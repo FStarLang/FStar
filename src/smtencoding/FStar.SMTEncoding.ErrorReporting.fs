@@ -259,7 +259,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 let detail_errors env
                  (all_labels:labels)
                  (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*Z3.error_kind)> * int * Z3.z3statistics))
-    : error_labels =
+    : unit =
 
     let print_banner () =
         BU.print3_error
@@ -308,8 +308,5 @@ let detail_errors env
     Options.set_option "z3rlimit" (Options.Int 5);
     let res = linear_check [] [] all_labels in
     BU.print_string "\n";
-    res |> List.iter print_result;
-    []
-//    let dummy, _, _ = all_labels |> List.hd in
-//    [(dummy, "Detailed errors provided", TypeChecker.Env.get_range env)]
+    res |> List.iter print_result
 

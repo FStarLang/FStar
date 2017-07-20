@@ -35,4 +35,4 @@ val label_goals : option<(unit -> string)> -> range -> q:term -> labels * term
 val detail_errors : TypeChecker.Env.env
                   -> labels
                   -> (decls_t -> either<Z3.unsat_core,(labels * Z3.error_kind)> * int * Z3.z3statistics)
-                  -> labels
+                  -> unit

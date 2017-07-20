@@ -603,7 +603,7 @@ let detail_errors:
                                              FStar_Pervasives_Native.tuple2)
             FStar_Util.either,Prims.int,FStar_SMTEncoding_Z3.z3statistics)
            FStar_Pervasives_Native.tuple3)
-        -> FStar_SMTEncoding_Term.error_label Prims.list
+        -> Prims.unit
   =
   fun env  ->
     fun all_labels  ->
@@ -680,5 +680,4 @@ let detail_errors:
           (FStar_Options.Int (Prims.parse_int "5"));
         (let res = linear_check [] [] all_labels in
          FStar_Util.print_string "\n";
-         FStar_All.pipe_right res (FStar_List.iter print_result);
-         [])
+         FStar_All.pipe_right res (FStar_List.iter print_result))
