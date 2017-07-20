@@ -55,8 +55,10 @@ let serializer_any (inputs:TSet.set bslice)
            as_seq h0 b == as_seq h1 b) /\
         serialized (enc h1) buf r h0 h1))
 
+unfold inline_for_extraction
 let serializer (enc:bytes) = serializer_any TSet.empty (fun _ -> enc)
 
+unfold inline_for_extraction
 let serializer_1 (input:bslice) (enc: buffer_fun (TSet.singleton input)) =
     serializer_any (TSet.singleton input) (fun h -> enc h)
 
