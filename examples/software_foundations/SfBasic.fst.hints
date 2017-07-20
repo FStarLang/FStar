@@ -1,0 +1,682 @@
+[
+  "I›è≤IÈ\boäé∆\u0004Ü\bÄ‰",
+  [
+    [ "SfBasic.uu___is_Monday", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SfBasic.uu___is_Tuesday", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SfBasic.uu___is_Wednesday", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SfBasic.uu___is_Thursday", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SfBasic.uu___is_Friday", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SfBasic.uu___is_Saturday", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SfBasic.uu___is_Sunday", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SfBasic.next_weekday",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_SfBasic.Saturday",
+        "disc_equation_SfBasic.Friday", "disc_equation_SfBasic.Monday",
+        "disc_equation_SfBasic.Saturday", "disc_equation_SfBasic.Sunday",
+        "disc_equation_SfBasic.Thursday", "disc_equation_SfBasic.Tuesday",
+        "disc_equation_SfBasic.Wednesday", "equality_tok_SfBasic.Friday@tok",
+        "equality_tok_SfBasic.Monday@tok",
+        "equality_tok_SfBasic.Thursday@tok",
+        "equality_tok_SfBasic.Tuesday@tok",
+        "equality_tok_SfBasic.Wednesday@tok",
+        "fuel_guarded_inversion_SfBasic.day"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_next_weekday",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.day_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_next_weekday",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_SfBasic.Monday",
+        "constructor_distinct_SfBasic.Saturday",
+        "equality_tok_SfBasic.Monday@tok",
+        "equality_tok_SfBasic.Saturday@tok", "equation_SfBasic.next_weekday",
+        "unit_typing"
+      ],
+      0
+    ],
+    [ "SfBasic.uu___is_MTrue", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SfBasic.uu___is_MFalse", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SfBasic.negb",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_SfBasic.MFalse",
+        "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MTrue@tok",
+        "fuel_guarded_inversion_SfBasic.mbool"
+      ],
+      0
+    ],
+    [
+      "SfBasic.andb",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_SfBasic.MFalse",
+        "constructor_distinct_SfBasic.MTrue", "disc_equation_SfBasic.MFalse",
+        "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MFalse@tok",
+        "fuel_guarded_inversion_SfBasic.mbool"
+      ],
+      0
+    ],
+    [
+      "SfBasic.orb",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_SfBasic.MFalse",
+        "constructor_distinct_SfBasic.MTrue", "disc_equation_SfBasic.MFalse",
+        "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MTrue@tok",
+        "fuel_guarded_inversion_SfBasic.mbool"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_orb1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_orb1",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_SfBasic.MTrue",
+        "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
+        "equation_SfBasic.orb", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_orb2",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_orb2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_SfBasic.MFalse",
+        "equality_tok_SfBasic.MFalse@tok", "equation_SfBasic.orb",
+        "fuel_guarded_inversion_SfBasic.mbool", "typing_SfBasic.orb",
+        "typing_tok_SfBasic.MFalse@tok", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_orb3",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_orb3",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_SfBasic.MFalse",
+        "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
+        "equation_SfBasic.orb", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_orb4",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_orb4",
+      2,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_SfBasic.MTrue",
+        "equality_tok_SfBasic.MTrue@tok", "equation_SfBasic.orb",
+        "unit_typing"
+      ],
+      0
+    ],
+    [ "SfBasic.nat", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SfBasic.uu___is_O", 1, 2, 1, [ "@query" ], 0 ],
+    [ "SfBasic.uu___is_S", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SfBasic.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_SfBasic.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_SfBasic_Tm_refine_b7b70964a15ac3a2f4808938f2801faf"
+      ],
+      0
+    ],
+    [
+      "SfBasic.pred",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_SfBasic.O",
+        "disc_equation_SfBasic.S", "equality_tok_SfBasic.O@tok",
+        "fuel_guarded_inversion_SfBasic.nat"
+      ],
+      0
+    ],
+    [
+      "SfBasic.minustwo",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_SfBasic.O",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.O@tok", "fuel_guarded_inversion_SfBasic.nat",
+        "proj_equation_SfBasic.S__0", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_SfBasic_Tm_refine_b7b70964a15ac3a2f4808938f2801faf",
+        "typing_SfBasic.__proj__S__item___0"
+      ],
+      0
+    ],
+    [
+      "SfBasic.evenb",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_ccd81122687c082c3642373b68717e85_0",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
+        "fuel_guarded_inversion_SfBasic.nat", "proj_equation_SfBasic.S__0",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_SfBasic.S__0",
+        "refinement_interpretation_SfBasic_Tm_refine_b7b70964a15ac3a2f4808938f2801faf",
+        "subterm_ordering_SfBasic.S", "typing_SfBasic.__proj__S__item___0"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_oddb1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_oddb1",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.evenb.fuel_instrumented", "@query",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "constructor_distinct_Tm_unit", "data_typing_intro_SfBasic.S@tok",
+        "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
+        "equality_tok_SfBasic.O@tok", "equation_SfBasic.negb",
+        "equation_SfBasic.oddb",
+        "equation_with_fuel_SfBasic.evenb.fuel_instrumented",
+        "fuel_guarded_inversion_SfBasic.mbool",
+        "projection_inverse_SfBasic.S__0", "typing_SfBasic.oddb",
+        "typing_tok_SfBasic.O@tok", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_oddb2",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_oddb2",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_SfBasic.evenb.fuel_instrumented", "@query",
+        "constructor_distinct_SfBasic.MTrue",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "equality_tok_SfBasic.MTrue@tok", "equality_tok_SfBasic.O@tok",
+        "equation_SfBasic.negb", "equation_SfBasic.oddb",
+        "equation_with_fuel_SfBasic.evenb.fuel_instrumented",
+        "projection_inverse_SfBasic.S__0", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.plus",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_ccd81122687c082c3642373b68717e85_0",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "fuel_guarded_inversion_SfBasic.nat", "subterm_ordering_SfBasic.S"
+      ],
+      0
+    ],
+    [
+      "SfBasic.mult",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_ccd81122687c082c3642373b68717e85_0",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.O@tok", "fuel_guarded_inversion_SfBasic.nat",
+        "subterm_ordering_SfBasic.S"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_mult1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.nat_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_mult1",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_SfBasic.mult.fuel_instrumented",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented",
+        "@fuel_irrelevance_SfBasic.mult.fuel_instrumented", "@query",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.mult.fuel_instrumented",
+        "equation_with_fuel_SfBasic.plus.fuel_instrumented",
+        "projection_inverse_SfBasic.S__0", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.minus",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_ccd81122687c082c3642373b68717e85_0",
+        "binder_x_ccd81122687c082c3642373b68717e85_1",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.O@tok", "fuel_guarded_inversion_SfBasic.nat",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
+      ],
+      0
+    ],
+    [
+      "SfBasic.beq_nat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "SfBasic_pretyping_ccd81122687c082c3642373b68717e85",
+        "binder_x_ccd81122687c082c3642373b68717e85_0",
+        "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
+        "equality_tok_SfBasic.O@tok",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "subterm_ordering_SfBasic.S", "typing_tok_SfBasic.O@tok"
+      ],
+      0
+    ],
+    [
+      "SfBasic.ble_nat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "SfBasic_pretyping_ccd81122687c082c3642373b68717e85",
+        "binder_x_ccd81122687c082c3642373b68717e85_0",
+        "binder_x_ccd81122687c082c3642373b68717e85_1",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
+        "equality_tok_SfBasic.O@tok", "fuel_guarded_inversion_SfBasic.nat",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S",
+        "typing_tok_SfBasic.O@tok"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_ble_nat1",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_ble_nat1",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.ble_nat.fuel_instrumented", "@query",
+        "SfBasic_pretyping_ccd81122687c082c3642373b68717e85",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "constructor_distinct_Tm_unit", "data_typing_intro_SfBasic.S@tok",
+        "equality_tok_SfBasic.MTrue@tok", "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.ble_nat.fuel_instrumented",
+        "fuel_guarded_inversion_SfBasic.mbool",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_SfBasic.S__0", "typing_SfBasic.ble_nat",
+        "typing_tok_SfBasic.O@tok", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_ble_nat2",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_ble_nat2",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.ble_nat.fuel_instrumented", "@query",
+        "SfBasic_pretyping_ccd81122687c082c3642373b68717e85",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.ble_nat.fuel_instrumented",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_SfBasic.S__0", "typing_tok_SfBasic.O@tok",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.test_ble_nat3",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.test_ble_nat3",
+      2,
+      4,
+      2,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.ble_nat.fuel_instrumented", "@query",
+        "SfBasic_pretyping_ccd81122687c082c3642373b68717e85",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "constructor_distinct_Tm_unit", "data_typing_intro_SfBasic.S@tok",
+        "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.ble_nat.fuel_instrumented",
+        "fuel_guarded_inversion_SfBasic.mbool",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_SfBasic.S__0", "typing_SfBasic.ble_nat",
+        "typing_tok_SfBasic.O@tok", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.plus_O_n",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.nat_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.plus_O_n",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented", "@query",
+        "constructor_distinct_SfBasic.O", "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.plus.fuel_instrumented", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.plus_id_example",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.nat_haseq" ],
+      0
+    ],
+    [ "SfBasic.plus_id_example", 2, 2, 1, [ "@query", "unit_typing" ], 0 ],
+    [
+      "SfBasic.mult_0_plus",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.nat_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.mult_0_plus",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented", "@query",
+        "constructor_distinct_SfBasic.O", "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.plus.fuel_instrumented", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.plus_1_neq_0",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.plus_1_neq_0",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.beq_nat.fuel_instrumented",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented", "@query",
+        "SfBasic_pretyping_ccd81122687c082c3642373b68717e85",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.beq_nat.fuel_instrumented",
+        "equation_with_fuel_SfBasic.plus.fuel_instrumented",
+        "fuel_guarded_inversion_SfBasic.nat",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "typing_tok_SfBasic.O@tok", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.negb_involutive",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.mbool_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.negb_involutive",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_SfBasic.MFalse",
+        "constructor_distinct_SfBasic.MTrue",
+        "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
+        "equation_SfBasic.negb", "fuel_guarded_inversion_SfBasic.mbool",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.plus_0_r",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.nat_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.plus_0_r",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented",
+        "@fuel_irrelevance_SfBasic.plus.fuel_instrumented", "@query",
+        "binder_x_ccd81122687c082c3642373b68717e85_0",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.plus.fuel_instrumented",
+        "fuel_guarded_inversion_SfBasic.nat",
+        "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.plus_n_Sm",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.nat_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.plus_n_Sm",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented",
+        "@fuel_irrelevance_SfBasic.plus.fuel_instrumented", "@query",
+        "binder_x_ccd81122687c082c3642373b68717e85_0",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.plus.fuel_instrumented",
+        "fuel_guarded_inversion_SfBasic.nat",
+        "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "SfBasic.plus_comm",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.nat_haseq" ],
+      0
+    ],
+    [
+      "SfBasic.plus_comm",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented",
+        "@fuel_irrelevance_SfBasic.plus.fuel_instrumented", "@query",
+        "binder_x_ccd81122687c082c3642373b68717e85_0",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.plus.fuel_instrumented",
+        "fuel_guarded_inversion_SfBasic.nat",
+        "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
+      ],
+      0
+    ],
+    [
+      "SfBasic.plus_rearrange",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_SfBasic.nat_haseq" ],
+      0
+    ],
+    [ "SfBasic.plus_rearrange", 2, 2, 1, [ "@query" ], 0 ]
+  ]
+]

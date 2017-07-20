@@ -1,0 +1,10 @@
+[
+  "â∞ÁKªÂJß…ôêªÙÃÌˇ",
+  [
+    [ "MetaCoq.ttry", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MetaCoq.or", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MetaCoq.exact", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MetaCoq.apply", 1, 2, 1, [ "@query" ], 0 ],
+    [ "MetaCoq.cut", 1, 2, 1, [ "@query" ], 0 ]
+  ]
+]

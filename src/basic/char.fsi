@@ -13,7 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.Char
+open FStar.ST
+open FStar.All
 type char' = char
 type char = char'
 val lowercase: char -> char

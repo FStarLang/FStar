@@ -15,23 +15,20 @@
 *)
 // (c) Microsoft Corporation. All rights reserved
 
+#light "off"
 module FStar.Unionfind
 
-type cell<'a when 'a : not struct> = {mutable contents : contents<'a> }
-and contents<'a when 'a : not struct> =
-  | Data of list<'a> * int
-  | Fwd of cell<'a>
-type uvar<'a when 'a : not struct> = 'a cell
+open FStar.ST
+open FStar.Util
 
-val uvar_id: uvar<'a> -> int
-val fresh : 'a -> uvar<'a>
-val find : uvar<'a> -> 'a
-val change : uvar<'a> -> 'a -> unit
-val equivalent : uvar<'a> -> uvar<'a> -> bool
-val union : uvar<'a> -> uvar<'a> -> unit
-
-type tx = int //don't rely on representation
-val new_transaction: (unit -> tx)
-val rollback: tx -> unit
-val commit: tx -> unit
-val update_in_tx: ref<'a> -> 'a -> unit
+type puf<'a>
+type p_uvar<'a>
+val puf_empty: unit -> puf<'a>
+val puf_fresh: puf<'a> -> 'a -> p_uvar<'a>
+val puf_id: puf<'a> -> p_uvar<'a> -> int
+val puf_fromid: puf<'a> -> int -> p_uvar<'a>
+val puf_find: puf<'a> -> p_uvar<'a> -> 'a
+val puf_union: puf<'a> -> p_uvar<'a> -> p_uvar<'a> -> puf<'a>
+val puf_equivalent: puf<'a> -> p_uvar<'a> -> p_uvar<'a> -> bool
+val puf_change: puf<'a> -> p_uvar<'a> -> 'a -> puf<'a>
+val puf_test: unit -> unit

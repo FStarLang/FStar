@@ -1,5 +1,9 @@
 # For simplified Makefiles, define FSTAR_HOME, then include the file below.
 FSTAR_HOME=../..
+include ../Makefile.include
+
+all: hello.uver
+
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 # This target is very concise and re-uses the variables defined in
@@ -22,14 +26,13 @@ testseq: out testseq.fst
 	$(OCAMLOPT) -I $(ULIB_ML)/native_int -I out/ out/FStar_Seq.ml out/TestSeq.ml -o testseq.exe
 	./testseq.exe
 
-LIB=../../ulib
-BIN=../../bin
-FSTAR=../../bin/fstar.exe
+LIB=$(FSTAR_HOME)/ulib
+BIN=$(FSTAR_HOME)/bin
 
 ifeq ($(OS),Windows_NT)
-FSC     = fsc --mlcompatibility $(addprefix -r , $(FS_LIBS))
+FSC     = fsc --mlcompatibility
 else
-FSC     = fsharpc --mlcompatibility $(addprefix -r , $(FS_LIBS))
+FSC     = fsharpc --mlcompatibility
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -38,12 +41,8 @@ else
 FSRUNTIME = mono
 endif
 
-FS_LIBS=$(BIN)/FSharp.PowerPack.dll
-
 fs: out hello.fst
 	$(FSTAR)   --odir out --codegen FSharp hello.fst
-	cp $(FS_LIBS) out
-	$(FSC) --nowarn:0086 -o out/hello.exe $(LIB)/fs/prims.fs $(LIB)/fs/io.fs out/Hello.fs
 	$(FSRUNTIME) ./out/hello.exe
 
 # CH: this target is dead, there is no ml/native_int anywhere

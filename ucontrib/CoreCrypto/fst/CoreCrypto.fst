@@ -2,11 +2,36 @@ module CoreCrypto
 
 open Platform.Bytes
 
-effect EXT (a:Type) = ST a
-  (requires (fun _ -> True)) 
-  (ensures (fun h0 _ h -> modifies_none h0 h))
+(* ------------ Hashing ------------ *) 
+type hash_alg = 
+  | MD5 
+  | SHA1 
+  | SHA224 
+  | SHA256 
+  | SHA384 
+  | SHA512
 
-type hash_alg = | MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
+let hashSize = function
+  | MD5    -> 16
+  | SHA1   -> 20
+  | SHA224 -> 28
+  | SHA256 -> 32
+  | SHA384 -> 48
+  | SHA512 -> 64
+
+(* These implementations are not pure; to be upgraded! *)
+assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
+assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
+
+(* Digest functions *)
+assume type hash_ctx : Type0 (* SI: or assume_new_abstract_type?*)
+assume val digest_create : hash_alg -> EXT hash_ctx
+assume val digest_update : hash_ctx -> bytes -> EXT unit 
+assume val digest_final : hash_ctx -> EXT bytes  
+
+(* --------------------------- *)
+
+
 type sig_alg = | RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = | AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type stream_cipher = | RC4_128
@@ -19,17 +44,6 @@ let blockSize = function
   | TDES_EDE_CBC -> 8
   | AES_128_CBC  -> 16
   | AES_256_CBC  -> 16
-
-
-let hashSize = function
-  | MD5    -> 16
-  | SHA1   -> 20
-  | SHA224 -> 28
-  | SHA256 -> 32
-  | SHA384 -> 48
-  | SHA512 -> 64
-
-
 
 (* Authenticated Encryption for TLS.  
    Note that their AAD contents depends on the protocol version. *)
@@ -75,7 +89,7 @@ assume val aead_encryptT:
   ad:bytes -> 
   plain:bytes -> 
   GTot (lbytes (length plain + aeadTagSize a))
-  
+
 assume val aead_encrypt: 
   a: aead_cipher -> 
   k: lbytes (aeadKeySize a) -> 
@@ -83,14 +97,15 @@ assume val aead_encrypt:
   ad:bytes -> 
   plain:bytes -> 
   EXT (c:bytes {c = aead_encryptT a k iv ad plain})
-  
+
 assume val aead_decrypt:
   a: aead_cipher -> 
   k: lbytes (aeadKeySize a) -> 
   iv:lbytes (aeadRealIVSize a) -> 
   ad:bytes -> 
   cipher:bytes{length cipher >= aeadTagSize a} -> 
-  EXT (o:option (b:bytes{length b + aeadTagSize a = length cipher}) {forall (p:bytes). cipher = aead_encryptT a k iv ad p <==> o = Some p })
+  EXT (o:option (b:bytes{length b + aeadTagSize a = length cipher})
+    {forall (p:bytes). cipher = aead_encryptT a k iv ad p <==> (Some? o /\ Some?.v o == p) })
 
 
 type rsa_key = {
@@ -126,15 +141,6 @@ type dh_key = {
 
 (* TODO: revisit the Tot annotations, switch to EXT when appropriate *)
 
-assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
-assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
-
-(* Digest functions *)
-assume type hash_ctx : Type0 (* SI: or assume_new_abstract_type?*)
-assume val digest_create : hash_alg -> hash_ctx
-assume val digest_update : hash_ctx -> bytes -> unit 
-assume val digest_final : hash_ctx -> bytes  
-
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> EXT bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> EXT bytes
 
@@ -166,13 +172,17 @@ type ec_curve =
   | ECC_P256
   | ECC_P384
   | ECC_P521
+  | ECC_X25519
+  | ECC_X448
 
 (* Bytelen of field elements *)
-val ec_bytelen: ec_curve -> Tot int
+val ec_bytelen: ec_curve -> Tot (n:nat{n <= 127})
 let ec_bytelen = function
   | ECC_P256 -> 32
   | ECC_P384 -> 48
   | ECC_P521 -> 66 (* ceil(521/8) *)
+  | ECC_X25519 -> 32
+  | ECC_X448 -> 56
 
 type ec_params = {
   curve: ec_curve;

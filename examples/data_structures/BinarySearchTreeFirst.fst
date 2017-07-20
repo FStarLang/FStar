@@ -27,11 +27,10 @@ module BinarySearchTreeFirst
 open FStar.List.Tot
 
 (* The type of a binary tree indexed by its max element *)
-type tree: int -> Type =
+type tree (r:int) =
   | Node : #l   :int
         -> left :option (tree l)
         -> n    :int
-        -> #r   :int
         -> right:option (tree r){l <= n
                                  /\ n <= r
                                  /\ (None? right <==> n=r)
@@ -39,7 +38,7 @@ type tree: int -> Type =
         -> tree r
 
 (* Need to supply #i for the empty sub-trees, since it can't be inferred by unification *)
-let leaf i = Node #i None i #i None
+let leaf i : tree i = Node #i #i None i None
 
 let max i j = if i < j then j else i
 
@@ -88,8 +87,8 @@ CH: this is very strange since it is reported on x, which has no decreases claus
   match t with
   | None -> ()
   | Some (Node left i right) ->
-     ListProperties.append_mem (in_order_opt left @ [i]) (in_order_opt right) x;
-     ListProperties.append_mem (in_order_opt left) [i] x;
+     List.Tot.append_mem (in_order_opt left @ [i]) (in_order_opt right) x;
+     List.Tot.append_mem (in_order_opt left) [i] x;
      index_is_max left x;
      index_is_max right x
 *)
@@ -104,8 +103,8 @@ let rec index_is_max2 (#max:int) t x = admit()
   match t with
   | None -> ()
   | Some (Node #l left i #r right) -> (* You can also writing the implicit arguments explicitly ... just testing it *)
-     ListProperties.append_mem (in_order_opt #l left @ [i]) (in_order_opt #r right) x;
-     ListProperties.append_mem (in_order_opt #l left) [i] x;
+     List.Tot.append_mem (in_order_opt #l left @ [i]) (in_order_opt #r right) x;
+     List.Tot.append_mem (in_order_opt #l left) [i] x;
      index_is_max2 #l left x;
      index_is_max2 #r right x
 *)

@@ -74,4 +74,4 @@ let op_Less_Equals_Hat = lte
 
 let of_string s = Stdint.Uint128.of_string s
 let to_string s = Stdint.Uint128.to_string s
-let uint_to_t s = s
+let uint_to_t s = Stdint.Uint128.of_string (Prims.to_string s)

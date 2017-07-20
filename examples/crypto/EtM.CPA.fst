@@ -1,7 +1,6 @@
 module EtM.CPA
-
+open FStar.HyperStack.ST
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
@@ -10,13 +9,13 @@ open EtM.Ideal
 
 open Platform.Bytes
 open CoreCrypto
-
+module CC = CoreCrypto
 module B = Platform.Bytes
 
 open EtM.Plain
 
 let ivsize = blockSize AES_128_CBC
-type keysize = 16
+let keysize = 16
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type msg = plain
 type cipher = b:bytes{B.length b >= ivsize}
@@ -63,11 +62,11 @@ val encrypt: k:key -> m:msg -> ST cipher
      /\ log1 == snoc log0 (m, c)
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
-let encrypt k m : cipher =
+let encrypt k m =
   m_recall k.log;
   let iv = random ivsize in
   let text = if ind_cpa && ind_cpa_rest_adv then createBytes (length m) 0z else repr m in
-  let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
+  let c = CC.block_encrypt AES_128_CBC k.raw iv text in
   let c = iv@|c in
   write_at_end k.log (m,c);
   c
@@ -87,7 +86,7 @@ let encryption_injective k iv t1 t2 = correctness k iv t1; correctness k iv t2
 
 (* this doesn't really belong here *)
 val mem : #a:eqtype -> x:a -> xs:Seq.seq a -> Tot bool
-let mem (#a:eqtype) x xs = Some? (SeqProperties.seq_find (fun y -> y = x) xs)
+let mem (#a:eqtype) x xs = Some? (Seq.seq_find (fun y -> y = x) xs)
 
 val decrypt: k:key -> c:cipher -> ST msg
   (requires (fun h0 ->
@@ -111,4 +110,4 @@ let decrypt k c =
     | Some mc -> fst mc
   else
     let iv,c' = split c ivsize in
-    coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')
+    coerce (CC.block_decrypt AES_128_CBC k.raw iv c')

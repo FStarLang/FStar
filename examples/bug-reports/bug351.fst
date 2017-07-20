@@ -27,7 +27,7 @@ let works_too'' (a:(Type->Type)) (b:(Type->Type)) (t:Type) (x:a t)
 
 open FStar.Constructive
 
-opaque val p_and_not_p : p:Type -> cand p (cnot p) -> Tot cfalse
+irreducible val p_and_not_p : p:Type -> cand p (cnot p) -> Tot cfalse
 let p_and_not_p (p:Type) h =
   let Conj h1 h2 = h in h2 h1
 
@@ -37,7 +37,7 @@ val works_too''' : a:(Type->Type) -> b:(Type->Type) -> t:Type -> x:a t ->
 let works_too''' (a:(Type->Type)) (b:(Type->Type)) (t:Type) (x:a t)
                  (f:(cnot (b t))) = f x
 
-opaque val works_too'''' : _P:(Type->Type) ->
+irreducible val works_too'''' : _P:(Type->Type) ->
                  p:Type ->
                  h:_P p ->
                  a:(Type->Type) ->

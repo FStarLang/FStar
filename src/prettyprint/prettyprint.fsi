@@ -13,7 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.Pprint
+open FStar.ST
+open FStar.All
+open FStar.BaseTypes
 
 (** A pretty-printing engine and a set of basic document combinators. *)
 
@@ -34,13 +38,17 @@ type document
 (** [empty] is the empty document. *)
 val empty: document
 
-(** [char c] is a document that consists of the single character [c]. This
+(** [doc_of_char c] is a document that consists of the single character [c]. This
     character must not be a newline. *)
-val document_of_char: FStar.Char.char -> document
+val doc_of_char: FStar.Char.char -> document
 
-(** [string s] is a document that consists of the string [s]. This string must
+(** [doc_of_string s] is a document that consists of the string [s]. This string must
     not contain a newline. *)
-val document_of_string: string -> document
+val doc_of_string: string -> document
+
+(** [doc_of_bool b] is a document that consists of the boolean [b]. This boolean must
+    not contain a newline. *)
+val doc_of_bool: bool -> document
 
 (** [substring s ofs len] is a document that consists of the portion of the
     string [s] delimited by the offset [ofs] and the length [len]. This
@@ -79,7 +87,10 @@ val blank: int -> document
 val break_: int -> document
 
 (** [doc1 ^^ doc2] is the concatenation of the documents [doc1] and [doc2]. *)
-val op_Hat_Hat: document -> document -> document
+val ( ^^ ) : document -> document -> document
+(** [x ^/^ y] separates x and y with a breakable space. It is a short-hand for
+    [x ^^ break 1 ^^ y] *)
+val ( ^/^ ) : document -> document -> document
 
 (** [nest j doc] is the document [doc], in which the indentation level has
     been increased by [j], that is, in which [j] blanks have been inserted
@@ -120,19 +131,19 @@ val position : (int -> int -> int -> document) -> document
     equivalent. *)
 val ifflat: document -> document -> document
 
-// SI: purposely commented-out for now. 
+// SI: purposely commented-out for now.
 // (** {1 Rendering documents} *)
-// 
+//
 // (** This renderer sends its output into an output channel. *)
 // module ToChannel : PPrintRenderer.RENDERER
 //   with type channel = out_channel
 //    and type document = document
-// 
+//
 // (** This renderer sends its output into a memory buffer. *)
 // module ToBuffer : PPrintRenderer.RENDERER
 //   with type channel = Buffer.t
 //    and type document = document
-// 
+//
 // (** This renderer sends its output into a formatter channel. *)
 // module ToFormatter : PPrintRenderer.RENDERER
 //   with type channel = Format.formatter
@@ -178,6 +189,9 @@ val minus: document
 val underscore: document
 val bang: document
 val bar: document
+val rarrow: document
+val long_left_arrow: document
+val larrow: document
 
 (** {1 Delimiters} *)
 
@@ -353,20 +367,20 @@ val surround_separate: int -> int -> document -> document -> document -> documen
     [surround_separate n b void opening sep closing (List.map f xs)]. *)
 val surround_separate_map: int -> int -> document -> document -> document -> document -> ('a -> document) -> list<'a> -> document
 
-// (** {1 Short-hands} *)
-// 
-// (** [!^s] is a short-hand for [string s]. *)
+(** {1 Short-hands} *)
+
+
+//(** [!^s] is a short-hand for [string s]. *)
 // val ( !^ ) : string -> document
-// 
-// (** [x ^/^ y] separates [x] and [y] with a breakable space.
-//     It is a short-hand for [x ^^ break 1 ^^ y]. *)
-// val ( ^/^ ) : document -> document -> document
-// 
-// (** [x ^//^ y] is a short-hand for [prefix 2 1 x y]. *)
+
+(** [x ^/^ y] separates [x] and [y] with a breakable space.
+    It is a short-hand for [x ^^ break 1 ^^ y]. *)
+
+(** [x ^//^ y] is a short-hand for [prefix 2 1 x y]. *)
 // val ( ^//^ ) : document -> document -> document
 
 // Expose underlying Renderer.pretty implementations (avoid inner modules).
-// [pretty_string] uses ToBuffer:RENDERER implementation; 
-// [print_out_channel] uses the ToChannel:RENDERER one. 
-val pretty_string : int -> document -> string 
-val pretty_out_channel : int -> document -> FStar.Util.out_channel -> unit 
+// [pretty_string] uses ToBuffer:RENDERER implementation;
+// [print_out_channel] uses the ToChannel:RENDERER one.
+val pretty_string : float -> int -> document -> string
+val pretty_out_channel : float -> int -> document -> FStar.Util.out_channel -> unit

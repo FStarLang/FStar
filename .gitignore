@@ -25,6 +25,7 @@ cache/
 /lib/FStar.GetOpt.fsti
 /lib/FStar.Unionfind.fsti
 
+/ulib/.mgen
 /ulib/ml/extracted
 
 /bin/*.dll
@@ -33,6 +34,7 @@ cache/
 /bin/*.xml
 /bin/*.config
 /bin/fstar.exe
+/bin/fstar.ocaml
 /bin/tests.exe
 /bin/z3.exe
 /bin/z3-x86.exe
@@ -42,6 +44,7 @@ cache/
 examples/*/*.ml
 examples/crypto/CntProtocol.exe
 examples/wysteria/ocaml-output/*
+examples/incl/*.neg/error.log
 
 _build/
 
@@ -55,6 +58,7 @@ dump
 *.cmi
 *.cmo
 *.cmx
+*.cma
 *.o
 
 .depend
@@ -74,3 +78,6 @@ tags
 /nuobj/
 nubuild.log
 nubuild.progress
+
+# Z3/F* nightly/weekly files
+/nightly

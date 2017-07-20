@@ -13,8 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+#light "off"
 module FStar.Util
-
+open FStar.ST
+open FStar.All
 open System.IO
 
 open FStar.BaseTypes
@@ -30,6 +32,9 @@ type time = System.DateTime
 val now : unit -> time
 val time_diff: time -> time -> float*int
 val record_time: (unit -> 'a) -> ('a * int)
+val is_before: time -> time -> bool
+val get_file_last_modification_time: string -> time
+val string_of_time: time -> string
 
 (* generic utils *)
 (* Functional sets *)
@@ -46,12 +51,16 @@ val set_count: set<'a> -> int
 val set_difference: set<'a> -> set<'a> -> set<'a>
 val set_elements: set<'a> -> list<'a>
 
+(* A fifo_set is a set preserving the insertion order *)
 type fifo_set<'a> = set<'a>
 val new_fifo_set: ('a -> 'a -> int) -> ('a -> int) -> fifo_set<'a>
 val fifo_set_is_empty: fifo_set<'a> -> bool
+(* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
 val fifo_set_add: 'a -> fifo_set<'a> -> fifo_set<'a>
+(* [fifo_set_remove x s] removes [x]from [s] *)
 val fifo_set_remove: 'a -> fifo_set<'a> -> fifo_set<'a>
 val fifo_set_mem: 'a -> fifo_set<'a> -> bool
+(* [fifo_set s1 s2] is the set with all elements in [s1] inserted before those of [s2] *)
 val fifo_set_union: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
 val fifo_set_count: fifo_set<'a> -> int
 val fifo_set_difference: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
@@ -68,6 +77,19 @@ val smap_remove: smap<'value> -> string -> unit
 (* The list may contain duplicates. *)
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
+val smap_size: smap<'value> -> int
+
+type imap<'value> = System.Collections.Generic.Dictionary<int,'value> (* not relying on representation *)
+val imap_create: int -> imap<'value>
+val imap_clear:imap<'value> -> unit
+val imap_add: imap<'value> -> int -> 'value -> unit
+val imap_of_list: list<(int*'value)> -> imap<'value>
+val imap_try_find: imap<'value> -> int -> option<'value>
+val imap_fold: imap<'value> -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
+val imap_remove: imap<'value> -> int -> unit
+(* The list may contain duplicates. *)
+val imap_keys: imap<'value> -> list<int>
+val imap_copy: imap<'value> -> imap<'value>
 
 val format: string -> list<string> -> string
 val format1: string -> string -> string
@@ -109,6 +131,16 @@ val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list<string> -> unit
 
+type printer = {
+  printer_prinfo: string -> unit;
+  printer_prwarning: string -> unit;
+  printer_prerror: string -> unit;
+}
+
+val default_printer : printer
+val set_printer : printer -> unit
+
+val print_raw : string -> unit
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
@@ -120,6 +152,9 @@ val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val flush_file: file_handle -> unit
+val file_get_contents: string -> string
+val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
+val concat_dir_filename: string -> string -> string
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 val open_stdin : unit -> stream_reader
@@ -135,6 +170,7 @@ val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 
 type proc = {m:System.Object; outbuf:System.Text.StringBuilder; proc:System.Diagnostics.Process; killed:ref<bool>; id:string}  (* not relying on representation; this needs to be defined on one line for a sed script *)
+val launch_process: string -> string -> string -> string -> (string -> string -> bool) -> string
 val start_process: string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
 val kill_process: proc -> unit
@@ -163,6 +199,7 @@ val uint16_of_int: int -> Tot<uint16>
 val float_of_byte: byte -> Tot<float>
 val float_of_int32: int32 -> Tot<float>
 val float_of_int64: int64 -> Tot<float>
+val float_of_string: string -> Tot<float>
 val int_of_int32: int32 -> Tot<int>
 val int32_of_int:   int -> int32 //potentially failing int32 coercion
 val string_of_int:   int -> string
@@ -173,16 +210,18 @@ val string_of_float: float -> Tot<string>
 val string_of_char:  char -> Tot<string>
 val hex_string_of_byte:  byte -> Tot<string>
 val string_of_bytes: array<byte> -> Tot<string>
+val bytes_of_string: string -> Tot<array<byte>>
 val starts_with: string -> string -> Tot<bool>
 val trim_string: string -> Tot<string>
 val ends_with: string -> string -> Tot<bool>
 val char_at: string -> int -> char
 val is_upper: char -> Tot<bool>
+val contains: string -> string -> Tot<bool>
 val substring_from: string -> int -> string
 (* Second argument is a length, not an index. *)
 val substring: string -> int -> int -> string
 val replace_char: string -> char -> char -> Tot<string>
-val replace_string: string -> string -> string -> Tot<string>
+val replace_chars: string -> char -> string -> Tot<string>
 val hashcode: string -> Tot<int>
 val compare: string -> string -> Tot<int>
 val splitlines: string -> Tot<list<string>>
@@ -202,6 +241,7 @@ val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
 val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
 val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
+val try_find: ('a -> bool) -> list<'a> -> option<'a>
 val try_find_i: (int -> 'a -> bool) -> list<'a> -> option<(int * 'a)>
 val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val try_find_index: ('a -> bool) -> list<'a> -> option<int>
@@ -211,6 +251,11 @@ val for_all: ('a -> bool) -> list<'a> -> bool
 val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
+val take: ('a -> bool) -> list<'a> -> list<'a> * list<'a>
+
+(* Variation on fold_left which pushes the list returned by the functional *)
+(* on top of the leftover input list *)
+val fold_flatten:('a -> 'b -> 'a * list<'b>) -> 'a -> list<'b> -> 'a
 
 val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a
@@ -219,6 +264,7 @@ val find_opt: ('a -> bool) -> list<'a> -> option<'a>
 (* FIXME: these functions have the wrong argument order when compared to
  List.map, List.iter, etc. *)
 val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
+val catch_opt: option<'a> -> (unit -> option<'a>) -> option<'a>
 val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
 val iter_opt: option<'a> -> ('a -> unit) -> unit
 
@@ -253,6 +299,8 @@ val expand_environment_variable: string -> string
 val physical_equality: 'a -> 'a -> bool
 val check_sharing: 'a -> 'a -> string -> unit
 
+val is_letter: char -> bool
+val is_digit: char -> bool
 val is_letter_or_digit: char -> bool
 val is_punctuation: char -> bool
 val is_symbol: char -> bool
@@ -328,3 +376,23 @@ type hints_db = {
 
 val write_hints: string -> hints_db -> unit
 val read_hints: string -> option<hints_db>
+
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of list<json>
+| JsonAssoc of list<(string * json)>
+
+val json_of_string : string -> option<json>
+val string_of_json : json -> string
+
+(* Common interface between F#, Ocaml and F* to read and write references *)
+(* F# uses native references, while OCaml uses both native references (Pervasives) and FStar_Heap ones *)
+val read : ref<'a> -> 'a
+val write : ref<'a> -> 'a -> unit
+
+(* Marshaling to and from strings *)
+val marshal: 'a -> string
+val unmarshal: string -> 'a

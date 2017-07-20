@@ -29,11 +29,11 @@ let ilog l = l
 #set-options "--initial_fuel 1 --max_fuel 1"
 
 val poly_cons: x:word -> xs:text -> r:elem ->
-  Lemma (poly (SeqProperties.cons x xs) r == (encode x +@ poly xs r) *@ r)
+  Lemma (poly (Seq.cons x xs) r == (encode x +@ poly xs r) *@ r)
 let poly_cons x xs r =
-  let xxs = SeqProperties.cons x xs in
+  let xxs = Seq.cons x xs in
   Seq.lemma_len_append (Seq.create 1 x) xs;
-  Seq.lemma_eq_intro (SeqProperties.tail xxs) xs
+  Seq.lemma_eq_intro (Seq.tail xxs) xs
 
 val poly_empty: t:text{Seq.length t == 0} -> r:elem ->
   Lemma (poly t r == 0)
@@ -59,7 +59,7 @@ val poly1305_update:
     /\ live h1 msg /\ norm h1 acc /\ norm h1 r
     /\ modifies_1 acc h0 h1
     /\ (mac_log ==>
-       ilog updated_log == SeqProperties.cons (sel_word h0 msg) (ilog current_log)
+       ilog updated_log == Seq.cons (sel_word h0 msg) (ilog current_log)
        /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 let poly1305_update log msgB acc r =
   let h0 = ST.get () in
@@ -77,7 +77,7 @@ let poly1305_update log msgB acc r =
     if mac_log then
       let msg = read_word 16ul msgB in
       poly_cons (sel_word h0 msgB) (ilog log) (sel_elem h0 r);
-      SeqProperties.cons msg (ilog log)
+      Seq.cons msg (ilog log)
     else ()
   in
   pop_frame();
@@ -100,7 +100,7 @@ val poly1305_last:
       /\ live h1 msg /\ norm h1 acc /\ norm h1 r
       /\ modifies_1 acc h0 h1
       /\ (mac_log ==>
-         ilog updated_log == SeqProperties.cons (sel_word h0 msg) (ilog current_log)
+         ilog updated_log == Seq.cons (sel_word h0 msg) (ilog current_log)
          /\ sel_elem h1 acc == poly (ilog updated_log) (sel_elem h0 r)) ))
 let poly1305_last log msgB acc r len =
   let h0 = ST.get () in
@@ -118,7 +118,7 @@ let poly1305_last log msgB acc r len =
     if mac_log then
       let msg = read_word len msgB in
       poly_cons (sel_word h0 msgB) (ilog log) (sel_elem h0 r);
-      SeqProperties.cons msg (ilog log)
+      Seq.cons msg (ilog log)
     else ()
   in
   pop_frame ();
@@ -137,8 +137,8 @@ let rec encode_bytes txt =
     Seq.createEmpty
   else
     let l0 = min l 16 in
-    let w, txt = SeqProperties.split txt l0 in
-    SeqProperties.snoc (encode_bytes txt) w // snoc, not cons!
+    let w, txt = Seq.split txt l0 in
+    Seq.snoc (encode_bytes txt) w // snoc, not cons!
 (***)
 
 #set-options "--initial_fuel 1 --max_fuel 1"
@@ -153,15 +153,15 @@ let append_empty #a s1 s2 =
   Seq.lemma_eq_intro (Seq.append s1 s2) s2
 
 val append_cons_snoc: #a:Type -> s1:Seq.seq a -> hd:a -> tl:Seq.seq a -> Lemma
-  (Seq.append s1 (SeqProperties.cons hd tl) ==
-   Seq.append (SeqProperties.snoc s1 hd) tl)
+  (Seq.append s1 (Seq.cons hd tl) ==
+   Seq.append (Seq.snoc s1 hd) tl)
 let append_cons_snoc #a s1 hd tl =
   Seq.lemma_eq_intro
-    (Seq.append s1 (SeqProperties.cons hd tl))
-    (Seq.append (SeqProperties.snoc s1 hd) tl)
+    (Seq.append s1 (Seq.cons hd tl))
+    (Seq.append (Seq.snoc s1 hd) tl)
 
 val snoc_cons: #a:Type -> s:Seq.seq a -> x:a -> y:a -> Lemma
-  (FStar.SeqProperties (Seq.equal (snoc (cons x s) y) (cons x (snoc s y))))
+  (FStar.Seq (Seq.equal (snoc (cons x s) y) (cons x (snoc s y))))
 let snoc_cons #a s x y = ()
 
 val append_assoc: #a:Type -> s1:Seq.seq a -> s2:Seq.seq a -> s3:Seq.seq a -> Lemma
@@ -192,19 +192,18 @@ val encode_bytes_empty: txt:Seq.seq UInt8.t -> Lemma
 let encode_bytes_empty txt = ()
 
 val snoc_encode_bytes: s:Seq.seq UInt8.t -> w:word_16 -> Lemma
-  (Seq.equal (SeqProperties.snoc (encode_bytes s) w) (encode_bytes (Seq.append w s)))
+  (Seq.equal (Seq.snoc (encode_bytes s) w) (encode_bytes (Seq.append w s)))
 let snoc_encode_bytes s w =
-  let txt0, txt1 = SeqProperties.split (Seq.append w s) 16 in
+  let txt0, txt1 = Seq.split (Seq.append w s) 16 in
   assert (Seq.equal w txt0 /\ Seq.equal s txt1)
 
 val encode_bytes_append: len:U32.t -> s:Seq.seq UInt8.t -> w:word -> Lemma
   (requires (0 < Seq.length w /\ Seq.length s == U32.v len /\ U32.rem len 16ul == 0ul))
   (ensures  (Seq.equal (encode_bytes (Seq.append s w))
-                      (SeqProperties.cons w (encode_bytes s))))
+                      (Seq.cons w (encode_bytes s))))
   (decreases (Seq.length s))
 let rec encode_bytes_append len s w =
   let open FStar.Seq in
-  let open FStar.SeqProperties in
   let txt = Seq.append s w in
   lemma_len_append s w;
   let l0 = min (length txt) 16 in
@@ -262,18 +261,18 @@ let rec poly1305_loop log msg acc r ctr =
     if mac_log then
       begin
       assert (sel_elem h1 acc == poly (ilog log1) (sel_elem h0 r));
-      assert (ilog log1 == SeqProperties.cons (sel_word h0 msg0) (ilog log));
+      assert (ilog log1 == Seq.cons (sel_word h0 msg0) (ilog log));
       let s = as_seq h0 (sub msg1 0ul (UInt32.mul 16ul (U32 (ctr -^ 1ul)))) in
       append_cons_snoc (encode_bytes s) (sel_word h0 msg0) (ilog log);
    //   assert (ilog log2 ==
-   //     Seq.append (SeqProperties.snoc (encode_bytes s)
+   //     Seq.append (Seq.snoc (encode_bytes s)
    //                (sel_word h0 msg0)) (ilog log));
       snoc_encode_bytes
         (as_seq h0 (sub msg1 0ul (U32.mul 16ul (U32 (ctr -^ 1ul)))))
         (sel_word h0 msg0);
       append_as_seq_sub h0 (U32.mul 16ul ctr) 16ul msg
    //   assert (Seq.equal
-   //     (SeqProperties.snoc (encode_bytes s) (sel_word h0 msg0))
+   //     (Seq.snoc (encode_bytes s) (sel_word h0 msg0))
    //     (encode_bytes (as_seq h0 (Buffer.sub msg 0ul (UInt32.mul 16ul ctr)))))
       end;
     log2

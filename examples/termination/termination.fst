@@ -70,49 +70,100 @@ let rec map f l = match l with
   | [] -> []
   | hd::tl -> f hd::map f tl
 
-val mem: 'a -> list 'a -> Tot bool
-let rec mem a l = match l with
+val mem: #a:eqtype -> x:a -> list a -> Tot bool
+let rec mem #a x l = match l with
   | [] -> false
-  | hd::tl -> hd=a || mem a tl
+  | hd::tl ->
+    hd=x || mem x tl
 
-val list_subterm_ordering_coercion: l:list 'a
-                        -> bound:'b{Precedes l bound}
-                        -> Tot (m:list 'a{l==m /\ (forall (x:'a). mem x m ==> Precedes x bound)})
-let rec list_subterm_ordering_coercion l bound = match l with
+val list_subterm_ordering_coercion: 
+			  #a:eqtype 
+			-> #b:Type
+			-> l:list a
+                        -> bound:b{l << bound}
+                        -> Tot (m:list a{l==m /\ (forall (x:a). mem x m ==> x << bound)})
+let rec list_subterm_ordering_coercion #a #b l bound = match l with
   | [] -> []
   | hd::tl ->
     hd::list_subterm_ordering_coercion tl bound
 
 (* WARNING: pattern does not contain all quantified variables. *)
-val list_subterm_ordering_lemma: l:list 'a
-                        -> bound:'b
-                        -> x:'a
+val list_subterm_ordering_lemma:
+			#a:eqtype
+			-> #b:Type
+			-> l:list a
+                        -> bound:b
+                        -> x:a
                         -> Lemma (requires (l << bound))
                                  (ensures (mem x l ==> x << bound))
                                  [SMTPat (mem x l);
                                   SMTPatT (x << bound)]
-let rec list_subterm_ordering_lemma l bound x = match l with
+let rec list_subterm_ordering_lemma #a #b l bound x = match l with
   | [] -> ()
   | hd::tl -> list_subterm_ordering_lemma tl bound x
 
-val move_refinement:  #a:Type
+val move_refinement:  #a:eqtype
                    -> #p:(a -> Type)
                    -> l:list a{forall z. mem z l ==> p z}
                    -> Tot (list (x:a{p x}))
-let rec move_refinement (a:Type) (p:(a -> Type)) l = match l with
+let rec move_refinement #a #p l = match l with
   | [] -> []
   | hd::tl -> hd::move_refinement #a #p tl
 
-type T 'a =
-  | Leaf : 'a -> T 'a
-  | Node : list (T 'a) -> T 'a
+type tree (a:Type) =
+  | Leaf : a -> tree a
+  | Node : list (tree a) -> tree a
 
-val treeMap : #a:Type -> #b:Type -> (a -> Tot b) -> T a -> Tot (T b)
-let rec treeMap 'a 'b f v = match v with
+val treeMap : #a:eqtype -> #b:Type -> (a -> Tot b) -> tree a -> Tot (tree b)
+let rec treeMap #a #b f v = match v with
   | Leaf a -> Leaf (f a)
   | Node l ->
     (* NS: this next call seems to be unavoidable. We need to move the refinement "inside" the list.
-           An alternative would be to give map a different type accouting for this "outside" refinement.
+           An alternative would be to give map a different type accounting for this "outside" refinement.
            But, it's seeems nicer to give map its normal type *)
     let l = move_refinement #_ #(fun aa -> aa << v) l in (* ghost *)
     Node (map (treeMap f) l) //treeMap f: (x:T a{x << v} -> Tot (T b))
+
+(* CH: The problem I see with Nik's trick is that adding "ghost" in a
+       comment: doesn't make something Ghost in F*, and in fact
+       `move_refinement` has a significant computational cost. *)
+
+(* CH: here is the variant in which map gets a different type: *)
+
+let rec list_map (xs:list 'a) (f:(x:'a{x<<xs} -> 'b)) : list 'b =
+  match xs with
+  | [] -> []
+  | x::xs' -> f x :: list_map xs' f
+
+let rec tree_map (f:'a -> 'b) (t:tree 'a) : tree 'b =
+  match t with
+  | Leaf v -> Leaf (f v)
+  | Node ts -> Node (list_map ts (tree_map f))
+
+(* CH: here is a very similar example that came up in a mailing list discussion:
+       https://lists.gforge.inria.fr/pipermail/fstar-club/2017/000078.html *)
+
+let rec flatten_list (#a #b:Type) (l:(list b)) (f:(b -> list a)) : list a =
+  match l with
+  | []    -> []
+  | hd::tl -> FStar.List.append (f hd) (flatten_list tl f)
+
+(* solution #1 *)
+
+let rec flatten_tree (#a:eqtype) (t:tree a) : list a =
+  match t with
+  | Leaf v -> [v]
+  | Node l -> let l = move_refinement #_ #(fun aa -> aa << t) l in
+              flatten_list l flatten_tree
+
+(* solution #2 *)
+
+let rec flatten_list' (l:(list 'b)) (f:(x:'b{x << l} -> list 'a)) : list 'a =
+  match l with
+  | []    -> []
+  | hd::tl -> FStar.List.append (f hd) (flatten_list' tl f)
+
+let rec flatten_tree' (#a:Type) (t:tree a) : list a =
+  match t with
+  | Leaf v -> [v]
+  | Node l -> flatten_list' l flatten_tree'

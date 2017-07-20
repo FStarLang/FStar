@@ -13,7 +13,7 @@ type exp =
 
 type sub = var -> Tot exp
 
-opaque type renaming (s:sub) = (forall (x:var). is_EVar (s x))
+opaque type renaming (s:sub) = (forall (x:var). EVar? (s x))
 
 val is_renaming : s:sub -> Tot (n:int{  (renaming s  ==> n=0) /\
                                       (~(renaming s) ==> n=1)})
@@ -28,17 +28,17 @@ let sub_inc = sub_inc_above 0
 val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
 let renaming_sub_inc _ = ()
 
-let is_var (e:exp) : int = if is_EVar e then 0 else 1
+let is_var (e:exp) : int = if EVar? e then 0 else 1
 
 val subst : s:sub -> e:exp -> Pure exp (requires True)
-     (ensures (fun e' -> (renaming s /\ is_EVar e) ==> is_EVar e'))
+     (ensures (fun e' -> (renaming s /\ EVar? e) ==> EVar? e'))
      (decreases %[is_var e; is_renaming s; e])
 let rec subst s e =
   match e with
   | EVar x -> s x
 
   | ELam t e1 ->
-     let subst_elam : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) =
+     let subst_elam : y:var -> Tot (e:exp{renaming s ==> EVar? e}) =
        fun y -> if y=0 then EVar y
                        else subst sub_inc (s (y-1))            (* shift +1 *)
      in ELam t (subst subst_elam e1)
@@ -57,8 +57,8 @@ let extend g x t y = if y < x then g y
 
 type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
-            x:var{is_Some (g x)} ->
-            typing g (EVar x) (Some.v (g x))
+            x:var{Some? (g x)} ->
+            typing g (EVar x) (Some?.v (g x))
   | TyLam : #g:env ->
             t:typ ->
             #e1:exp ->
@@ -74,7 +74,7 @@ assume opaque val weakening : x:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       (decreases h)
 
 type subst_typing (s:sub) (g1:env) (g2:env) =
-  (x:var{is_Some (g1 x)} -> Tot(typing g2 (s x) (Some.v (g1 x)))) 
+  (x:var{Some? (g1 x)} -> Tot(typing g2 (s x) (Some?.v (g1 x)))) 
 
 val substitution :
       #g1:env -> #e:exp -> #t:typ -> s:sub -> #g2:env ->

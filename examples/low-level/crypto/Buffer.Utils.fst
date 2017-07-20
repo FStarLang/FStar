@@ -3,6 +3,7 @@ module Buffer.Utils
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Int.Cast
 open FStar.UInt8
 open FStar.UInt32
@@ -12,6 +13,7 @@ open FStar.Math.Lemmas
 
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
+module ST = FStar.HyperStack.ST
 
 let u32 = FStar.UInt32.t
 let u8 = FStar.UInt8.t
@@ -181,5 +183,5 @@ let rec memset b z len =
     let h1 = ST.get() in 
     let s = as_seq h1 b in
     assert(Seq.index s 0 = z); // ...but this fails in the absence of framing
-    assert(Seq.equal s (SeqProperties.cons z (Seq.slice s 1 (v len))))
+    assert(Seq.equal s (Seq.cons z (Seq.slice s 1 (v len))))
   end

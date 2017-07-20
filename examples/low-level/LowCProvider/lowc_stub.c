@@ -21,10 +21,12 @@
 #include "tmp/Crypto_Symmetric_PRF.h"
 #include "tmp/Crypto_Symmetric_UF1CMA.h"
 #include "tmp/Crypto_AEAD_Invariant.h"
+#include "tmp/Crypto_AEAD_Encrypt.h"
+#include "tmp/Crypto_AEAD_Decrypt.h"
 #include "tmp/Crypto_AEAD.h"
 
 typedef Crypto_Symmetric_PRF_state____ PRF_ST;
-typedef Crypto_AEAD_Invariant_state_______ AEAD_ST;
+typedef Crypto_AEAD_Invariant_aead_state_______ AEAD_ST;
 typedef Crypto_Indexing_id ID;
 
 typedef struct {
@@ -69,6 +71,7 @@ static struct custom_operations st_ops = {
   .deserialize = custom_deserialize_default,
 };
 
+// NS, JP: Why not just call AEAD.gen?
 CAMLprim value ocaml_AEAD_create(value alg, value key) {
         CAMLparam2(alg, key);
         Crypto_Indexing_cipherAlg calg;
@@ -114,7 +117,7 @@ CAMLprim value ocaml_AEAD_create(value alg, value key) {
                 };
         }
         else
-                ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None, { .case_None = {  } } };
+                ak = (Prims_option__uint8_t_ ){ .tag = Prims_option__uint8_t__None };
 
         AEAD_ST* st = malloc(sizeof(AEAD_ST));
         st->x00 = FStar_HyperHeap_root;
@@ -147,12 +150,13 @@ CAMLprim value ocaml_AEAD_encrypt(value state, value iv, value ad, value plain) 
 
         CAMLlocal1(cipher);
         // ADL: hardcoded taglen here TODO
+	// NS, JP: Why zero out the ccipher before calling encrypt?
         cipher = caml_alloc_string(plainlen + 16);
         uint8_t* ccipher = (uint8_t*) String_val(cipher);
         for (uint32_t i = 0; i < plainlen + 16; ++i)
           ccipher[i] = (uint8_t )0;
 
-        Crypto_AEAD_encrypt(id, *ast, n, adlen, cad, plainlen, cplain, ccipher);
+        Crypto_AEAD_Encrypt_encrypt(id, *ast, n, adlen, cad, plainlen, cplain, ccipher);
         CAMLreturn(cipher);
 }
 
@@ -172,13 +176,14 @@ CAMLprim value ocaml_AEAD_decrypt(value state, value iv, value ad, value cipher)
 
         CAMLlocal1(plain);
         // ADL: hardcoded taglen here TODO
+	// NS, JP: Why zero out the cipher before calling decrypt? 
         uint32_t plainlen = cipherlen - 16;
         plain = caml_alloc_string(plainlen);
         uint8_t* cplain = (uint8_t*) String_val(plain);
         for (uint32_t i = 0; i < plainlen; ++i)
           cplain[i] = (uint8_t )0;
         
-        if(Crypto_AEAD_decrypt(id, *ast, n, adlen, cad, plainlen, cplain, ccipher))
+        if(Crypto_AEAD_Decrypt_decrypt(id, *ast, n, adlen, cad, plainlen, cplain, ccipher))
         {
                 CAMLreturn(Val_some(plain));
         }

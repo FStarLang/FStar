@@ -11,28 +11,22 @@ let string_of_bytes b = Platform.Bytes.get_cbytes b
 let bytes_of_string s = Platform.Bytes.abytes s
 let (@|) = Platform.Bytes.(@|)
 
-(* -------------------------------------------------------------------- *)
+                         
+(* ----------------- Hashing and HMAC --------------------------------------- *)
 
 (** Hashing *)
 
 (** We support a subset of the algorithms from OpenSSL. Note: when changing
  * these types, please only append new constructors *at the end* (otherwise, C
  * functions such as [RSADigest_val] will most likely break). *)
-type hash_alg = MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
-type sig_alg = RSASIG | DSA | ECDSA | RSAPSS
-type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
-type stream_cipher = RC4_128
-type rsa_padding = Pad_none | Pad_PKCS1
+type hash_alg =
+  | MD5
+  | SHA1
+  | SHA224
+  | SHA256
+  | SHA384
+  | SHA512
 
-type aead_cipher = 
-  | AES_128_GCM   
-  | AES_256_GCM
-  | CHACHA20_POLY1305 
-  | AES_128_CCM
-  | AES_256_CCM   
-  | AES_128_CCM_8
-  | AES_256_CCM_8
-                                
 let string_of_hash_alg = function
   | MD5 -> "MD5"
   | SHA1 -> "SHA1"
@@ -40,36 +34,6 @@ let string_of_hash_alg = function
   | SHA256 -> "SHA256"
   | SHA384 -> "SHA384"
   | SHA512 -> "SHA512"
-
-let string_of_block_cipher = function
-  | AES_128_CBC -> "AES_128_CBC"
-  | AES_256_CBC -> "AES_256_CBC"
-  | TDES_EDE_CBC -> "TDES_EDE_CBC"
-
-let blockSize = function
-  | TDES_EDE_CBC -> Z.of_int 8
-  | AES_128_CBC  -> Z.of_int 16
-  | AES_256_CBC  -> Z.of_int 16
-
-let aeadKeySize = function
-  | AES_128_CCM       -> Z.of_int 16
-  | AES_128_CCM_8     -> Z.of_int 16
-  | AES_128_GCM       -> Z.of_int 16
-  | AES_256_CCM       -> Z.of_int 32
-  | AES_256_CCM_8     -> Z.of_int 32
-  | AES_256_GCM       -> Z.of_int 32
-  | CHACHA20_POLY1305 -> Z.of_int 32
-
-let aeadRealIVSize (a:aead_cipher) = Z.of_int 12
-
-let aeadTagSize = function
-  | AES_128_CCM_8     -> Z.of_int 8
-  | AES_256_CCM_8     -> Z.of_int 8
-  | AES_128_CCM       -> Z.of_int 16
-  | AES_256_CCM       -> Z.of_int 16
-  | AES_128_GCM       -> Z.of_int 16
-  | AES_256_GCM       -> Z.of_int 16
-  | CHACHA20_POLY1305 -> Z.of_int 16
 
 let hashSize = function
   | MD5    -> Z.of_int 16
@@ -137,7 +101,55 @@ let hmac (h:hash_alg) (k:bytes) (d:bytes) =
   let h = ocaml_EVP_HMAC md (string_of_bytes k) (string_of_bytes d) in
   bytes_of_string h
 
-(* -------------------------------------------------------------------- *)
+(* ------end of Hashing------------------------------------------ *)
+
+                  
+
+                
+type sig_alg = RSASIG | DSA | ECDSA | RSAPSS
+type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
+type stream_cipher = RC4_128
+type rsa_padding = Pad_none | Pad_PKCS1
+
+type aead_cipher = 
+  | AES_128_GCM   
+  | AES_256_GCM
+  | CHACHA20_POLY1305 
+  | AES_128_CCM
+  | AES_256_CCM   
+  | AES_128_CCM_8
+  | AES_256_CCM_8
+                                
+let string_of_block_cipher = function
+  | AES_128_CBC -> "AES_128_CBC"
+  | AES_256_CBC -> "AES_256_CBC"
+  | TDES_EDE_CBC -> "TDES_EDE_CBC"
+
+let blockSize = function
+  | TDES_EDE_CBC -> Z.of_int 8
+  | AES_128_CBC  -> Z.of_int 16
+  | AES_256_CBC  -> Z.of_int 16
+
+let aeadKeySize = function
+  | AES_128_CCM       -> Z.of_int 16
+  | AES_128_CCM_8     -> Z.of_int 16
+  | AES_128_GCM       -> Z.of_int 16
+  | AES_256_CCM       -> Z.of_int 32
+  | AES_256_CCM_8     -> Z.of_int 32
+  | AES_256_GCM       -> Z.of_int 32
+  | CHACHA20_POLY1305 -> Z.of_int 32
+
+let aeadRealIVSize (a:aead_cipher) = Z.of_int 12
+
+let aeadTagSize = function
+  | AES_128_CCM_8     -> Z.of_int 8
+  | AES_256_CCM_8     -> Z.of_int 8
+  | AES_128_CCM       -> Z.of_int 16
+  | AES_256_CCM       -> Z.of_int 16
+  | AES_128_GCM       -> Z.of_int 16
+  | AES_256_GCM       -> Z.of_int 16
+  | CHACHA20_POLY1305 -> Z.of_int 16
+
 
 (** Stream ciphers and AEAD *)
 
@@ -467,11 +479,15 @@ type ec_curve =
   | ECC_P256
   | ECC_P384
   | ECC_P521
+  | ECC_X25519
+  | ECC_X448
 
 let ec_bytelen = function
   | ECC_P256 -> Z.of_int 32
   | ECC_P384 -> Z.of_int 48
   | ECC_P521 -> Z.of_int 66 (* ceil(521/8) *)
+  | ECC_X25519 -> Z.of_int 32
+  | ECC_X448 -> Z.of_int 56
 
 type ec_params = { curve: ec_curve; point_compression: bool; }
 type ec_point = { ecx : bytes; ecy : bytes; }
@@ -511,6 +527,7 @@ let ssl_name_of_curve = function
   | ECC_P256 -> "prime256v1"
   | ECC_P384 -> "secp384r1"
   | ECC_P521 -> "secp521r1"
+  | ECC_X25519 -> "X25519"
 
 let ec_group_new curve =
   ocaml_ec_group_new_by_curve_name (ssl_name_of_curve curve)

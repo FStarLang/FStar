@@ -3,8 +3,9 @@ CONTRIB=ucontrib
 PLATFORM = $(FSTAR_HOME)/$(CONTRIB)/Platform/ml
 CORECRYPTO = $(FSTAR_HOME)/$(CONTRIB)/CoreCrypto/ml
 INCLUDE=-package batteries,zarith -I $(PLATFORM) -I $(CORECRYPTO)
+MARCH?=x86_64
 
-KREMLIN_HOME=../../../../kremlin
+KREMLIN_HOME?=../../../../kremlin
 KRML_INCLUDES=$(addprefix -I ,.. $(KREMLIN_HOME)/kremlib $(KREMLIN_HOME)/test)
 KRML_ARGS=-verbose -ccopt -Wno-error=pointer-sign $(KOPTS)
 KRML=$(KREMLIN_HOME)/krml $(KRML_ARGS) $(KRML_INCLUDES)
@@ -22,13 +23,15 @@ ifeq ($(OS),Windows_NT)
     # altered to include by default the mingw64 native DLLs. We also need to
     # find dllcorecrypto.dll; it is in the current directory, which Windows
     # always uses to search for DLLs.
-    EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
+    EXTRA_PATH = PATH="/usr/$(MARCH)-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
     ARCH = win32
     EXTRA_OPTS =
     EXTRA_LIBS = -L.
+    AR = $(MARCH)-w64-mingw32-ar
 else
     EXTRA_PATH = LD_LIBRARY_PATH=.
     UNAME_S := $(shell uname -s)
+    AR = ar
     ifeq ($(UNAME_S),Darwin)
         EXTRA_OPTS =
         EXTRA_LIBS = -L.
@@ -42,7 +45,13 @@ endif
 
 .PHONY: test dep
 
-all: LowCProvider.cmxa
+all: ../krml-test.exe ../spartan_aes/aes.o LowCProvider.cmxa
+
+../spartan_aes/aes.o:
+	$(MAKE) -C ../spartan_aes
+
+../krml-test.exe: $(wildcard ../crypto/*.fst)
+	$(MAKE) -C .. krml-test.exe
 
 %.cmi: %.mli
 	$(OCAMLC) -c $<
@@ -56,15 +65,14 @@ all: LowCProvider.cmxa
 $(CORECRYPTO)/CoreCrypto.cmx: $(CORECRYPTO)/CoreCrypto.ml
 	$(MAKE) -C $(CORECRYPTO)
 
+
+
 libllcrypto.a: ../krml-test.exe
-	ar -cr libllcrypto.a ../spartan_aes/aes.o ../tmp/*.o
-	ar -d libllcrypto.a Crypto_KrmlTest.o
+	$(AR) -cr libllcrypto.a ../spartan_aes/aes.o ../tmp/*.o
+	$(AR) -d libllcrypto.a Crypto_KrmlTest.o
 
 lowc_stub.o: libllcrypto.a
 	$(OCAMLOPT) $(CCOPTS) $(EXTRA_OPTS) $(KRML_INCLUDES) -c lowc_stub.c
-
-../krml-test.exe:
-	make -C .. krml-test.exe
 
 LowCProvider.cmxa: $(CORECRYPTO)/CoreCrypto.cmx libllcrypto.a lowc_stub.o LowCProvider.cmx
 	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o LowCProvider $^

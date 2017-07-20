@@ -1,5 +1,7 @@
 let max_int = Z.of_int max_int
-let is_letter_or_digit c = (BatChar.is_digit c) || (BatChar.is_letter c)
+let is_letter c = BatChar.is_letter c
+let is_digit  c = BatChar.is_digit  c
+let is_letter_or_digit c = (BatChar.is_letter c) || (BatChar.is_digit c)
 let is_symbol c = BatChar.is_symbol c
 
 (* Modeled after: Char.IsPunctuation in .NET
@@ -34,16 +36,19 @@ let is_punctuation c = (
 let return_all x = x
 
 type time = float
-let now () = Unix.gettimeofday ()
+let now () = BatUnix.gettimeofday ()
 let time_diff (t1:time) (t2:time) : float * Prims.int =
   let n = t2 -. t1 in
-  n, 
+  n,
   Z.of_float (n *. 1000.0)
-let record_time f = 
+let record_time f =
     let start = now () in
-    let res = f () in 
+    let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
+let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let is_before t1 t2 = compare t1 t2 < 0
+let string_of_time = string_of_float
 
 exception Impos
 exception NYI of string
@@ -61,8 +66,10 @@ let lock () = ()
 let release () = ()
 let sleep n = Thread.delay ((Z.to_float n) /. 1000.)
 
-let monitor_enter _ = ()
-let monitor_exit _ = ()
+let mlock = Mutex.create ()
+
+let monitor_enter _ = Mutex.lock mlock
+let monitor_exit _ = Mutex.unlock mlock
 let monitor_wait _ = ()
 let monitor_pulse _ = ()
 let current_tid _ = Z.zero
@@ -75,6 +82,52 @@ let atomically =
 let spawn f =
   let _ = Thread.create f () in ()
 
+let write_input in_write input =
+  output_string in_write input;
+  flush in_write
+
+(*let cnt = ref 0*)
+
+let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
+  (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
+  output_string fc input;
+  close_out fc;*)
+  let cmd = prog^" "^args in
+  let (to_chd_r, to_chd_w) = Unix.pipe () in
+  let (from_chd_r, from_chd_w) = Unix.pipe () in
+  Unix.set_close_on_exec to_chd_w;
+  Unix.set_close_on_exec from_chd_r;
+  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+  (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
+                               to_chd_r from_chd_w Unix.stderr
+  in
+  (*cnt := !cnt +1;*)
+  Unix.close from_chd_w;
+  Unix.close to_chd_r;
+  let cin = Unix.in_channel_of_descr from_chd_r in
+  let cout = Unix.out_channel_of_descr to_chd_w in
+
+  (* parallel reading thread *)
+  let out = Buffer.create 16 in
+  let rec read_out _ =
+    let s, eof = (try
+                    BatString.trim (input_line cin), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
+      if s = "Done!" then ()
+      else (Buffer.add_string out (s ^ "\n"); read_out ())  in
+  let child_thread = Thread.create (fun _ -> read_out ()) () in
+
+  (* writing to z3 *)
+  write_input cout input;
+  close_out cout;
+
+  (* waiting for z3 to finish *)
+  Thread.join child_thread;
+  close_in cin;
+  Buffer.contents out
+
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
   let (inc,outc) = Unix.open_process command in
@@ -86,15 +139,16 @@ let ask_process (p:proc) (stdin:string) : string =
   let out = Buffer.create 16 in
 
   let rec read_out _ =
-    try
-      let s = BatString.trim (input_line p.inc) in
+    let s, eof = (try
+                    BatString.trim (input_line p.inc), false
+                  with End_of_file ->
+                    Buffer.add_string out ("\nkilled\n") ; "", true) in
+    if not eof then
       if s = "Done!" then ()
       else (Buffer.add_string out (s ^ "\n"); read_out ())
-    with End_of_file -> Buffer.add_string out ("\nkilled\n")
   in
 
   let child_thread = Thread.create (fun _ -> read_out ()) () in
-
   output_string p.outc stdin;
   flush p.outc;
   Thread.join child_thread;
@@ -109,12 +163,13 @@ let kill_all () =
 
 let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
   let command = name^" "^args in
-  let (inc,outc) = Unix.open_process command in
+  let (inc,outc,errc) = Unix.open_process_full command (Unix.environment ()) in
   output_string outc stdin;
   flush outc;
   let res = BatPervasives.input_all inc in
-  let _ = Unix.close_process (inc, outc) in
-  (true, res, "")
+  let err = BatPervasives.input_all errc in
+  let _ = Unix.close_process_full (inc, outc, errc) in
+  (true, res, err)
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 let is_path_absolute path_str =
@@ -159,6 +214,7 @@ let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let set_is_empty ((s, _):'a set) =
   match s with
@@ -190,7 +246,10 @@ let set_count ((s1, _):'a set) = Z.of_int (BatList.length s1)
 let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
 
+
+(* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
 type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let fifo_set_is_empty ((s, _):'a fifo_set) =
   match s with
@@ -204,7 +263,7 @@ let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
   let rec aux out = function
     | [] -> out
     | hd::tl ->
-       if BatList.exists (eq hd) out then
+       if BatList.exists (eq hd) tl then
          aux out tl
        else
          aux (hd::out) tl in
@@ -213,7 +272,7 @@ let fifo_set_add a ((s, b):'a fifo_set) = (a::s, b)
 let fifo_set_remove x ((s1, eq):'a fifo_set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
 let fifo_set_mem a ((s, b):'a fifo_set) = BatList.exists (b a) s
-let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s1@s2, b)
+let fifo_set_union ((s1, b):'a fifo_set) ((s2, _):'a fifo_set) = (s2@s1, b)
 let fifo_set_count ((s1, _):'a fifo_set) = Z.of_int (BatList.length s1)
 let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_set =
   (BatList.filter (fun y -> not (BatList.exists (eq y) s2)) s1, eq)
@@ -231,69 +290,21 @@ let smap_fold (m:'value smap) f a = BatHashtbl.fold f m a
 let smap_remove (m:'value smap) k = BatHashtbl.remove m k
 let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
+let smap_size (m:'value smap) = BatHashtbl.length m
 
-let pr  = Printf.printf
-let spr = Printf.sprintf
-let fpr = Printf.fprintf
-
-let print_string s = pr "%s" s; flush stdout
-let print_any s = output_value stdout s; flush stdout
-let strcat s1 s2 = s1 ^ s2
-let concat_l sep (l:string list) = BatString.concat sep l
-
-let string_of_unicode (bytes:int array) =
-  BatArray.fold_left (fun acc b -> acc^(BatUTF8.init 1 (fun _ -> BatUChar.of_int b))) "" bytes
-let unicode_of_string (string:string) =
-  let n = BatUTF8.length string in
-  let t = Array.make n 0 in
-  let i = ref 0 in
-  BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
-  t
-
-let char_of_int i = char_of_int (Z.to_int i)
-let int_of_string = Z.of_string
-let int_of_char x= Z.of_int (Char.code x)
-let int_of_byte x = x
-let int_of_uint8 = int_of_char
-let uint16_of_int i = Z.to_int i
-let byte_of_char (c:char) = Char.code c
-
-let float_of_byte b = float_of_int (Char.code b)
-let float_of_int32 = float_of_int
-let float_of_int64 = BatInt64.to_float
-
-let int_of_int32 i = i
-let int32_of_int i = BatInt32.of_int i
-
-let string_of_int = Z.to_string
-let string_of_bool = string_of_bool
-let string_of_int32 = BatInt32.to_string
-let string_of_int64 = BatInt64.to_string
-let string_of_float = string_of_float
-let string_of_char  (i:char) = spr "%c" i
-let hex_string_of_byte (i:int) =
-  let hs = spr "%x" i in
-  if (String.length hs = 1) then "0" ^ hs
-  else hs
-let string_of_bytes = string_of_unicode
-let starts_with = BatString.starts_with
-let trim_string = BatString.trim
-let ends_with = BatString.ends_with
-let char_at s index = BatString.get s (Z.to_int index)
-let is_upper (c:char) = 'A' <= c && c <= 'Z'
-let substring_from s index = BatString.tail s (Z.to_int index)
-let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
-let replace_char (s:string) (c1:char) (c2:char) =
-  BatString.map (fun c -> if c = c1 then c2 else c) s
-let replace_string (s:string) (s1:string) (s2:string) =
-  BatString.rev (BatString.nreplace ~str:(BatString.rev s) ~sub:s1 ~by:s2)
-let hashcode s = Z.of_int (BatHashtbl.hash s)
-let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
-let splitlines s = BatString.nsplit s "\n"
-let split s sep = BatString.nsplit s sep
-
-let iof = int_of_float
-let foi = float_of_int
+type 'value imap = (Z.t, 'value) BatHashtbl.t
+let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
+let imap_clear (s:('value imap)) = BatHashtbl.clear s
+let imap_add (m:'value imap) k (v:'value) = BatHashtbl.add m k v
+let imap_of_list (l: (Z.t * 'value) list) =
+  let s = BatHashtbl.create (BatList.length l) in
+  FStar_List.iter (fun (x,y) -> imap_add s x y) l;
+  s
+let imap_try_find (m:'value imap) k = BatHashtbl.find_option m k
+let imap_fold (m:'value imap) f a = BatHashtbl.fold f m a
+let imap_remove (m:'value imap) k = BatHashtbl.remove m k
+let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
+let imap_copy (m:'value imap) = BatHashtbl.copy m
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
@@ -309,14 +320,6 @@ let format3 f a b c = format f [a;b;c]
 let format4 f a b c d = format f [a;b;c;d]
 let format5 f a b c d e = format f [a;b;c;d;e]
 let format6 f a b c d e g = format f [a;b;c;d;e;g]
-
-let print1 a b = print_string (format1 a b)
-let print2 a b c = print_string (format2 a b c)
-let print3 a b c d = print_string (format3 a b c d)
-let print4 a b c d e = print_string (format4 a b c d e)
-let print5 a b c d e f = print_string (format5 a b c d e f)
-let print6 a b c d e f g = print_string (format6 a b c d e f g)
-let print fmt args = print_string (format fmt args)
 
 let stdout_isatty () = Some (Unix.isatty Unix.stdout)
 
@@ -342,16 +345,104 @@ let colorize_cyan s =
   | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
   | _ -> s
 
-let print_error s = fpr stderr "%s" (colorize_red s); flush stdout; flush stderr
+let pr  = Printf.printf
+let spr = Printf.sprintf
+let fpr = Printf.fprintf
+
+type printer = {
+  printer_prinfo: string -> unit;
+  printer_prwarning: string -> unit;
+  printer_prerror: string -> unit;
+}
+
+let default_printer =
+  { printer_prinfo = (fun s -> pr "%s" s; flush stdout);
+    printer_prwarning = (fun s -> fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr);
+    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr); }
+
+let current_printer = ref default_printer
+let set_printer printer = current_printer := printer
+
+let print_raw s = pr "%s" s; flush stdout
+let print_string s = (!current_printer).printer_prinfo s
+let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
+let strcat s1 s2 = s1 ^ s2
+let concat_l sep (l:string list) = BatString.concat sep l
+
+let string_of_unicode (bytes:int array) =
+  BatArray.fold_left (fun acc b -> acc^(BatUTF8.init 1 (fun _ -> BatUChar.of_int b))) "" bytes
+let unicode_of_string (string:string) =
+  let n = BatUTF8.length string in
+  let t = Array.make n 0 in
+  let i = ref 0 in
+  BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
+  t
+
+let char_of_int i = char_of_int (Z.to_int i)
+let int_of_string = Z.of_string
+let int_of_char x= Z.of_int (Char.code x)
+let int_of_byte x = x
+let int_of_uint8 = int_of_char
+let uint16_of_int i = Z.to_int i
+let byte_of_char (c:char) = Char.code c
+
+let float_of_string s = float_of_string s
+let float_of_byte b = float_of_int (Char.code b)
+let float_of_int32 = float_of_int
+let float_of_int64 = BatInt64.to_float
+
+let int_of_int32 i = i
+let int32_of_int i = BatInt32.of_int i
+
+let string_of_int = Z.to_string
+let string_of_bool = string_of_bool
+let string_of_int32 = BatInt32.to_string
+let string_of_int64 = BatInt64.to_string
+let string_of_float = string_of_float
+let string_of_char  (i:char) = spr "%c" i
+let hex_string_of_byte (i:int) =
+  let hs = spr "%x" i in
+  if (String.length hs = 1) then "0" ^ hs
+  else hs
+let string_of_bytes = string_of_unicode
+let bytes_of_string = unicode_of_string
+let starts_with = BatString.starts_with
+let trim_string = BatString.trim
+let ends_with = BatString.ends_with
+let char_at s index = BatString.get s (Z.to_int index)
+let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let contains (s1:string) (s2:string) = BatString.exists s1 s2
+let substring_from s index = BatString.tail s (Z.to_int index)
+let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
+let replace_char (s:string) (c1:char) (c2:char) =
+  BatString.map (fun c -> if c = c1 then c2 else c) s
+let replace_chars (s:string) (c:char) (by:string) =
+  BatString.replace_chars (fun x -> if x=c then by else BatString.of_char x) s
+let hashcode s = Z.of_int (BatHashtbl.hash s)
+let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
+let split s sep = if s = "" then [""] else BatString.nsplit s sep
+let splitlines s = split s "\n"
+
+let iof = int_of_float
+let foi = float_of_int
+
+let print1 a b = print_string (format1 a b)
+let print2 a b c = print_string (format2 a b c)
+let print3 a b c d = print_string (format3 a b c d)
+let print4 a b c d e = print_string (format4 a b c d e)
+let print5 a b c d e f = print_string (format5 a b c d e f)
+let print6 a b c d e f g = print_string (format6 a b c d e f g)
+let print fmt args = print_string (format fmt args)
+
+let print_error s = (!current_printer).printer_prerror s
 let print1_error a b = print_error (format1 a b)
 let print2_error a b c = print_error (format2 a b c)
 let print3_error a b c d = print_error (format3 a b c d)
 
-let print_warning s = fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr
+let print_warning s = (!current_printer).printer_prwarning s
 let print1_warning a b = print_warning (format1 a b)
 let print2_warning a b c = print_warning (format2 a b c)
 let print3_warning a b c d = print_warning (format3 a b c d)
-
 
 let stderr = stderr
 let stdout = stdout
@@ -361,6 +452,7 @@ let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
+[@@deriving show]
 
 let is_left = function
   | Inl _ -> true
@@ -428,6 +520,11 @@ let bind_opt opt f =
   | None -> None
   | Some x -> f x
 
+let catch_opt opt f =
+  match opt with
+  | Some x -> opt
+  | None -> f ()
+
 let map_opt opt f =
   match opt with
   | None -> None
@@ -443,6 +540,8 @@ let rec find_map l f =
      match f x with
      | None -> find_map tl f
      | y -> y
+
+let try_find f l = try Some (List.find f l) with Not_found -> None
 
 let try_find_index f l =
   let rec aux i = function
@@ -470,6 +569,17 @@ let forall_exists rel l1 l2 =
   for_all (fun x -> for_some (rel x) l2) l1
 let multiset_equiv rel l1 l2 =
   BatList.length l1 = BatList.length l2 && forall_exists rel l1 l2
+let take p l =
+  let rec take_aux acc = function
+    | [] -> l, []
+    | x::xs when p x -> take_aux (x::acc) xs
+    | x::xs -> List.rev acc, x::xs
+  in take_aux [] l
+
+let rec fold_flatten f acc l =
+  match l with
+  | [] -> acc
+  | x :: xs -> let acc, xs' = f acc x in fold_flatten f acc (xs' @ xs)
 
 let add_unique f x l =
   if for_some (f x) l then
@@ -487,8 +597,11 @@ let first_N n l =
   in
   f [] 0 l
 
-let rec nth_tail n l =
-  if n=0 then l else nth_tail (n - 1) (BatList.tl l)
+let nth_tail n l =
+  let rec aux n l = 
+    if n=0 then l else aux (n - 1) (BatList.tl l)
+  in
+  aux (Z.to_int n) l
 
 let prefix l =
   match BatList.rev l with
@@ -507,7 +620,7 @@ let string_to_ascii_bytes (s:string) : char array =
   BatArray.of_list (BatString.explode s)
 let ascii_bytes_to_string (b:char array) : string =
   BatString.implode (BatArray.to_list b)
-let mk_ref a = ref a
+let mk_ref a = FStar_ST.alloc a
 
 (* A simple state monad *)
 type ('s,'a) state = 's -> ('a*'s)
@@ -563,6 +676,24 @@ let write_file (fn:string) s =
   append_to_file fh s;
   close_file fh
 let flush_file (fh:file_handle) = flush fh
+let file_get_contents f =
+  let ic = open_in_bin f in
+  let l = in_channel_length ic in
+  let s = really_input_string ic l in
+  close_in ic;
+  s
+let concat_dir_filename d f = Filename.concat d f
+let mkdir clean nm =
+  let remove_all_in_dir nm =
+    let open Sys in
+    Array.iter remove (Array.map (concat_dir_filename nm) (readdir nm)) in
+  let open Unix in
+  (match Sys.os_type with
+  | "Unix" -> ignore (umask 0o002)
+  | _ -> (* unimplemented*) ());
+  try mkdir nm 0o777
+  with Unix_error (EEXIST,_,_) ->
+    if clean then remove_all_in_dir nm
 
 let for_range lo hi f =
   for i = Z.to_int lo to Z.to_int hi do
@@ -570,8 +701,8 @@ let for_range lo hi f =
   done
 
 
-let incr r = Z.(r := !r + one)
-let decr r = Z.(r := !r - one)
+let incr r = FStar_ST.(Z.(write r (read r + one)))
+let decr r = FStar_ST.(Z.(write r (read r - one)))
 let geq (i:int) (j:int) = i >= j
 
 let get_exec_dir () = Filename.dirname (Sys.executable_name)
@@ -687,7 +818,7 @@ let print_endline = print_endline
 let map_option f opt = BatOption.map f opt
 
 let save_value_to_file (fname:string) value =
-  BatFile.with_file_out 
+  BatFile.with_file_out
     fname
     (fun f ->
       BatPervasives.output_value f value)
@@ -707,7 +838,7 @@ let print_exn e =
 
 let digest_of_file (fname:string) =
   BatDigest.file fname
-  
+
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
 
@@ -750,7 +881,7 @@ let write_hints (filename: string) (hints: hints_db): unit =
           ]
     ) hints.hints)
   ] in
-  Yojson.Safe.pretty_to_channel (open_out filename) json
+  Yojson.Safe.pretty_to_channel (open_out_bin filename) json
 
 let read_hints (filename: string): hints_db option =
     try
@@ -763,7 +894,7 @@ let read_hints (filename: string): hints_db option =
         `List hints
       ] ->
         {
-          module_digest; 
+          module_digest;
           hints = List.map (function
             | `Null -> None
             | `List [
@@ -793,7 +924,7 @@ let read_hints (filename: string): hints_db option =
                   query_elapsed_time = Z.of_int query_elapsed_time
                 }
               | _ ->
-                 raise Exit 
+                 raise Exit
           ) hints
         }
     | _ ->
@@ -803,6 +934,59 @@ let read_hints (filename: string): hints_db option =
    | Exit ->
       Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
-   | Sys_error _ -> 
+   | Sys_error _ ->
       Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None
+
+(** Interactive protocol **)
+
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of Z.t
+| JsonStr of string
+| JsonList of json list
+| JsonAssoc of (string * json) list
+
+exception UnsupportedJson
+
+let json_of_yojson yjs: json option =
+  let rec aux yjs =
+    match yjs with
+    | `Null -> JsonNull
+    | `Bool b -> JsonBool b
+    | `Int i -> JsonInt (Z.of_int i)
+    | `String s -> JsonStr s
+    | `List l -> JsonList (List.map aux l)
+    | `Assoc a -> JsonAssoc (List.map (fun (k, v) -> (k, aux v)) a)
+    | _ -> raise UnsupportedJson in
+  try Some (aux yjs) with UnsupportedJson -> None
+
+let rec yojson_of_json js =
+  match js with
+  | JsonNull -> `Null
+  | JsonBool b -> `Bool b
+  | JsonInt i -> `Int (Z.to_int i)
+  | JsonStr s -> `String s
+  | JsonList l -> `List (List.map yojson_of_json l)
+  | JsonAssoc a -> `Assoc (List.map (fun (k, v) -> (k, yojson_of_json v)) a)
+
+let json_of_string str : json option =
+  let open Yojson.Basic in
+  try
+    json_of_yojson (Yojson.Basic.from_string str)
+  with Yojson.Json_error _ -> None
+
+let string_of_json json =
+  Yojson.Basic.to_string (yojson_of_json json)
+
+(* Outside of this file the reference to FStar_Util.ref must use the following combinators *)
+(* Export it at the end of the file so that we don't break other internal uses of ref *)
+type 'a ref = 'a FStar_Heap.ref
+let read = FStar_ST.read
+let write = FStar_ST.write
+let (!) = FStar_ST.read
+let (:=) = FStar_ST.write
+
+let marshal (x:'a) : string = Marshal.to_string x []
+let unmarshal (x:string) : 'a = Marshal.from_string x 0

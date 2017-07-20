@@ -1,7 +1,6 @@
 module HyE.AE
-
+open FStar.HyperStack.ST
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
@@ -10,13 +9,14 @@ open HyE.Ideal
 
 open Platform.Bytes
 open CoreCrypto
-
+module CC = CoreCrypto
 module B = Platform.Bytes
 
 open HyE.Plain
+module Plain = HyE.Plain
 
 let ivsize = aeadRealIVSize AES_128_GCM
-type keysize = aeadKeySize AES_128_GCM
+let keysize = aeadKeySize AES_128_GCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type msg = Plain.t
 type cipher = b:bytes{B.length b >= ivsize}
@@ -62,11 +62,11 @@ val encrypt: k:key -> m:msg -> ST cipher
      /\ log1 == snoc log0 (m, c)
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log))))
 
-let encrypt k m : cipher =
+let encrypt k m =
   m_recall k.log;
   let iv = random ivsize in
   let text = if ind_cca && int_ctxt then createBytes (length m) 0z else repr m in
-  let c = CoreCrypto.aead_encrypt AES_128_GCM k.raw iv empty_bytes text in
+  let c = CC.aead_encrypt AES_128_GCM k.raw iv empty_bytes text in
   let c = iv@|c in
   write_at_end k.log (m,c);
   c
@@ -74,7 +74,7 @@ let encrypt k m : cipher =
 
 (* this doesn't really belong here *)
 val mem : #a:eqtype -> x:a -> xs:Seq.seq a -> Tot bool
-let mem (#a:eqtype) x xs = Some? (SeqProperties.seq_find (fun y -> y = x) xs)
+let mem (#a:eqtype) x xs = Some? (Seq.seq_find (fun y -> y = x) xs)
 
 val decrypt: k:key -> c:cipher -> ST (option msg)
   (requires (fun h0 -> True (* Could require Map.contains h0 k.region *)
@@ -96,7 +96,7 @@ let decrypt k c =
   else
     let iv,c' = split c ivsize in
     assume( B.length c' >= aeadTagSize AES_128_GCM);
-    let poption = (CoreCrypto.aead_decrypt AES_128_GCM k.raw iv empty_bytes c') in
+    let poption = (CC.aead_decrypt AES_128_GCM k.raw iv empty_bytes c') in
     if Some? poption then
       Some (coerce (Some?.v poption))
     else

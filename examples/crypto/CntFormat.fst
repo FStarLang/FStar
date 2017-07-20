@@ -17,14 +17,16 @@
 module CntFormat
 
 open FStar.String
-open Platform.Bytes         //This shadows length, index etc. from FStar.Seq, for no good reason?
-open FStar.Seq              //It's really important for FStar.Seq.index to have precedence for proper use of the lemmas in FStar.Seq and FStar.SeqProperties
-open FStar.SeqProperties
+open FStar.Seq              //It's really important for FStar.Seq.index to have precedence for proper use of the lemmas in FStar.Seq
 open FStar.Classical
 
+module Bytes = Platform.Bytes //This shadows length, index etc. from FStar.Seq
 
-type message = bytes
-type msg (l:nat) = lbytes l
+let op_At_Bar = Platform.Bytes.op_At_Bar
+let length = Platform.Bytes.length
+
+type message = Bytes.bytes
+type msg (l:nat) = Bytes.lbytes l
 
 
 (* ----- a lemma on array append *)
@@ -44,8 +46,8 @@ let append_inj_lemma b1 b2 c1 c2 =
 type uint = i:int{0 <= i}
 type pint = i:int{1 <= i}
 
-type uint16 = i:nat{repr_bytes i <= 2}
-type uint32 = i:nat{repr_bytes i <= 4}
+type uint16 = i:nat{Bytes.repr_bytes i <= 2}
+type uint32 = i:nat{Bytes.repr_bytes i <= 4}
 
 (*assume val utf8:
   s:string  -> Tot (m:message{length m <= strlen s})*)
@@ -62,35 +64,34 @@ type uint32 = i:nat{repr_bytes i <= 4}
 (*   try Some (iutf8 m) *)
 (*   with _ -> None *)
 
-let uint16_to_bytes = bytes_of_int 2
-let uint32_to_bytes = bytes_of_int 4
-let bytes_to_uint16 (x:msg 2) = int_of_bytes x
-let bytes_to_uint32 (x:msg 4) = int_of_bytes x
+let uint16_to_bytes = Bytes.bytes_of_int 2
+let uint32_to_bytes = Bytes.bytes_of_int 4
+let bytes_to_uint16 (x:msg 2) = Bytes.int_of_bytes x
+let bytes_to_uint32 (x:msg 4) = Bytes.int_of_bytes x
 
 assume UTF8_inj:
-  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-     b2t ( Seq.eq (utf8 s0) (utf8 s1) ) ==> s0==s1
+  forall s0 s1.{:pattern (Bytes.utf8 s0); (Bytes.utf8 s1)}
+     b2t ( Seq.eq (Bytes.utf8 s0) (Bytes.utf8 s1) ) ==> s0==s1
 
-type string16 = s:string{repr_bytes (length (utf8 s)) <= 2} (* up to 65K *)
+type string16 = s:string{Bytes.repr_bytes (length (Bytes.utf8 s)) <= 2} (* up to 65K *)
 
 
 (* =============== the formatting we use for authenticated RPCs *)
 
 val request : string -> Tot message
-val response: string16 -> string -> Tot message
+val response: s:string{ Bytes.repr_bytes (length (Bytes.utf8 s)) <= 2} -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = createBytes 1 (Char.char_of_int 0)
-let tag1 = createBytes 1 (Char.char_of_int 1)
-let tag2 = createBytes 1 (Char.char_of_int 2)
+let tag0 = Bytes.createBytes 1 (Char.char_of_int 0)
+let tag1 = Bytes.createBytes 1 (Char.char_of_int 1)
+let tag2 = Bytes.createBytes 1 (Char.char_of_int 2)
 
-let request s = tag0 @| (utf8 s)
+let request s = tag0 @| (Bytes.utf8 s)
 
-val response: s:string{ repr_bytes (length (utf8 s)) <= 2} -> string -> Tot message
 let response s t =
-  let lb = uint16_to_bytes (length (utf8 s)) in
-  tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
+  let lb = uint16_to_bytes (length (Bytes.utf8 s)) in
+  tag1 @| (lb @| ( (Bytes.utf8 s) @| (Bytes.utf8 t)))
 
 val signal_size: int
 let signal_size = 6 (* Bytes *)
@@ -104,7 +105,7 @@ let signal s c =
 val signal_split : m:msg signal_size -> Tot (x:(uint32 * uint16)
     { m = signal (fst x) (snd x)})
 let signal_split sc =
-    let (s_b, c_b) = split_eq sc 4 in
+    let (s_b, c_b) = Platform.Bytes.split_eq sc 4 in
     (bytes_to_uint32 s_b, bytes_to_uint16 c_b)
 
 assume val signal_components_corr:

@@ -1,0 +1,36 @@
+[
+  "ô,ëkéL„\u0000DÛ…≈p&¡#",
+  [
+    [ "Cert.ACLs.canWrite", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Cert.ACLs.publicFile", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Cert.ACLs.canRead",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [
+      "Cert.ACLs.test",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Cert.ACLs.canRead",
+        "equation_Cert.ACLs.canWrite", "equation_Cert.ACLs.publicFile",
+        "equation_Cert.ACLs.readme", "equation_Cert.ACLs.tmp",
+        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
+      ],
+      0
+    ],
+    [
+      "Cert.ACLs.rc",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0
+    ]
+  ]
+]

@@ -150,7 +150,7 @@ val lemma_toField_2_2: x:nat{x < pow2 32} -> Lemma
 let lemma_toField_2_2 x =
   Math.Lemmas.pow2_plus 52 12;
   Math.Lemmas.pow2_multiplication_modulo_lemma_2 x 26 12;
-  assert ((x * pow2 12) % pow2 26 = pow2 12 * (x % (pow2 14)));
+  cut ((x * pow2 12) % pow2 26 = pow2 12 * (x % (pow2 14)));
   Math.Lemmas.pow2_plus 64 14;
   Math.Lemmas.lemma_div_mod x (pow2 14);
   Math.Lemmas.distributivity_add_right (pow2 64) (x % pow2 14) (pow2 14 * (x / pow2 14))
@@ -369,7 +369,7 @@ val lemma_little_endian_from_top_def: s:Seq.seq U8.t -> len:nat{Seq.length s >= 
 let lemma_little_endian_from_top_def s len = ()
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 -z3rlimit 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
 
 val lemma_little_endian_of_u64: u:U64.t -> w:Seq.seq U8.t{Seq.length w = 4} ->
   Lemma (requires  (U64.v u == U8.v (Seq.index w 0) + pow2 8 * U8.v (Seq.index w 1) + pow2 16 * U8.v (Seq.index w 2) + pow2 24 * U8.v (Seq.index w 3)))
@@ -384,7 +384,7 @@ let lemma_little_endian_of_u64 u w =
   lemma_little_endian_from_top_def w 0
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 -z3rlimit 5"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 5"
 
 private let lemma_get_word #a (b:Buffer.buffer a) (h:HyperStack.mem{live h b}) (i:nat{i < Buffer.length b}) :
   Lemma (Seq.index (as_seq h b) i == get h b i)
@@ -768,7 +768,7 @@ let lemma_mod_sum_mul x y l m =
     Math.Lemmas.pow2_plus (m-l) l; Math.Lemmas.modulo_lemma (((c%pow2 (m-l))*pow2 l) + y) (pow2 m)
 
 
-#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#set-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 50"
 
 let lemma_b3 (a0:U64.t{v a0 < pow2 26}) (a1:U64.t{v a1 < pow2 26}) : Lemma
   (pow2 24 * (U8.v (uint64_to_uint8 ((a0 >>^ 24ul) |^ (a1 <<^ 2ul)))) = pow2 24 * ((v a0 / pow2 24) % pow2 8) + pow2 24 * ((v a1*pow2 2)%pow2 8))
@@ -1153,7 +1153,7 @@ let lemma_add_word_1 ha a a0 a4 a8 a12 =
 
 let eval_4 a0 a1 a2 a3 : GTot nat = v a0 + pow2 32 * v a1 + pow2 64 * v a2 + pow2 96 * v a3
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 20"
+#reset-options "--z3rlimit 100"
 
 val lemma_add_word_2_2:
   a0:u64_32 -> a4:u64_32 -> a8:u64_32 -> a12:u64_32 ->
@@ -1172,7 +1172,7 @@ let lemma_add_word_2_2 a0 a1 a2 a3 b0 b1 b2 b3 =
   Math.Lemmas.lemma_mod_plus_distr_l (pow2 96 * z3) ((z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32)) (pow2 128);
   Math.Lemmas.pow2_multiplication_modulo_lemma_2 z3 128 96;
   let r = (z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * (z3 % pow2 32) in
-  assert (((z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * z3) % pow2 128 = r % pow2 128);
+  cut (((z0 % pow2 32) + pow2 32 * (z1 % pow2 32) + pow2 64 * (z2 % pow2 32) + pow2 96 * z3) % pow2 128 = r % pow2 128);
   lemma_mul_mod (z1 % pow2 32) (pow2 32);
   lemma_mul_mod (z2 % pow2 32) (pow2 32);
   lemma_mul_mod (z3 % pow2 32) (pow2 32);
@@ -1182,7 +1182,6 @@ let lemma_add_word_2_2 a0 a1 a2 a3 b0 b1 b2 b3 =
   add_disjoint_bounded (z0 % pow2 32) (pow2 32 * (z1 % pow2 32)) 32 64;
   add_disjoint_bounded ((z0 % pow2 32)+(pow2 32 * (z1 % pow2 32)))
                              (pow2 64 * (z2 % pow2 32)) 64 96;
-  multiple_modulo_lemma (z3 % pow2 32) (pow2 96) ;
   add_disjoint_bounded ((z0 % pow2 32)+(pow2 32 * (z1 % pow2 32))+(pow2 64 * (z2 % pow2 32)))
                              (pow2 96 * (z3 % pow2 32)) 96 128;
   Math.Lemmas.modulo_lemma r (pow2 128)

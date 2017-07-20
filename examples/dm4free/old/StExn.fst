@@ -94,7 +94,7 @@ reifiable new_effect {
      ; assume_p     = assume_p
      ; null_wp      = null_wp
      ; trivial      = trivial
-  and effect_actions
+;
     //these are new
       get  = (fun _ n0 -> Some n0, n0), get_cps_type
     ; raise = (fun _ h -> None, h + 1), raise_cps_type

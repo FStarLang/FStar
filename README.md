@@ -1,5 +1,5 @@
-F*: An ML-like language with a type system for program verification
-===================================================================
+F*: An ML-like language aimed at program verification
+=====================================================
 
 [![Build status](https://travis-ci.org/FStarLang/FStar.svg?branch=master)](https://travis-ci.org/FStarLang/FStar)
 
@@ -26,13 +26,6 @@ The [F\* wiki] contains additional, usually more in-depth, technical
 documentation on F\*.
 
 [F\* wiki]: https://github.com/FStarLang/FStar/wiki
-
-### Blog
-
-The [F\* for the masses] blog is also expected to become an important
-source of information and news on the F\* project.
-
-[F\* for the masses]: https://fstarlang.github.io/
 
 ### Editing F* code
 
@@ -61,23 +54,37 @@ releases, new papers, etc) and where users can ask questions, ask for
 help, discuss, provide feedback, announce jobs requiring at least 10
 years of F* experience, etc.
 
-[List archives] are public, but only members can post.
+[List archives] are public and [searchable], but only members can post.
 [Join here][fstar-club mailing list]!
 
 [fstar-club mailing list]: http://lists.gforge.inria.fr/mailman/listinfo/fstar-club
 
 [List archives]: https://lists.gforge.inria.fr/pipermail/fstar-club/
+[searchable]: https://mail-archive.com/fstar-club@lists.gforge.inria.fr/
 
-### Issues
+### Slack channel
 
-Please report issues using the [F* issue tracker] on GitHub.
+Users can also ask questions on the `#fstar` Slack channel at
+<http://fpchat.com/>
+
+### Reporting issues
+
+Please report issues using the [F\* issue tracker] on GitHub.
+Before filing please use search to make sure the issue doesn't already exist.
 We don't maintain old releases, so if possible please use the
 [online F\* editor] or directly [the GitHub sources] to check
-that your problem still exists.
+that your problem still exists on the `master` branch.
 
-[F* issue tracker]: https://github.com/FStarLang/FStar/issues
+[F\* issue tracker]: https://github.com/FStarLang/FStar/issues
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [the GitHub sources]: [https://github.com/FStarLang/FStar/blob/master/INSTALL.md#building-f-from-sources
+
+### Blog
+
+The [F\* for the masses] blog is also expected to become an important
+source of information and news on the F\* project.
+
+[F\* for the masses]: https://fstarlang.github.io/
 
 ### License
 
@@ -100,5 +107,5 @@ previously released [0.7 versions and earlier].
 [F\* v0.7.1] and earlier are no longer maintained, so please do not
 create any issues here about those versions.
 
-[F\* v0.7.1]: https://github.com/FStarLang/FStar/blob/master/.old/fstar-0.7.1-alpha.zip?raw=true
+[F\* v0.7.1]: https://github.com/FStarLang/FStar/blob/stratified_last/.old/fstar-0.7.1-alpha.zip?raw=true
 

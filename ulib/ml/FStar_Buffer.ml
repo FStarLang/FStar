@@ -24,7 +24,7 @@ type uint32s = FStar_UInt32.uint32 buffer
 type uint64s = FStar_UInt64.uint64 buffer
 type uint128s = FStar_UInt128.uint128 buffer
 
-type u9 = FStar_UInt8.t
+type u8 = FStar_UInt8.t
 type u32 = FStar_UInt32.t
 type u64 = FStar_UInt64.t
 type u128 = FStar_UInt128.t
@@ -37,7 +37,7 @@ let upd (b:'a buffer) (n:int) (v:'a) = Array.set b.content (n+b.idx) v
 let sub b i len = {content = b.content; idx = b.idx+i; length = len}
 let offset b i  = {content = b.content; idx = b.idx+i; length = b.length-i}
 let blit a idx_a b idx_b len = Array.blit a.content (idx_a+a.idx) b.content (idx_b+b.idx) len
-let fill a z len = Array.fill a.content 0 len z
+let fill a z len = Array.fill a.content a.idx len z
 let split a i = (sub a 0 i, sub a i (a.length - i))
 let of_seq s l = ()
 let copy b l = {content = Array.sub b.content b.idx l; idx = 0; length = l}
@@ -53,3 +53,6 @@ let op_Array_Access b n = index b n
 let op_Array_Assignment b n v = upd b n v
 
 let recall = fun b -> ()
+
+(* AR: revisit. This is used in the idealization code of AEAD encrypt *)
+let to_seq_full b = Obj.magic ()

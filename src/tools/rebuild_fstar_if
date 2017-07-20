@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script takes as its first argument the path to a checkout of FStar; it
 # then proceeds to rebuild the OCaml snapshot of FStar only if the [.last_fstar]

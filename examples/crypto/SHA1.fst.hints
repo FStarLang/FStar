@@ -1,5 +1,5 @@
 [
-  "E>\u001b∂\\Dªn1QÖÇ·\t-ú",
+  "ÔLÎ©È’≈a–‰ÿ≈ÅI°\u0019",
   [
     [
       "SHA1.key",
@@ -11,6 +11,7 @@
       ],
       0
     ],
+    [ "SHA1.sample", 1, 2, 1, [ "@query" ], 0 ],
     [ "SHA1.sha1", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [
       "SHA1.sha1",
@@ -29,16 +30,8 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Char.char", "equation_Platform.Bytes.byte",
-        "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.createBytes",
-        "equation_Platform.Bytes.lbytes", "equation_Platform.Bytes.length",
-        "equation_SHA1.blocksize", "equation_SHA1.key",
-        "equation_SHA1.keysize", "kinding_FStar.Char.char_@tok",
-        "lemma_FStar.Seq.lemma_create_len",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_810128ef5f4b05b21d8806119a5984f5",
-        "typing_Platform.Bytes.length"
+        "@query", "equation_SHA1.blocksize", "equation_SHA1.keysize",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0
     ]

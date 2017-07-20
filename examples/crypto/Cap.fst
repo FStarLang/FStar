@@ -1,16 +1,10 @@
-(* to be used with mac.fst and acls2.fst *)
-
 module Cap (* capabilities *)
-
+open FStar.ST
 open FStar.Seq
-open FStar.SeqProperties
-open ACLs_simplified
+open FStar.String
+open Cert.ACLs
 open MAC
-open FStar.BaseTypes
 
-//does it verify for trivial reasons, like a bug in the build-config?
-(*let testme () =
-   assert False*)
 
 type byte = Platform.Bytes.byte
 
@@ -20,14 +14,24 @@ assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
     (utf8 s0) == (utf8 s1) ==> s0==s1
 
-opaque logic type capRead (msg:seq byte) =
+logic type capRead (msg:seq byte) =
     (forall f. msg = utf8 f ==> canRead f)
 
-let k = keygen capRead
+let gen () = keygen capRead
 
-val issue: f:file{ canRead f } -> SHA1.tag
-val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
+let issue (f:file{ canRead f }) (k:pkey capRead) = MAC.mac k (utf8 f)
 
-let issue f = MAC.mac k (utf8 f)
-let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capability"
-(* check_marker *)
+//val redeem: f:file -> m:SHA1.tag -> pkey capRead -> St (option (u:unit{ canRead f }))
+let redeem f t k = 
+  if MAC.verify k (utf8 f) t then 
+    Some ()
+  else 
+    None
+
+let f = "C:/public/README"
+  
+let main () : St (u:unit{ canRead f }) =
+  let k = gen () in
+  let t = issue f k in  
+  Some?.v (redeem f t k)
+  

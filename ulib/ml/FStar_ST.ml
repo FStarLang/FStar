@@ -2,6 +2,8 @@
 
 open FStar_CommonST
 
+type 'a ref = 'a FStar_Heap.ref
+
 let read = read
 
 let op_Bang = op_Bang

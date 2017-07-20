@@ -5,7 +5,6 @@ open FStar.String
 open FStar.IO
 open FStar.Heap
 open FStar.Seq
-open FStar.SeqProperties
 
 open Format
 

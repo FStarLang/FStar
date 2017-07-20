@@ -1,7 +1,6 @@
 module Bloom.Format
 
 open FStar.Seq
-open FStar.SeqProperties
 
 type uint = i:int{0 <= i}
 type pint = i:int{1 <= i}

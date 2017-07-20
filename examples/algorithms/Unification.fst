@@ -238,22 +238,31 @@ let rec lemma_lsubst_eqns_commutes s l = function
   | (t1,t2)::tl -> lemma_lsubst_term_commutes s l t1;
 		 lemma_lsubst_term_commutes s l t2;
 		 lemma_lsubst_eqns_commutes s l tl
- 
+
+let (++) l1 l2 = extend_lsubst l1 l2
+let sub l e = lsubst_eqns l e
+
+let test l1 l2 l3 = assert (l1 ++ l2 ++ l3 == (l1 ++ l2) ++ l3)
+
 val key_lemma: x:nat -> y:term -> tl:eqns -> l:list subst -> lpre:list subst -> l'':list subst -> Lemma
-  (requires (l'' = extend_lsubst lpre (extend_lsubst [(x, y)] l)
+  (requires (l'' = lpre ++ ([x,y] ++ l)
 	     /\ not (occurs x y)
- 	     /\ lsubst_eqns l ((V x, y)::tl) = (V x, y)::tl
- 	     /\ solved (lsubst_eqns l'' (lsubst_eqns [x, y] tl))))
-  (ensures (solved (lsubst_eqns l'' ((V x,y)::tl))))
+ 	     /\ l `sub` ((V x, y)::tl) = (V x, y)::tl
+ 	     /\ solved (l'' `sub` ([x, y] `sub` tl))))
+  (ensures (solved (l'' `sub` ((V x,y)::tl))))
+
 let key_lemma x y tl l lpre l'' =
-  lemma_lsubst_eqns_commutes (x,y) l tl;
-  lemma_subst_id x y y;
-  assert (lsubst_eqns l'' [V x, y] =
-  	  lsubst_eqns lpre (lsubst_eqns [x,y] (lsubst_eqns l [V x, y])));
-  assert (lsubst_eqns [x,y] (lsubst_eqns l [V x, y]) =
-  	  lsubst_eqns [x,y] [V x, y]);
-  assert (lsubst_eqns [x,y] [V x, y] =
-	  [y,y])
+  let xy = [x,y] in
+  let xyl = xy++l in
+  let vxy = V x, y in
+  assert  (l'' `sub` (vxy::tl)
+        == lpre `sub` (xy `sub` (l `sub` (vxy::tl))));
+  lemma_lsubst_eqns_commutes (x,y) l (vxy :: tl);
+  assert  (lpre `sub` (xy `sub` (l `sub` (vxy::tl)))
+        == lpre `sub` (xy `sub` (l `sub` (xy `sub` (vxy::tl)))));
+  assert  (lpre `sub` (xy `sub` (l `sub` (xy `sub` (vxy::tl))))
+        == l'' `sub` (xy `sub` (vxy :: tl)));
+  lemma_subst_id x y y
 
 val lemma_subst_term_idem: s:subst -> t:term -> Lemma
   (requires (ok s))

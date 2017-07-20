@@ -2,7 +2,6 @@ module Downgrade
 #set-options "--initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0"
 open FStar.Array
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.ST
 open FStar.Heap
 type tot_ord (a:Type) = f:(a -> a -> Tot bool){total_order a f}

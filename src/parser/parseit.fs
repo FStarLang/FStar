@@ -18,6 +18,7 @@
 module FStar.Parser.ParseIt
 open FStar
 open FStar.Util
+open FStar.Errors
 
 type filename = string
 
@@ -27,7 +28,7 @@ type input_frag = {
     frag_col:int
 }
 
-// VALS_HACK_HERE
+
 
 let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
   lexbuf.EndPos <- {lexbuf.EndPos with
@@ -46,7 +47,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise (Absyn.Syntax.Err(Util.format1 "Unable to find file: %s\n" filename))
+      raise (Err(Util.format1 "Unable to find file: %s\n" filename))
 
 let read_file (filename:string) =
   if Options.debug_any()
@@ -59,7 +60,7 @@ let read_file (filename:string) =
 let check_extension fn =
     if not (Util.ends_with fn ".fst")
     && not (Util.ends_with fn ".fsti")
-    then raise (FStar.Syntax.Syntax.Err("Unrecognized file extension: " ^fn))
+    then raise (Err("Unrecognized file extension: " ^fn))
 
 let parse fn =
   Parser.Util.warningHandler := (function
@@ -109,17 +110,17 @@ let parse fn =
                 | _ -> failwith "Impossible"))
            else Inl mods
         | _ -> fileOrFragment in
-       Inl frags
+       let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
+       Inl (frags, non_polymorphic_nil)
   with
-    | Absyn.Syntax.Error(msg, r)
-    | Syntax.Syntax.Error(msg, r) ->
+    | Empty_frag ->
+        Inl (Inl [], [])
+    | Error(msg, r) ->
       Inr (msg, r)
     | e ->
-      let p0 =
-        let p = lexbuf.StartPos in
-        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
-      let p1 =
-        let p = lexbuf.EndPos in
-        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol + 1) in
+      let pos_of_lexpos (p: Microsoft.FSharp.Text.Lexing.Position) =
+        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol) in
+      let p0 = pos_of_lexpos lexbuf.StartPos in
+      let p1 = pos_of_lexpos lexbuf.EndPos in
       let r = Range.mk_range filename p0 p1 in
       Inr (sprintf "Syntax error (%A)" e, r)

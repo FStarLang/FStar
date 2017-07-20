@@ -89,8 +89,8 @@ val poly: vs:text -> r:elem -> Tot (a:elem) (decreases (Seq.length vs))
 let rec poly vs r =
   if Seq.length vs = 0 then 0
   else 
-    let v = SeqProperties.head vs in
-    (encode v +@ poly (SeqProperties.tail vs) r) *@ r
+    let v = Seq.head vs in
+    (encode v +@ poly (Seq.tail vs) r) *@ r
 
 
 (* REMARK: Currently unused
@@ -98,15 +98,15 @@ let rec poly vs r =
 val eq_poly0: p:text -> Tot bool (decreases (length p)) 
 let rec eq_poly0 p = 
   Seq.length p = 0 || 
-  (encode (SeqProperties.head p) = 0 && eq_poly0 (SeqProperties.tail p))
+  (encode (Seq.head p) = 0 && eq_poly0 (Seq.tail p))
 
 val eq_poly: p0:text -> p1:text -> Tot bool (decreases (length p0))
 let rec eq_poly p0 p1 = 
   if Seq.length p0 = 0 then eq_poly0 p1 
   else if Seq.length p1 = 0 then eq_poly0 p0
   else 
-    encode (SeqProperties.head p0) = encode (SeqProperties.head p1) && 
-    eq_poly (SeqProperties.tail p0) (SeqProperties.tail p1)
+    encode (Seq.head p0) = encode (Seq.head p1) && 
+    eq_poly (Seq.tail p0) (Seq.tail p1)
 
 private val eq_poly0_spec: p:text -> r:elem -> Lemma
   (requires (eq_poly0 p))
@@ -114,7 +114,7 @@ private val eq_poly0_spec: p:text -> r:elem -> Lemma
   (decreases (Seq.length p))
 let eq_poly0_spec p r =
   if Seq.length p = 0 then () 
-  else lemma_encode_nonzero (SeqProperties.head p)
+  else lemma_encode_nonzero (Seq.head p)
 
 private val eq_poly_spec: p0:text -> p1:text -> r:elem -> Lemma
   (requires (eq_poly p0 p1))
@@ -123,7 +123,7 @@ private val eq_poly_spec: p0:text -> p1:text -> r:elem -> Lemma
 let rec eq_poly_spec p0 p1 r =
   if Seq.length p0 = 0 then eq_poly0_spec p1 r
   else if Seq.length p1 = 0 then eq_poly0_spec p0 r
-  else eq_poly_spec (SeqProperties.tail p0) (SeqProperties.tail p1) r
+  else eq_poly_spec (Seq.tail p0) (Seq.tail p1) r
 
 
 private val fix: word_16 -> i:nat{i < 16} -> m:U8.t -> Tot word_16

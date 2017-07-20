@@ -1,16 +1,17 @@
 module EtM.MAC
 
+open FStar.HyperStack.ST
 open FStar.Seq
-open FStar.SeqProperties
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
+open FStar.HyperStack
 open FStar.Monotonic.RRef
-
-
-
 
 open Platform.Bytes
 open CoreCrypto
+open EtM.CPA
+
+module Ideal = EtM.Ideal
 
 type msg = EtM.CPA.cipher
 
@@ -52,7 +53,7 @@ noeq type key =
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
-  /\ fresh_region k.region h0 h1
+  /\ fresh_region k.region h0.h h1.h
   /\ m_contains k.log h1
   /\ m_sel h1 k.log == createEmpty
   (* CH: equivalent definition makes gen fail:
@@ -83,24 +84,29 @@ val mac: k:key -> m:msg -> ST tag
         (* CH: This last condition should follow from snoc, prove lemma?
                EtM.AE.fst(136,4-158,15) *)
      )))
-
+// BEGIN: EtMMACMac
 let mac k m =
   let t = hmac_sha1 k.raw m in
   write_at_end k.log (m,t);
   t
+// END: EtMMACMac
 
+// BEGIN: EtMMACVerifyT
 val verify: k:key -> m:msg -> t:tag -> ST bool
-  (requires (fun h -> True (* not needed: Map.contains h k.region *) ))
+  (requires (fun h -> True))
   (ensures  (fun h0 res h1 ->
      modifies_none h0 h1 /\
-     (( Ideal.uf_cma && res ) ==> CPA.mem (m,t) (m_sel h0 k.log))))
+     (( Ideal.uf_cma && res ) ==> mem (m,t) (m_sel h0 k.log))))
+// END: EtMMACVerifyT
 
+// BEGIN: EtMMACVerify
 let verify k m t =
   let t' = hmac_sha1 k.raw m in
   let verified = (t = t') in
   let log = m_read k.log in
-  let found = CPA.mem (m,t) log in
+  let found = mem (m,t) log in
   if Ideal.uf_cma then
     verified && found
   else
     verified
+// END: EtMMACVerify

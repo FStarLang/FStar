@@ -12,7 +12,7 @@ let bind (a:Type0) (b:Type0)
   *)
   let mm : cont a = m in mm (fun (x:a) -> let fx : cont b = f x in fx k)
 
-reifiable new_effect_for_free {
+reifiable new_effect {
   CONT: Type -> Effect
   with repr = cont
      ; return = return

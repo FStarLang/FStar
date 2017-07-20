@@ -1,0 +1,24 @@
+open Prims
+type 'Aa set = 'Aa -> Prims.prop
+type ('Aa,'As1,'As2) equal = Prims.unit
+type ('a,'Ax,'As) mem = 'As
+let empty = Obj.magic (fun x  -> ())
+let singleton = Obj.magic (fun x  -> fun y  -> ())
+let union = Obj.magic (fun s1  -> fun s2  -> fun x  -> ())
+let intersect = Obj.magic (fun s1  -> fun s2  -> fun x  -> ())
+let complement = Obj.magic (fun s  -> fun x  -> ())
+type ('Aa,'As1,'As2) subset = Prims.unit
+let mem_empty x = ()
+let mem_singleton x y = ()
+let mem_union x s1 s2 = ()
+let mem_intersect x s1 s2 = ()
+let mem_complement x s = ()
+let subset_mem s1 s2 = ()
+let mem_subset s1 s2 = ()
+let lemma_equal_intro s1 s2 = ()
+let lemma_equal_elim s1 s2 = ()
+let lemma_equal_refl s1 s2 = ()
+let tset_of_set = Obj.magic (fun s  -> fun x  -> ())
+let lemma_mem_tset_of_set_l s x = ()
+let lemma_mem_tset_of_set_r s x = ()
+let lemma_mem_tset_of_set s x = ()

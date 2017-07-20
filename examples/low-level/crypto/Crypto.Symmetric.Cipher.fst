@@ -4,10 +4,13 @@ module Crypto.Symmetric.Cipher
 // Consider also enforcing key abstraction (but quite verbose to code; see Plain.fst).
 
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Buffer
 open Buffer.Utils
+
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 open FStar.UInt32
 open Crypto.Symmetric.Bytes
@@ -98,26 +101,30 @@ val compute:
   st:state (algi i) {disjoint output st} ->
   n:iv (algi i) ->
   counter: ctr ->
-  len:UInt32.t { len <=^  blocklen (algi i) /\ v len <= length output} -> STL unit
+  len:UInt32.t { len <=^  blocklen (algi i) /\ v len <= length output} -> Stack unit
     (requires (fun h -> live h st /\ live h output))
     (ensures (fun h0 _ h1 -> live h1 output /\ modifies_1 output h0 h1
       ))
 
-#reset-options "--z3rlimit 10000" 
+#reset-options "--z3rlimit 50" 
 
 let compute i output st n counter len = 
+  let h0 = ST.get() in 
+  push_frame(); 
   let a = algi i in
-  assume False; //16-10-02 TODO not sure what's going on
-  push_frame();
   begin match a with 
   | CHACHA20 -> // already specialized for counter mode
       let open Crypto.Symmetric.Chacha20 in // shadows ivlen
       let nbuf = Buffer.create 0uy (ivlen' CHACHA20) in
+      let h1 = ST.get() in 
       store_uint128 (ivlen' CHACHA20) nbuf n;
-      chacha20 output st nbuf counter len
+      chacha20 output st nbuf counter len;
+      let h2 = ST.get() in
+      Buffer.lemma_reveal_modifies_2 output nbuf h1 h2;
+      ()
 
   // ADL: TODO single parametric AES module
-  | AES128 ->
+  | AES128 -> (
       let open Crypto.Symmetric.AES128 in // shadows blocklen
       let sbox = Buffer.sub st 0ul 256ul in
       let w = Buffer.sub st 256ul 176ul in
@@ -125,10 +132,10 @@ let compute i output st n counter len =
       store_uint128 (ivlen AES128) (Buffer.sub ctr_block 0ul (ivlen AES128)) n;
       aes_store_counter ctr_block counter;
       let output_block = Buffer.create 0uy (blocklen' AES128) in
-      let () = match aesImpl_of_id i with
-        | HaclAES -> cipher output_block ctr_block w sbox
-        | SpartanAES -> Spartan.cipher output_block ctr_block w sbox in
-      blit output_block 0ul output 0ul len // too much copying!
+      ( match aesImpl_of_id i with
+          | HaclAES -> cipher output_block ctr_block w sbox
+          | SpartanAES -> Spartan.cipher output_block ctr_block w sbox );
+      blit output_block 0ul output 0ul len ) // too much copying!
 
   | AES256 -> 
       let open Crypto.Symmetric.AES in  // shadows blocklen

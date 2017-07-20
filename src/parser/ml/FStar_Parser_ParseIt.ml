@@ -1,5 +1,6 @@
-open FStar_Util
-open FStar_Absyn_Syntax
+module U = FStar_Util
+open FStar_Errors
+open FStar_Syntax_Syntax
 open Lexing
 
 type filename = string
@@ -8,7 +9,7 @@ type input_frag = {
     frag_text:string;
     frag_line:Prims.int;
     frag_col:Prims.int
-}   
+}
 
 let resetLexbufPos filename lexbuf =
   lexbuf.lex_curr_p <- {
@@ -29,7 +30,7 @@ let find_file filename =
   match FStar_Options.find_file filename with
     | Some s ->
       s
-    | None -> 
+    | None ->
       raise(Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
 
 let read_file (filename:string) =
@@ -41,19 +42,19 @@ let read_file (filename:string) =
 let check_extension fn =
     if not (FStar_Util.ends_with fn ".fst")
     && not (FStar_Util.ends_with fn ".fsti")
-    then raise (FStar_Syntax_Syntax.Err("Unrecognized file extension: " ^fn))
+    then raise (Err("Unrecognized file extension: " ^fn))
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
 
   let filename,lexbuf,line,col = match fn with
-    | Inl(f) ->
+    | U.Inl(f) ->
         check_extension f;
-	let f' = find_file f in
+        let f' = find_file f in
         (try f', Lexing.from_string (read_file f'), 1, 0
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
-    | Inr s ->
+    | U.Inr s ->
       "<input>", Lexing.from_string s.frag_text, Z.to_int s.frag_line, Z.to_int s.frag_col in
 
   setLexbufPos filename lexbuf line col;
@@ -63,22 +64,24 @@ let parse fn =
   try
       let fileOrFragment = FStar_Parser_Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
-          | Inl mods ->
+          | U.Inl mods ->
              if FStar_Util.ends_with filename ".fsti"
-             then Inl (mods |> FStar_List.map (function
+             then U.Inl (mods |> FStar_List.map (function
                   | FStar_Parser_AST.Module(l,d) ->
                     FStar_Parser_AST.Interface(l, d, true)
                   | _ -> failwith "Impossible"))
-             else Inl mods
-          | _ -> fileOrFragment in
-      Inl frags
+             else U.Inl mods
+          | _ -> fileOrFragment
+      in
+      U.Inl (frags, FStar_Parser_LexFStar.flush_comments ())
   with
-    | FStar_Syntax_Syntax.Error(msg, r)
-    | FStar_Absyn_Syntax.Error(msg, r) ->
-      Inr (msg, r)
+    | FStar_Errors.Empty_frag ->
+      U.Inl (U.Inl [], [])
+
+    | FStar_Errors.Error(msg, r) ->
+      U.Inr (msg, r)
 
     | e ->
-      let pos = lexbuf.lex_curr_p in
-      let p = FStar_Range.mk_pos pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
-      let r = FStar_Range.mk_range filename (Z.of_int p) (Z.of_int p) in
-      Inr ("Syntax error: " ^ (Printexc.to_string e), r)
+      let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.lex_curr_p in
+      let r = FStar_Range.mk_range filename pos pos in
+      U.Inr ("Syntax error: " ^ (Printexc.to_string e), r)

@@ -2,6 +2,7 @@ module Crypto.Plain
 
 open FStar.HyperHeap
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
@@ -97,11 +98,12 @@ let create (i:id) (zero:UInt8.t) (len:UInt32.t) :
    StackInline (plainBuffer i (v len))
      (requires (fun h -> is_stack_region h.tip))
      (ensures (fun (h0:mem) p h1 ->
+       let p' = p in
        let b = as_buffer p in
        let open FStar.Buffer in
        let live = live' in (* to undo shadowing by FStar.Buffer.live *)
          ~(contains h0 b)
-       /\ live h1 p /\ idx b = 0 /\ length b = v len
+       /\ live h1 p' /\ idx b = 0 /\ length b = v len
        /\ frameOf b = h0.tip
        /\ Map.domain h1.h == Map.domain h0.h
        /\ modifies_0 h0 h1

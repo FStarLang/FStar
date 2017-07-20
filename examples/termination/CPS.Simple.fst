@@ -21,7 +21,7 @@
 
 (*  Standard implementation **)
 module CPS.Simple
-open List
+open FStar.List.Tot
 
 val add_cps : list int -> (int -> Tot 'a) -> Tot 'a
 let rec add_cps l k = match l with

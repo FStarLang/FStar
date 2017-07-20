@@ -89,10 +89,10 @@ val dedup: l:list int{sorted l} -> Tot (l2:list int{sorted l2 /\ (forall i. mem 
 let cmp i j = i <= j
 val sort: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
                             (decreases (length l))
-//#set-options "--z3timeout 100"
 let rec sort l = match l with
   | [] -> []
   | pivot::tl ->
     let hi, lo = partition (cmp pivot) tl in
     let l' = append (sort lo) (pivot::sort hi) in
+    assert (forall i. mem i (pivot::sort hi) = mem i (append [pivot] (sort hi)));
     dedup l'

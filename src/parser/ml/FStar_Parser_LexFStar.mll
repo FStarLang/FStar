@@ -17,6 +17,18 @@
       (lexeme_start_p lexbuf, lexeme_end_p lexbuf)
   end
 
+  let split_on_char sep s =
+     let open String in
+     let r = ref [] in
+     let j = ref (length s) in
+     for i = length s - 1 downto 0 do
+        if unsafe_get s i = sep then begin
+          r := sub s (i + 1) (!j - i - 1) :: !r;
+          j := i
+        end
+     done;
+     sub s 0 !j :: !r
+
   let string_trim_both s n m = BatString.sub s n (String.length s - (n+m))
   let trim_both   lexbuf n m = string_trim_both (L.lexeme lexbuf) n m
   let trim_right  lexbuf n = trim_both lexbuf 0 n
@@ -43,9 +55,9 @@
     Hashtbl.add keywords "assert"        ASSERT      ;
     Hashtbl.add keywords "assume"        ASSUME      ;
     Hashtbl.add keywords "begin"         BEGIN       ;
+    Hashtbl.add keywords "by"            BY          ;
     Hashtbl.add keywords "default"       DEFAULT     ;
     Hashtbl.add keywords "effect"        EFFECT      ;
-    Hashtbl.add keywords "effect_actions" ACTIONS    ;
     Hashtbl.add keywords "else"          ELSE        ;
     Hashtbl.add keywords "end"           END         ;
     Hashtbl.add keywords "ensures"       ENSURES     ;
@@ -57,8 +69,8 @@
     Hashtbl.add keywords "fun"           FUN         ;
     Hashtbl.add keywords "function"      FUNCTION    ;
     Hashtbl.add keywords "if"            IF          ;
-    Hashtbl.add keywords "kind"          KIND        ;
     Hashtbl.add keywords "in"            IN          ;
+    Hashtbl.add keywords "include"       INCLUDE     ;
     Hashtbl.add keywords "inline"        INLINE      ;
     Hashtbl.add keywords "inline_for_extraction"        INLINE_FOR_EXTRACTION      ;
     Hashtbl.add keywords "irreducible"   IRREDUCIBLE ;
@@ -69,7 +81,6 @@
     Hashtbl.add keywords "mutable"       MUTABLE     ;
     Hashtbl.add keywords "new"           NEW         ;
     Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
-    Hashtbl.add keywords "new_effect_for_free" NEW_EFFECT_FOR_FREE  ;
     Hashtbl.add keywords "noextract"     NOEXTRACT   ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
@@ -97,37 +108,47 @@
   type delimiters = { angle:int ref; paren:int ref; }
 
   let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
-  let n_typ_apps = FStar_Util.mk_ref 0
+  let n_typ_apps = ref 0
   let is_typ_app lexbuf =
-  if not (FStar_Options.fs_typ_app()) then false
-  else try
-   let char_ok = function
-     | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | '_' | ',' | '.' | ' ' | '\t' -> true
-     | c when c >= 'A' && c <= 'Z' -> true
-     | c when c >= 'a' && c <= 'z' -> true
-     | c when c >= '0' && c <= '9' -> true
-     | _ -> false in
-   let balanced (contents:string) pos =
-     if contents.[pos] <> '<' then
-      (failwith  "Unexpected position in is_typ_lapp");
-    let d = {angle=ref 1; paren=ref 0} in
-    let upd i = match contents.[i] with
-      | '(' -> incr d.paren | ')' -> decr d.paren
-      | '<' -> incr d.angle | '>' -> decr d.angle
-      | _ -> () in
-    let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
-    let rec aux i =
-      if !(d.angle)=0 && !(d.paren)=0 then true
-      else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || (FStar_Util.starts_with (FStar_Util.substring_from contents (Z.of_int i)) "then") then false
-      else (upd i; aux (i + 1)) in
-      aux (pos + 1) in
-   let rest = String.sub lexbuf.lex_buffer lexbuf.lex_last_pos (lexbuf.lex_buffer_len - lexbuf.lex_last_pos) in
-   if not (String.contains rest '\n') then (lexbuf.refill_buff lexbuf);
-   let lookahead = String.sub lexbuf.lex_buffer (lexbuf.lex_last_pos - 1) (lexbuf.lex_buffer_len - lexbuf.lex_last_pos + 1) in
-   let res = balanced lookahead 0 in
-   if res then incr n_typ_apps;
-   (*Printf.printf "TYP_APP %s: %s\n" lookahead (if res then "YES" else "NO");*)
-   res
+    if not (FStar_Options.fs_typ_app lexbuf.lex_start_p.pos_fname) then false
+    else try
+      let char_ok = function
+        | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | '_' | ',' | '.' | ' ' | '\t' -> true
+        | c when c >= 'A' && c <= 'Z' -> true
+        | c when c >= 'a' && c <= 'z' -> true
+        | c when c >= '0' && c <= '9' -> true
+        | _ -> false
+      in
+      let balanced (contents:string) pos =
+      if contents.[pos] <> '<'
+      then (failwith  "Unexpected position in is_typ_lapp");
+      let d = {angle=ref 1; paren=ref 0} in
+      let upd i = match contents.[i] with
+        | '(' -> incr d.paren
+        | ')' -> decr d.paren
+        | '<' -> incr d.angle
+        | '>' when contents.[i-1] <> '-' -> decr d.angle
+        | _ -> ()
+      in
+      let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
+      let rec aux i =
+        if !(d.angle)=0 && !(d.paren)=0 then true
+        else if i >= String.length contents || not (ok ()) || (not (char_ok (contents.[i]))) || FStar_Util.(starts_with (substring_from contents (Z.of_int i)) "then") then false
+        else (upd i; aux (i + 1))
+      in
+      aux (pos + 1)
+    in
+    let rest = String.sub lexbuf.lex_buffer lexbuf.lex_last_pos (lexbuf.lex_buffer_len - lexbuf.lex_last_pos) in
+    if not (String.contains rest '\n') then (lexbuf.refill_buff lexbuf);
+    let lookahead =
+      String.sub lexbuf.lex_buffer
+                 (lexbuf.lex_last_pos - 1)
+                 (lexbuf.lex_buffer_len - lexbuf.lex_last_pos + 1)
+    in
+    let res = balanced lookahead 0 in
+    if res then incr n_typ_apps;
+    (*Printf.printf "TYP_APP %s: %s\n" lookahead (if res then "YES" else "NO");*)
+    res
   with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
 
   let is_typ_app_gt () =
@@ -139,7 +160,51 @@
   let rec mknewline n lexbuf =
     if n > 0 then (L.new_line lexbuf; incr lc; mknewline (n-1) lexbuf)
 
- let clean_number x = String.strip ~chars:"uzyslLUnIN" x
+  let clean_number x = String.strip ~chars:"uzyslLUnIN" x
+
+  let comments : (string * FStar_Range.range) list ref = ref []
+
+  let flush_comments () =
+    let lexed_comments = !comments in
+    comments := [] ;
+    lexed_comments
+
+  (* Try to trim each line of [comment] by the ammount of space
+     on the first line of the comment if possible *)
+  (* TODO : apply this to FSDOC too *)
+  let maybe_trim_lines start_column comment =
+    if start_column = 0 then comment
+    else
+      let comment_lines = split_on_char '\n' comment in
+      let ensures_empty_prefix k s =
+        let j = min k (String.length s - 1) in
+        let rec aux i = if i > j then k else if s.[i] <> ' ' then i else aux (i+1) in
+        aux 0
+      in
+      let trim_width =
+        List.fold_left ensures_empty_prefix start_column comment_lines
+      in
+      String.concat "\n" (List.map (fun s -> String.tail s trim_width) comment_lines)
+
+
+  let comment_buffer = Buffer.create 1024
+
+  let start_comment lexbuf =
+    Buffer.add_bytes comment_buffer "(*" ;
+    (false, comment_buffer, fst (L.range lexbuf))
+
+  let terminate_comment buffer startpos lexbuf =
+    let endpos = snd (L.range lexbuf) in
+    Buffer.add_bytes buffer "*)" ;
+    let comment = Buffer.contents buffer in
+    let comment = maybe_trim_lines (startpos.pos_cnum - startpos.pos_bol) comment in
+    Buffer.clear buffer ;
+    comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
+
+  let push_one_line_comment lexbuf =
+    let startpos, endpos = L.range lexbuf in
+    assert (startpos.pos_lnum = endpos.pos_lnum) ;
+    comments := (lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
 }
 
 (* -------------------------------------------------------------------- *)
@@ -215,13 +280,12 @@ let tvar_char              = letter | digit | '\'' | '_'
 let constructor = constructor_start_char ident_char*
 let ident       = ident_start_char ident_char*
 let tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
-let univar      = '\'' 'u' tvar_char+
 
 rule token = parse
  | "\xef\xbb\xbf"   (* UTF-8 byte order mark, some compiler files have them *)
      {token lexbuf}
  | "#light"
-     { PRAGMALIGHT }
+     { FStar_Options.add_light_off_file lexbuf.lex_start_p.pos_fname ; PRAGMALIGHT }
  | "#set-options"
      { PRAGMA_SET_OPTIONS }
  | "#reset-options"
@@ -247,8 +311,6 @@ rule token = parse
      { id |> Hashtbl.find_option keywords |> Option.default (IDENT id) }
  | constructor as id
      { NAME id }
- | univar as id
-     { UNIVAR id }
  | tvar as id
      { TVAR id }
  | (integer | xinteger) as x
@@ -263,7 +325,7 @@ rule token = parse
          failwith "Out-of-range character literal";
        x
        )) }
- | int8 as x  
+ | int8 as x
      { INT8 (clean_number x, false) }
  | uint16 as x
      { UINT16 (clean_number x) }
@@ -289,10 +351,16 @@ rule token = parse
      { fsdoc (1,"",[]) lexbuf}
 
  | "(*"
-     { comment false lexbuf }
+     { let inner, buffer, startpos = start_comment lexbuf in
+       comment inner buffer startpos lexbuf }
+
+ | "[@"
+ | "///[@" (* special syntax for the purposes of the compiler *)
+      { LBRACK_AT }
 
  | "//"  [^'\n''\r']*
-     { token lexbuf }
+     { push_one_line_comment lexbuf ;
+       token lexbuf }
 
  | '"'
      { string (Buffer.create 0) lexbuf }
@@ -328,6 +396,7 @@ rule token = parse
  | ','         { COMMA }
  | "~>"        { SQUIGGLY_RARROW }
  | "->"        { RARROW }
+ | "<--"       { LONG_LEFT_ARROW }
  | "<-"        { LARROW }
  | "<==>"      { IFF }
  | "==>"       { IMPLIES }
@@ -403,22 +472,29 @@ and string buffer = parse
  | eof
     { failwith "unterminated string" }
 
-and comment inner = parse
+and comment inner buffer startpos = parse
 
  | "(*"
-    { let close_eof = comment true lexbuf in comment inner lexbuf }
+    { Buffer.add_bytes buffer "(*" ;
+      let close_eof = comment true buffer startpos lexbuf in
+      comment inner buffer startpos lexbuf }
 
  | newline
-    { L.new_line lexbuf; comment inner lexbuf }
+    { Buffer.add_char buffer '\n' ;
+      L.new_line lexbuf;
+      comment inner buffer startpos lexbuf }
 
  | "*)"
-    { if inner then EOF else token lexbuf }
+    { terminate_comment buffer startpos lexbuf;
+      if inner then EOF else token lexbuf }
 
- | _
-    { comment inner lexbuf }
+ | _ as c
+    { Buffer.add_char buffer c ;
+      comment inner buffer startpos lexbuf }
 
  | eof
-     { lc := 1; EOF }
+     { terminate_comment buffer startpos lexbuf;
+       lc := 1; EOF }
 
 and fsdoc cargs = parse
  | '(' '*'

@@ -1,9 +1,5 @@
-VERFILES=sf-basic.fst sf-lists.fst sf-poly.fst
+VERFILES=SfBasic SfLists SfPoly
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: uall sall
-
-uall:
-
-sall: .all.ver
+all: $(addsuffix .uver, $(VERFILES))

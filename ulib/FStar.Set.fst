@@ -14,6 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+(** Computatiional sets (on eqtypes): membership is a boolean function *)
 module FStar.Set
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.FunctionalExtensionality
@@ -38,6 +39,11 @@ let singleton #a x     = fun y -> y = x
 let union #a s1 s2     = fun x -> s1 x || s2 x
 let intersect #a s1 s2 = fun x -> s1 x && s2 x
 let complement #a s    = fun x -> not (s x)
+
+(* a property about sets *)
+let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
+  intersect s1 s2 == empty
+
 
 (* ops *)
 type subset (#a:eqtype) (s1:set a) (s2:set a) :Type0 = forall x. mem x s1 ==> mem x s2
@@ -107,20 +113,20 @@ let lemma_equal_intro #a s1 s2 = ()
 let lemma_equal_elim  #a s1 s2 = ()
 let lemma_equal_refl  #a s1 s2 = ()
 
-(* TODO: how do we define these *)
-assume val set_to_tset: #key:eqtype -> set key -> Tot (TSet.set key)
-assume val lemma_set_to_tset:
-  #key:eqtype -> s:set key -> x:key
-  -> Lemma (requires (True))
-          (ensures (mem x s <==> TSet.mem x (set_to_tset s)))
-    [SMTPat (TSet.mem x (set_to_tset s))]
+let disjoint_not_in_both (a:eqtype) (s1:set a) (s2:set a) :
+  Lemma
+    (requires (disjoint s1 s2))
+    (ensures (forall (x:a).{:pattern (mem x s1) \/ (mem x s2)} mem x s1 ==> ~(mem x s2)))
+  [SMTPat (disjoint s1 s2)]
+= let f (x:a) : Lemma (~(mem x (intersect s1 s2))) = () in
+  FStar.Classical.forall_intro f
 
 (* Converting lists to sets *)
 #reset-options //restore fuel usage here
 type eqtype = a:Type0{hasEq a}
 
 val as_set': #a:eqtype -> list a -> Tot (set a)
-let rec as_set' #a l = match l with 
+let rec as_set' #a l = match l with
   | [] -> empty
   | hd::tl -> union (singleton hd) (as_set' tl)
 

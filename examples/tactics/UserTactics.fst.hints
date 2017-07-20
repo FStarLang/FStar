@@ -1,0 +1,77 @@
+[
+  "·\u001c¿Œú-Ý8¾R0±å§Üð",
+  [
+    [ "UserTactics.test_print_goal", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.uu___is_A", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.uu___is_B", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.uu___is_C", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.uu___is_D", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "UserTactics.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_UserTactics.A",
+        "constructor_distinct_UserTactics.B",
+        "constructor_distinct_UserTactics.C",
+        "constructor_distinct_UserTactics.D", "disc_equation_UserTactics.A",
+        "disc_equation_UserTactics.B", "disc_equation_UserTactics.C",
+        "disc_equation_UserTactics.D", "fuel_guarded_inversion_UserTactics.t"
+      ],
+      0
+    ],
+    [
+      "UserTactics.implicitly_unfolfed_before_preprocessing",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_UserTactics.visible_boolean",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0
+    ],
+    [
+      "UserTactics.lemma_mul_comm",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Multiply", "unit_typing" ],
+      0
+    ],
+    [ "UserTactics.sqintro", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "UserTactics.mul_commute_ascription",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Derived.fail",
+        "equation_FStar.Tactics.Effect.assert_by_tactic", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "UserTactics.test_apply_ascription'",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Multiply" ],
+      0
+    ],
+    [
+      "UserTactics.test_apply_ascription",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Multiply" ],
+      0
+    ],
+    [ "UserTactics.test_inspect", 1, 2, 1, [ "@query" ], 0 ],
+    [ "UserTactics.test_simpl", 1, 2, 1, [ "@query" ], 0 ]
+  ]
+]

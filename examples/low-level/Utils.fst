@@ -1,6 +1,6 @@
 module Utils
 
-open FStar.SeqProperties
+open FStar.Seq
 open FStar.Mul
 open FStar.UInt32
 open FStar.HyperStack

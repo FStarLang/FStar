@@ -3,7 +3,7 @@ module Ex04e
 
 type option 'a =  
    | None : option 'a
-   | Some : 'a -> option 'a
+   | Some : v:'a -> option 'a
 
 let rec find f l = match l with
   | [] -> None

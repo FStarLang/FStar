@@ -6,6 +6,7 @@ module Crypto.Symmetric.AES128
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.UInt8
 open FStar.Int.Cast
 open FStar.Buffer
@@ -13,6 +14,7 @@ open FStar.Buffer
 (* Module abbreviations *)
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 module U8  = FStar.UInt8
 module U32 = FStar.UInt32

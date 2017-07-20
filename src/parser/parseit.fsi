@@ -15,6 +15,8 @@
 *)
 #light "off"
 module FStar.Parser.ParseIt
+open FStar.ST
+open FStar.All
 open FStar.Parser
 open FStar.Util
 open FStar
@@ -25,7 +27,7 @@ type input_frag = {
     frag_text:string;
     frag_line:int;
     frag_col:int
-}   
+}
 
-val parse: either<filename, input_frag> -> either<AST.inputFragment, (string * Range.range)>
-
+val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
+val find_file: string -> string

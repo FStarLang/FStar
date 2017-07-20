@@ -1,18 +1,34 @@
 module Crypto.KrmlTest
 
+(* Note: this file uses the test library from KreMLin and should extract to both
+   C (via kremlib.c) and OCaml (via jk's implementation of kremlib in
+   OCaml). Here's a suggested few lines you can put in your ~/.emacs:
+
+(setq fstar-subp-prover-args '(
+                               "--include" "D:/cygwin/home/protz/Code/fstar/ulib/hyperstack"
+                               "--include" "D:/cygwin/home/protz/Code/fstar/examples/low-level/crypto/spartan"
+                               "--include" "D:/cygwin/home/protz/Code/kremlin/kremlib"
+                               "--include" "D:/cygwin/home/protz/Code/kremlin/test"
+                               ))
+
+*)
+
 open FStar.UInt32
 open FStar.Ghost
 open FStar.Buffer
+open FStar.HyperStack.ST
 
 open Crypto.Indexing
 open Crypto.Symmetric.Bytes
 open Crypto.Plain
 open Crypto.Config
+open Crypto
 open Buffer
 open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 module Plain = Crypto.Plain
 module MAC = Crypto.Symmetric.MAC
@@ -20,6 +36,8 @@ module Cipher = Crypto.Symmetric.Cipher
 module PRF = Crypto.Symmetric.PRF
 module AE = Crypto.AEAD
 module AETypes = Crypto.AEAD.Invariant
+module D = Crypto.AEAD.Decrypt
+module E = Crypto.AEAD.Encrypt
 
 module L = FStar.List.Tot
 
@@ -121,40 +139,33 @@ let test() =
   //NS: These 3 separation properties are explicitly violated by allocating st in HH.root
   //    Assuming them for the moment
   assume (
-    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) (AETypes.State?.log_region st) /\
-    HH.disjoint (Buffer.frameOf cipher) (AETypes.State?.log_region st) /\
-    HH.disjoint (Buffer.frameOf aad) (AETypes.State?.log_region st)
+    HH.disjoint (Buffer.frameOf (Plain.as_buffer plain)) (AETypes.AEADState?.log_region st) /\
+    HH.disjoint (Buffer.frameOf cipher) (AETypes.AEADState?.log_region st) /\
+    HH.disjoint (Buffer.frameOf aad) (AETypes.AEADState?.log_region st)
   );
-  AE.encrypt i st iv aadlen aad plainlen plain cipher;
+  AEAD.Encrypt.encrypt i st iv aadlen aad plainlen plain cipher;
 
-  // String for 'cipher'
-  let string_cipher = FStar.Buffer.createL [99y; 105y; 112y; 104y; 101y; 114y; 0y] in
-  TestLib.compare_and_print string_cipher expected_cipher cipher cipherlen;
+  TestLib.compare_and_print (C.string_of_literal "cipher") expected_cipher cipher cipherlen;
 
   (* let ok_0 = diff "cipher" cipherlen expected_cipher cipher in *)
 
   let decrypted = Plain.create i 0uy plainlen in
 
   let st = AE.genReader st in
-  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
+  let ok_1 = AEAD.Decrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
 
-  // String for 'decryption'
-  let string_decryption = FStar.Buffer.createL [
-    100y; 101y; 99y; 114y; 121y; 112y; 116y; 105y; 111y; 110y; 0y
-  ] in
-
-  TestLib.compare_and_print string_decryption (bufferRepr #i plain) (bufferRepr #i decrypted) plainlen;
+  TestLib.compare_and_print (C.string_of_literal "decryption") (bufferRepr #i plain) (bufferRepr #i decrypted) plainlen;
   (* let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in *)
 
   // testing that decryption fails when truncating aad or tweaking the ciphertext.
-  let fail_0 = AE.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher in
+  let fail_0 = AEAD.Decrypt.decrypt i st iv (aadlen -^ 1ul) (Buffer.sub aad 0ul (aadlen -^ 1ul)) plainlen decrypted cipher in
 
   tweak 3ul cipher;
-  let fail_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
+  let fail_1 = AEAD.Decrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak 3ul cipher;
 
   tweak plainlen cipher;
-  let fail_2 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
+  let fail_2 = AEAD.Decrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
   tweak plainlen cipher;
 
   pop_frame ();
@@ -186,24 +197,17 @@ let test_aes_gcm i (tn: UInt32.t) key ivBuffer aadlen aad plainlen plainrepr exp
     load_uint128 12ul ivBuffer in
   let cipherlen = plainlen +^ 16ul in
   let cipher = Buffer.create 2uy cipherlen in
-  AE.encrypt i st iv aadlen aad plainlen plain cipher;
+  AEAD.Encrypt.encrypt i st iv aadlen aad plainlen plain cipher;
 
   (* let ok_0 = diff "cipher" cipherlen expected_cipher cipher in  *)
-  // String for 'cipher'
-  let string_cipher = FStar.Buffer.createL [99y; 105y; 112y; 104y; 101y; 114y; 0y] in
-  TestLib.compare_and_print string_cipher expected_cipher cipher cipherlen;
+  TestLib.compare_and_print (C.string_of_literal "cipher")  expected_cipher cipher cipherlen;
 
   let st = AE.genReader st in
   let decrypted = Plain.create i 3uy plainlen in
-  let ok_1 = AE.decrypt i st iv aadlen aad plainlen decrypted cipher in
+  let ok_1 = AEAD.Decrypt.decrypt i st iv aadlen aad plainlen decrypted cipher in
   (* let ok_2 = diff "decryption" plainlen (bufferRepr #i plain) (bufferRepr #i decrypted) in *)
 
-  // String for 'decryption'
-  let string_decryption = FStar.Buffer.createL [
-    100y; 101y; 99y; 114y; 121y; 112y; 116y; 105y; 111y; 110y; 0y
-  ] in
-
-  TestLib.compare_and_print string_decryption (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen;
+  TestLib.compare_and_print (C.string_of_literal "decryption") (bufferRepr #i decrypted) (bufferRepr #i plain) plainlen;
   (* let ok_2 = diff "decryption" plainlen (bufferRepr #i decrypted) (bufferRepr #i plain) in *)
 
   pop_frame();

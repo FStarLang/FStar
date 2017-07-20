@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/usr/bin/env bash
 
 if [[ $# != 1 ]]; then
   echo "Usage: $0 FILENAME OUTPUT_DIR where FILENAME.fs exists and FILENAME.fsi may exist";

@@ -178,11 +178,13 @@ let rec getBytes (bl: list cbytes) i n  =
                substringT h i curr ^ getBytes t 0 (n-curr)
 
 
+#reset-options "--z3rlimit 20"
+
 val lemma_getBytes: ls1:list cbytes -> ls2:list cbytes -> i:nat{i <= sum_length ls1} -> n:nat{sum_length ls1 <= i + n /\ i + n <= sum_length ls1 + sum_length ls2} -> Lemma
   (requires True)
   (ensures getBytes (ls1 @ ls2) i n = (getBytes ls1 i (sum_length ls1 - i) ^ getBytes ls2 0 (i + n - sum_length ls1)))
   [SMTPat (getBytes (ls1 @ ls2) i n)]
-let rec lemma_getBytes ls1 ls2 i n = 
+let rec lemma_getBytes ls1 ls2 i n =
   match ls1 with
   | [] ->
     ()
@@ -201,7 +203,7 @@ let rec lemma_getBytes ls1 ls2 i n =
           ()
         else
           ()
-        
+#reset-options "--z3rlimit 5"
 
 val concatT_empty : ls:list string -> Tot (r:string{String.length r = sum_length ls})
 let rec concatT_empty ls =
@@ -289,7 +291,7 @@ let rec lemma_getBytes_3 ls i n i2 n2 =
             ()
         
 
-val get_cbytes : (bytes -> Tot cbytes)
+private val get_cbytes : (bytes -> Tot cbytes)
 (* val get_cbytes : b:bytes -> Tot (r:cbytes{String.length r = b.length}) *)
 let get_cbytes (b:bytes) =
     if b.length = b.max && b.index = 0 then
@@ -300,7 +302,7 @@ let get_cbytes (b:bytes) =
 
 
 (* a version of get_cbytes that doesn't have the [concatT_empty] part so it's easier to reason about *)
-val get_cbytes' : b:bytes -> Tot (r:cbytes{String.length r = b.length})
+private val get_cbytes' : b:bytes -> Tot (r:cbytes{String.length r = b.length})
 let get_cbytes' (b:bytes) =
       getBytes b.bl b.index b.length
 

@@ -2,7 +2,6 @@ module Ex12d.Pad
 
 open FStar.UInt8
 open FStar.Seq
-open FStar.SeqProperties
 
 
 type uint8 = FStar.UInt8.t
@@ -18,6 +17,7 @@ let blocksize = 32
 type block = nbytes blocksize
 type text = b:bytes {(length b < blocksize)}
 
+// BEGIN: PadEx
 (* fill in type here and remove the assumption*)
 let pad n = 
   assume (1 <= n /\ n < 256);
@@ -38,3 +38,4 @@ let decode (b:block) =
     then Some plain
     else None   
   else None
+// END: PadEx

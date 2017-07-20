@@ -106,7 +106,6 @@ KeyExpansionStdcall:
   pxor %xmm1, %xmm1
   pxor %xmm2, %xmm2
   pxor %xmm3, %xmm3
-  sub $0, %rsp
   ret 
 
 .global KeyExpansionAndInversionStdcall
@@ -243,7 +242,6 @@ KeyExpansionAndInversionStdcall:
   pxor %xmm1, %xmm1
   pxor %xmm2, %xmm2
   pxor %xmm3, %xmm3
-  sub $0, %rsp
   ret 
 
 .global AES128EncryptOneBlockStdcall
@@ -273,7 +271,6 @@ AES128EncryptOneBlockStdcall:
   aesenclast %xmm2, %xmm0
   pxor %xmm2, %xmm2
   movdqu %xmm0, 0 (%rcx)
-  sub $0, %rsp
   ret 
 
 

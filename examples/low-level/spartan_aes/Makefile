@@ -5,9 +5,9 @@ UNAME?=$(shell uname | cut -c 1-6)
 ifeq ($(UNAME),CYGWIN)
   CC=$(MARCH)-w64-mingw32-gcc
 else ifeq ($(MARCH),i686)
-  CC=gcc -m32
+  CC=gcc -m32 -fPIC
 else
-  CC=gcc
+  CC=gcc -fPIC
 endif
 
 ifeq ($(UNAME),Darwin)
@@ -24,10 +24,17 @@ all: aes.o sha256.o
 
 .PHONY: import
 import:
-	@if [ x"$(SPARTAN_HOME)" = x ]; then echo "SPARTAN_HOME not defined"; exit 1; fi
-	cp $(SPARTAN_HOME)/obj/aes-gcc.S aes-x86_64.S
-	cp $(SPARTAN_HOME)/obj/sha256-gcc.S sha256-x86_64.S
-	sed -i 's/.section .text/.text/' *.S
+	@if [ x"$(VALE_HOME)" = x ]; then echo "VALE_HOME not defined"; exit 1; fi
+	cp $(VALE_HOME)/obj/aes-gcc.S aes-x86_64.S
+	cp $(VALE_HOME)/obj/aes-macos.S aes-x86_64-Darwin.S
+	cp $(VALE_HOME)/obj/aes-linux.S aes-x86_64-Linux.S
+# TODO: Vale SHA256 not built on Linux yet
+ifneq ($(UNAME),Linux)
+	cp $(VALE_HOME)/obj/sha256-gcc.S sha256-x86_64.S
+	cp $(VALE_HOME)/obj/sha256-macos.S sha256-x86_64-Darwin.S
+	cp $(VALE_HOME)/obj/sha256-linux.S sha256-x86_64-Linux.S
+endif
+	sed -i.bak 's/.section .text/.text/' *.S
 
 clean:
 	rm -f *.o *~

@@ -18,6 +18,7 @@ module Sig
 
 open FStar.Array
 open FStar.List.Tot
+open FStar.All
 open FStar.ST
 open Platform.Bytes
 
@@ -52,7 +53,7 @@ assume val log : ref (list entry)
 val sign: p:pk
       -> s:pk_sk p
       -> t:text{key_prop p t}
-      -> sig_t
+      -> ML sig_t
 let sign p s t =
   let m = fdh_rsa s t in
   log := Entry p t m :: !log;
@@ -61,7 +62,7 @@ let sign p s t =
 val verify: p:pk
          -> t:text
          -> sig_t
-         -> b:bool{b ==> key_prop p t}
+         -> ML (b:bool{b ==> key_prop p t})
 let verify p t m =
   let found = List.Tot.find (function (Entry p' t' _) -> p=p' && t=t') !log in
   Some? found

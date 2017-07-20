@@ -1,11 +1,8 @@
 .text
 .global KeyExpansionStdcall
 KeyExpansionStdcall:
-  mov %rcx, %r9
-  mov %rdx, %r8
+  movdqu 0 (%rdi), %xmm1
   mov %rsi, %rdx
-  mov %rdi, %rcx
-  movdqu 0 (%rcx), %xmm1
   movdqu %xmm1, 0 (%rdx)
   aeskeygenassist $1, %xmm1, %xmm2
   pshufd $255, %xmm2, %xmm2
@@ -110,16 +107,12 @@ KeyExpansionStdcall:
   pxor %xmm1, %xmm1
   pxor %xmm2, %xmm2
   pxor %xmm3, %xmm3
-  sub $0, %rsp
   ret 
 
 .global KeyExpansionAndInversionStdcall
 KeyExpansionAndInversionStdcall:
-  mov %rcx, %r9
-  mov %rdx, %r8
+  movdqu 0 (%rdi), %xmm1
   mov %rsi, %rdx
-  mov %rdi, %rcx
-  movdqu 0 (%rcx), %xmm1
   movdqu %xmm1, 0 (%rdx)
   aeskeygenassist $1, %xmm1, %xmm2
   pshufd $255, %xmm2, %xmm2
@@ -251,16 +244,12 @@ KeyExpansionAndInversionStdcall:
   pxor %xmm1, %xmm1
   pxor %xmm2, %xmm2
   pxor %xmm3, %xmm3
-  sub $0, %rsp
   ret 
 
 .global AES128EncryptOneBlockStdcall
 AES128EncryptOneBlockStdcall:
-  mov %rcx, %r9
+  movdqu 0 (%rsi), %xmm0
   mov %rdx, %r8
-  mov %rsi, %rdx
-  mov %rdi, %rcx
-  movdqu 0 (%rdx), %xmm0
   movdqu 0 (%r8), %xmm2
   pxor %xmm2, %xmm0
   movdqu 16 (%r8), %xmm2
@@ -284,8 +273,7 @@ AES128EncryptOneBlockStdcall:
   movdqu 160 (%r8), %xmm2
   aesenclast %xmm2, %xmm0
   pxor %xmm2, %xmm2
-  movdqu %xmm0, 0 (%rcx)
-  sub $0, %rsp
+  movdqu %xmm0, 0 (%rdi)
   ret 
 
 

@@ -1,4 +1,5 @@
 module Ex12a.ACLs 
+open FStar.All
 //this file is the same as Ex01a minus the tutorial code labels
 
 type filename = string
@@ -15,10 +16,10 @@ let canRead (f:filename) =
   || f="demo/README"       (* and so is this file *)
 // END: ACLs
 
-val read  : f:filename{canRead f}  -> string
+val read  : f:filename{canRead f}  -> ML string
 let read f  = FStar.IO.print_string ("Dummy read of file " ^ f ^ "\n"); f
 
-val write : f:filename{canWrite f} -> string -> unit
+val write : f:filename{canWrite f} -> string -> ML unit
 let write f s = FStar.IO.print_string ("Dummy write of string " ^ s ^ " to file " ^ f ^ "\n")
 
 let passwd  = "demo/password"
@@ -35,11 +36,11 @@ let staticChecking () =
 
 
 exception InvalidRead
-val checkedRead : filename -> string
+val checkedRead : filename -> ML string
 let checkedRead f =
   if canRead f then read f else raise InvalidRead
 
-val checkedWrite : filename -> string -> unit
+val checkedWrite : filename -> string -> ML unit
 
 exception InvalidWrite
 let checkedWrite f s =

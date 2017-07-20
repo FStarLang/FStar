@@ -1,6 +1,8 @@
 module Cert.ACLs
-open String
-open List
+open FStar.All
+open FStar.String
+open FStar.List.Tot
+
 type file = string
 
 let canWrite = function
@@ -38,5 +40,3 @@ let rc file =
   if canRead file 
   then (fun () -> read file)
   else failwith "Can't read"
-
-
