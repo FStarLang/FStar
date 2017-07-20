@@ -198,10 +198,10 @@ let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
             | _ -> d::theory, n_retained, n_pruned)
             theory ([], 0, 0) in
         let missed_assertions th core =
-        let missed =
-            core |> List.filter (fun nm ->
-                th |> BU.for_some (function Assume a -> nm=a.assumption_name | _ -> false) |> not)
-            |> String.concat ", "
+            let missed =
+                core |> List.filter (fun nm ->
+                    th |> BU.for_some (function Assume a -> nm=a.assumption_name | _ -> false) |> not)
+                |> String.concat ", "
         in
         let included =
             th
@@ -285,7 +285,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                         let res = BU.mk_ref None in
                         Z3.ask (filter_facts_without_core env) all_labels (with_fuel label_assumptions p min_fuel) None (fun r -> res := Some r);
                         Option.get (!res) in
-                     detail_errors env all_labels ask_z3;
+                     detail_errors false env all_labels ask_z3;
                      [], Default
                 else match errs with
                      | [], Timeout -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], snd errs
@@ -428,16 +428,17 @@ let ask_and_report_errors env all_labels prefix query suffix =
                  then begin
                       let ask_z3 label_assumptions =
                         let res = BU.mk_ref None in
-                        Z3.ask (filter_assertions unsat_core)
+                        Z3.ask (filter_assertions env unsat_core)
                                 all_labels
                                 (with_fuel label_assumptions p initial_config)
                                 None
                                 (fun r -> res := Some r);
                         Option.get (!res)
                       in
-                      detail_errors env all_labels ask_z3
+                      detail_errors true env all_labels ask_z3
                  end;
-                 try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt scope in
+                 try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt scope
+        in
 
         if Option.isSome unsat_core || Options.z3_refresh() then Z3.refresh();
         let wf = (with_fuel [] p initial_config) in
