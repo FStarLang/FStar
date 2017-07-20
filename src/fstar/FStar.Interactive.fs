@@ -31,8 +31,8 @@ open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
 module SS = FStar.Syntax.Syntax
-module DsEnv   = FStar.ToSyntax.Env
-module TcEnv   = FStar.TypeChecker.Env
+module DsEnv = FStar.ToSyntax.Env
+module TcEnv = FStar.TypeChecker.Env
 
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
@@ -499,7 +499,8 @@ open FStar.Parser.ParseIt
 type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_stack: stack_t; repl_curmod: modul_t;
                     repl_env: env_t; repl_ts: m_timestamps;
-                    repl_stdin: stream_reader }
+                    repl_stdin: stream_reader;
+                    repl_names: FStar.Completion.table }
 
 let json_of_repl_state st =
   let opts_and_defaults =
@@ -1002,7 +1003,8 @@ let interactive_mode' (filename:string): unit =
   TcEnv.toggle_id_info (snd env) true;
   let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
                   repl_stack = stack; repl_curmod = None;
-                  repl_env = env; repl_ts = ts; repl_stdin = open_stdin () } in
+                  repl_env = env; repl_ts = ts; repl_stdin = open_stdin ();
+                  repl_names = FStar.CompletionTable.empty } in
   if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
   else
