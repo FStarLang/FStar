@@ -15,7 +15,7 @@
 *)
 #light "off"
 
-module FStar.Interactive
+module FStar.Interactive.Ide
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -500,7 +500,7 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_stack: stack_t; repl_curmod: modul_t;
                     repl_env: env_t; repl_ts: m_timestamps;
                     repl_stdin: stream_reader;
-                    repl_names: FStar.Completion.table }
+                    repl_names: FStar.Interactive.CompletionTable.table }
 
 let json_of_repl_state st =
   let opts_and_defaults =
@@ -1004,7 +1004,7 @@ let interactive_mode' (filename:string): unit =
   let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
                   repl_stack = stack; repl_curmod = None;
                   repl_env = env; repl_ts = ts; repl_stdin = open_stdin ();
-                  repl_names = FStar.CompletionTable.empty } in
+                  repl_names = FStar.Interactive.CompletionTable.empty } in
   if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
   else

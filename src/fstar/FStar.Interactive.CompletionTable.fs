@@ -1,5 +1,5 @@
 #light "off"
-module FStar.Interactive.Completion
+module FStar.Interactive.CompletionTable
 
 module BU = FStar.Util
 

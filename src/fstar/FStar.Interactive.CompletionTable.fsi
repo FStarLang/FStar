@@ -1,9 +1,11 @@
 #light "off"
-module FStar.Interactive.Completion
+module FStar.Interactive.CompletionTable
 
 type query = string list
 type symbol = | Lid of FStar.Ident.lid
-type table
+
+type trie<'a>
+type table = trie<symbol>
 
 val empty : table
 val insert : tbl:table -> c:symbol -> table
