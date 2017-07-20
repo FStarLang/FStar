@@ -502,7 +502,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         begin match se.sigel with
           | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false))
           | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false))
-          | Sig_let((_, lbs), _, _) ->
+          | Sig_let((_, lbs), _) ->
             let fv = lb_fv lbs source_lid in
             Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false))
           | Sig_declare_typ(lid, _, _) ->
@@ -511,7 +511,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
                  let dd = if U.is_primop_lid lid
-                          || (ns_of_lid_equals lid Const.prims_lid && quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+                          || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
@@ -608,7 +608,7 @@ let try_lookup_module env path =
 
 let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
-      | ({ sigel = Sig_let((_, lbs), _, _) }, _) ->
+      | ({ sigel = Sig_let((_, lbs), _) }, _) ->
         let fv = lb_fv lbs lid in
         Some (fvar lid fv.fv_delta fv.fv_qual)
       | _ -> None in
@@ -616,7 +616,7 @@ let try_lookup_let env (lid:lident) =
 
 let try_lookup_definition env (lid:lident) =
     let k_global_def lid = function
-      | ({ sigel = Sig_let(lbs, _, _) }, _) ->
+      | ({ sigel = Sig_let(lbs, _) }, _) ->
         BU.find_map (snd lbs) (fun lb ->
             match lb.lbname with
                 | Inr fv when S.fv_eq_lid fv lid ->
@@ -1002,7 +1002,7 @@ let finish env modul =
       if List.contains Private quals
       then BU.smap_remove (sigmap env) lid.str
 
-    | Sig_let((_,lbs), _, _) ->
+    | Sig_let((_,lbs), _) ->
       if List.contains Private quals
       || List.contains Abstract quals
       then begin

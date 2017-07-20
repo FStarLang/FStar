@@ -70,7 +70,9 @@ let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
 
-let fstar_options : ref<list<Util.smap<option_val>> > = Util.mk_ref []
+type optionstate = Util.smap<option_val>
+
+let fstar_options : ref<list<optionstate> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
 let pop  () =
     match !fstar_options with
@@ -78,6 +80,11 @@ let pop  () =
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
 let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
+let set o =
+    match !fstar_options with
+    | [] -> failwith "set on empty option stack"
+    | _::os -> fstar_options := (o::os)
+
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 
@@ -122,6 +129,7 @@ let defaults =
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("lax"                          , Bool false);
+      ("load"                         , List []);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -169,7 +177,6 @@ let defaults =
       ("z3rlimit"                     , Int 5);
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
-      ("z3timeout"                    , Int 5);
       ("z3cliopt"                     , List []);
       ("__no_positivity"              , Bool false)]
 
@@ -223,6 +230,7 @@ let get_indent                  ()      = lookup_opt "indent"                   
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
+let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -270,7 +278,6 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
-let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 
 let dlevel = function
@@ -367,7 +374,7 @@ let rec specs () : list<Getopt.opt> =
       ( noshort,
         "admit_except",
          OneArg (String, "[id]"),
-        "Admit all verification conditions, except those with query label <id>");
+        "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
 
 
       ( noshort,
@@ -513,6 +520,12 @@ let rec specs () : list<Getopt.opt> =
         "lax",
         ZeroArgs (fun () -> Bool true), //pretype := true; verify := false),
         "Run the lax-type checker only (admit all verification conditions)");
+
+      ( noshort,
+       "load",
+        OneArg ((fun s -> List (List.map String (get_load()) @ [Path s])),
+                "[module]"),
+        "Load compiled module");
 
        ( noshort,
         "log_types",
@@ -782,12 +795,6 @@ let rec specs () : list<Getopt.opt> =
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
-        "z3timeout",
-         OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored; use z3rlimit instead\n"; Int (int_of_string s)),
-                  "[positive integer]"),
-        "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
-
-       ( noshort,
         "__no_positivity",
         ZeroArgs (fun () -> Bool true),
         "Don't check positivity of inductive types");
@@ -875,7 +882,7 @@ let settable = function
 // JP: the two options below are options that are passed to z3 using
 // command-line arguments; only #reset_options re-starts the z3 process, meaning
 // these two options are resettable, but not settable
-let resettable s = settable s || s="z3timeout" || s="z3seed" || s="z3cliopt"
+let resettable s = settable s || s="z3seed" || s="z3cliopt"
 let all_specs = specs ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
@@ -1039,6 +1046,7 @@ let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ()
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
+let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()
@@ -1088,7 +1096,6 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
-let z3_timeout                   () = get_z3timeout                   ()
 let no_positivity                () = get_no_positivity               ()
 
 

@@ -1,5 +1,5 @@
 [
-  "n@\u0007Ã\u0002&¼Ñ?\u0007Ó\u0017Á\u0001\u0016y",
+  "ñm»\u0018œy ç“\u00197¦ïT0–",
   [
     [
       "FStar.UInt128.v",
@@ -248,6 +248,18 @@
       [
         "@query", "equation_FStar.UInt128.n",
         "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "FStar.UInt128.__uint_to_t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.size", "equation_FStar.UInt128.n",
+        "int_inversion", "projection_inverse_BoxInt_proj_0"
       ],
       0
     ],

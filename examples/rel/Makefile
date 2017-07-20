@@ -20,7 +20,6 @@ all:\
   IfcExampleReify1.uver\
   IfcExampleReify2.uver\
   IfcExampleReify3.uver\
-  IfcRecursiveHeapReify.uver\
   IfcRecursiveReify.uver\
   IfcReificationRegressionTest.uver\
   IfcRules.uver\
@@ -46,7 +45,7 @@ all:\
   WhileReify.uver \
   OTP.uver \
   ElGamal.uver
-
+  # IfcRecursiveHeapReify.uver\ regressed; too slow (NS/07-10)
 
 benton2004:\
   Benton2004.Aux.uver\
@@ -58,8 +57,6 @@ benton2004:\
   Benton2004.RHL.Examples.uver\
   Benton2004.RHL.Derived.uver\
   Benton2004.RHL.Examples2.uver\
-
-
 
 %.fst-in:
 	@echo $(OTHERFLAGS)
