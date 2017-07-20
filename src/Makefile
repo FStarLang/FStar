@@ -20,7 +20,8 @@ ifeq ($(OS),Windows_NT)
   RUNTIME =
 else
   FSC     = fsharpc
-  MSBUILD = msbuild
+  # If can't find msbuild, use xbuild, but throw a warning
+  MSBUILD = $(shell which msbuild || (echo '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'>&2; which xbuild))
   UNAME   = $(shell uname -s)
   FSTAR   = ../bin/fstar-any.sh
   RUNTIME = mono
