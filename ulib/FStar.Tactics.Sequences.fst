@@ -40,7 +40,7 @@ let prune_for_seq : tactic unit =
   
 val sequence_pruning : tactic unit
 let sequence_pruning =
-  norm [];; //normalize the current goal
+  norm [] ;; //normalize the current goal
   g <-- cur_goal; //this is just the goal type
   dump "A";;
   let f = term_as_formula g in
@@ -75,6 +75,35 @@ let sequence_pruning =
 let test (#a:Type0) (s:seq a) (x:a) (from:nat) (to:nat{from<=to /\ to<=length s}) (l:seq a) (y:nat) =
   assume (y == 17); //I would like to prune this out
   assume (l == snoc s x); //I would like to retain this fact from the local environment
-  assert_by_tactic (or_else sequence_pruning idtac) (slice s from to == slice l from to) //would prefer to write this, and have the tactic switch to extensional equality
+  assert_by_tactic (or_else sequence_pruning idtac)
+                   (slice s from to == slice l from to) //would prefer to write this, and have the tactic switch to extensional equality
 
-(*   assert (slice s from to `Seq.equal` slice (snoc s x) from to) *)
+
+(* ////////////////// *)
+(* 1. We generate this WP for test: *)
+
+(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (by_tactic idtac (slice s from to == slice l from to) /\ *)
+(*                                                   (by_tactic idtac (slice s from to == slice l from to) ==> (p /\ p ==> ...))) *)
+
+(* 2. Then we process this WP *)
+
+(*  a. remove marker in negative position *)
+(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (by_tactic idtac (slice s from to == slice l from to) /\ *)
+(*                                                   (slice s from to == slice l from to ==> (p /\ p ==> ...)) *)
+(*  b. in positive position *)
+
+(*  remove the marked term from the main VC *)
+(*  forall a s x from to l y. y==17 ==> y == snoc s x ==> (true /\ *)
+(*                                                   (slice s from to == slice l from to ==> (p /\ p ==> ...)) *)
+
+
+(*  separate subgoal *)
+ 
+(*   run idtac [ (G, (slice s from to == slice l from to)] where G =  a s x from to l y. y==17 ==> y == snoc s x *)
+
+(*   -->* [ (G, (slice s from to == slice l from to)] *)
+
+
+(*  c. present all remaining goals to Z3 *)
+
+(* (\*   assert (slice s from to `Seq.equal` slice (snoc s x) from to) *\) *)
