@@ -74,6 +74,7 @@ val debug_any                   : unit    -> bool
 val debug_at_level              : string  -> debug_level_t -> bool
 val dep                         : unit    -> option<string>
 val detail_errors               : unit    -> bool
+val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit
 val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool

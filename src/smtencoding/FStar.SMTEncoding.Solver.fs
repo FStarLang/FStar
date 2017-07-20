@@ -285,7 +285,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
                         let res = BU.mk_ref None in
                         Z3.ask (filter_facts_without_core env) all_labels (with_fuel label_assumptions p min_fuel) None (fun r -> res := Some r);
                         Option.get (!res) in
-                     detail_errors env all_labels ask_z3, Default
+                     detail_errors env all_labels ask_z3;
+                     [], Default
                 else match errs with
                      | [], Timeout -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], snd errs
                      | [], Default -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], snd errs
@@ -412,12 +413,30 @@ let ask_and_report_errors env all_labels prefix query suffix =
                              else hint_opt)
             | Inr errs ->
                  query_info (Some env) "Query-stats" "failed" statistics;
-                 if used_hint && Options.hint_info() then (
-                 print_string "Failed hint:\n";
-                 match unsat_core with
-                 | None -> BU.print_string "<empty>"
-                 | Some core -> ignore (List.map (fun x -> print_string (" " ^ x)) core) ;
-                 print_string "\n" ) ;
+                 if used_hint
+                 && Options.hint_info()
+                 then begin
+                     print_string "Failed hint:\n";
+                     match unsat_core with
+                     | None -> BU.print_string "<empty>"
+                     | Some core ->
+                       List.iter (fun x -> print_string (" " ^ x)) core;
+                       print_string "\n"
+                 end;
+                 if used_hint
+                 && Options.detail_hint_replay ()
+                 then begin
+                      let ask_z3 label_assumptions =
+                        let res = BU.mk_ref None in
+                        Z3.ask (filter_assertions unsat_core)
+                                all_labels
+                                (with_fuel label_assumptions p initial_config)
+                                None
+                                (fun r -> res := Some r);
+                        Option.get (!res)
+                      in
+                      detail_errors env all_labels ask_z3
+                 end;
                  try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt scope in
 
         if Option.isSome unsat_core || Options.z3_refresh() then Z3.refresh();
