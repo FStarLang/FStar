@@ -17,8 +17,8 @@ module B = Platform.Bytes
 
 open EtM.Plain
 
-type ivsize = blockSize AES_128_CBC
-type keysize = 16
+let ivsize = blockSize AES_128_CBC
+let keysize = 16
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type msg = plain
 type cipher = b:bytes{B.length b >= ivsize}

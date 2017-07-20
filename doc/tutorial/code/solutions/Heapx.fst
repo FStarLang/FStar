@@ -5,8 +5,8 @@ module TS = FStar.TSet
 
 open Preorder
 
-type set  = Set.set
-type tset = TSet.set
+type set  a = Set.set  a
+type tset a = TSet.set a
 
 assume val heap :Type u#1
 

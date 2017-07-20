@@ -3222,7 +3222,7 @@ false
 end)) quals) then begin
 FStar_Syntax_Syntax.teff
 end else begin
-FStar_Syntax_Syntax.tun
+FStar_Syntax_Util.tun
 end
 end
 | Some (k) -> begin
