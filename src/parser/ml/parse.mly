@@ -1446,7 +1446,7 @@ term:
       ( mk_term (Seq(e1, e2)) (rhs2 parseState 1 3) Expr )}
 | noSeqTerm SEMICOLON_SEMICOLON term
     {let (e1, _2, e2) = ($1, (), $3) in
-      ( mk_term (Bind(gen (rhs parseState 1), e1, e2)) (rhs2 parseState 1 3) Expr )}
+      ( mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr )}
 | lidentOrUnderscore LONG_LEFT_ARROW noSeqTerm SEMICOLON term
     {let (x, _2, e1, _4, e2) = ($1, (), $3, (), $5) in
       ( mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr )}

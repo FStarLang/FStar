@@ -9,6 +9,7 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Gho
 	UInt16 UInt32 UInt63 UInt64 UInt8 \
 	Pointer BufferNG Reflection.Types Tactics.Builtins \
 	Tactics.Types Bytes Util \
+	Pervasives
 	# prims is realized by default hence not included in this list
 
 NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims

@@ -179,7 +179,8 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
-      ("__no_positivity"              , Bool false)]
+      ("__no_positivity"              , Bool false);
+      ("__ml_no_eta_expand_coertions" , Bool false)]
 
 let init () =
    let o = peek () in
@@ -281,6 +282,7 @@ let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
+let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -807,6 +809,11 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs (fun () -> Bool true),
         "Don't check positivity of inductive types");
 
+       ( noshort,
+        "__ml_no_eta_expand_coertions",
+        ZeroArgs (fun () -> Bool true),
+        "Do not eta-expand coertions in generated OCaml");
+
 
   ] in
      ( 'h',
@@ -1107,6 +1114,7 @@ let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
 let no_positivity                () = get_no_positivity               ()
+let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 
 
 let should_extract m =
