@@ -117,6 +117,7 @@ let validate_u32_array_st : stateful_validator parse_u32_array = fun input ->
     end
   | None -> None
 
+[@"substitute"]
 let then_check #t (p: parser t) (v: stateful_validator p)
                #t' (p': parser t') (v': stateful_validator p')
                #t'' (f: t -> t' -> t'') :
