@@ -3077,6 +3077,18 @@ let is_active_union_field_eq
 = ()
 
 abstract
+let is_active_union_field_get_key
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires (is_active_union_field h p fd))
+  (ensures (union_get_key (gread h p) == fd))
+  [SMTPat (is_active_union_field h p fd)]
+= ()
+
+abstract
 let is_active_union_field_intro
   (#l: union_typ)
   (h: HS.mem)
