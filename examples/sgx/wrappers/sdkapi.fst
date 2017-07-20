@@ -2,7 +2,7 @@
 module SdkAPI
 
 open FStar.HyperStack.ST
-open Manifest
+open SGX.Manifest
 open FStar.Int8
 open FStar.UInt32
 open FStar.List.Tot.Base
