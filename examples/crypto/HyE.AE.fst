@@ -16,7 +16,7 @@ open HyE.Plain
 module Plain = HyE.Plain
 
 let ivsize = aeadRealIVSize AES_128_GCM
-type keysize = aeadKeySize AES_128_GCM
+let keysize = aeadKeySize AES_128_GCM
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type msg = Plain.t
 type cipher = b:bytes{B.length b >= ivsize}
