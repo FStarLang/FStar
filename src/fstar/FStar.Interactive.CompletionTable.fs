@@ -46,8 +46,8 @@ let rec btree_find_exact (tr: btree<'a>) (k: string) : option<'a> =
     else
       Some v
 
-let rec btree_find_prefix (tr: btree<'a>) (prefix: string) : list<'a> =
-  let rec aux (tr: btree<'a>) (prefix: string) (acc: list<'a>) : list<'a> =
+let rec btree_find_prefix (tr: btree<'a>) (prefix: string) : list<string*'a> =
+  let rec aux (tr: btree<'a>) (prefix: string) (acc: list<string*'a>) : list<string*'a> =
     match tr with
     | StrEmpty -> acc
     | StrBranch (k, v, ltr, rtr) ->
@@ -56,7 +56,7 @@ let rec btree_find_prefix (tr: btree<'a>) (prefix: string) : list<'a> =
       let explore_left = cmp > 0 in
       let explore_right = cmp <= 0 || include_middle in
       let matches = if explore_right then aux rtr prefix acc else acc in
-      let matches = if include_middle then v :: matches else matches in
+      let matches = if include_middle then (k, v) :: matches else matches in
       let matches = if explore_left then aux ltr prefix matches else matches in
       matches in
   aux tr prefix []
@@ -69,8 +69,10 @@ let rec btree_fold (tr: btree<'a>) (f: string -> 'a -> 'b -> 'b) (acc: 'b) =
 
 (** * Tries * **)
 
+type path = list<string>
+
 type subtrie<'a> =
-| Alias of string * list<string>
+| Alias of string * path
 | ProperSubtrie of trie<'a>
 and trie<'a> =
 | Trie of option<'a> * btree<subtrie<'a>>
@@ -78,66 +80,76 @@ and trie<'a> =
 let trie_empty = Trie (None, StrEmpty)
 let subtrie_empty = ProperSubtrie trie_empty
 
-let rec trie_descend_exact (keys: list<string>) (tr: trie<'a>) : option<trie<'a>> =
-  match keys with
+type result<'a> = path*'a
+type oresult<'a> = option<result<'a>>
+
+let extend_result_path (prefix: string) (pth, res) : result<'a> =
+  (prefix :: pth, res)
+
+let rec trie_descend_exact (pth: path) (tr: trie<'a>) : option<trie<'a>> =
+  match pth with
   | [] -> Some tr
-  | id :: keys ->
+  | id :: pth ->
     match tr with
     | Trie (vopt, subtries) ->
-      match btree_find_trie_exact subtries id with
-      | None -> None
-      | Some subtrie -> trie_descend_exact keys subtrie
-and resolve_subtrie (tr: btree<subtrie<'a>>) (k: string) (subtrie: subtrie<'a>) : option<trie<'a>> =
+      bind_opt (btree_find_trie_exact subtries id)
+        (fun subtrie -> trie_descend_exact pth subtrie)
+
+and resolve_subtrie_aliases (tr: btree<subtrie<'a>>) (k: string) (subtrie: subtrie<'a>) : option<trie<'a>> =
   match subtrie with
   | Alias (hd, tl) ->
-    bind_opt (btree_find_trie_exact tr hd) (fun tr' -> trie_descend_exact tl tr')
+    bind_opt (btree_find_trie_exact tr hd)
+      (fun tr' -> trie_descend_exact tl tr')
   | ProperSubtrie st -> Some st
+
 and btree_find_trie_exact (tr: btree<subtrie<'a>>) (k: string) : option<trie<'a>> =
-  bind_opt (btree_find_exact tr k) (resolve_subtrie tr k)
+  bind_opt (btree_find_exact tr k) (resolve_subtrie_aliases tr k)
 
-let trie_find_exact (keys: list<string>) (tr: trie<'a>) : option<'a> =
-  bind_opt (trie_descend_exact keys tr) (function | Trie (vopt, _) -> vopt)
+let trie_find_exact (pth: path) (tr: trie<'a>) : option<'a> =
+  bind_opt (trie_descend_exact pth tr)
+    (function | Trie (vopt, _) -> vopt)
 
-let trie_insert (tr: trie<'a>) (keys: list<string>) (v: 'a) : trie<'a> =
-  let rec aux keys tr =
+let trie_insert (tr: trie<'a>) (pth: path) (v: 'a) : trie<'a> =
+  let rec aux pth tr =
     match tr with
     | Trie (vopt, subtries) ->
-      match keys with
+      match pth with
       | [] ->
         Trie (Some v, subtries)
-      | id :: keys ->
+      | id :: pth ->
         match dflt subtrie_empty (btree_find_exact subtries id) with
         | Alias _ -> failwith "Inserting under module alias"
         | ProperSubtrie subtrie ->
-          Trie (vopt, btree_insert subtries id (ProperSubtrie (aux keys subtrie))) in
-  aux keys tr
+          Trie (vopt, btree_insert subtries id (ProperSubtrie (aux pth subtrie))) in
+  aux pth tr
 
-let rec trie_flatten (tr: trie<'a>) (acc: list<'a>) =
+let rec trie_flatten (rev_path_prefix: path) (tr: trie<'a>) (acc: list<result<'a>>) =
   match tr with
   | Trie (vopt, subtries) ->
     let helper k subtr acc =
-      match resolve_subtrie subtries k subtr with
+      match resolve_subtrie_aliases subtries k subtr with
       | None -> acc
-      | Some subtrie -> trie_flatten subtrie acc in
+      | Some subtrie -> trie_flatten (k :: rev_path_prefix) subtrie acc in
     let acc = btree_fold subtries helper acc in
     match vopt with
     | None -> acc
-    | Some v -> v :: acc
+    | Some v -> (List.rev rev_path_prefix, v) :: acc
 
-let trie_find_prefix (keys: list<string>) (tr: trie<'a>) =
-  let rec aux (keys: list<string>) (tr: trie<'a>) (acc: list<'a>) =
-    match keys with
-    | [] -> trie_flatten tr acc
-    | id :: keys ->
+let trie_find_prefix (pth: path) (tr: trie<'a>) =
+  let rec aux (rev_path_prefix: path) (pth: path) (tr: trie<'a>) (acc: list<result<'a>>) =
+    match pth with
+    | [] -> trie_flatten rev_path_prefix tr acc
+    | id :: pth ->
       match tr with
       | Trie (vopt, subtries) ->
-        let matching_subtries : list<subtrie<'a>> = btree_find_prefix subtries id in
-        List.foldBack (fun subtr acc ->
-                       match resolve_subtrie subtries id subtr with
+        let matching_subtries : list<string*subtrie<'a>> = btree_find_prefix subtries id in
+        List.foldBack (fun (complete_id, subtr) acc ->
+                       match resolve_subtrie_aliases subtries id subtr with
                        | None -> acc
-                       | Some subtrie -> aux keys subtrie acc)
+                       | Some subtrie ->
+                         aux (complete_id :: rev_path_prefix) pth subtrie acc)
                       matching_subtries acc in
-  aux keys tr []
+  aux [] pth tr []
 
 let trie_add_alias (tr: trie<'a>) key path =
   match path with
@@ -176,7 +188,7 @@ let _ =
     printf "prefix 1: %A\n" (trie_find_prefix ["AA"; ""] tmp);
     printf "prefix 2: %A\n" (trie_find_prefix ["A"; "C2"] tmp);
     printf "prefix w/ alias: %A\n" (trie_find_prefix ["X"] tmp);
-    printf "flat: %A\n" (trie_flatten tmp []);
+    printf "flat: %A\n" (trie_flatten [] tmp []);
     // printf "full: %A\n" tmp;
 
     // let tmp = trie_insert tmp ["AA1"; "b1"] "AA1/b1" in
@@ -194,7 +206,7 @@ let _ =
 type candidate =
 | Lid of lid
 
-let keys_of_candidate (c: candidate) =
+let pth_of_candidate (c: candidate) =
   match c with
   | Lid l -> List.map FStar.Ident.text_of_id (FStar.Ident.ids_of_lid l)
 
@@ -204,7 +216,7 @@ let empty : table =
   trie_empty
 
 let insert (tbl: table) (c: candidate) =
-  let keys = keys_of_candidate c in
-  trie_insert tbl keys c
+  let pth = pth_of_candidate c in
+  trie_insert tbl pth c
 
-let autocomplete =
+let autocomplete = 1
