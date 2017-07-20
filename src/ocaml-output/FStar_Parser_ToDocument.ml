@@ -214,7 +214,7 @@ let doc_of_fsdoc :
   =
   fun uu____375  ->
     match uu____375 with
-    | (comment,keywords1) ->
+    | (comment,keywords) ->
         let uu____400 =
           let uu____401 =
             let uu____404 = str comment  in
@@ -232,7 +232,7 @@ let doc_of_fsdoc :
                                  let uu____437 = str v1  in [uu____437]  in
                                FStar_Pprint.rarrow :: uu____434  in
                              uu____430 :: uu____431  in
-                           FStar_Pprint.concat uu____427) keywords1
+                           FStar_Pprint.concat uu____427) keywords
                    in
                 [uu____411]  in
               FStar_Pprint.space :: uu____408  in
@@ -736,15 +736,15 @@ let handleable_op :
   fun op  ->
     fun args  ->
       match FStar_List.length args with
-      | _0_27 when _0_27 = (Prims.parse_int "0") -> true
-      | _0_28 when _0_28 = (Prims.parse_int "1") ->
+      | _0_26 when _0_26 = (Prims.parse_int "0") -> true
+      | _0_27 when _0_27 = (Prims.parse_int "1") ->
           (is_general_prefix_op op) ||
             (FStar_List.mem (FStar_Ident.text_of_id op) ["-"; "~"])
-      | _0_29 when _0_29 = (Prims.parse_int "2") ->
+      | _0_28 when _0_28 = (Prims.parse_int "2") ->
           ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
             (FStar_List.mem (FStar_Ident.text_of_id op)
                ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
-      | _0_30 when _0_30 = (Prims.parse_int "3") ->
+      | _0_29 when _0_29 = (Prims.parse_int "3") ->
           FStar_List.mem (FStar_Ident.text_of_id op) [".()<-"; ".[]<-"]
       | uu____2236 -> false
   
@@ -938,10 +938,10 @@ and p_fsdoc : FStar_Parser_AST.fsdoc -> FStar_Pprint.document =
           | kwd_args1 ->
               let process_kwd_arg uu____2880 =
                 match uu____2880 with
-                | (kwd1,arg) ->
+                | (kwd,arg) ->
                     let uu____2887 = str "@"  in
                     let uu____2888 =
-                      let uu____2889 = str kwd1  in
+                      let uu____2889 = str kwd  in
                       let uu____2890 =
                         let uu____2891 = str arg  in
                         FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____2891
@@ -1462,9 +1462,9 @@ and p_subEffect : FStar_Parser_AST.lift -> FStar_Pprint.document =
         | FStar_Parser_AST.LiftForFree t -> [("lift", t)]  in
       let p_lift uu____3676 =
         match uu____3676 with
-        | (kwd1,t) ->
+        | (kwd,t) ->
             let uu____3683 =
-              let uu____3684 = str kwd1  in
+              let uu____3684 = str kwd  in
               let uu____3685 =
                 FStar_Pprint.op_Hat_Hat FStar_Pprint.space
                   FStar_Pprint.equals
