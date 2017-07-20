@@ -57,11 +57,17 @@ and struct_typ = (l: list (string * typ) {
 })
 and union_typ = struct_typ
 
+(** `struct_field l` is the type of fields of `TStruct l`
+    (i.e. a refinement of `string`).
+*)
 let struct_field
   (l: struct_typ)
 : Tot eqtype
 = (s: string { List.Tot.mem s (List.Tot.map fst l) } )
 
+(** `typ_of_struct_field l f` is the type of data associated with field `f` in
+    `TStruct l` (i.e. a refinement of `typ`).
+*)
 let typ_of_struct_field
   (l: struct_typ)
   (f: struct_field l)
@@ -105,7 +111,15 @@ let rec typ_depth_typ_of_struct_field
     typ_depth_typ_of_struct_field l' f
   end
 
-(** Pointers to data of type t *)
+(** Pointers to data of type t.
+
+    This defines two main types:
+    - `npointer (t: typ)`, a pointer that may be "NULL";
+    - `pointer (t: typ)`, a pointer that cannot be "NULL"
+      (defined as a refinement of `npointer`).
+
+    `nullptr #t` (of type `npointer t`) represents the "NULL" value.
+*)
 
 private type step: (from: typ) -> (to: typ) -> Tot Type0 =
   | StepField:
@@ -238,8 +252,13 @@ noeq private type _buffer (t: typ) =
   _buffer t
 abstract let buffer (t: typ): Tot Type0 = _buffer t
 
-(** Interpretation of type codes *)
+(** Interpretation of type codes.
 
+   Defines functions mapping from type codes (`typ`) to their interpretation as
+   FStar types. For example, `type_of_typ (TBase TUInt8)` is `FStar.UInt8.t`.
+*)
+
+(** Interpretation of base types. *)
 let type_of_base_typ
   (t: base_typ)
 : Tot Type0
@@ -258,6 +277,7 @@ let type_of_base_typ
   | TBool -> bool
   | TUnit -> unit
 
+(** Interpretation of arrays of elements of (interpreted) type `t`. *)
 type array (length: array_length_t) (t: Type) = (s: Seq.seq t {Seq.length s == UInt32.v length})
 
 let type_of_struct_field'
@@ -273,6 +293,17 @@ let type_of_struct_field'
   List.Tot.assoc_precedes f l y;
   type_of_typ y
 
+(** Helper for the interpretation of unions.
+
+    A C union is interpreted as a dependent pair of a key and a value (which
+    depends on the key). The intent is for the key to be ghost, as it will not
+    exist at runtime (C unions are untagged).
+
+    Therefore,
+    - `gtdata_get_key` (defined below) is in `GTot`, and
+    - `gtdata_get_value` asks for the key `k` to read, and a proof that `k`
+      matches the ghost key.
+*)
 abstract
 let gtdata (* ghostly-tagged data *)
   (key: eqtype)
@@ -288,6 +319,11 @@ let _gtdata_get_key
 : Tot key
 = dfst u
 
+(** Gets the current tag (or key) of a union.
+
+    This is a ghost function, as this tag only exists at the logical level and
+    is not stored in memory.
+*)
 abstract
 let gtdata_get_key
   (#key: eqtype)
@@ -296,6 +332,11 @@ let gtdata_get_key
 : GTot key // important: must be Ghost, the tag is not actually stored in memory
 = _gtdata_get_key u
 
+(** Gets the value of a union, provided the field to read from.
+
+    This field must match the ghost tag of the union (hence the `require`
+    clause).
+*)
 abstract
 let gtdata_get_value
   (#key: eqtype)
@@ -332,6 +373,7 @@ let gtdata_extensionality
   (ensures (u1 == u2))
 = ()
 
+(* Interperets a type code (`typ`) as a FStar type (`Type0`). *)
 let rec type_of_typ
   (t: typ)
 : Tot Type0
@@ -355,6 +397,7 @@ let type_of_struct_field
 : Tot (struct_field l -> Tot Type0)
 = type_of_struct_field' l type_of_typ
 
+(** Interpretation of structs, as dependent maps. *)
 let struct (l: struct_typ) = DM.t (struct_field l) (type_of_struct_field l)
 
 let type_of_typ_struct
@@ -381,6 +424,9 @@ let struct_upd (#l: struct_typ) (s: struct l) (f: struct_field l) (v: type_of_st
 let struct_create (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
   DM.create #(struct_field l) #(type_of_struct_field l) f
 
+(** Interpretation of unions, as ghostly-tagged data
+    (see `gtdata` for more information).
+*)
 let union (l: struct_typ) = gtdata (struct_field l) (type_of_struct_field l)
 
 let type_of_typ_union
@@ -410,6 +456,10 @@ let union_create
 : Tot (union l)
 = gtdata_create fd v
 
+(** For any `t: typ`, `dummy_val t` provides a default value of this type.
+
+    This is useful to represent uninitialized data.
+*)
 private
 let rec dummy_val
   (t: typ)
@@ -443,7 +493,31 @@ let rec dummy_val
   | TNPointer t -> NullPtr #t
   | TBuffer t -> Buffer (BufferRootSingleton (Pointer t HS.dummy_aref PathBase)) 0ul 1ul
 
-(** To properly manage the `readable` permission, we store option values instead. *)
+(** The interpretation of type codes (`typ`) defined previously (`type_of_typ`)
+    maps codes to fully defined FStar types. In other words, a struct is
+    interpreted as a dependent map where all fields have a well defined value.
+
+    However, in practice, C structures (or any other type) can be uninitialized
+    or partially-initialized.
+
+    To account for that:
+
+    - First, we define an alternative interpretation of type codes,
+      `otype_of_typ`, which makes uninitialized data explicit (essentially
+      wrapping all interpretations with `option`).
+
+      This concrete interpretation is what is stored in the model of the heap,
+      and what is manipulated internally. As it is quite verbose, it is not
+      exposed to the user.
+
+    - Then, interpretations with explicit uninitialized data (`otype_of_type t`)
+      can be mapped to fully-initialized data (`type_of_type t`) by inserting
+      dummy values. This is done by the `value_of_ovalue` function.
+
+    - Finally, reading from a fully-initialized data is guarded by a `readable`
+      predicate, which ensures that the dummy values cannot be accessed, and
+      therefore that reading uninitialized data is actually forbidden.
+*)
 
 private
 let rec otype_of_typ
