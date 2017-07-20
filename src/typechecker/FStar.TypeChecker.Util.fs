@@ -1711,6 +1711,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | S.Private -> true
                   | _ -> false)
               in
+              //quals (S.Inline_for_extraction :: S.Projector(lid, x.ppname)::iquals) in
               quals (S.Projector(lid, x.ppname)::iquals) in
           let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
                        sigquals = quals;
