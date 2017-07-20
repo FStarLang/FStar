@@ -650,7 +650,7 @@ let rec ovalue_is_readable
 = match t with
   | TStruct l ->
     let (v: ostruct l) = v in
-    Some? v && (    
+    Some? v && (
       let keys = List.Tot.map fst l in
       let pred
         (t': typ)
@@ -672,7 +672,7 @@ let rec ovalue_is_readable
     let (v: option (array len (otype_of_typ t))) = v in
     Some? v &&
     Seq.for_all (ovalue_is_readable t) (Some?.v v)
-  | TBase t -> 
+  | TBase t ->
     let (v: option (type_of_base_typ t)) = v in
     Some? v
   | TPointer t ->
@@ -1022,7 +1022,7 @@ let step_sel
       then ounion_get_value m' fd
       else none_ovalue to
     end
-  | StepCell length value i -> 
+  | StepCell length value i ->
     let (m': option (array length (otype_of_typ to))) = m' in
     begin match m' with
     | None -> none_ovalue to
@@ -1867,7 +1867,7 @@ private let path_disjoint_decomp_includes
       exists (d: path_disjoint_decomp_t p1' p2') . True
     ))
   = Classical.move_requires (f q1 q2) d // FIXME: annoying to repeat those type annotations above. WHY WHY WHY can't I just use (fun q1 q2 d -> Classical.move_requires (f q1 q2) d) as an argument of Classical.forall_intro_3 below instead of this g???
-  in  
+  in
   path_includes_exists_concat p1 p1' ;
   path_includes_exists_concat p2 p2' ;
   let _ : squash (exists (d: path_disjoint_decomp_t p1' p2') . True) =
@@ -2856,7 +2856,7 @@ let disjoint_includes_l_swap #a #as #a' (x:pointer a) (subx:pointer as) (y:point
   [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
   = ()
 
-(* TODO: The following is now wrong, should be replaced with readable 
+(* TODO: The following is now wrong, should be replaced with readable
 
 abstract
 let live_not_equal_disjoint
@@ -2974,7 +2974,7 @@ let readable_struct_forall_mem
   (p: pointer (TStruct l))
 : Lemma (forall
     (h: HS.mem)
-  . (  
+  . (
       forall (f: struct_field l) .
       readable h (gfield p f)
     ) ==>
