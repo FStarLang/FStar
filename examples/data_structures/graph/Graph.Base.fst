@@ -76,7 +76,7 @@ let lemma_valid_csubpath_is_valid #n g p a b =
 
 let adjacent (#n:nat) (g:graph0 n) (node1 node2:fin n) = L.mem node2 (g @^ node1)
 
-let reachable (#n:nat) (g:graph0 n) (node1 node2:fin n) = exists (p : path g) . from p == node1 /\ to p == node2
+let reachable (#n:nat) (g:graph0 n) (node1 node2:fin n) = node1 == node2 \/ exists (p : path g) . (from p == node1 /\ to p == node2)
 
 let append (#n:nat) (g:graph0 n) (p1 p2:path g) 
  : Pure (path g)
