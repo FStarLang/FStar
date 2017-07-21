@@ -194,25 +194,46 @@ val lemma_restrict_unused (#a:Type0) (h:heap) (s:set nat) (r:ref a)
          [SMTPat (r `unused_in` (restrict h s))]
 
 val lemma_restrict_sel (#a:Type0) (h:heap) (s:set nat) (r:ref a)
-  :Lemma (requires Set.mem (addr_of r) s)
+  :Lemma (requires (Set.mem (addr_of r) s))
          (ensures (let h1 = restrict h s in
-	           sel h1 r == sel h r))
+	           (sel h1 r == sel h r)))
          [SMTPat (sel (restrict h s) r)]
 
+ 
 val lemma_join_contains (#a:Type0) (h1:heap) (h2:heap) (r:ref a)
-  :Lemma (requires True)
+  :Lemma (requires (disjoint h1 h2))
          (ensures (let h = join h1 h2 in
                    (h `contains` r) <==> ((h1 `contains` r) \/ (h2 `contains` r))))	   
          [SMTPat ((join h1 h2) `contains` r)]
 
 val lemma_join_unused (#a:Type0) (h1:heap) (h2:heap) (r:ref a)
-  :Lemma (requires True)
+  :Lemma (requires (disjoint h1 h2))
          (ensures (let h = join h1 h2 in
 	           (r `unused_in` h) <==> ((r `unused_in` h1) /\ (r `unused_in` h2))))
 	 [SMTPat (r `unused_in` (join h1 h2))]
 
 val lemma_join_sel (#a:Type0) (h1:heap) (h2:heap) (r:ref a)
-  :Lemma (requires True)
+  :Lemma (requires (disjoint h1 h2))
          (ensures (let h = join h1 h2 in
-	           ((h1 `contains` r) /\ (sel h r == sel h1 r)) \/ ((h2 `contains` r) /\ (sel h r == sel h2 r))))
-	 [SMTPat (sel (join h1 h2) r)]
+	           (sel h r == sel h1 r) \/ (sel h r == sel h2 r)))
+	 [SMTPat (sel (join h1 h2) r)] 	  
+
+val lemma_disjoint_emp (h1:heap) (h2:heap)
+  :Lemma (requires (equal h2 emp))
+         (ensures (disjoint h1 h2))
+	 [SMTPat (disjoint h1 h2)]
+
+val lemma_join_emp (h1:heap) (h2:heap)
+  :Lemma (requires (equal h2 emp))
+         (ensures (disjoint h1 h2 /\ equal (join h1 h2) h1))
+	 [SMTPat(join h1 h2)]
+
+val lemma_join_is_comm (h1:heap) (h2:heap)
+  :Lemma (requires True)
+         (ensures (equal (join h1 h2) (join h2 h1)))
+	 [SMTPat (join h1 h2); SMTPat(join h2 h1)]
+
+val lemma_disjoint_is_comm (h1:heap) (h2:heap)
+  :Lemma (requires True)
+         (ensures (disjoint h1 h2) <==> (disjoint h2 h1))
+	 [SMTPat (disjoint h1 h2); SMTPat(disjoint h2 h1)]

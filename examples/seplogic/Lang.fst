@@ -2,9 +2,13 @@ module Lang
 
 open FStar.Seq
 open FStar.Set
+open FStar.Heap
+open FStar.Classical
 
-type addr = nat
+(* type addr = nat*)
+type addr = ref nat
 
+(*
 type heap = {
   
   set addr * (s:seq nat{length s = size})
@@ -25,7 +29,12 @@ let join (s1:heap) (s2:heap{disjoint s1 s2}) :(s:heap{dom s == Set.union (dom s1
                                                       (forall (i:addr). s1 `contains` i ==> s.[i] == s1.[i]) /\
                                                       (forall (i:addr). s2 `contains` i ==> s.[i] == s2.[i])})
   = admit ()
+*)
 
+let equal (h1:heap) (h2:heap) =
+  (forall (r:addr). (h1 `contains` r) <==> (h2 `contains` r)) /\
+  (forall (r:addr). (h1 `contains` r) /\ (h2 `contains` r) ==> (sel h1 r == sel h2 r))
+  
 type loop_result (a:Type0) =
   | Done : v:a   -> loop_result a
   | Again: acc:a -> loop_result a
@@ -47,23 +56,29 @@ assume val interpreted_in (#a:Type0) (c:command a) (h:heap) :Tot (a * heap)
 
 type heap_predicate = heap -> Type0
 
-let emp (h:heap) :Type0 = dom h == Set.empty
+(* let emp (h:heap) :Type0 = dom h == Set.empty *)
+let is_emp (h:heap) : Type0 = (h == emp)
 
+(*
 let lemma_disjoint_emp (h1:heap) (h2:heap)
   :Lemma (requires (emp h2))
          (ensures  (disjoint h1 h2))
 	 [SMTPat (disjoint h1 h2); SMTPat (emp h2)]
   = assert (Set.equal (Set.intersect (dom h1) (dom h2)) Set.empty)
 
+
 let lemma_join_emp (h1:heap) (h2:heap)
   :Lemma (requires (emp h2))
          (ensures  (disjoint h1 h2 /\ join h1 h2 == h1))
   = assert (Set.equal (dom h1) (dom (join h1 h2)));
     assert (Seq.equal (memory h1) (memory (join h1 h2)))
+*)
+   
+(* let points_to (id:addr) (n:nat) (h:heap) :Type0 = dom h == Set.singleton id /\ h.[id] == n *)
+let points_to (id:addr) (n:nat) (h:heap) : Type0 =
+  (equal h (restrict h (Set.singleton (addr_of id)))) /\ (sel h id == n)
 
-let points_to (id:addr) (n:nat) (h:heap) :Type0 = dom h == Set.singleton id /\ h.[id] == n
-
-let lift (phi:Type0) (h:heap) :Type0 = phi /\ emp h
+let lift (phi:Type0) (h:heap) :Type0 = phi /\ is_emp h
 
 let exists_x (#a:Type0) (pred:a -> heap_predicate) (h:heap) :Type0
   = exists (x:a). pred x h
@@ -76,16 +91,32 @@ let iff (p:heap_predicate) (q:heap_predicate) :Type0 = forall (h:heap). p h <==>
 let imp (p:heap_predicate) (q:heap_predicate) :Type0 = forall (h:heap). p h ==> q h
 
 (* some algebraic laws on the predicates *)
-
 let lemma1_helper (phi:Type0) (p:heap_predicate) (q:heap_predicate) (h:heap)
   :Lemma (requires ((phi ==> (p `imp` q)) /\
                     (star p (lift phi) h)))
          (ensures  (q h))
-  = assert (exists (h1:heap) (h2:heap). disjoint h1 h2 /\ h == join h1 h2 /\ p h1 /\ ((lift phi) h2) /\ emp h2 /\ phi /\ q h1);
-    admit ()
+ = assert (exists (h1:heap) (h2:heap). disjoint h1 h2 /\ (equal h (join h1 h2)) /\ p h1 /\ ((lift phi) h2) /\ is_emp h2 /\ phi /\ q h1)
 
+let lemma1 (phi:Type0) (p:heap_predicate) (q:heap_predicate)
+  :Lemma (requires (phi ==> (p `imp` q)))
+         (ensures ((star p (lift phi)) `imp` q))
+  = Classical.forall_intro (Classical.move_requires (lemma1_helper phi p q))
 
+let lemma2 (phi:Type0) (p:heap_predicate) (q:heap_predicate)
+  :Lemma (requires (phi /\ (p `imp` q)))
+         (ensures (p `imp` (star q (lift phi))))
+  = assert (forall (h:heap). (p h ==> q h) /\ phi /\ ((lift phi) emp) /\ (disjoint h emp))
 
+let lemma3 (phi:Type0) (p:heap_predicate)
+  :Lemma (requires phi)
+         (ensures (p `iff` (star p (lift phi)))) 
+  = assert (forall (h:heap). phi /\ ((lift phi) emp) /\ (disjoint h emp) /\ (equal h (join h emp)))
+
+let lemma_star_is_comm (p:heap_predicate) (q:heap_predicate) 
+  :Lemma (requires True)
+         (ensures (star p q) `iff` (star q p))
+  = assert (forall (h1:heap) (h2:heap). (disjoint h1 h2) <==> (disjoint h2 h1))
+  
 type c_pre            = heap_predicate
 type c_post (a:Type0) = a -> heap_predicate
 
@@ -138,14 +169,14 @@ let lemma_write (id:addr) (v:nat)
 
 let lemma_alloc (u:unit)
   :Lemma (requires True)
-         (ensures  (hoare_triple emp Alloc (fun r -> r `points_to` 0)))
+         (ensures  (hoare_triple is_emp Alloc (fun r -> r `points_to` 0)))
   = admit ()
 
 let lemma_free (id:addr)
   :Lemma (requires True)
          (ensures  (hoare_triple (exists_x (fun v -> id `points_to` v))
 	                         (Free id)
-				 (fun _ -> emp)))
+				 (fun _ -> is_emp)))
   = admit ()
 
 (* get the nice x <-- c1; c2 syntax *)

@@ -74,19 +74,21 @@ let restrict h s =
   { h with memory = (fun r' -> if Set.mem r' s
 			    then h.memory r'
 			    else None) }
+
 let disjoint h1 h2 =
   let _ = () in
-  (forall (r:nat). (Some?(h1.memory r) <==> None?(h2.memory r))) /\
-  (forall (r:nat). (Some?(h2.memory r) <==> None?(h1.memory r)))
+  (forall (r:nat). ~(Some?(h1.memory r) && Some?(h2.memory r))) 
 
 let join_tot h1 h2 =
   let heap_memory = (fun r' ->  match (h1.memory r', h2.memory r') with
                               | (Some v1, None) -> Some v1 
-			      | (None, Some v2) -> Some v2) in
+			      | (None, Some v2) -> Some v2
+			      | (None, None) -> None) in
   if (h1.next_addr < h2.next_addr)
   then { h2 with memory = heap_memory }
   else { h1 with memory = heap_memory }
 
+(* should join return an empty heap if input heaps are disjoint? *)
 let join h1 h2 = 
   if FStar.StrongExcludedMiddle.strong_excluded_middle (disjoint h1 h2) 
   then join_tot h1 h2
@@ -196,3 +198,7 @@ let lemma_restrict_sel #a h s r = ()
 let lemma_join_contains #a h1 h2 r = ()
 let lemma_join_unused #a h1 h2 r = ()
 let lemma_join_sel #a h1 h2 r = ()
+let lemma_disjoint_emp h1 h2 = ()
+let lemma_join_emp h1 h2 = ()
+let lemma_join_is_comm h1 h2 = ()
+let lemma_disjoint_is_comm h1 h2 = ()
