@@ -154,6 +154,8 @@ because it always creates disjoint slices it tends to have much easier framing
 than the general [B.sub]. *)
 
 // general split_at primitive (think of Rust's slice::split_at_mut)
+// polymorphic: inline and hope that it type-checks in kremlin
+inline_for_extraction
 val buffer_split_at: #a:Type -> b:B.buffer a ->
     off:U32.t{U32.v off <= B.length b} ->
     // TODO: this shouldn't be necessary, but Buffer provides no way to advance
