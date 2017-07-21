@@ -1,4 +1,4 @@
-module FStar.Snapshot.ST
+module FStar.SnapshotHyperStack.ST
 
 open FStar.SnapshotHyperStack
 
@@ -205,7 +205,7 @@ assume val op_Colon_Equals: #a:Type -> r:HS.reference a -> v:a -> STL unit
   (ensures (assign_post r v))
 
 unfold let deref_post (#a:Type) (r:HS.reference a) m0 x m1 =
-  m1== m0 /\ x== sel m0 r
+  m1== m0 /\ x == sel m0 r
 
 (**
    Dereferences, provided that the reference exists.

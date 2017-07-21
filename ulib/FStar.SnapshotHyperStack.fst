@@ -95,6 +95,12 @@ let lemma_upd_2 (#a:Type) (h:snapshot_heap) (x:reference a) (v:a) : Lemma
     [SMTPat (upd h x v); SMTPatT (x `unused_in` h)]
     = ()
 
+val lemma_live_1: #a:Type ->  #a':Type -> h:snapshot_heap -> x:reference a -> x':reference a' -> Lemma
+(requires (contains h x /\ x' `unused_in` h))
+(ensures  (x.id <> x'.id \/ ~ (as_ref x === as_ref x')))
+[SMTPat (contains h x); SMTPat (x' `unused_in` h)]
+let lemma_live_1 #a #a' h x x' = ()
+
 unfold let hs_remove_reference (#a:Type) (r:reference a) (m:mem{m `HS.contains` r /\ is_mm r}) :GTot mem =
   let h_0 = Map.sel m.h r.id in
   let h_1 = Heap.free_mm h_0 (HH.as_ref r.ref) in
