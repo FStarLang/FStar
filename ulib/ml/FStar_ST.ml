@@ -2,6 +2,8 @@
 
 open FStar_CommonST
 
+type ('a, 'b) mref = 'a FStar_Heap.ref
+   
 type 'a ref = 'a FStar_Heap.ref
 
 let read = read
