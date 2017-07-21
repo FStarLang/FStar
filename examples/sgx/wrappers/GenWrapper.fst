@@ -55,148 +55,11 @@ let rec allocate_stack_ref nrefs =
       else
                let s = trace "\n \t" in
                s
-                                                  
-let rec print_ref_args nrefs : (ST unit)
-(requires (fun _ -> True))
-(ensures (fun h0 _ h1 -> h0 == h1)) =
-     if nrefs > 1 then 
-        let s = trace "xref" in
-        let s = trace (string_of_int nrefs) in
-        let s = trace " " in
-        print_ref_args (nrefs-1)
-      else 
-        let s = trace "xref" in
-         trace (string_of_int nrefs)
-        
-let rec print_args count : (ST unit)
-(requires (fun _ -> True))
-(ensures (fun h0 _ h1 -> h0 == h1)) =
-     if count > 1 then 
-       let s = trace "x" in
-       let s = trace (string_of_int count) in
-       let s = trace " " in
-       print_args (count-1)
-     else if count = 1 then
-       let s = trace "x" in
-       let s = trace (string_of_int count) in
-       trace " "
-     else
-       trace "()"
-                                                   
-                                        
-                                        
-val gen_int_wrapper_body: (fname:string) -> (nargs:int) -> ST unit
+
+val print_val_generic_args: (args:list argtype)-> (tag:int)->(is_sig:bool) ->ST unit
 (requires (fun _ -> True))
 (ensures (fun h0 _ h1 -> h0 == h1))
-let gen_int_wrapper_body (fname:string) (nargs:int) = 
-      let _ = trace "let " in
-      let _ = trace fname in
-      let s = trace "_wrapper  " in
-      let _ = if nargs <= 4 then
-                print_args nargs
-              else
-                let _ = print_args 4 in
-                let _ = print_ref_args (nargs - 4) in
-                trace " = \n\t"
-      in
-      if nargs <= 4 then
-         (* Not much work here if nargs <= 4*)
-         (* Call fname *)
-         let s = trace fname in                                  
-         let s = trace " " in
-         print_args nargs
-      else
-        (* pass higher arguments as stack references ?*)
-       // let _ = allocate_stack_ref (nargs - 4) in
-        (* Call fname *)
-        let s = trace fname in
-        let s = trace " " in
-        (* print first four arguments as is and ...*)
-        let s = print_args 4 in
-        print_ref_args (nargs - 4)
-
-
-val gen_int_wrapper_sig: (fname:string) -> (nargs:int) ->(ret:argtype) -> ST unit
-(requires (fun _ -> True))
- (ensures (fun h0 _ h1 -> h0 == h1))
-let gen_int_wrapper_sig (fname:string) (nargs:int) (ret:argtype) = 
-     let s = trace "(* Printing signature *)\n" in
-     let s = trace "val " in
-     let s = trace fname in
-     let s = trace "_wrapper : " in
-     let rec print_val_int_args count : (ST unit)
-     (requires (fun _ -> True))
-     (ensures (fun h0 _ h1 -> h0 == h1))=
-      if count >= 1 then
-           let s = trace "int->"
-           in print_val_int_args (count-1)
-      else 
-           ()
-      in 
-      let rec print_val_int_ref_args nrefs : (ST unit)
-          (requires (fun _ -> True))
-          (ensures (fun h0 _ h1 -> h0 == h1))= 
-          if nrefs >= 1 then
-           let s = trace "(xref" in
-           let s = trace (string_of_int nrefs) in
-           let s = trace ": stackref int)-> " in
-           print_val_int_ref_args (nrefs-1)
-           else 
-                ()
-
-       in   
-       let _ = if nargs > 4 then
-                 let _ = print_val_int_args 4 in
-                 (* print remaining arguments as references *)
-                 print_val_int_ref_args (nargs - 4)  
-               else
-                 print_val_int_args nargs
-       in
-       (* print return type *)
-       let _ = trace " ST (rt: " in
-       let _ = print_type ret in
-       let _ = trace ")\n \t " in
-       (* Print proper effect type here *)
-       let _ = trace "(requires (fun _ -> True)) \n\t (ensures (fun h0 r h1 -> " in
-       let _ = if nargs <= 4 then 
-                  trace " h0 == h1 " 
-                else
-                  let rec local_print_modifies_rids_clause nrefs: (ST unit)
-                     (requires (fun _ -> True ))
-                     (ensures (fun h0 r h1 -> h0 == h1)) =
-                     if nrefs > 1 then
-                       let _ = trace "TSet.union (TSet.singleton (frameOf xref" in
-                       let _ = trace (string_of_int nrefs) in
-                       let _ = trace ")) " in
-                       local_print_modifies_rids_clause (nrefs -1)
-                     else 
-                       let _ = trace "(TSet.singleton (frameOf xref" in
-                       let _ = trace (string_of_int nrefs) in
-                       trace ")) "
-                   in
-                   let _ = trace "modifies TSet.union TSet.empty " in
-                   let _ = local_print_modifies_rids_clause (nargs-4) in
-                   let _  = trace "h0 h1 \n\t " in
-                   if (type_is_ref ret) then
-                      (* if return type is a reference should there be a modifies clause? *)
-                      trace "\t\t\t /\ is_eternal_region rt \n\t"
-                   else
-                      ()
-       in
-       trace "))\n"
-
-val gen_int_wrapper: (fname:string) -> (nargs:int)-> (ret:argtype) -> ST unit
-(requires (fun _ -> True))
-(ensures (fun h0 _ h1 -> h0 == h1))
-let gen_int_wrapper (fname:string) (nargs:int) (ret:argtype) = 
-    let _ = gen_int_wrapper_sig fname nargs ret in
-    let _ = gen_int_wrapper_body fname nargs in
-    ()
-
-val print_val_generic_args: (args:list argtype)-> (tag:int) ->ST unit
-(requires (fun _ -> True))
-(ensures (fun h0 _ h1 -> h0 == h1))
-let rec print_val_generic_args  args tag: (ST unit)
+let rec print_val_generic_args  args tag is_sig: (ST unit)
      (requires (fun _ -> True))
      (ensures (fun h0 _ h1 -> h0 == h1))= 
       let count = List.Tot.Base.length args in
@@ -204,19 +67,27 @@ let rec print_val_generic_args  args tag: (ST unit)
       | [] -> ()
       | hd::tl ->
            if count >= 1 then
-                let s = trace "(x" in
+                let _ = if is_sig then trace "(" 
+                        else ()
+                in
+                let _ = trace "x" in
                 let s = trace (string_of_int tag) in
-                let s = trace ":" in
-                let s = print_type hd in
-                let _ = trace ")->"
-                in print_val_generic_args tl (tag+1)
+
+                let _ = if not is_sig then trace " " else () in
+                let _ = if is_sig then 
+                           let s = trace ":" in
+                           let s = print_type hd in
+                           trace ")->"
+                        else 
+                           ()
+                in print_val_generic_args tl (tag+1) is_sig
            else 
                 ()
                 
-val print_val_generic_stackref_args: (args:list argtype)-> (tag:int) ->ST unit
+val print_val_generic_stackref_args: (args:list argtype)-> (tag:int)->(is_sig:bool) ->ST unit
 (requires (fun _ -> True))
 (ensures (fun h0 _ h1 -> h0 == h1))
-let rec print_val_generic_stackref_args args tag: (ST unit)
+let rec print_val_generic_stackref_args args tag is_sig: (ST unit)
       (requires (fun _ -> True))
       (ensures (fun h0 _ h1 -> h0 == h1))= 
       let nrefs = List.Tot.Base.length args in
@@ -224,12 +95,19 @@ let rec print_val_generic_stackref_args args tag: (ST unit)
        | [] -> ()
        | hd::tl  ->
           if nrefs >= 1 then
-           let s = trace "(xref" in
+           let _ = if is_sig then trace "("
+                   else ()
+           in
+           let _ = trace "xref" in
            let s = trace (string_of_int tag) in
-           let s = trace ": stackref " in
-           let _ = print_type hd in
-           let _ = trace ")->" in
-           print_val_generic_stackref_args tl (tag+1)
+           let _ = if not is_sig then trace " " else () in
+           let _ = if is_sig then 
+                    let s = trace ": stackref " in
+                    let _ = print_type hd in
+                    trace ")->"
+                   else ()
+           in
+           print_val_generic_stackref_args tl (tag+1) is_sig
            else 
                 ()
 
@@ -256,7 +134,7 @@ let rec print_frameOf d narg is_st_ref : ST unit
  (requires (fun _ -> True))
  (ensures (fun h0 r h1 -> h0 == h1)) =
  if d > 1 then
-         let _ = trace "TSet.union (TSet.singleton " in
+         let _ = trace "Set.union (Set.singleton " in
          let _ = helper_print d "(frameOf sel h  " in
          let _ = if is_st_ref then 
                    trace  "xref" 
@@ -295,7 +173,7 @@ let rec print_sel_and_frame d narg is_st_ref : ST unit
          in
          let _ = trace (string_of_int narg) in
          let _ = helper_print d ")" in
-         let _ = trace " " in
+         let _ = trace ") " in
          let _ = trace "Set.singleton " in
          let _ = helper_print d "as_addr (frameOf sel h0  " in
          let _ = if is_st_ref then 
@@ -319,7 +197,7 @@ let rec get_ref_depth (a:argtype) = match a with
    
 val gen_generic_wrapper_sig: (fname:string) ->(args: list argtype)->(ret:argtype) -> ST unit
 (requires (fun _ -> True))
- (ensures (fun h0 _ h1 -> h0 == h1))
+(ensures (fun h0 _ h1 -> h0 == h1))
 let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) = 
      let orignargs = List.Tot.Base.length args in
      let s = trace "(* Printing signature *)\n" in
@@ -328,18 +206,18 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
      let s = trace "_wrapper : " in
      let _ = if orignargs > 4 then
                  let argsl, argsh = split_list_at_4 args in 
-                 let _ = print_val_generic_args argsl 1  in
+                 let _ = print_val_generic_args argsl 1 true  in
                  (* print remaining arguments as references *)
-                 print_val_generic_stackref_args argsh 1  
+                 print_val_generic_stackref_args argsh 1  true
                else
-                 print_val_generic_args args 1
+                 print_val_generic_args args 1 true
        in
        (* print return type *)
        let _ = trace " ST (rt: " in
        let _ = print_type ret in
        let _ = trace ")\n \t " in
        (* Print proper effect type here *)
-       let _ = trace "(requires (fun _ -> " in
+       let _ = trace "(requires (fun h -> True  " in
 
        (*  local function that prints each reference is contained in memory *)
        let rec local_print_contains_clause (args: list argtype) : (ST unit)
@@ -353,14 +231,23 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                                       if (orignargs - 4 < nargs) then
                                          (* normal argument *)
                                           if (type_is_ref hd) then
-                                                 let _ = trace "(h `contains` x" in
+                                                 let _ = trace "/\ (h `contains` x" in
                                                  let _ = trace (string_of_int (orignargs - nargs + 1)) in
-                                                 let _ = trace ") \n\t " in
+                                                 let _ = trace ") \n\t" in
                                                  if (is_deep_ref false hd) then
                                                     let d = get_ref_depth hd in
-                                                    (* add to the modifies clause *)
-                                                    let _ = trace "/\ h `contains` "  in
-                                                    let _ = print_sel d (orignargs - nargs +1) false in
+                                                    let rec print_all_deep_refs (l:int) :ST unit
+                                                      (requires (fun _ -> True))
+                                                      (ensures (fun h0 r h1 -> h0 == h1)) =
+                                                          if l <= d then
+                                                             (* add to the modifies clause *)
+                                                             let _ = trace "/\ (h `contains` "  in
+                                                             let _ = print_sel l (orignargs - nargs +1) false in
+                                                             let _ = trace ") \n\t" in
+                                                             print_all_deep_refs (l+1)
+                                                           else ()
+                                                    in
+                                                    let _ = print_all_deep_refs 2 in
                                                     (* continue with rest of the arguments *)
                                                     local_print_contains_clause tl
                                                  else 
@@ -372,14 +259,23 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                                         
                                       else 
                                           (* stackref aguments *)
-                                          let _ = trace "\n\t /\ (h `contains` xref" in 
+                                          let _ = trace "/\ (h `contains` xref" in 
                                           let _ = trace (string_of_int nargs) in
-                                          let _ = trace ") \n\t " in
+                                          let _ = trace ") \n\t" in
                                           if (is_deep_ref false hd) then
                                              let d = get_ref_depth hd in
-                                             (* add to the modifies clause *)
-                                             let _ = trace "/\ h `contains` "  in
-                                             let _ =  print_sel d (orignargs - 4 - nargs) true in
+                                             let rec print_all_deep_refs (l:int) :ST unit
+                                               (requires (fun _ -> True))
+                                               (ensures (fun h0 r h1 -> h0 == h1)) =
+                                                   if l <= d then
+                                                       (* add to the modifies clause *)
+                                                       let _ = trace "/\ (h `contains` "  in
+                                                       let _ =  print_sel l (orignargs - 4 - nargs) true in
+                                                       let _ = trace ") \n\t" in
+                                                       print_all_deep_refs (l+1)
+                                                    else ()
+                                             in
+                                             let _ = print_all_deep_refs 2 in
                                              (* continue with rest of the arguments *)
                                              local_print_contains_clause tl
                                           else 
@@ -407,15 +303,23 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                                       if (orignargs - 4 < nargs) then
                                          (* normal argument *)
                                           if (type_is_ref hd) then
-                                                 let _ = trace "TSet.union (TSet.singleton (frameOf x" in
+                                                 let _ = trace "Set.union (Set.singleton (frameOf x" in
                                                  let _ = trace (string_of_int (orignargs - nargs + 1)) in
                                                  let _ = trace ")) " in
                                                  if (is_deep_ref false hd) then
                                                     let d = get_ref_depth hd in
-                                                    (* add to the modifies clause *)
-                                                    let _ = print_frameOf d (orignargs - nargs +1) false in
-                                                    (* continue with rest of the arguments *)
-                                                    local_print_modifies_rids_clause tl
+                                                    let rec print_all_deep_refs (l:int) :ST unit
+                                                      (requires (fun _ -> True))
+                                                      (ensures (fun h0 r h1 -> h0 == h1)) =
+                                                          if l <= d then
+                                                               (* add to the modifies clause *)
+                                                               let _ = print_frameOf l (orignargs - nargs +1) false in
+                                                               print_all_deep_refs (l+1)
+                                                           else ()
+                                                     in
+                                                     let _ = print_all_deep_refs 2 in
+                                                     (* continue with rest of the arguments *)
+                                                     local_print_modifies_rids_clause tl
                                                  else 
                                                    (* not a deep reference - continue to rest of the arguments*)
                                                    local_print_modifies_rids_clause tl
@@ -425,13 +329,21 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                                         
                                       else 
                                           (* stackref aguments *)
-                                          let _ = trace "TSet.union (TSet.singleton (frameOf xref" in
+                                          let _ = trace "Set.union (Set.singleton (frameOf xref" in
                                           let _ = trace (string_of_int nargs) in
                                           let _ = trace ")) " in
                                           if (is_deep_ref false hd) then
                                              let d = get_ref_depth hd in
-                                             (* add to the modifies clause *)
-                                             let _ =  print_frameOf d (orignargs - 4 - nargs) true in
+                                             let rec print_all_deep_refs (l:int) :ST unit
+                                               (requires (fun _ -> True))
+                                               (ensures (fun h0 r h1 -> h0 == h1)) =
+                                                   if l <= d then
+                                                      (* add to the modifies clause *)
+                                                      let _ =  print_frameOf l (orignargs - 4 - nargs) true in
+                                                      print_all_deep_refs (l+1)
+                                                   else ()
+                                             in
+                                             let _ = print_all_deep_refs 2 in
                                              (* continue with rest of the arguments *)
                                              local_print_modifies_rids_clause tl
                                           else 
@@ -441,13 +353,13 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                            (* end of function *)
                            in ()
                     in
-                   let _ = trace "modifies_ref TSet.union TSet.empty " in
+                   let _ = trace "modifies Set.union Set.empty " in
                    let _ = local_print_modifies_rids_clause args in
                    let _  = trace "h0 h1 \n\t " in
                    let rec local_print_modifies_refs_clause (args: list argtype) : (ST unit)
                        (requires (fun _ -> True))
                        (ensures (fun h0 r h1 -> h0 == h1)) =
-                                            let nargs = List.Tot.Base.length args in
+                     let nargs = List.Tot.Base.length args in
                      (* is this a deep pointer? *)
                      let _ = begin match args with
                              |[] -> ()
@@ -457,15 +369,26 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                                           if (type_is_ref hd) then
                                                  let _ = trace "/\ modifies_ref (frameOf x" in
                                                  let _ = trace (string_of_int (orignargs - nargs + 1)) in
-                                                 let _ = trace ") \n \t " in
+                                                 let _ = trace ") " in 
+                                                 let _ = trace " (Set.singleton (as_addr x" in
+                                                 let _ = trace (string_of_int (orignargs -nargs + 1)) in 
+                                                 let _ = trace "))\n \t " in
                                                  if (is_deep_ref false hd) then
                                                     let d = get_ref_depth hd in
-                                                    let _ = trace "/\ modifies_ref (frameOf " in
-                                                    (* add to the modifies_ref clause *)
-                                                    let _ = print_sel_and_frame d (orignargs - nargs +1) false in
-                                                    let _ = trace ") \n \t " in
-                                                    (* continue with rest of the arguments *)
-                                                    local_print_modifies_refs_clause tl
+                                                    let rec print_all_deep_refs (l:int) :ST unit
+                                                      (requires (fun _ -> True))
+                                                      (ensures (fun h0 r h1 -> h0 == h1)) =
+                                                          if l <= d then
+                                                              let _ = trace "/\ modifies_ref (frameOf " in
+                                                              (* add to the modifies_ref clause *)
+                                                              let _ = print_sel_and_frame l (orignargs - nargs +1) false in
+                                                              let _ = trace "\n \t " in
+                                                              print_all_deep_refs (l+1)
+                                                           else ()
+                                                  in
+                                                  let _ = print_all_deep_refs 2 in
+                                                  (* continue with rest of the arguments *)
+                                                  local_print_modifies_refs_clause tl
                                                  else 
                                                    (* not a deep reference - continue to rest of the arguments*)
                                                    local_print_modifies_refs_clause tl
@@ -476,16 +399,27 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                                       else 
                                           (* stackref aguments *)
                                           let _ = trace "/\ modifies_ref (frameOf xref" in
-                                          let _ = trace (string_of_int nargs) in
-                                          let _ = trace ")\n\t " in
+                                          let _ = trace (string_of_int (orignargs - 4 - nargs + 1)) in
+                                          let _ = trace ") " in 
+                                          let _ = trace "(Set.singleton (as_addr xref" in
+                                          let _ = trace (string_of_int (orignargs - 4 -nargs + 1)) in 
+                                          let _ = trace ")) \n\t " in
                                           if (is_deep_ref false hd) then
                                              let d = get_ref_depth hd in
                                              let _ = trace "/\ modifies_ref (frameOf " in
-                                             (* add to the modifies clause *)
-                                             let _ =  print_sel_and_frame d (orignargs - 4 - nargs) true in
-                                             let _ = trace ") \n \t " in
-                                             (* continue with rest of the arguments *)
-                                             local_print_modifies_refs_clause tl
+                                             let rec print_all_deep_refs (l:int) :ST unit
+                                               (requires (fun _ -> True))
+                                               (ensures (fun h0 r h1 -> h0 == h1)) =
+                                                   if l <= d then
+                                                        (* add to the modifies clause *)
+                                                        let _ =  print_sel_and_frame l (orignargs - 4 - nargs + 1) true in
+                                                        let _ = trace ") \n \t " in
+                                                        print_all_deep_refs (l+1)
+                                                   else ()
+                                            in
+                                            let _ = print_all_deep_refs 2 in
+                                            (* continue with rest of the arguments *)
+                                            local_print_modifies_refs_clause tl
                                           else 
                                              (* not a deep reference - continue to rest of the arguments*)
                                              local_print_modifies_refs_clause tl
@@ -505,7 +439,114 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
        in 
        trace "))\n"
        
-
+                                        
+val gen_generic_wrapper_body: (fname:string) ->(args: list argtype)->(ret:argtype) -> ST unit
+(requires (fun _ -> True))
+(ensures (fun h0 _ h1 -> h0 == h1))
+let gen_generic_wrapper_body (fname:string) (args: list argtype) (ret:argtype) = 
+     let orignargs = List.Tot.Base.length args in
+     let s = trace "let " in
+     let s = trace fname in
+     let s = trace "_wrapper  " in
+     let _ = if orignargs > 4 then
+                 let argsl, argsh = split_list_at_4 args in 
+                 let _ = print_val_generic_args argsl 1 false  in
+                 (* print remaining arguments as references *)
+                 print_val_generic_stackref_args argsh 1  false
+               else
+                 print_val_generic_args args 1 false
+       in
+      let _ = trace "= \n \t" in
+      (* Check if bitmap is set for reference arguments *)
+      let rec check_bitmap (args: list argtype) : ST unit
+        (requires (fun _ -> True))
+        (ensures (fun h0 r h1 -> h0 == h1)) = 
+        let nargs = List.Tot.Base.length args in
+         let _ =  match args with
+                  |[] -> ()
+                  | hd::tl -> 
+                         if (orignargs - 4 < nargs) then
+                            (* normal argument *)
+                             if type_is_ref hd then
+                                 let _ = trace "and writable (as_addr " in
+                                 let _ = trace "x" in
+                                 let _ = trace (string_of_int (orignargs - nargs + 1)) in
+                                 let _ = trace ") \n \t \t" in
+                                 if (is_deep_ref false hd) then
+                                      let d = get_ref_depth hd in
+                                      let rec print_all_deep_refs (l:int) :ST unit
+                                        (requires (fun _ -> True))
+                                        (ensures (fun h0 r h1 -> h0 == h1)) =
+                                            if l <= d then
+                                              let _ = trace "and writable (as_addr  " in
+                                              (* add to the modifies_ref clause *)
+                                              let _ = print_sel l (orignargs - nargs +1) false in
+                                              let _ = trace ")\n \t \t" in
+                                              print_all_deep_refs (l+1)
+                                            else
+                                              ()
+                                      in
+                                      let _ = print_all_deep_refs 2 in
+                                      (* continue with rest of the arguments *)
+                                      check_bitmap tl 
+                                   else 
+                                     (* not a deep reference - continue to rest of the arguments*)
+                                      check_bitmap tl 
+                                 
+                             else
+                                 (* skip the checks *)
+                                 check_bitmap tl
+                          else
+                             if type_is_ref hd then
+                                 let _ = trace "and writable (as_addr " in
+                                 let _ = trace "xref" in
+                                 let _ = trace (string_of_int (orignargs - 4 - nargs + 1)) in
+                                 let _ = trace ") \n \t" in
+                                 if (is_deep_ref false hd) then
+                                      let d = get_ref_depth hd in
+                                      let rec print_all_deep_refs (l:int) :ST unit
+                                        (requires (fun _ -> True))
+                                        (ensures (fun h0 r h1 -> h0 == h1)) =
+                                            if l <= d then
+                                              let _ = trace "and writable (as_addr  " in
+                                              (* add to the modifies_ref clause *)
+                                              let _ = print_sel l (orignargs - nargs +1) true in
+                                              let _ = trace ")\n \t \t" in
+                                              print_all_deep_refs (l+1)
+                                            else
+                                              ()
+                                      in
+                                      let _ = print_all_deep_refs 2 in
+                                      (* continue with rest of the arguments *)
+                                      check_bitmap tl 
+                                   else 
+                                     (* not a deep reference - continue to rest of the arguments*)
+                                      check_bitmap tl 
+                             else
+                                 (* skip the checks *)
+                                 check_bitmap tl
+        in () (* end of match *)
+      in (* end of check_bitmap *) 
+      let _ = trace "(* check if all references and deep references are marked as wriatable in bitmap *) \n \t " in
+      let _ = trace " if true   " in
+      let _ = check_bitmap args in
+      let _ = trace " then \n \t \t " in
+      (* invoke function *)
+      let s = trace "(* invoking function *)\n \t    " in
+      let _ = trace "let rt = " in
+      let _ = trace fname in
+      let _ = trace " " in
+      let _ = if orignargs > 4 then
+                  let argsl, argsh = split_list_at_4 args in 
+                  let _ = print_val_generic_args argsl 1 false  in
+                  (* print remaining arguments as references *)
+                  print_val_generic_stackref_args argsh 1  false
+                else
+                  print_val_generic_args args 1 false
+        in
+      let _ = trace " in \n \t \t rt \n \t " in
+      let _ = trace "else \n \t \t (* raise an exception here? *) \n \t \t raise Halt \n" in
+      ()
 
 
 open FStar.List.Tot.Base
@@ -515,7 +556,7 @@ val gen_generic_wrapper: (fname:string) -> (args:list argtype)-> (ret:argtype) -
 (ensures (fun h0 _ h1 -> h0 == h1))
 let gen_generic_wrapper (fname:string) (args:list argtype) (ret:argtype) = 
     let _ = gen_generic_wrapper_sig fname args ret in
-   // let _ = gen_generic_wrapper_body fname nargs in
+    let _ = gen_generic_wrapper_body fname args ret in
     ()
 
 
@@ -524,22 +565,12 @@ val gen_wrapper: (f:calltable_entry)  -> ST unit
   (ensures (fun h0 _ h1 -> h0 == h1))
 let gen_wrapper (f:calltable_entry) = match f with
   | Mkcalltable_entry (fname:string) (fstart_address:nat64) (fsize:nat64) (argslist:list argtype) (ret:argtype) -> 
-      let rec issimplefunc (argsl: list argtype) (count:int) = begin match argsl with
-      |[] -> (true, count)
-      | hd::tail -> begin match hd with
-                  | ANat64 -> issimplefunc tail (count+1)
-                  | _  -> (false, count)
-                  end
-      end in
-      let stat, nargs = issimplefunc argslist 0 in
-      if stat then gen_int_wrapper fname nargs ret
-      else
          gen_generic_wrapper fname argslist ret
          
 (* Sample Manifest *)
 val main: unit -> ST unit
 (requires (fun _ -> True))
 (ensures (fun h0 _ h1 -> h0 == h1))
-let main () = gen_wrapper (Mkcalltable_entry "foo" 0x1000 0x25 [ANat64; ANat64; ANat64; (ABuffer (ABuffer ANat64)); (ABuffer ANat64)] (ABuffer ANat64))
+let main () = gen_wrapper (Mkcalltable_entry "foo" 0x1000 0x25 [ANat64; ANat64; (ABuffer (ABuffer (ABuffer ANat64))); (ABuffer (ABuffer ANat64)); (ABuffer ANat64)] (ABuffer ANat64))
            
 let () = main ()
