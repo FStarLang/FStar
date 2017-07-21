@@ -20,7 +20,8 @@ ifeq ($(OS),Windows_NT)
   RUNTIME =
 else
   FSC     = fsharpc
-  MSBUILD = xbuild
+  # If can't find msbuild, use xbuild, but throw a warning
+  MSBUILD = $(shell which msbuild || (echo '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'>&2; which xbuild))
   UNAME   = $(shell uname -s)
   FSTAR   = ../bin/fstar-any.sh
   RUNTIME = mono
@@ -115,7 +116,7 @@ boot_fstis/FStar.bytes.fst: basic/bytes.fsti
 
 boot_fstis/FStar.util.fsti: basic/util.fsi
 	cp $^ $@
-	$(SED) -i 's/open System.IO/open FStar.All/g' $@
+	$(SED) -i 's/open System.IO/module ALL_TMP = FStar.All/g' $@
 	$(SED) -i 's/type time.*/assume new type time/g'  $@
 	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@
 	$(SED) -i 's/type imap.*/assume new type imap : Type0 -> Type0/g'  $@
@@ -128,7 +129,7 @@ boot_fstis/FStar.util.fsti: basic/util.fsi
 
 boot_fstis/FStar.unionfind.fsti: basic/unionfind.fsi
 	cp $^ $@
-	$(SED) -i 's/type pa_t.*/open FStar.All/g' $@
+	$(SED) -i 's/type pa_t.*/module ALL_TMP = FStar.All/g' $@
 	$(SED) -i 's/and data.*//g' $@
 	$(SED) -i 's/.*| PArray.*//g' $@
 	$(SED) -i 's/.*| PDiff.*//g' $@
@@ -153,8 +154,8 @@ rename_as_fst:
 prep: $(U_ALL_INTERFACES)
 	$(MAKE) rename_as_fst
 	#fix up a use of polymorphic recursion in F#, which has a different syntax than F*
-	$(SED) -i 's/^and unembed_tactic_0.*//g' u_boot_fsts/FStar.Tactics.Interpreter.fst
-	$(SED) -i 's/^\/\/F\* version: and unembed_tactic_0/and unembed_tactic_0/g' u_boot_fsts/FStar.Tactics.Interpreter.fst
+	$(SED) -i '/\/\/ *JUST *FSHARP */d' u_boot_fsts/FStar.Tactics.Interpreter.fst
+	$(SED) -i 's,^ *// *IN *F\* *:,,g' u_boot_fsts/FStar.Tactics.Interpreter.fst
 
 clean_u_extract_ocaml:
 	rm -rf boot_fstis u_boot_fsts u_ocaml-output
@@ -165,7 +166,7 @@ u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FSta
 	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
 u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Subst.fst Free.fst \
-							InstFV.fst Util.fst Print.fst MutRecTy.fst Resugar.fst) \
+							InstFV.fst Util.fst Print.fst MutRecTy.fst Resugar.fst Unionfind.fst) \
                   u_boot_fsts/FStar.Fsdoc.Generator.fst
 	$(FSTARBOOT) $^ --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
 
@@ -201,8 +202,11 @@ u_extract_tosyntax:$(addprefix u_boot_fsts/FStar.ToSyntax., Env.fst Interleave.f
 u_extract_extraction:$(addprefix u_boot_fsts/FStar.Extraction., ML.Syntax.fst ML.UEnv.fst ML.Util.fst ML.Code.fst ML.Term.fst ML.Modul.fst Kremlin.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Extraction
 
-u_extract_tactics:$(addprefix u_boot_fsts/FStar.Tactics., Basic.fst Embedding.fst Interpreter.fst)
-	$(FSTARBOOT) $^ --extract_namespace FStar.Tactics
+u_extract_tactics:../ulib/FStar.Tactics.Types.fsti $(addprefix u_boot_fsts/FStar.Tactics., Types.fst Basic.fst Embedding.fst Interpreter.fst Native.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.Tactics --no_extract FStar.Tactics.Native
+
+u_extract_reflection:../ulib/FStar.Reflection.Types.fsti $(addprefix u_boot_fsts/FStar.Reflection., Basic.fst Data.fst Interpreter.fst)
+	$(FSTARBOOT) $^ --extract_namespace FStar.Reflection
 
 u_extract_smtencoding_base: $(addprefix u_boot_fsts/FStar.SMTEncoding., Term.fst Util.fst Z3.fst SplitQueryCases.fst ErrorReporting.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.SMTEncoding
@@ -221,7 +225,7 @@ u_extract_smtencoding: u_extract_smtencoding_base u_extract_encode u_extract_sol
 u_extract_fstar: $(addprefix u_boot_fsts/FStar., Dependencies.fst Interactive.fst Universal.fst Indent.fst Main.fst)
 	$(FSTARBOOT) $^ --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Legacy.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
-u_extract_all: u_extract_misc u_extract_syntax u_extract_parser	u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction u_extract_tactics u_extract_fstar
+u_extract_all: u_extract_tactics u_extract_reflection u_extract_misc u_extract_syntax u_extract_parser u_extract_typechecker u_extract_tosyntax u_extract_smtencoding u_extract_extraction u_extract_fstar
 
 uz:
 	$(MAKE) prep
@@ -274,10 +278,13 @@ hello:
 	+$(MAKE) -C ../examples/hello ocaml
 
 # Getting parallelism from this target
-uregressions: hello ulib uexamples interactive-test
+uregressions: hello ulib tutorial uexamples interactive-test
 
 ulib:
 	+$(MAKE) -C ../ulib
+
+tutorial: ulib
+	+$(MAKE) -C ../doc/tutorial regressions
 
 uexamples:
 	+$(MAKE) -C ../examples all

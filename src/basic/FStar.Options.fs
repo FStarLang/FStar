@@ -70,7 +70,9 @@ let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
 
-let fstar_options : ref<list<Util.smap<option_val>> > = Util.mk_ref []
+type optionstate = Util.smap<option_val>
+
+let fstar_options : ref<list<optionstate> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
 let pop  () =
     match !fstar_options with
@@ -78,6 +80,11 @@ let pop  () =
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
 let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
+let set o =
+    match !fstar_options with
+    | [] -> failwith "set on empty option stack"
+    | _::os -> fstar_options := (o::os)
+
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 
@@ -93,6 +100,7 @@ let defaults =
       ("_fstar_home"                  , String "");
       ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
+      ("admit_except"                 , Unset);
       ("check_hints"                  , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
@@ -100,6 +108,7 @@ let defaults =
       ("debug_level"                  , List []);
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
+      ("detail_hint_replay"           , Bool false);
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
@@ -121,6 +130,7 @@ let defaults =
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("lax"                          , Bool false);
+      ("load"                         , List []);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -168,9 +178,9 @@ let defaults =
       ("z3rlimit"                     , Int 5);
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
-      ("z3timeout"                    , Int 5);
       ("z3cliopt"                     , List []);
-      ("__no_positivity"              , Bool false)]
+      ("__no_positivity"              , Bool false);
+      ("__ml_no_eta_expand_coertions" , Bool false)]
 
 let init () =
    let o = peek () in
@@ -194,6 +204,7 @@ let lookup_opt s c =
   c (get_option s)
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
+let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_check_hints             ()      = lookup_opt "check_hints"              as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
@@ -201,6 +212,7 @@ let get_debug                   ()      = lookup_opt "debug"                    
 let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
+let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
@@ -221,6 +233,7 @@ let get_indent                  ()      = lookup_opt "indent"                   
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
+let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -268,8 +281,8 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
-let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
+let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -363,7 +376,13 @@ let rec specs () : list<Getopt.opt> =
        "Admit SMT queries, unsafe! (default 'false')");
 
       ( noshort,
-       "codegen",
+        "admit_except",
+         OneArg (String, "[id]"),
+        "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
+
+
+      ( noshort,
+        "codegen",
         OneArg ((fun s -> String (parse_codegen s)),
                  "[OCaml|FSharp|Kremlin]"),
         "Generate code for execution");
@@ -396,6 +415,12 @@ let rec specs () : list<Getopt.opt> =
         "detail_errors",
         ZeroArgs (fun () -> Bool true),
          "Emit a detailed error report by asking the SMT solver many queries; will take longer;
+         implies n_cores=1");
+
+       ( noshort,
+        "detail_hint_replay",
+        ZeroArgs (fun () -> Bool true),
+         "Emit a detailed report for proof whose unsat core fails to replay;
          implies n_cores=1");
 
        ( noshort,
@@ -457,7 +482,7 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs(fun () -> Bool true),
         "Print information regarding hints");
 
-        ( noshort,
+       ( noshort,
          "hint_file",
          OneArg (Path,
                  "[path]"),
@@ -505,6 +530,12 @@ let rec specs () : list<Getopt.opt> =
         "lax",
         ZeroArgs (fun () -> Bool true), //pretype := true; verify := false),
         "Run the lax-type checker only (admit all verification conditions)");
+
+      ( noshort,
+       "load",
+        OneArg ((fun s -> List (List.map String (get_load()) @ [Path s])),
+                "[module]"),
+        "Load compiled module");
 
        ( noshort,
         "log_types",
@@ -774,15 +805,14 @@ let rec specs () : list<Getopt.opt> =
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
-        "z3timeout",
-         OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored; use z3rlimit instead\n"; Int (int_of_string s)),
-                  "[positive integer]"),
-        "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
-
-       ( noshort,
         "__no_positivity",
         ZeroArgs (fun () -> Bool true),
         "Don't check positivity of inductive types");
+
+       ( noshort,
+        "__ml_no_eta_expand_coertions",
+        ZeroArgs (fun () -> Bool true),
+        "Do not eta-expand coertions in generated OCaml");
 
 
   ] in
@@ -818,9 +848,11 @@ let docs () =
 //Additionaly, the --smt option is a security concern
 let settable = function
     | "admit_smt_queries"
+    | "admit_except"
     | "debug"
     | "debug_level"
     | "detail_errors"
+    | "detail_hint_replay"
     | "eager_inference"
     | "hide_genident_nums"
     | "hide_uvar_nums"
@@ -866,7 +898,7 @@ let settable = function
 // JP: the two options below are options that are passed to z3 using
 // command-line arguments; only #reset_options re-starts the z3 process, meaning
 // these two options are resettable, but not settable
-let resettable s = settable s || s="z3timeout" || s="z3seed" || s="z3cliopt"
+let resettable s = settable s || s="z3seed" || s="z3cliopt"
 let all_specs = specs ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
@@ -1005,6 +1037,7 @@ let prepend_output_dir fname =
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
+let admit_except                 () = get_admit_except                  ()
 let check_hints                  () = get_check_hints                 ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
@@ -1012,6 +1045,7 @@ let debug_any                    () = get_debug () <> []
 let debug_at_level      modul level = (modul = "" || get_debug () |> List.contains modul) && debug_level_geq level
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
+let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
@@ -1029,6 +1063,7 @@ let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ()
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
+let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()
@@ -1078,8 +1113,8 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
-let z3_timeout                   () = get_z3timeout                   ()
 let no_positivity                () = get_no_positivity               ()
+let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 
 
 let should_extract m =

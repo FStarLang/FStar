@@ -1,5 +1,5 @@
 [
-  "Å-IkÇ-‘€¨‹\u001f¿ˆ\fñ‘",
+  "Óù°=kß\\.mò≈Q+˛e.",
   [
     [ "Unit2.test1", 1, 2, 1, [ "@query" ], 0 ],
     [ "Unit2.test2", 1, 2, 1, [ "@query" ], 0 ],
@@ -96,7 +96,8 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_GreaterThanOrEqual",
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "primitive_Prims.op_GreaterThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
       ],
       0

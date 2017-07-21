@@ -46,7 +46,7 @@ let snat_l = S.lid_as_fv (lid "S") Delta_constant (Some Data_ctor)
 let tm_fv fv = mk (Tm_fvar fv) None dummyRange
 let znat : term = tm_fv znat_l
 let snat s      = mk (Tm_app(tm_fv snat_l, [as_arg s])) None dummyRange
-let pat p = withinfo p tun.n dummyRange
+let pat p = withinfo p dummyRange
 open FStar.Syntax.Subst
 module SS=FStar.Syntax.Subst
 let mk_match h branches =

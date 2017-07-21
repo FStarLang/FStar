@@ -2,7 +2,7 @@ module Unit2
 
 (* Proving alpha equivalence in the solver *)
 let test1 _ = assert ((fun (x:int) -> x) == (fun y -> y))
-assume type vector : Type -> nat -> Type
+assume type vector : Type0 -> nat -> Type0
 let test2 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
                       (b:Type -> y:nat -> Tot (vector b y)))
 let test3 _ = assert (nat == y:int{y>=0})

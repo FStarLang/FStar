@@ -39,6 +39,7 @@ val close_branch:         branch -> branch
 val close_univ_vars:      univ_names -> term -> term
 val close_univ_vars_comp: univ_names -> comp -> comp
 val close_let_rec:        list<letbinding> -> term -> list<letbinding> * term
+val closing_of_binders:   binders -> subst_t
 
 val open_binders:       binders -> binders
 val open_term:          binders -> term -> binders * term
@@ -54,5 +55,6 @@ val close_tscheme: binders -> tscheme -> tscheme
 val close_univ_vars_tscheme: univ_names -> tscheme -> tscheme
 
 val univ_var_opening: univ_names -> list<subst_elt> * list<univ_name>
+val univ_var_closing: univ_names -> list<subst_elt>
 
 val set_use_range: Range.range -> term -> term
