@@ -11,7 +11,7 @@ private let mul_lemma (a:nat) (b:nat) (c:pos) : Lemma (requires (a < b))
   = ()
 
 val slash_decr_axiom: a:nat -> b:pos -> Lemma (a / b <= a)
-#reset-options "--z3rlimit 100"
+#reset-options "--z3rlimit 150"
 let slash_decr_axiom a b =
   lemma_div_def a b;
   if (a / b > a) then mul_lemma a (a/b) b
@@ -101,9 +101,10 @@ let powx_lemma1 a = ()
 val powx_lemma2: x:int -> n:nat -> m:nat -> Lemma
   (powx x n * powx x m = powx x (n + m))
 let rec powx_lemma2 x n m =
+  let ass (x y z : int) : Lemma ((x*y)*z == x*(y*z)) = () in
   match n with
   | 0 -> ()
-  | _ -> powx_lemma2 x (n-1) m
+  | _ -> powx_lemma2 x (n-1) m; ass x (powx x (n-1)) (powx x m)
 
 (* Lemma: absolute value of product is the product of the absolute values *)
 val abs_mul_lemma: a:int -> b:int -> Lemma (abs (a * b) = abs a * abs b)

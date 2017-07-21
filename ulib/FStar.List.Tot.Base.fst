@@ -153,7 +153,7 @@ let rec concatMap f = function
 ... yn). Requires, at type-checking time, [f] to be a pure total
 function. Named as in: OCaml, Coq. *)
 val fold_left: ('a -> 'b -> Tot 'a) -> 'a -> l:list 'b -> Tot 'a (decreases l)
-let rec fold_left f x y = match y with
+let rec fold_left f x l = match l with
   | [] -> x
   | hd::tl -> fold_left f (f x hd) tl
 
