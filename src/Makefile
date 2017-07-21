@@ -170,7 +170,7 @@ u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Subst.fst Fre
                   u_boot_fsts/FStar.Fsdoc.Generator.fst
 	$(FSTARBOOT) $^ --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
 
-u_extract_parser:$(addprefix u_boot_fsts/FStar.Parser., AST.fst Lexhelp.fst Parseit.fsti Driver.fst Dep.fst ToDocument.fst)
+u_extract_parser:$(addprefix u_boot_fsts/FStar.Parser., AST.fst Parseit.fsti Driver.fst Dep.fst ToDocument.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Parser
 
 u_extract_normalizer: $(addprefix u_boot_fsts/FStar.TypeChecker., Common.fst Env.fst Normalize.fst Err.fst)
