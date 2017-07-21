@@ -181,9 +181,10 @@ let field
   ))
 = P.ufield (P.field p (union_field l)) f
 
-// We could also require the user to manually provide the integer tagged I claim
-// it should not be needed since we need to normalise/inline write before
-// extraction anyway (check this)
+// We could also require the user to manually provide the integer tagged. I
+// claim it should not be needed since we need to normalise/inline write before
+// extraction anyway
+
 let write
   (#l: P.union_typ)
   (tgs: tags l)
