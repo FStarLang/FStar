@@ -1,5 +1,8 @@
 open FStar_CommonST
 
+open FStar_Monotonic_HyperHeap
+open FStar_Monotonic_HyperStack
+   
 open FStar_HyperHeap
 open FStar_HyperStack
 
