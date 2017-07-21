@@ -16,38 +16,6 @@ private type flag =
 
 private type set_n (n:nat) = (s:set nat{forall (i:nat).{:pattern (Set.mem i s)} Set.mem i s ==> (i >= 0 /\ i < n)})
 
-assume val set_i_j (n:nat) (i:nat) (j:nat{j >= i /\ j <= n})
-  :Tot (s:set_n n{forall (k:nat).{:pattern (Set.mem k s)} Set.mem k s <==> k >= i /\ k < j})
-
-assume val scale_down (m:nat) (n:nat) (s:set_n m) (offset:nat{offset + n <= m})
-  :Tot (r:set_n n{forall (i:nat).{:pattern (Set.mem i r) \/ Set.mem (offset + i) s} Set.mem i r <==> Set.mem (offset + i) s})
-
-assume val scale_up (m:nat) (n:nat) (s:set_n n) (offset:nat{offset + n <= m})
-  :Tot (r:set_n m{forall (i:nat).{:pattern (Set.mem i s) \/ Set.mem (offset + i) r} Set.mem i s <==> Set.mem (offset + i) r})
-
-assume val lemma_scale_up_of_i_j (m:nat) (n:nat) (i:nat) (j:nat{j >= i /\ j <= n}) (offset:nat{offset + n <= m})
-  :Lemma (scale_up m n (set_i_j n i j) offset == set_i_j m (offset + i) (offset + j))
-
-assume val lemma_down_up_identity (m:nat) (n:nat) (s:set_n m) (offset:nat{offset + n <= m})
-  :Lemma (requires True)
-         (ensures  (scale_up m n (scale_down m n s offset) offset == s))
-	 [SMTPat (scale_up m n (scale_down m n s offset) offset == s)]
-
-assume val lemma_up_down_identity (m:nat) (n:nat) (s:set_n n) (offset:nat{offset + n <= m})
-  :Lemma (requires True)
-         (ensures  (scale_down m n (scale_up m n s offset) offset == s))
-	 [SMTPat (scale_down m n (scale_up m n s offset) offset == s)]
-
-assume val lemma_scale_up_commutes_with_union (m:nat) (n:nat) (s1:set_n n) (s2:set_n n) (offset:nat{offset + n <= m})
-  :Lemma (requires True)
-         (ensures  (scale_up m n (Set.union s1 s2) offset == Set.union (scale_up m n s1 offset) (scale_up m n s2 offset)))
-	 [SMTPatOr [[SMTPat (scale_up m n (Set.union s1 s2) offset)]; [SMTPat (Set.union (scale_up m n s1 offset) (scale_up m n s2 offset))]]]
-
-assume val lemma_scale_down_commutes_with_union (m:nat) (n:nat) (s1:set_n m) (s2:set_n m) (offset:nat{offset + n <= m})
-  :Lemma (requires True)
-         (ensures  (scale_down m n (Set.union s1 s2) offset == Set.union (scale_down m n s1 offset) (scale_down m n s2 offset)))
-	 [SMTPatOr [[SMTPat (scale_down m n (Set.union s1 s2) offset)]; [SMTPat (Set.union (scale_down m n s1 offset) (scale_up m n s2 offset))]]]
-
 (* seq (option a) is the contents, flag is the flag above, set nat is the indices frozen currently *)
 noeq private type repr (a:Type0) (n:nat) :Type0 =
   | Repr: s:seq (option a){length s == n}
@@ -86,17 +54,15 @@ abstract type always_mutable_pred_ (#a:Type0) (#n:nat) (x:t a n) :heap_predicate
 abstract type always_mutable_pred (#a:Type0) (#n:nat) (x:t a n) :(p:heap_predicate{stable p})
   = always_mutable_pred_ x
 
-abstract type freezable_pred_ (#a:Type0) (#n:nat) (x:t a n) (s:set_n n) :heap_predicate
+abstract type freezable_pred_ (#a:Type0) (#n:nat) (x:t a n) :heap_predicate
   = fun h ->
-    let A r_ref offset = x in
-    h `Heap.contains` r_ref /\ (let Repr _ f _ f_indices = sel h r_ref in
-                               f == MutableUntilFrozen /\
-			       scale_down
+    let A r_ref _ = x in
+    h `Heap.contains` r_ref /\ (let Repr _ f _ _ = sel h r_ref in f == MutableUntilFrozen)
 
 abstract type freezable_pred (#a:Type0) (#n:nat) (x:t a n) :(p:heap_predicate{stable p})
   = freezable_pred_ x
 
-type farray (a:Type0) (n:nat) = (x:t a n{witnessed (freezable_pred x)})a  //an array that can be frozen (in part)
+type farray (a:Type0) (n:nat) = x:t a n{witnessed (freezable_pred x)}  //an array that can be frozen (in part)
 
 type array (a:Type0) (n:nat) = x:t a n{witnessed (always_mutable_pred x)}  //an array that you don't intend to freeze
 
@@ -151,9 +117,9 @@ let lemma_as_seq_length (#a:Type0) (#n:nat) (arr:t a n) (h:heap)
 
 private let init_at_pred_ (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) :heap_predicate
   = fun h -> h `contains_array` arr /\
-          (let A #_ #_ #m r_ref offset = arr in
+          (let A r_ref offset = arr in
 	   let Repr _ _ i_indices _ = sel h r_ref in
-	   Set.subset (scale_up m n s offset) i_indices)
+	   (forall (i:nat).{:pattern (Set.mem i s)} Set.mem i s ==> Set.mem (offset + i) i_indices))
 
 (* a stable init_at predicate *)
 abstract let init_at_pred (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) :(p:heap_predicate{stable p})
@@ -163,19 +129,15 @@ abstract let init_at_pred (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) :(p:heap_p
 abstract let init_at (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) :Type0
   = witnessed (init_at_pred arr s)
 
-open FStar.Ghost
-
-private let frozen_at_pred_ (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) (snap:erased (seq (option a)))
-  :heap_predicate
-  = let snap = reveal snap in
-    fun h -> h `contains_array` arr /\ length snap == n /\
-          (let A #_ #_ #m r_ref offset = arr in
+private let frozen_at_pred_ (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) (snap:seq (option a){length snap == n}) :heap_predicate
+  = fun h -> h `contains_array` arr /\
+          (let A r_ref offset = arr in
 	   let Repr l _ _ f_indices = sel h r_ref in
-	   Set.subset (scale_up m n s offset) f_indices /\
-	   (forall (i:nat).{:pattern (Set.mem i s)} Set.mem i s ==> index snap i == index l (offset + i)))
+	   (forall (i:nat).{:pattern (Set.mem i s)} Set.mem i s ==> (Set.mem (offset + i) f_indices /\
+	                                                      index snap i == index l (offset + i))))
 
 (* a stable init_at predicate *)
-abstract let frozen_at_pred (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) (snap:erased (seq (option a)))
+abstract let frozen_at_pred (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) (snap:seq (option a){length snap == n})
   :(p:heap_predicate{stable p})
   = let A #_ #_ #m r_ref offset = arr in
     assert (forall (h1 h2:heap).
@@ -186,7 +148,7 @@ abstract let frozen_at_pred (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) (snap:er
   frozen_at_pred_ arr s snap
 
 (* witnessed predicate for init_at *)
-abstract let frozen_at (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) (snap:erased (seq (option a))) :Type0
+abstract let frozen_at (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) (snap:seq (option a){length snap == n}) :Type0
   = witnessed (frozen_at_pred arr s snap)
 
 (***** serious stuff starts now *****)
@@ -194,54 +156,23 @@ abstract let frozen_at (#a:Type0) (#n:nat) (arr:t a n) (s:set_n n) (snap:erased 
 
 (*** Doesn't work below this ***)
 
-abstract let freeze (#a:Type0) (#n:nat) (arr:farray a n) (s:set_n n)
-  :ST (set_n n * erased (seq (option a)))
-      (requires (fun _      -> init_at arr s))
-      (ensures (fun h0 r h1 -> let rs, rl = fst r, reveal (snd r) in
-                            length rl == n                        /\
-                            modifies (array_footprint arr) h0 h1  /\
-			    Set.subset s rs                       /\
-                            frozen_at arr rs (hide rl)))
-  = gst_recall (freezable_pred arr);  //recall that the array is freezable
-    gst_recall (init_at_pred arr s);  //recall that all indices in s are initialized
-    let A #_ #_ #m s_ref offset = arr in
-    let Repr l flag i_indices f_indices = !s_ref in
-    let f_indices = Set.union f_indices (scale_up m n s offset) in  //add s to frozen indices
-    s_ref := Repr l flag i_indices f_indices;  //write the updated repr
-    let rs = scale_down m n f_indices offset in  //scale the frozen set
-    let rl = Seq.slice l offset (offset + n) in  //slice the underlying seq
-    lemma_down_up_identity m n f_indices offset;  //TODO: why is this lemma not firing
-    gst_witness (frozen_at_pred arr rs (hide rl));  //witness frozen predicate
-    (rs, hide rl)  //boom!
-
-abstract let recall_frozen_i (#a:Type0) (#n:nat) (arr:farray a n)
-  (s:set_n n) (l:erased (seq (option a))) (i:nat{Set.mem i s})
-  :ST unit (fun _       -> frozen_at arr s l)
-           (fun h0 _ h1 -> h0 == h1 /\ length (reveal l) == n /\ index (as_seq arr h0) i == index (reveal l) i)
-  = gst_recall (frozen_at_pred arr s l)
-
-let init_arr_in_heap_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >= i /\ j <= n}) (h:heap) :Type0
-  = forall (k:nat{k >= i /\ k < j}).{:pattern (index (as_seq arr h) k)} Some? (index (as_seq arr h) k)
-
-let as_initialized_subseq (#a:Type0) (#n:nat) (arr:t a n) (h:heap)
-  (i:nat) (j:nat{j >= i /\ j <= n /\ init_arr_in_heap_i_j arr i j h})
-  :GTot (seq a)
-  = let s = as_seq arr h in
-    let s = Seq.slice s i j in
-    get_some_equivalent s
-
-abstract let read (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >= i /\ j <= n})
-  :ST (seq a)
-      (requires (fun _       -> init_at arr (set_i_j n i j)))
-      (ensures  (fun h0 s h1 -> h0 == h1                        /\
-                             init_arr_in_heap_i_j arr i j h0 /\
-                             s == as_initialized_subseq arr h0 i j))
-  = gst_recall (init_at_pred arr (set_i_j n i j));
-    let A #_ #_ #m s_ref offset = arr in
-    lemma_scale_up_of_i_j m n i j offset;
-    let Repr s _ _ _ = !s_ref in
-    let s = Seq.slice s (offset + i) (offset + j) in    
-    get_some_equivalent s
+(*
+ * freeze an array
+ *)
+abstract let freeze (#a:Type0) (#n:nat) (arr:farray a n)
+  :ST (s:erased (Seq.seq a))
+      (requires (fun h0       -> is_full_array arr /\  //can only freeze full arrays
+                              (forall (i:nat). i < n ==> init_at_arr arr i h0)))  //all elements must be init_at
+      (ensures  (fun h0 es h1 -> some_equivalent_seqs (as_seq arr h0) (reveal es) /\  //the returned ghost sequence is the current view of array in the heap
+                              frozen_with arr es                          /\  //witnessing the stable predicate
+                              (~ (is_mutable arr h1))                     /\  //the array is no longer mutable
+			      modifies (array_footprint arr) h0 h1))  //only array footprint is changed
+  = gst_recall (freezable_pred arr);
+    let A #_ s_ref _ = arr in
+    let s, b = !s_ref in
+    s_ref := (s, Frozen);
+    gst_witness (frozen_pred arr (hide (get_some_equivalent s)));
+    hide (get_some_equivalent s)
 
 (*
  * read from an array
@@ -446,6 +377,33 @@ abstract let witness_all_init (#a:Type0) (#n:nat) (arr:t a n)
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ all_init arr))
   = witness_all_init_i_j arr 0 n
 
+let as_initialized_seq
+  (#a:Type0) (#n:nat) (arr:t a n) (h:heap{init_arr_in_heap arr h})
+  :GTot (seq a)
+  = let s = as_seq arr h in
+    get_some_equivalent s
+
+let as_initialized_subseq (#a:Type0) (#n:nat) (arr:t a n) (h:heap)
+  (i:nat) (j:nat{j >= i /\ j <= n /\ init_arr_in_heap_i_j arr h i j})
+  :GTot (seq a)
+  = let s = as_seq arr h in
+    let s = Seq.slice s i j in
+    get_some_equivalent s
+
+abstract let read_subseq_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >= i /\ j <= n})
+  :ST (seq a)
+      (requires (fun h0      -> all_init_i_j arr i j))
+      (ensures  (fun h0 s h1 -> h0 == h1                        /\
+                             init_arr_in_heap_i_j arr h0 i j /\
+                             s == as_initialized_subseq arr h0 i j))
+  = let A #_ #_ #_ s_ref off = arr in
+    let (s, _) = !s_ref in
+    let s = Seq.slice s off (off + n) in
+    recall_all_init_i_j arr i j;
+    let s = Seq.slice s i j in
+    let s = get_some_equivalent s in
+    s
+    
 let lemma_framing_of_is_mutable (#a:Type0) (#n:nat) (arr:t a n) (h0:heap) (h1:heap) (r:Set.set nat)
   :Lemma (requires (modifies r h0 h1 /\ Set.disjoint r (array_footprint arr) /\ h0 `contains_array` arr))
          (ensures  ((is_mutable arr h0 <==> is_mutable arr h1) /\
