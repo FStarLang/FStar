@@ -39,7 +39,7 @@ let buffer_fun (inputs:TSet.set bslice) =
 let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
   forall b. TSet.mem b inputs ==> live h b /\ B.disjoint b.p buf.p
 
-unfold inline_for_extraction
+inline_for_extraction unfold
 let serializer_any (inputs:TSet.set bslice)
                    (enc: buffer_fun inputs) =
   buf:bslice ->
@@ -55,10 +55,10 @@ let serializer_any (inputs:TSet.set bslice)
            as_seq h0 b == as_seq h1 b) /\
         serialized (enc h1) buf r h0 h1))
 
-unfold inline_for_extraction
+inline_for_extraction unfold
 let serializer (enc:bytes) = serializer_any TSet.empty (fun _ -> enc)
 
-unfold inline_for_extraction
+inline_for_extraction unfold
 let serializer_1 (input:bslice) (enc: buffer_fun (TSet.singleton input)) =
     serializer_any (TSet.singleton input) (fun h -> enc h)
 
@@ -284,6 +284,7 @@ val adjacent_0len (b:bslice) :
     [SMTPat (buffers_adjacent (truncated_slice b 0ul).p b.p)]
 let adjacent_0len b = ()
 
+noextract
 let writer_init (b:bslice) : ST (option writer)
     (requires (fun h0 -> live h0 b))
     (ensures (fun h0 r h1 ->
@@ -312,6 +313,7 @@ let join_slices (b1 b2:bslice) : Pure (option bslice)
 
 // TODO: implement this API
 
+noextract
 val writer_append (w:writer) (e:entry_st) : ST (option writer)
        (requires (fun h0 -> writer_inv h0 w /\
                          entry_live h0 e /\
@@ -325,6 +327,7 @@ val writer_append (w:writer) (e:entry_st) : ST (option writer)
                   (let ee = as_entry h1 e in
                   w'.entries_written_list () == w.entries_written_list () `List.append` [ee])
                 end))
+noextract
 let writer_append w e =
     let r = ser_entry e w.entries_scratch in
     match r with
@@ -363,6 +366,7 @@ let writer_store_buf (w:writer{writer_valid w}) : Pure bslice
 // XXX: don't have a proof that ser_u32 will not fail if given a buffer of
 // length 4 (and somehow F* doesn't prove this by unfolding the definition
 // enough)
+noextract
 val writer_finish (w:writer) : ST (option bslice)
     (requires (fun h0 -> writer_inv h0 w))
     (ensures (fun h0 mb h1 ->
@@ -375,6 +379,7 @@ val writer_finish (w:writer) : ST (option bslice)
                  List.length entries == U32.v w.num_entries_written /\
                  bs == encode_store (Store w.num_entries_written entries))
                 end))
+noextract
 let writer_finish w =
     let length_buf = BSlice 4ul w.length_field in
     let r = ser_u32 w.num_entries_written length_buf in
