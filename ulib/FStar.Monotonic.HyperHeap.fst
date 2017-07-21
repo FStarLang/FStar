@@ -16,6 +16,7 @@
 module FStar.Monotonic.HyperHeap
 open FStar.Map
 open FStar.Preorder
+open FStar.DataInvariant
 open FStar.Monotonic.Heap
 
 abstract let rid = list (int * int)
@@ -47,7 +48,7 @@ let lemma_root_has_color_zero r = ()
 //expose this so that no-one should assume otheriwse
 let root_has_color_zero (u:unit) :Lemma (color root = 0) = ()
 
-abstract type mrref (id:rid) (a:Type) (rel:preorder a) = mref a rel
+abstract type mrref (id:rid) (a:Type) (inv:data_inv a) (rel:preorder a) = mref a inv rel
 
 (* let has_eq_rref (id:rid) (a:Type) : *)
 (*   Lemma (requires True) *)
@@ -55,23 +56,23 @@ abstract type mrref (id:rid) (a:Type) (rel:preorder a) = mref a rel
 (*      [SMTPat (hasEq (rref id a))] *)
 (*   = ()        *)
 
-abstract val as_ref : #a:Type -> #id:rid -> #rel:preorder a -> r:mrref id a rel -> Tot (mref a rel)
-let as_ref #a #id #rel r = r
+abstract val as_ref : #a:Type -> #id:rid -> #inv:data_inv a -> #rel:preorder a -> r:mrref id a inv rel -> Tot (mref a inv rel)
+let as_ref #a #id #inv #rel r = r
 
-val addr_of: #a:Type -> #id:rid -> #rel:preorder a -> r:mrref id a rel -> GTot nat
-let addr_of #a #id #rel r = addr_of (as_ref r)
+val addr_of: #a:Type -> #id:rid -> #inv:data_inv a -> #rel:preorder a -> r:mrref id a inv rel -> GTot nat
+let addr_of #a #id #inv #rel r = addr_of (as_ref r)
 
-let is_mm (#a:Type) (#id:rid) (#rel:preorder a) (r:mrref id a rel) :GTot bool
+let is_mm (#a:Type) (#id:rid) (#inv:data_inv a) (#rel:preorder a) (r:mrref id a inv rel) :GTot bool
   = is_mm (as_ref r)
 
-abstract val ref_as_rref : #a:Type -> #rel:preorder a -> i:rid -> r:mref a rel -> GTot (mrref i a rel)
-let ref_as_rref #a #rel i r = r
+abstract val ref_as_rref : #a:Type -> #inv:data_inv a -> #rel:preorder a -> i:rid -> r:mref a inv rel -> GTot (mrref i a inv rel)
+let ref_as_rref #a #inv #rel i r = r
 
-val lemma_as_ref_inj: #a:Type -> #i:rid -> #rel:preorder a -> r:mrref i a rel
+val lemma_as_ref_inj: #a:Type -> #i:rid -> #inv:data_inv a -> #rel:preorder a -> r:mrref i a inv rel
     -> Lemma (requires (True))
              (ensures ((ref_as_rref i (as_ref r) == r)))
        [SMTPat (as_ref r)]
-let lemma_as_ref_inj #a #i #rel r = ()
+let lemma_as_ref_inj #a #i #inv #rel r = ()
 
 abstract val includes : rid -> rid -> GTot bool
 let rec includes r1 r2 =
@@ -163,14 +164,13 @@ let fresh_region (i:rid) (m0:t) (m1:t) =
  (forall j. includes i j ==> not (Map.contains m0 j))
  /\ Map.contains m1 i
 
-let sel (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) : GTot a
+let sel (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a inv rel) : GTot a
   = sel (Map.sel m i) (as_ref r)
-unfold let op_String_Access (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) = sel m r
+unfold let op_String_Access (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a inv rel) = sel m r
 
-let upd (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) (v:a{rel (sel m r) v}) :GTot t
+let upd (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a inv rel) (v:a{rel (sel m r) v}) :GTot t
   = Map.upd m i (upd (Map.sel m i) (as_ref r) v)
-unfold let op_String_Assignment (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel) v = upd m r v
-
+unfold let op_String_Assignment (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a inv rel) v = upd m r v
 
 assume val mod_set : Set.set rid -> Tot (Set.set rid)
 assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set s)}
@@ -239,17 +239,17 @@ let lemma_disjoint_parents pr r ps s =
     assert (ps `includes` s)
 
 (* AR: using excluded_middle here, could make it GTot Type0 instead ? *)
-let contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) :GTot bool  =
+let contains_ref (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (r:mrref i a inv rel) (m:t) :GTot bool  =
   Map.contains m i && (FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r)))
 
-let unused_in (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) :GTot bool =
+let unused_in (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (r:mrref i a inv rel) (m:t) :GTot bool =
   not (Map.contains m i) ||
   FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.unused_in (as_ref r) (Map.sel m i))
 
-let weak_contains_ref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m:t) : GTot bool =
+let weak_contains_ref (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (r:mrref i a inv rel) (m:t) : GTot bool =
   FStar.StrongExcludedMiddle.strong_excluded_middle (Heap.contains (Map.sel m i) (as_ref r))
 
-let fresh_rref (#a:Type) (#rel:preorder a) (#i:rid) (r:mrref i a rel) (m0:t) (m1:t) =
+let fresh_rref (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (r:mrref i a inv rel) (m0:t) (m1:t) =
   FStar.Monotonic.Heap.unused_in (as_ref r) (Map.sel m0 i) /\
   FStar.Monotonic.Heap.contains (Map.sel m1 i) (as_ref r)
 

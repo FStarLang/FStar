@@ -1,6 +1,7 @@
 module FStar.Monotonic.HyperStack
 
 open FStar.Preorder
+open FStar.DataInvariant
 open FStar.Monotonic.HyperHeap
 module M  = FStar.Map
 module HH = FStar.Monotonic.HyperHeap
@@ -93,7 +94,8 @@ let pop (m0:mem{poppable m0}) : GTot mem =
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
 noeq type mreference (a:Type) (rel:preorder a) =
-  | MkRef : id:rid -> ref:HH.mrref id a rel -> mreference a rel
+  // TODO: generalize mreference to support data invariant
+  | MkRef : id:rid -> ref:HH.mrref id a (FStar.Heap.trivial_invariant a) rel -> mreference a rel
 
 let is_mm (#a:Type) (#rel:preorder a) (r:mreference a rel) :GTot bool = HH.is_mm r.ref
 
@@ -209,7 +211,7 @@ type s_mref (i:rid) (a:Type) (rel:preorder a) = s:mreference a rel{s.id = i}
 
 let frameOf #a #rel (s:mreference a rel) = s.id
 
-let as_ref #a #rel (x:mreference a rel)  : GTot (Heap.mref a rel) = HH.as_ref #a #x.id x.ref
+let as_ref #a #rel (x:mreference a rel)  : GTot (Heap.mref a (FStar.Heap.trivial_invariant a) rel) = HH.as_ref #a #x.id x.ref
 let as_addr #a #rel (x:mreference a rel) : GTot nat = Heap.addr_of (HH.as_ref #a #x.id x.ref)
 let modifies_one id h0 h1 = HH.modifies_one id h0.h h1.h
 let modifies_ref (id:rid) (s:Set.set nat) (h0:mem) (h1:mem) =
