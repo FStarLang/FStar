@@ -82,7 +82,7 @@
       0
     ],
     [
-      "SnapshotST.165337",
+      "SnapshotST.171102",
       1,
       2,
       1,
@@ -90,7 +90,6 @@
         "@MaxIFuel_assumption", "@query",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
-        "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
         "equation_SnapshotST.snapshot_rel",
