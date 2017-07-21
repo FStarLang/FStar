@@ -1090,9 +1090,8 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let env = Env.set_range env r in
 
     if lid_exists env lid
-    then raise (Error (BU.format1 "The toplevel declaration %s is shadowing \
-                                   an already defined declaration \
-                                   (Each top-level name must be unique to its module)"
+    then raise (Error (BU.format1 "Top-level declaration %s for a name that is already used in this module; \
+                                   top-level declarations must be unique in their module"
                                    (Ident.text_of_lid lid), r)) ;
 
     let uvs, t =

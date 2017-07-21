@@ -3673,7 +3673,7 @@ let tc_decl:
                  let uu____5428 =
                    let uu____5433 =
                      FStar_Util.format1
-                       "The toplevel declaration %s is shadowing an already defined declaration (Each top-level name must be unique to its module)"
+                       "Top-level declaration %s for a name that is already used in this module; top-level declarations must be unique in their module"
                        (FStar_Ident.text_of_lid lid) in
                    (uu____5433, r) in
                  FStar_Errors.Error uu____5428 in
