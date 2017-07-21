@@ -411,18 +411,18 @@ let insert_identifier_info:
                   (FStar_Util.imap_add rows row col_info;
                    FStar_Util.smap_add file_info_table fn rows)
               | FStar_Pervasives_Native.Some file_rows ->
-                  let uu____1252 = FStar_Util.imap_try_find file_rows row in
-                  (match uu____1252 with
+                  let uu____1264 = FStar_Util.imap_try_find file_rows row in
+                  (match uu____1264 with
                    | FStar_Pervasives_Native.None  ->
                        let col_info =
-                         let uu____1270 = insert_col_info col info [] in
-                         FStar_Util.mk_ref uu____1270 in
+                         let uu____1294 = insert_col_info col info [] in
+                         FStar_Util.mk_ref uu____1294 in
                        FStar_Util.imap_add file_rows row col_info
                    | FStar_Pervasives_Native.Some col_infos ->
-                       let uu____1296 =
-                         let uu____1297 = FStar_ST.read col_infos in
-                         insert_col_info col info uu____1297 in
-                       FStar_ST.write col_infos uu____1296));
+                       let uu____1344 =
+                         let uu____1345 = FStar_ST.read col_infos in
+                         insert_col_info col info uu____1345 in
+                       FStar_ST.write col_infos uu____1344));
              (fn, row, col))
 let info_at_pos:
   Prims.string ->
@@ -431,25 +431,25 @@ let info_at_pos:
   fun fn  ->
     fun row  ->
       fun col  ->
-        let uu____1324 = FStar_Util.smap_try_find file_info_table fn in
-        match uu____1324 with
+        let uu____1416 = FStar_Util.smap_try_find file_info_table fn in
+        match uu____1416 with
         | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
         | FStar_Pervasives_Native.Some rows ->
-            let uu____1330 = FStar_Util.imap_try_find rows row in
-            (match uu____1330 with
+            let uu____1422 = FStar_Util.imap_try_find rows row in
+            (match uu____1422 with
              | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
              | FStar_Pervasives_Native.Some cols ->
-                 let uu____1346 =
-                   let uu____1349 = FStar_ST.read cols in
-                   find_nearest_preceding_col_info col uu____1349 in
-                 (match uu____1346 with
+                 let uu____1450 =
+                   let uu____1453 = FStar_ST.read cols in
+                   find_nearest_preceding_col_info col uu____1453 in
+                 (match uu____1450 with
                   | FStar_Pervasives_Native.None  ->
                       FStar_Pervasives_Native.None
                   | FStar_Pervasives_Native.Some ci ->
                       let last_col =
-                        let uu____1362 =
+                        let uu____1488 =
                           FStar_Range.end_of_range ci.identifier_range in
-                        FStar_Range.col_of_pos uu____1362 in
+                        FStar_Range.col_of_pos uu____1488 in
                       if col <= last_col
                       then FStar_Pervasives_Native.Some ci
                       else FStar_Pervasives_Native.None))
@@ -494,42 +494,42 @@ let insert_id_info: insert_id_info_ops =
   let enabled = FStar_Util.mk_ref false in
   let id_info_buffer = FStar_Util.mk_ref [] in
   let enable b =
-    let uu____1583 = (FStar_Options.ide ()) && b in
-    FStar_ST.write enabled uu____1583 in
+    let uu____1709 = (FStar_Options.ide ()) && b in
+    FStar_ST.write enabled uu____1709 in
   let bv x t =
-    let uu____1593 = FStar_ST.read enabled in
-    if uu____1593
+    let uu____1741 = FStar_ST.read enabled in
+    if uu____1741
     then
-      let uu____1596 =
-        let uu____1609 =
-          let uu____1620 = FStar_Syntax_Syntax.range_of_bv x in
-          ((FStar_Util.Inl x), t, uu____1620) in
-        let uu____1625 = FStar_ST.read id_info_buffer in uu____1609 ::
-          uu____1625 in
-      FStar_ST.write id_info_buffer uu____1596
+      let uu____1766 =
+        let uu____1779 =
+          let uu____1790 = FStar_Syntax_Syntax.range_of_bv x in
+          ((FStar_Util.Inl x), t, uu____1790) in
+        let uu____1795 = FStar_ST.read id_info_buffer in uu____1779 ::
+          uu____1795 in
+      FStar_ST.write id_info_buffer uu____1766
     else () in
   let fv x t =
-    let uu____1684 = FStar_ST.read enabled in
-    if uu____1684
+    let uu____1970 = FStar_ST.read enabled in
+    if uu____1970
     then
-      let uu____1687 =
-        let uu____1700 =
-          let uu____1711 = FStar_Syntax_Syntax.range_of_fv x in
-          ((FStar_Util.Inr x), t, uu____1711) in
-        let uu____1716 = FStar_ST.read id_info_buffer in uu____1700 ::
-          uu____1716 in
-      FStar_ST.write id_info_buffer uu____1687
+      let uu____1995 =
+        let uu____2008 =
+          let uu____2019 = FStar_Syntax_Syntax.range_of_fv x in
+          ((FStar_Util.Inr x), t, uu____2019) in
+        let uu____2024 = FStar_ST.read id_info_buffer in uu____2008 ::
+          uu____2024 in
+      FStar_ST.write id_info_buffer uu____1995
     else () in
   let promote cb =
-    (let uu____1778 = FStar_ST.read id_info_buffer in
-     FStar_All.pipe_right uu____1778
+    (let uu____2202 = FStar_ST.read id_info_buffer in
+     FStar_All.pipe_right uu____2202
        (FStar_List.iter
-          (fun uu____1832  ->
-             match uu____1832 with
+          (fun uu____2314  ->
+             match uu____2314 with
              | (i,t,r) ->
-                 let uu____1854 =
-                   let uu____1861 = cb t in
-                   insert_identifier_info i uu____1861 r in
-                 FStar_All.pipe_left FStar_Pervasives.ignore uu____1854)));
+                 let uu____2336 =
+                   let uu____2343 = cb t in
+                   insert_identifier_info i uu____2343 r in
+                 FStar_All.pipe_left FStar_Pervasives.ignore uu____2336)));
     FStar_ST.write id_info_buffer [] in
   { enable; bv; fv; promote }

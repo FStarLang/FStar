@@ -11,10 +11,10 @@ open FStar.Seq
 let is_seq_t t : tactic bool = 
     let hd, args = collect_app t in
     tseq <-- quote seq; //Somehow, tseq ends up as (seq u#0), when we expect it to be (seq u#?), i.e., a unification variable
+    print ("This is the quoted term: " ^ (term_to_string tseq));;
+    print ("This is hd: " ^ (term_to_string hd));;
     return (term_eq tseq hd)
 
-    (* print ("This is the quoted term: " ^ (term_to_string tseq));; *)
-    (* print ("This is hd: " ^ (term_to_string hd));;     *)
 
 let clear_hypothesis (b:binder) : tactic unit = idtac
 
