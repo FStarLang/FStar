@@ -219,9 +219,9 @@ abstract val lemma_modset: i:rid -> j:rid
 let lemma_modset i j = ()
 
 abstract val lemma_modifies_includes: m1:t -> m2:t
-                       -> i:rid -> j:rid
-                       -> Lemma (requires (modifies (Set.singleton i) m1 m2 /\ includes j i))
-                                (ensures (modifies (Set.singleton j) m1 m2))
+                       -> s1:rid -> s2:rid
+                       -> Lemma (requires (modifies (Set.singleton s1) m1 m2 /\ includes s2 s1))
+                                (ensures (modifies (Set.singleton s2) m1 m2))
 let lemma_modifies_includes m1 m2 s1 s2 = ()
 
 abstract val lemma_modifies_includes2: m1:t -> m2:t

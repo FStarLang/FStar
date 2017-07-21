@@ -222,7 +222,8 @@ let lemma_pop_is_popped (m0:mem{poppable m0})
   = let m1 = pop m0 in
     assert (Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip))
 
-type s_mref (i:rid) (a:Type) (inv:data_inv a) (rel:preorder a) = s:imreference a inv rel{s.id = i}
+type s_imref (i:rid) (a:Type) (inv:data_inv a) (rel:preorder a) = s:imreference a inv rel{s.id = i}
+type s_mref (i:rid) (a:Type) (rel:preorder a) = s_imref i a (FStar.Heap.trivial_invariant a) rel
 
 let frameOf #a #inv #rel (s:imreference a inv rel) = s.id
 
@@ -255,7 +256,7 @@ val lemma_live_1: #a:Type ->  #a':Type -> #inv:data_inv a -> #inv':data_inv a' -
   (requires (contains h x /\ x' `unused_in` h))
   (ensures  (x.id <> x'.id \/ ~ (as_ref x === as_ref x')))
   [SMTPat (contains h x); SMTPat (x' `unused_in` h)]
-let lemma_live_1 #a #a' #rel #rel' #inv #inv' h x x' = ()
+let lemma_live_1 #a #a' #inv #inv' #rel #rel' h x x' = ()
 
 let above_tip_is_live (#a:Type) (#rel:preorder a) (m:mem) (x:mreference a rel) : Lemma
   (requires (x.id `is_above` m.tip))
@@ -265,7 +266,7 @@ let above_tip_is_live (#a:Type) (#rel:preorder a) (m:mem) (x:mreference a rel) :
 (*
  * AR: relating contains and weak_contains.
  *)
-let contains_implies_weak_contains (#a:Type) (#inv:data_inv a) l(#rel:preorder a) (h:mem) (x:imreference a inv rel) :Lemma
+let contains_implies_weak_contains (#a:Type) (#inv:data_inv a) (#rel:preorder a) (h:mem) (x:imreference a inv rel) :Lemma
   (requires (True))
   (ensures (contains h x ==> weak_contains h x))
   [SMTPatOr [[SMTPat (contains h x)]; [SMTPat (weak_contains h x)]] ]
