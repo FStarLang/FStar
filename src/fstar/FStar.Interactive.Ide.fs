@@ -562,8 +562,24 @@ let run_pop st = // This shrinks all internal stacks by 1
       if nothing_left_to_pop st' then cleanup env;
       ((QueryOK, JsonNull), Inl st')
 
+let add_completion_entry table binding =
+  let lids =
+    match binding with
+    | Binding_lid (lid, _) -> [lid]
+    | Binding_sig (lids, _) -> lids
+    | Binding_sig_inst (lids, _, _) -> lids
+    | _ -> [] in
+  List.fold_left
+    (fun tbl lid -> FStar.Interactive.CompletionTable.insert
+                   tbl (FStar.Interactive.CompletionTable.Lid lid))
+    table lids
+
 let run_push st kind text line column peek_only =
   let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
+
+  let bindings = ref [] in
+  let push_binding _ s = bindings := s :: !bindings in
+  FStar.TypeChecker.Env.push_in_gamma_hook := push_binding;
 
   // If we are at a stage where we have not yet pushed a fragment from the
   // current buffer, see if some dependency is stale. If so, update it. Also
@@ -582,8 +598,11 @@ let run_push st kind text line column peek_only =
   let errors = FStar.Errors.report_all() |> List.map json_of_issue in
   FStar.Errors.clear ();
 
+  FStar.TypeChecker.Env.push_in_gamma_hook := (fun _ _ -> ());
+  let names = List.fold_left add_completion_entry st.repl_names !bindings in
   let st' = { st with repl_stack = stack; repl_ts = ts;
-                      repl_line = line; repl_column = column } in
+                      repl_line = line; repl_column = column;
+                      repl_names = names } in
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->

@@ -1007,7 +1007,7 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////
 
-let push_in_gamma_hook = ref ignore
+let push_in_gamma_hook = BU.mk_ref (fun _ _ -> ())
 
 // The environment maintains the invariant that gamma is of the form:
 //   l_1 ... l_n val_1 ... val_n
@@ -1027,7 +1027,7 @@ let push_in_gamma env s =
     | local :: rest ->
         local :: push x rest
   in
-  !push_in_gamma_hook s;
+  !push_in_gamma_hook env s;
   { env with gamma = push s env.gamma }
 
 let push_sigelt env s =
