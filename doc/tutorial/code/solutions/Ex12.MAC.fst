@@ -16,7 +16,7 @@ module Ex12.MAC
 open Ex12.SHA1
 open FStar.IO
 
-open Preorder
+open FStar.Preorder
 open Heapx
 open STx
 open MRefx

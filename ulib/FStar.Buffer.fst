@@ -886,6 +886,7 @@ private let lemma_aux_0
 		     as_seq h0 bb == as_seq h1 bb)))
   = ()
 
+#set-options "--z3rlimit 10"
 private let lemma_aux_1
   (#a:Type) (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) (h0:mem) (tt:Type)
   :Lemma (requires (live h0 b))
@@ -895,6 +896,8 @@ private let lemma_aux_1
 		                        as_seq h0 bb == as_seq h1 bb))))
   = let open FStar.Classical in
     forall_intro (move_requires (lemma_aux_0 b n z h0 tt))
+
+#reset-options "--initial_fuel 0 --max_fuel 0"
 
 private let lemma_aux_2
   (#a:Type) (b:buffer a) (n:UInt32.t{v n < length b}) (z:a) (h0:mem)

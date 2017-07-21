@@ -7,14 +7,14 @@ module SnapshotST
    predicates is only possible when the state is consistent.
 *)
 
-open Preorder
+open FStar.Preorder
 
 
 (* The state space and the preorder on it for the snapshot instance of IST. *)
 
 let snapshot_state (state:Type) = state * (option state)
 
-let snapshot_rel (#state:Type) (rel:relation state{preorder rel}) (s0:snapshot_state state) (s1:snapshot_state state) = 
+let snapshot_rel (#state:Type) (rel:preorder state) (s0:snapshot_state state) (s1:snapshot_state state) = 
      ((snd s0 == None #state /\ snd s1 == None #state) ==> rel (fst s0) (fst s1))
   /\ (forall s . (snd s0 == None #state /\ snd s1 == Some s) ==> rel (fst s0) s)
   /\ (forall s . (snd s0 == Some s /\ snd s1 == None #state) ==> rel s (fst s1))
@@ -23,7 +23,7 @@ let snapshot_rel (#state:Type) (rel:relation state{preorder rel}) (s0:snapshot_s
 
 (* Proof that the relation of the snapshot instance of IST is associative. *)
 val snapshot_rel_assoc : #state:Type -> 
-			 rel:relation state{preorder rel} -> 
+			 rel:preorder state -> 
 			 s0:snapshot_state state -> 
 			 s1:snapshot_state state -> 
 			 s2:snapshot_state state ->
@@ -56,14 +56,14 @@ let snapshot_rel_assoc #state rel s0 s1 s2 =
 
 (* Witnessing predicate for the snapshot instance of IST. *)
 
-let witnessing_predicate (#state:Type) (#rel:relation state{preorder rel}) (p:predicate state{stable rel p}) (s:snapshot_state state) =
+let witnessing_predicate (#state:Type) (#rel:preorder state) (p:predicate state{stable p rel}) (s:snapshot_state state) =
   (snd s == None ==> p (fst s)) /\ 
   (forall s' . snd s == Some s' ==> p s')
 
 
 val witnessing_predicate_stable : #state:Type ->
-		                  rel:relation state{preorder rel} -> 
-		                  p:predicate state{stable rel p} ->
+		                  rel:preorder state -> 
+		                  p:predicate state{stable p rel} ->
 		                  s0:snapshot_state state ->
 		                  s1:snapshot_state state ->
 		                  Lemma (requires (witnessing_predicate #state #rel p s0 /\ snapshot_rel rel s0 s1))
@@ -91,7 +91,7 @@ let witnessing_predicate_stable #state rel p s0 s1 =
 (* Temporarily assuming the type of the states and the preorder on them. *)
 
 assume type tmp_state
-assume type tmp_rel : rel:relation tmp_state{preorder rel}
+assume type tmp_rel : rel:preorder tmp_state
 
 
 (* Preconditions, postconditions and WPs for the preorder-indexed state monad. *)
@@ -108,7 +108,7 @@ new_effect ISTATE = STATE_h (snapshot_state tmp_state)
 
 (* DIV is a sub-effect/sub-monad of the snapshot instance of the preorder-indexed monad. *)
 
-unfold let lift_div_istate (state:Type) (rel:relation state{preorder rel}) 
+unfold let lift_div_istate (state:Type) (rel:preorder state) 
                            (a:Type) (wp:pure_wp a) (p:ist_post state a) (s:state) = wp (fun x -> p x s)
 sub_effect DIV ~> ISTATE = lift_div_istate (snapshot_state tmp_state) (snapshot_rel tmp_rel)
 
@@ -124,7 +124,7 @@ effect IST    (a:Type)
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 
-assume type ist_witnessed: p:predicate (snapshot_state tmp_state){stable (snapshot_rel tmp_rel) p} -> Type0
+assume type ist_witnessed: p:predicate (snapshot_state tmp_state){stable p (snapshot_rel tmp_rel)} -> Type0
 
 
 (* Generic effects (operations) for IST. *)
@@ -134,10 +134,10 @@ assume val ist_get :     unit -> IST (snapshot_state tmp_state) (fun s0 -> True)
 assume val ist_put :     x:snapshot_state tmp_state ->
 		         IST unit (fun s0 -> snapshot_rel tmp_rel s0 x) (fun s0 _ s1 -> s1 == x)
 
-assume val ist_witness : p:predicate (snapshot_state tmp_state){stable (snapshot_rel tmp_rel) p} ->
+assume val ist_witness : p:predicate (snapshot_state tmp_state){stable p (snapshot_rel tmp_rel)} ->
 		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
-assume val ist_recall :  p:predicate (snapshot_state tmp_state){stable (snapshot_rel tmp_rel) p} -> 
+assume val ist_recall :  p:predicate (snapshot_state tmp_state){stable p (snapshot_rel tmp_rel)} -> 
 		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 (* ************************************************************************************************** *)
@@ -161,7 +161,7 @@ effect SnapshotST (a:Type)
 
 (* The box-like modality for witnessed stable predicates for the snapshot instance of IST. *)
 
-let witnessed (p:predicate tmp_state{stable tmp_rel p}) = 
+let witnessed (p:predicate tmp_state{stable p tmp_rel}) = 
   ist_witnessed (fun s -> witnessing_predicate #tmp_state #tmp_rel p s)
 
 
@@ -187,7 +187,7 @@ let write x =
 
 (* Witness and recall operations. These are applicable only when the state is "consistent" (any better terminology???) wrt. the preorder. *)
 
-val witness : p:predicate tmp_state{stable tmp_rel p} -> 
+val witness : p:predicate tmp_state{stable p tmp_rel} -> 
               SnapshotST unit (fun s0      -> p (fst s0) /\ 
 	                                      snd s0 == None)
 			      (fun s0 _ s1 -> s0 == s1 /\ 
@@ -196,7 +196,7 @@ let witness p =
   ist_witness (fun s -> witnessing_predicate #tmp_state #tmp_rel p s)
 
 
-val recall : p:predicate tmp_state{stable tmp_rel p} -> 
+val recall : p:predicate tmp_state{stable p tmp_rel} -> 
              SnapshotST unit (fun s0      -> witnessed p /\ 
 	                                     snd s0 == None)
 			     (fun s0 _ s1 -> s0 == s1 /\ 

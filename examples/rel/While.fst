@@ -1,6 +1,6 @@
 module While
-open FStar.ST
 open FStar.Heap
+open FStar.ST
 
 type id = ref int
 

@@ -1,6 +1,6 @@
 module ReifyTestTSST
 
-open Preorder
+open FStar.Preorder
 
 (* *************************************************************************************************** *)
 (* A nat-valued instance of time-stamped preorder-indexed state monads for reify-recall demonstration. *)
@@ -54,8 +54,8 @@ let tsst_wp   (state:Type) (a:Type) = tsst_post (state) a -> Tot (tsst_pre (stat
 
 let state = nat
 
-val state_rel : rel:relation state{preorder rel}
-let state_rel (s0:state) (s1:state) = s0 <= s1
+val state_rel : rel:preorder state
+let state_rel (s0:state) (s1:state) = b2t (s0 <= s1)
 
 
 (* A WP-style timestamped preorder-indexed state monad. *)
@@ -65,7 +65,7 @@ new_effect TSSTATE = STATE_h (timestamped_state state)
 
 (* Sub-effecting, works only because we have fixed the state and a preorder on it. *)
 
-unfold let lift_div_tsstate (state:Type) (rel:relation state{preorder rel}) 
+unfold let lift_div_tsstate (state:Type) (rel:preorder state)
                             (a:Type) (wp:pure_wp a) (p:tsst_post state a) (s:timestamped_state state) = wp (fun x -> p x s)
 sub_effect DIV ~> TSSTATE = lift_div_tsstate state state_rel
 
@@ -89,7 +89,7 @@ effect TSST    (a:Type)
 (* An abstract (box-style) modality for witnessed stable predicates. *)
 
 assume type witnessed: ts:timestamp ->
-			p:predicate state{stable state_rel p} -> 
+			p:predicate state{stable p state_rel} -> 
 			Type0
 
 
@@ -107,14 +107,14 @@ assume val put:     s:state ->
 					      older_than (get_timestamp s0) (get_timestamp s1))
 
 
-assume val witness: p:predicate state{stable state_rel p} ->
+assume val witness: p:predicate state{stable p state_rel} ->
 		    TSST unit (fun s0 -> p (get_state s0)) 
 			      (fun s0 _ s1 -> get_state s0 == get_state s1 /\
 				              get_timestamp s0 == get_timestamp s1 /\
 					      witnessed (get_timestamp s1) p)
 
 
-assume val recall:  p:predicate state{stable state_rel p} -> 
+assume val recall:  p:predicate state{stable p state_rel} -> 
 		    TSST unit (fun s0 -> exists ts . 
 		                           (older_than ts (get_timestamp s0) \/ 
 					      ts == get_timestamp s0) /\
@@ -147,8 +147,6 @@ let reify_recall_test _ =
   assume (state_rel (get_state s0) (get_state s0 + 1));  //temporary, because F* does not unroll the def. of state_rel
 
   let _ = put (get_state s0 + 1) in
-
-  assume (stable state_rel (fun s -> s > 0));   //temporary, because F* does not unroll the def. of state_rel
 
   let _ = witness (fun s -> s > 0) in
 

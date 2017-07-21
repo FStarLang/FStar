@@ -3,7 +3,7 @@ module Heapx
 module S  = FStar.Set
 module TS = FStar.TSet
 
-open Preorder
+open FStar.Preorder
 
 type set  a = Set.set a
 type tset a = TSet.set a
@@ -229,3 +229,6 @@ assume val lemma_upd_equals_upd_tot_for_contained_refs
   :Lemma (requires True)
          (ensures  (upd_tot h r x == upd h r x))
 	 [SMTPat (upd_tot h r x)]
+
+let trivial_preorder (a:Type0) = fun x y -> True
+

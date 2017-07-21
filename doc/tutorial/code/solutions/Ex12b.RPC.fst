@@ -2,7 +2,7 @@ module Ex12b.RPC
 
 open FStar.IO
 (* TODO : revert *x to FStar* once aseem_monotonicity landed in master *)
-open Preorder
+open FStar.Preorder
 open Heapx
 open STx
 open Allx

@@ -2,7 +2,7 @@ module MRefx
 
 open Heapx
 open STx
-open Preorder
+open FStar.Preorder
 
 private let p_pred (#a:Type) (#b:preorder a) (r:mref a b) (p:(a -> Type))
   = fun h -> h `contains` r /\ p (sel h r)
