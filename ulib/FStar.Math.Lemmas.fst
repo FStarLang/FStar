@@ -190,6 +190,7 @@ let multiply_fractions a n = euclidean_div_axiom a n
 val modulo_lemma: a:nat -> b:pos -> Lemma (requires (a < b)) (ensures (a % b = a))
 let modulo_lemma a b = ()
 
+(** Same as `lemma_div_def` in Math.Lib *)
 val lemma_div_mod: a:nat -> p:pos -> Lemma (a = p * (a / p) + a % p)
 let lemma_div_mod a p = ()
 
@@ -207,15 +208,17 @@ let lemma_div_lt a n m =
 
 val lemma_eq_trans_2: w:int -> x:int -> y:int -> z:int -> Lemma
   (requires (w = x /\ x = y /\ y = z))
-  (ensures  (x = z))
+  (ensures  (w = z))
 let lemma_eq_trans_2 w x y z = ()
 
-#reset-options "--z3rlimit 80 --max_fuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 80 --max_fuel 0 --max_ifuel 0 --z3seed 3"
 
 private let lemma_mod_plus_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((a + b * p) % p - a % p = p * (b + a / p - (a + b * p) / p))
-  = lemma_div_mod a p;
-    lemma_div_mod (a + b * p) p
+  =
+  let z: nat = a + b * p in
+  lemma_div_mod a p;
+  lemma_div_mod z p
 
 #reset-options "--z3rlimit 5 --initial_fuel 0 --max_fuel 0"
 
@@ -248,7 +251,7 @@ let lemma_mod_sub_1 a b = ()
 
 //NS: not sure why this requires 4 unfoldings
 //    it fails initially, and then succeeds on a retry with less fuel; strange
-#reset-options "--z3rlimit 20 --initial_ifuel 2 --initial_fuel 4"
+#reset-options "--z3rlimit 20 --initial_ifuel 0 --initial_fuel 0 --z3seed 1"
 private let lemma_mod_mul_distr_l_0 (a:nat) (b:nat) (p:pos) : Lemma
   ((((a % p) + (a / p) * p) * b) % p = ((a % p) * b + ((a / p) * b) * p) % p)
   = ()
@@ -309,7 +312,8 @@ private let lemma_mod_plus_injective_1 (p:pos) (a:nat) (b:nat) (c:nat) : Lemma
   = lemma_mod_spec2 (a + b) p;
     lemma_mod_spec2 (a + c) p
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --z3rlimit 10"
+//#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 200"
+#reset-options "--z3rlimit 200"
 
 val lemma_mod_plus_injective: p:pos -> a:nat -> b:nat -> c:nat -> Lemma
   (requires (b < p /\ c < p /\ (a + b) % p = (a + c) % p))
@@ -332,7 +336,7 @@ let lemma_mod_plus_distr_l a b p =
   lemma_mod_spec2 a p;
   lemma_mod_plus (a % p + b) q p
 
-#reset-options "--z3rlimit 30 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 90 --initial_fuel 0 --max_fuel 0"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
@@ -529,6 +533,8 @@ let division_multiplication_lemma a b c =
 let lemma_mul_pos_pos_is_pos (x:pos) (y:pos) : Lemma (x*y > 0) = ()
 let lemma_mul_nat_pos_is_nat (x:nat) (y:pos) : Lemma (x*y >= 0) = ()
 
+#reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0 --z3seed 2"
+
 let modulo_division_lemma_0 (a:nat) (b:pos) (c:pos) : Lemma
   (a / (b*c) <= a /\ (a - (a / (b * c)) * (b * c)) / b = a / b - ((a / (b * c)) * c))
   = slash_decr_axiom a (b*c);
@@ -554,7 +560,7 @@ let modulo_division_lemma a b c =
   division_multiplication_lemma a b c;
   euclidean_division_definition (a / b) c
 
-#reset-options "--z3rlimit 150 --max_fuel 0 --max_ifuel 0"
+#reset-options "--z3rlimit 150 --max_fuel 0 --max_ifuel 0 --z3seed 2"
 
 val modulo_modulo_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) % b = a % b )

@@ -29,6 +29,7 @@ type range = {
     def_range:FStar_BaseTypes.int64;
     use_range:FStar_BaseTypes.int64
 }
+[@@deriving show]
 
 type int_t = int
 

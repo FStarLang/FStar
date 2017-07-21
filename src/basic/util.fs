@@ -499,6 +499,11 @@ let bind_opt opt f =
     | None -> None
     | Some x -> f x
 
+let catch_opt opt f =
+    match opt with
+    | Some _ -> opt
+    | None -> f ()
+
 let map_opt opt f =
     match opt with
       | None -> None
@@ -975,3 +980,6 @@ let string_of_json json : string =
 
 let read r = !r
 let write r x = r := x
+
+let marshal (x:'a) : string = failwith "Marshaling to/from strings: not yet supported in F#"
+let unmarshal (x:string) : 'a = failwith "Marshaling to/from strings: not yet supported in F#"

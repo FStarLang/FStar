@@ -29,6 +29,8 @@ open FStar.Const
 open FStar.BaseTypes
 module BU = FStar.Util
 
+(* This is the old printer used exclusively for the F# build of F*. It will not
+ * evolve in the future. *)
 
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
@@ -567,11 +569,15 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 //                      end
             else if top_level
             then match tys with
-                    | None | Some (_::_, _) -> text ""
+                    | None ->
+                      text ""
                     | Some ([], ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
-//                      let vars = vars |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
                       reduce1 [text ":"; ty]
+                    | Some (vs, ty) ->
+                      let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
+                      let vars = vs |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
+                      reduce1 [text ":"; vars; text "."; ty]
             else text "" in
         reduce1 [text (idsym name); reduce1 ids; ty_annot; text "="; e] in
 
@@ -594,7 +600,7 @@ and doc_of_loc (lineno, file) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
-    let for1 (_, x, mangle_opt, tparams, body) =
+    let for1 (_, x, mangle_opt, tparams, _, body) =
         let x = match mangle_opt with
                 | None -> x
                 | Some y -> y in

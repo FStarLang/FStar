@@ -1,0 +1,25 @@
+[
+  "\u0001\" ·Ie¾èúxN^¿Œû\u007f",
+  [
+    [
+      "FStar.Int.Cast.Full.uint64_to_uint128",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.UInt128.n", "equation_FStar.UInt64.n",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [ "FStar.Int.Cast.Full.uint64_to_uint128", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Int.Cast.Full.uint128_to_uint64",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0
+    ]
+  ]
+]

@@ -1167,17 +1167,8 @@
       0
     ],
     [
-      "FStar.HyperHeap.contains_ref",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
-      0
-    ],
-    [ "FStar.HyperHeap.unused_in", 1, 2, 1, [ "@query" ], 0 ],
-    [
       "FStar.HyperHeap.unused_in",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],
@@ -1185,7 +1176,7 @@
     ],
     [
       "FStar.HyperHeap.unused_in",
-      3,
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.HyperHeap.HasEq_rid" ],

@@ -12,7 +12,7 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_None"
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0
     ],
@@ -25,10 +25,9 @@
         "@MaxIFuel_assumption", "@query", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0
     ],
@@ -56,10 +55,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.IntStore.INT_STORE", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntStore.INT_STORE", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntStore.INT_STORE", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntStore.INT_STORE", 4, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IntStore.raise_",
       1,
@@ -230,9 +225,7 @@
         "function_token_typing_Prims.int", "int_inversion",
         "lemma_FStar.Seq.Base.lemma_index_upd1",
         "lemma_FStar.Seq.Base.lemma_len_upd", "primitive_Prims.op_LessThan",
-        "proj_equation_Prims.Mktuple2__1",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Mktuple2__1",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",

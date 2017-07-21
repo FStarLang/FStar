@@ -16,6 +16,9 @@ indent: $(addsuffix -indent, $(ALL))
 	$(FSTAR) $^
 	touch $@
 
+%.fst-in:
+	@echo --use_hints --hint_info
+
 %.fst-indent: %.fst
 	$(FSTAR) --indent $^ > $^.indent.fst
 
@@ -35,10 +38,10 @@ wc:
 include ml/Makefile.include
 
 REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
-EXTRACT_ALL=$(filter-out $(REALIZED) $(HYPERSTACK),$(wildcard FStar.*.fst FStar.*.fsti))
+EXTRACT_ALL=$(filter-out $(REALIZED),$(wildcard FStar.*.fst FStar.*.fsti))
 
-.mgen: *.fst
-	@# creating a dummy file so that the target is not regenerated unless a file has changed
-	touch .mgen
+.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
 	$(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(EXTRACT_ALL)
+	@# creating a dummy file so that the target is not regenerated unless a file has changed
+	touch .mgen
