@@ -57,10 +57,12 @@ let parse_u16_st_nochk :
   parser_st_nochk (parse_u16) = fun input ->
   let b0 = B.index input.p 0ul in
       let b1 = B.index input.p 1ul in
-      let twobytes = append (create 1 b0) (create 1 b1) in
-      let h = get() in
-      lemma_eq_intro twobytes (slice (as_seq h input) 0 2);
-      let n = u16_from_be twobytes in
+      begin
+        let h = get() in
+        let twobytes = append (create 1 b0) (create 1 b1) in
+        lemma_eq_intro twobytes (slice (as_seq h input) 0 2)
+      end;
+      let n = u16_from_bytes b0 b1 in
       (n, U32.uint_to_t 2)
 
 let parse_u16_st : parser_st (parse_u16) = fun input ->

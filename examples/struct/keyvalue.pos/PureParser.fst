@@ -3,8 +3,10 @@ module PureParser
 open KeyValue
 
 open FStar.Seq
+module U8 = FStar.UInt8
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
+module Cast = FStar.Int.Cast
 
 (*** Spec-level pure parsing to values *)
 
@@ -35,7 +37,13 @@ unfold let parse_ret (#t:Type) (v:t) : parser t =
 
 let fail_parser #t : parser t = fun b -> None
 
-assume val u16_from_be: b:bytes{length b == 2} -> U16.t
+inline_for_extraction unfold
+val u16_from_bytes: hi:byte -> lo:byte -> U16.t
+let u16_from_bytes hi lo =
+  U16.add (U16.shift_left (Cast.uint8_to_uint16 hi) 8ul) (Cast.uint8_to_uint16 lo)
+
+val u16_from_be: b:bytes{length b == 2} -> U16.t
+let u16_from_be b = u16_from_bytes (index b 0) (index b 1)
 
 let parse_u16: parser U16.t =
   fun b -> if length b < 2 then None
