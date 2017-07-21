@@ -6,6 +6,8 @@ module HST = FStar.HyperStack.ST
 module P = FStar.Pointer
 module DM = FStar.DependentMap
 
+#set-options "--initial_fuel 4"
+
 (** Either *)
 
 let either_l (a b : P.typ) : P.union_typ =
