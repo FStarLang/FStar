@@ -28,7 +28,6 @@ type sort =
   | Bool_sort
   | Int_sort
   | String_sort
-  | Ref_sort
   | Term_sort
   | Fuel_sort
   | BitVec_sort of int
@@ -134,7 +133,6 @@ val hash_of_term: term -> string
 val boxIntFun : string * string
 val boxBoolFun : string * string
 val boxStringFun : string * string
-val boxRefFun : string * string
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val free_variables: term -> fvs
@@ -203,8 +201,6 @@ val boxBool:     term -> term
 val unboxBool:   term -> term
 val boxString:   term -> term
 val unboxString: term -> term
-val boxRef:      term -> term
-val unboxRef:    term -> term
 val boxBitVec:   int -> term -> term
 val unboxBitVec: int -> term -> term
 

@@ -1535,19 +1535,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let b = mkFreeV bb in
         [Util.mkAssume(mkForall([[Term.boxString b]], [bb], mk_HasType (Term.boxString b) tt), Some "string typing", "string_typing");
          Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxStringFun) x)),  Some "string inversion", "string_inversion")] in
-    let mk_ref : env -> string -> term -> decls_t = fun env reft_name _ ->
-        let r = ("r", Ref_sort) in
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let refa = mkApp(reft_name, [mkFreeV aa]) in
-        let refb = mkApp(reft_name, [mkFreeV bb]) in
-        let typing_pred = mk_HasType x refa in
-        let typing_pred_b = mk_HasType x refb in
-        [Util.mkAssume(mkForall_fuel([[typing_pred]], [xx;aa], mkImp(typing_pred, mk_tester (fst boxRefFun) x)), Some "ref inversion", "ref_inversion");
-//         Util.mkAssume(mkForall_fuel' 2 ([[typing_pred; typing_pred_b]], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))),
-//                     Some "ref typing is injective",
-//                     "ref_injectivity")
-        ] in
     let mk_true_interp : env -> string -> term -> decls_t = fun env nm true_tm ->
         let valid = mkApp("Valid", [true_tm]) in
         [Util.mkAssume(valid, Some "True interpretation", "true_interp")] in
@@ -1657,7 +1644,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
-                 (Const.ref_lid,    mk_ref);
                  (Const.true_lid,   mk_true_interp);
                  (Const.false_lid,  mk_false_interp);
                  (Const.and_lid,    mk_and_interp);

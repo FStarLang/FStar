@@ -30,7 +30,6 @@ type sort =
   | Bool_sort
   | Int_sort
   | String_sort
-  | Ref_sort
   | Term_sort
   | Fuel_sort
   | BitVec_sort of int // BitVectors parameterized by their size
@@ -43,7 +42,6 @@ let rec strSort x = match x with
   | Int_sort  -> "Int"
   | Term_sort -> "Term"
   | String_sort -> "FString"
-  | Ref_sort -> "Ref"
   | Fuel_sort -> "Fuel"
   | BitVec_sort n -> format1 "(_ BitVec %s)" (string_of_int n)
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
@@ -255,7 +253,6 @@ let mkBoxFunctions s = (s, s ^ "_proj_0")
 let boxIntFun        = mkBoxFunctions "BoxInt"
 let boxBoolFun       = mkBoxFunctions "BoxBool"
 let boxStringFun     = mkBoxFunctions "BoxString"
-let boxRefFun        = mkBoxFunctions "BoxRef"
 let boxBitVecFun sz  = mkBoxFunctions ("BoxBitVec" ^ (string_of_int sz))
 
 // Assume the Box/Unbox functions to be injective
@@ -673,10 +670,7 @@ let rec declToSmt z3options decl =
 
 and mkPrelude z3options =
   let basic = z3options ^
-                "(declare-sort Ref)\n\
-                (declare-fun Ref_constr_id (Ref) Int)\n\
-                \n\
-                (declare-sort FString)\n\
+                "(declare-sort FString)\n\
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
@@ -740,7 +734,6 @@ and mkPrelude z3options =
                                  (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
                                  (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
-                                 (fst boxRefFun,     [snd boxRefFun, Ref_sort, true],    Term_sort, 10, true);
                                  ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
    let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
@@ -778,8 +771,6 @@ let boxBool t     = maybe_elim_box (fst boxBoolFun) (snd boxBoolFun) t
 let unboxBool t   = maybe_elim_box (snd boxBoolFun) (fst boxBoolFun) t
 let boxString t   = maybe_elim_box (fst boxStringFun) (snd boxStringFun) t
 let unboxString t = maybe_elim_box (snd boxStringFun) (fst boxStringFun) t
-let boxRef t      = maybe_elim_box (fst boxRefFun) (snd boxRefFun) t
-let unboxRef t    = maybe_elim_box (snd boxRefFun) (fst boxRefFun) t
 let boxBitVec (sz:int) t = 
     elim_box true (fst (boxBitVecFun sz)) (snd (boxBitVecFun sz)) t
 let unboxBitVec (sz:int) t = 
@@ -788,14 +779,12 @@ let boxTerm sort t = match sort with
   | Int_sort -> boxInt t
   | Bool_sort -> boxBool t
   | String_sort -> boxString t
-  | Ref_sort -> boxRef t
   | BitVec_sort sz -> boxBitVec sz t
   | _ -> raise Impos
 let unboxTerm sort t = match sort with
   | Int_sort -> unboxInt t
   | Bool_sort -> unboxBool t
   | String_sort -> unboxString t
-  | Ref_sort -> unboxRef t
   | BitVec_sort sz -> unboxBitVec sz t  
   | _ -> raise Impos
 
