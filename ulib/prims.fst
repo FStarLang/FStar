@@ -319,6 +319,13 @@ assume val string_of_int: int -> Tot string
 (*********************************************************************************)
 abstract let normalize_term (#a:Type) (x:a) : a = x
 abstract let normalize (a:Type0) = a
+type step =
+ | Zeta
+ | Iota
+ | Primops
+ | Delta
+ | DeltaOnly of list string
+abstract let norm (s:list step) (#a:Type) (x:a) : a = x
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()

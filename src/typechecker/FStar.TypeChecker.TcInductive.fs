@@ -169,7 +169,7 @@ let generalize_and_inst_within (env:env_t) (g:guard_t) (tcs:list<(sigelt * unive
         let binders' = datas |> List.map (fun se -> match se.sigel with
             | Sig_datacon(_, _, t, _, _, _) -> S.null_binder t
             | _ -> failwith "Impossible") in
-        let t = U.arrow (binders@binders') (S.mk_Total Common.t_unit) in
+        let t = U.arrow (binders@binders') (S.mk_Total t_unit) in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print1 "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
         let (uvs, t) = TcUtil.generalize_universes env t in

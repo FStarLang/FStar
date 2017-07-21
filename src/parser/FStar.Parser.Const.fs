@@ -217,6 +217,12 @@ let guard_free     = pconst "guard_free"
 (* Constants for marking terms with normalization hints *)
 let normalize      = pconst "normalize"
 let normalize_term = pconst "normalize_term"
+let norm           = pconst "norm"
+let steps_zeta       = pconst "Zeta"
+let steps_iota       = pconst "Iota"
+let steps_primops    = pconst "Primops"
+let steps_delta      = pconst "Delta"
+let steps_delta_only = pconst "DeltaOnly"
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -250,6 +256,8 @@ let mk_tuple_lid n r =
   let t = U.format1 "tuple%s" (U.string_of_int n) in
   set_lid_range (psnconst t) r
 
+let lid_tuple2   = mk_tuple_lid 2 dummyRange
+
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
@@ -258,6 +266,8 @@ let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_id lid)
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
   set_lid_range (psnconst t) r
+
+let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
