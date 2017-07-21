@@ -1,5 +1,8 @@
 open FStar_CommonST
 
+open FStar_Monotonic_HyperHeap
+open FStar_Monotonic_HyperStack
+   
 open FStar_HyperHeap
 open FStar_HyperStack
 
@@ -41,7 +44,7 @@ let read = op_Bang
 
 let write = op_Colon_Equals
 
-let get () = HS (FStar_Map.const FStar_Heap.emp, def_rid)
+let get () = HS (FStar_Map.const FStar_Monotonic_Heap.emp, def_rid)
 
 let recall = (fun r -> ())
 

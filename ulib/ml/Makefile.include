@@ -3,7 +3,7 @@
 
 # This Makefile assumes that $(FSTAR_HOME) is properly defined.
 
-FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Ghost Heap \
+FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Ghost Heap Monotonic.Heap \
 	HyperStack.All HyperStack.ST Int16 Int32 Int63 Int64 Int8 Int.Cast IO \
 	List List.Tot.Base Mul Option Pervasives.Native Set ST String \
 	UInt16 UInt32 UInt63 UInt64 UInt8 \
