@@ -10,6 +10,7 @@ module HST = FStar.HyperStack.ST
   The code of a tagged union with fields `l` is `typ l`
 *)
 
+abstract
 let typ_l (l: P.union_typ) =
   P.([("tag", TBase TUInt32); ("union", TUnion l)])
 
@@ -241,6 +242,36 @@ let modifies_1_valid
 =
   let u_ptr = P.gfield p (union_field l) in
   P.is_active_union_field_intro h1 u_ptr f p'
+
+let readable_intro
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+  (h: HS.mem)
+: Lemma
+  (requires (
+    valid h tgs p /\
+    P.readable h (gfield tgs p f)
+  ))
+  (ensures (P.readable h p))
+= P.readable_struct h p
+
+let modifies_1_tag
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+  (t: UInt32.t)
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (
+    valid h0 tgs p /\
+    gread_tag h0 tgs p == t /\
+    P.modifies_1 (gfield tgs p f) h0 h1
+  ))
+  (ensures (gread_tag h1 tgs p == t))
+= ()
 
 (******************************************************************************)
 
