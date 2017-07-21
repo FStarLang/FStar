@@ -8,6 +8,13 @@ open FStar.ST
 
 open MonotonicArray
 
+(***** Ugh *****)
+
+let lemma_seq_append_whats_wrong_with_me (#a:Type0) (s:seq a) (s1:seq a) (s2:seq a) (s3:seq a) (pos:nat) (sent:nat{pos + sent <= length s})
+  :Lemma (requires (s1 == slice s 0 pos /\ s2 == slice s pos (pos + sent) /\ s3 == slice s 0 (pos + sent)))
+         (ensures  (s3 == append s1 s2))
+  = assert (Seq.equal s3 (append s1 s2))
+
 (***** basic messages interface *****)
 
 (* size of each message fragment sent over the network *)
@@ -351,7 +358,22 @@ let append_subseq #a #n (f:iarray a n) (pos:nat) (sent:nat{pos + sent <= n}) (h:
       let f1 = as_initialized_subseq f h 0 (pos + sent) in
       let sub_file = suffix f pos in
       let sent_frag = as_initialized_subseq sub_file h 0 sent in
-      assert (Seq.equal f1 (append f0 sent_frag))
+
+      let bs = as_seq f h in
+      let bss = as_seq sub_file h in
+      let sbs = ArrayUtils.get_some_equivalent bs in
+
+      assert (f0 == ArrayUtils.get_some_equivalent (Seq.slice bs 0 pos));
+      assert (f1 == ArrayUtils.get_some_equivalent (Seq.slice bs 0 (pos + sent)));
+      assert (sent_frag == ArrayUtils.get_some_equivalent (Seq.slice bss 0 sent));
+      assert (bss == Seq.slice bs pos n);
+      assert (Seq.equal (Seq.slice bss 0 sent) (Seq.slice bs pos (pos + sent)));
+      assert (sent_frag == ArrayUtils.get_some_equivalent (Seq.slice bs pos (pos + sent)));
+
+      assert (f0 == Seq.slice sbs 0 pos);
+      assert (f1 == Seq.slice sbs 0 (pos + sent));
+      assert (sent_frag == Seq.slice sbs pos (pos + sent));
+      lemma_seq_append_whats_wrong_with_me sbs f0 sent_frag f1 pos sent
 
 let lemma_sender_connection_ctr_equals_length_log
   (c:connection{sender c}) (h:heap{h `live_connection` c})

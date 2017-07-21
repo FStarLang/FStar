@@ -56,8 +56,8 @@ assume val lemma_get_some_equivalent_append (#a:Type0) (s1:seq (option a)) (s2:s
 	 [SMTPatOr [[SMTPat (get_some_equivalent (append s1 s2))]; [SMTPat (append (get_some_equivalent s1) (get_some_equivalent s2))]]]
 
 assume val lemma_get_some_equivalent_slice (#a:Type0) (s:seq (option a)) (i:nat) (j:nat)
-  :Lemma (requires (all_some s /\ j >= i /\ j < Seq.length s))
-         (ensures  (all_some s /\ j >= i /\ j < Seq.length s /\
+  :Lemma (requires (all_some s /\ j >= i /\ j <= Seq.length s))
+         (ensures  (all_some s /\ j >= i /\ j <= Seq.length s /\
 	            get_some_equivalent (slice s i j) == slice (get_some_equivalent s) i j))
 
 	 [SMTPatOr [[SMTPat (get_some_equivalent (slice s i j))]; [SMTPat (slice (get_some_equivalent s) i j)]]]
