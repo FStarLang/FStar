@@ -7,32 +7,6 @@ open Seq.Complements
 module C = FStar.Classical
 open Graph.Base
 
-let lemma_elementary_slice (#n:nat) (p:prepath n) (i j : k:nat{k <= S.length p})
-  : Lemma (requires (i <= j /\ elementary p))
-    (ensures (i <= j /\ elementary (S.slice p i j)))
-= let p' = S.slice p i j in
-  assert (forall (i0 j0: _in p'). p @^ (i+i0) == p @^ (i+j0) ==> i0 == j0)
-
-
-let lemma_snoc_elementary (#n:nat) (p:prepath n) (e:fin n)
- : Lemma(requires (elementary p /\ index_of e p == None))
-   (ensures (elementary (S.snoc p e)))
-= let p' = S.append p (S.create 1 e) in
-  S.lemma_eq_elim (S.snoc p e) (S.append p (S.create 1 e));
-  assert(forall (i0 j0 : k:nat{k<S.length p}). p @^ i0 == p @^ j0 ==> i0 == j0);
-  assert(forall (i0 j0 : k:nat{k<S.length p}). p' @^ i0 == p' @^ j0 ==> i0 == j0);
-  count_zero_none e p;
-  assert(forall (i0 : k:nat{k<S.length p}) . ~(p' @^ i0 == p' @^ (S.length p' - 1)))
-
-let lemma_snoc_elementary_without_count (#n:nat) (p:prepath n) (e:fin n)
- : Lemma(requires (elementary p /\ (forall (i : _in p) . ~(p @^ i == e))))
-   (ensures (elementary (S.snoc p e)))
-= let p' = S.append p (S.create 1 e) in
-  assert(forall (i0 j0 : k:nat{k<S.length p}). p @^ i0 == p @^ j0 ==> i0 == j0);
-  assert(forall (i0 j0 : k:nat{k<S.length p}). p' @^ i0 == p' @^ j0 ==> i0 == j0);
-  assert(forall (i0 : k:nat{k<S.length p}) . ~(p' @^ i0 == p' @^ (S.length p' - 1)))
-
-
 (*TODO: Prove that this holds for any ordering *)
 val lemma_mutually_exclusive_elementary_append : (#n:nat) -> (p1:prepath n) -> (p2:prepath n) ->
  Lemma (requires (disjoint p1 p2 /\ elementary p1 /\ elementary p2))
@@ -55,10 +29,11 @@ let lemma_mutually_exclusive_elementary_append #n p1 p2 =
   let aux (i j:_in p) : Lemma (p @^ i == p @^ j ==> i == j) = C.move_requires #(_in p) (aux i) j in
   C.forall_intro_2 aux
 
-let lemma_valid_graph_snoc  (#n:nat) (g:graph0 n) (p:prepath n) (e:fin n)
- : Lemma (requires (S.length p == 0 \/ (is_in_graph (S.last p) e g /\ valid_path g p)))
-   (ensures (valid_path g (S.snoc p e)))
-   = ()
+let lemma_valid_graph_append_empty_path (#n:nat) (g:graph0 n) (q p:prepath n) (e:fin n)
+  : Lemma (requires (q == (p `S.append` empty_path_at g e)) /\
+    (S.length p == 0 \/ (is_in_graph (S.last p) e g /\ valid_path g p)))
+   (ensures (valid_path g q))
+= ()
 
 let end_index (#n:nat) (p:prepath n) = S.length p - 1
 let subpath (#n:nat) (#g:graph0 n) (p:path g) (i j:_in p)
@@ -68,45 +43,73 @@ let subpath (#n:nat) (#g:graph0 n) (p:path g) (i j:_in p)
   lemma_valid_csubpath_is_valid g p i j ;
   r
 
-#set-options "--max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
+let lemma_subpath_disjoint (#n:nat) (g:graph0 n) (p1 : path g) (p2:prepath n) (i j:_in p1) :
+  Lemma (requires (i <= j /\ disjoint p1 p2)) (ensures ( i <= j /\ disjoint (subpath p1 i j) p2))
+=
+  lemma_disjoint_slice p2 p1 (i <: nat) (j+1 <: nat) ;
+  lemma_disjoint_symmetric p2 (subpath p1 i j)
+
+let pre (#n:nat) (g:graph0 n) (p:path g) (pn : prepath n) =
+  elementary pn /\
+  disjoint p pn /\
+  (
+    S.length pn == 0 \/
+    (is_in_graph (S.last pn) (S.head p) g /\ valid_path g pn)
+  )
+
+let lemma_append_last (#a:Type) (s1 s2:S.seq a) : Lemma (requires (S.length s2 > 0)) (ensures (S.length s2 > 0 /\ S.last (s1 `S.append` s2) == S.last s2)) = ()
+
+let maybe_trim_path (#n:nat) (g:graph0 n) (p:path g) (pn : prepath n)
+  : Pure (path g * prepath n)
+    (requires (pre g p pn /\ S.length p > 1))
+    (ensures (fun (p', pn') -> pre g p' pn' /\ S.length p' < S.length p))
+=
+  let h = S.head p in
+  let remaining = S.tail p in
+  let f ind = ind = h in
+  index_of_l_spec f remaining ;
+  match index_of_l f remaining with
+  | None ->
+    let head_seq = empty_path_at g h in
+    lemma_empty_path_elementary g h ;
+    assert (disjoint head_seq remaining /\ disjoint pn head_seq) ;
+    if S.length pn = 0 then
+      remaining, head_seq
+    else
+      let pn' = pn `S.append` head_seq in
+      lemma_mutually_exclusive_elementary_append pn head_seq;
+      (* KM : I don't understand why but adding this intermediate step makes the proof go smoother *)
+      assert(elementary (S.append pn head_seq));
+      assert(elementary pn');
+      lemma_disjoint_append pn head_seq remaining;
+      assert(disjoint (S.append pn head_seq) remaining);
+      assert(disjoint pn' remaining);
+      lemma_append_last pn head_seq ;
+      assert (S.last pn' == h) ;
+      assert(is_in_graph (S.last pn') (S.head remaining) g);
+      assert (head_seq == empty_path_at g h) ;
+      assert(pn' == pn `S.append` empty_path_at g h) ;
+      lemma_valid_graph_append_empty_path g pn'  pn h ;
+      remaining, pn'
+  | Some v ->
+    let v' = v+1 in
+    let remaining = subpath p v' (end_index p) in
+    lemma_subpath_disjoint g p pn v' (end_index p) ;
+    assert(disjoint remaining pn);
+    remaining, pn
 
 let rec to_elementary_path_aux (#n:nat) (g:graph0 n) (p:path g) (pn : prepath n)
   : Pure (path g)
-  (requires (elementary pn /\
-    (disjoint p pn) /\
-    (S.length pn == 0 \/ (is_in_graph (S.last pn) (S.head p) g /\ valid_path g pn))))
+  (requires (pre g p pn))
   (ensures (fun p' -> elementary p'))
   (decreases (S.length p ))
 =
   if S.length p <= 1 then
     (lemma_mutually_exclusive_elementary_append pn p; S.append pn p)
   else
-   let h = S.head p in
-   let remaining = S.tail p in
-   let f ind = ind = h in
-   index_of_l_spec f remaining ;
-   match index_of_l f remaining with
-   | None ->
-     let pn' = S.snoc pn h in
-     assert (~(S.length pn' == 0));
-     let head_seq = S.create 1 h in
-     lemma_mutually_exclusive_elementary_append pn head_seq;
-     lemma_disjoint_append pn head_seq remaining;
-     assert(elementary pn');
-     assert(disjoint pn' remaining);
-     assert(is_in_graph (S.last pn') (S.head remaining) g);
-     lemma_valid_graph_snoc g pn h ;
-     assert(valid_path g pn');
-     to_elementary_path_aux g remaining pn'
-   | Some v ->
-     let v' = v+1 in
-     let remaining = subpath p v' (end_index p) in
-     lemma_disjoint_slice pn p v' (S.length p);
-     assert(elementary pn);
-     assert(disjoint remaining pn);
-     to_elementary_path_aux g remaining pn
+   let remaining, pn = maybe_trim_path g p pn in
+   to_elementary_path_aux g remaining pn
 
-#reset-options
 
 let to_elementary_path (#n:nat) (g:graph0 n) (p:path g)
  : Pure (path g)

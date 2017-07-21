@@ -1,5 +1,5 @@
 [
-  "\u0018ÚuÅ&Ãìúßñ\u0012b√†›·",
+  "\u0017Á◊ïÔU˜ﬁ∆ˇ\u0017i\u0015k\u0006ñ",
   [
     [
       "Seq.Complements.op_At_Hat",
@@ -650,6 +650,14 @@
       0
     ],
     [
+      "Seq.Complements.lemma_disjoint_symmetric",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Seq.Complements.disjoint", "unit_typing" ],
+      0
+    ],
+    [
       "Seq.Complements.disjoint_implies_count_zero",
       1,
       2,
@@ -752,6 +760,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.Seq.Base_interpretation_Tm_arrow_015e5d64a12964940b96ac2bc090f517",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Seq.Complements_interpretation_Tm_arrow_0e93db4627628be2393979f2cc502dcf",
         "equation_Prims.nat", "equation_Seq.Complements._in",
         "equation_Seq.Complements.map", "equation_Seq.Complements.op_At_Hat",

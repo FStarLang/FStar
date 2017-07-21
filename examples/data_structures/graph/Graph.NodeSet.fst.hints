@@ -1,0 +1,164 @@
+[
+  "vÀJ6é¿\u0017\\CÏ:˜Q3Ám",
+  [
+    [
+      "Graph.NodeSet.op_At_Hat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Graph.NodeSet._in",
+        "equation_Prims.nat",
+        "refinement_interpretation_FStar.List.Tot.Base_Tm_refine_5b76b1c4682092d8298d5677347b4a58"
+      ],
+      0
+    ],
+    [
+      "Graph.NodeSet.disjoint",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Fin.fin",
+        "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
+      ],
+      0
+    ],
+    [
+      "Graph.NodeSet.disjoint",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Fin.fin",
+        "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
+      ],
+      0
+    ],
+    [
+      "Graph.NodeSet.append",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Fin.fin",
+        "equation_FStar.List.Tot.Base.op_At", "equation_Graph.Base.nodeset",
+        "equation_Graph.NodeSet.disjoint", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Graph.Base_Tm_refine_7e0e99de2d06c18804c1227975269eb3",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Graph.NodeSet.append",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Fin.fin",
+        "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
+      ],
+      0
+    ],
+    [
+      "Graph.NodeSet.lemma_disjoint_append",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@query", "equation_FStar.Fin.fin",
+        "equation_FStar.List.Tot.Base.op_At",
+        "equation_Graph.NodeSet.append", "equation_Graph.NodeSet.disjoint",
+        "equation_Prims.nat", "int_inversion", "primitive_Prims.op_BarBar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Graph.NodeSet.lemma_disjoint_append",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Fin.fin",
+        "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
+      ],
+      0
+    ],
+    [
+      "Graph.NodeSet.list_to_nodeset_aux",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
+        "binder_x_bf8ce5f2d4d8d4a84354f8cec0f4ea39_1",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
+        "binder_x_f6b0d69600fcf733929aba0ff780cbb1_2", "bool_inversion",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Fin.fin",
+        "equation_Graph.Base.nodeset", "equation_Graph.NodeSet.disjoint",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list",
+        "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff",
+        "int_inversion", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Negation",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_FStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff",
+        "refinement_interpretation_Graph.Base_Tm_refine_7e0e99de2d06c18804c1227975269eb3",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "subterm_ordering_Prims.Cons",
+        "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "typing_FStar.Fin.fin", "typing_FStar.List.Tot.Base.mem",
+        "typing_FStar.List.Tot.Base.noRepeats"
+      ],
+      0
+    ],
+    [
+      "Graph.NodeSet.list_to_nodeset_aux",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Fin.fin",
+        "haseqFStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
+      ],
+      0
+    ],
+    [
+      "Graph.NodeSet.list_to_nodeset",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
+        "@query", "constructor_distinct_Prims.Nil", "equation_FStar.Fin.fin",
+        "equation_Graph.NodeSet.disjoint", "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.noRepeats.fuel_instrumented",
+        "int_inversion", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ]
+  ]
+]

@@ -96,6 +96,9 @@ let index_of_l_count (#a:eqtype) (e:a) (s:seq a)
 
 let disjoint (#a:Type) (s1:seq a) (s2:seq a) = forall (i:_in s1)(j:_in s2). ~(s1 @^ i == s2 @^ j)
 
+let lemma_disjoint_symmetric (#a:Type) (s1 s2:seq a)
+  : Lemma (requires (disjoint s1 s2)) (ensures (disjoint s2 s1))
+= ()
 
 let disjoint_implies_count_zero (#a:eqtype) (s1 s2:seq a)
  : Lemma (requires (disjoint s1 s2))
