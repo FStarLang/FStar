@@ -34,7 +34,7 @@ let rec btree_find_exact (tr: btree<'a>) (k: string) : option<'a> =
     else
       Some v
 
-type path_elem = option<int>*string
+type path_elem = option<string>*string
 
 let rec btree_find_prefix (tr: btree<'a>) (prefix: string) : list<path_elem*'a> =
   let rec aux (tr: btree<'a>) (prefix: string) (acc: list<path_elem*'a>) : list<path_elem*'a> =
@@ -49,7 +49,7 @@ let rec btree_find_prefix (tr: btree<'a>) (prefix: string) : list<path_elem*'a> 
         if explore_right then aux rtr prefix acc else acc in
       let matches =
         if include_middle then
-          ((Some (String.length prefix), k), v) :: matches
+          ((Some prefix, k), v) :: matches
         else
           matches in
       let matches =
@@ -201,11 +201,21 @@ let register_alias (tbl: table) (key: string) (query: query) : table =
   trie_add_alias tbl key query
 
 let path_match_length (path: path) : int =
-  List.fold (fun acc elem ->
-             match fst elem with
-             | Some nchars -> 1 (* ‘.’ *) + nchars + acc
-             | None -> acc)
-            0 path
+  let length, (last_prefix, last_completion_length) =
+    List.fold (fun acc elem ->
+               let (acc_len, _) = acc in
+               let (prefix_opt, completion) = elem in
+               match prefix_opt with
+               | Some prefix ->
+                 let completion_len = String.length completion in
+                 (acc_len + 1 (* ‘.’ *) + completion_len,
+                  (prefix, completion_len))
+               | None -> acc)
+              (0, ("", 0)) path in
+  length
+  - 1 (* extra ‘.’ *)
+  - last_completion_length
+  + (String.length last_prefix) (* match stops after last prefix *)
 
 let path_to_string (path: path) : string =
   String.concat "." (List.map snd path)
