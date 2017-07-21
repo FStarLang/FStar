@@ -416,7 +416,7 @@ let normalize_abs: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
 let unit_binder: FStar_Syntax_Syntax.binder =
   let uu____1442 =
     FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-      FStar_TypeChecker_Common.t_unit in
+      FStar_Syntax_Syntax.t_unit in
   FStar_All.pipe_left FStar_Syntax_Syntax.mk_binder uu____1442
 let check_pats_for_ite:
   (FStar_Syntax_Syntax.pat,FStar_Syntax_Syntax.term

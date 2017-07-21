@@ -1888,3 +1888,63 @@ let has_simple_attribute: term Prims.list -> Prims.string -> Prims.bool =
                pos = uu____6365; vars = uu____6366;_} when
                (FStar_Util.string_of_unicode data) = s -> true
            | uu____6373 -> false) l
+let tconst: FStar_Ident.lident -> term =
+  fun l  ->
+    let uu____6380 =
+      let uu____6383 =
+        let uu____6384 =
+          lid_as_fv l Delta_constant FStar_Pervasives_Native.None in
+        Tm_fvar uu____6384 in
+      mk uu____6383 in
+    uu____6380 FStar_Pervasives_Native.None FStar_Range.dummyRange
+let tabbrev: FStar_Ident.lident -> term =
+  fun l  ->
+    let uu____6392 =
+      let uu____6395 =
+        let uu____6396 =
+          lid_as_fv l (Delta_defined_at_level (Prims.parse_int "1"))
+            FStar_Pervasives_Native.None in
+        Tm_fvar uu____6396 in
+      mk uu____6395 in
+    uu____6392 FStar_Pervasives_Native.None FStar_Range.dummyRange
+let tdataconstr: FStar_Ident.lident -> term =
+  fun l  ->
+    let uu____6404 =
+      lid_as_fv l Delta_constant (FStar_Pervasives_Native.Some Data_ctor) in
+    fv_to_tm uu____6404
+let t_unit: term = tconst FStar_Parser_Const.unit_lid
+let t_bool: term = tconst FStar_Parser_Const.bool_lid
+let t_int: term = tconst FStar_Parser_Const.int_lid
+let t_string: term = tconst FStar_Parser_Const.string_lid
+let t_float: term = tconst FStar_Parser_Const.float_lid
+let t_char: term = tabbrev FStar_Parser_Const.char_lid
+let t_range: term = tconst FStar_Parser_Const.range_lid
+let t_tactic_unit: term' syntax =
+  let uu____6407 =
+    let uu____6408 =
+      let uu____6409 = tabbrev FStar_Parser_Const.tactic_lid in
+      mk_Tm_uinst uu____6409 [U_zero] in
+    let uu____6410 = let uu____6411 = as_arg t_unit in [uu____6411] in
+    mk_Tm_app uu____6408 uu____6410 in
+  uu____6407 FStar_Pervasives_Native.None FStar_Range.dummyRange
+let t_list_of: term -> term =
+  fun t  ->
+    let uu____6418 =
+      let uu____6419 =
+        let uu____6420 = tabbrev FStar_Parser_Const.list_lid in
+        mk_Tm_uinst uu____6420 [U_zero] in
+      let uu____6421 = let uu____6422 = as_arg t in [uu____6422] in
+      mk_Tm_app uu____6419 uu____6421 in
+    uu____6418 FStar_Pervasives_Native.None FStar_Range.dummyRange
+let t_option_of: term -> term =
+  fun t  ->
+    let uu____6429 =
+      let uu____6430 =
+        let uu____6431 = tabbrev FStar_Parser_Const.option_lid in
+        mk_Tm_uinst uu____6431 [U_zero] in
+      let uu____6432 = let uu____6433 = as_arg t in [uu____6433] in
+      mk_Tm_app uu____6430 uu____6432 in
+    uu____6429 FStar_Pervasives_Native.None FStar_Range.dummyRange
+let unit_const: term' syntax =
+  mk (Tm_constant FStar_Const.Const_unit) FStar_Pervasives_Native.None
+    FStar_Range.dummyRange

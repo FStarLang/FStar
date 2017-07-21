@@ -8840,7 +8840,7 @@ let encode_query:
                             let uu____26281 =
                               FStar_Syntax_Syntax.new_bv
                                 FStar_Pervasives_Native.None
-                                FStar_TypeChecker_Common.t_unit in
+                                FStar_Syntax_Syntax.t_unit in
                             FStar_Syntax_Util.refine uu____26281
                               x.FStar_Syntax_Syntax.sort
                         | uu____26282 -> x.FStar_Syntax_Syntax.sort in

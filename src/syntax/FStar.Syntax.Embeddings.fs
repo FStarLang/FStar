@@ -1,7 +1,9 @@
-﻿module FStar.Syntax.Embeddings
+﻿#light "off"
+module FStar.Syntax.Embeddings
 
 open FStar.All
 open FStar.Syntax.Syntax
+module Print = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
 module C = FStar.Const
 module PC = FStar.Parser.Const

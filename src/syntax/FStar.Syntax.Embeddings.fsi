@@ -1,4 +1,5 @@
-﻿module FStar.Syntax.Embeddings
+﻿#light "off"
+module FStar.Syntax.Embeddings
 
 open FStar.All
 open FStar.Syntax.Syntax

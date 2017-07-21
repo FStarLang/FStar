@@ -172,8 +172,8 @@ let disentangle_abbrevs_from_bundle:
                       let quals1 =
                         FStar_All.pipe_right x.FStar_Syntax_Syntax.sigquals
                           (FStar_List.filter
-                             (fun uu___182_397  ->
-                                match uu___182_397 with
+                             (fun uu___211_397  ->
+                                match uu___211_397 with
                                 | FStar_Syntax_Syntax.Noeq  -> false
                                 | uu____398 -> true)) in
                       let lid =
@@ -199,15 +199,15 @@ let disentangle_abbrevs_from_bundle:
                                     FStar_Syntax_InstFV.inst unfold_abbrev_fv
                                       lb.FStar_Syntax_Syntax.lbdef in
                                   let lb' =
-                                    let uu___183_425 = lb in
+                                    let uu___212_425 = lb in
                                     {
                                       FStar_Syntax_Syntax.lbname =
-                                        (uu___183_425.FStar_Syntax_Syntax.lbname);
+                                        (uu___212_425.FStar_Syntax_Syntax.lbname);
                                       FStar_Syntax_Syntax.lbunivs =
-                                        (uu___183_425.FStar_Syntax_Syntax.lbunivs);
+                                        (uu___212_425.FStar_Syntax_Syntax.lbunivs);
                                       FStar_Syntax_Syntax.lbtyp = ty';
                                       FStar_Syntax_Syntax.lbeff =
-                                        (uu___183_425.FStar_Syntax_Syntax.lbeff);
+                                        (uu___212_425.FStar_Syntax_Syntax.lbeff);
                                       FStar_Syntax_Syntax.lbdef = tm'
                                     } in
                                   let sigelt' =
@@ -217,17 +217,17 @@ let disentangle_abbrevs_from_bundle:
                                       let uu____441 =
                                         FStar_ST.read
                                           rev_unfolded_type_abbrevs in
-                                      (let uu___184_449 = x in
+                                      (let uu___213_449 = x in
                                        {
                                          FStar_Syntax_Syntax.sigel = sigelt';
                                          FStar_Syntax_Syntax.sigrng =
-                                           (uu___184_449.FStar_Syntax_Syntax.sigrng);
+                                           (uu___213_449.FStar_Syntax_Syntax.sigrng);
                                          FStar_Syntax_Syntax.sigquals =
                                            quals1;
                                          FStar_Syntax_Syntax.sigmeta =
-                                           (uu___184_449.FStar_Syntax_Syntax.sigmeta);
+                                           (uu___213_449.FStar_Syntax_Syntax.sigmeta);
                                          FStar_Syntax_Syntax.sigattrs =
-                                           (uu___184_449.FStar_Syntax_Syntax.sigattrs)
+                                           (uu___213_449.FStar_Syntax_Syntax.sigattrs)
                                        }) :: uu____441 in
                                     FStar_ST.write rev_unfolded_type_abbrevs
                                       uu____438);
@@ -293,37 +293,37 @@ let disentangle_abbrevs_from_bundle:
                         FStar_Syntax_InstFV.inst_binders unfold_fv bnd in
                       let ty' = FStar_Syntax_InstFV.inst unfold_fv ty in
                       let mut' = filter_out_type_abbrevs mut in
-                      [(let uu___185_620 = x in
+                      [(let uu___214_620 = x in
                         {
                           FStar_Syntax_Syntax.sigel =
                             (FStar_Syntax_Syntax.Sig_inductive_typ
                                (lid, univs1, bnd', ty', mut', dc));
                           FStar_Syntax_Syntax.sigrng =
-                            (uu___185_620.FStar_Syntax_Syntax.sigrng);
+                            (uu___214_620.FStar_Syntax_Syntax.sigrng);
                           FStar_Syntax_Syntax.sigquals =
-                            (uu___185_620.FStar_Syntax_Syntax.sigquals);
+                            (uu___214_620.FStar_Syntax_Syntax.sigquals);
                           FStar_Syntax_Syntax.sigmeta =
-                            (uu___185_620.FStar_Syntax_Syntax.sigmeta);
+                            (uu___214_620.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
-                            (uu___185_620.FStar_Syntax_Syntax.sigattrs)
+                            (uu___214_620.FStar_Syntax_Syntax.sigattrs)
                         })]
                   | FStar_Syntax_Syntax.Sig_datacon
                       (lid,univs1,ty,res,npars,mut) ->
                       let ty' = FStar_Syntax_InstFV.inst unfold_fv ty in
                       let mut' = filter_out_type_abbrevs mut in
-                      [(let uu___186_640 = x in
+                      [(let uu___215_640 = x in
                         {
                           FStar_Syntax_Syntax.sigel =
                             (FStar_Syntax_Syntax.Sig_datacon
                                (lid, univs1, ty', res, npars, mut'));
                           FStar_Syntax_Syntax.sigrng =
-                            (uu___186_640.FStar_Syntax_Syntax.sigrng);
+                            (uu___215_640.FStar_Syntax_Syntax.sigrng);
                           FStar_Syntax_Syntax.sigquals =
-                            (uu___186_640.FStar_Syntax_Syntax.sigquals);
+                            (uu___215_640.FStar_Syntax_Syntax.sigquals);
                           FStar_Syntax_Syntax.sigmeta =
-                            (uu___186_640.FStar_Syntax_Syntax.sigmeta);
+                            (uu___215_640.FStar_Syntax_Syntax.sigmeta);
                           FStar_Syntax_Syntax.sigattrs =
-                            (uu___186_640.FStar_Syntax_Syntax.sigattrs)
+                            (uu___215_640.FStar_Syntax_Syntax.sigattrs)
                         })]
                   | FStar_Syntax_Syntax.Sig_let (uu____643,uu____644) -> []
                   | uu____649 ->
