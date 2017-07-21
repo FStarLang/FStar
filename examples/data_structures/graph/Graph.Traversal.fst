@@ -3,6 +3,7 @@ module Graph.Traversal
 open Graph.Base
 open Seq.Complements
 module SEM = FStar.StrongExcludedMiddle
+module S = FStar.Seq
 
 (* `depth g root x d` holds iff the depth of x in the graph rooted in root is d *)
 (* where None = \infty *)
@@ -33,8 +34,6 @@ let depth_fun (#n:nat) (g:graph0 n) (root x:_in g) : GTot (d:option nat{depth g 
   depth_fun_aux g root x 0
 
 
-type traversal (#n:nat) (g:graph0 n) (root:_in g) : nodeset n -> Type0 =
-  fun s ->
-    Cons? s /\
-    Cons?.hd s == root (* /\ *)
-    (* missing condition ... *)
+type traversal (#n:nat) (g:graph0 n) (root:_in g) : nodesetseq n -> Type0 =
+  fun s -> S.length s > 0 /\ S.head s == root /\ 
+  (forall (i:_in g). i == 0 \/ (exists (j:k:nat{k<i}). is_in_graph i j g))
