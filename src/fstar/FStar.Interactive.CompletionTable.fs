@@ -152,7 +152,7 @@ let trie_add_alias (tr: trie<'a>) key path =
 
 (** * High level interface * **)
 
-let _ =
+let test () =
     let tmp = trie_empty in
 
     let tmp = trie_insert tmp ["AA"; "B"] "AA/B" in
