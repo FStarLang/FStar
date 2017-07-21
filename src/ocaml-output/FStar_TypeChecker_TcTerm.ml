@@ -4870,7 +4870,7 @@ and check_top_level_let:
                             let uu____13185 = c11.FStar_Syntax_Syntax.comp () in
                             FStar_All.pipe_right uu____13185
                               (FStar_TypeChecker_Normalize.normalize_comp
-                                 [FStar_TypeChecker_Normalize.Beta] env1) in
+                                 [FStar_TypeChecker_Normalize.Beta; FStar_TypeChecker_Normalize.NoFullNorm] env1) in
                           let e21 =
                             let uu____13193 =
                               FStar_Syntax_Util.is_pure_comp c in

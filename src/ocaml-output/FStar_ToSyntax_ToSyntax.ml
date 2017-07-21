@@ -4156,7 +4156,7 @@ let rec desugar_tycon:
                                 | uu____12109 -> false) quals in
                          if uu____12106
                          then FStar_Syntax_Syntax.teff
-                         else FStar_Syntax_Syntax.tun
+                         else FStar_Syntax_Util.ktype
                      | FStar_Pervasives_Native.Some k -> desugar_term env' k in
                    let t0 = t in
                    let quals1 =

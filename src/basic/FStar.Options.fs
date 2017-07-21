@@ -108,6 +108,7 @@ let defaults =
       ("debug_level"                  , List []);
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
+      ("detail_hint_replay"           , Bool false);
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
@@ -178,7 +179,8 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
-      ("__no_positivity"              , Bool false)]
+      ("__no_positivity"              , Bool false);
+      ("__ml_no_eta_expand_coertions" , Bool false)]
 
 let init () =
    let o = peek () in
@@ -210,6 +212,7 @@ let get_debug                   ()      = lookup_opt "debug"                    
 let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
+let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
@@ -279,6 +282,7 @@ let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
+let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -411,6 +415,12 @@ let rec specs () : list<Getopt.opt> =
         "detail_errors",
         ZeroArgs (fun () -> Bool true),
          "Emit a detailed error report by asking the SMT solver many queries; will take longer;
+         implies n_cores=1");
+
+       ( noshort,
+        "detail_hint_replay",
+        ZeroArgs (fun () -> Bool true),
+         "Emit a detailed report for proof whose unsat core fails to replay;
          implies n_cores=1");
 
        ( noshort,
@@ -799,6 +809,11 @@ let rec specs () : list<Getopt.opt> =
         ZeroArgs (fun () -> Bool true),
         "Don't check positivity of inductive types");
 
+       ( noshort,
+        "__ml_no_eta_expand_coertions",
+        ZeroArgs (fun () -> Bool true),
+        "Do not eta-expand coertions in generated OCaml");
+
 
   ] in
      ( 'h',
@@ -837,6 +852,7 @@ let settable = function
     | "debug"
     | "debug_level"
     | "detail_errors"
+    | "detail_hint_replay"
     | "eager_inference"
     | "hide_genident_nums"
     | "hide_uvar_nums"
@@ -1029,6 +1045,7 @@ let debug_any                    () = get_debug () <> []
 let debug_at_level      modul level = (modul = "" || get_debug () |> List.contains modul) && debug_level_geq level
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
+let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
@@ -1097,6 +1114,7 @@ let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
 let no_positivity                () = get_no_positivity               ()
+let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 
 
 let should_extract m =

@@ -3,8 +3,8 @@ module FStar.Heap
 module S  = FStar.Set
 module TS = FStar.TSet
 
-type set  = Set.set
-type tset = TSet.set
+type set  a = Set.set a
+type tset a = TSet.set a
 
 val heap :Type u#1
 
