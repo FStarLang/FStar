@@ -23,6 +23,9 @@ let retain_only (nss:list string) : tactic unit =
   addns "Prims" ;; //keep prims always
   _ig <-- mapM addns nss ;  //add back only things in nss
   return ()
+
+let unrefine_eq_lem (#a:Type) (#p : (a -> Type)) (x y : (z:a{p z})) (s : squash (eq2 #a x y)) : Lemma (eq2 #(z:a{p z}) x y) =
+    ()
   
 let prune_for_seq : tactic unit =
   g <-- cur_env;
@@ -38,9 +41,25 @@ let prune_for_seq : tactic unit =
     | _ -> idtac) bs ; 
   retain_only ["FStar.Seq"]
   
+let try_unref_eq : tactic unit =
+  g <-- cur_goal; //this is just the goal type
+  let f = term_as_formula g in
+  match f with
+  | Comp Eq t l r ->
+    begin match inspect t with
+    | Tv_Refine _ _ ->
+        apply_lemma (quote unrefine_eq_lem);;
+        norm []
+    | _ ->
+        fail "done"
+    end
+  | _ -> fail "done"
+
 val sequence_pruning : tactic unit
 let sequence_pruning =
   norm [] ;; //normalize the current goal
+  // GM: if `seq a` is refined, applying lemma_eq_elim misbehaves and spins off a different goal, work around it by removing refinements here
+  repeat try_unref_eq;;
   g <-- cur_goal; //this is just the goal type
   dump "A";;
   let f = term_as_formula g in
