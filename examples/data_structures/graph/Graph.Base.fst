@@ -41,6 +41,8 @@ let empty_path_at (#n:nat) (g:graph0 n) (i:_in g) : path g =
 
 let elementary (#n:nat) (p:prepath n) = forall (i j : _in p) . p @^ i == p @^ j ==> i == j
 
+let nodesetseq (n:nat) = s:S.seq (fin n){elementary s}
+
 let lemma_empty_path_elementary (#n:nat) (g:graph0 n) (i:_in g)
   : Lemma (elementary (empty_path_at g i))
 = ()
