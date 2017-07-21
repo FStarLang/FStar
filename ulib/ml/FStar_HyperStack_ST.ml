@@ -44,7 +44,7 @@ let read = op_Bang
 
 let write = op_Colon_Equals
 
-let get () = HS (FStar_Map.const FStar_Heap.emp, def_rid)
+let get () = HS (FStar_Map.const FStar_Monotonic_Heap.emp, def_rid)
 
 let recall = (fun r -> ())
 

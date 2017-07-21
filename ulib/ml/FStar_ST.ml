@@ -2,9 +2,9 @@
 
 open FStar_CommonST
 
-type ('a, 'b) mref = 'a FStar_Heap.ref
+type ('a, 'b) mref = ('a, 'b) FStar_Monotonic_Heap.mref
    
-type 'a ref = 'a FStar_Heap.ref
+type 'a ref = 'a FStar_Monotonic_Heap.ref
 
 let read = read
 
@@ -18,3 +18,8 @@ let alloc = alloc
 
 let recall = recall
 let get = get
+
+type 'a witnessed = 'a FStar_CommonST.witnessed
+
+let gst_witness = gst_witness
+let gst_recall = gst_recall
