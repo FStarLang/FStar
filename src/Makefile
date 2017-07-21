@@ -236,6 +236,7 @@ uz:
 ocaml: clean_u_extract_ocaml
 	$(MAKE) prep
 	+$(MAKE) u_extract_all
+	rm -f ocaml-output/FStar_*.ml
 	cp u_ocaml-output/*.ml ocaml-output/
 
 # Fastest way to refresh the snapshot (if it works)
