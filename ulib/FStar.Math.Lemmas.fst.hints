@@ -1506,7 +1506,7 @@
     [
       "FStar.Math.Lemmas.lemma_mod_plus_injective",
       4,
-      2,
+      4,
       2,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
@@ -1594,7 +1594,7 @@
       "FStar.Math.Lemmas.lemma_mod_plus_mul_distr",
       3,
       0,
-      1,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
@@ -2236,7 +2236,7 @@
       "FStar.Math.Lemmas.mod_mult_exact",
       2,
       0,
-      1,
+      2,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
         "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Division",

@@ -17,7 +17,7 @@ module STx
 
 open FStar.TSet
 open Heapx
-open Preorder
+open FStar.Preorder
 
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 

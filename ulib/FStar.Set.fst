@@ -132,3 +132,7 @@ let rec as_set' #a l = match l with
 
 unfold val as_set:  #a:eqtype -> l:list a -> Tot (set a)
 let as_set (#a:eqtype) (l:list a) = normalize_term (as_set' l)
+
+assume val lemma_disjoint_subset (#a:eqtype) (s1:set a) (s2:set a) (s3:set a)
+  :Lemma (requires (disjoint s1 s2 /\ subset s3 s1))
+         (ensures  (disjoint s3 s2))

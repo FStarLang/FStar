@@ -4,6 +4,7 @@ open Rel
 open While
 open IfcRules
 open FStar.Heap
+open FStar.ST
 
 (* (Warning) Top-level let-bindings must be total; this term may have effects *)
 

@@ -67,7 +67,7 @@ noeq type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc #(list entry) []
+let log :ref (list entry) = ST.alloc #(list entry) []
 
 let mac k t =
   let m = sha1 k t in
