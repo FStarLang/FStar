@@ -1188,7 +1188,9 @@ let return_value:
                         uu____4377 FStar_Pervasives_Native.None
                           v1.FStar_Syntax_Syntax.pos in
                       FStar_TypeChecker_Normalize.normalize
-                        [FStar_TypeChecker_Normalize.Beta] env uu____4376) in
+                        [FStar_TypeChecker_Normalize.Beta;
+                        FStar_TypeChecker_Normalize.NoFullNorm] env
+                        uu____4376) in
              mk_comp m u_t t wp [FStar_Syntax_Syntax.RETURN]) in
         (let uu____4388 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -2676,7 +2678,7 @@ let pure_or_ghost_pre_and_post:
           uu____6213 FStar_Pervasives_Native.None
             res_t.FStar_Syntax_Syntax.pos in
         FStar_Syntax_Util.refine x uu____6212 in
-      let norm t =
+      let norm1 t =
         FStar_TypeChecker_Normalize.normalize
           [FStar_TypeChecker_Normalize.Beta;
           FStar_TypeChecker_Normalize.Eager_unfolding;
@@ -2700,12 +2702,12 @@ let pure_or_ghost_pre_and_post:
                (match ct.FStar_Syntax_Syntax.effect_args with
                 | (req,uu____6285)::(ens,uu____6287)::uu____6288 ->
                     let uu____6317 =
-                      let uu____6320 = norm req in
+                      let uu____6320 = norm1 req in
                       FStar_Pervasives_Native.Some uu____6320 in
                     let uu____6321 =
                       let uu____6322 =
                         mk_post_type ct.FStar_Syntax_Syntax.result_typ ens in
-                      FStar_All.pipe_left norm uu____6322 in
+                      FStar_All.pipe_left norm1 uu____6322 in
                     (uu____6317, uu____6321)
                 | uu____6325 ->
                     let uu____6334 =
@@ -2790,13 +2792,13 @@ let pure_or_ghost_pre_and_post:
                                 uu____6492 FStar_Pervasives_Native.None
                                   (ct1.FStar_Syntax_Syntax.result_typ).FStar_Syntax_Syntax.pos in
                               let uu____6520 =
-                                let uu____6523 = norm req in
+                                let uu____6523 = norm1 req in
                                 FStar_Pervasives_Native.Some uu____6523 in
                               let uu____6524 =
                                 let uu____6525 =
                                   mk_post_type
                                     ct1.FStar_Syntax_Syntax.result_typ ens in
-                                norm uu____6525 in
+                                norm1 uu____6525 in
                               (uu____6520, uu____6524)))
                 | uu____6528 -> failwith "Impossible"))
 let reify_body:
@@ -3167,7 +3169,7 @@ let gen:
       if uu____7930
       then FStar_Pervasives_Native.None
       else
-        (let norm c =
+        (let norm1 c =
            (let uu____7982 =
               FStar_TypeChecker_Env.debug env FStar_Options.Medium in
             if uu____7982
@@ -3215,7 +3217,7 @@ let gen:
                            FStar_All.pipe_right
                              (FStar_Syntax_Util.comp_result c)
                              FStar_Syntax_Subst.compress in
-                         let c1 = norm c in
+                         let c1 = norm1 c in
                          let t1 = FStar_Syntax_Util.comp_result c1 in
                          let univs1 = FStar_Syntax_Free.univs t1 in
                          let uvt = FStar_Syntax_Free.uvars t1 in

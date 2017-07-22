@@ -156,6 +156,12 @@ let range_0: FStar_Ident.lident = pconst "range_0"
 let guard_free: FStar_Ident.lident = pconst "guard_free"
 let normalize: FStar_Ident.lident = pconst "normalize"
 let normalize_term: FStar_Ident.lident = pconst "normalize_term"
+let norm: FStar_Ident.lident = pconst "norm"
+let steps_zeta: FStar_Ident.lident = pconst "zeta"
+let steps_iota: FStar_Ident.lident = pconst "iota"
+let steps_primops: FStar_Ident.lident = pconst "primops"
+let steps_delta: FStar_Ident.lident = pconst "delta"
+let steps_delta_only: FStar_Ident.lident = pconst "delta_only"
 let gen_reset:
   (Prims.unit -> Prims.int,Prims.unit -> Prims.unit)
     FStar_Pervasives_Native.tuple2
@@ -196,6 +202,8 @@ let mk_tuple_lid: Prims.int -> FStar_Range.range -> FStar_Ident.lident =
         let uu____158 = FStar_Util.string_of_int n1 in
         FStar_Util.format1 "tuple%s" uu____158 in
       let uu____159 = psnconst t in FStar_Ident.set_lid_range uu____159 r
+let lid_tuple2: FStar_Ident.lident =
+  mk_tuple_lid (Prims.parse_int "2") FStar_Range.dummyRange
 let is_tuple_constructor_string: Prims.string -> Prims.bool =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.tuple"
 let is_tuple_constructor_lid: FStar_Ident.ident -> Prims.bool =
@@ -207,6 +215,8 @@ let mk_tuple_data_lid: Prims.int -> FStar_Range.range -> FStar_Ident.lident =
         let uu____177 = FStar_Util.string_of_int n1 in
         FStar_Util.format1 "Mktuple%s" uu____177 in
       let uu____178 = psnconst t in FStar_Ident.set_lid_range uu____178 r
+let lid_Mktuple2: FStar_Ident.lident =
+  mk_tuple_data_lid (Prims.parse_int "2") FStar_Range.dummyRange
 let is_tuple_datacon_string: Prims.string -> Prims.bool =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.Mktuple"
 let is_tuple_data_lid: FStar_Ident.lident -> Prims.int -> Prims.bool =

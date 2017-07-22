@@ -1,13 +1,39 @@
 [
-  "Õ¥ºÙ\u001aCJd§“m \u0010°F\u007f",
+  "0\u001bÚ£‚ë ÕX2.S4\u000eoô",
   [
     [ "FStar.Tactics.Sequences.is_seq_t", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Sequences.unrefine_eq_lem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
+      0
+    ],
     [
       "FStar.Tactics.Sequences.prune_for_seq",
       1,
       2,
       1,
       [ "@query", "equation_FStar.Tactics.Derived.idtac" ],
+      0
+    ],
+    [
+      "FStar.Tactics.Sequences.try_unref_eq",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Derived.fail",
+        "equation_FStar.Tactics.Effect.bind", "unit_typing"
+      ],
       0
     ],
     [ "FStar.Tactics.Sequences.sequence_pruning", 1, 2, 1, [ "@query" ], 0 ],

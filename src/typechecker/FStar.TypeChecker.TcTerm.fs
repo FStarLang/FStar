@@ -317,12 +317,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_meta(e, Meta_desugared Sequence) ->
     begin match (SS.compress e).n with
         | Tm_let((_,[{lbname=x; lbdef=e1}]), e2) -> //NS: Why not handle this specially in the deugaring phase, adding a unit annotation on x?
-          let e1, c1, g1 = tc_term (Env.set_expected_typ env Common.t_unit) e1 in
+          let e1, c1, g1 = tc_term (Env.set_expected_typ env t_unit) e1 in
           let e2, c2, g2 = tc_term env e2 in
           let c = TcUtil.bind e1.pos env (Some e1) c1 (None, c2) in
           let e1 = TcUtil.maybe_lift env e1 c1.eff_name c.eff_name c1.res_typ in
           let e2 = TcUtil.maybe_lift env e2 c2.eff_name c.eff_name c2.res_typ in
-          let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, Common.t_unit, e1)]), e2)) None e.pos in
+          let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, t_unit, e1)]), e2)) None e.pos in
           let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
           let e = mk (Tm_meta(e, Meta_desugared Sequence)) None top.pos in
           e, c, Rel.conj_guard g1 g2
@@ -620,7 +620,7 @@ and tc_tactic_opt env topt =
     match topt with
     | None -> None
     | Some tactic ->
-      let tactic, _, _ = tc_check_tot_or_gtot_term env tactic Common.t_tactic_unit in
+      let tactic, _, _ = tc_check_tot_or_gtot_term env tactic t_tactic_unit in
       Some tactic
 (************************************************************************************************************)
 (* Type-checking values:                                                                                    *)
@@ -1506,7 +1506,7 @@ and tc_eqn scrutinee env branch
         then raise (Error("When clauses are not yet supported in --verify mode; they will be some day", e.pos))
         //             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env TcUtil.t_bool) e in
         //             Some e, g
-        else let e, c, g = tc_term (Env.set_expected_typ pat_env Common.t_bool) e in
+        else let e, c, g = tc_term (Env.set_expected_typ pat_env t_bool) e in
              Some e, g in
 
   (* 3. Check the branch *)
@@ -1714,7 +1714,7 @@ and check_top_level_let env e =
 
 
          (* the result has the same effect as c1, except it returns unit *)
-         let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero Common.t_unit in
+         let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero t_unit in
 
 (*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 in
          mk (Tm_let((false, [lb]), e2))
@@ -1808,7 +1808,7 @@ and check_top_level_let_rec env top =
                    ecs |> List.map (fun (x, uvs, e, c) ->
                       U.close_univs_and_mk_letbinding all_lb_names x uvs (U.comp_result c) (U.comp_effect_name c) e) in
 
-          let cres = U.lcomp_of_comp <| S.mk_Total Common.t_unit in
+          let cres = U.lcomp_of_comp <| S.mk_Total t_unit in
 
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
           Rel.discharge_guard env g_lbs |> Rel.force_trivial_guard env;

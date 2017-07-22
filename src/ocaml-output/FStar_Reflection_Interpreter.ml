@@ -76,18 +76,18 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
       let uu____332 =
         mk11 "__inspect_fv" FStar_Reflection_Basic.inspect_fv
           FStar_Reflection_Basic.unembed_fvar
-          FStar_Reflection_Basic.embed_string_list in
+          FStar_Syntax_Embeddings.embed_string_list in
       let uu____335 =
         let uu____338 =
           mk11 "__pack_fv" FStar_Reflection_Basic.pack_fv
-            (FStar_Reflection_Basic.unembed_list
-               FStar_Reflection_Basic.unembed_string)
+            (FStar_Syntax_Embeddings.unembed_list
+               FStar_Syntax_Embeddings.unembed_string)
             FStar_Reflection_Basic.embed_fvar in
         let uu____341 =
           let uu____344 =
             mk11 "__inspect_bv" FStar_Reflection_Basic.inspect_bv
               FStar_Reflection_Basic.unembed_binder
-              FStar_Reflection_Basic.embed_string in
+              FStar_Syntax_Embeddings.embed_string in
           let uu____345 =
             let uu____348 =
               mk2 "__compare_binder" FStar_Reflection_Basic.order_binder
@@ -107,7 +107,7 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
                   mk2 "__is_free" FStar_Reflection_Basic.is_free
                     FStar_Reflection_Basic.unembed_binder
                     FStar_Reflection_Basic.unembed_term
-                    FStar_Reflection_Basic.embed_bool in
+                    FStar_Syntax_Embeddings.embed_bool in
                 let uu____375 =
                   let uu____378 =
                     mk11 "__fresh_binder"
@@ -123,13 +123,13 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
                       mk2 "__term_eq" FStar_Syntax_Util.term_eq
                         FStar_Reflection_Basic.unembed_term
                         FStar_Reflection_Basic.unembed_term
-                        FStar_Reflection_Basic.embed_bool in
+                        FStar_Syntax_Embeddings.embed_bool in
                     let uu____399 =
                       let uu____402 =
                         mk11 "__term_to_string"
                           FStar_Syntax_Print.term_to_string
                           FStar_Reflection_Basic.unembed_term
-                          FStar_Reflection_Basic.embed_string in
+                          FStar_Syntax_Embeddings.embed_string in
                       let uu____403 =
                         let uu____406 =
                           mk11 "__binders_of_env"
@@ -141,7 +141,7 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
                             mk2 "__lookup_typ"
                               FStar_Reflection_Basic.lookup_typ
                               FStar_Reflection_Basic.unembed_env
-                              FStar_Reflection_Basic.unembed_string_list
+                              FStar_Syntax_Embeddings.unembed_string_list
                               FStar_Reflection_Basic.embed_sigelt_view in
                           [uu____410] in
                         uu____406 :: uu____407 in

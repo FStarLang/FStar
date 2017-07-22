@@ -1107,10 +1107,10 @@ let base_and_refinement:
   fun env  ->
     fun wl  ->
       fun t1  ->
-        let rec aux norm t11 =
+        let rec aux norm1 t11 =
           match t11.FStar_Syntax_Syntax.n with
           | FStar_Syntax_Syntax.Tm_refine (x,phi) ->
-              if norm
+              if norm1
               then
                 ((x.FStar_Syntax_Syntax.sort),
                   (FStar_Pervasives_Native.Some (x, phi)))
@@ -1134,7 +1134,7 @@ let base_and_refinement:
                          uu____2151 uu____2152 in
                      failwith uu____2150)
           | FStar_Syntax_Syntax.Tm_uinst uu____2167 ->
-              if norm
+              if norm1
               then (t11, FStar_Pervasives_Native.None)
               else
                 (let t1' =
@@ -1147,7 +1147,7 @@ let base_and_refinement:
                  | FStar_Syntax_Syntax.Tm_refine uu____2224 -> aux true t1'
                  | uu____2231 -> (t11, FStar_Pervasives_Native.None))
           | FStar_Syntax_Syntax.Tm_fvar uu____2248 ->
-              if norm
+              if norm1
               then (t11, FStar_Pervasives_Native.None)
               else
                 (let t1' =
@@ -1160,7 +1160,7 @@ let base_and_refinement:
                  | FStar_Syntax_Syntax.Tm_refine uu____2299 -> aux true t1'
                  | uu____2306 -> (t11, FStar_Pervasives_Native.None))
           | FStar_Syntax_Syntax.Tm_app uu____2323 ->
-              if norm
+              if norm1
               then (t11, FStar_Pervasives_Native.None)
               else
                 (let t1' =
