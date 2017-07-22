@@ -46,24 +46,8 @@ let s_y : P.struct_field s_l = "y"
 
 let s_typ : P.typ = P.TStruct s_l
 
-let s_ty : P.struct_field s_l -> Type0 = function "x" -> UInt8.t | "y" -> UInt8.t
-//let s_ty = P.type_of_struct_field' s_l P.type_of_typ
-let s = DM.t (P.struct_field s_l) s_ty
-let mk_s (x y: UInt8.t) : s =
-  DM.create #(P.struct_field s_l) #s_ty (function "x" -> x | "y" -> y)
-
 let st_typ = either_typ s_typ P.(TBase TUInt16)
 let st_tags = either_tags s_typ P.(TBase TUInt16)
-
-let includes_readable
-  (#a #b: P.typ)
-  (h: HS.mem)
-  (p: P.pointer a)
-  (p': P.pointer b)
-: Lemma (requires (P.includes p p' /\ P.readable h p))
-        (ensures (P.readable h p'))
-  [SMTPat (P.readable h p'); SMTPat (P.includes p p')]
-= admit ()
 
 let step (p: P.pointer st_typ) :
   HST.Stack unit
@@ -81,18 +65,11 @@ let step (p: P.pointer st_typ) :
     let x_ptr = P.field s_ptr s_x in
     let x : UInt8.t = P.read x_ptr in
     let y : UInt8.t = P.read (P.field s_ptr s_y) in
-    let h0 = HST.get () in
-    P.write x_ptr (UInt8.logxor x y);
-    let h1 = HST.get () in
-    TU.modifies_1_valid st_tags p "left" h0 h1 x_ptr; // TODO: add a SMTPat
-    TU.readable_intro st_tags p "left" h1; // TODO: SMTPat
-    TU.modifies_1_tag st_tags p "left" 0ul h0 h1 // TODO: SMTPat
+    P.write x_ptr (UInt8.logxor x y)
   ) else (
     assert (t == 1ul);
     let z : UInt16.t = P.read (TU.field st_tags p "right") in
     let x : UInt8.t = FStar.Int.Cast.uint16_to_uint8 z in
-    let v : s = mk_s x 0uy in
-    assert_norm (P.typ_of_struct_field (either_l s_typ P.(TBase TUInt16)) "left" == s_typ);
-    assume (P.type_of_typ (P.typ_of_struct_field (either_l s_typ P.(TBase TUInt16)) "left") == s); // Cheating
+    let v : P.struct s_l = P.struct_create s_l (function "x" -> x | "y" -> 0uy) in
     TU.write st_tags p "left" v
   )

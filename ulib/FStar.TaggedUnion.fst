@@ -173,7 +173,7 @@ let field
 : HST.ST (P.pointer (P.typ_of_struct_field l f))
   (requires (fun h ->
     valid h tgs p /\
-    gread_tag h tgs p == tag_of_field tgs f
+    gread_tag h tgs p == normalize_term (tag_of_field tgs f)
   ))
   (ensures (fun h0 p' h1 ->
     h0 == h1 /\
@@ -200,7 +200,7 @@ let write
     P.modifies_1 p h0 h1 /\
     P.readable h1 p /\
     valid h1 tgs p /\
-    gread_tag #l h1 tgs p == tag_of_field tgs f /\
+    gread_tag #l h1 tgs p == normalize_term (tag_of_field tgs f) /\
     P.gread h1 (gfield tgs p f) == v
   ))
 =
@@ -234,29 +234,17 @@ let modifies_1_valid
 : Lemma
   (requires (
     valid h0 tgs p /\
-    gread_tag h0 tgs p == tag_of_field tgs f /\
+    gread_tag h0 tgs p == normalize_term (tag_of_field tgs f) /\
     P.modifies_1 (gfield tgs p f) h0 h1 /\
     P.includes (gfield tgs p f) p' /\
     P.readable h1 p'
   ))
   (ensures (valid h1 tgs p))
+  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1);
+   SMTPat (P.includes #_ #t' (gfield #l tgs p f) p')]
 =
   let u_ptr = P.gfield p (union_field l) in
   P.is_active_union_field_intro h1 u_ptr f p'
-
-let readable_intro
-  (#l: P.union_typ)
-  (tgs: tags l)
-  (p: P.pointer (typ l))
-  (f: P.struct_field l)
-  (h: HS.mem)
-: Lemma
-  (requires (
-    valid h tgs p /\
-    P.readable h (gfield tgs p f)
-  ))
-  (ensures (P.readable h p))
-= P.readable_struct h p
 
 let modifies_1_tag
   (#l: P.union_typ)
@@ -272,6 +260,37 @@ let modifies_1_tag
     P.modifies_1 (gfield tgs p f) h0 h1
   ))
   (ensures (gread_tag h1 tgs p == t))
+  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1)]
+= ()
+
+let readable_intro
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+  (h: HS.mem)
+: Lemma
+  (requires (
+    valid h tgs p /\
+    P.readable h (gfield tgs p f)
+  ))
+  (ensures (P.readable h p))
+  [SMTPat (valid #l h tgs p); SMTPat (P.readable h (gfield #l tgs p f))]
+= P.readable_struct h p
+
+let readable_field
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+  (h: HS.mem)
+: Lemma
+  (requires (
+    valid h tgs p /\ P.readable h p /\
+    gread_tag h tgs p == normalize_term (tag_of_field tgs f)
+  ))
+  (ensures (P.readable h (gfield tgs p f)))
+  [SMTPat (P.readable h (gfield tgs p f))]
 = ()
 
 (******************************************************************************)
@@ -323,7 +342,7 @@ let get_tag (#l: P.union_typ) (#tgs: tags l) (tu: t l tgs)
   (requires True)
   (ensures (fun t ->
     List.Tot.mem t tgs /\
-    t == tag_of_field tgs (get_field tu)))
+    t == normalize_term (tag_of_field tgs (get_field tu))))
 =
   raw_get_tag #l tu
 
