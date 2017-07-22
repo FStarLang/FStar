@@ -384,7 +384,7 @@ let generalize_and_inst_within:
                      | uu____1024 -> failwith "Impossible")) in
            let t =
              let uu____1028 =
-               FStar_Syntax_Syntax.mk_Total FStar_TypeChecker_Common.t_unit in
+               FStar_Syntax_Syntax.mk_Total FStar_Syntax_Syntax.t_unit in
              FStar_Syntax_Util.arrow (FStar_List.append binders binders')
                uu____1028 in
            (let uu____1032 =

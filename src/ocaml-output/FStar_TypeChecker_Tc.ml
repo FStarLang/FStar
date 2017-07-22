@@ -510,7 +510,7 @@ let tc_eff_decl:
                                    let uu____613 =
                                      let uu____620 =
                                        FStar_Syntax_Syntax.null_binder
-                                         FStar_TypeChecker_Common.t_range in
+                                         FStar_Syntax_Syntax.t_range in
                                      let uu____621 =
                                        let uu____624 =
                                          FStar_Syntax_Syntax.mk_binder a in
@@ -3730,15 +3730,14 @@ let tc_decl:
            let env2 = FStar_TypeChecker_Env.set_range env1 r in
            let env3 =
              FStar_TypeChecker_Env.set_expected_typ env2
-               FStar_TypeChecker_Common.t_unit in
+               FStar_Syntax_Syntax.t_unit in
            let uu____5507 = FStar_TypeChecker_TcTerm.tc_term env3 e in
            (match uu____5507 with
             | (e1,c,g1) ->
                 let uu____5525 =
                   let uu____5532 =
                     let uu____5535 =
-                      FStar_Syntax_Util.ml_comp
-                        FStar_TypeChecker_Common.t_unit r in
+                      FStar_Syntax_Util.ml_comp FStar_Syntax_Syntax.t_unit r in
                     FStar_Pervasives_Native.Some uu____5535 in
                   let uu____5536 =
                     let uu____5541 = c.FStar_Syntax_Syntax.comp () in
@@ -4292,7 +4291,7 @@ let tc_decl:
                            let uu____6714 =
                              FStar_Syntax_Syntax.new_bv
                                FStar_Pervasives_Native.None
-                               FStar_TypeChecker_Common.t_unit in
+                               FStar_Syntax_Syntax.t_unit in
                            FStar_All.pipe_left FStar_Syntax_Syntax.mk_binder
                              uu____6714 in
                          let body =
