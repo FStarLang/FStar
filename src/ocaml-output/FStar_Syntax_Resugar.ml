@@ -1054,7 +1054,7 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                  let uu____3872 =
                    let uu____3873 = FStar_Options.print_universes () in
                    Prims.op_Negation uu____3873 in
-                 fun a374  ->
+                 fun a363  ->
                    (Obj.magic
                       (if uu____3872
                        then FStar_Pervasives_Native.fst
@@ -1069,7 +1069,7 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                                     mk1
                                       (FStar_Parser_AST.Labeled
                                          (body2, univs1, true)) in
-                                (pat, uu____3913)))) a374 in
+                                (pat, uu____3913)))) a363 in
                FStar_List.map f r in
              let body2 = resugar_term body1 in
              mk1
