@@ -169,6 +169,7 @@ val buffer_split_at: #a:Type -> b:B.buffer a ->
                      let (b1, b2) = r in
                      is_concat_of b b1 b2 /\
                      B.length b1 == U32.v off))
+inline_for_extraction [@"substitute"]
 let buffer_split_at #a b off len =
     (B.sub b 0ul off, B.sub b off (U32.sub len off))
 

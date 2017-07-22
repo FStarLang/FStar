@@ -87,6 +87,7 @@ let parse_u32_st : parser_st (parse_u32) = fun input ->
     then None
     else Some (parse_u32_st_nochk input)
 
+unfold
 let stateful_validator #t (p: parser t) = input:bslice -> ST (option U32.t)
     (requires (fun h0 -> live h0 input))
     (ensures (fun h0 r h1 -> live h1 input /\
@@ -142,7 +143,9 @@ let validate_entry_st : stateful_validator parse_entry = fun input ->
              parse_u32_array validate_u32_array_st
              (fun key value -> EncodedEntry key.len16 key.a16 value.len32 value.a32) input
 
+[@"substitute"]
 val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:nat) : stateful_validator (parse_many p n)
+[@"substitute"]
 let rec validate_many_st #t p v (n:nat) : stateful_validator (parse_many p n) = fun input ->
   match n with
   | 0 -> Some (U32.uint_to_t 0)
