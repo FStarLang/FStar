@@ -23,6 +23,7 @@ unfold let validation_checks_parse #t (b: bytes)
   (p: option (t * n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
 
+inline_for_extraction unfold
 let parser_st_nochk #t (p: parser t) =
   input:bslice -> ST (t * U32.t)
   (requires (fun h0 -> live h0 input /\
@@ -37,6 +38,7 @@ let parser_st_nochk #t (p: parser t) =
                        v == rv /\
                        n == U32.v off))))
 
+inline_for_extraction unfold
 let parser_st #t (p: parser t) =
   input:bslice -> ST (option (t * U32.t))
   (requires (fun h0 -> live h0 input))
@@ -53,12 +55,14 @@ let parser_st #t (p: parser t) =
 
 let parse_u16_st_nochk :
   parser_st_nochk (parse_u16) = fun input ->
-  let b0 = B.index input.p (U32.uint_to_t 0) in
-      let b1 = B.index input.p (U32.uint_to_t 1) in
-      let twobytes = append (create 1 b0) (create 1 b1) in
-      let h = get() in
-      lemma_eq_intro twobytes (slice (as_seq h input) 0 2);
-      let n = u16_from_be twobytes in
+  let b0 = B.index input.p 0ul in
+      let b1 = B.index input.p 1ul in
+      begin
+        let h = get() in
+        let twobytes = append (create 1 b0) (create 1 b1) in
+        lemma_eq_intro twobytes (slice (as_seq h input) 0 2)
+      end;
+      let n = u16_from_bytes b0 b1 in
       (n, U32.uint_to_t 2)
 
 let parse_u16_st : parser_st (parse_u16) = fun input ->
