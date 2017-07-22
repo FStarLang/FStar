@@ -218,11 +218,11 @@ let guard_free     = pconst "guard_free"
 let normalize      = pconst "normalize"
 let normalize_term = pconst "normalize_term"
 let norm           = pconst "norm"
-let steps_zeta       = pconst "Zeta"
-let steps_iota       = pconst "Iota"
-let steps_primops    = pconst "Primops"
-let steps_delta      = pconst "Delta"
-let steps_delta_only = pconst "DeltaOnly"
+let steps_zeta       = pconst "zeta"
+let steps_iota       = pconst "iota"
+let steps_primops    = pconst "primops"
+let steps_delta      = pconst "delta"
+let steps_delta_only = pconst "delta_only"
 
 let gen_reset =
     let x = U.mk_ref 0 in
