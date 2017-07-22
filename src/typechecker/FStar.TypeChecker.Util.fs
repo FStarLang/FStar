@@ -1711,10 +1711,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | S.Private -> true
                   | _ -> false)
               in
-              //quals (S.Inline_for_extraction :: S.Projector(lid, x.ppname)::iquals) in
               quals (S.Projector(lid, x.ppname)::iquals) in
           let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
-                       sigquals = quals;
+                       sigquals = if only_decl then quals else S.Inline_for_extraction :: quals;
                        sigrng = range_of_lid field_name;
                        sigmeta = default_sigmeta;
                        sigattrs = [] } in
@@ -1749,7 +1748,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   lbdef=SS.close_univ_vars uvs imp
               } in
               let impl = { sigel = Sig_let((false, [lb]), [lb.lbname |> right |> (fun fv -> fv.fv_name.v)]);
-                           sigquals = quals;
+                           sigquals = S.Inline_for_extraction :: quals;
                            sigrng = p;
                            sigmeta = default_sigmeta;
                            sigattrs = [] } in
