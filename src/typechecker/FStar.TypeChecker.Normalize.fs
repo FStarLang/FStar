@@ -820,7 +820,7 @@ let is_norm_request hd args =
 
     | _ -> false
 
-let get_norm_request args =
+let get_norm_request (full_norm:term -> term) args =
     let parse_steps s =
         let unembed_step s =
             match (U.un_uinst s).n with
@@ -850,7 +850,7 @@ let get_norm_request args =
       s, tm
     | [(steps, _); _; (tm, _)] ->
       let add_exclude s z = if not (List.contains z s) then Exclude z::s else s in
-      let s = Beta::parse_steps steps in
+      let s = Beta::parse_steps (full_norm steps) in
       let s = add_exclude s Zeta in
       let s = add_exclude s Iota in
       s, tm
@@ -901,8 +901,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
-            let s, tm = get_norm_request args in
-            let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
+            let s, tm = get_norm_request (norm ({cfg with delta_level=[Unfold Delta_constant]}) env []) args in
+            let delta_level =
+                if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
+                then [Unfold Delta_constant]
+                else [NoDelta] in
+            let cfg' = {cfg with steps=s; delta_level=delta_level} in
             let stack' = Debug t :: Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
 

@@ -19,14 +19,14 @@ let unembed_unit (_:term) :unit = ()
 
 let embed_bool (b:bool) : term = if b then U.exp_true_bool else U.exp_false_bool
 let unembed_bool (t:term) : bool =
-    match (SS.compress t).n with
+    match (SS.compress (U.unmeta t)).n with
     | Tm_constant(FStar.Const.Const_bool b) -> b
     | _ -> failwith "Not an embedded bool"
 
 let embed_int (i:int) : term = U.exp_int (BU.string_of_int i)
 let unembed_int (t:term) : int =
     // What's the portable solution? Let's do this for now
-    match (SS.compress t).n with
+    match (SS.compress (U.unmeta t)).n with
     | Tm_constant(FStar.Const.Const_int (s, _)) ->
         BU.int_of_string s
     | _ -> failwith "Not an embedded int"
@@ -38,7 +38,7 @@ let embed_string (s:string) : term =
          Range.dummyRange
 
 let unembed_string (t:term) : string =
-    let t = U.unascribe t in
+    let t = U.unmeta t in
     match t.n with
     | Tm_constant(FStar.Const.Const_string(bytes, _)) ->
       BU.string_of_unicode bytes
@@ -57,7 +57,7 @@ let embed_pair (embed_a:'a -> term) (t_a:term)
                 Range.dummyRange
 
 let unembed_pair (unembed_a:term -> 'a) (unembed_b:term -> 'b) (pair:term) : ('a * 'b) =
-    let pairs = U.unascribe pair in
+    let pairs = U.unmeta pair in
     let hd, args = U.head_and_args pair in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
@@ -76,7 +76,7 @@ let embed_option (embed_a:'a -> term) (typ:term) (o:option<'a>) : term =
                   None Range.dummyRange
 
 let unembed_option (unembed_a:term -> 'a) (o:term) : option<'a> =
-   let hd, args = U.head_and_args o in
+   let hd, args = U.head_and_args (U.unmeta o) in
    match (U.un_uinst hd).n, args with
    | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> None
    | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
@@ -98,7 +98,7 @@ let rec embed_list (embed_a: ('a -> term)) (typ:term) (l:list<'a>) : term =
                         Range.dummyRange
 
 let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
-    let l = U.unascribe l in
+    let l = U.unmeta l in
     let hd, args = U.head_and_args l in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, _
@@ -109,7 +109,9 @@ let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
       unembed_a hd :: unembed_list unembed_a tl
 
     | _ ->
-      failwith (BU.format1 "Not an embedded list: %s" (Print.term_to_string l))
+      failwith (BU.format2 "(%s) Not an embedded list: %s"
+                            (Print.tag_of_term l)
+                            (Print.term_to_string l))
 
 let embed_string_list ss = embed_list embed_string S.t_string ss
 let unembed_string_list t = unembed_list unembed_string t
