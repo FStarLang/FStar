@@ -10,6 +10,7 @@ type table = trie<symbol>
 val empty : table
 val insert : tbl:table -> c:symbol -> table
 val register_alias : tbl:table -> key:string -> query:query -> table
+val register_include : tbl:table -> included_query:query -> target_query:query -> table
 
 type completion_result =
   { completion_kind: string;
@@ -17,4 +18,4 @@ type completion_result =
     completion_candidate: string;
     completion_annotation: string }
 
-val autocomplete : tbl:table -> query:query -> completion_result list
+val autocomplete : tbl:table -> query:query -> namespaces:list<query> -> completion_result list

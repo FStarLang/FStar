@@ -114,6 +114,7 @@ val set_expect_typ: env -> bool -> env
 val empty_env: unit -> env
 val current_module: env -> lident
 val set_current_module: env -> lident -> env
+val open_modules_and_namespaces: env -> list<lident>
 val iface_decls : env -> lident -> option<(list<Parser.AST.decl>)>
 val set_iface_decls: env -> lident -> list<Parser.AST.decl> -> env
 val try_lookup_id: env -> ident -> option<(term*bool)>
@@ -147,7 +148,9 @@ val push_bv_mutable: env -> ident -> env * bv
 val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
+val push_include_hook : ref<env -> lident -> unit>
 val push_include: env -> lident -> env
+val push_module_abbrev_hook : ref<env -> ident -> lident -> unit>
 val push_module_abbrev : env -> ident -> lident -> env
 val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
 

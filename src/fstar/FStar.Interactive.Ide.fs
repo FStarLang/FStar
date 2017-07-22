@@ -29,6 +29,7 @@ open FStar.Errors
 open FStar.Universal
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
+open FStar.Interactive
 
 module SS = FStar.Syntax.Syntax
 module DsEnv = FStar.ToSyntax.Env
@@ -499,8 +500,7 @@ open FStar.Parser.ParseIt
 type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_stack: stack_t; repl_curmod: modul_t;
                     repl_env: env_t; repl_ts: m_timestamps;
-                    repl_stdin: stream_reader;
-                    repl_names: FStar.Interactive.CompletionTable.table }
+                    repl_stdin: stream_reader; repl_names: CompletionTable.table }
 
 let json_of_repl_state st =
   let opts_and_defaults =
@@ -562,47 +562,89 @@ let run_pop st = // This shrinks all internal stacks by 1
       if nothing_left_to_pop st' then cleanup env;
       ((QueryOK, JsonNull), Inl st')
 
-let add_completion_entry table binding =
-  let lids =
-    match binding with
-    | Binding_lid (lid, _) -> [lid]
-    | Binding_sig (lids, _) -> lids
-    | Binding_sig_inst (lids, _, _) -> lids
-    | _ -> [] in
-  List.fold_left
-    (fun tbl lid -> FStar.Interactive.CompletionTable.insert
-                   tbl (FStar.Interactive.CompletionTable.Lid lid))
-    table lids
+type name_tracking_event =
+| NTAlias of lid * ident * lid
+| NTInclude of lid * lid
+| NTBinding of binding
+
+let query_of_lid lid : list<string> =
+  List.map text_of_id (ids_of_lid lid)
+
+let update_names_from_event cur_mod_str table evt =
+  match evt with
+  | NTAlias (host, id, lid) ->
+    printf ">>> new event >>> NTAlias %A %A %A\n" host.str (text_of_id id) lid.str;
+    if host.str = cur_mod_str then
+      CompletionTable.register_alias
+        table (text_of_id id) (query_of_lid lid)
+    else
+      table
+  | NTInclude (host, included) ->
+    printf ">>> new event >>> NTInclude %A %A\n" host.str included.str;
+    CompletionTable.register_include
+      table (query_of_lid host) (query_of_lid included)
+  | NTBinding binding ->
+    let lids =
+      match binding with
+      | Binding_lid (lid, _) -> [lid]
+      | Binding_sig (lids, _) -> lids
+      | Binding_sig_inst (lids, _, _) -> lids
+      | _ -> [] in
+    printf ">>> new event >>> NTBinding %A\n" (List.map (fun lid -> lid.str) lids);
+    List.fold_left
+      (fun tbl lid -> CompletionTable.insert tbl (CompletionTable.Lid lid))
+      table lids
+
+let with_name_tracking cur_mod_str (f: unit -> 'a * repl_state) : 'a * repl_state =
+  (* Aliases are only recorded for the current module, hence ‘cur_mode_str’ *)
+  let pig_hook = !TcEnv.push_in_gamma_hook in
+  let pma_hook = !DsEnv.push_module_abbrev_hook in
+  let pinc_hook = !DsEnv.push_include_hook in
+
+  let events = Util.mk_ref [] in
+  let push_event evt = events := evt :: !events in
+  DsEnv.push_module_abbrev_hook :=
+    (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l)));
+  DsEnv.push_include_hook :=
+    (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)));
+  TcEnv.push_in_gamma_hook :=
+    (fun _ s -> push_event (NTBinding s));
+  let a, st = f () in
+  TcEnv.push_in_gamma_hook := pig_hook;
+  DsEnv.push_include_hook := pinc_hook;
+  DsEnv.push_module_abbrev_hook := pma_hook;
+
+  // printf "<<<<\n%A\n>>>>\n" !events;
+  let updater = update_names_from_event cur_mod_str in
+  let names = List.fold_left updater st.repl_names (List.rev !events) in
+  (a, { st with repl_names = names })
 
 let run_push st kind text line column peek_only =
   let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
 
-  let bindings = ref [] in
-  let push_binding _ s = bindings := s :: !bindings in
-  FStar.TypeChecker.Env.push_in_gamma_hook := push_binding;
+  let cur_mod_str = match st.repl_curmod with
+                    | None -> "" | Some md -> md.name.str in
+  let (res, env_mark, errors), st' = with_name_tracking cur_mod_str (fun () ->
+    // If we are at a stage where we have not yet pushed a fragment from the
+    // current buffer, see if some dependency is stale. If so, update it. Also
+    // if this is the first chunk, we need to restore the command line options.
+    let restore_cmd_line_options, (stack, env, ts) =
+      if nothing_left_to_pop st
+      then true, update_deps st.repl_fname st.repl_curmod stack env ts
+      else false, (stack, env, ts) in
 
-  // If we are at a stage where we have not yet pushed a fragment from the
-  // current buffer, see if some dependency is stale. If so, update it. Also
-  // if this is the first chunk, we need to restore the command line options.
-  let restore_cmd_line_options, (stack, env, ts) =
-    if nothing_left_to_pop st
-    then true, update_deps st.repl_fname st.repl_curmod stack env ts
-    else false, (stack, env, ts) in
+    let stack = (env, st.repl_curmod) :: stack in
+    let env = push_with_kind env kind restore_cmd_line_options "#push" in
 
-  let stack = (env, st.repl_curmod) :: stack in
-  let env = push_with_kind env kind restore_cmd_line_options "#push" in
+    let frag = { frag_text = text; frag_line = line; frag_col = column } in
+    let res = check_frag env st.repl_curmod (frag, false) in
 
-  let frag = { frag_text = text; frag_line = line; frag_col = column } in
-  let res = check_frag env st.repl_curmod (frag, false) in
+    let errors = FStar.Errors.report_all() |> List.map json_of_issue in
+    FStar.Errors.clear ();
 
-  let errors = FStar.Errors.report_all() |> List.map json_of_issue in
-  FStar.Errors.clear ();
-
-  FStar.TypeChecker.Env.push_in_gamma_hook := (fun _ _ -> ());
-  let names = List.fold_left add_completion_entry st.repl_names !bindings in
-  let st' = { st with repl_stack = stack; repl_ts = ts;
-                      repl_line = line; repl_column = column;
-                      repl_names = names } in
+    ((res, env_mark, errors),
+     { st with repl_stack = stack; repl_ts = ts;
+               repl_line = line; repl_column = column })) in
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
@@ -668,7 +710,7 @@ let run_lookup st symbol pos_opt requested_info =
 
   (response, Inl st)
 
-let run_completions st search_term =
+let run_completions_old st search_term =
   let dsenv, tcenv = st.repl_env in
   //search_term is the partially written identifer by the user
   // FIXME a regular expression might be faster than this explicit matching
@@ -774,6 +816,7 @@ let run_completions st search_term =
       matched_ids |>
       List.map (fun x -> prepare_candidate (shorten_namespace x))
   in
+
   let json_candidates =
     List.map (fun (candidate, ns, match_len) ->
               JsonList [JsonInt match_len; JsonStr ns; JsonStr candidate])
@@ -783,6 +826,25 @@ let run_completions st search_term =
                               | n -> n)
                              matches) in
   ((QueryOK, JsonList json_candidates), Inl st)
+
+let run_completions st search_term =
+  let dsenv, tcenv = st.repl_env in
+
+  let completion_roots =
+    [] :: query_of_lid (DsEnv.current_module dsenv) ::
+    List.map query_of_lid (DsEnv.open_modules_and_namespaces dsenv) in
+
+  let needle = Util.split search_term "." in
+
+  let completions =
+    CompletionTable.autocomplete st.repl_names needle completion_roots in
+
+  let json_of_completion (completion: CompletionTable.completion_result) =
+    JsonList [JsonInt completion.completion_match_length;
+              JsonStr completion.completion_annotation;
+              JsonStr completion.completion_candidate] in
+
+  ((QueryOK, JsonList (List.map json_of_completion completions)), Inl st)
 
 let run_compute st term rules =
   let run_and_rewind st task =
@@ -1002,29 +1064,36 @@ let interactive_printer =
     printer_prgeneric = (fun label get_string get_json -> write_message label (get_json ()) )}
 
 open FStar.TypeChecker.Common
+
 // filename is the name of the file currently edited
 let interactive_mode' (filename:string): unit =
   write_hello ();
-  //type check prims and the dependencies
-  let filenames, maybe_intf = deps_of_our_file filename in
-  let env = tc_prims () in
-  let stack, env, ts = tc_deps None [] env filenames [] in
-  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-  let env = fst env, TcEnv.set_range (snd env) initial_range in
-  let env =
-    match maybe_intf with
-    | Some intf ->
-      // We found an interface: record its contents in the desugaring environment
-      // to be interleaved with the module implementation on-demand
-      FStar.Universal.load_interface_decls env intf
-    | None -> env in
 
-  TcEnv.toggle_id_info (snd env) true;
-  let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
-                  repl_stack = stack; repl_curmod = None;
-                  repl_env = env; repl_ts = ts; repl_stdin = open_stdin ();
-                  repl_names = FStar.Interactive.CompletionTable.empty } in
-  if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
+  let _, init_st = with_name_tracking "" (fun () ->
+    //type check prims and the dependencies
+    let filenames, maybe_intf = deps_of_our_file filename in
+    let env = tc_prims () in
+    let stack, env, ts = tc_deps None [] env filenames [] in
+    let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+    let env = fst env, TcEnv.set_range (snd env) initial_range in
+    let env =
+      match maybe_intf with
+      | Some intf ->
+          // We found an interface: record its contents in the desugaring environment
+          // to be interleaved with the module implementation on-demand
+          FStar.Universal.load_interface_decls env intf
+      | None ->
+          env
+    in
+
+    TcEnv.toggle_id_info (snd env) true;
+    ((),
+     { repl_line = 1; repl_column = 0; repl_fname = filename;
+       repl_stack = stack; repl_curmod = None;
+       repl_env = env; repl_ts = ts; repl_stdin = open_stdin ();
+       repl_names = CompletionTable.empty })) in
+
+  if FStar.Options.record_hints() || FStar.Options.use_hints() then
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
   else
     go init_st

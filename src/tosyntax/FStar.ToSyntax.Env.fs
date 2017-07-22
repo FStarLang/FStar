@@ -114,6 +114,11 @@ let transitive_exported_ids env lid =
     | None -> []
     | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
 let open_modules e = e.modules
+let open_modules_and_namespaces env =
+  List.filter_map (function
+                   | Open_module_or_namespace (lid, _info) -> Some lid
+                   | _ -> None)
+    env.scope_mods
 let set_current_module e l = {e with curmodule=Some l}
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
@@ -905,12 +910,15 @@ let push_namespace env ns =
   in
      push_scope_mod env (Open_module_or_namespace (ns', kd))
 
+let push_include_hook = BU.mk_ref (fun _ _ -> ())
+
 let push_include env ns =
     (* similarly to push_namespace in the case of modules, we allow
        module abbrevs, but not namespace resolution *)
     let ns0 = ns in
     match resolve_module_name env ns false with
     | Some ns ->
+      !push_include_hook env ns;
       let _ = fail_if_curmodule env ns0 ns in
       (* from within the current module, include is equivalent to open *)
       let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module)) in
@@ -945,11 +953,14 @@ let push_include env ns =
     | _ ->
       raise (Error (BU.format1 "include: Module %s cannot be found" ns.str, Ident.range_of_lid ns))
 
+let push_module_abbrev_hook = BU.mk_ref (fun _ _ _ -> ())
+
 let push_module_abbrev env x l =
   (* both namespace resolution and module abbrevs disabled:
      in 'module A = B', B must be fully qualified *)
   if module_is_defined env l
   then let _ = fail_if_curmodule env l l in
+       !push_module_abbrev_hook env x l;
        push_scope_mod env (Module_abbrev (x,l))
   else raise (Error(BU.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
