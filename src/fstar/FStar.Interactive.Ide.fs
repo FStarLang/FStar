@@ -563,26 +563,39 @@ let run_pop st = // This shrinks all internal stacks by 1
       ((QueryOK, JsonNull), Inl st')
 
 type name_tracking_event =
-| NTAlias of lid * ident * lid
-| NTInclude of lid * lid
+| NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
+| NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
+| NTInclude of lid (* host *) * lid (* included *)
 | NTBinding of binding
 
-let query_of_lid lid : list<string> =
-  List.map text_of_id (ids_of_lid lid)
+let query_of_lid' (ns: list<ident>) (id: ident) : list<string> =
+  List.map text_of_id (ns @ [id])
+
+let query_of_lid (lid: lident) : list<string> =
+  query_of_lid' lid.ns lid.ident
 
 let update_names_from_event cur_mod_str table evt =
+  let is_cur_mod lid = lid.str = cur_mod_str in
+  printf ">>> Updating names >>> cur_mod is %A\n" cur_mod_str;
   match evt with
-  | NTAlias (host, id, lid) ->
-    printf ">>> new event >>> NTAlias %A %A %A\n" host.str (text_of_id id) lid.str;
-    if host.str = cur_mod_str then
+  | NTAlias (host, id, included) ->
+    printf ">>> new event >>> NTAlias %A %A %A\n" host.str (text_of_id id) included.str;
+    if is_cur_mod host then
       CompletionTable.register_alias
-        table (text_of_id id) (query_of_lid lid)
+        table (text_of_id id) [] (query_of_lid included)
+    else
+      table
+  | NTOpen (host, (included, kind)) ->
+    printf ">>> new event >>> NTOpen %A %A %A\n" host.str included.str kind;
+    if is_cur_mod host then
+      CompletionTable.register_open
+        table (kind = DsEnv.Open_module) [] (query_of_lid included)
     else
       table
   | NTInclude (host, included) ->
     printf ">>> new event >>> NTInclude %A %A\n" host.str included.str;
     CompletionTable.register_include
-      table (query_of_lid host) (query_of_lid included)
+      table (if is_cur_mod host then [] else query_of_lid host) (query_of_lid included)
   | NTBinding binding ->
     let lids =
       match binding with
@@ -592,14 +605,24 @@ let update_names_from_event cur_mod_str table evt =
       | _ -> [] in
     printf ">>> new event >>> NTBinding %A\n" (List.map (fun lid -> lid.str) lids);
     List.fold_left
-      (fun tbl lid -> CompletionTable.insert tbl (CompletionTable.Lid lid))
+      (fun tbl lid ->
+         let query = if lid.nsstr = cur_mod_str then query_of_lid' [] lid.ident
+                     else query_of_lid lid in
+         CompletionTable.insert tbl query (CompletionTable.Lid lid))
       table lids
 
-let with_name_tracking cur_mod_str (f: unit -> 'a * repl_state) : 'a * repl_state =
+let commit_name_tracking (cur_mod: modul_t) names name_events =
+  let cur_mod_str = match cur_mod with
+                    | None -> "" | Some md -> md.name.str in
+  let updater = update_names_from_event cur_mod_str in
+  List.fold_left updater names name_events
+
+let with_name_tracking (f: unit -> 'a) : 'a * list<name_tracking_event> =
   (* Aliases are only recorded for the current module, hence ‘cur_mode_str’ *)
   let pig_hook = !TcEnv.push_in_gamma_hook in
+  let popen_hook = !DsEnv.push_open_hook in
+  let pinclude_hook = !DsEnv.push_include_hook in
   let pma_hook = !DsEnv.push_module_abbrev_hook in
-  let pinc_hook = !DsEnv.push_include_hook in
 
   let events = Util.mk_ref [] in
   let push_event evt = events := evt :: !events in
@@ -607,24 +630,23 @@ let with_name_tracking cur_mod_str (f: unit -> 'a * repl_state) : 'a * repl_stat
     (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l)));
   DsEnv.push_include_hook :=
     (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)));
+  DsEnv.push_open_hook :=
+    (fun dsenv op -> push_event (NTOpen (DsEnv.current_module dsenv, op)));
   TcEnv.push_in_gamma_hook :=
     (fun _ s -> push_event (NTBinding s));
-  let a, st = f () in
+  let output = f () in
   TcEnv.push_in_gamma_hook := pig_hook;
-  DsEnv.push_include_hook := pinc_hook;
+  DsEnv.push_open_hook := popen_hook;
+  DsEnv.push_include_hook := pinclude_hook;
   DsEnv.push_module_abbrev_hook := pma_hook;
 
   // printf "<<<<\n%A\n>>>>\n" !events;
-  let updater = update_names_from_event cur_mod_str in
-  let names = List.fold_left updater st.repl_names (List.rev !events) in
-  (a, { st with repl_names = names })
+  (output, List.rev !events)
 
 let run_push st kind text line column peek_only =
   let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
 
-  let cur_mod_str = match st.repl_curmod with
-                    | None -> "" | Some md -> md.name.str in
-  let (res, env_mark, errors), st' = with_name_tracking cur_mod_str (fun () ->
+  let (res, env_mark, errors, st'), name_events = with_name_tracking (fun () ->
     // If we are at a stage where we have not yet pushed a fragment from the
     // current buffer, see if some dependency is stale. If so, update it. Also
     // if this is the first chunk, we need to restore the command line options.
@@ -642,14 +664,15 @@ let run_push st kind text line column peek_only =
     let errors = FStar.Errors.report_all() |> List.map json_of_issue in
     FStar.Errors.clear ();
 
-    ((res, env_mark, errors),
+    (res, env_mark, errors,
      { st with repl_stack = stack; repl_ts = ts;
                repl_line = line; repl_column = column })) in
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
     ((QueryOK, JsonList errors),
-      Inl ({ st' with repl_curmod = curmod; repl_env = env }))
+     Inl ({ st' with repl_curmod = curmod; repl_env = env;
+                     repl_names = commit_name_tracking curmod st'.repl_names name_events }))
   | _ ->
     // The previous version of the protocol required the client to send a #pop
     // immediately after failed pushes; this version pops automatically.
@@ -830,14 +853,8 @@ let run_completions_old st search_term =
 let run_completions st search_term =
   let dsenv, tcenv = st.repl_env in
 
-  let completion_roots =
-    [] :: query_of_lid (DsEnv.current_module dsenv) ::
-    List.map query_of_lid (DsEnv.open_modules_and_namespaces dsenv) in
-
   let needle = Util.split search_term "." in
-
-  let completions =
-    CompletionTable.autocomplete st.repl_names needle completion_roots in
+  let completions = CompletionTable.autocomplete st.repl_names needle in
 
   let json_of_completion (completion: CompletionTable.completion_result) =
     JsonList [JsonInt completion.completion_match_length;
@@ -1016,13 +1033,20 @@ let run_search st search_str =
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
+let duration f =
+  let timer = new System.Diagnostics.Stopwatch () in
+  timer.Start();
+  let returnValue = f () in
+  printfn "Elapsed Time: %i" timer.ElapsedMilliseconds;
+  returnValue
+
 let run_query st : query' -> (query_status * json) * either<repl_state,int> = function
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
   | DescribeRepl -> run_describe_repl st
   | Pop -> run_pop st
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
-  | AutoComplete search_term -> run_completions st search_term
+  | AutoComplete search_term -> duration (fun () -> run_completions st search_term)
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
@@ -1069,7 +1093,7 @@ open FStar.TypeChecker.Common
 let interactive_mode' (filename:string): unit =
   write_hello ();
 
-  let _, init_st = with_name_tracking "" (fun () ->
+  let (stack, env, ts), name_events = with_name_tracking (fun () ->
     //type check prims and the dependencies
     let filenames, maybe_intf = deps_of_our_file filename in
     let env = tc_prims () in
@@ -1084,14 +1108,14 @@ let interactive_mode' (filename:string): unit =
           FStar.Universal.load_interface_decls env intf
       | None ->
           env
-    in
+    in (stack, env, ts)) in
 
-    TcEnv.toggle_id_info (snd env) true;
-    ((),
-     { repl_line = 1; repl_column = 0; repl_fname = filename;
-       repl_stack = stack; repl_curmod = None;
-       repl_env = env; repl_ts = ts; repl_stdin = open_stdin ();
-       repl_names = CompletionTable.empty })) in
+  TcEnv.toggle_id_info (snd env) true;
+  let init_st =
+    { repl_line = 1; repl_column = 0; repl_fname = filename;
+      repl_stack = stack; repl_curmod = None;
+      repl_env = env; repl_ts = ts; repl_stdin = open_stdin ();
+      repl_names = commit_name_tracking None CompletionTable.empty name_events } in
 
   if FStar.Options.record_hints() || FStar.Options.use_hints() then
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)

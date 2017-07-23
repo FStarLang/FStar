@@ -895,6 +895,8 @@ let push_sigelt env s =
   let env = {env with scope_mods = !globals } in
   env
 
+let push_open_hook = BU.mk_ref (fun _ _ -> ())
+
 let push_namespace env ns =
   (* namespace resolution disabled, but module abbrevs enabled *)
   let (ns', kd) = match resolve_module_name env ns false with
@@ -908,6 +910,7 @@ let push_namespace env ns =
      let _ = fail_if_curmodule env ns ns' in
      (ns', Open_module)
   in
+     !push_open_hook env (ns', kd);
      push_scope_mod env (Open_module_or_namespace (ns', kd))
 
 let push_include_hook = BU.mk_ref (fun _ _ -> ())
@@ -1150,7 +1153,7 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
     in
     let namespace_of_module = if List.length mname.ns > 0 then [ (lid_of_ids mname.ns, Open_namespace) ] else [] in
     (* [scope_mods] is a stack, so reverse the order *)
-    let auto_open = List.rev (auto_open @ namespace_of_module) in
+    let auto_open = namespace_of_module @ List.rev auto_open in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
     let () = BU.smap_add env.exported_ids mname.str (as_exported_id_set mii.mii_exported_ids) in
@@ -1158,12 +1161,14 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
     let () = BU.smap_add env.trans_exported_ids mname.str (as_exported_id_set mii.mii_trans_exported_ids) in
     (* Create new empty list of includes for the current module *)
     let () = BU.smap_add env.includes mname.str (as_includes mii.mii_includes) in
-    {
+    let env' = {
       env with curmodule=Some mname;
       sigmap=env.sigmap;
       scope_mods = List.map (fun x -> Open_module_or_namespace x) auto_open;
       iface=intf;
-      admitted_iface=admitted }
+      admitted_iface=admitted } in
+    List.iter (fun op -> !push_open_hook env' op) (List.rev auto_open);
+    env'
   in
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with

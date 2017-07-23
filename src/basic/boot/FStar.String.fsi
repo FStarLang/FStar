@@ -28,6 +28,7 @@ val compare: s1: string -> s2: string -> Tot<int>
 val strlen:  string -> Tot<nat>
 val length:  string -> Tot<nat>
 val lowercase: string -> Tot<string>
+val uppercase: string -> Tot<string>
 
 (* may fail with index out of bounds *)
 (* Second argument is a length, not an index. *)
