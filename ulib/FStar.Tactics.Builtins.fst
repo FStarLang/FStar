@@ -5,6 +5,11 @@ open FStar.Order
 open FStar.Reflection
 open FStar.Reflection.Types
 
+(**
+Every tactic primitive that's builtin the compiler
+@summary Tactic primitives
+*)
+
 (* Inspecting proofstate, needs to go via this since it is an assumed type *)
 assume private val __cur_env     : __tac env
 let cur_env = fun () -> TAC?.reflect __cur_env
@@ -31,6 +36,8 @@ unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 assume private val __trytac : #a:Type -> __tac a -> __tac (option a)
 let trytac (t : tactic 'a) = fun () -> TAC?.reflect (__trytac (reify_tactic t))
 
+(** [trivial] will discharge the goal if it's exactly [True] after
+doing normalization and simplification of it. *)
 assume private val __trivial  : __tac unit
 let trivial : tactic unit = fun () -> TAC?.reflect __trivial
 
