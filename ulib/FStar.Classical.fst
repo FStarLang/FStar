@@ -73,6 +73,12 @@ let forall_intro_3 (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#p:(x
   = let g : x:a -> Lemma (forall (y:b x) (z:c x y). p x y z) = fun x -> forall_intro_2 (f x) in
     forall_intro g
 
+let forall_intro_4 (#a:Type) (#b:(a -> Type)) (#c:(x:a -> y:b x -> Type)) (#d:(x:a -> y:b x -> z:c x y -> Type)) (#p:(x:a -> y:b x -> z:c x y -> w:d x y z -> Type0))
+	                 ($f: (x:a -> y:b x -> z:c x y -> w:d x y z -> Lemma (p x y z w)))
+   : Lemma (forall (x:a) (y:b x) (z:c x y) (w:d x y z). p x y z w)
+   = let g : x:a -> Lemma (forall (y:b x) (z:c x y) (w:d x y z). p x y z w) = fun x -> forall_intro_3 (f x) in
+      forall_intro g
+
 let exists_intro (#a:Type) (p:(a -> Type)) (witness:a)
   : Lemma (requires (p witness))
 	  (ensures (exists (x:a). p x))
@@ -150,7 +156,7 @@ let ghost_lemma #a #p #q $f =
             | Right hnp -> give_witness hnp
           ))))
  in forall_intro lem
- 
+
 let or_elim
   (#l #r: Type0)
   (#goal: (squash (l \/ r) -> Tot Type0))
