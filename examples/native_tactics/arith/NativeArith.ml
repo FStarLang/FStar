@@ -11,13 +11,13 @@ let tau1: Prims.unit FStar_Tactics_Effect.tactic =
                    (FStar_Tactics_Builtins.addns "Prims")
                    (fun uu___97_46  ->
                       FStar_Tactics_Effect.bind
-                        (FStar_Tactics_Builtins.smt ())
+                        (FStar_Tactics_Builtins.smt)
                         (fun uu___96_55  ->
                            FStar_Tactics_Effect.bind
                              (FStar_Tactics_Builtins.addns "Prims")
                              (fun uu___95_64  ->
                                 FStar_Tactics_Effect.bind
-                                  (FStar_Tactics_Builtins.smt ())
+                                  (FStar_Tactics_Builtins.smt)
                                   (fun uu___94_73  ->
                                      FStar_Tactics_Effect.return ())))))))
 let _ =
