@@ -52,44 +52,89 @@ module BU = FStar.Util
 //     let starts_with = fun (s: string) pref -> s.StartsWith pref
 // end
 
+// module List = begin
+//   let fold_left = List.fold
+//   let hd = List.head
+// end
+
+// module String = begin
+//   let compare = compare
+//   let uppercase (s: string) = s.ToUpperInvariant ()
+// end
+
 let string_compare s1 s2 =
-  String.compare (String.uppercase s1) (String.uppercase s2)
+  String.compare s1 s2 // (String.uppercase s1) (String.uppercase s2)
+
+(** * (Pairing) max-heaps * **)
+
+type heap<'a> =
+| EmptyHeap
+| Heap of 'a * list<heap<'a>>
+
+let heap_merge cmp h1 h2 =
+  match h1, h2 with
+  | EmptyHeap, h
+  | h, EmptyHeap -> h
+  | Heap (v1, hh1), Heap (v2, hh2) ->
+    if cmp v1 v2 > 0 then Heap (v1, h2 :: hh1) else Heap (v2, h1 :: hh2)
+
+let heap_insert cmp h v =
+  heap_merge cmp (Heap (v, [])) h
+
+let rec heap_merge_pairs cmp = function
+  | [] -> EmptyHeap
+  | [h] -> h
+  | h1 :: h2 :: hh ->
+    heap_merge cmp (heap_merge cmp h1 h2) (heap_merge_pairs cmp hh)
+
+let heap_peek = function
+  | EmptyHeap -> None
+  | Heap (v, _) -> Some v
+
+let heap_pop cmp = function
+  | EmptyHeap -> None
+  | Heap (v, hh) -> Some (v, heap_merge_pairs cmp hh)
+
+let heap_from_list cmp values =
+  List.fold_left (heap_insert cmp) EmptyHeap values
 
 (** * List functions * **)
 
-// FIXME reimplement these with heaps
+let push_nodup key_fn x = function
+  | [] -> [x]
+  | h :: t -> if string_compare (key_fn x) (key_fn h) = 0 then h :: t else x :: h :: t
 
-(** Find the largest key in [List.map List.hd lists] and the associated value.
-    When multiple keys are equal, keep the value from the first occurrence. *)
-let rec find_max key_fn lists =
-  match lists with
-  | [] -> None
-  | [] :: t -> find_max key_fn t
-  | (v :: _) :: t ->
-    let k = key_fn v in
-    match find_max key_fn t with
-    | None ->
-      Some (k, v)
-    | Some (k', v') ->
-      Some (if string_compare k' k >= 0 then (k', v') else (k, v))
-
-(** Filter ‘lists’, removing empties and dropping heads whose key is ‘k0’. *)
-let pop_max key_fn k0 lists =
-  List.filter_map (fun ls ->
-                     match ls with
-                     | [] -> None
-                     | h :: t -> Some (if key_fn h = k0 then t else ls))
-                  lists
+let rec add_priorities n acc = function
+  | [] -> acc
+  | h :: t -> add_priorities (n + 1) ((n, h) :: acc) t
 
 (** Merge ‘lists’, a list of decreasing (according to ‘key_fn’) lists.
     Keeps a single copy of each key that appears in more than one list (earlier
     lists take precedence when chosing which value to keep). *)
 let merge_decreasing_lists_rev (key_fn: 'a -> string) (lists: list<list<'a>>) =
-  let rec aux (lists: list<list<'a>>) (acc: list<'a>) =
-    match find_max key_fn lists with
+  let cmp v1 v2 =
+    match v1, v2 with
+    | (_, []), _ | _, (_, []) -> failwith "impossible"
+    | (pr1, h1 :: _), (pr2, h2 :: _) ->
+      let cmp_h = string_compare (key_fn h1) (key_fn h2) in
+      if cmp_h <> 0 then cmp_h else pr1 - pr2 in
+  let rec aux (lists: heap<(int * list<'a>)>) (acc: list<'a>) =
+    match heap_pop cmp lists with
     | None -> acc
-    | Some mx -> aux (pop_max key_fn (fst mx) lists) ((snd mx) :: acc) in
-  aux lists []
+    | Some ((pr, []), _) -> failwith "impossible"
+    | Some ((pr, v :: []), lists) -> aux lists (v :: acc)
+    | Some ((pr, v :: tl), lists) -> aux (heap_insert cmp lists (pr, tl)) (push_nodup key_fn v acc) in
+  let lists = List.filter (fun x -> x <> []) lists in
+  let lists = add_priorities 0 [] lists in
+  aux (heap_from_list cmp lists) []
+
+let test_merge () =
+  let l1 = [("And", 7); ("admitP", 5); ("2", 2); ("1", 1)] in
+  let l2 = [("And", 77); ("admitP", 66); ("5", 55); ("3", 3); ("1", 1)] in
+  let l3 = [("And", 777); ("admitP", 555); ("4", 4); ("1", 1)] in
+  merge_decreasing_lists_rev (fun (k, _) -> k) [l1;l2;l3]
+
+// FIXME does this maintain order?
 
 (** * Binary trees * **)
 
@@ -325,7 +370,7 @@ let trie_find_prefix (tr: trie<'a>) (query: query) : list<(path * 'a)> =
 
 (** * High level interface * **)
 
-let test () =
+let test_trie () =
     let tmp = trie_empty in
 
     let tmp = trie_insert tmp ["AA"; "B"] "AA/B" in
