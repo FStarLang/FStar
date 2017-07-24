@@ -25,6 +25,7 @@ fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
 	cp ../../src/parser/ml/FStar_Parser_Util.ml      extracted/
 	cp ../../src/tactics/ml/FStar_Tactics_Native.ml extracted/
 	cp ../../src/tactics/ml/FStar_Tactics_Load.ml extracted/
+	cp ../../src/tactics/ml/FStar_Tactics_Builtins.ml extracted/
 	$(FIND) . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
 		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
 		| sort | uniq > $@
