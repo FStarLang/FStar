@@ -92,13 +92,26 @@ abstract let read (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE a (fun p h -
     sel_tot h0 r
 
 abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
-  :ST unit (fun h -> rel (sel h r) v) (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\ h1 == upd h0 r v)
+  : ST unit
+    (fun h -> rel (sel h r) v)
+    (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\ h1 == upd h0 r v)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
     gst_put h1
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()
+
+abstract
+let op_Bang (#a:Type) (#rel:preorder a) (r:mref a rel)
+  : STATE a (fun p h -> p (sel h r) h)
+= read #a #rel r
+
+abstract let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
+  : ST unit
+    (fun h -> rel (sel h r) v)
+    (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\ h1 == upd h0 r v)
+= write #a #rel r v
 
 type ref (a:Type0) = mref a (trivial_preorder a)
 

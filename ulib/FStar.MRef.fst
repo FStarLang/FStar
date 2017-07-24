@@ -4,7 +4,7 @@ open FStar.ST
 
 open FStar.Preorder
 
-let stable (#a:Type) (p:(a -> Type)) (b:preorder a) = forall x y. p x /\ b x y ==> p y
+let stable = FStar.Preorder.stable
 
 private let p_pred (#a:Type) (#b:preorder a) (r:mref a b) (p:(a -> Type))
   = fun h -> h `contains` r /\ p (sel h r)
@@ -12,10 +12,10 @@ private let p_pred (#a:Type) (#b:preorder a) (r:mref a b) (p:(a -> Type))
 abstract let token (#a:Type) (#b:preorder a) (r:mref a b) (p:(a -> Type){stable p b})
   = witnessed (p_pred r p)
 
-abstract val take_token: #a:Type -> #b:preorder a -> m:mref a b -> p:(a -> Type){stable p b}
+abstract val witness_token: #a:Type -> #b:preorder a -> m:mref a b -> p:(a -> Type){stable p b}
                          -> ST unit (requires (fun h0 -> p (sel h0 m)))
                                    (ensures (fun h0 _ h1 -> h0==h1 /\ token m p))
-let take_token #a #b m p =
+let witness_token #a #b m p =
   gst_recall (contains_pred m);
   gst_witness (p_pred m p)
 
@@ -24,12 +24,17 @@ abstract val recall_token: #a:Type -> #b:preorder a -> m:mref a b -> p:(a -> Typ
                                      (ensures (fun h0 _ h1 -> h0==h1 /\ p (sel h1 m)))
 let recall_token #a #b m p = gst_recall (p_pred m p)
 
-abstract val recall: p:(heap -> Type){ST.stable p}
-                     -> ST unit (requires (fun _ ->  witnessed p))
-                               (ensures (fun h0 _ h1 -> h0 == h1 /\ p h1))
+
+(* KM : These don't have much to do here... *)
+
+abstract val recall: p:(heap -> Type){ST.stable p} ->
+  ST unit
+    (requires (fun _ ->  witnessed p))
+    (ensures (fun h0 _ h1 -> h0 == h1 /\ p h1))
 let recall p = gst_recall p
 
-abstract val witness: p:(heap -> Type){ST.stable p}
-                      -> ST unit (requires (fun h0 -> p h0))
-                                (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
+abstract val witness: p:(heap -> Type){ST.stable p} ->
+  ST unit
+    (requires (fun h0 -> p h0))
+    (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
 let witness p = gst_witness p

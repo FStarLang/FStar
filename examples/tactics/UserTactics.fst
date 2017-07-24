@@ -29,7 +29,7 @@ let explicitly_trigger_normalizer =
 
 unfold let unfoldable_predicate (x:int) = True
 let implicitly_unfolfed_before_preprocessing =
-  assert_by_tactic (smt ())
+  assert_by_tactic smt
                    (unfoldable_predicate 0 /\ visible_boolean 2) //only "b2t (visible_boolean 2)" goes to SMT
 
 let visible_predicate (x:int) = True

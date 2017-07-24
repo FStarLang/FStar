@@ -8,9 +8,9 @@ module Ex12.SHA1
 (* open FStar.Monotonic.RRef *)
 
 open FStar.Preorder
-open Heapx
-open STx
-open MRefx
+open FStar.Heap
+open FStar.ST
+open FStar.MRef
 
 //open FStar.All
 open FStar.Seq
