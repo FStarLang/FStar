@@ -200,7 +200,11 @@ val gen_generic_wrapper_sig: (fname:string) ->(args: list argtype)->(ret:argtype
 (ensures (fun h0 _ h1 -> h0 == h1))
 let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) = 
      let orignargs = List.Tot.Base.length args in
-     let s = trace "(* Printing signature *)\n" in
+     let s = trace "\n (* Printing signature for V's function wrapper. \n * U's code invokes V's function " in
+     let _ = trace fname in
+     let _ = trace " using the wrapper " in
+     let _ = trace fname in
+     let _ = trace "_wrapper \n *)\n" in
      let s = trace "val " in
      let s = trace fname in
      let s = trace "_wrapper : " in
@@ -432,7 +436,7 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                    let _ = local_print_modifies_refs_clause args in
                    if (type_is_ref ret) then
                       (* if return type is a reference should there be a modifies clause? *)
-                      trace "/\ is_eternal_region rt \n\t"
+                      trace "/\ (not is_vheap_reference rt) \n\t"
                    else
                      ()
   
@@ -468,20 +472,32 @@ let gen_generic_wrapper_body (fname:string) (args: list argtype) (ret:argtype) =
                          if (orignargs - 4 < nargs) then
                             (* normal argument *)
                              if type_is_ref hd then
-                                 let _ = trace "and writable (as_addr " in
+                                 let _ = trace "and (is_writable (as_addr " in
                                  let _ = trace "x" in
                                  let _ = trace (string_of_int (orignargs - nargs + 1)) in
-                                 let _ = trace ") \n \t \t" in
+                                 let _ = trace ") or is_uheap_reference (as_addr " in
+                                 let _ = trace "x" in
+                                 let _ = trace (string_of_int (orignargs - nargs + 1)) in
+                                 let _ = trace ")) \n \t \t" in
+                                 let _ = trace "and ( not is_higher_order_ref " in
+                                 let _ = trace "x" in
+                                 let _ = trace (string_of_int (orignargs - nargs + 1)) in
+                                 let _ = trace ") \n \t \t" in 
                                  if (is_deep_ref false hd) then
                                       let d = get_ref_depth hd in
                                       let rec print_all_deep_refs (l:int) :ST unit
                                         (requires (fun _ -> True))
                                         (ensures (fun h0 r h1 -> h0 == h1)) =
                                             if l <= d then
-                                              let _ = trace "and writable (as_addr  " in
+                                              let _ = trace "and (is_writable (as_addr  " in
                                               (* add to the modifies_ref clause *)
                                               let _ = print_sel l (orignargs - nargs +1) false in
-                                              let _ = trace ")\n \t \t" in
+                                              let _ = trace ") or is_uheap_reference (as_addr " in
+                                              let _ = print_sel l (orignargs - nargs +1) false in
+                                              let _ = trace "))\n \t \t" in
+                                              let _ = trace "and ( not is_higher_order_ref " in
+                                              let _ = print_sel l (orignargs - nargs +1) false in
+                                              let _ = trace ") \n \t \t" in 
                                               print_all_deep_refs (l+1)
                                             else
                                               ()
@@ -498,20 +514,33 @@ let gen_generic_wrapper_body (fname:string) (args: list argtype) (ret:argtype) =
                                  check_bitmap tl
                           else
                              if type_is_ref hd then
-                                 let _ = trace "and writable (as_addr " in
+                                 let _ = trace "and (is_writable (as_addr " in
                                  let _ = trace "xref" in
                                  let _ = trace (string_of_int (orignargs - 4 - nargs + 1)) in
-                                 let _ = trace ") \n \t" in
+                                 let _ = trace ") or is_uheap_reference (as_addr " in
+                                 let _ = trace "xref" in
+                                 let _ = trace (string_of_int (orignargs - 4 - nargs + 1)) in
+                                 let _ = trace ")) \n \t \t" in
+                                 let _ = trace "and ( not is_code_pointer " in
+                                 let _ = trace "xref" in
+                                 let _ = trace (string_of_int (orignargs - 4 - nargs + 1)) in
+                                 let _ = trace ") \n \t \t" in 
+                                 
                                  if (is_deep_ref false hd) then
                                       let d = get_ref_depth hd in
                                       let rec print_all_deep_refs (l:int) :ST unit
                                         (requires (fun _ -> True))
                                         (ensures (fun h0 r h1 -> h0 == h1)) =
                                             if l <= d then
-                                              let _ = trace "and writable (as_addr  " in
+                                              let _ = trace "and (is_writable (as_addr  " in
                                               (* add to the modifies_ref clause *)
-                                              let _ = print_sel l (orignargs - nargs +1) true in
-                                              let _ = trace ")\n \t \t" in
+                                              let _ = print_sel l (orignargs - 4 - nargs +1) true in
+                                              let _ = trace ") or is_uheap_reference (as_addr " in
+                                              let _ = print_sel l (orignargs - 4 - nargs +1) true in
+                                              let _ = trace "))\n \t \t" in
+                                              let _ = trace "and ( not is_code_pointer " in
+                                              let _ = print_sel l (orignargs - 4 - nargs +1) true in
+                                              let _ = trace ") \n \t \t" in 
                                               print_all_deep_refs (l+1)
                                             else
                                               ()
@@ -527,7 +556,10 @@ let gen_generic_wrapper_body (fname:string) (args: list argtype) (ret:argtype) =
                                  check_bitmap tl
         in () (* end of match *)
       in (* end of check_bitmap *) 
-      let _ = trace "(* check if all references and deep references are marked as wriatable in bitmap *) \n \t " in
+      let _ = trace "(* Check \n " in
+      let _ = trace " \t \t 1. If a reference is a stack (deep) references, then it is marked as writable in bitmap \n" in
+      let _ = trace " \t \t 2. If it is a heap reference then it refers to U's heap \n" in
+      let _ = trace " \t \t 3. Not a code pointer *) \n \t " in
       let _ = trace " if true   " in
       let _ = check_bitmap args in
       let _ = trace " then \n \t \t " in
@@ -566,11 +598,30 @@ val gen_wrapper: (f:calltable_entry)  -> ST unit
 let gen_wrapper (f:calltable_entry) = match f with
   | Mkcalltable_entry (fname:string) (fstart_address:nat64) (fsize:nat64) (argslist:list argtype) (ret:argtype) -> 
          gen_generic_wrapper fname argslist ret
-         
+
+
+val gen_manifest_helper_routines : unit -> ST unit
+(requires (fun _ -> True))
+(ensures (fun h0 r h1 -> h0 == h1))
+let gen_manifest_helper_routines () = 
+ let _ = trace "type bitmap = reference (seq int)\n" in
+ let _ = trace "assume val is_writable: (addr: nat) -> bool \n" in
+ let _  = trace "assume val is_uheap_reference: (addr: nat) -> bool \n" in
+ let _ = trace "assume val is_vheap_reference : (addr:nat) -> bool \n" in
+ let _ = trace "assume val is_code_pointer: (addr:nat) -> bool \n \n" in
+ ()
+
+let print_icon () = 
+ trace " \n \n (* Automatically generated wrappers  \n * DO NOT MODIFY  \n *) \n \n"
+ 
 (* Sample Manifest *)
 val main: unit -> ST unit
 (requires (fun _ -> True))
 (ensures (fun h0 _ h1 -> h0 == h1))
-let main () = gen_wrapper (Mkcalltable_entry "foo" 0x1000 0x25 [ANat64; ANat64; (ABuffer (ABuffer (ABuffer ANat64))); (ABuffer (ABuffer ANat64)); (ABuffer ANat64)] (ABuffer ANat64))
+let main () = 
+   let _ = print_icon () in
+   let _ = gen_manifest_helper_routines () in
+   gen_wrapper (Mkcalltable_entry "foo" 0x1000 0x25 [ANat64; ANat64; (ABuffer (ABuffer (ABuffer ANat64))); (ABuffer (ABuffer ANat64)); (ABuffer ANat64)] (ABuffer ANat64))
            
 let () = main ()
+
