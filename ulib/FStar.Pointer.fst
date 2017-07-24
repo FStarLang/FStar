@@ -429,25 +429,76 @@ let dfst_struct_field
   let (| f, _ |) = p in
   f
 
+(* TODO move to FStar.List.Tot.Properties *)
+
+let rec find_none
+  (#a: Type)
+  (f: (a -> Tot bool))
+  (l: list a)
+  (x: a)
+: Lemma
+  (requires (List.Tot.find f l == None /\ List.Tot.memP x l))
+  (ensures (f x == false))
+= let (x' :: l') = l in
+  Classical.or_elim
+    #(x == x')
+    #(~ (x == x'))
+    #(fun _ -> f x == false)
+    (fun h -> ())
+    (fun h -> find_none f l' x)
+
+let rec mem_count
+  (#a: eqtype)
+  (l: list a)
+  (x: a)
+: Lemma
+  (List.Tot.mem x l <==> List.Tot.count x l > 0)
+= match l with
+  | [] -> ()
+  | x' :: l' -> mem_count l' x
+
+let struct_literal (s: struct_typ) : Tot Type0 = (list (x: struct_field s & type_of_struct_field s x))
+
+let struct_literal_wf (s: struct_typ) (l: struct_literal s) : Tot bool =
+  List.Tot.sortWith FStar.String.compare (List.Tot.map fst s) =
+  List.Tot.sortWith FStar.String.compare
+    (List.Tot.map (dfst_struct_field s) l)
+
 let fun_of_list
   (s: struct_typ)
-  (l: list (x: struct_field s & type_of_struct_field s x) {
-    normalize_term (
-      List.Tot.sortWith FStar.String.compare (List.Tot.map fst s) =
-      List.Tot.sortWith FStar.String.compare
-        (List.Tot.map (dfst_struct_field s) l)
-    ) == true
-  })
+  (l: struct_literal s)
   (f: struct_field s)
-: Tot (type_of_struct_field s f)
+: Pure (type_of_struct_field s f)
+  (requires (normalize_term (struct_literal_wf s l) == true))
+  (ensures (fun _ -> True))
 =
   let f' : string = f in
-  match List.Tot.find (fun p -> dfst_struct_field s p = f') l with
+  let phi (p: (x: struct_field s & type_of_struct_field s x)) : Tot bool =
+    dfst_struct_field s p = f'
+  in
+  match List.Tot.find phi l with
   | Some p -> let (| _, v |) = p in v
-  | None -> admit () (* impossible: TODO: prove it *)
+  | _ ->
+    List.Tot.sortWith_permutation FStar.String.compare (List.Tot.map fst s);
+    List.Tot.sortWith_permutation FStar.String.compare (List.Tot.map (dfst_struct_field s) l);
+    List.Tot.mem_memP f' (List.Tot.map fst s);
+    mem_count (List.Tot.map fst s) f';
+    mem_count (List.Tot.map (dfst_struct_field s) l) f';
+    List.Tot.mem_memP f' (List.Tot.map (dfst_struct_field s) l);
+    List.Tot.memP_map_elim (dfst_struct_field s) f' l;
+    Classical.forall_intro (Classical.move_requires (find_none phi l));
+    false_elim ()
 
 let struct_create (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
   DM.create #(struct_field l) #(type_of_struct_field l) f
+
+let struct_create'
+  (s: struct_typ)
+  (l: struct_literal s)
+: Pure (struct s)
+  (requires (normalize_term (struct_literal_wf s l) == true))
+  (ensures (fun _ -> True))
+= struct_create s (fun_of_list s l)
 
 (** Interpretation of unions, as ghostly-tagged data
     (see `gtdata` for more information).
