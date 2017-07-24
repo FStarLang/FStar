@@ -2039,6 +2039,14 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let r = Env.get_range env in
 
     match t1.n, t2.n with
+      | Tm_ascribed _, _
+      | Tm_meta _, _ ->
+        solve_t' env ({problem with lhs=U.unmeta t1}) wl
+
+      | _, Tm_ascribed _
+      | _, Tm_meta _ ->
+        solve_t' env ({problem with rhs=U.unmeta t2}) wl
+
       | Tm_bvar _, _
       | _, Tm_bvar _ -> failwith "Only locally nameless! We should never see a de Bruijn variable"
 
@@ -2225,16 +2233,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               else rigid_rigid_delta env orig wl head1 head2 t1 t2
          else rigid_rigid_delta env orig wl head1 head2 t1 t2
 
-      | Tm_ascribed(t1, _, _), _ ->
-        solve_t' env ({problem with lhs=t1}) wl
-
-      | _, Tm_ascribed(t2, _, _)->
-        solve_t' env ({problem with rhs=t2}) wl
-
       | Tm_let _, _
-      | Tm_meta _, _
       | Tm_delayed _, _
-      | _, Tm_meta _
       | _, Tm_delayed _
       | _, Tm_let _ -> failwith (BU.format2 "Impossible: %s and %s" (Print.tag_of_term t1) (Print.tag_of_term t2))
 
