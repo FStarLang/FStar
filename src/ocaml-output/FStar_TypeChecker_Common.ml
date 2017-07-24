@@ -343,9 +343,9 @@ let insert_identifier_info:
                        FStar_Util.imap_add file_rows row col_info
                    | FStar_Pervasives_Native.Some col_infos ->
                        let uu____1265 =
-                         let uu____1266 = FStar_ST.read col_infos in
+                         let uu____1266 = FStar_ST.op_Bang col_infos in
                          insert_col_info col info uu____1266 in
-                       FStar_ST.write col_infos uu____1265));
+                       FStar_ST.op_Colon_Equals col_infos uu____1265));
              (fn, row, col))
 let info_at_pos:
   Prims.string ->
@@ -363,7 +363,7 @@ let info_at_pos:
              | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
              | FStar_Pervasives_Native.Some cols ->
                  let uu____1371 =
-                   let uu____1374 = FStar_ST.read cols in
+                   let uu____1374 = FStar_ST.op_Bang cols in
                    find_nearest_preceding_col_info col uu____1374 in
                  (match uu____1371 with
                   | FStar_Pervasives_Native.None  ->
@@ -418,33 +418,33 @@ let insert_id_info: insert_id_info_ops =
   let id_info_buffer = FStar_Util.mk_ref [] in
   let enable b =
     let uu____1630 = (FStar_Options.ide ()) && b in
-    FStar_ST.write enabled uu____1630 in
+    FStar_ST.op_Colon_Equals enabled uu____1630 in
   let bv x t =
-    let uu____1662 = FStar_ST.read enabled in
+    let uu____1662 = FStar_ST.op_Bang enabled in
     if uu____1662
     then
       let uu____1687 =
         let uu____1700 =
           let uu____1711 = FStar_Syntax_Syntax.range_of_bv x in
           ((FStar_Util.Inl x), t, uu____1711) in
-        let uu____1716 = FStar_ST.read id_info_buffer in uu____1700 ::
+        let uu____1716 = FStar_ST.op_Bang id_info_buffer in uu____1700 ::
           uu____1716 in
-      FStar_ST.write id_info_buffer uu____1687
+      FStar_ST.op_Colon_Equals id_info_buffer uu____1687
     else () in
   let fv x t =
-    let uu____1891 = FStar_ST.read enabled in
+    let uu____1891 = FStar_ST.op_Bang enabled in
     if uu____1891
     then
       let uu____1916 =
         let uu____1929 =
           let uu____1940 = FStar_Syntax_Syntax.range_of_fv x in
           ((FStar_Util.Inr x), t, uu____1940) in
-        let uu____1945 = FStar_ST.read id_info_buffer in uu____1929 ::
+        let uu____1945 = FStar_ST.op_Bang id_info_buffer in uu____1929 ::
           uu____1945 in
-      FStar_ST.write id_info_buffer uu____1916
+      FStar_ST.op_Colon_Equals id_info_buffer uu____1916
     else () in
   let promote cb =
-    (let uu____2123 = FStar_ST.read id_info_buffer in
+    (let uu____2123 = FStar_ST.op_Bang id_info_buffer in
      FStar_All.pipe_right uu____2123
        (FStar_List.iter
           (fun uu____2235  ->
@@ -454,5 +454,5 @@ let insert_id_info: insert_id_info_ops =
                    let uu____2264 = cb t in
                    insert_identifier_info i uu____2264 r in
                  FStar_All.pipe_left FStar_Pervasives.ignore uu____2257)));
-    FStar_ST.write id_info_buffer [] in
+    FStar_ST.op_Colon_Equals id_info_buffer [] in
   { enable; bv; fv; promote }

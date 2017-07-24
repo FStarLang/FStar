@@ -792,7 +792,7 @@ let is_top_level_prob: FStar_TypeChecker_Common.prob -> Prims.bool =
     uu____1417 = (Prims.parse_int "1")
 let next_pid: Prims.unit -> Prims.int =
   let ctr = FStar_Util.mk_ref (Prims.parse_int "0") in
-  fun uu____1430  -> FStar_Util.incr ctr; FStar_ST.read ctr
+  fun uu____1430  -> FStar_Util.incr ctr; FStar_ST.op_Bang ctr
 let mk_problem:
   'Auu____1495 'Auu____1496 .
     FStar_Syntax_Syntax.binders ->
@@ -7940,17 +7940,19 @@ let last_proof_ns:
 let maybe_update_proof_ns: FStar_TypeChecker_Env.env -> Prims.unit =
   fun env  ->
     let pns = env.FStar_TypeChecker_Env.proof_ns in
-    let uu____22181 = FStar_ST.read last_proof_ns in
+    let uu____22181 = FStar_ST.op_Bang last_proof_ns in
     match uu____22181 with
     | FStar_Pervasives_Native.None  ->
-        FStar_ST.write last_proof_ns (FStar_Pervasives_Native.Some pns)
+        FStar_ST.op_Colon_Equals last_proof_ns
+          (FStar_Pervasives_Native.Some pns)
     | FStar_Pervasives_Native.Some old ->
         if old = pns
         then ()
         else
           ((env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
              ();
-           FStar_ST.write last_proof_ns (FStar_Pervasives_Native.Some pns))
+           FStar_ST.op_Colon_Equals last_proof_ns
+             (FStar_Pervasives_Native.Some pns))
 let discharge_guard':
   (Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env ->

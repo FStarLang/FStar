@@ -395,10 +395,10 @@ let fresh:
     FStar_Util.incr c;
     (let uu____1386 =
        let uu____1387 =
-         let uu____1388 = FStar_ST.read c in
+         let uu____1388 = FStar_ST.op_Bang c in
          FStar_Util.string_of_int uu____1388 in
        Prims.strcat x uu____1387 in
-     let uu____1413 = FStar_ST.read c in (uu____1386, uu____1413))
+     let uu____1413 = FStar_ST.op_Bang c in (uu____1386, uu____1413))
 let normalize_abs: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun t0  ->
     let rec aux bs t copt =

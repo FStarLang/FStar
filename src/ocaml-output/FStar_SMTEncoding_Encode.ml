@@ -271,7 +271,7 @@ let varops: varops_t =
     let y1 = escape y in
     let y2 =
       let uu____1022 =
-        let uu____1025 = FStar_ST.read scopes in
+        let uu____1025 = FStar_ST.op_Bang scopes in
         FStar_Util.find_map uu____1025
           (fun uu____1111  ->
              match uu____1111 with
@@ -282,13 +282,13 @@ let varops: varops_t =
           (FStar_Util.incr ctr;
            (let uu____1155 =
               let uu____1156 =
-                let uu____1157 = FStar_ST.read ctr in
+                let uu____1157 = FStar_ST.op_Bang ctr in
                 Prims.string_of_int uu____1157 in
               Prims.strcat "__" uu____1156 in
             Prims.strcat y1 uu____1155)) in
     let top_scope =
       let uu____1185 =
-        let uu____1194 = FStar_ST.read scopes in FStar_List.hd uu____1194 in
+        let uu____1194 = FStar_ST.op_Bang scopes in FStar_List.hd uu____1194 in
       FStar_All.pipe_left FStar_Pervasives_Native.fst uu____1185 in
     FStar_Util.smap_add top_scope y2 true; y2 in
   let new_var pp rn =
@@ -296,7 +296,7 @@ let varops: varops_t =
       (Prims.strcat pp.FStar_Ident.idText
          (Prims.strcat "__" (Prims.string_of_int rn))) in
   let new_fvar lid = mk_unique lid.FStar_Ident.str in
-  let next_id1 uu____1306 = FStar_Util.incr ctr; FStar_ST.read ctr in
+  let next_id1 uu____1306 = FStar_Util.incr ctr; FStar_ST.op_Bang ctr in
   let fresh1 pfx =
     let uu____1357 =
       let uu____1358 = next_id1 () in
@@ -304,7 +304,7 @@ let varops: varops_t =
     FStar_Util.format2 "%s_%s" pfx uu____1357 in
   let string_const s =
     let uu____1363 =
-      let uu____1366 = FStar_ST.read scopes in
+      let uu____1366 = FStar_ST.op_Bang scopes in
       FStar_Util.find_map uu____1366
         (fun uu____1452  ->
            match uu____1452 with
@@ -318,22 +318,23 @@ let varops: varops_t =
           FStar_All.pipe_left FStar_SMTEncoding_Term.boxString uu____1476 in
         let top_scope =
           let uu____1480 =
-            let uu____1489 = FStar_ST.read scopes in FStar_List.hd uu____1489 in
+            let uu____1489 = FStar_ST.op_Bang scopes in
+            FStar_List.hd uu____1489 in
           FStar_All.pipe_left FStar_Pervasives_Native.snd uu____1480 in
         (FStar_Util.smap_add top_scope s f; f) in
   let push1 uu____1590 =
     let uu____1591 =
       let uu____1602 = new_scope () in
-      let uu____1611 = FStar_ST.read scopes in uu____1602 :: uu____1611 in
-    FStar_ST.write scopes uu____1591 in
+      let uu____1611 = FStar_ST.op_Bang scopes in uu____1602 :: uu____1611 in
+    FStar_ST.op_Colon_Equals scopes uu____1591 in
   let pop1 uu____1761 =
     let uu____1762 =
-      let uu____1773 = FStar_ST.read scopes in FStar_List.tl uu____1773 in
-    FStar_ST.write scopes uu____1762 in
+      let uu____1773 = FStar_ST.op_Bang scopes in FStar_List.tl uu____1773 in
+    FStar_ST.op_Colon_Equals scopes uu____1762 in
   let mark1 uu____1923 = push1 () in
   let reset_mark1 uu____1927 = pop1 () in
   let commit_mark1 uu____1931 =
-    let uu____1932 = FStar_ST.read scopes in
+    let uu____1932 = FStar_ST.op_Bang scopes in
     match uu____1932 with
     | (hd1,hd2)::(next1,next2)::tl1 ->
         (FStar_Util.smap_fold hd1
@@ -344,7 +345,7 @@ let varops: varops_t =
            (fun key  ->
               fun value  -> fun v1  -> FStar_Util.smap_add next2 key value)
            ();
-         FStar_ST.write scopes ((next1, next2) :: tl1))
+         FStar_ST.op_Colon_Equals scopes ((next1, next2) :: tl1))
     | uu____2144 -> failwith "Impossible" in
   {
     push = push1;
@@ -8558,11 +8559,11 @@ let init_env: FStar_TypeChecker_Env.env -> Prims.unit =
           current_module_name = uu____26329
         } in
       [uu____26325] in
-    FStar_ST.write last_env uu____26322
+    FStar_ST.op_Colon_Equals last_env uu____26322
 let get_env: FStar_Ident.lident -> FStar_TypeChecker_Env.env -> env_t =
   fun cmn  ->
     fun tcenv  ->
-      let uu____26357 = FStar_ST.read last_env in
+      let uu____26357 = FStar_ST.op_Bang last_env in
       match uu____26357 with
       | [] -> failwith "No env; call init first!"
       | e::uu____26379 ->
@@ -8582,13 +8583,13 @@ let get_env: FStar_Ident.lident -> FStar_TypeChecker_Env.env -> env_t =
           }
 let set_env: env_t -> Prims.unit =
   fun env  ->
-    let uu____26388 = FStar_ST.read last_env in
+    let uu____26388 = FStar_ST.op_Bang last_env in
     match uu____26388 with
     | [] -> failwith "Empty env stack"
-    | uu____26409::tl1 -> FStar_ST.write last_env (env :: tl1)
+    | uu____26409::tl1 -> FStar_ST.op_Colon_Equals last_env (env :: tl1)
 let push_env: Prims.unit -> Prims.unit =
   fun uu____26434  ->
-    let uu____26435 = FStar_ST.read last_env in
+    let uu____26435 = FStar_ST.op_Bang last_env in
     match uu____26435 with
     | [] -> failwith "Empty env stack"
     | hd1::tl1 ->
@@ -8607,20 +8608,20 @@ let push_env: Prims.unit -> Prims.unit =
               (uu___154_26464.encode_non_total_function_typ);
             current_module_name = (uu___154_26464.current_module_name)
           } in
-        FStar_ST.write last_env (top :: hd1 :: tl1)
+        FStar_ST.op_Colon_Equals last_env (top :: hd1 :: tl1)
 let pop_env: Prims.unit -> Prims.unit =
   fun uu____26486  ->
-    let uu____26487 = FStar_ST.read last_env in
+    let uu____26487 = FStar_ST.op_Bang last_env in
     match uu____26487 with
     | [] -> failwith "Popping an empty stack"
-    | uu____26508::tl1 -> FStar_ST.write last_env tl1
+    | uu____26508::tl1 -> FStar_ST.op_Colon_Equals last_env tl1
 let mark_env: Prims.unit -> Prims.unit = fun uu____26533  -> push_env ()
 let reset_mark_env: Prims.unit -> Prims.unit = fun uu____26537  -> pop_env ()
 let commit_mark_env: Prims.unit -> Prims.unit =
   fun uu____26541  ->
-    let uu____26542 = FStar_ST.read last_env in
+    let uu____26542 = FStar_ST.op_Bang last_env in
     match uu____26542 with
-    | hd1::uu____26564::tl1 -> FStar_ST.write last_env (hd1 :: tl1)
+    | hd1::uu____26564::tl1 -> FStar_ST.op_Colon_Equals last_env (hd1 :: tl1)
     | uu____26586 -> failwith "Impossible"
 let init: FStar_TypeChecker_Env.env -> Prims.unit =
   fun tcenv  ->

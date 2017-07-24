@@ -1808,7 +1808,7 @@ let sc_typ:
   FStar_TypeChecker_Env.env -> search_candidate -> FStar_Syntax_Syntax.typ =
   fun tcenv  ->
     fun sc  ->
-      let uu____6371 = FStar_ST.read sc.sc_typ in
+      let uu____6371 = FStar_ST.op_Bang sc.sc_typ in
       match uu____6371 with
       | FStar_Pervasives_Native.Some t -> t
       | FStar_Pervasives_Native.None  ->
@@ -1821,21 +1821,25 @@ let sc_typ:
                   FStar_Pervasives_Native.None FStar_Range.dummyRange
             | FStar_Pervasives_Native.Some ((uu____6417,typ),uu____6419) ->
                 typ in
-          (FStar_ST.write sc.sc_typ (FStar_Pervasives_Native.Some typ); typ)
+          (FStar_ST.op_Colon_Equals sc.sc_typ
+             (FStar_Pervasives_Native.Some typ);
+           typ)
 let sc_fvars:
   FStar_TypeChecker_Env.env ->
     search_candidate -> FStar_Ident.lid FStar_Util.set
   =
   fun tcenv  ->
     fun sc  ->
-      let uu____6463 = FStar_ST.read sc.sc_fvars in
+      let uu____6463 = FStar_ST.op_Bang sc.sc_fvars in
       match uu____6463 with
       | FStar_Pervasives_Native.Some fv -> fv
       | FStar_Pervasives_Native.None  ->
           let fv =
             let uu____6506 = sc_typ tcenv sc in
             FStar_Syntax_Free.fvars uu____6506 in
-          (FStar_ST.write sc.sc_fvars (FStar_Pervasives_Native.Some fv); fv)
+          (FStar_ST.op_Colon_Equals sc.sc_fvars
+             (FStar_Pervasives_Native.Some fv);
+           fv)
 let json_of_search_result:
   FStar_ToSyntax_Env.env ->
     FStar_TypeChecker_Env.env -> search_candidate -> FStar_Util.json
@@ -2011,19 +2015,20 @@ let rec go: repl_state -> Prims.unit =
 let interactive_error_handler: FStar_Errors.error_handler =
   let issues = FStar_Util.mk_ref [] in
   let add_one1 e =
-    let uu____6944 = let uu____6947 = FStar_ST.read issues in e :: uu____6947 in
-    FStar_ST.write issues uu____6944 in
+    let uu____6944 =
+      let uu____6947 = FStar_ST.op_Bang issues in e :: uu____6947 in
+    FStar_ST.op_Colon_Equals issues uu____6944 in
   let count_errors uu____7017 =
     let uu____7018 =
-      let uu____7021 = FStar_ST.read issues in
+      let uu____7021 = FStar_ST.op_Bang issues in
       FStar_List.filter
         (fun e  -> e.FStar_Errors.issue_level = FStar_Errors.EError)
         uu____7021 in
     FStar_List.length uu____7018 in
   let report1 uu____7063 =
-    let uu____7064 = FStar_ST.read issues in
+    let uu____7064 = FStar_ST.op_Bang issues in
     FStar_List.sortWith FStar_Errors.compare_issues uu____7064 in
-  let clear1 uu____7102 = FStar_ST.write issues [] in
+  let clear1 uu____7102 = FStar_ST.op_Colon_Equals issues [] in
   {
     FStar_Errors.eh_add_one = add_one1;
     FStar_Errors.eh_count_errors = count_errors;

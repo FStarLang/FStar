@@ -248,7 +248,7 @@ let tag_of_term: FStar_Syntax_Syntax.term -> Prims.string =
     | FStar_Syntax_Syntax.Tm_let uu____757 -> "Tm_let"
     | FStar_Syntax_Syntax.Tm_uvar uu____770 -> "Tm_uvar"
     | FStar_Syntax_Syntax.Tm_delayed (uu____787,m) ->
-        let uu____829 = FStar_ST.read m in
+        let uu____829 = FStar_ST.op_Bang m in
         (match uu____829 with
          | FStar_Pervasives_Native.None  -> "Tm_delayed"
          | FStar_Pervasives_Native.Some uu____876 -> "Tm_delayed-resolved")

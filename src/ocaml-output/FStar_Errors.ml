@@ -152,17 +152,18 @@ let default_handler: error_handler =
   let add_one e =
     match e.issue_level with
     | EError  ->
-        let uu____362 = let uu____365 = FStar_ST.read errs in e :: uu____365 in
-        FStar_ST.write errs uu____362
+        let uu____362 =
+          let uu____365 = FStar_ST.op_Bang errs in e :: uu____365 in
+        FStar_ST.op_Colon_Equals errs uu____362
     | uu____432 -> print_issue e in
   let count_errors uu____436 =
-    let uu____437 = FStar_ST.read errs in FStar_List.length uu____437 in
+    let uu____437 = FStar_ST.op_Bang errs in FStar_List.length uu____437 in
   let report uu____477 =
     let sorted1 =
-      let uu____481 = FStar_ST.read errs in
+      let uu____481 = FStar_ST.op_Bang errs in
       FStar_List.sortWith compare_issues uu____481 in
     FStar_List.iter print_issue sorted1; sorted1 in
-  let clear1 uu____520 = FStar_ST.write errs [] in
+  let clear1 uu____520 = FStar_ST.op_Colon_Equals errs [] in
   {
     eh_add_one = add_one;
     eh_count_errors = count_errors;
@@ -182,7 +183,7 @@ let mk_issue:
 let get_err_count: Prims.unit -> Prims.int =
   fun uu____585  ->
     let uu____586 =
-      let uu____589 = FStar_ST.read current_handler in
+      let uu____589 = FStar_ST.op_Bang current_handler in
       uu____589.eh_count_errors in
     uu____586 ()
 let add_one: issue -> Prims.unit =
@@ -190,7 +191,7 @@ let add_one: issue -> Prims.unit =
     FStar_Util.atomically
       (fun uu____606  ->
          let uu____607 =
-           let uu____610 = FStar_ST.read current_handler in
+           let uu____610 = FStar_ST.op_Bang current_handler in
            uu____610.eh_add_one in
          uu____607 issue)
 let add_many: issue Prims.list -> Prims.unit =
@@ -198,23 +199,25 @@ let add_many: issue Prims.list -> Prims.unit =
     FStar_Util.atomically
       (fun uu____631  ->
          let uu____632 =
-           let uu____635 = FStar_ST.read current_handler in
+           let uu____635 = FStar_ST.op_Bang current_handler in
            uu____635.eh_add_one in
          FStar_List.iter uu____632 issues)
 let report_all: Prims.unit -> issue Prims.list =
   fun uu____651  ->
     let uu____652 =
-      let uu____657 = FStar_ST.read current_handler in uu____657.eh_report in
+      let uu____657 = FStar_ST.op_Bang current_handler in uu____657.eh_report in
     uu____652 ()
 let clear: Prims.unit -> Prims.unit =
   fun uu____671  ->
     let uu____672 =
-      let uu____675 = FStar_ST.read current_handler in uu____675.eh_clear in
+      let uu____675 = FStar_ST.op_Bang current_handler in uu____675.eh_clear in
     uu____672 ()
 let set_handler: error_handler -> Prims.unit =
   fun handler  ->
     let issues = report_all () in
-    clear (); FStar_ST.write current_handler handler; add_many issues
+    clear ();
+    FStar_ST.op_Colon_Equals current_handler handler;
+    add_many issues
 let diag: FStar_Range.range -> Prims.string -> Prims.unit =
   fun r  ->
     fun msg  ->
@@ -258,11 +261,12 @@ let __proj__Mkerror_message_prefix__item__clear_prefix:
         clear_prefix = __fname__clear_prefix;_} -> __fname__clear_prefix
 let message_prefix: error_message_prefix =
   let pfx = FStar_Util.mk_ref FStar_Pervasives_Native.None in
-  let set_prefix s = FStar_ST.write pfx (FStar_Pervasives_Native.Some s) in
+  let set_prefix s =
+    FStar_ST.op_Colon_Equals pfx (FStar_Pervasives_Native.Some s) in
   let clear_prefix uu____855 =
-    FStar_ST.write pfx FStar_Pervasives_Native.None in
+    FStar_ST.op_Colon_Equals pfx FStar_Pervasives_Native.None in
   let append_prefix s =
-    let uu____892 = FStar_ST.read pfx in
+    let uu____892 = FStar_ST.op_Bang pfx in
     match uu____892 with
     | FStar_Pervasives_Native.None  -> s
     | FStar_Pervasives_Native.Some p -> Prims.strcat p (Prims.strcat ": " s) in

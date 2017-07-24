@@ -1072,51 +1072,54 @@ let query_indices:
   = FStar_Util.mk_ref [[]]
 let push_query_indices: Prims.unit -> Prims.unit =
   fun uu____4469  ->
-    let uu____4470 = FStar_ST.read query_indices in
+    let uu____4470 = FStar_ST.op_Bang query_indices in
     match uu____4470 with
     | [] -> failwith "Empty query indices!"
     | uu____4527 ->
         let uu____4536 =
           let uu____4545 =
-            let uu____4552 = FStar_ST.read query_indices in
+            let uu____4552 = FStar_ST.op_Bang query_indices in
             FStar_List.hd uu____4552 in
-          let uu____4609 = FStar_ST.read query_indices in uu____4545 ::
+          let uu____4609 = FStar_ST.op_Bang query_indices in uu____4545 ::
             uu____4609 in
-        FStar_ST.write query_indices uu____4536
+        FStar_ST.op_Colon_Equals query_indices uu____4536
 let pop_query_indices: Prims.unit -> Prims.unit =
   fun uu____4711  ->
-    let uu____4712 = FStar_ST.read query_indices in
+    let uu____4712 = FStar_ST.op_Bang query_indices in
     match uu____4712 with
     | [] -> failwith "Empty query indices!"
-    | hd1::tl1 -> FStar_ST.write query_indices tl1
+    | hd1::tl1 -> FStar_ST.op_Colon_Equals query_indices tl1
 let add_query_index:
   (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 -> Prims.unit
   =
   fun uu____4840  ->
     match uu____4840 with
     | (l,n1) ->
-        let uu____4847 = FStar_ST.read query_indices in
+        let uu____4847 = FStar_ST.op_Bang query_indices in
         (match uu____4847 with
-         | hd1::tl1 -> FStar_ST.write query_indices (((l, n1) :: hd1) :: tl1)
+         | hd1::tl1 ->
+             FStar_ST.op_Colon_Equals query_indices (((l, n1) :: hd1) :: tl1)
          | uu____4972 -> failwith "Empty query indices")
 let peek_query_indices:
   Prims.unit ->
     (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun uu____4990  ->
-    let uu____4991 = FStar_ST.read query_indices in FStar_List.hd uu____4991
+    let uu____4991 = FStar_ST.op_Bang query_indices in
+    FStar_List.hd uu____4991
 let commit_query_index_mark: Prims.unit -> Prims.unit =
   fun uu____5051  ->
-    let uu____5052 = FStar_ST.read query_indices in
+    let uu____5052 = FStar_ST.op_Bang query_indices in
     match uu____5052 with
-    | hd1::uu____5104::tl1 -> FStar_ST.write query_indices (hd1 :: tl1)
+    | hd1::uu____5104::tl1 ->
+        FStar_ST.op_Colon_Equals query_indices (hd1 :: tl1)
     | uu____5186 -> failwith "Unmarked query index stack"
 let stack: env Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let push_stack: env -> env =
   fun env  ->
     (let uu____5213 =
-       let uu____5216 = FStar_ST.read stack in env :: uu____5216 in
-     FStar_ST.write stack uu____5213);
+       let uu____5216 = FStar_ST.op_Bang stack in env :: uu____5216 in
+     FStar_ST.op_Colon_Equals stack uu____5213);
     (let uu___117_5255 = env in
      let uu____5256 = FStar_Util.smap_copy (gamma_cache env) in
      let uu____5259 = FStar_Util.smap_copy (sigtab env) in
@@ -1151,9 +1154,9 @@ let push_stack: env -> env =
      })
 let pop_stack: Prims.unit -> env =
   fun uu____5265  ->
-    let uu____5266 = FStar_ST.read stack in
+    let uu____5266 = FStar_ST.op_Bang stack in
     match uu____5266 with
-    | env::tl1 -> (FStar_ST.write stack tl1; env)
+    | env::tl1 -> (FStar_ST.op_Colon_Equals stack tl1; env)
     | uu____5310 -> failwith "Impossible: Too many pops"
 let cleanup_interactive: env -> Prims.unit = fun env  -> (env.solver).pop ""
 let push: env -> Prims.string -> env =

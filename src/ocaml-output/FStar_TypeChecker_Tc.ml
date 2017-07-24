@@ -2125,11 +2125,11 @@ let cps_and_elaborate:
                                                 | (sigelt,fv) ->
                                                     ((let uu____2799 =
                                                         let uu____2802 =
-                                                          FStar_ST.read
+                                                          FStar_ST.op_Bang
                                                             sigelts in
                                                         sigelt :: uu____2802 in
-                                                      FStar_ST.write sigelts
-                                                        uu____2799);
+                                                      FStar_ST.op_Colon_Equals
+                                                        sigelts uu____2799);
                                                      fv)) in
                                          let lift_from_pure_wp1 =
                                            register "lift_from_pure"
@@ -2143,9 +2143,10 @@ let cps_and_elaborate:
                                                     (FStar_Syntax_Syntax.SetOptions
                                                        "--admit_smt_queries true")) in
                                              let uu____2876 =
-                                               FStar_ST.read sigelts in
+                                               FStar_ST.op_Bang sigelts in
                                              uu____2875 :: uu____2876 in
-                                           FStar_ST.write sigelts uu____2872);
+                                           FStar_ST.op_Colon_Equals sigelts
+                                             uu____2872);
                                           (let return_elab1 =
                                              register "return_elab"
                                                return_elab in
@@ -2156,9 +2157,10 @@ let cps_and_elaborate:
                                                      (FStar_Syntax_Syntax.SetOptions
                                                         "--admit_smt_queries false")) in
                                               let uu____2949 =
-                                                FStar_ST.read sigelts in
+                                                FStar_ST.op_Bang sigelts in
                                               uu____2948 :: uu____2949 in
-                                            FStar_ST.write sigelts uu____2945);
+                                            FStar_ST.op_Colon_Equals sigelts
+                                              uu____2945);
                                            (let bind_wp2 =
                                               register "bind_wp" bind_wp1 in
                                             (let uu____3018 =
@@ -2168,9 +2170,9 @@ let cps_and_elaborate:
                                                       (FStar_Syntax_Syntax.SetOptions
                                                          "--admit_smt_queries true")) in
                                                let uu____3022 =
-                                                 FStar_ST.read sigelts in
+                                                 FStar_ST.op_Bang sigelts in
                                                uu____3021 :: uu____3022 in
-                                             FStar_ST.write sigelts
+                                             FStar_ST.op_Colon_Equals sigelts
                                                uu____3018);
                                             (let bind_elab1 =
                                                register "bind_elab" bind_elab in
@@ -2181,10 +2183,10 @@ let cps_and_elaborate:
                                                        (FStar_Syntax_Syntax.SetOptions
                                                           "--admit_smt_queries false")) in
                                                 let uu____3095 =
-                                                  FStar_ST.read sigelts in
+                                                  FStar_ST.op_Bang sigelts in
                                                 uu____3094 :: uu____3095 in
-                                              FStar_ST.write sigelts
-                                                uu____3091);
+                                              FStar_ST.op_Colon_Equals
+                                                sigelts uu____3091);
                                              (let uu____3162 =
                                                 FStar_List.fold_left
                                                   (fun uu____3202  ->
@@ -2770,7 +2772,7 @@ let cps_and_elaborate:
                                                                    =
                                                                    let uu____3887
                                                                     =
-                                                                    FStar_ST.read
+                                                                    FStar_ST.op_Bang
                                                                     sigelts in
                                                                    FStar_List.rev
                                                                     uu____3887 in

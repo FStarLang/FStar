@@ -19,15 +19,15 @@ let vops: vops_t =
   let major = FStar_Util.mk_ref (Prims.parse_int "0") in
   let minor = FStar_Util.mk_ref (Prims.parse_int "0") in
   let next_major uu____56 =
-    FStar_ST.write minor (Prims.parse_int "0");
-    (let uu____82 = FStar_Util.incr major; FStar_ST.read major in
+    FStar_ST.op_Colon_Equals minor (Prims.parse_int "0");
+    (let uu____82 = FStar_Util.incr major; FStar_ST.op_Bang major in
      {
        FStar_Syntax_Syntax.major = uu____82;
        FStar_Syntax_Syntax.minor = (Prims.parse_int "0")
      }) in
   let next_minor uu____132 =
-    let uu____133 = FStar_ST.read major in
-    let uu____158 = FStar_Util.incr minor; FStar_ST.read minor in
+    let uu____133 = FStar_ST.op_Bang major in
+    let uu____158 = FStar_Util.incr minor; FStar_ST.op_Bang minor in
     {
       FStar_Syntax_Syntax.major = uu____133;
       FStar_Syntax_Syntax.minor = uu____158
@@ -76,8 +76,8 @@ type tx =
 let uu___is_TX: tx -> Prims.bool = fun projectee  -> true
 let __proj__TX__item___0: tx -> uf =
   fun projectee  -> match projectee with | TX _0 -> _0
-let get: Prims.unit -> uf = fun uu____289  -> FStar_ST.read state
-let set: uf -> Prims.unit = fun u  -> FStar_ST.write state u
+let get: Prims.unit -> uf = fun uu____289  -> FStar_ST.op_Bang state
+let set: uf -> Prims.unit = fun u  -> FStar_ST.op_Colon_Equals state u
 let reset: Prims.unit -> Prims.unit =
   fun uu____317  ->
     let v1 = vops.next_major () in let uu____319 = empty v1 in set uu____319

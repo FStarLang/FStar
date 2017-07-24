@@ -90,11 +90,11 @@ let gs: gensym_t =
          (let uu____116 =
             let uu____117 =
               let uu____118 =
-                let uu____119 = FStar_ST.read n_resets in
+                let uu____119 = FStar_ST.op_Bang n_resets in
                 FStar_Util.string_of_int uu____119 in
               let uu____144 =
                 let uu____145 =
-                  let uu____146 = FStar_ST.read ctr in
+                  let uu____146 = FStar_ST.op_Bang ctr in
                   FStar_Util.string_of_int uu____146 in
                 Prims.strcat "_" uu____145 in
               Prims.strcat uu____118 uu____144 in
@@ -102,7 +102,8 @@ let gs: gensym_t =
           (uu____116, (Prims.parse_int "0"))));
     reset =
       (fun uu____173  ->
-         FStar_ST.write ctr (Prims.parse_int "0"); FStar_Util.incr n_resets)
+         FStar_ST.op_Colon_Equals ctr (Prims.parse_int "0");
+         FStar_Util.incr n_resets)
   }
 let gensym: Prims.unit -> mlident = fun uu____223  -> gs.gensym ()
 let reset_gensym: Prims.unit -> Prims.unit = fun uu____227  -> gs.reset ()

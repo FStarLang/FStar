@@ -177,9 +177,9 @@ let enter_namespace: map -> map -> Prims.string -> Prims.bool =
                   let uu____432 = FStar_Util.smap_try_find original_map k in
                   FStar_Util.must uu____432 in
                 (FStar_Util.smap_add working_map suffix filename;
-                 FStar_ST.write found true)
+                 FStar_ST.op_Colon_Equals found true)
               else ()) uu____403);
-        FStar_ST.read found
+        FStar_ST.op_Bang found
 let string_of_lid: FStar_Ident.lident -> Prims.bool -> Prims.string =
   fun l  ->
     fun last1  ->
@@ -260,14 +260,14 @@ let collect_one:
             let add_dep d =
               let uu____679 =
                 let uu____680 =
-                  let uu____681 = FStar_ST.read deps in
+                  let uu____681 = FStar_ST.op_Bang deps in
                   FStar_List.existsML (fun d'  -> d' = d) uu____681 in
                 Prims.op_Negation uu____680 in
               if uu____679
               then
                 let uu____718 =
-                  let uu____721 = FStar_ST.read deps in d :: uu____721 in
-                FStar_ST.write deps uu____718
+                  let uu____721 = FStar_ST.op_Bang deps in d :: uu____721 in
+                FStar_ST.op_Colon_Equals deps uu____718
               else () in
             let working_map = FStar_Util.smap_copy original_map in
             let record_open_module let_open lid =
@@ -416,7 +416,7 @@ let collect_one:
                                       FStar_String.lowercase uu____1403 in
                                     (FStar_String.lowercase m) = uu____1402 in
                                   if uu____1401
-                                  then FStar_ST.write r true
+                                  then FStar_ST.op_Colon_Equals r true
                                   else ()) verify_flags);
                     collect_decls decls)
                | FStar_Parser_AST.Interface (lid,decls,uu____1513) ->
@@ -451,7 +451,7 @@ let collect_one:
                                       FStar_String.lowercase uu____1776 in
                                     (FStar_String.lowercase m) = uu____1775 in
                                   if uu____1774
-                                  then FStar_ST.write r true
+                                  then FStar_ST.op_Colon_Equals r true
                                   else ()) verify_flags);
                     collect_decls decls)
              and collect_decls decls =
@@ -509,7 +509,7 @@ let collect_one:
                | FStar_Parser_AST.TopLevelModule lid ->
                    (FStar_Util.incr num_of_toplevelmods;
                     (let uu____2019 =
-                       let uu____2020 = FStar_ST.read num_of_toplevelmods in
+                       let uu____2020 = FStar_ST.op_Bang num_of_toplevelmods in
                        uu____2020 > (Prims.parse_int "1") in
                      if uu____2019
                      then
@@ -722,7 +722,7 @@ let collect_one:
                     collect_term t2) in
              let uu____2667 = FStar_Parser_Driver.parse_file filename in
              match uu____2667 with
-             | (ast,uu____2681) -> (collect_file ast; FStar_ST.read deps))
+             | (ast,uu____2681) -> (collect_file ast; FStar_ST.op_Bang deps))
 let print_graph:
   'Auu____2731 .
     (Prims.string Prims.list,'Auu____2731) FStar_Pervasives_Native.tuple2
@@ -876,9 +876,9 @@ let collect:
                       FStar_List.unique uu____3248 in
                     FStar_Util.smap_add graph key (all_deps, Black);
                     (let uu____3274 =
-                       let uu____3277 = FStar_ST.read topologically_sorted in
+                       let uu____3277 = FStar_ST.op_Bang topologically_sorted in
                        key :: uu____3277 in
-                     FStar_ST.write topologically_sorted uu____3274);
+                     FStar_ST.op_Colon_Equals topologically_sorted uu____3274);
                     all_deps))) in
        let discover1 = discover [] in
        let must_find k =
@@ -942,14 +942,14 @@ let collect:
                      FStar_List.append uu____3562 suffix in
                    (f, deps_as_filenames)) as_list) uu____3450 in
        let topologically_sorted1 =
-         let uu____3570 = FStar_ST.read topologically_sorted in
+         let uu____3570 = FStar_ST.op_Bang topologically_sorted in
          FStar_List.collect must_find_r uu____3570 in
        FStar_List.iter
          (fun uu____3674  ->
             match uu____3674 with
             | (m1,r) ->
                 let uu____3855 =
-                  (let uu____3858 = FStar_ST.read r in
+                  (let uu____3858 = FStar_ST.op_Bang r in
                    Prims.op_Negation uu____3858) &&
                     (let uu____3966 = FStar_Options.interactive () in
                      Prims.op_Negation uu____3966) in

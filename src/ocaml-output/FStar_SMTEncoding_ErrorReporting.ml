@@ -53,7 +53,7 @@ let fresh_label:
         let l =
           FStar_Util.incr ctr;
           (let uu____272 =
-             let uu____273 = FStar_ST.read ctr in
+             let uu____273 = FStar_ST.op_Bang ctr in
              FStar_Util.string_of_int uu____273 in
            FStar_Util.format1 "label_%s" uu____272) in
         let lvar = (l, FStar_SMTEncoding_Term.Bool_sort) in

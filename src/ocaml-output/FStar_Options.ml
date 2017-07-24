@@ -69,11 +69,11 @@ let uu___is_Restore: options -> Prims.bool =
     match projectee with | Restore  -> true | uu____158 -> false
 let __unit_tests__: Prims.bool FStar_ST.ref = FStar_Util.mk_ref false
 let __unit_tests: Prims.unit -> Prims.bool =
-  fun uu____171  -> FStar_ST.read __unit_tests__
+  fun uu____171  -> FStar_ST.op_Bang __unit_tests__
 let __set_unit_tests: Prims.unit -> Prims.unit =
-  fun uu____185  -> FStar_ST.write __unit_tests__ true
+  fun uu____185  -> FStar_ST.op_Colon_Equals __unit_tests__ true
 let __clear_unit_tests: Prims.unit -> Prims.unit =
-  fun uu____199  -> FStar_ST.write __unit_tests__ false
+  fun uu____199  -> FStar_ST.op_Colon_Equals __unit_tests__ false
 let as_bool: option_val -> Prims.bool =
   fun uu___49_213  ->
     match uu___49_213 with
@@ -114,27 +114,28 @@ type optionstate = option_val FStar_Util.smap
 let fstar_options: optionstate Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let peek: Prims.unit -> optionstate =
   fun uu____303  ->
-    let uu____304 = FStar_ST.read fstar_options in FStar_List.hd uu____304
+    let uu____304 = FStar_ST.op_Bang fstar_options in FStar_List.hd uu____304
 let pop: Prims.unit -> Prims.unit =
   fun uu____328  ->
-    let uu____329 = FStar_ST.read fstar_options in
+    let uu____329 = FStar_ST.op_Bang fstar_options in
     match uu____329 with
     | [] -> failwith "TOO MANY POPS!"
     | uu____350::[] -> failwith "TOO MANY POPS!"
-    | uu____351::tl1 -> FStar_ST.write fstar_options tl1
+    | uu____351::tl1 -> FStar_ST.op_Colon_Equals fstar_options tl1
 let push: Prims.unit -> Prims.unit =
   fun uu____376  ->
     let uu____377 =
       let uu____380 =
         let uu____383 = peek () in FStar_Util.smap_copy uu____383 in
-      let uu____386 = FStar_ST.read fstar_options in uu____380 :: uu____386 in
-    FStar_ST.write fstar_options uu____377
+      let uu____386 = FStar_ST.op_Bang fstar_options in uu____380 ::
+        uu____386 in
+    FStar_ST.op_Colon_Equals fstar_options uu____377
 let set: optionstate -> Prims.unit =
   fun o  ->
-    let uu____433 = FStar_ST.read fstar_options in
+    let uu____433 = FStar_ST.op_Bang fstar_options in
     match uu____433 with
     | [] -> failwith "set on empty option stack"
-    | uu____454::os -> FStar_ST.write fstar_options (o :: os)
+    | uu____454::os -> FStar_ST.op_Colon_Equals fstar_options (o :: os)
 let set_option: Prims.string -> option_val -> Prims.unit =
   fun k  ->
     fun v1  -> let uu____484 = peek () in FStar_Util.smap_add uu____484 k v1
@@ -148,8 +149,9 @@ let light_off_files: Prims.string Prims.list FStar_ST.ref =
 let add_light_off_file: Prims.string -> Prims.unit =
   fun filename  ->
     let uu____535 =
-      let uu____538 = FStar_ST.read light_off_files in filename :: uu____538 in
-    FStar_ST.write light_off_files uu____535
+      let uu____538 = FStar_ST.op_Bang light_off_files in filename ::
+        uu____538 in
+    FStar_ST.op_Colon_Equals light_off_files uu____535
 let defaults:
   (Prims.string,option_val) FStar_Pervasives_Native.tuple2 Prims.list =
   [("__temp_no_proj", (List []));
@@ -245,8 +247,8 @@ let init: Prims.unit -> Prims.unit =
 let clear: Prims.unit -> Prims.unit =
   fun uu____946  ->
     let o = FStar_Util.smap_create (Prims.parse_int "50") in
-    FStar_ST.write fstar_options [o];
-    FStar_ST.write light_off_files [];
+    FStar_ST.op_Colon_Equals fstar_options [o];
+    FStar_ST.op_Colon_Equals light_off_files [];
     init ()
 let _run: Prims.unit = clear ()
 let get_option: Prims.string -> option_val =
@@ -460,11 +462,11 @@ let _commit: Prims.string FStar_ST.ref = FStar_Util.mk_ref ""
 let display_version: Prims.unit -> Prims.unit =
   fun uu____1552  ->
     let uu____1553 =
-      let uu____1554 = FStar_ST.read _version in
-      let uu____1565 = FStar_ST.read _platform in
-      let uu____1576 = FStar_ST.read _compiler in
-      let uu____1587 = FStar_ST.read _date in
-      let uu____1598 = FStar_ST.read _commit in
+      let uu____1554 = FStar_ST.op_Bang _version in
+      let uu____1565 = FStar_ST.op_Bang _platform in
+      let uu____1576 = FStar_ST.op_Bang _compiler in
+      let uu____1587 = FStar_ST.op_Bang _date in
+      let uu____1598 = FStar_ST.op_Bang _commit in
       FStar_Util.format5
         "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" uu____1554
         uu____1565 uu____1576 uu____1587 uu____1598 in
@@ -1100,15 +1102,15 @@ let parse_cmd_line:
       FStar_Getopt.parse_cmdline uu____3626
         (fun i  ->
            let uu____3632 =
-             let uu____3635 = FStar_ST.read file_list_ in
+             let uu____3635 = FStar_ST.op_Bang file_list_ in
              FStar_List.append uu____3635 [i] in
-           FStar_ST.write file_list_ uu____3632) in
+           FStar_ST.op_Colon_Equals file_list_ uu____3632) in
     let uu____3674 =
-      let uu____3677 = FStar_ST.read file_list_ in
+      let uu____3677 = FStar_ST.op_Bang file_list_ in
       FStar_List.map FStar_Common.try_convert_file_name_to_mixed uu____3677 in
     (res, uu____3674)
 let file_list: Prims.unit -> Prims.string Prims.list =
-  fun uu____3705  -> FStar_ST.read file_list_
+  fun uu____3705  -> FStar_ST.op_Bang file_list_
 let restore_cmd_line_options: Prims.bool -> FStar_Getopt.parse_cmdline_res =
   fun should_clear  ->
     let old_verify_module = get_verify_module () in
@@ -1300,7 +1302,7 @@ let extract_all: Prims.unit -> Prims.bool =
   fun uu____4017  -> get_extract_all ()
 let fs_typ_app: Prims.string -> Prims.bool =
   fun filename  ->
-    let uu____4022 = FStar_ST.read light_off_files in
+    let uu____4022 = FStar_ST.op_Bang light_off_files in
     FStar_List.contains filename uu____4022
 let full_context_dependency: Prims.unit -> Prims.bool =
   fun uu____4046  -> true

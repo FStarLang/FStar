@@ -107,9 +107,9 @@ let gen_wps_for_free:
                 match uu____256 with
                 | (sigelt,fv) ->
                     ((let uu____264 =
-                        let uu____267 = FStar_ST.read sigelts in sigelt ::
+                        let uu____267 = FStar_ST.op_Bang sigelts in sigelt ::
                           uu____267 in
-                      FStar_ST.write sigelts uu____264);
+                      FStar_ST.op_Colon_Equals sigelts uu____264);
                      fv) in
               let binders_of_list1 =
                 FStar_List.map
@@ -1276,7 +1276,7 @@ let gen_wps_for_free:
                     else ());
                    (let c = FStar_Syntax_Subst.close binders in
                     let uu____2670 =
-                      let uu____2673 = FStar_ST.read sigelts in
+                      let uu____2673 = FStar_ST.op_Bang sigelts in
                       FStar_List.rev uu____2673 in
                     let uu____2708 =
                       let uu___104_2709 = ed in

@@ -727,7 +727,7 @@ let run_tactic_on_typ:
                          ((Prims.strcat "EXCEPTION: " s), ps) in
                  (match r with
                   | FStar_Tactics_Basic.Success (uu____1630,ps1) ->
-                      ((let uu____1633 = FStar_ST.read tacdbg in
+                      ((let uu____1633 = FStar_ST.op_Bang tacdbg in
                         if uu____1633
                         then
                           let uu____1644 =
@@ -997,8 +997,8 @@ let preprocess:
     fun goal  ->
       (let uu____2731 =
          FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac") in
-       FStar_ST.write tacdbg uu____2731);
-      (let uu____2743 = FStar_ST.read tacdbg in
+       FStar_ST.op_Colon_Equals tacdbg uu____2731);
+      (let uu____2743 = FStar_ST.op_Bang tacdbg in
        if uu____2743
        then
          let uu____2754 =
@@ -1013,7 +1013,7 @@ let preprocess:
        let uu____2785 = traverse by_tactic_interp Pos env goal in
        match uu____2785 with
        | (t',gs) ->
-           ((let uu____2807 = FStar_ST.read tacdbg in
+           ((let uu____2807 = FStar_ST.op_Bang tacdbg in
              if uu____2807
              then
                let uu____2818 =
@@ -1046,7 +1046,7 @@ let preprocess:
                                     uu____2916 in
                                 failwith uu____2915
                             | FStar_Pervasives_Native.Some phi -> phi in
-                          ((let uu____2919 = FStar_ST.read tacdbg in
+                          ((let uu____2919 = FStar_ST.op_Bang tacdbg in
                             if uu____2919
                             then
                               let uu____2930 = FStar_Util.string_of_int n1 in
@@ -1100,7 +1100,7 @@ let synth:
       fun tau  ->
         (let uu____3032 =
            FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac") in
-         FStar_ST.write tacdbg uu____3032);
+         FStar_ST.op_Colon_Equals tacdbg uu____3032);
         (let uu____3043 =
            let uu____3050 =
              let uu____3053 = reify_tactic tau in

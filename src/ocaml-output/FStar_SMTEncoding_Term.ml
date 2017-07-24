@@ -477,14 +477,16 @@ let rec freevars:
     | Let (es,body) -> FStar_List.collect freevars (body :: es)
 let free_variables: term -> fvs =
   fun t  ->
-    let uu____1504 = FStar_ST.read t.freevars in
+    let uu____1504 = FStar_ST.op_Bang t.freevars in
     match uu____1504 with
     | FStar_Pervasives_Native.Some b -> b
     | FStar_Pervasives_Native.None  ->
         let fvs =
           let uu____1577 = freevars t in
           FStar_Util.remove_dups fv_eq uu____1577 in
-        (FStar_ST.write t.freevars (FStar_Pervasives_Native.Some fvs); fvs)
+        (FStar_ST.op_Colon_Equals t.freevars
+           (FStar_Pervasives_Native.Some fvs);
+         fvs)
 let qop_to_string: qop -> Prims.string =
   fun uu___89_1628  ->
     match uu___89_1628 with | Forall  -> "forall" | Exists  -> "exists"
@@ -950,7 +952,7 @@ let abstr: fv Prims.list -> term -> term =
             FStar_Pervasives_Native.Some
               (nvars - (i + (Prims.parse_int "1"))) in
       let rec aux ix t1 =
-        let uu____2862 = FStar_ST.read t1.freevars in
+        let uu____2862 = FStar_ST.op_Bang t1.freevars in
         match uu____2862 with
         | FStar_Pervasives_Native.Some [] -> t1
         | uu____2923 ->
@@ -1440,7 +1442,7 @@ let termToSmt: Prims.string -> term -> Prims.string =
       let next_qid =
         let ctr = FStar_Util.mk_ref (Prims.parse_int "0") in
         fun depth  ->
-          let n1 = FStar_ST.read ctr in
+          let n1 = FStar_ST.op_Bang ctr in
           FStar_Util.incr ctr;
           if n1 = (Prims.parse_int "0")
           then enclosing_name
