@@ -225,15 +225,30 @@ val lemma_disjoint_emp (h1:heap) (h2:heap)
 
 val lemma_join_emp (h1:heap) (h2:heap)
   :Lemma (requires (equal h2 emp))
-         (ensures (disjoint h1 h2 /\ equal (join h1 h2) h1))
-	 [SMTPat(join h1 h2)]
+         (ensures (equal h1 (join h1 h2)))
+	 [SMTPat (join h1 h2)]
 
-val lemma_join_is_comm (h1:heap) (h2:heap)
-  :Lemma (requires True)
-         (ensures (equal (join h1 h2) (join h2 h1)))
-	 [SMTPat (join h1 h2); SMTPat(join h2 h1)]
-
-val lemma_disjoint_is_comm (h1:heap) (h2:heap)
+val lemma_disjoint_comm (h1:heap) (h2:heap)
   :Lemma (requires True)
          (ensures (disjoint h1 h2) <==> (disjoint h2 h1))
-	 [SMTPat (disjoint h1 h2); SMTPat(disjoint h2 h1)]
+	 [SMTPat (disjoint h1 h2)]
+
+val lemma_join_comm (h1:heap) (h2:heap)
+  :Lemma (requires True)
+         (ensures (equal (join h1 h2) (join h2 h1)))
+	 [SMTPat (join h1 h2)]
+
+val lemma_subheap_disj (h1:heap) (h2:heap) (h3:heap)
+  :Lemma (requires (disjoint h1 (join h2 h3) /\ disjoint h2 h3))
+         (ensures (disjoint h1 h2) /\ (disjoint h1 h3))
+	 [SMTPat (disjoint h1 (join h2 h3)); SMTPatT (disjoint h2 h3)]
+
+val lemma_heapjoin_disj (h1:heap) (h2:heap) (h3:heap)
+  :Lemma (requires (disjoint h1 h2) /\ (disjoint h1 h3))
+         (ensures (disjoint h1 (join h2 h3)))
+	 [SMTPat (disjoint h1 (join h2 h3))]
+
+val lemma_join_assoc (h1:heap) (h2:heap) (h3:heap)
+  :Lemma (requires disjoint h1 h2 /\ disjoint h1 h3 /\ disjoint h2 h3)
+         (ensures (equal (join h1 (join h2 h3)) (join (join h1 h2) h3)))
+	 [SMTPat (join h1 (join h2 h3))]

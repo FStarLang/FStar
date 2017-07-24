@@ -84,6 +84,7 @@ let join_tot h1 h2 =
                               | (Some v1, None) -> Some v1 
 			      | (None, Some v2) -> Some v2
 			      | (None, None) -> None) in
+
   if (h1.next_addr < h2.next_addr)
   then { h2 with memory = heap_memory }
   else { h1 with memory = heap_memory }
@@ -93,7 +94,7 @@ let join h1 h2 =
   if FStar.StrongExcludedMiddle.strong_excluded_middle (disjoint h1 h2) 
   then join_tot h1 h2
   else emp
-  
+
 (*
  * update of a well-typed reference
  *)
@@ -200,5 +201,8 @@ let lemma_join_unused #a h1 h2 r = ()
 let lemma_join_sel #a h1 h2 r = ()
 let lemma_disjoint_emp h1 h2 = ()
 let lemma_join_emp h1 h2 = ()
-let lemma_join_is_comm h1 h2 = ()
-let lemma_disjoint_is_comm h1 h2 = ()
+let lemma_disjoint_comm h1 h2 = ()
+let lemma_join_comm h1 h2 = ()
+let lemma_subheap_disj h1 h2 h3 = ()
+let lemma_heapjoin_disj h1 h2 h3 = ()
+let lemma_join_assoc h1 h2 h3 = ()
