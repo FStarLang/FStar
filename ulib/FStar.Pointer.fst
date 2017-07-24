@@ -421,6 +421,31 @@ let struct_sel (#l: struct_typ) (s: struct l) (f: struct_field l) : Tot (type_of
 let struct_upd (#l: struct_typ) (s: struct l) (f: struct_field l) (v: type_of_struct_field l f) : Tot (struct l) =
   DM.upd s f v
 
+let dfst_struct_field
+  (s: struct_typ)
+  (p: (x: struct_field s & type_of_struct_field s x))
+: Tot string
+=
+  let (| f, _ |) = p in
+  f
+
+let fun_of_list
+  (s: struct_typ)
+  (l: list (x: struct_field s & type_of_struct_field s x) {
+    normalize_term (
+      List.Tot.sortWith FStar.String.compare (List.Tot.map fst s) =
+      List.Tot.sortWith FStar.String.compare
+        (List.Tot.map (dfst_struct_field s) l)
+    ) == true
+  })
+  (f: struct_field s)
+: Tot (type_of_struct_field s f)
+=
+  let f' : string = f in
+  match List.Tot.find (fun p -> dfst_struct_field s p = f') l with
+  | Some p -> let (| _, v |) = p in v
+  | None -> admit () (* impossible: TODO: prove it *)
+
 let struct_create (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
   DM.create #(struct_field l) #(type_of_struct_field l) f
 
