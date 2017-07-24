@@ -107,12 +107,18 @@ let validate_u16_array_st : stateful_validator parse_u16_array = fun input ->
     end
   | None -> None
 
+inline_for_extraction
+let u32_array_bound: U32.t = 4294967291ul
+
+let u32_array_bound_is (_:unit) :
+  Lemma (U32.v u32_array_bound = pow2 32 - 4 - 1) = ()
+
 let validate_u32_array_st : stateful_validator parse_u32_array = fun input ->
   match parse_u32_st input with
   | Some (n, off) -> begin
       // we have to make sure that the total length we compute doesn't overflow
       // a U32.t to correctly check if the input is long enough
-      if U32.gte n (U32.uint_to_t (pow2 32 - 4 - 1)) then None
+      if U32.gte n u32_array_bound then None
       else begin
         assert (U32.v n + U32.v off < pow2 32);
         let total_len = U32.add n off in
