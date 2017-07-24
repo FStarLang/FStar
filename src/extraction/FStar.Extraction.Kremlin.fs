@@ -98,7 +98,8 @@ and expr =
   | ECons of typ * ident * list<expr>
   | EBufFill of expr * expr * expr
   | EString of string
-  | EFun of list<binder> * expr
+  | EFun of list<binder> * expr * typ
+  | EAbortS of string
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -159,7 +160,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 20
+let current_version: version = 21
 
 type file = string * program
 type binary_format = version * list<file>
@@ -678,7 +679,7 @@ and translate_expr env e: expr =
   | MLE_Fun (args, body) ->
       let binders = translate_binders env args in
       let env = add_binders env args in
-      EFun (binders, translate_expr env body)
+      EFun (binders, translate_expr env body, translate_type env body.mlty)
 
   | MLE_If (e1, e2, e3) ->
       EIfThenElse (translate_expr env e1, translate_expr env e2, (match e3 with
