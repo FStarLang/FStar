@@ -1539,12 +1539,16 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let m, o = head_matches_delta env wl t1 t2 in
         match m, o  with
             | (MisMatch _, _) -> //heads definitely do not match
-                let may_relate head =
-                    match (U.un_uinst head).n with
+                let rec may_relate head =
+                    match (SS.compress head).n with
                     | Tm_name _
                     | Tm_match _ -> true
                     | Tm_fvar tc -> tc.fv_delta = Delta_equational
-                    | _ -> false  in
+                    | Tm_ascribed (t, _, _)
+                    | Tm_uinst (t, _)
+                    | Tm_meta (t, _) -> may_relate t
+                    | _ -> false
+                in
                 if (may_relate head1 || may_relate head2) && wl.smt_ok
                 then let guard =
                         if problem.relation = EQ
