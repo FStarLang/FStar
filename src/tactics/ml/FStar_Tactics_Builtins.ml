@@ -88,8 +88,7 @@ let __rewrite (h: RT.binder): unit __tac = from_tac_1 B.rewrite h
 let rewrite: RT.binder -> unit -> unit __tac = fun b  -> fun () -> __rewrite b
 
 let __smt: unit __tac = from_tac_0 B.smt
-(*this is probably unnecessary? also change in Builtins.fst *)
-let smt: unit -> unit -> unit __tac = fun () -> fun ()  -> __smt
+let smt: unit -> unit __tac = fun ()  -> __smt
 
 let __divide (n:int) (f: 'a __tac) (g: 'b __tac): ('a * 'b) __tac = from_tac_3 B.divide n (to_tac_0 f) (to_tac_0 g)
 let divide: int -> 'a E.tactic -> 'b E.tactic -> ('a * 'b) E.tactic = fun n f g -> fun () -> __divide n (E.reify_tactic f) (E.reify_tactic g)
