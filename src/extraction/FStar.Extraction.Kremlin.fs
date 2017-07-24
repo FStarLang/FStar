@@ -378,7 +378,7 @@ and translate_decl env d: option<decl> =
         with e ->
           let msg = BU.print_exn e in
           BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) msg;
-          let msg = "This function was not extracted:|n" ^ msg in
+          let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg))
       end
 
