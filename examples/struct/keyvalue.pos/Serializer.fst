@@ -141,13 +141,13 @@ let ser_u32 v = fun buf ->
 // this is really a coercion that lifts a pure bytes serializer to one that
 // takes an input buffer (and ignores it)
 // this is a higher-order combinator that needs to be inlined
-inline_for_extraction [@"substitute"]
+[@"substitute"]
 let ser_input (input:bslice) (#b:bytes) (s:serializer b) : serializer_1 input (fun _ -> b) =
     fun buf -> s buf
 
 // coercion to increase the size of the inputs set
 // this is a higher-order combinator that needs to be inlined
-inline_for_extraction [@"substitute"]
+[@"substitute"]
 let ser_inputs (#inputs1:TSet.set bslice)
                (inputs2:TSet.set bslice{TSet.subset inputs1 inputs2})
                (#b: buffer_fun inputs1)
@@ -196,7 +196,7 @@ let ser_append (#inputs1 #inputs2:TSet.set bslice)
 
 #reset-options
 
-inline_for_extraction unfold [@"substitute"]
+[@"substitute"]
 val ser_copy : data:bslice -> serializer_1 data (fun h -> as_seq h data)
 let ser_copy data = fun buf ->
   if U32.lt buf.len data.len then None
@@ -209,7 +209,7 @@ let ser_copy data = fun buf ->
 let enc_u16_array_st (a: u16_array_st) (h:mem{live h a.a16_st}) : GTot bytes =
     u16_to_be a.len16_st `append` as_seq h a.a16_st
 
-inline_for_extraction unfold [@"substitute"]
+// inline_for_extraction unfold [@"substitute"]
 val ser_u16_array : a:u16_array_st ->
   serializer_any (TSet.singleton a.a16_st) (fun h -> enc_u16_array_st a h)
 let ser_u16_array a =
