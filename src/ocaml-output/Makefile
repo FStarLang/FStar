@@ -189,6 +189,9 @@ NAME=fstar_$(VERSION)_$(PLATFORM)
 fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
           tar -x -C $(PREFIX)
 
+# Similar, but exports every file instead of only those in version control.
+fexport-all = cp -a ../../$(1) $(PREFIX)/$(1)
+
 ifeq ($(OS),Windows_NT)
   Z3_NAME=z3.exe
 else
@@ -215,7 +218,9 @@ package: all ulib
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
-	$(call fexport,bin/fstarlib)
+	$(call fexport-all,bin/fstarlib)
+	touch $(PREFIX)/ulib/.mgen
+
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial
