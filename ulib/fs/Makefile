@@ -8,10 +8,10 @@ endif
 
 BIN=../../bin
 
-FS_LIBS=$(BIN)/FSharp.PowerPack.dll
+FS_LIBS=
 
 all: $(ALL_FILES)
-	 	$(FSC) --nowarn:0086 -a $^
+		$(FSC) --nowarn:0086 -a $^
 
 clean:
 		rm -f *dll *exe

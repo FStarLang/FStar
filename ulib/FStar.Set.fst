@@ -162,3 +162,8 @@ let lemma_intersect_remove_elt (#a:eqtype) (s:set a) (x:a) :
   let s'' = s' `intersect` s in
   lemma_equal_intro s'' s' ;
   lemma_equal_elim s'' s'
+
+let lemma_disjoint_subset (#a:eqtype) (s1:set a) (s2:set a) (s3:set a)
+  : Lemma (requires (disjoint s1 s2 /\ subset s3 s1))
+    (ensures  (disjoint s3 s2))
+= lemma_equal_intro (s3 `intersect` s2) empty

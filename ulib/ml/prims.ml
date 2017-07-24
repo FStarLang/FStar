@@ -29,11 +29,13 @@ type nat       = int
 type pos       = int
 type 'd b2t    = unit
 
+type 'a squash = unit
+
 type (' p, ' q) c_or =
   | Left of ' p
   | Right of ' q
 
-type (' p, ' q) l_or = (' p, ' q) c_or
+type (' p, ' q) l_or = ('p, 'q) c_or squash
 
 let uu___is_Left = function Left _ -> true | Right _ -> false
 
@@ -42,22 +44,24 @@ let uu___is_Right = function Left _ -> false | Right _ -> true
 type (' p, ' q) c_and =
 | And of ' p * ' q
 
-type (' p, ' q) l_and = (' p, ' q) c_and
+type (' p, ' q) l_and = ('p, 'q) c_and squash
 
 let uu___is_And _ = true
 
-type 'a squash = unit
 
-type l_True =
+type c_True =
   | T
+
+type l_True = c_True squash
 
 let uu___is_T _ = true
 
-type l_False = unit
+type c_False = unit
 (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
        are no constructors and generate this type abbreviation*)
+type l_False = c_False squash
 
-type (' p, ' q) l_imp = ' p  ->  ' q
+type (' p, ' q) l_imp = ('p -> 'q) squash
 
 type (' p, ' q) l_iff = ((' p, ' q) l_imp, (' q, ' p) l_imp) l_and
 
@@ -80,6 +84,11 @@ let _assert x = ()
 let magic () = failwith "no magic"
 let unsafe_coerce x = Obj.magic x
 let op_Negation x = not x
+
+let range_0 = ()
+let range_of _ = ()
+let mk_range _ _ _ _ _ = ()
+let set_range_of x = x
 
 (* for partially variants of the operators *)
 let op_Multiply x y = x * y

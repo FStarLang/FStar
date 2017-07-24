@@ -37,8 +37,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.Exceptions.EXN", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Exceptions.EXN", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Exceptions.uu___is_Division_by_zero",
       1,
@@ -137,7 +135,7 @@
         "data_typing_intro_FStar.Pervasives.Inr@tok",
         "equality_tok_FStar.DM4F.Exceptions.Division_by_zero@tok",
         "function_token_typing_Prims.exn", "function_token_typing_Prims.int",
-        "int_inversion", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Equality",
         "typing_tok_FStar.DM4F.Exceptions.Division_by_zero@tok"
       ],
       0

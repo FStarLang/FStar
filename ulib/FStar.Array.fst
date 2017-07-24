@@ -183,7 +183,7 @@ val blit_aux:
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     Seq.index (sel h1 t) i == Seq.index (sel h0 t) i) ))
 
-#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 10"
+#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 20"
 let rec blit_aux #a s s_idx t t_idx len ctr =
   match len - ctr with
   | 0 -> ()

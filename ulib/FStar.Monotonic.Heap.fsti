@@ -5,8 +5,8 @@ module TS = FStar.TSet
 
 open FStar.Preorder
 
-type set  = Set.set
-type tset = TSet.set
+let set  = Set.set
+let tset = TSet.set
 
 val heap :Type u#1
 
@@ -29,6 +29,8 @@ val compare_addrs:
   r1:mref a rel1 -> r2:mref b rel2 -> Tot (b:bool{b = (addr_of r1 = addr_of r2)})
 
 val contains: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> Type0
+
+val addr_unused_in: nat -> heap -> Type0
 
 val unused_in: #a:Type0 -> #rel:preorder a -> mref a rel -> heap -> Type0
 
@@ -73,6 +75,11 @@ let modifies (s:set nat) (h0:heap) (h1:heap) = modifies_t (TS.tset_of_set s) h0 
 let equal_dom (h1:heap) (h2:heap) :GTot Type0 =
   (forall (a:Type0) (rel:preorder a) (r:mref a rel). h1 `contains` r <==> h2 `contains` r) /\
   (forall (a:Type0) (rel:preorder a) (r:mref a rel). r `unused_in` h1 <==> r `unused_in` h2)
+
+val lemma_ref_unused_iff_addr_unused (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
+  :Lemma (requires True)
+         (ensures  (r `unused_in` h <==> addr_of r `addr_unused_in` h))
+	 [SMTPatOr [[SMTPat (r `unused_in` h)]; [SMTPat (addr_of r `addr_unused_in` h)]]]
 
 val lemma_contains_implies_used (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
   :Lemma (requires (h `contains` r))

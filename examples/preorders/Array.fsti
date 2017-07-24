@@ -27,6 +27,7 @@ let prefix (#a:Type) (#n:nat) (x:array n a) (i:index x) :array i a = sub x 0 i
 
 (*  [h.[x]] : View a possibly uninitialized array `x` in state `h` as a sequence *)
 val op_String_Access : #a:Type -> #n:nat -> heap -> array n a -> GTot (s:Seq.seq (option a){Seq.length s == n})
+val as_seq : #a:Type -> #n:nat -> heap -> array n a -> GTot (s:Seq.seq (option a){Seq.length s == n})
 
 (* [x `init_at` i]: a predicate claiming that `x` is initialized at `i` *)
 val init_at: #a:Type -> #n:nat -> x:array n a -> i:index x -> Type0

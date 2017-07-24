@@ -9,8 +9,10 @@ Usage: python2 cleanup.py [fname.clean] < [fname.dirty]
 import io
 import json
 import sys
+import re
 
 def cleanup_one(line):
+    line = re.sub(r"\bu[0-9][0-9]+\b", "u[...]", line)
     try:
         return json.dumps(json.loads(line), ensure_ascii=False, sort_keys=True) + "\n"
     except:

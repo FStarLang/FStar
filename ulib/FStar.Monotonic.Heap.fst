@@ -42,7 +42,9 @@ let contains #a #rel h r =
   (let Some (| a1, pre_opt, _ |) = h.memory r.addr in
    a == a1 /\ Some? pre_opt /\ Some?.v pre_opt === rel)  //using `===` here, since otherwise typechecker fails with a and a1 being different types, why?
 
-let unused_in #a #rel r h = None? (h.memory r.addr)
+let addr_unused_in n h = None? (h.memory n)
+
+let unused_in #a #rel r h = addr_unused_in (addr_of r) h
 
 let sel_tot #a #rel h r =
   let Some (| _, _, x |) = h.memory r.addr in
@@ -153,6 +155,7 @@ private let lemma_alloc_fresh_test (#a:Type) (rel:preorder a) (h0:heap) (x:a) (m
           fresh r h0 h1 /\ modifies Set.empty h0 h1)
   = ()
 
+let lemma_ref_unused_iff_addr_unused #a #rel h r = ()
 let lemma_contains_implies_used #a #rel h r = ()
 let lemma_distinct_addrs_distinct_types #a #b #rel1 #rel2 h r1 r2 = ()
 let lemma_distinct_addrs_distinct_preorders #a #rel1 #rel2 h r1 r2 = ()
