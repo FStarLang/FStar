@@ -141,8 +141,6 @@ unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (
 sub_effect DIV ~> EXN = lift_div_exn
 effect Ex (a:Type) = Exn a True (fun v -> True)
 
-assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
-
 let all_pre_h  (h:Type)           = h -> GTot Type0
 let all_post_h (h:Type) (a:Type)  = result a -> h -> GTot Type0
 let all_wp_h   (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)

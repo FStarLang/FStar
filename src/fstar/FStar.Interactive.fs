@@ -17,6 +17,7 @@
 
 module FStar.Interactive
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Range

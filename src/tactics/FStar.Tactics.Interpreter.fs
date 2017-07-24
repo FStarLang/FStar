@@ -2,6 +2,7 @@
 module FStar.Tactics.Interpreter
 open FStar
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util

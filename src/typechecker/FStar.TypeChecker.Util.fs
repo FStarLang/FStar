@@ -18,6 +18,7 @@
 
 module FStar.TypeChecker.Util
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Util
