@@ -87,3 +87,18 @@ assume val dlem : squash True -> squash True -> squash True
 
 let _ = assert_by_tactic (apply (quote dlem);; divide 1 (trivial;; qed) (trivial;; qed);; qed) True
 let _ = assert_by_tactic (apply (quote dlem);; focus (trivial;; qed);; focus (trivial;; qed);; qed) True
+
+open FStar.Order
+
+let _ = assert_by_tactic trivial (Lt = Lt)
+let _ = assert_by_tactic trivial (Gt = Gt)
+let _ = assert_by_tactic trivial (Eq = Eq)
+let _ = assert_by_tactic trivial (Lt <> Eq)
+let _ = assert_by_tactic trivial (Gt <> Lt)
+let _ = assert_by_tactic trivial (Eq <> Gt)
+let _ = assert_by_tactic trivial (ge Gt)
+let _ = assert_by_tactic trivial (ge Eq)
+let _ = assert_by_tactic trivial (le Lt)
+let _ = assert_by_tactic trivial (le Eq)
+let _ = assert_by_tactic trivial (ne Lt)
+let _ = assert_by_tactic trivial (ne Gt)
