@@ -202,14 +202,16 @@ let parse_many_next (#t:Type) (p:parser t) (n:nat{n>0}) (bs:bytes) :
                     vs' == List.tail vs)))) =
   ()
 
-val parse_one_entry : n:nat{n>0} -> input:bslice -> ST (entry_st * off:U32.t{U32.v off <= U32.v input.len})
+val parse_one_entry : n:U32.t{U32.v n > 0} -> input:bslice -> ST (entry_st * off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
+                     let n = U32.v n in
                      Some? (parse_many parse_entry n bs))))
   (ensures (fun h0 r h1 -> live h1 input /\
                         h0 == h1 /\
                         begin
                           let bs = as_seq h1 input in
+                          let n:(n:nat{n > 0}) = U32.v n in
                           Some? (parse_many parse_entry n bs) /\
                           begin
                             let (vs, _) = Some?.v (parse_many parse_entry n bs) in
@@ -228,7 +230,7 @@ val parse_one_entry : n:nat{n>0} -> input:bslice -> ST (entry_st * off:U32.t{U32
 let parse_one_entry n input =
   (let h = get() in
    let bs = as_seq h input in
-   parse_many_next parse_entry n bs);
+   parse_many_next parse_entry (U32.v n) bs);
   parse_entry_st_nochk input
 
 #reset-options "--z3rlimit 20"
@@ -254,29 +256,32 @@ val fold_left_buffer_n_mut_st: #t:Type ->
                           as_seq h0 input == as_seq h1 input /\
                           r == f_spec acc (as_entry h1 e))))) ->
   input:bslice{bslice_prefix input (full_input ())} ->
-  acc:t -> n:nat -> ST t
+  acc:t -> n:U32.t -> ST t
   (requires (fun h0 -> live h0 (full_input ()) /\
                     (let bs = as_seq h0 input in
+                    let n = U32.v n in
                     Some? (parse_many parse_entry n bs))))
   (ensures (fun h0 r h1 -> rel h0 h1 /\
                         live h0 (full_input ()) /\
                         live h1 (full_input ()) /\
                         as_seq h0 (full_input ()) == as_seq h1 (full_input ()) /\
                         (let bs = as_seq h1 input in
+                        let n = U32.v n in
                         Some? (parse_many parse_entry n bs) /\
                         r == fold_left_store_n f_spec acc (parse_result (parse_many parse_entry n bs)) n)))
 let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
-    match n with
-    | 0 -> acc
-    | _ -> begin
+    if U32.eq n 0ul then acc
+    else  begin
       let h0 = get() in
       let (e, off) = parse_one_entry n input in
       let input' = advance_slice input off in
-      let n':nat = n-1 in
+      let n' = U32.sub n 1ul in
       let acc' = f acc e in
       let h1 = get() in
       (let bs1 = as_seq h1 input in
         let bs1' = as_seq h1 input' in
+        let n = U32.v n in
+        let n' = U32.v n' in
         assert (Some? (parse_many parse_entry n' bs1') /\
                 parse_result (parse_many parse_entry n' bs1') ==
                 List.tail (parse_result (parse_many parse_entry n bs1))));
@@ -290,9 +295,9 @@ let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
       assert (bs0 == bs2);
       assert (live h1 (full_input ()));
       assert (as_seq h0 (full_input ()) == as_seq h2 (full_input ()));
-      assert (Some? (parse_many parse_entry n' bs2') /\
-              parse_result (parse_many parse_entry n' bs2') ==
-              List.tail (parse_result (parse_many parse_entry n bs2)));
+      assert (Some? (parse_many parse_entry (U32.v n') bs2') /\
+              parse_result (parse_many parse_entry (U32.v n') bs2') ==
+              List.tail (parse_result (parse_many parse_entry (U32.v n) bs2)));
       // TODO: this call doesn't work
       //fold_left_store_n_unfold1 f_spec acc (parse_result (parse_many parse_entry n' bs2')) n';
 
@@ -303,36 +308,39 @@ let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
       r
     end
 
+[@"substitute"]
 val fold_left_buffer_n_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
   f:(acc:t -> e:entry_st -> ST t
     (requires (fun h0 -> entry_live h0 e))
     (ensures (fun h0 r h1 -> entry_live h1 e /\
                           h0 == h1 /\
                           r == f_spec acc (as_entry h1 e)))) ->
-  acc:t -> input:bslice -> n:nat -> ST t
+  acc:t -> input:bslice -> n:U32.t -> ST t
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
+                    let n = U32.v n in
                     Some? (parse_many parse_entry n bs))))
   (ensures (fun h0 r h1 -> live h1 input /\
                         h0 == h1 /\
                         (let bs = as_seq h1 input in
+                        let n = U32.v n in
                         Some? (parse_many parse_entry n bs) /\
                         r == fold_left_store_n f_spec acc (parse_result (parse_many parse_entry n bs)) n)))
 let rec fold_left_buffer_n_st #t f_spec f acc input n =
-    match n with
-    | 0 -> acc
-    | _ -> begin
+    if U32.eq n 0ul then acc
+    else  begin
       let (e, off) = parse_one_entry n input in
       let input = advance_slice input off in
-      let n':nat = n-1 in
+      let n' = U32.sub n 1ul in
       let acc' = f acc e in
       let h = get() in
       assert (let bs = as_seq h input in
-              Some? (parse_many parse_entry n' bs));
+              Some? (parse_many parse_entry (U32.v n') bs));
       let r = fold_left_buffer_n_st f_spec f acc' input n' in
       r
     end
 
+[@"substitute"]
 val fold_left_buffer_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
   f:(acc:t -> e:entry_st -> ST t
     (requires (fun h0 -> entry_live h0 e))
@@ -356,7 +364,7 @@ let fold_left_buffer_st #t f_spec f acc input =
    fold_left_store_n_spec f_spec acc s;
    assert (num_entries == s.num_entries));
   let input = advance_slice input off in
-  fold_left_buffer_n_st f_spec f acc input (U32.v num_entries)
+  fold_left_buffer_n_st f_spec f acc input num_entries
 
 val fold_left_n_count : es:list encoded_entry -> acc:U32.t ->
     Lemma (requires (U32.v acc + List.length es < pow2 32))
@@ -374,7 +382,7 @@ val fold_left_count : s:store ->
 let fold_left_count s = fold_left_n_count s.entries 0ul;
                         fold_left_store_n_spec (fun acc e -> U32.add_mod acc 1ul) 0ul s
 
-val count_entries_example : input:bslice -> ST U32.t
+val count_entries_example (input:bslice) : ST U32.t
     (requires (fun h0 -> live h0 input /\
                       (let bs = as_seq h0 input in
                         Some? (parse_abstract_store bs))))
@@ -396,3 +404,7 @@ let count_entries_example input =
       fold_left_count (parse_result (parse_abstract_store bs))
     end;
     r
+
+let count_entries_example' input =
+    let (num_entries, _) = parse_num_entries_valid input in
+    fold_left_buffer_n_st (fun acc e -> U32.add_mod acc 1ul) (fun acc e -> U32.add_mod acc 1ul) 0ul input num_entries
