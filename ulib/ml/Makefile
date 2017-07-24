@@ -16,7 +16,7 @@ OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_G
 all: .mgen install
 
 fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
-	cp ../../src/ocaml-output/*.ml extracted/
+	cp ../../src/ocaml-output/FStar_*.ml extracted/
 	cp ../../src/basic/ml/*.ml extracted/
 	cp ../../src/prettyprint/ml/*.ml extracted/
 	cp ../../src/extraction/ml/FStar_Extraction_ML_PrintML.ml extracted/
