@@ -197,9 +197,13 @@ endif
 Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
 Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
+.PHONY: ulib
+ulib:
+	make -C ../../ulib/ml
+
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
-package: all
+package: all ulib
         # Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
