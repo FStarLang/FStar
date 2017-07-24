@@ -89,7 +89,7 @@ let free_mm #a #inv #rel h r =
  * update of a well-typed mreference
  *)
 private let lemma_upd_contains_test
-  (#a:Type) (#inv:data_inv a) (#rel:preorder a) (h0:heap) (r:mref a inv rel) (x:a{valid_upd h0 r x})
+  (#a:Type) (#inv:data_inv a) (#rel:preorder a) (h0:heap) (r:mref a inv rel) (x:a)
   :Lemma (h0 `contains` r ==>
           (let h1 = upd h0 r x in
 	   (forall (b:Type) (inv:data_inv b)(rel:preorder b) (r':mref b inv rel). (h0 `contains` r' /\ addr_of r' = addr_of r) ==> sel h1 r' == x /\
@@ -106,7 +106,7 @@ private let lemma_upd_contains_test
  * in h0, r' is well-typed, but in h1 it's not
  *)
 private let lemma_upd_contains_not_necessarily_well_typed_test
-  (#a:Type) (#inv:data_inv a) (#rel:preorder a) (h0:heap) (r:mref a inv rel) (x:a{valid_upd h0 r x})
+  (#a:Type) (#inv:data_inv a) (#rel:preorder a) (h0:heap) (r:mref a inv rel) (x:a)
   :Lemma ((~ (r `unused_in` h0)) ==>
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\
@@ -119,7 +119,7 @@ private let lemma_upd_contains_not_necessarily_well_typed_test
  * update of an unused mreference
  *)
 private let lemma_upd_unused_test
-  (#a:Type) (#inv:data_inv a) (#rel:preorder a) (h0:heap) (r:mref a inv rel) (x:a{valid_upd h0 r x})
+  (#a:Type) (#inv:data_inv a) (#rel:preorder a) (h0:heap) (r:mref a inv rel) (x:a)
   :Lemma (r `unused_in` h0 ==>
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\

@@ -1,5 +1,6 @@
 module FStar.SnapshotHyperStack.ST
 
+open FStar.Preorder
 open FStar.SnapshotHyperStack
 
 module HH = FStar.HyperHeap
@@ -60,10 +61,10 @@ let inline_stack_inv h h' : GTot Type0 =
   (* The frame invariant is enforced *)
   tip h = tip h'
   (* The heap structure is unchanged *)
-  /\ Map.domain (active_mem h).HS.h == Map.domain (active_mem h').HS.h
+  /\ Map.domain (heap h) == Map.domain (heap h')
   (* Any region that is not the tip has no seen any allocation *)
-  /\ (forall (r:HH.rid). {:pattern (Map.contains (active_mem h).HS.h r)} (r <> tip h /\ Map.contains (active_mem h).HS.h r)
-       ==> Heap.equal_dom (Map.sel (active_mem h).HS.h r) (Map.sel (active_mem h').HS.h r))
+  /\ (forall (r:HH.rid). {:pattern (Map.contains (heap h) r)} (r <> tip h /\ Map.contains (heap h) r)
+       ==> Heap.equal_dom (Map.sel (heap h) r) (Map.sel (heap h) r))
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
@@ -75,16 +76,21 @@ effect StackInline (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) =
        STATE a
              (fun (p:st_post a) (h:mem) -> pre h /\ HS.is_stack_region (tip h) /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
 
+
 let inline_inv h h' : GTot Type0 =
   (* The stack invariant is enforced *)
   tip h = tip h'
   (* No frame may have received an allocation but the tip *)
   /\ (forall (r:HH.rid). {:pattern (HS.is_stack_region r)}(HS.is_stack_region r /\ r `HS.is_strictly_above` (tip h))
-       ==> Heap.equal_dom (Map.sel (active_mem h).HS.h r) (Map.sel (active_mem h').HS.h r))
+       ==> Heap.equal_dom (Map.sel (heap h) r) (Map.sel (heap h') r))
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
    In other terms, the backend has to unfold the body into the caller's body.
+
+
+
+
    This effect only maintains the stack invariant: the tip is left unchanged and no allocation
    may occurs in the stack lower than the tip.
    Region allocation is not constrained.
@@ -110,6 +116,7 @@ assume val push_frame: unit -> Unsafe unit
   (requires (fun m -> True))
   (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
 
+
 (**
    Removes old frame from the stack
    *)
@@ -117,12 +124,13 @@ assume val pop_frame: unit -> Unsafe unit
   (requires (fun m -> poppable m))
   (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
 
-let salloc_post (#a:Type) (init:a) (m0:mem) (s:HS.reference a{HS.is_stack_region s.HS.id}) (m1:mem) =
+let salloc_post (#a:Type) (#rel:preorder a)(init:a) (m0:mem) (s:HS.mreference a rel {HS.is_stack_region s.HS.id}) (m1:mem) =
       HS.is_stack_region (tip m0)
     /\ Map.domain (heap m0) == Map.domain (heap m1)
     /\ tip m0 = tip m1
     /\ s.HS.id   = tip m1
     /\ HH.fresh_rref s.HS.ref (heap m0) (heap m1)         //it's a fresh reference in the top fram
+    // /\ rel (sel m0 s) init
     /\ m1== upd m0 s init          //and it's been initialized
 
 (**

@@ -168,8 +168,9 @@ let sel (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i 
   = sel (Map.sel m i) (as_ref r)
 unfold let op_String_Access (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a inv rel) = sel m r
 
-let upd (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a inv rel) (v:a{rel (sel m r) v}) :GTot t
+let upd (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a inv rel) (v:a) :GTot t
   = Map.upd m i (upd (Map.sel m i) (as_ref r) v)
+
 unfold let op_String_Assignment (#a:Type) (#inv:data_inv a) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a inv rel) v = upd m r v
 
 assume val mod_set : Set.set rid -> Tot (Set.set rid)

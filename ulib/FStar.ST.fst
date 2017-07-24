@@ -92,11 +92,35 @@ abstract let read (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:mref a inv re
     gst_recall (contains_pred r);
     sel_tot h0 r
 
+let upd_maintains_heap_inv (b:Type0) (inv_b:data_inv b) (rel_b:preorder b) (r':mref b inv_b rel_b) (v:b) (h1 h2 : heap):
+(a:Type0) ->
+(inv:data_inv a) ->
+(rel:preorder a) ->
+(r:mref a inv rel) ->
+Lemma (requires h2 == upd h1 r' v) (ensures (h1 `contains` r ==> (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))) =
+fun a inv rel r ->
+if compare_addrs r r'
+then (assume (h2 `contains` r); assume (rel (sel h1 r) (sel h2 r)))
+else ()
+
+
+#set-options "--ugly --print_effect_args --print_full_names"
+
+let upd_tot_maintains_heap_inv (#b:Type) (#inv_b:data_inv b) (#rel_b:preorder b) (r':mref b inv_b rel_b) (v:b) (h0 h1 : heap) :
+Lemma
+  (requires (h1 == upd h0 r' v))
+  (ensures (heap_rel h0 h1)) =
+FStar.Classical.forall_intro_3 (fun (a : Type0) (inv:data_inv a) (rel:preorder a) ->
+  (FStar.Classical.forall_intro (fun (r:mref a inv rel) -> upd_maintains_heap_inv b inv_b rel_b r' v h0 h1 a inv rel r))) <: Lemma (requires (h1 == upd h0 r' v))
+                                                                                                               (ensures (heap_rel h0 h1))
+
 abstract let write (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:mref a inv rel) (v:a)
   :ST unit (fun h -> rel (sel h r) v) (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\ h1 == upd h0 r v)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
+    assume (heap_rel h0 h1);
+    // upd_tot_maintains_heap_inv r v;
     gst_put h1
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()
