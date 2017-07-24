@@ -100,6 +100,10 @@ abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()
 
+abstract let op_Bang #x1 #x2 x3 = read #x1 #x2 x3
+
+abstract let op_Colon_Equals #x1 #x2 x3 x4 = write #x1 #x2 x3 x4
+
 type ref (a:Type0) = mref a (trivial_preorder a)
 
 let modifies_none (h0:heap) (h1:heap) = modifies Set.empty h0 h1
