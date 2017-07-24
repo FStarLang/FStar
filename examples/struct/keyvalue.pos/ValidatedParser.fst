@@ -357,3 +357,42 @@ let fold_left_buffer_st #t f_spec f acc input =
    assert (num_entries == s.num_entries));
   let input = advance_slice input off in
   fold_left_buffer_n_st f_spec f acc input (U32.v num_entries)
+
+val fold_left_n_count : es:list encoded_entry -> acc:U32.t ->
+    Lemma (requires (U32.v acc + List.length es < pow2 32))
+          (ensures (U32.v acc + List.length es < pow2 32 /\
+                   fold_left_store_n (fun acc e -> U32.add_mod acc 1ul) acc es (List.length es) ==
+                   U32.uint_to_t (U32.v acc + List.length es)))
+let rec fold_left_n_count es acc = match es with
+                              | [] -> ()
+                              | e::es -> assert (U32.v (U32.add_mod acc 1ul) == U32.v acc + 1);
+                                       assert (U32.v acc + 1 + List.length es < pow2 32);
+                                       fold_left_n_count es (U32.add_mod acc 1ul)
+
+val fold_left_count : s:store ->
+    Lemma (fold_left_store (fun acc e -> U32.add_mod acc 1ul) 0ul s == s.num_entries)
+let fold_left_count s = fold_left_n_count s.entries 0ul;
+                        fold_left_store_n_spec (fun acc e -> U32.add_mod acc 1ul) 0ul s
+
+val count_entries_example : input:bslice -> ST U32.t
+    (requires (fun h0 -> live h0 input /\
+                      (let bs = as_seq h0 input in
+                        Some? (parse_abstract_store bs))))
+    (ensures (fun h0 r h1 -> live h1 input /\
+                          h0 == h1 /\
+                          (let bs = as_seq h1 input in
+                          Some? (parse_abstract_store bs) /\
+                          r == (parse_result (parse_abstract_store bs)).num_entries)))
+let count_entries_example input =
+    let r = fold_left_buffer_st
+       // pure spec
+      (fun acc e -> U32.add_mod acc 1ul)
+      // implementation
+      (fun acc e -> U32.add_mod acc 1ul)
+      0ul input in
+    begin
+      let h = get() in
+      let bs = as_seq h input in
+      fold_left_count (parse_result (parse_abstract_store bs))
+    end;
+    r
