@@ -96,7 +96,7 @@ let lowercase_module_name: Prims.string -> Prims.string =
         let uu____212 =
           let uu____213 = FStar_Util.format1 "not a valid FStar file: %s\n" f in
           FStar_Errors.Err uu____213 in
-        raise uu____212
+        FStar_Exn.raise uu____212
 let build_map: Prims.string Prims.list -> map =
   fun filenames  ->
     let include_directories = FStar_Options.include_path () in
@@ -151,7 +151,7 @@ let build_map: Prims.string Prims.list -> map =
               let uu____380 =
                 FStar_Util.format1 "not a valid include directory: %s\n" d in
               FStar_Errors.Err uu____380 in
-            raise uu____379)) include_directories2;
+            FStar_Exn.raise uu____379)) include_directories2;
     FStar_List.iter
       (fun f  ->
          let uu____385 = lowercase_module_name f in add_entry uu____385 f)
@@ -177,9 +177,9 @@ let enter_namespace: map -> map -> Prims.string -> Prims.bool =
                   let uu____432 = FStar_Util.smap_try_find original_map k in
                   FStar_Util.must uu____432 in
                 (FStar_Util.smap_add working_map suffix filename;
-                 FStar_ST.write found true)
+                 FStar_ST.op_Colon_Equals found true)
               else ()) uu____403);
-        FStar_ST.read found
+        FStar_ST.op_Bang found
 let string_of_lid: FStar_Ident.lident -> Prims.bool -> Prims.string =
   fun l  ->
     fun last1  ->
@@ -260,14 +260,14 @@ let collect_one:
             let add_dep d =
               let uu____679 =
                 let uu____680 =
-                  let uu____681 = FStar_ST.read deps in
+                  let uu____681 = FStar_ST.op_Bang deps in
                   FStar_List.existsML (fun d'  -> d' = d) uu____681 in
                 Prims.op_Negation uu____680 in
               if uu____679
               then
                 let uu____718 =
-                  let uu____721 = FStar_ST.read deps in d :: uu____721 in
-                FStar_ST.write deps uu____718
+                  let uu____721 = FStar_ST.op_Bang deps in d :: uu____721 in
+                FStar_ST.op_Colon_Equals deps uu____718
               else () in
             let working_map = FStar_Util.smap_copy original_map in
             let record_open_module let_open lid =
@@ -286,7 +286,7 @@ let collect_one:
                    then
                      (if let_open
                       then
-                        raise
+                        FStar_Exn.raise
                           (FStar_Errors.Err
                              "let-open only supported for modules, not namespaces")
                       else
@@ -303,7 +303,7 @@ let collect_one:
               then
                 match error_msg with
                 | FStar_Pervasives_Native.Some e ->
-                    raise (FStar_Errors.Err e)
+                    FStar_Exn.raise (FStar_Errors.Err e)
                 | FStar_Pervasives_Native.None  ->
                     let uu____884 = string_of_lid lid true in
                     FStar_Util.print1_warning
@@ -343,7 +343,7 @@ let collect_one:
                       FStar_Util.format1
                         "module not found in search path: %s\n" alias in
                     FStar_Errors.Err uu____978 in
-                  raise uu____977 in
+                  FStar_Exn.raise uu____977 in
             let record_lid lid =
               let try_key key =
                 let uu____987 = FStar_Util.smap_try_find working_map key in
@@ -416,7 +416,7 @@ let collect_one:
                                       FStar_String.lowercase uu____1403 in
                                     (FStar_String.lowercase m) = uu____1402 in
                                   if uu____1401
-                                  then FStar_ST.write r true
+                                  then FStar_ST.op_Colon_Equals r true
                                   else ()) verify_flags);
                     collect_decls decls)
                | FStar_Parser_AST.Interface (lid,decls,uu____1513) ->
@@ -451,7 +451,7 @@ let collect_one:
                                       FStar_String.lowercase uu____1776 in
                                     (FStar_String.lowercase m) = uu____1775 in
                                   if uu____1774
-                                  then FStar_ST.write r true
+                                  then FStar_ST.op_Colon_Equals r true
                                   else ()) verify_flags);
                     collect_decls decls)
              and collect_decls decls =
@@ -509,7 +509,7 @@ let collect_one:
                | FStar_Parser_AST.TopLevelModule lid ->
                    (FStar_Util.incr num_of_toplevelmods;
                     (let uu____2019 =
-                       let uu____2020 = FStar_ST.read num_of_toplevelmods in
+                       let uu____2020 = FStar_ST.op_Bang num_of_toplevelmods in
                        uu____2020 > (Prims.parse_int "1") in
                      if uu____2019
                      then
@@ -520,7 +520,7 @@ let collect_one:
                              "Automatic dependency analysis demands one module per file (module %s not supported)"
                              uu____2047 in
                          FStar_Errors.Err uu____2046 in
-                       raise uu____2045
+                       FStar_Exn.raise uu____2045
                      else ()))
              and collect_tycon uu___87_2049 =
                match uu___87_2049 with
@@ -722,7 +722,7 @@ let collect_one:
                     collect_term t2) in
              let uu____2667 = FStar_Parser_Driver.parse_file filename in
              match uu____2667 with
-             | (ast,uu____2681) -> (collect_file ast; FStar_ST.read deps))
+             | (ast,uu____2681) -> (collect_file ast; FStar_ST.op_Bang deps))
 let print_graph:
   'Auu____2731 .
     (Prims.string Prims.list,'Auu____2731) FStar_Pervasives_Native.tuple2
@@ -876,9 +876,9 @@ let collect:
                       FStar_List.unique uu____3248 in
                     FStar_Util.smap_add graph key (all_deps, Black);
                     (let uu____3274 =
-                       let uu____3277 = FStar_ST.read topologically_sorted in
+                       let uu____3277 = FStar_ST.op_Bang topologically_sorted in
                        key :: uu____3277 in
-                     FStar_ST.write topologically_sorted uu____3274);
+                     FStar_ST.op_Colon_Equals topologically_sorted uu____3274);
                     all_deps))) in
        let discover1 = discover [] in
        let must_find k =
@@ -942,14 +942,14 @@ let collect:
                      FStar_List.append uu____3562 suffix in
                    (f, deps_as_filenames)) as_list) uu____3450 in
        let topologically_sorted1 =
-         let uu____3570 = FStar_ST.read topologically_sorted in
+         let uu____3570 = FStar_ST.op_Bang topologically_sorted in
          FStar_List.collect must_find_r uu____3570 in
        FStar_List.iter
          (fun uu____3674  ->
             match uu____3674 with
             | (m1,r) ->
                 let uu____3855 =
-                  (let uu____3858 = FStar_ST.read r in
+                  (let uu____3858 = FStar_ST.op_Bang r in
                    Prims.op_Negation uu____3858) &&
                     (let uu____3966 = FStar_Options.interactive () in
                      Prims.op_Negation uu____3966) in
@@ -977,7 +977,7 @@ let collect:
                         "You passed --verify_module %s but I found no file that contains [module %s] in the dependency graph.%s\n"
                         m1 m1 maybe_fst in
                     FStar_Errors.Err uu____3993 in
-                  raise uu____3992
+                  FStar_Exn.raise uu____3992
                 else ()) verify_flags;
        (by_target, topologically_sorted1, immediate_graph))
 let print_make:
@@ -1009,5 +1009,5 @@ let print:
          | FStar_Pervasives_Native.Some "make" -> print_make make_deps
          | FStar_Pervasives_Native.Some "graph" -> print_graph graph
          | FStar_Pervasives_Native.Some uu____4155 ->
-             raise (FStar_Errors.Err "unknown tool for --dep\n")
+             FStar_Exn.raise (FStar_Errors.Err "unknown tool for --dep\n")
          | FStar_Pervasives_Native.None  -> ())

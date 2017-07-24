@@ -53,7 +53,7 @@ let fresh_label:
         let l =
           FStar_Util.incr ctr;
           (let uu____272 =
-             let uu____273 = FStar_ST.read ctr in
+             let uu____273 = FStar_ST.op_Bang ctr in
              FStar_Util.string_of_int uu____273 in
            FStar_Util.format1 "label_%s" uu____272) in
         let lvar = (l, FStar_SMTEncoding_Term.Bool_sort) in
@@ -272,7 +272,7 @@ let label_goals:
                                                     uu____888 in
                                                 Not_a_wp_implication
                                                   uu____887 in
-                                              raise uu____886))
+                                              FStar_Exn.raise uu____886))
                                 | uu____897 ->
                                     let uu____898 =
                                       let uu____899 =
@@ -282,7 +282,7 @@ let label_goals:
                                         Prims.strcat "LHS not a conjunct: "
                                           uu____900 in
                                       Not_a_wp_implication uu____899 in
-                                    raise uu____898 in
+                                    FStar_Exn.raise uu____898 in
                               (match uu____724 with
                                | (labels1,lhs2) ->
                                    let uu____919 =

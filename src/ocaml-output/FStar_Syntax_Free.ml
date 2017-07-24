@@ -314,7 +314,7 @@ and free_names_and_uvars:
   fun t  ->
     fun use_cache  ->
       let t1 = FStar_Syntax_Subst.compress t in
-      let uu____1407 = FStar_ST.read t1.FStar_Syntax_Syntax.vars in
+      let uu____1407 = FStar_ST.op_Bang t1.FStar_Syntax_Syntax.vars in
       match uu____1407 with
       | FStar_Pervasives_Native.Some n1 when
           let uu____1435 = should_invalidate_cache n1 use_cache in
@@ -322,10 +322,10 @@ and free_names_and_uvars:
           let uu____1436 = FStar_Syntax_Syntax.new_fv_set () in
           (n1, uu____1436)
       | uu____1441 ->
-          (FStar_ST.write t1.FStar_Syntax_Syntax.vars
+          (FStar_ST.op_Colon_Equals t1.FStar_Syntax_Syntax.vars
              FStar_Pervasives_Native.None;
            (let n1 = free_names_and_uvs' t1 use_cache in
-            FStar_ST.write t1.FStar_Syntax_Syntax.vars
+            FStar_ST.op_Colon_Equals t1.FStar_Syntax_Syntax.vars
               (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n1));
             n1))
 and free_names_and_uvars_args:
@@ -374,13 +374,13 @@ and free_names_and_uvars_comp:
   =
   fun c  ->
     fun use_cache  ->
-      let uu____1627 = FStar_ST.read c.FStar_Syntax_Syntax.vars in
+      let uu____1627 = FStar_ST.op_Bang c.FStar_Syntax_Syntax.vars in
       match uu____1627 with
       | FStar_Pervasives_Native.Some n1 ->
           let uu____1655 = should_invalidate_cache n1 use_cache in
           if uu____1655
           then
-            (FStar_ST.write c.FStar_Syntax_Syntax.vars
+            (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars
                FStar_Pervasives_Native.None;
              free_names_and_uvars_comp c use_cache)
           else
@@ -414,7 +414,7 @@ and free_names_and_uvars_comp:
                      fun u  ->
                        let uu____1787 = free_univs u in union us1 uu____1787)
                   us ct.FStar_Syntax_Syntax.comp_univs in
-          (FStar_ST.write c.FStar_Syntax_Syntax.vars
+          (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars
              (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n1));
            n1)
 and should_invalidate_cache:

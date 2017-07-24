@@ -317,12 +317,12 @@ let set_memo:
   =
   fun r  ->
     fun t  ->
-      let uu____1499 = FStar_ST.read r in
+      let uu____1499 = FStar_ST.op_Bang r in
       match uu____1499 with
       | FStar_Pervasives_Native.Some uu____1600 ->
           failwith "Unexpected set_memo: thunk already evaluated"
       | FStar_Pervasives_Native.None  ->
-          FStar_ST.write r (FStar_Pervasives_Native.Some t)
+          FStar_ST.op_Colon_Equals r (FStar_Pervasives_Native.Some t)
 let env_to_string: closure Prims.list -> Prims.string =
   fun env  ->
     let uu____1707 = FStar_List.map closure_to_string env in
@@ -2439,7 +2439,7 @@ let rec norm:
                         (Prims.op_Negation
                            (FStar_List.contains (Exclude Zeta) cfg.steps))
                     then
-                      let uu____11421 = FStar_ST.read r in
+                      let uu____11421 = FStar_ST.op_Bang r in
                       (match uu____11421 with
                        | FStar_Pervasives_Native.Some (env2,t') ->
                            (log cfg
@@ -3368,7 +3368,7 @@ let rec norm:
                       FStar_List.map2
                         (fun lb  ->
                            fun memo  ->
-                             FStar_ST.write memo
+                             FStar_ST.op_Colon_Equals memo
                                (FStar_Pervasives_Native.Some
                                   (rec_env, (lb.FStar_Syntax_Syntax.lbdef))))
                         (FStar_Pervasives_Native.snd lbs) memos in
@@ -4352,7 +4352,7 @@ and rebuild:
                     (let stack3 = (App (t, aq, r)) :: stack2 in
                      norm cfg env1 stack3 tm))
                else
-                 (let uu____15501 = FStar_ST.read m in
+                 (let uu____15501 = FStar_ST.op_Bang m in
                   match uu____15501 with
                   | FStar_Pervasives_Native.None  ->
                       if FStar_List.contains WHNF cfg.steps

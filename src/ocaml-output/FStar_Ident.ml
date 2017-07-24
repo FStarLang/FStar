@@ -48,12 +48,14 @@ let gen: FStar_Range.range -> ident =
   let x = FStar_Util.mk_ref (Prims.parse_int "0") in
   fun r  ->
     (let uu____105 =
-       let uu____106 = FStar_ST.read x in uu____106 + (Prims.parse_int "1") in
-     FStar_ST.write x uu____105);
+       let uu____106 = FStar_ST.op_Bang x in
+       uu____106 + (Prims.parse_int "1") in
+     FStar_ST.op_Colon_Equals x uu____105);
     (let uu____155 =
        let uu____160 =
          let uu____161 =
-           let uu____162 = FStar_ST.read x in Prims.string_of_int uu____162 in
+           let uu____162 = FStar_ST.op_Bang x in
+           Prims.string_of_int uu____162 in
          Prims.strcat reserved_prefix uu____161 in
        (uu____160, r) in
      mk_ident uu____155)

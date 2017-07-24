@@ -1114,7 +1114,7 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                         FStar_Util.format1 "Not an application or a fv %s"
                           uu____4202 in
                       FStar_Errors.Err uu____4201 in
-                    raise uu____4200 in
+                    FStar_Exn.raise uu____4200 in
               let uu____4220 =
                 try
                   let uu____4272 = FStar_Syntax_Util.unmeta e in
@@ -1131,7 +1131,7 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                             uu____4301 in
                         (uu____4300, (e.FStar_Syntax_Syntax.pos)) in
                       FStar_Errors.Error uu____4295 in
-                    raise uu____4294 in
+                    FStar_Exn.raise uu____4294 in
               (match uu____4220 with
                | (head1,universes,args) ->
                    let universes1 =

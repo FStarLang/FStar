@@ -149,7 +149,7 @@ let tc_data:
                   if FStar_Ident.lid_equals tc_lid FStar_Parser_Const.exn_lid
                   then (env, [], FStar_Syntax_Syntax.U_zero)
                   else
-                    raise
+                    FStar_Exn.raise
                       (FStar_Errors.Error
                          ("Unexpected data constructor",
                            (se.FStar_Syntax_Syntax.sigrng))) in
@@ -234,7 +234,7 @@ let tc_data:
                                            (uu____716,
                                              (se.FStar_Syntax_Syntax.sigrng)) in
                                          FStar_Errors.Error uu____711 in
-                                       raise uu____710);
+                                       FStar_Exn.raise uu____710);
                                   (let uu____719 =
                                      FStar_Syntax_Util.head_and_args result1 in
                                    match uu____719 with
@@ -266,7 +266,7 @@ let tc_data:
                                                  (uu____773,
                                                    (se.FStar_Syntax_Syntax.sigrng)) in
                                                FStar_Errors.Error uu____768 in
-                                             raise uu____767);
+                                             FStar_Exn.raise uu____767);
                                         (let g =
                                            FStar_List.fold_left2
                                              (fun g  ->
@@ -623,7 +623,7 @@ let already_unfolded:
     fun arrghs  ->
       fun unfolded  ->
         fun env  ->
-          let uu____1663 = FStar_ST.read unfolded in
+          let uu____1663 = FStar_ST.op_Bang unfolded in
           FStar_List.existsML
             (fun uu____1711  ->
                match uu____1711 with
@@ -844,7 +844,7 @@ and ty_nested_positive_in_inductive:
                               uu____2305 in
                           debug_log env uu____2304);
                          (let uu____2308 =
-                            let uu____2309 = FStar_ST.read unfolded in
+                            let uu____2309 = FStar_ST.op_Bang unfolded in
                             let uu____2338 =
                               let uu____2345 =
                                 let uu____2358 =
@@ -854,7 +854,7 @@ and ty_nested_positive_in_inductive:
                                 (ilid, uu____2358) in
                               [uu____2345] in
                             FStar_List.append uu____2309 uu____2338 in
-                          FStar_ST.write unfolded uu____2308);
+                          FStar_ST.op_Colon_Equals unfolded uu____2308);
                          FStar_List.for_all
                            (fun d  ->
                               ty_nested_positive_in_dlid ty_lid d ilid us
@@ -1922,7 +1922,7 @@ let check_inductive_well_typedness:
                       ("Mutually defined type contains a non-inductive element",
                         uu____5070) in
                     FStar_Errors.Error uu____5065 in
-                  raise uu____5064
+                  FStar_Exn.raise uu____5064
                 else ());
                (let env0 = env in
                 let uu____5073 =

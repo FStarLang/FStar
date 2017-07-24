@@ -121,12 +121,13 @@ let rec force_delayed_thunk:
   fun t  ->
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_delayed (f,m) ->
-        let uu____589 = FStar_ST.read m in
+        let uu____589 = FStar_ST.op_Bang m in
         (match uu____589 with
          | FStar_Pervasives_Native.None  -> t
          | FStar_Pervasives_Native.Some t' ->
              let t'1 = force_delayed_thunk t' in
-             (FStar_ST.write m (FStar_Pervasives_Native.Some t'1); t'1))
+             (FStar_ST.op_Colon_Equals m (FStar_Pervasives_Native.Some t'1);
+              t'1))
     | uu____689 -> t
 let rec compress_univ:
   FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe =

@@ -792,7 +792,7 @@ let is_top_level_prob: FStar_TypeChecker_Common.prob -> Prims.bool =
     uu____1417 = (Prims.parse_int "1")
 let next_pid: Prims.unit -> Prims.int =
   let ctr = FStar_Util.mk_ref (Prims.parse_int "0") in
-  fun uu____1430  -> FStar_Util.incr ctr; FStar_ST.read ctr
+  fun uu____1430  -> FStar_Util.incr ctr; FStar_ST.op_Bang ctr
 let mk_problem:
   'Auu____1495 'Auu____1496 .
     FStar_Syntax_Syntax.binders ->
@@ -6769,7 +6769,7 @@ and solve_c:
                            uu____20530 uu____20531 in
                        (uu____20529, (env.FStar_TypeChecker_Env.range)) in
                      FStar_Errors.Error uu____20524 in
-                   raise uu____20523 in
+                   FStar_Exn.raise uu____20523 in
              match uu____20407 with
              | (wpc1,wpc2) ->
                  let uu____20550 = FStar_Util.physical_equality wpc1 wpc2 in
@@ -7581,7 +7581,7 @@ let teq:
                 let uu____21545 = FStar_TypeChecker_Env.get_range env in
                 (uu____21544, uu____21545) in
               FStar_Errors.Error uu____21539 in
-            raise uu____21538
+            FStar_Exn.raise uu____21538
         | FStar_Pervasives_Native.Some g ->
             ((let uu____21548 =
                 FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -7728,7 +7728,7 @@ let solve_universe_inequalities':
                    let uu____21758 = FStar_TypeChecker_Env.get_range env in
                    (uu____21755, uu____21758) in
                  FStar_Errors.Error uu____21750 in
-               raise uu____21749) in
+               FStar_Exn.raise uu____21749) in
             let equiv1 v1 v' =
               let uu____21766 =
                 let uu____21771 = FStar_Syntax_Subst.compress_univ v1 in
@@ -7867,7 +7867,7 @@ let solve_universe_inequalities':
                     ("Failed to solve universe inequalities for inductives",
                       uu____22053) in
                   FStar_Errors.Error uu____22048 in
-                raise uu____22047))
+                FStar_Exn.raise uu____22047))
 let solve_universe_inequalities:
   FStar_TypeChecker_Env.env ->
     (FStar_Syntax_Syntax.universe Prims.list,(FStar_Syntax_Syntax.universe,
@@ -7891,7 +7891,7 @@ let rec solve_deferred_constraints:
         match uu____22105 with
         | (d,s) ->
             let msg = explain env d s in
-            raise (FStar_Errors.Error (msg, (p_loc d))) in
+            FStar_Exn.raise (FStar_Errors.Error (msg, (p_loc d))) in
       let wl = wl_of_guard env g.FStar_TypeChecker_Env.deferred in
       (let uu____22119 =
          FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -7940,17 +7940,19 @@ let last_proof_ns:
 let maybe_update_proof_ns: FStar_TypeChecker_Env.env -> Prims.unit =
   fun env  ->
     let pns = env.FStar_TypeChecker_Env.proof_ns in
-    let uu____22181 = FStar_ST.read last_proof_ns in
+    let uu____22181 = FStar_ST.op_Bang last_proof_ns in
     match uu____22181 with
     | FStar_Pervasives_Native.None  ->
-        FStar_ST.write last_proof_ns (FStar_Pervasives_Native.Some pns)
+        FStar_ST.op_Colon_Equals last_proof_ns
+          (FStar_Pervasives_Native.Some pns)
     | FStar_Pervasives_Native.Some old ->
         if old = pns
         then ()
         else
           ((env.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
              ();
-           FStar_ST.write last_proof_ns (FStar_Pervasives_Native.Some pns))
+           FStar_ST.op_Colon_Equals last_proof_ns
+             (FStar_Pervasives_Native.Some pns))
 let discharge_guard':
   (Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env ->
@@ -8133,7 +8135,7 @@ let discharge_guard_no_smt:
               let uu____22416 = FStar_TypeChecker_Env.get_range env in
               ("Expected a trivial pre-condition", uu____22416) in
             FStar_Errors.Error uu____22411 in
-          raise uu____22410
+          FStar_Exn.raise uu____22410
 let discharge_guard:
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Env.guard_t -> FStar_TypeChecker_Env.guard_t
@@ -8387,7 +8389,7 @@ let force_trivial_guard:
                   uu____22771 uu____22772 in
               (uu____22770, r) in
             FStar_Errors.Error uu____22765 in
-          raise uu____22764
+          FStar_Exn.raise uu____22764
 let universe_inequality:
   FStar_Syntax_Syntax.universe ->
     FStar_Syntax_Syntax.universe -> FStar_TypeChecker_Env.guard_t

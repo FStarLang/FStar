@@ -920,7 +920,7 @@ let check_id: FStar_Ident.ident -> Prims.unit =
                id.FStar_Ident.idText in
            (uu____3772, (id.FStar_Ident.idRange)) in
          FStar_Errors.Error uu____3767 in
-       raise uu____3766)
+       FStar_Exn.raise uu____3766)
 let at_most_one:
   'Auu____3781 .
     Prims.string ->
@@ -942,7 +942,7 @@ let at_most_one:
                     "At most one %s is allowed on declarations" s in
                 (uu____3810, r) in
               FStar_Errors.Error uu____3805 in
-            raise uu____3804
+            FStar_Exn.raise uu____3804
 let mk_decl: decl' -> FStar_Range.range -> decoration Prims.list -> decl =
   fun d  ->
     fun r  ->
@@ -1396,7 +1396,7 @@ let as_frag:
         let uu____5292 =
           match ds with
           | d::ds1 -> (d, ds1)
-          | [] -> raise FStar_Errors.Empty_frag in
+          | [] -> FStar_Exn.raise FStar_Errors.Empty_frag in
         match uu____5292 with
         | (d,ds1) ->
             (match d.d with
@@ -1429,7 +1429,7 @@ let as_frag:
                        | { d = TopLevelModule uu____5390; drange = r;
                            doc = uu____5392; quals = uu____5393;
                            attrs = uu____5394;_} ->
-                           raise
+                           FStar_Exn.raise
                              (FStar_Errors.Error
                                 ("Unexpected module declaration", r))
                        | uu____5397 -> ()) ds2;
@@ -1837,5 +1837,5 @@ let error:
                 (Prims.parse_int "77") in
             Prims.strcat uu____6375 "..."
           else tm1 in
-        raise
+        FStar_Exn.raise
           (FStar_Errors.Error ((Prims.strcat msg (Prims.strcat "\n" tm2)), r))

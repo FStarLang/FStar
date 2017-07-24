@@ -246,7 +246,7 @@ let monad_signature:
                 FStar_TypeChecker_Err.unexpected_signature_for_monad env m s in
               (uu____199, (FStar_Ident.range_of_lid m)) in
             FStar_Errors.Error uu____194 in
-          raise uu____193 in
+          FStar_Exn.raise uu____193 in
         let s1 = FStar_Syntax_Subst.compress s in
         match s1.FStar_Syntax_Syntax.n with
         | FStar_Syntax_Syntax.Tm_arrow (bs,c) ->
@@ -409,7 +409,7 @@ let tc_eff_decl:
                                 env1 mname t in
                             (uu____424, (FStar_Ident.range_of_lid mname)) in
                           FStar_Errors.Error uu____419 in
-                        raise uu____418 in
+                        FStar_Exn.raise uu____418 in
                       let uu____431 =
                         let uu____432 =
                           FStar_Syntax_Subst.compress signature1 in
@@ -1118,7 +1118,7 @@ let tc_eff_decl:
                                             (match univs1 with
                                              | [] -> ([], repr1)
                                              | uu____1313 ->
-                                                 raise
+                                                 FStar_Exn.raise
                                                    (FStar_Errors.Error
                                                       ("Unexpected universe-polymorphic return for effect",
                                                         (repr1.FStar_Syntax_Syntax.pos))))) in
@@ -1285,7 +1285,8 @@ let tc_eff_decl:
                                                            (act_defn1.FStar_Syntax_Syntax.pos)) in
                                                        FStar_Errors.Error
                                                          uu____1431 in
-                                                     raise uu____1430 in
+                                                     FStar_Exn.raise
+                                                       uu____1430 in
                                                (match uu____1367 with
                                                 | (expected_k,g_k) ->
                                                     let g =
@@ -1768,7 +1769,7 @@ let cps_and_elaborate:
                                                      "Computation for [%s] is not total : %s !"
                                                      uu____2137 uu____2138 in
                                                  FStar_Errors.Err uu____2136 in
-                                               raise uu____2135
+                                               FStar_Exn.raise uu____2135
                                              else ());
                                             (let uu____2140 =
                                                FStar_TypeChecker_DMFF.star_expr
@@ -2125,11 +2126,11 @@ let cps_and_elaborate:
                                                 | (sigelt,fv) ->
                                                     ((let uu____2799 =
                                                         let uu____2802 =
-                                                          FStar_ST.read
+                                                          FStar_ST.op_Bang
                                                             sigelts in
                                                         sigelt :: uu____2802 in
-                                                      FStar_ST.write sigelts
-                                                        uu____2799);
+                                                      FStar_ST.op_Colon_Equals
+                                                        sigelts uu____2799);
                                                      fv)) in
                                          let lift_from_pure_wp1 =
                                            register "lift_from_pure"
@@ -2143,9 +2144,10 @@ let cps_and_elaborate:
                                                     (FStar_Syntax_Syntax.SetOptions
                                                        "--admit_smt_queries true")) in
                                              let uu____2876 =
-                                               FStar_ST.read sigelts in
+                                               FStar_ST.op_Bang sigelts in
                                              uu____2875 :: uu____2876 in
-                                           FStar_ST.write sigelts uu____2872);
+                                           FStar_ST.op_Colon_Equals sigelts
+                                             uu____2872);
                                           (let return_elab1 =
                                              register "return_elab"
                                                return_elab in
@@ -2156,9 +2158,10 @@ let cps_and_elaborate:
                                                      (FStar_Syntax_Syntax.SetOptions
                                                         "--admit_smt_queries false")) in
                                               let uu____2949 =
-                                                FStar_ST.read sigelts in
+                                                FStar_ST.op_Bang sigelts in
                                               uu____2948 :: uu____2949 in
-                                            FStar_ST.write sigelts uu____2945);
+                                            FStar_ST.op_Colon_Equals sigelts
+                                              uu____2945);
                                            (let bind_wp2 =
                                               register "bind_wp" bind_wp1 in
                                             (let uu____3018 =
@@ -2168,9 +2171,9 @@ let cps_and_elaborate:
                                                       (FStar_Syntax_Syntax.SetOptions
                                                          "--admit_smt_queries true")) in
                                                let uu____3022 =
-                                                 FStar_ST.read sigelts in
+                                                 FStar_ST.op_Bang sigelts in
                                                uu____3021 :: uu____3022 in
-                                             FStar_ST.write sigelts
+                                             FStar_ST.op_Colon_Equals sigelts
                                                uu____3018);
                                             (let bind_elab1 =
                                                register "bind_elab" bind_elab in
@@ -2181,10 +2184,10 @@ let cps_and_elaborate:
                                                        (FStar_Syntax_Syntax.SetOptions
                                                           "--admit_smt_queries false")) in
                                                 let uu____3095 =
-                                                  FStar_ST.read sigelts in
+                                                  FStar_ST.op_Bang sigelts in
                                                 uu____3094 :: uu____3095 in
-                                              FStar_ST.write sigelts
-                                                uu____3091);
+                                              FStar_ST.op_Colon_Equals
+                                                sigelts uu____3091);
                                              (let uu____3162 =
                                                 FStar_List.fold_left
                                                   (fun uu____3202  ->
@@ -2770,7 +2773,7 @@ let cps_and_elaborate:
                                                                    =
                                                                    let uu____3887
                                                                     =
-                                                                    FStar_ST.read
+                                                                    FStar_ST.op_Bang
                                                                     sigelts in
                                                                    FStar_List.rev
                                                                     uu____3887 in
@@ -3168,12 +3171,12 @@ let tc_decl:
              match uu____4584 with
              | FStar_Getopt.Success  -> ()
              | FStar_Getopt.Help  ->
-                 raise
+                 FStar_Exn.raise
                    (FStar_Errors.Error
                       ("Failed to process pragma: use 'fstar --help' to see which options are available",
                         r))
              | FStar_Getopt.Error s1 ->
-                 raise
+                 FStar_Exn.raise
                    (FStar_Errors.Error
                       ((Prims.strcat "Failed to process pragma: " s1), r)) in
            (match p with
@@ -3300,7 +3303,7 @@ let tc_decl:
                                FStar_TypeChecker_Env.get_range env1 in
                              (uu____4772, uu____4773) in
                            FStar_Errors.Error uu____4767 in
-                         raise uu____4766 in
+                         FStar_Exn.raise uu____4766 in
                        let uu____4776 =
                          FStar_TypeChecker_Env.effect_decl_opt env1 eff_name in
                        match uu____4776 with
@@ -3629,7 +3632,7 @@ let tc_decl:
                                                      uu____5374 in
                                                  (uu____5371, r) in
                                                FStar_Errors.Error uu____5366 in
-                                             raise uu____5365)
+                                             FStar_Exn.raise uu____5365)
                                       else ();
                                       (let se1 =
                                          let uu___111_5377 = se in
@@ -3677,7 +3680,7 @@ let tc_decl:
                        (FStar_Ident.text_of_lid lid) in
                    (uu____5433, r) in
                  FStar_Errors.Error uu____5428 in
-               raise uu____5427
+               FStar_Exn.raise uu____5427
              else ());
             (let uu____5435 =
                if uvs = []
@@ -3791,7 +3794,7 @@ let tc_decl:
                             uu____5626 uu____5627 uu____5628 in
                         (uu____5625, r) in
                       FStar_Errors.Error uu____5620 in
-                    raise uu____5619) in
+                    FStar_Exn.raise uu____5619) in
            let rename_parameters lb =
              let rename_in_typ def typ =
                let typ1 = FStar_Syntax_Subst.compress typ in
@@ -3918,7 +3921,7 @@ let tc_decl:
                                           lb.FStar_Syntax_Syntax.lbunivs)
                                          <> (FStar_List.length uvs))
                                   then
-                                    raise
+                                    FStar_Exn.raise
                                       (FStar_Errors.Error
                                          ("Inline universes are incoherent with annotation from val declaration",
                                            r))
