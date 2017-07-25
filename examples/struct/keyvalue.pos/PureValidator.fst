@@ -98,7 +98,7 @@ let validate_liftA2 #t #t' #t'' p p' f v v' =
                | None -> true);
   ()
 
-#reset-options
+#set-options "--z3rlimit 30"
 
 let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator_checks v p}) :
   Lemma (validator_checks (validate_many' n v) (parse_many' p n)) =
@@ -109,6 +109,8 @@ let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator
         let v': v:validator{validator_checks v p'} = validate_many' (n-1) v in
         validate_liftA2 p p' (fun v l -> v::l) v v';
         ()
+
+#reset-options
 
 val validate_many:
   #t:Type -> p:parser t ->
