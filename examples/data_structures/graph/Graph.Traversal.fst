@@ -40,19 +40,23 @@ type traversal (#n:nat) (g:graph0 n) (root:_in g) : nodesetseq n -> Type0 =
   (forall (i:_in s). i == 0 \/ (exists (h:k:nat{k<i}). is_in_graph (s @^ h) (s @^ i) g))
 
 let rec traversal_reachability (#n:nat) (g:graph0 n) (root:_in g) 
-  (ns:nodesetseq n{traversal g root ns})
+  (ns:nodesetseq n {traversal g root ns})
   : Lemma (requires True) (ensures (forall (i:_in ns). reachable g root (ns @^ i))) =
   let reachable_aux (*(nss:nodesetseq n{traversal g root ns})*)
        (w:squash(True)) (x:_in ns)
-       : Lemma (forall (i:_in ns) . reachable g root (ns @^ i)) =
+       : Lemma (reachable g root (ns @^ x)) =
        FStar.Squash.give_proof w ; 
        match x with
-       | 0 -> let p = S.create 1 (ns @^ 0) <: path g in
-             assert(to p == root /\ from p == root); assert(ns @^ 0 == root); 
-             assert(reachable g root (ns @^ 0)); admit()
+       | 0 -> let p = S.create 1 (ns @^ 0) <: path g in ()
        | e ->  assert(e =!= 0); assert(traversal g root ns);
-              assume(forall (i:_in ns). i == 0 \/ (exists (j:k:nat{k<i}). 
-                is_in_graph (ns @^ j) (ns @^ i) g));          
+
+       (*Why is this assert failing?*)
+       assert(S.length ns > 0 /\ S.head ns == root /\ 
+  (forall (i:_in ns). i == 0 \/ (exists (h:k:nat{k<i}). is_in_graph (ns @^ h) (ns @^ i) g)));
+  
+  admit();
+              assert(forall (i:_in ns). i == 0 \/ (exists (h:k:nat{k<i}). 
+                is_in_graph (ns @^ h) (ns @^ i) g));          
               admit();
            assert((exists (w:k:nat{k < e}). is_in_graph (ns @^ w) (ns @^ e) g)); admit()
          
