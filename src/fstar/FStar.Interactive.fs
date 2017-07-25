@@ -484,7 +484,7 @@ let write_response qid status response =
 let write_message level contents =
   write_json (JsonAssoc [("kind", JsonStr "message");
                          ("level", JsonStr level);
-                         ("contents", JsonStr contents)])
+                         ("contents", contents)])
 
 let write_hello () =
   let js_version = JsonInt interactive_protocol_vernum in
@@ -962,9 +962,10 @@ let interactive_error_handler = // No printing here — collect everything for f
     eh_clear = clear }
 
 let interactive_printer =
-  { printer_prinfo = write_message "info";
-    printer_prwarning = write_message "warning";
-    printer_prerror = write_message "error" }
+  { printer_prinfo = (fun s -> write_message "info" (JsonStr s));
+    printer_prwarning = (fun s -> write_message "warning" (JsonStr s));
+    printer_prerror = (fun s -> write_message "error" (JsonStr s));
+    printer_prgeneric = (fun label get_string get_json -> write_message label (get_json ()) )}
 
 open FStar.TypeChecker.Common
 // filename is the name of the file currently edited
