@@ -1540,7 +1540,7 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
              FStar_Extraction_ML_Syntax.loc = uu____4923;_},uu____4924::[])
           when
           let uu____4927 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu____4927 = "FStar.HyperStack.ST.get" -> EUnit
+          uu____4927 = "FStar.HyperStack.ST.get" -> EAny
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
