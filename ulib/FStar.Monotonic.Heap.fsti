@@ -53,7 +53,9 @@ val sel_tot: #a:Type0 -> #inv:data_inv a -> #rel:preorder a -> h:heap -> r:mref 
 
 val sel: #a:Type0 -> #inv:data_inv a -> #rel:preorder a -> heap -> mref a inv rel -> GTot a
 
-val upd_tot: #a:Type0 -> #inv:data_inv a -> #rel:preorder a -> h:heap -> r:mref a inv rel{h `contains` r} -> x:a -> Tot heap
+let valid_upd (#a:Type0) (#inv:data_inv a) (#rel:preorder a) (h:heap) (r:mref a inv rel) (x:a) = rel (sel h r) x
+
+val upd_tot: #a:Type0 -> #inv:data_inv a -> #rel:preorder a -> h:heap -> r:mref a inv rel{h `contains` r} -> x:a {valid_upd h r x} -> Tot heap
 
 val upd: #a:Type0 -> #inv:data_inv a -> #rel:preorder a -> h:heap -> r:mref a inv rel -> x:a -> GTot heap
 
@@ -226,7 +228,7 @@ val lemma_sel_equals_sel_tot_for_contained_refs
 	 [SMTPat (sel_tot h r)]
 
 val lemma_upd_equals_upd_tot_for_contained_refs
-  (#a:Type0) (#inv:data_inv a) (#rel:preorder a) (h:heap) (r:mref a inv rel{h `contains` r}) (x:a)
+  (#a:Type0) (#inv:data_inv a) (#rel:preorder a) (h:heap) (r:mref a inv rel{h `contains` r}) (x:a {valid_upd h r x})
   :Lemma (requires True)
          (ensures  (upd_tot h r x == upd h r x))
 	 [SMTPat (upd_tot h r x)]

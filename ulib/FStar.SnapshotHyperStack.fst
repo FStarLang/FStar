@@ -8,16 +8,14 @@ open FStar.Monotonic.HyperStack
 module HS = FStar.Monotonic.HyperStack
 module HH = FStar.HyperHeap
 
+// A pair, the active heap and a snapshot.
 abstract type snapshot_heap = (HS.mem * option HS.mem)
 
 let is_unrestricted (h : snapshot_heap) : bool =
 Some? (snd h)
 
 // The heap that is currently being modified.
-let active_mem (m : snapshot_heap) : HS.mem =
-match m with
-| (h0, None) -> h0
-| (h0, Some h1) -> h1
+let active_mem (m : snapshot_heap) : HS.mem = fst m
 
 let equal_domains (h0 h1 : snapshot_heap) : Type =
 HS.equal_domains (active_mem h0) (active_mem h1)
@@ -54,12 +52,8 @@ HS.fresh_frame (active_mem h0) (active_mem h1)
 let poppable (h:snapshot_heap): Type =
 HS.poppable (active_mem h)
 
-let pop (h : snapshot_heap { poppable h}) : GTot snapshot_heap =
-match h with
-| (h0, None) -> (HS.pop h0, None)
-| (h0, Some h1) ->
-  let h2 = HS.pop h1 in
-  (h0, Some h2)
+let pop (h : snapshot_heap {poppable h}) : GTot snapshot_heap =
+(HS.pop (fst h), snd h)
 
 let popped (h0 h1 : snapshot_heap) =
 HS.popped (active_mem h0) (active_mem h1)
@@ -68,7 +62,6 @@ let lemma_pop_is_popped (m0: snapshot_heap{poppable m0})
    : Lemma (popped m0 (pop m0))
     = let m1 = pop m0 in
       assert (Set.equal (Map.domain (heap m1)) (remove_elt (Map.domain (heap m0)) (tip m0)))
-
 
 let live_region (mem : snapshot_heap) (id : rid) : Type0 =
 HS.live_region (active_mem mem) id
@@ -83,9 +76,7 @@ let upd
   (m: snapshot_heap)
   (s:HS.imreference a inv rel {live_region m s.HS.id})
   (v:a) : GTot snapshot_heap =
-match m with
-| (h0, None) -> (HS.upd h0 s v, None)
-| (h0, Some h1) -> (h0, Some (HS.upd h1 s v))
+(HS.upd (fst m) s v, snd m)
 
 let contains (#a:Type) (#inv:data_inv a) (#rel:preorder a) (m: snapshot_heap) (s: HS.imreference a inv rel) =
 HS.contains (active_mem m) s
@@ -125,16 +116,14 @@ val lemma_live_1:
     (ensures  (x.id <> x'.id \/ ~ (as_ref x === as_ref x'))) [SMTPat (contains h x); SMTPat (x' `unused_in` h)]
 let lemma_live_1 #a #a' #inv1 #inv2 #rel1 #rel2 h x x' = ()
 
-unfold let hs_remove_reference (#a:Type) (#inv:data_inv a) (#rel:preorder a) 
+unfold let hs_remove_reference (#a:Type) (#inv:data_inv a) (#rel:preorder a)
 (r:HS.imreference a inv rel) (m:mem{m `HS.contains` r /\ is_mm r}) :GTot mem =
   let h_0 = Map.sel m.h r.id in
   let h_1 = Heap.free_mm h_0 (HH.as_ref r.ref) in
   HS (Map.upd m.h r.id h_1) m.tip
 
-let remove_reference (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:HS.imreference a inv rel) (m:snapshot_heap {m `contains` r /\ is_mm r}) : GTot snapshot_heap =
-match m with
-| (h0, None) -> (hs_remove_reference r h0, None)
-| (h0, Some h1) -> (h0, Some (hs_remove_reference r h1))
+unfold let remove_reference (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:HS.imreference a inv rel) (m:snapshot_heap {m `contains` r /\ is_mm r}) : GTot snapshot_heap =
+(hs_remove_reference r (fst m), snd m)
 
 let weak_contains (#a:Type) (#inv:data_inv a) (#rel:preorder a) (m: snapshot_heap) (s: HS.imreference a inv rel) =
   HS.weak_contains (active_mem m) s
@@ -149,7 +138,7 @@ let modifies_drop_tip (m0 m1 m2 : snapshot_heap) (s:Set.set rid)
       : Lemma (fresh_frame m0 m1 /\
               modifies_transitively (Set.union s (Set.singleton (tip m1))) m1 m2 ==>
               modifies_transitively s m0 (pop m2))
-      = ()
+      = HS.modifies_drop_tip (active_mem m0) (active_mem m1) (active_mem m2) s
 
 let heap_only (m0:snapshot_heap) =
   HS.heap_only (active_mem m0)

@@ -96,47 +96,11 @@ abstract let read (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:mref a inv re
     gst_recall (contains_pred r);
     sel_tot h0 r
 
-// I was playing with the lemma here, wasn't sure the set of facts I needed in scope to prove this.
-// It seems to get strange if we allow it to be any type, in the case where they are equal we should
-// know something like (x:mref b inv_b rel_b) = (y:mref a inv_a rel_a) -> a = b -> inv_b = inv_a = rel_a = rel_b.
-//
-// My idea for the proof was to consider the case where we do the update, show that if its equal we read it back,
-// and restablish the relation using the precondition, and if not we show they are still extentionally equal.
-//
-// private let upd_maintains_heap_inv_arr (b:Type0) (inv_b:data_inv b) (rel_b:preorder b) (r':Heap.mref b inv_b rel_b) (v:b) (h1 h2 : heap):
-// (a:Type0) ->
-// (inv:data_inv a) ->
-// (rel:preorder a) ->
-// (r:Heap.mref a inv rel) ->
-// Lemma (requires ((rel_b (sel h1 r') v) /\ (h2 == upd h1 r' v) /\  (h1 `contains` r')))
-//       (ensures (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
-// = fun a inv rel r ->
-// lemma_contains_upd_modifies h1 r' v;
-// if compare_addrs r r'
-// then
-// ((assume (a == b); admit ())) // lemma_sel_same_addr h r1 r2); admit ())
-// else ()
-
-// let upd_maintains_heap_inv (#b:Type) (#inv_b:data_inv b) (#rel_b:preorder b) (r':Heap.mref b inv_b rel_b) (v:b) (h0 h1 : heap) :
-// Lemma
-//   (requires (h1 == upd h0 r' v))
-//   (ensures (heap_rel h0 h1)) =
-//   let aux (a : Type0) (inv:data_inv a) (rel:preorder a) (r:Heap.mref a inv rel) :
-//     Lemma (related_at h0 h1 a inv rel r) =
-//     upd_maintains_heap_inv_arr b inv_b rel_b r' v h0 h1 a inv rel r
-//   in
-//   FStar.Classical.forall_intro_4 aux
-
 abstract let write (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:mref a inv rel) (v:a)
   :ST unit (fun h -> rel (sel h r) v) (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\ h1 == upd h0 r v)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
-    // We need to restablish the heap relation here, but it doesn't seem to fire anymore,
-    // the above proof is a one attempt at this from this afternoon. I spent the rest of
-    // the evening trying to patch examples and proofs using this new references.
-    assume (heap_rel h0 h1);
-    // upd_maintains_heap_inv r v h0 h1;
     gst_put h1
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()

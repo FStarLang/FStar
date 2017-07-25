@@ -67,7 +67,7 @@ let inline_stack_inv h h' : GTot Type0 =
   /\ Map.domain (heap h) == Map.domain (heap h')
   (* Any region that is not the tip has no seen any allocation *)
   /\ (forall (r:HH.rid). {:pattern (Map.contains (heap h) r)} (r <> tip h /\ Map.contains (heap h) r)
-       ==> Heap.equal_dom (Map.sel (heap h) r) (Map.sel (heap h) r))
+       ==> Heap.equal_dom (Map.sel (heap h) r) (Map.sel (heap h') r))
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
@@ -131,7 +131,7 @@ let salloc_post (#a:Type) (#inv:data_inv a) (#rel:preorder a)(init:a) (m0:mem) (
       HS.is_stack_region (tip m0)
     /\ Map.domain (heap m0) == Map.domain (heap m1)
     /\ tip m0 = tip m1
-    /\ s.HS.id   = tip m1
+    /\ s.HS.id = tip m1
     /\ HH.fresh_rref s.HS.ref (heap m0) (heap m1)         //it's a fresh reference in the top fram
     /\ m1== upd m0 s init          //and it's been initialized
 
@@ -192,11 +192,11 @@ assume val new_colored_region: r0:HH.rid -> c:int -> ST HH.rid
 // Clean up to use projections, tweak projections to fire with SMTPat - Jared.
 unfold let ralloc_post (#a:Type) (#inv:data_inv a) (#rel:preorder a) (i:HH.rid) (init:a) (m0:mem)
 (x:HS.imreference a inv rel {HS.is_eternal_region x.HS.id}) (m1:mem) =
-    let region_i = Map.sel (active_mem m0).HS.h i in
+    let region_i = Map.sel (heap m0) i in
     (HH.as_ref x.HS.ref) `Heap.unused_in` region_i
-  /\ i `HS.is_in` (active_mem m0).HS.h
+  /\ i `HS.is_in` (heap m0)
   /\ i = x.HS.id
-  /\ (active_mem m0) == HS.upd (active_mem m0) x init
+  /\ m0 == upd m0 x init
 
 assume val ralloc: #a:Type -> inv:data_inv a -> rel:preorder a -> i:HH.rid -> init:a -> ST (HS.imref a inv rel)
     (requires (fun m -> HS.is_eternal_region i))
@@ -324,16 +324,18 @@ let test_stack x =
   pop_frame ();
   x
 
+#set-options "--z3rlimit 16"
 val test_stack_with_long_lived: #inv:data_inv int -> #rel:preorder int -> s:HS.imreference int inv rel -> Stack unit
   (requires (fun h -> contains h s))
   (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1
     /\ modifies (Set.singleton s.HS.id) h0 h1))
-let test_stack_with_long_lived #inv #rel s = admit()
-
-  // push_frame();
-  // let _ = test_stack !s in
-  // s := !s + 1;
-  // pop_frame()
+let test_stack_with_long_lived #inv #rel s =
+  push_frame();
+  let h0 = get () in
+  let _ = test_stack !s in
+  let h1 = get () in
+  s := !s + 1;
+  pop_frame()
 
 val test_heap_code_with_stack_calls: unit -> Heap unit
   (requires (fun h -> heap_only h))
@@ -396,18 +398,17 @@ let test_to_be_stack_inlined () =
   r := 2;
   r
 
-// val map_domain_eq_implies_domain_equals (m0 m1 : mem) :
-//   Lemma (requires (Map.domain (heap m0) == Map.domain (heap m1))
+#set-options "--z3rlimit 16"
 
-// val test_stack_function_with_inline: unit -> Stack int
-//   (requires (fun h -> True))
-//   (ensures  (fun h0 _ h1 -> True))
-// let test_stack_function_with_inline () =
-//   push_frame();
-//   let x = test_to_be_stack_inlined () in
-//   let y = !x + !x in
-//   pop_frame();
-//   y
+val test_stack_function_with_inline: unit -> Stack int
+  (requires (fun h -> True))
+  (ensures  (fun h0 _ h1 -> True))
+let test_stack_function_with_inline () =
+  push_frame();
+  let x = test_to_be_stack_inlined () in
+  let y = !x + !x in
+  pop_frame();
+  1
 
 val test_st_function_with_inline: unit -> ST unit
   (requires (fun h -> True))
@@ -415,7 +416,7 @@ val test_st_function_with_inline: unit -> ST unit
 let test_st_function_with_inline () =
   push_frame();
   let x = test_to_be_stack_inlined () in
-  // let y = !x + !x in
+  let y = !x + !x in
   pop_frame();
   ()
 
@@ -469,11 +470,14 @@ assume val as_stack: #a:Type -> #wp:st_wp a -> $f:(unit -> STATE a wp) ->
 	        (requires (forall s0 x s1. as_ensures wp s0 x s1 ==> equal_domains s0 s1))
  	        (ensures (fun x -> True))
 
+private let tinv = FStar.Heap.trivial_invariant int
+private let tpord = FStar.Heap.trivial_preorder int
+
 val mm_tests: unit -> Unsafe unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))
 let mm_tests _ =
   let _ = push_frame () in
 
-  let r1 = salloc_mm 2 in
+  let r1 = salloc_mm tinv tpord 2 in
 
   //check that the heap contains the reference
   let m = get () in
@@ -492,7 +496,7 @@ let mm_tests _ =
   let h = Map.sel (heap m) (tip m) in
   let _ = assert (~ (Heap.contains h (HH.as_ref r1.HS.ref))) in
 
-  let r2 = salloc_mm 2 in
+  let r2 = salloc_mm (FStar.Heap.trivial_invariant int) (FStar.Heap.trivial_preorder int) 2 in
   let _ = pop_frame () in
 
   //this fails because the reference is no longer live
@@ -500,7 +504,7 @@ let mm_tests _ =
 
   let id = new_region HH.root in
 
-  let r3 = ralloc_mm id 2 in
+  let r3 = ralloc_mm tinv tpord id 2 in
   let _ = !r3 in
   let _ = rfree r3 in
 
