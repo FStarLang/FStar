@@ -242,13 +242,15 @@ let adjacent_entries_disjoint (#t:Type) (b1 b2:B.buffer t) :
     Lemma (requires (buffers_adjacent b1 b2))
           (ensures (B.disjoint b1 b2)) = ()
 
+open FStar.Ghost
+
 // TODO: the writer is tracking a few more pointers than strictly necessary; we
 // really only need a pointer to the beginning and a bslice at the current write
 // position
 noeq type writer =
      { length_field: b:lbuffer 4;
        entries_written_buf: bslice;
-       entries_written_list: unit -> GTot (list encoded_entry);
+       entries_written_list: erased (list encoded_entry);
        num_entries_written: U32.t;
        entries_scratch: bslice; }
 
@@ -265,7 +267,7 @@ let writer_inv (h:mem) (w:writer) : Type0 =
     (let entries_buf = w.entries_written_buf in
      let enc_entries = as_seq h entries_buf in
      let num_entries = U32.v w.num_entries_written in
-     let entries = w.entries_written_list () in
+     let entries = reveal w.entries_written_list in
      live h entries_buf /\
      List.length entries == num_entries /\
      enc_entries == encode_many entries encode_entry num_entries)
@@ -296,7 +298,7 @@ let writer_init (b:bslice) : ST (option writer)
     else
     let w = { length_field = (truncated_slice b 4ul).p;
               entries_written_buf = truncated_slice (advance_slice b 4ul) 0ul;
-              entries_written_list = (fun _ -> []);
+              entries_written_list = hide [];
               num_entries_written = 0ul;
               entries_scratch = advance_slice b 4ul } in
     assert (writer_valid w);
@@ -325,7 +327,7 @@ val writer_append (w:writer) (e:entry_st) : ST (option writer)
                   writer_inv h1 w' /\
                   entry_live h1 e /\
                   (let ee = as_entry h1 e in
-                  w'.entries_written_list () == w.entries_written_list () `List.append` [ee])
+                  reveal w'.entries_written_list == reveal w.entries_written_list `List.append` [ee])
                 end))
 let writer_append w e =
     let r = ser_entry e w.entries_scratch in
@@ -335,10 +337,18 @@ let writer_append w e =
       begin
         match join_slices w.entries_written_buf entries_done with
         | Some entries_written ->
+            begin
+              let h = get() in
+              let ee = as_entry h e in
+              ()
+            end;
             let w' = { length_field = w.length_field;
                        entries_written_buf = entries_written;
                        entries_scratch = entries_scratch';
-                       entries_written_list = (fun _ -> w.entries_written_list ());
+                       // TODO: I want to feed information from the ST effect
+                       // just into building this erased value, but I get
+                       // "effects STATE and GHOST cannot be composed"
+                       entries_written_list = elift1 (fun l -> l) w.entries_written_list;
                        num_entries_written = U32.add w.num_entries_written 1ul } in
             admit();
             Some w'
@@ -373,7 +383,7 @@ val writer_finish (w:writer) : ST (option bslice)
                 let b = Some?.v mb in
                 live h1 b /\
                 (let bs = as_seq h1 b in
-                 let entries = w.entries_written_list () in
+                 let entries = reveal w.entries_written_list in
                  List.length entries == U32.v w.num_entries_written /\
                  bs == encode_store (Store w.num_entries_written entries))
                 end))
@@ -387,7 +397,7 @@ let writer_finish w =
           let h1 = get() in
           assert (live h1 b);
           let bs = as_seq h1 b in
-          let entries = w.entries_written_list () in
+          let entries = reveal w.entries_written_list in
           let enc_entries = as_seq h1 w.entries_written_buf in
           assert (List.length entries == U32.v w.num_entries_written);
           // this is the only required part of this proof (everything else falls
