@@ -198,7 +198,7 @@ let disjoint_ref_5 a r r' r'' r''' r'''' = disjoint_ref_1 a r /\ disjoint_ref_4 
 val disjoint_only_lemma: #a:Type -> #a':Type -> b:buffer a -> b':buffer a' -> Lemma
   (requires (disjoint b b'))
   (ensures (disjoint_from_bufs b (only b')))
-let disjoint_only_lemma #t #t' b b' = ()
+let disjoint_only_lemma #a #a' b b' = ()
 
 (* Fully general modifies clause *)
 let modifies_bufs_and_refs (bufs:TSet.set abuffer) (refs:Set.set nat) h h' : GTot Type0 =
