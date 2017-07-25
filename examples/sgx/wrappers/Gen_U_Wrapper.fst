@@ -28,7 +28,7 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                  print_val_generic_args args 1 true
        in
        (* print return type *)
-       let _ = trace " ST (rt: " in
+       let _ = trace " Stack (rt: " in
        let _ = print_type ret in
        let _ = trace ")\n \t " in
        (* Print proper effect type here *)

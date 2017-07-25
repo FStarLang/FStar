@@ -33,7 +33,7 @@ assume val get_bitmap_unset_locations : (h:mem)->(loc: Set nat)-> (Set nat)
  (* Printing signature for U's function wrapper.
  * V's code invokes U's function ufunc using the wrapper ufunc_wrapper
  *)
-val ufunc_wrapper : (x1: int )->(x2: int )->(x3:(reference (reference (reference  int ))))->(x4:(reference (reference  int )))->(xref1: stackref (reference  int ))-> ST (rt: (reference  int ))
+val ufunc_wrapper : (x1: int )->(x2: int )->(x3:(reference (reference (reference  int ))))->(x4:(reference (reference  int )))->(xref1: stackref (reference  int ))-> Stack (rt: (reference  int ))
          (requires (fun h -> True  /\ (h `contains` x3)
         /\ (h `contains` (sel h0  x3))
         /\ (h `contains` (sel h0  (sel h0  x3)))

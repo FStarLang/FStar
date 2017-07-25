@@ -14,7 +14,7 @@ assume val is_code_pointer: (addr:nat) -> bool
  (* Printing signature for V's function wrapper.
  * U's code invokes V's function foo using the wrapper foo_wrapper
  *)
-val foo_wrapper : (x1: int )->(x2: int )->(x3:(reference (reference (reference  int ))))->(x4:(reference (reference  int )))->(xref1: stackref (reference  int ))-> ST (rt: (reference  int ))
+val foo_wrapper : (x1: int )->(x2: int )->(x3:(reference (reference (reference  int ))))->(x4:(reference (reference  int )))->(xref1: stackref (reference  int ))-> Stack (rt: (reference  int ))
          (requires (fun h -> True  /\ (h `contains` x3)
         /\ (h `contains` (sel h0  x3))
         /\ (h `contains` (sel h0  (sel h0  x3)))
@@ -30,6 +30,7 @@ val foo_wrapper : (x1: int )->(x2: int )->(x3:(reference (reference (reference  
          /\ modifies_ref (frameOf (sel h0  x4)) Set.singleton as_addr (frameOf sel h0  x4)
          /\ modifies_ref (frameOf xref1) (Set.singleton (as_addr xref1))
          /\ (not is_vheap_reference rt)
+         /\ get_bitmap_unset_locations h0 (get_all_refs_from_stack_frames_below h0) = get_bitmap_unset_locations h1 (get_all_refs_from_stack_frames_below h1)
         ))
 let foo_wrapper  x1 x2 x3 x4 xref1 =
         (* Check

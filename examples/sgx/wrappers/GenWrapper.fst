@@ -28,7 +28,7 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                  print_val_generic_args args 1 true
        in
        (* print return type *)
-       let _ = trace " ST (rt: " in
+       let _ = trace " Stack (rt: " in
        let _ = print_type ret in
        let _ = trace ")\n \t " in
        (* Print proper effect type here *)
@@ -245,11 +245,15 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                     (*end of function local_print_modifies_refs_clause *)
                     in
                    let _ = local_print_modifies_refs_clause args in
-                   if (type_is_ref ret) then
-                      (* if return type is a reference should there be a modifies clause? *)
-                      trace "/\ (not is_vheap_reference rt) \n\t"
-                   else
-                     ()
+                   let _ = if (type_is_ref ret) then
+                              (* if return type is a reference should there be a modifies clause? *)
+                              trace "/\ (not is_vheap_reference rt) \n\t"
+                           else
+                             ()
+                   in
+                   (* print bitmap invariant *)
+                   let _ = trace "/\ get_bitmap_unset_locations h0 (get_all_refs_from_stack_frames_below h0) = get_bitmap_unset_locations h1 (get_all_refs_from_stack_frames_below h1) \n \t" in
+                   ()
   
        in 
        trace "))\n"

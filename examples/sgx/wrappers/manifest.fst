@@ -6,10 +6,11 @@ type nat64 = i:nat{i <= nat64_max}
 type argtype =
   | ANat64 : argtype
   | AChar: argtype
-  | ABuffer: int->argtype
+  | AVoid: argtype
+  | ABuffer: argtype -> argtype
   
 type calltable_entry =
-  |Mkcalltable_entry : fname:string -> fstart_address : nat64 -> fsize:nat64 -> args: (list argtype) -> calltable_entry
+  |Mkcalltable_entry : fname:string -> fstart_address : nat64 -> fsize:nat64 -> args: (list argtype) -> (ret: argtype) -> calltable_entry
 
 type calltable = 
   | MkCalltable : calltable_start:nat64 -> calltable_size: nat64 -> entries: (list calltable_entry) -> calltable
