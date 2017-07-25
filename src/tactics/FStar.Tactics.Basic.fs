@@ -139,7 +139,7 @@ let ps_to_string (msg, ps) = format5 "State dump (%s):\nACTIVE goals (%s):\n%s\n
 let goal_to_json g =
     let g_binders = Env.all_binders g.context |> Print.binders_to_json in
     JsonAssoc [("hyps", g_binders);
-               ("goal", JsonAssoc [("witness", JsonStr (Print.term_to_string g.witness));
+               ("proof-state", JsonAssoc [("witness", JsonStr (Print.term_to_string g.witness));
                                    ("type", JsonStr (Print.term_to_string g.goal_ty))])]
 
 let ps_to_json (msg, ps) =
@@ -148,7 +148,7 @@ let ps_to_json (msg, ps) =
                ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))]
 
 let dump_proofstate ps msg =
-    print_generic "goal" ps_to_string ps_to_json (msg, ps)
+    print_generic "proof-state" ps_to_string ps_to_json (msg, ps)
     // tacprint "";
     // tacprint1 "State dump (%s):" msg;
     // tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));

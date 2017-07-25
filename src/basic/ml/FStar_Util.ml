@@ -349,22 +349,33 @@ let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
 
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of Z.t
+| JsonStr of string
+| JsonList of json list
+| JsonAssoc of (string * json) list
+
 type printer = {
   printer_prinfo: string -> unit;
   printer_prwarning: string -> unit;
   printer_prerror: string -> unit;
+  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
 }
 
 let default_printer =
   { printer_prinfo = (fun s -> pr "%s" s; flush stdout);
     printer_prwarning = (fun s -> fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr);
-    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr); }
+    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr);
+    printer_prgeneric = fun label get_string get_json -> pr "%s: %s" label (get_string ())}
 
 let current_printer = ref default_printer
 let set_printer printer = current_printer := printer
 
 let print_raw s = pr "%s" s; flush stdout
 let print_string s = (!current_printer).printer_prinfo s
+let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
 let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:string list) = BatString.concat sep l
@@ -939,14 +950,6 @@ let read_hints (filename: string): hints_db option =
       None
 
 (** Interactive protocol **)
-
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of Z.t
-| JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
 
 exception UnsupportedJson
 
