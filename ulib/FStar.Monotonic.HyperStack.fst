@@ -167,7 +167,7 @@ let sel (#a:Type) (#inv:data_inv a) (#rel:preorder a) (m:mem) (s:imreference a i
   : GTot a
   = m.h.[s.ref]
 
-let upd (#a:Type) (#inv:data_inv a) (#rel:preorder a) (m:mem) (s:imreference a inv rel{live_region m s.id}) (v:a{rel (sel m s) v})
+let upd (#a:Type) (#inv:data_inv a) (#rel:preorder a) (m:mem) (s:imreference a inv rel{live_region m s.id}) (v:a)
   : GTot mem
   = HS (m.h.[s.ref] <- v) m.tip
 
