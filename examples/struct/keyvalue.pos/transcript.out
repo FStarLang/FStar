@@ -1,0 +1,24 @@
+{"kind":"protocol-info","version":1,"features":["autocomplete","compute","describe-protocol","describe-repl","exit","lookup","lookup/documentation","lookup/definition","pop","peek","push","search"]}
+{"kind":"response","query-id":"1","status":"success","response":[]}
+{"kind":"response","query-id":"2","status":"success","response":[]}
+{"kind":"response","query-id":"3","status":"success","response":[]}
+{"kind":"response","query-id":"4","status":"success","response":[]}
+{"kind":"response","query-id":"5","status":"success","response":[]}
+{"kind":"response","query-id":"6","status":"success","response":[]}
+{"kind":"response","query-id":"7","status":"success","response":[]}
+{"kind":"response","query-id":"8","status":"success","response":[]}
+{"kind":"response","query-id":"9","status":"success","response":[]}
+{"kind":"response","query-id":"10","status":"success","response":[]}
+{"kind":"response","query-id":"11","status":"success","response":[]}
+{"kind":"response","query-id":"12","status":"success","response":[]}
+{"kind":"response","query-id":"13","status":"success","response":[]}
+{"kind":"response","query-id":"14","status":"success","response":[]}
+{"kind":"response","query-id":"15","status":"success","response":[]}
+{"kind":"response","query-id":"16","status":"success","response":[]}
+{"kind":"response","query-id":"17","status":"success","response":[]}
+{"kind":"response","query-id":"18","status":"success","response":[]}
+{"kind":"response","query-id":"19","status":"success","response":[]}
+{"kind":"response","query-id":"20","status":"success","response":[]}
+{"kind":"response","query-id":"21","status":"success","response":[]}
+{"kind":"response","query-id":"22","status":"success","response":[{"level":"error","message":"Failed to resolve implicit argument of type 'FStar.TSet.set Slice.bslice' introduced in uu___unification_ 0 a","ranges":[{"fname":"<input>","beg":[209,2],"end":[209,12]}]}]}
+{"kind":"message","level":"error","contents":"Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\nFailure(\"(<input>(209,2-211,21)) CheckNoUvars: Unexpected unification variable remains: uu___unification_ 0\")\n"}
