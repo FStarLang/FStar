@@ -2094,7 +2094,6 @@ and desugar_decl env (d: decl): (env_t * sigelts) =
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
-  List.iter (fun a -> BU.print1 "Desugared attribute: %s\n" (P.term_to_string a)) attrs;
   env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
