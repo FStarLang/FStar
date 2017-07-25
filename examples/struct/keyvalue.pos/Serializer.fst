@@ -39,7 +39,7 @@ let buffer_fun (inputs:TSet.set bslice) =
 let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
   forall b. TSet.mem b inputs ==> live h b /\ B.disjoint b.p buf.p
 
-inline_for_extraction unfold
+unfold
 let serializer_any (inputs:TSet.set bslice)
                    (enc: buffer_fun inputs) =
   buf:bslice ->
@@ -55,10 +55,10 @@ let serializer_any (inputs:TSet.set bslice)
            as_seq h0 b == as_seq h1 b) /\
         serialized (enc h1) buf r h0 h1))
 
-inline_for_extraction unfold
+unfold
 let serializer (enc:bytes) = serializer_any TSet.empty (fun _ -> enc)
 
-inline_for_extraction unfold
+unfold
 let serializer_1 (input:bslice) (enc: buffer_fun (TSet.singleton input)) =
     serializer_any (TSet.singleton input) (fun h -> enc h)
 
@@ -140,14 +140,10 @@ let ser_u32 v = fun buf ->
 
 // this is really a coercion that lifts a pure bytes serializer to one that
 // takes an input buffer (and ignores it)
-// this is a higher-order combinator that needs to be inlined
-[@"substitute"]
 let ser_input (input:bslice) (#b:bytes) (s:serializer b) : serializer_1 input (fun _ -> b) =
     fun buf -> s buf
 
 // coercion to increase the size of the inputs set
-// this is a higher-order combinator that needs to be inlined
-[@"substitute"]
 let ser_inputs (#inputs1:TSet.set bslice)
                (inputs2:TSet.set bslice{TSet.subset inputs1 inputs2})
                (#b: buffer_fun inputs1)
@@ -156,8 +152,6 @@ let ser_inputs (#inputs1:TSet.set bslice)
 
 #reset-options "--z3rlimit 30"
 
-// this is a higher-order combinator that needs to be inlined
-inline_for_extraction unfold [@"substitute"]
 let ser_append (#inputs1 #inputs2:TSet.set bslice)
                (#b1: buffer_fun inputs1) (#b2: buffer_fun inputs2)
                (s1:serializer_any inputs1 b1) (s2:serializer_any inputs2 b2) :
@@ -196,7 +190,6 @@ let ser_append (#inputs1 #inputs2:TSet.set bslice)
 
 #reset-options
 
-[@"substitute"]
 val ser_copy : data:bslice -> serializer_1 data (fun h -> as_seq h data)
 let ser_copy data = fun buf ->
   if U32.lt buf.len data.len then None
