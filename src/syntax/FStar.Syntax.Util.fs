@@ -832,6 +832,8 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh () in
     mk (Tm_type u) None dummyRange, u
 
+let attr_substitute = mk (Tm_constant (Const_string (bytes_of_string "substitute", Range.dummyRange))) None Range.dummyRange
+
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
 let exp_unit : term = mk (Tm_constant (Const_unit)) None dummyRange
@@ -1369,3 +1371,4 @@ let un_alien (t : term) : dyn =
     match t.n with
     | Tm_meta (_, Meta_alien (blob, _)) -> blob
     | _ -> failwith "Something paranormal occurred"
+
