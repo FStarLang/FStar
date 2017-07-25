@@ -139,7 +139,7 @@ let ps_to_string (msg, ps) = format5 "State dump (%s):\nACTIVE goals (%s):\n%s\n
 let goal_to_json g =
     let g_binders = Env.all_binders g.context |> Print.binders_to_json in
     JsonAssoc [("hyps", g_binders);
-               ("proof-state", JsonAssoc [("witness", JsonStr (Print.term_to_string g.witness));
+               ("goal", JsonAssoc [("witness", JsonStr (Print.term_to_string g.witness));
                                    ("type", JsonStr (Print.term_to_string g.goal_ty))])]
 
 let ps_to_json (msg, ps) =
