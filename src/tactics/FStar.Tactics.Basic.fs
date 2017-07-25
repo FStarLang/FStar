@@ -148,7 +148,9 @@ let ps_to_json (msg, ps) =
                ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))]
 
 let dump_proofstate ps msg =
-    print_generic "proof-state" ps_to_string ps_to_json (msg, ps)
+    Options.with_saved_options (fun () ->
+        Options.set_option "print_effect_args" (Options.Bool true);
+        print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
     // tacprint "";
     // tacprint1 "State dump (%s):" msg;
     // tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));
