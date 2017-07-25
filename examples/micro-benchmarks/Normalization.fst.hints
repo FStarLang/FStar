@@ -128,6 +128,7 @@
         "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
       ],
       0
-    ]
+    ],
+    [ "Normalization.test_sort", 2, 0, 0, [ "@query" ], 0 ]
   ]
 ]

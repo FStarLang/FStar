@@ -16,10 +16,10 @@ module Ex12.MAC
 open Ex12.SHA1
 open FStar.IO
 
-open Preorder
-open Heapx
-open STx
-open MRefx
+open FStar.Preorder
+open FStar.Heap
+open FStar.ST
+open FStar.MRef
 
 module SHA1 = Ex12.SHA1
 module SEM = FStar.StrongExcludedMiddle
@@ -82,7 +82,7 @@ type entry =
 (* let key_prop k t =  exists p. token key_log (associated_to k p) /\ p t *)
 
 private type log_t = ref (list entry)
-let log:log_t = STx.alloc _ []
+let log:log_t = FStar.ST.alloc []
 
 // BEGIN: MacSpec
 val keygen: p:(text -> Type0) -> St (pkey p)

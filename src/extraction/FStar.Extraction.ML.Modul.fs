@@ -36,13 +36,13 @@ module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
-module C  = FStar.Parser.Const
+module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
-    mk (Tm_app(S.fvar C.failwith_lid Delta_constant None,
+    mk (Tm_app(S.fvar PC.failwith_lid Delta_constant None,
                [ S.iarg t
                ; S.as_arg <| mk (Tm_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.lid_to_string lid)), Range.dummyRange))) None Range.dummyRange]))
         None
@@ -60,6 +60,27 @@ let as_pair = function
 (*****************************************************************************)
 (* Extracting type definitions from the signature                            *)
 (*****************************************************************************)
+
+// So far, we recognize only a couple special attributes; they are encoded as
+// type constructors for an inductive defined in Pervasives, to provide a minimal
+// amount of typo-checking via desugaring.
+let rec extract_attr x =
+  match SS.compress x with
+  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShow" ->
+      Some PpxDerivingShow
+  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
+      Some (PpxDerivingShowConstant (string_of_unicode data))
+  | { n = Tm_meta (x, _) } ->
+      extract_attr x
+  | a ->
+      (* BU.print2 "Unrecognized attribute at extraction: %s (%s)\n" *)
+      (*   (Print.term_to_string a) *)
+      (*   (Print.tag_of_term a); *)
+      None
+
+let extract_attrs attrs =
+  List.choose extract_attr attrs
+
 let binders_as_mlty_binders (env:UEnv.env) bs =
     BU.fold_map (fun env (bv, _) ->
 //        if Term.is_type env.tcenv bv.sort || true
@@ -70,7 +91,7 @@ let binders_as_mlty_binders (env:UEnv.env) bs =
     env bs
 
 //Type abbreviations
-let extract_typ_abbrev env fv quals def =
+let extract_typ_abbrev env fv quals attrs def =
     let lid = fv.fv_name.v in
     let def = SS.compress def |> U.unmeta |> U.un_uinst in
     let def = match def.n with
@@ -88,10 +109,11 @@ let extract_typ_abbrev env fv quals def =
          then let mname = mangle_projector_lid lid in
               Some mname.ident.idText
          else None in
-    let td = [assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, Some (MLTD_Abbrev body)] in
+    let attrs = extract_attrs attrs in
+    let td = [assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, attrs, Some (MLTD_Abbrev body)] in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty td] in
     let env = if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
-              then env
+              then UEnv.extend_type_name env fv
               else UEnv.extend_tydef env fv td in
     env, def
 
@@ -109,7 +131,8 @@ type inductive_family = {
   iparams: binders;
   ityp   : term;
   idatas : list<data_constructor>;
-  iquals : list<S.qualifier>
+  iquals : list<S.qualifier>;
+  iattrs : tyattrs;
 }
 
 let print_ifamily i =
@@ -119,9 +142,10 @@ let print_ifamily i =
         (Print.term_to_string i.ityp)
         (i.idatas |> List.map (fun d -> Print.lid_to_string d.dname ^ " : " ^ Print.term_to_string d.dtyp) |> String.concat "\n\t\t")
 
-let bundle_as_inductive_families env ses quals : list<inductive_family> =
-    ses |> List.collect
-        (fun se -> match se.sigel with
+let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive_family> =
+    let env, ifams =
+        BU.fold_map
+        (fun env se -> match se.sigel with
             | Sig_inductive_typ(l, _us, bs, t, _mut_i, datas) ->
                 let bs, t = SS.open_term bs t in
                 let datas = ses |> List.collect (fun se -> match se.sigel with
@@ -132,13 +156,17 @@ let bundle_as_inductive_families env ses quals : list<inductive_family> =
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
-                [{  iname=l
-                  ; iparams=bs
-                  ; ityp=t
-                  ; idatas=datas
-                  ; iquals=se.sigquals  }]
-
-            | _ -> [])
+                let attrs = extract_attrs (se.sigattrs @ attrs) in
+                let env = UEnv.extend_type_name env (S.lid_as_fv l Delta_constant None) in
+                env, [{   iname=l
+                        ; iparams=bs
+                        ; ityp=t
+                        ; idatas=datas
+                        ; iquals=se.sigquals
+                        ; iattrs = attrs }]
+            | _ -> env, [])
+        env ses in
+    env, List.flatten ifams
 
 type env_t = UEnv.env
 
@@ -176,7 +204,7 @@ let extract_bundle env se =
              MLTD_Record fields
          | _ ->
              MLTD_DType ctors in
-        env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, Some tbody) in
+        env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, ind.iattrs, Some tbody) in
 
     match se.sigel, se.sigquals with
         | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
@@ -184,8 +212,7 @@ let extract_bundle env se =
           env, [MLM_Exn ctor]
 
         | Sig_bundle(ses, _), quals ->
-          let ifams = bundle_as_inductive_families env ses quals in
-//          ifams |> List.iter print_ifamily;
+          let env, ifams = bundle_as_inductive_families env ses quals se.sigattrs in
           let env, td = BU.fold_map extract_one_family env ifams in
           env, [MLM_Ty td]
 
@@ -238,7 +265,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 (Print.term_to_string a.action_defn);
             let a_nm, a_lid = action_name ed a in
             let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
-            let lb = mk_lb (lbname, a.action_univs, C.effect_Tot_lid, a.action_typ, a.action_defn) in
+            let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn) in
             let lbs = (false, [lb]) in
             let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
             let a_let, _, ty = Term.term_as_mlexpr g action_lb in
@@ -275,13 +302,14 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_declare_typ(lid, _, t)  when Term.is_arity g t -> //lid is a type
           //extracting `assume type t : k`
           let quals = se.sigquals in
+          let attrs = se.sigattrs in
           if not (quals |> BU.for_some (function Assumption -> true | _ -> false))
           then g, []
           else let bs, _ = U.arrow_formals t in
                let fv = S.lid_as_fv lid Delta_constant None in
-               extract_typ_abbrev g fv quals (U.abs bs TypeChecker.Common.t_unit None)
+               extract_typ_abbrev g fv quals attrs (U.abs bs t_unit None)
 
-        | Sig_let((false, [lb]), _, _) when Term.is_arity g lb.lbtyp ->
+        | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
           //extracting `type t = e`
           //or         `let t = e` when e is a type
           let quals = se.sigquals in
@@ -289,14 +317,58 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
             let tcenv, _, def_typ =
                 FStar.TypeChecker.Env.open_universes_in g.tcenv lb.lbunivs [lb.lbdef; lb.lbtyp] in
             tcenv, as_pair def_typ in
-          let lbtyp = FStar.TypeChecker.Normalize.unfold_whnf tcenv lbtyp in
+          let lbtyp = FStar.TypeChecker.Normalize.normalize [FStar.TypeChecker.Normalize.Beta;FStar.TypeChecker.Normalize.UnfoldUntil Delta_constant] tcenv lbtyp in
           let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
           //eta expansion is important; see issue #490
-          extract_typ_abbrev g (right lb.lbname) quals lbdef
+          extract_typ_abbrev g (right lb.lbname) quals se.sigattrs lbdef
 
-        | Sig_let (lbs, _, attrs) ->
+        | Sig_let (lbs, _) ->
+          let attrs = se.sigattrs in
           let quals = se.sigquals in
           let elet = mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng in
+
+          (* If the top-level let is a user-defined tactic, automatically add the matching invocation to
+             FStar.Tactics.Native.register_tactic, allowing the extracted tactic to be dynamically linked. *)
+          let tactic_registration_decl =
+            let is_tactic_decl (tac_lid: lident) (h: term) =
+              match h.n with
+              | Tm_uinst (h', _) ->
+                (match (SS.compress h').n with
+                  | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) ->
+                      (* TODO change this test *)
+                      not (BU.starts_with (string_of_mlpath g.currentModule) "FStar.Tactics")
+                  | _ -> false)
+              | _ -> false in
+
+            let mk_registration tac_lid assm_lid t bs =
+              let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str "FStar_Tactics_Native.register_tactic")) in
+              let lid_arg = MLE_Const (MLC_String (string_of_lid assm_lid)) in
+              let tac_arity = List.length bs in
+              let arity = MLE_Name (mlpath_of_lident (lid_of_str (BU.string_of_int (tac_arity + 1)))) in
+              let tac_interpretation = mk_interpretation_fun tac_lid lid_arg t bs in
+              let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
+              MLM_Top app in
+
+            (match (snd lbs) with
+             | [hd] ->
+                let bs, comp = U.arrow_formals_comp hd.lbtyp in
+                let t = U.comp_result comp in
+                (match (SS.compress t).n with
+                 | Tm_app(h, args) ->
+                      let h = SS.compress h in
+                      let tac_lid = (right hd.lbname).fv_name.v in
+                      let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
+                      if is_tactic_decl assm_lid h then begin
+                        // BU.print1 "Extracting tactic %s\n" (Print.lid_to_string assm_lid);
+                        // BU.print1 "Head %s \n" (Print.term_to_string h);
+                        // BU.print1 "Arg %s \n" (Print.term_to_string (fst(List.hd args)));
+                        // BU.print1 "Type: %s\n" (Print.term_to_string hd.lbtyp);
+                        [mk_registration tac_lid assm_lid (fst(List.hd args)) bs]
+                      end else []
+                 | _ -> [])
+             | _ -> []
+            ) in
+
           let ml_let, _, _ = Term.term_as_mlexpr g elet in
           begin match ml_let.expr with
             | MLE_Let((flavor, _, bindings), _) ->
@@ -324,7 +396,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
                     None
               ) attrs in
-              g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')]
+
+              g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')] @ tactic_registration_decl
 
             | _ ->
               failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
@@ -344,8 +417,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   { se with sigel = Sig_let((false, [{lbname=Inr (S.lid_as_fv lid Delta_constant None);
                                                       lbunivs=[];
                                                       lbtyp=t;
-                                                      lbeff=C.effect_ML_lid;
-                                                      lbdef=imp}]), [], []) } in
+                                                      lbeff=PC.effect_ML_lid;
+                                                      lbdef=imp}]), []) } in
               let g, mlm = extract_sig g always_fail in //extend the scope with the new name
               match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
                   | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
@@ -385,7 +458,8 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
   let _ = Options.restore_cmd_line_options true in
   let name = MLS.mlpath_of_lident m.name in
-  let g = {g with currentModule = name}  in
+  let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
+                  currentModule = name} in
   let g, sigs = BU.fold_map extract_sig g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
   let is_kremlin = match Options.codegen () with | Some "Kremlin" -> true | _ -> false in

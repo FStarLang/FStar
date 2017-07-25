@@ -18,6 +18,7 @@
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0
@@ -48,8 +49,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.StExnC.STEXNC", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExnC.STEXNC", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.StExnC.div_intrinsic",
       1,
@@ -166,7 +165,6 @@
         "kinding_FStar.Pervasives.Native.option@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
@@ -203,6 +201,7 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.None_a",

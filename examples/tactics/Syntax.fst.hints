@@ -1,29 +1,88 @@
 [
-  "ùâ\u0014§KŠ3˜çº\u0018ëGÖ\u001f!",
+  "\u0003!y^`\u000eaŸ¨ØÒ–q7Š#",
   [
+    [ "Syntax.quote_sanity_check", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.goal_sanity_check", 1, 2, 1, [ "@query" ], 0 ],
     [ "Syntax.test2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.test2", 2, 2, 1, [ "@query" ], 0 ],
     [
-      "Syntax.blah'",
+      "Syntax.blah",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Tactics.Tv_Abs",
-        "disc_equation_FStar.Tactics.Tv_App",
-        "disc_equation_FStar.Tactics.Tv_Arrow",
-        "disc_equation_FStar.Tactics.Tv_Const",
-        "disc_equation_FStar.Tactics.Tv_FVar",
-        "disc_equation_FStar.Tactics.Tv_Refine",
-        "disc_equation_FStar.Tactics.Tv_Type",
-        "disc_equation_FStar.Tactics.Tv_Var",
-        "fuel_guarded_inversion_FStar.Tactics.term_view"
+        "binder_x_58d2c7c10918d93b79238e251dd796c1_0", "bool_inversion",
+        "bool_typing", "constructor_distinct_FStar.Reflection.Syntax.Tv_Abs",
+        "constructor_distinct_FStar.Reflection.Syntax.Tv_App",
+        "constructor_distinct_FStar.Reflection.Syntax.Tv_Refine",
+        "constructor_distinct_FStar.Reflection.Syntax.Tv_Unknown",
+        "constructor_distinct_FStar.Reflection.Syntax.Tv_Var",
+        "disc_equation_FStar.Reflection.Syntax.Tv_Abs",
+        "disc_equation_FStar.Reflection.Syntax.Tv_App",
+        "disc_equation_FStar.Reflection.Syntax.Tv_Arrow",
+        "disc_equation_FStar.Reflection.Syntax.Tv_Const",
+        "disc_equation_FStar.Reflection.Syntax.Tv_FVar",
+        "disc_equation_FStar.Reflection.Syntax.Tv_Match",
+        "disc_equation_FStar.Reflection.Syntax.Tv_Refine",
+        "disc_equation_FStar.Reflection.Syntax.Tv_Type",
+        "disc_equation_FStar.Reflection.Syntax.Tv_Unknown",
+        "disc_equation_FStar.Reflection.Syntax.Tv_Uvar",
+        "disc_equation_FStar.Reflection.Syntax.Tv_Var",
+        "equation_FStar.Reflection.Syntax.inspect",
+        "equation_FStar.Reflection.Syntax.smaller",
+        "fuel_guarded_inversion_FStar.Reflection.Syntax.term_view",
+        "l_and-interp", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Reflection.Syntax.Tv_Abs__0",
+        "projection_inverse_FStar.Reflection.Syntax.Tv_Abs__1",
+        "projection_inverse_FStar.Reflection.Syntax.Tv_App__0",
+        "projection_inverse_FStar.Reflection.Syntax.Tv_App__1",
+        "projection_inverse_FStar.Reflection.Syntax.Tv_Arrow__1",
+        "projection_inverse_FStar.Reflection.Syntax.Tv_Refine__0",
+        "projection_inverse_FStar.Reflection.Syntax.Tv_Refine__1",
+        "refinement_interpretation_FStar.Reflection.Syntax_Tm_refine_2253eb13f1af233a64b1a092facd80b2",
+        "typing_FStar.Reflection.Syntax.__inspect"
       ],
       0
     ],
-    [ "Syntax.blah", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___30", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___30", 2, 2, 1, [ "@query" ], 0 ]
+    [ "Syntax.uu___87", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___88", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___89", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___90", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___91", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___92", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Syntax.arith_test1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_FStar.Reflection.Arith.run_tm",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "kinding_FStar.Reflection.Arith.expr@tok",
+        "typing_FStar.Reflection.Arith.is_arith_expr",
+        "typing_FStar.Reflection.Arith.run_tm"
+      ],
+      0
+    ],
+    [
+      "Syntax.arith_test2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_FStar.Reflection.Arith.run_tm",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "kinding_FStar.Reflection.Arith.expr@tok",
+        "typing_FStar.Reflection.Arith.is_arith_expr",
+        "typing_FStar.Reflection.Arith.run_tm"
+      ],
+      0
+    ]
   ]
 ]

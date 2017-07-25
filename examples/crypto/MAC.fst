@@ -42,7 +42,7 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc #(list entry) []
+let log :ref (list entry) = ST.alloc #(list entry) []
 
 val keygen: p:(text -> Type) -> St (pkey p)
 val mac:    k:key -> t:text{key_prop k t} -> ST tag 

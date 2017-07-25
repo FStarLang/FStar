@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Parser.AST
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Errors
 module C = FStar.Parser.Const

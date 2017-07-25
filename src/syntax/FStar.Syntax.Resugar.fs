@@ -19,6 +19,7 @@
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 open FStar
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -35,6 +36,7 @@ module C = FStar.Parser.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 module D = FStar.Parser.ToDocument
+module UF = FStar.Syntax.Unionfind
 module E = FStar.Errors
 
 
@@ -44,7 +46,6 @@ let parser_term_to_string t = doc_to_string (D.term_to_document t)
 
 let map_opt (f:'a -> option<'b>) (l:list<'a>) : list<'b> =
   snd (BU.choose_map (fun () x -> (), f x) () l)
-
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
@@ -609,7 +610,7 @@ let rec resugar_term (t : S.term) : A.term =
       mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
 
     | Tm_uvar (u, _) ->
-      let s = "uu___unification_ " ^ (FStar.Unionfind.uvar_id u |> string_of_int) in
+      let s = "uu___unification_ " ^ (UF.uvar_id u |> string_of_int) in
       mk (var s t.pos)
 
     | Tm_meta(e, m) ->
@@ -688,6 +689,8 @@ let rec resugar_term (t : S.term) : A.term =
           mk (A.Labeled(resugar_term e, l, p))
       | Meta_desugared i ->
           resugar_meta_desugared i
+      | Meta_alien (_, s) ->
+          resugar_term e
       | Meta_named t ->
           mk (A.Name t)
       | Meta_monadic (name, t)
@@ -1044,7 +1047,7 @@ let resugar_sigelt se : option<A.decl> =
         failwith "Should not happen hopefully"
     end
 
-  | Sig_let (lbs, _, attrs) ->
+  | Sig_let (lbs, _) ->
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
       None
     else
@@ -1058,7 +1061,7 @@ let resugar_sigelt se : option<A.decl> =
         | _ -> failwith "Should not happen hopefully"
       end
 
-  | Sig_assume (lid, fml) ->
+  | Sig_assume (lid, _, fml) ->
     Some (decl'_to_decl se (Assume (lid.ident, resugar_term fml)))
 
   | Sig_new_effect ed ->

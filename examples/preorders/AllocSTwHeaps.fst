@@ -1,6 +1,6 @@
 module AllocSTwHeaps
 open FStar.ST
-open Preorder
+open FStar.Preorder
 
 //giving ourselves two non-ghost versions of the heap sel/upd functions
 assume val sel: h:FStar.Heap.heap -> r:ref 'a -> Tot (x:'a{x == FStar.Heap.sel h r})
@@ -44,7 +44,7 @@ new_effect ISTATE = STATE_h FStar.Heap.heap
 
 (* DIV is a sub-effect/sub-monad of the allocated references instance of the preorder-indexed monad. *)
 
-unfold let lift_div_istate (state:Type) (rel:relation state{preorder rel}) 
+unfold let lift_div_istate (state:Type) (rel:preorder state)
                            (a:Type) (wp:pure_wp a) (p:ist_post state a) (s:state) = wp (fun x -> p x s)
 sub_effect DIV ~> ISTATE = lift_div_istate FStar.Heap.heap heap_rel
 
@@ -61,7 +61,7 @@ effect IST    (a:Type)
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 
-assume type ist_witnessed: p:predicate FStar.Heap.heap{stable heap_rel p} -> Type0
+assume type ist_witnessed: p:predicate FStar.Heap.heap{stable p heap_rel} -> Type0
 
 
 (* Generic effects (operations) for IST. *)
@@ -71,10 +71,10 @@ assume val ist_get :     unit -> IST FStar.Heap.heap (fun s0 -> True) (fun s0 s 
 assume val ist_put :     x:FStar.Heap.heap ->
 		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 == x)
 
-assume val ist_witness : p:predicate FStar.Heap.heap{stable heap_rel p} ->
+assume val ist_witness : p:predicate FStar.Heap.heap{stable p heap_rel} ->
 		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
-assume val ist_recall :  p:predicate FStar.Heap.heap{stable heap_rel p} -> 
+assume val ist_recall :  p:predicate FStar.Heap.heap{stable p heap_rel} -> 
 		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 (* *************************************************** *)
@@ -83,13 +83,13 @@ assume val ist_recall :  p:predicate FStar.Heap.heap{stable heap_rel p} ->
 (* Swapping the reference and heap arguments of (FStar.Heap.contains) 
    to use it in point-free style in (witness) and (recall). *)
 
-let contains (#a:Type) (r:FStar.Heap.ref a) (h:FStar.Heap.heap) =
+let contains (#a:Type) (r:ref a) (h:FStar.Heap.heap) =
   b2t (FStar.StrongExcludedMiddle.strong_excluded_middle (FStar.Heap.contains h r))
 
 
 val contains_lemma : #a:Type -> 
                      h:FStar.Heap.heap -> 
-		     r:FStar.Heap.ref a -> 
+		     r:ref a -> 
 		     Lemma (requires (contains r h)) 
 		           (ensures  (FStar.Heap.contains h r))
 		     [SMTPat (contains r h)]
@@ -99,14 +99,14 @@ let contains_lemma #a h r = ()
 (* Type of references that refines the standard notion of references by
    witnessing that the given reference is allocated in every future heap. *)
 
-type ref a = r:FStar.Heap.ref a{ist_witnessed (contains r)}
+type ref a = r:ref a{ist_witnessed (contains r)}
 
 
 (* Assuming a source of freshness for references for a given heap. *)
 
 assume val gen_ref : #a:Type -> 
                      h:FStar.Heap.heap -> 
-		     Tot (r:FStar.Heap.ref a{r `Heap.unused_in` h})
+		     Tot (r:ref a{r `Heap.unused_in` h})
 
 
 (* Pre- and postconditions for the allocated references instance of IST. *)

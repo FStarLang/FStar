@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Parser.Interleave
 open FStar.ST
+open FStar.Exn
 open FStar.All
 //Reorders the top-level definitions/declarations in a file 
 //in a proper order for consistent type-checking
