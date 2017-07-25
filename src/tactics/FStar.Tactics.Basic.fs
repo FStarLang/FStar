@@ -145,7 +145,7 @@ let goal_to_json g =
 let ps_to_json (msg, ps) =
     JsonAssoc [("label", JsonStr msg);
                ("goals", JsonList (List.map goal_to_json ps.goals));
-               ("smt-goals", JsonList (List.map goal_to_json ps.goals))]
+               ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))]
 
 let dump_proofstate ps msg =
     print_generic "goal" ps_to_string ps_to_json (msg, ps)
