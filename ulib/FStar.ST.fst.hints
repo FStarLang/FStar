@@ -1,5 +1,5 @@
 [
-  "<ü•¶¾{õÕ¼E\u001eÙ\u0010±N",
+  "\r^\u0010¥ø„ÏÝ•š·v•ÝÇç",
   [
     [ "FStar.ST.gst_witness", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.ST.gst_recall", 1, 2, 1, [ "@query" ], 0 ],
@@ -137,6 +137,14 @@
       0
     ],
     [ "FStar.ST.get", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.ST.op_Colon_Equals",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Monotonic.Heap.valid_upd" ],
+      0
+    ],
     [
       "FStar.ST.ref",
       1,
