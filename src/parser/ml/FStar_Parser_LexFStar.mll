@@ -540,6 +540,7 @@ and fsdoc_kw cargs = parse
 and fsdoc_kw_arg cargs = parse
  | newline
      { let n,doc,kw,kwn,kwa = cargs in
+	   mknewline 1 lexbuf;
 	   fsdoc(n,doc^(L.lexeme lexbuf),(kwn,kwa)::kw) lexbuf}
  | _ { let n,doc,kw,kwn,kwa = cargs in
        fsdoc_kw_arg(n,doc,kw,kwn,kwa^(L.lexeme lexbuf)) lexbuf }
