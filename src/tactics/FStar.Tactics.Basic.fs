@@ -133,14 +133,29 @@ let dump_cur ps msg =
         dump_goal ps (List.hd ps.goals)
         end
 
+let ps_to_string (msg, ps) = format5 "State dump (%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
+                msg (string_of_int (List.length ps.goals)) (String.concat "\n" (List.map goal_to_string ps.goals))
+                (string_of_int (List.length ps.smt_goals)) (String.concat "\n" (List.map goal_to_string ps.smt_goals))
+let goal_to_json g =
+    let g_binders = Env.all_binders g.context |> Print.binders_to_json in
+    JsonAssoc [("hyps", g_binders);
+               ("goal", JsonAssoc [("witness", JsonStr (Print.term_to_string g.witness));
+                                   ("type", JsonStr (Print.term_to_string g.goal_ty))])]
+
+let ps_to_json (msg, ps) =
+    JsonAssoc [("label", JsonStr msg);
+               ("goals", JsonList (List.map goal_to_json ps.goals));
+               ("smt-goals", JsonList (List.map goal_to_json ps.goals))]
+
 let dump_proofstate ps msg =
-    tacprint "";
-    tacprint1 "State dump (%s):" msg;
-    tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));
-    List.iter (dump_goal ps) ps.goals;
-    tacprint1 "SMT goals (%s):" (string_of_int (List.length ps.smt_goals));
-    List.iter (dump_goal ps) ps.smt_goals;
-    ()
+    print_generic "goal" ps_to_string ps_to_json (msg, ps)
+    // tacprint "";
+    // tacprint1 "State dump (%s):" msg;
+    // tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));
+    // List.iter (dump_goal ps) ps.goals;
+    // tacprint1 "SMT goals (%s):" (string_of_int (List.length ps.smt_goals));
+    // List.iter (dump_goal ps) ps.smt_goals;
+    // ()
 
 let print_proof_state1 (msg:string) : tac<unit> =
     mk_tac (fun p -> dump_cur p msg;

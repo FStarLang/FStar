@@ -237,7 +237,7 @@ let run_tactic_on_typ (tau:tac<'a>) (env:env) (typ:typ) : list<goal> // remainin
     match r with
     | Success (_, ps) ->
         if !tacdbg then
-            BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w);
+            BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); //FIXME: Is this right?
         List.iter (fun g -> if is_irrelevant g
                             then if TcRel.teq_nosmt g.context g.witness U.exp_unit
                                  then ()

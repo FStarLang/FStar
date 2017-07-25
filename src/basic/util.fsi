@@ -131,10 +131,19 @@ val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list<string> -> unit
 
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of list<json>
+| JsonAssoc of list<(string * json)>
+
 type printer = {
   printer_prinfo: string -> unit;
   printer_prwarning: string -> unit;
   printer_prerror: string -> unit;
+  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
 }
 
 val default_printer : printer
@@ -142,6 +151,7 @@ val set_printer : printer -> unit
 
 val print_raw : string -> unit
 val print_string : string -> unit
+val print_generic: string -> ('a -> string) -> ('a -> json) -> 'a -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list<string> -> string
@@ -376,14 +386,6 @@ type hints_db = {
 
 val write_hints: string -> hints_db -> unit
 val read_hints: string -> option<hints_db>
-
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of int
-| JsonStr of string
-| JsonList of list<json>
-| JsonAssoc of list<(string * json)>
 
 val json_of_string : string -> option<json>
 val string_of_json : json -> string
