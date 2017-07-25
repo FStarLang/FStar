@@ -988,14 +988,14 @@ let write_response:
              ("query-id", qid1);
              ("status", status1);
              ("response", response)])
-let write_message: Prims.string -> Prims.string -> Prims.unit =
+let write_message: Prims.string -> FStar_Util.json -> Prims.unit =
   fun level  ->
     fun contents  ->
       write_json
         (FStar_Util.JsonAssoc
            [("kind", (FStar_Util.JsonStr "message"));
            ("level", (FStar_Util.JsonStr level));
-           ("contents", (FStar_Util.JsonStr contents))])
+           ("contents", contents)])
 let write_hello: Prims.unit -> Prims.unit =
   fun uu____3092  ->
     let js_version = FStar_Util.JsonInt interactive_protocol_vernum in
@@ -2039,41 +2039,49 @@ let interactive_error_handler: FStar_Errors.error_handler =
   }
 let interactive_printer: FStar_Util.printer =
   {
-    FStar_Util.printer_prinfo = (write_message "info");
-    FStar_Util.printer_prwarning = (write_message "warning");
-    FStar_Util.printer_prerror = (write_message "error")
+    FStar_Util.printer_prinfo =
+      (fun s  -> write_message "info" (FStar_Util.JsonStr s));
+    FStar_Util.printer_prwarning =
+      (fun s  -> write_message "warning" (FStar_Util.JsonStr s));
+    FStar_Util.printer_prerror =
+      (fun s  -> write_message "error" (FStar_Util.JsonStr s));
+    FStar_Util.printer_prgeneric =
+      (fun label1  ->
+         fun get_string  ->
+           fun get_json  ->
+             let uu____7157 = get_json () in write_message label1 uu____7157)
   }
 let interactive_mode': Prims.string -> Prims.unit =
   fun filename  ->
     write_hello ();
-    (let uu____7144 = deps_of_our_file filename in
-     match uu____7144 with
+    (let uu____7163 = deps_of_our_file filename in
+     match uu____7163 with
      | (filenames,maybe_intf) ->
          let env = tc_prims () in
-         let uu____7168 =
+         let uu____7187 =
            tc_deps FStar_Pervasives_Native.None [] env filenames [] in
-         (match uu____7168 with
+         (match uu____7187 with
           | (stack,env1,ts) ->
               let initial_range =
-                let uu____7195 =
+                let uu____7214 =
                   FStar_Range.mk_pos (Prims.parse_int "1")
                     (Prims.parse_int "0") in
-                let uu____7196 =
+                let uu____7215 =
                   FStar_Range.mk_pos (Prims.parse_int "1")
                     (Prims.parse_int "0") in
-                FStar_Range.mk_range "<input>" uu____7195 uu____7196 in
+                FStar_Range.mk_range "<input>" uu____7214 uu____7215 in
               let env2 =
-                let uu____7202 =
+                let uu____7221 =
                   FStar_TypeChecker_Env.set_range
                     (FStar_Pervasives_Native.snd env1) initial_range in
-                ((FStar_Pervasives_Native.fst env1), uu____7202) in
+                ((FStar_Pervasives_Native.fst env1), uu____7221) in
               let env3 =
                 match maybe_intf with
                 | FStar_Pervasives_Native.Some intf ->
                     FStar_Universal.load_interface_decls env2 intf
                 | FStar_Pervasives_Native.None  -> env2 in
               let init_st =
-                let uu____7214 = FStar_Util.open_stdin () in
+                let uu____7233 = FStar_Util.open_stdin () in
                 {
                   repl_line = (Prims.parse_int "1");
                   repl_column = (Prims.parse_int "0");
@@ -2082,29 +2090,29 @@ let interactive_mode': Prims.string -> Prims.unit =
                   repl_curmod = FStar_Pervasives_Native.None;
                   repl_env = env3;
                   repl_ts = ts;
-                  repl_stdin = uu____7214
+                  repl_stdin = uu____7233
                 } in
               (FStar_TypeChecker_Common.insert_id_info.FStar_TypeChecker_Common.enable
                  true;
-               (let uu____7216 =
+               (let uu____7235 =
                   (FStar_Options.record_hints ()) ||
                     (FStar_Options.use_hints ()) in
-                if uu____7216
+                if uu____7235
                 then
-                  let uu____7217 =
-                    let uu____7218 = FStar_Options.file_list () in
-                    FStar_List.hd uu____7218 in
-                  FStar_SMTEncoding_Solver.with_hints_db uu____7217
-                    (fun uu____7222  -> go init_st)
+                  let uu____7236 =
+                    let uu____7237 = FStar_Options.file_list () in
+                    FStar_List.hd uu____7237 in
+                  FStar_SMTEncoding_Solver.with_hints_db uu____7236
+                    (fun uu____7241  -> go init_st)
                 else go init_st))))
 let interactive_mode: Prims.string -> Prims.unit =
   fun filename  ->
     FStar_Util.set_printer interactive_printer;
     FStar_Errors.set_handler interactive_error_handler;
-    (let uu____7231 =
-       let uu____7232 = FStar_Options.codegen () in
-       FStar_Option.isSome uu____7232 in
-     if uu____7231
+    (let uu____7250 =
+       let uu____7251 = FStar_Options.codegen () in
+       FStar_Option.isSome uu____7251 in
+     if uu____7250
      then
        FStar_Util.print_warning
          "code-generation is not supported in interactive mode, ignoring the codegen flag"
