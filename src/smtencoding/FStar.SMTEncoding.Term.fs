@@ -658,6 +658,7 @@ and mkPrelude z3options =
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Precedes (Term Term) Term)\n\
+                (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
                 (assert (forall ((t Term))\n\
                             (! (implies (exists ((e Term)) (HasType e t))\n\
@@ -680,7 +681,6 @@ and mkPrelude z3options =
    let constrs : constructors = [("FString_const", ["FString_const_proj_0", Int_sort, true], String_sort, 0, true);
                                  ("Tm_type",  [], Term_sort, 2, true);
                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
-                                 ("Tm_uvar",  [("Tm_uvar_fst", Int_sort, true)],  Term_sort, 5, true);
                                  ("Tm_unit",  [], Term_sort, 6, true);
                                  ("BoxInt",     ["BoxInt_proj_0",  Int_sort, true],   Term_sort, 7, true);
                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort, true],  Term_sort, 8, true);

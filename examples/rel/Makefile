@@ -5,7 +5,10 @@ include ../Makefile.include
 
 uall: all
 
+.PHONY: benton2004
+
 all:\
+  benton2004\
   Bijection.uver\
   Equivalence.uver\
   IfcComposeReify.uver\
@@ -43,6 +46,20 @@ all:\
   WhileReify.uver \
   OTP.uver \
   ElGamal.uver
+
+
+benton2004:\
+  Benton2004.Aux.uver\
+  Benton2004.uver\
+  Benton2004.DDCC.uver\
+  Benton2004.DDCC.Examples.uver\
+  Benton2004.SmithVolpano.uver\
+  Benton2004.RHL.uver\
+  Benton2004.RHL.Examples.uver\
+  Benton2004.RHL.Derived.uver\
+  Benton2004.RHL.Examples2.uver\
+
+
 
 %.fst-in:
 	@echo $(OTHERFLAGS)

@@ -93,6 +93,7 @@ let defaults =
       ("_fstar_home"                  , String "");
       ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
+      ("admit_except"                 , Unset);
       ("check_hints"                  , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
@@ -113,6 +114,7 @@ let defaults =
       ("hide_genident_nums"           , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
+      ("hint_file"                    , Unset);
       ("in"                           , Bool false);
       ("ide"                          , Bool false);
       ("include"                      , List []);
@@ -193,6 +195,7 @@ let lookup_opt s c =
   c (get_option s)
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
+let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
 let get_check_hints             ()      = lookup_opt "check_hints"              as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
@@ -212,6 +215,7 @@ let get_fstar_home              ()      = lookup_opt "fstar_home"               
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
+let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
 let get_in                      ()      = lookup_opt "in"                       as_bool
 let get_ide                     ()      = lookup_opt "ide"                      as_bool
 let get_include                 ()      = lookup_opt "include"                  (as_list as_string)
@@ -361,7 +365,13 @@ let rec specs () : list<Getopt.opt> =
        "Admit SMT queries, unsafe! (default 'false')");
 
       ( noshort,
-       "codegen",
+        "admit_except",
+         OneArg (String, "[id]"),
+        "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
+
+
+      ( noshort,
+        "codegen",
         OneArg ((fun s -> String (parse_codegen s)),
                  "[OCaml|FSharp|Kremlin]"),
         "Generate code for execution");
@@ -454,6 +464,12 @@ let rec specs () : list<Getopt.opt> =
         "hint_info",
         ZeroArgs(fun () -> Bool true),
         "Print information regarding hints");
+
+       ( noshort,
+         "hint_file",
+         OneArg (Path,
+                 "[path]"),
+        "Read/write hints to <path> (instead of module-specific hints files)");
 
        ( noshort,
         "in",
@@ -635,7 +651,7 @@ let rec specs () : list<Getopt.opt> =
         "smt",
         OneArg (Path,
                  "[path]"),
-        "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
+        "Path to the Z3 SMT solver (we could eventually support other solvers)");
 
        (noshort,
         "smtencoding.elim_box",
@@ -810,6 +826,7 @@ let docs () =
 //Additionaly, the --smt option is a security concern
 let settable = function
     | "admit_smt_queries"
+    | "admit_except"
     | "debug"
     | "debug_level"
     | "detail_errors"
@@ -817,6 +834,7 @@ let settable = function
     | "hide_genident_nums"
     | "hide_uvar_nums"
     | "hint_info"
+    | "hint_file"
     | "initial_fuel"
     | "initial_ifuel"
     | "inline_arith"
@@ -996,6 +1014,7 @@ let prepend_output_dir fname =
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
+let admit_except                 () = get_admit_except                  ()
 let check_hints                  () = get_check_hints                 ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
@@ -1013,6 +1032,7 @@ let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
+let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
 let indent                       () = get_indent                      ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())

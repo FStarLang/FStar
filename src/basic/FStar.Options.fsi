@@ -60,6 +60,7 @@ val add_light_off_file          : string  -> unit
 
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
+val admit_except                : unit    -> option<string>
 val codegen                     : unit    -> option<string>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
@@ -82,6 +83,7 @@ val full_context_dependency     : unit    -> bool
 val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
+val hint_file                   : unit    -> option<string>
 val ide                         : unit    -> bool
 val include_path                : unit    -> list<string>
 val indent                      : unit    -> bool

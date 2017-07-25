@@ -417,7 +417,7 @@
       "FStar.Int.mod",
       2,
       2,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Prims.pow2.fuel_instrumented",
@@ -443,8 +443,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
         "token_correspondence_Prims.pow2.fuel_instrumented",
-        "typing_FStar.Int.fits", "typing_FStar.Int.min_int",
-        "typing_Prims.abs", "typing_Prims.pow2"
+        "typing_FStar.Int.fits", "typing_Prims.abs", "typing_Prims.pow2"
       ],
       0
     ],

@@ -16,6 +16,9 @@ indent: $(addsuffix -indent, $(ALL))
 	$(FSTAR) $^
 	touch $@
 
+%.fst-in:
+	@echo --use_hints --hint_info
+
 %.fst-indent: %.fst
 	$(FSTAR) --indent $^ > $^.indent.fst
 

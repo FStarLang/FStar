@@ -36,11 +36,11 @@ let acls = ST.alloc []
    F* infers a fully precise predicate transformer semantics for them.
 *)
 
-let grant e = ST.write acls (e::ST.read acls)
+let grant e = acls := e::!acls
 
 let revoke e =
-  let db = filter (fun e' -> e<>e') (ST.read acls) in
-  ST.write acls db
+  let db = filter (fun e' -> e<>e') !acls in
+  acls := db
 
 (* Next, we model two primitives that provide access to files *)
 
