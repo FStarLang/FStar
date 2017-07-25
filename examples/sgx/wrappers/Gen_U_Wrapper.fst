@@ -1,17 +1,17 @@
-module GenWrapper
+module Gen_U_Wrapper
 
+(* Generate Wrappers *)
 open WrapperUtil
 open Manifest
 open FStar.IO
 open FStar.HyperStack.ST
 
-   
 val gen_generic_wrapper_sig: (fname:string) ->(args: list argtype)->(ret:argtype) -> ST unit
 (requires (fun _ -> True))
 (ensures (fun h0 _ h1 -> h0 == h1))
 let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) = 
      let orignargs = List.Tot.Base.length args in
-     let s = trace "\n (* Printing signature for V's function wrapper. \n * U's code invokes V's function " in
+     let s = trace "\n (* Printing signature for U's function wrapper. \n * V's code invokes U's function " in
      let _ = trace fname in
      let _ = trace " using the wrapper " in
      let _ = trace fname in
@@ -245,11 +245,15 @@ let gen_generic_wrapper_sig (fname:string) (args: list argtype) (ret:argtype) =
                     (*end of function local_print_modifies_refs_clause *)
                     in
                    let _ = local_print_modifies_refs_clause args in
-                   if (type_is_ref ret) then
-                      (* if return type is a reference should there be a modifies clause? *)
-                      trace "/\ (not is_vheap_reference rt) \n\t"
-                   else
-                     ()
+                   let _ = if (type_is_ref ret) then
+                              (* if return type is a reference should there be a modifies clause? *)
+                              trace "/\ (not is_vheap_reference rt) \n\t"
+                           else
+                             ()
+                   in
+                   (* print bitmap invariant *)
+                   let _ = trace "/\ get_bitmap_unset_locations h0 (get_all_refs_from_stack_frames_below h0) = get_bitmap_unset_locations h1 (get_all_refs_from_stack_frames_below h1) \n \t" in
+                   ()
   
        in 
        trace "))\n"
@@ -290,7 +294,7 @@ let gen_generic_wrapper_body (fname:string) (args: list argtype) (ret:argtype) =
                                  let _ = trace "x" in
                                  let _ = trace (string_of_int (orignargs - nargs + 1)) in
                                  let _ = trace ")) \n \t \t" in
-                                 let _ = trace "and ( not is_higher_order_ref " in
+                                 let _ = trace "and ( not is_code_pointer " in
                                  let _ = trace "x" in
                                  let _ = trace (string_of_int (orignargs - nargs + 1)) in
                                  let _ = trace ") \n \t \t" in 
@@ -306,7 +310,7 @@ let gen_generic_wrapper_body (fname:string) (args: list argtype) (ret:argtype) =
                                               let _ = trace ") or is_uheap_reference (as_addr " in
                                               let _ = print_sel l (orignargs - nargs +1) false in
                                               let _ = trace "))\n \t \t" in
-                                              let _ = trace "and ( not is_higher_order_ref " in
+                                              let _ = trace "and ( not is_code_pointer " in
                                               let _ = print_sel l (orignargs - nargs +1) false in
                                               let _ = trace ") \n \t \t" in 
                                               print_all_deep_refs (l+1)
@@ -368,7 +372,7 @@ let gen_generic_wrapper_body (fname:string) (args: list argtype) (ret:argtype) =
         in () (* end of match *)
       in (* end of check_bitmap *) 
       let _ = trace "(* Check \n " in
-      let _ = trace " \t \t 1. If a reference is a stack (deep) references, then it is marked as writable in bitmap \n" in
+      let _ = trace " \t \t 1. If it is a stack (deep) reference, it is marked as writable in bitmap \n" in
       let _ = trace " \t \t 2. If it is a heap reference then it refers to U's heap \n" in
       let _ = trace " \t \t 3. Not a code pointer *) \n \t " in
       let _ = trace " if true   " in
@@ -419,11 +423,25 @@ let gen_manifest_helper_routines () =
  let _ = trace "assume val is_writable: (addr: nat) -> bool \n" in
  let _  = trace "assume val is_uheap_reference: (addr: nat) -> bool \n" in
  let _ = trace "assume val is_vheap_reference : (addr:nat) -> bool \n" in
- let _ = trace "assume val is_code_pointer: (addr:nat) -> bool \n \n" in
+ let _ = trace "assume val is_code_pointer: (addr:nat) -> bool \n\n" in
+ let _ = trace "val get_stack_frames_below : (h:mem) -> (list rid) \n" in
+ let _ = trace "(* Not quite right - IN PROGRESS *) \n" in
+ let _ = trace "let get_stack_frames_below h = \n" in
+ let _ = trace "    let top = h.tip \n" in
+ let _ = trace "    let rec get_last_parent (f:rid) (l:list rid) = \n" in
+ let _ = trace "         let p = HH.parent f in \n " in
+ let _ = trace "         if p = HH.root then l else get_last_parent p::l \n \n" in
+ let _ = trace "assume val refs_in_region: (l:rid)->(list nat) \n\n" in
+ let _ = trace "val get_all_refs_from_stack_frames_below : (h:mem) -> (Set nat) \n" in
+ let _ = trace "let get_all_refs_from_stack_frames_below h = \n" in
+ let _ = trace "    let sframes = get_stack_frames_below h \n" in
+ let _ = trace "    let srefs = refs_in_region sframes \n" in
+ let _ = trace "    as_addr_list srefs \n\n" in
+ let _ = trace "assume val get_bitmap_unset_locations : (h:mem)->(loc: Set nat)-> (Set nat) \n \n" in
  ()
 
 let print_icon () = 
- trace " \n \n (* Automatically generated wrappers  \n * DO NOT MODIFY  \n *) \n \n"
+ trace " \n \n (* Automatically generated wrappers for U  \n * DO NOT MODIFY  \n *) \n \n"
  
 (* Sample Manifest *)
 val main: unit -> ST unit
@@ -432,7 +450,7 @@ val main: unit -> ST unit
 let main () = 
    let _ = print_icon () in
    let _ = gen_manifest_helper_routines () in
-   gen_wrapper (Mkcalltable_entry "foo" 0x1000 0x25 [ANat64; ANat64; (ABuffer (ABuffer (ABuffer ANat64))); (ABuffer (ABuffer ANat64)); (ABuffer ANat64)] (ABuffer ANat64))
+   gen_wrapper (Mkcalltable_entry "ufunc" 0x1000 0x25 [ANat64; ANat64; (ABuffer (ABuffer (ABuffer ANat64))); (ABuffer (ABuffer ANat64)); (ABuffer ANat64)] (ABuffer ANat64))
            
 let () = main ()
 
