@@ -309,7 +309,7 @@ let rec reclassifyHeader h l =
 		  (f, v)::(reclassifyHeader tl l)
 		  
 val reclassifyHeaderLemma : h:header{checkHeaderSecLevel h} -> l:secLevel{canReclHeader h l} -> Lemma (requires (True))
-	(ensures (match l with | SecretVal [o] -> isHeaderVisible (reclassifyHeader h l) [o] | _ -> true))
+	(ensures (match l with | SecretVal ol -> isHeaderVisible (reclassifyHeader h l) ol | PublicVal -> true))
 	[SMTPat (reclassifyHeader h l)]
 let rec reclassifyHeaderLemma h l = 
   match h with
@@ -339,7 +339,14 @@ let rec redirectHeadersLemma h l =
 
 val reclassifyHeaderVisibleLemma : h:header{checkHeaderSecLevel h} -> o:torigin{canReclHeader h (SecretVal [o])} -> 
 	Lemma (requires (True)) (ensures (isHeaderVisible (reclassifyHeader h (SecretVal [o])) [o])) [SMTPat (reclassifyHeader h (SecretVal [o]))]
-let rec reclassifyHeaderVisibleLemma h o = ()
+let reclassifyHeaderVisibleLemma h o = ()
+
+val reclassifyHeaderVisibleListLemma : h:header{checkHeaderSecLevel h} -> o:list torigin{(not (emptyList o)) /\ canReclHeader h (SecretVal o)} -> 
+	Lemma (requires (True)) (ensures (isHeaderVisible (reclassifyHeader h (SecretVal o)) o)) [SMTPat (reclassifyHeader h (SecretVal o))]
+let rec reclassifyHeaderVisibleListLemma h o = 
+  match h with 
+  | [] -> ()
+  | (f,v)::tl -> reclassifyHeaderVisibleListLemma tl o
 
 (* *** Some functions for printing and logging *** *)
 val getOriginList : list torigin -> Tot string

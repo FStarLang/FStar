@@ -1,3 +1,6 @@
+(*
+  Defines some of the data structures used by the servers participating in the OAuth protocol
+*)
 module OAuth.Datatypes
 
 open FStar.All
@@ -89,16 +92,16 @@ type tokenList' = list (torigin * secretVal)
 type tokenList = c:(tokenList'){indexedOriginTL c}
 
 (* retrieve the client_id from the client_data table for the given origin-client *)
-val getClientID : clientData -> torigin -> Tot string
+val getClientID : clientData -> torigin -> Tot (option secretVal)
 let rec getClientID cd t = match cd with  
-  | [] -> ""
-  | (o,v,_)::tl -> if o = t then (Secret?.v v) else getClientID tl t
+  | [] -> None
+  | (o,v,_)::tl -> if o = t then Some v else getClientID tl t
 
 (* retrieve the origin from the client_data table for the given client_id *)
-val getCDOrigin : clientData -> string -> Tot torigin
+val getCDOrigin : clientData -> secretVal -> Tot torigin
 let rec getCDOrigin cd t = match cd with  
   | [] -> blank_origin
-  | (o,v,_)::tl -> if (Secret?.v v) = t then o else getCDOrigin tl t
+  | (o,v,_)::tl -> if v = t then o else getCDOrigin tl t
 
 (* retrieve the client_secret from the client_data table for the given origin *)
 val getCDSecret : clientData -> t:torigin -> Tot (option secretVal)
@@ -110,7 +113,7 @@ let rec getCDSecret cd t = match cd with
 val getIPLogin : loginSession -> secretVal -> ML torigin
 let rec getIPLogin ls s = match ls with
   | [] -> blank_origin
-  | (o,_,t)::tl -> if compareSecret s t then o else getIPLogin tl s
+  | (o,_,t)::tl -> if s = t then o else getIPLogin tl s
 		 
 (* retrieve the authcode from the codelist for the given origin *)
 val getCLRedURI : codeList -> torigin -> Tot (option uri)
@@ -128,7 +131,7 @@ let rec getCLCode cd t = match cd with
 val getNewCodeList : codeList -> t:torigin -> ac:secretVal -> ru:uri -> Tot (codeList)
 let rec getNewCodeList cd t ac ru = match cd with  
   | [] -> []
-  | (o,v,sv,u)::tl -> if o = t && compareSecret sv ac && u = ru then tl else (o,v,sv,u)::(getNewCodeList  tl t ac ru)
+  | (o,v,sv,u)::tl -> if o = t && sv = ac && u = ru then tl else (o,v,sv,u)::(getNewCodeList  tl t ac ru)
 
 (* retrieve the access token from the list for the origin *)
 val getTLToken : tokenList -> t:torigin -> Tot (option (s:secretVal))
@@ -201,15 +204,15 @@ let refUL (#s:secLevel) (tl:uList s) = ST.alloc tl
 val userList : ref (uList (SecretVal [ipori]))
 let userList = refUL ([((classify #PublicVal "usernameU" (SecretVal [ipori])), (classify #PublicVal "passwordP" (SecretVal [ipori])), [])])
 
-val getRPClientID : torigin -> ML string
+val getRPClientID : torigin -> ML (option secretVal)
 let getRPClientID t = getClientID (!rpCD) t  
 
 (* get the client_id for the origin *)
-val getIPClientID : torigin -> ML string
+val getIPClientID : torigin -> ML (option secretVal)
 let getIPClientID t = getClientID (!ipCD) t  
 
 (* get the RP's origin using the client_id *)
-val getRPOrigin : string -> ML torigin
+val getRPOrigin : secretVal -> ML torigin
 let getRPOrigin s = getCDOrigin (!ipCD) s
 
 val addCookieList : #s:secLevel -> list (secString s * secString s * (list (secString s))) -> secString s -> secString s -> secString s -> 

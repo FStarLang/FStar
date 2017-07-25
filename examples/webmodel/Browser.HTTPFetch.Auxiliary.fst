@@ -59,7 +59,7 @@ let setRefPolRedirect req resp =
 val refPolRedForbiddenHeaderLemma : req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> resp:actResponse{requestResponseValid req resp} -> 
 				    Lemma (requires (notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead)) 
 				    (ensures (notForbiddenHeaderfieldInReqHeader (Request?.rf (setRefPolRedirect req resp)).reqhead)) 
-let refPolRedForbiddenHeaderLemma h l = ()
+let refPolRedForbiddenHeaderLemma req resp = ()
 
 (* Is request's method cors-safelisted method *)
 val isCORSSafelistedMethod : reqMethod -> Tot bool

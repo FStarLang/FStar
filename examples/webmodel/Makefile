@@ -35,7 +35,7 @@ uall: $(ALLFILES:%=verify-%)
 # Makefile.include. You shouldn't need to call `cp` ever.
 ocaml_oauth: out OAuth.User.fst
 	$(MAKE) -C $(ULIB_ML)
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml OAuth.User.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --z3rlimit 100 --odir out --codegen OCaml OAuth.User.fst
 	$(OCAMLOPT) -I out/ ML_ExternalFunctions.ml out/FStar_List_Tot.ml out/AuxiliaryFunctions.ml out/Web_Origin.ml out/Secret_SecString.ml out/Web_URI.ml out/Browser_AuxiliaryDatatypes.ml out/Browser_StringFunctions.ml out/Browser_Datatypes.ml out/Browser_ContentSecurityPolicy.ml out/Browser_RequestResponseHeader.ml out/Browser_HTTPFetch_Auxiliary.ml out/Browser_HTTPFetch.ml out/Browser_Model_Interface.ml out/NetworkRequestInterface.ml out/OAuth_Datatypes.ml out/OAuth_RP.ml out/OAuth_IP.ml out/OAuth_User.ml -o out/OAuth_User.exe
 	./out/OAuth_User.exe
 

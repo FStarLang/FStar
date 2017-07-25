@@ -40,8 +40,8 @@ let rec splitDom s =
     | None -> [s]
     | Some (f,r) -> f::(splitDom r)
 
-private val stringContains : s:string -> string -> n:nat -> Tot (p:(option nat){match p with | None -> true | Some po -> (po >= n && po < String.length s)}) 
-					       (decreases (String.length s - n))
+private val stringContains : s1:string -> s2:string -> n:nat -> Tot (p:(option nat){match p with | None -> true | Some po -> (po >= n && po < String.length s1)}) 
+					       (decreases (String.length s1 - n))
 let rec stringContains s1 s2 n =
   let l1 = String.length s1 in
   let l2 = String.length s2 in
@@ -229,7 +229,7 @@ let hstring_to_curi_ml l s =
   | Some num -> (
       match stringContains s "/" (num+3) with
       | None -> let orig = (splitOrigin s num) in 
-	       if (isOriginSec orig l) then
+	       if (isOriginSec orig l) then (* check if the origin is part of the secLevel - either PublicVal or SecretVal list containing origin *)
 		 Some (orig, ({c_origin=orig;c_uname=(emptyString l);c_pwd=(emptyString l);c_path=[];c_querystring=[];c_fragment=(emptyString l)}))
 	       else None
       | Some slash -> (

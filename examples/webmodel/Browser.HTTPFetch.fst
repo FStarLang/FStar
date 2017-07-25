@@ -58,7 +58,7 @@ let httpNetworkOrCachePreflightFetch b req cors af einfo =
     let nr = Request (Request?.rsl req) ({r with reqhead=nh;corsflag=cors;corspfflag=false;authflag=af}) in
     (httpNetworkFetch b nr cflag einfo) 
 
-val preflight_request : r:request -> h:header{checkHeaderSecLevel h /\ List.for_all (fun (hf,hv) -> Headervalue?.hvs hv = PublicVal) h} -> Tot request
+val preflight_request : request -> h:header{checkHeaderSecLevel h /\ List.for_all (fun (hf,hv) -> Headervalue?.hvs hv = PublicVal) h} -> Tot request
 let preflight_request req h =
   let r = (Request?.rf req) in
   let rs = (Request?.rsl req) in
@@ -76,7 +76,7 @@ let corsPreflightFetch b req einfo =
   httpNetworkOrCachePreflightFetch b pr false false einfo
 
 (* Section 4.3 - HTTP Fetch *)
-val httpFetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> bool -> bool -> (cowindow * cowindow * navType) -> 
+val httpFetch : browser -> r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> bool -> bool -> (cowindow * cowindow * navType) -> 
 		Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
 let httpFetch b r cors pf einfo = (* check for skip-service-worker. define service workers. for now assuming that the page doesnt use service workers *)
   if (pf) then
@@ -88,7 +88,7 @@ let httpFetch b r cors pf einfo = (* check for skip-service-worker. define servi
 
 (* Section 4.2 - Scheme Fetch *)
 (* case analyse the protocol to determine what to do. Considering only http(s) cases, calls into httpFetch *)
-val schemeFetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> (cowindow * cowindow * navType) -> 
+val schemeFetch : browser -> r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> (cowindow * cowindow * navType) -> 
 		  Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
 let schemeFetch b r einfo =
   let rurl = (firstElement (Request?.rf r).requrl) in
@@ -97,7 +97,7 @@ let schemeFetch b r einfo =
   else (Error "basic fetch error", r, b) (* return an error ? *)
     
 (* 4.1 case analysis (11) *)
-val response_for_fetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> bool -> 
+val response_for_fetch : browser -> nreq:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nreq).reqhead} -> bool -> 
 			 (cowindow * cowindow * navType) -> Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
 let response_for_fetch b nreq cors einfo =
     let r = (Request?.rf nreq) in
@@ -129,7 +129,7 @@ let upReferRequest r refer rP cors rf = Request (Request?.rsl r) ({(Request?.rf 
 (* Or if we consider this to be async always, then this would always queue the request and handle the response later *)
 (* Algorithm main fetch using request, optionally with a CORS flag and recursive flag *)
 (* Fetch calls response_for_fetch which calls basic fetch which calls http fetch which calls http redirect fetch which calls Fetch! *)
-val fetch_resource : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> bool -> bool -> (cowindow * cowindow * navType) -> 
+val fetch_resource : browser -> r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> bool -> bool -> (cowindow * cowindow * navType) -> 
 		     Tot (result * nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead} * browser)
 let fetch_resource b r cors rf einfo =
   let req = (Request?.rf r) in
@@ -171,7 +171,7 @@ let httpRedirectFetch b req resp cors einfo =
       else if ((isRedResponse (ActResponse?.ar resp)) && r.reqm = "POST") then (* redirect for 307/308 with POST *)
       	  let newr = Request (URI?.usl u) ({nr with requrl=u::nr.requrl;reqm=r.reqm;reqo=ro;reqhead=nh;reqredirect=(nr.reqredirect + 1);reqbody=(reclassify nr.reqbody (URI?.usl u));corsflag=cors;recflag=rf}) in
           fetch_resource nb newr cors true einfo
-      else  (* other cases - mostly GET for 301/2/7/8 *)	  
+      else  (* other cases - mostly GET for 301/2/7/8 *)
 	  let newr = Request (URI?.usl u) ({nr with requrl=u::nr.requrl;reqm=r.reqm;reqo=ro;reqhead=nh;reqredirect=(nr.reqredirect + 1);reqbody=(emptyString (URI?.usl u));corsflag=cors;recflag=rf}) in
           fetch_resource nb newr cors true einfo
 
@@ -193,7 +193,7 @@ let getResponse b c resp =
 (* let processResponseBody b r resp = (Response resp, b) *)
 
 (* Process Fetch Response - Step 13, 14, 16 of main fetch algorithm *)
-val processFetchResponse : browser -> req:request -> resp:response{validReqResp req resp} -> bool -> Tot (response)
+val processFetchResponse : browser -> req:request -> resp:response{validReqResp req resp} -> bool -> Tot (ores:response{validReqResp req ores})
 let processFetchResponse b req resp cf =
   match resp with
   | NetworkError e -> NetworkError e
@@ -231,7 +231,7 @@ let processFetchResponse b req resp cf =
     (FilteredResponse nresp)
 	  
 (* Process cors preflight response *)
-val processCORSPreFlightResponse : browser -> req:request -> resp:actResponse{requestResponseValid req resp} -> bool -> Tot (option actResponse)
+val processCORSPreFlightResponse : browser -> r:request -> resp:actResponse{requestResponseValid r resp} -> bool -> Tot (option actResponse)
 let processCORSPreFlightResponse b r resp cf =
     if (corsCheck r resp) && ((ActResponse?.ar resp).respcode >= 200) && ((ActResponse?.ar resp).respcode <= 299) then
        (corsOKResponse r resp)
@@ -250,7 +250,7 @@ let processHttpRedirectResponse b req resp cf =
 (* Process http response *)
 (* The fetch functions return the request but do not pass over to the callee *)
 val processHttpResponse : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> resp:actResponse{requestResponseValid req resp} -> bool ->
-			  (cowindow * cowindow * navType) -> Tot (response * browser)
+			  (cowindow * cowindow * navType) -> Tot (ores:response{validReqResp req ores} * browser)
 let processHttpResponse b req resp cf einfo =
   let reqf = (Request?.rf req) in
   if (reqf.corspfflag) then
@@ -290,7 +290,7 @@ let processHttpResponse b req resp cf einfo =
 
 (* Process network-or-cache response *)
 val processNOCResponse : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> resp:actResponse{requestResponseValid req resp} -> bool ->
-			 (cowindow * cowindow * navType) -> Tot (response * browser)
+			 (cowindow * cowindow * navType) -> Tot (ores:response{validReqResp req ores} * browser)
 let processNOCResponse b req resp cf einfo =
   if ((ActResponse?.ar resp).respcode = 401 && cf = true && (Request?.rf req).corsflag = false && Some? (Request?.rf req).reqw) then (
      if ((Request?.rf req).reqcredflag = false || (Request?.rf req).authflag = true) then
@@ -313,7 +313,7 @@ let processNOCResponse b req resp cf einfo =
 
 (* Processing response for network fetch *)
 val processNetworkResponse : browser -> connection -> r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> resp:actResponse{requestResponseValid r resp} ->
-			     Tot (response * browser * option (request * cowindow * cowindow * navType))
+			     Tot (ores:response{validReqResp r ores} * browser * option (request * cowindow * cowindow * navType))
 let processNetworkResponse b c r resp =
   let (rr,nb) = (getResponse b c resp) in (* remove the first request from the connection list in the browser *)
   match rr with

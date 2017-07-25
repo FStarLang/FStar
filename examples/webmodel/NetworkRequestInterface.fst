@@ -1,3 +1,6 @@
+(*
+  Defines secret and trusted origins to be used by the OAuth protocol and exposes a set of APIs from Browser.Model.Interface
+*)
 module NetworkRequestInterface
 
 open FStar.IO

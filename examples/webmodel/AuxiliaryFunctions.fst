@@ -65,13 +65,17 @@ let rec removeDuplicates #a l =
 	    else (removeDuplicates tl)
 
 (* Is "l" a sublist of "s", i.e., all elements of "l" are present in "s" *)
-(* No implementation for subset function in List.Tot.Base *)
+(* No implementation for subset function in List.Tot.Base --- the current implementation doesn't account for duplicates separately *)
 val isSublist : #a:eqtype -> l:list a -> s:list a -> Tot (bool)
-let rec isSublist #a l s =
-  match l with 
+let rec isSublist #a l s = 
+  (l = s) ||
+  (match l with 
   | [] -> true
-  | hd::tl -> (List.mem hd s) && (isSublist tl s)
-	    
+  | hd::tl -> (List.mem hd s) && (isSublist tl s))
+
+val sublist_lemma : #a:eqtype -> l:list a -> s:list a -> Lemma (requires (l = s)) (ensures (isSublist l s)) [SMTPat (isSublist l s)]
+let sublist_lemma #a l s = ()
+
 val emptyList : l: list 'a -> Tot bool
 let emptyList l = 
   match l with | [] -> true | _ -> false
@@ -99,12 +103,12 @@ let rec rem_sublist #a l n =
 	 | [] -> []
 	 | h::t -> h::(rem_sublist t (n-1)))
 
-val sublist_lemma : #a:eqtype -> l:list a -> n:nat -> 
+val rem_sublist_lemma : #a:eqtype -> l:list a -> n:nat -> 
 		  Lemma (requires True) (ensures (forall x. List.mem x (rem_sublist l n) ==> List.mem x l))
 		      [SMTPat (rem_sublist #a l n)]
-let rec sublist_lemma #a l n = 
+let rec rem_sublist_lemma #a l n = 
   if n = 0 then ()
-  else match l with | [] -> () | h::tl -> sublist_lemma tl (n-1)
+  else match l with | [] -> () | h::tl -> rem_sublist_lemma tl (n-1)
 
 val lemma_list_append : l:list 'a -> l':list 'a -> 
 			Lemma (requires True) (ensures (List.length (List.append l l') = (List.length l + List.length l'))) [SMTPat (List.append l l')]

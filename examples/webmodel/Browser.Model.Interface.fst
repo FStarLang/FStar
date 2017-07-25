@@ -221,7 +221,7 @@ let join_flags ls1 ls2 = List.append ls1 ls2
   ir indicates isRequestResource
 *)
 (* 7.8.1 -- process a navigate response *)
-private val processNavigateResponseSub : browser -> req:(request) -> resp:actResponse{requestResponseValid req resp} -> ir:bool -> cowindow -> cowindow -> navType -> 
+private val processNavigateResponseSub : browser -> req:(request) -> oresp:actResponse{requestResponseValid req oresp} -> bool -> cowindow -> cowindow -> navType -> 
 					 Tot (result * option cowindow * browser)
 let processNavigateResponseSub b req oresp ir sw tw ty =
   if (navRespBlockedCSP req ty (oresp) sw tw) then ((Error "navigation response blocked by CSP"), None, b)
@@ -252,6 +252,16 @@ let processNavigateResponse b req resp ir sw tw ty =
 					 | OpaqRedFiltered orf -> orf.ir ) in
 	processNavigateResponseSub b req oresp ir sw tw ty
 
+private val processNavigateFetchSub : browser -> nreq:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nreq).reqhead} -> cowindow -> cowindow -> navType -> 
+				   Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
+let processNavigateFetchSub b nreq sw tw ty =
+    if (navReqBlockedCSP nreq ty sw tw) then (Error "navigation req blocked by CSP", None, None, b)
+    else 
+      let nw = (CWindow tw.cwinid tw.cwname (firstElement (Request?.rf nreq).requrl) tw.cwframes tw.cwopener tw.cwparent tw.cwhist tw.cwdoc tw.cwsbox) in
+      let nb = ({b with windows=(replacewin b.windows tw nw)}) in
+      let (re, nr, sb) = (fetch_resource nb nreq false false (sw, nw, ty)) in
+      (re, Some nr, Some nw, sb) (* Send the newwin *)
+
 (* 7.8.1 -- Process a navigate fetch *)
 private val processNavigateFetch : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> cowindow -> cowindow -> navType -> 
 				   Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
@@ -266,13 +276,8 @@ let processNavigateFetch b req sw tw ty =
 	       (getAOrigin (getWinURI (Some?.v (CWindow?.cwparent tw))))
 	    else r.reqo) in
     let nreq = Request (Request?.rsl req) ({r with reqo = ori; reqw = (Some sw); reqdest = "document"; reqtarget = (Some tw); reqredmode = "manual"; reqmode = Navigate; reqcredm = "include"; reqcredflag = true; corsflag = false; corspfflag = false; authflag = false; recflag = false}) in
-    if (navReqBlockedCSP nreq ty sw tw) then (Error "navigation req blocked by CSP", None, None, b)
-    else 
-      let nw = (CWindow tw.cwinid tw.cwname ruri tw.cwframes tw.cwopener tw.cwparent tw.cwhist tw.cwdoc tw.cwsbox) in
-      let nb = ({b with windows=(replacewin b.windows tw nw)}) in
-      let (re, nr, sb) = (fetch_resource nb nreq false false (sw, nw, ty)) in
-      (re, Some nr, Some nw, sb) (* Send the newwin *)
-
+    processNavigateFetchSub b nreq sw tw ty
+    
 (* 7.8.1 -- Navigate a browsing context *)
 (* TODO - update the windows details to the request url *)
 val navigateWindow: browser -> cowindow -> cowindow -> resource -> navType -> 
@@ -299,13 +304,13 @@ let processNavigateFetchRespSub b req resp sw tw ty =
 		   else if prot = "blob" || prot = "file" || prot = "filesystem" || prot = "javascript" then 
 		      (Error "incorrect protocol", None, None, b) (* Network Error *)
 		   else if prot = "ftp" || prot = "about" || prot = "data" then 
-		      let nreq = default_req_uri sw u in 
+		      let nreq = default_request sw u in 
 		      processNavigateFetch b nreq sw tw ty
 		   else (Success "not navigation resource", None, Some tw, b) (*process resource appropriately*)
   | None -> (match (processNavigateResponse b req (TotResponse resp) true sw tw ty) with | (res, w, nb) -> (res, None, w, nb))
 	
 private val processNavigateFetchResp : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> 
-				       r:response{validReqResp req r /\ (not (NetworkError? r) /\ not (RespSuccess? r))} ->cowindow -> cowindow -> navType -> 
+				       resp:response{validReqResp req resp /\ (not (NetworkError? resp) /\ not (RespSuccess? resp))} ->cowindow -> cowindow -> navType -> 
 				       Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
 let processNavigateFetchResp b req resp sw tw ty =
   match resp with
@@ -418,7 +423,7 @@ let open_window b cw h name =
       match us with 
       | None -> (Success s, None, w, nb)
       | Some u -> 
-	   (match (navigateWindow nb cw w (RequestResource (default_req_uri cw u)) "other") with
+	   (match (navigateWindow nb cw w (RequestResource (default_request cw u)) "other") with
     	   | (Error err, nr, _, n) -> (Error err, nr, cw, n)
     	   | (Success s, nr, _, n) -> (Success s, nr, w, n)))
 
@@ -461,14 +466,14 @@ let back_window b cw tw =
   else ((Error "back history error"), b)
 
 (* Set window location *)
-val set_win_location : browser -> c:cowindow -> f:cowindow -> u:uri{match (URI?.usl u) with | SecretVal [o] -> true | _ -> false} -> 
+val set_win_location : browser -> c:cowindow -> f:cowindow -> u:uri -> 
 		       Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
-let set_win_location b c f u = navigateWindow b c f (RequestResource (default_req_uri f u)) "other"
+let set_win_location b c f u = navigateWindow b c f (RequestResource (default_request f u)) "other"
 
 (* 4.10.22.3 Form submission algorithm - form data is serialized string fd *)
 (* can also have dialog method that does separate processing *)
 (* For similar schemes, the spec proposes using the suitable descriptions *)
-val form_submission : browser -> window -> string -> m:reqMethod{m="GET" \/ m="POST"} -> u:uri{validSingleSecLevel (URI?.usl u)} -> fd:list (pubString * pubString) -> 
+val form_submission : browser -> window -> string -> m:reqMethod{m="GET" \/ m="POST"} -> u:uri -> fd:list (pubString * pubString) -> 
 		      Tot (result * option (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) * option cowindow * browser)
 let form_submission b sw tn m u fd =
   if (List.find (fun w -> w = SB_Forms) sw.wdoc.dsbox <> None) then ((Error ""), None, None, b)
@@ -481,16 +486,16 @@ let form_submission b sw tn m u fd =
 	if (sch = "http" || sch = "https") then (
 	  if (m = "GET") then 
 	    let nuri = URI (URI?.usl u) ({c_origin=(URI?.u u).c_origin;c_uname=(URI?.u u).c_uname;c_pwd=(URI?.u u).c_pwd;c_path=(URI?.u u).c_path;c_querystring=(classifyQS #PublicVal fd (URI?.usl u));c_fragment=emptyString (URI?.usl u)}) in
-	    (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_req_uri (win_to_cowin sw) (nuri))) "form-submission") 
+	    (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_request (win_to_cowin sw) (nuri))) "form-submission") 
 	  else 
 	    let nreq = (Request (URI?.usl u) ({reqm = "POST"; requrl = [u]; reqhead = []; reqo = (mk_aorigin (URI?.u sw.wloc).c_origin); reqw = (Some (win_to_cowin sw)); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = Some tw; reqredirect = 0; reqredmode = "follow"; reqref = (Client (win_to_cowin sw)); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (classify #PublicVal (serializeQueryString fd) (URI?.usl u)); corsflag = false; corspfflag = false; authflag = false; recflag = false})) in
 	    (navigateWindow nb (win_to_cowin sw) tw (RequestResource nreq) "form-submission") 
 	  )
 	else if ((sch = "data") && (m = "GET")) then
 	  let nuri = URI (URI?.usl u) ({c_origin=(URI?.u u).c_origin;c_uname=(URI?.u u).c_uname;c_pwd=(URI?.u u).c_pwd;c_path=(URI?.u u).c_path;c_querystring=(classifyQS #PublicVal fd (URI?.usl u));c_fragment=emptyString (URI?.usl u)}) in
-	  (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_req_uri (win_to_cowin sw) (nuri))) "form-submission") 
+	  (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_request (win_to_cowin sw) (nuri))) "form-submission") 
 	else (* For ftp, javascript no data is sent *)
-	  (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_req_uri (win_to_cowin sw) (u))) "form-submission") 
+	  (navigateWindow nb (win_to_cowin sw) tw (RequestResource (default_request (win_to_cowin sw) (u))) "form-submission") 
 
 (* xhr.spec.whatwg.org - open and send only *)
 (* require the request and response to have similar secLevels; so return the request that contains this information *)
