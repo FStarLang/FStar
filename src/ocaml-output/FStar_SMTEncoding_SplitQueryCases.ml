@@ -48,7 +48,7 @@ let rec is_ite_all_the_way:
       fun negs  ->
         fun l  ->
           if n1 <= (Prims.parse_int "0")
-          then raise FStar_Util.Impos
+          then FStar_Exn.raise FStar_Util.Impos
           else
             (match t.FStar_SMTEncoding_Term.tm with
              | FStar_SMTEncoding_Term.FreeV uu____127 ->

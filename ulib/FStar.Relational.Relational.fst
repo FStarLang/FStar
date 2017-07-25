@@ -59,6 +59,6 @@ let eq_irel (#t:eqtype) (x:(rel t t)) = match x with
   | R a b -> a = b
 
 (* Some convenient functions on heap (for specification) *)
-let sel_rel1 h r  = rel_map2G sel h (twice r)
-let sel_rel2 = rel_map2G sel
-let upd_rel = rel_map3G upd
+let sel_rel1 (#a:Type) (h:double heap) (r:ref a)  = rel_map2G sel h (twice r)
+//let sel_rel2 = rel_map2G sel
+//let upd_rel = rel_map3G upd

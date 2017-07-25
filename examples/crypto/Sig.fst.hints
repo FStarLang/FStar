@@ -57,7 +57,38 @@
       0
     ],
     [ "Sig.__proj__Entry__item__m", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Sig.sign", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Sig.sign",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Heap.trivial_preorder", "true_interp" ],
+      0
+    ],
+    [
+      "Sig.sign",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Sig.sign",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
     [
       "Sig.verify",
       1,
@@ -103,6 +134,18 @@
     [
       "Sig.verify",
       4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Sig.verify",
+      5,
       2,
       1,
       [

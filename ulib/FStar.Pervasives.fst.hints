@@ -1,5 +1,5 @@
 [
-  "¥é‹0\u001eøÌ}åPËS¡ûüð",
+  "Buu•p÷Z •~%\u000f\u0019ÊTU",
   [
     [ "FStar.Pervasives.uu___is_V", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -42,7 +42,19 @@
       0
     ],
     [ "FStar.Pervasives.ex_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Pervasives.all_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Pervasives.all_bind_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Pervasives.E",
+        "disc_equation_FStar.Pervasives.Err",
+        "disc_equation_FStar.Pervasives.V",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0
+    ],
     [
       "FStar.Pervasives.allow_inversion",
       1,

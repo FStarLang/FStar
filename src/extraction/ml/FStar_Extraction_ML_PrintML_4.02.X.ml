@@ -92,7 +92,6 @@ let mk_top_mllb (e: mlexpr): mllb =
    print_typ=false }
 
 (* names of F* functions which need to be handled differently *)
-let raise_ident = path_to_ident (["FStar"; "Pervasives"], "raise")
 let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 
 
@@ -290,8 +289,6 @@ and resugar_app f args es: expression =
          )
       | _ -> failwith "Cannot resugar FStar.All.try_with" in
     Exp.try_ body variants
-  | Pexp_ident x when (x = raise_ident) ->
-    Exp.apply (Exp.ident (mk_lident "raise")) args
   | _ -> Exp.apply f args
 
 and build_seq args =

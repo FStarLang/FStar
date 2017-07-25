@@ -307,7 +307,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           then g, []
           else let bs, _ = U.arrow_formals t in
                let fv = S.lid_as_fv lid Delta_constant None in
-               extract_typ_abbrev g fv quals attrs (U.abs bs TypeChecker.Common.t_unit None)
+               extract_typ_abbrev g fv quals attrs (U.abs bs t_unit None)
 
         | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
           //extracting `type t = e`

@@ -2,8 +2,8 @@
 
 module Ex12a1.Cap (* capabilities *)
 
-open STx
-open Allx
+open FStar.ST
+open FStar.All
 open Platform.Bytes
 
 

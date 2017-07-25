@@ -40,7 +40,7 @@ let parse:
                             (match uu____129 with
                              | (env2,ast1) -> (env2, [ast1]))
                         | uu____143 ->
-                            raise
+                            FStar_Exn.raise
                               (FStar_Errors.Err
                                  "mismatch between pre-module and module\n"))) in
             (match uu____68 with
@@ -275,7 +275,7 @@ let tc_one_fragment:
                                        uu____391 <> uu____396 in
                                      if uu____390
                                      then
-                                       raise
+                                       FStar_Exn.raise
                                          (FStar_Errors.Err
                                             "Interactive mode only supports a single module at the top-level")
                                      else env
@@ -338,7 +338,7 @@ let tc_one_fragment:
                     FStar_Pervasives_Native.None)
                | e when
                    let uu____623 = FStar_Options.trace_error () in
-                   Prims.op_Negation uu____623 -> raise e)
+                   Prims.op_Negation uu____623 -> FStar_Exn.raise e)
 let load_interface_decls:
   (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
     FStar_Pervasives_Native.tuple2 ->
@@ -370,9 +370,9 @@ let load_interface_decls:
                        "Unexpected result from parsing %s; expected a single interface"
                        interface_file_name in
                    FStar_Errors.Err uu____784 in
-                 raise uu____783
+                 FStar_Exn.raise uu____783
              | FStar_Util.Inr (err1,rng) ->
-                 raise (FStar_Errors.Error (err1, rng))
+                 FStar_Exn.raise (FStar_Errors.Error (err1, rng))
            with
            | FStar_Errors.Error (msg,r) when
                let uu____820 = FStar_Options.trace_error () in
@@ -386,7 +386,7 @@ let load_interface_decls:
                 (dsenv, env))
            | e when
                let uu____842 = FStar_Options.trace_error () in
-               Prims.op_Negation uu____842 -> raise e)
+               Prims.op_Negation uu____842 -> FStar_Exn.raise e)
 let tc_one_file:
   FStar_ToSyntax_Env.env ->
     FStar_TypeChecker_Env.env ->

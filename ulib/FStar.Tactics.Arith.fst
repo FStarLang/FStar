@@ -19,7 +19,7 @@ let rec split_arith = fun () -> (
     if b then (
         prune "";;
         addns "Prims";;
-        smt ()
+        smt
     ) else (
         g <-- cur_goal;
         match term_as_formula g with

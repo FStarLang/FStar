@@ -17,6 +17,7 @@
 
 module FStar.SMTEncoding.Encode
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open Prims
 open FStar
@@ -472,7 +473,7 @@ let getInteger (tm : Syntax.term') =
     | Tm_constant (Const_int (n,None)) -> FStar.Util.int_of_string n
     | _ -> failwith "Expected an Integer term"
 
-(* We only want to encode a term as a bitvector term (not an uninterpreted function) 
+(* We only want to encode a term as a bitvector term (not an uninterpreted function)
    if there is a concrete/constant size argument given*)
 let is_BitVector_primitive head args =
     match head.n, args with
@@ -591,7 +592,7 @@ and encode_arith_term env head args_e =
     let (tm_sz, _) : arg = List.hd args_e in
     let sz = getInteger tm_sz.n in
     let sz_key = FStar.Util.format1 "BitVector_%s" (string_of_int sz) in
-    let sz_decls =  
+    let sz_decls =
          match BU.smap_try_find env.cache sz_key with
             | Some cache_entry ->
                 []
@@ -602,20 +603,20 @@ and encode_arith_term env head args_e =
                 t_decls
     in
     (* we need to treat the size argument for zero_extend specially*)
-    let arg_tms, ext_sz = 
+    let arg_tms, ext_sz =
         match head.n, args_e with
-        | Tm_fvar fv, [_;(sz_arg, _);_] when 
+        | Tm_fvar fv, [_;(sz_arg, _);_] when
             (S.fv_eq_lid fv Const.bv_uext_lid &&
                 (isInteger sz_arg.n)) ->
                 (List.tail (List.tail args_e), Some (getInteger sz_arg.n))
-        | Tm_fvar fv, [_;(sz_arg, _);_] when    
+        | Tm_fvar fv, [_;(sz_arg, _);_] when
             (S.fv_eq_lid fv Const.bv_uext_lid) ->
             (*fail if extension size is not a constant*)
-            failwith (FStar.Util.format1 "Not a constant bitvector extend size: %s" 
+            failwith (FStar.Util.format1 "Not a constant bitvector extend size: %s"
                             (FStar.Syntax.Print.term_to_string sz_arg))
         | _  -> (List.tail args_e, None)
     in
-                
+
     let arg_tms, decls = encode_args arg_tms env in
     let head_fv =
         match head.n with
@@ -649,7 +650,7 @@ and encode_arith_term env head args_e =
     let bv_mod  = mk_bv (Util.mkBvMod sz) binary_arith (Term.boxBitVec sz) in
     let bv_mul  = mk_bv (Util.mkBvMul sz) binary_arith (Term.boxBitVec sz) in
     let bv_ult  = mk_bv Util.mkBvUlt binary Term.boxBool in
-    let bv_uext arg_tms = 
+    let bv_uext arg_tms =
            mk_bv (Util.mkBvUext (match ext_sz with | Some x -> x | None -> failwith "impossible")) unary
                          (Term.boxBitVec (sz +  (match ext_sz with | Some x -> x | None -> failwith "impossible"))) arg_tms in
     let to_int  = mk_bv Util.mkBvToNat unary Term.boxInt in
@@ -1535,19 +1536,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let b = mkFreeV bb in
         [Util.mkAssume(mkForall([[Term.boxString b]], [bb], mk_HasType (Term.boxString b) tt), Some "string typing", "string_typing");
          Util.mkAssume(mkForall_fuel([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxStringFun) x)),  Some "string inversion", "string_inversion")] in
-    let mk_ref : env -> string -> term -> decls_t = fun env reft_name _ ->
-        let r = ("r", Ref_sort) in
-        let aa = ("a", Term_sort) in
-        let bb = ("b", Term_sort) in
-        let refa = mkApp(reft_name, [mkFreeV aa]) in
-        let refb = mkApp(reft_name, [mkFreeV bb]) in
-        let typing_pred = mk_HasType x refa in
-        let typing_pred_b = mk_HasType x refb in
-        [Util.mkAssume(mkForall_fuel([[typing_pred]], [xx;aa], mkImp(typing_pred, mk_tester (fst boxRefFun) x)), Some "ref inversion", "ref_inversion");
-//         Util.mkAssume(mkForall_fuel' 2 ([[typing_pred; typing_pred_b]], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))),
-//                     Some "ref typing is injective",
-//                     "ref_injectivity")
-        ] in
     let mk_true_interp : env -> string -> term -> decls_t = fun env nm true_tm ->
         let valid = mkApp("Valid", [true_tm]) in
         [Util.mkAssume(valid, Some "True interpretation", "true_interp")] in
@@ -1657,7 +1645,6 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
-                 (Const.ref_lid,    mk_ref);
                  (Const.true_lid,   mk_true_interp);
                  (Const.false_lid,  mk_false_interp);
                  (Const.and_lid,    mk_and_interp);
@@ -2735,7 +2722,7 @@ let encode_query use_env_msg tcenv q
                 let t =
                     match (FStar.Syntax.Util.destruct_typ_as_formula x.sort) with
                     | Some _ ->
-                      U.refine (S.new_bv None FStar.TypeChecker.Common.t_unit) x.sort
+                      U.refine (S.new_bv None t_unit) x.sort
                       //add a squash to trigger the shallow embedding,
                       //if the assumption is of the form x:(forall y. P) etc.
                     | _ ->

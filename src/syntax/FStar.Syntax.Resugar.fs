@@ -19,6 +19,7 @@
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 open FStar
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident

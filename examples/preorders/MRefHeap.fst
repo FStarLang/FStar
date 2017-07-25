@@ -1,12 +1,12 @@
 module MRefHeap
 
-open Preorder
+open FStar.Preorder
 
 (* Heap is a tuple of a source of freshness (the no. of the next fresh
    reference to be allocated) and a mapping of allocated raw references
    (represented as natural numbers) to types, values and preorders. *)
 
-let preorder_t (a:Type0) = r:relation a{preorder r}
+let preorder_t (a:Type0) = r:preorder a
 let heap_cell_a (a:Type0) = a * preorder_t a
 let heap_cell = (a:Type0 & heap_cell_a a)
 abstract type heap = h:(nat * (nat -> Tot (option heap_cell)))
@@ -30,7 +30,7 @@ let contains (#a:Type) (#r:preorder_t a) (h:heap) (m:mref a r) : GTot Type0 =
 (* Select. *)
 
 val sel : #a:Type ->
-          #r:relation a{preorder r} ->
+          #r:preorder a ->
           h:heap ->
 	  m:mref a r{contains h m} ->
           Tot a
@@ -43,7 +43,7 @@ let sel #a #b h m =
 
 val alloc_ref : h0:heap ->
 		a:Type ->
-		r:relation a{preorder r} ->
+		r:preorder a ->
 	        x:a ->
 		Tot (mh1:(mref a r * heap){~(contains #a #r h0 (fst mh1)) /\
 		                           contains (snd mh1) (fst mh1) /\
@@ -64,7 +64,7 @@ let alloc_ref h a r x =
 (* Update. *)
 
 val upd : #a:Type ->
-	  #r:relation a{preorder r} ->
+	  #r:preorder a ->
           h0:heap ->
           m:mref a r{contains h0 m} ->
           x:a ->

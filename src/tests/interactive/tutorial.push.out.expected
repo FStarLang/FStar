@@ -6,10 +6,10 @@
 {"kind": "response", "query-id": "5", "response": [], "status": "success"}
 {"kind": "response", "query-id": "6", "response": [], "status": "success"}
 {"kind": "response", "query-id": "7", "response": [], "status": "success"}
-{"kind": "response", "query-id": "8", "response": [], "status": "success"}
+{"kind": "response", "query-id": "8", "response": [{"level": "error", "message": "Identifier not found: [raise]", "ranges": [{"beg": [43, 32], "end": [43, 37], "fname": "<input>"}]}], "status": "failure"}
 {"kind": "response", "query-id": "9", "response": [], "status": "success"}
-{"kind": "response", "query-id": "10", "response": [], "status": "success"}
-{"kind": "response", "query-id": "11", "response": [{"level": "warning", "message": "Top-level let-bindings must be total; this term may have effects", "ranges": [{"beg": [60, 0], "end": [60, 48], "fname": "<input>"}]}], "status": "success"}
+{"kind": "response", "query-id": "10", "response": [{"level": "error", "message": "Identifier not found: [checkedRead]", "ranges": [{"beg": [54, 11], "end": [54, 22], "fname": "<input>"}]}], "status": "failure"}
+{"kind": "response", "query-id": "11", "response": [{"level": "error", "message": "Identifier not found: [staticChecking]", "ranges": [{"beg": [60, 11], "end": [60, 25], "fname": "<input>"}]}], "status": "failure"}
 {"kind": "response", "query-id": "a1", "response": null, "status": "success"}
 {"kind": "response", "query-id": "a2", "response": null, "status": "success"}
 {"kind": "response", "query-id": "a3", "response": null, "status": "success"}
@@ -18,7 +18,7 @@
 {"kind": "response", "query-id": "a6", "response": null, "status": "success"}
 {"kind": "response", "query-id": "a7", "response": null, "status": "success"}
 {"kind": "response", "query-id": "a8", "response": null, "status": "success"}
-{"kind": "response", "query-id": "a9", "response": null, "status": "success"}
-{"kind": "response", "query-id": "a10", "response": null, "status": "success"}
-{"kind": "response", "query-id": "a11", "response": null, "status": "success"}
+{"kind": "response", "query-id": "a9", "response": "Too many pops", "status": "failure"}
+{"kind": "response", "query-id": "a10", "response": "Too many pops", "status": "failure"}
+{"kind": "response", "query-id": "a11", "response": "Too many pops", "status": "failure"}
 {"kind": "response", "query-id": "a12", "response": "Too many pops", "status": "failure"}

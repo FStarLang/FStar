@@ -18,10 +18,10 @@ let tau1 : tactic unit =
     (* rev part *)
       addns "FStar.List";;
       addns "Prims";;
-      smt ();;
+      smt;;
     (* arithmetic part *)
       addns "Prims";;
-      smt ();;
+      smt;;
     return ()
 
 let lem1 (x:int) =

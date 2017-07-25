@@ -9,6 +9,7 @@ open FStar.TypeChecker.Env
 module Range = FStar.Range
 open FStar.List
 open FStar.Syntax.Syntax
+open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
 
 let int1 (m:lid) (f:'a -> 'b) (ua:term -> 'a) (em:'b -> term)

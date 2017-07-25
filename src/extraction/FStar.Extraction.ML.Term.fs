@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Extraction.ML.Term
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Util
@@ -225,7 +226,7 @@ let rec is_type_aux env t =
 
     | Tm_match(_, branches) ->
       begin match branches with
-        | b::_ -> 
+        | b::_ ->
           let _, _, e = SS.open_branch b in
           is_type_aux env e
         | _ -> false
@@ -313,7 +314,7 @@ let normalize_abs (t0:term) : term =
               else U.abs bs e' copt in
    aux [] t0 None
 
-let unit_binder = S.mk_binder <| S.new_bv None TypeChecker.Common.t_unit
+let unit_binder = S.mk_binder <| S.new_bv None t_unit
 
 //check_pats_for_ite l:
 //    A helper to enable translating boolean matches back to if/then/else
@@ -381,6 +382,12 @@ let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
     let body = with_ty r <| MLE_App (e, vs_es) in
     with_ty t <| MLE_Fun (vs_ts, body)
 
+let maybe_eta_expand expect e =
+    if Options.ml_no_eta_expand_coertions () ||
+        Options.codegen () = Some "Kremlin" // we need to stay first order for Kremlin
+    then e
+    else eta_expand expect e
+
 //maybe_coerce g e ty expect:
 //     Inserts an Obj.magic around e if ty </: expect
 let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
@@ -392,7 +399,7 @@ let maybe_coerce (g:env) e ty (expect:mlty) : mlexpr  =
                              (Code.string_of_mlexpr g.currentModule e)
                              (Code.string_of_mlty g.currentModule ty)
                              (Code.string_of_mlty g.currentModule expect));
-          eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
+          maybe_eta_expand expect (with_ty expect <| MLE_Coerce (e, ty, expect))
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)

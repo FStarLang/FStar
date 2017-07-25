@@ -18,6 +18,7 @@
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Errors

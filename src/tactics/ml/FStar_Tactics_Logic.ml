@@ -85,7 +85,7 @@ let rec visit:
                  | uu____557 ->
                      FStar_Tactics_Derived.or_else
                        FStar_Tactics_Builtins.trivial
-                       (FStar_Tactics_Builtins.smt ())))) ()
+                       (FStar_Tactics_Builtins.smt)))) ()
 let rec simplify_eq_implication:
   Prims.unit -> (Prims.unit,Prims.unit) FStar_Tactics_Effect._dm4f_TAC_repr =
   fun u  ->

@@ -2,6 +2,7 @@
 module FStar.Tactics.Interpreter
 open FStar
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
@@ -20,14 +21,13 @@ module N = FStar.TypeChecker.Normalize
 open FStar.Tactics.Basic
 module E = FStar.Tactics.Embedding
 module Core = FStar.Tactics.Basic
+open FStar.Syntax.Embeddings
 open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
 module RD = FStar.Reflection.Data
 open FStar.Tactics.Native
 
 let tacdbg = BU.mk_ref false
-
-let t_unit = FStar.TypeChecker.Common.t_unit
 
 let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) (t_a:typ) (nm:Ident.lid) (args:args) : option<term> =
  (*  We have: t () embedded_state

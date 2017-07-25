@@ -86,7 +86,7 @@ let rec visit (callback:tactic unit) () : Tac unit =
                         seq (visit callback)
                             l_revert
                     | _ ->
-                        or_else trivial (smt ())
+                        or_else trivial smt
                    )
           ) ()
 

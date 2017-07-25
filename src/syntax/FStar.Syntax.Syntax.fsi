@@ -454,3 +454,23 @@ val set_range_of_fv:fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool
+
+///////////////////////////////////////////////////////////////////////
+//Some common constants
+///////////////////////////////////////////////////////////////////////
+module C = FStar.Parser.Const
+val tconst        : lident -> term
+val tabbrev       : lident -> term
+val tdataconstr   : lident -> term
+val t_unit        : term
+val t_bool        : term
+val t_int         : term
+val t_string      : term
+val t_float       : term
+val t_char        : term
+val t_range       : term
+val t_tactic_unit : term
+val t_list_of     : term -> term
+val t_option_of   : term -> term
+val unit_const    : term
+

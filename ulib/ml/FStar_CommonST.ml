@@ -1,4 +1,4 @@
-open FStar_Heap
+open FStar_Monotonic_Heap
 
 let read x = x.contents
 
@@ -18,3 +18,8 @@ let alloc contents =
 
 let recall = (fun r -> ())
 let get () = ()
+
+type 'a witnessed = | C
+
+let gst_witness = (fun r -> ())
+let gst_recall = (fun r -> ())
