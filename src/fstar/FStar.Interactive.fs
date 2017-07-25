@@ -28,6 +28,7 @@ open FStar.Errors
 
 open FStar.Universal
 open FStar.TypeChecker.Env
+open FStar.TypeChecker.Common
 
 module SS = FStar.Syntax.Syntax
 module DsEnv   = FStar.ToSyntax.Env
@@ -109,10 +110,12 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
     | _ -> None
   with
   | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Common.insert_id_info.clear();
     FStar.TypeChecker.Err.add_errors env [(msg, r)];
     None
 
   | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Common.insert_id_info.clear();
     FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
     None
 

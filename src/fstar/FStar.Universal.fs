@@ -26,6 +26,7 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.Syntax.Syntax
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Dependencies
 
@@ -201,6 +202,7 @@ let needs_interleaving intf impl =
 let pop_context env msg =
     DsEnv.pop () |> ignore;
     TcEnv.pop env msg |> ignore;
+    FStar.TypeChecker.Common.insert_id_info.clear();
     env.solver.refresh()
 
 let push_context (dsenv, env) msg =
