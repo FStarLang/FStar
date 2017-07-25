@@ -96,6 +96,13 @@ abstract let read (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:mref a inv re
     gst_recall (contains_pred r);
     sel_tot h0 r
 
+// I was playing with the lemma here, wasn't sure the set of facts I needed in scope to prove this.
+// It seems to get strange if we allow it to be any type, in the case where they are equal we should
+// know something like (x:mref b inv_b rel_b) = (y:mref a inv_a rel_a) -> a = b -> inv_b = inv_a = rel_a = rel_b.
+//
+// My idea for the proof was to consider the case where we do the update, show that if its equal we read it back,
+// and restablish the relation using the precondition, and if not we show they are still extentionally equal.
+//
 // private let upd_maintains_heap_inv_arr (b:Type0) (inv_b:data_inv b) (rel_b:preorder b) (r':Heap.mref b inv_b rel_b) (v:b) (h1 h2 : heap):
 // (a:Type0) ->
 // (inv:data_inv a) ->
@@ -125,7 +132,10 @@ abstract let write (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:mref a inv r
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
-    assume (heap_rel h0 h1); // How to prove?s
+    // We need to restablish the heap relation here, but it doesn't seem to fire anymore,
+    // the above proof is a one attempt at this from this afternoon. I spent the rest of
+    // the evening trying to patch examples and proofs using this new references.
+    assume (heap_rel h0 h1);
     // upd_maintains_heap_inv r v h0 h1;
     gst_put h1
 
