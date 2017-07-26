@@ -567,13 +567,29 @@ let apply_lemma (tm:term) : tac<unit> =
         bind (add_implicits g.implicits) (fun _ ->
         add_goals sub_goals)))))
 
+let destruct_eq' (typ : typ) : option<(term * term)> =
+    match U.destruct_typ_as_formula typ with
+    | Some (U.BaseConn(l, [_; (e1, _); (e2, _)])) when Ident.lid_equals l PC.eq2_lid ->
+        Some (e1, e2)
+    | _ ->
+        None
+
+let destruct_eq (typ : typ) : option<(term * term)> =
+    match destruct_eq' typ with
+    | Some t -> Some t
+    | None ->
+        // Retry for a squashed one
+        begin match U.un_squash typ with
+        | Some typ -> destruct_eq' typ
+        | None -> None
+        end
+
 let rewrite (h:binder) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort))) (fun _ ->
-    match U.destruct_typ_as_formula (fst <| Env.lookup_bv goal.context (fst h)) with
-    | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
-              when Ident.lid_equals l PC.eq2_lid ->
-      (match (SS.compress x).n with
+    match destruct_eq (fst <| Env.lookup_bv goal.context (fst h)) with
+    | Some  (x, e) ->
+    (match (SS.compress x).n with
        | Tm_name x ->
          let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty; witness = SS.subst [NT(x, e)] goal.witness} in
          replace_cur goal
