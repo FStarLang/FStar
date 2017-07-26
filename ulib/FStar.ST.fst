@@ -31,13 +31,10 @@ let gst_wp (a:Type)   = st_wp_h heap a
 unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:heap) = wp (fun a -> p a h)
 sub_effect DIV ~> GST = lift_div_gst
 
-let related_at (h1:heap) (h2:heap) (a:Type0) (inv:data_inv a) (rel:preorder a) (r:mref a inv rel) =
-           h1 `contains` r ==>
-           (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))
-
 let heap_rel (h1:heap) (h2:heap) =
   forall (a:Type0) (inv:data_inv a) (rel:preorder a) (r:mref a inv rel).
-    related_at h1 h2 a inv rel r
+      h1 `contains` r ==>
+        (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))
 
 assume val gst_get: unit    -> GST heap (fun p h0 -> p h0 h0)
 assume val gst_put: h1:heap -> GST unit (fun p h0 -> heap_rel h0 h1 /\ p () h1)
@@ -96,11 +93,18 @@ abstract let read (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:mref a inv re
     gst_recall (contains_pred r);
     sel_tot h0 r
 
+let upd_tot_maintains_heap_inv (#a:Type0) (#inv:data_inv a) (#rel:preorder a)
+  (h0 : heap) (r:mref a inv rel{h0 `contains` r}) (v:a{valid_upd h0 r v}) :
+  Lemma
+    (requires True)
+    (ensures (heap_rel h0 (upd_tot h0 r v))) = admit ()
+
 abstract let write (#a:Type) (#inv:data_inv a) (#rel:preorder a) (r:mref a inv rel) (v:a)
   :ST unit (fun h -> rel (sel h r) v) (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\ h1 == upd h0 r v)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
+    upd_tot_maintains_heap_inv h0 r v;
     gst_put h1
 
 abstract let get (u:unit) :ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h==h1) = gst_get ()

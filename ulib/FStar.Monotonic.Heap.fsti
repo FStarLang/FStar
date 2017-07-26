@@ -113,7 +113,7 @@ val lemma_distinct_addrs_unused
 val lemma_alloc (#a:Type0) (inv:data_inv a) (rel:preorder a) (h0:heap) (x:a) (mm:bool)
   :Lemma (requires True)
          (ensures  (let r, h1 = alloc inv rel h0 x mm in
-                    fresh r h0 h1 /\ h1 == upd h0 r x /\ is_mm r = mm))
+                    fresh r h0 h1 /\ valid_upd h0 r x /\ h1 == upd h0 r x /\ is_mm r = mm))
 	 [SMTPat (alloc inv rel h0 x mm)]
 
 val lemma_free_mm_sel
@@ -218,7 +218,7 @@ val upd_upd_same_mref
   (#a:Type) (#inv:data_inv a) (#rel:preorder a) (h:heap) (r:mref a inv rel)
   (x:a) (y:a)
   :Lemma (requires True)
-         (ensures  ((upd (upd h r x) r y == upd h r y)))
+         (ensures  (valid_upd h r y /\ (upd (upd h r x) r y == upd h r y)))
 	 [SMTPat (upd (upd h r x) r y)]
 
 val lemma_sel_equals_sel_tot_for_contained_refs
