@@ -1,5 +1,6 @@
 #+TITLE: Low-level binary format parsing
 * Data format
+#+BEGIN_EXAMPLE
   +---------------------------+
   | number of entries (32bit) |
   +---------------------------+
@@ -11,6 +12,7 @@
      +-----------------------+---------------+
      | value length (32 bit) | value data... |
      +-----------------------+---------------+
+#+END_EXAMPLE
 
 * F* pure and stateful representations
   [[file+emacs:KeyValue.fst][KeyValue.fst]]
@@ -66,3 +68,11 @@ once we have a ~Some?~ from validation, let's access fields and parse on-the-fly
 *** ~init~, ~append~ to add entries, ~finish~ to write dependent length and get a fact about a buffer
 *** writer does not have proper framing (yet)
 *** not really proven correct
+* Notes from presentation:
+** pass key-value store parser parser for the values
+** do notation for names "bind" and "return"
+** ask how this will integrate into TLS
+** ask how the key-value store will be used (if at all...)
+** fix for writer_append (move as_entry into Tot function)
+** fold_left should extract as (tail) recursive C function, something is wrong
+** writer should extract
