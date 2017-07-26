@@ -18,6 +18,7 @@
 
 module FStar.ToSyntax.Env
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 

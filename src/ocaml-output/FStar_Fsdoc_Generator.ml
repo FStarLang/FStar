@@ -277,7 +277,8 @@ let document_toplevel :
                       (FStar_Pervasives_Native.Some doc1)))
            | FStar_Pervasives_Native.None  ->
                (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None))
-      | uu____1173 -> raise (FStar_Errors.Err "Not a TopLevelModule")
+      | uu____1173 ->
+          FStar_Exn.raise (FStar_Errors.Err "Not a TopLevelModule")
   
 let document_module : FStar_Parser_AST.modul -> FStar_Ident.lid =
   fun m  ->
@@ -328,7 +329,7 @@ let document_module : FStar_Parser_AST.modul -> FStar_Ident.lid =
                    name.FStar_Ident.str
                   in
                FStar_Errors.Err uu____1293  in
-             raise uu____1292)
+             FStar_Exn.raise uu____1292)
   
 let generate : Prims.string Prims.list -> Prims.unit =
   fun files  ->

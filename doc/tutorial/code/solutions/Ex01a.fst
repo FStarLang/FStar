@@ -1,4 +1,6 @@
 module Ex01a
+
+open FStar.Exn
 open FStar.All
 //safe-read-write
 

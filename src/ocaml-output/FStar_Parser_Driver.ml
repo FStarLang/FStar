@@ -29,10 +29,10 @@ let parse_fragment : FStar_Parser_ParseIt.input_frag -> fragment =
     | FStar_Util.Inl (FStar_Util.Inl (modul::[]),uu____128) -> Modul modul
     | FStar_Util.Inl (FStar_Util.Inr decls,uu____176) -> Decls decls
     | FStar_Util.Inl (FStar_Util.Inl uu____219,uu____220) ->
-        raise
+        FStar_Exn.raise
           (FStar_Errors.Err
              "Refusing to check more than one module at a time incrementally")
-    | FStar_Util.Inr (msg,r) -> raise (FStar_Errors.Error (msg, r))
+    | FStar_Util.Inr (msg,r) -> FStar_Exn.raise (FStar_Errors.Error (msg, r))
   
 let parse_file :
   FStar_Parser_ParseIt.filename ->
@@ -47,6 +47,6 @@ let parse_file :
     | FStar_Util.Inl (FStar_Util.Inr uu____368,uu____369) ->
         let msg = FStar_Util.format1 "%s: expected a module\n" fn  in
         let r = FStar_Range.dummyRange  in
-        raise (FStar_Errors.Error (msg, r))
-    | FStar_Util.Inr (msg,r) -> raise (FStar_Errors.Error (msg, r))
+        FStar_Exn.raise (FStar_Errors.Error (msg, r))
+    | FStar_Util.Inr (msg,r) -> FStar_Exn.raise (FStar_Errors.Error (msg, r))
   

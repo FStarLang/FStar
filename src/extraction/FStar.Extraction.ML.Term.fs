@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Extraction.ML.Term
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Util
@@ -225,7 +226,7 @@ let rec is_type_aux env t =
 
     | Tm_match(_, branches) ->
       begin match branches with
-        | b::_ -> 
+        | b::_ ->
           let _, _, e = SS.open_branch b in
           is_type_aux env e
         | _ -> false
@@ -313,7 +314,7 @@ let normalize_abs (t0:term) : term =
               else U.abs bs e' copt in
    aux [] t0 None
 
-let unit_binder = S.mk_binder <| S.new_bv None TypeChecker.Common.t_unit
+let unit_binder = S.mk_binder <| S.new_bv None t_unit
 
 //check_pats_for_ite l:
 //    A helper to enable translating boolean matches back to if/then/else

@@ -189,6 +189,9 @@ NAME=fstar_$(VERSION)_$(PLATFORM)
 fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
           tar -x -C $(PREFIX)
 
+# Similar, but exports every file instead of only those in version control.
+fexport-all = cp -a ../../$(1) $(PREFIX)/$(1)
+
 ifeq ($(OS),Windows_NT)
   Z3_NAME=z3.exe
 else
@@ -197,9 +200,13 @@ endif
 Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
 Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
 
+.PHONY: ulib
+ulib:
+	make -C ../../ulib/ml
+
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
-package: all
+package: all ulib
         # Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
@@ -211,7 +218,9 @@ package: all
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
-	$(call fexport,bin/fstarlib)
+	$(call fexport-all,bin/fstarlib)
+	touch $(PREFIX)/ulib/.mgen
+
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial

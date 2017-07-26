@@ -40,7 +40,7 @@ let pair_typ :
     fun s  ->
       let uu____39 =
         let uu____40 =
-          let uu____41 = lid_as_tm FStar_Reflection_Basic.lid_tuple2  in
+          let uu____41 = lid_as_tm FStar_Parser_Const.lid_tuple2  in
           FStar_Syntax_Syntax.mk_Tm_uinst uu____41
             [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero]
            in
@@ -89,8 +89,8 @@ let embed_result :
                   let uu____104 = FStar_Syntax_Syntax.iarg t_a  in
                   let uu____105 =
                     let uu____108 =
-                      let uu____109 = FStar_Reflection_Basic.embed_string msg
-                         in
+                      let uu____109 =
+                        FStar_Syntax_Embeddings.embed_string msg  in
                       FStar_Syntax_Syntax.as_arg uu____109  in
                     let uu____110 =
                       let uu____113 =
@@ -162,7 +162,7 @@ let unembed_result :
                  FStar_Syntax_Syntax.fv_eq_lid fv uu____380 ->
                  let uu____381 =
                    let uu____386 =
-                     FStar_Reflection_Basic.unembed_string embedded_string
+                     FStar_Syntax_Embeddings.unembed_string embedded_string
                       in
                    let uu____387 = unembed_proofstate ps embedded_state  in
                    (uu____386, uu____387)  in

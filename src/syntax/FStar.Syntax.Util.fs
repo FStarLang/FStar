@@ -412,12 +412,25 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       | Unknown, _
       | _, Unknown -> Unknown
     in
+    let equal_data f1 args1 f2 args2 =
+        // we got constructors! we know they are injective and disjoint, so we can do some
+        // good analysis on them
+        if fv_eq f1 f2
+        then (
+            assert (List.length args1 = List.length args2);
+            List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
+                                assert (q1 = q2);
+                                eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
+        ) else NotEqual
+    in
     match t1.n, t2.n with
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
 
     | Tm_fvar f, Tm_fvar g ->
-      equal_if (fv_eq f g)
+      if f.fv_qual = Some Data_ctor && g.fv_qual = Some Data_ctor
+      then equal_data f [] g []
+      else equal_if (fv_eq f g)
 
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
@@ -431,17 +444,9 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_app (h1, args1), Tm_app (h2, args2) ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
       | Tm_fvar f1, Tm_fvar f2 when f1.fv_qual = Some Data_ctor && f2.fv_qual = Some Data_ctor ->
-        // we got constructors! we know they are injective and disjoint, so we can do some
-        // good analysis on them
-        if fv_eq f1 f2
-        then (
-            assert (List.length args1 = List.length args2);
-            List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
-                                assert (q1 = q2);
-                                eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
-        ) else NotEqual
+        equal_data f1 args1 f2 args2
       | _ -> // can only they're equal if they syntactically match, nothing else
-          eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
+        eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
       end
 
     | Tm_type u, Tm_type v ->

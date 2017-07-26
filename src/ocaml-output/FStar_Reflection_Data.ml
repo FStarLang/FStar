@@ -210,33 +210,26 @@ let fstar_refl_lid : Prims.string Prims.list -> FStar_Ident.lident =
     FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Reflection"] s)
       FStar_Range.dummyRange
   
-let lid_as_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term =
-  fun l  ->
-    let uu____619 =
-      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
-        FStar_Pervasives_Native.None
-       in
-    FStar_All.pipe_right uu____619 FStar_Syntax_Syntax.fv_to_tm
-  
-let lid_as_data_tm : FStar_Ident.lident -> FStar_Syntax_Syntax.term =
-  fun l  ->
-    let uu____624 =
-      FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
-        (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
-       in
-    FStar_Syntax_Syntax.fv_to_tm uu____624
-  
 let fstar_refl_types_lid : Prims.string -> FStar_Ident.lident =
   fun s  -> fstar_refl_lid ["Types"; s] 
 let fstar_refl_syntax_lid : Prims.string -> FStar_Ident.lident =
   fun s  -> fstar_refl_lid ["Syntax"; s] 
 let mk_refl_types_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term =
-  fun s  -> let uu____637 = fstar_refl_types_lid s  in lid_as_tm uu____637 
+  fun s  ->
+    let uu____627 = fstar_refl_types_lid s  in
+    FStar_Syntax_Syntax.tconst uu____627
+  
 let mk_refl_syntax_lid_as_term : Prims.string -> FStar_Syntax_Syntax.term =
-  fun s  -> let uu____642 = fstar_refl_syntax_lid s  in lid_as_tm uu____642 
-let fstar_refl_lid_as_data_tm :
+  fun s  ->
+    let uu____632 = fstar_refl_syntax_lid s  in
+    FStar_Syntax_Syntax.tconst uu____632
+  
+let fstar_refl_tdataconstr :
   Prims.string Prims.list -> FStar_Syntax_Syntax.term =
-  fun s  -> let uu____651 = fstar_refl_lid s  in lid_as_data_tm uu____651 
+  fun s  ->
+    let uu____641 = fstar_refl_lid s  in
+    FStar_Syntax_Syntax.tdataconstr uu____641
+  
 let fstar_refl_term : FStar_Syntax_Syntax.term =
   mk_refl_types_lid_as_term "term" 
 let fstar_refl_env : FStar_Syntax_Syntax.term =
@@ -262,21 +255,29 @@ let ref_C_True_lid : FStar_Ident.lident = fstar_refl_syntax_lid "C_True"
 let ref_C_False_lid : FStar_Ident.lident = fstar_refl_syntax_lid "C_False" 
 let ref_C_Int_lid : FStar_Ident.lident = fstar_refl_syntax_lid "C_Int" 
 let ref_C_String_lid : FStar_Ident.lident = fstar_refl_syntax_lid "C_String" 
-let ref_C_Unit : FStar_Syntax_Syntax.term = lid_as_data_tm ref_C_Unit_lid 
-let ref_C_True : FStar_Syntax_Syntax.term = lid_as_data_tm ref_C_True_lid 
-let ref_C_False : FStar_Syntax_Syntax.term = lid_as_data_tm ref_C_False_lid 
-let ref_C_Int : FStar_Syntax_Syntax.term = lid_as_data_tm ref_C_Int_lid 
-let ref_C_String : FStar_Syntax_Syntax.term = lid_as_data_tm ref_C_String_lid 
+let ref_C_Unit : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_C_Unit_lid 
+let ref_C_True : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_C_True_lid 
+let ref_C_False : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_C_False_lid 
+let ref_C_Int : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_C_Int_lid 
+let ref_C_String : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_C_String_lid 
 let ref_Pat_Constant_lid : FStar_Ident.lident =
   fstar_refl_syntax_lid "Pat_Constant" 
 let ref_Pat_Cons_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Pat_Cons" 
 let ref_Pat_Var_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Pat_Var" 
 let ref_Pat_Wild_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Pat_Wild" 
 let ref_Pat_Constant : FStar_Syntax_Syntax.term =
-  lid_as_data_tm ref_Pat_Constant_lid 
-let ref_Pat_Cons : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Pat_Cons_lid 
-let ref_Pat_Var : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Pat_Var_lid 
-let ref_Pat_Wild : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Pat_Wild_lid 
+  FStar_Syntax_Syntax.tdataconstr ref_Pat_Constant_lid 
+let ref_Pat_Cons : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Pat_Cons_lid 
+let ref_Pat_Var : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Pat_Var_lid 
+let ref_Pat_Wild : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Pat_Wild_lid 
 let ref_Tv_Var_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Tv_Var" 
 let ref_Tv_FVar_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Tv_FVar" 
 let ref_Tv_App_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Tv_App" 
@@ -290,68 +291,86 @@ let ref_Tv_Uvar_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Tv_Uvar"
 let ref_Tv_Match_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Tv_Match" 
 let ref_Tv_Unknown_lid : FStar_Ident.lident =
   fstar_refl_syntax_lid "Tv_Unknown" 
-let ref_Tv_Var : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Tv_Var_lid 
-let ref_Tv_FVar : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Tv_FVar_lid 
-let ref_Tv_App : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Tv_App_lid 
-let ref_Tv_Abs : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Tv_Abs_lid 
-let ref_Tv_Arrow : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Tv_Arrow_lid 
-let ref_Tv_Type : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Tv_Type_lid 
+let ref_Tv_Var : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_Var_lid 
+let ref_Tv_FVar : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_FVar_lid 
+let ref_Tv_App : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_App_lid 
+let ref_Tv_Abs : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_Abs_lid 
+let ref_Tv_Arrow : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_Arrow_lid 
+let ref_Tv_Type : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_Type_lid 
 let ref_Tv_Refine : FStar_Syntax_Syntax.term =
-  lid_as_data_tm ref_Tv_Refine_lid 
-let ref_Tv_Const : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Tv_Const_lid 
-let ref_Tv_Uvar : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Tv_Uvar_lid 
-let ref_Tv_Match : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Tv_Match_lid 
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_Refine_lid 
+let ref_Tv_Const : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_Const_lid 
+let ref_Tv_Uvar : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_Uvar_lid 
+let ref_Tv_Match : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_Match_lid 
 let ref_Tv_Unknown : FStar_Syntax_Syntax.term =
-  lid_as_data_tm ref_Tv_Unknown_lid 
+  FStar_Syntax_Syntax.tdataconstr ref_Tv_Unknown_lid 
 let ref_Sg_Inductive_lid : FStar_Ident.lident =
   fstar_refl_syntax_lid "Sg_Inductive" 
 let ref_Unk_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Unk" 
 let ref_Ctor_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Ctor" 
 let ref_Sg_Inductive : FStar_Syntax_Syntax.term =
-  lid_as_data_tm ref_Sg_Inductive_lid 
-let ref_Unk : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Unk_lid 
-let ref_Ctor : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Ctor_lid 
+  FStar_Syntax_Syntax.tdataconstr ref_Sg_Inductive_lid 
+let ref_Unk : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Unk_lid 
+let ref_Ctor : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Ctor_lid 
 type order =
   | Lt 
   | Eq 
   | Gt 
 let uu___is_Lt : order -> Prims.bool =
-  fun projectee  -> match projectee with | Lt  -> true | uu____656 -> false 
+  fun projectee  -> match projectee with | Lt  -> true | uu____646 -> false 
 let uu___is_Eq : order -> Prims.bool =
-  fun projectee  -> match projectee with | Eq  -> true | uu____661 -> false 
+  fun projectee  -> match projectee with | Eq  -> true | uu____651 -> false 
 let uu___is_Gt : order -> Prims.bool =
-  fun projectee  -> match projectee with | Gt  -> true | uu____666 -> false 
+  fun projectee  -> match projectee with | Gt  -> true | uu____656 -> false 
 let ord_Lt_lid : FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"] FStar_Range.dummyRange 
 let ord_Eq_lid : FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Eq"] FStar_Range.dummyRange 
 let ord_Gt_lid : FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Gt"] FStar_Range.dummyRange 
-let ord_Lt : FStar_Syntax_Syntax.term = lid_as_data_tm ord_Lt_lid 
-let ord_Eq : FStar_Syntax_Syntax.term = lid_as_data_tm ord_Eq_lid 
-let ord_Gt : FStar_Syntax_Syntax.term = lid_as_data_tm ord_Gt_lid 
+let ord_Lt : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ord_Lt_lid 
+let ord_Eq : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ord_Eq_lid 
+let ord_Gt : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ord_Gt_lid 
 let fstar_refl_norm_step : FStar_Syntax_Syntax.term =
   mk_refl_syntax_lid_as_term "norm_step" 
 let ref_Simpl_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Simpl" 
 let ref_WHNF_lid : FStar_Ident.lident = fstar_refl_syntax_lid "WHNF" 
 let ref_Primops_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Primops" 
 let ref_Delta_lid : FStar_Ident.lident = fstar_refl_syntax_lid "Delta" 
-let ref_Simpl : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Simpl_lid 
-let ref_WHNF : FStar_Syntax_Syntax.term = lid_as_data_tm ref_WHNF_lid 
-let ref_Primops : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Primops_lid 
-let ref_Delta : FStar_Syntax_Syntax.term = lid_as_data_tm ref_Delta_lid 
-let t_binder : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
-  let uu____669 = fstar_refl_types_lid "binder"  in
-  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____669 
-let t_term : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
-  let uu____674 = fstar_refl_types_lid "term"  in
-  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____674 
-let t_fv : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
-  let uu____679 = fstar_refl_types_lid "fv"  in
-  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____679 
-let t_binders : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
-  let uu____684 = fstar_refl_syntax_lid "binders"  in
-  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____684 
-let t_norm_step : FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax =
-  let uu____689 = fstar_refl_syntax_lid "norm_step"  in
-  FStar_All.pipe_left FStar_TypeChecker_Common.tabbrev uu____689 
+let ref_Simpl : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Simpl_lid 
+let ref_WHNF : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_WHNF_lid 
+let ref_Primops : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Primops_lid 
+let ref_Delta : FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Delta_lid 
+let t_binder : FStar_Syntax_Syntax.term =
+  let uu____657 = fstar_refl_types_lid "binder"  in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____657 
+let t_term : FStar_Syntax_Syntax.term =
+  let uu____658 = fstar_refl_types_lid "term"  in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____658 
+let t_fv : FStar_Syntax_Syntax.term =
+  let uu____659 = fstar_refl_types_lid "fv"  in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____659 
+let t_binders : FStar_Syntax_Syntax.term =
+  let uu____660 = fstar_refl_syntax_lid "binders"  in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____660 
+let t_norm_step : FStar_Syntax_Syntax.term =
+  let uu____661 = fstar_refl_syntax_lid "norm_step"  in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____661 

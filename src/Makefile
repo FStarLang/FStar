@@ -166,11 +166,11 @@ u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FSta
 	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
 
 u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Subst.fst Free.fst \
-							InstFV.fst Util.fst Print.fst MutRecTy.fst Resugar.fst Unionfind.fst) \
+							InstFV.fst Util.fst Print.fst Embeddings.fst MutRecTy.fst Resugar.fst Unionfind.fst) \
                   u_boot_fsts/FStar.Fsdoc.Generator.fst
 	$(FSTARBOOT) $^ --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
 
-u_extract_parser:$(addprefix u_boot_fsts/FStar.Parser., AST.fst Lexhelp.fst Parseit.fsti Driver.fst Dep.fst ToDocument.fst)
+u_extract_parser:$(addprefix u_boot_fsts/FStar.Parser., AST.fst Parseit.fsti Driver.fst Dep.fst ToDocument.fst)
 	$(FSTARBOOT) $^ --extract_namespace FStar.Parser
 
 u_extract_normalizer: $(addprefix u_boot_fsts/FStar.TypeChecker., Common.fst Env.fst Normalize.fst Err.fst)
@@ -236,6 +236,7 @@ uz:
 ocaml: clean_u_extract_ocaml
 	$(MAKE) prep
 	+$(MAKE) u_extract_all
+	rm -f ocaml-output/FStar_*.ml
 	cp u_ocaml-output/*.ml ocaml-output/
 
 # Fastest way to refresh the snapshot (if it works)

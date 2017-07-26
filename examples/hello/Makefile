@@ -6,10 +6,16 @@ all: hello.uver
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
+ulib: ../../bin/fstarlib/fstarlib.cmxa
+
+../../bin/fstarlib/fstarlib.cmxa:
+	$(MAKE) -C $(ULIB_ML)
+
+
+
 # This target is very concise and re-uses the variables defined in
 # Makefile.include. You shouldn't need to call `cp` ever.
-ocaml: out hello.fst
-	$(MAKE) -C $(ULIB_ML)
+ocaml: out hello.fst ulib
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml hello.fst
 	$(OCAMLOPT) out/Hello.ml -o hello.exe
 	./hello.exe
@@ -56,6 +62,5 @@ out:
 	mkdir -p out
 
 clean:
-	make -C $(ULIB_ML) clean
 	rm -rf out
 	rm -f *~

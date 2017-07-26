@@ -63,22 +63,6 @@ type univ_ineq = universe * universe
 
 module C = FStar.Parser.Const
 
-let tconst l = mk (Tm_fvar(S.lid_as_fv l Delta_constant None)) None Range.dummyRange
-let tabbrev l = mk (Tm_fvar(S.lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
-let t_unit   = tconst C.unit_lid
-let t_bool   = tconst C.bool_lid
-let t_int    = tconst C.int_lid
-let t_string = tconst C.string_lid
-let t_float  = tconst C.float_lid
-let t_char   = tabbrev C.char_lid
-let t_range  = tconst C.range_lid
-let t_tactic_unit = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [S.as_arg t_unit] None Range.dummyRange
-
-
-let t_list_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [S.as_arg t] None Range.dummyRange
-let t_option_of t = S.mk_Tm_app (S.mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [S.as_arg t] None Range.dummyRange
-
-let unit_const = S.mk (S.Tm_constant FStar.Const.Const_unit) None Range.dummyRange
 let mk_by_tactic tac f =
     let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
     let t_reify_tactic = S.mk_Tm_uinst (tabbrev C.reify_tactic_lid) [U_zero] in
@@ -191,6 +175,7 @@ type insert_id_info_ops = {
     bv:bv -> typ -> unit;
     fv:fv -> typ -> unit;
     promote:(typ -> typ) -> unit;
+    clear: unit -> unit;
 }
 let insert_id_info =
     let enabled = BU.mk_ref false in
@@ -201,7 +186,9 @@ let insert_id_info =
     let promote cb =
         !id_info_buffer |> List.iter (fun (i, t, r) -> ignore <| insert_identifier_info i (cb t) r);
         id_info_buffer := [] in
+    let clear () = id_info_buffer := [] in
     {enable=enable;
      bv=bv;
      fv=fv;
-     promote=promote}
+     promote=promote;
+     clear=clear}

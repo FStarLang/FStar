@@ -336,9 +336,15 @@ let lid_to_top_name l = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l)
 let str_to_name s = lid_to_name (lid_of_str s)
 let str_to_top_name s = lid_to_top_name (lid_of_str s)
 
+let fstar_syn_syn_prefix s = str_to_name ("FStar_Syntax_Syntax." ^ s)
 let fstar_tc_common_prefix s = str_to_name ("FStar_TypeChecker_Common." ^ s)
 let fstar_refl_basic_prefix s = str_to_name ("FStar_Reflection_Basic." ^ s)
 let fstar_refl_data_prefix s = str_to_name ("FStar_Reflection_Data." ^ s)
+let fstar_emb_basic_prefix s = str_to_name ("FStar_Syntax_Embeddings." ^ s)
+let mk_basic_embedding (m: emb_decl) (s: string) =
+    match m with
+    | Embed -> fstar_emb_basic_prefix ("embed_" ^ s)
+    | Unembed -> fstar_emb_basic_prefix ("unembed_" ^ s)
 let mk_embedding (m: emb_decl) (s: string) =
     match m with
     | Embed -> fstar_refl_basic_prefix ("embed_" ^ s)
@@ -346,10 +352,10 @@ let mk_embedding (m: emb_decl) (s: string) =
 
 let rec mk_tac_param_type (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
-    | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> fstar_tc_common_prefix "t_int"
-    | Tm_fvar fv when fv_eq_lid fv PC.bool_lid -> fstar_tc_common_prefix "t_bool"
-    | Tm_fvar fv when fv_eq_lid fv PC.unit_lid -> fstar_tc_common_prefix "t_unit"
-    | Tm_fvar fv when fv_eq_lid fv PC.string_lid -> fstar_tc_common_prefix "t_string"
+    | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> fstar_syn_syn_prefix "t_int"
+    | Tm_fvar fv when fv_eq_lid fv PC.bool_lid -> fstar_syn_syn_prefix "t_bool"
+    | Tm_fvar fv when fv_eq_lid fv PC.unit_lid -> fstar_syn_syn_prefix "t_unit"
+    | Tm_fvar fv when fv_eq_lid fv PC.string_lid -> fstar_syn_syn_prefix "t_string"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> fstar_refl_data_prefix "t_binder"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> fstar_refl_data_prefix "t_term"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> fstar_refl_data_prefix "t_fv"
@@ -373,10 +379,10 @@ let rec mk_tac_param_type (t: term): mlexpr' =
    and are named embed_x, unembed_x *)
 let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
-    | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> mk_embedding m "int"
-    | Tm_fvar fv when fv_eq_lid fv PC.bool_lid -> mk_embedding m "bool"
-    | Tm_fvar fv when fv_eq_lid fv PC.unit_lid -> mk_embedding m "unit"
-    | Tm_fvar fv when fv_eq_lid fv PC.string_lid -> mk_embedding m "string"
+    | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> mk_basic_embedding m "int"
+    | Tm_fvar fv when fv_eq_lid fv PC.bool_lid -> mk_basic_embedding m "bool"
+    | Tm_fvar fv when fv_eq_lid fv PC.unit_lid -> mk_basic_embedding m "unit"
+    | Tm_fvar fv when fv_eq_lid fv PC.string_lid -> mk_basic_embedding m "string"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "binder") -> mk_embedding m "binder"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "term") -> mk_embedding m "term"
     | Tm_fvar fv when fv_eq_lid fv (RD.fstar_refl_types_lid "fv") -> mk_embedding m "fvar"

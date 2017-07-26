@@ -22,9 +22,9 @@ F* standard library mutable arrays module.
 module FStar.Array
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.All
-open FStar.ST
 open FStar.Seq
 open FStar.Heap
+open FStar.ST
 
 abstract type array (t:Type) = ref (seq t)
 
@@ -183,7 +183,7 @@ val blit_aux:
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     Seq.index (sel h1 t) i == Seq.index (sel h0 t) i) ))
 
-#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 10"
+#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 20"
 let rec blit_aux #a s s_idx t t_idx len ctr =
   match len - ctr with
   | 0 -> ()

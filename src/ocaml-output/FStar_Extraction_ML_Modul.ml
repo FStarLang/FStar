@@ -868,7 +868,7 @@ let rec extract_sig :
                       FStar_Pervasives_Native.None
                      in
                   let uu____2428 =
-                    FStar_Syntax_Util.abs bs FStar_TypeChecker_Common.t_unit
+                    FStar_Syntax_Util.abs bs FStar_Syntax_Syntax.t_unit
                       FStar_Pervasives_Native.None
                      in
                   extract_typ_abbrev g fv quals attrs uu____2428)

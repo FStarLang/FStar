@@ -21,8 +21,8 @@ struct \
 micro-benchmarks \
 bytes \
 tactics \
+native_tactics \
 kv_parsing
-
 
 # low-level \  ... NS: removing from CI for this branch
 

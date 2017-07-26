@@ -4,6 +4,7 @@ open Rel
 open While
 open FStar.Heap
 open FStar.Classical
+open FStar.ST
 
 (****************************** Preliminaries ******************************)
 
