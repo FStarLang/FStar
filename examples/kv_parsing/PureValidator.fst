@@ -64,9 +64,9 @@ let validate_entry: v:validator{validator_checks v parse_entry} =
   validate_u16_array `seq`
   validate_u32_array
 
-unfold let validate_accept : validator =
+let validate_accept : validator =
   fun b -> valid 0
-unfold let validate_reject : validator =
+let validate_reject : validator =
   fun b -> invalid
 
 val validate_many':
@@ -98,10 +98,11 @@ let validate_liftA2 #t #t' #t'' p p' f v v' =
                | None -> true);
   ()
 
-#set-options "--z3rlimit 30"
+#reset-options "--z3rlimit 30"
 
-let rec validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator_checks v p}) :
-  Lemma (validator_checks (validate_many' n v) (parse_many' p n)) =
+val validate_many'_ok (n:nat) (#t:Type) (p: parser t) (v:validator{validator_checks v p}) :
+  Lemma (validator_checks (validate_many' n v) (parse_many' p n))
+let rec validate_many'_ok n #t p v =
   match n with
   | 0 -> ()
   | _ -> validate_many'_ok (n-1) p v;
