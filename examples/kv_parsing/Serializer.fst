@@ -232,10 +232,6 @@ let ser_entry (e:entry_st) : serializer_any (hide (entry_st_bufs e)) (fun h -> e
 
 (*! Incremental key-value store writer *)
 
-// TODO: will create a complete key-value store by allocating a length field,
-// repeatedly calling ser_entry (advancing the output each time), then filling
-// in the length
-
 let adjacent_entries_disjoint (#t:Type) (b1 b2:B.buffer t) :
     Lemma (requires (buffers_adjacent b1 b2))
           (ensures (B.disjoint b1 b2)) = ()
@@ -244,7 +240,9 @@ open FStar.Ghost
 
 // TODO: the writer is tracking a few more pointers than strictly necessary; we
 // really only need a pointer to the beginning and a bslice at the current write
-// position
+// position, and entries_written_buf can be reconstructed from these two. This
+// requires keeping a large buffer in the writer and then projecting out
+// sub-buffers for the current fields.
 noeq type writer =
      { length_field: b:lbuffer 4;
        entries_written_buf: bslice;

@@ -29,7 +29,7 @@ let fold_left_store #t f acc s =
         | e::es -> aux es (f acc e) in
     aux s.entries acc
 
-// TODO: this is just computation, right?
+// XXX: this is just computation, right?
 assume val fold_left_empty (#t:Type) (f:(t -> encoded_entry -> t)) (acc:t) (s:store) :
   Lemma (requires (s.entries == []))
         (ensures (fold_left_store f acc s == acc))
@@ -298,7 +298,7 @@ let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
       assert (Some? (parse_many parse_entry (U32.v n') bs2') /\
               parse_result (parse_many parse_entry (U32.v n') bs2') ==
               List.tail (parse_result (parse_many parse_entry (U32.v n) bs2)));
-      // TODO: this call doesn't work
+      // XXX: this call doesn't work
       //fold_left_store_n_unfold1 f_spec acc (parse_result (parse_many parse_entry n' bs2')) n';
 
       // XXX: why doesn't the proof go through at this point? do we need more

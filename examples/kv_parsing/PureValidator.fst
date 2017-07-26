@@ -9,6 +9,10 @@ module U32 = FStar.UInt32
 
 (*! Pure validation *)
 
+(** Note that this was an experiment and is largely superseded by the stateful
+versions (there isn't a compelling use case for spec-level validation; might as
+well use the pure parser as the spec) *)
+
 let validator = parser unit
 // let parse_validator #t (p:parser t) = b:bytes -> (ok:bool{ok <==> Some? (p b)} * n:nat{n <= length b})
 
@@ -124,9 +128,9 @@ let validate_done : v:validator{validator_checks v parsing_done} =
   fun b -> if length b = 0 then valid 0
         else invalid
 
-// TODO: tie together pieces to prove this overall correctness result
 val validate: v:validator{validator_checks v parse_abstract_store}
 let validate =
+  // NOTE: this verification didn't go through
   admit();
   parse_u32 `then_validate`
   (fun num_entries -> validate_many parse_entry (U32.v num_entries) validate_entry `seq`

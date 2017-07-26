@@ -112,7 +112,7 @@ let same_ref (#a:Type) (b1 b2:B.buffer a) =
     B.max_length b1 == B.max_length b2 /\
     B.content b1 == B.content b2
 
-// TODO: why is this not in the standard library?
+// XXX: why is this not in the standard library?
 let same_ref_equivalence (#a:Type) :
     Lemma ((forall b. same_ref #a b b) /\
            (forall b1 b2. same_ref #a b1 b2 ==> same_ref b2 b1) /\

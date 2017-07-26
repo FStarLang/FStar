@@ -71,9 +71,6 @@ noeq type entry_st =
               val_st:u32_array_st ->
               entry_st
 
-// TODO: all of these things that embed buffers need a live method on top
-// (really begs for a typeclass..)
-
 let entry_live h (e:entry_st) =
     live h e.key_st.a16_st /\
     live h e.val_st.a32_st
