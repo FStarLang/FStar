@@ -64,3 +64,8 @@ extraction-bug734: bug734.fst
 	$(FSTAR) --explicit_deps $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml bug734.fst
 	$(OCAMLOPT) out/Bug734.ml -o bug734.exe
 	./bug734.exe
+
+bug1154:
+	$(FSTAR) Bug1154.fst
+	ocamlfind ocamlopt -shared -I ../../src/ocaml-output/_build/src/tactics/ml -I ../../src/ocaml-output/_build/ulib/ml -I ../../src/ocaml-output/_build/src/ocaml-output/ -linkpkg -package zarith -o Bug1154_tactic.cmxs Bug1154_tactic.ml
+	$(FSTAR) --load Bug1154_tactic.cmxs Bug1154.fst
