@@ -126,6 +126,8 @@ let parse_num_entries_valid input =
 // method to encode dependencies (luckily the length of a bslice can be accessed
 // without a heap).
 
+#reset-options "--z3rlimit 15"
+
 // TODO: this isn't a parser_st_nochk because its output isn't exactly the same
 // as the parser; the relationship requires converting the return value to bytes
 let parse_u16_array_nochk : input:bslice -> ST (u16_array_st * off:U32.t{U32.v off <= U32.v input.len})
@@ -149,6 +151,8 @@ let parse_u16_array_nochk : input:bslice -> ST (u16_array_st * off:U32.t{U32.v o
   let input = advance_slice input off in
   let a = U16ArraySt len (truncate_slice input (Cast.uint16_to_uint32 len)) in
   (a, U32.add off (Cast.uint16_to_uint32 len))
+
+#reset-options
 
 let parse_u32_array_nochk : input:bslice -> ST (u32_array_st * off:U32.t)
   (requires (fun h0 -> live h0 input /\
