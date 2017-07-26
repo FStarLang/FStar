@@ -1,5 +1,11 @@
 module Manifest
 
+open FStar.HyperHeap
+open FStar.HyperStack
+open FStar.HyperStack.ST
+
+module HH = FStar.HyperHeap
+
 let nat64_max = 0x10000000000000000
 type nat64 = i:nat{i <= nat64_max}
 
@@ -15,37 +21,24 @@ type calltable_entry =
 type calltable = 
   | MkCalltable : calltable_start:nat64 -> calltable_size: nat64 -> entries: (list calltable_entry) -> calltable
 
-type umemlayout =
- | MkUmemlayout :  base_start:nat64 -> base_size:nat64 ->
-                   bitmap_address:nat64 -> bitmap_size:nat64 ->
-		   ctable: calltable ->
-		   code_start:nat64 -> code_size: nat64 ->
-		   heap_start: nat64 -> heap_size:nat64 ->
-		   stack_start:nat64 -> stack_size:nat64 -> umemlayout
+let color = 0
 
+(* Enclave and non-Enclave regions *)
+let (enclave_regn: rid{is_eternal_color (HH.color enclave_regn)}) = new_colored_region HH.root (color -1)
 
-val get_u_start (m:umemlayout) : (r:nat64)
-let get_u_start (m:umemlayout) = m.code_start
-let get_u_size (m:umemlayout) = m.code_size + m.heap_size + m.stack_size
-let get_u_end (m:umemlayout) = m.stack_start
+// Shared by enclave and non-enclave components to exchange arguments
+let (host_regn:rid{is_eternal_color (HH.color host_regn)}) = new_colored_region HH.root (color - 2)
 
-val get_bitmap_start (m:umemlayout) : (r:nat64)
-let get_bitmap_start (m:umemlayout) = m.bitmap_address
-let get_bitmap_size (m:umemlayout) = m.bitmap_size
+(* U component *)
+let (u_mem:rid{is_eternal_color (HH.color u_mem)} )  = new_colored_region enclave_regn (color-3)
 
-let get_calltable_start (m:umemlayout) = m.ctable.calltable_start
-let get_code_start (m:umemlayout) = m.code_start
-let get_code_size (m:umemlayout) = m.code_size
+let (u_code:rid{is_eternal_color (HH.color u_code)}) = new_colored_region u_mem (color-4)
+let (u_heap:rid{is_eternal_color (HH.color u_heap)}) = new_colored_region u_mem (color-5)
 
-let get_heap_start (m:umemlayout) = m.heap_start
-let get_heap_size (m:umemlayout) = m.heap_size
-let get_stack_start (m:umemlayout) = m.stack_start
-let get_stack_size (m:umemlayout) = m.stack_size
+(* V component *)
+let (v_mem:rid{is_eternal_color (HH.color v_mem)})  = new_colored_region enclave_regn (color-6) 
+let (v_heap:rid{is_eternal_color (HH.color v_heap)}) = new_colored_region v_mem (color-7) 
 
-let address_within_procedure (fname:string) (dst:nat64) (env:umemlayout) = true
-
-val is_inside_u_region (addr:nat64) (u:umemlayout) : bool
-let is_inside_u_region (addr:nat64) (u:umemlayout) = ( addr < ((get_u_start u) + (get_u_size u))) && ( addr >= (get_u_start u))  
-
+  
 
 
