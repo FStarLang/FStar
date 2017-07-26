@@ -3,6 +3,7 @@ module Serializer
 open FStar.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
+open FStar.Ghost
 module B = FStar.Buffer
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
@@ -30,34 +31,34 @@ let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem)
     | None ->
       modifies_slice buf h0 h1
 
-let buffer_fun (inputs:TSet.set bslice) =
-    f:(h:mem{forall b. TSet.mem b inputs ==> live h b} -> GTot bytes){
-      forall (h0 h1: h:mem{forall b. TSet.mem b inputs ==> live h b}).
-      (forall b. TSet.mem b inputs ==> as_seq h0 b == as_seq h1 b) ==>
+let buffer_fun (inputs:erased (TSet.set bslice)) =
+    f:(h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b} -> GTot bytes){
+      forall (h0 h1: h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b}).
+      (forall b. TSet.mem b (reveal inputs) ==> as_seq h0 b == as_seq h1 b) ==>
       f h0 == f h1}
 
 let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
   forall b. TSet.mem b inputs ==> live h b /\ B.disjoint b.p buf.p
 
-let serializer_any (inputs:TSet.set bslice)
+let serializer_any (inputs:erased (TSet.set bslice))
                    (enc: buffer_fun inputs) =
   buf:bslice ->
   ST (option (off:offset_into buf))
      (requires (fun h0 -> live h0 buf /\
-                       disjoint_in h0 inputs buf))
+                       disjoint_in h0 (reveal inputs) buf))
      (ensures (fun h0 r h1 ->
         live h0 buf /\
         live h1 buf /\
-        (forall b. TSet.mem b inputs ==>
+        (forall b. TSet.mem b (reveal inputs) ==>
            live h0 b /\
            live h1 b /\
            as_seq h0 b == as_seq h1 b) /\
         serialized (enc h1) buf r h0 h1))
 
-let serializer (enc:bytes) = serializer_any TSet.empty (fun _ -> enc)
+let serializer (enc:erased bytes) = serializer_any (hide TSet.empty) (fun _ -> reveal enc)
 
-let serializer_1 (input:bslice) (enc: buffer_fun (TSet.singleton input)) =
-    serializer_any (TSet.singleton input) (fun h -> enc h)
+let serializer_1 (input:bslice) (enc: buffer_fun (hide (TSet.singleton input))) =
+    serializer_any (hide (TSet.singleton input)) (fun h -> enc h)
 
 let lemma_index_upd_gt (#a:Type) (s:Seq.seq a) (n:nat{n < length s}) (i:nat{n < i /\ i < length s}) (v:a) :
   Lemma (index (Seq.upd s n v) i == index s i)
@@ -70,7 +71,7 @@ val upd_len_1 : #a:Type -> s:Seq.seq a{length s == 1} -> v:a ->
 let upd_len_1 #a s v =
   lemma_eq_intro (Seq.upd s 0 v) (Seq.create 1 v)
 
-val ser_byte: v:byte -> serializer (Seq.create 1 v)
+val ser_byte: v:byte -> serializer (hide (Seq.create 1 v))
 let ser_byte v = fun buf ->
   if U32.lt buf.len 1ul then None
   else
@@ -87,7 +88,7 @@ let upd_len_2 (#a:Type) (s:Seq.seq a{length s == 2}) (vs:Seq.seq a{length vs == 
   Lemma (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1) == vs) =
   lemma_eq_intro (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1)) vs
 
-val ser_u16: v:U16.t -> serializer (u16_to_be v)
+val ser_u16: v:U16.t -> serializer (hide (u16_to_be v))
 let ser_u16 v = fun buf ->
   if U32.lt buf.len 2ul then None
   else
@@ -118,7 +119,7 @@ let upd_len_4 (#a:Type) (s:Seq.seq a{length s == 4}) (vs:Seq.seq a{length vs == 
   2 (index vs 2))
   3 (index vs 3)) vs
 
-val ser_u32: v:U32.t -> serializer (u32_to_be v)
+val ser_u32: v:U32.t -> serializer (hide (u32_to_be v))
 let ser_u32 v = fun buf ->
   if U32.lt buf.len 4ul then None
   else
@@ -137,22 +138,22 @@ let ser_u32 v = fun buf ->
 
 // this is really a coercion that lifts a pure bytes serializer to one that
 // takes an input buffer (and ignores it)
-let ser_input (input:bslice) (#b:bytes) (s:serializer b) : serializer_1 input (fun _ -> b) =
+let ser_input (input:bslice) (#b:erased bytes) (s:serializer b) : serializer_1 input (fun _ -> reveal b) =
     fun buf -> s buf
 
 // coercion to increase the size of the inputs set
-let ser_inputs (#inputs1:TSet.set bslice)
-               (inputs2:TSet.set bslice{TSet.subset inputs1 inputs2})
+let ser_inputs (#inputs1:erased (TSet.set bslice))
+               (inputs2:erased (TSet.set bslice){TSet.subset (reveal inputs1) (reveal inputs2)})
                (#b: buffer_fun inputs1)
                (s:serializer_any inputs1 b) : serializer_any inputs2 (fun h -> b h) =
     fun buf -> s buf
 
 #reset-options "--z3rlimit 30"
 
-let ser_append (#inputs1 #inputs2:TSet.set bslice)
+let ser_append (#inputs1 #inputs2:erased (TSet.set bslice))
                (#b1: buffer_fun inputs1) (#b2: buffer_fun inputs2)
                (s1:serializer_any inputs1 b1) (s2:serializer_any inputs2 b2) :
-               serializer_any (TSet.union inputs1 inputs2) (fun h -> append (b1 h) (b2 h)) =
+               serializer_any (elift2 TSet.union inputs1 inputs2) (fun h -> append (b1 h) (b2 h)) =
   fun buf ->
   let h0 = get() in
   match s1 buf with
@@ -201,23 +202,20 @@ let enc_u16_array_st (a: u16_array_st) (h:mem{live h a.a16_st}) : GTot bytes =
 
 // inline_for_extraction unfold [@"substitute"]
 val ser_u16_array : a:u16_array_st ->
-  serializer_any (TSet.singleton a.a16_st) (fun h -> enc_u16_array_st a h)
-let ser_u16_array a =
-  ser_inputs (TSet.singleton a.a16_st) #(fun h -> enc_u16_array_st a h)
-  (ser_input a.a16_st (ser_u16 a.len16_st) `ser_append`
-   ser_copy a.a16_st)
+  serializer_any (hide (TSet.singleton a.a16_st)) (fun h -> enc_u16_array_st a h)
+let ser_u16_array a = fun buf ->
+  (ser_u16 a.len16_st `ser_append` ser_copy a.a16_st) buf
 
-let ser_u16_array' a input = ser_u16_array a input
+let ser_u16_array' a buf = ser_u16_array a buf
 
 let enc_u32_array_st (a: u32_array_st) (h:mem{live h a.a32_st}) : GTot bytes =
   u32_to_be a.len32_st `append` as_seq h a.a32_st
 
 val ser_u32_array : a:u32_array_st ->
-  serializer_any (TSet.singleton a.a32_st) (fun h -> enc_u32_array_st a h)
-let ser_u32_array a =
-  ser_inputs (TSet.singleton a.a32_st)
+  serializer_any (hide (TSet.singleton a.a32_st)) (fun h -> enc_u32_array_st a h)
+let ser_u32_array a = fun buf ->
   (ser_u32 a.len32_st `ser_append`
-   ser_copy a.a32_st)
+   ser_copy a.a32_st) buf
 
 noextract
 val entry_st_bufs : e:entry_st -> TSet.set bslice
@@ -228,9 +226,9 @@ val enc_entry_st : e:entry_st -> h:mem{forall b. TSet.mem b (entry_st_bufs e) ==
 let enc_entry_st (e:entry_st) h =
     enc_u16_array_st e.key_st h `append` enc_u32_array_st e.val_st h
 
-let ser_entry (e:entry_st) : serializer_any (entry_st_bufs e) (fun h -> enc_entry_st e h) =
-    ser_inputs (entry_st_bufs e)
-    (ser_u16_array e.key_st `ser_append` ser_u32_array e.val_st)
+let ser_entry (e:entry_st) : serializer_any (hide (entry_st_bufs e)) (fun h -> enc_entry_st e h) =
+    fun buf ->
+    (ser_u16_array e.key_st `ser_append` ser_u32_array e.val_st) buf
 
 (*! Incremental key-value store writer *)
 
