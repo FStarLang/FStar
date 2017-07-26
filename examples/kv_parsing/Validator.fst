@@ -16,16 +16,14 @@ module Cast = FStar.Int.Cast
 
 (*** Stateful validation of input buffer *)
 
-type validation (b:bytes) = option U32.t
-
 unfold let validation_checks_parse #t (b: bytes)
-  (v: validation b)
+  (v: option (off:U32.t{U32.v off <= length b}))
   (p: option (t * n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
 
 inline_for_extraction unfold
 let parser_st_nochk #t (p: parser t) =
-  input:bslice -> ST (t * U32.t)
+  input:bslice -> ST (t * off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                      Some? (p bs))))
@@ -40,7 +38,7 @@ let parser_st_nochk #t (p: parser t) =
 
 inline_for_extraction unfold
 let parser_st #t (p: parser t) =
-  input:bslice -> ST (option (t * U32.t))
+  input:bslice -> ST (option (t * off:U32.t{U32.v off <= U32.v input.len}))
   (requires (fun h0 -> live h0 input))
   (ensures (fun h0 r h1 -> live h1 input /\
           h0 == h1 /\
@@ -88,7 +86,7 @@ let parse_u32_st : parser_st (parse_u32) = fun input ->
     else Some (parse_u32_st_nochk input)
 
 unfold
-let stateful_validator #t (p: parser t) = input:bslice -> ST (option U32.t)
+let stateful_validator #t (p: parser t) = input:bslice -> ST (option (off:U32.t{U32.v off <= U32.v input.len}))
     (requires (fun h0 -> live h0 input))
     (ensures (fun h0 r h1 -> live h1 input /\
                           h0 == h1 /\
@@ -128,6 +126,8 @@ let validate_u32_array_st : stateful_validator parse_u32_array = fun input ->
     end
   | None -> None
 
+#reset-options "--z3rlimit 10"
+
 [@"substitute"]
 let then_check #t (p: parser t) (v: stateful_validator p)
                #t' (p': parser t') (v': stateful_validator p')
@@ -143,11 +143,15 @@ fun input ->
     end
   | None -> None
 
+#reset-options
+
 // eta expansion is necessary to get the right subtyping check
 let validate_entry_st : stateful_validator parse_entry = fun input ->
   then_check parse_u16_array validate_u16_array_st
              parse_u32_array validate_u32_array_st
              (fun key value -> EncodedEntry key.len16 key.a16 value.len32 value.a32) input
+
+#reset-options "--z3rlimit 10"
 
 // TODO: cyclic dependency in Frames check due to recursion
 noextract
@@ -159,6 +163,8 @@ let rec validate_many_st #t p v n : stateful_validator (parse_many p (U32.v n)) 
        then_check p v
                   (parse_many p (U32.v n')) (validate_many_st p v n')
                   (fun e es -> e::es) input
+
+#reset-options
 
 let validate_done_st : stateful_validator parsing_done = fun input ->
   if U32.eq input.len 0ul then Some 0ul else None
