@@ -3122,13 +3122,25 @@ let is_active_union_field
   (p: pointer (TUnion l))
   (fd: struct_field l)
 : GTot Type0
-= live h (gufield p fd) /\ (
+= live h p /\ (
     let content = greference_of p in
-    let (| _ , c |) = HS.sel h content in
-    let t = typ_of_struct_field l fd in
-    let (v0 : otype_of_typ t) = path_sel c (PathStep _ _ (Pointer?.p p) (StepUField l fd)) in (
-    ~ (v0 == none_ovalue t)
-  ))
+    let (| _, c |) = HS.sel h content in
+    let vu : otype_of_typ (TUnion l) = path_sel c (Pointer?.p p) in
+    let vu : option (gtdata (struct_field l) (type_of_struct_field' l otype_of_typ)) = vu in
+    Some? vu /\ gtdata_get_key (Some?.v vu) == fd
+  )
+
+abstract
+let is_active_union_live
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires (is_active_union_field h p fd))
+  (ensures (live h p))
+  [SMTPat (is_active_union_field h p fd)]
+= ()
 
 abstract
 let is_active_union_field_live
@@ -3139,6 +3151,7 @@ let is_active_union_field_live
 : Lemma
   (requires (is_active_union_field h p fd))
   (ensures (live h (gufield p fd)))
+  [SMTPat (is_active_union_field h p fd)]
 = ()
 
 abstract
@@ -3150,6 +3163,7 @@ let is_active_union_field_eq
 : Lemma
   (requires (is_active_union_field h p fd1 /\ is_active_union_field h p fd2))
   (ensures (fd1 == fd2))
+  [SMTPat (is_active_union_field h p fd1); SMTPat (is_active_union_field h p fd2)]
 = ()
 
 abstract
@@ -3165,7 +3179,19 @@ let is_active_union_field_get_key
 = ()
 
 abstract
-let is_active_union_field_intro
+let is_active_union_field_readable
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: Lemma
+  (requires (is_active_union_field h p fd /\ readable h (gufield p fd)))
+  (ensures (readable h p))
+  [SMTPat (is_active_union_field h p fd); SMTPat (readable h (gufield p fd))]
+= ()
+
+abstract
+let is_active_union_field_includes_readable
   (#l: union_typ)
   (h: HS.mem)
   (p: pointer (TUnion l))
@@ -3762,6 +3788,44 @@ let write #a b z =
   let (| t , c0 |) = !r in
   let c1 = path_upd c0 (Pointer?.p b) (ovalue_of_value a z) in
   r := (| t, c1 |)
+
+(** Given our model, this operation is stateful, however it should be translated
+    to a no-op by Kremlin, as the tag does not actually exist at runtime.
+*)
+abstract
+let write_union_field
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: HST.Stack unit
+  (requires (fun h -> live h p))
+  (ensures (fun h0 _ h1 -> live h0 p /\ live h1 p
+    /\ modifies_1 p h0 h1
+    /\ is_active_union_field h1 p fd
+  ))
+= let h0 = HST.get () in
+  assume (live h0 p);
+  let r = reference_of h0 p in
+  let (| t, c0 |) = !r in
+  let field_t : typ = typ_of_struct_field l fd in
+
+  // We could avoid removing the data if `fd` is already the current tag.
+
+  // However this seems impossible to specify with the current set of
+  // user-available predicates and functions (the only thing we have to
+  // distinguish between actual data and dummy values is `readable`, which is
+  // too coarse-grained for our needs).
+  let vu : option (gtdata (struct_field l) (type_of_struct_field' l otype_of_typ)) =
+    Some (gtdata_create fd (none_ovalue field_t)) in
+  let vu : otype_of_typ (TUnion l) = vu in
+
+  let c1 : otype_of_typ t = path_upd c0 (Pointer?.p p) vu in
+  r := (| t, c1 |);
+  let h1 = HST.get () in
+  let rid = frameOf p in
+  // Help z3 proving `modifies_1 p h0 h1`. Both asserts seem required.
+  assert (HS.modifies_ref rid (Ghost.reveal (Set?.addrs (set_singleton p))) h0 h1);
+  assert (modifies rid (set_singleton p) h0 h1)
 
 (** Lemmas and patterns *)
 

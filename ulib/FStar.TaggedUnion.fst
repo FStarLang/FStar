@@ -165,12 +165,13 @@ let gfield
 : GTot (p': P.pointer (P.typ_of_struct_field l f) { P.includes p p' })
 = P.gufield (P.gfield p (union_field l)) f
 
+
 let field
   (#l: P.union_typ)
   (tgs: tags l)
   (p: P.pointer (typ l))
   (f: P.struct_field l)
-: HST.ST (P.pointer (P.typ_of_struct_field l f))
+: HST.Stack (P.pointer (P.typ_of_struct_field l f))
   (requires (fun h ->
     valid h tgs p /\
     gread_tag h tgs p == normalize_term (tag_of_field tgs f)
@@ -216,12 +217,34 @@ let write
   assert (P.readable h1 tag_ptr);
   assert (P.readable h1 u_ptr);
   P.readable_struct h1 p;
-  P.is_active_union_field_intro #l h1 u_ptr f (P.ufield u_ptr f);
+  P.is_active_union_field_includes_readable #l h1 u_ptr f (P.ufield u_ptr f);
   assert (P.is_active_union_field #l h1 u_ptr f)
+
+let write_tag
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+: HST.Stack unit
+  (requires (fun h ->
+    valid h tgs p
+  ))
+  (ensures (fun h0 _ h1 ->
+    valid h0 tgs p /\ valid h1 tgs p
+    /\ P.modifies_1 p h0 h1
+    /\ gread_tag #l h1 tgs p == normalize_term (tag_of_field tgs f)
+  ))
+=
+  let tag_ptr = P.field p (tag_field l) in
+  let u_ptr : P.pointer (P.TUnion l) = P.field p (union_field l) in
+  let t = tag_of_field #l tgs f in
+  P.write tag_ptr t;
+  P.write_union_field u_ptr f
 
 (******************************************************************************)
 
 (* Lemmas *)
+
 
 let modifies_1_valid
   (#l: P.union_typ)
@@ -244,7 +267,7 @@ let modifies_1_valid
    SMTPat (P.includes #_ #t' (gfield #l tgs p f) p')]
 =
   let u_ptr = P.gfield p (union_field l) in
-  P.is_active_union_field_intro h1 u_ptr f p'
+  P.is_active_union_field_includes_readable h1 u_ptr f p'
 
 let modifies_1_tag
   (#l: P.union_typ)
