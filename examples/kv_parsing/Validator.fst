@@ -149,25 +149,22 @@ let validate_entry_st : stateful_validator parse_entry = fun input ->
              parse_u32_array validate_u32_array_st
              (fun key value -> EncodedEntry key.len16 key.a16 value.len32 value.a32) input
 
+val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:U32.t) : Tot (stateful_validator (parse_many p (U32.v n))) (decreases (U32.v n))
 [@"substitute"]
-val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:nat) : stateful_validator (parse_many p n)
-[@"substitute"]
-let rec validate_many_st #t p v (n:nat) : stateful_validator (parse_many p n) = fun input ->
-  match n with
-  | 0 -> Some (U32.uint_to_t 0)
-  | _ -> let n':nat = n - 1 in
-        then_check p v
-                   (parse_many p n') (validate_many_st p v n')
-                   (fun e es -> e::es) input
+let rec validate_many_st #t p v n : stateful_validator (parse_many p (U32.v n)) = fun input ->
+  if U32.eq n 0ul then Some 0ul
+  else let n':U32.t = U32.sub n 1ul in
+       then_check p v
+                  (parse_many p (U32.v n')) (validate_many_st p v n')
+                  (fun e es -> e::es) input
 
 let validate_done_st : stateful_validator parsing_done = fun input ->
-  if U32.eq input.len (U32.uint_to_t 0) then Some (U32.uint_to_t 0) else None
+  if U32.eq input.len 0ul then Some 0ul else None
 
 let validate_entries_st (num_entries:U32.t) : stateful_validator (parse_entries num_entries) =
   fun input ->
-  let n = U32.v num_entries in
-  then_check (parse_many parse_entry n)
-  (validate_many_st parse_entry validate_entry_st n)
+  then_check (parse_many parse_entry (U32.v num_entries))
+  (validate_many_st parse_entry validate_entry_st num_entries)
   parsing_done validate_done_st
   (fun entries _ -> Store num_entries entries) input
 
