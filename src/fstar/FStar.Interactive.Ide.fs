@@ -568,11 +568,11 @@ type name_tracking_event =
 | NTInclude of lid (* host *) * lid (* included *)
 | NTBinding of binding
 
-let query_of_lid' (ns: list<ident>) (id: ident) : list<string> =
-  List.map text_of_id (ns @ [id])
+let query_of_ids (ids: list<ident>) : CompletionTable.query =
+  List.map text_of_id ids
 
-let query_of_lid (lid: lident) : list<string> =
-  query_of_lid' lid.ns lid.ident
+let query_of_lid (lid: lident) : CompletionTable.query =
+  query_of_ids (lid.ns @ [lid.ident])
 
 let update_names_from_event cur_mod_str table evt =
   let is_cur_mod lid = lid.str = cur_mod_str in
@@ -606,9 +606,10 @@ let update_names_from_event cur_mod_str table evt =
     printf ">>> new event >>> NTBinding %A\n" (List.map (fun lid -> lid.str) lids);
     List.fold_left
       (fun tbl lid ->
-         let query = if lid.nsstr = cur_mod_str then query_of_lid' [] lid.ident
-                     else query_of_lid lid in
-         CompletionTable.insert tbl query (CompletionTable.Lid lid))
+         let ns_query = if lid.nsstr = cur_mod_str then []
+                        else query_of_ids lid.ns in
+         CompletionTable.insert
+           tbl ns_query (text_of_id lid.ident) (CompletionTable.Lid lid))
       table lids
 
 let commit_name_tracking (cur_mod: modul_t) names name_events =
@@ -619,7 +620,7 @@ let commit_name_tracking (cur_mod: modul_t) names name_events =
 
 let with_name_tracking (f: unit -> 'a) : 'a * list<name_tracking_event> =
   (* Aliases are only recorded for the current module, hence ‘cur_mode_str’ *)
-  let pig_hook = !TcEnv.push_in_gamma_hook in
+  let pgamma_hook = !TcEnv.push_in_gamma_hook in
   let popen_hook = !DsEnv.push_open_hook in
   let pinclude_hook = !DsEnv.push_include_hook in
   let pma_hook = !DsEnv.push_module_abbrev_hook in
@@ -635,7 +636,7 @@ let with_name_tracking (f: unit -> 'a) : 'a * list<name_tracking_event> =
   TcEnv.push_in_gamma_hook :=
     (fun _ s -> push_event (NTBinding s));
   let output = f () in
-  TcEnv.push_in_gamma_hook := pig_hook;
+  TcEnv.push_in_gamma_hook := pgamma_hook;
   DsEnv.push_open_hook := popen_hook;
   DsEnv.push_include_hook := pinclude_hook;
   DsEnv.push_module_abbrev_hook := pma_hook;
