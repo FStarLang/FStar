@@ -1,3 +1,6 @@
+(*
+  executes the OAuth protocol in the browser
+*)
 module OAuth.User
 
 open FStar.All
@@ -66,14 +69,14 @@ let processRPResponse req =
   let pr' = (getProcResponse rpori) req in
   match pr' with
   | RetRequest nreq -> (let co = {cori=ipori;ccred=true} in
-		      match (getConnection !rpb co) with (* the rp creates a new request here - sent to the ip *)
+		      match (getConnection !rpbr co) with (* the rp creates a new request here - sent to the ip *)
 		      | None -> (Error ("No connections available at the RP!"))
 	   	      | Some ({connect=oconn;creq=oreq}) -> 
 			     let pr'' = (getProcResponse ipori) nreq in
 			     (match pr'' with 
 			     | RetRequest _ -> (Error ("FATAL ERROR AGAIN!")) 
-			     | RetResponse pr -> let (res, _, _, nb) = processResponse !rpb oconn nreq pr in 
-						rpb := nb; (res)))
+			     | RetResponse pr -> let (res, _, _, nb) = processResponse !rpbr oconn nreq pr in 
+						rpbr := nb; (res)))
   | RetResponse _ -> (Error ("No request made from RP to IP!")) 
 
 (* Process the response from the IP after authentication *)
@@ -139,22 +142,30 @@ let browserOAuth () : ML (result * browser) =
 
 (* Request's URL - RP's server - Assuming that the initial request was for "ip.com" but attacker modified it to "badip.com" *)
 (* Everything else happens at ip.com *)
-let birurl = {c_origin=rpori;c_uname=emptyString sl;c_pwd=emptyString sl;c_path=[(classify #PublicVal "login-ipauth" sl)];c_querystring=[(classify #PublicVal "IP" sl),(classify #PublicVal "badip.com" sl)];c_fragment=emptyString sl}
+let birurl = {c_origin=rpori;c_uname=emptyString sl;c_pwd=emptyString sl;c_path=[(classify #PublicVal "login-ipauth" sl)];c_querystring=[(classify #PublicVal "IP" sl),(classify #PublicVal "badip" sl)];c_fragment=emptyString sl}
 let biruri = mk_uri birurl
 (* Request to start OAuth authentication *)
-let bireq = Request sl ({reqm = "POST"; requrl = [biruri]; reqhead = []; reqo = (mk_aorigin (URI?.u (CWindow?.cwloc sw)).c_origin); reqw = (Some sw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client sw); reqrefPolicy = RP_OriginWhenCO; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = emptyString sl; corsflag = false; corspfflag = false; authflag = false; recflag = false})
+let bireq = Request sl ({reqm = "POST"; requrl = [biruri]; reqhead = []; reqo = (mk_aorigin (URI?.u (CWindow?.cwloc sw)).c_origin); reqw = (Some sw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "manual"; reqref = (Client sw); reqrefPolicy = RP_OriginWhenCO; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = emptyString sl; corsflag = false; corspfflag = false; authflag = false; recflag = false})
 
-(* let ipMixUp () : ML (result * browser) =  *)
-(*   let (r, nw, nb) = open_window cb sw "https://rp.com/" "" in *)
-(*   let (re, win, sb) = navigateWindow (nb) sw nw (RequestResource bireq) "other" in  *)
-(*   match sb.conn with (\*the response arrives on the connection - assume connection is the first available here*\) *)
-(*   | [] -> (Error ("No connections"), sb) *)
-(*   | hd::_ -> *)
-(*       let pr = (getProcResponse rpori) bireq in *)
-(*       let (r1, _, br) = processResponse sb (getConn hd).connect pr in (\* Processes response from RP that redirects to IP *\) *)
-(*       ( *)
-(*       print_result r1; *)
-(*       let co = {cori=ipori; ccred=true} in *)
+let ipMixUp () : ML (result * browser) =
+  let (r, _, nw, nb) = open_window cb sw "https://rp.com/" "" in
+  let (re, nr, win, sb) = navigateWindow (nb) sw nw (RequestResource bireq) "other" in
+  print_result re;
+  match sb.conn with (*the response arrives on the connection - assume connection is the first available here*)
+  | [] -> (Error ("No connections"), sb)
+  | hd::_ ->
+      let pr' = (getProcResponse rpori) bireq in
+      match pr' with
+      | RetRequest _ -> (Error ("QUITE A FATAL ERROR!"), sb)
+      | RetResponse pr -> let (r1, nr, _, br) = processResponse sb (getConn hd).connect bireq pr in (* Processes response from RP that redirects to IP for initial auth *)
+	  (print_result r1;
+	  let co = {cori=ipori; ccred=false} in
+	  match (getConnection br co) with
+	  | None -> (Error ("No connections after response from RP to IP"), br)
+	  | Some ({connect=oconn;creq=oreq}) -> (
+		 match nr with 
+		 | None -> (Error ("No requests made here"), br)
+		 | Some nreq -> processIPFormResponse br nreq oconn))
 (*       match (getConnection br co) with *)
 (*       | None -> (Error ("No connections after response from RP to IP"), br) *)
 (*       | Some ({connect=oconn;creq=oreq}) -> ( *)
@@ -172,6 +183,6 @@ let bireq = Request sl ({reqm = "POST"; requrl = [biruri]; reqhead = []; reqo = 
 (* 			  ))) *)
 			  
 let main =
-    let (r,nb) = browserOAuth () in
+    let (r,nb) = ipMixUp () in
     print_result r
 	    

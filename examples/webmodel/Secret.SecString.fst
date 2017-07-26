@@ -3,7 +3,6 @@
   A string can either be public or secret indexed by origins
   It also defines the different functions for handling the secrets
 *)
-
 module Secret.SecString
 
 open FStar.String
@@ -42,7 +41,7 @@ let content (#l:secLevel) (s:secString l) : GTot string =
       let (AString #ol v) = s in v
 
 (* Function to return the content of the secret string *)
-private val getSecString : #l:secLevel -> ss:secString l -> Tot (ns:string{ns = content ss})
+private val getSecString : #l:secLevel -> s:secString l -> Tot (ns:string{ns = content s})
 let getSecString #l s =
     match l with
     | PublicVal -> s
@@ -50,13 +49,16 @@ let getSecString #l s =
       let (AString #ol v) = s in v
 
 (* Ghost function that checks if a secrecy level can be restricted to a more secret level *)
-val restricts: l:secLevel -> l':secLevel -> GTot bool
+val restricts: secLevel -> secLevel -> GTot bool
 let restricts l1 l2 =
     match l1,l2 with
     | PublicVal, l2 -> true
     | SecretVal ol, SecretVal [o] -> List.mem o ol
     | SecretVal ol, SecretVal ol' -> isSublist ol' ol
     | _, _ -> false
+
+val restrict_lemma : l1:secLevel -> l2:secLevel -> Lemma (requires (l1 = l2)) (ensures (restricts l1 l2)) [SMTPat (restricts l1 l2)]
+let restrict_lemma l1 l2 = () 
 
 (* Function to classify a string to a more secret level *)
 val classify: #l:secLevel -> s:secString l -> l':secLevel{restricts l l'} -> Tot (t:secString l'{content t = content s})

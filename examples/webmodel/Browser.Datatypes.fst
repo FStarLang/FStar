@@ -174,7 +174,7 @@ abstract type connReq = connReq'
 type connectionPool = list connReq (*contains the list of pending requests for that connection*)
 
 (* add STS for automatic upgrades of the requests to HTTPS *)
-type browser = {
+type browser :Type0 = {
   windows:list cowindow;
   cookieStore:list cookie;
   localStorage:localStorageMap;

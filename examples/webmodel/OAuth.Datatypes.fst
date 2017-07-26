@@ -4,6 +4,7 @@
 module OAuth.Datatypes
 
 open FStar.All
+open FStar.Heap
 open FStar.IO
 open Web.Origin
 open Web.URI
@@ -79,6 +80,12 @@ let rec indexedOriginCL clist =
 type clientData' = list (torigin * secretVal * secretVal) (* Store the client id and secret for a given ip/rp *)
 type clientData = c:(clientData'){indexedOriginCD c}
 
+val isClientIDPublic : clientData -> GTot bool
+let rec isClientIDPublic c = match c with | [] -> true | (o,i,v)::tl -> (Secret?.s i = PublicVal) && isClientIDPublic tl
+  
+val lemma_clientdata : c:clientData -> Lemma (requires (True)) (ensures (isClientIDPublic c)) 
+let rec lemma_clientdata c = match c with | [] -> () | (o,i,v)::tl -> lemma_clientdata tl
+
 (* IP == associates an origin with state and authcode *)
 type codeList' = list (rp:torigin * state:secretVal * code:secretVal * ruri:uri) (* Store the auth code for the rp given the state *)
 type codeList = c:(codeList'){indexedOriginCL c}
@@ -92,7 +99,7 @@ type tokenList' = list (torigin * secretVal)
 type tokenList = c:(tokenList'){indexedOriginTL c}
 
 (* retrieve the client_id from the client_data table for the given origin-client *)
-val getClientID : clientData -> torigin -> Tot (option secretVal)
+val getClientID : clientData -> torigin -> Tot (option (s:secretVal{Secret?.s s = PublicVal}))
 let rec getClientID cd t = match cd with  
   | [] -> None
   | (o,v,_)::tl -> if o = t then Some v else getClientID tl t
@@ -198,17 +205,17 @@ val ipCL : ref (codeList) (* for ipori *)
 let ipCL = refCL []
 
 (* a user-pass list along with the session cookies for the IP *)
-type uList (s:secLevel) = (list (secString s * secString s * list (secString s)))
-let refUL (#s:secLevel) (tl:uList s) = ST.alloc tl
+(* type uList (s:secLevel) = (list (secString s * secString s * list (secString s))) *)
+(* let refUL (#s:secLevel) (tl:uList s) = ST.alloc tl *)
 
-val userList : ref (uList (SecretVal [ipori]))
-let userList = refUL ([((classify #PublicVal "usernameU" (SecretVal [ipori])), (classify #PublicVal "passwordP" (SecretVal [ipori])), [])])
+(* val userList : ref (uList (SecretVal [ipori])) *)
+(* let userList = refUL ([((classify #PublicVal "usernameU" (SecretVal [ipori])), (classify #PublicVal "passwordP" (SecretVal [ipori])), [])]) *)
 
-val getRPClientID : torigin -> ML (option secretVal)
+val getRPClientID : torigin -> ML (option (s:secretVal{Secret?.s s = PublicVal}))
 let getRPClientID t = getClientID (!rpCD) t  
 
 (* get the client_id for the origin *)
-val getIPClientID : torigin -> ML (option secretVal)
+val getIPClientID : torigin -> ML (option (s:secretVal{Secret?.s s = PublicVal}))
 let getIPClientID t = getClientID (!ipCD) t  
 
 (* get the RP's origin using the client_id *)
