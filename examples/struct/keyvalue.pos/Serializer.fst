@@ -314,7 +314,30 @@ let join_slices (b1 b2:bslice) : Pure (option bslice)
       else let b' = BSlice (U32.add b1.len b2.len) (B.join b1.p b2.p) in
            Some b'
 
-// TODO: implement this API
+val enc_one_more (#t:Type) (xs: list t) (enc: t -> bytes) (x: t) :
+  Lemma (encode_many xs enc (List.length xs) `append` enc x ==
+         encode_many (xs `List.append` [x]) enc (List.length (xs `List.append` [x])))
+let rec enc_one_more #t xs enc x =
+  match xs with
+  | [] -> append_empty_l (enc x); append_empty_r (enc x)
+  | x'::xs ->
+    enc_one_more xs enc x;
+    append_assoc #byte (enc x') (encode_many xs enc (List.length xs)) (enc x)
+
+let max_entries_to_write: n:U32.t{U32.v n == pow2 32 - 5} = 4294967291ul
+
+let lt_max_entries (n:U32.t) :
+    Lemma (requires (U32.v n < U32.v max_entries_to_write))
+          (ensures (4 + (U32.v n + 1) < pow2 32)) = ()
+
+let join_adjacent_stable (b1 b2 b':bslice) :
+    Lemma (requires (buffers_adjacent b1.p b2.p /\
+                    buffers_adjacent b2.p b'.p /\
+                    Some? (join_slices b1 b2)))
+          (ensures (buffers_adjacent b1.p b2.p /\
+                    buffers_adjacent (Some?.v (join_slices b1 b2)).p b'.p)) = ()
+
+#set-options "--z3rlimit 30"
 
 val writer_append (w:writer) (e:entry_st) : ST (option writer)
        (requires (fun h0 -> writer_inv h0 w /\
@@ -330,6 +353,10 @@ val writer_append (w:writer) (e:entry_st) : ST (option writer)
                   reveal w'.entries_written_list == reveal w.entries_written_list `List.append` [ee])
                 end))
 let writer_append w e =
+    if U32.gte w.num_entries_written max_entries_to_write then None
+    else
+    begin
+    lt_max_entries w.num_entries_written;
     let r = ser_entry e w.entries_scratch in
     match r with
     | Some off ->
@@ -337,24 +364,34 @@ let writer_append w e =
       begin
         match join_slices w.entries_written_buf entries_done with
         | Some entries_written ->
-            begin
-              let h = get() in
-              let ee = as_entry h e in
-              ()
-            end;
+            join_adjacent_stable w.entries_written_buf entries_done entries_scratch';
+            let h = get() in
             let w' = { length_field = w.length_field;
                        entries_written_buf = entries_written;
                        entries_scratch = entries_scratch';
-                       // TODO: I want to feed information from the ST effect
-                       // just into building this erased value, but I get
-                       // "effects STATE and GHOST cannot be composed"
-                       entries_written_list = elift1 (fun l -> l) w.entries_written_list;
+                       entries_written_list = elift1
+                         (fun l -> let ee = as_entry h e in
+                                l `List.append` [ee])
+                         w.entries_written_list;
                        num_entries_written = U32.add w.num_entries_written 1ul } in
-            admit();
+            begin
+              assert (writer_valid w');
+              assert (B.live h w'.length_field);
+              assert (B.live h w'.entries_scratch.p);
+              assert (live h w'.entries_written_buf);
+              let ee = as_entry h e in
+              List.append_length (reveal w.entries_written_list) [ee];
+              let entries = reveal w'.entries_written_list in
+              assert (List.length entries == U32.v w'.num_entries_written);
+              enc_one_more (reveal w.entries_written_list) encode_entry ee;
+              is_concat_append entries_written.p w.entries_written_buf.p entries_done.p h;
+              ()
+            end;
             Some w'
         | None -> None
       end
     | None -> None
+    end
 
 val join_is_concat (#t:Type) (b1 b2:B.buffer t) :
     Lemma (requires (same_ref b1 b2 /\
