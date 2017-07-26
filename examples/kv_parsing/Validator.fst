@@ -149,6 +149,8 @@ let validate_entry_st : stateful_validator parse_entry = fun input ->
              parse_u32_array validate_u32_array_st
              (fun key value -> EncodedEntry key.len16 key.a16 value.len32 value.a32) input
 
+// TODO: cyclic dependency in Frames check due to recursion
+noextract
 val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:U32.t) : Tot (stateful_validator (parse_many p (U32.v n))) (decreases (U32.v n))
 [@"substitute"]
 let rec validate_many_st #t p v n : stateful_validator (parse_many p (U32.v n)) = fun input ->

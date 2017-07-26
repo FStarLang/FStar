@@ -308,6 +308,7 @@ let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
       r
     end
 
+// TODO: doesn't extract, but count_entries_example' generates a call to it
 [@"substitute"]
 val fold_left_buffer_n_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
   f:(acc:t -> e:entry_st -> ST t
@@ -340,6 +341,7 @@ let rec fold_left_buffer_n_st #t f_spec f acc input n =
       r
     end
 
+// TODO: doesn't extract, but count_entries_example generates a call to it
 [@"substitute"]
 val fold_left_buffer_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
   f:(acc:t -> e:entry_st -> ST t
