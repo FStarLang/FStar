@@ -4,7 +4,6 @@ module TU = FStar.TaggedUnion
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module P = FStar.Pointer
-module DM = FStar.DependentMap
 
 #set-options "--initial_fuel 4"
 
