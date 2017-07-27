@@ -1155,10 +1155,10 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
                                    ppname = { val_bv.ppname with
                                               idText = body_bv.ppname.idText } }, aqual)
                | false, false ->
-                 if body_bv.ppname.idText <> val_bv.ppname.idText then
-                   Errors.warn body_bv.ppname.idRange
-                     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
-                                  body_bv.ppname.idText val_bv.ppname.idText);
+                 // if body_bv.ppname.idText <> val_bv.ppname.idText then
+                 //   Errors.warn body_bv.ppname.idRange
+                 //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
+                 //                  body_bv.ppname.idText val_bv.ppname.idText);
                  (val_bv, aqual)) :: rename_binders bt vt in
           Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) None r end
         | _ -> typ in
