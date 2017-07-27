@@ -414,9 +414,10 @@ val gen_manifest_helper_routines : unit -> ST unit
 (requires (fun _ -> True))
 (ensures (fun h0 r h1 -> h0 == h1))
 let gen_manifest_helper_routines () = 
+ let _ = trace " (* These should be part of FStar.HyperStack.ST.fst *) \n" in
  let _ = trace "assume val set_ref_as_mutable: (addr:stackref 'a) -> (rt:stackref 'a{rt.is_mutable = true}) \n" in
  let _ = trace "assume val unset_ref_as_mutable: (addr:stackref 'a) -> (rt:stackref 'a{rt.is_mutable = false}) \n" in
- let _ = trace "assume val is_ref_mutable: (addr: reference 'a) -> bool \n" in
+ let _ = trace "assume val is_ref_mutable: (addr: stackref 'a) -> bool \n\n" in
  let _ = trace "assume val is_stack_reference: (addr: reference 'a) -> bool \n" in
  let _ = trace "assume val is_uheap_reference: (addr: reference 'a) -> bool \n" in
  let _ = trace "assume val is_vheap_reference : (addr: referece 'a) -> bool \n" in

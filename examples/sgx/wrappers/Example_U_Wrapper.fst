@@ -6,9 +6,11 @@ open Manifest
  * DO NOT MODIFY
  *)
 
+ (* These should be part of FStar.HyperStack.ST.fst *)
 assume val set_ref_as_mutable: (addr:stackref 'a) -> (rt:stackref 'a{rt.is_mutable = true})
 assume val unset_ref_as_mutable: (addr:stackref 'a) -> (rt:stackref 'a{rt.is_mutable = false})
-assume val is_ref_mutable: (addr: reference 'a) -> bool
+assume val is_ref_mutable: (addr: stackref 'a) -> bool
+
 assume val is_stack_reference: (addr: reference 'a) -> bool
 assume val is_uheap_reference: (addr: reference 'a) -> bool
 assume val is_vheap_reference : (addr: referece 'a) -> bool
