@@ -363,7 +363,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
-    let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
+    let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) None top.pos) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
@@ -1978,7 +1978,7 @@ and check_let_bound_def top_level env lb
 
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
     let c1, guard_f = TcUtil.strengthen_precondition
-                        (Some (fun () -> Err.ill_kinded_type))
+                        (Some (fun () -> return_all Err.ill_kinded_type))
                         (Env.set_range env1 e1.pos) e1 c1 wf_annot in
     let g1 = Rel.conj_guard g1 guard_f in
 

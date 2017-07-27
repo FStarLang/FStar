@@ -26,7 +26,7 @@ exception NYI of string
 exception Failure of string
 
 val max_int: int
-val return_all: 'a -> 'a
+val return_all: 'a -> ML<'a>
 
 type time = System.DateTime
 val now : unit -> time

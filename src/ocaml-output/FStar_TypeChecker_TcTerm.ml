@@ -1153,7 +1153,8 @@ and tc_maybe_toplevel_term:
                             FStar_TypeChecker_Util.strengthen_precondition
                               (FStar_Pervasives_Native.Some
                                  (fun uu____2467  ->
-                                    FStar_TypeChecker_Err.ill_kinded_type))
+                                    FStar_Util.return_all
+                                      FStar_TypeChecker_Err.ill_kinded_type))
                               uu____2463 e2 c f in
                           (match uu____2458 with
                            | (c1,f1) ->
@@ -5790,7 +5791,8 @@ and check_let_bound_def:
                          FStar_TypeChecker_Util.strengthen_precondition
                            (FStar_Pervasives_Native.Some
                               (fun uu____14504  ->
-                                 FStar_TypeChecker_Err.ill_kinded_type))
+                                 FStar_Util.return_all
+                                   FStar_TypeChecker_Err.ill_kinded_type))
                            uu____14500 e12 c1 wf_annot in
                        (match uu____14495 with
                         | (c11,guard_f) ->
