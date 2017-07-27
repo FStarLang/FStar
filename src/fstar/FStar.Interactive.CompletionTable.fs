@@ -117,11 +117,11 @@ let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list<list<'a>>) =
     match heap_pop cmp lists with
     | None -> acc
     | Some ((pr, []), _) -> failwith "impossible"
-    | Some ((pr, v :: []), lists) -> aux lists (v :: acc)
+    | Some ((pr, [v]), lists) -> aux lists (v :: acc)
     | Some ((pr, v :: tl), lists) -> aux (heap_insert cmp lists (pr, tl)) (push_nodup key_fn v acc) in
   let lists = List.filter (fun x -> x <> []) lists in
   match lists with
-  | [] -> [] | [l] -> l
+  | [] -> [] | [l] -> List.rev l
   | _ ->
     let lists = add_priorities 0 [] lists in
     aux (heap_from_list cmp lists) []
@@ -448,6 +448,6 @@ let make_result annotation (path: path) (symb: symbol) =
       completion_annotation = annotation }
 
 let autocomplete (tbl: table) (query: query) =
-  List.fold_left
-    (fun acc (path, symb) -> make_result "" (* FIXME *) path symb :: acc)
-    [] (trie_find_prefix tbl query)
+  List.rev_map_onto (fun (path, symb) -> make_result "" (* FIXME *) path symb)
+    (trie_find_prefix tbl query) []
+  |> List.rev
