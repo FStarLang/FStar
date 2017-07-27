@@ -17,13 +17,10 @@ private let mul_lemma' (a:nat) (b:nat) (c:pos) : Lemma (requires (c * a <= c * b
 private let mul_div_lemma (a:nat) (b:pos) : Lemma (b * (a / b) <= a) = ()
 
 val slash_decr_axiom: a:nat -> b:pos -> Lemma (a / b <= a)
-#reset-options "--z3rlimit 150"
 let slash_decr_axiom a b =
     mul_lemma 1 b a;
     mul_div_lemma a b;
     mul_lemma' (a / b) a b
-
-#reset-options
 
 private let lemma_mul_minus_distr_l (a:int) (b:int) (c:int) : Lemma (a * (b - c) = a * b - a * c)
   = ()
