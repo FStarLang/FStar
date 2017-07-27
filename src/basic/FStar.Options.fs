@@ -41,6 +41,16 @@ type option_val =
   | List of list<option_val>
   | Unset
 
+//These wrappers provide each constructor with the ML effect
+//They are needed to make type-inference work well with the
+//--eager_inference flag that is used during bootstrapping,
+//which explicitly disables some subtyping/sub-effecting
+let mk_bool   : bool -> option_val = Bool
+let mk_string : string -> option_val = String
+let mk_path   : string -> option_val = Path
+let mk_int    : int -> option_val = Int
+let mk_list   : list<option_val> -> option_val = List
+
 type options =
     | Set
     | Reset
@@ -370,84 +380,84 @@ let rec specs () : list<Getopt.opt> =
   let specs =
     [  ( noshort,
        "admit_smt_queries",
-       OneArg ((fun s -> if s="true" then Bool true
-                         else if s="false" then Bool false
+       OneArg ((fun s -> if s="true" then mk_bool true
+                         else if s="false" then mk_bool false
                          else failwith("Invalid argument to --admit_smt_queries")),
                 "[true|false]"),
        "Admit SMT queries, unsafe! (default 'false')");
 
       ( noshort,
         "admit_except",
-         OneArg (String, "[id]"),
+         OneArg (mk_string, "[id]"),
         "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
 
 
       ( noshort,
         "codegen",
-        OneArg ((fun s -> String (parse_codegen s)),
+        OneArg ((fun s -> mk_string (parse_codegen s)),
                  "[OCaml|FSharp|Kremlin]"),
         "Generate code for execution");
 
       ( noshort,
         "codegen-lib",
-        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)),
+        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map mk_string)),
                  "[namespace]"),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
 
       ( noshort,
         "debug",
-        OneArg ((fun x -> List (x::get_debug() |> List.map String)),
+        OneArg ((fun x -> List (x::get_debug() |> List.map mk_string)),
                  "[module name]"),
         "Print lots of debugging information while checking module");
 
        ( noshort,
         "debug_level",
-        OneArg ((fun x -> List (x::get_debug_level() |> List.map String)),
+        OneArg ((fun x -> List (x::get_debug_level() |> List.map mk_string)),
                  "[Low|Medium|High|Extreme|...]"),
         "Control the verbosity of debugging info");
 
        ( noshort,
         "dep",
-        OneArg ((fun x -> if x = "make" || x = "graph" then String x else failwith "invalid argument to 'dep'"),
+        OneArg ((fun x -> if x = "make" || x = "graph" then mk_string x else failwith "invalid argument to 'dep'"),
                  "[make|graph]"),
         "Output the transitive closure of the dependency graph in a format suitable for the given tool");
 
        ( noshort,
         "detail_errors",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
          "Emit a detailed error report by asking the SMT solver many queries; will take longer;
          implies n_cores=1");
 
        ( noshort,
         "detail_hint_replay",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
          "Emit a detailed report for proof whose unsat core fails to replay;
          implies n_cores=1");
 
        ( noshort,
         "doc",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
          "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory.");
 
        ( noshort,
         "dump_module",
-        OneArg ((fun x -> (x::get_dump_module()) |> List.map String |> List),
+        OneArg ((fun x -> (x::get_dump_module()) |> List.map mk_string |> mk_list),
                  "[module name]"),
         "");
 
        ( noshort,
         "eager_inference",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
 
        ( noshort,
         "explicit_deps",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Do not find dependencies automatically, the user provides them on the command-line");
 
        ( noshort,
         "extract_all",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Discover the complete dependency graph and do not stop at interface boundaries");
 
        ( noshort,
@@ -464,216 +474,216 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "fstar_home",
-        OneArg (Path,
+        OneArg (mk_path,
                 "[dir]"),
         "Set the FSTAR_HOME variable to [dir]");
 
        ( noshort,
         "hide_genident_nums",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Don't print generated identifier numbers");
 
        ( noshort,
         "hide_uvar_nums",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Don't print unification variable numbers");
 
        ( noshort,
         "hint_info",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Print information regarding hints");
 
        ( noshort,
          "hint_file",
-         OneArg (Path,
+         OneArg (mk_path,
                  "[path]"),
         "Read/write hints to <path> (instead of module-specific hints files)");
 
        ( noshort,
         "in",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Legacy interactive mode; reads input from stdin");
 
        ( noshort,
         "ide",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "JSON-based interactive mode for IDEs");
 
        ( noshort,
         "include",
-        OneArg ((fun s -> List (List.map String (get_include()) @ [Path s])),
+        OneArg ((fun s -> mk_list (List.map mk_string (get_include()) @ [mk_path s])),
                 "[path]"),
         "A directory in which to search for files included on the command line");
 
        ( noshort,
         "indent",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Parses and outputs the files on the command line");
 
        ( noshort,
         "initial_fuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Number of unrolling of recursive functions to try initially (default 2)");
 
        ( noshort,
         "initial_ifuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Number of unrolling of inductive datatypes to try at first (default 1)");
 
        ( noshort,
         "inline_arith",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Inline definitions of arithmetic functions in the SMT encoding");
 
        ( noshort,
         "lax",
-        ZeroArgs (fun () -> Bool true), //pretype := true; verify := false),
+        ZeroArgs (fun () -> mk_bool true), //pretype := true; verify := false),
         "Run the lax-type checker only (admit all verification conditions)");
 
       ( noshort,
        "load",
-        OneArg ((fun s -> List (List.map String (get_load()) @ [Path s])),
+        OneArg ((fun s -> mk_list (List.map mk_string (get_load()) @ [mk_path s])),
                 "[module]"),
         "Load compiled module");
 
        ( noshort,
         "log_types",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print types computed for data/val/let-bindings");
 
        ( noshort,
         "log_queries",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Log the Z3 queries in several queries-*.smt2 files, as we go");
 
        ( noshort,
         "max_fuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Number of unrolling of recursive functions to try at most (default 8)");
 
        ( noshort,
         "max_ifuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Number of unrolling of inductive datatypes to try at most (default 2)");
 
        ( noshort,
         "min_fuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Minimum number of unrolling of recursive functions to try (default 1)");
 
        ( noshort,
         "MLish",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
 
        ( noshort,
         "n_cores",
-        OneArg ((fun x -> Int (int_of_string x)),//; detail_errors := false),
+        OneArg ((fun x -> mk_int (int_of_string x)),//; detail_errors := false),
                  "[positive integer]"),
         "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)");
 
        ( noshort,
         "no_default_includes",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Ignore the default module search paths");
 
        ( noshort,
         "no_extract",
-        OneArg ((fun x -> List (x :: get_no_extract() |> List.map String)),
+        OneArg ((fun x -> mk_list (x :: get_no_extract() |> List.map mk_string)),
                  "[module name]"),
         "Do not extract code from this module");
 
        ( noshort,
         "no_location_info",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
 
        ( noshort,
         "odir",
-        OneArg ((fun p -> Path (validate_dir p)),
+        OneArg ((fun p -> mk_path (validate_dir p)),
                 "[dir]"),
         "Place output in directory [dir]");
 
        ( noshort,
         "prims",
-        OneArg (String,
+        OneArg (mk_string,
                 "file"),
         "");
 
        ( noshort,
         "print_bound_var_types",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Print the types of bound variables");
 
        ( noshort,
         "print_effect_args",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print inferred predicate transformers for all computation types");
 
        ( noshort,
         "print_fuels",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print the fuel amounts used for each successful query");
 
        ( noshort,
         "print_full_names",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print full names of variables");
 
        ( noshort,
         "print_implicits",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Print implicit arguments");
 
        ( noshort,
         "print_universes",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Print universes");
 
        ( noshort,
         "print_z3_statistics",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Print Z3 statistics for each SMT query");
 
        ( noshort,
         "prn",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
         "record_hints",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Record a database of hints for efficient proof replay");
 
        ( noshort,
         "check_hints",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Check new hints for replayability");
 
        ( noshort,
         "reuse_hint_for",
-        OneArg (String, "top-level name in the current module"),
+        OneArg (mk_string, "top-level name in the current module"),
         "Optimistically, attempt using the recorded hint for 'f' when trying to verify some other term 'g'");
 
        ( noshort,
         "show_signatures",
-        OneArg((fun x -> List (x::get_show_signatures() |> List.map String)),
+        OneArg((fun x -> mk_list (x::get_show_signatures() |> List.map mk_string)),
                 "[module name]"),
         "Show the checked signatures for all top-level symbols in the module");
 
        ( noshort,
         "silent",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         " ");
 
        ( noshort,
         "smt",
-        OneArg (Path,
+        OneArg (mk_path,
                  "[path]"),
         "Path to the Z3 SMT solver (we could eventually support other solvers)");
 
@@ -685,7 +695,7 @@ let rec specs () : list<Getopt.opt> =
 
        (noshort,
         "smtencoding.nl_arith_repr",
-        OneArg (String,
+        OneArg (mk_string,
                 "native|wrapped|boxwrap"),
         "Control the representation of non-linear arithmetic functions in the SMT encoding:\n\t\t\
          i.e., if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'; \n\t\t\
@@ -695,7 +705,7 @@ let rec specs () : list<Getopt.opt> =
 
        (noshort,
         "smtencoding.l_arith_repr",
-        OneArg (String,
+        OneArg (mk_string,
                 "native|boxwrap"),
         "Toggle the representation of linear arithmetic functions in the SMT encoding:\n\t\t\
          i.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\t\
@@ -704,43 +714,43 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "split_cases",
-        OneArg ((fun n -> Int (int_of_string n)),
+        OneArg ((fun n -> mk_int (int_of_string n)),
                  "[positive integer]"),
         "Partition VC of a match into groups of [n] cases");
 
        ( noshort,
         "timing",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print the time it takes to verify each top-level definition");
 
        ( noshort,
         "trace_error",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Don't print an error message; show an exception trace instead");
 
       ( noshort,
         "ugly",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Emit output formatted for debugging");
 
        ( noshort,
         "unthrottle_inductives",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
 
        ( noshort,
         "use_eq_at_higher_order",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Use equality constraints when comparing higher-order types (Temporary)");
 
        ( noshort,
         "use_hints",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
         "no_tactics",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Do not run the tactic engine before discharging a VC");
 
        ( noshort,
@@ -752,7 +762,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "verify_all",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line.");
 
        ( noshort,
@@ -763,7 +773,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "__temp_no_proj",
-         OneArg ((fun x -> List (x :: get___temp_no_proj() |> List.map String)),
+         OneArg ((fun x -> mk_list (x :: get___temp_no_proj() |> List.map mk_string)),
                   "[module name]"),
         "Don't generate projectors for this module");
 
@@ -774,45 +784,45 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
          "warn_default_effects",
-         ZeroArgs (fun _ -> Bool true),
+         ZeroArgs (fun _ -> mk_bool true),
          "Warn when (a -> b) is desugared to (a -> Tot b)");
 
        ( noshort,
          "z3cliopt",
-         OneArg ((fun s -> List (get_z3cliopt() @ [s] |> List.map String)), "[option]"),
+         OneArg ((fun s -> mk_list (get_z3cliopt() @ [s] |> List.map mk_string)), "[option]"),
          "Z3 command line options");
 
        ( noshort,
         "z3refresh",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
 
        ( noshort,
         "z3rlimit",
-         OneArg ((fun s -> Int (int_of_string s)),
+         OneArg ((fun s -> mk_int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)");
 
        ( noshort,
         "z3rlimit_factor",
-         OneArg ((fun s -> Int (int_of_string s)),
+         OneArg ((fun s -> mk_int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)");
 
        ( noshort,
         "z3seed",
-         OneArg ((fun s -> Int (int_of_string s)),
+         OneArg ((fun s -> mk_int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
         "__no_positivity",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Don't check positivity of inductive types");
 
        ( noshort,
         "__ml_no_eta_expand_coertions",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Do not eta-expand coertions in generated OCaml");
 
 
@@ -832,8 +842,8 @@ and parse_codegen s =
       display_usage_aux (specs ()); exit 1)
 
 and string_as_bool option_name = function
-    | "true" -> Bool true
-    | "false" -> Bool false
+    | "true" -> mk_bool true
+    | "false" -> mk_bool false
     | _ ->
       Util.print1 "Wrong argument to %s\n" option_name;
       display_usage_aux (specs ()); exit 1
@@ -916,7 +926,7 @@ let fstar_home () =
       let x = Util.get_exec_dir () in
       let x = x ^ "/.." in
       // Memoizes to avoid repeatedly forking an external process
-      set_option' ("fstar_home", String x);
+      set_option' ("fstar_home", mk_string x);
       x
     | Some x ->
       x
@@ -950,7 +960,7 @@ let restore_cmd_line_options should_clear =
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
     let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
-    set_option' ("verify_module", List (List.map String old_verify_module));
+    set_option' ("verify_module", List (List.map mk_string old_verify_module));
     r
 
 let should_verify m =

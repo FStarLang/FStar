@@ -879,7 +879,7 @@ let rec decompose (env:env) (t:term)
             | [] -> t
             | _ -> failwith "Bad reconstruction" in
 
-          rebuild, (fun t -> true), []
+          rebuild, (fun t -> return_all true), []
 
 let un_T = function
     | T (t, _) -> t
@@ -2369,7 +2369,12 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
             else let c1_comp = Env.comp_to_comp_typ env c1 in
                  let c2_comp = Env.comp_to_comp_typ env c2 in
                  if problem.relation=EQ
-                 then solve_eq c1_comp c2_comp
+                 then let c1_comp, c2_comp =
+                            if lid_equals c1_comp.effect_name c2_comp.effect_name
+                            then c1_comp, c2_comp
+                            else Env.unfold_effect_abbrev env c1,
+                                 Env.unfold_effect_abbrev env c2 in
+                      solve_eq c1_comp c2_comp
                  else begin
                     let c1 = Env.unfold_effect_abbrev env c1 in
                     let c2 = Env.unfold_effect_abbrev env c2 in
