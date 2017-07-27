@@ -474,6 +474,7 @@ let compile_op arity s r =
       |'*' -> "Star"
       |'?' -> "Question"
       |':' -> "Colon"
+      |'$' -> "Dollar"
       | c -> raise (Error ("Unexpected operator symbol: '" ^ string_of_char c ^ "'" , r))
     in
     match s with

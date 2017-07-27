@@ -148,6 +148,7 @@ let string_to_op s =
     | "Star" -> Some ("*", 0)
     | "Question" -> Some ("?", 0)
     | "Colon" -> Some (":", 0)
+    | "Dollar" -> Some ("$", 0)
     | _ -> None
   in
   match s with
