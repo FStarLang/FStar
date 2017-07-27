@@ -162,7 +162,7 @@ let compile_op_lid:
         let uu____250 =
           let uu____253 =
             let uu____254 =
-              let uu____259 = FStar_Parser_AST.compile_op n1 s in
+              let uu____259 = FStar_Parser_AST.compile_op n1 s r in
               (uu____259, r) in
             FStar_Ident.mk_ident uu____254 in
           [uu____253] in
@@ -1010,7 +1010,7 @@ let rec desugar_data_pat:
                        let uu____2628 =
                          let uu____2633 =
                            FStar_Parser_AST.compile_op (Prims.parse_int "0")
-                             op.FStar_Ident.idText in
+                             op.FStar_Ident.idText op.FStar_Ident.idRange in
                          (uu____2633, (op.FStar_Ident.idRange)) in
                        FStar_Ident.mk_ident uu____2628 in
                      (uu____2627, FStar_Pervasives_Native.None) in
@@ -1398,7 +1398,7 @@ and desugar_binding_pat_maybe_top:
                   let uu____4181 =
                     let uu____4186 =
                       FStar_Parser_AST.compile_op (Prims.parse_int "0")
-                        x.FStar_Ident.idText in
+                        x.FStar_Ident.idText x.FStar_Ident.idRange in
                     (uu____4186, (x.FStar_Ident.idRange)) in
                   FStar_Ident.mk_ident uu____4181 in
                 mklet uu____4180
