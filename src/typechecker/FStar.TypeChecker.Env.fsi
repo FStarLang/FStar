@@ -196,7 +196,7 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 
 (* Introducing identifiers and updating the environment *)
-val push_in_gamma_hook : ref<env -> binding -> unit>
+val push_in_gamma_hook : ref<(env -> binding -> unit)>
 val push_sigelt        : env -> sigelt -> env
 val push_sigelt_inst   : env -> sigelt -> universes -> env
 val push_bv            : env -> bv -> env

@@ -576,24 +576,20 @@ let query_of_lid (lid: lident) : CompletionTable.query =
 
 let update_names_from_event cur_mod_str table evt =
   let is_cur_mod lid = lid.str = cur_mod_str in
-  printf ">>> Updating names >>> cur_mod is %A\n" cur_mod_str;
   match evt with
   | NTAlias (host, id, included) ->
-    printf ">>> new event >>> NTAlias %A %A %A\n" host.str (text_of_id id) included.str;
     if is_cur_mod host then
       CompletionTable.register_alias
         table (text_of_id id) [] (query_of_lid included)
     else
       table
   | NTOpen (host, (included, kind)) ->
-    printf ">>> new event >>> NTOpen %A %A %A\n" host.str included.str kind;
     if is_cur_mod host then
       CompletionTable.register_open
         table (kind = DsEnv.Open_module) [] (query_of_lid included)
     else
       table
   | NTInclude (host, included) ->
-    printf ">>> new event >>> NTInclude %A %A\n" host.str included.str;
     CompletionTable.register_include
       table (if is_cur_mod host then [] else query_of_lid host) (query_of_lid included)
   | NTBinding binding ->
@@ -603,7 +599,6 @@ let update_names_from_event cur_mod_str table evt =
       | Binding_sig (lids, _) -> lids
       | Binding_sig_inst (lids, _, _) -> lids
       | _ -> [] in
-    printf ">>> new event >>> NTBinding %A\n" (List.map (fun lid -> lid.str) lids);
     List.fold_left
       (fun tbl lid ->
          let ns_query = if lid.nsstr = cur_mod_str then []
@@ -1034,20 +1029,13 @@ let run_search st search_str =
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
-let duration f =
-  let timer = new System.Diagnostics.Stopwatch () in
-  timer.Start();
-  let returnValue = f () in
-  printfn "Elapsed Time: %i" timer.ElapsedMilliseconds;
-  returnValue
-
 let run_query st : query' -> (query_status * json) * either<repl_state,int> = function
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
   | DescribeRepl -> run_describe_repl st
   | Pop -> run_pop st
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
-  | AutoComplete search_term -> duration (fun () -> run_completions st search_term)
+  | AutoComplete search_term -> Util.measure_execution_time (fun () -> run_completions_old st search_term)
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term

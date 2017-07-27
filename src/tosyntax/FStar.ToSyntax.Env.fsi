@@ -147,11 +147,11 @@ val push_bv: env -> ident -> env * bv
 val push_bv_mutable: env -> ident -> env * bv
 val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
 val push_sigelt: env -> sigelt -> env
-val push_open_hook : ref<env -> open_module_or_namespace -> unit>
+val push_open_hook : ref<(env -> open_module_or_namespace -> unit)>
 val push_namespace: env -> lident -> env
-val push_include_hook : ref<env -> lident -> unit>
+val push_include_hook : ref<(env -> lident -> unit)>
 val push_include: env -> lident -> env
-val push_module_abbrev_hook : ref<env -> ident -> lident -> unit>
+val push_module_abbrev_hook : ref<(env -> ident -> lident -> unit)>
 val push_module_abbrev : env -> ident -> lident -> env
 val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
 
