@@ -314,12 +314,12 @@ let imap_remove (m:'value imap) k = BatHashtbl.remove m k
 let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
 let imap_copy (m:'value imap) = BatHashtbl.copy m
 
-type 'value pimap = (int, 'value) BatMap.t
+type 'value pimap = (Z.t, 'value) BatMap.t
 let pimap_empty (_: unit) : 'value pimap = BatMap.empty
-let pimap_add (map: 'value pimap) (key: int) (value: 'value) = BatMap.add key value map
-let pimap_find_default (map: 'value pimap) (key: int) (dflt: 'value) =
+let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
+let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
   try BatMap.find key map with Not_found -> dflt
-let pimap_try_find (map: 'value pimap) (key: int) =
+let pimap_try_find (map: 'value pimap) (key: Z.t) =
   try Some (BatMap.find key map) with Not_found -> None
 
 let format (fmt:string) (args:string list) =
