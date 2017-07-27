@@ -1178,9 +1178,11 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
             | Some ((uvs,tval), quals) ->
               let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
-              let _ = match lb.lbtyp.n with
-                | Tm_unknown -> ()
-                | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation"
+              let def = match lb.lbtyp.n with
+                | Tm_unknown -> lb.lbdef
+                | _ ->
+                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None), None)) None lb.lbdef.pos
+                 (* Errors.warn r "Annotation from val declaration overrides inline type annotation" *)
               in
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
