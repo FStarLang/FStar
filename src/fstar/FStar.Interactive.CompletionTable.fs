@@ -7,58 +7,8 @@ open FStar
 open FStar.All
 module BU = FStar.Util
 
-module String = begin
-  let compare = compare
-  let uppercase (s: string) = s.ToUpperInvariant ()
-end
-
-module List = begin
-  let filter_map f l =
-      (let rec filter_map acc l =
-         match l with
-         | [] ->
-             List.rev acc
-         | hd :: tl ->
-             match f hd with
-             | Some hd ->
-                 filter_map (hd :: acc) tl
-             | None ->
-                 filter_map acc tl
-       in
-       filter_map [] l)
-
-  let rev_map_onto f l acc = List.fold (fun acc x -> f x :: acc) acc l
-
-  let fold_left = List.fold
-
-  let hd = List.head
-
-  let rec rev_acc = (fun ( l  :  'a list ) ( acc  :  'a list ) ->
-                     (match (l) with
-                      | [] -> begin
-                                 acc
-                             end
-                      | hd::tl -> begin
-                                    (rev_acc tl ((hd)::acc))
-                                end))
-
-  let rev_append l a = rev_acc l a
-end
-module All = begin end
-module BU = begin
-    let bind_opt opt f =
-        match opt with
-        | None -> None
-        | Some x -> f x
-    let dflt x = function
-        | None   -> x
-        | Some x -> x
-    let format1 msg arg = msg ^ arg
-    let starts_with = fun (s: string) pref -> s.StartsWith pref
-end
-
 let string_compare s1 s2 =
-  String.compare s1 s2 // (String.uppercase s1) (String.uppercase s2)
+  String.compare s1 s2
 
 (** * (Pairing) min-heaps * **)
 
@@ -125,12 +75,6 @@ let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list<list<'a>>) =
   | _ ->
     let lists = add_priorities 0 [] lists in
     aux (heap_from_list cmp lists) []
-
-let test_merge () =
-  let l1 = List.rev [("And", 7); ("admitP", 5); ("2", 2); ("1", 1)] in
-  let l2 = List.rev [("And", 77); ("admitP", 66); ("5", 55); ("3", 3); ("1", 1)] in
-  let l3 = List.rev [("And", 777); ("admitP", 555); ("4", 4); ("1", 1)] in
-  merge_increasing_lists_rev (fun (k, _) -> k) [l1;l2;l3]
 
 (** * Binary trees * **)
 
@@ -364,43 +308,6 @@ let trie_find_prefix (tr: trie<'a>) (query: query) : list<(path * 'a)> =
   trie_find_prefix' tr [] query []
 
 (** * High level interface * **)
-
-// let test_trie =
-//   let tmp = trie_empty in
-
-//   let tmp = trie_insert tmp ["FStar"; "All"] "aaa" "FStar/All/aaa" in
-//   let tmp = trie_insert tmp ["FStar"; "All"] "bbb" "FStar/All/bbb" in
-//   let tmp = trie_insert tmp ["FStar"; "All"] "ccc" "FStar/All/ccc" in
-//   let tmp = trie_insert tmp ["Prims"] "xxx" "Prims/xxx" in
-//   let tmp = trie_insert tmp ["Prims"] "yyy" "Prims/yyy" in
-//   let tmp = trie_insert tmp ["Prims"] "zzz" "Prims/zzz" in
-//   let tmp = trie_include tmp None [] ["Prims"] in
-//   let tmp = trie_add_alias tmp "MyPrims" [] ["Prims"] in
-//   let tmp = trie_include tmp None ["FStar"; "All2"] ["FStar"; "All"] in
-//   let tmp = trie_insert tmp [] "abc" "Top.abc" in
-//   let tmp = trie_insert tmp [] "def" "Top.def" in
-//   let tmp = trie_insert tmp [] "aaa" "Top.aaa" in
-//   // printf "exact: %A\n" (trie_find_exact tmp ["AA"; "B"]);
-//   // printf "exact w/ alias: %A\n" (trie_find_exact tmp ["XX"; "x"]);
-//   printf "prefix 1: %A\n" (trie_find_prefix tmp ["FSt"; "A"]);
-//   printf "prefix 2: %A\n" (trie_find_prefix tmp ["Prim"]);
-//   printf "prefix 2': %A\n" (trie_find_prefix tmp ["Prim"; ""]);
-//   printf "prefix w/ alias: %A\n" (trie_find_prefix tmp ["MyPr"]);
-//   // printf "flat: %A\n" (trie_flatten tmp [] []);
-//   printf "flat using prefix: %A\n" (trie_find_prefix tmp [""])
-//   // printf "full: %A\n" tmp;
-
-//   let tmp = trie_insert tmp ["AA1"] "b1" "AA1/b1" in
-//   let tmp = trie_insert tmp ["AA1"; "B1"] "C1" "AA1/B1/C1" in
-//   let tmp = trie_insert tmp ["AA1"; "B1"] "D2" "AA1/B1/D2" in
-//   let tmp = trie_insert tmp ["AA2"; "B1"] "C1" "AA2/B1/C1" in
-//   let tmp = trie_insert tmp ["AA2"; "B1"] "D2" "AA2/B1/D2" in
-//   let tmp = trie_insert tmp ["AB1"; "B1"] "C1" "AB1/B1/C1" in
-//   let tmp = trie_insert tmp ["AB1"; "B1"] "D2" "AB1/B1/D2" in
-//   // printf "exact: %A\n" (trie_find_exact tmp ["AA1"; "b1"]);
-//   printf "prefix: %A\n" (trie_find_prefix tmp ["AA"; "b1"]);
-//   printf "prefix: %A\n" (trie_find_prefix tmp ["AA"; "B"; ""])
-//   // printf "flat: %A\n" (trie_flatten tmp [] [])
 
 type symbol =
 | Lid of Ident.lid
