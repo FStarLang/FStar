@@ -216,16 +216,18 @@ let rec btree_fold (bt: btree<'a>) (f: string -> 'a -> 'b -> 'b) (acc: 'b) =
 type path = list<path_elem>
 type query = list<string>
 
+let query_to_string q = String.concat "." q
+
 type name_collection<'a> =
 | Names of btree<'a>
-| ImportedNames of option<string> * names<'a>
+| ImportedNames of string * names<'a>
 and names<'a> = list<name_collection<'a>>
 
 type trie<'a> =
-| Trie of names<'a> (* bindings *) * namespaces<'a>
-and namespaces<'a> = names<trie<'a>>
+  { bindings: names<'a>;
+    namespaces: names<trie<'a>> }
 
-let trie_empty = Trie ([], [])
+let trie_empty = { bindings = []; namespaces = [] }
 
 let rec names_find_exact (names: names<'a>) (ns: string) : option<'a> =
   let result, names =
@@ -243,10 +245,8 @@ let rec trie_descend_exact (tr: trie<'a>) (query: query) : option<trie<'a>> =
   match query with
   | [] -> Some tr
   | ns :: query ->
-    match tr with
-    | Trie (bindings, namespaces) ->
-      BU.bind_opt (names_find_exact namespaces ns)
-        (fun scope -> trie_descend_exact scope query)
+    BU.bind_opt (names_find_exact tr.namespaces ns)
+      (fun scope -> trie_descend_exact scope query)
 
 let rec trie_descend_exact_error (tr: trie<'a>) (query: query) : trie<'a> =
   match trie_descend_exact tr query with
@@ -260,7 +260,7 @@ let names_insert (names: names<'a>) (id: string) (v: 'a) : names<'a> =
     | _ -> (StrEmpty, names) in
   Names (btree_insert_replace bt id v) :: names
 
-let rec namespaces_mutate (namespaces: namespaces<'a>) (ns: string)
+let rec namespaces_mutate (namespaces: names<trie<'a>>) (ns: string)
                           (query: query) (mutator: trie<'a> -> trie<'a>) =
   let trie = BU.dflt trie_empty (names_find_exact namespaces ns) in
   names_insert namespaces ns (trie_mutate trie query mutator)
@@ -269,43 +269,35 @@ and trie_mutate (tr: trie<'a>) (query: query) (mutator: trie<'a> -> trie<'a>) : 
   match query with
   | [] -> mutator tr
   | id :: query ->
-    match tr with
-    | Trie (bindings, namespaces) ->
-      Trie (bindings, namespaces_mutate namespaces id query mutator)
+    { tr with namespaces = namespaces_mutate tr.namespaces id query mutator }
 
 let trie_insert (tr: trie<'a>) (ns_query: query) (id: string) (v: 'a) : trie<'a> =
-  trie_mutate tr ns_query (function
-    | Trie (bindings, namespaces) -> Trie (names_insert bindings id v, namespaces))
+  trie_mutate tr ns_query (fun tr -> { tr with bindings = names_insert tr.bindings id v })
 
-let trie_include (tr: trie<'a>) (id: option<string>)
-                 (host_query: query) (included_query: query)
-    : trie<'a> =
-  match trie_descend_exact_error tr included_query with
-  | Trie (included_bindings, _) ->
-    trie_mutate tr host_query (function
-      | Trie (bindings, namespaces) ->
-        Trie (ImportedNames (id, included_bindings) :: bindings, namespaces))
+let trie_import (tr: trie<'a>) (host_query: query) (included_query: query)
+                (mutator: trie<'a> -> trie<'a> -> string -> trie<'a>) =
+  let label = query_to_string included_query in
+  let included_trie = trie_descend_exact_error tr included_query in
+  trie_mutate tr host_query (fun tr -> mutator tr included_trie label)
 
-let trie_open_namespace (tr: trie<'a>) (id: string)
-                        (host_query: query) (included_query: query)
+let trie_include (tr: trie<'a>) (host_query: query) (included_query: query)
     : trie<'a> =
-  match trie_descend_exact_error tr included_query with
-  | Trie (_, included_namespaces) ->
-    trie_mutate tr host_query (function
-      | Trie (bindings, namespaces) ->
-        Trie (bindings, ImportedNames (Some id, included_namespaces) :: namespaces))
+  trie_import tr host_query included_query (fun tr inc label ->
+      { tr with bindings = ImportedNames (label, inc.bindings) :: tr.bindings })
+
+let trie_open_namespace (tr: trie<'a>) (host_query: query) (included_query: query)
+    : trie<'a> =
+  trie_import tr host_query included_query (fun tr inc label ->
+      { tr with namespaces = ImportedNames (label, inc.namespaces) :: tr.namespaces })
 
 let trie_add_alias (tr: trie<'a>) (key: string)
                    (host_query: query) (included_query: query) : trie<'a> =
-  match trie_descend_exact_error tr included_query with
-  | Trie (included_bindings, _) ->
-    trie_mutate tr host_query (fun tr ->
+  trie_import tr host_query included_query (fun tr inc label ->
       // Very similar to an include, but aliasing A.B as M in A.C entirely
       // overrides A.B.M, should that also exists.  Doing this makes sense
       // because we only process aliases in the current module.
-      trie_mutate tr [key] (function
-        | _ignored_overwritten_trie ->
-          Trie ([ImportedNames (None, included_bindings)], [])))
+      trie_mutate tr [key] (fun _ignored_overwritten_trie ->
+          { bindings = [ImportedNames (label, inc.bindings)]; namespaces = [] }))
 
 let names_revmap (fn: btree<'a> -> 'b)
                  (names: names<'a> (* ↓ priority *))
@@ -317,14 +309,21 @@ let names_revmap (fn: btree<'a> -> 'b)
       acc names in
   aux [] names
 
-let btree_find_all (bt: btree<'a>) : list<(path_elem * 'a)> (* ↑ keys *) =
-  btree_fold bt (fun k tr acc -> ((None, k), tr) :: acc) []
+let btree_find_all (prefix: option<string>) (bt: btree<'a>) : list<(path_elem * 'a)> (* ↑ keys *) =
+  btree_fold bt (fun k tr acc -> ((prefix, k), tr) :: acc) []
 
-let names_find_prefix_rev (names: names<'a>) (id: option<string>) : list<(path_elem * 'a)> =
+type name_search_term =
+| NSTAll
+| NSTNone
+| NSTPrefix of string
+
+let names_find_rev (names: names<'a>) (id: name_search_term) : list<(path_elem * 'a)> =
   let matching_values_per_collection =
     match id with
-    | None -> names_revmap btree_find_all names
-    | Some id -> names_revmap (fun bt -> btree_find_prefix bt id) names in
+    | NSTNone -> []
+    | NSTAll -> names_revmap (btree_find_all None) names
+    | NSTPrefix "" -> names_revmap (btree_find_all (Some "")) names
+    | NSTPrefix id -> names_revmap (fun bt -> btree_find_prefix bt id) names in
   merge_increasing_lists_rev
     (fun (path_el, _) -> snd path_el) matching_values_per_collection
 
@@ -332,62 +331,63 @@ let rec trie_find_prefix' (tr: trie<'a>) (path_acc: path)
                           (query: query) (acc: list<(path * 'a)>)
     : list<(path * 'a)> =
   // printf "\n<<<\n!! %A\n!! %A\n!! %A\n!! %A\n>>>\n\n" tr path_acc query acc;
-  match tr with
-  | Trie (bindings, namespaces) (* ↓ priority *) ->
-    let ns_prefix, bindings_prefix, query =
-      match query with
-      | [] -> None, None, []
-      | [id] -> Some id, Some id, []
-      | ns :: query -> Some ns, None, query in
+  let ns_search_term, bindings_search_term, query =
+    match query with
+    | [] -> NSTAll, NSTAll, []
+    | [id] -> NSTPrefix id, NSTPrefix id, []
+    | ns :: query -> NSTPrefix ns, NSTNone, query in
 
-    let matching_namespaces_rev = names_find_prefix_rev namespaces ns_prefix in
-    let acc_with_recursive_bindings =
-      List.fold_left (fun acc (path_el, trie) ->
-          trie_find_prefix' trie (path_el :: path_acc) query acc)
-        acc matching_namespaces_rev in
+  let matching_namespaces_rev = names_find_rev tr.namespaces ns_search_term in
+  let acc_with_recursive_bindings =
+    List.fold_left (fun acc (path_el, trie) ->
+        trie_find_prefix' trie (path_el :: path_acc) query acc)
+      acc matching_namespaces_rev in
 
-    let matching_bindings_rev = names_find_prefix_rev bindings bindings_prefix in
-    List.rev_map_onto (fun (path_el, v) -> (path_el :: path_acc, v))
-      matching_bindings_rev acc_with_recursive_bindings
+  let matching_bindings_rev = names_find_rev tr.bindings bindings_search_term in
+  List.rev_map_onto (fun (path_el, v) -> (List.rev (path_el :: path_acc), v))
+    matching_bindings_rev acc_with_recursive_bindings
 
 let trie_find_prefix (tr: trie<'a>) (query: query) : list<(path * 'a)> =
-  List.map (fun (path_rev, v) -> (List.rev path_rev, v))
-    (trie_find_prefix' tr [] query [])
+  trie_find_prefix' tr [] query []
 
 (** * High level interface * **)
 
-let test_trie =
-  let tmp = trie_empty in
+// let test_trie =
+//   let tmp = trie_empty in
 
-  let tmp = trie_insert tmp ["FStar"; "All"] "aaa" "FStar/All/aaa" in
-  let tmp = trie_insert tmp ["FStar"; "All"] "bbb" "FStar/All/bbb" in
-  let tmp = trie_insert tmp ["FStar"; "All"] "ccc" "FStar/All/ccc" in
-  let tmp = trie_insert tmp ["Prims"] "xxx" "Prims/xxx" in
-  let tmp = trie_insert tmp ["Prims"] "yyy" "Prims/yyy" in
-  let tmp = trie_insert tmp ["Prims"] "zzz" "Prims/zzz" in
-  let tmp = trie_include tmp None [] ["Prims"] in
-  let tmp = trie_add_alias tmp "MyPrims" [] ["Prims"] in
-  let tmp = trie_include tmp None ["FStar"; "All2"] ["FStar"; "All"] in
-  // printf "exact: %A\n" (trie_find_exact tmp ["AA"; "B"]);
-  // printf "exact w/ alias: %A\n" (trie_find_exact tmp ["XX"; "x"]);
-  printf "prefix 1: %A\n" (trie_find_prefix tmp ["FSt"; "A"]);
-  printf "prefix 2: %A\n" (trie_find_prefix tmp ["Prim"]);
-  printf "prefix w/ alias: %A\n" (trie_find_prefix tmp ["X"]);
-  // printf "flat: %A\n" (trie_flatten tmp [] []);
-  printf "flat using prefix: %A\n" (trie_find_prefix tmp [""]);
-  printf "full: %A\n" tmp;
+//   let tmp = trie_insert tmp ["FStar"; "All"] "aaa" "FStar/All/aaa" in
+//   let tmp = trie_insert tmp ["FStar"; "All"] "bbb" "FStar/All/bbb" in
+//   let tmp = trie_insert tmp ["FStar"; "All"] "ccc" "FStar/All/ccc" in
+//   let tmp = trie_insert tmp ["Prims"] "xxx" "Prims/xxx" in
+//   let tmp = trie_insert tmp ["Prims"] "yyy" "Prims/yyy" in
+//   let tmp = trie_insert tmp ["Prims"] "zzz" "Prims/zzz" in
+//   let tmp = trie_include tmp None [] ["Prims"] in
+//   let tmp = trie_add_alias tmp "MyPrims" [] ["Prims"] in
+//   let tmp = trie_include tmp None ["FStar"; "All2"] ["FStar"; "All"] in
+//   let tmp = trie_insert tmp [] "abc" "Top.abc" in
+//   let tmp = trie_insert tmp [] "def" "Top.def" in
+//   let tmp = trie_insert tmp [] "aaa" "Top.aaa" in
+//   // printf "exact: %A\n" (trie_find_exact tmp ["AA"; "B"]);
+//   // printf "exact w/ alias: %A\n" (trie_find_exact tmp ["XX"; "x"]);
+//   printf "prefix 1: %A\n" (trie_find_prefix tmp ["FSt"; "A"]);
+//   printf "prefix 2: %A\n" (trie_find_prefix tmp ["Prim"]);
+//   printf "prefix 2': %A\n" (trie_find_prefix tmp ["Prim"; ""]);
+//   printf "prefix w/ alias: %A\n" (trie_find_prefix tmp ["MyPr"]);
+//   // printf "flat: %A\n" (trie_flatten tmp [] []);
+//   printf "flat using prefix: %A\n" (trie_find_prefix tmp [""])
+//   // printf "full: %A\n" tmp;
 
-  // let tmp = trie_insert tmp ["AA1"] "b1" "AA1/b1" in
-  // let tmp = trie_insert tmp ["AA1"; "B1"] "C1" "AA1/B1/C1" in
-  // let tmp = trie_insert tmp ["AA1"; "B1"] "D2" "AA1/B1/D2" in
-  // let tmp = trie_insert tmp ["AA2"; "B1"] "C1" "AA2/B1/C1" in
-  // let tmp = trie_insert tmp ["AA2"; "B1"] "D2" "AA2/B1/D2" in
-  // let tmp = trie_insert tmp ["AB1"; "B1"] "C1" "AB1/B1/C1" in
-  // let tmp = trie_insert tmp ["AB1"; "B1"] "D2" "AB1/B1/D2" in
-  // // printf "exact: %A\n" (trie_find_exact tmp ["AA1"; "b1"]);
-  // printf "prefix: %A\n" (trie_find_prefix tmp ["AA"; "b1"]);
-  // printf "prefix: %A\n" (trie_find_prefix tmp ["AA"; "B"; ""])
-  // // printf "flat: %A\n" (trie_flatten tmp [] [])
+//   let tmp = trie_insert tmp ["AA1"] "b1" "AA1/b1" in
+//   let tmp = trie_insert tmp ["AA1"; "B1"] "C1" "AA1/B1/C1" in
+//   let tmp = trie_insert tmp ["AA1"; "B1"] "D2" "AA1/B1/D2" in
+//   let tmp = trie_insert tmp ["AA2"; "B1"] "C1" "AA2/B1/C1" in
+//   let tmp = trie_insert tmp ["AA2"; "B1"] "D2" "AA2/B1/D2" in
+//   let tmp = trie_insert tmp ["AB1"; "B1"] "C1" "AB1/B1/C1" in
+//   let tmp = trie_insert tmp ["AB1"; "B1"] "D2" "AB1/B1/D2" in
+//   // printf "exact: %A\n" (trie_find_exact tmp ["AA1"; "b1"]);
+//   printf "prefix: %A\n" (trie_find_prefix tmp ["AA"; "b1"]);
+//   printf "prefix: %A\n" (trie_find_prefix tmp ["AA"; "B"; ""])
+//   // printf "flat: %A\n" (trie_flatten tmp [] [])
 
 type symbol =
 | Lid of Ident.lid
@@ -403,15 +403,14 @@ let insert (tbl: table) (host_query: query) (id: string) (c: symbol) : table =
 let register_alias (tbl: table) (key: string) (host_query: query) (included_query: query) : table =
   trie_add_alias tbl key host_query included_query
 
-let register_open (tbl: table) (is_module: bool) (host_query: query) (included_query: query) : table =
-  let label = String.concat "." host_query in
-  if is_module then
-    trie_include tbl (Some label) host_query included_query
-  else
-    trie_open_namespace tbl label host_query included_query
-
 let register_include (tbl: table) (host_query: query) (included_query: query) : table =
-  trie_include tbl None host_query included_query
+  trie_include tbl host_query included_query
+
+let register_open (tbl: table) (is_module: bool) (host_query: query) (included_query: query) : table =
+  if is_module then
+    trie_include tbl host_query included_query
+  else
+    trie_open_namespace tbl host_query included_query
 
 let path_match_length (path: path) : int =
   let length, (last_prefix, last_completion_length) =

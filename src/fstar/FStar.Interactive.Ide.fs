@@ -1035,7 +1035,7 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | DescribeRepl -> run_describe_repl st
   | Pop -> run_pop st
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
-  | AutoComplete search_term -> Util.measure_execution_time (fun () -> run_completions_old st search_term)
+  | AutoComplete search_term -> Util.measure_execution_time (fun () -> run_completions st search_term)
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
