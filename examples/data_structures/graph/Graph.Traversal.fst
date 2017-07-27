@@ -42,6 +42,46 @@ type traversal (#n:nat) (g:graph0 n) (root:_in g) : nodesetseq n -> Type0 =
       (i == 0 ==> s @^ i == root) /\
       (i =!= 0 ==> (exists (j:_in s). j < i /\ is_in_graph (s @^ j) (s @^ i) g)))
 
+let rec traversal_construct_getpath_aux (#n:nat) (g:graph0 n) (root:_in g) (ns : nodesetseq n{traversal g root ns}) (ps:S.seq(path g)) (i:k:nat{k + 1< S.length ns})
+ : Pure (path g) 
+ (requires (S.length ps == i /\ i < S.length ns /\ (forall (ind:k:nat{k<S.length ps}). let p = (ps @^ ind) in from p == root 
+ /\ to p == (ns @^ ind))))
+ (ensures (fun p ->  i  < S.length ns /\ from p == root /\ to p == (S.index ns  (i + 1))))
+ = let sl = S.slice ns 0 i in
+ 
+  match index_of_l (fun a -> is_in_graph a (S.index ns (i+1)) g) sl with
+   | Some v -> 
+   let p1 = (ps @^ (v <: nat)) in
+   let p2 = S.create 1 (ns @^ (v <: nat)) in let p2' = S.append p2 (S.create 1 (ns @^ (i + 1))) in
+   index_of_l_spec (fun a -> is_in_graph a (S.index ns (i+1)) g) sl;
+   assert(valid_path g p2');
+   let p' = append g p1 p2' in  assert(valid_path g p'); assert(from p' == root); assert(to p' == (S.index ns (i + 1)));  p'
+   | None -> if i = 0 then admit() 
+   else 
+   (
+
+   (* This assertion right here is the one that fails. I am trying to prove a contradiction in this case*)
+   assert((forall (i':_in ns).
+      (i' == 0 ==> ns @^ i' == root) /\
+      (i' =!= 0 ==> (exists (j:_in ns). j < i' /\ is_in_graph (ns @^ j) (ns @^ i') g)))); admit();
+   assert(exists (j:_in ns). j < (i+1) /\ is_in_graph (ns @^ j) (ns @^ (i + 1)) g); admit()
+   )
+    
+
+let rec traversal_construct (#n:nat) (g:graph0 n) (root:_in g) (ns : nodesetseq n{traversal g root ns}) (ps:S.seq(path g)) (i:nat)
+ : Pure (S.seq (path g)) 
+ (requires (S.length ps == i /\ i < S.length ns /\ (forall (ind:k:nat{k<S.length ps}). let p = (ps @^ ind) in from p == root /\ to p == (ns @^ ind))))
+ (ensures (fun x -> S.length x == i /\ i <= S.length ns /\ (forall (ind:k:nat{k<S.length x}). let p = (x @^ ind) in from p == root /\ to p == (ns @^ ind))))
+ (decreases (S.length ns - i))
+ = match S.length ns - i with
+   | 0 -> ps
+   | x -> 
+     begin match index_of_l (fun a -> is_in_graph (ns @^ a) (ns @^ (i+1))) (S.slice s 0 i) with
+      | Some v -> admit()
+      | None -> admit()
+     end
+   traversal_construct g root ns ps (i+1)
+
 // let rec traversal_reachability
 //   (#n:nat)
 //   (g:graph0 n)
