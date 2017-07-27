@@ -19,6 +19,9 @@ private new_effect STATE = STATE_h mem
 (* effect State (a:Type) (wp:st_wp a) = *)
 (*        STATE a wp *)
 
+// let memory_inv (m0 m1 : mem) =
+//  relations
+  
 (**
     WARNING: this effect is unsafe, for C/C++ extraction it shall only be used by
     code that would later extract to OCaml or by library functions
@@ -111,6 +114,26 @@ effect STL (a:Type) (pre:st_pre) (post: (mem -> Tot (st_post a))) = Stack a pre 
 
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:mem) -> wp (fun a -> p a h)
+
+(** Transistion the heap into a state where modifications may disrespect
+    data invariants and montonic relations.
+ *)
+assume val break : unit -> ST unit
+  (requires (fun h0 -> ~ (has_snapshot h0)))
+  (ensures (fun h0 v h1 -> ~ (has_snapshot h0) /\ snapshot h0 == h1))
+// let break () =
+//   let h0 = get () in
+//   put h0
+
+   // let h0 = get ();
+   // let h1 = snapshot h0;
+   // put h0
+
+(** Transistion the heap back into a state where invariants and relations must hold,
+    only if we can prove that the working memory has restablished all of them *)
+assume val restore : unit -> ST unit
+  (requires (fun h0 -> True))
+   (ensures (fun h0 v h1 -> True))
 
 (**
    Pushes a new empty frame on the stack

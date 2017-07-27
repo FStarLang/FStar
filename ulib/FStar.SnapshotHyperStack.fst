@@ -11,8 +11,17 @@ module HH = FStar.HyperHeap
 // A pair, the active heap and a snapshot.
 abstract type snapshot_heap = (HS.mem * option HS.mem)
 
-let is_unrestricted (h : snapshot_heap) : bool =
+let has_snapshot (h : snapshot_heap) : bool =
 Some? (snd h)
+
+// Create a snapshot of the current heap, this populates the second field
+// of the pair saving the state of the global heap at the time of the snapshot
+// future updates will be peformed on the first component of the pair.
+let snapshot (m:snapshot_heap { ~ (has_snapshot m) }) : snapshot_heap =
+(fst m, Some (fst m))
+
+let commit (m: snapshot_heap { has_snapshot m }) : snapshot_heap =
+(fst m, None)
 
 // The heap that is currently being modified.
 let active_mem (m : snapshot_heap) : HS.mem = fst m
