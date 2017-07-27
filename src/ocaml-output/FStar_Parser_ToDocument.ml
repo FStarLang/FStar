@@ -2129,7 +2129,7 @@ and p_tmArrow:
       | FStar_Parser_AST.Product (bs,tgt) ->
           let uu____4758 =
             let uu____4759 =
-    separate_map_or_flow FStar_Pprint.empty
+              separate_map_or_flow FStar_Pprint.empty
                 (fun b  ->
                    let uu____4764 = p_binder false b in
                    let uu____4765 =

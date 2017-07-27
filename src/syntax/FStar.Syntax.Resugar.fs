@@ -60,7 +60,7 @@ let filter_imp a = a |> List.filter (function (_, Some (S.Implicit _)) -> false 
 
 let label s t =
   if s = "" then t
-  else A.mk_term (A.Labeled (t,s,true)) t.A.range A.Un
+  else A.mk_term (A.Labeled (t,s,true)) t.range A.Un
 
 (* If resugar_arg_qual returns None, the corresponding binder should *not* be resugared *)
 let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifier>)> =
