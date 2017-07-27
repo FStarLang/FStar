@@ -192,7 +192,7 @@ let tac_verb_dbg: Prims.bool FStar_Pervasives_Native.option FStar_ST.ref =
 let rec log: proofstate -> (Prims.unit -> Prims.unit) -> Prims.unit =
   fun ps  ->
     fun f  ->
-      let uu____627 = FStar_ST.read tac_verb_dbg in
+      let uu____627 = FStar_ST.op_Bang tac_verb_dbg in
       match uu____627 with
       | FStar_Pervasives_Native.None  ->
           ((let uu____649 =
@@ -200,7 +200,7 @@ let rec log: proofstate -> (Prims.unit -> Prims.unit) -> Prims.unit =
                 FStar_TypeChecker_Env.debug ps.main_context
                   (FStar_Options.Other "TacVerbose") in
               FStar_Pervasives_Native.Some uu____652 in
-            FStar_ST.write tac_verb_dbg uu____649);
+            FStar_ST.op_Colon_Equals tac_verb_dbg uu____649);
            log ps f)
       | FStar_Pervasives_Native.Some (true ) -> f ()
       | FStar_Pervasives_Native.Some (false ) -> ()
@@ -268,7 +268,7 @@ let solve: goal -> FStar_Syntax_Syntax.typ -> Prims.unit =
              FStar_Util.format3 "%s does not solve %s : %s" uu____847
                uu____848 uu____849 in
            TacFailure uu____846 in
-         raise uu____845)
+         FStar_Exn.raise uu____845)
 let dismiss: Prims.unit tac =
   bind get
     (fun p  ->

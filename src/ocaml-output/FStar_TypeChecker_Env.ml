@@ -1072,51 +1072,54 @@ let query_indices:
   = FStar_Util.mk_ref [[]]
 let push_query_indices: Prims.unit -> Prims.unit =
   fun uu____4469  ->
-    let uu____4470 = FStar_ST.read query_indices in
+    let uu____4470 = FStar_ST.op_Bang query_indices in
     match uu____4470 with
     | [] -> failwith "Empty query indices!"
     | uu____4527 ->
         let uu____4536 =
           let uu____4545 =
-            let uu____4552 = FStar_ST.read query_indices in
+            let uu____4552 = FStar_ST.op_Bang query_indices in
             FStar_List.hd uu____4552 in
-          let uu____4609 = FStar_ST.read query_indices in uu____4545 ::
+          let uu____4609 = FStar_ST.op_Bang query_indices in uu____4545 ::
             uu____4609 in
-        FStar_ST.write query_indices uu____4536
+        FStar_ST.op_Colon_Equals query_indices uu____4536
 let pop_query_indices: Prims.unit -> Prims.unit =
   fun uu____4711  ->
-    let uu____4712 = FStar_ST.read query_indices in
+    let uu____4712 = FStar_ST.op_Bang query_indices in
     match uu____4712 with
     | [] -> failwith "Empty query indices!"
-    | hd1::tl1 -> FStar_ST.write query_indices tl1
+    | hd1::tl1 -> FStar_ST.op_Colon_Equals query_indices tl1
 let add_query_index:
   (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 -> Prims.unit
   =
   fun uu____4840  ->
     match uu____4840 with
     | (l,n1) ->
-        let uu____4847 = FStar_ST.read query_indices in
+        let uu____4847 = FStar_ST.op_Bang query_indices in
         (match uu____4847 with
-         | hd1::tl1 -> FStar_ST.write query_indices (((l, n1) :: hd1) :: tl1)
+         | hd1::tl1 ->
+             FStar_ST.op_Colon_Equals query_indices (((l, n1) :: hd1) :: tl1)
          | uu____4972 -> failwith "Empty query indices")
 let peek_query_indices:
   Prims.unit ->
     (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun uu____4990  ->
-    let uu____4991 = FStar_ST.read query_indices in FStar_List.hd uu____4991
+    let uu____4991 = FStar_ST.op_Bang query_indices in
+    FStar_List.hd uu____4991
 let commit_query_index_mark: Prims.unit -> Prims.unit =
   fun uu____5051  ->
-    let uu____5052 = FStar_ST.read query_indices in
+    let uu____5052 = FStar_ST.op_Bang query_indices in
     match uu____5052 with
-    | hd1::uu____5104::tl1 -> FStar_ST.write query_indices (hd1 :: tl1)
+    | hd1::uu____5104::tl1 ->
+        FStar_ST.op_Colon_Equals query_indices (hd1 :: tl1)
     | uu____5186 -> failwith "Unmarked query index stack"
 let stack: env Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let push_stack: env -> env =
   fun env  ->
     (let uu____5213 =
-       let uu____5216 = FStar_ST.read stack in env :: uu____5216 in
-     FStar_ST.write stack uu____5213);
+       let uu____5216 = FStar_ST.op_Bang stack in env :: uu____5216 in
+     FStar_ST.op_Colon_Equals stack uu____5213);
     (let uu___117_5255 = env in
      let uu____5256 = FStar_Util.smap_copy (gamma_cache env) in
      let uu____5259 = FStar_Util.smap_copy (sigtab env) in
@@ -1151,9 +1154,9 @@ let push_stack: env -> env =
      })
 let pop_stack: Prims.unit -> env =
   fun uu____5265  ->
-    let uu____5266 = FStar_ST.read stack in
+    let uu____5266 = FStar_ST.op_Bang stack in
     match uu____5266 with
-    | env::tl1 -> (FStar_ST.write stack tl1; env)
+    | env::tl1 -> (FStar_ST.op_Colon_Equals stack tl1; env)
     | uu____5310 -> failwith "Impossible: Too many pops"
 let cleanup_interactive: env -> Prims.unit = fun env  -> (env.solver).pop ""
 let push: env -> Prims.string -> env =
@@ -1875,7 +1878,7 @@ let lookup_bv:
             let uu____7751 =
               let uu____7756 = variable_not_found bv in (uu____7756, bvr) in
             FStar_Errors.Error uu____7751 in
-          raise uu____7750
+          FStar_Exn.raise uu____7750
       | FStar_Pervasives_Native.Some (t,r) ->
           let uu____7767 = FStar_Syntax_Subst.set_use_range bvr t in
           let uu____7768 = FStar_Range.set_use_range r bvr in
@@ -1918,7 +1921,7 @@ let lookup_lid:
               let uu____7929 = name_not_found l in
               (uu____7929, (FStar_Ident.range_of_lid l)) in
             FStar_Errors.Error uu____7924 in
-          raise uu____7923
+          FStar_Exn.raise uu____7923
       | FStar_Pervasives_Native.Some v1 -> v1
 let lookup_univ: env -> FStar_Syntax_Syntax.univ_name -> Prims.bool =
   fun env  ->
@@ -1986,7 +1989,7 @@ let lookup_val_decl:
               let uu____8251 = name_not_found lid in
               (uu____8251, (FStar_Ident.range_of_lid lid)) in
             FStar_Errors.Error uu____8246 in
-          raise uu____8245
+          FStar_Exn.raise uu____8245
 let lookup_datacon:
   env ->
     FStar_Ident.lident ->
@@ -2014,7 +2017,7 @@ let lookup_datacon:
               let uu____8383 = name_not_found lid in
               (uu____8383, (FStar_Ident.range_of_lid lid)) in
             FStar_Errors.Error uu____8378 in
-          raise uu____8377
+          FStar_Exn.raise uu____8377
 let datacons_of_typ:
   env ->
     FStar_Ident.lident ->
@@ -2124,7 +2127,7 @@ let lookup_effect_lid: env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term
               let uu____9005 = name_not_found ftv in
               (uu____9005, (FStar_Ident.range_of_lid ftv)) in
             FStar_Errors.Error uu____9000 in
-          raise uu____8999
+          FStar_Exn.raise uu____8999
       | FStar_Pervasives_Native.Some k -> k
 let lookup_effect_abbrev:
   env ->
@@ -2446,7 +2449,7 @@ let num_inductive_ty_params: env -> FStar_Ident.lident -> Prims.int =
               let uu____10329 = name_not_found lid in
               (uu____10329, (FStar_Ident.range_of_lid lid)) in
             FStar_Errors.Error uu____10324 in
-          raise uu____10323
+          FStar_Exn.raise uu____10323
 let effect_decl_opt:
   env ->
     FStar_Ident.lident ->
@@ -2473,7 +2476,7 @@ let get_effect_decl:
               let uu____10413 = name_not_found l in
               (uu____10413, (FStar_Ident.range_of_lid l)) in
             FStar_Errors.Error uu____10408 in
-          raise uu____10407
+          FStar_Exn.raise uu____10407
       | FStar_Pervasives_Native.Some md -> FStar_Pervasives_Native.fst md
 let identity_mlift: mlift =
   {
@@ -2525,7 +2528,7 @@ let join:
                          uu____10572 in
                      (uu____10570, (env.range)) in
                    FStar_Errors.Error uu____10565 in
-                 raise uu____10564
+                 FStar_Exn.raise uu____10564
              | FStar_Pervasives_Native.Some
                  (uu____10579,uu____10580,m3,j1,j2) -> (m3, j1, j2))
 let monad_leq:
@@ -2880,7 +2883,7 @@ let build_lattice: env -> FStar_Syntax_Syntax.sigelt -> env =
                          let uu____11383 = get_range env in
                          (uu____11382, uu____11383) in
                        FStar_Errors.Error uu____11377 in
-                     raise uu____11376
+                     FStar_Exn.raise uu____11376
                    else ()));
            (let joins =
               FStar_All.pipe_right ms
@@ -3043,7 +3046,7 @@ let rec unfold_effect_abbrev:
                            uu____11768 uu____11773 uu____11780 in
                        (uu____11767, (comp.FStar_Syntax_Syntax.pos)) in
                      FStar_Errors.Error uu____11762 in
-                   raise uu____11761)
+                   FStar_Exn.raise uu____11761)
                 else ();
                 (let inst1 =
                    let uu____11786 =
@@ -3157,7 +3160,7 @@ let reify_comp:
                 FStar_Util.format1 "Effect %s cannot be reified" uu____12080 in
               let uu____12081 = get_range env in (uu____12079, uu____12081) in
             FStar_Errors.Error uu____12074 in
-          raise uu____12073 in
+          FStar_Exn.raise uu____12073 in
         let uu____12082 = effect_repr_aux true env c u_c in
         match uu____12082 with
         | FStar_Pervasives_Native.None  ->

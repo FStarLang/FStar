@@ -8,15 +8,15 @@ let with_fs_typ_app:
   fun b  ->
     fun printer  ->
       fun t  ->
-        let b0 = FStar_ST.read should_print_fs_typ_app in
-        FStar_ST.write should_print_fs_typ_app b;
+        let b0 = FStar_ST.op_Bang should_print_fs_typ_app in
+        FStar_ST.op_Colon_Equals should_print_fs_typ_app b;
         (let res = printer t in
-         FStar_ST.write should_print_fs_typ_app b0; res)
+         FStar_ST.op_Colon_Equals should_print_fs_typ_app b0; res)
 let should_unparen: Prims.bool FStar_ST.ref = FStar_Util.mk_ref true
 let rec unparen: FStar_Parser_AST.term -> FStar_Parser_AST.term =
   fun t  ->
     let uu____86 =
-      let uu____87 = FStar_ST.read should_unparen in
+      let uu____87 = FStar_ST.op_Bang should_unparen in
       Prims.op_Negation uu____87 in
     if uu____86
     then t
@@ -705,14 +705,14 @@ let with_comment:
     fun tm  ->
       fun tmrange  ->
         let rec comments_before_pos acc print_pos lookahead_pos =
-          let uu____2354 = FStar_ST.read comment_stack in
+          let uu____2354 = FStar_ST.op_Bang comment_stack in
           match uu____2354 with
           | [] -> (acc, false)
           | (comment,crange)::cs ->
               let uu____2416 = FStar_Range.range_before_pos crange print_pos in
               if uu____2416
               then
-                (FStar_ST.write comment_stack cs;
+                (FStar_ST.op_Colon_Equals comment_stack cs;
                  (let uu____2456 =
                     let uu____2457 =
                       let uu____2458 = str comment in
@@ -751,11 +751,11 @@ let rec place_comments_until_pos:
     fun lbegin  ->
       fun pos_end  ->
         fun doc1  ->
-          let uu____2497 = FStar_ST.read comment_stack in
+          let uu____2497 = FStar_ST.op_Bang comment_stack in
           match uu____2497 with
           | (comment,crange)::cs when
               FStar_Range.range_before_pos crange pos_end ->
-              (FStar_ST.write comment_stack cs;
+              (FStar_ST.op_Colon_Equals comment_stack cs;
                (let lnum =
                   let uu____2587 =
                     let uu____2588 =
@@ -1064,7 +1064,8 @@ and p_pragma: FStar_Parser_AST.pragma -> FStar_Pprint.document =
                FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu____3277) s_opt in
         FStar_Pprint.op_Hat_Hat uu____3272 uu____3273
     | FStar_Parser_AST.LightOff  ->
-        (FStar_ST.write should_print_fs_typ_app true; str "#light \"off\"")
+        (FStar_ST.op_Colon_Equals should_print_fs_typ_app true;
+         str "#light \"off\"")
 and p_typars: FStar_Parser_AST.binder Prims.list -> FStar_Pprint.document =
   fun bs  -> p_binders true bs
 and p_fsdocTypeDeclPairs:
@@ -2371,7 +2372,7 @@ and p_appTerm: FStar_Parser_AST.term -> FStar_Pprint.document =
         (match uu____5094 with
          | (head1,args) ->
              let uu____5119 =
-               let uu____5130 = FStar_ST.read should_print_fs_typ_app in
+               let uu____5130 = FStar_ST.op_Bang should_print_fs_typ_app in
                if uu____5130
                then
                  let uu____5151 =
@@ -2832,7 +2833,7 @@ let binder_to_document: FStar_Parser_AST.binder -> FStar_Pprint.document =
   fun b  -> p_binder true b
 let modul_to_document: FStar_Parser_AST.modul -> FStar_Pprint.document =
   fun m  ->
-    FStar_ST.write should_print_fs_typ_app false;
+    FStar_ST.op_Colon_Equals should_print_fs_typ_app false;
     (let res =
        match m with
        | FStar_Parser_AST.Module (uu____5951,decls) ->
@@ -2845,7 +2846,7 @@ let modul_to_document: FStar_Parser_AST.modul -> FStar_Pprint.document =
              FStar_All.pipe_right decls (FStar_List.map decl_to_document) in
            FStar_All.pipe_right uu____5973
              (FStar_Pprint.separate FStar_Pprint.hardline) in
-     FStar_ST.write should_print_fs_typ_app false; res)
+     FStar_ST.op_Colon_Equals should_print_fs_typ_app false; res)
 let comments_to_document:
   (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2 Prims.list
     -> FStar_Pprint.document
@@ -2868,7 +2869,7 @@ let modul_with_comments_to_document:
         match m with
         | FStar_Parser_AST.Module (uu____6058,decls) -> decls
         | FStar_Parser_AST.Interface (uu____6064,decls,uu____6066) -> decls in
-      FStar_ST.write should_print_fs_typ_app false;
+      FStar_ST.op_Colon_Equals should_print_fs_typ_app false;
       (match decls with
        | [] -> (FStar_Pprint.empty, comments)
        | d::ds ->
@@ -2891,7 +2892,7 @@ let modul_with_comments_to_document:
            (match uu____6102 with
             | (decls1,first_range) ->
                 let extract_decl_range d1 = d1.FStar_Parser_AST.drange in
-                (FStar_ST.write comment_stack comments;
+                (FStar_ST.op_Colon_Equals comment_stack comments;
                  (let initial_comment =
                     let uu____6197 = FStar_Range.start_of_range first_range in
                     place_comments_until_pos (Prims.parse_int "0")
@@ -2900,9 +2901,9 @@ let modul_with_comments_to_document:
                     separate_map_with_comments FStar_Pprint.empty
                       FStar_Pprint.empty decl_to_document decls1
                       extract_decl_range in
-                  let comments1 = FStar_ST.read comment_stack in
-                  FStar_ST.write comment_stack [];
-                  FStar_ST.write should_print_fs_typ_app false;
+                  let comments1 = FStar_ST.op_Bang comment_stack in
+                  FStar_ST.op_Colon_Equals comment_stack [];
+                  FStar_ST.op_Colon_Equals should_print_fs_typ_app false;
                   (let uu____6290 =
                      FStar_Pprint.op_Hat_Hat initial_comment doc1 in
                    (uu____6290, comments1))))))

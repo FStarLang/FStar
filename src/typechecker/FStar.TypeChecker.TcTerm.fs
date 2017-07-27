@@ -16,6 +16,7 @@
 #light "off"
 module FStar.TypeChecker.TcTerm
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 open FStar

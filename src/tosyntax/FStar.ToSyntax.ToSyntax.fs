@@ -16,6 +16,7 @@
 #light "off"
 module FStar.ToSyntax.ToSyntax
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 open FStar
@@ -110,7 +111,7 @@ let rec is_comp_type env t =
 
 let unit_ty = mk_term (Name C.unit_lid) Range.dummyRange Type_level
 
-let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
+let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
 
 let op_as_term env arity rng op : option<S.term> =
   let r l dd = Some (S.lid_as_fv (set_lid_range l op.idRange) dd None |> S.fv_to_tm) in
@@ -492,7 +493,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
       | PatOr _ -> failwith "impossible"
 
       | PatOp op ->
-        aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText, op.idRange), None); prange = p.prange })
+        aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText op.idRange, op.idRange), None); prange = p.prange })
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p, imp = aux loc env p in
@@ -605,7 +606,7 @@ and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<pat>) =
   let mklet x = env, LetBinder(qualify env x, tun), [] in
   if top
   then match p.pat with
-    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText, x.idRange))
+    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText x.idRange, x.idRange))
     | PatVar (x, _) -> mklet x
     | PatAscribed({pat=PatVar (x, _)}, t) ->
       (env, LetBinder(qualify env x, desugar_term env t), [])
@@ -2093,7 +2094,6 @@ and desugar_decl env (d: decl): (env_t * sigelts) =
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
-  List.iter (fun a -> BU.print1 "Desugared attribute: %s\n" (P.term_to_string a)) attrs;
   env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =

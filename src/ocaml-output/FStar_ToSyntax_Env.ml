@@ -468,7 +468,7 @@ let transitive_exported_ids:
       | FStar_Pervasives_Native.Some exported_id_set ->
           let uu____1476 =
             let uu____1477 = exported_id_set Exported_id_term_type in
-            FStar_ST.read uu____1477 in
+            FStar_ST.op_Bang uu____1477 in
           FStar_All.pipe_right uu____1476 FStar_Util.set_elements
 let open_modules:
   env ->
@@ -774,7 +774,7 @@ let find_in_module_with_includes:
                       | FStar_Pervasives_Native.Some mex ->
                           let mexports =
                             let uu____2439 = mex eikind in
-                            FStar_ST.read uu____2439 in
+                            FStar_ST.op_Bang uu____2439 in
                           FStar_Util.set_mem idstr mexports in
                     let mincludes =
                       let uu____2614 =
@@ -782,7 +782,7 @@ let find_in_module_with_includes:
                       match uu____2614 with
                       | FStar_Pervasives_Native.None  -> []
                       | FStar_Pervasives_Native.Some minc ->
-                          FStar_ST.read minc in
+                          FStar_ST.op_Bang minc in
                     let look_into =
                       if not_shadowed
                       then
@@ -1014,7 +1014,7 @@ let fail_if_curmodule:
                       ns_original.FStar_Ident.str in
                   (uu____3300, (FStar_Ident.range_of_lid ns_original)) in
                 FStar_Errors.Error uu____3295 in
-              raise uu____3294))
+              FStar_Exn.raise uu____3294))
         else ()
 let fail_if_qualified_by_curmodule: env -> FStar_Ident.lident -> Prims.unit =
   fun env  ->
@@ -1775,28 +1775,32 @@ let record_cache_aux_with_filter:
   let push1 uu____5275 =
     let uu____5276 =
       let uu____5281 =
-        let uu____5284 = FStar_ST.read record_cache in
+        let uu____5284 = FStar_ST.op_Bang record_cache in
         FStar_List.hd uu____5284 in
-      let uu____5331 = FStar_ST.read record_cache in uu____5281 :: uu____5331 in
-    FStar_ST.write record_cache uu____5276 in
+      let uu____5331 = FStar_ST.op_Bang record_cache in uu____5281 ::
+        uu____5331 in
+    FStar_ST.op_Colon_Equals record_cache uu____5276 in
   let pop1 uu____5421 =
     let uu____5422 =
-      let uu____5427 = FStar_ST.read record_cache in FStar_List.tl uu____5427 in
-    FStar_ST.write record_cache uu____5422 in
+      let uu____5427 = FStar_ST.op_Bang record_cache in
+      FStar_List.tl uu____5427 in
+    FStar_ST.op_Colon_Equals record_cache uu____5422 in
   let peek1 uu____5519 =
-    let uu____5520 = FStar_ST.read record_cache in FStar_List.hd uu____5520 in
+    let uu____5520 = FStar_ST.op_Bang record_cache in
+    FStar_List.hd uu____5520 in
   let insert r =
     let uu____5571 =
       let uu____5576 = let uu____5579 = peek1 () in r :: uu____5579 in
       let uu____5582 =
-        let uu____5587 = FStar_ST.read record_cache in
+        let uu____5587 = FStar_ST.op_Bang record_cache in
         FStar_List.tl uu____5587 in
       uu____5576 :: uu____5582 in
-    FStar_ST.write record_cache uu____5571 in
+    FStar_ST.op_Colon_Equals record_cache uu____5571 in
   let commit1 uu____5679 =
-    let uu____5680 = FStar_ST.read record_cache in
+    let uu____5680 = FStar_ST.op_Bang record_cache in
     match uu____5680 with
-    | hd1::uu____5726::tl1 -> FStar_ST.write record_cache (hd1 :: tl1)
+    | hd1::uu____5726::tl1 ->
+        FStar_ST.op_Colon_Equals record_cache (hd1 :: tl1)
     | uu____5782 -> failwith "Impossible" in
   let filter1 uu____5790 =
     let rc = peek1 () in
@@ -1807,9 +1811,9 @@ let record_cache_aux_with_filter:
            FStar_List.filter
              (fun r  -> Prims.op_Negation r.is_private_or_abstract) rc in
          let uu____5800 =
-           let uu____5805 = FStar_ST.read record_cache in filtered ::
+           let uu____5805 = FStar_ST.op_Bang record_cache in filtered ::
              uu____5805 in
-         FStar_ST.write record_cache uu____5800) in
+         FStar_ST.op_Colon_Equals record_cache uu____5800) in
   let aux = (push1, pop1, peek1, insert, commit1) in (aux, filter1)
 let record_cache_aux:
   (Prims.unit -> Prims.unit,Prims.unit -> Prims.unit,Prims.unit ->
@@ -1956,9 +1960,10 @@ let extract_record:
                                     } in
                                   ((let uu____6799 =
                                       let uu____6802 =
-                                        FStar_ST.read new_globs in
+                                        FStar_ST.op_Bang new_globs in
                                       (Record_or_dc record) :: uu____6802 in
-                                    FStar_ST.write new_globs uu____6799);
+                                    FStar_ST.op_Colon_Equals new_globs
+                                      uu____6799);
                                    (match () with
                                     | () ->
                                         ((let add_field uu____6879 =
@@ -1979,12 +1984,12 @@ let extract_record:
                                                          Exported_id_field in
                                                      ((let uu____6921 =
                                                          let uu____6922 =
-                                                           FStar_ST.read
+                                                           FStar_ST.op_Bang
                                                              my_exported_ids in
                                                          FStar_Util.set_add
                                                            id.FStar_Ident.idText
                                                            uu____6922 in
-                                                       FStar_ST.write
+                                                       FStar_ST.op_Colon_Equals
                                                          my_exported_ids
                                                          uu____6921);
                                                       (match () with
@@ -2000,12 +2005,12 @@ let extract_record:
                                                              uu____6974.FStar_Ident.idText in
                                                            let uu____6977 =
                                                              let uu____6978 =
-                                                               FStar_ST.read
+                                                               FStar_ST.op_Bang
                                                                  my_exported_ids in
                                                              FStar_Util.set_add
                                                                projname
                                                                uu____6978 in
-                                                           FStar_ST.write
+                                                           FStar_ST.op_Colon_Equals
                                                              my_exported_ids
                                                              uu____6977))
                                                  | FStar_Pervasives_Native.None
@@ -2202,7 +2207,7 @@ let push_top_level_rec_binding:
         if uu____7379
         then push_scope_mod env (Rec_binding (x, l, dd))
         else
-          raise
+          FStar_Exn.raise
             (FStar_Errors.Error
                ((Prims.strcat "Duplicate top-level names " l.FStar_Ident.str),
                  (FStar_Ident.range_of_lid l)))
@@ -2231,7 +2236,7 @@ let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
                 (FStar_Ident.text_of_lid l) r in
             (uu____7425, (FStar_Ident.range_of_lid l)) in
           FStar_Errors.Error uu____7420 in
-        raise uu____7419 in
+        FStar_Exn.raise uu____7419 in
       let globals = FStar_Util.mk_ref env.scope_mods in
       let env1 =
         let uu____7434 =
@@ -2278,7 +2283,7 @@ let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
                    }))) in
       let env2 =
         let uu___188_7498 = env1 in
-        let uu____7499 = FStar_ST.read globals in
+        let uu____7499 = FStar_ST.op_Bang globals in
         {
           curmodule = (uu___188_7498.curmodule);
           curmonad = (uu___188_7498.curmonad);
@@ -2315,10 +2320,10 @@ let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
                          (FStar_List.iter
                             (fun lid  ->
                                (let uu____7676 =
-                                  let uu____7679 = FStar_ST.read globals in
+                                  let uu____7679 = FStar_ST.op_Bang globals in
                                   (Top_level_def (lid.FStar_Ident.ident)) ::
                                     uu____7679 in
-                                FStar_ST.write globals uu____7676);
+                                FStar_ST.op_Colon_Equals globals uu____7676);
                                (match () with
                                 | () ->
                                     let modul =
@@ -2334,12 +2339,13 @@ let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
                                             f Exported_id_term_type in
                                           let uu____7775 =
                                             let uu____7776 =
-                                              FStar_ST.read my_exported_ids in
+                                              FStar_ST.op_Bang
+                                                my_exported_ids in
                                             FStar_Util.set_add
                                               (lid.FStar_Ident.ident).FStar_Ident.idText
                                               uu____7776 in
-                                          FStar_ST.write my_exported_ids
-                                            uu____7775
+                                          FStar_ST.op_Colon_Equals
+                                            my_exported_ids uu____7775
                                       | FStar_Pervasives_Native.None  -> ());
                                      (match () with
                                       | () ->
@@ -2351,7 +2357,7 @@ let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
                                                     env3.admitted_iface))))))))));
            (let env4 =
               let uu___189_7836 = env3 in
-              let uu____7837 = FStar_ST.read globals in
+              let uu____7837 = FStar_ST.op_Bang globals in
               {
                 curmodule = (uu___189_7836.curmodule);
                 curmonad = (uu___189_7836.curmonad);
@@ -2397,7 +2403,7 @@ let push_namespace: env -> FStar_Ident.lident -> env =
                        (FStar_Ident.text_of_lid ns) in
                    (uu____7931, (FStar_Ident.range_of_lid ns)) in
                  FStar_Errors.Error uu____7926 in
-               raise uu____7925)
+               FStar_Exn.raise uu____7925)
         | FStar_Pervasives_Native.Some ns' ->
             (fail_if_curmodule env ns ns'; (ns', Open_module)) in
       match uu____7880 with
@@ -2421,8 +2427,9 @@ let push_include: env -> FStar_Ident.lident -> env =
              | FStar_Pervasives_Native.None  -> ()
              | FStar_Pervasives_Native.Some incl ->
                  let uu____7982 =
-                   let uu____7985 = FStar_ST.read incl in ns1 :: uu____7985 in
-                 FStar_ST.write incl uu____7982);
+                   let uu____7985 = FStar_ST.op_Bang incl in ns1 ::
+                     uu____7985 in
+                 FStar_ST.op_Colon_Equals incl uu____7982);
             (match () with
              | () ->
                  let uu____8052 =
@@ -2441,19 +2448,21 @@ let push_include: env -> FStar_Ident.lident -> env =
                             let update_exports k =
                               let ns_ex =
                                 let uu____8147 = ns_trans_exports k in
-                                FStar_ST.read uu____8147 in
+                                FStar_ST.op_Bang uu____8147 in
                               let ex = cur_exports k in
                               (let uu____8330 =
-                                 let uu____8331 = FStar_ST.read ex in
+                                 let uu____8331 = FStar_ST.op_Bang ex in
                                  FStar_Util.set_difference uu____8331 ns_ex in
-                               FStar_ST.write ex uu____8330);
+                               FStar_ST.op_Colon_Equals ex uu____8330);
                               (match () with
                                | () ->
                                    let trans_ex = cur_trans_exports k in
                                    let uu____8393 =
-                                     let uu____8394 = FStar_ST.read trans_ex in
+                                     let uu____8394 =
+                                       FStar_ST.op_Bang trans_ex in
                                      FStar_Util.set_union uu____8394 ns_ex in
-                                   FStar_ST.write trans_ex uu____8393) in
+                                   FStar_ST.op_Colon_Equals trans_ex
+                                     uu____8393) in
                             FStar_List.iter update_exports
                               all_exported_id_kinds
                         | uu____8445 -> ());
@@ -2467,7 +2476,7 @@ let push_include: env -> FStar_Ident.lident -> env =
                               ns1.FStar_Ident.str in
                           (uu____8472, (FStar_Ident.range_of_lid ns1)) in
                         FStar_Errors.Error uu____8467 in
-                      raise uu____8466))))
+                      FStar_Exn.raise uu____8466))))
       | uu____8473 ->
           let uu____8476 =
             let uu____8477 =
@@ -2476,7 +2485,7 @@ let push_include: env -> FStar_Ident.lident -> env =
                   ns.FStar_Ident.str in
               (uu____8482, (FStar_Ident.range_of_lid ns)) in
             FStar_Errors.Error uu____8477 in
-          raise uu____8476
+          FStar_Exn.raise uu____8476
 let push_module_abbrev: env -> FStar_Ident.ident -> FStar_Ident.lident -> env
   =
   fun env  ->
@@ -2495,7 +2504,7 @@ let push_module_abbrev: env -> FStar_Ident.ident -> FStar_Ident.lident -> env
                    (FStar_Ident.text_of_lid l) in
                (uu____8504, (FStar_Ident.range_of_lid l)) in
              FStar_Errors.Error uu____8499 in
-           raise uu____8498)
+           FStar_Exn.raise uu____8498)
 let push_doc:
   env ->
     FStar_Ident.lident ->
@@ -2666,12 +2675,12 @@ let finish: env -> FStar_Syntax_Syntax.modul -> env =
            cur_trans_ex) ->
             let update_exports eikind =
               let cur_ex_set =
-                let uu____8787 = cur_ex eikind in FStar_ST.read uu____8787 in
+                let uu____8787 = cur_ex eikind in FStar_ST.op_Bang uu____8787 in
               let cur_trans_ex_set_ref = cur_trans_ex eikind in
               let uu____8969 =
-                let uu____8970 = FStar_ST.read cur_trans_ex_set_ref in
+                let uu____8970 = FStar_ST.op_Bang cur_trans_ex_set_ref in
                 FStar_Util.set_union cur_ex_set uu____8970 in
-              FStar_ST.write cur_trans_ex_set_ref uu____8969 in
+              FStar_ST.op_Colon_Equals cur_trans_ex_set_ref uu____8969 in
             FStar_List.iter update_exports all_exported_id_kinds
         | uu____9021 -> ());
        (match () with
@@ -2704,8 +2713,8 @@ let push: env -> env =
   fun env  ->
     push_record_cache ();
     (let uu____9063 =
-       let uu____9066 = FStar_ST.read stack in env :: uu____9066 in
-     FStar_ST.write stack uu____9063);
+       let uu____9066 = FStar_ST.op_Bang stack in env :: uu____9066 in
+     FStar_ST.op_Colon_Equals stack uu____9063);
     (let uu___193_9105 = env in
      let uu____9106 = FStar_Util.smap_copy (sigmap env) in
      let uu____9117 = FStar_Util.smap_copy env.docs in
@@ -2728,16 +2737,17 @@ let push: env -> env =
      })
 let pop: Prims.unit -> env =
   fun uu____9123  ->
-    let uu____9124 = FStar_ST.read stack in
+    let uu____9124 = FStar_ST.op_Bang stack in
     match uu____9124 with
-    | env::tl1 -> (pop_record_cache (); FStar_ST.write stack tl1; env)
+    | env::tl1 ->
+        (pop_record_cache (); FStar_ST.op_Colon_Equals stack tl1; env)
     | uu____9169 -> failwith "Impossible: Too many pops"
 let commit_mark: env -> env =
   fun env  ->
     commit_record_cache ();
-    (let uu____9177 = FStar_ST.read stack in
+    (let uu____9177 = FStar_ST.op_Bang stack in
      match uu____9177 with
-     | uu____9198::tl1 -> (FStar_ST.write stack tl1; env)
+     | uu____9198::tl1 -> (FStar_ST.op_Colon_Equals stack tl1; env)
      | uu____9221 -> failwith "Impossible: Too many pops")
 let mark: env -> env = fun x  -> push x
 let reset_mark: Prims.unit -> env = fun uu____9231  -> pop ()
@@ -2890,7 +2900,7 @@ let prepare_module_or_interface:
                           mname.FStar_Ident.str in
                       (uu____9565, (FStar_Ident.range_of_lid mname)) in
                     FStar_Errors.Error uu____9560 in
-                  raise uu____9559
+                  FStar_Exn.raise uu____9559
                 else ());
                (let uu____9567 = let uu____9568 = push env in prep uu____9568 in
                 (uu____9567, true)))
@@ -2899,7 +2909,7 @@ let enter_monad_scope: env -> FStar_Ident.ident -> env =
     fun mname  ->
       match env.curmonad with
       | FStar_Pervasives_Native.Some mname' ->
-          raise
+          FStar_Exn.raise
             (FStar_Errors.Error
                ((Prims.strcat "Trying to define monad "
                    (Prims.strcat mname.FStar_Ident.idText
@@ -2981,7 +2991,8 @@ let fail_or:
                        "%s\nModule %s resolved into %s, definition %s not found"
                        msg modul.FStar_Ident.str modul'.FStar_Ident.str
                        (lid.FStar_Ident.ident).FStar_Ident.idText) in
-            raise (FStar_Errors.Error (msg1, (FStar_Ident.range_of_lid lid)))
+            FStar_Exn.raise
+              (FStar_Errors.Error (msg1, (FStar_Ident.range_of_lid lid)))
         | FStar_Pervasives_Native.Some r -> r
 let fail_or2:
   'a .
@@ -2993,7 +3004,7 @@ let fail_or2:
       let uu____9668 = lookup id in
       match uu____9668 with
       | FStar_Pervasives_Native.None  ->
-          raise
+          FStar_Exn.raise
             (FStar_Errors.Error
                ((Prims.strcat "Identifier not found ["
                    (Prims.strcat id.FStar_Ident.idText "]")),

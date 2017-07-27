@@ -1,5 +1,5 @@
 [
-  "aï`\u0006Ë©Â»\u0011»\u001dşØÄ“",
+  "c0\u000e5L«\b@ÌµkŠ$ÎGî",
   [
     [
       "UnitTests.uu___100",
@@ -92,6 +92,54 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "UnitTests.uu___119",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___120",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___121",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___122",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___123",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___124",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
       0
     ]
   ]

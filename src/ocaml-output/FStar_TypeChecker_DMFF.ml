@@ -107,9 +107,9 @@ let gen_wps_for_free:
                 match uu____256 with
                 | (sigelt,fv) ->
                     ((let uu____264 =
-                        let uu____267 = FStar_ST.read sigelts in sigelt ::
+                        let uu____267 = FStar_ST.op_Bang sigelts in sigelt ::
                           uu____267 in
-                      FStar_ST.write sigelts uu____264);
+                      FStar_ST.op_Colon_Equals sigelts uu____264);
                      fv) in
               let binders_of_list1 =
                 FStar_List.map
@@ -1276,7 +1276,7 @@ let gen_wps_for_free:
                     else ());
                    (let c = FStar_Syntax_Subst.close binders in
                     let uu____2670 =
-                      let uu____2673 = FStar_ST.read sigelts in
+                      let uu____2673 = FStar_ST.op_Bang sigelts in
                       FStar_List.rev uu____2673 in
                     let uu____2708 =
                       let uu___104_2709 = ed in
@@ -1562,7 +1562,7 @@ and star_type':
                          let uu____3312 = FStar_Util.set_is_empty sinter in
                          Prims.op_Negation uu____3312 in
                        if uu____3311
-                       then (debug1 ty1 sinter; raise Not_found)
+                       then (debug1 ty1 sinter; FStar_Exn.raise Not_found)
                        else () in
                      let uu____3315 = FStar_Syntax_Subst.open_comp binders c in
                      match uu____3315 with
@@ -1660,7 +1660,7 @@ and star_type':
                    "For now, only [either], [option] and [eq2] are supported in the definition language (got: %s)"
                    uu____3495 in
                FStar_Errors.Err uu____3494 in
-             raise uu____3493)
+             FStar_Exn.raise uu____3493)
       | FStar_Syntax_Syntax.Tm_bvar uu____3496 -> t1
       | FStar_Syntax_Syntax.Tm_name uu____3497 -> t1
       | FStar_Syntax_Syntax.Tm_type uu____3498 -> t1
@@ -1725,7 +1725,7 @@ and star_type':
                 "Tm_ascribed is outside of the definition language: %s"
                 uu____3726 in
             FStar_Errors.Err uu____3725 in
-          raise uu____3724
+          FStar_Exn.raise uu____3724
       | FStar_Syntax_Syntax.Tm_refine uu____3727 ->
           let uu____3734 =
             let uu____3735 =
@@ -1734,7 +1734,7 @@ and star_type':
                 "Tm_refine is outside of the definition language: %s"
                 uu____3736 in
             FStar_Errors.Err uu____3735 in
-          raise uu____3734
+          FStar_Exn.raise uu____3734
       | FStar_Syntax_Syntax.Tm_uinst uu____3737 ->
           let uu____3744 =
             let uu____3745 =
@@ -1743,7 +1743,7 @@ and star_type':
                 "Tm_uinst is outside of the definition language: %s"
                 uu____3746 in
             FStar_Errors.Err uu____3745 in
-          raise uu____3744
+          FStar_Exn.raise uu____3744
       | FStar_Syntax_Syntax.Tm_constant uu____3747 ->
           let uu____3748 =
             let uu____3749 =
@@ -1752,7 +1752,7 @@ and star_type':
                 "Tm_constant is outside of the definition language: %s"
                 uu____3750 in
             FStar_Errors.Err uu____3749 in
-          raise uu____3748
+          FStar_Exn.raise uu____3748
       | FStar_Syntax_Syntax.Tm_match uu____3751 ->
           let uu____3774 =
             let uu____3775 =
@@ -1761,7 +1761,7 @@ and star_type':
                 "Tm_match is outside of the definition language: %s"
                 uu____3776 in
             FStar_Errors.Err uu____3775 in
-          raise uu____3774
+          FStar_Exn.raise uu____3774
       | FStar_Syntax_Syntax.Tm_let uu____3777 ->
           let uu____3790 =
             let uu____3791 =
@@ -1769,7 +1769,7 @@ and star_type':
               FStar_Util.format1
                 "Tm_let is outside of the definition language: %s" uu____3792 in
             FStar_Errors.Err uu____3791 in
-          raise uu____3790
+          FStar_Exn.raise uu____3790
       | FStar_Syntax_Syntax.Tm_uvar uu____3793 ->
           let uu____3810 =
             let uu____3811 =
@@ -1778,7 +1778,7 @@ and star_type':
                 "Tm_uvar is outside of the definition language: %s"
                 uu____3812 in
             FStar_Errors.Err uu____3811 in
-          raise uu____3810
+          FStar_Exn.raise uu____3810
       | FStar_Syntax_Syntax.Tm_unknown  ->
           let uu____3813 =
             let uu____3814 =
@@ -1787,7 +1787,7 @@ and star_type':
                 "Tm_unknown is outside of the definition language: %s"
                 uu____3815 in
             FStar_Errors.Err uu____3814 in
-          raise uu____3813
+          FStar_Exn.raise uu____3813
       | FStar_Syntax_Syntax.Tm_delayed uu____3816 -> failwith "impossible"
 let is_monadic:
   FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option ->
@@ -1919,7 +1919,7 @@ let rec check:
                         "[check]: the expression [%s] has type [%s] but should have type [%s]"
                         uu____4304 uu____4305 uu____4306 in
                     FStar_Errors.Err uu____4303 in
-                  raise uu____4302
+                  FStar_Exn.raise uu____4302
                 else () in
               (match (rec_nm, context_nm) with
                | (N t1,N t2) -> (check1 t1 t2; (rec_nm, s_e, u_e))
@@ -1938,7 +1938,7 @@ let rec check:
                          "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]"
                          uu____4328 uu____4329 uu____4330 in
                      FStar_Errors.Err uu____4327 in
-                   raise uu____4326) in
+                   FStar_Exn.raise uu____4326) in
         let ensure_m env1 e2 =
           let strip_m uu___96_4371 =
             match uu___96_4371 with
@@ -1955,7 +1955,7 @@ let rec check:
                       uu____4414 in
                   (uu____4413, (e2.FStar_Syntax_Syntax.pos)) in
                 FStar_Errors.Error uu____4408 in
-              raise uu____4407
+              FStar_Exn.raise uu____4407
           | M uu____4421 ->
               let uu____4422 = check env1 e2 context_nm in strip_m uu____4422 in
         let uu____4429 =
@@ -2352,7 +2352,7 @@ and infer:
                          FStar_Util.format1 "%s: not a function type"
                            uu____5573 in
                        FStar_Errors.Err uu____5572 in
-                     raise uu____5571 in
+                     FStar_Exn.raise uu____5571 in
                let uu____5586 = flatten1 t_head in
                (match uu____5586 with
                 | (binders,comp) ->
@@ -2371,7 +2371,7 @@ and infer:
                               "The head of this application, after being applied to %s arguments, is an effectful computation (leaving %s arguments to be applied). Please let-bind the head applied to the %s first arguments."
                               uu____5648 uu____5655 uu____5666 in
                           FStar_Errors.Err uu____5647 in
-                        raise uu____5646)
+                        FStar_Exn.raise uu____5646)
                      else ();
                      (let uu____5674 =
                         FStar_Syntax_Subst.open_comp binders comp in
@@ -2573,7 +2573,7 @@ and mk_match:
                                   (pat, FStar_Pervasives_Native.None,
                                     (s_body, u_body, body))))
                        | uu____6834 ->
-                           raise
+                           FStar_Exn.raise
                              (FStar_Errors.Err
                                 "No when clauses in the definition language"))
                     branches in

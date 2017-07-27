@@ -17,6 +17,7 @@
 
 module FStar.SMTEncoding.Encode
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open Prims
 open FStar

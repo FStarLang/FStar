@@ -64,10 +64,12 @@ let initialize_hints_db:
   'Auu____172 . Prims.string -> 'Auu____172 -> Prims.unit =
   fun src_filename  ->
     fun format_filename  ->
-      FStar_ST.write hint_stats [];
+      FStar_ST.op_Colon_Equals hint_stats [];
       (let uu____201 = FStar_Options.record_hints () in
        if uu____201
-       then FStar_ST.write recorded_hints (FStar_Pervasives_Native.Some [])
+       then
+         FStar_ST.op_Colon_Equals recorded_hints
+           (FStar_Pervasives_Native.Some [])
        else ());
       (let uu____227 = FStar_Options.use_hints () in
        if uu____227
@@ -98,7 +100,7 @@ let initialize_hints_db:
                     then "valid; using hints"
                     else "invalid; using potentially stale hints") uu____241
                else ());
-              FStar_ST.write replaying_hints
+              FStar_ST.op_Colon_Equals replaying_hints
                 (FStar_Pervasives_Native.Some (hints.FStar_Util.hints)))
          | FStar_Pervasives_Native.None  ->
              let uu____269 = FStar_Options.hint_info () in
@@ -114,7 +116,7 @@ let finalize_hints_db: Prims.string -> Prims.unit =
      if uu____277
      then
        let hints =
-         let uu____279 = FStar_ST.read recorded_hints in
+         let uu____279 = FStar_ST.op_Bang recorded_hints in
          FStar_Option.get uu____279 in
        let hints_db =
          let uu____301 = FStar_Util.digest_of_file src_filename in
@@ -132,7 +134,7 @@ let finalize_hints_db: Prims.string -> Prims.unit =
      if uu____310
      then
        let stats =
-         let uu____314 = FStar_ST.read hint_stats in
+         let uu____314 = FStar_ST.op_Bang hint_stats in
          FStar_All.pipe_right uu____314 FStar_List.rev in
        FStar_All.pipe_right stats
          (FStar_List.iter
@@ -145,9 +147,9 @@ let finalize_hints_db: Prims.string -> Prims.unit =
                   | FStar_Util.Inl uu____348 -> "succeeded"
                   | FStar_Util.Inr uu____349 -> "failed") uu____346))
      else ());
-    FStar_ST.write recorded_hints FStar_Pervasives_Native.None;
-    FStar_ST.write replaying_hints FStar_Pervasives_Native.None;
-    FStar_ST.write hint_stats []
+    FStar_ST.op_Colon_Equals recorded_hints FStar_Pervasives_Native.None;
+    FStar_ST.op_Colon_Equals replaying_hints FStar_Pervasives_Native.None;
+    FStar_ST.op_Colon_Equals hint_stats []
 let with_hints_db: 'a . Prims.string -> (Prims.unit -> 'a) -> 'a =
   fun fname  ->
     fun f  ->
@@ -158,7 +160,7 @@ let next_hint:
   =
   fun qname  ->
     fun qindex  ->
-      let uu____440 = FStar_ST.read replaying_hints in
+      let uu____440 = FStar_ST.op_Bang replaying_hints in
       match uu____440 with
       | FStar_Pervasives_Native.Some hints ->
           FStar_Util.find_map hints
@@ -187,10 +189,10 @@ let record_hint: FStar_Util.hint FStar_Pervasives_Native.option -> Prims.unit
                FStar_Util.unsat_core = (uu___89_495.FStar_Util.unsat_core);
                FStar_Util.query_elapsed_time = (Prims.parse_int "0")
              }) in
-    let uu____496 = FStar_ST.read recorded_hints in
+    let uu____496 = FStar_ST.op_Bang recorded_hints in
     match uu____496 with
     | FStar_Pervasives_Native.Some l ->
-        FStar_ST.write recorded_hints
+        FStar_ST.op_Colon_Equals recorded_hints
           (FStar_Pervasives_Native.Some (FStar_List.append l [hint1]))
     | uu____546 -> ()
 let record_hint_stat:
@@ -209,8 +211,8 @@ let record_hint_stat:
               source_location = r
             } in
           let uu____570 =
-            let uu____573 = FStar_ST.read hint_stats in s :: uu____573 in
-          FStar_ST.write hint_stats uu____570
+            let uu____573 = FStar_ST.op_Bang hint_stats in s :: uu____573 in
+          FStar_ST.op_Colon_Equals hint_stats uu____570
 let filter_using_facts_from:
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Term.decl Prims.list
@@ -401,11 +403,12 @@ let ask_and_report_errors:
                    match uu___88_1127 with
                    | ([],uu____1140) -> ()
                    | errs ->
-                       let uu____1150 = FStar_ST.read minimum_workable_fuel in
+                       let uu____1150 =
+                         FStar_ST.op_Bang minimum_workable_fuel in
                        (match uu____1150 with
                         | FStar_Pervasives_Native.Some uu____1265 -> ()
                         | FStar_Pervasives_Native.None  ->
-                            FStar_ST.write minimum_workable_fuel
+                            FStar_ST.op_Colon_Equals minimum_workable_fuel
                               (FStar_Pervasives_Native.Some (f, errs))) in
                  let with_fuel label_assumptions p uu____1457 =
                    match uu____1457 with
@@ -619,7 +622,7 @@ let ask_and_report_errors:
                            then
                              let uu____2088 =
                                let uu____2105 =
-                                 FStar_ST.read minimum_workable_fuel in
+                                 FStar_ST.op_Bang minimum_workable_fuel in
                                match uu____2105 with
                                | FStar_Pervasives_Native.Some (f,errs1) ->
                                    (f, errs1)
@@ -644,9 +647,9 @@ let ask_and_report_errors:
                                       all_labels uu____2362
                                       FStar_Pervasives_Native.None
                                       (fun r  ->
-                                         FStar_ST.write res
+                                         FStar_ST.op_Colon_Equals res
                                            (FStar_Pervasives_Native.Some r)));
-                                   (let uu____2399 = FStar_ST.read res in
+                                   (let uu____2399 = FStar_ST.op_Bang res in
                                     FStar_Option.get uu____2399) in
                                  (FStar_SMTEncoding_ErrorReporting.detail_errors
                                     false env all_labels ask_z3;
@@ -861,7 +864,7 @@ let ask_and_report_errors:
                                  let rec refine_hint core_ext_max_dist =
                                    let uu____3025 =
                                      let uu____3026 =
-                                       FStar_ST.read hint_worked in
+                                       FStar_ST.op_Bang hint_worked in
                                      Prims.op_Negation uu____3026 in
                                    if uu____3025
                                    then
@@ -872,8 +875,8 @@ let ask_and_report_errors:
                                            let tag =
                                              match result1 with
                                              | FStar_Util.Inl uu____3111 ->
-                                                 (FStar_ST.write hint_worked
-                                                    true;
+                                                 (FStar_ST.op_Colon_Equals
+                                                    hint_worked true;
                                                   "succeeded")
                                              | FStar_Util.Inr uu____3141 ->
                                                  "failed" in
@@ -888,7 +891,7 @@ let ask_and_report_errors:
                                      (FStar_SMTEncoding_Z3.refresh ();
                                       (let uu____3154 =
                                          let uu____3161 =
-                                           FStar_ST.read current_core in
+                                           FStar_ST.op_Bang current_core in
                                          filter_assertions env uu____3161 in
                                        let uu____3186 =
                                          with_fuel [] p1
@@ -899,7 +902,7 @@ let ask_and_report_errors:
                                          hint_check_cb);
                                       (let uu____3189 =
                                          let uu____3190 =
-                                           FStar_ST.read hint_worked in
+                                           FStar_ST.op_Bang hint_worked in
                                          Prims.op_Negation uu____3190 in
                                        if uu____3189
                                        then
@@ -939,10 +942,10 @@ let ask_and_report_errors:
                                                    let tag =
                                                      match result1 with
                                                      | FStar_Util.Inl uc ->
-                                                         (FStar_ST.write
+                                                         (FStar_ST.op_Colon_Equals
                                                             refinement_ok
                                                             true;
-                                                          FStar_ST.write
+                                                          FStar_ST.op_Colon_Equals
                                                             current_core uc;
                                                           (let uu____3348 =
                                                              FStar_Util.string_of_int
@@ -968,7 +971,7 @@ let ask_and_report_errors:
                                               (FStar_Pervasives_Native.Some
                                                  scope1) hint_refinement_cb);
                                            (let uu____3364 =
-                                              FStar_ST.read refinement_ok in
+                                              FStar_ST.op_Bang refinement_ok in
                                             if uu____3364
                                             then
                                               let cutoff =
@@ -983,7 +986,8 @@ let ask_and_report_errors:
                                                    FStar_Util.print
                                                      "\tHint-fallback smt.core.extend_patterns.max_distance=%s reached, aborting refinement."
                                                      uu____3391);
-                                                  FStar_ST.write current_core
+                                                  FStar_ST.op_Colon_Equals
+                                                    current_core
                                                     FStar_Pervasives_Native.None)
                                                else
                                                  refine_hint
@@ -1009,7 +1013,8 @@ let ask_and_report_errors:
                                      uu____3433);
                                   FStar_Options.set_option "log_queries"
                                     (FStar_Options.Bool log_queries_before));
-                                 (let uu____3439 = FStar_ST.read current_core in
+                                 (let uu____3439 =
+                                    FStar_ST.op_Bang current_core in
                                   {
                                     FStar_Util.hint_name = query_name;
                                     FStar_Util.hint_index = query_index;
@@ -1093,10 +1098,11 @@ let ask_and_report_errors:
                                             all_labels uu____3514
                                             FStar_Pervasives_Native.None
                                             (fun r  ->
-                                               FStar_ST.write res
+                                               FStar_ST.op_Colon_Equals res
                                                  (FStar_Pervasives_Native.Some
                                                     r)));
-                                         (let uu____3551 = FStar_ST.read res in
+                                         (let uu____3551 =
+                                            FStar_ST.op_Bang res in
                                           FStar_Option.get uu____3551) in
                                        FStar_SMTEncoding_ErrorReporting.detail_errors
                                          true env all_labels ask_z3

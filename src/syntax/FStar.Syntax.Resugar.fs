@@ -19,6 +19,7 @@
 module FStar.Syntax.Resugar //we should rename FStar.ToSyntax to something else
 open FStar
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident
@@ -133,7 +134,9 @@ let string_to_op s =
     | "Plus" -> Some ("+", 0)
     | "Minus" -> Some ("-", 0)
     | "Subtraction" -> Some ("-", 2)
+    | "Tilde" -> Some ("~", 0)
     | "Slash" -> Some ("/", 0)
+    | "Backslash" -> Some ("\\", 0)
     | "Less" -> Some ("<", 0)
     | "Equals" -> Some ("=", 0)
     | "Greater" -> Some (">", 0)
@@ -145,6 +148,7 @@ let string_to_op s =
     | "Star" -> Some ("*", 0)
     | "Question" -> Some ("?", 0)
     | "Colon" -> Some (":", 0)
+    | "Dollar" -> Some ("$", 0)
     | _ -> None
   in
   match s with

@@ -201,7 +201,7 @@ let check_no_escape:
                                 FStar_TypeChecker_Env.get_range env in
                               (msg, uu____151) in
                             FStar_Errors.Error uu____146 in
-                          raise uu____145 in
+                          FStar_Exn.raise uu____145 in
                         let s =
                           let uu____153 =
                             let uu____154 = FStar_Syntax_Util.type_u () in
@@ -537,7 +537,7 @@ let no_logical_guard:
                    let uu____698 = FStar_TypeChecker_Env.get_range env in
                    (uu____697, uu____698) in
                  FStar_Errors.Error uu____692 in
-               raise uu____691)
+               FStar_Exn.raise uu____691)
 let print_expected_ty: FStar_TypeChecker_Env.env -> Prims.unit =
   fun env  ->
     let uu____709 = FStar_TypeChecker_Env.expected_typ env in
@@ -812,7 +812,7 @@ let guard_letrecs:
                                       else ());
                                      (l, t'))))
                       | uu____1275 ->
-                          raise
+                          FStar_Exn.raise
                             (FStar_Errors.Error
                                ("Annotated type of 'let rec' must be an arrow",
                                  (t.FStar_Syntax_Syntax.pos)))) in
@@ -1323,7 +1323,7 @@ and tc_maybe_toplevel_term:
                        l.FStar_Ident.str in
                    (uu____3046, (e1.FStar_Syntax_Syntax.pos)) in
                  FStar_Errors.Error uu____3041 in
-               raise uu____3040 in
+               FStar_Exn.raise uu____3040 in
              let uu____3053 = FStar_Syntax_Util.head_and_args top in
              match uu____3053 with
              | (reflect_op,uu____3075) ->
@@ -1852,7 +1852,7 @@ and tc_synth:
               (tau,FStar_Pervasives_Native.None )::rest ->
               (tau, (FStar_Pervasives_Native.Some a), rest)
           | uu____4735 ->
-              raise
+              FStar_Exn.raise
                 (FStar_Errors.Error ("synth_by_tactic: bad application", rng)) in
         match uu____4510 with
         | (tau,atyp,rest) ->
@@ -1871,7 +1871,7 @@ and tc_synth:
                            ("synth_by_tactic: need a type annotation when no expected type is present",
                              uu____4831) in
                          FStar_Errors.Error uu____4826 in
-                       raise uu____4825) in
+                       FStar_Exn.raise uu____4825) in
             let uu____4834 = FStar_TypeChecker_Env.clear_expected_typ env in
             (match uu____4834 with
              | (env',uu____4848) ->
@@ -1979,7 +1979,7 @@ and tc_value:
                   let uu____5031 = FStar_TypeChecker_Env.get_range env1 in
                   (uu____5030, uu____5031) in
                 FStar_Errors.Error uu____5025 in
-              raise uu____5024
+              FStar_Exn.raise uu____5024
             else value_check_expected_typ env1 e2 tc implicits in
       let env1 =
         FStar_TypeChecker_Env.set_range env e.FStar_Syntax_Syntax.pos in
@@ -2090,7 +2090,7 @@ and tc_value:
               let uu____5389 = FStar_TypeChecker_Env.get_range env1 in
               ("Badly instantiated synth_by_tactic", uu____5389) in
             FStar_Errors.Error uu____5384 in
-          raise uu____5383
+          FStar_Exn.raise uu____5383
       | FStar_Syntax_Syntax.Tm_fvar fv when
           FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.synth_lid ->
           let uu____5397 =
@@ -2098,7 +2098,7 @@ and tc_value:
               let uu____5403 = FStar_TypeChecker_Env.get_range env1 in
               ("Badly instantiated synth_by_tactic", uu____5403) in
             FStar_Errors.Error uu____5398 in
-          raise uu____5397
+          FStar_Exn.raise uu____5397
       | FStar_Syntax_Syntax.Tm_uinst
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
              FStar_Syntax_Syntax.pos = uu____5411;
@@ -2126,7 +2126,7 @@ and tc_value:
                        let uu____5454 = FStar_TypeChecker_Env.get_range env1 in
                        (uu____5450, uu____5454) in
                      FStar_Errors.Error uu____5445 in
-                   raise uu____5444)
+                   FStar_Exn.raise uu____5444)
                 else
                   FStar_List.iter2
                     (fun u'  ->
@@ -2355,7 +2355,8 @@ and tc_constant:
       | FStar_Const.Const_char uu____5860 -> FStar_Syntax_Syntax.t_char
       | FStar_Const.Const_effect  -> FStar_Syntax_Util.ktype0
       | FStar_Const.Const_range uu____5861 -> FStar_Syntax_Syntax.t_range
-      | uu____5862 -> raise (FStar_Errors.Error ("Unsupported constant", r))
+      | uu____5862 ->
+          FStar_Exn.raise (FStar_Errors.Error ("Unsupported constant", r))
 and tc_comp:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
@@ -2540,7 +2541,7 @@ and tc_abs:
                     env msg t top in
                 (uu____6369, (top.FStar_Syntax_Syntax.pos)) in
               FStar_Errors.Error uu____6364 in
-            raise uu____6363 in
+            FStar_Exn.raise uu____6363 in
           let check_binders env1 bs1 bs_expected =
             let rec aux uu____6459 bs2 bs_expected1 =
               match uu____6459 with
@@ -2566,7 +2567,7 @@ and tc_abs:
                                    FStar_Syntax_Syntax.range_of_bv hd1 in
                                  (uu____6638, uu____6640) in
                                FStar_Errors.Error uu____6633 in
-                             raise uu____6632
+                             FStar_Exn.raise uu____6632
                          | (FStar_Pervasives_Native.Some
                             (FStar_Syntax_Syntax.Implicit
                             uu____6641),FStar_Pervasives_Native.None ) ->
@@ -2582,7 +2583,7 @@ and tc_abs:
                                    FStar_Syntax_Syntax.range_of_bv hd1 in
                                  (uu____6652, uu____6654) in
                                FStar_Errors.Error uu____6647 in
-                             raise uu____6646
+                             FStar_Exn.raise uu____6646
                          | uu____6655 -> ());
                         (let expected_t =
                            FStar_Syntax_Subst.subst subst1
@@ -3551,7 +3552,7 @@ and check_application_args:
                                (FStar_Syntax_Syntax.Equality
                                ),FStar_Pervasives_Native.None ) -> ()
                             | uu____10328 ->
-                                raise
+                                FStar_Exn.raise
                                   (FStar_Errors.Error
                                      ("Inconsistent implicit qualifier",
                                        (e.FStar_Syntax_Syntax.pos))));
@@ -3756,7 +3757,7 @@ and check_application_args:
                                            FStar_Syntax_Syntax.argpos arg in
                                          (uu____10705, uu____10714) in
                                        FStar_Errors.Error uu____10700 in
-                                     raise uu____10699 in
+                                     FStar_Exn.raise uu____10699 in
                                aux false chead1.FStar_Syntax_Syntax.res_typ)) in
                let rec check_function_app tf =
                  let uu____10733 =
@@ -3963,7 +3964,7 @@ and check_application_args:
                            FStar_TypeChecker_Err.expected_function_typ env tf in
                          (uu____11602, (head1.FStar_Syntax_Syntax.pos)) in
                        FStar_Errors.Error uu____11597 in
-                     raise uu____11596 in
+                     FStar_Exn.raise uu____11596 in
                check_function_app thead)
 and check_short_circuit_args:
   FStar_TypeChecker_Env.env ->
@@ -4001,7 +4002,7 @@ and check_short_circuit_args:
                              | ((seen,guard,ghost),(e,aq),(b,aq')) ->
                                  (if aq <> aq'
                                   then
-                                    raise
+                                    FStar_Exn.raise
                                       (FStar_Errors.Error
                                          ("Inconsistent implicit qualifiers",
                                            (e.FStar_Syntax_Syntax.pos)))
@@ -4266,7 +4267,7 @@ and tc_eqn:
                                            (uu____12203,
                                              (p.FStar_Syntax_Syntax.p)) in
                                          FStar_Errors.Error uu____12198 in
-                                       raise uu____12197
+                                       FStar_Exn.raise uu____12197
                                      else ());
                                     (let uu____12236 =
                                        FStar_TypeChecker_Env.debug env
@@ -4306,7 +4307,7 @@ and tc_eqn:
                                    FStar_TypeChecker_Env.should_verify env in
                                  if uu____12342
                                  then
-                                   raise
+                                   FStar_Exn.raise
                                      (FStar_Errors.Error
                                         ("When clauses are not yet supported in --verify mode; they will be some day",
                                           (e.FStar_Syntax_Syntax.pos)))
@@ -5427,7 +5428,7 @@ and build_let_rec_env:
                     FStar_Util.format4
                       "From its type %s, the definition of `let rec %s` expects a function with %s, but %s"
                       uu____14097 uu____14098 formals_msg actuals_msg in
-                  raise
+                  FStar_Exn.raise
                     (FStar_Errors.Error
                        (msg, (lbdef.FStar_Syntax_Syntax.pos))))
                else ();
@@ -5447,7 +5448,7 @@ and build_let_rec_env:
                       uu____14117 uu____14118 in
                   (uu____14116, (lbtyp.FStar_Syntax_Syntax.pos)) in
                 FStar_Errors.Error uu____14111 in
-              raise uu____14110 in
+              FStar_Exn.raise uu____14110 in
         let uu____14119 =
           FStar_List.fold_left
             (fun uu____14145  ->
@@ -5655,7 +5656,7 @@ and check_let_recs:
                            ("Only function literals may be defined recursively",
                              uu____14319) in
                          FStar_Errors.Error uu____14314 in
-                       raise uu____14313);
+                       FStar_Exn.raise uu____14313);
                   (let uu____14320 =
                      let uu____14327 =
                        FStar_TypeChecker_Env.set_expected_typ env
@@ -5670,7 +5671,7 @@ and check_let_recs:
                            Prims.op_Negation uu____14337 in
                          if uu____14336
                          then
-                           raise
+                           FStar_Exn.raise
                              (FStar_Errors.Error
                                 ("Expected let rec to be a Tot term; got effect GTot",
                                   (e.FStar_Syntax_Syntax.pos)))
@@ -5709,7 +5710,7 @@ and check_let_bound_def:
              | (topt,wf_annot,univ_vars1,univ_opening,env11) ->
                  (if (Prims.op_Negation top_level) && (univ_vars1 <> [])
                   then
-                    raise
+                    FStar_Exn.raise
                       (FStar_Errors.Error
                          ("Inner let-bound definitions cannot be universe polymorphic",
                            (e1.FStar_Syntax_Syntax.pos)))
@@ -6043,7 +6044,7 @@ and tc_tot_or_gtot_term:
                                 e1 c2 in
                             (uu____15275, (e1.FStar_Syntax_Syntax.pos)) in
                           FStar_Errors.Error uu____15270 in
-                        raise uu____15269
+                        FStar_Exn.raise uu____15269
                       else
                         (let uu____15283 =
                            let uu____15284 =
@@ -6052,7 +6053,7 @@ and tc_tot_or_gtot_term:
                                  e1 c2 in
                              (uu____15289, (e1.FStar_Syntax_Syntax.pos)) in
                            FStar_Errors.Error uu____15284 in
-                         raise uu____15283)))
+                         FStar_Exn.raise uu____15283)))
 and tc_check_tot_or_gtot_term:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -6158,7 +6159,7 @@ let type_of_tot_term:
                  let uu____15387 = FStar_TypeChecker_Env.get_range env1 in
                  ((Prims.strcat "Implicit argument: " msg), uu____15387) in
                FStar_Errors.Error uu____15382 in
-             raise uu____15381 in
+             FStar_Exn.raise uu____15381 in
        match uu____15347 with
        | (t,c,g) ->
            let uu____15403 = FStar_Syntax_Util.is_total_lcomp c in
@@ -6175,7 +6176,7 @@ let type_of_tot_term:
                   let uu____15421 = FStar_TypeChecker_Env.get_range env1 in
                   (uu____15419, uu____15421) in
                 FStar_Errors.Error uu____15414 in
-              raise uu____15413))
+              FStar_Exn.raise uu____15413))
 let level_of_type_fail:
   'Auu____15436 .
     FStar_TypeChecker_Env.env ->
@@ -6193,7 +6194,7 @@ let level_of_type_fail:
             let uu____15457 = FStar_TypeChecker_Env.get_range env in
             (uu____15455, uu____15457) in
           FStar_Errors.Error uu____15450 in
-        raise uu____15449
+        FStar_Exn.raise uu____15449
 let level_of_type:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -6343,7 +6344,7 @@ let rec universe_of_aux:
                        ("Unexpected number of universe instantiations",
                          uu____15773) in
                      FStar_Errors.Error uu____15768 in
-                   raise uu____15767)
+                   FStar_Exn.raise uu____15767)
                 else
                   FStar_List.iter2
                     (fun u'  ->

@@ -21,6 +21,7 @@
 #light "off"
 module FStar.Fsdoc.Generator
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 open FStar

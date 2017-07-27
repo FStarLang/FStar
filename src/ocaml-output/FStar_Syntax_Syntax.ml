@@ -1762,8 +1762,8 @@ let gen_reset:
     FStar_Pervasives_Native.tuple2
   =
   let x = FStar_Util.mk_ref (Prims.parse_int "0") in
-  let gen1 uu____6149 = FStar_Util.incr x; FStar_ST.read x in
-  let reset uu____6199 = FStar_ST.write x (Prims.parse_int "0") in
+  let gen1 uu____6149 = FStar_Util.incr x; FStar_ST.op_Bang x in
+  let reset uu____6199 = FStar_ST.op_Colon_Equals x (Prims.parse_int "0") in
   (gen1, reset)
 let next_id: Prims.unit -> Prims.int = FStar_Pervasives_Native.fst gen_reset
 let reset_gensym: Prims.unit -> Prims.unit =

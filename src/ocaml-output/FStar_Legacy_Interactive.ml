@@ -331,24 +331,26 @@ let rec read_chunk: Prims.unit -> input_chunks =
       if uu____1299
       then
         let transcript =
-          let uu____1303 = FStar_ST.read s.log in
+          let uu____1303 = FStar_ST.op_Bang s.log in
           match uu____1303 with
           | FStar_Pervasives_Native.Some transcript -> transcript
           | FStar_Pervasives_Native.None  ->
               let transcript = FStar_Util.open_file_for_writing "transcript" in
-              (FStar_ST.write s.log (FStar_Pervasives_Native.Some transcript);
+              (FStar_ST.op_Colon_Equals s.log
+                 (FStar_Pervasives_Native.Some transcript);
                transcript) in
         fun line  ->
           (FStar_Util.append_to_file transcript line;
            FStar_Util.flush_file transcript)
       else (fun uu____1348  -> ()) in
     let stdin =
-      let uu____1350 = FStar_ST.read s.stdin in
+      let uu____1350 = FStar_ST.op_Bang s.stdin in
       match uu____1350 with
       | FStar_Pervasives_Native.Some i -> i
       | FStar_Pervasives_Native.None  ->
           let i = FStar_Util.open_stdin () in
-          (FStar_ST.write s.stdin (FStar_Pervasives_Native.Some i); i) in
+          (FStar_ST.op_Colon_Equals s.stdin (FStar_Pervasives_Native.Some i);
+           i) in
     let line =
       let uu____1393 = FStar_Util.read_line stdin in
       match uu____1393 with
@@ -436,18 +438,18 @@ let rec read_chunk: Prims.unit -> input_chunks =
 let shift_chunk: Prims.unit -> input_chunks =
   fun uu____1541  ->
     let s = the_interactive_state in
-    let uu____1543 = FStar_ST.read s.buffer in
+    let uu____1543 = FStar_ST.op_Bang s.buffer in
     match uu____1543 with
     | [] -> read_chunk ()
-    | chunk::chunks -> (FStar_ST.write s.buffer chunks; chunk)
+    | chunk::chunks -> (FStar_ST.op_Colon_Equals s.buffer chunks; chunk)
 let fill_buffer: Prims.unit -> Prims.unit =
   fun uu____1590  ->
     let s = the_interactive_state in
     let uu____1592 =
-      let uu____1595 = FStar_ST.read s.buffer in
+      let uu____1595 = FStar_ST.op_Bang s.buffer in
       let uu____1616 = let uu____1619 = read_chunk () in [uu____1619] in
       FStar_List.append uu____1595 uu____1616 in
-    FStar_ST.write s.buffer uu____1592
+    FStar_ST.op_Colon_Equals s.buffer uu____1592
 let deps_of_our_file:
   Prims.string ->
     (Prims.string Prims.list,Prims.string FStar_Pervasives_Native.option)
