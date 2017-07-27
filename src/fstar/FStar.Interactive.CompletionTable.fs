@@ -181,11 +181,19 @@ let rec btree_find_exact (bt: btree<'a>) (k: string) : option<'a> =
     else
       Some v
 
-type path_elem = option<string>*string
+type prefix_match =
+  { prefix: option<string>;
+    completion: string }
+
+type path_elem =
+  { imports: list<string>;
+    segment: prefix_match }
+
+let mk_path_el imports segment = { imports = imports; segment = segment }
 
 let rec btree_find_prefix (bt: btree<'a>) (prefix: string)
-    : list<(path_elem * 'a)> (* ↑ keys *) =
-  let rec aux (bt: btree<'a>) (prefix: string) (acc: list<(path_elem * 'a)>) : list<(path_elem * 'a)> =
+    : list<(prefix_match * 'a)> (* ↑ keys *) =
+  let rec aux (bt: btree<'a>) (prefix: string) (acc: list<(prefix_match * 'a)>) : list<(prefix_match * 'a)> =
     match bt with
     | StrEmpty -> acc
     | StrBranch (k, v, lbt, rbt) ->
@@ -197,7 +205,7 @@ let rec btree_find_prefix (bt: btree<'a>) (prefix: string)
         if explore_right then aux rbt prefix acc else acc in
       let matches =
         if include_middle then
-          ((Some prefix, k), v) :: matches
+          ({ prefix = Some prefix; completion = k }, v) :: matches
         else
           matches in
       let matches =
@@ -299,18 +307,20 @@ let trie_add_alias (tr: trie<'a>) (key: string)
       trie_mutate tr [key] (fun _ignored_overwritten_trie ->
           { bindings = [ImportedNames (label, inc.bindings)]; namespaces = [] }))
 
-let names_revmap (fn: btree<'a> -> 'b)
-                 (names: names<'a> (* ↓ priority *))
-    : list<'b> (* ↑ priority *) =
-  let rec aux (acc: list<'b>) (names: names<'a>) =
+let names_revmap (fn: btree<'a> -> 'b) (names: names<'a> (* ↓ priority *))
+    : list<(list<string> (* imports *) * 'b)> (* ↑ priority *) =
+  let rec aux (acc: list<(list<string> * 'b)>) (imports: list<string>) (names: names<'a>) =
     List.fold_left (fun acc -> function
-        | Names bt -> fn bt :: acc
-        | ImportedNames (_, names) -> aux acc names)
+        | Names bt -> (imports, fn bt) :: acc
+        | ImportedNames (nm, names) ->
+          aux acc (nm :: imports) names)
       acc names in
-  aux [] names
+  aux [] [] names
 
-let btree_find_all (prefix: option<string>) (bt: btree<'a>) : list<(path_elem * 'a)> (* ↑ keys *) =
-  btree_fold bt (fun k tr acc -> ((prefix, k), tr) :: acc) []
+let btree_find_all (prefix: option<string>) (bt: btree<'a>)
+    : list<(prefix_match * 'a)> (* ↑ keys *) =
+  btree_fold bt (fun k tr acc ->
+      ({ prefix = prefix; completion = k }, tr) :: acc) []
 
 type name_search_term =
 | NSTAll
@@ -318,19 +328,22 @@ type name_search_term =
 | NSTPrefix of string
 
 let names_find_rev (names: names<'a>) (id: name_search_term) : list<(path_elem * 'a)> =
-  let matching_values_per_collection =
+  let matching_values_per_collection_with_imports =
     match id with
     | NSTNone -> []
     | NSTAll -> names_revmap (btree_find_all None) names
     | NSTPrefix "" -> names_revmap (btree_find_all (Some "")) names
     | NSTPrefix id -> names_revmap (fun bt -> btree_find_prefix bt id) names in
+  let matching_values_per_collection =
+    List.map (fun (imports, matches) ->
+                List.map_tr (fun (segment, v) -> mk_path_el imports segment, v) matches)
+             matching_values_per_collection_with_imports in
   merge_increasing_lists_rev
-    (fun (path_el, _) -> snd path_el) matching_values_per_collection
+    (fun (path_el, _) -> path_el.segment.completion) matching_values_per_collection
 
 let rec trie_find_prefix' (tr: trie<'a>) (path_acc: path)
                           (query: query) (acc: list<(path * 'a)>)
     : list<(path * 'a)> =
-  // printf "\n<<<\n!! %A\n!! %A\n!! %A\n!! %A\n>>>\n\n" tr path_acc query acc;
   let ns_search_term, bindings_search_term, query =
     match query with
     | [] -> NSTAll, NSTAll, []
@@ -417,10 +430,9 @@ let path_match_length (path: path) : int =
     List.fold_left
       (fun acc elem ->
          let (acc_len, _) = acc in
-         let (prefix_opt, completion) = elem in
-         match prefix_opt with
+         match elem.segment.prefix with
          | Some prefix ->
-           let completion_len = String.length completion in
+           let completion_len = String.length elem.segment.completion in
            (acc_len + 1 (* ‘.’ *) + completion_len, (prefix, completion_len))
          | None -> acc)
       (0, ("", 0)) path in
@@ -430,7 +442,7 @@ let path_match_length (path: path) : int =
   + (String.length last_prefix) (* match stops after last prefix *)
 
 let path_to_string (path: path) : string =
-  String.concat "." (List.map snd path)
+  String.concat "." (List.map (fun el -> el.segment.completion) path)
 
 type completion_result =
   { completion_kind: string;
@@ -438,15 +450,21 @@ type completion_result =
     completion_candidate: string;
     completion_annotation: string }
 
-let make_result annotation (path: path) (symb: symbol) =
+let annotation_of_path path =
+  match path with
+  | [] -> ""
+  | { imports = imports } :: _ -> List.last "" imports
+
+let make_result (path: path) (symb: symbol) =
   match symb with
   | Lid l ->
+    let annotation = annotation_of_path path in
     { completion_kind = "lid";
       completion_match_length = path_match_length path;
       completion_candidate = path_to_string path;
       completion_annotation = annotation }
 
 let autocomplete (tbl: table) (query: query) =
-  List.rev_map_onto (fun (path, symb) -> make_result "" (* FIXME *) path symb)
-    (trie_find_prefix tbl query) []
-  |> List.rev
+  List.map_tr
+    (fun (path, symb) -> make_result path symb)
+    (trie_find_prefix tbl query)
