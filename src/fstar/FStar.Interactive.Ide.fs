@@ -609,7 +609,7 @@ let update_names_from_event cur_mod_str table evt =
 
 let commit_name_tracking (cur_mod: modul_t) names name_events =
   let cur_mod_str = match cur_mod with
-                    | None -> "" | Some md -> md.name.str in
+                    | None -> "" | Some md -> (SS.mod_name md).str in
   let updater = update_names_from_event cur_mod_str in
   List.fold_left updater names name_events
 
@@ -851,13 +851,9 @@ let run_completions st search_term =
 
   let needle = Util.split search_term "." in
   let completions = CompletionTable.autocomplete st.repl_names needle in
+  let json = List.map CompletionTable.json_of_completion_result completions in
 
-  let json_of_completion (completion: CompletionTable.completion_result) =
-    JsonList [JsonInt completion.completion_match_length;
-              JsonStr completion.completion_annotation;
-              JsonStr completion.completion_candidate] in
-
-  ((QueryOK, JsonList (List.map json_of_completion completions)), Inl st)
+  ((QueryOK, JsonList json), Inl st)
 
 let run_compute st term rules =
   let run_and_rewind st task =

@@ -42,7 +42,6 @@ val fold_left2 : ('s -> 'a -> 'b -> 's) -> 's -> (list<'a>) -> (list<'b>) -> 's
 val fold_right : ('a -> 'b -> 'b) -> (list<'a>) -> 'b -> 'b
 val fold_right2 : ('a -> 'b -> 'c -> 'c) -> list<'a> -> list<'b> -> 'c -> 'c
 val rev_map_onto : ('a -> 'b) -> (list<'a>) -> (list<'b>) -> (list<'b>)
-val map_tr : ('a -> 'b) -> (list<'a>) -> (list<'b>)
 val last : 'a -> (list<'a>) -> 'a
 val mem<'a when 'a : equality>  : 'a -> (list<'a>) -> Tot<bool>
 val existsb : f:('a -> Tot<bool>) -> (list<'a>) -> Tot<bool>

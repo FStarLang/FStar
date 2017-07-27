@@ -142,7 +142,7 @@ let rec btree_find_prefix (bt: btree<'a>) (prefix: string)
     | StrEmpty -> acc
     | StrBranch (k, v, lbt, rbt) ->
       let cmp = string_compare k prefix in
-      let include_middle = BU.starts_with k prefix in
+      let include_middle = Util.starts_with k prefix in
       let explore_right = cmp <= 0 || include_middle in
       let explore_left = cmp > 0 in
       let matches =
@@ -197,24 +197,24 @@ let rec trie_descend_exact (tr: trie<'a>) (query: query) : option<trie<'a>> =
   match query with
   | [] -> Some tr
   | ns :: query ->
-    BU.bind_opt (names_find_exact tr.namespaces ns)
+    Util.bind_opt (names_find_exact tr.namespaces ns)
       (fun scope -> trie_descend_exact scope query)
 
 let rec trie_descend_exact_error (tr: trie<'a>) (query: query) : trie<'a> =
   match trie_descend_exact tr query with
   | Some t -> t
-  | None -> failwith (BU.format1 "Unknown module: %s" (String.concat "." query))
+  | None -> failwith (Util.format1 "Unknown module: %s" (String.concat "." query))
 
-let names_insert (names: names<'a>) (id: string) (v: 'a) : names<'a> =
-  let bt, names =
-    match names with
+let names_insert (name_cols: names<'a>) (id: string) (v: 'a) : names<'a> =
+  let bt, name_cols =
+    match name_cols with
     | Names bt :: tl -> (bt, tl)
-    | _ -> (StrEmpty, names) in
-  Names (btree_insert_replace bt id v) :: names
+    | _ -> (StrEmpty, name_cols) in
+  Names (btree_insert_replace bt id v) :: name_cols
 
 let rec namespaces_mutate (namespaces: names<trie<'a>>) (ns: string)
                           (query: query) (mutator: trie<'a> -> trie<'a>) =
-  let trie = BU.dflt trie_empty (names_find_exact namespaces ns) in
+  let trie = Util.dflt trie_empty (names_find_exact namespaces ns) in
   names_insert namespaces ns (trie_mutate trie query mutator)
 
 and trie_mutate (tr: trie<'a>) (query: query) (mutator: trie<'a> -> trie<'a>) : trie<'a> =
@@ -251,15 +251,17 @@ let trie_add_alias (tr: trie<'a>) (key: string)
       trie_mutate tr [key] (fun _ignored_overwritten_trie ->
           { bindings = [ImportedNames (label, inc.bindings)]; namespaces = [] }))
 
-let names_revmap (fn: btree<'a> -> 'b) (names: names<'a> (* ↓ priority *))
+let names_revmap (fn: btree<'a> -> 'b) (name_collections: names<'a> (* ↓ priority *))
     : list<(list<string> (* imports *) * 'b)> (* ↑ priority *) =
-  let rec aux (acc: list<(list<string> * 'b)>) (imports: list<string>) (names: names<'a>) =
+  let rec aux (acc: list<(list<string> * 'b)>)
+              (imports: list<string>) (name_collections: names<'a>)
+      : list<(list<string> * 'b)> (* #1158 *) =
     List.fold_left (fun acc -> function
         | Names bt -> (imports, fn bt) :: acc
-        | ImportedNames (nm, names) ->
-          aux acc (nm :: imports) names)
-      acc names in
-  aux [] [] names
+        | ImportedNames (nm, name_collections) ->
+          aux acc (nm :: imports) name_collections)
+      acc name_collections in
+  aux [] [] name_collections
 
 let btree_find_all (prefix: option<string>) (bt: btree<'a>)
     : list<(prefix_match * 'a)> (* ↑ keys *) =
@@ -280,7 +282,7 @@ let names_find_rev (names: names<'a>) (id: name_search_term) : list<(path_elem *
     | NSTPrefix id -> names_revmap (fun bt -> btree_find_prefix bt id) names in
   let matching_values_per_collection =
     List.map (fun (imports, matches) ->
-                List.map_tr (fun (segment, v) -> mk_path_el imports segment, v) matches)
+                List.map (fun (segment, v) -> mk_path_el imports segment, v) matches)
              matching_values_per_collection_with_imports in
   merge_increasing_lists_rev
     (fun (path_el, _) -> path_el.segment.completion) matching_values_per_collection
@@ -357,6 +359,11 @@ type completion_result =
     completion_candidate: string;
     completion_annotation: string }
 
+let json_of_completion_result (result: completion_result) =
+  Util.JsonList [Util.JsonInt result.completion_match_length;
+                 Util.JsonStr result.completion_annotation;
+                 Util.JsonStr result.completion_candidate]
+
 let annotation_of_path path =
   match path with
   | [] -> ""
@@ -372,6 +379,6 @@ let make_result (path: path) (symb: symbol) =
       completion_annotation = annotation }
 
 let autocomplete (tbl: table) (query: query) =
-  List.map_tr
+  List.map
     (fun (path, symb) -> make_result path symb)
     (trie_find_prefix tbl query)

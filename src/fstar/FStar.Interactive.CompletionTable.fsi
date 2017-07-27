@@ -9,7 +9,7 @@ type table = trie<symbol>
 
 val empty : table
 val insert : tbl:table -> host_query:query -> id:string -> c:symbol -> table
-val register_alias : tbl:table -> id:string -> host_query:query -> included_query:query -> table
+val register_alias : tbl:table -> key:string -> host_query:query -> included_query:query -> table
 val register_open : tbl:table -> is_module:bool -> host_query:query -> included_query:query -> table
 val register_include : tbl:table -> host_query:query -> included_query:query -> table
 
@@ -19,4 +19,5 @@ type completion_result =
     completion_candidate: string;
     completion_annotation: string }
 
-val autocomplete : tbl:table -> query:query -> completion_result list
+val json_of_completion_result: completion_result -> FStar.Util.json
+val autocomplete : tbl:table -> query:query -> list<completion_result>

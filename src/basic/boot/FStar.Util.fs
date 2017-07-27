@@ -868,7 +868,7 @@ let measure_execution_time f =
   let timer = new System.Diagnostics.Stopwatch () in
   timer.Start();
   let retv = f () in
-  print1 "Execution time: %s" (string_of_int64 timer.ElapsedMilliseconds);
+  print1 "Execution time: %s ms" (string_of_int64 timer.ElapsedMilliseconds);
   retv
 
 (** Hints. *)
