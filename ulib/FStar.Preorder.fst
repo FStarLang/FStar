@@ -13,3 +13,6 @@ type preorder (a:Type) = rel:relation a{preorder_rel rel}
 
 let stable (#a:Type) (p:predicate a) (rel:relation a{preorder_rel rel}) =
   forall (x:a) (y:a). (p x /\ rel x y) ==> p y
+
+let trivial_preorder0 (a:Type) = fun x y -> True
+let trivial_preorder (a:Type) : preorder a  = trivial_preorder0 a

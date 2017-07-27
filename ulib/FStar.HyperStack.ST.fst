@@ -17,10 +17,9 @@ unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fu
 sub_effect DIV ~> GST = lift_div_gst
 
 let ref_requires (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) =
-  is_eternal_region r.id /\ ~(is_mm r) \/
-  (is_eternal_region r.id /\ is_mm r /\ h `contains` r) \/
-  (is_stack_region r.id /\ is_mm r /\ h `contains` r) \/
-  (is_stack_region r.id /\ ~ (is_mm r) /\ r.id `is_above` h.tip)
+  ~(is_mm r) /\
+  (* (is_mm r ==> h `contains` r) /\ *)
+  (is_stack_region r.id /\ ~ (is_mm r) ==> r.id `is_above` h.tip)
 
 let mem_rel0 (h1:mem) (h2:mem) =
   (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
@@ -28,7 +27,7 @@ let mem_rel0 (h1:mem) (h2:mem) =
   (forall (i:HH.rid). Map.contains h1.h i ==> Map.contains h2.h i) /\
   (forall (i:HH.rid). ~(i `is_alive` h1) ==> ~(i `is_alive` h2))
 
-let mem_rel (* : preorder mem *) = mem_rel0
+let mem_rel : preorder mem = mem_rel0
 
 assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
 assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
