@@ -1296,21 +1296,21 @@ let id =
   let op = op0 in
        ( mk_ident (op, rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX3 RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let id =
   let op = op0 in
        ( mk_ident (op, rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX4 RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let id =
   let op = op0 in
        ( mk_ident (op, rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0a RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1321,7 +1321,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0b RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1332,7 +1332,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0c RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1343,7 +1343,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0d RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1354,7 +1354,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX1 RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1365,7 +1365,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX2 RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1376,28 +1376,28 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN PIPE_RIGHT RPAREN
     {let (_1, op0, _3) = ((), (), ()) in
 let id =
   let op = op0 in
        ( mk_ident("|>", rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN COLON_EQUALS RPAREN
     {let (_1, op0, _3) = ((), (), ()) in
 let id =
   let op = op0 in
        ( mk_ident(":=", rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN COLON_COLON RPAREN
     {let (_1, op0, _3) = ((), (), ()) in
 let id =
   let op = op0 in
        ( mk_ident("::", rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 
 lidentOrUnderscore:
   IDENT

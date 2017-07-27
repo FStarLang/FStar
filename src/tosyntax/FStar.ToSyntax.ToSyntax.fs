@@ -111,7 +111,7 @@ let rec is_comp_type env t =
 
 let unit_ty = mk_term (Name C.unit_lid) Range.dummyRange Type_level
 
-let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
+let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
 
 let op_as_term env arity rng op : option<S.term> =
   let r l dd = Some (S.lid_as_fv (set_lid_range l op.idRange) dd None |> S.fv_to_tm) in
@@ -493,7 +493,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
       | PatOr _ -> failwith "impossible"
 
       | PatOp op ->
-        aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText, op.idRange), None); prange = p.prange })
+        aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText op.idRange, op.idRange), None); prange = p.prange })
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p, imp = aux loc env p in
@@ -606,7 +606,7 @@ and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<pat>) =
   let mklet x = env, LetBinder(qualify env x, tun), [] in
   if top
   then match p.pat with
-    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText, x.idRange))
+    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText x.idRange, x.idRange))
     | PatVar (x, _) -> mklet x
     | PatAscribed({pat=PatVar (x, _)}, t) ->
       (env, LetBinder(qualify env x, desugar_term env t), [])
