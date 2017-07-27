@@ -719,13 +719,13 @@ let pack: FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term =
         FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_match (t, brs2))
           FStar_Pervasives_Native.None FStar_Range.dummyRange
     | uu____2124 -> failwith "pack: unexpected term view"
-let embed_order: FStar_Reflection_Data.order -> FStar_Syntax_Syntax.term =
+let embed_order: FStar_Order.order -> FStar_Syntax_Syntax.term =
   fun o  ->
     match o with
-    | FStar_Reflection_Data.Lt  -> FStar_Reflection_Data.ord_Lt
-    | FStar_Reflection_Data.Eq  -> FStar_Reflection_Data.ord_Eq
-    | FStar_Reflection_Data.Gt  -> FStar_Reflection_Data.ord_Gt
-let unembed_order: FStar_Syntax_Syntax.term -> FStar_Reflection_Data.order =
+    | FStar_Order.Lt  -> FStar_Reflection_Data.ord_Lt
+    | FStar_Order.Eq  -> FStar_Reflection_Data.ord_Eq
+    | FStar_Order.Gt  -> FStar_Reflection_Data.ord_Gt
+let unembed_order: FStar_Syntax_Syntax.term -> FStar_Order.order =
   fun t  ->
     let t1 = FStar_Syntax_Util.unascribe t in
     let uu____2134 = FStar_Syntax_Util.head_and_args t1 in
@@ -740,19 +740,19 @@ let unembed_order: FStar_Syntax_Syntax.term -> FStar_Reflection_Data.order =
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ord_Lt_lid
-             -> FStar_Reflection_Data.Lt
+             -> FStar_Order.Lt
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ord_Eq_lid
-             -> FStar_Reflection_Data.Eq
+             -> FStar_Order.Eq
          | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
              FStar_Syntax_Syntax.fv_eq_lid fv
                FStar_Reflection_Data.ord_Gt_lid
-             -> FStar_Reflection_Data.Gt
+             -> FStar_Order.Gt
          | uu____2241 -> failwith "not an embedded order")
-let order_binder:
+let compare_binder:
   FStar_Syntax_Syntax.binder ->
-    FStar_Syntax_Syntax.binder -> FStar_Reflection_Data.order
+    FStar_Syntax_Syntax.binder -> FStar_Order.order
   =
   fun x  ->
     fun y  ->
@@ -760,11 +760,9 @@ let order_binder:
         FStar_Syntax_Syntax.order_bv (FStar_Pervasives_Native.fst x)
           (FStar_Pervasives_Native.fst y) in
       if n1 < (Prims.parse_int "0")
-      then FStar_Reflection_Data.Lt
+      then FStar_Order.Lt
       else
-        if n1 = (Prims.parse_int "0")
-        then FStar_Reflection_Data.Eq
-        else FStar_Reflection_Data.Gt
+        if n1 = (Prims.parse_int "0") then FStar_Order.Eq else FStar_Order.Gt
 let is_free:
   FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.term -> Prims.bool =
   fun x  ->
@@ -948,3 +946,26 @@ let unembed_sigelt_view:
                FStar_Reflection_Data.ref_Unk_lid
              -> FStar_Reflection_Data.Unk
          | uu____3065 -> failwith "not an embedded sigelt_view")
+let binders_of_env: FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders
+  = fun e  -> FStar_TypeChecker_Env.all_binders e
+let type_of_binder:
+  'Auu____3086 .
+    (FStar_Syntax_Syntax.bv,'Auu____3086) FStar_Pervasives_Native.tuple2 ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+  = fun b  -> match b with | (b1,uu____3102) -> b1.FStar_Syntax_Syntax.sort
+let term_eq:
+  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.bool
+  = FStar_Syntax_Util.term_eq
+let fresh_binder:
+  'Auu____3117 .
+    FStar_Syntax_Syntax.typ ->
+      (FStar_Syntax_Syntax.bv,'Auu____3117 FStar_Pervasives_Native.option)
+        FStar_Pervasives_Native.tuple2
+  =
+  fun t  ->
+    let uu____3128 =
+      FStar_Syntax_Syntax.gen_bv "__refl" FStar_Pervasives_Native.None t in
+    (uu____3128, FStar_Pervasives_Native.None)
+let term_to_string: FStar_Syntax_Syntax.term -> Prims.string =
+  FStar_Syntax_Print.term_to_string
