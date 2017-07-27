@@ -603,8 +603,8 @@ and tc_synth env args rng =
     let typ, _, g1 = tc_term env' typ in
     Rel.force_trivial_guard env' g1;
 
-    // Check the tactic (TODO: actually check against `tactic unit`, this is just asserting it has a type)
-    let tau, c, g2 = tc_term env' tau in
+    // Check the tactic
+    let tau, _, g2 = tc_tactic env' tau in
     Rel.force_trivial_guard env' g2;
 
     if Env.debug env <| Options.Other "Tac" then
@@ -617,12 +617,16 @@ and tc_synth env args rng =
     TcUtil.check_uvars tau.pos t;
     tc_term env (mk_Tm_app t rest None rng)
 
+and tc_tactic env tau =
+    tc_check_tot_or_gtot_term env tau t_tactic_unit
+
 and tc_tactic_opt env topt =
     match topt with
     | None -> None
     | Some tactic ->
-      let tactic, _, _ = tc_check_tot_or_gtot_term env tactic t_tactic_unit in
-      Some tactic
+        let tactic, _, _ = tc_tactic env tactic
+        in Some tactic
+
 (************************************************************************************************************)
 (* Type-checking values:                                                                                    *)
 (*   Values have no special status, except that we structure the code to promote a value type t to a Tot t  *)
