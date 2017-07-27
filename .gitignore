@@ -73,6 +73,8 @@ tags
 *~
 *.swp
 
+*.exe
+
 /.nubuild
 /nucache/
 /nuobj/
