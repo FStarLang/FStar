@@ -8,7 +8,7 @@ module U64 = FStar.UInt64
 
 let n = 128
 
-val t:Type0
+val t: (x:Type0{hasEq x})
 
 val v (x:t) : Tot (uint_t n)
 
@@ -62,7 +62,6 @@ val lognot: a:t -> Pure t
   (requires True)
   (ensures (fun r -> v r == lognot (v a)))
 
-#set-options "--lax"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -72,9 +71,9 @@ val lognot: a:t -> Pure t
 //eliminating the verification overhead of the wrapper
 private
 unfold
-let __uint_to_t (x:int) : Tot t
-    = uint_to_t x
-#reset-options
+let __uint_to_t (x:int) : Tot t =
+      assume (fits x 128);
+      uint_to_t x
 
 
 (* Shift operators *)
@@ -112,14 +111,8 @@ val eq_mask: a:t -> b:t -> Tot (c:t{(v a = v b ==> v c = pow2 n - 1) /\ (v a <> 
 val gte_mask: a:t -> b:t -> Tot (c:t{(v a >= v b ==> v c = pow2 n - 1) /\ (v a < v b ==> v c = 0)})
 
 (* Casts *)
-
-val uint64_to_uint128: a:U64.t -> Pure t
-  (requires True)
-  (ensures (fun r -> v r == U64.v a))
-
-val uint128_to_uint64: a:t -> Pure U64.t
-  (requires (v a < pow2 64))
-  (ensures (fun r -> U64.v r == v a))
+val uint64_to_uint128: a:U64.t -> b:t{v b == U64.v a}
+val uint128_to_uint64: a:t -> b:U64.t{U64.v b == v a % pow2 64}
 
 (* To input / output constants *)
 (* TODO: assume these without implementations *)

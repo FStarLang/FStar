@@ -79,6 +79,22 @@
       1,
       [ "@query", "assumption_FStar.Bytes.HasEq_bytes" ],
       0
+    ],
+    [
+      "FStar.Crypto.__proj__Mkrsa_pkey__item__modulus",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.Crypto.__proj__Mkrsa_pkey__item__exponent",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
     ]
   ]
 ]

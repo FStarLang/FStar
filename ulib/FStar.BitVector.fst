@@ -98,6 +98,7 @@ val lemma_slice_superset_vec: #n:pos -> a:bv_t n -> b:bv_t n -> i:nat -> j:nat{i
 let lemma_slice_superset_vec #n a b i j = ()
 
 (* Shift operators *)
+(* Note: the shift amount is extracted as a bitvector*)
 val shift_left_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
 let shift_left_vec #n a s =
   if s >= n then zero_vec #n

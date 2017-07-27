@@ -1,5 +1,5 @@
 [
-  "\re6ˆ&\u001dX´‹‡úaé‰Bî",
+  "åÐƒJ\u0018÷\r‹\"2f©\u000f¹ê§",
   [
     [
       "Benton2004.RHL.Examples.sec42_ex1",
@@ -717,8 +717,8 @@
         "assumption_Prims.HasEq_int", "bool_inversion", "bool_typing",
         "constructor_distinct_Benton2004.RHL.Left",
         "constructor_distinct_Benton2004.RHL.Right",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "eq2-interp", "equality_tok_Benton2004.RHL.Left@tok",
+        "constructor_distinct_Prims.Cons", "eq2-interp",
+        "equality_tok_Benton2004.RHL.Left@tok",
         "equality_tok_Benton2004.RHL.Right@tok",
         "equation_Benton2004.RHL.Examples.sec43_left",
         "equation_Benton2004.RHL.Examples.sec43_phi",
@@ -728,10 +728,12 @@
         "equation_Benton2004.RHL.geq", "equation_Benton2004.RHL.gexp",
         "equation_Benton2004.RHL.gnot", "equation_Benton2004.RHL.gop",
         "equation_Benton2004.RHL.gor", "equation_Benton2004.RHL.gsubst",
-        "equation_Benton2004.RHL.gvar", "equation_Benton2004.assign",
+        "equation_Benton2004.RHL.gvar", "equation_Benton2004.RHL.included",
+        "equation_Benton2004.RHL.interp", "equation_Benton2004.assign",
         "equation_Benton2004.const", "equation_Benton2004.eop",
-        "equation_Benton2004.evar", "equation_Benton2004.seq",
-        "equation_Benton2004.var", "equation_Benton2004.while",
+        "equation_Benton2004.evar", "equation_Benton2004.included",
+        "equation_Benton2004.seq", "equation_Benton2004.var",
+        "equation_Benton2004.while",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "equation_FStar.DM4F.Heap.IntStoreFixed.upd", "equation_Prims.eq2",
         "equation_Prims.eqtype", "equation_Prims.squash",
@@ -757,17 +759,20 @@
         "lemma_Benton2004.RHL.gsubst_geq", "lemma_Benton2004.RHL.gsubst_gop",
         "lemma_Benton2004.RHL.gsubst_gvar_other",
         "lemma_Benton2004.RHL.gsubst_gvar_same",
+        "lemma_Benton2004.RHL.holds_gand",
+        "lemma_Benton2004.RHL.holds_interp",
         "lemma_Benton2004.RHL.included_alt", "lemma_Benton2004.RHL.r_sub",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Negation", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "token_correspondence_Prims.op_Addition",
         "token_correspondence_Prims.op_AmpAmp",
         "token_correspondence_Prims.op_Equality",
+        "typing_Benton2004.RHL.Examples.sec43_left",
         "typing_Benton2004.RHL.exp_to_gexp", "typing_Benton2004.RHL.gand",
         "typing_Benton2004.RHL.gsubst", "typing_Benton2004.RHL.gvar",
         "typing_Benton2004.RHL_Tm_abs_217dc39f20e932774574ae244c79948b",
@@ -785,7 +790,12 @@
       2,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
       0
     ],
     [
@@ -801,12 +811,7 @@
       4,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
     [
@@ -864,6 +869,19 @@
     [
       "Benton2004.RHL.Examples.sec43",
       9,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
+    [
+      "Benton2004.RHL.Examples.sec43",
+      10,
       2,
       1,
       [

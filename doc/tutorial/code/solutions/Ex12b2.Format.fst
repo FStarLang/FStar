@@ -112,7 +112,7 @@ let req_resp_distinct s s' t' =
   assert (Seq.index (request s) 0 == Char.char_of_int 0);
   assert (Seq.index (response s' t') 0 == Char.char_of_int 1)
 
-let req_injctive s0 s1 = ()
+let req_injective s0 s1 = ()
 
 let resp_injective s0 t0 s1 t1 =
   lemma_repr_bytes_values (length (utf8 s0));

@@ -1,13 +1,14 @@
 (* to be used with Ex12.MAC.fst and Ex12a.ACLs.fst *)
 
 module Ex12a1.Cap (* capabilities *) 
-open FStar.HyperStack.ST
-open FStar.HyperStack.All
+open FStar.ST
+open FStar.All
 open Platform.Bytes
 
 
 module ACLs = Ex12a.ACLs
 module MAC = Ex12.MAC
+module SHA1 = Ex12.SHA1
 
 // In Platform.Bytes: val utf8: s:string  -> Tot bytes
 

@@ -166,6 +166,7 @@ let d_su1'_flip
   [SMTPat (exec_equiv phi phi'' c'' (seq c c'))]
 = d_su1' c c' c'' (flip phi) (flip phi') (flip phi'')
 
+#set-options "--z3rlimit 20"
 let sec43
   (i n x y: var)
   (diffs: squash (List.Tot.noRepeats [i; n; x; y] == true))
@@ -198,7 +199,7 @@ let sec43
   r_while cond cond lbody asi phi1;
   assert (exec_equiv phi1 phi l rloop) // by d_sub
   // d_su1'_flip applied implicitly
-
+#reset-options
 
 (* Sophisticated dead code *)
 

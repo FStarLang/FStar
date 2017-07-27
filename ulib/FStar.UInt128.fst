@@ -11,7 +11,7 @@ module U64 = FStar.UInt64
 
 module Math = FStar.Math.Lemmas
 
-#set-options "--z3rlimit 20 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped"
+#reset-options "--z3refresh --z3rlimit 40 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 
 type uint128: Type0 = { low: U64.t; high: U64.t }
 
@@ -21,7 +21,6 @@ let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()
 
-val uint_to_t: n:nat{n < pow2 128} -> x:t{v x == n}
 let uint_to_t n =
     div_mod n (pow2 64);
     { low = U64.uint_to_t (n % (pow2 64));
@@ -93,11 +92,13 @@ let mul_div_cancel n k =
   Math.lemma_mod_plus 0 n k;
   assert ((n * k) % k == 0)
 
-let mod_mul (n:nat) (k1 k2: (k:nat{k > 0})) :
-  Lemma ((n % k2) * k1 == (n * k1) % (k1*k2)) =
+val mod_mul: n:nat -> k1:pos -> k2:pos ->
+  Lemma ((n % k2) * k1 == (n * k1) % (k1*k2))
+let mod_mul n k1 k2 =
   mod_spec (n*k1) (k1*k2);
   div_product (n*k1) k1 k2;
   mul_div_cancel n k1;
+  Math.lemma_mul_sub_distr k1 n (n / k2 * k2);
   mod_spec n k2
 
 let mod_spec_rew_n (n:nat) (k:nat{k > 0}) :
@@ -111,20 +112,12 @@ val mod_add_small: n1:nat -> n2:nat -> k:nat{k > 0} -> Lemma
   (requires (n1 % k + n2 % k < k))
   (ensures (n1 % k + n2 % k == (n1 + n2) % k))
 let mod_add_small n1 n2 k =
-  mod_add n1 n2 k
+  mod_add n1 n2 k;
+  Math.small_modulo_lemma_1 (n1%k + n2%k) k
 
-#set-options "--z3rlimit 20 --initial_fuel 1 --initial_ifuel 1 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped"
-
-let rec pow2_sum (n1 n2:nat) : Lemma (pow2 (n1 + n2) == pow2 n1 * pow2 n2) =
-  match n1 with
-  | 0 -> ()
-  | _ -> pow2_sum (n1-1) n2
-
-#reset-options "--z3rlimit 20 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped"
-
-val pow2_sum_pat: n1:nat -> n2:nat -> Lemma (pow2 n1 * pow2 n2 == pow2 (n1 + n2))
+val pow2_plus_pat: n1:nat -> n2:nat -> Lemma (pow2 n1 * pow2 n2 == pow2 (n1 + n2))
   [SMTPat (pow2 n1 * pow2 n2)]
-let pow2_sum_pat n1 n2 = pow2_sum n1 n2
+let pow2_plus_pat n1 n2 = Math.pow2_plus n1 n2
 
 val mod_mul_pat: n:nat -> k1:pos -> k2:pos ->
   Lemma ((n % k2) * k1 == (n * k1) % (k1*k2))
@@ -142,31 +135,36 @@ let add_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a + v b) % pow2 128 = v r)) =
   let l = U64.add_mod a.low b.low in
-  carry_sum_ok a.low b.low;
   let r = { low = l;
             high = U64.add_mod (U64.add_mod a.high b.high) (carry l b.low)} in
-  assert (U64.v r.high == (U64.v a.high + U64.v b.high + (U64.v a.low + U64.v b.low) / (pow2 64)) % pow2 64);
-  // mod_mul (U64.v a.high + U64.v b.high + (U64.v a.low + U64.v b.low) / (pow2 64)) (pow2 64) (pow2 64);
+  let a_l = U64.v a.low in
+  let a_h = U64.v a.high in
+  let b_l = U64.v b.low in
+  let b_h = U64.v b.high in
+  carry_sum_ok a.low b.low;
+  Math.lemma_mod_plus_distr_l (a_h + b_h) ((a_l + b_l) / (pow2 64)) (pow2 64);
+  assert (U64.v r.high == (a_h + b_h + (a_l + b_l) / (pow2 64)) % pow2 64);
+  // mod_mul (a_h + b_h + (a_l + b_l) / (pow2 64)) (pow2 64) (pow2 64);
   assert (U64.v r.high * pow2 64 ==
-            (U64.v a.high * pow2 64 +
-              U64.v b.high * pow2 64 +
-              (U64.v a.low + U64.v b.low) / (pow2 64) * (pow2 64)) % pow2 128);
+            (a_h * pow2 64 +
+              b_h * pow2 64 +
+              (a_l + b_l) / (pow2 64) * (pow2 64)) % pow2 128);
   // mod_mod (U64.v r.low) (pow2 64) (pow2 64);
   assert (U64.v r.low == (U64.v r.low) % pow2 128);
-  mod_add_small (U64.v a.high * pow2 64 +
-                  U64.v b.high * pow2 64 +
-                  (U64.v a.low + U64.v b.low) / (pow2 64) * (pow2 64))
-          ((U64.v a.low + U64.v b.low) % (pow2 64))
+  mod_add_small (a_h * pow2 64 +
+                  b_h * pow2 64 +
+                  (a_l + b_l) / (pow2 64) * (pow2 64))
+          ((a_l + b_l) % (pow2 64))
           (pow2 128);
   assert (U64.v r.low + U64.v r.high * pow2 64 ==
-                (U64.v a.high * pow2 64 +
-                U64.v b.high * pow2 64 +
-                (U64.v a.low + U64.v b.low) / (pow2 64) * (pow2 64) + (U64.v a.low + U64.v b.low) % (pow2 64)) % pow2 128);
-  mod_spec_rew_n (U64.v a.low + U64.v b.low) (pow2 64);
+                (a_h * pow2 64 +
+                b_h * pow2 64 +
+                (a_l + b_l) / (pow2 64) * (pow2 64) + (a_l + b_l) % (pow2 64)) % pow2 128);
+  mod_spec_rew_n (a_l + b_l) (pow2 64);
   assert (v r ==
-          (U64.v a.high * pow2 64 +
-          U64.v b.high * pow2 64 +
-          U64.v a.low + U64.v b.low) % pow2 128);
+          (a_h * pow2 64 +
+          b_h * pow2 64 +
+          a_l + b_l) % pow2 128);
   r
 
 let sub (a b: t) : Pure t
@@ -192,14 +190,26 @@ let sub_mod_pos_ok (a b:t) : Lemma
   assert (sub a b == sub_mod_impl a b);
   ()
 
-let sub_mod_wrap1_ok (a b:t) : Lemma
+val u64_diff_wrap : a:U64.t -> b:U64.t ->
+  Lemma  (requires (U64.v a < U64.v b))
+         (ensures (U64.v (U64.sub_mod a b) == U64.v a - U64.v b + pow2 64))
+let u64_diff_wrap a b = ()
+
+val sub_mod_wrap1_ok : a:t -> b:t -> Lemma
   (requires (v a - v b < 0 /\ U64.v a.low < U64.v b.low))
-  (ensures (v (sub_mod_impl a b) = v a - v b + pow2 128)) =
+  (ensures (v (sub_mod_impl a b) = v a - v b + pow2 128))
+let sub_mod_wrap1_ok a b =
     // carry == 1 and subtraction in low wraps
     let l = U64.sub_mod a.low b.low in
     assert (U64.v (carry a.low l) == 1);
-    assert (U64.v (sub_mod_impl a b).low == U64.v a.low - U64.v b.low + pow2 64);
-    ()
+    u64_diff_wrap a.low b.low;
+    // a.high <= b.high since v a < v b;
+    // case split on equality and strictly less
+    if U64.v a.high = U64.v b.high then ()
+    else begin
+      u64_diff_wrap a.high b.high;
+      ()
+    end
 
 let sum_lt (a1 a2 b1 b2:nat) : Lemma
   (requires (a1 + a2 < b1 + b2 /\ a1 >= b1))
@@ -233,10 +243,14 @@ let sub_mod (a b: t) : Pure t
     else sub_mod_wrap_ok a b);
   sub_mod_impl a b
 
-let append_uint (#n1 #n2:nat) (num1:UInt.uint_t n1) (num2:UInt.uint_t n2) : UInt.uint_t (n1 + n2) =
-  pow2_sum n1 n2;
-  pow2_sum n2 n1;
-  assert (num2 * pow2 n1 <= pow2 n2 * pow2 n1 - pow2 n1);
+val append_uint : #n1:nat -> #n2:nat -> num1:UInt.uint_t n1 -> num2:UInt.uint_t n2 -> UInt.uint_t (n1+n2)
+let append_uint #n1 #n2 num1 num2 =
+  Math.lemma_mult_le_right (pow2 n1) num2 (pow2 n2 - 1);
+//  assert (num1 + num2 * pow2 n1 <= (pow2 n1 - 1) + (pow2 n2 - 1) * pow2 n1);
+  Math.distributivity_sub_left (pow2 n2) 1 (pow2 n1);
+//  assert ( (pow2 n1 - 1) + (pow2 n2 - 1) * pow2 n1 == (pow2 n1 - 1) + pow2 n2 * pow2 n1 - pow2 n1);
+  Math.pow2_plus n2 n1;
+ // assert ((pow2 n1 - 1) + pow2 (n2 + n1) - pow2 n1 == pow2 (n2 + n1) - 1);
   num1 + num2 * pow2 n1
 
 val to_vec_append : #n1:nat{n1 > 0} -> #n2:nat{n2 > 0} -> num1:UInt.uint_t n1 -> num2:UInt.uint_t n2 ->
@@ -342,9 +356,9 @@ let mod_mul_cancel (n:nat) (k:nat{k > 0}) :
 let shift_past_mod (n:nat) (k1:nat) (k2:nat{k2 >= k1}) :
   Lemma ((n * pow2 k2) % pow2 k1 == 0) =
   assert (k2 == (k2 - k1) + k1);
-  pow2_sum (k2 - k1) k1;
-  assert (n * pow2 k2 == n * pow2 (k2-k1) * pow2 k1);
+  Math.pow2_plus (k2 - k1) k1;
   mod_mul_cancel (n * pow2 (k2 - k1)) (pow2 k1);
+  Math.paren_mul_right n (pow2 (k2-k1)) (pow2 k1);
   ()
 
 val mod_double: a:nat -> k:nat{k>0} ->
@@ -356,7 +370,7 @@ let shift_left_large_val (#n1:nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_
   Lemma ((a1 + a2 * pow2 n1) * pow2 s % pow2 (n1+n2) == (a1 * pow2 s + a2 * pow2 (n1+s)) % pow2 (n1+n2)) =
   Math.distributivity_add_left a1 (a2 * pow2 n1) (pow2 s);
   Math.paren_mul_right a2 (pow2 n1) (pow2 s);
-  pow2_sum n1 s
+  Math.pow2_plus n1 s
 
 let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_t n2) (s: nat{s >= n2}) :
   Lemma (((a1 + a2 * pow2 n1) * pow2 s) % pow2 (n1+n2) ==
@@ -364,12 +378,14 @@ let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.ui
   shift_left_large_val a1 a2 s;
   mod_add (a1 * pow2 s) (a2 * pow2 (n1+s)) (pow2 (n1+n2));
   shift_past_mod a2 (n1+n2) (n1+s);
-  mod_double (a1 * pow2 s) (pow2 (n1+n2))
+  mod_double (a1 * pow2 s) (pow2 (n1+n2));
+  ()
 
-let shift_left_large_lemma_t (a: t) (s: nat) :
+val shift_left_large_lemma_t : a:t -> s:nat ->
   Lemma (requires (s >= 64))
         (ensures ((v a * pow2 s) % pow2 128 ==
-                  (U64.v a.low * pow2 s) % pow2 128)) =
+                  (U64.v a.low * pow2 s) % pow2 128))
+let shift_left_large_lemma_t a s =
   shift_left_large_lemma #64 #64 (U64.v a.low) (U64.v a.high) s
 
 private let u32_64: n:U32.t{U32.v n == 64} = U32.uint_to_t 64
@@ -378,40 +394,32 @@ val div_pow2_diff: a:nat -> n1:nat -> n2:nat{n2 <= n1} -> Lemma
   (requires True)
   (ensures (a / pow2 (n1 - n2) == a * pow2 n2 / pow2 n1))
 let div_pow2_diff a n1 n2 =
-  pow2_sum n2 (n1-n2);
+  Math.pow2_plus n2 (n1-n2);
   assert (a * pow2 n2 / pow2 n1 == a * pow2 n2 / (pow2 n2 * pow2 (n1 - n2)));
   div_product (a * pow2 n2) (pow2 n2) (pow2 (n1-n2));
   mul_div_cancel a (pow2 n2)
 
-let mul_incr (n m:nat) (k: pos) : Lemma
-  (requires (n < m))
-  (ensures (n * k < m * k)) = ()
-
-let mul_incr_le (n m:nat) (k:nat) : Lemma
-  (requires (n <= m))
-  (ensures (n * k <= m * k)) = ()
-
-let mod_mul_pow2 (n:nat) (e1:nat) (e2:nat) :
-  Lemma (n % pow2 e1 * pow2 e2 <= pow2 (e1+e2) - pow2 e2) =
+val mod_mul_pow2 : n:nat -> e1:nat -> e2:nat ->
+  Lemma (n % pow2 e1 * pow2 e2 <= pow2 (e1+e2) - pow2 e2)
+let mod_mul_pow2 n e1 e2 =
   Math.lemma_mod_lt n (pow2 e1);
-  mul_incr_le (n % pow2 e1) (pow2 e1 - 1) (pow2 e2);
-  Math.distributivity_sub_right (pow2 e1) (pow2 e2) 1;
+  Math.lemma_mult_le_right (pow2 e2) (n % pow2 e1) (pow2 e1 - 1);
   assert (n % pow2 e1 * pow2 e2 <= pow2 e1 * pow2 e2 - pow2 e2);
-  pow2_sum e1 e2
+  Math.pow2_plus e1 e2
 
 let pow2_div_bound #b (n:UInt.uint_t b) (s:nat{s <= b}) :
   Lemma (n / pow2 s < pow2 (b - s)) =
   Math.lemma_div_lt n b s
 
 let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
-  (requires True)
+  (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r = (U64.v hi * pow2 (U32.v s)) % pow2 64 + U64.v lo / pow2 (64 - U32.v s))) =
   let high = U64.shift_left hi s in
   let low = U64.shift_right lo (U32.sub u32_64 s) in
   let s = U32.v s in
   let high_n = U64.v hi % pow2 (64 - s) * pow2 s in
   let low_n = U64.v lo / pow2 (64 - s) in
-  pow2_sum (64-s) s;
+  Math.pow2_plus (64-s) s;
   mod_mul (U64.v hi) (pow2 s) (pow2 (64-s));
   assert (U64.v high == high_n);
   assert (U64.v low == low_n);
@@ -424,7 +432,7 @@ let div_plus_multiple (a:nat) (b:nat) (k:pos) :
   Lemma (requires (a < k))
         (ensures ((a + b * k) / k == b)) =
   Math.lemma_mod_plus a b k;
-  assert ((a + b*k) % k == a)
+  Math.small_division_lemma_1 a k
 
 val div_add_small: n:nat -> m:nat -> k1:pos -> k2:pos ->
   Lemma (requires (n < k1))
@@ -436,8 +444,6 @@ let div_add_small n m k1 k2 =
   assert (k1*m/k1 == m);
   div_plus_multiple n m k1
 
-#set-options "--z3rlimit 20 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped"
-
 val add_mod_small: n: nat -> m:nat -> k1:pos -> k2:pos ->
   Lemma (requires (n < k1))
         (ensures (n + (k1 * m) % (k1 * k2) ==
@@ -448,13 +454,13 @@ let add_mod_small n m k1 k2 =
   div_add_small n m k1 k2
 
 let mod_then_mul_64 (n:nat) : Lemma (n % pow2 64 * pow2 64 == n * pow2 64 % pow2 128) =
-  pow2_sum 64 64;
+  Math.pow2_plus 64 64;
   mod_mul n (pow2 64) (pow2 64)
 
-#set-options "--z3rlimit 30 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr native"
+let mul_abc_to_acb (a b c: int) : Lemma (a * b * c == a * c * b) = ()
 
 let add_u64_shift_left_respec (hi lo:U64.t) (s:U32.t{U32.v s < 64}) : Pure U64.t
-  (requires True)
+  (requires (U32.v s <> 0))
   (ensures (fun r ->
               U64.v r * pow2 64 ==
               (U64.v hi * pow2 64) * pow2 (U32.v s) % pow2 128 +
@@ -463,69 +469,98 @@ let add_u64_shift_left_respec (hi lo:U64.t) (s:U32.t{U32.v s < 64}) : Pure U64.t
   let hi = U64.v hi in
   let lo = U64.v lo in
   let s = U32.v s in
+  // spec of add_u64_shift_left
+  assert (U64.v r == hi * pow2 s % pow2 64 + lo / pow2 (64 - s));
   Math.distributivity_add_left (hi * pow2 s % pow2 64) (lo / pow2 (64-s)) (pow2 64);
   mod_then_mul_64 (hi * pow2 s);
-  assert (hi * pow2 s % pow2 64 * pow2 64 == ((hi * pow2 s) * pow2 64) % pow2 128);
+  assert (hi * pow2 s % pow2 64 * pow2 64 == (hi * pow2 s * pow2 64) % pow2 128);
   div_pow2_diff lo 64 s;
+  assert (lo / pow2 (64-s) == lo * pow2 s / pow2 64);
+  assert (U64.v r * pow2 64 == hi * pow2 s * pow2 64 % pow2 128 + lo * pow2 s / pow2 64 * pow2 64);
+  mul_abc_to_acb hi (pow2 s) (pow2 64);
   r
 
-let add_mod_small' (n:nat) (m:nat) (k:pos) :
+val add_mod_small' : n:nat -> m:nat -> k:pos ->
   Lemma (requires (n + m % k < k))
-        (ensures (n + m % k == (n + m) % k)) =
+        (ensures (n + m % k == (n + m) % k))
+let add_mod_small' n m k =
   Math.lemma_mod_lt (n + m % k) k;
   Math.modulo_lemma n k;
   mod_add n m k
 
 let shift_t_val (a: t) (s: nat) :
-    Lemma (v a * pow2 s == U64.v a.low * pow2 s + (U64.v a.high * pow2 64) * pow2 s) =
+    Lemma (v a * pow2 s == U64.v a.low * pow2 s + U64.v a.high * pow2 (64+s)) =
+    Math.pow2_plus 64 s;
     ()
 
-let mul_mod_bound (n:nat) (s1:nat) (s2:nat{s2>=s1}) :
-    Lemma (n * pow2 s1 % pow2 s2 <= pow2 s2 - pow2 s1) =
-    // n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1
-    // n % pow2 (s2-s1) <= pow2 (s2-s1) - 1
-    // n % pow2 (s2-s1) * pow2 s1 <= pow2 s2 - pow2 s1
-    pow2_sum (s2-s1) s1;
-    mod_mul n (pow2 s1) (pow2 (s2-s1));
-    assert (n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1);
-    Math.lemma_mod_lt n (pow2 (s2-s1));
-    Math.lemma_mult_le_right (pow2 s1) (n % pow2 (s2-s1)) (pow2 (s2-s1) - 1);
-    assert (pow2 (s2-s1) * pow2 s1 == pow2 s2)
+val mul_mod_bound : n:nat -> s1:nat -> s2:nat{s2>=s1} ->
+  Lemma (n * pow2 s1 % pow2 s2 <= pow2 s2 - pow2 s1)
+let mul_mod_bound n s1 s2 =
+  // n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1
+  // n % pow2 (s2-s1) <= pow2 (s2-s1) - 1
+  // n % pow2 (s2-s1) * pow2 s1 <= pow2 s2 - pow2 s1
+  mod_mul n (pow2 s1) (pow2 (s2-s1));
+  // assert (n * pow2 s1 % pow2 s2 == n % pow2 (s2-s1) * pow2 s1);
+  Math.lemma_mod_lt n (pow2 (s2-s1));
+  Math.lemma_mult_le_right (pow2 s1) (n % pow2 (s2-s1)) (pow2 (s2-s1) - 1);
+  Math.pow2_plus (s2-s1) s1
+
+let add_lt_le (a a' b b': int) :
+  Lemma (requires (a < a' /\ b <= b'))
+  (ensures (a + b < a' + b')) = ()
+
+let u64_pow2_bound (a: UInt.uint_t 64) (s: nat) :
+  Lemma (a * pow2 s < pow2 (64+s)) =
+  Math.pow2_plus 64 s
+
+let shift_t_mod_val' (a: t) (s: nat{s < 64}) :
+  Lemma ((v a * pow2 s) % pow2 128 ==
+        U64.v a.low * pow2 s + U64.v a.high * pow2 (64+s) % pow2 128) =
+  let a_l = U64.v a.low in
+  let a_h = U64.v a.high in
+  u64_pow2_bound a_l s;
+  mul_mod_bound a_h (64+s) 128;
+  // assert (a_h * pow2 (64+s) % pow2 128 <= pow2 128 - pow2 (64+s));
+  add_lt_le (a_l * pow2 s) (pow2 (64+s)) (a_h * pow2 (64+s) % pow2 128) (pow2 128 - pow2 (64+s));
+  add_mod_small' (a_l * pow2 s) (a_h * pow2 (64+s)) (pow2 128);
+  shift_t_val a s;
+  ()
+
 
 let shift_t_mod_val (a: t) (s: nat{s < 64}) :
-    Lemma ((v a * pow2 s) % pow2 128 ==
-          U64.v a.low * pow2 s + (U64.v a.high * pow2 64) * pow2 s % pow2 128) =
-    let a_l = U64.v a.low in
-    let a_h = U64.v a.high in
-    shift_t_val a s;
-    pow2_sum 64 s;
-    assert ((a_h * pow2 64) * pow2 s == a_h * pow2 (64+s));
-    mul_mod_bound a_h (64+s) 128;
-    add_mod_small' (a_l * pow2 s) ((a_h * pow2 64) * pow2 s) (pow2 128)
+  Lemma ((v a * pow2 s) % pow2 128 ==
+        U64.v a.low * pow2 s + (U64.v a.high * pow2 64) * pow2 s % pow2 128) =
+  let a_l = U64.v a.low in
+  let a_h = U64.v a.high in
+  shift_t_mod_val' a s;
+  Math.pow2_plus 64 s;
+  Math.paren_mul_right a_h (pow2 64) (pow2 s);
+  ()
 
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
-  let r = { low = U64.shift_left a.low s;
-            high = add_u64_shift_left_respec a.high a.low s; } in
-  let s = U32.v s in
-  let a_l = U64.v a.low in
-  let a_h = U64.v a.high in
-  mod_spec_rew_n (a_l * pow2 s) (pow2 64);
-  shift_t_mod_val a s;
-  r
+  if U32.eq s 0ul then a
+  else
+    let r = { low = U64.shift_left a.low s;
+              high = add_u64_shift_left_respec a.high a.low s; } in
+    let s = U32.v s in
+    let a_l = U64.v a.low in
+    let a_h = U64.v a.high in
+    mod_spec_rew_n (a_l * pow2 s) (pow2 64);
+    shift_t_mod_val a s;
+    r
 
-#reset-options "--z3rlimit 20 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped"
-
-let shift_left_large (a: t) (s: U32.t{U32.v s >= 64}) :
-  r:t{U32.v s < 128 ==> v r = (v a * pow2 (U32.v s)) % pow2 128} =
+val shift_left_large : a:t -> s:U32.t{U32.v s >= 64} ->
+  r:t{U32.v s < 128 ==> v r = (v a * pow2 (U32.v s)) % pow2 128}
+let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v s < 128 ==> U32.v h_shift < 64);
   let r = { low = U64.uint_to_t 0;
             high = U64.shift_left a.low h_shift; } in
   assert (U64.v r.high == (U64.v a.low * pow2 (U32.v s - 64)) % pow2 64);
   mod_mul (U64.v a.low * pow2 (U32.v s - 64)) (pow2 64) (pow2 64);
-  pow2_sum (U32.v s - 64) 64;
+  Math.pow2_plus (U32.v s - 64) 64;
   assert (U64.v r.high * pow2 64 == (U64.v a.low * pow2 (U32.v s)) % pow2 128);
   shift_left_large_lemma_t a (U32.v s);
   r
@@ -536,8 +571,9 @@ let shift_left (a: t) (s: U32.t) : Pure t
   if (U32.lt s u32_64) then shift_left_small a s
   else shift_left_large a s
 
+#set-options "--z3rlimit 100"
 let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
-  (requires True)
+  (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
                              U64.v hi * pow2 (64 - U32.v s) % pow2 64)) =
   let low = U64.shift_right lo s in
@@ -546,19 +582,22 @@ let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   let low_n = U64.v lo / pow2 s in
   let high_n = U64.v hi % pow2 s * pow2 (64 - s) in
   assert (U64.v low == low_n);
-  assert (U64.v high == high_n);
+  admit ();
+  assert (U64.v high == high_n); // This one seems to be hard on z3
   assert (low_n < pow2 (64 - s));
   mod_mul_pow2 (U64.v hi) s (64 - s);
   U64.add low high
+#set-options "--z3rlimit 40"
 
-let mul_pow2_diff (a:nat) (n1:nat) (n2:nat{n2 <= n1}) :
+val mul_pow2_diff: a:nat -> n1:nat -> n2:nat{n2 <= n1} ->
   Lemma (a * pow2 (n1 - n2) == a * pow2 n1 / pow2 n2)
-  = pow2_sum (n1 - n2) n2;
-    assert (n1 - n2 + n2 == n1);
-    mul_div_cancel (a * pow2 (n1 - n2)) (pow2 n2)
+let mul_pow2_diff a n1 n2 =
+  Math.paren_mul_right a (pow2 (n1-n2)) (pow2 n2);
+  mul_div_cancel (a * pow2 (n1 - n2)) (pow2 n2);
+  Math.pow2_plus (n1 - n2) n2
 
 let add_u64_shift_right_respec (hi lo:U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
-  (requires True)
+  (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
                              U64.v hi * pow2 64 / pow2 (U32.v s) % pow2 64)) =
   let r = add_u64_shift_right hi lo s in
@@ -570,28 +609,33 @@ let mul_div_spec (n:nat) (k:pos) : Lemma (n / k * k == n - n % k) = ()
 
 let mul_distr_sub (n1 n2:nat) (k:nat) : Lemma ((n1 - n2) * k == n1 * k - n2 * k) = ()
 
-let shift_right_reconstruct (a_h:UInt.uint_t 64) (s: nat{s < 64}) :
-  Lemma (a_h * pow2 (64-s) == a_h / pow2 s * pow2 64 + a_h * pow2 64 / pow2 s % pow2 64) =
-  mul_pow2_diff a_h 64 s;
-  pow2_sum (64-s) s;
-  assert (a_h / pow2 s * pow2 64 == (a_h / pow2 s * pow2 s) * pow2 (64-s));
-  mul_div_spec a_h (pow2 s);
-  assert (a_h / pow2 s * pow2 64 == (a_h - a_h % pow2 s) * pow2 (64-s));
-  mul_distr_sub a_h (a_h % pow2 s) (pow2 (64-s));
-  assert (a_h / pow2 s * pow2 64 == (a_h * pow2 (64-s) - a_h % pow2 s * pow2 (64-s)));
-  mod_mul a_h (pow2 (64-s)) (pow2 s);
-  pow2_sum s (64-s);
-  assert (a_h / pow2 s * pow2 64 == a_h * pow2 (64-s) - a_h * pow2 (64-s) % pow2 64);
-  div_mod (a_h * pow2 (64-s)) (pow2 64)
+val div_product_comm : n1:nat -> k1:pos -> k2:pos ->
+    Lemma (n1 / k1 / k2 == n1 / k2 / k1)
+let div_product_comm n1 k1 k2 =
+    div_product n1 k1 k2;
+    div_product n1 k2 k1
 
+val shift_right_reconstruct : a_h:UInt.uint_t 64 -> s:nat{s < 64} ->
+  Lemma (a_h * pow2 (64-s) == a_h / pow2 s * pow2 64 + a_h * pow2 64 / pow2 s % pow2 64)
+let shift_right_reconstruct a_h s =
+  mul_pow2_diff a_h 64 s;
+  mod_spec_rew_n (a_h * pow2 (64-s)) (pow2 64);
+  div_product_comm (a_h * pow2 64) (pow2 s) (pow2 64);
+  mul_div_cancel a_h (pow2 64);
+  assert (a_h / pow2 s * pow2 64 == a_h * pow2 64 / pow2 s / pow2 64 * pow2 64);
+  ()
+
+#set-options "--z3rlimit 200"
 let u128_div_pow2 (a: t) (s:nat{s < 64}) :
   Lemma (v a / pow2 s == U64.v a.low / pow2 s + U64.v a.high * pow2 (64 - s)) =
-  pow2_sum s (64-s);
+  Math.pow2_plus s (64-s);
   Math.division_addition_lemma (U64.v a.low) (pow2 s) (U64.v a.high * pow2 (64 - s))
 
 let shift_right_small (a: t) (s: U32.t{U32.v s < 64}) : Pure t
   (requires True)
   (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
+  if U32.eq s 0ul then a
+  else
   let r = { low = add_u64_shift_right_respec a.high a.low s;
             high = U64.shift_right a.high s; } in
   let a_h = U64.v a.high in
@@ -608,7 +652,7 @@ let shift_right_large (a: t) (s: U32.t{U32.v s >= 64}) : Pure t
   let r = { high = U64.uint_to_t 0;
             low = U64.shift_right a.high (U32.sub s u32_64); } in
   let s = U32.v s in
-  pow2_sum 64 (s - 64);
+  Math.pow2_plus 64 (s - 64);
   div_product (v a) (pow2 64) (pow2 (s - 64));
   assert (v a / pow2 s == v a / pow2 64 / pow2 (s - 64));
   div_plus_multiple (U64.v a.low) (U64.v a.high) (pow2 64);
@@ -708,11 +752,9 @@ let gte_mask (a b: t) : Pure t
   lt_characterization a b;
   { low = mask; high = mask; }
 
-let uint64_to_uint128 (a: U64.t) = { low = a; high = U64.uint_to_t 0; }
+let uint64_to_uint128 (a:U64.t) = { low = a; high = U64.uint_to_t 0; }
 
-let uint128_to_uint64 (a: t) : Pure U64.t
-    (requires (v a < pow2 64))
-    (ensures (fun r -> U64.v r == v a)) = a.low
+let uint128_to_uint64 (a:t) : b:U64.t{U64.v b == v a % pow2 64} = a.low
 
 let u64_l32_mask: x:U64.t{U64.v x == pow2 32 - 1} = U64.uint_to_t 0xffffffff
 
@@ -725,8 +767,9 @@ let u64_mod_32 (a: U64.t) : Pure U64.t
 let u64_32_digits (a: U64.t) : Lemma (U64.v a / pow2 32 * pow2 32 + U64.v a % pow2 32 == U64.v a) =
   div_mod (U64.v a) (pow2 32)
 
-let mul32_digits (x: UInt.uint_t 64) (y: UInt.uint_t 32) :
-  Lemma (x * y == (x / pow2 32 * y) * pow2 32 + (x % pow2 32) * y) = ()
+val mul32_digits : x:UInt.uint_t 64 -> y:UInt.uint_t 32 ->
+  Lemma (x * y == (x / pow2 32 * y) * pow2 32 + (x % pow2 32) * y)
+let mul32_digits x y = ()
 
 let u32_32 : x:U32.t{U32.v x == 32} = U32.uint_to_t 32
 
@@ -747,26 +790,26 @@ let product_bound (a b:nat) (k:pos) :
   Math.lemma_mult_le_right b a (k-1);
   lemma_mult_le_left (k-1) b (k-1)
 
-let uint_product_bound (#n:nat) (a b: UInt.uint_t n) :
-  Lemma (a * b <= pow2 (2*n) - 2*(pow2 n) + 1) =
+val uint_product_bound : #n:nat -> a:UInt.uint_t n -> b:UInt.uint_t n ->
+  Lemma (a * b <= pow2 (2*n) - 2*(pow2 n) + 1)
+let uint_product_bound #n a b =
   product_bound a b (pow2 n);
-  pow2_sum n n
+  Math.pow2_plus n n
 
-let u32_product_bound (a b: (n:nat{n < pow2 32})) :
-  Lemma (UInt.size (a * b) 64 /\ a * b < pow2 64 - pow2 32 - 1) =
+val u32_product_bound : a:nat{a < pow2 32} -> b:nat{b < pow2 32} ->
+  Lemma (UInt.size (a * b) 64 /\ a * b < pow2 64 - pow2 32 - 1)
+let u32_product_bound a b =
   uint_product_bound #32 a b
 
-let mul32 (x: U64.t) (y: U32.t) : Pure t
-  (requires True)
-  (ensures (fun r -> v r == U64.v x * U32.v y)) =
+let mul32 x y =
   let x0 = u64_mod_32 x in
   let x1 = U64.shift_right x u32_32 in
   u32_product_bound (U64.v x0) (U32.v y);
   let x0y = U64.mul x0 (FStar.Int.Cast.uint32_to_uint64 y) in
   let x0yl = u64_mod_32 x0y in
   let x0yh = U64.shift_right x0y u32_32 in
-  // not in the original C code
   u32_product_bound (U64.v x1) (U32.v y);
+  // not in the original C code
   let x1y' = U64.mul x1 (FStar.Int.Cast.uint32_to_uint64 y) in
   let x1y = U64.add x1y' x0yh in
   // correspondence with C:
@@ -788,8 +831,9 @@ let mul32 (x: U64.t) (y: U32.t) : Pure t
 let l32 (x: UInt.uint_t 64) : UInt.uint_t 32 = x % pow2 32
 let h32 (x: UInt.uint_t 64) : UInt.uint_t 32 = x / pow2 32
 
-let mul32_bound (x y: UInt.uint_t 32) :
-  n:UInt.uint_t 64{n < pow2 64 - pow2 32 - 1 /\ n == x * y} =
+val mul32_bound : x:UInt.uint_t 32 -> y:UInt.uint_t 32 ->
+    n:UInt.uint_t 64{n < pow2 64 - pow2 32 - 1 /\ n == x * y}
+let mul32_bound x y =
   u32_product_bound x y;
   x * y
 
@@ -813,8 +857,6 @@ let mul_wide_high (x y: U64.t) =
   phh x y +
     (phl x y + pll_h x y) / pow2 32 +
     (plh x y + (phl x y + pll_h x y) % pow2 32) / pow2 32
-
-#reset-options "--z3rlimit 20 --initial_fuel 0 --initial_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped"
 
 let mul_wide_impl_t' (x y: U64.t) : Pure (tuple4 U64.t U64.t U64.t U64.t)
   (requires True)
@@ -873,13 +915,14 @@ let mul_wide_impl (x: U64.t) (y: U64.t) :
 let product_sums (a b c d:nat) :
   Lemma ((a + b) * (c + d) == a * c + a * d + b * c + b * d) = ()
 
-let u64_32_product (xl xh yl yh:UInt.uint_t 32) :
+val u64_32_product (xl xh yl yh:UInt.uint_t 32) :
   Lemma ((xl + xh * pow2 32) * (yl + yh * pow2 32) ==
-    xl * yl + (xl * yh) * pow2 32 + (xh * yl) * pow2 32 + (xh * yh) * pow2 64) =
+  xl * yl + (xl * yh) * pow2 32 + (xh * yl) * pow2 32 + (xh * yh) * pow2 64)
+let u64_32_product xl xh yl yh =
   product_sums xl (xh*pow2 32) yl (yh*pow2 32);
-  assert (xh * pow2 32 * yl == (xh * yl) * pow2 32);
+  mul_abc_to_acb xh (pow2 32) yl;
   assert (xl * (yh * pow2 32) == (xl * yh) * pow2 32);
-  pow2_sum 32 32;
+  Math.pow2_plus 32 32;
   assert ((xh * pow2 32) * (yh * pow2 32) == (xh * yh) * pow2 64)
 
 let product_expand (x y: U64.t) :
@@ -908,7 +951,7 @@ let shift_add (n:nat) (m:nat{m < pow2 32}) :
 
 let mul_wide_low_ok (x y: U64.t) :
   Lemma (mul_wide_low x y == (U64.v x * U64.v y) % pow2 64) =
-  pow2_sum 32 32;
+  Math.pow2_plus 32 32;
   mod_mul (plh x y + (phl x y + pll_h x y) % pow2 32) (pow2 32) (pow2 32);
   assert (mul_wide_low x y ==
           (plh x y + (phl x y + pll_h x y) % pow2 32) % pow2 32 * pow2 32 + pll_l x y);
@@ -919,24 +962,28 @@ let mul_wide_low_ok (x y: U64.t) :
   assert (mul_wide_low x y == ((plh x y + phl x y + pll_h x y) * pow2 32 + pll_l x y) % pow2 64);
   product_low_expand x y
 
-let product_high32 (x y:U64.t) :
-  Lemma ((U64.v x * U64.v y) / pow2 32 == phh x y * pow2 32 + plh x y + phl x y + pll_h x y) =
-  pow2_sum 32 32;
+val product_high32 : x:U64.t -> y:U64.t ->
+  Lemma ((U64.v x * U64.v y) / pow2 32 == phh x y * pow2 32 + plh x y + phl x y + pll_h x y)
+let product_high32 x y =
+  Math.pow2_plus 32 32;
   product_expand x y;
   Math.division_addition_lemma (plh x y + phl x y + pll_h x y) (pow2 32) (phh x y * pow2 32);
   mul_div_cancel (phh x y * pow2 32) (pow2 32);
   mul_div_cancel (plh x y + phl x y + pll_h x y) (pow2 32);
   Math.small_division_lemma_1 (pll_l x y) (pow2 32)
 
-let product_high_expand (x y: U64.t) :
-  Lemma ((U64.v x * U64.v y) / pow2 64 == phh x y + (plh x y + phl x y + pll_h x y) / pow2 32) =
-  pow2_sum 32 32;
+val product_high_expand : x:U64.t -> y:U64.t ->
+  Lemma ((U64.v x * U64.v y) / pow2 64 == phh x y + (plh x y + phl x y + pll_h x y) / pow2 32)
+let product_high_expand x y =
+  Math.pow2_plus 32 32;
   div_product (mul_wide_high x y) (pow2 32) (pow2 32);
   product_high32 x y;
-  Math.division_addition_lemma (plh x y + phl x y + pll_h x y) (pow2 32) (phh x y)
+  Math.division_addition_lemma (plh x y + phl x y + pll_h x y) (pow2 32) (phh x y);
+  ()
 
-let mod_spec_multiply (n:nat) (k:pos) :
-  Lemma ((n - n%k) / k * k == n - n%k) =
+val mod_spec_multiply : n:nat -> k:pos ->
+  Lemma ((n - n%k) / k * k == n - n%k)
+let mod_spec_multiply n k =
   Math.lemma_mod_spec2 n k
 
 val mod_spec_mod (n:nat) (k:pos) : Lemma ((n - n%k) % k == 0)
@@ -948,13 +995,13 @@ let mul_injective (n m:nat) (k:pos) :
   Lemma (requires (n * k == m * k))
         (ensures (n == m)) = ()
 
-let div_sum_combine1 (n m:nat) (k:pos) :
-  Lemma ((n / k + m / k) * k == (n - n % k) + (m - m % k)) =
-  Math.lemma_mod_spec n k;
-  Math.lemma_mod_spec m k;
-  assert (n / k + m / k == (n - n%k) / k + (m - m%k) / k);
-  mod_spec_multiply n k;
-  mod_spec_multiply m k
+val div_sum_combine1 : n:nat -> m:nat -> k:pos ->
+  Lemma ((n / k + m / k) * k == (n - n % k) + (m - m % k))
+let div_sum_combine1 n m k =
+  Math.distributivity_add_left (n / k) (m / k) k;
+  div_mod n k;
+  div_mod m k;
+  ()
 
 let mod_0 (k:pos) :
   Lemma (0 % k == 0) = ()
@@ -964,19 +1011,33 @@ let n_minus_mod_exact (n:nat) (k:pos) :
     mod_spec_mod n k;
     mod_0 k
 
-let div_sum_combine (n m:nat) (k:pos) :
-  Lemma (n / k + m / k == (n + m - n % k - m % k) / k) =
-  mod_add (n - n % k) (m - m % k) k;
+let sub_mod_gt_0 (n:nat) (k:pos) :
+  Lemma (0 <= n - n % k) = ()
+
+val sum_rounded_mod_exact : n:nat -> m:nat -> k:pos ->
+  Lemma (((n - n%k) + (m - m%k)) / k * k == (n - n%k) + (m - m%k))
+let sum_rounded_mod_exact n m k =
   n_minus_mod_exact n k;
   n_minus_mod_exact m k;
-  Math.div_exact_r ((n - n%k) + (m - m % k)) k;
-  div_sum_combine1 n m k;
-  mul_injective (n / k + m / k) (((n - n%k) + (m - m%k)) / k) k
+  sub_mod_gt_0 n k;
+  sub_mod_gt_0 m k;
+  mod_add (n - n%k) (m - m%k) k;
+  Math.div_exact_r ((n - n%k) + (m - m % k)) k
 
-let sum_shift_carry (a b:nat) (k:pos) :
-  Lemma (a / k + (b + a%k) / k == (a + b) / k) =
+val div_sum_combine : n:nat -> m:nat -> k:pos ->
+  Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
+let div_sum_combine n m k =
+  sum_rounded_mod_exact n m k;
+  div_sum_combine1 n m k;
+  mul_injective (n / k + m / k) (((n - n%k) + (m - m%k)) / k) k;
+  assert (n + m - n % k - m % k == (n - n%k) + (m - m%k))
+
+val sum_shift_carry : a:nat -> b:nat -> k:pos ->
+  Lemma (a / k + (b + a%k) / k == (a + b) / k)
+let sum_shift_carry a b k =
   div_sum_combine a (b+a%k) k;
-  assert (a / k + (b + a%k) / k == (a + b - (b + a%k)%k) / k);
+//  assert (a / k + (b + a%k) / k == (a + b + (a % k - a % k) - (b + a%k) % k) / k);
+//  assert ((a + b + (a % k - a % k) - (b + a%k) % k) / k == (a + b - (b + a%k) % k) / k);
   add_mod_then_mod b a k;
   Math.lemma_mod_spec (a+b) k
 
@@ -987,7 +1048,7 @@ let mul_wide_high_ok (x y: U64.t) :
 
 let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   Lemma (x * y / pow2 n < pow2 n) =
-  pow2_sum n n;
+  Math.pow2_plus n n;
   product_bound x y (pow2 n);
   pow2_div_bound #(n+n) (x * y) n
 

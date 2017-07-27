@@ -3,11 +3,10 @@ open FStar.Tactics
 
 (* Tests for the grewrite function *)
 
-let test_grewrite (a b c : int) (l : b == c) =
+let test_grewrite (a b c : int) (l : squash (b == c)) =
     assert_by_tactic (liftM2' grewrite (quote b) (quote c);;
-                      ql <-- quote l;
-                      exact ql;;
                       trivial;;
+                      exact (quote l);;
                       return ()) (a + b == a + c)
 
 let test_grewrite2 (w x y z:int) =
@@ -25,14 +24,13 @@ let test_grewrite3 (w x y z : int) =
 let test_grewrite4 (f : int -> int -> int) (w : int) =
     assert_by_tactic (implies_intro;;
                       seq (liftM2' grewrite (quote (f w w)) (quote w))
-                          revert)
+                          l_revert)
                      (f w w == w ==> f (f w w) (f w w) == w)
 
-let test_grewrite5 (n m : int) (p1 : n == m)
+let test_grewrite5 (n m : int) (p1 : squash (n == m))
                                (p2 : (fun x -> x + n) == (fun x -> m + x)) =
     assert_by_tactic (liftM2' grewrite (quote n) (quote m);;
-                      liftM1' exact (quote p1);;
-                      trivial)
+                      flip;; exact (quote p1))
                      ((fun x -> x + n) == (fun x -> m + x))
 
 let guard (b:bool) : tactic unit =
@@ -41,8 +39,8 @@ let guard (b:bool) : tactic unit =
 
 // Sanity checks for term_eq
 let test_term_eq (m n o : int) =
-    assert_by_tactic (liftM1' guard (liftM2' term_eq (quote n) (quote n))) True;
-    assert_by_tactic (liftM1' guard (liftM2' term_eq (quote (n+m)) (quote (n+m)))) True;
+    assert_by_tactic (liftM1' guard (liftM2 term_eq (quote n) (quote n))) True;
+    assert_by_tactic (liftM1' guard (liftM2 term_eq (quote (n+m)) (quote (n+m)))) True;
 
     // These fail because of uvars present in types (of the arguments)
     //assert_by_tactic (liftM1' guard (liftM2' term_eq (quote (fun x -> n)) (quote (fun x -> n)))) True;

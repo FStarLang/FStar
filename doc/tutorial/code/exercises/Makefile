@@ -29,7 +29,7 @@ Ex12c.Format.fst \
 Ex12d.Pad.fst \
 Ex12e.Pad.fst \
 Ex12f.TMAC.fst \
-Ex12g.TMAC2.fst 
+Ex12g.TMAC2.fst
 
 FSTAR_HOME=../../../../
 HINTS_ENABLED?=--use_hints

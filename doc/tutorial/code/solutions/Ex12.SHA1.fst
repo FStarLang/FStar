@@ -1,12 +1,16 @@
 module Ex12.SHA1
 
-open FStar.HyperStack.ST
-open FStar.Seq
-open FStar.Monotonic.Seq
-open FStar.HyperHeap
-open FStar.HyperStack
-open FStar.Monotonic.RRef
+(* open FStar.HyperStack.ST *)
+(* open FStar.Seq *)
+(* open FStar.Monotonic.Seq *)
+(* open FStar.HyperHeap *)
+(* open FStar.HyperStack *)
+(* open FStar.Monotonic.RRef *)
 
+open FStar.Preorder
+open FStar.Heap
+open FStar.ST
+open FStar.MRef
 
 //open FStar.All
 open FStar.Seq

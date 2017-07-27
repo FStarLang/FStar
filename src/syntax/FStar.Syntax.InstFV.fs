@@ -28,7 +28,7 @@ type inst_t = list<(lident * universes)>
 
 
 
-let mk t s = S.mk s !t.tk t.pos
+let mk t s = S.mk s None t.pos
 
 let rec inst (s:term -> fv -> term) t =
     let t = SS.compress t in
@@ -114,11 +114,8 @@ and inst_comp s c = match c.n with
 
 
 and inst_lcomp_opt s l = match l with
-    | None
-    | Some (Inr _) -> l
-    | Some (Inl lc) ->
-       Some (Inl ({lc with res_typ=inst s lc.res_typ;
-                           comp=(fun () -> inst_comp s (lc.comp()))}))
+    | None -> None
+    | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (inst s)})
 
 let instantiate i t = match i with
     | [] -> t

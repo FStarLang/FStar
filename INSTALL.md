@@ -38,6 +38,9 @@ required dependencies (except for Z3) using the following commands:
         $ opam pin add fstar --dev-repo
         $ opam install fstar
 
+### Platform specific early troubleshooting ###
+- for mac users, make sure that `ginstall` is on your system (present in macports in `coreutils`) 
+
 ## Binary releases ##
 
 Every now and then we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
