@@ -1460,6 +1460,7 @@ let compile_op:
           | '*' -> "Star"
           | '?' -> "Question"
           | ':' -> "Colon"
+          | '$' -> "Dollar"
           | c ->
               FStar_Exn.raise
                 (FStar_Errors.Error
