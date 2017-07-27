@@ -2259,12 +2259,17 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     let solve_eq c1_comp c2_comp =
         let _ = if Env.debug env <| Options.Other "EQ"
                 then BU.print_string "solve_c is using an equality constraint\n" in
-        let sub_probs = List.map2 (fun (a1, _) (a2, _) -> TProb<| sub_prob a1 EQ a2 "effect arg")
+        if not (lid_equals c1_comp.effect_name c2_comp.effect_name)
+        then giveup env (BU.format2 "incompatible effects: %s <> %s"
+                                        (Print.lid_to_string c1_comp.effect_name)
+                                        (Print.lid_to_string c2_comp.effect_name)) orig
+        else let sub_probs =
+                List.map2 (fun (a1, _) (a2, _) -> TProb<| sub_prob a1 EQ a2 "effect arg")
                         c1_comp.effect_args
                         c2_comp.effect_args in
-        let guard = U.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
-        let wl = solve_prob orig (Some guard) [] wl in
-        solve env (attempt sub_probs wl)
+             let guard = U.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
+             let wl = solve_prob orig (Some guard) [] wl in
+             solve env (attempt sub_probs wl)
     in
 
     let solve_sub c1 edge c2 =
@@ -2337,50 +2342,51 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                     (Print.comp_to_string c2) in
          let c1, c2 = N.ghost_to_pure env c1, N.ghost_to_pure env c2 in
          match c1.n, c2.n with
-               | GTotal (t1, _), Total (t2, _) when (U.non_informative t2) ->
-                 solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+         | GTotal (t1, _), Total (t2, _) when (U.non_informative t2) ->
+            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
-               | GTotal _, Total _ ->
-                 giveup env "incompatible monad ordering: GTot </: Tot"  orig
+         | GTotal _, Total _ ->
+            giveup env "incompatible monad ordering: GTot </: Tot"  orig
 
-               | Total  (t1, _), Total  (t2, _)
-               | GTotal (t1, _), GTotal (t2, _)
-               | Total  (t1, _), GTotal (t2, _) -> //rigid-rigid 1
-                 solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+         | Total  (t1, _), Total  (t2, _)
+         | GTotal (t1, _), GTotal (t2, _)
+         | Total  (t1, _), GTotal (t2, _) -> //rigid-rigid 1
+            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
-               | GTotal _, Comp _
-               | Total _,  Comp _ ->
-                 solve_c env ({problem with lhs=mk_Comp <| Env.comp_to_comp_typ env c1}) wl
+         | GTotal _, Comp _
+         | Total _,  Comp _ ->
+            solve_c env ({problem with lhs=mk_Comp <| Env.comp_to_comp_typ env c1}) wl
 
-               | Comp _, GTotal _
-               | Comp _, Total _ ->
-                 solve_c env ({problem with rhs=mk_Comp <| Env.comp_to_comp_typ env c2}) wl
+         | Comp _, GTotal _
+         | Comp _, Total _ ->
+            solve_c env ({problem with rhs=mk_Comp <| Env.comp_to_comp_typ env c2}) wl
 
-               | Comp _, Comp _ ->
-                 if (U.is_ml_comp c1 && U.is_ml_comp c2)
-                    || (U.is_total_comp c1 && (U.is_total_comp c2 || U.is_ml_comp c2))
-                 then solve_t env (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") wl
-                 else let c1_comp = Env.comp_to_comp_typ env c1 in
-                      let c2_comp = Env.comp_to_comp_typ env c2 in
-                      if problem.relation=EQ && lid_equals c1_comp.effect_name c2_comp.effect_name
-                      then solve_eq c1_comp c2_comp
-                      else
-                         let c1 = Env.unfold_effect_abbrev env c1 in
-                         let c2 = Env.unfold_effect_abbrev env c2 in
-                         if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
-                         begin match Env.monad_leq env c1.effect_name c2.effect_name with
-                           | None ->
-                             if U.is_ghost_effect c1.effect_name
-                             && U.is_pure_effect c2.effect_name
-                             && U.non_informative (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env c2.result_typ)
-                             then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=identity_mlift} in
-                                  solve_sub c1 edge c2
-                             else giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
-                                             (Print.lid_to_string c1.effect_name)
-                                             (Print.lid_to_string c2.effect_name)) orig
-                           | Some edge ->
-                             solve_sub c1 edge c2
-                         end
+         | Comp _, Comp _ ->
+            if (U.is_ml_comp c1 && U.is_ml_comp c2)
+            || (U.is_total_comp c1 && U.is_total_comp c2)
+            || (U.is_total_comp c1 && U.is_ml_comp c2 && problem.relation=SUB)
+            then solve_t env (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") wl
+            else let c1_comp = Env.comp_to_comp_typ env c1 in
+                 let c2_comp = Env.comp_to_comp_typ env c2 in
+                 if problem.relation=EQ
+                 then solve_eq c1_comp c2_comp
+                 else begin
+                    let c1 = Env.unfold_effect_abbrev env c1 in
+                    let c2 = Env.unfold_effect_abbrev env c2 in
+                    if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
+                    match Env.monad_leq env c1.effect_name c2.effect_name with
+                    | None ->
+                        if U.is_ghost_effect c1.effect_name
+                        && U.is_pure_effect c2.effect_name
+                        && U.non_informative (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env c2.result_typ)
+                        then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=identity_mlift} in
+                            solve_sub c1 edge c2
+                        else giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
+                                        (Print.lid_to_string c1.effect_name)
+                                        (Print.lid_to_string c2.effect_name)) orig
+                    | Some edge ->
+                        solve_sub c1 edge c2
+                 end
 
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)

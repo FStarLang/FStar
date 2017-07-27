@@ -1043,7 +1043,7 @@ let check_hints                  () = get_check_hints                 ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
-let debug_at_level      modul level = (modul = "" || get_debug () |> List.contains modul) && debug_level_geq level
+let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
