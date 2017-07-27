@@ -35,6 +35,15 @@ let acls = ST.alloc []
    F* infers a fully precise predicate transformer semantics for them.
 *)
 
+(* 
+// Uncomment these types and make them precise enough to pass the test
+// BEGIN: Ex10aExercise
+val grant : e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> True))
+val revoke: e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> True))
+// END: Ex10aExercise
+*)
 
 let grant e = acls := e::!acls
 
@@ -90,9 +99,3 @@ let test_acls f =
   //let _ = read f in       (* not ok any more *) 
   ()
 
-// BEGIN: Ex10aExercise
-val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> True))
-val revoke: e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> True))
-// END: Ex10aExercise
