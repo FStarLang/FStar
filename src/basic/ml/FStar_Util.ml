@@ -293,7 +293,7 @@ let smap_copy (m:'value smap) = BatHashtbl.copy m
 let smap_size (m:'value smap) = BatHashtbl.length m
 
 type 'value psmap = (string, 'value) BatMap.t
-let psmap_empty : 'value psmap = BatMap.empty
+let psmap_empty (_: unit) : 'value psmap = BatMap.empty
 let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
 let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
   try BatMap.find key map with Not_found -> dflt
@@ -315,7 +315,7 @@ let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
 let imap_copy (m:'value imap) = BatHashtbl.copy m
 
 type 'value pimap = (int, 'value) BatMap.t
-let pimap_empty : 'value pimap = BatMap.empty
+let pimap_empty (_: unit) : 'value pimap = BatMap.empty
 let pimap_add (map: 'value pimap) (key: int) (value: 'value) = BatMap.add key value map
 let pimap_find_default (map: 'value pimap) (key: int) (dflt: 'value) =
   try BatMap.find key map with Not_found -> dflt

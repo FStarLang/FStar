@@ -141,7 +141,7 @@ type id_info_table = {
 
 let id_info_table_empty =
     { id_info_enabled = false;
-      id_info_db = BU.psmap_empty;
+      id_info_db = BU.psmap_empty ();
       id_info_buffer = [] }
 
 open FStar.Range
@@ -156,7 +156,7 @@ let id_info__insert ty_map db info =
     let start = start_of_range use_range in
     let row, col = line_of_pos start, col_of_pos start in
 
-    let rows = BU.psmap_find_default db fn BU.pimap_empty in
+    let rows = BU.psmap_find_default db fn (BU.pimap_empty ()) in
     let cols = BU.pimap_find_default rows row [] in
 
     insert_col_info col info cols
@@ -185,7 +185,7 @@ let id_info_promote table ty_map =
                      table.id_info_db table.id_info_buffer }
 
 let id_info_at_pos (table: id_info_table) (fn:string) (row:int) (col:int) : option<identifier_info> =
-    let rows = BU.psmap_find_default table.id_info_db fn BU.pimap_empty in
+    let rows = BU.psmap_find_default table.id_info_db fn (BU.pimap_empty ()) in
     let cols = BU.pimap_find_default rows row [] in
 
     match find_nearest_preceding_col_info col cols with

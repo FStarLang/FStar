@@ -80,7 +80,7 @@ val smap_copy: smap<'value> -> smap<'value>
 val smap_size: smap<'value> -> int
 
 type psmap<'value> = Collections.Map<string,'value> (* pure version *)
-val psmap_empty: psmap<'value>
+val psmap_empty: unit -> psmap<'value> // GH-1161
 val psmap_add: psmap<'value> -> string -> 'value -> psmap<'value>
 val psmap_find_default: psmap<'value> -> string -> 'value -> 'value
 val psmap_try_find: psmap<'value> -> string -> option<'value>
@@ -98,7 +98,7 @@ val imap_keys: imap<'value> -> list<int>
 val imap_copy: imap<'value> -> imap<'value>
 
 type pimap<'value> = Collections.Map<int,'value> (* pure version *)
-val pimap_empty: pimap<'value>
+val pimap_empty: unit -> pimap<'value> // GH-1161
 val pimap_add: pimap<'value> -> int -> 'value -> pimap<'value>
 val pimap_find_default: pimap<'value> -> int -> 'value -> 'value
 val pimap_try_find: pimap<'value> -> int -> option<'value>

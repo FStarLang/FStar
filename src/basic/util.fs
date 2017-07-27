@@ -280,7 +280,7 @@ let smap_copy (m:smap<'value>) =
 let smap_size (m:smap<'value>) = m.Count
 
 type psmap<'value> = Collections.Map<string,'value>
-let psmap_empty : psmap<'value> = Collections.Map.empty
+let psmap_empty (_: unit) : psmap<'value> = Collections.Map.empty
 let psmap_add (map: psmap<'value>) (key: string) (value: 'value) = Collections.Map.add key value map
 let psmap_find_default (map: psmap<'value>) (key: string) (dflt: 'value) =
   match Collections.Map.tryFind key map with | Some v -> v | None -> dflt
@@ -309,7 +309,7 @@ let imap_copy (m:imap<'value>) =
     n
 
 type pimap<'value> = Collections.Map<int,'value>
-let pimap_empty : pimap<'value> = Collections.Map.empty
+let pimap_empty (_: unit) : pimap<'value> = Collections.Map.empty
 let pimap_add (map: pimap<'value>) (key: int) (value: 'value) = Collections.Map.add key value map
 let pimap_find_default (map: pimap<'value>) (key: int) (dflt: 'value) =
   match Collections.Map.tryFind key map with | Some v -> v | None -> dflt
