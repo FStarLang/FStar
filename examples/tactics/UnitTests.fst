@@ -57,13 +57,10 @@ assume val l : unit -> unit -> Lemma (requires p1) (ensures p2)
 
 let _ =
     assert_by_tactic (apply_lemma (quote l);;
-                      exact (quote ());;
-                      exact (quote ());;
                       exact (quote proof_1)) p2
 
 let _ =
     assert_by_tactic (apply_lemma (quote (l ()));;
-                      exact (quote ());;
                       exact (quote proof_1)) p2
 
 (* This fails, since when we fully apply `l` we get a Pure *)

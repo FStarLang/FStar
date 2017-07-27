@@ -499,6 +499,10 @@ let apply (tm:term) : tac<unit> =
     focus (__apply true tm)
 
 let apply_lemma (tm:term) : tac<unit> =
+    let is_unit_t t = match (SS.compress t).n with
+    | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
+    | _ -> false
+    in
     bind cur_goal (fun goal ->
     let tm, t, guard = goal.context.type_of goal.context tm in
     if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply_lemma: got non-trivial guard" else
@@ -507,10 +511,16 @@ let apply_lemma (tm:term) : tac<unit> =
     let uvs, implicits, subst =
        List.fold_left (fun (uvs, guard, subst) (b, aq) ->
                let b_t = SS.subst subst b.sort in
-               let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
-               (u, aq)::uvs,
-               FStar.TypeChecker.Rel.conj_guard guard g_u,
-               S.NT(b, u)::subst)
+               if is_unit_t b_t
+               then
+                   // Simplification: if the argument is simply unit, then don't ask for it
+                   (U.exp_unit, aq)::uvs, guard, S.NT(b, U.exp_unit)::subst
+               else
+                   let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
+                   (u, aq)::uvs,
+                   FStar.TypeChecker.Rel.conj_guard guard g_u,
+                   S.NT(b, u)::subst
+               )
        ([], guard, [])
        bs
     in
