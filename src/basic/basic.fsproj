@@ -94,6 +94,7 @@
     <Compile Include="unionfind.fs" />
     <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Const.fs" />
+    <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />
     <Compile Include="version.fsi" />
     <Compile Include="version.fs" />

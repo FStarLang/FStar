@@ -131,13 +131,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
     } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map (step_from_native_step ps) native_tactics in
-    let mk_refl nm arity interpretation =
-      let nm = RD.fstar_refl_lid nm in {
-      N.name=nm;
-      N.arity=arity;
-      N.strong_reduction_ok=false;
-      N.interpretation=(fun _rng args -> interpretation nm args)
-    } in
     let mktac0 (name : string) (f : tac<'a>) (e_a : 'a -> term) (ta : typ) : N.primitive_step =
         mk name 1 (mk_tactic_interpretation_0 ps f e_a ta)
     in

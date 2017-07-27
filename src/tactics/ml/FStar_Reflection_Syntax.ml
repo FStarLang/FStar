@@ -110,11 +110,7 @@ let __compare_binder:
   FStar_Reflection_Types.binder ->
     FStar_Reflection_Types.binder -> FStar_Order.order
   =
-      fun b1 b2 -> match FStar_Reflection_Basic.order_binder b1 b2
-      with
-      | FStar_Reflection_Data.Eq -> FStar_Order.Eq
-      | FStar_Reflection_Data.Lt -> FStar_Order.Lt
-      | FStar_Reflection_Data.Gt -> FStar_Order.Gt
+      FStar_Reflection_Basic.compare_binder
 let compare_binder:
   FStar_Reflection_Types.binder ->
     FStar_Reflection_Types.binder -> FStar_Order.order
