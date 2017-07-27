@@ -300,6 +300,48 @@ let writer_init (b:bslice) : ST (option writer)
     assert (writer_valid w);
     Some w
 
+#reset-options "--z3rlimit 10"
+
+// writer_reinit takes an encoded store at b (and its parsed number of entries)
+// and some adjacent scratch space and allows to extend that store
+// NOTE: the obligation is that b contains the encoded store; it would be more
+// natural to allow any validated store; a proof that parsing is invertible
+// should allow validated stores to be used, via an elift)
+val writer_reinit (b:bslice) (num_entries: U32.t) (s: erased store) (scratch: bslice) : ST writer
+    (requires (fun h0 -> live h0 b /\
+                      buffers_adjacent b.p scratch.p /\
+                      4 + U32.v num_entries < pow2 32 /\
+                      begin
+                        let s = reveal s in
+                        let enc = encode_store s in
+                        num_entries == s.num_entries /\
+                        as_seq h0 b == enc
+                      end))
+    (ensures (fun h0 w h1 ->
+                h0 == h1 /\
+                writer_inv h1 w /\
+                reveal w.entries_written_list == (reveal s).entries))
+let writer_reinit b num_entries s scratch =
+    assert (U32.v b.len >= 4);
+    let (length_field, entries_written_buf) = bslice_split_at b 4ul in
+    let w = { length_field = length_field.p;
+              entries_written_buf = entries_written_buf;
+              entries_written_list = elift1 (fun s -> s.entries) s;
+              num_entries_written = num_entries;
+              entries_scratch = scratch; } in
+    begin
+      let h = get() in
+      let s = reveal s in
+      assert (writer_valid w);
+      is_concat_append b.p length_field.p entries_written_buf.p h;
+      lemma_append_inj (u32_to_be s.num_entries) (encode_many s.entries encode_entry (U32.v s.num_entries))
+                       (as_seq h length_field) (as_seq h entries_written_buf);
+      ()
+    end;
+    w
+
+#reset-options
+
 let join_slices (b1 b2:bslice) : Pure (option bslice)
     (requires (buffers_adjacent b1.p b2.p))
     (ensures (fun r ->

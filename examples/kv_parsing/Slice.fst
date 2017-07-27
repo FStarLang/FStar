@@ -147,6 +147,26 @@ let is_concat_append (#a:Type) (b b1 b2:B.buffer a) h :
                     B.as_seq h b == B.as_seq h b1 `append` B.as_seq h b2)) =
     lemma_eq_intro (B.as_seq h b) (B.as_seq h b1 `append` B.as_seq h b2)
 
+let is_concat_suffix (#a:Type) (b b1 b2:B.buffer a) h :
+    Lemma (requires (is_concat_of b b1 b2 /\
+                     B.live h b))
+          (ensures (B.live h b /\
+                    B.live h b2 /\
+                    // just to satisfy the bounds in the refinements to slice
+                    B.length b1 + B.length b2 == B.length b /\
+                    B.as_seq h b2 == slice (B.as_seq h b) (B.length b1) (B.length b))) =
+    lemma_eq_intro (B.as_seq h b2) (slice (B.as_seq h b) (B.length b1) (B.length b))
+
+let is_concat_prefix (#a:Type) (b b1 b2:B.buffer a) h :
+    Lemma (requires (is_concat_of b b1 b2 /\
+                     B.live h b))
+          (ensures (B.live h b /\
+                    B.live h b1 /\
+                    // just to satisfy the bounds in the refinements to slice
+                    B.length b1 + B.length b2 == B.length b /\
+                    B.as_seq h b1 == slice (B.as_seq h b) 0 (B.length b1))) =
+    lemma_eq_intro (B.as_seq h b1) (slice (B.as_seq h b) 0 (B.length b1))
+
 (*! Splitting buffers *)
 
 (** This single primitive is sufficient to encode many useful patterns, and
