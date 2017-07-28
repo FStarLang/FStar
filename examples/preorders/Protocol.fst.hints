@@ -1437,8 +1437,9 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "bool_inversion", "bool_typing",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_ArrayUtils.init_at_seq",
+        "equation_ArrayUtils.all_some", "equation_ArrayUtils.init_at_seq",
         "equation_MonotonicArray.all_init", "equation_MonotonicArray.array",
         "equation_MonotonicArray.as_initialized_seq",
         "equation_MonotonicArray.as_initialized_subseq",

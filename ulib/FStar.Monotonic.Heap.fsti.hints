@@ -1,5 +1,5 @@
 [
-  "6±±wT\\ùû≈\u0000ËÀŸ⁄@T",
+  "ì2ˆ%wpå\u0011L\u007f˜\tòJWj",
   [
     [
       "FStar.Monotonic.Heap.compare_addrs",
@@ -305,6 +305,28 @@
       ],
       0
     ],
-    [ "FStar.Monotonic.Heap.upd_upd_same_mref", 1, 2, 1, [ "@query" ], 0 ]
+    [ "FStar.Monotonic.Heap.upd_upd_same_mref", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Monotonic.Heap.lemma_modifies_and_equal_dom_sel_diff_addr",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Monotonic.Heap.lemma_modifies_and_equal_dom_sel_diff_addr",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ]
   ]
 ]
