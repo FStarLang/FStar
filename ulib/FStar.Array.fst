@@ -97,7 +97,8 @@ abstract val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
                             /\ contains h1 x
-                            /\ h1==heap_upd h0 x (Seq.upd (sel h0 x) n v))))
+			    /\ modifies (Set.singleton (addr_of x)) h0 h1
+			    /\ sel h1 x == Seq.upd (sel h0 x) n v)))
 let upd #a x n v =
   let s = !x in
   let s' = Seq.upd s n v in
@@ -122,7 +123,8 @@ val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                             (ensures (fun h0 _u h1 ->
                                       (j < Seq.length (sel h0 x))
                                       /\ contains h1 x
-                                      /\ (h1==heap_upd h0 x (Seq.swap (sel h0 x) i j))))
+				      /\ modifies (Set.singleton (addr_of x)) h0 h1
+				      /\ sel h1 x == Seq.swap (sel h0 x) i j))
 let swap #a x i j =
   let tmpi = index x i in
   let tmpj = index x j in

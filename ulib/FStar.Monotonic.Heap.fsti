@@ -229,3 +229,9 @@ val lemma_upd_equals_upd_tot_for_contained_refs
   :Lemma (requires True)
          (ensures  (upd_tot h r x == upd h r x))
 	 [SMTPat (upd_tot h r x)]
+
+val lemma_modifies_and_equal_dom_sel_diff_addr
+  (#a:Type0)(#rel:preorder a) (s:set nat) (h0:heap) (h1:heap) (r:mref a rel)
+  :Lemma (requires (modifies s h0 h1 /\ equal_dom h0 h1 /\ (~ (S.mem (addr_of r) s))))
+         (ensures  (sel h0 r == sel h1 r))
+	 [SMTPat (modifies s h0 h1); SMTPat (equal_dom h0 h1); SMTPat (sel h1 r)]
