@@ -52,8 +52,8 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
   (intf, impl), (dsenv, env), remaining
 
 // Ibid.
-let tc_prims () = //:uenv =
-  let _, dsenv, env = tc_prims () in
+let tc_prims env = //:uenv =
+  let _, dsenv, env = tc_prims env in
   (dsenv, env)
 
 
@@ -613,65 +613,65 @@ let commit_name_tracking (cur_mod: modul_t) names name_events =
   let updater = update_names_from_event cur_mod_str in
   List.fold_left updater names name_events
 
-let with_name_tracking (f: unit -> 'a) : 'a * list<name_tracking_event> =
-  (* Aliases are only recorded for the current module, hence ‘cur_mode_str’ *)
-  let pgamma_hook = !TcEnv.push_in_gamma_hook in
-  let popen_hook = !DsEnv.push_open_hook in
-  let pinclude_hook = !DsEnv.push_include_hook in
-  let pma_hook = !DsEnv.push_module_abbrev_hook in
-
+let fresh_name_tracking_hooks () =
   let events = Util.mk_ref [] in
   let push_event evt = events := evt :: !events in
-  DsEnv.push_module_abbrev_hook :=
-    (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l)));
-  DsEnv.push_include_hook :=
-    (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)));
-  DsEnv.push_open_hook :=
-    (fun dsenv op -> push_event (NTOpen (DsEnv.current_module dsenv, op)));
-  TcEnv.push_in_gamma_hook :=
-    (fun _ s -> push_event (NTBinding s));
-  let output = f () in
-  TcEnv.push_in_gamma_hook := pgamma_hook;
-  DsEnv.push_open_hook := popen_hook;
-  DsEnv.push_include_hook := pinclude_hook;
-  DsEnv.push_module_abbrev_hook := pma_hook;
+  events,
+  { DsEnv.ds_push_module_abbrev_hook =
+      (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l)));
+    DsEnv.ds_push_include_hook =
+      (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)));
+    DsEnv.ds_push_open_hook =
+      (fun dsenv op -> push_event (NTOpen (DsEnv.current_module dsenv, op))) },
+  { TcEnv.tc_push_in_gamma_hook =
+      (fun _ s -> push_event (NTBinding s)) }
 
-  // printf "<<<<\n%A\n>>>>\n" !events;
-  (output, List.rev !events)
+let track_name_changes ((dsenv, tcenv): env_t)
+    : env_t * (env_t -> env_t * list<name_tracking_event>) =
+  let dsenv_old_hooks, tcenv_old_hooks = DsEnv.ds_hooks dsenv, TcEnv.tc_hooks tcenv in
+  let events, dsenv_new_hooks, tcenv_new_hooks = fresh_name_tracking_hooks () in
+  ((DsEnv.set_ds_hooks dsenv dsenv_new_hooks,
+    TcEnv.set_tc_hooks tcenv tcenv_new_hooks),
+   (fun (dsenv, tcenv) ->
+      (DsEnv.set_ds_hooks dsenv dsenv_old_hooks,
+       TcEnv.set_tc_hooks tcenv tcenv_old_hooks),
+      List.rev !events))
 
 let run_push st kind text line column peek_only =
   let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
 
-  let (res, env_mark, errors, st'), name_events = with_name_tracking (fun () ->
-    // If we are at a stage where we have not yet pushed a fragment from the
-    // current buffer, see if some dependency is stale. If so, update it. Also
-    // if this is the first chunk, we need to restore the command line options.
-    let restore_cmd_line_options, (stack, env, ts) =
-      if nothing_left_to_pop st
-      then true, update_deps st.repl_fname st.repl_curmod stack env ts
-      else false, (stack, env, ts) in
+  let env, finish_name_tracking = track_name_changes env in // begin name tracking
 
-    let stack = (env, st.repl_curmod) :: stack in
-    let env = push_with_kind env kind restore_cmd_line_options "#push" in
+  // If we are at a stage where we have not yet pushed a fragment from the
+  // current buffer, see if some dependency is stale. If so, update it. Also
+  // if this is the first chunk, we need to restore the command line options.
+  let restore_cmd_line_options, (stack, env, ts) =
+    if nothing_left_to_pop st
+    then true, update_deps st.repl_fname st.repl_curmod stack env ts
+    else false, (stack, env, ts) in
 
-    let frag = { frag_text = text; frag_line = line; frag_col = column } in
-    let res = check_frag env st.repl_curmod (frag, false) in
+  let stack = (env, st.repl_curmod) :: stack in
+  let env = push_with_kind env kind restore_cmd_line_options "#push" in
 
-    let errors = FStar.Errors.report_all() |> List.map json_of_issue in
-    FStar.Errors.clear ();
+  let frag = { frag_text = text; frag_line = line; frag_col = column } in
+  let res = check_frag env st.repl_curmod (frag, false) in
 
-    (res, env_mark, errors,
-     { st with repl_stack = stack; repl_ts = ts;
-               repl_line = line; repl_column = column })) in
+  let errors = FStar.Errors.report_all() |> List.map json_of_issue in
+  FStar.Errors.clear ();
+
+  let st' = { st with repl_stack = stack; repl_ts = ts;
+                      repl_line = line; repl_column = column } in
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
+    let env, name_events = finish_name_tracking env in // finish name tracking
     ((QueryOK, JsonList errors),
      Inl ({ st' with repl_curmod = curmod; repl_env = env;
                      repl_names = commit_name_tracking curmod st'.repl_names name_events }))
   | _ ->
     // The previous version of the protocol required the client to send a #pop
     // immediately after failed pushes; this version pops automatically.
+    let env, _ = finish_name_tracking env in // finish name tracking
     let _, st'' = run_pop ({ st' with repl_env = env }) in
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
@@ -1078,22 +1078,23 @@ open FStar.TypeChecker.Common
 let interactive_mode' (filename:string): unit =
   write_hello ();
 
-  let (stack, env, ts), name_events = with_name_tracking (fun () ->
-    //type check prims and the dependencies
-    let filenames, maybe_intf = deps_of_our_file filename in
-    let env = tc_prims () in
-    let stack, env, ts = tc_deps None [] env filenames [] in
-    let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-    let env = fst env, TcEnv.set_range (snd env) initial_range in
-    let env =
-      match maybe_intf with
-      | Some intf ->
-          // We found an interface: record its contents in the desugaring environment
-          // to be interleaved with the module implementation on-demand
-          FStar.Universal.load_interface_decls env intf
-      | None ->
-          env
-    in (stack, env, ts)) in
+  //type check prims and the dependencies
+  let filenames, maybe_intf = deps_of_our_file filename in
+  let env = init_env () in
+  let env, finish_name_tracking = track_name_changes env in // begin name tracking
+  let env = tc_prims env in
+  let stack, env, ts = tc_deps None [] env filenames [] in
+  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
+  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+  let env =
+    match maybe_intf with
+    | Some intf ->
+        // We found an interface: record its contents in the desugaring environment
+        // to be interleaved with the module implementation on-demand
+        FStar.Universal.load_interface_decls env intf
+    | None ->
+        env in
+  let env, name_events = finish_name_tracking env in // end name tracking
 
   TcEnv.toggle_id_info (snd env) true;
   let init_st =

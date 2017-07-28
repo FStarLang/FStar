@@ -94,6 +94,10 @@ type env
 //  remaining_iface_decls:BU.smap<(list<Parser.AST.decl>)>
 //  syntax_only:          bool;                             (* Whether next push should skip type-checking *)
 //}
+type dsenv_hooks =
+  { ds_push_open_hook : env -> open_module_or_namespace -> unit;
+    ds_push_include_hook : env -> lident -> unit;
+    ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
 type foundname =
   | Term_name of typ * bool // indicates if mutable
@@ -102,6 +106,8 @@ type foundname =
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
+val ds_hooks : env -> dsenv_hooks
+val set_ds_hooks: env -> dsenv_hooks -> env
 val syntax_only: env -> bool
 val set_syntax_only: env -> bool -> env
 val qualify: env -> ident -> lident
@@ -147,11 +153,8 @@ val push_bv: env -> ident -> env * bv
 val push_bv_mutable: env -> ident -> env * bv
 val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env
 val push_sigelt: env -> sigelt -> env
-val push_open_hook : ref<(env -> open_module_or_namespace -> unit)>
 val push_namespace: env -> lident -> env
-val push_include_hook : ref<(env -> lident -> unit)>
 val push_include: env -> lident -> env
-val push_module_abbrev_hook : ref<(env -> ident -> lident -> unit)>
 val push_module_abbrev : env -> ident -> lident -> env
 val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
 

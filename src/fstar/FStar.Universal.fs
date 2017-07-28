@@ -69,21 +69,25 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
   in
   Desugar.desugar_modul env ast
 
-
 (***********************************************************************)
-(* Checking Prims.fst                                                  *)
+(* Initialize a clean environment                                      *)
 (***********************************************************************)
-let tc_prims () : (Syntax.modul * int)
-                  * DsEnv.env
-                  * TcEnv.env =
+let init_env () : DsEnv.env * TcEnv.env =
   let solver = if Options.lax() then SMT.dummy else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
   let env = TcEnv.initial_env TcTerm.tc_term TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   (* Set up some tactics callbacks *)
   let env = { env with synth = FStar.Tactics.Interpreter.synth } in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
   env.solver.init env;
+  (DsEnv.empty_env (), env)
+
+(***********************************************************************)
+(* Checking Prims.fst                                                  *)
+(***********************************************************************)
+let tc_prims ((dsenv, env): DsEnv.env * TcEnv.env)
+    : (Syntax.modul * int) * DsEnv.env * TcEnv.env =
   let prims_filename = Options.prims () in
-  let dsenv, prims_mod = parse (DsEnv.empty_env ()) None prims_filename in
+  let dsenv, prims_mod = parse dsenv None prims_filename in
   let (prims_mod, env), elapsed_time =
     record_time (fun () -> Tc.check_module env prims_mod) in
   (prims_mod, elapsed_time), dsenv, env
@@ -276,7 +280,7 @@ let batch_mode_tc_no_prims dsenv env filenames =
   all_mods, dsenv, env
 
 let batch_mode_tc filenames =
-  let prims_mod, dsenv, env = tc_prims () in
+  let prims_mod, dsenv, env = tc_prims (init_env ()) in
   if not (Options.explicit_deps ()) && Options.debug_any () then begin
     FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
     FStar.Util.print1 "Here's the list of filenames we will process: %s\n"

@@ -200,11 +200,6 @@ let rec trie_descend_exact (tr: trie<'a>) (query: query) : option<trie<'a>> =
     Util.bind_opt (names_find_exact tr.namespaces ns)
       (fun scope -> trie_descend_exact scope query)
 
-let rec trie_descend_exact_error (tr: trie<'a>) (query: query) : trie<'a> =
-  match trie_descend_exact tr query with
-  | Some t -> t
-  | None -> failwith (Util.format1 "Unknown module: %s" (String.concat "." query))
-
 let names_insert (name_cols: names<'a>) (id: string) (v: 'a) : names<'a> =
   let bt, name_cols =
     match name_cols with
@@ -229,7 +224,7 @@ let trie_insert (tr: trie<'a>) (ns_query: query) (id: string) (v: 'a) : trie<'a>
 let trie_import (tr: trie<'a>) (host_query: query) (included_query: query)
                 (mutator: trie<'a> -> trie<'a> -> string -> trie<'a>) =
   let label = query_to_string included_query in
-  let included_trie = trie_descend_exact_error tr included_query in
+  let included_trie = Util.dflt trie_empty (trie_descend_exact tr included_query) in
   trie_mutate tr host_query (fun tr -> mutator tr included_trie label)
 
 let trie_include (tr: trie<'a>) (host_query: query) (included_query: query)

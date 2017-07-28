@@ -78,6 +78,7 @@ type proof_namespace = list<flat_proof_namespace>
 
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
+
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
@@ -109,7 +110,8 @@ type env = {
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                   (* callback into the native tactics engine *)
-  identifier_info: ref<FStar.TypeChecker.Common.id_info_table> (* information on identifiers *)
+  identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
+  tc_hooks       : tcenv_hooks                     (* hooks that the interactive more relies onto for symbol tracking *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -130,6 +132,11 @@ and guard_t = {
   implicits:  implicits;
 }
 and implicits = list<(string * env * uvar * term * typ * Range.range)>
+and tcenv_hooks =
+  { tc_push_in_gamma_hook : (env -> binding -> unit) }
+
+val tc_hooks : env -> tcenv_hooks
+val set_tc_hooks: env -> tcenv_hooks -> env
 
 type env_t = env
 val initial_env : (env -> term -> term*lcomp*guard_t) ->
@@ -196,7 +203,6 @@ val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
 
 
 (* Introducing identifiers and updating the environment *)
-val push_in_gamma_hook : ref<(env -> binding -> unit)>
 val push_sigelt        : env -> sigelt -> env
 val push_sigelt_inst   : env -> sigelt -> universes -> env
 val push_bv            : env -> bv -> env

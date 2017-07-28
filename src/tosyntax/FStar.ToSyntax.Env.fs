@@ -95,7 +95,17 @@ type env = {
   docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
   remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
+  ds_hooks:             dsenv_hooks                       (* hooks that the interactive more relies onto for symbol tracking *)
 }
+and dsenv_hooks =
+  { ds_push_open_hook : env -> open_module_or_namespace -> unit;
+    ds_push_include_hook : env -> lident -> unit;
+    ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
+
+let default_ds_hooks =
+  { ds_push_open_hook = (fun _ _ -> ());
+    ds_push_include_hook = (fun _ _ -> ());
+    ds_push_module_abbrev_hook = (fun _ _ _ -> ()) }
 
 type foundname =
   | Term_name of typ * bool // indicates if mutable
@@ -141,6 +151,8 @@ let qualify env id =
     | Some monad -> mk_field_projector_name_from_ident (qual (current_module env) monad) id
 let syntax_only env = env.syntax_only
 let set_syntax_only env b = { env with syntax_only = b }
+let ds_hooks env = env.ds_hooks
+let set_ds_hooks env hooks = { env with ds_hooks = hooks }
 let new_sigmap () = BU.smap_create 100
 let empty_env () = {curmodule=None;
                     curmonad=None;
@@ -156,7 +168,8 @@ let empty_env () = {curmodule=None;
                     expect_typ=false;
                     docs=new_sigmap();
                     remaining_iface_decls=[];
-                    syntax_only=false}
+                    syntax_only=false;
+                    ds_hooks=default_ds_hooks}
 
 let sigmap env = env.sigmap
 let has_all_in_scope env =
@@ -895,8 +908,6 @@ let push_sigelt env s =
   let env = {env with scope_mods = !globals } in
   env
 
-let push_open_hook = BU.mk_ref (fun _ _ -> ())
-
 let push_namespace env ns =
   (* namespace resolution disabled, but module abbrevs enabled *)
   let (ns', kd) = match resolve_module_name env ns false with
@@ -910,10 +921,8 @@ let push_namespace env ns =
      let _ = fail_if_curmodule env ns ns' in
      (ns', Open_module)
   in
-     !push_open_hook env (ns', kd);
+     env.ds_hooks.ds_push_open_hook env (ns', kd);
      push_scope_mod env (Open_module_or_namespace (ns', kd))
-
-let push_include_hook = BU.mk_ref (fun _ _ -> ())
 
 let push_include env ns =
     (* similarly to push_namespace in the case of modules, we allow
@@ -921,7 +930,7 @@ let push_include env ns =
     let ns0 = ns in
     match resolve_module_name env ns false with
     | Some ns ->
-      !push_include_hook env ns;
+      env.ds_hooks.ds_push_include_hook env ns;
       let _ = fail_if_curmodule env ns0 ns in
       (* from within the current module, include is equivalent to open *)
       let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module)) in
@@ -956,14 +965,12 @@ let push_include env ns =
     | _ ->
       raise (Error (BU.format1 "include: Module %s cannot be found" ns.str, Ident.range_of_lid ns))
 
-let push_module_abbrev_hook = BU.mk_ref (fun _ _ _ -> ())
-
 let push_module_abbrev env x l =
   (* both namespace resolution and module abbrevs disabled:
      in 'module A = B', B must be fully qualified *)
   if module_is_defined env l
   then let _ = fail_if_curmodule env l l in
-       !push_module_abbrev_hook env x l;
+       env.ds_hooks.ds_push_module_abbrev_hook env x l;
        push_scope_mod env (Module_abbrev (x,l))
   else raise (Error(BU.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
@@ -1167,7 +1174,7 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
       scope_mods = List.map (fun x -> Open_module_or_namespace x) auto_open;
       iface=intf;
       admitted_iface=admitted } in
-    List.iter (fun op -> !push_open_hook env' op) (List.rev auto_open);
+    List.iter (fun op -> env.ds_hooks.ds_push_open_hook env' op) (List.rev auto_open);
     env'
   in
 

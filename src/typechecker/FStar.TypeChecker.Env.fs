@@ -80,6 +80,7 @@ type proof_namespace = list<flat_proof_namespace>
 
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
+
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
@@ -110,8 +111,9 @@ type env = {
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
-  is_native_tactic: lid -> bool;                      (* callback into the native tactics engine *)
-  identifier_info: ref<FStar.TypeChecker.Common.id_info_table> (* information on identifiers *)
+  is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
+  identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
+  tc_hooks       : tcenv_hooks                        (* hooks that the interactive more relies onto for symbol tracking *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -132,6 +134,14 @@ and guard_t = {
   implicits:  implicits;
 }
 and implicits = list<(string * env * uvar * term * typ * Range.range)>
+and tcenv_hooks =
+  { tc_push_in_gamma_hook : (env -> binding -> unit) }
+
+let default_tc_hooks =
+  { tc_push_in_gamma_hook = (fun _ _ -> ()) }
+let tc_hooks (env: env) = env.tc_hooks
+let set_tc_hooks env hooks = { env with tc_hooks = hooks }
+
 type env_t = env
 
 type sigtable = BU.smap<sigelt>
@@ -186,7 +196,8 @@ let initial_env tc_term type_of universe_of solver module_lid =
                | None -> [[]]);
     synth = (fun e g tau -> failwith "no synthesizer available");
     is_native_tactic = (fun _ -> false);
-    identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty
+    identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
+    tc_hooks = default_tc_hooks
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -1007,8 +1018,6 @@ let is_reifiable_function (env:env) (t:S.term) : bool =
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////
 
-let push_in_gamma_hook = BU.mk_ref (fun _ _ -> ())
-
 // The environment maintains the invariant that gamma is of the form:
 //   l_1 ... l_n val_1 ... val_n
 // where l_i is a local binding and val_i is a top-level binding.
@@ -1027,7 +1036,7 @@ let push_in_gamma env s =
     | local :: rest ->
         local :: push x rest
   in
-  !push_in_gamma_hook env s;
+  env.tc_hooks.tc_push_in_gamma_hook env s;
   { env with gamma = push s env.gamma }
 
 let push_sigelt env s =
