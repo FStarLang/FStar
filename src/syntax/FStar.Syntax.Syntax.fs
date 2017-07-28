@@ -499,10 +499,13 @@ let pat_bvs (p:pat) : list<bv> =
   List.rev <| aux [] p
 
 (* Gen sym *)
-let next_id =
+let gen_reset =
     let x = Util.mk_ref 0 in
-    fun () -> incr x; !x
-
+    let gen () = incr x; !x in
+    let reset () = x := 0 in
+    gen, reset
+let next_id = fst gen_reset
+let reset_gensym = snd gen_reset
 let range_of_ropt = function
     | None -> dummyRange
     | Some r -> r
