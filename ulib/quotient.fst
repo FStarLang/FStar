@@ -23,14 +23,26 @@ let squash (#a:Type) (r:equiv a) (x:a) : p:(quotient a r) =
   let f (y:a) : GTot bool = SEM.strong_excluded_middle (r x y) in
   f
 
-(* let g (x:nat) = x + x + x *)
-
-(* let bidule : tactic unit = *)
-(*   t <-- quote g ; *)
-(*   unfold_def t ;; *)
-(*   smt *)
+let intro_quotient (#a #b:Type) (ra:equiv a) (rb:equiv b) (f: a -> quotient b rb)
+  : Pure (quotient a ra -> quotient b rb)
+    (requires (forall x y. ra x y ==> f x == f y))
+    (ensures (fun g -> forall x. g (squash ra x) == f x))
+= let g (p:quotient a ra) = fun (y:b) -> SEM.strong_excluded_middle (exists x. p x /\ f x y) in
+  let h (p:quotient a ra) (x:a) : Lemma (requires (p x /\ (forall y. ra x y ==> p y))) (ensures (exists y. b2t (g p y))) =
+    assert (exists y. f x y) ;
+    assert (exists y. b2t (g p y))
+  in
+  admit () ;
+  g
 
 let prop_equiv (a b:prop) :Lemma (requires (a == b)) (ensures (a <==> b)) = ()
+
+let tau : tactic unit =
+  hp <-- forall_intro ;
+  dump "A" ;;
+  smt
+
+let bidule = assert_by_tactic tau (forall x. x + 1 == 1 + x)
 
 let intro_quotient_type (#a:Type) (r:equiv a) (f: a -> prop)
   : Ghost (quotient a r -> prop)
@@ -62,9 +74,3 @@ let mod5 : equiv int = admit () ; imod5
 
 let test = (2).[mod5] = (7).[mod5]
 
-let intro_quotient (#a #b:Type) (ra:equiv a) (rb:equiv b) (f: a -> quotient b rb)
-  : Pure (quotient a ra -> quotient b rb)
-    (requires (forall x y. ra x y ==> f x == f y))
-    (ensures (fun g -> forall x. g (squash ra x) == f x))
-= let g (p:quotient a ra) : quotient b rb = fun (y:b) -> SEM.strong_excluded_middle (exists x. p x /\ f x y) in
-  g
