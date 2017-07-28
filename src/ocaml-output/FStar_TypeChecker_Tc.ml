@@ -3923,8 +3923,7 @@ let tc_decl:
                                      FStar_Syntax_Syntax.mk_lb
                                        ((FStar_Util.Inr lbname), uvs,
                                          FStar_Parser_Const.effect_ALL_lid,
-                                         tval,
-                                         (lb.FStar_Syntax_Syntax.lbdef)) in
+                                         tval, def) in
                                    (false, uu____6153, quals_opt1))) in
                            (match uu____6014 with
                             | (gen2,lb1,quals_opt1) ->
