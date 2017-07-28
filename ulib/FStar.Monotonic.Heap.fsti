@@ -56,7 +56,7 @@ let valid_upd (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a) = rel (
 
 val upd_tot: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` r} -> x:a{valid_upd h r x} -> Tot heap
 
-val upd: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel -> x:a{valid_upd h r x} -> GTot heap
+val upd: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel -> x:a -> GTot heap
 
 val alloc: #a:Type0 -> rel:preorder a -> heap -> a -> mm:bool -> Tot (mref a rel * heap)
 
@@ -148,9 +148,14 @@ val lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:heap) (r1:mref a rel) (r
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
 	 [SMTPat (sel h r1); SMTPat (sel h r2)]
 
-(*
- * AR: this is true only if the preorder is same, else r2 may not be contained in h
- *)
+val lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: heap) (r1 r2: mref a rel) (x: a)
+  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ addr_of r1 = addr_of r2))
+         (ensures (upd h r1 x == upd h r2 x))
+         [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
+
+ (*
+  * AR: this is true only if the preorder is same, else r2 may not be contained in h
+  *)
 val lemma_sel_upd1 (#a:Type0) (#rel:preorder a) (h:heap) (r1:mref a rel) (x:a{valid_upd h r1 x}) (r2:mref a rel)
   :Lemma (requires (addr_of r1 = addr_of r2))
          (ensures  (sel (upd h r1 x) r2 == x))
@@ -229,3 +234,125 @@ val lemma_upd_equals_upd_tot_for_contained_refs
   :Lemma (requires True)
          (ensures  (upd_tot h r x == upd h r x))
 	 [SMTPat (upd_tot h r x)]
+
+
+(*** Untyped views of monotonic references *)
+
+(* Definition and ghost decidable equality *)
+val aref: Type0
+val dummy_aref: aref
+val aref_equal (a1 a2: aref) : Ghost bool (requires True) (ensures (fun b -> b == true <==> a1 == a2))
+
+(* Introduction rule *)
+val aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> Tot aref
+
+(* Operators lifted from ref *)
+val addr_of_aref: a: aref -> GTot nat
+val addr_of_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> Lemma (addr_of r == addr_of_aref (aref_of r))
+[SMTPat (addr_of_aref (aref_of r))]
+val aref_is_mm: aref -> GTot bool
+val is_mm_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> Lemma (is_mm r == aref_is_mm (aref_of r))
+[SMTPat (aref_is_mm (aref_of r))]
+val aref_unused_in: aref -> heap -> Type0
+val unused_in_aref_of: #t: Type0 -> #rel: preorder t -> r: mref t rel -> h: heap -> Lemma (unused_in r h <==> aref_unused_in (aref_of r) h)
+[SMTPat (aref_unused_in (aref_of r) h)]
+val contains_aref_unused_in: #a:Type -> #rel: preorder a -> h:heap -> x:mref a rel -> y:aref -> Lemma
+  (requires (contains h x /\ aref_unused_in y h))
+  (ensures  (addr_of x <> addr_of_aref y))
+
+(* Elimination rule *)
+val aref_live_at: h: heap -> a: aref -> t: Type0 -> rel: preorder t -> GTot Type0
+val gref_of: a: aref -> t: Type0 -> rel: preorder t -> Ghost (mref t rel) (requires (exists h . aref_live_at h a t rel)) (ensures (fun _ -> True))
+val ref_of: h: heap -> a: aref -> t: Type0 -> rel: preorder t -> Pure (mref t rel) (requires (aref_live_at h a t rel)) (ensures (fun x -> aref_live_at h a t rel /\ addr_of (gref_of a t rel) == addr_of x /\ is_mm x == aref_is_mm a))
+val aref_live_at_aref_of
+  (h: heap)
+  (#t: Type0)
+  (#rel: preorder t)
+  (r: mref t rel)
+: Lemma
+  (ensures (aref_live_at h (aref_of r) t rel <==> contains h r))
+  [SMTPat (aref_live_at h (aref_of r) t rel)]
+val contains_gref_of
+  (h: heap)
+  (a: aref)
+  (t: Type0)
+  (rel: preorder t)
+: Lemma
+  (requires (exists h' . aref_live_at h' a t rel))
+  (ensures ((exists h' . aref_live_at h' a t rel) /\ (contains h (gref_of a t rel) <==> aref_live_at h a t rel)))
+  [SMTPatOr [
+    [SMTPat (contains h (gref_of a t rel))];
+    [SMTPat (aref_live_at h a t rel)];
+  ]]
+
+val aref_of_gref_of
+  (a: aref)
+  (t: Type0)
+  (rel: preorder t)
+: Lemma
+  (requires (exists h . aref_live_at h a t rel))
+  (ensures ((exists h . aref_live_at h a t rel) /\ aref_of (gref_of a t rel) == a))
+  [SMTPat (aref_of (gref_of a t rel))]
+
+(* Operators lowered to ref *)
+abstract
+let addr_of_gref_of
+  (a: aref)
+  (t: Type0)
+  (rel: preorder t)
+: Lemma
+  (requires (exists h . aref_live_at h a t rel))
+  (ensures ((exists h . aref_live_at h a t rel) /\ addr_of (gref_of a t rel) == addr_of_aref a))
+  [SMTPat (addr_of (gref_of a t rel))]
+= addr_of_aref_of (gref_of a t rel)
+
+abstract
+let is_mm_gref_of
+  (a: aref)
+  (t: Type0)
+  (rel: preorder t)
+: Lemma
+  (requires (exists h . aref_live_at h a t rel))
+  (ensures ((exists h . aref_live_at h a t rel) /\ is_mm (gref_of a t rel) == aref_is_mm a))
+  [SMTPat (is_mm (gref_of a t rel))]
+= is_mm_aref_of (gref_of a t rel)
+
+abstract
+let unused_in_gref_of
+  (a: aref)
+  (t: Type0)
+  (rel: preorder t)
+  (h: heap)
+: Lemma
+  (requires (exists h . aref_live_at h a t rel))
+  (ensures ((exists h . aref_live_at h a t rel) /\ (unused_in (gref_of a t rel) h <==> aref_unused_in a h)))
+  [SMTPat (unused_in (gref_of a t rel) h)]
+= unused_in_aref_of (gref_of a t rel) h
+
+abstract
+let sel_ref_of
+  (a: aref)
+  (t: Type0)
+  (rel: preorder t)
+  (h1 h2: heap)
+: Lemma
+  (requires (aref_live_at h1 a t rel /\ aref_live_at h2 a t rel))
+  (ensures (aref_live_at h2 a t rel /\ sel h1 (ref_of h2 a t rel) == sel h1 (gref_of a t rel)))
+  [SMTPat (sel h1 (ref_of h2 a t rel))]
+= ()
+
+abstract
+let upd_ref_of
+  (a: aref)
+  (t: Type0)
+  (rel: preorder t)
+  (h1 h2: heap)
+  (x: t)
+: Lemma
+  (requires (aref_live_at h1 a t rel /\ aref_live_at h2 a t rel))
+  (ensures (aref_live_at h2 a t rel /\ upd h1 (ref_of h2 a t rel) x == upd h1 (gref_of a t rel) x))
+  [SMTPat (upd h1 (ref_of h2 a t rel) x)]
+= ()
+
+(* Work around #1088 *)
+val _eof: unit
