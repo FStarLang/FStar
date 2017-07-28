@@ -8,6 +8,7 @@
       1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_preorder_",
         "equation_FStar.Monotonic.Heap.valid_upd", "equation_Prims.l_True",
         "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "true_interp"
@@ -15,7 +16,7 @@
       0
     ],
     [
-      "ImmutableSTwHeaps.260401",
+      "ImmutableSTwHeaps.260441",
       1,
       2,
       1,
@@ -70,6 +71,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_preorder_",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_FStar.Monotonic.Heap.valid_upd",
@@ -109,6 +111,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_preorder_",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_FStar.Monotonic.Heap.valid_upd",

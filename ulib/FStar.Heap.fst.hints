@@ -1,1 +1,18 @@
-[ "¥\u000f&]\u001d\u001a¢R\u000fBïÅ|\u0006çˆ", [ null ] ]
+[
+  "’å\u001ec\u001aãvvZÜádê2∞õ",
+  [
+    [
+      "FStar.Heap.trivial_preorder",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder_",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "true_interp"
+      ],
+      0
+    ]
+  ]
+]

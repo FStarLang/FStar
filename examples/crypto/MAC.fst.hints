@@ -83,6 +83,7 @@
         "constructor_distinct_Prims.Cons",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Heap.trivial_preorder_",
         "equation_FStar.Monotonic.Heap.only",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
         "equation_Prims.l_True", "equation_SHA1.hmac_sha1",
