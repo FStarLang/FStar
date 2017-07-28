@@ -93,6 +93,8 @@ let stateful_validator #t (p: parser t) = input:bslice -> Stack (option (off:U32
                           (let bs = as_seq h1 input in
                             validation_checks_parse bs r (p bs))))
 
+#reset-options "--z3rlimit 10"
+
 let validate_u16_array_st : stateful_validator parse_u16_array = fun input ->
   match parse_u16_st input with
   | Some (n, off) -> begin
@@ -126,8 +128,6 @@ let validate_u32_array_st : stateful_validator parse_u32_array = fun input ->
     end
   | None -> None
 
-#reset-options "--z3rlimit 10"
-
 [@"substitute"]
 let then_check #t (p: parser t) (v: stateful_validator p)
                #t' (p': parser t') (v': stateful_validator p')
@@ -143,28 +143,143 @@ fun input ->
     end
   | None -> None
 
-#reset-options
-
 // eta expansion is necessary to get the right subtyping check
 let validate_entry_st : stateful_validator parse_entry = fun input ->
   then_check parse_u16_array validate_u16_array_st
              parse_u32_array validate_u32_array_st
              (fun key value -> EncodedEntry key.len16 key.a16 value.len32 value.a32) input
 
-#reset-options "--z3rlimit 10"
+// TODO: oops, how do we import C.Loops? we need kremlib on the include path...
 
-// TODO: cyclic dependency in Frames check due to recursion
-noextract
-val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:U32.t) : Tot (stateful_validator (parse_many p (U32.v n))) (decreases (U32.v n))
-[@"substitute"]
-let rec validate_many_st #t p v n : stateful_validator (parse_many p (U32.v n)) = fun input ->
-  if U32.eq n 0ul then Some 0ul
-  else let n':U32.t = U32.sub n 1ul in
-       then_check p v
-                  (parse_many p (U32.v n')) (validate_many_st p v n')
-                  (fun e es -> e::es) input
+(* To be extracted as:
+    int i = <start>;
+    bool b = false;
+    for (; (!b) && (i != <end>); ++i) {
+      b = <f> i;
+    }
+    // i and b must be in scope after the loop
+*)
+val interruptible_for:
+  start:U32.t ->
+  finish:U32.t{U32.v finish >= U32.v start} ->
+  inv:(mem -> nat -> bool -> GTot Type0) ->
+  f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> Stack bool
+                        (requires (fun h -> inv h (U32.v i) false))
+                        (ensures (fun h_1 b h_2 -> inv h_1 (U32.v i) false /\ inv h_2 U32.(v i + 1) b)) ) ->
+  Stack (U32.t * bool)
+    (requires (fun h -> inv h (U32.v start) false))
+    (ensures (fun _ res h_2 -> let (i, b) = res in ((if b then True else i == finish) /\ inv h_2 (U32.v i) b)))
+let rec interruptible_for start finish inv f =
+  if start = finish then
+    (finish, false)
+  else
+    let start' = U32.(start +^ 1ul) in
+    if f start
+    then (start', true)
+    else interruptible_for start' finish inv f
 
-#reset-options
+module HH = FStar.Monotonic.HyperHeap
+
+val modifies_one_trans (r:HH.rid) (h0 h1 h2:mem) :
+    Lemma (requires (modifies_one r h0 h1 /\
+                     modifies_one r h1 h2))
+          (ensures (modifies_one r h0 h2))
+let modifies_one_trans r h0 h1 h2 = ()
+
+#reset-options "--z3rlimit 25"
+
+val parse_many_parse_one (#t:Type) (p:parser t) (n:nat{n > 0}) (bs:bytes) :
+    Lemma (requires (Some? (parse_many p n bs)))
+          (ensures (Some? (p bs)))
+let parse_many_parse_one #t p n bs = ()
+
+// TODO: finish this proof; need to think about the induction more
+val validate_n_more (#t:Type) (p:parser t) (n m:nat) (buf:bslice)
+    (off:U32.t{U32.v off <= U32.v buf.len}) (off':U32.t) (h:mem) :
+    Lemma (requires (live h buf /\
+                    U32.v off + U32.v off' <= U32.v buf.len /\
+                    begin
+                      let bs = as_seq h buf in
+                      let bs' = as_seq h (advance_slice buf off) in
+                      Some? (parse_many p n bs) /\
+                      U32.v off == snd (Some?.v (parse_many p n bs)) /\
+                      Some? (parse_many p m bs') /\
+                      U32.v off' == snd (Some?.v (parse_many p m bs'))
+                    end))
+          (ensures (live h buf /\
+                   begin
+                    let bs = as_seq h buf in
+                    Some? (parse_many p (n + m) bs) /\
+                    U32.v off + U32.v off' == snd (Some?.v (parse_many p (n + m) bs))
+                   end))
+    (decreases n)
+let rec validate_n_more #t p n m buf off off' h =
+    match n with
+    | 0 -> ()
+    | _ -> let bs = as_seq h buf in
+          let bs' = as_seq h (advance_slice buf off) in
+          parse_many_parse_one p n bs;
+          let off_d = snd (Some?.v (p bs)) in
+          let off_d_u32 = U32.uint_to_t off_d in
+          admit();
+          validate_n_more p (n-1) (m+1) buf (U32.add off off_d_u32) (U32.sub off' off_d_u32) h
+
+val validate_one_more (#t:Type) (p:parser t) (n:nat) (buf:bslice)
+    (off:U32.t{U32.v off <= U32.v buf.len}) (off':U32.t) (h:mem) :
+    Lemma (requires (live h buf /\
+                    U32.v off + U32.v off' <= U32.v buf.len /\
+                    begin
+                      let bs = as_seq h buf in
+                      let bs' = as_seq h (advance_slice buf off) in
+                      Some? (parse_many p n bs) /\
+                      U32.v off == snd (Some?.v (parse_many p n bs)) /\
+                      Some? (p bs') /\
+                      U32.v off' == snd (Some?.v (p bs'))
+                    end))
+          (ensures (live h buf /\
+                   begin
+                    let bs = as_seq h buf in
+                    Some? (parse_many p (n + 1) bs) /\
+                    U32.v off + U32.v off' == snd (Some?.v (parse_many p (n + 1) bs))
+                   end))
+let validate_one_more #t p n buf off off' h =
+    validate_n_more p n 1 buf off off' h
+
+val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:U32.t) :
+    stateful_validator (parse_many p (U32.v n))
+let validate_many_st #t p v n = fun buf ->
+    let h0 = get() in
+    push_frame();
+    let ptr_off = salloc #(n:U32.t{U32.v n <= U32.v buf.len}) 0ul in
+    let h0' = get() in
+    let (i, failed) = interruptible_for 0ul n
+      (fun h i failed ->
+        live h buf /\
+        contains h ptr_off /\
+        poppable h /\
+        modifies_one ptr_off.id h0' h /\
+        begin
+          let bs = as_seq h buf in
+          not failed ==> Some? (parse_many p i bs) /\
+                         U32.v (sel h ptr_off) == snd (Some?.v (parse_many p i bs))
+        end)
+      (fun i -> let h = get() in
+             let off = !ptr_off in
+             let buf' = advance_slice buf off in
+             match v buf' with
+             | Some off' ->
+              if u32_add_overflows off off' then true
+              else (ptr_off := U32.(off +^ off');
+                   let h1 = get() in
+                   modifies_one_trans ptr_off.id h0' h h1;
+                   validate_one_more p (U32.v i) buf off off' h1;
+                   false)
+             | None -> true) in
+    let off = !ptr_off in
+    pop_frame();
+    if failed then None
+    // why is the invariant insufficient to prove this?
+    else (admit(); Some off)
 
 let validate_done_st : stateful_validator parsing_done = fun input ->
   if U32.eq input.len 0ul then Some 0ul else None
