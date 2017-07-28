@@ -1,1 +1,17 @@
-[ "¥\u000f&]\u001d\u001a¢R\u000fBïÅ|\u0006çˆ", [ null ] ]
+[
+  "ÿö!ó∏{{\u0011„ûff0GEÉ",
+  [
+    [
+      "FStar.Heap.ref",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ]
+  ]
+]

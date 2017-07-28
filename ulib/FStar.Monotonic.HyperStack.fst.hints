@@ -1112,6 +1112,7 @@
         "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_b05295ea25e1fbfe5a4bd48cb81ddfff",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_FStar.Map.restrict", "typing_FStar.Map.domain",
+        "typing_FStar.Map.restrict",
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h",
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__tip",
         "typing_FStar.Monotonic.HyperStack.is_in",

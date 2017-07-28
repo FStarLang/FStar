@@ -2,6 +2,19 @@
   "_™L4‡\u0013\u0017±eÄÉ™‹zù~",
   [
     [
+      "RPC.msg_buffer",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
       "RPC.send",
       1,
       2,
@@ -9,8 +22,19 @@
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
         "equation_Formatting.message", "equation_Platform.Bytes.bytes",
-        "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.send",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0
@@ -23,8 +47,45 @@
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
         "equation_Formatting.message", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.empty_bytes", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "equation_Platform.Bytes.empty_bytes", "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.recv",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.recv",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.recv",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0

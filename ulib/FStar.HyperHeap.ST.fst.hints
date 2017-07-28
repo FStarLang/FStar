@@ -54,12 +54,7 @@
       1,
       2,
       1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.HyperHeap.sel", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
+      [ "@query", "equation_FStar.Heap.trivial_preorder", "true_interp" ],
       0
     ],
     [
@@ -71,16 +66,47 @@
       0
     ],
     [
-      "FStar.HyperHeap.ST.alloc_post",
-      1,
+      "FStar.HyperHeap.ST.ralloc_post",
+      3,
       2,
       1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.HyperHeap.sel", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "equation_FStar.Preorder.preorder_rel",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.ralloc_post",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.ralloc_post",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.alloc_post",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Heap.trivial_preorder", "true_interp" ],
       0
     ],
     [
@@ -89,6 +115,42 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.alloc_post",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.alloc_post",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.alloc_post",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
       0
     ],
     [
@@ -96,10 +158,29 @@
       1,
       2,
       1,
+      [ "@query", "equation_FStar.Heap.trivial_preorder", "true_interp" ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.assign_post",
+      2,
+      2,
+      1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.HyperHeap.sel", "equation_Prims.l_True",
-        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.deref_post",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0
@@ -117,7 +198,31 @@
       2,
       2,
       1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.recall",
+      3,
+      2,
+      1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
+      "FStar.HyperHeap.ST.recall",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
       0
     ],
     [

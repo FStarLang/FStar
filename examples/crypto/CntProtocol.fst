@@ -65,27 +65,20 @@ let fresh_cnt x =
   (y < x)
 
 
-let next_cnt () :ST uint16 (requires (fun h0 -> repr_bytes (sel h0 client_cnt + 1) <= 2))
-                           (ensures (fun h0 r h1 -> modifies (only client_cnt) h0 h1 /\
-                                                 r == sel h0 client_cnt /\
-				                 sel h1 client_cnt == sel h0 client_cnt + 1))
-  = let c  = !client_cnt in
-    client_cnt := c+1;
-    c
+let next_cnt () =
+  let c  = !client_cnt in
+  client_cnt := c+1;
+  c
 
 
-let update_cnt (x:uint16) :ST unit (requires (fun _ -> True))
-                                   (ensures  (fun h0 _ h1 -> sel h1 server_cnt == max x (sel h0 server_cnt) /\
-				                          modifies (only server_cnt) h0 h1))
-  = let y = !server_cnt in
-    server_cnt := max x y
+let update_cnt x =
+  let y = !server_cnt in
+  server_cnt := max x y
 
 
-let log_event e :ST unit (requires (fun _ -> True))
-                         (ensures  (fun h0 _ h1 -> sel h1 log_prot == e::(sel h0 log_prot) /\
-			                        modifies (only log_prot) h0 h1))
-  = let l = !log_prot in
-    log_prot := e::l
+let log_event e =
+  let l = !log_prot in
+  log_prot := e::l
 
 
 val log_and_update: s: uint32 -> c: uint16 -> ST (unit)

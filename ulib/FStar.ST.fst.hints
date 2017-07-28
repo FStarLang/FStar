@@ -195,6 +195,18 @@
       0
     ],
     [
+      "FStar.ST.ref",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
       "FStar.ST.modifies_none",
       1,
       2,
