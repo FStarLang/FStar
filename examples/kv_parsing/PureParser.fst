@@ -81,37 +81,14 @@ let parse_entry =
 let parsing_done : parser unit =
   fun b -> if length b = 0 then Some ((), 0) else None
 
-val parse_many' : #t:Type -> p:parser t -> n:nat -> parser (list t)
-let rec parse_many' #t p n =
+val parse_many : #t:Type -> p:parser t -> n:nat -> parser (l:list t{List.length l == n})
+let rec parse_many #t p n =
   match n with
   | 0 -> parse_ret []
-  | _ -> p `and_then`
-      (fun v -> parse_many' #t p (n-1) `and_then`
-      (fun l -> parse_ret (v::l)))
-
-let rec parse_many'_length (#t:Type) (p:parser t) (n:nat) (b:bytes) :
-  Lemma (Some? (parse_many' p n b) ==> List.length (fst (Some?.v (parse_many' p n b))) == n) =
-  match n with
-  | 0 -> ()
-  | _ -> match p b with
-        | Some (v, l) -> parse_many'_length p (n-1) (slice b l (length b))
-        | None -> ()
-
-// XXX: this doesn't work
-(*
-val parse_many : #t:Type -> p:parser t -> n:nat -> parser (s:seq t{length s == n})
-let rec parse_many #t p n =
-  if n = 0 then parse_ret createEmpty
-    else and_then #t #(s:seq t{length s == n}) p
-      (fun v -> and_then #(s:seq t{length s == n-1}) #(s:seq t{length s == n}) (parse_many #t p (n-1))
-      (fun l -> parse_ret #(s:seq t{length s == n}) (cons v l)))
-*)
-
-val parse_many : #t:Type -> p:parser t -> n:nat -> parser (s:list t{List.length s == n})
-let parse_many #t p n b =
-  match parse_many' p n b with
-  | Some (v, l) -> parse_many'_length p n b; Some (v, l)
-  | None -> None
+  | _ -> let n':nat = n-1 in
+      p `and_then`
+      (fun v -> parse_many #t p n' `and_then`
+      (fun l -> parse_ret #(l:list t{List.length l == n}) (v::l)))
 
 let parse_abstract_store : parser store =
   parse_u32 `and_then`
