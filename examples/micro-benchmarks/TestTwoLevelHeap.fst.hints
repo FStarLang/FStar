@@ -38,9 +38,8 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
-        "bool_inversion", "bool_typing", "equation_FStar.Heap.ref",
+        "bool_inversion", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Heap.trivial_preorder_",
         "equation_FStar.Monotonic.Heap.valid_upd",
         "equation_FStar.Set.eqtype", "equation_FStar.TwoLevelHeap.as_ref",
         "equation_FStar.TwoLevelHeap.modifies",

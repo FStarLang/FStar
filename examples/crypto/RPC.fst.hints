@@ -8,7 +8,6 @@
       1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Heap.trivial_preorder_",
         "equation_Formatting.message", "equation_Platform.Bytes.bytes",
         "equation_Prims.l_True",
         "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
@@ -23,7 +22,6 @@
       1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Heap.trivial_preorder_",
         "equation_Formatting.message", "equation_Platform.Bytes.bytes",
         "equation_Platform.Bytes.empty_bytes", "equation_Prims.l_True",
         "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
