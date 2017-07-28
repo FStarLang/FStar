@@ -204,7 +204,7 @@ val lemma_upd_unused
 val lemma_contains_upd_modifies (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{valid_upd h r x})
   :Lemma (requires (h `contains` r))
          (ensures  (modifies (S.singleton (addr_of r)) h (upd h r x)))
-         [SMTPat (upd h r x); SMTPatT (h `contains` r)]
+         [SMTPat (upd h r x)]
 
 val lemma_unused_upd_modifies (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{valid_upd h r x})
   :Lemma (requires (r `unused_in` h))
