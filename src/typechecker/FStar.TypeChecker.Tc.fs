@@ -1181,13 +1181,13 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
               let def = match lb.lbtyp.n with
                 | Tm_unknown -> lb.lbdef
                 | _ ->
+                  (* If there are two type ascriptions we check that they are compatible *)
                   mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None), None)) None lb.lbdef.pos
-                 (* Errors.warn r "Annotation from val declaration overrides inline type annotation" *)
               in
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
               false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, lb.lbdef),
+              mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def),
               quals_opt
           in
           gen, lb::lbs, quals_opt)
