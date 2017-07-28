@@ -1155,10 +1155,10 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
                                    ppname = { val_bv.ppname with
                                               idText = body_bv.ppname.idText } }, aqual)
                | false, false ->
-                 if body_bv.ppname.idText <> val_bv.ppname.idText then
-                   Errors.warn body_bv.ppname.idRange
-                     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
-                                  body_bv.ppname.idText val_bv.ppname.idText);
+                 // if body_bv.ppname.idText <> val_bv.ppname.idText then
+                 //   Errors.warn body_bv.ppname.idRange
+                 //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
+                 //                  body_bv.ppname.idText val_bv.ppname.idText);
                  (val_bv, aqual)) :: rename_binders bt vt in
           Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) None r end
         | _ -> typ in
@@ -1178,9 +1178,11 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
             | Some ((uvs,tval), quals) ->
               let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
-              let _ = match lb.lbtyp.n with
-                | Tm_unknown -> ()
-                | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation"
+              let def = match lb.lbtyp.n with
+                | Tm_unknown -> lb.lbdef
+                | _ ->
+                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None), None)) None lb.lbdef.pos
+                 (* Errors.warn r "Annotation from val declaration overrides inline type annotation" *)
               in
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
