@@ -21,14 +21,14 @@ unfold let validation_checks_parse #t (b: bytes)
   (p: option (t * n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
 
-inline_for_extraction unfold
+inline_for_extraction
 let parser_st_nochk #t (p: parser t) =
-  input:bslice -> ST (t * off:U32.t{U32.v off <= U32.v input.len})
+  input:bslice -> Stack (t * off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                      Some? (p bs))))
   (ensures (fun h0 r h1 -> live h1 input /\
-                  h0 == h1 /\
+                  modifies_none h0 h1 /\
                   (let bs = B.as_seq h1 input.p in
                     Some? (p bs) /\
                     (let (v, n) = Some?.v (p bs) in
@@ -36,12 +36,12 @@ let parser_st_nochk #t (p: parser t) =
                        v == rv /\
                        n == U32.v off))))
 
-inline_for_extraction unfold
+inline_for_extraction
 let parser_st #t (p: parser t) =
-  input:bslice -> ST (option (t * off:U32.t{U32.v off <= U32.v input.len}))
+  input:bslice -> Stack (option (t * off:U32.t{U32.v off <= U32.v input.len}))
   (requires (fun h0 -> live h0 input))
   (ensures (fun h0 r h1 -> live h1 input /\
-          h0 == h1 /\
+          modifies_none h0 h1 /\
           (let bs = B.as_seq h1 input.p in
             match p bs with
             | Some (v, n) -> Some? r /\
@@ -86,10 +86,10 @@ let parse_u32_st : parser_st (parse_u32) = fun input ->
     else Some (parse_u32_st_nochk input)
 
 unfold
-let stateful_validator #t (p: parser t) = input:bslice -> ST (option (off:U32.t{U32.v off <= U32.v input.len}))
+let stateful_validator #t (p: parser t) = input:bslice -> Stack (option (off:U32.t{U32.v off <= U32.v input.len}))
     (requires (fun h0 -> live h0 input))
     (ensures (fun h0 r h1 -> live h1 input /\
-                          h0 == h1 /\
+                          modifies_none h0 h1 /\
                           (let bs = as_seq h1 input in
                             validation_checks_parse bs r (p bs))))
 

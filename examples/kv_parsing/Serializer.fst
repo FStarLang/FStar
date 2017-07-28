@@ -43,7 +43,7 @@ let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
 let serializer_any (inputs:erased (TSet.set bslice))
                    (enc: buffer_fun inputs) =
   buf:bslice ->
-  ST (option (off:offset_into buf))
+  Stack (option (off:offset_into buf))
      (requires (fun h0 -> live h0 buf /\
                        disjoint_in h0 (reveal inputs) buf))
      (ensures (fun h0 r h1 ->
@@ -284,7 +284,7 @@ val adjacent_0len (b:bslice) :
     [SMTPat (buffers_adjacent (truncated_slice b 0ul).p b.p)]
 let adjacent_0len b = ()
 
-let writer_init (b:bslice) : ST (option writer)
+let writer_init (b:bslice) : Stack (option writer)
     (requires (fun h0 -> live h0 b))
     (ensures (fun h0 r h1 ->
              h0 == h1 /\
@@ -307,7 +307,7 @@ let writer_init (b:bslice) : ST (option writer)
 // NOTE: the obligation is that b contains the encoded store; it would be more
 // natural to allow any validated store; a proof that parsing is invertible
 // should allow validated stores to be used, via an elift)
-val writer_reinit (b:bslice) (num_entries: U32.t) (s: erased store) (scratch: bslice) : ST writer
+val writer_reinit (b:bslice) (num_entries: U32.t) (s: erased store) (scratch: bslice) : Stack writer
     (requires (fun h0 -> live h0 b /\
                       buffers_adjacent b.p scratch.p /\
                       4 + U32.v num_entries < pow2 32 /\
@@ -377,7 +377,7 @@ let join_adjacent_stable (b1 b2 b':bslice) :
 
 #set-options "--z3rlimit 30"
 
-val writer_append (w:writer) (e:entry_st) : ST (option writer)
+val writer_append (w:writer) (e:entry_st) : Stack (option writer)
        (requires (fun h0 -> writer_inv h0 w /\
                          entry_live h0 e /\
                          disjoint_in h0 (entry_st_bufs e) w.entries_scratch ))
@@ -450,7 +450,7 @@ let writer_store_buf (w:writer{writer_valid w}) : Pure bslice
 // XXX: don't have a proof that ser_u32 will not fail if given a buffer of
 // length 4 (and somehow F* doesn't prove this by unfolding the definition
 // enough)
-val writer_finish (w:writer) : ST (option bslice)
+val writer_finish (w:writer) : Stack (option bslice)
     (requires (fun h0 -> writer_inv h0 w))
     (ensures (fun h0 mb h1 ->
                 Some? mb ==>

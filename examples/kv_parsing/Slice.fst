@@ -37,7 +37,7 @@ let advance_slice_spec (b:bslice) (off:U32.t{U32.v off <= U32.v b.len}) h :
 let u32_add_overflows (a b:U32.t) : overflow:bool{not overflow <==> U32.v a + U32.v b < pow2 32} =
   U32.lt (U32.add_mod a b) a
 
-val truncate_slice : b:bslice -> len:U32.t{U32.v len <= U32.v b.len} -> ST bslice
+val truncate_slice : b:bslice -> len:U32.t{U32.v len <= U32.v b.len} -> Stack bslice
   (requires (fun h0 -> live h0 b))
   (ensures (fun h0 r h1 -> live h1 b /\
                         live h1 r /\
@@ -45,7 +45,7 @@ val truncate_slice : b:bslice -> len:U32.t{U32.v len <= U32.v b.len} -> ST bslic
                         as_seq h1 r == slice (as_seq h1 b) 0 (U32.v len)))
 let truncate_slice b len = BSlice len (B.sub b.p (U32.uint_to_t 0) len)
 
-// pure version of truncate_slice (which is in ST)
+// pure version of truncate_slice (which is in Stack)
 val truncated_slice : b:bslice -> len:U32.t{U32.v len <= U32.v b.len} -> bslice
 let truncated_slice b len = BSlice len (B.sub b.p (U32.uint_to_t 0) len)
 
