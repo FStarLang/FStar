@@ -363,7 +363,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
-    let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
+    let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) None top.pos) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
@@ -923,7 +923,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
 
     let rec expected_function_typ env t0 body
-        : (option<(typ*bool)> (* any remaining expected type to check against; bool signals to check using teq *)
+        : (option<typ>        (* any remaining expected type to check against *)
         * binders             (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
         * binders             (* let rec binders, suitably guarded with termination check, if any *)
         * option<comp>        (* the expected comp type for the body *)
@@ -959,13 +959,13 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
                 let bs, envbody, g, _ = tc_binders env bs in
                 let envbody, _ = Env.clear_expected_typ envbody in
-                Some (t, true), bs, [], None, None, envbody, body, g
+                Some t, bs, [], None, None, envbody, body, g
 
               (* CK: add this case since the type may be f:(a -> M b wp){φ}, in which case I drop the refinement *)
               (* NS: 07/21 dropping the refinement is not sound; we need to check that f validates phi. See Bug #284 *)
               | Tm_refine (b, _) ->
                 let _, bs, bs', copt, tacopt, env, body, g = as_function_typ norm b.sort in
-                Some (t, false), bs, bs', copt, tacopt, env, body, g
+                Some t, bs, bs', copt, tacopt, env, body, g
 
               | Tm_arrow(bs_expected, c_expected) ->
                 let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
@@ -1019,7 +1019,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
                 let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
                 let envbody = Env.set_expected_typ envbody (U.comp_result c) in
-                Some (t, false), bs, letrecs, Some c, None, envbody, body, g
+                Some t, bs, letrecs, Some c, None, envbody, body, g
 
               | _ -> (* expected type is not a function;
                         try normalizing it first;
@@ -1027,7 +1027,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 if not norm
                 then as_function_typ true (N.unfold_whnf env t)
                 else let _, bs, _, c_opt, tacopt, envbody, body, g = expected_function_typ env None body in
-                      Some (t, false), bs, [], c_opt, tacopt, envbody, body, g in
+                      Some t, bs, [], c_opt, tacopt, envbody, body, g in
           as_function_typ false t
     in
 
@@ -1065,7 +1065,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let tfun_computed = U.arrow bs cbody in
     let e = U.abs bs body (Some (U.residual_comp_of_comp (dflt cbody c_opt))) in
     let e, tfun, guard = match tfun_opt with
-        | Some (t, use_teq) ->
+        | Some t ->
            let t = SS.compress t in
            begin match t.n with
                 | Tm_arrow _ ->
@@ -1073,17 +1073,13 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     //just repackage the expression with this type; t is guaranteed to be alpha equivalent to tfun_computed
                     e, t, guard
                 | _ ->
-                    let e, guard' =
-                        if use_teq
-                        then e, Rel.teq env t tfun_computed
-                        else TcUtil.check_and_ascribe env e tfun_computed t
-                    in
+                    let e, guard' = TcUtil.check_and_ascribe env e tfun_computed t in
                     e, t, Rel.conj_guard guard guard'
            end
 
         | None -> e, tfun_computed, guard in
 
-    let c = if env.top_level then mk_Total tfun else TcUtil.return_value env tfun e in
+    let c = if env.top_level then   mk_Total tfun else TcUtil.return_value env tfun e in
     let c, g = TcUtil.strengthen_precondition None env e (U.lcomp_of_comp c) guard in
     e, c, g
 
@@ -1978,7 +1974,7 @@ and check_let_bound_def top_level env lb
 
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
     let c1, guard_f = TcUtil.strengthen_precondition
-                        (Some (fun () -> Err.ill_kinded_type))
+                        (Some (fun () -> return_all Err.ill_kinded_type))
                         (Env.set_range env1 e1.pos) e1 c1 wf_annot in
     let g1 = Rel.conj_guard g1 guard_f in
 
