@@ -2482,7 +2482,8 @@ let identity_mlift: mlift =
   {
     mlift_wp = (fun t  -> fun wp  -> wp);
     mlift_term =
-      (FStar_Pervasives_Native.Some (fun t  -> fun wp  -> fun e  -> e))
+      (FStar_Pervasives_Native.Some
+         (fun t  -> fun wp  -> fun e  -> FStar_Util.return_all e))
   }
 let join:
   env ->

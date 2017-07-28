@@ -111,7 +111,7 @@ let rec is_comp_type env t =
 
 let unit_ty = mk_term (Name C.unit_lid) Range.dummyRange Type_level
 
-let compile_op_lid n s r = [mk_ident(compile_op n s, r)] |> lid_of_ids
+let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
 
 let op_as_term env arity rng op : option<S.term> =
   let r l dd = Some (S.lid_as_fv (set_lid_range l op.idRange) dd None |> S.fv_to_tm) in
@@ -493,7 +493,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
       | PatOr _ -> failwith "impossible"
 
       | PatOp op ->
-        aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText, op.idRange), None); prange = p.prange })
+        aux loc env ({ pat = PatVar (mk_ident (compile_op 0 op.idText op.idRange, op.idRange), None); prange = p.prange })
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p, imp = aux loc env p in
@@ -606,7 +606,7 @@ and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<pat>) =
   let mklet x = env, LetBinder(qualify env x, tun), [] in
   if top
   then match p.pat with
-    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText, x.idRange))
+    | PatOp x -> mklet (mk_ident (compile_op 0 x.idText x.idRange, x.idRange))
     | PatVar (x, _) -> mklet x
     | PatAscribed({pat=PatVar (x, _)}, t) ->
       (env, LetBinder(qualify env x, desugar_term env t), [])
@@ -957,13 +957,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 mk (Tm_uinst(head, universes))
        in aux [] top
 
-    | App ({tm=Var lid}, tau, Nothing)
-            when lid_equals lid C.assert_by_tactic_lid ->
-        // Get the left part of the app by re-matching, since there's no `as'
-        let l = match (unparen top).tm with
-                | App (l, _, _) -> l
-                | _ -> failwith "impossible"
-        in
+    | App (l, tau, Nothing) when
+        not_ascribed tau && 
+        (is_assert_by_tactic env l || is_synth_by_tactic env l) ->
         let tactic_unit_type =
             mk_term (App (mk_term (Var (lid_of_path ["FStar";"Tactics";"Effect";"tactic"] tau.range)) tau.range tau.level,
                           mk_term (Var (lid_of_path ["Prims";"unit"] tau.range)) tau.range tau.level,
@@ -1221,6 +1217,32 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | QForall(_, _, _) -> failwith "Not implemented yet"
     | QExists(_, _, _) -> failwith "Not implemented yet"
   end
+
+and not_ascribed t =
+    match t.tm with
+    | Ascribed _ -> false
+    | _ ->  true
+
+and is_assert_by_tactic e t =
+    match t.tm with
+    | Var lid ->
+        begin match Env.resolve_to_fully_qualified_name e lid with
+        | Some lid -> lid_equals lid C.assert_by_tactic_lid
+        | None -> false
+        end
+    | _ -> false
+
+// In this case, we might have implicits in the way
+and is_synth_by_tactic e t =
+    match t.tm with
+    | App (l, r, Hash) -> is_synth_by_tactic e l
+    | Var lid ->
+        begin match Env.resolve_to_fully_qualified_name e lid with
+        | Some lid -> lid_equals lid C.synth_lid
+        | None -> false
+        end
+    | _ -> false
+
 
 and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))

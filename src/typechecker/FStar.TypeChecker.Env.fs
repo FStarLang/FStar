@@ -734,7 +734,7 @@ let get_effect_decl env l =
 
 let identity_mlift : mlift =
   { mlift_wp=(fun t wp -> wp) ;
-    mlift_term=Some (fun t wp e -> e) }
+    mlift_term=Some (fun t wp e -> return_all e) }
 
 let join env l1 l2 : (lident * mlift * mlift) =
   if lid_equals l1 l2

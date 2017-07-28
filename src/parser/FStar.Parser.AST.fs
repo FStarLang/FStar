@@ -453,14 +453,16 @@ let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<mo
       ) ds;
       Inr ds
 
-let compile_op arity s =
+let compile_op arity s r =
     let name_of_char = function
       |'&' -> "Amp"
       |'@'  -> "At"
       |'+' -> "Plus"
       |'-' when (arity=1) -> "Minus"
       |'-' -> "Subtraction"
+      |'~' -> "Tilde"
       |'/' -> "Slash"
+      |'\\' -> "Backslash"
       |'<' -> "Less"
       |'=' -> "Equals"
       |'>' -> "Greater"
@@ -472,7 +474,9 @@ let compile_op arity s =
       |'*' -> "Star"
       |'?' -> "Question"
       |':' -> "Colon"
-      | _ -> "UNKNOWN" in
+      |'$' -> "Dollar"
+      | c -> raise (Error ("Unexpected operator symbol: '" ^ string_of_char c ^ "'" , r))
+    in
     match s with
     | ".[]<-" -> "op_String_Assignment"
     | ".()<-" -> "op_Array_Assignment"
@@ -480,8 +484,8 @@ let compile_op arity s =
     | ".()" -> "op_Array_Access"
     | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
 
-let compile_op' s =
-  compile_op (-1) s
+let compile_op' s r =
+  compile_op (-1) s r
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging

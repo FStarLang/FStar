@@ -40,7 +40,10 @@ include ml/Makefile.include
 REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
 EXTRACT_ALL=$(filter-out $(REALIZED),$(wildcard FStar.*.fst FStar.*.fsti))
 
-.mgen: *.fst *.fsti
+../bin/fstar.ocaml:
+	make -C ../src/ocaml-output
+
+.mgen: *.fst *.fsti ../bin/fstar.ocaml
 	mkdir -p ml/extracted
 	cp ../src/ocaml-output/FStar_*.ml                      ml/extracted/
 	cp ../src/basic/ml/*.ml                                ml/extracted/

@@ -16,8 +16,8 @@ let test_cases (h : p \/ q) : Lemma r =
     assert_by_tactic
         (t <-- quote h;
          cases_or t;;
-         apply_lemma (quote f);; exact (quote ());;
-         apply_lemma (quote g);; exact (quote ());;
+         apply_lemma (quote f);;
+         apply_lemma (quote g);;
          qed) r
 
 // Taking a squashed hypothesis, we can unsquash it as we're in an irrelevant context
@@ -26,8 +26,8 @@ let test_cases_unsquash (h : squash (p \/ q)) : Lemma r =
         (t <-- quote h;
          t <-- unsquash t;
          cases_or t;;
-         apply_lemma (quote f);; exact (quote ());;
-         apply_lemma (quote g);; exact (quote ());;
+         apply_lemma (quote f);;
+         apply_lemma (quote g);;
          qed)
          r
 

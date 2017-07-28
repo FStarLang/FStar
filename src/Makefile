@@ -162,8 +162,8 @@ clean_u_extract_ocaml:
 	mkdir boot_fstis u_boot_fsts u_ocaml-output
 
 u_extract_misc:$(addprefix u_boot_fsts/, FStar.Common.fst FStar.Options.fst FStar.Ident.fst FStar.Errors.fst FStar.Const.fst \
-					 FStar.Format.fst)
-	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format)
+					 FStar.Format.fst FStar.Order.fst)
+	$(FSTARBOOT) $^ $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
 
 u_extract_syntax:$(addprefix u_boot_fsts/FStar.Syntax., Syntax.fst Subst.fst Free.fst \
 							InstFV.fst Util.fst Print.fst Embeddings.fst MutRecTy.fst Resugar.fst Unionfind.fst) \

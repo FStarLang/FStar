@@ -382,13 +382,15 @@ type insert_id_info_ops =
   bv: FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> Prims.unit;
   fv: FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> Prims.unit;
   promote:
-    (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> Prims.unit;}
+    (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> Prims.unit;
+  clear: Prims.unit -> Prims.unit;}
 let __proj__Mkinsert_id_info_ops__item__enable:
   insert_id_info_ops -> Prims.bool -> Prims.unit =
   fun projectee  ->
     match projectee with
     | { enable = __fname__enable; bv = __fname__bv; fv = __fname__fv;
-        promote = __fname__promote;_} -> __fname__enable
+        promote = __fname__promote; clear = __fname__clear;_} ->
+        __fname__enable
 let __proj__Mkinsert_id_info_ops__item__bv:
   insert_id_info_ops ->
     FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> Prims.unit
@@ -396,7 +398,7 @@ let __proj__Mkinsert_id_info_ops__item__bv:
   fun projectee  ->
     match projectee with
     | { enable = __fname__enable; bv = __fname__bv; fv = __fname__fv;
-        promote = __fname__promote;_} -> __fname__bv
+        promote = __fname__promote; clear = __fname__clear;_} -> __fname__bv
 let __proj__Mkinsert_id_info_ops__item__fv:
   insert_id_info_ops ->
     FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> Prims.unit
@@ -404,7 +406,7 @@ let __proj__Mkinsert_id_info_ops__item__fv:
   fun projectee  ->
     match projectee with
     | { enable = __fname__enable; bv = __fname__bv; fv = __fname__fv;
-        promote = __fname__promote;_} -> __fname__fv
+        promote = __fname__promote; clear = __fname__clear;_} -> __fname__fv
 let __proj__Mkinsert_id_info_ops__item__promote:
   insert_id_info_ops ->
     (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> Prims.unit
@@ -412,47 +414,56 @@ let __proj__Mkinsert_id_info_ops__item__promote:
   fun projectee  ->
     match projectee with
     | { enable = __fname__enable; bv = __fname__bv; fv = __fname__fv;
-        promote = __fname__promote;_} -> __fname__promote
+        promote = __fname__promote; clear = __fname__clear;_} ->
+        __fname__promote
+let __proj__Mkinsert_id_info_ops__item__clear:
+  insert_id_info_ops -> Prims.unit -> Prims.unit =
+  fun projectee  ->
+    match projectee with
+    | { enable = __fname__enable; bv = __fname__bv; fv = __fname__fv;
+        promote = __fname__promote; clear = __fname__clear;_} ->
+        __fname__clear
 let insert_id_info: insert_id_info_ops =
   let enabled = FStar_Util.mk_ref false in
   let id_info_buffer = FStar_Util.mk_ref [] in
   let enable b =
-    let uu____1630 = (FStar_Options.ide ()) && b in
-    FStar_ST.op_Colon_Equals enabled uu____1630 in
+    let uu____1681 = (FStar_Options.ide ()) && b in
+    FStar_ST.op_Colon_Equals enabled uu____1681 in
   let bv x t =
-    let uu____1662 = FStar_ST.op_Bang enabled in
-    if uu____1662
+    let uu____1713 = FStar_ST.op_Bang enabled in
+    if uu____1713
     then
-      let uu____1687 =
-        let uu____1700 =
-          let uu____1711 = FStar_Syntax_Syntax.range_of_bv x in
-          ((FStar_Util.Inl x), t, uu____1711) in
-        let uu____1716 = FStar_ST.op_Bang id_info_buffer in uu____1700 ::
-          uu____1716 in
-      FStar_ST.op_Colon_Equals id_info_buffer uu____1687
+      let uu____1738 =
+        let uu____1751 =
+          let uu____1762 = FStar_Syntax_Syntax.range_of_bv x in
+          ((FStar_Util.Inl x), t, uu____1762) in
+        let uu____1767 = FStar_ST.op_Bang id_info_buffer in uu____1751 ::
+          uu____1767 in
+      FStar_ST.op_Colon_Equals id_info_buffer uu____1738
     else () in
   let fv x t =
-    let uu____1891 = FStar_ST.op_Bang enabled in
-    if uu____1891
+    let uu____1942 = FStar_ST.op_Bang enabled in
+    if uu____1942
     then
-      let uu____1916 =
-        let uu____1929 =
-          let uu____1940 = FStar_Syntax_Syntax.range_of_fv x in
-          ((FStar_Util.Inr x), t, uu____1940) in
-        let uu____1945 = FStar_ST.op_Bang id_info_buffer in uu____1929 ::
-          uu____1945 in
-      FStar_ST.op_Colon_Equals id_info_buffer uu____1916
+      let uu____1967 =
+        let uu____1980 =
+          let uu____1991 = FStar_Syntax_Syntax.range_of_fv x in
+          ((FStar_Util.Inr x), t, uu____1991) in
+        let uu____1996 = FStar_ST.op_Bang id_info_buffer in uu____1980 ::
+          uu____1996 in
+      FStar_ST.op_Colon_Equals id_info_buffer uu____1967
     else () in
   let promote cb =
-    (let uu____2123 = FStar_ST.op_Bang id_info_buffer in
-     FStar_All.pipe_right uu____2123
+    (let uu____2174 = FStar_ST.op_Bang id_info_buffer in
+     FStar_All.pipe_right uu____2174
        (FStar_List.iter
-          (fun uu____2235  ->
-             match uu____2235 with
+          (fun uu____2286  ->
+             match uu____2286 with
              | (i,t,r) ->
-                 let uu____2257 =
-                   let uu____2264 = cb t in
-                   insert_identifier_info i uu____2264 r in
-                 FStar_All.pipe_left FStar_Pervasives.ignore uu____2257)));
+                 let uu____2308 =
+                   let uu____2315 = cb t in
+                   insert_identifier_info i uu____2315 r in
+                 FStar_All.pipe_left FStar_Pervasives.ignore uu____2308)));
     FStar_ST.op_Colon_Equals id_info_buffer [] in
-  { enable; bv; fv; promote }
+  let clear1 uu____2413 = FStar_ST.op_Colon_Equals id_info_buffer [] in
+  { enable; bv; fv; promote; clear = clear1 }

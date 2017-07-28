@@ -28,6 +28,7 @@ open FStar.Errors
 
 open FStar.Universal
 open FStar.TypeChecker.Env
+open FStar.TypeChecker.Common
 
 module SS = FStar.Syntax.Syntax
 module DsEnv   = FStar.ToSyntax.Env
@@ -109,10 +110,12 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
     | _ -> None
   with
   | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Common.insert_id_info.clear();
     FStar.TypeChecker.Err.add_errors env [(msg, r)];
     None
 
   | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Common.insert_id_info.clear();
     FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
     None
 
@@ -513,6 +516,16 @@ let json_of_repl_state st =
                                    ("documentation", json_of_opt JsonStr doc)])
                        opts_and_defaults))]
 
+let with_printed_effect_args k =
+  Options.with_saved_options
+    (fun () -> Options.set_option "print_effect_args" (Options.Bool true); k ())
+
+let term_to_string tcenv t =
+  with_printed_effect_args (fun () -> FStar.TypeChecker.Normalize.term_to_string tcenv t)
+
+let sigelt_to_string se =
+  with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string se)
+
 let run_exit st =
   ((QueryOK, JsonNull), Inr 0)
 
@@ -598,7 +611,7 @@ let run_lookup st symbol pos_opt requested_info =
 
   let def_of_lid lid =
     Util.bind_opt (TcEnv.lookup_qname tcenv lid) (function
-      | (Inr (se, _), _) -> Some (Syntax.Print.sigelt_to_string se)
+      | (Inr (se, _), _) -> Some (sigelt_to_string se)
       | _ -> None) in
 
   let info_at_pos_opt =
@@ -619,7 +632,7 @@ let run_lookup st symbol pos_opt requested_info =
         | Inr lid -> Ident.string_of_lid lid in
       let typ_str =
         if List.mem "type" requested_info then
-          Some (FStar.Syntax.Print.term_to_string typ) //every entry in the table should already be normalized
+          Some (term_to_string tcenv typ)
         else None in
       let doc_str =
         match name_or_lid with
@@ -812,7 +825,7 @@ let run_compute st term rules =
           match find_let_body ses with
           | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
           | Some def -> let normalized = normalize_term tcenv rules def in
-                       (QueryOK, JsonStr (Syntax.Print.term_to_string normalized))
+                       (QueryOK, JsonStr (term_to_string tcenv normalized))
         with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
                                 | Some issue -> JsonStr (FStar.Errors.format_issue issue)
                                 | None -> raise e)))
@@ -850,7 +863,7 @@ let sc_fvars tcenv sc = // Memoized version of fc_vars
              sc.sc_fvars := Some fv; fv
 
 let json_of_search_result dsenv tcenv sc =
-  let typ_str = Syntax.Print.term_to_string (sc_typ tcenv sc) in
+  let typ_str = term_to_string tcenv (sc_typ tcenv sc) in
   JsonAssoc [("lid", JsonStr (DsEnv.shorten_lid dsenv sc.sc_lid).str);
              ("type", JsonStr typ_str)]
 
@@ -909,9 +922,7 @@ let run_search st search_str =
       let cmp r1 r2 = Util.compare r1.sc_lid.str r2.sc_lid.str in
       let results = List.filter matches_all all_candidates in
       let sorted = Util.sort_with cmp results in
-      let js = Options.with_saved_options
-                 (fun () -> Options.set_option "print_effect_args" (Options.Bool true);
-                         List.map (json_of_search_result dsenv tcenv) sorted) in
+      let js = List.map (json_of_search_result dsenv tcenv) sorted in
       match results with
       | [] -> let kwds = Util.concat_l " " (List.map pprint_one terms) in
               raise (InvalidSearch (Util.format1 "No results found for query [%s]" kwds))
