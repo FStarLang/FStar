@@ -1015,6 +1015,8 @@ let rec value_of_ovalue
     | Some v -> v
     end
 
+#reset-options "--z3rlimit 16"
+
 private
 let rec value_of_ovalue_of_value
   (t: typ)
@@ -1893,8 +1895,6 @@ private type path_disjoint_decomp_t
       p2 == path_concat (PathStep _ _ d_p d_s2) d_p2'
     ) ->
     path_disjoint_decomp_t p1 p2
-
-#reset-options "--z3rlimit 16"
 
 private let path_disjoint_decomp_includes
   (#from: typ)

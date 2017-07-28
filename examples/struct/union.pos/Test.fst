@@ -14,7 +14,7 @@ let u : union_typ = [
 
 let t : typ = TUnion u
 
-#reset-options "--z3rlimit 9" // 8 fails
+#reset-options "--z3rlimit 16"
 
 let f
   (c: bool)

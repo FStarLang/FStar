@@ -262,6 +262,8 @@ let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a r
          ]]
 = lemma_sel_same_addr h r1 r2
 
+#set-options "--z3rlimit 16"
+
 let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
   :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
