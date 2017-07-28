@@ -13,13 +13,13 @@ let equivalence_relation (#a:Type) (r:rel a) =
 let equiv (a:Type) = r:rel a{equivalence_relation r}
 
 let equivalence_class (#a:Type) (p: a -> GTot bool) (r:equiv a) =
-  forall x y. r x y ==> p x == p y
+  exists x. p x /\ (forall y. r x y <==> p y)
 
 let quotient (a:Type u#a) (r:equiv a): Type u#a = p:(a -> GTot bool){equivalence_class p r}
 
 let prop = a:Type{forall (x y: a). x == y}
 
-let squash (#a:Type) (r:equiv a) (x:a) : p:(quotient a r){p x} =
+let squash (#a:Type) (r:equiv a) (x:a) : p:(quotient a r) =
   let f (y:a) : GTot bool = SEM.strong_excluded_middle (r x y) in
   f
 
