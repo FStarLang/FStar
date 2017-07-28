@@ -24,12 +24,11 @@ assume val cps : attribute
    The type-checker emits axioms for hasEq for each inductive type *)
 assume type hasEq: Type -> GTot Type0
 
-type eqtype = a:Type{hasEq a}
+type eqtype = a:Type0{hasEq a}
 
 (* bool is a two element type with elements {'true', 'false'}
     we assume it is primitive, for convenient interop with other languages *)
-assume new type bool : Type0
-assume HasEq_bool: hasEq bool
+assume new type bool : eqtype
 
 (* False is the empty inductive type *)
 type c_False =
@@ -40,8 +39,7 @@ type c_True =
 
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
-assume new type unit : Type0
-assume HasEq_unit: hasEq unit
+assume new type unit : eqtype
 
 (* A coercion down to universe 0 *)
 type squash (p:Type) : Type0 = x:unit{p}
@@ -132,8 +130,7 @@ type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 *)
 assume new type range : Type0
 
-assume new type string : Type0
-assume HasEq_string: hasEq string
+assume new type string : eqtype
 
 irreducible let labeled (r:range) (msg:string) (b:Type) = b
 
@@ -205,9 +202,7 @@ effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
        GHOST a
            (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
 
-assume new type int : Type0
-
-assume HasEq_int: hasEq int
+assume new type int : eqtype
 
 assume val range_0 : range
 (* A total function to obtain the range of a term x *)
@@ -228,8 +223,8 @@ assume val op_LessThanOrEqual    : int -> int -> Tot bool
 assume val op_GreaterThan        : int -> int -> Tot bool
 assume val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume val op_LessThan           : int -> int -> Tot bool
-assume val op_Equality :    #a:Type{hasEq a} -> a -> a -> Tot bool
-assume val op_disEquality : #a:Type{hasEq a} -> a -> a -> Tot bool
+assume val op_Equality :    #a:eqtype -> a -> a -> Tot bool
+assume val op_disEquality : #a:eqtype -> a -> a -> Tot bool
 assume new type exn : Type0
 assume new type array : Type -> Type0
 assume val strcat : string -> string -> Tot string

@@ -18,7 +18,7 @@ open FStar.Map
 open FStar.Preorder
 open FStar.Monotonic.Heap
 
-abstract let rid = list (int * int)
+abstract let rid : eqtype = list (int * int)
 
 let reveal (r:rid) : GTot (list (int * int)) = r
 
@@ -28,13 +28,6 @@ abstract let color (x:rid): GTot int =
   | (c, _)::_ -> c
 
 type t = Map.t rid heap
-
-let has_eq_rid (u:unit) :
-  Lemma (requires True)
-        (ensures hasEq rid)
-  = ()
-
-assume HasEq_rid: hasEq rid //TODO: we just proved this above, but we need to expose it as an argument-free SMT lemma, which isn't supported yet
 
 abstract let root : rid = []
 
@@ -48,12 +41,6 @@ let lemma_root_has_color_zero r = ()
 let root_has_color_zero (u:unit) :Lemma (color root = 0) = ()
 
 abstract type mrref (id:rid) (a:Type) (rel:preorder a) = mref a rel
-
-(* let has_eq_rref (id:rid) (a:Type) : *)
-(*   Lemma (requires True) *)
-(*         (ensures hasEq (rref id a)) *)
-(*      [SMTPat (hasEq (rref id a))] *)
-(*   = ()        *)
 
 abstract val as_ref : #a:Type -> #id:rid -> #rel:preorder a -> r:mrref id a rel -> Tot (mref a rel)
 let as_ref #a #id #rel r = r
