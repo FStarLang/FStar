@@ -58,45 +58,14 @@
     ],
     [ "MAC.__proj__Entry__item__m", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "MAC.log",
+      "MAC.mac",
       1,
       2,
       1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "MAC.mac",
-      1,
-      2,
-      1,
-      [ "@query", "equation_FStar.Heap.trivial_preorder", "true_interp" ],
-      0
-    ],
-    [
-      "MAC.mac",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "MAC.mac",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
+        "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0
@@ -156,18 +125,6 @@
       1,
       [
         "@query", "assumption_FStar.UInt8.t__haseq", "equation_FStar.UInt8.t"
-      ],
-      0
-    ],
-    [
-      "MAC.verify",
-      5,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0
     ]

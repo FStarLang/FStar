@@ -95,18 +95,6 @@
       ],
       0
     ],
-    [
-      "While.interpret_exp",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
     [ "While.uu___is_Skip", 1, 2, 1, [ "@query" ], 0 ],
     [ "While.uu___is_Assign", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -270,25 +258,23 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_04be18fc2a1909fb42b2c6016a52763f_0",
         "binder_x_59b54fa21cedada836226afdcb64958b_1", "bool_inversion",
-        "constructor_distinct_While.Assign", "constructor_distinct_While.If",
-        "constructor_distinct_While.Seq", "constructor_distinct_While.While",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_While.Assign", "disc_equation_While.If",
-        "disc_equation_While.Seq", "disc_equation_While.Skip",
-        "disc_equation_While.While", "equality_tok_Prims.LexTop@tok",
+        "constructor_distinct_While.Skip", "disc_equation_While.Assign",
+        "disc_equation_While.If", "disc_equation_While.Seq",
+        "disc_equation_While.Skip", "disc_equation_While.While",
+        "equality_tok_Prims.LexTop@tok", "equality_tok_While.Skip@tok",
         "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "fuel_guarded_inversion_While.com",
+        "equation_FStar.Monotonic.Heap.valid_upd", "equation_Prims.l_True",
+        "equation_While.decr_while", "fuel_guarded_inversion_While.com",
         "function_token_typing_FStar.Monotonic.Heap.heap", "int_typing",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0", "subterm_ordering_While.If",
-        "subterm_ordering_While.Seq",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp",
+        "subterm_ordering_While.Seq", "true_interp",
         "typing_FStar.Pervasives.Native.uu___is_None",
-        "typing_While.decr_while", "well-founded-ordering-on-nat"
+        "typing_FStar.Pervasives.Native.uu___is_Some",
+        "well-founded-ordering-on-nat"
       ],
       0
     ],
@@ -303,20 +289,6 @@
     [
       "While.interpret_while",
       4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "While.interpret_while",
-      5,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -342,26 +314,20 @@
         "constructor_distinct_While.AInt", "constructor_distinct_While.AOp",
         "constructor_distinct_While.AVar", "disc_equation_While.AInt",
         "disc_equation_While.AOp", "disc_equation_While.AVar",
+        "equation_FStar.Heap.trivial_preorder", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_While.id",
         "equation_While.interpret_binop",
         "equation_with_fuel_While.interpret_exp.fuel_instrumented",
         "fuel_guarded_inversion_While.exp",
+        "function_token_typing_Prims.int",
         "lemma_FStar.Monotonic.Heap.equal_extensional",
         "projection_inverse_While.AInt__0",
         "projection_inverse_While.AOp__0", "projection_inverse_While.AOp__1",
         "projection_inverse_While.AOp__2",
-        "projection_inverse_While.AVar__0", "typing_While.interpret_exp"
-      ],
-      0
-    ],
-    [
-      "While.interpret_exp_st",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+        "projection_inverse_While.AVar__0",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel"
       ],
       0
     ],
@@ -371,7 +337,10 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Heap.trivial_preorder", "true_interp",
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp",
         "unit_typing"
       ],
       0
@@ -381,24 +350,12 @@
       2,
       2,
       1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "While.interpret_com_st",
-      3,
-      2,
-      1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
     [
       "While.interpret_com_st",
-      4,
+      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],

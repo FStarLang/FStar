@@ -1,17 +1,1 @@
-[
-  "sŒp\u0010\u001dò_ùä0ÿÒ\u0005\\È¥",
-  [
-    [
-      "FStar.HyperHeap.rref",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ]
-  ]
-]
+[ "sŒp\u0010\u001dò_ùä0ÿÒ\u0005\\È¥", [] ]

@@ -53,18 +53,6 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.TwoLevelHeap.sel",
-      2,
-      2,
-      1,
-      [
         "@query", "assumption_Prims.HasEq_int",
         "equation_FStar.TwoLevelHeap.rid"
       ],
@@ -77,10 +65,9 @@
       1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "equation_FStar.TwoLevelHeap.as_ref",
-        "equation_FStar.TwoLevelHeap.rid",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+        "equation_FStar.Monotonic.Heap.valid_upd", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "true_interp"
       ],
       0
     ],
@@ -98,18 +85,6 @@
     [
       "FStar.TwoLevelHeap.upd",
       3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.TwoLevelHeap.upd",
-      4,
       2,
       1,
       [
@@ -146,9 +121,8 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
@@ -158,34 +132,10 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0
-    ],
-    [
-      "FStar.TwoLevelHeap.ralloc",
-      5,
-      2,
-      1,
-      [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.TwoLevelHeap.ralloc",
-      6,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "equation_FStar.TwoLevelHeap.as_ref",
-        "equation_FStar.TwoLevelHeap.rid",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+        "equation_FStar.Monotonic.Heap.valid_upd", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "true_interp"
       ],
       0
     ],
@@ -206,9 +156,8 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_FStar.TwoLevelHeap.rid"
       ],
       0
     ],
@@ -218,40 +167,16 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int",
-        "equation_FStar.TwoLevelHeap.rid"
-      ],
-      0
-    ],
-    [
-      "FStar.TwoLevelHeap.op_Colon_Equals",
-      4,
-      2,
-      1,
-      [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "equation_FStar.TwoLevelHeap.as_ref",
-        "equation_FStar.TwoLevelHeap.rid",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+        "equation_FStar.Monotonic.Heap.valid_upd", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "true_interp"
       ],
       0
     ],
     [
       "FStar.TwoLevelHeap.op_Bang",
       1,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.TwoLevelHeap.op_Bang",
-      2,
       2,
       1,
       [
@@ -354,18 +279,6 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.TwoLevelHeap.contains_ref",
-      3,
-      2,
-      1,
-      [
         "@query", "assumption_Prims.HasEq_int",
         "equation_FStar.TwoLevelHeap.rid"
       ],
@@ -377,18 +290,6 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.TwoLevelHeap.fresh_rref",
-      2,
-      2,
-      1,
-      [
         "@query", "assumption_Prims.HasEq_int",
         "equation_FStar.TwoLevelHeap.rid"
       ],
@@ -396,19 +297,7 @@
     ],
     [
       "FStar.TwoLevelHeap.fresh_rref",
-      3,
       2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.TwoLevelHeap.fresh_rref",
-      4,
       2,
       1,
       [

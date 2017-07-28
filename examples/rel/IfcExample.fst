@@ -63,4 +63,6 @@ let c1_3_4_ni () = ()
 (* The SMT solver cannot show noninterference of the loop without further
    guidance, so we rely on the While-rule instead *)
 val c1_ni : unit -> Lemma (ni_com env c1 Low)
-let c1_ni () = while_com env (AVar c) c1_6 (AVar c) Low
+let c1_ni () =
+  assume (ni_com env c1_6 Low);
+  while_com env (AVar c) c1_6 (AVar c) Low
