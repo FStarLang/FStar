@@ -729,123 +729,6 @@ let run_lookup st symbol pos_opt requested_info =
 
   (response, Inl st)
 
-let run_completions_old st search_term =
-  let dsenv, tcenv = st.repl_env in
-  //search_term is the partially written identifer by the user
-  // FIXME a regular expression might be faster than this explicit matching
-  let rec measure_anchored_match
-    : list<string> -> list<ident> -> option<(list<ident> * int)>
-    //determines it the candidate may match the search term
-    //and, if so, provides an integer measure of the degree of the match
-    //Q: isn't the output list<ident> always the same as the candidate?
-      // About the degree of the match, cpitclaudel says:
-      //      Because we're measuring the length of the match and we allow partial
-      //      matches. Say we're matching FS.Li.app against FStar.List.Append. Then
-      //      the length we want is (length "FStar" + 1 + length "List" + 1 + length
-      //      "app"), not (length "FStar" + 1 + length "List" + 1 + length
-      //      "append"). This length is used to know how much of the candidate to
-      //      highlight in the company-mode popup (we want to display the candidate
-      //      as FStar.List.append.
-    = fun search_term candidate ->
-        match search_term, candidate with
-        | [], _ -> Some ([], 0)
-        | _, [] -> None
-        | hs :: ts, hc :: tc ->
-          let hc_text = FStar.Ident.text_of_id hc in
-          if Util.starts_with hc_text hs then
-             match ts with
-             | [] -> Some (candidate, String.length hs)
-             | _ -> measure_anchored_match ts tc |>
-                      Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
-          else None in
-  let rec locate_match
-    : list<string> -> list<ident> -> option<(list<ident> * list<ident> * int)>
-    = fun needle candidate ->
-    match measure_anchored_match needle candidate with
-    | Some (matched, n) -> Some ([], matched, n)
-    | None ->
-      match candidate with
-      | [] -> None
-      | hc :: tc ->
-        locate_match needle tc |>
-          Util.map_option (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
-  let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.text_of_id ids) in
-  let match_lident_against needle lident =
-      locate_match needle (lident.ns @ [lident.ident])
-  in
-  let shorten_namespace (prefix, matched, match_len) =
-    let naked_match = match matched with [_] -> true | _ -> false in
-    let stripped_ns, shortened = ToSyntax.Env.shorten_module_path dsenv prefix naked_match in
-    (str_of_ids shortened, str_of_ids matched, str_of_ids stripped_ns, match_len) in
-  let prepare_candidate (prefix, matched, stripped_ns, match_len) =
-    if prefix = "" then
-      (matched, stripped_ns, match_len)
-    else
-      (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + 1) in
-  let needle = Util.split search_term "." in
-  let all_lidents_in_env = TcEnv.lidents tcenv in
-  let matches =
-      //There are two cases here:
-      //Either the needle is of the form:
-      //   (a) A.x   where A resolves to the module L.M.N
-      //or (b) the needle's namespace is not a well-formed module.
-      //In case (a), we go to the desugaring to find the names
-      //   transitively exported by L.M.N
-      //In case (b), we find all lidents in the type-checking environment
-      //   and rank them by potential matches to the needle
-      let case_a_find_transitive_includes (orig_ns:list<string>) (m:lident) (id:string)
-          : list<(list<ident> * list<ident> * int)>
-          =
-          let exported_names = DsEnv.transitive_exported_ids dsenv m in
-          let matched_length =
-            List.fold_left
-              (fun out s -> String.length s + out + 1)
-              (String.length id)
-              orig_ns
-          in
-          exported_names |>
-          List.filter_map (fun n ->
-          if Util.starts_with n id
-          then let lid = Ident.lid_of_ns_and_id (Ident.ids_of_lid m) (Ident.id_of_text n) in
-               Option.map (fun fqn -> [], (List.map Ident.id_of_text orig_ns)@[fqn.ident], matched_length)
-                          (DsEnv.resolve_to_fully_qualified_name dsenv lid)
-          else None)
-      in
-      let case_b_find_matches_in_env ()
-        : list<(list<ident> * list<ident> * int)>
-        = let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
-          //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
-          matches |> List.filter (fun (ns, id, _) ->
-            match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with
-            | None -> false
-            | Some l -> Ident.lid_equals l (Ident.lid_of_ids (ns@id)))
-      in
-      let ns, id = Util.prefix needle in
-      let matched_ids =
-          match ns with
-          | [] -> case_b_find_matches_in_env ()
-          | _ ->
-            let l = Ident.lid_of_path ns Range.dummyRange in
-            match FStar.ToSyntax.Env.resolve_module_name dsenv l true with
-            | None ->
-              case_b_find_matches_in_env ()
-            | Some m ->
-              case_a_find_transitive_includes ns m id
-      in
-      matched_ids |>
-      List.map (fun x -> prepare_candidate (shorten_namespace x))
-  in
-
-  let json_candidates =
-    List.map (fun (candidate, ns, match_len) ->
-              JsonList [JsonInt match_len; JsonStr ns; JsonStr candidate])
-             (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
-                              match String.compare cd1 cd2 with
-                              | 0 -> String.compare ns1 ns2
-                              | n -> n)
-                             matches) in
-  ((QueryOK, JsonList json_candidates), Inl st)
-
 let run_completions st search_term =
   let dsenv, tcenv = st.repl_env in
 
@@ -1031,7 +914,7 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | DescribeRepl -> run_describe_repl st
   | Pop -> run_pop st
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
-  | AutoComplete search_term -> Util.measure_execution_time (fun () -> run_completions st search_term)
+  | AutoComplete search_term -> run_completions st search_term
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
