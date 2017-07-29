@@ -1028,7 +1028,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               else
                 let cache_size = BU.smap_size env.cache in  //record the cache size before starting the encoding
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let body = TcUtil.reify_body env.tcenv body in
+                let body = if is_reifiable env.tcenv rc
+                           then TcUtil.reify_body env.tcenv body
+                           else body
+                in
                 let body, decls' = encode_term body envbody in
                 let arrow_t_opt, decls'' =
                   match codomain_eff rc with
