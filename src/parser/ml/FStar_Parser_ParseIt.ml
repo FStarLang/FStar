@@ -38,11 +38,21 @@ let read_file (filename:string) =
     BatFile.with_file_in filename BatIO.read_all
   with e -> raise (Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
 
+let fs_extensions = [".fs"; ".fsi"]
+let fst_extensions = [".fst"; ".fsti"]
+
+let valid_extensions () =
+  fst_extensions @ if FStar_Options.ml_ish () then fs_extensions else []
+
+let has_extension file extensions =
+  FStar_List.existsb (FStar_Util.ends_with file) extensions
 
 let check_extension fn =
-    if not (FStar_Util.ends_with fn ".fst")
-    && not (FStar_Util.ends_with fn ".fsti")
-    then raise (Err("Unrecognized file extension: " ^fn))
+  if (not (has_extension fn (valid_extensions ()))) then
+    let message = FStar_Util.format1 "Unrecognized extension '%s'" fn in
+    raise (Err (if has_extension fn fs_extensions then
+                  message ^ " (pass --MLish to process .fs and .fsi files)"
+                else message))
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
