@@ -497,6 +497,7 @@ let write_hello () =
 (******************************************************************************************)
 open FStar.Parser.ParseIt
 
+// FIXME: Store repl_names in the stack, too
 type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_stack: stack_t; repl_curmod: modul_t;
                     repl_env: env_t; repl_ts: m_timestamps;
