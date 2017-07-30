@@ -46,7 +46,7 @@ let record_time f =
     let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
-let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let get_file_last_modification_time f = (BatUnix.stat f).BatUnix.st_mtime
 let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
 
@@ -97,7 +97,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   let (from_chd_r, from_chd_w) = Unix.pipe () in
   Unix.set_close_on_exec to_chd_w;
   Unix.set_close_on_exec from_chd_r;
-  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+  let _pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
   (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
                                to_chd_r from_chd_w Unix.stderr
   in
