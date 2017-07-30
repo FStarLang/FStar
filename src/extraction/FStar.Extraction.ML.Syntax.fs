@@ -273,5 +273,6 @@ let pop_unit (ts : mltyscheme) : mltyscheme =
     | MLTY_Fun (l, E_PURE, t) ->
         if l = ml_unit_ty
         then vs, t
-        else failwith "GGG 1"
-    | _ -> failwith "GGG 2"
+        else failwith "unexpected: pop_unit: domain was not unit"
+    | _ ->
+        failwith "unexpected: pop_unit: not a function type"
