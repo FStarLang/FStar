@@ -280,9 +280,9 @@ let get_codegen: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
 let get_codegen_lib: Prims.unit -> Prims.string Prims.list =
   fun uu____1069  -> lookup_opt "codegen-lib" (as_list as_string)
 let get_debug: Prims.unit -> Prims.string Prims.list =
-  fun uu____1077  -> lookup_opt "debug" (as_list as_string)
+  fun uu____1077  -> []
 let get_debug_level: Prims.unit -> Prims.string Prims.list =
-  fun uu____1085  -> lookup_opt "debug_level" (as_list as_string)
+  fun uu____1085  -> []
 let get_dep: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
   fun uu____1093  -> lookup_opt "dep" (as_option as_string)
 let get_detail_errors: Prims.unit -> Prims.bool =
@@ -1276,13 +1276,10 @@ let codegen_libs: Prims.unit -> Prims.string Prims.list Prims.list =
     FStar_All.pipe_right uu____3974
       (FStar_List.map (fun x  -> FStar_Util.split x "."))
 let debug_any: Prims.unit -> Prims.bool =
-  fun uu____3990  -> let uu____3991 = get_debug () in uu____3991 <> []
+  fun uu____3990  -> false
 let debug_at_level: Prims.string -> debug_level_t -> Prims.bool =
   fun modul  ->
-    fun level  ->
-      (let uu____4006 = get_debug () in
-       FStar_All.pipe_right uu____4006 (FStar_List.contains modul)) &&
-        (debug_level_geq level)
+    fun level  -> false
 let dep: Prims.unit -> Prims.string FStar_Pervasives_Native.option =
   fun uu____4016  -> get_dep ()
 let detail_errors: Prims.unit -> Prims.bool =
