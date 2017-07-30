@@ -1310,14 +1310,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "disc_equation_FStar.Pervasives.PpxDerivingShowConstant",
-        "eq2-interp", "equality_tok_FStar.Pervasives.PpxDerivingShow@tok",
+        "@MaxIFuel_assumption", "@query", "eq2-interp",
         "equation_Benton2004.RHL.gor", "equation_Benton2004.RHL.interp",
         "equation_Benton2004.RHL.is_per", "equation_Benton2004.is_per",
         "equation_Benton2004.sttype", "equation_Prims.eqtype",
-        "equation_Prims.l_iff", "forall-interp",
+        "forall-interp",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "interpretation_Benton2004.RHL_Tm_abs_7d337ff8789ac9c7f27fe84e068a9c72",
         "interpretation_Benton2004.RHL_Tm_abs_8158d2ec64596ba9818da750ba81d99c",
@@ -1327,9 +1324,7 @@
         "lemma_Benton2004.is_per_holds_sym",
         "lemma_Benton2004.per_holds_trans",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_Benton2004.RHL.gor", "typing_Benton2004.RHL.interp",
-        "typing_FStar.Pervasives.uu___is_PpxDerivingShowConstant",
-        "typing_tok_FStar.Pervasives.PpxDerivingShow@tok"
+        "typing_Benton2004.RHL.gor", "typing_Benton2004.RHL.interp"
       ],
       0
     ],
@@ -1401,7 +1396,9 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
-        "bool_inversion", "eq2-interp", "equation_Benton2004.RHL.gand",
+        "bool_inversion",
+        "constructor_distinct_FStar.Pervasives.PpxDerivingShow",
+        "eq2-interp", "equation_Benton2004.RHL.gand",
         "equation_Benton2004.RHL.gexp", "equation_Benton2004.RHL.gop",
         "equation_Benton2004.RHL.interp",
         "equation_Benton2004.RHL.interpolable",
@@ -1434,7 +1431,8 @@
         "equation_Benton2004.sttype", "equation_Prims.eqtype",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "interpretation_Benton2004.RHL_Tm_abs_7d337ff8789ac9c7f27fe84e068a9c72",
-        "lemma_Benton2004.RHL.holds_gor",
+        "interpretation_Benton2004.RHL_Tm_abs_8e1d871d5d8c2ccb58718092531991df",
+        "l_iff-interp", "l_or-interp", "lemma_Benton2004.RHL.holds_gor",
         "lemma_Benton2004.RHL.holds_interp",
         "lemma_Benton2004.is_per_holds_sym",
         "lemma_Benton2004.per_holds_trans",
