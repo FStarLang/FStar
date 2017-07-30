@@ -2,8 +2,10 @@ module Quotient
 
 open FStar.Tactics
 
+open FStar.FunctionalExtensionality
 module SEM = FStar.StrongExcludedMiddle
 module C = FStar.Classical
+module S = FStar.Squash
 
 type rel (a:Type) = a -> a -> Type
 
@@ -23,26 +25,84 @@ let squash (#a:Type) (r:equiv a) (x:a) : p:(quotient a r) =
   let f (y:a) : GTot bool = SEM.strong_excluded_middle (r x y) in
   f
 
+let forall_to_exists_lem (#a #c: Type) (#b:a -> Type) (f : (x:a) -> Prims.squash (b x ==> c))
+  : Prims.squash ((exists x. b x) ==> c)
+= let h (x:a) : Lemma (b x ==> c) = f x in
+  C.forall_to_exists h ;
+  S.get_proof ((exists x. b x) ==> c)
+
+let destruct_exists_arg : tactic (binder * binder) =
+  let fail () = fail "not of the form (exists x. a) ==> b" in
+  g <-- cur_goal ;
+  match term_as_formula g with
+  | Implies t _ ->
+    // if not (Exists? (term_as_formula t))
+    // then fail ()
+    // else
+    begin
+      apply (quote_lid ["Quotient" ; "forall_to_exists_lem"]) ;;
+      x <-- intro ;
+      h <-- implies_intro ;
+      return (x, h)
+    end
+  | _ -> fail ()
+
+let tau : tactic unit =
+  hx <-- forall_intros ;
+  dump "A" ;;
+  h <-- destruct_exists_arg ;
+  let (y, h1) = h in
+  dump "B" ;;
+  smt
+
 let intro_quotient (#a #b:Type) (ra:equiv a) (rb:equiv b) (f: a -> quotient b rb)
   : Pure (quotient a ra -> quotient b rb)
     (requires (forall x y. ra x y ==> f x == f y))
     (ensures (fun g -> forall x. g (squash ra x) == f x))
-= let g (p:quotient a ra) = fun (y:b) -> SEM.strong_excluded_middle (exists x. p x /\ f x y) in
-  let h (p:quotient a ra) (x:a) : Lemma (requires (p x /\ (forall y. ra x y ==> p y))) (ensures (exists y. b2t (g p y))) =
-    assert (exists y. f x y) ;
-    assert (exists y. b2t (g p y))
+=
+  let g (p:quotient a ra) : quotient b rb =
+    let h = fun (y:b) -> SEM.strong_excluded_middle (exists x. p x /\ f x y) in
+    assert_by_tactic
+      (norm [Delta] ;; h1 <-- destruct_exists_arg ; smt)
+      (equivalence_class p ra ==> equivalence_class h rb) ;
+    h
   in
-  admit () ;
+  assert (forall x y. g (squash ra x) y == f x y) ;
+  assert (forall x. g (squash ra x) `gfeq` f x) ;
   g
+
+let op_String_Access (#a:Type) (x:a) (r:equiv a) = squash r x
+
+let finest_equiv (#a:Type) : equiv a = let h = fun x y -> x == y in h
+
+let squash_finest_inj_lemma (a:Type) (x y:a)
+  : Lemma (requires (x.[finest_equiv] == y.[finest_equiv]))
+    (ensures (x == y))
+= ()
+
+let quotient_extensionality (#a:Type) (ra:equiv a) (p1 p2:quotient a ra)
+  : Lemma (requires (exists x. p1 x /\ p2 x)) (ensures (p1 == p2))
+= assert (forall x. p1 x == p2 x) ;
+  assert (p1 `gfeq` p2)
+
+let squash_extensionality (#a:Type) (r:equiv a) (p:quotient a r) (x:a)
+  : Lemma (requires (p x)) (ensures (p == x.[r]))
+= assert (p x /\ x.[r] x) ;
+  quotient_extensionality r p x.[r]
+
+let squash_extensionality' (#a:Type) (r:equiv a) (p:quotient a r)
+  : Lemma (forall x. p x ==> p == x.[r])
+= C.forall_intro (C.move_requires (squash_extensionality #a r p))
+
+let squash_finest_surj_lemma (a:Type) (p:quotient a finest_equiv)
+  : Lemma (exists x. p == x.[finest_equiv]) =
+  assert (exists x. p x) ;
+  squash_extensionality' #a finest_equiv p
 
 let prop_equiv (a b:prop) :Lemma (requires (a == b)) (ensures (a <==> b)) = ()
 
-let tau : tactic unit =
-  hp <-- forall_intro ;
-  dump "A" ;;
-  smt
 
-let bidule = assert_by_tactic tau (forall x. x + 1 == 1 + x)
+(* let _ = assert_by_tactic (h <-- forall_intros ; dump "A" ;; smt) (forall (x:nat) (y:int{y < 0}). x == y) *)
 
 let intro_quotient_type (#a:Type) (r:equiv a) (f: a -> prop)
   : Ghost (quotient a r -> prop)
@@ -67,7 +127,6 @@ let intro_quotient_type (#a:Type) (r:equiv a) (f: a -> prop)
   (*   (forall x.let p = squash r x in g p ==> f x) *)
   g
 
-let op_String_Access (#a:Type) (x:a) (r:equiv a) = squash r x
 
 let imod5 :  rel int = fun x y -> b2t (x = y % 5)
 let mod5 : equiv int = admit () ; imod5
