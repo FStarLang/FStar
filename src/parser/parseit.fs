@@ -59,6 +59,7 @@ let read_file (filename:string) =
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
+let interface_extensions = [".fsti"; ".fsi"]
 
 let valid_extensions () =
   fst_extensions @ if Options.ml_ish () then fs_extensions else []
@@ -114,7 +115,7 @@ let parse fn =
       let fileOrFragment = Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
         | Inl mods ->
-           if Util.ends_with filename ".fsti"
+           if has_extension filename interface_extensions
            then Inl (mods |> List.map (function
                 | AST.Module(l,d) ->
                   AST.Interface(l, d, true)
