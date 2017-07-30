@@ -580,18 +580,18 @@ let level_associativity_spec:
   (associativity,(FStar_Char.char,Prims.string) FStar_Util.either Prims.list)
     FStar_Pervasives_Native.tuple2 Prims.list
   =
-  [Obj.magic (opinfix4 ());
-  Obj.magic (opinfix3 ());
-  Obj.magic (opinfix2 ());
-  Obj.magic (opinfix1 ());
-  Obj.magic (pipe_right ());
-  Obj.magic (opinfix0d ());
-  Obj.magic (opinfix0c ());
-  Obj.magic (opinfix0b ());
-  Obj.magic (opinfix0a ());
-  Obj.magic (colon_equals ());
-  Obj.magic (amp ());
-  Obj.magic (colon_colon ())]
+  [opinfix4 ();
+  opinfix3 ();
+  opinfix2 ();
+  opinfix1 ();
+  pipe_right ();
+  opinfix0d ();
+  opinfix0c ();
+  opinfix0b ();
+  opinfix0a ();
+  colon_equals ();
+  amp ();
+  colon_colon ()]
 let level_table:
   ((Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3,(FStar_Char.char,
                                                                     Prims.string)
@@ -662,21 +662,21 @@ let operatorInfix0ad12:
         FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun uu____2061  ->
-    [Obj.magic (opinfix0a ());
-    Obj.magic (opinfix0b ());
-    Obj.magic (opinfix0c ());
-    Obj.magic (opinfix0d ());
-    Obj.magic (opinfix1 ());
-    Obj.magic (opinfix2 ())]
+    [opinfix0a ();
+    opinfix0b ();
+    opinfix0c ();
+    opinfix0d ();
+    opinfix1 ();
+    opinfix2 ()]
 let is_operatorInfix0ad12: FStar_Ident.ident -> Prims.bool =
   fun op  ->
     let uu____2136 =
       let uu____2149 =
         FStar_All.pipe_left matches_level (FStar_Ident.text_of_id op) in
-      FStar_List.tryFind uu____2149 (Obj.magic (operatorInfix0ad12 ())) in
+      FStar_List.tryFind uu____2149 (operatorInfix0ad12 ()) in
     uu____2136 <> FStar_Pervasives_Native.None
 let is_operatorInfix34: FStar_Ident.ident -> Prims.bool =
-  let opinfix34 = [Obj.magic (opinfix3 ()); Obj.magic (opinfix4 ())] in
+  let opinfix34 = [opinfix3 (); opinfix4 ()] in
   fun op  ->
     let uu____2253 =
       let uu____2266 =
@@ -2197,9 +2197,8 @@ and p_tmEq: FStar_Parser_AST.term -> FStar_Pprint.document =
   fun e  ->
     let n1 =
       max_level
-        (FStar_List.append
-           [Obj.magic (colon_equals ()); Obj.magic (pipe_right ())]
-           (Obj.magic (operatorInfix0ad12 ()))) in
+        (FStar_List.append [colon_equals (); pipe_right ()]
+           (operatorInfix0ad12 ())) in
     p_tmEq' n1 e
 and p_tmEq': Prims.int -> FStar_Parser_AST.term -> FStar_Pprint.document =
   fun curr  ->
@@ -2246,12 +2245,7 @@ and p_tmEq': Prims.int -> FStar_Parser_AST.term -> FStar_Pprint.document =
       | uu____4925 -> p_tmNoEq e
 and p_tmNoEq: FStar_Parser_AST.term -> FStar_Pprint.document =
   fun e  ->
-    let n1 =
-      max_level
-        [Obj.magic (colon_colon ());
-        Obj.magic (amp ());
-        Obj.magic (opinfix3 ());
-        Obj.magic (opinfix4 ())] in
+    let n1 = max_level [colon_colon (); amp (); opinfix3 (); opinfix4 ()] in
     p_tmNoEq' n1 e
 and p_tmNoEq': Prims.int -> FStar_Parser_AST.term -> FStar_Pprint.document =
   fun curr  ->

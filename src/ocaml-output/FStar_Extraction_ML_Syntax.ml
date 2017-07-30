@@ -667,3 +667,17 @@ let bv_as_mlident: FStar_Syntax_Syntax.bv -> mlident =
     else
       (((x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText),
         (Prims.parse_int "0"))
+let push_unit: mltyscheme -> mltyscheme =
+  fun ts  ->
+    let uu____2458 = ts in
+    match uu____2458 with
+    | (vs,ty) -> (vs, (MLTY_Fun (ml_unit_ty, E_PURE, ty)))
+let pop_unit: mltyscheme -> mltyscheme =
+  fun ts  ->
+    let uu____2465 = ts in
+    match uu____2465 with
+    | (vs,ty) ->
+        (match ty with
+         | MLTY_Fun (l,E_PURE ,t) ->
+             if l = ml_unit_ty then (vs, t) else failwith "GGG 1"
+         | uu____2471 -> failwith "GGG 2")
