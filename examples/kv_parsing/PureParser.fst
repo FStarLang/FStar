@@ -37,6 +37,10 @@ unfold let parse_ret (#t:Type) (v:t) : parser t =
 
 let fail_parser #t : parser t = fun b -> None
 
+let parse_u8: parser U8.t =
+  fun b -> if length b < 1 then None
+        else Some (index b 0, 1)
+
 inline_for_extraction unfold
 val u16_from_bytes: hi:byte -> lo:byte -> U16.t
 let u16_from_bytes hi lo =
