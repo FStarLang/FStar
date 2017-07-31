@@ -134,7 +134,7 @@ open FStar_String
 %token SEMICOLON
 %token SEMICOLON_SEMICOLON
 %token SQUIGGLY_RARROW
-%token <bytes> STRING
+%token <string> STRING
 %token SUBKIND
 %token SUBTYPE
 %token SUB_EFFECT

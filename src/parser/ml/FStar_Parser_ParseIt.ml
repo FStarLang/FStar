@@ -14,8 +14,9 @@ type input_frag = {
 let resetLexbufPos filename lexbuf =
   lexbuf.lex_curr_p <- {
     pos_fname= FStar_Range.encode_file filename;
-    pos_cnum = 0; pos_bol = 0;
-    pos_lnum=1 }
+    pos_cnum = 0;
+    pos_bol = 0;
+    pos_lnum = 1 }
 
 let setLexbufPos filename lexbuf line col =
   lexbuf.lex_curr_p <- {

@@ -2,13 +2,13 @@ module CoreCrypto
 
 open Platform.Bytes
 
-(* ------------ Hashing ------------ *) 
-type hash_alg = 
-  | MD5 
-  | SHA1 
-  | SHA224 
-  | SHA256 
-  | SHA384 
+(* ------------ Hashing ------------ *)
+type hash_alg =
+  | MD5
+  | SHA1
+  | SHA224
+  | SHA256
+  | SHA384
   | SHA512
 
 let hashSize = function
@@ -26,13 +26,11 @@ assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hash
 (* Digest functions *)
 assume type hash_ctx : Type0 (* SI: or assume_new_abstract_type?*)
 assume val digest_create : hash_alg -> EXT hash_ctx
-assume val digest_update : hash_ctx -> bytes -> EXT unit 
-assume val digest_final : hash_ctx -> EXT bytes  
+assume val digest_update : hash_ctx -> bytes -> EXT unit
+assume val digest_final : hash_ctx -> EXT bytes
 
 (* --------------------------- *)
 
-
-type sig_alg = | RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = | AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type stream_cipher = | RC4_128
 type rsa_padding = | Pad_none | Pad_PKCS1
@@ -45,26 +43,26 @@ let blockSize = function
   | AES_128_CBC  -> 16
   | AES_256_CBC  -> 16
 
-(* Authenticated Encryption for TLS.  
+(* Authenticated Encryption for TLS.
    Note that their AAD contents depends on the protocol version. *)
 
-type aead_cipher = 
-  | AES_128_GCM   
+type aead_cipher =
+  | AES_128_GCM
   | AES_256_GCM
-  | CHACHA20_POLY1305 
+  | CHACHA20_POLY1305
   | AES_128_CCM   // "Counter with CBC-Message Authentication Code"
-  | AES_256_CCM   
-  | AES_128_CCM_8 // variant with truncated 8-byte tags 
+  | AES_256_CCM
+  | AES_128_CCM_8 // variant with truncated 8-byte tags
   | AES_256_CCM_8
 
 // the key materials consist of an encryption key, a static IV, and an authentication key.
 
 let aeadKeySize = function
-  | AES_128_CCM       -> 16 
-  | AES_128_CCM_8     -> 16 
+  | AES_128_CCM       -> 16
+  | AES_128_CCM_8     -> 16
   | AES_128_GCM       -> 16
-  | AES_256_CCM       -> 32 
-  | AES_256_CCM_8     -> 32 
+  | AES_256_CCM       -> 32
+  | AES_256_CCM_8     -> 32
   | AES_256_GCM       -> 32
   | CHACHA20_POLY1305 -> 32
 
@@ -82,28 +80,28 @@ let aeadTagSize = function
 
 //16-09-12 added precise concrete spec, matching what we implement in low-level/crypto
 //16-09-12 for robustness, we should at least test it when using external crypto.
-assume val aead_encryptT: 
-  a: aead_cipher -> 
-  k: lbytes (aeadKeySize a) -> 
-  iv:lbytes (aeadRealIVSize a) -> 
-  ad:bytes -> 
-  plain:bytes -> 
+assume val aead_encryptT:
+  a: aead_cipher ->
+  k: lbytes (aeadKeySize a) ->
+  iv:lbytes (aeadRealIVSize a) ->
+  ad:bytes ->
+  plain:bytes ->
   GTot (lbytes (length plain + aeadTagSize a))
 
-assume val aead_encrypt: 
-  a: aead_cipher -> 
-  k: lbytes (aeadKeySize a) -> 
-  iv:lbytes (aeadRealIVSize a) -> 
-  ad:bytes -> 
-  plain:bytes -> 
+assume val aead_encrypt:
+  a: aead_cipher ->
+  k: lbytes (aeadKeySize a) ->
+  iv:lbytes (aeadRealIVSize a) ->
+  ad:bytes ->
+  plain:bytes ->
   EXT (c:bytes {c = aead_encryptT a k iv ad plain})
 
 assume val aead_decrypt:
-  a: aead_cipher -> 
-  k: lbytes (aeadKeySize a) -> 
-  iv:lbytes (aeadRealIVSize a) -> 
-  ad:bytes -> 
-  cipher:bytes{length cipher >= aeadTagSize a} -> 
+  a: aead_cipher ->
+  k: lbytes (aeadKeySize a) ->
+  iv:lbytes (aeadRealIVSize a) ->
+  ad:bytes ->
+  cipher:bytes{length cipher >= aeadTagSize a} ->
   EXT (o:option (b:bytes{length b + aeadTagSize a = length cipher})
     {forall (p:bytes). cipher = aead_encryptT a k iv ad p <==> (Some? o /\ Some?.v o == p) })
 
@@ -202,31 +200,3 @@ type ec_key = {
 
 assume val ec_is_on_curve: ec_params -> ec_point -> Tot bool
 assume val ecdh_agreement: k:ec_key{Some? k.ec_priv} -> ec_point -> EXT bytes
-
-assume val ecdsa_sign: option hash_alg -> k:ec_key{Some? k.ec_priv} -> bytes -> EXT bytes
-assume val ecdsa_verify: option hash_alg -> ec_key -> bytes -> bytes -> EXT bool
-assume val ec_gen_key: p:ec_params
-  -> EXT (k:ec_key{Some? k.ec_priv /\ k.ec_params = p /\
-                  length k.ec_point.ecx = ec_bytelen k.ec_params.curve /\
-                  length k.ec_point.ecy = ec_bytelen k.ec_params.curve})
-
-//TODO: keep also abtsract OpenSSL representation for efficiency?
-type key =
-  | KeyRSA of rsa_key
-  | KeyDSA of dsa_key
-  | KeyECDSA of ec_key
-
-// If we are careless we can cause openssl segfaults when signing or encrypting
-// with keys that are missing the "private" field.
-// The only has_priv keys are the ones loaded with load_key and or generated with gen_key
-let has_priv : key -> Type0 = function
-  | KeyRSA k -> Some? k.rsa_prv_exp
-  | KeyDSA k -> Some? k.dsa_private
-  | KeyECDSA k -> Some? k.ec_priv
-
-assume val validate_chain: der_list:list bytes -> for_signing:bool -> hostname:option string -> ca_file:string -> Tot bool
-assume val get_key_from_cert: bytes -> Tot (option key)
-assume val hash_and_sign: k:key{has_priv k} -> hash_alg -> bytes -> Tot bytes
-assume val verify_signature: key -> hash_alg -> tbs:bytes -> sigv:bytes -> Tot bool
-assume val load_chain: pemfile:string -> Tot (option (list bytes))
-assume val load_key: keyfile:string -> Tot (option (k:key{has_priv k}))

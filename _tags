@@ -1,5 +1,6 @@
 true: annot, bin_annot, warn(-8-11-21-26-28), package(batteries), \
-  package(zarith), package(yojson), package(pprint), \
+  package(zarith), package(yojson), package(pprint), package(ulex), \
   package(compiler-libs), package(compiler-libs.common), thread, -traverse
 <ulib/ml/FStar_{U,}Int*.ml> or "ulib/ml/fstarlib.cma": package(stdint), linkpkg
 "ulib/ml/fstarlib.cma":package(stdint)
+"src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)
