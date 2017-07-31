@@ -31,8 +31,8 @@ type pattern =
   | Pat_Constant of vconst
   | Pat_Cons of (FStar_Syntax_Syntax.fv,pattern Prims.list)
   FStar_Pervasives_Native.tuple2
-  | Pat_Var of FStar_Syntax_Syntax.bv
-  | Pat_Wild of FStar_Syntax_Syntax.bv
+  | Pat_Var of FStar_Syntax_Syntax.binder
+  | Pat_Wild of FStar_Syntax_Syntax.binder
 let uu___is_Pat_Constant: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | Pat_Constant _0 -> true | uu____83 -> false
@@ -49,12 +49,12 @@ let __proj__Pat_Cons__item___0:
 let uu___is_Pat_Var: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | Pat_Var _0 -> true | uu____135 -> false
-let __proj__Pat_Var__item___0: pattern -> FStar_Syntax_Syntax.bv =
+let __proj__Pat_Var__item___0: pattern -> FStar_Syntax_Syntax.binder =
   fun projectee  -> match projectee with | Pat_Var _0 -> _0
 let uu___is_Pat_Wild: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | Pat_Wild _0 -> true | uu____149 -> false
-let __proj__Pat_Wild__item___0: pattern -> FStar_Syntax_Syntax.bv =
+let __proj__Pat_Wild__item___0: pattern -> FStar_Syntax_Syntax.binder =
   fun projectee  -> match projectee with | Pat_Wild _0 -> _0
 type branch =
   (pattern,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2
