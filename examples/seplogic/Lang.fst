@@ -300,3 +300,61 @@ let lemma_swap_ok (p:ref nat) (q:ref nat) (a:nat) (b:nat) (h:heap)
 
     admit()
     
+
+
+
+(*****)
+
+let example3 (r1:ref nat) (r2:ref nat) :(command unit) =
+  n1 <-- Read r1;
+  Write r2 n1
+
+let lemma_example3 (r1:ref nat) (r2:ref nat) (n1:nat)
+  :Lemma (hoare_triple (r1 `points_to` n1 `star` (exists_x (fun v -> r2 `points_to` v)))
+                       (example3 r1 r2)
+		       (fun _ -> (r1 `points_to` n1) `star` (r2 `points_to` n1)))
+  = let r_c1 = fun _ _ -> True in
+
+    let c1 = Read r1 in
+    let c2 = fun n -> Write r2 n in
+
+    lemma_read r1 r_c1;
+    let c1_pre  = exists_x (fun v -> r1 `points_to` v `star` (r_c1 v)) in
+    let c1_post = fun x -> r1 `points_to` x `star` (r_c1 x) in
+    assert (hoare_triple c1_pre (Read r1) c1_post);
+
+    let c1_pre_c2_pre  = c1_pre `star` (exists_x (fun v -> r2 `points_to` v)) in
+    let c2_pre  = exists_x (fun v -> r2 `points_to` v) in
+    let c1_post_c2_pre = fun x -> (c1_post x) `star` c2_pre in
+    
+    lemma_frame_rule c1 c1_pre c1_post (exists_x (fun v -> r2 `points_to` v));
+
+    let aux (n1:nat) :Lemma (hoare_triple (c1_post_c2_pre n1) (c2 n1) (fun _ -> exists_x (fun n -> r2 `points_to` n `star` (c1_post n))))
+      = lemma_write r2 n1;
+        let c2_post = fun _ -> r2 `points_to` n1 in
+        assert (hoare_triple c2_pre (c2 n1) c2_post);
+
+        lemma_frame_rule (c2 n1) c2_pre c2_post (c1_post n1);
+
+        assert (hoare_triple (c2_pre `star` (c1_post n1)) (c2 n1) (fun _ -> r2 `points_to` n1 `star` (c1_post n1)));
+
+        lemma4 c2_pre (c1_post n1);
+        lemma_consequence (c2 n1) ((c1_post n1) `star` c2_pre) (fun _ -> r2 `points_to` n1 `star` (c1_post n1));
+
+        assert (hoare_triple ((c1_post n1) `star` c2_pre) (c2 n1) (fun _ -> r2 `points_to` n1 `star` (c1_post n1)));
+
+        assert (hoare_triple c1_pre_c2_pre c1 c1_post_c2_pre);
+        assert (hoare_triple (c1_post_c2_pre n1) (c2 n1) (fun _ -> r2 `points_to` n1 `star` (c1_post n1)))
+    in
+
+    FStar.Classical.forall_intro aux;
+
+    assert (hoare_triple c1_pre_c2_pre c1 c1_post_c2_pre);
+    assert (forall (n:nat). hoare_triple (c1_post_c2_pre n) (c2 n) (fun _ -> exists_x (fun n -> r2 `points_to` n `star` (c1_post n))));
+
+    lemma_bind c1 c2 c1_pre_c2_pre (fun _ -> exists_x (fun n -> r2 `points_to` n `star` (c1_post n)));
+
+    assert (hoare_triple c1_pre_c2_pre (Bind c1 c2) (fun _ -> exists_x (fun n -> r2 `points_to` n `star` (c1_post n))));
+    assert (hoare_triple c1_pre_c2_pre (Bind c1 c2) (fun _ -> exists_x (fun n -> r2 `points_to` n `star` (r1 `points_to` n `star` (r_c1 n)))));
+
+    admit ()
