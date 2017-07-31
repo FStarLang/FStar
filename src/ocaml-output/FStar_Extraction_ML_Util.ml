@@ -253,9 +253,7 @@ let rec type_leq_c:
                       | uu____471 ->
                           FStar_Extraction_ML_Syntax.MLE_Fun (xs, body) in
                     let uu____478 =
-                      Obj.magic
-                        ((mk_ty_fun ()) (Obj.magic xs)
-                           (Obj.magic body.FStar_Extraction_ML_Syntax.mlty)) in
+                      (mk_ty_fun ()) xs body.FStar_Extraction_ML_Syntax.mlty in
                     FStar_Extraction_ML_Syntax.with_ty uu____478 e1 in
               (match e with
                | FStar_Pervasives_Native.Some
@@ -293,10 +291,8 @@ let rec type_leq_c:
                              let uu____545 =
                                let uu____546 =
                                  let uu____549 =
-                                   Obj.magic
-                                     ((mk_ty_fun ()) (Obj.magic [x])
-                                        (Obj.magic
-                                           body1.FStar_Extraction_ML_Syntax.mlty)) in
+                                   (mk_ty_fun ()) [x]
+                                     body1.FStar_Extraction_ML_Syntax.mlty in
                                  FStar_Extraction_ML_Syntax.with_ty uu____549 in
                                FStar_All.pipe_left uu____546
                                  (FStar_Extraction_ML_Syntax.MLE_Fun
@@ -553,14 +549,11 @@ let prims_op_equality: FStar_Extraction_ML_Syntax.mlexpr =
 let prims_op_amp_amp: FStar_Extraction_ML_Syntax.mlexpr =
   let uu____1223 =
     let uu____1226 =
-      Obj.magic
-        ((mk_ty_fun ())
-           (Obj.magic
-              [(("x", (Prims.parse_int "0")),
-                 FStar_Extraction_ML_Syntax.ml_bool_ty);
-              (("y", (Prims.parse_int "0")),
-                FStar_Extraction_ML_Syntax.ml_bool_ty)])
-           (Obj.magic FStar_Extraction_ML_Syntax.ml_bool_ty)) in
+      (mk_ty_fun ())
+        [(("x", (Prims.parse_int "0")),
+           FStar_Extraction_ML_Syntax.ml_bool_ty);
+        (("y", (Prims.parse_int "0")), FStar_Extraction_ML_Syntax.ml_bool_ty)]
+        FStar_Extraction_ML_Syntax.ml_bool_ty in
     FStar_Extraction_ML_Syntax.with_ty uu____1226 in
   FStar_All.pipe_left uu____1223
     (FStar_Extraction_ML_Syntax.MLE_Name (["Prims"], "op_AmpAmp"))

@@ -1028,7 +1028,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               else
                 let cache_size = BU.smap_size env.cache in  //record the cache size before starting the encoding
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let body = TcUtil.reify_body env.tcenv body in
+                let body = if is_reifiable env.tcenv rc
+                           then TcUtil.reify_body env.tcenv body
+                           else body
+                in
                 let body, decls' = encode_term body envbody in
                 let arrow_t_opt, decls'' =
                   match codomain_eff rc with
@@ -1640,7 +1643,25 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = mkApp(range, []) in
         [Util.mkAssume(mk_HasTypeZ mk_Range_const range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
-
+   let mk_inversion_axiom : env -> string -> term -> decls_t = fun env inversion tt ->
+       // (assert (forall ((t Term))
+       //            (! (implies (Valid (FStar.Pervasives.inversion t))
+       //                        (forall ((x Term))
+       //                                (! (implies (HasTypeFuel ZFuel x t)
+       //                                            (HasTypeFuel (SFuel ZFuel) x t))
+       //                                   :pattern ((HasTypeFuel ZFuel x t)))))
+       //               :pattern ((FStar.Pervasives.inversion t)))))
+        let tt = ("t", Term_sort) in
+        let t = mkFreeV tt in
+        let xx = ("x", Term_sort) in
+        let x = mkFreeV xx in
+        let inversion_t = mkApp(inversion, [t]) in
+        let valid = mkApp("Valid", [inversion_t]) in
+        let body =
+          let hastypeZ = mk_HasTypeZ x t in
+          let hastypeS = mk_HasTypeFuel (n_fuel 1) x t in
+          mkForall([[hastypeZ]], [xx], mkImp(hastypeZ, hastypeS)) in
+        [Util.mkAssume(mkForall([[inversion_t]], [tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")] in
    let prims =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
@@ -1657,6 +1678,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.forall_lid, mk_forall_interp);
                  (Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
+                 (Const.inversion_lid,mk_inversion_axiom)
                 ] in
     (fun (env:env) (t:lident) (s:string) (tt:term) ->
         match BU.find_opt (fun (l, _) -> lid_equals l t) prims with
@@ -2312,19 +2334,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                         mkImp(xx_has_type_sfuel, data_ax)),
                                 Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
                                 (varops.mk_unique ("fuel_guarded_inversion_"^t.str))) in
-                let pattern_guarded_inversion =
-                    if contains_name env "Prims.inversion"
-                    && List.length datas > 1 //no point emitting this if there's only 1 constructor; it's already covered by the previous inversion
-                    then let xx_has_type_fuel = mk_HasTypeFuel ff xx tapp in
-                         let pattern_guard = mkApp("Prims.inversion", [tapp]) in
-                         [Util.mkAssume(mkForall([[xx_has_type_fuel; pattern_guard]], add_fuel (ffsym, Fuel_sort) ((xxsym, Term_sort)::vars),
-                                             mkImp(xx_has_type_fuel, data_ax)),
-                                      Some "inversion axiom",  //this name matters! see Sig_bundle case near line 1493
-                                      (varops.mk_unique ("pattern_guarded_inversion_"^t.str)))]
-                    else [] in
                 decls
-                @[fuel_guarded_inversion]
-                @pattern_guarded_inversion in
+                @[fuel_guarded_inversion] in
 
         let formals, res = match (SS.compress k).n with
                 | Tm_arrow(formals, kres) ->

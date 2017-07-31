@@ -78,8 +78,7 @@ abstract let recall (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE unit (fun 
 abstract let alloc (#a:Type) (#rel:preorder a) (init:a)
   :ST (mref a rel)
       (fun h -> True)
-      (fun h0 r h1 -> let (r', h1') = alloc rel h0 init true in
-	           witnessed (contains_pred r') /\ r' == r /\ h1 == h1')
+      (fun h0 r h1 -> fresh r h0 h1 /\ modifies Set.empty h0 h1 /\ sel h1 r == init)
   = let h0 = gst_get () in
     let r, h1 = alloc rel h0 init true in
     gst_put h1;

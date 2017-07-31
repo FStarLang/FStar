@@ -445,7 +445,7 @@ and symbolchar_parser = parse
  | symbolchar* { OPINFIX0c (">" ^  L.lexeme lexbuf) }
 
 and string buffer = parse
- |  '\\' (newline as x) anywhite*
+ |  '\\' newline anywhite*
     {
       L.new_line lexbuf;
       string buffer lexbuf; }
@@ -476,7 +476,7 @@ and comment inner buffer startpos = parse
 
  | "(*"
     { Buffer.add_bytes buffer "(*" ;
-      let close_eof = comment true buffer startpos lexbuf in
+      let _close_eof = comment true buffer startpos lexbuf in
       comment inner buffer startpos lexbuf }
 
  | newline

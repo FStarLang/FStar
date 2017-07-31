@@ -79,6 +79,12 @@ val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
 val smap_size: smap<'value> -> int
 
+type psmap<'value> = Collections.Map<string,'value> (* pure version *)
+val psmap_empty: unit -> psmap<'value> // GH-1161
+val psmap_add: psmap<'value> -> string -> 'value -> psmap<'value>
+val psmap_find_default: psmap<'value> -> string -> 'value -> 'value
+val psmap_try_find: psmap<'value> -> string -> option<'value>
+
 type imap<'value> = System.Collections.Generic.Dictionary<int,'value> (* not relying on representation *)
 val imap_create: int -> imap<'value>
 val imap_clear:imap<'value> -> unit
@@ -90,6 +96,12 @@ val imap_remove: imap<'value> -> int -> unit
 (* The list may contain duplicates. *)
 val imap_keys: imap<'value> -> list<int>
 val imap_copy: imap<'value> -> imap<'value>
+
+type pimap<'value> = Collections.Map<int,'value> (* pure version *)
+val pimap_empty: unit -> pimap<'value> // GH-1161
+val pimap_add: pimap<'value> -> int -> 'value -> pimap<'value>
+val pimap_find_default: pimap<'value> -> int -> 'value -> 'value
+val pimap_try_find: pimap<'value> -> int -> option<'value>
 
 val format: string -> list<string> -> string
 val format1: string -> string -> string
@@ -131,10 +143,19 @@ val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list<string> -> unit
 
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of list<json>
+| JsonAssoc of list<(string * json)>
+
 type printer = {
   printer_prinfo: string -> unit;
   printer_prwarning: string -> unit;
   printer_prerror: string -> unit;
+  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
 }
 
 val default_printer : printer
@@ -142,6 +163,7 @@ val set_printer : printer -> unit
 
 val print_raw : string -> unit
 val print_string : string -> unit
+val print_generic: string -> ('a -> string) -> ('a -> json) -> 'a -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list<string> -> string
@@ -376,14 +398,6 @@ type hints_db = {
 
 val write_hints: string -> hints_db -> unit
 val read_hints: string -> option<hints_db>
-
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of int
-| JsonStr of string
-| JsonList of list<json>
-| JsonAssoc of list<(string * json)>
 
 val json_of_string : string -> option<json>
 val string_of_json : json -> string
