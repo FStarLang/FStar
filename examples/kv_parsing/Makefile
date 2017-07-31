@@ -13,6 +13,9 @@ FST_FILES= Slice.fst \
 
 all: $(FST_FILES:.fst=.uver)
 
+%.fst-in:
+	@echo "--include ../../../kremlin/kremlib"
+
 
 extract-c: Serializer.fst Validator.fst ValidatedParser.fst
 	krml -skip-compilation -warn-error +11 Serializer.fst Validator.fst ValidatedParser.fst

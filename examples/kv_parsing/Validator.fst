@@ -7,6 +7,8 @@ open Slice
 open FStar.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
+// special kremlin support for looping
+open C.Loops
 
 module B = FStar.Buffer
 
@@ -149,35 +151,6 @@ let validate_entry_st : stateful_validator parse_entry = fun input ->
              parse_u32_array validate_u32_array_st
              (fun key value -> EncodedEntry key.len16 key.a16 value.len32 value.a32) input
 
-// TODO: oops, how do we import C.Loops? we need kremlib on the include path...
-
-(* To be extracted as:
-    int i = <start>;
-    bool b = false;
-    for (; (!b) && (i != <end>); ++i) {
-      b = <f> i;
-    }
-    // i and b must be in scope after the loop
-*)
-val interruptible_for:
-  start:U32.t ->
-  finish:U32.t{U32.v finish >= U32.v start} ->
-  inv:(mem -> nat -> bool -> GTot Type0) ->
-  f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> Stack bool
-                        (requires (fun h -> inv h (U32.v i) false))
-                        (ensures (fun h_1 b h_2 -> inv h_1 (U32.v i) false /\ inv h_2 U32.(v i + 1) b)) ) ->
-  Stack (U32.t * bool)
-    (requires (fun h -> inv h (U32.v start) false))
-    (ensures (fun _ res h_2 -> let (i, b) = res in ((if b then True else i == finish) /\ inv h_2 (U32.v i) b)))
-let rec interruptible_for start finish inv f =
-  if start = finish then
-    (finish, false)
-  else
-    let start' = U32.(start +^ 1ul) in
-    if f start
-    then (start', true)
-    else interruptible_for start' finish inv f
-
 module HH = FStar.Monotonic.HyperHeap
 
 val modifies_one_trans (r:HH.rid) (h0 h1 h2:mem) :
@@ -245,6 +218,7 @@ val validate_one_more (#t:Type) (p:parser t) (n:nat) (buf:bslice)
 let validate_one_more #t p n buf off off' h =
     validate_n_more p n 1 buf off off' h
 
+inline_for_extraction [@"substitute"]
 val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:U32.t) :
     stateful_validator (parse_many p (U32.v n))
 let validate_many_st #t p v n = fun buf ->
@@ -281,6 +255,7 @@ let validate_many_st #t p v n = fun buf ->
     // why is the invariant insufficient to prove this?
     else (admit(); Some off)
 
+[@"substitute"]
 let validate_done_st : stateful_validator parsing_done = fun input ->
   if U32.eq input.len 0ul then Some 0ul else None
 
