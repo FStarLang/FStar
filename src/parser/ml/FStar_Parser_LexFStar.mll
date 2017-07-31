@@ -354,6 +354,10 @@ rule token = parse
      { let inner, buffer, startpos = start_comment lexbuf in
        comment inner buffer startpos lexbuf }
 
+ | "[@"
+ | "///[@" (* special syntax for the purposes of the compiler *)
+      { LBRACK_AT }
+
  | "//"  [^'\n''\r']*
      { push_one_line_comment lexbuf ;
        token lexbuf }
@@ -410,7 +414,6 @@ rule token = parse
  | "="         { EQUALS }
  | "%["        { PERCENT_LBRACK }
  | "!{"        { BANG_LBRACE }
- | "[@"        { LBRACK_AT }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
  | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
@@ -442,7 +445,7 @@ and symbolchar_parser = parse
  | symbolchar* { OPINFIX0c (">" ^  L.lexeme lexbuf) }
 
 and string buffer = parse
- |  '\\' (newline as x) anywhite*
+ |  '\\' newline anywhite*
     {
       L.new_line lexbuf;
       string buffer lexbuf; }
@@ -473,7 +476,7 @@ and comment inner buffer startpos = parse
 
  | "(*"
     { Buffer.add_bytes buffer "(*" ;
-      let close_eof = comment true buffer startpos lexbuf in
+      let _close_eof = comment true buffer startpos lexbuf in
       comment inner buffer startpos lexbuf }
 
  | newline

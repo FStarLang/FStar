@@ -1,0 +1,2038 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A small dependently typed effectful language that we use to study the witness-recall verification model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+(* this language is a dependently typed calculus based on Paul Levy's simply typed Fine-Grain Call-By-Value language *)
+
+Value types:
+------------
+
+  t ::= state                   (* type of states *)
+      | unit                    (* unit type *)
+      | t_1 + t_2               (* sum type *)
+      | t_1 * t_2               (* product type *)
+      | x:t -> C                (* Pi-type *)
+
+Computation types:
+------------------
+
+  C ::= {x_s.pre} t {x_s.x_v.x'_s.post}       (* see metatheory_logic.txt for the accompanying pre- and postcondition logic *)
+
+    where
+
+      (pre) and (post) are formulae
+
+      (x_s) has type (state)                  (* the initial state *)
+
+      (x_v) has type (t)                      (* the value returned *)
+
+      (x'_s) has type (state)                 (* the final state *)
+
+  In the following definitions and proofs we often use the following convenient syntactic sugar
+
+    a) we write (pre v) for (pre[v/x_s])
+
+    b) we write (post v_1 v_2 v_3) for (post[v_1/x_s,v_2/x_v,v_3/x'_s])
+
+Value terms:
+------------
+
+  v,s ::= x
+        | c_s | ...                           (* we make the assumption that (state) is non-empty, assuming that there is some constant c_s of type state *)
+        | ()
+        | inl v
+        | inr v
+        | (v_1,v_2)
+        | fun x:t -> e
+
+  (* For better readability, in the following we often let (s) to range over value terms of type (state) *)
+
+Computation terms:
+------------------
+
+    e ::= return v
+      | e_1 to x in e_2
+      | v_1 v_2
+      | case (v as x) of (inl x_1 => e_1 ; inr x_2 => e_2)
+      | pmatch (v as x) as (x_1,x_2) in e
+      | get
+      | put v
+      | witness x.phi
+      | recall x.phi
+
+Contexts:
+---------
+
+  G ::= -
+      | G , x:t
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Well-formedness rules for types and contexts
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Value types:
+------------
+
+  |- G wf
+  ------------- [Ty-State]
+  G |- state wf
+
+  |- G wf
+  ------------ [Ty-Unit]
+  G |- unit wf
+
+  G |- t_1 wf
+  G |- t_2 wf
+  ----------------- [Ty-Sum]
+  G |- t_1 + t_2 wf
+  
+  G |- t_1 wf
+  G |- t_2 wf
+  ----------------- [Ty-Product]
+  G |- t_1 * t_2 wf
+
+  G |- t wf
+  G , x:t |- C wf
+  ---------------- [Ty-Fun]
+  G |- x:t -> C wf
+
+Computation types:
+------------------
+
+  G |- t wf
+  G , x_s:state |- pre wf
+  G , x_s:state , x_v:t , x'_s:state |- post wf
+  --------------------------------------------- [Ty-MST]
+  G |- {x_s.pre} t {x_s.x_v.x'_s.post} wf
+
+Value contexts:
+---------------
+
+  ------- [Ctx-Empty]
+  |- - wf
+
+  |- G wf
+  G |- t wf
+  x \not\in Vars(G)
+  ----------------- [Ctx-Cons]
+  |- G , x:t wf
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Typing rules for value and computation terms
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Value terms:
+------------
+
+Well-typed value terms are defined using the judgement
+
+  G |- v : t
+
+using the following rules:
+
+  x:t \in G
+  |- G wf
+  ---------- [T-Var]
+  G |- x : t
+
+  |- G wf
+  ---------------- [T-State-Constant]
+  G |- c_s : state
+
+  |- G wf
+  --------------- [T-Unit]
+  G |- () : unit
+
+  G |- v : t_1
+  G |- t_2 wf
+  ---------------------- [T-Inl]
+  G |- inl v : t_1 + t_2
+
+  G |- v : t_2
+  G |- t_1 wf
+  ---------------------- [T-Inr]
+  G |- inr v : t_1 + t_2
+
+  G |- v_1 : t_1
+  G |- v_2 : t_2
+  -------------------------- [T-Pair]
+  G |- (v_1,v_2) : t_1 * t_2
+
+  G , x:t |- e : C
+  --------------------- [T-Fun]
+  G |- fun x:t -> e : C
+
+  G |- v : t
+  G |- t <: t'
+  ------------ [T-ValSub]
+  G |- v : t'
+  
+Computation terms:
+------------------
+
+Well-typed computation terms are defined using the judgement
+
+  G |- e : C
+
+using the following rules:
+
+  G |- v : t
+  --------------------------------------------------------------------- [T-Return]
+  G |- return v : {x_s.True} t {x_s.x_v.x'_s.(x_s == x'_s /\ x_v == v)}
+
+  G |- e_1 : {x_s.pre} t_1 {x_s.x_v.x'_s.post}
+  G |- t_2 wf
+  G , x:t_1 |- e_2 : {x_s.(exists x''_s:state . post x''_s x x_s)} t_2 {x_s.x_v.x'_s.post'}
+  --------------------------------------------------------------------------------------------------------------------------- [T-To]
+  G |- e_1 to x in e_2 : {x_s.pre} t_2 {x_s.x_v.x'_s.(exists x:t_1 x''_s:state . post x_s x x''_s /\ post' x''_s x_v x'_s)}
+
+  G |- v_1 : x:t -> C
+  G |- v_2 : t
+  ----------------------- [T-App]
+  G |- v_1 v_2 : C[v_2/x]
+
+  G |– v : t_1 + t_2
+  G , x:t_1 + t_2 |- C wf
+  G , x_1:t_1 |- e_1 : C[inl x_1/x]
+  G , x_2:t_2 |- e_2 : C[inr x_2/x]
+  ---------------------------------------------------------------- [T-Case]
+  G |- case (v as x) of (inl x_1 => e_1 ; inr x_2 => e_2) : C[v/x]
+
+  G |- v : t_1 * t_2
+  G , x:t_1 * t_2 |- C wf
+  G , x_1:t_1 , x_2:t_2 |- e : C[(x_1,x_2)/x]
+  ----------------------------------------------- [T-Pmatch]
+  G |- pmatch (v as x) as (x_1,x_2) in e : C[v/x]
+
+  |- G wf
+  ---------------------------------------------------------------------- [T-Get]
+  G |- get : {x_s.True} state {x_s.x_v.x'_s.(x_s == x_v /\ x_v == x'_s)}
+
+  G |- s : state
+  -------------------------------------------------------------- [T-Put]
+  G |- put s : {x_s.(rel x_s s)} unit {x_s.x_v.x'_s.(x'_s == s)}
+
+  G , x:state |- phi wf
+  ------------------------------------------------------------------------------------------------------------ [T-Witness]
+  G |- witness x.phi : {x_s.(stable x.phi /\ phi[x_s/x])} unit {x_s.x_v.x'_s.(x_s == x'_s /\ witnessed x.phi)}
+
+  G , x:state |- phi wf
+  -------------------------------------------------------------------------------------------- [T-Recall]
+  G |- recall x.phi : {x_s.(witnessed x.phi)} unit {x_s.x_v.x'_s.(x_s == x'_s /\ phi[x'_s/x])}
+
+  G |- e : C
+  G |- C <: C'
+  ------------ [T-CompSub]
+  G |- e : C'
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Subtyping for value and computation types
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Subtyping value types:
+----------------------
+
+  |- G wf
+  ------------------- [Sub-State]
+  G |- state <: state
+
+  |- G wf
+  ----------------- [Sub-Unit]
+  G |- unit <: unit
+
+  G |- t_1 <: t'_1
+  G |- t_2 <: t'_2
+  ----------------------------- [Sub-Sum]
+  G |- t_1 + t_2 <: t'_1 + t'_2
+
+  G |- t_1 <: t'_1
+  G |- t_2 <: t'_2
+  ----------------------------- [Sub-Pair]
+  G |- t_1 * t_2 <: t'_1 * t'_2
+
+  G |- t' <: t
+  G , x:t' |- C <: C'
+  --------------------------- [Sub-Fun]
+  G |- x:t -> C <: x:t' -> C'
+
+Subtyping computation types:
+----------------------------
+
+  G |- t <: t'
+  G , x_s:state | pre' |- pre
+  G , x_s:state , x_v:t , x'_s:state | pre' , rel x_s x'_s , post |- post'
+  -------------------------------------------------------------------------- [Sub-MST]
+  G |- {x_s.pre} t {x_s.x_v.x'_s.post} <: {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+
+Lemma (Subtyping relation is reflexive and transitive):
+-------------------------------------------------------
+
+The following rules are admissible:
+
+  a) G |- t wf
+     -----------
+     G |- t <: t
+
+  b) G |- t_1 <: t_2
+     G |- t_2 <: t_3
+     ---------------
+     G |- t_1 <: t_3
+
+Proof:
+------
+
+   We prove a) by induction on the derivation of (G |- t wf).
+
+   We prove b) by induction on the sum of the heights of (G |- t_1 <: t_2) and (G |- t_2 <: t_3).
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Basic weakening and substitution lemmas
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Lemma (Weakening):
+------------------
+
+  Given a derivation of
+
+    G , G' |- J                                         (* where (J) includes all judgements of the language and the accompanying logic (both nat. ded. and seq. calc.) *)
+
+  and a value type (t) with a derivation of
+
+    G |- t wf
+
+  and a variable (x) such that (x) is not in (Vars(G , G')), 
+
+  then we have a derivation of
+
+    G , G' |- J
+
+Proof:
+------
+
+  By induction on the derivation of (G , G' |- J).
+
+  This lemma is proved simultaneously with Lemma (Substitution).
+
+qed.
+
+
+Lemma (Substitution):
+---------------------
+
+  Given a derivation of
+
+    G , x:t , G' |- J                                  (* where (J) includes all judgements of the language and the accompanying logic (both nat. ded. and seq. calc.) *)
+
+  and a value term (v) together with a derivation of
+
+    G |- v : t
+
+  then we have a derivation of
+
+    G , G'[v/x] |- J[v/x]
+
+Proof:
+------
+
+  By induction on the derivation of (G , x:t , G' |- J).
+
+  This lemma is proved simultaneously with Lemma (Weakening).
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Subtyping is admissible in the LHS of rules
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Lemma (Subtyping is admissible in the LHS of rules):
+----------------------------------------------------
+
+  Given a derivation of
+
+    G , x:t , G' |- J                                     (* where (J) includes all judgements of the language and the accompanying logic (both nat. ded. and seq. calc.) *)
+
+  and a derivation of
+
+    G |- t' <: t
+
+  then we have a derivation of
+
+    G , x:t' , G' |- J
+
+Proof:
+------
+
+  By induction on the given derivation of (G , x:t , G' |- J).
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Judgements only relate well-formed syntax
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Lemma (Judgements only relate well-formed syntax):
+--------------------------------------------------
+
+  Given a derivation of
+
+    G |- v : t
+
+  then we have derivations of
+
+    |- G wf
+
+  and
+
+    G |- t wf
+
+  and similarly for other judgements of the language and the accompanying logic (both its natural deduction and sequent calculus systems).
+
+Proof:
+------
+
+  By induction on the given derivations.
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Small-step call-by-value reduction relation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Evaluation contexts:
+--------------------
+
+  E ::= []
+      | E to x in e
+
+Configurations:
+---------------
+
+We define the reduction relation on configurations
+
+  (e,s,W)
+
+where
+
+  (e) is a computation term being reduced
+
+  (s) is a value of type (state)
+
+  (W) is a finite set of witnessed properties of the form (x.phi) where (x) has type (state)
+
+
+Well-formed configurations:
+---------------------------
+
+  G |- (s,W) wf iff a) G |- s : state, and
+                    b) G | witnessed W |- phi[s/x_s], for all (x.phi) in (W), and
+                    c) G | witnessed W |- stable x.phi, for all (x.phi) in (W),
+
+  where
+
+    witnessed W =def= witnessed x.(/\_{y.phi \in W} phi[x/y])
+
+
+Reduction rules:
+----------------
+
+  (e,s,W) ~> (e',s',W')
+  --------------------------- [Context]
+  (E[e],s,W) ~> (E[e'],s',W')
+
+  -------------------------------------- [App]
+  ((fun x:t -> e) v,s,W) ~> (e[v/x],s,W)
+
+  ------------------------------------------ [Return-To]
+  ((return v) to x in e,s,W) ~> (e[v/x],s,W)
+
+  -------------------------------------------------------------------------------- [Case-Inl]
+  (case (inl v as x) of (inl x_1 => e_1 ; inr x_2 => e_2),s,W) ~> (e_1[v/x_1],s,W)
+
+  -------------------------------------------------------------------------------- [Case-Inr]
+  (case (inr v as x) of (inl x_1 => e_1 ; inr x_2 => e_2),s,W) ~> (e_2[v/x_2],s,W)
+
+  --------------------------------------------------------------------------- [Pmatch]
+  (pmatch ((v_1,v_2) as x) as (x_1,x_2) in e,s,W) ~> (e[v_1/x_1,v_2/x_2],s,W)
+
+  --------------------------- [Get]
+  (get,s,W) ~> (return s,s,W)
+
+  -------------------------------- [Put]
+  (put s',s,W) ~> (return (),s',W)
+
+  ------------------------------------------------- [Witness]
+  (witness x.phi,s,W) ~> (return (),s,W \cup x.phi)
+
+  ------------------------------------- [Recall]
+  (recall x.phi,s,W) ~> (return (),s,W)
+
+
+Lemma (The reduction relation is deterministic):
+------------------------------------------------
+
+  forall e s W e' s' W' e'' s'' W''.
+
+    (e,s,W) ~> (e',s',W') /\
+
+    (e,s,W) ~> (e'',s'',W'')
+
+    ==>
+
+    e' = e'' /\
+
+    s' = s'' /\
+
+    W' = W''
+
+Proof:
+------
+
+  By induction on the derivation of ((e,s,W) ~> (e',s',W')).
+
+  For rules with no premises, we observe that ((e,s,W) ~> (e'',s'',W'')) can only be given by either the exact
+  same rule or by the [Context] rule with (E = []). As a result, (e'' = e'), (s'' = s'), and (W'' = W').
+
+  For the [Context] rule, we observe that ((e,s,W) ~> (e'',s'',W'')) has to also end with the [Context] rule,
+  with the contexts (E) the same in both cases. As a result, we can use the induction hypothesis to show 
+  that the reduction steps in the premises are the same. As a result, (e'' = e'), (s'' = s'), and (W'' = W').
+
+qed.
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+Correctness of reduction
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+Theorem (Progress):
+-------------------
+
+forall e t pre post.
+
+  |- e : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+  ==>
+
+  a) exists v . e = return v
+
+  \/
+
+  b) forall s W . exists e' s' W' . (e,s,W) ~> (e',s',W')
+
+Proof:
+------
+
+  By induction on the derivation of (|- e : {x_s.phi} t {x_s.x_v.x'_s.psi}).
+
+  Case [T-CompSub]:
+
+    In this case, the derivation ends with
+
+      |- t' <: t
+      x_s:state | pre' |- pre
+      x_s:state , x_v:t' , x'_s:state | pre , post' |- post
+      |- e : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+      ----------------------------------------------------- [T-CompSub]
+      |- e : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    so we simply use the induction hypothesis with the derivation of (|- e : {x_s.pre'} t' {x_s.x_v.x'_s.post'}).
+
+
+  Case [T-Return]:
+
+    In this case, the given derivation ends with
+
+      |- v : t
+      ------------------------------------------------------------------- [T-Return]
+      |- return v : {x_s.True} t {x_s.x_v.x'_s.(x_s == x'_s /\ x_v == v)}
+
+    and thus a) follows immediately.
+
+
+  Case [T-To]:
+
+    In this case, the given derivation ends with
+
+      |- e_1 : {x_s.pre} t_1 {x_s.x_v.x'_s.post}
+      |- t_2 wf
+      x:t_1 |- e_2 : {x_s.(exists x''_s:state . post x''_s x x_s)} t_2 {x_s.x_v.x'_s.post'}
+      ----------------------------------------------------------------------------------------------------------------------- [T-To]
+      |- e_1 to x in e_2 : {x_s.pre} t_2 {x_s.x_v.x'_s.(exists x:t_1 x''_s:state . post x_s x x''_s /\ post' x''_s x_v x'_s)}
+
+    First, we use the induction hypothesis on (G |- e_1 : {x_s.pre} t_1 {x_s.x_v.x'_s.post}) to get that
+
+      a') e_1 = return v
+
+      \/
+
+      b') forall s W . exists e' s' W' . (e_1,s,W) ~> (e'_1,s',W')
+
+    Next, we proceed by case analysis on whether a') or b') holds.
+
+    If a'), then we show b) as follows: 
+
+                   ---------------------------------------------- [Return-To]
+                   ((return v) to x in e_2,s,W) ~> (e_2[v/x],s,W)
+                   ---------------------------------------------- (* = *)
+      forall s W . (e_1 to x in e_2,s,W) ~> (e_2[v/x],s,W)
+
+    If b'), then we show b) as follows:
+
+                   forall s W . exists e' s' W' . (e_1,s,W) ~> (e'_1,s',W')
+                   --------------------------------------------------------
+                   (e_1,s,W) ~> (e'_1,s',W')
+                   ------------------------------------------------- [Context] with (E = [] to x in e_2)
+      forall s W . (e_1 to x in e_2,s,W) ~> (e'_1 to x in e_2,s',W')
+
+
+  Case [T-App]:
+
+    In this case, the given derivation ends with
+
+      |- v_1 : x:t_1 -> C
+      |- v_2 : t_1
+      --------------------- [T-App]
+      |- v_1 v_2 : C[v_1/x]
+
+    By induction on the possible derivations of (|- v_1 : x:t_1 -> C), we get that (v_1 = fun x:t_1 -> e) for some computation term (e).
+
+    As a result, we can prove b) as follows:
+
+                   -------------------------------------------- [App]
+      forall s W . ((fun x:t_1 -> e) v_2,s,W) ~> (e[v_2/x],s,W)
+
+
+  Case [T-Case]:
+
+    In this case, the given derivation ends with
+
+      |– v : t_1 + t_2
+      x:t_1 + t_2 |- t wf
+      x:t_1 + t_2 , x_s:state |- pre wf
+      x:t_1 + t_2 , x_s:state , x_v:t , x'_s:state |- post wf
+      x_1:t_1 |- e_1 : {x_s.pre[inl x_1/x]} t[inl x_1/x] {x_s.x_v.x'_s.post[inl x_1/x]}
+      x_2:t_2 |- e_2 : {x_s.pre[inr x_2/x]} t[inr x_2/x] {x_s.x_v.x'_s.post[inr x_2/x]}
+      ------------------------------------------------------------------------------------------------------ [T-Case]
+      |- case (v as x) of (inl x_1 => e_1 ; inr x_2 => e_2) : {x_s.pre[v/x]} t[v/x] {x_s.x_v.x'_s.post[v/x]}
+
+    We prove this case analogously to [T-App], in that by induction on (|- v : t_1 + t_2), we get that either (v = inl v') or (v = inr v') for some value term (v').
+
+
+  Case [T-Pmatch]:
+
+    In this case, the given derivation ends with
+
+      |- v : t_1 * t_2
+      x:t_1 * t_2 |- t wf
+      x:t_1 * t_2 , x_s:state |- pre wf
+      x:t_1 * t_2 , x_s:state , x_v:t , x'_s:state |- post wf
+      x_1:t_1 , x_2:t_2 |- e : {x_s.pre[(x_1,x_2)/x]} t[(x_1,x_2)/x] {x_s.x_v.x'_s.post[(x_1,x_2)/x]}
+      ----------------------------------------------------------------------------------------------- [T-Pmatch]
+      |- pmatch (v as x) as (x_1,x_2) in e : {x_s.pre[v/x]} t[v/x] {x_s.x_v.x'_s.post[v/x]}
+
+    We prove this case analogously to [T-App], in that by induction on (|- v : t_1 * t_2), we get that (v = (v_1,v_2)) for some value terms (v_1) and (v_2).
+
+
+  Case [T-Get]:
+
+    In this case, the given derivation ends with
+
+      -------------------------------------------------------------------- [T-Get]
+      |- get : {x_s.True} state {x_s.x_v.x'_s.(x_s == x_v /\ x_v == x'_s)}
+
+    As a result, we can prove b) as follows:
+
+                   --------------------------- [Get]
+      forall s W . (get,s,W) ~> (return s,s,W)
+
+
+  Case [T-Put]:
+
+    In this case, the given derivation ends with
+
+      |- s' : state
+      -------------------------------------------------------------- [T-Put]
+      |- put s' : {x_s.(rel x_s v)} unit {x_s.x_v.x'_s.(x'_s == s')}
+
+    As a result, we can prove b) as follows:
+
+                   -------------------------------- [Put]
+      forall s W . (put s',s,W) ~> (return (),s',W)
+
+
+  Case [T-Witness]:
+
+    In this case, the given derivation ends with
+    
+      x:state |- phi wf
+      ---------------------------------------------------------------------------------------------------------- [T-Witness]
+      |- witness x.phi : {x_s.(stable x.phi /\ phi[x_s/x])} unit {x_s.x_v.x'_s.(x_s == x'_s /\ witnessed x.phi)}
+
+    As a result, we can prove b) as follows:
+
+                   --------------------------------------------------- [Witness]
+      forall s W . (witness x.phi,s,W) ~> (return (),s,W \cup {x.phi})
+
+
+  Case [T-Recall]:
+
+    In this case, the given derivation ends with
+
+      x:state |- phi wf
+      ------------------------------------------------------------------------------------------ [T-Recall]
+      |- recall x.phi : {x_s.(witnessed x.phi)} unit {x_s.x_v.x'_s.(x_s == x'_s /\ phi[x'_s/x])}
+
+    As a result, we can prove b) as follows:
+
+                   ------------------------------------- [Recall]
+      forall s W . (recall x.phi,s,W) ~> (return (),s,W)
+
+qed.
+
+
+Theorem (Preservation):
+-----------------------
+
+  forall e t pre post s W e' s' W' . 
+
+    |- e : {x_s.pre} t {x_s.x_v.x'_s.post} /\
+
+    (e,s,W) ~> (e',s',W') /\
+
+    |- (s,W) wf /\
+
+    witnessed W |- pre s
+
+    ==>
+
+    W \subseteq W' /\
+
+    witnessed W' |- rel s s' /\
+
+    |- (s',W') wf /\ 
+
+    exists pre' t' post' .
+
+      |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'} /\
+
+      |- t' <: t /\
+
+      witnessed W' |- pre' s' /\
+
+      x_v:t' , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+Proof:
+------
+
+  By induction on the sum of the height of the derivation of ((e,s,W) ~> (e',s',W')) and the size of (e).
+
+  (* We occasionally abbreviate multiple steps of derivations, apply weakening implicitly, and apply some of the implications directly on the LHS of the judgements via cuts. *)
+
+  Case [Context] with (e = E[e'']) and (e' = E[e''']):
+
+    We proceed by case analysis on E:
+
+      Case when (E = []):
+
+        In this case, (e = [][e''] = e'') and (e' = [][e'''] = e''').
+
+        We can simply use the induction hypothesis with ((e'',s,W) ~> (e''',s',W')) and (|- e'' : {x_s.pre} t {x_s.x_v.x'_s.post}).
+
+      Case when (E = E' to x in e''''):
+
+        In this case, the derivation of ~> ends with
+
+          (e'',s,W) ~> (e''',s',W')
+          ------------------------------------------------------------- [Context]
+          (E'[e''] to x in e'''',s,W) ~> (E'[e'''] to x in e'''',s',W')
+
+        By inverting the typing of
+
+          |- E'[e''] to x in e'''' : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+        we get that (based on the observation that this derivation contains 0 or more applications of [T-CompSub] and one [T-To])
+
+          |- E'[e''] : {x_s.pre''} t'' {x_s.x_v.x'_s.post''}
+
+          x:t'' |- e'''' : {x_s.(exists x''_s:state . post'' x''_s x x_s)} t''' {x_s.x_v.x'_s.post'''}
+
+        for some pre'', t'', post'', t''', post''' such that
+
+          |- t''' <: t
+
+          x_s:state | pre x_s |- pre'' x_s
+
+          x_s:state , x_v:t''' , x'_s:state | pre x_s , rel x_s x'_s , exists x:t'' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s |- post x_s x_v x'_s
+
+        We can now use the [Context] rule to get a derivation of
+
+          (e'',s,W) ~> (e''',s',W')
+          --------------------------------- [Context]
+          (E'[e''],s,W) ~> (E'[e'''],s',W')
+
+        Observe that, while the height of the derivation of ((E'[e''],s,W) ~> (E'[e'''],s',W'))
+        is the same as the height of the given derivation of ~>, the size of (E'[e'']) is smaller
+        than the size of (E'[e''] to x in e'''').
+
+        Further, note that we also have
+
+                                           |- (s,W) wf
+                                           ------------
+          x_s:state | pre |- pre''         |- s : state
+          --------------------------------------------- (* subst *)
+          pre s |- pre'' s 
+          ------------------------------ (* wk *)
+          witnessed W , pre s |- pre'' s                        witnessed W |- pre s
+          -------------------------------------------------------------------------- (* cut *)
+          witnessed W |- pre'' s
+
+        Therefore, we can use the induction hypothesis with
+
+          |- E'[e''] : {x_s.phi''} t'' {x_s.x_v.x'_s.post''}
+
+        and
+
+          (E'[e''],s,W) ~> (E'[e'''],s',W')
+
+        to get 
+
+          W \subseteq W' /\
+
+          witnessed W' |- rel s s' /\
+
+          |- (s',W') wf /\ 
+
+          exists pre''' t'''' post'''' .
+
+            |- E'[e'''] : {x_s.pre'''} t'''' {x_s.x_v.x'_s.post''''} /\
+
+            |- t'''' <: t'' /\
+
+            witnessed W' |- pre''' s' /\
+
+            x_v:t'''' , x'_s:state | witnessed W' , rel s' x'_s , post'''' s' x_v x'_s |- post'' s x_v x'_s
+
+        So, showing the following is trivial
+
+          W \subseteq W'                    
+
+          witnessed W' |- rel s s'
+
+          |- (s',W') wf                      
+
+        Finally, we can pick
+
+          pre'  =def= pre''' x_s /\ x_s == s' /\ witnessed W'
+
+          t'    =def= t'''
+
+          post' =def= exists x:t'''' x''_s:state . post'''' x_s x x''_s /\ post''' x''_s x_v x'_s
+
+        and prove that
+
+          (a)
+          (b)
+          ------------------------------------------------------------------------------------------------------------------------------------------------------------ [T-CompSub]
+          |- E'[e'''] to x in e'''' : {x_s.pre''' x_s /\ x_s == s' /\ witnessed W'} t'''
+                                                                          {x_s.x_v.x'_s.(exists x:t'''' x''_s:state . post'''' x_s x x''_s /\ post''' x''_s x_v x'_s)}
+          ------------------------------------------------------------------------------------------------------------------------------------------------------------ (* = *)
+          |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+        where the derivation (a) is given by
+
+          ------------------------------------------------------------------------------------------------------------------------------------------------------ [Hyp]
+          x_s , x_v , x'_s | pre''' x_s , x_s == s' , witnessed W' , rel x_s x'_s , exists x:t'''' x''_s:state . post'''' s' x x''_s /\ post''' x''_s x_v x'_s |-
+                                                                                             exists x:t'''' x''_s:state . post'''' s' x x''_s /\ post''' x''_s x_v x'_s
+          ------------------------------------------------------------------------------------------------------------------------------------------------------ [Eq-Transport]
+          x_s , x_v , x'_s | pre''' x_s , x_s == s' , witnessed W' , rel x_s x'_s , exists x:t'''' x''_s:state . post'''' s' x x''_s /\ post''' x''_s x_v x'_s |-
+                                                                                            exists x:t'''' x''_s:state . post'''' x_s x x''_s /\ post''' x''_s x_v x'_s
+          ------------------------------------------------------------------------------------------------------------------------------------------------------- (* /\ in LHS*)
+          x_s , x_v , x'_s | pre''' x_s /\ x_s == s' /\ witnessed W' , rel x_s x'_s , exists x:t'''' x''_s:state . post'''' s' x x''_s /\ post''' x''_s x_v x'_s |-
+                                                                                            exists x:t'''' x''_s:state . post'''' x_s x x''_s /\ post''' x''_s x_v x'_s
+
+        and the derivation (b) is given by
+
+          (c)
+          (d)
+          ---------------------------------------------------------------------------------------------------------------------------------------------------------- [T-To]
+          |- E'[e'''] to x in e'''' : {x_s.pre''' x_s /\ x_s == s' /\ witnessed W'} t'''
+                                                                         {x_s.x_v.x'_s.(exists x:t'''' x''_s:state . post'''' s' x x''_s /\ post''' x''_s x_v x'_s)}
+
+        where the derivation (c) is given by
+
+          x_s | pre''' x_s /\ x_s == s' /\ witnessed W' |- pre''' x_s                                                                   (* using [Hyp] *)
+          x_s , x_v , x'_s | pre''' x_s /\ x_s == s' /\ witnessed W' , rel x_s x'_s , post'''' x_s x_v x'_s |- post'''' s' x_v x'_s     (* using [Equality-Transport] *)
+          |- E'[e'''] : {x_s.pre'''} t'''' {x_s.x_v.x'_s.post'''' x_s x_v x'_s}
+          ------------------------------------------------------------------------------------------------------------------------- [T-CompSub]
+          |- E'[e'''] : {x_s.pre''' x_s /\ x_s == s' /\ witnessed W'} t'''' {x_s.x_v.x'_s.post'''' s' x_v x'_s}
+
+        and the derivation (d) is given by
+
+          (e)
+          x:t'' |- e'''' : {x_s.(exists x''_s:state . post'' x''_s x x_s)} t''' {x_s.x_v.x'_s.post'''}            (* additionally using (|- t'''' <: t'') in LHS *)
+          ------------------------------------------------------------------------------------------------------- [T-CompSub]
+          x:t'''' |- e'''' : {x_s.(exists x''_s . post'''' s' x x_s /\ witnessed W')}  t''' {x_s.x_v.x'_s.post'''}
+
+        where the derivation (e) is given by
+
+          one of the assumptions we get from IH
+          ---------------------------------------------------------------------------------
+          x_v:t'''' , x'_s:state | witnessed W' , post'''' s' x_v x'_s |- post'' s x_v x'_s                           |- (s,W) wf
+          ----------------------------------------------------------------------------------------- (* wk *)          ------------
+          x''_s:state , x_v:t'''' , x'_s:state | witnessed W' , post'''' s' x_v x'_s |- post'' s x_v x'_s             |- s : state
+          ------------------------------------------------------------------------------------------------------------------------ [Exists-Intro]
+          x''_s:state , x_v:t'''' , x'_s:state | witnessed W' , post'''' s' x_v x'_s |- exists x''_s:state . post'' x''_s x_v x'_s
+          ------------------------------------------------------------------------------------------------------------------------- (* /\ in LHS *)
+          x''_s:state , x_v:t'''' , x'_s:state | post'''' s' x_v x'_s /\ witnessed W' |- exists x''_s:state . post'' x''_s x_v x'_s
+          -------------------------------------------------------------------------------------------------------------------------- [Exists-Elim]
+          x_v:t'''' , x'_s:state | exists x''_s . post'''' s' x_v x'_s /\ witnessed W' |- exists x''_s:state . post'' x''_s x_v x'_s
+          -------------------------------------------------------------------------------------------------------------------------- (* renaming *)
+          x:t'''' , x_s:state | exists x''_s . post'''' s' x x_s /\ witnessed W' |- exists x''_s:state . post'' x''_s x x_s
+
+        Further, we also prove that
+
+          one of the assumptions we get from the inversion of typing
+          ----------------------------------------------------------
+          |- t''' <: t
+          ------------ (* = *)
+          |- t' <: t
+                                         
+                                         
+          assumption we get from IH      |- (s',W') wf                                      |- (s',W') wf
+          -------------------------      ----------------------------- [Equality-Refl]      ---------------------------- [Hyp]
+          witnessed W' |- pre''' s'      witnessed W' |- s' == s'                           witnessed W' |- witnessed W'
+          --------------------------------------------------------------------------------------------------------------
+          witnessed W' |- pre''' s' /\ s' == s' /\ witnessed W'
+          ----------------------------------------------------- (* = *)
+          witnessed W' |- pre' s'
+
+
+          one of the assumptions we get from inverting the typing above
+          ---------------------------------------------------------------------------------------------------------------------------
+          x_s , x_v , x'_s | pre x_s , rel x_s x'_s , exists x:t'' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s |- post
+          ---------------------------------------------------------------------------------------------------------------------------- (* subst *)
+          x_v , x'_s | pre s , rel s x'_s , exists x:t'' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s |- post s x_v x'_s       witnessed W |- pre s (* implicit wk *)
+          ------------------------------------------------------------------------------------------------------------------------------------------------------- (* cut *)
+          x_v , x'_s | witnessed W , rel s x'_s , exists x:t'' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s |- post s x_v x'_s
+          --------------------------------------------------------------------------------------------------------------------------- (* wk under witnessed using W \subseteq W' *)
+          x_v , x'_s | witnessed W' , rel s x'_s , exists x:t'' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s |- post s x_v x'_s
+          ----------------------------------------------------------------------------------------------------------------------------------- [Exists-Intro]
+          x , x''_s , x_v , x'_s | witnessed W' , rel s x'_s , post'' s x x''_s /\ post''' x''_s x_v x'_s |- post s x_v x'_s
+          ------------------------------------------------------------------------------------------------------------------------------ [Rel-Trans]
+          x , x''_s , x_v , x'_s | witnessed W' , rel s s' , rel s' x'_s , post'' s x x''_s /\ post''' x''_s x_v x'_s |- post s x_v x'_s
+          ------------------------------------------------------------------------------------------------------------------------------ (* cut *)
+          x , x''_s , x_v , x'_s | witnessed W' , rel s' x'_s , post'' s x x''_s /\ post''' x''_s x_v x'_s |- post s x_v x'_s
+          ------------------------------------------------------------------------------------------------------------------- (* (p /\ q) is equiv to (p , q) in LHS *)
+          x , x''_s , x_v , x'_s | witnessed W' , rel s' x'_s , post'' s x x''_s , post''' x''_s x_v x'_s |- post s x_v x'_s
+          --------------------------------------------------------------------------------------------------------------------- (* cut for (post'' s x_v x''_s) using IH *)
+          x , x''_s , x_v , x'_s | witnessed W' , rel s' x'_s , post'''' s' x x''_s , post''' x''_s x_v x'_s |- post s x_v x'_s
+          ------------------------------------------------------------------------------------------------------------------------------------------------ [Exists-Elim]
+          x_v:t''' , x'_s:state | witnessed W' , rel s' x'_s , exists x:t'''' x''_s:state . post'''' s' x x''_s /\ post''' x''_s x_v x'_s |- post s x_v x'_s
+          ------------------------------------------------------------------------------------------------------------------------------------------------ (* = *)
+          x_v:t' , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+
+  Case [App] with (e = (fun x:t -> e'') v) and (e' = e''[v/x]):
+
+    In this case, the given derivation ends with
+
+      ------------------------------------------ [App]
+      ((fun x:t -> e'') v,s,W) ~> (e''[v/x],s,W)
+
+    So, showing the following is trivial:
+
+      W \subseteq W'                     (* because W' = W *)
+
+      witnessed W' |- rel s s'           (* because s' = s *)
+
+      |- (s',W') wf                      (* because s' = s and W' = W *)
+
+    By inverting the typing of
+
+      |- (fun x:t'' -> e'') v : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    we get that
+
+      |- v : t''
+
+      x:t'' |- e'' : {x_s.pre'''} t'''' {x_s.x_v.x'_s.post'''}
+
+    for some pre'', t''', post'', pre''', t'''', post''' such that
+
+      |- t'''[v/x] <: t
+
+      x_s:state | pre x_s |- pre''[v/x] x_s
+
+      x_s:state , x_v:t'''[v/x] , x'_s:state | pre x_s , rel x_s x'_s , post''[v/x] x_s x_v x'_s |- post x_s x_v x'_s
+
+      x:t'' |- t'''' <: t'''
+
+      x:t'' , x_s:state | pre'' x_s |- pre''' x_s
+
+      x:t'' , x_s:state , x_v:t'''' , x'_s:state | pre'' x_s , rel x_s x'_s , post''' x_s x_v x'_s |- post'' x_s x_v x'_s
+
+    Finally, we can pick
+
+      pre'  =def= pre'''[v/x]
+
+      t'    =def= t''''[v/x]
+
+      post' =def= post'''[v/x]
+
+    and prove that
+
+      one of the assumptions we get from the inversion of typing                         one of the assumptions we get from the inversion of typing
+      ----------------------------------------------------------                         ----------------------------------------------------------
+      x:t'' |- e'' : {x_s.pre'''} t'''' {x_s.x_v.x'_s.post'''}                           |- v : t''
+      --------------------------------------------------------------------------------------------- (* subst *)
+      |- e''[v/x] : {x_s.pre'''[v/x]} t''''[v/x] {x_s.x_v.x'_s.post'''[v/x]}
+      ---------------------------------------------------------------------- (* = *)
+      |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+
+      from inversion of typing
+      ------------------------
+      x:t'' |- t'''' <: t'''    |- v : t''                       one of the assumptions we get from the inversion of typing
+      ------------------------------------ (* subst *)           ----------------------------------------------------------
+      |- t''''[v/x] <: t'''[v/x]                                 |- t'''[v/x] <: t
+      ---------------------------------------------------------------------------- (* subtyping relation is transitive *)
+      |- t''''[v/x] <: t
+      ------------------ (* = *)
+      |- t' <: t
+
+                                 from inversion of typing
+                                 -------------------------------
+                                 x_s | pre x_s |- pre''[v/x] x_s   |- s : state                from inversion of typing
+                                 ---------------------------------------------- (* subst *)    -------------------------------------------
+      witnessed W |- pre s       pre s |- pre''[v/x] s                                         x:t'' , x_s:state | pre'' x_s |- pre''' x_s   |- v : t''   |- s : state
+      ------------------------------------------------ (* cut *)                               ----------------------------------------------------------------------- (* subst *)
+      witnessed W |- pre''[v/x] s                                                              pre''[v/x] s |- pre'''[v/x] s
+      ---------------------------------------------------------------------------------------------------------------------- (* cut *)
+      witnessed W |- pre'''[v/x] s
+      ---------------------------- (* = *)
+      witnessed W' |- pre' s'
+
+
+      (a)
+      (b)
+      ----------------------------------------------------------------------------------------------------------- (* cut *)
+      x_v:t''''[v/x] , x'_s:state | witnessed W , rel s x'_s , pre s , post'''[v/x] s x_v x'_s |- post s x_v x'_s                 witnessed W |- pre s
+      ------------------------------------------------------------------------------------------------------------------------------------------------ (* cut *)
+      x_v:t''''[v/x] , x'_s:state | witnessed W , rel s x'_s , post'''[v/x] s x_v x'_s |- post s x_v x'_s
+      --------------------------------------------------------------------------------------------------- (* = *)
+      x_v:t' , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+    where the derivation (a) is given by
+
+      one of the assumptions we get from the inversion of typing
+      ---------------------------------------------------------------------------------------------------------------
+      x_s:state , x_v:t'''[v/x] , x'_s:state | pre x_s , rel x_s x'_s , post''[v/x] x_s x_v x'_s |- post x_s x_v x'_s          |- s : state
+      ------------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      x_v:t'''[v/x] , x'_s:state | pre s , rel s x'_s , post''[v/x] s x_v x'_s |- post s x_v x'_s
+      -------------------------------------------------------------------------------------------- (* using (|- t''''[v/x] <: t'''[v/x]) in the LHS *)
+      x_v:t''''[v/x] , x'_s:state | pre s , rel s x'_s , post''[v/x] s x_v x'_s |- post s x_v x'_s
+      ---------------------------------------------------------------------------------------------------------- (* wk *)
+      x_v:t''''[v/x] , x'_s:state | witnessed W , rel s x'_s , pre s , post''[v/x] s x_v x'_s |- post s x_v x'_s
+
+    and where the derivation (b) is given by
+
+      one of the assumptions we get from the inversion of typing
+      -------------------------------------------------------------------------------------------------------------------
+      x:t'' , x_s:state , x_v:t'''' , x'_s:state | pre'' x_s , rel x_s x'_s , post''' x_s x_v x'_s |- post'' x_s x_v x'_s          |- v : t''       |- s : state
+      ---------------------------------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      x_v:t''''[v/x] , x'_s:state | pre s , rel s x'_s , post'''[v/x] s x_v x'_s |- post''[v/x] s x_v x'_s
+      ----------------------------------------------------------------------------------------------------- (* wk *)
+      x_v:t''''[v/x] , x'_s:state | witnessed W , rel s x'_s , pre s , post'''[v/x] s x_v x'_s |- post''[v/x] s x_v x'_s
+
+
+  Case [Return-To] with (e = (return v) to x in e'') and (e' = e''[v/x]):
+
+    In this case, the given derivation ends with
+
+      ---------------------------------------------- [Return-To]
+      ((return v) to x in e'',s,W) ~> (e''[v/x],s,W)
+
+    So, showing the following is trivial:
+
+      W \subseteq W'                     (* because W' = W *)
+
+      witnessed W' |- rel s s'           (* because s' = s *)
+
+      |- (s',W') wf                      (* because s' = s and W' = W *)
+
+    By inverting the typing of
+
+      |- (return v) to x in e'' : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    we get that (based on the observation that this derivation contains 0 or more applications of [T-CompSub])
+
+      |- v : t'''
+
+      |- return v : {x_s.pre''} t'' {x_s.x_v.x'_s.post''}
+
+      x:t'' |- e'' : {x_s.(exists x''_s:state . post'' x'' x x_s)} t'''' {x_s.x_v.x'_s.post'''}
+
+    for some t''', t'''', pre'', post'', post''' such that
+
+      |- t''' <: t''
+
+      |- t'''' <: t
+
+      x_s:state | pre'' x_s |- True
+
+      x_s:state | pre x_s |- pre'' x_s
+
+      x_s:state , x_v:t''' , x'_s:state | pre'' x_s , rel x_s x'_s , x_s == x'_s /\ x_v == v |- post'' x_s x_v x'_s
+
+      x_s:state , x_v:t'''' , x'_s:state | pre x_s , rel x_s x'_s , exists x:t'' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s  |- post x_s x_v x'_s
+
+    Finally, we can pick
+
+      pre'  =def= post'' s v x_s /\ x_s == s
+
+      t'    =def= t''''
+
+      post' =def= exists x:t''' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s
+
+    and prove
+
+      x:t''' , x_s:state | post'' s x x_s /\ x_s == s |- exists x''_s:state . post'' x'' x x_s                        (* using [Exists-Intro] *)
+      (a)
+      x:t'' |- e'' : {x_s.(exists x''_s:state . post'' x'' x x_s)} t'''' {x_s.x_v.x'_s.post'''}                       (* additionally using (|- t''' <: t'') in LHS *)
+      ---------------------------------------------------------------------------------------------------------------------------------------------------------------- [T-CompSub]
+      x:t''' |- e'' : {x_s.(post'' s x x_s /\ x_s == s)} t'''' {x_s.x_v.x'_s.exists x:t''' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s}  |- v : t'''
+      ------------------------------------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      |- e''[v/x] : {x_s.(post'' s v x_s /\ x_s == s)} t'''' {x_s.x_v.x'_s.exists x:t''' x''_s:state . post'' x_s v x''_s /\ post''' x''_s x_v x'_s}
+      ---------------------------------------------------------------------------------------------------------------------------------------------- (* = *)
+      |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+    where the derivation (a) is given by
+
+      -------------------------------------------------------------------------------------------------------------------------------- [And-Intro] and [Hyp]
+      x , x_s , x_v , x'_s | post'' s x x_s , x_s == s , rel x_s x'_s , post''' x_s x_v x'_s |- post'' s x x_s /\ post''' x_s x_v x'_s
+      -------------------------------------------------------------------------------------------------------------------------------- [Equality-Transport]
+      x , x_s , x_v , x'_s | post'' s x x_s , x_s == s , rel x_s x'_s , post''' x_s x_v x'_s |- post'' x_s x s /\ post''' s x_v x'_s
+      -------------------------------------------------------------------------------------------------------------------------------------------------- [Exists-Intro]
+      x , x_s , x_v , x'_s | post'' s x x_s , x_s == s , rel x_s x'_s , post''' x_s x_v x'_s |-
+                                                                                exists x:t''' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s
+      -------------------------------------------------------------------------------------------------------------------------------------------------- (* /\ *)
+      x:t''' , x_s , x_v:t'''' , x'_s | post'' s x x_s /\ x_s == s , rel x_s x'_s , post''' x_s x_v x'_s |-
+                                                                                exists x:t''' x''_s:state . post'' x_s x x''_s /\ post''' x''_s x_v x'_s
+
+    Further, we also prove that
+
+      one of the assumptions we get from the inversion of typing
+      ----------------------------------------------------------
+      |- t'''' <: t
+      ------------- (* = *)
+      |- t' <: t 
+
+
+      one of the assumptions we get from the inversion of typing                                              |- (s,W) wf         from inversion of typing
+      --------------------------------------------------------------------------------------------            ------------        ------------------------
+      x_s , x_v , x'_s | pre'' x_s , rel x_s x'_s , x_s == x'_s , x_v == v |- post'' x_s x_v x'_s             |- s : state        |- v : t'''
+      --------------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      pre'' s , rel s s , s == s , v == v |- post'' s v s
+      --------------------------------------------------- [Rel-Refl]
+      pre'' s , s == s , v == v |- post'' s v s
+      ----------------------------------------- [Equality-Refl]
+      pre'' s |- post'' s v s
+      ------------------------------------- (* wk *)
+      witnessed W , pre'' s |- post'' s v s                       pre s |- pre'' s (* implicit wk to save space *)                 
+      ---------------------------------------------------------------------------- (* cut *)                                       
+      witnessed W , pre s |- post'' s v s                                                      witnessed W |- pre s                |- (s,W) wf
+      ------------------------------------------------------------------------------------------------------------- (* cut *)      --------------------- [Equality-Refl]
+      witnessed W |– post'' s v s                                                                                                  witnessed W |- s == s
+      -------------------------------------------------------------------------------------------------------------------------------------------------- [And-Intro]
+      witnessed W |- post'' s v s /\ s == s
+      ------------------------------------- (* = *)
+      witnessed W' |- pre' s'
+
+
+      one of the assumptions we get from the inversion of typing
+      ----------------------------------------------------------------------------------------------------------------------------------
+      x_s , x_v , x'_s | pre x_s , rel x_s x'_s , exists x:t'' x''_s . post'' x_s x x''_s /\ post''' x''_s x_v x'_s |- post x_s x_v x'_s
+      ------------------------------------------------------------------------------------------------------------------------------------ [Exists-Intro]
+      x_s , x_v , x'_s , x:t'' | pre x_s , rel x_s x'_s , exists x''_s . post'' x_s x x''_s /\ post''' x''_s x_v x'_s |- post x_s x_v x'_s
+      ------------------------------------------------------------------------------------------------------------------------------------ (* using (|- t''' <: t'') in LHS *)
+      x_s , x_v , x'_s , x:t''' | pre x_s , rel x_s x'_s , exists x''_s . post'' x_s x x''_s /\ post''' x''_s x_v x'_s |- post x_s x_v x'_s          
+      ------------------------------------------------------------------------------------------------------------------------------------- [Ex-E]   
+      x_s , x_v , x'_s | pre x_s , rel x_s x'_s , exists x:t''' x''_s . post'' x_s x x''_s /\ post''' x''_s x_v x'_s |- post x_s x_v x'_s         |- s : state
+      -------------------------------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      x_v:t'''' , x'_s:state | pre s , rel s x'_s , exists x:t''' x''_s:state . post'' s x x''_s /\ post''' x''_s x_v x'_s |- post s x_v x'_s          witnessed W |- pre s 
+      ------------------------------------------------------------------------------------------------------------------------------------------------------------------ (* cut *)
+      x_v:t'''' , x'_s:state | witnessed W , rel s x'_s , exists x:t''' x''_s:state . post'' s x x''_s /\ post''' x''_s x_v x'_s |- post s x_v x'_s
+      --------------------------------------------------------------------------------------------------------------------------------------------- (* = *)
+      x_v:t' , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+
+  Case [Case-Inl] with (e = case (v as x) of (inl x_1 => e_1 ; inr x_2 => e_2)) and (e' = e_1[v/x_1]):
+
+    In this case, the given derivation eds with
+
+      -------------------------------------------------------------------------------- [Case-Inl]
+      (case (inl v as x) of (inl x_1 => e_1 ; inr x_2 => e_2),s,W) ~> (e_1[v/x_1],s,W)
+
+    So, showing the following is trivial:
+
+      W \subseteq W'                     (* because W' = W *)
+
+      witnessed W' |- rel s s'           (* because s' = s *)
+
+      |- (s',W') wf                      (* because s' = s and W' = W *)
+
+    By inverting the typing of
+
+      |- case (inl v as x) of (inl x_1 => e_1 ; inr x_2 => e_2) : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    we get that (based on the observation that this derivation contains 0 or more applications of [T-CompSub] and one [T-Case])
+
+      |- v : t'_1
+
+      x_1:t_1 |- e_1 : {x_s.pre''[inl x_1/x]} t''[inl x_1/x] {x_s.x_v.x'_s.post''[inl x_1/x]}
+
+      x_2:t_2 |- e_2 : {x_s.pre''[inr x_2/x]} t''[inr x_2/x] {x_s.x_v.x'_s.post''[inr x_2/x]}
+
+    for some t_1, t'_1, t_2, pre'', t'', post'' such that
+
+      |- t'_1 <: t_1
+
+      |- t''[inl v/x] <: t
+
+      x_s:state | pre x_s |– pre''[inl v/x] x_s
+
+      x_s:state , x_v:t''[inl v/x] , x'_s:state | pre x_s , rel x_s x'_s , post''[inl v/x] x_s x_v x'_s |- post x_s x_v x'_s
+
+    Finally, we can pick
+
+      pre'  =def= pre''[inl v/x] x_s
+
+      t'    =def= t''[inl v/x]
+
+      post' =def= post''[inl v/x] x_s x_v x'_s
+
+    and prove that
+                                                                                                                                  assumptions given by inversion of typing
+                                                                                                                                  ----------------------------------------
+      one of the assumptions given by inversion of typing                                                                         |- v : t'_1       |- t'_1 <: t_1
+      ------------------------------------------------------------------------------------------------------------                -------------------------------- [T-ValSub]
+      x_1:t_1 |- e_1 : {x_s.(pre''[inl x_1/x] x_s)} t''[inl x_1/x] {x_s.x_v.x'_s.(post''[inl x_1/x] x_s x_v x'_s)}                |- v : t_1
+      -------------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      |- e_1[v/x_1] : {x_s.(pre''[inl v/x] x_s)} t''[inl v/x] {x_s.x_v.x'_s.(post''[inl v/x] x_s x_v x'_s)}
+      ----------------------------------------------------------------------------------------------------- (* = *)
+      |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+
+      one of the assumptions given by inversion of typing
+      ---------------------------------------------------
+      |- t''[inl v/x] <: t
+      -------------------- (* = *)
+      |- t' <: t
+
+
+      one of the assumptions given by inversion of typing
+      ---------------------------------------------------      
+      x_s:state | pre x_s |- pre''[inl v/x] x_s                 |- s : state
+      ---------------------------------------------------------------------- (* subst *)
+      pre s |- pre''[inl v/x] s
+      --------------------------------------- (* wk *)
+      witnessed W , pre s |- pre''[inl v/x] s                   witnessed W |- pre s
+      ------------------------------------------------------------------------------ (* cut *)
+      witnessed W |- pre''[inl v/x] s
+      ------------------------------- (* = *)
+      witnessed W' |- pre' s'
+
+
+      one of the assumptions given by inversion of typing                                                       |- (s,W) wf
+      ---------------------------------------------------------------------------------------------             ------------
+      x_s , x_v , x'_s | pre x_s , rel x_s x'_s , post''[inl v/x] x_s x_v x'_s |- post x_s x_v x'_s             |- s : state
+      ---------------------------------------------------------------------------------------------------------------------- (* subst *)
+      x_v:t''[inl v/x] , x'_s:state | pre s , rel s x'_s , post''[inl v/x] s x_v x'_s |- post s x_v x'_s                                    witnessed W |- pre s
+      ---------------------------------------------------------------------------------------------------------------------------------------------------------- (* cut *)
+      x_v:t''[inl v/x] , x'_s:state | witnessed W , rel s x'_s , post''[inl v/x] s x_v x'_s |- post s x_v x'_s
+      ------------------------------------------------------------------------------------------- (* = *)
+      x_v:t' , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+
+  Case [Case-Inr] with (e = case (inr v as x) of (inl x_1 => e_1 ; inr x_2 => e_2)) and (e' = e_2[v/x_2]):
+
+    (* analogous to [Case-Inr] *)
+
+
+  Case [Pmatch] with (e = pmatch ((v_1,v_2) as x) as (x_1,x_2) in e'') and (e' = e''[v_1/x_1,v_2/x_2]):
+
+    In this case, the given derivation ends with
+
+      ------------------------------------------------------------------------------- [Pmatch]
+      (pmatch ((v_1,v_2) as x) as (x_1,x_2) in e'',s,W) ~> (e''[v_1/x_1,v_2/x_2],s,W)
+
+    So, showing the following is trivial:
+
+      W \subseteq W'                     (* because W' = W *)
+
+      witnessed W' |- rel s s'           (* because s' = s *)
+
+      |- (s',W') wf                      (* because s' = s and W' = W *)
+
+    By inverting the typing of
+
+      |- pmatch ((v_1,v_2) as x) as (x_1,x_2) in e'' : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    we get that
+
+      |- v_1 : t'_1
+
+      |- v_2 : t'_2
+
+      x_1:t_1 , x_2:t_2 |- e'' : {x_s.pre''[(x_1,x_2)/x]} t''[(x_1,x_2)/x] {x_s.x_v.x'_s.post''[(x_1,x_2)/x]}
+
+    for some t'_1, t'_2, t_1, t_2, pre'', t'', post'' such that
+
+      |- t'_1 * t'_2 <: t_1 * t_2
+
+      |- t''[(x_1,x_2)/x] <: t
+
+      x_s:state | pre x_s |- pre''[(v_1,v_2)/x] x_s
+
+      x_s:state , x_v:t''[(v_1,v_2)/x] , x'_s:state | pre x_s , rel x_s x'_s , post''[(v_1,v_2)/x] x_s x_v x'_s |- post x_s x_v x'_s
+
+    Further, due to the structural definition of the subtyping relation, we get from
+
+      |- t'_1 * t'_2 <: t_1 * t_2
+
+    that
+
+      |- t'_1 <: t_1
+
+    and
+
+      |- t'_2 <: t_2
+
+    Finally, we can pick
+
+      pre'  =def= pre''[(v_1,v_2)/x] x_s
+
+      t'    =def= t''[(v_1,v_2)/x]
+
+      post' =def= post''[(v_1,v_2)/x] x_s x_v x'_s
+
+    and prove that    
+                                                                                                          assumptions from inverting sub   assumptions from inverting sub
+                                                                                                          ------------------------------   ------------------------------
+      one of the assumptions we get from inversion of typing                                              |- v_1 : t'_1   |- t'_1 <: t_1   |- v_2 : t'_2   |- t'_2 <: t_1
+      -----------------------------------------------------------------------------------------------     ------------------------------   ------------------------------  
+      x_1 , x_2 |- e'' : {x_s.pre''[(x_1,x_2)/x]} t''[(x_1,x_2)/x] {x_s.x_v.x'_s.post''[(x_1,x_2)/x]}     |- v_1 : t_1                     |- v_2 : t_2
+      ------------------------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      |- e''[v_1/x_1,v_2/x_2] : {x_s.(pre''[(v_1,v_2)/x] x_s)} t''[(v_1,v_2)/x] {x_s.x_v.x'_s.(post''[(v_1,v_2)/x] x_s x_v x'_s)}
+      --------------------------------------------------------------------------------------------------------------------------- (* = *)
+      |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+
+      one of the assumptions we get from inversion of typing
+      ------------------------------------------------------
+      |- t''[(v_1,v_2)/x] <: t
+      ------------------------ (* = *)
+      |- t' <: t
+
+
+      one of the assumptions we get from inversion of typing            |- (s,W) wf
+      ------------------------------------------------------            ------------
+      x_s:state | pre x_s |- pre'' [(v_1,v_2)/x] x_s                    |- s : state
+      ------------------------------------------------------------------------------ (* subst *)
+      pre s |– pre''[(v_1,v_2)/x] s
+      ------------------------------------------- (* wk *)
+      witnessed W , pre s |- pre''[(v_1,v_2)/x] s                          witnessed W |- pre s
+      ----------------------------------------------------------------------------------------- (* cut *)
+      witnessed W |- pre''[(v_1,v_2)/x] s
+      ----------------------------------- (* = *)
+      witnessed W' |- pre' s'
+
+
+      one of the assumptions we get from inversion of typing                                                   |- (s,W) wf
+      -------------------------------------------------------------------------------------------------        ------------
+      x_s , x_v , x'_s | pre x_s , rel x_s x'_s , post''[(v_1,v_2)/x] x_s x_v x'_s |- post x_s x_v x'_s        |- s : state
+      --------------------------------------------------------------------------------------------------------------------- (* subst *)
+      x_v:t''[(v_1,v_2)/x] , x'_s:state | pre s , rel s x'_s , post''[(v_1,v_2)/x] s x_v x'_s |- post s x_v x'_s                           witnessed W |- pre s
+      --------------------------------------------------------------------------------------------------------------------------------------------------------- (* cut *)
+      x_v:t''[(v_1,v_2)/x] , x'_s:state | witnessed W , rel s x'_s , post''[(v_1,v_2)/x] s x_v x'_s |- post s x_v x'_s
+      ---------------------------------------------------------------------------------------------------------------- (* = *)
+      x_v:t' , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+
+  Case [Get] with (e = get) and (e' = return ()):
+
+    In this case, the given derivation ends with
+
+      --------------------------- [Get]
+      (get,s,W) ~> (return s,s,W)
+
+    So, showing the following is trivial:
+
+      W \subseteq W'                     (* because W' = W *)
+
+      witnessed W' |- rel s s'           (* because s' = s *)
+
+      |- (s',W') wf                      (* because s' = s and W' = W *)
+
+    By inverting the typing of
+
+      |- get : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    we get that (based on the observation that this derivation contains 0 or more applications of [T-CompSub] and one [T-Get])
+
+      |- state <: t
+
+      x_s:state | pre |- True
+
+      x_s:state , x_v:state , x'_s:state | pre x_s , rel x_s x'_s , x_s == x_v , x_v == x'_s |- post x_s x_v x'_s
+
+    Finally, we pick
+
+      pre'  =def= x_s == s
+
+      t'    =def= state
+
+      post' =def= x_s == x_v /\ x_v == x'_s /\ x'_s == s
+
+    and prove
+
+      x_s:state | x_s == s |- True
+      x_s:state , x_v:state , x'_s:state | x_s == s , rel x_s x'_s , x_s == x'_s /\ x_v == s |- x_s == x_v /\ x_v == x'_s /\ x'_s == s
+      |- return s : {x_s.True} state {x_s.x_v.x'_s.(x_s == x'_s /\ x_v == s)}
+      -------------------------------------------------------------------------------------------------------------------------------- [T-CompSub]
+      |- return s : {x_s.x_s == s} state {x_s.x_v.x'_s.(x_s == x_v /\ x_v == x'_s /\ x'_s == s)}
+      ------------------------------------------------------------------------------------------ (* = *)
+      |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+
+      one of the assumptions we get from inverson of typing
+      -----------------------------------------------------
+      |- state <: t
+      ------------- (* = *)
+      |- t' <: t
+
+
+      |- (s,W) wf
+      --------------------- [Equality-Ref]
+      witnessed W |- s == s
+      ----------------------- (* = *)
+      witnessed W' |- pre' s'
+
+
+      one of the assumptions we get from inverson of typing                                                                  |- (s,W) wf
+      -----------------------------------------------------------------------------------------------------------            ------------
+      x_s:state , x_v:state , x'_s:state | pre x_s , rel x_s x'_s , x_s == x_v , x_v == x'_s |- post x_s x_v x'_s            |- s : state
+      ----------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      x_v:state , x'_s:state | pre s , rel s x'_s , s == x_v , x_v == x'_s |- post s x_v x'_s
+      --------------------------------------------------------------------------------------------------- (* wk *)
+      x_v:state , x'_s:state | pre s , rel s x'_s , s == x_v , x_v == x'_s , x'_s == s |- post s x_v x'_s              witnessed W |- pre s (* implicit wk *)
+      ------------------------------------------------------------------------------------------------------------------------------------- (* cut *)
+      x_v:state , x'_s:state | witnessed W , rel s x'_s , s == x_v , x_v == x'_s , x'_s == s |- post s x_v x'_s
+      --------------------------------------------------------------------------------------------------------- (* = *)
+      x_v:state , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+
+  Case [Put] with (e = put s'') and (e' = return ()):
+
+    In this case, the given derivation ends with
+
+      ---------------------------------- [Put]
+      (put s'',s,W) ~> (return (),s'',W)
+
+    So, showing the following is trivial:
+
+      W \subseteq W'                     (* because W' = W *)
+
+    By inverting the typing of
+
+      |- put s'' : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    we get that (based on the observation that this derivation contains 0 or more applications of [T-CompSub] and one [T-Put])
+
+      |- s'' : state
+
+      |- unit <: t
+
+      x_s:state | pre x_s |- rel x_s s''
+
+      x_s:state , x_v:unit , x'_s:state | pre x_s , rel x_s x'_s , x'_s == s'' |- post x_s x_v x'_s
+
+    Next, we observe that (s' = s'') and (W' = W) and prove
+    
+                                     one of the assumptions we get from inversion of typing                    |- (s,W) wf
+                                     ------------------------------------------------------                    ------------
+                                     x_s:state | pre x_s |- rel x_s s''                                        |- s : state
+                                     -------------------------------------------------------------------------------------- (* subst *)
+      witnessed W |- pre s           pre s |- rel s s''
+      ------------------------------------------------- (* cut *)
+      witnessed W |- rel s s''
+      ------------------------ (* = *)
+      witnessed W' |- rel s s'
+
+    Next, we prove (|- (s',W) wf) by observing that (s' = s'') and that (|- s'' : state), and showing for all (x.phi) in W that
+
+                                      |- (s,W) wf
+                                      --------------------------- (* = *)
+                                      witnessed W |- stable x.phi                                     see above
+                                      ------------------------------------------------ (* = *)        ------------------------
+      |- (s,W) wf                     witnessed W , phi[s/x] , rel s s'' |- phi[s''/x]                witnessed W |- rel s s''
+      -----------------------         ---------------------------------------------------------------------------------------- [Cut] 
+      witnessed W |- phi[s/x]         witnessed W , phi[s/x] |- phi[s''/x]
+      -------------------------------------------------------------------- (* cut *)
+      witnessed W |- phi[s''/x]
+      ------------------------- (* = *)
+      witnessed W' |- phi[s'/x]
+
+    Finally, we pick
+
+      pre'  =def= x_s == s''
+
+      t'    =def= unit
+
+      post' =def= x_s == x'_s /\ x'_s == s'' /\ x_v == ()
+
+    and prove
+
+      x_s:state | x_s == s'' |- True
+      x_s:state , x_v:unit , x'_s:state | x_s == s'' , rel x_s x'_s , x_s == x'_s /\ x_v == () |- x_s == x'_s /\ x'_s == s'' /\ x_v == ()
+      |- return () : {x_s.True} unit {x_s.x_v.x'_s.(x_s == x'_s /\ x_v == ())}
+      ----------------------------------------------------------------------------------------------------------------------------------- [T-CompSub]
+      |- return () : {x_s.(x_s == s'')} unit {x_s.x_v.x'_s.(x_s == x'_s /\ x'_s == s'' /\ x_v == ())}
+      ----------------------------------------------------------------------------------------------- (* = *)
+      |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+
+      one of the assumptions we get from inverson of typing
+      -----------------------------------------------------
+      |- s'' : state
+      ------------------------- [Equality-Refl]
+      witnessed W |- s'' == s''
+      ------------------------- (* = *)
+      witnessed W' |- pre' s'
+
+
+      one of the assumptions we get from inverson of typing
+      -----------------------------------------------------
+      |- unit <: t
+      ------------ (* = *)
+      |- t' <: t
+                                                                                        
+                                                                                        
+      one of the assumptions we get from inverson of typing                                                   |- (s,W) wf
+      ---------------------------------------------------------------------------------------------           ------------
+      x_s:state , x_v:unit , x'_s:state | pre x_s , rel x_s x'_s , x'_s == s'' |- post x_s x_v x'_s           |- s : state (* implicit wk to save space *)
+      -------------------------------------------------------------------------------------------------------------------- (* subst *)
+      x_v , x'_s | pre s , rel s x'_s , x'_s == s'' |- post s x_v x'_s
+      ------------------------------------------------------------------------------ [Rel-Trans]
+      x_v , x'_s | pre s , rel s s'' , rel s'' x'_s , x'_s == s'' |- post s x_v x'_s
+      -------------------------------------------------------------------------------------------- (* wk *)
+      x_v , x'_s | witnessed W , pre s , rel s s'' , rel s'' x'_s , x'_s == s'' |- post s x_v x'_s                               witnessed W |- pre s
+      ------------------------------------------------------------------------------------------------------------ (* cut *)     --------------------------------- (* wk *)
+      x_v , x'_s | witnessed W , pre s , rel s'' x'_s , x_s == x'_s /\ x'_s == s'' /\ x_v == () |- post s x_v x'_s               x_v , x'_s | witnessed W |- pre s
+      ------------------------------------------------------------------------------------------------------------------------------------------------------------ (* cut *)
+      x_v:unit , x'_s:state | witnessed W , rel s'' x'_s , x_s == x'_s /\ x'_s == s'' /\ x_v == () |- post s x_v x'_s
+      --------------------------------------------------------------------------------------------------------------- (* = *)
+      x_v:t' , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+
+  Case [Witness] with (e = witness x.phi) and (e' = return ()):
+
+    In this case, the given derivation ends with
+
+      ------------------------------------------------- [Witness]
+      (witness x.phi,s,W) ~> (return (),s,W \cup x.phi)
+
+    So, showing the following is trivial:
+
+      W \subseteq W'                     (* because W' = W \cup x.phi *)
+    
+      witnessed W' |- rel s s'            (* because s' = s *)
+
+    By inverting the typing of
+
+      |- witness x.phi : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    we get that (based on the observation that this derivation contains 0 or more applications of [T-CompSub] and one [T-Witness])
+
+      |- unit <: t
+
+      x:state |- phi wf
+
+      x_s:state | pre x_s |- stable x.phi /\ phi[x_s/x]
+
+      x_s:state , x_v:unit , x'_s:state | pre x_s , rel x_s x'_s , x_s == x'_s /\ witnessed x.phi |- post x_s x_v x'_s
+
+    Next, we prove (|- (s',W') wf) by observing that (s' = s), and showing for all (y.phi') in (W \cup x.phi) that
+
+      witnessed W' |- phi'[s'/y]
+
+    by considering the following two cases:
+
+      case (y.phi') is in (W):
+
+        |- (s,W) wf
+        ------------------------
+        witnessed W |- phi'[s/y]
+        ------------------------------------- (* weakening of (witnessed) in LHS, using that (x | /\_{y.phi \in W'} phi[x/y] |- /\_{y.phi \in W} phi[x/y]) *)
+        witnessed (W \cup x.phi) |- phi'[s/y]
+        ------------------------------------- (* = *)
+        witnessed W' |- phi'[s'/y]
+
+      case (y.phi') is not in (W), i.e., (y.phi') is (x.phi):
+
+        one of the assumptions we get from inversion of typing
+        ------------------------------------------------------
+        x_s:state | pre x_s |- stable x.phi /\ phi[x_s/x]                  |- (s,W) wf
+        ------------------------------------------------- [And-Elim-2]     ------------
+        x_s:state | pre x_s |- phi[x_s/x]                                  |- s : state
+        ------------------------------------------------------------------------------- (* subst *)
+        pre s |- phi[s/x_s,x_s/x]
+        ------------------------- (* = *)
+        pre s |- phi[s/x]
+        ------------------------------- (* wk *)
+        witnessed W , pre s |- phi[s/x]                              witnessed W |- pre s
+        --------------------------------------------------------------------------------- (* cut *)
+        witnessed W |- phi[s/x]
+        ------------------------------------ (* weakening of (witnessed) in LHS, as above *)
+        witnessed (W \cup x.phi) |- phi[s/x]
+        ------------------------------------------------ (* = *)
+        witnessed W' |- phi'[s'/y]
+
+    Further, we also show for (|- (s',W') wf) that
+
+      one of the assumptions we get from inversion of typing
+      ------------------------------------------------------
+      x_s:state | pre x_s |- stable x.phi /\ phi[x_s/x]                      |- (s,W) wf
+      ------------------------------------------------- [And-Elim-1]         ------------
+      x_s:state | pre x_s |- stable x.phi                                    |- s : state
+      ----------------------------------------------------------------------------------- (* subst *)
+      pre s |- stable x.phi
+      ----------------------------------- (* wk *)
+      witnessed W , pre s |- stable x.phi             witnessed W |- pre s
+      -------------------------------------------------------------------- (* cut *)
+      witnessed W |- stable x.phi
+      ---------------------------------------- (* weakening of (witnessed) in LHS, as above *)
+      witnessed (W \cup x.phi) |- stable x.phi
+      ---------------------------------------- (* = *)
+      witnessed W' |- stable x.phi
+
+    Finally, we pick
+
+      pre'  =def= witnessed x.phi
+
+      t'    =def= unit
+
+      post' =def= x_s == x'_s /\ x_v == ()
+
+    and prove
+
+      x_s:state | witnessed x.phi |- True
+      x_s:state , x_v:unit , x'_s:state | witnessed x.phi , rel x_s x'_s , x_s == x'_s /\ x_v == () |- x_s == x'_s /\ x_v == ()
+      |- return () : {x_s.True} unit {x_s.x_v.x'_s.(x_s == x'_s /\ x_v == ())}
+      ------------------------------------------------------------------------------------------------------------------------- [T-CompSub]
+      |- return () : {x_s.(witnessed x.phi)} unit {x_s.x_v.x'_s.(x_s == x'_s /\ x_v == ())}
+      ------------------------------------------------------------------------------------- (* = *)
+      |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+      
+      one of the assumptions we get from inversion of typing
+      ------------------------------------------------------
+      |- unit <: t
+      ------------ (* = *)
+      |- t' <: t
+
+
+      |- (s',W') wf
+      --------------------------------------------------------------------- [Hyp]
+      x':state | /\_{y.phi \in W'} phi[x'/y] |- /\_{y.phi \in W'} phi[x'/y]
+      --------------------------------------------------------------------- [And-Elim]
+      x':state | /\_{y.phi \in W'} phi[x'/y] |- phi[x'/y]
+      --------------------------------------------------- [Witnessed-Functoriality]
+      witnessed (W \cup x.phi) |- witnessed x.phi
+      ------------------------------------------- (* = *)
+      witnessed W' |- pre' s'
+
+
+      one of the assumptions we get from inversion of typing                                                   |- (s,W) wf
+      ---------------------------------------------------------------------------------------------------      ------------
+      x_s:state , x_v:unit , x'_s:state |  witnessed x.phi , rel x_s x'_s , x_s == x'_s , pre x_s |- post      |- s : state
+      --------------------------------------------------------------------------------------------------------------------- (* subst *)
+      x_v , x'_s | witnessed x.phi , rel s x'_s , s == x'_s , pre s |- post s x_v x'_s
+      -------------------------------------------------------------------------------------------- (* wk *)
+      x_v , x'_s | witnessed W , witnessed x.phi rel s x'_s , s == x'_s , pre s |- post s x_v x'_s                witnessed W |- pre s (* implicit wk to save space *)
+      -------------------------------------------------------------------------------------------------------------------------------- (* cut *) 
+      x_v:unit , x'_s:state | witnessed W , witnessed x.phi , rel s x'_s , s == x'_s |- post s x_v x'_s
+      -------------------------------------------------------------------------------------------------------------- (* wk *)
+      x_v:unit , x'_s:state | witnessed W , witnessed x.phi , rel s x'_s , s == x'_s /\ x_v == () |- post s x_v x'_s
+      -------------------------------------------------------------------------------------------------------------- (* weakening of (witnessed) in LHS, as above *)
+      x_v:unit , x'_s:state | witnessed (W \cup x.phi) , rel s x'_s , s == x'_s /\ x_v == () |- post s x_v x'_s
+      --------------------------------------------------------------------------------------------------------- (* = *)
+      x_v:t' , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+
+  Case [Recall] with (e = recall x.phi) and (e' = return ()):
+
+    In this case, the given derivation ends with
+
+      ------------------------------------- [Recall]
+      (recall x.phi,s,W) ~> (return (),s,W)
+
+    So, showing the following is trivial:
+
+      W \subseteq W'                     (* because W' = W *)
+    
+      witnessed W |- rel s s'            (* because s' = s *)
+
+      |- (s',W') wf                      (* because s' = s and W' = W *)
+
+    By inverting the typing of
+
+      |- recall x.phi : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    we get that (based on the observation that this derivation contains 0 or more applications of [T-CompSub] and one [T-Recall])
+
+      |- unit <: t
+
+      x:state |- phi wf
+
+      x_s:state | pre x_s |- witnessed x.phi
+
+      x_s:state , x_v:unit , x'_s:state | pre x_s , rel x_s x'_s , x_s == x'_s /\ phi[x'_s/x] |- post x_s x_v x'_s
+
+    Finally, we pick
+
+      pre'  =def= phi[x_s/x]
+
+      t'    =def= unit
+
+      post' =def= x_s == x'_s /\ x_v == () /\ phi[x'_s/x]
+
+    and prove
+
+      x_s:state | phi[x_s/x] |- True
+      x_s:state , x_v:unit , x'_s:state | phi[x_s/x] , rel x_s x'_s , x_s == x'_s /\ x_v == () |- x_s == x'_s /\ x_v == () /\ phi[x'_s/x]
+      |- return () : {x_s.True} unit {x_s.x_v.x'_s.x_s == x'_s /\ x_v == ()}
+      ----------------------------------------------------------------------------------------------------------------------------------- [T-CompSub]
+      |- return () : {x_s.phi[x_s/x]} unit {x_s.x_v.x'_s.(x_s == x'_s /\ x_v == () /\ phi[x'_s/x])}
+      ------------------------------------------------------------------------------------------------------ (* = *)
+      |- e' : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+
+
+      one of the assumptions we get from inversion of typing
+      ------------------------------------------------------
+      |- unit <: t
+      ------------ (* = *)
+      |- t' <: t
+
+
+      applying inversion of validity (via sequent calculus) to the derivation (a) below                                     |- (s,W) wf
+      ---------------------------------------------------------------------------------                                     ------------
+      x:state | /\_{y.phi' \in W} phi'[x/y] |- phi                                                                          |- s : state
+      ---------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      /\_{y.phi' \in W} phi'[s/y] |- phi[s/x]
+      ----------------------------------------------------- (* wk *)           
+      witnessed W , /\_{y.phi' \in W} phi'[s/y] |- phi[s/x]                    witnessed W |- /\_{y.phi' \in W'} phi'[s/y] (* using (|- (s,W) wf) *)
+      -------------------------------------------------------------------------------------------------------------------- (* cut *)
+      witnessed W |- phi[s/x]
+      -------------------------------- (* = *)
+      witnessed W |- phi[s/x_s][x_s/x]
+      -------------------------------- (* = *)
+      witnessed W' |- pre' s'
+
+    where the derivation (a) is given by
+
+      one of the assumptions we get from inversion of typing            |- (s,W) wf
+      ------------------------------------------------------            ------------
+      x_s:state | pre x_s |- witnessed x.phi                            |- s : state
+      ------------------------------------------------------------------------------ (* subst *)
+      pre s |- witnessed x.phi
+      -------------------------------------- (* wk *)
+      witnessed W , pre s |- witnessed x.phi             witnessed W |- pre s
+      ----------------------------------------------------------------------- (* cut *)
+      witnessed W |- witnessed x.phi
+      ------------------------------------------------------------ (* = *)
+      witnessed x.(/\_{y.phi' \in W} phi'[x/y]) |- witnessed x.phi
+
+    Further, we also prove that
+
+      one of the assumptions we get from inversion of typing                                                                           |- (s,W) wf
+      -----------------------------------------------------------------------------------------------------------                      ------------
+      x_s:state , x_v:unit , x'_s:state | pre x_s , rel x_s x'_s , x_s == x'_s , phi[x'_s/x] |- post x_s x_v x'_s                      |- s : state
+      --------------------------------------------------------------------------------------------------------------------------------------------- (* subst *)
+      x_v , x'_s | pre s , rel s x'_s , s == x'_s , phi[x'_s/x] |- post s x_v x'_s
+      ------------------------------------------------------------------------------------------------------- (* wk *)
+      x_v , x'_s | witnessed W , rel s x'_s , pre s , s == x'_s , x_v == () /\ phi[x'_s/x] |- post s x_v x'_s               witnessed W |– pre s (* implicit wk to save space*)
+      ------------------------------------------------------------------------------------------------------------------------------------------ (* cut *)
+      x_v:unit , x'_s:state | witnessed W , rel s x'_s , s == x'_s /\ x_v == () /\ phi[x'_s/x] |- post s x_v x'_s
+      ----------------------------------------------------------------------------------------------------------- (* = *)
+      x_v:t' , x'_s:state | witnessed W' , rel s' x'_s , post' s' x_v x'_s |- post s x_v x'_s
+
+  qed.
+
+
+Lemma (Correctness of return):
+------------------------------
+
+  forall v t pre post s .
+
+    |- return v : {x_s.pre} t {x_s.x_v.x'_s.post} /\
+
+    |- s : state
+
+    ==>
+
+    |- v : t /\
+
+    |- pre s ==> post s v s
+    
+
+Proof:
+------
+
+  By induction on the derivation of (|- return v : {x_s.pre} t {x_s.x_v.x'_s.post}).
+
+  Case [T-Return]:
+
+    In this case, the given derivation ends with
+
+      |- v : t
+      ------------------------------------------------------------------- [T-Return]
+      |- return v : {x_s.True} t {x_s.x_v.x'_s.(x_s == x'_s /\ x_v == v)}
+
+    and we prove
+
+      premise of the given derivation
+      -------------------------------
+      |- v : t
+
+                                              premise of the given derivation
+                                              -------------------------------
+      |- s : state                            |- v : t
+      ------------ [Equality-Refl]            --------- [Equality-Refl]
+      |- s == s                               |- v == v
+      ------------------------------------------------- [And-Intro]
+      |- s == s /\ v == v
+      ------------------------ (* wk *)
+      True |- s == s /\ v == v
+      ---------------------------- [Implication-Intro]
+      |- True ==> s == s /\ v == v
+      ---------------------------- (* = *)
+      |- pre s ==> post s v s
+
+  Case [T-CompSub]:
+
+    In this case, the given derivation ends with
+      
+      x_s:state | pre x_s |- pre' x_s
+      |- t' <: t
+      x_s:state , x_v:t' , x'_s:state | pre x_s , rel x_s x'_s , post' x_s x_v x'_s |- post x_s x_v x'_s
+      |- return v : {x_s.pre'} t' {x_s.x_v.x'_s.post'}
+      -------------------------------------------------------------------------------------------------- [T-CompSub]
+      |- return v : {x_s.pre} t {x_s.x_v.x'_s.post}
+
+    By using the induction hypothesis on (|- return v : {x_s.pre'} t' {x_s.x_v.x'_s.post'}), we get that
+
+      |- v : t'
+
+      /\
+
+      |- pre' s ==> post' s v s
+
+    Finally, we prove that
+
+      premise of the given derivation                 premise of the given derivation
+      -------------------------------                 -------------------------------
+      |- v : t'                                       |- t' <: t
+      ---------------------------------------------------------- [T-ValSub]
+      |- v : t
+
+      premise of the given derivation
+      --------------------------------------------------------------------------------------
+      x_s , x_v:t' , x'_s | pre x_s , rel x_s x'_s , post' x_s x_v x'_s |- post x_s x_v x'_s
+      -------------------------------------------------------------------------------------- (* subst *)
+      pre s , rel s s , post' s v s |- post s v s
+      ------------------------------------------- [Rel-Refl]
+      pre s , post' s v s |- post s v s                                 induction hypothesis                  premise of the derivation         premise of the derivation
+      ------------------------------------------ (* wk *)               ---------------------                 -------------------------         -------------------------
+      pre s , pre' s , post' s v s |- post s v s                        pre' s |- post' s v s                 x_s | pre x_s |- pre' x_s         |- s : state
+      --------------------------------------------------------------------------------------- (* cut *)       ---------------------------------------------- (* subst *)
+      pre s , pre' s | post s v s                                                                             pre s |- pre' s
+      ----------------------------------------------------------------------------------------------------------------------- (* cut *)
+      pre s |- post s v s
+      ----------------------- [Implication-Intro]
+      |- pre s ==> post s v s
+
+qed.
+
+
+Theorem ((Partial) Correctness):
+--------------------------------
+
+  forall e t pre post s W v s' W' .
+
+    |- e : {x_s.pre} t {x_s.x_v.x'_s.post} /\
+
+    |- (s,W) wf /\
+
+    (e,s,W) ~>* (return v,s',W') /\
+
+    witnessed W |- pre s
+
+    ==>
+
+    |- v : t /\
+
+    witnessed W' |- rel s s' /\
+
+    W \subseteq W' /\
+
+    witnessed W' |- post s v s'
+
+Proof:
+------
+
+  We prove this proposition by induction on the length of ((e,s,W) ~>* (return v,s',W')).
+
+  Case for when the length of ((e,s,W) ~>* (return v,s',W')) is 0:
+
+    In this case, we have that
+
+      e = return v
+
+      s = s'
+
+      W = W'
+
+    Therefore, showing the following is straightforward
+
+      witnessed W' |- rel s s'
+
+      W \subseteq W'
+
+    Finally, we use Lemma (Correctness of return) to show the following
+
+      from Lemma (Correctness of return)
+      ----------------------------------
+      |- v : t
+
+      from Lemma (Correctness of return)
+      ----------------------------------
+      |- pre s ==> post s v s
+      ----------------------------------- (* wk *)
+      witnessed W |- pre s ==> post s v s                     witnessed W |- pre s
+      ---------------------------------------------------------------------------- [Implication-Elim]
+      witnessed W |- post s v s
+      --------------------------- (* = *)
+      witnessed W' |- post s v s'
+
+  Case for when the reduction sequence is of the form ((e,s,W) ~> (e'',s'',W'') ~>* (return v,s',W')):
+
+    First, by using Theorem (Preservation) with (|- e : {x_s.pre} t {x_s.x_v.x'_s.post}) and ((e,s,W) ~> (e'',s'',W'')), we get that
+
+      W \subseteq W'' /\
+
+      witnessed W'' |- rel s s'' /\
+
+      |- (s'',W'') wf /\ 
+
+      exists pre'' t'' post'' .
+
+        |- e'' : {x_s.pre''} t'' {x_s.x_v.x'_s.post''} /\
+
+        |- t'' <: t /\
+
+        witnessed W'' |- pre'' s'' /\
+
+        x_v:t'' , x'_s:state | witnessed W'' , rel s'' x'_s , post'' s'' x_v x'_s |- post s x_v x'_s
+
+    As a result, we can use the induction hypothesis with (|- e'' : {x_s.pre''} t'' {x_s.x_v.x'_s.post''}) and ((e'',s'',W'') ~>* (return v,s',W')), to get that
+
+        |- v : t'' /\
+
+        witnessed W' |- rel s'' s' /\
+
+        W'' \subseteq W' /\
+
+        witnessed W' |- post'' s'' v s'
+
+    By combining these results, we can prove the following
+
+      |- v : t''         |- t'' <: t
+      ------------------------------ [T-ValSub]
+      |- v : t
+
+      witnessed W |- rel s s''                                                               witnessed W'' |- rel s'' s'
+      ------------------------- (* wk of (witnessed) using that (W \subseteq W') *)          --------------------------- (* wk of (witnessed) using that (W'' \subseteq W') *)
+      witnessed W' |- rel s s''                                                              witnessed W' |- rel s'' s'
+      ----------------------------------------------------------------------------------------------------------------- [Rel-Trans]
+      witnessed W' |- rel s s'
+
+      W \subseteq W''       W'' \subseteq W'
+      -------------------------------------- (* \subseteq is transitive *)
+      W \subseteq W'
+
+      from Theorem (Preservation)
+      --------------------------------------------------------------------------------------------
+      x_v:t'' , x'_s:state | witnessed W'' , rel s'' x'_s , post'' s'' x_v x'_s |- post s x_v x'_s                 |- v : t''            |- s' : state
+      ------------------------------------------------------------------------------------------------------------------------------------------------ (* subst *)
+      witnessed W'' , rel s'' s' , post'' s'' v s' |- post s v s'
+      ----------------------------------------------------------- (* wk of (witnessed) using that (W'' \subseteq W') *)
+      witnessed W' , rel s'' s' , post'' s'' v s' |- post s v s'
+      ---------------------------------------------------------- (* cut with (witnessed W' |- rel s'' s') *)
+      witnessed W' , post'' s'' v s' |- post s v s'                                                               witnessed W' |- post'' s'' v s'
+      ------------------------------------------------------------------------------------------------------------------------------------------- (* cut *)
+      witnessed W' |- post s v s'
+
+qed.
+
+
+Theorem ((Total) Correctness):
+------------------------------
+
+  forall e t pre post s W v s' W' .
+
+    |- e : {x_s.pre} t {x_s.x_v.x'_s.post} /\
+
+    |- (s,W) wf /\
+
+    witnessed W |- pre s
+
+    ==>
+
+    exists v s' W' .
+
+      (e,s,W) ~>* (return v,s',W') /\
+
+      |- v : t /\
+
+      witnessed W' |- rel s s' /\
+
+      W \subseteq W' /\
+
+      witnessed W' |- post s v s'
+
+Proof:
+------
+
+  We combine Lemma (The reduction relation is deterministic), Theorem (Strong normalisation
+  for the well-typed computation terms in the dependently typed language), and Theorem (Progress),
+  to get that there exists a (unique) reduction sequence ((e,s,W) ~>* (return v,s',W')).
+
+  As a result, we can use Theorem ((Partial) Correctness) to prove
+
+   |- v : t
+
+   witnessed W' |- rel s s'
+
+   W \subseteq W'
+
+   witnessed W' |- post s v s'
+
+qed.

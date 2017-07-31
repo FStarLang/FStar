@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -65,6 +65,7 @@
     <Compile Include="basetypes-fake.fs" />
     <Compile Include="prims-fake.fs" />
     <Compile Include="st-fake.fs" />
+    <Compile Include="exn-fake.fs" />
     <Compile Include="all-fake.fs" />
     <Compile Include="mul-fake.fs" />
     <Compile Include="char.fsi" />
@@ -85,12 +86,15 @@
     <Compile Include="range.fs" />
     <Compile Include="getopt.fsi" />
     <Compile Include="getopt.fs" />
+    <Compile Include="dyn.fsi" />
+    <Compile Include="dyn.fs" />
     <Compile Include="FStar.Options.fsi" />
     <Compile Include="FStar.Options.fs" />
     <Compile Include="unionfind.fsi" />
     <Compile Include="unionfind.fs" />
     <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Const.fs" />
+    <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />
     <Compile Include="version.fsi" />
     <Compile Include="version.fs" />
@@ -102,22 +106,6 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\VS\packages\FSPowerPack.Core.Community.3.0.0.0\lib\Net40\FSharp.PowerPack.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Linq">
-      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.1\lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Metadata">
-      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.1\lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Parallel.Seq">
-      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.1\lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">

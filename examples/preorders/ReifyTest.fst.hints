@@ -1,5 +1,5 @@
 [
-  "\u0007˚\f…`ﬁK\u001e‘éı±\bŸ\u0002í",
+  "±V`µè|À´‡\u0018^/4\u0013~\u0006",
   [
     [
       "ReifyTest.test_reify_recall",
@@ -9,34 +9,39 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "constructor_distinct_Prims.Some", "equation_MRefHeap.alloc_ref",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.stable", "equation_MRefHeap.alloc_ref",
         "equation_MRefHeap.contains", "equation_MRefHeap.heap_cell",
         "equation_MRefHeap.preorder_t", "equation_MRefHeap.sel",
         "equation_MRefST.contains", "equation_MRefST.heap_rel",
         "equation_MRefST.mref", "equation_MRefST.stable_on_heap",
-        "equation_MRefST.stable_on_heap_aux", "equation_Preorder.preorder",
-        "equation_Preorder.stable", "equation_Prims.nat",
-        "equation_Prims.snd", "fuel_guarded_inversion_Prims.dtuple2",
+        "equation_MRefST.stable_on_heap_aux", "equation_Prims.nat",
+        "fuel_guarded_inversion_Prims.dtuple2",
         "function_token_typing_Prims.nat", "int_typing",
-        "interpretation_MRefHeap_Tm_abs_705c68959755c989e77a2187d578c4be",
-        "interpretation_ReifyTest_Tm_abs_0950a1e9b922bea6b8beae3642151988",
-        "interpretation_ReifyTest_Tm_abs_c277a3e3452f841d15f0d59f30a43050",
+        "interpretation_MRefHeap_Tm_abs_ca7ca508b0f11218e4d69ff09a8817a3",
+        "interpretation_ReifyTest_Tm_abs_1fb5647deeb692985769a8a38bbfe04a",
+        "interpretation_ReifyTest_Tm_abs_8b7c35248131ee5b76dcf8f14ef9ab09",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "l_and-interp", "lemma_MRefST.contains_lemma",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
-        "proj_equation_Prims.Mktuple2__2",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Prims.Mkdtuple2__2",
-        "projection_inverse_Prims.Mktuple2__1",
-        "projection_inverse_Prims.Mktuple2__2",
-        "projection_inverse_Prims.Some_a", "projection_inverse_Prims.Some_v",
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466",
         "refinement_interpretation_MRefHeap_Tm_refine_f2f7aad12be5d33874cf210bb491505c",
         "refinement_interpretation_MRefST_Tm_refine_3568bcf9133bbe8512b3c2560361e2a6",
         "refinement_interpretation_MRefST_Tm_refine_da9cbab0485332770e2f963089e2dda6",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_FStar.Pervasives.Native.snd",
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.upd"
       ],
       0
@@ -47,8 +52,10 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
+        "int_typing",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
@@ -61,8 +68,10 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
+        "int_typing",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
@@ -75,8 +84,10 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
+        "int_typing",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
@@ -89,8 +100,10 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
+        "int_typing",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0"
@@ -103,11 +116,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -117,11 +132,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -131,11 +148,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -145,11 +164,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -159,11 +180,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -173,11 +196,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -187,11 +212,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -201,11 +228,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -215,11 +244,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -229,11 +260,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -243,11 +276,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -257,11 +292,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -271,11 +308,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -285,11 +324,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -299,11 +340,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -313,11 +356,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -327,11 +372,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -341,11 +388,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -355,11 +404,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -369,11 +420,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -383,11 +436,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -397,11 +452,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -411,11 +468,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ],
@@ -425,11 +484,13 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
-        "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
+        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ]

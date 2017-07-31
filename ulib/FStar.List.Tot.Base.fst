@@ -153,7 +153,7 @@ let rec concatMap f = function
 ... yn). Requires, at type-checking time, [f] to be a pure total
 function. Named as in: OCaml, Coq. *)
 val fold_left: ('a -> 'b -> Tot 'a) -> 'a -> l:list 'b -> Tot 'a (decreases l)
-let rec fold_left f x y = match y with
+let rec fold_left f x l = match l with
   | [] -> x
   | hd::tl -> fold_left f (f x hd) tl
 
@@ -390,6 +390,18 @@ let rec unzip3 l = match l with
        let (tl1,tl2,tl3) = unzip3 tl in
        (hd1::tl1,hd2::tl2,hd3::tl3)
 
+(** Splitting a list at some index **)
+
+(** [splitAt] takes a natural number n and a list and returns a pair
+    of the maximal prefix of l of size smaller than n and the rest of
+    the list *)
+let rec splitAt (#a:Type) (n:nat) (l:list a) : list a * list a =
+  if n = 0 then [], l
+  else
+    match l with
+    | [] -> [], l
+    | x :: xs -> let l1, l2 = splitAt (n-1) xs in x :: l1, l2
+
 (** Sorting (implemented as quicksort) **)
 
 (** [partition] splits a list [l] into two lists, the sum of whose
@@ -422,7 +434,7 @@ if, x > y. Requires, at type-checking time, [rel] to be a pure total
 function.  *)
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
 let compare_of_bool #a rel x y =
-  if x `rel` y  then 1 
+  if x `rel` y  then 1
   else if x = y then 0
   else 0-1
 

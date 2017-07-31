@@ -27,7 +27,7 @@ val encrypt: #p:Type0 -> k:key p AES.plain -> plain: p -> ML (cipher p AES.plain
 
 (* TODO: implementation *)
 
-let c = ST.alloc 0
+let c :ref nat = ST.alloc 0
 
 let keygen #p safe plain repr =
   let i = !c in

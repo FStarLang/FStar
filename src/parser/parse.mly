@@ -455,7 +455,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { {id with idText = compile_op' id.idText} }
+    { {id with idText = compile_op' id.idText id.idRange} }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -501,7 +501,7 @@ term:
 (* ... which is actually be benign, since the same conflict already *)
 (*     exists for the previous production *)
   | e1=noSeqTerm SEMICOLON_SEMICOLON e2=term
-      { mk_term (Bind(gen (rhs parseState 1), e1, e2)) (rhs2 parseState 1 3) Expr }
+      { mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 

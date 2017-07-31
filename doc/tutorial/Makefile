@@ -20,3 +20,8 @@ clean:
 	rm -f *~ css.sty madoko.css madoko.sty *math-dvi.tex *math-pdf.tex *math-dvi.final.tex *math-pdf.final.tex  *.aux *.dim *.dvi *.log *.out *.upa *.dimx *.html *.log *.pdf *.upa *.upb *.bbl *.blg .*~
 	rm -f ellipse.sty longbox.sty longfbox.sty madoko2.sty options.sty tutorial-math-dvi.out.ps
 	rm -dfr math
+
+regressions: code/exercises.ver code/solutions.ver
+
+%.ver: %
+	make -C $^ all

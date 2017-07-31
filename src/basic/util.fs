@@ -279,6 +279,14 @@ let smap_copy (m:smap<'value>) =
     n
 let smap_size (m:smap<'value>) = m.Count
 
+type psmap<'value> = Collections.Map<string,'value>
+let psmap_empty (_: unit) : psmap<'value> = Collections.Map.empty
+let psmap_add (map: psmap<'value>) (key: string) (value: 'value) = Collections.Map.add key value map
+let psmap_find_default (map: psmap<'value>) (key: string) (dflt: 'value) =
+  match Collections.Map.tryFind key map with | Some v -> v | None -> dflt
+let psmap_try_find (map: psmap<'value>) (key: string) =
+  Collections.Map.tryFind key map
+
 type imap<'value>=System.Collections.Generic.Dictionary<int,'value>
 let imap_create<'value> (i:int) = new Dictionary<int,'value>(i)
 let imap_clear<'value> (s:imap<'value>) = s.Clear()
@@ -299,6 +307,14 @@ let imap_copy (m:imap<'value>) =
     let n = imap_create (m.Count) in
     imap_fold m (fun k v () -> imap_add n k v) ();
     n
+
+type pimap<'value> = Collections.Map<int,'value>
+let pimap_empty (_: unit) : pimap<'value> = Collections.Map.empty
+let pimap_add (map: pimap<'value>) (key: int) (value: 'value) = Collections.Map.add key value map
+let pimap_find_default (map: pimap<'value>) (key: int) (dflt: 'value) =
+  match Collections.Map.tryFind key map with | Some v -> v | None -> dflt
+let pimap_try_find (map: pimap<'value>) (key: int) =
+  Collections.Map.tryFind key map
 
 let format (fmt:string) (args:list<string>) =
     let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in
@@ -327,22 +343,33 @@ let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
 
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of int
+| JsonStr of string
+| JsonList of json list
+| JsonAssoc of (string * json) list
+
 type printer = {
   printer_prinfo: string -> unit;
   printer_prwarning: string -> unit;
   printer_prerror: string -> unit;
+  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
 }
 
 let default_printer =
   { printer_prinfo = fun s -> pr "%s" s;
     printer_prwarning = fun s -> fpr stderr "%s" (colorize_cyan s);
-    printer_prerror = fun s -> fpr stderr "%s" (colorize_red s); }
+    printer_prerror = fun s -> fpr stderr "%s" (colorize_red s);
+    printer_prgeneric = fun label get_string get_json -> pr "%s: %s" label (get_string ()) ;}
 
 let current_printer = ref default_printer
 let set_printer printer = current_printer := printer
 
 let print_raw s = pr "%s" s
 let print_string s = (!current_printer).printer_prinfo s
+let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
 let print_any s = print_string (spr "%A" s)
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:list<string>) = String.concat sep l
@@ -498,6 +525,11 @@ let bind_opt opt f =
     match opt with
     | None -> None
     | Some x -> f x
+
+let catch_opt opt f =
+    match opt with
+    | Some _ -> opt
+    | None -> f ()
 
 let map_opt opt f =
     match opt with
@@ -928,14 +960,6 @@ let read_hints (filename : string) : option<hints_db> =
 
 (** Interactive protocol **)
 
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of int
-| JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
-
 exception UnsupportedJson
 
 let rec json_to_obj js =
@@ -975,3 +999,6 @@ let string_of_json json : string =
 
 let read r = !r
 let write r x = r := x
+
+let marshal (x:'a) : string = failwith "Marshaling to/from strings: not yet supported in F#"
+let unmarshal (x:string) : 'a = failwith "Marshaling to/from strings: not yet supported in F#"
