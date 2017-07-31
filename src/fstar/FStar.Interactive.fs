@@ -313,7 +313,7 @@ type query' =
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
 
-let interactive_protocol_vernum = 1
+let interactive_protocol_vernum = 2
 
 let interactive_protocol_features =
   ["autocomplete"; "compute"; "describe-protocol"; "describe-repl"; "exit";
