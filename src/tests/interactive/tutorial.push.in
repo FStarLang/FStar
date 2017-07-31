@@ -9,3 +9,15 @@
 {"query-id":"9","query":"push","args":{"kind":"full","code":"\n\nassume val checkedWrite : filename -> string -> ML unit\n","line":44,"column":0}}
 {"query-id":"10","query":"push","args":{"kind":"full","code":"\n// solution here\n//\n//\n\n\nlet dynamicChecking () =\n  let v1 = checkedRead tmp in\n  let v2 = checkedRead readme in\n  let v3 = checkedRead passwd in (* this raises exception *)\n  checkedWrite tmp \"hello!\";\n  checkedWrite passwd \"junk\" (* this raises exception *)\n","line":47,"column":0}}
 {"query-id":"11","query":"push","args":{"kind":"full","code":"\nlet main = staticChecking (); dynamicChecking ()\n","line":59,"column":0}}
+{"query-id": "a1", "query": "pop", "args": {}}
+{"query-id": "a2", "query": "pop", "args": {}}
+{"query-id": "a3", "query": "pop", "args": {}}
+{"query-id": "a4", "query": "pop", "args": {}}
+{"query-id": "a5", "query": "pop", "args": {}}
+{"query-id": "a6", "query": "pop", "args": {}}
+{"query-id": "a7", "query": "pop", "args": {}}
+{"query-id": "a8", "query": "pop", "args": {}}
+{"query-id": "a9", "query": "pop", "args": {}}
+{"query-id": "a10", "query": "pop", "args": {}}
+{"query-id": "a11", "query": "pop", "args": {}}
+{"query-id": "a12", "query": "pop", "args": {}}

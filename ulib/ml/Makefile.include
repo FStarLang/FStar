@@ -3,11 +3,14 @@
 
 # This Makefile assumes that $(FSTAR_HOME) is properly defined.
 
-FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Ghost Heap \
-	HyperStack.All HyperStack.ST Int16 Int32 Int63 Int64 Int8 Int_Cast IO \
-	List List.Tot.Base Mul Option Pervasives.Native Set ST String \
-	UInt128 UInt16 UInt32 UInt63 UInt64 UInt8 \
-  Pointer BufferNG
+FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Ghost Heap Monotonic.Heap \
+	HyperStack.All HyperStack.ST Int16 Int32 Int63 Int64 Int8 Int.Cast IO \
+	List List.Tot.Base Mul Option Pervasives.Native Set ST Exn String \
+	UInt16 UInt32 UInt63 UInt64 UInt8 \
+	Pointer BufferNG Tactics.Builtins \
+	Reflection.Types Reflection.Basic Reflection.Data \
+	Tactics.Types Bytes Util \
+	Pervasives
 	# prims is realized by default hence not included in this list
 
 NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims
@@ -15,6 +18,7 @@ NOEXTRACT_MODULES=$(addprefix FStar., $(FSTAR_REALIZED_MODULES)) prims
 FSTAR_DEFAULT_ARGS=$(addprefix --no_extract ,$(NOEXTRACT_MODULES))
 ULIB_ML=$(FSTAR_HOME)/ulib/ml
 FSTARLIB_DIR=$(FSTAR_HOME)/bin/fstarlib
+FSTARLIB=$(FSTARLIB_DIR)/fstarlib.cmxa
 
 # Left as an example if we were to add multiple versions of fstarlib
 # ifeq ($(MEM),HST)

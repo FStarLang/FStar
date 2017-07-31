@@ -8,8 +8,6 @@ algorithms \
 crypto \
 termination \
 software_foundations \
-../doc/tutorial/code/exercises \
-../doc/tutorial/code/solutions \
 maths \
 rel \
 paradoxes \
@@ -22,7 +20,8 @@ incl \
 struct \
 micro-benchmarks \
 bytes \
-tactics
+tactics \
+native_tactics
 
 
 # low-level \  ... NS: removing from CI for this branch

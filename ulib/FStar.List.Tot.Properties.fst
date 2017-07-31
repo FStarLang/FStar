@@ -22,7 +22,6 @@ operations on lists.
 module FStar.List.Tot.Properties
 open FStar.List.Tot.Base
 
-
 (** Properties about mem **)
 
 (** The empty list has no elements *)
@@ -738,6 +737,7 @@ let rec strict_prefix_of_trans (#a: Type) (l1 l2 l3: list a)
   (requires True)
   (ensures ((strict_prefix_of l1 l2 /\ strict_prefix_of l2 l3) ==> strict_prefix_of l1 l3))
   (decreases l3)
+  [SMTPat (strict_prefix_of l1 l2); SMTPat (strict_prefix_of l2 l3)]
 = match l3 with
   | [] -> ()
   | _ :: q -> strict_prefix_of_trans l1 l2 q
@@ -873,3 +873,4 @@ let assoc_precedes
   (ensures (x << l /\ y << l))
 = assoc_memP_some x y l;
   memP_precedes (x, y) l
+

@@ -1,6 +1,7 @@
 [
-  "Ѓл…\u0015\u0019ри\u000fП\u0003\u0004GњК›G",
+  "tMm&nRf<муДЄ\bгE2",
   [
+    [ "FStar.Squash.return_squash", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Squash.get_proof",
       1,
@@ -39,8 +40,7 @@
       ],
       0
     ],
-    [ "FStar.Squash.squash_double_arrow", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Squash.squash_double_sum", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Squash.return_squash", 1, 2, 1, [ "@query" ], 0 ]
+    [ "FStar.Squash.push_sum", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Squash.squash_double_sum", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

@@ -207,7 +207,7 @@
         "equation_Prims.nat", "equation_UnionFind.Forest.elt",
         "equation_UnionFind.Forest.id", "equation_UnionFind.Forest.live",
         "equation_UnionFind.Forest.uf_forest",
-        "fuel_guarded_inversion_Prims.tuple3", "int_inversion",
+        "fuel_guarded_inversion_FStar.Pervasives.tuple3", "int_inversion",
         "lemma_FStar.DM4F.Heap.lemma_upd_tot_is_upd_if_contains_a_well_typed",
         "refinement_interpretation_FStar.DM4F.Heap_Tm_refine_33c56d04cd2b4870da0423961c379a8a",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",

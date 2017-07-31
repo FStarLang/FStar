@@ -13,7 +13,6 @@ let main argv =
     printfn "Initializing ...";
     try
         Pars.init() |> ignore;
-        FStar.Tests.Tactics.test();
         Norm.run_all ();
         Unif.run_all ();
         0

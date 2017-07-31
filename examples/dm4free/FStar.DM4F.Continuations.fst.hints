@@ -1,7 +1,6 @@
 [
   "ÿfèJ™W+t‰ÊH©uÍ-~",
   [
-    [ "FStar.DM4F.Continuations.cont", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.Continuations.uu___is_L", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Continuations.__proj__L__item__a",
@@ -32,14 +31,6 @@
     [
       "FStar.DM4F.Continuations.__proj__L__item___2",
       1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "FStar.DM4F.Continuations.__proj__L__item___2",
-      2,
       2,
       1,
       [
@@ -84,14 +75,6 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "FStar.DM4F.Continuations.__proj__R__item___2",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query",
         "disc_equation_FStar.DM4F.Continuations.R",
@@ -111,7 +94,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.Continuations.CONT", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Continuations._dm4f_CONTINUATION_wp_if_then_else",
       1,
@@ -120,7 +102,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.Continuations.CONTINUATION", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Continuations.em2",
       1,
@@ -137,7 +118,6 @@
         "typing_Prims_Tm_abs_33c425e9d5a70900b1deadec7d52bee0"
       ],
       0
-    ],
-    [ "FStar.DM4F.Continuations.excluded_middle", 1, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

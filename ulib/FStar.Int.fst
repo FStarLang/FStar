@@ -129,6 +129,7 @@ let div_underspec #n a b =
 
 (* Modulo primitives *)
 // JK: takes time
+#set-options "--z3rlimit 25"
 val mod: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Tot (int_t n)
 let mod #n a b = a - ((a/b) * b)
 

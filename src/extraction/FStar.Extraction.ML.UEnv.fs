@@ -45,8 +45,7 @@ type env = {
     tcenv: TypeChecker.Env.env;
     gamma:list<binding>;
     tydefs:list<(list<mlsymbol> * mltydecl)>;
-    //erasableTypes : mlty -> bool; // Unit is not the only type that can be erased. We could erase inductive families which had only 1 element, or become so after extraction.
-    //if so, just convert them to type abbreviations returning unit.
+    type_names:list<fv>;
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -104,7 +103,7 @@ let rec lookup_ty_local (gamma:list<binding>) (b:bv) : mlty =
         | _::tl -> lookup_ty_local tl b
         | [] -> failwith ("extraction: unbound type var "^(b.ppname.idText))
 
-let tyscheme_of_td (_, _, _, vars, body_opt) : option<mltyscheme> = match body_opt with
+let tyscheme_of_td (_, _, _, vars, _, body_opt) : option<mltyscheme> = match body_opt with
     | Some (MLTD_Abbrev t) -> Some (vars, t)
     | _ -> None
 
@@ -113,7 +112,7 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
     BU.find_map env.tydefs  (fun (m, tds) ->
         if module_name = m
         then BU.find_map tds (fun td ->
-             let (_, n, _, _, _) = td in
+             let (_, n, _, _, _, _) = td in
              if n=ty_name
              then tyscheme_of_td td
              else None)
@@ -125,7 +124,7 @@ let maybe_mangle_type_projector (env:env) (fv:fv) : option<mlpath> =
     let mname = module_name_of_fv fv in
     let ty_name = fv.fv_name.v.ident.idText in
     BU.find_map env.tydefs  (fun (m, tds) ->
-        BU.find_map tds (fun (_, n, mangle_opt, _, _) ->
+        BU.find_map tds (fun (_, n, mangle_opt, _, _, _) ->
             if m = mname
             then if n=ty_name
                  then match mangle_opt with
@@ -194,6 +193,17 @@ let extend_ty (g:env) (a:bv) (mapped_to:option<mlty>) : env =
     let tcenv = TypeChecker.Env.push_bv g.tcenv a in // push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv}
 
+let sanitize (s:string) : string =
+  let cs = FStar.String.list_of_string s in
+  let valid c = BU.is_letter_or_digit c || c = '_' || c = '\'' in
+  let cs' = List.fold_right (fun c cs -> (if valid c then [c] else ['_';'_'])@cs) cs [] in
+  let cs' = match cs' with
+            | (c::cs) when BU.is_digit c || c = '\'' ->
+                  '_'::c::cs
+            | _ -> cs in
+  FStar.String.string_of_list cs'
+
+
 // Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
 let find_uniq gamma mlident =
   let rec find_uniq mlident i =
@@ -210,6 +220,7 @@ let find_uniq gamma mlident =
     else
       target_mlident
   in
+  let mlident = sanitize mlident in
   find_uniq mlident 0
 
 let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
@@ -284,13 +295,17 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_re
 
 let extend_tydef (g:env) (fv:fv) (td:mltydecl) : env =
     let m = module_name_of_fv fv in
-    {g with tydefs=(m,td)::g.tydefs}
+    {g with tydefs=(m,td)::g.tydefs; type_names=fv::g.type_names}
 
+let extend_type_name (g:env) (fv:fv) : env =
+    {g with type_names=fv::g.type_names}
+
+let is_type_name g fv = g.type_names |> BU.for_some (fv_eq fv)
 
 let emptyMlPath : mlpath = ([],"")
 
 let mkContext (e:TypeChecker.Env.env) : env =
-   let env = { tcenv = e; gamma =[] ; tydefs =[]; currentModule = emptyMlPath} in
+   let env = { tcenv = e; gamma =[] ; tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
    let a = "'a", -1 in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
    extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst

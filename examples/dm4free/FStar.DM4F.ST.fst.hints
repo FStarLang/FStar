@@ -18,9 +18,6 @@
       1,
       [ "@query" ],
       0
-    ],
-    [ "FStar.DM4F.ST.STATE_h", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.ST.STATE_h", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.ST.STATE_h", 3, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

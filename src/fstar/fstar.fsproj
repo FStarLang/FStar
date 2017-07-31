@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -28,10 +28,11 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>test.fst --debug Test --debug_level SMTQuery --dump_module Test --print_implicits</StartArguments>
+    <StartArguments>--smt C:\dev\z3-vs-debug\z3\Debug\z3.exe --debug Any --trace_error --hint_info --print_z3_statistics --log_queries foo.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>D:\workspace\test\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\cwinter\FStar\Armael</StartWorkingDirectory>
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -44,6 +45,8 @@
     <DocumentationFile>bin\Release\fstar.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
+    <StartWorkingDirectory>C:\cwinter\FStar\Armael</StartWorkingDirectory>
+    <StartArguments>--smt c:\dev\z3\bld_rel\z3.exe --debug Any --trace_error --hint_info --print_z3_statistics foo.fst</StartArguments>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -114,22 +117,6 @@
     </ProjectReference>
     <Reference Include="FSharp.Compatibility.OCaml">
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\VS\packages\FSPowerPack.Core.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Linq">
-      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Metadata">
-      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Parallel.Seq">
-      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">

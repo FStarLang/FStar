@@ -28,9 +28,9 @@ type sort =
   | Bool_sort
   | Int_sort
   | String_sort
-  | Ref_sort
   | Term_sort
   | Fuel_sort
+  | BitVec_sort of int
   | Array of sort * sort
   | Arrow of sort * sort
   | Sort of string
@@ -54,6 +54,18 @@ type op =
   | Mul
   | Minus
   | Mod
+  | BvAnd
+  | BvXor
+  | BvOr
+  | BvShl
+  | BvShr
+  | BvUdiv
+  | BvMod
+  | BvMul
+  | BvUlt
+  | BvUext of int
+  | NatToBv of int
+  | BvToNat
   | ITE
   | Var of string
 
@@ -118,6 +130,9 @@ val inst: list<term> -> term -> term
 val subst: term -> fv -> term -> term
 val mk: term' -> Range.range -> term
 val hash_of_term: term -> string
+val boxIntFun : string * string
+val boxBoolFun : string * string
+val boxStringFun : string * string
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val free_variables: term -> fvs
@@ -145,6 +160,19 @@ val mkSub:   ((term * term) -> Range.range -> term)
 val mkDiv:   ((term * term) -> Range.range -> term)
 val mkMul:   ((term * term) -> Range.range -> term)
 val mkMod:   ((term * term) -> Range.range -> term)
+val mkNatToBv : (int -> term -> Range.range -> term)
+val mkBvToNat : (term -> Range.range -> term)
+val mkBvAnd   : ((term * term) -> Range.range -> term)
+val mkBvXor   : ((term * term) -> Range.range -> term)
+val mkBvOr    : ((term * term) -> Range.range -> term)
+val mkBvUlt   : ((term * term) -> Range.range -> term)
+val mkBvUext  : (int -> term -> Range.range -> term)
+val mkBvShl   : (int -> (term * term) -> Range.range -> term)
+val mkBvShr   : (int -> (term * term) -> Range.range -> term)
+val mkBvUdiv  : (int -> (term * term) -> Range.range -> term)
+val mkBvMod   : (int -> (term * term) -> Range.range -> term)
+val mkBvMul   : (int -> (term * term) -> Range.range -> term)
+
 val mkITE: (term * term * term) -> Range.range -> term
 val mkCases : list<term> -> Range.range -> term
 val mkForall: (list<list<pat>> * fvs * term) -> Range.range -> term
@@ -159,6 +187,7 @@ val injective_constructor : (string * list<constructor_field> * sort) -> decls_t
 val fresh_constructor : (string * list<sort> * sort * int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t
+val mkBvConstructor: int -> decls_t
 val declToSmt: string -> decl -> string
 
 val mk_Term_app : term -> term -> Range.range -> term
@@ -172,8 +201,8 @@ val boxBool:     term -> term
 val unboxBool:   term -> term
 val boxString:   term -> term
 val unboxString: term -> term
-val boxRef:      term -> term
-val unboxRef:    term -> term
+val boxBitVec:   int -> term -> term
+val unboxBitVec: int -> term -> term
 
 val mk_Range_const:  term
 val mk_Term_unit:    term
@@ -202,4 +231,3 @@ val mk_haseq: term -> term
 val print_smt_term: term -> string
 val print_smt_term_list: list<term> -> string
 val print_smt_term_list_list: list<list<term>> -> string
-

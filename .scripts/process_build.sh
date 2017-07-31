@@ -29,16 +29,17 @@ function cp_to_binaries () {
 }
 
 function cleanup_files () {
-pushd $BN_BINARYSPATH
+  pushd $BN_BINARYSPATH
   local suffix=$1
   local files=*.$suffix
   local file_count=$(ls -1 $files 2>/dev/null | wc -l)
   if (( $file_count > $BN_FILESTOKEEP )); then
-    # Windows git rm just needs the file name and fails if give path so just get file name
+    # git rm does not take absolute paths; since there are no subdirectories,
+    # use basename
     local file_list=$(ls -t1 $files | xargs -n1 basename | tail -n +$(($BN_FILESTOKEEP+1)))
-    git rm ${file_list} -f
+    git rm $file_list -f
   fi
-popd
+  popd
 }
 
 # Constants for showing color in output window
@@ -49,9 +50,6 @@ NC='\033[0m' # No Color
 CURRENT_VERSION=$(head -n 1 version.txt | tr -d '\r')
 
 echo "*** Clean up log files ***"
-if [[ -f src/ocaml-output/fstar/MicroBenchMarkOutput.log ]]; then
-  rm src/ocaml-output/fstar/MicroBenchMarkOutput.log
-fi
 if [[ -f src/ocaml-output/fstar/HelloOcamlOutput.log ]]; then
   rm src/ocaml-output/fstar/HelloOcamlOutput.log
 fi
@@ -61,7 +59,6 @@ fi
 
 echo "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
-make -C ../../ulib/ml clean
 make package
 
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
@@ -89,18 +86,8 @@ fi
 
 echo "*** Make the examples ***"
 cd fstar
-make -C examples/micro-benchmarks > MicroBenchMarkOutput.log
-make -C examples/hello ocaml > HelloOcamlOutput.log
-make -j6 -C examples > AllExamples.log
-
-echo "*** Verify the examples ***"
-echo "-- Verify Micro-benchmarks -- should output 'Success:' *"
-if ! egrep 'Success:' MicroBenchMarkOutput.log; then
-  echo -e "* ${RED}FAIL!${NC} for examples/micro-benchmarks - Success: was not found in MicroBenchMarkOutput.log"
-  exit 1
-else
-  echo -e "* ${GREEN}PASSED!${NC} for examples/micro-benchmarks"
-fi
+make -C examples/hello ocaml | tee HelloOcamlOutput.log
+make -j6 -C examples | tee AllExamples.log
 
 echo "-- Verify hello ocaml -- should output Hello F*! *"
 if ! egrep 'F*!' HelloOcamlOutput.log; then
@@ -120,14 +107,12 @@ fi
 
 # Got to this point, so know it passed - copy minor version out
 echo "*** Upload the minor version of the package. Will only keep the most recent 4 packages ***"
-cd $FSTAR_HOME
 BN_BINARYSPATH_ROOT=~/binaries
 BN_BINARYSPATH=$BN_BINARYSPATH_ROOT/weekly
 BN_FILESTOKEEP=4
 
 if [[ ! -d $BN_BINARYSPATH_ROOT ]]; then
-  cd ~
-  git clone git@github.com:/FStarLang/binaries.git
+  git clone git@github.com:/FStarLang/binaries.git $BN_BINARYSPATH_ROOT
 fi
 
 cd $BN_BINARYSPATH_ROOT
