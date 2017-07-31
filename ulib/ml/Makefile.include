@@ -8,6 +8,7 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Gho
 	List List.Tot.Base Mul Option Pervasives.Native Set ST Exn String \
 	UInt16 UInt32 UInt63 UInt64 UInt8 \
 	Pointer BufferNG Tactics.Builtins \
+        TaggedUnion \
 	Reflection.Types Reflection.Basic Reflection.Data \
 	Tactics.Types Bytes Util \
 	Pervasives
