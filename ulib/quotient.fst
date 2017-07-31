@@ -99,10 +99,40 @@ let squash_finest_surj_lemma (a:Type) (p:quotient a finest_equiv)
   assert (exists x. p x) ;
   squash_extensionality' #a finest_equiv p
 
+
+let projector (a:Type) = f:(a -> a){forall x. f x == f (f x)}
+
+let pquotient (a:Type) (f:projector a) = x:a{x == f x}
+
+let psquash (#a:Type) (f:projector a) (x:a) : pquotient a f = f x
+
+let pequiv (#a:Type) (f:projector a) : equiv a =
+  let r x y = f x == f y in
+  r
+
+let pquotient_to_quotient (#a:Type) (f:projector a) : pquotient a f -> quotient a (pequiv f) =
+  let h (x:pquotient a f) = x.[pequiv f] in
+  h
+
+let pquotient_to_quotient_inj (#a:Type) (f:projector a) :
+    Lemma (forall (x y:pquotient a f). pquotient_to_quotient f x == pquotient_to_quotient f y ==> x == y)
+= ()
+
+let pquotient_to_quotient_surj (#a:Type) (f:projector a) (y:quotient a (pequiv f)) :
+    Lemma (exists x. y == pquotient_to_quotient f x)
+= assert (forall x. y x ==> y (f x)) ;
+  assert (exists (x:pquotient a f). y x) ;
+  squash_extensionality' #a (pequiv f) y
+
+(* let pquotient_intro (#a #b:Type) (f:projector a) (h:a -> b) *)
+(*   : Pure (pquotient a f) *)
+(*     (requires (forall x. h x = h (f x))) *)
+(*     (ensures (fun g -> g (psquash x))) *)
+
+
 let prop_equiv (a b:prop) :Lemma (requires (a == b)) (ensures (a <==> b)) = ()
 
-
-(* let _ = assert_by_tactic (h <-- forall_intros ; dump "A" ;; smt) (forall (x:nat) (y:int{y < 0}). x == y) *)
+(* let _ = assert_by_tactic (h <-- forall_intros ; dump "A" ;; smt) (forall (x:nat) (y:int{y < 0}). x =!= y) *)
 
 let intro_quotient_type (#a:Type) (r:equiv a) (f: a -> prop)
   : Ghost (quotient a r -> prop)
@@ -132,4 +162,3 @@ let imod5 :  rel int = fun x y -> b2t (x = y % 5)
 let mod5 : equiv int = admit () ; imod5
 
 let test = (2).[mod5] = (7).[mod5]
-
