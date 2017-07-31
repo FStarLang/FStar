@@ -38,7 +38,8 @@ let rec init len contents = if len = 0 then Seq.createEmpty else init_aux len 0 
 
 type lbytes (n:nat) = b:bytes{length b = n}
 
-let empty_bytes : lbytes 0 = Seq.createEmpty
+val empty_bytes : lbytes 0
+let empty_bytes = Seq.createEmpty
 
 
 #set-options "--max_fuel 1 --max_ifuel 1 --detail_errors"
@@ -67,11 +68,6 @@ let lemma_sub_length (b:bytes) (s:nat{s < length b})
   (e:nat{e < length b /\ s <= e})
   : Lemma (length (sub b s e) = e - s)
   = lemma_len_slice b s e
-
-assume val make: len:nat -> f:(n:nat{n < len} -> Tot byte) -> Tot (lbytes len)
-assume val create: len:nat -> Tot (lbytes len)
-assume val utf8_encode: string -> bytes
-assume val utf8_decode: bytes -> option string
 
 type uint_t (k:nat) = n:nat{n < pow2 FStar.Mul.(8 * k)}
 
@@ -140,11 +136,12 @@ let rec slice b i j =
     if j = 0 then Seq.createEmpty
     else cons (head b) (slice (tail b) i (j - 1))
 
-
+(*
 val eq_lemma_decode_big_endion:
   b:bytes ->
   Lemma (decode_big_endian b = decode_big_endian_acc b 0 0)
   (decreases (lengtjh ))
+
 let rec eq_lemma_decode_big_endion b =
   if length b = 0 then ()
   //else eq_lemma_decode_big_endion (tail b)
@@ -152,7 +149,7 @@ let rec eq_lemma_decode_big_endion b =
     let sub = slice b 0 (length b - 1) in
     assert(length sub = length b - 1);
     eq_lemma_decode_big_endion sub
-
+*)
 (*
 val eq_lemma_decode_big_endion: b:bytes ->
   GTot (u:unit{decode_big_endian b = decode_big_endian_acc b 0 0})
@@ -180,23 +177,25 @@ val op_At_Bar: bytes -> bytes -> Tot bytes
 let op_At_Bar (b1:bytes) (b2:bytes) = append b1 b2
 
 (*@ type (l:nat) lbytes = (b:bytes){Length (b) = l} @*)
-type lbytes (l:nat) = b:bytes{length b = l}
+(*type lbytes (l:nat) = b:bytes{length b = l}*)
 
-(*@ val empty_bytes : (b:bytes){B (b) = C_array_of_list C_op_Nil ()} @*)
-val empty_bytes : lbytes 0
-let empty_bytes = Seq.createEmpty
-
-val abyte : (byte -> Tot bytes)
-let abyte (b:byte) = create 1 b
-
-val abyte2 : (byte * byte) -> Tot bytes
-let abyte2 (b1, b2) = append (Seq.create 1 b1) (Seq.create 1 b2)
 
 val createBytes : l:nat -> byte -> Tot (lbytes l)
 let createBytes l b = Seq.create l b
 
 val initBytes: l:nat -> (i:nat {i<l} -> Tot byte) -> Tot (lbytes l)
 let initBytes l f = Seq.init l f
+
+assume val make: len:nat -> f:(n:nat{n < len} -> Tot byte) -> Tot (lbytes len)
+assume val utf8_encode: string -> bytes
+assume val utf8_decode: bytes -> option string
+
+
+
+
+
+
+
 
 (*@ assume val equalBytes : (b0:bytes -> (b1:bytes -> (r:bool){r = True /\ B (b0) = B (b1) \/ r = False /\ B (b0) <> B (b1)})) @*)
 assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
@@ -240,7 +239,43 @@ let append_assoc (l1 l2 l3: bytes): Lemma
   Seq.append_assoc l1 l2 l3
 
 
+val get_binary: n:nat -> Tot (bytes)
+let rec get_binary n =
+  match n with
+  | 0 -> Seq.createEmpty
+  | _ -> Seq.append (get_binary (n / 2)) (of_list [U8.uint_to_t (n % 2)])
 
+(*
+//val format: n:nat{n>0 /\ n <=20} -> Tot (bytes)
+val format: n:nat -> Tot (bytes)
+let format n =
+  match n with
+  | 1  -> (of_list [U8.uint_to_t 000000]) | 2  -> (of_list [U8.uint_to_t 00000])
+  | 3  -> (of_list [U8.uint_to_t 0000])   | 4  -> (of_list [U8.uint_to_t 000])
+  | 5  -> (of_list [U8.uint_to_t 00])     | 6  -> (of_list [U8.uint_to_t 0])
+  | 7  -> Seq.createEmpty                 | 8  -> (of_list [U8.uint_to_t 000])
+  | 9  -> (of_list [U8.uint_to_t 00])     | 10 -> (of_list [U8.uint_to_t 0])
+  | 11 -> Seq.createEmpty                 | 12 -> (of_list [U8.uint_to_t 0000])
+  | 13 -> (of_list [U8.uint_to_t 000])    | 14 -> (of_list [U8.uint_to_t 00])
+  | 15 -> (of_list [U8.uint_to_t 0])      | 16 -> Seq.createEmpty
+  | 17 -> (of_list [U8.uint_to_t 000])    | 18 -> (of_list [U8.uint_to_t 00])
+  | 19 -> (of_list [U8.uint_to_t 0])      | 20 -> Seq.createEmpty
+  | _ -> Seq.createEmpty
+
+val binary_code_point: n:nat -> Tot (bytes)
+let binary_code_point n =
+  let b = (get_binary n) in
+    Seq.append (format(length b)) b
+
+val encode_utf8: n:nat -> Tot (bytes)
+let encode_utf8 n =
+  let code_point = (binary_code_point n) in
+    if n < 127 then Seq.append (of_list [U8.uint_to_t 0]) (code_point)
+    else if n < 2047 then
+      (of_list [U8.uint_to_t 110])
+    else Seq.createEmpty
+*)
+(*
 #reset-options "--initial_fuel 1 --max_fuel 1"
 
 val encode_big_endian: k:nat -> n:uint_t k ->
@@ -280,3 +315,4 @@ val little_endian_append: w1:bytes -> w2:bytes -> Lemma
    little_endian (Seq.append w1 w2) ==
    little_endian w1 + pow2 (8 * Seq.length w1) * little_endian w2)
  (decreases (Seq.length w1))
+*)
