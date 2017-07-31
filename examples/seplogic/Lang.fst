@@ -189,7 +189,7 @@ let lemma_fail (#a:Type0)
 
 (* making it let ... = admit () does not verify *)
 assume val lemma_consequence (#a:Type0) (c:command a) (p':c_pre) (q':c_post a)
-  :Lemma (requires (forall (p:c_pre) (q:c_post a). hoare_triple p c q /\ p' `imp` p /\ (forall (r:a). q r `imp` q' r)))
+  :Lemma (requires (exists (p:c_pre) (q:c_post a). hoare_triple p c q /\ p' `imp` p /\ (forall (r:a). q r `imp` q' r)))
          (ensures  (hoare_triple p' c q'))
 
 let lemma_read (id:addr) (r:c_post nat)
@@ -225,3 +225,78 @@ let lemma_frame_rule (#a:Type0) (c:command a) (p:c_pre) (q:c_post a) (r:c_pre)
           
 (* get the nice x <-- c1; c2 syntax *)
 let bind (#a:Type0) (#b:Type0) (c1:command a) (c2:a -> command b) :command b = Bind c1 c2
+
+let lemma_hoare_triple_imp (#a:Type0) (pre:c_pre) (c:command a) (post:c_post a) (h:heap)
+  :Lemma (requires (hoare_triple pre c post) /\ pre h)
+         (ensures (let (r, h1) = c `interpreted_in` h in
+		   post r h1))
+  = ()
+  
+let example1 (p:ref nat) (h:heap) =
+ let (a1, h1) = (Write p 3) `interpreted_in` h in
+ h1
+
+let lemma_example1_ok (p:ref nat) (a:nat) (h:heap)
+  : Lemma (requires ((p `points_to` a) h))
+          (ensures ((p `points_to` 3) (example1 p h)))
+  = lemma_write p 3;
+    let pre = (exists_x (fun v -> p `points_to` v)) in
+    let post = (fun _ -> (p `points_to` 3)) in
+    let c = (Write p 3) in
+    lemma_hoare_triple_imp pre c post h
+
+let example2 (p:ref nat) (q:ref nat) (h:heap) =
+  let (a1, h1) = (Bind (Write p 3) (fun _ -> (Write q 4))) `interpreted_in` h in
+  h1
+
+let lemma_example2_ok (p:ref nat) (q:ref nat) (a:nat) (b:nat) (h:heap)
+  :Lemma (requires (((p `points_to` a) `star` (q `points_to` b)) h))
+         (ensures (((p `points_to` 3) `star` (q `points_to` 4)) (example2 p q h)))
+  = lemma_write p 3;
+    let pre1 = (exists_x (fun v -> p `points_to` v)) in
+    let post1 = (fun x -> p `points_to` 3) in
+    let c1 = (Write p 3) in
+    let r1 = (q `points_to` b) in
+    lemma_frame_rule c1 pre1 post1 r1;
+    
+    lemma_write q 4;
+    let pre2 = (exists_x (fun v -> q `points_to` v)) in
+    let post2 = (fun _ -> q `points_to` 4) in
+    let c2 = (Write q 4) in
+    let r2 = (p `points_to` 3) in
+    lemma_frame_rule c2 pre2 post2 r2;
+
+    let pre1' = (pre1 `star` r1) in
+    let post1' = (fun x -> (post1 x) `star` r1) in
+    let pre2' = (pre2 `star` r2) in
+    let post2' = (fun x -> (post2 x) `star` r2) in
+
+    let (_, h1) = (Write p 3) `interpreted_in` h in    
+    lemma_consequence (c2) (post1' ()) (post2');     
+    lemma_bind (Write p 3) (fun _ -> Write q 4) pre1' post2';
+
+    let (r, h2) = (Bind (Write p 3) (fun _ -> Write q 4)) `interpreted_in` h in
+    lemma_hoare_triple_imp pre1' (Bind (Write p 3) (fun _ -> Write q 4)) post2' h;
+
+    let post3 = (fun x -> (p `points_to` 3) `star` (q `points_to` 4)) in
+    lemma_consequence (Bind (Write p 3) (fun _ -> Write q 4)) (pre1') (post3);
+    lemma_hoare_triple_imp (pre1') (Bind (Write p 3) (fun _ -> Write q 4)) (post3) h
+
+
+let swap (p:ref nat) (q:ref nat) (h:heap) =
+  let (a1, h1) = (Bind (Read p) (fun tmp1 -> (Bind (Read q) (fun tmp2 -> (Bind (Write p tmp2) (fun _ -> Write q tmp1)))))) `interpreted_in` h in
+  h1
+
+let lemma_swap_ok (p:ref nat) (q:ref nat) (a:nat) (b:nat) (h:heap) 
+  :Lemma (requires ((p `points_to` a) `star` (q `points_to` b)) h)
+         (ensures ((p `points_to` b) `star` (q `points_to` a)) h)
+  = let r1 = (fun (x:nat) -> q `points_to` b) in
+    let pre1 = (exists_x (fun v -> (p `points_to` v) `star` (r1 v))) in
+    let post1 = (fun (x:nat) -> (p `points_to` x) `star` (r1 x)) in
+    lemma_read p r1;
+    assert(hoare_triple pre1 (Read p) post1);
+    
+    (* WIP *)
+
+    admit()
+    
