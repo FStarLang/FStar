@@ -16,6 +16,7 @@
 module FStar.All
 open FStar.Heap
 include FStar.ST
+include FStar.Exn
 
 let all_pre = all_pre_h heap
 let all_post (a : Type) = all_post_h heap a
@@ -39,4 +40,3 @@ assume val pipe_left : ('a -> ML 'b) -> 'a -> ML 'b
 assume val failwith : string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h == h')
 assume val exit : int -> ML 'a
 assume val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
-

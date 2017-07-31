@@ -110,13 +110,11 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
     | _ -> None
   with
   | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-    FStar.TypeChecker.Common.insert_id_info.clear();
     FStar.TypeChecker.Err.add_errors env [(msg, r)];
     None
 
   | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-    FStar.TypeChecker.Common.insert_id_info.clear();
-    FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
+    FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
     None
 
 
@@ -705,7 +703,7 @@ let run_completions st search_term =
     else
       (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + 1) in
   let needle = Util.split search_term "." in
-  let all_lidents_in_env = FStar.TypeChecker.Env.lidents tcenv in
+  let all_lidents_in_env = TcEnv.lidents tcenv in
   let matches =
       //There are two cases here:
       //Either the needle is of the form:
@@ -916,7 +914,7 @@ let run_search st search_str =
   let results =
     try
       let terms = parse search_str in
-      let all_lidents = FStar.TypeChecker.Env.lidents tcenv in
+      let all_lidents = TcEnv.lidents tcenv in
       let all_candidates = List.map sc_of_lid all_lidents in
       let matches_all candidate = List.for_all (st_matches candidate) terms in
       let cmp r1 r2 = Util.compare r1.sc_lid.str r2.sc_lid.str in
@@ -976,21 +974,19 @@ let interactive_mode' (filename:string): unit =
   let env = tc_prims () in
   let stack, env, ts = tc_deps None [] env filenames [] in
   let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+  let env = fst env, TcEnv.set_range (snd env) initial_range in
   let env =
     match maybe_intf with
     | Some intf ->
-        // We found an interface: record its contents in the desugaring environment
-        // to be interleaved with the module implementation on-demand
-        FStar.Universal.load_interface_decls env intf
-    | None ->
-        env
-  in
+      // We found an interface: record its contents in the desugaring environment
+      // to be interleaved with the module implementation on-demand
+      FStar.Universal.load_interface_decls env intf
+    | None -> env in
 
+  TcEnv.toggle_id_info (snd env) true;
   let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
                   repl_stack = stack; repl_curmod = None;
                   repl_env = env; repl_ts = ts; repl_stdin = open_stdin () } in
-  FStar.TypeChecker.Common.insert_id_info.enable true; //enable recording identifier information in a table for the ide to query
   if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
   else
