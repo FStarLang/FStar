@@ -1,0 +1,30 @@
+[
+  "\u0014QßYŠšû—š\u001f\u0013\u0018\u00033¨Ë",
+  [
+    [
+      "FStar.Reflection.Basic.smaller",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Abs",
+        "disc_equation_FStar.Reflection.Data.Tv_Abs",
+        "disc_equation_FStar.Reflection.Data.Tv_App",
+        "disc_equation_FStar.Reflection.Data.Tv_Arrow",
+        "disc_equation_FStar.Reflection.Data.Tv_Const",
+        "disc_equation_FStar.Reflection.Data.Tv_FVar",
+        "disc_equation_FStar.Reflection.Data.Tv_Match",
+        "disc_equation_FStar.Reflection.Data.Tv_Refine",
+        "disc_equation_FStar.Reflection.Data.Tv_Type",
+        "disc_equation_FStar.Reflection.Data.Tv_Unknown",
+        "disc_equation_FStar.Reflection.Data.Tv_Uvar",
+        "disc_equation_FStar.Reflection.Data.Tv_Var",
+        "equation_Prims.l_True",
+        "fuel_guarded_inversion_FStar.Reflection.Data.term_view"
+      ],
+      0
+    ],
+    [ "FStar.Reflection.Basic.term_eq", 1, 2, 1, [ "@query" ], 0 ]
+  ]
+]

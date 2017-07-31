@@ -1028,7 +1028,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               else
                 let cache_size = BU.smap_size env.cache in  //record the cache size before starting the encoding
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let body = TcUtil.reify_body env.tcenv body in
+                let body = if is_reifiable env.tcenv rc
+                           then TcUtil.reify_body env.tcenv body
+                           else body
+                in
                 let body, decls' = encode_term body envbody in
                 let arrow_t_opt, decls'' =
                   match codomain_eff rc with
@@ -1378,8 +1381,8 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
            p, List.flatten decls) |> List.unzip in
         let body, decls'' = encode_formula body env in
     let guards = match pats with
-	  | [[{tm=App(Var gf, [p])}]] when Ident.text_of_lid Const.guard_free = gf -> []
-	  | _ -> guards in
+          | [[{tm=App(Var gf, [p])}]] when Ident.text_of_lid Const.guard_free = gf -> []
+          | _ -> guards in
         vars, pats, mk_and_l guards, body, decls@List.flatten decls'@decls'' in
 
     debug phi;
@@ -1640,7 +1643,25 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = mkApp(range, []) in
         [Util.mkAssume(mk_HasTypeZ mk_Range_const range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
-
+   let mk_inversion_axiom : env -> string -> term -> decls_t = fun env inversion tt ->
+       // (assert (forall ((t Term))
+       //            (! (implies (Valid (FStar.Pervasives.inversion t))
+       //                        (forall ((x Term))
+       //                                (! (implies (HasTypeFuel ZFuel x t)
+       //                                            (HasTypeFuel (SFuel ZFuel) x t))
+       //                                   :pattern ((HasTypeFuel ZFuel x t)))))
+       //               :pattern ((FStar.Pervasives.inversion t)))))
+        let tt = ("t", Term_sort) in
+        let t = mkFreeV tt in
+        let xx = ("x", Term_sort) in
+        let x = mkFreeV xx in
+        let inversion_t = mkApp(inversion, [t]) in
+        let valid = mkApp("Valid", [inversion_t]) in
+        let body =
+          let hastypeZ = mk_HasTypeZ x t in
+          let hastypeS = mk_HasTypeFuel (n_fuel 1) x t in
+          mkForall([[hastypeZ]], [xx], mkImp(hastypeZ, hastypeS)) in
+        [Util.mkAssume(mkForall([[inversion_t]], [tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")] in
    let prims =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
@@ -1657,6 +1678,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                  (Const.forall_lid, mk_forall_interp);
                  (Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
+                 (Const.inversion_lid,mk_inversion_axiom)
                 ] in
     (fun (env:env) (t:lident) (s:string) (tt:term) ->
         match BU.find_opt (fun (l, _) -> lid_equals l t) prims with
@@ -1668,10 +1690,11 @@ let encode_smt_lemma env fv t =
     let form, decls = encode_function_type_as_formula t env in
     decls@[Util.mkAssume(form, Some ("Lemma: " ^ lid.str), ("lemma_"^lid.str))]
 
-let encode_free_var env fv tt t_norm quals =
+let encode_free_var uninterpreted env fv tt t_norm quals =
     let lid = fv.fv_name.v in
     if not <| (U.is_pure_or_ghost_function t_norm || is_reifiable_function env.tcenv t_norm)
     || U.is_lemma t_norm
+    || uninterpreted
     then let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
          let arg_sorts = match (SS.compress t_norm).n with
             | Tm_arrow(binders, _) -> binders |> List.map (fun _ -> Term_sort)
@@ -1783,7 +1806,7 @@ let declare_top_level_let env x t t_norm =
   match try_lookup_lid env x.fv_name.v with
   (* Need to introduce a new name decl *)
   | None ->
-      let decls, env = encode_free_var env x t t_norm [] in
+      let decls, env = encode_free_var false env x t t_norm [] in
       let n, x', _ = lookup_lid env x.fv_name.v in
       (n, x'), decls, env
 
@@ -1792,21 +1815,21 @@ let declare_top_level_let env x t t_norm =
       (n, x), [], env
 
 
-let encode_top_level_val env lid t quals =
+let encode_top_level_val uninterpreted env lid t quals =
     let tt = norm env t in
 //        if Env.debug env.tcenv <| Options.Other "SMTEncoding"
 //        then Printf.printf "Encoding top-level val %s : %s\Normalized to is %s\n"
 //            (Print.lid_to_string lid)
 //            (Print.term_to_string t)
 //            (Print.term_to_string tt);
-    let decls, env = encode_free_var env lid t tt quals in
+    let decls, env = encode_free_var uninterpreted env lid t tt quals in
     if U.is_smt_lemma t
     then decls@encode_smt_lemma env lid tt, env
     else decls, env
 
 let encode_top_level_vals env bindings quals =
     bindings |> List.fold_left (fun (decls, env) lb ->
-        let decls', env = encode_top_level_val env (BU.right lb.lbname) lb.lbtyp quals in
+        let decls', env = encode_top_level_val false env (BU.right lb.lbname) lb.lbtyp quals in
         decls@decls', env) ([], env)
 
 let is_tactic t =
@@ -2114,6 +2137,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           BU.string_of_bytes bytes = "opaque_to_smt"
         | _ -> false
     in
+    let is_uninterpreted_by_smt (t:S.term) =
+        match (SS.compress t).n with
+        | Tm_constant (Const_string(bytes, _)) ->
+          BU.string_of_bytes bytes = "uninterpreted_by_smt"
+        | _ -> false
+    in
     match se.sigel with
      | Sig_new_effect_for_free _ ->
          failwith "impossible -- removed by tc.fs"
@@ -2188,7 +2217,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         if will_encode_definition
         then [], env //nothing to do at the declaration; wait to encode the definition
         else let fv = S.lid_as_fv lid Delta_constant None in
-             let decls, env = encode_top_level_val env fv t quals in
+             let decls, env =
+               encode_top_level_val
+                 (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
+                 env fv t quals in
              let tname = lid.str in
              let tsym = mkFreeV(tname, Term_sort) in
              decls
@@ -2302,19 +2334,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                         mkImp(xx_has_type_sfuel, data_ax)),
                                 Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
                                 (varops.mk_unique ("fuel_guarded_inversion_"^t.str))) in
-                let pattern_guarded_inversion =
-                    if contains_name env "Prims.inversion"
-                    && List.length datas > 1 //no point emitting this if there's only 1 constructor; it's already covered by the previous inversion
-                    then let xx_has_type_fuel = mk_HasTypeFuel ff xx tapp in
-                         let pattern_guard = mkApp("Prims.inversion", [tapp]) in
-                         [Util.mkAssume(mkForall([[xx_has_type_fuel; pattern_guard]], add_fuel (ffsym, Fuel_sort) ((xxsym, Term_sort)::vars),
-                                             mkImp(xx_has_type_fuel, data_ax)),
-                                      Some "inversion axiom",  //this name matters! see Sig_bundle case near line 1493
-                                      (varops.mk_unique ("pattern_guarded_inversion_"^t.str)))]
-                    else [] in
                 decls
-                @[fuel_guarded_inversion]
-                @pattern_guarded_inversion in
+                @[fuel_guarded_inversion] in
 
         let formals, res = match (SS.compress k).n with
                 | Tm_arrow(formals, kres) ->
@@ -2578,7 +2599,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
             let t_norm = whnf env t in
             let fv = S.lid_as_fv x Delta_constant None in
 //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
-            let g, env' = encode_free_var env fv t t_norm [] in
+            let g, env' = encode_free_var false env fv t t_norm [] in
             i+1, decls@g, env'
 
         | Env.Binding_sig_inst(_, se, _)
@@ -2757,4 +2778,3 @@ let is_trivial (tcenv:Env.env) (q:typ) : bool =
    match f.tm with
    | App(TrueOp, _) -> true
    | _ -> false
-

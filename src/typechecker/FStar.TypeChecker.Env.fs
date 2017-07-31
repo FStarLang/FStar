@@ -107,7 +107,8 @@ type env = {
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
-  is_native_tactic: lid -> bool                      (* callback into the native tactics engine *)
+  is_native_tactic: lid -> bool;                      (* callback into the native tactics engine *)
+  identifier_info: ref<FStar.TypeChecker.Common.id_info_table> (* information on identifiers *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -182,6 +183,7 @@ let initial_env type_of universe_of solver module_lid =
                | None -> [[]]);
     synth = (fun e g tau -> failwith "no synthesizer available");
     is_native_tactic = (fun _ -> false);
+    identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -210,7 +212,8 @@ let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
     stack := env::!stack;
     {env with sigtab=BU.smap_copy (sigtab env);
-              gamma_cache=BU.smap_copy (gamma_cache env)}
+              gamma_cache=BU.smap_copy (gamma_cache env);
+              identifier_info=BU.mk_ref !env.identifier_info}
 
 let pop_stack () =
     match !stack with
@@ -269,6 +272,19 @@ let debug env (l:Options.debug_level_t) =
     Options.debug_at_level env.curmodule.str l
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
+
+let toggle_id_info env enabled =
+  env.identifier_info :=
+    FStar.TypeChecker.Common.id_info_toggle !env.identifier_info enabled
+let insert_bv_info env bv ty =
+  env.identifier_info :=
+    FStar.TypeChecker.Common.id_info_insert_bv !env.identifier_info bv ty
+let insert_fv_info env fv ty =
+  env.identifier_info :=
+    FStar.TypeChecker.Common.id_info_insert_fv !env.identifier_info fv ty
+let promote_id_info env ty_map =
+  env.identifier_info :=
+    FStar.TypeChecker.Common.id_info_promote !env.identifier_info ty_map
 
 ////////////////////////////////////////////////////////////
 // Private utilities                                      //
