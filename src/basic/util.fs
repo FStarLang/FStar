@@ -279,6 +279,14 @@ let smap_copy (m:smap<'value>) =
     n
 let smap_size (m:smap<'value>) = m.Count
 
+type psmap<'value> = Collections.Map<string,'value>
+let psmap_empty (_: unit) : psmap<'value> = Collections.Map.empty
+let psmap_add (map: psmap<'value>) (key: string) (value: 'value) = Collections.Map.add key value map
+let psmap_find_default (map: psmap<'value>) (key: string) (dflt: 'value) =
+  match Collections.Map.tryFind key map with | Some v -> v | None -> dflt
+let psmap_try_find (map: psmap<'value>) (key: string) =
+  Collections.Map.tryFind key map
+
 type imap<'value>=System.Collections.Generic.Dictionary<int,'value>
 let imap_create<'value> (i:int) = new Dictionary<int,'value>(i)
 let imap_clear<'value> (s:imap<'value>) = s.Clear()
@@ -299,6 +307,14 @@ let imap_copy (m:imap<'value>) =
     let n = imap_create (m.Count) in
     imap_fold m (fun k v () -> imap_add n k v) ();
     n
+
+type pimap<'value> = Collections.Map<int,'value>
+let pimap_empty (_: unit) : pimap<'value> = Collections.Map.empty
+let pimap_add (map: pimap<'value>) (key: int) (value: 'value) = Collections.Map.add key value map
+let pimap_find_default (map: pimap<'value>) (key: int) (dflt: 'value) =
+  match Collections.Map.tryFind key map with | Some v -> v | None -> dflt
+let pimap_try_find (map: pimap<'value>) (key: int) =
+  Collections.Map.tryFind key map
 
 let format (fmt:string) (args:list<string>) =
     let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in

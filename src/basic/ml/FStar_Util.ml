@@ -292,6 +292,14 @@ let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
 let smap_size (m:'value smap) = BatHashtbl.length m
 
+type 'value psmap = (string, 'value) BatMap.t
+let psmap_empty (_: unit) : 'value psmap = BatMap.empty
+let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
+let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
+  try BatMap.find key map with Not_found -> dflt
+let psmap_try_find (map: 'value psmap) (key: string) =
+  try Some (BatMap.find key map) with Not_found -> None
+
 type 'value imap = (Z.t, 'value) BatHashtbl.t
 let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
 let imap_clear (s:('value imap)) = BatHashtbl.clear s
@@ -305,6 +313,14 @@ let imap_fold (m:'value imap) f a = BatHashtbl.fold f m a
 let imap_remove (m:'value imap) k = BatHashtbl.remove m k
 let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
 let imap_copy (m:'value imap) = BatHashtbl.copy m
+
+type 'value pimap = (Z.t, 'value) BatMap.t
+let pimap_empty (_: unit) : 'value pimap = BatMap.empty
+let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
+let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
+  try BatMap.find key map with Not_found -> dflt
+let pimap_try_find (map: 'value pimap) (key: Z.t) =
+  try Some (BatMap.find key map) with Not_found -> None
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
