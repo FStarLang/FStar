@@ -4108,21 +4108,25 @@ let rec desugar_tycon:
                          (l,uu____12030,typars,k,[],[]) ->
                          let quals1 = se.FStar_Syntax_Syntax.sigquals in
                          let quals2 =
-                           let uu____12043 =
-                             FStar_All.pipe_right quals1
-                               (FStar_List.contains
-                                  FStar_Syntax_Syntax.Assumption) in
-                           if uu____12043
+                           if
+                             FStar_List.contains
+                               FStar_Syntax_Syntax.Assumption quals1
                            then quals1
                            else
-                             ((let uu____12050 =
-                                 FStar_Range.string_of_range
-                                   se.FStar_Syntax_Syntax.sigrng in
-                               let uu____12051 =
-                                 FStar_Syntax_Print.lid_to_string l in
-                               FStar_Util.print2
-                                 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
-                                 uu____12050 uu____12051);
+                             ((let uu____12047 =
+                                 let uu____12048 = FStar_Options.ml_ish () in
+                                 Prims.op_Negation uu____12048 in
+                               if uu____12047
+                               then
+                                 let uu____12049 =
+                                   FStar_Range.string_of_range
+                                     se.FStar_Syntax_Syntax.sigrng in
+                                 let uu____12050 =
+                                   FStar_Syntax_Print.lid_to_string l in
+                                 FStar_Util.print2
+                                   "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
+                                   uu____12049 uu____12050
+                               else ());
                               FStar_Syntax_Syntax.Assumption
                               ::
                               FStar_Syntax_Syntax.New

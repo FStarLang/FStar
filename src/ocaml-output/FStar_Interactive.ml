@@ -1277,7 +1277,7 @@ let run_push:
     fun kind  ->
       fun text1  ->
         fun line  ->
-          fun column1  ->
+          fun column  ->
             fun peek_only  ->
               let uu____3904 = ((st.repl_stack), (st.repl_env), (st.repl_ts)) in
               match uu____3904 with
@@ -1299,7 +1299,7 @@ let run_push:
                          {
                            FStar_Parser_ParseIt.frag_text = text1;
                            FStar_Parser_ParseIt.frag_line = line;
-                           FStar_Parser_ParseIt.frag_col = column1
+                           FStar_Parser_ParseIt.frag_col = column
                          } in
                        let res =
                          check_frag env_mark st.repl_curmod (frag, false) in
@@ -1312,7 +1312,7 @@ let run_push:
                            let uu___207_4038 = st in
                            {
                              repl_line = line;
-                             repl_column = column1;
+                             repl_column = column;
                              repl_fname = (uu___207_4038.repl_fname);
                              repl_stack = stack2;
                              repl_curmod = (uu___207_4038.repl_curmod);

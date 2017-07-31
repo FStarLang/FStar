@@ -1677,11 +1677,12 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
         let se = match se.sigel with
            | Sig_inductive_typ(l, _, typars, k, [], []) ->
              let quals = se.sigquals in
-             let quals = if quals |> List.contains S.Assumption
+             let quals = if List.contains S.Assumption quals
                          then quals
-                         else (BU.print2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
+                         else (if not (Options.ml_ish ()) then
+                                 BU.print2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
                                                 (Range.string_of_range se.sigrng) (Print.lid_to_string l);
-                               S.Assumption::S.New::quals) in
+                               S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None se.sigrng in
