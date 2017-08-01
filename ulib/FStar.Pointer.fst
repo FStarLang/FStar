@@ -3547,8 +3547,6 @@ let modifies_trans
 = modifies_trans' r s12 h1 h2 s23 h3;
   modifies_subset r (set_union s12 s23) h1 h3 s13
 
-#reset-options "--z3rlimit 256"
-
 abstract
 let modifies_set_includes
   (r: HH.rid)
@@ -3660,6 +3658,8 @@ let modifies_0_1 (#a:typ) (b:pointer a) h0 h1 h2 : Lemma
 = ()
 
 (** Concrete allocators, getters and setters *)
+
+#reset-options "--z3rlimit 256"
 
 abstract let screate
   (value:typ)
