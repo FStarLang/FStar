@@ -35,79 +35,67 @@ let depth_fun (#n:nat) (g:graph0 n) (root x:_in g) : GTot (d:option nat{depth g 
   depth_fun_aux g root x 0
 
 
-type traversal (#n:nat) (g:graph0 n) (root:_in g) : nodesetseq n -> Type0 =
-  fun s ->
+let traversal (#n:nat) (g:graph0 n) (root:_in g) (s: nodesetseq n) :Type0 =
     S.length s > 0 /\
     (forall (i:_in s).
       (i == 0 ==> s @^ i == root) /\
       (i =!= 0 ==> (exists (j:_in s). j < i /\ is_in_graph (s @^ j) (s @^ i) g)))
 
-let rec traversal_construct_getpath_aux (#n:nat) (g:graph0 n) (root:_in g) (ns : nodesetseq n{traversal g root ns}) (ps:S.seq(path g)) (i:k:nat{k + 1< S.length ns})
- : Pure (path g) 
- (requires (S.length ps == i /\ i < S.length ns /\ (forall (ind:k:nat{k<S.length ps}). let p = (ps @^ ind) in from p == root 
- /\ to p == (ns @^ ind))))
- (ensures (fun p ->  i  < S.length ns /\ from p == root /\ to p == (S.index ns  (i + 1))))
- = let sl = S.slice ns 0 i in
- 
-  match index_of_l (fun a -> is_in_graph a (S.index ns (i+1)) g) sl with
-   | Some v -> 
-   let p1 = (ps @^ (v <: nat)) in
-   let p2 = S.create 1 (ns @^ (v <: nat)) in let p2' = S.append p2 (S.create 1 (ns @^ (i + 1))) in
-   index_of_l_spec (fun a -> is_in_graph a (S.index ns (i+1)) g) sl;
-   assert(valid_path g p2');
-   let p' = append g p1 p2' in  assert(valid_path g p'); assert(from p' == root); assert(to p' == (S.index ns (i + 1)));  p'
-   | None -> if i = 0 then admit() 
-   else 
-   (
 
-   (* This assertion right here is the one that fails. I am trying to prove a contradiction in this case*)
-   assert((forall (i':_in ns).
-      (i' == 0 ==> ns @^ i' == root) /\
-      (i' =!= 0 ==> (exists (j:_in ns). j < i' /\ is_in_graph (ns @^ j) (ns @^ i') g)))); admit();
-   assert(exists (j:_in ns). j < (i+1) /\ is_in_graph (ns @^ j) (ns @^ (i + 1)) g); admit()
-   )
-    
+let inv (#n:nat) (g:graph0 n) (root:_in g) (ns : nodesetseq n) (ps:S.seq (path g)) (i:nat) =
+  i <= S.length ns /\ S.length ps == S.length ns /\
+  (forall (ind:nat). ind < i ==>  (let p = (ps @^ ind) in from p == root /\ to p == (ns @^ ind)))
 
-let rec traversal_construct (#n:nat) (g:graph0 n) (root:_in g) (ns : nodesetseq n{traversal g root ns}) (ps:S.seq(path g)) (i:nat)
+#set-options "--detail_errors"
+
+let false_elim (#a:Type) (x:unit) : Pure a (requires False) (ensures (fun _ -> True)) = match x with
+
+let update_path_seq (#n:nat) (g:graph0 n) (root:_in g) (ns : nodesetseq n) (ps:S.seq (path g)) (i:nat) (p:path g)
+ : Pure (S.seq (path g))
+ (requires (i< S.length ns /\ traversal g root ns /\ inv g root ns ps i /\ from p == root /\ to p == (ns @^ i)))
+ (ensures (ensures (fun ps -> traversal g root ns /\ inv g root ns ps (i+1))))
+ = let ps' = S.upd ps i p in 
+   let prop1 = (forall (ind:nat). ind < i ==>  (let p = (ps' @^ ind) in from p == root /\ to p == (ns @^ ind))) in 
+   let prop2= (let p = (ps' @^ i) in from p == root /\ to p == (ns @^ i)) in
+   let prop3 = (forall (ind:nat). ind < (i+1) ==>  (let p = (ps' @^ ind) in from p == root /\ to p == (ns @^ ind))) in
+   assert(prop1);
+   assert(prop2);
+   (* NOTE THE ASSUMPTION USED HERE *)
+   assume(prop1 /\ prop2 ==> prop3);
+   assert(prop3);
+   assert((i+1) <= S.length ns /\ S.length ps' == S.length ns /\ prop3 ==> inv g root ns ps' (i+1));
+   assert(inv g root ns ps' (i+1));
+   ps'
+
+
+let rec traversal_construct_getpath_aux (#n:nat) (g:graph0 n) (root:_in g) (ns : nodesetseq n) (ps:S.seq (path g)) (i:nat)
  : Pure (S.seq (path g)) 
- (requires (S.length ps == i /\ i < S.length ns /\ (forall (ind:k:nat{k<S.length ps}). let p = (ps @^ ind) in from p == root /\ to p == (ns @^ ind))))
- (ensures (fun x -> S.length x == i /\ i <= S.length ns /\ (forall (ind:k:nat{k<S.length x}). let p = (x @^ ind) in from p == root /\ to p == (ns @^ ind))))
+ (requires (traversal g root ns /\ inv g root ns ps i))
+ (ensures (fun ps -> traversal g root ns /\ inv g root ns ps (S.length ns - 1)))
  (decreases (S.length ns - i))
- = match S.length ns - i with
-   | 0 -> ps
-   | x -> 
-     begin match index_of_l (fun a -> is_in_graph (ns @^ a) (ns @^ (i+1))) (S.slice s 0 i) with
-      | Some v -> admit()
-      | None -> admit()
-     end
-   traversal_construct g root ns ps (i+1)
+= if i >= S.length ns - 1 then ps
+  else if i = 0 then
+   let ps' = update_path_seq g root ns ps i (empty_path_at g root) in 
+   traversal_construct_getpath_aux g root ns ps' (i+1)
+  else
+   let f ind a = ind < i && is_in_graph a (ns @^ i) g in
+   match index_of_l2 ns f with
+   | Some v -> 
+     index_of_l2_spec ns f;
+     let v : nat = v in
+     let pv = append1 g (ps @^ v) (empty_path_at g (ns @^ i)) in
+     let ps' = update_path_seq g root ns ps i pv in
+     traversal_construct_getpath_aux g root ns ps' (i+1)
+   | None -> 
+     assert(i =!= 0);
+     assert (exists (j:_in ns). j < i /\ is_in_graph (ns @^ j) (ns @^ i) g) ;
+     index_of_l2_spec ns f;
+     false_elim ()
 
-// let rec traversal_reachability
-//   (#n:nat)
-//   (g:graph0 n)
-//   (root:_in g)
-//   (ns:nodesetseq n {traversal g root ns})
-//   : Lemma (requires True)
-//     (ensures (forall (i:_in ns). reachable g root (ns @^ i)))
-// =
-//   let reachable_aux (*(nss:nodesetseq n{traversal g root ns})*)
-//     (w:squash(True))
-//     (x:_in ns)
-//     : Lemma (reachable g root (ns @^ x))
-//   =
-//     FStar.Squash.give_proof w ;
-//     match x with
-//     | 0 -> let p = empty_path_at g (ns @^ 0) in ()
-//     | e ->  assert(e =!= 0); assert(traversal g root ns);
-
-//     (*Why is this assert failing?*)
-//     assert (traversal g root ns) ;
-//     assert(S.length ns > 0 /\ S.head ns == root /\
-//       (forall (i:_in ns). i == 0 \/ (exists (h:k:nat{k<i}). is_in_graph (ns @^ h) (ns @^ i) g)));
-//     admit();
-//     assert(forall (i:_in ns). i == 0 \/ (exists (h:k:nat{k<i}). is_in_graph (ns @^ h) (ns @^ i) g));
-//     admit();
-//     assert((exists (w:k:nat{k < e}). is_in_graph (ns @^ w) (ns @^ e) g)); admit()
-//   in
-//   C.forall_intro (reachable_aux (FStar.Squash.get_proof (True)))
-
+let traversal_construct_getpath (#n:nat) (g:graph0 n) (root:_in g) (ns : nodesetseq n)
+ : Pure (S.seq (path g)) 
+ (requires (traversal g root ns))
+ (ensures (fun ps -> traversal g root ns /\ inv g root ns ps (S.length ns - 1)))
+ = 
+ let ps = S.create (S.length ns) (empty_path_at g root) in
+ traversal_construct_getpath_aux g root ns ps 0

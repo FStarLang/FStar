@@ -60,6 +60,29 @@ let rec index_of_l_spec (#a:Type) (f:a -> bool) (s:seq a) :
   else index_of_l_aux_spec f s 0
 
 
+let rec index_of_l2_aux (#a:Type) (s:seq a) (f:_in s -> a -> bool) (i:_in s)
+  : Tot (option (_in s)) (decreases (length s - i))
+= if f i (s @^ i) then Some i else if i = length s - 1 then None else index_of_l2_aux #a s f (i+1)
+
+let index_of_l2 (#a:Type) (s:seq a) (f:_in s -> a -> bool)  : option (_in s) =
+  if length s = 0 then None else index_of_l2_aux #a s f (0 <: _in s)
+
+let rec index_of_l2_aux_spec (#a:Type) (s:seq a) (f:_in s -> a -> bool) (i:_in s) :
+  Lemma (requires (forall (j:_in s{j < i}). not (f j (s @^ j))))
+    (ensures (let r = index_of_l2_aux s f i in
+    (forall (i:_in s). (~(Some? r) \/ i < Some?.v r) ==>  not (f i (s @^ i))) /\
+      (Some? r ==> f (Some?.v r) (s @^ Some?.v r))))
+    (decreases (length s - i))
+= if f i (s @^ i) then () else if i = length s - 1 then () else index_of_l2_aux_spec #a s f (i+1)
+
+let rec index_of_l2_spec (#a:Type) (s:seq a) (f:_in s -> a -> bool) :
+    Lemma (let r = index_of_l2 s f in
+    (forall (i:_in s). (None? r \/ i < Some?.v r) ==> not (f i (s @^ i))) /\
+      (Some? r ==> f (Some?.v r) (s @^ Some?.v r)))
+= if length s = 0 then ()
+  else index_of_l2_aux_spec s f 0
+
+
 (** Lemmas on count **)
 
 let rec none_count_zero (#a:eqtype) (e:a) (s:seq a)

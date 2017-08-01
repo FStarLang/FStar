@@ -91,3 +91,11 @@ let append (#n:nat) (g:graph0 n) (p1 p2:path g)
  (requires (to p1 == from p2))
  (ensures (fun p' -> from p1 == from p' /\ to p2 == to p'))
  = S.append p1 (S.slice p2 1 (S.length p2))
+
+let append1 (#n:nat) (g:graph0 n) (p1 p2:path g)
+ : Pure (path g)
+ (requires (is_in_graph (to p1) (from p2) g))
+ (ensures (fun p' -> from p1 == from p' /\ to p2 == to p'))
+ = let e' = empty_path_at g (from p2) in let e' = S.cons (to p1) e' in
+   let p1' = append g p1 e' in append g p1' p2
+ 
