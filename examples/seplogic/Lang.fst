@@ -313,7 +313,7 @@ let lemma_example3 (r1:ref nat) (r2:ref nat) (n1:nat)
   :Lemma (hoare_triple (r1 `points_to` n1 `star` (exists_x (fun v -> r2 `points_to` v)))
                        (example3 r1 r2)
 		       (fun _ -> (r1 `points_to` n1) `star` (r2 `points_to` n1)))
-  = let r_c1 = fun _ _ -> True in
+  = let r_c1 = fun (r:nat) -> lift (r == n1) in
 
     let c1 = Read r1 in
     let c2 = fun n -> Write r2 n in
@@ -356,5 +356,20 @@ let lemma_example3 (r1:ref nat) (r2:ref nat) (n1:nat)
 
     assert (hoare_triple c1_pre_c2_pre (Bind c1 c2) (fun _ -> exists_x (fun n -> r2 `points_to` n `star` (c1_post n))));
     assert (hoare_triple c1_pre_c2_pre (Bind c1 c2) (fun _ -> exists_x (fun n -> r2 `points_to` n `star` (r1 `points_to` n `star` (r_c1 n)))));
+    
+    assert (hoare_triple c1_pre_c2_pre (Bind c1 c2) (fun _ -> (r2 `points_to` n1) `star` (r1 `points_to` n1)));
+   
+    lemma4 (r2 `points_to` n1) (r1 `points_to` n1);
 
-    admit ()
+    let bind_post = (fun _ -> (r1 `points_to` n1) `star` (r2 `points_to` n1)) in
+    lemma_consequence (Bind c1 c2) c1_pre_c2_pre bind_post;
+    assert (hoare_triple c1_pre_c2_pre (Bind c1 c2) bind_post);
+
+    lemma2 (n1 == n1) (r1 `points_to` n1) (exists_x (fun v -> r1 `points_to` v));
+    assert ((r1 `points_to` n1) `imp` (exists_x (fun v -> r1 `points_to` v `star` lift (v == n1))));
+    assert ((r1 `points_to` n1) `imp` c1_pre);
+    lemma6 (r1 `points_to` n1) (c1_pre) (exists_x (fun v -> r2 `points_to` v))(exists_x (fun v -> r2 `points_to` v));
+   
+    let bind_pre = (r1 `points_to` n1) `star` (exists_x (fun v -> r2 `points_to` v)) in
+    lemma_consequence (Bind c1 c2) bind_pre bind_post
+     
