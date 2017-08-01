@@ -1,5 +1,5 @@
 [
-  "\u0004›Ê¯¦ð5\bIWÿ@\t\u0019Y‹",
+  " qõ\u0019eZ™Ø´\bÓÓ\u0013Ö_ö",
   [
     [
       "Ex04f.append",
@@ -44,7 +44,7 @@
       0
     ],
     [
-      "Ex04f.append_cons",
+      "Ex04f.append_assoc",
       1,
       2,
       1,
@@ -65,39 +65,7 @@
       0
     ],
     [
-      "Ex04f.snoc_append",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Ex04f.snoc", "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons",
-        "unit_typing"
-      ],
-      0
-    ],
-    [
-      "Ex04f.reverse_append",
-      1,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption",
-        "@fuel_correspondence_Ex04f.reverse.fuel_instrumented",
-        "@fuel_irrelevance_Ex04f.reverse.fuel_instrumented", "@query",
-        "constructor_distinct_Prims.Cons",
-        "equation_with_fuel_Ex04f.reverse.fuel_instrumented",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
-      ],
-      0
-    ],
-    [
-      "Ex04f.fold_left_cons_is_reverse",
+      "Ex04f.fold_left_Cons_is_rev",
       1,
       2,
       1,
@@ -106,14 +74,17 @@
         "@fuel_correspondence_Ex04f.append.fuel_instrumented",
         "@fuel_correspondence_Ex04f.fold_left.fuel_instrumented",
         "@fuel_correspondence_Ex04f.reverse.fuel_instrumented",
-        "@fuel_irrelevance_Ex04f.fold_left.fuel_instrumented", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "equality_tok_Prims.Cons@tok",
+        "@fuel_irrelevance_Ex04f.fold_left.fuel_instrumented",
+        "@fuel_irrelevance_Ex04f.reverse.fuel_instrumented", "@query",
+        "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.Cons@tok",
         "equation_with_fuel_Ex04f.append.fuel_instrumented",
         "equation_with_fuel_Ex04f.fold_left.fuel_instrumented",
         "equation_with_fuel_Ex04f.reverse.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "subterm_ordering_Prims.Cons", "unit_typing"

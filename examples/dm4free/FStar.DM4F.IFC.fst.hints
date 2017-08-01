@@ -20,7 +20,8 @@
         "equation_FStar.DM4F.IFC.ifc", "kinding_FStar.DM4F.IFC.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0"
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0
     ],
@@ -76,15 +77,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.DM4F.IFC_pretyping_ec0bb0f1bf3d1d6b39e57751a23ec047",
-        "bool_inversion", "data_typing_intro_FStar.DM4F.IFC.High@tok",
+        "bool_inversion", "bool_typing",
+        "data_typing_intro_FStar.DM4F.IFC.High@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "kinding_FStar.DM4F.IFC.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_None",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "projection_inverse_BoxBool_proj_0"
       ],
       0
     ],
@@ -128,10 +129,9 @@
       [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
       0
     ],
-    [ "FStar.DM4F.IFC.IFC", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.IFC",
-      2,
+      1,
       2,
       1,
       [
@@ -141,16 +141,16 @@
       ],
       0
     ],
-    [ "FStar.DM4F.IFC.IFC", 3, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.IFC.IFC", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.IFC",
-      4,
+      3,
       2,
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
       0
     ],
-    [ "FStar.DM4F.IFC.IFC", 5, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.DM4F.IFC.IFC", 4, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.IFC.xor", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.IFC.xor",
@@ -189,7 +189,6 @@
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_typing_intro_FStar.DM4F.IFC.High@tok",
         "data_typing_intro_FStar.Pervasives.Native.None@tok",
-        "equality_tok_FStar.DM4F.IFC.High@tok",
         "function_token_typing_Prims.unit",
         "kinding_FStar.DM4F.IFC.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",

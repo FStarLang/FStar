@@ -1,0 +1,16 @@
+[
+  "\u001dö\r√√i∏=TÈÆ€\u001eäø\u001f",
+  [
+    [
+      "Canon.lem1",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ]
+  ]
+]

@@ -17,6 +17,7 @@
 
 module FStar.Interactive
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Range
@@ -27,6 +28,7 @@ open FStar.Errors
 
 open FStar.Universal
 open FStar.TypeChecker.Env
+open FStar.TypeChecker.Common
 
 module SS = FStar.Syntax.Syntax
 module DsEnv   = FStar.ToSyntax.Env
@@ -108,10 +110,12 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
     | _ -> None
   with
   | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Common.insert_id_info.clear();
     FStar.TypeChecker.Err.add_errors env [(msg, r)];
     None
 
   | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+    FStar.TypeChecker.Common.insert_id_info.clear();
     FStar.TypeChecker.Err.add_errors env [(msg, FStar.TypeChecker.Env.get_range env)];
     None
 
@@ -512,6 +516,16 @@ let json_of_repl_state st =
                                    ("documentation", json_of_opt JsonStr doc)])
                        opts_and_defaults))]
 
+let with_printed_effect_args k =
+  Options.with_saved_options
+    (fun () -> Options.set_option "print_effect_args" (Options.Bool true); k ())
+
+let term_to_string tcenv t =
+  with_printed_effect_args (fun () -> FStar.TypeChecker.Normalize.term_to_string tcenv t)
+
+let sigelt_to_string se =
+  with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string se)
+
 let run_exit st =
   ((QueryOK, JsonNull), Inr 0)
 
@@ -524,21 +538,25 @@ let run_describe_repl st =
 let run_protocol_violation st message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
 
+let nothing_left_to_pop st =
+  (* The initial dependency check creates [n] entires in [st.repl_ts] and [n]
+     entries in [st.repl_stack].  Subsequent pushes do not grow [st.repl_ts]
+     (only [st.repl_stack]), so [length st.repl_stack <= length st.repl_ts]
+     indicates that there's nothing left to pop. *)
+  List.length st.repl_stack <= List.length st.repl_ts
+
 let run_pop st = // This shrinks all internal stacks by 1
-  match st.repl_stack with
-  | [] -> // FIXME this isn't strict enough: the initial dependency checks create
-         // multiple entries in the stack (so an error should be raised when
-         // length <= length_after_deps_check, not when length = 0.
+  if nothing_left_to_pop st then
     ((QueryNOK, JsonStr "Too many pops"), Inl st)
-
-  | (env, curmod) :: stack ->
-    pop st.repl_env "#pop";
-
-    // Clean up if all the fragments from the current buffer have been popped
-    if List.length stack = List.length st.repl_ts then cleanup env;
-
-    ((QueryOK, JsonNull),
-      Inl ({ st with repl_env = env; repl_curmod = curmod; repl_stack = stack }))
+  else
+    match st.repl_stack with
+    | [] -> failwith "impossible"
+    | (env, curmod) :: stack ->
+      pop st.repl_env "#pop";
+      let st' = { st with repl_env = env; repl_curmod = curmod; repl_stack = stack } in
+      // Clean up if all the fragments from the current buffer have been popped
+      if nothing_left_to_pop st' then cleanup env;
+      ((QueryOK, JsonNull), Inl st')
 
 let run_push st kind text line column peek_only =
   let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
@@ -547,7 +565,7 @@ let run_push st kind text line column peek_only =
   // current buffer, see if some dependency is stale. If so, update it. Also
   // if this is the first chunk, we need to restore the command line options.
   let restore_cmd_line_options, (stack, env, ts) =
-    if List.length stack = List.length ts
+    if nothing_left_to_pop st
     then true, update_deps st.repl_fname st.repl_curmod stack env ts
     else false, (stack, env, ts) in
 
@@ -593,7 +611,7 @@ let run_lookup st symbol pos_opt requested_info =
 
   let def_of_lid lid =
     Util.bind_opt (TcEnv.lookup_qname tcenv lid) (function
-      | (Inr (se, _), _) -> Some (Syntax.Print.sigelt_to_string se)
+      | (Inr (se, _), _) -> Some (sigelt_to_string se)
       | _ -> None) in
 
   let info_at_pos_opt =
@@ -614,7 +632,7 @@ let run_lookup st symbol pos_opt requested_info =
         | Inr lid -> Ident.string_of_lid lid in
       let typ_str =
         if List.mem "type" requested_info then
-          Some (FStar.TypeChecker.Normalize.term_to_string tcenv typ)
+          Some (term_to_string tcenv typ)
         else None in
       let doc_str =
         match name_or_lid with
@@ -766,7 +784,7 @@ let run_compute st term rules =
 
   let find_let_body ses =
     match ses with
-    | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _, _) }] -> Some def
+    | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _) }] -> Some def
     | _ -> None in
 
   let parse frag =
@@ -807,7 +825,7 @@ let run_compute st term rules =
           match find_let_body ses with
           | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
           | Some def -> let normalized = normalize_term tcenv rules def in
-                       (QueryOK, JsonStr (Syntax.Print.term_to_string normalized))
+                       (QueryOK, JsonStr (term_to_string tcenv normalized))
         with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
                                 | Some issue -> JsonStr (FStar.Errors.format_issue issue)
                                 | None -> raise e)))
@@ -845,7 +863,7 @@ let sc_fvars tcenv sc = // Memoized version of fc_vars
              sc.sc_fvars := Some fv; fv
 
 let json_of_search_result dsenv tcenv sc =
-  let typ_str = Syntax.Print.term_to_string (sc_typ tcenv sc) in
+  let typ_str = term_to_string tcenv (sc_typ tcenv sc) in
   JsonAssoc [("lid", JsonStr (DsEnv.shorten_lid dsenv sc.sc_lid).str);
              ("type", JsonStr typ_str)]
 
@@ -904,9 +922,7 @@ let run_search st search_str =
       let cmp r1 r2 = Util.compare r1.sc_lid.str r2.sc_lid.str in
       let results = List.filter matches_all all_candidates in
       let sorted = Util.sort_with cmp results in
-      let js = Options.with_saved_options
-                 (fun () -> Options.set_option "print_effect_args" (Options.Bool true);
-                         List.map (json_of_search_result dsenv tcenv) sorted) in
+      let js = List.map (json_of_search_result dsenv tcenv) sorted in
       match results with
       | [] -> let kwds = Util.concat_l " " (List.map pprint_one terms) in
               raise (InvalidSearch (Util.format1 "No results found for query [%s]" kwds))
@@ -950,6 +966,7 @@ let interactive_printer =
     printer_prwarning = write_message "warning";
     printer_prerror = write_message "error" }
 
+open FStar.TypeChecker.Common
 // filename is the name of the file currently edited
 let interactive_mode' (filename:string): unit =
   write_hello ();
@@ -972,7 +989,7 @@ let interactive_mode' (filename:string): unit =
   let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
                   repl_stack = stack; repl_curmod = None;
                   repl_env = env; repl_ts = ts; repl_stdin = open_stdin () } in
-
+  FStar.TypeChecker.Common.insert_id_info.enable true; //enable recording identifier information in a table for the ide to query
   if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
   else

@@ -1,5 +1,5 @@
 [
-  "„HŒ\u0000\rZk≠Bœ©ò-é∆©",
+  "é‡0>dù\u0000À\u001b÷\u001e}ê≥6\u0011",
   [
     [
       "FStar.Set.singleton",
@@ -157,8 +157,9 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_FStar.FunctionalExtensionality.Extensionality",
-        "equation_FStar.FunctionalExtensionality.efun",
+        "bool_typing", "equation_FStar.FunctionalExtensionality.efun",
         "equation_FStar.Set.equal", "equation_FStar.Set.set",
         "equation_Prims.eqtype", "function_token_typing_Prims.bool",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
@@ -188,10 +189,9 @@
       ],
       0
     ],
-    [ "FStar.Set.as_set'", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Set.as_set'",
-      2,
+      1,
       2,
       1,
       [
@@ -199,14 +199,9 @@
         "binder_x_fab13fd67c8daa3709cd969786a732ec_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons"
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
-    ],
-    [ "FStar.Set.as_set'", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Set.as_set'", 4, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Set.as_set'", 5, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Set.as_set", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Set.as_set", 2, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

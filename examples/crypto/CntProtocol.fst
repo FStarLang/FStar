@@ -3,12 +3,12 @@
 module CntProtocol
 
 #set-options "--max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1"
-open FStar.ST
 open FStar.All
 open FStar.Set
 open FStar.String
 open FStar.IO
 open FStar.Heap
+open FStar.ST
 
 
 let init_print = print_string "\ninitializing...\n\n"

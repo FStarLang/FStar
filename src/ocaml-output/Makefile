@@ -9,7 +9,7 @@ MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex
 OCAMLBUILD=cd ../../ && ocamlbuild -cflag '-g' -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -I src/extraction/ml -j 24 -build-dir src/ocaml-output/_build \
-  -I src/prettyprint/ml  -I ulib/ml -use-ocamlfind
+  -I src/prettyprint/ml -I src/tactics/ml -I ulib/ml -use-ocamlfind
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
 PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
@@ -39,8 +39,7 @@ else
 endif
 
 # Final sanity check for the OCaml version
-_UNUSED=$(shell echo 'if Sys.ocaml_version < "4.02.3" then (print_endline "We need OCaml >= 4.02.3"; exit 0)' | ocaml -noinit -noprompt)
-OCAML_VERSION=$(shell echo 'print_endline Sys.ocaml_version' | ocaml -noprompt -noinit -stdin)
+OCAML_BRANCH=$(shell ocaml get_branch.ml)
 
 .PHONY: fstar.exe ../extraction/ml/FStar_Extraction_ML_PrintML.ml
 
@@ -51,7 +50,7 @@ all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/parse.fsy fstar.e
 
 # Choose the correct version of the ML prettyprinter, based on OCaml version
 ../extraction/ml/FStar_Extraction_ML_PrintML.ml:
-	cp "../extraction/ml/FStar_Extraction_ML_PrintML_$(OCAML_VERSION).ml" ../extraction/ml/FStar_Extraction_ML_PrintML.ml
+	cp "../extraction/ml/FStar_Extraction_ML_PrintML_$(OCAML_BRANCH).ml" ../extraction/ml/FStar_Extraction_ML_PrintML.ml
 
 # We derive parse.mly in two ways:
 # - if we have menhir, we generate it from from the Menhir parser
@@ -172,7 +171,7 @@ install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {}
 # Install FStar into $(PREFIX) using the standard Unix directory structure.
 install: all
         # Install the binary
-	$(INSTALL_EXEC) -m 755 -D -T _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
 	$(call install_dir,ulib,lib/fstar)
 	$(call install_dir,examples,share/fstar/examples)
@@ -190,9 +189,24 @@ NAME=fstar_$(VERSION)_$(PLATFORM)
 fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
           tar -x -C $(PREFIX)
 
+# Similar, but exports every file instead of only those in version control.
+fexport-all = cp -a ../../$(1) $(PREFIX)/$(1)
+
+ifeq ($(OS),Windows_NT)
+  Z3_NAME=z3.exe
+else
+  Z3_NAME=z3
+endif
+Z3_DIR=$(shell dirname $$(which $(Z3_NAME)))
+Z3_LICENSE=$(shell dirname $(Z3_DIR))/LICENSE.txt
+
+.PHONY: ulib
+ulib:
+	make -C ../../ulib/ml
+
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
-package: all
+package: all ulib
         # Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
@@ -204,6 +218,9 @@ package: all
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
+	$(call fexport-all,bin/fstarlib)
+	touch $(PREFIX)/ulib/.mgen
+
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial
@@ -212,22 +229,22 @@ else
 endif
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
-	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
-        # Copy Z3 binary
-	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$(FSTAR_HOME)/bin or in your \\$PATH, skipped from package ************** "
-	if [ -f "$(PREFIX)/bin/z3.exe" ]; then chmod 755 $(PREFIX)/bin/*z3*.*; fi
+	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
 
-        # Need this for running code extracted to F# (for instance hello)
-	make -C ../VS install-packages
-#	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
-	cp ../../src/gmake/fstar.mk $(PREFIX)/src/gmake/
+	cp ../../src/gmake/*.mk $(PREFIX)/src/gmake/
+        # Because we'll be building fstarlib in the resulting directory, somehow?
+	cp ../../_tags $(PREFIX)
+	mkdir -p $(PREFIX)/bin/fstarlib
+	cp ../../bin/fstarlib/META $(PREFIX)/bin/fstarlib/
 ifeq ($(OS),Windows_NT)
-#	cp ../../bin/msvc*.dll $(PREFIX)/bin  # Causing build failure - not needed anymore 5/1/17 - darrenge
-	cp ../../bin/libgmp-10.dll $(PREFIX)/bin
+	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
+	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin
+	chmod a+x $(PREFIX)/bin/z3.exe $(PREFIX)/bin/*.dll
 	zip -r -9 $(NAME).zip fstar
 else
+	cp $(Z3_DIR)/z3 $(PREFIX)/bin
 	tar czf $(NAME).tar.gz fstar
 endif
 

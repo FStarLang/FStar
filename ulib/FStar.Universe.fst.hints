@@ -2,7 +2,6 @@
   "¨Øğæ¥º7\u0007Q›}\u001c oÄ",
   [
     [ "FStar.Universe.__proj__Ret__item___0", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Universe.raise_t", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Universe.downgrade_val", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

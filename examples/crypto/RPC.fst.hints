@@ -1,7 +1,95 @@
 [
   "_™L4‡\u0013\u0017±eÄÉ™‹zù~",
   [
-    [ "RPC.recv", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "RPC.msg_buffer",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.send",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.send",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.recv",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.empty_bytes", "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.recv",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.recv",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "RPC.recv",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
     [
       "RPC.reqresp",
       1,
@@ -33,6 +121,7 @@
         "@MaxIFuel_assumption", "@query", "equation_MAC.pkey",
         "equation_Platform.Bytes.lbytes", "equation_SHA1.key",
         "equation_SHA1.keysize",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
         "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2"
       ],
       0
@@ -43,13 +132,21 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Formatting.string16",
-        "equation_RPC.reqresp", "equation_SHA1.key",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_FStar.Pervasives.V",
+        "equation_Formatting.op_At_Bar", "equation_Formatting.request",
+        "equation_Formatting.string16", "equation_Platform.Bytes.bytes",
+        "equation_Prims._assert", "equation_RPC.reqresp",
+        "equation_SHA1.hmac_sha1", "equation_SHA1.key",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
         "function_token_typing_RPC.k",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
         "refinement_interpretation_Formatting_Tm_refine_df393ec945fcc9a49fa4c6eaca42efd8",
         "refinement_interpretation_RPC_Tm_refine_550fe84c55fa1c4e5d6ffbaa7d53b8b2",
         "string_inversion", "token_correspondence_MAC.key_prop",
-        "token_correspondence_RPC.reqresp"
+        "token_correspondence_RPC.reqresp", "unit_typing"
       ],
       0
     ],
@@ -103,9 +200,8 @@
         "assumption_FStar.Char.char__haseq",
         "assumption_Formatting.UTF8_inj",
         "constructor_distinct_FStar.Pervasives.V",
-        "disc_equation_FStar.Pervasives.Err",
-        "disc_equation_FStar.Pervasives.V", "equation_FStar.Char.char",
-        "equation_FStar.Pervasives.Native.fst",
+        "data_elim_FStar.Pervasives.V", "disc_equation_FStar.Pervasives.Err",
+        "equation_FStar.Char.char", "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Seq.Properties.split", "equation_Formatting.length",
         "equation_Formatting.message", "equation_Formatting.request",
         "equation_Formatting.string16", "equation_Formatting.tag0",
@@ -114,6 +210,7 @@
         "equation_Platform.Bytes.length", "equation_Platform.Bytes.split",
         "equation_Prims.eqtype", "equation_RPC.reqresp", "equation_SHA1.key",
         "equation_SHA1.macsize", "equation_SHA1.text",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
         "function_token_typing_Formatting.tag0",
         "function_token_typing_RPC.k", "kinding_FStar.Char.char_@tok",
         "lemma_FStar.Seq.Base.lemma_eq_refl",
@@ -122,7 +219,6 @@
         "primitive_Prims.op_GreaterThan", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_Subtraction",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.V_v",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -139,7 +235,7 @@
         "string_typing", "token_correspondence_MAC.key_prop",
         "token_correspondence_RPC.reqresp", "typing_FStar.Seq.Base.eq",
         "typing_Formatting.request", "typing_Platform.Bytes.iutf8",
-        "typing_Platform.Bytes.utf8", "unit_typing"
+        "typing_Platform.Bytes.utf8", "unit_inversion", "unit_typing"
       ],
       0
     ],
@@ -152,13 +248,17 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "disc_equation_FStar.Pervasives.Err",
-        "disc_equation_FStar.Pervasives.V", "equation_Formatting.length",
-        "equation_Formatting.uInt16", "equation_Prims.nat",
-        "equation_SHA1.keysize", "function_token_typing_SHA1.keysize",
+        "constructor_distinct_FStar.Pervasives.V",
+        "disc_equation_FStar.Pervasives.Err", "equation_Formatting.length",
+        "equation_Formatting.string16", "equation_Formatting.uInt16",
+        "equation_Prims.nat", "equation_SHA1.keysize",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
+        "function_token_typing_SHA1.keysize",
         "primitive_Prims.op_GreaterThan",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "string_typing", "typing_Formatting.length",
         "typing_Platform.Bytes.utf8", "unit_typing"

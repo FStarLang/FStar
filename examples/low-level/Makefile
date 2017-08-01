@@ -213,6 +213,12 @@ krml-test.exe: spartan_aes/aes.o crypto/*.fst
                 crypto/spartan/Crypto.Config.fst crypto/real/Flag.fst crypto/Crypto.KrmlTest.fst
 	-./krml-test.exe #AR: 04/27: this fails, but the tests don't apparently use it. will raise a bug for this too.
 
+ifeq ($(OS),Windows_NT)
+  WINSOCK=,-lws2_32
+else
+  WINSOCK=
+endif
+
 test-perf.exe: crypto/test_perf.c krml-test.exe
 	# Add this argument once someone writes a proper API for the Crypto
 	# subsystem
@@ -226,7 +232,7 @@ test-perf.exe: crypto/test_perf.c krml-test.exe
                   -ldopt -flto \
                   -ccopts -Ofast,-m64,-march=native,-mtune=native,-funroll-loops,-fomit-frame-pointer,-Wno-int-conversion \
                   -I $(KREMLIN_HOME)/kremlib -I $(KREMLIN_HOME)/test \
-                  -I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto $(CFLAGS)
+                  -I $(OPENSSL_HOME)/include -ldopts -L,$(OPENSSL_HOME)/lib,-L,$(OPENSSL_HOME),-lcrypto$(WINSOCK) $(CFLAGS)
 	PATH=$(OPENSSL_HOME):"$(PATH)" \
 	  LD_LIBRARY_PATH=$(OPENSSL_HOME):"$(LD_LIBRARY_PATH)" \
 	  DYLD_LIBRARY_PATH=$(OPENSSL_HOME):"$(DYLD_LIBRARY_PATH)" ./test-perf.exe

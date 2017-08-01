@@ -12,6 +12,11 @@ module SHA1 = Ex12.SHA1
 
 (* ---- specification *)
 
+(* We make the MAC.key abstract so that it cannot be accessed by 
+   the adversary *)
+
+abstract type key=SHA1.key 
+
 (* we attach an authenticated properties to each key,
    used as a pre-condition for MACing and
    a postcondition of MAC verification *)
@@ -31,7 +36,9 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc #(list entry) []
+
+private type log_t = ref (list entry)
+let log:log_t = ST.alloc #(list entry) []
 
 // BEGIN: MacSpec
 val keygen: p:(text -> Type) -> ML (pkey p)

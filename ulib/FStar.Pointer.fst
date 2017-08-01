@@ -1015,6 +1015,8 @@ let rec value_of_ovalue
     | Some v -> v
     end
 
+#reset-options "--z3rlimit 16"
+
 private
 let rec value_of_ovalue_of_value
   (t: typ)
@@ -1894,8 +1896,6 @@ private type path_disjoint_decomp_t
     ) ->
     path_disjoint_decomp_t p1 p2
 
-#reset-options "--z3rlimit 16"
-
 private let path_disjoint_decomp_includes
   (#from: typ)
   (#value1: typ)
@@ -2228,9 +2228,10 @@ abstract let live
   (h: HS.mem)
   (p: pointer value)
 : GTot Type0
-= let (Pointer from contents _) = p in (
-    HS.aref_live_at h contents pointer_ref_contents /\ (
-      let untyped_contents = HS.greference_of contents pointer_ref_contents in (
+= let rel = Heap.trivial_preorder pointer_ref_contents in
+  let (Pointer from contents _) = p in (
+    HS.aref_live_at h contents pointer_ref_contents rel /\ (
+      let untyped_contents = HS.greference_of contents pointer_ref_contents rel in (
       dfst (HS.sel h untyped_contents) == from
   )))
 
@@ -2270,18 +2271,8 @@ private let greference_of
   (p: pointer value)
 : Ghost (HS.reference pointer_ref_contents)
   (requires (exists h . live h p))
-  (ensures (fun x -> (exists h . live h p) /\ x == HS.greference_of (Pointer?.contents p) pointer_ref_contents /\ HS.aref_of x == Pointer?.contents p))
-= HS.greference_of (Pointer?.contents p) pointer_ref_contents
-
-private
-let reference_of
-  (h: HS.mem)
-  (#value: typ)
-  (p: pointer value)
-: Pure (HS.reference pointer_ref_contents)
-  (requires (live h p))
-  (ensures (fun x -> live h p /\ x == greference_of p))
-= HS.reference_of h (Pointer?.contents p) pointer_ref_contents
+  (ensures (fun x -> (exists h . live h p) /\ x == HS.greference_of (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) /\ HS.aref_of x == Pointer?.contents p))
+= HS.greference_of (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents)
 
 private
 let unused_in_greference_of
@@ -3588,6 +3579,17 @@ abstract let modifies_0 h0 h1 =
   /\ modifies_ptr_0 h0.HS.tip h0 h1
   /\ h0.HS.tip=h1.HS.tip
 
+abstract
+let modifies_none_modifies_0
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (
+    HS.modifies_one h0.HS.tip h0 h1 /\
+    HS.modifies_ref h0.HS.tip Set.empty h0 h1
+  ))
+  (ensures (modifies_0 h0 h1))
+= ()
+
 (* This one is very generic: it says
  * - some references have changed in the frame of b, but
  * - among all pointers in this frame, b is the only one that changed. *)
@@ -3657,7 +3659,7 @@ let modifies_0_1 (#a:typ) (b:pointer a) h0 h1 h2 : Lemma
 
 (** Concrete allocators, getters and setters *)
 
-#reset-options "--z3rlimit 64"
+#reset-options "--z3rlimit 256"
 
 abstract let screate
   (value:typ)
@@ -3677,14 +3679,23 @@ abstract let screate
        | _ -> True
        end
   ))
-= let s = match s with
+= let h0 = HST.get () in
+  let s = match s with
   | Some s -> ovalue_of_value value s
   | _ -> none_ovalue value
   in
   let content: HS.reference pointer_ref_contents =
      HST.salloc (| value, s |)
   in
-  Pointer value (HS.aref_of content) PathBase
+  let aref = HS.aref_of content in
+  let p = Pointer value aref PathBase in
+  let h1 = HST.get () in
+  assert (HS.aref_live_at h1 aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents));
+  assert (
+    let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
+    HS.sel h1 gref == HS.sel h1 content
+  );
+  p
 
 // TODO: move to HyperStack?
 private let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h x.HS.id}) (v:a) : Lemma
@@ -3713,7 +3724,8 @@ abstract let ecreate
       | _ -> True
       end
     /\ ~(is_mm b)))
-= let s = match s with
+= let h0 = HST.get () in
+  let s = match s with
   | Some s -> ovalue_of_value t s
   | _ -> none_ovalue t
   in
@@ -3722,7 +3734,15 @@ abstract let ecreate
      HST.ralloc r (| t, s |)
   in
   domain_upd h0 content (| t, s |) ;
-  Pointer t (HS.aref_of content) PathBase
+  let aref = HS.aref_of content in
+  let p = Pointer t aref PathBase in
+  let h1 = HST.get () in
+  assert (HS.aref_live_at h1 aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents));
+  assert (
+    let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
+    HS.sel h1 gref == HS.sel h1 content
+  );
+  p
 
 abstract let field
  (#l: struct_typ)
@@ -3752,6 +3772,46 @@ abstract let cell
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gcell p i))
 = _cell p i
 
+private let reference_of
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer value)
+: Pure (HS.reference pointer_ref_contents)
+  (requires (live h p))
+  (ensures (fun x -> 
+    live h p /\
+    x == HS.reference_of h (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) /\
+    HS.frameOf x == HS.frameOf (greference_of p) /\
+    HS.as_addr x == HS.as_addr (greference_of p) /\
+    (forall h' . h' `HS.contains` x <==> h' `HS.contains` (greference_of p)) /\
+    (forall h' . (h' `HS.contains` x \/ h' `HS.contains` (greference_of p)) ==> (h' `HS.contains` x /\ h' `HS.contains` (greference_of p) /\ HS.sel h' x == HS.sel h' (greference_of p))) /\
+    (forall h' z .
+      (h' `HS.contains` x \/ h' `HS.contains` (greference_of p)) ==>
+      (h' `HS.contains` x /\ h' `HS.contains` (greference_of p) /\ HS.upd h' x z == HS.upd h' (greference_of p) z)
+  )))
+= let x =
+    HS.reference_of h (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents)
+  in
+  let f (h' : HS.mem) : Lemma
+    ( (exists h' . live h' p) /\ // necessary to typecheck Classical.forall_intro
+      (h' `HS.contains` x <==> h' `HS.contains` (greference_of p)) /\
+    ((h' `HS.contains` x \/ h' `HS.contains` (greference_of p)) ==> HS.sel h' x == HS.sel h' (greference_of p)))
+  = let y = greference_of p in
+    Classical.move_requires (HS.lemma_sel_same_addr h' y) x;
+    Classical.move_requires (HS.lemma_sel_same_addr h' x) y
+  in
+  let g (z: pointer_ref_contents) (h' : HS.mem) : Lemma (
+    (exists h' . live h' p) /\
+    ((h' `HS.contains` x \/ h' `HS.contains` (greference_of p)) ==> (h' `HS.contains` x /\ h' `HS.contains` (greference_of p) /\ HS.upd h' x z == HS.upd h' (greference_of p) z))
+  )
+  = let y = greference_of p in
+    Classical.move_requires (HS.lemma_upd_same_addr h' y x) z;
+    Classical.move_requires (HS.lemma_upd_same_addr h' x y) z
+  in
+  Classical.forall_intro f ;
+  Classical.forall_intro_2 g;
+  x
+
 abstract let read
  (#value: typ)
  (p: pointer value)
@@ -3774,7 +3834,7 @@ let is_null
   | NullPtr -> true
   | _ -> false
 
-#reset-options "--z3rlimit 128"
+#reset-options "--z3rlimit 1024"
 
 abstract val write: #a:typ -> b:pointer a -> z:type_of_typ a -> HST.Stack unit
   (requires (fun h -> live h b))
@@ -3787,7 +3847,10 @@ let write #a b z =
   let r = reference_of h0 b in
   let (| t , c0 |) = !r in
   let c1 = path_upd c0 (Pointer?.p b) (ovalue_of_value a z) in
-  r := (| t, c1 |)
+  let v = (| t, c1 |) in
+  r := v;
+  let h1 = HST.get () in
+  assert (h1 == HS.upd h0 (greference_of b) v)
 
 (** Given our model, this operation is stateful, however it should be translated
     to a no-op by Kremlin, as the tag does not actually exist at runtime.
@@ -3908,7 +3971,7 @@ let modifies_poppable_1 #t h0 h1 (b:pointer t) : Lemma
 (* `modifies` and the readable permission *)
 
 (** NOTE: we historically used to have this lemma for arbitrary
-pointer inclusion, but it will become wrong for unions. *)
+pointer inclusion, but that became wrong for unions. *)
 
 let modifies_1_readable_struct
   (#l: struct_typ)

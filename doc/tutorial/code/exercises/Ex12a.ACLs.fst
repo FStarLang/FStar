@@ -1,4 +1,6 @@
 module Ex12a.ACLs 
+
+open FStar.Exn
 open FStar.All
 //this file is the same as Ex01a minus the tutorial code labels
 

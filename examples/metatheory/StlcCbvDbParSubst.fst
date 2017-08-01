@@ -66,13 +66,9 @@ let rec step e =
   | _ -> None
 
 val progress : #e:exp -> #t:typ -> h:typing empty e t ->
-      Lemma (requires True) (ensures (is_value e \/ (Some? (step e)))) (decreases h)
+      Lemma (ensures (is_value e \/ (Some? (step e)))) (decreases h)
 let rec progress #e #t h =
-  match h with
-  | TyVar _   -> ()
-  | TyLam _ _ -> ()
-  | TyApp h1 h2 -> progress h1; progress h2
-  | TyUnit -> ()
+  if TyApp? h then let TyApp h1 h2 = h in progress h1; progress h2
 
 (* Typing extensional (weaker) and context invariance (stronger) lemmas *)
 

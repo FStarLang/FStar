@@ -13,35 +13,37 @@ OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_G
 
 .PHONY:clean
 
-all: .mgen fstarlib.cmxa
+all: .mgen install
 
 fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
 	$(FIND) . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
 		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
 		| sort | uniq > $@
+	echo 'FStar_Parser_LexFStar' >> $@
+	touch fstarlib.ml
 
 FSTARLIB_DIR=../../bin/fstarlib/
 
-fstarlib.cmxa:fstarlib.mllib
-	$(OCAMLBUILD) fstarlib.cmxa
-	make install
-
 fstarlib.cma:fstarlib.mllib
-	$(OCAMLBUILD) fstarlib.cma
-	make install
+	$(OCAMLBUILD) $@
+	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
 
-install:
-	cp _build/ulib/ml/fstarlib.{cmxa,cma,a} $(FSTARLIB_DIR) 2>/dev/null || :
+fstarlib.cmxa:fstarlib.mllib | fstarlib.cma
+	$(OCAMLBUILD) $@
+	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
+
+install: fstarlib.cmxa fstarlib.cma
+	cp _build/ulib/ml/fstarlib.a $(FSTARLIB_DIR)
 	cp _build/ulib/ml/*.cmi $(FSTARLIB_DIR)
 	cp _build/ulib/ml/extracted/*.cmi $(FSTARLIB_DIR)
 
 .mgen:
-	make -C .. .mgen
+	$(MAKE) -C .. .mgen
 
 
 # Common rules
 clean:
-	rm -f fstarlib.mllib || :
+	rm -f fstarlib.mllib
 	rm -f $(ULIB_GEN_DIR)/*
-	rm -f ../.mgen || :
+	rm -f ../.mgen
 	rm -rf _build # ← ocamlbuild -clean does not work on Cygwin

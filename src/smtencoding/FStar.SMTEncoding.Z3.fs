@@ -17,6 +17,7 @@
 
 module FStar.SMTEncoding.Z3
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.SMTEncoding.Term
@@ -264,7 +265,7 @@ let doZ3Exe' (fresh:bool) (input:string) : z3status * z3statistics =
                     | _ :: txt :: _ :: [] -> txt
                     | _ -> line in
                     if rsn <> "unknown" then
-                        BU.smap_add statistics "reason-unknown" rsn in
+                        BU.smap_add statistics "reason-unknown" ("\"" ^ rsn ^ "\"") in
         List.iter (fun line -> parse line) lines ;
         !core, statistics, !reason_unknown
     in

@@ -1,5 +1,7 @@
 let max_int = Z.of_int max_int
-let is_letter_or_digit c = (BatChar.is_digit c) || (BatChar.is_letter c)
+let is_letter c = BatChar.is_letter c
+let is_digit  c = BatChar.is_digit  c
+let is_letter_or_digit c = (BatChar.is_letter c) || (BatChar.is_digit c)
 let is_symbol c = BatChar.is_symbol c
 
 (* Modeled after: Char.IsPunctuation in .NET
@@ -212,6 +214,7 @@ let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let set_is_empty ((s, _):'a set) =
   match s with
@@ -246,6 +249,7 @@ let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
 
 (* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
 type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let fifo_set_is_empty ((s, _):'a fifo_set) =
   match s with
@@ -448,6 +452,7 @@ let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
+[@@deriving show]
 
 let is_left = function
   | Inl _ -> true
@@ -514,6 +519,11 @@ let bind_opt opt f =
   match opt with
   | None -> None
   | Some x -> f x
+
+let catch_opt opt f =
+  match opt with
+  | Some x -> opt
+  | None -> f ()
 
 let map_opt opt f =
   match opt with
@@ -587,8 +597,11 @@ let first_N n l =
   in
   f [] 0 l
 
-let rec nth_tail n l =
-  if n=0 then l else nth_tail (n - 1) (BatList.tl l)
+let nth_tail n l =
+  let rec aux n l = 
+    if n=0 then l else aux (n - 1) (BatList.tl l)
+  in
+  aux (Z.to_int n) l
 
 let prefix l =
   match BatList.rev l with
@@ -969,8 +982,11 @@ let string_of_json json =
 
 (* Outside of this file the reference to FStar_Util.ref must use the following combinators *)
 (* Export it at the end of the file so that we don't break other internal uses of ref *)
-type 'a ref = 'a FStar_Heap.ref
+type 'a ref = 'a FStar_Monotonic_Heap.ref
 let read = FStar_ST.read
 let write = FStar_ST.write
 let (!) = FStar_ST.read
 let (:=) = FStar_ST.write
+
+let marshal (x:'a) : string = Marshal.to_string x []
+let unmarshal (x:string) : 'a = Marshal.from_string x 0
