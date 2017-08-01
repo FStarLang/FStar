@@ -87,7 +87,7 @@ val log_and_update: s: uint32 -> c: uint16 -> ST (unit)
                         (c > server_max (sel h log_prot))))
     (ensures (fun h x h' -> invariant h' /\ c = sel h' server_cnt /\
                          (sel h' log_prot = Recv s c::sel h log_prot) /\
-                         (modifies (union (singleton (addr_of log_prot)) (singleton (addr_of server_cnt))) h h')))
+                         (modifies !{log_prot, server_cnt} h h')))
 let log_and_update s c =
   log_event (Recv s c);
   update_cnt c
@@ -100,12 +100,12 @@ let msg_buffer = ST.alloc (empty_bytes)
 
 val send: message -> ST unit
 		       (requires (fun h -> True))
-		       (ensures (fun h x h' -> modifies (only msg_buffer) h h'))
+		       (ensures (fun h x h' -> modifies !{msg_buffer} h h'))
 let send m = msg_buffer := m
 
 val recv: unit -> ST message
 		    (requires (fun h -> True))
-		    (ensures (fun h x h' -> modifies (only msg_buffer) h h'))
+		    (ensures (fun h x h' -> modifies !{msg_buffer} h h'))
 let rec recv _ = if length !msg_buffer > 0
                 then (
                   let msg = !msg_buffer in
@@ -152,9 +152,7 @@ let client (s: uint32) =
 
 val server : unit -> ST (option string)
 			(requires (fun h -> invariant h))
-			(ensures (fun h x h' -> invariant h' /\ modifies (Set.union (Set.singleton (addr_of log_prot))
-			                                                        (Set.union (Set.singleton (addr_of server_cnt))
-								                           (Set.singleton (addr_of msg_buffer)))) h h'))
+			(ensures (fun h x h' -> invariant h' /\ modifies !{log_prot, server_cnt, msg_buffer} h h'))
 let server () =
   recall_all ();
   let msg = recv () in (

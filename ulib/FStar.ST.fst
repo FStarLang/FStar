@@ -118,5 +118,5 @@ abstract let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
 
 type ref (a:Type0) = mref a (trivial_preorder a)
 
-let modifies_none (h0:heap) (h1:heap) = modifies Set.empty h0 h1
+let modifies_none (h0:heap) (h1:heap) = modifies !{} h0 h1
 
