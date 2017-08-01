@@ -16,7 +16,8 @@ true: \
   package(yojson), \
   package(zarith)
 
-<src/ocaml-output/**/*.ml> or "src/tactics/ml/FStar_Reflection_Syntax.ml" or  "src/tactics/ml/FStar_Tactics_Effect.ml" or "src/tactics/ml/FStar_Reflection_Formula.ml": \
+# Turn off warnings for extracted files
+<src/ocaml-output/**/*.ml> or "src/tactics/ml/FStar_Reflection_Syntax.ml" or  "src/tactics/ml/FStar_Tactics_Effect.ml" or "src/tactics/ml/FStar_Reflection_Formula.ml" or <ulib/ml/extracted/*.ml>: \
   warn(-8-11-20-21-26-28)
 
 <ulib/ml/FStar_{U,}Int*.ml> or "ulib/ml/fstarlib.cma": \
