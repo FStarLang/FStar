@@ -16,7 +16,7 @@ let uu___is_Le: comparison -> Prims.bool =
 type formula =
   | True_
   | False_
-  | Comp of comparison* FStar_Reflection_Syntax.typ*
+  | Comp of comparison* FStar_Reflection_Types.typ*
   FStar_Reflection_Types.term* FStar_Reflection_Types.term
   | And of FStar_Reflection_Types.term* FStar_Reflection_Types.term
   | Or of FStar_Reflection_Types.term* FStar_Reflection_Types.term
@@ -41,7 +41,7 @@ let uu___is_Comp: formula -> Prims.bool =
     match projectee with | Comp (_0,_1,_2,_3) -> true | uu____145 -> false
 let __proj__Comp__item___0: formula -> comparison =
   fun projectee  -> match projectee with | Comp (_0,_1,_2,_3) -> _0
-let __proj__Comp__item___1: formula -> FStar_Reflection_Syntax.typ =
+let __proj__Comp__item___1: formula -> FStar_Reflection_Types.typ =
   fun projectee  -> match projectee with | Comp (_0,_1,_2,_3) -> _1
 let __proj__Comp__item___2: formula -> FStar_Reflection_Types.term =
   fun projectee  -> match projectee with | Comp (_0,_1,_2,_3) -> _2
@@ -123,230 +123,230 @@ let mk_Forall:
   fun typ  ->
     fun pred  ->
       Forall
-        ((FStar_Reflection_Syntax.fresh_binder typ),
-          (FStar_Reflection_Syntax.pack
+        ((FStar_Reflection_Basic.fresh_binder typ),
+          (FStar_Reflection_Basic.pack
              (FStar_Reflection_Data.Tv_App
                 (pred,
-                  (FStar_Reflection_Syntax.pack
+                  (FStar_Reflection_Basic.pack
                      (FStar_Reflection_Data.Tv_Var
-                        (FStar_Reflection_Syntax.fresh_binder typ)))))))
+                        (FStar_Reflection_Basic.fresh_binder typ)))))))
 let mk_Exists:
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> formula =
   fun typ  ->
     fun pred  ->
       Exists
-        ((FStar_Reflection_Syntax.fresh_binder typ),
-          (FStar_Reflection_Syntax.pack
+        ((FStar_Reflection_Basic.fresh_binder typ),
+          (FStar_Reflection_Basic.pack
              (FStar_Reflection_Data.Tv_App
                 (pred,
-                  (FStar_Reflection_Syntax.pack
+                  (FStar_Reflection_Basic.pack
                      (FStar_Reflection_Data.Tv_Var
-                        (FStar_Reflection_Syntax.fresh_binder typ)))))))
+                        (FStar_Reflection_Basic.fresh_binder typ)))))))
 type ('Af,'At) smaller = Obj.t
 let term_as_formula': FStar_Reflection_Types.term -> formula =
   fun t  ->
-    match FStar_Reflection_Syntax.inspect t with
+    match FStar_Reflection_Basic.inspect t with
     | FStar_Reflection_Data.Tv_Var n -> Name n
     | FStar_Reflection_Data.Tv_FVar fv ->
         if
-          (FStar_Reflection_Syntax.inspect_fv fv) =
+          (FStar_Reflection_Basic.inspect_fv fv) =
             FStar_Reflection_Syntax.true_qn
         then True_
         else
           if
-            (FStar_Reflection_Syntax.inspect_fv fv) =
+            (FStar_Reflection_Basic.inspect_fv fv) =
               FStar_Reflection_Syntax.false_qn
           then False_
           else FV fv
     | FStar_Reflection_Data.Tv_App (h0,t1) ->
         (match FStar_Reflection_Syntax.collect_app h0 with
          | (h,ts) ->
-             (match ((FStar_Reflection_Syntax.inspect h),
+             (match ((FStar_Reflection_Basic.inspect h),
                       (FStar_List_Tot_Base.append ts [t1]))
               with
               | (FStar_Reflection_Data.Tv_FVar fv,a1::a2::a3::[]) ->
                   if
-                    (FStar_Reflection_Syntax.inspect_fv fv) =
+                    (FStar_Reflection_Basic.inspect_fv fv) =
                       FStar_Reflection_Syntax.eq2_qn
                   then Comp (Eq, a1, a2, a3)
                   else
                     if
-                      (FStar_Reflection_Syntax.inspect_fv fv) =
+                      (FStar_Reflection_Basic.inspect_fv fv) =
                         FStar_Reflection_Syntax.eq1_qn
                     then Comp (BoolEq, a1, a2, a3)
                     else
                       if
-                        (FStar_Reflection_Syntax.inspect_fv fv) =
+                        (FStar_Reflection_Basic.inspect_fv fv) =
                           FStar_Reflection_Syntax.lt_qn
                       then Comp (Lt, a1, a2, a3)
                       else
                         if
-                          (FStar_Reflection_Syntax.inspect_fv fv) =
+                          (FStar_Reflection_Basic.inspect_fv fv) =
                             FStar_Reflection_Syntax.lte_qn
                         then Comp (Le, a1, a2, a3)
                         else
                           if
-                            (FStar_Reflection_Syntax.inspect_fv fv) =
+                            (FStar_Reflection_Basic.inspect_fv fv) =
                               FStar_Reflection_Syntax.gt_qn
                           then Comp (Lt, a1, a3, a2)
                           else
                             if
-                              (FStar_Reflection_Syntax.inspect_fv fv) =
+                              (FStar_Reflection_Basic.inspect_fv fv) =
                                 FStar_Reflection_Syntax.gte_qn
                             then Comp (Le, a1, a3, a2)
                             else App (h0, t1)
               | (FStar_Reflection_Data.Tv_FVar fv,a1::a2::[]) ->
                   if
-                    (FStar_Reflection_Syntax.inspect_fv fv) =
+                    (FStar_Reflection_Basic.inspect_fv fv) =
                       FStar_Reflection_Syntax.imp_qn
                   then Implies (a1, a2)
                   else
                     if
-                      (FStar_Reflection_Syntax.inspect_fv fv) =
+                      (FStar_Reflection_Basic.inspect_fv fv) =
                         FStar_Reflection_Syntax.and_qn
                     then And (a1, a2)
                     else
                       if
-                        (FStar_Reflection_Syntax.inspect_fv fv) =
+                        (FStar_Reflection_Basic.inspect_fv fv) =
                           FStar_Reflection_Syntax.iff_qn
                       then Iff (a1, a2)
                       else
                         if
-                          (FStar_Reflection_Syntax.inspect_fv fv) =
+                          (FStar_Reflection_Basic.inspect_fv fv) =
                             FStar_Reflection_Syntax.or_qn
                         then Or (a1, a2)
                         else
                           if
-                            (FStar_Reflection_Syntax.inspect_fv fv) =
+                            (FStar_Reflection_Basic.inspect_fv fv) =
                               FStar_Reflection_Syntax.forall_qn
                           then mk_Forall a1 a2
                           else
                             if
-                              (FStar_Reflection_Syntax.inspect_fv fv) =
+                              (FStar_Reflection_Basic.inspect_fv fv) =
                                 FStar_Reflection_Syntax.exists_qn
                             then mk_Exists a1 a2
                             else App (h0, t1)
               | (FStar_Reflection_Data.Tv_FVar fv,a::[]) ->
                   if
-                    (FStar_Reflection_Syntax.inspect_fv fv) =
+                    (FStar_Reflection_Basic.inspect_fv fv) =
                       FStar_Reflection_Syntax.not_qn
                   then Not a
                   else App (h0, t1)
-              | uu____759 -> App (h0, t1)))
+              | uu____771 -> App (h0, t1)))
     | FStar_Reflection_Data.Tv_Arrow (b,t1) ->
-        if FStar_Reflection_Syntax.is_free b t1
+        if FStar_Reflection_Basic.is_free b t1
         then Forall (b, t1)
-        else Implies ((FStar_Reflection_Syntax.type_of_binder b), t1)
+        else Implies ((FStar_Reflection_Basic.type_of_binder b), t1)
     | FStar_Reflection_Data.Tv_Const (FStar_Reflection_Data.C_Int i) ->
         IntLit i
-    | FStar_Reflection_Data.Tv_Type uu____768 -> F_Unknown
-    | FStar_Reflection_Data.Tv_Abs (uu____769,uu____770) -> F_Unknown
-    | FStar_Reflection_Data.Tv_Refine (uu____771,uu____772) -> F_Unknown
+    | FStar_Reflection_Data.Tv_Type uu____783 -> F_Unknown
+    | FStar_Reflection_Data.Tv_Abs (uu____784,uu____785) -> F_Unknown
+    | FStar_Reflection_Data.Tv_Refine (uu____786,uu____787) -> F_Unknown
     | FStar_Reflection_Data.Tv_Const (FStar_Reflection_Data.C_Unit ) ->
         F_Unknown
-    | uu____773 -> F_Unknown
+    | uu____788 -> F_Unknown
 let rec term_as_formula: FStar_Reflection_Types.term -> formula =
   fun t  ->
-    match FStar_Reflection_Syntax.inspect t with
+    match FStar_Reflection_Basic.inspect t with
     | FStar_Reflection_Data.Tv_App (l,r) ->
-        (match FStar_Reflection_Syntax.inspect l with
+        (match FStar_Reflection_Basic.inspect l with
          | FStar_Reflection_Data.Tv_FVar fv ->
              if
-               (FStar_Reflection_Syntax.inspect_fv fv) =
+               (FStar_Reflection_Basic.inspect_fv fv) =
                  FStar_Reflection_Syntax.squash_qn
              then term_as_formula' r
              else F_Unknown
-         | uu____799 -> F_Unknown)
-    | uu____800 -> F_Unknown
-let formula_as_term_view: formula -> FStar_Reflection_Syntax.term_view =
+         | uu____812 -> F_Unknown)
+    | uu____813 -> F_Unknown
+let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
   fun f  ->
     match f with
     | True_  ->
         FStar_Reflection_Data.Tv_FVar
-          (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.true_qn)
+          (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.true_qn)
     | False_  ->
         FStar_Reflection_Data.Tv_FVar
-          (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.false_qn)
+          (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.false_qn)
     | Comp (Eq ,t,l,r) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
              fun a  ->
                FStar_Reflection_Data.Tv_App
-                 ((FStar_Reflection_Syntax.pack tv), a))
+                 ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.eq2_qn))
+             (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.eq2_qn))
           [t; l; r]
     | Comp (BoolEq ,t,l,r) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
              fun a  ->
                FStar_Reflection_Data.Tv_App
-                 ((FStar_Reflection_Syntax.pack tv), a))
+                 ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.eq1_qn))
+             (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.eq1_qn))
           [t; l; r]
     | Comp (Lt ,t,l,r) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
              fun a  ->
                FStar_Reflection_Data.Tv_App
-                 ((FStar_Reflection_Syntax.pack tv), a))
+                 ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.lt_qn))
+             (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.lt_qn))
           [t; l; r]
     | Comp (Le ,t,l,r) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
              fun a  ->
                FStar_Reflection_Data.Tv_App
-                 ((FStar_Reflection_Syntax.pack tv), a))
+                 ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.lte_qn))
+             (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.lte_qn))
           [t; l; r]
     | And (p,q) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
              fun a  ->
                FStar_Reflection_Data.Tv_App
-                 ((FStar_Reflection_Syntax.pack tv), a))
+                 ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.and_qn))
+             (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.and_qn))
           [p; q]
     | Or (p,q) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
              fun a  ->
                FStar_Reflection_Data.Tv_App
-                 ((FStar_Reflection_Syntax.pack tv), a))
+                 ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.or_qn))
+             (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.or_qn))
           [p; q]
     | Implies (p,q) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
              fun a  ->
                FStar_Reflection_Data.Tv_App
-                 ((FStar_Reflection_Syntax.pack tv), a))
+                 ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.imp_qn))
+             (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.imp_qn))
           [p; q]
     | Not p ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
              fun a  ->
                FStar_Reflection_Data.Tv_App
-                 ((FStar_Reflection_Syntax.pack tv), a))
+                 ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.not_qn))
+             (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.not_qn))
           [p]
     | Iff (p,q) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
              fun a  ->
                FStar_Reflection_Data.Tv_App
-                 ((FStar_Reflection_Syntax.pack tv), a))
+                 ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
-             (FStar_Reflection_Syntax.pack_fv FStar_Reflection_Syntax.iff_qn))
+             (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.iff_qn))
           [p; q]
     | Forall (b,t) -> FStar_Reflection_Data.Tv_Unknown
     | Exists (b,t) -> FStar_Reflection_Data.Tv_Unknown
@@ -357,7 +357,7 @@ let formula_as_term_view: formula -> FStar_Reflection_Syntax.term_view =
         FStar_Reflection_Data.Tv_Const (FStar_Reflection_Data.C_Int i)
     | F_Unknown  -> FStar_Reflection_Data.Tv_Unknown
 let formula_as_term: formula -> FStar_Reflection_Types.term =
-  fun f  -> FStar_Reflection_Syntax.pack (formula_as_term_view f)
+  fun f  -> FStar_Reflection_Basic.pack (formula_as_term_view f)
 let formula_to_string: formula -> Prims.string =
   fun f  ->
     match f with
@@ -365,77 +365,77 @@ let formula_to_string: formula -> Prims.string =
     | False_  -> "False_"
     | Comp (Eq ,t,l,r) ->
         Prims.strcat "Eq ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string t)
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string t)
              (Prims.strcat ") ("
-                (Prims.strcat (FStar_Reflection_Syntax.term_to_string l)
+                (Prims.strcat (FStar_Reflection_Basic.term_to_string l)
                    (Prims.strcat ") ("
-                      (Prims.strcat
-                         (FStar_Reflection_Syntax.term_to_string r) ")")))))
+                      (Prims.strcat (FStar_Reflection_Basic.term_to_string r)
+                         ")")))))
     | Comp (BoolEq ,t,l,r) ->
         Prims.strcat "BoolEq ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string t)
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string t)
              (Prims.strcat ") ("
-                (Prims.strcat (FStar_Reflection_Syntax.term_to_string l)
+                (Prims.strcat (FStar_Reflection_Basic.term_to_string l)
                    (Prims.strcat ") ("
-                      (Prims.strcat
-                         (FStar_Reflection_Syntax.term_to_string r) ")")))))
+                      (Prims.strcat (FStar_Reflection_Basic.term_to_string r)
+                         ")")))))
     | Comp (Lt ,t,l,r) ->
         Prims.strcat "Lt ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string t)
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string t)
              (Prims.strcat ") ("
-                (Prims.strcat (FStar_Reflection_Syntax.term_to_string l)
+                (Prims.strcat (FStar_Reflection_Basic.term_to_string l)
                    (Prims.strcat ") ("
-                      (Prims.strcat
-                         (FStar_Reflection_Syntax.term_to_string r) ")")))))
+                      (Prims.strcat (FStar_Reflection_Basic.term_to_string r)
+                         ")")))))
     | Comp (Le ,t,l,r) ->
         Prims.strcat "Le ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string t)
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string t)
              (Prims.strcat ") ("
-                (Prims.strcat (FStar_Reflection_Syntax.term_to_string l)
+                (Prims.strcat (FStar_Reflection_Basic.term_to_string l)
                    (Prims.strcat ") ("
-                      (Prims.strcat
-                         (FStar_Reflection_Syntax.term_to_string r) ")")))))
+                      (Prims.strcat (FStar_Reflection_Basic.term_to_string r)
+                         ")")))))
     | And (p,q) ->
         Prims.strcat "And ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string p)
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string p)
              (Prims.strcat ") ("
-                (Prims.strcat (FStar_Reflection_Syntax.term_to_string q) ")")))
+                (Prims.strcat (FStar_Reflection_Basic.term_to_string q) ")")))
     | Or (p,q) ->
         Prims.strcat "Or ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string p)
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string p)
              (Prims.strcat ") ("
-                (Prims.strcat (FStar_Reflection_Syntax.term_to_string q) ")")))
+                (Prims.strcat (FStar_Reflection_Basic.term_to_string q) ")")))
     | Implies (p,q) ->
         Prims.strcat "Implies ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string p)
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string p)
              (Prims.strcat ") ("
-                (Prims.strcat (FStar_Reflection_Syntax.term_to_string q) ")")))
+                (Prims.strcat (FStar_Reflection_Basic.term_to_string q) ")")))
     | Not p ->
         Prims.strcat "Not ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string p) ")")
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string p) ")")
     | Iff (p,q) ->
         Prims.strcat "Iff ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string p)
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string p)
              (Prims.strcat ") ("
-                (Prims.strcat (FStar_Reflection_Syntax.term_to_string q) ")")))
+                (Prims.strcat (FStar_Reflection_Basic.term_to_string q) ")")))
     | Forall (bs,t) ->
         Prims.strcat "Forall <bs> ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string t) ")")
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string t) ")")
     | Exists (bs,t) ->
         Prims.strcat "Exists <bs> ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string t) ")")
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string t) ")")
     | App (p,q) ->
         Prims.strcat "App ("
-          (Prims.strcat (FStar_Reflection_Syntax.term_to_string p)
+          (Prims.strcat (FStar_Reflection_Basic.term_to_string p)
              (Prims.strcat ") ("
-                (Prims.strcat (FStar_Reflection_Syntax.term_to_string q) ")")))
+                (Prims.strcat (FStar_Reflection_Basic.term_to_string q) ")")))
     | Name b ->
         Prims.strcat "Name ("
-          (Prims.strcat (FStar_Reflection_Syntax.inspect_bv b) ")")
+          (Prims.strcat (FStar_Reflection_Basic.inspect_bv b) ")")
     | FV fv ->
         Prims.strcat "FV ("
           (Prims.strcat
              (FStar_Reflection_Syntax.flatten_name
-                (FStar_Reflection_Syntax.inspect_fv fv)) ")")
+                (FStar_Reflection_Basic.inspect_fv fv)) ")")
     | IntLit i -> Prims.strcat "Int " (Prims.string_of_int i)
     | F_Unknown  -> "?"

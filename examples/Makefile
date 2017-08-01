@@ -21,7 +21,8 @@ incl \
 struct \
 micro-benchmarks \
 bytes \
-tactics
+tactics \
+native_tactics
 
 
 # low-level \  ... NS: removing from CI for this branch

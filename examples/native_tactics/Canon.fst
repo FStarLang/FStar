@@ -1,7 +1,6 @@
 module Canon
 
 open FStar.Tactics
-open FStar.Reflection.Types
 open FStar.Tactics.Arith
 module O = FStar.Order
 open FStar.Mul

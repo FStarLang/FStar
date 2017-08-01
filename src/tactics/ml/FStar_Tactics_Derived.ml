@@ -1,13 +1,13 @@
 open Prims
 let quote_lid:
-  FStar_Reflection_Syntax.name ->
+  FStar_Reflection_Data.name ->
     FStar_Reflection_Types.term FStar_Tactics_Effect.tactic
   =
   fun ns  ->
     FStar_Tactics_Effect.return
-      (FStar_Reflection_Syntax.pack
+      (FStar_Reflection_Basic.pack
          (FStar_Reflection_Data.Tv_FVar
-            (FStar_Reflection_Syntax.pack_fv ns)))
+            (FStar_Reflection_Basic.pack_fv ns)))
 let liftM1' f ma = FStar_Tactics_Effect.bind ma (fun a  -> f a)
 let liftM1 f = liftM1' (fun x  -> FStar_Tactics_Effect.return (f x))
 let liftM2' f ma mb =
@@ -54,10 +54,10 @@ let rec repeatseq t uu____602 =
     (fun uu___51_638  -> FStar_Tactics_Effect.return ()) ()
 let simpl: Prims.unit FStar_Tactics_Effect.tactic =
   FStar_Tactics_Builtins.norm
-    [FStar_Reflection_Syntax.Simpl; FStar_Reflection_Syntax.Primops]
+    [FStar_Reflection_Data.Simpl; FStar_Reflection_Data.Primops]
 let whnf: Prims.unit FStar_Tactics_Effect.tactic =
   FStar_Tactics_Builtins.norm
-    [FStar_Reflection_Syntax.WHNF; FStar_Reflection_Syntax.Primops]
+    [FStar_Reflection_Data.WHNF; FStar_Reflection_Data.Primops]
 let __cut f x = f x
 let tcut:
   FStar_Reflection_Types.term ->
@@ -70,11 +70,11 @@ let tcut:
          FStar_Tactics_Effect.bind
            (FStar_Tactics_Builtins.apply
               (FStar_Tactics_Effect.return
-                 (FStar_Reflection_Syntax.pack
+                 (FStar_Reflection_Basic.pack
                     (FStar_Reflection_Data.Tv_App (qq, t)))))
            (fun uu___52_712  -> FStar_Tactics_Builtins.intro))
 let rec revert_all:
-  FStar_Reflection_Syntax.binders -> Prims.unit FStar_Tactics_Effect.tactic =
+  FStar_Reflection_Data.binders -> Prims.unit FStar_Tactics_Effect.tactic =
   fun bs  ->
     match bs with
     | [] -> FStar_Tactics_Effect.return ()
@@ -89,12 +89,12 @@ let assumption: Prims.unit FStar_Tactics_Effect.tactic =
          | [] -> fail "no assumption matches goal"
          | b::bs1 ->
              let t =
-               FStar_Reflection_Syntax.pack
+               FStar_Reflection_Basic.pack
                  (FStar_Reflection_Data.Tv_Var b) in
              or_else
                (FStar_Tactics_Builtins.exact (FStar_Tactics_Effect.return t))
                (aux bs1) in
-       aux (FStar_Reflection_Syntax.binders_of_env e))
+       aux (FStar_Reflection_Basic.binders_of_env e))
 let destruct_equality_implication:
   FStar_Reflection_Types.term ->
     (FStar_Reflection_Formula.formula* FStar_Reflection_Types.term) option
@@ -112,7 +112,7 @@ let destruct_equality_implication:
     | uu____825 -> FStar_Tactics_Effect.return None
 let rec try_rewrite_equality:
   FStar_Reflection_Types.term ->
-    FStar_Reflection_Syntax.binders -> Prims.unit FStar_Tactics_Effect.tactic
+    FStar_Reflection_Data.binders -> Prims.unit FStar_Tactics_Effect.tactic
   =
   fun x  ->
     fun bs  ->
@@ -120,27 +120,27 @@ let rec try_rewrite_equality:
       | [] -> FStar_Tactics_Effect.return ()
       | x_t::bs1 ->
           (match FStar_Reflection_Formula.term_as_formula'
-                   (FStar_Reflection_Syntax.type_of_binder x_t)
+                   (FStar_Reflection_Basic.type_of_binder x_t)
            with
            | FStar_Reflection_Formula.Comp
                (FStar_Reflection_Formula.Eq ,uu____859,y,uu____861) ->
-               if FStar_Reflection_Syntax.term_eq x y
+               if FStar_Reflection_Basic.term_eq x y
                then FStar_Tactics_Builtins.rewrite x_t
                else try_rewrite_equality x bs1
            | uu____868 -> try_rewrite_equality x bs1)
 let rec rewrite_all_context_equalities:
-  FStar_Reflection_Syntax.binders -> Prims.unit FStar_Tactics_Effect.tactic =
+  FStar_Reflection_Data.binders -> Prims.unit FStar_Tactics_Effect.tactic =
   fun bs  ->
     match bs with
     | [] -> FStar_Tactics_Effect.return ()
     | x_t::bs1 ->
         FStar_Tactics_Effect.bind
           (match FStar_Reflection_Formula.term_as_formula'
-                   (FStar_Reflection_Syntax.type_of_binder x_t)
+                   (FStar_Reflection_Basic.type_of_binder x_t)
            with
            | FStar_Reflection_Formula.Comp
                (FStar_Reflection_Formula.Eq ,uu____897,lhs,uu____899) ->
-               (match FStar_Reflection_Syntax.inspect lhs with
+               (match FStar_Reflection_Basic.inspect lhs with
                 | FStar_Reflection_Data.Tv_Var uu____901 ->
                     FStar_Tactics_Builtins.rewrite x_t
                 | uu____904 -> idtac)
@@ -150,7 +150,7 @@ let rewrite_eqs_from_context: Prims.unit FStar_Tactics_Effect.tactic =
   FStar_Tactics_Effect.bind FStar_Tactics_Builtins.cur_env
     (fun e  ->
        rewrite_all_context_equalities
-         (FStar_Reflection_Syntax.binders_of_env e))
+         (FStar_Reflection_Basic.binders_of_env e))
 let rewrite_equality:
   FStar_Reflection_Types.term FStar_Tactics_Effect.tactic ->
     Prims.unit FStar_Tactics_Effect.tactic
@@ -161,7 +161,7 @@ let rewrite_equality:
          FStar_Tactics_Effect.bind x
            (fun t  ->
               try_rewrite_equality t
-                (FStar_Reflection_Syntax.binders_of_env e)))
+                (FStar_Reflection_Basic.binders_of_env e)))
 let unfold_point:
   FStar_Reflection_Types.term -> Prims.unit FStar_Tactics_Effect.tactic =
   fun t  ->
@@ -172,11 +172,11 @@ let unfold_point:
               match FStar_Reflection_Formula.term_as_formula g with
               | FStar_Reflection_Formula.Comp
                   (FStar_Reflection_Formula.Eq ,uu____989,l,r) ->
-                  if FStar_Reflection_Syntax.term_eq l t
+                  if FStar_Reflection_Basic.term_eq l t
                   then
                     FStar_Tactics_Effect.bind
                       (FStar_Tactics_Builtins.norm
-                         [FStar_Reflection_Syntax.Delta])
+                         [FStar_Reflection_Data.Delta])
                       (fun uu___55_999  -> FStar_Tactics_Builtins.trefl)
                   else FStar_Tactics_Builtins.trefl
               | uu____1001 -> fail "impossible"))
@@ -196,7 +196,7 @@ let grewrite':
              match FStar_Reflection_Formula.term_as_formula g with
              | FStar_Reflection_Formula.Comp
                  (FStar_Reflection_Formula.Eq ,uu____1052,l,uu____1054) ->
-                 if FStar_Reflection_Syntax.term_eq l t1
+                 if FStar_Reflection_Basic.term_eq l t1
                  then
                    FStar_Tactics_Builtins.exact
                      (FStar_Tactics_Effect.return eq1)
@@ -209,14 +209,14 @@ let mk_sq_eq:
   fun t1  ->
     fun t2  ->
       FStar_Reflection_Syntax.mk_app
-        (FStar_Reflection_Syntax.pack
+        (FStar_Reflection_Basic.pack
            (FStar_Reflection_Data.Tv_FVar
-              (FStar_Reflection_Syntax.pack_fv
+              (FStar_Reflection_Basic.pack_fv
                  FStar_Reflection_Syntax.squash_qn)))
         [FStar_Reflection_Syntax.mk_app
-           (FStar_Reflection_Syntax.pack
+           (FStar_Reflection_Basic.pack
               (FStar_Reflection_Data.Tv_FVar
-                 (FStar_Reflection_Syntax.pack_fv
+                 (FStar_Reflection_Basic.pack_fv
                     FStar_Reflection_Syntax.eq2_qn))) [t1; t2]]
 let grewrite:
   FStar_Reflection_Types.term ->
@@ -228,7 +228,7 @@ let grewrite:
         (fun e  ->
            FStar_Tactics_Builtins.pointwise
              (grewrite' t1 t2
-                (FStar_Reflection_Syntax.pack
+                (FStar_Reflection_Basic.pack
                    (FStar_Reflection_Data.Tv_Var e))))
 let focus f =
   FStar_Tactics_Effect.bind

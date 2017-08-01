@@ -280,6 +280,9 @@ let _assert p = ()
 abstract let spinoff (p:Type) : Type = p
 
 // Logically equivalent to assert, but spins off separate query
+val assert_spinoff : (p:Type) -> Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
+let assert_spinoff p = ()
+
 val cut : p:Type -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 
@@ -319,6 +322,13 @@ assume val string_of_int: int -> Tot string
 (*********************************************************************************)
 abstract let normalize_term (#a:Type) (x:a) : a = x
 abstract let normalize (a:Type0) = a
+abstract let step    : Type0 = unit
+abstract let zeta    : step = ()
+abstract let iota    : step = ()
+abstract let primops : step = ()
+abstract let delta   : step = ()
+abstract let delta_only (s:list string) : step = ()
+abstract let norm (s:list step) (#a:Type) (x:a) : a = x
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()

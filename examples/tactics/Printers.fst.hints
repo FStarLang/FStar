@@ -26,13 +26,13 @@
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_Printers.mk_concat.fuel_instrumented",
-        "@query", "disc_equation_FStar.Reflection.Syntax.Sg_Inductive",
-        "disc_equation_FStar.Reflection.Syntax.Unk",
-        "equality_tok_FStar.Reflection.Syntax.Unk@tok",
-        "equation_FStar.Reflection.Syntax.lookup_typ",
+        "@query", "disc_equation_FStar.Reflection.Data.Sg_Inductive",
+        "disc_equation_FStar.Reflection.Data.Unk",
+        "equality_tok_FStar.Reflection.Data.Unk@tok",
+        "equation_FStar.Reflection.Basic.lookup_typ",
         "equation_Printers.paren",
-        "fuel_guarded_inversion_FStar.Reflection.Syntax.sigelt_view",
-        "typing_FStar.Reflection.Syntax.lookup_typ"
+        "fuel_guarded_inversion_FStar.Reflection.Data.sigelt_view",
+        "typing_FStar.Reflection.Basic.__lookup_typ"
       ],
       0
     ],

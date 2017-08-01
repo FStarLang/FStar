@@ -1,5 +1,5 @@
 [
-  "›\u0005™\u0013<U^è–FÚ\r[Ù¤à",
+  "\u001b>@\u0014\u0006iÔÏªŸ,DîSêù",
   [
     [ "Ex01a.canWrite", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -10,21 +10,32 @@
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
-    [ "Ex01a.read", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex01a.read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0
+    ],
     [
       "Ex01a.staticChecking",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "constructor_distinct_Prims.V", "disc_equation_Prims.V",
-        "equation_Ex01a.canRead", "equation_Ex01a.canWrite",
-        "equation_Ex01a.readme", "equation_Ex01a.tmp",
-        "function_token_typing_Prims.string", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.V_a", "projection_inverse_Prims.V_v",
-        "typing_Prims.uu___is_V"
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.V", "equation_Ex01a.canRead",
+        "equation_Ex01a.canWrite", "equation_Ex01a.readme",
+        "equation_Ex01a.tmp",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v"
       ],
       0
     ],

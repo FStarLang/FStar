@@ -103,7 +103,7 @@ let rec try_rewrite_equality (x:term) (bs:binders) : tactic unit =
     match bs with
     | [] -> return ()
     | x_t::bs ->
-        begin match term_as_formula' (type_of_binder x_t) with
+        begin match term_as_formula (type_of_binder x_t) with
         | Comp Eq _ y _ ->
             if term_eq x y
             then rewrite x_t
@@ -117,7 +117,7 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
     | [] ->
         return ()
     | x_t::bs ->
-        begin (match term_as_formula' (type_of_binder x_t) with
+        begin (match term_as_formula (type_of_binder x_t) with
         | Comp Eq _ lhs _ ->
             begin match inspect lhs with
             | Tv_Var _ -> rewrite x_t

@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Parser.AST
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Errors
 module C = FStar.Parser.Const
@@ -291,14 +292,14 @@ let mkApp t args r = match args with
       | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
-  let empty_lid, singleton_lid, union_lid =
-      C.tset_empty, C.tset_singleton, C.tset_union in
+  let empty_lid, singleton_lid, union_lid, addr_of_lid =
+      C.set_empty, C.set_singleton, C.set_union, C.heap_addr_of_lid in
   let empty = mk_term (Var(set_lid_range empty_lid r)) r Expr in
-  let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
+  let addr_of = mk_term (Var (set_lid_range addr_of_lid r)) r Expr in
   let singleton = mk_term (Var (set_lid_range singleton_lid r)) r Expr in
   let union = mk_term (Var(set_lid_range union_lid r)) r Expr in
   List.fold_right (fun e tl ->
-    let e = mkApp ref_constr [(e, Nothing)] r in
+    let e = mkApp addr_of [(e, Nothing)] r in
     let single_e = mkApp singleton [(e, Nothing)] r in
     mkApp union [(single_e, Nothing); (tl, Nothing)] r) elts empty
 
@@ -452,14 +453,16 @@ let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<mo
       ) ds;
       Inr ds
 
-let compile_op arity s =
+let compile_op arity s r =
     let name_of_char = function
       |'&' -> "Amp"
       |'@'  -> "At"
       |'+' -> "Plus"
       |'-' when (arity=1) -> "Minus"
       |'-' -> "Subtraction"
+      |'~' -> "Tilde"
       |'/' -> "Slash"
+      |'\\' -> "Backslash"
       |'<' -> "Less"
       |'=' -> "Equals"
       |'>' -> "Greater"
@@ -471,7 +474,10 @@ let compile_op arity s =
       |'*' -> "Star"
       |'?' -> "Question"
       |':' -> "Colon"
-      | _ -> "UNKNOWN" in
+      |'$' -> "Dollar"
+      |'.' -> "Dot"
+      | c -> raise (Error ("Unexpected operator symbol: '" ^ string_of_char c ^ "'" , r))
+    in
     match s with
     | ".[]<-" -> "op_String_Assignment"
     | ".()<-" -> "op_Array_Assignment"
@@ -479,8 +485,8 @@ let compile_op arity s =
     | ".()" -> "op_Array_Access"
     | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
 
-let compile_op' s =
-  compile_op (-1) s
+let compile_op' s r =
+  compile_op (-1) s r
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging

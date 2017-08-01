@@ -165,7 +165,7 @@ let bv_tac ()  =
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
-  smt ()
+  smt
 
 let bv_tac_lt n =
   // apply_lemma (quote (lt_to_bv #n));;
@@ -174,7 +174,7 @@ let bv_tac_lt n =
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
-  smt ()
+  smt
 
 let to_bv_tac ()  =
   apply_lemma (quote eq_to_bv);;

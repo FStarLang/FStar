@@ -2,6 +2,8 @@ module FStar.Reflection.Syntax.Lemmas
 
 open FStar.Reflection.Syntax
 open FStar.Reflection.Types
+open FStar.Reflection.Basic
+open FStar.Reflection.Data
 
 val uncurry : ('a -> 'b -> 'c) -> ('a * 'b -> 'c)
 let uncurry f (x, y) = f x y

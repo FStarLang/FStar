@@ -17,6 +17,7 @@
 module FStar.Syntax.MutRecTy
 open FStar
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Ident

@@ -48,7 +48,7 @@ let rec is_ite_all_the_way:
       fun negs  ->
         fun l  ->
           if n1 <= (Prims.parse_int "0")
-          then raise FStar_Util.Impos
+          then FStar_Exn.raise FStar_Util.Impos
           else
             (match t.FStar_SMTEncoding_Term.tm with
              | FStar_SMTEncoding_Term.FreeV uu____127 ->
@@ -116,7 +116,8 @@ let rec parse_query_for_split_cases:
                               f uu____369)), l, negs)))
               | uu____370 ->
                   (false,
-                    (((fun uu____386  -> FStar_SMTEncoding_Util.mkFalse)),
+                    (((fun uu____386  ->
+                         FStar_Util.return_all FStar_SMTEncoding_Util.mkFalse)),
                       [], FStar_SMTEncoding_Util.mkFalse)) in
             r
         | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE ,uu____387)
@@ -126,8 +127,9 @@ let rec parse_query_for_split_cases:
             (match uu____392 with | (b,l,negs) -> (b, (f, l, negs)))
         | uu____436 ->
             (false,
-              (((fun uu____452  -> FStar_SMTEncoding_Util.mkFalse)), [],
-                FStar_SMTEncoding_Util.mkFalse))
+              (((fun uu____452  ->
+                   FStar_Util.return_all FStar_SMTEncoding_Util.mkFalse)),
+                [], FStar_SMTEncoding_Util.mkFalse))
 let strip_not: FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
   fun t  ->
     match t.FStar_SMTEncoding_Term.tm with

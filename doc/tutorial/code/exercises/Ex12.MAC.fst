@@ -36,12 +36,9 @@ type entry =
          -> m:tag
          -> entry
 
-(* the log needs to be private so the adversary cannot 
-   add or remove entries *)
 
 private type log_t = ref (list entry)
 let log:log_t = ST.alloc #(list entry) []
-
 
 // BEGIN: MacSpec
 val keygen: p:(text -> Type) -> ML (pkey p)

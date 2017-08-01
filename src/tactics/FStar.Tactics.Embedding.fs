@@ -4,6 +4,7 @@ open FStar
 open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
+open FStar.Syntax.Embeddings
 open FStar.Util
 
 module S = FStar.Syntax.Syntax
@@ -34,7 +35,7 @@ let fstar_tactics_lid_as_data_tm s = lid_as_data_tm (fstar_tactics_lid' ["Effect
 
 let fstar_tactics_Failed  = fstar_tactics_lid_as_data_tm "Failed"
 let fstar_tactics_Success = fstar_tactics_lid_as_data_tm "Success"
-let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm lid_tuple2) [U_zero;U_zero])
+let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;U_zero])
                                       [S.as_arg t;
                                        S.as_arg s]
                                       None
