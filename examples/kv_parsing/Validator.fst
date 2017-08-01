@@ -53,6 +53,15 @@ let parser_st #t (p: parser t) =
               end
             | None -> r == None)))
 
+let parse_u8_st_nochk :
+    parser_st_nochk (parse_u8) = fun input ->
+    let b0 = B.index input.p 0ul in
+    (b0, 1ul)
+
+let parse_u8_st : parser_st (parse_u8) = fun input ->
+    if U32.lt input.len 1ul then None
+    else (Some (parse_u8_st_nochk input))
+
 let parse_u16_st_nochk :
   parser_st_nochk (parse_u16) = fun input ->
   let b0 = B.index input.p 0ul in
