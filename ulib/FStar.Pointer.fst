@@ -3850,8 +3850,7 @@ let write #a b z =
   let v = (| t, c1 |) in
   r := v;
   let h1 = HST.get () in
-  assert (h1 == HS.upd h0 (greference_of b) v);
-  admit () (* TODO: sync up with the new spec of := *)
+  assert (h1 == HS.upd h0 (greference_of b) v)
 
 (** Given our model, this operation is stateful, however it should be translated
     to a no-op by Kremlin, as the tag does not actually exist at runtime.
