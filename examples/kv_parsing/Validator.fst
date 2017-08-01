@@ -18,11 +18,6 @@ module Cast = FStar.Int.Cast
 
 (*** Stateful validation of input buffer *)
 
-unfold let validation_checks_parse #t (b: bytes)
-  (v: option (off:U32.t{U32.v off <= length b}))
-  (p: option (t * n:nat{n <= length b})) : Type0 =
-  Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
-
 inline_for_extraction
 let parser_st_nochk #t (p: parser t) =
   input:bslice -> Stack (t * off:U32.t{U32.v off <= U32.v input.len})
@@ -44,7 +39,7 @@ let parser_st #t (p: parser t) =
   (requires (fun h0 -> live h0 input))
   (ensures (fun h0 r h1 -> live h1 input /\
           modifies_none h0 h1 /\
-          (let bs = B.as_seq h1 input.p in
+          (let bs = as_seq h1 input in
             match p bs with
             | Some (v, n) -> Some? r /\
               begin
@@ -96,7 +91,12 @@ let parse_u32_st : parser_st (parse_u32) = fun input ->
     then None
     else Some (parse_u32_st_nochk input)
 
-unfold
+unfold let validation_checks_parse #t (b: bytes)
+  (v: option (off:U32.t{U32.v off <= length b}))
+  (p: option (t * n:nat{n <= length b})) : Type0 =
+  Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
+
+inline_for_extraction
 let stateful_validator #t (p: parser t) = input:bslice -> Stack (option (off:U32.t{U32.v off <= U32.v input.len}))
     (requires (fun h0 -> live h0 input))
     (ensures (fun h0 r h1 -> live h1 input /\
@@ -267,6 +267,9 @@ let validate_many_st #t p v n = fun buf ->
 [@"substitute"]
 let validate_done_st : stateful_validator parsing_done = fun input ->
   if U32.eq input.len 0ul then Some 0ul else None
+
+let validate_entries_st' (num_entries:U32.t) : stateful_validator (parse_many parse_entry (U32.v num_entries)) =
+    validate_many_st parse_entry validate_entry_st num_entries
 
 let validate_entries_st (num_entries:U32.t) : stateful_validator (parse_entries num_entries) =
   fun input ->

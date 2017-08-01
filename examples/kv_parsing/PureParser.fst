@@ -14,7 +14,7 @@ module Cast = FStar.Int.Cast
 // - the parser can fail (currently reporting an uninformative [None])
 // - it returns the parsed value as well as the number of bytes read
 //   (this is intended to be the number of bytes to advance the input pointer)
-let parser (t:Type) = b:bytes -> Tot (option (t * n:nat{n <= length b}))
+let parser (t:Type) = b:bytes{length b < pow2 32} -> Tot (option (t * n:nat{n <= length b}))
 
 // parsers form a monad; this is bind for the parser monad
 val and_then : #t:Type -> #t':Type ->
