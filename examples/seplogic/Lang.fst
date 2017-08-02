@@ -283,16 +283,23 @@ let lemma_example2_ok (p:ref nat) (q:ref nat) (a:nat) (b:nat) (h:heap)
     lemma_hoare_triple_imp (pre1') (Bind (Write p 3) (fun _ -> Write q 4)) (post3) h
 
 
+(* Show both definitions are equivalent for proof to go 
+   through when swap is defined using bind notation
+   or avoid defining cx4, cx3, etc in the proof *)
+   
 let swap (r1:ref nat) (r2:ref nat) : (command unit) =
-  n1 <-- Read r1;
-  n2 <-- Read r2;
-  _ <-- Write r1 n2;
-  Write r2 n1
+(* 
+  tmp1 <-- Read r1;
+  tmp2 <-- Read r2;
+  _ <-- Write r1 tmp2;
+  Write r2 tmp1
+*) 
+  Bind (Read r1) (fun tmp1 -> Bind (Read r2) (fun tmp2 -> Bind (Write r1 tmp2) (fun _ -> Write r2 tmp1)))
 
 let lemma_swap_ok (r1:ref nat) (r2:ref nat) (n1:nat) (n2:nat)
   :Lemma (hoare_triple ((r1 `points_to` n1) `star` (r2 `points_to` n2))
                        (swap r1 r2)
-		       (fun _ -> (r1 `points_to` n2) `star` (r1 `points_to` n1)))
+		       (fun _ -> (r1 `points_to` n2) `star` (r2 `points_to` n1)))
   = let r_c1 = fun (r:nat) -> lift (r == n1) in
     let r_c2 = fun (r:nat) -> lift (r == n2) in
     
@@ -303,91 +310,133 @@ let lemma_swap_ok (r1:ref nat) (r2:ref nat) (n1:nat) (n2:nat)
     let cx4 = fun tmp1 tmp2 _ -> c4 tmp1 in
     let cx3 = fun tmp1 tmp2 -> Bind (c3 tmp2) (cx4 tmp1 tmp2) in
     let cx2 = fun tmp1 -> Bind c2 (cx3 tmp1) in
-
+    
     lemma_read r1 r_c1;
     let c1_pre  = (exists_x (fun v -> r1 `points_to` v `star` (r_c1 v))) in
     let c1_post = (fun r -> r1 `points_to` r `star` (r_c1 r)) in
     assert(hoare_triple c1_pre (Read r1) c1_post);
 
-    let c2_pre = (exists_x (fun v -> r2 `points_to` v `star` (r_c2 v))) in
+    let c2_pre         = (exists_x (fun v -> r2 `points_to` v `star` (r_c2 v))) in
     let c1_pre_c2_pre  = c1_pre `star` c2_pre in
     let c1_post_c2_pre = fun r -> (c1_post r) `star` c2_pre in
 
     lemma_frame_rule c1 c1_pre c1_post c2_pre;
     assert (hoare_triple c1_pre_c2_pre c1 c1_post_c2_pre);
 
-    let aux_cx2 (x1:nat) :Lemma (hoare_triple (c1_post_c2_pre x1) 
-                                            (cx2 x1) 
-			                    (fun _ -> (r1 `points_to` n2) `star` (r1 `points_to` n1)))
+    let c_post = fun _ -> (r1 `points_to` n2) `star` (r2 `points_to` n1) in
+    
+    let aux_cx2 (x1:nat) :Lemma (hoare_triple (c1_post_c2_pre x1) (cx2 x1) c_post)
       = lemma_read r2 r_c2;
+      
         let c2_post = (fun x -> r2 `points_to` x `star` (r_c2 x)) in
 	assert (hoare_triple c2_pre c2 c2_post);
 
         lemma_frame_rule c2 c2_pre c2_post (c1_post x1);
 
+        let c2_pre_c1_post  = c2_pre `star` (c1_post x1) in
         let c2_post_c1_post = fun n -> (c2_post n) `star` (c1_post x1) in
-	assert (hoare_triple (c2_pre `star` (c1_post x1)) c2 c2_post_c1_post);
+	assert (hoare_triple c2_pre_c1_post c2 c2_post_c1_post);
 
-        let aux_cx3 (x2:nat) :Lemma (hoare_triple (c2_post_c1_post x2) (cx3 x1 x2) (fun _ -> (r1 `points_to` n2) `star` (r1 `points_to` n1)))
-	  = lemma_write r1 x2;
-	    let r1_v  = exists_x (fun v -> r1 `points_to` v) in
-	    let r1_x2 = (fun _ -> r1 `points_to` x2) in
-	    assert (hoare_triple r1_v (c3 x2) r1_x2);
+        lemma4 (c2_pre) (c1_post x1);
 
-            lemma_frame_rule (c3 x2) r1_v r1_x2 (r_c1 x1);
-	    let r1_v_rc1  = r1_v `star` (r_c1 x1) in
-	    let r1_x2_rc1 = fun x -> (r1_x2 x) `star` (r_c1 x1) in
-	    assert (hoare_triple r1_v_rc1 (c3 x2) r1_x2_rc1);
-
-            lemma_frame_rule (c3 x2) r1_v_rc1 r1_x2_rc1 (c2_post x2);
-	    let r1_v_rc1_c2_post  = r1_v_rc1 `star` (c2_post x2) in
-	    let r1_x2_rc1_c2_post = (fun x -> (r1_x2_rc1 x) `star` (c2_post x2)) in
-	    assert (hoare_triple r1_v_rc1_c2_post (c3 x2) r1_x2_rc1_c2_post);
-
-            let aux_cx4 (_:unit) : Lemma (hoare_triple (r1_x2_rc1_c2_post ()) 
-	                                               (cx4 x1 x2 ()) 
-						       (fun _ -> (r1 `points_to` n2) `star` (r2 `points_to` n1)))
-	      = lemma_write r2 x1;
-                let r2_v  = exists_x (fun v -> r2 `points_to` v) in
-		let r2_x1 = (fun _ ->  r2 `points_to` x1) in
-		assert (hoare_triple r2_v (c4 x1) r2_x1);
-
-                lemma_frame_rule (c4 x1) (r2_v) (r2_x1) (r_c2 x2);
-                let r2_v_rc2  = r2_v `star` (r_c2 x2) in
-		let r2_x1_rc2 = fun x -> (r2_x1 x) `star` (r_c2 x2) in
-		assert (hoare_triple r2_v_rc2 (c4 x1) r2_x1_rc2);
-
-                lemma_frame_rule (c4 x1) r2_v_rc2 r2_x1_rc2 (r1_x2_rc1 ());
-		let r2_v_rc2_r1_x2_rc1  = r2_v_rc2 `star` (r1_x2_rc1 ()) in
-		let r2_x1_rc2_r1_x2_rc1 = fun _ -> (r2_x1_rc2 ()) `star` (r1_x2_rc1 ()) in
-		assert (hoare_triple r2_v_rc2_r1_x2_rc1 (c4 x1) r2_x1_rc2_r1_x2_rc1);
-
-                lemma4 (r2_v_rc2) (r1_x2_rc1 ());
-		let r1_x2_rc1_r2_v_rc2 = (r1_x2_rc1 ()) `star` r2_v_rc2 in
-		lemma_consequence (c4 x1) r1_x2_rc1_r2_v_rc2 r2_x1_rc2_r1_x2_rc1;
-
-                assert (hoare_triple (r1_x2_rc1_c2_post ()) (c4 x1) r2_x1_rc2_r1_x2_rc1);       
-		
-	        let cx4_post = fun _  -> (r2 `points_to` n1) `star` (r1 `points_to` n2) in
-		assert (forall (r:unit). r2_x1_rc2_r1_x2_rc1 r `imp` cx4_post r);
-	        lemma_consequence (c4 x1) (r1_x2_rc1_c2_post ()) cx4_post;
-		assert (hoare_triple (r1_x2_rc1_c2_post()) (c4 x1) cx4_post);
-                
-                let cx4_post' = fun _ -> (r1 `points_to` n2) `star` (r2 `points_to` n1) in
-		lemma4 (r2 `points_to` n1) (r1 `points_to` n2);
-		assert (forall (r:unit). cx4_post r `imp` cx4_post' r);
-                lemma_consequence (c4 x1) (r1_x2_rc1_c2_post ()) cx4_post';
-
-	(*	assert (hoare_triple (r1_x2_rc1_c2_post ()) (c4 x1) cx4_post'); *)
-		admit()
-	    in
-            admit()
-	in
+        let c1_post_c2_pre_x1 = (c1_post x1) `star` c2_pre in
+	lemma_consequence c2 c1_post_c2_pre_x1 c2_post_c1_post;
+	assert (hoare_triple c1_post_c2_pre_x1 c2 c2_post_c1_post);
 	
-        admit()
+        let aux_cx3 (x2:nat) :Lemma (hoare_triple (c2_post_c1_post x2) 
+	                                        (cx3 x1 x2) 
+						(c_post))
+	  = lemma_write r1 x2;
+	  
+	    let cx3_pre  = exists_x (fun v -> r1 `points_to` v) in
+	    let cx3_post = (fun _ -> r1 `points_to` x2) in
+	    assert (hoare_triple cx3_pre (c3 x2) cx3_post);
+	    
+            lemma_frame_rule (c3 x2) cx3_pre cx3_post (r_c1 x1);
+	    
+	    let c3_pre   = cx3_pre `star` (r_c1 x1) in
+	    let c3_post  = fun _ -> (cx3_post ()) `star` (r_c1 x1) in
+	    assert (hoare_triple c3_pre (c3 x2) c3_post);
+
+	    lemma_consequence (c3 x2) (c1_post x1) c3_post;
+	    
+            lemma_frame_rule (c3 x2) (c1_post x1) c3_post (c2_post x2);
+	    let c1_post_c2_post_x1  = (c1_post x1) `star` (c2_post x2) in
+	    let c3_post_c2_post = (fun _ -> (c3_post ()) `star` (c2_post x2)) in
+	    assert (hoare_triple c1_post_c2_post_x1 (c3 x2) c3_post_c2_post);
+
+            lemma4 (c1_post x1) (c2_post x2);
+
+            let c2_post_c1_post_x2 = (c2_post x2) `star` (c1_post x1) in
+	    lemma_consequence (c3 x2) c2_post_c1_post_x2 c3_post_c2_post;
+
+            let aux_cx4 (x3:unit) : Lemma (hoare_triple (c3_post_c2_post x3) 
+	                                                (cx4 x1 x2 x3) 
+						        (c_post))
+	      = lemma_write r2 x1;
+	      
+                let cx4_pre  = exists_x (fun v -> r2 `points_to` v) in
+		let cx4_post = (fun _ ->  r2 `points_to` x1) in
+		assert (hoare_triple cx4_pre (c4 x1) cx4_post);
+
+                lemma_frame_rule (c4 x1) cx4_pre cx4_post (r_c2 x2);
+		
+                let c4_pre   = cx4_pre `star` (r_c2 x2) in
+		let c4_post  = fun _ -> (cx4_post ()) `star` (r_c2 x2) in
+		assert (hoare_triple c4_pre (c4 x1) c4_post);
+
+                lemma_consequence (c4 x1) (c2_post x2) c4_post;
+		assert (hoare_triple (c2_post x2) (c4 x1) c4_post);
+		
+                lemma_frame_rule (c4 x1) (c2_post x2) c4_post (c3_post x3);
+		
+		let c2_post_c3_post  = (c2_post x2) `star` (c3_post x3) in
+		let c4_post_c3_post = fun _ -> (c4_post x3) `star` (c3_post x3) in
+		assert (hoare_triple c2_post_c3_post (c4 x1) c4_post_c3_post);
+
+                lemma4 (c2_post x2) (c3_post x3);
+		
+		let c3_post_c2_post_x2 = (c3_post x3) `star` (c2_post x2) in
+		lemma_consequence (c4 x1) c3_post_c2_post_x2 c4_post_c3_post;
+                assert (hoare_triple c3_post_c2_post_x2 (c4 x1) c4_post_c3_post);       
+		
+	        let c_post' = fun _ -> (r2 `points_to` n1) `star` (r1 `points_to` n2) in
+	        lemma_consequence (c4 x1) c3_post_c2_post_x2 c_post';
+		assert (hoare_triple c3_post_c2_post_x2 (c4 x1) c_post');
+                
+		lemma4 (r2 `points_to` n1) (r1 `points_to` n2);
+                lemma_consequence (c4 x1) c3_post_c2_post_x2 c_post; 
+
+		assert (hoare_triple c3_post_c2_post_x2 (c4 x1) c_post)
+	    in
+	 
+	    FStar.Classical.forall_intro aux_cx4; 
+	    
+	    lemma_bind (c3 x2) (cx4 x1 x2) c2_post_c1_post_x2 c_post;
+	    assert (hoare_triple c2_post_c1_post_x2 (cx3 x1 x2) c_post)
+	 
+	in
+
+        FStar.Classical.forall_intro aux_cx3;
+
+        lemma_bind c2 (cx3 x1) c1_post_c2_pre_x1 c_post;
+        assert (hoare_triple c1_post_c2_pre_x1 (cx2 x1) c_post)
     in
-    
-    admit()
+
+    FStar.Classical.forall_intro aux_cx2;
+
+    lemma_bind c1 cx2 c1_pre_c2_pre c_post;
+    assert (hoare_triple c1_pre_c2_pre (Bind c1 cx2) c_post);
+
+    lemma2 (n1 == n1) (r1 `points_to` n1) (exists_x (fun v -> r1 `points_to` v));
+    lemma2 (n2 == n2) (r2 `points_to` n2) (exists_x (fun v -> r2 `points_to` v));
+
+    lemma6 (r1 `points_to` n1) c1_pre (r2 `points_to` n2) c2_pre;
+    let c_pre = (r1 `points_to` n1) `star` (r2 `points_to` n2) in
+    lemma_consequence (Bind c1 cx2) c_pre c_post;
+ 
+    assert (hoare_triple c_pre (swap r1 r2) c_post)
+
 (*****)
 
 let example3 (r1:ref nat) (r2:ref nat) :(command unit) =
