@@ -1,20 +1,22 @@
 open Prims
 let info_at_pos:
-  'Auu____11 .
-    'Auu____11 ->
-      Prims.string ->
+  FStar_TypeChecker_Env.env ->
+    Prims.string ->
+      Prims.int ->
         Prims.int ->
-          Prims.int ->
-            ((Prims.string,FStar_Ident.lid) FStar_Util.either,FStar_Syntax_Syntax.typ,
-              FStar_Range.range) FStar_Pervasives_Native.tuple3
-              FStar_Pervasives_Native.option
+          ((Prims.string,FStar_Ident.lid) FStar_Util.either,FStar_Syntax_Syntax.typ,
+            FStar_Range.range) FStar_Pervasives_Native.tuple3
+            FStar_Pervasives_Native.option
   =
   fun env  ->
     fun file  ->
       fun row  ->
         fun col  ->
-          let uu____40 = FStar_TypeChecker_Common.info_at_pos file row col in
-          match uu____40 with
+          let uu____29 =
+            let uu____32 =
+              FStar_ST.op_Bang env.FStar_TypeChecker_Env.identifier_info in
+            FStar_TypeChecker_Common.id_info_at_pos uu____32 file row col in
+          match uu____29 with
           | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
           | FStar_Pervasives_Native.Some info ->
               (match info.FStar_TypeChecker_Common.identifier with
@@ -57,11 +59,11 @@ let add_errors:
                       (msg, uu____210)
                     else
                       (let r' =
-                         let uu___241_213 = r in
+                         let uu___245_213 = r in
                          {
                            FStar_Range.def_range = (r.FStar_Range.use_range);
                            FStar_Range.use_range =
-                             (uu___241_213.FStar_Range.use_range)
+                             (uu___245_213.FStar_Range.use_range)
                          } in
                        let uu____214 =
                          let uu____215 = FStar_Range.file_of_range r' in
