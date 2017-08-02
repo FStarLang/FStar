@@ -37,8 +37,7 @@ let unused_in #a (b:buffer a) h : GTot Type0 = HS.unused_in b.content h
 //17-01-04 notations: 
 //17-01-04 when to use sel, index, get, read? 
 //17-01-04 In most cases as_seq should be used instead of this one.
-//17-01-04 should the pre use contains or live? 
-let sel #a h (b:buffer a{contains h b}) : GTot (seq a) = HS.sel h b.content
+let sel #a h (b:buffer a) : GTot (seq a) = HS.sel h b.content
 
 let max_length #a (b:buffer a) : GTot nat = v b.max_length
 let length #a (b:buffer a) : GTot nat = v b.length
@@ -66,16 +65,16 @@ val recall: #a:Type
 let recall #a b = recall b.content
 
 (* Ghostly access an element of the array, or the full underlying sequence *)
-let as_seq #a h (b:buffer a) : Ghost (s:seq a{Seq.length s = length b}) (requires (live h b)) (ensures (fun _ -> True)) = 
+let as_seq #a h (b:buffer a) : GTot (s:seq a{Seq.length s = length b}) =
   Seq.slice (sel h b) (idx b) (idx b + length b)
 
-let get #a h (b:buffer a{live h b}) (i:nat{i < length b}) : GTot a =
+let get #a h (b:buffer a) (i:nat{i < length b}) : GTot a =
   Seq.index (as_seq h b) i
 
 (* Equality predicate on buffer contents, without quantifiers *)
 //17-01-04 revise comment? rename?
 let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
-  live h b /\ live h' b' /\ as_seq h b == as_seq h' b'
+  as_seq h b == as_seq h' b'
 
 (* y is included in x / x contains y *)
 let includes #a (x:buffer a) (y:buffer a) : GTot Type0 =
@@ -92,8 +91,8 @@ let includes_live #a h (x: buffer a) (y: buffer a)
 
 let includes_as_seq #a h1 h2 (x: buffer a) (y: buffer a)
 : Lemma
-  (requires (x `includes` y /\ live h1 x /\ live h2 x /\ as_seq h1 x == as_seq h2 x))
-  (ensures (live h1 y /\ live h2 y /\ as_seq h1 y == as_seq h2 y))
+  (requires (x `includes` y /\ as_seq h1 x == as_seq h2 x))
+  (ensures (as_seq h1 y == as_seq h2 y))
 = Seq.slice_slice (sel h1 x) (idx x) (idx x + length x) (idx y - idx x) (idx y  - idx x + length y);
   Seq.slice_slice (sel h2 x) (idx x) (idx x + length x) (idx y - idx x) (idx y  - idx x + length y)
 
