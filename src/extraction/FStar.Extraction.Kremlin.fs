@@ -470,6 +470,8 @@ and translate_type env t: typ =
       TInt (must (mk_width m))
   | MLTY_Named ([], ([ "FStar"; m ], "t'")) when is_machine_int m ->
       TInt (must (mk_width m))
+  | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
+      TUnit
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Buffer.buffer") ->
       TBuf (translate_type env arg)
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
@@ -591,7 +593,7 @@ and translate_expr env e: expr =
       // (void*)0 so that it can get rid of ghost calls to HST.get at the
       // beginning of functions, which is needed to enforce the push/pop
       // structure.
-      EAny
+      EUnit
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->
       ECast (translate_expr env e, TAny)

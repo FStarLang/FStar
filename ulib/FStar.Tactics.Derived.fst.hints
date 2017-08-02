@@ -1,5 +1,5 @@
 [
-  "\u0002­g—˜”oëÕ¡UF\u0004AØ",
+  "ñ®˜\u0013<vÅ\fe\u0017;fý¼å7",
   [
     [
       "FStar.Tactics.Derived.mapM",
@@ -53,10 +53,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_600174244456cffd2507e718cf78d82a_0",
+        "binder_x_1ed654bfaa534f1761692bbafce5b1e2_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Reflection.Syntax.binders",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
@@ -67,9 +68,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil",
-        "equation_FStar.Reflection.Syntax.binders",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
@@ -88,12 +89,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_600174244456cffd2507e718cf78d82a_1",
+        "binder_x_1ed654bfaa534f1761692bbafce5b1e2_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.LexTop@tok",
-        "equation_FStar.Reflection.Syntax.binders",
+        "equation_FStar.Reflection.Types.binders",
         "equation_FStar.Tactics.Builtins.rewrite",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
@@ -104,11 +107,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_600174244456cffd2507e718cf78d82a_0",
+        "binder_x_1ed654bfaa534f1761692bbafce5b1e2_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Reflection.Syntax.binders",
+        "equation_FStar.Reflection.Types.binders",
+        "equation_FStar.Tactics.Builtins.rewrite",
         "equation_FStar.Tactics.Derived.idtac",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ],

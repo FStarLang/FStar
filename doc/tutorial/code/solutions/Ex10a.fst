@@ -1,3 +1,4 @@
+
 module Ex10a
 open FStar.All
 open FStar.ST
@@ -36,16 +37,19 @@ let acls = ST.alloc []
    We give predicate transformer semantics for them.
 *)
 
-val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> sel h' acls == e::sel h acls))
-let grant e =  acls := (e:: !acls)
 
+// BEGIN: Ex10aSolution
+val grant : e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h _ h' -> sel h' acls == e::sel h acls))
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> not(mem e (sel h' acls))))
+// END: Ex10aSolution
+
+
+let grant e =  acls := (e:: !acls)
 let revoke e =
   let db = filter (fun e' -> e<>e') !acls in
   acls := db
-
 
 (* Next, we model two primitives that provide access to files *)
 
@@ -84,6 +88,8 @@ let safe_delete file =
   then delete file
   else failwith "unwritable"
 
+
+
 (* Finally, we have a top-level client program *)
 val test_acls: file -> ML unit
 let test_acls f =
@@ -94,3 +100,4 @@ let test_acls f =
   revoke (Readable f);
   //let _ = read f in       (* not ok any more *) 
   ()
+

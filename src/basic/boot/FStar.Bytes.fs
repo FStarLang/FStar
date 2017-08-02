@@ -42,7 +42,8 @@ let b3 n =  ((n >>> 24) &&& 0xFF)
 let dWw1 n = int32 ((n >>> 32) &&& 0xFFFFFFFFL)
 let dWw0 n = int32 (n          &&& 0xFFFFFFFFL)
 
-type bytes = byte[]
+type array<'a> = 'a[]
+type bytes = array<byte>
 
 let length (b:byte[]) = Array.length b
 let get (b:byte[]) n = int32 (Array.get b n)

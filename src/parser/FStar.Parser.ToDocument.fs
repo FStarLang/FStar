@@ -154,6 +154,12 @@ let soft_surround_separate_map n b void_ opening sep closing f xs =
   then void_
   else soft_surround n b opening (separate_map sep f xs) closing
 
+let soft_surround_map_or_flow n b void_ opening sep closing f xs =
+  if xs = []
+  then void_
+  else soft_surround n b opening (separate_map_or_flow sep f xs) closing
+
+
 let doc_of_fsdoc (comment,keywords) =
   group (concat [
     str comment; space;
@@ -199,11 +205,11 @@ let is_array e = match (unparen e).tm with
     | _ -> false
 
 let rec is_ref_set e = match (unparen e).tm with
-    | Var maybe_empty_lid -> lid_equals maybe_empty_lid C.tset_empty
-    | App ({tm=Var maybe_singleton_lid}, {tm=App({tm=Var maybe_ref_lid}, e, Nothing)}, Nothing) ->
-        lid_equals maybe_singleton_lid C.tset_singleton && lid_equals maybe_ref_lid C.heap_ref
+    | Var maybe_empty_lid -> lid_equals maybe_empty_lid C.set_empty
+    | App ({tm=Var maybe_singleton_lid}, {tm=App({tm=Var maybe_addr_of_lid}, e, Nothing)}, Nothing) ->
+        lid_equals maybe_singleton_lid C.set_singleton && lid_equals maybe_addr_of_lid C.heap_addr_of_lid
     | App({tm=App({tm=Var maybe_union_lid}, e1, Nothing)}, e2, Nothing) ->
-        lid_equals maybe_union_lid C.tset_union && is_ref_set e1 && is_ref_set e2
+        lid_equals maybe_union_lid C.set_union && is_ref_set e1 && is_ref_set e2
     | _ -> false
 
 (* [extract_from_ref_set e] assumes that [is_ref_set e] holds and returns the list of terms contained in the set *)
@@ -457,7 +463,7 @@ let rec p_decl d =
         (if d.quals = [] then empty else break1) ^^ p_rawDecl d)
 
 and p_attributes attrs =
-  soft_surround_separate_map 0 2 empty
+  soft_surround_map_or_flow 0 2 empty
                         (lbracket ^^ str "@") space (rbracket ^^ hardline)
                         p_atomicTerm attrs
 
@@ -592,7 +598,7 @@ and p_letbinding (pat, e) =
     match pat.pat with
     | PatApp ({pat=PatVar (x, _)}, pats) ->
         surround 2 1 (p_lident x)
-                      (separate_map break1 p_atomicPattern pats ^^ ascr_doc)
+                      (separate_map_or_flow break1 p_atomicPattern pats ^^ ascr_doc)
                       equals
     | _ -> group (p_tuplePattern pat ^^ ascr_doc ^/^ equals)
   in
@@ -780,7 +786,7 @@ and p_refinement aqual_opt binder t phi =
 
 
 (* TODO : we may prefer to flow if there are more than 15 binders *)
-and p_binders is_atomic bs = separate_map break1 (p_binder is_atomic) bs
+and p_binders is_atomic bs = separate_map_or_flow break1 (p_binder is_atomic) bs
 
 
 (* ****************************************************************************)
@@ -944,7 +950,7 @@ and p_tmImplies e = match (unparen e).tm with
 
 and p_tmArrow p_Tm e = match (unparen e).tm with
   | Product(bs, tgt) ->
-      group (concat_map (fun b -> p_binder false b ^^ space ^^ rarrow ^^ break1) bs ^^ p_tmArrow p_Tm tgt)
+      group (separate_map_or_flow empty (fun b -> p_binder false b ^^ space ^^ rarrow ^^ break1) bs ^^ p_tmArrow p_Tm tgt)
   | _ -> p_Tm e
 
 and p_tmFormula e = match (unparen e).tm with
@@ -1041,11 +1047,11 @@ and p_appTerm e = match (unparen e).tm with
         then
           let fs_typ_args, args = BU.take (fun (_,aq) -> aq = FsTypApp) args in
           p_indexingTerm head ^^
-          soft_surround_separate_map 2 0 empty langle (comma ^^ break1) rangle p_fsTypArg fs_typ_args,
+          soft_surround_map_or_flow 2 0 empty langle (comma ^^ break1) rangle p_fsTypArg fs_typ_args,
           args
         else p_indexingTerm head, args
       in
-      group (soft_surround_separate_map 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
+      group (soft_surround_map_or_flow 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
 
   (* dependent tuples are handled below *)
   | Construct (lid, args) when is_general_construction e && not (is_dtuple_constructor lid) ->
