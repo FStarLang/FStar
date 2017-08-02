@@ -5963,7 +5963,7 @@ let desugar_partial_modul:
                    let uu____18047 = FStar_Options.file_list () in
                    FStar_List.hd uu____18047 in
                  FStar_Util.get_file_extension uu____18046 in
-               uu____18045 = "fsti") in
+               FStar_List.mem uu____18045 ["fsti"; "fsi"]) in
           if uu____18043 then as_interface m else m in
         let uu____18051 = desugar_modul_common curmod env m1 in
         match uu____18051 with
