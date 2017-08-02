@@ -24,10 +24,16 @@ type pattern =
 
 type branch = pattern * term
 
+type aqualv =
+    | Q_Implicit
+    | Q_Explicit
+
+type argv = term * aqualv
+
 type term_view =
     | Tv_Var    of binder
     | Tv_FVar   of fv
-    | Tv_App    of term * term
+    | Tv_App    of term * argv
     | Tv_Abs    of binder * term
     | Tv_Arrow  of binder * term
     | Tv_Type   of unit
@@ -64,6 +70,7 @@ let fstar_refl_tdataconstr s = tdataconstr (fstar_refl_lid s)
 
 (* types *)
 let fstar_refl_term      = mk_refl_types_lid_as_term "term"
+let fstar_refl_aqualv    = mk_refl_types_lid_as_term "aqualv"
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
 let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
@@ -73,6 +80,12 @@ let fstar_refl_sigelt    = mk_refl_types_lid_as_term "sigelt"
 let fstar_refl_ctor      = mk_refl_types_lid_as_term "ctor"
 let fstar_refl_pattern   = mk_refl_syntax_lid_as_term "pattern"
 let fstar_refl_branch    = mk_refl_types_lid_as_term "branch"
+
+(* quals *)
+let ref_Q_Explicit_lid   = fstar_refl_data_lid "Q_Explicit"
+let ref_Q_Implicit_lid   = fstar_refl_data_lid "Q_Implicit"
+let ref_Q_Explicit       = tdataconstr ref_Q_Explicit_lid
+let ref_Q_Implicit       = tdataconstr ref_Q_Implicit_lid
 
 (* const *)
 let ref_C_Unit_lid  = fstar_refl_data_lid "C_Unit"

@@ -112,7 +112,7 @@ val is_arith_expr : term -> tm expr
 let rec is_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
     match inspect hd, tl with
-    | Tv_FVar fv, [e1; e2 ; e3] ->
+    | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
       let e2' = is_arith_expr e2 in
       let e3' = is_arith_expr e3 in
@@ -125,7 +125,7 @@ let rec is_arith_expr (t:term) =
       else if qn = umod_qn then liftM2 Umod e2' e3'
       else if qn = mul_mod_qn then liftM2 MulMod e2' e3'
       else fail ("triary: " ^ fv_to_string fv)
-    | Tv_FVar fv, [l; r] ->
+    | Tv_FVar fv, [(l, Q_Explicit); (r, Q_Explicit)] ->
         let qn = inspect_fv fv in
         // Have to go through hoops to get F* to typecheck this.
         // Maybe the do notation is twisting the terms somehow unexpected?
@@ -137,7 +137,7 @@ let rec is_arith_expr (t:term) =
         else if qn = mult'_qn then liftM2 Mult ll rr
 	else if qn = nat_bv_qn then liftM NatToBv rr
         else fail ("binary: " ^ fv_to_string fv)
-    | Tv_FVar fv, [a] ->
+    | Tv_FVar fv, [(a, Q_Explicit)] ->
         let qn = inspect_fv fv in
         let aa = is_arith_expr a in
         if qn = neg_qn then liftM Neg aa

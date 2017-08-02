@@ -59,19 +59,24 @@ let nat_bv_qn  = ["FStar" ; "BV"   ; "int2bv"]
 
 
 (* Helpers for dealing with nested applications and arrows *)
-let rec collect_app' (args : list term) (t : term) : Tot (term * list term) (decreases t) =
+let rec collect_app' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =
     match inspect t with
     | Tv_App l r ->
         collect_app' (r::args) l
     | _ -> (t, args)
 
-val collect_app : term -> term * list term
+val collect_app : term -> term * list argv
 let collect_app = collect_app' []
 
-let rec mk_app (t : term) (args : list term) : Tot term (decreases args) =
+let rec mk_app (t : term) (args : list argv) : Tot term (decreases args) =
     match args with
     | [] -> t
     | (x::xs) -> mk_app (pack (Tv_App t x)) xs
+
+// Helper for when all arguments are explicit
+let mk_e_app (t : term) (args : list term) : Tot term =
+    let e t = (t, Q_Explicit) in
+    mk_app t (List.Tot.map e args)
 
 let rec collect_arr' (typs : list typ) (t : typ) : Tot (typ * list typ) (decreases t) =
     match inspect t with
@@ -117,7 +122,7 @@ let rec compare_term (s t : term) : order =
         compare_fv sv tv
 
     | Tv_App h1 a1, Tv_App h2 a2 ->
-        lex (compare_term h1 h2) (fun () -> compare_term a1 a2)
+        lex (compare_term h1 h2) (fun () -> compare_argv a1 a2)
 
     | Tv_Abs b1 e1, Tv_Abs b2 e2
     | Tv_Arrow b1 e1, Tv_Arrow b2 e2
@@ -151,3 +156,10 @@ let rec compare_term (s t : term) : order =
     | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
     | Tv_Match _ _, _  -> Lt   | _, Tv_Match _ _  -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
+and compare_argv (a1 a2 : argv) : order =
+    let a1, q1 = a1 in
+    let a2, q2 = a2 in
+    match q1, q2 with
+    | Q_Implicit, Q_Explicit -> Lt
+    | Q_Explicit, Q_Implicit -> Gt
+    | _, _ -> compare_term a1 a2
