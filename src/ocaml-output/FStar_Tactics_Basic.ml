@@ -1834,6 +1834,22 @@ let cur_goal': FStar_Syntax_Syntax.typ tac =
   bind cur_goal (fun g  -> FStar_All.pipe_left ret g.goal_ty)
 let cur_witness: FStar_Syntax_Syntax.term tac =
   bind cur_goal (fun g  -> FStar_All.pipe_left ret g.witness)
+let goal_of_goal_ty:
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      (goal,FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple2
+  =
+  fun env  ->
+    fun typ  ->
+      let uu____5260 =
+        FStar_TypeChecker_Util.new_implicit_var "proofstate_of_goal_ty"
+          typ.FStar_Syntax_Syntax.pos env typ in
+      match uu____5260 with
+      | (u,uu____5278,g_u) ->
+          let g =
+            let uu____5293 = FStar_Options.peek () in
+            { context = env; witness = u; goal_ty = typ; opts = uu____5293 } in
+          (g, g_u)
 let proofstate_of_goal_ty:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -1841,14 +1857,9 @@ let proofstate_of_goal_ty:
   =
   fun env  ->
     fun typ  ->
-      let uu____5256 =
-        FStar_TypeChecker_Util.new_implicit_var "proofstate_of_goal_ty"
-          typ.FStar_Syntax_Syntax.pos env typ in
-      match uu____5256 with
-      | (u,uu____5274,g_u) ->
-          let g =
-            let uu____5289 = FStar_Options.peek () in
-            { context = env; witness = u; goal_ty = typ; opts = uu____5289 } in
+      let uu____5310 = goal_of_goal_ty env typ in
+      match uu____5310 with
+      | (g,g_u) ->
           let ps =
             {
               main_context = env;
@@ -1857,4 +1868,4 @@ let proofstate_of_goal_ty:
               goals = [g];
               smt_goals = []
             } in
-          (ps, u)
+          (ps, (g.witness))

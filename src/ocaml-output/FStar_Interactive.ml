@@ -128,6 +128,8 @@ let push:
                   FStar_TypeChecker_Env.lax = (kind = LaxCheck);
                   FStar_TypeChecker_Env.lax_universes =
                     (uu___199_391.FStar_TypeChecker_Env.lax_universes);
+                  FStar_TypeChecker_Env.failhard =
+                    (uu___199_391.FStar_TypeChecker_Env.failhard);
                   FStar_TypeChecker_Env.type_of =
                     (uu___199_391.FStar_TypeChecker_Env.type_of);
                   FStar_TypeChecker_Env.universe_of =
