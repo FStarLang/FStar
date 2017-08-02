@@ -10,6 +10,7 @@ all:	Apply.uver		\
 	Cut.uver		\
 	Clear.uver		\
 	Cases.uver		\
+	Tutorial.uver		\
 	Syntax.uver		\
 	GRewrite.uver		\
 	UserTactics.uver	\

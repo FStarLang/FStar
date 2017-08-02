@@ -18,6 +18,7 @@
 //Top-level invocations into the universal type-checker FStar.TypeChecker
 module FStar.Universal
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Errors
@@ -25,6 +26,7 @@ open FStar.Util
 open FStar.Getopt
 open FStar.Ident
 open FStar.Syntax.Syntax
+open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.Dependencies
 
@@ -195,7 +197,8 @@ let needs_interleaving intf impl =
   let m1 = Parser.Dep.lowercase_module_name intf in
   let m2 = Parser.Dep.lowercase_module_name impl in
   m1 = m2 &&
-  FStar.Util.get_file_extension intf = "fsti" && FStar.Util.get_file_extension impl = "fst"
+  List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
+  List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
 
 let pop_context env msg =
     DsEnv.pop () |> ignore;

@@ -1,0 +1,1688 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The pre- and postcondition logic for our dependently typed effectful language that we use to study the witness-recall verification model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+(* we use the same logic for both the language without reify-recall and with reify-recall *)
+
+This is classical first-order predicate logic extended with:
+- a preorder on states and typed equality on values
+  (so only values can appear in specifications, as in old-F*)
+- witnessed predicates
+
+Logical formulae:
+-----------------
+
+  phi, psi, ::= P(v_1,...,v_n)                  (* atomic predicate symbols *)
+  pre, post   | phi /\ psi
+              | True
+              | phi \/ psi
+              | False
+              | phi ==> psi
+              | forall x:t.phi
+              | exists x:t.phi
+              | witnessed x.phi                 (* the witnessed token *)
+
+  P ::= rel : state,state                       (* preorder on states *)
+      | ==  : t,t                               (* equality predicate, for every type (t) *)
+
+We write (x.phi) for predicates over states.
+
+We write (pre) and (post) for pre- and postcondition formulae when used in the computation type.
+
+We often write
+
+  (pre s) for (pre[s/x_s])
+
+and
+
+  (post s v s') for (post[s/x_s][v/x_v][s'/x'_s])
+
+for better readability.
+
+We also define convenient syntactic shorthands:
+
+  stable x.phi =def= forall y,y':state . p[y/x] /\ rel y y' ==> p[y'/x]
+
+  ~(phi)       =def= phi ==> False
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Well-formedness rules for pre- and postcondition formulae
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Well-formed formulae are defined using the judgement
+
+  G |- phi wf
+
+using the following rules:
+
+  P : t_1,...,t_n
+  G |- v_i : t_i   (1 <= i <= n)
+  ------------------------------ [Atomic-Predicate]
+  G |- P(v_1,...,v_n) wf
+
+    In particular,
+
+      G |- s_1 : state
+      G |- s_2 : state
+      ------------------- [Relation]
+      G |- rel s_1 s_2 wf
+
+      G |- v_1 : t
+      G |- v_2 : t
+      ------------------ [Equality]
+      G |- v_1 == v_2 wf
+
+  G |- phi wf
+  G |- psi wf
+  ------------------ [And]
+  G |- phi /\ psi wf
+
+  |- G wf
+  ------------ [True]
+  G |- True wf
+
+  G |- phi wf
+  G |- psi wf
+  ------------------ [Or]
+  G |- phi \/ psi wf
+
+  |- G wf
+  ------------- [False]
+  G |- False wf
+
+  G |- phi wf
+  G |- psi wf
+  ------------------- [Implication]
+  G |- phi ==> psi wf
+
+  G , x:t |- phi wf
+  ---------------------- [Forall]
+  G |- forall x:t.phi wf
+
+  G , x:t |- phi wf
+  ---------------------- [Exists]
+  G |- exists x:t.phi wf
+
+  G , x:state |- phi wf
+  ----------------------- [Witnessed]
+  G |- witnessed x.phi wf
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Natural deduction for pre- and postcondition formulae
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We define the natural deduction system using the following validity judgement
+
+  G | Phi |- phi
+
+where
+
+  a) (Phi) is a finite set of logical forumlae
+
+  b) we write (G |- Phi wf) to mean that (G |- phi wf) for all (phi \in Phi), and (|- G wf) if (Phi = \emptyset)
+
+The rules that define (G | Phi |- phi) are
+  
+  phi \in Phi
+  G |- Phi wf
+  -------------- [Hyp]
+  G | Phi |- phi
+
+  G |- Phi wf
+  G |- phi wf
+  ------------------------ [LEM]                                    (* excluded middle *)
+  G | Phi |- phi \/ ~(phi)
+
+  G | Phi |- phi
+  G | Phi |- psi
+  --------------------- [And-Intro]
+  G | Phi |- phi /\ psi
+
+  G | Phi |- phi /\ psi
+  --------------------- [And-Elim-1]
+  G | Phi |- phi
+
+  G | Phi |- phi /\ psi
+  --------------------- [And-Elim-2]
+  G | Phi |- psi
+
+  G |- Phi wf
+  --------------- [True-Intro]
+  G | Phi |- True
+
+  G | Phi |- phi
+  --------------------- [Or-Intro-1]
+  G | Phi |- phi \/ psi
+
+  G | Phi |- psi
+  --------------------- [Or-Intro-2]
+  G | Phi |- phi \/ psi
+
+  G | Phi |- phi_1 \/ phi_2
+  G | Phi , phi_1 |- psi
+  G | Phi , phi_2 |- psi
+  ------------------------- [Or-Elim]
+  G | Phi |- psi
+
+  G |- Phi wf
+  G |- phi wf
+  G | Phi |- False
+  ---------------- [False-Elim]
+  G | Phi |- phi
+
+  G | Phi , phi |- psi
+  ---------------------- [Implication-Intro]
+  G | Phi |- phi ==> psi
+
+  G | Phi |- phi ==> psi
+  G | Phi |- phi
+  ---------------------- [Implication-Elim]
+  G | Phi |- psi
+
+  G |- Phi wf
+  G , x:t | Phi |- phi
+  ------------------------- [Forall-Intro]
+  G | Phi |- forall x:t.phi
+
+  G |- v : t
+  G , x:t |- phi wf
+  G | Phi |- forall x:t.phi
+  ------------------------- [Forall-Elim]
+  G | Phi |- phi[v/x]
+
+  G |- v : t
+  G , x:t |- phi wf
+  G | Phi |- phi[v/x]
+  ------------------------- [Exists-Intro]
+  G | Phi |- exists x:t.phi
+
+  G | Phi |- exists x:t.phi
+  G |- psi wf
+  G , x:t | Phi , phi |- psi
+  -------------------------- [Exists-Elim]
+  G | Phi |- psi
+
+  G |- Phi wf
+  G , x:state | Phi |- phi ==> psi
+  ---------------------------------------------- [Witnessed-Functoriality]
+  G | Phi |- witnessed x.phi ==> witnessed x.psi
+
+  G |- v : t
+  G |- Phi wf
+  ----------------- [Equality-Refl]
+  G | Phi |- v == v
+
+  G | Phi |- v_1 == v_2
+  G | Phi |- phi[v_1/x]
+  --------------------- [Equality-Transport]
+  G | Phi |- phi[v_2/x]
+
+  G |- s : state
+  G |- Phi wf
+  ------------------ [Rel-Refl]
+  G | Phi |- rel s s
+
+  G | Phi |- rel s_1 s_2
+  G | Phi |- rel s_2 s_3
+  ---------------------- [Rel-Trans]
+  G | Phi |- rel s_1 s_3
+
+In addition, we include further axioms that relate logical equality with the structure of value terms
+
+  G | Phi |- inl v_1 == inr v_2 
+  ----------------------------- [Sum-Disjoint]
+  G | Phi |- False
+
+  G | Phi |- (v_1,v_2) == (v_3,v_4)
+  --------------------------------- [First-Projection]
+  G | Phi |- v_1 == v_3
+
+  G | Phi |- (v_1,v_2) == (v_3,v_4)
+  --------------------------------- [Second-Projection]
+  G | Phi |- v_2 == v_4
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Weakening formulae in the natural deduction's validity judgement
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Lemma (Weakening formulae in the natural deduction's validity judgement):
+-------------------------------------------------------------------------------
+
+  Given a) G | Phi |- psi, and
+        b) G |- phi wf
+
+  then  c) G | Phi , phi |- psi
+
+Proof:
+------
+
+  By induction on the derivation of (G | Phi |- psi)
+
+qed.
+
+Note: Exchange and contraction are built into the system for the
+assumed logical formulae, due to Phi being a finite set of formulae.
+
+
+Theorem (Admissibility of cut in the natural deduction):
+--------------------------------------------------------
+
+The following rule is derivable in this natural deduction system:
+
+  G | Phi |- phi
+  G | Phi , phi |- psi
+  --------------------
+  G | Phi |- psi
+
+Proof:
+------
+                         G | Phi , phi |- psi
+                         ---------------------- [Implication-Intro]
+  G | Phi |- phi         G | Phi |- phi ==> psi
+  --------------------------------------------- [Implication-Elim]
+  G | Phi |- psi
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Natural deduction relates well-formed formulae
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Lemma (Natural deduction relates well-formed formulae):
+-------------------------------------------------------
+
+Given
+
+  G | Phi |- phi
+
+then
+
+  |- G wf
+
+and
+
+  G |- Phi wf
+
+and
+
+  G |- phi wf
+
+Proof:
+------
+
+  By induction on the given derivation of (G | Phi |- phi).
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Sequent calculus for pre- and postcondition formulae
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We define the sequent calculus system using the following validity judgement
+
+  G | Phi |- Psi
+
+where (Phi) and (Psi) is finite sets of logical formulae
+
+  G |- Phi wf
+  G |- Psi wf
+  G |- phi wf
+  -------------------------- [Hyp-SC]
+  G | Phi , phi |- phi , Psi
+
+  G | Phi , phi , psi |- Psi
+  --------------------------- [And-Left]
+  G | Phi , phi /\ psi |- Psi
+
+  G | Phi |- phi , Psi
+  G | Phi |- psi , Psi
+  --------------------------- [And-Right]
+  G | Phi |- phi /\ psi , Psi
+
+  G |- Phi wf
+  G |- Psi wf
+  --------------------------- [True-Right]
+  G | Phi |- True , Psi
+
+  G | Phi , phi |- Psi
+  G | Phi , psi |- Psi
+  --------------------------- [Or-Left]
+  G | Phi , phi \/ psi |- Psi
+
+  G | Phi |- phi , psi , Psi
+  --------------------------- [Or-Right]
+  G | Phi |- phi \/ psi , Psi
+
+  G |- Phi wf
+  G |- Psi wf
+  ---------------------- [False-Left]
+  G | Phi , False |- Psi
+
+  G | Phi |- phi , Psi
+  G | Phi , psi |- Psi
+  ---------------------------- [Implication-Left]
+  G | Phi , phi ==> psi |- Psi
+
+  G | Phi , phi |- psi , Psi
+  ---------------------------- [Implication-Right]
+  G | Phi |- phi ==> psi , Psi
+
+  G |- v : t
+  G , x:t |- phi wf
+  G | Phi , phi[v/x] |- Psi
+  ------------------------------- [Forall-Left]
+  G | Phi , forall x:t.phi |- Psi
+
+  G |- Phi wf
+  G |- Psi wf
+  G , x:t | Phi |- phi , Psi
+  ------------------------------- [Forall-Right]
+  G | Phi |- forall x:t.phi , Psi
+
+  G |- Phi wf
+  G |- Psi wf
+  G , x:t | Phi , phi |- Psi
+  ------------------------------- [Exists-Left]
+  G | Phi , exists x:t.phi |- Psi
+
+  G |- v : t
+  G , x:t |- phi wf
+  G | Phi |- phi[v/x] , Psi
+  ------------------------------- [Exists-Right]
+  G | Phi |- exists x:t.phi , Psi
+
+  G |- Phi wf
+  G |- Psi wf
+  G , x:state | Phi , phi |- psi , Psi
+  -------------------------------------------------- [Witnessed-Functoriality-SC]
+  G | Phi , witnessed x.phi |- withessed x.psi , Psi
+
+  G |- v : t
+  G | Phi , v == v |- Psi
+  ----------------------- [Equality-Refl-SC]
+  G | Phi |- Psi
+
+  G |- v_1 : t
+  G |- v_2 : t
+  G | Phi , P(v'_1,...,v'_n)[v_2/x] |- Psi
+  ----------------------------------------------------- [Equality-Transport-SC]
+  G | Phi , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- Psi
+
+  (* Note that [Equality-Transport-SC] rule is restricted to atomic predicates *)
+
+  G | Phi , rel s s |- Psi
+  ------------------------ [Rel-Refl-SC]
+  G | Phi |– Psi
+
+  G |- s_2 : state
+  G | Phi , rel s_1 s_3 |- Psi
+  ------------------------------------------ [Rel-Trans-SC]
+  G | Phi , rel s_1 s_2 , rel s_2 s_3 |- Psi
+
+In addition, we include further axioms that relate logical equality with the structure of value terms
+
+  G |- v_1 : t_1
+  G |- v_2 : t_2
+  G |- Phi wf
+  G |- Psi wf
+  ----------------------------------- [Sum-Disjoint-SC]
+  G | Phi , inl v_1 == inr v_2 |- Psi
+
+  G |- v_2 : t_2
+  G |- v_4 : t_2
+  G | Phi , v_1 == v_3 |- Psi
+  --------------------------------------- [First-Projection-SC]
+  G | Phi , (v_1,v_2) == (v_3,v_4) |- Psi
+
+  G |- v_1 : t_1
+  G |- v_3 : t_1
+  G | Phi , v_2 == v_4 |- Psi
+  --------------------------------------- [Second-Projection-SC]
+  G | Phi , (v_1,v_2) == (v_3,v_4) |- Psi
+
+
+  (* the equality, relation, and disjointness rules follow the general LHS pattern suggested by S. Negri and J. von Plato in "Cut Elimination in the Presence of Axioms" *)
+  (*                                                                                                            http://www.helsinki.fi/~negri/articles.html/cepa_BSL.pdf *)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Basic weakening and substitution lemmas for sequent calculus
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Lemma (Weakening formulae in the LHS of sequent calculus's validity judgement):
+-------------------------------------------------------------------------------------
+
+  Given a) G | Phi |- Psi,
+        b) G |- phi wf
+
+  then  c) G | Phi , phi |- Psi, and
+        d) height(G | Phi , phi |- Psi) = height(G | Phi |- Psi)
+
+Proof:
+------
+
+  By induction on the derivation of (G | Phi |- Psi).
+
+qed.
+
+
+Lemma (Weakening formulae in the RHS of sequent calculus's validity judgement):
+-------------------------------------------------------------------------------------
+
+  Given a) G | Phi |- Psi,
+        b) G |- psi wf
+
+  then  c) G | Phi |- psi , Psi, and
+        d) height(G | Phi |- psi , Psi) = height(G | Phi |- Psi)
+
+Proof:
+------
+
+  By induction on the derivation of (G | Phi |- Psi).
+
+qed.
+
+Note: Exchange and contraction are built into the system for the
+assumed logical formulae, due to Phi being a finite set of formulae.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Sequent calculus relates well-formed formulae
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Lemma (Sequent calculus relates well-formed formulae):
+------------------------------------------------------
+
+Given
+
+  G | Phi |- Psi
+
+then
+
+  |- G wf
+
+and
+
+  G |- Phi wf
+
+and
+
+  G |- Psi wf
+
+Proof:
+------
+
+  By induction on the given derivation of (G | Phi |- Psi).
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Admissibility of [Equality-Transport-SC] for all formulae in the sequent calculus
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Lemma (Admissibility of equality transport for all formulae):
+-------------------------------------------------------------
+
+Given
+
+  G |- v : t
+  G |- v' : t
+  G , x:t |- phi wf
+
+then here exists a derivation for the following judgement:
+
+  G | v == v' , phi[v/x] |- phi[v'/x]
+
+Proof:
+------
+
+  By induction on the size of (phi).
+
+  1) If (phi) is either (True) or (False), we simply use [Hyp-SC].
+
+  2) If (phi) is an atomic predicate (P(v_1,...,v_n)), we use [Equality-Transport-SC].
+
+  3) If (phi) is any of the standard logical connectives, we use the induction hypothesis
+     and the corresponding left or right rules, e.g., for (phi_1 ==> phi_2) we have
+
+                                                                         induction hypothesis for (phi_1)
+                                                                         ---------------------------------------
+                                                                         G | v' == v , phi_1[v'/x] |- phi_1[v/x]
+                                                                         -------------------------------------------- (* = *)
+                                                                         G | x[v'/x] == v , phi_1[v'/x] |- phi_1[v/x]
+                                                                         ----------------------------------------------------- [Equality-Transport-SC]
+                                                                         G | v == v' , x[v/x] == v , phi_1[v'/x] |- phi_1[v/x]
+                                                                         ----------------------------------------------------- (* = *)
+       induction hypothesis for (phi_2)                                  G | v == v' , v == v , phi_1[v'/x] |- phi_1[v/x]                    G |- v : t
+       ----------------------------------------                          ------------------------------------------------------------------------------ [Equality-Refl-SC]
+       G | v == v' , phi_2[v/x] |- phi_2[v'/x]                           G | v == v' , phi_1[v'/x] |- phi_1[v/x]
+       ----------------------------------------------------- (* wk *)    ----------------------------------------------------- (* wk *)
+       G | v == v' , phi_1[v'/x] , phi_2[v/x] |- phi_2[v'/x]             G | v == v' , phi_1[v'/x] |- phi_1[v/x] , phi_2[v'/x]
+       ----------------------------------------------------------------------------------------------------------------------- [Implication-Left]
+       G | v == v' , phi_1[v/x] ==> phi_2[v/x] , phi_1[v'/x] |– phi_2[v'/x]
+       ---------------------------------------------------------------------- [Implication-Right]
+       G | v == v' , phi_1[v/x] ==> phi_2[v/x] |- phi_1[v'/x] ==> phi_2[v'/x]
+
+     For other standard logical connectives, see the work of S. Negri and J. von Plato.
+
+   4) If (phi) is (witnessed y.phi), we prove the following:
+
+        induction hypothesis for (phi)                                         G |- v : t        G |- v' : t
+        ----------------------------------------------                         ----------------------------- [Equality]
+        G , y:state | v == v' , phi[v/x] |- phi[v'/x]                          G |- v == v' wf
+        -------------------------------------------------------------------------------------- [Witnessed-Functoriality-SC]
+        G | v == v' , witnessed y.phi[v/x] |- witnessed y.phi[v'/x]
+
+Theorem (Admissibility of equality transport for all formulae):
+---------------------------------------------------------------
+
+Given
+
+  G |- v : t
+  G |- v' : t
+  G , x:t |- phi wf
+  G |- Phi wf
+  G |- Psi wf
+
+then the following rule is admissible in this sequent calculus:
+
+  G | Phi , phi[v'/x] |- Psi
+  -----------------------------------
+  G | Phi , v == v' , phi[v/x] |- Psi
+
+Proof:
+------
+
+  First, by the previous lemma, we have a derivation for
+
+    G | v == v' , phi[v/x] |- phi[v'/x]
+
+  Next, by using the admissibility of weakening of logical formulae, we get derivations of
+
+    G | Phi , v == v' , phi[v/x] |- phi[v'/x] , Psi
+
+  and
+
+    G | Phi , v == v' , phi[v/x] , phi[v'/x] |- Psi
+
+  Finally, we use the admissibility of cut in this sequent calculus to construct the following derivation:
+
+    the derivation we constructed above using weakening        the derivation we constructed above using weakening
+    ---------------------------------------------------        ---------------------------------------------------
+    G | Phi , v == v' , phi[v/x] |- phi[v'/x] , Psi            G | Phi , v == v' , phi[v/x] , phi[v'/x] |- Psi
+    ---------------------------------------------------------------------------------------------------------- (* cut *)
+    G | Phi , v == v' , phi[v/x] |- Psi
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Admissibility of cut in the sequent calculus
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Theorem (Admissibility of cut in sequent calculus):
+---------------------------------------------------
+
+The following rule is admissible in this sequent calculus:
+
+  (a) G | Phi |- phi , Psi
+  (b) G | Phi , phi |- Psi
+      --------------------
+  (c) G | Phi |- Psi
+
+Proof:
+------
+
+  (* The cut admissibility proof extends that of S. Negri and J. von Plato in "Cut Elimination in the Presence of Axioms". *)
+
+  (* For standard logical connectives we only discuss representative examples because these cases are the same for S. Negri and J. von Plato. *)
+
+  By well-founded induction on the lexicographical order on
+
+    (   size(phi)   ,   height(a) + height(b)   )
+
+  by considering the following cases (origanised into groups of similar derivations):
+
+  Group 1: Either the derivation of (a) or (b) ends with [Hyp-SC].
+
+    1) The derivation of (a) ends with [Hyp-SC] and (phi) is active.
+
+       In this case, (a) is of the form (G | Phi' , phi |- phi , Psi) and
+
+                     (b) is of the form (G | Phi' , phi |- Psi)
+
+       As a result, we can pick the derivation of (b) as the derivation of (c).  
+
+    2) The derivation of (a) ends with [Hyp-SC] and (phi) is not active.
+
+       In this case, (a) is of the form (G | Phi' , phi' |- phi' , phi, Psi) and
+
+                     (b) is of the form (G | Phi' , phi' |- phi' , Psi)
+
+       As a result, we can construct (c) simply as
+
+         Lemma (Sequent calculus relates well-formed formulae)             Lemma (Sequent calculus relates well-formed formulae)
+         -----------------------------------------------------             -----------------------------------------------------
+         G | Phi' , phi' |- wf                                             G | Psi wf
+         ---------------------------------------------------------------------------- [Hyp-SC]
+         G | Phi' , phi' |- phi' , Psi
+
+    3) The two cases for when (b) ends with [Hyp-SC] are analogous.
+
+  Group 2: The derivation of (a) ends with a right rule, the derivation of (b) ends with a left rule, and (phi) is active.
+
+    For example, let us consider the case when (a) ends with [Implication-Right] and (b) ends with [Implication-Left].
+
+    In this case, (a) is of the form
+
+      (a') G | Phi , phi1 |- phi2 , Psi
+           ------------------------------ [Implication-Right]
+      (a)  G | Phi |- phi1 ==> phi2 , Psi
+    
+    and (b) is of the form
+
+      (b')  G | Phi |- phi1 , Psi
+      (b'') G | Phi , phi2 |- Psi
+            ------------------------------ [Implication-Left]
+      (b)   G | Phi , phi1 ==> phi2 |- Psi
+
+    First, we weaken (b') to get (b''') given by (G | Phi |- phi1 , phi2 , Psi), with (height(b') = height(b''')).
+
+    Next, as (size(phi1) < size(phi1 ==> phi2)), we can use the induction hypothesis as follows:
+
+      (b''') G | Phi |- phi1 , phi2 , Psi
+      (a')   G | Phi , phi1 |- phi2 , Psi
+             ---------------------------- (* induction hypothesis *)
+      (c')   G | Phi |- phi2 , Psi
+
+    Finally, as (size(phi2) < size(phi1 ==> phi2)), we can use the induction hypothesis as follows:
+
+      (c')  G | Phi |- phi2 , Psi
+      (b'') G | Phi , phi2 |- Psi
+            --------------------- (* induction hypothesis *)
+      (c)   G | Phi |- Psi
+
+  Group 3: The derivations of (a) and (b) both end with [Witnessed-Functoriality-SC], and (phi) is the active (witnessed x.phi') token.
+
+    In this case, (a) is of the form
+
+      (a')   G |- Phi' wf
+      (a'')  G |- Psi' , witnessed x.psi' wf
+      (a''') G , x:state | Phi' , psi |- phi' , witnessed x.psi' , Psi'
+             ------------------------------------------------------------------------ [Witnessed-Functoriality-SC]
+      (a)    G | Phi' , witnessed x.psi |- witnessed x.phi' , witnessed x.psi' , Psi'
+
+    and (b) is of the form
+
+      (b')   G |- Phi' , witnessed x.psi wf
+      (b'')  G |- Psi' wf
+      (b''') G , x:state | Phi' , witnessed x.psi , phi' |- psi' , Psi'
+             ------------------------------------------------------------------------ [Witnessed-Functoriality-SC]
+      (b)    G | Phi' , witnessed x.psi , witnessed x.phi' |- witnessed x.psi' , Psi'
+
+    First, we use weakening on (a''') to get (c') given by (G , x:state | Phi' , witnessed x.psi , psi |- phi' , psi' , witnessed x.psi' , Psi'), with (height(c') = height(a''')).
+
+    Next, we use weakening on (b''') to get (c'') given by (G , x:state | Phi' , witnessed x.psi , psi , phi' |- psi' , witnessed x.psi' , Psi'), with (height(c'') = height(b''')).
+
+    Next, as (size(phi') < size(witnessed x.phi')), we can use the induction hypothesis to get
+
+      (c')   G , x:state | Phi' , witnessed x.psi , psi |- phi' , psi' , witnessed x.psi' , Psi'
+      (c'')  G , x:state | Phi' , witnessed x.psi , psi , phi' |- psi' , witnessed x.psi' , Psi'
+             ----------------------------------------------------------------------------------- (* induction hypothesis *)
+      (c''') G , x:state | Phi' , witnessed x.psi , psi |- psi' , witnessed x.psi' , Psi'
+
+    Finally, we can use [Witnessed-Functoriality-SC] to get (c) as
+
+      (a'')  G |- Phi' , witnessed x.psi wf
+      (b')   G |- Psi' , witnessed x.psi' wf
+      (c''') G , x:state | Phi' , witnessed x.psi , psi |- psi' , witnessed x.psi' , Psi'
+             ------------------------------------------------------------------------------------------ [Witnessed-Functoriality-SC]
+             G | Phi' , witnessed x.psi , witnessed x.psi |- witnessed x.psi' , witnessed x.psi' , Psi'
+             ------------------------------------------------------------------------------------------ (* contraction is built into the system *)
+      (c)    G | Phi' , witnessed x.psi |- witnessed x.psi' , Psi'
+
+  Group 4: The derivation of (a) ends with [Witnessed-Functoriality-SC] but (phi) is not the active (witnessed x.phi').
+
+    In this case, (a) is of the form
+
+      (a')   G |- Phi' wf
+      (a'')  G |- Psi' , phi wf
+      (a''') G , x:state | Phi' , psi |- phi' , phi , Psi'
+             ----------------------------------------------------------- [Witnessed-Functoriality-SC]
+      (a)    G | Phi' , witnessed x.psi |- witnessed x.phi' , phi , Psi'
+
+    and (b) is of the form (G | Phi' , witnessed x.psi , phi |- witnessed x.phi' , Psi').
+
+    First, we use weakening on (a''') to get (c') given by (G , x:state | Phi' , witnessed x.psi , psi |- phi' , phi , witnessed x.phi' , Psi'), with (height(a''') = height(c')).
+
+    Next, we use weakening on (b) to get (c'') given by (G , x:state | Phi' , witnessed x.psi , psi , phi |- phi' , witnessed x.phi' , Psi'), with (height(b) = height(c'')).
+
+    As (height(c') + height(c'') < height(a) + height(b)), we can use induction hypothesis to get (c) as follows
+
+      (c')  G , x:state | Phi' , witnessed x.psi , psi |- phi' , phi , witnessed x.phi' , Psi'
+      (c'') G , x:state | Phi' , witnessed x.psi , psi , phi |- phi' , witnessed x.phi' , Psi'
+            --------------------------------------------------------------------------------- (* induction hypothesis *)
+            G , x:state | Phi' , witnessed x.psi , psi |- phi' , witnessed x.phi' , Psi'
+            ------------------------------------------------------------------------------------------ [Witnessed-Functoriality-SC]
+            G | Phi' , witnessed x.psi , witnessed x.psi |- witnessed x.phi' , witnessed x.phi' , Psi'
+            ------------------------------------------------------------------------------------------ (* contraction is built into the system *)
+      (c)   G | Phi' , witnessed x.psi |- witnessed x.phi' , Psi'
+
+    The case when (b) ends with [Witnessed-Functoriality-SC] but (phi) is not the active (witnessed x.phi') is proved analogously.
+
+  Group 5: The derivation of (a) ends with a right rule but (phi) is not active.
+
+    For example, let us consider the case when (a) ends with [Implication-Right].
+
+    In this case, (a) is of the form
+
+      (a') G | Phi , phi1 |- phi , phi2 , Psi'
+           ------------------------------------- [Implication-Right]
+      (a)  G | Phi |- phi , phi1 ==> phi2 , Psi'
+
+    and (b) is of the form (G | Phi , phi |- phi1 ==> phi2 , Psi').
+
+    First, we use weakening on (a') to get (c') given by (G | Phi , phi1 |- phi , phi1 ==> phi2 , phi2 , Psi'), with (height(a') = height(c')).
+
+    Next, we use weakening on (b) to get (c'') given by (G | Phi , phi1 , phi |- phi1 ==> phi2 , phi2 , Psi'), with (height(b) = height(c'')).
+
+    As (height(c') + height(c'') < height(a) + height(b)), we can use the induction hypothesis to get
+
+      (c')   G | Phi , phi1 |- phi , phi1 ==> phi2 , phi2 , Psi'
+      (c'')  G | Phi , phi1 , phi |- phi1 ==> phi2 , phi2 , Psi'
+             --------------------------------------------------- (* induction hypothesis *)
+      (c''') G | Phi , phi1 |- phi1 ==> phi2 , phi2 , Psi'
+
+    Finally, we can use [Implication-Right] to get (c) as follows:
+
+      (c''') G | Phi , phi1 |- phi1 ==> phi2 , phi2 , Psi'
+             ----------------------------------------------- [Implication-Right]
+             G | Phi |- phi1 ==> phi2 , phi1 ==> phi2 , Psi'
+             ----------------------------------------------- (* = *)
+      (c)    G | Phi |- phi1 ==> phi2 , Psi'
+
+    The cases when the derivation of (b) ends with a left rule and (phi) is not active are proved analogously.
+
+  Group 6: The derivation of (a) ends with a left rule.
+
+    For example, let us consider the case when (a) ends with [Implication-Left].
+
+    In this case, (a) is of the form
+
+      (a')  G | Phi' |- phi , phi1 , Psi
+      (a'') G | Phi' , phi2 |- phi , Psi
+            ------------------------------------- [Implication-Left]
+      (a)   G | Phi' , phi1 ==> phi2 |- phi , Psi
+
+    and (b) is of the form (G | Phi' , phi1 ==> phi2 , phi |- Psi).
+
+    First, we use weakening on (a') to get (c') given by (G | Phi' , phi1 ==> phi2 |- phi , phi1 , Psi), with (height(a') = height(c')).
+
+    Next, we use weakening on (b) to get (c'') given by (G | Phi' , phi1 ==> phi2 , phi |- phi1 , Psi), with (height(b) = height(c'')).
+
+    As (height(c') + height(c'') < height(a) + height(b)), we can use the induction hypothesis to get
+
+      (c')   G | Phi' , phi1 ==> phi2 |- phi , phi1 , Psi
+      (c'')  G | Phi' , phi1 ==> phi2 , phi |- phi1 , Psi
+             -------------------------------------------- (* induction hypothesis *)
+      (c''') G | Phi' , phi1 ==> phi2 |- phi1 , Psi
+
+    Next, we use weakening on (a'') to get (d') given by (G | Phi' , phi1 ==> phi2 , phi2 |- phi , Psi), with (height(a'') = height(d')).
+
+    Also, we use weakening on (b) to get (d'') given by (G | Phi' , phi1 ==> phi2 , phi2 , phi |- Psi), with (height(b) = height(d''))
+
+    As (height(d') + height(d'') < height(a) + height(b)), we can use the induction hypothesis to get
+
+      (d')   G | Phi' , phi1 ==> phi2 , phi2 |- phi , Psi
+      (d'')  G | Phi' , phi1 ==> phi2 , phi2 , phi |- Psi
+             -------------------------------------------- (* induction hypothesis *)
+      (d''') G | Phi' , phi1 ==> phi2 , phi2 |- Psi
+
+    Finally, we use [Implication-Left] to get (c) as follow
+
+      (c''') G | Phi' , phi1 ==> phi2 |- phi1 , Psi
+      (d''') G | Phi' , phi1 ==> phi2 , phi2 |- Psi
+             ----------------------------------------------- [Implication-Left]
+             G | Phi' , phi1 ==> phi2 , phi1 ==> phi2 |- Psi
+             ----------------------------------------------- (* = *)
+      (c)    G | Phi' , phi1 ==> phi2 |- Psi
+
+    The cases when the derivation of (b) ends with a right rule are proved analogously.
+
+  Group 7: The derivation of (a) ends with [Equality-Refl-SC].
+
+    In this case, (a) is of the form
+
+      (a')  G |- v : t
+      (a'') G | Phi , v == v |- phi , Psi
+            ----------------------------- [Equality-Refl-SC]
+      (a)   G | Phi |- phi , Psi
+
+    and (b) is of the form (G | Phi , phi |- Psi).
+
+    First, we use weakening on (b) to get (c') given by (G | Phi , v == v , phi |- Psi), with (height(b) = height(c')).
+
+    As (height(a'') + height(c') < height(a) + height(b)), we can use the induction hypothesis to get
+
+      (a'') G | Phi , v == v |- phi , Psi
+      (c')  G | Phi , v == v , phi |- Psi
+            ----------------------------- (* induction hypothesis *)
+      (c'') G | Phi , v == v |- Psi
+
+    Finally, we use [Equality-Refl-SC] to get (c) as follows:
+
+      (a')  G |- v : t
+      (c'') G | Phi , v == v |- Psi
+            -----------------------
+      (c)   G | Phi |- Psi
+
+  Group 8: The derivation of (b) ends with [Equality-Refl-SC].
+
+    This case is proved analogously to Group 7 above.
+
+  Group 9: The derivation of (a) ends with [Equality-Transport-SC].
+
+    In this case, (a) is of the form
+    
+      (a')   G |- v_1 : t
+      (a'')  G |- v_2 : t
+      (a''') G | Phi' , P(v'_1,...,v'_n)[v_2/x] |- phi , Psi
+             ------------------------------------------------------------ [Equality-Transport-SC]
+      (a)    G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- phi , Psi
+
+    and (b) is of the form (G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , phi |- Psi).
+
+    First, we use weakening on (a''') to get (c') given by (G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , P(v'_1,...,v'_n)[v_2/x] |- phi , Psi), with (height(a''') = height(c')).
+
+    Next, we use weakening on (b) to get (c'') given by (G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , P(v'_1,...,v'_n)[v_2/x] , phi |- Psi), with (height(b) = height(c'')).
+
+    As (height(c') + height(c'') < height(a) + height(b)), we can use the induction hypothesis to get
+
+      (c')   G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , P(v'_1,...,v'_n)[v_2/x] |- phi , Psi
+      (c'')  G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , P(v'_1,...,v'_n)[v_2/x] , phi |- Psi
+             -------------------------------------------------------------------------------------- (* induction hypothesis *)
+      (c''') G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , P(v'_1,...,v'_n)[v_2/x] |- Psi
+
+    Finally, we use [Equality-Transport-SC] to get (c) as follows
+
+
+      (a')   G |- v_1 : t
+      (a'')  G |- v_2 : t
+      (c''') G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , P(v'_1,...,v'_n)[v_2/x] |- Psi
+             --------------------------------------------------------------------------------------------- [Equality-Transport-SC]
+             G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- Psi
+             --------------------------------------------------------------------------------------------- (* = *)
+      (c)    G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- Psi
+
+  Group 10: The derivation of (b) ends with [Equality-Transport-SC] and (phi) is not active.
+
+    This case is proved analogously to Group 9 above.
+
+  Group 11: The derivation of (b) ends with [Equality-Transport-SC] and (phi) is active with (phi = v_1 == v_2).
+
+    In this case, (b) is of the form
+
+      (b')   G |- v_1 : t
+      (b'')  G |- v_2 : t
+      (b''') G | Phi' , P(v'_1,...,v'_n)[v_2/x] |- Psi
+             ------------------------------------------------------- [Equality-Transport-SC]
+      (b)    G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- Psi
+
+    and (a) is of the form (G | Phi' , P(v'_1,...,v'_n)[v_1/x] |- v_1 == v_2 , Psi).
+
+    We proceed by case analysis on the possible derivations of (a):
+
+      1) (a) ends with [Hyp-SC]: This case is covered by the Group 1 cases from above.
+
+      2) (a) ends with a left rule: This case is covered by the Group 6 cases from above.
+
+      3) (a) ends with a right rule: As (phi) is (v_1 == v_2), it can not be active in this right rule, so this case is covered by the Group 5 cases from above.
+
+      4) (a) ends with [Equality-Refl-SC]: This case is covered by the Group 7 cases from above.
+
+      5) (a) ends with [Equality-Transport-SC]: This case is covered by the Group 9 cases from above.
+
+      6) (a) ends with [Witnessed-Functoriality-SC]: As (v_1 == v_2) is not of the form (witnessed x.phi), this is covered by the Group 4 cases from above.
+
+  Group 12: The derivation of (a) ends with [Equality-Transport-SC] and (phi) is active with (phi = P(v'_1,...,v'_n)[v_1/x]).
+
+    In this case, (b) is of the form
+
+      (b')   G |- v_1 : t
+      (b'')  G |- v_2 : t
+      (b''') G | Phi' , P(v'_1,...,v'_n)[v_2/x] |- Psi
+             ------------------------------------------------------ [Equality-Transport-SC]
+      (b)    G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- Psi
+
+    and (a) is of the form (G | Phi' , v_1 == v_2 |- P(v'_1,...,v'_n)[v_1/x] , Psi).
+
+    We proceed by case analysis on the possible derivations of (a):
+
+      1) (a) ends with [Hyp-SC]: This case is covered by the Group 1 cases from above.
+
+      2) (a) ends with a left rule: This case is covered by the Group 6 cases from above.
+
+      3) (a) ends with a right rule: As (phi) is (P(v'_1,...,v'_n)[v_1/x]), it can not be active in this right rule, so this case is covered by the Group 5 cases from above.
+
+      4) (a) ends with [Equality-Refl-SC]: This case is covered by the Group 7 cases from above.
+
+      5) (a) ends with [Equality-Transport-SC]: This case is covered by the Group 9 cases from above.
+
+      6) (a) ends with [Witnessed-Functoriality-SC]: As (P(v'_1,...,v'_n)[v_1/x]) is not of the form (witnessed x.phi), this is covered by the Group 4 cases from above.
+
+  Group 13: The derivation of (a) ends with [Rel-Refl-SC].
+
+    This case is proved analogously to Group 7 above.
+
+  Group 14: The derivation of (b) ends with [Rel-Refl-SC].
+
+    This case is proved analogously to Group 8 above.
+
+  Group 15: The derivation of (a) ends with [Rel-Trans-SC] (or [First-Projection-SC] or [Second-Projection-SC]).
+
+    This case is proved analogously to Group 9 above.
+
+  Group 16: The derivation of (b) ends with [Rel-Trans-SC] (or [First-Projection-SC] or [Second-Projection-SC]) and (phi) is not active.
+
+    This case is proved analogously to Group 10 above.
+
+  Group 17: The derivation of (b) ends with [Rel-Trans-SC] and (phi) is (rel s_1 s_2).
+
+    This case is proved analogously to Group 11 above.
+
+  Group 18: The derivation of (b) ends with [Rel-Trans-SC] and (phi) is (rel s_2 s_3).
+
+    This case is proved analogously to Group 12 above.
+
+    In particular, recall that in [Equality-Transport-SC], we only considered atomic predicates (P(v'_1,...,v'_n)).
+
+  Group 19: The derivation of (b) ends with [First-Projection-SC] or [Second-Projection-SC] and (phi) is ((v_1,v_2) == (v_3,v_4)).
+
+    This case is proved analogously to Group 11 and Group 12 above.
+
+  Group 20: The derivation of (a) ends with [Sum-Disjoint-SC].
+
+    In this case, (a) is of the form
+
+      G |- v_1 : t_1
+      G |- v_2 : t_2
+      G |- Phi' wf
+      G |- phi , Psi wf
+      ------------------------------------------ [Sum-Disjoint-SC]
+      G | Phi' , inl v_1 == inr v_2 |- phi , Psi
+
+    As in this case (Phi = Phi' , inl v_1 == inr v_2), we can prove this case simply by using [Sum-Disjoint-SC], as follows:
+
+      G |- v_1 : t_1
+      G |- v_2 : t_2
+      G |- Phi' wf
+      G |- Psi wf
+      ------------------------------------ [Sum-Disjoint-SC]
+      G | Phi' , inl v_1 == inr v_2 |- Psi
+
+  Group 21: The derivation of (b) ends with [Sum-Disjoint-SC] and (phi) is active.
+
+    In this case, (b) is of the form
+
+      G |- v_1 : t_1
+      G |- v_2 : t_2
+      G |- Phi wf
+      G |- Psi wf
+      ----------------------------------- [Sum-Disjoint-SC]
+      G | Phi , inl v_1 == inr v_2 |- Psi
+
+    and (a) is of the form (G | Phi |- inl v_1 == inr v_2 , Psi).
+
+    We proceed by case analysis on the possible derivations of (a):
+
+      1) (a) ends with [Hyp-SC]: This case is covered by the Group 1 cases above.
+
+      2) (a) ends with a left rule: This case is covered by the Group 6 cases from above.
+
+      3) (a) ends with a right rule: As (phi) is (inl v_1 == inr v_2) it can not be active, so this case is covered by the Group 5 cases from above.
+
+      4) (a) ends with [Equality-Refl-SC]: This case is covered by the Group 7 cases from above.
+
+      5) (a) ends with [Equality-Transport-SC]: This case is covered by the Group 9 cases from above.
+
+      6) (a) ends with [Witnessed-Functoriality-SC]: As (inl v_1 == inr v_2) is not of the form (witnessed x.phi), this is covered by the Group 4 cases from above.
+
+      7) (a) ends with [Rel-Refl-SC]: This case is covered by the Group 13 cases from above.
+
+      8) (a) ends with [Rel-Trans-SC]: This case is covered by the Group 15 cases from above.
+
+  Group 22: The derivation of (b) ends with [Sum-Disjoint-SC] and (phi) is not active.
+
+    In this case, (b) is of the form
+
+      G |- v_1 : t_1
+      G |- v_2 : t_2
+      G |- Phi' , phi wf
+      G |- Psi wf
+      ------------------------------------------ [Sum-Disjoint-SC]
+      G | Phi' , inl v_1 == inr v_2 , phi |- Psi
+
+    and (a) is of the form (G | Phi' , inl v_1 == inr v_2 |- phi , Psi).
+
+    As in this case (Phi = Phi' , inl v_2 == inr v_2), we can prove this case simply by using [Sum-Disjoint-SC], as follows:
+
+      G |- v_1 : t_1
+      G |- v_2 : t_2
+      G |- Phi' wf
+      G |- Psi wf
+      ------------------------------------ [Sum-Disjoint-SC]
+      G | Phi' , inl v_1 == inr v_2 |- Psi
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Inverting [Witnessed-Funcotirality-SC] in the sequent calculus
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Theorem (Inverting [Witnessed-Funcotirality-SC] in the sequent calculus):
+-------------------------------------------------------------------------
+
+Given a derivation for
+
+  G | Phi , witnessed x.phi |- witnessed x.psi
+
+  where every formula in (Phi) is an atomic predicate, i.e., of the form (v_1 == v_2) or (rel s_1 s_2), 
+
+then we have a derivation for
+
+  G , x:state | Phi , phi |- psi
+
+Proof:
+------
+
+  We proceed by observing that because (Phi) consists of atomic predicates, (G | Phi , witnessed x.phi |- witnessed x.psi) can only end with the following rules:
+
+  Case [Witnessed-Functoriality-SC]:
+
+    In this case, the given derivation ends with 
+
+      G |- Phi wf
+      G , x:state | Phi , phi |- psi
+      -------------------------------------------- [Witnessed-Functoriality-SC]
+      G | Phi , witnessed x.phi |- withessed x.psi
+
+    As a result, the required derivation of
+
+      G , x:state | Phi , phi |- psi
+
+    follows immediately from the premise of the above derivation.
+
+  Case [Equality-Refl-SC]:
+
+    In this case, the given derivation ends with 
+
+      G |- v : t
+      G | Phi , v == v , witnessed x.phi |- witnessed x.psi
+      ----------------------------------------------------- [Equality-Refl-SC]
+      G | Phi , witnessed x.phi |- witnessed x.psi
+
+    As a result, we can use the induction hypothesis on
+
+      G | Phi , v == v , witnessed x.phi |- witnessed x.psi
+
+    to get a derivation of
+
+      G , x:state | Phi , v == v , phi |- psi
+
+    Finally, we can use this derivation with [Equality-Refl-SC] to get
+
+                       induction hypothesis
+                       --------------------
+      G |- v : t       x \not\in Vars(G)
+      ---------------------------------- (* wk *)
+      G , x:state |- v : t                                     G , x:state | Phi , v == v , phi |- psi
+      ------------------------------------------------------------------------------------------------ [Equality-Refl-SC]
+      G , x:state | Phi , phi |- psi
+
+    To get (x \not\in Vars(G)) we
+
+      a) first use Lemma (Judgements only relate well-formed syntax) on (G , x:state | Phi , v == v , phi |- psi) to get (|- G , x:state wf), and then
+
+      b) inspect the possible derivations of (|- G , x:state wf) to get that (x \not\in Vars(G)).
+
+  Case [Equality-Transport-SC]:
+
+    In this case, the given derivation ends with 
+
+      G |- v_1 : t
+      G |- v_2 : t
+      G | Phi' , P(v'_1,...,v'_n)[v_2/x] , witnessed y.phi |- witnessed y.psi
+      ------------------------------------------------------------------------------------ [Equality-Transport-SC]
+      G | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , witnessed y.phi |- witnessed y.psi
+
+    First, observe that (P(v'_1,...,v'_n)) must be of the form (v''_1 == v''_2) or (rel s_1 s2), for some v''_1, v''_2, t'', s_1, s_2.
+
+    As a result, we can simply use the induction hypothesis on
+
+      G | Phi' , P(v'_1,...,v'_n)[v_2/x] , witnessed y.phi |- witnessed y.psi
+
+    to get a derivation of
+
+      G , x:state | Phi' , P(v'_1,...,v'_n)[v_2/x] , phi |- psi
+
+    Finally, we can use this derivation with [Equality-Transport-SC] to get
+
+                        induction hypothesis                           induction hypothesis
+                        --------------------                           --------------------
+      G |- v_1 : t      x \not\in Vars(G)             G |- v_2 : t     x \not\in Vars(G)
+      ----------------------------------- (* wk *)    ---------------------------------- (* = *)
+      G , x:state |- v_1 : t                          G , x:state |- v_2 : t                      G , x:state | Phi' , P(v'_1,...,v'_n)[v_2/x] , phi |- psi
+      ----------------------------------------------------------------------------------------------------------------------------------------------------- [Equality-Transport-SC]
+      G , x:state | Phi' , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] , phi |- psi
+
+    We prove (x \not\in Vars(G)) from the induction hypothesis as in the proof of [Equality-Refl-SC].
+
+  Case [Rel-Refl-SC]:
+
+    In this case, the given derivation ends with
+
+      G |- s : state
+      G | Phi , rel s s , witnessed x.phi |- witnessed x.psi
+      ------------------------------------------------------ [Rel-Refl-SC]
+      G | Phi , witnessed x.phi |– witnessed x.psi
+
+    As a result, we can simply use the induction hypothesis on
+
+      G | Phi , rel s s , witnessed x.phi |- witnessed x.psi
+
+    to get a derivation of 
+
+      G , x:state | Phi , rel s s , phi |- psi
+
+    Finally, we can use this derivation with [Rel-Refl-SC] to get
+                                                                                           induction hypothesis
+                                                                                           --------------------
+                                                                       G |- s : state      x \not\in Vars(G)
+                                                                       ------------------------------------- (* wk *)
+      G , x:state | Phi , rel s s , phi |- psi                         G , x:state |- s : state
+      ----------------------------------------------------------------------------------------- [Rel-Refl-SC]
+      G , x:state | Phi , phi |- psi
+
+    We prove (x \not\in Vars(G)) from the induction hypothesis as in the proof of [Equality-Refl-SC].
+
+  Case [Rel-Trans-SC]:
+
+    In this case, the given derivation ends with
+
+      G |- s_2 : state
+      G | Phi , rel s_1 s_3 , witnessed x.phi |- witnessed x.psi
+      ------------------------------------------------------------------------ [Rel-Trans-SC]
+      G | Phi , rel s_1 s_2 , rel s_2 s_3 , witnessed x.phi |- witnessed x.psi
+
+    As a result, we can simply use the induction hypothesis on
+
+      G | Phi , rel s_1 s_3 , witnessed x.phi |- witnessed x.psi
+
+    to get a derivation of
+
+      G , x:state | Phi , rel s_1 s_3 , phi |- psi
+
+    Finally, we can use this derivation with [Rel-Trans-SC] to get
+                                                                                    induction hypothesis
+                                                                                    --------------------
+                                                               G |- s_2 : state     x \not\in Vars(G)
+                                                               -------------------------------------- (* wk *)
+      G , x:state | Phi , rel s_1 s_3 , phi |- psi             G , x:state |- s_2 : state
+      ----------------------------------------------------------------------------------- [Rel-Trans-SC]
+      G , x:state | Phi , rel s_1 s_2 , rel s_2 s_3 , phi |- psi
+
+    We prove (x \not\in Vars(G)) from the induction hypothesis as in the proof of [Equality-Refl-SC].
+
+  Case [Sum-Disjoint-SC]:
+
+    In this case, the given derivation ends with
+
+      G |- v_1 : t_1
+      G |- v_2 : t_2
+      G |- Phi , witnessed x.phi wf
+      G |- witnessed x.psi wf
+      ------------------------------------------------------------------ [Sum-Disjoint-SC]
+      G | Phi' , inl v_1 == inr v_2 , witnessed x.phi |- witnessed x.psi
+
+    Next, we observe that by inspecting the possible derivations of (G |- witnessed x.phi wf) and (G |- witnessed x.psi wf), 
+    we get derivations of (G , x:state |- phi wf) and (G , x:state |- psi wf).
+
+    Next, by using Lemma (Weakening), we get derivations of (G , x:state |- v_1 : t_1), (G , x:state |- v_2 : t_2), and (G , x:state |- Phi).
+
+    Finally, as in this case (Phi = Phi' , inl v_1 == inr v_2), we can prove this case using [Sum-Disjoint-SC] as follows:
+
+      G , x:state |- v_1 : t_1
+      G , x:state |- v_2 : t_2
+      G , x:state |- Phi , phi wf
+      G , x:state |- psi wf
+      ---------------------------------------------------- [Sum-Disjoint-SC]
+      G , x:state | Phi' , inl v_1 == inr v_2 , phi |- psi
+
+  Case [First-Projection-SC]:
+
+    In this case, the given derivation ends with
+
+      G |- v_2 : t_2
+      G |- v_4 : t_2
+      G | Phi' , v_1 == v_3 , witnessed x.phi |- witnessed x.psi
+      ---------------------------------------------------------------------- [First-Projection-SC]
+      G | Phi' , (v_1,v_2) == (v_3,v_4) , witnessed x.phi |- witnessed x.psi
+
+    Next, by using the induction hypothesis on (G | Phi' , v_1 == v_3 , witnessed x.phi |- witnessed x.psi), we get a derivation of
+
+      G , x:state | Phi' , v_1 == v_3 , phi |- psi
+
+    By using Lemma (Weakening) on (G |- v_2 : t_2) and (G |- v_4 : t_2), we get derivations of (G , x:state |- v_2 : t_2) and (G , x:state |- v_4 : t_2).
+
+    Finally, as in this case (Phi = Phi' , (v_1,v_2) == (v_3,v_4)), we can prove this case using [First-Projection-SC] as follows:
+
+      G , x:state |- v_2 : t_2
+      G , x:state |- v_4 : t_2
+      G , x:state | Phi' , v_1 == v_3 , phi |- psi
+      -------------------------------------------------------- [First-Projection-SC]
+      G , x:state | Phi' , (v_1,v_2) == (v_3,v_4) , phi |- psi
+
+  Case [Second-Projection-SC]:
+
+    This case is proved analogously to [First-Projection-SC] above.
+
+qed.
+
+
+Corollary (Inverting [Witnessed-Funcotirality-SC] in the empty logical context):
+--------------------------------------------------------------------------------
+
+As an immediate consequence of the previous theorem we get that if we have a derivation of 
+
+  G | witnessed x.phi |- witnessed x.psi
+
+then we also have a derivation for
+
+  G , x:state | phi |- psi
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Translating derivations in natural deduction into derivations in the sequent calculus
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Theorem (Translating derivations in natural deduction into derivations in the sequent calculus):
+------------------------------------------------------------------------------------------------
+
+Given a derivation of
+
+  G | Phi |- phi
+
+in natural deduction, then we have a derivation
+
+  G | Phi |- phi
+
+in the sequent calculus.
+
+Proof:
+------
+
+  By induction on the derivation of (G | Phi |- phi).
+
+  The cases for [Hyp], [LEM] and logical connectives are standard from the literature.
+
+  For example, for [LEM] the given derivation ends with 
+
+    G |- Phi wf
+    G |- phi wf
+    ------------------------ [LEM]
+    G | Phi |- phi \/ ~(phi)
+
+  and we prove in the sequent calculus that
+
+                              Lemma (Natural deduction relates well-formed formulae)
+                              ------------------------------------------------------
+                              |- G wf
+                              ------------- [False]
+    G |- Phi , phi wf         G |- False wf
+    --------------------------------------- [Hyp-SC]
+    G | Phi , phi |- phi , False
+    ------------------------------ [Implication-Right]
+    G | Phi |- phi , phi ==> False
+    --------------------------------- [Or-Right]
+    G | Phi |- phi \/ (phi ==> False)
+    --------------------------------- (* = *)
+    G | Phi |- phi \/ ~(phi)
+
+  Next, for [Equality-Refl] the given derivation ends with 
+
+    G |- v : t
+    G |- Phi wf
+    ----------------- [Equality-Refl]
+    G | Phi |- v == v
+
+  and we prove that
+
+                      G |- v : t
+                      -------------- [Equality]
+    G |- Phi wf       G |- v == v wf
+    -------------------------------- [Hyp-SC]
+    G | Phi , v == v |- v == v                       G |- v : t
+    ----------------------------------------------------------- [Equality-Refl-SC]
+    G | Phi |- v == v
+
+  Next, for [Equality-Transport] the given derivation ends with
+
+    G | Phi |- v_1 == v_2
+    G | Phi |- phi[v_1/x]
+    --------------------- [Equality-Transport]
+    G | Phi |- phi[v_2/x]
+
+  and we prove in the sequent calculus that
+
+    Lemma (Sequent calculus relates well-formed formulae)
+    -----------------------------------------------------
+    G |- Phi , phi[v_2/x]                                  inverting the well-formedness of G | Phi |- v_1 == v_2
+    ---------------------------------- [Hyp-SC]            -------------------------------------------------------
+    G | Phi , phi[v_2/x] |- phi[v_2/x]                     G |- v_i : t_i
+    --------------------------------------------------------------------- (* admissibility of [Equality-Transport-SC] for arbitrary formulae *)
+    G | Phi , v_1 == v_2 , phi[v_1/x] |- phi[v_2/x]                                                                                                      (a) 
+    -------------------------------------------------------------------------------------------------------------------------------------------------------- (* cut *)
+    G | Phi |- phi[v_2/x]
+
+  where the derivation (a) is given by
+
+    induction hypothesis                            induction hypothesis
+    ----------------------                          ---------------------
+    G | Phi |- v_1 == v_2                           G | Phi |- phi[v_1/x]
+    ----------------------------------- (* wk *)    ---------------------------------- (* wk *)
+    G | Phi |- v_1 == v_2 , phi[v_2/x]              G | Phi |- phi[v_1/x] , phi[v_2/x]
+    ----------------------------------------------------------------------------------- [And-Right]
+    G | Phi |- v_1 == v_2 /\ phi[v_1/x] , phi[v_2/x]
+
+  Next, for [Rel-Refl] the given derivation ends with
+
+    G |- s : state
+    G |- Phi wf
+    ------------------ [Rel-Refl]
+    G | Phi |- rel s s
+
+  and we prove in the sequent calculus that
+
+                      G |- s : state
+                      --------------- [Equality]
+    G |- Phi wf       G |- rel s s wf
+    --------------------------------- [Hyp-SC]
+    G | Phi , rel s s |- rel s s
+    ---------------------------- [Rel-Refl-SC]
+    G | Phi |- rel s s
+
+  Next, for [Rel-Trans] the given derivation ends with
+
+    G | Phi |- rel s_1 s_2
+    G | Phi |- rel s_2 s_3
+    ---------------------- [Rel-Trans]
+    G | Phi |- rel s_1 s_3
+
+  and we prove in the sequent calculus that
+
+    Lemma (Natural deduction relates well-formed formulae)
+    ------------------------------------------------------
+    G | Phi , rel s_1 s_3 wf                                               induction hypothesis           induction hypothesis
+    ------------------------------------ [Hyp-SC]                          ----------------------         ----------------------
+    G | Phi , rel s_1 s_3 |- rel s_1 s_3                                   G | Phi |- rel s_1 s_2         G | Phi |- rel s_2 s_3
+    -------------------------------------------------- [Rel-Trans-SC]      ----------------------------------------------------- [And-Right]
+    G | Phi , rel s_1 s_2 , rel s_2 s_3 |- rel s_1 s_3                     G | Phi |- rel s_1 s_2 /\ rel s_2 s_3
+    ------------------------------------------------------------------------------------------------------------ (* cut *)
+    G | Phi |- rel s_1 s_3
+
+  Next, for [Sum-Disjoint] the given derivation ends with
+
+    G | Phi |- inl v_1 == inr v_2 
+    ----------------------------- [Sum-Disjoint]
+    G | Phi |- False
+  
+  and we prove in the sequent calculus that
+                                                                                                        Lemma (Natural deduction relates well-formed formulae)
+                                                                                                        ------------------------------------------------------
+                                          Lemma (Natural deduction relates well-formed formulae)        |- G wf
+                                          --------------       --------------        -----------        ------------- [False]
+    induction hypothesis                  G |- v_1 : t_1       G |- v_2 : t_2        G |- Phi wf        G |- False wf
+    -----------------------------         --------------------------------------------------------------------------- [Sum-Disjoint-SC]
+    G | Phi |- inl v_1 == inr v_2         G | Phi , inl v_1 == inr v_2 |- False
+    --------------------------------------------------------------------------- (* cut *)
+    G | Phi |- False
+
+  Next, for [First-Projection] and [Second-Projection], the proof proceeds as in the cases of [Equality-Transport] and [Rel-Trans].
+
+  Finally, for [Witnessed-Functoriality] the given derivation ends with 
+
+    G |- Phi wf
+    G , x:state | Phi |- phi ==> psi
+    ---------------------------------------------- [Witnessed-Functoriality]
+    G | Phi |- witnessed x.phi ==> witnessed x.psi
+
+  and we prove in the sequent calculus that
+
+    both premises are proved with [Hyp-SC]
+    --------------------------------------                             induction hypothesis
+    G , x:state | Phi , phi |- phi , psi                               --------------------------------         
+    G , x:state | Phi , phi , psi |- psi                               G , x:state | Phi |- phi ==> psi
+    -------------------------------------------- [Implication-Left]    -------------------------------------------- (* wk *)
+    G , x:state | Phi , phi , phi ==> psi |- psi                       G , x:state | Phi , phi |- phi ==> psi , psi
+    --------------------------------------------------------------------------------------------------------------- (* cut *)
+    G , x:state | Phi , phi |- psi                                                                                              G |- Phi wf
+    --------------------------------------------------------------------------------------------------------------------------------------- [Witnessed-Functoriality-SC]
+    G | Phi , witnessed x.phi |- witnessed x.psi
+    ---------------------------------------------- [Implication-Right]
+    G | Phi |- witnessed x.phi ==> witnessed x.psi
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Translating derivations in sequent calculus into derivations in the natural deduction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Theorem (Translating derivations in sequent calculus into derivations in the natural deduction):
+------------------------------------------------------------------------------------------------
+
+Given a derivation of
+
+  G | Phi |- Psi
+
+in sequent calculus, then we have a derivation
+
+  G | Phi |- \/_{psi \in Psi} psi
+
+in the sequent calculus.
+
+Proof:
+------
+
+  By induction on the derivation of G | Phi |- Psi.
+
+  The cases for [Hyp-SC], and the left and right rules are standard from the literature.
+
+  Next, for [Equality-Refl-SC] the given derivation ends with 
+
+    G |- v : t
+    G | Phi , v == v |- Psi
+    ----------------------- [Equality-Refl-SC]
+    G | Phi |- Psi
+
+  and we prove in the natural deduction that
+                                                                                               G | Phi |- Psi
+                                                                                               -------------- (* lemma that is proved by induction on (G | Phi |- Psi) *)
+    induction hypothesis                                               G |- v : t              G |- Phi wf
+    -------------------------------------------                        ----------------------------------- [Equality-Refl]
+    G | Phi , v == v |- \/_{psi \in Psi} psi                           G | Phi |- v == v
+    ---------------------------------------------------------------------------------------------- (* cut *)
+    G | Phi |- \/_{psi \in Psi} psi
+
+  Next, for [Equality-Transport-SC] the given derivation ends with
+
+    G |- v_1 : t
+    G |- v_2 : t
+    G | Phi , P(v'_1,...,v'_n)[v_2/x] |- Psi
+    ----------------------------------------------------- [Equality-Transport-SC]
+    G | Phi , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- Psi
+
+  and we prove in the natural deduction that
+
+    both premises are proved using [Hyp]
+    -------------------------------------------------------------------------
+    G | Phi , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- v_1 == v_2
+    G | Phi , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- P(v'_1,...,v'_n)[v_1/x]                         induction hypothesis
+    ------------------------------------------------------------------------- [Equality-Transport]    ---------------------------------------------------------
+    G | Phi , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- P(v'_1,...,v'_n)[v_2/x]                         G | Phi , P(v'_1,...,v'_n)[v_2/x] |- \/_{psi \in Psi} psi    
+    ----------------------------------------------------------------------------------------------------------------------------------------------------------- (* cut *)
+    G | Phi , v_1 == v_2 , P(v'_1,...,v'_n)[v_1/x] |- \/_{psi \in Psi} psi
+
+  Next, for [Rel-Refl-SC] the given derivation ends with
+
+    G |- s : state
+    G | Phi , rel s s |- Psi
+    ------------------------ [Rel-Refl-SC]
+    G | Phi |– Psi
+
+  and we prove in the natural deduction that
+
+    induction hypothesis                                         G |- s : state
+    -----------------------------------------                    ------------------ [Rel-Refl]
+    G | Phi , rel s s |- \/_{psi \in Psi} psi                    G | Phi |- rel s s
+    ------------------------------------------------------------------------------- (* cut *)
+    G | Phi |- \/_{psi \in Psi} psi
+
+  Next, for [Rel-Trans-SC] the given derivation ends with
+
+    G |- s_2 : state
+    G | Phi , rel s_1 s_3 |- Psi
+    ------------------------------------------ [Rel-Trans-SC]
+    G | Phi , rel s_1 s_2 , rel s_2 s_3 |- Psi
+
+  and we prove in the natural deduction that
+                                                        Lemma (Sequent calculus relates well-formed formulae)      Lemma (Sequent calculus relates well-formed formulae)
+                                                        -----------------------------------------------------      -----------------------------------------------------
+                                                        G |- Phi , rel s_1 s_2 , rel s_2 s_3 wf                    G |- Phi , rel s_1 s_2 , rel s_2 s_3 wf
+                                                        -------------------------------------------------- [Hyp]   -------------------------------------------------- [Hyp]
+    induction hypothesis                                G | Phi , rel s_1 s_2 , rel s_2 s_3 |- rel s_1 s_2         G | Phi , rel s_1 s_2 , rel s_2 s_3 |- rel s_2 s_3
+    ---------------------------------------------       ------------------------------------------------------------------------------------------------------------- [Rel-Trans]
+    G | Phi , rel s_1 s_3 |- \/_{psi \in Psi} psi       G | Phi , rel s_1 s_2 , rel s_2 s_3 |- rel s_1 s_3
+    ------------------------------------------------------------------------------------------------------ (* cut *)
+    G | Phi , rel s_1 s_2 , rel s_2 s_3 |- \/_{psi \in Psi} psi
+
+  Next, for [Sum-Disjoint-SC] the given derivation ends with
+
+    G |- v_1 : t_1
+    G |- v_2 : t_2
+    G |- Phi wf
+    G |- Psi wf
+    ----------------------------------- [Sum-Disjoint-SC]
+    G | Phi , inl v_1 == inr v_2 |- Psi
+
+  and we prove in the natural deduction that
+
+    Lemma (Sequent calculus relates well-formed formulae) 
+    -----------------------------------------------------
+    G |- Phi , inl v_1 == inr v_2 wf                                                Lemma (Sequent calculus relates well-formed formulae)
+    -------------------------------------------------- [Hyp]                        -----------------------------------------------------
+    G | Phi , inl v_1 == inr v_2 |- inl v_1 == inr v_2                              G |- Psi wf
+    -------------------------------------------------- [Sum-Disjoint]               ---------------------------- [Or]
+    G | Phi , inl v_1 == inr v_2 |- False                                           G |- \/_{psi \in Psi} psi wf
+    ------------------------------------------------------------------------------------------------------------ [False-Elim]
+    G | Phi , inl v_1 == inr v_2 |- \/_{psi \in Psi} psi
+
+  Next, for [First-Projection-SC] and [Second-Projection-SC], the proof proceeds as in the cases of [Equality-Transport-SC] and [Rel-Trans-SC].
+
+  Finally, for [Witnessed-Functoriality-SC] the given derivation ends with
+
+    G |- Phi wf
+    G |- Psi wf
+    G , x:state | Phi , phi |- psi , Psi
+    -------------------------------------------------- [Witnessed-Functoriality-SC]
+    G | Phi , witnessed x.phi |- withessed x.psi , Psi
+
+  and we prove in the natural deduction that
+
+    induction hypothesis
+    --------------------------------------------------------
+    G , x:state | Phi , phi |- psi \/ \/_{psi' \in Psi} psi'
+    ------------------------------------------------------------ [Implication-Intro]
+    G , x:state | Phi |- phi ==> (psi \/ \/_{psi' \in Psi} psi')
+    -------------------------------------------------------------- (* a classical tautology, see below *)
+    G , x:state | Phi |- (phi ==> psi) \/ (\/_{psi' \in Psi} psi')
+    -------------------------------------------------------------------------- (* [Forall-Intro] under \/ *)
+    G | Phi |- (forall x . phi ==> psi) \/ (forall x . \/_{psi' \in Psi} psi')
+    -------------------------------------------------------------------------- (* [Forall-Elim] using the non-emptyness assumption on the type state, under \/ *)
+    G | Phi |- (forall x . phi ==> psi) \/ (\/_{psi' \in Psi} psi')
+    ---------------------------------------------------------------------------- (* [Witnessed-Functoriality] under \/ *)
+    G | Phi |- (witnessed x.phi ==> witnessed x.psi) \/ (\/_{psi' \in Psi} psi')
+    ---------------------------------------------------------------------------- (* a classical tautology, see below *)
+    G | Phi |- witnessed x.phi ==> (witnessed x.psi \/ (\/_{psi' \in Psi} psi'))
+    ---------------------------------------------------------------------------- (* cut and [Implication-Elim] *)
+    G | Phi , witnessed x.phi |- witnessed x.psi \/ (\/_{psi' \in Psi} psi')
+
+  The classical tautology we used in the above derivation is proved (in general) as the following two implications.
+
+  On the one hand, we have
+
+                             (a)                   (b)
+    ------------------------------------------------------------------------------ (* cut with [Or-Elim] *)
+    G | Phi , phi1 \/ ~(phi1) , phi1 ==> (phi2 \/ phi3) |- (phi1 ==> phi2) \/ phi3                 
+    ------------------------------------------------------------------------------ (* cut with [LEM] *)
+    G | Phi , phi1 ==> (phi2 \/ phi3) |- (phi1 ==> phi2) \/ phi3
+
+  where the derivation (a) is given by
+
+     G |- Phi , phi2 , phi1 wf
+     ----------------------------- [Hyp]
+     G | Phi , phi2 , phi1 |- phi2                                  G |- Phi , phi3 wf
+     ------------------------------- [Implication-Intro]            ---------------------- [Hyp]
+     G | Phi , phi2 |- phi1 ==> phi2                                G | Phi , phi3 |- phi3
+     ----------------------------------------- [Or-Intro-1]         ----------------------------------------- [Or-Intro-2]
+     G | Phi , phi2 |- (phi1 ==> phi2) \/ phi3                      G | Phi , phi3 |- (phi1 ==> phi2) \/ phi3
+     -------------------------------------------------------------------------------------------------------- (* cut with [Or-Elim] *)
+     G | Phi , phi2 \/ phi3 |- (phi1 ==> phi2) \/ phi3
+     ------------------------------------------------------------------- (* cut with [Implication-Elim] *)
+     G | Phi , phi1 , phi1 ==> (phi2 \/ phi3) |- (phi1 ==> phi2) \/ phi3
+
+  and where the derivation (b) is given by
+
+    G |- Phi , phi1 ==> (phi2 \/ phi3) , phi1 wf
+    G |- phi2 wf
+    G | Phi , False , phi1 ==> (phi2 \/ phi3) , phi1 |- False
+    --------------------------------------------------------- [False-Elim]
+    G | Phi , False , phi1 ==> (phi2 \/ phi3) , phi1 |- phi2
+    ----------------------------------------------------------------- (* cut with [Implication-Elim] *)
+    G | Phi , phi1 ==> False , phi1 ==> (phi2 \/ phi3) , phi1 |- phi2
+    ----------------------------------------------------------------- (* = *)
+    G | Phi , ~(phi1) , phi1 ==> (phi2 \/ phi3) , phi1 |- phi2
+    ------------------------------------------------------------ [Implication-Intro]
+    G | Phi , ~(phi1) , phi1 ==> (phi2 \/ phi3) |- phi1 ==> phi2
+    ---------------------------------------------------------------------- [Or-Intro-1]
+    G | Phi , ~(phi1) , phi1 ==> (phi2 \/ phi3) |- (phi1 ==> phi2) \/ phi3
+
+  On the other hand, we have 
+
+    G |- Phi , phi2 wf
+    ---------------------- [Hyp]
+    G | Phi , phi2 |- phi2                                                              G |- Phi , phi3 , phi1 wf
+    -------------------------------------- (* cut with [Implication-Elim] *)            ---------------------------- [Hyp]
+    G | Phi , phi1 ==> phi2 , phi1 |- phi2                                              G | Phi , phi3, phi1 |- phi3
+    ---------------------------------------------- [Or-Intro-1]                         ------------------------------------- [Or-Intro-2]
+    G | Phi , phi1 ==> phi2 , phi1 |- phi2 \/ phi3                                      G | Phi , phi3 , phi1 |- phi2 \/ phi3
+    ------------------------------------------------------------------------------------------------------------------------- (* cut with [Or-Elim] *)
+    G | Phi , (phi1 ==> phi2) \/ phi3 , phi1 |- phi2 \/ phi3
+    ------------------------------------------------------------ [Implication-Intro]
+    G | Phi , (phi1 ==> phi2) \/ phi3 |- phi1 ==> (phi2 \/ phi3)
+
+  Note: This classical tautology is only used because we have chosen to work with classical logic
+  and thus the RHS of the sequent calculus's validity judgement contains a set of formulae,
+  rather than a single formula. If we would have used intuitionsitic logic instead, we would have
+  been able to use [Witnessed-Functoriality] directly on (G , x:state | Phi , phi |- psi).
+
+qed.

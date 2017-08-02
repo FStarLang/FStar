@@ -1,6 +1,6 @@
 module NatHeap
 
-open Preorder
+open FStar.Preorder
 
 (* Heap is a tuple of a source of freshness (the no. of the next 
    reference to be allocated) and a mapping of allocated raw 

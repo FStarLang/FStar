@@ -9,6 +9,7 @@ open FStar.TypeChecker.Env
 module Range = FStar.Range
 open FStar.List
 open FStar.Syntax.Syntax
+open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
 
 let int1 (m:lid) (f:'a -> 'b) (ua:term -> 'a) (em:'b -> term)
@@ -24,7 +25,7 @@ let int2 (m:lid) (f:'a -> 'b -> 'c) (ua:term -> 'a) (ub:term -> 'b) (em:'c -> te
     | _ -> None
 
 let reflection_primops : list<N.primitive_step> =
-    let mklid (nm : string) : lid = fstar_refl_syntax_lid nm in
+    let mklid (nm : string) : lid = fstar_refl_basic_lid nm in
     let mk (l : lid) (arity : int) (fn : Range.range -> args -> option<term>) : N.primitive_step =
         {
             N.name = l;
@@ -44,14 +45,14 @@ let reflection_primops : list<N.primitive_step> =
         mk1 "__pack_fv" pack_fv (unembed_list unembed_string) embed_fvar;
 
         mk1 "__inspect_bv" inspect_bv unembed_binder embed_string;
-        mk2 "__compare_binder" order_binder unembed_binder unembed_binder embed_order;
-        mk1 "__type_of_binder" (fun (b,q) -> b.sort) unembed_binder embed_term;
+        mk2 "__compare_binder" compare_binder unembed_binder unembed_binder embed_order;
+        mk1 "__type_of_binder" type_of_binder unembed_binder embed_term;
         mk2 "__is_free" is_free unembed_binder unembed_term embed_bool;
-        mk1 "__fresh_binder" (fun t -> (gen_bv "__refl" None t, None)) unembed_term embed_binder;
+        mk1 "__fresh_binder" fresh_binder unembed_term embed_binder;
 
-        mk2 "__term_eq" FStar.Syntax.Util.term_eq unembed_term unembed_term embed_bool;
+        mk2 "__term_eq" term_eq unembed_term unembed_term embed_bool;
 
-        mk1 "__term_to_string" Print.term_to_string unembed_term embed_string;
-        mk1 "__binders_of_env" all_binders unembed_env embed_binders;
+        mk1 "__term_to_string" term_to_string unembed_term embed_string;
+        mk1 "__binders_of_env" binders_of_env unembed_env embed_binders;
         mk2 "__lookup_typ" lookup_typ unembed_env unembed_string_list embed_sigelt_view;
     ]

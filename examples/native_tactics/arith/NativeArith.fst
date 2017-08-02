@@ -10,8 +10,8 @@ open FStar.List
     (* rev part *)
       addns "FStar.List";;
       addns "Prims";;
-      smt ();;
+      smt;;
     (* arithmetic part *)
       addns "Prims";;
-      smt ();;
+      smt;;
     return ()

@@ -171,16 +171,13 @@ let alloc_lid    = p2l ["FStar"; "ST"; "alloc"]
 let op_ColonEq   = p2l ["FStar"; "ST"; "op_Colon_Equals"]
 
 (* Constants for sets and ref sets *)
-let ref_lid       = p2l ["FStar"; "Heap"; "ref"]
-let heap_ref      = p2l ["FStar"; "Heap"; "Ref"]
-let set_empty     = p2l ["FStar"; "Set"; "empty"]
-let set_singleton = p2l ["FStar"; "Set"; "singleton"]
-let set_union     = p2l ["FStar"; "Set"; "union"]
+let ref_lid             = p2l ["FStar"; "Heap"; "ref"]
+let heap_addr_of_lid    = p2l ["FStar"; "Heap"; "addr_of"]
+let set_empty           = p2l ["FStar"; "Set"; "empty"]
+let set_singleton       = p2l ["FStar"; "Set"; "singleton"]
+let set_union           = p2l ["FStar"; "Set"; "union"]
 let fstar_hyperheap_lid = p2l ["FStar"; "HyperHeap"]
-let rref_lid      = p2l ["FStar"; "HyperHeap"; "rref"]
-let tset_empty     = p2l ["FStar"; "TSet"; "empty"]
-let tset_singleton = p2l ["FStar"; "TSet"; "singleton"]
-let tset_union     = p2l ["FStar"; "TSet"; "union"]
+let rref_lid            = p2l ["FStar"; "HyperHeap"; "rref"]
 
 (* Other special constants *)
 let erased_lid    = p2l ["FStar"; "Ghost"; "erased"]
@@ -213,10 +210,17 @@ let range_of_lid   = pconst "range_of"
 let labeled_lid    = pconst "labeled"
 let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
+let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
 
 (* Constants for marking terms with normalization hints *)
 let normalize      = pconst "normalize"
 let normalize_term = pconst "normalize_term"
+let norm           = pconst "norm"
+let steps_zeta       = pconst "zeta"
+let steps_iota       = pconst "iota"
+let steps_primops    = pconst "primops"
+let steps_delta      = pconst "delta"
+let steps_delta_only = pconst "delta_only"
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -250,6 +254,8 @@ let mk_tuple_lid n r =
   let t = U.format1 "tuple%s" (U.string_of_int n) in
   set_lid_range (psnconst t) r
 
+let lid_tuple2   = mk_tuple_lid 2 dummyRange
+
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
@@ -258,6 +264,8 @@ let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_id lid)
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
   set_lid_range (psnconst t) r
+
+let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"

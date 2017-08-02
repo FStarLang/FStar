@@ -2,49 +2,25 @@ module FStar.Order
 
 type order = | Lt | Eq | Gt
 
-// NOTE: the following six functions are not defined using `=` and `<>`
-// intentionally, as those operators have limited reduction semantics
-// (which we should add!). Thus we implement them by pattern matching,
-// which does reduce well. This is essential to call from within a
-// tactic.
-
 // Some derived checks
 val ge : order -> bool
-let ge o =
-    match o with
-    | Lt -> false
-    | _ -> true
+let ge o = o <> Lt
 
 val le : order -> bool
-let le o =
-    match o with
-    | Gt -> false
-    | _ -> true
+let le o = o <> Gt
 
 val ne : order -> bool
-let ne o =
-    match o with
-    | Eq -> false
-    | _ -> true
+let ne o = o <> Eq
 
 // Just for completeness and consistency...
 val gt : order -> bool
-let gt o =
-    match o with
-    | Gt -> true
-    | _ -> false
+let gt o = o = Gt
 
 val lt : order -> bool
-let lt o =
-    match o with
-    | Lt -> true
-    | _ -> false
+let lt o = o = Lt
 
 val eq : order -> bool
-let eq o =
-    match o with
-    | Eq -> true
-    | _ -> false
+let eq o = o = Eq
 
 // Lexicographical combination, thunked to be lazy
 val lex : order -> (unit -> order) -> order

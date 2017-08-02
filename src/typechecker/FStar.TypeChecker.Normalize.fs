@@ -60,6 +60,7 @@ type step =
   | Inlining
   | NoDeltaSteps
   | UnfoldUntil of S.delta_depth
+  | UnfoldOnly of list<I.lid>
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -814,12 +815,45 @@ let is_norm_request hd args =
     | Tm_fvar fv, [_] ->
       S.fv_eq_lid fv PC.normalize
 
+    | Tm_fvar fv, [steps; _; _] ->
+      S.fv_eq_lid fv PC.norm
+
     | _ -> false
 
-let get_norm_request args =
+let get_norm_request (full_norm:term -> term) args =
+    let parse_steps s =
+        let unembed_step s =
+            match (U.un_uinst s).n with
+            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_zeta ->
+              Zeta
+            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_iota ->
+              Iota
+            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_primops ->
+              Primops
+            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_delta ->
+              UnfoldUntil Delta_constant
+            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_delta_only ->
+              UnfoldUntil Delta_constant
+            | Tm_app({n=Tm_fvar fv}, [(names, _)])
+                when S.fv_eq_lid fv PC.steps_delta_only ->
+              let names = FStar.Syntax.Embeddings.unembed_string_list names in
+              let lids = names |> List.map Ident.lid_of_str in
+              UnfoldOnly lids
+            | _ -> failwith "Not an embedded `Prims.step`"
+        in
+        FStar.Syntax.Embeddings.unembed_list unembed_step s
+    in
     match args with
     | [_; (tm, _)]
-    | [(tm, _)] -> tm
+    | [(tm, _)] ->
+      let s = [Beta; Zeta; Iota; Primops; UnfoldUntil Delta_constant; Reify] in
+      s, tm
+    | [(steps, _); _; (tm, _)] ->
+      let add_exclude s z = if not (List.contains z s) then Exclude z::s else s in
+      let s = Beta::parse_steps (full_norm steps) in
+      let s = add_exclude s Zeta in
+      let s = add_exclude s Iota in
+      s, tm
     | _ -> failwith "Impossible"
 
 let is_reify_head = function
@@ -867,9 +901,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
-            let tm = get_norm_request args in
-            let s = [Reify; UnfoldUntil Delta_constant; Primops] in
-            let cfg' = {cfg with steps=s; delta_level=[Unfold Delta_constant]} in
+            let s, tm = get_norm_request (norm ({cfg with delta_level=[Unfold Delta_constant]}) env []) args in
+            let delta_level =
+                if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
+                then [Unfold Delta_constant]
+                else [NoDelta] in
+            let cfg' = {cfg with steps=s; delta_level=delta_level} in
             let stack' = Debug t :: Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
             norm cfg' env stack' tm
 
@@ -941,7 +978,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f PC.true_lid
                    || S.fv_eq_lid f PC.false_lid)
                 then false
-                else should_delta
+                else begin
+                    match cfg.steps |> List.tryFind (function UnfoldOnly _ -> true | _ -> false) with
+                    | Some (UnfoldOnly lids) -> should_delta && BU.for_some (fv_eq_lid f) lids
+                    | _ -> should_delta
+                end
             in
 
             if not should_delta

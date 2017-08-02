@@ -1,5 +1,6 @@
 module MetaCoq
 
+open FStar.Exn
 open FStar.All
 
 (*

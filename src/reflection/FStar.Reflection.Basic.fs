@@ -4,6 +4,9 @@ module FStar.Reflection.Basic
 open FStar.All
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
+open FStar.Syntax.Embeddings
+open FStar.Order
+
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
 module C = FStar.Const
@@ -53,122 +56,20 @@ let un_protect_embedded_term : term -> term =
         | _ ->
           failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
 
-let embed_unit (u:unit) : term = U.exp_unit
-let unembed_unit (_:term) :unit = ()
-
-let embed_bool (b:bool) : term = if b then U.exp_true_bool else U.exp_false_bool
-let unembed_bool (t:term) : bool =
-    match (SS.compress t).n with
-    | Tm_constant(FStar.Const.Const_bool b) -> b
-    | _ -> failwith "Not an embedded bool"
-
-let embed_int (i:int) : term = U.exp_int (BU.string_of_int i)
-let unembed_int (t:term) : int =
-    // What's the portable solution? Let's do this for now
-    match (SS.compress t).n with
-    | Tm_constant(FStar.Const.Const_int (s, _)) ->
-        BU.int_of_string s
-    | _ -> failwith "Not an embedded int"
-
-let embed_string (s:string) : term =
-    let bytes = BU.unicode_of_string s in
-    S.mk (Tm_constant(FStar.Const.Const_string(bytes, Range.dummyRange)))
-         None
-         Range.dummyRange
-
-let unembed_string (t:term) : string =
-    let t = U.unascribe t in
-    match t.n with
-    | Tm_constant(FStar.Const.Const_string(bytes, _)) ->
-      BU.string_of_unicode bytes
-    | _ ->
-      failwith ("Not an embedded string (" ^ Print.term_to_string t ^ ")")
-
-let lid_Mktuple2 = PC.mk_tuple_data_lid 2 Range.dummyRange
-let lid_tuple2   = PC.mk_tuple_lid 2 Range.dummyRange
-
 let embed_binder (b:binder) : term =
     U.mk_alien b "reflection.embed_binder" None
 
 let unembed_binder (t:term) : binder =
     U.un_alien t |> FStar.Dyn.undyn
 
-let rec embed_list (embed_a: ('a -> term)) (typ:term) (l:list<'a>) : term =
-    match l with
-    | [] -> S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.nil_lid) [U_zero])
-                        [S.iarg typ]
-                        None
-                        Range.dummyRange
-    | hd::tl ->
-            S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.cons_lid) [U_zero])
-                        [S.iarg typ;
-                         S.as_arg (embed_a hd);
-                         S.as_arg (embed_list embed_a typ tl)]
-                        None
-                        Range.dummyRange
-
-let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
-    let l = U.unascribe l in
-    let hd, args = U.head_and_args l in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, _
-        when S.fv_eq_lid fv PC.nil_lid -> []
-
-    | Tm_fvar fv, [_t; (hd, _); (tl, _)]
-        when S.fv_eq_lid fv PC.cons_lid ->
-      unembed_a hd :: unembed_list unembed_a tl
-
-    | _ ->
-      failwith (BU.format1 "Not an embedded list: %s" (Print.term_to_string l))
-
 let embed_binders l = embed_list embed_binder fstar_refl_binder l
 let unembed_binders t = unembed_list unembed_binder t
-let embed_string_list ss = embed_list embed_string FStar.TypeChecker.Common.t_string ss
-let unembed_string_list t = unembed_list unembed_string t
 
 let embed_term (t:term) : term =
     protect_embedded_term fstar_refl_term t
 
 let unembed_term (t:term) : term =
     un_protect_embedded_term t
-
-let embed_pair (embed_a:'a -> term) (t_a:term)
-               (embed_b:'b -> term) (t_b:term)
-               (x:('a * 'b)) : term =
-    S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm lid_Mktuple2) [U_zero;U_zero])
-                [S.iarg t_a;
-                 S.iarg t_b;
-                 S.as_arg (embed_a (fst x));
-                 S.as_arg (embed_b (snd x))]
-                None
-                Range.dummyRange
-
-let unembed_pair (unembed_a:term -> 'a) (unembed_b:term -> 'b) (pair:term) : ('a * 'b) =
-    let pairs = U.unascribe pair in
-    let hd, args = U.head_and_args pair in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv lid_Mktuple2 ->
-      unembed_a a, unembed_b b
-    | _ -> failwith "Not an embedded pair"
-
-let embed_option (embed_a:'a -> term) (typ:term) (o:option<'a>) : term =
-    match o with
-    | None ->
-      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.none_lid) [U_zero])
-                  [S.iarg typ]
-                  None Range.dummyRange
-    | Some a ->
-      S.mk_Tm_app (S.mk_Tm_uinst (lid_as_data_tm PC.some_lid) [U_zero])
-                  [S.iarg typ; S.as_arg (embed_a a)]
-                  None Range.dummyRange
-
-let unembed_option (unembed_a:term -> 'a) (o:term) : option<'a> =
-   let hd, args = U.head_and_args o in
-   match (U.un_uinst hd).n, args with
-   | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> None
-   | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
-     Some (unembed_a a)
-   | _ -> failwith "Not an embedded option"
 
 let embed_fvar (fv:fv) : term =
     U.mk_alien fv "reflection.embed_fvar" None
@@ -509,7 +410,7 @@ let unembed_order (t:term) : order =
     | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Gt_lid -> Gt
     | _ -> failwith "not an embedded order"
 
-let order_binder (x:binder) (y:binder) : order =
+let compare_binder (x:binder) (y:binder) : order =
     let n = S.order_bv (fst x) (fst y) in
     if n < 0 then Lt
     else if n = 0 then Eq
@@ -613,3 +514,9 @@ let unembed_sigelt_view (t:term) : sigelt_view =
         Unk
     | _ ->
         failwith "not an embedded sigelt_view"
+
+let binders_of_env e = FStar.TypeChecker.Env.all_binders e
+let type_of_binder b = match b with (b, _) -> b.sort
+let term_eq = FStar.Syntax.Util.term_eq
+let fresh_binder t = (gen_bv "__refl" None t, None)
+let term_to_string = Print.term_to_string
