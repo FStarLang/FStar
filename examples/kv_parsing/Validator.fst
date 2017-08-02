@@ -4,6 +4,7 @@ open KeyValue
 open PureParser
 open Slice
 
+open FStar.Ghost
 open FStar.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
@@ -19,28 +20,28 @@ module Cast = FStar.Int.Cast
 (*** Stateful validation of input buffer *)
 
 inline_for_extraction
-let parser_st_nochk #t (p: parser t) =
+let parser_st_nochk #t (p: erased (parser t)) =
   input:bslice -> Stack (t * off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
-                     Some? (p bs))))
+                     Some? (reveal p bs))))
   (ensures (fun h0 r h1 -> live h1 input /\
                   modifies_none h0 h1 /\
                   (let bs = B.as_seq h1 input.p in
-                    Some? (p bs) /\
-                    (let (v, n) = Some?.v (p bs) in
+                    Some? (reveal p bs) /\
+                    (let (v, n) = Some?.v (reveal p bs) in
                      let (rv, off) = r in
                        v == rv /\
                        n == U32.v off))))
 
 inline_for_extraction
-let parser_st #t (p: parser t) =
+let parser_st #t (p: erased (parser t)) =
   input:bslice -> Stack (option (t * off:U32.t{U32.v off <= U32.v input.len}))
   (requires (fun h0 -> live h0 input))
   (ensures (fun h0 r h1 -> live h1 input /\
           modifies_none h0 h1 /\
           (let bs = as_seq h1 input in
-            match p bs with
+            match reveal p bs with
             | Some (v, n) -> Some? r /\
               begin
                 let (rv, off) = Some?.v r in
@@ -49,16 +50,16 @@ let parser_st #t (p: parser t) =
             | None -> r == None)))
 
 let parse_u8_st_nochk :
-    parser_st_nochk (parse_u8) = fun input ->
+    parser_st_nochk (hide parse_u8) = fun input ->
     let b0 = B.index input.p 0ul in
     (b0, 1ul)
 
-let parse_u8_st : parser_st (parse_u8) = fun input ->
+let parse_u8_st : parser_st (hide parse_u8) = fun input ->
     if U32.lt input.len 1ul then None
     else (Some (parse_u8_st_nochk input))
 
 let parse_u16_st_nochk :
-  parser_st_nochk (parse_u16) = fun input ->
+  parser_st_nochk (hide parse_u16) = fun input ->
   let b0 = B.index input.p 0ul in
       let b1 = B.index input.p 1ul in
       begin
@@ -69,13 +70,13 @@ let parse_u16_st_nochk :
       let n = u16_from_bytes b0 b1 in
       (n, U32.uint_to_t 2)
 
-let parse_u16_st : parser_st (parse_u16) = fun input ->
+let parse_u16_st : parser_st (hide parse_u16) = fun input ->
   if U32.lt input.len (U32.uint_to_t 2)
     then None
   else Some (parse_u16_st_nochk input)
 
 let parse_u32_st_nochk :
-  parser_st_nochk (parse_u32) = fun input ->
+  parser_st_nochk (hide parse_u32) = fun input ->
   let b0 = B.index input.p (U32.uint_to_t 0) in
   let b1 = B.index input.p (U32.uint_to_t 1) in
   let b2 = B.index input.p (U32.uint_to_t 2) in
@@ -86,7 +87,7 @@ let parse_u32_st_nochk :
   let n = u32_from_be fourbytes in
   (n, U32.uint_to_t 4)
 
-let parse_u32_st : parser_st (parse_u32) = fun input ->
+let parse_u32_st : parser_st (hide parse_u32) = fun input ->
   if U32.lt input.len (U32.uint_to_t 4)
     then None
     else Some (parse_u32_st_nochk input)
@@ -97,16 +98,16 @@ unfold let validation_checks_parse #t (b: bytes)
   Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
 
 inline_for_extraction
-let stateful_validator #t (p: parser t) = input:bslice -> Stack (option (off:U32.t{U32.v off <= U32.v input.len}))
+let stateful_validator #t (p: erased (parser t)) = input:bslice -> Stack (option (off:U32.t{U32.v off <= U32.v input.len}))
     (requires (fun h0 -> live h0 input))
     (ensures (fun h0 r h1 -> live h1 input /\
                           modifies_none h0 h1 /\
                           (let bs = as_seq h1 input in
-                            validation_checks_parse bs r (p bs))))
+                            validation_checks_parse bs r (reveal p bs))))
 
 #reset-options "--z3rlimit 10"
 
-let validate_u16_array_st : stateful_validator parse_u16_array = fun input ->
+let validate_u16_array_st : stateful_validator (hide parse_u16_array) = fun input ->
   match parse_u16_st input with
   | Some (n, off) -> begin
       let n: U32.t = Cast.uint16_to_uint32 n in
@@ -124,7 +125,7 @@ let u32_array_bound: U32.t = 4294967291ul
 let u32_array_bound_is (_:unit) :
   Lemma (U32.v u32_array_bound = pow2 32 - 4 - 1) = ()
 
-let validate_u32_array_st : stateful_validator parse_u32_array = fun input ->
+let validate_u32_array_st : stateful_validator (hide parse_u32_array) = fun input ->
   match parse_u32_st input with
   | Some (n, off) -> begin
       // we have to make sure that the total length we compute doesn't overflow
@@ -140,10 +141,10 @@ let validate_u32_array_st : stateful_validator parse_u32_array = fun input ->
   | None -> None
 
 [@"substitute"]
-let then_check #t (p: parser t) (v: stateful_validator p)
-               #t' (p': parser t') (v': stateful_validator p')
+let then_check #t (p: erased (parser t)) (v: stateful_validator p)
+               #t' (p': erased (parser t')) (v': stateful_validator p')
                #t'' (f: t -> t' -> t'') :
-               stateful_validator (p `and_then` (fun x -> p' `and_then` (fun y -> parse_ret (f x y)))) =
+               stateful_validator (elift2 (fun p p' -> p `and_then` (fun x -> p' `and_then` (fun y -> parse_ret (f x y)))) p p') =
 fun input ->
   match v input with
   | Some off -> begin
@@ -155,9 +156,9 @@ fun input ->
   | None -> None
 
 // eta expansion is necessary to get the right subtyping check
-let validate_entry_st : stateful_validator parse_entry = fun input ->
-  then_check parse_u16_array validate_u16_array_st
-             parse_u32_array validate_u32_array_st
+let validate_entry_st : stateful_validator (hide parse_entry) = fun input ->
+  then_check (hide parse_u16_array) validate_u16_array_st
+             (hide parse_u32_array) validate_u32_array_st
              (fun key value -> EncodedEntry key.len16 key.a16 value.len32 value.a32) input
 
 module HH = FStar.Monotonic.HyperHeap
@@ -170,7 +171,7 @@ let modifies_one_trans r h0 h1 h2 = ()
 
 #reset-options "--z3rlimit 25"
 
-val parse_many_parse_one (#t:Type) (p:parser t) (n:nat{n > 0}) (bs:bytes) :
+val parse_many_parse_one (#t:Type) (p:parser t) (n:nat{n > 0}) (bs:bytes{length bs < pow2 32}) :
     Lemma (requires (Some? (parse_many p n bs)))
           (ensures (Some? (p bs)))
 let parse_many_parse_one #t p n bs = ()
@@ -225,11 +226,14 @@ val validate_one_more (#t:Type) (p:parser t) (n:nat) (buf:bslice)
                     U32.v off + U32.v off' == snd (Some?.v (parse_many p (n + 1) bs))
                    end))
 let validate_one_more #t p n buf off off' h =
+    let bs' = as_seq h (advance_slice buf off) in
+    assert (Some? (parse_many p 1 bs') == Some? (p bs'));
+    assert (snd (Some?.v (parse_many p 1 bs')) == snd (Some?.v (p bs')));
     validate_n_more p n 1 buf off off' h
 
 inline_for_extraction [@"substitute"]
-val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:U32.t) :
-    stateful_validator (parse_many p (U32.v n))
+val validate_many_st (#t:Type) (p:erased (parser t)) (v:stateful_validator p) (n:U32.t) :
+    stateful_validator (hide (parse_many (reveal p) (U32.v n)))
 let validate_many_st #t p v n = fun buf ->
     // TODO: prove this function correct
     admit();
@@ -245,8 +249,8 @@ let validate_many_st #t p v n = fun buf ->
         B.modifies_1 ptr_off h0' h /\
         begin
           let bs = as_seq h buf in
-          not failed ==> Some? (parse_many p i bs) /\
-                         U32.v (Seq.index (B.as_seq h ptr_off) 0) == snd (Some?.v (parse_many p i bs))
+          not failed ==> Some? (parse_many (reveal p) i bs) /\
+                         U32.v (Seq.index (B.as_seq h ptr_off) 0) == snd (Some?.v (parse_many (reveal p) i bs))
         end)
       (fun i -> let h = get() in
              let off = B.index ptr_off 0ul in
@@ -256,7 +260,7 @@ let validate_many_st #t p v n = fun buf ->
               (B.upd ptr_off 0ul U32.(off +^ off');
                let h1 = get() in
                B.lemma_modifies_1_trans ptr_off h0' h h1;
-               validate_one_more p (U32.v i) buf off off' h1;
+               validate_one_more (reveal p) (U32.v i) buf off off' h1;
                false)
              | None -> true) in
     let off = B.index ptr_off 0ul in
@@ -267,20 +271,20 @@ let validate_many_st #t p v n = fun buf ->
     else Some off
 
 [@"substitute"]
-let validate_done_st : stateful_validator parsing_done = fun input ->
+let validate_done_st : stateful_validator (hide parsing_done) = fun input ->
   if U32.eq input.len 0ul then Some 0ul else None
 
-let validate_entries_st' (num_entries:U32.t) : stateful_validator (parse_many parse_entry (U32.v num_entries)) =
-    validate_many_st parse_entry validate_entry_st num_entries
+let validate_entries_st' (num_entries:U32.t) : stateful_validator (hide (parse_many parse_entry (U32.v num_entries))) =
+    validate_many_st (hide parse_entry) validate_entry_st num_entries
 
-let validate_entries_st (num_entries:U32.t) : stateful_validator (parse_entries num_entries) =
+let validate_entries_st (num_entries:U32.t) : stateful_validator (hide (parse_entries num_entries)) =
   fun input ->
-  then_check (parse_many parse_entry (U32.v num_entries))
-  (validate_many_st parse_entry validate_entry_st num_entries)
-  parsing_done validate_done_st
+  then_check (hide (parse_many parse_entry (U32.v num_entries)))
+  (validate_many_st (hide parse_entry) validate_entry_st num_entries)
+  (hide parsing_done) validate_done_st
   (fun entries _ -> Store num_entries entries) input
 
-let validate_store_st : stateful_validator parse_abstract_store = fun input ->
+let validate_store_st : stateful_validator (hide parse_abstract_store) = fun input ->
   match parse_u32_st input with
   | Some (num_entries, off) ->
     begin

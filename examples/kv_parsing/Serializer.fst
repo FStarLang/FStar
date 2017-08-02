@@ -7,6 +7,7 @@ open FStar.Ghost
 module B = FStar.Buffer
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
+module Cast = FStar.Int.Cast
 
 open KeyValue
 open Slice
@@ -17,7 +18,6 @@ open PureEncoder
 (* NOTE: I'm using ser out of laziness, but they should NOT be abbreviated, we
 can serialize everywhere *)
 
-unfold
 let offset_into (buf:bslice) = off:U32.t{U32.v off <= U32.v buf.len}
 
 let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem) :
@@ -41,6 +41,10 @@ let buffer_fun (inputs:erased (TSet.set bslice)) =
 let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
   forall b. TSet.mem b inputs ==> live h b /\ B.disjoint b.p buf.p
 
+// TODO: unfold is needed for extraction but breaks verification; eventually
+// should replace with inline_for_extraction once that attribute unfolds type
+// aliases
+unfold
 let serializer_any (inputs:erased (TSet.set bslice))
                    (enc: buffer_fun inputs) =
   buf:bslice ->
@@ -56,8 +60,10 @@ let serializer_any (inputs:erased (TSet.set bslice))
            as_seq h0 b == as_seq h1 b) /\
         serialized (enc h1) buf r h0 h1))
 
+unfold
 let serializer (enc:erased bytes) = serializer_any (hide TSet.empty) (fun _ -> reveal enc)
 
+unfold
 let serializer_1 (input:bslice) (enc: buffer_fun (hide (TSet.singleton input))) =
     serializer_any (hide (TSet.singleton input)) (fun h -> enc h)
 
@@ -89,17 +95,22 @@ let upd_len_2 (#a:Type) (s:Seq.seq a{length s == 2}) (vs:Seq.seq a{length vs == 
   Lemma (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1) == vs) =
   lemma_eq_intro (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1)) vs
 
+inline_for_extraction [@"substitute"]
 val ser_u16: v:U16.t -> serializer (hide (u16_to_be v))
 let ser_u16 v = fun buf ->
   if U32.lt buf.len 2ul then None
   else
     let bs = u16_to_be v in
+    let b0 = Cast.uint16_to_uint8 (U16.shift_right v 8ul) in
+    let b1 = Cast.uint16_to_uint8 (U16.rem v 256us) in
     let (buf, _) = bslice_split_at buf 2ul in
     let h0 = get() in
-    B.upd buf.p 0ul (index bs 0);
-    B.upd buf.p 1ul (index bs 1);
+    B.upd buf.p 0ul b0;
+    B.upd buf.p 1ul b1;
     begin
       let s0 = as_seq h0 buf in
+      assert (index bs 0 == b0);
+      assert (index bs 1 == b1);
       upd_len_2 s0 bs
     end;
     Some 2ul
@@ -139,10 +150,12 @@ let ser_u32 v = fun buf ->
 
 // this is really a coercion that lifts a pure bytes serializer to one that
 // takes an input buffer (and ignores it)
+[@"substitute"]
 let ser_input (input:bslice) (#b:erased bytes) (s:serializer b) : serializer_1 input (fun _ -> reveal b) =
     fun buf -> s buf
 
 // coercion to increase the size of the inputs set
+[@"substitute"]
 let ser_inputs (#inputs1:erased (TSet.set bslice))
                (inputs2:erased (TSet.set bslice){TSet.subset (reveal inputs1) (reveal inputs2)})
                (#b: buffer_fun inputs1)
@@ -151,6 +164,7 @@ let ser_inputs (#inputs1:erased (TSet.set bslice))
 
 #reset-options "--z3rlimit 30"
 
+inline_for_extraction [@"substitute"]
 let ser_append (#inputs1 #inputs2:erased (TSet.set bslice))
                (#b1: buffer_fun inputs1) (#b2: buffer_fun inputs2)
                (s1:serializer_any inputs1 b1) (s2:serializer_any inputs2 b2) :
@@ -189,6 +203,7 @@ let ser_append (#inputs1 #inputs2:erased (TSet.set bslice))
 
 #reset-options
 
+inline_for_extraction [@"substitute"]
 val ser_copy : data:bslice -> serializer_1 data (fun h -> as_seq h data)
 let ser_copy data = fun buf ->
   if U32.lt buf.len data.len then None
@@ -201,7 +216,7 @@ let ser_copy data = fun buf ->
 let enc_u16_array_st (a: u16_array_st) (h:mem{live h a.a16_st}) : GTot bytes =
     u16_to_be a.len16_st `append` as_seq h a.a16_st
 
-// inline_for_extraction unfold [@"substitute"]
+inline_for_extraction unfold [@"substitute"]
 val ser_u16_array : a:u16_array_st ->
   serializer_any (hide (TSet.singleton a.a16_st)) (fun h -> enc_u16_array_st a h)
 let ser_u16_array a = fun buf ->
