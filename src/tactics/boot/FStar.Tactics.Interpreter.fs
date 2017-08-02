@@ -17,6 +17,7 @@ module U = FStar.Syntax.Util
 module TcRel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
+module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
 open FStar.Tactics.Basic
 module E = FStar.Tactics.Embedding
@@ -218,9 +219,11 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
         bind (set ps) (fun _ -> fail msg)
     )))
 
-let run_tactic_on_typ (tau:tac<'a>) (env:env) (typ:typ) : list<goal> // remaining goals, to be fed to SMT
+let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals, to be fed to SMT
                                                         * term // witness, in case it's needed, as in synthesis)
                                                         =
+    let tactic, _, _ = TcTerm.tc_reified_tactic env tactic in
+    let tau = unembed_tactic_0 unembed_unit tactic in
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     let ps, w = proofstate_of_goal_ty env typ in
@@ -263,7 +266,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
     | Tm_fvar fv, [(rett, Some (Implicit _)); (tactic, None); (assertion, None)]
             when S.fv_eq_lid fv PC.by_tactic_lid ->
         if pol = Pos then
-            let gs, _ = run_tactic_on_typ (unembed_tactic_0 unembed_unit tactic) e assertion in
+            let gs, _ = run_tactic_on_typ tactic e assertion in
             (FStar.Syntax.Util.t_true, gs)
         else
             (assertion, []) // Peel away tactics in negative positions, they're assumptions!
@@ -273,8 +276,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : term * list<goal> =
     | Tm_fvar fv, [(assertion, None)]
             when S.fv_eq_lid fv PC.spinoff_lid ->
         if pol = Pos then
-            let gs, _ = run_tactic_on_typ idtac e assertion in
-            (FStar.Syntax.Util.t_true, gs)
+            (FStar.Syntax.Util.t_true, [fst <| goal_of_goal_ty e assertion])
         else
             (assertion, [])
 
@@ -355,7 +357,7 @@ let reify_tactic (a : term) : term =
 
 let synth (env:Env.env) (typ:typ) (tau:term) : term =
     tacdbg := Env.debug env (Options.Other "Tac");
-    let gs, w = run_tactic_on_typ (unembed_tactic_0 unembed_unit (reify_tactic tau)) env typ in
+    let gs, w = run_tactic_on_typ (reify_tactic tau) env typ in
     match gs with
     | [] -> w
     | _::_ -> raise (FStar.Errors.Error ("synthesis left open goals", typ.pos))
