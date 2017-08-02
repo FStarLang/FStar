@@ -269,7 +269,7 @@ let modifies_1_valid
   let u_ptr = P.gfield p (union_field l) in
   P.is_active_union_field_includes_readable h1 u_ptr f p'
 
-let modifies_1_tag
+let modifies_1_field_tag
   (#l: P.union_typ)
   (tgs: tags l)
   (p: P.pointer (typ l))
@@ -283,6 +283,18 @@ let modifies_1_tag
     P.modifies_1 (gfield tgs p f) h0 h1
   ))
   (ensures (gread_tag h1 tgs p == t))
+  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1)]
+= ()
+
+let modifies_1_field
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (valid h0 tgs p /\ P.modifies_1 (gfield tgs p f) h0 h1))
+  (ensures (P.modifies_1 p h0 h1))
   [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1)]
 = ()
 
