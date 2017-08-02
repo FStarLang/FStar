@@ -135,4 +135,6 @@ let parse fn =
       let p0 = pos_of_lexpos lexbuf.StartPos in
       let p1 = pos_of_lexpos lexbuf.EndPos in
       let r = Range.mk_range filename p0 p1 in
-      Inr (sprintf "Syntax error (%A)" e, r)
+      Inr ((if Options.trace_error ()
+            then sprintf "Syntax error (%A)" e
+            else sprintf "Syntax error (%s)" e.Message), r)
