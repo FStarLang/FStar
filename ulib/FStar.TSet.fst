@@ -147,13 +147,13 @@ let lemma_mem_filter (#a:Type) (f:(a -> Type0)) (s:set a) (x:a)
          [SMTPat (mem x (filter f s))]
   = ()
 
-let exists_y_in_s (#a:Type) (#b:Type) (s:set a) (f:a -> b) (x:b) : prop =
+let exists_y_in_s (#a:Type) (#b:Type) (s:set a) (f:a -> Tot b) (x:b) : Tot prop =
  exists (y:a). mem y s /\ x == f y
 
 abstract
-let map (#a:Type) (#b:Type) (f:a -> b) (s:set a) : set b = exists_y_in_s s f
+let map (#a:Type) (#b:Type) (f:a -> Tot b) (s:set a) : Tot (set b) = exists_y_in_s s f
 
-let lemma_mem_map (#a:Type) (#b:Type) (f:(a -> b)) (s:set a) (x:b)
+let lemma_mem_map (#a:Type) (#b:Type) (f:(a -> Tot b)) (s:set a) (x:b)
   :Lemma ((exists (y:a). {:pattern (mem y s)} mem y s /\ x == f y) <==> mem x (map f s))
          [SMTPat (mem x (map f s))]
   = ()
