@@ -122,28 +122,30 @@ let gsub
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
-: GTot (buffer t)
+  (len: UInt32.t)
+: Ghost (buffer t)
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b)))
+  (ensures (fun _ -> True))
 = P.gsub_buffer b i len
 
 let sub
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
+  (len: UInt32.t)
 : Stack (buffer t)
-  (requires (fun h -> live h b))
-  (ensures (fun h b' h' -> h' == h /\ b' == gsub b i len ))
+  (requires (fun h -> UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ live h b))
+  (ensures (fun h b' h' -> UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ h' == h /\ b' == gsub b i len ))
 = P.sub_buffer b i len
 
 let length_gsub
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
+  (len: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (length (gsub b i len) == len))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b)))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ length (gsub b i len) == len))
   [SMTPat (length (gsub b i len))]
 = ()
 
@@ -151,11 +153,11 @@ let live_gsub
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
+  (len: UInt32.t)
   (h: HS.mem)
 : Lemma
-  (requires (UInt32.v len > 0))
-  (ensures (live h (gsub b i len) <==> live h b))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ UInt32.v len > 0))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ (live h (gsub b i len) <==> live h b)))
   [SMTPat (live h (gsub b i len))]
 = ()
 
@@ -163,11 +165,19 @@ let gsub_gsub
   (#a: typ)
   (b: buffer a)
   (i1: UInt32.t)
-  (len1: UInt32.t{UInt32.v i1 + UInt32.v len1 <= UInt32.v (length b)})
+  (len1: UInt32.t)
   (i2: UInt32.t)
-  (len2: UInt32.t {UInt32.v i2 + UInt32.v len2 <= UInt32.v len1})
+  (len2: UInt32.t)
 : Lemma
-  (ensures (gsub (gsub b i1 len1) i2 len2 == gsub b FStar.UInt32.(i1 +^ i2) len2))
+  (requires (
+    UInt32.v i1 + UInt32.v len1 <= UInt32.v (length b) /\  
+    UInt32.v i2 + UInt32.v len2 <= UInt32.v len1
+  ))
+  (ensures (
+    UInt32.v i1 + UInt32.v len1 <= UInt32.v (length b) /\  
+    UInt32.v i2 + UInt32.v len2 <= UInt32.v len1 /\
+    gsub (gsub b i1 len1) i2 len2 == gsub b FStar.UInt32.(i1 +^ i2) len2
+  ))
   [SMTPat (gsub (gsub b i1 len1) i2 len2)]
 = ()
 
@@ -221,58 +231,68 @@ let as_seq_gsub
   (h: HS.mem)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
+  (len: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (as_seq h (gsub b i len) == Seq.slice (as_seq h b) (UInt32.v i) (UInt32.v i + UInt32.v len)))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b)))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ as_seq h (gsub b i len) == Seq.slice (as_seq h b) (UInt32.v i) (UInt32.v i + UInt32.v len)))
   [SMTPat (as_seq h (gsub b i len))]
 = ()
 
 let gpointer_of_buffer_cell
   (#t: typ)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
-: GTot (P.pointer t)
+  (i: UInt32.t)
+: Ghost (P.pointer t)
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (fun _ -> True))
 = P.gpointer_of_buffer_cell b i
 
 let pointer_of_buffer_cell
   (#t: typ)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
+  (i: UInt32.t)
 : Stack (P.pointer t)
-  (requires (fun h -> live h b))
-  (ensures (fun h p h' -> h' == h /\ p == gpointer_of_buffer_cell b i))
+  (requires (fun h -> UInt32.v i < UInt32.v (length b) /\ live h b))
+  (ensures (fun h p h' -> UInt32.v i < UInt32.v (length b) /\ h' == h /\ p == gpointer_of_buffer_cell b i))
 = P.pointer_of_buffer_cell b i
 
 let gpointer_of_buffer_cell_gsub
   (#t: typ)
   (b: buffer t)
   (i1: UInt32.t)
-  (len: UInt32.t { UInt32.v i1 + UInt32.v len <= UInt32.v (length b) } )
-  (i2: UInt32.t { UInt32.v i2 < UInt32.v len } )
+  (len: UInt32.t )
+  (i2: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (gpointer_of_buffer_cell (gsub b i1 len) i2 == gpointer_of_buffer_cell b FStar.UInt32.(i1 +^ i2)))
+  (requires (
+    UInt32.v i1 + UInt32.v len <= UInt32.v (length b) /\
+    UInt32.v i2 < UInt32.v len
+  ))
+  (ensures (
+    UInt32.v i1 + UInt32.v len <= UInt32.v (length b) /\
+    UInt32.v i2 < UInt32.v len /\
+    gpointer_of_buffer_cell (gsub b i1 len) i2 == gpointer_of_buffer_cell b FStar.UInt32.(i1 +^ i2)
+  ))
   [SMTPat (gpointer_of_buffer_cell (gsub b i1 len) i2)]
 = ()
 
 let live_gpointer_of_buffer_cell
   (#t: typ)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
+  (i: UInt32.t)
   (h: HS.mem)
 : Lemma
-  (ensures (P.live h (gpointer_of_buffer_cell b i) <==> live h b))
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ P.live h (gpointer_of_buffer_cell b i) <==> live h b))
   [SMTPat (P.live h (gpointer_of_buffer_cell b i))]
 = ()
 
 let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
   (#t: typ)
   (p: P.pointer t)
-  (i: UInt32.t { UInt32.v i < 1 } )
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (gpointer_of_buffer_cell (gsingleton_buffer_of_pointer p) i == p))
+  (requires (UInt32.v i < 1))
+  (ensures (UInt32.v i < 1 /\ gpointer_of_buffer_cell (gsingleton_buffer_of_pointer p) i == p))
   [SMTPat (gpointer_of_buffer_cell (gsingleton_buffer_of_pointer p) i)]
 = ()
 
@@ -280,10 +300,10 @@ let gpointer_of_buffer_cell_gbuffer_of_array_pointer
   (#length: array_length_t)
   (#t: typ)
   (p: P.pointer (TArray length t))
-  (i: UInt32.t { UInt32.v i < UInt32.v length } )
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i == P.gcell p i))
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (UInt32.v i < UInt32.v length /\ gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i == P.gcell p i))
   [SMTPat (gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i)]
 = ()
 
@@ -291,9 +311,10 @@ let gread_gpointer_of_buffer_cell
   (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
+  (i: UInt32.t)
 : Lemma
-  (ensures (P.gread h (gpointer_of_buffer_cell b i) == Seq.index (as_seq h b) (UInt32.v i)))
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ P.gread h (gpointer_of_buffer_cell b i) == Seq.index (as_seq h b) (UInt32.v i)))
   [SMTPat (P.gread h (gpointer_of_buffer_cell b i))]
 = ()
 
@@ -301,19 +322,20 @@ let gread_gpointer_of_buffer_cell'
   (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
+  (i: UInt32.t)
 : Lemma
-  (ensures (P.gread h (gpointer_of_buffer_cell b i) == Seq.index (as_seq h b) (UInt32.v i)))
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ P.gread h (gpointer_of_buffer_cell b i) == Seq.index (as_seq h b) (UInt32.v i)))
 = ()
 
 let gread_pointer_of_buffer_cell'
   (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (Seq.index (as_seq h b) (UInt32.v i) == P.gread h (gpointer_of_buffer_cell b i)))
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ Seq.index (as_seq h b) (UInt32.v i) == P.gread h (gpointer_of_buffer_cell b i)))
   [SMTPat (Seq.index (as_seq h b) (UInt32.v i))]
 = ()
 
@@ -364,10 +386,10 @@ let readable_gsub
   (h: HS.mem)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
+  (len: UInt32.t)
 : Lemma
-  (requires (readable h b /\ UInt32.v len > 0))
-  (ensures (readable h (gsub b i len)))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h b /\ UInt32.v len > 0))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h (gsub b i len)))
   [SMTPat (readable h (gsub b i len))]
 = ()
 
@@ -375,10 +397,10 @@ let readable_gpointer_of_buffer_cell
   (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
+  (i: UInt32.t)
 : Lemma
-  (requires (readable h b))
-  (ensures (P.readable h (gpointer_of_buffer_cell b i)))
+  (requires (UInt32.v i < UInt32.v (length b) /\ readable h b))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ P.readable h (gpointer_of_buffer_cell b i)))
   [SMTPat (P.readable h (gpointer_of_buffer_cell b i))]
 = ()
 
@@ -389,22 +411,21 @@ let readable_intro
 : Lemma
   (requires (
     live h b /\ (
-     forall (i: UInt32.t { UInt32.v i < UInt32.v (length b) } ) .
+     forall (i: UInt32.t) .
+     UInt32.v i < UInt32.v (length b) ==>
      P.readable h (gpointer_of_buffer_cell b i)
   )))
   (ensures (readable h b))
 //  [SMTPat (buffer_readable h b)] // TODO: dubious pattern, may trigger unreplayable hints
-= assert (forall (i: UInt32.t { UInt32.v i < UInt32.v (buffer_length b) } ) .
-     P.readable h (gpointer_of_buffer_cell b i));
-  P.buffer_readable_intro h b
+= P.buffer_readable_intro h b
 
 let read
   (#t: typ)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
+  (i: UInt32.t)
 : HST.Stack (type_of_typ t)
-  (requires (fun h -> readable h b))
-  (ensures (fun h v h' -> h' == h /\ v == Seq.index (as_seq h b) (UInt32.v i)))
+  (requires (fun h -> UInt32.v i < UInt32.v (length b) /\ readable h b))
+  (ensures (fun h v h' -> UInt32.v i < UInt32.v (length b) /\ h' == h /\ v == Seq.index (as_seq h b) (UInt32.v i)))
 = P.read_buffer b i
 
 (* buffer write: needs clearer "modifies" clauses *)
@@ -412,11 +433,11 @@ let read
 let disjoint_gpointer_of_buffer_cell
   (#t: typ)
   (b: buffer t)
-  (i1: UInt32.t { UInt32.v i1 < UInt32.v (length b) } )
-  (i2: UInt32.t { UInt32.v i2 < UInt32.v (length b) } )
+  (i1: UInt32.t)
+  (i2: UInt32.t)
 : Lemma
-  (requires ( UInt32.v i1 <> UInt32.v i2 ) )
-  (ensures (P.disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2)))
+  (requires ( UInt32.v i1 < UInt32.v (length b) /\ UInt32.v i2 < UInt32.v (length b) /\ UInt32.v i1 <> UInt32.v i2 ) )
+  (ensures (UInt32.v i1 < UInt32.v (length b) /\ UInt32.v i2 < UInt32.v (length b) /\ P.disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2)))
   [SMTPat (P.disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2))]
 = ()
 
@@ -467,11 +488,11 @@ let disjoint_buffer_vs_pointer_gsub
   (#t1 #t2: typ)
   (b1: buffer t1)
   (i: UInt32.t)
-  (len: UInt32.t {UInt32.v i + UInt32.v len <= UInt32.v (length b1)} )
+  (len: UInt32.t)
   (p2: pointer t2)
 : Lemma
-  (requires (disjoint_buffer_vs_pointer b1 p2))
-  (ensures (disjoint_buffer_vs_pointer (gsub b1 i len) p2))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b1) /\ disjoint_buffer_vs_pointer b1 p2))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b1) /\ disjoint_buffer_vs_pointer (gsub b1 i len) p2))
   [SMTPat (disjoint_buffer_vs_pointer (gsub b1 i len) p2)]
 = ()
 
@@ -479,10 +500,10 @@ let disjoint_buffer_vs_pointer_elim
   (#t1 #t2: typ)
   (b1: buffer t1)
   (p2: pointer t2)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b1)})
+  (i: UInt32.t)
 : Lemma
-  (requires (disjoint_buffer_vs_pointer b1 p2))
-  (ensures (disjoint (gpointer_of_buffer_cell b1 i) p2))
+  (requires (UInt32.v i < UInt32.v (length b1) /\ disjoint_buffer_vs_pointer b1 p2))
+  (ensures (UInt32.v i < UInt32.v (length b1) /\ disjoint (gpointer_of_buffer_cell b1 i) p2))
   [SMTPat (disjoint (gpointer_of_buffer_cell b1 i) p2)]
 = ()
 
@@ -528,10 +549,10 @@ let disjoint_buffer_vs_buffer_gsub
   (b1: buffer t1)
   (b2: buffer t2)
   (i2: UInt32.t)
-  (len2: UInt32.t { UInt32.v i2 + UInt32.v len2 <= UInt32.v (length b2) } )
+  (len2: UInt32.t)
 : Lemma
-  (requires (disjoint_buffer_vs_buffer b1 b2))
-  (ensures (disjoint_buffer_vs_buffer b1 (gsub b2 i2 len2)))
+  (requires (UInt32.v i2 + UInt32.v len2 <= UInt32.v (length b2) /\ disjoint_buffer_vs_buffer b1 b2))
+  (ensures (UInt32.v i2 + UInt32.v len2 <= UInt32.v (length b2) /\ disjoint_buffer_vs_buffer b1 (gsub b2 i2 len2)))
   [SMTPat (disjoint_buffer_vs_buffer b1 (gsub b2 i2 len2))]
 = ()
 
@@ -539,21 +560,22 @@ let disjoint_buffer_vs_buffer_elim
   (#t1 #t2: typ)
   (b1: buffer t1)
   (b2: buffer t2)
-  (i2: UInt32.t { UInt32.v i2 < UInt32.v (length b2) } )
+  (i2: UInt32.t)
 : Lemma
-  (requires (disjoint_buffer_vs_buffer b1 b2))
-  (ensures (disjoint_buffer_vs_pointer b1 (gpointer_of_buffer_cell b2 i2)))
+  (requires (UInt32.v i2 < UInt32.v (length b2) /\ disjoint_buffer_vs_buffer b1 b2))
+  (ensures (UInt32.v i2 < UInt32.v (length b2) /\ disjoint_buffer_vs_pointer b1 (gpointer_of_buffer_cell b2 i2)))
   [SMTPat (disjoint_buffer_vs_pointer b1 (gpointer_of_buffer_cell b2 i2))]
 = ()
 
 let write
   (#t: typ)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
+  (i: UInt32.t)
   (v: type_of_typ t)
 : HST.Stack unit
-  (requires (fun h -> live h b))
+  (requires (fun h -> UInt32.v i < UInt32.v (length b) /\ live h b))
   (ensures (fun h _ h' ->
+    UInt32.v i < UInt32.v (length b) /\
     modifies_1 (gpointer_of_buffer_cell b i) h h' /\
     live h' b /\
     P.readable h' (gpointer_of_buffer_cell b i) /\
