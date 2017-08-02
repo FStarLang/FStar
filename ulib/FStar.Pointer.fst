@@ -3365,9 +3365,7 @@ let write #a b z =
   let v = (| t, c1 |) in
   r := v;
   let h1 = HST.get () in
-  assert (h1 == HS.upd h0 (greference_of b) v);
-  admit ()
-
+  assert (h1 == HS.upd h0 (greference_of b) v)
 
 let write_union_field
   (#l: union_typ)
