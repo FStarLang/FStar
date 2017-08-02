@@ -228,9 +228,9 @@ let kwd_or_id args (r:Range.range) s =
     | None ->
       match s with
         | "__SOURCE_DIRECTORY__" ->
-          STRING (Bytes.string_as_unicode_bytes (args.getSourceDirectory()))
+          STRING (args.getSourceDirectory())
         | "__SOURCE_FILE__" ->
-          STRING (Bytes.string_as_unicode_bytes (Range.file_of_range r))
+          STRING (Range.file_of_range r)
         | "__LINE__" ->
           INT (Util.string_of_int <| Range.line_of_pos (Range.start_of_range r), false)
         | _ ->

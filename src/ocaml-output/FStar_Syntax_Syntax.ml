@@ -1354,5 +1354,5 @@ let has_simple_attribute: term Prims.list -> Prims.string -> Prims.bool =
            match uu___93_4367 with
            | { n = Tm_constant (FStar_Const.Const_string (data,uu____4371));
                tk = uu____4372; pos = uu____4373; vars = uu____4374;_} when
-               (FStar_Util.string_of_unicode data) = s -> true
-           | uu____4379 -> false) l
+               data = s -> true
+           | uu____4377 -> false) l

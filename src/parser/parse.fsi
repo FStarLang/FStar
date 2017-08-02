@@ -21,12 +21,12 @@ type token =
   | TRY
   | TRUE
   | TOTAL
-  | TILDE of (string)
+  | TILDE
   | THEN
   | SUB_EFFECT
   | SUBTYPE
   | SUBKIND
-  | STRING of (bytes)
+  | STRING of (string)
   | SQUIGGLY_RARROW
   | SEMICOLON_SEMICOLON
   | SEMICOLON
@@ -48,6 +48,7 @@ type token =
   | PIPE_RIGHT
   | PERCENT_LBRACK
   | OPPREFIX of (string)
+  | OPNONASSOC of (string)
   | OPINFIX4 of (string)
   | OPINFIX3 of (string)
   | OPINFIX2 of (string)
@@ -124,7 +125,7 @@ type token =
   | COLON_EQUALS
   | COLON_COLON
   | COLON
-  | CHAR of (char)
+  | CHAR of (int)
   | BYTEARRAY of (bytes)
   | BY
   | BEGIN
@@ -185,6 +186,7 @@ type tokenId =
     | TOKEN_PIPE_RIGHT
     | TOKEN_PERCENT_LBRACK
     | TOKEN_OPPREFIX
+    | TOKEN_OPNONASSOC
     | TOKEN_OPINFIX4
     | TOKEN_OPINFIX3
     | TOKEN_OPINFIX2

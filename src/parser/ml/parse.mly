@@ -36,7 +36,7 @@ open FStar_String
 %token BEGIN
 %token BY
 %token <bytes> BYTEARRAY
-%token <char> CHAR
+%token <int> CHAR
 %token COLON
 %token COLON_COLON
 %token COLON_EQUALS
@@ -113,6 +113,7 @@ open FStar_String
 %token <string> OPINFIX2
 %token <string> OPINFIX3
 %token <string> OPINFIX4
+%token <string> OPNONASSOC
 %token <string> OPPREFIX
 %token PERCENT_LBRACK
 %token PIPE_RIGHT
@@ -139,7 +140,7 @@ open FStar_String
 %token SUBTYPE
 %token SUB_EFFECT
 %token THEN
-%token <string> TILDE
+%token TILDE
 %token TOTAL
 %token TRUE
 %token TRY
@@ -174,6 +175,7 @@ open FStar_String
 %left OPINFIX3
 %left BACKTICK
 %right OPINFIX4
+%nonassoc OPNONASSOC
 %type <inputFragment> inputFragment
 %type <FStar_Ident.ident> lident
 %type <term> term
@@ -284,11 +286,7 @@ option_string_:
     {    ( None )}
 | STRING
     {let s0 = $1 in
-let x =
-  let s = s0 in
-               ( string_of_bytes s )
-in
-    ( Some x )}
+    ( Some s0 )}
 
 boption_SQUIGGLY_RARROW_:
   
@@ -617,11 +615,7 @@ mainDecl:
 pragma:
   PRAGMA_SET_OPTIONS STRING
     {let (_1, s0) = ((), $2) in
-let s =
-  let s = s0 in
-               ( string_of_bytes s )
-in
-      ( SetOptions s )}
+      ( SetOptions s0 )}
 | PRAGMA_RESET_OPTIONS option_string_
     {let (_1, s_opt) = ((), $2) in
       ( ResetOptions s_opt )}
@@ -1050,6 +1044,13 @@ let op =
        ( mk_ident (op, rhs parseState 1) )
 in
       ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
+| LPAREN OPNONASSOC RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let op =
+  let op = op0 in
+       ( mk_ident (op, rhs parseState 1) )
+in
+      ( mk_pattern (PatOp op) (rhs2 parseState 1 3) )}
 | LPAREN OPINFIX0a RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let op =
@@ -1305,6 +1306,13 @@ let id =
 in
     ( {id with idText = compile_op' id.idText} )}
 | LPAREN OPINFIX4 RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let id =
+  let op = op0 in
+       ( mk_ident (op, rhs parseState 1) )
+in
+    ( {id with idText = compile_op' id.idText} )}
+| LPAREN OPNONASSOC RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let id =
   let op = op0 in
@@ -1880,6 +1888,9 @@ tmNoEq:
 | tmNoEq OPINFIX4 tmNoEq
     {let (e1, op, e2) = ($1, $2, $3) in
       ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
+| tmNoEq OPNONASSOC tmNoEq
+    {let (e1, op, e2) = ($1, $2, $3) in
+      ( mk_term (Op(mk_ident(op, rhs parseState 2), [e1; e2])) (rhs2 parseState 1 3) Un)}
 | lidentOrUnderscore COLON appTerm refineOpt
     {let (id, _2, e, phi_opt) = ($1, (), $3, $4) in
       (
@@ -1892,8 +1903,8 @@ tmNoEq:
     {let (_1, e, _3) = ((), $2, ()) in
                               ( e )}
 | TILDE atomicTerm
-    {let (op, e) = ($1, $2) in
-      ( mk_term (Op(mk_ident (op, rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula )}
+    {let (_1, e) = ((), $2) in
+      ( mk_term (Op(mk_ident ("~", rhs parseState 1), [e])) (rhs2 parseState 1 2) Formula )}
 | appTerm
     {let e = $1 in
               ( e )}
@@ -2032,6 +2043,13 @@ let op =
 in
       ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
 | LPAREN OPINFIX4 RPAREN
+    {let (_1, op0, _3) = ((), $2, ()) in
+let op =
+  let op = op0 in
+       ( mk_ident (op, rhs parseState 1) )
+in
+      ( mk_term (Op(op, [])) (rhs2 parseState 1 3) Un )}
+| LPAREN OPNONASSOC RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let op =
   let op = op0 in

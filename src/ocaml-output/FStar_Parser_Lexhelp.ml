@@ -341,25 +341,21 @@ let kwd_or_id:
         | FStar_Pervasives_Native.None  ->
             (match s with
              | "__SOURCE_DIRECTORY__" ->
-                 let uu____532 =
-                   let uu____533 = args.getSourceDirectory () in
-                   FStar_Bytes.string_as_unicode_bytes uu____533 in
+                 let uu____532 = args.getSourceDirectory () in
                  FStar_Parser_Parse.STRING uu____532
              | "__SOURCE_FILE__" ->
-                 let uu____534 =
-                   let uu____535 = FStar_Range.file_of_range r in
-                   FStar_Bytes.string_as_unicode_bytes uu____535 in
-                 FStar_Parser_Parse.STRING uu____534
+                 let uu____533 = FStar_Range.file_of_range r in
+                 FStar_Parser_Parse.STRING uu____533
              | "__LINE__" ->
-                 let uu____536 =
-                   let uu____539 =
-                     let uu____540 =
-                       let uu____541 = FStar_Range.start_of_range r in
-                       FStar_Range.line_of_pos uu____541 in
-                     FStar_All.pipe_left FStar_Util.string_of_int uu____540 in
-                   (uu____539, false) in
-                 FStar_Parser_Parse.INT uu____536
-             | uu____542 ->
+                 let uu____534 =
+                   let uu____537 =
+                     let uu____538 =
+                       let uu____539 = FStar_Range.start_of_range r in
+                       FStar_Range.line_of_pos uu____539 in
+                     FStar_All.pipe_left FStar_Util.string_of_int uu____538 in
+                   (uu____537, false) in
+                 FStar_Parser_Parse.INT uu____534
+             | uu____540 ->
                  if FStar_Util.starts_with s FStar_Ident.reserved_prefix
                  then
                    raise
@@ -367,5 +363,5 @@ let kwd_or_id:
                         ((Prims.strcat FStar_Ident.reserved_prefix
                             " is a reserved prefix for an identifier"), r))
                  else
-                   (let uu____544 = intern_string s in
-                    FStar_Parser_Parse.IDENT uu____544))
+                   (let uu____542 = intern_string s in
+                    FStar_Parser_Parse.IDENT uu____542))
