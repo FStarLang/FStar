@@ -11,10 +11,14 @@ FST_FILES= Slice.fst \
 	   PureEncoder.fst \
 	   Serializer.fst
 
+FSTAR_INCLUDE_PATHS=--include ../../../kremlin/kremlib
+
+OTHERFLAGS+=$(FSTAR_INCLUDE_PATHS)
+
 all: $(FST_FILES:.fst=.uver)
 
 %.fst-in:
-	@echo "--include ../../../kremlin/kremlib"
+	@echo $(FSTAR_INCLUDE_PATHS)
 
 
 extract-c: Serializer.fst Validator.fst ValidatedParser.fst

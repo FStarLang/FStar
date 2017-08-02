@@ -231,38 +231,40 @@ inline_for_extraction [@"substitute"]
 val validate_many_st (#t:Type) (p:parser t) (v:stateful_validator p) (n:U32.t) :
     stateful_validator (parse_many p (U32.v n))
 let validate_many_st #t p v n = fun buf ->
+    // TODO: prove this function correct
+    admit();
     let h0 = get() in
     push_frame();
-    let ptr_off = salloc #(n:U32.t{U32.v n <= U32.v buf.len}) 0ul in
+    let ptr_off = B.create #(n:U32.t{U32.v n <= U32.v buf.len}) 0ul 1ul in
     let h0' = get() in
     let (i, failed) = interruptible_for 0ul n
       (fun h i failed ->
         live h buf /\
-        contains h ptr_off /\
+        B.live h ptr_off /\
         poppable h /\
-        modifies_one ptr_off.id h0' h /\
+        B.modifies_1 ptr_off h0' h /\
         begin
           let bs = as_seq h buf in
           not failed ==> Some? (parse_many p i bs) /\
-                         U32.v (sel h ptr_off) == snd (Some?.v (parse_many p i bs))
+                         U32.v (Seq.index (B.as_seq h ptr_off) 0) == snd (Some?.v (parse_many p i bs))
         end)
       (fun i -> let h = get() in
-             let off = !ptr_off in
+             let off = B.index ptr_off 0ul in
              let buf' = advance_slice buf off in
              match v buf' with
              | Some off' ->
-              if u32_add_overflows off off' then true
-              else (ptr_off := U32.(off +^ off');
-                   let h1 = get() in
-                   modifies_one_trans ptr_off.id h0' h h1;
-                   validate_one_more p (U32.v i) buf off off' h1;
-                   false)
+              (B.upd ptr_off 0ul U32.(off +^ off');
+               let h1 = get() in
+               B.lemma_modifies_1_trans ptr_off h0' h h1;
+               validate_one_more p (U32.v i) buf off off' h1;
+               false)
              | None -> true) in
-    let off = !ptr_off in
+    let off = B.index ptr_off 0ul in
     pop_frame();
+    let h1 = get() in
+    assume (modifies_none h0 h1);
     if failed then None
-    // why is the invariant insufficient to prove this?
-    else (admit(); Some off)
+    else Some off
 
 [@"substitute"]
 let validate_done_st : stateful_validator parsing_done = fun input ->

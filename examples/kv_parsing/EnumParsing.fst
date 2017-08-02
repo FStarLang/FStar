@@ -206,7 +206,7 @@ let validate_numbers_data (t:numbers_tag) : stateful_validator (parse_numbers_da
 
 let coerce_validator #t (#p: parser t)
                         (#p': parser t{forall x. p x == p' x})
-                        (v: stateful_validator p) : stateful_validator p' =
+                        (v: stateful_validator p) : Pure (stateful_validator p') (requires True) (ensures (fun r -> True)) =
   fun input -> match v input with
             | Some off -> Some off
             | None -> None
