@@ -66,7 +66,7 @@ let embed_binders l = embed_list embed_binder fstar_refl_binder l
 let unembed_binders t = unembed_list unembed_binder t
 
 let embed_term (t:term) : term =
-    protect_embedded_term fstar_refl_term t
+    protect_embedded_term S.tun t
 
 let unembed_term (t:term) : term =
     un_protect_embedded_term t

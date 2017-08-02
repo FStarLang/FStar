@@ -70,7 +70,7 @@ let fstar_refl_tdataconstr s = tdataconstr (fstar_refl_lid s)
 
 (* types *)
 let fstar_refl_term      = mk_refl_types_lid_as_term "term"
-let fstar_refl_aqualv    = mk_refl_types_lid_as_term "aqualv"
+let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
 let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
