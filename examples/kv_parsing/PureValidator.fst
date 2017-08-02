@@ -40,7 +40,7 @@ let parser_validation_checks_parse #t (b: bytes)
   (p: option (t * n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ snd (Some?.v v) == snd (Some?.v p))
 
-let validator_checks_on (v:validator) #t (p: parser t) (b:bytes) = parser_validation_checks_parse b (v b) (p b)
+let validator_checks_on (v:validator) #t (p: parser t) (b:bytes{length b < pow2 32}) = parser_validation_checks_parse b (v b) (p b)
 
 // NOTE: this proof about the whole validator works better than a function with
 // built-in correctness proof (despite the universal quantifier)
@@ -97,9 +97,9 @@ val validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
   Lemma (validator_checks (v `seq` v') (p `and_then` (fun (x:t) -> p' `and_then` (fun (y:t') -> parse_ret (f x y)))))
 let validate_liftA2 #t #t' #t'' p p' f v v' =
   assert (forall x. validator_checks v' (p' `and_then` (fun y -> parse_ret (f x y))));
-  assert (forall b. match v b with
+  assert (forall (b: bytes{length b < pow2 32}). match v b with
                | Some (_, l) -> Some? (p b) /\ snd (Some?.v (p b)) == l
-               | None -> true);
+               | None -> True);
   ()
 
 #reset-options "--z3rlimit 30"

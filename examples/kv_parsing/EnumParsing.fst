@@ -5,6 +5,7 @@ open Validator
 open Serializer
 open Slice
 
+open FStar.Ghost
 open FStar.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
@@ -148,7 +149,7 @@ let validate_numbers_pure : pure_validator' parse_numbers =
   make_correct _
   (parse_numbers_tag `then_pure_check` validate_numbers_data_pure)
 
-val parse_numbers_tag_st : parser_st parse_numbers_tag
+val parse_numbers_tag_st : parser_st (hide parse_numbers_tag)
 let parse_numbers_tag_st = fun input ->
   match parse_u8_st input with
   | Some (tag, off) -> if U8.lt tag 3uy
@@ -156,7 +157,7 @@ let parse_numbers_tag_st = fun input ->
                       else None
   | None -> None
 
-let parse_numbers_tag_st_nochk : parser_st_nochk parse_numbers_tag = fun input ->
+let parse_numbers_tag_st_nochk : parser_st_nochk (hide parse_numbers_tag) = fun input ->
   let (tag, off) = parse_u8_st_nochk input in
   ((tag <: numbers_tag), off)
 
@@ -189,33 +190,33 @@ let check_length (len:U32.t) (input:bslice) : Pure bool
   (requires True)
   (ensures (fun r -> r ==> U32.v input.len >= U32.v len)) = U32.lte len input.len
 
-val validate_OneNum : stateful_validator (parser_forget parse_OneNum)
+val validate_OneNum : stateful_validator (hide (parser_forget parse_OneNum))
 let validate_OneNum = fun input ->
   if check_length 4ul input then Some 4ul else None
 
-val validate_TwoNums : stateful_validator (parser_forget parse_TwoNums)
+val validate_TwoNums : stateful_validator (hide (parser_forget parse_TwoNums))
 let validate_TwoNums = fun input ->
   if check_length 8ul input then Some 8ul else None
 
-let validate_numbers_data (t:numbers_tag) : stateful_validator (parse_numbers_data t) =
+let validate_numbers_data (t:numbers_tag) : stateful_validator (hide (parse_numbers_data t)) =
   if U8.eq t 0uy then
-    (fun input -> Some 0ul) <: stateful_validator (parser_forget parse_Nothing)
+    (fun input -> Some 0ul) <: stateful_validator (hide (parser_forget parse_Nothing))
   else if U8.eq t 1uy then
     validate_OneNum
   else validate_TwoNums
 
 let coerce_validator #t (#p: parser t)
                         (#p': parser t{forall x. p x == p' x})
-                        (v: stateful_validator p) : stateful_validator p' =
+                        (v: stateful_validator (hide p)) : stateful_validator (hide p') =
   fun input -> match v input with
             | Some off -> Some off
             | None -> None
 
 #reset-options "--z3rlimit 15"
 
-val and_check (#t:Type) (p: parser t) (p_st: parser_st p)
-              (#t':Type) (#p': t -> parser t') (v: x:t -> stateful_validator (p' x))
-              : stateful_validator (p `and_then` p')
+val and_check (#t:Type) (p: parser t) (p_st: parser_st (hide p))
+              (#t':Type) (#p': t -> parser t') (v: x:t -> stateful_validator (hide (p' x)))
+              : stateful_validator (hide (p `and_then` p'))
 let and_check #t p p_st #t' #p' v =
     fun input -> match p_st input with
               | Some (x, off) ->
@@ -228,6 +229,6 @@ let and_check #t p p_st #t' #p' v =
 
 #reset-options
 
-let validate_numbers : stateful_validator parse_numbers =
+let validate_numbers : stateful_validator (hide parse_numbers) =
     // TODO: parse_numbers_tag is not inferred from the type of parse_numbers_tag_st
     and_check parse_numbers_tag parse_numbers_tag_st validate_numbers_data

@@ -216,7 +216,7 @@ let ser_copy data = fun buf ->
 let enc_u16_array_st (a: u16_array_st) (h:mem{live h a.a16_st}) : GTot bytes =
     u16_to_be a.len16_st `append` as_seq h a.a16_st
 
-inline_for_extraction unfold [@"substitute"]
+inline_for_extraction [@"substitute"]
 val ser_u16_array : a:u16_array_st ->
   serializer_any (hide (TSet.singleton a.a16_st)) (fun h -> enc_u16_array_st a h)
 let ser_u16_array a = fun buf ->
@@ -251,8 +251,6 @@ let ser_entry (e:entry_st) : serializer_any (hide (entry_st_bufs e)) (fun h -> e
 let adjacent_entries_disjoint (#t:Type) (b1 b2:B.buffer t) :
     Lemma (requires (buffers_adjacent b1 b2))
           (ensures (B.disjoint b1 b2)) = ()
-
-open FStar.Ghost
 
 // TODO: the writer is tracking a few more pointers than strictly necessary; we
 // really only need a pointer to the beginning and a bslice at the current write
