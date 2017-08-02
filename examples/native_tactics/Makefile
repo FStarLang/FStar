@@ -11,8 +11,6 @@ all: $(patsubst %,%.test,$(MODULES))
 
 %.ml: %.fst
 	$(FSTAR) $(OTHERFLAGS) --lax --codegen OCaml $< --extract_module $(patsubst %.fst,%,$<)
-	@# Sneaky fix...
-	sed -i 's/Reflection_Syntax\.\(Tv\|C_\)/Reflection_Data.\1/g' *.ml
 
 %.cmxs: %.ml
 	ocamlfind ocamlopt -shared $(INCLUDES) -linkpkg -package zarith -o $@ $<

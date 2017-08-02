@@ -32,6 +32,7 @@ open FStar.BaseTypes
 
 (** This is the abstract type of documents. *)
 type document
+  = FSharp.PPrint.Engine.document // JUST FSHARP
 
 (** The following basic (low-level) combinators allow constructing documents. *)
 
@@ -105,24 +106,24 @@ val nest: int -> document -> document
     presence will lead to further choices being explored. *)
 val group: document -> document
 
-(** [column f] is the document obtained by applying the function [f] to the
-    current column number. This combinator allows making the construction of
-    a document dependent on the current column number. *)
-val column: (int -> document) -> document
+// (** [column f] is the document obtained by applying the function [f] to the
+//     current column number. This combinator allows making the construction of
+//     a document dependent on the current column number. *)
+// val column: (int -> document) -> document
 
-(** [nesting f] is the document obtained by applying the function [f] to the
-    current indentation level, that is, the number of indentation (blank)
-    characters that were inserted at the beginning of the current line. *)
-val nesting: (int -> document) -> document
+// (** [nesting f] is the document obtained by applying the function [f] to the
+//     current indentation level, that is, the number of indentation (blank)
+//     characters that were inserted at the beginning of the current line. *)
+// val nesting: (int -> document) -> document
 
-(** [position f] is the document obtained by applying the function [f]
-    to the current position in the rendered output. The position
-    consists of [bol], which is the character-offset of the beginnig
-    of the current line (starting at 0), [line], which is the current
-    line (starting at 1), and [column], which is the current column
-    (starting at 0). The current character-offset is always given by
-    [bol + column]. *)
-val position : (int -> int -> int -> document) -> document
+// (** [position f] is the document obtained by applying the function [f]
+//     to the current position in the rendered output. The position
+//     consists of [bol], which is the character-offset of the beginnig
+//     of the current line (starting at 0), [line], which is the current
+//     line (starting at 1), and [column], which is the current column
+//     (starting at 0). The current character-offset is always given by
+//     [bol + column]. *)
+// val position : (int -> int -> int -> document) -> document
 
 (** [ifflat doc1 doc2] is rendered as [doc1] if part of a group that can be
     successfully flattened, and is rendered as [doc2] otherwise. Use this

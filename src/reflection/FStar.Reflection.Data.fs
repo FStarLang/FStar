@@ -6,6 +6,8 @@ module Ident = FStar.Ident
 module Range = FStar.Range
 
 type name = list<string>
+type typ  = term
+type binders = list<binder>
 
 type vconst =
     | C_Unit
@@ -50,11 +52,14 @@ type norm_step =
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
+let fstar_refl_basic_lid s = fstar_refl_lid ["Basic"; s]
 let fstar_refl_types_lid s = fstar_refl_lid ["Types"; s]
 let fstar_refl_syntax_lid s = fstar_refl_lid ["Syntax"; s]
+let fstar_refl_data_lid s  = fstar_refl_lid ["Data"; s]
 
 let mk_refl_types_lid_as_term (s:string) = tconst (fstar_refl_types_lid s)
 let mk_refl_syntax_lid_as_term (s:string) = tconst (fstar_refl_syntax_lid s)
+let mk_refl_data_lid_as_term (s:string)  = tconst (fstar_refl_data_lid s)
 let fstar_refl_tdataconstr s = tdataconstr (fstar_refl_lid s)
 
 (* types *)
@@ -62,19 +67,19 @@ let fstar_refl_term      = mk_refl_types_lid_as_term "term"
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
 let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
-let fstar_refl_binders   = mk_refl_syntax_lid_as_term "binders"
-let fstar_refl_term_view = mk_refl_syntax_lid_as_term "term_view"
-let fstar_refl_sigelt    = mk_refl_syntax_lid_as_term "sigelt"
-let fstar_refl_ctor      = mk_refl_syntax_lid_as_term "ctor"
+let fstar_refl_binders   = mk_refl_types_lid_as_term "binders"
+let fstar_refl_term_view = mk_refl_types_lid_as_term "term_view"
+let fstar_refl_sigelt    = mk_refl_types_lid_as_term "sigelt"
+let fstar_refl_ctor      = mk_refl_types_lid_as_term "ctor"
 let fstar_refl_pattern   = mk_refl_syntax_lid_as_term "pattern"
-let fstar_refl_branch    = mk_refl_syntax_lid_as_term "branch"
+let fstar_refl_branch    = mk_refl_types_lid_as_term "branch"
 
 (* const *)
-let ref_C_Unit_lid  = fstar_refl_syntax_lid "C_Unit"
-let ref_C_True_lid  = fstar_refl_syntax_lid "C_True"
-let ref_C_False_lid = fstar_refl_syntax_lid "C_False"
-let ref_C_Int_lid   = fstar_refl_syntax_lid "C_Int"
-let ref_C_String_lid = fstar_refl_syntax_lid "C_String"
+let ref_C_Unit_lid  = fstar_refl_data_lid "C_Unit"
+let ref_C_True_lid  = fstar_refl_data_lid "C_True"
+let ref_C_False_lid = fstar_refl_data_lid "C_False"
+let ref_C_Int_lid   = fstar_refl_data_lid "C_Int"
+let ref_C_String_lid = fstar_refl_data_lid "C_String"
 
 let ref_C_Unit   = tdataconstr ref_C_Unit_lid
 let ref_C_True   = tdataconstr ref_C_True_lid
@@ -83,10 +88,10 @@ let ref_C_Int    = tdataconstr ref_C_Int_lid
 let ref_C_String = tdataconstr ref_C_String_lid
 
 (* pattern *)
-let ref_Pat_Constant_lid   = fstar_refl_syntax_lid "Pat_Constant"
-let ref_Pat_Cons_lid       = fstar_refl_syntax_lid "Pat_Cons"
-let ref_Pat_Var_lid        = fstar_refl_syntax_lid "Pat_Var"
-let ref_Pat_Wild_lid       = fstar_refl_syntax_lid "Pat_Wild"
+let ref_Pat_Constant_lid   = fstar_refl_data_lid "Pat_Constant"
+let ref_Pat_Cons_lid       = fstar_refl_data_lid "Pat_Cons"
+let ref_Pat_Var_lid        = fstar_refl_data_lid "Pat_Var"
+let ref_Pat_Wild_lid       = fstar_refl_data_lid "Pat_Wild"
 
 let ref_Pat_Constant   = tdataconstr ref_Pat_Constant_lid
 let ref_Pat_Cons       = tdataconstr ref_Pat_Cons_lid
@@ -94,17 +99,17 @@ let ref_Pat_Var        = tdataconstr ref_Pat_Var_lid
 let ref_Pat_Wild       = tdataconstr ref_Pat_Wild_lid
 
 (* term_view *)
-let ref_Tv_Var_lid     = fstar_refl_syntax_lid "Tv_Var"
-let ref_Tv_FVar_lid    = fstar_refl_syntax_lid "Tv_FVar"
-let ref_Tv_App_lid     = fstar_refl_syntax_lid "Tv_App"
-let ref_Tv_Abs_lid     = fstar_refl_syntax_lid "Tv_Abs"
-let ref_Tv_Arrow_lid   = fstar_refl_syntax_lid "Tv_Arrow"
-let ref_Tv_Type_lid    = fstar_refl_syntax_lid "Tv_Type"
-let ref_Tv_Refine_lid  = fstar_refl_syntax_lid "Tv_Refine"
-let ref_Tv_Const_lid   = fstar_refl_syntax_lid "Tv_Const"
-let ref_Tv_Uvar_lid    = fstar_refl_syntax_lid "Tv_Uvar"
-let ref_Tv_Match_lid   = fstar_refl_syntax_lid "Tv_Match"
-let ref_Tv_Unknown_lid = fstar_refl_syntax_lid "Tv_Unknown"
+let ref_Tv_Var_lid     = fstar_refl_data_lid "Tv_Var"
+let ref_Tv_FVar_lid    = fstar_refl_data_lid "Tv_FVar"
+let ref_Tv_App_lid     = fstar_refl_data_lid "Tv_App"
+let ref_Tv_Abs_lid     = fstar_refl_data_lid "Tv_Abs"
+let ref_Tv_Arrow_lid   = fstar_refl_data_lid "Tv_Arrow"
+let ref_Tv_Type_lid    = fstar_refl_data_lid "Tv_Type"
+let ref_Tv_Refine_lid  = fstar_refl_data_lid "Tv_Refine"
+let ref_Tv_Const_lid   = fstar_refl_data_lid "Tv_Const"
+let ref_Tv_Uvar_lid    = fstar_refl_data_lid "Tv_Uvar"
+let ref_Tv_Match_lid   = fstar_refl_data_lid "Tv_Match"
+let ref_Tv_Unknown_lid = fstar_refl_data_lid "Tv_Unknown"
 
 let ref_Tv_Var     = tdataconstr ref_Tv_Var_lid
 let ref_Tv_FVar    = tdataconstr ref_Tv_FVar_lid
@@ -119,30 +124,19 @@ let ref_Tv_Match   = tdataconstr ref_Tv_Match_lid
 let ref_Tv_Unknown = tdataconstr ref_Tv_Unknown_lid
 
 (* inductives & sigelts *)
-let ref_Sg_Inductive_lid = fstar_refl_syntax_lid "Sg_Inductive"
-let ref_Unk_lid          = fstar_refl_syntax_lid "Unk"
-let ref_Ctor_lid         = fstar_refl_syntax_lid "Ctor"
+let ref_Sg_Inductive_lid = fstar_refl_data_lid "Sg_Inductive"
+let ref_Unk_lid          = fstar_refl_data_lid "Unk"
+let ref_Ctor_lid         = fstar_refl_data_lid "Ctor"
 let ref_Sg_Inductive = tdataconstr ref_Sg_Inductive_lid
 let ref_Unk          = tdataconstr ref_Unk_lid
 let ref_Ctor         = tdataconstr ref_Ctor_lid
 
+let fstar_refl_norm_step = mk_refl_data_lid_as_term "norm_step"
 
-(* FStar.Order, probably a bad place for this *)
-type order = | Lt | Eq | Gt
-
-let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange
-let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange
-let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange
-let ord_Lt = tdataconstr ord_Lt_lid
-let ord_Eq = tdataconstr ord_Eq_lid
-let ord_Gt = tdataconstr ord_Gt_lid
-
-let fstar_refl_norm_step = mk_refl_syntax_lid_as_term "norm_step"
-
-let ref_Simpl_lid      = fstar_refl_syntax_lid "Simpl"
-let ref_WHNF_lid       = fstar_refl_syntax_lid "WHNF"
-let ref_Primops_lid    = fstar_refl_syntax_lid "Primops"
-let ref_Delta_lid      = fstar_refl_syntax_lid "Delta"
+let ref_Simpl_lid      = fstar_refl_data_lid "Simpl"
+let ref_WHNF_lid       = fstar_refl_data_lid "WHNF"
+let ref_Primops_lid    = fstar_refl_data_lid "Primops"
+let ref_Delta_lid      = fstar_refl_data_lid "Delta"
 
 let ref_Simpl          = tdataconstr ref_Simpl_lid
 let ref_WHNF           = tdataconstr ref_WHNF_lid
@@ -152,5 +146,12 @@ let ref_Delta          = tdataconstr ref_Delta_lid
 let t_binder = tabbrev <| fstar_refl_types_lid "binder"
 let t_term = tabbrev <| fstar_refl_types_lid "term"
 let t_fv = tabbrev <| fstar_refl_types_lid "fv"
-let t_binders = tabbrev <| fstar_refl_syntax_lid "binders"
-let t_norm_step = tabbrev <| fstar_refl_syntax_lid "norm_step"
+let t_binders = tabbrev <| fstar_refl_types_lid "binders"
+let t_norm_step = tabbrev <| fstar_refl_types_lid "norm_step"
+
+let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange
+let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange
+let ord_Gt_lid = Ident.lid_of_path (["FStar"; "Order"; "Gt"]) Range.dummyRange
+let ord_Lt = tdataconstr ord_Lt_lid
+let ord_Eq = tdataconstr ord_Eq_lid
+let ord_Gt = tdataconstr ord_Gt_lid

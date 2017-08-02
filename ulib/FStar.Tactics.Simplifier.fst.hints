@@ -1,5 +1,5 @@
 [
-  "Bû&ˆ‰µÿº\u0016P®vü\u0004¢n",
+  "‚vE¢ìdX\u001ei´¸\u0007Äý\u0000r",
   [
     [
       "FStar.Tactics.Simplifier.lem_iff_refl",
@@ -279,7 +279,7 @@
       [
         "@query", "assumption_Prims.HasEq_string",
         "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Syntax.name",
+        "equation_FStar.Reflection.Types.name",
         "function_token_typing_Prims.string"
       ],
       0
@@ -292,7 +292,7 @@
       [
         "@query", "assumption_Prims.HasEq_string",
         "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Syntax.name",
+        "equation_FStar.Reflection.Types.name",
         "function_token_typing_Prims.string"
       ],
       0

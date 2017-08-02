@@ -516,6 +516,10 @@ let apply (tm:term) : tac<unit> =
     focus (__apply true tm)
 
 let apply_lemma (tm:term) : tac<unit> =
+    let is_unit_t t = match (SS.compress t).n with
+    | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
+    | _ -> false
+    in
     bind cur_goal (fun goal ->
     let tm, t, guard = goal.context.type_of goal.context tm in
     if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply_lemma: got non-trivial guard" else
@@ -524,10 +528,16 @@ let apply_lemma (tm:term) : tac<unit> =
     let uvs, implicits, subst =
        List.fold_left (fun (uvs, guard, subst) (b, aq) ->
                let b_t = SS.subst subst b.sort in
-               let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
-               (u, aq)::uvs,
-               FStar.TypeChecker.Rel.conj_guard guard g_u,
-               S.NT(b, u)::subst)
+               if is_unit_t b_t
+               then
+                   // Simplification: if the argument is simply unit, then don't ask for it
+                   (U.exp_unit, aq)::uvs, guard, S.NT(b, U.exp_unit)::subst
+               else
+                   let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
+                   (u, aq)::uvs,
+                   FStar.TypeChecker.Rel.conj_guard guard g_u,
+                   S.NT(b, u)::subst
+               )
        ([], guard, [])
        bs
     in
@@ -584,13 +594,29 @@ let apply_lemma (tm:term) : tac<unit> =
         bind (add_implicits g.implicits) (fun _ ->
         add_goals sub_goals)))))
 
+let destruct_eq' (typ : typ) : option<(term * term)> =
+    match U.destruct_typ_as_formula typ with
+    | Some (U.BaseConn(l, [_; (e1, _); (e2, _)])) when Ident.lid_equals l PC.eq2_lid ->
+        Some (e1, e2)
+    | _ ->
+        None
+
+let destruct_eq (typ : typ) : option<(term * term)> =
+    match destruct_eq' typ with
+    | Some t -> Some t
+    | None ->
+        // Retry for a squashed one
+        begin match U.un_squash typ with
+        | Some typ -> destruct_eq' typ
+        | None -> None
+        end
+
 let rewrite (h:binder) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort))) (fun _ ->
-    match U.destruct_typ_as_formula (fst <| Env.lookup_bv goal.context (fst h)) with
-    | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
-              when Ident.lid_equals l PC.eq2_lid ->
-      (match (SS.compress x).n with
+    match destruct_eq (fst <| Env.lookup_bv goal.context (fst h)) with
+    | Some  (x, e) ->
+    (match (SS.compress x).n with
        | Tm_name x ->
          let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty; witness = SS.subst [NT(x, e)] goal.witness} in
          replace_cur goal

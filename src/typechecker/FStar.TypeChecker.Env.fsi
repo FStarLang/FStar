@@ -105,7 +105,8 @@ type env = {
   qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
-  is_native_tactic: lid -> bool                   (* callback into the native tactics engine *)
+  is_native_tactic: lid -> bool;                   (* callback into the native tactics engine *)
+  identifier_info: ref<FStar.TypeChecker.Common.id_info_table> (* information on identifiers *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -150,6 +151,10 @@ val debug          : env -> Options.debug_level_t -> bool
 val current_module : env -> lident
 val set_range      : env -> Range.range -> env
 val get_range      : env -> Range.range
+val insert_bv_info : env -> bv -> typ -> unit
+val insert_fv_info : env -> fv -> typ -> unit
+val toggle_id_info : env -> bool -> unit
+val promote_id_info : env -> (typ -> typ) -> unit
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
@@ -212,7 +217,7 @@ val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> FStar.Util.set<universe_uvar>
-val univnames   : env -> FStar.Util.set<univ_name>
+val univnames   : env -> FStar.Util.fifo_set<univ_name>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 

@@ -62,7 +62,7 @@ let embed_result:
     FStar_Tactics_Basic.proofstate ->
       'a FStar_Tactics_Basic.result ->
         ('a -> FStar_Syntax_Syntax.term) ->
-          FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term
+          FStar_Reflection_Data.typ -> FStar_Syntax_Syntax.term
   =
   fun ps  ->
     fun res  ->

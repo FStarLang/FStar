@@ -101,6 +101,7 @@ type identifier_info = {
     identifier_ty:typ;
     identifier_range:Range.range;
 }
+
 let insert_col_info col info col_infos =
     // Tail recursive helper
     let rec __insert aux rest =
@@ -122,70 +123,73 @@ let find_nearest_preceding_col_info col col_infos =
           else aux (Some i) rest
     in
     aux None col_infos
-type col_info = //sorted in ascending order of columns
+
+type id_info_by_col = //sorted in ascending order of columns
     list<(int * identifier_info)>
-type row_info =
-    BU.imap<ref<col_info>>
-type file_info =
-    BU.smap<row_info>
-let mk_info id ty range = {
-    identifier=id;
-    identifier_ty=ty;
-    identifier_range=range
+
+type col_info_by_row =
+    BU.pimap<id_info_by_col>
+
+type row_info_by_file =
+    BU.psmap<col_info_by_row>
+
+type id_info_table = {
+    id_info_enabled: bool;
+    id_info_db: row_info_by_file;
+    id_info_buffer: list<identifier_info>;
 }
-let file_info_table : file_info = BU.smap_create 50 //50 files
+
+let id_info_table_empty =
+    { id_info_enabled = false;
+      id_info_db = BU.psmap_empty ();
+      id_info_buffer = [] }
+
 open FStar.Range
-let insert_identifier_info id ty range =
-    let use_range = {range with def_range=range.use_range} in //key the lookup table from the use range
-    let info = mk_info id ty use_range in
-    let fn = Range.file_of_range use_range in
-    let start = Range.start_of_range use_range in
-    let row, col = Range.line_of_pos start, Range.col_of_pos start in
-    begin match BU.smap_try_find file_info_table fn with
-    | None ->
-      let col_info = BU.mk_ref (insert_col_info col info []) in
-      let rows = BU.imap_create 1000 in //1000 rows per file
-      BU.imap_add rows row col_info;
-      BU.smap_add file_info_table fn rows
-    | Some file_rows -> begin
-      match BU.imap_try_find file_rows row with
-      | None ->
-        let col_info = BU.mk_ref (insert_col_info col info []) in
-        BU.imap_add file_rows row col_info
-      | Some col_infos ->
-        col_infos := insert_col_info col info !col_infos
-      end
-    end;
-    fn, row, col
-let info_at_pos (fn:string) (row:int) (col:int) : option<identifier_info> =
-    match BU.smap_try_find file_info_table fn with
+
+let id_info__insert ty_map db info =
+    let range = info.identifier_range in
+    let use_range = { range with def_range = range.use_range } in
+    let info = { info with identifier_range = use_range;
+                           identifier_ty = ty_map info.identifier_ty } in
+
+    let fn = file_of_range use_range in
+    let start = start_of_range use_range in
+    let row, col = line_of_pos start, col_of_pos start in
+
+    let rows = BU.psmap_find_default db fn (BU.pimap_empty ()) in
+    let cols = BU.pimap_find_default rows row [] in
+
+    insert_col_info col info cols
+    |> BU.pimap_add rows row
+    |> BU.psmap_add db fn
+
+let id_info_insert table id ty range =
+    let info = { identifier = id; identifier_ty = ty; identifier_range = range} in
+    { table with id_info_buffer = info :: table.id_info_buffer }
+
+let id_info_insert_bv table bv ty =
+    if table.id_info_enabled then id_info_insert table (Inl bv) ty (range_of_bv bv)
+    else table
+
+let id_info_insert_fv table fv ty =
+    if table.id_info_enabled then id_info_insert table (Inr fv) ty (range_of_fv fv)
+    else table
+
+let id_info_toggle table enabled =
+    { table with id_info_enabled = enabled && FStar.Options.ide () }
+
+let id_info_promote table ty_map =
+    { table with
+      id_info_buffer = [];
+      id_info_db = List.fold_left (id_info__insert ty_map)
+                     table.id_info_db table.id_info_buffer }
+
+let id_info_at_pos (table: id_info_table) (fn:string) (row:int) (col:int) : option<identifier_info> =
+    let rows = BU.psmap_find_default table.id_info_db fn (BU.pimap_empty ()) in
+    let cols = BU.pimap_find_default rows row [] in
+
+    match find_nearest_preceding_col_info col cols with
     | None -> None
-    | Some rows ->
-      match BU.imap_try_find rows row with
-      | None -> None
-      | Some cols ->
-        match find_nearest_preceding_col_info col !cols with
-        | None -> None
-        | Some ci ->
-          // Check that `col` is in `ci.identifier_range`
-          let last_col = Range.col_of_pos (Range.end_of_range ci.identifier_range) in
-          if col <= last_col then Some ci else None
-type insert_id_info_ops = {
-    enable:bool -> unit;
-    bv:bv -> typ -> unit;
-    fv:fv -> typ -> unit;
-    promote:(typ -> typ) -> unit;
-}
-let insert_id_info =
-    let enabled = BU.mk_ref false in
-    let id_info_buffer : ref<(list<(either<bv,fv>*typ*Range.range)>)> = BU.mk_ref [] in
-    let enable b = enabled := FStar.Options.ide() && b in
-    let bv x t = if !enabled then id_info_buffer := (Inl x, t, range_of_bv x)::!id_info_buffer in
-    let fv x t = if !enabled then id_info_buffer := (Inr x, t, range_of_fv x)::!id_info_buffer in
-    let promote cb =
-        !id_info_buffer |> List.iter (fun (i, t, r) -> ignore <| insert_identifier_info i (cb t) r);
-        id_info_buffer := [] in
-    {enable=enable;
-     bv=bv;
-     fv=fv;
-     promote=promote}
+    | Some info ->
+      let last_col = col_of_pos (end_of_range info.identifier_range) in
+      if col <= last_col then Some info else None

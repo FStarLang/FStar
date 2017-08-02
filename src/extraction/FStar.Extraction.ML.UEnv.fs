@@ -238,6 +238,7 @@ let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
               else if add_unit
               then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
+    let t_x = if add_unit then pop_unit t_x else t_x in
     let gamma = Bv(x, Inr(mlsymbol, mlx, t_x, is_rec))::g.gamma in
     let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
     {g with gamma=gamma; tcenv=tcenv}, mlident
@@ -272,6 +273,7 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         in
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
+        let t_x = if add_unit then pop_unit t_x else t_x in
         let gamma = Fv(x, Inr(mlsymbol, mly, t_x, is_rec))::g.gamma in
         {g with gamma=gamma}, (mlsymbol, 0)
     else failwith "freevars found"

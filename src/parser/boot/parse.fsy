@@ -1,25 +1,26 @@
 %{
+#light "off"
+// (c) Microsoft Corporation. All rights reserved
+open Prims
+open FStar
+open FStar.Errors
+open FStar.List
+open FStar.Util
+open FStar.Range
+open FStar.Options
+open FStar.Parser.Const
+open FStar.Parser.AST
+open FStar.Parser.Util
+open FStar.Const
+open FStar.Ident
+open FStar.String
 (*
  We are expected to have only 7 shift-reduce conflicts.
  A lot (176) of end-of-stream conflicts are also reported and
  should be investigated...
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
-open Prims
-open FStar_Errors
-open FStar_List
-open FStar_Util
-open FStar_Range
-open FStar_Options
 (* TODO : these files should be deprecated and removed *)
-open FStar_Syntax_Syntax
-open FStar_Parser_Const
-open FStar_Syntax_Util
-open FStar_Parser_AST
-open FStar_Parser_Util
-open FStar_Const
-open FStar_Ident
-open FStar_String
 %}
 %start inputFragment
 %start term
@@ -58,8 +59,8 @@ open FStar_String
 %token EXISTS
 %token FALSE
 %token FORALL
-%token <FStar_Parser_AST.fsdoc> FSDOC
-%token <FStar_Parser_AST.fsdoc> FSDOC_STANDALONE
+%token <fsdoc> FSDOC
+%token <fsdoc> FSDOC_STANDALONE
 %token FUN
 %token FUNCTION
 %token HASH
@@ -175,7 +176,7 @@ open FStar_String
 %left BACKTICK
 %right OPINFIX4
 %type <inputFragment> inputFragment
-%type <FStar_Ident.ident> lident
+%type <ident> lident
 %type <term> term
 %%
 
@@ -1296,21 +1297,21 @@ let id =
   let op = op0 in
        ( mk_ident (op, rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX3 RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let id =
   let op = op0 in
        ( mk_ident (op, rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX4 RPAREN
     {let (_1, op0, _3) = ((), $2, ()) in
 let id =
   let op = op0 in
        ( mk_ident (op, rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0a RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1321,7 +1322,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0b RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1332,7 +1333,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0c RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1343,7 +1344,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX0d RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1354,7 +1355,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX1 RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1365,7 +1366,7 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN OPINFIX2 RPAREN
     {let (_1, op00, _3) = ((), $2, ()) in
 let id =
@@ -1376,28 +1377,28 @@ let id =
   in
        ( op )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN PIPE_RIGHT RPAREN
     {let (_1, op0, _3) = ((), (), ()) in
 let id =
   let op = op0 in
        ( mk_ident("|>", rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN COLON_EQUALS RPAREN
     {let (_1, op0, _3) = ((), (), ()) in
 let id =
   let op = op0 in
        ( mk_ident(":=", rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 | LPAREN COLON_COLON RPAREN
     {let (_1, op0, _3) = ((), (), ()) in
 let id =
   let op = op0 in
        ( mk_ident("::", rhs parseState 1) )
 in
-    ( {id with idText = compile_op' id.idText} )}
+    ( {id with idText = compile_op' id.idText id.idRange} )}
 
 lidentOrUnderscore:
   IDENT
