@@ -288,6 +288,9 @@ ulib:
 tutorial: ulib
 	+$(MAKE) -C ../doc/tutorial regressions
 
+native_tactics: ulib
+	+$(MAKE) -C ../examples/native_tactics all
+
 uexamples:
 	+$(MAKE) -C ../examples all
 
