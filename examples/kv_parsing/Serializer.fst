@@ -44,7 +44,7 @@ let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
 // TODO: unfold is needed for extraction but breaks verification; eventually
 // should replace with inline_for_extraction once that attribute unfolds type
 // aliases
-unfold
+// unfold
 let serializer_any (inputs:erased (TSet.set bslice))
                    (enc: buffer_fun inputs) =
   buf:bslice ->
