@@ -139,7 +139,7 @@ let synth_by_tactic: 'At 'Aa . 'Aa tactic -> 'At =
     (Obj.magic
        (fun uu____1652  -> failwith "Not yet implemented:synth_by_tactic"))
       a649
-let assert_by_tactic: Prims.unit tactic -> Prims.unit -> Prims.unit =
-  fun t  -> fun p  -> ()
+let assert_by_tactic: Prims.unit -> Prims.unit tactic -> Prims.unit =
+  fun p  -> fun t  -> ()
 let by_tactic_seman: 'Aa . 'Aa tactic -> Prims.unit -> Prims.unit =
   fun tau  -> fun phi  -> ()
