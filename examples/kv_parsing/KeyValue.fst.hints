@@ -1,5 +1,5 @@
 [
-  "U‡\bÌÔ¨2e\u0018W\u0012hLJzs",
+  "Í-üšàq„«Fg`°Å\u000340",
   [
     [
       "KeyValue.entry",
@@ -225,8 +225,7 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
-        "haseqFStar.Buffer_Tm_refine_f2c63b31fd0059912139424a133143ce",
+        "@query", "equation_FStar.UInt32.n",
         "projection_inverse_BoxInt_proj_0"
       ],
       0
@@ -239,11 +238,10 @@
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "assumption_Prims.HasEq_int", "data_elim_FStar.UInt32.Mk",
-        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
-        "equation_FStar.UInt32.t", "equation_FStar.UInt32.v",
-        "equation_Prims.nat", "fuel_guarded_inversion_FStar.UInt32.t_",
-        "haseqFStar.Buffer_Tm_refine_f2c63b31fd0059912139424a133143ce",
+        "@query", "data_elim_FStar.UInt32.Mk", "equation_FStar.UInt.uint_t",
+        "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
+        "equation_FStar.UInt32.v", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.UInt32.t_",
         "kinding_KeyValue.encoded_entry@tok",
         "proj_equation_FStar.UInt32.Mk_v",
         "projection_inverse_BoxInt_proj_0",
@@ -261,9 +259,7 @@
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "assumption_Prims.HasEq_int", "equation_FStar.UInt32.n",
-        "equation_Prims.nat",
-        "haseqFStar.Buffer_Tm_refine_f2c63b31fd0059912139424a133143ce",
+        "@query", "equation_FStar.UInt32.n", "equation_Prims.nat",
         "kinding_KeyValue.encoded_entry@tok",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_KeyValue_Tm_refine_73061219acedf795ff1e97b86a9bc700",
@@ -295,13 +291,11 @@
       [
         "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "assumption_Prims.HasEq_int", "data_elim_FStar.UInt32.Mk",
-        "data_elim_KeyValue.Store", "equation_FStar.UInt.uint_t",
-        "equation_FStar.UInt32.n", "equation_FStar.UInt32.t",
-        "equation_FStar.UInt32.v", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.UInt32.t_",
+        "@query", "data_elim_FStar.UInt32.Mk", "data_elim_KeyValue.Store",
+        "equation_FStar.UInt.uint_t", "equation_FStar.UInt32.n",
+        "equation_FStar.UInt32.t", "equation_FStar.UInt32.v",
+        "equation_Prims.nat", "fuel_guarded_inversion_FStar.UInt32.t_",
         "fuel_guarded_inversion_KeyValue.store",
-        "haseqFStar.Buffer_Tm_refine_f2c63b31fd0059912139424a133143ce",
         "kinding_KeyValue.encoded_entry@tok",
         "proj_equation_FStar.UInt32.Mk_v",
         "proj_equation_KeyValue.Store_num_entries",

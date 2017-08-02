@@ -9,7 +9,13 @@ FST_FILES= Slice.fst \
 	   SkipChecksParsing.fst \
 	   ValidatedParser.fst \
 	   PureEncoder.fst \
-	   Serializer.fst
+	   Serializer.fst \
+	   EnumParsing.fst
+
+EXTRACT_FILES= 	Validator.fst \
+		ValidatedParser.fst \
+		Serializer.fst \
+		EnumParsing.fst
 
 FSTAR_INCLUDE_PATHS=--include ../../../kremlin/kremlib
 
@@ -21,5 +27,5 @@ all: $(FST_FILES:.fst=.uver)
 	@echo $(FSTAR_INCLUDE_PATHS)
 
 
-extract-c: Serializer.fst Validator.fst ValidatedParser.fst
-	krml -skip-compilation -warn-error +11 Serializer.fst Validator.fst ValidatedParser.fst
+extract-c: $(EXTRACT_FILES)
+	krml -skip-compilation -warn-error +11 $(EXTRACT_FILES)
