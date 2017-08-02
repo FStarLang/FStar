@@ -17,8 +17,10 @@
 module FStar.Char
 open FStar.ST
 open FStar.All
+
 type char' = char
 type char = char'
+
 val lowercase: char -> char
 val uppercase: char -> char
 val int_of_char: char -> int

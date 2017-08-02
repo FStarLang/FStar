@@ -310,10 +310,16 @@ type query' =
 | Lookup of string * option<(string * int * int)> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
 | Search of string
+| MissingCurrentModule
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
 
-let interactive_protocol_vernum = 1
+let query_needs_current_module = function
+  | Exit | DescribeProtocol | DescribeRepl | Pop
+  | Push _ | MissingCurrentModule | ProtocolViolation _ -> false
+  | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
+
+let interactive_protocol_vernum = 2
 
 let interactive_protocol_features =
   ["autocomplete"; "compute"; "describe-protocol"; "describe-repl"; "exit";
@@ -379,11 +385,6 @@ let unpack_interactive_query json =
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got
 
-let validate_interactive_query = function
-  | { qid = qid; qq = Push (SyntaxCheck, _, _, _, false) } ->
-    { qid = qid; qq = ProtocolViolation "Cannot use 'kind': 'syntax' with 'query': 'push'" }
-  | other -> other
-
 let read_interactive_query stream : query =
   try
     match Util.read_line stream with
@@ -391,7 +392,7 @@ let read_interactive_query stream : query =
     | Some line ->
       match Util.json_of_string line with
       | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
-      | Some request -> validate_interactive_query (unpack_interactive_query request)
+      | Some request -> unpack_interactive_query request
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
@@ -535,6 +536,9 @@ let run_describe_repl st =
 
 let run_protocol_violation st message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
+
+let run_missing_current_module st message =
+  ((QueryNOK, JsonStr "Current module unset"), Inl st)
 
 let nothing_left_to_pop st =
   (* The initial dependency check creates [n] entires in [st.repl_ts] and [n]
@@ -938,10 +942,20 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
+  | MissingCurrentModule -> run_missing_current_module st query
   | ProtocolViolation query -> run_protocol_violation st query
 
+let validate_query st (q: query) : query =
+  match q.qq with
+  | Push (SyntaxCheck, _, _, _, false) ->
+    { qid = q.qid; qq = ProtocolViolation "Cannot use 'kind': 'syntax' with 'query': 'push'" }
+  | _ -> match st.repl_curmod with
+        | None when query_needs_current_module q.qq ->
+          { qid = q.qid; qq = MissingCurrentModule }
+        | _ -> q
+
 let rec go st : unit =
-  let query = read_interactive_query st.repl_stdin in
+  let query = validate_query st (read_interactive_query st.repl_stdin) in
   let (status, response), state_opt = run_query st query.qq in
   write_response query.qid status response;
   match state_opt with

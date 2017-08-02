@@ -292,14 +292,14 @@ let mkApp t args r = match args with
       | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
-  let empty_lid, singleton_lid, union_lid =
-      C.tset_empty, C.tset_singleton, C.tset_union in
+  let empty_lid, singleton_lid, union_lid, addr_of_lid =
+      C.set_empty, C.set_singleton, C.set_union, C.heap_addr_of_lid in
   let empty = mk_term (Var(set_lid_range empty_lid r)) r Expr in
-  let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
+  let addr_of = mk_term (Var (set_lid_range addr_of_lid r)) r Expr in
   let singleton = mk_term (Var (set_lid_range singleton_lid r)) r Expr in
   let union = mk_term (Var(set_lid_range union_lid r)) r Expr in
   List.fold_right (fun e tl ->
-    let e = mkApp ref_constr [(e, Nothing)] r in
+    let e = mkApp addr_of [(e, Nothing)] r in
     let single_e = mkApp singleton [(e, Nothing)] r in
     mkApp union [(single_e, Nothing); (tl, Nothing)] r) elts empty
 

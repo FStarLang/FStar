@@ -319,7 +319,7 @@ let rec is_ref_set: FStar_Parser_AST.term -> Prims.bool =
       let uu____706 = unparen e in uu____706.FStar_Parser_AST.tm in
     match uu____705 with
     | FStar_Parser_AST.Var maybe_empty_lid ->
-        FStar_Ident.lid_equals maybe_empty_lid FStar_Parser_Const.tset_empty
+        FStar_Ident.lid_equals maybe_empty_lid FStar_Parser_Const.set_empty
     | FStar_Parser_AST.App
         ({ FStar_Parser_AST.tm = FStar_Parser_AST.Var maybe_singleton_lid;
            FStar_Parser_AST.range = uu____709;
@@ -329,7 +329,7 @@ let rec is_ref_set: FStar_Parser_AST.term -> Prims.bool =
                                                      ({
                                                         FStar_Parser_AST.tm =
                                                           FStar_Parser_AST.Var
-                                                          maybe_ref_lid;
+                                                          maybe_addr_of_lid;
                                                         FStar_Parser_AST.range
                                                           = uu____712;
                                                         FStar_Parser_AST.level
@@ -342,9 +342,10 @@ let rec is_ref_set: FStar_Parser_AST.term -> Prims.bool =
          )
         ->
         (FStar_Ident.lid_equals maybe_singleton_lid
-           FStar_Parser_Const.tset_singleton)
+           FStar_Parser_Const.set_singleton)
           &&
-          (FStar_Ident.lid_equals maybe_ref_lid FStar_Parser_Const.heap_ref)
+          (FStar_Ident.lid_equals maybe_addr_of_lid
+             FStar_Parser_Const.heap_addr_of_lid)
     | FStar_Parser_AST.App
         ({
            FStar_Parser_AST.tm = FStar_Parser_AST.App
@@ -356,8 +357,7 @@ let rec is_ref_set: FStar_Parser_AST.term -> Prims.bool =
            FStar_Parser_AST.level = uu____722;_},e2,FStar_Parser_AST.Nothing
          )
         ->
-        ((FStar_Ident.lid_equals maybe_union_lid
-            FStar_Parser_Const.tset_union)
+        ((FStar_Ident.lid_equals maybe_union_lid FStar_Parser_Const.set_union)
            && (is_ref_set e1))
           && (is_ref_set e2)
     | uu____724 -> false

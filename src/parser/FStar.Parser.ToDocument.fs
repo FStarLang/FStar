@@ -205,11 +205,11 @@ let is_array e = match (unparen e).tm with
     | _ -> false
 
 let rec is_ref_set e = match (unparen e).tm with
-    | Var maybe_empty_lid -> lid_equals maybe_empty_lid C.tset_empty
-    | App ({tm=Var maybe_singleton_lid}, {tm=App({tm=Var maybe_ref_lid}, e, Nothing)}, Nothing) ->
-        lid_equals maybe_singleton_lid C.tset_singleton && lid_equals maybe_ref_lid C.heap_ref
+    | Var maybe_empty_lid -> lid_equals maybe_empty_lid C.set_empty
+    | App ({tm=Var maybe_singleton_lid}, {tm=App({tm=Var maybe_addr_of_lid}, e, Nothing)}, Nothing) ->
+        lid_equals maybe_singleton_lid C.set_singleton && lid_equals maybe_addr_of_lid C.heap_addr_of_lid
     | App({tm=App({tm=Var maybe_union_lid}, e1, Nothing)}, e2, Nothing) ->
-        lid_equals maybe_union_lid C.tset_union && is_ref_set e1 && is_ref_set e2
+        lid_equals maybe_union_lid C.set_union && is_ref_set e1 && is_ref_set e2
     | _ -> false
 
 (* [extract_from_ref_set e] assumes that [is_ref_set e] holds and returns the list of terms contained in the set *)

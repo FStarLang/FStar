@@ -957,17 +957,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                 mk (Tm_uinst(head, universes))
        in aux [] top
 
-    | App (l, tau, Nothing) when
-        not_ascribed tau && 
-        (is_assert_by_tactic env l || is_synth_by_tactic env l) ->
-        let tactic_unit_type =
-            mk_term (App (mk_term (Var (lid_of_path ["FStar";"Tactics";"Effect";"tactic"] tau.range)) tau.range tau.level,
-                          mk_term (Var (lid_of_path ["Prims";"unit"] tau.range)) tau.range tau.level,
-                          Nothing)) tau.range tau.level
-        in
-        let t' = mk_term (App (l, mk_term (Ascribed (tau, tactic_unit_type, None)) tau.range tau.level, Nothing)) top.range top.level in
-        desugar_term env t'
-
     | App _ ->
       let rec aux args e = match (unparen e).tm with
         | App(e, t, imp) when imp <> UnivApp ->
@@ -1222,15 +1211,6 @@ and not_ascribed t =
     match t.tm with
     | Ascribed _ -> false
     | _ ->  true
-
-and is_assert_by_tactic e t =
-    match t.tm with
-    | Var lid ->
-        begin match Env.resolve_to_fully_qualified_name e lid with
-        | Some lid -> lid_equals lid C.assert_by_tactic_lid
-        | None -> false
-        end
-    | _ -> false
 
 // In this case, we might have implicits in the way
 and is_synth_by_tactic e t =
@@ -1677,11 +1657,12 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
         let se = match se.sigel with
            | Sig_inductive_typ(l, _, typars, k, [], []) ->
              let quals = se.sigquals in
-             let quals = if quals |> List.contains S.Assumption
+             let quals = if List.contains S.Assumption quals
                          then quals
-                         else (BU.print2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
+                         else (if not (Options.ml_ish ()) then
+                                 BU.print2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
                                                 (Range.string_of_range se.sigrng) (Print.lid_to_string l);
-                               S.Assumption::S.New::quals) in
+                               S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None se.sigrng in

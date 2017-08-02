@@ -17,7 +17,7 @@
 module FStar.Util
 open FStar.ST
 open FStar.All
-open System.IO
+(* open System.IO *)
 
 open FStar.BaseTypes
 
@@ -28,7 +28,8 @@ exception Failure of string
 val max_int: int
 val return_all: 'a -> ML<'a>
 
-type time = System.DateTime
+type time
+  = System.DateTime // JUST FSHARP
 val now : unit -> time
 val time_diff: time -> time -> float*int
 val record_time: (unit -> 'a) -> ('a * int)
@@ -38,7 +39,8 @@ val string_of_time: time -> string
 
 (* generic utils *)
 (* Functional sets *)
-type set<'a> = (list<'a> * ('a -> 'a -> bool))
+type set<'a>
+  = (list<'a> * ('a -> 'a -> bool)) // JUST FSHARP
 val new_set: ('a -> 'a -> int) -> ('a -> int) -> set<'a>
 val set_is_empty: set<'a> -> bool
 val set_add: 'a -> set<'a> -> set<'a>
@@ -52,7 +54,8 @@ val set_difference: set<'a> -> set<'a> -> set<'a>
 val set_elements: set<'a> -> list<'a>
 
 (* A fifo_set is a set preserving the insertion order *)
-type fifo_set<'a> = set<'a>
+type fifo_set<'a>
+  = set<'a> // JUST FSHARP
 val new_fifo_set: ('a -> 'a -> int) -> ('a -> int) -> fifo_set<'a>
 val fifo_set_is_empty: fifo_set<'a> -> bool
 (* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
@@ -66,7 +69,9 @@ val fifo_set_count: fifo_set<'a> -> int
 val fifo_set_difference: fifo_set<'a> -> fifo_set<'a> -> fifo_set<'a>
 val fifo_set_elements: fifo_set<'a> -> list<'a>
 
-type smap<'value> = System.Collections.Generic.Dictionary<string,'value> (* not relying on representation *)
+(* not relying on representation *)
+type smap<'value>
+  = System.Collections.Generic.Dictionary<string,'value> // JUST FSHARP
 val smap_create: int -> smap<'value>
 val smap_clear:smap<'value> -> unit
 val smap_add: smap<'value> -> string -> 'value -> unit
@@ -79,13 +84,17 @@ val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
 val smap_size: smap<'value> -> int
 
-type psmap<'value> = Collections.Map<string,'value> (* pure version *)
+(* pure version *)
+type psmap<'value>
+  = Collections.Map<string,'value> // JUST FSHARP
 val psmap_empty: unit -> psmap<'value> // GH-1161
 val psmap_add: psmap<'value> -> string -> 'value -> psmap<'value>
 val psmap_find_default: psmap<'value> -> string -> 'value -> 'value
 val psmap_try_find: psmap<'value> -> string -> option<'value>
 
-type imap<'value> = System.Collections.Generic.Dictionary<int,'value> (* not relying on representation *)
+(* not relying on representation *)
+type imap<'value>
+  = System.Collections.Generic.Dictionary<int,'value> // JUST FSHARP
 val imap_create: int -> imap<'value>
 val imap_clear:imap<'value> -> unit
 val imap_add: imap<'value> -> int -> 'value -> unit
@@ -97,7 +106,9 @@ val imap_remove: imap<'value> -> int -> unit
 val imap_keys: imap<'value> -> list<int>
 val imap_copy: imap<'value> -> imap<'value>
 
-type pimap<'value> = Collections.Map<int,'value> (* pure version *)
+(* pure version *)
+type pimap<'value>
+  = Collections.Map<int,'value> // JUST FSHARP
 val pimap_empty: unit -> pimap<'value> // GH-1161
 val pimap_add: pimap<'value> -> int -> 'value -> pimap<'value>
 val pimap_find_default: pimap<'value> -> int -> 'value -> 'value
@@ -138,7 +149,8 @@ val colorize_cyan: string -> string
 
 
 (* Clients of this module should *NOT* rely on this representation *)
-type out_channel = TextWriter
+type out_channel
+  = System.IO.TextWriter // JUST FSHARP
 val stderr: out_channel
 val stdout: out_channel
 val fprint: out_channel -> string -> list<string> -> unit
@@ -168,7 +180,9 @@ val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list<string> -> string
 
-type file_handle = System.IO.TextWriter (* not relying representation *)
+(* not relying on representation *)
+type file_handle
+  = System.IO.TextWriter// JUST FSHARP 
 val open_file_for_writing: string -> file_handle
 val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
@@ -178,11 +192,15 @@ val file_get_contents: string -> string
 val mkdir: bool-> string -> unit (* [mkdir clean d] a new dir with user read/write; else delete content of [d] if it exists && clean *)
 val concat_dir_filename: string -> string -> string
 
-type stream_reader = System.IO.StreamReader (* not relying on representation *)
+(* not relying on representation *)
+type stream_reader
+  = System.IO.StreamReader// JUST FSHARP
 val open_stdin : unit -> stream_reader
 val read_line: stream_reader -> option<string>
 
-type string_builder = System.Text.StringBuilder (* not relying on representation *)
+(* not relying on representation *)
+type string_builder
+  = System.Text.StringBuilder// JUST FSHARP
 val new_string_builder: unit -> string_builder
 val clear_string_builder: string_builder -> unit
 val string_of_string_builder: string_builder -> string
@@ -191,7 +209,8 @@ val string_builder_append: string_builder -> string -> unit
 val message_of_exn: exn -> string
 val trace_of_exn: exn -> string
 
-type proc = {m:System.Object; outbuf:System.Text.StringBuilder; proc:System.Diagnostics.Process; killed:ref<bool>; id:string}  (* not relying on representation; this needs to be defined on one line for a sed script *)
+(* not relying on representation *)
+type proc
 val launch_process: string -> string -> string -> string -> (string -> string -> bool) -> string
 val start_process: string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
