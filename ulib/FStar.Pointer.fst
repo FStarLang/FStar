@@ -1441,11 +1441,30 @@ let path_disjoint_includes
   (#to1': typ)
   (#to2': typ)
   (p1': path from to1')
-  (p2': path from to2' {path_disjoint p1 p2 /\ path_includes p1 p1' /\ path_includes p2 p2'} )
+  (p2': path from to2')
 : Lemma
+  (requires (path_disjoint p1 p2 /\ path_includes p1 p1' /\ path_includes p2 p2'))
   (ensures (path_disjoint p1' p2'))
 = let h : squash (path_disjoint_t p1 p2) = FStar.Squash.join_squash () in
   FStar.Squash.bind_squash h (fun h -> FStar.Squash.return_squash (PathDisjointIncludes p1 p2 p1' p2' h))
+
+let path_disjoint_includes_l
+  (#from: typ)
+  (#to1: typ)
+  (#to2: typ)
+  (p1: path from to1)
+  (p2: path from to2)
+  (#to1': typ)
+  (#to2': typ)
+  (p1': path from to1')
+: Lemma
+  (requires (path_disjoint p1 p2 /\ path_includes p1 p1'))
+  (ensures (path_disjoint p1' p2))
+  [SMTPatOr [
+    [SMTPat (path_disjoint p1 p2); SMTPat (path_includes p1 p1')];
+    [SMTPat (path_disjoint p1' p2); SMTPat (path_includes p1 p1')];
+  ]]
+= path_disjoint_includes p1 p2 p1' p2
 
 let rec path_disjoint_sym
   (#from: typ)
@@ -1456,6 +1475,7 @@ let rec path_disjoint_sym
 : Lemma
   (requires (path_disjoint p1 p2))
   (ensures (path_disjoint p2 p1))
+  [SMTPatOr [[SMTPat (path_disjoint p1 p2)]; [SMTPat (path_disjoint p2 p1)]]]
 = path_disjoint_ind
   (fun #v1 #v2 p1 p2 -> path_disjoint p2 p1)
   (fun #through #to1 #to2 p s1 s2 -> path_disjoint_step p s2 s1)
@@ -1786,13 +1806,13 @@ let path_sel_upd_other'
   (#from: typ)
   (#to1 #to2: typ)
   (p1: path from to1)
-  (p2: path from to2 {path_disjoint p1 p2})
+  (p2: path from to2)
   (m: otype_of_typ from)
   (v: otype_of_typ to1)
 : Lemma
-  (requires True)
+  (requires (path_disjoint p1 p2))
   (ensures (path_sel (path_upd m p1 v) p2 == path_sel m p2))
-  [SMTPat (path_sel (path_upd m p1 v) p2)]
+  [SMTPat (path_sel (path_upd m p1 v) p2)]  
 = path_sel_upd_other p1 p2
 
 (** Operations on pointers *)
@@ -2004,8 +2024,6 @@ let includes
 = Pointer?.from p1 = Pointer?.from p2 &&
   HS.aref_equal (Pointer?.contents p1) (Pointer?.contents p2) &&
   path_includes (Pointer?.p p1) (Pointer?.p p2)
-
-#reset-options "--z3rlimit 16"
 
 let gfield
   (#l: struct_typ)
@@ -3092,64 +3110,38 @@ let modifies_set_includes
   (ensures (modifies r s1 h h'))
 = ()
 
-let modifies_ptr_0_0 rid h0 h1 h2 :
-  Lemma (requires (modifies_ptr_0 rid h0 h1 /\ modifies_ptr_0 rid h1 h2))
-	(ensures (modifies_ptr_0 rid h0 h2))
-	[SMTPatT (modifies_ptr_0 rid h0 h1); SMTPatT (modifies_ptr_0 rid h1 h2)]
- = ()
-
 (* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
 (* NB: those clauses are made abstract in order to make verification faster
    Lemmas follow to allow the programmer to make use of the real definition
    of those predicates in a general setting *)
+let modifies_0' (h0 h1 : HS.mem) : GTot Type0 =
+  HS.modifies_one h0.HS.tip h0 h1 /\
+  HS.modifies_ref h0.HS.tip Set.empty h0 h1 /\
+  h0.HS.tip == h1.HS.tip
+
 let modifies_0 h0 h1 =
-  let () = () in // necessary to somehow remove the `logic` qualifier
-  HS.modifies_one h0.HS.tip h0 h1
-  /\ modifies_ptr_0 h0.HS.tip h0 h1
-  /\ h0.HS.tip=h1.HS.tip
+  modifies_0' h0 h1
 
-let modifies_none_modifies_0
-  (h0 h1: HS.mem)
-: Lemma
-  (requires (
-    HS.modifies_one h0.HS.tip h0 h1 /\
-    HS.modifies_ref h0.HS.tip Set.empty h0 h1
-  ))
-  (ensures (modifies_0 h0 h1))
-= ()
-
-(* This one is very generic: it says
- * - some references have changed in the frame of b, but
- * - among all pointers in this frame, b is the only one that changed. *)
 let modifies_1 (#a:typ) (b:pointer a) h0 h1 =
   let rid = frameOf b in
-  HS.modifies_one rid h0 h1 /\ modifies_ptr_1 rid b h0 h1
-
-(* Lemmas introducing the 'modifies' predicates *)
-let modifies_0_intro h0 h1 : Lemma
-  (requires (HS.modifies_one h0.HS.tip h0 h1
-  /\ modifies_ptr_0 h0.HS.tip h0 h1
-  /\ h0.HS.tip=h1.HS.tip))
-  (ensures  (modifies_0 h0 h1))
-  = ()
-
-let modifies_1_intro (#a:typ) (b:pointer a) h0 h1 : Lemma
-  (requires (let rid = frameOf b in
-  HS.modifies_one rid h0 h1 /\ modifies_ptr_1 rid b h0 h1))
-  (ensures  (modifies_1 b h0 h1))
-  = ()
+  HS.modifies_one rid h0 h1 /\
+  HS.modifies_ref rid (Set.singleton (as_addr b)) h0 h1 /\ (
+    forall (to': typ) (p: path (Pointer?.from b) to') .
+    (path_disjoint p (Pointer?.p b) /\ live h0 b) ==>
+    (live h1 b /\ (
+      let r = greference_of b in (
+        let (| _, m0 |) = HS.sel h0 r in
+        let (| _, m1 |) = HS.sel h1 r in
+        path_sel m1 p == path_sel m0 p
+  ))))
 
 (* Lemmas revealing the content of the specialized modifies clauses in order to
    be able to generalize them if needs be. *)
-let  modifies_0_reveal h0 h1 : Lemma
-  (requires (modifies_0 h0 h1))
-  (ensures  (HS.modifies_one h0.HS.tip h0 h1 /\ modifies_ptr_0 h0.HS.tip h0 h1 /\ h0.HS.tip=h1.HS.tip))
-  = ()
+let modifies_0_reveal h0 h1 = ()
 
-let modifies_1_reveal (#a:typ) (b:pointer a) h0 h1 : Lemma
-  (requires (modifies_1 b h0 h1))
-  (ensures  (let rid = frameOf b in HS.modifies_one rid h0 h1 /\ modifies_ptr_1 rid b h0 h1))
-  = ()
+#reset-options "--z3rlimit 32"
+
+let modifies_1_reveal (#a:typ) (b:pointer a) h0 h1 = ()
 
 (* STStack effect specific lemmas *)
 let lemma_ststack_1 (#a:typ) (b:pointer a) h0 h1 h2 h3 : Lemma
@@ -3178,8 +3170,6 @@ let modifies_0_1 (#a:typ) (b:pointer a) h0 h1 h2 : Lemma
   (ensures  (modifies_0 h0 h2))
   [SMTPatT (modifies_0 h0 h1); SMTPatT (modifies_1 b h1 h2)]
 = ()
-
-#reset-options "--z3rlimit 1024"
 
 (** Concrete allocators, getters and setters *)
 
@@ -3355,17 +3345,14 @@ let is_null
   | NullPtr -> true
   | _ -> false
 
-#reset-options "--z3rlimit 1024"
-
 let write #a b z =
   let h0 = HST.get () in
   let r = reference_of h0 b in
-  let (| t , c0 |) = !r in
+  let v0 = !r in
+  let (| t , c0 |) = v0 in
   let c1 = path_upd c0 (Pointer?.p b) (ovalue_of_value a z) in
-  let v = (| t, c1 |) in
-  r := v;
-  let h1 = HST.get () in
-  assert (h1 == HS.upd h0 (greference_of b) v)
+  let v1 = (| t, c1 |) in
+  r := v1
 
 let write_union_field
   (#l: union_typ)
@@ -3394,12 +3381,7 @@ let write_union_field
   let vu : otype_of_typ (TUnion l) = vu in
 
   let c1 : otype_of_typ t = path_upd c0 (Pointer?.p p) vu in
-  r := (| t, c1 |);
-  let h1 = HST.get () in
-  let rid = frameOf p in
-  // Help z3 proving `modifies_1 p h0 h1`. Both asserts seem required.
-  assert (HS.modifies_ref rid (Ghost.reveal (Set?.addrs (set_singleton p))) h0 h1);
-  assert (modifies rid (set_singleton p) h0 h1)
+  r := (| t, c1 |)
 
 (** Lemmas and patterns *)
 
@@ -3411,10 +3393,7 @@ let modifies_one_trans_1 (#a:typ) (b:pointer a) (h0:HS.mem) (h1:HS.mem) (h2:HS.m
 
 let no_upd_lemma_0 #t h0 h1 b = ()
 
-let no_upd_lemma_1 #t #t' h0 h1 a b =
-  if frameOf a = frameOf b
-  then modifies_elim (frameOf a) (set_singleton a) h0 h1 b
-  else ()
+let no_upd_lemma_1 #t #t' h0 h1 a b = ()
 
 let no_upd_fresh #t h0 h1 a = ()
 
@@ -3430,10 +3409,7 @@ let modifies_substruct_1 (#tsub #ta:typ) h0 h1 (sub:pointer tsub) (a:pointer ta)
   (requires (live h0 a /\ modifies_1 sub h0 h1 /\ live h1 sub /\ includes a sub))
   (ensures  (modifies_1 a h0 h1 /\ live h1 a))
   [SMTPatT (modifies_1 sub h0 h1); SMTPatT (includes a sub)]
-= let s1 = set_singleton a in
-  let s2 = set_singleton sub in
-  set_includes_singleton a sub;
-  modifies_set_includes (frameOf a) s1 s2 h0 h1
+= ()
 
 let modifies_popped_1' (#t:typ) (a:pointer t) h0 h1 h2 h3 : Lemma
   (requires (live h0 a /\ HS.fresh_frame h0 h1 /\ HS.popped h2 h3 /\ modifies_1 a h1 h2))

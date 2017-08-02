@@ -1303,59 +1303,26 @@ val modifies_set_includes
   (requires (modifies r s2 h h' /\ s1 `set_includes` s2))
   (ensures (modifies r s1 h h'))
 
-(* Specialized clauses for small numbers of pointers *)
-let modifies_ptr_0 rid h h' =
-  modifies rid set_empty h h'
-
-let modifies_ptr_1 (#t:typ) rid (b:pointer t) h h' = //would be good to drop the rid argument on these, since they can be computed from the pointers
-  modifies rid (set_singleton b) h h'
-
-val modifies_ptr_0_0 (rid: HH.rid) (h0 h1 h2: HS.mem) :
-  Lemma (requires (modifies_ptr_0 rid h0 h1 /\ modifies_ptr_0 rid h1 h2))
-	(ensures (modifies_ptr_0 rid h0 h2))
-	[SMTPatT (modifies_ptr_0 rid h0 h1); SMTPatT (modifies_ptr_0 rid h1 h2)]
-
 (* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
 (* NB: those clauses are made abstract in order to make verification faster
    Lemmas follow to allow the programmer to make use of the real definition
    of those predicates in a general setting *)
 val modifies_0 (h0 h1: HS.mem) : GTot Type0
 
-val modifies_none_modifies_0
-  (h0 h1: HS.mem)
-: Lemma
-  (requires (
-    HS.modifies_one h0.HS.tip h0 h1 /\
-    HS.modifies_ref h0.HS.tip Set.empty h0 h1
-  ))
-  (ensures (modifies_0 h0 h1))
-
 (* This one is very generic: it says
  * - some references have changed in the frame of b, but
  * - among all pointers in this frame, b is the only one that changed. *)
 val modifies_1 (#a:typ) (b:pointer a) (h0 h1: HS.mem) : GTot Type0
 
-(* Lemmas introducing the 'modifies' predicates *)
-val modifies_0_intro (h0 h1: HS.mem) : Lemma
-  (requires (HS.modifies_one h0.HS.tip h0 h1
-  /\ modifies_ptr_0 h0.HS.tip h0 h1
-  /\ h0.HS.tip=h1.HS.tip))
-  (ensures  (modifies_0 h0 h1))
-
-val modifies_1_intro (#a:typ) (b:pointer a) (h0 h1: HS.mem) : Lemma
-  (requires (let rid = frameOf b in
-  HS.modifies_one rid h0 h1 /\ modifies_ptr_1 rid b h0 h1))
-  (ensures  (modifies_1 b h0 h1))
-
 (* Lemmas revealing the content of the specialized modifies clauses in order to
    be able to generalize them if needs be. *)
 val  modifies_0_reveal (h0 h1: HS.mem) : Lemma
   (requires (modifies_0 h0 h1))
-  (ensures  (HS.modifies_one h0.HS.tip h0 h1 /\ modifies_ptr_0 h0.HS.tip h0 h1 /\ h0.HS.tip=h1.HS.tip))
+  (ensures  (HS.modifies_one h0.HS.tip h0 h1 /\ modifies h0.HS.tip set_empty h0 h1 /\ h0.HS.tip == h1.HS.tip))
 
 val modifies_1_reveal (#a:typ) (b:pointer a) (h0 h1 : HS.mem) : Lemma
   (requires (modifies_1 b h0 h1))
-  (ensures  (let rid = frameOf b in HS.modifies_one rid h0 h1 /\ modifies_ptr_1 rid b h0 h1))
+  (ensures  (let rid = frameOf b in HS.modifies_one rid h0 h1 /\ modifies rid (set_singleton b) h0 h1))
 
 (* STStack effect specific lemmas *)
 val lemma_ststack_1 (#a:typ) (b:pointer a) (h0 h1 h2 h3 : HS.mem) : Lemma
