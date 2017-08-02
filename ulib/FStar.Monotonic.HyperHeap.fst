@@ -34,6 +34,7 @@ abstract let color (x:rid): GTot int =
   | [] -> 0
   | (c, _)::_ -> c
 
+
 let has_eq_rid (u:unit) :
   Lemma (requires True)
         (ensures hasEq rid)
@@ -58,6 +59,9 @@ let root_has_color_zero (u:unit) :Lemma (color root == 0) = ()
 
 (*! Operations on rids !*)
 
+abstract
+let addr_in_parent (r:rid{r =!= root}) = snd (Cons?.hd r)
+
 abstract val includes : rid -> rid -> GTot bool
 let rec includes r1 r2 =
   if r1=r2 then true
@@ -73,6 +77,19 @@ let extends r0 r1 = Cons? r0 && Cons?.tl r0 = r1
 
 abstract val parent: r:rid{r=!=root} -> Tot rid
 let parent r = Cons?.tl r
+
+abstract
+let extend (r:rid) (addr:int) (c:int)
+  : Pure rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == c))
+= (c, addr) :: r
+
+abstract
+let extend_monochrome (r:rid) (addr:int)
+  : Pure rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == color r))
+= match r with
+  | [] -> (0, addr) :: r
+  | (c, _)::_ -> (c, addr) :: r
+
 
 let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) : Tot Type0 =
   forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
@@ -157,7 +174,7 @@ let lemma_extends_not_root i j = ()
 abstract
 val lemma_extends_only_parent: i:rid -> j:rid{extends j i} ->
   Lemma (requires True)
-    (ensures (i = parent j))
+    (ensures (i == parent j))
     [SMTPat (extends j i)]
 let lemma_extends_only_parent i j = ()
 
@@ -243,6 +260,8 @@ let fresh_region (i:rid) (m0:t) (m1:t) : Tot Type0 =
  (forall j. includes i j ==> not (Map.contains m0 j))
  (* and the region `i` is contained in the new heap *)
  /\ m1 `contains` i
+
+
 
 
 (* KM : surprisingly, using the Tot version makes an assert fail in HyperStack... to be investigated *)
@@ -373,6 +392,26 @@ let modifies_rref (r:rid) (s:Set.set nat) (h0 h1:h:t) =
 let map_invariant (m:t) =
   forall r. Map.contains m r ==>
       (forall s. includes s r ==> Map.contains m s)
+
+let extend_fresh_region (m0 m1:t) (r r':rid) (addr c:int)
+  : Lemma (requires (
+      (forall s. Map.contains m0 s /\ s =!= root ==> addr_in_parent s < addr) /\
+      r' == extend r addr c /\
+      map_invariant m0))
+  (ensures (forall j. includes r' j ==> not (Map.contains m0 j)))
+= assert (addr_in_parent r' == addr) ;
+  assert (not (Map.contains m0 r')) ;
+  assert (forall j. includes r' j ==> Map.contains m0 j ==> Map.contains m0 r')
+
+let extend_preserves_map_invariant (m0 m1 : t) (r r':rid) (addr c:int)
+  : Lemma (requires (map_invariant m0 /\ r' == extend r addr c /\ m1 == Map.upd m0 r' emp /\
+                    Map.contains m0 r /\
+                    (forall s. Map.contains m0 s /\ s =!= root ==> addr_in_parent s < addr)))
+    (ensures (map_invariant m1))
+= assert (forall r0. Map.contains m1 r0 <==> r0 == r' \/ Map.contains m0 r0) ;
+  assert (forall s. Map.contains m0 s ==> s =!= r') ;
+  assert (forall s. Map.contains m0 s /\ includes s r' ==> includes s r)
+
 
 abstract
 val lemma_extends_fresh_disjoint:

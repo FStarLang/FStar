@@ -17,4 +17,4 @@ module FStar.HyperHeap
 
 include FStar.Monotonic.HyperHeap
 
-type rref (id:rid) (a:Type) = mrref id a (FStar.Heap.trivial_preorder a)
+type rref (id:rid) (a:Type) = mrref id a (FStar.Preorder.trivial_preorder a)

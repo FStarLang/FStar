@@ -1,7 +1,7 @@
 module FStar.HyperStack.ST
 open FStar.Preorder
 open FStar.HyperStack
-module HH = FStar.HyperHeap
+module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module Set = FStar.Set
 
@@ -16,18 +16,24 @@ let gst_wp (a:Type)   = st_wp_h mem a
 unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
 sub_effect DIV ~> GST = lift_div_gst
 
-let ref_requires (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) =
-  ~(is_mm r) /\
-  (* (is_mm r ==> h `contains` r) /\ *)
-  (is_stack_region r.id /\ ~ (is_mm r) ==> r.id `is_above` h.tip)
+let ref_liveness = fun h1 h2 ->
+   (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
+     h1 `contains` r /\ (is_stack_region r.id ==> r.id `is_above` h2.tip) ==>
+       (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
 
-let mem_rel0 (h1:mem) (h2:mem) =
-  (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
-    h1 `contains` r /\ ref_requires r h2 ==> (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))) /\
-  (forall (i:HH.rid). Map.contains h1.h i ==> Map.contains h2.h i) /\
-  (forall (i:HH.rid). ~(i `is_alive` h1) ==> ~(i `is_alive` h2))
 
-let mem_rel : preorder mem = mem_rel0
+
+let region_liveness : preorder mem = fun h1 h2 ->
+   (forall (i:HH.rid). Map.contains h1.h i ==> Map.contains h2.h i) /\
+   (forall (i:HH.rid). ~(i `is_alive` h1) ==> ~(i `is_alive` h2))
+
+let region_freshness_increases : preorder mem = fun h1 h2 ->
+  b2t (h1.region_freshness <= h2.region_freshness)
+
+let mem_rel : preorder mem = fun h1 h2 ->
+  ref_liveness h1 h2 /\
+  region_liveness h1 h2 /\
+  region_freshness_increases h1 h2
 
 assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
 assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
@@ -141,7 +147,7 @@ let recall_weak_live_region (r:rid)
 let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) : p:mem_predicate{stable p} =
   fun (m:mem) ->
     region_allocated_pred r.id m /\
-    (not (is_mm r) /\ r.id `is_alive` m ==> HH.contains_ref m.h r.ref)
+    (~(is_mm r) /\ r.id `is_alive` m ==> HH.contains_ref m.h r.ref)
 
 type reference (a:Type) = r:reference a{witnessed(valid_ref r)}
 
@@ -153,15 +159,28 @@ let mmref (a:Type) = r:mmref a{witnessed(valid_ref r)}
 
 type s_ref (i:rid) (a:Type) = s:s_ref i a{witnessed(valid_ref s)}
 
-(* TODO : We need to provide access to the internal representation of HH.rid in order to implement this fnction... *)
-assume val fresh_child : r:HH.rid -> c:int ->
-  GST rid
-    (fun (p:gst_post rid) (m0:mem) ->
-      r `is_in` m0.h /\
-      (forall (r':rid) m1. r' =!= HH.root /\ r `is_in` m0.h /\ HH.parent r' == r /\ HH.color r' == c /\
-        m1.h == Map.upd m0.h r' HH.emp
-      /\ m1.tip == m0.tip
-      /\ HH.fresh_region r' m0.h m1.h ==> p r' m1))
+(**
+  Pushes a new empty frame on the stack
+  *)
+val push_colored_frame: c:int -> Unsafe unit
+  (requires (fun m -> c > 0))
+  (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
+let push_colored_frame (c:int) =
+  let m0 = gst_get () in
+  let n = m0.region_freshness + 1 in
+  let tip = HH.extend m0.tip n c in
+  let h = Map.upd m0.h tip HH.emp in
+  assert (HH.root `is_in` h) ;
+  HH.extend_preserves_map_invariant m0.h h m0.tip tip n c ;
+  assert (HH.map_invariant h) ;
+  assume (downward_closed h) ;
+  assert (eternal_is_live h) ;
+  let h : hh = h in
+  let m1 = HS h tip n in
+  assert (ref_liveness m0 m1) ;
+  assert (region_liveness m0 m1) ;
+  assert (region_freshness_increases m0 m1) ;
+  gst_put m1
 
 (**
    Pushes a new empty frame on the stack
@@ -170,11 +189,7 @@ val push_frame: unit -> Unsafe unit
   (requires (fun m -> True))
   (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
 let push_frame () =
-  let m0 = gst_get () in
-  let tip = fresh_child m0.tip 1 in
-  let h = Map.upd m0.h tip HH.emp in
-  let m1 = HS h tip in
-  gst_put m1
+  push_colored_frame 1
 
 (**
    Removes old frame from the stack
@@ -217,8 +232,8 @@ val salloc_maybe_mm: #a:Type -> init:a -> mm:bool -> StackInline (s:reference a{
   (ensures (fun m0 s m1 -> salloc_post init m0 s m1 /\ is_mm s == mm))
 let salloc_maybe_mm #a init mm =
   let m0 = gst_get () in
-  let r, h = HH.alloc m0.tip (Heap.trivial_preorder a) m0.h init mm in
-  HH.lemma_alloc m0.tip (Heap.trivial_preorder a) m0.h init mm ;
+  let r, h = HH.alloc m0.tip (Preorder.trivial_preorder a) m0.h init mm in
+  HH.lemma_alloc m0.tip (Preorder.trivial_preorder a) m0.h init mm ;
   lemma_upd_tip_idempotent m0;
   let m1 = HS h m0.tip in
   gst_put m1 ;
@@ -296,10 +311,13 @@ val new_region: r0:rid ->
 			/\ m1.tip == m0.tip
 			))
 let new_region r0 =
-  (* TODO : We need some way to access the color of the region here *)
-  (* if we really want/need to keep the same *)
-  let c :c:int{c == HH.color r0} = admit () in
-  fresh_child r0 c
+  let m0 = gst_get () in
+  let n = m0.region_freshness + 1 in
+  let r1 = HH.extend_monochrome r0 n in
+  let h1 = Map.upd m0.h r1 HH.emp in
+  let m1 = HS h1 m0.tip n in
+  gst_put m1 ;
+  r1
 
 let is_eternal_color = HS.is_eternal_color
 
@@ -314,7 +332,13 @@ val new_colored_region: r0:rid -> c:int -> ST rid
 			))
 let new_colored_region r0 c =
   recall_weak_live_region r0 ;
-  fresh_child r0 c
+  let m0 = gst_get () in
+  let n = m0.region_freshness + 1 in
+  let r1 = HH.extend r0 n c in
+  let h1 = Map.upd m0.h r1 HH.emp in
+  let m1 = HS h1 m0.tip n in
+  gst_put m1 ;
+  r1
 
 unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
     let region_i = (Map.sel m0.h i).HH.m in
@@ -330,8 +354,8 @@ val ralloc_maybe_mm: #a:Type -> i:rid -> init:a -> mm:bool -> ST (x:reference a{
 let ralloc_maybe_mm #a i init mm =
   recall_weak_live_region i ;
   let m0 = gst_get () in
-  let r, h = HH.alloc i (Heap.trivial_preorder a) m0.h init mm in
-  HH.lemma_alloc i (Heap.trivial_preorder a) m0.h init mm ;
+  let r, h = HH.alloc i (Preorder.trivial_preorder a) m0.h init mm in
+  HH.lemma_alloc i (Preorder.trivial_preorder a) m0.h init mm ;
   lemma_upd_existing_rid_idempotent i m0;
   let m1 = HS h m0.tip in
   gst_put m1 ;

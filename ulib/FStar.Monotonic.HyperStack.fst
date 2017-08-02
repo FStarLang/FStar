@@ -48,6 +48,10 @@ let eternal_is_live (h:HH.t) =
   (* Any eternal region contained in the heap must be live *)
   forall (r:HH.rid). is_eternal_region r /\ Map.contains h r ==> (Map.sel h r).live
 
+let fresh_region_invariant (h:HH.t) (x:int)  =
+  (* No region in h have an address greater than x *)
+  forall (r:HH.rid). Map.contains h r /\ r =!= HH.root ==> addr_in_parent r <= x
+
 (* the memory itself, always contains the root region, and the parent of any active region is active *)
 let hh = h:HH.t{HH.root `is_in` h /\ HH.map_invariant h /\ downward_closed h /\ eternal_is_live h}
 
@@ -56,16 +60,17 @@ noeq type mem =
     h:hh ->
     (* the id of the current top-most region *)
     tip:rid{tip `is_tip` h} ->
+    region_freshness:int{fresh_region_invariant h region_freshness} ->
     mem
 
 let empty_mem (m:HH.t) =
   let empty_map = Map.restrict (Set.empty) m in
   let h = Map.upd empty_map HH.root (H true Heap.emp) in
   let tip = HH.root in
-  HS h tip
+  HS h tip 0
 
 let at (m:mem) (r:HH.rid{r `is_in` m.h}) = m.h `HH.at` r
-let is_alive (i:HH.rid) (m:mem) = (Map.sel m.h i).HH.live
+let is_alive (i:HH.rid) (m:mem) = Map.contains m.h i /\ (Map.sel m.h i).HH.live
 
 (*+ Tests +*)
 
@@ -114,7 +119,7 @@ let pop (m0:mem{poppable m0}) : Tot (m1:mem) =
   let h1 = Map.upd m0.h m0.tip v in
   let tip1 = HH.parent m0.tip in
   assert (forall (r:sid). r `is_in` h1 <==> r `is_above` tip1) ;
-  HS h1 tip1
+  HS h1 tip1 m0.region_freshness
 
 let lemma_pop_is_popped (m0:mem{poppable m0})
   : Lemma (popped m0 (pop m0))
@@ -184,7 +189,7 @@ let sel (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel)
 
 let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m s.id}) (v:a{rel (sel m s) v})
   : GTot mem
-= HS (m.h.[s.ref] <- v) m.tip
+= HS (m.h.[s.ref] <- v) m.tip m.region_freshness
 
 let equal_domains (m0:mem) (m1:mem) =
   m0.tip == m1.tip
