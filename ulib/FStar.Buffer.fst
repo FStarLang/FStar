@@ -1231,14 +1231,13 @@ let modifies_0_to_2_1_lemma (#t:Type) h0 h1 (b:buffer t) : Lemma
 
 let lemma_modifies_none_push_pop h0 h1 h2 : Lemma
   (requires (fresh_frame h0 h1 /\ popped h1 h2))
-  (ensures  (h2 == h0))
-  =
-  admit()
+  (ensures  (modifies_none h0 h2))
+  = ()
 
 let lemma_modifies_0_push_pop h0 h1 h2 h3 : Lemma
   (requires (fresh_frame h0 h1 /\ modifies_0 h1 h2 /\ popped h2 h3))
-  (ensures  (h3 == h0))
-  = admit()
+  (ensures  (modifies_none h0 h3))
+  = ()
 
 let modifies_1_to_2_1_lemma (#t:Type) h0 h1 (b:buffer t) : Lemma
   (requires (modifies_1 b h0 h1 /\ live h0 b))

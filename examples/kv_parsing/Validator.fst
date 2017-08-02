@@ -97,6 +97,8 @@ unfold let validation_checks_parse #t (b: bytes)
   (p: option (t * n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
 
+// TODO: unfold is only for extraction
+//unfold
 inline_for_extraction
 let stateful_validator #t (p: erased (parser t)) = input:bslice -> Stack (option (off:U32.t{U32.v off <= U32.v input.len}))
     (requires (fun h0 -> live h0 input))
@@ -231,42 +233,79 @@ let validate_one_more #t p n buf off off' h =
     assert (snd (Some?.v (parse_many p 1 bs')) == snd (Some?.v (p bs')));
     validate_n_more p n 1 buf off off' h
 
+let lemma_modifies_0_unalloc (#a:Type) (b:B.buffer a) h0 h1 h2 :
+  Lemma (requires (b `B.unused_in` h0 /\
+                   B.frameOf b == h0.tip /\
+                   B.modifies_0 h0 h1 /\
+                   B.modifies_1 b h1 h2))
+        (ensures (B.modifies_0 h0 h2)) =
+        B.lemma_reveal_modifies_0 h0 h1;
+        B.lemma_reveal_modifies_1 b h1 h2;
+        B.lemma_intro_modifies_0 h0 h2
+
+let lemma_modifies_none_1_trans (#a:Type) (b:B.buffer a) h0 h1 h2 :
+  Lemma (requires (modifies_none h0 h1 /\
+                   B.live h0 b /\
+                   B.modifies_1 b h1 h2))
+        (ensures (B.modifies_1 b h0 h2)) =
+  B.lemma_reveal_modifies_1 b h1 h2;
+  B.lemma_intro_modifies_1 b h0 h2
+
+let lemma_modifies_0_none_trans h0 h1 h2 :
+  Lemma (requires (B.modifies_0 h0 h1 /\
+                   modifies_none h1 h2))
+        (ensures (B.modifies_0 h0 h2)) =
+  B.lemma_reveal_modifies_0 h0 h1;
+  B.lemma_intro_modifies_0 h0 h2
+
 inline_for_extraction [@"substitute"]
 val validate_many_st (#t:Type) (p:erased (parser t)) (v:stateful_validator p) (n:U32.t) :
-    stateful_validator (hide (parse_many (reveal p) (U32.v n)))
+    stateful_validator (elift1 (fun p -> (parse_many p (U32.v n))) p)
 let validate_many_st #t p v n = fun buf ->
     // TODO: prove this function correct
-    admit();
     let h0 = get() in
     push_frame();
-    let ptr_off = B.create #(n:U32.t{U32.v n <= U32.v buf.len}) 0ul 1ul in
     let h0' = get() in
+    let ptr_off = B.create #(n:U32.t{U32.v n <= U32.v buf.len}) 0ul 1ul in
+    assert (ptr_off `B.unused_in` h0' /\
+            B.frameOf ptr_off == h0'.tip);
     let (i, failed) = interruptible_for 0ul n
       (fun h i failed ->
         live h buf /\
         B.live h ptr_off /\
         poppable h /\
-        B.modifies_1 ptr_off h0' h /\
+        B.modifies_0 h0' h /\
         begin
           let bs = as_seq h buf in
-          not failed ==> Some? (parse_many (reveal p) i bs) /\
-                         U32.v (Seq.index (B.as_seq h ptr_off) 0) == snd (Some?.v (parse_many (reveal p) i bs))
+          not failed ==>
+            validation_checks_parse bs
+              (Some (Seq.index (B.as_seq h ptr_off) 0))
+              (parse_many (reveal p) i bs)
         end)
-      (fun i -> let h = get() in
+      (fun i -> let h0 = get() in
              let off = B.index ptr_off 0ul in
              let buf' = advance_slice buf off in
              match v buf' with
              | Some off' ->
-              (B.upd ptr_off 0ul U32.(off +^ off');
-               let h1 = get() in
-               B.lemma_modifies_1_trans ptr_off h0' h h1;
+              (let h1 = get() in
+               B.upd ptr_off 0ul U32.(off +^ off');
+               let h2 = get() in
+               lemma_modifies_none_1_trans ptr_off h0 h1 h2;
+               lemma_modifies_0_unalloc ptr_off h0' h0 h2;
                validate_one_more (reveal p) (U32.v i) buf off off' h1;
                false)
-             | None -> true) in
+             | None -> (let h1 = get() in
+                      lemma_modifies_0_none_trans h0' h0 h1;
+                      true)) in
     let off = B.index ptr_off 0ul in
-    pop_frame();
     let h1 = get() in
-    assume (modifies_none h0 h1);
+    pop_frame();
+    let h2 = get() in
+    begin
+      let bs = as_seq h2 buf in
+      assert (not failed ==> validation_checks_parse bs (Some off) (parse_many (reveal p) (U32.v n) bs))
+    end;
+    B.lemma_modifies_0_push_pop h0 h0' h1 h2;
     if failed then None
     else Some off
 
@@ -274,12 +313,9 @@ let validate_many_st #t p v n = fun buf ->
 let validate_done_st : stateful_validator (hide parsing_done) = fun input ->
   if U32.eq input.len 0ul then Some 0ul else None
 
-let validate_entries_st' (num_entries:U32.t) : stateful_validator (hide (parse_many parse_entry (U32.v num_entries))) =
-    validate_many_st (hide parse_entry) validate_entry_st num_entries
-
 let validate_entries_st (num_entries:U32.t) : stateful_validator (hide (parse_entries num_entries)) =
   fun input ->
-  then_check (hide (parse_many parse_entry (U32.v num_entries)))
+  then_check _
   (validate_many_st (hide parse_entry) validate_entry_st num_entries)
   (hide parsing_done) validate_done_st
   (fun entries _ -> Store num_entries entries) input

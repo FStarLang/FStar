@@ -48,7 +48,7 @@ type encoded_entry =
 type store =
   | Store :
     num_entries:U32.t ->
-    entries:list encoded_entry{List.length entries = U32.v num_entries} ->
+    entries:list encoded_entry{List.length entries == U32.v num_entries} ->
     store
 
 // TODO: clearly encoded_entry should have a u16_array and a u32_array
