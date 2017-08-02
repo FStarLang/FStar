@@ -160,7 +160,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 21
+let current_version: version = 20
 
 type file = string * program
 type binary_format = version * list<file>
