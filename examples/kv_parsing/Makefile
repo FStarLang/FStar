@@ -6,7 +6,6 @@ FST_FILES= Slice.fst \
 	   PureParser.fst \
 	   PureValidator.fst \
 	   Validator.fst \
-	   SkipChecksParsing.fst \
 	   ValidatedParser.fst \
 	   PureEncoder.fst \
 	   Serializer.fst \
