@@ -258,11 +258,90 @@ let lemma_modifies_0_none_trans h0 h1 h2 :
   B.lemma_reveal_modifies_0 h0 h1;
   B.lemma_intro_modifies_0 h0 h2
 
+val for_readonly :
+  #t:Type0 ->
+  init:t ->
+  start:U32.t ->
+  finish:U32.t{U32.v finish >= U32.v start} ->
+  inv:(mem -> nat -> t -> bool -> GTot Type0) ->
+  f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> v:t -> Stack (t * bool)
+     (requires (fun h0 -> inv h0 (U32.v i) v false))
+     (ensures (fun h0 r h1 -> let (v', break) = r in
+                           inv h0 (U32.v i) v false /\
+                           inv h1 U32.(v i + 1) v' break))) ->
+  Stack (U32.t * t * bool)
+    (requires (fun h0 -> inv h0 (U32.v start) init false /\
+                      (forall h h' i v break. (inv h i v break /\ modifies_none h h') ==>
+                                         inv h' i v break)))
+    (ensures (fun h0 r h1 -> let (i, v, break) = r in
+                          (not break ==> i == finish) /\
+                          inv h1 (U32.v i) v break /\
+                          modifies_none h0 h1))
+let for_readonly #t init start finish inv f =
+  admit();
+  let h0 = get() in
+  push_frame();
+  let h1 = get() in
+  let ptr_state = B.create #t init 1ul in
+  assert (ptr_state `B.unused_in` h1 /\
+          B.frameOf ptr_state == h1.tip);
+  let h = get() in
+  // there's one tricky bit with this loop: the invariant need not hold now that
+  // we've pushed a frame and allocated a buffer; one idea is that the invariant
+  // holds on the post-pop state, but then f's spec needs to allow for the
+  // invariant holding only on a state that satisfies the invariant but has an
+  // extra frame
+  let (i, break) = begin
+    interruptible_for start finish
+    (fun h i break ->
+      B.live h ptr_state /\
+      B.modifies_0 h1 h /\
+      inv h i (Seq.index (B.as_seq h ptr_state) 0) break)
+    (fun i -> let h0' = get() in
+           let v = B.index ptr_state 0ul in
+           let (v', break) = f i v in
+           let h1' = get() in
+           B.upd ptr_state 0ul v';
+           let h2' = get() in
+           lemma_modifies_none_1_trans ptr_state h0' h1' h2';
+           lemma_modifies_0_unalloc ptr_state h1 h0' h2';
+           break)
+    end in
+  let v = B.index ptr_state 0ul in
+  let h2 = get() in
+  pop_frame();
+  let h3 = get() in
+  B.lemma_modifies_0_push_pop h0 h1 h2 h3;
+  (i, v, break)
+
+inline_for_extraction [@"substitute"]
+val validate_many_st' (#t:Type) (p:erased (parser t)) (v:stateful_validator p) (n:U32.t) :
+    stateful_validator (elift1 (fun p -> (parse_many p (U32.v n))) p)
+let validate_many_st' #t p v n = fun buf ->
+    let (_, off, failed) = for_readonly #(n:U32.t{U32.v n <= U32.v buf.len}) 0ul 0ul n
+      (fun h i off failed ->
+        live h buf /\
+        begin
+          let bs = as_seq h buf in
+          not failed ==>
+            validation_checks_parse bs
+              (Some off) (parse_many (reveal p) i bs)
+        end)
+      (fun i off ->
+        let buf' = advance_slice buf off in
+        match v buf' with
+        | Some off' -> begin
+          let h = get() in
+          validate_one_more (reveal p) (U32.v i) buf off off' h;
+          (U32.(off +^ off'), false)
+          end
+        | None -> (off, true)) in
+    if failed then None else Some off
+
 inline_for_extraction [@"substitute"]
 val validate_many_st (#t:Type) (p:erased (parser t)) (v:stateful_validator p) (n:U32.t) :
     stateful_validator (elift1 (fun p -> (parse_many p (U32.v n))) p)
 let validate_many_st #t p v n = fun buf ->
-    // TODO: prove this function correct
     let h0 = get() in
     push_frame();
     let h0' = get() in
