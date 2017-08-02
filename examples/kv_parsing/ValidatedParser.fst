@@ -69,12 +69,12 @@ let fold_left_store_st f acc s = fold_left_entries_st f acc s.entries
 
 // this is an old experiment with doing a fold_left over a buffer of bytes (pure
 // validation); we now have a complete prototype of validators in Stack
-val fold_left_buffer: #t:Type -> f:(t -> encoded_entry -> t) -> t -> b:bytes -> t
+val fold_left_buffer: #t:Type -> f:(t -> encoded_entry -> t) -> t -> b:bytes{length b < pow2 32} -> t
 let fold_left_buffer #t f acc b =
     match parse_u32 b with
     | Some (num_entries, l) -> begin
        // we only parse up to n more entries from the buffer b
-       let rec aux (n: nat) b acc : t =
+       let rec aux (n: nat) (b: bytes{length b < pow2 32}) acc : t =
          match n with
          | 0 -> acc
          | _ -> begin
@@ -103,7 +103,7 @@ val parse_num_entries_valid : input:bslice -> Stack (U32.t * off:U32.t{U32.v off
                         // this postcondition; their proofs should be trivial
                         // due to the function being read-only
                         live h1 input /\
-                        h0 == h1 /\
+                        modifies_none h0 h1 /\
                         begin
                           let bs = as_seq h1 input in
                           Some? (parse_abstract_store bs) /\
@@ -136,7 +136,7 @@ let parse_u16_array_nochk : input:bslice -> Stack (u16_array_st * off:U32.t{U32.
                     Some? (parse_u16_array bs))))
   (ensures (fun h0 r h1 ->
               live h1 input /\
-              h0 == h1 /\
+              modifies_none h0 h1 /\
               (let bs = B.as_seq h1 input.p in
                 Some? (parse_u16_array bs) /\
                 (let (v, n) = Some?.v (parse_u16_array bs) in
@@ -160,7 +160,7 @@ let parse_u32_array_nochk : input:bslice -> Stack (u32_array_st * off:U32.t)
                     Some? (parse_u32_array bs))))
   (ensures (fun h0 r h1 ->
               live h1 input /\
-              h0 == h1 /\
+              modifies_none h0 h1 /\
               (let bs = B.as_seq h1 input.p in
                 Some? (parse_u32_array bs) /\
                 (let (v, n) = Some?.v (parse_u32_array bs) in
@@ -181,7 +181,7 @@ let parse_entry_st_nochk : input:bslice -> Stack (entry_st * off:U32.t{U32.v off
                     Some? (parse_entry bs))))
   (ensures (fun h0 r h1 ->
                 live h1 input /\
-                h0 == h1 /\
+                modifies_none h0 h1 /\
                 (let bs = B.as_seq h1 input.p in
                 Some? (parse_entry bs) /\
                 (let (v, n) = Some?.v (parse_entry bs) in
@@ -194,7 +194,7 @@ let parse_entry_st_nochk : input:bslice -> Stack (entry_st * off:U32.t{U32.v off
   let (value, off') = parse_u32_array_nochk input in
   (EntrySt key value, U32.add off off')
 
-let parse_many_next (#t:Type) (p:parser t) (n:nat{n>0}) (bs:bytes) :
+let parse_many_next (#t:Type) (p:parser t) (n:nat{n>0}) (bs:bytes{length bs < pow2 32}) :
   Lemma (requires (Some? (parse_many p n bs)))
         (ensures (Some? (parse_many p n bs) /\
                   (let (vs, _) = Some?.v (parse_many p n bs) in
@@ -212,7 +212,7 @@ val parse_one_entry : n:U32.t{U32.v n > 0} -> input:bslice -> Stack (entry_st * 
                      let n = U32.v n in
                      Some? (parse_many parse_entry n bs))))
   (ensures (fun h0 r h1 -> live h1 input /\
-                        h0 == h1 /\
+                        modifies_none h0 h1 /\
                         begin
                           let bs = as_seq h1 input in
                           let n:(n:nat{n > 0}) = U32.v n in
@@ -318,7 +318,7 @@ val fold_left_buffer_n_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
   f:(acc:t -> e:entry_st -> Stack t
     (requires (fun h0 -> entry_live h0 e))
     (ensures (fun h0 r h1 -> entry_live h1 e /\
-                          h0 == h1 /\
+                          modifies_none h0 h1 /\
                           r == f_spec acc (as_entry h1 e)))) ->
   acc:t -> input:bslice -> n:U32.t -> Stack t
   (requires (fun h0 -> live h0 input /\
@@ -326,7 +326,7 @@ val fold_left_buffer_n_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
                     let n = U32.v n in
                     Some? (parse_many parse_entry n bs))))
   (ensures (fun h0 r h1 -> live h1 input /\
-                        h0 == h1 /\
+                        modifies_none h0 h1 /\
                         (let bs = as_seq h1 input in
                         let n = U32.v n in
                         Some? (parse_many parse_entry n bs) /\
@@ -351,14 +351,14 @@ val fold_left_buffer_st: #t:Type -> f_spec:(t -> encoded_entry -> t) ->
   f:(acc:t -> e:entry_st -> Stack t
     (requires (fun h0 -> entry_live h0 e))
     (ensures (fun h0 r h1 -> entry_live h1 e /\
-                          h0 == h1 /\
+                          modifies_none h0 h1 /\
                           r == f_spec acc (as_entry h1 e)))) ->
   acc:t -> input:bslice -> Stack t
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                     Some? (parse_abstract_store bs))))
   (ensures (fun h0 r h1 -> live h1 input /\
-                        h0 == h1 /\
+                        modifies_none h0 h1 /\
                         (let bs = as_seq h1 input in
                         Some? (parse_abstract_store bs) /\
                         r == fold_left_store f_spec acc (parse_result (parse_abstract_store bs)))))
@@ -393,7 +393,7 @@ val count_entries_example (input:bslice) : Stack U32.t
                       (let bs = as_seq h0 input in
                         Some? (parse_abstract_store bs))))
     (ensures (fun h0 r h1 -> live h1 input /\
-                          h0 == h1 /\
+                          modifies_none h0 h1 /\
                           (let bs = as_seq h1 input in
                           Some? (parse_abstract_store bs) /\
                           r == (parse_result (parse_abstract_store bs)).num_entries)))

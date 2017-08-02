@@ -41,7 +41,6 @@ let buffer_fun (inputs:erased (TSet.set bslice)) =
 let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
   forall b. TSet.mem b inputs ==> live h b /\ B.disjoint b.p buf.p
 
-unfold
 let serializer_any (inputs:erased (TSet.set bslice))
                    (enc: buffer_fun inputs) =
   buf:bslice ->
@@ -57,7 +56,6 @@ let serializer_any (inputs:erased (TSet.set bslice))
            as_seq h0 b == as_seq h1 b) /\
         serialized (enc h1) buf r h0 h1))
 
-unfold
 let serializer (enc:erased bytes) = serializer_any (hide TSet.empty) (fun _ -> reveal enc)
 
 let serializer_1 (input:bslice) (enc: buffer_fun (hide (TSet.singleton input))) =
