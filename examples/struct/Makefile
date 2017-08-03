@@ -10,6 +10,7 @@ POSTESTS=\
   point.pos \
   nested.pos \
   union.pos \
+  taggedunion.pos \
 
 POSTARGETS=$(addsuffix .pver,$(POSTESTS))
 
