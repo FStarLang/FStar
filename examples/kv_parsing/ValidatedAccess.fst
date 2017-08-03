@@ -16,6 +16,8 @@ module B = FStar.Buffer
 
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
+module I32 = FStar.Int32
+module Cast = FStar.Int.Cast
 
 (*** API to access validated but unparsed key-value buffer *)
 
@@ -97,7 +99,7 @@ val for_readonly2 :
   buf2:B.buffer a2 ->
   inv:(vs1:seq a1{length vs1 == B.length buf1} ->
        vs2:seq a2{length vs2 == B.length buf2} ->
-       nat -> t -> bool -> GTot Type0) ->
+       i:nat{i <= U32.v finish} -> t -> bool -> GTot Type0) ->
   f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> v:t -> Stack (t * bool)
      (requires (fun h0 -> B.live h0 buf1 /\
                        B.live h0 buf2 /\
@@ -118,6 +120,7 @@ val for_readonly2 :
                           (not break ==> i == finish) /\
                           B.live h1 buf1 /\
                           B.live h1 buf2 /\
+                          U32.v i <= U32.v finish /\
                           inv (B.as_seq h1 buf1) (B.as_seq h1 buf2) (U32.v i) v break /\
                           modifies_none h0 h1))
 let for_readonly2 #t init start finish #a1 buf1 #a2 buf2 inv f =
@@ -135,6 +138,7 @@ let for_readonly2 #t init start finish #a1 buf1 #a2 buf2 inv f =
       B.live h buf2 /\
       B.live h ptr_state /\
       B.modifies_0 h1 h /\
+      i <= U32.v finish /\
       inv (B.as_seq h buf1) (B.as_seq h buf2) i (Seq.index (B.as_seq h ptr_state) 0) break)
     (fun i -> let h0' = get() in
            let v = B.index ptr_state 0ul in
@@ -153,16 +157,63 @@ let for_readonly2 #t init start finish #a1 buf1 #a2 buf2 inv f =
   B.lemma_modifies_0_push_pop h0 h1 h2 h3;
   (i, v, break)
 
-val lookup : s:store -> key:bytes -> option bytes
-let lookup s key =
-  let rec aux (es:list encoded_entry) : option bytes =
-  begin
+val lookup_in_entries : es:list encoded_entry -> key:bytes -> option bytes
+let rec lookup_in_entries es key =
     match es with
     | [] -> None
     | e::es -> if e.key = key then Some e.value
-             else aux es
-   end in
-   aux s.entries
+             else lookup_in_entries es key
+
+val lookup_in_entries_st : buf:bslice -> num_entries:U32.t -> key:bslice -> Stack (option bslice)
+  (requires (fun h0 -> live h0 buf /\
+                    live h0 key /\
+                    (let bs = as_seq h0 buf in
+                     let n = U32.v num_entries in
+                    Some? (parse_many parse_entry n bs))))
+  (ensures (fun h0 r h1 -> live h1 buf /\
+                        live h1 key /\
+                        modifies_none h0 h1 /\
+                        (let bs = as_seq h1 buf in
+                         let n = U32.v num_entries in
+                         let key_bs = as_seq h1 key in
+                        Some? (parse_many parse_entry n bs) /\
+                        (let es = parse_result (parse_many parse_entry n bs) in
+                         match r with
+                         | Some v_slice -> live h1 v_slice /\
+                                          lookup_in_entries es key_bs == Some (as_seq h1 v_slice)
+                         | None -> lookup_in_entries es key_bs == None))))
+let lookup_in_entries_st buf num_entries key =
+  admit();
+  let (_, st, break) = for_readonly2 #(n:U32.t{U32.v n <= U32.v buf.len} * option entry_st) (0ul, None)
+    0ul num_entries buf.p key.p
+    (fun bs key_bs i st break ->
+       let (off, m_ee) = st in
+       Some? (parse_many parse_entry (U32.v num_entries - i) (slice bs (U32.v off) (length bs))) /\
+       (match m_ee with
+       | Some ee -> break = true
+       | None -> break = false) /\
+       // TODO: extend invariant to cover correctness of search
+       True)
+    (fun i st -> let (off, _) = st in
+              let buf = advance_slice buf off in
+              let (ee, off') = parse_one_entry (U32.sub num_entries i) buf in
+              let off' = U32.add off off' in
+              // TODO: even need to prove that can parse remaining entries; should
+              // be natural postcondition of parse_one_entry
+              admit();
+              if U32.eq (Cast.uint16_to_uint32 ee.key_st.len16_st) key.len then
+                if I32.eq (B.compare ee.key_st.a16_st.p key.p key.len) 0l then
+                  ( (off', Some ee), true )
+                else ((off', None), false)
+              else ((off', None), false)) in
+  admit();
+  let (_, m_ee) = st in
+  match m_ee with
+  | Some ee -> Some ee.val_st.a32_st
+  | None -> None
+
+val lookup : s:store -> key:bytes -> option bytes
+let lookup s key = lookup_in_entries s.entries key
 
 val lookup_st : input:bslice -> key:bslice -> Stack (option bslice)
   (requires (fun h0 -> live h0 input /\
@@ -183,5 +234,4 @@ val lookup_st : input:bslice -> key:bslice -> Stack (option bslice)
 let lookup_st input key =
   let (num_entries, off) = parse_num_entries_valid input in
   let input = advance_slice input off in
-  admit();
-  None
+  lookup_in_entries_st input num_entries key
