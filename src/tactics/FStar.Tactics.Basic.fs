@@ -871,5 +871,9 @@ let proofstate_of_goal_ty env typ =
     in
     (ps, g.witness)
 
-let unquote (ty : term) (t : term) : tac<term> =
-    ret t
+let unquote (ty : term) (tm : term) : tac<term> =
+    bind cur_goal (fun goal ->
+    let env = Env.set_expected_typ goal.context ty in
+    let tm, typ, guard = goal.context.type_of env tm in
+    Rel.force_trivial_guard env guard;
+    ret tm)
