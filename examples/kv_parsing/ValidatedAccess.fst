@@ -86,6 +86,9 @@ let for_readonly #t init start finish inv f =
 *)
 
 
+// TODO: get this to extract (same issue as with Validator.for_readonly)
+// unfold
+[@"substitute"]
 // sadly for_readonly only takes a single buffer and we need two input buffers here
 val for_readonly2 :
   #t:Type0 ->
@@ -157,6 +160,7 @@ let for_readonly2 #t init start finish #a1 buf1 #a2 buf2 inv f =
   B.lemma_modifies_0_push_pop h0 h1 h2 h3;
   (i, v, break)
 
+noextract
 val lookup_in_entries : es:list encoded_entry -> key:bytes -> option bytes
 let rec lookup_in_entries es key =
     match es with
