@@ -241,7 +241,7 @@ let rec dummy_val
     | TUnit -> ()
     end
   | TStruct l ->
-    struct_create l (fun f -> (
+    struct_create_fun l (fun f -> (
       dummy_val (typ_of_struct_field l f)
     ))
   | TUnion l ->
@@ -625,7 +625,7 @@ let rec value_of_ovalue
       : Tot (type_of_struct_field l f)
       = value_of_ovalue (typ_of_struct_field l f) (ostruct_sel v f)
       in
-      struct_create l phi
+      struct_create_fun l phi
     else dummy_val t
   | TArray len t' ->
     let (v: option (array len (otype_of_typ t'))) = v in
