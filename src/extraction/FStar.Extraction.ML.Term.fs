@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Extraction.ML.Term
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Util
@@ -225,7 +226,7 @@ let rec is_type_aux env t =
 
     | Tm_match(_, branches) ->
       begin match branches with
-        | b::_ -> 
+        | b::_ ->
           let _, _, e = SS.open_branch b in
           is_type_aux env e
         | _ -> false
@@ -313,7 +314,7 @@ let normalize_abs (t0:term) : term =
               else U.abs bs e' copt in
    aux [] t0 None
 
-let unit_binder = S.mk_binder <| S.new_bv None TypeChecker.Common.t_unit
+let unit_binder = S.mk_binder <| S.new_bv None t_unit
 
 //check_pats_for_ite l:
 //    A helper to enable translating boolean matches back to if/then/else
@@ -1129,9 +1130,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                 | [] -> not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
                                 | _ -> false in
                              let rest_args = if add_unit then (unit_binder::rest_args) else rest_args in
-                             let body = match rest_args with
-                                | [] -> body
-                                | _ -> U.abs rest_args body copt in
+                             let polytype = if add_unit then push_unit polytype else polytype in
+                             let body = U.abs rest_args body copt in
                              (lbname_, f_e, (t, (targs, polytype)), add_unit, body)
 
                         else (* fails to handle:
@@ -1181,8 +1181,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
 
           let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =
               let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a None) env targs in
-              let expected_t = if add_unit then MLTY_Fun(ml_unit_ty, E_PURE, snd polytype) else snd polytype in
-              let polytype = fst polytype, expected_t in
+              let expected_t = snd polytype in
               let e, _ = check_term_as_mlexpr env e f expected_t in
               let f = maybe_downgrade_eff env f expected_t in
               f, {mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true} in

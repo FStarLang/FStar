@@ -1,10 +1,53 @@
 [
-  "â∞ÁKªÂJß…ôêªÙÃÌˇ",
+  "±aE\u001d¨Ò[˙\u0014®T\u0006úzNÊ",
   [
     [ "MetaCoq.ttry", 1, 2, 1, [ "@query" ], 0 ],
     [ "MetaCoq.or", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MetaCoq.exact", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MetaCoq.apply", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MetaCoq.cut", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "MetaCoq.exact",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0
+    ],
+    [
+      "MetaCoq.apply",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.V",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0
+    ],
+    [
+      "MetaCoq.cut",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "MetaCoq_pretyping_e377cb287814fa961971cf040b03719d",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_FStar.Pervasives.E",
+        "constructor_distinct_FStar.Pervasives.Err",
+        "constructor_distinct_FStar.Pervasives.V",
+        "equation_FStar.Pervasives.ignore",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
+        "projection_inverse_FStar.Pervasives.E_a",
+        "projection_inverse_FStar.Pervasives.E_e",
+        "projection_inverse_FStar.Pervasives.Err_a",
+        "projection_inverse_FStar.Pervasives.Err_msg",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v", "unit_typing"
+      ],
+      0
+    ]
   ]
 ]

@@ -11,10 +11,10 @@ open FStar.Seq
 let is_seq_t t : tactic bool = 
     let hd, args = collect_app t in
     tseq <-- quote seq; //Somehow, tseq ends up as (seq u#0), when we expect it to be (seq u#?), i.e., a unification variable
+    print ("This is the quoted term: " ^ (term_to_string tseq));;
+    print ("This is hd: " ^ (term_to_string hd));;
     return (term_eq tseq hd)
 
-    (* print ("This is the quoted term: " ^ (term_to_string tseq));; *)
-    (* print ("This is hd: " ^ (term_to_string hd));;     *)
 
 let clear_hypothesis (b:binder) : tactic unit = idtac
 
@@ -23,6 +23,9 @@ let retain_only (nss:list string) : tactic unit =
   addns "Prims" ;; //keep prims always
   _ig <-- mapM addns nss ;  //add back only things in nss
   return ()
+
+let unrefine_eq_lem (#a:Type) (#p : (a -> Type)) (x y : (z:a{p z})) (s : squash (eq2 #a x y)) : Lemma (eq2 #(z:a{p z}) x y) =
+    ()
   
 let prune_for_seq : tactic unit =
   g <-- cur_env;
@@ -38,9 +41,25 @@ let prune_for_seq : tactic unit =
     | _ -> idtac) bs ; 
   retain_only ["FStar.Seq"]
   
+let try_unref_eq : tactic unit =
+  g <-- cur_goal; //this is just the goal type
+  let f = term_as_formula g in
+  match f with
+  | Comp Eq t l r ->
+    begin match inspect t with
+    | Tv_Refine _ _ ->
+        apply_lemma (quote unrefine_eq_lem);;
+        norm []
+    | _ ->
+        fail "done"
+    end
+  | _ -> fail "done"
+
 val sequence_pruning : tactic unit
 let sequence_pruning =
   norm [] ;; //normalize the current goal
+  // GM: if `seq a` is refined, applying lemma_eq_elim misbehaves and spins off a different goal, work around it by removing refinements here
+  repeat try_unref_eq;;
   g <-- cur_goal; //this is just the goal type
   dump "A";;
   let f = term_as_formula g in
@@ -75,8 +94,8 @@ let sequence_pruning =
 let test (#a:Type0) (s:seq a) (x:a) (from:nat) (to:nat{from<=to /\ to<=length s}) (l:seq a) (y:nat) =
   assume (y == 17); //I would like to prune this out
   assume (l == snoc s x); //I would like to retain this fact from the local environment
-  assert_by_tactic (or_else sequence_pruning idtac)
-                   (slice s from to == slice l from to) //would prefer to write this, and have the tactic switch to extensional equality
+  assert_by_tactic (slice s from to == slice l from to) //would prefer to write this, and have the tactic switch to extensional equality
+                   (or_else sequence_pruning idtac)
 
 
 (* ////////////////// *)

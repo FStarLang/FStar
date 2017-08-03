@@ -1,157 +1,5 @@
 open Prims
-type name = Prims.string Prims.list
-type typ = FStar_Reflection_Types.term
-type binders = FStar_Reflection_Types.binder Prims.list
-type const = FStar_Reflection_Data.vconst
-  (* | C_Unit *)
-  (* | C_Int of Prims.int *)
-  (* | C_True *)
-  (* | C_False *)
-let uu___is_C_Unit: const -> Prims.bool =
-  fun projectee  ->
-    match projectee with | C_Unit  -> true | uu____13 -> false
-let uu___is_C_Int: const -> Prims.bool =
-  fun projectee  ->
-    match projectee with | C_Int _0 -> true | uu____22 -> false
-let __proj__C_Int__item___0: const -> Prims.int =
-  fun projectee  -> match projectee with | C_Int _0 -> _0
-let uu___is_C_True: const -> Prims.bool =
-  fun projectee  ->
-    match projectee with | C_True  -> true | uu____40 -> false
-let uu___is_C_False: const -> Prims.bool =
-  fun projectee  ->
-    match projectee with | C_False  -> true | uu____47 -> false
-type term_view = FStar_Reflection_Data.term_view
-  (* | Tv_Var of FStar_Reflection_Types.binder *)
-  (* | Tv_FVar of FStar_Reflection_Types.fv *)
-  (* | Tv_App of FStar_Reflection_Types.term* FStar_Reflection_Types.term *)
-  (* | Tv_Abs of FStar_Reflection_Types.binder* FStar_Reflection_Types.term *)
-  (* | Tv_Arrow of FStar_Reflection_Types.binder* FStar_Reflection_Types.term *)
-  (* | Tv_Type of Prims.unit *)
-  (* | Tv_Refine of FStar_Reflection_Types.binder* FStar_Reflection_Types.term *)
-  (* | Tv_Const of const *)
-  (* | Tv_Unknown *)
-let uu___is_Tv_Var: term_view -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Tv_Var _0 -> true | uu____104 -> false
-let __proj__Tv_Var__item___0: term_view -> FStar_Reflection_Types.binder =
-  fun projectee  -> match projectee with | Tv_Var _0 -> _0
-let uu___is_Tv_FVar: term_view -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Tv_FVar _0 -> true | uu____124 -> false
-let __proj__Tv_FVar__item___0: term_view -> FStar_Reflection_Types.fv =
-  fun projectee  -> match projectee with | Tv_FVar _0 -> _0
-let uu___is_Tv_App: term_view -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Tv_App (_0,_1) -> true | uu____146 -> false
-let __proj__Tv_App__item___0: term_view -> FStar_Reflection_Types.term =
-  fun projectee  -> match projectee with | Tv_App (_0,_1) -> _0
-let __proj__Tv_App__item___1: term_view -> FStar_Reflection_Types.term =
-  fun projectee  -> match projectee with | Tv_App (_0,_1) -> _1
-let uu___is_Tv_Abs: term_view -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Tv_Abs (_0,_1) -> true | uu____183 -> false
-let __proj__Tv_Abs__item___0: term_view -> FStar_Reflection_Types.binder =
-  fun projectee  -> match projectee with | Tv_Abs (_0,_1) -> _0
-let __proj__Tv_Abs__item___1: term_view -> FStar_Reflection_Types.term =
-  fun projectee  -> match projectee with | Tv_Abs (_0,_1) -> _1
-let uu___is_Tv_Arrow: term_view -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Tv_Arrow (_0,_1) -> true | uu____220 -> false
-let __proj__Tv_Arrow__item___0: term_view -> FStar_Reflection_Types.binder =
-  fun projectee  -> match projectee with | Tv_Arrow (_0,_1) -> _0
-let __proj__Tv_Arrow__item___1: term_view -> FStar_Reflection_Types.term =
-  fun projectee  -> match projectee with | Tv_Arrow (_0,_1) -> _1
-let uu___is_Tv_Type: term_view -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Tv_Type _0 -> true | uu____255 -> false
-let __proj__Tv_Type__item___0: term_view -> Prims.unit = fun projectee  -> ()
-let uu___is_Tv_Refine: term_view -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Tv_Refine (_0,_1) -> true | uu____277 -> false
-let __proj__Tv_Refine__item___0: term_view -> FStar_Reflection_Types.binder =
-  fun projectee  -> match projectee with | Tv_Refine (_0,_1) -> _0
-let __proj__Tv_Refine__item___1: term_view -> FStar_Reflection_Types.term =
-  fun projectee  -> match projectee with | Tv_Refine (_0,_1) -> _1
-let uu___is_Tv_Const: term_view -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Tv_Const _0 -> true | uu____312 -> false
-let __proj__Tv_Const__item___0: term_view -> const =
-  fun projectee  -> match projectee with | Tv_Const _0 -> _0
-let uu___is_Tv_Unknown: term_view -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Tv_Unknown  -> true | uu____330 -> false
-let __type_of_binder:
-  FStar_Reflection_Types.binder -> FStar_Reflection_Types.term =
-  Obj.magic
-    (fun uu____336  -> failwith "Not yet implemented:__type_of_binder")
-let type_of_binder:
-  FStar_Reflection_Types.binder -> FStar_Reflection_Types.term =
-  fun b  -> __type_of_binder b
-type ('Atv,'At) smaller = Obj.t
-let __inspect: FStar_Reflection_Types.term -> term_view =
-    FStar_Reflection_Basic.inspect
-let inspect: FStar_Reflection_Types.term -> term_view = fun t  -> __inspect t
-let __pack: term_view -> FStar_Reflection_Types.term =
-    FStar_Reflection_Basic.pack
-let pack: term_view -> FStar_Reflection_Types.term = fun tv  -> __pack tv
-let pack_inspect_inv: FStar_Reflection_Types.term -> Prims.unit =
-  Obj.magic (fun t  -> failwith "Not yet implemented:pack_inspect_inv")
-let inspect_pack_inv: term_view -> Prims.unit =
-  Obj.magic (fun tv  -> failwith "Not yet implemented:inspect_pack_inv")
-let __inspect_fv: FStar_Reflection_Types.fv -> name =
-    FStar_Reflection_Basic.inspect_fv
-let inspect_fv: FStar_Reflection_Types.fv -> name =
-  fun fv  -> __inspect_fv fv
-let __pack_fv: name -> FStar_Reflection_Types.fv =
-    FStar_Reflection_Basic.pack_fv
-let pack_fv: name -> FStar_Reflection_Types.fv = fun ns  -> __pack_fv ns
-let __compare_binder:
-  FStar_Reflection_Types.binder ->
-    FStar_Reflection_Types.binder -> FStar_Order.order
-  =
-      fun b1 b2 -> match FStar_Reflection_Basic.order_binder b1 b2
-      with
-      | FStar_Reflection_Data.Eq -> FStar_Order.Eq
-      | FStar_Reflection_Data.Lt -> FStar_Order.Lt
-      | FStar_Reflection_Data.Gt -> FStar_Order.Gt
-let compare_binder:
-  FStar_Reflection_Types.binder ->
-    FStar_Reflection_Types.binder -> FStar_Order.order
-  = fun b1  -> fun b2  -> __compare_binder b1 b2
-let __inspect_bv: FStar_Reflection_Types.binder -> Prims.string =
-  Obj.magic (fun uu____458  -> failwith "Not yet implemented:__inspect_bv")
-let inspect_bv: FStar_Reflection_Types.binder -> Prims.string =
-  fun b  -> __inspect_bv b
-let __binders_of_env: FStar_Reflection_Types.env -> binders =
-  Obj.magic
-    (fun uu____469  -> failwith "Not yet implemented:__binders_of_env")
-let binders_of_env: FStar_Reflection_Types.env -> binders =
-  fun e  -> __binders_of_env e
-let __is_free:
-  FStar_Reflection_Types.binder -> FStar_Reflection_Types.term -> Prims.bool
-  =
-  Obj.magic
-    (fun uu____485  ->
-       fun uu____486  -> failwith "Not yet implemented:__is_free")
-let is_free:
-  FStar_Reflection_Types.binder -> FStar_Reflection_Types.term -> Prims.bool
-  = fun b  -> fun t  -> __is_free b t
-let __term_eq:
-  FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool =
-      FStar_Syntax_Util.term_eq
-let term_eq:
-  FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool =
-  fun t1  -> fun t2  -> __term_eq t1 t2
-let __term_to_string: FStar_Reflection_Types.term -> Prims.string =
-    FStar_Syntax_Print.term_to_string
-let term_to_string: FStar_Reflection_Types.term -> Prims.string =
-  fun t  -> __term_to_string t
-let __fresh_binder: typ -> FStar_Reflection_Types.binder =
-  (fun t -> (FStar_Syntax_Syntax.gen_bv "__refl" None t, None))
-let fresh_binder: typ -> FStar_Reflection_Types.binder =
-  fun t  -> __fresh_binder t
-let rec flatten_name: name -> Prims.string =
+let rec flatten_name: FStar_Reflection_Types.name -> Prims.string =
   fun ns  ->
     match ns with
     | [] -> ""
@@ -186,19 +34,30 @@ let lte_qn: Prims.string Prims.list = ["Prims"; "op_LessThanOrEqual"]
 let gt_qn: Prims.string Prims.list = ["Prims"; "op_GreaterThan"]
 let gte_qn: Prims.string Prims.list = ["Prims"; "op_GreaterThanOrEqual"]
 let mod_qn: Prims.string Prims.list = ["Prims"; "op_Modulus"]
+let land_qn: Prims.string Prims.list = ["FStar"; "UInt"; "logand"]
+let lxor_qn: Prims.string Prims.list = ["FStar"; "UInt"; "logxor"]
+let lor_qn: Prims.string Prims.list = ["FStar"; "UInt"; "logor"]
+let shiftl_qn: Prims.string Prims.list = ["FStar"; "UInt"; "shift_left"]
+let shiftr_qn: Prims.string Prims.list = ["FStar"; "UInt"; "shift_right"]
+let udiv_qn: Prims.string Prims.list = ["FStar"; "UInt"; "udiv"]
+let umod_qn: Prims.string Prims.list = ["FStar"; "UInt"; "mod"]
+let mul_mod_qn: Prims.string Prims.list = ["FStar"; "UInt"; "mul_mod"]
+let nat_bv_qn: Prims.string Prims.list = ["FStar"; "BV"; "int2bv"]
 let rec collect_app':
   FStar_Reflection_Types.term Prims.list ->
     FStar_Reflection_Types.term ->
-      (FStar_Reflection_Types.term* FStar_Reflection_Types.term Prims.list)
+      (FStar_Reflection_Types.term,FStar_Reflection_Types.term Prims.list)
+        FStar_Pervasives_Native.tuple2
   =
   fun args  ->
     fun t  ->
-      match inspect t with
-      | Tv_App (l,r) -> collect_app' (r :: args) l
-      | uu____608 -> (t, args)
+      match FStar_Reflection_Basic.inspect t with
+      | FStar_Reflection_Data.Tv_App (l,r) -> collect_app' (r :: args) l
+      | uu____121 -> (t, args)
 let collect_app:
   FStar_Reflection_Types.term ->
-    (FStar_Reflection_Types.term* FStar_Reflection_Types.term Prims.list)
+    (FStar_Reflection_Types.term,FStar_Reflection_Types.term Prims.list)
+      FStar_Pervasives_Native.tuple2
   = collect_app' []
 let rec mk_app:
   FStar_Reflection_Types.term ->
@@ -206,30 +65,42 @@ let rec mk_app:
   =
   fun t  ->
     fun args  ->
-      match args with | [] -> t | x::xs -> mk_app (pack (Tv_App (t, x))) xs
-let rec eqlist f xs ys =
-  match (xs, ys) with
-  | ([],[]) -> true
-  | (x::xs1,y::ys1) -> (f x y) && (eqlist f xs1 ys1)
-  | uu____691 -> false
+      match args with
+      | [] -> t
+      | x::xs ->
+          mk_app
+            (FStar_Reflection_Basic.pack
+               (FStar_Reflection_Data.Tv_App (t, x))) xs
+let rec collect_arr':
+  FStar_Reflection_Types.typ Prims.list ->
+    FStar_Reflection_Types.typ ->
+      (FStar_Reflection_Types.typ,FStar_Reflection_Types.typ Prims.list)
+        FStar_Pervasives_Native.tuple2
+  =
+  fun typs  ->
+    fun t  ->
+      match FStar_Reflection_Basic.inspect t with
+      | FStar_Reflection_Data.Tv_Arrow (b,r) ->
+          collect_arr' ((FStar_Reflection_Basic.type_of_binder b) :: typs) r
+      | uu____184 -> (t, typs)
+let collect_arr:
+  FStar_Reflection_Types.typ ->
+    (FStar_Reflection_Types.typ,FStar_Reflection_Types.typ Prims.list)
+      FStar_Pervasives_Native.tuple2
+  = collect_arr' []
+let rec eqlist:
+  'a .
+    ('a -> 'a -> Prims.bool) -> 'a Prims.list -> 'a Prims.list -> Prims.bool
+  =
+  fun f  ->
+    fun xs  ->
+      fun ys  ->
+        match (xs, ys) with
+        | ([],[]) -> true
+        | (x::xs1,y::ys1) -> (f x y) && (eqlist f xs1 ys1)
+        | uu____266 -> false
 let fv_to_string: FStar_Reflection_Types.fv -> Prims.string =
-  fun fv  -> FStar_String.concat "." (inspect_fv fv)
-type norm_step =
-  | Simpl
-  | WHNF
-  | Primops
-  | Delta
-let uu___is_Simpl: norm_step -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Simpl  -> true | uu____707 -> false
-let uu___is_WHNF: norm_step -> Prims.bool =
-  fun projectee  -> match projectee with | WHNF  -> true | uu____714 -> false
-let uu___is_Primops: norm_step -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Primops  -> true | uu____721 -> false
-let uu___is_Delta: norm_step -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Delta  -> true | uu____728 -> false
+  fun fv  -> FStar_String.concat "." (FStar_Reflection_Basic.inspect_fv fv)
 let compare_fv:
   FStar_Reflection_Types.fv -> FStar_Reflection_Types.fv -> FStar_Order.order
   =
@@ -238,62 +109,111 @@ let compare_fv:
       FStar_Order.compare_list
         (fun s1  ->
            fun s2  -> FStar_Order.order_from_int (FStar_String.compare s1 s2))
-        (inspect_fv f1) (inspect_fv f2)
-let rec compare_const: const -> const -> FStar_Order.order =
+        (FStar_Reflection_Basic.inspect_fv f1)
+        (FStar_Reflection_Basic.inspect_fv f2)
+let rec compare_const:
+  FStar_Reflection_Data.vconst ->
+    FStar_Reflection_Data.vconst -> FStar_Order.order
+  =
   fun c1  ->
     fun c2  ->
       match (c1, c2) with
-      | (C_Unit ,C_Unit ) -> FStar_Order.Eq
-      | (C_Int i,C_Int j) -> FStar_Order.order_from_int (i - j)
-      | (C_True ,C_True ) -> FStar_Order.Eq
-      | (C_False ,C_False ) -> FStar_Order.Eq
-      | (C_Unit ,uu____767) -> FStar_Order.Lt
-      | (uu____768,C_Unit ) -> FStar_Order.Gt
-      | (C_Int uu____769,uu____770) -> FStar_Order.Lt
-      | (uu____771,C_Int uu____772) -> FStar_Order.Gt
-      | (C_True ,uu____773) -> FStar_Order.Lt
-      | (uu____774,C_True ) -> FStar_Order.Gt
-      | (C_False ,uu____775) -> FStar_Order.Lt
-      | (uu____776,C_False ) -> FStar_Order.Gt
+      | (FStar_Reflection_Data.C_Unit ,FStar_Reflection_Data.C_Unit ) ->
+          FStar_Order.Eq
+      | (FStar_Reflection_Data.C_Int i,FStar_Reflection_Data.C_Int j) ->
+          FStar_Order.order_from_int (i - j)
+      | (FStar_Reflection_Data.C_True ,FStar_Reflection_Data.C_True ) ->
+          FStar_Order.Eq
+      | (FStar_Reflection_Data.C_False ,FStar_Reflection_Data.C_False ) ->
+          FStar_Order.Eq
+      | (FStar_Reflection_Data.C_String s1,FStar_Reflection_Data.C_String s2)
+          -> FStar_Order.order_from_int (FStar_String.compare s1 s2)
+      | (FStar_Reflection_Data.C_Unit ,uu____328) -> FStar_Order.Lt
+      | (uu____329,FStar_Reflection_Data.C_Unit ) -> FStar_Order.Gt
+      | (FStar_Reflection_Data.C_Int uu____330,uu____331) -> FStar_Order.Lt
+      | (uu____332,FStar_Reflection_Data.C_Int uu____333) -> FStar_Order.Gt
+      | (FStar_Reflection_Data.C_True ,uu____334) -> FStar_Order.Lt
+      | (uu____335,FStar_Reflection_Data.C_True ) -> FStar_Order.Gt
+      | (FStar_Reflection_Data.C_False ,uu____336) -> FStar_Order.Lt
+      | (uu____337,FStar_Reflection_Data.C_False ) -> FStar_Order.Gt
+      | (FStar_Reflection_Data.C_String uu____338,uu____339) ->
+          FStar_Order.Lt
+      | (uu____340,FStar_Reflection_Data.C_String uu____341) ->
+          FStar_Order.Gt
 let rec compare_term:
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term -> FStar_Order.order
   =
   fun s  ->
     fun t  ->
-      match ((inspect s), (inspect t)) with
-      | (Tv_Var sv,Tv_Var tv) -> compare_binder sv tv
-      | (Tv_FVar sv,Tv_FVar tv) -> compare_fv sv tv
-      | (Tv_App (h1,a1),Tv_App (h2,a2)) ->
+      match ((FStar_Reflection_Basic.inspect s),
+              (FStar_Reflection_Basic.inspect t))
+      with
+      | (FStar_Reflection_Data.Tv_Var sv,FStar_Reflection_Data.Tv_Var tv) ->
+          FStar_Reflection_Basic.compare_binder sv tv
+      | (FStar_Reflection_Data.Tv_FVar sv,FStar_Reflection_Data.Tv_FVar tv)
+          -> compare_fv sv tv
+      | (FStar_Reflection_Data.Tv_App (h1,a1),FStar_Reflection_Data.Tv_App
+         (h2,a2)) ->
           FStar_Order.lex (compare_term h1 h2)
-            (fun uu____861  -> compare_term a1 a2)
-      | (Tv_Abs (b1,e1),Tv_Abs (b2,e2)) ->
-          FStar_Order.lex (compare_binder b1 b2)
-            (fun uu____866  -> compare_term e1 e2)
-      | (Tv_Arrow (b1,e1),Tv_Arrow (b2,e2)) ->
-          FStar_Order.lex (compare_binder b1 b2)
-            (fun uu____871  -> compare_term e1 e2)
-      | (Tv_Refine (b1,e1),Tv_Refine (b2,e2)) ->
-          FStar_Order.lex (compare_binder b1 b2)
-            (fun uu____876  -> compare_term e1 e2)
-      | (Tv_Type (),Tv_Type ()) -> FStar_Order.Eq
-      | (Tv_Const c1,Tv_Const c2) -> compare_const c1 c2
-      | (Tv_Unknown ,Tv_Unknown ) -> FStar_Order.Eq
-      | (Tv_Var uu____879,uu____880) -> FStar_Order.Lt
-      | (uu____881,Tv_Var uu____882) -> FStar_Order.Gt
-      | (Tv_FVar uu____883,uu____884) -> FStar_Order.Lt
-      | (uu____885,Tv_FVar uu____886) -> FStar_Order.Gt
-      | (Tv_App (uu____887,uu____888),uu____889) -> FStar_Order.Lt
-      | (uu____890,Tv_App (uu____891,uu____892)) -> FStar_Order.Gt
-      | (Tv_Abs (uu____893,uu____894),uu____895) -> FStar_Order.Lt
-      | (uu____896,Tv_Abs (uu____897,uu____898)) -> FStar_Order.Gt
-      | (Tv_Arrow (uu____899,uu____900),uu____901) -> FStar_Order.Lt
-      | (uu____902,Tv_Arrow (uu____903,uu____904)) -> FStar_Order.Gt
-      | (Tv_Type (),uu____905) -> FStar_Order.Lt
-      | (uu____906,Tv_Type ()) -> FStar_Order.Gt
-      | (Tv_Refine (uu____907,uu____908),uu____909) -> FStar_Order.Lt
-      | (uu____910,Tv_Refine (uu____911,uu____912)) -> FStar_Order.Gt
-      | (Tv_Const uu____913,uu____914) -> FStar_Order.Lt
-      | (uu____915,Tv_Const uu____916) -> FStar_Order.Gt
-      | (Tv_Unknown ,uu____917) -> FStar_Order.Lt
-      | (uu____918,Tv_Unknown ) -> FStar_Order.Gt
+            (fun uu____447  -> compare_term a1 a2)
+      | (FStar_Reflection_Data.Tv_Abs (b1,e1),FStar_Reflection_Data.Tv_Abs
+         (b2,e2)) ->
+          FStar_Order.lex (FStar_Reflection_Basic.compare_binder b1 b2)
+            (fun uu____453  -> compare_term e1 e2)
+      | (FStar_Reflection_Data.Tv_Arrow
+         (b1,e1),FStar_Reflection_Data.Tv_Arrow (b2,e2)) ->
+          FStar_Order.lex (FStar_Reflection_Basic.compare_binder b1 b2)
+            (fun uu____459  -> compare_term e1 e2)
+      | (FStar_Reflection_Data.Tv_Refine
+         (b1,e1),FStar_Reflection_Data.Tv_Refine (b2,e2)) ->
+          FStar_Order.lex (FStar_Reflection_Basic.compare_binder b1 b2)
+            (fun uu____465  -> compare_term e1 e2)
+      | (FStar_Reflection_Data.Tv_Type (),FStar_Reflection_Data.Tv_Type ())
+          -> FStar_Order.Eq
+      | (FStar_Reflection_Data.Tv_Const c1,FStar_Reflection_Data.Tv_Const c2)
+          -> compare_const c1 c2
+      | (FStar_Reflection_Data.Tv_Uvar
+         (u1,uu____469),FStar_Reflection_Data.Tv_Uvar (u2,uu____471)) ->
+          FStar_Order.compare_int u1 u2
+      | (FStar_Reflection_Data.Tv_Match
+         (uu____472,uu____473),FStar_Reflection_Data.Tv_Match
+         (uu____474,uu____475)) -> FStar_Order.Eq
+      | (FStar_Reflection_Data.Tv_Unknown ,FStar_Reflection_Data.Tv_Unknown )
+          -> FStar_Order.Eq
+      | (FStar_Reflection_Data.Tv_Var uu____480,uu____481) -> FStar_Order.Lt
+      | (uu____482,FStar_Reflection_Data.Tv_Var uu____483) -> FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_FVar uu____484,uu____485) -> FStar_Order.Lt
+      | (uu____486,FStar_Reflection_Data.Tv_FVar uu____487) -> FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_App (uu____488,uu____489),uu____490) ->
+          FStar_Order.Lt
+      | (uu____491,FStar_Reflection_Data.Tv_App (uu____492,uu____493)) ->
+          FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Abs (uu____494,uu____495),uu____496) ->
+          FStar_Order.Lt
+      | (uu____497,FStar_Reflection_Data.Tv_Abs (uu____498,uu____499)) ->
+          FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Arrow (uu____500,uu____501),uu____502) ->
+          FStar_Order.Lt
+      | (uu____503,FStar_Reflection_Data.Tv_Arrow (uu____504,uu____505)) ->
+          FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Type (),uu____506) -> FStar_Order.Lt
+      | (uu____507,FStar_Reflection_Data.Tv_Type ()) -> FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Refine (uu____508,uu____509),uu____510) ->
+          FStar_Order.Lt
+      | (uu____511,FStar_Reflection_Data.Tv_Refine (uu____512,uu____513)) ->
+          FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Const uu____514,uu____515) ->
+          FStar_Order.Lt
+      | (uu____516,FStar_Reflection_Data.Tv_Const uu____517) ->
+          FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Uvar (uu____518,uu____519),uu____520) ->
+          FStar_Order.Lt
+      | (uu____521,FStar_Reflection_Data.Tv_Uvar (uu____522,uu____523)) ->
+          FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Match (uu____524,uu____525),uu____526) ->
+          FStar_Order.Lt
+      | (uu____529,FStar_Reflection_Data.Tv_Match (uu____530,uu____531)) ->
+          FStar_Order.Gt
+      | (FStar_Reflection_Data.Tv_Unknown ,uu____534) -> FStar_Order.Lt
+      | (uu____535,FStar_Reflection_Data.Tv_Unknown ) -> FStar_Order.Gt

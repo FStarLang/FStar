@@ -13,37 +13,63 @@ let test_simplify : tactic unit =
     simplify;;
     or_else goal_is_true (dump "";; fail "simplify left open goals")
 
-let _ = assert_by_tactic test_simplify (True /\ True)
-let _ = assert_by_tactic test_simplify (True \/ True)
-let _ = assert_by_tactic test_simplify (True \/ False)
-let _ = assert_by_tactic test_simplify (False \/ True)
+let _ = assert_by_tactic (True /\ True)
+                         test_simplify
+let _ = assert_by_tactic (True \/ True)
+                         test_simplify
+let _ = assert_by_tactic (True \/ False)
+                         test_simplify
+let _ = assert_by_tactic (False \/ True)
+                         test_simplify
 
-let _ = assert_by_tactic test_simplify (False \/ (True /\ True))
-let _ = assert_by_tactic test_simplify ((True /\ False) \/ (True /\ True))
-let _ = assert_by_tactic test_simplify (False \/ ((True /\ False) \/ (True /\ True)))
+let _ = assert_by_tactic (False \/ (True /\ True))
+                         test_simplify
+let _ = assert_by_tactic ((True /\ False) \/ (True /\ True))
+                         test_simplify
+let _ = assert_by_tactic (False \/ ((True /\ False) \/ (True /\ True)))
+                         test_simplify
 
-let _ = assert_by_tactic test_simplify (False ==> True)
-let _ = assert_by_tactic test_simplify (False ==> False)
-let _ = assert_by_tactic test_simplify (True ==> True)
+let _ = assert_by_tactic (False ==> True)
+                         test_simplify
+let _ = assert_by_tactic (False ==> False)
+                         test_simplify
+let _ = assert_by_tactic (True ==> True)
+                         test_simplify
 
-let _ = assert_by_tactic test_simplify ((False ==> False) ==> True)
-let _ = assert_by_tactic test_simplify (False ==> (False ==> False))
-let _ = assert_by_tactic test_simplify ((False ==> False) ==> (True ==> True))
-let _ = assert_by_tactic test_simplify ((True ==> True) ==> (False ==> False))
+let _ = assert_by_tactic ((False ==> False) ==> True)
+                         test_simplify
+let _ = assert_by_tactic (False ==> (False ==> False))
+                         test_simplify
+let _ = assert_by_tactic ((False ==> False) ==> (True ==> True))
+                         test_simplify
+let _ = assert_by_tactic ((True ==> True) ==> (False ==> False))
+                         test_simplify
 
-let _ = assert_by_tactic test_simplify (~False)
-let _ = assert_by_tactic test_simplify (~(~True))
+let _ = assert_by_tactic (~False)
+                         test_simplify
+let _ = assert_by_tactic (~(~True))
+                         test_simplify
 
-let _ = assert_by_tactic test_simplify (forall (x:int). True)
-let _ = assert_by_tactic test_simplify (forall (x:int). ((True ==> True) ==> (False ==> False)))
+let _ = assert_by_tactic (forall (x:int). True)
+                         test_simplify
+let _ = assert_by_tactic (forall (x:int). ((True ==> True) ==> (False ==> False)))
+                         test_simplify
 
-let _ = assert_by_tactic test_simplify ((exists (x:int). False) ==> False)
-let _ = assert_by_tactic test_simplify (~(exists (x:int). False))
-let _ = assert_by_tactic test_simplify (~(exists (x:int). ((True ==> True) ==> (True ==> False))))
+let _ = assert_by_tactic ((exists (x:int). False) ==> False)
+                         test_simplify
+let _ = assert_by_tactic (~(exists (x:int). False))
+                         test_simplify
+let _ = assert_by_tactic (~(exists (x:int). ((True ==> True) ==> (True ==> False))))
+                         test_simplify
 
-let _ = assert_by_tactic test_simplify (False <==> False)
-let _ = assert_by_tactic test_simplify ((False <==> False) <==> True)
-let _ = assert_by_tactic test_simplify (False <==> (False <==> True))
+let _ = assert_by_tactic (False <==> False)
+                         test_simplify
+let _ = assert_by_tactic ((False <==> False) <==> True)
+                         test_simplify
+let _ = assert_by_tactic (False <==> (False <==> True))
+                         test_simplify
 
-let _ = assert_by_tactic test_simplify ((exists (x:int). True) <==> True)
-let _ = assert_by_tactic test_simplify ((forall (x:int). False) <==> False)
+let _ = assert_by_tactic ((exists (x:int). True) <==> True)
+                         test_simplify
+let _ = assert_by_tactic ((forall (x:int). False) <==> False)
+                         test_simplify

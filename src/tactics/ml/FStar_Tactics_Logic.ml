@@ -7,7 +7,7 @@ let l_revert: Prims.unit FStar_Tactics_Effect.tactic =
          (FStar_Tactics_Derived.quote_lid
             ["FStar"; "Tactics"; "Logic"; "revert_squash"]))
 let rec l_revert_all:
-  FStar_Reflection_Syntax.binders -> Prims.unit FStar_Tactics_Effect.tactic =
+  FStar_Reflection_Data.binders -> Prims.unit FStar_Tactics_Effect.tactic =
   fun bs  ->
     match bs with
     | [] -> FStar_Tactics_Effect.return ()
@@ -85,7 +85,7 @@ let rec visit:
                  | uu____557 ->
                      FStar_Tactics_Derived.or_else
                        FStar_Tactics_Builtins.trivial
-                       (FStar_Tactics_Builtins.smt ())))) ()
+                       (FStar_Tactics_Builtins.smt)))) ()
 let rec simplify_eq_implication:
   Prims.unit -> (Prims.unit,Prims.unit) FStar_Tactics_Effect._dm4f_TAC_repr =
   fun u  ->
@@ -126,7 +126,7 @@ let rec unfold_definition_and_simplify_eq':
         (fun g  ->
            match FStar_Reflection_Formula.term_as_formula g with
            | FStar_Reflection_Formula.App (hd1,arg) ->
-               if FStar_Reflection_Syntax.term_eq hd1 tm
+               if FStar_Reflection_Basic.term_eq hd1 tm
                then FStar_Tactics_Builtins.trivial
                else FStar_Tactics_Effect.return ()
            | uu____752 ->
@@ -173,7 +173,7 @@ let unsquash:
               FStar_Tactics_Effect.bind FStar_Tactics_Builtins.intro
                 (fun b  ->
                    FStar_Tactics_Effect.return
-                     (FStar_Reflection_Syntax.pack
+                     (FStar_Reflection_Basic.pack
                         (FStar_Reflection_Data.Tv_Var b)))))
 let squash_intro: Prims.unit FStar_Tactics_Effect.tactic =
   FStar_Tactics_Builtins.apply

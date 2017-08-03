@@ -18,6 +18,7 @@
 
 module FStar.TypeChecker.Util
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Util
@@ -487,7 +488,7 @@ let return_value env t v =
             then S.tun
             else let a, kwp = Env.wp_signature env C.effect_PURE_lid in
                  let k = SS.subst [NT(a, t)] kwp in
-                 N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun_with [u_t] env m m.ret_wp) [S.as_arg t; S.as_arg v] None v.pos) in
+                 N.normalize [N.Beta; N.NoFullNorm] env (mk_Tm_app (inst_effect_fun_with [u_t] env m m.ret_wp) [S.as_arg t; S.as_arg v] None v.pos) in
          mk_comp m u_t t wp [RETURN] in
   if debug env <| Options.Other "Return"
   then BU.print3 "(%s) returning %s at comp type %s\n"

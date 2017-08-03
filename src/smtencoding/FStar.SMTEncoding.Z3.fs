@@ -17,6 +17,7 @@
 
 module FStar.SMTEncoding.Z3
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.SMTEncoding.Term
