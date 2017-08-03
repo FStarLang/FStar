@@ -263,22 +263,28 @@ val for_readonly :
   init:t ->
   start:U32.t ->
   finish:U32.t{U32.v finish >= U32.v start} ->
-  inv:(mem -> nat -> t -> bool -> GTot Type0) ->
+  #a:Type ->
+  // buf is logical; it can be captured by f at runtime
+  buf:B.buffer a ->
+  inv:(vs:seq a{length vs == B.length buf} -> nat -> t -> bool -> GTot Type0) ->
   f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> v:t -> Stack (t * bool)
-     (requires (fun h0 -> inv h0 (U32.v i) v false))
+     (requires (fun h0 -> B.live h0 buf /\
+                       inv (B.as_seq h0 buf) (U32.v i) v false))
      (ensures (fun h0 r h1 -> let (v', break) = r in
-                           inv h0 (U32.v i) v false /\
-                           inv h1 U32.(v i + 1) v' break))) ->
+                           B.live h0 buf /\
+                           B.live h1 buf /\
+                           inv (B.as_seq h0 buf) (U32.v i) v false /\
+                           inv (B.as_seq h1 buf) U32.(v i + 1) v' break /\
+                           modifies_none h0 h1))) ->
   Stack (U32.t * t * bool)
-    (requires (fun h0 -> inv h0 (U32.v start) init false /\
-                      (forall h h' i v break. (inv h i v break /\ modifies_none h h') ==>
-                                         inv h' i v break)))
+    (requires (fun h0 -> B.live h0 buf /\
+                      inv (B.as_seq h0 buf) (U32.v start) init false))
     (ensures (fun h0 r h1 -> let (i, v, break) = r in
                           (not break ==> i == finish) /\
-                          inv h1 (U32.v i) v break /\
+                          B.live h1 buf /\
+                          inv (B.as_seq h1 buf) (U32.v i) v break /\
                           modifies_none h0 h1))
-let for_readonly #t init start finish inv f =
-  admit();
+let for_readonly #t init start finish #a buf inv f =
   let h0 = get() in
   push_frame();
   let h1 = get() in
@@ -286,17 +292,13 @@ let for_readonly #t init start finish inv f =
   assert (ptr_state `B.unused_in` h1 /\
           B.frameOf ptr_state == h1.tip);
   let h = get() in
-  // there's one tricky bit with this loop: the invariant need not hold now that
-  // we've pushed a frame and allocated a buffer; one idea is that the invariant
-  // holds on the post-pop state, but then f's spec needs to allow for the
-  // invariant holding only on a state that satisfies the invariant but has an
-  // extra frame
   let (i, break) = begin
     interruptible_for start finish
     (fun h i break ->
+      B.live h buf /\
       B.live h ptr_state /\
       B.modifies_0 h1 h /\
-      inv h i (Seq.index (B.as_seq h ptr_state) 0) break)
+      inv (B.as_seq h buf) i (Seq.index (B.as_seq h ptr_state) 0) break)
     (fun i -> let h0' = get() in
            let v = B.index ptr_state 0ul in
            let (v', break) = f i v in
@@ -315,18 +317,14 @@ let for_readonly #t init start finish inv f =
   (i, v, break)
 
 inline_for_extraction [@"substitute"]
-val validate_many_st' (#t:Type) (p:erased (parser t)) (v:stateful_validator p) (n:U32.t) :
+val validate_many_st (#t:Type) (p:erased (parser t)) (v:stateful_validator p) (n:U32.t) :
     stateful_validator (elift1 (fun p -> (parse_many p (U32.v n))) p)
-let validate_many_st' #t p v n = fun buf ->
-    let (_, off, failed) = for_readonly #(n:U32.t{U32.v n <= U32.v buf.len}) 0ul 0ul n
-      (fun h i off failed ->
-        live h buf /\
-        begin
-          let bs = as_seq h buf in
-          not failed ==>
-            validation_checks_parse bs
-              (Some off) (parse_many (reveal p) i bs)
-        end)
+let validate_many_st #t p v n = fun buf ->
+    let (_, off, failed) = for_readonly #(n:U32.t{U32.v n <= U32.v buf.len}) 0ul 0ul n buf.p
+      (fun bs i off failed ->
+        not failed ==>
+          validation_checks_parse bs
+            (Some off) (parse_many (reveal p) i bs))
       (fun i off ->
         let buf' = advance_slice buf off in
         match v buf' with
@@ -337,56 +335,6 @@ let validate_many_st' #t p v n = fun buf ->
           end
         | None -> (off, true)) in
     if failed then None else Some off
-
-inline_for_extraction [@"substitute"]
-val validate_many_st (#t:Type) (p:erased (parser t)) (v:stateful_validator p) (n:U32.t) :
-    stateful_validator (elift1 (fun p -> (parse_many p (U32.v n))) p)
-let validate_many_st #t p v n = fun buf ->
-    let h0 = get() in
-    push_frame();
-    let h0' = get() in
-    let ptr_off = B.create #(n:U32.t{U32.v n <= U32.v buf.len}) 0ul 1ul in
-    assert (ptr_off `B.unused_in` h0' /\
-            B.frameOf ptr_off == h0'.tip);
-    let (i, failed) = interruptible_for 0ul n
-      (fun h i failed ->
-        live h buf /\
-        B.live h ptr_off /\
-        poppable h /\
-        B.modifies_0 h0' h /\
-        begin
-          let bs = as_seq h buf in
-          not failed ==>
-            validation_checks_parse bs
-              (Some (Seq.index (B.as_seq h ptr_off) 0))
-              (parse_many (reveal p) i bs)
-        end)
-      (fun i -> let h0 = get() in
-             let off = B.index ptr_off 0ul in
-             let buf' = advance_slice buf off in
-             match v buf' with
-             | Some off' ->
-              (let h1 = get() in
-               B.upd ptr_off 0ul U32.(off +^ off');
-               let h2 = get() in
-               lemma_modifies_none_1_trans ptr_off h0 h1 h2;
-               lemma_modifies_0_unalloc ptr_off h0' h0 h2;
-               validate_one_more (reveal p) (U32.v i) buf off off' h1;
-               false)
-             | None -> (let h1 = get() in
-                      lemma_modifies_0_none_trans h0' h0 h1;
-                      true)) in
-    let off = B.index ptr_off 0ul in
-    let h1 = get() in
-    pop_frame();
-    let h2 = get() in
-    begin
-      let bs = as_seq h2 buf in
-      assert (not failed ==> validation_checks_parse bs (Some off) (parse_many (reveal p) (U32.v n) bs))
-    end;
-    B.lemma_modifies_0_push_pop h0 h0' h1 h2;
-    if failed then None
-    else Some off
 
 [@"substitute"]
 let validate_done_st : stateful_validator (hide parsing_done) = fun input ->
