@@ -4037,6 +4037,8 @@ let write_buffer
   i v
 = write (pointer_of_buffer_cell b i) v
 
+#reset-options "--z3rlimit 64"
+
 let modifies_1_disjoint_buffer_vs_pointer_live
   (#t1 #t2: typ)
   (b: buffer t1)
