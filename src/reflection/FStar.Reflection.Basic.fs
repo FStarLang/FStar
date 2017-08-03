@@ -429,6 +429,9 @@ let embed_norm_step (n:norm_step) : term =
         ref_Primops
     | Delta ->
         ref_Delta
+    | UnfoldOnly x ->
+        S.mk_Tm_app ref_UnfoldOnly [S.as_arg (embed_fvar x)]
+                    None Range.dummyRange
 
 let unembed_norm_step (t:term) : norm_step =
     let t = U.unascribe t in
@@ -442,6 +445,8 @@ let unembed_norm_step (t:term) : norm_step =
         Primops
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Delta_lid ->
         Delta
+    | Tm_fvar fv, [(s, _)] when S.fv_eq_lid fv ref_UnfoldOnly_lid ->
+        UnfoldOnly (unembed_fvar s)
     | _ ->
         failwith "not an embedded norm_step"
 
