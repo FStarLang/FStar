@@ -1011,6 +1011,7 @@ let eq_lemma2 #a b1 b2 len h =
   cut (forall (j:nat). j < v len ==> get h b1 j == Seq.index s1 j);
   cut (forall (j:nat). j < v len ==> get h b2 j == Seq.index s2 j)
 
+(** Corresponds to memcmp for `eqtype` *)
 val eqb: #a:eqtype -> b1:buffer a -> b2:buffer a
   -> len:UInt32.t{v len <= length b1 /\ v len <= length b2}
   -> ST bool
@@ -1053,7 +1054,7 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem)
 
 #reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 
-(* Corresponds to memcpy *)
+(** Corresponds to memcpy *)
 val blit: #t:Type
   -> a:buffer t
   -> idx_a:UInt32.t{v idx_a <= length a}
@@ -1084,8 +1085,7 @@ let rec blit #t a idx_a b idx_b len =
     Seq.cons_head_tail (Seq.slice (as_seq h1 b) (v idx_b + v len') (length b))
     end
 
-
-(* Corresponds to memset *)
+(** Corresponds to memset *)
 val fill: #t:Type
   -> b:buffer t
   -> z:t
