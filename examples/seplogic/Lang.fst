@@ -307,69 +307,131 @@ let lemma_swap_ok (r1:ref nat) (r2:ref nat) (n1:nat) (n2:nat)
     let c2  = Read r2 in
     let c3  = fun x -> Write r1 x in
     let c4  = fun x -> Write r2 x in
-    let cx4 = fun tmp1 tmp2 _ -> c4 tmp1 in
-    let cx3 = fun tmp1 tmp2 -> Bind (c3 tmp2) (cx4 tmp1 tmp2) in
-    let cx2 = fun tmp1 -> Bind c2 (cx3 tmp1) in
     
+    (* cx4 = Write r2 tmp1 *)
+    let cx4 = fun tmp1 tmp2 _ -> c4 tmp1 in
+    (* cx3 = Bind (Write r1 tmp2) (fn _. Write r2 tmp1) *)
+    let cx3 = fun tmp1 tmp2 -> Bind (c3 tmp2) (cx4 tmp1 tmp2) in
+    (* cx2 = Bind (Read r2) (fn tmp2. (Bind (Write r1 tmp2) (fn _. Write r2 tmp1)) *)
+    let cx2 = fun tmp1 -> Bind c2 (cx3 tmp1) in
+
+    (* assert hoare_triple (exists v. (r1 |-> v * [v == n1]))
+                            Read r1
+			   (fun r. (r1 |-> r * [r == n1]))
+    *)
     lemma_read r1 r_c1;
     let c1_pre  = (exists_x (fun v -> r1 `points_to` v `star` (r_c1 v))) in
     let c1_post = (fun r -> r1 `points_to` r `star` (r_c1 r)) in
     assert(hoare_triple c1_pre (Read r1) c1_post);
 
+
     let c2_pre         = (exists_x (fun v -> r2 `points_to` v `star` (r_c2 v))) in
     let c1_pre_c2_pre  = c1_pre `star` c2_pre in
     let c1_post_c2_pre = fun r -> (c1_post r) `star` c2_pre in
 
+
+    (* Applying the frame rule with (exists v'. (r2 |-> v' * [v' == n2]) as the frame predicate,
+       assert hoare_triple (exists v. (r1 |-> v * [v == n1]) * (exists v'. (r2 |-> v' * [v' == n2]))
+                                   Read r1
+				  (fn r. (r1 |-> r * [r == n1]) * (exists v'. (r2 |-> v' * [v' == n2])))
+    *)
     lemma_frame_rule c1 c1_pre c1_post c2_pre;
     assert (hoare_triple c1_pre_c2_pre c1 c1_post_c2_pre);
 
     let c_post = fun _ -> (r1 `points_to` n2) `star` (r2 `points_to` n1) in
-    
+
+    (* assert forall (tmp1:nat), hoare_triple (r1 |-> tmp1 * [tmp1 == n1]) * (exists v'. (r2 |-> v' * [v' == n2]))
+                                            Bind (Read r2) (fn tmp2. (Bind (Write r1 tmp2) (fn _. Write r2 tmp1)))
+					   (fn _ -> (r1 |-> n1) * (r2 |-> n2))
+    *)
     let aux_cx2 (x1:nat) :Lemma (hoare_triple (c1_post_c2_pre x1) (cx2 x1) c_post)
       = lemma_read r2 r_c2;
-      
+
+        (* assert hoare_triple (exists v'. (r2 |-> v' * [v' == n2])) 
+	                        Read r2
+			       (fn r'. r2 |-> r' * [r' == n2])
+        *)
         let c2_post = (fun x -> r2 `points_to` x `star` (r_c2 x)) in
 	assert (hoare_triple c2_pre c2 c2_post);
 
+
+        (* Applying the frame rule with (r1 |-> tmp1 * [tmp1 == n1]) as the frame predicate, 
+	   assert hoare_triple (exists v'. (r2 |-> v' * [v' == n2])) * (r1 |-> tmp1 * [tmp1 == n1])
+	                        Read r2
+			       (fn r'. (r2 |-> r' * [r' == n2]) * (r1 |-> tmp1 * [tmp1 == n1]))
+        *)
         lemma_frame_rule c2 c2_pre c2_post (c1_post x1);
 
         let c2_pre_c1_post  = c2_pre `star` (c1_post x1) in
         let c2_post_c1_post = fun n -> (c2_post n) `star` (c1_post x1) in
 	assert (hoare_triple c2_pre_c1_post c2 c2_post_c1_post);
-
+        
+	(* Applying the star is commutative lemma, 
+	   assert hoare_triple (r1 |-> tmp1 * [tmp1 == n1]) * (exists v'. (r2 |-> v' * [v' == n2])) 
+	                        Read r2
+			       (fn r'. (r1 |-> tmp1 * [tmp1 == n1]) * (r2 |-> r' * [r' == n2]))
+        *)
         lemma4 (c2_pre) (c1_post x1);
 
         let c1_post_c2_pre_x1 = (c1_post x1) `star` c2_pre in
 	lemma_consequence c2 c1_post_c2_pre_x1 c2_post_c1_post;
 	assert (hoare_triple c1_post_c2_pre_x1 c2 c2_post_c1_post);
-	
+
+        (* assert forall (tmp2:nat), hoare_triple (r1 |-> tmp1 * [tmp1 == n1]) * (r2 -> tmp2 * [tmp2 == n2])
+	                                         Bind (Write r1 tmp2) (fn _. Write r2 tmp1)
+						(fn _ -> (r1 |-> n1) * (r2 |-> n2))
+	*)
         let aux_cx3 (x2:nat) :Lemma (hoare_triple (c2_post_c1_post x2) 
 	                                        (cx3 x1 x2) 
 						(c_post))
 	  = lemma_write r1 x2;
-	  
+
+            (* assert hoare_triple (exists v. r1 |-> v)
+	                            Write r1 tmp2
+                                   (fn _. r1 |-> tmp2)
+            *)
 	    let cx3_pre  = exists_x (fun v -> r1 `points_to` v) in
 	    let cx3_post = (fun _ -> r1 `points_to` x2) in
 	    assert (hoare_triple cx3_pre (c3 x2) cx3_post);
-	    
+
+            (* Applying the frame rule with [tmp1 == n1] as the frame predicate, 
+	       assert hoare_triple (exists v. r1 |-> v) * ([tmp1 == n1])
+	                            Write r1 tmp2
+				   (fn _. r1 |-> tmp2 * ([tmp1 == n1])) 
+	    *)  
             lemma_frame_rule (c3 x2) cx3_pre cx3_post (r_c1 x1);
 	    
 	    let c3_pre   = cx3_pre `star` (r_c1 x1) in
 	    let c3_post  = fun _ -> (cx3_post ()) `star` (r_c1 x1) in
 	    assert (hoare_triple c3_pre (c3 x2) c3_post);
 
+            (* (r1 |-> tmp1 * [tmp1 == n1]) implies (exists v. r1 |-> v) * ([tmp1 == n1])  *)
 	    lemma_consequence (c3 x2) (c1_post x1) c3_post;
-	    
+
+            (* Applying the frame rule with (r2 -> tmp2 * [tmp2 == n2]) as the frame predicate,
+	       assert hoare_triple (exists v. r1 |-> v) * ([tmp1 == n1]) * (r2 |-> tmp2) * ([tmp2 == n2])
+	                            Write r1 tmp2
+				   (fn _. r1 |-> tmp2 * ([tmp1 == n1]) * (r2 |-> tmp2) * ([tmp2 == n2]))
+	    *)
             lemma_frame_rule (c3 x2) (c1_post x1) c3_post (c2_post x2);
 	    let c1_post_c2_post_x1  = (c1_post x1) `star` (c2_post x2) in
 	    let c3_post_c2_post = (fun _ -> (c3_post ()) `star` (c2_post x2)) in
 	    assert (hoare_triple c1_post_c2_post_x1 (c3 x2) c3_post_c2_post);
 
+            (* Applying star is commutative lemma, 
+	       assert hoare_triple (r2 |-> tmp2) * ([tmp2 == n2]) * (exists v. r1 |-> v) * ([tmp1 == n1])
+	                            Write r1 tmp2
+				   (fn _. (r2 |-> tmp2) * ([tmp2 == n2]) * (r1 |-> tmp2) * ([tmp1 == n1]))
+	    *)
             lemma4 (c1_post x1) (c2_post x2);
 
             let c2_post_c1_post_x2 = (c2_post x2) `star` (c1_post x1) in
 	    lemma_consequence (c3 x2) c2_post_c1_post_x2 c3_post_c2_post;
 
+            (* assert forall (tmp3:unit) hoare_triple (r2 |-> tmp2) * ([tmp2 == n2]) * (r1 |-> tmp2) * ([tmp1 == n1])
+	                                               Write r2 tmp1
+						      (fn _ . r1 |-> n2 * r2 |-> n1)
+	    *)
             let aux_cx4 (x3:unit) : Lemma (hoare_triple (c3_post_c2_post x3) 
 	                                                (cx4 x1 x2 x3) 
 						        (c_post))
