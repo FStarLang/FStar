@@ -1,14 +1,17 @@
-.PHONY: indent
+.PHONY: indent all extra
 
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/z3.mk
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
-FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst FStar.StructNG.fst
+EXTRA=FStar.Pointer.fst
+FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
 ALL=$(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
 
 all: $(addsuffix -ver, $(ALL))
+
+extra: $(addsuffix -ver, $(EXTRA))
 
 indent: $(addsuffix -indent, $(ALL))
 
