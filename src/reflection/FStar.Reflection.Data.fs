@@ -49,7 +49,7 @@ type norm_step =
     | WHNF
     | Primops
     | Delta
-    | UnfoldOnly of fv
+    | UnfoldOnly of list<fv>
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
