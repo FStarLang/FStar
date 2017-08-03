@@ -218,7 +218,7 @@ let fstar_refl_tdataconstr:
 let fstar_refl_term: FStar_Syntax_Syntax.term =
   mk_refl_types_lid_as_term "term"
 let fstar_refl_aqualv: FStar_Syntax_Syntax.term =
-  mk_refl_types_lid_as_term "aqualv"
+  mk_refl_data_lid_as_term "aqualv"
 let fstar_refl_env: FStar_Syntax_Syntax.term =
   mk_refl_types_lid_as_term "env"
 let fstar_refl_fvar: FStar_Syntax_Syntax.term =

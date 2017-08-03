@@ -61,7 +61,7 @@ let unembed_binders:
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.binder Prims.list =
   fun t  -> FStar_Syntax_Embeddings.unembed_list unembed_binder t
 let embed_term: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
-  fun t  -> protect_embedded_term FStar_Reflection_Data.fstar_refl_term t
+  fun t  -> protect_embedded_term FStar_Syntax_Syntax.tun t
 let unembed_term: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun t  -> un_protect_embedded_term t
 let embed_fvar: FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term =
