@@ -74,7 +74,7 @@ let get #a h (b:buffer a) (i:nat{i < length b}) : GTot a =
 (* Equality predicate on buffer contents, without quantifiers *)
 //17-01-04 revise comment? rename?
 let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
-  as_seq h b == as_seq h' b'
+  live h b /\ live h' b' /\ as_seq h b == as_seq h' b'
 
 (* y is included in x / x contains y *)
 let includes #a (x:buffer a) (y:buffer a) : GTot Type0 =

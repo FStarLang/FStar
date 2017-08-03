@@ -158,12 +158,13 @@ let lemma_mem_map (#a:Type) (#b:Type) (f:(a -> Tot b)) (s:set a) (x:b)
          [SMTPat (mem x (map f s))]
   = ()
 
-(* TODO: For some reason, this definition does not typecheck here *)
-(* val as_set': #a:Type -> list a -> Tot (set a) *)
-(* let rec as_set' #a l =  *)
-(*   match l with *)
-(*   | [] -> admit() *)
-(*   | hd::tl -> admit() *)
+#reset-options
+val as_set': #a:Type -> list a -> Tot (set a)
+let rec as_set' #a l =
+  match l with
+  | [] -> empty
+  | hd::tl -> union (singleton hd) (as_set' tl)
 
-(* unfold val as_set:  #a:Type -> l:list a -> Tot (set a) *)
-(* let as_set (#a:Type) (l:list a) = normalize_term (as_set' l) *)
+
+(* unfold let as_set (#a:Type) (l:list a) : set a = *)
+(*   Prims.norm [zeta; iota; delta_only ["FStar.TSet.as_set'"]] (as_set' l) *)
