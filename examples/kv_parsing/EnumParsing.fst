@@ -2,6 +2,7 @@ module EnumParsing
 
 open PureParser
 open Validator
+open PureEncoder
 open Serializer
 open Slice
 
@@ -13,6 +14,8 @@ open FStar.HyperStack.ST
 module U8 = FStar.UInt8
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
+
+(*! Pure model *)
 
 type numbers =
   | Nothing : numbers
@@ -67,6 +70,15 @@ let parse_numbers_data (t:numbers_tag) : parser numbers =
 
 let parse_numbers : parser numbers =
   parse_numbers_tag `and_then` parse_numbers_data
+
+(*! Pure validator  *)
+
+(* This didn't end up being necessary (eg, as an intermediary to verified
+parsers), but it demonstrates using extrinsic correctness proofs for validators.
+
+The equivalent approach doesn't work for the real parsers/validators since
+there's no support for extrinsically verifying properties of code in the STATE
+effect. *)
 
 let pure_validator = input:bytes{length input < pow2 32} -> option (off:nat{off <= length input})
 
@@ -149,6 +161,8 @@ let validate_numbers_pure : pure_validator' parse_numbers =
   make_correct _
   (parse_numbers_tag `then_pure_check` validate_numbers_data_pure)
 
+(*! Stateful validator *)
+
 val parse_numbers_tag_st : parser_st (hide parse_numbers_tag)
 let parse_numbers_tag_st = fun input ->
   match parse_u8_st input with
@@ -161,6 +175,7 @@ let parse_numbers_tag_st_nochk : parser_st_nochk (hide parse_numbers_tag) = fun 
   let (tag, off) = parse_u8_st_nochk input in
   ((tag <: numbers_tag), off)
 
+// here's a monolithic implementation of the whole thing:
 (*
 let validate_numbers (input:bslice) : Stack (option (off:U32.t{U32.v off <= U32.v input.len}))
   (requires (fun h0 -> live h0 input))
@@ -205,6 +220,7 @@ let validate_numbers_data (t:numbers_tag) : stateful_validator (hide (parse_numb
     validate_OneNum
   else validate_TwoNums
 
+// so far unused, but allows switching between equivalent parsers
 let coerce_validator #t (#p: parser t)
                         (#p': parser t{forall x. p x == p' x})
                         (v: stateful_validator (hide p)) : stateful_validator (hide p') =
@@ -214,10 +230,10 @@ let coerce_validator #t (#p: parser t)
 
 #reset-options "--z3rlimit 15"
 
-val and_check (#t:Type) (p: parser t) (p_st: parser_st (hide p))
-              (#t':Type) (#p': t -> parser t') (v: x:t -> stateful_validator (hide (p' x)))
+val and_check (#t:Type) (#t':Type) (p: parser t) (p': t -> parser t') (p_st: parser_st (hide p))
+              (v: x:t -> stateful_validator (hide (p' x)))
               : stateful_validator (hide (p `and_then` p'))
-let and_check #t p p_st #t' #p' v =
+let and_check #t #t' p p' p_st v =
     fun input -> match p_st input with
               | Some (x, off) ->
                 begin
@@ -230,5 +246,57 @@ let and_check #t p p_st #t' #p' v =
 #reset-options
 
 let validate_numbers : stateful_validator (hide parse_numbers) =
-    // TODO: parse_numbers_tag is not inferred from the type of parse_numbers_tag_st
-    and_check parse_numbers_tag parse_numbers_tag_st validate_numbers_data
+    // XXX: parse_numbers_tag is not inferred from the type of parse_numbers_tag_st
+    and_check parse_numbers_tag parse_numbers_data parse_numbers_tag_st validate_numbers_data
+
+(*! Encoder (pure serialization) *)
+
+val encode_numbers_tag: numbers_tag -> b:bytes{length b == 1}
+let encode_numbers_tag t = Seq.create 1 t
+
+val encode_Nothing : b:bytes{length b == 0}
+let encode_Nothing = Seq.createEmpty
+
+val encode_OneNum : n:U32.t -> b:bytes{length b == 4}
+let encode_OneNum n = u32_to_be n
+
+val encode_TwoNums : n:U32.t -> m:U32.t -> b:bytes{length b == 8}
+let encode_TwoNums n m = u32_to_be n `append` u32_to_be m
+
+val encode_numbers_data: numbers -> b:bytes
+let encode_numbers_data ns = match ns with
+    | Nothing -> encode_Nothing
+    | OneNum n -> encode_OneNum n
+    | TwoNums n m -> encode_TwoNums n m
+
+val encode_numbers: numbers -> b:bytes
+let encode_numbers ns =
+  encode_numbers_tag (numbers_tag_val ns) `append`
+  encode_numbers_data ns
+
+(*! Serializer *)
+
+val ser_numbers_tag: tag:numbers_tag -> serializer (hide (encode_numbers_tag tag))
+let ser_numbers_tag tag = ser_byte tag
+
+val ser_Nothing : serializer (hide (encode_Nothing))
+let ser_Nothing = fun buf -> Some 0ul
+
+val ser_OneNum : n:U32.t -> serializer (hide (encode_OneNum n))
+let ser_OneNum n = ser_u32 n
+
+val ser_TwoNums : n:U32.t -> m:U32.t -> serializer (hide (encode_TwoNums n m))
+let ser_TwoNums n m = fun buf -> (ser_u32 n `ser_append` ser_u32 m) buf
+
+// this works, but perhaps it should be eta expanded for extraction purposes
+val ser_numbers_data: ns:numbers -> serializer (hide (encode_numbers_data ns))
+let ser_numbers_data ns =
+  match ns with
+  | Nothing -> ser_Nothing
+  | OneNum n -> ser_OneNum n
+  | TwoNums n m -> ser_TwoNums n m
+
+val ser_numbers: ns:numbers -> serializer (hide (encode_numbers ns))
+let ser_numbers ns = fun buf ->
+  (ser_numbers_tag (numbers_tag_val ns) `ser_append`
+   ser_numbers_data ns) buf
