@@ -5,31 +5,7 @@ open FStar.Set
 open FStar.Heap
 open FStar.Classical
 
-(* type addr = nat*)
 type addr = ref nat
-
-(*
-type heap = {
-  
-  set addr * (s:seq nat{length s = size})
-
-let dom (s:heap) :set addr = fst s
-
-let memory (s:heap) :(s:seq nat{length s = size}) = snd s
-
-let equal (h1:heap) (h2:heap)
-
-let op_String_Access (s:heap) (id:addr) :nat = index (memory s) id
-let op_String_Assignment (s:heap) (id:addr) (v:nat) :heap = (dom s, Seq.upd (memory s) id v)
-let contains (s:heap) (id:addr) :Type0 = Set.mem id (dom s)
-
-let disjoint (s1:heap) (s2:heap) :Type0 = Set.disjoint (dom s1) (dom s2)
-
-let join (s1:heap) (s2:heap{disjoint s1 s2}) :(s:heap{dom s == Set.union (dom s1) (dom s2)              /\
-                                                      (forall (i:addr). s1 `contains` i ==> s.[i] == s1.[i]) /\
-                                                      (forall (i:addr). s2 `contains` i ==> s.[i] == s2.[i])})
-  = admit ()
-*)
 
 let equal (h1:heap) (h2:heap) =
   (forall (r:addr). (h1 `contains` r) <==> (h2 `contains` r)) /\
@@ -56,25 +32,8 @@ assume val interpreted_in (#a:Type0) (c:command a) (h:heap) :Tot (a * heap)
 
 type heap_predicate = heap -> Type0
 
-(* let emp (h:heap) :Type0 = dom h == Set.empty *)
 let is_emp (h:heap) : Type0 = (h == emp)
 
-(*
-let lemma_disjoint_emp (h1:heap) (h2:heap)
-  :Lemma (requires (emp h2))
-         (ensures  (disjoint h1 h2))
-	 [SMTPat (disjoint h1 h2); SMTPat (emp h2)]
-  = assert (Set.equal (Set.intersect (dom h1) (dom h2)) Set.empty)
-
-
-let lemma_join_emp (h1:heap) (h2:heap)
-  :Lemma (requires (emp h2))
-         (ensures  (disjoint h1 h2 /\ join h1 h2 == h1))
-  = assert (Set.equal (dom h1) (dom (join h1 h2)));
-    assert (Seq.equal (memory h1) (memory (join h1 h2)))
-*)
-   
-(* let points_to (id:addr) (n:nat) (h:heap) :Type0 = dom h == Set.singleton id /\ h.[id] == n *)
 let points_to (id:addr) (n:nat) (h:heap) : Type0 =
   (h == (restrict h (Set.singleton (addr_of id)))) /\ (sel h id == n)
 
@@ -91,67 +50,55 @@ let iff (p:heap_predicate) (q:heap_predicate) :Type0 = forall (h:heap). p h <==>
 let imp (p:heap_predicate) (q:heap_predicate) :Type0 = forall (h:heap). p h ==> q h
 
 (* some algebraic laws on the predicates *)
-let lemma1_helper (phi:Type0) (p:heap_predicate) (q:heap_predicate) (h:heap)
+let lemma_lift_elim_helper (phi:Type0) (p:heap_predicate) (q:heap_predicate) (h:heap)
   :Lemma (requires ((phi ==> (p `imp` q)) /\
                     (star p (lift phi) h)))
          (ensures  (q h))
  = assert (exists (h1:heap) (h2:heap). disjoint h1 h2 /\ (h == (join h1 h2)) /\ p h1 /\ ((lift phi) h2) /\ is_emp h2 /\ phi /\ q h1 /\ (h1 == h))
  
-let lemma1 (phi:Type0) (p:heap_predicate) (q:heap_predicate)
+let lemma_lift_elim (phi:Type0) (p:heap_predicate) (q:heap_predicate)
   :Lemma (requires (phi ==> (p `imp` q)))
          (ensures ((star p (lift phi)) `imp` q))
-  = Classical.forall_intro (Classical.move_requires (lemma1_helper phi p q))
+  = Classical.forall_intro (Classical.move_requires (lemma_lift_elim_helper phi p q))
 
 
-let lemma2 (phi:Type0) (p:heap_predicate) (q:heap_predicate)
+let lemma_lift_intro (phi:Type0) (p:heap_predicate) (q:heap_predicate)
   :Lemma (requires (phi /\ (p `imp` q)))
          (ensures (p `imp` (star q (lift phi))))
   = assert (forall (h:heap). (p h ==> q h) /\ phi /\ ((lift phi) emp) /\ (disjoint h emp))
 
 
-let lemma3 (phi:Type0) (p:heap_predicate)
+let lemma_lift_equivalence (phi:Type0) (p:heap_predicate)
   :Lemma (requires phi)
          (ensures (p `iff` (star p (lift phi)))) 
   = assert (forall (h:heap). phi /\ ((lift phi) emp) /\ (disjoint h emp) /\ (h == (join h emp)))
 
-let lemma4 (p:heap_predicate) (q:heap_predicate) 
+let lemma_star_is_comm (p:heap_predicate) (q:heap_predicate) 
   :Lemma (requires True)
          (ensures (star p q) `iff` (star q p))
   = assert (forall (h1:heap) (h2:heap). (disjoint h1 h2) <==> (disjoint h2 h1))
 
-(*
-let lemma5_helper (p:heap_predicate) (q:heap_predicate) (r:heap_predicate) (h:heap)
-  :Lemma (requires (star p (star q r) h))
-         (ensures (star (star p q) r h))
-  = assert (exists (h1:heap) (h2:heap) (h3:heap). p h1 /\ q h2 /\ r h3 /\ disjoint h2 h3 /\ (disjoint h1 (join h2 h3)) /\ (h == (join h1 (join h2 h3))) /\ (disjoint h1 h3) /\ (disjoint h3 h1 /\ disjoint h3 h2) /\ disjoint h3 (join h1 h2) /\ (h == (join h3 (join h1 h2))))
-
-*)
-
-let lemma5 (p:heap_predicate) (q:heap_predicate) (r:heap_predicate)
+let lemma_star_is_assoc (p:heap_predicate) (q:heap_predicate) (r:heap_predicate)
   :Lemma (requires True)
          (ensures (star p (star q r)) `iff` (star (star p q) r))
   = ()
-  
-  
-(*   assert (exists (h1:heap) (h2:heap) (h3:heap). p h1 /\ q h2 /\ r h3 /\ (disjoint h2 h3) /\ (disjoint h1 (join h2 h3)))
-*)
 
-let lemma6 (p1:heap_predicate) (p2:heap_predicate) (q1:heap_predicate) (q2:heap_predicate)
+let lemma_star_consequence (p1:heap_predicate) (p2:heap_predicate) (q1:heap_predicate) (q2:heap_predicate)
   :Lemma (requires ((p1 `imp` p2) /\ (q1 `imp` q2)))
          (ensures ((star p1 q1) `imp` (star p2 q2)))
   = ()
 
-let lemma7 (#a:Type0) (p:heap_predicate) (q:a -> heap_predicate)
+let lemma_exists_equivalence (#a:Type0) (p:heap_predicate) (q:a -> heap_predicate)
   :Lemma (requires True)
          (ensures (star p (exists_x (fun x -> (q x)))) `iff` (exists_x (fun x -> star p (q x))))
   = ()
 
-let lemma8 (#a:Type0) (p:a -> heap_predicate) (q:heap_predicate)
+let lemma_forall_implies_exists (#a:Type0) (p:a -> heap_predicate) (q:heap_predicate)
   :Lemma (requires (forall (x:a). (p x) `imp` q))
          (ensures (exists_x p) `imp` q)
   = ()
   
-let lemma9 (#a:Type0) (p:heap_predicate) (q:a -> heap_predicate) (v:a)
+let lemma_exists_intro (#a:Type0) (p:heap_predicate) (q:a -> heap_predicate) (v:a)
   :Lemma (requires (p `imp` (q v)))
          (ensures (p `imp` exists_x (q)))
   = ()
@@ -231,7 +178,8 @@ let lemma_hoare_triple_imp (#a:Type0) (pre:c_pre) (c:command a) (post:c_post a) 
          (ensures (let (r, h1) = c `interpreted_in` h in
 		   post r h1))
   = ()
-  
+
+(* Writing a number to a reference *)
 let example1 (p:ref nat) (h:heap) =
  let (a1, h1) = (Write p 3) `interpreted_in` h in
  h1
@@ -245,6 +193,7 @@ let lemma_example1_ok (p:ref nat) (a:nat) (h:heap)
     let c = (Write p 3) in
     lemma_hoare_triple_imp pre c post h
 
+(* Writing numbers to two references *)
 let example2 (p:ref nat) (q:ref nat) (h:heap) =
   let (a1, h1) = (Bind (Write p 3) (fun _ -> (Write q 4))) `interpreted_in` h in
   h1
@@ -286,7 +235,8 @@ let lemma_example2_ok (p:ref nat) (q:ref nat) (a:nat) (b:nat) (h:heap)
 (* Show both definitions are equivalent for proof to go 
    through when swap is defined using bind notation
    or avoid defining cx4, cx3, etc in the proof *)
-   
+
+(* Swapping two references *)   
 let swap (r1:ref nat) (r2:ref nat) : (command unit) =
 (* 
   tmp1 <-- Read r1;
@@ -371,7 +321,7 @@ let lemma_swap_ok (r1:ref nat) (r2:ref nat) (n1:nat) (n2:nat)
 	                        Read r2
 			       (fn r'. (r1 |-> tmp1 * [tmp1 == n1]) * (r2 |-> r' * [r' == n2]))
         *)
-        lemma4 (c2_pre) (c1_post x1);
+        lemma_star_is_comm (c2_pre) (c1_post x1);
 
         let c1_post_c2_pre_x1 = (c1_post x1) `star` c2_pre in
 	lemma_consequence c2 c1_post_c2_pre_x1 c2_post_c1_post;
@@ -423,7 +373,7 @@ let lemma_swap_ok (r1:ref nat) (r2:ref nat) (n1:nat) (n2:nat)
 	                            Write r1 tmp2
 				   (fn _. (r2 |-> tmp2) * ([tmp2 == n2]) * (r1 |-> tmp2) * ([tmp1 == n1]))
 	    *)
-            lemma4 (c1_post x1) (c2_post x2);
+            lemma_star_is_comm (c1_post x1) (c2_post x2);
 
             let c2_post_c1_post_x2 = (c2_post x2) `star` (c1_post x1) in
 	    lemma_consequence (c3 x2) c2_post_c1_post_x2 c3_post_c2_post;
@@ -456,7 +406,7 @@ let lemma_swap_ok (r1:ref nat) (r2:ref nat) (n1:nat) (n2:nat)
 		let c4_post_c3_post = fun _ -> (c4_post x3) `star` (c3_post x3) in
 		assert (hoare_triple c2_post_c3_post (c4 x1) c4_post_c3_post);
 
-                lemma4 (c2_post x2) (c3_post x3);
+                lemma_star_is_comm (c2_post x2) (c3_post x3);
 		
 		let c3_post_c2_post_x2 = (c3_post x3) `star` (c2_post x2) in
 		lemma_consequence (c4 x1) c3_post_c2_post_x2 c4_post_c3_post;
@@ -466,7 +416,7 @@ let lemma_swap_ok (r1:ref nat) (r2:ref nat) (n1:nat) (n2:nat)
 	        lemma_consequence (c4 x1) c3_post_c2_post_x2 c_post';
 		assert (hoare_triple c3_post_c2_post_x2 (c4 x1) c_post');
                 
-		lemma4 (r2 `points_to` n1) (r1 `points_to` n2);
+		lemma_star_is_comm (r2 `points_to` n1) (r1 `points_to` n2);
                 lemma_consequence (c4 x1) c3_post_c2_post_x2 c_post; 
 
 		assert (hoare_triple c3_post_c2_post_x2 (c4 x1) c_post)
@@ -490,10 +440,10 @@ let lemma_swap_ok (r1:ref nat) (r2:ref nat) (n1:nat) (n2:nat)
     lemma_bind c1 cx2 c1_pre_c2_pre c_post;
     assert (hoare_triple c1_pre_c2_pre (Bind c1 cx2) c_post);
 
-    lemma2 (n1 == n1) (r1 `points_to` n1) (exists_x (fun v -> r1 `points_to` v));
-    lemma2 (n2 == n2) (r2 `points_to` n2) (exists_x (fun v -> r2 `points_to` v));
+    lemma_lift_intro (n1 == n1) (r1 `points_to` n1) (exists_x (fun v -> r1 `points_to` v));
+    lemma_lift_intro (n2 == n2) (r2 `points_to` n2) (exists_x (fun v -> r2 `points_to` v));
 
-    lemma6 (r1 `points_to` n1) c1_pre (r2 `points_to` n2) c2_pre;
+    lemma_star_consequence (r1 `points_to` n1) c1_pre (r2 `points_to` n2) c2_pre;
     let c_pre = (r1 `points_to` n1) `star` (r2 `points_to` n2) in
     lemma_consequence (Bind c1 cx2) c_pre c_post;
  
@@ -501,6 +451,7 @@ let lemma_swap_ok (r1:ref nat) (r2:ref nat) (n1:nat) (n2:nat)
 
 (*****)
 
+(* Reading from one reference and writing to another *)
 let example3 (r1:ref nat) (r2:ref nat) :(command unit) =
   n1 <-- Read r1;
   Write r2 n1
@@ -534,7 +485,7 @@ let lemma_example3 (r1:ref nat) (r2:ref nat) (n1:nat)
 
         assert (hoare_triple (c2_pre `star` (c1_post n1)) (c2 n1) (fun _ -> r2 `points_to` n1 `star` (c1_post n1)));
 
-        lemma4 c2_pre (c1_post n1);
+        lemma_star_is_comm c2_pre (c1_post n1);
         lemma_consequence (c2 n1) ((c1_post n1) `star` c2_pre) (fun _ -> r2 `points_to` n1 `star` (c1_post n1));
 
         assert (hoare_triple ((c1_post n1) `star` c2_pre) (c2 n1) (fun _ -> r2 `points_to` n1 `star` (c1_post n1)));
@@ -555,16 +506,16 @@ let lemma_example3 (r1:ref nat) (r2:ref nat) (n1:nat)
     
     assert (hoare_triple c1_pre_c2_pre (Bind c1 c2) (fun _ -> (r2 `points_to` n1) `star` (r1 `points_to` n1)));
    
-    lemma4 (r2 `points_to` n1) (r1 `points_to` n1);
+    lemma_star_is_comm (r2 `points_to` n1) (r1 `points_to` n1);
 
     let bind_post = (fun _ -> (r1 `points_to` n1) `star` (r2 `points_to` n1)) in
     lemma_consequence (Bind c1 c2) c1_pre_c2_pre bind_post;
     assert (hoare_triple c1_pre_c2_pre (Bind c1 c2) bind_post);
 
-    lemma2 (n1 == n1) (r1 `points_to` n1) (exists_x (fun v -> r1 `points_to` v));
+    lemma_lift_intro (n1 == n1) (r1 `points_to` n1) (exists_x (fun v -> r1 `points_to` v));
     assert ((r1 `points_to` n1) `imp` (exists_x (fun v -> r1 `points_to` v `star` lift (v == n1))));
     assert ((r1 `points_to` n1) `imp` c1_pre);
-    lemma6 (r1 `points_to` n1) (c1_pre) (exists_x (fun v -> r2 `points_to` v))(exists_x (fun v -> r2 `points_to` v));
+    lemma_star_consequence (r1 `points_to` n1) (c1_pre) (exists_x (fun v -> r2 `points_to` v))(exists_x (fun v -> r2 `points_to` v));
    
     let bind_pre = (r1 `points_to` n1) `star` (exists_x (fun v -> r2 `points_to` v)) in
     lemma_consequence (Bind c1 c2) bind_pre bind_post
