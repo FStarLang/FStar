@@ -197,10 +197,12 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__cur_env"       cur_env     embed_env RD.fstar_refl_env;
       mktac0 "__cur_goal"      cur_goal'   embed_term RD.fstar_refl_term;
       mktac0 "__cur_witness"   cur_witness embed_term RD.fstar_refl_term;
+
+      mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term RD.fstar_refl_term;
+      mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;
     ]@reflection_primops @native_tactics_steps
 
-// Please note, there is some makefile magic to tweak this function in the OCaml output,
-// BESIDES the markers you see right here. If you change anything, be sure to revise it.
+// Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
 
 //IN F*: and unembed_tactic_0 (#b:Type) (unembed_b:term -> b) (embedded_tac_b:term) : tac b =
 and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> = //JUST FSHARP

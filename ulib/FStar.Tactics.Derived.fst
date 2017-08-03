@@ -5,6 +5,10 @@ open FStar.Reflection.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
+let fresh_uvar o =
+    e <-- cur_env;
+    uvar_env e o
+
 let quote_lid (ns:name) : tactic term =
     let t = pack (Tv_FVar (pack_fv ns)) in
     return t

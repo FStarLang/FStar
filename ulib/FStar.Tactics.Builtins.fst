@@ -211,3 +211,9 @@ assume private val __set_options : string -> __tac unit
 (** Set command line options for the current goal. Mostly useful to
 change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
 let set_options s : tactic unit = fun () -> TAC?.reflect (__set_options s)
+
+assume private val __uvar_env : env -> option typ -> __tac term
+let uvar_env (e : env) (o : option typ) : tactic term = fun () -> TAC?.reflect (__uvar_env e o)
+
+assume private val __unify : term -> term -> __tac bool
+let unify (t1 t2 : term) : tactic bool = fun () -> TAC?.reflect(__unify t1 t2)
