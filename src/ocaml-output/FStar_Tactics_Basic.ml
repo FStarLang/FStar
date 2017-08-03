@@ -1878,4 +1878,14 @@ let proofstate_of_goal_ty:
 let unquote:
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac
-  = fun ty  -> fun t  -> ret t
+  =
+  fun ty  ->
+    fun tm  ->
+      bind cur_goal
+        (fun goal  ->
+           let env = FStar_TypeChecker_Env.set_expected_typ goal.context ty in
+           let uu____5359 =
+             (goal.context).FStar_TypeChecker_Env.type_of env tm in
+           match uu____5359 with
+           | (tm1,typ,guard) ->
+               (FStar_TypeChecker_Rel.force_trivial_guard env guard; ret tm1))

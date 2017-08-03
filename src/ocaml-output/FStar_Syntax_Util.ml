@@ -2989,4 +2989,4 @@ let un_alien: FStar_Syntax_Syntax.term -> FStar_Dyn.dyn =
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_meta
         (uu____9632,FStar_Syntax_Syntax.Meta_alien (blob,uu____9634)) -> blob
-    | uu____9639 -> failwith "Something paranormal occurred"
+    | uu____9639 -> failwith "unexpected: term was not an alien embedding"
