@@ -97,6 +97,8 @@ endif
 	                    -e '/%type.*->.*/d' \
 	                    >> $@
 
+# https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
+fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstar.exe: $(GENERATED_FILES)
 	$(OCAMLBUILD) main.native
 	cp _build/src/fstar/ml/main.native ../../bin/$@

@@ -1,0 +1,24 @@
+PKG batteries
+PKG compiler-libs
+PKG compiler-libs.common
+PKG pprint
+PKG yojson
+PKG zarith
+
+S src/basic/ml
+S src/extraction/ml
+S src/fstar/ml
+S src/ocaml-output
+S src/parser/ml
+S src/prettyprint/ml
+S ulib/ml
+
+B +threads
+B src/ocaml-output/_build/src/basic/ml
+B src/ocaml-output/_build/src/extraction/ml
+B src/ocaml-output/_build/src/fstar/ml
+B src/ocaml-output/_build/src/ocaml-output
+B src/ocaml-output/_build/src/parser/ml
+B src/ocaml-output/_build/src/prettyprint/ml
+B src/ocaml-output/_build/ulib/ml
+

@@ -83,7 +83,6 @@ $(FSYACC) $(FSLEX): nuget-restore
 # This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, u_boot_fsts and boot_fstis
 #   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
-#   -- fs_typ_app parses list<foo> as valid syntax, for overlap with F# syntax
 FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_info \
 		   --odir u_ocaml-output --codegen OCaml --include ../ulib --include u_boot_fsts --include boot_fstis
 
@@ -120,6 +119,8 @@ boot_fstis/FStar.util.fsti: basic/util.fsi
 	$(SED) -i 's/type time.*/assume new type time/g'  $@
 	$(SED) -i 's/type smap.*/assume new type smap : Type0 -> Type0/g'  $@
 	$(SED) -i 's/type imap.*/assume new type imap : Type0 -> Type0/g'  $@
+	$(SED) -i 's/type psmap.*/assume new type psmap : Type0 -> Type0/g'  $@
+	$(SED) -i 's/type pimap.*/assume new type pimap : Type0 -> Type0/g'  $@
 	$(SED) -i 's/type out_channel.*/assume new type out_channel/g'  $@
 	$(SED) -i 's/type file_handle.*/assume new type file_handle/g'  $@
 	$(SED) -i 's/type stream_reader.*/assume new type stream_reader/g'  $@
