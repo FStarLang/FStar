@@ -344,7 +344,8 @@ let validate_many_st #t p v n = fun buf ->
 let validate_done_st : stateful_validator (hide parsing_done) = fun input ->
   if U32.eq input.len 0ul then Some 0ul else None
 
-let validate_entries_st (num_entries:U32.t) : stateful_validator (hide (parse_entries num_entries)) =
+val validate_entries_st (num_entries:U32.t) : stateful_validator (hide (parse_entries num_entries))
+let validate_entries_st (num_entries:U32.t) =
   fun input ->
   then_check _
   (validate_many_st (hide parse_entry) validate_entry_st num_entries)

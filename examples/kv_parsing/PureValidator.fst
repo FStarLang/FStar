@@ -82,13 +82,13 @@ let rec validate_many' n v =
   | 0 -> validate_accept
   | _ -> v `seq` validate_many' (n-1) v
 
+#reset-options "--max_fuel 0 --z3rlimit 50"
+
 let validate_seq (#t:Type) (#t':Type)
   (p: parser t) (p': parser t')
   (v: validator{validator_checks v p})
   (v': validator{validator_checks v' p'}) :
   Lemma (validator_checks (v `seq` v') (p `seq` p')) = ()
-
-#set-options "--max_fuel 0 --z3rlimit 50"
 
 val validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
   (p: parser t) (p': parser t') (f: t -> t' -> t'')
