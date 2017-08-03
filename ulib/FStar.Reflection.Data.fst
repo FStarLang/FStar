@@ -62,3 +62,4 @@ type norm_step =
     | WHNF
     | Primops
     | Delta
+    | UnfoldOnly : list fv -> norm_step

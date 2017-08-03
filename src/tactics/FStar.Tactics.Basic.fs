@@ -414,6 +414,7 @@ let norm (s : list<RD.norm_step>) : tac<unit> =
         | RD.WHNF    -> [N.WHNF]
         | RD.Primops -> [N.Primops]
         | RD.Delta   -> [N.UnfoldUntil Delta_constant]
+        | RD.UnfoldOnly l -> [N.UnfoldOnly (List.map S.lid_of_fv l)]
     in
     let steps = [N.Reify; N.UnfoldTac]@(List.flatten (List.map tr s)) in
     let w = N.normalize steps goal.context goal.witness in
