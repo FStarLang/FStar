@@ -111,6 +111,8 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
 val is_arith_expr : term -> tm expr
 let rec is_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
+    // Admitting this subtyping on lists for now, it's provable, but tedious right now
+    let tl : list ((a:term{a << t}) * aqualv) = admit(); tl in
     match inspect hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
@@ -135,7 +137,7 @@ let rec is_arith_expr (t:term) =
         else if qn = minus_qn then liftM2 Minus ll rr
         else if qn = mult_qn  then liftM2 Mult ll rr
         else if qn = mult'_qn then liftM2 Mult ll rr
-	else if qn = nat_bv_qn then liftM NatToBv rr
+        else if qn = nat_bv_qn then liftM NatToBv rr
         else fail ("binary: " ^ fv_to_string fv)
     | Tv_FVar fv, [(a, Q_Explicit)] ->
         let qn = inspect_fv fv in
