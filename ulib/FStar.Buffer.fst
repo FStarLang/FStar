@@ -3,6 +3,7 @@ module FStar.Buffer
 open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.UInt32
+module Int32 = FStar.Int32
 open FStar.HyperStack
 open FStar.Ghost
 
@@ -1078,6 +1079,17 @@ assume val fill: #t:Type -> b:buffer t -> z:t -> len:UInt32.t{v len <= length b}
   (ensures  (fun h0 _ h1 -> live h0 b /\ live h1 b /\ modifies_1 b h0 h1
     /\ Seq.slice (as_seq h1 b) 0 (v len) == Seq.create (v len) z
     /\ Seq.slice (as_seq h1 b) (v len) (length b) == Seq.slice (as_seq h0 b) (v len) (length b) ))
+
+// corresponds to memcmp, but without the sign comparison
+assume val compare: #t:Type -> b1:buffer t -> b2:buffer t ->
+                    len:UInt32.t{v len <= length b1 /\ v len <= length b2} -> Stack Int32.t
+ (requires (fun h0 -> live h0 b1 /\ live h0 b2))
+ (ensures (fun h0 r h1 -> live h1 b1 /\
+                       live h1 b2 /\
+                       modifies_none h0 h1 /\
+                       (Int32.v r == 0 <==>
+                        Seq.slice (as_seq h1 b1) 0 (v len) ==
+                        Seq.slice (as_seq h1 b2) 0 (v len))))
 
 let split #t (b:buffer t) (i:UInt32.t{v i <= length b}) : Tot (buffer t * buffer t)
   = sub b 0ul i, offset b i
