@@ -489,16 +489,16 @@ let fun_of_list
     Classical.forall_intro (Classical.move_requires (find_none phi l));
     false_elim ()
 
-let struct_create (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
+let struct_create_fun (l: struct_typ) (f: ((fd: struct_field l) -> Tot (type_of_struct_field l fd))) : Tot (struct l) =
   DM.create #(struct_field l) #(type_of_struct_field l) f
 
-let struct_create'
+let struct_create
   (s: struct_typ)
   (l: struct_literal s)
 : Pure (struct s)
   (requires (normalize_term (struct_literal_wf s l) == true))
   (ensures (fun _ -> True))
-= struct_create s (fun_of_list s l)
+= struct_create_fun s (fun_of_list s l)
 
 (** Interpretation of unions, as ghostly-tagged data
     (see `gtdata` for more information).
@@ -558,7 +558,7 @@ let rec dummy_val
     | TUnit -> ()
     end
   | TStruct l ->
-    struct_create l (fun f -> (
+    struct_create_fun l (fun f -> (
       dummy_val (typ_of_struct_field l f)
     ))
   | TUnion l ->
@@ -968,7 +968,7 @@ let rec value_of_ovalue
       : Tot (type_of_struct_field l f)
       = value_of_ovalue (typ_of_struct_field l f) (ostruct_sel v f)
       in
-      struct_create l phi
+      struct_create_fun l phi
     else dummy_val t
   | TArray len t' ->
     let (v: option (array len (otype_of_typ t'))) = v in
