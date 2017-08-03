@@ -1,5 +1,5 @@
 [
-  "CF™ua4\u001cR¦Úä8$H¾\u0018",
+  ";ÃZjJŠÚÂˆ\u0004ÂØn\u0004±",
   [
     [ "FStar.Pointer.uu___is_TUInt", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Pointer.uu___is_TUInt8", 1, 2, 1, [ "@query" ], 0 ],
@@ -666,7 +666,7 @@
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
-    [ "FStar.Pointer.struct_create'", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Pointer.struct_create", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Pointer.type_of_typ_union",
       1,
