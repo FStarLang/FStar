@@ -7,12 +7,14 @@ FST_FILES :=	Slice.fst \
 		PureValidator.fst \
 		Validator.fst \
 		ValidatedParser.fst \
+		ValidatedAccess.fst \
 		PureEncoder.fst \
 		Serializer.fst \
 		EnumParsing.fst
 
 EXTRACT_FILES := Validator.fst \
 		 ValidatedParser.fst \
+		 ValidatedAccess.fst \
 		 Serializer.fst \
 		 EnumParsing.fst
 

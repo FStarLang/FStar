@@ -37,6 +37,10 @@ unfold let parse_ret (#t:Type) (v:t) : parser t =
 
 let fail_parser #t : parser t = fun b -> None
 
+let parse_result (#t:Type) (#b:bytes)
+  (r: option (t * n:nat{n <= length b}){Some? r}) : t =
+  fst (Some?.v r)
+
 let parse_u8: parser U8.t =
   fun b -> if length b < 1 then None
         else Some (index b 0, 1)

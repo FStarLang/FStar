@@ -88,10 +88,6 @@ let fold_left_buffer #t f acc b =
       end
     | None -> acc
 
-let parse_result (#t:Type) (#b:bytes)
-  (r: option (t * n:nat{n <= length b}){Some? r}) : t =
-  fst (Some?.v r)
-
 val parse_num_entries_valid : input:bslice -> Stack (U32.t * off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
