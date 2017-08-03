@@ -171,16 +171,13 @@ let alloc_lid    = p2l ["FStar"; "ST"; "alloc"]
 let op_ColonEq   = p2l ["FStar"; "ST"; "op_Colon_Equals"]
 
 (* Constants for sets and ref sets *)
-let ref_lid       = p2l ["FStar"; "Heap"; "ref"]
-let heap_ref      = p2l ["FStar"; "Heap"; "Ref"]
-let set_empty     = p2l ["FStar"; "Set"; "empty"]
-let set_singleton = p2l ["FStar"; "Set"; "singleton"]
-let set_union     = p2l ["FStar"; "Set"; "union"]
+let ref_lid             = p2l ["FStar"; "Heap"; "ref"]
+let heap_addr_of_lid    = p2l ["FStar"; "Heap"; "addr_of"]
+let set_empty           = p2l ["FStar"; "Set"; "empty"]
+let set_singleton       = p2l ["FStar"; "Set"; "singleton"]
+let set_union           = p2l ["FStar"; "Set"; "union"]
 let fstar_hyperheap_lid = p2l ["FStar"; "HyperHeap"]
-let rref_lid      = p2l ["FStar"; "HyperHeap"; "rref"]
-let tset_empty     = p2l ["FStar"; "TSet"; "empty"]
-let tset_singleton = p2l ["FStar"; "TSet"; "singleton"]
-let tset_union     = p2l ["FStar"; "TSet"; "union"]
+let rref_lid            = p2l ["FStar"; "HyperHeap"; "rref"]
 
 (* Other special constants *)
 let erased_lid    = p2l ["FStar"; "Ghost"; "erased"]

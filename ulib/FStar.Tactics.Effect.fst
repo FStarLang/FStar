@@ -83,7 +83,7 @@ assume val synth_by_tactic : (#t:Type) -> (#a:Type) -> tactic a -> Tot t
 // Must run with tactics off, as it will otherwise try to run `by_tactic
 // (reify_tactic t)`, which fails as `t` is not a concrete tactic
 #reset-options "--no_tactics"
-let assert_by_tactic (t:tactic unit) (p:Type)
+let assert_by_tactic (p:Type) (t:tactic unit)
   : Pure unit
          (requires (by_tactic t (squash p)))
          (ensures (fun _ -> p))

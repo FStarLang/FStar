@@ -1,6 +1,7 @@
 HAS_MENHIR := $(shell command -v menhir 2> /dev/null)
+MENHIR_MIN_VERSION:=20161115
 ifdef HAS_MENHIR
-HAS_VALID_MENHIR := $(shell expr `menhir --version | sed -e 's/.*version \([0-9]*\)/\1/'` \>= 20161115)
+HAS_VALID_MENHIR := $(shell expr `menhir --version | sed -e 's/.*version \([0-9]*\)/\1/'` \>= $(MENHIR_MIN_VERSION))
 else
 HAS_VALID_MENHIR := 0
 endif
@@ -46,7 +47,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/parse.fsy fstar.exe
+all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/boot/parse.fsy fstar.exe
 
 # Choose the correct version of the ML prettyprinter, based on OCaml version
 ../extraction/ml/FStar_Extraction_ML_PrintML.ml:
@@ -62,16 +63,13 @@ ifeq ($(HAS_VALID_MENHIR), 1)
 	# TODO : call menhir directly when positions are fixed instead of
 	# letting OCamlbuild go through ocamlyacc
 	$(MENHIR) --only-preprocess-for-ocamlyacc $< > $@
-	# Save a copy of the dumb parse.mly for whoever doesn't have menhir.
-	$(DOS2UNIX) parse.mly
-	cp parse.mly ../parser/ml/
 else
-	cp ../parser/ml/parse.mly ./parse.mly
+	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
 endif
 
 # This is about the F# parser, which we sed-transform from the parse.mly
 # obtained via the rule above.
-../parser/parse.fsy: parse.mly
+../parser/boot/parse.fsy: parse.mly
 	echo "%{" > $@
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
