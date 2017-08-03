@@ -1875,3 +1875,7 @@ let proofstate_of_goal_ty:
               smt_goals = []
             } in
           (ps, (g.witness))
+let unquote:
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac
+  = fun ty  -> fun t  -> ret t
