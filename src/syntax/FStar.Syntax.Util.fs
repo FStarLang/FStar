@@ -1373,4 +1373,4 @@ let mk_alien (b : 'a) (s : string) (r : option<range>) : term =
 let un_alien (t : term) : dyn =
     match t.n with
     | Tm_meta (_, Meta_alien (blob, _)) -> blob
-    | _ -> failwith "Something paranormal occurred"
+    | _ -> failwith "unexpected: term was not an alien embedding"
