@@ -174,6 +174,8 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac1 "__set_options"   set_options unembed_string embed_unit t_unit;
       mktac2 "__seq"           seq (unembed_tactic_0 unembed_unit) (unembed_tactic_0 unembed_unit) embed_unit t_unit;
 
+      mktac2 "__unquote"       unquote (fun t -> t) unembed_term (fun t -> t) t_unit;
+
       mktac1 "__prune"         prune unembed_string embed_unit t_unit;
       mktac1 "__addns"         addns unembed_string embed_unit t_unit;
 

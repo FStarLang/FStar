@@ -870,3 +870,6 @@ let proofstate_of_goal_ty env typ =
     }
     in
     (ps, g.witness)
+
+let unquote (ty : term) (t : term) : tac<term> =
+    ret t

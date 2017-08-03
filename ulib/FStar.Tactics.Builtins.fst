@@ -34,6 +34,9 @@ let cur_witness = fun () -> TAC?.reflect __cur_witness
 assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 
+assume private val __unquote : #a:Type -> term -> __tac a
+let unquote (#a:Type) (t:term) : tactic a = fun () -> TAC?.reflect (__unquote #a t)
+
 assume private val __trytac : #a:Type -> __tac a -> __tac (option a)
 (** [trytac t] will attempt to run [t] and allow to recover from a failure.
 If [t] succeeds with return value [a], [trytac t] returns [Some a].
