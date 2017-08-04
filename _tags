@@ -10,14 +10,8 @@ true: \
   annot, bin_annot, thread, -traverse, \
   package(batteries), \
   package(zarith)
-#  package(dynlink), \
-#  package(pprint), \
-#  package(yojson), \
 
-# ADL: DO NOT ENABLE COMPILER-LIBS FOR ALL FILES
-# COMPILER-LIBS ARE ABSOLUTELY EVIL AND POLLUTE THE
-# MODULE NAMESPACE WITH NAMES SUCH AS COMMON, PARSE, GEN
-# THAT ARE USED EVERYWHERE
+# ADL: Please do not enable compiler-libs unless absolutely necessary
 <ulib/ml/compiler/*.ml> or <ulib/ml/compiler-extracted/*.ml> or <src/*/ml/*> or <src/ocaml-output/*.ml>: \
   package(compiler-libs), \
   package(compiler-libs.common), \
