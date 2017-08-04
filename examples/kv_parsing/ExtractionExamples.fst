@@ -58,3 +58,34 @@ let sum_to_n_buf (n:U32.t) : Stack U32.t
   lemma_reveal_modifies_0 h0 h1;
   pop_frame();
   sum
+
+let count_to_n (n:U32.t{U32.v n > 0}) : Stack U32.t
+  (requires (fun h0 -> True))
+  (ensures (fun h0 r h1 -> r == n)) =
+  push_frame();
+  let ptr_count = create 0ul 1ul in
+  do_while
+    (fun h break -> live h ptr_count /\
+                 (not break ==> U32.v (Seq.index (as_seq h ptr_count) 0) < U32.v n) /\
+                 (break ==> U32.v (Seq.index (as_seq h ptr_count) 0) == U32.v n))
+    (fun _ -> ptr_count.(0ul) <- U32.(ptr_count.(0ul) +^ 1ul);
+           let sum = ptr_count.(0ul) in
+           if U32.eq sum n then true else false);
+  let count = ptr_count.(0ul) in
+  pop_frame();
+  count
+
+// this is just an infinite loop
+let wait_for_false (n:U32.t{U32.v n > 0}) : Stack U32.t
+  (requires (fun h0 -> True))
+  (ensures (fun h0 r h1 -> r == n)) =
+  push_frame();
+  let ptr_count = create 0ul 1ul in
+  do_while
+    (fun h break -> live h ptr_count /\
+                 (break ==> False))
+    (fun _ -> false);
+  let count = ptr_count.(0ul) in
+  pop_frame();
+  assert (False);
+  count
