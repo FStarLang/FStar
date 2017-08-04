@@ -562,6 +562,7 @@ let apply_lemma (tm:term) : tac<unit> =
              | Tm_uvar _ -> true //still unresolved
              | _ -> false) in
         solve goal solution;
+        bind (add_implicits implicits) (fun _ ->
         bind dismiss (fun _ ->
         let is_free_uvar uv t =
             let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
@@ -593,7 +594,6 @@ let apply_lemma (tm:term) : tac<unit> =
         bind (add_irrelevant_goal goal.context pre goal.opts) (fun _ ->
         // Try to discharge the precondition, which is often trivial
         bind (trytac trivial) (fun _ ->
-        bind (add_implicits g.implicits) (fun _ ->
         add_goals sub_goals)))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
