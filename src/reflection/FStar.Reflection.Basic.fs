@@ -283,9 +283,12 @@ let inspect_const (c:sconst) : vconst =
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 // TODO: consider effects? probably not too useful, but something should be done
-let inspect (t:term) : term_view =
+let rec inspect (t:term) : term_view =
     let t = U.un_uinst t in
     match t.n with
+    | Tm_meta (t, _) ->
+        inspect t
+
     | Tm_name bv ->
         Tv_Var (S.mk_binder bv)
 
