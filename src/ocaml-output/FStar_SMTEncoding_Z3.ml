@@ -420,7 +420,7 @@ let doZ3Exe':
                  FStar_All.pipe_right (FStar_Util.split s2 " ")
                    (FStar_Util.sort_with FStar_String.compare) in
                FStar_All.pipe_right uu____1964
-                 (fun _0_38  -> FStar_Pervasives_Native.Some _0_38)) in
+                 (fun _0_40  -> FStar_Pervasives_Native.Some _0_40)) in
           let core = FStar_Util.mk_ref FStar_Pervasives_Native.None in
           let statistics = FStar_Util.smap_create (Prims.parse_int "0") in
           let reason_unknown = FStar_Util.mk_ref "" in

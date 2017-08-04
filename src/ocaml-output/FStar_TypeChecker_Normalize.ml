@@ -466,7 +466,7 @@ let norm_universe:
                | uu____2101 -> us1)
           | FStar_Syntax_Syntax.U_succ u3 ->
               let uu____2105 = aux u3 in
-              FStar_List.map (fun _0_40  -> FStar_Syntax_Syntax.U_succ _0_40)
+              FStar_List.map (fun _0_42  -> FStar_Syntax_Syntax.U_succ _0_42)
                 uu____2105 in
         let uu____2108 =
           FStar_All.pipe_right cfg.steps (FStar_List.contains EraseUniverses) in
@@ -727,7 +727,7 @@ let rec closure_as_term:
                               FStar_Syntax_Syntax.index =
                                 (uu___165_3097.FStar_Syntax_Syntax.index);
                               FStar_Syntax_Syntax.sort = ty
-                            }) (fun _0_41  -> FStar_Util.Inl _0_41)) in
+                            }) (fun _0_43  -> FStar_Util.Inl _0_43)) in
                     let uu___166_3098 = lb in
                     let uu____3099 =
                       closure_as_term cfg env2 lb.FStar_Syntax_Syntax.lbdef in
@@ -4964,6 +4964,8 @@ let eta_expand:
                                    FStar_TypeChecker_Env.lax = true;
                                    FStar_TypeChecker_Env.lax_universes =
                                      (uu___229_17263.FStar_TypeChecker_Env.lax_universes);
+                                   FStar_TypeChecker_Env.failhard =
+                                     (uu___229_17263.FStar_TypeChecker_Env.failhard);
                                    FStar_TypeChecker_Env.type_of =
                                      (uu___229_17263.FStar_TypeChecker_Env.type_of);
                                    FStar_TypeChecker_Env.universe_of =
@@ -5027,6 +5029,8 @@ let eta_expand:
                            FStar_TypeChecker_Env.lax = true;
                            FStar_TypeChecker_Env.lax_universes =
                              (uu___230_17276.FStar_TypeChecker_Env.lax_universes);
+                           FStar_TypeChecker_Env.failhard =
+                             (uu___230_17276.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.type_of =
                              (uu___230_17276.FStar_TypeChecker_Env.type_of);
                            FStar_TypeChecker_Env.universe_of =
