@@ -251,7 +251,7 @@ let above_tip_is_live (#a:Type) (#rel:preorder a) (m:mem) (x:mreference a rel) :
 let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-= ()
+= lemma_sel_same_addr #(frameOf r1) #a #rel h.h r1.ref r2.ref
 
 let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
