@@ -455,7 +455,7 @@ abstract let unused_in_aref_of
   (h: mem)
 : Lemma
   (aref_unused_in (aref_of r) h <==> unused_in r h)
-  [SMTPat (aref_unused_in (aref_of r))]
+  [SMTPat (aref_unused_in (aref_of r) h)]
 = HH.unused_in_aref_of r.ref h.h
 
 abstract
@@ -541,7 +541,6 @@ let aref_of_greference_of
 (* Operators lowered to rref *)
 
 abstract let frameOf_greference_of
-  (h: mem)
   (a: aref)
   (t: Type)
   (rel: preorder t)
@@ -582,7 +581,7 @@ let unused_in_greference_of
 : Lemma
   (requires (exists h . aref_live_at h a t rel))
   (ensures ((exists h . aref_live_at h a t rel) /\ (unused_in (greference_of a t rel) h <==> aref_unused_in a h)))
-  [SMTPat (unused_in (greference_of a t rel))]
+  [SMTPat (unused_in (greference_of a t rel) h)]
 = ()
 
 abstract
