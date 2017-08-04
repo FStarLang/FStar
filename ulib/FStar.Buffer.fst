@@ -952,19 +952,21 @@ let lemma_sub_spec (#a:Type) (b:buffer a)
   (i:UInt32.t)
   (len:UInt32.t{v len <= length b /\ v i + v len <= length b})
   h : Lemma
-     (requires True)
-     (ensures  (as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
-  [SMTPat (sub b i len)]
+     (requires (live h b))
+     (ensures  (live h (sub b i len) /\
+                as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
+  [SMTPat (sub b i len); SMTPatT (live h b)]
   = Seq.lemma_eq_intro (as_seq h (sub b i len)) (Seq.slice (as_seq h b) (v i) (v i + v len))
 
 let lemma_sub_spec' (#a:Type) (b:buffer a)
   (i:UInt32.t)
   (len:UInt32.t{v len <= length b /\ v i + v len <= length b})
   h : Lemma
-     (requires True)
-     (ensures  (as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
-  [SMTPat (sub b i len)]
-= lemma_sub_spec b i len h
+     (requires (live h b))
+     (ensures  (live h (sub b i len) /\
+                as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
+  [SMTPatT (live h (sub b i len))]
+  = lemma_sub_spec b i len h
 
 val offset: #a:Type -> b:buffer a
   -> i:UInt32.t{v i + v b.idx < pow2 n /\ v i <= v b.length}
