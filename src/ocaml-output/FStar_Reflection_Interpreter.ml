@@ -53,7 +53,7 @@ let int2 :
   
 let reflection_primops :
   FStar_TypeChecker_Normalize.primitive_step Prims.list =
-  let mklid nm = FStar_Reflection_Data.fstar_refl_syntax_lid nm  in
+  let mklid nm = FStar_Reflection_Data.fstar_refl_basic_lid nm  in
   let mk1 l arity fn =
     {
       FStar_TypeChecker_Normalize.name = l;
@@ -97,75 +97,66 @@ let reflection_primops :
              in
           let uu____345 =
             let uu____348 =
-              mk2 "__compare_binder" FStar_Reflection_Basic.order_binder
+              mk2 "__compare_binder" FStar_Reflection_Basic.compare_binder
                 FStar_Reflection_Basic.unembed_binder
                 FStar_Reflection_Basic.unembed_binder
                 FStar_Reflection_Basic.embed_order
                in
             let uu____349 =
               let uu____352 =
-                mk11 "__type_of_binder"
-                  (fun uu____362  ->
-                     match uu____362 with
-                     | (b,q) -> b.FStar_Syntax_Syntax.sort)
+                mk11 "__type_of_binder" FStar_Reflection_Basic.type_of_binder
                   FStar_Reflection_Basic.unembed_binder
                   FStar_Reflection_Basic.embed_term
                  in
-              let uu____371 =
-                let uu____374 =
+              let uu____359 =
+                let uu____362 =
                   mk2 "__is_free" FStar_Reflection_Basic.is_free
                     FStar_Reflection_Basic.unembed_binder
                     FStar_Reflection_Basic.unembed_term
                     FStar_Syntax_Embeddings.embed_bool
                    in
-                let uu____375 =
-                  let uu____378 =
-                    mk11 "__fresh_binder"
-                      (fun t  ->
-                         let uu____388 =
-                           FStar_Syntax_Syntax.gen_bv "__refl"
-                             FStar_Pervasives_Native.None t
-                            in
-                         (uu____388, FStar_Pervasives_Native.None))
+                let uu____363 =
+                  let uu____366 =
+                    mk11 "__fresh_binder" FStar_Reflection_Basic.fresh_binder
                       FStar_Reflection_Basic.unembed_term
                       FStar_Reflection_Basic.embed_binder
                      in
-                  let uu____391 =
-                    let uu____394 =
-                      mk2 "__term_eq" FStar_Syntax_Util.term_eq
+                  let uu____373 =
+                    let uu____376 =
+                      mk2 "__term_eq" FStar_Reflection_Basic.term_eq
                         FStar_Reflection_Basic.unembed_term
                         FStar_Reflection_Basic.unembed_term
                         FStar_Syntax_Embeddings.embed_bool
                        in
-                    let uu____399 =
-                      let uu____402 =
+                    let uu____381 =
+                      let uu____384 =
                         mk11 "__term_to_string"
-                          FStar_Syntax_Print.term_to_string
+                          FStar_Reflection_Basic.term_to_string
                           FStar_Reflection_Basic.unembed_term
                           FStar_Syntax_Embeddings.embed_string
                          in
-                      let uu____403 =
-                        let uu____406 =
+                      let uu____385 =
+                        let uu____388 =
                           mk11 "__binders_of_env"
-                            FStar_TypeChecker_Env.all_binders
+                            FStar_Reflection_Basic.binders_of_env
                             FStar_Reflection_Basic.unembed_env
                             FStar_Reflection_Basic.embed_binders
                            in
-                        let uu____407 =
-                          let uu____410 =
+                        let uu____389 =
+                          let uu____392 =
                             mk2 "__lookup_typ"
                               FStar_Reflection_Basic.lookup_typ
                               FStar_Reflection_Basic.unembed_env
                               FStar_Syntax_Embeddings.unembed_string_list
                               FStar_Reflection_Basic.embed_sigelt_view
                              in
-                          [uu____410]  in
-                        uu____406 :: uu____407  in
-                      uu____402 :: uu____403  in
-                    uu____394 :: uu____399  in
-                  uu____378 :: uu____391  in
-                uu____374 :: uu____375  in
-              uu____352 :: uu____371  in
+                          [uu____392]  in
+                        uu____388 :: uu____389  in
+                      uu____384 :: uu____385  in
+                    uu____376 :: uu____381  in
+                  uu____366 :: uu____373  in
+                uu____362 :: uu____363  in
+              uu____352 :: uu____359  in
             uu____348 :: uu____349  in
           uu____344 :: uu____345  in
         uu____338 :: uu____341  in

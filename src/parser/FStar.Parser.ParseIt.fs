@@ -57,10 +57,22 @@ let read_file (filename:string) =
   fs.ReadToEnd()
   with _ -> Util.format1 "Unable to open file: %s" filename
 
+let fs_extensions = [".fs"; ".fsi"]
+let fst_extensions = [".fst"; ".fsti"]
+let interface_extensions = [".fsti"; ".fsi"]
+
+let valid_extensions () =
+  fst_extensions @ if Options.ml_ish () then fs_extensions else []
+
+let has_extension file extensions =
+  List.existsb (ends_with file) extensions
+
 let check_extension fn =
-    if not (Util.ends_with fn ".fst")
-    && not (Util.ends_with fn ".fsti")
-    then raise (Err("Unrecognized file extension: " ^fn))
+  if (not (has_extension fn (valid_extensions ()))) then
+    let message = format1 "Unrecognized extension '%s'" fn in
+    raise (Err (if has_extension fn fs_extensions then
+                  message ^ " (pass --MLish to process .fs and .fsi files)"
+                else message))
 
 let parse fn =
   Parser.Util.warningHandler := (function
@@ -103,7 +115,7 @@ let parse fn =
       let fileOrFragment = Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
         | Inl mods ->
-           if Util.ends_with filename ".fsti"
+           if has_extension filename interface_extensions
            then Inl (mods |> List.map (function
                 | AST.Module(l,d) ->
                   AST.Interface(l, d, true)
@@ -123,4 +135,6 @@ let parse fn =
       let p0 = pos_of_lexpos lexbuf.StartPos in
       let p1 = pos_of_lexpos lexbuf.EndPos in
       let r = Range.mk_range filename p0 p1 in
-      Inr (sprintf "Syntax error (%A)" e, r)
+      Inr ((if Options.trace_error ()
+            then sprintf "Syntax error (%A)" e
+            else sprintf "Syntax error (%s)" e.Message), r)

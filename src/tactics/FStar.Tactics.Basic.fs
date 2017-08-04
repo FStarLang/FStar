@@ -133,14 +133,31 @@ let dump_cur ps msg =
         dump_goal ps (List.hd ps.goals)
         end
 
+let ps_to_string (msg, ps) = format5 "State dump (%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
+                msg (string_of_int (List.length ps.goals)) (String.concat "\n" (List.map goal_to_string ps.goals))
+                (string_of_int (List.length ps.smt_goals)) (String.concat "\n" (List.map goal_to_string ps.smt_goals))
+let goal_to_json g =
+    let g_binders = Env.all_binders g.context |> Print.binders_to_json in
+    JsonAssoc [("hyps", g_binders);
+               ("goal", JsonAssoc [("witness", JsonStr (Print.term_to_string g.witness));
+                                   ("type", JsonStr (Print.term_to_string g.goal_ty))])]
+
+let ps_to_json (msg, ps) =
+    JsonAssoc [("label", JsonStr msg);
+               ("goals", JsonList (List.map goal_to_json ps.goals));
+               ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))]
+
 let dump_proofstate ps msg =
-    tacprint "";
-    tacprint1 "State dump (%s):" msg;
-    tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));
-    List.iter (dump_goal ps) ps.goals;
-    tacprint1 "SMT goals (%s):" (string_of_int (List.length ps.smt_goals));
-    List.iter (dump_goal ps) ps.smt_goals;
-    ()
+    Options.with_saved_options (fun () ->
+        Options.set_option "print_effect_args" (Options.Bool true);
+        print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
+    // tacprint "";
+    // tacprint1 "State dump (%s):" msg;
+    // tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));
+    // List.iter (dump_goal ps) ps.goals;
+    // tacprint1 "SMT goals (%s):" (string_of_int (List.length ps.smt_goals));
+    // List.iter (dump_goal ps) ps.smt_goals;
+    // ()
 
 let print_proof_state1 (msg:string) : tac<unit> =
     mk_tac (fun p -> dump_cur p msg;
@@ -397,6 +414,7 @@ let norm (s : list<RD.norm_step>) : tac<unit> =
         | RD.WHNF    -> [N.WHNF]
         | RD.Primops -> [N.Primops]
         | RD.Delta   -> [N.UnfoldUntil Delta_constant]
+        | RD.UnfoldOnly l -> [N.UnfoldOnly (List.map S.lid_of_fv l)]
     in
     let steps = [N.Reify; N.UnfoldTac]@(List.flatten (List.map tr s)) in
     let w = N.normalize steps goal.context goal.witness in
@@ -499,6 +517,10 @@ let apply (tm:term) : tac<unit> =
     focus (__apply true tm)
 
 let apply_lemma (tm:term) : tac<unit> =
+    let is_unit_t t = match (SS.compress t).n with
+    | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
+    | _ -> false
+    in
     bind cur_goal (fun goal ->
     let tm, t, guard = goal.context.type_of goal.context tm in
     if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply_lemma: got non-trivial guard" else
@@ -507,10 +529,16 @@ let apply_lemma (tm:term) : tac<unit> =
     let uvs, implicits, subst =
        List.fold_left (fun (uvs, guard, subst) (b, aq) ->
                let b_t = SS.subst subst b.sort in
-               let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
-               (u, aq)::uvs,
-               FStar.TypeChecker.Rel.conj_guard guard g_u,
-               S.NT(b, u)::subst)
+               if is_unit_t b_t
+               then
+                   // Simplification: if the argument is simply unit, then don't ask for it
+                   (U.exp_unit, aq)::uvs, guard, S.NT(b, U.exp_unit)::subst
+               else
+                   let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
+                   (u, aq)::uvs,
+                   FStar.TypeChecker.Rel.conj_guard guard g_u,
+                   S.NT(b, u)::subst
+               )
        ([], guard, [])
        bs
     in
@@ -567,13 +595,29 @@ let apply_lemma (tm:term) : tac<unit> =
         bind (add_implicits g.implicits) (fun _ ->
         add_goals sub_goals)))))
 
+let destruct_eq' (typ : typ) : option<(term * term)> =
+    match U.destruct_typ_as_formula typ with
+    | Some (U.BaseConn(l, [_; (e1, _); (e2, _)])) when Ident.lid_equals l PC.eq2_lid ->
+        Some (e1, e2)
+    | _ ->
+        None
+
+let destruct_eq (typ : typ) : option<(term * term)> =
+    match destruct_eq' typ with
+    | Some t -> Some t
+    | None ->
+        // Retry for a squashed one
+        begin match U.un_squash typ with
+        | Some typ -> destruct_eq' typ
+        | None -> None
+        end
+
 let rewrite (h:binder) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort))) (fun _ ->
-    match U.destruct_typ_as_formula (fst <| Env.lookup_bv goal.context (fst h)) with
-    | Some (U.BaseConn(l, [_; (x, _); (e, _)]))
-              when Ident.lid_equals l PC.eq2_lid ->
-      (match (SS.compress x).n with
+    match destruct_eq (fst <| Env.lookup_bv goal.context (fst h)) with
+    | Some  (x, e) ->
+    (match (SS.compress x).n with
        | Tm_name x ->
          let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty; witness = SS.subst [NT(x, e)] goal.witness} in
          replace_cur goal

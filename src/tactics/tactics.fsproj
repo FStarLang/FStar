@@ -88,8 +88,8 @@
     <Compile Include="FStar.Tactics.Basic.fs" />
     <Compile Include="FStar.Tactics.Embedding.fs" />
     <Compile Include="FStar.Tactics.Native.fs" />
-    <Compile Include="FStar.Tactics.Interpreter.fsi" />
-    <Compile Include="FStar.Tactics.Interpreter.fs" />
+    <Compile Include="boot/FStar.Tactics.Interpreter.fsi" />
+    <Compile Include="boot/FStar.Tactics.Interpreter.fs" />
     <Compile Include="FStar.Tactics.Load.fsi" />
     <Compile Include="FStar.Tactics.Load.fs" />
   </ItemGroup>

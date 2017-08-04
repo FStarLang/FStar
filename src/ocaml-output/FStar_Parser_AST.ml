@@ -1267,17 +1267,15 @@ let mkRefSet : FStar_Range.range -> term Prims.list -> term =
   fun r  ->
     fun elts  ->
       let uu____4333 =
-        (FStar_Parser_Const.tset_empty, FStar_Parser_Const.tset_singleton,
-          FStar_Parser_Const.tset_union)
+        (FStar_Parser_Const.set_empty, FStar_Parser_Const.set_singleton,
+          FStar_Parser_Const.set_union, FStar_Parser_Const.heap_addr_of_lid)
          in
       match uu____4333 with
-      | (empty_lid,singleton_lid,union_lid) ->
+      | (empty_lid,singleton_lid,union_lid,addr_of_lid) ->
           let empty1 =
             mk_term (Var (FStar_Ident.set_lid_range empty_lid r)) r Expr  in
-          let ref_constr =
-            mk_term
-              (Var (FStar_Ident.set_lid_range FStar_Parser_Const.heap_ref r))
-              r Expr
+          let addr_of1 =
+            mk_term (Var (FStar_Ident.set_lid_range addr_of_lid r)) r Expr
              in
           let singleton1 =
             mk_term (Var (FStar_Ident.set_lid_range singleton_lid r)) r Expr
@@ -1287,7 +1285,7 @@ let mkRefSet : FStar_Range.range -> term Prims.list -> term =
           FStar_List.fold_right
             (fun e  ->
                fun tl1  ->
-                 let e1 = mkApp ref_constr [(e, Nothing)] r  in
+                 let e1 = mkApp addr_of1 [(e, Nothing)] r  in
                  let single_e = mkApp singleton1 [(e1, Nothing)] r  in
                  mkApp union1 [(single_e, Nothing); (tl1, Nothing)] r) elts
             empty1
@@ -1298,17 +1296,17 @@ let mkExplicitApp : term -> term Prims.list -> FStar_Range.range -> term =
       fun r  ->
         match args with
         | [] -> t
-        | uu____4399 ->
+        | uu____4402 ->
             (match t.tm with
              | Name s ->
-                 let uu____4403 =
-                   let uu____4404 =
-                     let uu____4415 =
+                 let uu____4406 =
+                   let uu____4407 =
+                     let uu____4418 =
                        FStar_List.map (fun a  -> (a, Nothing)) args  in
-                     (s, uu____4415)  in
-                   Construct uu____4404  in
-                 mk_term uu____4403 r Un
-             | uu____4434 ->
+                     (s, uu____4418)  in
+                   Construct uu____4407  in
+                 mk_term uu____4406 r Un
+             | uu____4437 ->
                  FStar_List.fold_left
                    (fun t1  -> fun a  -> mk_term (App (t1, a, Nothing)) r Un)
                    t args)
@@ -1333,22 +1331,22 @@ let mkAdmitMagic : FStar_Range.range -> term =
     let admit_magic = mk_term (Seq (admit1, magic1)) r Expr  in admit_magic
   
 let mkWildAdmitMagic :
-  'Auu____4453 .
+  'Auu____4456 .
     FStar_Range.range ->
-      (pattern,'Auu____4453 FStar_Pervasives_Native.option,term)
+      (pattern,'Auu____4456 FStar_Pervasives_Native.option,term)
         FStar_Pervasives_Native.tuple3
   =
   fun r  ->
-    let uu____4466 = mkAdmitMagic r  in
-    ((mk_pattern PatWild r), FStar_Pervasives_Native.None, uu____4466)
+    let uu____4469 = mkAdmitMagic r  in
+    ((mk_pattern PatWild r), FStar_Pervasives_Native.None, uu____4469)
   
 let focusBranches :
-  'Auu____4475 .
-    (Prims.bool,(pattern,'Auu____4475 FStar_Pervasives_Native.option,
+  'Auu____4478 .
+    (Prims.bool,(pattern,'Auu____4478 FStar_Pervasives_Native.option,
                   term) FStar_Pervasives_Native.tuple3)
       FStar_Pervasives_Native.tuple2 Prims.list ->
       FStar_Range.range ->
-        (pattern,'Auu____4475 FStar_Pervasives_Native.option,term)
+        (pattern,'Auu____4478 FStar_Pervasives_Native.option,term)
           FStar_Pervasives_Native.tuple3 Prims.list
   =
   fun branches  ->
@@ -1359,24 +1357,24 @@ let focusBranches :
       then
         (FStar_Errors.warn r "Focusing on only some cases";
          (let focussed =
-            let uu____4565 =
+            let uu____4568 =
               FStar_List.filter FStar_Pervasives_Native.fst branches  in
-            FStar_All.pipe_right uu____4565
+            FStar_All.pipe_right uu____4568
               (FStar_List.map FStar_Pervasives_Native.snd)
              in
-          let uu____4652 =
-            let uu____4663 = mkWildAdmitMagic r  in [uu____4663]  in
-          FStar_List.append focussed uu____4652))
+          let uu____4655 =
+            let uu____4666 = mkWildAdmitMagic r  in [uu____4666]  in
+          FStar_List.append focussed uu____4655))
       else
         FStar_All.pipe_right branches
           (FStar_List.map FStar_Pervasives_Native.snd)
   
 let focusLetBindings :
-  'Auu____4755 .
-    (Prims.bool,('Auu____4755,term) FStar_Pervasives_Native.tuple2)
+  'Auu____4758 .
+    (Prims.bool,('Auu____4758,term) FStar_Pervasives_Native.tuple2)
       FStar_Pervasives_Native.tuple2 Prims.list ->
       FStar_Range.range ->
-        ('Auu____4755,term) FStar_Pervasives_Native.tuple2 Prims.list
+        ('Auu____4758,term) FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun lbs  ->
     fun r  ->
@@ -1387,14 +1385,14 @@ let focusLetBindings :
         (FStar_Errors.warn r
            "Focusing on only some cases in this (mutually) recursive definition";
          FStar_List.map
-           (fun uu____4825  ->
-              match uu____4825 with
+           (fun uu____4828  ->
+              match uu____4828 with
               | (f,lb) ->
                   if f
                   then lb
                   else
-                    (let uu____4853 = mkAdmitMagic r  in
-                     ((FStar_Pervasives_Native.fst lb), uu____4853))) lbs)
+                    (let uu____4856 = mkAdmitMagic r  in
+                     ((FStar_Pervasives_Native.fst lb), uu____4856))) lbs)
       else
         FStar_All.pipe_right lbs (FStar_List.map FStar_Pervasives_Native.snd)
   
@@ -1402,24 +1400,24 @@ let mkFsTypApp : term -> term Prims.list -> FStar_Range.range -> term =
   fun t  ->
     fun args  ->
       fun r  ->
-        let uu____4903 = FStar_List.map (fun a  -> (a, FsTypApp)) args  in
-        mkApp t uu____4903 r
+        let uu____4906 = FStar_List.map (fun a  -> (a, FsTypApp)) args  in
+        mkApp t uu____4906 r
   
 let mkTuple : term Prims.list -> FStar_Range.range -> term =
   fun args  ->
     fun r  ->
       let cons1 =
         FStar_Parser_Const.mk_tuple_data_lid (FStar_List.length args) r  in
-      let uu____4929 = FStar_List.map (fun x  -> (x, Nothing)) args  in
-      mkApp (mk_term (Name cons1) r Expr) uu____4929 r
+      let uu____4932 = FStar_List.map (fun x  -> (x, Nothing)) args  in
+      mkApp (mk_term (Name cons1) r Expr) uu____4932 r
   
 let mkDTuple : term Prims.list -> FStar_Range.range -> term =
   fun args  ->
     fun r  ->
       let cons1 =
         FStar_Parser_Const.mk_dtuple_data_lid (FStar_List.length args) r  in
-      let uu____4955 = FStar_List.map (fun x  -> (x, Nothing)) args  in
-      mkApp (mk_term (Name cons1) r Expr) uu____4955 r
+      let uu____4958 = FStar_List.map (fun x  -> (x, Nothing)) args  in
+      mkApp (mk_term (Name cons1) r Expr) uu____4958 r
   
 let mkRefinedBinder :
   FStar_Ident.ident ->
@@ -1473,34 +1471,34 @@ let mkRefinedPattern :
                     if should_bind_pat
                     then
                       (match pat.pat with
-                       | PatVar (x,uu____5032) ->
+                       | PatVar (x,uu____5035) ->
                            mk_term
                              (Refine
                                 ((mk_binder (Annotated (x, t)) t_range
                                     Type_level FStar_Pervasives_Native.None),
                                   phi)) range Type_level
-                       | uu____5037 ->
+                       | uu____5040 ->
                            let x = FStar_Ident.gen t_range  in
                            let phi1 =
                              let x_var =
-                               let uu____5041 =
-                                 let uu____5042 = FStar_Ident.lid_of_ids [x]
+                               let uu____5044 =
+                                 let uu____5045 = FStar_Ident.lid_of_ids [x]
                                     in
-                                 Var uu____5042  in
-                               mk_term uu____5041 phi.range Formula  in
+                                 Var uu____5045  in
+                               mk_term uu____5044 phi.range Formula  in
                              let pat_branch =
                                (pat, FStar_Pervasives_Native.None, phi)  in
                              let otherwise_branch =
-                               let uu____5063 =
-                                 let uu____5064 =
-                                   let uu____5065 =
+                               let uu____5066 =
+                                 let uu____5067 =
+                                   let uu____5068 =
                                      FStar_Ident.lid_of_path ["False"]
                                        phi.range
                                       in
-                                   Name uu____5065  in
-                                 mk_term uu____5064 phi.range Formula  in
+                                   Name uu____5068  in
+                                 mk_term uu____5067 phi.range Formula  in
                                ((mk_pattern PatWild phi.range),
-                                 FStar_Pervasives_Native.None, uu____5063)
+                                 FStar_Pervasives_Native.None, uu____5066)
                                 in
                              mk_term
                                (Match (x_var, [pat_branch; otherwise_branch]))
@@ -1531,13 +1529,13 @@ let rec extract_named_refinement :
     | NamedTyp (x,t) ->
         FStar_Pervasives_Native.Some (x, t, FStar_Pervasives_Native.None)
     | Refine
-        ({ b = Annotated (x,t); brange = uu____5142; blevel = uu____5143;
-           aqual = uu____5144;_},t')
+        ({ b = Annotated (x,t); brange = uu____5145; blevel = uu____5146;
+           aqual = uu____5147;_},t')
         ->
         FStar_Pervasives_Native.Some
           (x, t, (FStar_Pervasives_Native.Some t'))
     | Paren t -> extract_named_refinement t
-    | uu____5157 -> FStar_Pervasives_Native.None
+    | uu____5160 -> FStar_Pervasives_Native.None
   
 let rec as_mlist :
   modul Prims.list ->
@@ -1547,8 +1545,8 @@ let rec as_mlist :
   fun out  ->
     fun cur  ->
       fun ds  ->
-        let uu____5210 = cur  in
-        match uu____5210 with
+        let uu____5213 = cur  in
+        match uu____5213 with
         | ((m_name,m_decl),cur1) ->
             (match ds with
              | [] ->
@@ -1561,7 +1559,7 @@ let rec as_mlist :
                       as_mlist
                         ((Module (m_name, (m_decl :: (FStar_List.rev cur1))))
                         :: out) ((m', d), []) ds1
-                  | uu____5253 ->
+                  | uu____5256 ->
                       as_mlist out ((m_name, m_decl), (d :: cur1)) ds1))
   
 let as_frag :
@@ -1572,259 +1570,270 @@ let as_frag :
   fun is_light  ->
     fun light_range  ->
       fun ds  ->
-        let uu____5292 =
+        let uu____5295 =
           match ds with
           | d::ds1 -> (d, ds1)
           | [] -> FStar_Exn.raise FStar_Errors.Empty_frag  in
-        match uu____5292 with
+        match uu____5295 with
         | (d,ds1) ->
             (match d.d with
              | TopLevelModule m ->
                  let ds2 =
                    if is_light
                    then
-                     let uu____5345 =
+                     let uu____5348 =
                        mk_decl (Pragma LightOff) light_range []  in
-                     uu____5345 :: ds1
+                     uu____5348 :: ds1
                    else ds1  in
                  let ms = as_mlist [] ((m, d), []) ds2  in
-                 ((let uu____5357 = FStar_List.tl ms  in
-                   match uu____5357 with
-                   | (Module (m',uu____5361))::uu____5362 ->
+                 ((let uu____5360 = FStar_List.tl ms  in
+                   match uu____5360 with
+                   | (Module (m',uu____5364))::uu____5365 ->
                        let msg =
                          "Support for more than one module in a file is deprecated"
                           in
-                       let uu____5370 =
+                       let uu____5373 =
                          FStar_Range.string_of_range
                            (FStar_Ident.range_of_lid m')
                           in
                        FStar_Util.print2_warning "%s (Warning): %s\n"
-                         uu____5370 msg
-                   | uu____5371 -> ());
+                         uu____5373 msg
+                   | uu____5374 -> ());
                   FStar_Util.Inl ms)
-             | uu____5378 ->
+             | uu____5381 ->
                  let ds2 = d :: ds1  in
                  (FStar_List.iter
-                    (fun uu___77_5389  ->
-                       match uu___77_5389 with
-                       | { d = TopLevelModule uu____5390; drange = r;
-                           doc = uu____5392; quals = uu____5393;
-                           attrs = uu____5394;_} ->
+                    (fun uu___77_5392  ->
+                       match uu___77_5392 with
+                       | { d = TopLevelModule uu____5393; drange = r;
+                           doc = uu____5395; quals = uu____5396;
+                           attrs = uu____5397;_} ->
                            FStar_Exn.raise
                              (FStar_Errors.Error
                                 ("Unexpected module declaration", r))
-                       | uu____5397 -> ()) ds2;
+                       | uu____5400 -> ()) ds2;
                   FStar_Util.Inr ds2))
   
-let compile_op : Prims.int -> Prims.string -> Prims.string =
+let compile_op :
+  Prims.int -> Prims.string -> FStar_Range.range -> Prims.string =
   fun arity  ->
     fun s  ->
-      let name_of_char uu___78_5413 =
-        match uu___78_5413 with
-        | '&' -> "Amp"
-        | '@' -> "At"
-        | '+' -> "Plus"
-        | '-' when arity = (Prims.parse_int "1") -> "Minus"
-        | '-' -> "Subtraction"
-        | '/' -> "Slash"
-        | '<' -> "Less"
-        | '=' -> "Equals"
-        | '>' -> "Greater"
-        | '_' -> "Underscore"
-        | '|' -> "Bar"
-        | '!' -> "Bang"
-        | '^' -> "Hat"
-        | '%' -> "Percent"
-        | '*' -> "Star"
-        | '?' -> "Question"
-        | ':' -> "Colon"
-        | uu____5414 -> "UNKNOWN"  in
-      match s with
-      | ".[]<-" -> "op_String_Assignment"
-      | ".()<-" -> "op_Array_Assignment"
-      | ".[]" -> "op_String_Access"
-      | ".()" -> "op_Array_Access"
-      | uu____5415 ->
-          let uu____5416 =
-            let uu____5417 =
-              let uu____5420 = FStar_String.list_of_string s  in
-              FStar_List.map name_of_char uu____5420  in
-            FStar_String.concat "_" uu____5417  in
-          Prims.strcat "op_" uu____5416
+      fun r  ->
+        let name_of_char uu___78_5420 =
+          match uu___78_5420 with
+          | '&' -> "Amp"
+          | '@' -> "At"
+          | '+' -> "Plus"
+          | '-' when arity = (Prims.parse_int "1") -> "Minus"
+          | '-' -> "Subtraction"
+          | '~' -> "Tilde"
+          | '/' -> "Slash"
+          | '\\' -> "Backslash"
+          | '<' -> "Less"
+          | '=' -> "Equals"
+          | '>' -> "Greater"
+          | '_' -> "Underscore"
+          | '|' -> "Bar"
+          | '!' -> "Bang"
+          | '^' -> "Hat"
+          | '%' -> "Percent"
+          | '*' -> "Star"
+          | '?' -> "Question"
+          | ':' -> "Colon"
+          | '$' -> "Dollar"
+          | '.' -> "Dot"
+          | c ->
+              FStar_Exn.raise
+                (FStar_Errors.Error
+                   ((Prims.strcat "Unexpected operator symbol: '"
+                       (Prims.strcat (FStar_Util.string_of_char c) "'")), r))
+           in
+        match s with
+        | ".[]<-" -> "op_String_Assignment"
+        | ".()<-" -> "op_Array_Assignment"
+        | ".[]" -> "op_String_Access"
+        | ".()" -> "op_Array_Access"
+        | uu____5422 ->
+            let uu____5423 =
+              let uu____5424 =
+                let uu____5427 = FStar_String.list_of_string s  in
+                FStar_List.map name_of_char uu____5427  in
+              FStar_String.concat "_" uu____5424  in
+            Prims.strcat "op_" uu____5423
   
-let compile_op' : Prims.string -> Prims.string =
-  fun s  -> compile_op (~- (Prims.parse_int "1")) s 
+let compile_op' : Prims.string -> FStar_Range.range -> Prims.string =
+  fun s  -> fun r  -> compile_op (~- (Prims.parse_int "1")) s r 
 let string_of_fsdoc :
   (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
                   Prims.list)
     FStar_Pervasives_Native.tuple2 -> Prims.string
   =
-  fun uu____5440  ->
-    match uu____5440 with
+  fun uu____5451  ->
+    match uu____5451 with
     | (comment,keywords) ->
-        let uu____5465 =
-          let uu____5466 =
+        let uu____5476 =
+          let uu____5477 =
             FStar_List.map
-              (fun uu____5476  ->
-                 match uu____5476 with
+              (fun uu____5487  ->
+                 match uu____5487 with
                  | (k,v1) -> Prims.strcat k (Prims.strcat "->" v1)) keywords
              in
-          FStar_String.concat "," uu____5466  in
-        Prims.strcat comment uu____5465
+          FStar_String.concat "," uu____5477  in
+        Prims.strcat comment uu____5476
   
 let string_of_let_qualifier : let_qualifier -> Prims.string =
-  fun uu___79_5486  ->
-    match uu___79_5486 with
+  fun uu___79_5497  ->
+    match uu___79_5497 with
     | NoLetQualifier  -> ""
     | Rec  -> "rec"
     | Mutable  -> "mutable"
   
 let to_string_l :
-  'Auu____5495 .
+  'Auu____5506 .
     Prims.string ->
-      ('Auu____5495 -> Prims.string) ->
-        'Auu____5495 Prims.list -> Prims.string
+      ('Auu____5506 -> Prims.string) ->
+        'Auu____5506 Prims.list -> Prims.string
   =
   fun sep  ->
     fun f  ->
       fun l  ->
-        let uu____5517 = FStar_List.map f l  in
-        FStar_String.concat sep uu____5517
+        let uu____5528 = FStar_List.map f l  in
+        FStar_String.concat sep uu____5528
   
 let imp_to_string : imp -> Prims.string =
-  fun uu___80_5523  ->
-    match uu___80_5523 with | Hash  -> "#" | uu____5524 -> ""
+  fun uu___80_5534  ->
+    match uu___80_5534 with | Hash  -> "#" | uu____5535 -> ""
   
 let rec term_to_string : term -> Prims.string =
   fun x  ->
     match x.tm with
     | Wild  -> "_"
-    | Requires (t,uu____5535) ->
-        let uu____5540 = term_to_string t  in
-        FStar_Util.format1 "(requires %s)" uu____5540
-    | Ensures (t,uu____5542) ->
-        let uu____5547 = term_to_string t  in
-        FStar_Util.format1 "(ensures %s)" uu____5547
-    | Labeled (t,l,uu____5550) ->
+    | Requires (t,uu____5546) ->
         let uu____5551 = term_to_string t  in
-        FStar_Util.format2 "(labeled %s %s)" l uu____5551
+        FStar_Util.format1 "(requires %s)" uu____5551
+    | Ensures (t,uu____5553) ->
+        let uu____5558 = term_to_string t  in
+        FStar_Util.format1 "(ensures %s)" uu____5558
+    | Labeled (t,l,uu____5561) ->
+        let uu____5562 = term_to_string t  in
+        FStar_Util.format2 "(labeled %s %s)" l uu____5562
     | Const c -> FStar_Parser_Const.const_to_string c
     | Op (s,xs) ->
-        let uu____5559 =
-          let uu____5560 =
+        let uu____5570 =
+          let uu____5571 =
             FStar_List.map
               (fun x1  -> FStar_All.pipe_right x1 term_to_string) xs
              in
-          FStar_String.concat ", " uu____5560  in
-        FStar_Util.format2 "%s(%s)" (FStar_Ident.text_of_id s) uu____5559
+          FStar_String.concat ", " uu____5571  in
+        FStar_Util.format2 "%s(%s)" (FStar_Ident.text_of_id s) uu____5570
     | Tvar id -> id.FStar_Ident.idText
     | Uvar id -> id.FStar_Ident.idText
     | Var l -> l.FStar_Ident.str
     | Name l -> l.FStar_Ident.str
     | Construct (l,args) ->
-        let uu____5583 =
+        let uu____5594 =
           to_string_l " "
-            (fun uu____5592  ->
-               match uu____5592 with
+            (fun uu____5603  ->
+               match uu____5603 with
                | (a,imp) ->
-                   let uu____5599 = term_to_string a  in
-                   FStar_Util.format2 "%s%s" (imp_to_string imp) uu____5599)
+                   let uu____5610 = term_to_string a  in
+                   FStar_Util.format2 "%s%s" (imp_to_string imp) uu____5610)
             args
            in
-        FStar_Util.format2 "(%s %s)" l.FStar_Ident.str uu____5583
+        FStar_Util.format2 "(%s %s)" l.FStar_Ident.str uu____5594
     | Abs (pats,t) ->
-        let uu____5606 = to_string_l " " pat_to_string pats  in
-        let uu____5607 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format2 "(fun %s -> %s)" uu____5606 uu____5607
+        let uu____5617 = to_string_l " " pat_to_string pats  in
+        let uu____5618 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format2 "(fun %s -> %s)" uu____5617 uu____5618
     | App (t1,t2,imp) ->
-        let uu____5611 = FStar_All.pipe_right t1 term_to_string  in
-        let uu____5612 = FStar_All.pipe_right t2 term_to_string  in
-        FStar_Util.format3 "%s %s%s" uu____5611 (imp_to_string imp)
-          uu____5612
+        let uu____5622 = FStar_All.pipe_right t1 term_to_string  in
+        let uu____5623 = FStar_All.pipe_right t2 term_to_string  in
+        FStar_Util.format3 "%s %s%s" uu____5622 (imp_to_string imp)
+          uu____5623
     | Let (Rec ,lbs,body) ->
-        let uu____5627 =
+        let uu____5638 =
           to_string_l " and "
-            (fun uu____5637  ->
-               match uu____5637 with
+            (fun uu____5648  ->
+               match uu____5648 with
                | (p,b) ->
-                   let uu____5644 = FStar_All.pipe_right p pat_to_string  in
-                   let uu____5645 = FStar_All.pipe_right b term_to_string  in
-                   FStar_Util.format2 "%s=%s" uu____5644 uu____5645) lbs
+                   let uu____5655 = FStar_All.pipe_right p pat_to_string  in
+                   let uu____5656 = FStar_All.pipe_right b term_to_string  in
+                   FStar_Util.format2 "%s=%s" uu____5655 uu____5656) lbs
            in
-        let uu____5646 = FStar_All.pipe_right body term_to_string  in
-        FStar_Util.format2 "let rec %s in %s" uu____5627 uu____5646
+        let uu____5657 = FStar_All.pipe_right body term_to_string  in
+        FStar_Util.format2 "let rec %s in %s" uu____5638 uu____5657
     | Let (q,(pat,tm)::[],body) ->
-        let uu____5665 = FStar_All.pipe_right pat pat_to_string  in
-        let uu____5666 = FStar_All.pipe_right tm term_to_string  in
-        let uu____5667 = FStar_All.pipe_right body term_to_string  in
+        let uu____5676 = FStar_All.pipe_right pat pat_to_string  in
+        let uu____5677 = FStar_All.pipe_right tm term_to_string  in
+        let uu____5678 = FStar_All.pipe_right body term_to_string  in
         FStar_Util.format4 "let %s %s = %s in %s" (string_of_let_qualifier q)
-          uu____5665 uu____5666 uu____5667
+          uu____5676 uu____5677 uu____5678
     | Seq (t1,t2) ->
-        let uu____5670 = FStar_All.pipe_right t1 term_to_string  in
-        let uu____5671 = FStar_All.pipe_right t2 term_to_string  in
-        FStar_Util.format2 "%s; %s" uu____5670 uu____5671
+        let uu____5681 = FStar_All.pipe_right t1 term_to_string  in
+        let uu____5682 = FStar_All.pipe_right t2 term_to_string  in
+        FStar_Util.format2 "%s; %s" uu____5681 uu____5682
     | If (t1,t2,t3) ->
-        let uu____5675 = FStar_All.pipe_right t1 term_to_string  in
-        let uu____5676 = FStar_All.pipe_right t2 term_to_string  in
-        let uu____5677 = FStar_All.pipe_right t3 term_to_string  in
-        FStar_Util.format3 "if %s then %s else %s" uu____5675 uu____5676
-          uu____5677
+        let uu____5686 = FStar_All.pipe_right t1 term_to_string  in
+        let uu____5687 = FStar_All.pipe_right t2 term_to_string  in
+        let uu____5688 = FStar_All.pipe_right t3 term_to_string  in
+        FStar_Util.format3 "if %s then %s else %s" uu____5686 uu____5687
+          uu____5688
     | Match (t,branches) ->
-        let uu____5700 = FStar_All.pipe_right t term_to_string  in
-        let uu____5701 =
+        let uu____5711 = FStar_All.pipe_right t term_to_string  in
+        let uu____5712 =
           to_string_l " | "
-            (fun uu____5717  ->
-               match uu____5717 with
+            (fun uu____5728  ->
+               match uu____5728 with
                | (p,w,e) ->
-                   let uu____5733 = FStar_All.pipe_right p pat_to_string  in
-                   let uu____5734 =
+                   let uu____5744 = FStar_All.pipe_right p pat_to_string  in
+                   let uu____5745 =
                      match w with
                      | FStar_Pervasives_Native.None  -> ""
                      | FStar_Pervasives_Native.Some e1 ->
-                         let uu____5736 = term_to_string e1  in
-                         FStar_Util.format1 "when %s" uu____5736
+                         let uu____5747 = term_to_string e1  in
+                         FStar_Util.format1 "when %s" uu____5747
                       in
-                   let uu____5737 = FStar_All.pipe_right e term_to_string  in
-                   FStar_Util.format3 "%s %s -> %s" uu____5733 uu____5734
-                     uu____5737) branches
+                   let uu____5748 = FStar_All.pipe_right e term_to_string  in
+                   FStar_Util.format3 "%s %s -> %s" uu____5744 uu____5745
+                     uu____5748) branches
            in
-        FStar_Util.format2 "match %s with %s" uu____5700 uu____5701
+        FStar_Util.format2 "match %s with %s" uu____5711 uu____5712
     | Ascribed (t1,t2,FStar_Pervasives_Native.None ) ->
-        let uu____5742 = FStar_All.pipe_right t1 term_to_string  in
-        let uu____5743 = FStar_All.pipe_right t2 term_to_string  in
-        FStar_Util.format2 "(%s : %s)" uu____5742 uu____5743
+        let uu____5753 = FStar_All.pipe_right t1 term_to_string  in
+        let uu____5754 = FStar_All.pipe_right t2 term_to_string  in
+        FStar_Util.format2 "(%s : %s)" uu____5753 uu____5754
     | Ascribed (t1,t2,FStar_Pervasives_Native.Some tac) ->
-        let uu____5749 = FStar_All.pipe_right t1 term_to_string  in
-        let uu____5750 = FStar_All.pipe_right t2 term_to_string  in
-        let uu____5751 = FStar_All.pipe_right tac term_to_string  in
-        FStar_Util.format3 "(%s : %s by %s)" uu____5749 uu____5750 uu____5751
+        let uu____5760 = FStar_All.pipe_right t1 term_to_string  in
+        let uu____5761 = FStar_All.pipe_right t2 term_to_string  in
+        let uu____5762 = FStar_All.pipe_right tac term_to_string  in
+        FStar_Util.format3 "(%s : %s by %s)" uu____5760 uu____5761 uu____5762
     | Record (FStar_Pervasives_Native.Some e,fields) ->
-        let uu____5768 = FStar_All.pipe_right e term_to_string  in
-        let uu____5769 =
+        let uu____5779 = FStar_All.pipe_right e term_to_string  in
+        let uu____5780 =
           to_string_l " "
-            (fun uu____5778  ->
-               match uu____5778 with
+            (fun uu____5789  ->
+               match uu____5789 with
                | (l,e1) ->
-                   let uu____5785 = FStar_All.pipe_right e1 term_to_string
+                   let uu____5796 = FStar_All.pipe_right e1 term_to_string
                       in
-                   FStar_Util.format2 "%s=%s" l.FStar_Ident.str uu____5785)
+                   FStar_Util.format2 "%s=%s" l.FStar_Ident.str uu____5796)
             fields
            in
-        FStar_Util.format2 "{%s with %s}" uu____5768 uu____5769
+        FStar_Util.format2 "{%s with %s}" uu____5779 uu____5780
     | Record (FStar_Pervasives_Native.None ,fields) ->
-        let uu____5801 =
+        let uu____5812 =
           to_string_l " "
-            (fun uu____5810  ->
-               match uu____5810 with
+            (fun uu____5821  ->
+               match uu____5821 with
                | (l,e) ->
-                   let uu____5817 = FStar_All.pipe_right e term_to_string  in
-                   FStar_Util.format2 "%s=%s" l.FStar_Ident.str uu____5817)
+                   let uu____5828 = FStar_All.pipe_right e term_to_string  in
+                   FStar_Util.format2 "%s=%s" l.FStar_Ident.str uu____5828)
             fields
            in
-        FStar_Util.format1 "{%s}" uu____5801
+        FStar_Util.format1 "{%s}" uu____5812
     | Project (e,l) ->
-        let uu____5820 = FStar_All.pipe_right e term_to_string  in
-        FStar_Util.format2 "%s.%s" uu____5820 l.FStar_Ident.str
+        let uu____5831 = FStar_All.pipe_right e term_to_string  in
+        FStar_Util.format2 "%s.%s" uu____5831 l.FStar_Ident.str
     | Product ([],t) -> term_to_string t
     | Product (b::hd1::tl1,t) ->
         term_to_string
@@ -1833,53 +1842,53 @@ let rec term_to_string : term -> Prims.string =
                 ([b], (mk_term (Product ((hd1 :: tl1), t)) x.range x.level)))
              x.range x.level)
     | Product (b::[],t) when x.level = Type_level ->
-        let uu____5840 = FStar_All.pipe_right b binder_to_string  in
-        let uu____5841 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format2 "%s -> %s" uu____5840 uu____5841
+        let uu____5851 = FStar_All.pipe_right b binder_to_string  in
+        let uu____5852 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format2 "%s -> %s" uu____5851 uu____5852
     | Product (b::[],t) when x.level = Kind ->
-        let uu____5846 = FStar_All.pipe_right b binder_to_string  in
-        let uu____5847 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format2 "%s => %s" uu____5846 uu____5847
+        let uu____5857 = FStar_All.pipe_right b binder_to_string  in
+        let uu____5858 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format2 "%s => %s" uu____5857 uu____5858
     | Sum (binders,t) ->
-        let uu____5854 =
-          let uu____5855 =
+        let uu____5865 =
+          let uu____5866 =
             FStar_All.pipe_right binders (FStar_List.map binder_to_string)
              in
-          FStar_All.pipe_right uu____5855 (FStar_String.concat " * ")  in
-        let uu____5864 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format2 "%s * %s" uu____5854 uu____5864
+          FStar_All.pipe_right uu____5866 (FStar_String.concat " * ")  in
+        let uu____5875 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format2 "%s * %s" uu____5865 uu____5875
     | QForall (bs,pats,t) ->
-        let uu____5880 = to_string_l " " binder_to_string bs  in
-        let uu____5881 =
+        let uu____5891 = to_string_l " " binder_to_string bs  in
+        let uu____5892 =
           to_string_l " \\/ " (to_string_l "; " term_to_string) pats  in
-        let uu____5884 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format3 "forall %s.{:pattern %s} %s" uu____5880 uu____5881
-          uu____5884
+        let uu____5895 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format3 "forall %s.{:pattern %s} %s" uu____5891 uu____5892
+          uu____5895
     | QExists (bs,pats,t) ->
-        let uu____5900 = to_string_l " " binder_to_string bs  in
-        let uu____5901 =
+        let uu____5911 = to_string_l " " binder_to_string bs  in
+        let uu____5912 =
           to_string_l " \\/ " (to_string_l "; " term_to_string) pats  in
-        let uu____5904 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format3 "exists %s.{:pattern %s} %s" uu____5900 uu____5901
-          uu____5904
+        let uu____5915 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format3 "exists %s.{:pattern %s} %s" uu____5911 uu____5912
+          uu____5915
     | Refine (b,t) ->
-        let uu____5907 = FStar_All.pipe_right b binder_to_string  in
-        let uu____5908 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format2 "%s:{%s}" uu____5907 uu____5908
+        let uu____5918 = FStar_All.pipe_right b binder_to_string  in
+        let uu____5919 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format2 "%s:{%s}" uu____5918 uu____5919
     | NamedTyp (x1,t) ->
-        let uu____5911 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format2 "%s:%s" x1.FStar_Ident.idText uu____5911
+        let uu____5922 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format2 "%s:%s" x1.FStar_Ident.idText uu____5922
     | Paren t ->
-        let uu____5913 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format1 "(%s)" uu____5913
+        let uu____5924 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format1 "(%s)" uu____5924
     | Product (bs,t) ->
-        let uu____5920 =
-          let uu____5921 =
+        let uu____5931 =
+          let uu____5932 =
             FStar_All.pipe_right bs (FStar_List.map binder_to_string)  in
-          FStar_All.pipe_right uu____5921 (FStar_String.concat ",")  in
-        let uu____5930 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format2 "Unidentified product: [%s] %s" uu____5920
-          uu____5930
+          FStar_All.pipe_right uu____5932 (FStar_String.concat ",")  in
+        let uu____5941 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format2 "Unidentified product: [%s] %s" uu____5931
+          uu____5941
     | t -> "_"
 
 and binder_to_string : binder -> Prims.string =
@@ -1889,21 +1898,21 @@ and binder_to_string : binder -> Prims.string =
       | Variable i -> i.FStar_Ident.idText
       | TVariable i -> FStar_Util.format1 "%s:_" i.FStar_Ident.idText
       | TAnnotated (i,t) ->
-          let uu____5938 = FStar_All.pipe_right t term_to_string  in
-          FStar_Util.format2 "%s:%s" i.FStar_Ident.idText uu____5938
+          let uu____5949 = FStar_All.pipe_right t term_to_string  in
+          FStar_Util.format2 "%s:%s" i.FStar_Ident.idText uu____5949
       | Annotated (i,t) ->
-          let uu____5941 = FStar_All.pipe_right t term_to_string  in
-          FStar_Util.format2 "%s:%s" i.FStar_Ident.idText uu____5941
+          let uu____5952 = FStar_All.pipe_right t term_to_string  in
+          FStar_Util.format2 "%s:%s" i.FStar_Ident.idText uu____5952
       | NoName t -> FStar_All.pipe_right t term_to_string  in
-    let uu____5943 = aqual_to_string x.aqual  in
-    FStar_Util.format2 "%s%s" uu____5943 s
+    let uu____5954 = aqual_to_string x.aqual  in
+    FStar_Util.format2 "%s%s" uu____5954 s
 
 and aqual_to_string : aqual -> Prims.string =
-  fun uu___81_5944  ->
-    match uu___81_5944 with
+  fun uu___81_5955  ->
+    match uu___81_5955 with
     | FStar_Pervasives_Native.Some (Equality ) -> "$"
     | FStar_Pervasives_Native.Some (Implicit ) -> "#"
-    | uu____5945 -> ""
+    | uu____5956 -> ""
 
 and pat_to_string : pattern -> Prims.string =
   fun x  ->
@@ -1911,72 +1920,72 @@ and pat_to_string : pattern -> Prims.string =
     | PatWild  -> "_"
     | PatConst c -> FStar_Parser_Const.const_to_string c
     | PatApp (p,ps) ->
-        let uu____5954 = FStar_All.pipe_right p pat_to_string  in
-        let uu____5955 = to_string_l " " pat_to_string ps  in
-        FStar_Util.format2 "(%s %s)" uu____5954 uu____5955
+        let uu____5965 = FStar_All.pipe_right p pat_to_string  in
+        let uu____5966 = to_string_l " " pat_to_string ps  in
+        FStar_Util.format2 "(%s %s)" uu____5965 uu____5966
     | PatTvar (i,aq) ->
-        let uu____5962 = aqual_to_string aq  in
-        FStar_Util.format2 "%s%s" uu____5962 i.FStar_Ident.idText
+        let uu____5973 = aqual_to_string aq  in
+        FStar_Util.format2 "%s%s" uu____5973 i.FStar_Ident.idText
     | PatVar (i,aq) ->
-        let uu____5969 = aqual_to_string aq  in
-        FStar_Util.format2 "%s%s" uu____5969 i.FStar_Ident.idText
+        let uu____5980 = aqual_to_string aq  in
+        FStar_Util.format2 "%s%s" uu____5980 i.FStar_Ident.idText
     | PatName l -> l.FStar_Ident.str
     | PatList l ->
-        let uu____5974 = to_string_l "; " pat_to_string l  in
-        FStar_Util.format1 "[%s]" uu____5974
+        let uu____5985 = to_string_l "; " pat_to_string l  in
+        FStar_Util.format1 "[%s]" uu____5985
     | PatTuple (l,false ) ->
-        let uu____5980 = to_string_l ", " pat_to_string l  in
-        FStar_Util.format1 "(%s)" uu____5980
+        let uu____5991 = to_string_l ", " pat_to_string l  in
+        FStar_Util.format1 "(%s)" uu____5991
     | PatTuple (l,true ) ->
-        let uu____5986 = to_string_l ", " pat_to_string l  in
-        FStar_Util.format1 "(|%s|)" uu____5986
+        let uu____5997 = to_string_l ", " pat_to_string l  in
+        FStar_Util.format1 "(|%s|)" uu____5997
     | PatRecord l ->
-        let uu____5994 =
+        let uu____6005 =
           to_string_l "; "
-            (fun uu____6003  ->
-               match uu____6003 with
+            (fun uu____6014  ->
+               match uu____6014 with
                | (f,e) ->
-                   let uu____6010 = FStar_All.pipe_right e pat_to_string  in
-                   FStar_Util.format2 "%s=%s" f.FStar_Ident.str uu____6010) l
+                   let uu____6021 = FStar_All.pipe_right e pat_to_string  in
+                   FStar_Util.format2 "%s=%s" f.FStar_Ident.str uu____6021) l
            in
-        FStar_Util.format1 "{%s}" uu____5994
+        FStar_Util.format1 "{%s}" uu____6005
     | PatOr l -> to_string_l "|\n " pat_to_string l
     | PatOp op -> FStar_Util.format1 "(%s)" (FStar_Ident.text_of_id op)
     | PatAscribed (p,t) ->
-        let uu____6017 = FStar_All.pipe_right p pat_to_string  in
-        let uu____6018 = FStar_All.pipe_right t term_to_string  in
-        FStar_Util.format2 "(%s:%s)" uu____6017 uu____6018
+        let uu____6028 = FStar_All.pipe_right p pat_to_string  in
+        let uu____6029 = FStar_All.pipe_right t term_to_string  in
+        FStar_Util.format2 "(%s:%s)" uu____6028 uu____6029
 
 let rec head_id_of_pat : pattern -> FStar_Ident.lid Prims.list =
   fun p  ->
     match p.pat with
     | PatName l -> [l]
-    | PatVar (i,uu____6029) ->
-        let uu____6034 = FStar_Ident.lid_of_ids [i]  in [uu____6034]
-    | PatApp (p1,uu____6036) -> head_id_of_pat p1
-    | PatAscribed (p1,uu____6042) -> head_id_of_pat p1
-    | uu____6043 -> []
+    | PatVar (i,uu____6040) ->
+        let uu____6045 = FStar_Ident.lid_of_ids [i]  in [uu____6045]
+    | PatApp (p1,uu____6047) -> head_id_of_pat p1
+    | PatAscribed (p1,uu____6053) -> head_id_of_pat p1
+    | uu____6054 -> []
   
 let lids_of_let :
-  'Auu____6048 .
-    (pattern,'Auu____6048) FStar_Pervasives_Native.tuple2 Prims.list ->
+  'Auu____6059 .
+    (pattern,'Auu____6059) FStar_Pervasives_Native.tuple2 Prims.list ->
       FStar_Ident.lid Prims.list
   =
   fun defs  ->
     FStar_All.pipe_right defs
       (FStar_List.collect
-         (fun uu____6082  ->
-            match uu____6082 with | (p,uu____6090) -> head_id_of_pat p))
+         (fun uu____6093  ->
+            match uu____6093 with | (p,uu____6101) -> head_id_of_pat p))
   
 let id_of_tycon : tycon -> Prims.string =
-  fun uu___82_6094  ->
-    match uu___82_6094 with
-    | TyconAbstract (i,uu____6096,uu____6097) -> i.FStar_Ident.idText
-    | TyconAbbrev (i,uu____6107,uu____6108,uu____6109) ->
+  fun uu___82_6105  ->
+    match uu___82_6105 with
+    | TyconAbstract (i,uu____6107,uu____6108) -> i.FStar_Ident.idText
+    | TyconAbbrev (i,uu____6118,uu____6119,uu____6120) ->
         i.FStar_Ident.idText
-    | TyconRecord (i,uu____6119,uu____6120,uu____6121) ->
+    | TyconRecord (i,uu____6130,uu____6131,uu____6132) ->
         i.FStar_Ident.idText
-    | TyconVariant (i,uu____6151,uu____6152,uu____6153) ->
+    | TyconVariant (i,uu____6162,uu____6163,uu____6164) ->
         i.FStar_Ident.idText
   
 let decl_to_string : decl -> Prims.string =
@@ -1988,52 +1997,52 @@ let decl_to_string : decl -> Prims.string =
     | ModuleAbbrev (i,l) ->
         FStar_Util.format2 "module %s = %s" i.FStar_Ident.idText
           l.FStar_Ident.str
-    | TopLevelLet (uu____6199,pats) ->
-        let uu____6213 =
-          let uu____6214 =
-            let uu____6217 = lids_of_let pats  in
-            FStar_All.pipe_right uu____6217
+    | TopLevelLet (uu____6210,pats) ->
+        let uu____6224 =
+          let uu____6225 =
+            let uu____6228 = lids_of_let pats  in
+            FStar_All.pipe_right uu____6228
               (FStar_List.map (fun l  -> l.FStar_Ident.str))
              in
-          FStar_All.pipe_right uu____6214 (FStar_String.concat ", ")  in
-        Prims.strcat "let " uu____6213
-    | Main uu____6228 -> "main ..."
-    | Assume (i,uu____6230) -> Prims.strcat "assume " i.FStar_Ident.idText
-    | Tycon (uu____6231,tys) ->
-        let uu____6249 =
-          let uu____6250 =
+          FStar_All.pipe_right uu____6225 (FStar_String.concat ", ")  in
+        Prims.strcat "let " uu____6224
+    | Main uu____6239 -> "main ..."
+    | Assume (i,uu____6241) -> Prims.strcat "assume " i.FStar_Ident.idText
+    | Tycon (uu____6242,tys) ->
+        let uu____6260 =
+          let uu____6261 =
             FStar_All.pipe_right tys
               (FStar_List.map
-                 (fun uu____6272  ->
-                    match uu____6272 with | (x,uu____6280) -> id_of_tycon x))
+                 (fun uu____6283  ->
+                    match uu____6283 with | (x,uu____6291) -> id_of_tycon x))
              in
-          FStar_All.pipe_right uu____6250 (FStar_String.concat ", ")  in
-        Prims.strcat "type " uu____6249
-    | Val (i,uu____6288) -> Prims.strcat "val " i.FStar_Ident.idText
-    | Exception (i,uu____6290) ->
+          FStar_All.pipe_right uu____6261 (FStar_String.concat ", ")  in
+        Prims.strcat "type " uu____6260
+    | Val (i,uu____6299) -> Prims.strcat "val " i.FStar_Ident.idText
+    | Exception (i,uu____6301) ->
         Prims.strcat "exception " i.FStar_Ident.idText
-    | NewEffect (DefineEffect (i,uu____6296,uu____6297,uu____6298)) ->
+    | NewEffect (DefineEffect (i,uu____6307,uu____6308,uu____6309)) ->
         Prims.strcat "new_effect " i.FStar_Ident.idText
-    | NewEffect (RedefineEffect (i,uu____6308,uu____6309)) ->
+    | NewEffect (RedefineEffect (i,uu____6319,uu____6320)) ->
         Prims.strcat "new_effect " i.FStar_Ident.idText
-    | SubEffect uu____6314 -> "sub_effect"
-    | Pragma uu____6315 -> "pragma"
-    | Fsdoc uu____6316 -> "fsdoc"
+    | SubEffect uu____6325 -> "sub_effect"
+    | Pragma uu____6326 -> "pragma"
+    | Fsdoc uu____6327 -> "fsdoc"
   
 let modul_to_string : modul -> Prims.string =
   fun m  ->
     match m with
-    | Module (uu____6321,decls) ->
-        let uu____6327 =
+    | Module (uu____6332,decls) ->
+        let uu____6338 =
           FStar_All.pipe_right decls (FStar_List.map decl_to_string)  in
-        FStar_All.pipe_right uu____6327 (FStar_String.concat "\n")
-    | Interface (uu____6336,decls,uu____6338) ->
-        let uu____6343 =
+        FStar_All.pipe_right uu____6338 (FStar_String.concat "\n")
+    | Interface (uu____6347,decls,uu____6349) ->
+        let uu____6354 =
           FStar_All.pipe_right decls (FStar_List.map decl_to_string)  in
-        FStar_All.pipe_right uu____6343 (FStar_String.concat "\n")
+        FStar_All.pipe_right uu____6354 (FStar_String.concat "\n")
   
 let error :
-  'Auu____6360 . Prims.string -> term -> FStar_Range.range -> 'Auu____6360 =
+  'Auu____6371 . Prims.string -> term -> FStar_Range.range -> 'Auu____6371 =
   fun msg  ->
     fun tm  ->
       fun r  ->
@@ -2041,11 +2050,11 @@ let error :
         let tm2 =
           if (FStar_String.length tm1) >= (Prims.parse_int "80")
           then
-            let uu____6375 =
+            let uu____6386 =
               FStar_Util.substring tm1 (Prims.parse_int "0")
                 (Prims.parse_int "77")
                in
-            Prims.strcat uu____6375 "..."
+            Prims.strcat uu____6386 "..."
           else tm1  in
         FStar_Exn.raise
           (FStar_Errors.Error ((Prims.strcat msg (Prims.strcat "\n" tm2)), r))

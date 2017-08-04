@@ -54,7 +54,8 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="prettyprint.fs" />
+    <Compile Include="boot/FStar.Pprint.fsi" />
+    <Compile Include="boot/FStar.Pprint.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

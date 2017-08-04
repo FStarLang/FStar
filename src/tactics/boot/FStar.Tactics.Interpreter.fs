@@ -131,13 +131,6 @@ let rec primitive_steps ps : list<N.primitive_step> =
     } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map (step_from_native_step ps) native_tactics in
-    let mk_refl nm arity interpretation =
-      let nm = RD.fstar_refl_lid nm in {
-      N.name=nm;
-      N.arity=arity;
-      N.strong_reduction_ok=false;
-      N.interpretation=(fun _rng args -> interpretation nm args)
-    } in
     let mktac0 (name : string) (f : tac<'a>) (e_a : 'a -> term) (ta : typ) : N.primitive_step =
         mk name 1 (mk_tactic_interpretation_0 ps f e_a ta)
     in
@@ -237,7 +230,7 @@ let run_tactic_on_typ (tau:tac<'a>) (env:env) (typ:typ) : list<goal> // remainin
     match r with
     | Success (_, ps) ->
         if !tacdbg then
-            BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w);
+            BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); //FIXME: Is this right?
         List.iter (fun g -> if is_irrelevant g
                             then if TcRel.teq_nosmt g.context g.witness U.exp_unit
                                  then ()
@@ -297,7 +290,7 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
                             (Tm_meta (t', m), gs)
 
         | Tm_app ({ n = Tm_fvar fv }, [(p,_); (q,_)]) when S.fv_eq_lid fv PC.imp_lid ->
-               let x = S.new_bv None p in
+               let x = S.new_bv None (U.mk_squash p) in
                let (p', gs1) = traverse f (flip pol)  e                p in
                let (q', gs2) = traverse f       pol  (Env.push_bv e x) q in
                ((U.mk_imp p' q').n, gs1@gs2)

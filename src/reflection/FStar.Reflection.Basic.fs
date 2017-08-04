@@ -5,6 +5,8 @@ open FStar.All
 open FStar.Reflection.Data
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
+open FStar.Order
+
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
 module C = FStar.Const
@@ -408,7 +410,7 @@ let unembed_order (t:term) : order =
     | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Gt_lid -> Gt
     | _ -> failwith "not an embedded order"
 
-let order_binder (x:binder) (y:binder) : order =
+let compare_binder (x:binder) (y:binder) : order =
     let n = S.order_bv (fst x) (fst y) in
     if n < 0 then Lt
     else if n = 0 then Eq
@@ -427,6 +429,9 @@ let embed_norm_step (n:norm_step) : term =
         ref_Primops
     | Delta ->
         ref_Delta
+    | UnfoldOnly l ->
+        S.mk_Tm_app ref_UnfoldOnly [S.as_arg (embed_list embed_fvar fstar_refl_fvar l)]
+                    None Range.dummyRange
 
 let unembed_norm_step (t:term) : norm_step =
     let t = U.unascribe t in
@@ -440,6 +445,8 @@ let unembed_norm_step (t:term) : norm_step =
         Primops
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Delta_lid ->
         Delta
+    | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_UnfoldOnly_lid ->
+        UnfoldOnly (unembed_list unembed_fvar l)
     | _ ->
         failwith "not an embedded norm_step"
 
@@ -512,3 +519,9 @@ let unembed_sigelt_view (t:term) : sigelt_view =
         Unk
     | _ ->
         failwith "not an embedded sigelt_view"
+
+let binders_of_env e = FStar.TypeChecker.Env.all_binders e
+let type_of_binder b = match b with (b, _) -> b.sort
+let term_eq = FStar.Syntax.Util.term_eq
+let fresh_binder t = (gen_bv "__refl" None t, None)
+let term_to_string = Print.term_to_string

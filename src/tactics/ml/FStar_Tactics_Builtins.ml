@@ -44,15 +44,6 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
           let m = t x y z in
           interpret_tac m ps
 
-
-let transform_norm_step (s: FStar_Reflection_Syntax.norm_step): FStar_Reflection_Data.norm_step =
-  match s with
-  | FStar_Reflection_Syntax.Simpl -> FStar_Reflection_Data.Simpl
-  | FStar_Reflection_Syntax.WHNF -> FStar_Reflection_Data.WHNF
-  | FStar_Reflection_Syntax.Primops -> FStar_Reflection_Data.Primops
-  | FStar_Reflection_Syntax.Delta -> FStar_Reflection_Data.Delta
-
-
 let __cur_env: RT.env __tac = from_tac_0 B.cur_env
 let cur_env: unit -> RT.env __tac = fun () -> __cur_env
 
@@ -72,8 +63,8 @@ let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __tryt
 let __trivial: unit __tac = from_tac_0 B.trivial
 let trivial: unit -> unit __tac = fun () -> __trivial
 
-let __norm (s: FStar_Reflection_Syntax.norm_step list): unit __tac = from_tac_1 B.norm (List.map transform_norm_step s)
-let norm: FStar_Reflection_Syntax.norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
+let __norm (s: FStar_Reflection_Data.norm_step list): unit __tac = from_tac_1 B.norm s 
+let norm: FStar_Reflection_Data.norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
 
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro

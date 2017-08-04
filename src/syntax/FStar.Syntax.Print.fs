@@ -477,6 +477,16 @@ and cflags_to_string c =
        only locally detecting certain patterns *)
 and formula_to_string phi = term_to_string phi
 
+let binder_to_json b =
+
+    let (a, imp) = b in
+    let n = if is_null_binder b then JsonNull else JsonStr (imp_to_string (nm_to_string a) imp) in
+    let t = JsonStr (term_to_string a.sort) in
+    JsonAssoc [("name", n); ("type", t)]
+
+let binders_to_json bs =
+    JsonList (List.map binder_to_json bs)
+
 
 //let subst_to_string subst =
 //   U.format1 "{%s}" <|

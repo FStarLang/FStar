@@ -1,5 +1,5 @@
 [
-  "ñ\u001f∞M\\\u0010ÊMıó‰·π›qÿ",
+  "‡ÂÔöë˜ W‘Y[çØ\nö¶",
   [
     [
       "Ex10a.entry",
@@ -111,6 +111,27 @@
       0
     ],
     [
+      "Ex10a.revoke",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Ex10a.entry_haseq" ],
+      0
+    ],
+    [
+      "Ex10a.revoke",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
       "Ex10a.grant",
       3,
       2,
@@ -150,27 +171,6 @@
     [
       "Ex10a.grant",
       5,
-      2,
-      1,
-      [
-        "@query", "equation_Ex10a.db",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Ex10a.revoke",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Ex10a.entry_haseq" ],
-      0
-    ],
-    [
-      "Ex10a.revoke",
-      2,
       2,
       1,
       [

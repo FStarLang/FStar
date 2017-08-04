@@ -121,7 +121,8 @@ let rec parse_query_for_split_cases :
                               f uu____369)), l, negs)))
               | uu____370 ->
                   (false,
-                    (((fun uu____386  -> FStar_SMTEncoding_Util.mkFalse)),
+                    (((fun uu____386  ->
+                         FStar_Util.return_all FStar_SMTEncoding_Util.mkFalse)),
                       [], FStar_SMTEncoding_Util.mkFalse))
                in
             r
@@ -132,8 +133,9 @@ let rec parse_query_for_split_cases :
             (match uu____392 with | (b,l,negs) -> (b, (f, l, negs)))
         | uu____436 ->
             (false,
-              (((fun uu____452  -> FStar_SMTEncoding_Util.mkFalse)), [],
-                FStar_SMTEncoding_Util.mkFalse))
+              (((fun uu____452  ->
+                   FStar_Util.return_all FStar_SMTEncoding_Util.mkFalse)),
+                [], FStar_SMTEncoding_Util.mkFalse))
   
 let strip_not : FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
   fun t  ->

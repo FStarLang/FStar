@@ -58,6 +58,10 @@ let bv_as_unique_ident (x:S.bv) : I.ident =
 
 let filter_imp a = a |> List.filter (function (_, Some (S.Implicit _)) -> false | _ -> true)
 
+let label s t =
+  if s = "" then t
+  else A.mk_term (A.Labeled (t,s,true)) t.range A.Un
+
 (* If resugar_arg_qual returns None, the corresponding binder should *not* be resugared *)
 let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifier>)> =
   match q with
@@ -134,7 +138,9 @@ let string_to_op s =
     | "Plus" -> Some ("+", 0)
     | "Minus" -> Some ("-", 0)
     | "Subtraction" -> Some ("-", 2)
+    | "Tilde" -> Some ("~", 0)
     | "Slash" -> Some ("/", 0)
+    | "Backslash" -> Some ("\\", 0)
     | "Less" -> Some ("<", 0)
     | "Equals" -> Some ("=", 0)
     | "Greater" -> Some (">", 0)
@@ -146,6 +152,8 @@ let string_to_op s =
     | "Star" -> Some ("*", 0)
     | "Question" -> Some ("?", 0)
     | "Colon" -> Some (":", 0)
+    | "Dollar" -> Some ("$", 0)
+    | "Dot" -> Some (".", 0)
     | _ -> None
   in
   match s with
@@ -602,7 +610,7 @@ let rec resugar_term (t : S.term) : A.term =
             if not (Options.print_universes ()) then fst
             (* Print bound universes as a comment *)
             else function ((pat, body), univs) ->
-              pat, (if univs = "" then body else mk (A.Labeled (body, univs, true)))
+              pat, label univs body
           in
           List.map f r
       in
@@ -610,8 +618,9 @@ let rec resugar_term (t : S.term) : A.term =
       mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
 
     | Tm_uvar (u, _) ->
-      let s = "uu___unification_ " ^ (UF.uvar_id u |> string_of_int) in
-      mk (var s t.pos)
+      let s = "?u" ^ (UF.uvar_id u |> string_of_int) in
+      (* TODO : should we put a pretty_non_parseable option for these cases ? *)
+      label s (mk A.Wild)
 
     | Tm_meta(e, m) ->
        let resugar_meta_desugared = function
@@ -1109,7 +1118,7 @@ let resugar_sigelt se : option<A.decl> =
         else
           let uvs, t = SS.open_univ_vars uvs t in
           let universes = universe_to_string uvs in
-          A.mk_term (A.Labeled (resugar_term t, universes, true)) t.pos A.Un
+          label universes (resugar_term t)
       in
       Some (decl'_to_decl se (A.Val (lid.ident,t')))
 
