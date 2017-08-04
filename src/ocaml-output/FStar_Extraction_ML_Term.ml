@@ -655,6 +655,7 @@ let rec term_as_mlty :
         FStar_TypeChecker_Normalize.normalize
           [FStar_TypeChecker_Normalize.Beta;
           FStar_TypeChecker_Normalize.Eager_unfolding;
+          FStar_TypeChecker_Normalize.Inlining;
           FStar_TypeChecker_Normalize.Iota;
           FStar_TypeChecker_Normalize.Zeta;
           FStar_TypeChecker_Normalize.EraseUniverses;
