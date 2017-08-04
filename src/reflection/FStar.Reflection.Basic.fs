@@ -124,9 +124,9 @@ let rec embed_pattern (p : pattern) : term =
         S.mk_Tm_app ref_Pat_Constant [S.as_arg (embed_const c)] None Range.dummyRange
     | Pat_Cons (fv, ps) ->
         S.mk_Tm_app ref_Pat_Cons [S.as_arg (embed_fvar fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern ps)] None Range.dummyRange
-    | Pat_Var (bv, _) ->
+    | Pat_Var bv ->
         S.mk_Tm_app ref_Pat_Var [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
-    | Pat_Wild (bv, _) ->
+    | Pat_Wild bv ->
         S.mk_Tm_app ref_Pat_Wild [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
 
 let rec unembed_pattern (t : term) : pattern =
@@ -138,9 +138,9 @@ let rec unembed_pattern (t : term) : pattern =
     | Tm_fvar fv, [(f, _); (ps, _)] when S.fv_eq_lid fv ref_Pat_Cons_lid ->
         Pat_Cons (unembed_fvar f, unembed_list unembed_pattern ps)
     | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Var_lid ->
-        Pat_Var (unembed_binder b)
+        Pat_Var (fst (unembed_binder b))
     | Tm_fvar fv, [(b, _)] when S.fv_eq_lid fv ref_Pat_Wild_lid ->
-        Pat_Wild (unembed_binder b)
+        Pat_Wild (fst (unembed_binder b))
     | _ ->
         failwith "not an embedded pattern"
 
@@ -329,8 +329,8 @@ let inspect (t:term) : term_view =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
             | Pat_cons (fv, ps) -> Pat_Cons (fv, List.map (fun (p, _) -> inspect_pat p) ps)
-            | Pat_var bv -> Pat_Var (bv, None)
-            | Pat_wild bv -> Pat_Wild (bv, None)
+            | Pat_var bv -> Pat_Var bv
+            | Pat_wild bv -> Pat_Wild bv
             | Pat_dot_term _ -> failwith "NYI: Pat_dot_term"
         in
         let brs = List.map SS.open_branch brs in
@@ -385,8 +385,8 @@ let pack (tv:term_view) : term =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
             | Pat_Cons (fv, ps) -> wrap <| Pat_cons (fv, List.map (fun p -> pack_pat p, false) ps)
-            | Pat_Var binder -> wrap <| Pat_var (fst binder)
-            | Pat_Wild binder -> wrap <| Pat_wild (fst binder)
+            | Pat_Var bv -> wrap <| Pat_var bv
+            | Pat_Wild bv -> wrap <| Pat_wild bv
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
@@ -429,6 +429,9 @@ let embed_norm_step (n:norm_step) : term =
         ref_Primops
     | Delta ->
         ref_Delta
+    | UnfoldOnly l ->
+        S.mk_Tm_app ref_UnfoldOnly [S.as_arg (embed_list embed_fvar fstar_refl_fvar l)]
+                    None Range.dummyRange
 
 let unembed_norm_step (t:term) : norm_step =
     let t = U.unascribe t in
@@ -442,6 +445,8 @@ let unembed_norm_step (t:term) : norm_step =
         Primops
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Delta_lid ->
         Delta
+    | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_UnfoldOnly_lid ->
+        UnfoldOnly (unembed_list unembed_fvar l)
     | _ ->
         failwith "not an embedded norm_step"
 
@@ -516,7 +521,7 @@ let unembed_sigelt_view (t:term) : sigelt_view =
         failwith "not an embedded sigelt_view"
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
-let type_of_binder (b: binder): term = match b with (b, _) -> b.sort
+let type_of_binder b = match b with (b, _) -> b.sort
 let term_eq = FStar.Syntax.Util.term_eq
-let fresh_binder (t: term): binder = (gen_bv "__refl" None t, None)
+let fresh_binder t = (gen_bv "__refl" None t, None)
 let term_to_string = Print.term_to_string

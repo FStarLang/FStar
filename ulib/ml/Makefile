@@ -19,17 +19,14 @@ fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
 	$(FIND) . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
 		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
 		| sort | uniq > $@
-	echo 'FStar_Parser_LexFStar' >> $@
 	touch fstarlib.ml
 
 FSTARLIB_DIR=../../bin/fstarlib/
 
-fstarlib.cma: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstarlib.cma:fstarlib.mllib
 	$(OCAMLBUILD) $@
 	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
 
-fstarlib.cmxa: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstarlib.cmxa:fstarlib.mllib | fstarlib.cma
 	$(OCAMLBUILD) $@
 	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
@@ -45,7 +42,8 @@ install: fstarlib.cmxa fstarlib.cma
 
 # Common rules
 clean:
-	rm -f fstarlib.mllib
-	rm -f $(ULIB_GEN_DIR)/*
+	rm -f fstarlib.mllib *~
+	rm -fr $(ULIB_GEN_DIR) compiler-extracted
+	rm -f $(FSTARLIB_DIR)/*.cm[aiox]a?
 	rm -f ../.mgen
 	rm -rf _build # ← ocamlbuild -clean does not work on Cygwin

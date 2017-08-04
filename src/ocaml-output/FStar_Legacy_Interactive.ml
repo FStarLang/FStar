@@ -907,7 +907,7 @@ let rec go:
                              match (uu____3908, uu____3909) with
                              | ((cd1,ns1,uu____3936),(cd2,ns2,uu____3939)) ->
                                  (match FStar_String.compare cd1 cd2 with
-                                  | _0_48 when _0_48 = (Prims.parse_int "0")
+                                  | _0_50 when _0_50 = (Prims.parse_int "0")
                                       -> FStar_String.compare ns1 ns2
                                   | n1 -> n1)) matches in
                     FStar_List.iter

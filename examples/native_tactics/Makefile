@@ -20,9 +20,6 @@ all: $(patsubst %,%.cmxs,$(MODULES)) $(patsubst %,%.test,$(MODULES))
 ../../bin/fstarlib/fstarlib.cmxa:
 	$(MAKE) -C $(ULIB_ML)
 
-%.ml: %.fst .ulib
-	$(FSTAR) $(OTHERFLAGS) --lax --codegen OCaml $< --extract_module $(patsubst %.fst,%,$<)
-
 %.cmxs: %.Test.fst .ulib
 	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE) $<
 
