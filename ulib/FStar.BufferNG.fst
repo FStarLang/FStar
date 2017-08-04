@@ -6,69 +6,51 @@ module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 module P = FStar.Pointer
+open FStar.Pointer
 open HST
 
 (* Buffers *)
 
-noeq private type buffer_root (t: Type) =
-| BufferRootSingleton:
-  (p: P.pointer t) ->
-  buffer_root t
-| BufferRootArray:
-  (#max_length: UInt32.t) ->
-  (p: P.pointer (P.array max_length t)) ->
-  buffer_root t
+let buffer (t: typ): Tot Type0 = P.buffer t
 
-private let buffer_root_length (#t: Type) (b: buffer_root t): Tot UInt32.t = match b with
-| BufferRootSingleton _ -> 1ul
-| BufferRootArray #t #len _ -> len
-
-noeq private type _buffer (t: Type) =
-| Buffer:
-  (broot: buffer_root t) ->
-  (bidx: UInt32.t) ->
-  (blength: UInt32.t { UInt32.v bidx + UInt32.v blength <= UInt32.v (buffer_root_length broot) } ) ->
-  _buffer t
-abstract let buffer (t: Type): Tot Type = _buffer t
-
-abstract let gsingleton_buffer_of_pointer
-  (#t: Type)
-  (p: P.pointer t)
+let gsingleton_buffer_of_pointer
+  (#t: typ)
+  (p: pointer t)
 : GTot (buffer t)
-= Buffer (BufferRootSingleton p) 0ul 1ul
+= P.gsingleton_buffer_of_pointer p
 
-abstract let singleton_buffer_of_pointer
-  (#t: Type)
+let singleton_buffer_of_pointer
+  (#t: typ)
   (p: P.pointer t)
 : Stack (buffer t)
   (requires (fun h -> P.live h p))
   (ensures (fun h b h' -> h' == h /\ b == gsingleton_buffer_of_pointer p))
-= Buffer (BufferRootSingleton p) 0ul 1ul
+= P.singleton_buffer_of_pointer p
 
-abstract let gbuffer_of_array_pointer
-  (#t: Type)
-  (#length: UInt32.t)
-  (p: P.pointer (P.array length t))
+let gbuffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: P.pointer (TArray length t))
 : GTot (buffer t)
-= Buffer (BufferRootArray p) 0ul length
+= P.gbuffer_of_array_pointer p
 
-abstract let buffer_of_array_pointer
-  (#t: Type)
-  (#length: UInt32.t)
-  (p: P.pointer (P.array length t))
+let buffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: P.pointer (TArray length t))
 : Stack (buffer t)
   (requires (fun h -> P.live h p))
   (ensures (fun h b h' -> h' == h /\ b == gbuffer_of_array_pointer p))
-= Buffer (BufferRootArray p) 0ul length
+= P.buffer_of_array_pointer p
 
-abstract let length
-  (#t: Type)
+let length
+  (#t: typ)
   (b: buffer t)
 : GTot UInt32.t
-= Buffer?.blength b
+= P.buffer_length b
 
-abstract let length_gsingleton_buffer_of_pointer
-  (#t: Type)
+let length_gsingleton_buffer_of_pointer
+  (#t: typ)
   (p: P.pointer t)
 : Lemma
   (requires True)
@@ -76,29 +58,25 @@ abstract let length_gsingleton_buffer_of_pointer
   [SMTPat (length (gsingleton_buffer_of_pointer p))]
 = ()
 
-abstract let length_gbuffer_of_array_pointer
-  (#t: Type)
-  (#len: UInt32.t)
-  (p: P.pointer (P.array len t))
+let length_gbuffer_of_array_pointer
+  (#t: typ)
+  (#len: array_length_t)
+  (p: P.pointer (TArray len t))
 : Lemma
   (requires True)
   (ensures (length (gbuffer_of_array_pointer p) == len))
   [SMTPat (length (gbuffer_of_array_pointer p))]
 = ()
 
-abstract let live
-  (#t: Type)
+let live
+  (#t: typ)
   (h: HS.mem)
   (b: buffer t)
 : GTot Type0
-= UInt32.v (length b) > 0 /\ ( // needed to preserve liveness through modifies
-    match b.broot with
-    | BufferRootSingleton p -> P.live h p
-    | BufferRootArray #mlen p -> P.live h p
-  )
+= P.buffer_live h b
 
-abstract let live_gsingleton_buffer_of_pointer
-  (#t: Type)
+let live_gsingleton_buffer_of_pointer
+  (#t: typ)
   (p: P.pointer t)
   (h: HS.mem)
 : Lemma
@@ -106,10 +84,10 @@ abstract let live_gsingleton_buffer_of_pointer
   [SMTPat (live h (gsingleton_buffer_of_pointer p))]
 = ()
 
-abstract let live_gbuffer_of_array_pointer
-  (#t: Type)
-  (#length: UInt32.t)
-  (p: P.pointer (P.array length t))
+let live_gbuffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: P.pointer (TArray length t))
   (h: HS.mem)
 : Lemma
   (requires (UInt32.v length > 0))
@@ -117,121 +95,108 @@ abstract let live_gbuffer_of_array_pointer
   [SMTPat (live h (gbuffer_of_array_pointer p))]
 = ()
 
-abstract let frameOf
-  (#t: Type)
+let frameOf
+  (#t: typ)
   (b: buffer t)
 : GTot HH.rid
-= match b.broot with
-  | BufferRootSingleton p -> P.frameOf p
-  | BufferRootArray #mlen p -> P.frameOf p
+= P.frameOf_buffer b
 
-abstract let frameOf_gsingleton_buffer_of_pointer
-  (#t: Type)
+let frameOf_gsingleton_buffer_of_pointer
+  (#t: typ)
   (p: P.pointer t)
 : Lemma
   (ensures (frameOf (gsingleton_buffer_of_pointer p) == P.frameOf p))
   [SMTPat (frameOf (gsingleton_buffer_of_pointer p))]
 = ()
 
-abstract let frameOf_gbuffer_of_array_pointer
-  (#t: Type)
-  (#length: UInt32.t)
-  (p: P.pointer (P.array length t))
+let frameOf_gbuffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: P.pointer (TArray length t))
 : Lemma
   (ensures (frameOf (gbuffer_of_array_pointer p) == P.frameOf p))
   [SMTPat (frameOf (gbuffer_of_array_pointer p))]
 = ()
 
-abstract let gsub
-  (#t: Type)
+let gsub
+  (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
-: GTot (buffer t)
-= Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
+  (len: UInt32.t)
+: Ghost (buffer t)
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b)))
+  (ensures (fun _ -> True))
+= P.gsub_buffer b i len
 
-abstract let sub
-  (#t: Type)
+let sub
+  (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
+  (len: UInt32.t)
 : Stack (buffer t)
-  (requires (fun h -> live h b))
-  (ensures (fun h b' h' -> h' == h /\ b' == gsub b i len ))
-= Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
+  (requires (fun h -> UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ live h b))
+  (ensures (fun h b' h' -> UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ h' == h /\ b' == gsub b i len ))
+= P.sub_buffer b i len
 
-abstract let length_gsub
-  (#t: Type)
+let length_gsub
+  (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
+  (len: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (length (gsub b i len) == len))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b)))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ length (gsub b i len) == len))
   [SMTPat (length (gsub b i len))]
 = ()
 
-abstract let live_gsub
-  (#t: Type)
+let live_gsub
+  (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
+  (len: UInt32.t)
   (h: HS.mem)
 : Lemma
-  (requires (UInt32.v len > 0))
-  (ensures (live h (gsub b i len) <==> live h b))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ UInt32.v len > 0))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ (live h (gsub b i len) <==> live h b)))
   [SMTPat (live h (gsub b i len))]
 = ()
 
-abstract let gsub_gsub
-  (#a: Type)
+let gsub_gsub
+  (#a: typ)
   (b: buffer a)
   (i1: UInt32.t)
-  (len1: UInt32.t{UInt32.v i1 + UInt32.v len1 <= UInt32.v (length b)})
+  (len1: UInt32.t)
   (i2: UInt32.t)
-  (len2: UInt32.t {UInt32.v i2 + UInt32.v len2 <= UInt32.v len1})
+  (len2: UInt32.t)
 : Lemma
-  (ensures (gsub (gsub b i1 len1) i2 len2 == gsub b FStar.UInt32.(i1 +^ i2) len2))
+  (requires (
+    UInt32.v i1 + UInt32.v len1 <= UInt32.v (length b) /\  
+    UInt32.v i2 + UInt32.v len2 <= UInt32.v len1
+  ))
+  (ensures (
+    UInt32.v i1 + UInt32.v len1 <= UInt32.v (length b) /\  
+    UInt32.v i2 + UInt32.v len2 <= UInt32.v len1 /\
+    gsub (gsub b i1 len1) i2 len2 == gsub b FStar.UInt32.(i1 +^ i2) len2
+  ))
+  [SMTPat (gsub (gsub b i1 len1) i2 len2)]
 = ()
 
-abstract let gsub_zero_length
-  (#a: Type)
+let gsub_zero_length
+  (#a: typ)
   (b: buffer a)
 : Lemma
   (ensures (gsub b 0ul (length b) == b))
 = ()
 
-private let buffer_root_as_seq
-  (#t: Type)
-  (h: HS.mem)
-  (b: buffer_root t)
-: GTot (Seq.seq t)
-= match b with
-  | BufferRootSingleton p ->
-    Seq.create 1 (P.gread h p)
-  | BufferRootArray p ->
-    P.gread h p
-
-private let length_buffer_root_as_seq
-  (#t: Type)
-  (h: HS.mem)
-  (b: buffer_root t)
-: Lemma
-  (requires True)
-  (ensures (Seq.length (buffer_root_as_seq h b) == UInt32.v (buffer_root_length b)))
-  [SMTPat (Seq.length (buffer_root_as_seq h b))]
-= ()
-
-abstract let as_seq
-  (#t: Type)
+let as_seq
+  (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-: GTot (Seq.seq t)
-= let i = UInt32.v (Buffer?.bidx b) in
-  Seq.slice (buffer_root_as_seq h (Buffer?.broot b)) i (i + UInt32.v (Buffer?.blength b))
+: GTot (Seq.seq (type_of_typ t))
+= P.buffer_as_seq h b
 
-abstract let length_as_seq
-  (#t: Type)
+let length_as_seq
+  (#t: typ)
   (h: HS.mem)
   (b: buffer t)
 : Lemma
@@ -240,198 +205,390 @@ abstract let length_as_seq
   [SMTPat (Seq.length (as_seq h b))]
 = ()
 
-abstract let as_seq_gsingleton_buffer_of_pointer
-  (#t: Type)
+let as_seq_gsingleton_buffer_of_pointer
+  (#t: typ)
   (h: HS.mem)
   (p: P.pointer t)
 : Lemma
   (requires True)
   (ensures (as_seq h (gsingleton_buffer_of_pointer p) == Seq.create 1 (P.gread h p)))
   [SMTPat (as_seq h (gsingleton_buffer_of_pointer p))]
-= Seq.slice_length (Seq.create 1 (P.gread h p))
+= ()
 
-abstract let as_seq_gbuffer_of_array_pointer
-  (#length: UInt32.t)
-  (#t: Type)
+let as_seq_gbuffer_of_array_pointer
+  (#length: array_length_t)
+  (#t: typ)
   (h: HS.mem)
-  (p: P.pointer (P.array length t))
+  (p: P.pointer (TArray length t))
 : Lemma
   (requires True)
   (ensures (as_seq h (gbuffer_of_array_pointer p) == P.gread h p))
   [SMTPat (as_seq h (gbuffer_of_array_pointer p))]
-= Seq.slice_length (P.gread h p)
+= ()
 
-abstract let as_seq_gsub
-  (#t: Type)
+let as_seq_gsub
+  (#t: typ)
   (h: HS.mem)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (length b) } )
+  (len: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (as_seq h (gsub b i len) == Seq.slice (as_seq h b) (UInt32.v i) (UInt32.v i + UInt32.v len)))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b)))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ as_seq h (gsub b i len) == Seq.slice (as_seq h b) (UInt32.v i) (UInt32.v i + UInt32.v len)))
   [SMTPat (as_seq h (gsub b i len))]
-= Seq.slice_slice (buffer_root_as_seq h (Buffer?.broot b)) (UInt32.v (Buffer?.bidx b)) (UInt32.v (Buffer?.bidx b) + UInt32.v (Buffer?.blength b)) (UInt32.v i) (UInt32.v i + UInt32.v len)
+= ()
 
-abstract let gpointer_of_buffer_cell
-  (#t: Type)
+let gpointer_of_buffer_cell
+  (#t: typ)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
-: GTot (P.pointer t)
-= match Buffer?.broot b with
-  | BufferRootSingleton p -> p
-  | BufferRootArray p ->
-    P.gcell p FStar.UInt32.(Buffer?.bidx b +^ i)
+  (i: UInt32.t)
+: Ghost (P.pointer t)
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (fun _ -> True))
+= P.gpointer_of_buffer_cell b i
 
-abstract let pointer_of_buffer_cell
-  (#t: Type)
+let pointer_of_buffer_cell
+  (#t: typ)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
+  (i: UInt32.t)
 : Stack (P.pointer t)
-  (requires (fun h -> live h b))
-  (ensures (fun h p h' -> h' == h /\ p == gpointer_of_buffer_cell b i))
-= match Buffer?.broot b with
-  | BufferRootSingleton p -> p
-  | BufferRootArray p ->
-    P.cell p FStar.UInt32.(Buffer?.bidx b +^ i)
+  (requires (fun h -> UInt32.v i < UInt32.v (length b) /\ live h b))
+  (ensures (fun h p h' -> UInt32.v i < UInt32.v (length b) /\ h' == h /\ p == gpointer_of_buffer_cell b i))
+= P.pointer_of_buffer_cell b i
 
-abstract let gpointer_of_buffer_cell_gsub
-  (#t: Type)
+let gpointer_of_buffer_cell_gsub
+  (#t: typ)
   (b: buffer t)
   (i1: UInt32.t)
-  (len: UInt32.t { UInt32.v i1 + UInt32.v len <= UInt32.v (length b) } )
-  (i2: UInt32.t { UInt32.v i2 < UInt32.v len } )
+  (len: UInt32.t )
+  (i2: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (gpointer_of_buffer_cell (gsub b i1 len) i2 == gpointer_of_buffer_cell b FStar.UInt32.(i1 +^ i2)))
+  (requires (
+    UInt32.v i1 + UInt32.v len <= UInt32.v (length b) /\
+    UInt32.v i2 < UInt32.v len
+  ))
+  (ensures (
+    UInt32.v i1 + UInt32.v len <= UInt32.v (length b) /\
+    UInt32.v i2 < UInt32.v len /\
+    gpointer_of_buffer_cell (gsub b i1 len) i2 == gpointer_of_buffer_cell b FStar.UInt32.(i1 +^ i2)
+  ))
   [SMTPat (gpointer_of_buffer_cell (gsub b i1 len) i2)]
 = ()
 
-abstract let live_gpointer_of_buffer_cell
-  (#t: Type)
+let live_gpointer_of_buffer_cell
+  (#t: typ)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) })
+  (i: UInt32.t)
   (h: HS.mem)
 : Lemma
-  (ensures (P.live h (gpointer_of_buffer_cell b i) <==> live h b))
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ P.live h (gpointer_of_buffer_cell b i) <==> live h b))
   [SMTPat (P.live h (gpointer_of_buffer_cell b i))]
 = ()
 
-abstract let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
-  (#t: Type)
+let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
+  (#t: typ)
   (p: P.pointer t)
-  (i: UInt32.t { UInt32.v i < 1 } )
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (gpointer_of_buffer_cell (gsingleton_buffer_of_pointer p) i == p))
+  (requires (UInt32.v i < 1))
+  (ensures (UInt32.v i < 1 /\ gpointer_of_buffer_cell (gsingleton_buffer_of_pointer p) i == p))
   [SMTPat (gpointer_of_buffer_cell (gsingleton_buffer_of_pointer p) i)]
 = ()
 
-abstract let gpointer_of_buffer_cell_gbuffer_of_array_pointer
-  (#length: UInt32.t)
-  (#t: Type)
-  (p: P.pointer (P.array length t))
-  (i: UInt32.t { UInt32.v i < UInt32.v length } )
+let gpointer_of_buffer_cell_gbuffer_of_array_pointer
+  (#length: array_length_t)
+  (#t: typ)
+  (p: P.pointer (TArray length t))
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i == P.gcell p i))
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (UInt32.v i < UInt32.v length /\ gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i == P.gcell p i))
   [SMTPat (gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i)]
 = ()
 
-abstract let gread_gpointer_of_buffer_cell
-  (#t: Type)
+let gread_gpointer_of_buffer_cell
+  (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
+  (i: UInt32.t)
 : Lemma
-  (ensures (P.gread h (gpointer_of_buffer_cell b i) == Seq.index (as_seq h b) (UInt32.v i)))
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ P.gread h (gpointer_of_buffer_cell b i) == Seq.index (as_seq h b) (UInt32.v i)))
   [SMTPat (P.gread h (gpointer_of_buffer_cell b i))]
 = ()
 
-abstract let gread_gpointer_of_buffer_cell'
-  (#t: Type)
+let gread_gpointer_of_buffer_cell'
+  (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
+  (i: UInt32.t)
 : Lemma
-  (ensures (P.gread h (gpointer_of_buffer_cell b i) == Seq.index (as_seq h b) (UInt32.v i)))
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ P.gread h (gpointer_of_buffer_cell b i) == Seq.index (as_seq h b) (UInt32.v i)))
 = ()
 
-abstract let gread_pointer_of_buffer_cell'
-  (#t: Type)
+let gread_pointer_of_buffer_cell'
+  (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (Seq.index (as_seq h b) (UInt32.v i) == P.gread h (gpointer_of_buffer_cell b i)))
+  (requires (UInt32.v i < UInt32.v (length b)))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ Seq.index (as_seq h b) (UInt32.v i) == P.gread h (gpointer_of_buffer_cell b i)))
   [SMTPat (Seq.index (as_seq h b) (UInt32.v i))]
 = ()
 
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
 
-let read
-  (#t: Type)
+let readable
+  (#t: typ)
+  (h: HS.mem)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
-: HST.Stack t
-  (requires (fun h -> live h b))
-  (ensures (fun h v h' -> h' == h /\ v == Seq.index (as_seq h b) (UInt32.v i)))
-= P.read (pointer_of_buffer_cell b i)
+: GTot Type0
+= P.buffer_readable h b
+
+let readable_live
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: Lemma
+  (requires (readable h b))
+  (ensures (live h b))
+  [SMTPatOr [
+    [SMTPat (readable h b)];
+    [SMTPat (live h b)];
+  ]]
+= ()
+
+let readable_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (h: HS.mem)
+  (p: pointer t)
+: Lemma
+  (ensures (readable h (gsingleton_buffer_of_pointer p) <==> P.readable h p))
+  [SMTPat (readable h (gsingleton_buffer_of_pointer p))]
+= ()
+
+let readable_gbuffer_of_array_pointer
+  (#len: array_length_t)
+  (#t: typ)
+  (h: HS.mem)
+  (p: pointer (TArray len t))
+: Lemma
+  (requires True)
+  (ensures (readable h (gbuffer_of_array_pointer p) <==> P.readable h p))
+  [SMTPat (readable h (gbuffer_of_array_pointer p))]
+= ()
+
+let readable_gsub
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h b /\ UInt32.v len > 0))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h (gsub b i len)))
+  [SMTPat (readable h (gsub b i len))]
+= ()
+
+let readable_gpointer_of_buffer_cell
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  (i: UInt32.t)
+: Lemma
+  (requires (UInt32.v i < UInt32.v (length b) /\ readable h b))
+  (ensures (UInt32.v i < UInt32.v (length b) /\ P.readable h (gpointer_of_buffer_cell b i)))
+  [SMTPat (P.readable h (gpointer_of_buffer_cell b i))]
+= ()
+
+let readable_intro
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: Lemma
+  (requires (
+    live h b /\ (
+     forall (i: UInt32.t) .
+     UInt32.v i < UInt32.v (length b) ==>
+     P.readable h (gpointer_of_buffer_cell b i)
+  )))
+  (ensures (readable h b))
+//  [SMTPat (buffer_readable h b)] // TODO: dubious pattern, may trigger unreplayable hints
+= P.buffer_readable_intro h b
+
+let read
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+: HST.Stack (type_of_typ t)
+  (requires (fun h -> UInt32.v i < UInt32.v (length b) /\ readable h b))
+  (ensures (fun h v h' -> UInt32.v i < UInt32.v (length b) /\ h' == h /\ v == Seq.index (as_seq h b) (UInt32.v i)))
+= P.read_buffer b i
 
 (* buffer write: needs clearer "modifies" clauses *)
 
-abstract let disjoint_gpointer_of_buffer_cell
-  (#t: Type)
+let disjoint_gpointer_of_buffer_cell
+  (#t: typ)
   (b: buffer t)
-  (i1: UInt32.t { UInt32.v i1 < UInt32.v (length b) } )
-  (i2: UInt32.t { UInt32.v i2 < UInt32.v (length b) } )
+  (i1: UInt32.t)
+  (i2: UInt32.t)
 : Lemma
-  (requires ( UInt32.v i1 <> UInt32.v i2 ) )
-  (ensures (P.disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2)))
+  (requires ( UInt32.v i1 < UInt32.v (length b) /\ UInt32.v i2 < UInt32.v (length b) /\ UInt32.v i1 <> UInt32.v i2 ) )
+  (ensures (UInt32.v i1 < UInt32.v (length b) /\ UInt32.v i2 < UInt32.v (length b) /\ P.disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2)))
   [SMTPat (P.disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2))]
 = ()
 
-(* For a "disjoint" clause on buffers, we could use the following TRANSPARENT definitions: *)
-
-unfold
 let disjoint_buffer_vs_pointer
-  (#t1 #t2: Type)
+  (#t1 #t2: typ)
   (b: buffer t1)
   (p: P.pointer t2)
 : GTot Type0
-= forall (i: UInt32.t { UInt32.v i < UInt32.v (length b) } ) . P.disjoint (gpointer_of_buffer_cell b i) p
+= P.disjoint_buffer_vs_pointer b p
 
-unfold
+let disjoint_buffer_vs_pointer_gsingleton_buffer_of_pointer
+  (#t1 #t2: typ)
+  (p1: pointer t1)
+  (p2: pointer t2)
+: Lemma
+  (requires (disjoint p1 p2))
+  (ensures (disjoint_buffer_vs_pointer (gsingleton_buffer_of_pointer p1) p2))
+  [SMTPat (disjoint_buffer_vs_pointer (gsingleton_buffer_of_pointer p1) p2)]
+= ()
+
+let disjoint_buffer_vs_pointer_gbuffer_of_array_pointer
+  (#len: array_length_t)
+  (#t1 #t2: typ)
+  (p1: pointer (TArray len t1))
+  (p2: pointer t2)
+: Lemma
+  (requires (disjoint p1 p2))
+  (ensures (disjoint_buffer_vs_pointer (gbuffer_of_array_pointer p1) p2))
+  [SMTPat (disjoint_buffer_vs_pointer (gbuffer_of_array_pointer p1) p2)]
+= ()
+
+let disjoint_buffer_vs_pointer_includes
+  (#t1 #t2 #t2': typ)
+  (b1: buffer t1)
+  (p2: pointer t2)
+  (p2': pointer t2')
+: Lemma
+  (requires (disjoint_buffer_vs_pointer b1 p2 /\ includes p2 p2'))
+  (ensures (disjoint_buffer_vs_pointer b1 p2'))
+  [SMTPatOr [
+    [SMTPat (disjoint_buffer_vs_pointer b1 p2'); SMTPat (includes p2 p2')];
+    [SMTPat (disjoint_buffer_vs_pointer b1 p2); SMTPat (includes p2 p2')];
+    [SMTPat (disjoint_buffer_vs_pointer b1 p2); SMTPat (disjoint_buffer_vs_pointer b1 p2)];
+  ]]
+= ()
+
+let disjoint_buffer_vs_pointer_gsub
+  (#t1 #t2: typ)
+  (b1: buffer t1)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (p2: pointer t2)
+: Lemma
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b1) /\ disjoint_buffer_vs_pointer b1 p2))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b1) /\ disjoint_buffer_vs_pointer (gsub b1 i len) p2))
+  [SMTPat (disjoint_buffer_vs_pointer (gsub b1 i len) p2)]
+= ()
+
+let disjoint_buffer_vs_pointer_elim
+  (#t1 #t2: typ)
+  (b1: buffer t1)
+  (p2: pointer t2)
+  (i: UInt32.t)
+: Lemma
+  (requires (UInt32.v i < UInt32.v (length b1) /\ disjoint_buffer_vs_pointer b1 p2))
+  (ensures (UInt32.v i < UInt32.v (length b1) /\ disjoint (gpointer_of_buffer_cell b1 i) p2))
+  [SMTPat (disjoint (gpointer_of_buffer_cell b1 i) p2)]
+= ()
+
 let disjoint_buffer_vs_buffer
-  (#t1 #t2: Type)
+  (#t1 #t2: typ)
   (b1: buffer t1)
   (b2: buffer t2)
 : GTot Type0
-= forall
-    (i1: UInt32.t { UInt32.v i1 < UInt32.v (length b1) } )
-    (i2: UInt32.t { UInt32.v i2 < UInt32.v (length b2) } )
-  .
-    P.disjoint (gpointer_of_buffer_cell b1 i1) (gpointer_of_buffer_cell b2 i2)
+= P.disjoint_buffer_vs_buffer b1 b2
+
+let disjoint_buffer_vs_buffer_sym
+  (#t1 #t2: typ)
+  (b1: buffer t1)
+  (b2: buffer t2)
+: Lemma
+  (disjoint_buffer_vs_buffer b1 b2 <==> disjoint_buffer_vs_buffer b2 b1)
+  [SMTPat (disjoint_buffer_vs_buffer b1 b2)]
+= ()
+
+let disjoint_buffer_vs_buffer_gsingleton_buffer_of_pointer
+  (#t1 #t2: typ)
+  (b1: buffer t1)
+  (p2: pointer t2)
+: Lemma
+  (requires (disjoint_buffer_vs_pointer b1 p2))
+  (ensures (disjoint_buffer_vs_buffer b1 (gsingleton_buffer_of_pointer p2)))
+  [SMTPat (disjoint_buffer_vs_buffer b1 (gsingleton_buffer_of_pointer p2))]
+= ()
+
+let disjoint_buffer_vs_buffer_gbuffer_of_array_pointer
+  (#t1 #t2: typ)
+  (#len: array_length_t)
+  (b1: buffer t1)
+  (p2: pointer (TArray len t2))
+: Lemma
+  (requires (disjoint_buffer_vs_pointer b1 p2))
+  (ensures (disjoint_buffer_vs_buffer b1 (gbuffer_of_array_pointer p2)))
+  [SMTPat (disjoint_buffer_vs_buffer b1 (gbuffer_of_array_pointer p2))]
+= ()
+
+let disjoint_buffer_vs_buffer_gsub
+  (#t1 #t2: typ)
+  (b1: buffer t1)
+  (b2: buffer t2)
+  (i2: UInt32.t)
+  (len2: UInt32.t)
+: Lemma
+  (requires (UInt32.v i2 + UInt32.v len2 <= UInt32.v (length b2) /\ disjoint_buffer_vs_buffer b1 b2))
+  (ensures (UInt32.v i2 + UInt32.v len2 <= UInt32.v (length b2) /\ disjoint_buffer_vs_buffer b1 (gsub b2 i2 len2)))
+  [SMTPat (disjoint_buffer_vs_buffer b1 (gsub b2 i2 len2))]
+= ()
+
+let disjoint_buffer_vs_buffer_elim
+  (#t1 #t2: typ)
+  (b1: buffer t1)
+  (b2: buffer t2)
+  (i2: UInt32.t)
+: Lemma
+  (requires (UInt32.v i2 < UInt32.v (length b2) /\ disjoint_buffer_vs_buffer b1 b2))
+  (ensures (UInt32.v i2 < UInt32.v (length b2) /\ disjoint_buffer_vs_pointer b1 (gpointer_of_buffer_cell b2 i2)))
+  [SMTPat (disjoint_buffer_vs_pointer b1 (gpointer_of_buffer_cell b2 i2))]
+= ()
 
 let write
-  (#t: Type)
+  (#t: typ)
   (b: buffer t)
-  (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
-  (v: t)
+  (i: UInt32.t)
+  (v: type_of_typ t)
 : HST.Stack unit
-  (requires (fun h -> live h b))
+  (requires (fun h -> UInt32.v i < UInt32.v (length b) /\ live h b))
   (ensures (fun h _ h' ->
-    P.modifies_1 (gpointer_of_buffer_cell b i) h h' /\
+    UInt32.v i < UInt32.v (length b) /\
+    modifies_1 (gpointer_of_buffer_cell b i) h h' /\
     live h' b /\
+    P.readable h' (gpointer_of_buffer_cell b i) /\
     Seq.index (as_seq h' b) (UInt32.v i) == v /\ (
       forall (j: UInt32.t {UInt32.v j < UInt32.v (length b) /\ UInt32.v j <> UInt32.v i }) .
+        P.readable h (gpointer_of_buffer_cell b j) ==> (
+        P.readable h' (gpointer_of_buffer_cell b j) /\
         Seq.index (as_seq h' b) (UInt32.v j) == Seq.index (as_seq h b) (UInt32.v j)
-  )))
-= P.write (pointer_of_buffer_cell b i) v
+  ))))
+= P.write_buffer b i v
 
 let modifies_1_disjoint_buffer_vs_pointer_live
-  (#t1 #t2: Type)
+  (#t1 #t2: typ)
   (b: buffer t1)
   (p: P.pointer t2)
   (h h': HS.mem)
@@ -441,32 +598,6 @@ let modifies_1_disjoint_buffer_vs_pointer_live
     live h b /\
     P.modifies_1 p h h'
   ))
-  (ensures (live h' b /\ as_seq h b == as_seq h' b))
+  (ensures (live h' b /\ (readable h b ==> (readable h' b /\ as_seq h b == as_seq h' b))))
   [SMTPat (P.modifies_1 p h h'); SMTPat (live h b)]
-= P.modifies_1_reveal p h h';
-  let f
-    (i: UInt32.t { UInt32.v i < UInt32.v (length b) } )
-  : Lemma
-    (P.live h' (gpointer_of_buffer_cell b i) /\ P.gread h (gpointer_of_buffer_cell b i) == P.gread h' (gpointer_of_buffer_cell b i))
-  = if frameOf b = P.frameOf p
-    then
-      let s = P.set_singleton p in
-      let (ap: P.apointer { P.set_amem ap s } ) = P.APointer t2 p in
-      P.modifies_elim (P.frameOf p) s h h' (gpointer_of_buffer_cell b i)
-    else
-      P.modifies_one_other_region (P.frameOf p) h h' (gpointer_of_buffer_cell b i)
-  in
-  f 0ul; // for the liveness of the whole buffer
-  length_as_seq h b;
-  length_as_seq h' b;
-  let g
-    (i: nat { i < UInt32.v (length b) } )
-  : Lemma
-    (Seq.index (as_seq h b) i == Seq.index (as_seq h' b) i)
-  = let j = UInt32.uint_to_t i in
-    f j;
-    gread_gpointer_of_buffer_cell' h b j;
-    gread_gpointer_of_buffer_cell' h' b j
-  in
-  Classical.forall_intro g;
-  Seq.lemma_eq_elim (as_seq h b) (as_seq h' b)
+= P.modifies_1_disjoint_buffer_vs_pointer_live b p h h'

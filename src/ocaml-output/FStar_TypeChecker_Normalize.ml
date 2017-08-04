@@ -4964,8 +4964,6 @@ let eta_expand:
                                    FStar_TypeChecker_Env.lax = true;
                                    FStar_TypeChecker_Env.lax_universes =
                                      (uu___229_17263.FStar_TypeChecker_Env.lax_universes);
-                                   FStar_TypeChecker_Env.failhard =
-                                     (uu___229_17263.FStar_TypeChecker_Env.failhard);
                                    FStar_TypeChecker_Env.type_of =
                                      (uu___229_17263.FStar_TypeChecker_Env.type_of);
                                    FStar_TypeChecker_Env.universe_of =
@@ -5029,8 +5027,6 @@ let eta_expand:
                            FStar_TypeChecker_Env.lax = true;
                            FStar_TypeChecker_Env.lax_universes =
                              (uu___230_17276.FStar_TypeChecker_Env.lax_universes);
-                           FStar_TypeChecker_Env.failhard =
-                             (uu___230_17276.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.type_of =
                              (uu___230_17276.FStar_TypeChecker_Env.type_of);
                            FStar_TypeChecker_Env.universe_of =

@@ -19,6 +19,7 @@ cache/
 
 /ulib/.mgen
 /ulib/ml/extracted
+/ulib/ml/compiler-extracted
 
 /bin/*.dll
 /bin/*.pdb

@@ -279,6 +279,17 @@ let rec for_all f l = match l with
     | [] -> true
     | hd::tl -> if f hd then for_all f tl else false
 
+(** Specification for [for_all f l] vs. mem *)
+let rec for_all_mem
+  (#a: eqtype)
+  (f: (a -> Tot bool))
+  (l: list a)
+: Lemma
+  (for_all f l <==> (forall x . mem x l ==> f x))
+= match l with
+  | [] -> ()
+  | _ :: q -> for_all_mem f q
+
 (** [collect f l] applies [f] to each element of [l] and returns the
 concatenation of the results, in the order of the original elements of
 [l]. It is equivalent to [flatten (map f l)]. Requires, at

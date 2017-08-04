@@ -1717,11 +1717,12 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | _ -> false)
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
+          let attrs = if only_decl then [] else [ U.attr_substitute ] in
           let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
                        sigquals = quals;
                        sigrng = range_of_lid field_name;
                        sigmeta = default_sigmeta;
-                       sigattrs = [] } in
+                       sigattrs = attrs } in
           if Env.debug env (Options.Other "LogTypes")
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
@@ -1756,7 +1757,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                            sigquals = quals;
                            sigrng = p;
                            sigmeta = default_sigmeta;
-                           sigattrs = [] } in
+                           sigattrs = attrs } in
               if Env.debug env (Options.Other "LogTypes")
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten

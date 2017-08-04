@@ -98,7 +98,8 @@ and expr =
   | ECons of typ * ident * list<expr>
   | EBufFill of expr * expr * expr
   | EString of string
-  | EFun of list<binder> * expr
+  | EFun of list<binder> * expr * typ
+  | EAbortS of string
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -354,13 +355,13 @@ and translate_decl env d: option<decl> =
       let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) flags in
       let env = if flavor = Rec then extend env name false else env in
       let env = List.fold_left (fun env (name, _) -> extend_t env name) env tvars in
-      let rec find_return_type = function
-        | MLTY_Fun (_, _, t) ->
-            find_return_type t
+      let rec find_return_type i = function
+        | MLTY_Fun (_, _, t) when i > 0 ->
+            find_return_type (i - 1) t
         | t ->
             t
       in
-      let t = translate_type env (find_return_type t0) in
+      let t = translate_type env (find_return_type (List.length args) t0) in
       let binders = translate_binders env args in
       let env = add_binders env args in
       let name = env.module_name, name in
@@ -678,7 +679,7 @@ and translate_expr env e: expr =
   | MLE_Fun (args, body) ->
       let binders = translate_binders env args in
       let env = add_binders env args in
-      EFun (binders, translate_expr env body)
+      EFun (binders, translate_expr env body, translate_type env body.mlty)
 
   | MLE_If (e1, e2, e3) ->
       EIfThenElse (translate_expr env e1, translate_expr env e2, (match e3 with
