@@ -97,7 +97,11 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
             else if qn = and_qn then And a1 a2
             else if qn = iff_qn then Iff a1 a2
             else if qn = or_qn  then Or a1 a2
-            else if qn = forall_qn then (admit(); //TODO: admitting termination check for now
+            else App h0 (fst t)
+
+        | Tv_FVar fv, [(a1, Q_Implicit); (a2, Q_Explicit)] ->
+            let qn = inspect_fv fv in
+                 if qn = forall_qn then (admit(); //TODO: admitting termination check for now
                                              mk_Forall a1 a2) //a1 is type, a2 predicate
             else if qn = exists_qn then (admit(); //TODO: admitting termination check for now
                                              mk_Exists a1 a2) //a1 is type, a2 predicate
