@@ -23,9 +23,9 @@ ifeq ($(OS),Windows_NT)
     EXTRA_OPTS =
     EXTRA_LIBS = -L.
     ifeq ($(MARCH),x86_64)
-      OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64 enable-tls13 no-shared no-engine
+      OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64 no-shared no-engine
     else
-      OPENSSL_CONF = CC=i686-w64-mingw32-gcc ./Configure mingw enable-tls13 no-shared no-engine
+      OPENSSL_CONF = CC=i686-w64-mingw32-gcc ./Configure mingw no-shared no-engine
     endif
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
@@ -37,13 +37,13 @@ else
         EXTRA_OPTS =
         EXTRA_LIBS = -L.
         ARCH = osx
-        OPENSSL_CONF = ./config enable-tls13
+        OPENSSL_CONF = ./config
     else
         EXTRA_OPTS = -thread -ccopt -fPIC
         EXTRA_LIBS = -L.
         ARCH = x86_64
 	# The HACL* test engine directly links with the .o files
-        OPENSSL_CONF = ./config enable-tls13 -fPIC
+        OPENSSL_CONF = ./config -fPIC
     endif
 endif
 
