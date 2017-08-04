@@ -41,7 +41,7 @@ wc:
 include ml/Makefile.include
 
 REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
-EXTRACT_FSTARLIB=$(filter-out $(REALIZED),$(filter-out FStar.Crypto.fst FStar.Tcp.fst FStar.Reflection.% FStar.Tactics.%,$(wildcard FStar.*.fst FStar.*.fsti)))
+EXTRACT_FSTARLIB=$(filter-out $(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.Reflection.% FStar.Tactics.%,$(wildcard FStar.*.fst FStar.*.fsti))
 EXTRACT_COMPILER=$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar.Tactics.*.fst FStar.Tactics.*.fsti)
 
 ../bin/fstar.ocaml:

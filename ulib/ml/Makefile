@@ -19,17 +19,14 @@ fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
 	$(FIND) . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
 		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
 		| sort | uniq > $@
-#	echo 'FStar_Parser_LexFStar' >> $@
 	touch fstarlib.ml
 
 FSTARLIB_DIR=../../bin/fstarlib/
 
-# fstarlib.cma: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstarlib.cma:fstarlib.mllib
 	$(OCAMLBUILD) $@
 	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
 
-#fstarlib.cmxa: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstarlib.cmxa:fstarlib.mllib | fstarlib.cma
 	$(OCAMLBUILD) $@
 	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
