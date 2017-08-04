@@ -56,6 +56,7 @@ Currently, the flags (defined in FStar.Reflection.Syntax) are
 [Primops] (performing primitive reductions, such as arithmetic and
 string operations)
 [Delta] (unfold names)
+[UnfoldOnly] (restricts unfolding to those names)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
