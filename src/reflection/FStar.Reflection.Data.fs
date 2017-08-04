@@ -49,6 +49,7 @@ type norm_step =
     | WHNF
     | Primops
     | Delta
+    | UnfoldOnly of list<fv>
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
@@ -137,11 +138,13 @@ let ref_Simpl_lid      = fstar_refl_data_lid "Simpl"
 let ref_WHNF_lid       = fstar_refl_data_lid "WHNF"
 let ref_Primops_lid    = fstar_refl_data_lid "Primops"
 let ref_Delta_lid      = fstar_refl_data_lid "Delta"
+let ref_UnfoldOnly_lid = fstar_refl_data_lid "UnfoldOnly"
 
 let ref_Simpl          = tdataconstr ref_Simpl_lid
 let ref_WHNF           = tdataconstr ref_WHNF_lid
 let ref_Primops        = tdataconstr ref_Primops_lid
 let ref_Delta          = tdataconstr ref_Delta_lid
+let ref_UnfoldOnly     = tdataconstr ref_UnfoldOnly_lid
 
 let t_binder = tabbrev <| fstar_refl_types_lid "binder"
 let t_term = tabbrev <| fstar_refl_types_lid "term"

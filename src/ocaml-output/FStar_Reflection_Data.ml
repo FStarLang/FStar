@@ -168,17 +168,24 @@ type norm_step =
   | WHNF
   | Primops
   | Delta
+  | UnfoldOnly of FStar_Syntax_Syntax.fv Prims.list
 let uu___is_Simpl: norm_step -> Prims.bool =
   fun projectee  ->
-    match projectee with | Simpl  -> true | uu____593 -> false
+    match projectee with | Simpl  -> true | uu____599 -> false
 let uu___is_WHNF: norm_step -> Prims.bool =
-  fun projectee  -> match projectee with | WHNF  -> true | uu____598 -> false
+  fun projectee  -> match projectee with | WHNF  -> true | uu____604 -> false
 let uu___is_Primops: norm_step -> Prims.bool =
   fun projectee  ->
-    match projectee with | Primops  -> true | uu____603 -> false
+    match projectee with | Primops  -> true | uu____609 -> false
 let uu___is_Delta: norm_step -> Prims.bool =
   fun projectee  ->
-    match projectee with | Delta  -> true | uu____608 -> false
+    match projectee with | Delta  -> true | uu____614 -> false
+let uu___is_UnfoldOnly: norm_step -> Prims.bool =
+  fun projectee  ->
+    match projectee with | UnfoldOnly _0 -> true | uu____622 -> false
+let __proj__UnfoldOnly__item___0:
+  norm_step -> FStar_Syntax_Syntax.fv Prims.list =
+  fun projectee  -> match projectee with | UnfoldOnly _0 -> _0
 let fstar_refl_lid: Prims.string Prims.list -> FStar_Ident.lident =
   fun s  ->
     FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Reflection"] s)
@@ -193,21 +200,21 @@ let fstar_refl_data_lid: Prims.string -> FStar_Ident.lident =
   fun s  -> fstar_refl_lid ["Data"; s]
 let mk_refl_types_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____637 = fstar_refl_types_lid s in
-    FStar_Syntax_Syntax.tconst uu____637
+    let uu____665 = fstar_refl_types_lid s in
+    FStar_Syntax_Syntax.tconst uu____665
 let mk_refl_syntax_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____642 = fstar_refl_syntax_lid s in
-    FStar_Syntax_Syntax.tconst uu____642
+    let uu____670 = fstar_refl_syntax_lid s in
+    FStar_Syntax_Syntax.tconst uu____670
 let mk_refl_data_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____647 = fstar_refl_data_lid s in
-    FStar_Syntax_Syntax.tconst uu____647
+    let uu____675 = fstar_refl_data_lid s in
+    FStar_Syntax_Syntax.tconst uu____675
 let fstar_refl_tdataconstr:
   Prims.string Prims.list -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____656 = fstar_refl_lid s in
-    FStar_Syntax_Syntax.tdataconstr uu____656
+    let uu____684 = fstar_refl_lid s in
+    FStar_Syntax_Syntax.tdataconstr uu____684
 let fstar_refl_term: FStar_Syntax_Syntax.term =
   mk_refl_types_lid_as_term "term"
 let fstar_refl_env: FStar_Syntax_Syntax.term =
@@ -305,6 +312,7 @@ let ref_Simpl_lid: FStar_Ident.lident = fstar_refl_data_lid "Simpl"
 let ref_WHNF_lid: FStar_Ident.lident = fstar_refl_data_lid "WHNF"
 let ref_Primops_lid: FStar_Ident.lident = fstar_refl_data_lid "Primops"
 let ref_Delta_lid: FStar_Ident.lident = fstar_refl_data_lid "Delta"
+let ref_UnfoldOnly_lid: FStar_Ident.lident = fstar_refl_data_lid "UnfoldOnly"
 let ref_Simpl: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr ref_Simpl_lid
 let ref_WHNF: FStar_Syntax_Syntax.term =
@@ -313,21 +321,23 @@ let ref_Primops: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr ref_Primops_lid
 let ref_Delta: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr ref_Delta_lid
+let ref_UnfoldOnly: FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_UnfoldOnly_lid
 let t_binder: FStar_Syntax_Syntax.term =
-  let uu____657 = fstar_refl_types_lid "binder" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____657
+  let uu____685 = fstar_refl_types_lid "binder" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____685
 let t_term: FStar_Syntax_Syntax.term =
-  let uu____658 = fstar_refl_types_lid "term" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____658
+  let uu____686 = fstar_refl_types_lid "term" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____686
 let t_fv: FStar_Syntax_Syntax.term =
-  let uu____659 = fstar_refl_types_lid "fv" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____659
+  let uu____687 = fstar_refl_types_lid "fv" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____687
 let t_binders: FStar_Syntax_Syntax.term =
-  let uu____660 = fstar_refl_types_lid "binders" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____660
+  let uu____688 = fstar_refl_types_lid "binders" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____688
 let t_norm_step: FStar_Syntax_Syntax.term =
-  let uu____661 = fstar_refl_types_lid "norm_step" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____661
+  let uu____689 = fstar_refl_types_lid "norm_step" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____689
 let ord_Lt_lid: FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"] FStar_Range.dummyRange
 let ord_Eq_lid: FStar_Ident.lident =

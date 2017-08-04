@@ -1,5 +1,5 @@
 [
-  "í·‰GÉË\u0006Gö\u0011òÖ\fû÷¾",
+  "|)ëÈ-í@€p*\u0010øâÁ?R",
   [
     [ "FStar.List.Tot.Base.isEmpty", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -440,6 +440,37 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [
+      "FStar.List.Tot.Base.for_all_mem",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.for_all.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.for_all.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@query",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_89386f2c4d2fc5eff564b5fa6eec111e",
+        "binder_x_1cc327216eda32b9ebb5ae32580104b1_1",
+        "binder_x_273c0cb114efbc10b99731f088b17ae0_0",
+        "binder_x_a7fb6faea5d851896150f3c74abbb25a_2", "bool_inversion",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok",
+        "equation_with_fuel_FStar.List.Tot.Base.for_all.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.mem",
+        "unit_typing"
       ],
       0
     ],
