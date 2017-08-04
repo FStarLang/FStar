@@ -41,10 +41,7 @@ let buffer_fun (inputs:erased (TSet.set bslice)) =
 let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
   forall b. TSet.mem b inputs ==> live h b /\ B.disjoint b.p buf.p
 
-// TODO: unfold is needed for extraction but breaks verification; eventually
-// should replace with inline_for_extraction once that attribute unfolds type
-// aliases
-// unfold
+inline_for_extraction
 let serializer_any (inputs:erased (TSet.set bslice))
                    (enc: buffer_fun inputs) =
   buf:bslice ->
@@ -60,10 +57,10 @@ let serializer_any (inputs:erased (TSet.set bslice))
            as_seq h0 b == as_seq h1 b) /\
         serialized (enc h1) buf r h0 h1))
 
-unfold
+inline_for_extraction
 let serializer (enc:erased bytes) = serializer_any (hide TSet.empty) (fun _ -> reveal enc)
 
-unfold
+inline_for_extraction
 let serializer_1 (input:bslice) (enc: buffer_fun (hide (TSet.singleton input))) =
     serializer_any (hide (TSet.singleton input)) (fun h -> enc h)
 
@@ -95,8 +92,9 @@ let upd_len_2 (#a:Type) (s:Seq.seq a{length s == 2}) (vs:Seq.seq a{length vs == 
   Lemma (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1) == vs) =
   lemma_eq_intro (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1)) vs
 
-inline_for_extraction [@"substitute"]
+[@"substitute"]
 val ser_u16: v:U16.t -> serializer (hide (u16_to_be v))
+[@"substitute"]
 let ser_u16 v = fun buf ->
   if U32.lt buf.len 2ul then None
   else
@@ -164,7 +162,7 @@ let ser_inputs (#inputs1:erased (TSet.set bslice))
 
 #reset-options "--z3rlimit 30"
 
-inline_for_extraction [@"substitute"]
+[@"substitute"]
 let ser_append (#inputs1 #inputs2:erased (TSet.set bslice))
                (#b1: buffer_fun inputs1) (#b2: buffer_fun inputs2)
                (s1:serializer_any inputs1 b1) (s2:serializer_any inputs2 b2) :
@@ -203,8 +201,9 @@ let ser_append (#inputs1 #inputs2:erased (TSet.set bslice))
 
 #reset-options
 
-inline_for_extraction [@"substitute"]
+[@"substitute"]
 val ser_copy : data:bslice -> serializer_1 data (fun h -> as_seq h data)
+[@"substitute"]
 let ser_copy data = fun buf ->
   if U32.lt buf.len data.len then None
   else begin
