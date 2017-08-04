@@ -130,6 +130,7 @@ let defaults =
       ("fs_typ_app"                   , Bool false);
       ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
+      ("gen_native_tactics"           , Unset);
       ("hide_genident_nums"           , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
@@ -176,6 +177,7 @@ let defaults =
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
+      ("use_native_tactics"           , Unset);
       ("unthrottle_inductives"        , Bool false);
       ("use_eq_at_higher_order"       , Bool false);
       ("use_hints"                    , Bool false);
@@ -233,6 +235,7 @@ let get_extract_module          ()      = lookup_opt "extract_module"           
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
+let get_gen_native_tactics      ()      = lookup_opt "gen_native_tactics"       (as_option as_string)
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
@@ -280,6 +283,7 @@ let get_trace_error             ()      = lookup_opt "trace_error"              
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
+let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
 let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
@@ -477,6 +481,12 @@ let rec specs () : list<Getopt.opt> =
         OneArg (mk_path,
                 "[dir]"),
         "Set the FSTAR_HOME variable to [dir]");
+
+       ( noshort,
+         "gen_native_tactics",
+         OneArg (mk_path,
+                 "[path]"),
+        "Compile all user tactics used in the module in <path>");
 
        ( noshort,
         "hide_genident_nums",
@@ -749,6 +759,12 @@ let rec specs () : list<Getopt.opt> =
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
+         "use_native_tactics",
+         OneArg (mk_path,
+                 "[path]"),
+        "Use compiled tactics from <path>");
+
+       ( noshort,
         "no_tactics",
         ZeroArgs (fun () -> mk_bool true),
         "Do not run the tactic engine before discharging a VC");
@@ -873,6 +889,7 @@ let settable = function
     | "initial_ifuel"
     | "inline_arith"
     | "lax"
+    | "load"
     | "log_types"
     | "log_queries"
     | "max_fuel"
@@ -1063,6 +1080,7 @@ let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
 let extract_all                  () = get_extract_all                 ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
+let gen_native_tactics           () = get_gen_native_tactics          ()
 let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
@@ -1111,6 +1129,7 @@ let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
+let use_native_tactics           () = get_use_native_tactics          ()
 let use_tactics                  () = get_use_tactics                 ()
 let using_facts_from             () = get_using_facts_from            ()
 let verify_all                   () = get_verify_all                  ()

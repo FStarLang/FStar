@@ -84,6 +84,16 @@ let codegen (umods, env) =
         save_value_to_file (Options.prepend_output_dir "out.krml") bin
    | _ -> failwith "Unrecognized option"
 
+let gen_native_tactics (umods, env) out_dir =
+    (* Extract module and its dependencies to OCaml *)
+    Options.set_option "codegen" (Options.String "OCaml");
+    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
+    let mllibs = List.flatten mllibs in
+    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
+
+    (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
+    let user_tactics_modules = Universal.user_tactics_modules in
+    Tactics.Load.compile_modules out_dir (!user_tactics_modules)
 
 
 (****************************************************************************)
@@ -139,11 +149,25 @@ let go _ =
               Parser.Dep.VerifyFigureItOut
           in
           let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
+          (match Options.gen_native_tactics () with
+          | Some dir ->
+             Util.print1 "Generating native tactics in %s\n" dir;
+             Options.set_option "lax" (Options.Bool true)
+          | None -> ());
+          (match Options.use_native_tactics () with
+          | Some dir ->
+              Util.print1 "Using native tactics from %s\n" dir;
+              Tactics.Load.load_tactics_dir dir
+          | None -> ());
           Tactics.Load.load_tactics (Options.load ());
           let fmods, dsenv, env = Universal.batch_mode_tc filenames in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
+          (match Options.gen_native_tactics () with
+          | Some dir ->
+              gen_native_tactics (fmods |> List.map fst, env) dir
+          | None -> ());
           finished_message module_names_and_times 0
         end //end normal batch mode
         else
