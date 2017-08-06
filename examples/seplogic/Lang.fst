@@ -61,18 +61,17 @@ type c_post (a:Type0) = a -> heap_predicate
 type hoare_triple (#a:Type0) (pre:c_pre) (c:command a) (post:c_post a)
   = forall (h0:heap) (h1:heap) (r:a). (pre h0 /\ (c `interpreted_in` h0 == (r, h1))) ==> post r h1
 
-let rec wp_command (#a:Type0) (c:command a) (p:st_post a) (h:heap) :Type0
+let rec wp_command (#a:Type0) (c:command a) (p:st_post a) (h0:heap) :Type0
   = match c with
-    | Return #a x      -> p x h
+    | Return #a x      -> p x h0
     | Bind #a #b c1 c2 ->
       FStar.Classical.forall_intro (FStar.WellFounded.axiom1 #a #(command b) c2);
-      (wp_command c1) (fun x h1 -> (wp_command (c2 x)) p h1) h
+      (wp_command c1) (fun x h1 -> (wp_command (c2 x)) p h1) h0
     //| Loop #_ _ _      -> False
     //| Fail #_          -> True
-    | Read r           -> p (sel h r) h
-    | Write r x        -> p () (upd h r x)
-    | Alloc            ->
-      let (r, h) :(ref int * heap) = Heap.alloc (Heap.trivial_preorder int) h 0 false in p r h
+    | Read r           -> p (sel h0 r) h0
+    | Write r x        -> (forall (h1:heap). (sel h1 r == x /\ modifies !{r} h0 h1) ==> p () h1)
+    | Alloc            -> (forall (r:ref int) (h1:heap). (fresh r h0 h1 /\ modifies !{} h0 h1 /\ sel h1 r == 0) ==> p r h1)
     //| Free r           -> False
 
 (* get the nice x <-- c1; c2 syntax *)
@@ -90,6 +89,7 @@ let c1 (r1:addr) (n1:int)
        (r4:addr) (n4:int)
   :command int
   = Write r1 n1;;
+    Alloc;;
     n <-- Read r1;
     Write r2 n2;;
     Write r3 n3;;
@@ -97,12 +97,62 @@ let c1 (r1:addr) (n1:int)
     Write r2 n1;;
     Write r4 n3;;
     Write r1 (n + 1);;
+    Alloc;;
     n <-- Read r1;
     Write r3 n2;;
     Write r4 n2;;
     Write r2 n4;;
     Write r3 n1;;
     Write r1 (n + 1);;
+    Alloc;;
+    n <-- Read r1;
+    Write r2 n2;;
+    Write r3 n3;;
+    Write r4 n4;;
+    Write r2 n1;;
+    Write r4 n3;;
+    Write r3 n2;;
+    Write r4 n2;;
+    Write r2 n4;;
+    Write r3 n1;;
+    Write r1 (n + 1);;
+    Alloc;;
+    n <-- Read r1;
+    Write r2 n2;;
+    Write r3 n3;;
+    Write r4 n4;;
+    Write r2 n1;;
+    Write r4 n3;;
+    Write r3 n2;;
+    Write r4 n2;;
+    Write r2 n4;;
+    Write r3 n1;;
+    Write r1 (n + 1);;
+    Alloc;;
+    n <-- Read r1;
+    Write r2 n2;;
+    Write r3 n3;;
+    Write r4 n4;;
+    Write r2 n1;;
+    Write r4 n3;;
+    Write r3 n2;;
+    Write r4 n2;;
+    Write r2 n4;;
+    Write r3 n1;;
+    Write r1 (n + 1);;
+    Alloc;;
+    n <-- Read r1;
+    Write r2 n2;;
+    Write r3 n3;;
+    Write r4 n4;;
+    Write r2 n1;;
+    Write r4 n3;;
+    Write r3 n2;;
+    Write r4 n2;;
+    Write r2 n4;;
+    Write r3 n1;;
+    Write r1 (n + 1);;
+    Alloc;;
     n <-- Read r1;
     Write r2 n2;;
     Write r3 n3;;
@@ -141,7 +191,7 @@ let foo (r1:addr) (n1:int)
         (r3:addr) (n3:int)
         (r4:addr) (n4:int)
         (h:heap{distinct_and_contained r1 r2 r3 r4 h})
-  =  let p1  :st_post int = fun _ h -> sel h r1 == n1 + 2 in
+  =  let p1  :st_post int = fun _ h -> sel h r1 == n1 + 6 in
 
      let t  = wp_command (c1 r1 n1 r2 n2 r3 n3 r4 n4) p1 h in
      assert (Prims.norm steps t)
