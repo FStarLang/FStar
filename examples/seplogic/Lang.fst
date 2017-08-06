@@ -3,6 +3,8 @@ module Lang
 open FStar.Seq
 open FStar.Set
 open FStar.Classical
+open FStar.Buffer
+open FStar.Seq
 
 open FStar.ST
 open FStar.Heap  //this order of opening the modules is important, we want ref from FStar.Heap
@@ -22,12 +24,12 @@ type loop_result (a:Type0) =
 noeq type command :Type0 -> Type =
   | Return: #a:Type -> v:a -> command a
   | Bind  : #a:Type0 -> #b:Type0 -> c1:command a -> c2:(a -> command b) -> command b
-  | Loop  : #a:Type0 -> acc:a -> f:(a -> command (loop_result a)) -> command a
-  | Fail  : #a:Type0 -> command a
+  //| Loop  : #a:Type0 -> acc:a -> f:(a -> command (loop_result a)) -> command a
+  //| Fail  : #a:Type0 -> command a
   | Read  : id:addr -> command int
   | Write : id:addr -> v:int -> command unit
   | Alloc : command addr
-  | Free  : id:addr -> command unit
+  //| Free  : id:addr -> command unit
 
 (*
  * a bit hacky, since a program may not termiinte
@@ -65,29 +67,81 @@ let rec wp_command (#a:Type0) (c:command a) (p:st_post a) (h:heap) :Type0
     | Bind #a #b c1 c2 ->
       FStar.Classical.forall_intro (FStar.WellFounded.axiom1 #a #(command b) c2);
       (wp_command c1) (fun x h1 -> (wp_command (c2 x)) p h1) h
-    | Loop #_ _ _      -> False
-    | Fail #_          -> True
+    //| Loop #_ _ _      -> False
+    //| Fail #_          -> True
     | Read r           -> p (sel h r) h
     | Write r x        -> p () (upd h r x)
     | Alloc            ->
       let (r, h) :(ref int * heap) = Heap.alloc (Heap.trivial_preorder int) h 0 false in p r h
-    | Free r           -> False
+    //| Free r           -> False
 
 (* get the nice x <-- c1; c2 syntax *)
 let bind (#a:Type0) (#b:Type0) (c1:command a) (c2:a -> command b) :command b = Bind c1 c2
 
-let distinct_and_contained (r1:addr) (r2:addr) (h:heap)
-  = addr_of r1 <> addr_of r2 /\ h `contains` r1 /\ h `contains` r2
+let distinct_and_contained (r1:addr) (r2:addr) (r3:addr) (r4:addr) (h:heap)
+  = addr_of r1 <> addr_of r2 /\ addr_of r1 <> addr_of r3 /\ addr_of r1 <> addr_of r4 /\
+    addr_of r2 <> addr_of r3 /\ addr_of r2 <> addr_of r4 /\
+    addr_of r3 <> addr_of r4 /\
+    h `contains` r1 /\ h `contains` r2 /\ h `contains` r3 /\ h `contains` r4
 
 let c1 (r1:addr) (n1:int)
+       (r2:addr) (n2:int)
+       (r3:addr) (n3:int)
+       (r4:addr) (n4:int)
   :command int
-  = Write r1 n1;; n <-- Read r1; Return n
+  = Write r1 n1;;
+    n <-- Read r1;
+    Write r2 n2;;
+    Write r3 n3;;
+    Write r4 n4;;
+    Write r2 n1;;
+    Write r4 n3;;
+    Write r1 (n + 1);;
+    n <-- Read r1;
+    Write r3 n2;;
+    Write r4 n2;;
+    Write r2 n4;;
+    Write r3 n1;;
+    Write r1 (n + 1);;
+    n <-- Read r1;
+    Write r2 n2;;
+    Write r3 n3;;
+    Write r4 n4;;
+    Write r2 n1;;
+    Write r4 n3;;
+    Write r3 n2;;
+    Write r4 n2;;
+    Write r2 n4;;
+    Write r3 n1;;
+    Return 0
   
+let steps :list step = [delta_only
+  ["Lang.wp_command";
+   "Lang.uu___is_Return";
+   "Lang.uu___is_Bind";
+   "Lang.uu___is_Read";
+   "Lang.uu___is_Write";
+   "Lang.uu___is_Alloc";
+   "Lang.__proj__Return__item__v";
+   "Lang.__proj__Bind__item__c1";
+   "Lang.__proj__Bind__item__c2";
+   "Lang.__proj__Read__item__id";
+   "Lang.__proj__Write__item__id";
+   "Lang.__proj__Write__item__v";
+   "Lang.c1";
+   "Lang.bind"];
+
+   zeta; iota; primops
+  ]
+
 #reset-options
 
 let foo (r1:addr) (n1:int)
         (r2:addr) (n2:int)
-        (h:heap{distinct_and_contained r1 r2 h})
-  =  let p1  :st_post int = fun n h -> sel h r1 == n1 in
-     admit ();
-     assert_norm ((wp_command (c1 r1 n1)) (normalize_term p1) h)
+        (r3:addr) (n3:int)
+        (r4:addr) (n4:int)
+        (h:heap{distinct_and_contained r1 r2 r3 r4 h})
+  =  let p1  :st_post int = fun _ h -> sel h r1 == n1 + 2 in
+
+     let t  = wp_command (c1 r1 n1 r2 n2 r3 n3 r4 n4) p1 h in
+     assert (Prims.norm steps t)
