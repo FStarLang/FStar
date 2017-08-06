@@ -77,92 +77,74 @@ let rec wp_command (#a:Type0) (c:command a) (p:st_post a) (h0:heap) :Type0
 (* get the nice x <-- c1; c2 syntax *)
 let bind (#a:Type0) (#b:Type0) (c1:command a) (c2:a -> command b) :command b = Bind c1 c2
 
-let distinct_and_contained (r1:addr) (r2:addr) (r3:addr) (r4:addr) (h:heap)
-  = addr_of r1 <> addr_of r2 /\ addr_of r1 <> addr_of r3 /\ addr_of r1 <> addr_of r4 /\
-    addr_of r2 <> addr_of r3 /\ addr_of r2 <> addr_of r4 /\
-    addr_of r3 <> addr_of r4 /\
-    h `contains` r1 /\ h `contains` r2 /\ h `contains` r3 /\ h `contains` r4
+let distinct_and_contained (r1:addr) (r2:addr) (r3:addr) (r4:addr) (r5:addr) (r6:addr) (h:heap)
+  = addr_of r1 <> addr_of r2 /\ addr_of r1 <> addr_of r3 /\ addr_of r1 <> addr_of r4 /\ addr_of r1 <> addr_of r5 /\ addr_of r1 <> addr_of r6 /\
+    addr_of r2 <> addr_of r3 /\ addr_of r2 <> addr_of r4 /\ addr_of r2 <> addr_of r5 /\ addr_of r2 <> addr_of r6 /\
+    addr_of r3 <> addr_of r4 /\ addr_of r3 <> addr_of r5 /\ addr_of r3 <> addr_of r6 /\
+    addr_of r4 <> addr_of r5 /\ addr_of r4 <> addr_of r6 /\
+    addr_of r5 <> addr_of r6 /\
+    h `contains` r1 /\ h `contains` r2 /\ h `contains` r3 /\ h `contains` r4 /\ h `contains` r5 /\ h `contains` r6
 
 let c1 (r1:addr) (n1:int)
        (r2:addr) (n2:int)
        (r3:addr) (n3:int)
        (r4:addr) (n4:int)
+       (r5:addr) (n5:int)
+       (r6:addr) (n6:int)
   :command int
   = Write r1 n1;;
-    Alloc;;
+    n <-- Read r1;
+    r <-- Alloc;
+    Write r2 n2;;
+    Write r3 n3;;
+    Write r4 n4;;
+    Write r5 n5;;
+    Write r6 n6;;
+    Write r n1;;
+    Write r1 (n + 1);;
+    n <-- Read r1;
+    r <-- Alloc;
+    Write r2 n6;;
+    Write r3 n5;;
+    Write r4 n4;;
+    Write r5 n5;;
+    Write r6 n6;;
+    Write r n5;;
+    Write r1 (n + 1);;
+    n <-- Read r1;
+    r <-- Alloc;
+    Write r2 n2;;
+    Write r3 n3;;
+    Write r4 n4;;
+    Write r5 n5;;
+    Write r6 n6;;
+    Write r n3;;
+    Write r1 (n + 1);;
+    n <-- Read r1;
+    r <-- Alloc;
+    Write r2 n6;;
+    Write r3 n5;;
+    Write r4 n4;;
+    Write r5 n5;;
+    Write r6 n6;;
+    Write r n5;;
+    Write r1 (n + 1);;
     n <-- Read r1;
     Write r2 n2;;
     Write r3 n3;;
     Write r4 n4;;
-    Write r2 n1;;
-    Write r4 n3;;
+    Write r5 n5;;
+    Write r6 n6;;
     Write r1 (n + 1);;
-    Alloc;;
     n <-- Read r1;
-    Write r3 n2;;
-    Write r4 n2;;
-    Write r2 n4;;
-    Write r3 n1;;
-    Write r1 (n + 1);;
-    Alloc;;
-    n <-- Read r1;
-    Write r2 n2;;
-    Write r3 n3;;
+    r <-- Alloc;
+    Write r2 n6;;
+    Write r3 n5;;
     Write r4 n4;;
-    Write r2 n1;;
-    Write r4 n3;;
-    Write r3 n2;;
-    Write r4 n2;;
-    Write r2 n4;;
-    Write r3 n1;;
+    Write r5 n5;;
+    Write r6 n6;;
+    Write r n1;;
     Write r1 (n + 1);;
-    Alloc;;
-    n <-- Read r1;
-    Write r2 n2;;
-    Write r3 n3;;
-    Write r4 n4;;
-    Write r2 n1;;
-    Write r4 n3;;
-    Write r3 n2;;
-    Write r4 n2;;
-    Write r2 n4;;
-    Write r3 n1;;
-    Write r1 (n + 1);;
-    Alloc;;
-    n <-- Read r1;
-    Write r2 n2;;
-    Write r3 n3;;
-    Write r4 n4;;
-    Write r2 n1;;
-    Write r4 n3;;
-    Write r3 n2;;
-    Write r4 n2;;
-    Write r2 n4;;
-    Write r3 n1;;
-    Write r1 (n + 1);;
-    Alloc;;
-    n <-- Read r1;
-    Write r2 n2;;
-    Write r3 n3;;
-    Write r4 n4;;
-    Write r2 n1;;
-    Write r4 n3;;
-    Write r3 n2;;
-    Write r4 n2;;
-    Write r2 n4;;
-    Write r3 n1;;
-    Write r1 (n + 1);;
-    Alloc;;
-    n <-- Read r1;
-    Write r2 n2;;
-    Write r3 n3;;
-    Write r4 n4;;
-    Write r2 n1;;
-    Write r4 n3;;
-    Write r3 n2;;
-    Write r4 n2;;
-    Write r2 n4;;
-    Write r3 n1;;
     Return 0
   
 let steps :list step = [delta_only
@@ -186,12 +168,16 @@ let steps :list step = [delta_only
 
 #reset-options
 
+#set-options "--z3rlimit 10"
 let foo (r1:addr) (n1:int)
         (r2:addr) (n2:int)
         (r3:addr) (n3:int)
         (r4:addr) (n4:int)
-        (h:heap{distinct_and_contained r1 r2 r3 r4 h})
-  =  let p1  :st_post int = fun _ h -> sel h r1 == n1 + 6 in
+        (r5:addr) (n5:int)
+        (r6:addr) (n6:int)
+        (h:heap{distinct_and_contained r1 r2 r3 r4 r5 r6 h})
+  =  let p1  :st_post int = fun _ h -> sel h r1 == n1 + 6 /\ sel h r2 == n6 /\ sel h r3 == n5 /\ sel h r4 == n4 /\ sel h r5 == n5 /\ sel h r6 == n6
+     in
 
-     let t  = wp_command (c1 r1 n1 r2 n2 r3 n3 r4 n4) p1 h in
+     let t  = wp_command (c1 r1 n1 r2 n2 r3 n3 r4 n4 r5 n5 r6 n6) p1 h in
      assert (Prims.norm steps t)
