@@ -6,13 +6,11 @@ Experiments in low-level parsing that extracts to reasonable C code, proves corr
 
 ## KreMLin features
 
-* `interruptible_for` for both `validate_many_st` and `lookup` (see [FStarLang/kremlin#49](https://github.com/FStarLang/kremlin/issues/49))
-* `inline_for_extraction` for types (specifically, functions which compute types) should be unfolded by extraction (eg, `serializer_any`). `unfold` works for extraction but breaks verification
 * `must_extract` annotation to fail if something doesn't extract, and potentially block CI
 * add a checkout of kremlin and set `KREMLIN_HOME` on CI so `C.Loops.fst` and `C.fst` are available
 * `C.fst` needs specs for big endian reading/encoding (fix known - HACL* already did this but not in the KreMLin library)
-* KreMLin extraction doesn't have `memcmp` (see [FStarLang/kremlin#50](https://github.com/FStarLang/kremlin/issues/50))
-* might need a generic `while` loop; mine will terminate, but the proof will be a bit tricky (local offset will eventually reach the input buffer length)
+* might need a generic `while` loop. Modeled in kremlin branch `schema_21` (no implementation)
+* `inline_for_extraction` for types (specifically, functions which compute types) should be unfolded by extraction (eg, `serializer_any`). `unfold` works for extraction but breaks verification. Fixed by [FStarLang/FStar#1176](https://github.com/FStarLang/FStar/pull/1176).
 
 ## Extraction bugs
 

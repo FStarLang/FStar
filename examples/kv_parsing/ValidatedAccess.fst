@@ -206,7 +206,7 @@ let lookup_in_entries_st buf num_entries key =
               // be natural postcondition of parse_one_entry
               admit();
               if U32.eq (Cast.uint16_to_uint32 ee.key_st.len16_st) key.len then
-                if I32.eq (B.compare ee.key_st.a16_st.p key.p key.len) 0l then
+                if B.eqb ee.key_st.a16_st.p key.p key.len then
                   ( (off', Some ee), true )
                 else ((off', None), false)
               else ((off', None), false)) in
