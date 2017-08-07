@@ -298,6 +298,18 @@ let modifies_1_field
   [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1)]
 = ()
 
+let modifies_1_field_tag_equal
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (valid h0 tgs p /\ P.modifies_1 (gfield tgs p f) h0 h1))
+  (ensures (gread_tag h0 tgs p == gread_tag h1 tgs p))
+  [SMTPat (valid h0 tgs p); SMTPat (gread_tag h1 tgs p); SMTPat (gfield tgs p f)]
+= ()
+
 let readable_intro
   (#l: P.union_typ)
   (tgs: tags l)
