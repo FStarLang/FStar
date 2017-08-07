@@ -243,14 +243,16 @@ let sub_mod (a b: t) : Pure t
     else sub_mod_wrap_ok a b);
   sub_mod_impl a b
 
+val shift_bound : #n:nat -> num:UInt.uint_t n -> n':nat ->
+  Lemma (num * pow2 n' <= pow2 (n'+n) - pow2 n')
+let shift_bound #n num n' =
+  Math.lemma_mult_le_right (pow2 n') num (pow2 n - 1);
+  Math.distributivity_sub_left (pow2 n) 1 (pow2 n');
+  Math.pow2_plus n' n
+
 val append_uint : #n1:nat -> #n2:nat -> num1:UInt.uint_t n1 -> num2:UInt.uint_t n2 -> UInt.uint_t (n1+n2)
 let append_uint #n1 #n2 num1 num2 =
-  Math.lemma_mult_le_right (pow2 n1) num2 (pow2 n2 - 1);
-//  assert (num1 + num2 * pow2 n1 <= (pow2 n1 - 1) + (pow2 n2 - 1) * pow2 n1);
-  Math.distributivity_sub_left (pow2 n2) 1 (pow2 n1);
-//  assert ( (pow2 n1 - 1) + (pow2 n2 - 1) * pow2 n1 == (pow2 n1 - 1) + pow2 n2 * pow2 n1 - pow2 n1);
-  Math.pow2_plus n2 n1;
- // assert ((pow2 n1 - 1) + pow2 (n2 + n1) - pow2 n1 == pow2 (n2 + n1) - 1);
+  shift_bound num2 n1;
   num1 + num2 * pow2 n1
 
 val to_vec_append : #n1:nat{n1 > 0} -> #n2:nat{n2 > 0} -> num1:UInt.uint_t n1 -> num2:UInt.uint_t n2 ->
@@ -367,7 +369,7 @@ let mod_double a k =
   mod_mod a k 1
 
 let shift_left_large_val (#n1:nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_t n2) (s:nat) :
-  Lemma ((a1 + a2 * pow2 n1) * pow2 s % pow2 (n1+n2) == (a1 * pow2 s + a2 * pow2 (n1+s)) % pow2 (n1+n2)) =
+  Lemma ((a1 + a2 * pow2 n1) * pow2 s == (a1 * pow2 s + a2 * pow2 (n1+s))) =
   Math.distributivity_add_left a1 (a2 * pow2 n1) (pow2 s);
   Math.paren_mul_right a2 (pow2 n1) (pow2 s);
   Math.pow2_plus n1 s
