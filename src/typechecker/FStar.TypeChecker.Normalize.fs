@@ -901,7 +901,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
-            let s, tm = get_norm_request (norm ({cfg with delta_level=[Unfold Delta_constant]}) env []) args in
+            let cfg' = {cfg with steps=(List.filter (function | UnfoldOnly _ | NoDeltaSteps -> false | _ -> true) cfg.steps);
+                                 delta_level=[Unfold Delta_constant]} in
+            let s, tm = get_norm_request (norm cfg' env []) args in
             let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
                 then [Unfold Delta_constant]

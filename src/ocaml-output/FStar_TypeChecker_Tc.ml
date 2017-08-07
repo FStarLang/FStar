@@ -53,6 +53,8 @@ let set_hint_correlator:
               (uu___95_15.FStar_TypeChecker_Env.lax);
             FStar_TypeChecker_Env.lax_universes =
               (uu___95_15.FStar_TypeChecker_Env.lax_universes);
+            FStar_TypeChecker_Env.failhard =
+              (uu___95_15.FStar_TypeChecker_Env.failhard);
             FStar_TypeChecker_Env.type_of =
               (uu___95_15.FStar_TypeChecker_Env.type_of);
             FStar_TypeChecker_Env.universe_of =
@@ -123,6 +125,8 @@ let set_hint_correlator:
               (uu___96_31.FStar_TypeChecker_Env.lax);
             FStar_TypeChecker_Env.lax_universes =
               (uu___96_31.FStar_TypeChecker_Env.lax_universes);
+            FStar_TypeChecker_Env.failhard =
+              (uu___96_31.FStar_TypeChecker_Env.failhard);
             FStar_TypeChecker_Env.type_of =
               (uu___96_31.FStar_TypeChecker_Env.type_of);
             FStar_TypeChecker_Env.universe_of =
@@ -1029,6 +1033,9 @@ let tc_eff_decl:
                                                 FStar_TypeChecker_Env.lax_universes
                                                   =
                                                   (uu___100_1216.FStar_TypeChecker_Env.lax_universes);
+                                                FStar_TypeChecker_Env.failhard
+                                                  =
+                                                  (uu___100_1216.FStar_TypeChecker_Env.failhard);
                                                 FStar_TypeChecker_Env.type_of
                                                   =
                                                   (uu___100_1216.FStar_TypeChecker_Env.type_of);
@@ -1190,6 +1197,8 @@ let tc_eff_decl:
                                              FStar_TypeChecker_Env.lax_universes
                                                =
                                                (uu___101_1349.FStar_TypeChecker_Env.lax_universes);
+                                             FStar_TypeChecker_Env.failhard =
+                                               (uu___101_1349.FStar_TypeChecker_Env.failhard);
                                              FStar_TypeChecker_Env.type_of =
                                                (uu___101_1349.FStar_TypeChecker_Env.type_of);
                                              FStar_TypeChecker_Env.universe_of
@@ -2816,7 +2825,7 @@ let tc_lex_t:
                                                               FStar_Syntax_Syntax.sigel
                                                                 =
                                                                 FStar_Syntax_Syntax.Sig_datacon
-                                                                (lex_top1,[],_t_top,_lex_t_top,_0_39,uu____3987);
+                                                                (lex_top1,[],_t_top,_lex_t_top,_0_41,uu____3987);
                                                               FStar_Syntax_Syntax.sigrng
                                                                 = r1;
                                                               FStar_Syntax_Syntax.sigquals
@@ -2827,14 +2836,14 @@ let tc_lex_t:
                                                                 = uu____3990;_}::
               {
                 FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
-                  (lex_cons,[],_t_cons,_lex_t_cons,_0_40,uu____3994);
+                  (lex_cons,[],_t_cons,_lex_t_cons,_0_42,uu____3994);
                 FStar_Syntax_Syntax.sigrng = r2;
                 FStar_Syntax_Syntax.sigquals = [];
                 FStar_Syntax_Syntax.sigmeta = uu____3996;
                 FStar_Syntax_Syntax.sigattrs = uu____3997;_}::[]
               when
-              ((_0_39 = (Prims.parse_int "0")) &&
-                 (_0_40 = (Prims.parse_int "0")))
+              ((_0_41 = (Prims.parse_int "0")) &&
+                 (_0_42 = (Prims.parse_int "0")))
                 &&
                 (((FStar_Ident.lid_equals lex_t1 FStar_Parser_Const.lex_t_lid)
                     &&
@@ -3439,6 +3448,8 @@ let tc_decl:
                               FStar_TypeChecker_Env.lax = true;
                               FStar_TypeChecker_Env.lax_universes =
                                 (uu___112_5004.FStar_TypeChecker_Env.lax_universes);
+                              FStar_TypeChecker_Env.failhard =
+                                (uu___112_5004.FStar_TypeChecker_Env.failhard);
                               FStar_TypeChecker_Env.type_of =
                                 (uu___112_5004.FStar_TypeChecker_Env.type_of);
                               FStar_TypeChecker_Env.universe_of =
@@ -4025,6 +4036,8 @@ let tc_decl:
                            (uu___121_6317.FStar_TypeChecker_Env.lax);
                          FStar_TypeChecker_Env.lax_universes =
                            (uu___121_6317.FStar_TypeChecker_Env.lax_universes);
+                         FStar_TypeChecker_Env.failhard =
+                           (uu___121_6317.FStar_TypeChecker_Env.failhard);
                          FStar_TypeChecker_Env.type_of =
                            (uu___121_6317.FStar_TypeChecker_Env.type_of);
                          FStar_TypeChecker_Env.universe_of =
@@ -4664,6 +4677,8 @@ let add_sigelt_to_env:
                          (uu___130_7547.FStar_TypeChecker_Env.lax);
                        FStar_TypeChecker_Env.lax_universes =
                          (uu___130_7547.FStar_TypeChecker_Env.lax_universes);
+                       FStar_TypeChecker_Env.failhard =
+                         (uu___130_7547.FStar_TypeChecker_Env.failhard);
                        FStar_TypeChecker_Env.type_of =
                          (uu___130_7547.FStar_TypeChecker_Env.type_of);
                        FStar_TypeChecker_Env.universe_of =
@@ -4923,6 +4938,8 @@ let tc_partial_modul:
              (uu___132_8259.FStar_TypeChecker_Env.lax);
            FStar_TypeChecker_Env.lax_universes =
              (uu___132_8259.FStar_TypeChecker_Env.lax_universes);
+           FStar_TypeChecker_Env.failhard =
+             (uu___132_8259.FStar_TypeChecker_Env.failhard);
            FStar_TypeChecker_Env.type_of =
              (uu___132_8259.FStar_TypeChecker_Env.type_of);
            FStar_TypeChecker_Env.universe_of =
@@ -5032,6 +5049,8 @@ let check_exports:
               (uu___135_8371.FStar_TypeChecker_Env.admit);
             FStar_TypeChecker_Env.lax = true;
             FStar_TypeChecker_Env.lax_universes = true;
+            FStar_TypeChecker_Env.failhard =
+              (uu___135_8371.FStar_TypeChecker_Env.failhard);
             FStar_TypeChecker_Env.type_of =
               (uu___135_8371.FStar_TypeChecker_Env.type_of);
             FStar_TypeChecker_Env.universe_of =
@@ -5289,6 +5308,8 @@ let check_module:
            FStar_TypeChecker_Env.lax = uu____8654;
            FStar_TypeChecker_Env.lax_universes =
              (uu___137_8653.FStar_TypeChecker_Env.lax_universes);
+           FStar_TypeChecker_Env.failhard =
+             (uu___137_8653.FStar_TypeChecker_Env.failhard);
            FStar_TypeChecker_Env.type_of =
              (uu___137_8653.FStar_TypeChecker_Env.type_of);
            FStar_TypeChecker_Env.universe_of =

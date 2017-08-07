@@ -99,6 +99,7 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
