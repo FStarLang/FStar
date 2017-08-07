@@ -49,7 +49,7 @@ let map_opt (f:'a -> option<'b>) (l:list<'a>) : list<'b> =
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
-    if starts_with reserved_prefix x.ppname.idText then
+    if Options.print_real_names () || starts_with reserved_prefix x.ppname.idText then
       x.ppname.idText ^ (string_of_int x.index)
     else
       x.ppname.idText
@@ -453,6 +453,9 @@ let rec resugar_term (t : S.term) : A.term =
           let rec resugar_body t = match (t.tm) with
             | A.Match(e, [(_,_,b)]) -> b
             | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
+            | A.Ascribed({tm=A.Ascribed(t1, _,_)}, t2, t3) ->
+              (* Flattening multiple ascription, just keeping the external one (which should be the most precise) *)
+              resugar_body ({t with tm = A.Ascribed (t1, t2, t3)})
             | A.Ascribed(t1, t2, t3) ->
               (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
               mk (A.Ascribed(resugar_body t1, t2, t3))
@@ -572,8 +575,10 @@ let rec resugar_term (t : S.term) : A.term =
             resugar_term n
           | Inr n -> (* comp *)
             resugar_comp n in
+      (* Flattenning inner ascription (the outer one should be the more precise, no ?) *)
+      let e' = match resugar_term e with | {tm=A.Ascribed (t, _, _)} -> t | t -> t in
       let tac_opt = Option.map resugar_term tac_opt in
-      mk (A.Ascribed(resugar_term e, term, tac_opt))
+      mk (A.Ascribed(e', term, tac_opt))
 
     | Tm_let((is_rec, bnds), body) ->
       let mk_pat a = A.mk_pattern a t.pos in
