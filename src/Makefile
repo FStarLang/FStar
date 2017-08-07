@@ -276,7 +276,6 @@ uexamples:
 
 ulong:
 	+$(MAKE) utest
-	+$(MAKE) -C ../examples/low-level/crypto extra
 	+$(MAKE) -C ../ulib extra
 
 ctags:
