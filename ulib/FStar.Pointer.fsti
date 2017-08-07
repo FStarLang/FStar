@@ -1529,7 +1529,11 @@ val lemma_modifies_sub_1 (#t: typ) (h0 h1 : HS.mem) (b:pointer t) : Lemma
 val modifies_substruct_1 (#tsub #ta:typ) (h0 h1 : HS.mem) (sub:pointer tsub) (a:pointer ta) : Lemma
   (requires (live h0 a /\ modifies_1 sub h0 h1 /\ live h1 sub /\ includes a sub))
   (ensures  (modifies_1 a h0 h1 /\ live h1 a))
-  [SMTPatT (modifies_1 sub h0 h1); SMTPatT (includes a sub)]
+  [SMTPatOr [
+    [SMTPatT (modifies_1 sub h0 h1); SMTPatT (includes a sub)];
+    [SMTPatT (modifies_1 a h0 h1); SMTPatT (includes a sub)];
+    [SMTPatT (modifies_1 sub h0 h1); SMTPatT (modifies_1 a h0 h1)]
+  ]]
 
 val modifies_popped_1' (#t:typ) (a:pointer t) (h0 h1 h2 h3 : HS.mem) : Lemma
   (requires (live h0 a /\ HS.fresh_frame h0 h1 /\ HS.popped h2 h3 /\ modifies_1 a h1 h2))
