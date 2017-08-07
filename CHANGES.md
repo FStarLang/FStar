@@ -28,3 +28,10 @@ Guidelines for the changelog:
   Code that relied on undefined behavior is unsafe, but it can be extracted
   using `assume` or
   `admit`.
+
+## C Extraction
+
+* [PR #1176](https://github.com/FStarLang/FStar/pull/1176)
+  `inline_for_extraction` on a type annotation now unfolds it at extraction
+  time. This can help to reveal first-order code for C extraction;
+  see [FStarLang/kremlin #51](https://github.com/FStarLang/kremlin/issues/51).
