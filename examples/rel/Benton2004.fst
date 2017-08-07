@@ -27,11 +27,11 @@ type reified_computation =
 type raw_computation =
   (f: ((fuel: nat) -> ISNull bool))
 
+let reify_raw_computation (f : raw_computation) : reified_raw_computation =
+  fun n h -> reify (f n) h
+
 type computation =
-  (f: raw_computation { 
-    let g n = reify (f n) in
-    fuel_monotonic g
-  })
+  (f: raw_computation { fuel_monotonic (reify_raw_computation f) })
 
 let reify_computation (c: computation) : GTot reified_computation =
   let f n = reify (c n) in
@@ -139,7 +139,7 @@ let fuel_monotonic_while
 
 let while (b: exp bool) (c: computation) : Tot computation =
   let f : raw_computation = while_raw b c in
-  let g (fuel: nat) = reify (f fuel) in
+  let g = reify_raw_computation f in
   fuel_monotonic_while b c g;
   f
 

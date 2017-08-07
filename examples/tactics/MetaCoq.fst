@@ -1,5 +1,6 @@
 module MetaCoq
 
+open FStar.Exn
 open FStar.All
 
 (*
@@ -75,7 +76,6 @@ let apply (#t:Type) (c : t) : tactic = fun g ->
           if is_evar e then Goal e :: r
           else r
       | _ ->
-          let gT = goal_type g in
           raise CantApply (* CantApply c gT *)
   in app (| t, c |)
 
@@ -83,10 +83,10 @@ let cut u : tactic = fun g ->
   let t = goal_type g in
   let ut = evar (u -> Tot t) in
   let u = evar u in
-  ignore (exact (ut u) g);
+  ignore u#1 (exact (ut u) g);
   [Goal ut; Goal u]
 
 let select (t:Type) (f : t -> tactic) : tactic = fun g ->
-  let g = goal_type g in
   admit()
+  // let g = goal_type u#0 g in
   (* match_goal ([| (x : T) |- G |] => f x) g *)

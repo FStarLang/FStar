@@ -35,7 +35,6 @@
       ],
       0
     ],
-    [ "FStar.Matrix2.lemma_row_len", 2, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Matrix2.lemma_col_len",
       1,
@@ -47,9 +46,6 @@
       ],
       0
     ],
-    [ "FStar.Matrix2.lemma_col_len", 2, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Matrix2.lemma_index_create", 1, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Matrix2.lemma_index_upd1", 1, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Matrix2.lemma_index_upd2",
       1,
@@ -74,7 +70,6 @@
       ],
       0
     ],
-    [ "FStar.Matrix2.lemma_index_upd2", 3, 0, 0, [ "@query" ], 0 ],
     [
       "FStar.Matrix2.lemma_index_row",
       1,
@@ -180,7 +175,6 @@
       ],
       0
     ],
-    [ "FStar.Matrix2.lemma_index_upd_col2", 3, 0, 0, [ "@query" ], 0 ],
-    [ "FStar.Matrix2.lemma_eq_intro", 1, 0, 0, [ "@query" ], 0 ]
+    [ "FStar.Matrix2.lemma_index_upd_col2", 3, 0, 0, [ "@query" ], 0 ]
   ]
 ]

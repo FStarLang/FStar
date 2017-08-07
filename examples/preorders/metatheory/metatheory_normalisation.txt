@@ -1,0 +1,1125 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A strong normalisation proof for the language that we use to study the witness-recall verification model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+(*
+   The basic idea is to prove the normalisation of this language via an erasure
+   based translation to a corresponding strongly normalising simply typed language.
+
+   The normalisation proof is based on Lindley and Stark's TT-lifting approach, 
+   available at http://homepages.inf.ed.ac.uk/slindley/papers/reducibility.pdf
+*)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+The simply typed language
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+(* Unless stated otherwise, (t, v, e) will refer to the syntax of this simply-typed language in this file. *)
+
+Value types:
+------------
+
+  t ::= state                 (* type of states *)
+      | unit                  (* unit type *)
+      | t1 + t2               (* sum type *)
+      | t1 * t2               (* product type *)
+      | t1 ->> t2             (* (effectful) function type *)
+
+Value terms:
+------------
+
+  v,s ::= x
+        | c_s | ...
+        | ()
+        | inl v
+        | inr v
+        | (v1,v2)
+        | fun x:t -> e
+
+Computation terms:
+------------------
+
+    e ::= return v
+      | e1 to x in e2
+      | v1 v2
+      | case v of (inl x1 => e1 ; inr x2 => e2)
+      | pmatch v as (x1,x2) in e
+      | get
+      | put v
+      | witness                       (* we erase the stable property (x.phi) but keep the (witness) term, so as to ensure that reduction sequences remain the same length *)
+      | recall                        (* we erase the stable property (x.phi) but keep the (recall) term, so as to ensure that reduction sequences remain the same length *)
+
+Term contexts:
+--------------
+
+  G ::= -
+      | G , x:t
+
+Typing rules for value terms:
+-----------------------------
+
+Well-typed value terms are defined using the judgement
+
+  G |- v : t                                                    
+
+using the following rules:
+
+  x:t \in G
+  ---------- [T-Var]
+  G |- x : t
+
+  ---------------- [T-State-Constant]
+  G |- c_s : state
+
+  --------------- [T-Unit]
+  G |- () : unit
+
+  G |- v : t1
+  -------------------- [T-Inl]
+  G |- inl v : t1 + t2
+
+  G |- v : t2
+  -------------------- [T-Inr]
+  G |- inr v : t1 + t2
+
+  G |- v1 : t1
+  G |- v2 : t2
+  ---------------------- [T-Pair]
+  G |- (v1,v2) : t1 * t2
+
+  G , x:t1 |- e : t2
+  ------------------------------ [T-Fun]
+  G |- fun x:t1 -> e : t1 ->> t2
+
+Typing rules for computation terms:
+-----------------------------------
+
+Well-typed computation terms are defined using the judgement
+
+  G |- e : t
+
+using the following rules:
+
+  G |- v : t
+  ----------------- [T-Return]
+  G |- return v : t
+
+  G |- e1 : t1
+  G , x:t1 |- e2 : t2
+  ----------------------- [T-To]
+  G |- e1 to x in e2 : t2
+
+  G |- v1 : t1 ->> t2
+  G |- v2 : t1
+  ------------------- [T-App]
+  G |- v1 v2 : t2
+
+  G |– v : t1 + t2
+  G , x1:t1 |- e1 : t
+  G , x2:t2 |- e2 : t
+  ------------------------------------------------ [T-Case]
+  G |- case v of (inl x1 => e1 ; inr x2 => e2) : t 
+
+  G |- v : t1 * t2
+  G , x1:t1 , x2:t2 |- e : t
+  --------------------------------- [T-Pmatch]
+  G |- pmatch v as (x1,x2) in e : t
+
+  ---------------- [T-Get]
+  G |- get : state
+
+  G |- s : state
+  ----------------- [T-Put]
+  G |- put s : unit
+
+  ------------------- [T-Witness]
+  G |- witness : unit
+
+  ------------------ [T-Recall]
+  G |- recall : unit
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Basic weakening and substitution lemmas for this simply typed language
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Lemma (Weakening for value terms):
+----------------------------------
+
+  Given a) G , G' |- v : t,
+        b) a value type t',
+        c) a variable x, and
+        d) x not in Vars(G , G')
+        
+  then  e) G , x:t' , G' |- v : t
+
+Proof:
+------
+
+  Straightforward induction on the derivation of (G , G' |- v : t).
+
+qed.
+
+
+Lemma (Weakening for computation terms):
+----------------------------------------
+
+  Given a) G , G' |- e : t,
+        b) a value type t', 
+        c) a variable x, and
+        d) x not in Vars(G , G')
+        
+  then  e) G , x:t' , G' |- e : t
+
+Proof:
+------
+
+  Straightforward induction on the derivation of (G , G' |- e : t).
+
+qed.
+
+
+Lemma (Substitution for value terms):
+-------------------------------------
+
+  Given a) G , x:t' , G' |- v : t, and
+        b) G |- v' : t'
+        
+  then  c) G , G' |- v[v'/x] : t
+
+Proof:
+------
+
+  Straightforward induction on the derivation of (G , x:t' , G' |- v : t).
+
+qed.
+
+
+Lemma (Substitution for computation terms):
+-------------------------------------------
+
+  Given a) G , x:t' , G' |- e : t, and
+        b) G |- v : t'
+        
+  then  e) G , G' |- e[v/x] : t
+
+Proof:
+------
+
+  Straightforward induction on the derivation of (G , x:t , G' |- e : t).
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Small-step call-by-value reduction relation for this simply typed language
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Evaluation contexts:
+--------------------
+
+  E ::= []
+      | E to x in e
+
+Configurations:
+---------------
+
+We define the reduction relation on configurations
+
+  (e,s)
+
+where
+
+  (e) is a computation term being reduced
+
+  (s) is a value of type (state)
+
+Reduction rules:
+----------------
+
+  (e,s) ~> (e',s')
+  ---------------------- [Context]
+  (E[e],s) ~> (E[e'],s')
+
+  ---------------------------------- [App]
+  ((fun x:t ~> e) v,s) ~> (e[v/x],s)
+
+  -------------------------------------- [Return-To]
+  ((return v) to x in e,s) ~> (e[v/x],s)
+
+  ----------------------------------------------------------------- [Case-Inl]
+  (case (inl v) of (inl x1 => e1 ; inr x2 => e2),s) ~> (e1[v/x1],s)
+
+  ----------------------------------------------------------------- [Case-Inr]
+  (case (inr v) of (inl x1 => e1 ; inr x2 => e2),s) ~> (e2[v/x2],s)
+
+  -------------------------------------------------------- [Pmatch]
+  (pmatch (v1,v2) as (x1,x2) in e,s) ~> (e[v1/x1,v2/x2],s)
+
+  ----------------------- [Get]
+  (get,s) ~> (return s,s)
+
+  ---------------------------- [Put]
+  (put s',s) ~> (return (),s')
+
+  ---------------------------- [Witness]
+  (witness,s) ~> (return (),s)
+
+  --------------------------- [Recall]
+  (recall,s) ~> (return (),s)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Strong normalisation for this simply typed language
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+(* The normalisation proof is based on Lindley and Stark's TT-lifting approach (TLCA 2005), an extension of Girard-Tait reducibility candidates to effectful computations. *)
+
+Continuations:
+--------------
+
+  k      ::= id | k o x.e
+
+  k_sum  ::= k o (x1.e1,x2.e2)          (* sum continuations *)
+
+  k_prod ::= k o x1.x2.e                (* product continuations *)
+  
+
+Typing of continuations:
+------------------------
+
+  ---------------- [K-Id]
+  G |- id : t -o t
+
+  G , x:t1 |- e : t2
+  G |- k : t2 -o t3
+  ----------------------- [K-To]
+  G |- k o x.e : t1 -o t3
+
+Typing of sum continuations:
+----------------------------
+
+  G , x1:t1 |- e1 : t3
+  G , x2:t2 |- e2 : t3
+  G |- k : t3 -o t4
+  -------------------------------------- [K-Case]
+  G |- k o (x1.e1,x2.e2) : t1 + t2 -o t4
+
+Typing of product continuations:
+--------------------------------
+
+  G , x1:t1 , x2:t2 |- e : t3
+  G |- k : t3 -o t4
+  -------------------------------- [K-Pmatch]
+  G |- k o x1.x2.e : t1 * t2 -o t4
+
+
+Applying continuations to computation terms:
+--------------------------------------------
+
+  id @ e            =def=   e
+
+  (k o x.e2) @ e1   =def=   k @ (e1 to x in e2)
+
+Applying sum continuations to value terms:
+------------------------------------------
+
+  (k o (x1.e1,x2.e2)) @ v   =def=   k @ (case v of (inl x1 => e1 ; inr x2 => e2))
+
+Applying product continuations to value terms:
+----------------------------------------------
+
+  (k o x1.x2.e) @ v   =def=   k @ (pmatch v as (x1,x2) in e)
+
+Definition (Strong normalisation):
+----------------------------------
+
+  A computation term (e) is said to be strongly normalising in a state (s) if all reduction sequences starting from (e,s) are finite.
+
+  A computation term (e) is said to be strongly normalising if for all states (s), all reduction sequences starting from (e,s) are finite.
+
+Reducibility relations for values, computations, and continuations:
+-------------------------------------------------------------------
+
+  v \in vRed_{state}             iff     true
+
+  v \in vRed_{unit}              iff     true
+
+  v \in vRed_{t1 + t2}           iff     forall (k_sum \in kSumRed_{t1,t2}) (s \in vRed_{state}) . (k_sum @ v,s) is strongly normalising
+
+  v \in vRed_{t1 * t2}           iff     forall (k_prod \in kProdRed_{t1,t2}) (s \in vRed_{state}) . (k_prod @ v,s) is strongly normalising
+
+  v \in vRed_{t1 ->> t2}         iff     forall (v' \in vRed_{t1}) (s \in vRed_{state}) . (v v' \in cRed^s_{t2})
+
+  e \in cRed^s_t                 iff     forall (k \in kRed_t) . (k @ e,s) is strongly normalising
+
+  k \in kRed_t                   iff     forall (v \in vRed_t) (s \in vRed_{state}) . (k @ (return v),s) is strongly normalising
+
+  k_sum \in kSumRed_{t1,t2}      iff     forall (v \in vRed_{t1}) (s \in vRed_{state}) . (k_sum @ (inl v),s) is strongly normalising
+
+                                           and
+
+                                         forall (v \in vRed_{t2}) (s \in vRed_{state}) . (k_sum @ (inr v),s) is strongly normalising
+
+  k_prod \in kProdRed_{t1,t2}    iff     forall (v1 \in vRed_{t1}) (v2 \in vRed_{t2}) (s \in vRed_{state}) . (k_prod @ (v1,v2),s) is strongly normalising
+
+
+Lemma (Identity continuation is reducible):
+-------------------------------------------
+
+  id \in kRed_t
+
+Proof:
+------
+
+  By definition of (kRed_t), we need to show that
+
+    forall (v \in vRed_t) (s \in vRed_{state}) . (id @ (return v),s) is strongly normalising
+
+  After we use the definition of (@), we are left with showing
+
+    forall (v \in vRed_t) (s \in vRed_{state}) . (return v,s) is strongly normalising
+
+  However, as there are no reduction sequences starting from (return v,s), we have that (return v) is strongly normalising in state (s).
+
+qed.
+
+
+Theorem (Reducibility implies strong normalisation):
+----------------------------------------------------
+
+  a) Given computation term (e), such that (e \in cRed^s_t), then (e,s) is strongly normalising.
+
+  b) Given (e) and (e'), such that (e \in cRef^s_t) and ((e,s) ~> (e',s')), then (e' \in cRef^{s'}_t).
+
+Proof:
+------
+
+  We prove a) and b) simultaneously.
+
+  Proof of a):
+
+    According to the definition of (cRed^s_t), we know that
+
+      forall (k \in kRed_t) . (k @ e,s) is strongly normalising
+
+    Next, using the above Lemma (Identity continuation is reducible), we know that (id \in kRed_t), thus we know that
+
+      (id @ e,s) is strongly normalising
+
+    Finally, using the definition of (@), we get that
+
+      (e,s) is strongly normalising
+
+  Proof of b)
+
+    According to the definition of (cRed^s_t), we know that
+
+      forall (k \in kRed_t) . (k @ e,s) is strongly normalising
+
+    Next, for every (k), we observe that we can show
+
+      (k @ e,s) ~> (k @ e',s')
+
+    using the [Context] rule with the evaluation context corresponding to (k @ []), constructed by induction on the structure of (k).
+
+    Next, for every (k), we observe that as (k @ e,s) was strongly normalising, so must be (k @ e',s'), because all reduction sequences
+    starting from (k @ e',s') are included in the reduction sequences starting from (k @ e,s), which was strongly normalising by assumption.
+
+    As a result, we have that
+
+      forall (k \in kRed_t) . (k @ e',s') is strongly normalising
+
+    and thus, according to the definition of (cRef^{s'}_t), we have that
+
+      e' \in cRed^{s'}_t
+
+qed.
+
+
+Lemma (Variables are reducible):
+--------------------------------
+
+  Givem
+
+    G |- x : t
+
+  then
+
+    x \in vRed_t
+
+Proof:
+------
+
+  By induction on the structure of the type (t).
+
+  Case (t) is (state) or (unit) are trivial.
+
+  Case (t) is (t1 + t2):
+
+    In this case, we need to show that
+
+      forall (k_sum \in kSumRed_{t1,t2}) (s \in vRed_{state}) . (k_sum @ x,s) is strongly normalising
+
+    Without loss of generality, we can assume that (k_sum = k o (x1.e1,x2.e2))
+
+    Now, using the definition of (@), we are left with having to show that
+
+      (k @ (case x of (inl x1 => e1 ; inr x2 => e2))) is strongly normalising
+
+    Without loss of generality, we can assume that (k = xn'.en' o ... o x1'.e1'), leaving us having to show that
+
+      ((case x of (inl x1 => e1 ; inr x2 => e2)) to x1' in ...,s) is strongly normalising
+
+    However, it is easy to see that there are no reduction sequences starting from this configuration.
+
+  Case (t) is (t1 * t2):
+
+    Analogous to the previous case. At a high level, there are no reduction sequences starting from pattern-matching on a variable.
+
+  Case (t) is (t1 ->> t2):
+
+    In this case, we need to show that
+
+      forall (v \in vRed_{t1}) (s \in vRed_{state}) . (x v \in cRed^s_{t2})
+
+    According to the definition of (cRed^s_{t2}), we are left with having to show that
+
+      forall (v \in vRed_{t1}) (s \in vRed_{state}) . forall (k \in kRed_{t2}) . (k @ (x v),s) is strongly normalising
+
+    Without loss of generality, we can assume that (k = xn'.en' o ... o x1'.e1'), leaving us having to show that
+
+      forall (v \in vRed_{t1}) (s \in vRed_{state}) . forall (k \in kRed_{t2}) . ((x v) to x1' in ...,s) is strongly normalising
+
+    However, it is easy to see that there are no reduction sequences starting from ((x v) to x1' in ...,s).
+
+qed.
+
+
+Lemma (Substitution of reducible value terms):
+----------------------------------------------
+
+  (* In the following, we assume that (G = x1:t1 , ..., xn:tn) for better readability. *)
+
+  Given
+
+    G |- v : t
+
+  and a set of value terms {v1,...,vn}, such that
+
+    (vi \in vRed_{ti}), for all (1 <= i <= n)
+
+  then
+
+    v[v1/x1,...,vn/xn] \in vRed_t
+
+
+  Given
+
+    G |- e : t
+
+  and
+
+    s \in vRed_{state}
+
+  and a set of value terms {v1,...,vn}, such that
+
+    (vi \in vRed_{ti}), for all (1 <= i <= n)
+
+  then
+
+    e[v1/x1,...,vn/xn] \in cRed^{s}_t
+
+Proof:
+------
+
+  We prove these two results simultaneously, by induction on the derivations of (G |- v : t) and (G |- e : t).
+
+  Case [T-Var]:
+
+    In this case, the given derivation ends with
+
+      xi:ti \in G
+      ------------
+      G |- xi : ti
+
+    Next, according to the definition of substitution we have
+
+      v[v1/x1,...,vn/xn] = xi[v1/x1,...,vn/xn] = vi
+
+    Thus, it is immediate from our assumptions that
+
+      v[v1/x1,...,vn/xn] \in vRed_{ti}
+
+  Case [T-State-Constant]:
+
+    In this case, the given derivation ends with 
+
+      ----------------
+      G |- c_s : state
+
+    Next, according to the definition of substitution we have
+
+      v[v1/x1,...,vn/xn] = c_s[v1/x1,...,vn/xn] = c_s
+
+    Thus, it is immediate from the definition of (vRed_{state}) that
+
+      v[v1/x1,...,vn/xn] \in vRed_{state}
+
+  Case [T-Unit]
+
+    In this case, the given derivation ends with
+
+      ---------------
+      G |- () : unit
+
+    According to the definition of substitution we have
+
+      v[v1/x1,...,vn/xn] = ()[v1/x1,...,vn/xn] = ()
+
+    Thus, it is immediate from the definition of (vRed_{unit}) that
+
+      v[v1/x1,...,vn/xn] \in vRed_{unit}
+
+  Case [T-Inl]:
+
+    In this case, the given derivation ends with
+
+      G |- v : t'
+      ---------------------
+      G |- inl v : t' + t''
+
+    First, by using the induction hypothesis, we get that (v[v1/x1,...,vn/xn] \in vRed_{t'}).
+
+    Next, according to the definition of substitution we have
+
+      v[v1/x1,...,vn/xn] = (inl v)[v1/x1,...,vn/xn] = inl v[v1/x1,...,vn/xn]
+
+    Finally, according to the definition of (vRed_{t' + t''}), we need to show that
+
+      forall (k_sum \in kSumRed_{t',t''}) (s \in vRed_{state}) . (k_sum @ (inl v[v1/x1,...,vn/xn]),s) is strongly normalising
+
+    which follows easily from combining the induction hypothesis (v[v1/x1,...,vn/xn] \in vRed_{t'}) with the definition of (kSumRed_{t',t''}), i.e., with
+
+      forall (v' \in vRed_{t'}) (s \in vRed_{state}) . (k_sum @ (inl v'),s) is strongly normalising
+
+        and
+
+      forall (v' \in vRed_{t''}) (s \in vRed_{state}) . (k_sum @ (inr v'),s) is strongly normalising
+
+  Case [T-Inr]:
+
+    Analogous to the [T-Inl] case.
+
+  Case [T-Pair]:
+
+    In this case, the given derivation ends with
+
+      G |- v' : t'
+      G |- v'' : t''
+      ------------------------
+      G |- (v',v'') : t' * t''
+
+    First, by using the induction hypothesis (twice), we get that (v'[v1/x1,...,vn/xn] \in vRed_{t'}) and (v''[v1/x1,...,vn/xn] \in vRed_{t''})
+
+    Next, according to the definition of substitution we have
+
+      v[v1/x1,...,vn/xn] = (v',v'')[v1/x1,...,vn/xn] = (v'[v1/x1,...,vn/xn],v''[v1/x1,...,vn/xn])
+
+    Finally, according to the definition of (vRed_{t' * t''}), we need to show that 
+
+      forall (k_prod \in kProdRed_{t',t''}) (s \in vRed_{state}) . (k_prod @ (v'[v1/x1,...,vn/xn],v''[v1/x1,...,vn/xn]),s) is strongly normalising
+
+    which follows easily from combining the induction hypotheses (v'[v1/x1,...,vn/xn] \in vRed_{t'}) and (v''[v1/x1,...,vn/xn] \in vRed_{t''}) with the def. of (kSumRed_{t',t''}), i.e., with
+
+      forall (v''' \in vRed_{t'}) (v'''' \in vRed_{t''}) (s \in vRed_{state}) . (k_prod @ (v''',v''''),s) is strongly normalising
+
+  Case [T-Fun]:
+
+    In this case, the given derivation ends with 
+
+      G , x:t' |- e : t''
+      -------------------------------
+      G |- fun x:t' -> e : t' ->> t''
+
+    First, by using the induction hypothesis, we get that ([e[v1/x1,...,vn/xn,v'/x']] \in cRed^s_{t''}), for any state (s) and any value term (v' \in vRed_{t'}).
+
+    Next, according to the definition of substitution we have
+
+      (fun x:t' -> e)[v1/x1,...,vn/xn] = fun x:t' -> e[v1/x1,...,vn/xn]
+
+    Finally, according to the definition of (vRed_{t' ->> t''}), we need to show that
+
+      forall (v' \in vRed_{t'}) (s \in vRed_{state}) . ((fun x:t' -> e[v1/x1,...,vn/xn]) v' \in cRed^s_{t''})
+
+    which, according to the definition of (cRed^s_{t''}), is equivalent to having to show 
+
+      forall (v' \in vRed_{t'}) (s \in vRed_{state}) . forall (k \in kRed_{t''}) . (k @ ((fun x:t' -> e[v1/x1,...,vn/xn]) v'),s) is strongly normalising
+
+    However, as there is only one reduction rule that applies to (k @ ((fun x:t' -> e[v1/x1,...,vn/xn]) v'),s), we only have to show that
+
+      forall (v' \in vRed_{t'}) (s \in vRed_{state}) . forall (k \in kRed_{t''}) . (k @ e[v1/x1,...,vn/xn,v'/x'],s) is strongly normalising
+
+    which, according to the definition of (cRed^s_{t''}), is equivalent to having to show 
+
+      forall (v' \in vRed_{t'}) (s \in vRed_{state}) . e[v1/x1,...,vn/xn,v'/x'] \in cRed^s_{t''}
+
+    which holds because of the above induction hypothesis ([e[v1/x1,...,vn/xn,v'/x']] \in cRed^s_{t''}).
+
+  Case [T-Return]:
+
+    In this case, the given derivation ends with
+
+      G |- v : t
+      -----------------
+      G |- return v : t
+
+    First, by using the induction hypothesis, we get that (v[v1/x1,...,vn/xn] \in vRed_t).
+
+    Next, according to the definition of substitution we have
+
+      e[v1/x1,...,vn/xn] = (return v)[v1/x1,...,vn/xn] = return v[v1/x1,...,vn/xn]
+
+    Finally, according to the definition of (cRed^s_t), we need to show that
+
+      forall (k \in kRed_t) . (k @ (return v[v1/x1,...,vn/xn]),s) is strongly normalising
+
+    which follows from combining the induction hypothesis (v[v1/x1,...,vn/xn] \in vRed_t) with the definition of (kRed_t), i.e., with 
+
+      forall (v \in vRed_t) (s \in vRed_{state}) . (k @ (return v),s) is strongly normalising
+
+  Case [T-To]:
+
+    In this case, the given derivation ends with
+
+      G |- e' : t'
+      G , x':t' |- e'' : t''
+      --------------------------
+      G |- e' to x' in e'' : t''
+
+    First, by using the induction hypothesis, we get that
+
+      (e'[v1/x1,...,vn/xn] \in cRed^{s'}_{t'}), for any (s' \in vRed_{state})
+
+    and
+
+      (e''[v1/x1,...,vn/xn,v'/x'] \in cRed^{s''}_{t''}), for any (s'' \in vRed_{state}) and (v' \in vRed_{t'}).
+
+    Next, according to the definition of substitution we have
+
+      e[v1/x1,...,vn/xn] = (e' to x' in e'')[v1/x1,...,vn/xn] = e'[v1/x1,...,vn/xn] to x' in e''[v1/x1,...,vn/xn]
+
+    Finally, according to the definition of (cRed^{s'}_{t''}), we need to show that  
+
+      (*)   forall (k \in kRed_{t''}) . (k @ (e'[v1/x1,...,vn/xn] to x' in e''[v1/x1,...,vn/xn]),s') is strongly normalising
+
+    In order to show (*), we first observe that according to the definition of (@), (*) is equivalent to
+
+      forall (k \in kRed_{t''}) . ((k o x'.e''[v1/x1,...,vn/xn]) @ e'[v1/x1,...,vn/xn],s') is strongly normalising
+
+    Therefore, based on the induction hypothesis (e'[v1/x1,...,vn/xn] \in cRed^{s}_{t'}) and the definition of (cRed^{s}_{t'}), it suffices to show that
+
+      k o x'.e''[v1/x1,...,vn/xn] \in kRed_{t'}
+
+    i.e.,
+
+      forall (v' \in vRed_{t'}) (s'' \in vRed_{state}) . ((k o x'.e''[v1/x1,...,vn/xn]) @ (return v'),s'') is strongly normalising
+
+    which, according to the defintion of (@), is equivalent to showing
+
+      forall (v' \in vRed_{t'}) (s'' \in vRed_{state}) . (k @ ((return v') to x' in e''[v1/x1,...,vn/xn]),s'') is strongly normalising
+
+    However, as there is only one reduction rule that applies to the configuration (k @ ((return v') to x' in e''[v1/x1,...,vn/xn]),s''), we only have to show that
+
+      forall (v' \in vRed_{t'}) (s'' \in vRed_{state}) . (k @ e''[v1/x1,...,vn/xn,v'/x'],s'') is strongly normalising
+
+    which follows from the induction hypothesis (e''[v1/x1,...,vn/xn,v'/x'] \in cRed^{s''}_{t''}) and the definition of (cRed^{s''}_{t''}).
+
+  Case [T-App]:
+
+    In this case, the given derivation ends with
+
+      G |- v'' : t' ->> t''
+      G |- v' : t'
+      ---------------------
+      G |- v'' v' : t''
+
+    First, by using the induction hypothesis (twice), we get that (v'[v1/x1,...,vn/xn,v'/x'] \in vRed_{t'}) and (v''[v1/x1,...,vn/xn,v'/x'] \in vRed_{t' ->> t''}).
+
+    Next, according to the definition of substitution we have
+
+      e[v1/x1,...,vn/xn] = (v'' v')[v1/x1,...,vn/xn] = v''[v1/x1,...,vn/xn] v'[v1/x1,...,vn/xn]
+
+    Next, according to the definition of (cRed^s_{t''}), we need to show that
+      
+      forall (k \in kRed_t) . (k @ (v''[v1/x1,...,vn/xn] v'[v1/x1,...,vn/xn]),s) is strongly normalising
+
+    which follows from using the induction hypotheses (v''[v1/x1,...,vn/xn,v'/x'] \in vRed_{t' ->> t''}) and (v'[v1/x1,...,vn/xn,v'/x'] \in vRed_{t'}).
+
+  Case [T-Case]:
+
+    In this case, the given derivation ends with
+
+      G |– v : t' + t''
+      G , x':t' |- e' : t
+      G , x'':t'' |- e'' : t
+      --------------------------------------------------
+      G |- case v of (inl x' => e' ; inr x'' => e'') : t
+
+    First, by induction hypothesis we have that
+
+      v[v1/x1,...,vn/xn] \in vRed_{t' + t''}
+
+    and
+
+      e'[v1/x1,...,vn/xn,v'/x'] \in cRed^s_t, for any (s \in vRed_{state}) and (v' \in vRed_{t'})
+
+    and
+
+      e''[v1/x1,...,vn/xn,v''/x''] \in cRed^s_t, for any (s \in vRed_{state}) and (v'' \in vRed_{t''})
+
+    Next, according to the definition of substitution we have
+
+      (case v of (inl x' => e' ; inr x'' => e''))[v1/x1,...,vn/xn]
+      =
+      case v[v1/x1,...,vn/xn] of (inl x' => e'[v1/x1,...,vn/xn] ; inr x'' => e''[v1/x1,...,vn/xn])
+
+    Finally, according to the definition of (cRed^s_t) we need to show
+
+      (*)   forall (k \in kRed_t) . (k @ (case v[v1/x1,...,vn/xn] of (inl x' => e'[v1/x1,...,vn/xn] ; inr x'' => e''[v1/x1,...,vn/xn])),s) is strongly normalising
+
+    In order to show (*), we first observe that according to the definition of (@), (*) is equivalent to
+
+      forall (k \in kRed_{t}) . ((k o (x'.e'[v1/x1,...,vn/xn],x''.e''[v1/x1,...,vn/xn])) @ v[v1/x1,...,vn/xn],s) is strongly normalising
+
+    Therefore, based on the induction hypothesis (v[v1/x1,...,vn/xn] \in vRed_{t' + t''}) and the definition of (vRed_{t' + t''}), it suffices to show that
+
+      forall (k \in kRed_t) . k o (x'.e'[v1/x1,...,vn/xn],x''.e''[v1/x1,...,vn/xn]) \in cSumRed_{t' + t''}
+
+    i.e.,
+
+      forall (v' \in vRed_{t'}) (s \in vRed_{state}) . ((k o (x'.e'[v1/x1,...,vn/xn],x''.e''[v1/x1,...,vn/xn])) @ (inl v'),s) is strongly normalising
+
+        and
+
+      forall (v'' \in vRed_{t''}) (s \in vRed_{state}) . ((k o (x'.e'[v1/x1,...,vn/xn],x''.e''[v1/x1,...,vn/xn])) @ (inr v''),s) is strongly normalising
+
+    which, according to the definition of (@), is equivalent to showing 
+
+      forall (v' \in vRed_{t'}) (s \in vRed_{state}) . (k @ (case (inl v') of (inl x' => e'[v1/x1,...,vn/xn] ; inr x'' => e''[v1/x1,...,vn/xn])),s) is strongly normalising
+
+        and
+
+      forall (v'' \in vRed_{t''}) (s \in vRed_{state}) . (k @ (case (inr v'') of (inl x' => e'[v1/x1,...,vn/xn] ; inr x'' => e''[v1/x1,...,vn/xn])),s) is strongly normalising
+
+    However, as in both cases only one reduction rule applies to the corresponding configurations, we only have to show that
+    
+      forall (v' \in vRed_{t'}) (s \in vRed_{state}) . (k @ e'[v1/x1,...,vn/xn,v'/x'],s) is strongly normalising
+
+        and
+
+      forall (v'' \in vRed_{t''}) (s \in vRed_{state}) . (k @ e''[v1/x1,...,vn/xn,v''/x''],s) is strongly normalising
+
+    which respectively follow the induction hypotheses (e'[v1/x1,...,vn/xn,v'/x'] \in cRed^s_t) and (e''[v1/x1,...,vn/xn,v''/x''] \in cRed^s_t).
+
+  Case [T-Pmatch]:
+
+    Analogously to the [T-Case] case.
+
+  Case [T-Get]:
+
+    In this case, the given derivation ends with
+
+      ----------------
+      G |- get : state
+
+    According to the definition of substitution, we have
+
+      e[v1/x1,...,vn/xn] = get[v1/x1,...,vn/xn] = get
+
+    As a result, according to the definition of (cRed^s_t), we need to show
+
+      forall (k \in kRed_{state}) . (k @ get,s) is strongly normalising
+
+    However, as there is only one reduction rule that applies to the configuration (k @ get,s), we only have to show that
+
+      forall (k \in kRed_{state}) . (k @ return s,s) is strongly normalising
+
+    which follows from combining (s \in vRef_{state}) with the definition of (kRed_{state}), i.e., with
+
+      forall (v \in vRed_{state}) (s \in vRed_{state}) . (k @ (return v),s) is strongly normalising
+
+  Case [T-Put]:
+
+    In this case, the given derivation ends with 
+
+      G |- s' : state
+      ------------------
+      G |- put s' : unit
+
+    First, by using the induction hypothesis, we get that
+
+      s'[v1/x1,...,vn/xn] \in vRed_{state}
+
+    Next, according to the definition of substitution, we have
+
+      e[v1/x1,...,vn/xn] = (put s')[v1/x1,...,vn/xn] = put s'[v1/x1,...,vn/xn]
+
+    Finally, according to the definition of (cRed^s_t), we need to show
+
+      forall (k \in kRed_{unit}) . (k @ put s'[v1/x1,...,vn/xn],s) is strongly normalising
+
+    However, as there is only one reduction rule that applies to the configuration (k @ put s'[v1/x1,...,vn/xn],s), we only have to show that
+
+      forall (k \in kRed_{unit}) . (k @ return (),s'[v1/x1,...,vn/xn]) is strongly normalising
+
+    which follows from combining the induction hypothesis (s'[v1/x1,...,vn/xn] \in vRed_{state}) with the definition of (kRed_{unit}), i.e., with
+
+      forall (v \in vRed_{unit}) (s \in vRed_{state}) . (k @ (return v),s) is strongly normalising
+
+  Case [T-Witness]:
+
+    In this case, the given derivation ends with
+
+      -------------------
+      G |- witness : unit
+
+    According to the definition of substitution, we have
+
+      e[v1/x1,...,vn/xn] = witness[v1/x1,...,vn/xn] = witness
+
+    As a result, according to the definition of (cRed^s_t), we need to show that
+
+      forall (k \in kRed_{unit}) . (k @ witness,s) is strongly normalising
+
+    However, as there is inly one reduction rule that applies to the configuration (k @ witness,s), we only have to show that
+
+      forall (k \in kRed_{unit}) . (k @ return (),s) is strongly normalising
+
+    which follows from combining (() \in vRed_{unit}) with the definition of (kRed_{unit}), i.e., with
+
+      forall (v \in vRed_{unit}) (s \in vRed_{state}) . (k @ (return v),s) is strongly normalising
+
+  Case [T-Recall]:
+
+    Analogously to the [T-Witness] case.
+
+qed.
+
+
+Theorem (All well-typed terms of this small simply typed language are reducible):
+---------------------------------------------------------------------------------
+
+  a) Given (G |- v : t) then (v \in vRed_t).
+
+  b) Given (G |- e : t) and (G |- s : state) then (e \in cRed^s_t).
+
+Proof:
+------
+
+  We prove a) and b) simultaneously. In both cases, we use Lemma (Substitution of reducible value terms)
+  with the variables contained in (G), all of which are reducible due to Lemma (Variables are reducible).
+
+  In the proof of b), we further use a) to get (s \in vRed_{state}) from (G |- s : state).
+
+qed.
+
+
+Theorem (Strong normalisation for the well-typed computation terms in this simply typed language):
+--------------------------------------------------------------------------------------------------
+
+  Given (G |- e : t) and (G |- s : state), then the configuration (e,s) is strongly normalising.
+
+Proof:
+------
+
+  Follows immediately from combining Theorem (All well-typed terms of this small simply typed
+  language are reducible) and Theorem (Reducibility implies strong normalisation).
+
+qed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Normalisation of the dependently typed language
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Translation from the dependently typed language to the simply typed language (by erasure of pre- and postconditions, in types and terms):
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+  On value types:
+  ---------------
+
+    |state|         =def=   state
+    |unit|          =def=   unit
+    |t1 + t2|       =def=   |t1| + |t2|
+    |t1 * t2|       =def=   |t1| * |t2|
+    |x:t -> C|      =def=   |t| ->> |C|
+
+  On computation types:
+  ---------------------
+
+    |{x_s.pre} t {x_s.x_v.x'_s.post}|   =def=   |t|
+
+  On value terms:
+  ---------------
+
+    |x|              =def=   x
+    |c_s|            =def=   c_s
+    |()|             =def=   ()
+    |inl v|          =def=   inl |v|
+    |inr v|          =def=   inr |v|
+    |(v1,v2)|        =def=   (|v1|,|v2|)
+    |fun x:t -> e|   =def=   fun x:|t| -> |e|
+    
+  On computation terms:
+  ---------------------
+
+    |return v|                                         =def=   return |v|
+    |e_1 to x in e_2|                                  =def=   |e1| to x in |e2|
+    |case (v as x) of (inl x1 => e1 ; inr x2 => e2)|   =def=   case |v| of (inl x1 => |e1| ; inr x2 => |e2|)
+    |pmatch (v as x) as (x1,x2) in e|                  =def=   pmatch |v| as (x1,x2) in |e|
+    |get|                                              =def=   get
+    |put s|                                            =def=   put |s|
+    |witness x.phi|   =def=   witness
+    |recall x.phi|    =def=   recall
+
+  On contexts:
+  ------------
+
+    |-|         =def=   -
+    |G , x:t|   =def=   |G| , x:|t|
+
+  On evaluation contexts:
+  -----------------------
+
+    |[]|            =def=   []
+    |E to x in e|   =def=   |E| to x in |e|
+    
+    
+Lemma (Substitutions in types get erased):
+------------------------------------------
+
+  a) |t[v/x]| = |t|
+  b) |C[v/x]| = |C|
+
+Proof:
+------
+
+  By induction on the structure of (t) and (C).
+
+qed.
+
+
+Lemma (The translation erases subtyping):
+-----------------------------------------
+
+  a) Given (G |- t <: t') in the dependently typed language, then (|t| = |t'|).
+
+  b) Given (G |- C <: C') in the dependently typed language, then (|C| = |C'|).
+
+Proof:
+------
+
+  By induction on the derivations of (G |- t <: t') and (G |- C <: C').
+
+qed.
+
+
+Lemma (The translation preserves well-typedness):
+-------------------------------------------------
+
+  a) Given (G |- v : t) in the dependently typed language, then (|G| |- |v| : |t|) in the simply typed language.
+
+  b) Given (G |- e : C) in the dependently typed language, then (|G| |- |e| : |C|) in the simply typed language.
+
+Proof:
+------
+
+  By induction on the derivations of (G |- v : t) and (G |- e : C).
+
+  The proof is very straightforward because the translation is a simple erasure of logical formulae from types and terms.
+
+qed.
+
+
+Lemma (The translation commutes with substitution):
+---------------------------------------------------
+
+  a) |v[v'/x]| = |v|[|v'|/x]
+
+  b) |e[v'/x]| = |e|[|v'|/x]
+
+Proof:
+
+  By induction on the structure of (v) and (e).
+
+qed.
+
+
+Lemma (The translation commutes with filling evaluation contexts):
+------------------------------------------------------------------
+
+  |E[e]| = |E|[|e|]
+
+Proof:
+------
+
+  By induction on the structure of (E).
+
+qed.
+
+
+Theorem (The translation preserves the exact number of reduction steps):
+------------------------------------------------------------------------
+
+  If ((e,s,W) ~> (e',s',W')) in the dependently typed language, then ((|e|,|s|) ~> (|e'|,|s'|)) in the simply typed language.
+
+Proof:
+------
+
+  By induction on the derivation of ((e,s,W) ~> (e',s',W')).
+
+  The proof is very straightforward because we translated (witness x.phi) (recall x.phi) to (witness) and (recall), rather than directly to (return ()).
+
+qed.
+
+
+Theorem (Strong normalisation for the well-typed computation terms in the dependently typed language):
+------------------------------------------------------------------------------------------------------
+
+  Given
+
+    G |- e : C
+
+  and
+
+    G |- s : state
+
+  and a finite set of witnessed stable properties (W),
+
+  then the configuration (e,s,W) is strongly normalising.
+
+Proof:
+------
+
+  First, according to Theorem (The translation preserves the exact number of reduction steps),
+  we know that for every reduction sequence starting from (e,s,W) in the dependently typed
+  language, there is a corresponding reduction sequence starting from (|e|,|s|) in the simply
+  typed language, with the same exact length (every step in the dependently typed language is
+  matched by exactly one step in the semantics for the simply typed language).
+
+  Next, according to Lemma (The translation preserves well-typedness), we know that
+
+    |G| |- |e| : |C|
+
+  and
+
+    |G| |- |s| : state
+
+  Now, according to Theorem (Strong normalisation for the well-typed computation terms of this
+  simply typed language), we know that the configuration (|e|,|s|) is strongly normalising, i.e.,
+  there are no infinite reduction sequences starting from it.
+
+  As a result, there can not be any infinite reduction sequences starting from (e,s,W) either.
+
+qed.

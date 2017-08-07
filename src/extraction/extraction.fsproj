@@ -58,7 +58,6 @@
     <Compile Include="FStar.Extraction.ML.Code.fs" />
     <Compile Include="FStar.Extraction.ML.PrintML.fsi" />
     <Compile Include="FStar.Extraction.ML.PrintML.fs" />
-    
     <Compile Include="FStar.Extraction.ML.Term.fs" />
     <Compile Include="FStar.Extraction.ML.Modul.fs" />
     <Content Include="app.config" />
@@ -79,22 +78,6 @@
     </ProjectReference>
     <Reference Include="FSharp.Compatibility.OCaml">
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\VS\packages\FSPowerPack.Core.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Linq">
-      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Metadata">
-      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Parallel.Seq">
-      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">
@@ -132,6 +115,12 @@
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\reflection\reflection.fsproj">
+      <Name>reflection</Name>
+      <Project>{8869FA4E-96AF-4E01-99BC-B52C88610E3D}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

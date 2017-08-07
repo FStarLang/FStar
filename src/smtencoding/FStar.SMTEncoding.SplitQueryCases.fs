@@ -17,6 +17,7 @@
 
 module FStar.SMTEncoding.SplitQueryCases
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 open FStar
@@ -65,7 +66,7 @@ let rec parse_query_for_split_cases (n:int) (t:term) (f:term -> term) :bool * ((
               let b, l, negs = is_ite_all_the_way n t2 mkTrue [] in
               b, ((fun x -> f (mkImp (t1, x))), l, negs)
 
-            | _ -> false, ((fun _ -> mkFalse), [], mkFalse)
+            | _ -> false, ((fun _ -> return_all mkFalse), [], mkFalse)
       in
       r
 
@@ -73,7 +74,7 @@ let rec parse_query_for_split_cases (n:int) (t:term) (f:term -> term) :bool * ((
       let b, l, negs = is_ite_all_the_way n t mkTrue [] in
       b, (f, l, negs)
 
-    | _ -> false, ((fun _ -> mkFalse), [], mkFalse)
+    | _ -> false, ((fun _ -> return_all mkFalse), [], mkFalse)
 
 let strip_not (t:term) :term = match t.tm with
     | App (Not, hd::_) -> hd

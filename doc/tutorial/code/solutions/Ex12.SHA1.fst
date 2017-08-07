@@ -7,10 +7,10 @@ module Ex12.SHA1
 (* open FStar.HyperStack *)
 (* open FStar.Monotonic.RRef *)
 
-open Preorder
-open Heapx
-open STx
-open MRefx
+open FStar.Preorder
+open FStar.Heap
+open FStar.ST
+open FStar.MRef
 
 //open FStar.All
 open FStar.Seq

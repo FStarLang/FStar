@@ -1,5 +1,5 @@
 [
-  ")vÊ«éž*&\bÄÁ`õT]D",
+  "1–›J¶%ûn\u0015ãÿÝ\f±J\u0005",
   [
     [
       "ReifyTestTSST.older_than_transitive",
@@ -37,7 +37,7 @@
       2,
       1,
       [
-        "@query", "b2t_def", "equation_Preorder.preorder",
+        "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
         "equation_Prims.nat", "equation_ReifyTestTSST.state",
         "interpretation_ReifyTestTSST_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
         "primitive_Prims.op_LessThanOrEqual",
@@ -45,10 +45,19 @@
       ],
       0
     ],
-    [ "ReifyTestTSST.152788", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ReifyTestTSST.witnessed", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ReifyTestTSST.witness", 1, 2, 1, [ "@query" ], 0 ],
-    [ "ReifyTestTSST.recall", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ReifyTestTSST.159628",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_ReifyTestTSST.state",
+        "function_token_typing_ReifyTestTSST.state_rel",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
+      ],
+      0
+    ],
     [
       "ReifyTestTSST.reify_recall_test",
       1,
@@ -57,13 +66,15 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
-        "equation_Prims.nat", "equation_ReifyTestTSST.get_timestamp",
+        "equation_FStar.Preorder.stable", "equation_Prims.nat",
+        "equation_ReifyTestTSST.get_timestamp",
         "equation_ReifyTestTSST.older_than", "equation_ReifyTestTSST.state",
         "equation_ReifyTestTSST.state_rel",
         "equation_ReifyTestTSST.timestamp",
         "function_token_typing_Prims.nat", "int_inversion",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_LessThan",
-        "primitive_Prims.op_LessThanOrEqual",
+        "interpretation_ReifyTestTSST_Tm_abs_1661f7094403c88cb824263727456b29",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",

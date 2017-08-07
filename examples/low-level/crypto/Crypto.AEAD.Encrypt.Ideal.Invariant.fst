@@ -36,8 +36,8 @@ let safeMac_ideal_writes
   (h0 h1:mem) =
   enc_dec_liveness_and_separation aead_st aad plain ct h0 /\
   (if safeMac i then
-    let aead_entries_0 = HS.sel h0 aead_st.log in
-    let aead_entries_1 = HS.sel h1 aead_st.log in
+    let aead_entries_0 = HS.sel h0 (st_ilog aead_st) in
+    let aead_entries_1 = HS.sel h1 (st_ilog aead_st) in
     HS.modifies (Set.singleton aead_st.log_region) h0 h1 /\
     HS.modifies_ref aead_st.log_region (Set.singleton (FStar.Heap.addr_of (HS.as_ref (aead_log_as_ref aead_st.log)))) h0 h1 /\
     aead_entries_1 

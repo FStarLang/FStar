@@ -1,5 +1,5 @@
 [
-  "î”)Ãa\u0004 ¼_$»òÓ—™ ",
+  "Buu•p÷Z •~%\u000f\u0019ÊTU",
   [
     [ "FStar.Pervasives.uu___is_V", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -41,9 +41,20 @@
       ],
       0
     ],
-    [ "FStar.Pervasives.ex_return", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Pervasives.ex_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Pervasives.all_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Pervasives.all_bind_wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Pervasives.E",
+        "disc_equation_FStar.Pervasives.Err",
+        "disc_equation_FStar.Pervasives.V",
+        "fuel_guarded_inversion_FStar.Pervasives.result"
+      ],
+      0
+    ],
     [
       "FStar.Pervasives.allow_inversion",
       1,
@@ -187,6 +198,36 @@
         "binder_x_27672a0694ca5377bbd1682fdc19a13b_1",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Pervasives_Tm_refine_16d7dda25a162db0722685f27f707102"
+      ],
+      0
+    ],
+    [
+      "FStar.Pervasives.__internal_ocaml_attributes",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [ "FStar.Pervasives.uu___is_PpxDerivingShow", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Pervasives.uu___is_PpxDerivingShowConstant",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.Pervasives.__proj__PpxDerivingShowConstant__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.PpxDerivingShowConstant",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_564db2f0aa0878b4d96c60508be3dd36"
       ],
       0
     ]

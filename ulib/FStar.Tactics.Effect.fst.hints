@@ -1,0 +1,160 @@
+[
+  "ºÔ–{¼¢‘<\u000bJN;W8ˆ",
+  [
+    [ "FStar.Tactics.Effect.uu___is_Success", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Effect.__proj__Success__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Effect.Success",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Effect_Tm_refine_09d886703691645f0e020d516d7b497d"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.__proj__Success__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Effect.Success",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Effect_Tm_refine_09d886703691645f0e020d516d7b497d"
+      ],
+      0
+    ],
+    [ "FStar.Tactics.Effect.uu___is_Failed", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Effect.__proj__Failed__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Effect.Failed",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Effect_Tm_refine_37de0058301af30848928501e5e24ded"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.__proj__Failed__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Effect.Failed",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Effect_Tm_refine_37de0058301af30848928501e5e24ded"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.__bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Effect_interpretation_Tm_arrow_b327283d1fbe437cf9b9f475ef88e7b0",
+        "disc_equation_FStar.Tactics.Effect.Failed",
+        "disc_equation_FStar.Tactics.Effect.Success",
+        "equation_FStar.Tactics.Effect.__tac",
+        "equation_FStar.Tactics.Effect.goals",
+        "equation_FStar.Tactics.Effect.state",
+        "fuel_guarded_inversion_FStar.Pervasives.tuple2",
+        "fuel_guarded_inversion_FStar.Tactics.Effect.__result"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.g_bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Effect.Failed",
+        "disc_equation_FStar.Tactics.Effect.Success",
+        "fuel_guarded_inversion_FStar.Tactics.Effect.__result"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____get_elab",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.return",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
+        "equation_FStar.Tactics.Effect.goal",
+        "equation_FStar.Tactics.Effect.goals",
+        "equation_FStar.Tactics.Effect.state"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Tactics.Effect.Success",
+        "data_elim_FStar.Tactics.Effect.Failed",
+        "data_typing_intro_FStar.Tactics.Effect.Failed@tok",
+        "fuel_guarded_inversion_FStar.Tactics.Effect.__result"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.get",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.assert_by_tactic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Effect.__by_tactic", "equation_Prims.squash",
+        "ref_valid_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Effect.by_tactic_seman",
+      1,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
+      0
+    ]
+  ]
+]

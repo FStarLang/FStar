@@ -11,8 +11,8 @@ ec = entry_count = "#"
 fstar_output_columns = [ "fstar_tag", "fstar_usedhints", "fstar_time", "fstar_fuel", "fstar_ifuel", "fstar_rlimit" ]
 column_separator = ","
 
-SHORTOPTS="harcgf:o:s:t:n:"
-LONGOPTS=["help", "infile=", "outfile=", "stat=", "top=", "collate", "append", "reverse", "global", "filter=" ]
+SHORTOPTS="harcgf:o:s:t:n:F:"
+LONGOPTS=["help", "infile=", "outfile=", "stat=", "top=", "collate", "append", "reverse", "global", "filter=", "format=" ]
 
 def show_help():
     print("Usage: query-stats <options>")
@@ -26,6 +26,7 @@ def show_help():
     print("  -r, --reverse\t\t\treverse sort order")
     print("  -c, --collate\t\t\tcollate queries of the same name (instead of adding ticks)")
     print("  -g, --global\t\t\tadd global statistics table")
+    print("  -F, --format\t\t\toutput format (csv|html; default csv)")
     print("      --filter=s=v\t\t\tfilter queries; only include queries for which variable s is equal to v.")
 
 
@@ -92,46 +93,88 @@ def get_int_value(stats, column):
 def get_string_value(stats, column):
     return str(get_value(stats, column)).strip("\"")
 
-
-def write_header(f, order_column, fstar_output_columns, columns):
-    f.write("\"ID (Name, Index)\"" + column_separator)
-    f.write("\"Location\"" + column_separator)
-    f.write("\"" + ec + "\"" + column_separator)
-    f.write("\"" + order_column + "\"")
-    for c in sorted(fstar_output_columns):
-        f.write(column_separator + "\"" + c + "\"")
-    for c in sorted(columns):        
-        if (c not in { ec }):
+def write_header(f, order_column, fstar_output_columns, columns, output_format):
+    if output_format == "csv":
+        f.write("\"ID (Name, Index)\"" + column_separator)
+        f.write("\"Location\"" + column_separator)
+        f.write("\"" + ec + "\"" + column_separator)
+        f.write("\"" + order_column + "\"")
+        for c in sorted(fstar_output_columns):
             f.write(column_separator + "\"" + c + "\"")
-    f.write("\n")
+        for c in sorted(columns):        
+            if (c not in { ec }):
+                f.write(column_separator + "\"" + c + "\"")
+        f.write("\n")
+    elif output_format == "html":
+        f.write("<html><title>Query-stats</title><body>\n")
+        f.write("<table width=100% border=1>\n")
+        f.write("<caption><h1>Query Statistics</h1></caption>\n")
+        f.write("<tr>")
+        f.write("<th>ID (Name, Index)</th>")
+        f.write("<th>Location</th>")
+        f.write("<th>" + ec + "</th>")
+        f.write("<th>" + order_column + "</th>")
+        for c in sorted(fstar_output_columns):
+            f.write("<th>" + c + "</th>")
+        for c in sorted(columns):        
+            if (c not in { ec }):
+                f.write("<th>" + c + "</th>")
+        f.write("</tr>\n")
 
+def write_footer(f, output_format):
+    if output_format == "csv":
+        pass
+    elif output_format == "html":
+        f.write("</table>")
 
-def write_footer(f):
-    f.write("\n")
+def write_eof(f, output_format):
+    if output_format == "csv":
+        f.write("\n")
+    elif output_format == "html":
+        f.write("</body></html>")
 
+def write_query_row(f, item, order_column, fstar_columns, columns, output_format):
+    if output_format == "csv":
+        key  = "\"" + item[0] + "\""
+        stats = item[1]
+        rng = "\"" + get_value(stats, "fstar_range").strip("\"").split(" ")[0] + "\""
+        n = stats[ec]
+        order_value = str(cfmt(order_column, get_value(stats, order_column)))
 
-def write_query_row(f, item, order_column, fstar_columns, columns):
-    key  = "\"" + item[0] + "\""
-    stats = item[1]
-    rng = "\"" + get_value(stats, "fstar_range").strip("\"").split(" ")[0] + "\""
-    n = stats[ec]
-    order_value = str(cfmt(order_column, get_value(stats, order_column)))
+        f.write(key + column_separator)
+        f.write(rng + column_separator)
+        f.write(str(n) + column_separator)
+        f.write(cfmt(order_column, str(order_value)))
 
-    f.write(key + column_separator)
-    f.write(rng + column_separator)
-    f.write(str(n) + column_separator)
-    f.write(cfmt(order_column, str(order_value)))
-
-    for c in sorted(fstar_output_columns):
-        # c != order_column:
+        for c in sorted(fstar_output_columns):
             f.write(column_separator + str(cfmt(c, get_value(stats, c))))
         
-    for c in sorted(columns):
-        # if c not in { ec, order_column }:
-        if c not in { ec }:
-            f.write(column_separator + str(cfmt(c, get_value(stats, c))))
+        for c in sorted(columns):
+            if c not in { ec }:
+                f.write(column_separator + str(cfmt(c, get_value(stats, c))))
 
-    f.write("\n")
+        f.write("\n")
+    elif output_format == "html":
+        key  = item[0]
+        stats = item[1]
+        rng = get_value(stats, "fstar_range").strip("\"").split(" ")[0]
+        n = stats[ec]
+        order_value = str(cfmt(order_column, get_value(stats, order_column)))
+
+        f.write("<tr>")
+        f.write("<td>%s</td>" % key)
+        f.write("<td>%s</td>" % rng)
+        f.write("<td>%s</td>" % str(n))
+        f.write("<td>%s</td>" % cfmt(order_column, str(order_value)))
+
+        for c in sorted(fstar_output_columns):
+            f.write("<td>%s</td>" % str(cfmt(c, get_value(stats, c))))
+        
+        for c in sorted(columns):
+            if c not in { ec }:
+                f.write("<td>%s</td>" % str(cfmt(c, get_value(stats, c))))
+
+        f.write("</tr>\n")
 
 
 def add_query(stats, k, v):
@@ -156,7 +199,7 @@ def is_filtered(stats, filters):
     return True
 
 
-def process_file(infile, outfile, stat, n, collate = False, append = False, reverse = False, global_stats = False, filters = None):
+def process_file(infile, outfile, stat, n, collate = False, append = False, reverse = False, global_stats = False, filters = None, output_format = "csv"):
     # "%s\t%s (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s"
     # (.\FStar.UInt.fst(11,11-11,14))	Query-stats (FStar.UInt.pow2_values, 1)	succeeded (with hint) in 467 milliseconds with fuel 2 and ifuel 1 and rlimit 2723280 statistics={added-eqs=2 binary-propagations=3629 conflicts=1 datatype-accessor-ax=3 max-memory=8.96 memory=8.96 mk-bool-var=7332 mk-clause=54 num-allocs=25468507 num-checks=1 propagations=3632 rlimit-count=378055 time=0.00}
     # From CI:
@@ -223,16 +266,24 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
         result.append(oq.pop(0))
 
     with (open(outfile, "w" if append == False else "a") if outfile != "" else sys.stdout) as f:
-        if len(result) > 0: write_header(f, stat, fstar_output_columns, columns)
+        if len(result) > 0: write_header(f, stat, fstar_output_columns, columns, output_format)
         for item in result:
-            write_query_row(f, item, stat, fstar_output_columns, columns)
-        write_footer(f)
+            write_query_row(f, item, stat, fstar_output_columns, columns, output_format)
+        write_footer(f, output_format)
         if global_stats:
-            process_global_stats(f, queries, modules, collate)
+            process_global_stats(f, queries, modules, collate, output_format)
+        write_eof(f, output_format)
 
 
-def process_global_stats(f, queries, modules, collate):
-    f.write("\"Name\",\"Value\",\"Unit\"\n")
+def process_global_stats(f, queries, modules, collate, output_format):
+    if output_format == "csv":
+        f.write("\n\"Name\",\"Value\",\"Unit\"\n")
+    elif output_format == "html":
+        f.write("<br/></table>\n")
+        f.write("<table border=1>\n")
+        f.write("<caption><h1>Global Statistics</h1></caption>\n")
+        f.write("<tr><th>Name</th><th>Value</th><th>Unit</th><th><Item/th></tr>\n")
+
     time = 0.0
     fstar_time = 0
     max_time = 0.0
@@ -293,50 +344,59 @@ def process_global_stats(f, queries, modules, collate):
                         sum_failed_with_hint += kv_time
                     elif u == "-":
                         sum_failed_without_hint += kv_time
-            
-    f.write("\"# Queries\",%s,%s\n" % (len(queries), "\"\""))
-    f.write("\"# succeeded\",%s,%s\n" % ((succeeded_with_hint + succeeded_without_hint), "\"\""))
-    f.write("\"# succeeded (with hint)\",%d,%s\n" % (succeeded_with_hint, "\"\""))
-    f.write("\"# succeeded (without hint)\",%d,%s\n" % (succeeded_without_hint, "\"\""))
-    f.write("\"# failed\",%d,%s\n" % ((failed_with_hint + failed_without_hint), "\"\""))
-    f.write("\"# failed (with hint)\",%d,%s\n" % (failed_with_hint, "\"\""))
-    f.write("\"# failed (without hint)\",%d,%s\n" % (failed_without_hint, "\"\""))
-    f.write("\"Sum(num-checks)\",%s,%s\n" % (sum_num_checks, "\"\""))
-    f.write("\"Sum(time)\",%s,%s\n" % (time, "\"sec\""))
-    f.write("\"Sum(fstar_time)\",%s,%s\n" % (fstar_time, "\"msec\""))
-    f.write("\"Max(time)\",%s,%s\n" % (max_time, "\"sec\""))
-    f.write("\"Max(fstar_time)\",%s,%s\n" % (max_fstar_time, "\"msec\""))
-    f.write("\"Sum(rlimit-count)\",%s,%s\n" % (sum_rlimit_count, "\"\""))
-    f.write("\"Max(rlimit-count)\",%s,%s\n" % (max_rlimit_count, "\"\""))
-    f.write("\"Sum(rlimit)\",%s,%s\n" % (sum_fstar_rlimit, "\"\""))
-    f.write("\"Max(rlimit)\",%s,%s\n" % (max_fstar_rlimit, "\"\""))
+           
+    def write_fmt(format, name, value, unit=None, item=None):
+        if output_format == "csv": 
+            f.write("\"%s\",%s,\"%s\",\"%s\"\n" % (name, value, "" if unit is None else unit, "" if item is None else item))
+        elif output_format == "html": 
+            f.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % 
+                        (name, value, "" if unit is None else unit, "" if item is None else item))
+
+    write_fmt(output_format, "# Queries", len(queries))
+    write_fmt(output_format, "# succeeded", succeeded_with_hint + succeeded_without_hint)
+    write_fmt(output_format, "# succeeded (with hint)", succeeded_with_hint)
+    write_fmt(output_format, "# succeeded (without hint)", succeeded_without_hint)
+    write_fmt(output_format, "# failed", (failed_with_hint + failed_without_hint))
+    write_fmt(output_format, "# failed (with hint)", failed_with_hint)
+    write_fmt(output_format, "# failed (without hint)", failed_without_hint)
+    write_fmt(output_format, "Sum(num-checks)", sum_num_checks)
+    write_fmt(output_format, "Sum(time)", time, "sec")
+    write_fmt(output_format, "Sum(fstar_time)", fstar_time, "msec")
+    write_fmt(output_format, "Max(time)", max_time, "sec")
+    write_fmt(output_format, "Max(fstar_time)", max_fstar_time, "msec")
+    write_fmt(output_format, "Sum(rlimit-count)", sum_rlimit_count)
+    write_fmt(output_format, "Max(rlimit-count)", max_rlimit_count)
+    write_fmt(output_format, "Sum(rlimit)", sum_fstar_rlimit)
+    write_fmt(output_format, "Max(rlimit)", max_fstar_rlimit)
 
     if not collate:
-        f.write("\"Sum(time failed)\",%s,%s\n" % (sum_failed, "\"sec\""))
-        f.write("\"Sum(time failed with hint)\",%s,%s\n" % (sum_failed_with_hint, "\"sec\""))
-        f.write("\"Sum(time failed without hint)\",%s,%s\n" % (sum_failed_without_hint, "\"sec\""))
+        write_fmt(output_format, "Sum(time failed)", sum_failed, "sec")
+        write_fmt(output_format, "Sum(time failed with hint)", sum_failed_with_hint, "sec")
+        write_fmt(output_format, "Sum(time failed without hint)", sum_failed_without_hint, "sec")
     
     rlimit_cnst = float(544656)
     rlimit_budget_used = float("inf") if (max_rlimit_count == 0.0) else 100.0 * (float(sum_rlimit_count)/(float(max_rlimit_count)*rlimit_cnst))
-    f.write("\"rlimit budget used\",%s,%s\n" % (rlimit_budget_used, "\"%\""))
+    write_fmt(output_format, "rlimit budget used", rlimit_budget_used, "%")
 
     time_per_rlimit = float("inf") if (sum_fstar_rlimit == 0) else float(time)/float(sum_fstar_rlimit)
     rlimit_per_sec = float("inf") if (time == 0.0) else float(sum_fstar_rlimit)/float(time)
-    f.write("\"time/rlimit\",%s,%s\n" % (time_per_rlimit, "\"sec\""))
-    f.write("\"rlimit/sec\",%s,%s\n" % (rlimit_per_sec, "\"\""))
-
-    f.write("\"Max(memory)\",%s,%s\n" % (max_max_memory, "\"MB\""))
-
-    f.write("\"# Modules\",%s,%s\n" % (len(modules), "\"\""))
+    write_fmt(output_format, "time/rlimit", time_per_rlimit, "sec")
+    write_fmt(output_format, "rlimit/sec", rlimit_per_sec, "")
+        
+    write_fmt(output_format, "Max(memory)", max_max_memory, "MB")
+        
+    write_fmt(output_format, "# Modules", len(modules), "")
     if len(modules) > 0:
         min_mod = min(modules.keys(), key=(lambda key: modules[key]))
         max_mod = max(modules.keys(), key=(lambda key: modules[key]))
-        f.write("\"# Sum(time modules)\",%s,%s\n" % (sum(modules.values()), "\"msec\""))
-        f.write("\"# Min(time modules)\",%s,%s,\"%s\"\n" % (min(modules.values()), "\"msec\"", min_mod))
-        f.write("\"# Max(time modules)\",%s,%s,\"%s\"\n" % (max(modules.values()), "\"msec\"", max_mod))
-
-    f.write("\n")
-
+        write_fmt(output_format, "# Sum(time modules)", sum(modules.values()), "msec")
+        write_fmt(output_format, "# Min(time modules)", min(modules.values()), "msec", min_mod)
+        write_fmt(output_format, "# Max(time modules)", max(modules.values()), "msec", max_mod)
+ 
+    if output_format == "csv":
+        f.write("\n")
+    elif output_format == "html":
+        f.write("</table>")
 
 def main(argv):
     infile = ""
@@ -348,6 +408,7 @@ def main(argv):
     reverse = False
     global_stats = False
     filters = None
+    output_format = "csv"
 
     try:
         opts, args = getopt.getopt(argv, SHORTOPTS, LONGOPTS)
@@ -395,11 +456,15 @@ def main(argv):
             if filters is None:
                 filters = [ ]
             filters += [ f ]
+        elif o in ("-F", "--format"):
+            if a != "csv" and a != "html":
+                print("Error: unsupported output format '%s'" % a)
+            output_format = a
         else:
             print("Unknown option `%s'" % o)
             return 2
     
-    process_file(infile, outfile, stat, int(n), collate, append, reverse, global_stats, filters)
+    process_file(infile, outfile, stat, int(n), collate, append, reverse, global_stats, filters, output_format)
     return 0
 
 

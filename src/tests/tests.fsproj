@@ -61,29 +61,12 @@
     <Compile Include="util.fs" />
     <Compile Include="norm.fs" />
     <Compile Include="unif.fs" />
-    <Compile Include="tactics.fs" />
     <Compile Include="test.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Compatibility.OCaml">
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\VS\packages\FSPowerPack.Core.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Linq">
-      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Metadata">
-      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Parallel.Seq">
-      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">
@@ -129,11 +112,6 @@
     <ProjectReference Include="..\syntax\syntax.fsproj">
       <Name>syntax</Name>
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\tactics\tactics.fsproj">
-      <Name>tactics</Name>
-      <Project>{82336f31-a87c-4403-a2f4-2b90b4f0996b}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\tosyntax\tosyntax.fsproj">
