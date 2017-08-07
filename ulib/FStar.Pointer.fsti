@@ -2030,7 +2030,7 @@ val disjoint_gpointer_of_buffer_cell
   ))
   (ensures (
     UInt32.v i1 < UInt32.v (buffer_length b) /\
-    UInt32.v i2 < UInt32.v (buffer_length b) /\  
+    UInt32.v i2 < UInt32.v (buffer_length b) /\
     disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2)
   ))
   [SMTPat (disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2))]
