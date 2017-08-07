@@ -1053,6 +1053,43 @@ let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
       gread h b == gread h' b'
   ))
 
+val equal_values_live
+  (#a: typ)
+  (h: HS.mem) (b:pointer a)
+  (h': HS.mem) (b':pointer a)
+: Lemma
+  (requires (equal_values h b h' b'))
+  (ensures (live h b /\ live h' b'))
+  [SMTPatOr [
+    [SMTPat (equal_values #a h b h' b'); SMTPat (live h b)];
+    [SMTPat (equal_values #a h b h' b'); SMTPat (live h' b')]
+  ]]
+
+val equal_values_readable
+  (#a: typ)
+  (h: HS.mem) (b:pointer a)
+  (h': HS.mem) (b':pointer a)
+: Lemma
+  (requires (equal_values h b h' b' /\ readable h b))
+  (ensures (readable h' b'))
+  [SMTPatOr [
+    [SMTPat (equal_values #a h b h' b'); SMTPat (readable h b)];
+    [SMTPat (equal_values #a h b h' b'); SMTPat (readable h' b')]
+  ]]
+
+
+val equal_values_gread
+  (#a: typ)
+  (h: HS.mem) (b:pointer a)
+  (h': HS.mem) (b':pointer a)
+: Lemma
+  (requires (equal_values h b h' b' /\ readable h b))
+  (ensures (gread h b == gread h' b' /\ readable h' b'))
+  [SMTPatOr [
+    [SMTPat (equal_values h b h' b'); SMTPat (gread h b)];
+    [SMTPat (equal_values h b h' b'); SMTPat (gread h' b')]
+  ]]
+
 (*** The modifies clause *)
 
 // private // in fact, we have to expose this type, otherwise unification problems will appear everywhere
