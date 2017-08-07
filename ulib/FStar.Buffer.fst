@@ -952,19 +952,21 @@ let lemma_sub_spec (#a:Type) (b:buffer a)
   (i:UInt32.t)
   (len:UInt32.t{v len <= length b /\ v i + v len <= length b})
   h : Lemma
-     (requires True)
-     (ensures  (as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
-  [SMTPat (sub b i len)]
+     (requires (live h b))
+     (ensures  (live h (sub b i len) /\
+                as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
+  [SMTPat (sub b i len); SMTPatT (live h b)]
   = Seq.lemma_eq_intro (as_seq h (sub b i len)) (Seq.slice (as_seq h b) (v i) (v i + v len))
 
 let lemma_sub_spec' (#a:Type) (b:buffer a)
   (i:UInt32.t)
   (len:UInt32.t{v len <= length b /\ v i + v len <= length b})
   h : Lemma
-     (requires True)
-     (ensures  (as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
-  [SMTPat (sub b i len)]
-= lemma_sub_spec b i len h
+     (requires (live h b))
+     (ensures  (live h (sub b i len) /\
+                as_seq h (sub b i len) == Seq.slice (as_seq h b) (v i) (v i + v len)))
+  [SMTPatT (live h (sub b i len))]
+  = lemma_sub_spec b i len h
 
 val offset: #a:Type -> b:buffer a
   -> i:UInt32.t{v i + v b.idx < pow2 n /\ v i <= v b.length}
@@ -1011,6 +1013,7 @@ let eq_lemma2 #a b1 b2 len h =
   cut (forall (j:nat). j < v len ==> get h b1 j == Seq.index s1 j);
   cut (forall (j:nat). j < v len ==> get h b2 j == Seq.index s2 j)
 
+(** Corresponds to memcmp for `eqtype` *)
 val eqb: #a:eqtype -> b1:buffer a -> b2:buffer a
   -> len:UInt32.t{v len <= length b1 /\ v len <= length b2}
   -> ST bool
@@ -1053,7 +1056,7 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:mem) (h1:mem) (h2:mem)
 
 #reset-options "--z3rlimit 100 --max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
 
-(* Corresponds to memcpy *)
+(** Corresponds to memcpy *)
 val blit: #t:Type
   -> a:buffer t
   -> idx_a:UInt32.t{v idx_a <= length a}
@@ -1084,8 +1087,7 @@ let rec blit #t a idx_a b idx_b len =
     Seq.cons_head_tail (Seq.slice (as_seq h1 b) (v idx_b + v len') (length b))
     end
 
-
-(* Corresponds to memset *)
+(** Corresponds to memset *)
 val fill: #t:Type
   -> b:buffer t
   -> z:t
