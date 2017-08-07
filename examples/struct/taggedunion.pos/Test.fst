@@ -48,7 +48,7 @@ let s_typ : P.typ = P.TStruct s_l
 let st_typ = either_typ s_typ P.(TBase TUInt16)
 let st_tags = either_tags s_typ P.(TBase TUInt16)
 
-#set-options "--z3rlimit 16"
+#set-options "--z3rlimit 20"
 
 let step (p: P.pointer st_typ) :
   HST.Stack unit
@@ -96,26 +96,10 @@ let step_alt (p: P.pointer st_typ):
     assert (t == 1ul);
     let z : UInt16.t = P.read (TU.field st_tags p "right") in
     let x : UInt8.t = FStar.Int.Cast.uint16_to_uint8 z in
-    let h0 = HST.get () in
     TU.write_tag st_tags p "left";
-    let h1 = HST.get () in
     let s_ptr : P.pointer (P.TStruct s_l) = TU.field st_tags p "left" in
     P.write (P.field s_ptr "x") x;
     P.write (P.field s_ptr "y") 0uy;
     let h2 = HST.get () in
-    assert (TU.valid h0 st_tags p);
-    assert (P.readable h0 p);
-    assert (TU.valid h1 st_tags p);
-    assert (TU.valid h2 st_tags p);
-    assume (P.readable h2 (P.field s_ptr "x")); // missing SMTPat
-    assert (P.readable h2 (P.field s_ptr "y"));
-    P.readable_struct h2 s_ptr;
-    assert (P.readable h2 s_ptr);
-    assert (TU.gread_tag h1 st_tags p == 0ul);
-    assert (P.modifies_1 (TU.gfield st_tags p "left") h1 h2); // not automatically inferred
-    assert (TU.gread_tag h2 st_tags p == 0ul);
-    assert (P.modifies_1 p h0 h1);
-    assert (P.modifies_1 p h1 h2);
-    assert (P.modifies_1 p h0 h2);
-    ()
+    P.readable_struct h2 s_ptr
   )
