@@ -276,7 +276,7 @@ uexamples:
 
 ulong:
 	+$(MAKE) utest
-	+$(MAKE) -C ../examples/low-level/crypto extra
+	+$(MAKE) -C ../ulib extra
 
 ctags:
 	ctags --exclude=boot_fsts --exclude=boot_fstis --exclude=ocaml-output -R .

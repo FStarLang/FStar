@@ -863,8 +863,12 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
              else Rel.try_subtype env lc.res_typ t, true in
   match gopt with
     | None, _ ->
-      subtype_fail env e lc.res_typ t; //log a sub-typing error
-      e, {lc with res_typ=t}, Rel.trivial_guard //and keep going to type-check the result of the program
+        if env.failhard
+        then raise (Error (Err.basic_type_error env (Some e) t lc.res_typ, e.pos))
+        else (
+            subtype_fail env e lc.res_typ t; //log a sub-typing error
+            e, {lc with res_typ=t}, Rel.trivial_guard //and keep going to type-check the result of the program
+        )
     | Some g, apply_guard ->
       match guard_form g with
         | Trivial ->
@@ -1713,11 +1717,12 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                   | _ -> false)
               in
               quals (S.Projector(lid, x.ppname)::iquals) in
+          let attrs = if only_decl then [] else [ U.attr_substitute ] in
           let decl = { sigel = Sig_declare_typ(field_name, uvs, t);
                        sigquals = quals;
                        sigrng = range_of_lid field_name;
                        sigmeta = default_sigmeta;
-                       sigattrs = [] } in
+                       sigattrs = attrs } in
           if Env.debug env (Options.Other "LogTypes")
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
@@ -1752,7 +1757,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                            sigquals = quals;
                            sigrng = p;
                            sigmeta = default_sigmeta;
-                           sigattrs = [] } in
+                           sigattrs = attrs } in
               if Env.debug env (Options.Other "LogTypes")
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten

@@ -564,6 +564,15 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
 let seq_find #a f l =
   seq_find_aux f l (Seq.length l)
 
+let for_all
+  (#a: Type)
+  (f: (a -> Tot bool))
+  (l: seq a)
+: Pure bool
+  (requires True)
+  (ensures (fun b -> (b == true <==> (forall (i: nat {i < Seq.length l} ) . f (index l i) == true))))
+= None? (seq_find (fun i -> not (f i)) l)
+
 #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 1 --max_fuel 1"
 val seq_mem_k: #a:eqtype -> s:seq a -> n:nat{n < Seq.length s} -> 
     Lemma (requires True)

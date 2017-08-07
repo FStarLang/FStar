@@ -1927,24 +1927,32 @@ let t_tactic_unit: term' syntax =
     let uu____6544 = let uu____6545 = as_arg t_unit in [uu____6545] in
     mk_Tm_app uu____6542 uu____6544 in
   uu____6541 FStar_Pervasives_Native.None FStar_Range.dummyRange
+let t_tac_unit: term' syntax =
+  let uu____6550 =
+    let uu____6551 =
+      let uu____6552 = tabbrev FStar_Parser_Const.u_tac_lid in
+      mk_Tm_uinst uu____6552 [U_zero] in
+    let uu____6553 = let uu____6554 = as_arg t_unit in [uu____6554] in
+    mk_Tm_app uu____6551 uu____6553 in
+  uu____6550 FStar_Pervasives_Native.None FStar_Range.dummyRange
 let t_list_of: term -> term =
   fun t  ->
-    let uu____6552 =
-      let uu____6553 =
-        let uu____6554 = tabbrev FStar_Parser_Const.list_lid in
-        mk_Tm_uinst uu____6554 [U_zero] in
-      let uu____6555 = let uu____6556 = as_arg t in [uu____6556] in
-      mk_Tm_app uu____6553 uu____6555 in
-    uu____6552 FStar_Pervasives_Native.None FStar_Range.dummyRange
+    let uu____6561 =
+      let uu____6562 =
+        let uu____6563 = tabbrev FStar_Parser_Const.list_lid in
+        mk_Tm_uinst uu____6563 [U_zero] in
+      let uu____6564 = let uu____6565 = as_arg t in [uu____6565] in
+      mk_Tm_app uu____6562 uu____6564 in
+    uu____6561 FStar_Pervasives_Native.None FStar_Range.dummyRange
 let t_option_of: term -> term =
   fun t  ->
-    let uu____6563 =
-      let uu____6564 =
-        let uu____6565 = tabbrev FStar_Parser_Const.option_lid in
-        mk_Tm_uinst uu____6565 [U_zero] in
-      let uu____6566 = let uu____6567 = as_arg t in [uu____6567] in
-      mk_Tm_app uu____6564 uu____6566 in
-    uu____6563 FStar_Pervasives_Native.None FStar_Range.dummyRange
+    let uu____6572 =
+      let uu____6573 =
+        let uu____6574 = tabbrev FStar_Parser_Const.option_lid in
+        mk_Tm_uinst uu____6574 [U_zero] in
+      let uu____6575 = let uu____6576 = as_arg t in [uu____6576] in
+      mk_Tm_app uu____6573 uu____6575 in
+    uu____6572 FStar_Pervasives_Native.None FStar_Range.dummyRange
 let unit_const: term' syntax =
   mk (Tm_constant FStar_Const.Const_unit) FStar_Pervasives_Native.None
     FStar_Range.dummyRange

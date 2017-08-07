@@ -31,9 +31,9 @@ let rec blah  (t : term) =
     tv <-- (match inspect t with
             | Tv_Var b -> return (Tv_Var b)
             | Tv_FVar f -> return (Tv_FVar f)
-            | Tv_App l r -> l <-- blah l;
-                            r <-- blah r;
-                            return (Tv_App l r)
+            | Tv_App l (r, q) -> l <-- blah l;
+                                 r <-- blah r;
+                                 return (Tv_App l (r, q))
             | Tv_Abs b t -> t <-- blah t;
                             return (Tv_Abs b t)
             | Tv_Arrow b t -> t <-- blah t;

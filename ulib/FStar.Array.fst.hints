@@ -44,18 +44,6 @@
       0,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.Array.heap_upd",
-      2,
-      0,
-      0,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Preorder.preorder_rel",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
