@@ -63,11 +63,11 @@ let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __tryt
 let __trivial: unit __tac = from_tac_0 B.trivial
 let trivial: unit -> unit __tac = fun () -> __trivial
 
-let __norm (s: FStar_Reflection_Data.norm_step list): unit __tac = from_tac_1 B.norm s 
+let __norm (s: FStar_Reflection_Data.norm_step list): unit __tac = from_tac_1 B.norm s
 let norm: FStar_Reflection_Data.norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
 
-let __intro: RT.binder __tac = from_tac_0 B.intro
-let intro: unit -> RT.binder __tac = fun () -> __intro
+let __intro (s_opt:string option): RT.binder __tac = from_tac_1 B.intro_named s_opt
+let intro: string option -> unit -> RT.binder __tac = fun s_opt -> fun () -> __intro s_opt
 
 let __revert: unit __tac = from_tac_0 B.revert
 let revert: unit -> unit __tac = fun () -> __revert

@@ -107,39 +107,41 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
                     FStar_Syntax_Embeddings.embed_bool in
                 let uu____363 =
                   let uu____366 =
-                    mk11 "__fresh_binder" FStar_Reflection_Basic.fresh_binder
+                    mk2 "__fresh_binder" FStar_Reflection_Basic.fresh_binder
+                      (FStar_Syntax_Embeddings.unembed_option
+                         FStar_Syntax_Embeddings.unembed_string)
                       FStar_Reflection_Basic.unembed_term
                       FStar_Reflection_Basic.embed_binder in
-                  let uu____373 =
-                    let uu____376 =
+                  let uu____375 =
+                    let uu____378 =
                       mk2 "__term_eq" FStar_Reflection_Basic.term_eq
                         FStar_Reflection_Basic.unembed_term
                         FStar_Reflection_Basic.unembed_term
                         FStar_Syntax_Embeddings.embed_bool in
-                    let uu____381 =
-                      let uu____384 =
+                    let uu____383 =
+                      let uu____386 =
                         mk11 "__term_to_string"
                           FStar_Reflection_Basic.term_to_string
                           FStar_Reflection_Basic.unembed_term
                           FStar_Syntax_Embeddings.embed_string in
-                      let uu____385 =
-                        let uu____388 =
+                      let uu____387 =
+                        let uu____390 =
                           mk11 "__binders_of_env"
                             FStar_Reflection_Basic.binders_of_env
                             FStar_Reflection_Basic.unembed_env
                             FStar_Reflection_Basic.embed_binders in
-                        let uu____389 =
-                          let uu____392 =
+                        let uu____391 =
+                          let uu____394 =
                             mk2 "__lookup_typ"
                               FStar_Reflection_Basic.lookup_typ
                               FStar_Reflection_Basic.unembed_env
                               FStar_Syntax_Embeddings.unembed_string_list
                               FStar_Reflection_Basic.embed_sigelt_view in
-                          [uu____392] in
-                        uu____388 :: uu____389 in
-                      uu____384 :: uu____385 in
-                    uu____376 :: uu____381 in
-                  uu____366 :: uu____373 in
+                          [uu____394] in
+                        uu____390 :: uu____391 in
+                      uu____386 :: uu____387 in
+                    uu____378 :: uu____383 in
+                  uu____366 :: uu____375 in
                 uu____362 :: uu____363 in
               uu____352 :: uu____359 in
             uu____348 :: uu____349 in

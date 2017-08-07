@@ -63,13 +63,15 @@ string operations)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
-assume private val __intro  : __tac binder
+assume private val __intro (s_opt:option string) : __tac binder
 (** [intro] pushes the first argument of an arrow goal into the
 environment, turning [Gamma |- ?u : x:a -> b] into [Gamma, x:a |- ?u' : b].
 Note that this does not work for logical implications/forall. See
-FStar.Tactics.Logic for that.
+FStar.Tactics.Logic for that. The optional string taken as argument
+allow to rename the binder in the context.
 *)
-let intro : tactic binder = fun () -> TAC?.reflect __intro
+let intro_named (s_opt:option string) : tactic binder = fun () -> TAC?.reflect (__intro s_opt)
+let intro = intro_named None
 
 assume private val __intro_rec  : __tac (binder * binder)
 (** Similar to intros, but allows to build a recursive function.

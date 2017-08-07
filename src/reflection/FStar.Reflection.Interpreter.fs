@@ -48,7 +48,7 @@ let reflection_primops : list<N.primitive_step> =
         mk2 "__compare_binder" compare_binder unembed_binder unembed_binder embed_order;
         mk1 "__type_of_binder" type_of_binder unembed_binder embed_term;
         mk2 "__is_free" is_free unembed_binder unembed_term embed_bool;
-        mk1 "__fresh_binder" fresh_binder unembed_term embed_binder;
+        mk2 "__fresh_binder" fresh_binder (unembed_option unembed_string) unembed_term embed_binder;
 
         mk2 "__term_eq" term_eq unembed_term unembed_term embed_bool;
 

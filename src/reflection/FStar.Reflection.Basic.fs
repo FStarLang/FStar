@@ -550,5 +550,5 @@ let unembed_sigelt_view (t:term) : sigelt_view =
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let type_of_binder b = match b with (b, _) -> b.sort
 let term_eq = FStar.Syntax.Util.term_eq
-let fresh_binder t = (gen_bv "__refl" None t, None)
+let fresh_binder s_opt t = (gen_bv (BU.dflt "__refl" s_opt) None t, None)
 let term_to_string = Print.term_to_string

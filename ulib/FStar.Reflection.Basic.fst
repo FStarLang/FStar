@@ -66,5 +66,5 @@ assume val __term_to_string : term -> string
 let term_to_string t : string = __term_to_string t
 
 (* Shouldn't this be TAC??? *)
-assume val __fresh_binder : typ -> binder
-let fresh_binder t : binder = __fresh_binder t
+assume val __fresh_binder : option string -> typ -> binder
+let fresh_binder s_opt t : binder = __fresh_binder s_opt t

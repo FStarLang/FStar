@@ -347,10 +347,19 @@ let seq (t1:tac<unit>) (t2:tac<unit>) : tac<unit> =
         bind (map t2) (fun _ -> ret ()))
     )
 
-let intro : tac<binder> =
+(* Unifies the current goal with x:a -> b aand introduces x:a in the context
+   If the optional name is provided then the introduces binder uses this name
+*)
+let intro_named (name_opt:option<string>) : tac<binder> =
     bind cur_goal (fun goal ->
     match U.arrow_one goal.goal_ty with
     | Some (b, c) ->
+        let b = match name_opt with
+          | None -> b
+          | Some name ->
+            let b0, aq = b in
+            {b0 with S.ppname = mk_ident (name, S.range_of_bv b0)}, aq
+        in
         let bs, c = SS.open_comp [b] c in
         let b = match bs with
                 | [b] -> b
@@ -372,7 +381,10 @@ let intro : tac<binder> =
         fail1 "intro: goal is not an arrow (%s)" (Print.term_to_string goal.goal_ty)
     )
 
+let intro = intro_named None
+
 // TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
+// TODO ? give the possibility to rename binders
 let intro_rec : tac<(binder * binder)> =
     bind cur_goal (fun goal ->
     BU.print_string "WARNING (intro_rec): calling this is known to cause normalizer loops\n";

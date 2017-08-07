@@ -29,9 +29,9 @@ let fa_intro_lem #a #b f = FStar.Squash.(return_squash (squash_double_arrow (ret
 let forall_intro : tactic binder =
     g <-- cur_goal;
     match term_as_formula g with
-    | Forall _ _ -> (
+    | Forall b _ -> (
         apply (quote_lid ["FStar";"Tactics";"Logic";"fa_intro_lem"]);;
-        intro)
+        intro_named (Some (inspect_bv b)))
     | _ ->
         fail "not a forall"
 

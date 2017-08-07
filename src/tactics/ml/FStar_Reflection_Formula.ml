@@ -123,26 +123,26 @@ let mk_Forall:
   fun typ  ->
     fun pred  ->
       Forall
-        ((FStar_Reflection_Basic.fresh_binder typ),
+        ((FStar_Reflection_Basic.fresh_binder None typ),
           (FStar_Reflection_Basic.pack
              (FStar_Reflection_Data.Tv_App
                 (pred,
                   ((FStar_Reflection_Basic.pack
                       (FStar_Reflection_Data.Tv_Var
-                         (FStar_Reflection_Basic.fresh_binder typ))),
+                         (FStar_Reflection_Basic.fresh_binder None typ))),
                     FStar_Reflection_Data.Q_Explicit)))))
 let mk_Exists:
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> formula =
   fun typ  ->
     fun pred  ->
       Exists
-        ((FStar_Reflection_Basic.fresh_binder typ),
+        ((FStar_Reflection_Basic.fresh_binder None typ),
           (FStar_Reflection_Basic.pack
              (FStar_Reflection_Data.Tv_App
                 (pred,
                   ((FStar_Reflection_Basic.pack
                       (FStar_Reflection_Data.Tv_Var
-                         (FStar_Reflection_Basic.fresh_binder typ))),
+                         (FStar_Reflection_Basic.fresh_binder None typ))),
                     FStar_Reflection_Data.Q_Explicit)))))
 type ('Af,'At) smaller = Obj.t
 let term_as_formula': FStar_Reflection_Types.term -> formula =

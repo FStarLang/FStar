@@ -132,7 +132,7 @@ let tcut:
                  (FStar_Reflection_Basic.pack
                     (FStar_Reflection_Data.Tv_App
                        (qq, (t, FStar_Reflection_Data.Q_Explicit))))))
-           (fun uu___65_717  -> FStar_Tactics_Builtins.intro))
+           (fun uu___65_717  -> FStar_Tactics_Builtins.intro None))
 let rec revert_all:
   FStar_Reflection_Types.binders -> Prims.unit FStar_Tactics_Effect.tactic =
   fun bs  ->

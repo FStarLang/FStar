@@ -28,12 +28,20 @@ noeq type formula =
   | IntLit : int -> formula
   | F_Unknown : formula // Also a baked-in "None"
 
+
+let maybe_binder_name (pred:term) : option string =
+  match inspect pred with
+  | Tv_Abs b _ -> Some (inspect_bv b)
+  | _ -> None
+
 let mk_Forall (typ : term) (pred : term) : formula =
-    let b = fresh_binder typ in
+    let name_opt = maybe_binder_name pred in
+    let b = fresh_binder name_opt typ in
     Forall b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
 
 let mk_Exists (typ : term) (pred : term) : formula =
-    let b = fresh_binder typ in
+    let name_opt = maybe_binder_name pred in
+    let b = fresh_binder name_opt typ in
     Exists b (pack (Tv_App pred (pack (Tv_Var b), Q_Explicit)))
 
 val smaller : formula -> term -> Type0
