@@ -8,8 +8,8 @@ Experiments in low-level parsing that extracts to reasonable C code, proves corr
 
 * `must_extract` annotation to fail if something doesn't extract, and potentially block CI
 * add a checkout of kremlin and set `KREMLIN_HOME` on CI so `C.Loops.fst` and `C.fst` are available
-* `C.fst` needs specs for big endian reading/encoding (fix known - HACL* already did this but not in the KreMLin library)
 * might need a generic `while` loop. Modeled in kremlin branch `schema_21` (no implementation)
+* `C.fst` needs specs for big endian reading/encoding - fixed in kremlin branch `schema_21` by porting Hacl*'s work.
 * `inline_for_extraction` for types (specifically, functions which compute types) should be unfolded by extraction (eg, `serializer_any`). `unfold` works for extraction but breaks verification. Fixed by [FStarLang/FStar#1176](https://github.com/FStarLang/FStar/pull/1176).
 
 ## Extraction bugs
