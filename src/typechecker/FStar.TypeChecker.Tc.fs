@@ -1465,7 +1465,8 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
         | Some ns ->
             let proof_ns = [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]] in
             { env with proof_ns = proof_ns }
-        | None -> env
+        | None ->
+            { env with proof_ns = [[]] }
         end
      | _ -> env)
   | Sig_new_effect_for_free _ -> env
