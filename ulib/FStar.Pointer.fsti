@@ -1158,9 +1158,10 @@ modifies clauses.
 let set_includes
   (s1 s2: set)
 : GTot Type0
-= forall (ap2: apointer { set_amem ap2 s2 } ) .
-  exists (ap1: apointer { set_amem ap1 s1 } ) .
+= forall (ap2: apointer) . set_amem ap2 s2 ==> (
+  exists (ap1: apointer) . set_amem ap1 s1 /\
   (APointer?.p ap1) `includes` (APointer?.p ap2)
+)
 
 let set_includes_refl
   (s: set)
@@ -1180,11 +1181,7 @@ let set_subset_includes
 : Lemma
   (requires (s2 `set_subset` s1))
   (ensures (s1 `set_includes` s2))
-= assert (
-    forall (ap2: apointer { set_amem ap2 s2 } ) .
-    let (ap1: apointer { set_amem ap1 s1 } ) = ap2 in
-    (APointer?.p ap1) `includes` (APointer?.p ap2)
-  )
+= ()
 
 val set_includes_singleton
   (#a1: typ)
