@@ -238,6 +238,11 @@ ocaml-fstar-ocaml: boot-ocaml
 OTHERFLAGS+=--hint_info
 
 utest:
+	+$(MAKE) utest-prelude
+	+$(MAKE) uregressions
+
+# The first tests have to be performed sequentially (but each one may use some parallelism)
+utest-prelude:
 	+$(MAKE) all
 ifeq ($(OS),Windows_NT)
 	+$(MAKE) fsharp-regressions #normalizer failures on linux so only run on windows
@@ -245,7 +250,6 @@ endif
 	+$(MAKE) boot-ocaml
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
-	+$(MAKE) uregressions
 
 # Interactive mode regressions
 interactive-test:
@@ -262,6 +266,12 @@ hello:
 # Getting parallelism from this target
 uregressions: hello ulib tutorial uexamples interactive-test
 
+# Getting parallelism from this target as well
+uregressions-ulong: uregressions ulib-extra
+
+ulib-extra:
+	+$(MAKE) -C ../ulib extra
+
 ulib:
 	+$(MAKE) -C ../ulib
 
@@ -275,8 +285,8 @@ uexamples:
 	+$(MAKE) -C ../examples all
 
 ulong:
-	+$(MAKE) utest
-	+$(MAKE) -C ../ulib extra
+	+$(MAKE) utest-prelude
+	+$(MAKE) uregressions-ulong
 
 ctags:
 	ctags --exclude=boot_fsts --exclude=boot_fstis --exclude=ocaml-output -R .
