@@ -1117,24 +1117,14 @@ and encode_let
 
 and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
+    let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown None Range.dummyRange)) in
     let scr, decls = encode_term e env in
-    let scr, env, mk_body =
-      match scr.tm with
-      | FreeV _
-      | Integer _ -> //not worth let-binding
-        scr, env, (fun x -> BU.return_all x)
-      | _ ->
-        let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown None Range.dummyRange)) in
-        scr',
-        env,
-        (fun match_tm ->  mkLet' ([(scrsym,Term_sort), scr], match_tm) Range.dummyRange)
-    in
     let match_tm, decls =
       let encode_branch b (else_case, decls) =
         let p, w, br = SS.open_branch b in
         let env0, pattern = encode_pat env p in
-        let guard = pattern.guard scr in
-        let projections = pattern.projections scr in
+        let guard = pattern.guard scr' in
+        let projections = pattern.projections scr' in
         let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
         let guard, decls2 =
             match w with
@@ -1148,7 +1138,7 @@ and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t
       in
       List.fold_right encode_branch pats (default_case (* default; should be unreachable *), decls)
     in
-    mk_body match_tm, decls
+    mkLet' ([(scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
 and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
     if Env.debug env.tcenv Options.Low then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
