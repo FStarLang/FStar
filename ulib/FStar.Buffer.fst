@@ -979,7 +979,7 @@ let lemma_offset_spec (#a:Type) (b:buffer a)
   h : Lemma
      (requires True)
      (ensures  (as_seq h (offset b i) == Seq.slice (as_seq h b) (v i) (length b)))
-     [SMTPat (offset b i)]
+     [SMTPat (as_seq h (offset b i))]
   = Seq.lemma_eq_intro (as_seq h (offset b i)) (Seq.slice (as_seq h b) (v i) (length b))
   
 private val eq_lemma1:
