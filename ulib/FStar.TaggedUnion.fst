@@ -245,6 +245,16 @@ let write_tag
 
 (* Lemmas *)
 
+let includes_gfield
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+: Lemma
+  (requires True)
+  (ensures (P.includes p (gfield tgs p f)))
+  [SMTPat (P.includes p (gfield tgs p f))]
+= ()
 
 let modifies_1_valid
   (#l: P.union_typ)
