@@ -260,6 +260,8 @@ fsharp-regressions:
 	$(RUNTIME) $(BIN)/tests.exe
 
 #a basic regression test for extraction
+#In particular, this test builds fstarlib.cmxa, so
+#any other examples that do need fstarlib.cmxa should depend on it
 hello:
 	+$(MAKE) -C ../examples/hello ocaml
 
@@ -275,10 +277,12 @@ ulib-extra:
 ulib:
 	+$(MAKE) -C ../ulib
 
-tutorial: ulib
+# Depends on fstarlib.cmxa, which is built by hello
+tutorial: hello
 	+$(MAKE) -C ../doc/tutorial regressions
 
-native_tactics: ulib
+# Depends on fstarlib.cmxa, which is built by hello
+native_tactics: hello
 	+$(MAKE) -C ../examples/native_tactics all
 
 uexamples:
