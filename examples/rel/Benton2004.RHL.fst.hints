@@ -1396,11 +1396,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_f2b2710ae3de861274020fd80b8c9cab",
-        "bool_inversion",
-        "constructor_distinct_FStar.Pervasives.PpxDerivingShow",
-        "eq2-interp", "equation_Benton2004.RHL.gand",
-        "equation_Benton2004.RHL.gexp", "equation_Benton2004.RHL.gop",
-        "equation_Benton2004.RHL.interp",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
+        "bool_typing",
+        "disc_equation_FStar.Pervasives.PpxDerivingShowConstant",
+        "eq2-interp", "equality_tok_FStar.Pervasives.PpxDerivingShow@tok",
+        "equation_Benton2004.RHL.gand", "equation_Benton2004.RHL.gexp",
+        "equation_Benton2004.RHL.gop", "equation_Benton2004.RHL.interp",
         "equation_Benton2004.RHL.interpolable",
         "equation_Benton2004.RHL.is_per", "equation_Benton2004.interpolable",
         "equation_Benton2004.sttype", "equation_Prims.eqtype",
@@ -1412,9 +1413,12 @@
         "lemma_Benton2004.is_per_holds_sym",
         "lemma_Benton2004.per_holds_trans", "primitive_Prims.op_AmpAmp",
         "projection_inverse_BoxBool_proj_0",
+        "ref_valid_FStar.Pervasives_Tm_refine_564db2f0aa0878b4d96c60508be3dd36",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "token_correspondence_Prims.op_AmpAmp", "typing_Benton2004.RHL.gand",
-        "typing_Benton2004.RHL.interp"
+        "typing_Benton2004.RHL.interp",
+        "typing_FStar.Pervasives.uu___is_PpxDerivingShowConstant",
+        "typing_tok_FStar.Pervasives.PpxDerivingShow@tok"
       ],
       0
     ],
