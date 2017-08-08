@@ -1458,8 +1458,8 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_pragma (p) ->
     (match p with
+     | SetOptions _
      | ResetOptions _ ->
-        env.solver.refresh ();
         // `using_facts_from` requires some special handling..
         begin match Options.using_facts_from () with
         | Some ns ->
