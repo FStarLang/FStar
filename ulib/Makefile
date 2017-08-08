@@ -1,14 +1,17 @@
-.PHONY: indent
+.PHONY: indent all extra
 
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/z3.mk
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
-FLAKY=FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst FStar.StructNG.fst
+EXTRA=FStar.Pointer.fst
+FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 
 ALL=$(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
 
 all: $(addsuffix -ver, $(ALL))
+
+extra: $(addsuffix -ver, $(EXTRA))
 
 indent: $(addsuffix -indent, $(ALL))
 
@@ -38,20 +41,28 @@ wc:
 include ml/Makefile.include
 
 REALIZED=$(addsuffix .fst, $(NOEXTRACT_MODULES))
-EXTRACT_ALL=$(filter-out $(REALIZED),$(wildcard FStar.*.fst FStar.*.fsti))
+EXTRACT_FSTARLIB=$(filter-out $(REALIZED) FStar.Crypto.fst FStar.Tcp.fst FStar.Reflection.% FStar.Tactics.%,$(wildcard FStar.*.fst FStar.*.fsti))
+EXTRACT_COMPILER=$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar.Tactics.*.fst FStar.Tactics.*.fsti)
 
-.mgen: *.fst *.fsti
+../bin/fstar.ocaml:
+	make -C ../src/ocaml-output
+
+.mgen: *.fst *.fsti ../bin/fstar.ocaml
 	mkdir -p ml/extracted
-	cp ../src/ocaml-output/FStar_*.ml                      ml/extracted/
-	cp ../src/basic/ml/*.ml                                ml/extracted/
-	cp ../src/prettyprint/ml/*.ml                          ml/extracted/
-	cp ../src/extraction/ml/FStar_Extraction_ML_PrintML.ml ml/extracted/
-	cp ../src/parser/ml/FStar_Parser_LexFStar.mll          ml/extracted/
-	cp ../src/parser/ml/FStar_Parser_ParseIt.ml            ml/extracted/
-	cp ../src/parser/ml/FStar_Parser_Util.ml               ml/extracted/
-	cp ../src/tactics/ml/FStar_Tactics_Native.ml           ml/extracted/
-	cp ../src/tactics/ml/FStar_Tactics_Load.ml             ml/extracted/
-	cp ../src/tactics/ml/FStar_Tactics_Builtins.ml         ml/extracted/
-	$(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(EXTRACT_ALL)
+	mkdir -p ml/compiler-extracted
+	cp ../src/ocaml-output/FStar_*.ml                      ml/compiler-extracted/
+	cp ../src/basic/ml/*.ml                                ml/compiler-extracted/
+	cp ../src/prettyprint/ml/*.ml                          ml/compiler-extracted/
+	cp ../src/extraction/ml/FStar_Extraction_ML_PrintML.ml ml/compiler-extracted/
+	cp ../src/parser/ml/FStar_Parser_LexFStar.mll          ml/compiler-extracted/
+	cp ../src/parser/ml/FStar_Parser_ParseIt.ml            ml/compiler-extracted/
+	cp ../src/parser/ml/FStar_Parser_Util.ml               ml/compiler-extracted/
+	cp ../src/tactics/ml/FStar_Tactics_Native.ml           ml/compiler-extracted/
+	cp ../src/tactics/ml/FStar_Tactics_Load.ml             ml/compiler-extracted/
+	cp ../src/tactics/ml/FStar_Tactics_Builtins.ml         ml/compiler-extracted/
+	$(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(EXTRACT_FSTARLIB)
+	$(FSTAR) --lax --codegen OCaml --odir ml/compiler-extracted $(FSTAR_DEFAULT_ARGS) $(EXTRACT_COMPILER)
+	cp ml/compiler-extracted/FStar_Pervasives.ml ml/extracted
 	@# creating a dummy file so that the target is not regenerated unless a file has changed
 	touch .mgen
+

@@ -1,8 +1,8 @@
 [
-  "aï`\u0006Ë©Â»\u0011»\u001dşØÄ“",
+  "iM\ti­üĞ,o.ôM!9",
   [
     [
-      "UnitTests.uu___100",
+      "UnitTests.uu___94",
       1,
       2,
       1,
@@ -10,7 +10,7 @@
       0
     ],
     [
-      "UnitTests.uu___102",
+      "UnitTests.uu___96",
       1,
       2,
       1,
@@ -32,7 +32,7 @@
       0
     ],
     [
-      "UnitTests.uu___105",
+      "UnitTests.uu___99",
       1,
       2,
       1,
@@ -72,7 +72,7 @@
       0
     ],
     [
-      "UnitTests.uu___112",
+      "UnitTests.uu___106",
       1,
       2,
       1,
@@ -87,11 +87,59 @@
     [ "UnitTests.r", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
     [ "UnitTests.__proj__Mkr__item__x", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "UnitTests.uu___115",
+      "UnitTests.uu___109",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "UnitTests.uu___113",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___114",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___115",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___116",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___117",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [
+      "UnitTests.uu___118",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
       0
     ]
   ]

@@ -197,12 +197,12 @@ let needs_interleaving intf impl =
   let m1 = Parser.Dep.lowercase_module_name intf in
   let m2 = Parser.Dep.lowercase_module_name impl in
   m1 = m2 &&
-  FStar.Util.get_file_extension intf = "fsti" && FStar.Util.get_file_extension impl = "fst"
+  List.mem (FStar.Util.get_file_extension intf) ["fsti"; "fsi"] &&
+  List.mem (FStar.Util.get_file_extension impl) ["fst"; "fs"]
 
 let pop_context env msg =
     DsEnv.pop () |> ignore;
     TcEnv.pop env msg |> ignore;
-    FStar.TypeChecker.Common.insert_id_info.clear();
     env.solver.refresh()
 
 let push_context (dsenv, env) msg =

@@ -195,26 +195,27 @@ let rel_to_string = function
   | SUB -> "<:"
   | SUBINV -> ":>"
 
-let term_to_string env t =
+let term_to_string t =
+  let compact = Print.term_to_string t in
+  let detail =
     match (SS.compress t).n with
-    | Tm_uvar(u, t) -> BU.format2 "(%s:%s)" (Print.uvar_to_string u) (Print.term_to_string t)
+    | Tm_uvar(u, t) -> BU.format2 "%s : %s" (Print.uvar_to_string u) (Print.term_to_string t)
     | Tm_app({n=Tm_uvar(u, ty)}, args) ->
-      BU.format3 "(%s:%s) %s" (Print.uvar_to_string u) (Print.term_to_string ty) (Print.args_to_string args)
-    | _ -> Print.term_to_string t
+      BU.format3 "(%s : %s) %s" (Print.uvar_to_string u) (Print.term_to_string ty) (Print.args_to_string args)
+    | _ -> "--" in
+  BU.format3 "%s (%s)\t%s" compact (Print.tag_of_term t) detail
 
 let prob_to_string env = function
   | TProb p ->
-    BU.format "\t%s: %s (%s)\n\t\t%s\n\t%s (%s) (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
+    BU.format "\n%s:\t%s \n\t\t%s\n\t%s" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
         [(BU.string_of_int p.pid);
-         (term_to_string env p.lhs);
-         (Print.tag_of_term p.lhs);
+         (term_to_string p.lhs);
          (rel_to_string p.relation);
-         (term_to_string env p.rhs);
-         (Print.tag_of_term p.rhs);
-         (N.term_to_string env (fst p.logical_guard));
-         (p.reason |> String.concat "\n\t\t\t")]
+         (term_to_string p.rhs)
+         (* (N.term_to_string env (fst p.logical_guard)); *)
+         (* (p.reason |> String.concat "\n\t\t\t") *)]
   | CProb p ->
-    BU.format3 "\t%s \n\t\t%s\n\t%s"
+    BU.format3 "\n\t%s \n\t\t%s\n\t%s"
                  (N.comp_to_string env p.lhs)
                  (rel_to_string p.relation)
                  (N.comp_to_string env p.rhs)
@@ -486,21 +487,7 @@ let force_refinement (t_base, refopt) =
 (* <printing worklists>                             *)
 (* ------------------------------------------------ *)
 
-let wl_prob_to_string wl = function
-  | TProb p ->
-    BU.format4 "%s: %s  (%s)  %s"
-        (string_of_int p.pid)
-        (Print.term_to_string (whnf wl.tcenv p.lhs))
-        (rel_to_string p.relation)
-        (Print.term_to_string (whnf wl.tcenv p.rhs))
-
-  | CProb p ->
-    BU.format4 "%s: %s  (%s)  %s"
-                 (string_of_int p.pid)
-                 (N.comp_to_string wl.tcenv p.lhs)
-                 (rel_to_string p.relation)
-                 (N.comp_to_string wl.tcenv p.rhs)
-
+let wl_prob_to_string wl prob = prob_to_string wl.tcenv prob
 let wl_to_string wl =
     List.map (wl_prob_to_string wl) (wl.attempting@(wl.wl_deferred |> List.map (fun (_, _, x) -> x))) |> String.concat "\n\t"
 
@@ -835,13 +822,22 @@ type tc =
  | C of comp
 type tcs = list<tc>
 
+let tc_to_string = function
+    | T (t, _) -> term_to_string t
+    | C c -> Print.comp_to_string c
+
 let generic_kind (binders:binders) r =
     let t, _ = U.type_u () in
     fst (new_uvar r binders t)
 let kind_type (binders:binders) (r:Range.range) =
     U.type_u() |> fst
 
-let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<binder> * variance * tc)> =
+//decompose a term into a form that resembles an application node
+let rec decompose (env:env) (t:term)
+    : (list<tc> -> term) //given a list of terms or computations, apply it to the head of t
+    * (term -> bool)     //does the head of t match the given term
+    * list<(option<binder> * variance * tc)>  //the arguments of the head of t
+    =
     let t = U.unmeta t in
     let matches t' = match head_matches env t t' with
         | MisMatch _ -> false
@@ -883,7 +879,7 @@ let rec decompose env t : (list<tc> -> term) * (term -> bool) * list<(option<bin
             | [] -> t
             | _ -> failwith "Bad reconstruction" in
 
-          rebuild, (fun t -> true), []
+          rebuild, (fun t -> return_all true), []
 
 let un_T = function
     | T (t, _) -> t
@@ -917,7 +913,8 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
         match qs with
             | [] -> [], [], U.t_true
             | q::qs ->
-                let tc, probs = match q with
+                let tc, probs =
+                     match q with
                      | bopt, variance, C ({n=Total (ti, uopt)}) ->
                        begin match sub_prob scope args (bopt, variance, T (ti, kind_type)) with
                             | T (gi_xs, _), prob -> C <| mk_Total' gi_xs uopt, [prob]
@@ -947,13 +944,19 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                       let ktec, prob = sub_prob scope args q in
                       ktec, [prob] in
 
-                let bopt, scope, args = match q with
-                    | Some b, _, _ -> Some b, b::scope, U.arg_of_non_null_binder b::args
+                let bopt, scope, args =
+                    match q, tc with
+                    | (Some (b, imp), _, _), T (t, _) ->
+                      let b = ({b with sort=t}), imp in
+                      //THE PREVIOUS LINE IS IMPORTANT, using b as leads to unification introducing a cycle
+                      //see examples/bug-reports/UnificationCrash.fst
+                      Some b, b::scope, U.arg_of_non_null_binder b::args
                     | _ -> None, scope, args in
 
                 let sub_probs, tcs, f = aux scope args qs in
                 let f = match bopt with
-                    | None -> U.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst)))
+                    | None ->
+                      U.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst)))
                     | Some b ->
                       let u_b = env.universe_of env (fst b).sort in
                       U.mk_conj_l (U.mk_forall u_b (fst b) f :: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
@@ -1633,12 +1636,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
         let im = U.abs xs (h gs_xs) (U.residual_comp_of_comp c |> Some) in
         if Env.debug env <| Options.Other "Rel"
-        then BU.print6 "Imitating  binders are {%s}, comp=%s\n\t%s (%s)\nsub_probs = %s\nformula=%s\n"
-            (Print.binders_to_string ", " xs)
-            (Print.comp_to_string c)
-            (Print.term_to_string im) (Print.tag_of_term im)
-            (List.map (prob_to_string env) sub_probs |> String.concat ", ")
-            (N.term_to_string env formula);
+        then BU.print
+                "Imitating gs_xs=%s\n\t binders are {%s}, comp=%s\n\t%s (%s)\nsub_probs = %s\nformula=%s\n"
+                   [(List.map tc_to_string gs_xs |> String.concat "\n\t");
+                    (Print.binders_to_string ", " xs);
+                    (Print.comp_to_string c);
+                    (Print.term_to_string im);
+                    (Print.tag_of_term im);
+                    (List.map (prob_to_string env) sub_probs |> String.concat ", ");
+                    (N.term_to_string env formula)];
         let wl = solve_prob orig (Some formula) [TERM((u,k), im)] wl in
         solve env (attempt sub_probs wl) in
     (* </imitate> *)
@@ -1920,8 +1926,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 let zs = intersect_vars xs ys in
                 if Env.debug env <| Options.Other "Rel"
                 then BU.print5 "Flex-flex patterns: intersected %s and %s; got %s\n\tk1=%s\n\tk2=%s\n"
-                        (Print.binders_to_string ", " xs) (Print.binders_to_string ", " ys) (Print.binders_to_string ", " zs)
-                        (Print.term_to_string k1) (Print.term_to_string k2);
+                        (Print.binders_to_string ", " xs)
+                        (Print.binders_to_string ", " ys)
+                        (Print.binders_to_string ", " zs)
+                        (Print.term_to_string k1)
+                        (Print.term_to_string k2);
                 let subst_k k xs args : term =
                     let xs_len = List.length xs in
                     let args_len = List.length args in
@@ -2250,12 +2259,17 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     let solve_eq c1_comp c2_comp =
         let _ = if Env.debug env <| Options.Other "EQ"
                 then BU.print_string "solve_c is using an equality constraint\n" in
-        let sub_probs = List.map2 (fun (a1, _) (a2, _) -> TProb<| sub_prob a1 EQ a2 "effect arg")
+        if not (lid_equals c1_comp.effect_name c2_comp.effect_name)
+        then giveup env (BU.format2 "incompatible effects: %s <> %s"
+                                        (Print.lid_to_string c1_comp.effect_name)
+                                        (Print.lid_to_string c2_comp.effect_name)) orig
+        else let sub_probs =
+                List.map2 (fun (a1, _) (a2, _) -> TProb<| sub_prob a1 EQ a2 "effect arg")
                         c1_comp.effect_args
                         c2_comp.effect_args in
-        let guard = U.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
-        let wl = solve_prob orig (Some guard) [] wl in
-        solve env (attempt sub_probs wl)
+             let guard = U.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
+             let wl = solve_prob orig (Some guard) [] wl in
+             solve env (attempt sub_probs wl)
     in
 
     let solve_sub c1 edge c2 =
@@ -2328,50 +2342,56 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                     (Print.comp_to_string c2) in
          let c1, c2 = N.ghost_to_pure env c1, N.ghost_to_pure env c2 in
          match c1.n, c2.n with
-               | GTotal (t1, _), Total (t2, _) when (U.non_informative t2) ->
-                 solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+         | GTotal (t1, _), Total (t2, _) when (U.non_informative t2) ->
+            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
-               | GTotal _, Total _ ->
-                 giveup env "incompatible monad ordering: GTot </: Tot"  orig
+         | GTotal _, Total _ ->
+            giveup env "incompatible monad ordering: GTot </: Tot"  orig
 
-               | Total  (t1, _), Total  (t2, _)
-               | GTotal (t1, _), GTotal (t2, _)
-               | Total  (t1, _), GTotal (t2, _) -> //rigid-rigid 1
-                 solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
+         | Total  (t1, _), Total  (t2, _)
+         | GTotal (t1, _), GTotal (t2, _)
+         | Total  (t1, _), GTotal (t2, _) -> //rigid-rigid 1
+            solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
-               | GTotal _, Comp _
-               | Total _,  Comp _ ->
-                 solve_c env ({problem with lhs=mk_Comp <| Env.comp_to_comp_typ env c1}) wl
+         | GTotal _, Comp _
+         | Total _,  Comp _ ->
+            solve_c env ({problem with lhs=mk_Comp <| Env.comp_to_comp_typ env c1}) wl
 
-               | Comp _, GTotal _
-               | Comp _, Total _ ->
-                 solve_c env ({problem with rhs=mk_Comp <| Env.comp_to_comp_typ env c2}) wl
+         | Comp _, GTotal _
+         | Comp _, Total _ ->
+            solve_c env ({problem with rhs=mk_Comp <| Env.comp_to_comp_typ env c2}) wl
 
-               | Comp _, Comp _ ->
-                 if (U.is_ml_comp c1 && U.is_ml_comp c2)
-                    || (U.is_total_comp c1 && (U.is_total_comp c2 || U.is_ml_comp c2))
-                 then solve_t env (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") wl
-                 else let c1_comp = Env.comp_to_comp_typ env c1 in
-                      let c2_comp = Env.comp_to_comp_typ env c2 in
-                      if problem.relation=EQ && lid_equals c1_comp.effect_name c2_comp.effect_name
-                      then solve_eq c1_comp c2_comp
-                      else
-                         let c1 = Env.unfold_effect_abbrev env c1 in
-                         let c2 = Env.unfold_effect_abbrev env c2 in
-                         if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
-                         begin match Env.monad_leq env c1.effect_name c2.effect_name with
-                           | None ->
-                             if U.is_ghost_effect c1.effect_name
-                             && U.is_pure_effect c2.effect_name
-                             && U.non_informative (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env c2.result_typ)
-                             then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=identity_mlift} in
-                                  solve_sub c1 edge c2
-                             else giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
-                                             (Print.lid_to_string c1.effect_name)
-                                             (Print.lid_to_string c2.effect_name)) orig
-                           | Some edge ->
-                             solve_sub c1 edge c2
-                         end
+         | Comp _, Comp _ ->
+            if (U.is_ml_comp c1 && U.is_ml_comp c2)
+            || (U.is_total_comp c1 && U.is_total_comp c2)
+            || (U.is_total_comp c1 && U.is_ml_comp c2 && problem.relation=SUB)
+            then solve_t env (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") wl
+            else let c1_comp = Env.comp_to_comp_typ env c1 in
+                 let c2_comp = Env.comp_to_comp_typ env c2 in
+                 if problem.relation=EQ
+                 then let c1_comp, c2_comp =
+                            if lid_equals c1_comp.effect_name c2_comp.effect_name
+                            then c1_comp, c2_comp
+                            else Env.unfold_effect_abbrev env c1,
+                                 Env.unfold_effect_abbrev env c2 in
+                      solve_eq c1_comp c2_comp
+                 else begin
+                    let c1 = Env.unfold_effect_abbrev env c1 in
+                    let c2 = Env.unfold_effect_abbrev env c2 in
+                    if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
+                    match Env.monad_leq env c1.effect_name c2.effect_name with
+                    | None ->
+                        if U.is_ghost_effect c1.effect_name
+                        && U.is_pure_effect c2.effect_name
+                        && U.non_informative (N.normalize [N.Eager_unfolding; N.UnfoldUntil Delta_constant] env c2.result_typ)
+                        then let edge = {msource=c1.effect_name; mtarget=c2.effect_name; mlift=identity_mlift} in
+                            solve_sub c1 edge c2
+                        else giveup env (BU.format2 "incompatible monad ordering: %s </: %s"
+                                        (Print.lid_to_string c1.effect_name)
+                                        (Print.lid_to_string c2.effect_name)) orig
+                    | Some edge ->
+                        solve_sub c1 edge c2
+                 end
 
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)

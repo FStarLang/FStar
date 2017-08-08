@@ -208,8 +208,8 @@ let rec simplify_point = fun () -> (
             else tiff
 
         | Not p ->
-                 if is_true p then (apply_lemma (quote lem_neg_true);; exact (quote ()))
-            else if is_false p then (apply_lemma (quote lem_neg_false);; exact (quote ()))
+                 if is_true p then apply_lemma (quote lem_neg_true)
+            else if is_false p then apply_lemma (quote lem_neg_false)
             else tiff
 
         | Iff p q ->

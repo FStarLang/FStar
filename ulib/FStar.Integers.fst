@@ -78,23 +78,16 @@ unfold let op_Plus (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x +
     | Signed, 64 -> FStar.Int64.(x +^ y)
     | Signed, 128 -> FStar.Int128.(x +^ y)
 
-unfold let op_Plus_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
-  : Tot (z:int_t s n{ok s n (v x + v y) ==> v z = v x + v y})
-  = match s, n with
-    | _, 0 -> x + y
-    | Unsigned, 8 -> FStar.UInt8.(x +?^ y)
-    | Unsigned, 16 -> FStar.UInt16.(x +?^ y)
-    | Unsigned, 31 -> FStar.UInt31.(x +?^ y)
-    | Unsigned, 32 -> FStar.UInt32.(x +?^ y)
-    | Unsigned, 63 -> FStar.UInt63.(x +?^ y)
-    | Unsigned, 64 -> FStar.UInt64.(x +?^ y)
-    | Signed, 8 -> FStar.Int8.(x +?^ y)
-    | Signed, 16 -> FStar.Int16.(x +?^ y)
-    | Signed, 31 -> FStar.Int31.(x +?^ y)
-    | Signed, 32 -> FStar.Int32.(x +?^ y)
-    | Signed, 63 -> FStar.Int63.(x +?^ y)
-    | Signed, 64 -> FStar.Int64.(x +?^ y)
-    | Signed, 128 -> FStar.Int128.(x +?^ y)
+unfold let op_Plus_Question (#n:nat) (x:int_t Unsigned n) (y:int_t Unsigned n)
+  : Tot (z:int_t Unsigned n{ok Unsigned n (v x + v y) ==> v z = v x + v y})
+  = match n with
+    | 0 -> x + y
+    | 8 -> FStar.UInt8.(x +?^ y)
+    | 16 -> FStar.UInt16.(x +?^ y)
+    | 31 -> FStar.UInt31.(x +?^ y)
+    | 32 -> FStar.UInt32.(x +?^ y)
+    | 63 -> FStar.UInt63.(x +?^ y)
+    | 64 -> FStar.UInt64.(x +?^ y)
 
 let modulo (s:signed) (x:int) (y:pos{s=Signed ==> y%2=0}) =
   match s with
@@ -103,22 +96,15 @@ let modulo (s:signed) (x:int) (y:pos{s=Signed ==> y%2=0}) =
 
 #reset-options "--z3rlimit 5 --initial_fuel 1 --max_fuel 1"
 
-unfold let op_Plus_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
-  : Tot (z:int_t s n{v z = modulo s (v x + v y) (pow2 n)})
-  = match s, n with
-    | Unsigned, 8 -> FStar.UInt8.(x +%^ y)
-    | Unsigned, 16 -> FStar.UInt16.(x +%^ y)
-    | Unsigned, 31 -> FStar.UInt31.(x +%^ y)
-    | Unsigned, 32 -> FStar.UInt32.(x +%^ y)
-    | Unsigned, 63 -> FStar.UInt63.(x +%^ y)
-    | Unsigned, 64 -> FStar.UInt64.(x +%^ y)
-    | Signed, 8 -> FStar.Int8.(x +%^ y)
-    | Signed, 16 -> FStar.Int16.(x +%^ y)
-    | Signed, 31 -> FStar.Int31.(x +%^ y)
-    | Signed, 32 -> FStar.Int32.(x +%^ y)
-    | Signed, 63 -> FStar.Int63.(x +%^ y)
-    | Signed, 64 -> FStar.Int64.(x +%^ y)
-    | Signed, 128 -> FStar.Int128.(x +%^ y)
+unfold let op_Plus_Percent (#n:pos) (x:int_t Unsigned n) (y:int_t Unsigned n)
+  : Tot (z:int_t Unsigned n{v z = modulo Unsigned (v x + v y) (pow2 n)})
+  = match n with
+    | 8 -> FStar.UInt8.(x +%^ y)
+    | 16 -> FStar.UInt16.(x +%^ y)
+    | 31 -> FStar.UInt31.(x +%^ y)
+    | 32 -> FStar.UInt32.(x +%^ y)
+    | 63 -> FStar.UInt63.(x +%^ y)
+    | 64 -> FStar.UInt64.(x +%^ y)
 
 #reset-options "--z3rlimit 5"
 
@@ -140,43 +126,28 @@ unfold let op_Subtraction (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n
     | Signed, 64 -> FStar.Int64.(x -^ y)
     | Signed, 128 -> FStar.Int128.(x -^ y)
 
-unfold let op_Subtraction_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
-  : Tot (z:int_t s n{ok s n (v x - v y) ==> v z = v x - v y})
-  = match s, n with
-    | Unsigned, 0 -> if v x - v y >= 0 then x - y else 0
-    | Unsigned, 8 -> FStar.UInt8.(x -?^ y)
-    | Unsigned, 16 -> FStar.UInt16.(x -?^ y)
-    | Unsigned, 31 -> FStar.UInt31.(x -?^ y)
-    | Unsigned, 32 -> FStar.UInt32.(x -?^ y)
-    | Unsigned, 63 -> FStar.UInt63.(x -?^ y)
-    | Unsigned, 64 -> FStar.UInt64.(x -?^ y)
-    | Signed, 0 -> x - y
-    | Signed, 8 -> FStar.Int8.(x -?^ y)
-    | Signed, 16 -> FStar.Int16.(x -?^ y)
-    | Signed, 31 -> FStar.Int31.(x -?^ y)
-    | Signed, 32 -> FStar.Int32.(x -?^ y)
-    | Signed, 63 -> FStar.Int63.(x -?^ y)
-    | Signed, 64 -> FStar.Int64.(x -?^ y)
-    | Signed, 128 -> FStar.Int128.(x -?^ y)
+unfold let op_Subtraction_Question (#n:nat) (x:int_t Unsigned n) (y:int_t Unsigned n)
+  : Tot (z:int_t Unsigned n{ok Unsigned n (v x - v y) ==> v z = v x - v y})
+  = match n with
+    | 0 -> if v x - v y >= 0 then x - y else 0
+    | 8 -> FStar.UInt8.(x -?^ y)
+    | 16 -> FStar.UInt16.(x -?^ y)
+    | 31 -> FStar.UInt31.(x -?^ y)
+    | 32 -> FStar.UInt32.(x -?^ y)
+    | 63 -> FStar.UInt63.(x -?^ y)
+    | 64 -> FStar.UInt64.(x -?^ y)
 
 #reset-options "--z3rlimit 20"
 
-unfold let op_Subtraction_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
-  : Tot (z:int_t s n{v z = modulo s (v x - v y) (pow2 n)})
-  = match s, n with
-    | Unsigned, 8 -> FStar.UInt8.(x -%^ y)
-    | Unsigned, 16 -> FStar.UInt16.(x -%^ y)
-    | Unsigned, 31 -> FStar.UInt31.(x -%^ y)
-    | Unsigned, 32 -> FStar.UInt32.(x -%^ y)
-    | Unsigned, 63 -> FStar.UInt63.(x -%^ y)
-    | Unsigned, 64 -> FStar.UInt64.(x -%^ y)
-    | Signed, 8 -> FStar.Int8.(x -%^ y)
-    | Signed, 16 -> FStar.Int16.(x -%^ y)
-    | Signed, 31 -> FStar.Int31.(x -%^ y)
-    | Signed, 32 -> FStar.Int32.(x -%^ y)
-    | Signed, 63 -> FStar.Int63.(x -%^ y)
-    | Signed, 64 -> FStar.Int64.(x -%^ y)
-    | Signed, 128 -> FStar.Int128.(x -%^ y)
+unfold let op_Subtraction_Percent (#n:pos) (x:int_t Unsigned n) (y:int_t Unsigned n)
+  : Tot (z:int_t Unsigned n{v z = modulo Unsigned (v x - v y) (pow2 n)})
+  = match n with
+    | 8 -> FStar.UInt8.(x -%^ y)
+    | 16 -> FStar.UInt16.(x -%^ y)
+    | 31 -> FStar.UInt31.(x -%^ y)
+    | 32 -> FStar.UInt32.(x -%^ y)
+    | 63 -> FStar.UInt63.(x -%^ y)
+    | 64 -> FStar.UInt64.(x -%^ y)
 
 #reset-options "--z3rlimit 5"
 
@@ -202,42 +173,28 @@ unfold let op_Star (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n{ok s n (v x *
 
 #reset-options "--z3rlimit 20"
 
-unfold let op_Star_Question (#s:signed) (#n:nat) (x:int_t s n) (y:int_t s n)
-  : Tot (z:int_t s n{ok s n (v x * v y) ==> v z = v x * v y})
-  = match s, n with
-    | _, 0 -> x * y
-    | Unsigned, 8 -> FStar.UInt8.(x *?^ y)
-    | Unsigned, 16 -> FStar.UInt16.(x *?^ y)
-    | Unsigned, 31 -> FStar.UInt31.(x *?^ y)
-    | Unsigned, 32 -> FStar.UInt32.(x *?^ y)
-    | Unsigned, 63 -> FStar.UInt63.(x *?^ y)
-    | Unsigned, 64 -> FStar.UInt64.(x *?^ y)
-    | Signed, 8 -> FStar.Int8.(x *?^ y)
-    | Signed, 16 -> FStar.Int16.(x *?^ y)
-    | Signed, 31 -> FStar.Int31.(x *?^ y)
-    | Signed, 32 -> FStar.Int32.(x *?^ y)
-    | Signed, 63 -> FStar.Int63.(x *?^ y)
-    | Signed, 64 -> FStar.Int64.(x *?^ y)
-    | Signed, 128 -> FStar.Int128.(x *?^ y)
+unfold let op_Star_Question (#n:nat) (x:int_t Unsigned n) (y:int_t Unsigned n)
+  : Tot (z:int_t Unsigned n{ok Unsigned n (v x * v y) ==> v z = v x * v y})
+  = match n with
+    | 0 -> x * y
+    | 8 -> FStar.UInt8.(x *?^ y)
+    | 16 -> FStar.UInt16.(x *?^ y)
+    | 31 -> FStar.UInt31.(x *?^ y)
+    | 32 -> FStar.UInt32.(x *?^ y)
+    | 63 -> FStar.UInt63.(x *?^ y)
+    | 64 -> FStar.UInt64.(x *?^ y)
 
 #reset-options "--z3rlimit 5"
 
-unfold let op_Star_Percent (#s:signed) (#n:pos) (x:int_t s n) (y:int_t s n)
-  : Tot (z:int_t s n{v z = modulo s (v x * v y) (pow2 n)})
-  = match s, n with
-    | Unsigned, 8 -> FStar.UInt8.(x *%^ y)
-    | Unsigned, 16 -> FStar.UInt16.(x *%^ y)
-    | Unsigned, 31 -> FStar.UInt31.(x *%^ y)
-    | Unsigned, 32 -> FStar.UInt32.(x *%^ y)
-    | Unsigned, 63 -> FStar.UInt63.(x *%^ y)
-    | Unsigned, 64 -> FStar.UInt64.(x *%^ y)
-    | Signed, 8 -> FStar.Int8.(x *%^ y)
-    | Signed, 16 -> FStar.Int16.(x *%^ y)
-    | Signed, 31 -> FStar.Int31.(x *%^ y)
-    | Signed, 32 -> FStar.Int32.(x *%^ y)
-    | Signed, 63 -> FStar.Int63.(x *%^ y)
-    | Signed, 64 -> FStar.Int64.(x *%^ y)
-    | Signed, 128 -> FStar.Int128.(x *%^ y)
+unfold let op_Star_Percent (#n:pos) (x:int_t Unsigned n) (y:int_t Unsigned n)
+  : Tot (z:int_t Unsigned n{v z = modulo Unsigned (v x * v y) (pow2 n)})
+  = match n with
+    | 8 -> FStar.UInt8.(x *%^ y)
+    | 16 -> FStar.UInt16.(x *%^ y)
+    | 31 -> FStar.UInt31.(x *%^ y)
+    | 32 -> FStar.UInt32.(x *%^ y)
+    | 63 -> FStar.UInt63.(x *%^ y)
+    | 64 -> FStar.UInt64.(x *%^ y)
 
 
 unfold let nat      = int_t Unsigned 0

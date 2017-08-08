@@ -1,7 +1,7 @@
 name="fstarlib"
 version="0.9.4"
 description="FStar standard library"
-requires="batteries,stdint,zarith,yojson,dynlink,pprint,compiler-libs,compiler-libs.common"
+requires="batteries,stdint,zarith"
 archive(toploop)="fstarlib.cma"
 archive(byte)="fstarlib.cma"
 archive(native)="fstarlib.cmxa"

@@ -110,7 +110,7 @@ let reset_gensym: Prims.unit -> Prims.unit = fun uu____227  -> gs.reset ()
 let rec gensyms: Prims.int -> mlident Prims.list =
   fun x  ->
     match x with
-    | _0_39 when _0_39 = (Prims.parse_int "0") -> []
+    | _0_41 when _0_41 = (Prims.parse_int "0") -> []
     | n1 ->
         let uu____237 = gensym () in
         let uu____238 = gensyms (n1 - (Prims.parse_int "1")) in uu____237 ::
@@ -667,3 +667,19 @@ let bv_as_mlident: FStar_Syntax_Syntax.bv -> mlident =
     else
       (((x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText),
         (Prims.parse_int "0"))
+let push_unit: mltyscheme -> mltyscheme =
+  fun ts  ->
+    let uu____2458 = ts in
+    match uu____2458 with
+    | (vs,ty) -> (vs, (MLTY_Fun (ml_unit_ty, E_PURE, ty)))
+let pop_unit: mltyscheme -> mltyscheme =
+  fun ts  ->
+    let uu____2465 = ts in
+    match uu____2465 with
+    | (vs,ty) ->
+        (match ty with
+         | MLTY_Fun (l,E_PURE ,t) ->
+             if l = ml_unit_ty
+             then (vs, t)
+             else failwith "unexpected: pop_unit: domain was not unit"
+         | uu____2471 -> failwith "unexpected: pop_unit: not a function type")

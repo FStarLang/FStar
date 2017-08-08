@@ -5,6 +5,10 @@ open FStar.Reflection.Types
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
+let fresh_uvar o =
+    e <-- cur_env;
+    uvar_env e o
+
 let quote_lid (ns:name) : tactic term =
     let t = pack (Tv_FVar (pack_fv ns)) in
     return t
@@ -68,7 +72,7 @@ private let __cut #b a f x = f x
 
 let tcut (t:term) : tactic binder =
     qq <-- quote_lid ["FStar";"Tactics";"Derived";"__cut"];
-    let tt = pack (Tv_App qq t) in
+    let tt = pack (Tv_App qq (t, Q_Explicit)) in
     apply (return tt);;
     intro
 
@@ -103,7 +107,7 @@ let rec try_rewrite_equality (x:term) (bs:binders) : tactic unit =
     match bs with
     | [] -> return ()
     | x_t::bs ->
-        begin match term_as_formula' (type_of_binder x_t) with
+        begin match term_as_formula (type_of_binder x_t) with
         | Comp Eq _ y _ ->
             if term_eq x y
             then rewrite x_t
@@ -117,7 +121,7 @@ let rec rewrite_all_context_equalities (bs:binders) : tactic unit =
     | [] ->
         return ()
     | x_t::bs ->
-        begin (match term_as_formula' (type_of_binder x_t) with
+        begin (match term_as_formula (type_of_binder x_t) with
         | Comp Eq _ lhs _ ->
             begin match inspect lhs with
             | Tv_Var _ -> rewrite x_t
@@ -164,7 +168,7 @@ let grewrite' (t1 t2 eq : term) : tactic unit =
 let mk_sq_eq (t1 t2 : term) : term =
     let sq : term = pack (Tv_FVar (pack_fv squash_qn)) in
     let eq : term = pack (Tv_FVar (pack_fv eq2_qn)) in
-    mk_app sq [mk_app eq [t1; t2]]
+    mk_e_app sq [mk_e_app eq [t1; t2]]
 
 let grewrite (t1 t2 : term) : tactic unit =
     e <-- tcut (mk_sq_eq t1 t2);

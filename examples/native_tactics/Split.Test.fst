@@ -3,7 +3,7 @@ open FStar.Tactics
 open Split
 
 let test = 
-  assert_by_tactic (compiled_split())  (True /\ False)
+  assert_by_tactic (True /\ True) (compiled_split())
 
 
 

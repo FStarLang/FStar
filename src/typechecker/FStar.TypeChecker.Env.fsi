@@ -99,13 +99,15 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
-  is_native_tactic: lid -> bool                   (* callback into the native tactics engine *)
+  is_native_tactic: lid -> bool;                   (* callback into the native tactics engine *)
+  identifier_info: ref<FStar.TypeChecker.Common.id_info_table> (* information on identifiers *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -150,6 +152,10 @@ val debug          : env -> Options.debug_level_t -> bool
 val current_module : env -> lident
 val set_range      : env -> Range.range -> env
 val get_range      : env -> Range.range
+val insert_bv_info : env -> bv -> typ -> unit
+val insert_fv_info : env -> fv -> typ -> unit
+val toggle_id_info : env -> bool -> unit
+val promote_id_info : env -> (typ -> typ) -> unit
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
@@ -212,7 +218,7 @@ val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> FStar.Util.set<universe_uvar>
-val univnames   : env -> FStar.Util.set<univ_name>
+val univnames   : env -> FStar.Util.fifo_set<univ_name>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 

@@ -78,8 +78,7 @@ abstract let recall (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE unit (fun 
 abstract let alloc (#a:Type) (#rel:preorder a) (init:a)
   :ST (mref a rel)
       (fun h -> True)
-      (fun h0 r h1 -> let (r', h1') = alloc rel h0 init true in
-	           witnessed (contains_pred r') /\ r' == r /\ h1 == h1')
+      (fun h0 r h1 -> fresh r h0 h1 /\ modifies Set.empty h0 h1 /\ sel h1 r == init)
   = let h0 = gst_get () in
     let r, h1 = alloc rel h0 init true in
     gst_put h1;
@@ -94,7 +93,9 @@ abstract let read (#a:Type) (#rel:preorder a) (r:mref a rel) :STATE a (fun p h -
 abstract let write (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
   : ST unit
     (fun h -> rel (sel h r) v)
-    (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\ h1 == upd h0 r v)
+    (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\
+                 modifies (Set.singleton (addr_of r)) h0 h1 /\ equal_dom h0 h1 /\
+                 sel h1 r == v)
   = let h0 = gst_get () in
     gst_recall (contains_pred r);
     let h1 = upd_tot h0 r v in
@@ -110,9 +111,12 @@ let op_Bang (#a:Type) (#rel:preorder a) (r:mref a rel)
 abstract let op_Colon_Equals (#a:Type) (#rel:preorder a) (r:mref a rel) (v:a)
   : ST unit
     (fun h -> rel (sel h r) v)
-    (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\ h1 == upd h0 r v)
+    (fun h0 x h1 -> rel (sel h0 r) v /\ h0 `contains` r /\
+                 modifies (Set.singleton (addr_of r)) h0 h1 /\ equal_dom h0 h1 /\
+                 sel h1 r == v)
 = write #a #rel r v
 
 type ref (a:Type0) = mref a (trivial_preorder a)
 
-let modifies_none (h0:heap) (h1:heap) = modifies Set.empty h0 h1
+let modifies_none (h0:heap) (h1:heap) = modifies !{} h0 h1
+

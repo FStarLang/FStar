@@ -64,3 +64,10 @@ extraction-bug734: bug734.fst
 	$(FSTAR) --explicit_deps $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml bug734.fst
 	$(OCAMLOPT) out/Bug734.ml -o bug734.exe
 	./bug734.exe
+
+extraction-bug1055: bug1055b.fst
+	mkdir -p out
+	$(MAKE) -C $(ULIB_ML)
+	$(FSTAR) --lax $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml bug1055b.fst
+	$(OCAMLOPT) out/Bug1055b.ml -o bug1055b.exe
+	./bug1055b.exe
