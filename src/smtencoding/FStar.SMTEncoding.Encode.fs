@@ -1738,7 +1738,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                     let f = {ppname=f; index=0; sort=tun} in
                     let tp_name = mk_term_projector_name d f in
                     let prim_app = mkApp(tp_name, [xx]) in
-                    [Util.mkAssume(mkForall([[vapp]], vars,
+                    [Util.mkAssume(mkForall([[vapp]; [prim_app]], vars,
                                             mkEq(vapp, prim_app)), Some "Projector equation", ("proj_equation_"^tp_name))]
                 | _ -> []) in
               let vars, guards, env', decls1, _ = encode_binders None formals env in
