@@ -1,5 +1,5 @@
 [
-  "›ŽáA]w†\tÌ ~\u0012ÐJç\u0011",
+  " gèJ\u0005§!Q\u0018ÔþÐþµ·Ñ",
   [
     [
       "FStar.Reflection.Syntax.flatten_name",
@@ -42,10 +42,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_54b8d13345a0876202ad05586d3a7a11_1",
+        "binder_x_e332943ee8a1e42b7e3342c33a69d95f_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons"
+        "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.Reflection.Data.argv",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0
     ],
@@ -146,6 +148,20 @@
         "projection_inverse_FStar.Reflection.Data.Tv_Refine__1",
         "refinement_interpretation_FStar.Reflection.Basic_Tm_refine_62353a91a906896ee28a928c3c16dabb",
         "typing_FStar.Reflection.Basic.__inspect"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Syntax.compare_term",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_529e9483dbed5c1a7547f851ad36541b_0",
+        "equality_tok_FStar.Order.Gt@tok", "equality_tok_FStar.Order.Lt@tok",
+        "equation_FStar.Reflection.Data.argv",
+        "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0
     ]

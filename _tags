@@ -9,12 +9,15 @@
 true: \
   annot, bin_annot, thread, -traverse, \
   package(batteries), \
+  package(zarith)
+
+# ADL: Please do not enable compiler-libs unless absolutely necessary
+<ulib/ml/compiler/*.ml> or <ulib/ml/compiler-extracted/*.ml> or <src/*/ml/*> or <src/ocaml-output/*.ml>: \
   package(compiler-libs), \
   package(compiler-libs.common), \
   package(dynlink), \
   package(pprint), \
-  package(yojson), \
-  package(zarith)
+  package(yojson)
 
 # Turn off warnings for extracted files
 <src/ocaml-output/**/*.ml> or "src/tactics/ml/FStar_Reflection_Syntax.ml" or  "src/tactics/ml/FStar_Tactics_Effect.ml" or "src/tactics/ml/FStar_Reflection_Formula.ml" or <ulib/ml/extracted/*.ml>: \

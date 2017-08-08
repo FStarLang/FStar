@@ -10,16 +10,16 @@ let mk_lit (s : string) : term =
     pack (Tv_Const (C_String s))
 
 let mk_strcat (t1 t2 : term) : term =
-    mk_app (pack (Tv_FVar (pack_fv ["Prims"; "strcat"]))) [t1; t2]
+    mk_e_app (pack (Tv_FVar (pack_fv ["Prims"; "strcat"]))) [t1; t2]
 
 let rec mk_list (ts : list term) : term =
     match ts with
     | [] -> pack (Tv_FVar (pack_fv ["Prims"; "Nil"]))
     | t::ts ->
-        mk_app (pack (Tv_FVar (pack_fv ["Prims"; "Cons"]))) [t; mk_list ts]
+        mk_e_app (pack (Tv_FVar (pack_fv ["Prims"; "Cons"]))) [t; mk_list ts]
 
 let rec mk_concat (sep : term) (ts : list term) : term =
-    mk_app (pack (Tv_FVar (pack_fv ["FStar"; "String"; "concat"]))) [sep; mk_list ts]
+    mk_e_app (pack (Tv_FVar (pack_fv ["FStar"; "String"; "concat"]))) [sep; mk_list ts]
 
 let mk_flatten = mk_concat (pack (Tv_Const (C_String "")))
 
@@ -31,7 +31,7 @@ let mk_print_binder (b : binder) : term =
     match inspect (type_of_binder b) with
     | Tv_FVar fv ->
         let f = mk ["Printers"; "print_" ^ (String.concat "_" (inspect_fv fv))] in
-        mk_app f [pack (Tv_Var b)]
+        mk_e_app f [pack (Tv_Var b)]
     | _ ->
         mk_lit "?"
 

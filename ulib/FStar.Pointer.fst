@@ -484,7 +484,6 @@ let ovalue_is_readable_array_elim
     Some? v /\
     ovalue_is_readable t (Seq.index (Some?.v v) (UInt32.v i))
   )))
-  [SMTPat (ovalue_is_readable t (Seq.index (Some?.v v) (UInt32.v i)))]
 = ()
 
 let ovalue_is_readable_array_intro
@@ -523,6 +522,16 @@ let ostruct_field_of_struct_field
   (f: struct_field l)
 : Tot (otype_of_struct_field l f)
 = ovalue_of_value (typ_of_struct_field l f) (struct_sel #l v f)
+
+(* TODO: move to Seq.Base *)
+
+let seq_init_index
+  (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a)) (i: nat)
+: Lemma
+  (requires (i < len))
+  (ensures (i < len /\ Seq.index (Seq.init len contents) i == contents i))
+  [SMTPat (Seq.index (Seq.init len contents) i)]
+= Seq.init_index len contents
 
 let rec ovalue_of_value
   (t: typ)
@@ -672,6 +681,25 @@ let rec value_of_ovalue
     | Some v -> v
     end
 
+let ovalue_of_value_array_index
+  (#len: array_length_t)
+  (t' : typ)
+  (v: array len (type_of_typ t'))
+  (sv: array len (otype_of_typ t'))
+: Lemma
+  (requires (ovalue_of_value (TArray len t') v == Some sv))
+  (ensures (forall (i: nat) . i < UInt32.v len ==> Seq.index sv i == ovalue_of_value t' (Seq.index v i)))
+= ()
+
+
+let value_of_ovalue_array_index
+  (#len: array_length_t)
+  (t': typ)
+  (sv: array len (otype_of_typ t'))
+: Lemma
+  (ensures (forall (i: nat) . i < UInt32.v len ==> Seq.index (value_of_ovalue (TArray len t') (Some sv)) i == value_of_ovalue t' (Seq.index sv i)))
+= ()
+
 #reset-options "--z3rlimit 16"
 
 let rec value_of_ovalue_of_value
@@ -694,6 +722,16 @@ let rec value_of_ovalue_of_value
     DM.equal_elim #(struct_field l) #(type_of_struct_field l) v' v
   | TArray len t' ->
     let (v: array len (type_of_typ t')) = v in
+    let ov : option (array len (otype_of_typ t')) = ovalue_of_value (TArray len t') v in
+    assert (Some? ov);
+    let sv : array len (otype_of_typ t') = Some?.v ov in
+    assert (Seq.length sv == UInt32.v len);
+//    assert (forall (i : nat { i < UInt32.v len } ) . Seq.index sv i == ovalue_of_value t' (Seq.index v i));
+    ovalue_of_value_array_index t' v sv;
+    let v'  : array len (type_of_typ t') = value_of_ovalue t ov in
+    assert (Seq.length v' == UInt32.v len);
+//    assert (forall (i: nat { i < UInt32.v len } ) . Seq.index v' i == value_of_ovalue t' (Seq.index sv i));
+    value_of_ovalue_array_index t' sv;
     let phi
       (i: nat { i < UInt32.v len } )
     : Lemma
@@ -701,7 +739,6 @@ let rec value_of_ovalue_of_value
     = value_of_ovalue_of_value t' (Seq.index v i)
     in
     Classical.forall_intro phi;
-    let v' = value_of_ovalue t (ovalue_of_value t v) in
     Seq.lemma_eq_intro v' v;
     Seq.lemma_eq_elim v' v
   | TUnion l ->
@@ -1455,7 +1492,6 @@ let path_disjoint_includes_l
   (p1: path from to1)
   (p2: path from to2)
   (#to1': typ)
-  (#to2': typ)
   (p1': path from to1')
 : Lemma
   (requires (path_disjoint p1 p2 /\ path_includes p1 p1'))
@@ -1986,7 +2022,8 @@ let disjoint_roots_intro_pointer_vs_reference
 : Lemma
   (requires (live h p1 /\ p2 `HS.unused_in` h))
   (ensures (frameOf p1 <> HS.frameOf p2 \/ as_addr p1 =!= HS.as_addr p2))
-= ()
+= let r = greference_of p1 in
+  assert (HS.contains h r)
 
 let disjoint_roots_intro_reference_vs_pointer
   (#value1: Type)
@@ -2558,7 +2595,8 @@ let disjoint_includes_l_swap #a #as #a' (x:pointer a) (subx:pointer as) (y:point
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint y subx))
   [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
-  = ()
+  = disjoint_includes_l x subx y;
+    disjoint_sym subx y
 
 (* TODO: The following is now wrong, should be replaced with readable
 
@@ -3105,9 +3143,6 @@ let modifies_set_includes
   (r: HH.rid)
   (s1 s2: set)
   (h h': HS.mem)
-: Lemma
-  (requires (modifies r s2 h h' /\ s1 `set_includes` s2))
-  (ensures (modifies r s1 h h'))
 = ()
 
 (* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
