@@ -2,7 +2,10 @@
 module FStar.Interactive.CompletionTable
 
 type query = list<string>
-type symbol = | Lid of FStar.Ident.lid
+type symbol =
+| Module of bool
+| Namespace of bool
+| Lid of FStar.Ident.lid
 
 type trie<'a>
 type table = trie<symbol>
@@ -12,6 +15,7 @@ val insert : tbl:table -> host_query:query -> id:string -> c:symbol -> table
 val register_alias : tbl:table -> key:string -> host_query:query -> included_query:query -> table
 val register_open : tbl:table -> is_module:bool -> host_query:query -> included_query:query -> table
 val register_include : tbl:table -> host_query:query -> included_query:query -> table
+val register_module_path : tbl:table -> loaded:bool -> mod_query:query -> table
 
 type completion_result =
   { completion_kind: string;

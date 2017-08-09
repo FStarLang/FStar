@@ -142,6 +142,8 @@ type path_elem =
   { imports: list<string>;
     segment: prefix_match }
 
+let matched_prefix_of_path_elem (elem: path_elem) = elem.segment.prefix
+
 let mk_path_el imports segment = { imports = imports; segment = segment }
 
 let rec btree_find_prefix (bt: btree<'a>) (prefix: string)
@@ -327,6 +329,8 @@ let trie_find_prefix (tr: trie<'a>) (query: query) : list<(path * 'a)> =
 (** * High level interface * **)
 
 type symbol =
+| Module of bool
+| Namespace of bool
 | Lid of Ident.lid
 
 type table = trie<symbol>
@@ -348,6 +352,26 @@ let register_open (tbl: table) (is_module: bool) (host_query: query) (included_q
     trie_include tbl host_query included_query
   else
     trie_open_namespace tbl host_query included_query
+
+let module_marker = "..."
+let namespace_marker = "(...)"
+
+let register_module_path (tbl: table) (loaded: bool) (mod_query: query) =
+  let ins_ns bindings loaded =
+    match names_find_exact bindings module_marker with
+    | Some (Module _) -> bindings // Already a module
+    | Some _ -> failwith "ins_ns: namespace or lid under module key"
+    | None -> match names_find_exact bindings namespace_marker, loaded with
+             | None, _ | Some (Namespace false), true ->
+               names_insert bindings namespace_marker (Namespace loaded)
+             | Some _, _ -> // Already registered
+               bindings in
+  let ins_mod bindings loaded =
+    let bindings = names_remove bindings namespace_marker in
+    names_insert bindings module_marker (Module loaded) in
+  trie_mutate tbl mod_query (fun tr namespaces ->
+      { tr with namespaces = namespaces; bindings = ins_ns tr.bindings loaded })
+    (fun tr -> { tr with bindings = ins_mod tr.bindings loaded })
 
 let string_of_path (path: path) : string =
   String.concat "." (List.map (fun el -> el.segment.completion) path)
