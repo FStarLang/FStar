@@ -1,11 +1,8 @@
-// -*- fstar-subp-prover-args: ("--eager_inference" "--lax" "--MLish" "--include" "../../ulib" "--include" "../u_boot_fsts" "--include" "../boot_fstis") -*-
-
 #light "off"
 module FStar.Interactive.CompletionTable
 
 open FStar
 open FStar.All
-module BU = FStar.Util
 
 let string_compare s1 s2 =
   String.compare s1 s2
@@ -67,7 +64,7 @@ let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list<list<'a>>) =
     match heap_pop cmp lists with
     | None -> acc
     | Some ((pr, []), _) -> failwith "impossible"
-    | Some ((pr, [v]), lists) -> aux lists (v :: acc)
+    | Some ((pr, [v]), lists) -> aux lists (push_nodup key_fn v acc)
     | Some ((pr, v :: tl), lists) -> aux (heap_insert cmp lists (pr, tl)) (push_nodup key_fn v acc) in
   let lists = List.filter (fun x -> x <> []) lists in
   match lists with
