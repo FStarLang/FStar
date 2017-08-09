@@ -1,5 +1,5 @@
 [
-  "Ño€\u000b?[\fùóá2∫Í¸\u0015”",
+  "\u001b≥ı\u001d\u0002K√,º]\u000b\n\u001d_Ÿs",
   [
     [ "FStar.Reflection.Arith.uu___is_Lit", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -589,28 +589,8 @@
       2,
       1,
       [
-        "@MaxFuel_assumption",
-        "@fuel_correspondence_FStar.Reflection.Syntax.Lemmas.forall_list.fuel_instrumented",
-        "@query",
-        "FStar.Reflection.Syntax_pretyping_ccdc84a2d4472b6fd887e80cb5f7f67a",
-        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_typing_intro_FStar.Reflection.Syntax.Tv_Unknown@tok",
-        "disc_equation_Prims.Cons", "equation_FStar.Pervasives.snd",
-        "equation_FStar.Reflection.Arith.fail",
-        "equation_FStar.Reflection.Arith.liftM",
-        "equation_FStar.Reflection.Arith.liftM2",
-        "equation_with_fuel_FStar.Reflection.Syntax.Lemmas.forall_list.fuel_instrumented",
-        "interpretation_FStar.Reflection.Arith_Tm_abs_2af23ed93b270ebea6c0f1d7f4eefc6f",
-        "interpretation_FStar.Reflection.Arith_Tm_abs_c8fe763661cd954077baa3458dc3c3c2",
-        "interpretation_FStar.Reflection.Arith_Tm_abs_e5af8e343c0a6cd95f6eb119b99d5963",
-        "l_and-interp", "proj_equation_FStar.Pervasives.Mktuple2__2",
-        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Mktuple2__2",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
-        "token_correspondence_FStar.Reflection.Arith.liftM",
-        "token_correspondence_FStar.Reflection.Arith.liftM2"
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],
@@ -770,17 +750,6 @@
         "assumption_Prims.list_haseq",
         "equation_FStar.Reflection.Types.name",
         "function_token_typing_Prims.string"
-      ],
-      0
-    ],
-    [
-      "FStar.Reflection.Arith.is_arith_expr",
-      15,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],

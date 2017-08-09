@@ -603,6 +603,7 @@ let rec term_as_mlty:
           FStar_TypeChecker_Normalize.Eager_unfolding;
           FStar_TypeChecker_Normalize.Iota;
           FStar_TypeChecker_Normalize.Zeta;
+          FStar_TypeChecker_Normalize.Inlining;
           FStar_TypeChecker_Normalize.EraseUniverses;
           FStar_TypeChecker_Normalize.AllowUnboundUniverses]
           g.FStar_Extraction_ML_UEnv.tcenv t0 in
@@ -618,6 +619,7 @@ let rec term_as_mlty:
               FStar_Syntax_Syntax.Delta_constant;
             FStar_TypeChecker_Normalize.Iota;
             FStar_TypeChecker_Normalize.Zeta;
+            FStar_TypeChecker_Normalize.Inlining;
             FStar_TypeChecker_Normalize.EraseUniverses;
             FStar_TypeChecker_Normalize.AllowUnboundUniverses]
             g.FStar_Extraction_ML_UEnv.tcenv t0 in
