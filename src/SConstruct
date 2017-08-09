@@ -25,6 +25,14 @@ if cache_dir != None:
     print('Using Shared Cache Directory %s'%cache_dir)
     CacheDir(cache_dir)
 
+AddOption('--target',
+    dest='build_target',
+    type='string',
+    default='all',
+    action='store',
+    help='Specify the build target:  all, ocaml-output, boot, or extract')
+build_target=GetOption('build_target')
+
 # construct a default environment
 env = Environment()
 
@@ -46,7 +54,7 @@ if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows 32-bit or 64-
         k = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0')
         v = _winreg.QueryValueEx(k, 'MSBuildToolsPath')[0]
         k.Close()
-    
+
     env['FSC']     = 'fsc'
     env['MSBUILD'] = '"'+os.path.join(v, 'MSBuild.exe')+'"'
     uname          = 'Windows_NT'
@@ -58,14 +66,20 @@ if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows 32-bit or 64-
     env['ENV']['TMP'] = os.environ['TMP']
 
     # set the OS environment var in child processes.  MSBuild scripts like NuGet.targets consume it.
-    env.AppendENVPath('OS', 'Windows_NT')  
+    env.AppendENVPath('OS', 'Windows_NT')
 else:
     env['FSC']     = 'fsharpc'
-    env['MSBUILD'] = 'xbuild'
+    buildtool = conf.CheckProg('msbuild')
+    if not buildtool:
+      print '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'
+      buildtool = conf.CheckProg('xbuild')
+    if not buildtool:
+      raise SCons.Errors.UserError('Failed to find msbuild or xbuild.  Unable to continue')
+    env['MSBUILD'] = buildtool
     uname          = os.uname()[0]  # sysname is at index 0
     env['RUNTIME'] = 'mono'
 
-# propagate the OS PATH environment variable into child processes, so tools like menhir can be found  
+# propagate the OS PATH environment variable into child processes, so tools like menhir can be found
 env['ENV']['PATH']=os.environ['PATH']
 env['BIN']=str(Dir('../bin'))
 env['CONFIGURATION']='Release'
@@ -75,98 +89,21 @@ env['NUGET']=File('#/VS/.nuget/NuGet.exe')
 print("****************************** $BIN = " + env['BIN'])
 
 
-Export('env')
-
-# --------------------------------------------------------------------
-
-def Connect_Stages(prior):
-    FStar_prior, top_FStar = SConscript('SConscript', exports={'My_env' : env})
-    if prior :  env.Depends(FStar_prior, prior)
-    #env.Default(top_FStar)
-    Ocaml_prior, top_Ocaml = SConscript('ocaml-output.scons', exports={'My_env' : env}, variant_dir='ocaml-output', duplicate=0)
-    env.Depends(Ocaml_prior, top_FStar)
-    return top_Ocaml
-
-if 'vs-fstar' in COMMAND_LINE_TARGETS :
-    top_NET = SConscript('FStar_NET.scons', exports={'My_env' : env})
-    vs_fstar = env.Alias('vs-fstar', top_NET)
-    #env.Default(top_NET)
-    pass
-elif 'boot-ocaml' in COMMAND_LINE_TARGETS :
-    no_prior, top_LKG = SConscript('ocaml-output.scons', exports={'My_env' : env}, variant_dir='ocaml-LKG', duplicate=0)
-    boot_ocaml = env.Alias('boot-ocaml', top_LKG)
-    #env.Default(top_LKG)
-    pass
-elif 'extract' in COMMAND_LINE_TARGETS :
-    top_FStar = SConscript('SConscript', exports={'My_env' : env})
-    #env.Default(top_Fstar)
-    pass
-elif 'ocaml' in COMMAND_LINE_TARGETS :  # boot, extract, new ocaml
-    top = Connect_Stages(None)
-    env.Alias('ocaml', top)
-    #env.Default(top)
-    pass
-elif 'all' in COMMAND_LINE_TARGETS :    # LKG ocaml, boot, extract, new ocaml
-    top_NET = SConscript('FStar_NET.scons', exports={'My_env' : env})
-    no_prior, top_LKG = SConscript('ocaml-output.scons', exports={'My_env' : env}, variant_dir='ocaml-LKG', duplicate=0)
-    if GetOption('clean') :
-        top = Connect_Stages(None)
-        all = env.Alias('all', [top])
-    else:
-        top = Connect_Stages(top_LKG)
-        all = env.Alias('all', [top_NET, top_LKG, top])
-
-    # This is a compromise. Building SMake all will force build LKG and .NET but cleanup (-c) won't clean it.
-    # to clean up LKG you'll still need to invoke SMake boot-ocaml -c
-    # to clean up .NET you'll need to invoke SMake vs-fstar -c
-
-    #env.Default(all)
-    pass
-
-print("COMMAND_LINE_TARGETS: %s" % COMMAND_LINE_TARGETS)
-print("DEFAULT_TARGETS: %s" % [a.name for a in DEFAULT_TARGETS])
-
-# --------------------------------------------------------------------
-
-
-def bf_to_str(bf):
-    """Convert an element of GetBuildFailures() to a string
-    in a useful way."""
-    import SCons.Errors
-    if bf is None: # unknown targets product None in list
-        return '(unknown tgt)'
-    elif isinstance(bf, SCons.Errors.StopError):
-        return str(bf)
-    elif bf.node:
-        return str(bf.node) + ': ' + bf.errstr
-    elif bf.filename:
-        return bf.filename + ': ' + bf.errstr
-    return 'unknown failure: ' + bf.errstr
-
-def build_status():
-    """Convert the build status to a 2-tuple, (status, msg)."""
-    from SCons.Script import GetBuildFailures
-    bf = GetBuildFailures()
-    if bf:
-        # bf is normally a list of build failures; if an element is None,
-        # it's because of a target that scons doesn't know anything about.
-        status = 'failed'
-        failures_message = "\n".join(["Failed building %s" % bf_to_str(x)
-                            for x in bf if x is not None])
-    else:
-        # if bf is None, the build completed successfully.
-        status = 'ok'
-        failures_message = ''
-    return (status, failures_message)
-
-def display_build_status():
-    """Display the build status.  Called by atexit.
-    Here you could do all kinds of complicated things."""
-    status, failures_message = build_status()
-    if status == 'failed':
-        print "FAILED!!!!"  # could display alert, ring bell, etc.
-    elif status == 'ok':
-        print "Build succeeded."
-    print failures_message
-
-atexit.register(display_build_status)
+if build_target == 'all':
+  # build the fstar.exe compiler from F# sources, targetting .NET
+  fstar_exe_dotnet = SConscript('VS/SConscript')
+  Default(Alias('all', fstar_exe_dotnet))
+elif build_target == 'ocaml-output':
+  # build fstar.exe from OCaml sources
+  fstar_exe_ocaml = SConscript('ocaml-output/SConscript', exports={'My_env' : env})
+  Default(Alias('ocaml-output', fstar_exe_ocaml))
+elif build_target == 'boot':
+  # extract F# to F*, and F* to OCaml
+  boot, extract = SConscript('SConscript', exports={'My_env' : env})
+  Default(boot)
+elif build_target == 'extract':
+  # extract F# to F*, and F* to OCaml
+  boot, extract = SConscript('SConscript', exports={'My_env' : env})
+  Default(extract)
+else:
+  raise SCons.Errors.UserError("Unsupported --target vale %s" % build_target)
