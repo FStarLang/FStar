@@ -122,6 +122,18 @@ let rec btree_find_exact (bt: btree<'a>) (k: string) : option<'a> =
     else
       Some v
 
+let rec btree_remove (bt: btree<'a>) (k: string) : btree<'a> =
+  match bt with
+  | StrEmpty -> StrEmpty
+  | StrBranch (k', v, lbt, rbt) ->
+    let cmp = string_compare k k' in
+    if cmp < 0 then
+      StrBranch (k', v, btree_remove lbt k, rbt)
+    else if cmp > 0 then
+      StrBranch (k', v, lbt, btree_remove rbt k)
+    else
+      StrEmpty
+
 type prefix_match =
   { prefix: option<string>;
     completion: string }
@@ -197,12 +209,18 @@ let rec trie_descend_exact (tr: trie<'a>) (query: query) : option<trie<'a>> =
     Util.bind_opt (names_find_exact tr.namespaces ns)
       (fun scope -> trie_descend_exact scope query)
 
-let names_insert (name_cols: names<'a>) (id: string) (v: 'a) : names<'a> =
-  let bt, name_cols =
-    match name_cols with
+let names_insert (name_collections: names<'a>) (id: string) (v: 'a) : names<'a> =
+  let bt, name_collections =
+    match name_collections with
     | Names bt :: tl -> (bt, tl)
-    | _ -> (StrEmpty, name_cols) in
-  Names (btree_insert_replace bt id v) :: name_cols
+    | _ -> (StrEmpty, name_collections) in
+  Names (btree_insert_replace bt id v) :: name_collections
+
+let names_remove (name_collections: names<'a>) (id: string) : names<'a> =
+  List.map (function
+            | Names bt -> Names (btree_remove bt id)
+            | _ -> failwith "names_delete: Deleting in imported collection")
+           name_collections
 
 let rec namespaces_mutate (namespaces: names<trie<'a>>) (ns: string)
                           (query: query) (mutator: trie<'a> -> trie<'a>) =
