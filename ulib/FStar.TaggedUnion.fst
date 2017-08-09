@@ -213,10 +213,10 @@ let write
   P.write (P.ufield u_ptr f) v;
   let h1 = HST.get () in
   // SMTPats for this lemma do not seem to trigger?
-  P.no_upd_lemma_1 h11 h1 u_ptr tag_ptr;
+//  P.no_upd_lemma_1 h11 h1 u_ptr tag_ptr;
   assert (P.readable h1 tag_ptr);
   assert (P.readable h1 u_ptr);
-  P.readable_struct h1 p;
+  P.readable_struct_fields_readable_struct h1 p;
   P.is_active_union_field_includes_readable #l h1 u_ptr f (P.ufield u_ptr f);
   assert (P.is_active_union_field #l h1 u_ptr f)
 
@@ -311,7 +311,7 @@ let readable_intro
   ))
   (ensures (P.readable h p))
   [SMTPat (valid #l h tgs p); SMTPat (P.readable h (gfield #l tgs p f))]
-= P.readable_struct h p
+= P.readable_struct_fields_readable_struct h p
 
 let readable_field
   (#l: P.union_typ)
