@@ -392,6 +392,10 @@ let match_length_of_path (path: path) : int =
   - last_completion_length
   + (String.length last_prefix) (* match stops after last prefix *)
 
+let first_import_of_path (path: path) : option<string> =
+  match path with
+  | [] -> None
+  | { imports = imports } :: _ -> List.last imports
 
 type completion_result =
   { completion_kind: string;
@@ -404,10 +408,6 @@ let json_of_completion_result (result: completion_result) =
                  Util.JsonStr result.completion_annotation;
                  Util.JsonStr result.completion_candidate]
 
-let annotation_of_path path =
-  match path with
-  | [] -> ""
-  | { imports = imports } :: _ -> List.last "" imports
 
 let make_result (path: path) (symb: symbol) =
   match symb with
