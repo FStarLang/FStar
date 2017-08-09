@@ -456,6 +456,18 @@ val frameOf
   (p: pointer value)
 : GTot HH.rid
 
+val live_region_frameOf
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer value)
+: Lemma
+  (requires (live h p))
+  (ensures (HS.live_region h (frameOf p)))
+  [SMTPatOr [
+    [SMTPat (HS.live_region h (frameOf p))];
+    [SMTPat (live h p)]
+  ]]
+
 val disjoint_roots_intro_pointer_vs_pointer
   (#value1 value2: typ)
   (h: HS.mem)
@@ -632,17 +644,19 @@ val gcell
   (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: GTot (pointer value)
+  (i: UInt32.t)
+: Pure (pointer value)
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (fun _ -> True))
 
 val as_addr_gcell
   (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (as_addr (gcell p i) == as_addr p))
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (UInt32.v i < UInt32.v length /\ as_addr (gcell p i) == as_addr p))
   [SMTPat (as_addr (gcell p i))]
 
 val unused_in_gcell
@@ -650,10 +664,10 @@ val unused_in_gcell
   (#value: typ)
   (h: HS.mem)
   (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (unused_in (gcell p i) h <==> unused_in p h))
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (UInt32.v i < UInt32.v length /\ (unused_in (gcell p i) h <==> unused_in p h)))
   [SMTPat (unused_in (gcell p i) h)]
 
 val live_gcell
@@ -661,10 +675,10 @@ val live_gcell
   (#value: typ)
   (h: HS.mem)
   (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (live h (gcell p i) <==> live h p))
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (UInt32.v i < UInt32.v length /\ (live h (gcell p i) <==> live h p)))
   [SMTPat (live h (gcell p i))]
 
 val gread_gcell
@@ -672,30 +686,30 @@ val gread_gcell
   (#value: typ)
   (h: HS.mem)
   (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (gread h (gcell p i) == Seq.index (gread h p) (UInt32.v i)))
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (UInt32.v i < UInt32.v length /\ gread h (gcell p i) == Seq.index (gread h p) (UInt32.v i)))
   [SMTPat (gread h (gcell p i))]
 
 val frameOf_gcell
   (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (frameOf (gcell p i) == frameOf p))
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (UInt32.v i < UInt32.v length /\ frameOf (gcell p i) == frameOf p))
   [SMTPat (frameOf (gcell p i))]
 
 val is_mm_gcell
   (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (is_mm (gcell p i) == is_mm p))
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (UInt32.v i < UInt32.v length /\ is_mm (gcell p i) == is_mm p))
   [SMTPat (is_mm (gcell p i))]
 
 val includes
@@ -767,10 +781,10 @@ val includes_gcell
   (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
+  (i: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (includes p (gcell p i)))
+  (requires (UInt32.v i < UInt32.v length))
+  (ensures (UInt32.v i < UInt32.v length /\ includes p (gcell p i)))
 
 let includes_gcell_gen
   (#t: typ)
@@ -848,10 +862,10 @@ val readable_gcell
   (#value: typ)
   (h: HS.mem)
   (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
+  (i: UInt32.t)
 : Lemma
-  (requires (readable h p))
-  (ensures (readable h (gcell p i)))
+  (requires (UInt32.v i < UInt32.v length /\ readable h p))
+  (ensures (UInt32.v i < UInt32.v length /\ readable h (gcell p i)))
   [SMTPat (readable h (gcell p i))]
 
 val readable_array
@@ -861,7 +875,8 @@ val readable_array
   (p: pointer (TArray length value))
 : Lemma
   (requires (
-    forall (i: UInt32.t { UInt32.v i < UInt32.v length } ) .
+    forall (i: UInt32.t) .
+    UInt32.v i < UInt32.v length ==>
     readable h (gcell p i)
   ))
   (ensures (readable h p))
@@ -950,7 +965,7 @@ val is_active_union_field_includes_readable
 
 (* Equality predicate on struct contents, without quantifiers *)
 let equal_values #a h (b:pointer a) h' (b':pointer a) : GTot Type0 =
-  live h b /\ live h' b' /\ (
+  (live h b ==> live h' b') /\ (
     readable h b ==> (
       readable h' b' /\
       gread h b == gread h' b'
@@ -1177,10 +1192,10 @@ val buffer_as_seq_gsub_buffer
   (h: HS.mem)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t {  UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) } )
+  (len: UInt32.t)
 : Lemma
-  (requires True)
-  (ensures (buffer_as_seq h (gsub_buffer b i len) == Seq.slice (buffer_as_seq h b) (UInt32.v i) (UInt32.v i + UInt32.v len)))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_as_seq h (gsub_buffer b i len) == Seq.slice (buffer_as_seq h b) (UInt32.v i) (UInt32.v i + UInt32.v len)))
   [SMTPat (buffer_as_seq h (gsub_buffer b i len))]
 
 val gpointer_of_buffer_cell
@@ -1590,11 +1605,19 @@ val loc_disjoint_gcell
   (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
-  (i1: UInt32.t {UInt32.v i1 < UInt32.v length})
-  (i2: UInt32.t {UInt32.v i2 < UInt32.v length})
+  (i1: UInt32.t)
+  (i2: UInt32.t)
 : Lemma
-  (requires (UInt32.v i1 <> UInt32.v i2))
-  (ensures (loc_disjoint (loc_pointer (gcell p i1)) (loc_pointer (gcell p i2))))
+  (requires (
+    UInt32.v i1 < UInt32.v length /\
+    UInt32.v i2 < UInt32.v length /\
+    UInt32.v i1 <> UInt32.v i2
+  ))
+  (ensures (
+    UInt32.v i1 < UInt32.v length /\
+    UInt32.v i2 < UInt32.v length /\  
+    loc_disjoint (loc_pointer (gcell p i1)) (loc_pointer (gcell p i2))
+  ))
   [SMTPat (loc_disjoint (loc_pointer (gcell p i1)) (loc_pointer (gcell p i2)))]
 
 val loc_disjoint_includes
@@ -1877,7 +1900,7 @@ val modifies
   (h1 h2: HS.mem)
 : GTot Type0
 
-val modifies_elim
+val modifies_pointer_elim
   (r: HH.rid)
   (s: loc)
   (h1 h2: HS.mem)
@@ -1893,6 +1916,66 @@ val modifies_elim
   (ensures (
     equal_values h1 p' h2 p'
   ))
+  [SMTPatOr [
+    [ SMTPatT (modifies r s h1 h2); SMTPatT (gread h1 p') ] ;
+    [ SMTPatT (modifies r s h1 h2); SMTPat (readable h1 p') ] ;
+    [ SMTPatT (modifies r s h1 h2); SMTPatT (live h1 p') ];
+    [ SMTPatT (modifies r s h1 h2); SMTPatT (gread h2 p') ] ;
+    [ SMTPatT (modifies r s h1 h2); SMTPat (readable h2 p') ] ;
+    [ SMTPatT (modifies r s h1 h2); SMTPatT (live h2 p') ]
+  ] ]
+
+val modifies_buffer_elim
+  (#t1: typ)
+  (b: buffer t1)
+  (p: loc)
+  (r: HH.rid)
+  (h h': HS.mem)
+: Lemma
+  (requires (
+    loc_disjoint (loc_buffer b) p /\
+    buffer_live h b /\
+    frameOf_buffer b == r /\
+    modifies r p h h'
+  ))
+  (ensures (
+    buffer_live h' b /\ (
+      buffer_readable h b ==> (
+	buffer_readable h' b /\
+	buffer_as_seq h b == buffer_as_seq h' b
+  ))))
+  [SMTPatOr [
+    [ SMTPatT (modifies r p h h'); SMTPatT (buffer_as_seq h b) ] ;
+    [ SMTPatT (modifies r p h h'); SMTPat (buffer_readable h b) ] ;
+    [ SMTPatT (modifies r p h h'); SMTPatT (buffer_live h b) ];
+    [ SMTPatT (modifies r p h h'); SMTPatT (buffer_as_seq h' b) ] ;
+    [ SMTPatT (modifies r p h h'); SMTPat (buffer_readable h' b) ] ;
+    [ SMTPatT (modifies r p h h'); SMTPatT (buffer_live h' b) ]
+  ] ]
+
+val modifies_reference_elim
+  (#t: Type0)
+  (b: HS.reference t)
+  (p: loc)
+  (r: HH.rid)
+  (h h': HS.mem)
+: Lemma
+  (requires (
+    loc_disjoint (loc_address (HS.as_addr b)) p /\
+    HS.contains h b /\
+    HS.frameOf b == r /\
+    modifies r p h h'
+  ))
+  (ensures (
+    HS.contains h' b /\
+    HS.sel h b == HS.sel h' b
+  ))
+  [SMTPatOr [
+    [ SMTPatT (modifies r p h h'); SMTPatT (HS.sel h b) ] ;
+    [ SMTPatT (modifies r p h h'); SMTPatT (HS.contains h b) ];
+    [ SMTPatT (modifies r p h h'); SMTPatT (HS.sel h' b) ] ;
+    [ SMTPatT (modifies r p h h'); SMTPatT (HS.contains h' b) ]
+  ] ]
 
 val modifies_refl
   (r: HH.rid)
@@ -1947,13 +2030,12 @@ let modifies_trans_incl_r
   [SMTPat (modifies r s12 h1 h2); SMTPat (modifies r s23 h2 h3)]
 = ()
 
-(* Modifies clauses that do not change the shape of the HyperStack (h1.tip = h0.tip) *)
 let modifies_0 (h0 h1: HS.mem) : GTot Type0 =
-  HS.modifies_one h0.HS.tip h0 h1 /\
+  HH.modifies_one h0.HS.tip h0.HS.h h1.HS.h /\
   modifies h0.HS.tip loc_none h0 h1
 
 let modifies_1 (#t: typ) (p: pointer t) (h0 h1: HS.mem) : GTot Type0 =
-  HS.modifies_one (frameOf p) h0 h1 /\
+  HH.modifies_one (frameOf p) h0.HS.h h1.HS.h /\
   modifies (frameOf p) (loc_pointer p) h0 h1
 
 (* What about other regions? *)
@@ -1963,20 +2045,30 @@ val modifies_other_regions
   (h0 h1: HS.mem)
   (r: HH.rid)
 : Lemma
-  (requires (HS.modifies rs h0 h1 /\ (~ (Set.mem r rs))))
+  (requires (HH.modifies_just rs h0.HS.h h1.HS.h /\ (~ (Set.mem r rs))))
   (ensures (modifies r loc_none h0 h1))
 
-let modifies_other_regions'
+let modifies_other_regions_l
   (rs: Set.set HH.rid)
-  (h0 h1: HS.mem)
-  (#a: typ)
-  (p: pointer a)
+  (h0 h1 h2: HS.mem)
+  (r: HH.rid)
+  (s: loc)
 : Lemma
-  (requires (HS.modifies rs h0 h1 /\ (~ (Set.mem (frameOf p) rs)) /\ live h0 p))
-  (ensures (equal_values h0 p h1 p))
-= modifies_other_regions rs h0 h1 (frameOf p);
-  modifies_elim (frameOf p) loc_none h0 h1 p
+  (requires (HH.modifies_just rs h0.HS.h h1.HS.h /\ (~ (Set.mem r rs)) /\ modifies r s h1 h2))
+  (ensures (modifies r s h0 h2))
+  [SMTPat (HH.modifies_just rs h0.HS.h h1.HS.h); SMTPat (modifies r s h1 h2)]
+= modifies_other_regions rs h0 h1 r
 
+let modifies_other_regions_r
+  (rs: Set.set HH.rid)
+  (h0 h1 h2: HS.mem)
+  (r: HH.rid)
+  (s: loc)
+: Lemma
+  (requires (HH.modifies_just rs h1.HS.h h2.HS.h /\ (~ (Set.mem r rs)) /\ modifies r s h0 h1))
+  (ensures (modifies r s h0 h2))
+  [SMTPat (HH.modifies_just rs h1.HS.h h2.HS.h); SMTPat (modifies r s h0 h1)]
+= modifies_other_regions rs h1 h2 r
 
 (** Concrete allocators, getters and setters *)
 
@@ -1990,7 +2082,6 @@ val screate
      /\ live h1 b
      /\ frameOf b = h0.HS.tip
      /\ modifies_0 h0 h1
-     /\ Map.domain h1.HS.h == Map.domain h0.HS.h
      /\ begin match s with
        | Some s' ->
 	 readable h1 b /\
@@ -2007,8 +2098,7 @@ val ecreate
   (requires (fun h -> HS.is_eternal_region r))
   (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
     /\ live h1 b
-    /\ Map.domain h1.HS.h == Map.domain h0.HS.h
-    /\ h1.HS.tip = h0.HS.tip
+    /\ frameOf b == r
     /\ modifies_0 h0 h1
     /\ begin match s with
       | Some s' ->
@@ -2038,10 +2128,10 @@ val cell
  (#length: array_length_t)
  (#value: typ)
  (p: pointer (TArray length value))
- (i: UInt32.t {UInt32.v i < UInt32.v length})
+ (i: UInt32.t)
 : HST.ST (pointer value)
-  (requires (fun h -> live h p))
-  (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gcell p i))
+  (requires (fun h -> UInt32.v i < UInt32.v length /\ live h p))
+  (ensures (fun h0 p' h1 -> UInt32.v i < UInt32.v length /\ h0 == h1 /\ p' == gcell p i))
 
 val read
  (#value: typ)
@@ -2078,66 +2168,15 @@ val write_union_field
     /\ is_active_union_field h1 p fd
   ))
 
-(** Lemmas and patterns *)
+val no_upd_fresh: r: HH.rid -> h0:HS.mem -> h1:HS.mem -> Lemma
+  (requires (HS.live_region h0 r /\ HS.fresh_frame h0 h1))
+  (ensures  (modifies r loc_none h0 h1))
+  [SMTPatT (HS.live_region h0 r); SMTPatT (HS.fresh_frame h0 h1)]
 
-val modifies_one_trans_1 (#a:typ) (b:pointer a) (h0:HS.mem) (h1:HS.mem) (h2:HS.mem): Lemma
-  (requires (HS.modifies_one (frameOf b) h0 h1 /\ HS.modifies_one (frameOf b) h1 h2))
-  (ensures (HS.modifies_one (frameOf b) h0 h2))
-  [SMTPatT (HS.modifies_one (frameOf b) h0 h1); SMTPatT (HS.modifies_one (frameOf b) h1 h2)]
-
-val no_upd_lemma_0: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
-  (requires (live h0 b /\ modifies_0 h0 h1))
-  (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
-  [SMTPatT (modifies_0 h0 h1); SMTPatT (live h0 b)]
-
-val no_upd_lemma_1: #t:typ -> #t':typ -> h0:HS.mem -> h1:HS.mem -> a:pointer t -> b:pointer t' -> Lemma
-  (requires (live h0 b /\ disjoint a b /\ modifies_1 a h0 h1))
-  (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
-  [SMTPatOr [
-    [ SMTPatT (modifies_1 a h0 h1); SMTPatT (gread h1 b) ] ;
-    [ SMTPatT (modifies_1 a h0 h1); SMTPat (readable h1 b) ] ;
-    [ SMTPatT (modifies_1 a h0 h1); SMTPatT (live h0 b) ]
-  ] ]
-
-val no_upd_fresh: #t:typ -> h0:HS.mem -> h1:HS.mem -> a:pointer t -> Lemma
-  (requires (live h0 a /\ HS.fresh_frame h0 h1))
-  (ensures  (live h0 a /\ live h1 a /\ equal_values h0 a h1 a))
-  [SMTPatT (live h0 a); SMTPatT (HS.fresh_frame h0 h1)]
-
-val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
-  (requires (live h0 b /\ frameOf b <> h0.HS.tip /\ HS.popped h0 h1))
-  (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
-  [SMTPatT (live h0 b); SMTPatT (HS.popped h0 h1)]
-
-val lemma_modifies_sub_1 (#t: typ) (h0 h1 : HS.mem) (b:pointer t) : Lemma
-  (requires (h1 == h0))
-  (ensures  (modifies_1 b h0 h1))
-  [SMTPatT (live h0 b); SMTPatT (modifies_1 b h0 h1)]
-
-val modifies_substruct_1 (#tsub #ta:typ) (h0 h1 : HS.mem) (sub:pointer tsub) (a:pointer ta) : Lemma
-  (requires (live h0 a /\ modifies_1 sub h0 h1 /\ live h1 sub /\ includes a sub))
-  (ensures  (modifies_1 a h0 h1 /\ live h1 a))
-  [SMTPatT (modifies_1 sub h0 h1); SMTPatT (includes a sub)]
-
-val modifies_popped_1' (#t:typ) (a:pointer t) (h0 h1 h2 h3 : HS.mem) : Lemma
-  (requires (live h0 a /\ HS.fresh_frame h0 h1 /\ HS.popped h2 h3 /\ modifies_1 a h1 h2))
-  (ensures  (modifies_1 a h0 h3))
-  [SMTPatT (HS.fresh_frame h0 h1); SMTPatT (HS.popped h2 h3); SMTPatT (modifies_1 a h1 h2)]
-
-val live_popped (#t:typ) (b:pointer t) (h0 h1 : HS.mem) : Lemma
-  (requires (HS.popped h0 h1 /\ live h0 b /\ frameOf b <> h0.HS.tip))
-  (ensures  (live h1 b))
-  [SMTPatT (HS.popped h0 h1); SMTPatT (live h0 b)]
-
-val live_fresh (#t:typ) (b:pointer t) (h0 h1 : HS.mem) : Lemma
-  (requires (HS.fresh_frame h0 h1 /\ live h0 b))
-  (ensures  (live h1 b))
-  [SMTPatT (HS.fresh_frame h0 h1); SMTPatT (live h0 b)]
-
-val modifies_poppable_1 (#t: typ) (h0 h1 : HS.mem) (b: pointer t) : Lemma
-  (requires (modifies_1 b h0 h1 /\ HS.poppable h0))
-  (ensures  (HS.poppable h1))
-  [SMTPatT (modifies_1 b h0 h1)]
+val no_upd_popped: r: HH.rid -> h0:HS.mem -> h1:HS.mem -> Lemma
+  (requires (HS.live_region h0 r /\ r <> h0.HS.tip /\ HS.popped h0 h1))
+  (ensures  (modifies r loc_none h0 h1))
+  [SMTPatT (HS.live_region h0 r); SMTPatT (HS.popped h0 h1)]
 
 (* `modifies` and the readable permission *)
 
@@ -2161,12 +2200,12 @@ val modifies_1_readable_struct
 
 val modifies_1_readable_array
   (#t: typ)
-  (#len: UInt32.t)
-  (i: UInt32.t { UInt32.v i < UInt32.v len } )
+  (#len: array_length_t)
+  (i: UInt32.t)
   (p: pointer (TArray len t))
   (h h' : HS.mem)
 : Lemma
-  (requires (readable h p /\ modifies_1 (gcell p i) h h' /\ readable h' (gcell p i)))
+  (requires (UInt32.v i < UInt32.v len /\ readable h p /\ modifies_1 (gcell p i) h h' /\ readable h' (gcell p i)))
   (ensures (readable h' p))
   [SMTPatOr [
     [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h p)];
@@ -2182,152 +2221,10 @@ val read_buffer
   (b: buffer t)
   (i: UInt32.t)
 : HST.Stack (type_of_typ t)
-  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ buffer_readable h b))
+  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ readable h (gpointer_of_buffer_cell b i)))
   (ensures (fun h v h' -> UInt32.v i < UInt32.v (buffer_length b) /\ h' == h /\ v == Seq.index (buffer_as_seq h b) (UInt32.v i)))
 
 (* buffer write: needs clearer "modifies" clauses *)
-
-val disjoint_gpointer_of_buffer_cell
-  (#t: typ)
-  (b: buffer t)
-  (i1: UInt32.t)
-  (i2: UInt32.t)
-: Lemma
-  (requires (
-    UInt32.v i1 < UInt32.v (buffer_length b) /\
-    UInt32.v i2 < UInt32.v (buffer_length b) /\
-    UInt32.v i1 <> UInt32.v i2
-  ))
-  (ensures (
-    UInt32.v i1 < UInt32.v (buffer_length b) /\
-    UInt32.v i2 < UInt32.v (buffer_length b) /\  
-    disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2)
-  ))
-  [SMTPat (disjoint (gpointer_of_buffer_cell b i1) (gpointer_of_buffer_cell b i2))]
-
-(* For a "disjoint" clause on buffers, we use the following
-   definitions.  We used to make them transparent, but doing so
-   actually led to unplayable hints in some examples. So it seems that
-   we still need to take the "axiomatic" approach, by defining
-   everything abstract and providing specific introduction and
-   elimination rules with suitable patterns.
-
-   (See also commit 0982fc58409c6ecdaafe92e5b77b81b8768f91be)
-*)
-
-val disjoint_buffer_vs_pointer
-  (#t1 #t2: typ)
-  (b: buffer t1)
-  (p: pointer t2)
-: GTot Type0
-
-val disjoint_buffer_vs_pointer_gsingleton_buffer_of_pointer
-  (#t1 #t2: typ)
-  (p1: pointer t1)
-  (p2: pointer t2)
-: Lemma
-  (requires (disjoint p1 p2))
-  (ensures (disjoint_buffer_vs_pointer (gsingleton_buffer_of_pointer p1) p2))
-  [SMTPat (disjoint_buffer_vs_pointer (gsingleton_buffer_of_pointer p1) p2)]
-
-val disjoint_buffer_vs_pointer_gbuffer_of_array_pointer
-  (#len: array_length_t)
-  (#t1 #t2: typ)
-  (p1: pointer (TArray len t1))
-  (p2: pointer t2)
-: Lemma
-  (requires (disjoint p1 p2))
-  (ensures (disjoint_buffer_vs_pointer (gbuffer_of_array_pointer p1) p2))
-  [SMTPat (disjoint_buffer_vs_pointer (gbuffer_of_array_pointer p1) p2)]
-
-val disjoint_buffer_vs_pointer_includes
-  (#t1 #t2 #t2': typ)
-  (b1: buffer t1)
-  (p2: pointer t2)
-  (p2': pointer t2')
-: Lemma
-  (requires (disjoint_buffer_vs_pointer b1 p2 /\ includes p2 p2'))
-  (ensures (disjoint_buffer_vs_pointer b1 p2'))
-  [SMTPatOr [
-    [SMTPat (disjoint_buffer_vs_pointer b1 p2'); SMTPat (includes p2 p2')];
-    [SMTPat (disjoint_buffer_vs_pointer b1 p2); SMTPat (includes p2 p2')];
-    [SMTPat (disjoint_buffer_vs_pointer b1 p2); SMTPat (disjoint_buffer_vs_pointer b1 p2)];
-  ]]
-
-val disjoint_buffer_vs_pointer_gsub_buffer
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (i: UInt32.t)
-  (len: UInt32.t)
-  (p2: pointer t2)
-: Lemma
-  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b1) /\ disjoint_buffer_vs_pointer b1 p2))
-  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b1) /\ disjoint_buffer_vs_pointer (gsub_buffer b1 i len) p2))
-  [SMTPat (disjoint_buffer_vs_pointer (gsub_buffer b1 i len) p2)]
-
-val disjoint_buffer_vs_pointer_elim
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (p2: pointer t2)
-  (i: UInt32.t)
-: Lemma
-  (requires (UInt32.v i < UInt32.v (buffer_length b1) /\ disjoint_buffer_vs_pointer b1 p2))
-  (ensures (UInt32.v i < UInt32.v (buffer_length b1) /\ disjoint (gpointer_of_buffer_cell b1 i) p2))
-  [SMTPat (disjoint (gpointer_of_buffer_cell b1 i) p2)]
-
-val disjoint_buffer_vs_buffer
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (b2: buffer t2)
-: GTot Type0
-
-val disjoint_buffer_vs_buffer_sym
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (b2: buffer t2)
-: Lemma
-  (disjoint_buffer_vs_buffer b1 b2 <==> disjoint_buffer_vs_buffer b2 b1)
-  [SMTPat (disjoint_buffer_vs_buffer b1 b2)]
-
-val disjoint_buffer_vs_buffer_gsingleton_buffer_of_pointer
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (p2: pointer t2)
-: Lemma
-  (requires (disjoint_buffer_vs_pointer b1 p2))
-  (ensures (disjoint_buffer_vs_buffer b1 (gsingleton_buffer_of_pointer p2)))
-  [SMTPat (disjoint_buffer_vs_buffer b1 (gsingleton_buffer_of_pointer p2))]
-
-val disjoint_buffer_vs_buffer_gbuffer_of_array_pointer
-  (#t1 #t2: typ)
-  (#len: array_length_t)
-  (b1: buffer t1)
-  (p2: pointer (TArray len t2))
-: Lemma
-  (requires (disjoint_buffer_vs_pointer b1 p2))
-  (ensures (disjoint_buffer_vs_buffer b1 (gbuffer_of_array_pointer p2)))
-  [SMTPat (disjoint_buffer_vs_buffer b1 (gbuffer_of_array_pointer p2))]
-
-val disjoint_buffer_vs_buffer_gsub_buffer
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (b2: buffer t2)
-  (i2: UInt32.t)
-  (len2: UInt32.t)
-: Lemma
-  (requires (disjoint_buffer_vs_buffer b1 b2 /\ UInt32.v i2 + UInt32.v len2 <= UInt32.v (buffer_length b2)))
-  (ensures (UInt32.v i2 + UInt32.v len2 <= UInt32.v (buffer_length b2) /\ disjoint_buffer_vs_buffer b1 (gsub_buffer b2 i2 len2)))
-  [SMTPat (disjoint_buffer_vs_buffer b1 (gsub_buffer b2 i2 len2))]
-
-val disjoint_buffer_vs_buffer_elim
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (b2: buffer t2)
-  (i2: UInt32.t)
-: Lemma
-  (requires (UInt32.v i2 < UInt32.v (buffer_length b2) /\ disjoint_buffer_vs_buffer b1 b2))
-  (ensures (UInt32.v i2 < UInt32.v (buffer_length b2) /\ disjoint_buffer_vs_pointer b1 (gpointer_of_buffer_cell b2 i2)))
-  [SMTPat (disjoint_buffer_vs_pointer b1 (gpointer_of_buffer_cell b2 i2))]
 
 val write_buffer
   (#t: typ)
@@ -2341,28 +2238,6 @@ val write_buffer
     modifies_1 (gpointer_of_buffer_cell b i) h h' /\
     buffer_live h' b /\
     readable h' (gpointer_of_buffer_cell b i) /\
-    Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\ (
-      forall (j: UInt32.t {UInt32.v j < UInt32.v (buffer_length b) /\ UInt32.v j <> UInt32.v i }) .
-        readable h (gpointer_of_buffer_cell b j) ==> (
-        readable h' (gpointer_of_buffer_cell b j) /\
-        Seq.index (buffer_as_seq h' b) (UInt32.v j) == Seq.index (buffer_as_seq h b) (UInt32.v j)
-  ))))
-
-val modifies_1_disjoint_buffer_vs_pointer_live
-  (#t1 #t2: typ)
-  (b: buffer t1)
-  (p: pointer t2)
-  (h h': HS.mem)
-: Lemma
-  (requires (
-    disjoint_buffer_vs_pointer b p /\
-    buffer_live h b /\
-    modifies_1 p h h'
+    Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\
+    (buffer_readable h b ==> buffer_readable h' b)
   ))
-  (ensures (
-    buffer_live h' b /\ (
-      buffer_readable h b ==> (
-	buffer_readable h' b /\
-	buffer_as_seq h b == buffer_as_seq h' b
-  ))))
-  [SMTPat (modifies_1 p h h'); SMTPat (buffer_live h b)]
