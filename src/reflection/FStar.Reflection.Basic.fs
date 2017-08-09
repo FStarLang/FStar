@@ -269,7 +269,7 @@ let pack_fv (ns:list<string>) : fv =
     lid_as_fv (PC.p2l ns) Delta_equational None
 
 let inspect_bv (b:binder) : string =
-    Print.bv_to_string (fst b)
+    Print.nm_to_string (fst b)
     // calling into Print, which really doesn't make guarantees
     // ... should be safe as we give no semantics to these names: they're just for debugging
 

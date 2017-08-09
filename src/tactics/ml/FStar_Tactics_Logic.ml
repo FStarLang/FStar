@@ -29,7 +29,7 @@ let forall_intro: FStar_Reflection_Types.binder FStar_Tactics_Effect.tactic =
              (FStar_Tactics_Builtins.apply
                 (FStar_Tactics_Derived.quote_lid
                    ["FStar"; "Tactics"; "Logic"; "fa_intro_lem"]))
-             (fun uu___72_169  -> FStar_Tactics_Builtins.intro None)
+             (fun uu___72_169  -> FStar_Tactics_Builtins.intro_named None)
        | uu____170 -> FStar_Tactics_Derived.fail "not a forall")
 let forall_intros:
   FStar_Reflection_Types.binder Prims.list FStar_Tactics_Effect.tactic =
@@ -62,7 +62,7 @@ let implies_intro: FStar_Reflection_Types.binder FStar_Tactics_Effect.tactic
                 (FStar_Tactics_Derived.quote_lid
                    ["FStar"; "Tactics"; "Logic"; "imp_intro_lem"]))
              (fun uu___73_320  ->
-                FStar_Tactics_Effect.bind (FStar_Tactics_Builtins.intro None)
+                FStar_Tactics_Effect.bind (FStar_Tactics_Builtins.intro_named None)
                   (fun b  -> FStar_Tactics_Effect.return b))
        | uu____323 -> FStar_Tactics_Derived.fail "not an implication")
 let implies_intros:
@@ -193,7 +193,7 @@ let unsquash:
               (FStar_Tactics_Effect.return
                  (FStar_Reflection_Syntax.mk_e_app v [t])))
            (fun uu___80_780  ->
-              FStar_Tactics_Effect.bind (FStar_Tactics_Builtins.intro None)
+              FStar_Tactics_Effect.bind (FStar_Tactics_Builtins.intro_named None)
                 (fun b  ->
                    FStar_Tactics_Effect.return
                      (FStar_Reflection_Basic.pack

@@ -558,7 +558,7 @@ let pack_fv: Prims.string Prims.list -> FStar_Syntax_Syntax.fv =
     FStar_Syntax_Syntax.lid_as_fv uu____1494
       FStar_Syntax_Syntax.Delta_equational FStar_Pervasives_Native.None
 let inspect_bv: FStar_Syntax_Syntax.binder -> Prims.string =
-  fun b  -> FStar_Syntax_Print.bv_to_string (FStar_Pervasives_Native.fst b)
+  fun b  -> FStar_Syntax_Print.nm_to_string (FStar_Pervasives_Native.fst b)
 let inspect_const: FStar_Syntax_Syntax.sconst -> FStar_Reflection_Data.vconst
   =
   fun c  ->

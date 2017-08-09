@@ -316,7 +316,7 @@ let rec primitive_steps:
                FStar_Syntax_Syntax.t_unit) FStar_Syntax_Syntax.t_unit in
         let uu____1239 =
           let uu____1242 =
-            mktac1 "__intro" FStar_Tactics_Basic.intro_named
+            mktac1 "__intro_named" FStar_Tactics_Basic.intro_named
               (FStar_Syntax_Embeddings.unembed_option
                  FStar_Syntax_Embeddings.unembed_string)
               FStar_Reflection_Basic.embed_binder

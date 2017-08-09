@@ -47,12 +47,17 @@ let printer : tactic unit =
     | Sg_Inductive _ bs t ctors ->
         let br1 ctor : branch = match ctor with | Ctor name t ->
             let pn = String.concat "." name in
-            let _, t_args = collect_arr t in
-            let bv_pats = List.Tot.map (fun ti -> let b = fresh_binder ti in (b, Pat_Var b)) t_args in
+            let _, bs = collect_binders t in
+            let bv_pats =
+              let refresh_binder bi =
+                let b = fresh_binder (Some (inspect_bv bi)) (type_of_binder bi) in (b, Pat_Var b)
+              in
+              List.Tot.map refresh_binder bs
+            in
             let bvs, pats = List.Tot.split bv_pats in
             let head = pack (Tv_Const (C_String pn)) in
             let bod = mk_concat (mk_lit " ") (head :: List.Tot.map mk_print_binder bvs) in
-            let bod = match t_args with | [] -> bod | _ -> paren bod in
+            let bod = match bs with | [] -> bod | _ -> paren bod in
             (Pat_Cons (pack_fv name) pats, bod)
         in
         let branches = List.Tot.map br1 ctors in

@@ -78,15 +78,18 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
-let rec collect_arr' (typs : list typ) (t : typ) : Tot (typ * list typ) (decreases t) =
+private
+let rec collect_binders' (bs : list binder) (t : typ) : Tot (typ * list binder) (decreases t) =
     match inspect t with
-    | Tv_Arrow b r ->
-        let t = type_of_binder b in
-        collect_arr' (t::typs) r
-    | _ -> (t, typs)
+    | Tv_Arrow b r -> collect_binders' (b::bs) r
+    | _ -> (t, bs)
+
+val collect_binders : typ -> typ * list binder
+let collect_binders t0 = collect_binders' [] t0
 
 val collect_arr : typ -> typ * list typ
-let collect_arr = collect_arr' []
+let collect_arr t0 = let t, bs = collect_binders t0 in t, List.Tot.map type_of_binder bs
+
 
 // TODO: move away
 let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =

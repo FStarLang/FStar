@@ -37,10 +37,10 @@ let iszero (x : int) : int =
     synth_by_tactic (
         x <-- quote x;
         t_int <-- quote int;
-        let _f = fresh_binder t_int in
+        let _wild = fresh_binder None t_int in
         let t = Tv_Match x
                     [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
-                     (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in
+                     (Pat_Wild _wild, pack (Tv_Const (C_Int 0)))] in
         exact (return (pack t)))
 
 let _ = assert (iszero 0 = 1)

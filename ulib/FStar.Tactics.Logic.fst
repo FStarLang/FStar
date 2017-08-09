@@ -6,14 +6,46 @@ open FStar.Tactics.Derived
 open FStar.Reflection
 open FStar.Reflection.Types
 
-private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
+private val revert_squash : (a:Type) -> (b : (a -> Type)) ->
                             (squash (forall (x:a). b x)) ->
                             x:a -> squash (b x)
-let revert_squash #a #b s x = ()
+let revert_squash a b s x = ()
+
+let term_of_binder b = pack (Tv_Var b)
+let apply_term t ts = List.Tot.fold_left (fun t1 t2 -> pack (Tv_App t1 (t2, Q_Explicit))) t ts
+let apply_args t args = List.Tot.fold_left (fun t1 arg -> pack (Tv_App t1 arg)) t args
+
+private
+let build_named_revert_squash_type (s:string) : term =
+  let a = fresh_binder (Some "a") (pack (Tv_Type ())) in
+  let x = fresh_binder (Some s) (pack (Tv_Var a)) in
+  let b = fresh_binder (Some "b") (pack (Tv_Arrow x (pack (Tv_Type ())))) in
+  let result = pack (Tv_App (term_of_binder b) (term_of_binder x, Q_Explicit)) in
+  let squash_app t = pack (Tv_App (pack (Tv_FVar (pack_fv squash_qn))) (t, Q_Explicit)) in
+  let for_all = pack (Tv_FVar (pack_fv forall_qn)) in
+  let forallfml =
+  squash_app (apply_args for_all [term_of_binder a, Q_Implicit ; pack (Tv_Abs x result), Q_Explicit ])
+  in
+  let forall_binder = fresh_binder None forallfml in
+  let arr0 = pack (Tv_Arrow x (squash_app result)) in
+  pack (Tv_Arrow a (pack (Tv_Arrow b (pack (Tv_Arrow forall_binder arr0)))))
+
+private
+let id (a:Type) (x:a) : a = x
+
+private
+let named_revert_squash (s:string) : tactic term =
+  id <-- quote_lid ["FStar";"Tactics";"Logic";"id"] ;
+  t <-- quote_lid ["FStar";"Tactics";"Logic";"revert_squash"] ;
+  return (apply_term id [build_named_revert_squash_type s ; t])
 
 let l_revert : tactic unit =
+    g <-- cur_env ;
+    let bs = binders_of_env g in
+    let i = List.Tot.length bs - 1 in
+    b <-- if i >= 0 then return (List.Tot.index bs i) else fail "Nothing in context" ;
     revert;;
-    apply (quote_lid ["FStar";"Tactics";"Logic";"revert_squash"])
+    apply (named_revert_squash (inspect_bv b))
 
 let rec l_revert_all (bs:binders) : tactic unit =
     match bs with
@@ -48,6 +80,13 @@ let split : tactic unit =
         apply (quote_lid ["FStar";"Tactics";"Logic";"split_lem"])
     | _ ->
         fail "not a conjunction"
+
+private val revert_squash_impl (#a #b:Type) : (squash (a ==> b)) -> a -> squash b
+let revert_squash_impl #a #b s x = ()
+
+let implies_revert : tactic unit =
+  revert ;;
+  apply (quote_lid ["FStar" ; "Tactics" ; "Logic" ; "revert_squash_impl"])
 
 private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
                             (a -> squash b) ->

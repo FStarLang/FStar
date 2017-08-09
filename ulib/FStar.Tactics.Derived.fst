@@ -67,6 +67,9 @@ let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
 let simpl : tactic unit = norm [Simpl; Primops]
 let whnf  : tactic unit = norm [WHNF; Primops]
 
+(* Nameless introduction of a binder *)
+let intro = intro_named None
+
 private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
 private let __cut #b a f x = f x
 
@@ -77,10 +80,7 @@ let tcut (t:term) : tactic binder =
     intro
 
 let rec revert_all (bs:binders) : tactic unit =
-    match bs with
-    | [] -> return ()
-    | _::tl -> revert;;
-               revert_all tl
+  List.Tot.fold_right (fun _ acc -> revert ;; acc) bs (return ())
 
 let assumption : tactic unit =
     e <-- cur_env;
