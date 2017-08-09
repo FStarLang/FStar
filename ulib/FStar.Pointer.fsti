@@ -857,6 +857,40 @@ val readable_struct_forall_mem
     readable h p
   )
 
+val readable_struct_fields
+  (#l: struct_typ)
+  (h: HS.mem)
+  (p: pointer (TStruct l))
+  (s: list string)
+: GTot Type0
+
+val readable_struct_fields_nil
+  (#l: struct_typ)
+  (h: HS.mem)
+  (p: pointer (TStruct l))
+: Lemma
+  (readable_struct_fields h p [])
+  [SMTPat (readable_struct_fields h p [])]
+
+val readable_struct_fields_cons
+  (#l: struct_typ)
+  (h: HS.mem)
+  (p: pointer (TStruct l))
+  (f: string)
+  (q: list string)
+: Lemma
+  (requires (readable_struct_fields h p q /\ (List.Tot.mem f (List.Tot.map fst l) ==> (let f : struct_field l = f in readable h (gfield p f)))))
+  (ensures (readable_struct_fields h p (f::q)))
+  [SMTPat (readable_struct_fields h p (f::q))]
+
+val readable_struct_fields_readable_struct
+  (#l: struct_typ)
+  (h: HS.mem)
+  (p: pointer (TStruct l))
+: Lemma
+  (requires (readable_struct_fields h p (normalize_term (List.Tot.map fst l))))
+  (ensures (readable h p))
+
 val readable_gcell
   (#length: array_length_t)
   (#value: typ)
