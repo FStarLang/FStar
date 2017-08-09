@@ -20,6 +20,8 @@
 *)
 #light "off"
 module FStar.Fsdoc.Generator
+open FStar.ST
+open FStar.Exn
 open FStar.All
 
 open FStar
@@ -33,7 +35,7 @@ module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module SU  = FStar.Syntax.Util
 module U  = FStar.Util
-module C  = FStar.Syntax.Const
+module C  = FStar.Parser.Const
 
 (*
 Notes:

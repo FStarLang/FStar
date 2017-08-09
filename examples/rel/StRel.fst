@@ -1,7 +1,7 @@
 module StRel
 open Rel
-open FStar.ST
 open FStar.Heap
+open FStar.ST
 
 (* Pure relational reasoning about stateful functions *)
 

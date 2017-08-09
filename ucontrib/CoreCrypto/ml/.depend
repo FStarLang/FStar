@@ -1,7 +1,9 @@
-CoreCrypto.cmo : CoreCrypto.cmi
-CoreCrypto.cmx : CoreCrypto.cmi
-DHDB.cmo : CoreCrypto.cmi
-DHDB.cmx : CoreCrypto.cmx
-Tests.cmo : CoreCrypto.cmi
-Tests.cmx : CoreCrypto.cmx
-CoreCrypto.cmi :
+CoreCrypto.cmo : ../../../ucontrib/Platform/ml/platform.cmo CoreCrypto.cmi
+CoreCrypto.cmx : ../../../ucontrib/Platform/ml/platform.cmx CoreCrypto.cmi
+CoreCrypto.cmi : ../../../ucontrib/Platform/ml/platform.cmo
+DHDB.cmo : ../../../ucontrib/Platform/ml/platform.cmo db/DB.cmi \
+    CoreCrypto.cmi
+DHDB.cmx : ../../../ucontrib/Platform/ml/platform.cmx db/DB.cmx \
+    CoreCrypto.cmx
+Tests.cmo : ../../../ucontrib/Platform/ml/platform.cmo CoreCrypto.cmi
+Tests.cmx : ../../../ucontrib/Platform/ml/platform.cmx CoreCrypto.cmx

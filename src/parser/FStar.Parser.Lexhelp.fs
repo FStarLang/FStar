@@ -29,6 +29,8 @@
 #light "off"
 
 module FStar.Parser.Lexhelp
+open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Mul
 open FStar

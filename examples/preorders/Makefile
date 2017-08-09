@@ -10,3 +10,7 @@ uall: $(patsubst %.fst,%.uver,$(wildcard *.fst))
 MRefHeap.uver : MRefHeap.fst
 	$(FSTAR) --record_hints --verify_module MRefHeap $^
 
+
+# Targets to get F* arguments in interactive mode
+%.fst-in: 
+	@echo --use_hints

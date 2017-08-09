@@ -76,7 +76,7 @@ let test1 () =
 val test2: unit -> St unit
 let test2 () =
   let p = new_point 0 0 in
-  let z = ST.alloc 0 in
+  let z :ref nat = ST.alloc 0 in
   assert (addr_of (Point?.x p) <> addr_of z)
 // END: Test2
 

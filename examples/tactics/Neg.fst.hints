@@ -1,0 +1,19 @@
+[
+  "„P\bÙqªó’\u00061‰Õ¯F¤“",
+  [
+    [ "Neg.c3", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Neg.c3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Neg.xi",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0
+    ],
+    [ "Neg.c4", 1, 2, 1, [ "@query" ], 0 ]
+  ]
+]

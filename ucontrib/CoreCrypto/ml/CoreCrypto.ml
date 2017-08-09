@@ -11,7 +11,7 @@ let string_of_bytes b = Platform.Bytes.get_cbytes b
 let bytes_of_string s = Platform.Bytes.abytes s
 let (@|) = Platform.Bytes.(@|)
 
-                         
+
 (* ----------------- Hashing and HMAC --------------------------------------- *)
 
 (** Hashing *)
@@ -77,19 +77,19 @@ let hash (h:hash_alg) (b:bytes) =
 (* digest functions *)
 type hash_ctx = md_ctx (* exported name *)
 
-let digest_create (h:hash_alg) : hash_ctx = 
+let digest_create (h:hash_alg) : hash_ctx =
   let md = md_of_hash_alg h in
   let ctx = ocaml_EVP_MD_CTX_new md in
-  ctx 
-  
-let digest_update (ctx:md_ctx) (b:bytes) : unit = 
+  ctx
+
+let digest_update (ctx:md_ctx) (b:bytes) : unit =
   ocaml_EVP_MD_CTX_update ctx (string_of_bytes b)
 
-let digest_final (ctx:md_ctx) : bytes = 
+let digest_final (ctx:md_ctx) : bytes =
   let s = ocaml_EVP_MD_CTX_final ctx  in
   ocaml_EVP_MD_CTX_fini ctx ;
   bytes_of_string s
-  
+
 (* -------------------------------------------------------------------- *)
 
 (** HMAC *)
@@ -103,23 +103,23 @@ let hmac (h:hash_alg) (k:bytes) (d:bytes) =
 
 (* ------end of Hashing------------------------------------------ *)
 
-                  
 
-                
+
+
 type sig_alg = RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type stream_cipher = RC4_128
 type rsa_padding = Pad_none | Pad_PKCS1
 
-type aead_cipher = 
-  | AES_128_GCM   
+type aead_cipher =
+  | AES_128_GCM
   | AES_256_GCM
-  | CHACHA20_POLY1305 
+  | CHACHA20_POLY1305
   | AES_128_CCM
-  | AES_256_CCM   
+  | AES_256_CCM
   | AES_128_CCM_8
   | AES_256_CCM_8
-                                
+
 let string_of_block_cipher = function
   | AES_128_CBC -> "AES_128_CBC"
   | AES_256_CBC -> "AES_256_CBC"
@@ -199,7 +199,7 @@ let cipher_of_aead_cipher (c:aead_cipher) = match c with
   | AES_128_GCM -> ocaml_EVP_CIPHER_aes_128_gcm()
   | AES_256_GCM -> ocaml_EVP_CIPHER_aes_256_gcm()
   | CHACHA20_POLY1305 -> ocaml_EVP_CIPHER_chacha20_poly1305()
-  | _ -> failwith "not linked to openSSL yet" 
+  | _ -> failwith "not linked to openSSL yet"
 
 let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
   assert (Platform.Bytes.length iv = blockSize c);
@@ -299,8 +299,8 @@ external ocaml_rsa_get_key : rsa -> string * string * (string option) = "ocaml_r
 external ocaml_rsa_encrypt : rsa -> prv:bool -> rsa_padding -> string -> string = "ocaml_rsa_encrypt"
 external ocaml_rsa_decrypt : rsa -> prv:bool -> rsa_padding -> string -> string = "ocaml_rsa_decrypt"
 
-external ocaml_rsa_sign : rsa -> hash_alg option -> string -> string = "ocaml_rsa_sign"
-external ocaml_rsa_verify : rsa -> hash_alg option -> data:string -> sig_:string -> bool = "ocaml_rsa_verify"
+external ocaml_rsa_sign : rsa -> pss:bool -> hash_alg option -> string -> string = "ocaml_rsa_sign"
+external ocaml_rsa_verify : rsa -> pss:bool -> hash_alg option -> data:string -> sig_:string -> bool = "ocaml_rsa_verify"
 
 let rsa_gen_key i =
   let i = Z.to_int i in
@@ -332,21 +332,19 @@ let rsa_decrypt (sk:rsa_key) (p:rsa_padding) (e:bytes) =
   ocaml_rsa_fini r;
   Some (bytes_of_string d)
 
-(* Note: if [h = None], then [t] is understood to be an SHA1+MD5 "SSL
- * signature", meaning its length must be 36 bytes exactly. *)
-let rsa_sign (h:hash_alg option) (sk:rsa_key) (t:bytes) =
+(* ADL: the hashing is now internal (because the PSS API uses DigestSign/DigestVerify).
+   It is still possible to set hash_alg to None to sign the raw digest (e.g. MD5SHA1) *)
+let rsa_sign (h:hash_alg option) (sk:rsa_key) (pss:bool) (tbs:bytes) =
   let r = ocaml_rsa_new() in
   ocaml_rsa_set_key r sk;
-  let d = match h with None -> t | Some a -> hash a t in
-  let s = ocaml_rsa_sign r h (string_of_bytes d) in
+  let s = ocaml_rsa_sign r pss h (string_of_bytes tbs) in
   ocaml_rsa_fini r;
   bytes_of_string s
 
-let rsa_verify (h:hash_alg option) (sk:rsa_key) (data:bytes) (sign:bytes) =
+let rsa_verify (h:hash_alg option) (sk:rsa_key) (pss:bool) (tbs:bytes) (sigv:bytes) =
   let rsa = ocaml_rsa_new() in
   ocaml_rsa_set_key rsa sk;
-  let data = match h with None -> data | Some h -> hash h data in
-  let ret = ocaml_rsa_verify rsa h (string_of_bytes data) (string_of_bytes sign) in
+  let ret = ocaml_rsa_verify rsa pss h (string_of_bytes tbs) (string_of_bytes sigv) in
   ocaml_rsa_fini rsa;
   ret
 
@@ -614,7 +612,7 @@ let ec_key_of_ssl_ec_key eck: ec_key =
   let curve =
     (* See https://tools.ietf.org/html/rfc5480#section-2.1.1.1 *)
     match ocaml_ec_key_get_curve_name eck with
-    | "prime256v1" -> ECC_P256 
+    | "prime256v1" -> ECC_P256
     | "secp384r1"  -> ECC_P384
     | "secp521r1"  -> ECC_P521
     | _  -> failwith "Unsupported curve in certificate"
@@ -681,13 +679,13 @@ let get_key_from_cert cert: key option =
 
 let maybe_hash_and_sign key h tbs =
   match key with
-  | KeyRSA rsa   -> rsa_sign   h rsa tbs
+  | KeyRSA rsa   -> rsa_sign   h rsa false tbs
   | KeyDSA dsa   -> dsa_sign   h dsa tbs
   | KeyECDSA eck -> ecdsa_sign h eck tbs
 
 let verify_signature key h tbs sigv =
   match key with
-  | KeyRSA rsa   -> rsa_verify   h rsa tbs sigv
+  | KeyRSA rsa   -> rsa_verify   h rsa false tbs sigv
   | KeyDSA dsa   -> dsa_verify   h dsa tbs sigv
   | KeyECDSA eck -> ecdsa_verify h eck tbs sigv
 

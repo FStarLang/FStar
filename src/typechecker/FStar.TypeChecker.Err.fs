@@ -16,6 +16,7 @@
 #light "off"
 
 module FStar.TypeChecker.Err
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -29,10 +30,11 @@ open FStar.Ident
 
 module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util //basic util
+module Env = FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
 let info_at_pos env file row col =
-    match TypeChecker.Common.info_at_pos file row col with
+    match TypeChecker.Common.id_info_at_pos !env.identifier_info file row col with
     | None -> None
     | Some info ->
       match info.identifier with
