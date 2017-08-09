@@ -349,7 +349,10 @@ let register_open (tbl: table) (is_module: bool) (host_query: query) (included_q
   else
     trie_open_namespace tbl host_query included_query
 
-let path_match_length (path: path) : int =
+let string_of_path (path: path) : string =
+  String.concat "." (List.map (fun el -> el.segment.completion) path)
+
+let match_length_of_path (path: path) : int =
   let length, (last_prefix, last_completion_length) =
     List.fold_left
       (fun acc elem ->
@@ -365,8 +368,6 @@ let path_match_length (path: path) : int =
   - last_completion_length
   + (String.length last_prefix) (* match stops after last prefix *)
 
-let path_to_string (path: path) : string =
-  String.concat "." (List.map (fun el -> el.segment.completion) path)
 
 type completion_result =
   { completion_kind: string;
