@@ -222,25 +222,30 @@ let names_remove (name_collections: names<'a>) (id: string) : names<'a> =
             | _ -> failwith "names_delete: Deleting in imported collection")
            name_collections
 
-let rec namespaces_mutate (namespaces: names<trie<'a>>) (ns: string)
-                          (query: query) (mutator: trie<'a> -> trie<'a>) =
+let rec namespaces_mutate (namespaces: names<trie<'a>>) (ns: string) (query: query)
+                          (mut_node: trie<'a> -> names<trie<'a>> -> trie<'a>)
+                          (mut_leaf: trie<'a> -> trie<'a>)=
   let trie = Util.dflt trie_empty (names_find_exact namespaces ns) in
-  names_insert namespaces ns (trie_mutate trie query mutator)
+  names_insert namespaces ns (trie_mutate trie query mut_node mut_leaf)
 
-and trie_mutate (tr: trie<'a>) (query: query) (mutator: trie<'a> -> trie<'a>) : trie<'a> =
+and trie_mutate (tr: trie<'a>) (query: query)
+                (mut_node: trie<'a> -> names<trie<'a>> -> trie<'a>)
+                (mut_leaf: trie<'a> -> trie<'a>) : trie<'a> =
   match query with
-  | [] -> mutator tr
-  | id :: query ->
-    { tr with namespaces = namespaces_mutate tr.namespaces id query mutator }
+  | [] -> mut_leaf tr
+  | id :: query -> mut_node tr (namespaces_mutate tr.namespaces id query mut_node mut_leaf)
+
+let trie_mutate_leaf (tr: trie<'a>) (query: query) =
+  trie_mutate tr query (fun tr namespaces -> { tr with namespaces = namespaces })
 
 let trie_insert (tr: trie<'a>) (ns_query: query) (id: string) (v: 'a) : trie<'a> =
-  trie_mutate tr ns_query (fun tr -> { tr with bindings = names_insert tr.bindings id v })
+  trie_mutate_leaf tr ns_query (fun tr -> { tr with bindings = names_insert tr.bindings id v })
 
 let trie_import (tr: trie<'a>) (host_query: query) (included_query: query)
                 (mutator: trie<'a> -> trie<'a> -> string -> trie<'a>) =
   let label = query_to_string included_query in
   let included_trie = Util.dflt trie_empty (trie_descend_exact tr included_query) in
-  trie_mutate tr host_query (fun tr -> mutator tr included_trie label)
+  trie_mutate_leaf tr host_query (fun tr -> mutator tr included_trie label)
 
 let trie_include (tr: trie<'a>) (host_query: query) (included_query: query)
     : trie<'a> =
@@ -258,7 +263,7 @@ let trie_add_alias (tr: trie<'a>) (key: string)
       // Very similar to an include, but aliasing A.B as M in A.C entirely
       // overrides A.B.M, should that also exists.  Doing this makes sense
       // because we only process aliases in the current module.
-      trie_mutate tr [key] (fun _ignored_overwritten_trie ->
+      trie_mutate_leaf tr [key] (fun _ignored_overwritten_trie ->
           { bindings = [ImportedNames (label, inc.bindings)]; namespaces = [] }))
 
 let names_revmap (fn: btree<'a> -> 'b) (name_collections: names<'a> (* ↓ priority *))
