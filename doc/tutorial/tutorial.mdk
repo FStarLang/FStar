@@ -90,7 +90,7 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 # Introduction
 
 F\* is a verification-oriented programming language developed at
-[Microsoft Research], [MSR-Inria], and [Inria].
+[Microsoft Research], MSR-Inria, and [Inria].
 It follows in
 the tradition of the [ML] family of languages in that it is a typed,
 strict, functional programming language. However, its type system is
@@ -106,6 +106,8 @@ can be found on the [F\* website].
 [IMDEA Software]: http://software.imdea.org/
 [ML]: https://en.wikipedia.org/wiki/ML_%28programming_language%29
 [F\* website]: http://www.fstar-lang.org
+[mailing list]: https://lists.gforge.inria.fr/mailman/listinfo/fstar-club
+[github issue]: https://github.com/FStarLang/FStar/issues
 
 It will help if you are already familiar with functional programming
 languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
@@ -115,14 +117,14 @@ resources freely available on the web, e.g., [TryF#],
 [F# for fun and profit], [Introduction to Caml], or the
 [Real World OCaml] book.
 
-[OCaml]: http://caml.inria.fr/ocaml/
+[OCaml]: https://ocaml.org
 [F#]: http://fsharp.org/
 [Standard ML]: http://sml-family.org/
 [Haskell]: https://www.haskell.org
 
 [F# for fun and profit]: http://fsharpforfunandprofit.com/
-[TryF#]: http://tryfsharp.org
-[Introduction to Caml]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
+[TryF#]: http://www.tryfsharp.org
+[Introduction to Caml]: https://pl.cs.jhu.edu/pl/lectures/caml-intro.html
 [Real World OCaml]: https://realworldocaml.org/
 
 ~KK
@@ -656,7 +658,7 @@ covers, F\* translates the definition of `max` and the asserted property
 to a theorem prover called [Z3], which then proves the property
 automatically.
 
-[Z3]: http://z3.codeplex.com/
+[Z3]: https://github.com/Z3Prover/z3/wiki
 
 We can assert and automatically check more general properties about `max`. For example:
 
@@ -670,6 +672,10 @@ Let's take a look at the factorial function:
 
     let rec factorial n = 
       if n = 0 then 1 else n * (factorial (n - 1))
+
+~ Remark
+By default the `op_Star` operator of F\* (the `*` above) is the type constructor of product types also known as typles. If, as in the example above, we are not doing anything with tuples, it is convenient to open the module `FStar.Mul` to let `*` be multiplication. Otherwise, one has to write `op_Multiply a b` instead of `a * b`.
+~
 
 For a recursive function, without further annotation, F\* attempts to
 automatically prove that the recursion always terminates. In the case
@@ -1033,6 +1039,12 @@ predicate; it is different from '`=`', which is a boolean function
 comparing a pair of values (F\* also has a separate constructor for
 heterogeneous equality, '`===`').
 
+[equality on F\* wiki]: https://github.com/FStarLang/FStar/wiki/Deriving-hasEq-predicate-for-inductive-types,-and-types-of-equalities-in-F*#different-types-of-equalities-in-f
+
+~ Remark
+Equality is more complex than it looks! See also [equality on F\* wiki].
+~
+
 The propositional connectives, `:/\`, `:\/`, and `:~`, for conjunction,
 disjunction and negations are type constructors. We also include `:==>`
 and `:<==>` for single and bidirectional implication. In contrast,
@@ -1204,7 +1216,7 @@ as an abbreviation of `a: Type{hasEq a}`.
 ```
 
 ~ Exercise
-Prove that mem satisfies the
+Prove that `mem` satisfies the
 following property:
 ~~ ExerciseFragment {exname=Ex04c}
 [INCLUDE=code/exercises/Ex04c.fst:AppendMem]
@@ -1545,8 +1557,8 @@ eventually stops making recursive calls, i.e., it terminates.
    which is only a _partial_ order.
 
 2. **The subterm ordering on inductive types**: For any value
-    `D v1 ... vn` of an inductive type (where `D` is a constructor applied
-    to arguments `v1` to `vn`) we include `v_i << v`, for all `i`.
+    `v = D v1 ... vn` of an inductive type (where `D` is a constructor applied
+    to arguments `v1` to `vn`) we include `vi << v`, for all `i`.
     That is, the sub-terms of a well-typed constructed term
     precede the constructed term. (The exception to this rule is `lex_t` below).
 ~CH
@@ -1556,7 +1568,7 @@ I guess there is also an exception for types with negative occurrences, right?
 3. **The lexicographic ordering on lex_t**, as described below.
 
 
-### Lexically ordered pairs
+### Lexically ordered pairs and lists
 
 Take a look at the classic function, `ackermann`:
 
@@ -1582,16 +1594,19 @@ In its standard prelude, F\* defines the following inductive type:
       | LexCons : #a:Type -> a -> lex_t -> lex_t
 
 (The `#` sign marks the first argument as implicit, see [#sec-implicit-arguments].)
+This is a list of heterogenously typed elements.
 
 **The lexicographic ordering on `lex_t`** is the following:
 
 * `LexCons v1 v2 << LexCons v1' v2'`, if and only if, either
-  `v1 << v1'`; or `v1=v1'` and `v2 << v2'`.
+  `v1 << v1'`; or `v1===v1'` and `v2 << v2'`.
 
 * If `v:lex_t` and `v <> LexTop`, then `v << LexTop`.
 
 ~MK
 We could explain what that means, that longer `lex_t` are smaller?
+
+I changed v1=v2 to heterogenous equality?
 ~
 
 **We include the following syntactic sugar**:
@@ -3795,30 +3810,14 @@ Write down some types for `grant` and `revoke` that are sufficiently
 precise to allow the program to continue to type-check.
 
 ~~ ExerciseFragment {exname=Ex10a}
-val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> True))
-let grant e = ST.write acls (e :: ST.read acls)
-
-val revoke: e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> True))
-let revoke e =
-  let db = List.filterT (fun e' -> e<>e') (ST.read acls) in
-  ST.write acls db
+[INCLUDE=code/exercises/Ex10a.fst:Ex10aExercise]
 ~~
 
 ~~Answer
 ~~~ SolutionFragment {exname=Ex10a}
-val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> sel h' acls = e :: sel h acls))
-let grant e = ST.write acls (e :: ST.read acls)
-
-val revoke: e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> not(List.mem e (sel h' acls))))
-let revoke e =
-  let db = List.filter (fun e' -> e<>e') (ST.read acls) in
-  ST.write acls db
+[INCLUDE=code/solutions/Ex10a.fst:Ex10aSolution]
 ~~~
-~~
+~~ 
 ~
 
 ~KK
@@ -4242,7 +4241,9 @@ region ids `rid` to `heap`s.
 
 ### The type of region identifiers, `rid`
 
-The type `rid` is abstract to clients, with a few operations on it
+[abstract]: https://github.com/FStarLang/FStar/wiki/Qualifiers-for-definitions-and-declarations#abstract
+
+The type `rid` is [abstract] to clients, with a few operations on it
 revealing its hierarchical structure. Specifically, we have three functions:
 
 ```
@@ -4687,46 +4688,51 @@ keyed cryptographic hashes.
 
 A MAC scheme typically consists of three algorithms, a `keygen` 
 algorithm for generating the shared `key`,
-a `mac` function for generating a MAC `tag` on `text` using `key`, and
+a `mac` function for generating a MAC `tag` on message `text` using `key`, and
 a `verify` function for verifying that `tag` is a valid MAC for `text` and `key`.
 
-### The message authentication experiment { - }
+We say that messages for which `verify key text tag=true` have been authenticated. But what does this mean formally? Does it mean that the owner of `key` endorsed the message `text`. But who is the owner of `key`, which after all is a bitstring that could be learned and copied. And for deployed MAC functionalities,  `verify` is a pure function, so even if the key was kept perfectly secret, a randomly picked `tag` will verify with some probability.
 
-A MAC scheme $\Pi=($`keygen`,`mac`,`verify`$)$ is unforgeable against chosen message attacks (UF-CMA) 
+Cryptographers grappled with these problems and specify the properties of a MAC negatively by bounding the probability of realistic adversaries forging a `tag`. This is typically done in the form of a random experiment:
+
+### The message authentication experiment { #MAC-game }
+
+A MAC scheme implementing `keygen`, `mac`, `verify` is unforgeable against chosen message attacks (UF-CMA) 
 if the success probability of all 'realistic' adversaries 
-$A$ in the following probabilistic experiment is small:
+`A` (modelled as F\* programs) is small in the following probabilistic experiment:
 
- * A key `key` is generated by running `keygen`.
- * The adversary $A$ is given oracle access to `mac key`. The key is hidden but he can provide messages to learn tags. 
-   The adversary eventually outputs `(text,tag)`. Let $Q$ denote the set of all queries that $A$ asked its oracle.
- * The adversary succeeds if and only if (1) `verify key text tag = true` and (2) `text` $\notin Q$.
+ * A key `k` is generated by running `keygen`.
+ * The adversary `A` is given oracle access to `mac k`. To the adversary, the key used to answer oracle queries is hidden but he can provide messages `text'` to learn tags of the form `mac k text'`. We let the set `log` record all `text'` that `A` asked to the oracle. Eventually, the adversary outputs a text and tag pair: `(text,tag)`.
+ 
+ * The adversary succeeds if and only if (1) `verify k text tag = true` and (2) `not (mem text log)`. That is if he produced a verifying tag on a new message `text`.
 
-We refer to the success probability of $A$ in this experiment as its UF-CMA advantage $\epsilon_{ufcma}(A)$. 
+We refer to the success probability of `A` in this experiment as its UF-CMA advantage $\epsilon_{ufcma}(A)$.
 
-### The MAC type interface { - } 
-We define an interface for an F* module implementing this functionality 
-and expressing the cryptographic guarantees.
+Does the appearance of *probabilities* in this section make you suspicious? It should, as nowhere in this tutorial have we so far discussed the use of F\* for probabilistic reasoning. The F\* type checker is a deductive reasoning tool, and trades in certainties and not in probabilities. While we will see that there are ways to extend F\* semantics with probabilities to express probabilistic experiments in the language of F\*, we will now provide an abstraction or idealization of the guarantees of the MAC functionality. We will discuss below, how one can formally establish the soundness of this idealization. 
 
-```
+### The MAC type interface 
+We define an interface that models perfect authentication guarantees. We will get back to how it can be (approximately) implemented by an F* module later.
+
+~~ SolutionFragment {exname=Ex12.MAC}
 [INCLUDE=code/solutions/Ex12.MAC.fst:MacSpec]
-```
+~~
 
-This interface is unsurprising except for `pkey p` and `key_prop k t`.
 
-We attach an authenticated property to each key and `pkey p` is the type of a key with property `p`.
+The specification of `keygen` attaches an authenticated property `p: text -> Type` to each key using function `key_prop k` and type `pkey p`:
 
-The application specific function `key_prop k t` maps each key to such 
-an authentication property: `assume type key_prop : key -> text -> Type`. 
+The function `key_prop : key -> p:(text -> Type)` maps each key to an application defined authentication property `p` and the type `pkey p = k:key{key_prop k == p}` denotes keys with property `p`.
 
-It is used as a pre-condition for MACing and a postcondition of MAC verification.
+The property `(key_prop k) t` is used as a pre-condition for MACing and as a postcondition for verifying a message `t` with key `k`.
 
-In the RPC example below ([#sec-secure-rpc]) we will use a key of type `pkey reqresp` where
+
+When implementing the message authentication experiment using a `key_prop k` that witnesses the monotone property `(mem text log)` before answering a `mac k` query, the postcondition of `verify` guarantees that `A` has UF-CMA advantage 0. This confirms that the interface models perfect authentication guarantees. 
+
+In the RPC example below ([#sec-secure-rpc]) we will define `key_prop k == reqresp` and uses keys of type `pkey reqresp` where
 ```
 [INCLUDE=code/solutions/Ex12b.RPC.fst:MsgProperty]
 ```
 which states that messages that verify with that key are either 
-`Request`s or `Respone`s. The types `message` and `text` are both abbreviations for `bytes`, 
-and the formatting functions use tags to disambiguate between requests and responses. 
+`Request`s or `Respone`s. The formatting functions use tags to disambiguate between requests and responses. 
 
 
 
@@ -4748,26 +4754,20 @@ In order to verify capabilities, they only need to store the cryptographic key
 used to generate the capability. The tokens generated in this fashion work in a
 similar fashion as tokens in the *Kerberos* authentication protocol.
 
-~KK
-So far we have only introduced UF-CMA. It might be better to either introduce
-the reader to the security assumptions we use here or to just omit them for
-simplicity.
-~
-
 ~ Exercise
 Relying on `ACLs` and `MAC`, implement a pair of functions with
 the following specification, and verify them by typing under the
-security assumption that HMACSHA1 is INT-CMA. Use `failwith "bad capability"` in
+security assumption that the MAC is UF-CMA. Use `failwith "bad capability"` in
 case the verification fails.
-~~ ExerciseFragment {exname=Ex12a.Cap}
-[INCLUDE=code/exercises/Ex12a.Cap.fst:CapType]
+~~ ExerciseFragment {exname=Ex12a1.Cap}
+[INCLUDE=code/exercises/Ex12a1.Cap.fst:CapType]
 ~~
 
 To this end, assume given a UTF8 encoding function from strings to
 bytes, with the following specification:
 
 ```
-[INCLUDE=code/exercises/Ex12a.Cap.fst:UTF8Inj]
+[INCLUDE=code/exercises/Ex12a1.Cap.fst:UTF8Inj]
 ```
 
 This says that if two `utf_8` encodings are equal, then so are the values that were encoded. 
@@ -4775,17 +4775,17 @@ The patterns instructs the SMT solver to associate the injectivity axiom only wi
 
 
 ~~ Answer
-```
-[INCLUDE=code/solutions/Ex12a.Cap.fst:CapImplementation]
-```
+~~~ SolutionFragment {exname=Ex12a1.Cap}
+[INCLUDE=code/solutions/Ex12a1.Cap.fst:CapImplementation]
+~~~
 ~~
 
 How would we extend it to also cover write access?
 
 ~~ Answer
-```
-[INCLUDE=code/solutions/Ex12a1.Cap.fst:CapImplementation2]
-```
+~~~ SolutionFragment {exname=Ex12a2.Cap}
+[INCLUDE=code/solutions/Ex12a2.Cap.fst:CapImplementation2]
+~~~
 ~~
 
 ~
@@ -4825,8 +4825,8 @@ In the protocol narration, each line indicates an intended communication of data
 from one principal to another.
 
 `utf8` marshalls strings such as `s` and `t` into byte arrays
-that can be send over the network. `|` written also `append`
-is a function concatenating `bytes`. `request` and `response` build
+that can be send over the network. Operator `|` written also `append`
+is a function concatenating `bytes` (In F\* we will use the infix operator `@|`). Functions `request` and `response` build
 message digests (the authenticated values). These functions may for
 instance be implemented as tagged concatenations of their utf8-encoded
 arguments. These functions will be detailed in the `Format` module.
@@ -4847,34 +4847,43 @@ Two events, record genuine requests and responses
 ```
 in the following protocol
 
-```
+~~ SolutionFragment {exname=Ex12b.RPC}
 [INCLUDE=code/solutions/Ex12b.RPC.fst:RpcProtocol]
-```
+~~
 
-~KK
-Where "@|" is a macro for "append"?
+For simplicity we initially elide the client code which is similar, but you can open the module in the online editor to look at the full protocol.
+
+The `assert`s guarantee that messages that are received by a party have been sent by its peer.
+
+~ Remark
+One can imagine an extended protocol where we have a
+population of principals, represented as concrete strings ranged over
+by `a` and `b`, that intend to perform various remote procedure calls
+(RPCs) over a public network.
+The RPCs consist of requests and responses, both also represented as strings.
+The security goals of our RPC protocol are that (1) whenever a principal `b` accepts a
+request message `s` from `a`, principal `a` has indeed sent the message to `b` and, conversely,
+(2) whenever `a` accepts a response message `t` from `b`, principal `b` has indeed sent the
+message in response to a matching request from `a`.
 ~
 
-For simplicity we initially elide the client code which is similar.
-
-The `assert` guarantee that messages that are received by a party have been sent by its peer.
 
 ### Formatting code
 
-The Format module used by the protocol implementation
+The `Format` module used by the protocol implementation
 exports among others the following types and functions.
 
 ```
-[INCLUDE=code/solutions/Ex12b.Format.fst:FormatMsg]
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatMsg]
 
-[INCLUDE=code/solutions/Ex12b.Format.fst:FormatReqRes]
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatReqRes]
 ```
 
 We require 3 lemmas on message formats:
 
+* requests and responses are distinct
 * requests are injective on their argument
 * responses are injective on both their arguments
-* requests and responses are distinct
 
 For authentication properties, we require both functions to be
 injective, so that authenticating the bytes unambiguously
@@ -4882,47 +4891,45 @@ authenticate the text before marshalling.
 
 ~Exercise
 Try to state this formally as three lemmas.
-
+~~ ExerciseFragment {exname=Ex12b1.Format}
+[INCLUDE=code/exercises/Ex12b1.Format.fst:FormatLemmasEx]
+~~
 
 ~~Answer
-```
-[INCLUDE=code/solutions/Ex12b.Format.fst:FormatLemmas]
-```
+~~~ SolutionFragment {exname=Ex12b1.Format}
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatLemmas]
+~~~
+~~
+
+Prove these three lemmas.
+~~ ExerciseFragment {exname=Ex12b2.Format}
+[INCLUDE=code/exercises/Ex12b2.Format.fst:FormatProofsEx]
+~~
+
+~~ Answer
+~~~ SolutionFragment {exname=Ex12b2.Format}
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatProofs]
+~~~
 ~~
 ~
 
-~ Exercise
-Prove these three lemmas.
-~
-
-~ Answer
-```
-[INCLUDE=code/solutions/Ex12b.Format.fst:FormatProofs]
-```
-~
-
-<!--
-These lemmas rely on more powerful lemmas about the
+These lemmas rely on a lemma about the
 injectivity of append:
 
 ```
-val append_inj: #l:nat
-               -> b1:msg l -> b2:message
-               -> c1:msg l -> c2:message{append b1 b2==append c1 c2}
-               -> Lemma (ensures (equal b1 c1 /\ equal b2 c2))
-
-val append_inj_lemma: b1:message -> b2:message
-                   -> c1:message -> c2:message
-                   -> Lemma (requires (length b1==length c1 /\ append b1 b2==append c1 c2))
-                            (ensures (equal b1 c1 /\ equal b2 c2))
-                            (decreases (length b1))
-                            [SMTPat (append b1 b2); SMTPat (append c1 c2)]
+[INCLUDE=code/solutions/Ex12b2.Format.fst:FormatAppend]
 ```
 
 ~ Exercise
-The proof of the second lemma contain currently contains an 'admit'.
-Try to fix this proof.
+Complete the proof of the lemma.
+
+~~ ExerciseFragment {exname=Ex12c.Format}
+[INCLUDE=code/exercises/Ex12c.Format.fst:FormatAppendEx]
+~~
 ~
+
+
+<!--
 
 ~~ Answer
 ```
@@ -4935,21 +4942,6 @@ let rec append_inj_lemma b1 b2 c1 c2 =
 ~~
 -->
 
-~ Remark
-In the lecture we also saw an extended protocol where we have a
-population of principals, represented as concrete strings ranged over
-by `a` and `b`, that intend to perform various remote procedure calls
-(RPCs) over a public network.
-The RPCs consist of requests and responses, both also represented as strings.
-The security goals of our RPC protocol are that (1) whenever a principal `b` accepts a
-request message `s` from `a`, principal `a` has indeed sent the message to `b` and, conversely,
-(2) whenever `a` accepts a response message `t` from `b`, principal `b` has indeed sent the
-message in response to a matching request from `a`.
-~
-
-~KK
-What lecture is this exactly?
-~
 
 <!--
 ## Signing Email
@@ -4974,22 +4966,24 @@ To this end, we use the following classic PKCS#7 padding scheme (used for instan
 ```
 
 The function `n2b` converts numbers less than 256 into a byte; `pad` 
-creates creates `bytes` consisting of `n` bytes encoding the number `n`;
+creates `bytes` consisting of `n` bytes encoding the number `n`;
 `encode` fills up `bytes` smaller than a block to a full block using such pads; and
 `decode` removes pads.
 
 ~ Exercise
 Write a typed specifications for these functions. In particular
 show that decoding cancels out encoding.
+~~ ExerciseFragment {exname=Ex12d.Pad}
+[INCLUDE=code/exercises/Ex12d.Pad.fst:PadEx]
+~~
 
 ~~ Answer
 
-```
+~~~ SolutionFragment {exname=Ex12d.Pad}
 [INCLUDE=code/solutions/Ex12d.Pad.fst:CreatePaddingT]
 [INCLUDE=code/solutions/Ex12d.Pad.fst:EncodePaddingT]
 [INCLUDE=code/solutions/Ex12d.Pad.fst:DecodePaddingT]
-
-```
+~~~
 ~~
 ~
 
@@ -5007,9 +5001,9 @@ A padding scheme should be invertible. For authentication properties,
 we require it to be injective, so that authenticating a padded text
 unambiguously authenticate the text before padding. For instance:
 
-```
+~~~ SolutionFragment {exname=Ex12e.Pad}
 [INCLUDE=code/solutions/Ex12e.Pad.fst:PaddingInj]
-```
+~~~
 
 In this context, another good padding scheme is to append a 1 then
 enough zeros to fill the block. One could also format the message by
@@ -5021,8 +5015,8 @@ ending with 0s.
 ~
 
 ~ Exercise
-Relying on that specification, implement and verify a MAC interface
-for messages of type `text`, i.e., of less than `blocksize` bytes,
+Relying on that specification of `encode`, implement and verify a MAC interface
+for messages of type `text` of less than `blocksize` bytes,
 using the MAC interface below, which only supports messages of type
 `block`.
 
@@ -5033,21 +5027,27 @@ To this end, we assume given an implementation of the following module
 [INCLUDE=code/exercises/Ex12.BMAC.fst]
 ```
 
-Write a similar module that accepts texts instead of blocks:
-first the implementations for `keygen`, `mac`, and `verify`,
-then type annotations to derive their authentication property
+Write a similar module that accepts texts shorter than `blocksize` instead of blocks:
+
+Write the implementations for `keygen`, `mac`, and `verify`, first
+then devise type annotations to derive their authentication property
 (on `texts`) from the one of `BMAC` (on `blocks`).
 
+~~ ExerciseFragment {exname=Ex12f.TMAC}
+[INCLUDE=code/exercises/Ex12f.TMAC.fst:TMACEx]
+~~
+
 ~~ Answer
-```
+~~~ SolutionFragment {exname=Ex12f.TMAC}
 [INCLUDE=code/solutions/Ex12f.TMAC.fst:TMAC]
-```
+~~~
 ~~
 ~
 
 ~ Exercise
 1. Can we similarly construct a MAC scheme for texts
    with type `text:bytes {length text <= n}`?
+   
 2. Implement, then verify this construction.
 
 ~~ Answer
@@ -5056,37 +5056,9 @@ then type annotations to derive their authentication property
 
 2. Code:
 
-```
-module MAC2
-open Array
-open Pad
-
-type text2 = b:bytes { length b <=  blocksize }
-
-let keysize = 2 * BMAC.keysize
-let macsize = BMAC.macsize
-type key = | Keys: k0:BMAC.key -> k1:BMAC.key -> key
-type tag = BMAC.tag
-
-opaque type bspec0 (spec: (text2 -> Type)) (b:block) =
-  (forall (t:text). b = encode t ==> spec t)
-
-opaque type bspec1 (spec: (text2 -> Type)) (b:block) =
-  spec b
-
-opaque type key_prop : key -> text2 -> Type
-
-type pkey (p:(text2 -> Type)) =
-  k:key{ key_prop k == p
-      /\ BMAC.key_prop (Keys?.k0 k) == bspec0 p
-      /\ BMAC.key_prop (Keys?.k1 k) == bspec1 p }
-
-val keygen: p:(text2 -> Type) -> pkey p
-val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
-val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
-
+~~~ SolutionFragment {exname=Ex12g.TMAC2}
 [INCLUDE=code/solutions/Ex12g.TMAC2.fst:TMAC2]
-```
+~~~
 ~~
 
 ~
@@ -5098,7 +5070,7 @@ Hint: have a look e.g. at the HMAC construction.
 
 # Cryptography examples for confidentiality
 
-##  Theoretical background on crypto verification in F\*
+##  Theoretical background on cryptographic verification in F\*
 Those unfamiliar with functional programming may appreciate the
 following [security centered look](https://arxiv.org/abs/1201.5728) at the differences between a functional
 and an imperative programming style.
@@ -5135,7 +5107,7 @@ models a perfect source of random bits. In this probabilistic interpretation,
 two expressions $A_0$ and $A_1$ are equivalent, written $A_0 \approx A_1$,
 when they return the same probability distribution of values.
 
-An interface or module can declare a type as abstract, e.g. `abstract type key = bytes`, 
+An interface or module can declare a type as [abstract], e.g. `abstract type key = bytes`, 
 and keep its representation hidden. The 
 [qualified](https://github.com/FStarLang/FStar/wiki/Qualifiers-for-definitions-and-declarations) name is bound outside the scope of 
 the module, but its definition is hidden. 
@@ -5189,16 +5161,7 @@ in this context?
 module $P$ that is typeable using an interface $IP$ of the form
 
 ```
-abstract type plain = bytes
-
-val repr: p:plain{not conf} -> Tot bytes
-let repr p = p
-
-val coerce: r:bytes{not auth} -> Tot plain
-let coerce r = r
-
-val length: plain -> Tot nat
-let length p = length p
+[INCLUDE=code/solutions/EtM.Plain.fst:EtMPlain]
 ```
 
 <!--
@@ -5216,12 +5179,16 @@ When `auth` is true, the function `coerce` cannot be called, guaranteeing authen
 The module $P$ does not hide the length of `plain`.
 as modelled by the function `length` returning its length.
 
+~MK
+The following is not true because of the `length` function. Removing it until we have a better answer. Indexing by length might be it.
+~
 
+<!--
 **Definition 1 (Interface-based secrecy):** Let $IP$ be the secrecy interface
 of $P$ and $IC$ be the interface of module $C$. $C$ protects the secrecy
 of `plain` , if `conf=true`, $IP \vdash C \leadsto IC$ and for all modules $P$ with
 `conf=false`, $P \leadsto IP$ and `conf=true`, $P \leadsto IP$; and $A$ with $IP,IC \vdash A$ 
-we have `conf=false`, $P \cdot C \cdot A \approx_{\epsilon(A,P)}$ `conf=true`, 
+we have `conf=false`, $P \cdot C \cdot A \approx_{\epsilon(P,A)}$ `conf=true`, 
 $P \cdot C \cdot A$
 
 ~KK
@@ -5229,9 +5196,10 @@ I was not able to parse this definition. It might make sense to add a verbatim
 explaination of the formalism? 
 ~
 
+
 The function $\epsilon(.,.)$ is called the advantage function of $P,A$.
 
-<!--
+
 When `conf=true`, $C\cdot A$ is well typed with respect to interface "`conf=true`, $IP$" 
 which can be interpreted as
 the $I_\alpha$ interface of *Theorem 2*. Consequently for any module $P_0,P_1$ satisfying 
@@ -5266,17 +5234,17 @@ At the high level, we  define 5 modules:
 
 *1. the `Ideal` module* defines `auth` and `conf` flags and relates 
 them to assumptions that allow idealization of the underlying cryptographic building blocks. 
-Flag `ind_cpa` controls the idealization for chosen plaintext attack secure encyption, 
-and flag `uf_cma` controls the idealization for MAC unforgeability.
+Flag `ind_cpa` controls the idealization for an encryption module that is indistinguishable under chosen plaintext attack (IND-CPA), 
+and flag `uf_cma` controls the idealization for a UF-CMA secure MAC module. UF-CMA security was defined above using a cryptographic game ([#MAC-game]), we will se a similar game for IND-CPA below.
 
 *2. the `Plain` module* is a secrecy module defining a `plain` type. 
 Its representation is abstract and can only be accessed using the `repr` function 
 when `conf=false`.
 
-*3. the `CPA` module* models an IND-CPA secure encryption scheme. When the adversary is 
+*3. the `CPA` module* models an IND-CPA secure encryption scheme. Intuitively, when the adversary is 
 restricted to only query `decrypt` on ciphertexts resulting from `encrypt` 
 (under the same key), then the idealization of `CPA` can encrypt zeros and `CPA` 
-protects the secrecy of `plain`. We thus set `conf=ind_cpa`.
+protects the secrecy of `plain`. This is modelled by setting `conf=ind_cpa`.
 
 *4. the `MAC` module* models an UF-CMA secure message authentication scheme. The idealization
 of `MAC` guarantees that only message and tag pairs that were `mac`ed can `verify`.
@@ -5285,25 +5253,17 @@ of `MAC` guarantees that only message and tag pairs that were `mac`ed can `verif
 CPA secure encryption scheme, and  a `MAC` key `k.km`. The `AE` ciphertext is computed by 
 `encrypt`ing the plaintext and then `mac`ing the ciphertext: 
 
-```
-let encrypt k plain =
-  let c = CPA.encrypt k.ke plain in
-  let t = MAC.mac k.km c in
-  write_at_end k.log (plain, (c, t));
-  (c, t)
-```
-
+~ SolutionFragment {exname=EtM.AE}
+[INCLUDE=code/solutions/EtM.AE.fst:EtMAEEncrypt]
+~
 The monotonic log `k.log` is only used to model security properties and does not exist in
 concrete schemes.
 
 Before `decrypt`ing the `CPA` ciphertext, `AE` verifies the corresponding MAC tag:
 
-```
-let decrypt k (c,tag) =
-  if MAC.verify k.km c tag 
-  then Some (CPA.decrypt k.ke c)
-  else None
-```
+~ SolutionFragment {exname=EtM.AE}
+[INCLUDE=code/solutions/EtM.AE.fst:EtMAEDecrypt]
+~
 
 `AE` treats `CPA` and `MAC` keys abstractly, and never reveals them to an adversary $A$.
 This together with the fact that `AE` only ever `mac`s after `encrypt`ing, guarantees 
@@ -5320,12 +5280,7 @@ obtains a representation of the key using `k.raw` and the plaintext using `repr 
 and calls a library function implementing `AES_128_CBC`:
 
 ```
-let encrypt k m : cipher =
-  let iv = random ivsize in
-  let text = (* details intentionally omitted *) repr m in
-  let c = CoreCrypto.block_encrypt AES_128_CBC k.raw iv text in
-  let c = iv@|c in
-  c
+[INCLUDE=code/solutions/EtM.CPA.fst:EtMCPAEncrypt]
 ```
 
 Calling the library function which expects bytes as input, requires breaking the 
@@ -5372,14 +5327,7 @@ to be '`write_at_end k.log (m,c); c`' to update the `log`
 of ciphertext. By `decrypt`ing using table lookup as follows we still 
 hide whether it was `m` or a string of `0z`s that was encrypted:
 ```
-let decrypt k c =
-  if ind_cpa_rest_adv then
-    let log = m_read k.log in
-    match seq_find (fun mc -> snd mc = c) log with
-    | Some mc -> fst mc
-  else
-    let iv,c' = split c ivsize in
-    coerce (CoreCrypto.block_decrypt AES_128_CBC k.raw iv c')
+[INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecrypt]
 ```
 
 Note that in the `match` statement, we did not define a '`| None`' branche. This is because the 
@@ -5388,22 +5336,26 @@ that table lookup in `log` always succeeds.
 
 This can be expressed as a stateful precondition for `decrypt`:
 
-```
-val decrypt: k:key -> c:cipher -> ST msg
-  (requires (fun h0 ->
-    ( (b2t ind_cpa_rest_adv) ==> Some? (seq_find (fun mc -> snd mc = c) (get_log h0 k) ))))
-```
-where function `get_log` retrives `k.log` as stored in heap `h0`.
+~ SolutionFragment {exname=EtM.CPA}
+[INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecryptRequires]
+~
+where function `m_sel h0 k.log` retrives the content of `k.log` as stored in heap `h0`.
+
+~ Exercise
+Play with the type of `EtM.CPA.decrypt` above. What fails if you remove the precondition. What is the connection with chosen plaintext attacks?
+
+~~ Answer
+The type checker fails with a "Patterns are incomplete" error as it can no longer guarantee that it will find the ciphertext in the `log`. To preserve functionality one would have to use the `block_decrypt` functionality as in the else branch which could leak information to the attacker which might make the scheme insecure. The stronger security notion of indistinguishability against chosen ciphertext attacks (IND-CCA) guarantees security in such a setting.
+~~
+
+~
 
 ### Using authentication to achieve stronger confidentiality
 
 We already introduced the MAC unforgeabiltiy property in ([#MAC]). Here we model 
 MAC security using an idealization involving a log of `mac`ed messages and their tags:
 ```
-let mac k m =
-  let t = hmac_sha1 k.raw m in
-  write_at_end k.log (m,t);
-  t
+[INCLUDE=code/solutions/EtM.MAC.fst:EtMMACMac]
 ```
 
 Instead of modelling unforgeability using a predicate that is required upon 
@@ -5412,33 +5364,32 @@ directly on the log. In the idealization, only `(m,t)` pairs that are in the log
 
 
 ```
-val verify: k:key -> m:msg -> t:tag -> ST bool
-  (requires (fun h -> True ))
-  (ensures  (fun h0 res h1 ->
-     (( Ideal.uf_cma && res ) ==> mem (m,t) (get_log h0 k))))
+[INCLUDE=code/solutions/EtM.MAC.fst:EtMMACVerifyT]
 ```
 
 As for encryption, we also give an ideal functionality that is well typed 
 with respect to this specification:
 
-```
-let verify k m t =
-  let t' = hmac_sha1 k.raw m in
-  let verified = (t = t') in
-  let log = m_read k.log in
-  let found = CPA.mem (m,t) log in
-  if Ideal.uf_cma then
-    verified && found
-  else
-    verified
-```
+~ SolutionFragment {exname=EtM.MAC}
+[INCLUDE=code/solutions/EtM.MAC.fst:EtMMACVerify]
+~
 
 As any adversary that causes a difference between `verified` and `found` is also a successful UF-CMA adversary we have that
 `uf_cma=false`, `MAC`⋅$A$ $\approx_{\epsilon_{ufcma}}(A)$
 `uf_cma=true`, `MAC`⋅$A$. 
 
+Said otherwise, as long as the MAC construction is UF-CMA secure, the adversaries behaviour cannot differ substantially between the *ideal world* and the *real world*. 
+
+ - In the *ideal world* in which `uf_cma=true` all MAC forgeries are rejected, but we make the unrealistic assumption of maintaining the global `log`. 
+ 
+ - In the *real world*, in which `uf_cma=false` forgeries are in principle always possible but we use cryptography instead of the unrealistic global log.
+
 ~KK
 At this point maybe another verbatim explaination of the formal statement?
+~
+
+~MK
+Is this what you had in mind?
 ~
 
 For our Encrypt-then-MAC scheme we establish the invariant that all `mac`ed messages correspond to 
@@ -5448,22 +5399,10 @@ When the MAC is idealized, adversaries cannot compute ciphertexts that pass MAC 
 
 The invariant is expressed over logs and at first sight looks quite daunting:
 
-```
-  let invariant (h:t) (k:key) =
-  (* ignoring memory ant-aliasing details *)
-  let log = get_log h k in
-  let mac_log = get_mac_log h k in
-  let cpa_log = get_cpa_log h k in
-  Seq.length log = Seq.length mac_log /\
-  Seq.length mac_log = Seq.length cpa_log /\ (*logs have the same length *)
-  (forall (i:int). indexable log i ==>
-    (let m1,t = Seq.index mac_log i in
-     let m2,c = Seq.index cpa_log i in
-     m1 = c /\ (* all messages in the MAC log correspond to ciphertext created by encrypt *)
-     Seq.index log i == (m2,(c,t))
-    )
-  )
-```
+~ SolutionFragment {exname=EtM.AE}
+[INCLUDE=code/solutions/EtM.AE.fst:EtMAEInvariant]
+~
+
 Crucially all messages in the MAC log correspond to ciphertexts that resulted from previous encryptions.
 This allows us to prove that `uf_cma=true` $\cdot$ `MAC` $\cdot$ `AE`$\cdot A$ is a restricted `CPA` adversary.
 We can thus set `ind_cpa_rest_adv=uf_cma`.
@@ -5471,44 +5410,42 @@ We can thus set `ind_cpa_rest_adv=uf_cma`.
 ### The computational security proof
 
 We want to prove that:
-For all 𝐴 such that well typed with respect to an unrestricted Plain and AE
+For all `𝐴` that are well typed with respect to an unrestricted `Plain` and `AE`
 interface, that is `conf=false, auth=false`, $IP$, $IC \vdash A$,
 the following computational equivalence holds:
 
-> (1) `conf=false, auth=false, Plain` ⋅ `CPA` ⋅ `MAC` ⋅ `AE` ⋅
-$𝐴$
+> (1) `conf=auth=ind_cpa_rest_adv=uf_cma=ind_cpa=false, Plain` ⋅ `CPA` ⋅ `MAC` ⋅ `AE` ⋅ `A`
 
 >&emsp;&emsp;$\approx_{\epsilon_{indcpa}(B_1)+\epsilon_{ufcma}(B_2)}$
 
-> (2)`conf=true, auth=true, Plain` ⋅ `CPA` ⋅ `MAC`⋅ `AE`⋅
-$𝐴$.
+> (2) `conf=auth=ind_cpa_rest_adv=uf_cma=ind_cpa=true, Plain` ⋅ `CPA` ⋅ `MAC`⋅ `AE` ⋅ `A`.
 
-In other words, the distinguishing advantage of an adversary $A$ between the concrete implementation
+In other words, the distinguishing advantage of an adversary `A` between the concrete implementation
 and the idealized implementation of Encrypt-then-MAC is bounded by $\epsilon_{indcpa}(B_1)+\epsilon_{ufcma}(B_2)$.
 
 To see this we reason about several game transformations.
 
 *Game 1* is the same as program (1), except that we swap the order of `MAC` and `Plain`⋅`CPA` with 
-the goal of clearly separating out a `MAC` adversary. This change does not affect the 
-distribution output of $A$ and we thus have
+the goal of moving all modules to the right of the `MAC` module. This change does not affect the 
+distribution output of `A` and we thus have
 
-(1) ≈ `conf=false, auth=false`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅$A$
+(1) ≈ `conf=false, auth=false`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅ `A`
 
 *Game 2* is the same as *Game 1*, except that we activate the idealizations of the `MAC` module by
 setting `uf_cma=true`. 
 
->`conf=false, auth=false`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅$A$ 
+> `conf=false, auth=false`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅ `A` 
 
 > &emsp;&emsp; $\approx_{\epsilon_{ufcma}}(B_1)$
 
-> `conf=false, auth=false, uf_cma=true`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅$A$
+> `conf=false, auth=false, uf_cma=true`, `MAC`⋅`Plain`⋅`CPA`⋅`AE`⋅ `A`
 
-$B_1$ corresponds to `Plain`⋅`CPA`⋅`AE`⋅$A$, and can be interpreted as a reduction to UF-CMA security.
+$B_1$ corresponds to `Plain`⋅`CPA`⋅`AE`⋅ `A`, and can be interpreted as a reduction to UF-CMA security.
 
 *Game 3* is the same as *Game 2*, except that we swap the order of `MAC` and `Plain`⋅`CPA` back and
 also set `auth` and `ind_cpa_rest_adv` to `true`. These changes have no effect on the distribution of the program.
 
-> ≈ `conf=false, auth=ind_cpa_rest_adv=uf_cma=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅$A$
+> ≈ `conf=false, auth=ind_cpa_rest_adv=uf_cma=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅ `A`
 
 Because of the MAC guarantees we can establish the main invariant 
 which is sufficient to prove that we never call `CPA.decrypt` on ciphertexts that are not in the log.
@@ -5517,17 +5454,17 @@ This allows us type the program with `auth` and `ind_cpa_rest_adv` set to true.
 *Game 4* is the same as *Game 3*, except that we activate the idealizations of the `CPA` module by
 setting `ind_cpa=true`.
 
-> `conf=false, auth=ind_cpa_rest_adv=uf_cma=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅$A$
+> `conf=false, auth=ind_cpa_rest_adv=uf_cma=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅ `A`
 
 > &emsp;&emsp; $\approx_{\epsilon_{indcpa}}(B_2)$ 
 
->`conf=false, auth=ind_cpa_rest_adv=ind_cpa=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅$A$ ≈ (2)
+> `conf=false, auth=ind_cpa_rest_adv=uf_cma=ind_cpa=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅ `A` ≈ (2)
 
-$B_2$ corresponds to `MAC`⋅`AE`⋅$A$, and can be interpreted as a reduction to IND-CPA security.
+$B_2$ corresponds to `MAC`⋅`AE`⋅ `A`, and can be interpreted as a reduction to IND-CPA security.
 
-Finally, `CPA`⋅`MAC`⋅`AE`⋅$A$ does not make use of `Plain.repr` and we can thus type it as
+Finally, `CPA`⋅`MAC`⋅`AE`⋅`A` does not make use of `Plain.repr` and we can thus type it as
 
->`conf=auth=ind_cpa_rest_adv=ind_cpa=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅$A$ = (2) 
+>`conf=auth=ind_cpa_rest_adv=uf_cma=ind_cpa=true`, `Plain`⋅`CPA`⋅`MAC`⋅`AE`⋅`A` = (2) 
 
 ~ Align-Right
 $\qed$
@@ -5577,32 +5514,6 @@ This results from failing to prove the pre-condition of `CPA.decrypt` in `AE.dec
 ~~
 ~
 
-# A note on this document 
-
-This document was created using Dan Leijen's <https://madoko.net> markdown processor. 
-
-If` you find any errors in it, or would like to improve it in any way,
-this is how you do it: 
-
-1. Point your browser at <https://madoko.net>
-2. Select the folder icon in the top-left corner, then "Open ... (Alt-O)"
-3. Select the "GitHub" icon
-4. Authorize the Madoko application to access your GitHub repositories
-5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk, or your fork of the FStar repo
-   if you don't have access, and start editing.
-6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to
-   commit and push this file to GitHub after merging with the latest changes there.
-
-     For included code snippets:
-     -- The snippets must be derived from files that are stored in the same subtree of the git repo
-        i.e, all the samples should be in sub-directories of FStarLang/FStar/doc/tutorial/code
-
-     Note: in this mode (i.e., github instead of dropbox), the document will not live update
-           with the changes that anyone else may be making to the document concurrently. You
-           will only see others' changes when you synchronize with github.
-
-     If you use Emacs to edit this you can use the markdown-mode
-     <http://jblevins.org/projects/markdown-mode/> for syntax highlighting.
 
 
 
@@ -5934,6 +5845,40 @@ let test() =
 ```
 
 -->
+
+# A note on this document 
+
+This document was created using Dan Leijen's <https://madoko.net> markdown processor. 
+
+If` you find any errors in it, or would like to improve it in any way,
+this is how you do it: 
+
+1. Point your browser at <https://madoko.net>
+2. Select the folder icon in the top-left corner, then "Open ... (Alt-O)"
+3. Select the "GitHub" icon
+4. Authorize the Madoko application to access your GitHub repositories
+5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk, or your fork of the FStar repo
+   if you don't have access, and start editing.
+6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to
+   commit and push this file to GitHub after merging with the latest changes there.
+
+For included code snippets:
+
+The snippets must be derived from files that are stored in the same
+subtree of the git repo i.e, all the samples should be in
+sub-directories of FStarLang/FStar/doc/tutorial/code
+
+Note: in this mode (i.e., github instead of dropbox), the document
+will not live update with the changes that anyone else may be making
+to the document concurrently. You will only see others' changes when
+you synchronize with github.
+
+If you use Emacs to edit this you can use the
+markdown-mode <http://jblevins.org/projects/markdown-mode/> for syntax
+highlighting.
+
+If you experience problems with the online editor, e.g., many examples failing with strange error messages, please ring the bells at the [mailing list] or raise a [github issue] to investigate the problem further. Someone else might have filed one before, or an old bug crawled back in.
+
 
 [Title          A]: http://Title_A.com "Title          A title"
 

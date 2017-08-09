@@ -139,6 +139,7 @@ let go _ =
               Parser.Dep.VerifyFigureItOut
           in
           let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
+          Tactics.Load.load_tactics (Options.load ());
           let fmods, dsenv, env = Universal.batch_mode_tc filenames in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;

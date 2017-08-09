@@ -66,13 +66,6 @@ val add: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
 let add #n a b =
   a + b
 
-abstract val add_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    size (a + b) n ==> a + b = c))
-let add_underspec #n a b =
-  if fits (a+b) n then a + b else magic ()
-
 val add_mod: #n:pos -> int_t n -> int_t n -> Tot (int_t n)
 let add_mod #n a b =
   (a + b) @% (pow2 n)
@@ -83,13 +76,6 @@ val sub: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
   (ensures (fun _ -> True))
 let sub #n a b =
   a - b
-
-abstract val sub_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    size (a - b) n ==> a - b = c))
-let sub_underspec #n a b =
-  if fits (a-b) n then a - b else magic ()
 
 val sub_mod: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
 let sub_mod #n a b =
@@ -102,13 +88,6 @@ val mul: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
 let mul #n a b =
   a * b
 
-abstract val mul_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    size (a * b) n ==> a * b = c))
-let mul_underspec #n a b =
-  if fits (a*b) n then a * b else magic ()
-
 val mul_mod: #n:pos -> a:int_t n -> b:int_t n -> Tot (int_t n)
 let mul_mod #n a b =
   (a * b) @% (pow2 n)
@@ -120,15 +99,9 @@ val div: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Pure (int_t n)
 let div #n a b =
   a / b
 
-abstract val div_underspec: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    (b <> 0 /\ size (a / b) n) ==> a / b = c))
-let div_underspec #n a b =
-  if fits (a / b) n then a / b else magic ()
-
 (* Modulo primitives *)
 // JK: takes time
+#set-options "--z3rlimit 25"
 val mod: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Tot (int_t n)
 let mod #n a b = a - ((a/b) * b)
 

@@ -53,8 +53,7 @@
       [
         "@query",
         "equation_PropImpredicativeAndNonStrictlyPositiveInductives.f",
-        "projection_inverse_PropImpredicativeAndNonStrictlyPositiveInductives.IntroA__0",
-        "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.inj"
+        "projection_inverse_PropImpredicativeAndNonStrictlyPositiveInductives.IntroA__0"
       ],
       0
     ],

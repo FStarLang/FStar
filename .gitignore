@@ -12,21 +12,14 @@ dump*
 cache/
 /VS/packages
 
-/src/parser/parse.fs
+/src/parser/boot/parse.fs
 /src/parser/lex.fs
-/src/parser/parse.ml
-/src/parser/parse.mli
 
-/src/boot_fstis
-/src/boot_fsts
-/src/format/formatml.fsi
-
-/lib/FStar.Util.fsti
-/lib/FStar.GetOpt.fsti
-/lib/FStar.Unionfind.fsti
+/src/boot
 
 /ulib/.mgen
 /ulib/ml/extracted
+/ulib/ml/compiler-extracted
 
 /bin/*.dll
 /bin/*.pdb
@@ -72,6 +65,8 @@ tags
 
 *~
 *.swp
+
+*.exe
 
 /.nubuild
 /nucache/

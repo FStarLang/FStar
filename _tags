@@ -1,5 +1,32 @@
-true: annot, bin_annot, warn(-8-11-21-26-28), package(batteries), \
-  package(zarith), package(yojson), package(pprint), \
-  package(compiler-libs), package(compiler-libs.common), thread, -traverse
-<ulib/ml/FStar_{U,}Int*.ml> or "ulib/ml/fstarlib.cma": package(stdint), linkpkg
-"ulib/ml/fstarlib.cma":package(stdint)
+# Warnings:
+# 8	Partial match: missing cases in pattern-matching.
+# 11	Redundant case in a pattern matching (unused match case).
+# 20    This argument will not be used by the function.
+# 21	Non-returning statement.
+# 26	Suspicious unused variable: unused variable that is bound with let or as, and doesn’t start with an underscore (_) character.
+# 28	Wildcard pattern given as argument to a constant constructor.
+
+true: \
+  annot, bin_annot, thread, -traverse, \
+  package(batteries), \
+  package(zarith)
+
+# ADL: Please do not enable compiler-libs unless absolutely necessary
+<ulib/ml/compiler/*.ml> or <ulib/ml/compiler-extracted/*.ml> or <src/*/ml/*> or <src/ocaml-output/*.ml>: \
+  package(compiler-libs), \
+  package(compiler-libs.common), \
+  package(dynlink), \
+  package(pprint), \
+  package(yojson)
+
+# Turn off warnings for extracted files
+<src/ocaml-output/**/*.ml> or "src/tactics/ml/FStar_Reflection_Syntax.ml" or  "src/tactics/ml/FStar_Tactics_Effect.ml" or "src/tactics/ml/FStar_Reflection_Formula.ml" or <ulib/ml/extracted/*.ml>: \
+  warn(-8-11-20-21-26-28)
+
+<ulib/ml/FStar_{U,}Int*.ml> or "ulib/ml/fstarlib.cma": \
+  linkpkg, \
+  package(stdint)
+
+"ulib/ml/fstarlib.cma": \
+  package(stdint)
+

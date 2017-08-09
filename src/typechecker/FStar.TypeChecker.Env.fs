@@ -17,6 +17,7 @@
 
 module FStar.TypeChecker.Env
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 open FStar
@@ -33,6 +34,7 @@ open FStar.TypeChecker.Common
 module S = FStar.Syntax.Syntax
 module BU = FStar.Util
 module U  = FStar.Syntax.Util
+module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
 
 type binding =
@@ -47,7 +49,7 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
-
+  | UnfoldTac
 
 type mlift = {
   mlift_wp:typ -> typ -> typ ;
@@ -64,6 +66,18 @@ type effects = {
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
+
+// A name prefix, such as ["FStar";"Math"]
+type name_prefix = list<string>
+// A choice of which name prefixes are enabled/disabled
+// The leftmost match takes precedence. Empty list means everything is on.
+// To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
+type flat_proof_namespace = list<(name_prefix * bool)>
+
+// A stack of namespace choices. Provides simple push/pop behaviour.
+// For the purposes of filtering facts, this is just flattened.
+type proof_namespace = list<flat_proof_namespace>
+
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 type env = {
@@ -71,10 +85,10 @@ type env = {
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
-  gamma_cache    :BU.smap<cached_elt>;        (* Memo table for the local environment *)
+  gamma_cache    :BU.smap<cached_elt>;          (* Memo table for the local environment *)
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
-  sigtab         :BU.smap<sigelt>;            (* a dictionary of long-names to sigelts *)
+  sigtab         :BU.smap<sigelt>;              (* a dictionary of long-names to sigelts *)
   is_pattern     :bool;                         (* is the current term being checked a pattern? *)
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
@@ -87,10 +101,15 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
+  proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
+  synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  is_native_tactic: lid -> bool;                      (* callback into the native tactics engine *)
+  identifier_info: ref<FStar.TypeChecker.Common.id_info_table> (* information on identifiers *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -101,7 +120,7 @@ and solver_t = {
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
-    preprocess   :env -> goal -> list<(env * goal)>;  //a hook for a tactic; still too simple
+    preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> typ -> unit;
     is_trivial   :env -> typ -> bool;
     finish       :unit -> unit;
@@ -117,8 +136,6 @@ and implicits = list<(string * env * uvar * term * typ * Range.range)>
 type env_t = env
 
 type sigtable = BU.smap<sigelt>
-
-
 
 let should_verify env =
     not env.lax
@@ -158,10 +175,17 @@ let initial_env type_of universe_of solver module_lid =
     admit=false;
     lax=false;
     lax_universes=false;
+    failhard=false;
     type_of=type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
-    qname_and_index=None
+    qname_and_index=None;
+    proof_ns = (match Options.using_facts_from () with
+               | Some ns -> [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]]
+               | None -> [[]]);
+    synth = (fun e g tau -> failwith "no synthesizer available");
+    is_native_tactic = (fun _ -> false);
+    identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -190,7 +214,8 @@ let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
     stack := env::!stack;
     {env with sigtab=BU.smap_copy (sigtab env);
-              gamma_cache=BU.smap_copy (gamma_cache env)}
+              gamma_cache=BU.smap_copy (gamma_cache env);
+              identifier_info=BU.mk_ref !env.identifier_info}
 
 let pop_stack () =
     match !stack with
@@ -250,6 +275,19 @@ let debug env (l:Options.debug_level_t) =
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
 
+let toggle_id_info env enabled =
+  env.identifier_info :=
+    FStar.TypeChecker.Common.id_info_toggle !env.identifier_info enabled
+let insert_bv_info env bv ty =
+  env.identifier_info :=
+    FStar.TypeChecker.Common.id_info_insert_bv !env.identifier_info bv ty
+let insert_fv_info env fv ty =
+  env.identifier_info :=
+    FStar.TypeChecker.Common.id_info_insert_fv !env.identifier_info fv ty
+let promote_id_info env ty_map =
+  env.identifier_info :=
+    FStar.TypeChecker.Common.id_info_promote !env.identifier_info ty_map
+
 ////////////////////////////////////////////////////////////
 // Private utilities                                      //
 ////////////////////////////////////////////////////////////
@@ -266,7 +304,7 @@ let variable_not_found v =
   format1 "Variable \"%s\" not found" (Print.bv_to_string v)
 
 //Construct a new universe unification variable
-let new_u_univ () = U_unif (Unionfind.fresh None)
+let new_u_univ () = U_unif (Unionfind.univ_fresh ())
 
 //Instantiate the universe variables in a type scheme with provided universes
 let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
@@ -354,11 +392,9 @@ let lookup_qname env (lid:lident) : option<(either<(universes * typ), (sigelt * 
   in
   if is_some found
   then found
-  else if cur_mod <> Yes || has_interface env env.curmodule
-  then match find_in_sigtab env lid with
+  else match find_in_sigtab env lid with
         | Some se -> Some (Inr (se, None), U.range_of_sigelt se)
         | None -> None
-  else None
 
 let rec add_sigelt env se = match se.sigel with
     | Sig_bundle(ses, _) -> add_sigelts env ses
@@ -385,10 +421,10 @@ let try_lookup_bv env (bv:bv) =
     | _ -> None)
 
 let lookup_type_of_let se lid = match se.sigel with
-    | Sig_let((_, [lb]), _, _) ->
+    | Sig_let((_, [lb]), _) ->
       Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_lbname lb.lbname)
 
-    | Sig_let((_, lbs), _, _) ->
+    | Sig_let((_, lbs), _) ->
         BU.find_map lbs (fun lb -> match lb.lbname with
           | Inl _ -> failwith "impossible"
           | Inr fv ->
@@ -545,7 +581,7 @@ let lookup_definition delta_levels env lid =
   match lookup_qname env lid with
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
-      | Sig_let((_, lbs), _, _) when visible se.sigquals ->
+      | Sig_let((_, lbs), _) when visible se.sigquals ->
           BU.find_map lbs (fun lb ->
               let fv = right lb.lbname in
               if fv_eq_lid fv lid
@@ -577,7 +613,8 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
       then None
       else let insts = if List.length univ_insts = List.length univs
                        then univ_insts
-                       else failwith (BU.format2 "Unexpected instantiation of effect %s with %s universes"
+                       else failwith (BU.format3 "(%s) Unexpected instantiation of effect %s with %s universes"
+                                            (Range.string_of_range (get_range env))
                                             (Print.lid_to_string lid)
                                             (List.length univ_insts |> BU.string_of_int)) in
            begin match binders, univs with
@@ -653,7 +690,7 @@ let is_record env lid =
 
 let is_action env lid =
     match lookup_qname env lid with
-        | Some (Inr ({ sigel = Sig_let(_, _, _); sigquals = quals }, _), _) ->
+        | Some (Inr ({ sigel = Sig_let(_, _); sigquals = quals }, _), _) ->
             BU.for_some (function Action _ -> true | _ -> false) quals
         | _ -> false
 
@@ -715,7 +752,7 @@ let get_effect_decl env l =
 
 let identity_mlift : mlift =
   { mlift_wp=(fun t wp -> wp) ;
-    mlift_term=Some (fun t wp e -> e) }
+    mlift_term=Some (fun t wp e -> return_all e) }
 
 let join env l1 l2 : (lident * mlift * mlift) =
   if lid_equals l1 l2
@@ -960,12 +997,8 @@ let is_reifiable_effect (env:env) (effect_lid:lident) : bool =
     let quals = lookup_effect_quals env effect_lid in
     List.contains Reifiable quals
 
-let is_reifiable (env:env) (c:either<S.lcomp, S.residual_comp>) : bool =
-    let effect_lid = match c with
-        | Inl lc -> lc.eff_name
-        | Inr (eff_name, _) -> eff_name
-    in
-    is_reifiable_effect env effect_lid
+let is_reifiable (env:env) (c:S.residual_comp) : bool =
+    is_reifiable_effect env c.residual_effect
 
 let is_reifiable_comp (env:env) (c:S.comp) : bool =
     match c.n with
@@ -1076,7 +1109,7 @@ let finish_module =
 // Collections from the environment                       //
 ////////////////////////////////////////////////////////////
 let uvars_in_env env =
-  let no_uvs = new_uv_set () in
+  let no_uvs = Free.new_uv_set () in
   let ext out uvs = BU.set_union out uvs in
   let rec aux out g = match g with
     | [] -> out
@@ -1088,7 +1121,7 @@ let uvars_in_env env =
   aux no_uvs env.gamma
 
 let univ_vars env =
-    let no_univs = Syntax.no_universe_uvars in
+    let no_univs = Free.new_universe_uvar_set () in
     let ext out uvs = BU.set_union out uvs in
     let rec aux out g = match g with
       | [] -> out
@@ -1101,11 +1134,11 @@ let univ_vars env =
 
 let univnames env =
     let no_univ_names = Syntax.no_universe_names in
-    let ext out uvs = BU.set_union out uvs in
+    let ext out uvs = BU.fifo_set_union out uvs in
     let rec aux out g = match g with
         | [] -> out
         | Binding_sig_inst _::tl -> aux out tl
-        | Binding_univ uname :: tl -> aux (BU.set_add uname out) tl
+        | Binding_univ uname :: tl -> aux (BU.fifo_set_add uname out) tl
         | Binding_lid(_, (_, t))::tl
         | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
         | Binding_sig _::_ -> out in (* this marks a top-level scope ...  no more universe names beyond this *)
@@ -1151,6 +1184,57 @@ let lidents env : list<lident> =
     | _ -> keys) [] env.gamma in
   BU.smap_fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
+let should_enc_path env path =
+    // TODO: move
+    let rec list_prefix xs ys =
+        match xs, ys with
+        | [], _ -> true
+        | x::xs, y::ys -> x = y && list_prefix xs ys
+        | _, _ -> false
+    in
+    let rec should_enc_path' (pns:flat_proof_namespace) path =
+        match pns with
+        | [] -> true
+        | (p,b)::pns ->
+            if list_prefix p path
+            then b
+            else should_enc_path' pns path
+    in
+    should_enc_path' (List.flatten env.proof_ns) path
+
+let should_enc_lid env lid =
+    should_enc_path env (path_of_lid lid)
+
+let cons_proof_ns b e path =
+    match e.proof_ns with
+    | [] -> failwith "empty proof_ns stack!"
+    | pns::rest ->
+        let pns' = (path, b) :: pns in
+    { e with proof_ns = pns'::rest }
+
+// F# forces me to fully apply this... ugh
+let add_proof_ns e path = cons_proof_ns true  e path
+let rem_proof_ns e path = cons_proof_ns false e path
+
+let push_proof_ns e =
+    { e with proof_ns = []::e.proof_ns }
+
+let pop_proof_ns e =
+    match e.proof_ns with
+    | [] -> failwith "empty proof_ns stack!"
+    | _::rest ->
+        { e with proof_ns = rest }
+
+let get_proof_ns e = e.proof_ns
+let set_proof_ns ns e = {e with proof_ns = ns}
+
+let string_of_proof_ns env =
+    let string_of_proof_ns' pns =
+        String.concat ";"
+            (List.map (fun fpns -> "["
+                                   ^ String.concat "," (List.map (fun (p,b) -> (if b then "+" else "-")^(String.concat "." p)) fpns)
+                                   ^ "]") pns)
+    in string_of_proof_ns' (env.proof_ns)
 
 (* <Move> this out of here *)
 let dummy_solver = {
@@ -1162,7 +1246,7 @@ let dummy_solver = {
     commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
-    preprocess=(fun e g -> [e,g]);
+    preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=(fun _ _ _ -> ());
     is_trivial=(fun _ _ -> false);
     finish=(fun () -> ());

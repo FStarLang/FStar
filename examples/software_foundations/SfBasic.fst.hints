@@ -16,9 +16,6 @@
       [
         "@MaxIFuel_assumption", "@query",
         "constructor_distinct_SfBasic.Saturday",
-        "constructor_distinct_SfBasic.Thursday",
-        "constructor_distinct_SfBasic.Tuesday",
-        "constructor_distinct_SfBasic.Wednesday",
         "disc_equation_SfBasic.Friday", "disc_equation_SfBasic.Monday",
         "disc_equation_SfBasic.Saturday", "disc_equation_SfBasic.Sunday",
         "disc_equation_SfBasic.Thursday", "disc_equation_SfBasic.Tuesday",
@@ -45,16 +42,10 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "SfBasic_pretyping_b2a8739c30e81108f7536c227426a349",
-        "constructor_distinct_Prims.unit",
-        "constructor_distinct_SfBasic.Monday",
+        "@query", "constructor_distinct_SfBasic.Monday",
         "constructor_distinct_SfBasic.Saturday",
-        "constructor_distinct_SfBasic.day",
         "equality_tok_SfBasic.Monday@tok",
         "equality_tok_SfBasic.Saturday@tok", "equation_SfBasic.next_weekday",
-        "typing_SfBasic.next_weekday", "typing_tok_SfBasic.Saturday@tok",
         "unit_typing"
       ],
       0
@@ -67,11 +58,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_SfBasic.MFalse",
-        "constructor_distinct_SfBasic.MTrue", "disc_equation_SfBasic.MFalse",
-        "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MFalse@tok",
-        "equality_tok_SfBasic.MTrue@tok",
+        "@MaxIFuel_assumption", "@query", "disc_equation_SfBasic.MFalse",
+        "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MTrue@tok",
         "fuel_guarded_inversion_SfBasic.mbool"
       ],
       0
@@ -82,7 +70,9 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_SfBasic.MFalse",
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_SfBasic.MFalse",
+        "constructor_distinct_SfBasic.MTrue", "disc_equation_SfBasic.MFalse",
         "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MFalse@tok",
         "fuel_guarded_inversion_SfBasic.mbool"
       ],
@@ -94,7 +84,9 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_SfBasic.MFalse",
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_SfBasic.MFalse",
+        "constructor_distinct_SfBasic.MTrue", "disc_equation_SfBasic.MFalse",
         "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MTrue@tok",
         "fuel_guarded_inversion_SfBasic.mbool"
       ],
@@ -203,9 +195,9 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_SfBasic.O",
-        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
-        "equality_tok_SfBasic.O@tok", "fuel_guarded_inversion_SfBasic.nat"
+        "@MaxIFuel_assumption", "@query", "disc_equation_SfBasic.O",
+        "disc_equation_SfBasic.S", "equality_tok_SfBasic.O@tok",
+        "fuel_guarded_inversion_SfBasic.nat"
       ],
       0
     ],
@@ -256,17 +248,17 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_SfBasic.MFalse",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.evenb.fuel_instrumented", "@query",
         "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "constructor_distinct_Tm_unit", "data_typing_intro_SfBasic.S@tok",
         "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
         "equality_tok_SfBasic.O@tok", "equation_SfBasic.negb",
         "equation_SfBasic.oddb",
         "equation_with_fuel_SfBasic.evenb.fuel_instrumented",
-        "fuel_correspondence_SfBasic.evenb.fuel_instrumented",
         "fuel_guarded_inversion_SfBasic.mbool",
-        "projection_inverse_SfBasic.S__0", "typing_SfBasic.negb",
-        "typing_tok_SfBasic.MFalse@tok", "unit_typing"
+        "projection_inverse_SfBasic.S__0", "typing_SfBasic.oddb",
+        "typing_tok_SfBasic.O@tok", "unit_typing"
       ],
       0
     ],
@@ -284,13 +276,13 @@
       4,
       2,
       [
-        "@MaxFuel_assumption", "@query",
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_SfBasic.evenb.fuel_instrumented", "@query",
         "constructor_distinct_SfBasic.MTrue",
         "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
         "equality_tok_SfBasic.MTrue@tok", "equality_tok_SfBasic.O@tok",
         "equation_SfBasic.negb", "equation_SfBasic.oddb",
         "equation_with_fuel_SfBasic.evenb.fuel_instrumented",
-        "fuel_correspondence_SfBasic.evenb.fuel_instrumented",
         "projection_inverse_SfBasic.S__0", "unit_typing"
       ],
       0
@@ -304,8 +296,7 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_ccd81122687c082c3642373b68717e85_0",
         "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
-        "fuel_guarded_inversion_SfBasic.nat",
-        "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
+        "fuel_guarded_inversion_SfBasic.nat", "subterm_ordering_SfBasic.S"
       ],
       0
     ],
@@ -319,7 +310,7 @@
         "binder_x_ccd81122687c082c3642373b68717e85_0",
         "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
         "equality_tok_SfBasic.O@tok", "fuel_guarded_inversion_SfBasic.nat",
-        "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
+        "subterm_ordering_SfBasic.S"
       ],
       0
     ],
@@ -337,13 +328,14 @@
       4,
       2,
       [
-        "@MaxFuel_assumption", "@query", "constructor_distinct_SfBasic.O",
-        "constructor_distinct_SfBasic.S", "equality_tok_SfBasic.O@tok",
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_SfBasic.mult.fuel_instrumented",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented",
+        "@fuel_irrelevance_SfBasic.mult.fuel_instrumented", "@query",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
         "equation_with_fuel_SfBasic.mult.fuel_instrumented",
         "equation_with_fuel_SfBasic.plus.fuel_instrumented",
-        "fuel_correspondence_SfBasic.mult.fuel_instrumented",
-        "fuel_correspondence_SfBasic.plus.fuel_instrumented",
-        "fuel_irrelevance_SfBasic.mult.fuel_instrumented",
         "projection_inverse_SfBasic.S__0", "unit_typing"
       ],
       0
@@ -505,10 +497,10 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@query", "constructor_distinct_SfBasic.O",
-        "equality_tok_SfBasic.O@tok",
-        "equation_with_fuel_SfBasic.plus.fuel_instrumented",
-        "fuel_correspondence_SfBasic.plus.fuel_instrumented", "unit_typing"
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented", "@query",
+        "constructor_distinct_SfBasic.O", "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.plus.fuel_instrumented", "unit_typing"
       ],
       0
     ],
@@ -535,10 +527,10 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@query", "constructor_distinct_SfBasic.O",
-        "equality_tok_SfBasic.O@tok",
-        "equation_with_fuel_SfBasic.plus.fuel_instrumented",
-        "fuel_correspondence_SfBasic.plus.fuel_instrumented", "unit_typing"
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented", "@query",
+        "constructor_distinct_SfBasic.O", "equality_tok_SfBasic.O@tok",
+        "equation_with_fuel_SfBasic.plus.fuel_instrumented", "unit_typing"
       ],
       0
     ],
@@ -608,14 +600,15 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented",
+        "@fuel_irrelevance_SfBasic.plus.fuel_instrumented", "@query",
         "binder_x_ccd81122687c082c3642373b68717e85_0",
-        "constructor_distinct_SfBasic.O", "disc_equation_SfBasic.O",
-        "disc_equation_SfBasic.S", "equality_tok_SfBasic.O@tok",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
         "equation_with_fuel_SfBasic.plus.fuel_instrumented",
-        "fuel_correspondence_SfBasic.plus.fuel_instrumented",
         "fuel_guarded_inversion_SfBasic.nat",
-        "fuel_irrelevance_SfBasic.plus.fuel_instrumented",
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S",
         "unit_typing"
       ],
@@ -635,14 +628,15 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented",
+        "@fuel_irrelevance_SfBasic.plus.fuel_instrumented", "@query",
         "binder_x_ccd81122687c082c3642373b68717e85_0",
-        "constructor_distinct_SfBasic.O", "disc_equation_SfBasic.O",
-        "disc_equation_SfBasic.S", "equality_tok_SfBasic.O@tok",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
         "equation_with_fuel_SfBasic.plus.fuel_instrumented",
-        "fuel_correspondence_SfBasic.plus.fuel_instrumented",
         "fuel_guarded_inversion_SfBasic.nat",
-        "fuel_irrelevance_SfBasic.plus.fuel_instrumented",
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S",
         "unit_typing"
       ],
@@ -662,14 +656,15 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_SfBasic.plus.fuel_instrumented",
+        "@fuel_irrelevance_SfBasic.plus.fuel_instrumented", "@query",
         "binder_x_ccd81122687c082c3642373b68717e85_0",
-        "constructor_distinct_SfBasic.O", "disc_equation_SfBasic.O",
-        "disc_equation_SfBasic.S", "equality_tok_SfBasic.O@tok",
+        "constructor_distinct_SfBasic.O", "constructor_distinct_SfBasic.S",
+        "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
+        "equality_tok_SfBasic.O@tok",
         "equation_with_fuel_SfBasic.plus.fuel_instrumented",
-        "fuel_correspondence_SfBasic.plus.fuel_instrumented",
         "fuel_guarded_inversion_SfBasic.nat",
-        "fuel_irrelevance_SfBasic.plus.fuel_instrumented",
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
       0

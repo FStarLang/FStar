@@ -1,0 +1,141 @@
+[
+  "¡‡6#·»Ñ ¸Xrá\u0011_²A",
+  [
+    [ "Printers.mk_strcat", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.mk_list",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_54b8d13345a0876202ad05586d3a7a11_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [ "Printers.mk_concat", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Printers.paren", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Printers.mk_print_binder", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.printer",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "@fuel_correspondence_Printers.mk_concat.fuel_instrumented",
+        "@query", "disc_equation_FStar.Reflection.Data.Sg_Inductive",
+        "disc_equation_FStar.Reflection.Data.Unk",
+        "equality_tok_FStar.Reflection.Data.Unk@tok",
+        "equation_FStar.Reflection.Basic.lookup_typ",
+        "equation_Printers.paren",
+        "fuel_guarded_inversion_FStar.Reflection.Data.sigelt_view",
+        "typing_FStar.Reflection.Basic.__lookup_typ"
+      ],
+      0
+    ],
+    [
+      "Printers.t1",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.HasEq_string"
+      ],
+      0
+    ],
+    [ "Printers.uu___is_A", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.__proj__A__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
+      ],
+      0
+    ],
+    [
+      "Printers.__proj__A__item___1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
+      ],
+      0
+    ],
+    [ "Printers.uu___is_B", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.__proj__B__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.B",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Printers_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
+      ],
+      0
+    ],
+    [ "Printers.uu___is_C", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.t1_print",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
+        "disc_equation_Printers.B", "disc_equation_Printers.C",
+        "fuel_guarded_inversion_Printers.t1"
+      ],
+      0
+    ],
+    [
+      "Printers.t1_print",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Printers.C",
+        "disc_equation_Printers.A", "disc_equation_Printers.B",
+        "disc_equation_Printers.C", "fuel_guarded_inversion_Printers.t1"
+      ],
+      0
+    ],
+    [
+      "Printers.uu___71",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [ "Printers.uu___71", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.uu___72",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [ "Printers.uu___72", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.uu___73",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0
+    ],
+    [ "Printers.uu___73", 2, 2, 1, [ "@query" ], 0 ]
+  ]
+]

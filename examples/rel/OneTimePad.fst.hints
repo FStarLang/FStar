@@ -206,7 +206,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple4__3",
         "projection_inverse_FStar.Pervasives.Native.Mktuple4__4",
         "token_correspondence_OneTimePad.xor",
-        "token_correspondence_OneTimePad.xor_at", "typing_OneTimePad.xor_b",
+        "token_correspondence_OneTimePad.xor_at",
+        "token_correspondence_OneTimePad.xor_b", "typing_OneTimePad.xor_b",
         "unit_typing"
       ],
       0
