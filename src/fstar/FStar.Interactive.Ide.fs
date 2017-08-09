@@ -300,13 +300,31 @@ let js_reductionrule s = match js_str s with
   | "pure-subterms" -> FStar.TypeChecker.Normalize.PureSubtermsWithinComputations
   | _ -> js_fail "reduction rule" s
 
+type completion_kind =
+| CKSymbol
+| CKModuleOrNamespace of bool (* modules *) * bool (* namespaces *)
+
+let js_optional_completion_kind k =
+  match k with
+  | None -> CKSymbol
+  | Some k ->
+    match js_str k with
+    | "symbol" -> CKSymbol
+    | "open" -> CKModuleOrNamespace (true, true)
+    | "let-open"
+    | "include"
+    | "module-alias" -> CKModuleOrNamespace (true, false)
+    | _ ->
+      js_fail "completion kind (symbol, open, let-open, \
+include, module-alias)" k
+
 type query' =
 | Exit
 | DescribeProtocol
 | DescribeRepl
 | Pop
 | Push of push_kind * string * int * int * bool
-| AutoComplete of string
+| AutoComplete of string * completion_kind
 | Lookup of string * option<(string * int * int)> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
 | Search of string
@@ -369,7 +387,8 @@ let unpack_interactive_query json =
                                      arg "line" |> js_int,
                                      arg "column" |> js_int,
                                      query = "peek")
-           | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str)
+           | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
+                                            try_arg "kind" |> js_optional_completion_kind)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
                                 try_arg "location"
                                   |> Util.map_option js_assoc
@@ -641,7 +660,7 @@ let track_name_changes ((dsenv, tcenv): env_t)
 let run_push st kind text line column peek_only =
   let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
 
-  let env, finish_name_tracking = track_name_changes env in // begin name tracking
+  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
 
   // If we are at a stage where we have not yet pushed a fragment from the
   // current buffer, see if some dependency is stale. If so, update it. Also
@@ -665,14 +684,14 @@ let run_push st kind text line column peek_only =
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
-    let env, name_events = finish_name_tracking env in // finish name tracking
+    let env, name_events = finish_name_tracking env in // …end name tracking
     ((QueryOK, JsonList errors),
      Inl ({ st' with repl_curmod = curmod; repl_env = env;
                      repl_names = commit_name_tracking curmod st'.repl_names name_events }))
   | _ ->
     // The previous version of the protocol required the client to send a #pop
     // immediately after failed pushes; this version pops automatically.
-    let env, _ = finish_name_tracking env in // finish name tracking
+    let env, _ = finish_name_tracking env in // …end name tracking
     let _, st'' = run_pop ({ st' with repl_env = env }) in
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
@@ -730,14 +749,46 @@ let run_lookup st symbol pos_opt requested_info =
 
   (response, Inl st)
 
-let run_completions st search_term =
-  let dsenv, tcenv = st.repl_env in
-
+let run_autocomplete' st search_term filter =
   let needle = Util.split search_term "." in
-  let completions = CompletionTable.autocomplete st.repl_names needle in
-  let json = List.map CompletionTable.json_of_completion_result completions in
-
+  let results = CompletionTable.autocomplete st.repl_names needle filter in
+  let json = List.map CompletionTable.json_of_completion_result results in
   ((QueryOK, JsonList json), Inl st)
+
+let run_symbol_autocomplete st search_term =
+  let filter path symb = match path, symb with
+    | _,   CompletionTable.Module true -> None // Exclude loaded modules
+    | [_], CompletionTable.Namespace _ -> None // Exclude (...) at root
+    | path_and_symb -> Some path_and_symb in
+  run_autocomplete' st search_term filter
+
+let rec split_last = function
+  | [] -> failwith "split_last on empty list"
+  | [h] -> h, []
+  | h :: t -> let last, butlast = split_last t in last, h :: butlast
+
+let run_module_autocomplete st search_term namespaces modules =
+  let dsenv, tcenv = st.repl_env in
+  let mod_filter pred loaded path symb =
+    if pred then
+      let last_elem, path_but_last = split_last path in
+      match CompletionTable.matched_prefix_of_path_elem last_elem with
+      | Some _ -> None // Exclude matches that reach the final ‘.’
+      | _ -> Some (path_but_last, symb)
+    else None in
+  let filter path symb =
+    match symb with
+    | CompletionTable.Lid _ -> None
+    | CompletionTable.Module loaded -> mod_filter modules loaded path symb
+    | CompletionTable.Namespace loaded -> mod_filter namespaces loaded path symb in
+  run_autocomplete' st search_term filter
+
+let run_autocomplete st search_term kind =
+  match kind with
+  | CKSymbol ->
+    run_symbol_autocomplete st search_term
+  | CKModuleOrNamespace (modules, namespaces) ->
+    run_module_autocomplete st search_term modules namespaces
 
 let run_compute st term rules =
   let run_and_rewind st task =
@@ -915,7 +966,7 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | DescribeRepl -> run_describe_repl st
   | Pop -> run_pop st
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
-  | AutoComplete search_term -> run_completions st search_term
+  | AutoComplete (search_term, kind) -> run_autocomplete st search_term kind
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
@@ -958,16 +1009,29 @@ let interactive_printer =
 
 open FStar.TypeChecker.Common
 
+let add_module_completions deps table =
+  let mods = FStar.Parser.Dep.build_inclusion_candidates_list () in
+  let deps_set =
+    List.fold_left
+      (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
+      (psmap_empty ()) deps in
+  let loaded modname =
+    psmap_find_default deps_set (String.lowercase modname) false in
+  List.fold_left (fun table (modname, _path) ->
+      let ns_query = Util.split modname "." in
+      CompletionTable.register_module_path table (loaded modname) ns_query)
+    table mods
+
 // filename is the name of the file currently edited
 let interactive_mode' (filename:string): unit =
   write_hello ();
 
   //type check prims and the dependencies
-  let filenames, maybe_intf = deps_of_our_file filename in
+  let deps, maybe_intf = deps_of_our_file filename in
   let env = init_env () in
-  let env, finish_name_tracking = track_name_changes env in // begin name tracking
+  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
   let env = tc_prims env in
-  let stack, env, ts = tc_deps None [] env filenames [] in
+  let stack, env, ts = tc_deps None [] env deps [] in
   let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
   let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
   let env =
@@ -978,14 +1042,16 @@ let interactive_mode' (filename:string): unit =
         FStar.Universal.load_interface_decls env intf
     | None ->
         env in
-  let env, name_events = finish_name_tracking env in // end name tracking
+  let env, name_events = finish_name_tracking env in // …end name tracking
 
   TcEnv.toggle_id_info (snd env) true;
+
+  let names = add_module_completions deps CompletionTable.empty in
   let init_st =
     { repl_line = 1; repl_column = 0; repl_fname = filename;
       repl_stack = stack; repl_curmod = None;
       repl_env = env; repl_ts = ts; repl_stdin = open_stdin ();
-      repl_names = commit_name_tracking None CompletionTable.empty name_events } in
+      repl_names = commit_name_tracking None names name_events } in
 
   if FStar.Options.record_hints() || FStar.Options.use_hints() then
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)

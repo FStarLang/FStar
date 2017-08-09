@@ -398,8 +398,7 @@ let first_import_of_path (path: path) : option<string> =
   | { imports = imports } :: _ -> List.last imports
 
 type completion_result =
-  { completion_kind: string;
-    completion_match_length: int;
+  { completion_match_length: int;
     completion_candidate: string;
     completion_annotation: string }
 
@@ -408,17 +407,32 @@ let json_of_completion_result (result: completion_result) =
                  Util.JsonStr result.completion_annotation;
                  Util.JsonStr result.completion_candidate]
 
+let completion_result_of_lid _lid path =
+  { completion_match_length = match_length_of_path path;
+    completion_candidate = string_of_path path;
+    completion_annotation = Util.dflt "" (first_import_of_path path) }
 
-let make_result (path: path) (symb: symbol) =
+let completion_result_of_mod annot loaded path =
+  { completion_match_length = match_length_of_path path;
+    completion_candidate = string_of_path path;
+    completion_annotation = annot ^ (if loaded then "+" else "-") }
+
+let completion_result_of_path_and_symb (path, symb) =
   match symb with
-  | Lid l ->
-    let annotation = annotation_of_path path in
-    { completion_kind = "lid";
-      completion_match_length = path_match_length path;
-      completion_candidate = path_to_string path;
-      completion_annotation = annotation }
+  | Lid l -> completion_result_of_lid l path
+  | Module loaded -> completion_result_of_mod "mod" loaded path
+  | Namespace loaded -> completion_result_of_mod "ns" loaded path
 
-let autocomplete (tbl: table) (query: query) =
-  List.map
-    (fun (path, symb) -> make_result path symb)
+let incorrect_result path symbol =
+  match symbol with
+  | Module _ | Namespace _ ->
+    (match first_import_of_path path with
+     | Some _ -> true // Exclude module names obtained through includes or opens
+     | None -> false)
+  | _ -> false
+
+let autocomplete (tbl: table) (query: query) (filter: path -> symbol -> option<(path * symbol)>) =
+  List.filter_map (fun (path, symbol) ->
+      if incorrect_result path symbol then None
+      else Util.map_option completion_result_of_path_and_symb (filter path symbol))
     (trie_find_prefix tbl query)
