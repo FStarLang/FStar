@@ -70,7 +70,7 @@ let rec extract_attr x =
       Some PpxDerivingShow
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.CInline" -> Some CInline
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Substitute" -> Some Substitute
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "Star.Pervasives.Gc" -> Some GCType
+  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Gc" -> Some GCType
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
       Some (PpxDerivingShowConstant (string_of_unicode data))
   | { n = Tm_meta (x, _) } ->

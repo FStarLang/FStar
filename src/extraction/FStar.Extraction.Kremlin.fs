@@ -42,7 +42,7 @@ and decl =
   | DTypeAlias of lident * int * typ
   | DTypeFlat of lident * int * fields_t
   | DExternal of option<cc> * lident * typ
-  | DTypeVariant of lident * flag list * int * branches_t
+  | DTypeVariant of lident * list<flag> * int * branches_t
 
 and cc =
   | StdCall
@@ -161,7 +161,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 20
+let current_version: version = 22
 
 type file = string * program
 type binary_format = version * list<file>

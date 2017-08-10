@@ -358,11 +358,11 @@ let build_ty_manifest (b: mltybody): core_type option=
 let skip_type_defn (current_module:string) (type_name:string) :bool =
   current_module = "FStar_Pervasives" && type_name = "option"
 
-let type_attrs (attrs: tyattrs): attributes option =
+let type_attrs (attrs: attrs): attributes option =
   let deriving_show = (mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident "show"))]) in
   if BatList.is_empty attrs then None else (Some [deriving_show])
 
-let add_deriving_const (attrs: tyattrs) (ptype_manifest: core_type option): core_type option =
+let add_deriving_const (attrs: attrs) (ptype_manifest: core_type option): core_type option =
   match attrs with
   | [PpxDerivingShowConstant s] ->
       let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(no_label, Exp.ident (mk_lident "fmt")); (no_label, Exp.constant (Const_string(s, None)))] in
