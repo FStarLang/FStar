@@ -732,8 +732,8 @@ let query_info:
                    match z3status with
                    | FStar_SMTEncoding_Z3.UNSAT uu____1756 -> "succeeded"
                    | uu____1757 ->
-                       Prims.strcat "failed (reason-unknown="
-                         (Prims.strcat status_string ")") in
+                       Prims.strcat "failed {reason-unknown="
+                         (Prims.strcat status_string "}") in
                  let range =
                    let uu____1759 =
                      let uu____1760 =

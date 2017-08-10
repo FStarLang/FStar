@@ -207,7 +207,7 @@ def process_file(infile, outfile, stat, n, collate = False, append = False, reve
     # F* also reports:
     # 2017-06-29T14:00:36.8084892Z STDERR: Verified module: Hacl.Spec.Bignum.Fsquare (576007 milliseconds)
 
-    rx=re.compile("^([ 0-9-TZ:.]+)?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
+    rx=re.compile("^([ 0-9-TZ:.]+)?\((?P<fstar_range>.*)\)[ \t]+Query-stats \((?P<fstar_name>.*),[ ]*(?P<fstar_index>.*)\)[ \t]+(?P<fstar_tag>[a-zA-Z]+)(?reason-unknown=\{.*\})?(?P<fstar_usedhints>.*) in (?P<fstar_time>[0-9+\.+-]+) milliseconds with fuel (?P<fstar_fuel>\d+) and ifuel (?P<fstar_ifuel>\d+) and rlimit (?P<fstar_rlimit>\d+)[ \t\r]*(statistics=\{(?P<fstar_z3stats>.*)\})?[ \t\r]*$")
     z3rx=re.compile("([^ =]+)=([^ =\"]+|\".*\")")
     modrx=re.compile("^([ 0-9-TZ:.]+( STDERR:)? )?Verified module: (?P<module>[^ ]+) \((?P<module_time>[0-9]*) milliseconds\)[ \t\r]*$")
 
