@@ -160,6 +160,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                               embed_binder RD.fstar_refl_binder)
                                          (E.pair_typ RD.fstar_refl_binder RD.fstar_refl_binder);
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
+      mktac2 "__norm_term"     norm_term (unembed_list unembed_norm_step) unembed_term embed_term RD.fstar_refl_term;
       mktac0 "__revert"        revert embed_unit t_unit;
       mktac0 "__clear"         clear embed_unit t_unit;
       mktac1 "__rewrite"       rewrite unembed_binder embed_unit t_unit;

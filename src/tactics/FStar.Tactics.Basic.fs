@@ -407,9 +407,7 @@ let intro_rec : tac<(binder * binder)> =
         fail1 "intro_rec: goal is not an arrow (%s)" (Print.term_to_string goal.goal_ty)
     )
 
-let norm (s : list<RD.norm_step>) : tac<unit> =
-    bind cur_goal (fun goal ->
-    // Translate to actual normalizer steps
+let tr_steps (s : list<RD.norm_step>) : list<N.step> =
     let tr s = match s with
         | RD.Simpl   -> [N.Simplify]
         | RD.WHNF    -> [N.WHNF]
@@ -417,10 +415,22 @@ let norm (s : list<RD.norm_step>) : tac<unit> =
         | RD.Delta   -> [N.UnfoldUntil Delta_constant]
         | RD.UnfoldOnly l -> [N.UnfoldOnly (List.map S.lid_of_fv l)]
     in
-    let steps = [N.Reify; N.UnfoldTac]@(List.flatten (List.map tr s)) in
+    List.flatten (List.map tr s)
+
+let norm (s : list<RD.norm_step>) : tac<unit> =
+    bind cur_goal (fun goal ->
+    // Translate to actual normalizer steps
+    let steps = [N.Reify; N.UnfoldTac]@(tr_steps s) in
     let w = normalize steps goal.context goal.witness in
     let t = normalize steps goal.context goal.goal_ty in
     replace_cur ({goal with goal_ty = t; witness = w})
+    )
+
+let norm_term (s : list<RD.norm_step>) (t : term) : tac<term> =
+    bind get (fun ps ->
+    let steps = [N.Reify; N.UnfoldTac]@(tr_steps s) in
+    let t = normalize steps ps.main_context t in
+    ret t
     )
 
 let istrivial (e:env) (t:term) : bool =
