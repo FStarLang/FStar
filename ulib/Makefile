@@ -4,8 +4,8 @@ FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/z3.mk
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
-EXTRA=FStar.Pointer.fst
-FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
+EXTRA=
+FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst FStar.Pointer.fst
 
 ALL=$(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
 
