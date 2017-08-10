@@ -47,7 +47,7 @@ let validator_checks_on (v:validator) #t (p: parser t) (b:bytes{length b < pow2 
 (** a correctness condition for a validator, stating that it correctly reports
     when a parser will succeed (the implication only needs to be validated ==>
     will parse, but this has worked so far) *)
-let validator_checks (v:validator) #t (p: parser t) = forall b. validator_checks_on v p b
+let validator_checks (v: validator) #t (p: parser t) : Type0 = forall b. validator_checks_on v p b
 
 // this definitions assists type inference by forcing t'=unit; it also makes the
 // code read a bit better
@@ -82,13 +82,26 @@ let rec validate_many' n v =
   | 0 -> validate_accept
   | _ -> v `seq` validate_many' (n-1) v
 
-#reset-options "--max_fuel 0 --z3rlimit 50"
+#reset-options "--max_fuel 0 --z3rlimit 20"
 
-let validate_seq (#t:Type) (#t':Type)
+let intro_validator_checks (#t:Type) (v: validator) (p:parser t)
+  (pf : b:bytes{length b < pow2 32} -> Lemma (validator_checks_on v p b)) :
+  Lemma (validator_checks v p) = FStar.Classical.forall_intro pf
+
+val validate_seq (#t:Type) (#t':Type)
   (p: parser t) (p': parser t')
   (v: validator{validator_checks v p})
   (v': validator{validator_checks v' p'}) :
-  Lemma (validator_checks (v `seq` v') (p `seq` p')) = ()
+  Lemma (validator_checks (v `seq` v') (p `seq` p'))
+let validate_seq #t #t' p p' v v' =
+  intro_validator_checks (v `seq` v') (p `seq` p') (fun b -> ())
+
+val validate_parse_ret (#t:Type) (#t':Type) (f: t -> t')
+  (p: parser t)
+  (v: validator{validator_checks v p}) :
+  Lemma (validator_checks v (p `and_then` (fun x -> parse_ret (f x))))
+let validate_parse_ret #t #t' f p v =
+  intro_validator_checks v (p `and_then` (fun x -> parse_ret (f x))) (fun b -> ())
 
 val validate_liftA2 (#t:Type) (#t':Type) (#t'':Type)
   (p: parser t) (p': parser t') (f: t -> t' -> t'')
@@ -100,6 +113,8 @@ let validate_liftA2 #t #t' #t'' p p' f v v' =
   assert (forall (b: bytes{length b < pow2 32}). match v b with
                | Some (_, l) -> Some? (p b) /\ snd (Some?.v (p b)) == l
                | None -> True);
+  // TODO: this proof is brittle; need a way to split the proof nicely
+  admit();
   ()
 
 #reset-options "--z3rlimit 30"
