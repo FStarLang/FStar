@@ -263,17 +263,17 @@ let smt_output_sections (lines:list<string>) : smt_output =
     let unsat_core, lines = find_section "unsat-core" lines in
     let statistics, lines = find_section "statistics" lines in
     let labels, lines = find_section "labels" lines in
-    let _ =
+    let remaining =
       match until "Done!" lines with
-      | None -> failwith "Impossible"
-      | Some (prefix, suffix) ->
-        let remaining = prefix@suffix in
+      | None -> lines
+      | Some (prefix, suffix) -> prefix@suffix in
+    let _ =
         match remaining with
         | [] -> ()
         | _ ->
-          FStar.Errors.warn
-                   Range.dummyRange
-                   (BU.format2 "%s: Unexpected output from Z3: %s\n"
+            FStar.Errors.warn
+                    Range.dummyRange
+                    (BU.format2 "%s: Unexpected output from Z3: %s\n"
                                     (query_logging.get_module_name())
                                     (String.concat "\n" remaining)) in
     {smt_result = BU.must result_opt;

@@ -318,10 +318,10 @@ let query_info settings z3result =
     || Options.print_z3_statistics()
     then begin
         let z3status, elapsed_time, statistics = z3result in
+        let status_string, errs = Z3.status_string_and_errors z3status in
         let tag = match z3status with
          | UNSAT _ -> "succeeded"
-         | _ -> "failed" in
-        let status_string, errs = Z3.status_string_and_errors z3status in
+         | _ -> "failed (reason-unknown=" ^ status_string ^ ")"in
         let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file() ^ ")" in
         let used_hint = if used_hint settings then " (with hint)" else "" in
         let stats =
@@ -329,8 +329,7 @@ let query_info settings z3result =
                 let f k v a = a ^ k ^ "=" ^ v ^ " " in
                 let str = smap_fold statistics f "statistics={" in
                     (substring str 0 ((String.length str) - 1)) ^ "}"
-            else "(reason-unknown=" ^ status_string ^ ")"
-        in
+            else "" in
         BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
              [  range;
                 settings.query_name;
@@ -344,28 +343,33 @@ let query_info settings z3result =
                 stats ];
         errs |> List.iter (fun (_, msg, range) ->
             let e = FStar.Errors.mk_issue FStar.Errors.EInfo (Some range) msg in
-            BU.print1 "\t\t%s\n" (FStar.Errors.format_issue e))
+            BU.print1 "\t\t(Hint-replay failed): %s\n" (FStar.Errors.format_issue e))
     end
 
 let record_hint settings z3result =
     let z3status, elapsed_time, _ = z3result in
-    if not (used_hint settings) //if we didn't already use a hint
-    && Options.record_hints ()  //and we're asked to record unsat cores
-    then match z3status with
-         | UNSAT unsat_core ->
-           let hint = {
-             hint_name=settings.query_name;
-             hint_index=settings.query_index;
-             fuel=settings.query_fuel;
-             ifuel=settings.query_ifuel;
-             query_elapsed_time=0; //recording the elapsed_time prevents us from reaching a fixed point
-             unsat_core = unsat_core
-           } in
-           (match !recorded_hints with
-            | Some l -> recorded_hints := Some (l@[Some hint])
-            | _ -> ())
-         | _ -> () //it failed, so nothing to do
-    else ()
+    let mk_hint core = {
+            hint_name=settings.query_name;
+            hint_index=settings.query_index;
+            fuel=settings.query_fuel;
+            ifuel=settings.query_ifuel;
+            query_elapsed_time=0; //recording the elapsed_time prevents us from reaching a fixed point
+            unsat_core = core
+        }
+    in
+    let hint_opt =
+        if not (used_hint settings) //if we didn't already use a hint
+        && Options.record_hints ()  //and we're asked to record unsat cores
+        then match z3status with
+             | UNSAT unsat_core ->
+               Some (mk_hint unsat_core)
+             | _ -> None //it failed, so nothing to do
+        else Some (mk_hint settings.query_hint)
+    in
+    match !recorded_hints with
+    | Some l -> recorded_hints := Some (l@[hint_opt])
+    | _ -> ()
+
 
 let process_result settings result : option<errors> =
     if used_hint settings && not (Options.z3_refresh()) then Z3.refresh();
