@@ -139,6 +139,7 @@ let valid_live
 let gread_tag
   (#l: P.union_typ)
   (h: HS.mem)
+  (tgs: tags l)
   (p: P.pointer (typ l))
 : GTot UInt32.t
 = P.gread h (P.gfield p (tag_field l))
@@ -152,26 +153,18 @@ let read_tag
   (ensures (fun h0 t h1 ->
     h0 == h1 /\
     List.Tot.mem t tgs /\
-    t == gread_tag h0 p))
+    t == gread_tag h0 tgs p))
 = P.read (P.field p (tag_field l))
 
 
 let gfield
   (#l: P.union_typ)
+  (tgs: tags l)
   (p: P.pointer (typ l))
   (f: P.struct_field l)
 : GTot (p': P.pointer (P.typ_of_struct_field l f) { P.includes p p' })
 = P.gufield (P.gfield p (union_field l)) f
 
-let live_gfield
-  (#l: P.union_typ)
-  (p: P.pointer (typ l))
-  (f: P.struct_field l)
-  (h: HS.mem)
-: Lemma
-  (P.live h (gfield p f) <==> P.live h p)
-  [SMTPat (P.live h (gfield p f))]
-= ()
 
 let field
   (#l: P.union_typ)
@@ -181,11 +174,11 @@ let field
 : HST.Stack (P.pointer (P.typ_of_struct_field l f))
   (requires (fun h ->
     valid h tgs p /\
-    gread_tag h p == normalize_term (tag_of_field tgs f)
+    gread_tag h tgs p == normalize_term (tag_of_field tgs f)
   ))
   (ensures (fun h0 p' h1 ->
     h0 == h1 /\
-    p' == gfield p f
+    p' == gfield tgs p f
   ))
 = P.ufield (P.field p (union_field l)) f
 
@@ -208,8 +201,8 @@ let write
     P.modifies_1 p h0 h1 /\
     P.readable h1 p /\
     valid h1 tgs p /\
-    gread_tag #l h1 p == normalize_term (tag_of_field tgs f) /\
-    P.gread h1 (gfield p f) == v
+    gread_tag #l h1 tgs p == normalize_term (tag_of_field tgs f) /\
+    P.gread h1 (gfield tgs p f) == v
   ))
 =
   let tag_ptr = P.field p (tag_field l) in
@@ -239,7 +232,7 @@ let write_tag
   (ensures (fun h0 _ h1 ->
     valid h0 tgs p /\ valid h1 tgs p
     /\ P.modifies_1 p h0 h1
-    /\ gread_tag #l h1 p == normalize_term (tag_of_field tgs f)
+    /\ gread_tag #l h1 tgs p == normalize_term (tag_of_field tgs f)
   ))
 =
   let tag_ptr = P.field p (tag_field l) in
@@ -264,14 +257,14 @@ let modifies_1_valid
 : Lemma
   (requires (
     valid h0 tgs p /\
-    gread_tag h0 p == normalize_term (tag_of_field tgs f) /\
-    P.modifies_1 (gfield p f) h0 h1 /\
-    P.includes (gfield p f) p' /\
+    gread_tag h0 tgs p == normalize_term (tag_of_field tgs f) /\
+    P.modifies_1 (gfield tgs p f) h0 h1 /\
+    P.includes (gfield tgs p f) p' /\
     P.readable h1 p'
   ))
   (ensures (valid h1 tgs p))
-  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l p f) h0 h1);
-   SMTPat (P.includes #_ #t' (gfield #l p f) p')]
+  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1);
+   SMTPat (P.includes #_ #t' (gfield #l tgs p f) p')]
 =
   let u_ptr = P.gfield p (union_field l) in
   P.is_active_union_field_includes_readable h1 u_ptr f p'
@@ -281,14 +274,16 @@ let modifies_1_field_tag
   (tgs: tags l)
   (p: P.pointer (typ l))
   (f: P.struct_field l)
+  (t: UInt32.t)
   (h0 h1: HS.mem)
 : Lemma
   (requires (
     valid h0 tgs p /\
-    P.modifies_1 (gfield p f) h0 h1
+    gread_tag h0 tgs p == t /\
+    P.modifies_1 (gfield tgs p f) h0 h1
   ))
-  (ensures (gread_tag h1 p == gread_tag h0 p))
-  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l p f) h0 h1)]
+  (ensures (gread_tag h1 tgs p == t))
+  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1)]
 = ()
 
 let modifies_1_field
@@ -298,9 +293,9 @@ let modifies_1_field
   (f: P.struct_field l)
   (h0 h1: HS.mem)
 : Lemma
-  (requires (valid h0 tgs p /\ P.modifies_1 (gfield p f) h0 h1))
+  (requires (valid h0 tgs p /\ P.modifies_1 (gfield tgs p f) h0 h1))
   (ensures (P.modifies_1 p h0 h1))
-  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l p f) h0 h1)]
+  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1)]
 = ()
 
 let modifies_1_field_tag_equal
@@ -310,9 +305,9 @@ let modifies_1_field_tag_equal
   (f: P.struct_field l)
   (h0 h1: HS.mem)
 : Lemma
-  (requires (valid h0 tgs p /\ P.modifies_1 (gfield p f) h0 h1))
-  (ensures (gread_tag h0 p == gread_tag h1 p))
-  [SMTPat (valid h0 tgs p); SMTPat (gread_tag h1 p); SMTPat (gfield p f)]
+  (requires (valid h0 tgs p /\ P.modifies_1 (gfield tgs p f) h0 h1))
+  (ensures (gread_tag h0 tgs p == gread_tag h1 tgs p))
+  [SMTPat (valid h0 tgs p); SMTPat (gread_tag h1 tgs p); SMTPat (gfield tgs p f)]
 = ()
 
 let readable_intro
@@ -324,10 +319,10 @@ let readable_intro
 : Lemma
   (requires (
     valid h tgs p /\
-    P.readable h (gfield p f)
+    P.readable h (gfield tgs p f)
   ))
   (ensures (P.readable h p))
-  [SMTPat (valid #l h tgs p); SMTPat (P.readable h (gfield #l p f))]
+  [SMTPat (valid #l h tgs p); SMTPat (P.readable h (gfield #l tgs p f))]
 = P.readable_struct_fields_readable_struct h p
 
 let readable_field
@@ -339,10 +334,10 @@ let readable_field
 : Lemma
   (requires (
     valid h tgs p /\ P.readable h p /\
-    gread_tag h p == normalize_term (tag_of_field tgs f)
+    gread_tag h tgs p == normalize_term (tag_of_field tgs f)
   ))
-  (ensures (P.readable h (gfield p f)))
-  [SMTPat (valid #l h tgs p); SMTPat (P.readable h (gfield p f))]
+  (ensures (P.readable h (gfield tgs p f)))
+  [SMTPat (P.readable h (gfield tgs p f))]
 = ()
 
 (******************************************************************************)
