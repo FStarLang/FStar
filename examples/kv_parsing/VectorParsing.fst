@@ -26,8 +26,8 @@ assume val parse_elem_progress : b:bytes{length b < pow2 32} ->
 assume val enc_elem : t -> b:bytes{length b > 0}
 
 // for vector of length 0..2^16-1
-// (note: no additional length checks, and know that we need a U16.t for the
-// length field)
+// (note: no additional length checks, and this fixes the length field as a
+// U16.t)
 
 val vector_length: list t -> nat
 let vector_length l = List.fold_right (fun v (acc: nat) -> length (enc_elem v) + acc) l 0
@@ -55,3 +55,14 @@ val parse_vector : parser vector
 let parse_vector =
   parse_u16 `and_then`
   (fun bytes -> parse_vector_length bytes)
+
+val encode_vector_data : v:vector -> b:bytes{length b == vector_length v}
+let rec encode_vector_data v =
+  match v with
+  | [] -> createEmpty
+  | e::es -> enc_elem e `append` encode_vector_data es
+
+val encode_vector : v:vector -> bytes
+let encode_vector v =
+  u16_to_be (U16.uint_to_t (vector_length v)) `append`
+  encode_vector_data v
