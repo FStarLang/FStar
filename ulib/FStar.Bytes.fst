@@ -9,10 +9,23 @@ module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 
 type byte = U8.t
-abstract type bytes = seq byte
+abstract type bytes : eqtype = seq byte
 abstract type string = seq FStar.Char.char
 
-let length (b:bytes) : Tot (n:nat{n = Seq.length b}) = Seq.length b
+assume val repr_bytes : nat -> GTot (n:nat{n>0})
+assume val lemma_repr_bytes_values: n:nat ->
+  Lemma (   ( n < 256 <==> repr_bytes n = 1 )
+         /\ ( (n >= 256 /\ n < 65536) <==> repr_bytes n = 2 )
+         /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 )
+         /\ ( (n >= 16777216 /\ n < 4294967296) <==> repr_bytes n = 4 )
+         /\ ( (n >= 4294967296 /\ n < 1099511627776) <==> repr_bytes n = 5 )
+         /\ ( (n >= 1099511627776 /\ n < 281474976710656) <==> repr_bytes n = 6 )
+         /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
+         /\ ( (n >= 72057594037927936 /\ n < 18446744073709551616) <==> repr_bytes n = 8 ) )
+
+
+let length (b:bytes) : Tot (n:nat) = Seq.length b
+//private let length (b:bytes) : Tot (n:nat{n = Seq.length b}) = Seq.length b
 
 val index: b:bytes -> i:nat{i < length b} -> Tot byte
 let index b i = Seq.index b i
@@ -52,7 +65,7 @@ let abyte2 (b:byte*byte) : Tot (lbytes 2) =
 let get (b:bytes) (pos:nat{pos < length b}) : Tot byte = Seq.index b pos
 
 val append: b1:bytes -> b2:bytes -> Tot (b:bytes{length b = length b1 + length b2})
-let append (b1:bytes) (b2:bytes) = Seq.append b1 b2
+let append (b1:bytes) (b2:bytes) = append b1 b2
 
 val lemma_append_empty: b:bytes -> Lemma
   (ensures (append b empty_bytes = b))
@@ -186,15 +199,16 @@ let createBytes l b = Seq.create l b
 val initBytes: l:nat -> (i:nat {i<l} -> Tot byte) -> Tot (lbytes l)
 let initBytes l f = Seq.init l f
 
+assume val bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (lbytes l)
+
+assume val int_of_bytes : b:bytes -> Tot (n:nat)
+
+assume val int_of_bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} ->
+    Lemma (n = int_of_bytes (bytes_of_int l n))
+
 assume val make: len:nat -> f:(n:nat{n < len} -> Tot byte) -> Tot (lbytes len)
 assume val utf8_encode: string -> bytes
 assume val utf8_decode: bytes -> option string
-
-
-
-
-
-
 
 
 (*@ assume val equalBytes : (b0:bytes -> (b1:bytes -> (r:bool){r = True /\ B (b0) = B (b1) \/ r = False /\ B (b0) <> B (b1)})) @*)
@@ -203,12 +217,12 @@ assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
 
 assume val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 
-val split: b:bytes -> n:nat{n <= length b} ->
-  Tot (x:(bytes * bytes) {length (fst (x)) = n
-    /\ length (snd (x)) == (length b) - n }) //(lbytes n * lbytes (length b - n))
 
-let split b (n:nat { n <= length b}) = Seq.split b n
-
+private val split: b:bytes -> n:nat{n <= length b} ->
+  Tot (x:(bytes * bytes) {length (fst (x))= n /\ length (snd (x)) == (length b) - n }) //(lbytes n * lbytes (length b - n))
+//val split: bytes -> nat -> Tot (bytes * bytes)
+let split b (n:nat { n <= length b}) = split b n
+(*
 val lemma_split : s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
   (ensures ((fst (split s i)) @| (snd (split s i)) = s))
 let lemma_split s i =
@@ -222,11 +236,39 @@ let split_eq s i =
   let x = split s i in
   lemma_split s i;
   x
+*)
 
+(*
 val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes -> t2:bytes {length s1 = length t1 \/ length s2 = length t2} ->
   Lemma (requires (Seq.equal (append s1 s2) (append t1 t2)))
         (ensures (Seq.equal s1 t1 /\ Seq.equal s2 t2))
+*)
+
+
+(*
+let length (b:bytes) : Tot (n:nat) = Seq.length b
+//private let length (b:bytes) : Tot (n:nat{n = Seq.length b}) = Seq.length b
+
+val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes ->
+  t2:bytes {length s1 = length t1 \/ length s2 = length t2} ->
+  Lemma (requires (Seq.equal (append s1 s2) (append t1 t2)))
+        (ensures (Seq.equal s1 t1 /\ Seq.equal s2 t2))
+*)
+(*
+val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes ->
+  t2:bytes ->
+  Lemma (requires (Seq.equal (append s1 s2) (append t1 t2)))
+        (ensures (Seq.equal s1 t1 /\ Seq.equal s2 t2))
+
 let lemma_append_inj s1 s2 t1 t2 = admit()
+*)
+
+val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes ->
+  t2:bytes {length s1 = length t1 \/ length s2 = length t2} ->
+  Lemma (requires (equal (append s1 s2) (append t1 t2)))
+        (ensures (equal s1 t1 /\ equal s2 t2))
+let lemma_append_inj s1 s2 t1 t2 = admit() (* CH: this used to fail *)
+
 
 let append_empty_bytes_l (l: bytes): Lemma (ensures (empty_bytes @| l == l)) =
   Seq.append_empty_l l
@@ -237,6 +279,24 @@ let append_empty_bytes_r (l: bytes): Lemma (ensures (l @| empty_bytes == l)) =
 let append_assoc (l1 l2 l3: bytes): Lemma
   (ensures ((l1 @| l2) @| l3 == l1 @| (l2 @| l3))) =
   Seq.append_assoc l1 l2 l3
+
+
+val lemma_append_assoc: b1:bytes -> b2:bytes -> b3:bytes ->
+  Lemma (append b1 (append b2 b3) == append (append b1 b2) b3)
+
+let lemma_append_assoc b1 b2 b3 = admit()
+
+
+(*
+
+val append_assoc : #a:Type -> l1:list a -> l2:list a -> l3: list a ->
+  Lemma (append l1 (append l2 l3) == append (append l1 l2) l3)
+let rec append_assoc #a l1 l2 l3 =
+  match l1 with
+  | [] -> ()
+  | h1 :: t1 -> append_assoc t1 l2 l3
+
+*)
 
 
 val get_binary: n:nat -> Tot (bytes)

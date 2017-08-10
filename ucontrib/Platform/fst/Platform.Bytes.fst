@@ -137,7 +137,7 @@ let append_empty_bytes_l (l: bytes): Lemma (ensures (empty_bytes @| l == l)) =
 
 let append_empty_bytes_r (l: bytes): Lemma (ensures (l @| empty_bytes == l)) =
   Seq.append_empty_r l
-  
+
 let append_assoc (l1 l2 l3: bytes): Lemma
   (ensures ((l1 @| l2) @| l3 == l1 @| (l2 @| l3))) =
   Seq.append_assoc l1 l2 l3
