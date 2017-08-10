@@ -347,7 +347,8 @@ let validate_done_st : stateful_validator (hide parsing_done) = fun input ->
 val validate_entries_st (num_entries:U32.t) : stateful_validator (hide (parse_entries num_entries))
 let validate_entries_st (num_entries:U32.t) =
   fun input ->
-  then_check _
+  // XXX: explicitly annotating this type is terrible
+  then_check (elift1 (fun p -> parse_many p (U32.v num_entries)) (hide parse_entry))
   (validate_many_st (hide parse_entry) validate_entry_st num_entries)
   (hide parsing_done) validate_done_st
   (fun entries _ -> Store num_entries entries) input
