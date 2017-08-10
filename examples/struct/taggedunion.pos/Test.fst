@@ -56,7 +56,7 @@ let step (p: P.pointer st_typ) :
   (ensures (fun h0 _ h1 ->
     TU.valid h0 st_tags p /\ P.readable h0 p /\
     TU.valid h1 st_tags p /\ P.readable h1 p /\
-    TU.gread_tag h1 p == 0ul /\
+    TU.gread_tag h1 st_tags p == 0ul /\
     P.modifies_1 p h0 h1
   ))
 =
@@ -75,15 +75,13 @@ let step (p: P.pointer st_typ) :
     TU.write st_tags p "left" v
   )
 
-#set-options "--z3rlimit 32"
-
 let step_alt (p: P.pointer st_typ):
   HST.Stack unit
   (requires (fun h -> TU.valid h st_tags p /\ P.readable h p))
   (ensures (fun h0 _ h1 ->
     TU.valid h0 st_tags p /\ P.readable h0 p /\
     TU.valid h1 st_tags p /\ P.readable h1 p /\
-    TU.gread_tag h1 p == 0ul /\
+    TU.gread_tag h1 st_tags p == 0ul /\
     P.modifies_1 p h0 h1
   ))
 =
