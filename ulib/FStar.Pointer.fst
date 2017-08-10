@@ -1812,7 +1812,7 @@ let path_sel_upd_other'
 : Lemma
   (requires (path_disjoint p1 p2))
   (ensures (path_sel (path_upd m p1 v) p2 == path_sel m p2))
-  [SMTPat (path_sel (path_upd m p1 v) p2)]
+  [SMTPat (path_sel (path_upd m p1 v) p2)]  
 = path_sel_upd_other p1 p2
 
 (** Operations on pointers *)
@@ -3290,7 +3290,7 @@ let reference_of
   (p: pointer value)
 : Pure (HS.reference pointer_ref_contents)
   (requires (live h p))
-  (ensures (fun x ->
+  (ensures (fun x -> 
     live h p /\
     x == HS.reference_of h (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) /\
     HS.frameOf x == HS.frameOf (greference_of p) /\
