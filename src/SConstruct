@@ -20,17 +20,19 @@ AddOption('--CACHEDIR',
 
 cache_dir=GetOption('cache_dir')
 if cache_dir == None:
-    cache_dir = os.environ.get('EVEREST_SCONS_CACHE_DIR')
+  cache_dir = os.environ.get('FSTAR_SCONS_CACHE_DIR')
+if cache_dir == None:
+  cache_dir = os.environ.get('EVEREST_SCONS_CACHE_DIR')
 if cache_dir != None:
-    print('Using Shared Cache Directory %s'%cache_dir)
-    CacheDir(cache_dir)
+  print('Using Shared Cache Directory %s'%cache_dir)
+  CacheDir(cache_dir)
 
 AddOption('--target',
     dest='build_target',
     type='string',
-    default='all',
+    default=None,
     action='store',
-    help='Specify the build target:  all, ocaml-output, boot, or extract')
+    help='Specify the build target:  ocaml-output, boot, or extract')
 build_target=GetOption('build_target')
 
 # construct a default environment
@@ -39,61 +41,13 @@ env = Environment()
 # --------------------------------------------------------------------
 # Configuration of some platform-specific tools
 
-fstar_path = os.path.realpath('../bin/fstar.exe')       # the path to the fstar.exe which may not exist yet
+fstar_path = os.path.realpath('../bin/fstar.exe')
 env['FSTAR']   = fstar_path
-
-
-if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows 32-bit or 64-bit
-    if sys.platform == 'cygwin':
-        fd = open('/proc/registry/HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/MSBuild/ToolsVersions/14.0/MSBuildToolsPath', 'r')
-        v = fd.read()
-        v = v.rstrip(' \0') # strip the trailing \0 and any trailing whitespace
-        fd.close()
-    else:
-        import _winreg
-        k = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0')
-        v = _winreg.QueryValueEx(k, 'MSBuildToolsPath')[0]
-        k.Close()
-
-    env['FSC']     = 'fsc'
-    env['MSBUILD'] = '"'+os.path.join(v, 'MSBuild.exe')+'"'
-    uname          = 'Windows_NT'
-    env['RUNTIME'] = ''     # no Mono needed to run .NET code (FSLexYacc, etc.)
-
-    # propagate the TMP environment variable into the OS environment block used to launch
-    # child processes.  nuget.exe uses TMP as the path to its lock file and falls back
-    # on C:\WINDOWS if it doesn't exist, and that is readonly for most Windows users.
-    env['ENV']['TMP'] = os.environ['TMP']
-
-    # set the OS environment var in child processes.  MSBuild scripts like NuGet.targets consume it.
-    env.AppendENVPath('OS', 'Windows_NT')
-else:
-    env['FSC']     = 'fsharpc'
-    buildtool = conf.CheckProg('msbuild')
-    if not buildtool:
-      print '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'
-      buildtool = conf.CheckProg('xbuild')
-    if not buildtool:
-      raise SCons.Errors.UserError('Failed to find msbuild or xbuild.  Unable to continue')
-    env['MSBUILD'] = buildtool
-    uname          = os.uname()[0]  # sysname is at index 0
-    env['RUNTIME'] = 'mono'
 
 # propagate the OS PATH environment variable into child processes, so tools like menhir can be found
 env['ENV']['PATH']=os.environ['PATH']
-env['BIN']=str(Dir('../bin'))
-env['CONFIGURATION']='Release'
-env['MSBUILDARGS']='/verbosity:minimal /p:Configuration=$CONFIGURATION'
-env['NUGET']=File('#/VS/.nuget/NuGet.exe')
 
-print("****************************** $BIN = " + env['BIN'])
-
-
-if build_target == 'all':
-  # build the fstar.exe compiler from F# sources, targetting .NET
-  fstar_exe_dotnet = SConscript('VS/SConscript')
-  Default(Alias('all', fstar_exe_dotnet))
-elif build_target == 'ocaml-output':
+if build_target == 'ocaml-output':
   # build fstar.exe from OCaml sources
   fstar_exe_ocaml = SConscript('ocaml-output/SConscript', exports={'My_env' : env})
   Default(Alias('ocaml-output', fstar_exe_ocaml))
@@ -106,4 +60,4 @@ elif build_target == 'extract':
   boot, extract = SConscript('SConscript', exports={'My_env' : env})
   Default(extract)
 else:
-  raise SCons.Errors.UserError("Unsupported --target vale %s" % build_target)
+  raise SCons.Errors.UserError("Unsupported --target %s" % build_target)

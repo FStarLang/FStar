@@ -11,18 +11,14 @@ BIN=../bin
 # Configuration of some platform-specific tools; eventually we will want a configure script
 
 ifeq ($(OS),Windows_NT)
-  FSC     = fsc
   MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g' | tr -d '\r')\")/MSBuild.exe
-  UNAME   = Windows_NT
-  FSTAR   = ../bin/fstar.exe
   RUNTIME =
+  SCONS = scons.bat
 else
-  FSC     = fsharpc
   # If can't find msbuild, use xbuild, but throw a warning
   MSBUILD = $(shell which msbuild || (echo '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'>&2; which xbuild))
-  UNAME   = $(shell uname -s)
-  FSTAR   = ../bin/fstar-any.sh
   RUNTIME = mono
+  SCONS = scons
 endif
 
 CONFIGURATION=Release
@@ -30,25 +26,12 @@ CONFIGURATION=Release
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
 
-ifeq ($(UNAME),Darwin)
-  HEAD=ghead
-  SED=gsed
-  FIND=gfind
-else
-  HEAD=head
-  SED=sed
-  FIND=find
-endif
-
-# --------------------------------------------------------------------
-
-FSLYDIR := VS/packages/FsLexYacc.6.1.0
-FSYACC  := $(RUNTIME) $(FSLYDIR)/build/fsyacc.exe
-FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
-
 # --------------------------------------------------------------------
 .SUFFIXES:
 MAKEFLAGS += --no-builtin-rules
+
+# parse MAKEFLAGS to extract out the '-jN' switch, and pass it to scons
+SCONSFLAGS=$(filter -j%,$(MAKEFLAGS))
 
 .PHONY: all clean boot ocaml nuget-restore nuget-clean
 
@@ -85,23 +68,23 @@ clean_extracted:
 	$(SCONS) -c --target=ocaml-output
 
 ocaml:
-	$(SCONS) --target=extract
+	$(SCONS) $(SCONSFLAGS) --target=extract
 
 boot-ocaml:
-	$(SCONS) --target=ocaml-output
+	$(SCONS) $(SCONSFLAGS) --target=ocaml-output
 
 clean-ocaml:
 	$(SCONS) -c --target=extract
 
 fstar-ocaml:
-	$(SCONS) --target=extract
-	$(SCONS) --target=ocaml-output
+	$(SCONS) $(SCONSFLAGS) --target=extract
+	$(SCONS) $(SCONSFLAGS) --target=ocaml-output
 
 # Fastest way to refresh the snapshot (if it works)
 ocaml-fstar-ocaml:
-	$(SCONS) --target=ocaml-output
-	$(SCONS) --target=extract
-	$(SCONS) --target=ocaml-output
+	$(SCONS) $(SCONSFLAGS) --target=ocaml-output
+	$(SCONS) $(SCONSFLAGS) --target=extract
+	$(SCONS) $(SCONSFLAGS) --target=ocaml-output
 
 # --------------------------------------------------------------------
 # Testing

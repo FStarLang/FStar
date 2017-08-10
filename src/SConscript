@@ -150,7 +150,6 @@ for t in ALL_BOOT:
 # --------------------------------------------------------------------
 # Extract boot files to .ml
 # --------------------------------------------------------------------
-
 if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows
     fstar_path = '../bin/fstar.exe'
 else:  # Unix
@@ -158,7 +157,7 @@ else:  # Unix
     if os.path.exists(fstar):
         filetype = subprocess.check_output(['file',fstar_path])
         if filetype.contains('Mono'):
-            env['FSTAR'] = env['RUNTIME'] + ' ' + env['FSTAR']  # F# version, mono fstar.exe
+            env['FSTAR'] = 'mono ' + env['FSTAR']  # F# version, mono fstar.exe
         else:
             env['FSTAR'] = fstar_path                           # OCaml verion, fstar.exe
 
