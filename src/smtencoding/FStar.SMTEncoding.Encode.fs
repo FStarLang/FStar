@@ -1874,7 +1874,7 @@ let encode_top_level_let :
         let binders, body, lopt = U.abs_formals e in
         match binders with
         | _::_ -> begin
-            match (SS.compress t_norm).n with
+            match (U.unascribe <| SS.compress t_norm).n with
             | Tm_arrow(formals, c) ->
               let formals, c = SS.open_comp formals c in
               let nformals = List.length formals in
