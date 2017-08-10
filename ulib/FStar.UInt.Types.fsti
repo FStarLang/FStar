@@ -16,8 +16,6 @@ val pow2_values: x:nat -> Lemma
    | _  -> True))
   [SMTPat (pow2 x)]
   
-#reset-options "--initial_fuel 0 --max_fuel 0"
-
 let max_int (n:nat) : Tot int = pow2 n - 1
 let min_int (n:nat) : Tot int = 0
 
@@ -32,8 +30,7 @@ let zero (n:nat) : Tot (uint_t n) = 0
 
 val pow2_n: #n:pos -> p:nat{p < n} -> Tot (r:uint_t n{r = pow2 p})
 
-#reset-options "--initial_fuel 1 --max_fuel 1"
 let one (n:pos) : Tot (uint_t n) = 1
 let ones (n:nat) : Tot (uint_t n) = max_int n
 //Just because let cannot be the last thing in the interface..
-val empty : Type0
+val __empty : Type0

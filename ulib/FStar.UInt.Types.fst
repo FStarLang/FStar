@@ -17,4 +17,4 @@ let pow2_values x =
 #reset-options "--initial_fuel 1 --max_fuel 1"
 let pow2_n #n p = pow2_le_compat (n - 1) p; pow2 p
 
-let empty = unit
+let __empty = unit

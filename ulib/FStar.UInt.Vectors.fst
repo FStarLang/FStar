@@ -3,6 +3,7 @@ open FStar.UInt.Types
 open FStar.Seq
 open FStar.BitVector
 open FStar.Mul
+open FStar.Math.Lemmas
 
 #reset-options "--initial_fuel 1 --max_fuel 1"
 
@@ -48,8 +49,6 @@ let from_vec_lemma_1 (#n:nat) (a:bv_t n) (b:bv_t n) :
 let from_vec_lemma_2 (#n:nat) (a:bv_t n) (b:bv_t n) :
   Lemma (requires from_vec a = from_vec b) (ensures equal a b) = 
   inverse_vec_lemma a; inverse_vec_lemma b
-
-open FStar.Math.Lemmas
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 
