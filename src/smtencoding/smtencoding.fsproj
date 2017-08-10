@@ -64,6 +64,7 @@
     <Compile Include="FStar.SMTEncoding.ErrorReporting.fs" />
     <Compile Include="FStar.SMTEncoding.Encode.fsi" />
     <Compile Include="FStar.SMTEncoding.Encode.fs" />
+    <Compile Include="FStar.SMTEncoding.Solver.fsi" />
     <Compile Include="FStar.SMTEncoding.Solver.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
