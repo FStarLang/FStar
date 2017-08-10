@@ -1460,6 +1460,28 @@ modifies clauses.
 
 *)
 
+val loc_pointer
+  (#t: typ)
+  (p: pointer t)
+: GTot loc
+
+val loc_buffer
+  (#t: typ)
+  (b: buffer t)
+: GTot loc
+
+val loc_addresses
+  (r: HH.rid)
+  (n: TSet.set nat)
+: GTot loc
+
+val loc_regions
+  (r: Set.set HH.rid)
+: GTot loc
+
+
+(* Inclusion of memory locations *)
+
 val loc_includes
   (s1 s2: loc)
 : GTot Type0
@@ -1490,19 +1512,43 @@ val loc_includes_union_l
   (ensures (loc_includes (loc_union s1 s2) s))
   [SMTPat (loc_includes (loc_union s1 s2) s)]
 
+let loc_includes_union_assoc_r2l
+  (s1 s2 s3 s: loc)
+: Lemma
+  (requires (loc_includes (loc_union s1 (loc_union s2 s3)) s))
+  (ensures (loc_includes (loc_union (loc_union s1 s2) s3) s))
+  [SMTPat (loc_includes (loc_union (loc_union s1 s2) s3) s)]
+= loc_includes_trans (loc_union (loc_union s1 s2) s3) (loc_union s1 (loc_union s2 s3)) s
+
+let loc_includes_union_assoc_l2r
+  (s1 s2 s3 s: loc)
+: Lemma
+  (requires (loc_includes (loc_union (loc_union s1 s2) s3) s))
+  (ensures (loc_includes (loc_union s1 (loc_union s2 s3)) s))
+  [SMTPat (loc_includes (loc_union s1 (loc_union s2 s3)) s)]
+= loc_includes_trans (loc_union s1 (loc_union s2 s3)) (loc_union (loc_union s1 s2) s3) s
+
+let loc_includes_union_assoc_focalize_1
+  (l1 l2 x r s: loc)
+: Lemma
+  (requires (loc_includes (loc_union (loc_union l1 l2) (loc_union x r)) s))
+  (ensures (loc_includes (loc_union l1 (loc_union (loc_union l2 x) r)) s))
+  [SMTPat (loc_includes (loc_union l1 (loc_union (loc_union l2 x) r)) s)]
+= loc_includes_trans (loc_union l1 (loc_union (loc_union l2 x) r)) (loc_union (loc_union l1 l2) (loc_union x r)) s
+
+let loc_includes_union_assoc_focalize_2
+  (l x r1 r2 s: loc)
+: Lemma
+  (requires (loc_includes (loc_union l (loc_union x (loc_union r1 r2))) s))
+  (ensures (loc_includes (loc_union l (loc_union (loc_union x r1) r2)) s))
+  [SMTPat (loc_includes (loc_union l (loc_union (loc_union x r1) r2)) s)]
+= loc_includes_trans (loc_union l (loc_union (loc_union x r1) r2)) (loc_union l (loc_union x (loc_union r1 r2))) s
+
 val loc_includes_none
   (s: loc)
 : Lemma
   (loc_includes s loc_none)
   [SMTPat (loc_includes s loc_none)]
-
-
-(** Pointer inclusion lifted to sets of pointers *)
-
-val loc_pointer
-  (#t: typ)
-  (p: pointer t)
-: GTot loc
 
 val loc_includes_pointer_pointer
   (#t1 #t2: typ)
@@ -1512,11 +1558,6 @@ val loc_includes_pointer_pointer
   (requires (includes p1 p2))
   (ensures (loc_includes (loc_pointer p1) (loc_pointer p2)))
   [SMTPat (loc_includes (loc_pointer p1) (loc_pointer p2))]
-
-val loc_buffer
-  (#t: typ)
-  (b: buffer t)
-: GTot loc
 
 val loc_includes_gsingleton_buffer_of_pointer
   (l: loc)
@@ -1570,10 +1611,75 @@ val loc_includes_gsub_buffer_l
   (ensures (UInt32.v i1 + UInt32.v len1 <= UInt32.v (buffer_length b) /\ UInt32.v i1 <= UInt32.v i2 /\ UInt32.v i2 + UInt32.v len2 <= UInt32.v i1 + UInt32.v len1 /\ loc_includes (loc_buffer (gsub_buffer b i1 len1)) (loc_buffer (gsub_buffer b i2 len2))))
   [SMTPat (loc_includes (loc_buffer (gsub_buffer b i1 len1)) (loc_buffer (gsub_buffer b i2 len2)))]
 
-val loc_address
-  (n: nat)
-: GTot loc
+val loc_includes_region_pointer
+  (#t: typ)
+  (s: Set.set HH.rid)
+  (p: pointer t)
+: Lemma
+  (requires (Set.mem (frameOf p) s))
+  (ensures (loc_includes (loc_regions s) (loc_pointer p)))
+  [SMTPat (loc_includes (loc_regions s) (loc_pointer p))]
 
+val loc_includes_region_buffer
+  (#t: typ)
+  (s: Set.set HH.rid)
+  (b: buffer t)
+: Lemma
+  (requires (Set.mem (frameOf_buffer b) s))
+  (ensures (loc_includes (loc_regions s) (loc_buffer b)))
+  [SMTPat (loc_includes (loc_regions s) (loc_buffer b))]
+
+val loc_includes_region_addresses
+  (s: Set.set HH.rid)
+  (r: HH.rid)
+  (a: TSet.set nat)
+: Lemma
+  (requires (Set.mem r s))
+  (ensures (loc_includes (loc_regions s) (loc_addresses r a)))
+  [SMTPat (loc_includes (loc_regions s) (loc_addresses r a))]
+
+val loc_includes_region_region
+  (s1 s2: Set.set HH.rid)
+: Lemma
+  (requires (Set.subset s2 s1))
+  (ensures (loc_includes (loc_regions s1) (loc_regions s2)))
+  [SMTPat (loc_includes (loc_regions s1) (loc_regions s2))]
+
+val loc_includes_region_union_l
+  (l: loc)
+  (s1 s2: Set.set HH.rid)
+: Lemma
+  (requires (loc_includes l (loc_regions (Set.intersect s2 (Set.complement s1)))))
+  (ensures (loc_includes (loc_union (loc_regions s1) l) (loc_regions s2)))
+  [SMTPat (loc_includes (loc_union (loc_regions s1) l) (loc_regions s2))]
+
+let loc_includes_region_union_r
+  (l: loc)
+  (s1 s2: Set.set HH.rid)
+: Lemma
+  (requires (loc_includes l (loc_regions (Set.intersect s2 (Set.complement s1)))))
+  (ensures (loc_includes (loc_union l (loc_regions s1)) (loc_regions s2)))
+  [SMTPat (loc_includes (loc_union l (loc_regions s1)) (loc_regions s2))]
+= loc_includes_trans (loc_union l (loc_regions s1)) (loc_union (loc_regions s1) l) (loc_regions s2)
+
+let loc_includes_region_union_assoc
+  (l r: loc)
+  (s1 s2: Set.set HH.rid)
+: Lemma
+  (requires (loc_includes (loc_union l r)) (loc_regions (Set.intersect s2 (Set.complement s1))))
+  (ensures (loc_includes (loc_union l (loc_union (loc_regions s1) r)) (loc_regions s2)))
+  [SMTPat (loc_includes (loc_union l (loc_union (loc_regions s1) r)) (loc_regions s2))]
+= loc_includes_trans (loc_union l (loc_union (loc_regions s1) r)) (loc_union (loc_regions s1) (loc_union l r)) (loc_regions s2)
+
+let loc_regions_test
+  (x1 x2 x3: loc)
+  (r1 r2: HH.rid)
+: Lemma
+  (ensures (loc_includes (loc_union x1 (loc_union (loc_regions (Set.singleton r1)) (loc_union x2 (loc_union (loc_regions (Set.singleton r2)) x3)))) (loc_regions (Set.union (Set.singleton r1) (Set.singleton r2)))))
+= ()
+
+
+(* Disjointness of two memory locations *)
 
 val loc_disjoint
   (s1 s2: loc)
@@ -1899,51 +2005,50 @@ val loc_disjoint_gpointer_of_buffer_cell
   [SMTPat (loc_disjoint (loc_pointer (gpointer_of_buffer_cell b i1)) (loc_pointer (gpointer_of_buffer_cell b i2)))]
 
 
-val loc_disjoint_address
-  (n1 n2: nat)
+val loc_disjoint_addresses
+  (r1 r2: HH.rid)
+  (n1 n2: TSet.set nat)
 : Lemma
-  (requires (n1 <> n2))
-  (ensures (loc_disjoint (loc_address n1) (loc_address n2)))
-  [SMTPat (loc_disjoint (loc_address n1) (loc_address n2))]
+  (requires (r1 <> r2 \/ TSet.subset (TSet.intersect n1 n2) TSet.empty))
+  (ensures (loc_disjoint (loc_addresses r1 n1) (loc_addresses r2 n2)))
+  [SMTPat (loc_disjoint (loc_addresses r1 n1) (loc_addresses r2 n2))]
 
-val loc_disjoint_pointer_address
+val loc_disjoint_pointer_addresses
   (#t: typ)
   (p: pointer t)
-  (n: nat)
+  (r: HH.rid)
+  (n: TSet.set nat)
 : Lemma
-  (requires (as_addr p <> n))
-  (ensures (loc_disjoint (loc_pointer p) (loc_address n)))
-  [SMTPat (loc_disjoint (loc_pointer p) (loc_address n))]
+  (requires (r <> frameOf p \/ (~ (TSet.mem (as_addr p) n))))
+  (ensures (loc_disjoint (loc_pointer p) (loc_addresses r n)))
+  [SMTPat (loc_disjoint (loc_pointer p) (loc_addresses r n))]
 
-let loc_disjoint_address_pointer
+let loc_disjoint_addresses_pointer
   (#t: typ)
   (p: pointer t)
-  (n: nat)
+  (r: HH.rid)
+  (n: TSet.set nat)
 : Lemma
-  (requires (as_addr p <> n))
-  (ensures (loc_disjoint (loc_address n) (loc_pointer p)))
-  [SMTPat (loc_disjoint (loc_address n) (loc_pointer p))]
-= loc_disjoint_sym (loc_pointer p) (loc_address n)
-
+  (requires (r <> frameOf p \/ (~ (TSet.mem (as_addr p) n))))
+  (ensures (loc_disjoint (loc_addresses r n) (loc_pointer p)))
+  [SMTPat (loc_disjoint (loc_addresses r n) (loc_pointer p))]
+= loc_disjoint_sym (loc_pointer p) (loc_addresses r n)
 
 (** The modifies clause proper *)
 
 val modifies
-  (r: HH.rid)
   (s: loc)
   (h1 h2: HS.mem)
 : GTot Type0
 
 val modifies_pointer_elim
-  (r: HH.rid)
   (s: loc)
   (h1 h2: HS.mem)
   (#a': typ)
   (p': pointer a')
 : Lemma
   (requires (
-    modifies r s h1 h2 /\
-    frameOf p' == r /\
+    modifies s h1 h2 /\
     live h1 p' /\
     loc_disjoint (loc_pointer p') s
   ))
@@ -1951,26 +2056,24 @@ val modifies_pointer_elim
     equal_values h1 p' h2 p'
   ))
   [SMTPatOr [
-    [ SMTPatT (modifies r s h1 h2); SMTPatT (gread h1 p') ] ;
-    [ SMTPatT (modifies r s h1 h2); SMTPat (readable h1 p') ] ;
-    [ SMTPatT (modifies r s h1 h2); SMTPatT (live h1 p') ];
-    [ SMTPatT (modifies r s h1 h2); SMTPatT (gread h2 p') ] ;
-    [ SMTPatT (modifies r s h1 h2); SMTPat (readable h2 p') ] ;
-    [ SMTPatT (modifies r s h1 h2); SMTPatT (live h2 p') ]
+    [ SMTPatT (modifies s h1 h2); SMTPatT (gread h1 p') ] ;
+    [ SMTPatT (modifies s h1 h2); SMTPat (readable h1 p') ] ;
+    [ SMTPatT (modifies s h1 h2); SMTPatT (live h1 p') ];
+    [ SMTPatT (modifies s h1 h2); SMTPatT (gread h2 p') ] ;
+    [ SMTPatT (modifies s h1 h2); SMTPat (readable h2 p') ] ;
+    [ SMTPatT (modifies s h1 h2); SMTPatT (live h2 p') ]
   ] ]
 
 val modifies_buffer_elim
   (#t1: typ)
   (b: buffer t1)
   (p: loc)
-  (r: HH.rid)
   (h h': HS.mem)
 : Lemma
   (requires (
     loc_disjoint (loc_buffer b) p /\
     buffer_live h b /\
-    frameOf_buffer b == r /\
-    modifies r p h h'
+    modifies p h h'
   ))
   (ensures (
     buffer_live h' b /\ (
@@ -1979,130 +2082,89 @@ val modifies_buffer_elim
 	buffer_as_seq h b == buffer_as_seq h' b
   ))))
   [SMTPatOr [
-    [ SMTPatT (modifies r p h h'); SMTPatT (buffer_as_seq h b) ] ;
-    [ SMTPatT (modifies r p h h'); SMTPat (buffer_readable h b) ] ;
-    [ SMTPatT (modifies r p h h'); SMTPatT (buffer_live h b) ];
-    [ SMTPatT (modifies r p h h'); SMTPatT (buffer_as_seq h' b) ] ;
-    [ SMTPatT (modifies r p h h'); SMTPat (buffer_readable h' b) ] ;
-    [ SMTPatT (modifies r p h h'); SMTPatT (buffer_live h' b) ]
+    [ SMTPatT (modifies p h h'); SMTPatT (buffer_as_seq h b) ] ;
+    [ SMTPatT (modifies p h h'); SMTPat (buffer_readable h b) ] ;
+    [ SMTPatT (modifies p h h'); SMTPatT (buffer_live h b) ];
+    [ SMTPatT (modifies p h h'); SMTPatT (buffer_as_seq h' b) ] ;
+    [ SMTPatT (modifies p h h'); SMTPat (buffer_readable h' b) ] ;
+    [ SMTPatT (modifies p h h'); SMTPatT (buffer_live h' b) ]
   ] ]
 
 val modifies_reference_elim
   (#t: Type0)
   (b: HS.reference t)
   (p: loc)
-  (r: HH.rid)
   (h h': HS.mem)
 : Lemma
   (requires (
-    loc_disjoint (loc_address (HS.as_addr b)) p /\
+    loc_disjoint (loc_addresses (HS.frameOf b) (TSet.singleton (HS.as_addr b))) p /\
     HS.contains h b /\
-    HS.frameOf b == r /\
-    modifies r p h h'
+    modifies p h h'
   ))
   (ensures (
     HS.contains h' b /\
     HS.sel h b == HS.sel h' b
   ))
   [SMTPatOr [
-    [ SMTPatT (modifies r p h h'); SMTPatT (HS.sel h b) ] ;
-    [ SMTPatT (modifies r p h h'); SMTPatT (HS.contains h b) ];
-    [ SMTPatT (modifies r p h h'); SMTPatT (HS.sel h' b) ] ;
-    [ SMTPatT (modifies r p h h'); SMTPatT (HS.contains h' b) ]
+    [ SMTPatT (modifies p h h'); SMTPatT (HS.sel h b) ] ;
+    [ SMTPatT (modifies p h h'); SMTPatT (HS.contains h b) ];
+    [ SMTPatT (modifies p h h'); SMTPatT (HS.sel h' b) ] ;
+    [ SMTPatT (modifies p h h'); SMTPatT (HS.contains h' b) ]
   ] ]
 
 val modifies_refl
-  (r: HH.rid)
   (s: loc)
   (h: HS.mem)
 : Lemma
-  (modifies r s h h)
-  [SMTPat (modifies r s h h)]
+  (modifies s h h)
+  [SMTPat (modifies s h h)]
 
 val modifies_loc_includes
-  (r: HH.rid)
   (s1: loc)
   (h h': HS.mem)
   (s2: loc)
 : Lemma
-  (requires (modifies r s2 h h' /\ loc_includes s1 s2))
-  (ensures (modifies r s1 h h'))
-  [SMTPat (modifies r s1 h h'); SMTPat (modifies r s2 h h')]
+  (requires (modifies s2 h h' /\ loc_includes s1 s2))
+  (ensures (modifies s1 h h'))
+  [SMTPat (modifies s1 h h'); SMTPat (modifies s2 h h')]
 
 val modifies_trans
-  (r: HH.rid)
   (s12: loc)
   (h1 h2: HS.mem)
   (s23: loc)
   (h3: HS.mem)
 : Lemma
-  (requires (modifies r s12 h1 h2 /\ modifies r s23 h2 h3))
-  (ensures (modifies r (loc_union s12 s23) h1 h3))
-  [SMTPat (modifies r s12 h1 h2); SMTPat (modifies r s23 h2 h3)]
+  (requires (modifies s12 h1 h2 /\ modifies s23 h2 h3))
+  (ensures (modifies (loc_union s12 s23) h1 h3))
+  [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
 
 let modifies_trans_incl_l
-  (r: HH.rid)
   (s12: loc)
   (h1 h2: HS.mem)
   (s23: loc)
   (h3: HS.mem)
 : Lemma
-  (requires (modifies r s12 h1 h2 /\ modifies r s23 h2 h3 /\ loc_includes s12 s23))
-  (ensures (modifies r s12 h1 h3))
-  [SMTPat (modifies r s12 h1 h2); SMTPat (modifies r s23 h2 h3)]
+  (requires (modifies s12 h1 h2 /\ modifies s23 h2 h3 /\ loc_includes s12 s23))
+  (ensures (modifies s12 h1 h3))
+  [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
 = ()
 
 let modifies_trans_incl_r
-  (r: HH.rid)
   (s12: loc)
   (h1 h2: HS.mem)
   (s23: loc)
   (h3: HS.mem)
 : Lemma
-  (requires (modifies r s12 h1 h2 /\ modifies r s23 h2 h3 /\ loc_includes s23 s12))
-  (ensures (modifies r s23 h1 h3))
-  [SMTPat (modifies r s12 h1 h2); SMTPat (modifies r s23 h2 h3)]
+  (requires (modifies s12 h1 h2 /\ modifies s23 h2 h3 /\ loc_includes s23 s12))
+  (ensures (modifies s23 h1 h3))
+  [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
 = ()
 
 let modifies_0 (h0 h1: HS.mem) : GTot Type0 =
-  HH.modifies_one h0.HS.tip h0.HS.h h1.HS.h /\
-  modifies h0.HS.tip loc_none h0 h1
+  modifies (loc_addresses h0.HS.tip TSet.empty) h0 h1
 
 let modifies_1 (#t: typ) (p: pointer t) (h0 h1: HS.mem) : GTot Type0 =
-  HH.modifies_one (frameOf p) h0.HS.h h1.HS.h /\
-  modifies (frameOf p) (loc_pointer p) h0 h1
-
-(* What about other regions? *)
-
-val modifies_other_regions
-  (rs: Set.set HH.rid)
-  (h0 h1: HS.mem)
-  (r: HH.rid)
-: Lemma
-  (requires (HH.modifies_just rs h0.HS.h h1.HS.h /\ (~ (Set.mem r rs))))
-  (ensures (modifies r loc_none h0 h1))
-
-let modifies_other_regions_l
-  (rs: Set.set HH.rid)
-  (h0 h1 h2: HS.mem)
-  (r: HH.rid)
-  (s: loc)
-: Lemma
-  (requires (HH.modifies_just rs h0.HS.h h1.HS.h /\ (~ (Set.mem r rs)) /\ modifies r s h1 h2))
-  (ensures (modifies r s h0 h2))
-  [SMTPat (HH.modifies_just rs h0.HS.h h1.HS.h); SMTPat (modifies r s h1 h2)]
-= modifies_other_regions rs h0 h1 r
-
-let modifies_other_regions_r
-  (rs: Set.set HH.rid)
-  (h0 h1 h2: HS.mem)
-  (r: HH.rid)
-  (s: loc)
-: Lemma
-  (requires (HH.modifies_just rs h1.HS.h h2.HS.h /\ (~ (Set.mem r rs)) /\ modifies r s h0 h1))
-  (ensures (modifies r s h0 h2))
-  [SMTPat (HH.modifies_just rs h1.HS.h h2.HS.h); SMTPat (modifies r s h0 h1)]
-= modifies_other_regions rs h1 h2 r
+  modifies (loc_pointer p) h0 h1
 
 (** Concrete allocators, getters and setters *)
 
@@ -2202,15 +2264,15 @@ val write_union_field
     /\ is_active_union_field h1 p fd
   ))
 
-val no_upd_fresh: r: HH.rid -> h0:HS.mem -> h1:HS.mem -> Lemma
-  (requires (HS.live_region h0 r /\ HS.fresh_frame h0 h1))
-  (ensures  (modifies r loc_none h0 h1))
-  [SMTPatT (HS.live_region h0 r); SMTPatT (HS.fresh_frame h0 h1)]
+val no_upd_fresh: h0:HS.mem -> h1:HS.mem -> Lemma
+  (requires (HS.fresh_frame h0 h1))
+  (ensures  (modifies_0 h0 h1))
+  [SMTPatT (HS.fresh_frame h0 h1)]
 
-val no_upd_popped: r: HH.rid -> h0:HS.mem -> h1:HS.mem -> Lemma
-  (requires (HS.live_region h0 r /\ r <> h0.HS.tip /\ HS.popped h0 h1))
-  (ensures  (modifies r loc_none h0 h1))
-  [SMTPatT (HS.live_region h0 r); SMTPatT (HS.popped h0 h1)]
+val no_upd_popped: h0:HS.mem -> h1:HS.mem -> Lemma
+  (requires (HS.popped h0 h1))
+  (ensures  (modifies (loc_regions (Set.singleton h0.HS.tip)) h0 h1))
+  [SMTPatT (HS.popped h0 h1)]
 
 (* `modifies` and the readable permission *)
 
