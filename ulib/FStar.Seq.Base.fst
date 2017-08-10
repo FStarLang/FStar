@@ -264,7 +264,7 @@ val init_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a))
 private
 let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
   : Lemma (requires True)
-    (ensures (forall (i:nat{i < len - k}). index (init_aux len k contents) i == contents (k + i)))
+    (ensures (forall (i:nat{i < len - k}).index (init_aux len k contents) i == contents (k + i)))
     (decreases (len - k))
 =
   if k + 1 = len

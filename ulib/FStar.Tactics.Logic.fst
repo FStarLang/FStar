@@ -136,7 +136,7 @@ let vbind #p #q sq f = FStar.Squash.bind_squash sq f
 
 let unsquash (t:term) : tactic term =
     v <-- quote_lid ["FStar";"Tactics";"Logic";"vbind"];
-    apply (return (mk_app v [t]));;
+    apply (return (mk_e_app v [t]));;
     b <-- intro;
     return (pack (Tv_Var b))
 
@@ -152,7 +152,7 @@ let or_ind #p #q #phi o l r = ()
 
 let cases_or (o:term) : tactic unit =
     oi <-- quote_lid ["FStar";"Tactics";"Logic";"or_ind"];
-    apply (return (mk_app oi [o]))
+    apply (return (mk_e_app oi [o]))
 
 private val bool_ind : (b:bool) -> (phi:Type) -> (squash (b == true  ==> phi)) ->
                                                  (squash (b == false ==> phi)) ->
@@ -161,7 +161,7 @@ let bool_ind b phi l r = ()
 
 let cases_bool (b:term) : tactic unit =
     bi <-- quote_lid ["FStar";"Tactics";"Logic";"bool_ind"];
-    seq (apply (return (mk_app bi [b])))
+    seq (apply (return (mk_e_app bi [b])))
         (trytac (b <-- implies_intro; rewrite b;; clear);; idtac)
 
 private val or_intro_1 : (#p:Type) -> (#q:Type) -> squash p -> squash (p \/ q)
@@ -184,4 +184,4 @@ let __and_elim #p #q #phi p_and_q f = ()
 
 let and_elim (t : term) : tactic unit =
     ae <-- quote_lid ["FStar";"Tactics";"Logic";"__and_elim"];
-    apply (return (mk_app ae [t]))
+    apply (return (mk_e_app ae [t]))

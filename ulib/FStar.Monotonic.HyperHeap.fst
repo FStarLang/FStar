@@ -394,7 +394,7 @@ abstract let unused_in_aref_of
   (m: t)
 : Lemma
   (aref_unused_in (aref_of r) m <==> unused_in r m)
-  [SMTPat (aref_unused_in (aref_of r))]
+  [SMTPat (aref_unused_in (aref_of r) m)]
 = Heap.unused_in_aref_of r (Map.sel m i)
 
 abstract

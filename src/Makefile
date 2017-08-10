@@ -238,6 +238,11 @@ ocaml-fstar-ocaml: boot-ocaml
 OTHERFLAGS+=--hint_info
 
 utest:
+	+$(MAKE) utest-prelude
+	+$(MAKE) uregressions
+
+# The first tests have to be performed sequentially (but each one may use some parallelism)
+utest-prelude:
 	+$(MAKE) all
 ifeq ($(OS),Windows_NT)
 	+$(MAKE) fsharp-regressions #normalizer failures on linux so only run on windows
@@ -245,7 +250,6 @@ endif
 	+$(MAKE) boot-ocaml
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
-	+$(MAKE) uregressions
 
 # Interactive mode regressions
 interactive-test:
@@ -256,28 +260,37 @@ fsharp-regressions:
 	$(RUNTIME) $(BIN)/tests.exe
 
 #a basic regression test for extraction
+#In particular, this test builds fstarlib.cmxa, so
+#any other examples that do need fstarlib.cmxa should depend on it
 hello:
 	+$(MAKE) -C ../examples/hello ocaml
 
 # Getting parallelism from this target
 uregressions: hello ulib tutorial uexamples interactive-test
 
+# Getting parallelism from this target as well
+uregressions-ulong: uregressions ulib-extra
+
+ulib-extra:
+	+$(MAKE) -C ../ulib extra
+
 ulib:
 	+$(MAKE) -C ../ulib
 
-tutorial: ulib
+# Depends on fstarlib.cmxa, which is built by hello
+tutorial: hello
 	+$(MAKE) -C ../doc/tutorial regressions
 
-native_tactics: ulib
+# Depends on fstarlib.cmxa, which is built by hello
+native_tactics: hello
 	+$(MAKE) -C ../examples/native_tactics all
 
 uexamples:
 	+$(MAKE) -C ../examples all
 
 ulong:
-	+$(MAKE) utest
-	+$(MAKE) -C ../examples/low-level/crypto extra
-	+$(MAKE) -C ../ulib extra
+	+$(MAKE) utest-prelude
+	+$(MAKE) uregressions-ulong
 
 ctags:
 	ctags --exclude=boot_fsts --exclude=boot_fstis --exclude=ocaml-output -R .

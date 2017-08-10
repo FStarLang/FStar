@@ -562,6 +562,7 @@ let t_float  = tconst C.float_lid
 let t_char   = tabbrev C.char_lid
 let t_range  = tconst C.range_lid
 let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev C.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange
