@@ -8962,8 +8962,12 @@ let encode_query:
                                     FStar_SMTEncoding_Util.mkAssume
                                       uu____27328 in
                                   let suffix =
-                                    FStar_List.append label_suffix
-                                      [FStar_SMTEncoding_Term.Echo "Done!"] in
+                                    FStar_List.append
+                                      [FStar_SMTEncoding_Term.Echo "<labels>"]
+                                      (FStar_List.append label_suffix
+                                         [FStar_SMTEncoding_Term.Echo
+                                            "</labels>";
+                                         FStar_SMTEncoding_Term.Echo "Done!"]) in
                                   (query_prelude, labels, qry, suffix)))))))
 let is_trivial:
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool =
