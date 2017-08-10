@@ -68,15 +68,16 @@ let rec extract_attr x =
   match SS.compress x with
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShow" ->
       Some PpxDerivingShow
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "c_inline" -> Some CInline
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "substitute" -> Some Substitute
-  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "gc" -> Some GCType
+  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.CInline" -> Some CInline
+  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Substitute" -> Some Substitute
+  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "Star.Pervasives.Gc" -> Some GCType
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
       Some (PpxDerivingShowConstant (string_of_unicode data))
   | { n = Tm_meta (x, _) } ->
       extract_attr x
   | a ->
-      print_warning "Warning: unrecognized attribute, valid attributes are `c_inline`, `substitute`, and `gc`.";
+      print1_warning "Warning: unrecognized attribute (%s), valid attributes are `c_inline`, `substitute`, and `gc`."
+      (Print.term_to_string a);
       (* BU.print2 "Unrecognized attribute at extraction: %s (%s)\n" *)
       (*   (Print.term_to_string a) *)
       (*   (Print.tag_of_term a); *)
