@@ -430,10 +430,11 @@ and translate_decl env d: option<decl> =
       Some (DTypeFlat (name, List.length args, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
-  | MLM_Ty [ (_, name, _mangled_name, args, a, Some (MLTD_DType branches)) ] ->
+  | MLM_Ty [ (_, name, _mangled_name, args, attrs, Some (MLTD_DType branches)) ] ->
       let name = env.module_name, name in
+      let flags = translate_flags attrs in
       let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
-      Some (DTypeVariant (name, [], List.length args, List.map (fun (cons, ts) ->
+      Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
         cons, List.map (fun (name, t) ->
           name, (translate_type env t, false)
         ) ts
