@@ -334,7 +334,9 @@ let doZ3Exe (fresh:bool) (input:string) (label_messages:error_labels) : z3status
     let reason_unknown = BU.map_opt smt_output.smt_reason_unknown (fun x ->
         let ru = String.concat " " x in
         if BU.starts_with ru "(:reason-unknown \""
-        then FStar.Util.substring ru (String.length "(:reason-unknown \"") (String.length ru - 1)
+        then let reason = FStar.Util.substring_from ru (String.length "(:reason-unknown \"" ) in
+             let res = String.substring reason 0 (String.length reason - 2) in //it ends with '")'
+             res
         else ru) in
     let status =
       if Options.debug_any() then print_string <| format1 "Z3 says: %s\n" (String.concat "\n" smt_output.smt_result);
