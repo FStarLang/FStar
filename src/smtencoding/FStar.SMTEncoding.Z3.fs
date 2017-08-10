@@ -103,11 +103,11 @@ let status_tag = function
 
 let status_string_and_errors s =
     match s with
-    | UNSAT _ -> "SMT result: unsat", []
-    | KILLED  -> "SMT result: killed", []
+    | KILLED
+    | UNSAT _ -> status_tag s, []
     | SAT (errs, msg)
     | UNKNOWN (errs, msg)
-    | TIMEOUT (errs, msg) -> BU.format2 "SMT result: %s %s" (status_tag s) (match msg with None -> "" | Some msg -> msg), errs
+    | TIMEOUT (errs, msg) -> BU.format2 "%s%s" (status_tag s) (match msg with None -> "" | Some msg -> " because " ^ msg), errs
 
 let tid () = BU.current_tid() |> BU.string_of_int
 let new_z3proc id =
@@ -331,7 +331,11 @@ let doZ3Exe (fresh:bool) (input:string) (label_messages:error_labels) : z3status
           List.iter parse_line lines;
           statistics
     in
-    let reason_unknown = BU.map_opt smt_output.smt_reason_unknown (String.concat " ") in
+    let reason_unknown = BU.map_opt smt_output.smt_reason_unknown (fun x ->
+        let ru = String.concat " " x in
+        if BU.starts_with ru "(:reason-unknown \""
+        then FStar.Util.substring ru (String.length "(:reason-unknown \"") (String.length ru - 1)
+        else ru) in
     let status =
       if Options.debug_any() then print_string <| format1 "Z3 says: %s\n" (String.concat "\n" smt_output.smt_result);
       match smt_output.smt_result with
