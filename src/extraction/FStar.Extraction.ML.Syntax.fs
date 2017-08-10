@@ -120,25 +120,26 @@ type mlpattern =
 | MLP_Tuple  of list<mlpattern>
 
 
-type c_flag = // C backend only
+//TODO:rename, not sure whether should be attributes/flags/etc, attributes
+// seems to be the most inutitive name since we are marking attributes of a defintion
+// whether type or let
+type attr = // C backend only
   | Mutable
   | Assumed
   | Private
   | NoExtract
-  | Attribute of string
-
-// JP: merge these two?
-type tyattr = // OCaml only
+  | CInline
+  | Substitute
+  | GCType
   | PpxDerivingShow
   | PpxDerivingShowConstant of string
 
-type tyattrs = list<tyattr>
+// rename
+type attrs = list<attr>
 
 type mlletflavor =
   | Rec
   | NonRec
-
-type c_flags = list<c_flag>
 
 type mlexpr' =
 | MLE_Const  of mlconstant
@@ -175,7 +176,7 @@ and mllb = {
     print_typ:bool;
 }
 
-and mlletbinding = mlletflavor * c_flags * list<mllb>
+and mlletbinding = mlletflavor * attrs * list<mllb>
 
 type mltybody =
 | MLTD_Abbrev of mlty
@@ -186,7 +187,7 @@ type mltybody =
      *)
 
 // bool: this was assumed (C backend)
-type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * tyattrs * option<mltybody>
+type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * attrs * option<mltybody>
 type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =

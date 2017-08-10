@@ -68,11 +68,15 @@ let rec extract_attr x =
   match SS.compress x with
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShow" ->
       Some PpxDerivingShow
+  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "c_inline" -> Some CInline
+  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "substitute" -> Some Substitute
+  | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "gc" -> Some GCType
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
       Some (PpxDerivingShowConstant (string_of_unicode data))
   | { n = Tm_meta (x, _) } ->
       extract_attr x
   | a ->
+      print_warning "Warning: unrecognized attribute, valid attributes are `c_inline`, `substitute`, and `gc`.";
       (* BU.print2 "Unrecognized attribute at extraction: %s (%s)\n" *)
       (*   (Print.term_to_string a) *)
       (*   (Print.tag_of_term a); *)
@@ -132,7 +136,7 @@ type inductive_family = {
   ityp   : term;
   idatas : list<data_constructor>;
   iquals : list<S.qualifier>;
-  iattrs : tyattrs;
+  iattrs : attrs;
 }
 
 let print_ifamily i =
@@ -217,7 +221,6 @@ let extract_bundle env se =
           env, [MLM_Ty td]
 
         | _ -> failwith "Unexpected signature element"
-
 
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
@@ -389,14 +392,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 | S.NoExtract -> Some NoExtract
                 | _ -> None
               ) quals in
-              let flags' = List.choose (function
-                | { n = Tm_constant (Const_string (data, _)) } ->
-                    Some (Attribute (string_of_unicode data))
-                | _ ->
-                    print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
-                    None
-              ) attrs in
-
+              let flags' = extract_attrs attrs in
               g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')] @ tactic_registration_decl
 
             | _ ->

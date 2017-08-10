@@ -42,7 +42,7 @@ and decl =
   | DTypeAlias of lident * int * typ
   | DTypeFlat of lident * int * fields_t
   | DExternal of option<cc> * lident * typ
-  | DTypeVariant of lident * int * branches_t
+  | DTypeVariant of lident * flag list * int * branches_t
 
 and cc =
   | StdCall
@@ -60,6 +60,7 @@ and flag =
   | NoExtract
   | CInline
   | Substitute
+  | GCType
 
 and lifetime =
   | Eternal
@@ -332,12 +333,10 @@ and translate_flags flags =
   List.choose (function
     | Syntax.Private -> Some Private
     | Syntax.NoExtract -> Some NoExtract
-    | Syntax.Attribute "c_inline" -> Some CInline
-    | Syntax.Attribute "substitute" -> Some Substitute
-    | Syntax.Attribute a ->
-        print1_warning "Warning: unrecognized attribute %s" a;
-        None
-    | _ -> None
+    | Syntax.CInline -> Some CInline
+    | Syntax.Substitute -> Some Substitute
+    | Syntax.GCType -> Some GCType
+    | _ -> None // is this all of them?
   ) flags
 
 and translate_decl env d: option<decl> =
@@ -431,10 +430,10 @@ and translate_decl env d: option<decl> =
       Some (DTypeFlat (name, List.length args, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
-  | MLM_Ty [ (_, name, _mangled_name, args, _, Some (MLTD_DType branches)) ] ->
+  | MLM_Ty [ (_, name, _mangled_name, args, a, Some (MLTD_DType branches)) ] ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
-      Some (DTypeVariant (name, List.length args, List.map (fun (cons, ts) ->
+      Some (DTypeVariant (name, [], List.length args, List.map (fun (cons, ts) ->
         cons, List.map (fun (name, t) ->
           name, (translate_type env t, false)
         ) ts
