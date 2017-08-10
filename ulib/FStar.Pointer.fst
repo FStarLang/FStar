@@ -2838,35 +2838,6 @@ let is_active_union_field_includes_readable
   in
   path_concat_includes pf phi f (Pointer?.p p')
 
-let equal_values_live #a h b h' b'
-: Lemma
-  (requires (equal_values h b h' b'))
-  (ensures (live h b /\ live h' b'))
-  [SMTPatOr [
-    [SMTPat (equal_values #a h b h' b'); SMTPat (live h b)];
-    [SMTPat (equal_values #a h b h' b'); SMTPat (live h' b')]
-  ]]
-= ()
-
-let equal_values_readable #a h b h' b'
-: Lemma
-  (requires (equal_values h b h' b' /\ readable h b))
-  (ensures (readable h' b'))
-  [SMTPatOr [
-    [SMTPat (equal_values #a h b h' b'); SMTPat (readable h b)];
-    [SMTPat (equal_values #a h b h' b'); SMTPat (readable h' b')]
-  ]]
-= ()
-
-let equal_values_gread #a h b h' b'
-: Lemma
-  (requires (equal_values h b h' b' /\ readable h b))
-  (ensures (gread h b == gread h' b' /\ readable h' b'))
-  [SMTPatOr [
-    [SMTPat (equal_values h b h' b'); SMTPat (gread h b)];
-    [SMTPat (equal_values h b h' b'); SMTPat (gread h' b')]
-  ]]
-= ()
 
 (*** The modifies clause *)
 
