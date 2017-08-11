@@ -64,7 +64,7 @@ let as_pair = function
 // So far, we recognize only a couple special attributes; they are encoded as
 // type constructors for an inductive defined in Pervasives, to provide a minimal
 // amount of typo-checking via desugaring.
-let rec extract_attr x =
+let rec extract_meta x =
   match SS.compress x with
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShow" ->
       Some PpxDerivingShow
@@ -74,7 +74,7 @@ let rec extract_attr x =
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
       Some (PpxDerivingShowConstant (string_of_unicode data))
   | { n = Tm_meta (x, _) } ->
-      extract_attr x
+      extract_meta x
   | a ->
       print1_warning "Warning: unrecognized attribute (%s), valid attributes are `c_inline`, `substitute`, and `gc`."
       (Print.term_to_string a);
@@ -83,8 +83,8 @@ let rec extract_attr x =
       (*   (Print.tag_of_term a); *)
       None
 
-let extract_attrs attrs =
-  List.choose extract_attr attrs
+let extract_metadata metas =
+  List.choose extract_meta metas
 
 let binders_as_mlty_binders (env:UEnv.env) bs =
     BU.fold_map (fun env (bv, _) ->
@@ -114,8 +114,8 @@ let extract_typ_abbrev env fv quals attrs def =
          then let mname = mangle_projector_lid lid in
               Some mname.ident.idText
          else None in
-    let attrs = extract_attrs attrs in
-    let td = [assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, attrs, Some (MLTD_Abbrev body)] in
+    let metadata = extract_metadata attrs in
+    let td = [assumed, lident_as_mlsymbol lid, mangled_projector, ml_bs, metadata, Some (MLTD_Abbrev body)] in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty td] in
     let env = if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
               then UEnv.extend_type_name env fv
@@ -137,7 +137,7 @@ type inductive_family = {
   ityp   : term;
   idatas : list<data_constructor>;
   iquals : list<S.qualifier>;
-  iattrs : attrs;
+  imetadata : metadata;
 }
 
 let print_ifamily i =
@@ -161,14 +161,14 @@ let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
-                let attrs = extract_attrs (se.sigattrs @ attrs) in
+                let metadata = extract_metadata (se.sigattrs @ attrs) in
                 let env = UEnv.extend_type_name env (S.lid_as_fv l Delta_constant None) in
                 env, [{   iname=l
                         ; iparams=bs
                         ; ityp=t
                         ; idatas=datas
                         ; iquals=se.sigquals
-                        ; iattrs = attrs }]
+                        ; imetadata = metadata }]
             | _ -> env, [])
         env ses in
     env, List.flatten ifams
@@ -209,7 +209,7 @@ let extract_bundle env se =
              MLTD_Record fields
          | _ ->
              MLTD_DType ctors in
-        env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, ind.iattrs, Some tbody) in
+        env,  (false, lident_as_mlsymbol ind.iname, None, ml_params, ind.imetadata, Some tbody) in
 
     match se.sigel, se.sigquals with
         | Sig_bundle([{sigel = Sig_datacon(l, _, t, _, _, _)}], _), [ExceptionConstructor] ->
@@ -393,7 +393,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 | S.NoExtract -> Some NoExtract
                 | _ -> None
               ) quals in
-              let flags' = extract_attrs attrs in
+              let flags' = extract_metadata attrs in
               g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')] @ tactic_registration_decl
 
             | _ ->

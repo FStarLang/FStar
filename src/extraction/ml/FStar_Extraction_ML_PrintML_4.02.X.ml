@@ -358,19 +358,19 @@ let build_ty_manifest (b: mltybody): core_type option=
 let skip_type_defn (current_module:string) (type_name:string) :bool =
   current_module = "FStar_Pervasives" && type_name = "option"
 
-let type_attrs (attrs: attrs): attributes option =
+let type_metadata (metadata: metadata): attributes option =
   let deriving_show = (mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident "show"))]) in
-  if BatList.is_empty attrs then None else (Some [deriving_show])
+  if BatList.is_empty metadata then None else (Some [deriving_show])
 
-let add_deriving_const (attrs: attrs) (ptype_manifest: core_type option): core_type option =
-  match attrs with
+let add_deriving_const (md: metadata) (ptype_manifest: core_type option): core_type option =
+  match md with
   | [PpxDerivingShowConstant s] ->
       let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(no_label, Exp.ident (mk_lident "fmt")); (no_label, Exp.constant (Const_string(s, None)))] in
       let deriving_const = (mk_sym "printer", PStr [Str.eval (Exp.fun_ "" None (build_binding_pattern ("fmt",Prims.parse_int "0")) (Exp.fun_ "" None (Pat.any ()) e))]) in
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
   | _ -> ptype_manifest
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): type_declaration option =
+let build_one_tydecl ((_, x, mangle_opt, tparams, metadata, body): one_mltydecl): type_declaration option =
   if skip_type_defn !current_module x then None
   else
     let ptype_name = match mangle_opt with
@@ -378,9 +378,9 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): t
       | None -> mk_sym x in
     let ptype_params = Some (map (fun (sym, _) -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
     let (ptype_manifest: core_type option) =
-      BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
+      BatOption.map_default build_ty_manifest None body |> add_deriving_const metadata in
     let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
-    let ptype_attrs = type_attrs attrs in
+    let ptype_attrs = type_metadata metadata in
     Some (Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ?attrs:ptype_attrs ptype_name)
 
 let build_tydecl (td: mltydecl): structure_item_desc option =

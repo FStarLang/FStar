@@ -120,10 +120,7 @@ type mlpattern =
 | MLP_Tuple  of list<mlpattern>
 
 
-//TODO:rename, not sure whether should be attributes/flags/etc, attributes
-// seems to be the most inutitive name since we are marking attributes of a defintion
-// whether type or let
-type attr = // C backend only
+type meta = // C backend only
   | Mutable
   | Assumed
   | Private
@@ -135,7 +132,7 @@ type attr = // C backend only
   | PpxDerivingShowConstant of string
 
 // rename
-type attrs = list<attr>
+type metadata = list<meta>
 
 type mlletflavor =
   | Rec
@@ -176,7 +173,7 @@ and mllb = {
     print_typ:bool;
 }
 
-and mlletbinding = mlletflavor * attrs * list<mllb>
+and mlletbinding = mlletflavor * metadata * list<mllb>
 
 type mltybody =
 | MLTD_Abbrev of mlty
@@ -187,7 +184,7 @@ type mltybody =
      *)
 
 // bool: this was assumed (C backend)
-type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * attrs * option<mltybody>
+type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * metadata * option<mltybody>
 type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =
