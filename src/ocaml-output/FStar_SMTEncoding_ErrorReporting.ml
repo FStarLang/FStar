@@ -673,23 +673,28 @@ let detail_errors:
                     FStar_Errors.warn r
                       (Prims.strcat "Hint failed to replay this sub-proof: "
                          msg)
-                  else FStar_Errors.err r msg in
+                  else
+                    ((let uu____2044 = FStar_Range.string_of_range r in
+                      FStar_Util.print2_error
+                        "XX: proof obligation at %s failed\n\t%s\n"
+                        uu____2044 msg);
+                     FStar_Errors.err r msg) in
           let elim labs =
             FStar_All.pipe_right labs
               (FStar_List.map
-                 (fun uu____2102  ->
-                    match uu____2102 with
-                    | (l,uu____2114,uu____2115) ->
+                 (fun uu____2104  ->
+                    match uu____2104 with
+                    | (l,uu____2116,uu____2117) ->
                         let a =
-                          let uu____2125 =
-                            let uu____2126 =
-                              let uu____2131 =
+                          let uu____2127 =
+                            let uu____2128 =
+                              let uu____2133 =
                                 FStar_SMTEncoding_Util.mkFreeV l in
-                              (uu____2131, FStar_SMTEncoding_Util.mkTrue) in
-                            FStar_SMTEncoding_Util.mkEq uu____2126 in
+                              (uu____2133, FStar_SMTEncoding_Util.mkTrue) in
+                            FStar_SMTEncoding_Util.mkEq uu____2128 in
                           {
                             FStar_SMTEncoding_Term.assumption_term =
-                              uu____2125;
+                              uu____2127;
                             FStar_SMTEncoding_Term.assumption_caption =
                               (FStar_Pervasives_Native.Some "Disabling label");
                             FStar_SMTEncoding_Term.assumption_name =
@@ -703,25 +708,25 @@ let detail_errors:
             (match active with
              | [] ->
                  let results =
-                   let uu____2186 =
+                   let uu____2188 =
                      FStar_List.map (fun x  -> (x, true)) eliminated in
-                   let uu____2199 =
+                   let uu____2201 =
                      FStar_List.map (fun x  -> (x, false)) errors in
-                   FStar_List.append uu____2186 uu____2199 in
+                   FStar_List.append uu____2188 uu____2201 in
                  sort_labels results
              | hd1::tl1 ->
-                 ((let uu____2221 =
+                 ((let uu____2223 =
                      FStar_Util.string_of_int (FStar_List.length active) in
-                   FStar_Util.print1 "%s, " uu____2221);
+                   FStar_Util.print1 "%s, " uu____2223);
                   (let decls =
                      FStar_All.pipe_left elim
                        (FStar_List.append eliminated
                           (FStar_List.append errors tl1)) in
-                   let uu____2239 = askZ3 decls in
-                   match uu____2239 with
-                   | (result,uu____2267,uu____2268) ->
-                       let uu____2285 = FStar_Util.is_left result in
-                       if uu____2285
+                   let uu____2241 = askZ3 decls in
+                   match uu____2241 with
+                   | (result,uu____2269,uu____2270) ->
+                       let uu____2287 = FStar_Util.is_left result in
+                       if uu____2287
                        then linear_check (hd1 :: eliminated) errors tl1
                        else linear_check eliminated (hd1 :: errors) tl1))) in
           print_banner ();
