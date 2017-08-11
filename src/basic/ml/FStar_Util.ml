@@ -29,7 +29,7 @@ let string_of_time = string_of_float
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
 
 type proc =
     {inc : in_channel;

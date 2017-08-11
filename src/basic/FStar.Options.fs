@@ -1047,7 +1047,7 @@ let prims () =
       | Some result ->
         result
       | None ->
-        raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+        failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
     end
   | Some x -> x
 
@@ -1057,14 +1057,14 @@ let pervasives () =
   let filename = "FStar.Pervasives.fst" in
   match find_file filename with
   | Some result -> result
-  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+  | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
 
 let pervasives_basename () = basename (pervasives ())
 let pervasives_native_basename () =
   let filename = "FStar.Pervasives.Native.fst" in
   match find_file filename with
   | Some result -> basename result
-  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+  | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
 
 
 let prepend_output_dir fname =

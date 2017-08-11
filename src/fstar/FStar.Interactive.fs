@@ -109,14 +109,24 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
       Some (m, (dsenv, env), FStar.Errors.get_err_count())
     | _ -> None
   with
-  | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+  | Failure (msg) when not (Options.trace_error ()) ->
+    let msg = "ASSERTION FAILURE: " ^ msg ^ "\n" ^
+              "F* may be in an inconsistent state.\n" ^
+              "Please file a bug report, ideally with a " ^
+              "minimized version of the program that triggered the error." in
+    FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
+    // Make sure the user sees the error, even if it happened transiently while
+    // running an automatic syntax checker like FlyCheck.
+    Util.print_error msg;
+    None
+
+  | FStar.Errors.Error(msg, r) when not (Options.trace_error ()) ->
     FStar.TypeChecker.Err.add_errors env [(msg, r)];
     None
 
-  | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+  | FStar.Errors.Err msg when not (Options.trace_error ()) ->
     FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
     None
-
 
 (*********************)
 (* Dependency checks *)
