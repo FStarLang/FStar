@@ -35,3 +35,25 @@ Guidelines for the changelog:
   `inline_for_extraction` on a type annotation now unfolds it at extraction
   time. This can help to reveal first-order code for C extraction;
   see [FStarLang/kremlin #51](https://github.com/FStarLang/kremlin/issues/51).
+
+## Command line options
+
+* --hint_stats and --check_hints are gone
+    b50c88930e3f2655704696902693941525f6cf9f. The former was rarely
+    used. The latter may be restored, but the code was too messy to
+    retain, given that the feature is also not much used.
+
+## Error reporting
+
+* The error reports from SMT query failures have been substantially
+  reworked. At least a warning is issued for each SMT query failure
+  together with a reason provided by the SMT solver. Additionally,
+  localized assertion failures will be printed as errors. If no
+  localized errors could be recovered (e.g., because of a solver
+  timeout) then the dreaded "Unknown assertion failed" error is
+  reported.
+
+* --hint_info now reports a reason for a hint failure as well as
+    localized errors for sub-proofs that failed to replay. This is
+    should provide a faster workflow than using --detail_hint_replay
+    (which still exists)
