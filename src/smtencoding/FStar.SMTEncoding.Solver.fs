@@ -307,10 +307,10 @@ let report_errors settings : unit =
         FStar.Errors.warn settings.query_range (error_to_short_string e));
         match find_localized_errors settings.query_errors with
         | Some err ->
-          FStar.Errors.add_errors err.error_messages
+          FStar.TypeChceker.Err.add_errors settings.query_env err.error_messages
 
         | None ->
-          FStar.Errors.err settings.query_range "Unknown assertion failed"
+          FStar.TypeChceker.Err.add_errors settings.query_env [("Unknown assertion failed", settings.query_range)]
     end
 
 let query_info settings z3result =
