@@ -2,15 +2,13 @@ module FStar.UInt.Base
 open FStar.UInt.Types
 open FStar.Mul
 
-#reset-options "--initial_fuel 0 --max_fuel 0"
-
 (* Increment and decrement *)
 let incr (#n:nat) (a:uint_t n) : Pure (uint_t n)
-(requires (b2t (a < max_int n))) (ensures (fun _ -> True)) =
+(requires (a < max_int n)) (ensures (fun _ -> True)) =
   a + 1
 
 let decr (#n:nat) (a:uint_t n) : Pure (uint_t n)
-  (requires (b2t (a > min_int n))) (ensures (fun _ -> True)) =
+  (requires (a > min_int n)) (ensures (fun _ -> True)) =
   a - 1
 
 let incr_mod (#n:nat) (a:uint_t n) : Tot (uint_t n) = 
@@ -50,14 +48,14 @@ val mul_div: #n:nat -> a:uint_t n -> b:uint_t n ->
 (* Division primitives *)
 val div: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
   (requires (size (a / b) n))
-  (ensures (fun c -> b <> 0 ==> a / b = c))
+  (ensures (fun c -> a / b = c))
 
 val div_size: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} ->
   Lemma (requires (size a n)) (ensures (size (a / b) n))
 
 val udiv: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
   (requires (True))
-  (ensures (fun c -> b <> 0 ==> a / b = c))
+  (ensures (fun c -> a / b = c))
 
 (* Modulo primitives *)
 let mod (#n:nat) (a:uint_t n) (b:uint_t n{b<>0}) : Tot (uint_t n) =
@@ -77,11 +75,11 @@ let lte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a <= b)
 let to_uint_t (m:nat) (a:int) : Tot (uint_t m) = a % pow2 m
 
 val incr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
-  (requires (b2t (a < max_int n)))
+  (requires (a < max_int n))
   (ensures (fun b -> a + 1 = b))
 
 val decr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
-  (requires (b2t (a > min_int n)))
+  (requires (a > min_int n))
   (ensures (fun b -> a - 1 = b))
 
 val add_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
@@ -103,4 +101,4 @@ val mul_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n)
 val div_underspec: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
   (requires True)
   (ensures (fun c ->
-    (b <> 0 /\ size (a / b) n) ==> a / b = c))
+    (size (a / b) n) ==> a / b = c))
