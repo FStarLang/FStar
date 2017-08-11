@@ -716,26 +716,31 @@ end
 (FStar_Errors.warn r (Prims.strcat "Hint failed to replay this sub-proof: " msg))
 end
 | uu____2042 -> begin
-(FStar_Errors.err r msg)
+((
+
+let uu____2044 = (FStar_Range.string_of_range r)
+in (FStar_Util.print2_error "XX: proof obligation at %s failed\n\t%s\n" uu____2044 msg));
+(FStar_Errors.err r msg);
+)
 end)
 end)
 end))
 in (
 
-let elim = (fun labs -> (FStar_All.pipe_right labs (FStar_List.map (fun uu____2102 -> (match (uu____2102) with
-| (l, uu____2114, uu____2115) -> begin
+let elim = (fun labs -> (FStar_All.pipe_right labs (FStar_List.map (fun uu____2104 -> (match (uu____2104) with
+| (l, uu____2116, uu____2117) -> begin
 (
 
 let a = (
 
-let uu____2125 = (
+let uu____2127 = (
 
-let uu____2126 = (
+let uu____2128 = (
 
-let uu____2131 = (FStar_SMTEncoding_Util.mkFreeV l)
-in ((uu____2131), (FStar_SMTEncoding_Util.mkTrue)))
-in (FStar_SMTEncoding_Util.mkEq uu____2126))
-in {FStar_SMTEncoding_Term.assumption_term = uu____2125; FStar_SMTEncoding_Term.assumption_caption = FStar_Pervasives_Native.Some ("Disabling label"); FStar_SMTEncoding_Term.assumption_name = (Prims.strcat "@disable_label_" (FStar_Pervasives_Native.fst l)); FStar_SMTEncoding_Term.assumption_fact_ids = []})
+let uu____2133 = (FStar_SMTEncoding_Util.mkFreeV l)
+in ((uu____2133), (FStar_SMTEncoding_Util.mkTrue)))
+in (FStar_SMTEncoding_Util.mkEq uu____2128))
+in {FStar_SMTEncoding_Term.assumption_term = uu____2127; FStar_SMTEncoding_Term.assumption_caption = FStar_Pervasives_Native.Some ("Disabling label"); FStar_SMTEncoding_Term.assumption_name = (Prims.strcat "@disable_label_" (FStar_Pervasives_Native.fst l)); FStar_SMTEncoding_Term.assumption_fact_ids = []})
 in FStar_SMTEncoding_Term.Assume (a))
 end)))))
 in (
@@ -747,34 +752,34 @@ let rec linear_check = (fun eliminated errors active -> ((FStar_SMTEncoding_Z3.r
 
 let results = (
 
-let uu____2186 = (FStar_List.map (fun x -> ((x), (true))) eliminated)
+let uu____2188 = (FStar_List.map (fun x -> ((x), (true))) eliminated)
 in (
 
-let uu____2199 = (FStar_List.map (fun x -> ((x), (false))) errors)
-in (FStar_List.append uu____2186 uu____2199)))
+let uu____2201 = (FStar_List.map (fun x -> ((x), (false))) errors)
+in (FStar_List.append uu____2188 uu____2201)))
 in (sort_labels results))
 end
 | (hd1)::tl1 -> begin
 ((
 
-let uu____2221 = (FStar_Util.string_of_int (FStar_List.length active))
-in (FStar_Util.print1 "%s, " uu____2221));
+let uu____2223 = (FStar_Util.string_of_int (FStar_List.length active))
+in (FStar_Util.print1 "%s, " uu____2223));
 (
 
 let decls = (FStar_All.pipe_left elim (FStar_List.append eliminated (FStar_List.append errors tl1)))
 in (
 
-let uu____2239 = (askZ3 decls)
-in (match (uu____2239) with
-| (result, uu____2267, uu____2268) -> begin
+let uu____2241 = (askZ3 decls)
+in (match (uu____2241) with
+| (result, uu____2269, uu____2270) -> begin
 (
 
-let uu____2285 = (FStar_Util.is_left result)
-in (match (uu____2285) with
+let uu____2287 = (FStar_Util.is_left result)
+in (match (uu____2287) with
 | true -> begin
 (linear_check ((hd1)::eliminated) errors tl1)
 end
-| uu____2302 -> begin
+| uu____2304 -> begin
 (linear_check eliminated ((hd1)::errors) tl1)
 end))
 end)));
