@@ -146,3 +146,9 @@ let cases: RT.term -> unit -> (RT.term * RT.term) __tac = fun t  -> fun () -> __
 
 let __set_options (s: string) : unit __tac = from_tac_1 B.set_options s
 let set_options : string -> unit -> unit __tac = fun s -> fun () -> __set_options s
+
+let __uvar_env (e : RT.env) (o : RT.term option) : RT.term __tac = from_tac_2 B.uvar_env e o
+let uvar_env : RT.env -> RT.term option -> unit -> RT.term __tac = fun e o -> fun () -> __uvar_env e o
+
+let __unify (t1 : RT.term) (t2 : RT.term) : bool __tac = from_tac_2 B.unify t1 t2
+let unify : RT.term -> RT.term -> unit -> bool __tac = fun t1 t2 -> fun () -> __unify t1 t2

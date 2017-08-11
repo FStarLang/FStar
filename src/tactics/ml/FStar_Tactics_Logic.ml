@@ -191,7 +191,7 @@ let unsquash:
          FStar_Tactics_Effect.bind
            (FStar_Tactics_Builtins.apply
               (FStar_Tactics_Effect.return
-                 (FStar_Reflection_Syntax.mk_app v [t])))
+                 (FStar_Reflection_Syntax.mk_e_app v [t])))
            (fun uu___68_780  ->
               FStar_Tactics_Effect.bind FStar_Tactics_Builtins.intro
                 (fun b  ->
@@ -216,7 +216,7 @@ let cases_or:
       (fun oi  ->
          FStar_Tactics_Builtins.apply
            (FStar_Tactics_Effect.return
-              (FStar_Reflection_Syntax.mk_app oi [o])))
+              (FStar_Reflection_Syntax.mk_e_app oi [o])))
 let bool_ind:
   Prims.bool ->
     Prims.unit ->
@@ -235,7 +235,7 @@ let cases_bool:
          FStar_Tactics_Builtins.seq
            (FStar_Tactics_Builtins.apply
               (FStar_Tactics_Effect.return
-                 (FStar_Reflection_Syntax.mk_app bi [b])))
+                 (FStar_Reflection_Syntax.mk_e_app bi [b])))
            (FStar_Tactics_Effect.bind
               (FStar_Tactics_Builtins.trytac
                  (FStar_Tactics_Effect.bind implies_intro
@@ -273,4 +273,4 @@ let and_elim:
       (fun ae  ->
          FStar_Tactics_Builtins.apply
            (FStar_Tactics_Effect.return
-              (FStar_Reflection_Syntax.mk_app ae [t])))
+              (FStar_Reflection_Syntax.mk_e_app ae [t])))

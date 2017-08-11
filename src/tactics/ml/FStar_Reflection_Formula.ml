@@ -127,9 +127,10 @@ let mk_Forall:
           (FStar_Reflection_Basic.pack
              (FStar_Reflection_Data.Tv_App
                 (pred,
-                  (FStar_Reflection_Basic.pack
-                     (FStar_Reflection_Data.Tv_Var
-                        (FStar_Reflection_Basic.fresh_binder typ)))))))
+                  ((FStar_Reflection_Basic.pack
+                      (FStar_Reflection_Data.Tv_Var
+                         (FStar_Reflection_Basic.fresh_binder typ))),
+                    FStar_Reflection_Data.Q_Explicit)))))
 let mk_Exists:
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> formula =
   fun typ  ->
@@ -139,9 +140,10 @@ let mk_Exists:
           (FStar_Reflection_Basic.pack
              (FStar_Reflection_Data.Tv_App
                 (pred,
-                  (FStar_Reflection_Basic.pack
-                     (FStar_Reflection_Data.Tv_Var
-                        (FStar_Reflection_Basic.fresh_binder typ)))))))
+                  ((FStar_Reflection_Basic.pack
+                      (FStar_Reflection_Data.Tv_Var
+                         (FStar_Reflection_Basic.fresh_binder typ))),
+                    FStar_Reflection_Data.Q_Explicit)))))
 type ('Af,'At) smaller = Obj.t
 let term_as_formula': FStar_Reflection_Types.term -> formula =
   fun t  ->
@@ -164,7 +166,11 @@ let term_as_formula': FStar_Reflection_Types.term -> formula =
              (match ((FStar_Reflection_Basic.inspect h),
                       (FStar_List_Tot_Base.append ts [t1]))
               with
-              | (FStar_Reflection_Data.Tv_FVar fv,a1::a2::a3::[]) ->
+              | (FStar_Reflection_Data.Tv_FVar
+                 fv,(a1,FStar_Reflection_Data.Q_Implicit )::(a2,FStar_Reflection_Data.Q_Explicit
+                                                             )::(a3,FStar_Reflection_Data.Q_Explicit
+                                                                 )::[])
+                  ->
                   if
                     (FStar_Reflection_Basic.inspect_fv fv) =
                       FStar_Reflection_Syntax.eq2_qn
@@ -194,8 +200,11 @@ let term_as_formula': FStar_Reflection_Types.term -> formula =
                               (FStar_Reflection_Basic.inspect_fv fv) =
                                 FStar_Reflection_Syntax.gte_qn
                             then Comp (Le, a1, a3, a2)
-                            else App (h0, t1)
-              | (FStar_Reflection_Data.Tv_FVar fv,a1::a2::[]) ->
+                            else App (h0, (FStar_Pervasives_Native.fst t1))
+              | (FStar_Reflection_Data.Tv_FVar
+                 fv,(a1,FStar_Reflection_Data.Q_Explicit )::(a2,FStar_Reflection_Data.Q_Explicit
+                                                             )::[])
+                  ->
                   if
                     (FStar_Reflection_Basic.inspect_fv fv) =
                       FStar_Reflection_Syntax.imp_qn
@@ -215,49 +224,69 @@ let term_as_formula': FStar_Reflection_Types.term -> formula =
                           (FStar_Reflection_Basic.inspect_fv fv) =
                             FStar_Reflection_Syntax.or_qn
                         then Or (a1, a2)
-                        else
-                          if
-                            (FStar_Reflection_Basic.inspect_fv fv) =
-                              FStar_Reflection_Syntax.forall_qn
-                          then mk_Forall a1 a2
-                          else
-                            if
-                              (FStar_Reflection_Basic.inspect_fv fv) =
-                                FStar_Reflection_Syntax.exists_qn
-                            then mk_Exists a1 a2
-                            else App (h0, t1)
-              | (FStar_Reflection_Data.Tv_FVar fv,a::[]) ->
+                        else App (h0, (FStar_Pervasives_Native.fst t1))
+              | (FStar_Reflection_Data.Tv_FVar
+                 fv,(a1,FStar_Reflection_Data.Q_Implicit )::(a2,FStar_Reflection_Data.Q_Explicit
+                                                             )::[])
+                  ->
+                  if
+                    (FStar_Reflection_Basic.inspect_fv fv) =
+                      FStar_Reflection_Syntax.forall_qn
+                  then mk_Forall a1 a2
+                  else
+                    if
+                      (FStar_Reflection_Basic.inspect_fv fv) =
+                        FStar_Reflection_Syntax.exists_qn
+                    then mk_Exists a1 a2
+                    else App (h0, (FStar_Pervasives_Native.fst t1))
+              | (FStar_Reflection_Data.Tv_FVar
+                 fv,(a,FStar_Reflection_Data.Q_Explicit )::[]) ->
                   if
                     (FStar_Reflection_Basic.inspect_fv fv) =
                       FStar_Reflection_Syntax.not_qn
                   then Not a
-                  else App (h0, t1)
-              | uu____771 -> App (h0, t1)))
+                  else App (h0, (FStar_Pervasives_Native.fst t1))
+              | uu____847 -> App (h0, (FStar_Pervasives_Native.fst t1))))
     | FStar_Reflection_Data.Tv_Arrow (b,t1) ->
         if FStar_Reflection_Basic.is_free b t1
         then Forall (b, t1)
         else Implies ((FStar_Reflection_Basic.type_of_binder b), t1)
     | FStar_Reflection_Data.Tv_Const (FStar_Reflection_Data.C_Int i) ->
         IntLit i
-    | FStar_Reflection_Data.Tv_Type uu____783 -> F_Unknown
-    | FStar_Reflection_Data.Tv_Abs (uu____784,uu____785) -> F_Unknown
-    | FStar_Reflection_Data.Tv_Refine (uu____786,uu____787) -> F_Unknown
+    | FStar_Reflection_Data.Tv_Type uu____863 -> F_Unknown
+    | FStar_Reflection_Data.Tv_Abs (uu____864,uu____865) -> F_Unknown
+    | FStar_Reflection_Data.Tv_Refine (uu____866,uu____867) -> F_Unknown
     | FStar_Reflection_Data.Tv_Const (FStar_Reflection_Data.C_Unit ) ->
         F_Unknown
-    | uu____788 -> F_Unknown
-let rec term_as_formula: FStar_Reflection_Types.term -> formula =
+    | uu____868 -> F_Unknown
+let rec is_name_imp:
+  FStar_Reflection_Types.name -> FStar_Reflection_Types.term -> Prims.bool =
+  fun nm  ->
+    fun t  ->
+      match FStar_Reflection_Basic.inspect t with
+      | FStar_Reflection_Data.Tv_FVar fv ->
+          if (FStar_Reflection_Basic.inspect_fv fv) = nm then true else false
+      | FStar_Reflection_Data.Tv_App
+          (l,(uu____887,FStar_Reflection_Data.Q_Implicit )) ->
+          is_name_imp nm l
+      | uu____888 -> false
+let rec unsquash:
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term FStar_Pervasives_Native.option
+  =
   fun t  ->
     match FStar_Reflection_Basic.inspect t with
-    | FStar_Reflection_Data.Tv_App (l,r) ->
-        (match FStar_Reflection_Basic.inspect l with
-         | FStar_Reflection_Data.Tv_FVar fv ->
-             if
-               (FStar_Reflection_Basic.inspect_fv fv) =
-                 FStar_Reflection_Syntax.squash_qn
-             then term_as_formula' r
-             else F_Unknown
-         | uu____812 -> F_Unknown)
-    | uu____813 -> F_Unknown
+    | FStar_Reflection_Data.Tv_App (l,(r,FStar_Reflection_Data.Q_Explicit ))
+        ->
+        if is_name_imp FStar_Reflection_Syntax.squash_qn l
+        then FStar_Pervasives_Native.Some r
+        else FStar_Pervasives_Native.None
+    | uu____907 -> FStar_Pervasives_Native.None
+let rec term_as_formula: FStar_Reflection_Types.term -> formula =
+  fun t  ->
+    match unsquash t with
+    | FStar_Pervasives_Native.None  -> F_Unknown
+    | FStar_Pervasives_Native.Some t1 -> term_as_formula' t1
 let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
   fun f  ->
     match f with
@@ -275,7 +304,9 @@ let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
                  ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
              (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.eq2_qn))
-          [t; l; r]
+          [(t, FStar_Reflection_Data.Q_Implicit);
+          (l, FStar_Reflection_Data.Q_Explicit);
+          (r, FStar_Reflection_Data.Q_Explicit)]
     | Comp (BoolEq ,t,l,r) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
@@ -284,7 +315,9 @@ let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
                  ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
              (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.eq1_qn))
-          [t; l; r]
+          [(t, FStar_Reflection_Data.Q_Implicit);
+          (l, FStar_Reflection_Data.Q_Explicit);
+          (r, FStar_Reflection_Data.Q_Explicit)]
     | Comp (Lt ,t,l,r) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
@@ -293,7 +326,9 @@ let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
                  ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
              (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.lt_qn))
-          [t; l; r]
+          [(t, FStar_Reflection_Data.Q_Implicit);
+          (l, FStar_Reflection_Data.Q_Explicit);
+          (r, FStar_Reflection_Data.Q_Explicit)]
     | Comp (Le ,t,l,r) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
@@ -302,7 +337,9 @@ let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
                  ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
              (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.lte_qn))
-          [t; l; r]
+          [(t, FStar_Reflection_Data.Q_Implicit);
+          (l, FStar_Reflection_Data.Q_Explicit);
+          (r, FStar_Reflection_Data.Q_Explicit)]
     | And (p,q) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
@@ -311,7 +348,8 @@ let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
                  ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
              (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.and_qn))
-          [p; q]
+          [(p, FStar_Reflection_Data.Q_Explicit);
+          (q, FStar_Reflection_Data.Q_Explicit)]
     | Or (p,q) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
@@ -320,7 +358,8 @@ let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
                  ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
              (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.or_qn))
-          [p; q]
+          [(p, FStar_Reflection_Data.Q_Explicit);
+          (q, FStar_Reflection_Data.Q_Explicit)]
     | Implies (p,q) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
@@ -329,7 +368,8 @@ let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
                  ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
              (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.imp_qn))
-          [p; q]
+          [(p, FStar_Reflection_Data.Q_Explicit);
+          (q, FStar_Reflection_Data.Q_Explicit)]
     | Not p ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
@@ -338,7 +378,7 @@ let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
                  ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
              (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.not_qn))
-          [p]
+          [(p, FStar_Reflection_Data.Q_Explicit)]
     | Iff (p,q) ->
         FStar_List_Tot_Base.fold_left
           (fun tv  ->
@@ -347,10 +387,13 @@ let formula_as_term_view: formula -> FStar_Reflection_Data.term_view =
                  ((FStar_Reflection_Basic.pack tv), a))
           (FStar_Reflection_Data.Tv_FVar
              (FStar_Reflection_Basic.pack_fv FStar_Reflection_Syntax.iff_qn))
-          [p; q]
+          [(p, FStar_Reflection_Data.Q_Explicit);
+          (q, FStar_Reflection_Data.Q_Explicit)]
     | Forall (b,t) -> FStar_Reflection_Data.Tv_Unknown
     | Exists (b,t) -> FStar_Reflection_Data.Tv_Unknown
-    | App (p,q) -> FStar_Reflection_Data.Tv_App (p, q)
+    | App (p,q) ->
+        FStar_Reflection_Data.Tv_App
+          (p, (q, FStar_Reflection_Data.Q_Explicit))
     | Name b -> FStar_Reflection_Data.Tv_Var b
     | FV fv -> FStar_Reflection_Data.Tv_FVar fv
     | IntLit i ->
