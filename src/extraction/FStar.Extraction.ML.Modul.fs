@@ -73,6 +73,9 @@ let rec extract_meta x =
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Gc" -> Some GCType
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
       Some (PpxDerivingShowConstant (string_of_unicode data))
+  // These are only for backwards compatibility, they should be removed at some point.
+  | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = "c_inline" -> Some CInline
+  | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = "substitute" -> Some Substitute
   | { n = Tm_meta (x, _) } ->
       extract_meta x
   | a ->
