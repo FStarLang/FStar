@@ -20,11 +20,14 @@ all: $(patsubst %,%.cmxs,$(MODULES)) $(patsubst %,%.test,$(MODULES))
 ../../bin/fstarlib/fstarlib.cmxa:
 	$(MAKE) -C $(ULIB_ML)
 
-%.cmxs: %.Test.fst .ulib
+$(CACHE):
+	mkdir $@
+
+%.cmxs: %.Test.fst .ulib $(CACHE)
 	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE) $<
 
-%.test: %.Test.fst
-	$(FSTAR) $(OTHERFLAGS) --use_native_tactics $(CACHE) $^
+%.test: %.Test.fst %.cmxs
+	$(FSTAR) $(OTHERFLAGS) --use_native_tactics $(CACHE) $<
 
 clean:
 	rm -f $(CACHE)/*.ml $(CACHE)/*.cm* $(CACHE)/*.o
