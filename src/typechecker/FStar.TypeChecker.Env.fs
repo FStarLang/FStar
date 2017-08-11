@@ -1178,6 +1178,13 @@ let eq_gamma env env' =
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
+let string_of_delta_level = function
+  | NoDelta -> "NoDelta"
+  | Inlining -> "Inlining"
+  | Eager_unfolding_only -> "Eager_unfolding_only"
+  | Unfold _ -> "Unfold _"
+  | UnfoldTac -> "UnfoldTac"
+
 let lidents env : list<lident> =
   let keys = List.fold_left (fun keys -> function
     | Binding_sig(lids, _) -> lids@keys

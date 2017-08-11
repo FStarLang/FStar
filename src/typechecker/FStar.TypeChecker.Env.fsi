@@ -138,6 +138,7 @@ val initial_env : (env -> term -> term*typ*guard_t) -> (env -> term -> universe)
 (* Some utilities *)
 val should_verify   : env -> bool
 val incr_query_index: env -> env
+val string_of_delta_level : delta_level -> string
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push               : env -> string -> env
