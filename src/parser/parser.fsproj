@@ -70,15 +70,15 @@
   </Target>
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <ItemGroup>
-    <FsYacc Include="boot/parse.fsy">
-      <OtherFlags>--module FStar.Parser.Parse --open FStar.Parser.AST -o boot/parse.fs</OtherFlags>
-    </FsYacc>
     <FsLex Include="lex.fsl">
       <OtherFlags>--unicode</OtherFlags>
     </FsLex>
     <Compile Include="FStar.Parser.Const.fs" />
     <Compile Include="FStar.Parser.AST.fs" />
     <Compile Include="parseutil.fs" />
+    <FsYacc Include="boot/parse.fsy">
+      <OtherFlags>--module FStar.Parser.Parse --open FStar.Parser.AST -o boot/parse.fs</OtherFlags>
+    </FsYacc>
     <Compile Include="boot/parse.fs" />
     <Compile Include="FStar.Parser.Lexhelp.fs" />
     <Compile Include="lex.fs" />

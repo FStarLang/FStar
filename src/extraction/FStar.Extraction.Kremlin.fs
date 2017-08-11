@@ -375,8 +375,10 @@ and translate_decl env d: option<decl> =
           let body = translate_expr env body in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, body))
         with e ->
-          BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) (BU.print_exn e);
-          Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbort))
+          let msg = BU.print_exn e in
+          BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) msg;
+          let msg = "This function was not extracted:\n" ^ msg in
+          Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg))
       end
 
   | MLM_Let (flavor, flags, [ {
