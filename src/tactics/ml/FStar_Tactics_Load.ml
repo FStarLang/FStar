@@ -34,6 +34,7 @@ let compile_modules dir ms =
         Sys.command ("ocamlfind ocamlopt -shared " ^
         "-I " ^ fs_home ^ "/src/ocaml-output/_build/src/tactics/ml " ^
         "-I " ^ fs_home ^ "/src/ocaml-output/_build/ulib/ml " ^
+        "-I " ^ fs_home ^ "/src/ocaml-output/_build/ulib/ml/compiler " ^
         "-I " ^ fs_home ^ "/src/ocaml-output/_build/src/ocaml-output/ " ^
         "-I " ^ fs_home ^ "/src/ocaml-output/_build/src/basic/ml " ^
         "-linkpkg -package zarith -o " ^ m ^ ".cmxs " ^ m ^ ".ml") in
