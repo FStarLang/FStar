@@ -52,6 +52,7 @@ let set_lid_range l r = {l with ident={l.ident with idRange=r}}
 let lid_add_suffix l s =
     let path = path_of_lid l in
     lid_of_path (path@[s]) (range_of_lid l)
+let ml_path_of_lid lid = String.concat "_" <| (path_of_ns lid.ns)@[text_of_id lid.ident]
 
 (* JP: I don't understand why a lid has both a str and a semantic list of
  * namespaces followed by a lowercase identifiers... *)

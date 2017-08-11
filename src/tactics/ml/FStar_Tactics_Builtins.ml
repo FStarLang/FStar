@@ -53,17 +53,13 @@ let cur_goal: unit -> RT.term __tac = fun () -> __cur_goal
 let __cur_witness: RT.term __tac = from_tac_0 B.cur_witness
 let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
 
-let __embed =
-  Obj.magic (fun uu____118  -> failwith "Not yet implemented:__embed")
-let quote x uu____135 s = E.Success ((__embed x), s)
-
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
 let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __trytac (E.reify_tactic t)
 
 let __trivial: unit __tac = from_tac_0 B.trivial
 let trivial: unit -> unit __tac = fun () -> __trivial
 
-let __norm (s: FStar_Reflection_Data.norm_step list): unit __tac = from_tac_1 B.norm s 
+let __norm (s: FStar_Reflection_Data.norm_step list): unit __tac = from_tac_1 B.norm s
 let norm: FStar_Reflection_Data.norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
 
 let __intro: RT.binder __tac = from_tac_0 B.intro
@@ -150,9 +146,3 @@ let cases: RT.term -> unit -> (RT.term * RT.term) __tac = fun t  -> fun () -> __
 
 let __set_options (s: string) : unit __tac = from_tac_1 B.set_options s
 let set_options : string -> unit -> unit __tac = fun s -> fun () -> __set_options s
-
-let __uvar_env (e : RT.env) (o : RT.term option) : RT.term __tac = from_tac_2 B.uvar_env e o
-let uvar_env : RT.env -> RT.term option -> unit -> RT.term __tac = fun e o -> fun () -> __uvar_env e o
-
-let __unify (t1 : RT.term) (t2 : RT.term) : bool __tac = from_tac_2 B.unify t1 t2
-let unify : RT.term -> RT.term -> unit -> bool __tac = fun t1 t2 -> fun () -> __unify t1 t2

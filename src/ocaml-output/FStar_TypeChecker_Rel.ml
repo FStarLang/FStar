@@ -8312,8 +8312,6 @@ let resolve_implicits':
                                 FStar_TypeChecker_Env.lax = true;
                                 FStar_TypeChecker_Env.lax_universes =
                                   (uu___191_22687.FStar_TypeChecker_Env.lax_universes);
-                                FStar_TypeChecker_Env.failhard =
-                                  (uu___191_22687.FStar_TypeChecker_Env.failhard);
                                 FStar_TypeChecker_Env.type_of =
                                   (uu___191_22687.FStar_TypeChecker_Env.type_of);
                                 FStar_TypeChecker_Env.universe_of =
@@ -8376,8 +8374,6 @@ let resolve_implicits':
                                    (uu___192_22697.FStar_TypeChecker_Env.lax);
                                  FStar_TypeChecker_Env.lax_universes =
                                    (uu___192_22697.FStar_TypeChecker_Env.lax_universes);
-                                 FStar_TypeChecker_Env.failhard =
-                                   (uu___192_22697.FStar_TypeChecker_Env.failhard);
                                  FStar_TypeChecker_Env.type_of =
                                    (uu___192_22697.FStar_TypeChecker_Env.type_of);
                                  FStar_TypeChecker_Env.universe_of =

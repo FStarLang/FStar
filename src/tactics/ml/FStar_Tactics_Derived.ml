@@ -108,9 +108,9 @@ let rec repeatseq:
         (FStar_Tactics_Builtins.trytac
            (FStar_Tactics_Builtins.seq
               (FStar_Tactics_Effect.bind t
-                 (fun uu___63_656  -> FStar_Tactics_Effect.return ()))
+                 (fun uu___51_656  -> FStar_Tactics_Effect.return ()))
               (repeatseq t)))
-        (fun uu___64_662  -> FStar_Tactics_Effect.return ()) ()
+        (fun uu___52_662  -> FStar_Tactics_Effect.return ()) ()
 let simpl: Prims.unit FStar_Tactics_Effect.tactic =
   FStar_Tactics_Builtins.norm
     [FStar_Reflection_Data.Simpl; FStar_Reflection_Data.Primops]
@@ -130,9 +130,8 @@ let tcut:
            (FStar_Tactics_Builtins.apply
               (FStar_Tactics_Effect.return
                  (FStar_Reflection_Basic.pack
-                    (FStar_Reflection_Data.Tv_App
-                       (qq, (t, FStar_Reflection_Data.Q_Explicit))))))
-           (fun uu___65_717  -> FStar_Tactics_Builtins.intro))
+                    (FStar_Reflection_Data.Tv_App (qq, t)))))
+           (fun uu___53_717  -> FStar_Tactics_Builtins.intro))
 let rec revert_all:
   FStar_Reflection_Types.binders -> Prims.unit FStar_Tactics_Effect.tactic =
   fun bs  ->
@@ -140,7 +139,7 @@ let rec revert_all:
     | [] -> FStar_Tactics_Effect.return ()
     | uu____730::tl1 ->
         FStar_Tactics_Effect.bind FStar_Tactics_Builtins.revert
-          (fun uu___66_735  -> revert_all tl1)
+          (fun uu___54_735  -> revert_all tl1)
 let assumption: Prims.unit FStar_Tactics_Effect.tactic =
   FStar_Tactics_Effect.bind FStar_Tactics_Builtins.cur_env
     (fun e  ->
@@ -207,7 +206,7 @@ let rec rewrite_all_context_equalities:
                     FStar_Tactics_Builtins.rewrite x_t
                 | uu____906 -> idtac)
            | uu____907 -> idtac)
-          (fun uu___67_909  -> rewrite_all_context_equalities bs1)
+          (fun uu___55_909  -> rewrite_all_context_equalities bs1)
 let rewrite_eqs_from_context: Prims.unit FStar_Tactics_Effect.tactic =
   FStar_Tactics_Effect.bind FStar_Tactics_Builtins.cur_env
     (fun e  ->
@@ -239,7 +238,7 @@ let unfold_point:
                     FStar_Tactics_Effect.bind
                       (FStar_Tactics_Builtins.norm
                          [FStar_Reflection_Data.Delta])
-                      (fun uu___68_982  -> FStar_Tactics_Builtins.trefl)
+                      (fun uu___56_982  -> FStar_Tactics_Builtins.trefl)
                   else FStar_Tactics_Builtins.trefl
               | uu____984 -> fail "impossible"))
 let unfold_def:
@@ -270,12 +269,12 @@ let mk_sq_eq:
   =
   fun t1  ->
     fun t2  ->
-      FStar_Reflection_Syntax.mk_e_app
+      FStar_Reflection_Syntax.mk_app
         (FStar_Reflection_Basic.pack
            (FStar_Reflection_Data.Tv_FVar
               (FStar_Reflection_Basic.pack_fv
                  FStar_Reflection_Syntax.squash_qn)))
-        [FStar_Reflection_Syntax.mk_e_app
+        [FStar_Reflection_Syntax.mk_app
            (FStar_Reflection_Basic.pack
               (FStar_Reflection_Data.Tv_FVar
                  (FStar_Reflection_Basic.pack_fv
@@ -307,5 +306,5 @@ let rec iseq:
     | t::ts1 ->
         FStar_Tactics_Effect.bind
           (FStar_Tactics_Builtins.divide (Prims.parse_int "1") t (iseq ts1))
-          (fun uu___69_1145  -> FStar_Tactics_Effect.return ())
+          (fun uu___57_1145  -> FStar_Tactics_Effect.return ())
     | [] -> FStar_Tactics_Effect.return ()
