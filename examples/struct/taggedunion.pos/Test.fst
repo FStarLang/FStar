@@ -48,7 +48,21 @@ let s_typ : P.typ = P.TStruct s_l
 let st_typ = either_typ s_typ P.(TBase TUInt16)
 let st_tags = either_tags s_typ P.(TBase TUInt16)
 
-#set-options "--z3rlimit 20"
+let step_0 (p: P.pointer st_typ) :
+  HST.Stack unit
+  (requires (fun h -> TU.valid h st_tags p /\ P.readable h p /\ TU.gread_tag h st_tags p == 0ul ))
+  (ensures (fun h0 _ h1 ->
+    TU.valid h0 st_tags p /\ P.readable h0 p /\
+    TU.valid h1 st_tags p /\ P.readable h1 p /\
+    TU.gread_tag h1 st_tags p == 0ul /\
+    P.modifies_1 p h0 h1
+  ))
+=
+    let s_ptr : P.pointer (P.TStruct s_l) = TU.field st_tags p "left" in
+    let x_ptr = P.field s_ptr "x" in
+    let x : UInt8.t = P.read x_ptr in
+    let y : UInt8.t = P.read (P.field s_ptr s_y) in
+    P.write x_ptr (UInt8.logxor x y)
 
 let step (p: P.pointer st_typ) :
   HST.Stack unit
@@ -62,11 +76,7 @@ let step (p: P.pointer st_typ) :
 =
   let t = TU.read_tag st_tags p in
   if t = 0ul then (
-    let s_ptr = TU.field st_tags p "left" in
-    let x_ptr = P.field s_ptr s_x in
-    let x : UInt8.t = P.read x_ptr in
-    let y : UInt8.t = P.read (P.field s_ptr s_y) in
-    P.write x_ptr (UInt8.logxor x y)
+    step_0 p
   ) else (
     assert (t == 1ul);
     let z : UInt16.t = P.read (TU.field st_tags p "right") in
@@ -74,6 +84,8 @@ let step (p: P.pointer st_typ) :
     let v : P.struct s_l = P.struct_create s_l [(|"x", x|); (|"y", 0uy|)] in
     TU.write st_tags p "left" v
   )
+
+#set-options "--z3rlimit 20"
 
 let step_alt (p: P.pointer st_typ):
   HST.Stack unit
@@ -87,11 +99,7 @@ let step_alt (p: P.pointer st_typ):
 =
   let t = TU.read_tag st_tags p in
   if t = 0ul then (
-    let s_ptr : P.pointer (P.TStruct s_l) = TU.field st_tags p "left" in
-    let x_ptr = P.field s_ptr "x" in
-    let x : UInt8.t = P.read x_ptr in
-    let y : UInt8.t = P.read (P.field s_ptr s_y) in
-    P.write x_ptr (UInt8.logxor x y)
+    step_0 p
   ) else (
     assert (t == 1ul);
     let z : UInt16.t = P.read (TU.field st_tags p "right") in
@@ -101,5 +109,5 @@ let step_alt (p: P.pointer st_typ):
     P.write (P.field s_ptr "x") x;
     P.write (P.field s_ptr "y") 0uy;
     let h2 = HST.get () in
-    P.readable_struct h2 s_ptr
+    P.readable_struct_fields_readable_struct h2 s_ptr
   )
