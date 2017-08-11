@@ -284,6 +284,7 @@ let inspect_const (c:sconst) : vconst =
 
 // TODO: consider effects? probably not too useful, but something should be done
 let rec inspect (t:term) : term_view =
+    let t = U.unascribe t in
     let t = U.un_uinst t in
     match t.n with
     | Tm_meta (t, _) ->
