@@ -304,7 +304,7 @@ let report_errors settings : unit =
          detail_errors false settings.query_env settings.query_all_labels ask_z3
     else begin
         settings.query_errors |> List.iter (fun e ->
-        FStar.Errors.warn settings.query_range (error_to_short_string e));
+        FStar.Errors.warn settings.query_range ("SMT solver says: " ^ error_to_short_string e));
         match find_localized_errors settings.query_errors with
         | Some err ->
           FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
