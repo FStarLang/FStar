@@ -1287,9 +1287,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         delta_level=[Env.Inlining; Env.Eager_unfolding_only]
                       }
                     else
-                      { cfg with
-                        steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
-                        delta_level=[NoDelta]}
+                      { cfg with steps=[ Exclude Zeta]@cfg.steps }
                   in
                   (* meta doesn't block reduction, but we need to put the label back *)
                   norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head
