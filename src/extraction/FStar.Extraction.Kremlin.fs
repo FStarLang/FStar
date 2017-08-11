@@ -126,7 +126,7 @@ and width =
   | UInt8 | UInt16 | UInt32 | UInt64
   | Int8 | Int16 | Int32 | Int64
   | Bool
-  | Int | UInt
+  | CInt
 
 and constant = width * string
 
@@ -153,7 +153,6 @@ and typ =
   | TBool
   | TAny
   | TArrow of typ * typ
-  | TZ
   | TBound of int
   | TApp of lident * list<typ>
   | TTuple of list<typ>
@@ -161,7 +160,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 22
+let current_version: version = 23
 
 type file = string * program
 type binary_format = version * list<file>
@@ -766,8 +765,8 @@ and translate_constant c: expr =
       failwith "todo: translate_expr [MLC_String]"
   | MLC_Bytes _ ->
       failwith "todo: translate_expr [MLC_Bytes]"
-  | MLC_Int (_, None) ->
-      failwith "todo: translate_expr [MLC_Int]"
+  | MLC_Int (s, None) ->
+      EConstant (CInt, s)
 
 (* Helper functions **********************************************************)
 
