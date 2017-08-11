@@ -239,6 +239,8 @@ let includes_gfield
   [SMTPat (P.includes p (gfield tgs p f))]
 = ()
 
+let live_gfield #l tgs p f h = ()
+
 let modifies_1_valid
   (#l: P.union_typ)
   (tgs: tags l)

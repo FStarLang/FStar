@@ -239,7 +239,30 @@ val includes_gfield
 : Lemma
   (requires True)
   (ensures (P.includes p (gfield tgs p f)))
-  [SMTPat (P.includes p (gfield tgs p f))]
+
+let includes_gfield_gen
+  (#t: P.typ)
+  (q: P.pointer t)
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+: Lemma
+  (requires (P.includes q p))
+  (ensures (P.includes q (gfield tgs p f)))
+  [SMTPat (P.includes q (gfield tgs p f))]
+= includes_gfield tgs p f;
+  P.includes_trans q p (gfield tgs p f)
+
+val live_gfield
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+  (h: HS.mem)
+: Lemma
+  (P.live h (gfield tgs p f) <==> P.live h p)
+  [SMTPat (P.live h (gfield tgs p f))]
 
 val modifies_1_valid
   (#l: P.union_typ)
