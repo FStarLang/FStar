@@ -15,6 +15,7 @@ all:	Apply.uver		\
 	GRewrite.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
+	Trace.uver		\
 	Synthesis.uver		\
 	Printers.uver		\
 	Setopts.uver		\
