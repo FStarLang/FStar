@@ -1911,6 +1911,19 @@
       0
     ],
     [
+      "FStar.TaggedUnion.raw_get_tag",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_FStar.Pointer.TStruct",
+        "equation_FStar.TaggedUnion.typ",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_bf89b40ace80a702460fafd9e91bd470",
+        "typing_FStar.TaggedUnion.typ"
+      ],
+      0
+    ],
+    [
       "FStar.TaggedUnion.raw_get_field",
       1,
       2,
@@ -1967,6 +1980,19 @@
         "typing_FStar.List.Tot.Base.map",
         "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.TaggedUnion.typ", "typing_FStar.TaggedUnion.typ_l"
+      ],
+      0
+    ],
+    [
+      "FStar.TaggedUnion.raw_get_field",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_FStar.Pointer.TStruct",
+        "equation_FStar.TaggedUnion.typ",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_bf89b40ace80a702460fafd9e91bd470",
+        "typing_FStar.TaggedUnion.typ"
       ],
       0
     ],
@@ -2055,6 +2081,23 @@
         "typing_FStar.Pointer.struct_sel", "typing_FStar.TaggedUnion.typ",
         "typing_FStar.TaggedUnion.typ_l",
         "typing_FStar.TaggedUnion.union_field"
+      ],
+      0
+    ],
+    [
+      "FStar.TaggedUnion.raw_get_value",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
+        "data_elim_FStar.Pointer.TStruct",
+        "equation_FStar.Pointer.struct_field",
+        "equation_FStar.TaggedUnion.typ",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_01356254b0339c4dbadadfbfc431e206",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_bf89b40ace80a702460fafd9e91bd470",
+        "typing_FStar.TaggedUnion.typ"
       ],
       0
     ],

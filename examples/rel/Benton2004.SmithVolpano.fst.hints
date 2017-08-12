@@ -511,6 +511,25 @@
       0
     ],
     [
+      "Benton2004.SmithVolpano.exec_equiv_seq",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
+        "@query", "equation_Benton2004.SmithVolpano.exec_equiv",
+        "fuel_guarded_inversion_Benton2004.SmithVolpano.seclevel",
+        "function_token_typing_Benton2004.skip",
+        "lemma_Benton2004.DDCC.d_seq", "lemma_Benton2004.DDCC.d_su1_",
+        "lemma_Benton2004.DDCC.exec_equiv_sym",
+        "lemma_Benton2004.DDCC.exec_equiv_trans",
+        "token_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
       "Benton2004.SmithVolpano.exec_equiv_ifthenelse",
       1,
       2,
