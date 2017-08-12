@@ -88,6 +88,7 @@ val fs_typ_app                  : string  -> bool
 val fstar_home                  : unit    -> string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
+val gen_native_tactics          : unit    -> option<string>
 val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
@@ -148,6 +149,7 @@ val ugly                        : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
+val use_native_tactics          : unit    -> option<string>
 val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> option<list<string>>
 val verify_all                  : unit    -> bool

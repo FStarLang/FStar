@@ -7,14 +7,14 @@ let curry:
   = fun f  -> fun x  -> fun y  -> f (x, y)
 let rec mk_app_collect_inv_s:
   FStar_Reflection_Types.term ->
-    FStar_Reflection_Data.argv Prims.list -> Prims.unit
+    FStar_Reflection_Types.term Prims.list -> Prims.unit
   = fun t  -> fun args  -> ()
 let rec mk_app_collect_inv: FStar_Reflection_Types.term -> Prims.unit =
   fun t  -> ()
 let rec forall_list: 'a 'Ap . 'a Prims.list -> Obj.t =
   fun a266  -> (Obj.magic (fun l  -> ())) a266
 let rec collect_app_order':
-  FStar_Reflection_Data.argv Prims.list ->
+  FStar_Reflection_Types.term Prims.list ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.unit
   = fun args  -> fun tt  -> fun t  -> ()
 let collect_app_order: FStar_Reflection_Types.term -> Prims.unit =
@@ -23,7 +23,7 @@ let rec list_ref: 'Aa 'Ap . 'Aa Prims.list -> 'Aa Prims.list =
   fun l  -> match l with | [] -> [] | x::xs -> x :: (list_ref xs)
 let collect_app_ref:
   FStar_Reflection_Types.term ->
-    (FStar_Reflection_Types.term,FStar_Reflection_Data.argv Prims.list)
+    (FStar_Reflection_Types.term,FStar_Reflection_Types.term Prims.list)
       FStar_Pervasives_Native.tuple2
   =
   fun t  ->

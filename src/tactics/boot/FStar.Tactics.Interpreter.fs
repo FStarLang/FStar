@@ -116,7 +116,6 @@ let mk_tactic_interpretation_5 (ps:proofstate)
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
 let step_from_native_step (ps: proofstate) (s: native_primitive_step): N.primitive_step =
-    BU.print1 "Registered primitive step %s\n" (Ident.string_of_lid s.name);
     { N.name=s.name;
       N.arity=s.arity;
       N.strong_reduction_ok=s.strong_reduction_ok;

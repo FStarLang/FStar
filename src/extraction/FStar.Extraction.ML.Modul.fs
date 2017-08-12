@@ -456,7 +456,14 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
   if Options.debug_any ()
   then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
+  let codegen_opt = Options.codegen () in
   let _ = Options.restore_cmd_line_options true in
+  (* since command line options are reset, need to set OCaml extraction for when
+     extraction is driven from the F* compiler itself; currently this is only the case for
+     automatic tactic compilation *)
+  let _ = match codegen_opt with
+    | Some "OCaml" -> Options.set_option "codegen" (Options.String "OCaml")
+    | _ -> () in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
                   currentModule = name} in

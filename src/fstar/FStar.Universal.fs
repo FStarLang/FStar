@@ -44,6 +44,8 @@ module BU      = FStar.Util
 
 let module_or_interface_name m = m.is_interface, m.name
 
+let user_tactics_modules = Tc.user_tactics_modules
+
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
 (***********************************************************************)
