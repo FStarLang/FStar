@@ -49,7 +49,14 @@ let mod_qn       = ["Prims"; "op_Modulus"]
 
 let nil_qn       = ["Prims"; "Nil"]
 let cons_qn      = ["Prims"; "Cons"]
+
 let mktuple2_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]
+let mktuple3_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple3"]
+let mktuple4_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple4"]
+let mktuple5_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple5"]
+let mktuple6_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple6"]
+let mktuple7_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple7"]
+let mktuple8_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple8"]
 
 let land_qn    = ["FStar" ; "UInt" ; "logand"]
 let lxor_qn    = ["FStar" ; "UInt" ; "logxor"]
@@ -60,7 +67,6 @@ let udiv_qn    = ["FStar" ; "UInt" ; "udiv"]
 let umod_qn    = ["FStar" ; "UInt" ; "mod"]
 let mul_mod_qn = ["FStar" ; "UInt" ; "mul_mod"]
 let nat_bv_qn  = ["FStar" ; "BV"   ; "int2bv"]
-
 
 (* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =
@@ -195,5 +201,21 @@ let rec mk_list (ts : list term) : term =
     | [] -> pack (Tv_FVar (pack_fv nil_qn))
     | t::ts -> mk_cons t (mk_list ts)
 
+let mktuple_n (ts : list term) : term =
+    match List.length ts with
+    | 0 -> pack (Tv_Const C_Unit)
+    | 1 -> let [x] = ts in x
+    | n -> begin
+           let qn = match n with
+                    | 2 -> mktuple2_qn
+                    | 3 -> mktuple3_qn
+                    | 4 -> mktuple4_qn
+                    | 5 -> mktuple5_qn
+                    | 6 -> mktuple6_qn
+                    | 7 -> mktuple7_qn
+                    | 8 -> mktuple8_qn
+           in mk_e_app (pack (Tv_FVar (pack_fv qn))) ts
+           end
+
 let mkpair (t1 t2 : term) : term =
-    mk_e_app (pack (Tv_FVar (pack_fv mktuple2_qn))) [t1; t2]
+    mktuple_n [t1;t2]
