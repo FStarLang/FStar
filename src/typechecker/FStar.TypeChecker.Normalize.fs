@@ -987,6 +987,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 end
             in
 
+            log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
+                            (Print.term_to_string t)
+                            (Range.string_of_range t.pos)
+                            (string_of_bool should_delta));
+
             if not should_delta
             then rebuild cfg env stack t
             else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
