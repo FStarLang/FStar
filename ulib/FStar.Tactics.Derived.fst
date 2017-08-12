@@ -67,6 +67,8 @@ let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
 let simpl : tactic unit = norm [Simpl; Primops]
 let whnf  : tactic unit = norm [WHNF; Primops]
 
+let intros : tactic (list binder) = repeat intro
+
 private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
 private let __cut #b a f x = f x
 

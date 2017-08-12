@@ -47,6 +47,10 @@ let gt_qn        = ["Prims"; "op_GreaterThan"]
 let gte_qn       = ["Prims"; "op_GreaterThanOrEqual"]
 let mod_qn       = ["Prims"; "op_Modulus"]
 
+let nil_qn       = ["Prims"; "Nil"]
+let cons_qn      = ["Prims"; "Cons"]
+let mktuple2_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]
+
 let land_qn    = ["FStar" ; "UInt" ; "logand"]
 let lxor_qn    = ["FStar" ; "UInt" ; "logxor"]
 let lor_qn     = ["FStar" ; "UInt" ; "logor"]
@@ -96,6 +100,9 @@ let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
     | _ -> false
 
 let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
+
+let binder_to_string b =
+  "(" ^ inspect_bv b ^ ":" ^ term_to_string (type_of_binder b) ^ ")"
 
 let compare_fv (f1 f2 : fv) : order =
     compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) (inspect_fv f1) (inspect_fv f2)
@@ -163,3 +170,24 @@ and compare_argv (a1 a2 : argv) : order =
     | Q_Implicit, Q_Explicit -> Lt
     | Q_Explicit, Q_Implicit -> Gt
     | _, _ -> compare_term a1 a2
+
+
+let mk_stringlit (s : string) : term =
+    pack (Tv_Const (C_String s))
+
+let mk_strcat (t1 t2 : term) : term =
+    mk_e_app (pack (Tv_FVar (pack_fv ["Prims"; "strcat"]))) [t1; t2]
+
+let mk_cons (h t : term) : term =
+   mk_e_app (pack (Tv_FVar (pack_fv cons_qn))) [h; t]
+
+let mk_cons_t (ty h t : term) : term =
+   mk_app (pack (Tv_FVar (pack_fv cons_qn))) [(ty, Q_Implicit); (h, Q_Explicit); (t, Q_Explicit)]
+
+let rec mk_list (ts : list term) : term =
+    match ts with
+    | [] -> pack (Tv_FVar (pack_fv nil_qn))
+    | t::ts -> mk_cons t (mk_list ts)
+
+let mkpair (t1 t2 : term) : term =
+    mk_e_app (pack (Tv_FVar (pack_fv mktuple2_qn))) [t1; t2]
