@@ -82,22 +82,28 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
-let rec collect_arr' (typs : list typ) (t : typ) : Tot (typ * list typ) (decreases t) =
+let rec collect_arr' (typs : list typ) (t : typ) : Tot (list typ * typ) (decreases t) =
     match inspect t with
     | Tv_Arrow b r ->
         let t = type_of_binder b in
         collect_arr' (t::typs) r
-    | _ -> (t, typs)
+    | _ -> (typs, t)
 
-val collect_arr : typ -> typ * list typ
-let collect_arr = collect_arr' []
+val collect_arr : typ -> list typ * typ
+let collect_arr t =
+    let (ts, c) = collect_arr' [] t in
+    (List.Tot.rev ts, c)
 
-// TODO: move away
-let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
-    match xs, ys with
-    | [], [] -> true
-    | x::xs, y::ys -> f x y && eqlist f xs ys
-    | _ -> false
+let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
+    match inspect t with
+    | Tv_Abs b t' ->
+        collect_abs' (b::bs) t'
+    | _ -> (bs, t)
+
+val collect_abs : term -> list binder * term
+let collect_abs t =
+    let (bs, t') = collect_abs' [] t in
+    (List.Tot.rev bs, t')
 
 let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
 

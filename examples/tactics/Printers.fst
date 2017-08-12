@@ -34,7 +34,7 @@ let printer : tactic unit =
     | Sg_Inductive _ bs t ctors ->
         let br1 ctor : branch = match ctor with | Ctor name t ->
             let pn = String.concat "." name in
-            let _, t_args = collect_arr t in
+            let t_args, _ = collect_arr t in
             let bv_pats = List.Tot.map (fun ti -> let b = fresh_binder ti in (b, Pat_Var b)) t_args in
             let bvs, pats = List.Tot.split bv_pats in
             let head = pack (Tv_Const (C_String pn)) in
