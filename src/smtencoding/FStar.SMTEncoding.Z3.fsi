@@ -26,13 +26,16 @@ module BU = FStar.Util
 
 type unsat_core = option<list<string>>
 type scope_t = list<list<decl>>
-type error_kind =
-    | Timeout
-    | Kill
-    | Default
+type z3status =
+    | UNSAT   of unsat_core
+    | SAT     of error_labels * option<string>         //error labels * z3 reason
+    | UNKNOWN of error_labels * option<string>         //error labels * z3 reason
+    | TIMEOUT of error_labels * option<string>         //error labels * z3 reason
+    | KILLED
+val status_string_and_errors : z3status -> string * error_labels
 type z3statistics = BU.smap<string>
 type z3result =
-    either<unsat_core, (error_labels*error_kind)>
+      z3status
     * int
     * z3statistics
 type cb = z3result -> unit
