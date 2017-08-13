@@ -211,8 +211,8 @@ val trace_of_exn: exn -> string
 
 (* not relying on representation *)
 type proc
-val launch_process: string -> string -> string -> string -> (string -> string -> bool) -> string
-val start_process: string -> string -> string -> (string -> string -> bool) -> proc
+val launch_process: bool -> string -> string -> string -> string -> (string -> string -> bool) -> string
+val start_process: bool -> string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit

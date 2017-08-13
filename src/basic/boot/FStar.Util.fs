@@ -69,7 +69,7 @@ let atomically (f:unit -> 'a) =
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
 
-let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
+let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
     let driverOutput = new StringBuilder() in
@@ -94,9 +94,11 @@ let start_process (id:string) (prog:string) (args:string) (cond:string -> string
                     if !killed then ()
                     else
                         ignore <| driverOutput.Append(args.Data);
-                        ignore <| driverOutput.Append("\n");
-                        if null = args.Data
-                            then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+                        if not raw then
+                            ignore <| driverOutput.Append("\n");
+                            if null = args.Data
+                                then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+                        else
                         if null = args.Data || cond id args.Data
                         then
                             System.Threading.Monitor.Enter(signal);
@@ -149,8 +151,8 @@ let kill_process (p:proc) =
     System.Threading.Monitor.Exit(p.m);
     p.proc.WaitForExit()
 
-let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
-  let proc = start_process id prog args cond in
+let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
+  let proc = start_process raw id prog args cond in
   let output = ask_process proc input in
   kill_process proc; output
 
