@@ -884,6 +884,16 @@ let unify (t1 : term) (t2 : term) : tac<bool> =
     ret (Rel.teq_nosmt ps.main_context t1 t2)
     )
 
+let launch_process (prog : string) (args : string) (input : string) : tac<string> =
+    // The `bind idtac` thunks the tactic
+    bind idtac (fun () ->
+    if Options.unsafe_tactic_exec () then
+        let s = BU.launch_process true "tactic_launch" prog args input (fun _ _ -> false) in
+        ret s
+    else
+        fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
+    )
+
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, _, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
     let g =  {

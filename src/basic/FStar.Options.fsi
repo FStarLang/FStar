@@ -145,6 +145,7 @@ val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
 val ugly                        : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
+val unsafe_tactic_exec          : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
 val use_native_tactics          : unit    -> option<string>

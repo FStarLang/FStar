@@ -223,3 +223,6 @@ let uvar_env (e : env) (o : option typ) : tactic term = fun () -> TAC?.reflect (
 
 assume private val __unify : term -> term -> __tac bool
 let unify (t1 t2 : term) : tactic bool = fun () -> TAC?.reflect(__unify t1 t2)
+
+assume private val __launch_process : string -> string -> string -> __tac string
+let launch_process (prog args input : string) : tactic string = fun () -> TAC?.reflect (__launch_process prog args input)
