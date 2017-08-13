@@ -162,6 +162,7 @@ let defaults =
       ("print_universes"              , Bool false);
       ("print_z3_statistics"          , Bool false);
       ("prn"                          , Bool false);
+      ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("reuse_hint_for"               , Unset);
       ("show_signatures"              , List []);
@@ -262,6 +263,7 @@ let get_print_implicits         ()      = lookup_opt "print_implicits"          
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
+let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
 let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
@@ -485,15 +487,15 @@ let rec specs () : list<Getopt.opt> =
         "Don't print unification variable numbers");
 
        ( noshort,
-        "hint_info",
-        ZeroArgs(fun () -> mk_bool true),
-        "Print information regarding hints");
-
-       ( noshort,
          "hint_file",
          OneArg (mk_path,
                  "[path]"),
         "Read/write hints to <path> (instead of module-specific hints files)");
+
+       ( noshort,
+        "hint_info",
+        ZeroArgs(fun () -> mk_bool true),
+        "Print information regarding hints (deprecated; use --query_stats instead)");
 
        ( noshort,
         "in",
@@ -639,12 +641,17 @@ let rec specs () : list<Getopt.opt> =
        ( noshort,
         "print_z3_statistics",
         ZeroArgs(fun () -> mk_bool true),
-        "Print Z3 statistics for each SMT query");
+        "Print Z3 statistics for each SMT query (deprecated; use --query_stats instead)");
 
        ( noshort,
         "prn",
         ZeroArgs (fun () -> mk_bool true),
         "Print full names (deprecated; use --print_full_names instead)");
+
+       ( noshort,
+        "query_stats",
+        ZeroArgs(fun () -> mk_bool true),
+        "Print SMT query statistics");
 
        ( noshort,
         "record_hints",
@@ -872,6 +879,7 @@ let settable = function
     | "print_universes"
     | "print_z3_statistics"
     | "prn"
+    | "query_stats"
     | "show_signatures"
     | "silent"
     | "smtencoding.elim_box"
@@ -1051,6 +1059,7 @@ let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
+                                    || get_query_stats                 ()
 let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
 let indent                       () = get_indent                      ()
@@ -1079,6 +1088,8 @@ let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
+                                    || get_query_stats                ()
+let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
@@ -1119,4 +1130,3 @@ let should_extract m =
      | [] -> true
      | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
   | l -> List.contains (String.lowercase m) l))
-
