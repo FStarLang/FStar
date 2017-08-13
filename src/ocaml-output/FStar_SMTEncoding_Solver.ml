@@ -704,7 +704,7 @@ let report_errors: query_settings -> Prims.unit =
                let uu____1702 =
                  let uu____1703 = error_to_short_string e in
                  Prims.strcat "SMT solver says: " uu____1703 in
-               FStar_Errors.warn settings.query_range uu____1702));
+               FStar_Errors.diag settings.query_range uu____1702));
        (let uu____1704 = find_localized_errors settings.query_errors in
         match uu____1704 with
         | FStar_Pervasives_Native.Some err1 ->
