@@ -94,11 +94,11 @@ let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:strin
                     if !killed then ()
                     else
                         ignore <| driverOutput.Append(args.Data);
-                        if not raw then
+                        if not raw then (
                             ignore <| driverOutput.Append("\n");
                             if null = args.Data
                                 then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
-                        else
+                        );
                         if null = args.Data || cond id args.Data
                         then
                             System.Threading.Monitor.Enter(signal);
