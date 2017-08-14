@@ -35,6 +35,9 @@ assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 
 assume private val __unquote : #a:Type -> term -> __tac a
+(** [unquote t] with turn a quoted term [t] into an actual value, of
+any type. This will fail at tactic runtime if the quoted term does not
+typecheck to type [a]. *)
 let unquote (#a:Type) (t:term) : tactic a = fun () -> TAC?.reflect (__unquote #a t)
 
 assume private val __trytac : #a:Type -> __tac a -> __tac (option a)
@@ -83,7 +86,6 @@ Currently broken (c.f. issue #1103)
 let intro_rec : tactic (binder * binder) = fun () -> TAC?.reflect __intro_rec
 
 assume private val __revert  : __tac unit
-
 (** [revert] pushes out a binder from the environment into the goal type,
 so a behaviour opposite to [intros].
 *)
@@ -186,7 +188,7 @@ some [?u] (possibly with exact) and then solving the other goal.
 let dup : tactic unit = fun () -> TAC?.reflect __dup
 
 assume private val __flip : __tac unit
-(** Flip the first two goals. *)
+(** Flip the order of the first two goals. *)
 let flip : tactic unit = fun () -> TAC?.reflect __flip
 
 assume private val __qed : __tac unit
@@ -219,10 +221,20 @@ change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
 let set_options s : tactic unit = fun () -> TAC?.reflect (__set_options s)
 
 assume private val __uvar_env : env -> option typ -> __tac term
+(** Creates a new, unconstrained unification variable in environment
+[env]. The type of the uvar can optionally be provided in [o]. If not
+provided, a second uvar is created for the type. *)
 let uvar_env (e : env) (o : option typ) : tactic term = fun () -> TAC?.reflect (__uvar_env e o)
 
 assume private val __unify : term -> term -> __tac bool
+(** Call the unifier on two terms. The return value is whether
+unification was possible. When the tactics returns true, the terms may
+have been instantited by unification. When false, there is no effect. *)
 let unify (t1 t2 : term) : tactic bool = fun () -> TAC?.reflect(__unify t1 t2)
 
 assume private val __launch_process : string -> string -> string -> __tac string
+(** Launches an external process [prog] with arguments [args] and input
+[input] and returns the output. For security reasons, this can only be
+performed when the `--unsafe_tactic_exec` options was provided for the
+current F* invocation. The tactic will fail if this is not so. *)
 let launch_process (prog args input : string) : tactic string = fun () -> TAC?.reflect (__launch_process prog args input)

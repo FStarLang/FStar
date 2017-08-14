@@ -57,3 +57,14 @@ Guidelines for the changelog:
     localized errors for sub-proofs that failed to replay. This is
     should provide a faster workflow than using --detail_hint_replay
     (which still exists)
+
+## Tactics
+
+* Let bindings are now part of the reflected syntax (Tv_Let), and can be
+  inspected/created in the usual manner.
+
+* New primitive: `launch_process` which runs an external command
+  and returns its output. For security reasons, this only works if
+  `--unsafe_tactic_exec` is provided (which can only be set externally).
+
+* New primitive: `norm_term` to call the normalizer on a quoted term.
