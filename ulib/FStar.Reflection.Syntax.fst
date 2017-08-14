@@ -157,6 +157,11 @@ let rec compare_term (s t : term) : order =
     | Tv_Uvar u1 _, Tv_Uvar u2 _->
         compare_int u1 u2
 
+    | Tv_Let b1 t1 t1', Tv_Let b2 t2 t2' ->
+        lex (compare_binder b1 b2) (fun () ->
+        lex (compare_term t1 t2) (fun () ->
+             compare_term t1' t2'))
+
     | Tv_Match _ _, Tv_Match _ _ ->
         Eq // TODO
 
