@@ -120,7 +120,6 @@ let g_is_null_intro
   (t: typ)
 : Lemma
   (g_is_null (nullptr #t) == true)
-  [SMTPat (g_is_null (nullptr #t))]
 = ()
 
 (** Buffers *)
@@ -1933,19 +1932,12 @@ let live_nlive
   (#value: typ)
   (h: HS.mem)
   (p: pointer value)
-: Lemma
-  (nlive h p <==> live h p)
-  [SMTPat (nlive h p)]
 = ()
 
 let g_is_null_nlive
   (#t: typ)
   (h: HS.mem)
   (p: npointer t)
-: Lemma
-  (requires (g_is_null p))
-  (ensures (nlive h p))
-  [SMTPat (g_is_null p); SMTPat (nlive h p)]
 = ()
 
 let greference_of
@@ -1973,9 +1965,6 @@ let live_not_unused_in
   (#value: typ)
   (h: HS.mem)
   (p: pointer value)
-: Lemma
-  (ensures (live h p /\ p `unused_in` h ==> False))
-  [SMTPatT (live h p); SMTPatT (p `unused_in` h)]
 = let f () : Lemma
     (requires (live h p /\ p `unused_in` h))
     (ensures False)
@@ -2002,6 +1991,10 @@ let frameOf
   (p: pointer value)
 : GTot HH.rid
 = HS.frameOf_aref (Pointer?.contents p)
+
+let live_region_frameOf #value h p =
+  let content = greference_of p in
+  assert (HS.contains h content)
 
 let disjoint_roots_intro_pointer_vs_pointer
   (#value1 value2: typ)
@@ -2052,6 +2045,148 @@ let recall
 = HST.recall (Pointer?.content p)
 *)
 
+let gfield
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+= _field p fd
+
+let as_addr_gfield
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+= ()
+
+let unused_in_gfield
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+  (h: HS.mem)
+= ()
+
+let live_gfield
+  (h: HS.mem)
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+= ()
+
+let gread_gfield
+  (h: HS.mem)
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+= ()
+
+let frameOf_gfield
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+= ()
+
+let is_mm_gfield
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+= ()
+
+let gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= _ufield p fd
+
+let as_addr_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let unused_in_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+  (h: HS.mem)
+= ()
+
+let live_gufield
+  (h: HS.mem)
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let gread_gufield
+  (h: HS.mem)
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let frameOf_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let is_mm_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let gcell
+  (#length: array_length_t)
+  (#value: typ)
+  (p: pointer (TArray length value))
+  i
+= _cell p i
+
+let as_addr_gcell
+  (#length: array_length_t)
+  (#value: typ)
+  (p: pointer (TArray length value))
+  i
+= ()
+
+let unused_in_gcell
+  (#length: array_length_t)
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer (TArray length value))
+  i
+= ()
+
+let live_gcell
+  (#length: array_length_t)
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer (TArray length value))
+  i
+= ()
+
+let gread_gcell
+  (#length: array_length_t)
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer (TArray length value))
+  i
+= ()
+
+let frameOf_gcell
+  (#length: array_length_t)
+  (#value: typ)
+  (p: pointer (TArray length value))
+  i
+= ()
+
+let is_mm_gcell
+  (#length: array_length_t)
+  (#value: typ)
+  (p: pointer (TArray length value))
+  i
+= ()
+
 let includes
   (#value1: typ)
   (#value2: typ)
@@ -2062,264 +2197,9 @@ let includes
   HS.aref_equal (Pointer?.contents p1) (Pointer?.contents p2) &&
   path_includes (Pointer?.p p1) (Pointer?.p p2)
 
-let gfield
-  (#l: struct_typ)
-  (p: pointer (TStruct l))
-  (fd: struct_field l)
-: GTot (p' : pointer (typ_of_struct_field l fd) { includes p p' } )
-= _field p fd
-
-let as_addr_gfield
-  (#l: struct_typ)
-  (p: pointer (TStruct l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (as_addr (gfield p fd) == as_addr p))
-  [SMTPat (as_addr (gfield p fd))]
-= ()
-
-let unused_in_gfield
-  (#l: struct_typ)
-  (p: pointer (TStruct l))
-  (fd: struct_field l)
-  (h: HS.mem)
-: Lemma
-  (requires True)
-  (ensures (unused_in (gfield p fd) h <==> unused_in p h))
-  [SMTPat (unused_in (gfield p fd) h)]
-= ()
-
-let live_gfield
-  (h: HS.mem)
-  (#l: struct_typ)
-  (p: pointer (TStruct l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (live h (gfield p fd) <==> live h p))
-  [SMTPat (live h (gfield p fd))]
-= ()
-
-let gread_gfield
-  (h: HS.mem)
-  (#l: struct_typ)
-  (p: pointer (TStruct l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (gread h (gfield p fd) == struct_sel (gread h p) fd))
-  [SMTPatOr [[SMTPat (gread h (gfield p fd))]; [SMTPat (struct_sel (gread h p) fd)]]]
-= ()
-
-let frameOf_gfield
-  (#l: struct_typ)
-  (p: pointer (TStruct l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (frameOf (gfield p fd) == frameOf p))
-  [SMTPat (frameOf (gfield p fd))]
-= ()
-
-let is_mm_gfield
-  (#l: struct_typ)
-  (p: pointer (TStruct l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (is_mm (gfield p fd) <==> is_mm p))
-  [SMTPat (is_mm (gfield p fd))]
-= ()
-
-let includes_gfield
-  (#l: struct_typ)
-  (p: pointer (TStruct l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (includes p (gfield p fd)))
-  [SMTPat (includes p (gfield p fd))]
-= ()
-
-let gufield
-  (#l: union_typ)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: GTot (p' : pointer (typ_of_struct_field l fd) { includes p p' } )
-= _ufield p fd
-
-let as_addr_gufield
-  (#l: union_typ)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (as_addr (gufield p fd) == as_addr p))
-  [SMTPat (as_addr (gufield p fd))]
-= ()
-
-let unused_in_gufield
-  (#l: union_typ)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-  (h: HS.mem)
-: Lemma
-  (requires True)
-  (ensures (unused_in (gufield p fd) h <==> unused_in p h))
-  [SMTPat (unused_in (gufield p fd) h)]
-= ()
-
-let live_gufield
-  (h: HS.mem)
-  (#l: union_typ)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (live h (gufield p fd) <==> live h p))
-  [SMTPat (live h (gufield p fd))]
-= ()
-
-let gread_gufield
-  (h: HS.mem)
-  (#l: union_typ)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires (union_get_key (gread h p) == fd))
-  (ensures (
-    union_get_key (gread h p) == fd /\
-    gread h (gufield p fd) == union_get_value (gread h p) fd
-  ))
-  [SMTPatOr [[SMTPat (gread h (gufield p fd))]; [SMTPat (union_get_value (gread h p) fd)]]]
-= ()
-
-let frameOf_gufield
-  (#l: union_typ)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (frameOf (gufield p fd) == frameOf p))
-  [SMTPat (frameOf (gufield p fd))]
-= ()
-
-let is_mm_gufield
-  (#l: union_typ)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (is_mm (gufield p fd) <==> is_mm p))
-  [SMTPat (is_mm (gufield p fd))]
-= ()
-
-let includes_gufield
-  (#l: union_typ)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (includes p (gufield p fd)))
-  [SMTPat (includes p (gufield p fd))]
-= ()
-
-let gcell
-  (#length: array_length_t)
-  (#value: typ)
-  (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: GTot (pointer value)
-= _cell p i
-
-let as_addr_gcell
-  (#length: array_length_t)
-  (#value: typ)
-  (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: Lemma
-  (requires True)
-  (ensures (as_addr (gcell p i) == as_addr p))
-  [SMTPat (as_addr (gcell p i))]
-= ()
-
-let unused_in_gcell
-  (#length: array_length_t)
-  (#value: typ)
-  (h: HS.mem)
-  (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: Lemma
-  (requires True)
-  (ensures (unused_in (gcell p i) h <==> unused_in p h))
-  [SMTPat (unused_in (gcell p i) h)]
-= ()
-
-let live_gcell
-  (#length: array_length_t)
-  (#value: typ)
-  (h: HS.mem)
-  (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: Lemma
-  (requires True)
-  (ensures (live h (gcell p i) <==> live h p))
-  [SMTPat (live h (gcell p i))]
-= ()
-
-let gread_gcell
-  (#length: array_length_t)
-  (#value: typ)
-  (h: HS.mem)
-  (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: Lemma
-  (requires True)
-  (ensures (gread h (gcell p i) == Seq.index (gread h p) (UInt32.v i)))
-  [SMTPat (gread h (gcell p i))]
-= ()
-
-let frameOf_gcell
-  (#length: array_length_t)
-  (#value: typ)
-  (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: Lemma
-  (requires True)
-  (ensures (frameOf (gcell p i) == frameOf p))
-  [SMTPat (frameOf (gcell p i))]
-= ()
-
-let is_mm_gcell
-  (#length: array_length_t)
-  (#value: typ)
-  (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: Lemma
-  (requires True)
-  (ensures (is_mm (gcell p i) == is_mm p))
-  [SMTPat (is_mm (gcell p i))]
-= ()
-
-let includes_gcell
-  (#length: array_length_t)
-  (#value: typ)
-  (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: Lemma
-  (requires True)
-  (ensures (includes p (gcell p i)))
-  [SMTPat (includes p (gcell p i))]
-= ()
-
 let includes_refl
   (#value: typ)
   (p: pointer value)
-: Lemma
-  (requires True)
-  (ensures (includes p p))
-  [SMTPat (includes p p)]
 = ()
 
 let includes_trans
@@ -2327,11 +2207,26 @@ let includes_trans
   (p1: pointer value1)
   (p2: pointer value2)
   (p3: pointer value3)
-: Lemma
-  (requires (includes p1 p2 /\ includes p2 p3))
-  (ensures (includes p1 p3))
-  [SMTPatT (includes p1 p2); SMTPatT (includes p2 p3)]
 = path_includes_trans (Pointer?.p p1) (Pointer?.p p2) (Pointer?.p p3)
+
+let includes_gfield
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+= ()
+
+let includes_gufield
+  (#l: union_typ)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let includes_gcell
+  (#length: array_length_t)
+  (#value: typ)
+  (p: pointer (TArray length value))
+  i
+= ()
 
 let includes_ind
   (x: (#value1: typ) ->
@@ -2386,6 +2281,7 @@ let includes_ind
     (Pointer?.p p1)
     (Pointer?.p p2)
 
+(*
 let unused_in_includes
   (#value1: typ)
   (#value2: typ)
@@ -2423,6 +2319,598 @@ let live_includes
   (fun #v p -> ())
   (fun #v1 #v2 #v3 p1 p2 p3 -> ())
   p1 p2
+*)
+
+(** The readable permission.
+    We choose to implement it only abstractly, instead of explicitly
+    tracking the permission in the heap.
+*)
+
+let readable
+  (#a: typ)
+  (h: HS.mem)
+  (b: pointer a)
+: GTot Type0
+= let () = () in // necessary to somehow remove the `logic` qualifier
+  live h b /\ (
+    let content = greference_of b in
+    let (| _, c |) = HS.sel h content in
+    ovalue_is_readable a (path_sel c (Pointer?.p b))
+  )
+
+let readable_live
+  (#a: typ)
+  (h: HS.mem)
+  (b: pointer a)
+= ()
+
+let readable_gfield
+  (#l: struct_typ)
+  (h: HS.mem)
+  (p: pointer (TStruct l))
+  (fd: struct_field l)
+= ()
+
+let readable_struct
+  (#l: struct_typ)
+  (h: HS.mem)
+  (p: pointer (TStruct l))
+: Lemma
+  (requires (
+    forall (f: struct_field l) .
+    readable h (gfield p f)
+  ))
+  (ensures (readable h p))
+//  [SMTPat (readable #(TStruct l) h p)] // TODO: dubious pattern, will probably trigger unreplayable hints
+= let dummy_field : struct_field l = fst (List.Tot.hd l) in // struct is nonempty
+  let dummy_field_ptr = gfield p dummy_field in
+  assert (readable h dummy_field_ptr);
+  let content = greference_of p in
+  let (| _, c |) = HS.sel h content in
+  let (v: otype_of_typ (TStruct l)) = path_sel c (Pointer?.p p) in
+  let (v: ostruct l {Some? v}) = v in
+  ovalue_is_readable_struct_intro l v
+
+let readable_struct_forall_mem
+  (#l: struct_typ)
+  (p: pointer (TStruct l))
+: Lemma (forall
+    (h: HS.mem)
+  . (
+      forall (f: struct_field l) .
+      readable h (gfield p f)
+    ) ==>
+    readable h p
+  )
+= let f
+    (h: HS.mem)
+  : Lemma // FIXME: WHY WHY WHY do we need this explicit annotation?
+    (requires (
+      forall (f: struct_field l) .
+      readable h (gfield p f)
+    ))
+    (ensures (readable h p))
+  = readable_struct h p
+  in
+  Classical.forall_intro (Classical.move_requires f)
+
+let rec readable_struct_fields'
+  (#l: struct_typ)
+  (h: HS.mem)
+  (p: pointer (TStruct l))
+  (s: list string)
+: GTot Type0
+  (decreases s)
+= match s with
+  | [] -> True
+  | f :: s' ->
+    readable_struct_fields' h p s' /\ (
+      if List.Tot.mem f (List.Tot.map fst l)
+      then
+	let f : struct_field l = f in
+	readable h (gfield p f)
+      else
+	True
+    )
+
+let readable_struct_fields #l h p s = readable_struct_fields' h p s
+
+let readable_struct_fields_nil #l h p = ()
+
+let readable_struct_fields_cons #l h p f q = ()
+
+let rec readable_struct_fields_elim
+  (#l: struct_typ)
+  (h: HS.mem)
+  (p: pointer (TStruct l))
+  (s: list string)
+: Lemma
+  (requires (readable_struct_fields h p s))
+  (ensures (forall f . (List.Tot.mem f s /\ List.Tot.mem f (List.Tot.map fst l)) ==> (let f : struct_field l = f in readable h (gfield p f))))
+  (decreases s)
+= match s with
+  | [] -> ()
+  | _ :: q -> readable_struct_fields_elim h p q
+
+let readable_struct_fields_readable_struct #l h p =
+  readable_struct_fields_elim h p (List.Tot.map fst l);
+  readable_struct h p
+
+let readable_gcell
+  (#length: array_length_t)
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer (TArray length value))
+  i
+= ()
+
+let readable_array
+  (#length: array_length_t)
+  (#value: typ)
+  (h: HS.mem)
+  (p: pointer (TArray length value))
+= assert (readable h (gcell p 0ul)); // for Some?
+  let content = greference_of p in
+  let (| _, c |) = HS.sel h content in
+  let (v0: otype_of_typ (TArray length value)) = path_sel c (Pointer?.p p) in
+  ovalue_is_readable_array_intro v0
+
+(* TODO: improve on the following interface *)
+let readable_gufield
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+(** The active field of a union *)
+
+let is_active_union_field
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+: GTot Type0
+= let () = () in // necessary to somehow remove the `logic` qualifier
+  live h p /\ (
+    let content = greference_of p in
+    let (| _, c |) = HS.sel h content in
+    let vu : otype_of_typ (TUnion l) = path_sel c (Pointer?.p p) in
+    let vu : option (gtdata (struct_field l) (type_of_struct_field' l otype_of_typ)) = vu in
+    Some? vu /\ gtdata_get_key (Some?.v vu) == fd
+  )
+
+let is_active_union_live
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let is_active_union_field_live
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let is_active_union_field_eq
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd1 fd2: struct_field l)
+= ()
+
+let is_active_union_field_get_key
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let is_active_union_field_readable
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+= ()
+
+let is_active_union_field_includes_readable
+  (#l: union_typ)
+  (h: HS.mem)
+  (p: pointer (TUnion l))
+  (fd: struct_field l)
+  (#t': typ)
+  (p' : pointer t')
+= let content = greference_of p in
+  let (| _ , c |) = HS.sel h content in
+  let t = typ_of_struct_field l fd in
+  let (Pointer from cts p0) = p in
+  let pf = PathStep _ _ p0 (StepUField l fd) in
+  let (v0 : otype_of_typ t) = path_sel c pf in
+  let phi
+    (#t': typ)
+    (pt': path from t')
+  : Ghost Type0
+    (requires (path_includes pf pt'))
+    (ensures (fun _ -> True))
+  = (~ (path_sel c pt' == none_ovalue t')) ==> is_active_union_field h p fd
+  in
+  let f
+    (t' : typ)
+    (pt' : path t t')
+  : Lemma
+    (ensures (phi (path_concat pf pt')))
+  = path_sel_concat c pf pt';
+    path_sel_none_ovalue pf;
+    path_sel_none_ovalue pt'
+  in
+  path_concat_includes pf phi f (Pointer?.p p')
+
+(*** Semantics of buffers *)
+
+(** Operations on buffers *)
+
+let gsingleton_buffer_of_pointer
+  (#t: typ)
+  (p: pointer t)
+: GTot (buffer t)
+= Buffer (BufferRootSingleton p) 0ul 1ul
+
+let singleton_buffer_of_pointer
+  (#t: typ)
+  (p: pointer t)
+: HST.Stack (buffer t)
+  (requires (fun h -> live h p))
+  (ensures (fun h b h' -> h' == h /\ b == gsingleton_buffer_of_pointer p))
+= Buffer (BufferRootSingleton p) 0ul 1ul
+
+let gbuffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: pointer (TArray length t))
+: GTot (buffer t)
+= Buffer (BufferRootArray p) 0ul length
+
+let buffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: pointer (TArray length t))
+: HST.Stack (buffer t)
+  (requires (fun h -> live h p))
+  (ensures (fun h b h' -> h' == h /\ b == gbuffer_of_array_pointer p))
+= Buffer (BufferRootArray p) 0ul length
+
+let buffer_length
+  (#t: typ)
+  (b: buffer t)
+: GTot UInt32.t
+= Buffer?.blength b
+
+let buffer_length_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (p: pointer t)
+: Lemma
+  (requires True)
+  (ensures (buffer_length (gsingleton_buffer_of_pointer p) == 1ul))
+  [SMTPat (buffer_length (gsingleton_buffer_of_pointer p))]
+= ()
+
+let buffer_length_gbuffer_of_array_pointer
+  (#t: typ)
+  (#len: array_length_t)
+  (p: pointer (TArray len t))
+: Lemma
+  (requires True)
+  (ensures (buffer_length (gbuffer_of_array_pointer p) == len))
+  [SMTPat (buffer_length (gbuffer_of_array_pointer p))]
+= ()
+
+let buffer_live
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: GTot Type0
+= let () = () in // necessary to somehow remove the `logic` qualifier
+  UInt32.v (buffer_length b) > 0 /\ ( // needed to preserve liveness through modifies
+    match b.broot with
+    | BufferRootSingleton p -> live h p
+    | BufferRootArray #mlen p -> live h p
+  )
+
+let buffer_live_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (p: pointer t)
+  (h: HS.mem)
+: Lemma
+  (ensures (buffer_live h (gsingleton_buffer_of_pointer p) <==> live h p ))
+  [SMTPat (buffer_live h (gsingleton_buffer_of_pointer p))]
+= ()
+
+let buffer_live_gbuffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: pointer (TArray length t))
+  (h: HS.mem)
+: Lemma
+  (requires True)
+  (ensures (buffer_live h (gbuffer_of_array_pointer p) <==> live h p))
+  [SMTPat (buffer_live h (gbuffer_of_array_pointer p))]
+= ()
+
+let frameOf_buffer
+  (#t: typ)
+  (b: buffer t)
+: GTot HH.rid
+= match b.broot with
+  | BufferRootSingleton p -> frameOf p
+  | BufferRootArray #mlen p -> frameOf p
+
+let frameOf_buffer_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (p: pointer t)
+= ()
+
+let frameOf_buffer_gbuffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: pointer (TArray length t))
+= ()
+
+let buffer_as_addr #t b =
+  match b.broot with
+  | BufferRootSingleton p -> as_addr p
+  | BufferRootArray #mlen p -> as_addr p
+
+let buffer_as_addr_gsingleton_buffer_of_pointer #t p = ()
+
+let buffer_as_addr_gbuffer_of_array_pointer #t #length p = ()
+
+let gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  len
+= Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
+
+let sub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  len
+= Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
+
+let buffer_length_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  len
+= ()
+
+let buffer_live_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  len
+  h
+= ()
+
+let gsub_buffer_gsub_buffer
+  (#a: typ)
+  (b: buffer a)
+  (i1: UInt32.t)
+  len1 i2 len2
+= ()
+
+let gsub_buffer_zero_buffer_length
+  (#a: typ)
+  (b: buffer a)
+= ()
+
+let buffer_root_as_seq
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer_root t)
+: GTot (Seq.seq (type_of_typ t))
+= match b with
+  | BufferRootSingleton p ->
+    Seq.create 1 (gread h p)
+  | BufferRootArray p ->
+    gread h p
+
+let length_buffer_root_as_seq
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer_root t)
+: Lemma
+  (requires True)
+  (ensures (Seq.length (buffer_root_as_seq h b) == UInt32.v (buffer_root_length b)))
+  [SMTPat (Seq.length (buffer_root_as_seq h b))]
+= ()
+
+let buffer_as_seq
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: GTot (Seq.seq (type_of_typ t))
+= let i = UInt32.v (Buffer?.bidx b) in
+  Seq.slice (buffer_root_as_seq h (Buffer?.broot b)) i (i + UInt32.v (Buffer?.blength b))
+
+let buffer_length_buffer_as_seq
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+= ()
+
+let buffer_as_seq_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (h: HS.mem)
+  (p: pointer t)
+= Seq.slice_length (Seq.create 1 (gread h p))
+
+let buffer_as_seq_gbuffer_of_array_pointer
+  (#length: array_length_t)
+  (#t: typ)
+  (h: HS.mem)
+  (p: pointer (TArray length t))
+= let s : array length (type_of_typ t) = gread h p in
+  Seq.slice_length s
+
+let buffer_as_seq_gsub_buffer
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  (i: UInt32.t)
+  len
+= Seq.slice_slice (buffer_root_as_seq h (Buffer?.broot b)) (UInt32.v (Buffer?.bidx b)) (UInt32.v (Buffer?.bidx b) + UInt32.v (Buffer?.blength b)) (UInt32.v i) (UInt32.v i + UInt32.v len)
+
+let gpointer_of_buffer_cell
+  (#t: typ)
+  (b: buffer t)
+  i
+= match Buffer?.broot b with
+  | BufferRootSingleton p -> p
+  | BufferRootArray p ->
+    gcell p FStar.UInt32.(Buffer?.bidx b +^ i)
+
+let pointer_of_buffer_cell
+  (#t: typ)
+  (b: buffer t)
+  i
+= match Buffer?.broot b with
+  | BufferRootSingleton p -> p
+  | BufferRootArray p ->
+    _cell p FStar.UInt32.(Buffer?.bidx b +^ i)
+
+let gpointer_of_buffer_cell_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  i1 len i2
+= ()
+
+let live_gpointer_of_buffer_cell
+  (#t: typ)
+  (b: buffer t)
+  i h
+= ()
+
+let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (p: pointer t)
+  i
+= ()
+
+let gpointer_of_buffer_cell_gbuffer_of_array_pointer
+  (#length: array_length_t)
+  (#t: typ)
+  (p: pointer (TArray length t))
+  i
+= ()
+
+let frameOf_gpointer_of_buffer_cell #t b i = ()
+
+let as_addr_gpointer_of_buffer_cell #t b i = ()
+
+let gread_gpointer_of_buffer_cell
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  i
+= ()
+
+let gread_gpointer_of_buffer_cell'
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  i
+= ()
+
+let gread_pointer_of_buffer_cell'
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  i
+= ()
+
+(* The readable permission lifted to buffers. *)
+
+let buffer_readable'
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: GTot Type0
+= buffer_live h b /\ (
+    forall (i: UInt32.t) .
+    UInt32.v i < UInt32.v (buffer_length b) ==>
+    readable h (gpointer_of_buffer_cell b i)
+  )
+
+let buffer_readable
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: GTot Type0
+= buffer_readable' h b
+
+let buffer_readable_buffer_live
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+= ()
+
+let buffer_readable_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (h: HS.mem)
+  (p: pointer t)
+= let phi () : Lemma
+      (requires (buffer_readable h (gsingleton_buffer_of_pointer p)))
+      (ensures (readable h p))
+  = assert (readable h (gpointer_of_buffer_cell (gsingleton_buffer_of_pointer p) 0ul))
+  in
+  Classical.move_requires phi ()
+
+let buffer_readable_gbuffer_of_array_pointer
+  (#len: array_length_t)
+  (#t: typ)
+  (h: HS.mem)
+  (p: pointer (TArray len t))
+= let phi ()
+  : Lemma
+    (requires (buffer_readable h (gbuffer_of_array_pointer p)))
+    (ensures (readable h p))
+  = let psi
+      (i: UInt32.t { UInt32.v i < UInt32.v len } )
+    : Lemma
+      (readable h (gcell p i))
+    = assert (readable h (gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i))
+    in
+    Classical.forall_intro psi;
+    readable_array h p
+  in
+  Classical.move_requires phi ()
+
+let buffer_readable_gsub_buffer
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  (i: UInt32.t)
+  len
+= ()
+
+let readable_gpointer_of_buffer_cell
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+  i
+= ()
+
+let buffer_readable_intro
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+= ()
+
+(*** Disjointness of pointers *)
 
 let disjoint
   (#value1: typ)
@@ -2464,11 +2952,19 @@ let disjoint_gcell
   (#length: array_length_t)
   (#value: typ)
   (p: pointer (TArray length value))
-  (i1: UInt32.t {UInt32.v i1 < UInt32.v length})
-  (i2: UInt32.t {UInt32.v i2 < UInt32.v length})
+  (i1: UInt32.t)
+  (i2: UInt32.t)
 : Lemma
-  (requires (UInt32.v i1 <> UInt32.v i2))
-  (ensures (disjoint (gcell p i1) (gcell p i2)))
+  (requires (
+    UInt32.v i1 < UInt32.v length /\
+    UInt32.v i2 < UInt32.v length /\
+    UInt32.v i1 <> UInt32.v i2
+  ))
+  (ensures (
+    UInt32.v i1 < UInt32.v length /\
+    UInt32.v i2 < UInt32.v length /\
+    disjoint (gcell p i1) (gcell p i2)
+  ))
   [SMTPat (disjoint (gcell p i1) (gcell p i2))]
 = ()
 
@@ -2619,6 +3115,168 @@ let live_not_equal_disjoint
     disjoint_root p1 p2
 *)
 
+
+(*** The modifies clause *)
+
+noeq
+type loc_aux =
+  | LocNone:
+    loc_aux
+  | LocBuffer:
+    (#t: typ) ->
+    (b: buffer t) ->
+    loc_aux
+  | LocPointer:
+    (#t: typ) ->
+    (p: pointer t) ->
+    loc_aux
+  | LocUnion:
+    (l1: loc_aux) ->
+    (l2: loc_aux) ->
+    loc_aux
+
+noeq
+type loc' =
+  | Loc:
+      (whole_regions: Ghost.erased (Set.set HH.rid)) ->
+      (addr_regions: Ghost.erased (Set.set HH.rid)) ->
+      (addrs: (
+	(r: HH.rid) ->
+	Ghost (TSet.set nat)
+	(requires (Set.mem r (Ghost.reveal addr_regions)))
+	(ensures (fun _ -> True))
+      )) ->
+      (aux: loc_aux) ->
+      loc'
+
+let loc = loc'
+
+let loc_none = Loc (Ghost.hide (Set.empty)) (Ghost.hide (Set.empty)) (fun _ -> TSet.empty) LocNone
+
+let loc_union s1 s2 =
+  let addr_regions1 = Ghost.reveal (Loc?.addr_regions s1) in
+  let addr_regions2 = Ghost.reveal (Loc?.addr_regions s2) in
+  let addr_regions = Set.union addr_regions1 addr_regions2 in
+  let addrs
+    (r: HH.rid)
+  : Ghost (TSet.set nat)
+    (requires (Set.mem r addr_regions))
+    (ensures (fun _ -> True))
+  = TSet.union
+      (if Set.mem r addr_regions1 then Loc?.addrs s1 r else TSet.empty)
+      (if Set.mem r addr_regions2 then Loc?.addrs s2 r else TSet.empty)
+  in
+  Loc
+    (Ghost.hide (Set.union (Ghost.reveal (Loc?.whole_regions s1)) (Ghost.reveal (Loc?.whole_regions s2))))
+    (Ghost.hide addr_regions)
+    addrs
+    (LocUnion (Loc?.aux s1) (Loc?.aux s2))
+
+let loc_pointer #t p =
+  Loc
+    (Ghost.hide Set.empty)
+    (Ghost.hide Set.empty)
+    (fun _ -> TSet.empty)
+    (LocPointer p)
+
+let loc_buffer #t b =
+  Loc
+    (Ghost.hide Set.empty)
+    (Ghost.hide Set.empty)
+    (fun _ -> TSet.empty)
+    (LocBuffer b)
+
+let loc_addresses r n =
+  Loc
+    (Ghost.hide Set.empty)
+    (Ghost.hide (Set.singleton r))
+    (fun _ -> n)
+    LocNone
+
+let loc_regions r =
+  Loc
+    (Ghost.hide r)
+    (Ghost.hide Set.empty)
+    (fun _ -> TSet.empty)
+    LocNone
+
+let rec regions_of_loc_aux
+  (l: loc_aux)
+: GTot (Set.set HH.rid)
+= match l with
+  | LocNone -> Set.empty
+  | LocPointer #t p -> Set.singleton (frameOf p)
+  | LocBuffer #t b -> Set.singleton (frameOf_buffer b)
+  | LocUnion s1 s2 -> Set.union (regions_of_loc_aux s1) (regions_of_loc_aux s2)
+
+let rec addr_of_loc_aux
+  (l: loc_aux)
+  (r: HH.rid)
+: GTot (TSet.set nat)
+= match l with
+  | LocNone -> TSet.empty
+  | LocPointer #t p ->
+    if frameOf p = r
+    then TSet.singleton (as_addr p)
+    else TSet.empty
+  | LocBuffer #t b ->
+    if frameOf_buffer b = r
+    then TSet.singleton (buffer_as_addr b)
+    else TSet.empty
+  | LocUnion s1 s2 -> TSet.union (addr_of_loc_aux s1 r) (addr_of_loc_aux s2 r)
+
+let rec loc_aux_includes_pointer
+  (s: loc_aux)
+  (#t: typ)
+  (p: pointer t)
+: GTot bool
+  (decreases s)
+= match s with
+  | LocPointer q -> includes q p
+  | LocBuffer b -> false // FIXME
+  | LocNone -> false
+  | LocUnion s1 s2 ->
+    loc_aux_includes_pointer s1 p ||
+    loc_aux_includes_pointer s2 p
+
+let rec loc_includes_aux
+  (s: loc)
+  (s2: loc_aux)
+: GTot bool
+  (decreases s2)
+= let whole_regions = Ghost.reveal (Loc?.whole_regions s) in
+  let addr_regions = Ghost.reveal (Loc?.addr_regions s) in
+  match s2 with
+  | LocUnion s2l s2r ->
+    loc_includes_aux s s2l &&
+    loc_includes_aux s s2r
+  | LocNone -> true
+  | LocPointer p ->
+    let r = frameOf p in
+    Set.mem r whole_regions || (
+      Set.mem r addr_regions &&
+      StrongExcludedMiddle.strong_excluded_middle (TSet.mem (as_addr p) (Loc?.addrs s r))
+    ) ||
+    loc_aux_includes_pointer (Loc?.aux s) p
+  | LocBuffer b -> false // FIXME
+
+let loc_includes s1 s2 =
+  let whole_regions1 = Ghost.reveal (Loc?.whole_regions s1) in
+  let whole_regions2 = Ghost.reveal (Loc?.whole_regions s2) in
+  let addr_regions1 = Ghost.reveal (Loc?.addr_regions s1) in
+  let addr_regions2 = Ghost.reveal (Loc?.addr_regions s2) in
+  Set.subset whole_regions2 whole_regions1 /\ (
+  forall r .
+    Set.mem r addr_regions2 ==> (
+    if Set.mem r whole_regions1
+    then True
+    else (
+      Set.mem r addr_regions1 /\
+      TSet.subset (Loc?.addrs s2 r) (Loc?.addrs s1 r)
+  ))) /\ (
+    loc_includes_aux s1 (Loc?.aux s2)
+  )
+
 let live_unused_in_disjoint_strong
   (#value1: typ)
   (#value2: typ)
@@ -2640,244 +3298,9 @@ let live_unused_in_disjoint
   (requires (live h p1 /\ unused_in p2 h))
   (ensures (disjoint p1 p2))
   [SMTPatT (disjoint p1 p2); SMTPatT (live h p1)]
-= live_unused_in_disjoint_strong h p1 p2;
+= live_unused_in_disjoint_strong' h p1 p2;
   disjoint_root p1 p2
 
-(** The readable permission.
-    We choose to implement it only abstractly, instead of explicitly
-    tracking the permission in the heap.
-*)
-
-let readable
-  (#a: typ)
-  (h: HS.mem)
-  (b: pointer a)
-: GTot Type0
-= let () = () in // necessary to somehow remove the `logic` qualifier
-  live h b /\ (
-    let content = greference_of b in
-    let (| _, c |) = HS.sel h content in
-    ovalue_is_readable a (path_sel c (Pointer?.p b))
-  )
-
-let readable_live
-  (#a: typ)
-  (h: HS.mem)
-  (b: pointer a)
-: Lemma
-  (requires (readable h b))
-  (ensures (live h b))
-  [SMTPatOr [
-    [SMTPat (readable h b)];
-    [SMTPat (live h b)];
-  ]]
-= ()
-
-let readable_gfield
-  (#l: struct_typ)
-  (h: HS.mem)
-  (p: pointer (TStruct l))
-  (fd: struct_field l)
-: Lemma
-  (requires (readable h p))
-  (ensures (readable h (gfield p fd)))
-  [SMTPat (readable h (gfield p fd))]
-= ()
-
-let readable_struct
-  (#l: struct_typ)
-  (h: HS.mem)
-  (p: pointer (TStruct l))
-: Lemma
-  (requires (
-    forall (f: struct_field l) .
-    readable h (gfield p f)
-  ))
-  (ensures (readable h p))
-//  [SMTPat (readable #(TStruct l) h p)] // TODO: dubious pattern, will probably trigger unreplayable hints
-= let dummy_field : struct_field l = fst (List.Tot.hd l) in // struct is nonempty
-  let dummy_field_ptr = gfield p dummy_field in
-  assert (readable h dummy_field_ptr);
-  let content = greference_of p in
-  let (| _, c |) = HS.sel h content in
-  let (v: otype_of_typ (TStruct l)) = path_sel c (Pointer?.p p) in
-  let (v: ostruct l {Some? v}) = v in
-  ovalue_is_readable_struct_intro l v
-
-let readable_struct_forall_mem
-  (#l: struct_typ)
-  (p: pointer (TStruct l))
-: Lemma (forall
-    (h: HS.mem)
-  . (
-      forall (f: struct_field l) .
-      readable h (gfield p f)
-    ) ==>
-    readable h p
-  )
-= let f
-    (h: HS.mem)
-  : Lemma // FIXME: WHY WHY WHY do we need this explicit annotation?
-    (requires (
-      forall (f: struct_field l) .
-      readable h (gfield p f)
-    ))
-    (ensures (readable h p))
-  = readable_struct h p
-  in
-  Classical.forall_intro (Classical.move_requires f)
-
-let readable_gcell
-  (#length: array_length_t)
-  (#value: typ)
-  (h: HS.mem)
-  (p: pointer (TArray length value))
-  (i: UInt32.t {UInt32.v i < UInt32.v length})
-: Lemma
-  (requires (readable h p))
-  (ensures (readable h (gcell p i)))
-  [SMTPat (readable h (gcell p i))]
-= ()
-
-let readable_array
-  (#length: array_length_t)
-  (#value: typ)
-  (h: HS.mem)
-  (p: pointer (TArray length value))
-: Lemma
-  (requires (
-    forall (i: UInt32.t { UInt32.v i < UInt32.v length } ) .
-    readable h (gcell p i)
-  ))
-  (ensures (readable h p))
-//  [SMTPat (readable #(TArray length value) h p)] // TODO: dubious pattern, will probably trigger unreplayable hints
-= assert (readable h (gcell p 0ul)); // for Some?
-  let content = greference_of p in
-  let (| _, c |) = HS.sel h content in
-  let (v0: otype_of_typ (TArray length value)) = path_sel c (Pointer?.p p) in
-  ovalue_is_readable_array_intro v0
-
-(* TODO: improve on the following interface *)
-let readable_gufield
-  (#l: union_typ)
-  (h: HS.mem)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires True)
-  (ensures (readable h (gufield p fd) <==> (readable h p /\ union_get_key (gread h p) == fd)))
-  [SMTPat (readable h (gufield p fd))]
-= ()
-
-(** The active field of a union *)
-
-let is_active_union_field
-  (#l: union_typ)
-  (h: HS.mem)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: GTot Type0
-= let () = () in // necessary to somehow remove the `logic` qualifier
-  live h p /\ (
-    let content = greference_of p in
-    let (| _, c |) = HS.sel h content in
-    let vu : otype_of_typ (TUnion l) = path_sel c (Pointer?.p p) in
-    let vu : option (gtdata (struct_field l) (type_of_struct_field' l otype_of_typ)) = vu in
-    Some? vu /\ gtdata_get_key (Some?.v vu) == fd
-  )
-
-let is_active_union_live
-  (#l: union_typ)
-  (h: HS.mem)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires (is_active_union_field h p fd))
-  (ensures (live h p))
-  [SMTPat (is_active_union_field h p fd)]
-= ()
-
-let is_active_union_field_live
-  (#l: union_typ)
-  (h: HS.mem)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires (is_active_union_field h p fd))
-  (ensures (live h (gufield p fd)))
-  [SMTPat (is_active_union_field h p fd)]
-= ()
-
-let is_active_union_field_eq
-  (#l: union_typ)
-  (h: HS.mem)
-  (p: pointer (TUnion l))
-  (fd1 fd2: struct_field l)
-: Lemma
-  (requires (is_active_union_field h p fd1 /\ is_active_union_field h p fd2))
-  (ensures (fd1 == fd2))
-  [SMTPat (is_active_union_field h p fd1); SMTPat (is_active_union_field h p fd2)]
-= ()
-
-let is_active_union_field_get_key
-  (#l: union_typ)
-  (h: HS.mem)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires (is_active_union_field h p fd))
-  (ensures (union_get_key (gread h p) == fd))
-  [SMTPat (is_active_union_field h p fd)]
-= ()
-
-let is_active_union_field_readable
-  (#l: union_typ)
-  (h: HS.mem)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-: Lemma
-  (requires (is_active_union_field h p fd /\ readable h (gufield p fd)))
-  (ensures (readable h p))
-  [SMTPat (is_active_union_field h p fd); SMTPat (readable h (gufield p fd))]
-= ()
-
-let is_active_union_field_includes_readable
-  (#l: union_typ)
-  (h: HS.mem)
-  (p: pointer (TUnion l))
-  (fd: struct_field l)
-  (#t': typ)
-  (p' : pointer t')
-: Lemma
-  (requires (includes (gufield p fd) p' /\ readable h p'))
-  (ensures (is_active_union_field h p fd))
-= let content = greference_of p in
-  let (| _ , c |) = HS.sel h content in
-  let t = typ_of_struct_field l fd in
-  let (Pointer from cts p0) = p in
-  let pf = PathStep _ _ p0 (StepUField l fd) in
-  let (v0 : otype_of_typ t) = path_sel c pf in
-  let phi
-    (#t': typ)
-    (pt': path from t')
-  : Ghost Type0
-    (requires (path_includes pf pt'))
-    (ensures (fun _ -> True))
-  = (~ (path_sel c pt' == none_ovalue t')) ==> is_active_union_field h p fd
-  in
-  let f
-    (t' : typ)
-    (pt' : path t t')
-  : Lemma
-    (ensures (phi (path_concat pf pt')))
-  = path_sel_concat c pf pt';
-    path_sel_none_ovalue pf;
-    path_sel_none_ovalue pt'
-  in
-  path_concat_includes pf phi f (Pointer?.p p')
-
-
-(*** The modifies clause *)
 
 (** Sets of pointers. The set tracks not only the set of pointers, but
 also the corresponding set of addresses (which cannot be constructed
@@ -3530,399 +3953,6 @@ let modifies_one_other_region
   (ensures (equal_values h0 p h1 p))
 = ()
 
-(*** Semantics of buffers *)
-
-(** Operations on buffers *)
-
-let gsingleton_buffer_of_pointer
-  (#t: typ)
-  (p: pointer t)
-: GTot (buffer t)
-= Buffer (BufferRootSingleton p) 0ul 1ul
-
-let singleton_buffer_of_pointer
-  (#t: typ)
-  (p: pointer t)
-: HST.Stack (buffer t)
-  (requires (fun h -> live h p))
-  (ensures (fun h b h' -> h' == h /\ b == gsingleton_buffer_of_pointer p))
-= Buffer (BufferRootSingleton p) 0ul 1ul
-
-let gbuffer_of_array_pointer
-  (#t: typ)
-  (#length: array_length_t)
-  (p: pointer (TArray length t))
-: GTot (buffer t)
-= Buffer (BufferRootArray p) 0ul length
-
-let buffer_of_array_pointer
-  (#t: typ)
-  (#length: array_length_t)
-  (p: pointer (TArray length t))
-: HST.Stack (buffer t)
-  (requires (fun h -> live h p))
-  (ensures (fun h b h' -> h' == h /\ b == gbuffer_of_array_pointer p))
-= Buffer (BufferRootArray p) 0ul length
-
-let buffer_length
-  (#t: typ)
-  (b: buffer t)
-: GTot UInt32.t
-= Buffer?.blength b
-
-let buffer_length_gsingleton_buffer_of_pointer
-  (#t: typ)
-  (p: pointer t)
-: Lemma
-  (requires True)
-  (ensures (buffer_length (gsingleton_buffer_of_pointer p) == 1ul))
-  [SMTPat (buffer_length (gsingleton_buffer_of_pointer p))]
-= ()
-
-let buffer_length_gbuffer_of_array_pointer
-  (#t: typ)
-  (#len: array_length_t)
-  (p: pointer (TArray len t))
-: Lemma
-  (requires True)
-  (ensures (buffer_length (gbuffer_of_array_pointer p) == len))
-  [SMTPat (buffer_length (gbuffer_of_array_pointer p))]
-= ()
-
-let buffer_live
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-: GTot Type0
-= let () = () in // necessary to somehow remove the `logic` qualifier
-  UInt32.v (buffer_length b) > 0 /\ ( // needed to preserve liveness through modifies
-    match b.broot with
-    | BufferRootSingleton p -> live h p
-    | BufferRootArray #mlen p -> live h p
-  )
-
-let buffer_live_gsingleton_buffer_of_pointer
-  (#t: typ)
-  (p: pointer t)
-  (h: HS.mem)
-: Lemma
-  (ensures (buffer_live h (gsingleton_buffer_of_pointer p) <==> live h p ))
-  [SMTPat (buffer_live h (gsingleton_buffer_of_pointer p))]
-= ()
-
-let buffer_live_gbuffer_of_array_pointer
-  (#t: typ)
-  (#length: array_length_t)
-  (p: pointer (TArray length t))
-  (h: HS.mem)
-: Lemma
-  (requires True)
-  (ensures (buffer_live h (gbuffer_of_array_pointer p) <==> live h p))
-  [SMTPat (buffer_live h (gbuffer_of_array_pointer p))]
-= ()
-
-let frameOf_buffer
-  (#t: typ)
-  (b: buffer t)
-: GTot HH.rid
-= match b.broot with
-  | BufferRootSingleton p -> frameOf p
-  | BufferRootArray #mlen p -> frameOf p
-
-let frameOf_buffer_gsingleton_buffer_of_pointer
-  (#t: typ)
-  (p: pointer t)
-: Lemma
-  (ensures (frameOf_buffer (gsingleton_buffer_of_pointer p) == frameOf p))
-  [SMTPat (frameOf_buffer (gsingleton_buffer_of_pointer p))]
-= ()
-
-let frameOf_buffer_gbuffer_of_array_pointer
-  (#t: typ)
-  (#length: array_length_t)
-  (p: pointer (TArray length t))
-: Lemma
-  (ensures (frameOf_buffer (gbuffer_of_array_pointer p) == frameOf p))
-  [SMTPat (frameOf_buffer (gbuffer_of_array_pointer p))]
-= ()
-
-let gsub_buffer
-  (#t: typ)
-  (b: buffer t)
-  (i: UInt32.t)
-  len
-= Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
-
-let sub_buffer
-  (#t: typ)
-  (b: buffer t)
-  (i: UInt32.t)
-  len
-= Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
-
-let buffer_length_gsub_buffer
-  (#t: typ)
-  (b: buffer t)
-  (i: UInt32.t)
-  len
-= ()
-
-let buffer_live_gsub_buffer
-  (#t: typ)
-  (b: buffer t)
-  (i: UInt32.t)
-  len
-  h
-= ()
-
-let gsub_buffer_gsub_buffer
-  (#a: typ)
-  (b: buffer a)
-  (i1: UInt32.t)
-  len1 i2 len2
-= ()
-
-let gsub_buffer_zero_buffer_length
-  (#a: typ)
-  (b: buffer a)
-: Lemma
-  (ensures (gsub_buffer b 0ul (buffer_length b) == b))
-  [SMTPat (gsub_buffer b 0ul (buffer_length b))]
-= ()
-
-let buffer_root_as_seq
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer_root t)
-: GTot (Seq.seq (type_of_typ t))
-= match b with
-  | BufferRootSingleton p ->
-    Seq.create 1 (gread h p)
-  | BufferRootArray p ->
-    gread h p
-
-let length_buffer_root_as_seq
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer_root t)
-: Lemma
-  (requires True)
-  (ensures (Seq.length (buffer_root_as_seq h b) == UInt32.v (buffer_root_length b)))
-  [SMTPat (Seq.length (buffer_root_as_seq h b))]
-= ()
-
-let buffer_as_seq
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-: GTot (Seq.seq (type_of_typ t))
-= let i = UInt32.v (Buffer?.bidx b) in
-  Seq.slice (buffer_root_as_seq h (Buffer?.broot b)) i (i + UInt32.v (Buffer?.blength b))
-
-let buffer_length_buffer_as_seq
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-: Lemma
-  (requires True)
-  (ensures (Seq.length (buffer_as_seq h b) == UInt32.v (buffer_length b)))
-  [SMTPat (Seq.length (buffer_as_seq h b))]
-= ()
-
-let buffer_as_seq_gsingleton_buffer_of_pointer
-  (#t: typ)
-  (h: HS.mem)
-  (p: pointer t)
-: Lemma
-  (requires True)
-  (ensures (buffer_as_seq h (gsingleton_buffer_of_pointer p) == Seq.create 1 (gread h p)))
-  [SMTPat (buffer_as_seq h (gsingleton_buffer_of_pointer p))]
-= Seq.slice_length (Seq.create 1 (gread h p))
-
-let buffer_as_seq_gbuffer_of_array_pointer
-  (#length: array_length_t)
-  (#t: typ)
-  (h: HS.mem)
-  (p: pointer (TArray length t))
-: Lemma
-  (requires True)
-  (ensures (buffer_as_seq h (gbuffer_of_array_pointer p) == gread h p))
-  [SMTPat (buffer_as_seq h (gbuffer_of_array_pointer p))]
-= let s : array length (type_of_typ t) = gread h p in
-  Seq.slice_length s
-
-let buffer_as_seq_gsub_buffer
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-  (i: UInt32.t)
-  len
-= Seq.slice_slice (buffer_root_as_seq h (Buffer?.broot b)) (UInt32.v (Buffer?.bidx b)) (UInt32.v (Buffer?.bidx b) + UInt32.v (Buffer?.blength b)) (UInt32.v i) (UInt32.v i + UInt32.v len)
-
-let gpointer_of_buffer_cell
-  (#t: typ)
-  (b: buffer t)
-  i
-= match Buffer?.broot b with
-  | BufferRootSingleton p -> p
-  | BufferRootArray p ->
-    gcell p FStar.UInt32.(Buffer?.bidx b +^ i)
-
-let pointer_of_buffer_cell
-  (#t: typ)
-  (b: buffer t)
-  i
-= match Buffer?.broot b with
-  | BufferRootSingleton p -> p
-  | BufferRootArray p ->
-    cell p FStar.UInt32.(Buffer?.bidx b +^ i)
-
-let gpointer_of_buffer_cell_gsub_buffer
-  (#t: typ)
-  (b: buffer t)
-  i1 len i2
-= ()
-
-let live_gpointer_of_buffer_cell
-  (#t: typ)
-  (b: buffer t)
-  i h
-= ()
-
-let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
-  (#t: typ)
-  (p: pointer t)
-  i
-= ()
-
-let gpointer_of_buffer_cell_gbuffer_of_array_pointer
-  (#length: array_length_t)
-  (#t: typ)
-  (p: pointer (TArray length t))
-  i
-= ()
-
-let gread_gpointer_of_buffer_cell
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-  i
-= ()
-
-let gread_gpointer_of_buffer_cell'
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-  i
-= ()
-
-let gread_pointer_of_buffer_cell'
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-  i
-= ()
-
-(* The readable permission lifted to buffers. *)
-
-let buffer_readable'
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-: GTot Type0
-= buffer_live h b /\ (
-    forall (i: UInt32.t) .
-    UInt32.v i < UInt32.v (buffer_length b) ==>
-    readable h (gpointer_of_buffer_cell b i)
-  )
-
-let buffer_readable
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-: GTot Type0
-= buffer_readable' h b
-
-let buffer_readable_buffer_live
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-: Lemma
-  (requires (buffer_readable h b))
-  (ensures (buffer_live h b))
-  [SMTPatOr [
-    [SMTPat (buffer_readable h b)];
-    [SMTPat (buffer_live h b)];
-  ]]
-= ()
-
-let buffer_readable_gsingleton_buffer_of_pointer
-  (#t: typ)
-  (h: HS.mem)
-  (p: pointer t)
-: Lemma
-  (ensures (buffer_readable h (gsingleton_buffer_of_pointer p) <==> readable h p))
-  [SMTPat (buffer_readable h (gsingleton_buffer_of_pointer p))]
-= let phi () : Lemma
-      (requires (buffer_readable h (gsingleton_buffer_of_pointer p)))
-      (ensures (readable h p))
-  = assert (readable h (gpointer_of_buffer_cell (gsingleton_buffer_of_pointer p) 0ul))
-  in
-  Classical.move_requires phi ()
-
-let buffer_readable_gbuffer_of_array_pointer
-  (#len: array_length_t)
-  (#t: typ)
-  (h: HS.mem)
-  (p: pointer (TArray len t))
-: Lemma
-  (requires True)
-  (ensures (buffer_readable h (gbuffer_of_array_pointer p) <==> readable h p))
-  [SMTPat (buffer_readable h (gbuffer_of_array_pointer p))]
-= let phi ()
-  : Lemma
-    (requires (buffer_readable h (gbuffer_of_array_pointer p)))
-    (ensures (readable h p))
-  = let psi
-      (i: UInt32.t { UInt32.v i < UInt32.v len } )
-    : Lemma
-      (readable h (gcell p i))
-    = assert (readable h (gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i))
-    in
-    Classical.forall_intro psi;
-    readable_array h p
-  in
-  Classical.move_requires phi ()
-
-let buffer_readable_gsub_buffer
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-  (i: UInt32.t)
-  len
-= ()
-
-let readable_gpointer_of_buffer_cell
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-  i
-= ()
-
-let buffer_readable_intro
-  (#t: typ)
-  (h: HS.mem)
-  (b: buffer t)
-= ()
-
-(* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
-
-let read_buffer
-  (#t: typ)
-  (b: buffer t)
-  i
-= read (pointer_of_buffer_cell b i)
-
 (* buffer write: needs clearer "modifies" clauses *)
 
 let disjoint_gpointer_of_buffer_cell
@@ -4065,6 +4095,14 @@ let disjoint_buffer_vs_buffer_elim
   (b2: buffer t2)
   i2
 = ()
+
+(* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
+
+let read_buffer
+  (#t: typ)
+  (b: buffer t)
+  i
+= read (pointer_of_buffer_cell b i)
 
 let write_buffer
   (#t: typ)

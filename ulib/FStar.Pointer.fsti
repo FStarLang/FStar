@@ -645,7 +645,7 @@ val gcell
   (#value: typ)
   (p: pointer (TArray length value))
   (i: UInt32.t)
-: Pure (pointer value)
+: Ghost (pointer value)
   (requires (UInt32.v i < UInt32.v length))
   (ensures (fun _ -> True))
 
@@ -1318,6 +1318,24 @@ val gpointer_of_buffer_cell_gbuffer_of_array_pointer
   (ensures (UInt32.v i < UInt32.v length /\ gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i == gcell p i))
   [SMTPat (gpointer_of_buffer_cell (gbuffer_of_array_pointer p) i)]
 
+val frameOf_gpointer_of_buffer_cell
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+: Lemma
+  (requires (UInt32.v i < UInt32.v (buffer_length b)))
+  (ensures (UInt32.v i < UInt32.v (buffer_length b) /\ frameOf (gpointer_of_buffer_cell b i) == frameOf_buffer b))
+  [SMTPat (frameOf (gpointer_of_buffer_cell b i))]
+
+val as_addr_gpointer_of_buffer_cell
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+: Lemma
+  (requires (UInt32.v i < UInt32.v (buffer_length b)))
+  (ensures (UInt32.v i < UInt32.v (buffer_length b) /\ as_addr (gpointer_of_buffer_cell b i) == buffer_as_addr b))
+  [SMTPat (as_addr (gpointer_of_buffer_cell b i))]
+
 val gread_gpointer_of_buffer_cell
   (#t: typ)
   (h: HS.mem)
@@ -1441,7 +1459,7 @@ val loc_none: loc
 
 val loc_union
   (s1 s2: loc)
-: Tot loc
+: GTot loc
 
 (** NOTE: intersection cannot be easily defined, indeed consider two
 different (not necessarily disjoint) pointers p1, p2 coming from the
