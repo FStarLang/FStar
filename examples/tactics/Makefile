@@ -23,8 +23,8 @@ all:	Apply.uver		\
 	Caller.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
-	launch			\
 	neg
+	# launch			\
 
 launch: Launch.fst
 	$(FSTAR) --unsafe_tactic_exec --verify_module Launch $^
