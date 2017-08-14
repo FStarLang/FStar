@@ -1,134 +1,27 @@
-HAS_MENHIR := $(shell command -v menhir 2> /dev/null)
-MENHIR_MIN_VERSION:=20161115
-ifdef HAS_MENHIR
-HAS_VALID_MENHIR := $(shell expr `menhir --version | sed -e 's/.*version \([0-9]*\)/\1/'` \>= $(MENHIR_MIN_VERSION))
-else
-HAS_VALID_MENHIR := 0
-endif
-
-MENHIR=menhir #--explain --infer -la 1 --table
-OCAMLLEX=ocamllex
-OCAMLBUILD=cd ../../ && ocamlbuild -cflag '-g' -I src/ocaml-output -I src/basic/ml \
-  -I src/parser/ml -I src/fstar/ml -I src/extraction/ml -j 24 -build-dir src/ocaml-output/_build \
-  -I src/prettyprint/ml -I src/tactics/ml -I ulib/ml -I ulib/ml/compiler -use-ocamlfind
-COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
-PARSER_ML_LIB=FStar_Parser_Util.cmx
-PRETTYPRINT_ML_LIB=FStar_Pprint.cmx
-GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml
-
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
 PREFIX=$(shell pwd)/fstar
-PATH_TO_FILE=$(PREFIX)/bin/z3.exe
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
-DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
 
 # Detect the GNU utilities
 INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
-DATE_EXEC := $(shell gdate --version 2>/dev/null | cut -c -4 | head -n 1)
 ifdef INSTALL_EXEC
    INSTALL_EXEC := ginstall
 else
    INSTALL_EXEC := install
 endif
 
-ifdef DATE_EXEC
-   DATE_EXEC := gdate
+ifeq ($(OS),Windows_NT)
+  SCONS = scons.bat
 else
-   DATE_EXEC := date
+  SCONS = scons
 endif
+# parse MAKEFLAGS to extract out the '-jN' switch, and pass it to scons
+SCONSFLAGS=$(filter -j%,$(MAKEFLAGS))
 
-# Final sanity check for the OCaml version
-OCAML_BRANCH=$(shell ocaml get_branch.ml)
-
-.PHONY: fstar.exe ../extraction/ml/FStar_Extraction_ML_PrintML.ml
-
-# Complete build: generate fstar.exe and derive a fresh F#-compatible parser
-# from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
-# possible).
-all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/boot/parse.fsy fstar.exe
-
-# Choose the correct version of the ML prettyprinter, based on OCaml version
-../extraction/ml/FStar_Extraction_ML_PrintML.ml:
-	cp "../extraction/ml/FStar_Extraction_ML_PrintML_$(OCAML_BRANCH).ml" ../extraction/ml/FStar_Extraction_ML_PrintML.ml
-
-# We derive parse.mly in two ways:
-# - if we have menhir, we generate it from from the Menhir parser
-#   ../parser/parse.mly (and save a copy of the generated mly in ../parser/ml)
-# - if we don't have menhir, we take the saved copy above that is under version
-#   control
-parse.mly: ../parser/parse.mly
-ifeq ($(HAS_VALID_MENHIR), 1)
-	# TODO : call menhir directly when positions are fixed instead of
-	# letting OCamlbuild go through ocamlyacc
-	$(MENHIR) --only-preprocess-for-ocamlyacc $< > $@
-else
-	$(error Correct version of menhir not found (needs a version newer than $(MENHIR_MIN_VERSION)))
-endif
-
-# This is about the F# parser, which we sed-transform from the parse.mly
-# obtained via the rule above.
-../parser/boot/parse.fsy: parse.mly
-	echo "%{" > $@
-	echo "#light \"off\"" >> $@
-	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
-	echo "open Prims" >> $@
-	echo "open FStar" >> $@
-	echo "open FStar.Errors" >> $@
-	echo "open FStar.List" >> $@
-	echo "open FStar.Util" >> $@
-	echo "open FStar.Range" >> $@
-	echo "open FStar.Options" >> $@
-	echo "open FStar.Parser.Const" >> $@
-	echo "open FStar.Parser.AST" >> $@
-	echo "open FStar.Parser.Util" >> $@
-	echo "open FStar.Const" >> $@
-	echo "open FStar.Ident" >> $@
-	echo "open FStar.String" >> $@
-	# TODO : fsyacc seems to complain as soon as there is an arrow -> in a %type declaration...
-	cat parse.mly | sed -e '/%{/d' \
-	                    -e '/^open /d' \
-	                    -e '/%token/s/[a-zA-Z0-9_]*\.//g' \
-	                    -e '/%type/s/[a-zA-Z0-9_]*\.//g' \
-	                    -e '/%token.*->.*/d' \
-	                    -e '/%type.*->.*/d' \
-	                    >> $@
-
-# https://stackoverflow.com/questions/38294095/ocaml-how-to-solve-findlib-warnings-of-multiple-cmis
-fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
-fstar.exe: $(GENERATED_FILES)
-	$(OCAMLBUILD) main.native
-	cp _build/src/fstar/ml/main.native ../../bin/$@
-	cp _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
-
-FStar_Parser_Parse.ml: parse.mly
-	# We are opening the same module twice but we need these modules
-	# open for the definition of tokens
-	echo "open Prims" > $@
-	echo "open FStar_Errors" >> $@
-	echo "open FStar_List" >> $@
-	echo "open FStar_Util" >> $@
-	echo "open FStar_Range" >> $@
-	echo "open FStar_Options" >> $@
-	echo "open FStar_Syntax_Syntax" >> $@
-	echo "open FStar_Parser_Const" >> $@
-	echo "open FStar_Syntax_Util" >> $@
-	echo "open FStar_Parser_AST" >> $@
-	echo "open FStar_Parser_Util" >> $@
-	echo "open FStar_Const" >> $@
-	echo "open FStar_Ident" >> $@
-	echo "open FStar_String" >> $@
-	# TODO: create a proper OCamlbuild rule for this production so that
-	# OCamlbuild knows how to generate parse.mly first (possibly using
-	# menhir) and removes the production as needed.
-	ocamlyacc parse.mly 2> yac-log
-	cat yac-log
-	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 7 ]; then \
-	  echo "shift-reduce conflicts have increased; please fix" && exit 255; \
-	fi
-	cat parse.ml >> $@
-	rm parse.ml parse.mli
+all:
+	$(SCONS) -u $(SCONSFLAGS) --target=ocaml-output
 
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging
@@ -142,21 +35,6 @@ ifeq ($(OS),Windows_NT)
 else
      PLATFORM=$(shell echo `uname`_`uname -m`)
 endif
-COMPILER = OCaml $(shell ocamlc -version)
-DATE = $(shell $(DATE_EXEC) -Iseconds)
-COMMIT = $(shell ../tools/get_commit)
-
-.PHONY: FStar_Version.ml
-FStar_Version.ml:
-	echo 'open FStar_Util' > $@
-	echo 'let dummy () = ();;' >> $@
-	echo 'FStar_Options._version := "$(VERSION)";;' >> $@
-	echo 'FStar_Options._platform := "$(PLATFORM)";;' >> $@
-	echo 'FStar_Options._compiler := "$(COMPILER)";;' >> $@
-	echo 'FStar_Options._date := "$(DATE)";;' >> $@
-	echo 'FStar_Options._commit:= "$(COMMIT)";;' >> $@
-
-
 # ------------------------------------------------------------------------------
 # Preparing a release... these targets are not optimized and the Makefile is
 # actually used for scripting a bunch of stuff.
@@ -255,7 +133,6 @@ endif
 clean:
 	make -C ../../ulib/ml clean
 	rm -rf _build
-	rm -f $(GENERATED_FILES)
 	rm -f *.tar.gz *.zip
 
 # Purge (clean + delete *all* automatically generated files)
