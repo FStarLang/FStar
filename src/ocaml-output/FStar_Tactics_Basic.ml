@@ -1881,6 +1881,23 @@ let unify:
            let uu____5071 =
              FStar_TypeChecker_Rel.teq_nosmt ps.main_context t1 t2 in
            ret uu____5071)
+let launch_process:
+  Prims.string -> Prims.string -> Prims.string -> Prims.string tac =
+  fun prog  ->
+    fun args  ->
+      fun input  ->
+        bind idtac
+          (fun uu____5091  ->
+             let uu____5092 = FStar_Options.unsafe_tactic_exec () in
+             if uu____5092
+             then
+               let s =
+                 FStar_Util.launch_process true "tactic_launch" prog args
+                   input (fun uu____5098  -> fun uu____5099  -> false) in
+               ret s
+             else
+               fail
+                 "launch_process: will not run anything unless --unsafe_tactic_exec is provided")
 let goal_of_goal_ty:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -1888,14 +1905,14 @@ let goal_of_goal_ty:
   =
   fun env  ->
     fun typ  ->
-      let uu____5092 =
+      let uu____5121 =
         FStar_TypeChecker_Util.new_implicit_var "proofstate_of_goal_ty"
           typ.FStar_Syntax_Syntax.pos env typ in
-      match uu____5092 with
-      | (u,uu____5110,g_u) ->
+      match uu____5121 with
+      | (u,uu____5139,g_u) ->
           let g =
-            let uu____5125 = FStar_Options.peek () in
-            { context = env; witness = u; goal_ty = typ; opts = uu____5125 } in
+            let uu____5154 = FStar_Options.peek () in
+            { context = env; witness = u; goal_ty = typ; opts = uu____5154 } in
           (g, g_u)
 let proofstate_of_goal_ty:
   FStar_TypeChecker_Env.env ->
@@ -1904,8 +1921,8 @@ let proofstate_of_goal_ty:
   =
   fun env  ->
     fun typ  ->
-      let uu____5142 = goal_of_goal_ty env typ in
-      match uu____5142 with
+      let uu____5171 = goal_of_goal_ty env typ in
+      match uu____5171 with
       | (g,g_u) ->
           let ps =
             {
