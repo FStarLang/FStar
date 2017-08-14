@@ -201,6 +201,10 @@ let embed_term_view (t:term_view) : term =
         S.mk_Tm_app ref_Tv_Uvar [S.as_arg (embed_int u); S.as_arg (embed_term t)]
                     None Range.dummyRange
 
+    | Tv_Let (b, t1, t2) ->
+        S.mk_Tm_app ref_Tv_Let [S.as_arg (embed_binder b); S.as_arg (embed_term t1); S.as_arg (embed_term t2)]
+                    None Range.dummyRange
+
     | Tv_Match (t, brs) ->
         S.mk_Tm_app ref_Tv_Match [S.as_arg (embed_term t); S.as_arg (embed_list embed_branch fstar_refl_branch brs)]
                     None Range.dummyRange
@@ -238,6 +242,9 @@ let unembed_term_view (t:term) : term_view =
 
     | Tm_fvar fv, [(u, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Uvar_lid ->
         Tv_Uvar (unembed_int u, unembed_term t)
+
+    | Tm_fvar fv, [(b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let_lid ->
+        Tv_Let (unembed_binder b, unembed_term t1, unembed_term t2)
 
     | Tm_fvar fv, [(t, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match_lid ->
         Tv_Match (unembed_term t, unembed_list unembed_branch brs)
@@ -349,6 +356,21 @@ let rec inspect (t:term) : term_view =
     | Tm_uvar (u, t) ->
         Tv_Uvar (UF.uvar_id u, t)
 
+    | Tm_let ((false, [lb]), t2) ->
+        if lb.lbunivs <> [] then Tv_Unknown else
+        begin match lb.lbname with
+        | BU.Inr _ -> Tv_Unknown // no top level lets
+        | BU.Inl bv ->
+            // The type of `bv` should match `lb.lbtyp`
+            let b = S.mk_binder bv in
+            let bs, t2 = SS.open_term [b] t2 in
+            let b = match bs with
+                    | [b] -> b
+                    | _ -> failwith "impossible: open_term returned different amount of binders"
+            in
+            Tv_Let (b, lb.lbdef, t2)
+        end
+
     | Tm_match (t, brs) ->
         let rec inspect_pat p =
             match p.v with
@@ -406,6 +428,11 @@ let pack (tv:term_view) : term =
 
     | Tv_Uvar (u, t) ->
         U.uvar_from_id u t
+
+    | Tv_Let (b, t1, t2) ->
+        let bv = fst b in
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 in
+        S.mk (Tm_let ((false, [lb]), SS.close [b] t2)) None Range.dummyRange
 
     | Tv_Match (t, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in

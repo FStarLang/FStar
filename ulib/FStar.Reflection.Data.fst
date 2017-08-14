@@ -38,6 +38,7 @@ type term_view =
   | Tv_Refine : binder -> term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> typ -> term_view
+  | Tv_Let    : binder -> term -> term -> term_view
   | Tv_Match  : term -> list branch -> term_view
   | Tv_Unknown : term_view // Baked in "None"
 

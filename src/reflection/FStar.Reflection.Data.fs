@@ -40,6 +40,7 @@ type term_view =
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
     | Tv_Uvar   of int * typ
+    | Tv_Let    of binder * term * term
     | Tv_Match  of term * list<branch>
     | Tv_Unknown
 
@@ -122,6 +123,7 @@ let ref_Tv_Type_lid    = fstar_refl_data_lid "Tv_Type"
 let ref_Tv_Refine_lid  = fstar_refl_data_lid "Tv_Refine"
 let ref_Tv_Const_lid   = fstar_refl_data_lid "Tv_Const"
 let ref_Tv_Uvar_lid    = fstar_refl_data_lid "Tv_Uvar"
+let ref_Tv_Let_lid     = fstar_refl_data_lid "Tv_Let"
 let ref_Tv_Match_lid   = fstar_refl_data_lid "Tv_Match"
 let ref_Tv_Unknown_lid = fstar_refl_data_lid "Tv_Unknown"
 
@@ -134,6 +136,7 @@ let ref_Tv_Type    = tdataconstr ref_Tv_Type_lid
 let ref_Tv_Refine  = tdataconstr ref_Tv_Refine_lid
 let ref_Tv_Const   = tdataconstr ref_Tv_Const_lid
 let ref_Tv_Uvar    = tdataconstr ref_Tv_Uvar_lid
+let ref_Tv_Let     = tdataconstr ref_Tv_Let_lid
 let ref_Tv_Match   = tdataconstr ref_Tv_Match_lid
 let ref_Tv_Unknown = tdataconstr ref_Tv_Unknown_lid
 
