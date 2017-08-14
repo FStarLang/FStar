@@ -70,6 +70,11 @@ let rec instrument_body (ii : ins_info) (t : term) : tactic term =
     brs' <-- mapM (ins_br ii) brs;
     return (pack (Tv_Match t brs'))
     end
+  // descend into lets
+  | Tv_Let b t1 t2 -> begin
+    t2' <-- instrument_body ii t2;
+    return (pack (Tv_Let b t1 t2'))
+    end
   | _ -> begin
     let hd, args = collect_app t in
     let argpack = mktuple_n ii.args in
@@ -138,10 +143,13 @@ let rec fall' (n : mynat) =
 
 let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))
 
+// Beware: the `let acc' = `... gets normalized in the tactic,
+// so we're not actually descending through it. Maybe we need a flag
+// to control the evaluation of lets.
 let rec fact_aux (n acc : nat) : Tot nat =
     if n = 0
     then acc
-    else fact_aux (n - 1) (acc `op_Multiply` n)
+    else let acc' = acc `op_Multiply` n in fact_aux (n - 1) acc'
 
 let rec fact (n : nat) : Tot nat = fact_aux n 1
 
