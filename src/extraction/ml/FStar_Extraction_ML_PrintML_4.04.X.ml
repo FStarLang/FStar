@@ -226,6 +226,8 @@ let rec build_expr ?annot (e: mlexpr): expression =
       let args = map (fun x -> (Nolabel, build_expr x)) es in
       let f = build_expr e in
       resugar_app f args es
+   | MLE_TApp (e, ts) ->
+     build_expr e
    | MLE_Fun (l, e) -> build_fun l e
    | MLE_Match (e, branches) ->
       let ep = build_expr e in

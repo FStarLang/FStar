@@ -144,6 +144,7 @@ type mlexpr' =
 | MLE_Name   of mlpath
 | MLE_Let    of mlletbinding * mlexpr //tyscheme for polymorphic recursion
 | MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried
+| MLE_TApp   of mlexpr * list<mlty>
 | MLE_Fun    of list<(mlident * mlty)> * mlexpr
 | MLE_Match  of mlexpr * list<mlbranch>
 | MLE_Coerce of mlexpr * mlty * mlty

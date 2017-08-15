@@ -474,6 +474,10 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
             text "with";
             combine hardline (List.map (doc_of_branch currentModule) pats)
         ]
+    | MLE_TApp (head, ty_args) ->
+        // Type applications are only useful meta-data for backends without inference, for example Kremlin.
+        // We just skip them here.
+        doc_of_expr currentModule outer head
 and  doc_of_binop currentModule p e1 e2 : doc =
         let (_, prio, txt) = Option.get (as_bin_op p) in
         let e1  = doc_of_expr  currentModule (prio, Left ) e1 in

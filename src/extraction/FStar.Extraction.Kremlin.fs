@@ -31,6 +31,11 @@ open FStar.BaseTypes
 
 module BU = FStar.Util
 
+(** CHANGELOG
+- Added a single constructor to the expression type to reflect the addition
+  of type applications to the ML extraction language.
+*)
+
 (* COPY-PASTED ****************************************************************)
 
 type program =
@@ -72,6 +77,7 @@ and expr =
   | EConstant of constant
   | EUnit
   | EApp of expr * list<expr>
+  | ETypApp of expr * list<typ>
   | ELet of binder * expr * expr
   | EIfThenElse of expr * expr * expr
   | ESequence of list<expr>
@@ -160,7 +166,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 23
+let current_version: version = 24
 
 type file = string * program
 type binary_format = version * list<file>
@@ -651,6 +657,9 @@ and translate_expr env e: expr =
 
   | MLE_App ({ expr = MLE_Var (name, _) }, args) ->
       EApp (EBound (find env name), List.map (translate_expr env) args)
+
+  | MLE_TApp (head, ty_args) ->
+      ETypApp (translate_expr env head, List.map (translate_type env) ty_args)
 
   | MLE_Coerce (e, t_from, t_to) ->
       ECast (translate_expr env e, translate_type env t_to)

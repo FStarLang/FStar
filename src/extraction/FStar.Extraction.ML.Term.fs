@@ -1021,10 +1021,25 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                let prefixAsMLTypes = List.map (fun (x, _) -> term_as_mlty g x) prefix in
         //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
                                let t = instantiate (vars, t) prefixAsMLTypes in
+                               // If I understand this code correctly when we reach this branch we are observing an
+                               // application of the form:
+                               //
+                               // (f u_1 .. u_n) e_1 .. e_2
+                               //
+                               // where f : forall (t_1 ... t_n : Type), t1 -> ... t_n
+                               //
+                               // The old code was converting `f u_1 ... u_n`, to a term with a type `u_1 -> ... -> u_n`.
+                               //
+                               // We now preserve these type applications, by wrapping the head in type applications,
+                               // instantiating the type assigning it to this new type application expression,
+                               // and continuing with the rest of the pipeline.
+                               //
+                               // @jroesch
                                let head = match head_ml.expr with
                                  | MLE_Name _
-                                 | MLE_Var _ -> {head_ml with mlty=t}
-                                 | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
+                                 | MLE_Var _ -> {head_ml with mlty=t ; expr=MLE_TApp (head_ml, prefixAsMLTypes) }
+                                 | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) ->
+                                    MLE_App({head with expr=MLE_TApp (head_ml, prefixAsMLTypes); mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
                                  | _ -> failwith "Impossible: Unexpected head term" in
                                head, t, rest
                           else err_uninst g head (vars, t) top in
