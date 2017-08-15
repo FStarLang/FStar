@@ -233,31 +233,6 @@ let validate_one_more #t p n buf off off' h =
     assert (snd (Some?.v (parse_many p 1 bs')) == snd (Some?.v (p bs')));
     validate_n_more p n 1 buf off off' h
 
-let lemma_modifies_0_unalloc (#a:Type) (b:B.buffer a) h0 h1 h2 :
-  Lemma (requires (b `B.unused_in` h0 /\
-                   B.frameOf b == h0.tip /\
-                   B.modifies_0 h0 h1 /\
-                   B.modifies_1 b h1 h2))
-        (ensures (B.modifies_0 h0 h2)) =
-        B.lemma_reveal_modifies_0 h0 h1;
-        B.lemma_reveal_modifies_1 b h1 h2;
-        B.lemma_intro_modifies_0 h0 h2
-
-let lemma_modifies_none_1_trans (#a:Type) (b:B.buffer a) h0 h1 h2 :
-  Lemma (requires (modifies_none h0 h1 /\
-                   B.live h0 b /\
-                   B.modifies_1 b h1 h2))
-        (ensures (B.modifies_1 b h0 h2)) =
-  B.lemma_reveal_modifies_1 b h1 h2;
-  B.lemma_intro_modifies_1 b h0 h2
-
-let lemma_modifies_0_none_trans h0 h1 h2 :
-  Lemma (requires (B.modifies_0 h0 h1 /\
-                   modifies_none h1 h2))
-        (ensures (B.modifies_0 h0 h2)) =
-  B.lemma_reveal_modifies_0 h0 h1;
-  B.lemma_intro_modifies_0 h0 h2
-
 // TODO: get this to extract in validate_many_st (even unfold doesn't work,
 // though it at least gets to an error "todo: translate_expr [MLE_App]")
 //unfold
@@ -309,8 +284,8 @@ let for_readonly #t init start finish #a buf inv f =
            let h1' = get() in
            B.upd ptr_state 0ul v';
            let h2' = get() in
-           lemma_modifies_none_1_trans ptr_state h0' h1' h2';
-           lemma_modifies_0_unalloc ptr_state h1 h0' h2';
+           B.lemma_modifies_none_1_trans ptr_state h0' h1' h2';
+           B.lemma_modifies_0_unalloc ptr_state h1 h0' h2';
            break)
     end in
   let v = B.index ptr_state 0ul in
