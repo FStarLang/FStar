@@ -15,11 +15,11 @@
 #+END_EXAMPLE
 
 * F* pure and stateful representations
-  [[file+emacs:KeyValue.fst][KeyValue.fst]]
+  [[file:KeyValue.fst][KeyValue.fst]]
 
   Note the difference between ~encoded_entry~ and ~entry_st~.
 * Pure parsing (spec)
-  [[file+emacs:PureParser.fst][PureParser.fst]]
+  [[file:PureParser.fst][PureParser.fst]]
 ** Parser combinators
    ~parser t~ is a monad ~bytes -> Tot (option (t * n:nat{n <= length b}~
 
@@ -29,13 +29,13 @@
 ** No proofs - spec only
 * Detour: slices
 simple wrapper around buffers
-[[file+emacs:Slice.fst][Slice.fst]]
+[[file:Slice.fst][Slice.fst]]
 ** Buffers with runtime length
    roughly []byte from Go (though that has a capacity)
    same as &[u8] in Rust
 * Stateful validators
 idea is to validate input initially and then read without checking lengths
-[[file+emacs:Validator.fst][Validator.fst]]
+[[file:Validator.fst][Validator.fst]]
 
 ** Validators are roughly ~parser unit~ where success is validation
 ** Validation requires parsing (eg, lengths)
@@ -44,20 +44,20 @@ idea is to validate input initially and then read without checking lengths
 ** Validators can be combined by sequencing
    ~then_check~ is a monoid for validators (this gave a bunch of extraction trouble)
 ** Parsing without checks examples
-   [[file+emacs:SkipChecksParsing.fst][SkipChecksParsing.fst]]
+   [[file:SkipChecksParsing.fst][SkipChecksParsing.fst]]
 * Validated parsing
 once we have a ~Some?~ from validation, let's access fields and parse on-the-fly
-[[file+emacs:ValidatedParser.fst][ValidatedParser.fst]]
+[[file:ValidatedParser.fst][ValidatedParser.fst]]
 ** the only API is ~fold_left_store~
 ** could also get number of records
 ** could also get an entry by index, but we didn't remember how many records there are
 ** could also search for a key (linearly, didn't build an index)
 * Pure serialization (spec)
-[[file+emacs:PureEncoder.fst][PureEncoder.fst]]
+[[file:PureEncoder.fst][PureEncoder.fst]]
 ** Redundant, implied by parsing (better yet, vice versa)
 ** Note this is easy, and so is pure parsing
 * Serialization
-[[file+emacs:Serializer.fst][Serializer.fst]]
+[[file:Serializer.fst][Serializer.fst]]
 ** Framing much more complicated, but structured
 ** key primitive is splitting a bslice
 ** similar ~ser_append~ monoid
