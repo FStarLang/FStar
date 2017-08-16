@@ -369,7 +369,9 @@ and translate_decl env d: option<decl> =
       let binders = translate_binders env args in
       let env = add_binders env args in
       let name = env.module_name, name in
-      let flags = translate_flags flags in
+      let flags = (match t0 with
+      | MLTY_Fun (_, E_GHOST, _) -> NoExtract :: (translate_flags flags)
+      | _ -> translate_flags flags) in
       if assumed then
         if List.length tvars = 0 then
           Some (DExternal (None, name, translate_type env t0))
