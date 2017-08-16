@@ -3,6 +3,7 @@ module PureParser
 open KeyValue
 
 open FStar.Seq
+open FStar.Endianness
 module U8 = FStar.UInt8
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
@@ -45,23 +46,21 @@ let parse_u8: parser U8.t =
   fun b -> if length b < 1 then None
         else Some (index b 0, 1)
 
-inline_for_extraction unfold
-val u16_from_bytes: hi:byte -> lo:byte -> U16.t
-let u16_from_bytes hi lo =
-  U16.add (U16.shift_left (Cast.uint8_to_uint16 hi) 8ul) (Cast.uint8_to_uint16 lo)
-
-val u16_from_be: b:bytes{length b == 2} -> U16.t
-let u16_from_be b = u16_from_bytes (index b 0) (index b 1)
-
 let parse_u16: parser U16.t =
   fun b -> if length b < 2 then None
-        else Some (u16_from_be (slice b 0 2), 2)
-
-assume val u32_from_be: b:bytes{length b == 4} -> U32.t
+        else begin
+          let b' = slice b 0 2 in
+          lemma_be_to_n_is_bounded b';
+          Some (U16.uint_to_t (be_to_n b'), 2)
+        end
 
 let parse_u32: parser U32.t =
   fun b -> if length b < 4 then None
-        else Some (u32_from_be (slice b 0 4), 4)
+        else begin
+          let b' = slice b 0 4 in
+          lemma_be_to_n_is_bounded b';
+          Some (U32.uint_to_t (be_to_n b'), 4)
+        end
 
 val parse_u16_array: parser u16_array
 let parse_u16_array =

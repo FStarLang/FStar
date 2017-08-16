@@ -8,6 +8,7 @@ open FStar.Ghost
 open FStar.Seq
 open FStar.HyperStack
 open FStar.HyperStack.ST
+module C = C
 // special kremlin support for looping
 open C.Loops
 
@@ -60,35 +61,21 @@ let parse_u8_st : parser_st (hide parse_u8) = fun input ->
 
 let parse_u16_st_nochk :
   parser_st_nochk (hide parse_u16) = fun input ->
-  let b0 = B.index input.p 0ul in
-      let b1 = B.index input.p 1ul in
-      begin
-        let h = get() in
-        let twobytes = append (create 1 b0) (create 1 b1) in
-        lemma_eq_intro twobytes (slice (as_seq h input) 0 2)
-      end;
-      let n = u16_from_bytes b0 b1 in
-      (n, U32.uint_to_t 2)
+  let n = C.load16_be (truncated_slice input 2ul).p in
+  (n, 2ul)
 
 let parse_u16_st : parser_st (hide parse_u16) = fun input ->
-  if U32.lt input.len (U32.uint_to_t 2)
+  if U32.lt input.len 2ul
     then None
   else Some (parse_u16_st_nochk input)
 
 let parse_u32_st_nochk :
   parser_st_nochk (hide parse_u32) = fun input ->
-  let b0 = B.index input.p (U32.uint_to_t 0) in
-  let b1 = B.index input.p (U32.uint_to_t 1) in
-  let b2 = B.index input.p (U32.uint_to_t 2) in
-  let b3 = B.index input.p (U32.uint_to_t 3) in
-  let fourbytes = create 1 b0 `append` create 1 b1 `append` create 1 b2 `append` create 1 b3 in
-  let h = get() in
-  lemma_eq_intro fourbytes (slice (as_seq h input) 0 4);
-  let n = u32_from_be fourbytes in
-  (n, U32.uint_to_t 4)
+  let n = C.load32_be (truncated_slice input 4ul).p in
+  (n, 4ul)
 
 let parse_u32_st : parser_st (hide parse_u32) = fun input ->
-  if U32.lt input.len (U32.uint_to_t 4)
+  if U32.lt input.len 4ul
     then None
     else Some (parse_u32_st_nochk input)
 
