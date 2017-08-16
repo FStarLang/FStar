@@ -293,6 +293,7 @@ let rec is_ml_value e =
     | MLE_CTor (_, exps)
     | MLE_Tuple exps -> BU.for_all is_ml_value exps
     | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
+    | MLE_TApp (h, _) -> is_ml_value h
     | _ -> false
 
 
@@ -741,7 +742,8 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
     match mlAppExpr.expr, qual with
         | _, None -> mlAppExpr
 
-        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f)) ->
+        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f))
+        | MLE_App({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mle::args), Some (Record_projector (constrname, f))->
           let f = lid_of_ids (constrname.ns @ [f]) in
           let fn = Util.mlpath_of_lid f in
           let proj = MLE_Proj(mle, fn) in
@@ -751,11 +753,15 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
           with_ty mlAppExpr.mlty e
 
         | MLE_App ({expr=MLE_Name mlp}, mlargs), Some Data_ctor
-        | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _) ->
+        | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _)
+        | MLE_App ({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mlargs), Some Data_ctor
+        | MLE_App ({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mlargs), Some (Record_ctor _) ->
           resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp,mlargs))
 
         | MLE_Name mlp, Some Data_ctor
-        | MLE_Name mlp, Some (Record_ctor _) ->
+        | MLE_Name mlp, Some (Record_ctor _)
+        | MLE_TApp({expr=MLE_Name mlp}, _), Some Data_ctor
+        | MLE_TApp({expr=MLE_Name mlp}, _), Some (Record_ctor _) ->
           resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp, []))
 
         | _ -> mlAppExpr
