@@ -652,11 +652,8 @@ and translate_expr env e: expr =
       else
         EApp (EQualified ([ "FStar"; "Int"; "Cast" ], c), [ translate_expr env arg ])
 
-  | MLE_App ({ expr = MLE_Name (path, function_name) }, args) ->
-      EApp (EQualified (path, function_name), List.map (translate_expr env) args)
-
-  | MLE_App ({ expr = MLE_Var (name, _) }, args) ->
-      EApp (EBound (find env name), List.map (translate_expr env) args)
+  | MLE_App (head, args) ->
+      EApp (translate_expr env head, List.map (translate_expr env) args)
 
   | MLE_TApp (head, ty_args) ->
       ETypApp (translate_expr env head, List.map (translate_type env) ty_args)
