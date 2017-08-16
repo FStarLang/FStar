@@ -13,6 +13,17 @@
       0
     ],
     [
+      "FStar.String.make",
+      1,
+      2,
+      1,
+      [
+        "__query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_d2e2db8602bbddfb2772cf5783889241"
+      ],
+      0
+    ],
+    [
       "FStar.String.strcat",
       1,
       2,

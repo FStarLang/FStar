@@ -16,6 +16,19 @@
       ],
       0
     ],
+    [
+      "FStar.Reflection.Data.__proj__C_Int__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.C_Int",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_6b5e677f132a7995451a592648cf099d"
+      ],
+      0
+    ],
     [ "FStar.Reflection.Data.uu___is_C_True", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Reflection.Data.uu___is_C_False", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Reflection.Data.uu___is_C_String", 1, 2, 1, [ "@query" ], 0 ],
@@ -29,6 +42,19 @@
         "disc_equation_FStar.Reflection.Data.C_String",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_962840888fae5b535c54118d49e496bf"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__C_String__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.C_String",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_e918b82e2b55024d59266f3508e2dea0"
       ],
       0
     ],
@@ -53,9 +79,48 @@
       ],
       0
     ],
+    [
+      "FStar.Reflection.Data.__proj__Pat_Constant__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Pat_Constant",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_d6d2726f6b590bf21c95771d0c37bb5a"
+      ],
+      0
+    ],
     [ "FStar.Reflection.Data.uu___is_Pat_Cons", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Reflection.Data.__proj__Pat_Cons__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Reflection.Data.Pat_Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_dde9d25014415473550f124e06504c16"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Pat_Cons__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Pat_Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_7890d20b4e3db6fb68cc0ef9e6e89672"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Pat_Cons__item___1",
       1,
       2,
       1,
@@ -73,10 +138,10 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "__MaxIFuel_assumption", "__query",
         "disc_equation_FStar.Reflection.Data.Pat_Cons",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_dde9d25014415473550f124e06504c16"
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_7890d20b4e3db6fb68cc0ef9e6e89672"
       ],
       0
     ],
@@ -94,6 +159,19 @@
       ],
       0
     ],
+    [
+      "FStar.Reflection.Data.__proj__Pat_Var__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Pat_Var",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_6ded9d6b9f23a8b8e388be6253053d5f"
+      ],
+      0
+    ],
     [ "FStar.Reflection.Data.uu___is_Pat_Wild", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Reflection.Data.__proj__Pat_Wild__item___0",
@@ -105,6 +183,19 @@
         "disc_equation_FStar.Reflection.Data.Pat_Wild",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_2bd8e811315fcd591a6321d9e806533a"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Pat_Wild__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Pat_Wild",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_d9d94878c6eb285fada1fe60918b8a12"
       ],
       0
     ],
@@ -124,6 +215,19 @@
       ],
       0
     ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_Var__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Var",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_cfa8b8ff201c77a958d7fc31dfde5d79"
+      ],
+      0
+    ],
     [ "FStar.Reflection.Data.uu___is_Tv_FVar", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Reflection.Data.__proj__Tv_FVar__item___0",
@@ -135,6 +239,19 @@
         "disc_equation_FStar.Reflection.Data.Tv_FVar",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_ad0c440fdab6ffc192ca7b9c26ec7060"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_FVar__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_FVar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_baf7bbec25f9ae2c05e0bad0765e7807"
       ],
       0
     ],
@@ -153,6 +270,19 @@
       0
     ],
     [
+      "FStar.Reflection.Data.__proj__Tv_App__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_App",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_8401b9aa5ae706e60a6f3129afd961b4"
+      ],
+      0
+    ],
+    [
       "FStar.Reflection.Data.__proj__Tv_App__item___1",
       1,
       2,
@@ -162,6 +292,19 @@
         "disc_equation_FStar.Reflection.Data.Tv_App",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_369edc208ef003a3f503fc30ee54ef77"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_App__item___1",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_App",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_8401b9aa5ae706e60a6f3129afd961b4"
       ],
       0
     ],
@@ -180,6 +323,19 @@
       0
     ],
     [
+      "FStar.Reflection.Data.__proj__Tv_Abs__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Abs",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_0a5c4fab9ddd8b2bdc5cc9a12fd6ee0f"
+      ],
+      0
+    ],
+    [
       "FStar.Reflection.Data.__proj__Tv_Abs__item___1",
       1,
       2,
@@ -189,6 +345,19 @@
         "disc_equation_FStar.Reflection.Data.Tv_Abs",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_0890b9859e9c53ebf7a55ed59cccd0b8"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_Abs__item___1",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Abs",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_0a5c4fab9ddd8b2bdc5cc9a12fd6ee0f"
       ],
       0
     ],
@@ -207,6 +376,19 @@
       0
     ],
     [
+      "FStar.Reflection.Data.__proj__Tv_Arrow__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Arrow",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_8700e9cd5d05016ded1611fc618d218d"
+      ],
+      0
+    ],
+    [
       "FStar.Reflection.Data.__proj__Tv_Arrow__item___1",
       1,
       2,
@@ -216,6 +398,19 @@
         "disc_equation_FStar.Reflection.Data.Tv_Arrow",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_7f35847acbb7ec9362d723780e73642b"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_Arrow__item___1",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Arrow",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_8700e9cd5d05016ded1611fc618d218d"
       ],
       0
     ],
@@ -230,6 +425,19 @@
         "disc_equation_FStar.Reflection.Data.Tv_Type",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_46e071c592a079ed4ad7345ac56f609b"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_Type__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Type",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_1bc039ca8aa3341ec014849ef3bdccf3"
       ],
       0
     ],
@@ -248,6 +456,19 @@
       0
     ],
     [
+      "FStar.Reflection.Data.__proj__Tv_Refine__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Refine",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_ff27bb52ef690abfa7cf1a9b188340c5"
+      ],
+      0
+    ],
+    [
       "FStar.Reflection.Data.__proj__Tv_Refine__item___1",
       1,
       2,
@@ -257,6 +478,19 @@
         "disc_equation_FStar.Reflection.Data.Tv_Refine",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_6b626a0b655f5b02ad9415dccdffd80e"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_Refine__item___1",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Refine",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_ff27bb52ef690abfa7cf1a9b188340c5"
       ],
       0
     ],
@@ -271,6 +505,19 @@
         "disc_equation_FStar.Reflection.Data.Tv_Const",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_6367ecde002ce94c1d6d2d25e68fc6d4"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_Const__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Const",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_d9ef43c5dd25d705a8040f952e482314"
       ],
       0
     ],
@@ -289,6 +536,19 @@
       0
     ],
     [
+      "FStar.Reflection.Data.__proj__Tv_Uvar__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Uvar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_aaa822c0297c0c6c4d72de56c2ca06ec"
+      ],
+      0
+    ],
+    [
       "FStar.Reflection.Data.__proj__Tv_Uvar__item___1",
       1,
       2,
@@ -298,6 +558,19 @@
         "disc_equation_FStar.Reflection.Data.Tv_Uvar",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_18b717e4d9a60bc505138cd43435473b"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_Uvar__item___1",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Uvar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_aaa822c0297c0c6c4d72de56c2ca06ec"
       ],
       0
     ],
@@ -316,6 +589,19 @@
       0
     ],
     [
+      "FStar.Reflection.Data.__proj__Tv_Match__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Match",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_620821451877bea0bcbdbc086cf54af7"
+      ],
+      0
+    ],
+    [
       "FStar.Reflection.Data.__proj__Tv_Match__item___1",
       1,
       2,
@@ -325,6 +611,19 @@
         "disc_equation_FStar.Reflection.Data.Tv_Match",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_d9b78c2ca8fd6d8967a4cada27904b12"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Tv_Match__item___1",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Tv_Match",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_620821451877bea0bcbdbc086cf54af7"
       ],
       0
     ],
@@ -367,6 +666,19 @@
       0
     ],
     [
+      "FStar.Reflection.Data.__proj__Sg_Inductive__item__name",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Sg_Inductive",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_93b36e55e5fd311e038f273a15757c50"
+      ],
+      0
+    ],
+    [
       "FStar.Reflection.Data.__proj__Sg_Inductive__item__params",
       1,
       2,
@@ -376,6 +688,19 @@
         "disc_equation_FStar.Reflection.Data.Sg_Inductive",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_efd075e5f8fb3196392b8ad33623b437"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Sg_Inductive__item__params",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Sg_Inductive",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_93b36e55e5fd311e038f273a15757c50"
       ],
       0
     ],
@@ -393,6 +718,19 @@
       0
     ],
     [
+      "FStar.Reflection.Data.__proj__Sg_Inductive__item__typ",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Sg_Inductive",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_93b36e55e5fd311e038f273a15757c50"
+      ],
+      0
+    ],
+    [
       "FStar.Reflection.Data.__proj__Sg_Inductive__item___3",
       1,
       2,
@@ -402,6 +740,19 @@
         "disc_equation_FStar.Reflection.Data.Sg_Inductive",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_efd075e5f8fb3196392b8ad33623b437"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__Sg_Inductive__item___3",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.Sg_Inductive",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_93b36e55e5fd311e038f273a15757c50"
       ],
       0
     ],
@@ -421,6 +772,19 @@
         "disc_equation_FStar.Reflection.Data.UnfoldOnly",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Reflection.Data_Tm_refine_bb82ec88c22dae70290e0475c9d5c837"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Data.__proj__UnfoldOnly__item___0",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query",
+        "disc_equation_FStar.Reflection.Data.UnfoldOnly",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Reflection.Data_Tm_refine_faf02dd2bb876797991039559af9d4f3"
       ],
       0
     ]

@@ -36,6 +36,18 @@
       ],
       0
     ],
+    [
+      "FStar.Relational.Relational.tl_rel",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query", "disc_equation_Prims.Cons",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Relational.Relational_Tm_refine_ccf73b9e8f932b348de8f7afd1e865fc"
+      ],
+      0
+    ],
     [ "FStar.Relational.Relational.cons_rel", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Relational.Relational.pair_rel", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Relational.Relational.triple_rel", 1, 2, 1, [ "@query" ], 0 ],
@@ -51,6 +63,18 @@
       ],
       0
     ],
+    [
+      "FStar.Relational.Relational.eq_rel",
+      1,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_45cec59dab2fa571e58056873aeab260",
+        "uvar_typing_19"
+      ],
+      0
+    ],
     [ "FStar.Relational.Relational.and_irel", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Relational.Relational.or_irel", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Relational.Relational.eq_irel", 1, 2, 1, [ "@query" ], 0 ],
@@ -62,6 +86,17 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
+    [
+      "FStar.Relational.Relational.eq_irel",
+      2,
+      2,
+      1,
+      [
+        "__MaxIFuel_assumption", "__query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_45cec59dab2fa571e58056873aeab260"
       ],
       0
     ],
