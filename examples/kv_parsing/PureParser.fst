@@ -3,7 +3,7 @@ module PureParser
 open KeyValue
 
 open FStar.Seq
-open FStar.Endianness
+open FStar.Kremlin.Endianness
 module U8 = FStar.UInt8
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
