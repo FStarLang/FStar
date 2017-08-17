@@ -11,6 +11,7 @@ module Cast = FStar.Int.Cast
 
 open KeyValue
 open Slice
+open IntegerParsing
 open Serializing
 open PureEncoder
 
@@ -20,102 +21,6 @@ open PureEncoder
 can serialize everywhere *)
 
 #reset-options "--z3rlimit 10"
-
-val upd_len_1 : #a:Type -> s:Seq.seq a{length s == 1} -> v:a ->
-  Lemma (Seq.upd s 0 v == Seq.create 1 v)
-let upd_len_1 #a s v =
-  lemma_eq_intro (Seq.upd s 0 v) (Seq.create 1 v)
-
-val ser_byte: v:byte -> serializer (hide (Seq.create 1 v))
-let ser_byte v = fun buf ->
-  if U32.lt buf.len 1ul then None
-  else
-    let (buf, _) = bslice_split_at buf 1ul in
-    let h0 = get() in
-    B.upd buf.p 0ul v;
-    begin
-      let s0 = as_seq h0 buf in
-      upd_len_1 s0 v
-    end;
-    Some 1ul
-
-let upd_len_2 (#a:Type) (s:Seq.seq a{length s == 2}) (vs:Seq.seq a{length vs == 2}) :
-  Lemma (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1) == vs) =
-  lemma_eq_intro (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1)) vs
-
-[@"substitute"]
-val ser_u16: v:U16.t -> serializer (hide (u16_to_be v))
-[@"substitute"]
-let ser_u16 v = fun buf ->
-  if U32.lt buf.len 2ul then None
-  else
-    let bs = u16_to_be v in
-    let b0 = Cast.uint16_to_uint8 (U16.shift_right v 8ul) in
-    let b1 = Cast.uint16_to_uint8 (U16.rem v 256us) in
-    let (buf, _) = bslice_split_at buf 2ul in
-    let h0 = get() in
-    B.upd buf.p 0ul b0;
-    B.upd buf.p 1ul b1;
-    begin
-      let s0 = as_seq h0 buf in
-      assert (index bs 0 == b0);
-      assert (index bs 1 == b1);
-      upd_len_2 s0 bs
-    end;
-    Some 2ul
-
-let upd_len_4 (#a:Type) (s:Seq.seq a{length s == 4}) (vs:Seq.seq a{length vs == 4}) :
-  Lemma (Seq.upd
-          (Seq.upd
-            (Seq.upd
-              (Seq.upd s 0 (index vs 0))
-            1 (index vs 1))
-          2 (index vs 2))
-        3 (index vs 3) == vs) =
-  lemma_eq_intro (Seq.upd
-  (Seq.upd
-  (Seq.upd
-  (Seq.upd s 0 (index vs 0))
-  1 (index vs 1))
-  2 (index vs 2))
-  3 (index vs 3)) vs
-
-val ser_u32: v:U32.t -> serializer (hide (u32_to_be v))
-let ser_u32 v = fun buf ->
-  if U32.lt buf.len 4ul then None
-  else
-    let bs = u32_to_be v in
-    let (buf, _) = bslice_split_at buf 4ul in
-    let h0 = get() in
-    B.upd buf.p 0ul (index bs 0);
-    B.upd buf.p 1ul (index bs 1);
-    B.upd buf.p 2ul (index bs 2);
-    B.upd buf.p 3ul (index bs 3);
-    begin
-      let s0 = as_seq h0 buf in
-      upd_len_4 s0 bs
-    end;
-    Some 4ul
-
-let enc_u16_array_st (a: u16_array_st) (h:mem{live h a.a16_st}) : GTot bytes =
-    u16_to_be a.len16_st `append` as_seq h a.a16_st
-
-inline_for_extraction [@"substitute"]
-val ser_u16_array : a:u16_array_st ->
-  serializer_any (hide (TSet.singleton a.a16_st)) (fun h -> enc_u16_array_st a h)
-let ser_u16_array a = fun buf ->
-  (ser_u16 a.len16_st `ser_append` ser_copy a.a16_st) buf
-
-let ser_u16_array' a buf = ser_u16_array a buf
-
-let enc_u32_array_st (a: u32_array_st) (h:mem{live h a.a32_st}) : GTot bytes =
-  u32_to_be a.len32_st `append` as_seq h a.a32_st
-
-val ser_u32_array : a:u32_array_st ->
-  serializer_any (hide (TSet.singleton a.a32_st)) (fun h -> enc_u32_array_st a h)
-let ser_u32_array a = fun buf ->
-  (ser_u32 a.len32_st `ser_append`
-   ser_copy a.a32_st) buf
 
 noextract
 val entry_st_bufs : e:entry_st -> TSet.set bslice

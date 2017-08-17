@@ -2,9 +2,10 @@ FSTAR_HOME=../..
 include ../Makefile.include
 
 FST_FILES :=	Slice.fst \
-		KeyValue.fst \
 		Parsing.fst \
 		Serializing.fst \
+		IntegerParsing.fst \
+		KeyValue.fst \
 		PureParser.fst \
 		PureValidator.fst \
 		Validator.fst \
