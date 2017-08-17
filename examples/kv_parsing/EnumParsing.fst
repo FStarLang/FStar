@@ -1,5 +1,7 @@
 module EnumParsing
 
+open Parsing
+open Serializing
 open PureParser
 open Validator
 open PureEncoder

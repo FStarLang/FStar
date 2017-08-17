@@ -3,6 +3,8 @@ include ../Makefile.include
 
 FST_FILES :=	Slice.fst \
 		KeyValue.fst \
+		Parsing.fst \
+		Serializing.fst \
 		PureParser.fst \
 		PureValidator.fst \
 		Validator.fst \
@@ -10,7 +12,8 @@ FST_FILES :=	Slice.fst \
 		ValidatedAccess.fst \
 		PureEncoder.fst \
 		Serializer.fst \
-		EnumParsing.fst
+		EnumParsing.fst \
+		VectorParsing.fst
 
 EXTRACT_FILES := Validator.fst \
 		 ValidatedParser.fst \

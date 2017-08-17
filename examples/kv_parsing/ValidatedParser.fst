@@ -1,6 +1,7 @@
 module ValidatedParser
 
 open KeyValue
+open Parsing
 open PureParser
 open Validator
 open Slice

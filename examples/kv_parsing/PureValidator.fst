@@ -1,6 +1,7 @@
 module PureValidator
 
 open KeyValue
+open Parsing
 open PureParser
 
 open FStar.Seq

@@ -1,5 +1,6 @@
 module VectorParsing
 
+open Parsing
 open PureParser
 open Validator
 open PureEncoder
