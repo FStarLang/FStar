@@ -84,8 +84,6 @@ unfold let validation_checks_parse #t (b: bytes)
   (p: option (t * n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
 
-// TODO: unfold is only for extraction
-unfold
 inline_for_extraction
 let stateful_validator #t (p: erased (parser t)) = input:bslice -> Stack (option (off:U32.t{U32.v off <= U32.v input.len}))
     (requires (fun h0 -> live h0 input))

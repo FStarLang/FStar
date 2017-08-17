@@ -313,7 +313,7 @@ let writer_init (b:bslice) : Stack (option writer)
     assert (writer_valid w);
     Some w
 
-#reset-options "--z3rlimit 10"
+#reset-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
 
 // writer_reinit takes an encoded store at b (and its parsed number of entries)
 // and some adjacent scratch space and allows to extend that store
