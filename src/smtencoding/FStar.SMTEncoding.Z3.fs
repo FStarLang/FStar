@@ -282,6 +282,7 @@ let smt_output_sections (lines:list<string>) : smt_output =
         match remaining with
         | [] -> ()
         | _ ->
+            (* FIXME: Ignore "success" messages. *)
             FStar.Errors.warn
                     Range.dummyRange
                     (BU.format2 "%s: Unexpected output from Z3: %s\n"
