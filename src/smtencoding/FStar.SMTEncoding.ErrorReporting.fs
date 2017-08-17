@@ -272,7 +272,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 let detail_errors hint_replay
                   env
                  (all_labels:labels)
-                 (askZ3:decls_t -> (either<Z3.unsat_core, (error_labels*Z3.error_kind)> * int * Z3.z3statistics))
+                 (askZ3:decls_t -> Z3.z3result)
     : unit =
 
     let print_banner () =
@@ -321,9 +321,10 @@ let detail_errors hint_replay
 	      BU.print1 "%s, " (BU.string_of_int (List.length active));
 	      let decls = elim <| (eliminated @ errors @ tl) in
           let result, _, _ = askZ3 decls in //hd is the only thing to prove
-          if BU.is_left result //hd is provable
-          then linear_check (hd::eliminated) errors tl
-          else linear_check eliminated (hd::errors) tl in
+          match result with
+          | Z3.UNSAT _ -> //hd is provable
+            linear_check (hd::eliminated) errors tl
+          | _ -> linear_check eliminated (hd::errors) tl in
 
     print_banner ();
     Options.set_option "z3rlimit" (Options.Int 5);
