@@ -1131,6 +1131,32 @@ val gsub_buffer
   (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
   (ensures (fun _ -> True))
 
+val frameOf_buffer_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    frameOf_buffer (gsub_buffer b i len) == frameOf_buffer b
+  ))
+  [SMTPat (frameOf_buffer (gsub_buffer b i len))]
+
+val buffer_as_addr_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_as_addr (gsub_buffer b i len) == buffer_as_addr b
+  ))
+  [SMTPat (buffer_as_addr (gsub_buffer b i len))]
+
 val sub_buffer
   (#t: typ)
   (b: buffer t)
