@@ -1041,11 +1041,19 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                // and continuing with the rest of the pipeline.
                                //
                                // @jroesch
+                               //
+                               // This helper ensures we don't generate empty type applications, which will cause
+                               // problems in FStar.Extraction.Kremlin when trying match aganist head symbols which
+                               // are now wrapped with empty type applications.
+                               let mk_tapp e ty_args =
+                                match ty_args with
+                                | [] -> e
+                                | _ -> { e with expr=MLE_TApp(e, ty_args)} in
                                let head = match head_ml.expr with
                                  | MLE_Name _
-                                 | MLE_Var _ -> {head_ml with mlty=t ; expr=MLE_TApp (head_ml, prefixAsMLTypes) }
+                                 | MLE_Var _ -> { mk_tapp head_ml prefixAsMLTypes with mlty=t }
                                  | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) ->
-                                    MLE_App({head with expr=MLE_TApp (head, prefixAsMLTypes); mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
+                                    MLE_App({ mk_tapp head prefixAsMLTypes with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
                                  | _ -> failwith "Impossible: Unexpected head term" in
                                head, t, rest
                           else err_uninst g head (vars, t) top in
