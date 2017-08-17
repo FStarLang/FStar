@@ -55,11 +55,11 @@ let __proj__List__item___0: option_val -> option_val Prims.list =
 let uu___is_Unset: option_val -> Prims.bool =
   fun projectee  ->
     match projectee with | Unset  -> true | uu____143 -> false
-let mk_bool: Prims.bool -> option_val = fun _0_28  -> Bool _0_28
-let mk_string: Prims.string -> option_val = fun _0_29  -> String _0_29
-let mk_path: Prims.string -> option_val = fun _0_30  -> Path _0_30
-let mk_int: Prims.int -> option_val = fun _0_31  -> Int _0_31
-let mk_list: option_val Prims.list -> option_val = fun _0_32  -> List _0_32
+let mk_bool: Prims.bool -> option_val = fun _0_19  -> Bool _0_19
+let mk_string: Prims.string -> option_val = fun _0_20  -> String _0_20
+let mk_path: Prims.string -> option_val = fun _0_21  -> Path _0_21
+let mk_int: Prims.int -> option_val = fun _0_22  -> Int _0_22
+let mk_list: option_val Prims.list -> option_val = fun _0_23  -> List _0_23
 type options =
   | Set
   | Reset
@@ -540,7 +540,7 @@ let cons_extract_module: Prims.string -> option_val =
         let uu____1803 = get_extract_module () in (FStar_String.lowercase s)
           :: uu____1803 in
       FStar_All.pipe_right uu____1800
-        (FStar_List.map (fun _0_33  -> String _0_33)) in
+        (FStar_List.map (fun _0_24  -> String _0_24)) in
     List uu____1797
 let cons_extract_namespace: Prims.string -> option_val =
   fun s  ->
@@ -549,7 +549,7 @@ let cons_extract_namespace: Prims.string -> option_val =
         let uu____1820 = get_extract_namespace () in
         (FStar_String.lowercase s) :: uu____1820 in
       FStar_All.pipe_right uu____1817
-        (FStar_List.map (fun _0_34  -> String _0_34)) in
+        (FStar_List.map (fun _0_25  -> String _0_25)) in
     List uu____1814
 let add_extract_module: Prims.string -> Prims.unit =
   fun s  ->
@@ -566,7 +566,7 @@ let cons_verify_module: Prims.string -> option_val =
         let uu____1847 = get_verify_module () in (FStar_String.lowercase s)
           :: uu____1847 in
       FStar_All.pipe_right uu____1844
-        (FStar_List.map (fun _0_35  -> String _0_35)) in
+        (FStar_List.map (fun _0_26  -> String _0_26)) in
     List uu____1841
 let cons_using_facts_from: Prims.string -> option_val =
   fun s  ->
@@ -576,7 +576,7 @@ let cons_using_facts_from: Prims.string -> option_val =
      | FStar_Pervasives_Native.None  -> List [String s]
      | FStar_Pervasives_Native.Some l ->
          let uu____1871 =
-           FStar_List.map (fun _0_36  -> String _0_36) (s :: l) in
+           FStar_List.map (fun _0_27  -> String _0_27) (s :: l) in
          List uu____1871)
 let add_verify_module: Prims.string -> Prims.unit =
   fun s  ->

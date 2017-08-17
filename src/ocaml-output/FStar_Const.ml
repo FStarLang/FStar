@@ -113,7 +113,7 @@ let eq_const: sconst -> sconst -> Prims.bool =
 let rec pow2: Prims.int -> Prims.int =
   fun x  ->
     match x with
-    | _0_27 when _0_27 = (Prims.parse_int "0") -> Prims.parse_int "1"
+    | _0_18 when _0_18 = (Prims.parse_int "0") -> Prims.parse_int "1"
     | uu____387 ->
         let uu____388 = pow2 (x - (Prims.parse_int "1")) in
         (Prims.parse_int "2") * uu____388

@@ -948,18 +948,18 @@ let json_of_lookup_result: lookup_result -> FStar_Util.json =
         let uu____2976 =
           let uu____2983 =
             let uu____2988 =
-              json_of_opt (fun _0_42  -> FStar_Util.JsonStr _0_42) lr.lr_typ in
+              json_of_opt (fun _0_33  -> FStar_Util.JsonStr _0_33) lr.lr_typ in
             ("type", uu____2988) in
           let uu____2989 =
             let uu____2996 =
               let uu____3001 =
-                json_of_opt (fun _0_43  -> FStar_Util.JsonStr _0_43)
+                json_of_opt (fun _0_34  -> FStar_Util.JsonStr _0_34)
                   lr.lr_doc in
               ("documentation", uu____3001) in
             let uu____3002 =
               let uu____3009 =
                 let uu____3014 =
-                  json_of_opt (fun _0_44  -> FStar_Util.JsonStr _0_44)
+                  json_of_opt (fun _0_35  -> FStar_Util.JsonStr _0_35)
                     lr.lr_def in
                 ("definition", uu____3014) in
               [uu____3009] in
@@ -973,9 +973,9 @@ let json_of_protocol_info:
   let js_version = FStar_Util.JsonInt interactive_protocol_vernum in
   let js_features =
     let uu____3047 =
-      FStar_List.map (fun _0_45  -> FStar_Util.JsonStr _0_45)
+      FStar_List.map (fun _0_36  -> FStar_Util.JsonStr _0_36)
         interactive_protocol_features in
-    FStar_All.pipe_left (fun _0_46  -> FStar_Util.JsonList _0_46) uu____3047 in
+    FStar_All.pipe_left (fun _0_37  -> FStar_Util.JsonList _0_37) uu____3047 in
   [("version", js_version); ("features", js_features)]
 let write_json: FStar_Util.json -> Prims.unit =
   fun json  ->
@@ -1012,7 +1012,7 @@ let write_hello: Prims.unit -> Prims.unit =
     let js_version = FStar_Util.JsonInt interactive_protocol_vernum in
     let js_features =
       let uu____3134 =
-        FStar_List.map (fun _0_47  -> FStar_Util.JsonStr _0_47)
+        FStar_List.map (fun _0_38  -> FStar_Util.JsonStr _0_38)
           interactive_protocol_features in
       FStar_Util.JsonList uu____3134 in
     write_json
@@ -1141,7 +1141,7 @@ let json_of_repl_state:
                              let uu____3492 =
                                let uu____3497 =
                                  json_of_opt
-                                   (fun _0_48  -> FStar_Util.JsonStr _0_48)
+                                   (fun _0_39  -> FStar_Util.JsonStr _0_39)
                                    doc1 in
                                ("documentation", uu____3497) in
                              [uu____3492] in
@@ -1640,7 +1640,7 @@ let run_completions:
                      match (uu____5712, uu____5713) with
                      | ((cd1,ns1,uu____5740),(cd2,ns2,uu____5743)) ->
                          (match FStar_String.compare cd1 cd2 with
-                          | _0_49 when _0_49 = (Prims.parse_int "0") ->
+                          | _0_40 when _0_40 = (Prims.parse_int "0") ->
                               FStar_String.compare ns1 ns2
                           | n1 -> n1)) matches in
             FStar_List.map

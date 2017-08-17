@@ -305,8 +305,8 @@ let rec type_leq_c:
                            let uu____585 =
                              let uu____588 = mk_fun xs body in
                              FStar_All.pipe_left
-                               (fun _0_42  ->
-                                  FStar_Pervasives_Native.Some _0_42)
+                               (fun _0_33  ->
+                                  FStar_Pervasives_Native.Some _0_33)
                                uu____588 in
                            type_leq_c unfold_ty uu____585 t2 t2' in
                          match uu____578 with
