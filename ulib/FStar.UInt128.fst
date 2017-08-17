@@ -374,6 +374,8 @@ let shift_left_large_val (#n1:nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_
   Math.paren_mul_right a2 (pow2 n1) (pow2 s);
   Math.pow2_plus n1 s
 
+#reset-options "--z3refresh --z3rlimit 60 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+
 let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_t n2) (s: nat{s >= n2}) :
   Lemma (((a1 + a2 * pow2 n1) * pow2 s) % pow2 (n1+n2) ==
          (a1 * pow2 s) % pow2 (n1+n2)) =
@@ -382,6 +384,8 @@ let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.ui
   shift_past_mod a2 (n1+n2) (n1+s);
   mod_double (a1 * pow2 s) (pow2 (n1+n2));
   ()
+
+#reset-options "--z3refresh --z3rlimit 40 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 
 val shift_left_large_lemma_t : a:t -> s:nat ->
   Lemma (requires (s >= 64))
@@ -553,6 +557,8 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
     shift_t_mod_val a s;
     r
 
+#reset-options "--z3refresh --z3rlimit 60 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
 let shift_left_large a s =
@@ -566,6 +572,8 @@ let shift_left_large a s =
   assert (U64.v r.high * pow2 64 == (U64.v a.low * pow2 (U32.v s)) % pow2 128);
   shift_left_large_lemma_t a (U32.v s);
   r
+
+#reset-options "--z3refresh --z3rlimit 40 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 
 let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s

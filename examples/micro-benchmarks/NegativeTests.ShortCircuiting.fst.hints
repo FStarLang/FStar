@@ -3,6 +3,12 @@
   [
     null,
     null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
     [
       "NegativeTests.ShortCircuiting.ff",
       2,
