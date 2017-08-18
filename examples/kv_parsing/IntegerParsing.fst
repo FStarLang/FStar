@@ -108,8 +108,50 @@ let parse_u32_st : parser_st (hide parse_u32) = fun input ->
     then None
     else Some (parse_u32_st_nochk input)
 
+#reset-options "--z3rlimit 15"
 
-#reset-options "--z3rlimit 10"
+// TODO: this isn't a parser_st_nochk because its output isn't exactly the same
+// as the parser; the relationship requires converting the return value to bytes
+let parse_u16_array_nochk : input:bslice -> Stack (u16_array_st * off:U32.t{U32.v off <= U32.v input.len})
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                    Some? (parse_u16_array bs))))
+  (ensures (fun h0 r h1 ->
+              live h1 input /\
+              modifies_none h0 h1 /\
+              (let bs = B.as_seq h1 input.p in
+                Some? (parse_u16_array bs) /\
+                (let (v, n) = Some?.v (parse_u16_array bs) in
+                  let (rv, off) = r in
+                  // BUG: ommitting this live assertion causes failure in the
+                  // precondition to as_u16_array, but the error reported is
+                  // simply "ill-kinded type" on as_u16_array
+                  live h1 rv.a16_st /\
+                  as_u16_array h1 rv == v /\
+                  n == U32.v off)))) = fun input ->
+  let (len, off) = parse_u16_st_nochk input in
+  let input = advance_slice input off in
+  let a = U16ArraySt len (truncate_slice input (Cast.uint16_to_uint32 len)) in
+  (a, U32.add off (Cast.uint16_to_uint32 len))
+
+let parse_u32_array_nochk : input:bslice -> Stack (u32_array_st * off:U32.t)
+  (requires (fun h0 -> live h0 input /\
+                    (let bs = as_seq h0 input in
+                    Some? (parse_u32_array bs))))
+  (ensures (fun h0 r h1 ->
+              live h1 input /\
+              modifies_none h0 h1 /\
+              (let bs = B.as_seq h1 input.p in
+                Some? (parse_u32_array bs) /\
+                (let (v, n) = Some?.v (parse_u32_array bs) in
+                  let (rv, off) = r in
+                  live h1 rv.a32_st /\
+                  as_u32_array h1 rv == v /\
+                  n == U32.v off)))) = fun input ->
+  let (len, off) = parse_u32_st_nochk input in
+  let input = advance_slice input off in
+  let a = U32ArraySt len (truncate_slice input len) in
+  (a, U32.add off len)
 
 let validate_u16_array_st : stateful_validator (hide parse_u16_array) = fun input ->
   match parse_u16_st input with
