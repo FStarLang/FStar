@@ -32,3 +32,14 @@ old:
 	$(FSTAR) $^
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
+
+FIND=$(shell which gfind > /dev/null 2>&1 && echo gfind || echo find)
+SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
+REALIZED_FILES=$(shell $(FIND) ml -maxdepth 1 -type f -name "*.ml" -printf "%f " | $(SED) -e 's/\.ml//g' -e 's/_/./g')
+
+NOEXTRACT=$(addprefix --no_extract , $(REALIZED_FILES))
+
+extract_erase: $(wildcard FStar.Erase.*.fst)
+	mkdir -p ml/extracted
+	$(FSTAR) --codegen OCaml --odir ml/extracted --extract_namespace FStar.DM4F --extract_namespace FStar.Erase $(NOEXTRACT) $^
+

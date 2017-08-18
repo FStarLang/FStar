@@ -39,6 +39,7 @@ module N  = FStar.TypeChecker.Normalize
 module PC = FStar.Parser.Const
 module Util = FStar.Extraction.ML.Util
 module Env = FStar.TypeChecker.Env
+module Err = FStar.Errors
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) =
@@ -255,7 +256,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               let mlp = mlpath_of_lident fv.fv_name.v in
               let _, _, tysc, _ = BU.right <| UEnv.lookup_fv g fv in
               with_ty MLTY_Top <| MLE_Name mlp, tysc
-            | _ -> failwith "Not an fv" in
+            | _ -> raise (Err.Error (BU.format1 "Not an fv : %s" (Print.term_to_string tm), tm.pos)) in
 
           let extract_action g (a:S.action) =
             assert (match a.action_params with | [] -> true | _ -> false);
