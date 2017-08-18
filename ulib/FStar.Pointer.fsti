@@ -51,6 +51,11 @@ type typ =
 | TBuffer:
   (t: typ) ->
   typ
+| TDepPair :
+  ((field1: typ) -> typ) -> typ
+//  (field2: type_of_typ field1 -> typ)
+
+
 and struct_typ = (l: list (string * typ) {
   Cons? l /\ // C11, 6.2.5 al. 20: structs and unions must have at least one field
   List.Tot.noRepeats (List.Tot.map fst l)
@@ -1479,7 +1484,7 @@ We could also completely remove this "assumption" and explicitly track
 the regions and addresses within those regions. But this way would
 actually defeat the practical purpose of regions.
 *)
-val loc : Type u#1
+val loc : Type u#0
 
 val loc_none: loc
 
@@ -1516,7 +1521,7 @@ val loc_buffer
 
 val loc_addresses
   (r: HH.rid)
-  (n: TSet.set nat)
+  (n: Set.set nat)
 : GTot loc
 
 val loc_regions
@@ -1676,7 +1681,7 @@ val loc_includes_region_buffer
 val loc_includes_region_addresses
   (s: Set.set HH.rid)
   (r: HH.rid)
-  (a: TSet.set nat)
+  (a: Set.set nat)
 : Lemma
   (requires (Set.mem r s))
   (ensures (loc_includes (loc_regions s) (loc_addresses r a)))
@@ -2051,9 +2056,9 @@ val loc_disjoint_gpointer_of_buffer_cell
 
 val loc_disjoint_addresses
   (r1 r2: HH.rid)
-  (n1 n2: TSet.set nat)
+  (n1 n2: Set.set nat)
 : Lemma
-  (requires (r1 <> r2 \/ TSet.subset (TSet.intersect n1 n2) TSet.empty))
+  (requires (r1 <> r2 \/ Set.subset (Set.intersect n1 n2) Set.empty))
   (ensures (loc_disjoint (loc_addresses r1 n1) (loc_addresses r2 n2)))
   [SMTPat (loc_disjoint (loc_addresses r1 n1) (loc_addresses r2 n2))]
 
@@ -2061,9 +2066,9 @@ val loc_disjoint_pointer_addresses
   (#t: typ)
   (p: pointer t)
   (r: HH.rid)
-  (n: TSet.set nat)
+  (n: Set.set nat)
 : Lemma
-  (requires (r <> frameOf p \/ (~ (TSet.mem (as_addr p) n))))
+  (requires (r <> frameOf p \/ (~ (Set.mem (as_addr p) n))))
   (ensures (loc_disjoint (loc_pointer p) (loc_addresses r n)))
   [SMTPat (loc_disjoint (loc_pointer p) (loc_addresses r n))]
 
@@ -2071,9 +2076,9 @@ let loc_disjoint_addresses_pointer
   (#t: typ)
   (p: pointer t)
   (r: HH.rid)
-  (n: TSet.set nat)
+  (n: Set.set nat)
 : Lemma
-  (requires (r <> frameOf p \/ (~ (TSet.mem (as_addr p) n))))
+  (requires (r <> frameOf p \/ (~ (Set.mem (as_addr p) n))))
   (ensures (loc_disjoint (loc_addresses r n) (loc_pointer p)))
   [SMTPat (loc_disjoint (loc_addresses r n) (loc_pointer p))]
 = loc_disjoint_sym (loc_pointer p) (loc_addresses r n)
@@ -2141,7 +2146,7 @@ val modifies_reference_elim
   (h h': HS.mem)
 : Lemma
   (requires (
-    loc_disjoint (loc_addresses (HS.frameOf b) (TSet.singleton (HS.as_addr b))) p /\
+    loc_disjoint (loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))) p /\
     HS.contains h b /\
     modifies p h h'
   ))
@@ -2205,7 +2210,7 @@ let modifies_trans_incl_r
 = ()
 
 let modifies_0 (h0 h1: HS.mem) : GTot Type0 =
-  modifies (loc_addresses h0.HS.tip TSet.empty) h0 h1
+  modifies (loc_addresses h0.HS.tip Set.empty) h0 h1
 
 let modifies_1 (#t: typ) (p: pointer t) (h0 h1: HS.mem) : GTot Type0 =
   modifies (loc_pointer p) h0 h1
