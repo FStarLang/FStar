@@ -51,11 +51,6 @@ type typ =
 | TBuffer:
   (t: typ) ->
   typ
-| TDepPair :
-  ((field1: typ) -> typ) -> typ
-//  (field2: type_of_typ field1 -> typ)
-
-
 and struct_typ = (l: list (string * typ) {
   Cons? l /\ // C11, 6.2.5 al. 20: structs and unions must have at least one field
   List.Tot.noRepeats (List.Tot.map fst l)
