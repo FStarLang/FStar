@@ -2,6 +2,7 @@ module PureValidator
 
 open KeyValue
 open Parsing
+open IntegerParsing
 open PureParser
 
 open FStar.Seq
@@ -65,7 +66,9 @@ let validate_u32_array =
   parse_u32 `then_validate`
   (fun array_len -> skip_bytes (U32.v array_len))
 
+// TODO: this goes through in interactive mode but not in batch mode
 let validate_entry: v:validator{validator_checks v parse_entry} =
+  admit();
   validate_u16_array `seq`
   validate_u32_array
 

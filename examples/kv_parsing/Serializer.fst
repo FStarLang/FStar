@@ -137,7 +137,7 @@ let writer_reinit b num_entries s scratch =
       let s = reveal s in
       assert (writer_valid w);
       is_concat_append b.p length_field.p entries_written_buf.p h;
-      lemma_append_inj (u32_to_be s.num_entries) (encode_many s.entries encode_entry (U32.v s.num_entries))
+      lemma_append_inj (encode_u32 s.num_entries) (encode_many s.entries encode_entry (U32.v s.num_entries))
                        (as_seq h length_field) (as_seq h entries_written_buf);
       ()
     end;

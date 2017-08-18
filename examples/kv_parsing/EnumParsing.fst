@@ -275,10 +275,10 @@ val encode_Nothing : b:bytes{length b == 0}
 let encode_Nothing = Seq.createEmpty
 
 val encode_OneNum : n:U32.t -> b:bytes{length b == 4}
-let encode_OneNum n = u32_to_be n
+let encode_OneNum n = encode_u32 n
 
 val encode_TwoNums : n:U32.t -> m:U32.t -> b:bytes{length b == 8}
-let encode_TwoNums n m = u32_to_be n `append` u32_to_be m
+let encode_TwoNums n m = encode_u32 n `append` encode_u32 m
 
 val encode_numbers_data: numbers -> b:bytes
 let encode_numbers_data ns = match ns with

@@ -2,6 +2,7 @@ module PureParser
 
 open KeyValue
 open Parsing
+open IntegerParsing
 
 open FStar.Seq
 open FStar.Kremlin.Endianness
