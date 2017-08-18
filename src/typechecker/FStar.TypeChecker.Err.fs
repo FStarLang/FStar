@@ -103,7 +103,7 @@ let basic_type_error env eopt t1 t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   match eopt with
     | None -> format2 "Expected type \"%s\"; got type \"%s\"" s1 s2
-    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (Print.term_to_string e) s2
+    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (N.term_to_string env e) s2
 
 let occurs_check =
   "Possibly infinite typ (occurs check failed)"
