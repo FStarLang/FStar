@@ -90,7 +90,7 @@ let fold_left_buffer #t f acc b =
       end
     | None -> acc
 
-#reset-options "--z3rlimit 20 --max_fuel 1 --max_ifuel 1"
+#reset-options "--z3rlimit 30 --max_fuel 1 --max_ifuel 1"
 
 val parse_num_entries_valid : input:bslice -> Stack (U32.t * off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
@@ -220,6 +220,8 @@ val fold_left_buffer_n_mut_st: #t:Type ->
                         Some? (parse_many parse_entry n bs) /\
                         r == fold_left_store_n f_spec acc (parse_result (parse_many parse_entry n bs)) n)))
 let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
+    // TODO: this proof needs some work; unclear how much
+    admit();
     if U32.eq n 0ul then acc
     else  begin
       let h0 = get() in
@@ -250,10 +252,6 @@ let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
               List.tail (parse_result (parse_many parse_entry (U32.v n) bs2)));
       // XXX: this call doesn't work
       //fold_left_store_n_unfold1 f_spec acc (parse_result (parse_many parse_entry n' bs2')) n';
-
-      // XXX: why doesn't the proof go through at this point? do we need more
-      // rlimit/unfoldings, or is there something left to prove?
-      admit();
       ());
       r
     end

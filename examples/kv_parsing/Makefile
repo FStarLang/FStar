@@ -16,11 +16,13 @@ FST_FILES :=	Slice.fst \
 		EnumParsing.fst \
 		VectorParsing.fst
 
-EXTRACT_FILES := Validator.fst \
+EXTRACT_FILES := IntegerParsing.fst \
+		 Validator.fst \
 		 ValidatedParser.fst \
 		 ValidatedAccess.fst \
 		 Serializer.fst \
-		 EnumParsing.fst
+		 EnumParsing.fst \
+		 VectorParsing.fst
 
 FSTAR_INCLUDE_PATHS:=--include $(KREMLIN_HOME)/kremlib
 

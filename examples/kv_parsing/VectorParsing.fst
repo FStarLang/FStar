@@ -128,7 +128,7 @@ let rec encode_vector_data v =
 
 val encode_vector : v:vector -> bytes
 let encode_vector v =
-  u16_to_be (U16.uint_to_t (vector_length v)) `append`
+  encode_u16 (U16.uint_to_t (vector_length v)) `append`
   encode_vector_data v
 
 assume val validate_elem_st : stateful_validator (hide parse_elem)

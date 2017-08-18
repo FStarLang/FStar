@@ -105,6 +105,8 @@ let make_correct #t (p: parser t) (v:pure_validator) :
     (requires (validate_ok p v))
     (ensures (fun r -> True)) = v
 
+#reset-options "--z3rlimit 20 --max_fuel 1 --max_ifuel 1"
+
 let validate_Nothing_pure = make_correct (parser_forget parse_Nothing)
                             (fun input -> Some 0)
 
