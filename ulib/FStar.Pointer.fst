@@ -3650,6 +3650,12 @@ let loc_includes_union_l s1 s2 s =
 
 #reset-options "--z3rlimit 32"
 
+let loc_includes_union_assoc_r2l s1 s2 s3 s =
+  loc_includes_trans (loc_union (loc_union s1 s2) s3) (loc_union s1 (loc_union s2 s3)) s
+
+let loc_includes_union_assoc_l2r s1 s2 s3 s =
+  loc_includes_trans (loc_union s1 (loc_union s2 s3)) (loc_union (loc_union s1 s2) s3) s
+
 let loc_includes_none s = ()
 
 let loc_includes_pointer_pointer #t1 #t2 p1 p2 = ()
@@ -3662,6 +3668,8 @@ let loc_includes_gbuffer_of_array_pointer l #len #t p =
 
 let loc_includes_gpointer_of_array_cell l #t b i =
   loc_includes_trans l (loc_buffer b) (loc_pointer (gpointer_of_buffer_cell b i))
+
+#reset-options "--z3rlimit 64"
 
 let loc_includes_gsub_buffer_r l #t b i len =
   if len = 0ul
@@ -3948,8 +3956,6 @@ let rec loc_aux_disjoint_loc_aux_includes
     in
     Classical.forall_intro (Classical.move_requires f)
 
-#reset-options "--z3rlimit 64"
-
 let loc_disjoint_includes p1 p2 p1' p2' =
   regions_of_loc_monotonic p1 p1';
   regions_of_loc_monotonic p2 p2';
@@ -4078,7 +4084,7 @@ let modifies_loc_addresses_intro_2
 let modifies_pointer_elim s h1 h2 #a' p' =
   loc_disjoint_sym (loc_pointer p') s
 
-#reset-options "--z3rlimit 128"
+#reset-options "--z3rlimit 256"
 
 let modifies_buffer_elim #t1 b p h h' =
   loc_disjoint_sym (loc_buffer b) p;
@@ -4121,6 +4127,8 @@ let modifies_reference_elim #t b p h h' =
   loc_disjoint_sym (loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))) p
 
 let modifies_refl s h = ()
+
+#reset-options "--z3rlimit 512"
 
 let modifies_loc_includes s1 h h' s2 =
   assert (
@@ -4466,9 +4474,8 @@ let modifies_fresh_frame_popped
     ))
   = hs_modifies_rref_fresh_frame_popped h0 h1 h2 h3 r (addrs_of_loc s r)
   in
-  Classical.forall_intro (Classical.move_requires f)
-
-(*
+  Classical.forall_intro (Classical.move_requires f);
+  let u = loc_union (loc_regions mask) s in
   let g
     (t: typ)
     (p: pointer t)
@@ -4483,48 +4490,15 @@ let modifies_fresh_frame_popped
     (ensures (
       equal_values h0 p h3 p
     ))
-  = admit ()
+  = let r = frameOf p in
+    let a = as_addr p in
+    assert (Set.mem a (Loc?.aux_addrs u r));
+    assert (Set.equal (addrs_of_loc_weak u r) (addrs_of_loc_weak s r));
+    assert (Loc?.aux u r a == Loc?.aux s r a)
   in
   Classical.forall_intro_2 (fun t -> Classical.move_requires (g t))
 
-let no_upd_popped h0 h1 =
-  assert (HH.modifies_just (Set.singleton h0.HS.tip) h0.HS.h h1.HS.h)
-
-let lemma_modifies_sub_1 #t h0 h1 (b:pointer t) : Lemma
-  (requires (h1 == h0))
-  (ensures  (modifies_1 b h0 h1))
-  [SMTPatT (live h0 b); SMTPatT (modifies_1 b h0 h1)]
-  = ()
-
-let modifies_substruct_1 (#tsub #ta:typ) h0 h1 (sub:pointer tsub) (a:pointer ta) : Lemma
-  (requires (live h0 a /\ modifies_1 sub h0 h1 /\ live h1 sub /\ includes a sub))
-  (ensures  (modifies_1 a h0 h1 /\ live h1 a))
-  [SMTPatT (modifies_1 sub h0 h1); SMTPatT (includes a sub)]
-= ()
-
-let modifies_popped_1' (#t:typ) (a:pointer t) h0 h1 h2 h3 : Lemma
-  (requires (live h0 a /\ HS.fresh_frame h0 h1 /\ HS.popped h2 h3 /\ modifies_1 a h1 h2))
-  (ensures  (modifies_1 a h0 h3))
-  [SMTPatT (HS.fresh_frame h0 h1); SMTPatT (HS.popped h2 h3); SMTPatT (modifies_1 a h1 h2)]
-  = ()
-
-let live_popped (#t:typ) (b:pointer t) h0 h1 : Lemma
-  (requires (HS.popped h0 h1 /\ live h0 b /\ frameOf b <> h0.HS.tip))
-  (ensures  (live h1 b))
-  [SMTPatT (HS.popped h0 h1); SMTPatT (live h0 b)]
-  = ()
-
-let live_fresh (#t:typ) (b:pointer t) h0 h1 : Lemma
-  (requires (HS.fresh_frame h0 h1 /\ live h0 b))
-  (ensures  (live h1 b))
-  [SMTPatT (HS.fresh_frame h0 h1); SMTPatT (live h0 b)]
-  = ()
-
-let modifies_poppable_1 #t h0 h1 (b:pointer t) : Lemma
-  (requires (modifies_1 b h0 h1 /\ HS.poppable h0))
-  (ensures  (HS.poppable h1))
-  [SMTPatT (modifies_1 b h0 h1)]
-  = ()
+let no_upd_popped #t h0 h1 b = ()
 
 (* `modifies` and the readable permission *)
 
@@ -4536,179 +4510,10 @@ let modifies_1_readable_struct
   (f: struct_field l)
   (p: pointer (TStruct l))
   (h h' : HS.mem)
-: Lemma
-  (requires (readable h p /\ modifies_1 (gfield p f) h h' /\ readable h' (gfield p f)))
-  (ensures (readable h' p))
-  [SMTPatOr [
-    [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h p)];
-    [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h' p)];
-    [SMTPat (readable h p); SMTPat (readable h' (gfield p f))];
-    [SMTPat (readable h' p); SMTPat (readable h' (gfield p f))];
-  ]]
 = readable_struct h' p
 
-let modifies_1_readable_array
-  (#t: typ)
-  (#len: UInt32.t)
-  (i: UInt32.t { UInt32.v i < UInt32.v len } )
-  (p: pointer (TArray len t))
-  (h h' : HS.mem)
-: Lemma
-  (requires (readable h p /\ modifies_1 (gcell p i) h h' /\ readable h' (gcell p i)))
-  (ensures (readable h' p))
-  [SMTPatOr [
-    [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h p)];
-    [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h' p)];
-    [SMTPat (readable h p); SMTPat (readable h' (gcell p i))];
-    [SMTPat (readable h' p); SMTPat (readable h' (gcell p i))];
-  ]]
-= readable_array h' p
-
-(* What about other regions? *)
-
-let modifies_other_regions
-  (rs: Set.set HH.rid)
-  (h0 h1: HS.mem)
-  (#a: typ)
-  (p: pointer a)
-: Lemma
-  (requires (HS.modifies rs h0 h1 /\ (~ (Set.mem (frameOf p) rs)) /\ live h0 p))
-  (ensures (equal_values h0 p h1 p))
-= ()
-
-let modifies_one_other_region
-  (r: HH.rid)
-  (h0 h1: HS.mem)
-  (#a: typ)
-  (p: pointer a)
-: Lemma
-  (requires (HS.modifies_one r h0 h1 /\ frameOf p <> r /\ live h0 p))
-  (ensures (equal_values h0 p h1 p))
-= ()
-
-(* buffer write: needs clearer "modifies" clauses *)
-
-let disjoint_gpointer_of_buffer_cell
-  (#t: typ)
-  (b: buffer t)
-  i1 i2
-= ()
-
-(* For a "disjoint" clause on buffers, we use the following
-   definitions.  We used to make them transparent, but doing so
-   actually led to unplayable hints in some examples. So it seems that
-   we still need to take the "axiomatic" approach, by defining
-   everything abstract and providing specific introduction and
-   elimination rules with suitable patterns.
-
-   (See also commit 0982fc58409c6ecdaafe92e5b77b81b8768f91be)
-*)
-
-let disjoint_buffer_vs_pointer
-  (#t1 #t2: typ)
-  (b: buffer t1)
-  (p: pointer t2)
-: GTot Type0
-= disjoint_buffer_vs_pointer' b p
-
-let disjoint_buffer_vs_pointer_gsingleton_buffer_of_pointer
-  (#t1 #t2: typ)
-  (p1: pointer t1)
-  (p2: pointer t2)
-: Lemma
-  (requires (disjoint p1 p2))
-  (ensures (disjoint_buffer_vs_pointer (gsingleton_buffer_of_pointer p1) p2))
-  [SMTPat (disjoint_buffer_vs_pointer (gsingleton_buffer_of_pointer p1) p2)]
-= ()
-
-let disjoint_buffer_vs_pointer_gbuffer_of_array_pointer
-  (#len: array_length_t)
-  (#t1 #t2: typ)
-  (p1: pointer (TArray len t1))
-  (p2: pointer t2)
-: Lemma
-  (requires (disjoint p1 p2))
-  (ensures (disjoint_buffer_vs_pointer (gbuffer_of_array_pointer p1) p2))
-  [SMTPat (disjoint_buffer_vs_pointer (gbuffer_of_array_pointer p1) p2)]
-= let b = gbuffer_of_array_pointer p1 in
-  assert (forall (i: UInt32.t {UInt32.v i < UInt32.v len}) . includes p1 (gpointer_of_buffer_cell b i))
-
-let disjoint_buffer_vs_pointer_includes
-  (#t1 #t2 #t2': typ)
-  (b1: buffer t1)
-  (p2: pointer t2)
-  (p2': pointer t2')
-: Lemma
-  (requires (disjoint_buffer_vs_pointer b1 p2 /\ includes p2 p2'))
-  (ensures (disjoint_buffer_vs_pointer b1 p2'))
-  [SMTPatOr [
-    [SMTPat (disjoint_buffer_vs_pointer b1 p2'); SMTPat (includes p2 p2')];
-    [SMTPat (disjoint_buffer_vs_pointer b1 p2); SMTPat (includes p2 p2')];
-    [SMTPat (disjoint_buffer_vs_pointer b1 p2); SMTPat (disjoint_buffer_vs_pointer b1 p2)];
-  ]]
-= ()
-
-let disjoint_buffer_vs_pointer_gsub_buffer
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (i: UInt32.t)
-  len p2
-= ()
-
-let disjoint_buffer_vs_pointer_elim
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (p2: pointer t2)
-  i
-= ()
-
-let disjoint_buffer_vs_buffer
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (b2: buffer t2)
-: GTot Type0
-= disjoint_buffer_vs_buffer' b1 b2
-
-let disjoint_buffer_vs_buffer_sym
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (b2: buffer t2)
-: Lemma
-  (disjoint_buffer_vs_buffer b1 b2 <==> disjoint_buffer_vs_buffer b2 b1)
-  [SMTPat (disjoint_buffer_vs_buffer b1 b2)]
-= ()
-
-let disjoint_buffer_vs_buffer_gsingleton_buffer_of_pointer
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (p2: pointer t2)
-: Lemma
-  (requires (disjoint_buffer_vs_pointer b1 p2))
-  (ensures (disjoint_buffer_vs_buffer b1 (gsingleton_buffer_of_pointer p2)))
-  [SMTPat (disjoint_buffer_vs_buffer b1 (gsingleton_buffer_of_pointer p2))]
-= ()
-
-let disjoint_buffer_vs_buffer_gbuffer_of_array_pointer
-  (#t1 #t2: typ)
-  (#len: array_length_t)
-  (b1: buffer t1)
-  (p2: pointer (TArray len t2))
-: Lemma
-  (requires (disjoint_buffer_vs_pointer b1 p2))
-  (ensures (disjoint_buffer_vs_buffer b1 (gbuffer_of_array_pointer p2)))
-  [SMTPat (disjoint_buffer_vs_buffer b1 (gbuffer_of_array_pointer p2))]
-= ()
-
-let disjoint_buffer_vs_buffer_gsub_buffer
-  #t1 #t2 b1 b2 i2 len2
-= ()
-
-let disjoint_buffer_vs_buffer_elim
-  (#t1 #t2: typ)
-  (b1: buffer t1)
-  (b2: buffer t2)
-  i2
-= ()
+let modifies_1_readable_array #t #len i p h h' =
+  readable_array h' p
 
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
 
@@ -4723,61 +4528,3 @@ let write_buffer
   (b: buffer t)
   i v
 = write (pointer_of_buffer_cell b i) v
-
-#reset-options "--z3rlimit 64"
-
-let modifies_1_disjoint_buffer_vs_pointer_live
-  (#t1 #t2: typ)
-  (b: buffer t1)
-  (p: pointer t2)
-  (h h': HS.mem)
-: Lemma
-  (requires (
-    disjoint_buffer_vs_pointer b p /\
-    buffer_live h b /\
-    modifies_1 p h h'
-  ))
-  (ensures (
-    buffer_live h' b /\ (
-      buffer_readable h b ==> (
-	buffer_readable h' b /\
-	buffer_as_seq h b == buffer_as_seq h' b
-  ))))
-  [SMTPat (modifies_1 p h h'); SMTPat (buffer_live h b)]
-= modifies_1_reveal p h h';
-  let f
-    (i: UInt32.t { UInt32.v i < UInt32.v (buffer_length b) } )
-  : Lemma (
-      live h' (gpointer_of_buffer_cell b i) /\ (
-      readable h (gpointer_of_buffer_cell b i) ==> (
-      readable h' (gpointer_of_buffer_cell b i) /\
-      gread h (gpointer_of_buffer_cell b i) == gread h' (gpointer_of_buffer_cell b i)
-    )))
-  = if frameOf_buffer b = frameOf p
-    then
-      let s = set_singleton p in
-      let (ap: apointer { set_amem ap s } ) = APointer t2 p in
-      modifies_elim (frameOf p) s h h' (gpointer_of_buffer_cell b i)
-    else
-      modifies_one_other_region (frameOf p) h h' (gpointer_of_buffer_cell b i)
-  in
-  f 0ul; // for the liveness of the whole buffer
-  buffer_length_buffer_as_seq h b;
-  buffer_length_buffer_as_seq h' b;
-  let k ()
-  : Lemma
-    (requires (buffer_readable h b))
-    (ensures (buffer_readable h' b /\ buffer_as_seq h b == buffer_as_seq h' b))
-  = let g
-      (i: nat { i < UInt32.v (buffer_length b) } )
-    : Lemma
-      (Seq.index (buffer_as_seq h b) i == Seq.index (buffer_as_seq h' b) i)
-    = let j = UInt32.uint_to_t i in
-      f j;
-      gread_gpointer_of_buffer_cell' h b j;
-      gread_gpointer_of_buffer_cell' h' b j
-    in
-    Classical.forall_intro g;
-    Seq.lemma_eq_elim (buffer_as_seq h b) (buffer_as_seq h' b)
-  in
-  Classical.move_requires k ()

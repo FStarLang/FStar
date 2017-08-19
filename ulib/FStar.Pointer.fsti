@@ -1556,21 +1556,19 @@ val loc_includes_union_l
   (ensures (loc_includes (loc_union s1 s2) s))
   [SMTPat (loc_includes (loc_union s1 s2) s)]
 
-let loc_includes_union_assoc_r2l
+val loc_includes_union_assoc_r2l
   (s1 s2 s3 s: loc)
 : Lemma
   (requires (loc_includes (loc_union s1 (loc_union s2 s3)) s))
   (ensures (loc_includes (loc_union (loc_union s1 s2) s3) s))
   [SMTPat (loc_includes (loc_union (loc_union s1 s2) s3) s)]
-= loc_includes_trans (loc_union (loc_union s1 s2) s3) (loc_union s1 (loc_union s2 s3)) s
 
-let loc_includes_union_assoc_l2r
+val loc_includes_union_assoc_l2r
   (s1 s2 s3 s: loc)
 : Lemma
   (requires (loc_includes (loc_union (loc_union s1 s2) s3) s))
   (ensures (loc_includes (loc_union s1 (loc_union s2 s3)) s))
   [SMTPat (loc_includes (loc_union s1 (loc_union s2 s3)) s)]
-= loc_includes_trans (loc_union s1 (loc_union s2 s3)) (loc_union (loc_union s1 s2) s3) s
 
 let loc_includes_union_assoc_focalize_1
   (l1 l2 x r s: loc)
@@ -2313,10 +2311,17 @@ val no_upd_fresh: h0:HS.mem -> h1:HS.mem -> Lemma
   (ensures  (modifies_0 h0 h1))
   [SMTPatT (HS.fresh_frame h0 h1)]
 
-val no_upd_popped: h0:HS.mem -> h1:HS.mem -> Lemma
-  (requires (HS.popped h0 h1))
-  (ensures  (modifies (loc_regions (Set.singleton h0.HS.tip)) h0 h1))
-  [SMTPatT (HS.popped h0 h1)]
+val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
+  (requires (live h0 b /\ frameOf b <> h0.HS.tip /\ HS.popped h0 h1))
+  (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
+  [SMTPatOr [
+    [SMTPatT (live h0 b); SMTPatT (HS.popped h0 h1)];
+    [SMTPatT (readable h0 b); SMTPatT (HS.popped h0 h1)];    
+    [SMTPatT (gread h0 b); SMTPatT (HS.popped h0 h1)];    
+    [SMTPatT (live h1 b); SMTPatT (HS.popped h0 h1)];
+    [SMTPatT (readable h1 b); SMTPatT (HS.popped h0 h1)];    
+    [SMTPatT (gread h1 b); SMTPatT (HS.popped h0 h1)];    
+  ]]
 
 (* `modifies` and the readable permission *)
 
