@@ -175,8 +175,11 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
   then t
   else Typ.mk (Ptyp_poly (annots, t))
 
-let build_binding_pattern ((sym, _): mlident) : pattern =
-  Pat.mk (Ppat_var (mk_sym sym))
+let build_binding_pattern ?ty ((sym, _): mlident) : pattern =
+    let p = Pat.mk (Ppat_var (mk_sym sym)) in
+    match ty with
+    | None -> p
+    | Some ty -> Pat.mk (Ppat_constraint (p, ty))
 
 let resugar_prims_ops path: expression =
   (match path with
@@ -209,8 +212,8 @@ let resugar_if_stmts ep cases =
   else
     Exp.match_ ep cases
 
-let rec build_expr ?annot (e: mlexpr): expression =
-  let e' = (match e.expr with
+let rec build_expr (e: mlexpr): expression =
+  match e.expr with
   | MLE_Const c -> build_constant_expr c
   | MLE_Var (sym, _) -> Exp.ident (mk_lident sym)
   | MLE_Name path ->
@@ -252,17 +255,7 @@ let rec build_expr ?annot (e: mlexpr): expression =
       let args = map (fun x -> (Nolabel, build_expr x)) es in
       Exp.apply r args
    | MLE_Try (e, cs) ->
-      Exp.try_ (build_expr e) (map build_case cs)) in
-  match annot with
-  | None -> e'
-  | Some ts ->
-          (* Remove the leading tick *)
-          let mk1 (s, _) = let s' = String.sub s 1 (String.length s - 1) in
-                           mkloc s none
-          in
-          let vars = List.map mk1 (fst ts) in
-          let ty = snd ts in
-          Exp.constraint_ e' (build_core_type ~annots:vars ty)
+      Exp.try_ (build_expr e) (map build_case cs)
 
 and resugar_app f args es: expression =
   match f.pexp_desc with
@@ -326,14 +319,20 @@ and build_case ((lhs, guard, rhs): mlbranch): case =
    pc_rhs = (build_expr rhs)}
 
 and build_binding (toplevel: bool) (lb: mllb): value_binding =
-  (* replicating the rules for whether to print type ascriptions
-     from the old printer *)
-  let annot = if (lb.print_typ && toplevel)
-                 then lb.mllb_tysc
-                 else None
+  (* Add a constraint on the binding (ie. an annotation) for top-level lets *)
+  let mk1 (s, _) = mkloc (String.sub s 1 (String.length s - 1)) none in
+  let ty =
+      match lb.mllb_tysc with
+      | None -> None
+      | Some ts ->
+           if lb.print_typ && toplevel
+           then let vars = List.map mk1 (fst ts) in
+                let ty = snd ts in
+                Some (build_core_type ~annots:vars ty)
+           else None
   in
-  let e = build_expr ?annot:annot lb.mllb_def in
-  let p = build_binding_pattern lb.mllb_name in
+  let e = build_expr lb.mllb_def in
+  let p = build_binding_pattern ?ty:ty lb.mllb_name in
   (Vb.mk p e)
 
 let build_label_decl (sym, ty): label_declaration =
