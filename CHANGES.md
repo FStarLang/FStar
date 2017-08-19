@@ -66,5 +66,7 @@ Guidelines for the changelog:
   should provide a faster workflow than using --detail_hint_replay
   (which still exists)
 
+## Miscellaneous
 
+* A file can now contain at most one module or interface
 
