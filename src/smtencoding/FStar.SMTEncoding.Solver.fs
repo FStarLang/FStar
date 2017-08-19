@@ -303,14 +303,21 @@ let report_errors settings : unit =
             in
          detail_errors false settings.query_env settings.query_all_labels ask_z3
     else begin
-        settings.query_errors |> List.iter (fun e ->
-        FStar.Errors.warn settings.query_range ("SMT solver says: " ^ error_to_short_string e));
         match find_localized_errors settings.query_errors with
         | Some err ->
+          settings.query_errors |> List.iter (fun e ->
+          FStar.Errors.diag settings.query_range ("SMT solver says: " ^ error_to_short_string e));
           FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
 
         | None ->
-          FStar.TypeChecker.Err.add_errors settings.query_env [("Unknown assertion failed", settings.query_range)]
+          let err_detail =
+            settings.query_errors |>
+            List.map (fun e -> "SMT solver says: " ^ error_to_short_string e) |>
+            String.concat "; " in
+          FStar.TypeChecker.Err.add_errors
+                   settings.query_env
+                   [(BU.format1 "Unknown assertion failed (%s)" err_detail,
+                     settings.query_range)]
     end
 
 let query_info settings z3result =
@@ -546,4 +553,3 @@ let dummy = {
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }
-
