@@ -398,13 +398,16 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             begin match g_opt with
             | Some g' -> Rel.force_trivial_guard env g'
             | None ->
-                failwith (BU.format3
+              let err_msg =
+                BU.format3
                   "Unexpected result type of computation. \
-                   The computation type %s of the term %s should have \
-                   type Type n for some level n but has type %s"
+                  The computation type %s of the term %s should have \
+                  type Type n for some level n but has type %s"
                   (Print.lcomp_to_string c')
                   (Print.term_to_string c.res_typ)
-                  (Print.term_to_string c'.res_typ))
+                  (Print.term_to_string c'.res_typ)
+              in
+              raise (Error (err_msg, c.res_typ.pos))
             end ;
             u
     in
