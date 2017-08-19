@@ -1,35 +1,34 @@
 open Prims
 type name = FStar_Syntax_Syntax.bv
-let fstar_tactics_lid': Prims.string Prims.list -> FStar_Ident.lid =
+let (fstar_tactics_lid' :Prims.string Prims.list -> FStar_Ident.lid)=
   fun s  -> FStar_Parser_Const.fstar_tactics_lid' s
-let lid_as_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
+let (lid_as_tm :FStar_Ident.lident -> FStar_Syntax_Syntax.term)=
   fun l  ->
     let uu____13 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
         FStar_Pervasives_Native.None in
     FStar_All.pipe_right uu____13 FStar_Syntax_Syntax.fv_to_tm
-let mk_tactic_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
+let (mk_tactic_lid_as_term :Prims.string -> FStar_Syntax_Syntax.term)=
   fun s  ->
     let uu____18 = fstar_tactics_lid' ["Effect"; s] in lid_as_tm uu____18
-let lid_as_data_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =
+let (lid_as_data_tm :FStar_Ident.lident -> FStar_Syntax_Syntax.term)=
   fun l  ->
     let uu____23 =
       FStar_Syntax_Syntax.lid_as_fv l FStar_Syntax_Syntax.Delta_constant
         (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
     FStar_Syntax_Syntax.fv_to_tm uu____23
-let fstar_tactics_lid_as_data_tm: Prims.string -> FStar_Syntax_Syntax.term =
+let (fstar_tactics_lid_as_data_tm :Prims.string -> FStar_Syntax_Syntax.term)=
   fun s  ->
     let uu____28 = fstar_tactics_lid' ["Effect"; s] in
     lid_as_data_tm uu____28
-let fstar_tactics_Failed: FStar_Syntax_Syntax.term =
+let (fstar_tactics_Failed :FStar_Syntax_Syntax.term)=
   fstar_tactics_lid_as_data_tm "Failed"
-let fstar_tactics_Success: FStar_Syntax_Syntax.term =
+let (fstar_tactics_Success :FStar_Syntax_Syntax.term)=
   fstar_tactics_lid_as_data_tm "Success"
-let pair_typ:
-  FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.term ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
-  =
+let (pair_typ
+  :FStar_Syntax_Syntax.term ->
+     FStar_Syntax_Syntax.term ->
+       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)=
   fun t  ->
     fun s  ->
       let uu____39 =
@@ -44,26 +43,24 @@ let pair_typ:
           uu____43 :: uu____44 in
         FStar_Syntax_Syntax.mk_Tm_app uu____40 uu____42 in
       uu____39 FStar_Pervasives_Native.None FStar_Range.dummyRange
-let embed_proofstate:
-  FStar_Tactics_Basic.proofstate -> FStar_Syntax_Syntax.term =
+let (embed_proofstate
+  :FStar_Tactics_Basic.proofstate -> FStar_Syntax_Syntax.term)=
   fun ps  ->
     FStar_Syntax_Util.mk_alien ps "tactics.embed_proofstate"
       FStar_Pervasives_Native.None
-let unembed_proofstate:
-  FStar_Tactics_Basic.proofstate ->
-    FStar_Syntax_Syntax.term -> FStar_Tactics_Basic.proofstate
-  =
+let (unembed_proofstate
+  :FStar_Tactics_Basic.proofstate ->
+     FStar_Syntax_Syntax.term -> FStar_Tactics_Basic.proofstate)=
   fun ps  ->
     fun t  ->
       let uu____62 = FStar_Syntax_Util.un_alien t in
       FStar_All.pipe_right uu____62 FStar_Dyn.undyn
-let embed_result:
+let embed_result :
   'a .
     FStar_Tactics_Basic.proofstate ->
       'a FStar_Tactics_Basic.result ->
         ('a -> FStar_Syntax_Syntax.term) ->
-          FStar_Reflection_Data.typ -> FStar_Syntax_Syntax.term
-  =
+          FStar_Reflection_Data.typ -> FStar_Syntax_Syntax.term=
   fun ps  ->
     fun res  ->
       fun embed_a  ->
@@ -110,7 +107,7 @@ let embed_result:
                   uu____122 :: uu____123 in
                 FStar_Syntax_Syntax.mk_Tm_app uu____120 uu____121 in
               uu____119 FStar_Pervasives_Native.None FStar_Range.dummyRange
-let unembed_result:
+let unembed_result :
   'a .
     FStar_Tactics_Basic.proofstate ->
       FStar_Syntax_Syntax.term ->
@@ -118,8 +115,7 @@ let unembed_result:
           (('a,FStar_Tactics_Basic.proofstate) FStar_Pervasives_Native.tuple2,
             (Prims.string,FStar_Tactics_Basic.proofstate)
               FStar_Pervasives_Native.tuple2)
-            FStar_Util.either
-  =
+            FStar_Util.either=
   fun ps  ->
     fun res  ->
       fun unembed_a  ->

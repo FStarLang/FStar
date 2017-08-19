@@ -2,25 +2,24 @@ open Prims
 type z3_replay_result =
   (FStar_SMTEncoding_Z3.unsat_core,FStar_SMTEncoding_Term.error_labels)
     FStar_Util.either
-let z3_result_as_replay_result:
+let z3_result_as_replay_result :
   'Auu____13 'Auu____14 'Auu____15 .
     ('Auu____15,('Auu____14,'Auu____13) FStar_Pervasives_Native.tuple2)
-      FStar_Util.either -> ('Auu____15,'Auu____14) FStar_Util.either
-  =
+      FStar_Util.either -> ('Auu____15,'Auu____14) FStar_Util.either=
   fun uu___87_31  ->
     match uu___87_31 with
     | FStar_Util.Inl l -> FStar_Util.Inl l
     | FStar_Util.Inr (r,uu____46) -> FStar_Util.Inr r
-let recorded_hints:
-  FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref =
+let (recorded_hints
+  :FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref)=
   FStar_Util.mk_ref FStar_Pervasives_Native.None
-let replaying_hints:
-  FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref =
+let (replaying_hints
+  :FStar_Util.hints FStar_Pervasives_Native.option FStar_ST.ref)=
   FStar_Util.mk_ref FStar_Pervasives_Native.None
-let format_hints_file_name: Prims.string -> Prims.string =
+let (format_hints_file_name :Prims.string -> Prims.string)=
   fun src_filename  -> FStar_Util.format1 "%s.hints" src_filename
-let initialize_hints_db:
-  'Auu____87 . Prims.string -> 'Auu____87 -> Prims.unit =
+let initialize_hints_db :
+  'Auu____87 . Prims.string -> 'Auu____87 -> Prims.unit=
   fun src_filename  ->
     fun format_filename  ->
       (let uu____97 = FStar_Options.record_hints () in
@@ -68,7 +67,7 @@ let initialize_hints_db:
                   norm_src_filename
               else ())
        else ())
-let finalize_hints_db: Prims.string -> Prims.unit =
+let (finalize_hints_db :Prims.string -> Prims.unit)=
   fun src_filename  ->
     (let uu____173 = FStar_Options.record_hints () in
      if uu____173
@@ -90,15 +89,14 @@ let finalize_hints_db: Prims.string -> Prims.unit =
      else ());
     FStar_ST.op_Colon_Equals recorded_hints FStar_Pervasives_Native.None;
     FStar_ST.op_Colon_Equals replaying_hints FStar_Pervasives_Native.None
-let with_hints_db: 'a . Prims.string -> (Prims.unit -> 'a) -> 'a =
+let with_hints_db : 'a . Prims.string -> (Prims.unit -> 'a) -> 'a=
   fun fname  ->
     fun f  ->
       initialize_hints_db fname false;
       (let result = f () in finalize_hints_db fname; result)
-let filter_using_facts_from:
-  FStar_TypeChecker_Env.env ->
-    FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Term.decl Prims.list
-  =
+let (filter_using_facts_from
+  :FStar_TypeChecker_Env.env ->
+     FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Term.decl Prims.list)=
   fun e  ->
     fun theory  ->
       let should_enc_fid fid =
@@ -136,13 +134,12 @@ let filter_using_facts_from:
                     | uu____387 -> ((d :: out), include_assumption_names)))
           ([], []) theory_rev in
       match uu____302 with | (pruned_theory,uu____399) -> pruned_theory
-let filter_assertions:
-  FStar_TypeChecker_Env.env ->
-    FStar_SMTEncoding_Z3.unsat_core ->
-      FStar_SMTEncoding_Term.decls_t ->
-        (FStar_SMTEncoding_Term.decl Prims.list,Prims.bool)
-          FStar_Pervasives_Native.tuple2
-  =
+let (filter_assertions
+  :FStar_TypeChecker_Env.env ->
+     FStar_SMTEncoding_Z3.unsat_core ->
+       FStar_SMTEncoding_Term.decls_t ->
+         (FStar_SMTEncoding_Term.decl Prims.list,Prims.bool)
+           FStar_Pervasives_Native.tuple2)=
   fun e  ->
     fun core  ->
       fun theory  ->
@@ -249,12 +246,11 @@ let filter_assertions:
                        [uu____627] in
                      FStar_List.append theory' uu____624 in
                    (uu____621, true))))
-let filter_facts_without_core:
-  FStar_TypeChecker_Env.env ->
-    FStar_SMTEncoding_Term.decls_t ->
-      (FStar_SMTEncoding_Term.decl Prims.list,Prims.bool)
-        FStar_Pervasives_Native.tuple2
-  =
+let (filter_facts_without_core
+  :FStar_TypeChecker_Env.env ->
+     FStar_SMTEncoding_Term.decls_t ->
+       (FStar_SMTEncoding_Term.decl Prims.list,Prims.bool)
+         FStar_Pervasives_Native.tuple2)=
   fun e  ->
     fun x  ->
       let uu____648 = filter_using_facts_from e x in (uu____648, false)
@@ -267,40 +263,39 @@ type errors =
   error_messages:
     (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
       Prims.list;}
-let __proj__Mkerrors__item__error_reason: errors -> Prims.string =
+let (__proj__Mkerrors__item__error_reason :errors -> Prims.string)=
   fun projectee  ->
     match projectee with
     | { error_reason = __fname__error_reason;
         error_fuel = __fname__error_fuel; error_ifuel = __fname__error_ifuel;
         error_hint = __fname__error_hint;
         error_messages = __fname__error_messages;_} -> __fname__error_reason
-let __proj__Mkerrors__item__error_fuel: errors -> Prims.int =
+let (__proj__Mkerrors__item__error_fuel :errors -> Prims.int)=
   fun projectee  ->
     match projectee with
     | { error_reason = __fname__error_reason;
         error_fuel = __fname__error_fuel; error_ifuel = __fname__error_ifuel;
         error_hint = __fname__error_hint;
         error_messages = __fname__error_messages;_} -> __fname__error_fuel
-let __proj__Mkerrors__item__error_ifuel: errors -> Prims.int =
+let (__proj__Mkerrors__item__error_ifuel :errors -> Prims.int)=
   fun projectee  ->
     match projectee with
     | { error_reason = __fname__error_reason;
         error_fuel = __fname__error_fuel; error_ifuel = __fname__error_ifuel;
         error_hint = __fname__error_hint;
         error_messages = __fname__error_messages;_} -> __fname__error_ifuel
-let __proj__Mkerrors__item__error_hint:
-  errors -> Prims.string Prims.list FStar_Pervasives_Native.option =
+let (__proj__Mkerrors__item__error_hint
+  :errors -> Prims.string Prims.list FStar_Pervasives_Native.option)=
   fun projectee  ->
     match projectee with
     | { error_reason = __fname__error_reason;
         error_fuel = __fname__error_fuel; error_ifuel = __fname__error_ifuel;
         error_hint = __fname__error_hint;
         error_messages = __fname__error_messages;_} -> __fname__error_hint
-let __proj__Mkerrors__item__error_messages:
-  errors ->
-    (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
-      Prims.list
-  =
+let (__proj__Mkerrors__item__error_messages
+  :errors ->
+     (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
+       Prims.list)=
   fun projectee  ->
     match projectee with
     | { error_reason = __fname__error_reason;
@@ -308,7 +303,7 @@ let __proj__Mkerrors__item__error_messages:
         error_hint = __fname__error_hint;
         error_messages = __fname__error_messages;_} ->
         __fname__error_messages
-let error_to_short_string: errors -> Prims.string =
+let (error_to_short_string :errors -> Prims.string)=
   fun err1  ->
     let uu____802 = FStar_Util.string_of_int err1.error_fuel in
     let uu____803 = FStar_Util.string_of_int err1.error_ifuel in
@@ -329,8 +324,8 @@ type query_settings =
   query_errors: errors Prims.list;
   query_all_labels: FStar_SMTEncoding_Term.error_labels;
   query_suffix: FStar_SMTEncoding_Term.decl Prims.list;}
-let __proj__Mkquery_settings__item__query_env:
-  query_settings -> FStar_TypeChecker_Env.env =
+let (__proj__Mkquery_settings__item__query_env
+  :query_settings -> FStar_TypeChecker_Env.env)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -342,8 +337,8 @@ let __proj__Mkquery_settings__item__query_env:
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_env
-let __proj__Mkquery_settings__item__query_decl:
-  query_settings -> FStar_SMTEncoding_Term.decl =
+let (__proj__Mkquery_settings__item__query_decl
+  :query_settings -> FStar_SMTEncoding_Term.decl)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -355,8 +350,8 @@ let __proj__Mkquery_settings__item__query_decl:
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_decl
-let __proj__Mkquery_settings__item__query_name:
-  query_settings -> Prims.string =
+let (__proj__Mkquery_settings__item__query_name
+  :query_settings -> Prims.string)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -368,8 +363,8 @@ let __proj__Mkquery_settings__item__query_name:
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_name
-let __proj__Mkquery_settings__item__query_index: query_settings -> Prims.int
-  =
+let (__proj__Mkquery_settings__item__query_index
+  :query_settings -> Prims.int)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -381,8 +376,8 @@ let __proj__Mkquery_settings__item__query_index: query_settings -> Prims.int
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_index
-let __proj__Mkquery_settings__item__query_range:
-  query_settings -> FStar_Range.range =
+let (__proj__Mkquery_settings__item__query_range
+  :query_settings -> FStar_Range.range)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -394,7 +389,8 @@ let __proj__Mkquery_settings__item__query_range:
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_range
-let __proj__Mkquery_settings__item__query_fuel: query_settings -> Prims.int =
+let (__proj__Mkquery_settings__item__query_fuel
+  :query_settings -> Prims.int)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -406,8 +402,8 @@ let __proj__Mkquery_settings__item__query_fuel: query_settings -> Prims.int =
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_fuel
-let __proj__Mkquery_settings__item__query_ifuel: query_settings -> Prims.int
-  =
+let (__proj__Mkquery_settings__item__query_ifuel
+  :query_settings -> Prims.int)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -419,8 +415,8 @@ let __proj__Mkquery_settings__item__query_ifuel: query_settings -> Prims.int
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_ifuel
-let __proj__Mkquery_settings__item__query_rlimit: query_settings -> Prims.int
-  =
+let (__proj__Mkquery_settings__item__query_rlimit
+  :query_settings -> Prims.int)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -432,8 +428,8 @@ let __proj__Mkquery_settings__item__query_rlimit: query_settings -> Prims.int
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_rlimit
-let __proj__Mkquery_settings__item__query_hint:
-  query_settings -> Prims.string Prims.list FStar_Pervasives_Native.option =
+let (__proj__Mkquery_settings__item__query_hint
+  :query_settings -> Prims.string Prims.list FStar_Pervasives_Native.option)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -445,8 +441,8 @@ let __proj__Mkquery_settings__item__query_hint:
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_hint
-let __proj__Mkquery_settings__item__query_errors:
-  query_settings -> errors Prims.list =
+let (__proj__Mkquery_settings__item__query_errors
+  :query_settings -> errors Prims.list)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -458,8 +454,8 @@ let __proj__Mkquery_settings__item__query_errors:
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_errors
-let __proj__Mkquery_settings__item__query_all_labels:
-  query_settings -> FStar_SMTEncoding_Term.error_labels =
+let (__proj__Mkquery_settings__item__query_all_labels
+  :query_settings -> FStar_SMTEncoding_Term.error_labels)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -471,8 +467,8 @@ let __proj__Mkquery_settings__item__query_all_labels:
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_all_labels
-let __proj__Mkquery_settings__item__query_suffix:
-  query_settings -> FStar_SMTEncoding_Term.decl Prims.list =
+let (__proj__Mkquery_settings__item__query_suffix
+  :query_settings -> FStar_SMTEncoding_Term.decl Prims.list)=
   fun projectee  ->
     match projectee with
     | { query_env = __fname__query_env; query_decl = __fname__query_decl;
@@ -484,11 +480,10 @@ let __proj__Mkquery_settings__item__query_suffix:
         query_errors = __fname__query_errors;
         query_all_labels = __fname__query_all_labels;
         query_suffix = __fname__query_suffix;_} -> __fname__query_suffix
-let with_fuel_and_diagnostics:
-  query_settings ->
-    FStar_SMTEncoding_Term.decl Prims.list ->
-      FStar_SMTEncoding_Term.decl Prims.list
-  =
+let (with_fuel_and_diagnostics
+  :query_settings ->
+     FStar_SMTEncoding_Term.decl Prims.list ->
+       FStar_SMTEncoding_Term.decl Prims.list)=
   fun settings  ->
     fun label_assumptions  ->
       let n1 = settings.query_fuel in
@@ -558,10 +553,10 @@ let with_fuel_and_diagnostics:
           FStar_List.append uu____1243 uu____1253 in
         FStar_List.append label_assumptions uu____1240 in
       FStar_List.append uu____1184 uu____1237
-let used_hint: query_settings -> Prims.bool =
+let (used_hint :query_settings -> Prims.bool)=
   fun s  -> FStar_Option.isSome s.query_hint
-let next_hint:
-  query_settings -> FStar_Util.hint FStar_Pervasives_Native.option =
+let (next_hint
+  :query_settings -> FStar_Util.hint FStar_Pervasives_Native.option)=
   fun uu____1284  ->
     match uu____1284 with
     | { query_env = uu____1287; query_decl = uu____1288; query_name = qname;
@@ -582,13 +577,12 @@ let next_hint:
                       -> FStar_Pervasives_Native.Some hint
                   | uu____1341 -> FStar_Pervasives_Native.None)
          | uu____1344 -> FStar_Pervasives_Native.None)
-let query_errors:
+let query_errors :
   'Auu____1355 'Auu____1356 .
     query_settings ->
       (FStar_SMTEncoding_Z3.z3status,'Auu____1356,'Auu____1355)
         FStar_Pervasives_Native.tuple3 ->
-        errors FStar_Pervasives_Native.option
-  =
+        errors FStar_Pervasives_Native.option=
   fun settings  ->
     fun uu____1372  ->
       match uu____1372 with
@@ -615,12 +609,11 @@ let query_errors:
                         error_messages = uu____1396
                       } in
                     FStar_Pervasives_Native.Some err1))
-let detail_hint_replay:
+let detail_hint_replay :
   'Auu____1439 'Auu____1440 .
     query_settings ->
       (FStar_SMTEncoding_Z3.z3status,'Auu____1440,'Auu____1439)
-        FStar_Pervasives_Native.tuple3 -> Prims.unit
-  =
+        FStar_Pervasives_Native.tuple3 -> Prims.unit=
   fun settings  ->
     fun uu____1454  ->
       match uu____1454 with
@@ -648,18 +641,18 @@ let detail_hint_replay:
                  FStar_SMTEncoding_ErrorReporting.detail_errors true
                    settings.query_env settings.query_all_labels ask_z3)
           else ()
-let find_localized_errors:
-  errors Prims.list -> errors FStar_Pervasives_Native.option =
+let (find_localized_errors
+  :errors Prims.list -> errors FStar_Pervasives_Native.option)=
   fun errs  ->
     FStar_All.pipe_right errs
       (FStar_List.tryFind
          (fun err1  ->
             match err1.error_messages with | [] -> false | uu____1576 -> true))
-let has_localized_errors: errors Prims.list -> Prims.bool =
+let (has_localized_errors :errors Prims.list -> Prims.bool)=
   fun errs  ->
     let uu____1591 = find_localized_errors errs in
     FStar_Option.isSome uu____1591
-let report_errors: query_settings -> Prims.unit =
+let (report_errors :query_settings -> Prims.unit)=
   fun settings  ->
     let uu____1598 =
       (FStar_Options.detail_errors ()) &&
@@ -727,11 +720,10 @@ let report_errors: query_settings -> Prims.unit =
                (uu____1734, (settings.query_range)) in
              [uu____1729] in
            FStar_TypeChecker_Err.add_errors settings.query_env uu____1722)
-let query_info:
-  query_settings ->
-    (FStar_SMTEncoding_Z3.z3status,Prims.int,Prims.string FStar_Util.smap)
-      FStar_Pervasives_Native.tuple3 -> Prims.unit
-  =
+let (query_info
+  :query_settings ->
+     (FStar_SMTEncoding_Z3.z3status,Prims.int,Prims.string FStar_Util.smap)
+       FStar_Pervasives_Native.tuple3 -> Prims.unit)=
   fun settings  ->
     fun z3result  ->
       let uu____1767 =
@@ -827,12 +819,11 @@ let query_info:
                               let uu____1875 = FStar_Errors.format_issue e in
                               FStar_Util.print2 "\t\t%s%s\n" tag1 uu____1875))))
       else ()
-let record_hint:
+let record_hint :
   'Auu____1885 'Auu____1886 .
     query_settings ->
       (FStar_SMTEncoding_Z3.z3status,'Auu____1886,'Auu____1885)
-        FStar_Pervasives_Native.tuple3 -> Prims.unit
-  =
+        FStar_Pervasives_Native.tuple3 -> Prims.unit=
   fun settings  ->
     fun z3result  ->
       let uu____1907 = z3result in
@@ -865,11 +856,11 @@ let record_hint:
                  (FStar_Pervasives_Native.Some
                     (FStar_List.append l [hint_opt]))
            | uu____1990 -> ())
-let process_result:
-  query_settings ->
-    (FStar_SMTEncoding_Z3.z3status,Prims.int,Prims.string FStar_Util.smap)
-      FStar_Pervasives_Native.tuple3 -> errors FStar_Pervasives_Native.option
-  =
+let (process_result
+  :query_settings ->
+     (FStar_SMTEncoding_Z3.z3status,Prims.int,Prims.string FStar_Util.smap)
+       FStar_Pervasives_Native.tuple3 ->
+       errors FStar_Pervasives_Native.option)=
   fun settings  ->
     fun result  ->
       (let uu____2022 =
@@ -882,16 +873,15 @@ let process_result:
        record_hint settings result;
        detail_hint_replay settings result;
        errs)
-let fold_queries:
-  query_settings Prims.list ->
-    (query_settings ->
-       (FStar_SMTEncoding_Z3.z3result -> Prims.unit) -> Prims.unit)
-      ->
-      (query_settings ->
-         FStar_SMTEncoding_Z3.z3result ->
-           errors FStar_Pervasives_Native.option)
-        -> (errors Prims.list -> Prims.unit) -> Prims.unit
-  =
+let (fold_queries
+  :query_settings Prims.list ->
+     (query_settings ->
+        (FStar_SMTEncoding_Z3.z3result -> Prims.unit) -> Prims.unit)
+       ->
+       (query_settings ->
+          FStar_SMTEncoding_Z3.z3result ->
+            errors FStar_Pervasives_Native.option)
+         -> (errors Prims.list -> Prims.unit) -> Prims.unit)=
   fun qs  ->
     fun ask1  ->
       fun f  ->
@@ -908,13 +898,12 @@ let fold_queries:
                      | FStar_Pervasives_Native.Some errs ->
                          aux (errs :: acc) qs2) in
           aux [] qs
-let ask_and_report_errors:
-  FStar_TypeChecker_Env.env ->
-    FStar_SMTEncoding_Term.error_labels ->
-      FStar_SMTEncoding_Term.decl Prims.list ->
-        FStar_SMTEncoding_Term.decl ->
-          FStar_SMTEncoding_Term.decl Prims.list -> Prims.unit
-  =
+let (ask_and_report_errors
+  :FStar_TypeChecker_Env.env ->
+     FStar_SMTEncoding_Term.error_labels ->
+       FStar_SMTEncoding_Term.decl Prims.list ->
+         FStar_SMTEncoding_Term.decl ->
+           FStar_SMTEncoding_Term.decl Prims.list -> Prims.unit)=
   fun env  ->
     fun all_labels  ->
       fun prefix1  ->
@@ -1157,10 +1146,9 @@ let ask_and_report_errors:
                  if Prims.op_Negation skip
                  then check_all_configs all_configs
                  else ())
-let solve:
-  (Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
-    FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.unit
-  =
+let (solve
+  :(Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
+     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.unit)=
   fun use_env_msg  ->
     fun tcenv  ->
       fun q  ->
@@ -1201,7 +1189,7 @@ let solve:
                   (ask_and_report_errors tcenv1 labels prefix1 qry suffix;
                    pop1 ())
               | uu____2447 -> failwith "Impossible"))
-let solver: FStar_TypeChecker_Env.solver_t =
+let (solver :FStar_TypeChecker_Env.solver_t)=
   {
     FStar_TypeChecker_Env.init = FStar_SMTEncoding_Encode.init;
     FStar_TypeChecker_Env.push = FStar_SMTEncoding_Encode.push;
@@ -1223,7 +1211,7 @@ let solver: FStar_TypeChecker_Env.solver_t =
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   }
-let dummy: FStar_TypeChecker_Env.solver_t =
+let (dummy :FStar_TypeChecker_Env.solver_t)=
   {
     FStar_TypeChecker_Env.init = (fun uu____2475  -> ());
     FStar_TypeChecker_Env.push = (fun uu____2477  -> ());

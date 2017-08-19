@@ -1,8 +1,7 @@
 open Prims
-let find_deps_if_needed:
-  FStar_Parser_Dep.verify_mode ->
-    Prims.string Prims.list -> Prims.string Prims.list
-  =
+let (find_deps_if_needed
+  :FStar_Parser_Dep.verify_mode ->
+     Prims.string Prims.list -> Prims.string Prims.list)=
   fun verify_mode  ->
     fun files  ->
       let uu____15 = FStar_Options.explicit_deps () in
