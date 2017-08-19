@@ -1381,15 +1381,15 @@ val gread_gpointer_of_buffer_cell'
   (requires (UInt32.v i < UInt32.v (buffer_length b)))
   (ensures (UInt32.v i < UInt32.v (buffer_length b) /\ gread h (gpointer_of_buffer_cell b i) == Seq.index (buffer_as_seq h b) (UInt32.v i)))
 
-val gread_pointer_of_buffer_cell'
+val index_buffer_as_seq
   (#t: typ)
   (h: HS.mem)
   (b: buffer t)
-  (i: UInt32.t)
+  (i: nat)
 : Lemma
-  (requires (UInt32.v i < UInt32.v (buffer_length b)))
-  (ensures (UInt32.v i < UInt32.v (buffer_length b) /\ Seq.index (buffer_as_seq h b) (UInt32.v i) == gread h (gpointer_of_buffer_cell b i)))
-  [SMTPat (Seq.index (buffer_as_seq h b) (UInt32.v i))]
+  (requires (i < UInt32.v (buffer_length b)))
+  (ensures (i < UInt32.v (buffer_length b) /\ Seq.index (buffer_as_seq h b) i == gread h (gpointer_of_buffer_cell b (UInt32.uint_to_t i))))
+  [SMTPat (Seq.index (buffer_as_seq h b) i)]
 
 (* The readable permission lifted to buffers. *)
 
@@ -2239,7 +2239,7 @@ val ecreate
   (ensures (fun (h0:HS.mem) b h1 -> unused_in b h0
     /\ live h1 b
     /\ frameOf b == r
-    /\ modifies_0 h0 h1
+    /\ modifies (loc_addresses r Set.empty) h0 h1
     /\ begin match s with
       | Some s' ->
 	readable h1 b /\
