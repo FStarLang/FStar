@@ -25,9 +25,9 @@ let test_mod_ref = ref (Some ({name=test_lid;
 
 let parse_mod mod_name dsenv =
     match ParseIt.parse (Inl mod_name) with
-    | Inl (Inl [m], _) ->
+    | Inl (Inl m, _) ->
         let env',  m = ToSyntax.desugar_modul dsenv m in
-        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) in
+        let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) DsEnv.default_mii in
         dsenv_ref := Some env';
         env', m
     | _ -> failwith "Unexpected "

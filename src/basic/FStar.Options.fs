@@ -112,6 +112,7 @@ let defaults =
       ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
+      ("cache_checked_modules"        , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -215,6 +216,7 @@ let lookup_opt s c =
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
+let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -389,6 +391,10 @@ let rec specs () : list<Getopt.opt> =
          OneArg (mk_string, "[id]"),
         "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
 
+      ( noshort,
+        "cache_checked_modules",
+        ZeroArgs (fun () -> mk_bool true),
+        "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
 
       ( noshort,
         "codegen",
@@ -1042,6 +1048,7 @@ let prepend_output_dir fname =
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
+let cache_checked_modules        () = get_cache_checked_modules       ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []

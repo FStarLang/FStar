@@ -49,7 +49,7 @@ let module_or_interface_name m = m.is_interface, m.name
 (***********************************************************************)
 let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
   : DsEnv.env
-  * list<Syntax.modul> =
+  * Syntax.modul =
   let ast, _ = Parser.Driver.parse_file fn in
   let env, ast = match pre_fn with
     | None ->
@@ -57,21 +57,15 @@ let parse (env:DsEnv.env) (pre_fn: option<string>) (fn:string)
     | Some pre_fn ->
         let pre_ast, _ = Parser.Driver.parse_file pre_fn in
         match pre_ast, ast with
-        | [ Parser.AST.Interface (lid1, decls1, _) ], [ Parser.AST.Module (lid2, decls2) ]
+        | Parser.AST.Interface (lid1, decls1, _), Parser.AST.Module (lid2, decls2)
           when Ident.lid_equals lid1 lid2 ->
           let env = FStar.ToSyntax.Interleave.initialize_interface lid1 decls1 env in
-          let env, ast = FStar.ToSyntax.Interleave.interleave_module env (List.hd ast) true in
-          env, [ast]
+          let env, ast = FStar.ToSyntax.Interleave.interleave_module env ast true in
+          env, ast
         | _ ->
             raise (Err ("mismatch between pre-module and module\n"))
   in
-//  if fn = "test.fst"
-//  then printfn "<front end>\n%s\n</front end>\n" ast (ast |> List.map
-//        (fun m ->
-//            let doc = FStar.Parser.ToDocument.modul_to_document m in
-//            FStar.Pprint.pretty_string 0.8 100 doc)
-//       |>  String.concat "\n\n");
-  Desugar.desugar_file env ast
+  Desugar.desugar_modul env ast
 
 
 (***********************************************************************)
@@ -89,7 +83,7 @@ let tc_prims () : (Syntax.modul * int)
   let prims_filename = Options.prims () in
   let dsenv, prims_mod = parse (DsEnv.empty_env ()) None prims_filename in
   let (prims_mod, env), elapsed_time =
-    record_time (fun () -> Tc.check_module env (List.hd prims_mod)) in
+    record_time (fun () -> Tc.check_module env prims_mod) in
   (prims_mod, elapsed_time), dsenv, env
 
 (***********************************************************************)
@@ -152,7 +146,7 @@ let load_interface_decls (dsenv,env) interface_file_name : DsEnv.env * FStar.Typ
   try
     let r = FStar.Parser.ParseIt.parse (Inl interface_file_name) in
     match r with
-    | Inl (Inl [FStar.Parser.AST.Interface(l, decls, _)], _) ->
+    | Inl (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
       FStar.ToSyntax.Interleave.initialize_interface l decls dsenv, env
     | Inl _ ->
       raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
@@ -171,24 +165,44 @@ let load_interface_decls (dsenv,env) interface_file_name : DsEnv.env * FStar.Typ
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
-let tc_one_file dsenv env pre_fn fn : list<(Syntax.modul * int)> //each module and its elapsed checking time
+let tc_one_file dsenv env pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
                                     * DsEnv.env
                                     * TcEnv.env  =
-  let dsenv, fmods = parse dsenv pre_fn fn in
-  let check_mods () =
-      let env, all_mods =
-          fmods |> List.fold_left (fun (env, all_mods) m ->
-                    let (m, env), elapsed_ms =
-                        FStar.Util.record_time (fun () -> Tc.check_module env m) in
-                    env, (m, elapsed_ms)::all_mods) (env, []) in
-      List.rev all_mods, dsenv, env
+  let checked_file_name = FStar.Parser.ParseIt.find_file fn ^ ".checked" in
+  let tc_source_file () =
+      let dsenv, fmod = parse dsenv pre_fn fn in
+      let check_mod () =
+          let (tcmod, env), time =
+            FStar.Util.record_time (fun () -> Tc.check_module env fmod) in
+          (tcmod, time), dsenv, env
+      in
+      let tcmod, dsenv, tcenv =
+        if (Options.should_verify fmod.name.str //if we're verifying this module
+            && (FStar.Options.record_hints() //and if we're recording or using hints
+                || FStar.Options.use_hints()))
+        then SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) check_mod
+        else check_mod() //don't add a hints file for modules that are not actually verified
+      in
+      if Options.should_verify fmod.name.str
+      && Options.cache_checked_modules ()
+      then begin
+        let tcmod, _ = tcmod in
+        let mii = FStar.ToSyntax.Env.inclusion_info dsenv tcmod.name in
+        BU.save_value_to_file checked_file_name (BU.digest_of_file fn, tcmod, mii)
+      end;
+      tcmod, dsenv, tcenv
   in
-  match fmods with
-  | [m] when (Options.should_verify m.name.str //if we're verifying this module
-              && (FStar.Options.record_hints() //and if we're recording or using hints
-                  || FStar.Options.use_hints())) ->
-    SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) check_mods
-  | _ -> check_mods() //don't add a hints file for modules that are not actually verified
+  if Options.cache_checked_modules ()
+  && BU.file_exists checked_file_name
+  then match BU.load_value_from_file checked_file_name with
+       | None -> failwith ("Corrupt file: " ^ checked_file_name)
+       | Some (digest, tcmod, mii) ->
+            if digest = BU.digest_of_file fn
+            then let dsenv = FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii dsenv in
+                 let tcenv = FStar.TypeChecker.Tc.load_checked_module env tcmod in
+                 (tcmod, 0), dsenv, tcenv
+            else failwith (BU.format1 "The file %s.checked is stale; delete it" checked_file_name)
+  else tc_source_file()
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
@@ -217,9 +231,11 @@ let tc_one_file_from_remaining (remaining:list<string>) (uenv:uenv) = //:(string
   let remaining, (nmods, dsenv, env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          remaining, tc_one_file dsenv env (Some intf) impl
+          let m, dsenv, env = tc_one_file dsenv env (Some intf) impl in
+          remaining, ([m], dsenv, env)
         | intf_or_impl :: remaining ->
-          remaining, tc_one_file dsenv env None intf_or_impl
+          let m, dsenv, env = tc_one_file dsenv env None intf_or_impl in
+          remaining, ([m], dsenv, env)
         | [] -> [], ([], dsenv, env)
   in
   remaining, nmods, (dsenv, env)

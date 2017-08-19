@@ -32,12 +32,11 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
 val as_interface: AST.modul -> AST.modul
-val desugar_file: env -> file -> env * list<S.modul>
 val desugar_decls: env -> list<AST.decl> -> env * sigelts
 val desugar_partial_modul: option<S.modul> -> env -> AST.modul -> env * Syntax.modul
 val desugar_term: env -> term -> S.term
 
-(* private *) val desugar_modul : env -> AST.modul -> env * Syntax.modul
-(* private *) val close : env -> term -> term
+val desugar_modul : env -> AST.modul -> env * Syntax.modul
+val close : env -> term -> term
 
-val add_modul_to_env: Syntax.modul -> env -> env
+val add_modul_to_env: Syntax.modul -> module_inclusion_info -> env -> env
