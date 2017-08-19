@@ -54,7 +54,8 @@ let union f1 f2 = {
     free_names=(fst f1).free_names @ (fst f2).free_names;
     free_uvars=(fst f1).free_uvars @ (fst f2).free_uvars;
     free_univs=(fst f1).free_univs @ (fst f2).free_univs;
-    free_univ_names=(fst f1).free_univ_names @ (fst f2).free_univ_names;
+    free_univ_names=(fst f2).free_univ_names @ (fst f1).free_univ_names; //THE ORDER HERE IS IMPORTANT!
+    //We expect the free_univ_names list to be in fifo order to get the right order of universe generalization
 }, Util.set_union (snd f1) (snd f2)
 
 let rec free_univs u = match Subst.compress_univ u with
