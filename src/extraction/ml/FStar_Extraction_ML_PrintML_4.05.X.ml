@@ -320,7 +320,7 @@ and build_case ((lhs, guard, rhs): mlbranch): case =
 
 and build_binding (toplevel: bool) (lb: mllb): value_binding =
   (* Add a constraint on the binding (ie. an annotation) for top-level lets *)
-  let mk1 (s, _) = String.sub s 1 (String.length s - 1) in
+  let mk1 (s, _) = mkloc (String.sub s 1 (String.length s - 1)) none in
   let ty =
       match lb.mllb_tysc with
       | None -> None
