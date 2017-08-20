@@ -4,35 +4,36 @@ type env =
   env: FStar_TypeChecker_Env.env;
   subst: FStar_Syntax_Syntax.subst_elt Prims.list;
   tc_const: FStar_Const.sconst -> FStar_Syntax_Syntax.typ;}
-let (__proj__Mkenv__item__env :env -> FStar_TypeChecker_Env.env)=
+let __proj__Mkenv__item__env: env -> FStar_TypeChecker_Env.env =
   fun projectee  ->
     match projectee with
     | { env = __fname__env; subst = __fname__subst;
         tc_const = __fname__tc_const;_} -> __fname__env
-let (__proj__Mkenv__item__subst
-  :env -> FStar_Syntax_Syntax.subst_elt Prims.list)=
+let __proj__Mkenv__item__subst:
+  env -> FStar_Syntax_Syntax.subst_elt Prims.list =
   fun projectee  ->
     match projectee with
     | { env = __fname__env; subst = __fname__subst;
         tc_const = __fname__tc_const;_} -> __fname__subst
-let (__proj__Mkenv__item__tc_const
-  :env -> FStar_Const.sconst -> FStar_Syntax_Syntax.typ)=
+let __proj__Mkenv__item__tc_const:
+  env -> FStar_Const.sconst -> FStar_Syntax_Syntax.typ =
   fun projectee  ->
     match projectee with
     | { env = __fname__env; subst = __fname__subst;
         tc_const = __fname__tc_const;_} -> __fname__tc_const
-let (empty
-  :FStar_TypeChecker_Env.env ->
-     (FStar_Const.sconst -> FStar_Syntax_Syntax.typ) -> env)=
-  fun env  -> fun tc_const  -> { env; subst = []; tc_const }
-let (gen_wps_for_free
-  :FStar_TypeChecker_Env.env ->
-     FStar_Syntax_Syntax.binders ->
-       FStar_Syntax_Syntax.bv ->
-         FStar_Syntax_Syntax.term ->
-           FStar_Syntax_Syntax.eff_decl ->
-             (FStar_Syntax_Syntax.sigelts,FStar_Syntax_Syntax.eff_decl)
-               FStar_Pervasives_Native.tuple2)=
+let empty:
+  FStar_TypeChecker_Env.env ->
+    (FStar_Const.sconst -> FStar_Syntax_Syntax.typ) -> env
+  = fun env  -> fun tc_const  -> { env; subst = []; tc_const }
+let gen_wps_for_free:
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.binders ->
+      FStar_Syntax_Syntax.bv ->
+        FStar_Syntax_Syntax.term ->
+          FStar_Syntax_Syntax.eff_decl ->
+            (FStar_Syntax_Syntax.sigelts,FStar_Syntax_Syntax.eff_decl)
+              FStar_Pervasives_Native.tuple2
+  =
   fun env  ->
     fun binders  ->
       fun a  ->
@@ -1330,8 +1331,8 @@ let (gen_wps_for_free
                       } in
                     (uu____2670, uu____2708)))))
 type env_ = env
-let (get_env :env -> FStar_TypeChecker_Env.env)= fun env  -> env.env
-let (set_env :env -> FStar_TypeChecker_Env.env -> env)=
+let get_env: env -> FStar_TypeChecker_Env.env = fun env  -> env.env
+let set_env: env -> FStar_TypeChecker_Env.env -> env =
   fun dmff_env  ->
     fun env'  ->
       let uu___109_2756 = dmff_env in
@@ -1343,16 +1344,16 @@ let (set_env :env -> FStar_TypeChecker_Env.env -> env)=
 type nm =
   | N of FStar_Syntax_Syntax.typ
   | M of FStar_Syntax_Syntax.typ
-let (uu___is_N :nm -> Prims.bool)=
+let uu___is_N: nm -> Prims.bool =
   fun projectee  -> match projectee with | N _0 -> true | uu____2770 -> false
-let (__proj__N__item___0 :nm -> FStar_Syntax_Syntax.typ)=
+let __proj__N__item___0: nm -> FStar_Syntax_Syntax.typ =
   fun projectee  -> match projectee with | N _0 -> _0
-let (uu___is_M :nm -> Prims.bool)=
+let uu___is_M: nm -> Prims.bool =
   fun projectee  -> match projectee with | M _0 -> true | uu____2784 -> false
-let (__proj__M__item___0 :nm -> FStar_Syntax_Syntax.typ)=
+let __proj__M__item___0: nm -> FStar_Syntax_Syntax.typ =
   fun projectee  -> match projectee with | M _0 -> _0
 type nm_ = nm
-let (nm_of_comp :FStar_Syntax_Syntax.comp' -> nm)=
+let nm_of_comp: FStar_Syntax_Syntax.comp' -> nm =
   fun uu___95_2796  ->
     match uu___95_2796 with
     | FStar_Syntax_Syntax.Total (t,uu____2798) -> N t
@@ -1373,7 +1374,7 @@ let (nm_of_comp :FStar_Syntax_Syntax.comp' -> nm)=
         failwith uu____2814
     | FStar_Syntax_Syntax.GTotal uu____2817 ->
         failwith "[nm_of_comp]: impossible (GTot)"
-let (string_of_nm :nm -> Prims.string)=
+let string_of_nm: nm -> Prims.string =
   fun uu___96_2829  ->
     match uu___96_2829 with
     | N t ->
@@ -1382,7 +1383,7 @@ let (string_of_nm :nm -> Prims.string)=
     | M t ->
         let uu____2833 = FStar_Syntax_Print.term_to_string t in
         FStar_Util.format1 "M[%s]" uu____2833
-let (is_monadic_arrow :FStar_Syntax_Syntax.term' -> nm)=
+let is_monadic_arrow: FStar_Syntax_Syntax.term' -> nm =
   fun n1  ->
     match n1 with
     | FStar_Syntax_Syntax.Tm_arrow
@@ -1391,16 +1392,16 @@ let (is_monadic_arrow :FStar_Syntax_Syntax.term' -> nm)=
                       FStar_Syntax_Syntax.vars = uu____2841;_})
         -> nm_of_comp n2
     | uu____2858 -> failwith "unexpected_argument: [is_monadic_arrow]"
-let (is_monadic_comp
-  :FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> Prims.bool)=
+let is_monadic_comp:
+  FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> Prims.bool =
   fun c  ->
     let uu____2867 = nm_of_comp c.FStar_Syntax_Syntax.n in
     match uu____2867 with | M uu____2868 -> true | N uu____2869 -> false
 exception Not_found
-let (uu___is_Not_found :Prims.exn -> Prims.bool)=
+let uu___is_Not_found: Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with | Not_found  -> true | uu____2874 -> false
-let (double_star :FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)=
+let double_star: FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ =
   fun typ  ->
     let star_once typ1 =
       let uu____2885 =
@@ -1413,13 +1414,14 @@ let (double_star :FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)=
       FStar_Syntax_Util.arrow uu____2885 uu____2894 in
     let uu____2897 = FStar_All.pipe_right typ star_once in
     FStar_All.pipe_left star_once uu____2897
-let rec (mk_star_to_type
-  :(FStar_Syntax_Syntax.term' ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-     ->
-     env ->
-       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)=
+let rec mk_star_to_type:
+  (FStar_Syntax_Syntax.term' ->
+     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+    ->
+    env ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+  =
   fun mk1  ->
     fun env  ->
       fun a  ->
@@ -1437,10 +1439,11 @@ let rec (mk_star_to_type
                FStar_Syntax_Syntax.mk_Total FStar_Syntax_Util.ktype0 in
              (uu____2947, uu____2970) in
            FStar_Syntax_Syntax.Tm_arrow uu____2934)
-and (star_type'
-  :env ->
-     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-       FStar_Syntax_Syntax.term)=
+and star_type':
+  env ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      FStar_Syntax_Syntax.term
+  =
   fun env  ->
     fun t  ->
       let mk1 x =
@@ -1786,9 +1789,10 @@ and (star_type'
             FStar_Errors.Err uu____3814 in
           FStar_Exn.raise uu____3813
       | FStar_Syntax_Syntax.Tm_delayed uu____3816 -> failwith "impossible"
-let (is_monadic
-  :FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option ->
-     Prims.bool)=
+let is_monadic:
+  FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option ->
+    Prims.bool
+  =
   fun uu___98_3846  ->
     match uu___98_3846 with
     | FStar_Pervasives_Native.None  -> failwith "un-annotated lambda?!"
@@ -1799,7 +1803,7 @@ let (is_monadic
                 match uu___97_3853 with
                 | FStar_Syntax_Syntax.CPS  -> true
                 | uu____3854 -> false))
-let rec (is_C :FStar_Syntax_Syntax.typ -> Prims.bool)=
+let rec is_C: FStar_Syntax_Syntax.typ -> Prims.bool =
   fun t  ->
     let uu____3859 =
       let uu____3860 = FStar_Syntax_Subst.compress t in
@@ -1846,10 +1850,11 @@ let rec (is_C :FStar_Syntax_Syntax.typ -> Prims.bool)=
     | FStar_Syntax_Syntax.Tm_uinst (t1,uu____3972) -> is_C t1
     | FStar_Syntax_Syntax.Tm_ascribed (t1,uu____3978,uu____3979) -> is_C t1
     | uu____4020 -> false
-let (mk_return
-  :env ->
-     FStar_Syntax_Syntax.typ ->
-       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
+let mk_return:
+  env ->
+    FStar_Syntax_Syntax.typ ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+  =
   fun env  ->
     fun t  ->
       fun e  ->
@@ -1876,17 +1881,18 @@ let (mk_return
         FStar_Syntax_Util.abs uu____4090 body
           (FStar_Pervasives_Native.Some
              (FStar_Syntax_Util.residual_tot FStar_Syntax_Util.ktype0))
-let (is_unknown :FStar_Syntax_Syntax.term' -> Prims.bool)=
+let is_unknown: FStar_Syntax_Syntax.term' -> Prims.bool =
   fun uu___99_4095  ->
     match uu___99_4095 with
     | FStar_Syntax_Syntax.Tm_unknown  -> true
     | uu____4096 -> false
-let rec (check
-  :env ->
-     FStar_Syntax_Syntax.term ->
-       nm ->
-         (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-           FStar_Pervasives_Native.tuple3)=
+let rec check:
+  env ->
+    FStar_Syntax_Syntax.term ->
+      nm ->
+        (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+          FStar_Pervasives_Native.tuple3
+  =
   fun env  ->
     fun e  ->
       fun context_nm  ->
@@ -2006,11 +2012,12 @@ let rec (check
               let uu____4751 = FStar_Syntax_Print.term_to_string e in
               FStar_Util.format1 "[check]: Tm_unknown %s" uu____4751 in
             failwith uu____4750
-and (infer
-  :env ->
-     FStar_Syntax_Syntax.term ->
-       (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-         FStar_Pervasives_Native.tuple3)=
+and infer:
+  env ->
+    FStar_Syntax_Syntax.term ->
+      (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple3
+  =
   fun env  ->
     fun e  ->
       let mk1 x =
@@ -2513,21 +2520,22 @@ and (infer
             let uu____6564 = FStar_Syntax_Print.term_to_string e in
             FStar_Util.format1 "[infer]: Tm_unknown %s" uu____6564 in
           failwith uu____6563
-and (mk_match
-  :env ->
-     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-       (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t,FStar_Syntax_Syntax.term'
-                                                                  FStar_Syntax_Syntax.syntax
-                                                                  FStar_Pervasives_Native.option,
-         FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
-         FStar_Pervasives_Native.tuple3 Prims.list ->
-         (env ->
-            FStar_Syntax_Syntax.term ->
-              (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-                FStar_Pervasives_Native.tuple3)
-           ->
-           (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-             FStar_Pervasives_Native.tuple3)=
+and mk_match:
+  env ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      (FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t,FStar_Syntax_Syntax.term'
+                                                                 FStar_Syntax_Syntax.syntax
+                                                                 FStar_Pervasives_Native.option,
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+        FStar_Pervasives_Native.tuple3 Prims.list ->
+        (env ->
+           FStar_Syntax_Syntax.term ->
+             (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+               FStar_Pervasives_Native.tuple3)
+          ->
+          (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+            FStar_Pervasives_Native.tuple3
+  =
   fun env  ->
     fun e0  ->
       fun branches  ->
@@ -2706,22 +2714,23 @@ and (mk_match
                                (FStar_Syntax_Syntax.Tm_match
                                   (u_e0, u_branches1)) in
                            ((N t1), uu____7697, uu____7765))))
-and (mk_let
-  :env_ ->
-     FStar_Syntax_Syntax.letbinding ->
-       FStar_Syntax_Syntax.term ->
-         (env_ ->
-            FStar_Syntax_Syntax.term ->
-              (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-                FStar_Pervasives_Native.tuple3)
-           ->
-           (env_ ->
-              FStar_Syntax_Syntax.term ->
-                (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-                  FStar_Pervasives_Native.tuple3)
-             ->
+and mk_let:
+  env_ ->
+    FStar_Syntax_Syntax.letbinding ->
+      FStar_Syntax_Syntax.term ->
+        (env_ ->
+           FStar_Syntax_Syntax.term ->
              (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-               FStar_Pervasives_Native.tuple3)=
+               FStar_Pervasives_Native.tuple3)
+          ->
+          (env_ ->
+             FStar_Syntax_Syntax.term ->
+               (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+                 FStar_Pervasives_Native.tuple3)
+            ->
+            (nm,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+              FStar_Pervasives_Native.tuple3
+  =
   fun env  ->
     fun binding  ->
       fun e2  ->
@@ -2938,11 +2947,12 @@ and (mk_let
                               FStar_Syntax_Syntax.Tm_let uu____8067 in
                             mk1 uu____8066 in
                           ((M t2), uu____8060, uu____8063)))
-and (check_n
-  :env_ ->
-     FStar_Syntax_Syntax.term ->
-       (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-         FStar_Pervasives_Native.tuple3)=
+and check_n:
+  env_ ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple3
+  =
   fun env  ->
     fun e  ->
       let mn =
@@ -2954,11 +2964,12 @@ and (check_n
       match uu____8103 with
       | (N t,s_e,u_e) -> (t, s_e, u_e)
       | uu____8119 -> failwith "[check_n]: impossible"
-and (check_m
-  :env_ ->
-     FStar_Syntax_Syntax.term ->
-       (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-         FStar_Pervasives_Native.tuple3)=
+and check_m:
+  env_ ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple3
+  =
   fun env  ->
     fun e  ->
       let mn =
@@ -2970,10 +2981,10 @@ and (check_m
       match uu____8142 with
       | (M t,s_e,u_e) -> (t, s_e, u_e)
       | uu____8158 -> failwith "[check_m]: impossible"
-and (comp_of_nm :nm_ -> FStar_Syntax_Syntax.comp)=
+and comp_of_nm: nm_ -> FStar_Syntax_Syntax.comp =
   fun nm  ->
     match nm with | N t -> FStar_Syntax_Syntax.mk_Total t | M t -> mk_M t
-and (mk_M :FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.comp)=
+and mk_M: FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.comp =
   fun t  ->
     FStar_Syntax_Syntax.mk_Comp
       {
@@ -2984,14 +2995,15 @@ and (mk_M :FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.comp)=
         FStar_Syntax_Syntax.flags =
           [FStar_Syntax_Syntax.CPS; FStar_Syntax_Syntax.TOTAL]
       }
-and (type_of_comp
-  :FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)=
-  fun t  -> FStar_Syntax_Util.comp_result t
-and (trans_F_
-  :env_ ->
-     FStar_Syntax_Syntax.typ ->
-       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
+and type_of_comp:
+  FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+  = fun t  -> FStar_Syntax_Util.comp_result t
+and trans_F_:
+  env_ ->
+    FStar_Syntax_Syntax.typ ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+  =
   fun env  ->
     fun c  ->
       fun wp  ->
@@ -3130,10 +3142,11 @@ and (trans_F_
          | FStar_Syntax_Syntax.Tm_ascribed (e,uu____8642,uu____8643) ->
              trans_F_ env e wp
          | uu____8684 -> failwith "impossible trans_F_")
-and (trans_G
-  :env_ ->
-     FStar_Syntax_Syntax.typ ->
-       Prims.bool -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.comp)=
+and trans_G:
+  env_ ->
+    FStar_Syntax_Syntax.typ ->
+      Prims.bool -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.comp
+  =
   fun env  ->
     fun h  ->
       fun is_monadic1  ->
@@ -3160,9 +3173,10 @@ and (trans_G
           else
             (let uu____8717 = trans_F_ env h wp in
              FStar_Syntax_Syntax.mk_Total uu____8717)
-let (n
-  :FStar_TypeChecker_Env.env ->
-     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
+let n:
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+  =
   FStar_TypeChecker_Normalize.normalize
     [FStar_TypeChecker_Normalize.Beta;
     FStar_TypeChecker_Normalize.UnfoldUntil
@@ -3170,20 +3184,22 @@ let (n
     FStar_TypeChecker_Normalize.NoDeltaSteps;
     FStar_TypeChecker_Normalize.Eager_unfolding;
     FStar_TypeChecker_Normalize.EraseUniverses]
-let (star_type :env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)=
+let star_type: env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ =
   fun env  ->
     fun t  -> let uu____8732 = n env.env t in star_type' env uu____8732
-let (star_expr
-  :env ->
-     FStar_Syntax_Syntax.term ->
-       (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-         FStar_Pervasives_Native.tuple3)=
+let star_expr:
+  env ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple3
+  =
   fun env  ->
     fun t  -> let uu____8749 = n env.env t in check_n env uu____8749
-let (trans_F
-  :env ->
-     FStar_Syntax_Syntax.typ ->
-       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
+let trans_F:
+  env ->
+    FStar_Syntax_Syntax.typ ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+  =
   fun env  ->
     fun c  ->
       fun wp  ->
