@@ -20,6 +20,7 @@ let rec for_all_prop (#a:Type) (p:a -> Type0) (l:list a) : Tot Type0 (decreases 
   | [] -> True
   | x :: xs -> p x /\ for_all_prop p xs
 
+
 let rec for_all_prop_assoc_lemma (#a:eqtype) (#b:Type) (x:a) (p : (a * b) -> Tot Type0) (l:list (a*b))
   : Lemma (requires (for_all_prop p l))
     (ensures (match L.assoc x l with Some y -> p (x,y) | _ -> True))
@@ -102,3 +103,10 @@ let memo_invariant_valid' (#a:eqtype) (#b:Type) (f:a -> Tot b)
 let pure_memo (#a:eqtype) (#b:Type) (f:a -> Tot b) : Pure (a -> Tot b)(requires True) (ensures (fun g -> forall x. g x == f x))=
   memo_invariant_valid' f ;
   erase_st #a #b (memo_invariant f) (fun _ -> True) (fun x y -> y == f x) #(fun r _ -> memo_invariant f r) #(fun r x _ y h1 -> memo_invariant f r h1 /\ y == f x) (memo f) (memo_initializer f)
+
+
+
+let rec fibo (n:nat) = if n <= 1 then 1 else fibo (n - 1) + fibo (n - 2)
+
+let fib = pure_memo fibo
+
