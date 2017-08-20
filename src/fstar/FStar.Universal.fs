@@ -167,10 +167,10 @@ let load_interface_decls (dsenv,env) interface_file_name : DsEnv.env * FStar.Typ
 (***********************************************************************)
 let tc_one_file dsenv env pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
                                     * DsEnv.env
-                                    * TcEnv.env  =
+                                    * TcEnv.env =
   let checked_file_name = FStar.Parser.ParseIt.find_file fn ^ ".checked" in
   let lax_checked_file_name = checked_file_name ^ ".lax" in
-  let lax_ok = not (Options.should_verify (BU.basename fn)) in
+  let lax_ok = not (Options.should_verify_file fn) in
   let cache_file_to_write =
       if lax_ok
       then lax_checked_file_name

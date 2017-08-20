@@ -962,6 +962,11 @@ let restore_cmd_line_options should_clear =
     set_option' ("verify_module", List (List.map mk_string old_verify_module));
     r
 
+let module_name_of_file_name f =
+    let f = basename f in
+    let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
+    String.lowercase f
+
 let should_verify m =
   if get_lax () then
     false
@@ -973,13 +978,11 @@ let should_verify m =
          * meaning that this case is only called when in [--explicit_deps] mode.
          * If we could remove [--explicit_deps], there would be less complexity
          * here. *)
-        List.existsML (fun f ->
-          let f = basename f in
-          let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
-          String.lowercase f = m
-        ) (file_list ())
+        List.existsML (fun f -> module_name_of_file_name f = m) (file_list ())
     | l ->
         List.contains (String.lowercase m) l
+
+let should_verify_file fn = should_verify (module_name_of_file_name fn)
 
 let dont_gen_projectors m = List.contains m (get___temp_no_proj())
 

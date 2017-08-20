@@ -134,6 +134,7 @@ val set_options                 : options -> string -> parse_cmdline_res
 val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
 val should_verify               : string  -> bool
+val should_verify_file          : string  -> bool
 val silent                      : unit    -> bool
 val smtencoding_elim_box        : unit -> bool
 val smtencoding_nl_arith_default: unit -> bool
