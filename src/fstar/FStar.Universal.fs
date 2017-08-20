@@ -169,6 +169,19 @@ let tc_one_file dsenv env pre_fn fn : (Syntax.modul * int) //checked module and 
                                     * DsEnv.env
                                     * TcEnv.env  =
   let checked_file_name = FStar.Parser.ParseIt.find_file fn ^ ".checked" in
+  let lax_checked_file_name = checked_file_name ^ ".lax" in
+  let lax_ok = not (Options.should_verify (BU.basename fn)) in
+  let cache_file_to_write =
+      if lax_ok
+      then lax_checked_file_name
+      else checked_file_name
+  in
+  let cache_file_to_read () =
+      if BU.file_exists checked_file_name then Some checked_file_name
+      else if lax_ok && BU.file_exists lax_checked_file_name
+           then Some lax_checked_file_name
+           else None
+  in
   let tc_source_file () =
       let dsenv, fmod = parse dsenv pre_fn fn in
       let check_mod () =
@@ -183,26 +196,27 @@ let tc_one_file dsenv env pre_fn fn : (Syntax.modul * int) //checked module and 
         then SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) check_mod
         else check_mod() //don't add a hints file for modules that are not actually verified
       in
-      if Options.should_verify fmod.name.str
-      && Options.cache_checked_modules ()
+      if Options.cache_checked_modules ()
       then begin
         let tcmod, _ = tcmod in
         let mii = FStar.ToSyntax.Env.inclusion_info dsenv tcmod.name in
-        BU.save_value_to_file checked_file_name (BU.digest_of_file fn, tcmod, mii)
+        BU.save_value_to_file cache_file_to_write (BU.digest_of_file fn, tcmod, mii)
       end;
       tcmod, dsenv, tcenv
   in
   if Options.cache_checked_modules ()
-  && BU.file_exists checked_file_name
-  then match BU.load_value_from_file checked_file_name with
-       | None -> failwith ("Corrupt file: " ^ checked_file_name)
-       | Some (digest, tcmod, mii) ->
+  then match cache_file_to_read () with
+       | None -> tc_source_file ()
+       | Some cache_file ->
+         match BU.load_value_from_file cache_file with
+         | None -> failwith ("Corrupt file: " ^ cache_file)
+         | Some (digest, tcmod, mii) ->
             if digest = BU.digest_of_file fn
             then let dsenv = FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii dsenv in
                  let tcenv = FStar.TypeChecker.Tc.load_checked_module env tcmod in
                  (tcmod, 0), dsenv, tcenv
-            else failwith (BU.format1 "The file %s.checked is stale; delete it" checked_file_name)
-  else tc_source_file()
+            else failwith (BU.format1 "The file %s.checked is stale; delete it" cache_file)
+  else tc_source_file ()
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
