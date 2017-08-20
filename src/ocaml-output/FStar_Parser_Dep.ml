@@ -3,13 +3,13 @@ type verify_mode =
   | VerifyAll
   | VerifyUserList
   | VerifyFigureItOut
-let uu___is_VerifyAll: verify_mode -> Prims.bool =
+let (uu___is_VerifyAll :verify_mode -> Prims.bool)=
   fun projectee  ->
     match projectee with | VerifyAll  -> true | uu____5 -> false
-let uu___is_VerifyUserList: verify_mode -> Prims.bool =
+let (uu___is_VerifyUserList :verify_mode -> Prims.bool)=
   fun projectee  ->
     match projectee with | VerifyUserList  -> true | uu____10 -> false
-let uu___is_VerifyFigureItOut: verify_mode -> Prims.bool =
+let (uu___is_VerifyFigureItOut :verify_mode -> Prims.bool)=
   fun projectee  ->
     match projectee with | VerifyFigureItOut  -> true | uu____15 -> false
 type map =
@@ -20,23 +20,23 @@ type color =
   | White
   | Gray
   | Black
-let uu___is_White: color -> Prims.bool =
+let (uu___is_White :color -> Prims.bool)=
   fun projectee  -> match projectee with | White  -> true | uu____30 -> false
-let uu___is_Gray: color -> Prims.bool =
+let (uu___is_Gray :color -> Prims.bool)=
   fun projectee  -> match projectee with | Gray  -> true | uu____35 -> false
-let uu___is_Black: color -> Prims.bool =
+let (uu___is_Black :color -> Prims.bool)=
   fun projectee  -> match projectee with | Black  -> true | uu____40 -> false
 type open_kind =
   | Open_module
   | Open_namespace
-let uu___is_Open_module: open_kind -> Prims.bool =
+let (uu___is_Open_module :open_kind -> Prims.bool)=
   fun projectee  ->
     match projectee with | Open_module  -> true | uu____45 -> false
-let uu___is_Open_namespace: open_kind -> Prims.bool =
+let (uu___is_Open_namespace :open_kind -> Prims.bool)=
   fun projectee  ->
     match projectee with | Open_namespace  -> true | uu____50 -> false
-let check_and_strip_suffix:
-  Prims.string -> Prims.string FStar_Pervasives_Native.option =
+let (check_and_strip_suffix
+  :Prims.string -> Prims.string FStar_Pervasives_Native.option)=
   fun f  ->
     let suffixes = [".fsti"; ".fst"; ".fsi"; ".fs"] in
     let matches =
@@ -59,32 +59,30 @@ let check_and_strip_suffix:
     | (FStar_Pervasives_Native.Some m)::uu____128 ->
         FStar_Pervasives_Native.Some m
     | uu____135 -> FStar_Pervasives_Native.None
-let is_interface: Prims.string -> Prims.bool =
+let (is_interface :Prims.string -> Prims.bool)=
   fun f  ->
     let uu____144 =
       FStar_String.get f ((FStar_String.length f) - (Prims.parse_int "1")) in
     uu____144 = 'i'
-let is_implementation: Prims.string -> Prims.bool =
+let (is_implementation :Prims.string -> Prims.bool)=
   fun f  -> let uu____149 = is_interface f in Prims.op_Negation uu____149
-let list_of_option:
+let list_of_option :
   'Auu____154 .
-    'Auu____154 FStar_Pervasives_Native.option -> 'Auu____154 Prims.list
-  =
+    'Auu____154 FStar_Pervasives_Native.option -> 'Auu____154 Prims.list=
   fun uu___83_162  ->
     match uu___83_162 with
     | FStar_Pervasives_Native.Some x -> [x]
     | FStar_Pervasives_Native.None  -> []
-let list_of_pair:
+let list_of_pair :
   'Auu____170 .
     ('Auu____170 FStar_Pervasives_Native.option,'Auu____170
                                                   FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 -> 'Auu____170 Prims.list
-  =
+      FStar_Pervasives_Native.tuple2 -> 'Auu____170 Prims.list=
   fun uu____184  ->
     match uu____184 with
     | (intf,impl) ->
         FStar_List.append (list_of_option intf) (list_of_option impl)
-let lowercase_module_name: Prims.string -> Prims.string =
+let (lowercase_module_name :Prims.string -> Prims.string)=
   fun f  ->
     let uu____207 =
       let uu____210 = FStar_Util.basename f in
@@ -97,7 +95,7 @@ let lowercase_module_name: Prims.string -> Prims.string =
           let uu____213 = FStar_Util.format1 "not a valid FStar file: %s\n" f in
           FStar_Errors.Err uu____213 in
         FStar_Exn.raise uu____212
-let build_map: Prims.string Prims.list -> map =
+let (build_map :Prims.string Prims.list -> map)=
   fun filenames  ->
     let include_directories = FStar_Options.include_path () in
     let include_directories1 =
@@ -157,7 +155,7 @@ let build_map: Prims.string Prims.list -> map =
          let uu____385 = lowercase_module_name f in add_entry uu____385 f)
       filenames;
     map1
-let enter_namespace: map -> map -> Prims.string -> Prims.bool =
+let (enter_namespace :map -> map -> Prims.string -> Prims.bool)=
   fun original_map  ->
     fun working_map  ->
       fun prefix1  ->
@@ -180,7 +178,7 @@ let enter_namespace: map -> map -> Prims.string -> Prims.bool =
                  FStar_ST.op_Colon_Equals found true)
               else ()) uu____403);
         FStar_ST.op_Bang found
-let string_of_lid: FStar_Ident.lident -> Prims.bool -> Prims.string =
+let (string_of_lid :FStar_Ident.lident -> Prims.bool -> Prims.string)=
   fun l  ->
     fun last1  ->
       let suffix =
@@ -190,18 +188,18 @@ let string_of_lid: FStar_Ident.lident -> Prims.bool -> Prims.string =
           FStar_List.map (fun x  -> x.FStar_Ident.idText) l.FStar_Ident.ns in
         FStar_List.append uu____534 suffix in
       FStar_String.concat "." names
-let lowercase_join_longident:
-  FStar_Ident.lident -> Prims.bool -> Prims.string =
+let (lowercase_join_longident
+  :FStar_Ident.lident -> Prims.bool -> Prims.string)=
   fun l  ->
     fun last1  ->
       let uu____547 = string_of_lid l last1 in
       FStar_String.lowercase uu____547
-let namespace_of_lid: FStar_Ident.lident -> Prims.string =
+let (namespace_of_lid :FStar_Ident.lident -> Prims.string)=
   fun l  ->
     let uu____552 = FStar_List.map FStar_Ident.text_of_id l.FStar_Ident.ns in
     FStar_String.concat "_" uu____552
-let check_module_declaration_against_filename:
-  FStar_Ident.lident -> Prims.string -> Prims.unit =
+let (check_module_declaration_against_filename
+  :FStar_Ident.lident -> Prims.string -> Prims.unit)=
   fun lid  ->
     fun filename  ->
       let k' = lowercase_join_longident lid true in
@@ -222,12 +220,11 @@ let check_module_declaration_against_filename:
           uu____571 filename
       else ()
 exception Exit
-let uu___is_Exit: Prims.exn -> Prims.bool =
+let (uu___is_Exit :Prims.exn -> Prims.bool)=
   fun projectee  -> match projectee with | Exit  -> true | uu____577 -> false
-let hard_coded_dependencies:
-  Prims.string ->
-    (FStar_Ident.lident,open_kind) FStar_Pervasives_Native.tuple2 Prims.list
-  =
+let (hard_coded_dependencies
+  :Prims.string ->
+     (FStar_Ident.lident,open_kind) FStar_Pervasives_Native.tuple2 Prims.list)=
   fun filename  ->
     let filename1 = FStar_Util.basename filename in
     let corelibs =
@@ -245,12 +242,11 @@ let hard_coded_dependencies:
       [(FStar_Parser_Const.fstar_ns_lid, Open_namespace);
       (FStar_Parser_Const.prims_lid, Open_module);
       (FStar_Parser_Const.pervasives_lid, Open_module)]
-let collect_one:
-  (Prims.string,Prims.bool FStar_ST.ref) FStar_Pervasives_Native.tuple2
-    Prims.list ->
-    verify_mode ->
-      Prims.bool -> map -> Prims.string -> Prims.string Prims.list
-  =
+let (collect_one
+  :(Prims.string,Prims.bool FStar_ST.ref) FStar_Pervasives_Native.tuple2
+     Prims.list ->
+     verify_mode ->
+       Prims.bool -> map -> Prims.string -> Prims.string Prims.list)=
   fun verify_flags  ->
     fun verify_mode  ->
       fun is_user_provided_filename  ->
@@ -723,11 +719,10 @@ let collect_one:
              let uu____2667 = FStar_Parser_Driver.parse_file filename in
              match uu____2667 with
              | (ast,uu____2681) -> (collect_file ast; FStar_ST.op_Bang deps))
-let print_graph:
+let print_graph :
   'Auu____2731 .
     (Prims.string Prims.list,'Auu____2731) FStar_Pervasives_Native.tuple2
-      FStar_Util.smap -> Prims.unit
-  =
+      FStar_Util.smap -> Prims.unit=
   fun graph  ->
     FStar_Util.print_endline
       "A DOT-format graph has been dumped in the current directory as dep.graph";
@@ -758,16 +753,15 @@ let print_graph:
          Prims.strcat uu____2757 "\n}\n" in
        Prims.strcat "digraph {\n" uu____2756 in
      FStar_Util.write_file "dep.graph" uu____2755)
-let collect:
-  verify_mode ->
-    Prims.string Prims.list ->
-      ((Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
-         Prims.list,Prims.string Prims.list,(Prims.string Prims.list,
-                                              color)
-                                              FStar_Pervasives_Native.tuple2
-                                              FStar_Util.smap)
-        FStar_Pervasives_Native.tuple3
-  =
+let (collect
+  :verify_mode ->
+     Prims.string Prims.list ->
+       ((Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
+          Prims.list,Prims.string Prims.list,(Prims.string Prims.list,
+                                               color)
+                                               FStar_Pervasives_Native.tuple2
+                                               FStar_Util.smap)
+         FStar_Pervasives_Native.tuple3)=
   fun verify_mode  ->
     fun filenames  ->
       let graph = FStar_Util.smap_create (Prims.parse_int "41") in
@@ -980,10 +974,9 @@ let collect:
                   FStar_Exn.raise uu____3992
                 else ()) verify_flags;
        (by_target, topologically_sorted1, immediate_graph))
-let print_make:
-  (Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
-    Prims.list -> Prims.unit
-  =
+let (print_make
+  :(Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
+     Prims.list -> Prims.unit)=
   fun deps  ->
     FStar_List.iter
       (fun uu____4043  ->
@@ -994,13 +987,12 @@ let print_make:
                  (fun s  -> FStar_Util.replace_chars s ' ' "\\ ") deps1 in
              FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps2))
       deps
-let print:
+let print :
   'a 'b .
     ((Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
        Prims.list,'a,(Prims.string Prims.list,'b)
                        FStar_Pervasives_Native.tuple2 FStar_Util.smap)
-      FStar_Pervasives_Native.tuple3 -> Prims.unit
-  =
+      FStar_Pervasives_Native.tuple3 -> Prims.unit=
   fun uu____4094  ->
     match uu____4094 with
     | (make_deps,uu____4118,graph) ->
