@@ -281,8 +281,9 @@ val modifies_1_valid
     P.readable h1 p'
   ))
   (ensures (valid h1 tgs p))
-  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1);
-   SMTPat (P.includes #_ #t' (gfield #l tgs p f) p')]
+  [SMTPat (valid #l h0 tgs p);
+    SMTPat (P.readable h1 p');
+    SMTPat (gfield #l tgs p f)]
 
 val modifies_1_field_tag
   (#l: P.union_typ)
@@ -296,7 +297,7 @@ val modifies_1_field_tag
     P.modifies_1 (gfield tgs p f) h0 h1
   ))
   (ensures (gread_tag h1 tgs p == gread_tag h0 tgs p))
-  [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1)]
+  [SMTPat (valid #l h0 tgs p); SMTPat (gfield tgs p f); SMTPat (gread_tag h1 tgs p)]
 
 val modifies_1_field
   (#l: P.union_typ)
