@@ -1,22 +1,21 @@
 open Prims
 exception Not_a_wp_implication of Prims.string
-let uu___is_Not_a_wp_implication: Prims.exn -> Prims.bool =
+let (uu___is_Not_a_wp_implication :Prims.exn -> Prims.bool)=
   fun projectee  ->
     match projectee with
     | Not_a_wp_implication uu____8 -> true
     | uu____9 -> false
-let __proj__Not_a_wp_implication__item__uu___: Prims.exn -> Prims.string =
+let (__proj__Not_a_wp_implication__item__uu___ :Prims.exn -> Prims.string)=
   fun projectee  ->
     match projectee with | Not_a_wp_implication uu____17 -> uu____17
 type label = FStar_SMTEncoding_Term.error_label
 type labels = FStar_SMTEncoding_Term.error_labels
-let sort_labels:
-  (FStar_SMTEncoding_Term.error_label,Prims.bool)
-    FStar_Pervasives_Native.tuple2 Prims.list ->
-    ((FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
-       FStar_Pervasives_Native.tuple3,Prims.bool)
-      FStar_Pervasives_Native.tuple2 Prims.list
-  =
+let (sort_labels
+  :(FStar_SMTEncoding_Term.error_label,Prims.bool)
+     FStar_Pervasives_Native.tuple2 Prims.list ->
+     ((FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
+        FStar_Pervasives_Native.tuple3,Prims.bool)
+       FStar_Pervasives_Native.tuple2 Prims.list)=
   fun l  ->
     FStar_List.sortWith
       (fun uu____66  ->
@@ -24,11 +23,10 @@ let sort_labels:
            match (uu____66, uu____67) with
            | (((uu____108,uu____109,r1),uu____111),((uu____112,uu____113,r2),uu____115))
                -> FStar_Range.compare r1 r2) l
-let remove_dups:
-  labels ->
-    (FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
-      FStar_Pervasives_Native.tuple3 Prims.list
-  =
+let (remove_dups
+  :labels ->
+     (FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
+       FStar_Pervasives_Native.tuple3 Prims.list)=
   fun l  ->
     FStar_Util.remove_dups
       (fun uu____174  ->
@@ -40,12 +38,11 @@ type msg = (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
 type ranges =
   (Prims.string FStar_Pervasives_Native.option,FStar_Range.range)
     FStar_Pervasives_Native.tuple2 Prims.list
-let fresh_label:
-  Prims.string ->
-    FStar_Range.range ->
-      FStar_SMTEncoding_Term.term ->
-        (label,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2
-  =
+let (fresh_label
+  :Prims.string ->
+     FStar_Range.range ->
+       FStar_SMTEncoding_Term.term ->
+         (label,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2)=
   let ctr = FStar_Util.mk_ref (Prims.parse_int "0") in
   fun message  ->
     fun range  ->
@@ -61,12 +58,11 @@ let fresh_label:
         let lterm = FStar_SMTEncoding_Util.mkFreeV lvar in
         let lt1 = FStar_SMTEncoding_Term.mkOr (lterm, t) range in
         (label, lt1)
-let label_goals:
-  (Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
-    FStar_Range.range ->
-      FStar_SMTEncoding_Term.term ->
-        (labels,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2
-  =
+let (label_goals
+  :(Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
+     FStar_Range.range ->
+       FStar_SMTEncoding_Term.term ->
+         (labels,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2)=
   fun use_env_msg  ->
     fun r  ->
       fun q  ->
@@ -631,13 +627,12 @@ let label_goals:
                        (labels1, uu____1942)) in
             aux "assertion failed" FStar_Pervasives_Native.None
               FStar_Pervasives_Native.None [] q
-let detail_errors:
-  Prims.bool ->
-    FStar_TypeChecker_Env.env ->
-      labels ->
-        (FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Z3.z3result) ->
-          Prims.unit
-  =
+let (detail_errors
+  :Prims.bool ->
+     FStar_TypeChecker_Env.env ->
+       labels ->
+         (FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Z3.z3result) ->
+           Prims.unit)=
   fun hint_replay  ->
     fun env  ->
       fun all_labels  ->

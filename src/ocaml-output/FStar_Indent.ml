@@ -1,5 +1,5 @@
 open Prims
-let generate: FStar_Parser_ParseIt.filename Prims.list -> Prims.unit =
+let (generate :FStar_Parser_ParseIt.filename Prims.list -> Prims.unit)=
   fun filenames  ->
     let parse_and_indent filename =
       let uu____13 = FStar_Parser_Driver.parse_file filename in

@@ -1,13 +1,14 @@
 open Prims
-let embed_unit: Prims.unit -> FStar_Syntax_Syntax.term =
+let (embed_unit :Prims.unit -> FStar_Syntax_Syntax.term)=
   fun u  -> FStar_Syntax_Util.exp_unit
-let unembed_unit: FStar_Syntax_Syntax.term -> Prims.unit = fun uu____8  -> ()
-let embed_bool: Prims.bool -> FStar_Syntax_Syntax.term =
+let (unembed_unit :FStar_Syntax_Syntax.term -> Prims.unit)=
+  fun uu____8  -> ()
+let (embed_bool :Prims.bool -> FStar_Syntax_Syntax.term)=
   fun b  ->
     if b
     then FStar_Syntax_Util.exp_true_bool
     else FStar_Syntax_Util.exp_false_bool
-let unembed_bool: FStar_Syntax_Syntax.term -> Prims.bool =
+let (unembed_bool :FStar_Syntax_Syntax.term -> Prims.bool)=
   fun t  ->
     let uu____18 =
       let uu____19 =
@@ -17,11 +18,11 @@ let unembed_bool: FStar_Syntax_Syntax.term -> Prims.bool =
     match uu____18 with
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_bool b) -> b
     | uu____24 -> failwith "Not an embedded bool"
-let embed_int: Prims.int -> FStar_Syntax_Syntax.term =
+let (embed_int :Prims.int -> FStar_Syntax_Syntax.term)=
   fun i  ->
     let uu____29 = FStar_Util.string_of_int i in
     FStar_Syntax_Util.exp_int uu____29
-let unembed_int: FStar_Syntax_Syntax.term -> Prims.int =
+let (unembed_int :FStar_Syntax_Syntax.term -> Prims.int)=
   fun t  ->
     let uu____34 =
       let uu____35 =
@@ -32,14 +33,14 @@ let unembed_int: FStar_Syntax_Syntax.term -> Prims.int =
     | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int (s,uu____40)) ->
         FStar_Util.int_of_string s
     | uu____53 -> failwith "Not an embedded int"
-let embed_string: Prims.string -> FStar_Syntax_Syntax.term =
+let (embed_string :Prims.string -> FStar_Syntax_Syntax.term)=
   fun s  ->
     let bytes = FStar_Util.unicode_of_string s in
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_constant
          (FStar_Const.Const_string (bytes, FStar_Range.dummyRange)))
       FStar_Pervasives_Native.None FStar_Range.dummyRange
-let unembed_string: FStar_Syntax_Syntax.term -> Prims.string =
+let (unembed_string :FStar_Syntax_Syntax.term -> Prims.string)=
   fun t  ->
     let t1 = FStar_Syntax_Util.unmeta t in
     match t1.FStar_Syntax_Syntax.n with
@@ -52,15 +53,14 @@ let unembed_string: FStar_Syntax_Syntax.term -> Prims.string =
             Prims.strcat uu____77 ")" in
           Prims.strcat "Not an embedded string (" uu____76 in
         failwith uu____75
-let embed_pair:
+let embed_pair :
   'a 'b .
     ('a -> FStar_Syntax_Syntax.term) ->
       FStar_Syntax_Syntax.term ->
         ('b -> FStar_Syntax_Syntax.term) ->
           FStar_Syntax_Syntax.term ->
             ('a,'b) FStar_Pervasives_Native.tuple2 ->
-              FStar_Syntax_Syntax.term
-  =
+              FStar_Syntax_Syntax.term=
   fun embed_a  ->
     fun t_a  ->
       fun embed_b  ->
@@ -92,12 +92,11 @@ let embed_pair:
                 uu____136 :: uu____137 in
               FStar_Syntax_Syntax.mk_Tm_app uu____133 uu____135 in
             uu____132 FStar_Pervasives_Native.None FStar_Range.dummyRange
-let unembed_pair:
+let unembed_pair :
   'a 'b .
     (FStar_Syntax_Syntax.term -> 'a) ->
       (FStar_Syntax_Syntax.term -> 'b) ->
-        FStar_Syntax_Syntax.term -> ('a,'b) FStar_Pervasives_Native.tuple2
-  =
+        FStar_Syntax_Syntax.term -> ('a,'b) FStar_Pervasives_Native.tuple2=
   fun unembed_a  ->
     fun unembed_b  ->
       fun pair  ->
@@ -120,12 +119,11 @@ let unembed_pair:
                  let uu____327 = unembed_a a in
                  let uu____328 = unembed_b b in (uu____327, uu____328)
              | uu____329 -> failwith "Not an embedded pair")
-let embed_option:
+let embed_option :
   'a .
     ('a -> FStar_Syntax_Syntax.term) ->
       FStar_Syntax_Syntax.term ->
-        'a FStar_Pervasives_Native.option -> FStar_Syntax_Syntax.term
-  =
+        'a FStar_Pervasives_Native.option -> FStar_Syntax_Syntax.term=
   fun embed_a  ->
     fun typ  ->
       fun o  ->
@@ -158,11 +156,10 @@ let embed_option:
                 uu____388 :: uu____389 in
               FStar_Syntax_Syntax.mk_Tm_app uu____385 uu____387 in
             uu____384 FStar_Pervasives_Native.None FStar_Range.dummyRange
-let unembed_option:
+let unembed_option :
   'a .
     (FStar_Syntax_Syntax.term -> 'a) ->
-      FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option
-  =
+      FStar_Syntax_Syntax.term -> 'a FStar_Pervasives_Native.option=
   fun unembed_a  ->
     fun o  ->
       let uu____418 =
@@ -186,11 +183,10 @@ let unembed_option:
                let uu____543 = unembed_a a in
                FStar_Pervasives_Native.Some uu____543
            | uu____544 -> failwith "Not an embedded option")
-let rec embed_list:
+let rec embed_list :
   'a .
     ('a -> FStar_Syntax_Syntax.term) ->
-      FStar_Syntax_Syntax.term -> 'a Prims.list -> FStar_Syntax_Syntax.term
-  =
+      FStar_Syntax_Syntax.term -> 'a Prims.list -> FStar_Syntax_Syntax.term=
   fun embed_a  ->
     fun typ  ->
       fun l  ->
@@ -228,11 +224,10 @@ let rec embed_list:
                 uu____604 :: uu____605 in
               FStar_Syntax_Syntax.mk_Tm_app uu____601 uu____603 in
             uu____600 FStar_Pervasives_Native.None FStar_Range.dummyRange
-let rec unembed_list:
+let rec unembed_list :
   'a .
     (FStar_Syntax_Syntax.term -> 'a) ->
-      FStar_Syntax_Syntax.term -> 'a Prims.list
-  =
+      FStar_Syntax_Syntax.term -> 'a Prims.list=
   fun unembed_a  ->
     fun l  ->
       let l1 = FStar_Syntax_Util.unmeta l in
@@ -262,7 +257,8 @@ let rec unembed_list:
                  FStar_Util.format2 "(%s) Not an embedded list: %s" uu____794
                    uu____795 in
                failwith uu____793)
-let embed_string_list: Prims.string Prims.list -> FStar_Syntax_Syntax.term =
+let (embed_string_list :Prims.string Prims.list -> FStar_Syntax_Syntax.term)=
   fun ss  -> embed_list embed_string FStar_Syntax_Syntax.t_string ss
-let unembed_string_list: FStar_Syntax_Syntax.term -> Prims.string Prims.list
-  = fun t  -> unembed_list unembed_string t
+let (unembed_string_list
+  :FStar_Syntax_Syntax.term -> Prims.string Prims.list)=
+  fun t  -> unembed_list unembed_string t
