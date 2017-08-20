@@ -150,31 +150,6 @@ let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
                 else theory, n_retained, n_pruned+1
             | _ -> d::theory, n_retained, n_pruned)
             theory ([], 0, 0) in
-        let missed_assertions th core =
-            let missed =
-                core |> List.filter (fun nm ->
-                    th |> BU.for_some (function Assume a -> nm=a.assumption_name | _ -> false) |> not)
-                |> String.concat ", "
-        in
-        let included =
-            th
-            |> List.collect (function Assume a -> [a.assumption_name] | _ -> [])
-            |> String.concat ", "
-        in
-        BU.format2 "missed={%s}; included={%s}" missed included in
-        if Options.hint_info ()
-        && Options.debug_any()
-        then begin
-            let n = List.length core in
-            let missed = if n <> n_retained then missed_assertions theory' core else "" in
-            BU.print3 "\tHint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n"
-                            (BU.string_of_int n_retained)
-                            (if n <> n_retained
-                            then BU.format2 " (expected %s (%s); replay may be inaccurate)"
-                                (BU.string_of_int n) missed
-                            else "")
-                            (BU.string_of_int n_pruned)
-        end ;
         theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
 
 let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
