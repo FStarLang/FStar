@@ -355,29 +355,30 @@ let query_info settings z3result =
     end
 
 let record_hint settings z3result =
-    let z3status, elapsed_time, _ = z3result in
-    let mk_hint core = {
-            hint_name=settings.query_name;
-            hint_index=settings.query_index;
-            fuel=settings.query_fuel;
-            ifuel=settings.query_ifuel;
-            query_elapsed_time=0; //recording the elapsed_time prevents us from reaching a fixed point
-            unsat_core = core
-        }
-    in
-    let hint_opt =
-        if not (used_hint settings) //if we didn't already use a hint
-        && Options.record_hints ()  //and we're asked to record unsat cores
-        then match z3status with
-             | UNSAT unsat_core ->
-               Some (mk_hint unsat_core)
-             | _ -> None //it failed, so nothing to do
-        else Some (mk_hint settings.query_hint)
-    in
-    match !recorded_hints with
-    | Some l -> recorded_hints := Some (l@[hint_opt])
-    | _ -> ()
-
+    if not (Options.record_hints()) then () else
+    begin
+      let z3status, _, _ = z3result in
+      let mk_hint core = {
+                  hint_name=settings.query_name;
+                  hint_index=settings.query_index;
+                  fuel=settings.query_fuel;
+                  ifuel=settings.query_ifuel;
+                  query_elapsed_time=0; //recording the elapsed_time prevents us from reaching a fixed point
+                  unsat_core = core
+          }
+      in
+      let store_hint hint =
+          match !recorded_hints with
+          | Some l -> recorded_hints := Some (l@[Some hint])
+          | _ -> assert false; ()
+      in
+      match z3status with
+      | UNSAT unsat_core ->
+        if used_hint settings //if we already successfully use a hint
+        then store_hint (mk_hint settings.query_hint) //just re-use the successful hint
+        else store_hint (mk_hint unsat_core)          //else store the new unsat core
+      | _ ->  () //the query failed, so nothing to do
+    end
 
 let process_result settings result : option<errors> =
     if used_hint settings && not (Options.z3_refresh()) then Z3.refresh();
