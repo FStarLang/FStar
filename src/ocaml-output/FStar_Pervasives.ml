@@ -112,13 +112,13 @@ type __internal_ocaml_attributes =
   | PpxDerivingShowConstant of Prims.string
 let (uu___is_PpxDerivingShow :__internal_ocaml_attributes -> Prims.bool)=
   fun projectee  ->
-    match projectee with | PpxDerivingShow  -> true | uu____2259 -> false
+    match projectee with | PpxDerivingShow  -> true | uu____2260 -> false
 let (uu___is_PpxDerivingShowConstant
   :__internal_ocaml_attributes -> Prims.bool)=
   fun projectee  ->
     match projectee with
     | PpxDerivingShowConstant _0 -> true
-    | uu____2265 -> false
+    | uu____2266 -> false
 let (__proj__PpxDerivingShowConstant__item___0
   :__internal_ocaml_attributes -> Prims.string)=
   fun projectee  -> match projectee with | PpxDerivingShowConstant _0 -> _0
