@@ -563,14 +563,22 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_let ((false, [{lbname=Inr _}]), _) ->
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    check_top_level_let env top
+    let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
+    if Env.should_verify env then
+      check_top_level_let env lax_top
+    else lax_top, l, g
+    //check_top_level_let env top
 
   | Tm_let ((false, _), _) ->
     check_inner_let env top
 
   | Tm_let ((true, {lbname=Inr _}::_), _) ->
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    check_top_level_let_rec env top
+    let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
+    if Env.should_verify env then
+      check_top_level_let_rec env lax_top
+    else lax_top, l, g
+    //check_top_level_let_rec env top
 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top
@@ -1013,7 +1021,14 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 //                        let t = N.normalize [N.EraseUniverses; N.Beta] env t in
 //                        printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
                         let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
-                        let env = Env.push_let_binding env l ([], t) in
+                        let unames = match (Env.lookup_definition [Always] env
+                          (match l with
+                            | (Inr fvar) -> S.lid_of_fv fvar
+                            (* TOFIX! How to obtain the exact name of the bound varible including the prefix *)
+                            | (Inl bvar) -> FStar.Ident.lid_of_ids [bvar.ppname])) with
+                          | Some (x,_) -> x
+                          | _ -> [] in
+                        let env = Env.push_let_binding env l (unames, t) in
                         let lb = match l with
                             | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
                             | _ -> letrec_binders in
@@ -1924,7 +1939,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
         let env = if termination_check_enabled lb.lbname e t
                   && Env.should_verify env (* store the let rec names separately for termination checks *)
                   then {env with letrecs=(lb.lbname,t)::env.letrecs}
-                  else Env.push_let_binding env lb.lbname ([], t) in //no polymorphic recursion on universes
+                  else Env.push_let_binding env lb.lbname (univ_vars, t) in //no polymorphic recursion on universes
         let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
         lb::lbs,  env)
     ([],env)
