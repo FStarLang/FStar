@@ -22,7 +22,7 @@ open FStar.Ghost
 
 (*you can get the withness x, that the proof part is erased*)
 (*https://coq.inria.fr/library/Coq.Init.Specif.html#sig*)
-type sig (a:Type) (p: a->Type) = exists (x:a). (erased (p x))
+type sig_ (a:Type) (p: a->Type) = exists (x:a). (erased (p x))
 
 
 (*you get nothing. ofcourse, in ghost contexts, or to build other erased date, you get everything*)
@@ -32,12 +32,12 @@ type ex (a:Type) (p:a->Type) = erased (exists (x:a). (p x))
 
 (*how to use the above:*)
 (*assuming that existentials in F* are constructive. If so, the following 2 assumes must be definable*)
-assume val exists_proj1 : #a:Type -> #p:(a->Type) -> (exists x.p x) -> Tot a
+assume val exists_proj1 : #a:Type -> #p:(a->Type) -> (exists x.p x) -> GTot a
 assume val mkexists : #a:Type -> #p:(a->Type) -> x:a -> (p x) -> Tot (exists x.p x)
 
 
 val ex_proj1 : #a:Type -> #p:(a->Type) -> ex a p -> Tot (erased a)
-let ex_proj1 #a #p e = (elift1 exists_proj1) e
+let ex_proj1 #a #p e = (elift1 (exists_proj1 #a #p)) e
 
 
 val gex_proj1 : #a:Type -> #p:(a->Type) -> (ex a p) -> GTot a

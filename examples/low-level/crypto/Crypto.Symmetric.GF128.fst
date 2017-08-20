@@ -3,6 +3,7 @@ module Crypto.Symmetric.GF128
 open FStar.Mul
 open FStar.Ghost
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.UInt8
 open FStar.Int.Cast
 open FStar.Buffer
@@ -12,7 +13,7 @@ open Crypto.Symmetric.GF128.Spec
 
 module U32 = FStar.UInt32
 module Spec = Crypto.Symmetric.GF128.Spec
-
+module ST = FStar.HyperStack.ST
 
 let len = 16ul // length of GF128 in bytes
 
@@ -52,7 +53,8 @@ let gf128_add a b =
   let h0 = ST.get() in
   gf128_add_loop a b len;
   let h1 = ST.get() in
-  assume (as_seq h1 a == as_seq h0 a +@ as_seq h0 b)
+  admit()
+  //assume (as_seq h1 a == as_seq h0 a +@ as_seq h0 b)
   //16-10-27 TODO: functional correctness.
 
   
@@ -138,7 +140,8 @@ let gf128_mul a b =
   blit tmp 0ul a 0ul 16ul;
   pop_frame();
   let h1 = ST.get() in
-  assume(as_seq h1 a == as_seq h0 a *@ as_seq h0 b)
+  admit()
+  //assume(as_seq h1 a == as_seq h0 a *@ as_seq h0 b)
   //16-10-27 todo: functional correctness.
 
 val add_and_multiply: acc:elemB -> block:elemB{disjoint acc block}

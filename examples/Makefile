@@ -8,8 +8,6 @@ algorithms \
 crypto \
 termination \
 software_foundations \
-../doc/tutorial/code/exercises \
-../doc/tutorial/code/solutions \
 maths \
 rel \
 paradoxes \
@@ -24,7 +22,6 @@ micro-benchmarks \
 bytes \
 tactics
 
-
 # low-level \  ... NS: removing from CI for this branch
 
 # WARNING: this target shouldn't depend on anything other than the F*
@@ -32,7 +29,7 @@ tactics
 all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))
 
 %.all: %
-	+make -C $^ all
+	+$(MAKE) -C $^ all
 
 test: all
 

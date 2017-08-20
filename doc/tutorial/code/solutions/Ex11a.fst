@@ -1,12 +1,12 @@
 module Ex11a
-open FStar.ST
+open FStar.HyperStack.ST
 //robot
 
-open FStar.Heap
 open FStar.Set
 open FStar.HyperStack
 
 module HH = FStar.HyperHeap
+module HST = FStar.HyperStack.ST
 
 type rid = HH.rid
 
@@ -128,6 +128,7 @@ val fly: b:bot -> ST unit
               modifies_transitively (only (Bot?.r b)) h0 h1
             /\ robot_inv b h1
             /\ flying b h1))
+#set-options "--z3rlimit 20"
 let fly b =
   recall (Arm?.azim (Bot?.right b));
   recall (Arm?.polar (Bot?.left b));
@@ -209,6 +210,7 @@ val fly_robot_army: #rs:set rid -> bs:bots rs -> ST unit
   (requires (fun h -> (forall b. mem b bs ==> robot_inv b h)))
   (ensures  (fun h0 _u h1 ->   HH.modifies rs h0.h h1.h
                           /\ (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
+#set-options "--z3rlimit 30"
 let rec fly_robot_army #rs bs =
   match bs with
   | Nil -> ()
@@ -216,9 +218,9 @@ let rec fly_robot_army #rs bs =
     //cut (rs == (rs' ++^ Bot?.r b));  //not necesary, doesn't improve speed
     //lemma_bots_tl_disjoint bs;      //not necessary; doesnt' improve speed
     fly b;
-    let h1 = ST.get () in
+    let h1 = HST.get () in
     fly_robot_army bs';
-    let h2 = ST.get () in
+    let h2 = HST.get () in
     lemma_frame_robot_inv_and_flying b rs' h1 h2
 
 #reset-options
@@ -226,7 +228,7 @@ let rec fly_robot_army #rs bs =
 val main: unit -> ST unit
     (requires (fun _ -> True))
     (ensures (fun m0 _ m1 -> modifies_transitively Set.empty m0 m1))
-#set-options "--z3rlimit 10"
+#set-options "--z3rlimit 20"
 let main () =
   let b1 = new_robot HH.root in
   let b2 = new_robot HH.root in

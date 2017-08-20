@@ -1,0 +1,64 @@
+[
+  "ž&\u0007½1\u007fç`ŒÄ\u0016\rÐ\u0015¼6",
+  [
+    [
+      "FStar.Tactics.Builtins.quote",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term"
+      ],
+      0
+    ],
+    [ "FStar.Tactics.Builtins.divide", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Tactics.Builtins.divide", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Builtins.exact",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Effect.Failed",
+        "data_typing_intro_FStar.Tactics.Effect.Failed@tok",
+        "fuel_guarded_inversion_FStar.Tactics.Effect.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Builtins.apply",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Effect.Failed",
+        "data_typing_intro_FStar.Tactics.Effect.Failed@tok",
+        "fuel_guarded_inversion_FStar.Tactics.Effect.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Builtins.apply_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "data_elim_FStar.Tactics.Effect.Failed",
+        "data_typing_intro_FStar.Tactics.Effect.Failed@tok",
+        "fuel_guarded_inversion_FStar.Tactics.Effect.__result",
+        "function_token_typing_Prims.unit", "unit_typing"
+      ],
+      0
+    ]
+  ]
+]

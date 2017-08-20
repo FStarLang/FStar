@@ -22,7 +22,6 @@ operations on lists.
 module FStar.List.Tot.Properties
 open FStar.List.Tot.Base
 
-
 (** Properties about mem **)
 
 (** The empty list has no elements *)
@@ -39,6 +38,16 @@ let rec mem_existsb #a f xs =
   match xs with
   | [] -> ()
   | hd::tl -> mem_existsb f tl
+
+let rec mem_count
+  (#a: eqtype)
+  (l: list a)
+  (x: a)
+: Lemma
+  (mem x l <==> count x l > 0)
+= match l with
+  | [] -> ()
+  | x' :: l' -> mem_count l' x
 
 (** Properties about rev **)
 
@@ -180,6 +189,27 @@ let rec append_inv_tail l l1 l2 = match l1, l2 with
        (* Idem *)
        )
 
+let rec append_length_inv_head
+  (#a: Type)
+  (left1 right1 left2 right2: list a)
+: Lemma
+  (requires (append left1 right1 == append left2 right2 /\ length left1 == length left2))
+  (ensures (left1 == left2 /\ right1 == right2))
+  (decreases left1)
+= match left1 with
+  | [] -> ()
+  | _ :: left1' ->    
+    append_length_inv_head left1' right1 (tl left2) right2
+
+let append_length_inv_tail
+  (#a: Type)
+  (left1 right1 left2 right2: list a)
+: Lemma
+  (requires (append left1 right1 == append left2 right2 /\ length right1 == length right2))
+  (ensures (left1 == left2 /\ right1 == right2))
+= append_length left1 right1;
+  append_length left2 right2;
+  append_length_inv_head left1 right1 left2 right2
 
 (** Properties mixing rev and append **)
 
@@ -717,6 +747,7 @@ let rec strict_prefix_of_trans (#a: Type) (l1 l2 l3: list a)
   (requires True)
   (ensures ((strict_prefix_of l1 l2 /\ strict_prefix_of l2 l3) ==> strict_prefix_of l1 l3))
   (decreases l3)
+  [SMTPat (strict_prefix_of l1 l2); SMTPat (strict_prefix_of l2 l3)]
 = match l3 with
   | [] -> ()
   | _ :: q -> strict_prefix_of_trans l1 l2 q
@@ -852,3 +883,21 @@ let assoc_precedes
   (ensures (x << l /\ y << l))
 = assoc_memP_some x y l;
   memP_precedes (x, y) l
+
+(** Properties about find *)
+
+let rec find_none
+  (#a: Type)
+  (f: (a -> Tot bool))
+  (l: list a)
+  (x: a)
+: Lemma
+  (requires (find f l == None /\ memP x l))
+  (ensures (f x == false))
+= let (x' :: l') = l in
+  Classical.or_elim
+    #(x == x')
+    #(~ (x == x'))
+    #(fun _ -> f x == false)
+    (fun h -> ())
+    (fun h -> find_none f l' x)

@@ -34,7 +34,7 @@ ifneq ($(UNAME),Linux)
 	cp $(VALE_HOME)/obj/sha256-macos.S sha256-x86_64-Darwin.S
 	cp $(VALE_HOME)/obj/sha256-linux.S sha256-x86_64-Linux.S
 endif
-	sed -i 's/.section .text/.text/' *.S
+	sed -i.bak 's/.section .text/.text/' *.S
 
 clean:
 	rm -f *.o *~

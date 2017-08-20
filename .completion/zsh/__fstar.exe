@@ -1,0 +1,6 @@
+#compdef fstar.exe
+
+# Argument completion support for fstar.exe
+
+# get arguments with ZSH's builtin support for parsing fstar.exe
+_arguments --

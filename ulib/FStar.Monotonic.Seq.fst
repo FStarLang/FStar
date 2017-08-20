@@ -1,10 +1,12 @@
 module FStar.Monotonic.Seq
 
+open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Classical
 module HH   = FStar.HyperHeap
 module HS   = FStar.HyperStack
 module MR   = FStar.Monotonic.RRef
+module HST  = FStar.HyperStack.ST
 
 (* 2016-11-22: The following is meant to override the fact that the
    enclosing namespace of the current module (here FStar.Monotonic) is
@@ -66,7 +68,7 @@ let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
        (ensures (fun h0 m h1 ->
 	 m_contains m h1 /\
 	 m_sel h1 m == init /\
-	 FStar.ST.ralloc_post r init h0 (as_hsref m) h1))
+	 HST.ralloc_post r init h0 (as_hsref m) h1))
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 
@@ -111,7 +113,7 @@ let i_seq (r:rid) (a:Type) (p:seq a -> Type) = m_rref r (s:seq a{p s}) grows
 let alloc_mref_iseq (#a:Type) (p:seq a -> Type) (r:rid) (init:seq a{p init})
   : ST (i_seq r a p)
        (requires (fun _ -> True))
-       (ensures (fun h0 m h1 -> FStar.ST.ralloc_post r init h0 (MR.as_hsref m) h1))
+       (ensures (fun h0 m h1 -> HST.ralloc_post r init h0 (MR.as_hsref m) h1))
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 
@@ -175,7 +177,7 @@ private val test0: r:rid -> a:m_rref r (seq nat) grows -> k:nat -> ST unit
   (requires (fun h -> k < Seq.length (m_sel h a)))
   (ensures (fun h0 result h1 -> True))
 let test0 r a k =
-  let h0 = ST.get() in
+  let h0 = HST.get() in
   let _ = 
     let s = m_sel h0 a in 
     at_least_is_stable k (Seq.index (m_sel h0 a) k) a;
@@ -186,7 +188,7 @@ private val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
   (requires (fun h -> k < Seq.length (i_sel h a)))
   (ensures (fun h0 result h1 -> True))
 let itest r a k =
-  let h0 = ST.get() in
+  let h0 = HST.get() in
   i_at_least_is_stable k (Seq.index (i_sel h0 a) k) a;
   MR.witness a (i_at_least k (Seq.index (i_sel h0 a) k) a)
 

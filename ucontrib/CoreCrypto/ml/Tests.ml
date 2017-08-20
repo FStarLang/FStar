@@ -815,7 +815,7 @@ module TestHashUpdate = struct
     let input = bytes_of_string t.input in
     let ctx = digest_create t.hash_alg in
     (* Add input incrementally *)
-    for i = input.Bytes.index to (input.Bytes.length - 1) do
+    for i = 0 to Z.to_int (Bytes.length input) - 1 do
        digest_update ctx (Bytes.abyte (Bytes.index input (Z.of_int i)))
     done; 
     let output = digest_final ctx in  
@@ -894,9 +894,14 @@ module TestRsa = struct
       | None ->
           Printf.printf "rsa_encrypt/decrypt: got no bytes\n";
           raise Exit; ;
-      let sig_bytes = rsa_sign (Some SHA512) k original_bytes in
-      if not (rsa_verify (Some SHA512) k original_bytes sig_bytes) then begin
+      let sig_bytes = rsa_sign (Some SHA512) k false original_bytes in
+      if not (rsa_verify (Some SHA512) k false original_bytes sig_bytes) then begin
         Printf.printf "rsa_sign/rsa_verify: check failed\n";
+        raise Exit
+      end;
+      let sig_bytes = rsa_sign (Some SHA512) k true original_bytes in
+      if not (rsa_verify (Some SHA512) k true original_bytes sig_bytes) then begin
+        Printf.printf "rsa_sign/rsa_verify: PSS check failed\n";
         raise Exit
       end;
       true

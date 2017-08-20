@@ -17,6 +17,7 @@
 #light "off"
 
 module FStar.Extraction.ML.Code
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -28,6 +29,8 @@ open FStar.Const
 open FStar.BaseTypes
 module BU = FStar.Util
 
+(* This is the old printer used exclusively for the F# build of F*. It will not
+ * evolve in the future. *)
 
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
@@ -544,11 +547,11 @@ and doc_of_branch (currentModule : mlsymbol) ((p, cond, e) : mlbranch) : doc =
 and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
     let for1 {mllb_name=name; mllb_tysc=tys; mllb_def=e; print_typ=pt} =
         let e   = doc_of_expr currentModule  (min_op_prec, NonAssoc) e in
-        let ids = [] in //TODO: maybe extract the top-level binders from e and print it alongside name
+        //TODO: maybe extract the top-level binders from e and print it alongside name
         //let f x = x
         //let f = fun x -> x
         //i.e., print the latter as the former
-        let ids = List.map (fun (x, _) -> text x) ids in
+        let ids = [] in
         let ty_annot =
             if (not pt) then text ""
             else
@@ -566,11 +569,15 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 //                      end
             else if top_level
             then match tys with
-                    | None | Some (_::_, _) -> text ""
+                    | None ->
+                      text ""
                     | Some ([], ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
-//                      let vars = vars |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
                       reduce1 [text ":"; ty]
+                    | Some (vs, ty) ->
+                      let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
+                      let vars = vs |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
+                      reduce1 [text ":"; vars; text "."; ty]
             else text "" in
         reduce1 [text (idsym name); reduce1 ids; ty_annot; text "="; e] in
 
@@ -593,7 +600,7 @@ and doc_of_loc (lineno, file) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
-    let for1 (_, x, mangle_opt, tparams, body) =
+    let for1 (_, x, mangle_opt, tparams, _, body) =
         let x = match mangle_opt with
                 | None -> x
                 | Some y -> y in
@@ -621,6 +628,7 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
 
             | MLTD_DType ctors ->
                 let forctor (name, tys) =
+                  let _names, tys = List.split tys in
                     match tys with
                     | [] -> text name
                     | _  ->
@@ -687,6 +695,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
         reduce1 [text "exception"; text x]
 
     | MLM_Exn (x, args) ->
+        let args = List.map snd args in
         let args = List.map (doc_of_mltype currentModule  (min_op_prec, NonAssoc)) args in
         let args = parens (combine (text " * ") args) in
         reduce1 [text "exception"; text x; text "of"; args]

@@ -1,14 +1,3 @@
-type heap = unit
+open FStar_Monotonic_Heap
 
-(* https://www.lexifi.com/blog/references-physical-equality *)
-type 'a ref = {
-  mutable contents: 'a;
-  id: int
-}
-
-type aref =
-   | Ref of (unit * unit)
-
-let emp =
-  ()
-
+type 'a ref = 'a FStar_Monotonic_Heap.ref

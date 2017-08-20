@@ -8,7 +8,7 @@ MARCH?=x86_64
 OCAMLC = ocamlfind c $(INCLUDE) -g -annot
 OCAMLOPT = ocamlfind opt $(INCLUDE) -g -annot
 OCAMLMKLIB = ocamlfind mklib $(INCLUDE)
-OCAMLDEP = ocamlfind dep
+OCAMLDEP = ocamlfind dep -slash
 
 CCOPTS = $(addprefix -ccopt ,-Wall -std=c11 -D__USE_MINGW_ANSI_STDIO -Lopenssl -Iopenssl/include)
 CCLIBS = $(addprefix -cclib ,-lcrypto)
@@ -23,9 +23,9 @@ ifeq ($(OS),Windows_NT)
     EXTRA_OPTS =
     EXTRA_LIBS = -L.
     ifeq ($(MARCH),x86_64)
-      OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64
+      OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64 enable-tls1_3
     else
-      OPENSSL_CONF = CC=i686-w64-mingw32-gcc ./Configure mingw
+      OPENSSL_CONF = CC=i686-w64-mingw32-gcc ./Configure mingw enable-tls1_3
     endif
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
@@ -37,13 +37,13 @@ else
         EXTRA_OPTS =
         EXTRA_LIBS = -L.
         ARCH = osx
-        OPENSSL_CONF = ./config
+        OPENSSL_CONF = ./config enable-tls1_3
     else
         EXTRA_OPTS = -thread -ccopt -fPIC
         EXTRA_LIBS = -L.
         ARCH = x86_64
 	# The HACL* test engine directly links with the .o files
-        OPENSSL_CONF = ./config -fPIC
+        OPENSSL_CONF = ./config enable-tls1_3 -fPIC
     endif
 endif
 
@@ -74,21 +74,16 @@ openssl/Configure:
 	git submodule update --init
 
 openssl/libcrypto.a: openssl/Configure
-	cd openssl && $(OPENSSL_CONF) && $(MAKE) -j4 build_libs
+	cd openssl && $(OPENSSL_CONF) && $(MAKE) build_libs
 
 libcrypto.a: openssl/libcrypto.a
 	cp openssl/libcrypto.a .
 
-DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o $(DB)/DB.cmx DHDB.cmx
-CoreCrypto.cmxa: #explicitly sequentialize
-	make $(PLATFORM)/platform.cmx
-	make CoreCrypto.cmx
-	make openssl_stub.o
-	make $(DB)/DB.cmx
-	make DHDB.cmx
+DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o # $(DB)/DB.cmx DHDB.cmx
+CoreCrypto.cmxa: $(DLL_OBJ)
 	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o CoreCrypto $(DLL_OBJ)
 
-DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
+DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o # DHDB.cmo $(DB)/DB.cmo
 CoreCrypto.cma: $(DLL_BYTE)
 	$(OCAMLMKLIB) $(EXTRA_LIBS) -o CoreCrypto $^
 
@@ -106,7 +101,7 @@ clean:
 	rm -f Tests.exe *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll *.annot *~
 
 depend:
-	$(OCAMLDEP) *.ml *.mli > .depend
+	$(OCAMLDEP) -I $(PLATFORM) -I $(DB) *.ml *.mli > .depend
 
 include .depend
 

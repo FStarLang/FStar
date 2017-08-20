@@ -17,6 +17,8 @@
 // (c) Microsoft Corporation. All rights reserved
 
 module FStar.ToSyntax.Env
+open FStar.ST
+open FStar.Exn
 open FStar.All
 
 
@@ -25,13 +27,13 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
-open FStar.Syntax.Const
 open FStar.Parser
 open FStar.Ident
 open FStar.Errors
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module BU = FStar.Util
+module Const = FStar.Parser.Const
 
 type local_binding = (ident * bv * bool)                  (* local name binding for name resolution, paired with an env-generated unique name and a boolean that is true when the variable has been introduced with let-mutable *)
 type rec_binding   = (ident * lid * delta_depth)          (* name bound by recursive type and top-level let-bindings definitions only *)
@@ -71,7 +73,7 @@ type env = {
   curmodule:            option<lident>;                   (* name of the module being desugared *)
   curmonad:             option<ident>;                    (* current monad being desugared *)
   modules:              list<(lident * modul)>;           (* previously desugared modules *)
-  scope_mods:           list<scope_mod>;                  (* toplevel or definition-local scope modifiers *)
+  scope_mods:           list<scope_mod>;                  (* a STACK of toplevel or definition-local scope modifiers *)
   exported_ids:         BU.smap<exported_id_set>;         (* identifiers (stored as strings for efficiency)
                                                              reachable in a module, not shadowed by "include"
                                                              declarations. Used only to handle such shadowings,
@@ -280,7 +282,7 @@ let try_lookup_id''
         when check_rec_binding_id r ->
         k_rec_binding r
 
-      | Open_module_or_namespace (ns, _) ->
+      | Open_module_or_namespace (ns, Open_module) ->
         find_in_module_with_includes eikind find_in_module Cont_ignore env ns id
 
       | Top_level_def id'
@@ -387,7 +389,7 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
 let fail_if_curmodule env ns_original ns_resolved =
   if lid_equals ns_resolved (current_module env)
   then
-    if lid_equals ns_resolved FStar.Syntax.Const.prims_lid
+    if lid_equals ns_resolved Const.prims_lid
     then () // disable this check for Prims, because of Prims.unit, etc.
     else raise (Error (BU.format1 "Reference %s to current module is forbidden (see GitHub issue #451)" ns_original.str, range_of_lid ns_original))
   else ()
@@ -501,7 +503,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         begin match se.sigel with
           | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false))
           | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false))
-          | Sig_let((_, lbs), _, _) ->
+          | Sig_let((_, lbs), _) ->
             let fv = lb_fv lbs source_lid in
             Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false))
           | Sig_declare_typ(lid, _, _) ->
@@ -510,7 +512,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
                  let dd = if U.is_primop_lid lid
-                          || (ns_of_lid_equals lid FStar.Syntax.Const.prims_lid && quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+                          || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
@@ -607,7 +609,7 @@ let try_lookup_module env path =
 
 let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
-      | ({ sigel = Sig_let((_, lbs), _, _) }, _) ->
+      | ({ sigel = Sig_let((_, lbs), _) }, _) ->
         let fv = lb_fv lbs lid in
         Some (fvar lid fv.fv_delta fv.fv_qual)
       | _ -> None in
@@ -615,7 +617,7 @@ let try_lookup_let env (lid:lident) =
 
 let try_lookup_definition env (lid:lident) =
     let k_global_def lid = function
-      | ({ sigel = Sig_let(lbs, _, _) }, _) ->
+      | ({ sigel = Sig_let(lbs, _) }, _) ->
         BU.find_map (snd lbs) (fun lb ->
             match lb.lbname with
                 | Inr fv when S.fv_eq_lid fv lid ->
@@ -1001,7 +1003,7 @@ let finish env modul =
       if List.contains Private quals
       then BU.smap_remove (sigmap env) lid.str
 
-    | Sig_let((_,lbs), _, _) ->
+    | Sig_let((_,lbs), _) ->
       if List.contains Private quals
       || List.contains Abstract quals
       then begin
@@ -1094,21 +1096,19 @@ let finish_module_or_interface env modul =
 
 let prepare_module_or_interface intf admitted env mname = (* AR: open the pervasives namespace *)
   let prep env =
-    (* These automatically-prepended directives must be kept in sync with [dep.fs]. *)
-    let open_ns =
-      if lid_equals mname Const.prims_lid then
-        []
-      else if starts_with "FStar." (text_of_lid mname) then
-        [ Const.prims_lid; Const.pervasives_lid; Const.fstar_ns_lid ]
-      else
-        [ Const.prims_lid; Const.pervasives_lid; Const.st_lid; Const.all_lid; Const.fstar_ns_lid ]
+    let filename = BU.strcat (text_of_lid mname) ".fst" in
+    let auto_open = FStar.Parser.Dep.hard_coded_dependencies filename in
+    let auto_open =
+      let convert_kind = function
+      | FStar.Parser.Dep.Open_namespace -> Open_namespace
+      | FStar.Parser.Dep.Open_module -> Open_module
+      in
+      List.map (fun (lid, kind) -> (lid, convert_kind kind)) auto_open
     in
-    let open_ns =
-      // JP: auto-deps is not aware of that. Fix it once [universes] is the default.
-      if List.length mname.ns <> 0
-      then let ns = Ident.lid_of_ids mname.ns in
-           ns::open_ns //the namespace of the current module, if any, is implicitly in scope
-      else open_ns in
+    let namespace_of_module = if List.length mname.ns > 0 then [ (lid_of_ids mname.ns, Open_namespace) ] else [] in
+    (* [scope_mods] is a stack, so reverse the order *)
+    let auto_open = List.rev (auto_open @ namespace_of_module) in
+
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
     let () = BU.smap_add env.exported_ids mname.str (exported_id_set_new ()) in
     (* Create new empty set of transitively exported identifiers for the current module, for 'include' *)
@@ -1118,7 +1118,7 @@ let prepare_module_or_interface intf admitted env mname = (* AR: open the pervas
     {
       env with curmodule=Some mname;
       sigmap=env.sigmap;
-      scope_mods = List.map (fun lid -> Open_module_or_namespace (lid, Open_namespace)) open_ns;
+      scope_mods = List.map (fun x -> Open_module_or_namespace x) auto_open;
       iface=intf;
       admitted_iface=admitted }
   in

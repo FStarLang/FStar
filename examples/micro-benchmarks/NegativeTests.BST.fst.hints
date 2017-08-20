@@ -40,9 +40,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Pervasives.option_haseq",
+        "assumption_FStar.Pervasives.Native.option_haseq",
         "assumption_Prims.HasEq_int",
-        "haseqNegativeTests.BST_Tm_refine_9f48321d21f76681b2293999125b5267",
+        "haseqNegativeTests.BST_Tm_refine_7b1de022dd98e3cefdde3a41e40ebd18",
         "int_inversion", "kinding_NegativeTests.BST.tree@tok"
       ],
       0
@@ -78,14 +78,6 @@
     [
       "NegativeTests.BST.__proj__Node__item__left",
       1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "NegativeTests.BST.__proj__Node__item__left",
-      2,
       2,
       1,
       [
@@ -139,8 +131,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "data_elim_NegativeTests.BST.Node",
-        "disc_equation_NegativeTests.BST.Node", "disc_equation_Prims.None",
-        "int_inversion", "proj_equation_NegativeTests.BST.Node_l",
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_NegativeTests.BST.Node", "int_inversion",
+        "proj_equation_NegativeTests.BST.Node_l",
         "proj_equation_NegativeTests.BST.Node_left",
         "proj_equation_NegativeTests.BST.Node_n",
         "proj_equation_NegativeTests.BST.Node_r",
@@ -151,7 +144,7 @@
         "projection_inverse_NegativeTests.BST.Node_r",
         "projection_inverse_NegativeTests.BST.Node_right",
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4",
-        "refinement_interpretation_NegativeTests.BST_Tm_refine_96da7bad5ebe66e395a507d441709378"
+        "refinement_interpretation_NegativeTests.BST_Tm_refine_9f48321d21f76681b2293999125b5267"
       ],
       0
     ],
@@ -161,10 +154,10 @@
       2,
       1,
       [
-        "@query", "constructor_distinct_FStar.Pervasives.None",
-        "disc_equation_FStar.Pervasives.None",
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.None_a"
+        "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0
     ],
@@ -175,12 +168,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Pervasives.None",
-        "constructor_distinct_FStar.Pervasives.Some",
-        "disc_equation_FStar.Pervasives.None", "int_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.None_a"
+        "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0
     ],
@@ -191,13 +184,22 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Pervasives.Some",
-        "disc_equation_FStar.Pervasives.None", "int_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0"
       ],
       0
     ],
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
     null,
     null,
     null

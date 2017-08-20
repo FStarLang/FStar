@@ -15,6 +15,7 @@
 *)
 #light "off"
 module FStar.Main
+open FStar.ST
 open FStar.All
 open FStar.Util
 open FStar.Getopt
@@ -138,6 +139,7 @@ let go _ =
               Parser.Dep.VerifyFigureItOut
           in
           let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
+          Tactics.Load.load_tactics (Options.load ());
           let fmods, dsenv, env = Universal.batch_mode_tc filenames in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
@@ -155,13 +157,13 @@ let main () =
     exit 0
   with | e ->
     let trace = Util.trace_of_exn e in
-    (begin
-        if FStar.Errors.handleable e then FStar.Errors.err_exn e;
-        if (Options.trace_error()) then
-          Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
-        else if not (FStar.Errors.handleable e) then
-          Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
-     end;
-     cleanup();
-     report_errors [];
-     exit 1)
+    begin
+      if FStar.Errors.handleable e then FStar.Errors.err_exn e;
+      if (Options.trace_error()) then
+        Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) trace
+      else if not (FStar.Errors.handleable e) then
+        Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e)
+    end;
+    cleanup();
+    report_errors [];
+    exit 1

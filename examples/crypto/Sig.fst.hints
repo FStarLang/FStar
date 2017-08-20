@@ -1,5 +1,5 @@
 [
-  "8¡G¸\u0003ƒÆË+î\u000fÄEcØc",
+  "I ¾Î|uÞ‹\u0019PËðõªÉý",
   [
     [
       "Sig.sig_t",
@@ -57,15 +57,47 @@
       0
     ],
     [ "Sig.__proj__Entry__item__m", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Sig.sign", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Sig.sign",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Heap.trivial_preorder", "true_interp" ],
+      0
+    ],
+    [
+      "Sig.sign",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Sig.sign",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
     [
       "Sig.verify",
       1,
       2,
       2,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_FStar.Pervasives.Some",
-        "data_elim_Sig.Entry", "disc_equation_FStar.Pervasives.Some",
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_FStar.Pervasives.Native.Some", "data_elim_Sig.Entry",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Platform.Bytes.bytes", "equation_Sig.pk",
         "equation_Sig.pksize", "equation_Sig.sigsize", "equation_Sig.text",
         "fuel_guarded_inversion_Sig.entry", "primitive_Prims.op_AmpAmp",
@@ -102,6 +134,18 @@
     [
       "Sig.verify",
       4,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Sig.verify",
+      5,
       2,
       1,
       [

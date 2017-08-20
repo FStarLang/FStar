@@ -16,6 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Subst
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -25,7 +26,7 @@ open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Ident
 module U = FStar.Util
-
+module S = FStar.Syntax.Syntax
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -73,14 +74,14 @@ let compose_subst s1 s2 =
 //composing it with any other delayed substitution that may already be there
 let delay t s =
  match t.n with
- | Tm_delayed(Inl(t', s'), m) ->
+ | Tm_delayed((t', s'), m) ->
     //s' is the subsitution already associated with this node;
     //s is the new subsitution to add to it
     //compose substitutions by concatenating them
     //the order of concatenation is important!
-    mk_Tm_delayed (Inl (t', compose_subst s' s)) t.pos
+    mk_Tm_delayed ((t', compose_subst s' s)) t.pos
  | _ ->
-    mk_Tm_delayed (Inl (t, s)) t.pos
+    mk_Tm_delayed ((t, s)) t.pos
 
 (*
     force_uvar' (t:term)
@@ -92,7 +93,7 @@ let rec force_uvar' t =
   | Tm_uvar (uv,_) ->
       begin
         match Unionfind.find uv with
-          | Fixed t' -> force_uvar' t'
+          | Some t' -> force_uvar' t'
           | _ -> t
       end
   | _ -> t
@@ -106,22 +107,17 @@ let force_uvar t =
   else delay t' ([], Some t.pos)
 
 //If a delayed node has already been memoized, then return the memo
-//Otherwise, if it contains a thunk, force the thunk
 //THIS DOES NOT PUSH A SUBSTITUTION UNDER A DELAYED NODE---see push_subst for that
 let rec force_delayed_thunk t = match t.n with
   | Tm_delayed(f, m) ->
     (match !m with
-      | None ->
-        begin match f with
-            | Inr c -> let t' = force_delayed_thunk (c()) in m := Some t'; t'
-            | _ -> t
-        end
+      | None -> t
       | Some t' -> let t' = force_delayed_thunk t' in m := Some t'; t')
   | _ -> t
 
 let rec compress_univ u = match u with
     | U_unif u' ->
-      begin match Unionfind.find u' with
+      begin match Unionfind.univ_find u' with
         | Some u -> compress_univ u
         | _ -> u
       end
@@ -203,15 +199,12 @@ let rec subst' (s:subst_ts) t =
     | Tm_fvar _                          //fvars are never subject to substitution
     | Tm_uvar _ -> tag_with_range t0 s    //uvars are always resolved to closed terms
 
-    | Tm_delayed(Inl(t', s'), m) ->
+    | Tm_delayed((t', s'), m) ->
         //s' is the subsitution already associated with this node;
         //s is the new subsitution to add to it
         //compose substitutions by concatenating them
         //the order of concatenation is important!
-        mk_Tm_delayed (Inl (t', compose_subst s' s)) t.pos
-
-    | Tm_delayed(Inr _, _) ->
-        failwith "Impossible: force_delayed_thunk removes lazy delayed nodes"
+        mk_Tm_delayed ((t', compose_subst s' s)) t.pos
 
     | Tm_bvar a ->
         apply_until_some_then_map (subst_bv a) (fst s) subst_tail t0
@@ -222,7 +215,7 @@ let rec subst' (s:subst_ts) t =
     | Tm_type u ->
         mk (Tm_type (subst_univ (fst s) u)) None (mk_range t0.pos s)
 
-    | _ -> mk_Tm_delayed (Inl(t0, s)) (mk_range t.pos s)
+    | _ -> mk_Tm_delayed ((t0, s)) (mk_range t.pos s)
 
 and subst_flags' s flags =
     flags |> List.map (function
@@ -270,14 +263,7 @@ let subst_arg' s (t, imp) = (subst' s t, imp)
 let subst_args' s = List.map (subst_arg' s)
 let subst_pat' s p : (pat * int) =
     let rec aux n p : (pat * int) = match p.v with
-      | Pat_disj [] -> failwith "Impossible: empty disjunction"
-
       | Pat_constant _ -> p, n
-
-      | Pat_disj(p::ps) ->
-        let p, m = aux n p in
-        let ps = List.map (fun p -> fst (aux n p)) ps in
-        {p with v=Pat_disj(p::ps)}, m
 
       | Pat_cons(fv, pats) ->
         let pats, n = pats |> List.fold_left (fun (pats, n) (p, imp) ->
@@ -303,11 +289,8 @@ let subst_pat' s p : (pat * int) =
   in aux 0 p
 
 let push_subst_lcomp s lopt = match lopt with
-    | None
-    | Some (Inr _) -> lopt
-    | Some (Inl l) ->
-      Some (Inl ({l with res_typ=subst' s l.res_typ;
-                         comp=(fun () -> subst_comp' s (l.comp()))}))
+    | None -> None
+    | Some rc -> Some ({rc with residual_typ = FStar.Util.map_opt rc.residual_typ (subst' s)})
 
 let push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
@@ -375,7 +358,7 @@ let push_subst s t =
                     else subst' s lb.lbdef in
         let lbname = match lb.lbname with
             | Inl x -> Inl ({x with sort=lbt})
-            | Inr fv -> Inr ({fv with fv_name={fv.fv_name with ty=lbt}}) in
+            | Inr fv -> Inr fv in
         {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd}) in
         mk (Tm_let((is_rec, lbs), body))
 
@@ -393,7 +376,7 @@ let push_subst s t =
 let rec compress (t:term) =
     let t = force_delayed_thunk t in
     match t.n with
-    | Tm_delayed(Inl(t, s), memo) ->
+    | Tm_delayed((t, s), memo) ->
         let t' = compress (push_subst s t) in
         Unionfind.update_in_tx memo (Some t');
 //          memo := Some t';
@@ -407,7 +390,7 @@ let rec compress (t:term) =
 let subst s t = subst' ([s], None) t
 let set_use_range r t = subst' ([], Some ({r with def_range=r.use_range})) t
 let subst_comp s t = subst_comp' ([s], None) t
-let closing_subst bs =
+let closing_subst (bs:binders) =
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst
 let open_binders' bs =
    let rec aux bs o = match bs with
@@ -429,68 +412,34 @@ let open_comp (bs:binders) t =
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
 
-
 let open_pat (p:pat) : pat * subst_t =
-    let rec aux_disj sub renaming p =
+    let rec open_pat_aux sub renaming p =
         match p.v with
-           | Pat_disj _ -> failwith "impossible"
+        | Pat_constant _ -> p, sub, renaming
 
-           | Pat_constant _ -> p
+        | Pat_cons(fv, pats) ->
+            let pats, sub, renaming = pats |> List.fold_left (fun (pats, sub, renaming) (p, imp) ->
+                let p, sub, renaming = open_pat_aux sub renaming p in
+                ((p,imp)::pats, sub, renaming)) ([], sub, renaming) in
+            {p with v=Pat_cons(fv, List.rev pats)}, sub, renaming
 
-           | Pat_cons(fv, pats) ->
-             {p with v=Pat_cons(fv, pats |> List.map (fun (p, b) ->
-                       aux_disj sub renaming p, b))}
+        | Pat_var x ->
+            let x' = {freshen_bv x with sort=subst sub x.sort} in
+            let sub = DB(0, x')::shift_subst 1 sub in
+            {p with v=Pat_var x'}, sub, (x,x')::renaming
 
-           | Pat_var x ->
-             let yopt = U.find_map renaming (function
-                    | (x', y) when (x.ppname.idText=x'.ppname.idText) -> Some y
-                    | _ -> None) in
-             let y = match yopt with
-                | None -> {freshen_bv x with sort=subst sub x.sort}
-                | Some y -> y in
-             {p with v=Pat_var y}
+        | Pat_wild x ->
+            let x' = {freshen_bv x with sort=subst sub x.sort} in
+            let sub = DB(0, x')::shift_subst 1 sub in
+            {p with v=Pat_wild x'}, sub, (x,x')::renaming
 
-           | Pat_wild x ->
-             let x' = {freshen_bv x with sort=subst sub x.sort} in
-             {p with v=Pat_wild x'}
+        | Pat_dot_term(x, t0) ->
+            let x = {x with sort=subst sub x.sort} in
+            let t0 = subst sub t0 in
+            {p with v=Pat_dot_term(x, t0)}, sub, renaming //these are not in scope, so don't shift the index
+    in
 
-           | Pat_dot_term(x, t0) ->
-             let x = {x with sort=subst sub x.sort} in
-             let t0 = subst sub t0 in
-             {p with v=Pat_dot_term(x, t0)} in
-
-    let rec aux sub renaming p = match p.v with
-       | Pat_disj [] -> failwith "Impossible: empty disjunction"
-
-       | Pat_constant _ -> p, sub, renaming
-
-       | Pat_disj(p::ps) ->
-         let p, sub, renaming = aux sub renaming p in
-         let ps = List.map (aux_disj sub renaming) ps in
-         {p with v=Pat_disj(p::ps)}, sub, renaming
-
-       | Pat_cons(fv, pats) ->
-         let pats, sub, renaming = pats |> List.fold_left (fun (pats, sub, renaming) (p, imp) ->
-             let p, sub, renaming = aux sub renaming p in
-             ((p,imp)::pats, sub, renaming)) ([], sub, renaming) in
-         {p with v=Pat_cons(fv, List.rev pats)}, sub, renaming
-
-       | Pat_var x ->
-         let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, x')::shift_subst 1 sub in
-         {p with v=Pat_var x'}, sub, (x,x')::renaming
-
-       | Pat_wild x ->
-         let x' = {freshen_bv x with sort=subst sub x.sort} in
-         let sub = DB(0, x')::shift_subst 1 sub in
-         {p with v=Pat_wild x'}, sub, (x,x')::renaming
-
-       | Pat_dot_term(x, t0) ->
-         let x = {x with sort=subst sub x.sort} in
-         let t0 = subst sub t0 in
-         {p with v=Pat_dot_term(x, t0)}, sub, renaming in //these are not in scope, so don't shift the index
-
-    let p, sub, _ = aux [] [] p in
+    let p, sub, _ = open_pat_aux [] [] p in
     p, sub
 
 let open_branch (p, wopt, e) =
@@ -519,14 +468,7 @@ let close_lcomp (bs:binders) lc =
 
 let close_pat p =
     let rec aux sub p = match p.v with
-       | Pat_disj [] -> failwith "Impossible: empty disjunction"
-
        | Pat_constant _ -> p, sub
-
-       | Pat_disj(p::ps) ->
-         let p, sub = aux sub p in
-         let ps = List.map (fun p -> fst (aux sub p)) ps in
-         {p with v=Pat_disj(p::ps)}, sub
 
        | Pat_cons(fv, pats) ->
          let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) ->
@@ -560,10 +502,12 @@ let close_branch (p, wopt, e) =
 
 let univ_var_opening (us:univ_names) =
     let n = List.length us - 1 in
-    let s, us' = us |> List.mapi (fun i u ->
-        let u' = Syntax.new_univ_name (Some u.idRange) in
-        UN(n - i, U_name u'), u') |> List.unzip in
-    s, us'
+    let s = us |> List.mapi (fun i u -> UN(n - i, U_name u)) in
+    s, us
+
+let univ_var_closing (us:univ_names) =
+    let n = List.length us - 1 in
+    us |> List.mapi (fun i u -> UD(u, n - i))
 
 let open_univ_vars  (us:univ_names) (t:term)  : univ_names * term =
     let s, us' = univ_var_opening us in
@@ -575,8 +519,7 @@ let open_univ_vars_comp (us:univ_names) (c:comp) : univ_names * comp =
     us', subst_comp s c
 
 let close_univ_vars (us:univ_names) (t:term) : term =
-    let n = List.length us - 1 in
-    let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
+    let s = univ_var_closing us in
     subst s t
 
 let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
@@ -609,7 +552,6 @@ let open_let_rec lbs (t:term) =
          let lbs = lbs |> List.map (fun lb ->
               let _, us, u_let_rec_opening =
                   List.fold_right (fun u (i, us, out) ->
-                    let u = Syntax.new_univ_name None in
                     i+1, u::us, UN(i, U_name u)::out)
                   lb.lbunivs (n_let_recs, [], let_rec_opening) in
              {lb with lbunivs=us; lbdef=subst u_let_rec_opening lb.lbdef}) in
@@ -643,3 +585,5 @@ let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
 let opening_of_binders (bs:binders) =
   let n = List.length bs - 1 in
   bs |> List.mapi (fun i (x, _) -> DB(n - i, x))
+
+let closing_of_binders (bs:binders) = closing_subst bs

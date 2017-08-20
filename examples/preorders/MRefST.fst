@@ -1,6 +1,6 @@
 module MRefST
 
-open Preorder
+open FStar.Preorder
 open MRefHeap
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,10 +41,10 @@ reifiable reflectable total new_effect {
 (* Swapping the reference and heap arguments of (NatHeap.contains) to
    use it in point-free style in calls to (witness) and (recall). *)
 
-let contains (#a:Type) (#r:relation a{preorder r}) (m:mref a r) (h:heap) = contains h m
+let contains (#a:Type) (#r:preorder a) (m:mref a r) (h:heap) = contains h m
 
 val contains_lemma : #a:Type ->
-                     #r:relation a{preorder r} ->
+                     #r:preorder a ->
                      h:heap ->
 		     m:mref a r ->
 		     Lemma (requires (contains m h))
@@ -57,7 +57,7 @@ let contains_lemma #a #r h m = ()
 
 let heap_rel (h0:heap) (h1:heap) =
   (forall a r (m:mref a r) . contains m h0  ==> contains m h1) /\
-  (forall a (r:relation a{preorder r}) (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))
+  (forall a (r:preorder a) (m:mref a r{contains m h0}) . r (sel h0 m) (sel h1 m))
 
 
 (* *************************************************** *)
@@ -81,7 +81,7 @@ let ist_wp   (state:Type) (a:Type) = ist_post state a -> Tot (ist_pre state)
 
 (* Pure is a sub-effect/sub-monad of the allocated references instance of the preorder-indexed monad. *)
 
-unfold let lift_pure_istate (state:Type) (rel:relation state{preorder rel})
+unfold let lift_pure_istate (state:Type) (rel:preorder state)
                            (a:Type) (wp:pure_wp a) (s:state) (p:ist_post state a) = wp (fun x -> p (x, s))
 sub_effect PURE ~> ISTATE = lift_pure_istate heap heap_rel
 
@@ -105,13 +105,13 @@ let ist_put x = ISTATE?.put x
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 
-assume type ist_witnessed : (p:predicate heap{stable heap_rel p}) -> Type0
+assume type ist_witnessed : (p:predicate heap{stable p heap_rel}) -> Type0
 
-assume val ist_witness : p:predicate heap{stable heap_rel p} ->
+assume val ist_witness : p:predicate heap{stable p heap_rel} ->
 		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
 (* Justified by the metatheory of pre-order indexed state monads *)
-assume val ist_recall :  p:predicate heap{stable heap_rel p} ->
+assume val ist_recall :  p:predicate heap{stable p heap_rel} ->
 		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 
@@ -119,7 +119,7 @@ assume val ist_recall :  p:predicate heap{stable heap_rel p} ->
 
 (* References. *)
 
-type mref (a:Type) (r:relation a{preorder r}) = m:mref a r{ist_witnessed (contains m)}
+type mref (a:Type) (r:preorder a) = m:mref a r{ist_witnessed (contains m)}
 
 
 (* Pre- and postconditions for the allocated references instance of IST. *)
@@ -141,7 +141,7 @@ effect MRefST (a:Type)
 (* Allocation, reading and writing operations. *)
 
 val alloc : #a:Type ->
-            r:relation a{preorder r} ->
+            r:preorder a ->
 	    x:a ->
 	    MRefST (mref a r) (fun _       -> True)
                               (fun h0 m h1 -> ~(contains m h0) /\
@@ -156,7 +156,7 @@ let alloc #a r x =
 
 
 val read : #a:Type ->
-           #r:relation a{preorder r} ->
+           #r:preorder a ->
 	   m:mref a r ->
 	   MRefST a (fun _      -> True)
                     (fun h0 x h1 -> h0 == h1 /\
@@ -169,7 +169,7 @@ let read #a #r m =
 
 
 val write : #a:Type ->
-            #r:relation a{preorder r} ->
+            #r:preorder a ->
 	    m:mref a r ->
 	    x:a ->
 	    MRefST unit (fun h0      -> contains m h0 /\
@@ -185,19 +185,19 @@ let write #a #r m x =
 
 (* Stability property on heaps for monotonic references. *)
 
-let stable_on_heap_aux (#a:Type) (#r:relation a{preorder r}) (m:mref a r) (p:predicate heap) (h0:heap) (h1:heap) =
+let stable_on_heap_aux (#a:Type) (#r:preorder a) (m:mref a r) (p:predicate heap) (h0:heap) (h1:heap) =
   p h0 /\
   (contains m h0 ==> contains m h1 /\ r (sel h0 m) (sel h1 m))
   ==>
   p h1
 
 
-let stable_on_heap (#a:Type) (#r:relation a{preorder r}) (m:mref a r) (p:predicate heap) =
+let stable_on_heap (#a:Type) (#r:preorder a) (m:mref a r) (p:predicate heap) =
   forall h0 h1 . stable_on_heap_aux m p h0 h1
 
 
 val stable_on_heap_stable : #a:Type ->
-                            #r:relation a{preorder r} ->
+                            #r:preorder a ->
 			    m:mref a r ->
 			    p:predicate heap ->
 			    Lemma (requires (True))
@@ -205,14 +205,14 @@ val stable_on_heap_stable : #a:Type ->
 				               stable_on_heap_aux m p h0 h1
 					       ==>
 					       (p h0 /\ heap_rel h0 h1 ==> p h1)))
-		            [SMTPat (stable_on_heap m p); SMTPat (stable heap_rel p)]
+		            [SMTPat (stable_on_heap m p); SMTPat (stable p heap_rel)]
 let stable_on_heap_stable #a #r m p = ()
 
 
 (* Witnessing and recalling operations. *)
 
 val witness : #a:Type ->
-              #r:relation a{preorder r} ->
+              #r:preorder a ->
 	      m:mref a r ->
 	      p:predicate heap{stable_on_heap m p} ->
 	      MRefST unit (fun h0      -> p h0)
@@ -223,7 +223,7 @@ let witness #a #r m p =
 
 
 val recall : #a:Type ->
-             #r:relation a{preorder r} ->
+             #r:preorder a ->
 	     m:mref a r ->
 	     p:predicate heap{stable_on_heap m p} ->
 	     MRefST unit (fun h0      -> ist_witnessed p)

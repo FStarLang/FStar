@@ -1,5 +1,6 @@
 #light "off"
 module FStar.Parser.Dep
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Parser
@@ -29,9 +30,15 @@ type map = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
+type open_kind = | Open_module | Open_namespace
+
 val lowercase_module_name : string -> string
 
 val build_map : list<string> -> map
+
+(* Given a filename, returns the list of automatically opened modules
+and namespaces *)
+val hard_coded_dependencies : string -> list<(lident * open_kind)>
 
 val collect : verify_mode -> list<string> -> list<(string * list<string>)> * list<string> * BU.smap<(list<string> * color)>
 
