@@ -1,4 +1,4 @@
-module FStar.Pointer
+module FStar.Pointer.Base
 
 module DM = FStar.DependentMap
 module HH = FStar.HyperHeap
@@ -3649,12 +3649,6 @@ let loc_includes_union_l s1 s2 s =
     (fun _ -> loc_includes_trans u12 s2 s)
 
 #reset-options "--z3rlimit 32"
-
-let loc_includes_union_assoc_r2l s1 s2 s3 s =
-  loc_includes_trans (loc_union (loc_union s1 s2) s3) (loc_union s1 (loc_union s2 s3)) s
-
-let loc_includes_union_assoc_l2r s1 s2 s3 s =
-  loc_includes_trans (loc_union s1 (loc_union s2 s3)) (loc_union (loc_union s1 s2) s3) s
 
 let loc_includes_none s = ()
 
