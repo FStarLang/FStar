@@ -224,7 +224,7 @@ let validate_one_more #t p n buf off off' h =
 // TODO: get this to extract in validate_many_st (even unfold doesn't work,
 // though it at least gets to an error "todo: translate_expr [MLE_App]")
 //unfold
-inline_for_extraction [@"substitute"]
+[@"substitute"]
 val for_readonly :
   #t:Type0 ->
   init:t ->
