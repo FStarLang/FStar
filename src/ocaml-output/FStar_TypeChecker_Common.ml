@@ -1,5 +1,6 @@
 open Prims
 type rel =
+<<<<<<< HEAD
   | EQ 
   | SUB 
   | SUBINV 
@@ -8,6 +9,16 @@ let uu___is_EQ : rel -> Prims.bool =
 let uu___is_SUB : rel -> Prims.bool =
   fun projectee  -> match projectee with | SUB  -> true | uu____10 -> false 
 let uu___is_SUBINV : rel -> Prims.bool =
+=======
+  | EQ
+  | SUB
+  | SUBINV
+let (uu___is_EQ :rel -> Prims.bool)=
+  fun projectee  -> match projectee with | EQ  -> true | uu____5 -> false
+let (uu___is_SUB :rel -> Prims.bool)=
+  fun projectee  -> match projectee with | SUB  -> true | uu____10 -> false
+let (uu___is_SUBINV :rel -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with | SUBINV  -> true | uu____15 -> false
   
@@ -20,6 +31,7 @@ type ('a,'b) problem =
   element: 'b FStar_Pervasives_Native.option ;
   logical_guard:
     (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+<<<<<<< HEAD
       FStar_Pervasives_Native.tuple2
     ;
   scope: FStar_Syntax_Syntax.binders ;
@@ -27,6 +39,14 @@ type ('a,'b) problem =
   loc: FStar_Range.range ;
   rank: Prims.int FStar_Pervasives_Native.option }
 let __proj__Mkproblem__item__pid : 'a 'b . ('a,'b) problem -> Prims.int =
+=======
+      FStar_Pervasives_Native.tuple2;
+  scope: FStar_Syntax_Syntax.binders;
+  reason: Prims.string Prims.list;
+  loc: FStar_Range.range;
+  rank: Prims.int FStar_Pervasives_Native.option;}
+let __proj__Mkproblem__item__pid : 'a 'b . ('a,'b) problem -> Prims.int=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -34,8 +54,12 @@ let __proj__Mkproblem__item__pid : 'a 'b . ('a,'b) problem -> Prims.int =
         logical_guard = __fname__logical_guard; scope = __fname__scope;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__pid
+<<<<<<< HEAD
   
 let __proj__Mkproblem__item__lhs : 'a 'b . ('a,'b) problem -> 'a =
+=======
+let __proj__Mkproblem__item__lhs : 'a 'b . ('a,'b) problem -> 'a=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -43,8 +67,12 @@ let __proj__Mkproblem__item__lhs : 'a 'b . ('a,'b) problem -> 'a =
         logical_guard = __fname__logical_guard; scope = __fname__scope;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__lhs
+<<<<<<< HEAD
   
 let __proj__Mkproblem__item__relation : 'a 'b . ('a,'b) problem -> rel =
+=======
+let __proj__Mkproblem__item__relation : 'a 'b . ('a,'b) problem -> rel=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -52,8 +80,12 @@ let __proj__Mkproblem__item__relation : 'a 'b . ('a,'b) problem -> rel =
         logical_guard = __fname__logical_guard; scope = __fname__scope;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__relation
+<<<<<<< HEAD
   
 let __proj__Mkproblem__item__rhs : 'a 'b . ('a,'b) problem -> 'a =
+=======
+let __proj__Mkproblem__item__rhs : 'a 'b . ('a,'b) problem -> 'a=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -61,9 +93,14 @@ let __proj__Mkproblem__item__rhs : 'a 'b . ('a,'b) problem -> 'a =
         logical_guard = __fname__logical_guard; scope = __fname__scope;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__rhs
+<<<<<<< HEAD
   
 let __proj__Mkproblem__item__element :
   'a 'b . ('a,'b) problem -> 'b FStar_Pervasives_Native.option =
+=======
+let __proj__Mkproblem__item__element :
+  'a 'b . ('a,'b) problem -> 'b FStar_Pervasives_Native.option=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -71,13 +108,15 @@ let __proj__Mkproblem__item__element :
         logical_guard = __fname__logical_guard; scope = __fname__scope;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__element
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let __proj__Mkproblem__item__logical_guard :
   'a 'b .
     ('a,'b) problem ->
       (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-        FStar_Pervasives_Native.tuple2
-  =
+        FStar_Pervasives_Native.tuple2=
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -85,9 +124,14 @@ let __proj__Mkproblem__item__logical_guard :
         logical_guard = __fname__logical_guard; scope = __fname__scope;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__logical_guard
+<<<<<<< HEAD
   
 let __proj__Mkproblem__item__scope :
   'a 'b . ('a,'b) problem -> FStar_Syntax_Syntax.binders =
+=======
+let __proj__Mkproblem__item__scope :
+  'a 'b . ('a,'b) problem -> FStar_Syntax_Syntax.binders=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -95,9 +139,14 @@ let __proj__Mkproblem__item__scope :
         logical_guard = __fname__logical_guard; scope = __fname__scope;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__scope
+<<<<<<< HEAD
   
 let __proj__Mkproblem__item__reason :
   'a 'b . ('a,'b) problem -> Prims.string Prims.list =
+=======
+let __proj__Mkproblem__item__reason :
+  'a 'b . ('a,'b) problem -> Prims.string Prims.list=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -105,9 +154,14 @@ let __proj__Mkproblem__item__reason :
         logical_guard = __fname__logical_guard; scope = __fname__scope;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__reason
+<<<<<<< HEAD
   
 let __proj__Mkproblem__item__loc :
   'a 'b . ('a,'b) problem -> FStar_Range.range =
+=======
+let __proj__Mkproblem__item__loc :
+  'a 'b . ('a,'b) problem -> FStar_Range.range=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -115,9 +169,14 @@ let __proj__Mkproblem__item__loc :
         logical_guard = __fname__logical_guard; scope = __fname__scope;
         reason = __fname__reason; loc = __fname__loc; rank = __fname__rank;_}
         -> __fname__loc
+<<<<<<< HEAD
   
 let __proj__Mkproblem__item__rank :
   'a 'b . ('a,'b) problem -> Prims.int FStar_Pervasives_Native.option =
+=======
+let __proj__Mkproblem__item__rank :
+  'a 'b . ('a,'b) problem -> Prims.int FStar_Pervasives_Native.option=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { pid = __fname__pid; lhs = __fname__lhs; relation = __fname__relation;
@@ -127,6 +186,7 @@ let __proj__Mkproblem__item__rank :
         -> __fname__rank
   
 type prob =
+<<<<<<< HEAD
   | TProb of (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem 
   | CProb of (FStar_Syntax_Syntax.comp,Prims.unit) problem 
 let uu___is_TProb : prob -> Prims.bool =
@@ -158,15 +218,51 @@ let uu___is_NonTrivial : guard_formula -> Prims.bool =
 let __proj__NonTrivial__item___0 :
   guard_formula -> FStar_Syntax_Syntax.formula =
   fun projectee  -> match projectee with | NonTrivial _0 -> _0 
+=======
+  | TProb of (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem
+  | CProb of (FStar_Syntax_Syntax.comp,Prims.unit) problem
+let (uu___is_TProb :prob -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | TProb _0 -> true | uu____509 -> false
+let (__proj__TProb__item___0
+  :prob -> (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem)=
+  fun projectee  -> match projectee with | TProb _0 -> _0
+let (uu___is_CProb :prob -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | CProb _0 -> true | uu____539 -> false
+let (__proj__CProb__item___0
+  :prob -> (FStar_Syntax_Syntax.comp,Prims.unit) problem)=
+  fun projectee  -> match projectee with | CProb _0 -> _0
+type probs = prob Prims.list
+type guard_formula =
+  | Trivial
+  | NonTrivial of FStar_Syntax_Syntax.formula
+let (uu___is_Trivial :guard_formula -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Trivial  -> true | uu____570 -> false
+let (uu___is_NonTrivial :guard_formula -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | NonTrivial _0 -> true | uu____576 -> false
+let (__proj__NonTrivial__item___0
+  :guard_formula -> FStar_Syntax_Syntax.formula)=
+  fun projectee  -> match projectee with | NonTrivial _0 -> _0
+>>>>>>> taramana_pointers_with_codes_modifies
 type deferred = (Prims.string,prob) FStar_Pervasives_Native.tuple2 Prims.list
 type univ_ineq =
   (FStar_Syntax_Syntax.universe,FStar_Syntax_Syntax.universe)
     FStar_Pervasives_Native.tuple2
+<<<<<<< HEAD
 let mk_by_tactic :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
+=======
+let (mk_by_tactic
+  :FStar_Syntax_Syntax.term ->
+     FStar_Syntax_Syntax.term ->
+       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun tac  ->
     fun f  ->
       let t_by_tactic =
@@ -205,11 +301,17 @@ let mk_by_tactic :
           uu____623 :: uu____624  in
         FStar_Syntax_Syntax.mk_Tm_app t_by_tactic uu____622  in
       uu____621 FStar_Pervasives_Native.None FStar_Range.dummyRange
+<<<<<<< HEAD
   
 let rec delta_depth_greater_than :
   FStar_Syntax_Syntax.delta_depth ->
     FStar_Syntax_Syntax.delta_depth -> Prims.bool
   =
+=======
+let rec (delta_depth_greater_than
+  :FStar_Syntax_Syntax.delta_depth ->
+     FStar_Syntax_Syntax.delta_depth -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun l  ->
     fun m  ->
       match (l, m) with
@@ -224,11 +326,17 @@ let rec delta_depth_greater_than :
           delta_depth_greater_than d m
       | (uu____650,FStar_Syntax_Syntax.Delta_abstract d) ->
           delta_depth_greater_than l d
+<<<<<<< HEAD
   
 let rec decr_delta_depth :
   FStar_Syntax_Syntax.delta_depth ->
     FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option
   =
+=======
+let rec (decr_delta_depth
+  :FStar_Syntax_Syntax.delta_depth ->
+     FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu___103_657  ->
     match uu___103_657 with
     | FStar_Syntax_Syntax.Delta_constant  -> FStar_Pervasives_Native.None
@@ -245,6 +353,7 @@ let rec decr_delta_depth :
 type identifier_info =
   {
   identifier:
+<<<<<<< HEAD
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ;
   identifier_ty: FStar_Syntax_Syntax.typ ;
   identifier_range: FStar_Range.range }
@@ -252,38 +361,58 @@ let __proj__Mkidentifier_info__item__identifier :
   identifier_info ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either
   =
+=======
+    (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either;
+  identifier_ty: FStar_Syntax_Syntax.typ;
+  identifier_range: FStar_Range.range;}
+let (__proj__Mkidentifier_info__item__identifier
+  :identifier_info ->
+     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { identifier = __fname__identifier;
         identifier_ty = __fname__identifier_ty;
         identifier_range = __fname__identifier_range;_} ->
         __fname__identifier
+<<<<<<< HEAD
   
 let __proj__Mkidentifier_info__item__identifier_ty :
   identifier_info -> FStar_Syntax_Syntax.typ =
+=======
+let (__proj__Mkidentifier_info__item__identifier_ty
+  :identifier_info -> FStar_Syntax_Syntax.typ)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { identifier = __fname__identifier;
         identifier_ty = __fname__identifier_ty;
         identifier_range = __fname__identifier_range;_} ->
         __fname__identifier_ty
+<<<<<<< HEAD
   
 let __proj__Mkidentifier_info__item__identifier_range :
   identifier_info -> FStar_Range.range =
+=======
+let (__proj__Mkidentifier_info__item__identifier_range
+  :identifier_info -> FStar_Range.range)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { identifier = __fname__identifier;
         identifier_ty = __fname__identifier_ty;
         identifier_range = __fname__identifier_range;_} ->
         __fname__identifier_range
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let insert_col_info :
   'Auu____727 .
     Prims.int ->
       'Auu____727 ->
         (Prims.int,'Auu____727) FStar_Pervasives_Native.tuple2 Prims.list ->
-          (Prims.int,'Auu____727) FStar_Pervasives_Native.tuple2 Prims.list
-  =
+          (Prims.int,'Auu____727) FStar_Pervasives_Native.tuple2 Prims.list=
   fun col  ->
     fun info  ->
       fun col_infos  ->
@@ -298,13 +427,15 @@ let insert_col_info :
         let uu____895 = __insert [] col_infos  in
         match uu____895 with
         | (l,r) -> FStar_List.append (FStar_List.rev l) r
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let find_nearest_preceding_col_info :
   'Auu____962 .
     Prims.int ->
       (Prims.int,'Auu____962) FStar_Pervasives_Native.tuple2 Prims.list ->
-        'Auu____962 FStar_Pervasives_Native.option
-  =
+        'Auu____962 FStar_Pervasives_Native.option=
   fun col  ->
     fun col_infos  ->
       let rec aux out uu___104_1001 =
@@ -323,34 +454,53 @@ type col_info_by_row = id_info_by_col FStar_Util.pimap
 type row_info_by_file = col_info_by_row FStar_Util.psmap
 type id_info_table =
   {
+<<<<<<< HEAD
   id_info_enabled: Prims.bool ;
   id_info_db: row_info_by_file ;
   id_info_buffer: identifier_info Prims.list }
 let __proj__Mkid_info_table__item__id_info_enabled :
   id_info_table -> Prims.bool =
+=======
+  id_info_enabled: Prims.bool;
+  id_info_db: row_info_by_file;
+  id_info_buffer: identifier_info Prims.list;}
+let (__proj__Mkid_info_table__item__id_info_enabled
+  :id_info_table -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { id_info_enabled = __fname__id_info_enabled;
         id_info_db = __fname__id_info_db;
         id_info_buffer = __fname__id_info_buffer;_} ->
         __fname__id_info_enabled
+<<<<<<< HEAD
   
 let __proj__Mkid_info_table__item__id_info_db :
   id_info_table -> row_info_by_file =
+=======
+let (__proj__Mkid_info_table__item__id_info_db
+  :id_info_table -> row_info_by_file)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { id_info_enabled = __fname__id_info_enabled;
         id_info_db = __fname__id_info_db;
         id_info_buffer = __fname__id_info_buffer;_} -> __fname__id_info_db
+<<<<<<< HEAD
   
 let __proj__Mkid_info_table__item__id_info_buffer :
   id_info_table -> identifier_info Prims.list =
+=======
+let (__proj__Mkid_info_table__item__id_info_buffer
+  :id_info_table -> identifier_info Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { id_info_enabled = __fname__id_info_enabled;
         id_info_db = __fname__id_info_db;
         id_info_buffer = __fname__id_info_buffer;_} ->
         __fname__id_info_buffer
+<<<<<<< HEAD
   
 let id_info_table_empty : id_info_table =
   let uu____1087 = FStar_Util.psmap_empty ()  in
@@ -363,6 +513,18 @@ let id_info__insert :
         (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
           FStar_Util.pimap FStar_Util.psmap
   =
+=======
+let (id_info_table_empty :id_info_table)=
+  let uu____1087 = FStar_Util.psmap_empty () in
+  { id_info_enabled = false; id_info_db = uu____1087; id_info_buffer = [] }
+let (id_info__insert
+  :(FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) ->
+     (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2 Prims.list
+       FStar_Util.pimap FStar_Util.psmap ->
+       identifier_info ->
+         (Prims.int,identifier_info) FStar_Pervasives_Native.tuple2
+           Prims.list FStar_Util.pimap FStar_Util.psmap)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ty_map  ->
     fun db  ->
       fun info  ->
@@ -398,12 +560,19 @@ let id_info__insert :
               FStar_All.pipe_right uu____1220 (FStar_Util.pimap_add rows row)
                in
             FStar_All.pipe_right uu____1211 (FStar_Util.psmap_add db fn)
+<<<<<<< HEAD
   
 let id_info_insert :
   id_info_table ->
     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ->
       FStar_Syntax_Syntax.typ -> FStar_Range.range -> id_info_table
   =
+=======
+let (id_info_insert
+  :id_info_table ->
+     (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.fv) FStar_Util.either ->
+       FStar_Syntax_Syntax.typ -> FStar_Range.range -> id_info_table)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun table  ->
     fun id  ->
       fun ty  ->
@@ -417,11 +586,17 @@ let id_info_insert :
             id_info_db = (uu___107_1298.id_info_db);
             id_info_buffer = (info :: (table.id_info_buffer))
           }
+<<<<<<< HEAD
   
 let id_info_insert_bv :
   id_info_table ->
     FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> id_info_table
   =
+=======
+let (id_info_insert_bv
+  :id_info_table ->
+     FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> id_info_table)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun table  ->
     fun bv  ->
       fun ty  ->
@@ -430,11 +605,17 @@ let id_info_insert_bv :
           let uu____1311 = FStar_Syntax_Syntax.range_of_bv bv  in
           id_info_insert table (FStar_Util.Inl bv) ty uu____1311
         else table
+<<<<<<< HEAD
   
 let id_info_insert_fv :
   id_info_table ->
     FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> id_info_table
   =
+=======
+let (id_info_insert_fv
+  :id_info_table ->
+     FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> id_info_table)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun table  ->
     fun fv  ->
       fun ty  ->
@@ -443,8 +624,12 @@ let id_info_insert_fv :
           let uu____1325 = FStar_Syntax_Syntax.range_of_fv fv  in
           id_info_insert table (FStar_Util.Inr fv) ty uu____1325
         else table
+<<<<<<< HEAD
   
 let id_info_toggle : id_info_table -> Prims.bool -> id_info_table =
+=======
+let (id_info_toggle :id_info_table -> Prims.bool -> id_info_table)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun table  ->
     fun enabled  ->
       let uu___108_1335 = table  in
@@ -454,11 +639,17 @@ let id_info_toggle : id_info_table -> Prims.bool -> id_info_table =
         id_info_db = (uu___108_1335.id_info_db);
         id_info_buffer = (uu___108_1335.id_info_buffer)
       }
+<<<<<<< HEAD
   
 let id_info_promote :
   id_info_table ->
     (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> id_info_table
   =
+=======
+let (id_info_promote
+  :id_info_table ->
+     (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> id_info_table)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun table  ->
     fun ty_map  ->
       let uu___109_1350 = table  in
@@ -471,6 +662,7 @@ let id_info_promote :
         id_info_db = uu____1351;
         id_info_buffer = []
       }
+<<<<<<< HEAD
   
 let id_info_at_pos :
   id_info_table ->
@@ -478,6 +670,13 @@ let id_info_at_pos :
       Prims.int ->
         Prims.int -> identifier_info FStar_Pervasives_Native.option
   =
+=======
+let (id_info_at_pos
+  :id_info_table ->
+     Prims.string ->
+       Prims.int ->
+         Prims.int -> identifier_info FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun table  ->
     fun fn  ->
       fun row  ->

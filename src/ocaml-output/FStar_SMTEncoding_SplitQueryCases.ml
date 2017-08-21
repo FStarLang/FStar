@@ -1,4 +1,5 @@
 open Prims
+<<<<<<< HEAD
 let rec get_next_n_ite :
   Prims.int ->
     FStar_SMTEncoding_Term.term ->
@@ -7,6 +8,15 @@ let rec get_next_n_ite :
           (Prims.bool,FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term,
             FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple4
   =
+=======
+let rec (get_next_n_ite
+  :Prims.int ->
+     FStar_SMTEncoding_Term.term ->
+       FStar_SMTEncoding_Term.term ->
+         (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
+           (Prims.bool,FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term,
+             FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple4)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun n1  ->
     fun t  ->
       fun negs  ->
@@ -36,6 +46,7 @@ let rec get_next_n_ite :
                  (false, FStar_SMTEncoding_Util.mkFalse,
                    FStar_SMTEncoding_Util.mkFalse,
                    FStar_SMTEncoding_Util.mkFalse))
+<<<<<<< HEAD
   
 let rec is_ite_all_the_way :
   Prims.int ->
@@ -45,6 +56,15 @@ let rec is_ite_all_the_way :
           (Prims.bool,FStar_SMTEncoding_Term.term Prims.list,FStar_SMTEncoding_Term.term)
             FStar_Pervasives_Native.tuple3
   =
+=======
+let rec (is_ite_all_the_way
+  :Prims.int ->
+     FStar_SMTEncoding_Term.term ->
+       FStar_SMTEncoding_Term.term ->
+         FStar_SMTEncoding_Term.term Prims.list ->
+           (Prims.bool,FStar_SMTEncoding_Term.term Prims.list,FStar_SMTEncoding_Term.term)
+             FStar_Pervasives_Native.tuple3)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun n1  ->
     fun t  ->
       fun negs  ->
@@ -72,6 +92,7 @@ let rec is_ite_all_the_way :
                           uu____176 :: l  in
                         is_ite_all_the_way n1 rest negs' uu____173
                       else (false, [], FStar_SMTEncoding_Util.mkFalse)))
+<<<<<<< HEAD
   
 let rec parse_query_for_split_cases :
   Prims.int ->
@@ -83,6 +104,17 @@ let rec parse_query_for_split_cases :
                       FStar_Pervasives_Native.tuple3)
           FStar_Pervasives_Native.tuple2
   =
+=======
+let rec (parse_query_for_split_cases
+  :Prims.int ->
+     FStar_SMTEncoding_Term.term ->
+       (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
+         (Prims.bool,(FStar_SMTEncoding_Term.term ->
+                        FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term
+                                                      Prims.list,FStar_SMTEncoding_Term.term)
+                       FStar_Pervasives_Native.tuple3)
+           FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun n1  ->
     fun t  ->
       fun f  ->
@@ -136,13 +168,18 @@ let rec parse_query_for_split_cases :
               (((fun uu____452  ->
                    FStar_Util.return_all FStar_SMTEncoding_Util.mkFalse)),
                 [], FStar_SMTEncoding_Util.mkFalse))
+<<<<<<< HEAD
   
 let strip_not : FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
+=======
+let (strip_not :FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     match t.FStar_SMTEncoding_Term.tm with
     | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Not ,hd1::uu____458)
         -> hd1
     | uu____463 -> t
+<<<<<<< HEAD
   
 let handle_query :
   (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term
@@ -150,6 +187,13 @@ let handle_query :
     FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple3 ->
     (FStar_SMTEncoding_Term.decl -> Prims.unit) -> Prims.unit
   =
+=======
+let (handle_query
+  :(FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term
+                                                                 Prims.list,
+     FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple3 ->
+     (FStar_SMTEncoding_Term.decl -> Prims.unit) -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu____484  ->
     fun check  ->
       match uu____484 with

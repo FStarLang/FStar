@@ -210,7 +210,7 @@ and effect_decl =
 type modul =
   | Module of lid * list<decl>
   | Interface of lid * list<decl> * bool (* flag to mark admitted interfaces *)
-type file = list<modul>
+type file = modul
 type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
@@ -415,19 +415,19 @@ let rec extract_named_refinement t1  =
 
 //NS: needed to hoist this to workaround a bootstrapping bug
 //    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
-let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<decl>) : list<modul> =
+let rec as_mlist (cur: (lid * decl) * list<decl>) (ds:list<decl>) : modul =
     let ((m_name, m_decl), cur) = cur in
     match ds with
-    | [] -> List.rev (Module(m_name, m_decl :: List.rev cur)::out)
+    | [] -> Module(m_name, m_decl :: List.rev cur)
     | d :: ds ->
         begin match d.d with
         | TopLevelModule m' ->
-            as_mlist (Module(m_name, m_decl :: List.rev cur)::out) ((m', d), []) ds
+            raise (Error("Unexpected module declaration", d.drange))
         | _ ->
-            as_mlist out ((m_name, m_decl), d::cur) ds
+            as_mlist ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+let as_frag is_light (light_range:Range.range) (ds:list<decl>) : inputFragment =
   let d, ds = match ds with
     | d :: ds -> d, ds
     | [] -> raise Empty_frag
@@ -435,16 +435,8 @@ let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<mo
   match d.d with
   | TopLevelModule m ->
       let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
-      let ms = as_mlist [] ((m,d), []) ds in
-      begin match List.tl ms with
-      | Module (m', _) :: _ ->
-          (* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
-          let msg = "Support for more than one module in a file is deprecated" in
-          print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid m')) msg
-      | _ ->
-          ()
-      end;
-      Inl ms
+      let m = as_mlist ((m,d), []) ds in
+      Inl m
   | _ ->
       let ds = d::ds in
       List.iter (function

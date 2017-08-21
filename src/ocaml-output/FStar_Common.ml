@@ -1,13 +1,23 @@
 open Prims
+<<<<<<< HEAD
 let has_cygpath : Prims.bool =
+=======
+let (has_cygpath :Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   try
     let uu____7 = FStar_Util.run_proc "which" "cygpath" ""  in
     match uu____7 with
     | (uu____14,t_out,uu____16) ->
         (FStar_Util.trim_string t_out) = "/usr/bin/cygpath"
+<<<<<<< HEAD
   with | uu____20 -> false 
 let try_convert_file_name_to_mixed : Prims.string -> Prims.string =
   let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
+=======
+  with | uu____20 -> false
+let (try_convert_file_name_to_mixed :Prims.string -> Prims.string)=
+  let cache = FStar_Util.smap_create (Prims.parse_int "20") in
+>>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     if has_cygpath
     then

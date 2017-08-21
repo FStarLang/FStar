@@ -1,5 +1,6 @@
 open Prims
 type order =
+<<<<<<< HEAD
   | Lt 
   | Eq 
   | Gt 
@@ -16,23 +17,52 @@ let gt : order -> Prims.bool = fun o  -> o = Gt
 let lt : order -> Prims.bool = fun o  -> o = Lt 
 let eq : order -> Prims.bool = fun o  -> o = Eq 
 let lex : order -> (Prims.unit -> order) -> order =
+=======
+  | Lt
+  | Eq
+  | Gt
+let (uu___is_Lt :order -> Prims.bool)=
+  fun projectee  -> match projectee with | Lt  -> true | uu____5 -> false
+let (uu___is_Eq :order -> Prims.bool)=
+  fun projectee  -> match projectee with | Eq  -> true | uu____10 -> false
+let (uu___is_Gt :order -> Prims.bool)=
+  fun projectee  -> match projectee with | Gt  -> true | uu____15 -> false
+let (ge :order -> Prims.bool)= fun o  -> o <> Lt
+let (le :order -> Prims.bool)= fun o  -> o <> Gt
+let (ne :order -> Prims.bool)= fun o  -> o <> Eq
+let (gt :order -> Prims.bool)= fun o  -> o = Gt
+let (lt :order -> Prims.bool)= fun o  -> o = Lt
+let (eq :order -> Prims.bool)= fun o  -> o = Eq
+let (lex :order -> (Prims.unit -> order) -> order)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun o1  ->
     fun o2  ->
       match (o1, o2) with
       | (Lt ,uu____55) -> Lt
       | (Eq ,uu____60) -> o2 ()
       | (Gt ,uu____65) -> Gt
+<<<<<<< HEAD
   
 let order_from_int : Prims.int -> order =
+=======
+let (order_from_int :Prims.int -> order)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun i  ->
     if i < (Prims.parse_int "0")
     then Lt
     else if i = (Prims.parse_int "0") then Eq else Gt
+<<<<<<< HEAD
   
 let compare_int : Prims.int -> Prims.int -> order =
   fun i  -> fun j  -> order_from_int (i - j) 
 let rec compare_list :
   'a . ('a -> 'a -> order) -> 'a Prims.list -> 'a Prims.list -> order =
+=======
+let (compare_int :Prims.int -> Prims.int -> order)=
+  fun i  -> fun j  -> order_from_int (i - j)
+let rec compare_list :
+  'a . ('a -> 'a -> order) -> 'a Prims.list -> 'a Prims.list -> order=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun f  ->
     fun l1  ->
       fun l2  ->

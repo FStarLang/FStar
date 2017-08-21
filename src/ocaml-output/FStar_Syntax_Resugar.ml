@@ -1,19 +1,29 @@
 open Prims
+<<<<<<< HEAD
 let doc_to_string : FStar_Pprint.document -> Prims.string =
   fun doc1  ->
     FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
       (Prims.parse_int "100") doc1
   
 let parser_term_to_string : FStar_Parser_AST.term -> Prims.string =
+=======
+let (doc_to_string :FStar_Pprint.document -> Prims.string)=
+  fun doc1  ->
+    FStar_Pprint.pretty_string (FStar_Util.float_of_string "1.0")
+      (Prims.parse_int "100") doc1
+let (parser_term_to_string :FStar_Parser_AST.term -> Prims.string)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     let uu____9 = FStar_Parser_ToDocument.term_to_document t  in
     doc_to_string uu____9
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let map_opt :
   'a 'b .
     ('a -> 'b FStar_Pervasives_Native.option) ->
-      'a Prims.list -> 'b Prims.list
-  =
+      'a Prims.list -> 'b Prims.list=
   fun f  ->
     fun l  ->
       let uu____43 =
@@ -22,8 +32,12 @@ let map_opt :
           () l
          in
       FStar_Pervasives_Native.snd uu____43
+<<<<<<< HEAD
   
 let bv_as_unique_ident : FStar_Syntax_Syntax.bv -> FStar_Ident.ident =
+=======
+let (bv_as_unique_ident :FStar_Syntax_Syntax.bv -> FStar_Ident.ident)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun x  ->
     let unique_name =
       if
@@ -37,7 +51,10 @@ let bv_as_unique_ident : FStar_Syntax_Syntax.bv -> FStar_Ident.ident =
       else (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText  in
     FStar_Ident.mk_ident
       (unique_name, ((x.FStar_Syntax_Syntax.ppname).FStar_Ident.idRange))
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let filter_imp :
   'Auu____73 .
     ('Auu____73,FStar_Syntax_Syntax.arg_qualifier
@@ -45,18 +62,21 @@ let filter_imp :
       FStar_Pervasives_Native.tuple2 Prims.list ->
       ('Auu____73,FStar_Syntax_Syntax.arg_qualifier
                     FStar_Pervasives_Native.option)
-        FStar_Pervasives_Native.tuple2 Prims.list
-  =
+        FStar_Pervasives_Native.tuple2 Prims.list=
   fun a  ->
     FStar_All.pipe_right a
       (FStar_List.filter
-         (fun uu___182_127  ->
-            match uu___182_127 with
+         (fun uu___186_127  ->
+            match uu___186_127 with
             | (uu____134,FStar_Pervasives_Native.Some
                (FStar_Syntax_Syntax.Implicit uu____135)) -> false
             | uu____138 -> true))
+<<<<<<< HEAD
   
 let label : Prims.string -> FStar_Parser_AST.term -> FStar_Parser_AST.term =
+=======
+let (label :Prims.string -> FStar_Parser_AST.term -> FStar_Parser_AST.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun t  ->
       if s = ""
@@ -64,12 +84,19 @@ let label : Prims.string -> FStar_Parser_AST.term -> FStar_Parser_AST.term =
       else
         FStar_Parser_AST.mk_term (FStar_Parser_AST.Labeled (t, s, true))
           t.FStar_Parser_AST.range FStar_Parser_AST.Un
+<<<<<<< HEAD
   
 let resugar_arg_qual :
   FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
     FStar_Parser_AST.arg_qualifier FStar_Pervasives_Native.option
       FStar_Pervasives_Native.option
   =
+=======
+let (resugar_arg_qual
+  :FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
+     FStar_Parser_AST.arg_qualifier FStar_Pervasives_Native.option
+       FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun q  ->
     match q with
     | FStar_Pervasives_Native.None  ->
@@ -83,11 +110,17 @@ let resugar_arg_qual :
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality ) ->
         FStar_Pervasives_Native.Some
           (FStar_Pervasives_Native.Some FStar_Parser_AST.Equality)
+<<<<<<< HEAD
   
 let resugar_imp :
   FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
     FStar_Parser_AST.imp
   =
+=======
+let (resugar_imp
+  :FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
+     FStar_Parser_AST.imp)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun q  ->
     match q with
     | FStar_Pervasives_Native.None  -> FStar_Parser_AST.Nothing
@@ -97,20 +130,32 @@ let resugar_imp :
         failwith "Not an imp"
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit (true )) ->
         failwith "Not an imp"
+<<<<<<< HEAD
   
 let rec universe_to_int :
   Prims.int ->
     FStar_Syntax_Syntax.universe ->
       (Prims.int,FStar_Syntax_Syntax.universe) FStar_Pervasives_Native.tuple2
   =
+=======
+let rec (universe_to_int
+  :Prims.int ->
+     FStar_Syntax_Syntax.universe ->
+       (Prims.int,FStar_Syntax_Syntax.universe)
+         FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun n1  ->
     fun u  ->
       match u with
       | FStar_Syntax_Syntax.U_succ u1 ->
           universe_to_int (n1 + (Prims.parse_int "1")) u1
       | uu____213 -> (n1, u)
+<<<<<<< HEAD
   
 let universe_to_string : FStar_Ident.ident Prims.list -> Prims.string =
+=======
+let (universe_to_string :FStar_Ident.ident Prims.list -> Prims.string)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun univs1  ->
     let uu____222 = FStar_Options.print_universes ()  in
     if uu____222
@@ -119,10 +164,15 @@ let universe_to_string : FStar_Ident.ident Prims.list -> Prims.string =
          in
       FStar_All.pipe_right uu____223 (FStar_String.concat ", ")
     else ""
+<<<<<<< HEAD
   
 let rec resugar_universe :
   FStar_Syntax_Syntax.universe -> FStar_Range.range -> FStar_Parser_AST.term
   =
+=======
+let rec (resugar_universe
+  :FStar_Syntax_Syntax.universe -> FStar_Range.range -> FStar_Parser_AST.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun u  ->
     fun r  ->
       let mk1 a r1 = FStar_Parser_AST.mk_term a r1 FStar_Parser_AST.Un  in
@@ -189,15 +239,22 @@ let rec resugar_universe :
             FStar_Ident.mk_ident uu____352  in
           mk1 (FStar_Parser_AST.Uvar id) r
       | FStar_Syntax_Syntax.U_unknown  -> mk1 FStar_Parser_AST.Wild r
+<<<<<<< HEAD
   
 let string_to_op :
   Prims.string ->
     (Prims.string,Prims.int) FStar_Pervasives_Native.tuple2
       FStar_Pervasives_Native.option
   =
+=======
+let (string_to_op
+  :Prims.string ->
+     (Prims.string,Prims.int) FStar_Pervasives_Native.tuple2
+       FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
-    let name_of_op uu___183_378 =
-      match uu___183_378 with
+    let name_of_op uu___187_378 =
+      match uu___187_378 with
       | "Amp" -> FStar_Pervasives_Native.Some ("&", (Prims.parse_int "0"))
       | "At" -> FStar_Pervasives_Native.Some ("@", (Prims.parse_int "0"))
       | "Plus" -> FStar_Pervasives_Native.Some ("+", (Prims.parse_int "0"))
@@ -259,12 +316,19 @@ let string_to_op :
                   in
                FStar_Pervasives_Native.Some (op, (Prims.parse_int "0")))
         else FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let rec resugar_term_as_op :
   FStar_Syntax_Syntax.term ->
     (Prims.string,Prims.int) FStar_Pervasives_Native.tuple2
       FStar_Pervasives_Native.option
   =
+=======
+let rec (resugar_term_as_op
+  :FStar_Syntax_Syntax.term ->
+     (Prims.string,Prims.int) FStar_Pervasives_Native.tuple2
+       FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     let infix_prim_ops =
       [(FStar_Parser_Const.op_Addition, "+");
@@ -373,21 +437,33 @@ let rec resugar_term_as_op :
          | uu____906 -> fallback fv)
     | FStar_Syntax_Syntax.Tm_uinst (e,us) -> resugar_term_as_op e
     | uu____919 -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let is_true_pat : FStar_Syntax_Syntax.pat -> Prims.bool =
+=======
+let (is_true_pat :FStar_Syntax_Syntax.pat -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun p  ->
     match p.FStar_Syntax_Syntax.v with
     | FStar_Syntax_Syntax.Pat_constant (FStar_Const.Const_bool (true )) ->
         true
     | uu____928 -> false
+<<<<<<< HEAD
   
 let is_wild_pat : FStar_Syntax_Syntax.pat -> Prims.bool =
+=======
+let (is_wild_pat :FStar_Syntax_Syntax.pat -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun p  ->
     match p.FStar_Syntax_Syntax.v with
     | FStar_Syntax_Syntax.Pat_wild uu____933 -> true
     | uu____934 -> false
+<<<<<<< HEAD
   
 let rec resugar_term : FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
+=======
+let rec (resugar_term :FStar_Syntax_Syntax.term -> FStar_Parser_AST.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     let mk1 a =
       FStar_Parser_AST.mk_term a t.FStar_Syntax_Syntax.pos
@@ -557,11 +633,18 @@ let rec resugar_term : FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                let uu____1195 =
                  FStar_All.pipe_right xs2
                    (map_opt
+<<<<<<< HEAD
                       (fun b  -> resugar_binder b t.FStar_Syntax_Syntax.pos))
                   in
                FStar_All.pipe_right uu____1195 FStar_List.rev  in
              let rec aux body3 uu___184_1214 =
                match uu___184_1214 with
+=======
+                      (fun b  -> resugar_binder b t.FStar_Syntax_Syntax.pos)) in
+               FStar_All.pipe_right uu____1195 FStar_List.rev in
+             let rec aux body3 uu___188_1214 =
+               match uu___188_1214 with
+>>>>>>> taramana_pointers_with_codes_modifies
                | [] -> body3
                | hd1::tl1 ->
                    let body4 = mk1 (FStar_Parser_AST.Product ([hd1], body3))
@@ -588,13 +671,19 @@ let rec resugar_term : FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                FStar_Parser_AST.Refine uu____1249  in
              mk1 uu____1248)
     | FStar_Syntax_Syntax.Tm_app (e,args) ->
-        let rec last1 uu___185_1296 =
-          match uu___185_1296 with
+        let rec last1 uu___189_1296 =
+          match uu___189_1296 with
           | hd1::[] -> [hd1]
           | hd1::tl1 -> last1 tl1
+<<<<<<< HEAD
           | uu____1366 -> failwith "last of an empty list"  in
         let rec last_two uu___186_1402 =
           match uu___186_1402 with
+=======
+          | uu____1366 -> failwith "last of an empty list" in
+        let rec last_two uu___190_1402 =
+          match uu___190_1402 with
+>>>>>>> taramana_pointers_with_codes_modifies
           | [] ->
               failwith
                 "last two elements of a list with less than two elements "
@@ -602,9 +691,15 @@ let rec resugar_term : FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
               failwith
                 "last two elements of a list with less than two elements "
           | a1::a2::[] -> [a1; a2]
+<<<<<<< HEAD
           | uu____1510::t1 -> last_two t1  in
         let rec last_three uu___187_1551 =
           match uu___187_1551 with
+=======
+          | uu____1510::t1 -> last_two t1 in
+        let rec last_three uu___191_1551 =
+          match uu___191_1551 with
+>>>>>>> taramana_pointers_with_codes_modifies
           | [] ->
               failwith
                 "last three elements of a list with less than three elements "
@@ -1149,12 +1244,20 @@ let rec resugar_term : FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                  if uu____3897
                  then FStar_Pervasives_Native.fst
                  else
+<<<<<<< HEAD
                    (fun uu___188_3918  ->
                       match uu___188_3918 with
                       | ((pat,body2),univs1) -> (pat, (label univs1 body2)))
                   in
                FStar_List.map f r  in
              let body2 = resugar_term body1  in
+=======
+                   (fun uu___192_3918  ->
+                      match uu___192_3918 with
+                      | ((pat,body2),univs1) -> (pat, (label univs1 body2))) in
+               FStar_List.map f r in
+             let body2 = resugar_term body1 in
+>>>>>>> taramana_pointers_with_codes_modifies
              mk1
                (FStar_Parser_AST.Let
                   ((if is_rec
@@ -1168,8 +1271,8 @@ let rec resugar_term : FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
           Prims.strcat "?u" uu____3985  in
         let uu____3987 = mk1 FStar_Parser_AST.Wild  in label s uu____3987
     | FStar_Syntax_Syntax.Tm_meta (e,m) ->
-        let resugar_meta_desugared uu___189_3997 =
-          match uu___189_3997 with
+        let resugar_meta_desugared uu___193_3997 =
+          match uu___193_3997 with
           | FStar_Syntax_Syntax.Data_app  ->
               let rec head_fv_universes_args h =
                 let uu____4018 =
@@ -1351,8 +1454,12 @@ let rec resugar_term : FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                FStar_Parser_AST.Ascribed uu____4680  in
              mk1 uu____4679)
     | FStar_Syntax_Syntax.Tm_unknown  -> mk1 FStar_Parser_AST.Wild
+<<<<<<< HEAD
 
 and resugar_comp : FStar_Syntax_Syntax.comp -> FStar_Parser_AST.term =
+=======
+and (resugar_comp :FStar_Syntax_Syntax.comp -> FStar_Parser_AST.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun c  ->
     let mk1 a =
       FStar_Parser_AST.mk_term a c.FStar_Syntax_Syntax.pos
@@ -1421,8 +1528,8 @@ and resugar_comp : FStar_Syntax_Syntax.comp -> FStar_Parser_AST.term =
               FStar_Ident.lid_equals c1.FStar_Syntax_Syntax.effect_name
                 FStar_Parser_Const.effect_Lemma_lid
             then
-              let rec aux l uu___190_4923 =
-                match uu___190_4923 with
+              let rec aux l uu___194_4923 =
+                match uu___194_4923 with
                 | [] -> l
                 | (t,aq)::tl1 ->
                     (match t.FStar_Syntax_Syntax.n with
@@ -1440,11 +1547,18 @@ and resugar_comp : FStar_Syntax_Syntax.comp -> FStar_Parser_AST.term =
               (fun uu____5026  ->
                  match uu____5026 with
                  | (e,uu____5036) ->
+<<<<<<< HEAD
                      let uu____5037 = resugar_term e  in
                      (uu____5037, FStar_Parser_AST.Nothing)) args
              in
           let rec aux l uu___191_5058 =
             match uu___191_5058 with
+=======
+                     let uu____5037 = resugar_term e in
+                     (uu____5037, FStar_Parser_AST.Nothing)) args in
+          let rec aux l uu___195_5058 =
+            match uu___195_5058 with
+>>>>>>> taramana_pointers_with_codes_modifies
             | [] -> l
             | hd1::tl1 ->
                 (match hd1 with
@@ -1464,12 +1578,19 @@ and resugar_comp : FStar_Syntax_Syntax.comp -> FStar_Parser_AST.term =
           mk1
             (FStar_Parser_AST.Construct
                ((c1.FStar_Syntax_Syntax.effect_name), [result]))
+<<<<<<< HEAD
 
 and resugar_binder :
   FStar_Syntax_Syntax.binder ->
     FStar_Range.range ->
       FStar_Parser_AST.binder FStar_Pervasives_Native.option
   =
+=======
+and (resugar_binder
+  :FStar_Syntax_Syntax.binder ->
+     FStar_Range.range ->
+       FStar_Parser_AST.binder FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun b  ->
     fun r  ->
       let uu____5141 = b  in
@@ -1500,12 +1621,19 @@ and resugar_binder :
                         FStar_Parser_AST.Annotated uu____5166  in
                       FStar_Parser_AST.mk_binder uu____5165 r
                         FStar_Parser_AST.Type_level imp))
+<<<<<<< HEAD
 
 and resugar_bv_as_pat :
   FStar_Syntax_Syntax.bv ->
     FStar_Syntax_Syntax.aqual ->
       FStar_Parser_AST.pattern FStar_Pervasives_Native.option
   =
+=======
+and (resugar_bv_as_pat
+  :FStar_Syntax_Syntax.bv ->
+     FStar_Syntax_Syntax.aqual ->
+       FStar_Parser_AST.pattern FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun x  ->
     fun qual  ->
       let mk1 a =
@@ -1562,8 +1690,12 @@ and resugar_bv_as_pat :
                    mk1 uu____5247  in
                  FStar_Pervasives_Native.Some uu____5246
                else FStar_Pervasives_Native.Some pat)
+<<<<<<< HEAD
 
 and resugar_pat : FStar_Syntax_Syntax.pat -> FStar_Parser_AST.pattern =
+=======
+and (resugar_pat :FStar_Syntax_Syntax.pat -> FStar_Parser_AST.pattern)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun p  ->
     let mk1 a = FStar_Parser_AST.mk_pattern a p.FStar_Syntax_Syntax.p  in
     let to_arg_qual bopt =
@@ -1703,6 +1835,7 @@ and resugar_pat : FStar_Syntax_Syntax.pat -> FStar_Parser_AST.pattern =
           else pat
        in
     aux p FStar_Pervasives_Native.None
+<<<<<<< HEAD
 
 let resugar_qualifier :
   FStar_Syntax_Syntax.qualifier ->
@@ -1710,6 +1843,13 @@ let resugar_qualifier :
   =
   fun uu___192_5678  ->
     match uu___192_5678 with
+=======
+let (resugar_qualifier
+  :FStar_Syntax_Syntax.qualifier ->
+     FStar_Parser_AST.qualifier FStar_Pervasives_Native.option)=
+  fun uu___196_5678  ->
+    match uu___196_5678 with
+>>>>>>> taramana_pointers_with_codes_modifies
     | FStar_Syntax_Syntax.Assumption  ->
         FStar_Pervasives_Native.Some FStar_Parser_AST.Assumption
     | FStar_Syntax_Syntax.New  ->
@@ -1760,6 +1900,7 @@ let resugar_qualifier :
     | FStar_Syntax_Syntax.Effect  ->
         FStar_Pervasives_Native.Some FStar_Parser_AST.Effect_qual
     | FStar_Syntax_Syntax.OnlyName  -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let resugar_pragma : FStar_Syntax_Syntax.pragma -> FStar_Parser_AST.pragma =
   fun uu___193_5716  ->
@@ -1774,6 +1915,19 @@ let resugar_typ :
       (FStar_Syntax_Syntax.sigelts,FStar_Parser_AST.tycon)
         FStar_Pervasives_Native.tuple2
   =
+=======
+let (resugar_pragma :FStar_Syntax_Syntax.pragma -> FStar_Parser_AST.pragma)=
+  fun uu___197_5716  ->
+    match uu___197_5716 with
+    | FStar_Syntax_Syntax.SetOptions s -> FStar_Parser_AST.SetOptions s
+    | FStar_Syntax_Syntax.ResetOptions s -> FStar_Parser_AST.ResetOptions s
+    | FStar_Syntax_Syntax.LightOff  -> FStar_Parser_AST.LightOff
+let (resugar_typ
+  :FStar_Syntax_Syntax.sigelt Prims.list ->
+     FStar_Syntax_Syntax.sigelt ->
+       (FStar_Syntax_Syntax.sigelts,FStar_Parser_AST.tycon)
+         FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun datacon_ses  ->
     fun se  ->
       match se.FStar_Syntax_Syntax.sigel with
@@ -1803,8 +1957,8 @@ let resugar_typ :
                  let uu____5821 =
                    FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
                      (FStar_Util.for_some
-                        (fun uu___194_5826  ->
-                           match uu___194_5826 with
+                        (fun uu___198_5826  ->
+                           match uu___198_5826 with
                            | FStar_Syntax_Syntax.RecordType uu____5827 ->
                                true
                            | uu____5836 -> false))
@@ -1877,12 +2031,19 @@ let resugar_typ :
       | uu____6246 ->
           failwith
             "Impossible : only Sig_inductive_typ can be resugared as types"
+<<<<<<< HEAD
   
 let mk_decl :
   FStar_Range.range ->
     FStar_Syntax_Syntax.qualifier Prims.list ->
       FStar_Parser_AST.decl' -> FStar_Parser_AST.decl
   =
+=======
+let (mk_decl
+  :FStar_Range.range ->
+     FStar_Syntax_Syntax.qualifier Prims.list ->
+       FStar_Parser_AST.decl' -> FStar_Parser_AST.decl)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun r  ->
     fun q  ->
       fun d'  ->
@@ -1894,18 +2055,29 @@ let mk_decl :
           FStar_Parser_AST.quals = uu____6267;
           FStar_Parser_AST.attrs = []
         }
+<<<<<<< HEAD
   
 let decl'_to_decl :
   FStar_Syntax_Syntax.sigelt ->
     FStar_Parser_AST.decl' -> FStar_Parser_AST.decl
   =
+=======
+let (decl'_to_decl
+  :FStar_Syntax_Syntax.sigelt ->
+     FStar_Parser_AST.decl' -> FStar_Parser_AST.decl)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun se  ->
     fun d'  ->
       mk_decl se.FStar_Syntax_Syntax.sigrng se.FStar_Syntax_Syntax.sigquals
         d'
+<<<<<<< HEAD
   
 let resugar_tscheme' :
   Prims.string -> FStar_Syntax_Syntax.tscheme -> FStar_Parser_AST.decl =
+=======
+let (resugar_tscheme'
+  :Prims.string -> FStar_Syntax_Syntax.tscheme -> FStar_Parser_AST.decl)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun name  ->
     fun ts  ->
       let uu____6284 = ts  in
@@ -1928,6 +2100,7 @@ let resugar_tscheme' :
               (false, uu____6306)  in
             FStar_Parser_AST.Tycon uu____6293  in
           mk_decl typ.FStar_Syntax_Syntax.pos [] uu____6292
+<<<<<<< HEAD
   
 let resugar_tscheme : FStar_Syntax_Syntax.tscheme -> FStar_Parser_AST.decl =
   fun ts  -> resugar_tscheme' "tsheme" ts 
@@ -1937,6 +2110,15 @@ let resugar_eff_decl :
       FStar_Syntax_Syntax.qualifier Prims.list ->
         FStar_Syntax_Syntax.eff_decl -> FStar_Parser_AST.decl
   =
+=======
+let (resugar_tscheme :FStar_Syntax_Syntax.tscheme -> FStar_Parser_AST.decl)=
+  fun ts  -> resugar_tscheme' "tsheme" ts
+let (resugar_eff_decl
+  :Prims.bool ->
+     FStar_Range.range ->
+       FStar_Syntax_Syntax.qualifier Prims.list ->
+         FStar_Syntax_Syntax.eff_decl -> FStar_Parser_AST.decl)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun for_free  ->
     fun r  ->
       fun q  ->
@@ -2085,11 +2267,17 @@ let resugar_eff_decl :
                 (FStar_Parser_AST.NewEffect
                    (FStar_Parser_AST.DefineEffect
                       (eff_name, eff_binders2, eff_typ1, decls)))
+<<<<<<< HEAD
   
 let resugar_sigelt :
   FStar_Syntax_Syntax.sigelt ->
     FStar_Parser_AST.decl FStar_Pervasives_Native.option
   =
+=======
+let (resugar_sigelt
+  :FStar_Syntax_Syntax.sigelt ->
+     FStar_Parser_AST.decl FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun se  ->
     match se.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_bundle (ses,uu____6585) ->
@@ -2154,8 +2342,8 @@ let resugar_sigelt :
         let uu____6835 =
           FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
             (FStar_Util.for_some
-               (fun uu___195_6841  ->
-                  match uu___195_6841 with
+               (fun uu___199_6841  ->
+                  match uu___199_6841 with
                   | FStar_Syntax_Syntax.Projector (uu____6842,uu____6843) ->
                       true
                   | FStar_Syntax_Syntax.Discriminator uu____6844 -> true
@@ -2273,8 +2461,8 @@ let resugar_sigelt :
         let uu____7087 =
           FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
             (FStar_Util.for_some
-               (fun uu___196_7093  ->
-                  match uu___196_7093 with
+               (fun uu___200_7093  ->
+                  match uu___200_7093 with
                   | FStar_Syntax_Syntax.Projector (uu____7094,uu____7095) ->
                       true
                   | FStar_Syntax_Syntax.Discriminator uu____7096 -> true

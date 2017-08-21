@@ -1,5 +1,9 @@
 open Prims
+<<<<<<< HEAD
 let tacdbg : Prims.bool FStar_ST.ref = FStar_Util.mk_ref false 
+=======
+let (tacdbg :Prims.bool FStar_ST.ref)= FStar_Util.mk_ref false
+>>>>>>> taramana_pointers_with_codes_modifies
 let mk_tactic_interpretation_0 :
   'a .
     FStar_Tactics_Basic.proofstate ->
@@ -8,8 +12,7 @@ let mk_tactic_interpretation_0 :
           FStar_Syntax_Syntax.typ ->
             FStar_Ident.lid ->
               FStar_Syntax_Syntax.args ->
-                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-  =
+                FStar_Syntax_Syntax.term FStar_Pervasives_Native.option=
   fun ps  ->
     fun t  ->
       fun embed_a  ->
@@ -37,7 +40,10 @@ let mk_tactic_interpretation_0 :
                     FStar_Pervasives_Native.Some uu____89))
               | uu____90 ->
                   failwith "Unexpected application of tactic primitive"
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let mk_tactic_interpretation_1 :
   'a 'b .
     FStar_Tactics_Basic.proofstate ->
@@ -47,8 +53,7 @@ let mk_tactic_interpretation_1 :
             FStar_Syntax_Syntax.typ ->
               FStar_Ident.lid ->
                 FStar_Syntax_Syntax.args ->
-                  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-  =
+                  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option=
   fun ps  ->
     fun t  ->
       fun unembed_b  ->
@@ -89,7 +94,10 @@ let mk_tactic_interpretation_1 :
                         uu____210 uu____211
                        in
                     failwith uu____209
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let mk_tactic_interpretation_2 :
   'a 'b 'c .
     FStar_Tactics_Basic.proofstate ->
@@ -100,8 +108,7 @@ let mk_tactic_interpretation_2 :
               FStar_Syntax_Syntax.typ ->
                 FStar_Ident.lid ->
                   FStar_Syntax_Syntax.args ->
-                    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-  =
+                    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option=
   fun ps  ->
     fun t  ->
       fun unembed_a  ->
@@ -147,7 +154,10 @@ let mk_tactic_interpretation_2 :
                           uu____363 uu____364
                          in
                       failwith uu____362
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let mk_tactic_interpretation_3 :
   'a 'b 'c 'd .
     FStar_Tactics_Basic.proofstate ->
@@ -159,8 +169,7 @@ let mk_tactic_interpretation_3 :
                 FStar_Syntax_Syntax.typ ->
                   FStar_Ident.lid ->
                     FStar_Syntax_Syntax.args ->
-                      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
-  =
+                      FStar_Syntax_Syntax.term FStar_Pervasives_Native.option=
   fun ps  ->
     fun t  ->
       fun unembed_a  ->
@@ -209,7 +218,10 @@ let mk_tactic_interpretation_3 :
                             uu____548 uu____549
                            in
                         failwith uu____547
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let mk_tactic_interpretation_5 :
   'a 'b 'c 'd 'e 'f .
     FStar_Tactics_Basic.proofstate ->
@@ -224,8 +236,7 @@ let mk_tactic_interpretation_5 :
                       FStar_Ident.lid ->
                         FStar_Syntax_Syntax.args ->
                           FStar_Syntax_Syntax.term
-                            FStar_Pervasives_Native.option
-  =
+                            FStar_Pervasives_Native.option=
   fun ps  ->
     fun t  ->
       fun unembed_a  ->
@@ -283,12 +294,19 @@ let mk_tactic_interpretation_5 :
                                 uu____797 uu____798
                                in
                             failwith uu____796
+<<<<<<< HEAD
   
 let step_from_native_step :
   FStar_Tactics_Basic.proofstate ->
     FStar_Tactics_Native.native_primitive_step ->
       FStar_TypeChecker_Normalize.primitive_step
   =
+=======
+let (step_from_native_step
+  :FStar_Tactics_Basic.proofstate ->
+     FStar_Tactics_Native.native_primitive_step ->
+       FStar_TypeChecker_Normalize.primitive_step)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ps  ->
     fun s  ->
       (let uu____810 = FStar_Ident.string_of_lid s.FStar_Tactics_Native.name
@@ -302,11 +320,17 @@ let step_from_native_step :
         FStar_TypeChecker_Normalize.interpretation =
           ((fun _rng  -> fun args  -> s.FStar_Tactics_Native.tactic ps args))
       }
+<<<<<<< HEAD
   
 let rec primitive_steps :
   FStar_Tactics_Basic.proofstate ->
     FStar_TypeChecker_Normalize.primitive_step Prims.list
   =
+=======
+let rec (primitive_steps
+  :FStar_Tactics_Basic.proofstate ->
+     FStar_TypeChecker_Normalize.primitive_step Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ps  ->
     let mk1 nm arity interpretation =
       let nm1 = FStar_Tactics_Embedding.fstar_tactics_lid' ["Builtins"; nm]
@@ -702,12 +726,14 @@ let rec primitive_steps :
     FStar_List.append uu____1219
       (FStar_List.append FStar_Reflection_Interpreter.reflection_primops
          native_tactics_steps)
+<<<<<<< HEAD
 
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 and unembed_tactic_0 :
   'Ab .
     (FStar_Syntax_Syntax.term -> 'Ab) ->
-      FStar_Syntax_Syntax.term -> 'Ab FStar_Tactics_Basic.tac
-  =
+      FStar_Syntax_Syntax.term -> 'Ab FStar_Tactics_Basic.tac=
   fun unembed_b  ->
     fun embedded_tac_b  ->
       FStar_Tactics_Basic.bind FStar_Tactics_Basic.get
@@ -767,6 +793,7 @@ and unembed_tactic_0 :
                          let uu____1524 = FStar_Tactics_Basic.set ps  in
                          FStar_Tactics_Basic.bind uu____1524
                            (fun uu____1528  -> FStar_Tactics_Basic.fail msg))))
+<<<<<<< HEAD
 
 let run_tactic_on_typ :
   FStar_Syntax_Syntax.term ->
@@ -775,6 +802,14 @@ let run_tactic_on_typ :
         (FStar_Tactics_Basic.goal Prims.list,FStar_Syntax_Syntax.term)
           FStar_Pervasives_Native.tuple2
   =
+=======
+let (run_tactic_on_typ
+  :FStar_Syntax_Syntax.term ->
+     FStar_Tactics_Basic.env ->
+       FStar_Syntax_Syntax.typ ->
+         (FStar_Tactics_Basic.goal Prims.list,FStar_Syntax_Syntax.term)
+           FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun tactic  ->
     fun env  ->
       fun typ  ->
@@ -940,6 +975,7 @@ let run_tactic_on_typ :
                              FStar_Exn.raise uu____1664)))))
   
 type pol =
+<<<<<<< HEAD
   | Pos 
   | Neg 
 let uu___is_Pos : pol -> Prims.bool =
@@ -954,6 +990,21 @@ let by_tactic_interp :
         (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
           FStar_Pervasives_Native.tuple2
   =
+=======
+  | Pos
+  | Neg
+let (uu___is_Pos :pol -> Prims.bool)=
+  fun projectee  -> match projectee with | Pos  -> true | uu____1681 -> false
+let (uu___is_Neg :pol -> Prims.bool)=
+  fun projectee  -> match projectee with | Neg  -> true | uu____1686 -> false
+let (flip :pol -> pol)= fun p  -> match p with | Pos  -> Neg | Neg  -> Pos
+let (by_tactic_interp
+  :pol ->
+     FStar_TypeChecker_Env.env ->
+       FStar_Syntax_Syntax.term ->
+         (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
+           FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun pol  ->
     fun e  ->
       fun t  ->
@@ -999,6 +1050,7 @@ let by_tactic_interp :
                    (FStar_Syntax_Util.t_true, uu____1926)
                  else (assertion, [])
              | uu____1946 -> (t, []))
+<<<<<<< HEAD
   
 let rec traverse :
   (pol ->
@@ -1008,11 +1060,20 @@ let rec traverse :
            FStar_Pervasives_Native.tuple2)
     ->
     pol ->
+=======
+let rec (traverse
+  :(pol ->
+>>>>>>> taramana_pointers_with_codes_modifies
       FStar_TypeChecker_Env.env ->
         FStar_Syntax_Syntax.term ->
           (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
-            FStar_Pervasives_Native.tuple2
-  =
+            FStar_Pervasives_Native.tuple2)
+     ->
+     pol ->
+       FStar_TypeChecker_Env.env ->
+         FStar_Syntax_Syntax.term ->
+           (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
+             FStar_Pervasives_Native.tuple2)=
   fun f  ->
     fun pol  ->
       fun e  ->
@@ -1130,12 +1191,19 @@ let rec traverse :
               let uu____2661 = f pol e t'  in
               (match uu____2661 with
                | (t'1,gs') -> (t'1, (FStar_List.append gs gs')))
+<<<<<<< HEAD
   
 let getprop :
   FStar_Tactics_Basic.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
+=======
+let (getprop
+  :FStar_Tactics_Basic.env ->
+     FStar_Syntax_Syntax.term ->
+       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun e  ->
     fun t  ->
       let tn =
@@ -1145,6 +1213,7 @@ let getprop :
             FStar_Syntax_Syntax.Delta_constant] e t
          in
       FStar_Syntax_Util.un_squash tn
+<<<<<<< HEAD
   
 let preprocess :
   FStar_TypeChecker_Env.env ->
@@ -1152,6 +1221,13 @@ let preprocess :
       (FStar_TypeChecker_Env.env,FStar_Syntax_Syntax.term,FStar_Options.optionstate)
         FStar_Pervasives_Native.tuple3 Prims.list
   =
+=======
+let (preprocess
+  :FStar_TypeChecker_Env.env ->
+     FStar_Syntax_Syntax.term ->
+       (FStar_TypeChecker_Env.env,FStar_Syntax_Syntax.term,FStar_Options.optionstate)
+         FStar_Pervasives_Native.tuple3 Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun goal  ->
       (let uu____2720 =
@@ -1242,8 +1318,12 @@ let preprocess :
                    let uu____2985 = FStar_Options.peek ()  in
                    (env, t', uu____2985)  in
                  uu____2978 :: gs1)))
+<<<<<<< HEAD
   
 let reify_tactic : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
+=======
+let (reify_tactic :FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun a  ->
     let r =
       let uu____2997 =
@@ -1263,12 +1343,19 @@ let reify_tactic : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
         uu____3001 :: uu____3002  in
       FStar_Syntax_Syntax.mk_Tm_app r uu____3000  in
     uu____2999 FStar_Pervasives_Native.None a.FStar_Syntax_Syntax.pos
+<<<<<<< HEAD
   
 let synth :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
+=======
+let (synth
+  :FStar_TypeChecker_Env.env ->
+     FStar_Syntax_Syntax.typ ->
+       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun typ  ->
       fun tau  ->

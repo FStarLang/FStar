@@ -1,10 +1,18 @@
 open Prims
+<<<<<<< HEAD
 let tc_tycon :
   FStar_TypeChecker_Env.env_t ->
     FStar_Syntax_Syntax.sigelt ->
       (FStar_TypeChecker_Env.env_t,FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universe,
         FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple4
   =
+=======
+let (tc_tycon
+  :FStar_TypeChecker_Env.env_t ->
+     FStar_Syntax_Syntax.sigelt ->
+       (FStar_TypeChecker_Env.env_t,FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universe,
+         FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple4)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun s  ->
       match s.FStar_Syntax_Syntax.sigel with
@@ -108,6 +116,7 @@ let tc_tycon :
                                                  (uu___90_213.FStar_Syntax_Syntax.sigattrs)
                                              }), u, guard)))))))))
       | uu____220 -> failwith "impossible"
+<<<<<<< HEAD
   
 let tc_data :
   FStar_TypeChecker_Env.env_t ->
@@ -117,6 +126,15 @@ let tc_data :
         (FStar_Syntax_Syntax.sigelt,FStar_TypeChecker_Env.guard_t)
           FStar_Pervasives_Native.tuple2
   =
+=======
+let (tc_data
+  :FStar_TypeChecker_Env.env_t ->
+     (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universe)
+       FStar_Pervasives_Native.tuple2 Prims.list ->
+       FStar_Syntax_Syntax.sigelt ->
+         (FStar_Syntax_Syntax.sigelt,FStar_TypeChecker_Env.guard_t)
+           FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun tcs  ->
       fun se  ->
@@ -364,6 +382,7 @@ let tc_data :
                                                (uu___91_862.FStar_Syntax_Syntax.sigattrs)
                                            }), g))))))))))
         | uu____869 -> failwith "impossible"
+<<<<<<< HEAD
   
 let generalize_and_inst_within :
   FStar_TypeChecker_Env.env_t ->
@@ -375,6 +394,17 @@ let generalize_and_inst_within :
                                                    Prims.list)
             FStar_Pervasives_Native.tuple2
   =
+=======
+let (generalize_and_inst_within
+  :FStar_TypeChecker_Env.env_t ->
+     FStar_TypeChecker_Env.guard_t ->
+       (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universe)
+         FStar_Pervasives_Native.tuple2 Prims.list ->
+         FStar_Syntax_Syntax.sigelt Prims.list ->
+           (FStar_Syntax_Syntax.sigelt Prims.list,FStar_Syntax_Syntax.sigelt
+                                                    Prims.list)
+             FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun g  ->
       fun tcs  ->
@@ -650,8 +680,12 @@ let generalize_and_inst_within :
                                         data_types datas
                                    in
                                 (tcs1, datas1)))))))
+<<<<<<< HEAD
   
 let debug_log : FStar_TypeChecker_Env.env_t -> Prims.string -> Prims.unit =
+=======
+let (debug_log :FStar_TypeChecker_Env.env_t -> Prims.string -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun s  ->
       let uu____1570 =
@@ -663,19 +697,31 @@ let debug_log : FStar_TypeChecker_Env.env_t -> Prims.string -> Prims.unit =
         FStar_Util.print_string
           (Prims.strcat "Positivity::" (Prims.strcat s "\n"))
       else ()
+<<<<<<< HEAD
   
 let ty_occurs_in :
   FStar_Ident.lident -> FStar_Syntax_Syntax.term -> Prims.bool =
+=======
+let (ty_occurs_in
+  :FStar_Ident.lident -> FStar_Syntax_Syntax.term -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ty_lid  ->
     fun t  ->
       let uu____1580 = FStar_Syntax_Free.fvars t  in
       FStar_Util.set_mem ty_lid uu____1580
+<<<<<<< HEAD
   
 let try_get_fv :
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.fv,FStar_Syntax_Syntax.universes)
       FStar_Pervasives_Native.tuple2
   =
+=======
+let (try_get_fv
+  :FStar_Syntax_Syntax.term ->
+     (FStar_Syntax_Syntax.fv,FStar_Syntax_Syntax.universes)
+       FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     let uu____1595 =
       let uu____1596 = FStar_Syntax_Subst.compress t  in
@@ -693,11 +739,18 @@ type unfolded_memo_elt =
   (FStar_Ident.lident,FStar_Syntax_Syntax.args)
     FStar_Pervasives_Native.tuple2 Prims.list
 type unfolded_memo_t = unfolded_memo_elt FStar_ST.ref
+<<<<<<< HEAD
 let already_unfolded :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.args ->
       unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool
   =
+=======
+let (already_unfolded
+  :FStar_Ident.lident ->
+     FStar_Syntax_Syntax.args ->
+       unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ilid  ->
     fun arrghs  ->
       fun unfolded  ->
@@ -721,12 +774,19 @@ let already_unfolded :
                                     (FStar_Pervasives_Native.fst a)
                                     (FStar_Pervasives_Native.fst a'))) true
                         args l)) uu____1663
+<<<<<<< HEAD
   
 let rec ty_strictly_positive_in_type :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.term ->
       unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool
   =
+=======
+let rec (ty_strictly_positive_in_type
+  :FStar_Ident.lident ->
+     FStar_Syntax_Syntax.term ->
+       unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ty_lid  ->
     fun btype  ->
       fun unfolded  ->
@@ -880,6 +940,7 @@ let rec ty_strictly_positive_in_type :
                          in
                       debug_log env uu____2250);
                      false)))))
+<<<<<<< HEAD
 
 and ty_nested_positive_in_inductive :
   FStar_Ident.lident ->
@@ -888,6 +949,14 @@ and ty_nested_positive_in_inductive :
         FStar_Syntax_Syntax.args ->
           unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool
   =
+=======
+and (ty_nested_positive_in_inductive
+  :FStar_Ident.lident ->
+     FStar_Ident.lident ->
+       FStar_Syntax_Syntax.universes ->
+         FStar_Syntax_Syntax.args ->
+           unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ty_lid  ->
     fun ilid  ->
       fun us  ->
@@ -955,6 +1024,7 @@ and ty_nested_positive_in_inductive :
                            (fun d  ->
                               ty_nested_positive_in_dlid ty_lid d ilid us
                                 args num_ibs unfolded env) idatas)))
+<<<<<<< HEAD
 
 and ty_nested_positive_in_dlid :
   FStar_Ident.lident ->
@@ -965,6 +1035,16 @@ and ty_nested_positive_in_dlid :
             Prims.int ->
               unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool
   =
+=======
+and (ty_nested_positive_in_dlid
+  :FStar_Ident.lident ->
+     FStar_Ident.lident ->
+       FStar_Ident.lident ->
+         FStar_Syntax_Syntax.universes ->
+           FStar_Syntax_Syntax.args ->
+             Prims.int ->
+               unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ty_lid  ->
     fun dlid  ->
       fun ilid  ->
@@ -1107,6 +1187,7 @@ and ty_nested_positive_in_dlid :
                                   uu____2731.FStar_Syntax_Syntax.n  in
                                 ty_nested_positive_in_type ty_lid uu____2730
                                   ilid num_ibs unfolded env))))))
+<<<<<<< HEAD
 
 and ty_nested_positive_in_type :
   FStar_Ident.lident ->
@@ -1115,6 +1196,14 @@ and ty_nested_positive_in_type :
         Prims.int ->
           unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool
   =
+=======
+and (ty_nested_positive_in_type
+  :FStar_Ident.lident ->
+     FStar_Syntax_Syntax.term' ->
+       FStar_Ident.lident ->
+         Prims.int ->
+           unfolded_memo_t -> FStar_TypeChecker_Env.env_t -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ty_lid  ->
     fun t  ->
       fun ilid  ->
@@ -1169,6 +1258,7 @@ and ty_nested_positive_in_type :
                     match uu____2811 with | (b,uu____2872) -> b))
               | uu____2873 ->
                   failwith "Nested positive check, unhandled case"
+<<<<<<< HEAD
 
 let ty_positive_in_datacon :
   FStar_Ident.lident ->
@@ -1177,6 +1267,14 @@ let ty_positive_in_datacon :
         FStar_Syntax_Syntax.universes ->
           unfolded_memo_t -> FStar_TypeChecker_Env.env -> Prims.bool
   =
+=======
+let (ty_positive_in_datacon
+  :FStar_Ident.lident ->
+     FStar_Ident.lident ->
+       FStar_Syntax_Syntax.binders ->
+         FStar_Syntax_Syntax.universes ->
+           unfolded_memo_t -> FStar_TypeChecker_Env.env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ty_lid  ->
     fun dlid  ->
       fun ty_bs  ->
@@ -1266,9 +1364,14 @@ let ty_positive_in_datacon :
                     | uu____3102 ->
                         failwith
                           "Unexpected data constructor type when checking positivity"))
+<<<<<<< HEAD
   
 let check_positivity :
   FStar_Syntax_Syntax.sigelt -> FStar_TypeChecker_Env.env -> Prims.bool =
+=======
+let (check_positivity
+  :FStar_Syntax_Syntax.sigelt -> FStar_TypeChecker_Env.env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ty  ->
     fun env  ->
       let unfolded_inductives = FStar_Util.mk_ref []  in
@@ -1299,13 +1402,18 @@ let check_positivity :
                        in
                     ty_positive_in_datacon ty_lid d ty_bs2 uu____3205
                       unfolded_inductives env2) uu____3190)
+<<<<<<< HEAD
   
 let datacon_typ : FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.term =
+=======
+let (datacon_typ :FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun data  ->
     match data.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_datacon
         (uu____3226,uu____3227,t,uu____3229,uu____3230,uu____3231) -> t
     | uu____3236 -> failwith "Impossible!"
+<<<<<<< HEAD
   
 let optimized_haseq_soundness_for_data :
   FStar_Ident.lident ->
@@ -1313,6 +1421,13 @@ let optimized_haseq_soundness_for_data :
       FStar_Syntax_Syntax.subst_elt Prims.list ->
         FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.term
   =
+=======
+let (optimized_haseq_soundness_for_data
+  :FStar_Ident.lident ->
+     FStar_Syntax_Syntax.sigelt ->
+       FStar_Syntax_Syntax.subst_elt Prims.list ->
+         FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ty_lid  ->
     fun data  ->
       fun usubst  ->
@@ -1387,6 +1502,7 @@ let optimized_haseq_soundness_for_data :
                      uu____3356 FStar_Pervasives_Native.None
                        FStar_Range.dummyRange) dbs3 cond
           | uu____3377 -> FStar_Syntax_Util.t_true
+<<<<<<< HEAD
   
 let optimized_haseq_ty :
   FStar_Syntax_Syntax.sigelts ->
@@ -1400,9 +1516,22 @@ let optimized_haseq_ty :
             ((FStar_Ident.lident,FStar_Syntax_Syntax.term)
                FStar_Pervasives_Native.tuple2 Prims.list,FStar_TypeChecker_Env.env,
               FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.term'
+=======
+let (optimized_haseq_ty
+  :FStar_Syntax_Syntax.sigelts ->
+     FStar_Syntax_Syntax.subst_elt Prims.list ->
+       FStar_Syntax_Syntax.univ_name Prims.list ->
+         ((FStar_Ident.lident,FStar_Syntax_Syntax.term)
+            FStar_Pervasives_Native.tuple2 Prims.list,FStar_TypeChecker_Env.env,
+           FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
+           FStar_Pervasives_Native.tuple4 ->
+           FStar_Syntax_Syntax.sigelt ->
+             ((FStar_Ident.lident,FStar_Syntax_Syntax.term)
+                FStar_Pervasives_Native.tuple2 Prims.list,FStar_TypeChecker_Env.env,
+               FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.term'
+>>>>>>> taramana_pointers_with_codes_modifies
                                                                     FStar_Syntax_Syntax.syntax)
-              FStar_Pervasives_Native.tuple4
-  =
+               FStar_Pervasives_Native.tuple4)=
   fun all_datas_in_the_bundle  ->
     fun usubst  ->
       fun us  ->
@@ -1647,6 +1776,7 @@ let optimized_haseq_ty :
                             FStar_Syntax_Util.mk_conj cond' cond  in
                           ((FStar_List.append l_axioms [(axiom_lid, fml3)]),
                             env2, uu____3928, uu____3931)))
+<<<<<<< HEAD
   
 let optimized_haseq_scheme :
   FStar_Syntax_Syntax.sigelt ->
@@ -1660,6 +1790,19 @@ let optimized_haseq_scheme :
                    FStar_Range.range -> FStar_Syntax_Syntax.sigelt)
             -> FStar_Syntax_Syntax.sigelt Prims.list
   =
+=======
+let (optimized_haseq_scheme
+  :FStar_Syntax_Syntax.sigelt ->
+     FStar_Syntax_Syntax.sigelt Prims.list ->
+       FStar_Syntax_Syntax.sigelt Prims.list ->
+         FStar_TypeChecker_Env.env_t ->
+           (FStar_TypeChecker_Env.env_t ->
+              FStar_Ident.lident ->
+                FStar_Syntax_Syntax.formula ->
+                  FStar_Syntax_Syntax.qualifier Prims.list ->
+                    FStar_Range.range -> FStar_Syntax_Syntax.sigelt)
+             -> FStar_Syntax_Syntax.sigelt Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun sig_bndle  ->
     fun tcs  ->
       fun datas  ->
@@ -1722,6 +1865,7 @@ let optimized_haseq_scheme :
                              (env2.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.pop
                                "haseq";
                              ses)))))
+<<<<<<< HEAD
   
 let unoptimized_haseq_data :
   FStar_Syntax_Syntax.subst_elt Prims.list ->
@@ -1732,6 +1876,16 @@ let unoptimized_haseq_data :
             FStar_Syntax_Syntax.sigelt ->
               FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
+=======
+let (unoptimized_haseq_data
+  :FStar_Syntax_Syntax.subst_elt Prims.list ->
+     FStar_Syntax_Syntax.binders ->
+       FStar_Syntax_Syntax.term ->
+         FStar_Ident.lident Prims.list ->
+           FStar_Syntax_Syntax.term ->
+             FStar_Syntax_Syntax.sigelt ->
+               FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun usubst  ->
     fun bs  ->
       fun haseq_ind  ->
@@ -1840,6 +1994,7 @@ let unoptimized_haseq_data :
                      in
                   FStar_Syntax_Util.mk_conj acc cond1
               | uu____4411 -> acc
+<<<<<<< HEAD
   
 let unoptimized_haseq_ty :
   FStar_Syntax_Syntax.sigelt Prims.list ->
@@ -1850,6 +2005,16 @@ let unoptimized_haseq_ty :
             FStar_Syntax_Syntax.sigelt ->
               FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
+=======
+let (unoptimized_haseq_ty
+  :FStar_Syntax_Syntax.sigelt Prims.list ->
+     FStar_Ident.lident Prims.list ->
+       FStar_Syntax_Syntax.subst_elt Prims.list ->
+         FStar_Syntax_Syntax.univ_name Prims.list ->
+           FStar_Syntax_Syntax.term ->
+             FStar_Syntax_Syntax.sigelt ->
+               FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun all_datas_in_the_bundle  ->
     fun mutuals  ->
       fun usubst  ->
@@ -2029,6 +2194,7 @@ let unoptimized_haseq_ty :
                                   FStar_Range.dummyRange) bs2 fml2
                           in
                        FStar_Syntax_Util.mk_conj acc fml3)
+<<<<<<< HEAD
   
 let unoptimized_haseq_scheme :
   FStar_Syntax_Syntax.sigelt ->
@@ -2042,6 +2208,19 @@ let unoptimized_haseq_scheme :
                    FStar_Range.range -> FStar_Syntax_Syntax.sigelt)
             -> FStar_Syntax_Syntax.sigelt Prims.list
   =
+=======
+let (unoptimized_haseq_scheme
+  :FStar_Syntax_Syntax.sigelt ->
+     FStar_Syntax_Syntax.sigelt Prims.list ->
+       FStar_Syntax_Syntax.sigelt Prims.list ->
+         FStar_TypeChecker_Env.env_t ->
+           (FStar_TypeChecker_Env.env_t ->
+              FStar_Ident.lident ->
+                FStar_Syntax_Syntax.formula ->
+                  FStar_Syntax_Syntax.qualifier Prims.list ->
+                    FStar_Range.range -> FStar_Syntax_Syntax.sigelt)
+             -> FStar_Syntax_Syntax.sigelt Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun sig_bndle  ->
     fun tcs  ->
       fun datas  ->
@@ -2096,6 +2275,7 @@ let unoptimized_haseq_scheme :
                        (env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.pop
                          "haseq";
                        [se])))
+<<<<<<< HEAD
   
 let check_inductive_well_typedness :
   FStar_TypeChecker_Env.env_t ->
@@ -2106,6 +2286,16 @@ let check_inductive_well_typedness :
             FStar_Syntax_Syntax.sigelt Prims.list)
             FStar_Pervasives_Native.tuple3
   =
+=======
+let (check_inductive_well_typedness
+  :FStar_TypeChecker_Env.env_t ->
+     FStar_Syntax_Syntax.sigelt Prims.list ->
+       FStar_Syntax_Syntax.qualifier Prims.list ->
+         FStar_Ident.lident Prims.list ->
+           (FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.sigelt Prims.list,
+             FStar_Syntax_Syntax.sigelt Prims.list)
+             FStar_Pervasives_Native.tuple3)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun ses  ->
       fun quals  ->

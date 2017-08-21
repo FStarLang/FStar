@@ -8,6 +8,7 @@ type binding =
   | Binding_univ of FStar_Syntax_Syntax.univ_name 
   | Binding_sig_inst of
   (FStar_Ident.lident Prims.list,FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universes)
+<<<<<<< HEAD
   FStar_Pervasives_Native.tuple3 
 let uu___is_Binding_var : binding -> Prims.bool =
   fun projectee  ->
@@ -73,6 +74,66 @@ let uu___is_Unfold : delta_level -> Prims.bool =
 let __proj__Unfold__item___0 : delta_level -> FStar_Syntax_Syntax.delta_depth
   = fun projectee  -> match projectee with | Unfold _0 -> _0 
 let uu___is_UnfoldTac : delta_level -> Prims.bool =
+=======
+  FStar_Pervasives_Native.tuple3
+let (uu___is_Binding_var :binding -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Binding_var _0 -> true | uu____44 -> false
+let (__proj__Binding_var__item___0 :binding -> FStar_Syntax_Syntax.bv)=
+  fun projectee  -> match projectee with | Binding_var _0 -> _0
+let (uu___is_Binding_lid :binding -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Binding_lid _0 -> true | uu____62 -> false
+let (__proj__Binding_lid__item___0
+  :binding ->
+     (FStar_Ident.lident,FStar_Syntax_Syntax.tscheme)
+       FStar_Pervasives_Native.tuple2)=
+  fun projectee  -> match projectee with | Binding_lid _0 -> _0
+let (uu___is_Binding_sig :binding -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Binding_sig _0 -> true | uu____94 -> false
+let (__proj__Binding_sig__item___0
+  :binding ->
+     (FStar_Ident.lident Prims.list,FStar_Syntax_Syntax.sigelt)
+       FStar_Pervasives_Native.tuple2)=
+  fun projectee  -> match projectee with | Binding_sig _0 -> _0
+let (uu___is_Binding_univ :binding -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Binding_univ _0 -> true | uu____126 -> false
+let (__proj__Binding_univ__item___0
+  :binding -> FStar_Syntax_Syntax.univ_name)=
+  fun projectee  -> match projectee with | Binding_univ _0 -> _0
+let (uu___is_Binding_sig_inst :binding -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Binding_sig_inst _0 -> true | uu____148 -> false
+let (__proj__Binding_sig_inst__item___0
+  :binding ->
+     (FStar_Ident.lident Prims.list,FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universes)
+       FStar_Pervasives_Native.tuple3)=
+  fun projectee  -> match projectee with | Binding_sig_inst _0 -> _0
+type delta_level =
+  | NoDelta
+  | Inlining
+  | Eager_unfolding_only
+  | Unfold of FStar_Syntax_Syntax.delta_depth
+  | UnfoldTac
+let (uu___is_NoDelta :delta_level -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | NoDelta  -> true | uu____189 -> false
+let (uu___is_Inlining :delta_level -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Inlining  -> true | uu____194 -> false
+let (uu___is_Eager_unfolding_only :delta_level -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Eager_unfolding_only  -> true | uu____199 -> false
+let (uu___is_Unfold :delta_level -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Unfold _0 -> true | uu____205 -> false
+let (__proj__Unfold__item___0
+  :delta_level -> FStar_Syntax_Syntax.delta_depth)=
+  fun projectee  -> match projectee with | Unfold _0 -> _0
+let (uu___is_UnfoldTac :delta_level -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with | UnfoldTac  -> true | uu____218 -> false
   
@@ -86,6 +147,7 @@ type mlift =
     (FStar_Syntax_Syntax.typ ->
        FStar_Syntax_Syntax.typ ->
          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+<<<<<<< HEAD
       FStar_Pervasives_Native.option
     }
 let __proj__Mkmlift__item__mlift_wp :
@@ -93,10 +155,18 @@ let __proj__Mkmlift__item__mlift_wp :
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ
   =
+=======
+      FStar_Pervasives_Native.option;}
+let (__proj__Mkmlift__item__mlift_wp
+  :mlift ->
+     FStar_Syntax_Syntax.typ ->
+       FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { mlift_wp = __fname__mlift_wp; mlift_term = __fname__mlift_term;_} ->
         __fname__mlift_wp
+<<<<<<< HEAD
   
 let __proj__Mkmlift__item__mlift_term :
   mlift ->
@@ -105,6 +175,14 @@ let __proj__Mkmlift__item__mlift_term :
          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
       FStar_Pervasives_Native.option
   =
+=======
+let (__proj__Mkmlift__item__mlift_term
+  :mlift ->
+     (FStar_Syntax_Syntax.typ ->
+        FStar_Syntax_Syntax.typ ->
+          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+       FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { mlift_wp = __fname__mlift_wp; mlift_term = __fname__mlift_term;_} ->
@@ -112,22 +190,37 @@ let __proj__Mkmlift__item__mlift_term :
   
 type edge =
   {
+<<<<<<< HEAD
   msource: FStar_Ident.lident ;
   mtarget: FStar_Ident.lident ;
   mlift: mlift }
 let __proj__Mkedge__item__msource : edge -> FStar_Ident.lident =
+=======
+  msource: FStar_Ident.lident;
+  mtarget: FStar_Ident.lident;
+  mlift: mlift;}
+let (__proj__Mkedge__item__msource :edge -> FStar_Ident.lident)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { msource = __fname__msource; mtarget = __fname__mtarget;
         mlift = __fname__mlift;_} -> __fname__msource
+<<<<<<< HEAD
   
 let __proj__Mkedge__item__mtarget : edge -> FStar_Ident.lident =
+=======
+let (__proj__Mkedge__item__mtarget :edge -> FStar_Ident.lident)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { msource = __fname__msource; mtarget = __fname__mtarget;
         mlift = __fname__mlift;_} -> __fname__mtarget
+<<<<<<< HEAD
   
 let __proj__Mkedge__item__mlift : edge -> mlift =
+=======
+let (__proj__Mkedge__item__mlift :edge -> mlift)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { msource = __fname__msource; mtarget = __fname__mtarget;
@@ -142,6 +235,7 @@ type effects =
   order: edge Prims.list ;
   joins:
     (FStar_Ident.lident,FStar_Ident.lident,FStar_Ident.lident,mlift,mlift)
+<<<<<<< HEAD
       FStar_Pervasives_Native.tuple5 Prims.list
     }
 let __proj__Mkeffects__item__decls :
@@ -149,22 +243,40 @@ let __proj__Mkeffects__item__decls :
     (FStar_Syntax_Syntax.eff_decl,FStar_Syntax_Syntax.qualifier Prims.list)
       FStar_Pervasives_Native.tuple2 Prims.list
   =
+=======
+      FStar_Pervasives_Native.tuple5 Prims.list;}
+let (__proj__Mkeffects__item__decls
+  :effects ->
+     (FStar_Syntax_Syntax.eff_decl,FStar_Syntax_Syntax.qualifier Prims.list)
+       FStar_Pervasives_Native.tuple2 Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { decls = __fname__decls; order = __fname__order;
         joins = __fname__joins;_} -> __fname__decls
+<<<<<<< HEAD
   
 let __proj__Mkeffects__item__order : effects -> edge Prims.list =
+=======
+let (__proj__Mkeffects__item__order :effects -> edge Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { decls = __fname__decls; order = __fname__order;
         joins = __fname__joins;_} -> __fname__order
+<<<<<<< HEAD
   
 let __proj__Mkeffects__item__joins :
   effects ->
     (FStar_Ident.lident,FStar_Ident.lident,FStar_Ident.lident,mlift,mlift)
       FStar_Pervasives_Native.tuple5 Prims.list
   =
+=======
+let (__proj__Mkeffects__item__joins
+  :effects ->
+     (FStar_Ident.lident,FStar_Ident.lident,FStar_Ident.lident,mlift,
+       mlift) FStar_Pervasives_Native.tuple5 Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { decls = __fname__decls; order = __fname__order;
@@ -264,9 +376,14 @@ and guard_t =
   implicits:
     (Prims.string,env,FStar_Syntax_Syntax.uvar,FStar_Syntax_Syntax.term,
       FStar_Syntax_Syntax.typ,FStar_Range.range)
+<<<<<<< HEAD
       FStar_Pervasives_Native.tuple6 Prims.list
     }
 let __proj__Mkenv__item__solver : env -> solver_t =
+=======
+      FStar_Pervasives_Native.tuple6 Prims.list;}
+let (__proj__Mkenv__item__solver :env -> solver_t)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -287,8 +404,12 @@ let __proj__Mkenv__item__solver : env -> solver_t =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__solver
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__range : env -> FStar_Range.range =
+=======
+let (__proj__Mkenv__item__range :env -> FStar_Range.range)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -309,8 +430,12 @@ let __proj__Mkenv__item__range : env -> FStar_Range.range =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__range
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__curmodule : env -> FStar_Ident.lident =
+=======
+let (__proj__Mkenv__item__curmodule :env -> FStar_Ident.lident)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -331,8 +456,12 @@ let __proj__Mkenv__item__curmodule : env -> FStar_Ident.lident =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__curmodule
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__gamma : env -> binding Prims.list =
+=======
+let (__proj__Mkenv__item__gamma :env -> binding Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -353,8 +482,12 @@ let __proj__Mkenv__item__gamma : env -> binding Prims.list =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__gamma
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__gamma_cache : env -> cached_elt FStar_Util.smap =
+=======
+let (__proj__Mkenv__item__gamma_cache :env -> cached_elt FStar_Util.smap)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -375,9 +508,14 @@ let __proj__Mkenv__item__gamma_cache : env -> cached_elt FStar_Util.smap =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__gamma_cache
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__modules :
   env -> FStar_Syntax_Syntax.modul Prims.list =
+=======
+let (__proj__Mkenv__item__modules
+  :env -> FStar_Syntax_Syntax.modul Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -398,9 +536,14 @@ let __proj__Mkenv__item__modules :
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__modules
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__expected_typ :
   env -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option =
+=======
+let (__proj__Mkenv__item__expected_typ
+  :env -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -422,9 +565,14 @@ let __proj__Mkenv__item__expected_typ :
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} ->
         __fname__expected_typ
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__sigtab :
   env -> FStar_Syntax_Syntax.sigelt FStar_Util.smap =
+=======
+let (__proj__Mkenv__item__sigtab
+  :env -> FStar_Syntax_Syntax.sigelt FStar_Util.smap)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -445,8 +593,12 @@ let __proj__Mkenv__item__sigtab :
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__sigtab
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__is_pattern : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__is_pattern :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -467,8 +619,12 @@ let __proj__Mkenv__item__is_pattern : env -> Prims.bool =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__is_pattern
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__instantiate_imp : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__instantiate_imp :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -490,8 +646,12 @@ let __proj__Mkenv__item__instantiate_imp : env -> Prims.bool =
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} ->
         __fname__instantiate_imp
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__effects : env -> effects =
+=======
+let (__proj__Mkenv__item__effects :env -> effects)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -512,8 +672,12 @@ let __proj__Mkenv__item__effects : env -> effects =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__effects
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__generalize : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__generalize :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -534,12 +698,19 @@ let __proj__Mkenv__item__generalize : env -> Prims.bool =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__generalize
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__letrecs :
   env ->
     (FStar_Syntax_Syntax.lbname,FStar_Syntax_Syntax.typ)
       FStar_Pervasives_Native.tuple2 Prims.list
   =
+=======
+let (__proj__Mkenv__item__letrecs
+  :env ->
+     (FStar_Syntax_Syntax.lbname,FStar_Syntax_Syntax.typ)
+       FStar_Pervasives_Native.tuple2 Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -560,8 +731,12 @@ let __proj__Mkenv__item__letrecs :
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__letrecs
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__top_level : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__top_level :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -582,8 +757,12 @@ let __proj__Mkenv__item__top_level : env -> Prims.bool =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__top_level
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__check_uvars : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__check_uvars :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -604,8 +783,12 @@ let __proj__Mkenv__item__check_uvars : env -> Prims.bool =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__check_uvars
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__use_eq : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__use_eq :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -626,8 +809,12 @@ let __proj__Mkenv__item__use_eq : env -> Prims.bool =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__use_eq
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__is_iface : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__is_iface :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -648,8 +835,12 @@ let __proj__Mkenv__item__is_iface : env -> Prims.bool =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__is_iface
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__admit : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__admit :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -670,8 +861,12 @@ let __proj__Mkenv__item__admit : env -> Prims.bool =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__admit
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__lax : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__lax :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -692,8 +887,12 @@ let __proj__Mkenv__item__lax : env -> Prims.bool =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__lax
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__lax_universes : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__lax_universes :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -715,8 +914,12 @@ let __proj__Mkenv__item__lax_universes : env -> Prims.bool =
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} ->
         __fname__lax_universes
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__failhard : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__failhard :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -737,6 +940,7 @@ let __proj__Mkenv__item__failhard : env -> Prims.bool =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__failhard
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__type_of :
   env ->
@@ -745,6 +949,14 @@ let __proj__Mkenv__item__type_of :
         (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.typ,guard_t)
           FStar_Pervasives_Native.tuple3
   =
+=======
+let (__proj__Mkenv__item__type_of
+  :env ->
+     env ->
+       FStar_Syntax_Syntax.term ->
+         (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.typ,guard_t)
+           FStar_Pervasives_Native.tuple3)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -765,9 +977,14 @@ let __proj__Mkenv__item__type_of :
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__type_of
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__universe_of :
   env -> env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe =
+=======
+let (__proj__Mkenv__item__universe_of
+  :env -> env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -788,8 +1005,12 @@ let __proj__Mkenv__item__universe_of :
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__universe_of
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__use_bv_sorts : env -> Prims.bool =
+=======
+let (__proj__Mkenv__item__use_bv_sorts :env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -811,12 +1032,19 @@ let __proj__Mkenv__item__use_bv_sorts : env -> Prims.bool =
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} ->
         __fname__use_bv_sorts
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__qname_and_index :
   env ->
     (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2
       FStar_Pervasives_Native.option
   =
+=======
+let (__proj__Mkenv__item__qname_and_index
+  :env ->
+     (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2
+       FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -838,8 +1066,12 @@ let __proj__Mkenv__item__qname_and_index :
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} ->
         __fname__qname_and_index
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__proof_ns : env -> proof_namespace =
+=======
+let (__proj__Mkenv__item__proof_ns :env -> proof_namespace)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -860,6 +1092,7 @@ let __proj__Mkenv__item__proof_ns : env -> proof_namespace =
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__proof_ns
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__synth :
   env ->
@@ -867,6 +1100,13 @@ let __proj__Mkenv__item__synth :
       FStar_Syntax_Syntax.typ ->
         FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
+=======
+let (__proj__Mkenv__item__synth
+  :env ->
+     env ->
+       FStar_Syntax_Syntax.typ ->
+         FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -887,9 +1127,14 @@ let __proj__Mkenv__item__synth :
         proof_ns = __fname__proof_ns; synth = __fname__synth;
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} -> __fname__synth
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__is_native_tactic :
   env -> FStar_Ident.lid -> Prims.bool =
+=======
+let (__proj__Mkenv__item__is_native_tactic
+  :env -> FStar_Ident.lid -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -911,9 +1156,14 @@ let __proj__Mkenv__item__is_native_tactic :
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} ->
         __fname__is_native_tactic
+<<<<<<< HEAD
   
 let __proj__Mkenv__item__identifier_info :
   env -> FStar_TypeChecker_Common.id_info_table FStar_ST.ref =
+=======
+let (__proj__Mkenv__item__identifier_info
+  :env -> FStar_TypeChecker_Common.id_info_table FStar_ST.ref)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { solver = __fname__solver; range = __fname__range;
@@ -935,8 +1185,12 @@ let __proj__Mkenv__item__identifier_info :
         is_native_tactic = __fname__is_native_tactic;
         identifier_info = __fname__identifier_info;_} ->
         __fname__identifier_info
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__init : solver_t -> env -> Prims.unit =
+=======
+let (__proj__Mksolver_t__item__init :solver_t -> env -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -947,8 +1201,12 @@ let __proj__Mksolver_t__item__init : solver_t -> env -> Prims.unit =
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__init
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__push : solver_t -> Prims.string -> Prims.unit =
+=======
+let (__proj__Mksolver_t__item__push :solver_t -> Prims.string -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -959,8 +1217,12 @@ let __proj__Mksolver_t__item__push : solver_t -> Prims.string -> Prims.unit =
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__push
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__pop : solver_t -> Prims.string -> Prims.unit =
+=======
+let (__proj__Mksolver_t__item__pop :solver_t -> Prims.string -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -971,8 +1233,12 @@ let __proj__Mksolver_t__item__pop : solver_t -> Prims.string -> Prims.unit =
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__pop
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__mark : solver_t -> Prims.string -> Prims.unit =
+=======
+let (__proj__Mksolver_t__item__mark :solver_t -> Prims.string -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -983,9 +1249,14 @@ let __proj__Mksolver_t__item__mark : solver_t -> Prims.string -> Prims.unit =
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__mark
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__reset_mark :
   solver_t -> Prims.string -> Prims.unit =
+=======
+let (__proj__Mksolver_t__item__reset_mark
+  :solver_t -> Prims.string -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -996,9 +1267,14 @@ let __proj__Mksolver_t__item__reset_mark :
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__reset_mark
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__commit_mark :
   solver_t -> Prims.string -> Prims.unit =
+=======
+let (__proj__Mksolver_t__item__commit_mark
+  :solver_t -> Prims.string -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -1009,9 +1285,14 @@ let __proj__Mksolver_t__item__commit_mark :
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__commit_mark
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__encode_modul :
   solver_t -> env -> FStar_Syntax_Syntax.modul -> Prims.unit =
+=======
+let (__proj__Mksolver_t__item__encode_modul
+  :solver_t -> env -> FStar_Syntax_Syntax.modul -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -1022,9 +1303,14 @@ let __proj__Mksolver_t__item__encode_modul :
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__encode_modul
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__encode_sig :
   solver_t -> env -> FStar_Syntax_Syntax.sigelt -> Prims.unit =
+=======
+let (__proj__Mksolver_t__item__encode_sig
+  :solver_t -> env -> FStar_Syntax_Syntax.sigelt -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -1035,6 +1321,7 @@ let __proj__Mksolver_t__item__encode_sig :
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__encode_sig
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__preprocess :
   solver_t ->
@@ -1043,6 +1330,14 @@ let __proj__Mksolver_t__item__preprocess :
         (env,goal,FStar_Options.optionstate) FStar_Pervasives_Native.tuple3
           Prims.list
   =
+=======
+let (__proj__Mksolver_t__item__preprocess
+  :solver_t ->
+     env ->
+       goal ->
+         (env,goal,FStar_Options.optionstate) FStar_Pervasives_Native.tuple3
+           Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -1053,12 +1348,19 @@ let __proj__Mksolver_t__item__preprocess :
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__preprocess
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__solve :
   solver_t ->
     (Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
       env -> FStar_Syntax_Syntax.typ -> Prims.unit
   =
+=======
+let (__proj__Mksolver_t__item__solve
+  :solver_t ->
+     (Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
+       env -> FStar_Syntax_Syntax.typ -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -1069,9 +1371,14 @@ let __proj__Mksolver_t__item__solve :
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__solve
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__is_trivial :
   solver_t -> env -> FStar_Syntax_Syntax.typ -> Prims.bool =
+=======
+let (__proj__Mksolver_t__item__is_trivial
+  :solver_t -> env -> FStar_Syntax_Syntax.typ -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -1082,8 +1389,12 @@ let __proj__Mksolver_t__item__is_trivial :
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__is_trivial
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__finish : solver_t -> Prims.unit -> Prims.unit =
+=======
+let (__proj__Mksolver_t__item__finish :solver_t -> Prims.unit -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -1094,9 +1405,14 @@ let __proj__Mksolver_t__item__finish : solver_t -> Prims.unit -> Prims.unit =
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__finish
+<<<<<<< HEAD
   
 let __proj__Mksolver_t__item__refresh : solver_t -> Prims.unit -> Prims.unit
   =
+=======
+let (__proj__Mksolver_t__item__refresh
+  :solver_t -> Prims.unit -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { init = __fname__init; push = __fname__push; pop = __fname__pop;
@@ -1107,22 +1423,33 @@ let __proj__Mksolver_t__item__refresh : solver_t -> Prims.unit -> Prims.unit
         solve = __fname__solve; is_trivial = __fname__is_trivial;
         finish = __fname__finish; refresh = __fname__refresh;_} ->
         __fname__refresh
+<<<<<<< HEAD
   
 let __proj__Mkguard_t__item__guard_f :
   guard_t -> FStar_TypeChecker_Common.guard_formula =
+=======
+let (__proj__Mkguard_t__item__guard_f
+  :guard_t -> FStar_TypeChecker_Common.guard_formula)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { guard_f = __fname__guard_f; deferred = __fname__deferred;
         univ_ineqs = __fname__univ_ineqs; implicits = __fname__implicits;_}
         -> __fname__guard_f
+<<<<<<< HEAD
   
 let __proj__Mkguard_t__item__deferred :
   guard_t -> FStar_TypeChecker_Common.deferred =
+=======
+let (__proj__Mkguard_t__item__deferred
+  :guard_t -> FStar_TypeChecker_Common.deferred)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { guard_f = __fname__guard_f; deferred = __fname__deferred;
         univ_ineqs = __fname__univ_ineqs; implicits = __fname__implicits;_}
         -> __fname__deferred
+<<<<<<< HEAD
   
 let __proj__Mkguard_t__item__univ_ineqs :
   guard_t ->
@@ -1130,11 +1457,19 @@ let __proj__Mkguard_t__item__univ_ineqs :
                                                Prims.list)
       FStar_Pervasives_Native.tuple2
   =
+=======
+let (__proj__Mkguard_t__item__univ_ineqs
+  :guard_t ->
+     (FStar_Syntax_Syntax.universe Prims.list,FStar_TypeChecker_Common.univ_ineq
+                                                Prims.list)
+       FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { guard_f = __fname__guard_f; deferred = __fname__deferred;
         univ_ineqs = __fname__univ_ineqs; implicits = __fname__implicits;_}
         -> __fname__univ_ineqs
+<<<<<<< HEAD
   
 let __proj__Mkguard_t__item__implicits :
   guard_t ->
@@ -1142,6 +1477,13 @@ let __proj__Mkguard_t__item__implicits :
       FStar_Syntax_Syntax.typ,FStar_Range.range)
       FStar_Pervasives_Native.tuple6 Prims.list
   =
+=======
+let (__proj__Mkguard_t__item__implicits
+  :guard_t ->
+     (Prims.string,env,FStar_Syntax_Syntax.uvar,FStar_Syntax_Syntax.term,
+       FStar_Syntax_Syntax.typ,FStar_Range.range)
+       FStar_Pervasives_Native.tuple6 Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { guard_f = __fname__guard_f; deferred = __fname__deferred;
@@ -1154,12 +1496,20 @@ type implicits =
     Prims.list
 type env_t = env
 type sigtable = FStar_Syntax_Syntax.sigelt FStar_Util.smap
+<<<<<<< HEAD
 let should_verify : env -> Prims.bool =
   fun env  ->
     ((Prims.op_Negation env.lax) && (Prims.op_Negation env.admit)) &&
       (FStar_Options.should_verify (env.curmodule).FStar_Ident.str)
   
 let visible_at : delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool =
+=======
+let (should_verify :env -> Prims.bool)=
+  fun env  ->
+    ((Prims.op_Negation env.lax) && (Prims.op_Negation env.admit)) &&
+      (FStar_Options.should_verify (env.curmodule).FStar_Ident.str)
+let (visible_at :delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun d  ->
     fun q  ->
       match (d, q) with
@@ -1172,6 +1522,7 @@ let visible_at : delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool =
       | (Unfold uu____4520,FStar_Syntax_Syntax.Visible_default ) -> true
       | (Inlining ,FStar_Syntax_Syntax.Inline_for_extraction ) -> true
       | uu____4521 -> false
+<<<<<<< HEAD
   
 let default_table_size : Prims.int = (Prims.parse_int "200") 
 let new_sigtab : 'Auu____4530 . Prims.unit -> 'Auu____4530 FStar_Util.smap =
@@ -1188,6 +1539,22 @@ let initial_env :
     (env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe) ->
       solver_t -> FStar_Ident.lident -> env
   =
+=======
+let (default_table_size :Prims.int)= Prims.parse_int "200"
+let new_sigtab : 'Auu____4530 . Prims.unit -> 'Auu____4530 FStar_Util.smap=
+  fun uu____4536  -> FStar_Util.smap_create default_table_size
+let new_gamma_cache :
+  'Auu____4541 . Prims.unit -> 'Auu____4541 FStar_Util.smap=
+  fun uu____4547  -> FStar_Util.smap_create (Prims.parse_int "100")
+let (initial_env
+  :(env ->
+      FStar_Syntax_Syntax.term ->
+        (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.typ,guard_t)
+          FStar_Pervasives_Native.tuple3)
+     ->
+     (env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.universe) ->
+       solver_t -> FStar_Ident.lident -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun type_of  ->
     fun universe_of  ->
       fun solver  ->
@@ -1242,6 +1609,7 @@ let initial_env :
             is_native_tactic = (fun uu____4729  -> false);
             identifier_info = uu____4695
           }
+<<<<<<< HEAD
   
 let sigtab : env -> FStar_Syntax_Syntax.sigelt FStar_Util.smap =
   fun env  -> env.sigtab 
@@ -1252,6 +1620,17 @@ let query_indices :
     Prims.list FStar_ST.ref
   = FStar_Util.mk_ref [[]] 
 let push_query_indices : Prims.unit -> Prims.unit =
+=======
+let (sigtab :env -> FStar_Syntax_Syntax.sigelt FStar_Util.smap)=
+  fun env  -> env.sigtab
+let (gamma_cache :env -> cached_elt FStar_Util.smap)=
+  fun env  -> env.gamma_cache
+let (query_indices
+  :(FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 Prims.list
+     Prims.list FStar_ST.ref)=
+  FStar_Util.mk_ref [[]]
+let (push_query_indices :Prims.unit -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu____4800  ->
     let uu____4801 = FStar_ST.op_Bang query_indices  in
     match uu____4801 with
@@ -1265,17 +1644,27 @@ let push_query_indices : Prims.unit -> Prims.unit =
             uu____4940
            in
         FStar_ST.op_Colon_Equals query_indices uu____4867
+<<<<<<< HEAD
   
 let pop_query_indices : Prims.unit -> Prims.unit =
+=======
+let (pop_query_indices :Prims.unit -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu____5042  ->
     let uu____5043 = FStar_ST.op_Bang query_indices  in
     match uu____5043 with
     | [] -> failwith "Empty query indices!"
     | hd1::tl1 -> FStar_ST.op_Colon_Equals query_indices tl1
+<<<<<<< HEAD
   
 let add_query_index :
   (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 -> Prims.unit
   =
+=======
+let (add_query_index
+  :(FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 ->
+     Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu____5171  ->
     match uu____5171 with
     | (l,n1) ->
@@ -1284,25 +1673,40 @@ let add_query_index :
          | hd1::tl1 ->
              FStar_ST.op_Colon_Equals query_indices (((l, n1) :: hd1) :: tl1)
          | uu____5303 -> failwith "Empty query indices")
+<<<<<<< HEAD
   
 let peek_query_indices :
   Prims.unit ->
     (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 Prims.list
   =
+=======
+let (peek_query_indices
+  :Prims.unit ->
+     (FStar_Ident.lident,Prims.int) FStar_Pervasives_Native.tuple2 Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu____5321  ->
     let uu____5322 = FStar_ST.op_Bang query_indices  in
     FStar_List.hd uu____5322
+<<<<<<< HEAD
   
 let commit_query_index_mark : Prims.unit -> Prims.unit =
+=======
+let (commit_query_index_mark :Prims.unit -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu____5382  ->
     let uu____5383 = FStar_ST.op_Bang query_indices  in
     match uu____5383 with
     | hd1::uu____5435::tl1 ->
         FStar_ST.op_Colon_Equals query_indices (hd1 :: tl1)
     | uu____5517 -> failwith "Unmarked query index stack"
+<<<<<<< HEAD
   
 let stack : env Prims.list FStar_ST.ref = FStar_Util.mk_ref [] 
 let push_stack : env -> env =
+=======
+let (stack :env Prims.list FStar_ST.ref)= FStar_Util.mk_ref []
+let (push_stack :env -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     (let uu____5544 =
        let uu____5547 = FStar_ST.op_Bang stack  in env :: uu____5547  in
@@ -1344,13 +1748,18 @@ let push_stack : env -> env =
        is_native_tactic = (uu___122_5586.is_native_tactic);
        identifier_info = uu____5593
      })
+<<<<<<< HEAD
   
 let pop_stack : Prims.unit -> env =
+=======
+let (pop_stack :Prims.unit -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu____5624  ->
     let uu____5625 = FStar_ST.op_Bang stack  in
     match uu____5625 with
     | env::tl1 -> (FStar_ST.op_Colon_Equals stack tl1; env)
     | uu____5669 -> failwith "Impossible: Too many pops"
+<<<<<<< HEAD
   
 let cleanup_interactive : env -> Prims.unit = fun env  -> (env.solver).pop "" 
 let push : env -> Prims.string -> env =
@@ -1366,17 +1775,37 @@ let mark : env -> env =
     (env.solver).mark "USER MARK"; push_query_indices (); push_stack env
   
 let commit_mark : env -> env =
+=======
+let (cleanup_interactive :env -> Prims.unit)= fun env  -> (env.solver).pop ""
+let (push :env -> Prims.string -> env)=
+  fun env  ->
+    fun msg  -> push_query_indices (); (env.solver).push msg; push_stack env
+let (pop :env -> Prims.string -> env)=
+  fun env  ->
+    fun msg  -> (env.solver).pop msg; pop_query_indices (); pop_stack ()
+let (mark :env -> env)=
+  fun env  ->
+    (env.solver).mark "USER MARK"; push_query_indices (); push_stack env
+let (commit_mark :env -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     commit_query_index_mark ();
     (env.solver).commit_mark "USER MARK";
     (let uu____5709 = pop_stack ()  in ());
     env
+<<<<<<< HEAD
   
 let reset_mark : env -> env =
   fun env  ->
     (env.solver).reset_mark "USER MARK"; pop_query_indices (); pop_stack ()
   
 let incr_query_index : env -> env =
+=======
+let (reset_mark :env -> env)=
+  fun env  ->
+    (env.solver).reset_mark "USER MARK"; pop_query_indices (); pop_stack ()
+let (incr_query_index :env -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     let qix = peek_query_indices ()  in
     match env.qname_and_index with
@@ -1460,12 +1889,19 @@ let incr_query_index : env -> env =
                  is_native_tactic = (uu___124_5789.is_native_tactic);
                  identifier_info = (uu___124_5789.identifier_info)
                })))
+<<<<<<< HEAD
   
 let debug : env -> FStar_Options.debug_level_t -> Prims.bool =
   fun env  ->
     fun l  -> FStar_Options.debug_at_level (env.curmodule).FStar_Ident.str l
   
 let set_range : env -> FStar_Range.range -> env =
+=======
+let (debug :env -> FStar_Options.debug_level_t -> Prims.bool)=
+  fun env  ->
+    fun l  -> FStar_Options.debug_at_level (env.curmodule).FStar_Ident.str l
+let (set_range :env -> FStar_Range.range -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun e  ->
     fun r  ->
       if r = FStar_Range.dummyRange
@@ -1503,18 +1939,28 @@ let set_range : env -> FStar_Range.range -> env =
            is_native_tactic = (uu___125_5811.is_native_tactic);
            identifier_info = (uu___125_5811.identifier_info)
          })
+<<<<<<< HEAD
   
 let get_range : env -> FStar_Range.range = fun e  -> e.range 
 let toggle_id_info : env -> Prims.bool -> Prims.unit =
+=======
+let (get_range :env -> FStar_Range.range)= fun e  -> e.range
+let (toggle_id_info :env -> Prims.bool -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun enabled  ->
       let uu____5824 =
         let uu____5825 = FStar_ST.op_Bang env.identifier_info  in
         FStar_TypeChecker_Common.id_info_toggle uu____5825 enabled  in
       FStar_ST.op_Colon_Equals env.identifier_info uu____5824
+<<<<<<< HEAD
   
 let insert_bv_info :
   env -> FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> Prims.unit =
+=======
+let (insert_bv_info
+  :env -> FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.typ -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun bv  ->
       fun ty  ->
@@ -1522,9 +1968,14 @@ let insert_bv_info :
           let uu____5859 = FStar_ST.op_Bang env.identifier_info  in
           FStar_TypeChecker_Common.id_info_insert_bv uu____5859 bv ty  in
         FStar_ST.op_Colon_Equals env.identifier_info uu____5858
+<<<<<<< HEAD
   
 let insert_fv_info :
   env -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> Prims.unit =
+=======
+let (insert_fv_info
+  :env -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.typ -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun fv  ->
       fun ty  ->
@@ -1532,20 +1983,32 @@ let insert_fv_info :
           let uu____5893 = FStar_ST.op_Bang env.identifier_info  in
           FStar_TypeChecker_Common.id_info_insert_fv uu____5893 fv ty  in
         FStar_ST.op_Colon_Equals env.identifier_info uu____5892
+<<<<<<< HEAD
   
 let promote_id_info :
   env -> (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> Prims.unit =
+=======
+let (promote_id_info
+  :env -> (FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ) -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun ty_map  ->
       let uu____5927 =
         let uu____5928 = FStar_ST.op_Bang env.identifier_info  in
         FStar_TypeChecker_Common.id_info_promote uu____5928 ty_map  in
       FStar_ST.op_Colon_Equals env.identifier_info uu____5927
+<<<<<<< HEAD
   
 let modules : env -> FStar_Syntax_Syntax.modul Prims.list =
   fun env  -> env.modules 
 let current_module : env -> FStar_Ident.lident = fun env  -> env.curmodule 
 let set_current_module : env -> FStar_Ident.lident -> env =
+=======
+let (modules :env -> FStar_Syntax_Syntax.modul Prims.list)=
+  fun env  -> env.modules
+let (current_module :env -> FStar_Ident.lident)= fun env  -> env.curmodule
+let (set_current_module :env -> FStar_Ident.lident -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu___126_5967 = env  in
@@ -1580,8 +2043,12 @@ let set_current_module : env -> FStar_Ident.lident -> env =
         is_native_tactic = (uu___126_5967.is_native_tactic);
         identifier_info = (uu___126_5967.identifier_info)
       }
+<<<<<<< HEAD
   
 let has_interface : env -> FStar_Ident.lident -> Prims.bool =
+=======
+let (has_interface :env -> FStar_Ident.lident -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       FStar_All.pipe_right env.modules
@@ -1589,6 +2056,7 @@ let has_interface : env -> FStar_Ident.lident -> Prims.bool =
            (fun m  ->
               m.FStar_Syntax_Syntax.is_interface &&
                 (FStar_Ident.lid_equals m.FStar_Syntax_Syntax.name l)))
+<<<<<<< HEAD
   
 let find_in_sigtab :
   env ->
@@ -1602,14 +2070,31 @@ let find_in_sigtab :
 let name_not_found : FStar_Ident.lid -> Prims.string =
   fun l  -> FStar_Util.format1 "Name \"%s\" not found" l.FStar_Ident.str 
 let variable_not_found : FStar_Syntax_Syntax.bv -> Prims.string =
+=======
+let (find_in_sigtab
+  :env ->
+     FStar_Ident.lident ->
+       FStar_Syntax_Syntax.sigelt FStar_Pervasives_Native.option)=
+  fun env  ->
+    fun lid  ->
+      FStar_Util.smap_try_find (sigtab env) (FStar_Ident.text_of_lid lid)
+let (name_not_found :FStar_Ident.lid -> Prims.string)=
+  fun l  -> FStar_Util.format1 "Name \"%s\" not found" l.FStar_Ident.str
+let (variable_not_found :FStar_Syntax_Syntax.bv -> Prims.string)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun v1  ->
     let uu____5998 = FStar_Syntax_Print.bv_to_string v1  in
     FStar_Util.format1 "Variable \"%s\" not found" uu____5998
+<<<<<<< HEAD
   
 let new_u_univ : Prims.unit -> FStar_Syntax_Syntax.universe =
+=======
+let (new_u_univ :Prims.unit -> FStar_Syntax_Syntax.universe)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu____6002  ->
     let uu____6003 = FStar_Syntax_Unionfind.univ_fresh ()  in
     FStar_Syntax_Syntax.U_unif uu____6003
+<<<<<<< HEAD
   
 let inst_tscheme_with :
   FStar_Syntax_Syntax.tscheme ->
@@ -1617,6 +2102,13 @@ let inst_tscheme_with :
       (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
         FStar_Pervasives_Native.tuple2
   =
+=======
+let (inst_tscheme_with
+  :FStar_Syntax_Syntax.tscheme ->
+     FStar_Syntax_Syntax.universes ->
+       (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
+         FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ts  ->
     fun us  ->
       match (ts, us) with
@@ -1626,6 +2118,7 @@ let inst_tscheme_with :
           let vs =
             FStar_All.pipe_right us
               (FStar_List.mapi
+<<<<<<< HEAD
                  (fun i  -> fun u  -> FStar_Syntax_Syntax.UN ((n1 - i), u)))
              in
           let uu____6067 = FStar_Syntax_Subst.subst vs t  in (us, uu____6067)
@@ -1635,6 +2128,14 @@ let inst_tscheme :
     (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
       FStar_Pervasives_Native.tuple2
   =
+=======
+                 (fun i  -> fun u  -> FStar_Syntax_Syntax.UN ((n1 - i), u))) in
+          let uu____6067 = FStar_Syntax_Subst.subst vs t in (us, uu____6067)
+let (inst_tscheme
+  :FStar_Syntax_Syntax.tscheme ->
+     (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
+       FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun uu___110_6081  ->
     match uu___110_6081 with
     | ([],t) -> ([], t)
@@ -1644,6 +2145,7 @@ let inst_tscheme :
             (FStar_List.map (fun uu____6105  -> new_u_univ ()))
            in
         inst_tscheme_with (us, t) us'
+<<<<<<< HEAD
   
 let inst_tscheme_with_range :
   FStar_Range.range ->
@@ -1651,6 +2153,13 @@ let inst_tscheme_with_range :
       (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
         FStar_Pervasives_Native.tuple2
   =
+=======
+let (inst_tscheme_with_range
+  :FStar_Range.range ->
+     FStar_Syntax_Syntax.tscheme ->
+       (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
+         FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun r  ->
     fun t  ->
       let uu____6120 = inst_tscheme t  in
@@ -1658,6 +2167,7 @@ let inst_tscheme_with_range :
       | (us,t1) ->
           let uu____6131 = FStar_Syntax_Subst.set_use_range r t1  in
           (us, uu____6131)
+<<<<<<< HEAD
   
 let inst_effect_fun_with :
   FStar_Syntax_Syntax.universes ->
@@ -1665,6 +2175,13 @@ let inst_effect_fun_with :
       FStar_Syntax_Syntax.eff_decl ->
         FStar_Syntax_Syntax.tscheme -> FStar_Syntax_Syntax.term
   =
+=======
+let (inst_effect_fun_with
+  :FStar_Syntax_Syntax.universes ->
+     env ->
+       FStar_Syntax_Syntax.eff_decl ->
+         FStar_Syntax_Syntax.tscheme -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun insts  ->
     fun env  ->
       fun ed  ->
@@ -1718,6 +2235,7 @@ let inst_effect_fun_with :
                    failwith uu____6176)
   
 type tri =
+<<<<<<< HEAD
   | Yes 
   | No 
   | Maybe 
@@ -1730,6 +2248,19 @@ let uu___is_Maybe : tri -> Prims.bool =
     match projectee with | Maybe  -> true | uu____6192 -> false
   
 let in_cur_mod : env -> FStar_Ident.lident -> tri =
+=======
+  | Yes
+  | No
+  | Maybe
+let (uu___is_Yes :tri -> Prims.bool)=
+  fun projectee  -> match projectee with | Yes  -> true | uu____6182 -> false
+let (uu___is_No :tri -> Prims.bool)=
+  fun projectee  -> match projectee with | No  -> true | uu____6187 -> false
+let (uu___is_Maybe :tri -> Prims.bool)=
+  fun projectee  ->
+    match projectee with | Maybe  -> true | uu____6192 -> false
+let (in_cur_mod :env -> FStar_Ident.lident -> tri)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       let cur = current_module env  in
@@ -1752,6 +2283,7 @@ let in_cur_mod : env -> FStar_Ident.lident -> tri =
              | uu____6254 -> No  in
            aux cur1 lns)
         else No
+<<<<<<< HEAD
   
 let lookup_qname :
   env ->
@@ -1764,6 +2296,18 @@ let lookup_qname :
          FStar_Util.either,FStar_Range.range)
         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+let (lookup_qname
+  :env ->
+     FStar_Ident.lident ->
+       (((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
+           FStar_Pervasives_Native.tuple2,(FStar_Syntax_Syntax.sigelt,
+                                            FStar_Syntax_Syntax.universes
+                                              FStar_Pervasives_Native.option)
+                                            FStar_Pervasives_Native.tuple2)
+          FStar_Util.either,FStar_Range.range)
+         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let cur_mod = in_cur_mod env lid  in
@@ -1860,8 +2404,12 @@ let lookup_qname :
                ((FStar_Util.Inr (se, FStar_Pervasives_Native.None)),
                  (FStar_Syntax_Util.range_of_sigelt se))
          | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None)
+<<<<<<< HEAD
   
 let rec add_sigelt : env -> FStar_Syntax_Syntax.sigelt -> Prims.unit =
+=======
+let rec (add_sigelt :env -> FStar_Syntax_Syntax.sigelt -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun se  ->
       match se.FStar_Syntax_Syntax.sigel with
@@ -1885,6 +2433,7 @@ let rec add_sigelt : env -> FStar_Syntax_Syntax.sigelt -> Prims.unit =
                           (a.FStar_Syntax_Syntax.action_name).FStar_Ident.str
                           se_let))
             | uu____6992 -> ()))
+<<<<<<< HEAD
 
 and add_sigelts : env -> FStar_Syntax_Syntax.sigelt Prims.list -> Prims.unit
   =
@@ -1897,6 +2446,17 @@ let try_lookup_bv :
       (FStar_Syntax_Syntax.typ,FStar_Range.range)
         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+and (add_sigelts
+  :env -> FStar_Syntax_Syntax.sigelt Prims.list -> Prims.unit)=
+  fun env  ->
+    fun ses  -> FStar_All.pipe_right ses (FStar_List.iter (add_sigelt env))
+let (try_lookup_bv
+  :env ->
+     FStar_Syntax_Syntax.bv ->
+       (FStar_Syntax_Syntax.typ,FStar_Range.range)
+         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun bv  ->
       FStar_Util.find_map env.gamma
@@ -1907,6 +2467,7 @@ let try_lookup_bv :
                  ((id.FStar_Syntax_Syntax.sort),
                    ((id.FStar_Syntax_Syntax.ppname).FStar_Ident.idRange))
            | uu____7039 -> FStar_Pervasives_Native.None)
+<<<<<<< HEAD
   
 let lookup_type_of_let :
   FStar_Syntax_Syntax.sigelt ->
@@ -1915,6 +2476,14 @@ let lookup_type_of_let :
          FStar_Pervasives_Native.tuple2,FStar_Range.range)
         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+let (lookup_type_of_let
+  :FStar_Syntax_Syntax.sigelt ->
+     FStar_Ident.lident ->
+       ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
+          FStar_Pervasives_Native.tuple2,FStar_Range.range)
+         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun se  ->
     fun lid  ->
       match se.FStar_Syntax_Syntax.sigel with
@@ -1952,6 +2521,7 @@ let lookup_type_of_let :
                      FStar_Pervasives_Native.Some uu____7181
                    else FStar_Pervasives_Native.None)
       | uu____7221 -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let effect_signature :
   FStar_Syntax_Syntax.sigelt ->
@@ -1959,6 +2529,13 @@ let effect_signature :
        FStar_Pervasives_Native.tuple2,FStar_Range.range)
       FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+let (effect_signature
+  :FStar_Syntax_Syntax.sigelt ->
+     ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term)
+        FStar_Pervasives_Native.tuple2,FStar_Range.range)
+       FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun se  ->
     match se.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_new_effect ne ->
@@ -1991,6 +2568,7 @@ let effect_signature :
           (uu____7308, (se.FStar_Syntax_Syntax.sigrng))  in
         FStar_Pervasives_Native.Some uu____7299
     | uu____7334 -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let try_lookup_lid_aux :
   env ->
@@ -2000,6 +2578,15 @@ let try_lookup_lid_aux :
          FStar_Pervasives_Native.tuple2,FStar_Range.range)
         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+let (try_lookup_lid_aux
+  :env ->
+     FStar_Ident.lident ->
+       ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.term'
+                                         FStar_Syntax_Syntax.syntax)
+          FStar_Pervasives_Native.tuple2,FStar_Range.range)
+         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let mapper uu____7394 =
@@ -2148,14 +2735,19 @@ let try_lookup_lid_aux :
                     (uu___127_8117.FStar_Syntax_Syntax.vars)
                 })), r)
       | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let lid_exists : env -> FStar_Ident.lident -> Prims.bool =
+=======
+let (lid_exists :env -> FStar_Ident.lident -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       let uu____8144 = lookup_qname env l  in
       match uu____8144 with
       | FStar_Pervasives_Native.None  -> false
       | FStar_Pervasives_Native.Some uu____8183 -> true
+<<<<<<< HEAD
   
 let lookup_bv :
   env ->
@@ -2163,6 +2755,13 @@ let lookup_bv :
       (FStar_Syntax_Syntax.typ,FStar_Range.range)
         FStar_Pervasives_Native.tuple2
   =
+=======
+let (lookup_bv
+  :env ->
+     FStar_Syntax_Syntax.bv ->
+       (FStar_Syntax_Syntax.typ,FStar_Range.range)
+         FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun bv  ->
       let bvr = FStar_Syntax_Syntax.range_of_bv bv  in
@@ -2179,6 +2778,7 @@ let lookup_bv :
           let uu____8265 = FStar_Syntax_Subst.set_use_range bvr t  in
           let uu____8266 = FStar_Range.set_use_range r bvr  in
           (uu____8265, uu____8266)
+<<<<<<< HEAD
   
 let try_lookup_lid :
   env ->
@@ -2187,6 +2787,14 @@ let try_lookup_lid :
          FStar_Pervasives_Native.tuple2,FStar_Range.range)
         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+let (try_lookup_lid
+  :env ->
+     FStar_Ident.lident ->
+       ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
+          FStar_Pervasives_Native.tuple2,FStar_Range.range)
+         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       let uu____8285 = try_lookup_lid_aux env l  in
@@ -2202,6 +2810,7 @@ let try_lookup_lid :
               (us, uu____8365)  in
             (uu____8360, r1)  in
           FStar_Pervasives_Native.Some uu____8351
+<<<<<<< HEAD
   
 let lookup_lid :
   env ->
@@ -2210,6 +2819,14 @@ let lookup_lid :
          FStar_Pervasives_Native.tuple2,FStar_Range.range)
         FStar_Pervasives_Native.tuple2
   =
+=======
+let (lookup_lid
+  :env ->
+     FStar_Ident.lident ->
+       ((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
+          FStar_Pervasives_Native.tuple2,FStar_Range.range)
+         FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       let uu____8394 = try_lookup_lid env l  in
@@ -2222,8 +2839,12 @@ let lookup_lid :
             FStar_Errors.Error uu____8422  in
           FStar_Exn.raise uu____8421
       | FStar_Pervasives_Native.Some v1 -> v1
+<<<<<<< HEAD
   
 let lookup_univ : env -> FStar_Syntax_Syntax.univ_name -> Prims.bool =
+=======
+let (lookup_univ :env -> FStar_Syntax_Syntax.univ_name -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun x  ->
       FStar_All.pipe_right
@@ -2232,6 +2853,7 @@ let lookup_univ : env -> FStar_Syntax_Syntax.univ_name -> Prims.bool =
               match uu___113_8465 with
               | Binding_univ y -> x.FStar_Ident.idText = y.FStar_Ident.idText
               | uu____8467 -> false) env.gamma) FStar_Option.isSome
+<<<<<<< HEAD
   
 let try_lookup_val_decl :
   env ->
@@ -2239,6 +2861,13 @@ let try_lookup_val_decl :
       (FStar_Syntax_Syntax.tscheme,FStar_Syntax_Syntax.qualifier Prims.list)
         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+let (try_lookup_val_decl
+  :env ->
+     FStar_Ident.lident ->
+       (FStar_Syntax_Syntax.tscheme,FStar_Syntax_Syntax.qualifier Prims.list)
+         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____8484 = lookup_qname env lid  in
@@ -2264,6 +2893,7 @@ let try_lookup_val_decl :
             (uu____8580, q)  in
           FStar_Pervasives_Native.Some uu____8569
       | uu____8602 -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let lookup_val_decl :
   env ->
@@ -2271,6 +2901,13 @@ let lookup_val_decl :
       (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
         FStar_Pervasives_Native.tuple2
   =
+=======
+let (lookup_val_decl
+  :env ->
+     FStar_Ident.lident ->
+       (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
+         FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____8641 = lookup_qname env lid  in
@@ -2293,6 +2930,7 @@ let lookup_val_decl :
               (uu____8749, (FStar_Ident.range_of_lid lid))  in
             FStar_Errors.Error uu____8744  in
           FStar_Exn.raise uu____8743
+<<<<<<< HEAD
   
 let lookup_datacon :
   env ->
@@ -2300,6 +2938,13 @@ let lookup_datacon :
       (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
         FStar_Pervasives_Native.tuple2
   =
+=======
+let (lookup_datacon
+  :env ->
+     FStar_Ident.lident ->
+       (FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
+         FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____8766 = lookup_qname env lid  in
@@ -2322,6 +2967,7 @@ let lookup_datacon :
               (uu____8881, (FStar_Ident.range_of_lid lid))  in
             FStar_Errors.Error uu____8876  in
           FStar_Exn.raise uu____8875
+<<<<<<< HEAD
   
 let datacons_of_typ :
   env ->
@@ -2329,6 +2975,13 @@ let datacons_of_typ :
       (Prims.bool,FStar_Ident.lident Prims.list)
         FStar_Pervasives_Native.tuple2
   =
+=======
+let (datacons_of_typ
+  :env ->
+     FStar_Ident.lident ->
+       (Prims.bool,FStar_Ident.lident Prims.list)
+         FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____8900 = lookup_qname env lid  in
@@ -2345,8 +2998,12 @@ let datacons_of_typ :
               FStar_Syntax_Syntax.sigattrs = uu____8936;_},uu____8937),uu____8938)
           -> (true, dcs)
       | uu____8999 -> (false, [])
+<<<<<<< HEAD
   
 let typ_of_datacon : env -> FStar_Ident.lident -> FStar_Ident.lident =
+=======
+let (typ_of_datacon :env -> FStar_Ident.lident -> FStar_Ident.lident)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____9030 = lookup_qname env lid  in
@@ -2366,6 +3023,7 @@ let typ_of_datacon : env -> FStar_Ident.lident -> FStar_Ident.lident =
             let uu____9139 = FStar_Syntax_Print.lid_to_string lid  in
             FStar_Util.format1 "Not a datacon: %s" uu____9139  in
           failwith uu____9138
+<<<<<<< HEAD
   
 let lookup_definition :
   delta_level Prims.list ->
@@ -2374,6 +3032,14 @@ let lookup_definition :
         (FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.term)
           FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+let (lookup_definition
+  :delta_level Prims.list ->
+     env ->
+       FStar_Ident.lident ->
+         (FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.term)
+           FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun delta_levels  ->
     fun env  ->
       fun lid  ->
@@ -2405,12 +3071,19 @@ let lookup_definition :
                       else FStar_Pervasives_Native.None)
              | uu____9317 -> FStar_Pervasives_Native.None)
         | uu____9322 -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let try_lookup_effect_lid :
   env ->
     FStar_Ident.lident ->
       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
   =
+=======
+let (try_lookup_effect_lid
+  :env ->
+     FStar_Ident.lident ->
+       FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun ftv  ->
       let uu____9359 = lookup_qname env ftv  in
@@ -2427,9 +3100,14 @@ let try_lookup_effect_lid :
                   in
                FStar_Pervasives_Native.Some uu____9464)
       | uu____9465 -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let lookup_effect_lid : env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term
   =
+=======
+let (lookup_effect_lid
+  :env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun ftv  ->
       let uu____9494 = try_lookup_effect_lid env ftv  in
@@ -2442,6 +3120,7 @@ let lookup_effect_lid : env -> FStar_Ident.lident -> FStar_Syntax_Syntax.term
             FStar_Errors.Error uu____9498  in
           FStar_Exn.raise uu____9497
       | FStar_Pervasives_Native.Some k -> k
+<<<<<<< HEAD
   
 let lookup_effect_abbrev :
   env ->
@@ -2450,6 +3129,14 @@ let lookup_effect_abbrev :
         (FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.comp)
           FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+let (lookup_effect_abbrev
+  :env ->
+     FStar_Syntax_Syntax.universes ->
+       FStar_Ident.lident ->
+         (FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.comp)
+           FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun univ_insts  ->
       fun lid0  ->
@@ -2543,9 +3230,14 @@ let lookup_effect_abbrev :
                              FStar_Pervasives_Native.Some (binders1, c1)
                          | uu____9751 -> failwith "Impossible")))
         | uu____9758 -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let norm_eff_name : env -> FStar_Ident.lident -> FStar_Ident.lident =
   let cache = FStar_Util.smap_create (Prims.parse_int "20")  in
+=======
+let (norm_eff_name :env -> FStar_Ident.lident -> FStar_Ident.lident)=
+  let cache = FStar_Util.smap_create (Prims.parse_int "20") in
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       let rec find1 l1 =
@@ -2574,9 +3266,14 @@ let norm_eff_name : env -> FStar_Ident.lident -> FStar_Ident.lident =
                  (FStar_Util.smap_add cache l.FStar_Ident.str m; m))
          in
       FStar_Ident.set_lid_range res (FStar_Ident.range_of_lid l)
+<<<<<<< HEAD
   
 let lookup_effect_quals :
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.qualifier Prims.list =
+=======
+let (lookup_effect_quals
+  :env -> FStar_Ident.lident -> FStar_Syntax_Syntax.qualifier Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       let l1 = norm_eff_name env l  in
@@ -2593,9 +3290,14 @@ let lookup_effect_quals :
               FStar_Syntax_Syntax.sigattrs = uu____9874;_},uu____9875),uu____9876)
           -> q
       | uu____9927 -> []
+<<<<<<< HEAD
   
 let lookup_projector :
   env -> FStar_Ident.lident -> Prims.int -> FStar_Ident.lident =
+=======
+let (lookup_projector
+  :env -> FStar_Ident.lident -> Prims.int -> FStar_Ident.lident)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       fun i  ->
@@ -2629,8 +3331,12 @@ let lookup_projector :
                     FStar_All.pipe_right uu____10010
                       FStar_Pervasives_Native.fst)
              | uu____10019 -> fail ())
+<<<<<<< HEAD
   
 let is_projector : env -> FStar_Ident.lident -> Prims.bool =
+=======
+let (is_projector :env -> FStar_Ident.lident -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       let uu____10028 = lookup_qname env l  in
@@ -2651,8 +3357,12 @@ let is_projector : env -> FStar_Ident.lident -> Prims.bool =
                | FStar_Syntax_Syntax.Projector uu____10111 -> true
                | uu____10116 -> false) quals
       | uu____10117 -> false
+<<<<<<< HEAD
   
 let is_datacon : env -> FStar_Ident.lident -> Prims.bool =
+=======
+let (is_datacon :env -> FStar_Ident.lident -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____10146 = lookup_qname env lid  in
@@ -2668,8 +3378,12 @@ let is_datacon : env -> FStar_Ident.lident -> Prims.bool =
               FStar_Syntax_Syntax.sigattrs = uu____10176;_},uu____10177),uu____10178)
           -> true
       | uu____10233 -> false
+<<<<<<< HEAD
   
 let is_record : env -> FStar_Ident.lident -> Prims.bool =
+=======
+let (is_record :env -> FStar_Ident.lident -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____10262 = lookup_qname env lid  in
@@ -2692,8 +3406,12 @@ let is_record : env -> FStar_Ident.lident -> Prims.bool =
                | FStar_Syntax_Syntax.RecordConstructor uu____10365 -> true
                | uu____10374 -> false) quals
       | uu____10375 -> false
+<<<<<<< HEAD
   
 let is_action : env -> FStar_Ident.lident -> Prims.bool =
+=======
+let (is_action :env -> FStar_Ident.lident -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____10404 = lookup_qname env lid  in
@@ -2714,8 +3432,12 @@ let is_action : env -> FStar_Ident.lident -> Prims.bool =
                | FStar_Syntax_Syntax.Action uu____10490 -> true
                | uu____10491 -> false) quals
       | uu____10492 -> false
+<<<<<<< HEAD
   
 let is_interpreted : env -> FStar_Syntax_Syntax.term -> Prims.bool =
+=======
+let (is_interpreted :env -> FStar_Syntax_Syntax.term -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   let interpreted_symbols =
     [FStar_Parser_Const.op_Eq;
     FStar_Parser_Const.op_notEq;
@@ -2742,8 +3464,12 @@ let is_interpreted : env -> FStar_Syntax_Syntax.term -> Prims.bool =
           fv.FStar_Syntax_Syntax.fv_delta =
             FStar_Syntax_Syntax.Delta_equational
       | uu____10529 -> false
+<<<<<<< HEAD
   
 let is_type_constructor : env -> FStar_Ident.lident -> Prims.bool =
+=======
+let (is_type_constructor :env -> FStar_Ident.lident -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let mapper x =
@@ -2765,8 +3491,12 @@ let is_type_constructor : env -> FStar_Ident.lident -> Prims.bool =
       match uu____10654 with
       | FStar_Pervasives_Native.Some b -> b
       | FStar_Pervasives_Native.None  -> false
+<<<<<<< HEAD
   
 let num_inductive_ty_params : env -> FStar_Ident.lident -> Prims.int =
+=======
+let (num_inductive_ty_params :env -> FStar_Ident.lident -> Prims.int)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____10705 = lookup_qname env lid  in
@@ -2789,6 +3519,7 @@ let num_inductive_ty_params : env -> FStar_Ident.lident -> Prims.int =
               (uu____10827, (FStar_Ident.range_of_lid lid))  in
             FStar_Errors.Error uu____10822  in
           FStar_Exn.raise uu____10821
+<<<<<<< HEAD
   
 let effect_decl_opt :
   env ->
@@ -2796,6 +3527,13 @@ let effect_decl_opt :
       (FStar_Syntax_Syntax.eff_decl,FStar_Syntax_Syntax.qualifier Prims.list)
         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
+=======
+let (effect_decl_opt
+  :env ->
+     FStar_Ident.lident ->
+       (FStar_Syntax_Syntax.eff_decl,FStar_Syntax_Syntax.qualifier Prims.list)
+         FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       FStar_All.pipe_right (env.effects).decls
@@ -2804,9 +3542,14 @@ let effect_decl_opt :
               match uu____10869 with
               | (d,uu____10877) ->
                   FStar_Ident.lid_equals d.FStar_Syntax_Syntax.mname l))
+<<<<<<< HEAD
   
 let get_effect_decl :
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.eff_decl =
+=======
+let (get_effect_decl
+  :env -> FStar_Ident.lident -> FStar_Syntax_Syntax.eff_decl)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l  ->
       let uu____10890 = effect_decl_opt env l  in
@@ -2819,13 +3562,18 @@ let get_effect_decl :
             FStar_Errors.Error uu____10906  in
           FStar_Exn.raise uu____10905
       | FStar_Pervasives_Native.Some md -> FStar_Pervasives_Native.fst md
+<<<<<<< HEAD
   
 let identity_mlift : mlift =
+=======
+let (identity_mlift :mlift)=
+>>>>>>> taramana_pointers_with_codes_modifies
   {
     mlift_wp = (fun t  -> fun wp  -> wp);
     mlift_term =
       (FStar_Pervasives_Native.Some
          (fun t  -> fun wp  -> fun e  -> FStar_Util.return_all e))
+<<<<<<< HEAD
   } 
 let join :
   env ->
@@ -2833,6 +3581,14 @@ let join :
       FStar_Ident.lident ->
         (FStar_Ident.lident,mlift,mlift) FStar_Pervasives_Native.tuple3
   =
+=======
+  }
+let (join
+  :env ->
+     FStar_Ident.lident ->
+       FStar_Ident.lident ->
+         (FStar_Ident.lident,mlift,mlift) FStar_Pervasives_Native.tuple3)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l1  ->
       fun l2  ->
@@ -2878,12 +3634,19 @@ let join :
                  FStar_Exn.raise uu____11062
              | FStar_Pervasives_Native.Some
                  (uu____11077,uu____11078,m3,j1,j2) -> (m3, j1, j2))
+<<<<<<< HEAD
   
 let monad_leq :
   env ->
     FStar_Ident.lident ->
       FStar_Ident.lident -> edge FStar_Pervasives_Native.option
   =
+=======
+let (monad_leq
+  :env ->
+     FStar_Ident.lident ->
+       FStar_Ident.lident -> edge FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun l1  ->
       fun l2  ->
@@ -2900,7 +3663,10 @@ let monad_leq :
                (fun e  ->
                   (FStar_Ident.lid_equals l1 e.msource) &&
                     (FStar_Ident.lid_equals l2 e.mtarget)))
+<<<<<<< HEAD
   
+=======
+>>>>>>> taramana_pointers_with_codes_modifies
 let wp_sig_aux :
   'Auu____11121 .
     (FStar_Syntax_Syntax.eff_decl,'Auu____11121)
@@ -2908,8 +3674,7 @@ let wp_sig_aux :
       FStar_Ident.lident ->
         (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term'
                                   FStar_Syntax_Syntax.syntax)
-          FStar_Pervasives_Native.tuple2
-  =
+          FStar_Pervasives_Native.tuple2=
   fun decls  ->
     fun m  ->
       let uu____11148 =
@@ -2946,6 +3711,7 @@ let wp_sig_aux :
                       (FStar_Syntax_Util.comp_result c)
                     -> (a, (wp.FStar_Syntax_Syntax.sort))
                 | uu____11263 -> failwith "Impossible"))
+<<<<<<< HEAD
   
 let wp_signature :
   env ->
@@ -2959,6 +3725,19 @@ let null_wp_for_eff :
       FStar_Syntax_Syntax.universe ->
         FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.comp
   =
+=======
+let (wp_signature
+  :env ->
+     FStar_Ident.lident ->
+       (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.term)
+         FStar_Pervasives_Native.tuple2)=
+  fun env  -> fun m  -> wp_sig_aux (env.effects).decls m
+let (null_wp_for_eff
+  :env ->
+     FStar_Ident.lident ->
+       FStar_Syntax_Syntax.universe ->
+         FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.comp)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun eff_name  ->
       fun res_u  ->
@@ -3008,8 +3787,12 @@ let null_wp_for_eff :
                    FStar_Syntax_Syntax.flags = []
                  }  in
                FStar_Syntax_Syntax.mk_Comp uu____11341)
+<<<<<<< HEAD
   
 let build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env =
+=======
+let (build_lattice :env -> FStar_Syntax_Syntax.sigelt -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun se  ->
       match se.FStar_Syntax_Syntax.sigel with
@@ -3378,9 +4161,14 @@ let build_lattice : env -> FStar_Syntax_Syntax.sigelt -> env =
               identifier_info = (uu___131_12187.identifier_info)
             }))
       | uu____12188 -> env
+<<<<<<< HEAD
   
 let comp_to_comp_typ :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ =
+=======
+let (comp_to_comp_typ
+  :env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun c  ->
       let c1 =
@@ -3393,9 +4181,14 @@ let comp_to_comp_typ :
             FStar_Syntax_Syntax.mk_GTotal' t (FStar_Pervasives_Native.Some u)
         | uu____12214 -> c  in
       FStar_Syntax_Util.comp_to_comp_typ c1
+<<<<<<< HEAD
   
 let rec unfold_effect_abbrev :
   env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ =
+=======
+let rec (unfold_effect_abbrev
+  :env -> FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.comp_typ)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun comp  ->
       let c = comp_to_comp_typ env comp  in
@@ -3474,6 +4267,7 @@ let rec unfold_effect_abbrev :
                      FStar_Syntax_Syntax.mk_Comp
                     in
                  unfold_effect_abbrev env c2)))
+<<<<<<< HEAD
   
 let effect_repr_aux :
   Prims.bool ->
@@ -3483,6 +4277,15 @@ let effect_repr_aux :
           FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
             FStar_Pervasives_Native.option
   =
+=======
+let (effect_repr_aux
+  :Prims.bool ->
+     env ->
+       FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+         FStar_Syntax_Syntax.universe ->
+           FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+             FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun only_reifiable  ->
     fun env  ->
       fun c  ->
@@ -3537,6 +4340,7 @@ let effect_repr_aux :
                               uu____12496
                              in
                           FStar_Pervasives_Native.Some uu____12493))
+<<<<<<< HEAD
   
 let effect_repr :
   env ->
@@ -3549,6 +4353,18 @@ let reify_comp :
     FStar_Syntax_Syntax.comp ->
       FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.term
   =
+=======
+let (effect_repr
+  :env ->
+     FStar_Syntax_Syntax.comp ->
+       FStar_Syntax_Syntax.universe ->
+         FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)=
+  fun env  -> fun c  -> fun u_c  -> effect_repr_aux false env c u_c
+let (reify_comp
+  :env ->
+     FStar_Syntax_Syntax.comp ->
+       FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun c  ->
       fun u_c  ->
@@ -3568,26 +4384,41 @@ let reify_comp :
         | FStar_Pervasives_Native.None  ->
             no_reify (FStar_Syntax_Util.comp_effect_name c)
         | FStar_Pervasives_Native.Some tm -> tm
+<<<<<<< HEAD
   
 let is_reifiable_effect : env -> FStar_Ident.lident -> Prims.bool =
+=======
+let (is_reifiable_effect :env -> FStar_Ident.lident -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun effect_lid  ->
       let quals = lookup_effect_quals env effect_lid  in
       FStar_List.contains FStar_Syntax_Syntax.Reifiable quals
+<<<<<<< HEAD
   
 let is_reifiable : env -> FStar_Syntax_Syntax.residual_comp -> Prims.bool =
   fun env  ->
     fun c  -> is_reifiable_effect env c.FStar_Syntax_Syntax.residual_effect
   
 let is_reifiable_comp : env -> FStar_Syntax_Syntax.comp -> Prims.bool =
+=======
+let (is_reifiable :env -> FStar_Syntax_Syntax.residual_comp -> Prims.bool)=
+  fun env  ->
+    fun c  -> is_reifiable_effect env c.FStar_Syntax_Syntax.residual_effect
+let (is_reifiable_comp :env -> FStar_Syntax_Syntax.comp -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun c  ->
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Comp ct ->
           is_reifiable_effect env ct.FStar_Syntax_Syntax.effect_name
       | uu____12620 -> false
+<<<<<<< HEAD
   
 let is_reifiable_function : env -> FStar_Syntax_Syntax.term -> Prims.bool =
+=======
+let (is_reifiable_function :env -> FStar_Syntax_Syntax.term -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun t  ->
       let uu____12629 =
@@ -3597,8 +4428,12 @@ let is_reifiable_function : env -> FStar_Syntax_Syntax.term -> Prims.bool =
       | FStar_Syntax_Syntax.Tm_arrow (uu____12633,c) ->
           is_reifiable_comp env c
       | uu____12651 -> false
+<<<<<<< HEAD
   
 let push_in_gamma : env -> binding -> env =
+=======
+let (push_in_gamma :env -> binding -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun s  ->
       let rec push1 x rest =
@@ -3642,8 +4477,12 @@ let push_in_gamma : env -> binding -> env =
         is_native_tactic = (uu___133_12704.is_native_tactic);
         identifier_info = (uu___133_12704.identifier_info)
       }
+<<<<<<< HEAD
   
 let push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env =
+=======
+let (push_sigelt :env -> FStar_Syntax_Syntax.sigelt -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun s  ->
       let env1 =
@@ -3651,9 +4490,14 @@ let push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env =
           (Binding_sig ((FStar_Syntax_Util.lids_of_sigelt s), s))
          in
       build_lattice env1 s
+<<<<<<< HEAD
   
 let push_sigelt_inst :
   env -> FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.universes -> env =
+=======
+let (push_sigelt_inst
+  :env -> FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.universes -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun s  ->
       fun us  ->
@@ -3662,8 +4506,12 @@ let push_sigelt_inst :
             (Binding_sig_inst ((FStar_Syntax_Util.lids_of_sigelt s), s, us))
            in
         build_lattice env1 s
+<<<<<<< HEAD
   
 let push_local_binding : env -> binding -> env =
+=======
+let (push_local_binding :env -> binding -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun b  ->
       let uu___134_12742 = env  in
@@ -3698,6 +4546,7 @@ let push_local_binding : env -> binding -> env =
         is_native_tactic = (uu___134_12742.is_native_tactic);
         identifier_info = (uu___134_12742.identifier_info)
       }
+<<<<<<< HEAD
   
 let push_bv : env -> FStar_Syntax_Syntax.bv -> env =
   fun env  -> fun x  -> push_local_binding env (Binding_var x) 
@@ -3706,6 +4555,14 @@ let pop_bv :
     (FStar_Syntax_Syntax.bv,env) FStar_Pervasives_Native.tuple2
       FStar_Pervasives_Native.option
   =
+=======
+let (push_bv :env -> FStar_Syntax_Syntax.bv -> env)=
+  fun env  -> fun x  -> push_local_binding env (Binding_var x)
+let (pop_bv
+  :env ->
+     (FStar_Syntax_Syntax.bv,env) FStar_Pervasives_Native.tuple2
+       FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     match env.gamma with
     | (Binding_var x)::rest ->
@@ -3744,8 +4601,12 @@ let pop_bv :
                identifier_info = (uu___135_12776.identifier_info)
              }))
     | uu____12777 -> FStar_Pervasives_Native.None
+<<<<<<< HEAD
   
 let push_binders : env -> FStar_Syntax_Syntax.binders -> env =
+=======
+let (push_binders :env -> FStar_Syntax_Syntax.binders -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun bs  ->
       FStar_List.fold_left
@@ -3753,6 +4614,7 @@ let push_binders : env -> FStar_Syntax_Syntax.binders -> env =
            fun uu____12801  ->
              match uu____12801 with | (x,uu____12807) -> push_bv env1 x) env
         bs
+<<<<<<< HEAD
   
 let binding_of_lb :
   FStar_Syntax_Syntax.lbname ->
@@ -3760,6 +4622,13 @@ let binding_of_lb :
                                                 FStar_Syntax_Syntax.syntax)
       FStar_Pervasives_Native.tuple2 -> binding
   =
+=======
+let (binding_of_lb
+  :FStar_Syntax_Syntax.lbname ->
+     (FStar_Syntax_Syntax.univ_name Prims.list,FStar_Syntax_Syntax.term'
+                                                 FStar_Syntax_Syntax.syntax)
+       FStar_Pervasives_Native.tuple2 -> binding)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun x  ->
     fun t  ->
       match x with
@@ -3777,6 +4646,7 @@ let binding_of_lb :
       | FStar_Util.Inr fv ->
           Binding_lid
             (((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v), t)
+<<<<<<< HEAD
   
 let push_let_binding :
   env -> FStar_Syntax_Syntax.lbname -> FStar_Syntax_Syntax.tscheme -> env =
@@ -3784,6 +4654,13 @@ let push_let_binding :
     fun lb  -> fun ts  -> push_local_binding env (binding_of_lb lb ts)
   
 let push_module : env -> FStar_Syntax_Syntax.modul -> env =
+=======
+let (push_let_binding
+  :env -> FStar_Syntax_Syntax.lbname -> FStar_Syntax_Syntax.tscheme -> env)=
+  fun env  ->
+    fun lb  -> fun ts  -> push_local_binding env (binding_of_lb lb ts)
+let (push_module :env -> FStar_Syntax_Syntax.modul -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun m  ->
       add_sigelts env m.FStar_Syntax_Syntax.exports;
@@ -3819,13 +4696,18 @@ let push_module : env -> FStar_Syntax_Syntax.modul -> env =
          is_native_tactic = (uu___137_12872.is_native_tactic);
          identifier_info = (uu___137_12872.identifier_info)
        })
+<<<<<<< HEAD
   
 let push_univ_vars : env -> FStar_Syntax_Syntax.univ_names -> env =
+=======
+let (push_univ_vars :env -> FStar_Syntax_Syntax.univ_names -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun xs  ->
       FStar_List.fold_left
         (fun env1  -> fun x  -> push_local_binding env1 (Binding_univ x)) env
         xs
+<<<<<<< HEAD
   
 let open_universes_in :
   env ->
@@ -3835,6 +4717,15 @@ let open_universes_in :
                                               Prims.list)
           FStar_Pervasives_Native.tuple3
   =
+=======
+let (open_universes_in
+  :env ->
+     FStar_Syntax_Syntax.univ_names ->
+       FStar_Syntax_Syntax.term Prims.list ->
+         (env,FStar_Syntax_Syntax.univ_names,FStar_Syntax_Syntax.term
+                                               Prims.list)
+           FStar_Pervasives_Native.tuple3)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun uvs  ->
       fun terms  ->
@@ -3845,8 +4736,12 @@ let open_universes_in :
             let uu____12937 =
               FStar_List.map (FStar_Syntax_Subst.subst univ_subst) terms  in
             (env', univ_vars, uu____12937)
+<<<<<<< HEAD
   
 let set_expected_typ : env -> FStar_Syntax_Syntax.typ -> env =
+=======
+let (set_expected_typ :env -> FStar_Syntax_Syntax.typ -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun t  ->
       let uu___138_12952 = env  in
@@ -3881,19 +4776,31 @@ let set_expected_typ : env -> FStar_Syntax_Syntax.typ -> env =
         is_native_tactic = (uu___138_12952.is_native_tactic);
         identifier_info = (uu___138_12952.identifier_info)
       }
+<<<<<<< HEAD
   
 let expected_typ :
   env -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option =
+=======
+let (expected_typ
+  :env -> FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     match env.expected_typ with
     | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
     | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
+<<<<<<< HEAD
   
 let clear_expected_typ :
   env ->
     (env,FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
       FStar_Pervasives_Native.tuple2
   =
+=======
+let (clear_expected_typ
+  :env ->
+     (env,FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option)
+       FStar_Pervasives_Native.tuple2)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env_  ->
     let uu____12978 = expected_typ env_  in
     ((let uu___139_12984 = env_  in
@@ -3928,9 +4835,14 @@ let clear_expected_typ :
         is_native_tactic = (uu___139_12984.is_native_tactic);
         identifier_info = (uu___139_12984.identifier_info)
       }), uu____12978)
+<<<<<<< HEAD
   
 let finish_module : env -> FStar_Syntax_Syntax.modul -> env =
   let empty_lid = FStar_Ident.lid_of_ids [FStar_Ident.id_of_text ""]  in
+=======
+let (finish_module :env -> FStar_Syntax_Syntax.modul -> env)=
+  let empty_lid = FStar_Ident.lid_of_ids [FStar_Ident.id_of_text ""] in
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun m  ->
       let sigs =
@@ -3981,8 +4893,12 @@ let finish_module : env -> FStar_Syntax_Syntax.modul -> env =
          is_native_tactic = (uu___140_13025.is_native_tactic);
          identifier_info = (uu___140_13025.identifier_info)
        })
+<<<<<<< HEAD
   
 let uvars_in_env : env -> FStar_Syntax_Syntax.uvars =
+=======
+let (uvars_in_env :env -> FStar_Syntax_Syntax.uvars)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     let no_uvs = FStar_Syntax_Free.new_uv_set ()  in
     let ext out uvs = FStar_Util.set_union out uvs  in
@@ -4007,8 +4923,12 @@ let uvars_in_env : env -> FStar_Syntax_Syntax.uvars =
       | (Binding_sig uu____13163)::uu____13164 -> out
       | (Binding_sig_inst uu____13173)::uu____13174 -> out  in
     aux no_uvs env.gamma
+<<<<<<< HEAD
   
 let univ_vars : env -> FStar_Syntax_Syntax.universe_uvar FStar_Util.set =
+=======
+let (univ_vars :env -> FStar_Syntax_Syntax.universe_uvar FStar_Util.set)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     let no_univs = FStar_Syntax_Free.new_universe_uvar_set ()  in
     let ext out uvs = FStar_Util.set_union out uvs  in
@@ -4033,8 +4953,12 @@ let univ_vars : env -> FStar_Syntax_Syntax.universe_uvar FStar_Util.set =
           aux uu____13276 tl1
       | (Binding_sig uu____13282)::uu____13283 -> out  in
     aux no_univs env.gamma
+<<<<<<< HEAD
   
 let univnames : env -> FStar_Syntax_Syntax.univ_name FStar_Util.fifo_set =
+=======
+let (univnames :env -> FStar_Syntax_Syntax.univ_name FStar_Util.fifo_set)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     let no_univ_names = FStar_Syntax_Syntax.no_universe_names  in
     let ext out uvs = FStar_Util.fifo_set_union out uvs  in
@@ -4061,9 +4985,14 @@ let univnames : env -> FStar_Syntax_Syntax.univ_name FStar_Util.fifo_set =
           aux uu____13386 tl1
       | (Binding_sig uu____13392)::uu____13393 -> out  in
     aux no_univ_names env.gamma
+<<<<<<< HEAD
   
 let bound_vars_of_bindings :
   binding Prims.list -> FStar_Syntax_Syntax.bv Prims.list =
+=======
+let (bound_vars_of_bindings
+  :binding Prims.list -> FStar_Syntax_Syntax.bv Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun bs  ->
     FStar_All.pipe_right bs
       (FStar_List.collect
@@ -4074,8 +5003,12 @@ let bound_vars_of_bindings :
             | Binding_sig uu____13427 -> []
             | Binding_univ uu____13434 -> []
             | Binding_sig_inst uu____13435 -> []))
+<<<<<<< HEAD
   
 let binders_of_bindings : binding Prims.list -> FStar_Syntax_Syntax.binders =
+=======
+let (binders_of_bindings :binding Prims.list -> FStar_Syntax_Syntax.binders)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun bs  ->
     let uu____13452 =
       let uu____13455 = bound_vars_of_bindings bs  in
@@ -4083,12 +5016,20 @@ let binders_of_bindings : binding Prims.list -> FStar_Syntax_Syntax.binders =
         (FStar_List.map FStar_Syntax_Syntax.mk_binder)
        in
     FStar_All.pipe_right uu____13452 FStar_List.rev
+<<<<<<< HEAD
   
 let bound_vars : env -> FStar_Syntax_Syntax.bv Prims.list =
   fun env  -> bound_vars_of_bindings env.gamma 
 let all_binders : env -> FStar_Syntax_Syntax.binders =
   fun env  -> binders_of_bindings env.gamma 
 let print_gamma : env -> Prims.unit =
+=======
+let (bound_vars :env -> FStar_Syntax_Syntax.bv Prims.list)=
+  fun env  -> bound_vars_of_bindings env.gamma
+let (all_binders :env -> FStar_Syntax_Syntax.binders)=
+  fun env  -> binders_of_bindings env.gamma
+let (print_gamma :env -> Prims.unit)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     let uu____13480 =
       let uu____13481 =
@@ -4127,8 +5068,12 @@ let print_gamma : env -> Prims.unit =
          in
       FStar_All.pipe_right uu____13481 (FStar_String.concat "::\n")  in
     FStar_All.pipe_right uu____13480 (FStar_Util.print1 "%s\n")
+<<<<<<< HEAD
   
 let eq_gamma : env -> env -> Prims.bool =
+=======
+let (eq_gamma :env -> env -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun env'  ->
       let uu____13541 = FStar_Util.physical_equality env.gamma env'.gamma  in
@@ -4144,14 +5089,22 @@ let eq_gamma : env -> env -> Prims.bool =
                    match (uu____13569, uu____13570) with
                    | ((b1,uu____13588),(b2,uu____13590)) ->
                        FStar_Syntax_Syntax.bv_eq b1 b2) g g'))
+<<<<<<< HEAD
   
 let fold_env : 'a . env -> ('a -> binding -> 'a) -> 'a -> 'a =
+=======
+let fold_env : 'a . env -> ('a -> binding -> 'a) -> 'a -> 'a=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun f  ->
       fun a  ->
         FStar_List.fold_right (fun e  -> fun a1  -> f a1 e) env.gamma a
+<<<<<<< HEAD
   
 let lidents : env -> FStar_Ident.lident Prims.list =
+=======
+let (lidents :env -> FStar_Ident.lident Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     let keys =
       FStar_List.fold_left
@@ -4167,8 +5120,12 @@ let lidents : env -> FStar_Ident.lident Prims.list =
            fun keys1  ->
              FStar_List.append (FStar_Syntax_Util.lids_of_sigelt v1) keys1)
       keys
+<<<<<<< HEAD
   
 let should_enc_path : env -> Prims.string Prims.list -> Prims.bool =
+=======
+let (should_enc_path :env -> Prims.string Prims.list -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun path  ->
       let rec list_prefix xs ys =
@@ -4184,14 +5141,22 @@ let should_enc_path : env -> Prims.string Prims.list -> Prims.bool =
             if uu____13762 then b else should_enc_path' pns1 path1
          in
       should_enc_path' (FStar_List.flatten env.proof_ns) path
+<<<<<<< HEAD
   
 let should_enc_lid : env -> FStar_Ident.lident -> Prims.bool =
+=======
+let (should_enc_lid :env -> FStar_Ident.lident -> Prims.bool)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun lid  ->
       let uu____13776 = FStar_Ident.path_of_lid lid  in
       should_enc_path env uu____13776
+<<<<<<< HEAD
   
 let cons_proof_ns : Prims.bool -> env -> name_prefix -> env =
+=======
+let (cons_proof_ns :Prims.bool -> env -> name_prefix -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun b  ->
     fun e  ->
       fun path  ->
@@ -4231,12 +5196,20 @@ let cons_proof_ns : Prims.bool -> env -> name_prefix -> env =
               is_native_tactic = (uu___141_13806.is_native_tactic);
               identifier_info = (uu___141_13806.identifier_info)
             }
+<<<<<<< HEAD
   
 let add_proof_ns : env -> name_prefix -> env =
   fun e  -> fun path  -> cons_proof_ns true e path 
 let rem_proof_ns : env -> name_prefix -> env =
   fun e  -> fun path  -> cons_proof_ns false e path 
 let push_proof_ns : env -> env =
+=======
+let (add_proof_ns :env -> name_prefix -> env)=
+  fun e  -> fun path  -> cons_proof_ns true e path
+let (rem_proof_ns :env -> name_prefix -> env)=
+  fun e  -> fun path  -> cons_proof_ns false e path
+let (push_proof_ns :env -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun e  ->
     let uu___142_13833 = e  in
     {
@@ -4270,8 +5243,12 @@ let push_proof_ns : env -> env =
       is_native_tactic = (uu___142_13833.is_native_tactic);
       identifier_info = (uu___142_13833.identifier_info)
     }
+<<<<<<< HEAD
   
 let pop_proof_ns : env -> env =
+=======
+let (pop_proof_ns :env -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun e  ->
     match e.proof_ns with
     | [] -> failwith "empty proof_ns stack!"
@@ -4308,9 +5285,14 @@ let pop_proof_ns : env -> env =
           is_native_tactic = (uu___143_13852.is_native_tactic);
           identifier_info = (uu___143_13852.identifier_info)
         }
+<<<<<<< HEAD
   
 let get_proof_ns : env -> proof_namespace = fun e  -> e.proof_ns 
 let set_proof_ns : proof_namespace -> env -> env =
+=======
+let (get_proof_ns :env -> proof_namespace)= fun e  -> e.proof_ns
+let (set_proof_ns :proof_namespace -> env -> env)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun ns  ->
     fun e  ->
       let uu___144_13865 = e  in
@@ -4345,8 +5327,12 @@ let set_proof_ns : proof_namespace -> env -> env =
         is_native_tactic = (uu___144_13865.is_native_tactic);
         identifier_info = (uu___144_13865.identifier_info)
       }
+<<<<<<< HEAD
   
 let string_of_proof_ns : env -> Prims.string =
+=======
+let (string_of_proof_ns :env -> Prims.string)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     let string_of_proof_ns' pns =
       let uu____13894 =
@@ -4368,8 +5354,12 @@ let string_of_proof_ns : env -> Prims.string =
          in
       FStar_String.concat ";" uu____13894  in
     string_of_proof_ns' env.proof_ns
+<<<<<<< HEAD
   
 let dummy_solver : solver_t =
+=======
+let (dummy_solver :solver_t)=
+>>>>>>> taramana_pointers_with_codes_modifies
   {
     init = (fun uu____13946  -> ());
     push = (fun uu____13948  -> ());

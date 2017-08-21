@@ -5,18 +5,24 @@ type inst_t =
 let mk :
   'Auu____15 'Auu____16 .
     'Auu____16 FStar_Syntax_Syntax.syntax ->
-      'Auu____15 -> 'Auu____15 FStar_Syntax_Syntax.syntax
-  =
+      'Auu____15 -> 'Auu____15 FStar_Syntax_Syntax.syntax=
   fun t  ->
     fun s  ->
       FStar_Syntax_Syntax.mk s FStar_Pervasives_Native.None
         t.FStar_Syntax_Syntax.pos
+<<<<<<< HEAD
   
 let rec inst :
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
     -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
+=======
+let rec (inst
+  :(FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
+     -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun t  ->
       let t1 = FStar_Syntax_Subst.compress t  in
@@ -47,13 +53,18 @@ let rec inst :
           mk1 (FStar_Syntax_Syntax.Tm_arrow (bs1, c1))
       | FStar_Syntax_Syntax.Tm_refine (bv,t2) ->
           let bv1 =
+<<<<<<< HEAD
             let uu___148_267 = bv  in
             let uu____268 = inst s bv.FStar_Syntax_Syntax.sort  in
+=======
+            let uu___152_267 = bv in
+            let uu____268 = inst s bv.FStar_Syntax_Syntax.sort in
+>>>>>>> taramana_pointers_with_codes_modifies
             {
               FStar_Syntax_Syntax.ppname =
-                (uu___148_267.FStar_Syntax_Syntax.ppname);
+                (uu___152_267.FStar_Syntax_Syntax.ppname);
               FStar_Syntax_Syntax.index =
-                (uu___148_267.FStar_Syntax_Syntax.index);
+                (uu___152_267.FStar_Syntax_Syntax.index);
               FStar_Syntax_Syntax.sort = uu____268
             }  in
           let t3 = inst s t2  in
@@ -114,17 +125,23 @@ let rec inst :
               FStar_All.pipe_right (FStar_Pervasives_Native.snd lbs)
                 (FStar_List.map
                    (fun lb  ->
+<<<<<<< HEAD
                       let uu___149_762 = lb  in
                       let uu____763 = inst s lb.FStar_Syntax_Syntax.lbtyp  in
                       let uu____766 = inst s lb.FStar_Syntax_Syntax.lbdef  in
+=======
+                      let uu___153_762 = lb in
+                      let uu____763 = inst s lb.FStar_Syntax_Syntax.lbtyp in
+                      let uu____766 = inst s lb.FStar_Syntax_Syntax.lbdef in
+>>>>>>> taramana_pointers_with_codes_modifies
                       {
                         FStar_Syntax_Syntax.lbname =
-                          (uu___149_762.FStar_Syntax_Syntax.lbname);
+                          (uu___153_762.FStar_Syntax_Syntax.lbname);
                         FStar_Syntax_Syntax.lbunivs =
-                          (uu___149_762.FStar_Syntax_Syntax.lbunivs);
+                          (uu___153_762.FStar_Syntax_Syntax.lbunivs);
                         FStar_Syntax_Syntax.lbtyp = uu____763;
                         FStar_Syntax_Syntax.lbeff =
-                          (uu___149_762.FStar_Syntax_Syntax.lbeff);
+                          (uu___153_762.FStar_Syntax_Syntax.lbeff);
                         FStar_Syntax_Syntax.lbdef = uu____766
                       }))
                in
@@ -165,12 +182,19 @@ let rec inst :
                in
             FStar_Syntax_Syntax.Tm_meta uu____903  in
           mk1 uu____902
+<<<<<<< HEAD
 
 and inst_binders :
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
     -> FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binders
   =
+=======
+and (inst_binders
+  :(FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
+     -> FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binders)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun bs  ->
       FStar_All.pipe_right bs
@@ -179,16 +203,22 @@ and inst_binders :
               match uu____935 with
               | (x,imp) ->
                   let uu____946 =
+<<<<<<< HEAD
                     let uu___150_947 = x  in
                     let uu____948 = inst s x.FStar_Syntax_Syntax.sort  in
+=======
+                    let uu___154_947 = x in
+                    let uu____948 = inst s x.FStar_Syntax_Syntax.sort in
+>>>>>>> taramana_pointers_with_codes_modifies
                     {
                       FStar_Syntax_Syntax.ppname =
-                        (uu___150_947.FStar_Syntax_Syntax.ppname);
+                        (uu___154_947.FStar_Syntax_Syntax.ppname);
                       FStar_Syntax_Syntax.index =
-                        (uu___150_947.FStar_Syntax_Syntax.index);
+                        (uu___154_947.FStar_Syntax_Syntax.index);
                       FStar_Syntax_Syntax.sort = uu____948
                     }  in
                   (uu____946, imp)))
+<<<<<<< HEAD
 
 and inst_args :
   (FStar_Syntax_Syntax.term ->
@@ -199,12 +229,23 @@ and inst_args :
       (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
         FStar_Pervasives_Native.tuple2 Prims.list
   =
+=======
+and (inst_args
+  :(FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
+     ->
+     (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
+       FStar_Pervasives_Native.tuple2 Prims.list ->
+       (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax,FStar_Syntax_Syntax.aqual)
+         FStar_Pervasives_Native.tuple2 Prims.list)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun args  ->
       FStar_All.pipe_right args
         (FStar_List.map
            (fun uu____991  ->
               match uu____991 with
+<<<<<<< HEAD
               | (a,imp) -> let uu____1002 = inst s a  in (uu____1002, imp)))
 
 and inst_comp :
@@ -214,6 +255,15 @@ and inst_comp :
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax
   =
+=======
+              | (a,imp) -> let uu____1002 = inst s a in (uu____1002, imp)))
+and (inst_comp
+  :(FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
+     ->
+     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
+       FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun c  ->
       match c.FStar_Syntax_Syntax.n with
@@ -225,15 +275,21 @@ and inst_comp :
           FStar_Syntax_Syntax.mk_GTotal' uu____1034 uopt
       | FStar_Syntax_Syntax.Comp ct ->
           let ct1 =
+<<<<<<< HEAD
             let uu___151_1037 = ct  in
             let uu____1038 = inst s ct.FStar_Syntax_Syntax.result_typ  in
             let uu____1041 = inst_args s ct.FStar_Syntax_Syntax.effect_args
                in
+=======
+            let uu___155_1037 = ct in
+            let uu____1038 = inst s ct.FStar_Syntax_Syntax.result_typ in
+            let uu____1041 = inst_args s ct.FStar_Syntax_Syntax.effect_args in
+>>>>>>> taramana_pointers_with_codes_modifies
             let uu____1050 =
               FStar_All.pipe_right ct.FStar_Syntax_Syntax.flags
                 (FStar_List.map
-                   (fun uu___147_1060  ->
-                      match uu___147_1060 with
+                   (fun uu___151_1060  ->
+                      match uu___151_1060 with
                       | FStar_Syntax_Syntax.DECREASES t ->
                           let uu____1064 = inst s t  in
                           FStar_Syntax_Syntax.DECREASES uu____1064
@@ -241,14 +297,15 @@ and inst_comp :
                in
             {
               FStar_Syntax_Syntax.comp_univs =
-                (uu___151_1037.FStar_Syntax_Syntax.comp_univs);
+                (uu___155_1037.FStar_Syntax_Syntax.comp_univs);
               FStar_Syntax_Syntax.effect_name =
-                (uu___151_1037.FStar_Syntax_Syntax.effect_name);
+                (uu___155_1037.FStar_Syntax_Syntax.effect_name);
               FStar_Syntax_Syntax.result_typ = uu____1038;
               FStar_Syntax_Syntax.effect_args = uu____1041;
               FStar_Syntax_Syntax.flags = uu____1050
             }  in
           FStar_Syntax_Syntax.mk_Comp ct1
+<<<<<<< HEAD
 
 and inst_lcomp_opt :
   (FStar_Syntax_Syntax.term ->
@@ -257,27 +314,47 @@ and inst_lcomp_opt :
     FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option ->
       FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option
   =
+=======
+and (inst_lcomp_opt
+  :(FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
+     ->
+     FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option ->
+       FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun l  ->
       match l with
       | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some rc ->
           let uu____1079 =
+<<<<<<< HEAD
             let uu___152_1080 = rc  in
+=======
+            let uu___156_1080 = rc in
+>>>>>>> taramana_pointers_with_codes_modifies
             let uu____1081 =
               FStar_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ (inst s)
                in
             {
               FStar_Syntax_Syntax.residual_effect =
-                (uu___152_1080.FStar_Syntax_Syntax.residual_effect);
+                (uu___156_1080.FStar_Syntax_Syntax.residual_effect);
               FStar_Syntax_Syntax.residual_typ = uu____1081;
               FStar_Syntax_Syntax.residual_flags =
+<<<<<<< HEAD
                 (uu___152_1080.FStar_Syntax_Syntax.residual_flags)
             }  in
           FStar_Pervasives_Native.Some uu____1079
 
 let instantiate :
   inst_t -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
+=======
+                (uu___156_1080.FStar_Syntax_Syntax.residual_flags)
+            } in
+          FStar_Pervasives_Native.Some uu____1079
+let (instantiate
+  :inst_t -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
+>>>>>>> taramana_pointers_with_codes_modifies
   fun i  ->
     fun t  ->
       match i with
