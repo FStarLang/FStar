@@ -12,6 +12,7 @@ all:	Apply.uver		\
 	Cases.uver		\
 	Tutorial.uver		\
 	Syntax.uver		\
+	Normalization.uver	\
 	GRewrite.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
