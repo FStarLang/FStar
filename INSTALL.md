@@ -65,13 +65,13 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
-        F* 0.9.4.3
+        F* 0.9.5.0
         platform=Linux_x86_64
         compiler=OCaml 4.02.3
         date=2017-05-04T08:24:02+02:00
         commit=c0784052f
         $ z3 --version
-        Z3 version 4.5.0
+        Z3 version 4.5.1 - 64 bit - build hashcode 1f29cebd4df6
 
 2. Run the micro benchmarks:
 
