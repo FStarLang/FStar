@@ -226,7 +226,8 @@ ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial
 else
-	@echo " ********** WARNING: You don't have Madoko installed. Binary package will not include tutorial in html form."
+	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
+	false
 endif
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
