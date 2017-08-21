@@ -503,6 +503,13 @@ let lookup_typ (env:Env.env) (ns:list<string>) : sigelt_view =
             in
             let ctors = List.map ctor1 dc_lids in
             Sg_Inductive (nm, bs, t, ctors)
+        | Sig_let ((false, [lb]), _) ->
+            let fv = match lb.lbname with
+                     | BU.Inr fv -> fv
+                     | BU.Inl _  -> failwith "global Sig_let has bv"
+            in
+            Sg_Let (fv, lb.lbtyp, lb.lbdef)
+
         | _ ->
             Unk
         end
@@ -533,6 +540,14 @@ let embed_sigelt_view (sev:sigelt_view) : term =
                         S.as_arg (embed_term t);
                         S.as_arg (embed_list embed_ctor fstar_refl_ctor dcs)]
                     None Range.dummyRange
+
+    | Sg_Let (fv, ty, t) ->
+        S.mk_Tm_app ref_Sg_Let
+                    [S.as_arg (embed_fvar fv);
+                        S.as_arg (embed_term ty);
+                        S.as_arg (embed_term t)]
+                    None Range.dummyRange
+
     | Unk ->
         ref_Unk
 
@@ -542,8 +557,13 @@ let unembed_sigelt_view (t:term) : sigelt_view =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [(nm, _); (bs, _); (t, _); (dcs, _)] when S.fv_eq_lid fv ref_Sg_Inductive_lid ->
         Sg_Inductive (unembed_string_list nm, unembed_binders bs, unembed_term t, unembed_list unembed_ctor dcs)
+
+    | Tm_fvar fv, [(fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let_lid ->
+        Sg_Let (unembed_fvar fvar, unembed_term ty, unembed_term t)
+
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk_lid ->
         Unk
+
     | _ ->
         failwith "not an embedded sigelt_view"
 

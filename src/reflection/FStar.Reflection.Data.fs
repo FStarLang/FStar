@@ -48,6 +48,7 @@ type ctor =
     | Ctor of  name * typ
 type sigelt_view =
     | Sg_Inductive of name * list<binder> * typ * list<ctor>
+    | Sg_Let of fv * typ * term
     | Unk
 
 type norm_step =
@@ -139,9 +140,11 @@ let ref_Tv_Unknown = tdataconstr ref_Tv_Unknown_lid
 
 (* inductives & sigelts *)
 let ref_Sg_Inductive_lid = fstar_refl_data_lid "Sg_Inductive"
+let ref_Sg_Let_lid       = fstar_refl_data_lid "Sg_Let"
 let ref_Unk_lid          = fstar_refl_data_lid "Unk"
 let ref_Ctor_lid         = fstar_refl_data_lid "Ctor"
 let ref_Sg_Inductive = tdataconstr ref_Sg_Inductive_lid
+let ref_Sg_Let       = tdataconstr ref_Sg_Let_lid
 let ref_Unk          = tdataconstr ref_Unk_lid
 let ref_Ctor         = tdataconstr ref_Ctor_lid
 
