@@ -68,8 +68,8 @@ following commands. (On Windows this requires Cygwin and `make`)
         F* 0.9.5.0
         platform=Linux_x86_64
         compiler=OCaml 4.02.3
-        date=2017-05-04T08:24:02+02:00
-        commit=c0784052f
+        date=yyyy-mm-ddThh:nn:ss+02:00
+        commit=xxxxxxxx
         $ z3 --version
         Z3 version 4.5.1 - 64 bit - build hashcode 1f29cebd4df6
 
