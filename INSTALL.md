@@ -73,6 +73,10 @@ following commands. (On Windows this requires Cygwin and `make`)
         $ z3 --version
         Z3 version 4.5.1 - 64 bit - build hashcode 1f29cebd4df6
 
+   Note: if you are using the binary package and extracted it to,
+   say, the `fstar` directory, then both `fstar.exe` and `z3` are in
+   the `fstar/bin` directory.
+
 2. Run the micro benchmarks:
 
         $ make -C examples/micro-benchmarks
@@ -81,18 +85,19 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -C examples/hello ocaml
 
-4. If you have F# installed the following command should print "Hello F\*!"
+   Note: to have a working OCaml install, please first read the
+   [Working OCaml
+   setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup) section
+   further below, especially steps 0 to 3 to first install OCaml on
+   your OS; then use the following command to install the packages
+   required to compile OCaml programs extracted from F\* code:
 
-        $ make -C examples/hello fs
-   
-   Note: Currently this is [known to fail](https://github.com/FStarLang/FStar/issues/1087)
+        $ opam install ocamlfind batteries stdint zarith
 
-5. You can verify all the examples, keeping in mind that this might
+4. You can verify all the examples, keeping in mind that this might
    take a long time.
 
         $ make -j6 -C examples
-   
-   Note: Currently this is [known to fail for the F# build of F\*](https://github.com/FStarLang/FStar/issues/1023).
 
 ### Homebrew formula for Mac OS X ###
 
@@ -312,6 +317,11 @@ that's over there (it's optimized for F\*). This will install both OCaml and OPA
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)
+
+  Please note that this list of packages is longer than the list in
+  the [Testing a binary package](#testing-a-binary-package) section
+  above, because the additional packages here are necessary to compile
+  F\*.
 
 ### Step 2. Extracting the sources of F\* itself to OCaml ###
 
