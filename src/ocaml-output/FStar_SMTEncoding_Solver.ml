@@ -698,21 +698,35 @@ let report_errors: query_settings -> Prims.unit =
       FStar_SMTEncoding_ErrorReporting.detail_errors false settings.query_env
         settings.query_all_labels ask_z3
     else
-      (FStar_All.pipe_right settings.query_errors
-         (FStar_List.iter
-            (fun e  ->
-               let uu____1702 =
-                 let uu____1703 = error_to_short_string e in
-                 Prims.strcat "SMT solver says: " uu____1703 in
-               FStar_Errors.warn settings.query_range uu____1702));
-       (let uu____1704 = find_localized_errors settings.query_errors in
-        match uu____1704 with
-        | FStar_Pervasives_Native.Some err1 ->
+      (let uu____1696 = find_localized_errors settings.query_errors in
+       match uu____1696 with
+       | FStar_Pervasives_Native.Some err1 ->
+           (FStar_All.pipe_right settings.query_errors
+              (FStar_List.iter
+                 (fun e  ->
+                    let uu____1706 =
+                      let uu____1707 = error_to_short_string e in
+                      Prims.strcat "SMT solver says: " uu____1707 in
+                    FStar_Errors.diag settings.query_range uu____1706));
             FStar_TypeChecker_Err.add_errors settings.query_env
-              err1.error_messages
-        | FStar_Pervasives_Native.None  ->
-            FStar_TypeChecker_Err.add_errors settings.query_env
-              [("Unknown assertion failed", (settings.query_range))]))
+              err1.error_messages)
+       | FStar_Pervasives_Native.None  ->
+           let err_detail =
+             let uu____1709 =
+               FStar_All.pipe_right settings.query_errors
+                 (FStar_List.map
+                    (fun e  ->
+                       let uu____1719 = error_to_short_string e in
+                       Prims.strcat "SMT solver says: " uu____1719)) in
+             FStar_All.pipe_right uu____1709 (FStar_String.concat "; ") in
+           let uu____1722 =
+             let uu____1729 =
+               let uu____1734 =
+                 FStar_Util.format1 "Unknown assertion failed (%s)"
+                   err_detail in
+               (uu____1734, (settings.query_range)) in
+             [uu____1729] in
+           FStar_TypeChecker_Err.add_errors settings.query_env uu____1722)
 let query_info:
   query_settings ->
     (FStar_SMTEncoding_Z3.z3status,Prims.int,Prims.string FStar_Util.smap)
@@ -720,38 +734,38 @@ let query_info:
   =
   fun settings  ->
     fun z3result  ->
-      let uu____1740 =
+      let uu____1767 =
         (FStar_Options.hint_info ()) ||
           (FStar_Options.print_z3_statistics ()) in
-      if uu____1740
+      if uu____1767
       then
-        let uu____1741 = z3result in
-        match uu____1741 with
+        let uu____1768 = z3result in
+        match uu____1768 with
         | (z3status,elapsed_time,statistics) ->
-            let uu____1757 =
+            let uu____1784 =
               FStar_SMTEncoding_Z3.status_string_and_errors z3status in
-            (match uu____1757 with
+            (match uu____1784 with
              | (status_string,errs) ->
                  let tag =
                    match z3status with
-                   | FStar_SMTEncoding_Z3.UNSAT uu____1765 -> "succeeded"
-                   | uu____1766 ->
+                   | FStar_SMTEncoding_Z3.UNSAT uu____1792 -> "succeeded"
+                   | uu____1793 ->
                        Prims.strcat "failed {reason-unknown="
                          (Prims.strcat status_string "}") in
                  let range =
-                   let uu____1768 =
-                     let uu____1769 =
+                   let uu____1795 =
+                     let uu____1796 =
                        FStar_Range.string_of_range settings.query_range in
-                     let uu____1770 =
-                       let uu____1771 = FStar_SMTEncoding_Z3.at_log_file () in
-                       Prims.strcat uu____1771 ")" in
-                     Prims.strcat uu____1769 uu____1770 in
-                   Prims.strcat "(" uu____1768 in
+                     let uu____1797 =
+                       let uu____1798 = FStar_SMTEncoding_Z3.at_log_file () in
+                       Prims.strcat uu____1798 ")" in
+                     Prims.strcat uu____1796 uu____1797 in
+                   Prims.strcat "(" uu____1795 in
                  let used_hint_tag =
                    if used_hint settings then " (with hint)" else "" in
                  let stats =
-                   let uu____1775 = FStar_Options.print_z3_statistics () in
-                   if uu____1775
+                   let uu____1802 = FStar_Options.print_z3_statistics () in
+                   if uu____1802
                    then
                      let f k v1 a =
                        Prims.strcat a
@@ -759,50 +773,50 @@ let query_info:
                             (Prims.strcat "=" (Prims.strcat v1 " "))) in
                      let str =
                        FStar_Util.smap_fold statistics f "statistics={" in
-                     let uu____1787 =
+                     let uu____1814 =
                        FStar_Util.substring str (Prims.parse_int "0")
                          ((FStar_String.length str) - (Prims.parse_int "1")) in
-                     Prims.strcat uu____1787 "}"
+                     Prims.strcat uu____1814 "}"
                    else "" in
-                 ((let uu____1790 =
-                     let uu____1793 =
-                       let uu____1796 =
-                         let uu____1799 =
+                 ((let uu____1817 =
+                     let uu____1820 =
+                       let uu____1823 =
+                         let uu____1826 =
                            FStar_Util.string_of_int settings.query_index in
-                         let uu____1800 =
-                           let uu____1803 =
-                             let uu____1806 =
-                               let uu____1809 =
+                         let uu____1827 =
+                           let uu____1830 =
+                             let uu____1833 =
+                               let uu____1836 =
                                  FStar_Util.string_of_int elapsed_time in
-                               let uu____1810 =
-                                 let uu____1813 =
+                               let uu____1837 =
+                                 let uu____1840 =
                                    FStar_Util.string_of_int
                                      settings.query_fuel in
-                                 let uu____1814 =
-                                   let uu____1817 =
+                                 let uu____1841 =
+                                   let uu____1844 =
                                      FStar_Util.string_of_int
                                        settings.query_ifuel in
-                                   let uu____1818 =
-                                     let uu____1821 =
+                                   let uu____1845 =
+                                     let uu____1848 =
                                        FStar_Util.string_of_int
                                          settings.query_rlimit in
-                                     [uu____1821; stats] in
-                                   uu____1817 :: uu____1818 in
-                                 uu____1813 :: uu____1814 in
-                               uu____1809 :: uu____1810 in
-                             used_hint_tag :: uu____1806 in
-                           tag :: uu____1803 in
-                         uu____1799 :: uu____1800 in
-                       (settings.query_name) :: uu____1796 in
-                     range :: uu____1793 in
+                                     [uu____1848; stats] in
+                                   uu____1844 :: uu____1845 in
+                                 uu____1840 :: uu____1841 in
+                               uu____1836 :: uu____1837 in
+                             used_hint_tag :: uu____1833 in
+                           tag :: uu____1830 in
+                         uu____1826 :: uu____1827 in
+                       (settings.query_name) :: uu____1823 in
+                     range :: uu____1820 in
                    FStar_Util.print
                      "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
-                     uu____1790);
+                     uu____1817);
                   FStar_All.pipe_right errs
                     (FStar_List.iter
-                       (fun uu____1835  ->
-                          match uu____1835 with
-                          | (uu____1842,msg,range1) ->
+                       (fun uu____1862  ->
+                          match uu____1862 with
+                          | (uu____1869,msg,range1) ->
                               let e =
                                 FStar_Errors.mk_issue FStar_Errors.EInfo
                                   (FStar_Pervasives_Native.Some range1) msg in
@@ -810,47 +824,50 @@ let query_info:
                                 if used_hint settings
                                 then "(Hint-replay failed): "
                                 else "" in
-                              let uu____1848 = FStar_Errors.format_issue e in
-                              FStar_Util.print2 "\t\t%s%s\n" tag1 uu____1848))))
+                              let uu____1875 = FStar_Errors.format_issue e in
+                              FStar_Util.print2 "\t\t%s%s\n" tag1 uu____1875))))
       else ()
 let record_hint:
-  'Auu____1858 'Auu____1859 .
+  'Auu____1885 'Auu____1886 .
     query_settings ->
-      (FStar_SMTEncoding_Z3.z3status,'Auu____1859,'Auu____1858)
+      (FStar_SMTEncoding_Z3.z3status,'Auu____1886,'Auu____1885)
         FStar_Pervasives_Native.tuple3 -> Prims.unit
   =
   fun settings  ->
     fun z3result  ->
-      let uu____1880 = z3result in
-      match uu____1880 with
-      | (z3status,elapsed_time,uu____1889) ->
-          let mk_hint core =
-            {
-              FStar_Util.hint_name = (settings.query_name);
-              FStar_Util.hint_index = (settings.query_index);
-              FStar_Util.fuel = (settings.query_fuel);
-              FStar_Util.ifuel = (settings.query_ifuel);
-              FStar_Util.unsat_core = core;
-              FStar_Util.query_elapsed_time = (Prims.parse_int "0")
-            } in
-          let hint_opt =
-            let uu____1905 =
-              (Prims.op_Negation (used_hint settings)) &&
-                (FStar_Options.record_hints ()) in
-            if uu____1905
-            then
-              match z3status with
+      let uu____1907 =
+        let uu____1908 = FStar_Options.record_hints () in
+        Prims.op_Negation uu____1908 in
+      if uu____1907
+      then ()
+      else
+        (let uu____1910 = z3result in
+         match uu____1910 with
+         | (z3status,uu____1918,uu____1919) ->
+             let mk_hint core =
+               {
+                 FStar_Util.hint_name = (settings.query_name);
+                 FStar_Util.hint_index = (settings.query_index);
+                 FStar_Util.fuel = (settings.query_fuel);
+                 FStar_Util.ifuel = (settings.query_ifuel);
+                 FStar_Util.unsat_core = core;
+                 FStar_Util.query_elapsed_time = (Prims.parse_int "0")
+               } in
+             let store_hint hint =
+               let uu____1936 = FStar_ST.op_Bang recorded_hints in
+               match uu____1936 with
+               | FStar_Pervasives_Native.Some l ->
+                   FStar_ST.op_Colon_Equals recorded_hints
+                     (FStar_Pervasives_Native.Some
+                        (FStar_List.append l
+                           [FStar_Pervasives_Native.Some hint]))
+               | uu____1986 -> () in
+             (match z3status with
               | FStar_SMTEncoding_Z3.UNSAT unsat_core ->
-                  FStar_Pervasives_Native.Some (mk_hint unsat_core)
-              | uu____1911 -> FStar_Pervasives_Native.None
-            else FStar_Pervasives_Native.Some (mk_hint settings.query_hint) in
-          let uu____1913 = FStar_ST.op_Bang recorded_hints in
-          (match uu____1913 with
-           | FStar_Pervasives_Native.Some l ->
-               FStar_ST.op_Colon_Equals recorded_hints
-                 (FStar_Pervasives_Native.Some
-                    (FStar_List.append l [hint_opt]))
-           | uu____1963 -> ())
+                  if used_hint settings
+                  then store_hint (mk_hint settings.query_hint)
+                  else store_hint (mk_hint unsat_core)
+              | uu____1994 -> ()))
 let process_result:
   query_settings ->
     (FStar_SMTEncoding_Z3.z3status,Prims.int,Prims.string FStar_Util.smap)
@@ -858,11 +875,11 @@ let process_result:
   =
   fun settings  ->
     fun result  ->
-      (let uu____1995 =
+      (let uu____2024 =
          (used_hint settings) &&
-           (let uu____1997 = FStar_Options.z3_refresh () in
-            Prims.op_Negation uu____1997) in
-       if uu____1995 then FStar_SMTEncoding_Z3.refresh () else ());
+           (let uu____2026 = FStar_Options.z3_refresh () in
+            Prims.op_Negation uu____2026) in
+       if uu____2024 then FStar_SMTEncoding_Z3.refresh () else ());
       (let errs = query_errors settings result in
        query_info settings result;
        record_hint settings result;
@@ -888,8 +905,8 @@ let fold_queries:
             | q::qs2 ->
                 ask1 q
                   (fun res  ->
-                     let uu____2093 = f q res in
-                     match uu____2093 with
+                     let uu____2122 = f q res in
+                     match uu____2122 with
                      | FStar_Pervasives_Native.None  -> ()
                      | FStar_Pervasives_Native.Some errs ->
                          aux (errs :: acc) qs2) in
@@ -908,31 +925,31 @@ let ask_and_report_errors:
           fun suffix  ->
             FStar_SMTEncoding_Z3.giveZ3 prefix1;
             (let default_settings =
-               let uu____2127 =
+               let uu____2156 =
                  match env.FStar_TypeChecker_Env.qname_and_index with
                  | FStar_Pervasives_Native.None  ->
                      failwith "No query name set!"
                  | FStar_Pervasives_Native.Some (q,n1) ->
                      ((FStar_Ident.text_of_lid q), n1) in
-               match uu____2127 with
+               match uu____2156 with
                | (qname,index1) ->
                    let rlimit =
-                     let uu____2153 = FStar_Options.z3_rlimit_factor () in
-                     let uu____2154 =
-                       let uu____2155 = FStar_Options.z3_rlimit () in
-                       uu____2155 * (Prims.parse_int "544656") in
-                     uu____2153 * uu____2154 in
-                   let uu____2156 = FStar_TypeChecker_Env.get_range env in
-                   let uu____2157 = FStar_Options.initial_fuel () in
-                   let uu____2158 = FStar_Options.initial_ifuel () in
+                     let uu____2182 = FStar_Options.z3_rlimit_factor () in
+                     let uu____2183 =
+                       let uu____2184 = FStar_Options.z3_rlimit () in
+                       uu____2184 * (Prims.parse_int "544656") in
+                     uu____2182 * uu____2183 in
+                   let uu____2185 = FStar_TypeChecker_Env.get_range env in
+                   let uu____2186 = FStar_Options.initial_fuel () in
+                   let uu____2187 = FStar_Options.initial_ifuel () in
                    {
                      query_env = env;
                      query_decl = query;
                      query_name = qname;
                      query_index = index1;
-                     query_range = uu____2156;
-                     query_fuel = uu____2157;
-                     query_ifuel = uu____2158;
+                     query_range = uu____2185;
+                     query_fuel = uu____2186;
+                     query_ifuel = uu____2187;
                      query_rlimit = rlimit;
                      query_hint = FStar_Pervasives_Native.None;
                      query_errors = [];
@@ -940,144 +957,144 @@ let ask_and_report_errors:
                      query_suffix = suffix
                    } in
              let use_hints_setting =
-               let uu____2164 = next_hint default_settings in
-               match uu____2164 with
+               let uu____2193 = next_hint default_settings in
+               match uu____2193 with
                | FStar_Pervasives_Native.Some
-                   { FStar_Util.hint_name = uu____2169;
-                     FStar_Util.hint_index = uu____2170; FStar_Util.fuel = i;
+                   { FStar_Util.hint_name = uu____2198;
+                     FStar_Util.hint_index = uu____2199; FStar_Util.fuel = i;
                      FStar_Util.ifuel = j;
                      FStar_Util.unsat_core = FStar_Pervasives_Native.Some
                        core;
-                     FStar_Util.query_elapsed_time = uu____2174;_}
+                     FStar_Util.query_elapsed_time = uu____2203;_}
                    ->
-                   [(let uu___92_2180 = default_settings in
+                   [(let uu___92_2209 = default_settings in
                      {
-                       query_env = (uu___92_2180.query_env);
-                       query_decl = (uu___92_2180.query_decl);
-                       query_name = (uu___92_2180.query_name);
-                       query_index = (uu___92_2180.query_index);
-                       query_range = (uu___92_2180.query_range);
+                       query_env = (uu___92_2209.query_env);
+                       query_decl = (uu___92_2209.query_decl);
+                       query_name = (uu___92_2209.query_name);
+                       query_index = (uu___92_2209.query_index);
+                       query_range = (uu___92_2209.query_range);
                        query_fuel = i;
                        query_ifuel = j;
-                       query_rlimit = (uu___92_2180.query_rlimit);
+                       query_rlimit = (uu___92_2209.query_rlimit);
                        query_hint = (FStar_Pervasives_Native.Some core);
-                       query_errors = (uu___92_2180.query_errors);
-                       query_all_labels = (uu___92_2180.query_all_labels);
-                       query_suffix = (uu___92_2180.query_suffix)
+                       query_errors = (uu___92_2209.query_errors);
+                       query_all_labels = (uu___92_2209.query_all_labels);
+                       query_suffix = (uu___92_2209.query_suffix)
                      })]
-               | uu____2183 -> [] in
+               | uu____2212 -> [] in
              let initial_fuel_max_ifuel =
-               let uu____2189 =
-                 let uu____2190 = FStar_Options.max_ifuel () in
-                 let uu____2191 = FStar_Options.initial_ifuel () in
-                 uu____2190 > uu____2191 in
-               if uu____2189
+               let uu____2218 =
+                 let uu____2219 = FStar_Options.max_ifuel () in
+                 let uu____2220 = FStar_Options.initial_ifuel () in
+                 uu____2219 > uu____2220 in
+               if uu____2218
                then
-                 let uu____2194 =
-                   let uu___93_2195 = default_settings in
-                   let uu____2196 = FStar_Options.max_ifuel () in
+                 let uu____2223 =
+                   let uu___93_2224 = default_settings in
+                   let uu____2225 = FStar_Options.max_ifuel () in
                    {
-                     query_env = (uu___93_2195.query_env);
-                     query_decl = (uu___93_2195.query_decl);
-                     query_name = (uu___93_2195.query_name);
-                     query_index = (uu___93_2195.query_index);
-                     query_range = (uu___93_2195.query_range);
-                     query_fuel = (uu___93_2195.query_fuel);
-                     query_ifuel = uu____2196;
-                     query_rlimit = (uu___93_2195.query_rlimit);
-                     query_hint = (uu___93_2195.query_hint);
-                     query_errors = (uu___93_2195.query_errors);
-                     query_all_labels = (uu___93_2195.query_all_labels);
-                     query_suffix = (uu___93_2195.query_suffix)
+                     query_env = (uu___93_2224.query_env);
+                     query_decl = (uu___93_2224.query_decl);
+                     query_name = (uu___93_2224.query_name);
+                     query_index = (uu___93_2224.query_index);
+                     query_range = (uu___93_2224.query_range);
+                     query_fuel = (uu___93_2224.query_fuel);
+                     query_ifuel = uu____2225;
+                     query_rlimit = (uu___93_2224.query_rlimit);
+                     query_hint = (uu___93_2224.query_hint);
+                     query_errors = (uu___93_2224.query_errors);
+                     query_all_labels = (uu___93_2224.query_all_labels);
+                     query_suffix = (uu___93_2224.query_suffix)
                    } in
-                 [uu____2194]
+                 [uu____2223]
                else [] in
              let half_max_fuel_max_ifuel =
-               let uu____2201 =
-                 let uu____2202 =
-                   let uu____2203 = FStar_Options.max_fuel () in
-                   uu____2203 / (Prims.parse_int "2") in
-                 let uu____2210 = FStar_Options.initial_fuel () in
-                 uu____2202 > uu____2210 in
-               if uu____2201
+               let uu____2230 =
+                 let uu____2231 =
+                   let uu____2232 = FStar_Options.max_fuel () in
+                   uu____2232 / (Prims.parse_int "2") in
+                 let uu____2239 = FStar_Options.initial_fuel () in
+                 uu____2231 > uu____2239 in
+               if uu____2230
                then
-                 let uu____2213 =
-                   let uu___94_2214 = default_settings in
-                   let uu____2215 =
-                     let uu____2216 = FStar_Options.max_fuel () in
-                     uu____2216 / (Prims.parse_int "2") in
-                   let uu____2223 = FStar_Options.max_ifuel () in
+                 let uu____2242 =
+                   let uu___94_2243 = default_settings in
+                   let uu____2244 =
+                     let uu____2245 = FStar_Options.max_fuel () in
+                     uu____2245 / (Prims.parse_int "2") in
+                   let uu____2252 = FStar_Options.max_ifuel () in
                    {
-                     query_env = (uu___94_2214.query_env);
-                     query_decl = (uu___94_2214.query_decl);
-                     query_name = (uu___94_2214.query_name);
-                     query_index = (uu___94_2214.query_index);
-                     query_range = (uu___94_2214.query_range);
-                     query_fuel = uu____2215;
-                     query_ifuel = uu____2223;
-                     query_rlimit = (uu___94_2214.query_rlimit);
-                     query_hint = (uu___94_2214.query_hint);
-                     query_errors = (uu___94_2214.query_errors);
-                     query_all_labels = (uu___94_2214.query_all_labels);
-                     query_suffix = (uu___94_2214.query_suffix)
+                     query_env = (uu___94_2243.query_env);
+                     query_decl = (uu___94_2243.query_decl);
+                     query_name = (uu___94_2243.query_name);
+                     query_index = (uu___94_2243.query_index);
+                     query_range = (uu___94_2243.query_range);
+                     query_fuel = uu____2244;
+                     query_ifuel = uu____2252;
+                     query_rlimit = (uu___94_2243.query_rlimit);
+                     query_hint = (uu___94_2243.query_hint);
+                     query_errors = (uu___94_2243.query_errors);
+                     query_all_labels = (uu___94_2243.query_all_labels);
+                     query_suffix = (uu___94_2243.query_suffix)
                    } in
-                 [uu____2213]
+                 [uu____2242]
                else [] in
              let max_fuel_max_ifuel =
-               let uu____2228 =
-                 (let uu____2233 = FStar_Options.max_fuel () in
-                  let uu____2234 = FStar_Options.initial_fuel () in
-                  uu____2233 > uu____2234) &&
-                   (let uu____2237 = FStar_Options.max_ifuel () in
-                    let uu____2238 = FStar_Options.initial_ifuel () in
-                    uu____2237 >= uu____2238) in
-               if uu____2228
+               let uu____2257 =
+                 (let uu____2262 = FStar_Options.max_fuel () in
+                  let uu____2263 = FStar_Options.initial_fuel () in
+                  uu____2262 > uu____2263) &&
+                   (let uu____2266 = FStar_Options.max_ifuel () in
+                    let uu____2267 = FStar_Options.initial_ifuel () in
+                    uu____2266 >= uu____2267) in
+               if uu____2257
                then
-                 let uu____2241 =
-                   let uu___95_2242 = default_settings in
-                   let uu____2243 = FStar_Options.max_fuel () in
-                   let uu____2244 = FStar_Options.max_ifuel () in
+                 let uu____2270 =
+                   let uu___95_2271 = default_settings in
+                   let uu____2272 = FStar_Options.max_fuel () in
+                   let uu____2273 = FStar_Options.max_ifuel () in
                    {
-                     query_env = (uu___95_2242.query_env);
-                     query_decl = (uu___95_2242.query_decl);
-                     query_name = (uu___95_2242.query_name);
-                     query_index = (uu___95_2242.query_index);
-                     query_range = (uu___95_2242.query_range);
-                     query_fuel = uu____2243;
-                     query_ifuel = uu____2244;
-                     query_rlimit = (uu___95_2242.query_rlimit);
-                     query_hint = (uu___95_2242.query_hint);
-                     query_errors = (uu___95_2242.query_errors);
-                     query_all_labels = (uu___95_2242.query_all_labels);
-                     query_suffix = (uu___95_2242.query_suffix)
+                     query_env = (uu___95_2271.query_env);
+                     query_decl = (uu___95_2271.query_decl);
+                     query_name = (uu___95_2271.query_name);
+                     query_index = (uu___95_2271.query_index);
+                     query_range = (uu___95_2271.query_range);
+                     query_fuel = uu____2272;
+                     query_ifuel = uu____2273;
+                     query_rlimit = (uu___95_2271.query_rlimit);
+                     query_hint = (uu___95_2271.query_hint);
+                     query_errors = (uu___95_2271.query_errors);
+                     query_all_labels = (uu___95_2271.query_all_labels);
+                     query_suffix = (uu___95_2271.query_suffix)
                    } in
-                 [uu____2241]
+                 [uu____2270]
                else [] in
              let min_fuel1 =
-               let uu____2249 =
-                 let uu____2250 = FStar_Options.min_fuel () in
-                 let uu____2251 = FStar_Options.initial_fuel () in
-                 uu____2250 < uu____2251 in
-               if uu____2249
+               let uu____2278 =
+                 let uu____2279 = FStar_Options.min_fuel () in
+                 let uu____2280 = FStar_Options.initial_fuel () in
+                 uu____2279 < uu____2280 in
+               if uu____2278
                then
-                 let uu____2254 =
-                   let uu___96_2255 = default_settings in
-                   let uu____2256 = FStar_Options.min_fuel () in
+                 let uu____2283 =
+                   let uu___96_2284 = default_settings in
+                   let uu____2285 = FStar_Options.min_fuel () in
                    {
-                     query_env = (uu___96_2255.query_env);
-                     query_decl = (uu___96_2255.query_decl);
-                     query_name = (uu___96_2255.query_name);
-                     query_index = (uu___96_2255.query_index);
-                     query_range = (uu___96_2255.query_range);
-                     query_fuel = uu____2256;
+                     query_env = (uu___96_2284.query_env);
+                     query_decl = (uu___96_2284.query_decl);
+                     query_name = (uu___96_2284.query_name);
+                     query_index = (uu___96_2284.query_index);
+                     query_range = (uu___96_2284.query_range);
+                     query_fuel = uu____2285;
                      query_ifuel = (Prims.parse_int "1");
-                     query_rlimit = (uu___96_2255.query_rlimit);
-                     query_hint = (uu___96_2255.query_hint);
-                     query_errors = (uu___96_2255.query_errors);
-                     query_all_labels = (uu___96_2255.query_all_labels);
-                     query_suffix = (uu___96_2255.query_suffix)
+                     query_rlimit = (uu___96_2284.query_rlimit);
+                     query_hint = (uu___96_2284.query_hint);
+                     query_errors = (uu___96_2284.query_errors);
+                     query_all_labels = (uu___96_2284.query_all_labels);
+                     query_suffix = (uu___96_2284.query_suffix)
                    } in
-                 [uu____2254]
+                 [uu____2283]
                else [] in
              let all_configs =
                FStar_List.append use_hints_setting
@@ -1086,41 +1103,41 @@ let ask_and_report_errors:
                        (FStar_List.append half_max_fuel_max_ifuel
                           max_fuel_max_ifuel))) in
              let check_one_config config k =
-               (let uu____2274 =
+               (let uu____2303 =
                   (used_hint config) || (FStar_Options.z3_refresh ()) in
-                if uu____2274 then FStar_SMTEncoding_Z3.refresh () else ());
-               (let uu____2276 = with_fuel_and_diagnostics config [] in
-                let uu____2279 =
-                  let uu____2282 = FStar_SMTEncoding_Z3.mk_fresh_scope () in
-                  FStar_Pervasives_Native.Some uu____2282 in
+                if uu____2303 then FStar_SMTEncoding_Z3.refresh () else ());
+               (let uu____2305 = with_fuel_and_diagnostics config [] in
+                let uu____2308 =
+                  let uu____2311 = FStar_SMTEncoding_Z3.mk_fresh_scope () in
+                  FStar_Pervasives_Native.Some uu____2311 in
                 FStar_SMTEncoding_Z3.ask
                   (filter_assertions config.query_env config.query_hint)
-                  config.query_all_labels uu____2276 uu____2279 k) in
+                  config.query_all_labels uu____2305 uu____2308 k) in
              let check_all_configs configs =
                let report1 errs =
                  report_errors
-                   (let uu___97_2301 = default_settings in
+                   (let uu___97_2330 = default_settings in
                     {
-                      query_env = (uu___97_2301.query_env);
-                      query_decl = (uu___97_2301.query_decl);
-                      query_name = (uu___97_2301.query_name);
-                      query_index = (uu___97_2301.query_index);
-                      query_range = (uu___97_2301.query_range);
-                      query_fuel = (uu___97_2301.query_fuel);
-                      query_ifuel = (uu___97_2301.query_ifuel);
-                      query_rlimit = (uu___97_2301.query_rlimit);
-                      query_hint = (uu___97_2301.query_hint);
+                      query_env = (uu___97_2330.query_env);
+                      query_decl = (uu___97_2330.query_decl);
+                      query_name = (uu___97_2330.query_name);
+                      query_index = (uu___97_2330.query_index);
+                      query_range = (uu___97_2330.query_range);
+                      query_fuel = (uu___97_2330.query_fuel);
+                      query_ifuel = (uu___97_2330.query_ifuel);
+                      query_rlimit = (uu___97_2330.query_rlimit);
+                      query_hint = (uu___97_2330.query_hint);
                       query_errors = errs;
-                      query_all_labels = (uu___97_2301.query_all_labels);
-                      query_suffix = (uu___97_2301.query_suffix)
+                      query_all_labels = (uu___97_2330.query_all_labels);
+                      query_suffix = (uu___97_2330.query_suffix)
                     }) in
                fold_queries configs check_one_config process_result report1 in
-             let uu____2302 =
-               let uu____2309 = FStar_Options.admit_smt_queries () in
-               let uu____2310 = FStar_Options.admit_except () in
-               (uu____2309, uu____2310) in
-             match uu____2302 with
-             | (true ,uu____2315) -> ()
+             let uu____2331 =
+               let uu____2338 = FStar_Options.admit_smt_queries () in
+               let uu____2339 = FStar_Options.admit_except () in
+               (uu____2338, uu____2339) in
+             match uu____2331 with
+             | (true ,uu____2344) -> ()
              | (false ,FStar_Pervasives_Native.None ) ->
                  check_all_configs all_configs
              | (false ,FStar_Pervasives_Native.Some id) ->
@@ -1128,16 +1145,16 @@ let ask_and_report_errors:
                    if FStar_Util.starts_with id "("
                    then
                      let full_query_id =
-                       let uu____2327 =
-                         let uu____2328 =
-                           let uu____2329 =
-                             let uu____2330 =
+                       let uu____2356 =
+                         let uu____2357 =
+                           let uu____2358 =
+                             let uu____2359 =
                                FStar_Util.string_of_int
                                  default_settings.query_index in
-                             Prims.strcat uu____2330 ")" in
-                           Prims.strcat ", " uu____2329 in
-                         Prims.strcat default_settings.query_name uu____2328 in
-                       Prims.strcat "(" uu____2327 in
+                             Prims.strcat uu____2359 ")" in
+                           Prims.strcat ", " uu____2358 in
+                         Prims.strcat default_settings.query_name uu____2357 in
+                       Prims.strcat "(" uu____2356 in
                      full_query_id <> id
                    else default_settings.query_name <> id in
                  if Prims.op_Negation skip
@@ -1150,24 +1167,24 @@ let solve:
   fun use_env_msg  ->
     fun tcenv  ->
       fun q  ->
-        (let uu____2355 =
-           let uu____2356 =
-             let uu____2357 = FStar_TypeChecker_Env.get_range tcenv in
-             FStar_All.pipe_left FStar_Range.string_of_range uu____2357 in
-           FStar_Util.format1 "Starting query at %s" uu____2356 in
-         FStar_SMTEncoding_Encode.push uu____2355);
+        (let uu____2384 =
+           let uu____2385 =
+             let uu____2386 = FStar_TypeChecker_Env.get_range tcenv in
+             FStar_All.pipe_left FStar_Range.string_of_range uu____2386 in
+           FStar_Util.format1 "Starting query at %s" uu____2385 in
+         FStar_SMTEncoding_Encode.push uu____2384);
         (let tcenv1 = FStar_TypeChecker_Env.incr_query_index tcenv in
-         let uu____2359 =
+         let uu____2388 =
            FStar_SMTEncoding_Encode.encode_query use_env_msg tcenv1 q in
-         match uu____2359 with
+         match uu____2388 with
          | (prefix1,labels,qry,suffix) ->
-             let pop1 uu____2393 =
-               let uu____2394 =
-                 let uu____2395 =
-                   let uu____2396 = FStar_TypeChecker_Env.get_range tcenv1 in
-                   FStar_All.pipe_left FStar_Range.string_of_range uu____2396 in
-                 FStar_Util.format1 "Ending query at %s" uu____2395 in
-               FStar_SMTEncoding_Encode.pop uu____2394 in
+             let pop1 uu____2422 =
+               let uu____2423 =
+                 let uu____2424 =
+                   let uu____2425 = FStar_TypeChecker_Env.get_range tcenv1 in
+                   FStar_All.pipe_left FStar_Range.string_of_range uu____2425 in
+                 FStar_Util.format1 "Ending query at %s" uu____2424 in
+               FStar_SMTEncoding_Encode.pop uu____2423 in
              (match qry with
               | FStar_SMTEncoding_Term.Assume
                   {
@@ -1175,18 +1192,18 @@ let solve:
                       {
                         FStar_SMTEncoding_Term.tm =
                           FStar_SMTEncoding_Term.App
-                          (FStar_SMTEncoding_Term.FalseOp ,uu____2397);
-                        FStar_SMTEncoding_Term.freevars = uu____2398;
-                        FStar_SMTEncoding_Term.rng = uu____2399;_};
-                    FStar_SMTEncoding_Term.assumption_caption = uu____2400;
-                    FStar_SMTEncoding_Term.assumption_name = uu____2401;
-                    FStar_SMTEncoding_Term.assumption_fact_ids = uu____2402;_}
+                          (FStar_SMTEncoding_Term.FalseOp ,uu____2426);
+                        FStar_SMTEncoding_Term.freevars = uu____2427;
+                        FStar_SMTEncoding_Term.rng = uu____2428;_};
+                    FStar_SMTEncoding_Term.assumption_caption = uu____2429;
+                    FStar_SMTEncoding_Term.assumption_name = uu____2430;
+                    FStar_SMTEncoding_Term.assumption_fact_ids = uu____2431;_}
                   -> pop1 ()
-              | uu____2417 when tcenv1.FStar_TypeChecker_Env.admit -> pop1 ()
-              | FStar_SMTEncoding_Term.Assume uu____2418 ->
+              | uu____2446 when tcenv1.FStar_TypeChecker_Env.admit -> pop1 ()
+              | FStar_SMTEncoding_Term.Assume uu____2447 ->
                   (ask_and_report_errors tcenv1 labels prefix1 qry suffix;
                    pop1 ())
-              | uu____2420 -> failwith "Impossible"))
+              | uu____2449 -> failwith "Impossible"))
 let solver: FStar_TypeChecker_Env.solver_t =
   {
     FStar_TypeChecker_Env.init = FStar_SMTEncoding_Encode.init;
@@ -1201,9 +1218,9 @@ let solver: FStar_TypeChecker_Env.solver_t =
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____2426 =
-             let uu____2433 = FStar_Options.peek () in (e, g, uu____2433) in
-           [uu____2426]);
+           let uu____2455 =
+             let uu____2462 = FStar_Options.peek () in (e, g, uu____2462) in
+           [uu____2455]);
     FStar_TypeChecker_Env.solve = solve;
     FStar_TypeChecker_Env.is_trivial = FStar_SMTEncoding_Encode.is_trivial;
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
@@ -1211,26 +1228,26 @@ let solver: FStar_TypeChecker_Env.solver_t =
   }
 let dummy: FStar_TypeChecker_Env.solver_t =
   {
-    FStar_TypeChecker_Env.init = (fun uu____2448  -> ());
-    FStar_TypeChecker_Env.push = (fun uu____2450  -> ());
-    FStar_TypeChecker_Env.pop = (fun uu____2452  -> ());
-    FStar_TypeChecker_Env.mark = (fun uu____2454  -> ());
-    FStar_TypeChecker_Env.reset_mark = (fun uu____2456  -> ());
-    FStar_TypeChecker_Env.commit_mark = (fun uu____2458  -> ());
+    FStar_TypeChecker_Env.init = (fun uu____2477  -> ());
+    FStar_TypeChecker_Env.push = (fun uu____2479  -> ());
+    FStar_TypeChecker_Env.pop = (fun uu____2481  -> ());
+    FStar_TypeChecker_Env.mark = (fun uu____2483  -> ());
+    FStar_TypeChecker_Env.reset_mark = (fun uu____2485  -> ());
+    FStar_TypeChecker_Env.commit_mark = (fun uu____2487  -> ());
     FStar_TypeChecker_Env.encode_modul =
-      (fun uu____2461  -> fun uu____2462  -> ());
+      (fun uu____2490  -> fun uu____2491  -> ());
     FStar_TypeChecker_Env.encode_sig =
-      (fun uu____2465  -> fun uu____2466  -> ());
+      (fun uu____2494  -> fun uu____2495  -> ());
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____2472 =
-             let uu____2479 = FStar_Options.peek () in (e, g, uu____2479) in
-           [uu____2472]);
+           let uu____2501 =
+             let uu____2508 = FStar_Options.peek () in (e, g, uu____2508) in
+           [uu____2501]);
     FStar_TypeChecker_Env.solve =
-      (fun uu____2495  -> fun uu____2496  -> fun uu____2497  -> ());
+      (fun uu____2524  -> fun uu____2525  -> fun uu____2526  -> ());
     FStar_TypeChecker_Env.is_trivial =
-      (fun uu____2504  -> fun uu____2505  -> false);
-    FStar_TypeChecker_Env.finish = (fun uu____2507  -> ());
-    FStar_TypeChecker_Env.refresh = (fun uu____2509  -> ())
+      (fun uu____2533  -> fun uu____2534  -> false);
+    FStar_TypeChecker_Env.finish = (fun uu____2536  -> ());
+    FStar_TypeChecker_Env.refresh = (fun uu____2538  -> ())
   }
