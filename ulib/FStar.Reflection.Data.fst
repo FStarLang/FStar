@@ -61,6 +61,13 @@ type sigelt_view =
       (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
       list ctor ->              // constructors
       sigelt_view
+
+  | Sg_Let :
+      (fv:fv) ->
+      (typ:typ) ->
+      (def:term) ->
+      sigelt_view
+
   | Unk
 
 noeq

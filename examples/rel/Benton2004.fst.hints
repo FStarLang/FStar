@@ -641,30 +641,6 @@
       0
     ],
     [
-      "Benton2004.d_seq_terminates_recip",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Benton2004_interpretation_Tm_arrow_d529593900c5e5ecc5fc0986b45b6cb5",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
-        "equation_Benton2004.computation",
-        "equation_Benton2004.raw_computation",
-        "equation_Benton2004.reified_raw_computation",
-        "equation_Benton2004.reify_raw_computation",
-        "equation_Benton2004.sttype", "equation_Benton2004.terminates_on",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
-        "lemma_Benton2004.exec_equiv_flip", "lemma_Benton2004.holds_flip",
-        "refinement_interpretation_Benton2004_Tm_refine_72f59247ec9aa4a8317b20902c00c895",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_Benton2004.reify_raw_computation"
-      ],
-      0
-    ],
-    [
       "Benton2004.d_seq",
       1,
       2,
