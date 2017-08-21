@@ -562,14 +562,14 @@ and translate_expr env e: expr =
       EBound (find env v)
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var (v, _) }; e ]) when (string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" && is_mutable env v) ->
       EAssign (EBound (find env v), translate_expr env e)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
-  | MLE_App ({ expr = MLE_Name p }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
-  | MLE_App ({ expr = MLE_Name p }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
       let rec list_elements acc e2 =
         match e2.expr with
         | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
@@ -581,22 +581,22 @@ and translate_expr env e: expr =
       in
       let list_elements = list_elements [] in
       EBufCreateL (Stack, List.map (translate_expr env) (list_elements e2))
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ]) when (string_of_mlpath p = "FStar.Buffer.sub") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
       (translate_expr env e1)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ])
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
     when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.push_frame") ->
       EPushFrame
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.pop_frame") ->
       EPopFrame
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (string_of_mlpath p = "FStar.Buffer.blit") ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
-  | MLE_App ({ expr = MLE_Name p }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.fill") ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ]) when (string_of_mlpath p = "FStar.Buffer.fill") ->
       EBufFill (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when string_of_mlpath p = "FStar.HyperStack.ST.get" ->
       // We need to reveal to Kremlin that FStar.HST.get is equivalent to
