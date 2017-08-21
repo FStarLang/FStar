@@ -24,10 +24,16 @@ type pattern =
 
 type branch = pattern * term
 
+type aqualv =
+    | Q_Implicit
+    | Q_Explicit
+
+type argv = term * aqualv
+
 type term_view =
     | Tv_Var    of binder
     | Tv_FVar   of fv
-    | Tv_App    of term * term
+    | Tv_App    of term * argv
     | Tv_Abs    of binder * term
     | Tv_Arrow  of binder * term
     | Tv_Type   of unit
@@ -49,6 +55,7 @@ type norm_step =
     | WHNF
     | Primops
     | Delta
+    | UnfoldOnly of list<fv>
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
@@ -64,6 +71,7 @@ let fstar_refl_tdataconstr s = tdataconstr (fstar_refl_lid s)
 
 (* types *)
 let fstar_refl_term      = mk_refl_types_lid_as_term "term"
+let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
 let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
@@ -73,6 +81,12 @@ let fstar_refl_sigelt    = mk_refl_types_lid_as_term "sigelt"
 let fstar_refl_ctor      = mk_refl_types_lid_as_term "ctor"
 let fstar_refl_pattern   = mk_refl_syntax_lid_as_term "pattern"
 let fstar_refl_branch    = mk_refl_types_lid_as_term "branch"
+
+(* quals *)
+let ref_Q_Explicit_lid   = fstar_refl_data_lid "Q_Explicit"
+let ref_Q_Implicit_lid   = fstar_refl_data_lid "Q_Implicit"
+let ref_Q_Explicit       = tdataconstr ref_Q_Explicit_lid
+let ref_Q_Implicit       = tdataconstr ref_Q_Implicit_lid
 
 (* const *)
 let ref_C_Unit_lid  = fstar_refl_data_lid "C_Unit"
@@ -137,11 +151,13 @@ let ref_Simpl_lid      = fstar_refl_data_lid "Simpl"
 let ref_WHNF_lid       = fstar_refl_data_lid "WHNF"
 let ref_Primops_lid    = fstar_refl_data_lid "Primops"
 let ref_Delta_lid      = fstar_refl_data_lid "Delta"
+let ref_UnfoldOnly_lid = fstar_refl_data_lid "UnfoldOnly"
 
 let ref_Simpl          = tdataconstr ref_Simpl_lid
 let ref_WHNF           = tdataconstr ref_WHNF_lid
 let ref_Primops        = tdataconstr ref_Primops_lid
 let ref_Delta          = tdataconstr ref_Delta_lid
+let ref_UnfoldOnly     = tdataconstr ref_UnfoldOnly_lid
 
 let t_binder = tabbrev <| fstar_refl_types_lid "binder"
 let t_term = tabbrev <| fstar_refl_types_lid "term"

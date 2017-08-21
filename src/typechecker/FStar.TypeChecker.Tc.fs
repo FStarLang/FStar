@@ -1458,14 +1458,15 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_pragma (p) ->
     (match p with
+     | SetOptions _
      | ResetOptions _ ->
-        env.solver.refresh ();
         // `using_facts_from` requires some special handling..
         begin match Options.using_facts_from () with
         | Some ns ->
             let proof_ns = [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]] in
             { env with proof_ns = proof_ns }
-        | None -> env
+        | None ->
+            { env with proof_ns = [[]] }
         end
      | _ -> env)
   | Sig_new_effect_for_free _ -> env
@@ -1624,6 +1625,14 @@ let check_exports env (modul:modul) exports =
     then ()
     else List.iter check_sigelt exports
 
+let load_checked_module env modul =
+  let env = Env.set_current_module env modul.name in
+  let env = List.fold_left Env.push_sigelt env modul.exports in
+  let env = Env.finish_module env modul in
+  env.solver.encode_modul env modul;
+  env.solver.refresh();
+  let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+  env
 
 let finish_partial_modul env modul exports =
   let modul = {modul with exports=exports; is_interface=modul.is_interface} in

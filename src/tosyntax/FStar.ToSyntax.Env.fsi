@@ -157,11 +157,14 @@ val mark: env -> env
 val reset_mark: unit -> env
 val commit_mark: env -> env
 val finish_module_or_interface: env -> modul -> env
-val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //pop the context when done desugaring
 val enter_monad_scope: env -> ident -> env
 val export_interface: lident ->  env -> env
 
 val transitive_exported_ids: env -> lident -> list<string>
+type module_inclusion_info
+val default_mii : module_inclusion_info
+val inclusion_info: env -> lident -> module_inclusion_info
+val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusion_info -> env * bool //pop the context when done desugaring
 
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<(term*bool)>
 (* private *) val unique:  bool -> bool -> env -> lident -> bool

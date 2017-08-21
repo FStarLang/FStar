@@ -21,10 +21,10 @@ let v x = U64.v x.low + (U64.v x.high) * (pow2 64)
 
 let div_mod (x:nat) (k:nat{k > 0}) : Lemma (x / k * k + x % k == x) = ()
 
-let uint_to_t n =
-    div_mod n (pow2 64);
-    { low = U64.uint_to_t (n % (pow2 64));
-      high = U64.uint_to_t (n / (pow2 64)); }
+let uint_to_t x =
+    div_mod x (pow2 64);
+    { low = U64.uint_to_t (x % (pow2 64));
+      high = U64.uint_to_t (x / (pow2 64)); }
 
 let v_inj (x1 x2: t): Lemma (requires (v x1 == v x2))
                             (ensures x1 == x2) =
@@ -243,14 +243,16 @@ let sub_mod (a b: t) : Pure t
     else sub_mod_wrap_ok a b);
   sub_mod_impl a b
 
+val shift_bound : #n:nat -> num:UInt.uint_t n -> n':nat ->
+  Lemma (num * pow2 n' <= pow2 (n'+n) - pow2 n')
+let shift_bound #n num n' =
+  Math.lemma_mult_le_right (pow2 n') num (pow2 n - 1);
+  Math.distributivity_sub_left (pow2 n) 1 (pow2 n');
+  Math.pow2_plus n' n
+
 val append_uint : #n1:nat -> #n2:nat -> num1:UInt.uint_t n1 -> num2:UInt.uint_t n2 -> UInt.uint_t (n1+n2)
 let append_uint #n1 #n2 num1 num2 =
-  Math.lemma_mult_le_right (pow2 n1) num2 (pow2 n2 - 1);
-//  assert (num1 + num2 * pow2 n1 <= (pow2 n1 - 1) + (pow2 n2 - 1) * pow2 n1);
-  Math.distributivity_sub_left (pow2 n2) 1 (pow2 n1);
-//  assert ( (pow2 n1 - 1) + (pow2 n2 - 1) * pow2 n1 == (pow2 n1 - 1) + pow2 n2 * pow2 n1 - pow2 n1);
-  Math.pow2_plus n2 n1;
- // assert ((pow2 n1 - 1) + pow2 (n2 + n1) - pow2 n1 == pow2 (n2 + n1) - 1);
+  shift_bound num2 n1;
   num1 + num2 * pow2 n1
 
 val to_vec_append : #n1:nat{n1 > 0} -> #n2:nat{n2 > 0} -> num1:UInt.uint_t n1 -> num2:UInt.uint_t n2 ->
@@ -367,10 +369,12 @@ let mod_double a k =
   mod_mod a k 1
 
 let shift_left_large_val (#n1:nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_t n2) (s:nat) :
-  Lemma ((a1 + a2 * pow2 n1) * pow2 s % pow2 (n1+n2) == (a1 * pow2 s + a2 * pow2 (n1+s)) % pow2 (n1+n2)) =
+  Lemma ((a1 + a2 * pow2 n1) * pow2 s == (a1 * pow2 s + a2 * pow2 (n1+s))) =
   Math.distributivity_add_left a1 (a2 * pow2 n1) (pow2 s);
   Math.paren_mul_right a2 (pow2 n1) (pow2 s);
   Math.pow2_plus n1 s
+
+#reset-options "--z3refresh --z3rlimit 60 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 
 let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_t n2) (s: nat{s >= n2}) :
   Lemma (((a1 + a2 * pow2 n1) * pow2 s) % pow2 (n1+n2) ==
@@ -380,6 +384,8 @@ let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.ui
   shift_past_mod a2 (n1+n2) (n1+s);
   mod_double (a1 * pow2 s) (pow2 (n1+n2));
   ()
+
+#reset-options "--z3refresh --z3rlimit 40 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 
 val shift_left_large_lemma_t : a:t -> s:nat ->
   Lemma (requires (s >= 64))
@@ -551,11 +557,13 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
     shift_t_mod_val a s;
     r
 
-val shift_left_large : a:t -> s:U32.t{U32.v s >= 64} ->
-  r:t{U32.v s < 128 ==> v r = (v a * pow2 (U32.v s)) % pow2 128}
+#reset-options "--z3refresh --z3rlimit 60 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+
+val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
+  r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
-  assert (U32.v s < 128 ==> U32.v h_shift < 64);
+  assert (U32.v h_shift < 64);
   let r = { low = U64.uint_to_t 0;
             high = U64.shift_left a.low h_shift; } in
   assert (U64.v r.high == (U64.v a.low * pow2 (U32.v s - 64)) % pow2 64);
@@ -565,13 +573,12 @@ let shift_left_large a s =
   shift_left_large_lemma_t a (U32.v s);
   r
 
-let shift_left (a: t) (s: U32.t) : Pure t
-  (requires True)
-  (ensures (fun r -> U32.v s < 128 ==> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
+#reset-options "--z3refresh --z3rlimit 40 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+
+let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
   else shift_left_large a s
 
-#set-options "--z3rlimit 100"
 let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
@@ -581,13 +588,13 @@ let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   let s = U32.v s in
   let low_n = U64.v lo / pow2 s in
   let high_n = U64.v hi % pow2 s * pow2 (64 - s) in
-  assert (U64.v low == low_n);
-  admit ();
-  assert (U64.v high == high_n); // This one seems to be hard on z3
+  Math.pow2_plus (64-s) s;
+  mod_mul (U64.v hi) (pow2 (64-s)) (pow2 s);
+  assert (U64.v high == high_n);
+  pow2_div_bound (U64.v lo) s;
   assert (low_n < pow2 (64 - s));
   mod_mul_pow2 (U64.v hi) s (64 - s);
   U64.add low high
-#set-options "--z3rlimit 40"
 
 val mul_pow2_diff: a:nat -> n1:nat -> n2:nat{n2 <= n1} ->
   Lemma (a * pow2 (n1 - n2) == a * pow2 n1 / pow2 n2)
@@ -625,10 +632,11 @@ let shift_right_reconstruct a_h s =
   assert (a_h / pow2 s * pow2 64 == a_h * pow2 64 / pow2 s / pow2 64 * pow2 64);
   ()
 
-#set-options "--z3rlimit 200"
-let u128_div_pow2 (a: t) (s:nat{s < 64}) :
-  Lemma (v a / pow2 s == U64.v a.low / pow2 s + U64.v a.high * pow2 (64 - s)) =
-  Math.pow2_plus s (64-s);
+val u128_div_pow2 (a: t) (s:nat{s < 64}) :
+  Lemma (v a / pow2 s == U64.v a.low / pow2 s + U64.v a.high * pow2 (64 - s))
+let u128_div_pow2 a s =
+  Math.pow2_plus (64-s) s;
+  Math.paren_mul_right (U64.v a.high) (pow2 (64-s)) (pow2 s);
   Math.division_addition_lemma (U64.v a.low) (pow2 s) (U64.v a.high * pow2 (64 - s))
 
 let shift_right_small (a: t) (s: U32.t{U32.v s < 64}) : Pure t
@@ -646,9 +654,9 @@ let shift_right_small (a: t) (s: U32.t{U32.v s < 64}) : Pure t
   u128_div_pow2 a s;
   r
 
-let shift_right_large (a: t) (s: U32.t{U32.v s >= 64}) : Pure t
+let shift_right_large (a: t) (s: U32.t{U32.v s >= 64 /\ U32.v s < 128}) : Pure t
   (requires True)
-  (ensures (fun r -> U32.v s < 128 ==> v r == v a / pow2 (U32.v s))) =
+  (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
   let r = { high = U64.uint_to_t 0;
             low = U64.shift_right a.high (U32.sub s u32_64); } in
   let s = U32.v s in
@@ -659,8 +667,8 @@ let shift_right_large (a: t) (s: U32.t{U32.v s >= 64}) : Pure t
   r
 
 let shift_right (a: t) (s: U32.t) : Pure t
-  (requires True)
-  (ensures (fun r -> UInt32.v s < 128 ==> v r == v a / pow2 (UInt32.v s))) =
+  (requires (U32.v s < 128))
+  (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
   if U32.lt s u32_64
     then shift_right_small a s
     else shift_right_large a s

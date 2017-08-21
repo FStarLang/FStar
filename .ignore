@@ -1,1 +1,2 @@
 *.fst.hints
+src/ocaml-output/*

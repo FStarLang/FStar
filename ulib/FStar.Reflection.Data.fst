@@ -21,11 +21,17 @@ type pattern =
 
 type branch = pattern * term  // | pattern -> term
 
+type aqualv =
+    | Q_Implicit
+    | Q_Explicit
+
+type argv = term * aqualv
+
 noeq
 type term_view =
   | Tv_Var    : binder -> term_view
   | Tv_FVar   : fv -> term_view
-  | Tv_App    : term -> term -> term_view
+  | Tv_App    : term -> argv -> term_view
   | Tv_Abs    : binder -> term -> term_view
   | Tv_Arrow  : binder -> term -> term_view
   | Tv_Type   : unit -> term_view
@@ -62,3 +68,4 @@ type norm_step =
     | WHNF
     | Primops
     | Delta
+    | UnfoldOnly : list fv -> norm_step

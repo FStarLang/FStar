@@ -34,6 +34,9 @@ let cur_witness = fun () -> TAC?.reflect __cur_witness
 assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 
+assume private val __unquote : #a:Type -> term -> __tac a
+let unquote (#a:Type) (t:term) : tactic a = fun () -> TAC?.reflect (__unquote #a t)
+
 assume private val __trytac : #a:Type -> __tac a -> __tac (option a)
 (** [trytac t] will attempt to run [t] and allow to recover from a failure.
 If [t] succeeds with return value [a], [trytac t] returns [Some a].
@@ -56,6 +59,7 @@ Currently, the flags (defined in FStar.Reflection.Syntax) are
 [Primops] (performing primitive reductions, such as arithmetic and
 string operations)
 [Delta] (unfold names)
+[UnfoldOnly] (restricts unfolding to those names)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
@@ -208,3 +212,9 @@ assume private val __set_options : string -> __tac unit
 (** Set command line options for the current goal. Mostly useful to
 change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
 let set_options s : tactic unit = fun () -> TAC?.reflect (__set_options s)
+
+assume private val __uvar_env : env -> option typ -> __tac term
+let uvar_env (e : env) (o : option typ) : tactic term = fun () -> TAC?.reflect (__uvar_env e o)
+
+assume private val __unify : term -> term -> __tac bool
+let unify (t1 t2 : term) : tactic bool = fun () -> TAC?.reflect(__unify t1 t2)

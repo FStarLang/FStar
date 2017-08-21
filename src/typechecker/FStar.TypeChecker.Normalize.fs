@@ -111,7 +111,7 @@ type stack_elt =
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
  | Steps    of steps * list<primitive_step> * list<Env.delta_level>
- | Debug    of term
+ | Debug    of term * BU.time
 
 type stack = list<stack_elt>
 
@@ -134,7 +134,7 @@ let stack_elt_to_string = function
     | Meta (m,_) -> "Meta"
     | Let  _ -> "Let"
     | Steps (_, _, _) -> "Steps"
-    | Debug t -> BU.format1 "Debug %s" (Print.term_to_string t)
+    | Debug (t, _) -> BU.format1 "Debug %s" (Print.term_to_string t)
     // | _ -> "Match"
 
 let stack_to_string s =
@@ -901,13 +901,19 @@ let rec norm : cfg -> env -> stack -> term -> term =
             when not (cfg.steps |> List.contains NoFullNorm)
               && is_norm_request hd args
               && not (Ident.lid_equals cfg.tcenv.curmodule PC.prims_lid) ->
-            let s, tm = get_norm_request (norm ({cfg with delta_level=[Unfold Delta_constant]}) env []) args in
+            let cfg' = {cfg with steps=(List.filter (function | UnfoldOnly _ | NoDeltaSteps -> false | _ -> true) cfg.steps);
+                                 delta_level=[Unfold Delta_constant]} in
+            let s, tm = get_norm_request (norm cfg' env []) args in
             let delta_level =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ -> true | _ -> false)
                 then [Unfold Delta_constant]
                 else [NoDelta] in
             let cfg' = {cfg with steps=s; delta_level=delta_level} in
-            let stack' = Debug t :: Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+            let stack' =
+              let tail = Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+              if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
+              then Debug(t, BU.now())::tail
+              else tail in
             norm cfg' env stack' tm
 
           | Tm_app({n=Tm_constant FC.Const_reify}, a1::a2::rest) ->
@@ -1623,9 +1629,15 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   match stack with
   | [] -> t
 
-  | Debug tm :: stack ->
+  | Debug (tm, time_then) :: stack ->
     if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
-    then BU.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string t);
+    then begin
+      let time_now = BU.now () in
+      BU.print3 "Normalized (%s ms) %s\n\tto %s\n"
+                   (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+                   (Print.term_to_string tm)
+                   (Print.term_to_string t)
+    end;
     rebuild cfg env stack t
 
   | Steps (s, ps, dl) :: stack ->

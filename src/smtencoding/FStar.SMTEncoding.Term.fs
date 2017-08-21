@@ -661,7 +661,7 @@ let rec declToSmt z3options decl =
     format1 "(echo \"%s\")" s
   | RetainAssumptions _ ->
     ""
-  | CheckSat -> "(check-sat)"
+  | CheckSat -> "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
   | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
   | Push -> "(push)"
   | Pop -> "(pop)"

@@ -89,16 +89,9 @@ let mul_div a b =
 (* Division primitives *)
 val div: a:t -> b:t{v b <> 0} -> Pure t
   (requires (True))
-  (ensures (fun c -> v b <> 0 ==> v a / v b = v c))
+  (ensures (fun c -> v a / v b = v c))
 let div a b =
   Mk (div (v a) (v b))
-
-val div_underspec: a:t -> b:t{v b <> 0} -> Pure t
-  (requires True)
-  (ensures (fun c ->
-    (v b <> 0) ==> v a / v b = v c))
-let div_underspec a b =
-  Mk (div_underspec (v a) (v b))
 
 (* Modulo primitives *)
 val rem: a:t -> b:t{v b <> 0} -> Pure t
@@ -139,13 +132,13 @@ let __uint_to_t (x:int) : Tot t
 
 (* Shift operators *)
 val shift_right: a:t -> s:t -> Pure t
-  (requires True)
-  (ensures (fun c -> v s < n ==> v c = (v a / (pow2 (v s)))))
+  (requires (v s < n))
+  (ensures (fun c -> v c = (v a / (pow2 (v s)))))
 let shift_right a s = Mk (shift_right (v a) (v s))
 
 val shift_left: a:t -> s:t -> Pure t
-  (requires True)
-  (ensures (fun c -> v s < n ==> v c = ((v a * pow2 (v s)) % pow2 n)))
+  (requires (v s < n))
+  (ensures (fun c -> v c = ((v a * pow2 (v s)) % pow2 n)))
 let shift_left a s = Mk (shift_left (v a) (v s))
 
 (* Comparison operators *)

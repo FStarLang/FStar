@@ -66,7 +66,7 @@ let embed_binders l = embed_list embed_binder fstar_refl_binder l
 let unembed_binders t = unembed_list unembed_binder t
 
 let embed_term (t:term) : term =
-    protect_embedded_term fstar_refl_term t
+    protect_embedded_term S.tun t
 
 let unembed_term (t:term) : term =
     un_protect_embedded_term t
@@ -147,6 +147,22 @@ let rec unembed_pattern (t : term) : pattern =
 let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term fstar_refl_term
 let unembed_branch = unembed_pair unembed_pattern unembed_term
 
+let embed_aqualv (q : aqualv) : term =
+    match q with
+    | Data.Q_Explicit -> ref_Q_Explicit
+    | Data.Q_Implicit -> ref_Q_Implicit
+let unembed_aqualv (t : term) : aqualv =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Explicit_lid -> Data.Q_Explicit
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Implicit_lid -> Data.Q_Implicit
+    | _ ->
+        failwith "not an embedded aqualv"
+
+let embed_argv = embed_pair embed_term fstar_refl_term embed_aqualv fstar_refl_aqualv
+let unembed_argv = unembed_pair unembed_term unembed_aqualv
+
 let embed_term_view (t:term_view) : term =
     match t with
     | Tv_FVar fv ->
@@ -158,7 +174,7 @@ let embed_term_view (t:term_view) : term =
                     None Range.dummyRange
 
     | Tv_App (hd, a) ->
-        S.mk_Tm_app ref_Tv_App [S.as_arg (embed_term hd); S.as_arg (embed_term a)]
+        S.mk_Tm_app ref_Tv_App [S.as_arg (embed_term hd); S.as_arg (embed_argv a)]
                     None Range.dummyRange
 
     | Tv_Abs (b, t) ->
@@ -203,7 +219,7 @@ let unembed_term_view (t:term) : term_view =
         Tv_FVar (unembed_fvar b)
 
     | Tm_fvar fv, [(l, _); (r, _)] when S.fv_eq_lid fv ref_Tv_App_lid ->
-        Tv_App (unembed_term l, unembed_term r)
+        Tv_App (unembed_term l, unembed_argv r)
 
     | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Abs_lid ->
         Tv_Abs (unembed_binder b, unembed_term t)
@@ -267,9 +283,12 @@ let inspect_const (c:sconst) : vconst =
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 // TODO: consider effects? probably not too useful, but something should be done
-let inspect (t:term) : term_view =
+let rec inspect (t:term) : term_view =
     let t = U.un_uinst t in
     match t.n with
+    | Tm_meta (t, _) ->
+        inspect t
+
     | Tm_name bv ->
         Tv_Var (S.mk_binder bv)
 
@@ -282,8 +301,13 @@ let inspect (t:term) : term_view =
     | Tm_app (hd, args) ->
         // We split at the last argument, since the term_view does not
         // expose n-ary lambdas buy unary ones.
-        let (a, _) = last args in
-        Tv_App (S.mk_Tm_app hd (init args) None t.pos, a) // TODO: The range and tk are probably wrong. Fix
+        let (a, q) = last args in
+        let q' = match q with
+                 | Some (Implicit _) -> Data.Q_Implicit
+                 | Some Equality
+                 | None -> Data.Q_Explicit
+        in
+        Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
 
     | Tm_abs ([], _, _) ->
         failwith "inspect: empty arguments on Tm_abs"
@@ -358,8 +382,11 @@ let pack (tv:term_view) : term =
     | Tv_FVar fv ->
         S.fv_to_tm fv
 
-    | Tv_App (l, r) ->
-        U.mk_app l [S.as_arg r] // TODO: implicits
+    | Tv_App (l, (r, q)) ->
+        begin match q with
+        | Data.Q_Explicit -> U.mk_app l [S.as_arg r]
+        | Data.Q_Implicit -> U.mk_app l [S.iarg r]
+        end
 
     | Tv_Abs (b, t) ->
         U.abs [b] t None // TODO: effect?
@@ -429,6 +456,9 @@ let embed_norm_step (n:norm_step) : term =
         ref_Primops
     | Delta ->
         ref_Delta
+    | UnfoldOnly l ->
+        S.mk_Tm_app ref_UnfoldOnly [S.as_arg (embed_list embed_fvar fstar_refl_fvar l)]
+                    None Range.dummyRange
 
 let unembed_norm_step (t:term) : norm_step =
     let t = U.unascribe t in
@@ -442,6 +472,8 @@ let unembed_norm_step (t:term) : norm_step =
         Primops
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Delta_lid ->
         Delta
+    | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_UnfoldOnly_lid ->
+        UnfoldOnly (unembed_list unembed_fvar l)
     | _ ->
         failwith "not an embedded norm_step"
 
