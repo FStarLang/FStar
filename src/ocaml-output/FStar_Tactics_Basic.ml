@@ -2,24 +2,16 @@ open Prims
 type name = FStar_Syntax_Syntax.bv
 type env = FStar_TypeChecker_Env.env
 type implicits = FStar_TypeChecker_Env.implicits
-<<<<<<< HEAD
 let normalize :
   FStar_TypeChecker_Normalize.step Prims.list ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
   =
-=======
-let (normalize
-  :FStar_TypeChecker_Normalize.step Prims.list ->
-     FStar_TypeChecker_Env.env ->
-       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun e  ->
       fun t  ->
         FStar_TypeChecker_Normalize.normalize_with_primitive_steps
           FStar_Reflection_Interpreter.reflection_primops s e t
-<<<<<<< HEAD
   
 let bnorm :
   FStar_TypeChecker_Env.env ->
@@ -32,52 +24,27 @@ type goal =
   goal_ty: FStar_Syntax_Syntax.typ ;
   opts: FStar_Options.optionstate }
 let __proj__Mkgoal__item__context : goal -> env =
-=======
-let (bnorm
-  :FStar_TypeChecker_Env.env ->
-     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)=
-  fun e  -> fun t  -> normalize [] e t
-type goal =
-  {
-  context: env;
-  witness: FStar_Syntax_Syntax.term;
-  goal_ty: FStar_Syntax_Syntax.typ;
-  opts: FStar_Options.optionstate;}
-let (__proj__Mkgoal__item__context :goal -> env)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
         goal_ty = __fname__goal_ty; opts = __fname__opts;_} ->
         __fname__context
-<<<<<<< HEAD
   
 let __proj__Mkgoal__item__witness : goal -> FStar_Syntax_Syntax.term =
-=======
-let (__proj__Mkgoal__item__witness :goal -> FStar_Syntax_Syntax.term)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
         goal_ty = __fname__goal_ty; opts = __fname__opts;_} ->
         __fname__witness
-<<<<<<< HEAD
   
 let __proj__Mkgoal__item__goal_ty : goal -> FStar_Syntax_Syntax.typ =
-=======
-let (__proj__Mkgoal__item__goal_ty :goal -> FStar_Syntax_Syntax.typ)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
         goal_ty = __fname__goal_ty; opts = __fname__opts;_} ->
         __fname__goal_ty
-<<<<<<< HEAD
   
 let __proj__Mkgoal__item__opts : goal -> FStar_Options.optionstate =
-=======
-let (__proj__Mkgoal__item__opts :goal -> FStar_Options.optionstate)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
@@ -85,65 +52,40 @@ let (__proj__Mkgoal__item__opts :goal -> FStar_Options.optionstate)=
   
 type proofstate =
   {
-<<<<<<< HEAD
   main_context: env ;
   main_goal: goal ;
   all_implicits: implicits ;
   goals: goal Prims.list ;
   smt_goals: goal Prims.list }
 let __proj__Mkproofstate__item__main_context : proofstate -> env =
-=======
-  main_context: env;
-  main_goal: goal;
-  all_implicits: implicits;
-  goals: goal Prims.list;
-  smt_goals: goal Prims.list;}
-let (__proj__Mkproofstate__item__main_context :proofstate -> env)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
         all_implicits = __fname__all_implicits; goals = __fname__goals;
         smt_goals = __fname__smt_goals;_} -> __fname__main_context
-<<<<<<< HEAD
   
 let __proj__Mkproofstate__item__main_goal : proofstate -> goal =
-=======
-let (__proj__Mkproofstate__item__main_goal :proofstate -> goal)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
         all_implicits = __fname__all_implicits; goals = __fname__goals;
         smt_goals = __fname__smt_goals;_} -> __fname__main_goal
-<<<<<<< HEAD
   
 let __proj__Mkproofstate__item__all_implicits : proofstate -> implicits =
-=======
-let (__proj__Mkproofstate__item__all_implicits :proofstate -> implicits)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
         all_implicits = __fname__all_implicits; goals = __fname__goals;
         smt_goals = __fname__smt_goals;_} -> __fname__all_implicits
-<<<<<<< HEAD
   
 let __proj__Mkproofstate__item__goals : proofstate -> goal Prims.list =
-=======
-let (__proj__Mkproofstate__item__goals :proofstate -> goal Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
         all_implicits = __fname__all_implicits; goals = __fname__goals;
         smt_goals = __fname__smt_goals;_} -> __fname__goals
-<<<<<<< HEAD
   
 let __proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list =
-=======
-let (__proj__Mkproofstate__item__smt_goals :proofstate -> goal Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
@@ -151,7 +93,6 @@ let (__proj__Mkproofstate__item__smt_goals :proofstate -> goal Prims.list)=
         smt_goals = __fname__smt_goals;_} -> __fname__smt_goals
   
 type 'a result =
-<<<<<<< HEAD
   | Success of ('a,proofstate) FStar_Pervasives_Native.tuple2 
   | Failed of (Prims.string,proofstate) FStar_Pervasives_Native.tuple2 
 let uu___is_Success : 'a . 'a result -> Prims.bool =
@@ -187,39 +128,6 @@ let run : 'Auu____365 . 'Auu____365 tac -> proofstate -> 'Auu____365 result =
   fun t  -> fun p  -> t.tac_f p 
 let ret : 'a . 'a -> 'a tac = fun x  -> mk_tac (fun p  -> Success (x, p)) 
 let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
-=======
-  | Success of ('a,proofstate) FStar_Pervasives_Native.tuple2
-  | Failed of (Prims.string,proofstate) FStar_Pervasives_Native.tuple2
-let uu___is_Success : 'a . 'a result -> Prims.bool=
-  fun projectee  ->
-    match projectee with | Success _0 -> true | uu____211 -> false
-let __proj__Success__item___0 :
-  'a . 'a result -> ('a,proofstate) FStar_Pervasives_Native.tuple2=
-  fun projectee  -> match projectee with | Success _0 -> _0
-let uu___is_Failed : 'a . 'a result -> Prims.bool=
-  fun projectee  ->
-    match projectee with | Failed _0 -> true | uu____257 -> false
-let __proj__Failed__item___0 :
-  'a . 'a result -> (Prims.string,proofstate) FStar_Pervasives_Native.tuple2=
-  fun projectee  -> match projectee with | Failed _0 -> _0
-exception TacFailure of Prims.string
-let (uu___is_TacFailure :Prims.exn -> Prims.bool)=
-  fun projectee  ->
-    match projectee with | TacFailure uu____292 -> true | uu____293 -> false
-let (__proj__TacFailure__item__uu___ :Prims.exn -> Prims.string)=
-  fun projectee  -> match projectee with | TacFailure uu____301 -> uu____301
-type 'a tac = {
-  tac_f: proofstate -> 'a result;}
-let __proj__Mktac__item__tac_f : 'a . 'a tac -> proofstate -> 'a result=
-  fun projectee  ->
-    match projectee with | { tac_f = __fname__tac_f;_} -> __fname__tac_f
-let mk_tac : 'a . (proofstate -> 'a result) -> 'a tac=
-  fun f  -> { tac_f = f }
-let run : 'Auu____365 . 'Auu____365 tac -> proofstate -> 'Auu____365 result=
-  fun t  -> fun p  -> t.tac_f p
-let ret : 'a . 'a -> 'a tac= fun x  -> mk_tac (fun p  -> Success (x, p))
-let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac=
->>>>>>> taramana_pointers_with_codes_modifies
   fun t1  ->
     fun t2  ->
       mk_tac
@@ -228,14 +136,9 @@ let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac=
            match uu____432 with
            | Success (a,q) -> let uu____439 = t2 a  in run uu____439 q
            | Failed (msg,q) -> Failed (msg, q))
-<<<<<<< HEAD
   
 let idtac : Prims.unit tac = ret () 
 let goal_to_string : goal -> Prims.string =
-=======
-let (idtac :Prims.unit tac)= ret ()
-let (goal_to_string :goal -> Prims.string)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun g  ->
     let g_binders =
       let uu____451 = FStar_TypeChecker_Env.all_binders g.context  in
@@ -245,63 +148,40 @@ let (goal_to_string :goal -> Prims.string)=
     let uu____452 = FStar_Syntax_Print.term_to_string g.witness  in
     let uu____453 = FStar_Syntax_Print.term_to_string g.goal_ty  in
     FStar_Util.format3 "%s |- %s : %s" g_binders uu____452 uu____453
-<<<<<<< HEAD
   
 let tacprint : Prims.string -> Prims.unit =
   fun s  -> FStar_Util.print1 "TAC>> %s\n" s 
 let tacprint1 : Prims.string -> Prims.string -> Prims.unit =
-=======
-let (tacprint :Prims.string -> Prims.unit)=
-  fun s  -> FStar_Util.print1 "TAC>> %s\n" s
-let (tacprint1 :Prims.string -> Prims.string -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun x  ->
       let uu____466 = FStar_Util.format1 s x  in
       FStar_Util.print1 "TAC>> %s\n" uu____466
-<<<<<<< HEAD
   
 let tacprint2 : Prims.string -> Prims.string -> Prims.string -> Prims.unit =
-=======
-let (tacprint2 :Prims.string -> Prims.string -> Prims.string -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun x  ->
       fun y  ->
         let uu____479 = FStar_Util.format2 s x y  in
         FStar_Util.print1 "TAC>> %s\n" uu____479
-<<<<<<< HEAD
   
 let tacprint3 :
   Prims.string -> Prims.string -> Prims.string -> Prims.string -> Prims.unit
   =
-=======
-let (tacprint3
-  :Prims.string -> Prims.string -> Prims.string -> Prims.string -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     fun x  ->
       fun y  ->
         fun z  ->
           let uu____496 = FStar_Util.format3 s x y z  in
           FStar_Util.print1 "TAC>> %s\n" uu____496
-<<<<<<< HEAD
   
 let comp_to_typ : FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.typ =
-=======
-let (comp_to_typ :FStar_Syntax_Syntax.comp -> FStar_Syntax_Syntax.typ)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun c  ->
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Total (t,uu____502) -> t
     | FStar_Syntax_Syntax.GTotal (t,uu____512) -> t
     | FStar_Syntax_Syntax.Comp ct -> ct.FStar_Syntax_Syntax.result_typ
-<<<<<<< HEAD
   
 let is_irrelevant : goal -> Prims.bool =
-=======
-let (is_irrelevant :goal -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun g  ->
     let uu____526 =
       let uu____531 =
@@ -310,35 +190,22 @@ let (is_irrelevant :goal -> Prims.bool)=
     match uu____526 with
     | FStar_Pervasives_Native.Some t -> true
     | uu____537 -> false
-<<<<<<< HEAD
   
 let dump_goal : 'Auu____548 . 'Auu____548 -> goal -> Prims.unit =
   fun ps  ->
     fun goal  -> let uu____558 = goal_to_string goal  in tacprint uu____558
   
 let dump_cur : proofstate -> Prims.string -> Prims.unit =
-=======
-let dump_goal : 'Auu____548 . 'Auu____548 -> goal -> Prims.unit=
-  fun ps  ->
-    fun goal  -> let uu____558 = goal_to_string goal in tacprint uu____558
-let (dump_cur :proofstate -> Prims.string -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun ps  ->
     fun msg  ->
       match ps.goals with
       | [] -> tacprint1 "No more goals (%s)" msg
       | h::uu____568 ->
           (tacprint1 "Current goal (%s):" msg;
-<<<<<<< HEAD
            (let uu____572 = FStar_List.hd ps.goals  in dump_goal ps uu____572))
   
 let ps_to_string :
   (Prims.string,proofstate) FStar_Pervasives_Native.tuple2 -> Prims.string =
-=======
-           (let uu____572 = FStar_List.hd ps.goals in dump_goal ps uu____572))
-let (ps_to_string
-  :(Prims.string,proofstate) FStar_Pervasives_Native.tuple2 -> Prims.string)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun uu____580  ->
     match uu____580 with
     | (msg,ps) ->
@@ -355,12 +222,8 @@ let (ps_to_string
         FStar_Util.format5
           "State dump (%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s" msg
           uu____587 uu____588 uu____592 uu____593
-<<<<<<< HEAD
   
 let goal_to_json : goal -> FStar_Util.json =
-=======
-let (goal_to_json :goal -> FStar_Util.json)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun g  ->
     let g_binders =
       let uu____602 = FStar_TypeChecker_Env.all_binders g.context  in
@@ -390,16 +253,10 @@ let (goal_to_json :goal -> FStar_Util.json)=
         [uu____617]  in
       ("hyps", g_binders) :: uu____610  in
     FStar_Util.JsonAssoc uu____603
-<<<<<<< HEAD
   
 let ps_to_json :
   (Prims.string,proofstate) FStar_Pervasives_Native.tuple2 -> FStar_Util.json
   =
-=======
-let (ps_to_json
-  :(Prims.string,proofstate) FStar_Pervasives_Native.tuple2 ->
-     FStar_Util.json)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun uu____682  ->
     match uu____682 with
     | (msg,ps) ->
@@ -421,12 +278,8 @@ let (ps_to_json
             uu____703 :: uu____712  in
           ("label", (FStar_Util.JsonStr msg)) :: uu____696  in
         FStar_Util.JsonAssoc uu____689
-<<<<<<< HEAD
   
 let dump_proofstate : proofstate -> Prims.string -> Prims.unit =
-=======
-let (dump_proofstate :proofstate -> Prims.string -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun ps  ->
     fun msg  ->
       FStar_Options.with_saved_options
@@ -435,7 +288,6 @@ let (dump_proofstate :proofstate -> Prims.string -> Prims.unit)=
              (FStar_Options.Bool true);
            FStar_Util.print_generic "proof-state" ps_to_string ps_to_json
              (msg, ps))
-<<<<<<< HEAD
   
 let print_proof_state1 : Prims.string -> Prims.unit tac =
   fun msg  -> mk_tac (fun p  -> dump_cur p msg; Success ((), p)) 
@@ -445,16 +297,6 @@ let get : proofstate tac = mk_tac (fun p  -> Success (p, p))
 let tac_verb_dbg : Prims.bool FStar_Pervasives_Native.option FStar_ST.ref =
   FStar_Util.mk_ref FStar_Pervasives_Native.None 
 let rec log : proofstate -> (Prims.unit -> Prims.unit) -> Prims.unit =
-=======
-let (print_proof_state1 :Prims.string -> Prims.unit tac)=
-  fun msg  -> mk_tac (fun p  -> dump_cur p msg; Success ((), p))
-let (print_proof_state :Prims.string -> Prims.unit tac)=
-  fun msg  -> mk_tac (fun p  -> dump_proofstate p msg; Success ((), p))
-let (get :proofstate tac)= mk_tac (fun p  -> Success (p, p))
-let (tac_verb_dbg :Prims.bool FStar_Pervasives_Native.option FStar_ST.ref)=
-  FStar_Util.mk_ref FStar_Pervasives_Native.None
-let rec (log :proofstate -> (Prims.unit -> Prims.unit) -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun ps  ->
     fun f  ->
       let uu____814 = FStar_ST.op_Bang tac_verb_dbg  in
@@ -470,16 +312,10 @@ let rec (log :proofstate -> (Prims.unit -> Prims.unit) -> Prims.unit)=
            log ps f)
       | FStar_Pervasives_Native.Some (true ) -> f ()
       | FStar_Pervasives_Native.Some (false ) -> ()
-<<<<<<< HEAD
   
 let mlog : (Prims.unit -> Prims.unit) -> Prims.unit tac =
   fun f  -> bind get (fun ps  -> log ps f; ret ()) 
 let fail : 'Auu____879 . Prims.string -> 'Auu____879 tac =
-=======
-let (mlog :(Prims.unit -> Prims.unit) -> Prims.unit tac)=
-  fun f  -> bind get (fun ps  -> log ps f; ret ())
-let fail : 'Auu____879 . Prims.string -> 'Auu____879 tac=
->>>>>>> taramana_pointers_with_codes_modifies
   fun msg  ->
     mk_tac
       (fun ps  ->
@@ -491,44 +327,31 @@ let fail : 'Auu____879 . Prims.string -> 'Auu____879 tac=
           then dump_proofstate ps (Prims.strcat "TACTING FAILING: " msg)
           else ());
          Failed (msg, ps))
-<<<<<<< HEAD
   
 let fail1 : 'Auu____898 . Prims.string -> Prims.string -> 'Auu____898 tac =
   fun msg  ->
     fun x  -> let uu____909 = FStar_Util.format1 msg x  in fail uu____909
   
-=======
-let fail1 : 'Auu____898 . Prims.string -> Prims.string -> 'Auu____898 tac=
-  fun msg  ->
-    fun x  -> let uu____909 = FStar_Util.format1 msg x in fail uu____909
->>>>>>> taramana_pointers_with_codes_modifies
 let fail2 :
   'Auu____918 .
-    Prims.string -> Prims.string -> Prims.string -> 'Auu____918 tac=
+    Prims.string -> Prims.string -> Prims.string -> 'Auu____918 tac
+  =
   fun msg  ->
     fun x  ->
-<<<<<<< HEAD
       fun y  -> let uu____933 = FStar_Util.format2 msg x y  in fail uu____933
   
-=======
-      fun y  -> let uu____933 = FStar_Util.format2 msg x y in fail uu____933
->>>>>>> taramana_pointers_with_codes_modifies
 let fail3 :
   'Auu____944 .
     Prims.string ->
-      Prims.string -> Prims.string -> Prims.string -> 'Auu____944 tac=
+      Prims.string -> Prims.string -> Prims.string -> 'Auu____944 tac
+  =
   fun msg  ->
     fun x  ->
       fun y  ->
         fun z  ->
-<<<<<<< HEAD
           let uu____963 = FStar_Util.format3 msg x y z  in fail uu____963
   
 let trytac : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
-=======
-          let uu____963 = FStar_Util.format3 msg x y z in fail uu____963
-let trytac : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac=
->>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     mk_tac
       (fun ps  ->
@@ -541,16 +364,10 @@ let trytac : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac=
          | Failed (uu____1005,uu____1006) ->
              (FStar_Syntax_Unionfind.rollback tx;
               Success (FStar_Pervasives_Native.None, ps)))
-<<<<<<< HEAD
   
 let set : proofstate -> Prims.unit tac =
   fun p  -> mk_tac (fun uu____1021  -> Success ((), p)) 
 let solve : goal -> FStar_Syntax_Syntax.typ -> Prims.unit =
-=======
-let (set :proofstate -> Prims.unit tac)=
-  fun p  -> mk_tac (fun uu____1021  -> Success ((), p))
-let (solve :goal -> FStar_Syntax_Syntax.typ -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun goal  ->
     fun solution  ->
       let uu____1030 =
@@ -571,12 +388,8 @@ let (solve :goal -> FStar_Syntax_Syntax.typ -> Prims.unit)=
               in
            TacFailure uu____1033  in
          FStar_Exn.raise uu____1032)
-<<<<<<< HEAD
   
 let dismiss : Prims.unit tac =
-=======
-let (dismiss :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind get
     (fun p  ->
        let uu____1042 =
@@ -590,12 +403,8 @@ let (dismiss :Prims.unit tac)=
            smt_goals = (uu___86_1043.smt_goals)
          }  in
        set uu____1042)
-<<<<<<< HEAD
   
 let dismiss_all : Prims.unit tac =
-=======
-let (dismiss_all :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind get
     (fun p  ->
        set
@@ -607,12 +416,8 @@ let (dismiss_all :Prims.unit tac)=
             goals = [];
             smt_goals = (uu___87_1053.smt_goals)
           }))
-<<<<<<< HEAD
   
 let add_goals : goal Prims.list -> Prims.unit tac =
-=======
-let (add_goals :goal Prims.list -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun gs  ->
     bind get
       (fun p  ->
@@ -625,12 +430,8 @@ let (add_goals :goal Prims.list -> Prims.unit tac)=
               goals = (FStar_List.append gs p.goals);
               smt_goals = (uu___88_1070.smt_goals)
             }))
-<<<<<<< HEAD
   
 let add_smt_goals : goal Prims.list -> Prims.unit tac =
-=======
-let (add_smt_goals :goal Prims.list -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun gs  ->
     bind get
       (fun p  ->
@@ -643,12 +444,8 @@ let (add_smt_goals :goal Prims.list -> Prims.unit tac)=
               goals = (uu___89_1087.goals);
               smt_goals = (FStar_List.append gs p.smt_goals)
             }))
-<<<<<<< HEAD
   
 let push_goals : goal Prims.list -> Prims.unit tac =
-=======
-let (push_goals :goal Prims.list -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun gs  ->
     bind get
       (fun p  ->
@@ -661,12 +458,8 @@ let (push_goals :goal Prims.list -> Prims.unit tac)=
               goals = (FStar_List.append p.goals gs);
               smt_goals = (uu___90_1104.smt_goals)
             }))
-<<<<<<< HEAD
   
 let push_smt_goals : goal Prims.list -> Prims.unit tac =
-=======
-let (push_smt_goals :goal Prims.list -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun gs  ->
     bind get
       (fun p  ->
@@ -679,16 +472,10 @@ let (push_smt_goals :goal Prims.list -> Prims.unit tac)=
               goals = (uu___91_1121.goals);
               smt_goals = (FStar_List.append p.smt_goals gs)
             }))
-<<<<<<< HEAD
   
 let replace_cur : goal -> Prims.unit tac =
   fun g  -> bind dismiss (fun uu____1131  -> add_goals [g]) 
 let add_implicits : implicits -> Prims.unit tac =
-=======
-let (replace_cur :goal -> Prims.unit tac)=
-  fun g  -> bind dismiss (fun uu____1131  -> add_goals [g])
-let (add_implicits :implicits -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun i  ->
     bind get
       (fun p  ->
@@ -701,14 +488,9 @@ let (add_implicits :implicits -> Prims.unit tac)=
               goals = (uu___92_1144.goals);
               smt_goals = (uu___92_1144.smt_goals)
             }))
-<<<<<<< HEAD
   
 let new_uvar : env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term tac
   =
-=======
-let (new_uvar
-  :env -> FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.term tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun typ  ->
       let uu____1169 =
@@ -720,12 +502,8 @@ let (new_uvar
           let uu____1199 = add_implicits g_u.FStar_TypeChecker_Env.implicits
              in
           bind uu____1199 (fun uu____1203  -> ret u)
-<<<<<<< HEAD
   
 let is_true : FStar_Syntax_Syntax.term -> Prims.bool =
-=======
-let (is_true :FStar_Syntax_Syntax.term -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     let uu____1208 = FStar_Syntax_Util.un_squash t  in
     match uu____1208 with
@@ -738,12 +516,8 @@ let (is_true :FStar_Syntax_Syntax.term -> Prims.bool)=
              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.true_lid
          | uu____1223 -> false)
     | uu____1224 -> false
-<<<<<<< HEAD
   
 let is_false : FStar_Syntax_Syntax.term -> Prims.bool =
-=======
-let (is_false :FStar_Syntax_Syntax.term -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     let uu____1233 = FStar_Syntax_Util.un_squash t  in
     match uu____1233 with
@@ -756,28 +530,18 @@ let (is_false :FStar_Syntax_Syntax.term -> Prims.bool)=
              FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.false_lid
          | uu____1248 -> false)
     | uu____1249 -> false
-<<<<<<< HEAD
   
 let cur_goal : goal tac =
-=======
-let (cur_goal :goal tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind get
     (fun p  ->
        match p.goals with
        | [] -> fail "No more goals (1)"
        | hd1::tl1 -> ret hd1)
-<<<<<<< HEAD
   
 let add_irrelevant_goal :
   env ->
     FStar_Syntax_Syntax.typ -> FStar_Options.optionstate -> Prims.unit tac
   =
-=======
-let (add_irrelevant_goal
-  :env ->
-     FStar_Syntax_Syntax.typ -> FStar_Options.optionstate -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun phi  ->
       fun opts  ->
@@ -788,12 +552,8 @@ let (add_irrelevant_goal
              let goal = { context = env; witness = u; goal_ty = typ; opts }
                 in
              add_goals [goal])
-<<<<<<< HEAD
   
 let smt : Prims.unit tac =
-=======
-let (smt :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind cur_goal
     (fun g  ->
        let uu____1295 = is_irrelevant g  in
@@ -803,14 +563,12 @@ let (smt :Prims.unit tac)=
          (let uu____1301 = FStar_Syntax_Print.term_to_string g.goal_ty  in
           fail1 "goal is not irrelevant: cannot dispatch to smt (%s)"
             uu____1301))
-<<<<<<< HEAD
   
-=======
->>>>>>> taramana_pointers_with_codes_modifies
 let divide :
   'a 'b .
     Prims.int ->
-      'a tac -> 'b tac -> ('a,'b) FStar_Pervasives_Native.tuple2 tac=
+      'a tac -> 'b tac -> ('a,'b) FStar_Pervasives_Native.tuple2 tac
+  =
   fun n1  ->
     fun l  ->
       fun r  ->
@@ -883,22 +641,14 @@ let divide :
                                                     bind uu____1514
                                                       (fun uu____1522  ->
                                                          ret (a, b))))))))))
-<<<<<<< HEAD
   
 let focus : 'a . 'a tac -> 'a tac =
-=======
-let focus : 'a . 'a tac -> 'a tac=
->>>>>>> taramana_pointers_with_codes_modifies
   fun f  ->
     let uu____1542 = divide (Prims.parse_int "1") f idtac  in
     bind uu____1542
       (fun uu____1555  -> match uu____1555 with | (a,()) -> ret a)
-<<<<<<< HEAD
   
 let rec map : 'a . 'a tac -> 'a Prims.list tac =
-=======
-let rec map : 'a . 'a tac -> 'a Prims.list tac=
->>>>>>> taramana_pointers_with_codes_modifies
   fun tau  ->
     bind get
       (fun p  ->
@@ -911,12 +661,8 @@ let rec map : 'a . 'a tac -> 'a Prims.list tac=
              bind uu____1594
                (fun uu____1621  ->
                   match uu____1621 with | (h,t) -> ret (h :: t)))
-<<<<<<< HEAD
   
 let seq : Prims.unit tac -> Prims.unit tac -> Prims.unit tac =
-=======
-let (seq :Prims.unit tac -> Prims.unit tac -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun t1  ->
     fun t2  ->
       let uu____1660 =
@@ -926,17 +672,11 @@ let (seq :Prims.unit tac -> Prims.unit tac -> Prims.unit tac)=
              bind uu____1666 (fun uu____1674  -> ret ()))
          in
       focus uu____1660
-<<<<<<< HEAD
   
 let intro :
   (FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
     FStar_Pervasives_Native.tuple2 tac
   =
-=======
-let (intro
-  :(FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
-     FStar_Pervasives_Native.tuple2 tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind cur_goal
     (fun goal  ->
        let uu____1697 = FStar_Syntax_Util.arrow_one goal.goal_ty  in
@@ -992,19 +732,12 @@ let (intro
            let uu____1832 = FStar_Syntax_Print.term_to_string goal.goal_ty
               in
            fail1 "intro: goal is not an arrow (%s)" uu____1832)
-<<<<<<< HEAD
   
 let intro_rec :
   (FStar_Syntax_Syntax.binder,(FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
                                 FStar_Pervasives_Native.tuple2)
     FStar_Pervasives_Native.tuple2 tac
   =
-=======
-let (intro_rec
-  :(FStar_Syntax_Syntax.binder,(FStar_Syntax_Syntax.bv,FStar_Syntax_Syntax.aqual)
-                                 FStar_Pervasives_Native.tuple2)
-     FStar_Pervasives_Native.tuple2 tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind cur_goal
     (fun goal  ->
        FStar_Util.print_string
@@ -1099,12 +832,8 @@ let (intro_rec
             let uu____2107 = FStar_Syntax_Print.term_to_string goal.goal_ty
                in
             fail1 "intro_rec: goal is not an arrow (%s)" uu____2107))
-<<<<<<< HEAD
   
 let norm : FStar_Reflection_Data.norm_step Prims.list -> Prims.unit tac =
-=======
-let (norm :FStar_Reflection_Data.norm_step Prims.list -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     bind cur_goal
       (fun goal  ->
@@ -1144,12 +873,8 @@ let (norm :FStar_Reflection_Data.norm_step Prims.list -> Prims.unit tac)=
               goal_ty = t;
               opts = (uu___100_2166.opts)
             }))
-<<<<<<< HEAD
   
 let istrivial : env -> FStar_Syntax_Syntax.term -> Prims.bool =
-=======
-let (istrivial :env -> FStar_Syntax_Syntax.term -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun e  ->
     fun t  ->
       let steps =
@@ -1158,16 +883,10 @@ let (istrivial :env -> FStar_Syntax_Syntax.term -> Prims.bool)=
           FStar_Syntax_Syntax.Delta_constant;
         FStar_TypeChecker_Normalize.Primops;
         FStar_TypeChecker_Normalize.Simplify;
-<<<<<<< HEAD
         FStar_TypeChecker_Normalize.UnfoldTac]  in
       let t1 = normalize steps e t  in is_true t1
   
 let trivial : Prims.unit tac =
-=======
-        FStar_TypeChecker_Normalize.UnfoldTac] in
-      let t1 = normalize steps e t in is_true t1
-let (trivial :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind cur_goal
     (fun goal  ->
        let uu____2185 = istrivial goal.context goal.goal_ty  in
@@ -1176,12 +895,8 @@ let (trivial :Prims.unit tac)=
        else
          (let uu____2190 = FStar_Syntax_Print.term_to_string goal.goal_ty  in
           fail1 "Not a trivial goal: %s" uu____2190))
-<<<<<<< HEAD
   
 let exact : FStar_Syntax_Syntax.term -> Prims.unit tac =
-=======
-let (exact :FStar_Syntax_Syntax.term -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     bind cur_goal
       (fun goal  ->
@@ -1231,12 +946,8 @@ let (exact :FStar_Syntax_Syntax.term -> Prims.unit tac)=
                           FStar_Syntax_Print.term_to_string goal.goal_ty  in
                         fail3 "%s : %s does not exactly solve the goal %s"
                           uu____2299 uu____2300 uu____2302))))
-<<<<<<< HEAD
   
 let exact_lemma : FStar_Syntax_Syntax.term -> Prims.unit tac =
-=======
-let (exact_lemma :FStar_Syntax_Syntax.term -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     bind cur_goal
       (fun goal  ->
@@ -1304,12 +1015,8 @@ let (exact_lemma :FStar_Syntax_Syntax.term -> Prims.unit tac)=
                                fail3
                                  "%s : %s does not exactly solve the goal %s"
                                  uu____2517 uu____2518 uu____2519)))))
-<<<<<<< HEAD
   
 let uvar_free_in_goal : FStar_Syntax_Syntax.uvar -> goal -> Prims.bool =
-=======
-let (uvar_free_in_goal :FStar_Syntax_Syntax.uvar -> goal -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun u  ->
     fun g  ->
       let free_uvars =
@@ -1318,16 +1025,10 @@ let (uvar_free_in_goal :FStar_Syntax_Syntax.uvar -> goal -> Prims.bool)=
           FStar_Util.set_elements uu____2538  in
         FStar_List.map FStar_Pervasives_Native.fst uu____2531  in
       FStar_List.existsML (FStar_Syntax_Unionfind.equiv u) free_uvars
-<<<<<<< HEAD
   
 let uvar_free : FStar_Syntax_Syntax.uvar -> proofstate -> Prims.bool =
   fun u  -> fun ps  -> FStar_List.existsML (uvar_free_in_goal u) ps.goals 
 let rec __apply : Prims.bool -> FStar_Syntax_Syntax.term -> Prims.unit tac =
-=======
-let (uvar_free :FStar_Syntax_Syntax.uvar -> proofstate -> Prims.bool)=
-  fun u  -> fun ps  -> FStar_List.existsML (uvar_free_in_goal u) ps.goals
-let rec (__apply :Prims.bool -> FStar_Syntax_Syntax.term -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun uopt  ->
     fun tm  ->
       bind cur_goal
@@ -1440,16 +1141,10 @@ let rec (__apply :Prims.bool -> FStar_Syntax_Syntax.term -> Prims.unit tac)=
                                                            [uu____2740]  in
                                                          add_goals uu____2737))
                                              | uu____2743 -> ret ())))))))
-<<<<<<< HEAD
   
 let apply : FStar_Syntax_Syntax.term -> Prims.unit tac =
   fun tm  -> let uu____2752 = __apply true tm  in focus uu____2752 
 let apply_lemma : FStar_Syntax_Syntax.term -> Prims.unit tac =
-=======
-let (apply :FStar_Syntax_Syntax.term -> Prims.unit tac)=
-  fun tm  -> let uu____2752 = __apply true tm in focus uu____2752
-let (apply_lemma :FStar_Syntax_Syntax.term -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun tm  ->
     let is_unit_t t =
       let uu____2767 =
@@ -1719,19 +1414,12 @@ let (apply_lemma :FStar_Syntax_Syntax.term -> Prims.unit tac)=
                                                         (fun uu____3655  ->
                                                            add_goals
                                                              sub_goals1)))))))))))
-<<<<<<< HEAD
   
 let destruct_eq' :
   FStar_Syntax_Syntax.typ ->
     (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
       FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
-=======
-let (destruct_eq'
-  :FStar_Syntax_Syntax.typ ->
-     (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-       FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun typ  ->
     let uu____3674 = FStar_Syntax_Util.destruct_typ_as_formula typ  in
     match uu____3674 with
@@ -1740,19 +1428,12 @@ let (destruct_eq'
         FStar_Ident.lid_equals l FStar_Parser_Const.eq2_lid ->
         FStar_Pervasives_Native.Some (e1, e2)
     | uu____3747 -> FStar_Pervasives_Native.None
-<<<<<<< HEAD
   
 let destruct_eq :
   FStar_Syntax_Syntax.typ ->
     (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
       FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option
   =
-=======
-let (destruct_eq
-  :FStar_Syntax_Syntax.typ ->
-     (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-       FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun typ  ->
     let uu____3770 = destruct_eq' typ  in
     match uu____3770 with
@@ -1762,12 +1443,8 @@ let (destruct_eq
         (match uu____3800 with
          | FStar_Pervasives_Native.Some typ1 -> destruct_eq' typ1
          | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None)
-<<<<<<< HEAD
   
 let rewrite : FStar_Syntax_Syntax.binder -> Prims.unit tac =
-=======
-let (rewrite :FStar_Syntax_Syntax.binder -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun h  ->
     bind cur_goal
       (fun goal  ->
@@ -1824,12 +1501,8 @@ let (rewrite :FStar_Syntax_Syntax.binder -> Prims.unit tac)=
                        fail
                          "Not an equality hypothesis with a variable on the LHS")
               | uu____3891 -> fail "Not an equality hypothesis"))
-<<<<<<< HEAD
   
 let clear : Prims.unit tac =
-=======
-let (clear :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind cur_goal
     (fun goal  ->
        let uu____3903 = FStar_TypeChecker_Env.pop_bv goal.context  in
@@ -1863,12 +1536,8 @@ let (clear :Prims.unit tac)=
                           opts = (uu___106_3941.opts)
                         }  in
                       bind dismiss (fun uu____3944  -> add_goals [new_goal])))))
-<<<<<<< HEAD
   
 let clear_hd : name -> Prims.unit tac =
-=======
-let (clear_hd :name -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun x  ->
     bind cur_goal
       (fun goal  ->
@@ -1880,12 +1549,8 @@ let (clear_hd :name -> Prims.unit tac)=
              if Prims.op_Negation (FStar_Syntax_Syntax.bv_eq x y)
              then fail "Cannot clear_hd; head variable mismatch"
              else clear)
-<<<<<<< HEAD
   
 let revert : Prims.unit tac =
-=======
-let (revert :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind cur_goal
     (fun goal  ->
        let uu____3983 = FStar_TypeChecker_Env.pop_bv goal.context  in
@@ -1909,12 +1574,8 @@ let (revert :Prims.unit tac)=
                 goal_ty = typ';
                 opts = (uu___107_4039.opts)
               }))
-<<<<<<< HEAD
   
 let revert_hd : name -> Prims.unit tac =
-=======
-let (revert_hd :name -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun x  ->
     bind cur_goal
       (fun goal  ->
@@ -1931,24 +1592,16 @@ let (revert_hd :name -> Prims.unit tac)=
                  "Cannot revert_hd %s; head variable mismatch ... egot %s"
                  uu____4072 uu____4073
              else revert)
-<<<<<<< HEAD
   
 let rec revert_all_hd : name Prims.list -> Prims.unit tac =
-=======
-let rec (revert_all_hd :name Prims.list -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun xs  ->
     match xs with
     | [] -> ret ()
     | x::xs1 ->
         let uu____4091 = revert_all_hd xs1  in
         bind uu____4091 (fun uu____4095  -> revert_hd x)
-<<<<<<< HEAD
   
 let prune : Prims.string -> Prims.unit tac =
-=======
-let (prune :Prims.string -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     bind cur_goal
       (fun g  ->
@@ -1966,12 +1619,8 @@ let (prune :Prims.string -> Prims.unit tac)=
              opts = (uu___108_4112.opts)
            }  in
          bind dismiss (fun uu____4114  -> add_goals [g']))
-<<<<<<< HEAD
   
 let addns : Prims.string -> Prims.unit tac =
-=======
-let (addns :Prims.string -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     bind cur_goal
       (fun g  ->
@@ -1989,12 +1638,8 @@ let (addns :Prims.string -> Prims.unit tac)=
              opts = (uu___109_4131.opts)
            }  in
          bind dismiss (fun uu____4133  -> add_goals [g']))
-<<<<<<< HEAD
   
 let rec mapM : 'a 'b . ('a -> 'b tac) -> 'a Prims.list -> 'b Prims.list tac =
-=======
-let rec mapM : 'a 'b . ('a -> 'b tac) -> 'a Prims.list -> 'b Prims.list tac=
->>>>>>> taramana_pointers_with_codes_modifies
   fun f  ->
     fun l  ->
       match l with
@@ -2005,17 +1650,11 @@ let rec mapM : 'a 'b . ('a -> 'b tac) -> 'a Prims.list -> 'b Prims.list tac=
             (fun y  ->
                let uu____4183 = mapM f xs  in
                bind uu____4183 (fun ys  -> ret (y :: ys)))
-<<<<<<< HEAD
   
 let rec tac_bottom_fold_env :
   (env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac) ->
     env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac
   =
-=======
-let rec (tac_bottom_fold_env
-  :(env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac) ->
-     env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun f  ->
     fun env  ->
       fun t  ->
@@ -2071,7 +1710,6 @@ let rec (tac_bottom_fold_env
                   FStar_Syntax_Syntax.vars =
                     (uu___110_4430.FStar_Syntax_Syntax.vars)
                 }))
-<<<<<<< HEAD
   
 let pointwise_rec :
   proofstate ->
@@ -2080,14 +1718,6 @@ let pointwise_rec :
         FStar_TypeChecker_Env.env ->
           FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac
   =
-=======
-let (pointwise_rec
-  :proofstate ->
-     Prims.unit tac ->
-       FStar_Options.optionstate ->
-         FStar_TypeChecker_Env.env ->
-           FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun ps  ->
     fun tau  ->
       fun opts  ->
@@ -2139,12 +1769,8 @@ let (pointwise_rec
                                      ret ut1)
                                  in
                               focus uu____4505))))
-<<<<<<< HEAD
   
 let pointwise : Prims.unit tac -> Prims.unit tac =
-=======
-let (pointwise :Prims.unit tac -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun tau  ->
     bind get
       (fun ps  ->
@@ -2186,12 +1812,8 @@ let (pointwise :Prims.unit tac -> Prims.unit tac)=
                                     goal_ty = gt';
                                     opts = (uu___111_4591.opts)
                                   })]))))))
-<<<<<<< HEAD
   
 let trefl : Prims.unit tac =
-=======
-let (trefl :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind cur_goal
     (fun g  ->
        let uu____4611 = FStar_Syntax_Util.un_squash g.goal_ty  in
@@ -2228,12 +1850,8 @@ let (trefl :Prims.unit tac)=
                      let uu____4761 = FStar_Syntax_Print.term_to_string t  in
                      fail1 "trefl: not an equality (%s)" uu____4761))
        | FStar_Pervasives_Native.None  -> fail "not an irrelevant goal")
-<<<<<<< HEAD
   
 let dup : Prims.unit tac =
-=======
-let (dup :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind cur_goal
     (fun g  ->
        let uu____4769 = new_uvar g.context g.goal_ty  in
@@ -2263,12 +1881,8 @@ let (dup :Prims.unit tac)=
                    (fun uu____4787  ->
                       let uu____4788 = add_goals [g']  in
                       bind uu____4788 (fun uu____4792  -> ret ())))))
-<<<<<<< HEAD
   
 let flip : Prims.unit tac =
-=======
-let (flip :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind get
     (fun ps  ->
        match ps.goals with
@@ -2283,12 +1897,8 @@ let (flip :Prims.unit tac)=
                 smt_goals = (uu___113_4809.smt_goals)
               })
        | uu____4810 -> fail "flip: less than 2 goals")
-<<<<<<< HEAD
   
 let later : Prims.unit tac =
-=======
-let (later :Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   bind get
     (fun ps  ->
        match ps.goals with
@@ -2303,7 +1913,6 @@ let (later :Prims.unit tac)=
                 goals = (FStar_List.append gs [g]);
                 smt_goals = (uu___114_4825.smt_goals)
               }))
-<<<<<<< HEAD
   
 let qed : Prims.unit tac =
   bind get
@@ -2315,16 +1924,6 @@ let cases :
     (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
       FStar_Pervasives_Native.tuple2 tac
   =
-=======
-let (qed :Prims.unit tac)=
-  bind get
-    (fun ps  ->
-       match ps.goals with | [] -> ret () | uu____4832 -> fail "Not done!")
-let (cases
-  :FStar_Syntax_Syntax.term ->
-     (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
-       FStar_Pervasives_Native.tuple2 tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun t  ->
     bind cur_goal
       (fun g  ->
@@ -2390,12 +1989,8 @@ let (cases
                        let uu____5052 = FStar_Syntax_Print.term_to_string typ
                           in
                        fail1 "Not a disjunction: %s" uu____5052)))
-<<<<<<< HEAD
   
 let set_options : Prims.string -> Prims.unit tac =
-=======
-let (set_options :Prims.string -> Prims.unit tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun s  ->
     bind cur_goal
       (fun g  ->
@@ -2420,7 +2015,6 @@ let (set_options :Prims.string -> Prims.unit tac)=
                fail2 "Setting options `%s` failed: %s" s err1
            | FStar_Getopt.Help  ->
                fail1 "Setting options `%s` failed (got `Help`?)" s)))
-<<<<<<< HEAD
   
 let cur_env : env tac =
   bind cur_goal (fun g  -> FStar_All.pipe_left ret g.context) 
@@ -2432,17 +2026,6 @@ let unquote :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac
   =
-=======
-let (cur_env :env tac)=
-  bind cur_goal (fun g  -> FStar_All.pipe_left ret g.context)
-let (cur_goal' :FStar_Syntax_Syntax.typ tac)=
-  bind cur_goal (fun g  -> FStar_All.pipe_left ret g.goal_ty)
-let (cur_witness :FStar_Syntax_Syntax.term tac)=
-  bind cur_goal (fun g  -> FStar_All.pipe_left ret g.witness)
-let (unquote
-  :FStar_Syntax_Syntax.term ->
-     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun ty  ->
     fun tm  ->
       bind cur_goal
@@ -2454,19 +2037,12 @@ let (unquote
            match uu____5123 with
            | (tm1,typ,guard) ->
                (FStar_TypeChecker_Rel.force_trivial_guard env guard; ret tm1))
-<<<<<<< HEAD
   
 let uvar_env :
   env ->
     FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
       FStar_Syntax_Syntax.term tac
   =
-=======
-let (uvar_env
-  :env ->
-     FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option ->
-       FStar_Syntax_Syntax.term tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun ty  ->
       let uu____5152 =
@@ -2482,14 +2058,9 @@ let (uvar_env
         (fun typ  ->
            let uu____5171 = new_uvar env typ  in
            bind uu____5171 (fun t  -> ret t))
-<<<<<<< HEAD
   
 let unify :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool tac =
-=======
-let (unify
-  :FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool tac)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun t1  ->
     fun t2  ->
       bind get
@@ -2497,19 +2068,12 @@ let (unify
            let uu____5191 =
              FStar_TypeChecker_Rel.teq_nosmt ps.main_context t1 t2  in
            ret uu____5191)
-<<<<<<< HEAD
   
 let goal_of_goal_ty :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
       (goal,FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple2
   =
-=======
-let (goal_of_goal_ty
-  :FStar_TypeChecker_Env.env ->
-     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-       (goal,FStar_TypeChecker_Env.guard_t) FStar_Pervasives_Native.tuple2)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun typ  ->
       let uu____5212 =
@@ -2523,19 +2087,12 @@ let (goal_of_goal_ty
             { context = env; witness = u; goal_ty = typ; opts = uu____5245 }
              in
           (g, g_u)
-<<<<<<< HEAD
   
 let proofstate_of_goal_ty :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
       (proofstate,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2
   =
-=======
-let (proofstate_of_goal_ty
-  :FStar_TypeChecker_Env.env ->
-     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-       (proofstate,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun typ  ->
       let uu____5262 = goal_of_goal_ty env typ  in

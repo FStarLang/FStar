@@ -1,27 +1,17 @@
 open Prims
-<<<<<<< HEAD
 exception Not_a_wp_implication of Prims.string 
 let uu___is_Not_a_wp_implication : Prims.exn -> Prims.bool =
-=======
-exception Not_a_wp_implication of Prims.string
-let (uu___is_Not_a_wp_implication :Prims.exn -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with
     | Not_a_wp_implication uu____8 -> true
     | uu____9 -> false
-<<<<<<< HEAD
   
 let __proj__Not_a_wp_implication__item__uu___ : Prims.exn -> Prims.string =
-=======
-let (__proj__Not_a_wp_implication__item__uu___ :Prims.exn -> Prims.string)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with | Not_a_wp_implication uu____17 -> uu____17
   
 type label = FStar_SMTEncoding_Term.error_label
 type labels = FStar_SMTEncoding_Term.error_labels
-<<<<<<< HEAD
 let sort_labels :
   (FStar_SMTEncoding_Term.error_label,Prims.bool)
     FStar_Pervasives_Native.tuple2 Prims.list ->
@@ -29,14 +19,6 @@ let sort_labels :
        FStar_Pervasives_Native.tuple3,Prims.bool)
       FStar_Pervasives_Native.tuple2 Prims.list
   =
-=======
-let (sort_labels
-  :(FStar_SMTEncoding_Term.error_label,Prims.bool)
-     FStar_Pervasives_Native.tuple2 Prims.list ->
-     ((FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
-        FStar_Pervasives_Native.tuple3,Prims.bool)
-       FStar_Pervasives_Native.tuple2 Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun l  ->
     FStar_List.sortWith
       (fun uu____66  ->
@@ -44,19 +26,12 @@ let (sort_labels
            match (uu____66, uu____67) with
            | (((uu____108,uu____109,r1),uu____111),((uu____112,uu____113,r2),uu____115))
                -> FStar_Range.compare r1 r2) l
-<<<<<<< HEAD
   
 let remove_dups :
   labels ->
     (FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
       FStar_Pervasives_Native.tuple3 Prims.list
   =
-=======
-let (remove_dups
-  :labels ->
-     (FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
-       FStar_Pervasives_Native.tuple3 Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun l  ->
     FStar_Util.remove_dups
       (fun uu____174  ->
@@ -69,7 +44,6 @@ type msg = (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
 type ranges =
   (Prims.string FStar_Pervasives_Native.option,FStar_Range.range)
     FStar_Pervasives_Native.tuple2 Prims.list
-<<<<<<< HEAD
 let fresh_label :
   Prims.string ->
     FStar_Range.range ->
@@ -77,14 +51,6 @@ let fresh_label :
         (label,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2
   =
   let ctr = FStar_Util.mk_ref (Prims.parse_int "0")  in
-=======
-let (fresh_label
-  :Prims.string ->
-     FStar_Range.range ->
-       FStar_SMTEncoding_Term.term ->
-         (label,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2)=
-  let ctr = FStar_Util.mk_ref (Prims.parse_int "0") in
->>>>>>> taramana_pointers_with_codes_modifies
   fun message  ->
     fun range  ->
       fun t  ->
@@ -100,7 +66,6 @@ let (fresh_label
         let lterm = FStar_SMTEncoding_Util.mkFreeV lvar  in
         let lt1 = FStar_SMTEncoding_Term.mkOr (lterm, t) range  in
         (label, lt1)
-<<<<<<< HEAD
   
 let label_goals :
   (Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
@@ -108,13 +73,6 @@ let label_goals :
       FStar_SMTEncoding_Term.term ->
         (labels,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2
   =
-=======
-let (label_goals
-  :(Prims.unit -> Prims.string) FStar_Pervasives_Native.option ->
-     FStar_Range.range ->
-       FStar_SMTEncoding_Term.term ->
-         (labels,FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple2)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun use_env_msg  ->
     fun r  ->
       fun q  ->
@@ -171,24 +129,14 @@ let (label_goals
                 match ropt with
                 | FStar_Pervasives_Native.None  -> rng
                 | FStar_Pervasives_Native.Some r1 ->
-<<<<<<< HEAD
-                    let uu___109_524 = r1  in
-                    {
-                      FStar_Range.def_range = (rng.FStar_Range.def_range);
-                      FStar_Range.use_range =
-                        (uu___109_524.FStar_Range.use_range)
-                    }
-                 in
-              fresh_label msg1 rng1 t  in
-=======
-                    let uu___107_524 = r1 in
+                    let uu___107_524 = r1  in
                     {
                       FStar_Range.def_range = (rng.FStar_Range.def_range);
                       FStar_Range.use_range =
                         (uu___107_524.FStar_Range.use_range)
-                    } in
-              fresh_label msg1 rng1 t in
->>>>>>> taramana_pointers_with_codes_modifies
+                    }
+                 in
+              fresh_label msg1 rng1 t  in
             let rec aux default_msg ropt post_name_opt labels q1 =
               match q1.FStar_SMTEncoding_Term.tm with
               | FStar_SMTEncoding_Term.BoundV uu____565 -> (labels, q1)
@@ -752,72 +700,39 @@ let (label_goals
                in
             aux "assertion failed" FStar_Pervasives_Native.None
               FStar_Pervasives_Native.None [] q
-<<<<<<< HEAD
   
 let detail_errors :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
       labels ->
-        (FStar_SMTEncoding_Term.decls_t ->
-           ((FStar_SMTEncoding_Z3.unsat_core,(labels,FStar_SMTEncoding_Z3.error_kind)
-                                               FStar_Pervasives_Native.tuple2)
-              FStar_Util.either,Prims.int,FStar_SMTEncoding_Z3.z3statistics)
-             FStar_Pervasives_Native.tuple3)
-          -> Prims.unit
+        (FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Z3.z3result) ->
+          Prims.unit
   =
-=======
-let (detail_errors
-  :Prims.bool ->
-     FStar_TypeChecker_Env.env ->
-       labels ->
-         (FStar_SMTEncoding_Term.decls_t -> FStar_SMTEncoding_Z3.z3result) ->
-           Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun hint_replay  ->
     fun env  ->
       fun all_labels  ->
         fun askZ3  ->
           let print_banner uu____1971 =
             let msg =
-<<<<<<< HEAD
-              let uu____2001 =
-                let uu____2002 = FStar_TypeChecker_Env.get_range env  in
-                FStar_Range.string_of_range uu____2002  in
-              let uu____2003 = FStar_Util.string_of_int (Prims.parse_int "5")
+              let uu____1973 =
+                let uu____1974 = FStar_TypeChecker_Env.get_range env  in
+                FStar_Range.string_of_range uu____1974  in
+              let uu____1975 = FStar_Util.string_of_int (Prims.parse_int "5")
                  in
-              let uu____2004 =
+              let uu____1976 =
                 FStar_Util.string_of_int (FStar_List.length all_labels)  in
               FStar_Util.format4
                 "Detailed %s report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
-                (if hint_replay then "hint replay" else "error") uu____2001
-                uu____2003 uu____2004
+                (if hint_replay then "hint replay" else "error") uu____1973
+                uu____1975 uu____1976
                in
             FStar_Util.print_error msg  in
-          let print_result uu____2019 =
-            match uu____2019 with
-            | ((uu____2030,msg,r),success) ->
-                if success
-                then
-                  let uu____2040 = FStar_Range.string_of_range r  in
-=======
-              let uu____1973 =
-                let uu____1974 = FStar_TypeChecker_Env.get_range env in
-                FStar_Range.string_of_range uu____1974 in
-              let uu____1975 = FStar_Util.string_of_int (Prims.parse_int "5") in
-              let uu____1976 =
-                FStar_Util.string_of_int (FStar_List.length all_labels) in
-              FStar_Util.format4
-                "Detailed %s report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
-                (if hint_replay then "hint replay" else "error") uu____1973
-                uu____1975 uu____1976 in
-            FStar_Util.print_error msg in
           let print_result uu____1991 =
             match uu____1991 with
             | ((uu____2002,msg,r),success) ->
                 if success
                 then
-                  let uu____2012 = FStar_Range.string_of_range r in
->>>>>>> taramana_pointers_with_codes_modifies
+                  let uu____2012 = FStar_Range.string_of_range r  in
                   FStar_Util.print1_error
                     "OK: proof obligation at %s was proven\n" uu____2012
                 else
@@ -827,20 +742,12 @@ let (detail_errors
                       (Prims.strcat "Hint failed to replay this sub-proof: "
                          msg)
                   else
-<<<<<<< HEAD
-                    ((let uu____2044 = FStar_Range.string_of_range r  in
-                      FStar_Util.print2_error
-                        "XX: proof obligation at %s failed\n\t%s\n"
-                        uu____2044 msg);
-                     FStar_Errors.err r msg)
-             in
-=======
-                    ((let uu____2016 = FStar_Range.string_of_range r in
+                    ((let uu____2016 = FStar_Range.string_of_range r  in
                       FStar_Util.print2_error
                         "XX: proof obligation at %s failed\n\t%s\n"
                         uu____2016 msg);
-                     FStar_Errors.err r msg) in
->>>>>>> taramana_pointers_with_codes_modifies
+                     FStar_Errors.err r msg)
+             in
           let elim labs =
             FStar_All.pipe_right labs
               (FStar_List.map
@@ -848,21 +755,12 @@ let (detail_errors
                     match uu____2076 with
                     | (l,uu____2088,uu____2089) ->
                         let a =
-<<<<<<< HEAD
-                          let uu____2127 =
-                            let uu____2128 =
-                              let uu____2133 =
-                                FStar_SMTEncoding_Util.mkFreeV l  in
-                              (uu____2133, FStar_SMTEncoding_Util.mkTrue)  in
-                            FStar_SMTEncoding_Util.mkEq uu____2128  in
-=======
                           let uu____2099 =
                             let uu____2100 =
                               let uu____2105 =
-                                FStar_SMTEncoding_Util.mkFreeV l in
-                              (uu____2105, FStar_SMTEncoding_Util.mkTrue) in
-                            FStar_SMTEncoding_Util.mkEq uu____2100 in
->>>>>>> taramana_pointers_with_codes_modifies
+                                FStar_SMTEncoding_Util.mkFreeV l  in
+                              (uu____2105, FStar_SMTEncoding_Util.mkTrue)  in
+                            FStar_SMTEncoding_Util.mkEq uu____2100  in
                           {
                             FStar_SMTEncoding_Term.assumption_term =
                               uu____2099;
@@ -880,54 +778,30 @@ let (detail_errors
             (match active with
              | [] ->
                  let results =
-<<<<<<< HEAD
-                   let uu____2188 =
+                   let uu____2160 =
                      FStar_List.map (fun x  -> (x, true)) eliminated  in
-                   let uu____2201 =
+                   let uu____2173 =
                      FStar_List.map (fun x  -> (x, false)) errors  in
-                   FStar_List.append uu____2188 uu____2201  in
+                   FStar_List.append uu____2160 uu____2173  in
                  sort_labels results
              | hd1::tl1 ->
-                 ((let uu____2223 =
+                 ((let uu____2195 =
                      FStar_Util.string_of_int (FStar_List.length active)  in
-                   FStar_Util.print1 "%s, " uu____2223);
+                   FStar_Util.print1 "%s, " uu____2195);
                   (let decls =
                      FStar_All.pipe_left elim
                        (FStar_List.append eliminated
                           (FStar_List.append errors tl1))
                       in
-                   let uu____2241 = askZ3 decls  in
-                   match uu____2241 with
-                   | (result,uu____2269,uu____2270) ->
-                       let uu____2287 = FStar_Util.is_left result  in
-                       if uu____2287
-                       then linear_check (hd1 :: eliminated) errors tl1
-                       else linear_check eliminated (hd1 :: errors) tl1)))
-             in
-=======
-                   let uu____2160 =
-                     FStar_List.map (fun x  -> (x, true)) eliminated in
-                   let uu____2173 =
-                     FStar_List.map (fun x  -> (x, false)) errors in
-                   FStar_List.append uu____2160 uu____2173 in
-                 sort_labels results
-             | hd1::tl1 ->
-                 ((let uu____2195 =
-                     FStar_Util.string_of_int (FStar_List.length active) in
-                   FStar_Util.print1 "%s, " uu____2195);
-                  (let decls =
-                     FStar_All.pipe_left elim
-                       (FStar_List.append eliminated
-                          (FStar_List.append errors tl1)) in
-                   let uu____2213 = askZ3 decls in
+                   let uu____2213 = askZ3 decls  in
                    match uu____2213 with
                    | (result,uu____2227,uu____2228) ->
                        (match result with
                         | FStar_SMTEncoding_Z3.UNSAT uu____2241 ->
                             linear_check (hd1 :: eliminated) errors tl1
                         | uu____2242 ->
-                            linear_check eliminated (hd1 :: errors) tl1)))) in
->>>>>>> taramana_pointers_with_codes_modifies
+                            linear_check eliminated (hd1 :: errors) tl1))))
+             in
           print_banner ();
           FStar_Options.set_option "z3rlimit"
             (FStar_Options.Int (Prims.parse_int "5"));

@@ -1,28 +1,17 @@
 open Prims
-<<<<<<< HEAD
 let id_eq_lid : FStar_Ident.ident -> FStar_Ident.lident -> Prims.bool =
   fun i  ->
     fun l  -> i.FStar_Ident.idText = (l.FStar_Ident.ident).FStar_Ident.idText
   
 let is_val : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool =
-=======
-let (id_eq_lid :FStar_Ident.ident -> FStar_Ident.lident -> Prims.bool)=
-  fun i  ->
-    fun l  -> i.FStar_Ident.idText = (l.FStar_Ident.ident).FStar_Ident.idText
-let (is_val :FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun x  ->
     fun d  ->
       match d.FStar_Parser_AST.d with
       | FStar_Parser_AST.Val (y,uu____18) ->
           x.FStar_Ident.idText = y.FStar_Ident.idText
       | uu____19 -> false
-<<<<<<< HEAD
   
 let is_type : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool =
-=======
-let (is_type :FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun x  ->
     fun d  ->
       match d.FStar_Parser_AST.d with
@@ -34,12 +23,8 @@ let (is_type :FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool)=
                   | (t,uu____71) ->
                       (FStar_Parser_AST.id_of_tycon t) = x.FStar_Ident.idText))
       | uu____76 -> false
-<<<<<<< HEAD
   
 let definition_lids : FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list =
-=======
-let (definition_lids :FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun d  ->
     match d.FStar_Parser_AST.d with
     | FStar_Parser_AST.TopLevelLet (uu____85,defs) ->
@@ -55,19 +40,13 @@ let (definition_lids :FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list)=
                     [uu____166]
                 | uu____167 -> []))
     | uu____174 -> []
-<<<<<<< HEAD
   
 let is_definition_of :
   FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool =
-=======
-let (is_definition_of
-  :FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun x  ->
     fun d  ->
       let uu____183 = definition_lids d  in
       FStar_Util.for_some (id_eq_lid x) uu____183
-<<<<<<< HEAD
   
 let rec prefix_with_iface_decls :
   FStar_Parser_AST.decl Prims.list ->
@@ -75,13 +54,6 @@ let rec prefix_with_iface_decls :
       (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
         FStar_Pervasives_Native.tuple2
   =
-=======
-let rec (prefix_with_iface_decls
-  :FStar_Parser_AST.decl Prims.list ->
-     FStar_Parser_AST.decl ->
-       (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
-         FStar_Pervasives_Native.tuple2)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun iface1  ->
     fun impl  ->
       match iface1 with
@@ -192,14 +164,9 @@ let rec (prefix_with_iface_decls
                let uu____546 = prefix_with_iface_decls iface_tl impl  in
                (match uu____546 with
                 | (iface2,ds) -> (iface2, (iface_hd :: ds))))
-<<<<<<< HEAD
   
 let check_initial_interface :
   FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list =
-=======
-let (check_initial_interface
-  :FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun iface1  ->
     let rec aux iface2 =
       match iface2 with
@@ -255,7 +222,6 @@ let (check_initial_interface
             match d.FStar_Parser_AST.d with
             | FStar_Parser_AST.TopLevelModule uu____686 -> false
             | uu____687 -> true))
-<<<<<<< HEAD
   
 let rec ml_mode_prefix_with_iface_decls :
   FStar_Parser_AST.decl Prims.list ->
@@ -263,13 +229,6 @@ let rec ml_mode_prefix_with_iface_decls :
       (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
         FStar_Pervasives_Native.tuple2
   =
-=======
-let rec (ml_mode_prefix_with_iface_decls
-  :FStar_Parser_AST.decl Prims.list ->
-     FStar_Parser_AST.decl ->
-       (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
-         FStar_Pervasives_Native.tuple2)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun iface1  ->
     fun impl  ->
       match impl.FStar_Parser_AST.d with
@@ -286,14 +245,9 @@ let rec (ml_mode_prefix_with_iface_decls
            | (val_xs,rest_iface) ->
                (rest_iface, (FStar_List.append val_xs [impl])))
       | uu____770 -> (iface1, [impl])
-<<<<<<< HEAD
   
 let ml_mode_check_initial_interface :
   FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list =
-=======
-let (ml_mode_check_initial_interface
-  :FStar_Parser_AST.decl Prims.list -> FStar_Parser_AST.decl Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun iface1  ->
     FStar_All.pipe_right iface1
       (FStar_List.filter
@@ -301,7 +255,6 @@ let (ml_mode_check_initial_interface
             match d.FStar_Parser_AST.d with
             | FStar_Parser_AST.Val uu____792 -> true
             | uu____797 -> false))
-<<<<<<< HEAD
   
 let prefix_one_decl :
   FStar_Parser_AST.decl Prims.list ->
@@ -309,13 +262,6 @@ let prefix_one_decl :
       (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
         FStar_Pervasives_Native.tuple2
   =
-=======
-let (prefix_one_decl
-  :FStar_Parser_AST.decl Prims.list ->
-     FStar_Parser_AST.decl ->
-       (FStar_Parser_AST.decl Prims.list,FStar_Parser_AST.decl Prims.list)
-         FStar_Pervasives_Native.tuple2)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun iface1  ->
     fun impl  ->
       match impl.FStar_Parser_AST.d with
@@ -325,19 +271,12 @@ let (prefix_one_decl
           if uu____832
           then ml_mode_prefix_with_iface_decls iface1 impl
           else prefix_with_iface_decls iface1 impl
-<<<<<<< HEAD
   
 let initialize_interface :
   FStar_Ident.lident ->
     FStar_Parser_AST.decl Prims.list ->
       FStar_ToSyntax_Env.env -> FStar_ToSyntax_Env.env
   =
-=======
-let (initialize_interface
-  :FStar_Ident.lident ->
-     FStar_Parser_AST.decl Prims.list ->
-       FStar_ToSyntax_Env.env -> FStar_ToSyntax_Env.env)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun mname  ->
     fun l  ->
       fun env  ->
@@ -361,7 +300,6 @@ let (initialize_interface
             FStar_Exn.raise uu____875
         | FStar_Pervasives_Native.None  ->
             FStar_ToSyntax_Env.set_iface_decls env mname decls
-<<<<<<< HEAD
   
 let prefix_with_interface_decls :
   FStar_ToSyntax_Env.env ->
@@ -369,13 +307,6 @@ let prefix_with_interface_decls :
       (FStar_ToSyntax_Env.env,FStar_Parser_AST.decl Prims.list)
         FStar_Pervasives_Native.tuple2
   =
-=======
-let (prefix_with_interface_decls
-  :FStar_ToSyntax_Env.env ->
-     FStar_Parser_AST.decl ->
-       (FStar_ToSyntax_Env.env,FStar_Parser_AST.decl Prims.list)
-         FStar_Pervasives_Native.tuple2)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun impl  ->
       let uu____905 =
@@ -391,7 +322,6 @@ let (prefix_with_interface_decls
                  let uu____952 = FStar_ToSyntax_Env.current_module env  in
                  FStar_ToSyntax_Env.set_iface_decls env uu____952 iface2  in
                (env1, impl1))
-<<<<<<< HEAD
   
 let interleave_module :
   FStar_ToSyntax_Env.env ->
@@ -400,14 +330,6 @@ let interleave_module :
         (FStar_ToSyntax_Env.env,FStar_Parser_AST.modul)
           FStar_Pervasives_Native.tuple2
   =
-=======
-let (interleave_module
-  :FStar_ToSyntax_Env.env ->
-     FStar_Parser_AST.modul ->
-       Prims.bool ->
-         (FStar_ToSyntax_Env.env,FStar_Parser_AST.modul)
-           FStar_Pervasives_Native.tuple2)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun env  ->
     fun a  ->
       fun expect_complete_modul  ->

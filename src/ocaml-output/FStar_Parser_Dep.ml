@@ -1,6 +1,5 @@
 open Prims
 type verify_mode =
-<<<<<<< HEAD
   | VerifyAll 
   | VerifyUserList 
   | VerifyFigureItOut 
@@ -13,18 +12,6 @@ let uu___is_VerifyUserList : verify_mode -> Prims.bool =
     match projectee with | VerifyUserList  -> true | uu____10 -> false
   
 let uu___is_VerifyFigureItOut : verify_mode -> Prims.bool =
-=======
-  | VerifyAll
-  | VerifyUserList
-  | VerifyFigureItOut
-let (uu___is_VerifyAll :verify_mode -> Prims.bool)=
-  fun projectee  ->
-    match projectee with | VerifyAll  -> true | uu____5 -> false
-let (uu___is_VerifyUserList :verify_mode -> Prims.bool)=
-  fun projectee  ->
-    match projectee with | VerifyUserList  -> true | uu____10 -> false
-let (uu___is_VerifyFigureItOut :verify_mode -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun projectee  ->
     match projectee with | VerifyFigureItOut  -> true | uu____15 -> false
   
@@ -33,7 +20,6 @@ type map =
                                                  FStar_Pervasives_Native.option)
     FStar_Pervasives_Native.tuple2 FStar_Util.smap
 type color =
-<<<<<<< HEAD
   | White 
   | Gray 
   | Black 
@@ -56,28 +42,6 @@ let uu___is_Open_namespace : open_kind -> Prims.bool =
   
 let check_and_strip_suffix :
   Prims.string -> Prims.string FStar_Pervasives_Native.option =
-=======
-  | White
-  | Gray
-  | Black
-let (uu___is_White :color -> Prims.bool)=
-  fun projectee  -> match projectee with | White  -> true | uu____30 -> false
-let (uu___is_Gray :color -> Prims.bool)=
-  fun projectee  -> match projectee with | Gray  -> true | uu____35 -> false
-let (uu___is_Black :color -> Prims.bool)=
-  fun projectee  -> match projectee with | Black  -> true | uu____40 -> false
-type open_kind =
-  | Open_module
-  | Open_namespace
-let (uu___is_Open_module :open_kind -> Prims.bool)=
-  fun projectee  ->
-    match projectee with | Open_module  -> true | uu____45 -> false
-let (uu___is_Open_namespace :open_kind -> Prims.bool)=
-  fun projectee  ->
-    match projectee with | Open_namespace  -> true | uu____50 -> false
-let (check_and_strip_suffix
-  :Prims.string -> Prims.string FStar_Pervasives_Native.option)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun f  ->
     let suffixes = [".fsti"; ".fst"; ".fsi"; ".fs"]  in
     let matches =
@@ -102,51 +66,37 @@ let (check_and_strip_suffix
     | (FStar_Pervasives_Native.Some m)::uu____128 ->
         FStar_Pervasives_Native.Some m
     | uu____135 -> FStar_Pervasives_Native.None
-<<<<<<< HEAD
   
 let is_interface : Prims.string -> Prims.bool =
-=======
-let (is_interface :Prims.string -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun f  ->
     let uu____144 =
       FStar_String.get f ((FStar_String.length f) - (Prims.parse_int "1"))
        in
     uu____144 = 'i'
-<<<<<<< HEAD
   
 let is_implementation : Prims.string -> Prims.bool =
   fun f  -> let uu____149 = is_interface f  in Prims.op_Negation uu____149 
-=======
-let (is_implementation :Prims.string -> Prims.bool)=
-  fun f  -> let uu____149 = is_interface f in Prims.op_Negation uu____149
->>>>>>> taramana_pointers_with_codes_modifies
 let list_of_option :
   'Auu____154 .
-    'Auu____154 FStar_Pervasives_Native.option -> 'Auu____154 Prims.list=
+    'Auu____154 FStar_Pervasives_Native.option -> 'Auu____154 Prims.list
+  =
   fun uu___82_162  ->
     match uu___82_162 with
     | FStar_Pervasives_Native.Some x -> [x]
     | FStar_Pervasives_Native.None  -> []
-<<<<<<< HEAD
   
-=======
->>>>>>> taramana_pointers_with_codes_modifies
 let list_of_pair :
   'Auu____170 .
     ('Auu____170 FStar_Pervasives_Native.option,'Auu____170
                                                   FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.tuple2 -> 'Auu____170 Prims.list=
+      FStar_Pervasives_Native.tuple2 -> 'Auu____170 Prims.list
+  =
   fun uu____184  ->
     match uu____184 with
     | (intf,impl) ->
         FStar_List.append (list_of_option intf) (list_of_option impl)
-<<<<<<< HEAD
   
 let lowercase_module_name : Prims.string -> Prims.string =
-=======
-let (lowercase_module_name :Prims.string -> Prims.string)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun f  ->
     let uu____207 =
       let uu____210 = FStar_Util.basename f  in
@@ -160,12 +110,8 @@ let (lowercase_module_name :Prims.string -> Prims.string)=
              in
           FStar_Errors.Err uu____213  in
         FStar_Exn.raise uu____212
-<<<<<<< HEAD
   
 let build_map : Prims.string Prims.list -> map =
-=======
-let (build_map :Prims.string Prims.list -> map)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun filenames  ->
     let include_directories = FStar_Options.include_path ()  in
     let include_directories1 =
@@ -227,12 +173,8 @@ let (build_map :Prims.string Prims.list -> map)=
          let uu____385 = lowercase_module_name f  in add_entry uu____385 f)
       filenames;
     map1
-<<<<<<< HEAD
   
 let enter_namespace : map -> map -> Prims.string -> Prims.bool =
-=======
-let (enter_namespace :map -> map -> Prims.string -> Prims.bool)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun original_map  ->
     fun working_map  ->
       fun prefix1  ->
@@ -256,12 +198,8 @@ let (enter_namespace :map -> map -> Prims.string -> Prims.bool)=
                  FStar_ST.op_Colon_Equals found true)
               else ()) uu____403);
         FStar_ST.op_Bang found
-<<<<<<< HEAD
   
 let string_of_lid : FStar_Ident.lident -> Prims.bool -> Prims.string =
-=======
-let (string_of_lid :FStar_Ident.lident -> Prims.bool -> Prims.string)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun l  ->
     fun last1  ->
       let suffix =
@@ -272,36 +210,22 @@ let (string_of_lid :FStar_Ident.lident -> Prims.bool -> Prims.string)=
            in
         FStar_List.append uu____534 suffix  in
       FStar_String.concat "." names
-<<<<<<< HEAD
   
 let lowercase_join_longident :
   FStar_Ident.lident -> Prims.bool -> Prims.string =
-=======
-let (lowercase_join_longident
-  :FStar_Ident.lident -> Prims.bool -> Prims.string)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun l  ->
     fun last1  ->
       let uu____547 = string_of_lid l last1  in
       FStar_String.lowercase uu____547
-<<<<<<< HEAD
   
 let namespace_of_lid : FStar_Ident.lident -> Prims.string =
-=======
-let (namespace_of_lid :FStar_Ident.lident -> Prims.string)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun l  ->
     let uu____552 = FStar_List.map FStar_Ident.text_of_id l.FStar_Ident.ns
        in
     FStar_String.concat "_" uu____552
-<<<<<<< HEAD
   
 let check_module_declaration_against_filename :
   FStar_Ident.lident -> Prims.string -> Prims.unit =
-=======
-let (check_module_declaration_against_filename
-  :FStar_Ident.lident -> Prims.string -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun lid  ->
     fun filename  ->
       let k' = lowercase_join_longident lid true  in
@@ -321,7 +245,6 @@ let (check_module_declaration_against_filename
           "Warning: the module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect.\n"
           uu____571 filename
       else ()
-<<<<<<< HEAD
   
 exception Exit 
 let uu___is_Exit : Prims.exn -> Prims.bool =
@@ -330,14 +253,6 @@ let hard_coded_dependencies :
   Prims.string ->
     (FStar_Ident.lident,open_kind) FStar_Pervasives_Native.tuple2 Prims.list
   =
-=======
-exception Exit
-let (uu___is_Exit :Prims.exn -> Prims.bool)=
-  fun projectee  -> match projectee with | Exit  -> true | uu____577 -> false
-let (hard_coded_dependencies
-  :Prims.string ->
-     (FStar_Ident.lident,open_kind) FStar_Pervasives_Native.tuple2 Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun filename  ->
     let filename1 = FStar_Util.basename filename  in
     let corelibs =
@@ -355,7 +270,6 @@ let (hard_coded_dependencies
       [(FStar_Parser_Const.fstar_ns_lid, Open_namespace);
       (FStar_Parser_Const.prims_lid, Open_module);
       (FStar_Parser_Const.pervasives_lid, Open_module)]
-<<<<<<< HEAD
   
 let collect_one :
   (Prims.string,Prims.bool FStar_ST.ref) FStar_Pervasives_Native.tuple2
@@ -363,13 +277,6 @@ let collect_one :
     verify_mode ->
       Prims.bool -> map -> Prims.string -> Prims.string Prims.list
   =
-=======
-let (collect_one
-  :(Prims.string,Prims.bool FStar_ST.ref) FStar_Pervasives_Native.tuple2
-     Prims.list ->
-     verify_mode ->
-       Prims.bool -> map -> Prims.string -> Prims.string Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun verify_flags  ->
     fun verify_mode  ->
       fun is_user_provided_filename  ->
@@ -502,84 +409,44 @@ let (collect_one
             let auto_open = hard_coded_dependencies filename  in
             FStar_List.iter record_open_module_or_namespace auto_open;
             (let num_of_toplevelmods =
-<<<<<<< HEAD
                FStar_Util.mk_ref (Prims.parse_int "0")  in
-             let rec collect_file uu___84_1130 =
-               match uu___84_1130 with
-               | modul::[] -> collect_module modul
-               | modules ->
-                   (FStar_Util.print1_warning
-                      "Warning: file %s does not respect the one module per file convention\n"
-                      filename;
-                    FStar_List.iter collect_module modules)
-             
-             and collect_module uu___85_1138 =
-               match uu___85_1138 with
-=======
-               FStar_Util.mk_ref (Prims.parse_int "0") in
              let rec collect_module uu___83_1125 =
                match uu___83_1125 with
->>>>>>> taramana_pointers_with_codes_modifies
                | FStar_Parser_AST.Module (lid,decls) ->
                    (check_module_declaration_against_filename lid filename;
                     if
                       (FStar_List.length lid.FStar_Ident.ns) >
                         (Prims.parse_int "0")
                     then
-<<<<<<< HEAD
-                      (let uu____1147 =
-                         let uu____1148 = namespace_of_lid lid  in
-                         enter_namespace original_map working_map uu____1148
-                          in
-=======
                       (let uu____1134 =
-                         let uu____1135 = namespace_of_lid lid in
-                         enter_namespace original_map working_map uu____1135 in
->>>>>>> taramana_pointers_with_codes_modifies
+                         let uu____1135 = namespace_of_lid lid  in
+                         enter_namespace original_map working_map uu____1135
+                          in
                        ())
                     else ();
                     (match verify_mode with
                      | VerifyAll  ->
-<<<<<<< HEAD
-                         let uu____1151 = string_of_lid lid true  in
-                         FStar_Options.add_verify_module uu____1151
-                     | VerifyFigureItOut  ->
-                         if is_user_provided_filename
-                         then
-                           let uu____1152 = string_of_lid lid true  in
-                           FStar_Options.add_verify_module uu____1152
-=======
-                         let uu____1138 = string_of_lid lid true in
+                         let uu____1138 = string_of_lid lid true  in
                          FStar_Options.add_verify_module uu____1138
                      | VerifyFigureItOut  ->
                          if is_user_provided_filename
                          then
-                           let uu____1139 = string_of_lid lid true in
+                           let uu____1139 = string_of_lid lid true  in
                            FStar_Options.add_verify_module uu____1139
->>>>>>> taramana_pointers_with_codes_modifies
                          else ()
                      | VerifyUserList  ->
                          FStar_List.iter
                            (fun uu____1207  ->
                               match uu____1207 with
                               | (m,r) ->
-<<<<<<< HEAD
-                                  let uu____1401 =
-                                    let uu____1402 =
-                                      let uu____1403 = string_of_lid lid true
-                                         in
-                                      FStar_String.lowercase uu____1403  in
-                                    (FStar_String.lowercase m) = uu____1402
-                                     in
-                                  if uu____1401
-=======
                                   let uu____1388 =
                                     let uu____1389 =
-                                      let uu____1390 = string_of_lid lid true in
-                                      FStar_String.lowercase uu____1390 in
-                                    (FStar_String.lowercase m) = uu____1389 in
+                                      let uu____1390 = string_of_lid lid true
+                                         in
+                                      FStar_String.lowercase uu____1390  in
+                                    (FStar_String.lowercase m) = uu____1389
+                                     in
                                   if uu____1388
->>>>>>> taramana_pointers_with_codes_modifies
                                   then FStar_ST.op_Colon_Equals r true
                                   else ()) verify_flags);
                     collect_decls decls)
@@ -589,60 +456,35 @@ let (collect_one
                       (FStar_List.length lid.FStar_Ident.ns) >
                         (Prims.parse_int "0")
                     then
-<<<<<<< HEAD
-                      (let uu____1520 =
-                         let uu____1521 = namespace_of_lid lid  in
-                         enter_namespace original_map working_map uu____1521
-                          in
-=======
                       (let uu____1507 =
-                         let uu____1508 = namespace_of_lid lid in
-                         enter_namespace original_map working_map uu____1508 in
->>>>>>> taramana_pointers_with_codes_modifies
+                         let uu____1508 = namespace_of_lid lid  in
+                         enter_namespace original_map working_map uu____1508
+                          in
                        ())
                     else ();
                     (match verify_mode with
                      | VerifyAll  ->
-<<<<<<< HEAD
-                         let uu____1524 = string_of_lid lid true  in
-                         FStar_Options.add_verify_module uu____1524
-                     | VerifyFigureItOut  ->
-                         if is_user_provided_filename
-                         then
-                           let uu____1525 = string_of_lid lid true  in
-                           FStar_Options.add_verify_module uu____1525
-=======
-                         let uu____1511 = string_of_lid lid true in
+                         let uu____1511 = string_of_lid lid true  in
                          FStar_Options.add_verify_module uu____1511
                      | VerifyFigureItOut  ->
                          if is_user_provided_filename
                          then
-                           let uu____1512 = string_of_lid lid true in
+                           let uu____1512 = string_of_lid lid true  in
                            FStar_Options.add_verify_module uu____1512
->>>>>>> taramana_pointers_with_codes_modifies
                          else ()
                      | VerifyUserList  ->
                          FStar_List.iter
                            (fun uu____1580  ->
                               match uu____1580 with
                               | (m,r) ->
-<<<<<<< HEAD
-                                  let uu____1774 =
-                                    let uu____1775 =
-                                      let uu____1776 = string_of_lid lid true
-                                         in
-                                      FStar_String.lowercase uu____1776  in
-                                    (FStar_String.lowercase m) = uu____1775
-                                     in
-                                  if uu____1774
-=======
                                   let uu____1761 =
                                     let uu____1762 =
-                                      let uu____1763 = string_of_lid lid true in
-                                      FStar_String.lowercase uu____1763 in
-                                    (FStar_String.lowercase m) = uu____1762 in
+                                      let uu____1763 = string_of_lid lid true
+                                         in
+                                      FStar_String.lowercase uu____1763  in
+                                    (FStar_String.lowercase m) = uu____1762
+                                     in
                                   if uu____1761
->>>>>>> taramana_pointers_with_codes_modifies
                                   then FStar_ST.op_Colon_Equals r true
                                   else ()) verify_flags);
                     collect_decls decls)
@@ -653,24 +495,14 @@ let (collect_one
                     collect_decl x.FStar_Parser_AST.d;
                     FStar_List.iter collect_term x.FStar_Parser_AST.attrs)
                  decls
-<<<<<<< HEAD
              
-             and collect_decl uu___86_1891 =
-               match uu___86_1891 with
-               | FStar_Parser_AST.Include lid -> record_open false lid
-               | FStar_Parser_AST.Open lid -> record_open false lid
-               | FStar_Parser_AST.ModuleAbbrev (ident,lid) ->
-                   ((let uu____1897 = lowercase_join_longident lid true  in
-                     add_dep uu____1897);
-=======
              and collect_decl uu___84_1878 =
                match uu___84_1878 with
                | FStar_Parser_AST.Include lid -> record_open false lid
                | FStar_Parser_AST.Open lid -> record_open false lid
                | FStar_Parser_AST.ModuleAbbrev (ident,lid) ->
-                   ((let uu____1884 = lowercase_join_longident lid true in
+                   ((let uu____1884 = lowercase_join_longident lid true  in
                      add_dep uu____1884);
->>>>>>> taramana_pointers_with_codes_modifies
                     record_module_alias ident lid)
                | FStar_Parser_AST.TopLevelLet (uu____1885,patterms) ->
                    FStar_List.iter
@@ -702,14 +534,9 @@ let (collect_one
                | FStar_Parser_AST.Tycon (uu____1931,ts) ->
                    let ts1 =
                      FStar_List.map
-<<<<<<< HEAD
-                       (fun uu____1974  ->
-                          match uu____1974 with | (x,docnik) -> x) ts
-                      in
-=======
                        (fun uu____1961  ->
-                          match uu____1961 with | (x,docnik) -> x) ts in
->>>>>>> taramana_pointers_with_codes_modifies
+                          match uu____1961 with | (x,docnik) -> x) ts
+                      in
                    FStar_List.iter collect_tycon ts1
                | FStar_Parser_AST.Exception (uu____1974,t) ->
                    FStar_Util.iter_opt t collect_term
@@ -718,46 +545,26 @@ let (collect_one
                | FStar_Parser_AST.Pragma uu____1982 -> ()
                | FStar_Parser_AST.TopLevelModule lid ->
                    (FStar_Util.incr num_of_toplevelmods;
-<<<<<<< HEAD
-                    (let uu____2019 =
-                       let uu____2020 = FStar_ST.op_Bang num_of_toplevelmods
-                          in
-                       uu____2020 > (Prims.parse_int "1")  in
-                     if uu____2019
-                     then
-                       let uu____2045 =
-                         let uu____2046 =
-                           let uu____2047 = string_of_lid lid true  in
-                           FStar_Util.format1
-                             "Automatic dependency analysis demands one module per file (module %s not supported)"
-                             uu____2047
-                            in
-                         FStar_Errors.Err uu____2046  in
-                       FStar_Exn.raise uu____2045
-                     else ()))
-             
-             and collect_tycon uu___87_2049 =
-               match uu___87_2049 with
-               | FStar_Parser_AST.TyconAbstract (uu____2050,binders,k) ->
-=======
                     (let uu____2006 =
-                       let uu____2007 = FStar_ST.op_Bang num_of_toplevelmods in
-                       uu____2007 > (Prims.parse_int "1") in
+                       let uu____2007 = FStar_ST.op_Bang num_of_toplevelmods
+                          in
+                       uu____2007 > (Prims.parse_int "1")  in
                      if uu____2006
                      then
                        let uu____2032 =
                          let uu____2033 =
-                           let uu____2034 = string_of_lid lid true in
+                           let uu____2034 = string_of_lid lid true  in
                            FStar_Util.format1
                              "Automatic dependency analysis demands one module per file (module %s not supported)"
-                             uu____2034 in
-                         FStar_Errors.Err uu____2033 in
+                             uu____2034
+                            in
+                         FStar_Errors.Err uu____2033  in
                        FStar_Exn.raise uu____2032
                      else ()))
+             
              and collect_tycon uu___85_2036 =
                match uu___85_2036 with
                | FStar_Parser_AST.TyconAbstract (uu____2037,binders,k) ->
->>>>>>> taramana_pointers_with_codes_modifies
                    (collect_binders binders;
                     FStar_Util.iter_opt k collect_term)
                | FStar_Parser_AST.TyconAbbrev (uu____2049,binders,k,t) ->
@@ -782,16 +589,10 @@ let (collect_one
                          match uu____2184 with
                          | (uu____2197,t,uu____2199,uu____2200) ->
                              FStar_Util.iter_opt t collect_term) identterms)
-<<<<<<< HEAD
              
-             and collect_effect_decl uu___88_2222 =
-               match uu___88_2222 with
-               | FStar_Parser_AST.DefineEffect (uu____2223,binders,t,decls)
-=======
              and collect_effect_decl uu___86_2209 =
                match uu___86_2209 with
                | FStar_Parser_AST.DefineEffect (uu____2210,binders,t,decls)
->>>>>>> taramana_pointers_with_codes_modifies
                    ->
                    (collect_binders binders;
                     collect_term t;
@@ -801,14 +602,9 @@ let (collect_one
              
              and collect_binders binders =
                FStar_List.iter collect_binder binders
-<<<<<<< HEAD
              
-             and collect_binder uu___89_2248 =
-               match uu___89_2248 with
-=======
              and collect_binder uu___87_2235 =
                match uu___87_2235 with
->>>>>>> taramana_pointers_with_codes_modifies
                | {
                    FStar_Parser_AST.b = FStar_Parser_AST.Annotated
                      (uu____2236,t);
@@ -822,25 +618,15 @@ let (collect_one
                    FStar_Parser_AST.blevel = uu____2244;
                    FStar_Parser_AST.aqual = uu____2245;_} -> collect_term t
                | { FStar_Parser_AST.b = FStar_Parser_AST.NoName t;
-<<<<<<< HEAD
-                   FStar_Parser_AST.brange = uu____2260;
-                   FStar_Parser_AST.blevel = uu____2261;
-                   FStar_Parser_AST.aqual = uu____2262;_} -> collect_term t
-               | uu____2263 -> ()
-             
-             and collect_term t = collect_term' t.FStar_Parser_AST.tm
-             
-             and collect_constant uu___90_2265 =
-               match uu___90_2265 with
-=======
                    FStar_Parser_AST.brange = uu____2247;
                    FStar_Parser_AST.blevel = uu____2248;
                    FStar_Parser_AST.aqual = uu____2249;_} -> collect_term t
                | uu____2250 -> ()
+             
              and collect_term t = collect_term' t.FStar_Parser_AST.tm
+             
              and collect_constant uu___88_2252 =
                match uu___88_2252 with
->>>>>>> taramana_pointers_with_codes_modifies
                | FStar_Const.Const_int
                    (uu____2253,FStar_Pervasives_Native.Some
                     (signedness,width))
@@ -854,23 +640,14 @@ let (collect_one
                      | FStar_Const.Int8  -> "8"
                      | FStar_Const.Int16  -> "16"
                      | FStar_Const.Int32  -> "32"
-<<<<<<< HEAD
                      | FStar_Const.Int64  -> "64"  in
-                   let uu____2281 = FStar_Util.format2 "fstar.%sint%s" u w
+                   let uu____2268 = FStar_Util.format2 "fstar.%sint%s" u w
                       in
-                   add_dep uu____2281
-               | uu____2282 -> ()
-             
-             and collect_term' uu___91_2283 =
-               match uu___91_2283 with
-=======
-                     | FStar_Const.Int64  -> "64" in
-                   let uu____2268 = FStar_Util.format2 "fstar.%sint%s" u w in
                    add_dep uu____2268
                | uu____2269 -> ()
+             
              and collect_term' uu___89_2270 =
                match uu___89_2270 with
->>>>>>> taramana_pointers_with_codes_modifies
                | FStar_Parser_AST.Wild  -> ()
                | FStar_Parser_AST.Const c -> collect_constant c
                | FStar_Parser_AST.Op (s,ts) ->
@@ -881,16 +658,10 @@ let (collect_one
                            FStar_Ident.lid_of_path
                              (FStar_Ident.path_of_text
                                 "FStar.List.Tot.Base.append")
-<<<<<<< HEAD
                              FStar_Range.dummyRange
                             in
-                         FStar_Parser_AST.Name uu____2293  in
-                       collect_term' uu____2292)
-=======
-                             FStar_Range.dummyRange in
-                         FStar_Parser_AST.Name uu____2280 in
+                         FStar_Parser_AST.Name uu____2280  in
                        collect_term' uu____2279)
->>>>>>> taramana_pointers_with_codes_modifies
                     else ();
                     FStar_List.iter collect_term ts)
                | FStar_Parser_AST.Tvar uu____2282 -> ()
@@ -971,14 +742,9 @@ let (collect_one
              and collect_patterns ps = FStar_List.iter collect_pattern ps
              
              and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
-<<<<<<< HEAD
              
-             and collect_pattern' uu___92_2569 =
-               match uu___92_2569 with
-=======
              and collect_pattern' uu___90_2556 =
                match uu___90_2556 with
->>>>>>> taramana_pointers_with_codes_modifies
                | FStar_Parser_AST.PatWild  -> ()
                | FStar_Parser_AST.PatOp uu____2557 -> ()
                | FStar_Parser_AST.PatConst uu____2558 -> ()
@@ -1000,40 +766,24 @@ let (collect_one
                    (collect_pattern p; collect_term t)
              
              and collect_branches bs = FStar_List.iter collect_branch bs
-<<<<<<< HEAD
              
-             and collect_branch uu____2649 =
-               match uu____2649 with
-               | (pat,t1,t2) ->
-                   (collect_pattern pat;
-                    FStar_Util.iter_opt t1 collect_term;
-                    collect_term t2)
-              in
-             let uu____2667 = FStar_Parser_Driver.parse_file filename  in
-             match uu____2667 with
-             | (ast,uu____2681) -> (collect_file ast; FStar_ST.op_Bang deps))
-  
-let print_graph :
-  'Auu____2731 .
-    (Prims.string Prims.list,'Auu____2731) FStar_Pervasives_Native.tuple2
-      FStar_Util.smap -> Prims.unit
-  =
-=======
              and collect_branch uu____2636 =
                match uu____2636 with
                | (pat,t1,t2) ->
                    (collect_pattern pat;
                     FStar_Util.iter_opt t1 collect_term;
-                    collect_term t2) in
-             let uu____2654 = FStar_Parser_Driver.parse_file filename in
+                    collect_term t2)
+              in
+             let uu____2654 = FStar_Parser_Driver.parse_file filename  in
              match uu____2654 with
              | (ast,uu____2668) ->
                  (collect_module ast; FStar_ST.op_Bang deps))
+  
 let print_graph :
   'Auu____2718 .
     (Prims.string Prims.list,'Auu____2718) FStar_Pervasives_Native.tuple2
-      FStar_Util.smap -> Prims.unit=
->>>>>>> taramana_pointers_with_codes_modifies
+      FStar_Util.smap -> Prims.unit
+  =
   fun graph  ->
     FStar_Util.print_endline
       "A DOT-format graph has been dumped in the current directory as dep.graph";
@@ -1041,31 +791,30 @@ let print_graph :
       "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
     FStar_Util.print_endline
       "Hint: cat dep.graph | grep -v _ | grep -v prims";
-<<<<<<< HEAD
-    (let uu____2755 =
-       let uu____2756 =
-         let uu____2757 =
-           let uu____2758 =
-             let uu____2761 =
-               let uu____2764 = FStar_Util.smap_keys graph  in
-               FStar_List.unique uu____2764  in
+    (let uu____2742 =
+       let uu____2743 =
+         let uu____2744 =
+           let uu____2745 =
+             let uu____2748 =
+               let uu____2751 = FStar_Util.smap_keys graph  in
+               FStar_List.unique uu____2751  in
              FStar_List.collect
                (fun k  ->
                   let deps =
-                    let uu____2780 =
-                      let uu____2787 = FStar_Util.smap_try_find graph k  in
-                      FStar_Util.must uu____2787  in
-                    FStar_Pervasives_Native.fst uu____2780  in
+                    let uu____2767 =
+                      let uu____2774 = FStar_Util.smap_try_find graph k  in
+                      FStar_Util.must uu____2774  in
+                    FStar_Pervasives_Native.fst uu____2767  in
                   let r s = FStar_Util.replace_char s '.' '_'  in
                   FStar_List.map
                     (fun dep1  ->
                        FStar_Util.format2 "  %s -> %s" (r k) (r dep1)) deps)
-               uu____2761
+               uu____2748
               in
-           FStar_String.concat "\n" uu____2758  in
-         Prims.strcat uu____2757 "\n}\n"  in
-       Prims.strcat "digraph {\n" uu____2756  in
-     FStar_Util.write_file "dep.graph" uu____2755)
+           FStar_String.concat "\n" uu____2745  in
+         Prims.strcat uu____2744 "\n}\n"  in
+       Prims.strcat "digraph {\n" uu____2743  in
+     FStar_Util.write_file "dep.graph" uu____2742)
   
 let collect :
   verify_mode ->
@@ -1077,78 +826,26 @@ let collect :
                                               FStar_Util.smap)
         FStar_Pervasives_Native.tuple3
   =
-=======
-    (let uu____2742 =
-       let uu____2743 =
-         let uu____2744 =
-           let uu____2745 =
-             let uu____2748 =
-               let uu____2751 = FStar_Util.smap_keys graph in
-               FStar_List.unique uu____2751 in
-             FStar_List.collect
-               (fun k  ->
-                  let deps =
-                    let uu____2767 =
-                      let uu____2774 = FStar_Util.smap_try_find graph k in
-                      FStar_Util.must uu____2774 in
-                    FStar_Pervasives_Native.fst uu____2767 in
-                  let r s = FStar_Util.replace_char s '.' '_' in
-                  FStar_List.map
-                    (fun dep1  ->
-                       FStar_Util.format2 "  %s -> %s" (r k) (r dep1)) deps)
-               uu____2748 in
-           FStar_String.concat "\n" uu____2745 in
-         Prims.strcat uu____2744 "\n}\n" in
-       Prims.strcat "digraph {\n" uu____2743 in
-     FStar_Util.write_file "dep.graph" uu____2742)
-let (collect
-  :verify_mode ->
-     Prims.string Prims.list ->
-       ((Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
-          Prims.list,Prims.string Prims.list,(Prims.string Prims.list,
-                                               color)
-                                               FStar_Pervasives_Native.tuple2
-                                               FStar_Util.smap)
-         FStar_Pervasives_Native.tuple3)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun verify_mode  ->
     fun filenames  ->
       let graph = FStar_Util.smap_create (Prims.parse_int "41")  in
       let verify_flags =
-<<<<<<< HEAD
-        let uu____2876 = FStar_Options.verify_module ()  in
+        let uu____2863 = FStar_Options.verify_module ()  in
         FStar_List.map
           (fun f  ->
-             let uu____2888 = FStar_Util.mk_ref false  in (f, uu____2888))
-          uu____2876
+             let uu____2875 = FStar_Util.mk_ref false  in (f, uu____2875))
+          uu____2863
          in
       let partial_discovery =
-        let uu____2908 =
+        let uu____2895 =
           (FStar_Options.verify_all ()) || (FStar_Options.extract_all ())  in
-        Prims.op_Negation uu____2908  in
+        Prims.op_Negation uu____2895  in
       let m = build_map filenames  in
       let file_names_of_key k =
-        let uu____2914 =
-          let uu____2923 = FStar_Util.smap_try_find m k  in
-          FStar_Util.must uu____2923  in
-        match uu____2914 with
-=======
-        let uu____2863 = FStar_Options.verify_module () in
-        FStar_List.map
-          (fun f  ->
-             let uu____2875 = FStar_Util.mk_ref false in (f, uu____2875))
-          uu____2863 in
-      let partial_discovery =
-        let uu____2895 =
-          (FStar_Options.verify_all ()) || (FStar_Options.extract_all ()) in
-        Prims.op_Negation uu____2895 in
-      let m = build_map filenames in
-      let file_names_of_key k =
         let uu____2901 =
-          let uu____2910 = FStar_Util.smap_try_find m k in
-          FStar_Util.must uu____2910 in
+          let uu____2910 = FStar_Util.smap_try_find m k  in
+          FStar_Util.must uu____2910  in
         match uu____2901 with
->>>>>>> taramana_pointers_with_codes_modifies
         | (intf,impl) ->
             (match (intf, impl) with
              | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.None )
@@ -1164,27 +861,15 @@ let (collect
          in
       let collect_one1 = collect_one verify_flags verify_mode  in
       let rec discover_one is_user_provided_filename interface_only key =
-<<<<<<< HEAD
-        let uu____3011 =
-          let uu____3012 = FStar_Util.smap_try_find graph key  in
-          uu____3012 = FStar_Pervasives_Native.None  in
-        if uu____3011
-        then
-          let uu____3041 =
-            let uu____3050 = FStar_Util.smap_try_find m key  in
-            FStar_Util.must uu____3050  in
-          match uu____3041 with
-=======
         let uu____2998 =
-          let uu____2999 = FStar_Util.smap_try_find graph key in
-          uu____2999 = FStar_Pervasives_Native.None in
+          let uu____2999 = FStar_Util.smap_try_find graph key  in
+          uu____2999 = FStar_Pervasives_Native.None  in
         if uu____2998
         then
           let uu____3028 =
-            let uu____3037 = FStar_Util.smap_try_find m key in
-            FStar_Util.must uu____3037 in
+            let uu____3037 = FStar_Util.smap_try_find m key  in
+            FStar_Util.must uu____3037  in
           match uu____3028 with
->>>>>>> taramana_pointers_with_codes_modifies
           | (intf,impl) ->
               let intf_deps =
                 match intf with
@@ -1198,11 +883,7 @@ let (collect
                     interface_only -> []
                 | (FStar_Pervasives_Native.Some impl1,uu____3096) ->
                     collect_one1 is_user_provided_filename m impl1
-<<<<<<< HEAD
-                | (FStar_Pervasives_Native.None ,uu____3116) -> []  in
-=======
-                | (FStar_Pervasives_Native.None ,uu____3103) -> [] in
->>>>>>> taramana_pointers_with_codes_modifies
+                | (FStar_Pervasives_Native.None ,uu____3103) -> []  in
               let deps =
                 FStar_List.unique (FStar_List.append impl_deps intf_deps)  in
               (FStar_Util.smap_add graph key (deps, White);
@@ -1215,34 +896,20 @@ let (collect
             (let uu____3130 =
                FStar_List.existsML
                  (fun f1  ->
-<<<<<<< HEAD
-                    (let uu____3148 = lowercase_module_name f1  in
-                     uu____3148 = m1) && (is_implementation f1)) filenames
+                    (let uu____3135 = lowercase_module_name f1  in
+                     uu____3135 = m1) && (is_implementation f1)) filenames
                 in
-             Prims.op_Negation uu____3143)
+             Prims.op_Negation uu____3130)
            in
         discover_one true interface_only m1  in
-=======
-                    (let uu____3135 = lowercase_module_name f1 in
-                     uu____3135 = m1) && (is_implementation f1)) filenames in
-             Prims.op_Negation uu____3130) in
-        discover_one true interface_only m1 in
->>>>>>> taramana_pointers_with_codes_modifies
       FStar_List.iter discover_command_line_argument filenames;
       (let immediate_graph = FStar_Util.smap_copy graph  in
        let topologically_sorted = FStar_Util.mk_ref []  in
        let rec discover cycle key =
-<<<<<<< HEAD
-         let uu____3185 =
-           let uu____3192 = FStar_Util.smap_try_find graph key  in
-           FStar_Util.must uu____3192  in
-         match uu____3185 with
-=======
          let uu____3172 =
-           let uu____3179 = FStar_Util.smap_try_find graph key in
-           FStar_Util.must uu____3179 in
+           let uu____3179 = FStar_Util.smap_try_find graph key  in
+           FStar_Util.must uu____3179  in
          match uu____3172 with
->>>>>>> taramana_pointers_with_codes_modifies
          | (direct_deps,color) ->
              (match color with
               | Gray  ->
@@ -1266,74 +933,44 @@ let (collect
                         let uu____3238 =
                           FStar_List.map
                             (fun dep1  ->
-<<<<<<< HEAD
-                               let uu____3261 = discover (key :: cycle) dep1
+                               let uu____3248 = discover (key :: cycle) dep1
                                   in
-                               dep1 :: uu____3261) direct_deps
+                               dep1 :: uu____3248) direct_deps
                            in
-                        FStar_List.flatten uu____3251  in
-                      FStar_List.unique uu____3248  in
+                        FStar_List.flatten uu____3238  in
+                      FStar_List.unique uu____3235  in
                     FStar_Util.smap_add graph key (all_deps, Black);
-                    (let uu____3274 =
-                       let uu____3277 = FStar_ST.op_Bang topologically_sorted
+                    (let uu____3261 =
+                       let uu____3264 = FStar_ST.op_Bang topologically_sorted
                           in
-                       key :: uu____3277  in
-                     FStar_ST.op_Colon_Equals topologically_sorted uu____3274);
+                       key :: uu____3264  in
+                     FStar_ST.op_Colon_Equals topologically_sorted uu____3261);
                     all_deps)))
           in
        let discover1 = discover []  in
        let must_find k =
-         let uu____3355 =
-           let uu____3364 = FStar_Util.smap_try_find m k  in
-           FStar_Util.must uu____3364  in
-         match uu____3355 with
-=======
-                               let uu____3248 = discover (key :: cycle) dep1 in
-                               dep1 :: uu____3248) direct_deps in
-                        FStar_List.flatten uu____3238 in
-                      FStar_List.unique uu____3235 in
-                    FStar_Util.smap_add graph key (all_deps, Black);
-                    (let uu____3261 =
-                       let uu____3264 = FStar_ST.op_Bang topologically_sorted in
-                       key :: uu____3264 in
-                     FStar_ST.op_Colon_Equals topologically_sorted uu____3261);
-                    all_deps))) in
-       let discover1 = discover [] in
-       let must_find k =
          let uu____3342 =
-           let uu____3351 = FStar_Util.smap_try_find m k in
-           FStar_Util.must uu____3351 in
+           let uu____3351 = FStar_Util.smap_try_find m k  in
+           FStar_Util.must uu____3351  in
          match uu____3342 with
->>>>>>> taramana_pointers_with_codes_modifies
          | (FStar_Pervasives_Native.Some intf,FStar_Pervasives_Native.Some
             impl) when
              (Prims.op_Negation partial_discovery) &&
                (let uu____3387 =
                   FStar_List.existsML
                     (fun f  ->
-<<<<<<< HEAD
-                       let uu____3404 = lowercase_module_name f  in
-                       uu____3404 = k) filenames
+                       let uu____3391 = lowercase_module_name f  in
+                       uu____3391 = k) filenames
                    in
-                Prims.op_Negation uu____3400)
-=======
-                       let uu____3391 = lowercase_module_name f in
-                       uu____3391 = k) filenames in
                 Prims.op_Negation uu____3387)
->>>>>>> taramana_pointers_with_codes_modifies
              -> [intf; impl]
          | (FStar_Pervasives_Native.Some intf,FStar_Pervasives_Native.Some
             impl) when
              FStar_List.existsML
                (fun f  ->
                   (is_implementation f) &&
-<<<<<<< HEAD
-                    (let uu____3414 = lowercase_module_name f  in
-                     uu____3414 = k)) filenames
-=======
-                    (let uu____3401 = lowercase_module_name f in
+                    (let uu____3401 = lowercase_module_name f  in
                      uu____3401 = k)) filenames
->>>>>>> taramana_pointers_with_codes_modifies
              -> [intf; impl]
          | (FStar_Pervasives_Native.Some intf,uu____3403) -> [intf]
          | (FStar_Pervasives_Native.None ,FStar_Pervasives_Native.Some impl)
@@ -1342,22 +979,13 @@ let (collect
              []
           in
        let must_find_r f =
-<<<<<<< HEAD
-         let uu____3438 = must_find f  in FStar_List.rev uu____3438  in
-       let by_target =
-         let uu____3450 =
-           let uu____3453 = FStar_Util.smap_keys graph  in
-           FStar_List.sortWith (fun x  -> fun y  -> FStar_String.compare x y)
-             uu____3453
-            in
-=======
-         let uu____3425 = must_find f in FStar_List.rev uu____3425 in
+         let uu____3425 = must_find f  in FStar_List.rev uu____3425  in
        let by_target =
          let uu____3437 =
-           let uu____3440 = FStar_Util.smap_keys graph in
+           let uu____3440 = FStar_Util.smap_keys graph  in
            FStar_List.sortWith (fun x  -> fun y  -> FStar_String.compare x y)
-             uu____3440 in
->>>>>>> taramana_pointers_with_codes_modifies
+             uu____3440
+            in
          FStar_List.collect
            (fun k  ->
               let as_list = must_find k  in
@@ -1369,103 +997,63 @@ let (collect
                      (is_implementation f) && is_interleaved  in
                    let k1 = lowercase_module_name f  in
                    let suffix =
-<<<<<<< HEAD
-                     let uu____3498 =
-                       let uu____3507 = FStar_Util.smap_try_find m k1  in
-                       FStar_Util.must uu____3507  in
-                     match uu____3498 with
-                     | (FStar_Pervasives_Native.Some intf,uu____3537) when
-                         should_append_fsti -> [intf]
-                     | uu____3544 -> []  in
-                   let deps =
-                     let uu____3556 = discover1 k1  in
-                     FStar_List.rev uu____3556  in
-                   let deps_as_filenames =
-                     let uu____3562 = FStar_List.collect must_find deps  in
-                     FStar_List.append uu____3562 suffix  in
-                   (f, deps_as_filenames)) as_list) uu____3450
-          in
-       let topologically_sorted1 =
-         let uu____3570 = FStar_ST.op_Bang topologically_sorted  in
-         FStar_List.collect must_find_r uu____3570  in
-=======
                      let uu____3485 =
-                       let uu____3494 = FStar_Util.smap_try_find m k1 in
-                       FStar_Util.must uu____3494 in
+                       let uu____3494 = FStar_Util.smap_try_find m k1  in
+                       FStar_Util.must uu____3494  in
                      match uu____3485 with
                      | (FStar_Pervasives_Native.Some intf,uu____3524) when
                          should_append_fsti -> [intf]
-                     | uu____3531 -> [] in
+                     | uu____3531 -> []  in
                    let deps =
-                     let uu____3543 = discover1 k1 in
-                     FStar_List.rev uu____3543 in
+                     let uu____3543 = discover1 k1  in
+                     FStar_List.rev uu____3543  in
                    let deps_as_filenames =
-                     let uu____3549 = FStar_List.collect must_find deps in
-                     FStar_List.append uu____3549 suffix in
-                   (f, deps_as_filenames)) as_list) uu____3437 in
+                     let uu____3549 = FStar_List.collect must_find deps  in
+                     FStar_List.append uu____3549 suffix  in
+                   (f, deps_as_filenames)) as_list) uu____3437
+          in
        let topologically_sorted1 =
-         let uu____3557 = FStar_ST.op_Bang topologically_sorted in
-         FStar_List.collect must_find_r uu____3557 in
->>>>>>> taramana_pointers_with_codes_modifies
+         let uu____3557 = FStar_ST.op_Bang topologically_sorted  in
+         FStar_List.collect must_find_r uu____3557  in
        FStar_List.iter
          (fun uu____3661  ->
             match uu____3661 with
             | (m1,r) ->
-<<<<<<< HEAD
-                let uu____3855 =
-                  (let uu____3858 = FStar_ST.op_Bang r  in
-                   Prims.op_Negation uu____3858) &&
-                    (let uu____3966 = FStar_Options.interactive ()  in
-                     Prims.op_Negation uu____3966)
-                   in
-                if uu____3855
-                then
-                  let maybe_fst =
-                    let k = FStar_String.length m1  in
-                    let uu____3969 =
-=======
                 let uu____3842 =
-                  (let uu____3845 = FStar_ST.op_Bang r in
+                  (let uu____3845 = FStar_ST.op_Bang r  in
                    Prims.op_Negation uu____3845) &&
-                    (let uu____3953 = FStar_Options.interactive () in
-                     Prims.op_Negation uu____3953) in
+                    (let uu____3953 = FStar_Options.interactive ()  in
+                     Prims.op_Negation uu____3953)
+                   in
                 if uu____3842
                 then
                   let maybe_fst =
-                    let k = FStar_String.length m1 in
+                    let k = FStar_String.length m1  in
                     let uu____3956 =
->>>>>>> taramana_pointers_with_codes_modifies
                       (k > (Prims.parse_int "4")) &&
                         (let uu____3964 =
                            FStar_String.substring m1
                              (k - (Prims.parse_int "4"))
-<<<<<<< HEAD
                              (Prims.parse_int "4")
                             in
-                         uu____3977 = ".fst")
+                         uu____3964 = ".fst")
                        in
-                    if uu____3969
-=======
-                             (Prims.parse_int "4") in
-                         uu____3964 = ".fst") in
                     if uu____3956
->>>>>>> taramana_pointers_with_codes_modifies
                     then
                       let uu____3971 =
                         FStar_String.substring m1 (Prims.parse_int "0")
-<<<<<<< HEAD
                           (k - (Prims.parse_int "4"))
                          in
-                      FStar_Util.format1 " Did you mean %s ?" uu____3984
+                      FStar_Util.format1 " Did you mean %s ?" uu____3971
                     else ""  in
-                  let uu____3992 =
-                    let uu____3993 =
+                  let uu____3979 =
+                    let uu____3980 =
                       FStar_Util.format3
                         "You passed --verify_module %s but I found no file that contains [module %s] in the dependency graph.%s\n"
                         m1 m1 maybe_fst
                        in
-                    FStar_Errors.Err uu____3993  in
-                  FStar_Exn.raise uu____3992
+                    FStar_Errors.Err uu____3980  in
+                  FStar_Exn.raise uu____3979
                 else ()) verify_flags;
        (by_target, topologically_sorted1, immediate_graph))
   
@@ -1473,23 +1061,6 @@ let print_make :
   (Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
     Prims.list -> Prims.unit
   =
-=======
-                          (k - (Prims.parse_int "4")) in
-                      FStar_Util.format1 " Did you mean %s ?" uu____3971
-                    else "" in
-                  let uu____3979 =
-                    let uu____3980 =
-                      FStar_Util.format3
-                        "You passed --verify_module %s but I found no file that contains [module %s] in the dependency graph.%s\n"
-                        m1 m1 maybe_fst in
-                    FStar_Errors.Err uu____3980 in
-                  FStar_Exn.raise uu____3979
-                else ()) verify_flags;
-       (by_target, topologically_sorted1, immediate_graph))
-let (print_make
-  :(Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
-     Prims.list -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun deps  ->
     FStar_List.iter
       (fun uu____4030  ->
@@ -1501,31 +1072,19 @@ let (print_make
                 in
              FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps2))
       deps
-<<<<<<< HEAD
   
-=======
->>>>>>> taramana_pointers_with_codes_modifies
 let print :
   'a 'b .
     ((Prims.string,Prims.string Prims.list) FStar_Pervasives_Native.tuple2
        Prims.list,'a,(Prims.string Prims.list,'b)
                        FStar_Pervasives_Native.tuple2 FStar_Util.smap)
-<<<<<<< HEAD
       FStar_Pervasives_Native.tuple3 -> Prims.unit
   =
-  fun uu____4094  ->
-    match uu____4094 with
-    | (make_deps,uu____4118,graph) ->
-        let uu____4152 = FStar_Options.dep ()  in
-        (match uu____4152 with
-=======
-      FStar_Pervasives_Native.tuple3 -> Prims.unit=
   fun uu____4081  ->
     match uu____4081 with
     | (make_deps,uu____4105,graph) ->
-        let uu____4139 = FStar_Options.dep () in
+        let uu____4139 = FStar_Options.dep ()  in
         (match uu____4139 with
->>>>>>> taramana_pointers_with_codes_modifies
          | FStar_Pervasives_Native.Some "make" -> print_make make_deps
          | FStar_Pervasives_Native.Some "graph" -> print_graph graph
          | FStar_Pervasives_Native.Some uu____4142 ->

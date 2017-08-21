@@ -1,14 +1,8 @@
 open Prims
-<<<<<<< HEAD
 let find_deps_if_needed :
   FStar_Parser_Dep.verify_mode ->
     Prims.string Prims.list -> Prims.string Prims.list
   =
-=======
-let (find_deps_if_needed
-  :FStar_Parser_Dep.verify_mode ->
-     Prims.string Prims.list -> Prims.string Prims.list)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun verify_mode  ->
     fun files  ->
       let uu____15 = FStar_Options.explicit_deps ()  in

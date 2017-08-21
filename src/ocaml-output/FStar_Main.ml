@@ -1,5 +1,4 @@
 open Prims
-<<<<<<< HEAD
 let uu___224 : Prims.unit = FStar_Version.dummy () 
 let process_args :
   Prims.unit ->
@@ -12,19 +11,6 @@ let finished_message :
   ((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
     FStar_Pervasives_Native.tuple2 Prims.list -> Prims.int -> Prims.unit
   =
-=======
-let (uu___224 :Prims.unit)= FStar_Version.dummy ()
-let (process_args
-  :Prims.unit ->
-     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
-       FStar_Pervasives_Native.tuple2)=
-  fun uu____10  -> FStar_Options.parse_cmd_line ()
-let (cleanup :Prims.unit -> Prims.unit)=
-  fun uu____20  -> FStar_Util.kill_all ()
-let (finished_message
-  :((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
-     FStar_Pervasives_Native.tuple2 Prims.list -> Prims.int -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun fmods  ->
     fun errs  ->
       let print_to =
@@ -83,17 +69,11 @@ let (finished_message
               FStar_Util.format1 "%s\n" uu____111  in
             FStar_Util.print_string uu____110))
       else ()
-<<<<<<< HEAD
   
 let report_errors :
   ((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
     FStar_Pervasives_Native.tuple2 Prims.list -> Prims.unit
   =
-=======
-let (report_errors
-  :((Prims.bool,FStar_Ident.lident) FStar_Pervasives_Native.tuple2,Prims.int)
-     FStar_Pervasives_Native.tuple2 Prims.list -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun fmods  ->
     (let uu____138 = FStar_Errors.report_all ()  in
      FStar_All.pipe_right uu____138 FStar_Pervasives.ignore);
@@ -102,17 +82,11 @@ let (report_errors
      then
        (finished_message fmods nerrs; FStar_All.exit (Prims.parse_int "1"))
      else ())
-<<<<<<< HEAD
   
 let codegen :
   (FStar_Syntax_Syntax.modul Prims.list,FStar_TypeChecker_Env.env)
     FStar_Pervasives_Native.tuple2 -> Prims.unit
   =
-=======
-let (codegen
-  :(FStar_Syntax_Syntax.modul Prims.list,FStar_TypeChecker_Env.env)
-     FStar_Pervasives_Native.tuple2 -> Prims.unit)=
->>>>>>> taramana_pointers_with_codes_modifies
   fun uu____157  ->
     match uu____157 with
     | (umods,env) ->
@@ -155,12 +129,8 @@ let (codegen
                FStar_Util.save_value_to_file uu____234 bin
            | uu____235 -> failwith "Unrecognized option")
         else ()
-<<<<<<< HEAD
   
 let go : 'Auu____243 . 'Auu____243 -> Prims.unit =
-=======
-let go : 'Auu____243 . 'Auu____243 -> Prims.unit=
->>>>>>> taramana_pointers_with_codes_modifies
   fun uu____247  ->
     let uu____248 = process_args ()  in
     match uu____248 with
@@ -284,12 +254,8 @@ let go : 'Auu____243 . 'Auu____243 -> Prims.unit=
                                  finished_message module_names_and_times
                                    (Prims.parse_int "0"))))
                         else FStar_Util.print_error "no file provided\n"))))
-<<<<<<< HEAD
   
 let main : 'Auu____468 . Prims.unit -> 'Auu____468 =
-=======
-let main : 'Auu____468 . Prims.unit -> 'Auu____468=
->>>>>>> taramana_pointers_with_codes_modifies
   fun uu____472  ->
     try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")
     with
