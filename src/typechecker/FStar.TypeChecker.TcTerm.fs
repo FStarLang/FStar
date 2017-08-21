@@ -576,6 +576,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     check_inner_let_rec env top
 
 and tc_synth env args rng =
+    // Quit early with a magic if nosynth is set, cf. issue #73 in fstar-mode.el
+    if env.nosynth
+    then tc_term env (mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit]
+                                None rng)
+    else
+
     let tau, atyp, rest =
     match args with
     | (tau, None)::rest ->
