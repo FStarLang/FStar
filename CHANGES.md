@@ -43,20 +43,24 @@ Guidelines for the changelog:
     used. The latter may be restored, but the code was too messy to
     retain, given that the feature is also not much used.
 
+* --hint_info and --print_z3_statistics are deprecated. They are
+    subsumed by --query_stats.
+
 ## Error reporting
 
 * The error reports from SMT query failures have been substantially
-  reworked. At least a warning is issued for each SMT query failure
-  together with a reason provided by the SMT solver. Additionally,
-  localized assertion failures will be printed as errors. If no
-  localized errors could be recovered (e.g., because of a solver
-  timeout) then the dreaded "Unknown assertion failed" error is
-  reported.
-
-* --hint_info now reports a reason for a hint failure as well as
-    localized errors for sub-proofs that failed to replay. This is
-    should provide a faster workflow than using --detail_hint_replay
-    (which still exists)
+  reworked. At least a diagnostic (i.e., an "Info" message) is issued
+  for each SMT query failure together with a reason provided by the
+  SMT solver. To see that diagnostic message, you at least need to
+  have '--debug yes'. Additionally, localized assertion failures will
+  be printed as errors. If no localized errors could be recovered
+  (e.g., because of a solver timeout) then the dreaded "Unknown
+  assertion failed" error is reported.
+   
+* --query_stats now reports a reason for a hint failure as well as
+  localized errors for sub-proofs that failed to replay. This is
+  should provide a faster workflow than using --detail_hint_replay
+  (which still exists)
 
 ## Tactics
 
