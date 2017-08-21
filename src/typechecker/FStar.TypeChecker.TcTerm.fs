@@ -566,6 +566,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
     if Env.debug env (Options.Other "2-Phase-Checking")
     then let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
+         let _ = BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top) in
          if Env.should_verify env then
            check_top_level_let env lax_top
          else lax_top, l, g
@@ -579,6 +580,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
     if Env.debug env (Options.Other "2-Phase-Checking")
     then let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
+         let _ = BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top) in
          if Env.should_verify env then
             check_top_level_let_rec env lax_top
          else lax_top, l, g
