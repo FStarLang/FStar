@@ -46,6 +46,10 @@ Guidelines for the changelog:
 * --hint_info and --print_z3_statistics are deprecated. They are
     subsumed by --query_stats.
 
+* --cache_checked_modules: writes out a .checked file from which the
+  typechecker can reconstruct its state, instead of re-verifying a
+  module every time
+
 ## Error reporting
 
 * The error reports from SMT query failures have been substantially
@@ -61,6 +65,10 @@ Guidelines for the changelog:
   localized errors for sub-proofs that failed to replay. This is
   should provide a faster workflow than using --detail_hint_replay
   (which still exists)
+
+## Miscellaneous
+
+* A file can now contain at most one module or interface
 
 ## Tactics
 
