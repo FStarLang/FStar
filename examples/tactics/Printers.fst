@@ -44,6 +44,7 @@ let printer : tactic unit =
                | _ -> fail "not a qname type?");
     match lookup_typ e xt_ns with
     | Unk -> fail "type not found?"
+    | Sg_Let _ _ _ -> fail "cannot create printer for let"
     | Sg_Inductive _ bs t ctors ->
         let br1 ctor : branch = match ctor with | Ctor name t ->
             let pn = String.concat "." name in
