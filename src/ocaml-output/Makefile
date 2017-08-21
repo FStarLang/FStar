@@ -206,7 +206,8 @@ ulib:
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
-package: all ulib
+package: all
+	$(MAKE) ulib
         # Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
