@@ -170,17 +170,27 @@ type sigelt_view =
   | Sg_Inductive of
   (name,FStar_Syntax_Syntax.binder Prims.list,typ,ctor Prims.list)
   FStar_Pervasives_Native.tuple4
+  | Sg_Let of (FStar_Syntax_Syntax.fv,typ,FStar_Syntax_Syntax.term)
+  FStar_Pervasives_Native.tuple3
   | Unk
 let uu___is_Sg_Inductive: sigelt_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Sg_Inductive _0 -> true | uu____601 -> false
+    match projectee with | Sg_Inductive _0 -> true | uu____611 -> false
 let __proj__Sg_Inductive__item___0:
   sigelt_view ->
     (name,FStar_Syntax_Syntax.binder Prims.list,typ,ctor Prims.list)
       FStar_Pervasives_Native.tuple4
   = fun projectee  -> match projectee with | Sg_Inductive _0 -> _0
+let uu___is_Sg_Let: sigelt_view -> Prims.bool =
+  fun projectee  ->
+    match projectee with | Sg_Let _0 -> true | uu____667 -> false
+let __proj__Sg_Let__item___0:
+  sigelt_view ->
+    (FStar_Syntax_Syntax.fv,typ,FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.tuple3
+  = fun projectee  -> match projectee with | Sg_Let _0 -> _0
 let uu___is_Unk: sigelt_view -> Prims.bool =
-  fun projectee  -> match projectee with | Unk  -> true | uu____650 -> false
+  fun projectee  -> match projectee with | Unk  -> true | uu____698 -> false
 type norm_step =
   | Simpl
   | WHNF
@@ -189,18 +199,18 @@ type norm_step =
   | UnfoldOnly of FStar_Syntax_Syntax.fv Prims.list
 let uu___is_Simpl: norm_step -> Prims.bool =
   fun projectee  ->
-    match projectee with | Simpl  -> true | uu____661 -> false
+    match projectee with | Simpl  -> true | uu____709 -> false
 let uu___is_WHNF: norm_step -> Prims.bool =
-  fun projectee  -> match projectee with | WHNF  -> true | uu____666 -> false
+  fun projectee  -> match projectee with | WHNF  -> true | uu____714 -> false
 let uu___is_Primops: norm_step -> Prims.bool =
   fun projectee  ->
-    match projectee with | Primops  -> true | uu____671 -> false
+    match projectee with | Primops  -> true | uu____719 -> false
 let uu___is_Delta: norm_step -> Prims.bool =
   fun projectee  ->
-    match projectee with | Delta  -> true | uu____676 -> false
+    match projectee with | Delta  -> true | uu____724 -> false
 let uu___is_UnfoldOnly: norm_step -> Prims.bool =
   fun projectee  ->
-    match projectee with | UnfoldOnly _0 -> true | uu____684 -> false
+    match projectee with | UnfoldOnly _0 -> true | uu____732 -> false
 let __proj__UnfoldOnly__item___0:
   norm_step -> FStar_Syntax_Syntax.fv Prims.list =
   fun projectee  -> match projectee with | UnfoldOnly _0 -> _0
@@ -218,21 +228,21 @@ let fstar_refl_data_lid: Prims.string -> FStar_Ident.lident =
   fun s  -> fstar_refl_lid ["Data"; s]
 let mk_refl_types_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____727 = fstar_refl_types_lid s in
-    FStar_Syntax_Syntax.tconst uu____727
+    let uu____775 = fstar_refl_types_lid s in
+    FStar_Syntax_Syntax.tconst uu____775
 let mk_refl_syntax_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____732 = fstar_refl_syntax_lid s in
-    FStar_Syntax_Syntax.tconst uu____732
+    let uu____780 = fstar_refl_syntax_lid s in
+    FStar_Syntax_Syntax.tconst uu____780
 let mk_refl_data_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____737 = fstar_refl_data_lid s in
-    FStar_Syntax_Syntax.tconst uu____737
+    let uu____785 = fstar_refl_data_lid s in
+    FStar_Syntax_Syntax.tconst uu____785
 let fstar_refl_tdataconstr:
   Prims.string Prims.list -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____746 = fstar_refl_lid s in
-    FStar_Syntax_Syntax.tdataconstr uu____746
+    let uu____794 = fstar_refl_lid s in
+    FStar_Syntax_Syntax.tdataconstr uu____794
 let fstar_refl_term: FStar_Syntax_Syntax.term =
   mk_refl_types_lid_as_term "term"
 let fstar_refl_aqualv: FStar_Syntax_Syntax.term =
@@ -327,10 +337,13 @@ let ref_Tv_Unknown: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr ref_Tv_Unknown_lid
 let ref_Sg_Inductive_lid: FStar_Ident.lident =
   fstar_refl_data_lid "Sg_Inductive"
+let ref_Sg_Let_lid: FStar_Ident.lident = fstar_refl_data_lid "Sg_Let"
 let ref_Unk_lid: FStar_Ident.lident = fstar_refl_data_lid "Unk"
 let ref_Ctor_lid: FStar_Ident.lident = fstar_refl_data_lid "Ctor"
 let ref_Sg_Inductive: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr ref_Sg_Inductive_lid
+let ref_Sg_Let: FStar_Syntax_Syntax.term =
+  FStar_Syntax_Syntax.tdataconstr ref_Sg_Let_lid
 let ref_Unk: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr ref_Unk_lid
 let ref_Ctor: FStar_Syntax_Syntax.term =
@@ -353,20 +366,20 @@ let ref_Delta: FStar_Syntax_Syntax.term =
 let ref_UnfoldOnly: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr ref_UnfoldOnly_lid
 let t_binder: FStar_Syntax_Syntax.term =
-  let uu____747 = fstar_refl_types_lid "binder" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____747
+  let uu____795 = fstar_refl_types_lid "binder" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____795
 let t_term: FStar_Syntax_Syntax.term =
-  let uu____748 = fstar_refl_types_lid "term" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____748
+  let uu____796 = fstar_refl_types_lid "term" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____796
 let t_fv: FStar_Syntax_Syntax.term =
-  let uu____749 = fstar_refl_types_lid "fv" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____749
+  let uu____797 = fstar_refl_types_lid "fv" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____797
 let t_binders: FStar_Syntax_Syntax.term =
-  let uu____750 = fstar_refl_types_lid "binders" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____750
+  let uu____798 = fstar_refl_types_lid "binders" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____798
 let t_norm_step: FStar_Syntax_Syntax.term =
-  let uu____751 = fstar_refl_types_lid "norm_step" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____751
+  let uu____799 = fstar_refl_types_lid "norm_step" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____799
 let ord_Lt_lid: FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"] FStar_Range.dummyRange
 let ord_Eq_lid: FStar_Ident.lident =
