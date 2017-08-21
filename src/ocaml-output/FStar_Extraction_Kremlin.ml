@@ -146,462 +146,457 @@ and typ =
   ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
   typ Prims.list) FStar_Pervasives_Native.tuple2
   | TTuple of typ Prims.list
-let (uu___is_DGlobal :decl -> Prims.bool)=
+let uu___is_DGlobal: decl -> Prims.bool =
   fun projectee  ->
     match projectee with | DGlobal _0 -> true | uu____506 -> false
-let (__proj__DGlobal__item___0
-  :decl ->
-     (flag Prims.list,(Prims.string Prims.list,Prims.string)
-                        FStar_Pervasives_Native.tuple2,typ,expr)
-       FStar_Pervasives_Native.tuple4)=
-  fun projectee  -> match projectee with | DGlobal _0 -> _0
-let (uu___is_DFunction :decl -> Prims.bool)=
+let __proj__DGlobal__item___0:
+  decl ->
+    (flag Prims.list,(Prims.string Prims.list,Prims.string)
+                       FStar_Pervasives_Native.tuple2,typ,expr)
+      FStar_Pervasives_Native.tuple4
+  = fun projectee  -> match projectee with | DGlobal _0 -> _0
+let uu___is_DFunction: decl -> Prims.bool =
   fun projectee  ->
     match projectee with | DFunction _0 -> true | uu____594 -> false
-let (__proj__DFunction__item___0
-  :decl ->
-     (cc FStar_Pervasives_Native.option,flag Prims.list,Prims.int,typ,
-       (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-       binder Prims.list,expr) FStar_Pervasives_Native.tuple7)=
-  fun projectee  -> match projectee with | DFunction _0 -> _0
-let (uu___is_DTypeAlias :decl -> Prims.bool)=
+let __proj__DFunction__item___0:
+  decl ->
+    (cc FStar_Pervasives_Native.option,flag Prims.list,Prims.int,typ,
+      (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
+      binder Prims.list,expr) FStar_Pervasives_Native.tuple7
+  = fun projectee  -> match projectee with | DFunction _0 -> _0
+let uu___is_DTypeAlias: decl -> Prims.bool =
   fun projectee  ->
     match projectee with | DTypeAlias _0 -> true | uu____698 -> false
-let (__proj__DTypeAlias__item___0
-  :decl ->
-     ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-       Prims.int,typ) FStar_Pervasives_Native.tuple3)=
-  fun projectee  -> match projectee with | DTypeAlias _0 -> _0
-let (uu___is_DTypeFlat :decl -> Prims.bool)=
+let __proj__DTypeAlias__item___0:
+  decl ->
+    ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
+      Prims.int,typ) FStar_Pervasives_Native.tuple3
+  = fun projectee  -> match projectee with | DTypeAlias _0 -> _0
+let uu___is_DTypeFlat: decl -> Prims.bool =
   fun projectee  ->
     match projectee with | DTypeFlat _0 -> true | uu____770 -> false
-let (__proj__DTypeFlat__item___0
-  :decl ->
-     ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-       Prims.int,(Prims.string,(typ,Prims.bool)
-                                 FStar_Pervasives_Native.tuple2)
-                   FStar_Pervasives_Native.tuple2 Prims.list)
-       FStar_Pervasives_Native.tuple3)=
-  fun projectee  -> match projectee with | DTypeFlat _0 -> _0
-let (uu___is_DExternal :decl -> Prims.bool)=
+let __proj__DTypeFlat__item___0:
+  decl ->
+    ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
+      Prims.int,(Prims.string,(typ,Prims.bool) FStar_Pervasives_Native.tuple2)
+                  FStar_Pervasives_Native.tuple2 Prims.list)
+      FStar_Pervasives_Native.tuple3
+  = fun projectee  -> match projectee with | DTypeFlat _0 -> _0
+let uu___is_DExternal: decl -> Prims.bool =
   fun projectee  ->
     match projectee with | DExternal _0 -> true | uu____864 -> false
-let (__proj__DExternal__item___0
-  :decl ->
-     (cc FStar_Pervasives_Native.option,(Prims.string Prims.list,Prims.string)
-                                          FStar_Pervasives_Native.tuple2,
-       typ) FStar_Pervasives_Native.tuple3)=
-  fun projectee  -> match projectee with | DExternal _0 -> _0
-let (uu___is_DTypeVariant :decl -> Prims.bool)=
+let __proj__DExternal__item___0:
+  decl ->
+    (cc FStar_Pervasives_Native.option,(Prims.string Prims.list,Prims.string)
+                                         FStar_Pervasives_Native.tuple2,
+      typ) FStar_Pervasives_Native.tuple3
+  = fun projectee  -> match projectee with | DExternal _0 -> _0
+let uu___is_DTypeVariant: decl -> Prims.bool =
   fun projectee  ->
     match projectee with | DTypeVariant _0 -> true | uu____948 -> false
-let (__proj__DTypeVariant__item___0
-  :decl ->
-     ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-       Prims.int,(Prims.string,(Prims.string,(typ,Prims.bool)
-                                               FStar_Pervasives_Native.tuple2)
-                                 FStar_Pervasives_Native.tuple2 Prims.list)
-                   FStar_Pervasives_Native.tuple2 Prims.list)
-       FStar_Pervasives_Native.tuple3)=
-  fun projectee  -> match projectee with | DTypeVariant _0 -> _0
-let (uu___is_StdCall :cc -> Prims.bool)=
+let __proj__DTypeVariant__item___0:
+  decl ->
+    ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
+      Prims.int,(Prims.string,(Prims.string,(typ,Prims.bool)
+                                              FStar_Pervasives_Native.tuple2)
+                                FStar_Pervasives_Native.tuple2 Prims.list)
+                  FStar_Pervasives_Native.tuple2 Prims.list)
+      FStar_Pervasives_Native.tuple3
+  = fun projectee  -> match projectee with | DTypeVariant _0 -> _0
+let uu___is_StdCall: cc -> Prims.bool =
   fun projectee  ->
     match projectee with | StdCall  -> true | uu____1045 -> false
-let (uu___is_CDecl :cc -> Prims.bool)=
+let uu___is_CDecl: cc -> Prims.bool =
   fun projectee  ->
     match projectee with | CDecl  -> true | uu____1050 -> false
-let (uu___is_FastCall :cc -> Prims.bool)=
+let uu___is_FastCall: cc -> Prims.bool =
   fun projectee  ->
     match projectee with | FastCall  -> true | uu____1055 -> false
-let (uu___is_Private :flag -> Prims.bool)=
+let uu___is_Private: flag -> Prims.bool =
   fun projectee  ->
     match projectee with | Private  -> true | uu____1060 -> false
-let (uu___is_NoExtract :flag -> Prims.bool)=
+let uu___is_NoExtract: flag -> Prims.bool =
   fun projectee  ->
     match projectee with | NoExtract  -> true | uu____1065 -> false
-let (uu___is_CInline :flag -> Prims.bool)=
+let uu___is_CInline: flag -> Prims.bool =
   fun projectee  ->
     match projectee with | CInline  -> true | uu____1070 -> false
-let (uu___is_Substitute :flag -> Prims.bool)=
+let uu___is_Substitute: flag -> Prims.bool =
   fun projectee  ->
     match projectee with | Substitute  -> true | uu____1075 -> false
-let (uu___is_Eternal :lifetime -> Prims.bool)=
+let uu___is_Eternal: lifetime -> Prims.bool =
   fun projectee  ->
     match projectee with | Eternal  -> true | uu____1080 -> false
-let (uu___is_Stack :lifetime -> Prims.bool)=
+let uu___is_Stack: lifetime -> Prims.bool =
   fun projectee  ->
     match projectee with | Stack  -> true | uu____1085 -> false
-let (uu___is_EBound :expr -> Prims.bool)=
+let uu___is_EBound: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EBound _0 -> true | uu____1091 -> false
-let (__proj__EBound__item___0 :expr -> Prims.int)=
+let __proj__EBound__item___0: expr -> Prims.int =
   fun projectee  -> match projectee with | EBound _0 -> _0
-let (uu___is_EQualified :expr -> Prims.bool)=
+let uu___is_EQualified: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EQualified _0 -> true | uu____1111 -> false
-let (__proj__EQualified__item___0
-  :expr ->
-     (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2)=
-  fun projectee  -> match projectee with | EQualified _0 -> _0
-let (uu___is_EConstant :expr -> Prims.bool)=
+let __proj__EQualified__item___0:
+  expr ->
+    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | EQualified _0 -> _0
+let uu___is_EConstant: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EConstant _0 -> true | uu____1147 -> false
-let (__proj__EConstant__item___0
-  :expr -> (width,Prims.string) FStar_Pervasives_Native.tuple2)=
+let __proj__EConstant__item___0:
+  expr -> (width,Prims.string) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | EConstant _0 -> _0
-let (uu___is_EUnit :expr -> Prims.bool)=
+let uu___is_EUnit: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EUnit  -> true | uu____1172 -> false
-let (uu___is_EApp :expr -> Prims.bool)=
+let uu___is_EApp: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EApp _0 -> true | uu____1184 -> false
-let (__proj__EApp__item___0
-  :expr -> (expr,expr Prims.list) FStar_Pervasives_Native.tuple2)=
+let __proj__EApp__item___0:
+  expr -> (expr,expr Prims.list) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | EApp _0 -> _0
-let (uu___is_ELet :expr -> Prims.bool)=
+let uu___is_ELet: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | ELet _0 -> true | uu____1222 -> false
-let (__proj__ELet__item___0
-  :expr -> (binder,expr,expr) FStar_Pervasives_Native.tuple3)=
+let __proj__ELet__item___0:
+  expr -> (binder,expr,expr) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | ELet _0 -> _0
-let (uu___is_EIfThenElse :expr -> Prims.bool)=
+let uu___is_EIfThenElse: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EIfThenElse _0 -> true | uu____1260 -> false
-let (__proj__EIfThenElse__item___0
-  :expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3)=
+let __proj__EIfThenElse__item___0:
+  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | EIfThenElse _0 -> _0
-let (uu___is_ESequence :expr -> Prims.bool)=
+let uu___is_ESequence: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | ESequence _0 -> true | uu____1294 -> false
-let (__proj__ESequence__item___0 :expr -> expr Prims.list)=
+let __proj__ESequence__item___0: expr -> expr Prims.list =
   fun projectee  -> match projectee with | ESequence _0 -> _0
-let (uu___is_EAssign :expr -> Prims.bool)=
+let uu___is_EAssign: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EAssign _0 -> true | uu____1318 -> false
-let (__proj__EAssign__item___0
-  :expr -> (expr,expr) FStar_Pervasives_Native.tuple2)=
+let __proj__EAssign__item___0:
+  expr -> (expr,expr) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | EAssign _0 -> _0
-let (uu___is_EBufCreate :expr -> Prims.bool)=
+let uu___is_EBufCreate: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EBufCreate _0 -> true | uu____1350 -> false
-let (__proj__EBufCreate__item___0
-  :expr -> (lifetime,expr,expr) FStar_Pervasives_Native.tuple3)=
+let __proj__EBufCreate__item___0:
+  expr -> (lifetime,expr,expr) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | EBufCreate _0 -> _0
-let (uu___is_EBufRead :expr -> Prims.bool)=
+let uu___is_EBufRead: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EBufRead _0 -> true | uu____1386 -> false
-let (__proj__EBufRead__item___0
-  :expr -> (expr,expr) FStar_Pervasives_Native.tuple2)=
+let __proj__EBufRead__item___0:
+  expr -> (expr,expr) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | EBufRead _0 -> _0
-let (uu___is_EBufWrite :expr -> Prims.bool)=
+let uu___is_EBufWrite: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EBufWrite _0 -> true | uu____1418 -> false
-let (__proj__EBufWrite__item___0
-  :expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3)=
+let __proj__EBufWrite__item___0:
+  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | EBufWrite _0 -> _0
-let (uu___is_EBufSub :expr -> Prims.bool)=
+let uu___is_EBufSub: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EBufSub _0 -> true | uu____1454 -> false
-let (__proj__EBufSub__item___0
-  :expr -> (expr,expr) FStar_Pervasives_Native.tuple2)=
+let __proj__EBufSub__item___0:
+  expr -> (expr,expr) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | EBufSub _0 -> _0
-let (uu___is_EBufBlit :expr -> Prims.bool)=
+let uu___is_EBufBlit: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EBufBlit _0 -> true | uu____1490 -> false
-let (__proj__EBufBlit__item___0
-  :expr -> (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5)=
+let __proj__EBufBlit__item___0:
+  expr -> (expr,expr,expr,expr,expr) FStar_Pervasives_Native.tuple5 =
   fun projectee  -> match projectee with | EBufBlit _0 -> _0
-let (uu___is_EMatch :expr -> Prims.bool)=
+let uu___is_EMatch: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EMatch _0 -> true | uu____1544 -> false
-let (__proj__EMatch__item___0
-  :expr ->
-     (expr,(pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-       FStar_Pervasives_Native.tuple2)=
-  fun projectee  -> match projectee with | EMatch _0 -> _0
-let (uu___is_EOp :expr -> Prims.bool)=
+let __proj__EMatch__item___0:
+  expr ->
+    (expr,(pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)
+      FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | EMatch _0 -> _0
+let uu___is_EOp: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EOp _0 -> true | uu____1592 -> false
-let (__proj__EOp__item___0
-  :expr -> (op,width) FStar_Pervasives_Native.tuple2)=
-  fun projectee  -> match projectee with | EOp _0 -> _0
-let (uu___is_ECast :expr -> Prims.bool)=
+let __proj__EOp__item___0: expr -> (op,width) FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | EOp _0 -> _0
+let uu___is_ECast: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | ECast _0 -> true | uu____1622 -> false
-let (__proj__ECast__item___0
-  :expr -> (expr,typ) FStar_Pervasives_Native.tuple2)=
+let __proj__ECast__item___0:
+  expr -> (expr,typ) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | ECast _0 -> _0
-let (uu___is_EPushFrame :expr -> Prims.bool)=
+let uu___is_EPushFrame: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EPushFrame  -> true | uu____1647 -> false
-let (uu___is_EPopFrame :expr -> Prims.bool)=
+let uu___is_EPopFrame: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EPopFrame  -> true | uu____1652 -> false
-let (uu___is_EBool :expr -> Prims.bool)=
+let uu___is_EBool: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EBool _0 -> true | uu____1658 -> false
-let (__proj__EBool__item___0 :expr -> Prims.bool)=
+let __proj__EBool__item___0: expr -> Prims.bool =
   fun projectee  -> match projectee with | EBool _0 -> _0
-let (uu___is_EAny :expr -> Prims.bool)=
+let uu___is_EAny: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EAny  -> true | uu____1671 -> false
-let (uu___is_EAbort :expr -> Prims.bool)=
+let uu___is_EAbort: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EAbort  -> true | uu____1676 -> false
-let (uu___is_EReturn :expr -> Prims.bool)=
+let uu___is_EReturn: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EReturn _0 -> true | uu____1682 -> false
-let (__proj__EReturn__item___0 :expr -> expr)=
+let __proj__EReturn__item___0: expr -> expr =
   fun projectee  -> match projectee with | EReturn _0 -> _0
-let (uu___is_EFlat :expr -> Prims.bool)=
+let uu___is_EFlat: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EFlat _0 -> true | uu____1706 -> false
-let (__proj__EFlat__item___0
-  :expr ->
-     (typ,(Prims.string,expr) FStar_Pervasives_Native.tuple2 Prims.list)
-       FStar_Pervasives_Native.tuple2)=
-  fun projectee  -> match projectee with | EFlat _0 -> _0
-let (uu___is_EField :expr -> Prims.bool)=
+let __proj__EFlat__item___0:
+  expr ->
+    (typ,(Prims.string,expr) FStar_Pervasives_Native.tuple2 Prims.list)
+      FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | EFlat _0 -> _0
+let uu___is_EField: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EField _0 -> true | uu____1756 -> false
-let (__proj__EField__item___0
-  :expr -> (typ,expr,Prims.string) FStar_Pervasives_Native.tuple3)=
+let __proj__EField__item___0:
+  expr -> (typ,expr,Prims.string) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | EField _0 -> _0
-let (uu___is_EWhile :expr -> Prims.bool)=
+let uu___is_EWhile: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EWhile _0 -> true | uu____1792 -> false
-let (__proj__EWhile__item___0
-  :expr -> (expr,expr) FStar_Pervasives_Native.tuple2)=
+let __proj__EWhile__item___0:
+  expr -> (expr,expr) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | EWhile _0 -> _0
-let (uu___is_EBufCreateL :expr -> Prims.bool)=
+let uu___is_EBufCreateL: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EBufCreateL _0 -> true | uu____1824 -> false
-let (__proj__EBufCreateL__item___0
-  :expr -> (lifetime,expr Prims.list) FStar_Pervasives_Native.tuple2)=
+let __proj__EBufCreateL__item___0:
+  expr -> (lifetime,expr Prims.list) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | EBufCreateL _0 -> _0
-let (uu___is_ETuple :expr -> Prims.bool)=
+let uu___is_ETuple: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | ETuple _0 -> true | uu____1858 -> false
-let (__proj__ETuple__item___0 :expr -> expr Prims.list)=
+let __proj__ETuple__item___0: expr -> expr Prims.list =
   fun projectee  -> match projectee with | ETuple _0 -> _0
-let (uu___is_ECons :expr -> Prims.bool)=
+let uu___is_ECons: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | ECons _0 -> true | uu____1886 -> false
-let (__proj__ECons__item___0
-  :expr -> (typ,Prims.string,expr Prims.list) FStar_Pervasives_Native.tuple3)=
+let __proj__ECons__item___0:
+  expr -> (typ,Prims.string,expr Prims.list) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | ECons _0 -> _0
-let (uu___is_EBufFill :expr -> Prims.bool)=
+let uu___is_EBufFill: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EBufFill _0 -> true | uu____1930 -> false
-let (__proj__EBufFill__item___0
-  :expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3)=
+let __proj__EBufFill__item___0:
+  expr -> (expr,expr,expr) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | EBufFill _0 -> _0
-let (uu___is_EString :expr -> Prims.bool)=
+let uu___is_EString: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EString _0 -> true | uu____1962 -> false
-let (__proj__EString__item___0 :expr -> Prims.string)=
+let __proj__EString__item___0: expr -> Prims.string =
   fun projectee  -> match projectee with | EString _0 -> _0
-let (uu___is_EFun :expr -> Prims.bool)=
+let uu___is_EFun: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EFun _0 -> true | uu____1984 -> false
-let (__proj__EFun__item___0
-  :expr -> (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3)=
+let __proj__EFun__item___0:
+  expr -> (binder Prims.list,expr,typ) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | EFun _0 -> _0
-let (uu___is_EAbortS :expr -> Prims.bool)=
+let uu___is_EAbortS: expr -> Prims.bool =
   fun projectee  ->
     match projectee with | EAbortS _0 -> true | uu____2022 -> false
-let (__proj__EAbortS__item___0 :expr -> Prims.string)=
+let __proj__EAbortS__item___0: expr -> Prims.string =
   fun projectee  -> match projectee with | EAbortS _0 -> _0
-let (uu___is_Add :op -> Prims.bool)=
+let uu___is_Add: op -> Prims.bool =
   fun projectee  -> match projectee with | Add  -> true | uu____2035 -> false
-let (uu___is_AddW :op -> Prims.bool)=
+let uu___is_AddW: op -> Prims.bool =
   fun projectee  ->
     match projectee with | AddW  -> true | uu____2040 -> false
-let (uu___is_Sub :op -> Prims.bool)=
+let uu___is_Sub: op -> Prims.bool =
   fun projectee  -> match projectee with | Sub  -> true | uu____2045 -> false
-let (uu___is_SubW :op -> Prims.bool)=
+let uu___is_SubW: op -> Prims.bool =
   fun projectee  ->
     match projectee with | SubW  -> true | uu____2050 -> false
-let (uu___is_Div :op -> Prims.bool)=
+let uu___is_Div: op -> Prims.bool =
   fun projectee  -> match projectee with | Div  -> true | uu____2055 -> false
-let (uu___is_DivW :op -> Prims.bool)=
+let uu___is_DivW: op -> Prims.bool =
   fun projectee  ->
     match projectee with | DivW  -> true | uu____2060 -> false
-let (uu___is_Mult :op -> Prims.bool)=
+let uu___is_Mult: op -> Prims.bool =
   fun projectee  ->
     match projectee with | Mult  -> true | uu____2065 -> false
-let (uu___is_MultW :op -> Prims.bool)=
+let uu___is_MultW: op -> Prims.bool =
   fun projectee  ->
     match projectee with | MultW  -> true | uu____2070 -> false
-let (uu___is_Mod :op -> Prims.bool)=
+let uu___is_Mod: op -> Prims.bool =
   fun projectee  -> match projectee with | Mod  -> true | uu____2075 -> false
-let (uu___is_BOr :op -> Prims.bool)=
+let uu___is_BOr: op -> Prims.bool =
   fun projectee  -> match projectee with | BOr  -> true | uu____2080 -> false
-let (uu___is_BAnd :op -> Prims.bool)=
+let uu___is_BAnd: op -> Prims.bool =
   fun projectee  ->
     match projectee with | BAnd  -> true | uu____2085 -> false
-let (uu___is_BXor :op -> Prims.bool)=
+let uu___is_BXor: op -> Prims.bool =
   fun projectee  ->
     match projectee with | BXor  -> true | uu____2090 -> false
-let (uu___is_BShiftL :op -> Prims.bool)=
+let uu___is_BShiftL: op -> Prims.bool =
   fun projectee  ->
     match projectee with | BShiftL  -> true | uu____2095 -> false
-let (uu___is_BShiftR :op -> Prims.bool)=
+let uu___is_BShiftR: op -> Prims.bool =
   fun projectee  ->
     match projectee with | BShiftR  -> true | uu____2100 -> false
-let (uu___is_BNot :op -> Prims.bool)=
+let uu___is_BNot: op -> Prims.bool =
   fun projectee  ->
     match projectee with | BNot  -> true | uu____2105 -> false
-let (uu___is_Eq :op -> Prims.bool)=
+let uu___is_Eq: op -> Prims.bool =
   fun projectee  -> match projectee with | Eq  -> true | uu____2110 -> false
-let (uu___is_Neq :op -> Prims.bool)=
+let uu___is_Neq: op -> Prims.bool =
   fun projectee  -> match projectee with | Neq  -> true | uu____2115 -> false
-let (uu___is_Lt :op -> Prims.bool)=
+let uu___is_Lt: op -> Prims.bool =
   fun projectee  -> match projectee with | Lt  -> true | uu____2120 -> false
-let (uu___is_Lte :op -> Prims.bool)=
+let uu___is_Lte: op -> Prims.bool =
   fun projectee  -> match projectee with | Lte  -> true | uu____2125 -> false
-let (uu___is_Gt :op -> Prims.bool)=
+let uu___is_Gt: op -> Prims.bool =
   fun projectee  -> match projectee with | Gt  -> true | uu____2130 -> false
-let (uu___is_Gte :op -> Prims.bool)=
+let uu___is_Gte: op -> Prims.bool =
   fun projectee  -> match projectee with | Gte  -> true | uu____2135 -> false
-let (uu___is_And :op -> Prims.bool)=
+let uu___is_And: op -> Prims.bool =
   fun projectee  -> match projectee with | And  -> true | uu____2140 -> false
-let (uu___is_Or :op -> Prims.bool)=
+let uu___is_Or: op -> Prims.bool =
   fun projectee  -> match projectee with | Or  -> true | uu____2145 -> false
-let (uu___is_Xor :op -> Prims.bool)=
+let uu___is_Xor: op -> Prims.bool =
   fun projectee  -> match projectee with | Xor  -> true | uu____2150 -> false
-let (uu___is_Not :op -> Prims.bool)=
+let uu___is_Not: op -> Prims.bool =
   fun projectee  -> match projectee with | Not  -> true | uu____2155 -> false
-let (uu___is_PUnit :pattern -> Prims.bool)=
+let uu___is_PUnit: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | PUnit  -> true | uu____2160 -> false
-let (uu___is_PBool :pattern -> Prims.bool)=
+let uu___is_PBool: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | PBool _0 -> true | uu____2166 -> false
-let (__proj__PBool__item___0 :pattern -> Prims.bool)=
+let __proj__PBool__item___0: pattern -> Prims.bool =
   fun projectee  -> match projectee with | PBool _0 -> _0
-let (uu___is_PVar :pattern -> Prims.bool)=
+let uu___is_PVar: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | PVar _0 -> true | uu____2180 -> false
-let (__proj__PVar__item___0 :pattern -> binder)=
+let __proj__PVar__item___0: pattern -> binder =
   fun projectee  -> match projectee with | PVar _0 -> _0
-let (uu___is_PCons :pattern -> Prims.bool)=
+let uu___is_PCons: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | PCons _0 -> true | uu____2200 -> false
-let (__proj__PCons__item___0
-  :pattern ->
-     (Prims.string,pattern Prims.list) FStar_Pervasives_Native.tuple2)=
-  fun projectee  -> match projectee with | PCons _0 -> _0
-let (uu___is_PTuple :pattern -> Prims.bool)=
+let __proj__PCons__item___0:
+  pattern -> (Prims.string,pattern Prims.list) FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | PCons _0 -> _0
+let uu___is_PTuple: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | PTuple _0 -> true | uu____2234 -> false
-let (__proj__PTuple__item___0 :pattern -> pattern Prims.list)=
+let __proj__PTuple__item___0: pattern -> pattern Prims.list =
   fun projectee  -> match projectee with | PTuple _0 -> _0
-let (uu___is_PRecord :pattern -> Prims.bool)=
+let uu___is_PRecord: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | PRecord _0 -> true | uu____2260 -> false
-let (__proj__PRecord__item___0
-  :pattern ->
-     (Prims.string,pattern) FStar_Pervasives_Native.tuple2 Prims.list)=
-  fun projectee  -> match projectee with | PRecord _0 -> _0
-let (uu___is_UInt8 :width -> Prims.bool)=
+let __proj__PRecord__item___0:
+  pattern -> (Prims.string,pattern) FStar_Pervasives_Native.tuple2 Prims.list
+  = fun projectee  -> match projectee with | PRecord _0 -> _0
+let uu___is_UInt8: width -> Prims.bool =
   fun projectee  ->
     match projectee with | UInt8  -> true | uu____2291 -> false
-let (uu___is_UInt16 :width -> Prims.bool)=
+let uu___is_UInt16: width -> Prims.bool =
   fun projectee  ->
     match projectee with | UInt16  -> true | uu____2296 -> false
-let (uu___is_UInt32 :width -> Prims.bool)=
+let uu___is_UInt32: width -> Prims.bool =
   fun projectee  ->
     match projectee with | UInt32  -> true | uu____2301 -> false
-let (uu___is_UInt64 :width -> Prims.bool)=
+let uu___is_UInt64: width -> Prims.bool =
   fun projectee  ->
     match projectee with | UInt64  -> true | uu____2306 -> false
-let (uu___is_Int8 :width -> Prims.bool)=
+let uu___is_Int8: width -> Prims.bool =
   fun projectee  ->
     match projectee with | Int8  -> true | uu____2311 -> false
-let (uu___is_Int16 :width -> Prims.bool)=
+let uu___is_Int16: width -> Prims.bool =
   fun projectee  ->
     match projectee with | Int16  -> true | uu____2316 -> false
-let (uu___is_Int32 :width -> Prims.bool)=
+let uu___is_Int32: width -> Prims.bool =
   fun projectee  ->
     match projectee with | Int32  -> true | uu____2321 -> false
-let (uu___is_Int64 :width -> Prims.bool)=
+let uu___is_Int64: width -> Prims.bool =
   fun projectee  ->
     match projectee with | Int64  -> true | uu____2326 -> false
-let (uu___is_Bool :width -> Prims.bool)=
+let uu___is_Bool: width -> Prims.bool =
   fun projectee  ->
     match projectee with | Bool  -> true | uu____2331 -> false
-let (uu___is_Int :width -> Prims.bool)=
+let uu___is_Int: width -> Prims.bool =
   fun projectee  -> match projectee with | Int  -> true | uu____2336 -> false
-let (uu___is_UInt :width -> Prims.bool)=
+let uu___is_UInt: width -> Prims.bool =
   fun projectee  ->
     match projectee with | UInt  -> true | uu____2341 -> false
-let (__proj__Mkbinder__item__name :binder -> Prims.string)=
+let __proj__Mkbinder__item__name: binder -> Prims.string =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; typ = __fname__typ; mut = __fname__mut;_} ->
         __fname__name
-let (__proj__Mkbinder__item__typ :binder -> typ)=
+let __proj__Mkbinder__item__typ: binder -> typ =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; typ = __fname__typ; mut = __fname__mut;_} ->
         __fname__typ
-let (__proj__Mkbinder__item__mut :binder -> Prims.bool)=
+let __proj__Mkbinder__item__mut: binder -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { name = __fname__name; typ = __fname__typ; mut = __fname__mut;_} ->
         __fname__mut
-let (uu___is_TInt :typ -> Prims.bool)=
+let uu___is_TInt: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TInt _0 -> true | uu____2368 -> false
-let (__proj__TInt__item___0 :typ -> width)=
+let __proj__TInt__item___0: typ -> width =
   fun projectee  -> match projectee with | TInt _0 -> _0
-let (uu___is_TBuf :typ -> Prims.bool)=
+let uu___is_TBuf: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TBuf _0 -> true | uu____2382 -> false
-let (__proj__TBuf__item___0 :typ -> typ)=
+let __proj__TBuf__item___0: typ -> typ =
   fun projectee  -> match projectee with | TBuf _0 -> _0
-let (uu___is_TUnit :typ -> Prims.bool)=
+let uu___is_TUnit: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TUnit  -> true | uu____2395 -> false
-let (uu___is_TQualified :typ -> Prims.bool)=
+let uu___is_TQualified: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TQualified _0 -> true | uu____2407 -> false
-let (__proj__TQualified__item___0
-  :typ ->
-     (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2)=
-  fun projectee  -> match projectee with | TQualified _0 -> _0
-let (uu___is_TBool :typ -> Prims.bool)=
+let __proj__TQualified__item___0:
+  typ ->
+    (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | TQualified _0 -> _0
+let uu___is_TBool: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TBool  -> true | uu____2438 -> false
-let (uu___is_TAny :typ -> Prims.bool)=
+let uu___is_TAny: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TAny  -> true | uu____2443 -> false
-let (uu___is_TArrow :typ -> Prims.bool)=
+let uu___is_TArrow: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TArrow _0 -> true | uu____2453 -> false
-let (__proj__TArrow__item___0
-  :typ -> (typ,typ) FStar_Pervasives_Native.tuple2)=
-  fun projectee  -> match projectee with | TArrow _0 -> _0
-let (uu___is_TZ :typ -> Prims.bool)=
+let __proj__TArrow__item___0: typ -> (typ,typ) FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | TArrow _0 -> _0
+let uu___is_TZ: typ -> Prims.bool =
   fun projectee  -> match projectee with | TZ  -> true | uu____2478 -> false
-let (uu___is_TBound :typ -> Prims.bool)=
+let uu___is_TBound: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TBound _0 -> true | uu____2484 -> false
-let (__proj__TBound__item___0 :typ -> Prims.int)=
+let __proj__TBound__item___0: typ -> Prims.int =
   fun projectee  -> match projectee with | TBound _0 -> _0
-let (uu___is_TApp :typ -> Prims.bool)=
+let uu___is_TApp: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TApp _0 -> true | uu____2510 -> false
-let (__proj__TApp__item___0
-  :typ ->
-     ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-       typ Prims.list) FStar_Pervasives_Native.tuple2)=
-  fun projectee  -> match projectee with | TApp _0 -> _0
-let (uu___is_TTuple :typ -> Prims.bool)=
+let __proj__TApp__item___0:
+  typ ->
+    ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
+      typ Prims.list) FStar_Pervasives_Native.tuple2
+  = fun projectee  -> match projectee with | TApp _0 -> _0
+let uu___is_TTuple: typ -> Prims.bool =
   fun projectee  ->
     match projectee with | TTuple _0 -> true | uu____2562 -> false
-let (__proj__TTuple__item___0 :typ -> typ Prims.list)=
+let __proj__TTuple__item___0: typ -> typ Prims.list =
   fun projectee  -> match projectee with | TTuple _0 -> _0
 type program = decl Prims.list
 type ident = Prims.string
@@ -619,25 +614,25 @@ type var = Prims.int
 type lident =
   (Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2
 type version = Prims.int
-let (current_version :version)= Prims.parse_int "20"
+let current_version: version = Prims.parse_int "20"
 type file = (Prims.string,program) FStar_Pervasives_Native.tuple2
 type binary_format = (version,file Prims.list) FStar_Pervasives_Native.tuple2
-let fst3 :
+let fst3:
   'Auu____2643 'Auu____2644 'Auu____2645 .
     ('Auu____2645,'Auu____2644,'Auu____2643) FStar_Pervasives_Native.tuple3
-      -> 'Auu____2645=
-  fun uu____2655  -> match uu____2655 with | (x,uu____2663,uu____2664) -> x
-let snd3 :
+      -> 'Auu____2645
+  = fun uu____2655  -> match uu____2655 with | (x,uu____2663,uu____2664) -> x
+let snd3:
   'Auu____2673 'Auu____2674 'Auu____2675 .
     ('Auu____2675,'Auu____2674,'Auu____2673) FStar_Pervasives_Native.tuple3
-      -> 'Auu____2674=
-  fun uu____2685  -> match uu____2685 with | (uu____2692,x,uu____2694) -> x
-let thd3 :
+      -> 'Auu____2674
+  = fun uu____2685  -> match uu____2685 with | (uu____2692,x,uu____2694) -> x
+let thd3:
   'Auu____2703 'Auu____2704 'Auu____2705 .
     ('Auu____2705,'Auu____2704,'Auu____2703) FStar_Pervasives_Native.tuple3
-      -> 'Auu____2703=
-  fun uu____2715  -> match uu____2715 with | (uu____2722,uu____2723,x) -> x
-let (mk_width :Prims.string -> width FStar_Pervasives_Native.option)=
+      -> 'Auu____2703
+  = fun uu____2715  -> match uu____2715 with | (uu____2722,uu____2723,x) -> x
+let mk_width: Prims.string -> width FStar_Pervasives_Native.option =
   fun uu___124_2730  ->
     match uu___124_2730 with
     | "UInt8" -> FStar_Pervasives_Native.Some UInt8
@@ -649,7 +644,7 @@ let (mk_width :Prims.string -> width FStar_Pervasives_Native.option)=
     | "Int32" -> FStar_Pervasives_Native.Some Int32
     | "Int64" -> FStar_Pervasives_Native.Some Int64
     | uu____2733 -> FStar_Pervasives_Native.None
-let (mk_bool_op :Prims.string -> op FStar_Pervasives_Native.option)=
+let mk_bool_op: Prims.string -> op FStar_Pervasives_Native.option =
   fun uu___125_2739  ->
     match uu___125_2739 with
     | "op_Negation" -> FStar_Pervasives_Native.Some Not
@@ -658,9 +653,9 @@ let (mk_bool_op :Prims.string -> op FStar_Pervasives_Native.option)=
     | "op_Equality" -> FStar_Pervasives_Native.Some Eq
     | "op_disEquality" -> FStar_Pervasives_Native.Some Neq
     | uu____2742 -> FStar_Pervasives_Native.None
-let (is_bool_op :Prims.string -> Prims.bool)=
+let is_bool_op: Prims.string -> Prims.bool =
   fun op  -> (mk_bool_op op) <> FStar_Pervasives_Native.None
-let (mk_op :Prims.string -> op FStar_Pervasives_Native.option)=
+let mk_op: Prims.string -> op FStar_Pervasives_Native.option =
   fun uu___126_2754  ->
     match uu___126_2754 with
     | "add" -> FStar_Pervasives_Native.Some Add
@@ -703,9 +698,9 @@ let (mk_op :Prims.string -> op FStar_Pervasives_Native.option)=
     | "op_Less_Equals_Hat" -> FStar_Pervasives_Native.Some Lte
     | "lte" -> FStar_Pervasives_Native.Some Lte
     | uu____2757 -> FStar_Pervasives_Native.None
-let (is_op :Prims.string -> Prims.bool)=
+let is_op: Prims.string -> Prims.bool =
   fun op  -> (mk_op op) <> FStar_Pervasives_Native.None
-let (is_machine_int :Prims.string -> Prims.bool)=
+let is_machine_int: Prims.string -> Prims.bool =
   fun m  -> (mk_width m) <> FStar_Pervasives_Native.None
 type env =
   {
@@ -715,32 +710,32 @@ type env =
 and name = {
   pretty: Prims.string;
   mut: Prims.bool;}
-let (__proj__Mkenv__item__names :env -> name Prims.list)=
+let __proj__Mkenv__item__names: env -> name Prims.list =
   fun projectee  ->
     match projectee with
     | { names = __fname__names; names_t = __fname__names_t;
         module_name = __fname__module_name;_} -> __fname__names
-let (__proj__Mkenv__item__names_t :env -> Prims.string Prims.list)=
+let __proj__Mkenv__item__names_t: env -> Prims.string Prims.list =
   fun projectee  ->
     match projectee with
     | { names = __fname__names; names_t = __fname__names_t;
         module_name = __fname__module_name;_} -> __fname__names_t
-let (__proj__Mkenv__item__module_name :env -> Prims.string Prims.list)=
+let __proj__Mkenv__item__module_name: env -> Prims.string Prims.list =
   fun projectee  ->
     match projectee with
     | { names = __fname__names; names_t = __fname__names_t;
         module_name = __fname__module_name;_} -> __fname__module_name
-let (__proj__Mkname__item__pretty :name -> Prims.string)=
+let __proj__Mkname__item__pretty: name -> Prims.string =
   fun projectee  ->
     match projectee with
     | { pretty = __fname__pretty; mut = __fname__mut;_} -> __fname__pretty
-let (__proj__Mkname__item__mut :name -> Prims.bool)=
+let __proj__Mkname__item__mut: name -> Prims.bool =
   fun projectee  ->
     match projectee with
     | { pretty = __fname__pretty; mut = __fname__mut;_} -> __fname__mut
-let (empty :Prims.string Prims.list -> env)=
+let empty: Prims.string Prims.list -> env =
   fun module_name  -> { names = []; names_t = []; module_name }
-let (extend :env -> Prims.string -> Prims.bool -> env)=
+let extend: env -> Prims.string -> Prims.bool -> env =
   fun env  ->
     fun x  ->
       fun is_mut  ->
@@ -750,7 +745,7 @@ let (extend :env -> Prims.string -> Prims.bool -> env)=
           names_t = (uu___131_2879.names_t);
           module_name = (uu___131_2879.module_name)
         }
-let (extend_t :env -> Prims.string -> env)=
+let extend_t: env -> Prims.string -> env =
   fun env  ->
     fun x  ->
       let uu___132_2888 = env in
@@ -759,7 +754,7 @@ let (extend_t :env -> Prims.string -> env)=
         names_t = (x :: (env.names_t));
         module_name = (uu___132_2888.module_name)
       }
-let (find_name :env -> Prims.string -> name)=
+let find_name: env -> Prims.string -> name =
   fun env  ->
     fun x  ->
       let uu____2897 =
@@ -768,9 +763,9 @@ let (find_name :env -> Prims.string -> name)=
       | FStar_Pervasives_Native.Some name -> name
       | FStar_Pervasives_Native.None  ->
           failwith "internal error: name not found"
-let (is_mutable :env -> Prims.string -> Prims.bool)=
+let is_mutable: env -> Prims.string -> Prims.bool =
   fun env  -> fun x  -> let uu____2911 = find_name env x in uu____2911.mut
-let (find :env -> Prims.string -> Prims.int)=
+let find: env -> Prims.string -> Prims.int =
   fun env  ->
     fun x  ->
       try FStar_List.index (fun name  -> name.pretty = x) env.names
@@ -779,7 +774,7 @@ let (find :env -> Prims.string -> Prims.int)=
           let uu____2929 =
             FStar_Util.format1 "Internal error: name not found %s\n" x in
           failwith uu____2929
-let (find_t :env -> Prims.string -> Prims.int)=
+let find_t: env -> Prims.string -> Prims.int =
   fun env  ->
     fun x  ->
       try FStar_List.index (fun name  -> name = x) env.names_t
@@ -788,11 +783,12 @@ let (find_t :env -> Prims.string -> Prims.int)=
           let uu____2947 =
             FStar_Util.format1 "Internal error: name not found %s\n" x in
           failwith uu____2947
-let add_binders :
+let add_binders:
   'Auu____2956 'Auu____2957 .
     env ->
       ((Prims.string,'Auu____2957) FStar_Pervasives_Native.tuple2,'Auu____2956)
-        FStar_Pervasives_Native.tuple2 Prims.list -> env=
+        FStar_Pervasives_Native.tuple2 Prims.list -> env
+  =
   fun env  ->
     fun binders  ->
       FStar_List.fold_left
@@ -801,7 +797,7 @@ let add_binders :
              match uu____3000 with
              | ((name,uu____3010),uu____3011) -> extend env1 name false) env
         binders
-let rec (translate :FStar_Extraction_ML_Syntax.mllib -> file Prims.list)=
+let rec translate: FStar_Extraction_ML_Syntax.mllib -> file Prims.list =
   fun uu____3140  ->
     match uu____3140 with
     | FStar_Extraction_ML_Syntax.MLLib modules1 ->
@@ -824,12 +820,12 @@ let rec (translate :FStar_Extraction_ML_Syntax.mllib -> file Prims.list)=
                      "Unable to translate module: %s because:\n  %s\n" m_name
                      uu____3263);
                   FStar_Pervasives_Native.None)) modules1
-and (translate_module
-  :((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
-     (FStar_Extraction_ML_Syntax.mlsig,FStar_Extraction_ML_Syntax.mlmodule)
-       FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option,
-     FStar_Extraction_ML_Syntax.mllib) FStar_Pervasives_Native.tuple3 -> 
-     file)=
+and translate_module:
+  ((Prims.string Prims.list,Prims.string) FStar_Pervasives_Native.tuple2,
+    (FStar_Extraction_ML_Syntax.mlsig,FStar_Extraction_ML_Syntax.mlmodule)
+      FStar_Pervasives_Native.tuple2 FStar_Pervasives_Native.option,FStar_Extraction_ML_Syntax.mllib)
+    FStar_Pervasives_Native.tuple3 -> file
+  =
   fun uu____3264  ->
     match uu____3264 with
     | (module_name,modul,uu____3285) ->
@@ -844,8 +840,8 @@ and (translate_module
           | uu____3328 ->
               failwith "Unexpected standalone interface or nested modules" in
         ((FStar_String.concat "_" module_name1), program)
-and (translate_flags
-  :FStar_Extraction_ML_Syntax.c_flag Prims.list -> flag Prims.list)=
+and translate_flags:
+  FStar_Extraction_ML_Syntax.c_flag Prims.list -> flag Prims.list =
   fun flags  ->
     FStar_List.choose
       (fun uu___127_3343  ->
@@ -863,10 +859,11 @@ and (translate_flags
                 a;
               FStar_Pervasives_Native.None)
          | uu____3348 -> FStar_Pervasives_Native.None) flags
-and (translate_decl
-  :env ->
-     FStar_Extraction_ML_Syntax.mlmodule1 ->
-       decl FStar_Pervasives_Native.option)=
+and translate_decl:
+  env ->
+    FStar_Extraction_ML_Syntax.mlmodule1 ->
+      decl FStar_Pervasives_Native.option
+  =
   fun env  ->
     fun d  ->
       match d with
@@ -1173,7 +1170,7 @@ and (translate_decl
           failwith "todo: translate_decl [MLM_Top]"
       | FStar_Extraction_ML_Syntax.MLM_Exn uu____4377 ->
           failwith "todo: translate_decl [MLM_Exn]"
-and (translate_type :env -> FStar_Extraction_ML_Syntax.mlty -> typ)=
+and translate_type: env -> FStar_Extraction_ML_Syntax.mlty -> typ =
   fun env  ->
     fun t  ->
       match t with
@@ -1228,22 +1225,23 @@ and (translate_type :env -> FStar_Extraction_ML_Syntax.mlty -> typ)=
       | FStar_Extraction_ML_Syntax.MLTY_Tuple ts ->
           let uu____4521 = FStar_List.map (translate_type env) ts in
           TTuple uu____4521
-and (translate_binders
-  :env ->
-     (FStar_Extraction_ML_Syntax.mlident,FStar_Extraction_ML_Syntax.mlty)
-       FStar_Pervasives_Native.tuple2 Prims.list -> binder Prims.list)=
-  fun env  -> fun args  -> FStar_List.map (translate_binder env) args
-and (translate_binder
-  :env ->
-     (FStar_Extraction_ML_Syntax.mlident,FStar_Extraction_ML_Syntax.mlty)
-       FStar_Pervasives_Native.tuple2 -> binder)=
+and translate_binders:
+  env ->
+    (FStar_Extraction_ML_Syntax.mlident,FStar_Extraction_ML_Syntax.mlty)
+      FStar_Pervasives_Native.tuple2 Prims.list -> binder Prims.list
+  = fun env  -> fun args  -> FStar_List.map (translate_binder env) args
+and translate_binder:
+  env ->
+    (FStar_Extraction_ML_Syntax.mlident,FStar_Extraction_ML_Syntax.mlty)
+      FStar_Pervasives_Native.tuple2 -> binder
+  =
   fun env  ->
     fun uu____4537  ->
       match uu____4537 with
       | ((name,uu____4543),typ) ->
           let uu____4549 = translate_type env typ in
           { name; typ = uu____4549; mut = false }
-and (translate_expr :env -> FStar_Extraction_ML_Syntax.mlexpr -> expr)=
+and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
   fun env  ->
     fun e  ->
       match e.FStar_Extraction_ML_Syntax.expr with
@@ -1822,7 +1820,7 @@ and (translate_expr :env -> FStar_Extraction_ML_Syntax.mlexpr -> expr)=
           failwith "todo: translate_expr [MLE_Try]"
       | FStar_Extraction_ML_Syntax.MLE_Coerce uu____5433 ->
           failwith "todo: translate_expr [MLE_Coerce]"
-and (assert_lid :env -> FStar_Extraction_ML_Syntax.mlty -> typ)=
+and assert_lid: env -> FStar_Extraction_ML_Syntax.mlty -> typ =
   fun env  ->
     fun t  ->
       match t with
@@ -1835,19 +1833,21 @@ and (assert_lid :env -> FStar_Extraction_ML_Syntax.mlty -> typ)=
             TApp uu____5448
           else TQualified lid
       | uu____5467 -> failwith "invalid argument: assert_lid"
-and (translate_branches
-  :env ->
-     (FStar_Extraction_ML_Syntax.mlpattern,FStar_Extraction_ML_Syntax.mlexpr
-                                             FStar_Pervasives_Native.option,
-       FStar_Extraction_ML_Syntax.mlexpr) FStar_Pervasives_Native.tuple3
-       Prims.list -> (pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list)=
+and translate_branches:
+  env ->
+    (FStar_Extraction_ML_Syntax.mlpattern,FStar_Extraction_ML_Syntax.mlexpr
+                                            FStar_Pervasives_Native.option,
+      FStar_Extraction_ML_Syntax.mlexpr) FStar_Pervasives_Native.tuple3
+      Prims.list -> (pattern,expr) FStar_Pervasives_Native.tuple2 Prims.list
+  =
   fun env  -> fun branches  -> FStar_List.map (translate_branch env) branches
-and (translate_branch
-  :env ->
-     (FStar_Extraction_ML_Syntax.mlpattern,FStar_Extraction_ML_Syntax.mlexpr
-                                             FStar_Pervasives_Native.option,
-       FStar_Extraction_ML_Syntax.mlexpr) FStar_Pervasives_Native.tuple3 ->
-       (pattern,expr) FStar_Pervasives_Native.tuple2)=
+and translate_branch:
+  env ->
+    (FStar_Extraction_ML_Syntax.mlpattern,FStar_Extraction_ML_Syntax.mlexpr
+                                            FStar_Pervasives_Native.option,
+      FStar_Extraction_ML_Syntax.mlexpr) FStar_Pervasives_Native.tuple3 ->
+      (pattern,expr) FStar_Pervasives_Native.tuple2
+  =
   fun env  ->
     fun uu____5493  ->
       match uu____5493 with
@@ -1860,10 +1860,11 @@ and (translate_branch
                  let uu____5530 = translate_expr env1 expr in
                  (pat1, uu____5530))
           else failwith "todo: translate_branch"
-and (translate_pat
-  :env ->
-     FStar_Extraction_ML_Syntax.mlpattern ->
-       (env,pattern) FStar_Pervasives_Native.tuple2)=
+and translate_pat:
+  env ->
+    FStar_Extraction_ML_Syntax.mlpattern ->
+      (env,pattern) FStar_Pervasives_Native.tuple2
+  =
   fun env  ->
     fun p  ->
       match p with
@@ -1918,7 +1919,7 @@ and (translate_pat
           failwith "todo: translate_pat [MLP_Const]"
       | FStar_Extraction_ML_Syntax.MLP_Branch uu____5889 ->
           failwith "todo: translate_pat [MLP_Branch]"
-and (translate_constant :FStar_Extraction_ML_Syntax.mlconstant -> expr)=
+and translate_constant: FStar_Extraction_ML_Syntax.mlconstant -> expr =
   fun c  ->
     match c with
     | FStar_Extraction_ML_Syntax.MLC_Unit  -> EUnit
@@ -1938,8 +1939,9 @@ and (translate_constant :FStar_Extraction_ML_Syntax.mlconstant -> expr)=
     | FStar_Extraction_ML_Syntax.MLC_Int
         (uu____5920,FStar_Pervasives_Native.None ) ->
         failwith "todo: translate_expr [MLC_Int]"
-and (mk_op_app
-  :env -> width -> op -> FStar_Extraction_ML_Syntax.mlexpr Prims.list -> expr)=
+and mk_op_app:
+  env -> width -> op -> FStar_Extraction_ML_Syntax.mlexpr Prims.list -> expr
+  =
   fun env  ->
     fun w  ->
       fun op  ->
