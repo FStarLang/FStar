@@ -124,7 +124,7 @@ let validate_numbers_data_pure (t:numbers_tag) : pure_validator' (parse_numbers_
     then validate_OneNum_pure
   else validate_TwoNums_pure)
 
-#reset-options "--z3rlimit 15"
+#reset-options "--z3rlimit 30"
 
 val seq_pure_validate (v1 v2: pure_validator) : pure_validator
 let seq_pure_validate v1 v2 = fun input ->
