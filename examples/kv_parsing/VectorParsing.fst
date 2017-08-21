@@ -184,13 +184,13 @@ let do_while_readonly #t init #a buf inv f =
     B.lemma_modifies_0_push_pop h0 h1 h2 h3;
     v
 
-#reset-options "--max_fuel 1 --max_ifuel 1 --z3rlimit 30"
-
 val u16_bound (n m:nat) (bound:U16.t) :
     Lemma (requires (n + m <= U16.v bound))
           (ensures (n + m <= U16.v bound /\
                     n + m < pow2 16))
 let u16_bound n m bound = ()
+
+#reset-options "--max_fuel 1 --max_ifuel 1 --z3rlimit 40"
 
 val validate_vector_data : len:U16.t -> stateful_validator (hide (parse_vector_length len))
 let validate_vector_data len = fun b ->
