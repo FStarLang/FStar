@@ -150,31 +150,6 @@ let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
                 else theory, n_retained, n_pruned+1
             | _ -> d::theory, n_retained, n_pruned)
             theory ([], 0, 0) in
-        let missed_assertions th core =
-            let missed =
-                core |> List.filter (fun nm ->
-                    th |> BU.for_some (function Assume a -> nm=a.assumption_name | _ -> false) |> not)
-                |> String.concat ", "
-        in
-        let included =
-            th
-            |> List.collect (function Assume a -> [a.assumption_name] | _ -> [])
-            |> String.concat ", "
-        in
-        BU.format2 "missed={%s}; included={%s}" missed included in
-        if Options.hint_info ()
-        && Options.debug_any()
-        then begin
-            let n = List.length core in
-            let missed = if n <> n_retained then missed_assertions theory' core else "" in
-            BU.print3 "\tHint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n"
-                            (BU.string_of_int n_retained)
-                            (if n <> n_retained
-                            then BU.format2 " (expected %s (%s); replay may be inaccurate)"
-                                (BU.string_of_int n) missed
-                            else "")
-                            (BU.string_of_int n_pruned)
-        end ;
         theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
 
 let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
@@ -355,29 +330,30 @@ let query_info settings z3result =
     end
 
 let record_hint settings z3result =
-    let z3status, elapsed_time, _ = z3result in
-    let mk_hint core = {
-            hint_name=settings.query_name;
-            hint_index=settings.query_index;
-            fuel=settings.query_fuel;
-            ifuel=settings.query_ifuel;
-            query_elapsed_time=0; //recording the elapsed_time prevents us from reaching a fixed point
-            unsat_core = core
-        }
-    in
-    let hint_opt =
-        if not (used_hint settings) //if we didn't already use a hint
-        && Options.record_hints ()  //and we're asked to record unsat cores
-        then match z3status with
-             | UNSAT unsat_core ->
-               Some (mk_hint unsat_core)
-             | _ -> None //it failed, so nothing to do
-        else Some (mk_hint settings.query_hint)
-    in
-    match !recorded_hints with
-    | Some l -> recorded_hints := Some (l@[hint_opt])
-    | _ -> ()
-
+    if not (Options.record_hints()) then () else
+    begin
+      let z3status, _, _ = z3result in
+      let mk_hint core = {
+                  hint_name=settings.query_name;
+                  hint_index=settings.query_index;
+                  fuel=settings.query_fuel;
+                  ifuel=settings.query_ifuel;
+                  query_elapsed_time=0; //recording the elapsed_time prevents us from reaching a fixed point
+                  unsat_core = core
+          }
+      in
+      let store_hint hint =
+          match !recorded_hints with
+          | Some l -> recorded_hints := Some (l@[Some hint])
+          | _ -> assert false; ()
+      in
+      match z3status with
+      | UNSAT unsat_core ->
+        if used_hint settings //if we already successfully use a hint
+        then store_hint (mk_hint settings.query_hint) //just re-use the successful hint
+        else store_hint (mk_hint unsat_core)          //else store the new unsat core
+      | _ ->  () //the query failed, so nothing to do
+    end
 
 let process_result settings result : option<errors> =
     if used_hint settings && not (Options.z3_refresh()) then Z3.refresh();
