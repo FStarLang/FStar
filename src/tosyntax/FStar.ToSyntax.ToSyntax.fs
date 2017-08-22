@@ -331,7 +331,7 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
 
 let gather_pattern_bound_vars =
-  let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) (fun _ -> 0) in
+  let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) in
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
 type bnd =
@@ -2350,9 +2350,9 @@ let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * S
         Env.finish_module_or_interface env prev_mod in
   let (env, pop_when_done), mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
-      Env.prepare_module_or_interface true admitted env mname, mname, decls, true
+      Env.prepare_module_or_interface true admitted env mname Env.default_mii, mname, decls, true
     | Module(mname, decls) ->
-      Env.prepare_module_or_interface false false env mname, mname, decls, false in
+      Env.prepare_module_or_interface false false env mname Env.default_mii, mname, decls, false in
   let env, sigelts = desugar_decls env decls in
   let modul = {
     name = mname;
@@ -2386,14 +2386,8 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   then BU.print1 "%s\n" (Print.modul_to_string modul);
   (if pop_when_done then export_interface modul.name env else env), modul
 
-let desugar_file (env:env_t) (f:file) =
-  let env, mods = List.fold_left (fun (env, mods) m ->
-    let env, m = desugar_modul env m in
-    env, m::mods) (env, []) f in
-  env, List.rev mods
-
-let add_modul_to_env (m:Syntax.modul) (en: env) :env =
-  let en, pop_when_done = Env.prepare_module_or_interface false false en m.name in
+let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (en: env) :env =
+  let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
   let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
-  let env = Env.finish_module_or_interface en m in
+  let env = Env.finish en m in
   if pop_when_done then export_interface m.name env else env
