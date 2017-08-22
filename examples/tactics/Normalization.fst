@@ -27,10 +27,10 @@ let def_of (#t:Type) (x:t) : tactic term =
 let add_1 (x:int) : int = x + 1
 
 (* add_2 is defined to be (x + 1) + 1 *)
-let add_2 (x:int) : int = synth_by_tactic (normalize [Primops; Delta] (add_1 (add_1 x)))
+let add_2 (x:int) : int = synth_by_tactic (normalize [primops; delta] (add_1 (add_1 x)))
 
 (* `four` is defined as `4` ... *)
-let four : int = synth_by_tactic (normalize [Primops; Delta] (add_2 2))
+let four : int = synth_by_tactic (normalize [primops; delta] (add_2 2))
 
 (* .. as we can check by inspecting its definition *)
 let _ = assert_by_tactic True
@@ -42,7 +42,7 @@ let _ = assert_by_tactic True
 
 (* If we only allow for Delta steps, then there's no primitive computation and we
  * end up with (2 + 1) + 1 *)
-let four' : int = synth_by_tactic (normalize [Delta] (add_2 2))
+let four' : int = synth_by_tactic (normalize [delta] (add_2 2))
 
 let _ = assert_by_tactic True
                          (t <-- def_of four';
@@ -53,10 +53,10 @@ let _ = assert_by_tactic True
 
 (* Here, we allow for primitive computation but don't allow for `add_2` to be expanded to
  * its definition, so the final result is `add_2 1` *)
-let unfold_add_1: norm_step = UnfoldOnly [pack_fv ["Normalization"; "add_1"]]
+let unfold_add_1: norm_step = delta_only ["Normalization.add_1"]
 
 let three : int = synth_by_tactic
-  (normalize [Delta; unfold_add_1; Primops] (add_2 (add_1 0)))
+  (normalize [delta; unfold_add_1; primops] (add_2 (add_1 0)))
 
 let _ = assert_by_tactic True
                          (t <-- def_of three;
@@ -69,7 +69,7 @@ let _ = assert_by_tactic True
  * when this definition is type-checked, and not when it's called. So, this function is just an
  * identity function with no special semantics. *)
 let does_not_normalize (#t:Type) (x:t) : t =
-  synth_by_tactic #t #unit (normalize [Primops; Delta] x)
+  synth_by_tactic #t #unit (normalize [primops; delta] x)
 
 let four'' : int = does_not_normalize (2+2)
 

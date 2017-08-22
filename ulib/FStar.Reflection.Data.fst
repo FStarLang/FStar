@@ -69,11 +69,3 @@ type sigelt_view =
       sigelt_view
 
   | Unk
-
-noeq
-type norm_step =
-    | Simpl
-    | WHNF
-    | Primops
-    | Delta
-    | UnfoldOnly : list fv -> norm_step

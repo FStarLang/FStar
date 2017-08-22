@@ -474,37 +474,6 @@ let compare_binder (x:binder) (y:binder) : order =
 let is_free (x:binder) (t:term) : bool =
     U.is_free_in (fst x) t
 
-let embed_norm_step (n:norm_step) : term =
-    match n with
-    | Simpl ->
-        ref_Simpl
-    | WHNF ->
-        ref_WHNF
-    | Primops ->
-        ref_Primops
-    | Delta ->
-        ref_Delta
-    | UnfoldOnly l ->
-        S.mk_Tm_app ref_UnfoldOnly [S.as_arg (embed_list embed_fvar fstar_refl_fvar l)]
-                    None Range.dummyRange
-
-let unembed_norm_step (t:term) : norm_step =
-    let t = U.unascribe t in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Simpl_lid ->
-        Simpl
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_WHNF_lid ->
-        WHNF
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Primops_lid ->
-        Primops
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Delta_lid ->
-        Delta
-    | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_UnfoldOnly_lid ->
-        UnfoldOnly (unembed_list unembed_fvar l)
-    | _ ->
-        failwith "not an embedded norm_step"
-
 // Only for inductives, at the moment
 let lookup_typ (env:Env.env) (ns:list<string>) : sigelt_view =
     let lid = PC.p2l ns in

@@ -119,7 +119,7 @@ let instrument (f : 'a) : tactic unit =
     } in
     (* Apply the function to the arguments and unfold it. This will only
      * unfold it once, so recursive calls are present *)
-    t <-- norm_term [Delta] (mk_e_app t ii.args);
+    t <-- norm_term [delta] (mk_e_app t ii.args);
     dup;;
     t <-- instrument_body ii t;
     dump "";;

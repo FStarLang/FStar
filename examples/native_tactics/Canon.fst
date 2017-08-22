@@ -299,7 +299,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         // Fold constants
         | Inr (Plus (Lit _) (Lit _))
         | Inr (Mult (Lit _) (Lit _)) ->
-            norm [Delta; Primops];;
+            norm [delta; primops];;
             trefl
 
         // Forget about negations

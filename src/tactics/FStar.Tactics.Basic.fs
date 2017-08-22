@@ -24,6 +24,7 @@ module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
 module RD = FStar.Reflection.Data
 module UF = FStar.Syntax.Unionfind
+module EMB = FStar.Syntax.Embeddings
 
 type name = bv
 type env = Env.env
@@ -397,28 +398,18 @@ let intro_rec : tac<(binder * binder)> =
         fail1 "intro_rec: goal is not an arrow (%s)" (Print.term_to_string goal.goal_ty)
     )
 
-let tr_steps (s : list<RD.norm_step>) : list<N.step> =
-    let tr s = match s with
-        | RD.Simpl   -> [N.Simplify]
-        | RD.WHNF    -> [N.WHNF]
-        | RD.Primops -> [N.Primops]
-        | RD.Delta   -> [N.UnfoldUntil Delta_constant]
-        | RD.UnfoldOnly l -> [N.UnfoldOnly (List.map S.lid_of_fv l)]
-    in
-    List.flatten (List.map tr s)
-
-let norm (s : list<RD.norm_step>) : tac<unit> =
+let norm (s : list<EMB.norm_step>) : tac<unit> =
     bind cur_goal (fun goal ->
     // Translate to actual normalizer steps
-    let steps = [N.Reify; N.UnfoldTac]@(tr_steps s) in
+    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let w = normalize steps goal.context goal.witness in
     let t = normalize steps goal.context goal.goal_ty in
     replace_cur ({goal with goal_ty = t; witness = w})
     )
 
-let norm_term (s : list<RD.norm_step>) (t : term) : tac<term> =
+let norm_term (s : list<EMB.norm_step>) (t : term) : tac<term> =
     bind get (fun ps ->
-    let steps = [N.Reify; N.UnfoldTac]@(tr_steps s) in
+    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
     )

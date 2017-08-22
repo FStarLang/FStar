@@ -64,8 +64,8 @@ let repeat1 (#a:Type) (t : tactic a) : tactic (list a) =
 let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
     (trytac (seq (t;; return ()) (repeatseq t));; return ()) ()
 
-let simpl : tactic unit = norm [Simpl; Primops]
-let whnf  : tactic unit = norm [WHNF; Primops]
+let simpl : tactic unit = norm [simpl; primops]
+let whnf  : tactic unit = norm [whnf; primops]
 
 let intros : tactic (list binder) = repeat intro
 
@@ -149,7 +149,7 @@ let unfold_point (t:term) : tactic unit =
     match f with
     | Comp Eq _ l r ->
         if term_eq l t
-        then (norm [Delta];; trefl)
+        then (norm [delta];; trefl)
         else trefl
     | _ ->
         fail "impossible"

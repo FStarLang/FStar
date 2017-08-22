@@ -216,11 +216,15 @@ let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
 let normalize      = pconst "normalize"
 let normalize_term = pconst "normalize_term"
 let norm           = pconst "norm"
-let steps_zeta       = pconst "zeta"
-let steps_iota       = pconst "iota"
-let steps_primops    = pconst "primops"
-let steps_delta      = pconst "delta"
-let steps_delta_only = pconst "delta_only"
+
+(* lids for normalizer steps *)
+let steps_simpl      = pconst "Simpl"
+let steps_whnf       = pconst "WHNF"
+let steps_primops    = pconst "Primops"
+let steps_zeta       = pconst "Zeta"
+let steps_iota       = pconst "Iota"
+let steps_delta      = pconst "Delta"
+let steps_unfoldonly = pconst "UnfoldOnly"
 
 let gen_reset =
     let x = U.mk_ref 0 in

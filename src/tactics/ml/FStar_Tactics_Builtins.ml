@@ -4,6 +4,7 @@ open FStar_Tactics_Effect
 module E = FStar_Tactics_Effect
 module B = FStar_Tactics_Basic
 module RT = FStar_Reflection_Types
+module EMB = FStar_Syntax_Embeddings
 
 let interpret_tac (t: 'a B.tac) (ps: proofstate): 'a E.__result =
   match B.run t ps with
@@ -14,6 +15,17 @@ let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a B.result =
   match t ps with
   | E.Success (a, state) -> B.Success (a, state)
   | E.Failed (s, state) -> B.Failed (s, state)
+
+let tr_repr_steps =
+    let tr1 = function
+              | Simpl         -> EMB.Simpl
+              | WHNF          -> EMB.WHNF
+              | Primops       -> EMB.Primops
+              | Delta         -> EMB.Delta
+              | Zeta          -> EMB.Zeta
+              | Iota          -> EMB.Iota
+              | UnfoldOnly ss -> EMB.UnfoldOnly ss
+    in List.map tr1
 
 let to_tac_0 (t: 'a __tac): 'a B.tac =
   (fun (ps: proofstate) ->
@@ -59,8 +71,11 @@ let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __tryt
 let __trivial: unit __tac = from_tac_0 B.trivial
 let trivial: unit -> unit __tac = fun () -> __trivial
 
-let __norm (s: FStar_Reflection_Data.norm_step list): unit __tac = from_tac_1 B.norm s
-let norm: FStar_Reflection_Data.norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
+let __norm (s: norm_step list): unit __tac = from_tac_1 B.norm (tr_repr_steps s)
+let norm: norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
+
+let __norm_term (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_2 B.norm_term (tr_repr_steps s) t
+let norm_term: norm_step list -> RT.term -> unit -> RT.term __tac = fun s t -> fun () -> __norm_term s t
 
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro
