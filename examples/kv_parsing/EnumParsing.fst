@@ -310,7 +310,7 @@ val normalize : #t:Type -> list norm_step -> t -> tactic unit
 let normalize (#t:Type) (steps : list norm_step) (x:t) : tactic unit =
   dup;;
   exact (quote x);;
-  norm (List.append steps [Delta]);;
+  norm (List.append steps [delta]);;
   trefl
 
 #reset-options "--z3rlimit 10"
@@ -326,12 +326,12 @@ let ser_TwoNums' (n m:U32.t) : serializer_ty =
   ser_TwoNums n m
 
 let unfold_only (ns:list (list string)) : Tot (list norm_step) =
-  [UnfoldOnly (FStar.List.Tot.map pack_fv ns)]
+  FStar.List.Tot.map delta_only ns
 
 #reset-options "--lax"
 
 let ser_TwoNums'' (n m:U32.t) : serializer_ty =
-  synth_by_tactic (normalize [Delta; Simpl; Primops] (ser_TwoNums n m <: serializer_ty))
+  synth_by_tactic (normalize [delta; Prims.simpl; primops] (ser_TwoNums n m <: serializer_ty))
 
 #reset-options
 
