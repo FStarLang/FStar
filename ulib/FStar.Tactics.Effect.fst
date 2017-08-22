@@ -1,12 +1,8 @@
 module FStar.Tactics.Effect
 
 open FStar.Tactics.Types
+open FStar.Tactics.Result
 open FStar.Reflection
-
-
-noeq type __result (a:Type) =
-  | Success: a -> proofstate -> __result a
-  | Failed: string -> proofstate -> __result a
 
 let __tac (a:Type) = proofstate -> M (__result a)
 

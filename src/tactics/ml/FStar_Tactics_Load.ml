@@ -1,12 +1,8 @@
 open Dynlink
-open String
 module U = FStar_Util
 
-(* This module needs to be referenced in order for Dynlink to work *)
-module X = FStar_Tactics_Effect
-
-let load_tactic tac =
-    let _ = (try Dynlink.loadfile tac with
+let load_tactic s =
+    let _ = (try Dynlink.loadfile s with
     | e ->
         let str =
             match e with
