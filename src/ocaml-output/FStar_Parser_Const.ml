@@ -156,11 +156,13 @@ let inversion_lid: FStar_Ident.lident =
 let normalize: FStar_Ident.lident = pconst "normalize"
 let normalize_term: FStar_Ident.lident = pconst "normalize_term"
 let norm: FStar_Ident.lident = pconst "norm"
-let steps_zeta: FStar_Ident.lident = pconst "zeta"
-let steps_iota: FStar_Ident.lident = pconst "iota"
-let steps_primops: FStar_Ident.lident = pconst "primops"
-let steps_delta: FStar_Ident.lident = pconst "delta"
-let steps_delta_only: FStar_Ident.lident = pconst "delta_only"
+let steps_simpl: FStar_Ident.lident = pconst "Simpl"
+let steps_whnf: FStar_Ident.lident = pconst "WHNF"
+let steps_primops: FStar_Ident.lident = pconst "Primops"
+let steps_zeta: FStar_Ident.lident = pconst "Zeta"
+let steps_iota: FStar_Ident.lident = pconst "Iota"
+let steps_delta: FStar_Ident.lident = pconst "Delta"
+let steps_unfoldonly: FStar_Ident.lident = pconst "UnfoldOnly"
 let gen_reset:
   (Prims.unit -> Prims.int,Prims.unit -> Prims.unit)
     FStar_Pervasives_Native.tuple2

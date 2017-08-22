@@ -333,14 +333,14 @@ let rec primitive_steps:
               let uu____1253 =
                 mktac1 "__norm" FStar_Tactics_Basic.norm
                   (FStar_Syntax_Embeddings.unembed_list
-                     FStar_Reflection_Basic.unembed_norm_step)
+                     FStar_Syntax_Embeddings.unembed_norm_step)
                   FStar_Syntax_Embeddings.embed_unit
                   FStar_Syntax_Syntax.t_unit in
               let uu____1256 =
                 let uu____1259 =
                   mktac2 "__norm_term" FStar_Tactics_Basic.norm_term
                     (FStar_Syntax_Embeddings.unembed_list
-                       FStar_Reflection_Basic.unembed_norm_step)
+                       FStar_Syntax_Embeddings.unembed_norm_step)
                     FStar_Reflection_Basic.unembed_term
                     FStar_Reflection_Basic.embed_term
                     FStar_Reflection_Data.fstar_refl_term in
