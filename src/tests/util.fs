@@ -95,5 +95,8 @@ let rec term_eq' t1 t2 =
 let term_eq t1 t2 =
 //    Printf.printf "Comparing %s and\n\t%s\n" (Print.term_to_string t1) (Print.term_to_string t2);
     let b = term_eq' t1 t2 in
-    if not b then Printf.printf ">>>>>>>>>>>Term %s is not equal to %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+    if not b
+    then Printf.printf ">>>>>>>>>>>Term %s (%A) is not equal to %s (%A)\n"
+            (Print.term_to_string t1) t1
+            (Print.term_to_string t2) t2;
     b

@@ -79,12 +79,12 @@ let encode_nat n =
 
 module N = TypeChecker.Normalize
 
-let run i r expected =
+let run_either i r expected normalizer =
 //    force_term r;
-    Printf.printf "%d: ... \n" i;
+    Printf.printf "%d: ...\n" i;
     let _, tcenv = Pars.init() in
     FStar.Main.process_args() |> ignore; //set the command line args for debugging
-    let x = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops] tcenv r in
+    let x = normalizer tcenv r in
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
@@ -92,8 +92,43 @@ let run i r expected =
 //    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
     Util.always i (Util.term_eq (U.unascribe x) expected)
 
-let run_all () =
+let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops])
+let run_nbe i r expected = run_either i r expected (fun _tcenv -> FStar.TypeChecker.NBE.normalize)
+
+let run_all_nbe () =
+    Printf.printf "Testing NBE\n";
+    Options.__set_unit_tests();
+    let run = run_nbe in
+    run 0 (app apply [one; id; nm n]) (nm n);
+    run 1 (app apply [tt; nm n; nm m]) (nm n);
+    run 2 (app apply [ff; nm n; nm m]) (nm m);
+    run 3 (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]) (nm m);
+    run 4 (app twice [apply; ff; nm n; nm m]) (nm m);
+    run 5 (minus one z) one;
+    run 6 (app pred [one]) z;
+    run 7 (minus one one) z;
+    run 8 (app mul [one; one]) one;
+    run 9 (app mul [two; one]) two;
+    run 10 (app mul [app succ [one]; one]) two;
+    run 11 (minus (encode 10) (encode 10)) z;
+    run 12 (minus (encode 100) (encode 100)) z;
+    run 13 (let_ x (encode 100) (minus (nm x) (nm x))) z;
+    run 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~10s; wasteful for CI
+    run 15 (let_ x (app succ [one])
+            (let_ y (app mul [nm x; nm x])
+                (let_ h (app mul [nm y; nm y])
+                        (minus (nm h) (nm h))))) z;
+    run 16 (let_ x (app succ [one])
+            (let_ y (app mul [nm x; nm x])
+                (let_ h (app mul [nm y; nm y])
+                          (minus (nm h) (nm h))))) z;
+    Options.__clear_unit_tests();
+    Printf.printf "NBE ok\n"
+
+
+let run_all_interpreter () =
     Printf.printf "Testing the normalizer\n";
+    let run = run_interpreter in
     let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
                                            match x with \
                                             | [] -> []  \
@@ -129,7 +164,8 @@ let run_all () =
     run 11 (minus (encode 10) (encode 10)) z;
     run 12 (minus (encode 100) (encode 100)) z;
     run 13 (let_ x (encode 100) (minus (nm x) (nm x))) z;
-//    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~10s; wasteful for CI
+    run 130 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~10s; wasteful for CI
+    run 131 (let_ x (encode 10000) (minus (nm x) (nm x))) z; //takes ~10s; wasteful for CI
     run 14 (let_ x (app succ [one])
             (let_ y (app mul [nm x; nm x])
                 (let_ h (app mul [nm y; nm y])
@@ -152,4 +188,6 @@ let run_all () =
 //  run 24 (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"); -- CH: works up to an unfolding too much (char -> char')
     Printf.printf "Normalizer ok\n"
 
-
+let run_all () =
+    run_all_nbe ()
+//    run_all_interpreter ()

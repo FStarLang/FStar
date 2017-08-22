@@ -83,6 +83,8 @@ and readback (x:t) : term =
       let x = S.new_bv None S.tun in
       let body = readback (f (mkAccu x)) in
       U.abs [S.mk_binder x] body None
+    | Accu (Var bv, []) ->
+      S.bv_to_name bv
     | Accu (Var bv, ts) ->
       let args = List.map (fun x -> as_arg (readback x)) ts in
       U.mk_app (S.bv_to_name bv) args
