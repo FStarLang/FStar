@@ -9,6 +9,7 @@ open PureEncoder
 open Serializer
 open Slice
 
+open FStar.Tactics
 open FStar.Ghost
 open FStar.Seq
 open FStar.HyperStack
@@ -304,8 +305,35 @@ let ser_Nothing = fun buf -> Some 0ul
 val ser_OneNum : n:U32.t -> serializer (hide (encode_OneNum n))
 let ser_OneNum n = ser_u32 n
 
+noextract
+val normalize : #t:Type -> list norm_step -> t -> tactic unit
+let normalize (#t:Type) (steps : list norm_step) (x:t) : tactic unit =
+  dup;;
+  exact (quote x);;
+  norm (List.append steps [Delta]);;
+  trefl
+
+#reset-options "--z3rlimit 10"
+
 val ser_TwoNums : n:U32.t -> m:U32.t -> serializer (hide (encode_TwoNums n m))
 let ser_TwoNums n m = fun buf -> (ser_u32 n `ser_append` ser_u32 m) buf
+
+let serializer_ty  = buf:bslice -> Stack (option (offset_into buf))
+  (requires (fun h0 -> live h0 buf))
+  (ensures (fun h0 r h1 -> live h1 buf))
+
+let ser_TwoNums' (n m:U32.t) : serializer_ty =
+  ser_TwoNums n m
+
+let unfold_only (ns:list (list string)) : Tot (list norm_step) =
+  [UnfoldOnly (FStar.List.Tot.map pack_fv ns)]
+
+#reset-options "--lax"
+
+let ser_TwoNums'' (n m:U32.t) : serializer_ty =
+  synth_by_tactic (normalize [Delta; Simpl; Primops] (ser_TwoNums n m <: serializer_ty))
+
+#reset-options
 
 // this works, but perhaps it should be eta expanded for extraction purposes
 val ser_numbers_data: ns:numbers -> serializer (hide (encode_numbers_data ns))
