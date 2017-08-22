@@ -299,8 +299,8 @@ val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^
 			let blocks_1 = HS.sel h1 (PRF.itable i t) in
 			none_above_prf_st x t h0 /\
 		        h0 `HS.contains` r /\
-			HS.sel h0 t.table == 
-			  Seq.append (HS.sel h_init t.table)
+			HS.sel h0 (itable i t) ==
+			  Seq.append (HS.sel h_init (itable i t))
 				     (counterblocks i t.mac_rgn initial_domain
 						 len 0 completed_len
 						 (Plain.sel_plain h0 (u len) plain)
@@ -312,8 +312,8 @@ val extending_counter_blocks: #i:id -> (t:PRF.state i) -> (x:domain i{ctr_0 i <^
 		    let completed_len' = completed_len + l in
     		    let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
 		    safeId i ==>
-		      Seq.equal (HS.sel h1 t.table)
-				(Seq.append (HS.sel h_init t.table) 
+		      Seq.equal (HS.sel h1 (itable i t))
+				(Seq.append (HS.sel h_init (itable i t))
 					    (counterblocks i t.mac_rgn initial_domain
 						 len 0 completed_len'
 						 (Plain.sel_plain h1 (u len) plain)
@@ -388,7 +388,7 @@ let enxor_invariant (#i:id) (t:PRF.state i) (x:PRF.domain i)
            let initial_domain = {x with ctr=ctr_0 i +^ 1ul} in
            let completed_len = len -^ remaining_len in
 	   Seq.equal prf_table
-    		     (Seq.append (HS.sel h_init t.table)
+    		     (Seq.append (HS.sel h_init (itable i t))
     				 (counterblocks i t.mac_rgn initial_domain
     				      (v len) 0 (v completed_len)
     				      (Plain.sel_plain h len plain)
@@ -815,7 +815,7 @@ let decrypt_ok (#i:id) (n:Cipher.iv (Cipher.algi i)) (st:aead_state i Reader)
 	       (h1:mem) =
   (enc_dec_liveness st aad plain cipher_tagged h1 /\
    safeId i) ==> (
-   let aead_entries = HS.sel h1 st.log in 
+   let aead_entries = HS.sel h1 (st_ilog st) in
    let aad = Buffer.as_seq h1 aad in
    let plain = Plain.sel_plain h1 plainlen plain in
    let cipher_tagged = Buffer.as_seq h1 cipher_tagged in 
@@ -834,7 +834,7 @@ let found_entry (#i:id) (n:Cipher.iv (Cipher.algi i)) (st:aead_state i Reader)
     (Buffer.live h cipher_tagged /\
      Buffer.live h aad /\
      safeId i) ==> 		
-    (let entries = HS.sel h st.log in 		
+    (let entries = HS.sel h (st_ilog st) in
      found_matching_entry n entries #aadlen
 	 (Buffer.as_seq h aad)
 	 (as_plain q)
@@ -904,8 +904,8 @@ let dexor #i st iv #aadlen aad #len plain cipher_tagged p =
   then //re-establishing the invariant takes a bit of work;
        //basically, we know the iv is not fresh since verify succeeded
        //and we only modified entries for that iv, so we didn't impact any fresh nonces
-       let aead_entries_0 = HS.sel #(aead_entries i) h0 st.log in
-       let aead_entries_1 = HS.sel #(aead_entries i) h1 st.log in
+       let aead_entries_0 = HS.sel #(aead_entries i) h0 (st_ilog st) in
+       let aead_entries_1 = HS.sel #(aead_entries i) h1 (st_ilog st) in
        let prf_entries_1 = HS.sel h1 (PRF.itable i st.prf) in
        let prf_entries_0 = HS.sel h0 (PRF.itable i st.prf) in
        assert (aead_entries_1 == aead_entries_0);

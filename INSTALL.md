@@ -1,9 +1,9 @@
 ## Table of Contents ##
 
   * [Online editor](#online-editor)
+  * [OPAM package](#opam-package)
   * [Binary releases](#binary-releases)
     * [Testing a binary package](#testing-a-binary-package)
-    * [OPAM package](#opam-package)
     * [Homebrew formula for Mac OS X](#homebrew-formula-for-mac-os-x)
     * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
     * [Running F\* from a docker image](#running-f-from-a-docker-image)
@@ -28,6 +28,18 @@ the [online F\* editor] that's part of the [F\* tutorial].
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [F\* tutorial]: https://www.fstar-lang.org/tutorial/
+
+## OPAM package ##
+
+If the OCaml package manager is present on your platform, you can
+install the latest development version of F\* (`master` branch) and
+required dependencies (except for Z3) using the following commands:
+
+        $ opam pin add fstar --dev-repo
+        $ opam install fstar
+
+### Platform specific early troubleshooting ###
+- for mac users, make sure that `ginstall` is on your system (present in macports in `coreutils`) 
 
 ## Binary releases ##
 
@@ -82,30 +94,18 @@ following commands. (On Windows this requires Cygwin and `make`)
    
    Note: Currently this is [known to fail for the F# build of F\*](https://github.com/FStarLang/FStar/issues/1023).
 
-### OPAM package ###
-
-If the OCaml package manager is present on your platform, you can
-install the latest F\* release and required dependencies (except for
-Z3) using the opam package:
-
-        $ opam install fstar
-
-Right now, the opam package is version 0.9.3-beta1. You can easily get the latest development version of F\* with some opam magic:
-
-        $ opam pin add fstar --dev-repo
-
 ### Homebrew formula for Mac OS X ###
 
-On Macs you can also build and install the latest F\* release using Homebrew.
+On Macs you can build and install the latest F\* release using Homebrew.
 This will install F\* and all required dependencies (including Z3):
 
         $ brew install fstar
 
-For building and installing the latest F\* sources from GitHub (the `master` branch)
-instead of the latest release you can do:
+For building and installing the latest F\* development version from GitHub
+(the `master` branch) instead of the latest release you can do:
 
         $ brew install --HEAD fstar
-        
+
 ### Chocolatey Package on Windows ###
 
 On windows you can use chocolatey package manager to install and update fstar
@@ -126,7 +126,7 @@ with emacs support and `fstarlang/fstar` for purists.
 The image is automatically kept up to date through a cloud build.
 
 You only have to install docker and an X server for your platform and you are good to go.
-See [Running F\* from a docker image] (https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker.
+See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker.
 
 
 
@@ -217,7 +217,7 @@ Read on for the more complete solution involving Visual Studio itself.
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono (any version from 4.0.3.0 to 4.8.x.y) and fsharp (version 4.0.1.x)
+  - Install mono (any version from 4.0.3.0 to 5.0.0.x) and fsharp (version 4.0.1.x-4.1.18)
 
     - On Debian/Ubuntu
 
@@ -308,7 +308,7 @@ that's over there (it's optimized for F\*). This will install both OCaml and OPA
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)

@@ -68,12 +68,37 @@ let rec lognot_vec_definition #n a i =
   if i = 0 then ()
   else lognot_vec_definition #(n - 1) (slice a 1 n) (i - 1)
 
+(* Bitwise lemmas *)
+
 val lemma_xor_bounded: m:pos -> n:nat -> x:bv_t m -> y:bv_t m ->
   Lemma (requires (forall (i:nat). (i < m /\ i >= n) ==> (Seq.index x (m-1-i) = false /\ Seq.index y (m-1-i) = false)))
         (ensures  (forall (i:nat). (i < m /\ i >= n) ==> (Seq.index (logxor_vec x y) (m-1-i) = false)))
 let lemma_xor_bounded m n x y = ()
 
+(** is_subset_vec is the property that the zero bits of b are also zero in a.
+    I.e. that a is a subset of b. *)
+let is_subset_vec (#n:pos) (a:bv_t n) (b:bv_t n) =
+  forall (i:nat). i < n ==> index b i = false ==> index a i = false
+
+(** is_superset_vec is the property that the non-zero bits of b are also non-zero in a.
+    I.e. that a is a superset of b. *)
+let is_superset_vec (#n:pos) (a:bv_t n) (b:bv_t n) =
+  forall (i:nat). i < n ==> index b i = true ==> index a i = true
+
+(** lemma_slice_subset_vec proves that the subset property is conserved in subslices. *)
+val lemma_slice_subset_vec: #n:pos -> a:bv_t n -> b:bv_t n -> i:nat -> j:nat{i < j && j <= n} ->
+  Lemma (requires is_subset_vec a b)
+  (ensures (match n with | 1 -> True | _ -> is_subset_vec #(j-i) (slice a i j) (slice b i j)))
+let lemma_slice_subset_vec #n a b i j = ()
+
+(** lemma_slice_superset_vec proves that the superset property is conserved in subslices. *)
+val lemma_slice_superset_vec: #n:pos -> a:bv_t n -> b:bv_t n -> i:nat -> j:nat{i < j && j <= n} ->
+  Lemma (requires is_superset_vec a b)
+  (ensures (match n with | 1 -> True | _ -> is_superset_vec #(j-i) (slice a i j) (slice b i j)))
+let lemma_slice_superset_vec #n a b i j = ()
+
 (* Shift operators *)
+(* Note: the shift amount is extracted as a bitvector*)
 val shift_left_vec: #n:pos -> a:bv_t n -> s:nat -> Tot (bv_t n)
 let shift_left_vec #n a s =
   if s >= n then zero_vec #n

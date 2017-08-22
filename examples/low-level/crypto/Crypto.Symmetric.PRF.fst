@@ -85,7 +85,7 @@ let range (mac_rgn:region) (i:id) (x:domain i): Type0 =
   else if safeId i        then otp i
                           else lbytes (v (blocklen i))
 
-inline_for_extraction let iv_0 () = FStar.Int.Cast.uint64_to_uint128 0UL
+inline_for_extraction let iv_0 () = FStar.UInt128.uint64_to_uint128 0UL
 noextract let domain_sk0 (i:id) = x:domain i{x.ctr <^ ctr_0 i /\ x.iv = iv_0 () } 
 noextract let domain_mac (i:id) = x:domain i{x.ctr = ctr_0 i} 
 noextract let domain_otp (i:id) = x:domain i{x.ctr >^ ctr_0 i /\ safeId i}
@@ -506,7 +506,7 @@ val prf_enxor:
   (requires (fun h0 ->
      Crypto.Plain.live h0 plain /\ 
      Buffer.live h0 cipher /\
-     (safeId i ==> find_otp #t.mac_rgn #i (HS.sel h0 t.table) x == None)))
+     (safeId i ==> find_otp #t.mac_rgn #i (HS.sel h0 (itable i t)) x == None)))
   (ensures (fun h0 _ h1 ->
      Crypto.Plain.live h1 plain /\ Buffer.live h1 cipher /\
      modifies_x_buffer_1 t x cipher h0 h1 /\

@@ -46,7 +46,7 @@ let record_time f =
     let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
-let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let get_file_last_modification_time f = (BatUnix.stat f).BatUnix.st_mtime
 let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
 
@@ -97,7 +97,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   let (from_chd_r, from_chd_w) = Unix.pipe () in
   Unix.set_close_on_exec to_chd_w;
   Unix.set_close_on_exec from_chd_r;
-  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+  let _pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
   (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
                                to_chd_r from_chd_w Unix.stderr
   in
@@ -214,14 +214,15 @@ let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let set_is_empty ((s, _):'a set) =
   match s with
   | [] -> true
   | _ -> false
 
-let new_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_set (l:'a list) (cmp:('a -> 'a -> Z.t)) = (l, fun x y -> cmp x y = Z.zero)
+let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
 
 let set_elements ((s1, eq):'a set) : 'a list =
   let rec aux out = function
@@ -232,6 +233,7 @@ let set_elements ((s1, eq):'a set) : 'a list =
        else
          aux (hd::out) tl in
   aux [] s1
+
 let set_add a ((s, b):'a set) = (a::s, b)
 let set_remove x ((s1, eq):'a set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
@@ -248,14 +250,18 @@ let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
 
 (* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
 type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let fifo_set_is_empty ((s, _):'a fifo_set) =
   match s with
   | [] -> true
   | _ -> false
 
-let new_fifo_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a fifo_set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_fifo_set (l:'a list) (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+  (l, fun x y -> cmp x y = Z.zero)
+
+let new_fifo_set (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+    as_fifo_set [] cmp
 
 let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
   let rec aux out = function
@@ -290,6 +296,14 @@ let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
 let smap_size (m:'value smap) = BatHashtbl.length m
 
+type 'value psmap = (string, 'value) BatMap.t
+let psmap_empty (_: unit) : 'value psmap = BatMap.empty
+let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
+let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
+  try BatMap.find key map with Not_found -> dflt
+let psmap_try_find (map: 'value psmap) (key: string) =
+  try Some (BatMap.find key map) with Not_found -> None
+
 type 'value imap = (Z.t, 'value) BatHashtbl.t
 let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
 let imap_clear (s:('value imap)) = BatHashtbl.clear s
@@ -303,6 +317,14 @@ let imap_fold (m:'value imap) f a = BatHashtbl.fold f m a
 let imap_remove (m:'value imap) k = BatHashtbl.remove m k
 let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
 let imap_copy (m:'value imap) = BatHashtbl.copy m
+
+type 'value pimap = (Z.t, 'value) BatMap.t
+let pimap_empty (_: unit) : 'value pimap = BatMap.empty
+let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
+let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
+  try BatMap.find key map with Not_found -> dflt
+let pimap_try_find (map: 'value pimap) (key: Z.t) =
+  try Some (BatMap.find key map) with Not_found -> None
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
@@ -347,22 +369,33 @@ let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
 
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of Z.t
+| JsonStr of string
+| JsonList of json list
+| JsonAssoc of (string * json) list
+
 type printer = {
   printer_prinfo: string -> unit;
   printer_prwarning: string -> unit;
   printer_prerror: string -> unit;
+  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
 }
 
 let default_printer =
   { printer_prinfo = (fun s -> pr "%s" s; flush stdout);
     printer_prwarning = (fun s -> fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr);
-    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr); }
+    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr);
+    printer_prgeneric = fun label get_string get_json -> pr "%s: %s" label (get_string ())}
 
 let current_printer = ref default_printer
 let set_printer printer = current_printer := printer
 
 let print_raw s = pr "%s" s; flush stdout
 let print_string s = (!current_printer).printer_prinfo s
+let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
 let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:string list) = BatString.concat sep l
@@ -450,6 +483,7 @@ let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
+[@@deriving show]
 
 let is_left = function
   | Inl _ -> true
@@ -516,6 +550,11 @@ let bind_opt opt f =
   match opt with
   | None -> None
   | Some x -> f x
+
+let catch_opt opt f =
+  match opt with
+  | Some x -> opt
+  | None -> f ()
 
 let map_opt opt f =
   match opt with
@@ -589,8 +628,11 @@ let first_N n l =
   in
   f [] 0 l
 
-let rec nth_tail n l =
-  if n=0 then l else nth_tail (n - 1) (BatList.tl l)
+let nth_tail n l =
+  let rec aux n l = 
+    if n=0 then l else aux (n - 1) (BatList.tl l)
+  in
+  aux (Z.to_int n) l
 
 let prefix l =
   match BatList.rev l with
@@ -929,14 +971,6 @@ let read_hints (filename: string): hints_db option =
 
 (** Interactive protocol **)
 
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of Z.t
-| JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
-
 exception UnsupportedJson
 
 let json_of_yojson yjs: json option =
@@ -971,8 +1005,11 @@ let string_of_json json =
 
 (* Outside of this file the reference to FStar_Util.ref must use the following combinators *)
 (* Export it at the end of the file so that we don't break other internal uses of ref *)
-type 'a ref = 'a FStar_Heap.ref
+type 'a ref = 'a FStar_Monotonic_Heap.ref
 let read = FStar_ST.read
 let write = FStar_ST.write
 let (!) = FStar_ST.read
 let (:=) = FStar_ST.write
+
+let marshal (x:'a) : string = Marshal.to_string x []
+let unmarshal (x:string) : 'a = Marshal.from_string x 0

@@ -29,7 +29,7 @@ val fv_to_string      : fv -> string
 val nm_to_string      : bv -> string
 val lid_to_string     : lid -> string
 val term_to_string    : term -> string
-val uvar_to_string    : FStar.Unionfind.uvar<'a> -> string
+val uvar_to_string    : uvar -> string
 val comp_to_string    : comp -> string
 val tag_of_term       : term -> string
 val lbname_to_string  : lbname -> string
@@ -38,8 +38,11 @@ val modul_to_string   : modul -> string
 val lcomp_to_string   : lcomp -> string
 val univ_to_string    : universe -> string
 val sigelt_to_string  : sigelt -> string
+val sigelt_to_string_short : sigelt -> string
 val binder_to_string  : binder -> string
-val binders_to_string : string -> binders ->string
+val binders_to_string : string -> binders -> string
+val binder_to_json    : binder -> json
+val binders_to_json   : binders -> json
 val args_to_string    : args -> string
 val eff_decl_to_string: bool -> eff_decl -> string
 val subst_to_string   : subst_t -> string
@@ -50,3 +53,5 @@ val tscheme_to_string : tscheme -> string
 val cflags_to_string  : cflags -> string
 val set_to_string     : ('a -> string) -> set<'a> -> string
 val list_to_string    : ('a -> string) -> list<'a> -> string
+val delta_depth_to_string : delta_depth -> string
+val action_to_string  : action -> string

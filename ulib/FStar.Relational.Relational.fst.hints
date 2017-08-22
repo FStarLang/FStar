@@ -1,5 +1,5 @@
 [
-  "@JH\u0013j¥‰•Óôëpcšš\u007f",
+  "y\u001am!1òÍP^k\u001bâŠž\u0014‡",
   [
     [ "FStar.Relational.Relational.rel", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -47,7 +47,7 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "uvar_typing_54751"
+        "uvar_typing_19"
       ],
       0
     ],
@@ -62,6 +62,42 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
+    [
+      "FStar.Relational.Relational.sel_rel1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "FStar.Relational.Relational.sel_rel1",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "FStar.Relational.Relational.sel_rel1",
+      3,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0
     ]

@@ -11,3 +11,7 @@ MRefHeap.uver : MRefHeap.fst
 	$(FSTAR) --record_hints --verify_module MRefHeap $^
 
 all-cver: $(patsubst %.fst,%.ucver,$(wildcard *.fst))
+
+# Targets to get F* arguments in interactive mode
+%.fst-in: 
+	@echo --use_hints

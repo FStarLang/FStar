@@ -68,3 +68,9 @@ extraction-bug734: bug734.fst
 all-cver:
 
 uall-cver: $(subst .fst,.ucver,$(VERFILES))
+extraction-bug1055: bug1055b.fst
+	mkdir -p out
+	$(MAKE) -C $(ULIB_ML)
+	$(FSTAR) --lax $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml bug1055b.fst
+	$(OCAMLOPT) out/Bug1055b.ml -o bug1055b.exe
+	./bug1055b.exe

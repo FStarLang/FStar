@@ -1,9 +1,6 @@
 [
   "\u000e\u0005Qåv|F√Õ+†Ç¥?∆(",
   [
-    null,
-    null,
-    null,
     [
       "NegativeTests.Termination.ackermann_bad",
       2,
@@ -20,7 +17,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    null,
     [
       "NegativeTests.Termination.sumto",
       1,
@@ -30,7 +26,8 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_Addition",
+        "function_token_typing_NegativeTests.Neg.x", "int_inversion",
+        "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -46,7 +43,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    null,
     [
       "NegativeTests.Termination.strangeZeroBad",
       2,
@@ -70,11 +66,6 @@
         "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0
-    ],
-    null,
-    null,
-    null,
-    null,
-    null
+    ]
   ]
 ]

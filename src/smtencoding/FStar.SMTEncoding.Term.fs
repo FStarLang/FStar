@@ -17,6 +17,7 @@
 
 module FStar.SMTEncoding.Term
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 open FStar
@@ -30,9 +31,9 @@ type sort =
   | Bool_sort
   | Int_sort
   | String_sort
-  | Ref_sort
   | Term_sort
   | Fuel_sort
+  | BitVec_sort of int // BitVectors parameterized by their size
   | Array of sort * sort
   | Arrow of sort * sort
   | Sort of string
@@ -42,8 +43,8 @@ let rec strSort x = match x with
   | Int_sort  -> "Int"
   | Term_sort -> "Term"
   | String_sort -> "FString"
-  | Ref_sort -> "Ref"
   | Fuel_sort -> "Fuel"
+  | BitVec_sort n -> format1 "(_ BitVec %s)" (string_of_int n)
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
   | Arrow(s1, s2) -> format2 "(%s -> %s)" (strSort s1) (strSort s2)
   | Sort s -> s
@@ -67,7 +68,19 @@ type op =
   | Mul
   | Minus
   | Mod
-  | ITE
+  | BvAnd
+  | BvXor
+  | BvOr
+  | BvShl
+  | BvShr  // unsigned shift right\
+  | BvUdiv
+  | BvMod
+  | BvMul
+  | BvUlt
+  | BvUext of Prims.int
+  | NatToBv of Prims.int // need to explicitly define the size of the bitvector
+  | BvToNat
+  | ITE 
   | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
 
 type qop =
@@ -196,6 +209,18 @@ let op_to_string = function
   | Minus -> "-"
   | Mod  -> "mod"
   | ITE -> "ite"
+  | BvAnd -> "bvand"
+  | BvXor -> "bvxor"
+  | BvOr -> "bvor"
+  | BvShl -> "bvshl"
+  | BvShr -> "bvlshr"
+  | BvUdiv -> "bvudiv"
+  | BvMod -> "bvurem"
+  | BvMul -> "bvmul"
+  | BvUlt -> "bvult"
+  | BvToNat -> "bv2int"
+  | BvUext n -> format1 "(_ zero_extend %s)" (string_of_int n)
+  | NatToBv n -> format1 "(_ int2bv %s)" (string_of_int n)
   | Var s -> s
 
 let weightToSmt = function
@@ -224,6 +249,19 @@ let rec hash_of_term' t = match t with
   | Let (es, body) ->
     "(let (" ^ (List.map hash_of_term es |> String.concat " ") ^ ") " ^ hash_of_term body ^ ")"
 and hash_of_term tm = hash_of_term' tm.tm
+
+let mkBoxFunctions s = (s, s ^ "_proj_0")
+let boxIntFun        = mkBoxFunctions "BoxInt"
+let boxBoolFun       = mkBoxFunctions "BoxBool"
+let boxStringFun     = mkBoxFunctions "BoxString"
+let boxBitVecFun sz  = mkBoxFunctions ("BoxBitVec" ^ (string_of_int sz))
+
+// Assume the Box/Unbox functions to be injective
+let isInjective s = 
+    if (FStar.String.length s >= 3) then
+        String.substring s 0 3 = "Box" && 
+        not (List.existsML (fun c -> c = '.') (FStar.String.list_of_string s))
+    else false
 
 let mk t r = {tm=t; freevars=BU.mk_ref None; rng=r}
 let mkTrue  r       = mk (App(TrueOp, [])) r
@@ -265,8 +303,23 @@ let mkImp (t1, t2) r = match t1.tm, t2.tm with
 
 let mk_bin_op op (t1,t2) r = mkApp'(op, [t1;t2]) r
 let mkMinus t r = mkApp'(Minus, [t]) r
+let mkNatToBv sz t r = mkApp'(NatToBv sz, [t]) r
+let mkBvUext sz t r = mkApp'(BvUext sz, [t]) r
+let mkBvToNat t r = mkApp'(BvToNat, [t]) r
+let mkBvAnd = mk_bin_op BvAnd
+let mkBvXor = mk_bin_op BvXor
+let mkBvOr = mk_bin_op BvOr
+let mkBvShl sz (t1, t2) r = mkApp'(BvShl, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvUdiv sz (t1, t2) r = mkApp'(BvUdiv, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvMod sz (t1, t2) r = mkApp'(BvMod, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvMul sz (t1, t2) r = mkApp' (BvMul, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvUlt = mk_bin_op BvUlt
 let mkIff = mk_bin_op Iff
-let mkEq  = mk_bin_op Eq
+let mkEq (t1, t2) r = match t1.tm, t2.tm with
+    | App (Var f1, [s1]), App (Var f2, [s2]) when f1 = f2 && isInjective f1 ->
+        mk_bin_op Eq (s1, s2) r
+    | _ -> mk_bin_op Eq (t1, t2) r
 let mkLT  = mk_bin_op LT
 let mkLTE = mk_bin_op LTE
 let mkGT  = mk_bin_op GT
@@ -608,7 +661,7 @@ let rec declToSmt z3options decl =
     format1 "(echo \"%s\")" s
   | RetainAssumptions _ ->
     ""
-  | CheckSat -> "(check-sat)"
+  | CheckSat -> "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
   | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
   | Push -> "(push)"
   | Pop -> "(pop)"
@@ -618,10 +671,7 @@ let rec declToSmt z3options decl =
 
 and mkPrelude z3options =
   let basic = z3options ^
-                "(declare-sort Ref)\n\
-                (declare-fun Ref_constr_id (Ref) Int)\n\
-                \n\
-                (declare-sort FString)\n\
+                "(declare-sort FString)\n\
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
@@ -682,10 +732,9 @@ and mkPrelude z3options =
                                  ("Tm_type",  [], Term_sort, 2, true);
                                  ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)],  Term_sort, 3, false);
                                  ("Tm_unit",  [], Term_sort, 6, true);
-                                 ("BoxInt",     ["BoxInt_proj_0",  Int_sort, true],   Term_sort, 7, true);
-                                 ("BoxBool",    ["BoxBool_proj_0", Bool_sort, true],  Term_sort, 8, true);
-                                 ("BoxString",  ["BoxString_proj_0", String_sort, true], Term_sort, 9, true);
-                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort, true],    Term_sort, 10, true);
+                                 (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
+                                 (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
+                                 (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
                                  ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true)], Term_sort, 11, true)] in
    let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
@@ -697,36 +746,74 @@ and mkPrelude z3options =
                                                   (Valid (Precedes x2 y2)))))))\n" in
    basic ^ bcons ^ lex_ordering
 
+(* Generate boxing/unboxing functions for bitvectors of various sizes. *) 
+(* For ids, to avoid dealing with generation of fresh ids, 
+   I am computing them based on the size in this not very robust way. 
+   z3options are only used by the prelude so passing the empty string should be ok. *)
+let mkBvConstructor (sz : int) = 
+    (fst (boxBitVecFun sz), 
+        [snd (boxBitVecFun sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
+    |> constructor_to_decl
+
 let mk_Range_const      = mkApp("Range_const", []) norng
 let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
-let maybe_elim_box u v t =
+let elim_box cond u v t =
     match t.tm with
-    | App(Var v', [t])
-        when v=v' && Options.smtencoding_elim_box() -> t
+    | App(Var v', [t]) when v=v' && cond -> t
     | _ -> mkApp(u, [t]) t.rng
-let boxInt t      = maybe_elim_box "BoxInt" "BoxInt_proj_0" t
-let unboxInt t    = maybe_elim_box "BoxInt_proj_0" "BoxInt" t
-let boxBool t     = maybe_elim_box "BoxBool" "BoxBool_proj_0" t
-let unboxBool t   = maybe_elim_box "BoxBool_proj_0" "BoxBool" t
-let boxString t   = maybe_elim_box "BoxString" "BoxString_proj_0" t
-let unboxString t = maybe_elim_box "BoxString_proj_0" "BoxString" t
-let boxRef t      = maybe_elim_box "BoxRef" "BoxRef_proj_0" t
-let unboxRef t    = maybe_elim_box "BoxRef_proj_0" "BoxRef" t
+let maybe_elim_box u v t =
+    elim_box (Options.smtencoding_elim_box()) u v t
+let boxInt t      = maybe_elim_box (fst boxIntFun) (snd boxIntFun) t
+let unboxInt t    = maybe_elim_box (snd boxIntFun) (fst boxIntFun) t
+let boxBool t     = maybe_elim_box (fst boxBoolFun) (snd boxBoolFun) t
+let unboxBool t   = maybe_elim_box (snd boxBoolFun) (fst boxBoolFun) t
+let boxString t   = maybe_elim_box (fst boxStringFun) (snd boxStringFun) t
+let unboxString t = maybe_elim_box (snd boxStringFun) (fst boxStringFun) t
+let boxBitVec (sz:int) t = 
+    elim_box true (fst (boxBitVecFun sz)) (snd (boxBitVecFun sz)) t
+let unboxBitVec (sz:int) t = 
+    elim_box true (snd (boxBitVecFun sz)) (fst (boxBitVecFun sz)) t
 let boxTerm sort t = match sort with
   | Int_sort -> boxInt t
   | Bool_sort -> boxBool t
   | String_sort -> boxString t
-  | Ref_sort -> boxRef t
+  | BitVec_sort sz -> boxBitVec sz t
   | _ -> raise Impos
 let unboxTerm sort t = match sort with
   | Int_sort -> unboxInt t
   | Bool_sort -> unboxBool t
   | String_sort -> unboxString t
-  | Ref_sort -> unboxRef t
+  | BitVec_sort sz -> unboxBitVec sz t  
   | _ -> raise Impos
+
+
+ let rec print_smt_term (t:term) :string = match t.tm with
+  | Integer n               -> BU.format1 "(Integer %s)" n
+  | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
+  | FreeV  fv               -> BU.format1 "(FreeV %s)" (fst fv)
+  | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
+  | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
+  | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
+  | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
+  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
+
+and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
+
+and print_smt_term_list_list (l:list<list<term>>) :string =
+    List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l
+
+let getBoxedInteger (t:term) =
+  match t.tm with
+  | App(Var s, [t2]) when s = fst boxIntFun ->
+    begin 
+    match t2.tm with
+    | Integer n -> Some (int_of_string n)
+    | _ -> None
+    end
+  | _ -> None
 
 let mk_PreType t      = mkApp("PreType", [t]) t.rng
 let mk_Valid t        = match t.tm with
@@ -739,8 +826,15 @@ let mk_Valid t        = match t.tm with
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_AmpAmp", [t1; t2])}]) -> mkAnd (unboxBool t1, unboxBool t2) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (unboxBool t1, unboxBool t2) t.rng
     | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t) t.rng
+    | App(Var "Prims.b2t", [{tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}])
+    | App(Var "Prims.equals", [_; {tm=App(Var "FStar.BV.bvult", [t0; t1;t2])}; _]) 
+            when (FStar.Util.is_some (getBoxedInteger t0))->
+        // sometimes b2t gets needlessly normalized...
+        let sz = match getBoxedInteger t0 with | Some sz -> sz | _ -> failwith "impossible" in
+        mkBvUlt (unboxBitVec sz t1, unboxBitVec sz t2) t.rng
     | App(Var "Prims.b2t", [t1]) -> {unboxBool t1 with rng=t.rng}
-    | _ -> mkApp("Valid",  [t]) t.rng
+    | _ -> 
+        mkApp("Valid",  [t]) t.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTyped v      = mkApp("IsTyped", [v]) norng
@@ -780,18 +874,3 @@ let mk_and_l l r = List.fold_right (fun p1 p2 -> mkAnd(p1, p2) r) l (mkTrue r)
 let mk_or_l l r = List.fold_right (fun p1 p2 -> mkOr(p1,p2) r) l (mkFalse r)
 
 let mk_haseq t = mk_Valid (mkApp ("Prims.hasEq", [t]) t.rng)
-
-let rec print_smt_term (t:term) :string = match t.tm with
-  | Integer n               -> BU.format1 "(Integer %s)" n
-  | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
-  | FreeV  fv               -> BU.format1 "(FreeV %s)" (fst fv)
-  | App (op, l)             -> BU.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
-  | Labeled(t, r1, r2)      -> BU.format2 "(Labeled '%s' %s)" r1 (print_smt_term t)
-  | LblPos(t, s)            -> BU.format2 "(LblPos %s %s)" s (print_smt_term t)
-  | Quant (qop, l, _, _, t) -> BU.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
-  | Let (es, body) -> BU.format2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
-
-and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
-
-and print_smt_term_list_list (l:list<list<term>>) :string =
-    List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l

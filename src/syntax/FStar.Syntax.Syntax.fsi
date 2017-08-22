@@ -25,20 +25,20 @@ open FStar
 open FStar.Util
 open FStar.Range
 open FStar.Ident
+open FStar.Dyn
 
 // JP: all these types are defined twice and every change has to be performed
 // twice (because of the .fs). TODO: move the type definitions into a standalone
 // fs without fsi, and move the helpers into syntaxhelpers.fs / syntaxhelpers.fsi
 
 (* Objects with metadata *)
-type withinfo_t<'a,'t> = {
+type withinfo_t<'a> = {
   v: 'a;
-  ty: 't;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-type var<'t>  = withinfo_t<lident,'t>
+type var  = withinfo_t<lident>
 (* Term language *)
 type sconst = FStar.Const.sconst
 
@@ -48,6 +48,12 @@ type pragma =
   | LightOff
 
 type memo<'a> = ref<option<'a>>
+
+//versioning for unification variables
+type version = {
+    major:int;
+    minor:int
+}
 
 type arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
@@ -59,11 +65,11 @@ type universe =
   | U_max   of list<universe>
   | U_bvar  of int
   | U_name  of univ_name
-  | U_unif  of Unionfind.uvar<option<universe>>
+  | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 
-type universe_uvar = Unionfind.uvar<option<universe>>
 type univ_names    = list<univ_name>
 type universes     = list<universe>
 type monad_name    = lident
@@ -79,7 +85,7 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        of binders*term*option<either<lcomp, residual_comp>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
+  | Tm_abs        of binders*term*option<residual_comp>          (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
@@ -87,7 +93,7 @@ type term' =
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
+  | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
@@ -117,10 +123,10 @@ and comp' =
   | Total  of typ * option<universe>
   | GTotal of typ * option<universe>
   | Comp   of comp_typ
-and term = syntax<term',term'>
+and term = syntax<term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
-and pat = withinfo_t<pat',term'>
-and comp = syntax<comp', unit>
+and pat = withinfo_t<pat'>
+and comp = syntax<comp'>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
@@ -134,7 +140,7 @@ and cflags =
   | LEMMA
   | CPS
   | DECREASES of term
-and uvar = Unionfind.uvar<uvar_basis<term>>
+and uvar = Unionfind.p_uvar<option<term>> * version
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
@@ -144,9 +150,7 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-and uvar_basis<'a> =
-  | Uvar
-  | Fixed of 'a
+  | Meta_alien         of dyn * string                           (* A blob embedded into syntax, with an annotation to print it *)
 and meta_source_info =
   | Data_app
   | Sequence
@@ -171,9 +175,8 @@ and subst_elt =
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
 and freenames = set<bv>
 and uvars     = set<(uvar*typ)>
-and syntax<'a,'b> = {
+and syntax<'a> = {
     n:'a;
-    tk:memo<'b>;
     pos:Range.range;
     vars:memo<free_vars>;
 }
@@ -183,15 +186,15 @@ and bv = {
     sort:term
 }
 and fv = {
-    fv_name :var<term>;
+    fv_name :var;
     fv_delta:delta_depth;
     fv_qual :option<fv_qual>
 }
 and free_vars = {
-    free_names:set<bv>;
-    free_uvars:uvars;
-    free_univs:set<universe_uvar>;
-    free_univ_names:fifo_set<univ_name>;
+    free_names:list<bv>;
+    free_uvars:list<(uvar*typ)>;
+    free_univs:list<universe_uvar>;
+    free_univ_names:list<univ_name>; //fifo
 }
 and lcomp = {
     eff_name: lident;
@@ -200,9 +203,12 @@ and lcomp = {
     comp: unit -> comp //a lazy computation
 }
 
-and residual_comp = lident * list<cflags> (* Residual of a computation type after typechecking *)
-                                          (* first component is the effect name *)
-                                          (* second component contains (an approximation of) the cflags *)
+(* Residual of a computation type after typechecking *)
+and residual_comp = {
+    residual_effect:lident;                (* first component is the effect name *)
+    residual_typ   :option<typ>;           (* second component: result type *)
+    residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
+}
 
 type tscheme = list<univ_name> * typ
 type freenames_l = list<bv>
@@ -210,8 +216,6 @@ type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_fv_set: unit -> set<lident>
-val new_uv_set: unit -> uvars
-val new_universe_uvar_set: unit -> set<universe_uvar>
 val new_universe_names_fifo_set: unit -> fifo_set<univ_name>
 
 type qualifier =
@@ -338,9 +342,9 @@ type sigelt' =
                        * typ
   | Sig_let            of letbindings
                        * list<lident>               //mutually defined
-                       * list<attribute>
   | Sig_main           of term
   | Sig_assume         of lident
+                       * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
   | Sig_new_effect_for_free of eff_decl
@@ -356,7 +360,8 @@ and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
     sigquals: list<qualifier>;
-    sigmeta:  sig_metadata
+    sigmeta:  sig_metadata;
+    sigattrs: list<attribute>
 }
 
 type sigelts = list<sigelt>
@@ -369,16 +374,16 @@ type modul = {
 }
 type path = list<string>
 type subst_t = list<subst_elt>
-type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
-type mk_t = mk_t_a<term',term'>
+type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
+type mk_t = mk_t_a<term'>
 
 val contains_reflectable:  list<qualifier> -> bool
 
-val withsort: 'a -> 'b -> withinfo_t<'a,'b>
-val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
+val withsort: 'a -> withinfo_t<'a>
+val withinfo: 'a -> Range.range -> withinfo_t<'a>
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-val mk: 'a -> Tot<mk_t_a<'a,'b>>
+val mk: 'a -> Tot<mk_t_a<'a>>
 
 val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
 val default_sigmeta: sig_metadata
@@ -387,7 +392,7 @@ val mk_Tm_app:      term -> args -> Tot<mk_t>
 val mk_Tm_uinst:    term -> universes -> term
 val extend_app:     term -> arg -> Tot<mk_t>
 val extend_app_n:   term -> args -> Tot<mk_t>
-val mk_Tm_delayed:  either<(term * subst_ts), (unit -> term)> -> Range.range -> term
+val mk_Tm_delayed:  (term * subst_ts) -> Range.range -> term
 val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
 val mk_Total':      typ -> option<universe> -> comp
@@ -401,6 +406,7 @@ val order_bv:        bv -> bv -> Tot<int>
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv
+val order_univ_name: univ_name -> univ_name -> Tot<int>
 
 val tun:      term
 val teff:     term
@@ -408,8 +414,6 @@ val is_teff:  term -> bool
 val is_type:  term -> bool
 
 val no_names:          freenames
-val no_uvs:            uvars
-val no_universe_uvars: set<universe_uvar>
 val no_universe_names: fifo_set<univ_name>
 val no_fvars:          set<lident>
 
@@ -451,3 +455,24 @@ val set_range_of_fv:fv -> range -> fv
 
 (* attributes *)
 val has_simple_attribute: list<term> -> string -> bool
+
+///////////////////////////////////////////////////////////////////////
+//Some common constants
+///////////////////////////////////////////////////////////////////////
+module C = FStar.Parser.Const
+val tconst        : lident -> term
+val tabbrev       : lident -> term
+val tdataconstr   : lident -> term
+val t_unit        : term
+val t_bool        : term
+val t_int         : term
+val t_string      : term
+val t_float       : term
+val t_char        : term
+val t_range       : term
+val t_tactic_unit : term
+val t_tac_unit    : term
+val t_list_of     : term -> term
+val t_option_of   : term -> term
+val unit_const    : term
+

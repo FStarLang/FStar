@@ -10,7 +10,7 @@ OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 all: platform.cmx
 
 clean:
-	rm -fr *~ *.cm* *.o
+	rm -fr *~ *.cm* *.o *.annot
 
 .ml.cmo:
 	$(OCAMLC) $(OCAMLFLAGS) -c $<
