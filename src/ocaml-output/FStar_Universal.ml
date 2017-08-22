@@ -490,7 +490,7 @@ let tc_one_file:
                      else
                        (let uu____1133 =
                           FStar_Util.format1
-                            "The file %s.checked is stale; delete it"
+                            "The file %s is stale; delete it"
                             cache_file in
                         failwith uu____1133))
           else tc_source_file ()
