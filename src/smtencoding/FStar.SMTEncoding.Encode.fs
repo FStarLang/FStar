@@ -2767,7 +2767,7 @@ let encode_query use_env_msg tcenv q
         @label_prefix
         @qdecls in
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
-    let suffix = label_suffix @ [Term.Echo "Done!"] in
+    let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     query_prelude, labels, qry, suffix
 
 let is_trivial (tcenv:Env.env) (q:typ) : bool =

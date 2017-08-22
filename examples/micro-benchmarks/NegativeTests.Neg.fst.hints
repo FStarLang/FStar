@@ -1,9 +1,6 @@
 [
   "Ë!\u001eV\u0018IÂí–Q€¹y$%ê",
   [
-    null,
-    null,
-    null,
     [
       "NegativeTests.Neg.assert_0_eq_1",
       2,
@@ -12,11 +9,7 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    null,
     [ "NegativeTests.Neg.test_label", 1, 2, 1, [ "@query" ], 0 ],
-    null,
-    null,
-    null,
     [
       "NegativeTests.Neg.TEST",
       1,
@@ -24,8 +17,6 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
-    ],
-    null,
-    null
+    ]
   ]
 ]
