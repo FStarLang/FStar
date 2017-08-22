@@ -13,20 +13,22 @@ module U = FStar.Syntax.Util
 type var = bv
 type sort = int
 
-type atom =
+//IN F*: type atom : Type0 =
+type atom = //JUST FSHARP
   | Var of var
   | Sort of sort
   | Prod of t * t
-  | Match of annot * t * t * (t -> t)
+  | Match of t * t * t * (t -> t)
   | Fix of (t -> t) * t * int
-and head =
+//IN F*: and t : Type0 =
+and t = //JUST FSHARP
   | Lam of (t -> t)
   | Accu of atom * list<t>
   | Construct of int * list<t>
   | Unit
   | Bool of bool
-and t = head
-and annot = t
+type head = t
+type annot = t
 
 let app (f:t) (x:t) =
     match f with
