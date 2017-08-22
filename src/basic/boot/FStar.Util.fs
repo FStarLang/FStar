@@ -69,7 +69,7 @@ let atomically (f:unit -> 'a) =
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
 
-let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
+let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
     let driverOutput = new StringBuilder() in
@@ -94,9 +94,11 @@ let start_process (id:string) (prog:string) (args:string) (cond:string -> string
                     if !killed then ()
                     else
                         ignore <| driverOutput.Append(args.Data);
-                        ignore <| driverOutput.Append("\n");
-                        if null = args.Data
-                            then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+                        if not raw then (
+                            ignore <| driverOutput.Append("\n");
+                            if null = args.Data
+                                then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+                        );
                         if null = args.Data || cond id args.Data
                         then
                             System.Threading.Monitor.Enter(signal);
@@ -149,8 +151,8 @@ let kill_process (p:proc) =
     System.Threading.Monitor.Exit(p.m);
     p.proc.WaitForExit()
 
-let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
-  let proc = start_process id prog args cond in
+let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
+  let proc = start_process raw id prog args cond in
   let output = ask_process proc input in
   kill_process proc; output
 
@@ -197,8 +199,8 @@ let set_is_empty ((s, _):set<'a>) =
     | [] -> true
     | _ -> false
 
-let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> =
-    ([], fun x y -> cmp x y = 0)
+let as_set (l:list<'a>) (cmp:('a -> 'a -> int)) = (l, fun x y -> cmp x y = 0)
+let new_set (cmp:'a -> 'a -> int) : set<'a> = as_set [] cmp
 
 let set_elements ((s1, eq):set<'a>) :list<'a> =
    let rec aux out = function
@@ -228,8 +230,11 @@ let fifo_set_is_empty ((s, _):fifo_set<'a>) =
     | [] -> true
     | _ -> false
 
-let new_fifo_set (cmp:'a -> 'a -> int) (hash:'a -> int) : fifo_set<'a> =
-    ([], fun x y -> cmp x y = 0)
+let as_fifo_set (l:list<'a>) (cmp:'a -> 'a -> int) : fifo_set<'a> =
+    (l, fun x y -> cmp x y = 0)
+
+let new_fifo_set (cmp:'a -> 'a -> int) : fifo_set<'a> =
+    as_fifo_set [] cmp
 
 (* The input list [s1] is in reverse order and we need to keep only the last       *)
 (* occurence of each elements in s1. Note that accumulating over such elements     *)
@@ -797,9 +802,23 @@ let print_endline x =
 let map_option f opt = Option.map f opt
 
 let save_value_to_file (fname:string) value =
-  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
-  use writer = new System.IO.StreamWriter(fname) in
-  output_value writer value
+  try
+    use writer = new System.IO.FileStream(fname,
+                                          FileMode.OpenOrCreate,
+                                          FileAccess.Write,
+                                          FileShare.Write) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    formatter.Serialize(writer, value)
+  with
+  | e ->
+    printfn "Failed to write value to file because: %A" e;
+    raise e
+
+//
+//  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`.
+//  //this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
+//  use writer = new System.IO.StreamWriter(fname) in
+//  output_value writer value
 
 let load_value_from_file (fname:string) =
   // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`.
@@ -813,7 +832,8 @@ let load_value_from_file (fname:string) =
     let result = formatter.Deserialize(reader) :?> 'a in
     Some result
   with
-  | _ ->
+  | e ->
+    printfn "Failed to load file because: %A" e;
     None
 
 let print_exn (e: exn): string =

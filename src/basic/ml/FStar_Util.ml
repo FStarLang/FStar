@@ -88,7 +88,7 @@ let write_input in_write input =
 
 (*let cnt = ref 0*)
 
-let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
+let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
   (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
   output_string fc input;
   close_out fc;*)
@@ -113,10 +113,18 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
     let s, eof = (try
                     BatString.trim (input_line cin), false
                   with End_of_file ->
-                    Buffer.add_string out ("\nkilled\n") ; "", true) in
-    if not eof then
-      if s = "Done!" then ()
-      else (Buffer.add_string out (s ^ "\n"); read_out ())  in
+                    if not raw then
+                        Buffer.add_string out ("\nkilled\n")
+                    else (); "", true) in
+    if not raw then (
+        if not eof then
+          if s = "Done!" then ()
+          else (Buffer.add_string out (s ^ "\n"); read_out ())
+    ) else (
+        if not eof then
+          (Buffer.add_string out s; read_out ())
+    )
+  in
   let child_thread = Thread.create (fun _ -> read_out ()) () in
 
   (* writing to z3 *)
@@ -128,7 +136,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   close_in cin;
   Buffer.contents out
 
-let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
+let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
   let (inc,outc) = Unix.open_process command in
   let proc = {inc = inc; outc = outc; killed = false; id = prog^":"^id} in
@@ -221,8 +229,8 @@ let set_is_empty ((s, _):'a set) =
   | [] -> true
   | _ -> false
 
-let new_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_set (l:'a list) (cmp:('a -> 'a -> Z.t)) = (l, fun x y -> cmp x y = Z.zero)
+let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
 
 let set_elements ((s1, eq):'a set) : 'a list =
   let rec aux out = function
@@ -233,6 +241,7 @@ let set_elements ((s1, eq):'a set) : 'a list =
        else
          aux (hd::out) tl in
   aux [] s1
+
 let set_add a ((s, b):'a set) = (a::s, b)
 let set_remove x ((s1, eq):'a set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
@@ -256,8 +265,11 @@ let fifo_set_is_empty ((s, _):'a fifo_set) =
   | [] -> true
   | _ -> false
 
-let new_fifo_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a fifo_set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_fifo_set (l:'a list) (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+  (l, fun x y -> cmp x y = Z.zero)
+
+let new_fifo_set (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+    as_fifo_set [] cmp
 
 let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
   let rec aux out = function

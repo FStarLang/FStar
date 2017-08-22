@@ -46,6 +46,10 @@ Guidelines for the changelog:
 * --hint_info and --print_z3_statistics are deprecated. They are
     subsumed by --query_stats.
 
+* --cache_checked_modules: writes out a .checked file from which the
+  typechecker can reconstruct its state, instead of re-verifying a
+  module every time
+
 ## Error reporting
 
 * The error reports from SMT query failures have been substantially
@@ -62,5 +66,17 @@ Guidelines for the changelog:
   should provide a faster workflow than using --detail_hint_replay
   (which still exists)
 
+## Miscellaneous
 
+* A file can now contain at most one module or interface
 
+## Tactics
+
+* Let bindings are now part of the reflected syntax (Tv_Let), and can be
+  inspected/created in the usual manner.
+
+* New primitive: `launch_process` which runs an external command
+  and returns its output. For security reasons, this only works if
+  `--unsafe_tactic_exec` is provided (which can only be set externally).
+
+* New primitive: `norm_term` to call the normalizer on a quoted term.

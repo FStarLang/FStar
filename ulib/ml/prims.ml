@@ -130,3 +130,20 @@ let __proj__Cons__item__tl = function
   | _     -> failwith "Impossible"
 
 let min = min
+
+type norm_step =
+    | Simpl
+    | WHNF
+    | Primops
+    | Delta
+    | Zeta
+    | Iota
+    | UnfoldOnly : string list -> norm_step
+
+let simpl   : norm_step = Simpl
+let whnf    : norm_step = WHNF
+let primops : norm_step = Primops
+let delta   : norm_step = Delta
+let zeta    : norm_step = Zeta
+let iota    : norm_step = Iota
+let delta_only (s:string list) : norm_step = UnfoldOnly s

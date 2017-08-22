@@ -1,12 +1,9 @@
-(*open FStar_Tactics_Effect*)
-open FStar_Tactics_Basic
-open FStar_Syntax_Syntax
-open FStar_Range
-
-open FStar_Tactics
 open FStar_Tactics_Builtins
 open FStar_Tactics_Derived
 open FStar_Tactics_Logic
+
+open FStar_Syntax_Syntax
+open FStar_Range
 
 module E = FStar_Tactics_Effect
 module B = FStar_Tactics_Basic
@@ -14,7 +11,7 @@ module BU = FStar_Util
 
 let r = dummyRange
 
-type itac = proofstate -> args -> term option
+type itac = B.proofstate -> args -> term option
 type native_primitive_step =
     { name: FStar_Ident.lid;
       arity: Prims.int;
@@ -37,30 +34,30 @@ let register_tactic (s: string) (arity: int) (t: itac)=
     compiled_tactics := step :: !compiled_tactics;
     BU.print1 "Registered tactic %s\n" s
 
-let interpret_tactic (ps: proofstate) (t: proofstate -> 'a E.__result) =
+let interpret_tactic (ps: B.proofstate) (t: B.proofstate -> 'a E.__result) =
     match t ps with
     | E.Success (a, state) -> B.Success (a, state)
     | E.Failed (s, state) -> B.Failed (s, state)
 
-let from_tactic_0 (t: 'b E.tactic): ('b tac) =
-    (fun (ps: proofstate) ->
+let from_tactic_0 (t: 'b E.tactic): ('b B.tac) =
+    (fun (ps: B.proofstate) ->
         print_string "In compiled code\n";
         let m = t () in
-        interpret_tactic ps m) |> mk_tac
+        interpret_tactic ps m) |> B.mk_tac
 
-let from_tactic_1 (t: 'a -> 'b E.tactic): ('a -> 'b tac) =
+let from_tactic_1 (t: 'a -> 'b E.tactic): ('a -> 'b B.tac) =
     fun (x: 'a) ->
-        (fun (ps: proofstate) ->
+        (fun (ps: B.proofstate) ->
             print_string "In compiled code\n";
             let m = t x in
-            let (m2: proofstate -> 'b E.__result) = m () in
-            interpret_tactic ps m2) |> mk_tac
+            let (m2: B.proofstate -> 'b E.__result) = m () in
+            interpret_tactic ps m2) |> B.mk_tac
 
-let from_tactic_2 (t: 'a -> 'b -> 'c E.tactic): ('a -> 'b -> 'c tac) =
+let from_tactic_2 (t: 'a -> 'b -> 'c E.tactic): ('a -> 'b -> 'c B.tac) =
     fun (x: 'a) ->
         fun (y: 'b) ->
-            (fun (ps: proofstate) ->
+            (fun (ps: B.proofstate) ->
                 print_string "In compiled code\n";
                 let m = t x y in
-                let (m2: proofstate -> 'c E.__result) = m () in
-                interpret_tactic ps m2) |> mk_tac
+                let (m2: B.proofstate -> 'c E.__result) = m () in
+                interpret_tactic ps m2) |> B.mk_tac

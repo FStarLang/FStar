@@ -977,15 +977,21 @@ let un_squash t =
       None
 
 let arrow_one (t:typ) : option<(binder * comp)> =
-    match (compress t).n with
-    | Tm_arrow ([], c) ->
-        failwith "fatal: empty binders on arrow?"
-    | Tm_arrow ([b], c) ->
-        Some (b, c)
-    | Tm_arrow (b::bs, c) ->
-        Some (b, mk_Total (arrow bs c))
-    | _ ->
-        None
+    bind_opt (match (compress t).n with
+              | Tm_arrow ([], c) ->
+                  failwith "fatal: empty binders on arrow?"
+              | Tm_arrow ([b], c) ->
+                  Some (b, c)
+              | Tm_arrow (b::bs, c) ->
+                  Some (b, mk_Total (arrow bs c))
+              | _ ->
+                  None) (fun (b, c) ->
+    let bs, c = Subst.open_comp [b] c in
+    let b = match bs with
+            | [b] -> b
+            | _ -> failwith "impossible: open_comp returned different amount of binders"
+    in
+    Some (b, c))
 
 let is_free_in (bv:bv) (t:term) : bool =
     U.set_mem bv (FStar.Syntax.Free.names t)

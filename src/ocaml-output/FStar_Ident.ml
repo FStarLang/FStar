@@ -139,5 +139,12 @@ let lid_add_suffix : lident -> Prims.string -> lident =
       let path = path_of_lid l  in
       lid_of_path (FStar_List.append path [s]) (range_of_lid l)
   
+let ml_path_of_lid : lident -> Prims.string =
+  fun lid  ->
+    let uu____345 =
+      let uu____348 = path_of_ns lid.ns  in
+      FStar_List.append uu____348 [text_of_id lid.ident]  in
+    FStar_All.pipe_left (FStar_String.concat "_") uu____345
+  
 let string_of_lid : lident -> Prims.string =
-  fun lid  -> let uu____345 = path_of_lid lid  in text_of_path uu____345 
+  fun lid  -> let uu____357 = path_of_lid lid  in text_of_path uu____357 

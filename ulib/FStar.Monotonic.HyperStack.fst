@@ -311,7 +311,7 @@ let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
    = ()
    
 ////////////////////////////////////////////////////////////////////////////////
-#set-options "--initial_fuel 0 --max_fuel 0 --log_queries"
+#set-options "--initial_fuel 0 --max_fuel 0"
 let f (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder nat)
                           (x:mreference a rel_a) (x':mreference a rel_a) 
 			  (y:mreference b rel_b) (z:mreference nat rel_n) 

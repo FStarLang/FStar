@@ -112,6 +112,7 @@ let defaults =
       ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
+      ("cache_checked_modules"        , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
@@ -129,6 +130,7 @@ let defaults =
       ("fs_typ_app"                   , Bool false);
       ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
+      ("gen_native_tactics"           , Unset);
       ("hide_genident_nums"           , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
@@ -151,6 +153,7 @@ let defaults =
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
+      ("no_tactics"                   , Bool false);
       ("odir"                         , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
@@ -176,9 +179,10 @@ let defaults =
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
       ("unthrottle_inductives"        , Bool false);
+      ("unsafe_tactic_exec"           , Bool false);
+      ("use_native_tactics"           , Unset);
       ("use_eq_at_higher_order"       , Bool false);
       ("use_hints"                    , Bool false);
-      ("no_tactics"                   , Bool false);
       ("using_facts_from"             , Unset);
       ("verify"                       , Bool true);
       ("verify_all"                   , Bool false);
@@ -215,6 +219,7 @@ let lookup_opt s c =
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
+let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
@@ -231,6 +236,7 @@ let get_extract_module          ()      = lookup_opt "extract_module"           
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
+let get_gen_native_tactics      ()      = lookup_opt "gen_native_tactics"       (as_option as_string)
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
@@ -276,8 +282,10 @@ let get_split_cases             ()      = lookup_opt "split_cases"              
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
+let get_unsafe_tactic_exec      ()      = lookup_opt "unsafe_tactic_exec"       as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
+let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
 let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
@@ -389,6 +397,10 @@ let rec specs () : list<Getopt.opt> =
          OneArg (mk_string, "[id]"),
         "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
 
+      ( noshort,
+        "cache_checked_modules",
+        ZeroArgs (fun () -> mk_bool true),
+        "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
 
       ( noshort,
         "codegen",
@@ -475,6 +487,12 @@ let rec specs () : list<Getopt.opt> =
         OneArg (mk_path,
                 "[dir]"),
         "Set the FSTAR_HOME variable to [dir]");
+
+       ( noshort,
+         "gen_native_tactics",
+         OneArg (mk_path,
+                 "[path]"),
+        "Compile all user tactics used in the module in <path>");
 
        ( noshort,
         "hide_genident_nums",
@@ -732,6 +750,12 @@ let rec specs () : list<Getopt.opt> =
         "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
 
        ( noshort,
+        "unsafe_tactic_exec",
+        ZeroArgs (fun () -> mk_bool true),
+        "Allow tactics to run external processes. WARNING: checking an untrusted F* file while \
+         using this options can have disastrous effects.");
+
+       ( noshort,
         "use_eq_at_higher_order",
         ZeroArgs (fun () -> mk_bool true),
         "Use equality constraints when comparing higher-order types (Temporary)");
@@ -740,6 +764,12 @@ let rec specs () : list<Getopt.opt> =
         "use_hints",
         ZeroArgs (fun () -> mk_bool true),
         "Use a previously recorded hints database for proof replay");
+
+       ( noshort,
+         "use_native_tactics",
+         OneArg (mk_path,
+                 "[path]"),
+        "Use compiled tactics from <path>");
 
        ( noshort,
         "no_tactics",
@@ -866,6 +896,7 @@ let settable = function
     | "initial_ifuel"
     | "inline_arith"
     | "lax"
+    | "load"
     | "log_types"
     | "log_queries"
     | "max_fuel"
@@ -956,6 +987,11 @@ let restore_cmd_line_options should_clear =
     set_option' ("verify_module", List (List.map mk_string old_verify_module));
     r
 
+let module_name_of_file_name f =
+    let f = basename f in
+    let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
+    String.lowercase f
+
 let should_verify m =
   if get_lax () then
     false
@@ -967,13 +1003,11 @@ let should_verify m =
          * meaning that this case is only called when in [--explicit_deps] mode.
          * If we could remove [--explicit_deps], there would be less complexity
          * here. *)
-        List.existsML (fun f ->
-          let f = basename f in
-          let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
-          String.lowercase f = m
-        ) (file_list ())
+        List.existsML (fun f -> module_name_of_file_name f = m) (file_list ())
     | l ->
         List.contains (String.lowercase m) l
+
+let should_verify_file fn = should_verify (module_name_of_file_name fn)
 
 let dont_gen_projectors m = List.contains m (get___temp_no_proj())
 
@@ -1042,6 +1076,7 @@ let prepend_output_dir fname =
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
+let cache_checked_modules        () = get_cache_checked_modules       ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
@@ -1055,6 +1090,7 @@ let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
 let extract_all                  () = get_extract_all                 ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
+let gen_native_tactics           () = get_gen_native_tactics          ()
 let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
@@ -1103,8 +1139,10 @@ let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
+let unsafe_tactic_exec           () = get_unsafe_tactic_exec          ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
+let use_native_tactics           () = get_use_native_tactics          ()
 let use_tactics                  () = get_use_tactics                 ()
 let using_facts_from             () = get_using_facts_from            ()
 let verify_all                   () = get_verify_all                  ()

@@ -349,6 +349,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
               MLM_Top app in
 
+            // Don't even bother when NoExtract is present. cf. Issue #54 in Kremlin
+            if List.contains S.NoExtract quals then [] else
+
             (match (snd lbs) with
              | [hd] ->
                 let bs, comp = U.arrow_formals_comp hd.lbtyp in
@@ -456,7 +459,14 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
   if Options.debug_any ()
   then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
+  let codegen_opt = Options.codegen () in
   let _ = Options.restore_cmd_line_options true in
+  (* since command line options are reset, need to set OCaml extraction for when
+     extraction is driven from the F* compiler itself; currently this is only the case for
+     automatic tactic compilation *)
+  let _ = match codegen_opt with
+    | Some "OCaml" -> Options.set_option "codegen" (Options.String "OCaml")
+    | _ -> () in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
                   currentModule = name} in

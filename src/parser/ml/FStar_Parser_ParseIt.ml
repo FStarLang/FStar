@@ -75,19 +75,19 @@ let parse fn =
   try
       let fileOrFragment = FStar_Parser_Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
-          | U.Inl mods ->
+          | U.Inl modul ->
              if has_extension filename interface_extensions
-             then U.Inl (mods |> FStar_List.map (function
+             then match modul with
                   | FStar_Parser_AST.Module(l,d) ->
-                    FStar_Parser_AST.Interface(l, d, true)
-                  | _ -> failwith "Impossible"))
-             else U.Inl mods
+                    U.Inl (FStar_Parser_AST.Interface(l, d, true))
+                  | _ -> failwith "Impossible"
+             else U.Inl modul
           | _ -> fileOrFragment
       in
       U.Inl (frags, FStar_Parser_LexFStar.flush_comments ())
   with
     | FStar_Errors.Empty_frag ->
-      U.Inl (U.Inl [], [])
+      U.Inr ("Empty module", FStar_Range.dummyRange)
 
     | FStar_Errors.Error(msg, r) ->
       U.Inr (msg, r)

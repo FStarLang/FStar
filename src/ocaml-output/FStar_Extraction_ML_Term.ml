@@ -1062,8 +1062,8 @@ let rec extract_one_pat :
                                 p.FStar_Syntax_Syntax.p i
                                in
                             FStar_All.pipe_left
-                              (fun _0_43  ->
-                                 FStar_Extraction_ML_Syntax.MLE_Const _0_43)
+                              (fun _0_44  ->
+                                 FStar_Extraction_ML_Syntax.MLE_Const _0_44)
                               uu____3145
                              in
                           FStar_All.pipe_left
@@ -1684,8 +1684,8 @@ and term_as_mlexpr' :
                         t.FStar_Syntax_Syntax.pos c
                        in
                     FStar_All.pipe_left
-                      (fun _0_44  ->
-                         FStar_Extraction_ML_Syntax.MLE_Const _0_44)
+                      (fun _0_45  ->
+                         FStar_Extraction_ML_Syntax.MLE_Const _0_45)
                       uu____5544
                      in
                   FStar_Extraction_ML_Syntax.with_ty ml_ty uu____5543  in

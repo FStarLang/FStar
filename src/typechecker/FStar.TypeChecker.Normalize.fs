@@ -39,6 +39,7 @@ module FC = FStar.Const
 module PC = FStar.Parser.Const
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
+module EMB = FStar.Syntax.Embeddings
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -820,29 +821,21 @@ let is_norm_request hd args =
 
     | _ -> false
 
+let tr_norm_step = function
+    | EMB.Zeta ->    [Zeta]
+    | EMB.Iota ->    [Iota]
+    | EMB.Delta ->   [UnfoldUntil Delta_constant]
+    | EMB.Simpl ->   [Simplify]
+    | EMB.WHNF ->    [WHNF]
+    | EMB.Primops -> [Primops]
+    | EMB.UnfoldOnly names ->
+        [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+
+let tr_norm_steps s =
+    List.concatMap tr_norm_step s
+
 let get_norm_request (full_norm:term -> term) args =
-    let parse_steps s =
-        let unembed_step s =
-            match (U.un_uinst s).n with
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_zeta ->
-              Zeta
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_iota ->
-              Iota
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_primops ->
-              Primops
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_delta ->
-              UnfoldUntil Delta_constant
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_delta_only ->
-              UnfoldUntil Delta_constant
-            | Tm_app({n=Tm_fvar fv}, [(names, _)])
-                when S.fv_eq_lid fv PC.steps_delta_only ->
-              let names = FStar.Syntax.Embeddings.unembed_string_list names in
-              let lids = names |> List.map Ident.lid_of_str in
-              UnfoldOnly lids
-            | _ -> failwith "Not an embedded `Prims.step`"
-        in
-        FStar.Syntax.Embeddings.unembed_list unembed_step s
-    in
+    let parse_steps s = tr_norm_steps <| EMB.unembed_list EMB.unembed_norm_step s in
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
@@ -990,6 +983,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | _ -> should_delta
                 end
             in
+
+            log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
+                            (Print.term_to_string t)
+                            (Range.string_of_range t.pos)
+                            (string_of_bool should_delta));
 
             if not should_delta
             then rebuild cfg env stack t
