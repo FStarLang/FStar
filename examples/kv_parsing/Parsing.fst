@@ -20,14 +20,21 @@ module Cast = FStar.Int.Cast
 
 type byte = U8.t
 let bytes = seq byte
+/// the abstract model of input is a sequence of bytes, with a limit on size so
+/// offsets always fit in a UInt32.t
 let bytes32 = bs:bytes{length bs < pow2 32}
 
 /// parse a value of type t
+///
 /// - the parser can fail (currently reporting an uninformative [None])
 /// - it returns the parsed value as well as the number of bytes read
 ///   (this is intended to be the number of bytes to advance the input pointer)
+///
 /// note that the type does not forbid lookahead; the parser can depend on
 /// values beyond the returned offset
+///
+/// these parsers are used as specifications, and thus use unrepresentable types
+/// such as byte sequences and natural numbers and are always pure
 let parser (t:Type) = b:bytes32 -> Tot (option (t * n:nat{n <= length b}))
 
 /// monadic bind for the parser monad
@@ -61,6 +68,7 @@ let parse_result (#t:Type) (#b:bytes)
   (r: option (t * n:nat{n <= length b}){Some? r}) : t =
   fst (Some?.v r)
 
+/// repeat a parser `n` times, collecting all the results
 val parse_many : #t:Type -> p:parser t -> n:nat -> parser (l:list t{List.length l == n})
 let rec parse_many #t p n =
   match n with
@@ -70,6 +78,32 @@ let rec parse_many #t p n =
       (fun v -> parse_many #t p n' `and_then`
       (fun l -> parse_ret #(l:list t{List.length l == n}) (v::l)))
 
+/// A stateful parser that implements the same behavior as a pure parser. This
+/// includes both the output and offset. The specification parser is an erased
+/// type index; erasure helps guide extraction. The type is inlined for
+/// extraction to make it clear that parsers are first-order functions taking a
+/// buffer as input (as opposed to higher-order implementations that return a
+/// function).
+inline_for_extraction
+let parser_st #t (p: erased (parser t)) =
+  input:bslice -> Stack (option (t * off:U32.t{U32.v off <= U32.v input.len}))
+  (requires (fun h0 -> live h0 input))
+  (ensures (fun h0 r h1 -> live h1 input /\
+            modifies_none h0 h1 /\
+            (let bs = as_seq h1 input in
+            match reveal p bs with
+            | Some (v, n) -> Some? r /\
+              begin
+                let (rv, off) = Some?.v r in
+                  v == rv /\ n == U32.v off
+              end
+            | None -> r == None)))
+
+/// A stateful parser much like parser_st, except that error cases are
+/// precluded. The precondition includes that the specification parser succeeds
+/// on the input, and under this assumption a parser_st_nochk does not fail and
+/// has the same behavior as the specification parser. The implementation need
+/// not make error checks since those cases are impossible.
 inline_for_extraction
 let parser_st_nochk #t (p: erased (parser t)) =
   input:bslice -> Stack (t * off:U32.t{U32.v off <= U32.v input.len})
@@ -85,26 +119,20 @@ let parser_st_nochk #t (p: erased (parser t)) =
                        v == rv /\
                        n == U32.v off))))
 
-inline_for_extraction
-let parser_st #t (p: erased (parser t)) =
-  input:bslice -> Stack (option (t * off:U32.t{U32.v off <= U32.v input.len}))
-  (requires (fun h0 -> live h0 input))
-  (ensures (fun h0 r h1 -> live h1 input /\
-          modifies_none h0 h1 /\
-          (let bs = as_seq h1 input in
-            match reveal p bs with
-            | Some (v, n) -> Some? r /\
-              begin
-                let (rv, off) = Some?.v r in
-                  v == rv /\ n == U32.v off
-              end
-            | None -> r == None)))
-
+/// A validation is an [option U32.t], where [Some off] indicates success and
+/// consumes [off] bytes. A validation checks a parse result if it returns [Some
+/// off] only when the parser also succeeds and returns the same offset, with
+/// any result. Note that a validation need not be complete (in particular,
+/// [None] validates any parse).
 unfold let validation_checks_parse #t (b: bytes)
   (v: option (off:U32.t{U32.v off <= length b}))
   (p: option (t * n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
 
+/// A stateful validator is parametrized by a specification parser. A validator
+/// does not produce a value but only checks that the data is valid. The
+/// specification ensures that when a validator accepts the input the parser
+/// would succeed on the same input.
 inline_for_extraction
 let stateful_validator #t (p: erased (parser t)) =
   input:bslice ->
@@ -117,6 +145,10 @@ let stateful_validator #t (p: erased (parser t)) =
 
 #reset-options "--z3rlimit 15 --max_fuel 1 --max_ifuel 1"
 
+/// Validators can be composed monoidally, checking two parsers in sequence.
+/// This only works when there is no structural dependency: the two parsers
+/// always run one after the other. This validator will check any combination of
+/// the results of the two parsers.
 [@"substitute"]
 let then_check #t (p: erased (parser t)) (v: stateful_validator p)
                 #t' (p': erased (parser t')) (v': stateful_validator p')
@@ -283,6 +315,7 @@ let for_readonly #t init start finish #a buf inv f =
   B.lemma_modifies_0_push_pop h0 h1 h2 h3;
   (i, v, break)
 
+/// Validate a sequence of values from a parser (corresponding to parse_many).
 inline_for_extraction [@"substitute"]
 val validate_many_st (#t:Type) (p:erased (parser t)) (v:stateful_validator p) (n:U32.t) :
     stateful_validator (elift1 (fun p -> (parse_many p (U32.v n))) p)
@@ -302,49 +335,3 @@ let validate_many_st #t p v n = fun buf ->
           end
         | None -> (off, true)) in
     if failed then None else Some off
-
-let offset_into (buf:bslice) = off:U32.t{U32.v off <= U32.v buf.len}
-
-let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem) :
-    Pure Type0
-    (requires (live h1 buf))
-    (ensures (fun _ -> True)) =
-    match r with
-    | Some off ->
-      let (b1, b2) = bslice_split_at buf off in
-      modifies_slice b1 h0 h1 /\
-      as_seq h1 b1 == enc
-    | None ->
-      modifies_slice buf h0 h1
-
-let buffer_fun (inputs:erased (TSet.set bslice)) =
-    f:(h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b} -> GTot bytes){
-      forall (h0 h1: h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b}).
-      (forall b. TSet.mem b (reveal inputs) ==> as_seq h0 b == as_seq h1 b) ==>
-      f h0 == f h1}
-
-let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
-  forall b. TSet.mem b inputs ==> live h b /\ B.disjoint b.p buf.p
-
-inline_for_extraction
-let serializer_any (inputs:erased (TSet.set bslice))
-                   (enc: buffer_fun inputs) =
-  buf:bslice ->
-  Stack (option (off:offset_into buf))
-     (requires (fun h0 -> live h0 buf /\
-                       disjoint_in h0 (reveal inputs) buf))
-     (ensures (fun h0 r h1 ->
-        live h0 buf /\
-        live h1 buf /\
-        (forall b. TSet.mem b (reveal inputs) ==>
-           live h0 b /\
-           live h1 b /\
-           as_seq h0 b == as_seq h1 b) /\
-        serialized (enc h1) buf r h0 h1))
-
-inline_for_extraction
-let serializer (enc:erased bytes) = serializer_any (hide TSet.empty) (fun _ -> reveal enc)
-
-inline_for_extraction
-let serializer_1 (input:bslice) (enc: buffer_fun (hide (TSet.singleton input))) =
-    serializer_any (hide (TSet.singleton input)) (fun h -> enc h)

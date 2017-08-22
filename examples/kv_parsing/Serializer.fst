@@ -183,7 +183,7 @@ let join_adjacent_stable (b1 b2 b':bslice) :
 val writer_append (w:writer) (e:entry_st) : Stack (option writer)
        (requires (fun h0 -> writer_inv h0 w /\
                          entry_live h0 e /\
-                         disjoint_in h0 (entry_st_bufs e) w.entries_scratch ))
+                         disjoint_from h0 (entry_st_bufs e) w.entries_scratch ))
        (ensures (fun h0 w' h1 ->
                 Some? w' ==>
                 begin
