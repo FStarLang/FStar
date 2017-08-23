@@ -206,26 +206,37 @@ ulib:
 
 # Create a zip / tar.gz package of FStar that contains a Z3 binary and
 # proper license files.
-package: all ulib
+package: all
+	$(MAKE) ulib
         # Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
         # Install the F* binary
 	mkdir -p $(PREFIX)/bin/
 	$(INSTALL_EXEC) -m 755 _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
-        # Then the rest of the static files.
+        # Then the standard library.
 	$(call fexport,ulib)
+	# Do not provide ml/fs sources, however. From ulib/ml, only
+	# preserve Makefile.include
+	mv $(PREFIX)/ulib/ml/Makefile.include $(PREFIX)/ulib/ml_Makefile.include
+	rm -rf $(PREFIX)/ulib/ml $(PREFIX)/ulib/fs
+	mkdir -p $(PREFIX)/ulib/ml
+	mv $(PREFIX)/ulib/ml_Makefile.include $(PREFIX)/ulib/ml/Makefile.include
+	# Only provide the Makefile suited for verification
+	rm -f $(PREFIX)/ulib/Makefile
+	mv $(PREFIX)/ulib/Makefile.verify $(PREFIX)/ulib/Makefile
+	# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
 	$(call fexport-all,bin/fstarlib)
-	touch $(PREFIX)/ulib/.mgen
 
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C fstar/doc/tutorial
 else
-	@echo " ********** WARNING: You don't have Madoko installed. Binary package will not include tutorial in html form."
+	@echo " ********** You don't have Madoko installed. Binary package will not include tutorial in html form."
+	false
 endif
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
@@ -234,10 +245,8 @@ endif
         # Some new things used by examples/Makefile
 	mkdir -p $(PREFIX)/src/gmake/
 	cp ../../src/gmake/*.mk $(PREFIX)/src/gmake/
-        # Because we'll be building fstarlib in the resulting directory, somehow?
-	cp ../../_tags $(PREFIX)
-	mkdir -p $(PREFIX)/bin/fstarlib
-	cp ../../bin/fstarlib/META $(PREFIX)/bin/fstarlib/
+
+	# Z3
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin
 	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(PREFIX)/bin
