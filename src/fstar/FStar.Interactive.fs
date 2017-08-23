@@ -829,7 +829,7 @@ let run_compute st term rules =
     | None -> (QueryNOK, JsonStr "Current module unset")
     | _ ->
       match parse frag with
-      | None -> (QueryNOK, JsonStr "Count not parse this term")
+      | None -> (QueryNOK, JsonStr "Could not parse this term")
       | Some decls ->
         try
           let decls = desugar dsenv decls in
