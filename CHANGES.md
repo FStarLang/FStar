@@ -80,3 +80,14 @@ Guidelines for the changelog:
   `--unsafe_tactic_exec` is provided (which can only be set externally).
 
 * New primitive: `norm_term` to call the normalizer on a quoted term.
+
+* [commit
+  FStar@06948088](https://github.com/FStarLang/FStar/commit/0694808861d2428b2a552e3291c643b2d13b2fcc)
+  The tactics normalization interface is now on par with the normalization
+  available to the type checker. This included some backwards-incompatible
+  changes to how reduction steps are referenced in tactics. See [the changes to
+  Normalization.fst](https://github.com/FStarLang/FStar/commit/0694808861d2428b2a552e3291c643b2d13b2fcc#diff-a06134671d813bd28252d8520210edb5)
+  for some examples. The biggest breaking change is that `UnfoldOnly` (which
+  used to take a `list fv`) has been replaced with `delta_only`, which takes a
+  single definition as a `list string` (use multiple steps to include several
+  definitions). The other reduction steps are nullary and have simply been renamed.

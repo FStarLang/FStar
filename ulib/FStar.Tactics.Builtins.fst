@@ -56,13 +56,16 @@ assume private val __norm  : list norm_step -> __tac unit
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized
 by the flags in [steps].
-Currently, the flags (defined in FStar.Reflection.Syntax) are
-[Simpl] (do logical simplifications)
-[WHNF] (only reduce until weak head-normal-form)
-[Primops] (performing primitive reductions, such as arithmetic and
+Currently, the flags (provided in Prims) are
+[simpl] (do logical simplifications)
+[whnf] (only reduce until weak head-normal-form)
+[primops] (performing primitive reductions, such as arithmetic and
 string operations)
-[Delta] (unfold names)
-[UnfoldOnly] (restricts unfolding to those names)
+[delta] (unfold names)
+[zeta] (inline let bindings)
+[iota] (reduce match statements over constructors)
+[delta_only] (restrict delta to only unfold identifiers supplied using
+             [delta_only] steps)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
