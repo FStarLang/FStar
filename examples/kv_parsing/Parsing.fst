@@ -343,3 +343,12 @@ val normalize : #t:Type -> list norm_step -> t -> tactic unit
 let normalize (#t:Type) (steps : list norm_step) (x:t) : tactic unit =
   x <-- quote x;
   exact (norm_term (List.append steps [delta; primops]) x)
+
+// original implementation, which behaves slightly differently
+noextract
+val normalize' : #t:Type -> list norm_step -> t -> tactic unit
+let normalize' (#t:Type) (steps : list norm_step) (x:t) : tactic unit =
+  dup;;
+  exact (quote x);;
+  norm (FStar.List.Tot.append steps [delta; primops]);;
+  trefl

@@ -338,7 +338,24 @@ let ser_numbers_data ns =
   | OneNum n -> ser_OneNum n
   | TwoNums n m -> ser_TwoNums n m
 
+val ser_numbers_data': numbers -> serializer_ty
+let ser_numbers_data' ns =
+  fun buf -> match ns with
+          | Nothing -> ser_Nothing buf
+          | OneNum n -> ser_OneNum n buf
+          | TwoNums n m -> ser_TwoNums n m buf
+
+// this is the same as ser_numbers_data; haven't synthesized the eta expansion
+let ser_numbers_data'' ns : serializer_ty =
+    synth_by_tactic (normalize' [delta_only
+                                ["EnumParsing.ser_numbers_data"]] (ser_numbers_data ns <: serializer_ty))
+
 val ser_numbers: ns:numbers -> serializer (hide (encode_numbers ns))
 let ser_numbers ns = fun buf ->
   (ser_numbers_tag (numbers_tag_val ns) `ser_append`
    ser_numbers_data ns) buf
+
+let ser_numbers' ns : serializer_ty =
+  synth_by_tactic (normalize' [delta_only
+                  ["EnumParsing.ser_numbers";
+                   "Serializing.ser_append"]] (ser_numbers ns <: serializer_ty))
