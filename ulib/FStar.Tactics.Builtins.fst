@@ -64,8 +64,7 @@ string operations)
 [delta] (unfold names)
 [zeta] (inline let bindings)
 [iota] (reduce match statements over constructors)
-[delta_only] (restrict delta to only unfold identifiers supplied using
-             [delta_only] steps)
+[delta_only] (restrict delta to only unfold this list of fully-qualfied identifiers)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 

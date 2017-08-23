@@ -89,5 +89,5 @@ Guidelines for the changelog:
   Normalization.fst](https://github.com/FStarLang/FStar/commit/0694808861d2428b2a552e3291c643b2d13b2fcc#diff-a06134671d813bd28252d8520210edb5)
   for some examples. The biggest breaking change is that `UnfoldOnly` (which
   used to take a `list fv`) has been replaced with `delta_only`, which takes a
-  single definition as a `list string` (use multiple steps to include several
-  definitions). The other reduction steps are nullary and have simply been renamed.
+  list of fully-qualfied identifiers (eg, `FStar.Map.map`). The other reduction
+  steps are nullary and have simply been renamed.
