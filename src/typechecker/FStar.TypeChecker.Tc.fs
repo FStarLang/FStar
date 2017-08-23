@@ -1625,6 +1625,14 @@ let check_exports env (modul:modul) exports =
     then ()
     else List.iter check_sigelt exports
 
+let load_checked_module env modul =
+  let env = Env.set_current_module env modul.name in
+  let env = List.fold_left Env.push_sigelt env modul.exports in
+  let env = Env.finish_module env modul in
+  env.solver.encode_modul env modul;
+  env.solver.refresh();
+  let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+  env
 
 let finish_partial_modul env modul exports =
   let modul = {modul with exports=exports; is_interface=modul.is_interface} in
