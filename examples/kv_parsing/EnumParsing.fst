@@ -332,7 +332,9 @@ let unfold_only (ns:list (list string)) : Tot (list norm_step) =
 #reset-options "--lax"
 
 let ser_TwoNums'' (n m:U32.t) : serializer_ty =
-  synth_by_tactic (normalize [delta; Prims.simpl; primops] (ser_TwoNums n m <: serializer_ty))
+  synth_by_tactic (normalize [delta; Prims.simpl; primops;
+                  delta_only ["EnumParsing.ser_TwoNums";
+                              "Serializing.ser_append"]] (ser_TwoNums n m <: serializer_ty))
 
 #reset-options
 
