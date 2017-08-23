@@ -134,7 +134,7 @@ open FStar_String
 %token SEMICOLON
 %token SEMICOLON_SEMICOLON
 %token SQUIGGLY_RARROW
-%token <bytes> STRING
+%token <string> STRING
 %token SUBKIND
 %token SUBTYPE
 %token SUB_EFFECT
@@ -286,7 +286,7 @@ option_string_:
     {let s0 = $1 in
 let x =
   let s = s0 in
-               ( string_of_bytes s )
+               ( s )
 in
     ( Some x )}
 
@@ -619,7 +619,7 @@ pragma:
     {let (_1, s0) = ((), $2) in
 let s =
   let s = s0 in
-               ( string_of_bytes s )
+               ( s )
 in
       ( SetOptions s )}
 | PRAGMA_RESET_OPTIONS option_string_

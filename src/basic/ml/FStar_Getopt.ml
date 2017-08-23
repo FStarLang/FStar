@@ -2,7 +2,7 @@ let noshort='\000'
 type 'a opt_variant =
   | ZeroArgs of (unit -> 'a)
   | OneArg of (string -> 'a) * string
-type 'a opt' = char * string * 'a opt_variant * string
+type 'a opt' = BatUChar.t * string * 'a opt_variant * string
 type opt = unit opt'
 type parse_cmdline_res =
   | Help

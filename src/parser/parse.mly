@@ -23,7 +23,7 @@ open FStar_String
 %}
 
 %token <bytes> BYTEARRAY
-%token <bytes> STRING
+%token <string> STRING
 %token <string> IDENT
 %token <string> NAME
 %token <string> TVAR
@@ -929,7 +929,7 @@ atomicUniverse:
 /******************************************************************************/
 
 %inline string:
-  | s=STRING { string_of_bytes s }
+  | s=STRING { s }
 
 %inline operator:
   | op=OPPREFIX

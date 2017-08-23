@@ -236,7 +236,7 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Unit -> "()"
   | MLC_Bool true  -> "true"
   | MLC_Bool false -> "false"
-  | MLC_Char c -> "'"^ escape_or escape_char_hex c ^"'"
+  | MLC_Char c -> "(UChar.chr " ^ (string_of_int (Char.int_of_char c)) ^ " (*" ^ (string_of_char c) ^" *))"
   | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))

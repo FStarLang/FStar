@@ -1,5 +1,6 @@
 open FStar_Parser_Parse
 
+module UChar = BatUChar
 module Option  = BatOption
 module String  = BatString
 module Hashtbl = BatHashtbl

@@ -47,7 +47,7 @@ let intern_string : string -> string =
       | Some res -> res
       | None -> Util.smap_add strings s s; s
 
-let default_string_finish endm b s = STRING s
+let default_string_finish endm b s = STRING (let x = Bytes.utf8_bytes_as_string s in Printf.printf "STRING %s\n" x; x)
 
 let call_string_finish fin buf endm b = fin endm b (Bytes.close buf)
 
