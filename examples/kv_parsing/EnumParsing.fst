@@ -318,6 +318,7 @@ let normalize (#t:Type) (steps : list norm_step) (x:t) : tactic unit =
 val ser_TwoNums : n:U32.t -> m:U32.t -> serializer (hide (encode_TwoNums n m))
 let ser_TwoNums n m = fun buf -> (ser_u32 n `ser_append` ser_u32 m) buf
 
+inline_for_extraction
 let serializer_ty  = buf:bslice -> Stack (option (offset_into buf))
   (requires (fun h0 -> live h0 buf))
   (ensures (fun h0 r h1 -> live h1 buf))
