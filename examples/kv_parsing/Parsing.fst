@@ -2,6 +2,7 @@ module Parsing
 
 open Slice
 
+open FStar.Tactics
 open FStar.Ghost
 open FStar.Seq
 module List = FStar.List.Tot
@@ -335,3 +336,10 @@ let validate_many_st #t p v n = fun buf ->
           end
         | None -> (off, true)) in
     if failed then None else Some off
+
+// TODO: this definition is here out of convenience, but should probably go somewhere else
+noextract
+val normalize : #t:Type -> list norm_step -> t -> tactic unit
+let normalize (#t:Type) (steps : list norm_step) (x:t) : tactic unit =
+  x <-- quote x;
+  exact (norm_term (List.append steps [delta; primops]) x)

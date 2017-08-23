@@ -305,14 +305,6 @@ let ser_Nothing = fun buf -> Some 0ul
 val ser_OneNum : n:U32.t -> serializer (hide (encode_OneNum n))
 let ser_OneNum n = ser_u32 n
 
-noextract
-val normalize : #t:Type -> list norm_step -> t -> tactic unit
-let normalize (#t:Type) (steps : list norm_step) (x:t) : tactic unit =
-  dup;;
-  exact (quote x);;
-  norm (List.append steps [delta]);;
-  trefl
-
 #reset-options "--z3rlimit 10"
 
 val ser_TwoNums : n:U32.t -> m:U32.t -> serializer (hide (encode_TwoNums n m))
@@ -332,9 +324,9 @@ let unfold_only (ns:list (list string)) : Tot (list norm_step) =
 #reset-options "--lax"
 
 let ser_TwoNums'' (n m:U32.t) : serializer_ty =
-  synth_by_tactic (normalize [delta; Prims.simpl; primops;
-                  delta_only ["EnumParsing.ser_TwoNums";
-                              "Serializing.ser_append"]] (ser_TwoNums n m <: serializer_ty))
+  synth_by_tactic (normalize [delta_only
+                  ["EnumParsing.ser_TwoNums";
+                  "Serializing.ser_append"]] (ser_TwoNums n m <: serializer_ty))
 
 #reset-options
 
