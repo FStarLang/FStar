@@ -127,7 +127,7 @@ let parse fn =
        Inl (frags, non_polymorphic_nil)
   with
     | Empty_frag ->
-      Inr ("Empty module", Range.dummyRange)
+      Inl (Inr [], [])
     | Error(msg, r) ->
       Inr (msg, r)
     | e ->
