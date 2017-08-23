@@ -11,8 +11,6 @@ open FStar.Heap  //this order of opening the modules is important, we want ref f
 
 open FStar.Tactics
 
-#set-options "--lax"
-
 type addr = ref int
 
 let equal (h1:heap) (h2:heap) =
@@ -42,7 +40,7 @@ type heap_predicate = heap -> Type0
 
 let is_emp (h:heap) : Type0 = (h == emp)
 
-let points_to (id:addr) (n:int) (h:heap) : Type0 =
+let points_to (id:addr) (n:int) (h:heap) :Type0 =
   (h == (restrict h (Set.singleton (addr_of id)))) /\ (sel h id == n)
 
 let lift (phi:Type0) (h:heap) :Type0 = phi /\ is_emp h
@@ -63,20 +61,18 @@ type c_post (a:Type0) = a -> heap_predicate
 type hoare_triple (#a:Type0) (pre:c_pre) (c:command a) (post:c_post a)
   = forall (h0:heap) (h1:heap) (r:a). (pre h0 /\ (c `interpreted_in` h0 == (r, h1))) ==> post r h1
 
-let rec wp_command (#a:Type0) (c:command a) (p:st_post a) (h0:heap) :Type0
-  = match c with
-    | Return #a x      -> p x h0
-    | Bind #a #b c1 c2 ->
-      FStar.Classical.forall_intro (FStar.WellFounded.axiom1 #a #(command b) c2);
-      (wp_command c1) (fun x h1 -> (wp_command (c2 x)) p h1) h0
-    //| Loop #_ _ _      -> False
-    //| Fail #_          -> True
-    | Read r           -> p (sel h0 r) h0
-    | Write r x        -> (forall (h1:heap). (sel h1 r == x /\ modifies !{r} h0 h1) ==> p () h1)
-    | Alloc            -> (forall (r:ref int) (h1:heap). (fresh r h0 h1 /\ modifies !{} h0 h1 /\ sel h1 r == 0) ==> p r h1)
-    //| Free r           -> False
-
-let disjoint_partitions (h:heap) (h1:heap) (h2:heap) :Type0 = disjoint h1 h2 /\ h == h1 `join` h2
+// let rec wp_command (#a:Type0) (c:command a) (p:st_post a) (h0:heap) :Type0
+//   = match c with
+//     | Return #a x      -> p x h0
+//     | Bind #a #b c1 c2 ->
+//       FStar.Classical.forall_intro (FStar.WellFounded.axiom1 #a #(command b) c2);
+//       (wp_command c1) (fun x h1 -> (wp_command (c2 x)) p h1) h0
+//     //| Loop #_ _ _      -> False
+//     //| Fail #_          -> True
+//     | Read r           -> p (sel h0 r) h0
+//     | Write r x        -> (forall (h1:heap). (sel h1 r == x /\ modifies !{r} h0 h1) ==> p () h1)
+//     | Alloc            -> (forall (r:ref int) (h1:heap). (fresh r h0 h1 /\ modifies !{} h0 h1 /\ sel h1 r == 0) ==> p r h1)
+//     //| Free r           -> False
 
 let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
   = match c with
@@ -84,11 +80,9 @@ let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
 
     | Bind #a #b c1 c2 ->
       FStar.Classical.forall_intro (FStar.WellFounded.axiom1 #a #(command b) c2);
-      fun p h3 -> exists (h2' h2'':heap). (disjoint_partitions h3 h2' h2'') /\
-                                  (wp_command c1) (fun x h1 -> exists h1' h1''. (disjoint h1' h1'' /\ disjoint h1 h2'' /\
-			                                                 h1' `join` h1'' == h1 `join` h2'')
-						                      /\ (wp_command (c2 x)) (fun y h2 -> h2 `disjoint` h1'' /\ p y (h2 `join` h1'')) h1') h2'
-      
+      fun p h3 -> exists (h2' h2'':heap). h3 ==  h2' `join` h2'' /\
+                                  (wpsep_command c1) (fun x h1 -> exists h1' h1''. h1' `join` h1'' == h1 `join` h2'' /\
+						                           (wpsep_command (c2 x)) (fun y h2 -> p y (h2 `join` h1'')) h1') h2'      
 
     | Read r    -> fun p h0 -> (exists x. points_to r x h0) /\ (forall x. points_to r x h0 ==> p x h0)
 
@@ -97,8 +91,8 @@ let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
     | Alloc     -> fun p h0 -> h0 == emp /\ (forall r h1. points_to r 0 h1 ==> p r h1)
 
 let lift_wpsep (#a:Type0) (wp_sep:st_wp a) :st_wp a
-  = fun p h0 -> exists h0' h0''. disjoint h0' h0'' /\ h0 == h0' `join` h0'' /\
-                         wp_sep (fun x h1' -> disjoint h1' h0'' /\ p x (h1' `join` h0'')) h0'
+  = fun p h0 -> exists h0' h0''. h0 == h0' `join` h0'' /\
+                         wp_sep (fun x h1' -> p x (h1' `join` h0'')) h0'
 
 let steps :list step = [delta_only
   ["Lang.wp_command";
@@ -123,8 +117,6 @@ let steps :list step = [delta_only
   ]
 
 #reset-options "--z3rlimit 5"
-(* get the nice x <-- c1; c2 syntax *)
-//let bind (#a:Type0) (#b:Type0) (c1:command a) (c2:a -> command b) :command b = Bind c1 c2
 
 let unfold_fns :list string = [
   "wp_command"; "wpsep_command"; "lift_wpsep"; "disjoint_partitions"; "uu___is_Return"; "uu___is_Bind";
@@ -143,33 +135,32 @@ let foo (r1:addr) (r2:addr) (h:heap{sel h r2 == 4 /\ addr_of r1 <> addr_of r2})
     assert_by_tactic t (norm [Delta; UnfoldOnly unfold_steps; Primops];; dump "Foo")
 
 
-
-exists h0' h0''. h == h0' `join` h0'' /\
-                 (exists h2' h2''. h0' == h2' `join` h2'' /\
-                                   (forall h1. sel h1 r1 == 3 ==>
-                                               (exists h1' h1''. h1' `join` h1'' == h1 `join` h2'' /\
-                                                                 sel ((h1' `join` h1'') `join` h0'') r2 == 4)))
-
+// exists h0' h0''. h == h0' `join` h0'' /\
+//                  (exists h2' h2''. h0' == h2' `join` h2'' /\
+//                                    (forall h1. sel h1 r1 == 3 ==>
+//                                                (exists h1' h1''. h1' `join` h1'' == h1 `join` h2'' /\
+//                                                                  sel ((h1' `join` h1'') `join` h0'') r2 == 4)))
 
 
 
 
-    assert_by_tactic t (norm [Delta; UnfoldOnly [pack_fv ["Lang"; "wp_command"];
-                                                 pack_fv ["Lang"; "wpsep_command"];
-						 pack_fv ["Lang"; "disjoint_partitions"];
-						 pack_fv ["Lang"; "uu___is_Return"];
-						 pack_fv ["Lang"; "uu___is_Bind"];
-						 pack_fv ["Lang"; "uu___is_Read"];
-						 pack_fv ["Lang"; "uu___is_Write"];
-						 pack_fv ["Lang"; "uu___is_Alloc"];
-						 pack_fv ["Lang"; "__proj__Return__item__v"];
-						 pack_fv ["Lang"; "__proj__Bind__item__c1"];
-						 pack_fv ["Lang"; "__proj__Bind__item__c2"];
-						 pack_fv ["Lang"; "__proj__Read__item__id"];
-						 pack_fv ["Lang"; "__proj__Write__item__id"];
-						 pack_fv ["Lang"; "__proj__Write__item__v"];
-						 ];
-			      Primops])
+
+//     assert_by_tactic t (norm [Delta; UnfoldOnly [pack_fv ["Lang"; "wp_command"];
+//                                                  pack_fv ["Lang"; "wpsep_command"];
+// 						 pack_fv ["Lang"; "disjoint_partitions"];
+// 						 pack_fv ["Lang"; "uu___is_Return"];
+// 						 pack_fv ["Lang"; "uu___is_Bind"];
+// 						 pack_fv ["Lang"; "uu___is_Read"];
+// 						 pack_fv ["Lang"; "uu___is_Write"];
+// 						 pack_fv ["Lang"; "uu___is_Alloc"];
+// 						 pack_fv ["Lang"; "__proj__Return__item__v"];
+// 						 pack_fv ["Lang"; "__proj__Bind__item__c1"];
+// 						 pack_fv ["Lang"; "__proj__Bind__item__c2"];
+// 						 pack_fv ["Lang"; "__proj__Read__item__id"];
+// 						 pack_fv ["Lang"; "__proj__Write__item__id"];
+// 						 pack_fv ["Lang"; "__proj__Write__item__v"];
+// 						 ];
+// 			      Primops])
 
 (* #set-options "--z3rlimit 10" *)
 (* let foo (r1:addr) (n1:int) *)
