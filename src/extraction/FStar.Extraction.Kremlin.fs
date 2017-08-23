@@ -376,7 +376,7 @@ and translate_decl env d: option<decl> =
           let body = translate_expr env body in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, body))
         with e ->
-          BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) (BU.print_exn e);
+          BU.print2_warning "Warning: writing a stub for %s (%s)\n" (snd name) (BU.print_exn e);
           Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbort))
       end
 
@@ -392,7 +392,7 @@ and translate_decl env d: option<decl> =
         let expr = translate_expr env expr in
         Some (DGlobal (flags, name, t, expr))
       with e ->
-        BU.print2 "Warning: not translating definition for %s (%s)\n" (snd name) (BU.print_exn e);
+        BU.print2_warning "Warning: not translating definition for %s (%s)\n" (snd name) (BU.print_exn e);
         Some (DGlobal (flags, name, t, EAny))
       end
 
@@ -400,7 +400,7 @@ and translate_decl env d: option<decl> =
       (* Things we currently do not translate:
        * - polymorphic functions (lemmas do count, sadly)
        *)
-      BU.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      BU.print1_warning "Warning: not translating definition for %s (and possibly others)\n" name;
       begin match ts with
       | Some (idents, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
@@ -441,7 +441,7 @@ and translate_decl env d: option<decl> =
       ) branches))
 
   | MLM_Ty ((_, name, _mangled_name, _, _, _) :: _) ->
-      BU.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      BU.print1_warning "Warning: not translating definition for %s (and possibly others)\n" name;
       None
 
   | MLM_Ty [] ->

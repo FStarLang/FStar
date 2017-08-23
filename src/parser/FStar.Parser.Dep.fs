@@ -627,7 +627,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
     let direct_deps, color = must (smap_try_find graph key) in
     match color with
     | Gray ->
-        Util.print1 "Warning: recursive dependency on module %s\n" key;
+        Util.print1_warning "Warning: recursive dependency on module %s\n" key;
         let cycle = cycle |> List.map file_names_of_key in
         Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
         print_graph immediate_graph;

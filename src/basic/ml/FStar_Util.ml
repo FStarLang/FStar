@@ -949,10 +949,10 @@ let read_hints (filename: string): hints_db option =
     )
   with
    | Exit ->
-      Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
+      print1_warning "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
    | Sys_error _ ->
-      Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
+      print1_warning "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None
 
 (** Interactive protocol **)
