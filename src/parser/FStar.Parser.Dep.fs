@@ -275,9 +275,8 @@ let collect_one
           List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
       | None ->
           if List.length lid.ns > 0 && Options.debug_any () then
-            Util.print2_warning "%s (Warning): unbound module reference %s\n"
-                                (Range.string_of_range (range_of_lid lid))
-                                (string_of_lid lid false)
+            FStar.Errors.warn (range_of_lid lid)
+              (BU.format1 "Unbound module reference %s" (string_of_lid lid false))
       end
     in
     // Option.Some x

@@ -1333,8 +1333,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         let bs, cres' = SS.open_comp bs cres' in
                         let head_info = (head, chead, ghead, U.lcomp_of_comp cres') in
                         if debug env Options.Low
-                        then BU.print1 "%s: Warning: Potentially redundant explicit currying of a function type \n"
-                            (Range.string_of_range tres.pos);
+                        then FStar.Errors.warn tres.pos
+                               "Potentially redundant explicit currying of a function type";
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
                     | _ when not norm ->
                         aux true (N.unfold_whnf env tres)
