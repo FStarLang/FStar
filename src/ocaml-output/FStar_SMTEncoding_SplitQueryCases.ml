@@ -1,12 +1,11 @@
 open Prims
-let rec get_next_n_ite:
-  Prims.int ->
-    FStar_SMTEncoding_Term.term ->
-      FStar_SMTEncoding_Term.term ->
-        (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
-          (Prims.bool,FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term,
-            FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple4
-  =
+let rec (get_next_n_ite
+  :Prims.int ->
+     FStar_SMTEncoding_Term.term ->
+       FStar_SMTEncoding_Term.term ->
+         (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
+           (Prims.bool,FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term,
+             FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple4)=
   fun n1  ->
     fun t  ->
       fun negs  ->
@@ -35,14 +34,13 @@ let rec get_next_n_ite:
                  (false, FStar_SMTEncoding_Util.mkFalse,
                    FStar_SMTEncoding_Util.mkFalse,
                    FStar_SMTEncoding_Util.mkFalse))
-let rec is_ite_all_the_way:
-  Prims.int ->
-    FStar_SMTEncoding_Term.term ->
-      FStar_SMTEncoding_Term.term ->
-        FStar_SMTEncoding_Term.term Prims.list ->
-          (Prims.bool,FStar_SMTEncoding_Term.term Prims.list,FStar_SMTEncoding_Term.term)
-            FStar_Pervasives_Native.tuple3
-  =
+let rec (is_ite_all_the_way
+  :Prims.int ->
+     FStar_SMTEncoding_Term.term ->
+       FStar_SMTEncoding_Term.term ->
+         FStar_SMTEncoding_Term.term Prims.list ->
+           (Prims.bool,FStar_SMTEncoding_Term.term Prims.list,FStar_SMTEncoding_Term.term)
+             FStar_Pervasives_Native.tuple3)=
   fun n1  ->
     fun t  ->
       fun negs  ->
@@ -70,16 +68,15 @@ let rec is_ite_all_the_way:
                           uu____176 :: l in
                         is_ite_all_the_way n1 rest negs' uu____173
                       else (false, [], FStar_SMTEncoding_Util.mkFalse)))
-let rec parse_query_for_split_cases:
-  Prims.int ->
-    FStar_SMTEncoding_Term.term ->
-      (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
-        (Prims.bool,(FStar_SMTEncoding_Term.term ->
-                       FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term
-                                                     Prims.list,FStar_SMTEncoding_Term.term)
-                      FStar_Pervasives_Native.tuple3)
-          FStar_Pervasives_Native.tuple2
-  =
+let rec (parse_query_for_split_cases
+  :Prims.int ->
+     FStar_SMTEncoding_Term.term ->
+       (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term) ->
+         (Prims.bool,(FStar_SMTEncoding_Term.term ->
+                        FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term
+                                                      Prims.list,FStar_SMTEncoding_Term.term)
+                       FStar_Pervasives_Native.tuple3)
+           FStar_Pervasives_Native.tuple2)=
   fun n1  ->
     fun t  ->
       fun f  ->
@@ -130,18 +127,17 @@ let rec parse_query_for_split_cases:
               (((fun uu____452  ->
                    FStar_Util.return_all FStar_SMTEncoding_Util.mkFalse)),
                 [], FStar_SMTEncoding_Util.mkFalse))
-let strip_not: FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term =
+let (strip_not :FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)=
   fun t  ->
     match t.FStar_SMTEncoding_Term.tm with
     | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Not ,hd1::uu____458)
         -> hd1
     | uu____463 -> t
-let handle_query:
-  (FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term
-                                                                Prims.list,
-    FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple3 ->
-    (FStar_SMTEncoding_Term.decl -> Prims.unit) -> Prims.unit
-  =
+let (handle_query
+  :(FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term
+                                                                 Prims.list,
+     FStar_SMTEncoding_Term.term) FStar_Pervasives_Native.tuple3 ->
+     (FStar_SMTEncoding_Term.decl -> Prims.unit) -> Prims.unit)=
   fun uu____484  ->
     fun check  ->
       match uu____484 with

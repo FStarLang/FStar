@@ -20,6 +20,7 @@ let is_mm _ = Obj.magic ()
 (* let compare_addrs *)
 
 type ('a, 'b, 'c, 'd) contains
+type ('a, 'b) addr_unused_in
 type ('a, 'b, 'c, 'd) unused_in
 let fresh _ _ _ = Obj.magic ()
 

@@ -68,6 +68,7 @@ val add_light_off_file          : string  -> unit
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
+val cache_checked_modules       : unit    -> bool
 val codegen                     : unit    -> option<string>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
@@ -121,19 +122,19 @@ val pervasives_basename         : unit    -> string
 val pervasives_native_basename  : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
-val print_fuels                 : unit    -> bool
 val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
+val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
-val check_hints                 : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
 val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
 val should_verify               : string  -> bool
+val should_verify_file          : string  -> bool
 val silent                      : unit    -> bool
 val smtencoding_elim_box        : unit -> bool
 val smtencoding_nl_arith_default: unit -> bool
