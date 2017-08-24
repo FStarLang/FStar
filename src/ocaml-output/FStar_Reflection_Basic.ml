@@ -1077,18 +1077,17 @@ let type_of_binder:
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   = fun b  -> match b with | (b1,uu____3399) -> b1.FStar_Syntax_Syntax.sort
 let term_eq:
-  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> Prims.bool
-  = FStar_Syntax_Util.term_eq
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool =
+  FStar_Syntax_Util.term_eq
 let fresh_binder:
-  'Auu____3414 .
+  'Auu____3410 .
     FStar_Syntax_Syntax.typ ->
-      (FStar_Syntax_Syntax.bv,'Auu____3414 FStar_Pervasives_Native.option)
+      (FStar_Syntax_Syntax.bv,'Auu____3410 FStar_Pervasives_Native.option)
         FStar_Pervasives_Native.tuple2
   =
   fun t  ->
-    let uu____3425 =
+    let uu____3421 =
       FStar_Syntax_Syntax.gen_bv "__refl" FStar_Pervasives_Native.None t in
-    (uu____3425, FStar_Pervasives_Native.None)
+    (uu____3421, FStar_Pervasives_Native.None)
 let term_to_string: FStar_Syntax_Syntax.term -> Prims.string =
   FStar_Syntax_Print.term_to_string
