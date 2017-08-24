@@ -512,12 +512,12 @@ let try_unif (t : tac<'a>) (t' : tac<'a>) : tac<'a> =
         try run t ps
         with NoUnif -> run t' ps)
 
-let apply (tm:term) : tac<unit> =
+let apply (uopt:bool) (tm:term) : tac<unit> =
     bind cur_goal (fun goal ->
     let tm, typ, guard = goal.context.type_of goal.context tm in
     if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply: got non-trivial guard" else
     // Focus not really needed, but might help a bit for speed
-    try_unif (focus (__apply true tm typ))
+    try_unif (focus (__apply uopt tm typ))
              (fail3 "apply: Cannot instantiate %s (of type %s) to match goal (%s)"
                             (Print.term_to_string tm)
                             (Print.term_to_string typ)

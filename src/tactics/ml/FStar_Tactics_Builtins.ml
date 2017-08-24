@@ -112,11 +112,18 @@ let exact_lemma: RT.term E.tactic -> unit -> unit __tac =
     | E.Success (a, state) -> __exact_lemma a state
     | E.Failed (s, state) -> E.Failed (s, state)
 
-let __apply (t: RT.term): unit __tac = from_tac_1 B.apply t
+let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
 let apply: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
     match (t ()) ps with
     | E.Success (a, state) -> __apply a state
+    | E.Failed (s, state) -> E.Failed (s, state)
+
+let __apply_raw (t: RT.term): unit __tac = from_tac_1 (B.apply false) t
+let apply_raw: RT.term E.tactic -> unit -> unit __tac =
+  fun t  -> fun () -> fun ps ->
+    match (t ()) ps with
+    | E.Success (a, state) -> __apply_raw a state
     | E.Failed (s, state) -> E.Failed (s, state)
 
 let __apply_lemma (t: RT.term): unit __tac = from_tac_1 B.apply_lemma t

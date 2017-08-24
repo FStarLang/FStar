@@ -138,6 +138,11 @@ The amount of arguments introduced is the least such that [f a_i] unifies
 with the goal's type. *)
 let apply (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply tt)
 
+assume private val __apply_raw : term -> __tac unit
+(** [apply_raw f] is like [apply], but will ask for all arguments regardless
+of whether they appear free in further goals. *)
+let apply_raw (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply_raw tt)
+
 assume private val __apply_lemma : term -> __tac unit
 (** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a Lemma
 ensuring [phi]. The arguments to [l] and its requires clause are introduced as new goals.

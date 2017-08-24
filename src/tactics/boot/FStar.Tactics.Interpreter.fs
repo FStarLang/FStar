@@ -166,7 +166,8 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__smt"           smt embed_unit t_unit;
       mktac1 "__exact"         exact unembed_term embed_unit t_unit;
       mktac1 "__exact_lemma"   exact_lemma unembed_term embed_unit t_unit;
-      mktac1 "__apply"         apply unembed_term embed_unit t_unit;
+      mktac1 "__apply"         (apply  true) unembed_term embed_unit t_unit;
+      mktac1 "__apply_raw"     (apply false) unembed_term embed_unit t_unit;
       mktac1 "__apply_lemma"   apply_lemma unembed_term embed_unit t_unit;
       // A tac 5... oh my...
       mktac5 "__divide"        (fun _ _ -> divide) (fun t -> t) (fun t -> t) unembed_int (unembed_tactic_0 (fun t -> t)) (unembed_tactic_0 (fun t -> t))
