@@ -1,5 +1,5 @@
 [
-  "\u0007Û,,Ž¸È0L³à&Ó1\u001a‡",
+  "lt\u0001ÿê\u000f¤áyP‹Nef`9",
   [
     [ "FStar.Pointer.Base.uu___is_TUInt", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Pointer.Base.uu___is_TUInt8", 1, 2, 1, [ "@query" ], 0 ],
@@ -512,6 +512,28 @@
         "subterm_ordering_FStar.Pointer.Base.TArray",
         "subterm_ordering_FStar.Pointer.Base.TStruct",
         "subterm_ordering_FStar.Pointer.Base.TUnion"
+      ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.type_of_typ_array",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
+        "@fuel_irrelevance_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
+        "@query", "constructor_distinct_FStar.Pointer.Base.TArray",
+        "equation_FStar.Monotonic.HyperHeap.test0",
+        "equation_FStar.Pointer.Base.array_length_t",
+        "equation_FStar.UInt32.t", "equation_Prims._assert",
+        "equation_with_fuel_FStar.Pointer.Base.type_of_typ.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.UInt32.t_",
+        "function_token_typing_FStar.Monotonic.HyperHeap.test0",
+        "projection_inverse_FStar.Pointer.Base.TArray_length",
+        "projection_inverse_FStar.Pointer.Base.TArray_t",
+        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_484a6e6064fc1ae01de63e2e98020bbf"
       ],
       0
     ],
