@@ -363,5 +363,5 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 To use F\* for verification you need a Z3 binary.
 Our binary packages include that already in `bin`, but if you compile
 F\* from sources you need to get a Z3 binary yourself and add it to
-your `PATH`. We recommend you use the Everest test binaries here:
+your `PATH`. We recommend you use the Everest tested binaries here:
 https://github.com/FStarLang/binaries/tree/master/z3-tested
