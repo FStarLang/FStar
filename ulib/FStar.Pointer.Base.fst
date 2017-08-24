@@ -1839,15 +1839,15 @@ let path_sel_upd_other
 
 let path_sel_upd_other'
   (#from: typ)
-  (#to1 #to2: typ)
+  (#to1: typ)
   (p1: path from to1)
-  (p2: path from to2)
   (m: otype_of_typ from)
   (v: otype_of_typ to1)
+  (#to2: typ)
+  (p2: path from to2)
 : Lemma
   (requires (path_disjoint p1 p2))
   (ensures (path_sel (path_upd m p1 v) p2 == path_sel m p2))
-  [SMTPat (path_sel (path_upd m p1 v) p2)]  
 = path_sel_upd_other p1 p2
 
 (** Operations on pointers *)
@@ -2899,7 +2899,7 @@ let buffer_readable_gsub_buffer
   (b: buffer t)
   (i: UInt32.t)
   len
-= ()
+= Classical.forall_intro (Classical.move_requires (gpointer_of_buffer_cell_gsub_buffer b i len))
 
 let readable_gpointer_of_buffer_cell
   (#t: typ)
@@ -3085,6 +3085,15 @@ let disjoint_sym'
 = FStar.Classical.move_requires (disjoint_sym #value1 #value2 p1) p2;
   FStar.Classical.move_requires (disjoint_sym #value2 #value1 p2) p1
 
+let disjoint_sym''
+  (value1: typ)
+  (value2: typ)
+  (p1: pointer value1)
+  (p2: pointer value2)
+: Lemma
+  (ensures (disjoint p1 p2 <==> disjoint p2 p1))
+= disjoint_sym' p1 p2
+
 let disjoint_includes_l #a #as #a' (x: pointer a) (subx:pointer as) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint subx y))
@@ -3097,6 +3106,18 @@ let disjoint_includes_l_swap #a #as #a' (x:pointer a) (subx:pointer as) (y:point
   [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
   = disjoint_includes_l x subx y;
     disjoint_sym subx y
+
+let disjoint_includes_r
+  #t1 #t2 #t3
+  (p1: pointer t1)
+  (p2: pointer t2)
+  (p3: pointer t3)
+: Lemma
+  (requires (disjoint p1 p2 /\ includes p2 p3))
+  (ensures (disjoint p1 p3))
+  [SMTPat (disjoint p1 p2); SMTPat (includes p2 p3)]
+= disjoint_sym p1 p2;
+  disjoint_includes_l_swap p2 p3 p1
 
 (* TODO: The following is now wrong, should be replaced with readable
 
@@ -3153,6 +3174,14 @@ let rec loc_aux_in_addr
     frameOf p == r /\
     as_addr p == n
 
+(* TODO: move to FStar.Set?
+   Necessary to handle quantifiers *)
+let set_nonempty
+  (#t: eqtype)
+  (s: Set.set t)
+: GTot Type0
+= exists (i: t) . Set.mem i s
+
 noeq
 type loc' : Type0 =
   | Loc:
@@ -3169,7 +3198,7 @@ type loc' : Type0 =
 	(r: HH.rid) ->
 	Ghost (Set.set nat)
 	(requires (Set.mem r (Ghost.reveal aux_regions)))
-	(ensures (fun y -> exists i . Set.mem i y))
+	(ensures (fun y -> set_nonempty y))
       )) ->
       (aux: (
 	(r: HH.rid) ->
@@ -3193,7 +3222,14 @@ let aux_addrs_nonempty
     Set.mem r (Ghost.reveal (Loc?.aux_regions l)) ==>
     (exists i . Set.mem i (Loc?.aux_addrs l r))
   )
-= ()
+= let f
+    (r: HH.rid)
+  : Lemma
+    (requires (Set.mem r (Ghost.reveal (Loc?.aux_regions l))))
+    (ensures (Set.mem r (Ghost.reveal (Loc?.aux_regions l)) /\ set_nonempty (Loc?.aux_addrs l r)))
+  = ()
+  in
+  Classical.forall_intro (Classical.move_requires f)
 
 let loc_none = Loc
   (Ghost.hide (Set.empty))
@@ -3671,7 +3707,29 @@ let loc_includes_gsub_buffer_r l #t b i len =
     loc_includes_none l
   else begin
     let g = gsub_buffer b i len in
-    assert (loc_aux_includes (LocBuffer b) (LocBuffer g));
+    let f () : Lemma
+      (loc_aux_includes (LocBuffer b) (LocBuffer g))
+    = let pre
+        (j: UInt32.t)
+      : GTot Type0
+      = UInt32.v j < UInt32.v len
+      in
+      let post
+        (j: UInt32.t)
+      : GTot Type0
+      = pre j /\
+        loc_aux_includes_pointer (LocBuffer b) (gpointer_of_buffer_cell g j)
+      in
+      let k
+        (j: UInt32.t)
+      : Lemma
+        (requires (pre j))
+        (ensures (post j))
+      = gpointer_of_buffer_cell_gsub_buffer b i len j
+      in
+      Classical.forall_intro (Classical.move_requires k)
+    in
+    f ();
     loc_includes_trans l (loc_buffer b) (loc_buffer g)
   end
 
@@ -3761,6 +3819,22 @@ let loc_aux_disjoint_buffer
 : GTot Type0
 = forall (i: UInt32.t) . UInt32.v i < UInt32.v (buffer_length b) ==> loc_aux_disjoint_pointer l (gpointer_of_buffer_cell b i)
 
+let loc_aux_disjoint_buffer_sym
+  (#t1 #t2: typ)
+  (b1: buffer t1)
+  (b2: buffer t2)
+: Lemma
+  (loc_aux_disjoint_buffer (LocBuffer b1) b2 <==> loc_aux_disjoint_buffer (LocBuffer b2) b1)
+= Classical.forall_intro_2 (disjoint_sym'' t1 t2)
+
+let loc_aux_disjoint_pointer_buffer_sym
+  (#t1 #t2: typ)
+  (b1: buffer t1)
+  (p2: pointer t2)
+: Lemma
+  (loc_aux_disjoint_pointer (LocBuffer b1) p2 <==> loc_aux_disjoint_buffer (LocPointer p2) b1)
+= Classical.forall_intro_2 (disjoint_sym'' t1 t2)
+
 let rec loc_aux_disjoint
   (l1 l2: loc_aux)
 : GTot Type0
@@ -3776,13 +3850,19 @@ let rec loc_aux_disjoint
 let rec loc_aux_disjoint_union_l
   (ll1 lr1 l2: loc_aux)
 : Lemma
-  (ensures (loc_aux_disjoint (LocUnion ll1 lr1) l2 <==> loc_aux_disjoint ll1 l2 /\ loc_aux_disjoint lr1 l2))
+  (ensures (loc_aux_disjoint (LocUnion ll1 lr1) l2 <==> (loc_aux_disjoint ll1 l2 /\ loc_aux_disjoint lr1 l2)))
   (decreases l2)
 = match l2 with
   | LocUnion ll2 lr2 ->
     loc_aux_disjoint_union_l ll1 lr1 ll2;
     loc_aux_disjoint_union_l ll1 lr1 lr2
   | _ -> ()
+
+let loc_aux_disjoint_union_r
+  (l1 ll2 lr2: loc_aux)
+: Lemma
+  (loc_aux_disjoint l1 (LocUnion ll2 lr2) <==> (loc_aux_disjoint l1 ll2 /\ loc_aux_disjoint l1 lr2))
+= ()
 
 let rec loc_aux_size
   (l: loc_aux)
@@ -3801,6 +3881,7 @@ let rec loc_aux_disjoint_sym
   (decreases (loc_aux_size l1 + loc_aux_size l2))
 = match l2 with
   | LocUnion ll lr ->
+    loc_aux_disjoint_union_r l1 ll lr;
     loc_aux_disjoint_sym l1 ll;
     loc_aux_disjoint_sym l1 lr;
     loc_aux_disjoint_union_l ll lr l1
@@ -3809,8 +3890,15 @@ let rec loc_aux_disjoint_sym
     | LocUnion ll lr ->
       loc_aux_disjoint_union_l ll lr l2;
       loc_aux_disjoint_sym ll l2;
-      loc_aux_disjoint_sym lr l2
-    | _ -> ()
+      loc_aux_disjoint_sym lr l2;
+      loc_aux_disjoint_union_r l2 ll lr
+    | _ ->
+      begin match (l1, l2) with
+      | (LocPointer p1, LocPointer p2) -> disjoint_sym' p1 p2
+      | (LocPointer p1, LocBuffer b2) -> loc_aux_disjoint_pointer_buffer_sym b2 p1
+      | (LocBuffer b1, LocPointer p2) -> loc_aux_disjoint_pointer_buffer_sym b1 p2
+      | (LocBuffer b1, LocBuffer b2) -> loc_aux_disjoint_buffer_sym b1 b2
+      end
     end
 
 (* Same problem with decreases here *)
@@ -4076,7 +4164,16 @@ let modifies_loc_addresses_intro_2
 = ()
 
 let modifies_pointer_elim s h1 h2 #a' p' =
-  loc_disjoint_sym (loc_pointer p') s
+  loc_disjoint_sym (loc_pointer p') s;
+  let r = frameOf p' in
+  let a = as_addr p' in
+  if Set.mem r (Ghost.reveal (Loc?.aux_regions s)) &&
+     Set.mem a (Loc?.aux_addrs s r)
+  then
+    ()
+  else
+    let r = greference_of p' in
+    assert (HS.sel h1 r == HS.sel h2 r)
 
 #reset-options "--z3rlimit 256"
 
@@ -4248,10 +4345,16 @@ let screate
   let p = Pointer value aref PathBase in
   let h1 = HST.get () in
   assert (HS.aref_live_at h1 aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents));
-  assert (
+  let f () : Lemma (
     let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
     HS.sel h1 gref == HS.sel h1 content
-  );
+  )
+  = let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
+    assert (HS.frameOf content == HS.frameOf gref);
+    assert (HS.as_addr content == HS.as_addr gref);
+    HS.lemma_sel_same_addr h1 content gref
+  in
+  f ();
   p
 
 // TODO: move to HyperStack?
@@ -4279,10 +4382,16 @@ let ecreate
   let p = Pointer t aref PathBase in
   let h1 = HST.get () in
   assert (HS.aref_live_at h1 aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents));
-  assert (
+  let f () : Lemma (
     let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
     HS.sel h1 gref == HS.sel h1 content
-  );
+  )
+  = let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
+    assert (HS.frameOf content == HS.frameOf gref);
+    assert (HS.as_addr content == HS.as_addr gref);
+    HS.lemma_sel_same_addr h1 content gref
+  in
+  f ();
   p
 
 let field
@@ -4359,23 +4468,68 @@ let is_null
   | NullPtr -> true
   | _ -> false
 
-let write #a b z =
-  let h0 = HST.get () in
+let owrite
+  (#a: typ)
+  (b: pointer a)
+  (z: otype_of_typ a)
+: HST.Stack unit
+  (requires (fun h -> live h b))
+  (ensures (fun h0 _ h1 ->
+    live h0 b /\
+    live h1 b /\
+    modifies_1 b h0 h1 /\ (
+    let g = greference_of b in
+    let (| _, c1 |) = HS.sel h1 g in
+    path_sel c1 (Pointer?.p b) == z
+  )))
+= let h0 = HST.get () in
   let r = reference_of h0 b in
   let v0 = !r in
   let (| t , c0 |) = v0 in
-  let c1 = path_upd c0 (Pointer?.p b) (ovalue_of_value a z) in
+  let c1 = path_upd c0 (Pointer?.p b) z in
   let v1 = (| t, c1 |) in
-  r := v1
+  r := v1;
+  let h1 = HST.get () in
+  let e () : Lemma (
+    let gref = greference_of b in (
+    HS.frameOf r == HS.frameOf gref /\
+    HS.as_addr r == HS.as_addr gref /\
+    HS.sel h0 gref == v0 /\
+    HS.sel h1 gref == v1
+  ))
+  = let gref = greference_of b in
+    HS.lemma_sel_same_addr h0 r gref;
+    HS.lemma_sel_same_addr h1 r gref
+  in
+  e ();
+  let f
+    (t: typ)
+    (p: pointer t)
+  : Lemma
+    (requires (
+      frameOf p == frameOf b /\
+      as_addr p == as_addr b /\
+      live h0 p /\
+      disjoint b p
+    ))
+    (ensures (
+      equal_values h0 p h1 p
+    ))
+  = let grefp = greference_of p in
+    HS.lemma_sel_same_addr h0 r grefp;
+    HS.lemma_sel_same_addr h1 r grefp;
+    path_sel_upd_other' (Pointer?.p b) c0 z (Pointer?.p p)
+  in
+  Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
+
+let write #a b z =
+  owrite b (ovalue_of_value a z)
 
 let write_union_field
   (#l: union_typ)
   (p: pointer (TUnion l))
   (fd: struct_field l)
-= let h0 = HST.get () in
-  let r = reference_of h0 p in
-  let (| t, c0 |) = !r in
-  let field_t : typ = typ_of_struct_field l fd in
+= let field_t : typ = typ_of_struct_field l fd in
 
   // We could avoid removing the data if `fd` is already the current tag.
 
@@ -4386,9 +4540,7 @@ let write_union_field
   let vu : option (gtdata (struct_field l) (type_of_struct_field' l otype_of_typ)) =
     Some (gtdata_create fd (none_ovalue field_t)) in
   let vu : otype_of_typ (TUnion l) = vu in
-
-  let c1 : otype_of_typ t = path_upd c0 (Pointer?.p p) vu in
-  r := (| t, c1 |)
+  owrite p vu
 
 (** Lemmas and patterns *)
 
@@ -4492,7 +4644,9 @@ let modifies_fresh_frame_popped
   in
   Classical.forall_intro_2 (fun t -> Classical.move_requires (g t))
 
-let no_upd_popped #t h0 h1 b = ()
+let no_upd_popped #t h0 h1 b =
+  let g = greference_of b in
+  assert (HS.sel h1 g == HS.sel h0 g)
 
 (* `modifies` and the readable permission *)
 

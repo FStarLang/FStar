@@ -278,6 +278,14 @@ let rec type_of_typ
   | TBuffer t ->
     buffer t
 
+let type_of_typ_array
+  (len: array_length_t)
+  (t: typ)
+: Lemma
+  (type_of_typ (TArray len t) == array len (type_of_typ t))
+  [SMTPat (type_of_typ (TArray len t))]
+= ()
+
 let type_of_struct_field
   (l: struct_typ)
 : Tot (struct_field l -> Tot Type0)
