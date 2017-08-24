@@ -1,12 +1,12 @@
 open FStar_Parser_Parse
 
-module UChar = BatUChar
 module Option  = BatOption
 module String  = BatString
 module Hashtbl = BatHashtbl
 module Ulexing = FStar_Ulexing
 module L = Ulexing
 
+let ba_of_string s = Array.init (String.length s) (fun i -> Char.code (String.get s i))
 let array_trim_both a n m = Array.sub a n (Array.length a - n - m)
 let string_trim_both s n m = BatString.sub s n (String.length s - (n+m))
 let trim_both   lexbuf n m = string_trim_both (L.lexeme lexbuf) n m
@@ -97,7 +97,7 @@ let () =
   Hashtbl.add keywords "with"          WITH        ;
   Hashtbl.add keywords "_"             UNDERSCORE  ;
   let l =
-    ["~", TILDE; "-", MINUS; "/\\", CONJUNCTION; "\\/", DISJUNCTION;
+    ["~", TILDE "~"; "-", MINUS; "/\\", CONJUNCTION; "\\/", DISJUNCTION;
      "<:", SUBTYPE; "<@", SUBKIND; "(|", LENS_PAREN_LEFT; "|)", LENS_PAREN_RIGHT;
      "#", HASH; "u#", UNIV_HASH; "&", AMP; "()", LPAREN_RPAREN; "(", LPAREN;
      ")", RPAREN; ",", COMMA; "~>", SQUIGGLY_RARROW; "->", RARROW;
@@ -120,7 +120,7 @@ let n_typ_apps = ref 0
 (* ADL: unicode identifiers won't work with --fs_typ_app
    Since this is only used for bootstrapping I am not going to bother fixing this *)
 let is_typ_app lexbuf =
-  if not (FStar_Options.fs_typ_app lexbuf.lex_start_p.pos_fname) then false
+  if not (FStar_Options.fs_typ_app (L.source_file lexbuf)) then false
   else
    try
     let char_ok = function
@@ -145,9 +145,7 @@ let is_typ_app lexbuf =
         else (upd i; aux (i + 1))
       in aux (pos + 1)
     in
-    let rest = Ulexing.lookahead lexbuf (L.get_pos lexbuf) in
-    if not (String.contains rest '\n') then (lexbuf.refill_buff lexbuf);
-    let res = balanced (lookahead lexbuf (L.start_pos lexbuf)) 0 in
+    let res = balanced (L.lookahead lexbuf (L.get_cur lexbuf)) 0 in
     if res then incr n_typ_apps; res
    with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
 
@@ -191,14 +189,14 @@ let terminate_comment buffer startpos lexbuf =
   let endpos = snd (L.range lexbuf) in
   Buffer.add_bytes buffer "*)" ;
   let comment = Buffer.contents buffer in
-  let comment = maybe_trim_lines (startpos.pos_cnum - startpos.pos_bol) comment in
+  let comment = maybe_trim_lines (startpos.Lexing.pos_cnum - startpos.Lexing.pos_bol) comment in
   Buffer.clear buffer;
   comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
 
 let push_one_line_comment lexbuf =
   let startpos, endpos = L.range lexbuf in
-  assert (startpos.pos_lnum = endpos.pos_lnum);
-  comments := (lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
+  assert (startpos.Lexing.pos_lnum = endpos.Lexing.pos_lnum);
+  comments := (L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
 
 (** Unicode class definitions
   Auto-generated from http://www.unicode.org/Public/8.0.0/ucd/UnicodeData.txt **)
@@ -338,7 +336,7 @@ let regexp ident       = ident_start_char ident_char*
 let regexp tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
 
 let rec token = lexer
- | "#light" -> FStar_Options.add_light_off_file lexbuf.lex_start_p.pos_fname ; PRAGMALIGHT
+ | "#light" -> FStar_Options.add_light_off_file (L.source_file lexbuf); PRAGMALIGHT
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS
  | '#' ' ' (digit)* ->
@@ -349,12 +347,12 @@ let rec token = lexer
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
 
  (* Must appear before tvar to avoid 'a <-> 'a' conflict *)
- | ('\'' char '\'') -> CHAR (unescape (utrim_both lexbuf 1 1) |> UChar.chr)
- | ('\'' char '\'' 'B') -> CHAR (unescape (utrim_both lexbuf 1 2) |> UChar.chr)
+ | ('\'' char '\'') -> CHAR (unescape (utrim_both lexbuf 1 1))
+ | ('\'' char '\'' 'B') -> CHAR (unescape (utrim_both lexbuf 1 2))
 
  | '`' -> BACKTICK
- | ident ->
-   L.lexeme lexbuf |> Hashtbl.find_option keywords |> Option.default (IDENT id)
+ | ident -> let id = L.lexeme lexbuf in
+   Hashtbl.find_option keywords id |> Option.default (IDENT id)
 
  | constructor -> NAME (L.lexeme lexbuf)
  | tvar -> TVAR (L.lexeme lexbuf)
@@ -364,7 +362,7 @@ let rec token = lexer
  | char8 ->
    let c = int_of_string (clean_number (L.lexeme lexbuf)) in
    if c < 0 || c > 255 then failwith "Out-of-range character literal"
-   else CHAR (c |> UChar.chr)
+   else CHAR (c)
  | int8 -> INT8 (clean_number (L.lexeme lexbuf), false)
  | uint16 -> UINT16 (clean_number (L.lexeme lexbuf))
  | int16 -> INT16 (clean_number (L.lexeme lexbuf), false)
@@ -409,7 +407,7 @@ let rec token = lexer
  | op_infix2  symbolchar* -> OPINFIX2 (L.lexeme lexbuf)
  | op_infix3  symbolchar* -> OPINFIX3 (L.lexeme lexbuf)
  | "**"       symbolchar* -> OPINFIX4 (L.lexeme lexbuf)
- | usymbol (symbolchar | usymbol)+ -> OPNONASSOC (L.lexeme lexbuf)
+ | usymbol (symbolchar | usymbol)+ -> OPINFIX4 (L.lexeme lexbuf)
 
  | eof -> EOF
  | _ -> failwith "unexpected char"
@@ -423,10 +421,10 @@ and string buffer = lexer
    Buffer.add_string buffer (L.lexeme lexbuf);
    L.new_line lexbuf; string buffer lexbuf
  | escape_char -> 
-   Buffer.add_string buffer (unescape (L.ulexeme lexbuf));
+   Buffer.add_string buffer (BatUTF8.init 1 (fun _ -> unescape (L.ulexeme lexbuf) |> BatUChar.chr));
    string buffer lexbuf
  | '"' -> STRING (Buffer.contents buffer)
- | '"''B' -> BYTEARRAY (Buffer.to_bytes buffer)
+ | '"''B' -> BYTEARRAY (ba_of_string (Buffer.to_bytes buffer))
  | _ ->
    Buffer.add_string buffer (L.lexeme lexbuf);
    string buffer lexbuf
@@ -448,8 +446,7 @@ and comment inner buffer startpos = lexer
    Buffer.add_string buffer (L.lexeme lexbuf);
    comment inner buffer startpos lexbuf
  | eof ->
-   terminate_comment buffer startpos lexbuf;
-   lc := 1; EOF
+   terminate_comment buffer startpos lexbuf; EOF
 
 and fsdoc (n, doc, kw) = lexer
  | "(*" -> fsdoc (n + 1, doc ^ "(*", kw) lexbuf

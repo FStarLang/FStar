@@ -236,7 +236,9 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Unit -> "()"
   | MLC_Bool true  -> "true"
   | MLC_Bool false -> "false"
-  | MLC_Char c -> "(UChar.chr " ^ (string_of_int (Char.int_of_char c)) ^ " (*" ^ (string_of_char c) ^" *))"
+  | MLC_Char c -> (* Unicode characters, in OCaml we use BatUChar (wraper for int) *)
+    let nc = Char.int_of_char c in (string_of_int nc)
+    ^(if nc >= 32 && nc <= 127 then " (*" ^ (string_of_char c) ^"*)" else "")
   | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))

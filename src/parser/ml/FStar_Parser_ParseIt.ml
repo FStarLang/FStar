@@ -2,6 +2,7 @@ module U = FStar_Util
 open FStar_Errors
 open FStar_Syntax_Syntax
 open Lexing
+open FStar_Ulexing
 
 type filename = string
 
@@ -12,14 +13,14 @@ type input_frag = {
 }
 
 let resetLexbufPos filename lexbuf =
-  lexbuf.lex_curr_p <- {
+  lexbuf.cur_p <- {
     pos_fname= FStar_Range.encode_file filename;
     pos_cnum = 0;
     pos_bol = 0;
     pos_lnum = 1 }
 
 let setLexbufPos filename lexbuf line col =
-  lexbuf.lex_curr_p <- {
+  lexbuf.cur_p <- {
     pos_fname= FStar_Range.encode_file filename;
     pos_cnum = col;
     pos_bol  = 0;
@@ -49,16 +50,14 @@ let parse fn =
   FStar_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
 
-  let filename,lexbuf,line,col = match fn with
+  let lexbuf = match fn with
     | U.Inl(f) ->
         check_extension f;
         let f' = find_file f in
-        (try f', Lexing.from_string (read_file f'), 1, 0
+        (try create (read_file f') f' 1 0
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
     | U.Inr s ->
-      "<input>", Lexing.from_string s.frag_text, Z.to_int s.frag_line, Z.to_int s.frag_col in
-
-  setLexbufPos filename lexbuf line col;
+      create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col) in
 
   let lexer = FStar_Parser_LexFStar.token in
 
@@ -83,6 +82,6 @@ let parse fn =
       U.Inr (msg, r)
 
     | e ->
-      let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.lex_curr_p in
+      let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
       let r = FStar_Range.mk_range filename pos pos in
       U.Inr ("Syntax error: " ^ (Printexc.to_string e), r)
