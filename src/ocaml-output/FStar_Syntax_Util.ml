@@ -2811,8 +2811,8 @@ let rec term_eq:
           FStar_Syntax_Syntax.fv_eq x y
       | (FStar_Syntax_Syntax.Tm_uinst (t12,us1),FStar_Syntax_Syntax.Tm_uinst
          (t22,us2)) -> (eqlist eq_univs us1 us2) && (term_eq t12 t22)
-      | (FStar_Syntax_Syntax.Tm_constant x,FStar_Syntax_Syntax.Tm_constant y)
-          -> x = y
+      | (FStar_Syntax_Syntax.Tm_constant c1,FStar_Syntax_Syntax.Tm_constant
+         c2) -> FStar_Const.eq_const c1 c2
       | (FStar_Syntax_Syntax.Tm_type x,FStar_Syntax_Syntax.Tm_type y) ->
           x = y
       | (FStar_Syntax_Syntax.Tm_abs (b1,t12,k1),FStar_Syntax_Syntax.Tm_abs
