@@ -100,6 +100,19 @@ let rec unmeta e =
         | Tm_ascribed(e, _, _) -> unmeta e
         | _ -> e
 
+let rec unmeta_safe e =
+    let e = compress e in
+    match e.n with
+        | Tm_meta(e', m) ->
+            begin match m with
+            | Meta_monadic _
+            | Meta_monadic_lift _ ->
+              e // don't remove monadic metas
+            | _ -> unmeta_safe e'
+            end
+        | Tm_ascribed(e, _, _) -> unmeta_safe e
+        | _ -> e
+
 (********************************************************************************)
 (*************************** Utilities for universes ****************************)
 (********************************************************************************)
@@ -1309,8 +1322,8 @@ let rec term_eq t1 t2 =
                   { t with n = Tm_app (hd, args) }
     | _ -> t
   in
-  let t1 = canon_app t1 in
-  let t2 = canon_app t2 in
+  let t1 = canon_app (unmeta_safe t1) in
+  let t2 = canon_app (unmeta_safe t2) in
   match t1.n, t2.n with
   | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
