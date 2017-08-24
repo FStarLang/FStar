@@ -355,29 +355,6 @@
     ],
     [
       "While.interpret_exp_st",
-      2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_While.interpret_exp.fuel_instrumented",
-        "@fuel_irrelevance_While.interpret_exp.fuel_instrumented", "@query",
-        "constructor_distinct_While.AInt", "constructor_distinct_While.AOp",
-        "constructor_distinct_While.AVar", "disc_equation_While.AInt",
-        "disc_equation_While.AOp", "disc_equation_While.AVar",
-        "equation_While.interpret_binop",
-        "equation_with_fuel_While.interpret_exp.fuel_instrumented",
-        "fuel_guarded_inversion_While.exp",
-        "lemma_FStar.Monotonic.Heap.equal_extensional",
-        "projection_inverse_While.AInt__0",
-        "projection_inverse_While.AOp__0", "projection_inverse_While.AOp__1",
-        "projection_inverse_While.AOp__2",
-        "projection_inverse_While.AVar__0", "typing_While.interpret_exp"
-      ],
-      0
-    ],
-    [
-      "While.interpret_exp_st",
       3,
       2,
       1,
