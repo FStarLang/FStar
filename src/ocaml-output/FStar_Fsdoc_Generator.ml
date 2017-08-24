@@ -308,7 +308,7 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
 let generate: Prims.string Prims.list -> Prims.unit =
   fun files  ->
     let modules =
-      FStar_List.collect
+      FStar_List.map
         (fun fn  ->
            let uu____1308 = FStar_Parser_Driver.parse_file fn in
            FStar_Pervasives_Native.fst uu____1308) files in

@@ -34,63 +34,28 @@ module UF = FStar.Syntax.Unionfind
 
 type free_vars_and_fvars = free_vars * set<Ident.lident>
 
-let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> UF.uvar_id x - UF.uvar_id y)
-                                           (fun (x, _) -> UF.uvar_id x)
-let new_universe_uvar_set () : set<universe_uvar> =
-    Util.new_set (fun x y -> UF.univ_uvar_id x - UF.univ_uvar_id y)
-                 (fun x -> UF.univ_uvar_id x)
-
-let no_uvs : uvars = new_uv_set()
-let no_universe_uvars = new_universe_uvar_set()
-
 let no_free_vars = {
-    free_names=no_names;
-    free_uvars=no_uvs;
-    free_univs=no_universe_uvars;
-    free_univ_names=no_universe_names;
+    free_names=[];
+    free_uvars=[];
+    free_univs=[];
+    free_univ_names=[];
 }, new_fv_set ()
 
-let singleton_fvar fv = {
-    free_names=no_names;
-    free_uvars=no_uvs;
-    free_univs=no_universe_uvars;
-    free_univ_names=no_universe_names;
-}, Util.set_add fv.fv_name.v (new_fv_set ())
+let singleton_fvar fv =
+    fst no_free_vars,
+    Util.set_add fv.fv_name.v (new_fv_set ())
 
-let singleton_bv x   = {
-    free_names=Util.set_add x (new_bv_set());
-    free_uvars=no_uvs;
-    free_univs=no_universe_uvars;
-    free_univ_names=no_universe_names;
-}, new_fv_set ()
-
-let singleton_uv x   = {
-    free_names=no_names;
-    free_uvars=Util.set_add x (new_uv_set());
-    free_univs=no_universe_uvars;
-    free_univ_names=no_universe_names;
-}, new_fv_set ()
-
-let singleton_univ x = {
-    free_names=no_names;
-    free_uvars=no_uvs;
-    free_univs=Util.set_add x (new_universe_uvar_set());
-    free_univ_names=no_universe_names;
-}, new_fv_set ()
-
-
-let singleton_univ_name x = {
-    free_names=no_names;
-    free_uvars=no_uvs;
-    free_univs=no_universe_uvars;
-    free_univ_names=Util.fifo_set_add x (new_universe_names_fifo_set ());
-}, new_fv_set ()
+let singleton_bv x   = {fst no_free_vars with free_names=[x]}, snd no_free_vars
+let singleton_uv x   = {fst no_free_vars with free_uvars=[x]}, snd no_free_vars
+let singleton_univ x = {fst no_free_vars with free_univs=[x]}, snd no_free_vars
+let singleton_univ_name x = {fst no_free_vars with free_univ_names=[x]}, snd no_free_vars
 
 let union f1 f2 = {
-    free_names=Util.set_union (fst f1).free_names (fst f2).free_names;
-    free_uvars=Util.set_union (fst f1).free_uvars (fst f2).free_uvars;
-    free_univs=Util.set_union (fst f1).free_univs (fst f2).free_univs;
-    free_univ_names=Util.fifo_set_union (fst f1).free_univ_names (fst f2).free_univ_names;
+    free_names=(fst f1).free_names @ (fst f2).free_names;
+    free_uvars=(fst f1).free_uvars @ (fst f2).free_uvars;
+    free_univs=(fst f1).free_univs @ (fst f2).free_univs;
+    free_univ_names=(fst f2).free_univ_names @ (fst f1).free_univ_names; //THE ORDER HERE IS IMPORTANT!
+    //We expect the free_univ_names list to be in fifo order to get the right order of universe generalization
 }, Util.set_union (snd f1) (snd f2)
 
 let rec free_univs u = match Subst.compress_univ u with
@@ -226,19 +191,26 @@ and free_names_and_uvars_comp c use_cache =
 
 and should_invalidate_cache n use_cache =
     not use_cache ||
-      (n.free_uvars |> Util.set_elements |> Util.for_some (fun (u, _) -> match UF.find u with
+      (n.free_uvars |> Util.for_some (fun (u, _) -> match UF.find u with
          | Some _ -> true
          | _ -> false)
-       || n.free_univs |> Util.set_elements |> Util.for_some (fun u -> match UF.univ_find u with
+       || n.free_univs |> Util.for_some (fun u -> match UF.univ_find u with
            | Some _ -> true
            | None -> false)
       )
 
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above
-let names t = (fst (free_names_and_uvars t true)).free_names
-let uvars t = (fst (free_names_and_uvars t true)).free_uvars
-let univs t = (fst (free_names_and_uvars t true)).free_univs
-let univnames t = (fst (free_names_and_uvars t true)).free_univ_names
+let compare_uv uv1 uv2 = UF.uvar_id (fst uv1) - UF.uvar_id (fst uv2)
+let new_uv_set () : uvars = Util.new_set compare_uv
+
+let compare_universe_uvar x y = UF.univ_uvar_id x - UF.univ_uvar_id y
+let new_universe_uvar_set () : set<universe_uvar> =
+    Util.new_set compare_universe_uvar
+
+let names t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_names Syntax.order_bv
+let uvars t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_uvars compare_uv
+let univs t = FStar.Util.as_set (fst (free_names_and_uvars t true)).free_univs compare_universe_uvar
+let univnames t = FStar.Util.as_fifo_set (fst (free_names_and_uvars t true)).free_univ_names Syntax.order_univ_name
 let fvars t = snd (free_names_and_uvars t false)
-let names_of_binders (bs:binders) = (fst (free_names_and_uvars_binders bs no_free_vars true)).free_names
+let names_of_binders (bs:binders) = FStar.Util.as_set ((fst (free_names_and_uvars_binders bs no_free_vars true)).free_names) Syntax.order_bv
