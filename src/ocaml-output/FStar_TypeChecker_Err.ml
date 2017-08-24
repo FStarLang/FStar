@@ -218,7 +218,8 @@ let basic_type_error:
                    FStar_Util.format2 "Expected type \"%s\"; got type \"%s\""
                      s1 s2
                | FStar_Pervasives_Native.Some e ->
-                   let uu____421 = FStar_Syntax_Print.term_to_string e in
+                   let uu____421 =
+                     FStar_TypeChecker_Normalize.term_to_string env e in
                    FStar_Util.format3
                      "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1
                      uu____421 s2)
