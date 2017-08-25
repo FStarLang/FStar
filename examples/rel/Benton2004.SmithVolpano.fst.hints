@@ -1,5 +1,5 @@
 [
-  "5‚ÃdU§êkÚ2Y3íîÂa",
+  ":×ŒÒBzY•YºUC\u001cöú¼",
   [
     [ "Benton2004.SmithVolpano.uu___is_Low", 1, 2, 1, [ "@query" ], 0 ],
     [ "Benton2004.SmithVolpano.uu___is_High", 1, 2, 1, [ "@query" ], 0 ],
@@ -499,12 +499,15 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
-        "@query", "equation_Benton2004.SmithVolpano.exec_equiv",
+        "@query", "constructor_distinct_Benton2004.SmithVolpano.High",
+        "constructor_distinct_Benton2004.SmithVolpano.Low",
+        "disc_equation_Benton2004.SmithVolpano.High",
+        "disc_equation_Benton2004.SmithVolpano.Low",
+        "equality_tok_Benton2004.SmithVolpano.High@tok",
+        "equality_tok_Benton2004.SmithVolpano.Low@tok",
+        "equation_Benton2004.SmithVolpano.exec_equiv",
         "fuel_guarded_inversion_Benton2004.SmithVolpano.seclevel",
-        "function_token_typing_Benton2004.skip",
-        "lemma_Benton2004.DDCC.d_seq", "lemma_Benton2004.DDCC.d_su1_",
-        "lemma_Benton2004.DDCC.exec_equiv_sym",
-        "lemma_Benton2004.DDCC.exec_equiv_trans",
+        "lemma_Benton2004.DDCC.d_seq",
         "token_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
         "unit_typing"
       ],
