@@ -50,9 +50,9 @@ let lognot a = Mk (lognot (v a))
 let uint_to_t x = Mk x
 
 (* Shift operators *)
-let shift_right a s = Mk (shift_right (v a) (v s))
+let shift_right a s = Mk (shift_right (v a) (UInt32.v s))
 
-let shift_left a s = Mk (shift_left (v a) (v s))
+let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 (* Comparison operators *)
 let eq a b = eq #n (v a) (v b)

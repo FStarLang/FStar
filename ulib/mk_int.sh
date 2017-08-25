@@ -73,3 +73,4 @@ EOF
 done
 
 sed -i.bak 's/UInt32\.//g' FStar.UInt32.fst
+sed -i.bak 's/UInt32\.//g' FStar.UInt32.fsti
