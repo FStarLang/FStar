@@ -3508,6 +3508,14 @@ let rec loc_aux_includes_refl'
   (loc_aux_includes s s)
 = loc_aux_includes_refl s s
 
+(* FIXME: WHY WHY WHY do I need to duplicate the lemma? Because Classical.forall_intro DOES NOT UNIFY/typecheck if there is a pattern *)
+let rec loc_aux_includes_refl''
+  (s: loc_aux)
+: Lemma
+  (loc_aux_includes s s)
+  [SMTPat (loc_aux_includes s s)]
+= loc_aux_includes_refl' s
+
 let rec loc_aux_includes_union_l_r
   (s s': loc_aux)
 : Lemma
@@ -4105,6 +4113,8 @@ let loc_disjoint_addresses r1 r2 n1 n2 = ()
 
 let loc_disjoint_pointer_addresses #t p r n = ()
 
+let loc_disjoint_regions rs1 rs2 = ()
+
 (** The modifies clause proper *)
 
 let modifies'
@@ -4585,7 +4595,7 @@ let hs_modifies_rref_fresh_frame_popped
   ))
 = ()
 
-let modifies_fresh_frame_popped
+let modifies_fresh_frame_popped_weak
   (h0 h1: HS.mem)
   (s: loc)
   (h2 h3: HS.mem)
@@ -4647,6 +4657,106 @@ let modifies_fresh_frame_popped
 let no_upd_popped #t h0 h1 b =
   let g = greference_of b in
   assert (HS.sel h1 g == HS.sel h0 g)
+
+(* Restrict a set of locations along a set of regions *)
+
+let restrict_to_regions
+  (l: loc)
+  (rs: Set.set HH.rid)
+: GTot loc
+= let (Loc whole_regions addr_regions addrs aux_regions aux_addrs aux) = l in
+  Loc
+    (Ghost.hide (Set.intersect (Ghost.reveal whole_regions) rs))
+    (Ghost.hide (Set.intersect (Ghost.reveal addr_regions) rs))
+    (fun r -> addrs r)
+    (Ghost.hide (Set.intersect (Ghost.reveal aux_regions) rs))
+    (fun r -> aux_addrs r)
+    (fun r n -> aux r n)
+
+let regions_of_loc_restrict_to_regions
+  (l: loc)
+  (rs: Set.set HH.rid)
+: Lemma
+  (regions_of_loc (restrict_to_regions l rs) == Set.intersect (regions_of_loc l) rs)
+  [SMTPat (regions_of_loc (restrict_to_regions l rs))]
+= assert (Set.equal (regions_of_loc (restrict_to_regions l rs)) (Set.intersect (regions_of_loc l) rs))
+
+let addrs_of_loc_weak_restrict_to_regions
+  (l: loc)
+  (rs: Set.set HH.rid)
+  (r: HH.rid)
+: Lemma
+  (addrs_of_loc_weak (restrict_to_regions l rs) r == (if Set.mem r rs then addrs_of_loc_weak l r else Set.empty))
+  [SMTPat (addrs_of_loc_weak (restrict_to_regions l rs) r)]
+= assert (Set.equal (addrs_of_loc_weak (restrict_to_regions l rs) r) (if Set.mem r rs then addrs_of_loc_weak l r else Set.empty))
+
+let addrs_of_loc_restrict_to_regions
+  (l: loc)
+  (rs: Set.set HH.rid)
+  (r: HH.rid)
+: Lemma
+  (addrs_of_loc (restrict_to_regions l rs) r == (if Set.mem r rs then addrs_of_loc l r else Set.empty))
+  [SMTPat (addrs_of_loc (restrict_to_regions l rs) r)]
+= assert (Set.equal (addrs_of_loc (restrict_to_regions l rs) r) (if Set.mem r rs then addrs_of_loc l r else Set.empty))
+
+let loc_includes_restrict_to_regions
+  (l: loc)
+  (rs: Set.set HH.rid)
+: Lemma
+  (loc_includes l (restrict_to_regions l rs))
+= ()
+
+let loc_includes_loc_union_restrict_to_regions
+  (l: loc)
+  (rs: Set.set HH.rid)
+: Lemma
+  (loc_includes (loc_union (restrict_to_regions l rs) (restrict_to_regions l (Set.complement rs))) l)
+= ()
+
+let loc_includes_loc_regions_restrict_to_regions
+  (l: loc)
+  (rs: Set.set HH.rid)
+: Lemma
+  (loc_includes (loc_regions rs) (restrict_to_regions l rs))
+= ()
+
+let modifies_fresh_frame_popped
+  (h0 h1: HS.mem)
+  (s: loc)
+  (h2 h3: HS.mem)
+: Lemma
+  (requires (
+    HS.fresh_frame h0 h1 /\
+    modifies (loc_union (loc_regions (HH.mod_set (Set.singleton h1.HS.tip))) s) h1 h2 /\
+    h2.HS.tip == h1.HS.tip /\
+    HS.popped h2 h3
+  ))
+  (ensures (
+    modifies s h0 h3 /\
+    h3.HS.tip == h0.HS.tip
+  ))
+= (* NOTE: I could automate the proof, but at least this way here
+     it is replayable and also readable. *)
+  let rs = HH.mod_set (Set.singleton h1.HS.tip) in
+  let c_rs = Set.complement rs in
+  let s_rs = restrict_to_regions s rs in
+  let s_c_rs = restrict_to_regions s c_rs in
+  let lrs = loc_regions rs in
+  loc_includes_loc_regions_restrict_to_regions s rs;
+  loc_includes_union_l lrs s_c_rs s_rs;
+  loc_includes_refl s_c_rs;
+  loc_includes_union_l lrs s_c_rs s_c_rs;
+  loc_includes_union_r (loc_union lrs s_c_rs) s_rs s_c_rs;
+  loc_includes_loc_union_restrict_to_regions s rs;
+  loc_includes_trans (loc_union lrs s_c_rs) (loc_union s_rs s_c_rs) s;
+  modifies_loc_includes (loc_union lrs s_c_rs) h1 h2 (loc_union lrs s);
+  loc_includes_loc_regions_restrict_to_regions s c_rs;
+  loc_disjoint_regions rs c_rs;
+  loc_includes_refl lrs;
+  loc_disjoint_includes lrs (loc_regions c_rs) lrs s_c_rs;
+  modifies_fresh_frame_popped_weak h0 h1 s_c_rs h2 h3;
+  loc_includes_restrict_to_regions s c_rs;
+  modifies_loc_includes s h0 h3 s_c_rs
 
 (* `modifies` and the readable permission *)
 

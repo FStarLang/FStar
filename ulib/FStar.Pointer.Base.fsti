@@ -1818,6 +1818,13 @@ val loc_disjoint_pointer_addresses
   (ensures (loc_disjoint (loc_pointer p) (loc_addresses r n)))
   [SMTPat (loc_disjoint (loc_pointer p) (loc_addresses r n))]
 
+val loc_disjoint_regions
+  (rs1 rs2: Set.set HH.rid)
+: Lemma
+  (requires (Set.subset (Set.intersect rs1 rs2) Set.empty))
+  (ensures (loc_disjoint (loc_regions rs1) (loc_regions rs2)))
+  [SMTPat (loc_disjoint (loc_regions rs1) (loc_regions rs2))]
+
 (** The modifies clause proper *)
 
 val modifies
@@ -2042,6 +2049,23 @@ val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
     [SMTPatT (readable h1 b); SMTPatT (HS.popped h0 h1)];    
     [SMTPatT (gread h1 b); SMTPatT (HS.popped h0 h1)];    
   ]]
+
+val modifies_fresh_frame_popped
+  (h0 h1: HS.mem)
+  (s: loc)
+  (h2 h3: HS.mem)
+: Lemma
+  (requires (
+    HS.fresh_frame h0 h1 /\
+    modifies (loc_union (loc_regions (HH.mod_set (Set.singleton h1.HS.tip))) s) h1 h2 /\
+    h2.HS.tip == h1.HS.tip /\
+    HS.popped h2 h3
+  ))
+  (ensures (
+    modifies s h0 h3 /\
+    h3.HS.tip == h0.HS.tip
+  ))
+
 
 (* `modifies` and the readable permission *)
 
