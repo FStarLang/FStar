@@ -1,12 +1,9 @@
-module FStar.UInt32
-(* This module generated automatically using [mk_int.sh] *)
-
-open FStar.UInt
+open FStar.Int
 open FStar.Mul
 
-(* NOTE: this file should remain synchronized with [FStar.IntN.fstp] *)
+(* NOTE: this file should remain synchronized with [FStar.UIntN.fstp] *)
 
-private type t' = | Mk: v:uint_t n -> t'
+private type t' = | Mk: v:int_t n -> t'
 let t = t'
 
 let v x = x.v
@@ -15,23 +12,11 @@ let v_inj x1 x2 = ()
 
 let add a b = Mk (add (v a) (v b))
 
-let add_underspec a b = Mk (add_underspec (v a) (v b))
-
-let add_mod a b = Mk (add_mod (v a) (v b))
-
 (* Subtraction primitives *)
 let sub a b = Mk (sub (v a) (v b))
 
-let sub_underspec a b = Mk (sub_underspec (v a) (v b))
-
-let sub_mod a b = Mk (sub_mod (v a) (v b))
-
 (* Multiplication primitives *)
 let mul a b = Mk (mul (v a) (v b))
-
-let mul_underspec a b = Mk (mul_underspec (v a) (v b))
-
-let mul_mod a b = Mk (mul_mod (v a) (v b))
 
 let mul_div a b = Mk (mul_div (v a) (v b))
 
@@ -60,9 +45,6 @@ let gt a b = gt #n (v a) (v b)
 let gte a b = gte #n (v a) (v b)
 let lt a b = lt #n (v a) (v b)
 let lte a b = lte #n (v a) (v b)
-
-let eq_mask a b = if eq a b then Mk (pow2 n - 1) else Mk 0
-let gte_mask a b = if gte a b then Mk (pow2 n - 1) else Mk 0
 
 (* To input / output constants *)
 let to_string = admit()
