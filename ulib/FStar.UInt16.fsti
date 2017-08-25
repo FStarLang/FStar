@@ -10,7 +10,7 @@ open FStar.Mul
 
 val t: t:Type0{hasEq t}
 
-val v : t -> uint_t n
+val v : t -> Tot (uint_t n)
 
 val v_inj : x1:t -> x2:t ->
   Lemma (requires (v x1 == v x2))
