@@ -17,8 +17,10 @@ let substring s i j =
 let sub s i j =
    substring s i (Z.of_int (BatUTF8.length s - (Z.to_int j) + 1))
 
-let get s i = BatUTF8.get s (Z.to_int i)
-let collect = BatString.replace_chars
+let get s i = BatUChar.code (BatUTF8.get s (Z.to_int i))
+let collect f s =
+  let r = ref "" in
+  BatUTF8.iter (fun c -> r := !r ^ f (BatUChar.code c)) s; !r
 let lowercase = BatString.lowercase
 let uppercase = BatString.uppercase
 let index = get

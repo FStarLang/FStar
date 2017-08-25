@@ -174,9 +174,9 @@ open FStar_String
 %left OPINFIX3
 %left BACKTICK
 %right OPINFIX4
-%type <inputFragment> inputFragment
+%type <FStar_Parser_AST.inputFragment> inputFragment
 %type <FStar_Ident.ident> lident
-%type <term> term
+%type <FStar_Parser_AST.term> term
 %%
 
 option_FSDOC_:

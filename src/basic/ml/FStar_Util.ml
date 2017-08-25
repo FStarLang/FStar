@@ -1,37 +1,14 @@
 let max_int = Z.of_int max_int
-let is_letter c = BatChar.is_letter c
-let is_digit  c = BatChar.is_digit  c
-let is_letter_or_digit c = (BatChar.is_letter c) || (BatChar.is_digit c)
-let is_symbol c = BatChar.is_symbol c
+let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
+let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
+let is_letter_or_digit c = is_letter c || is_digit c
+let is_symbol c = if c > 255 then false else BatChar.is_symbol (BatChar.chr c)
 
 (* Modeled after: Char.IsPunctuation in .NET
    (http://www.dotnetperls.com/char-ispunctuation)
 *)
-let is_punctuation c = (
-    c = '!' ||
-    c = '"' ||
-    c = '#' ||
-    c = '%' ||
-    c = '&' ||
-    c = '\'' ||
-    c = '(' ||
-    c = ')' ||
-    c = '*' ||
-    c = ',' ||
-    c = '-' ||
-    c = '.' ||
-    c = '/' ||
-    c = ':' ||
-    c = ';' ||
-    c = '?' ||
-    c = '@' ||
-    c = '[' ||
-    c = '\\' ||
-    c = ']' ||
-    c = '_' ||
-    c = '{' ||
-    c = '}'
-  )
+let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 46; 47; 58; 59; 63; 64; 91; 92; 93; 95; 123; 125]
+(*'!','"','#','%','&','\'','(',')','*',',','-','.','/',':',';','?','@','[','\\',']','_','{','}'*)
 
 let return_all x = x
 
@@ -382,7 +359,7 @@ let int_of_char x = Z.of_int x
 let int_of_byte x = x
 let int_of_uint8 x = Z.of_int (Char.code x)
 let uint16_of_int i = Z.to_int i
-let byte_of_char c = Char.chr c
+let byte_of_char c = c
 
 let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)

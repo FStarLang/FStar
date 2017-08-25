@@ -96,9 +96,8 @@ open FStar_String
 
 %start inputFragment
 %start term
-%type <inputFragment> inputFragment
-%type <term> term
-
+%type <FStar_Parser_AST.inputFragment> inputFragment
+%type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
 
 %%

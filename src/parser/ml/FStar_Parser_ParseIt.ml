@@ -50,19 +50,27 @@ let parse fn =
   FStar_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
 
-  let lexbuf = match fn with
+  let lexbuf, filename = match fn with
     | U.Inl(f) ->
         check_extension f;
         let f' = find_file f in
-        (try create (read_file f') f' 1 0
+        (try create (read_file f') f' 1 0, f'
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
     | U.Inr s ->
-      create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col) in
+      create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), ""
+    in
 
-  let lexer = FStar_Parser_LexFStar.token in
+  let lexer =
+    let pos = ref (lexbuf.cur_p) in
+    fun () ->
+      let old = !pos in
+      let tok = FStar_Parser_LexFStar.token lexbuf in
+      pos := lexbuf.cur_p;
+      (tok, old, !pos)
+    in
 
   try
-      let fileOrFragment = FStar_Parser_Parse.inputFragment lexer lexbuf in
+      let fileOrFragment = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer in
       let frags = match fileOrFragment with
           | U.Inl mods ->
              if FStar_Util.ends_with filename ".fsti"
