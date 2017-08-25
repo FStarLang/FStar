@@ -113,7 +113,7 @@ let run_all_nbe () =
     run 11 (minus (encode 10) (encode 10)) z;
     run 12 (minus (encode 100) (encode 100)) z;
     run 13 (let_ x (encode 100) (minus (nm x) (nm x))) z;
-    run 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~10s; wasteful for CI
+    // run 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~10s; wasteful for CI
     run 15 (let_ x (app succ [one])
             (let_ y (app mul [nm x; nm x])
                 (let_ h (app mul [nm y; nm y])
@@ -122,6 +122,7 @@ let run_all_nbe () =
             (let_ y (app mul [nm x; nm x])
                 (let_ h (app mul [nm y; nm y])
                           (minus (nm h) (nm h))))) z;
+    run 18 (pred_nat (snat (snat znat))) (snat znat);
     Options.__clear_unit_tests();
     Printf.printf "NBE ok\n"
 
@@ -140,7 +141,7 @@ let run_all_interpreter () =
     let _ = Pars.pars_and_tc_fragment "let rev (x:list 'a) : Tot (list 'a) = \
                                             let rec aux (x:list 'a) (out:list 'a) : Tot (list 'a) = \
                                                 match x with \
-                                                | [] -> out \
+                                                  | [] -> out \
                                                 | hd::tl -> aux tl (hd::out) in \
                                             aux x []" in
     let _ = Pars.pars_and_tc_fragment "type t = \
