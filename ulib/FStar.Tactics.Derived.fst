@@ -186,3 +186,10 @@ let rec iseq (ts : list (tactic unit)) : tactic unit =
         divide 1 t (iseq ts);;
         return ()
     | [] -> return ()
+
+private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
+private let __witness #a x #p _ = ()
+
+let witness (t : tactic term) : tactic unit =
+    apply_raw (quote __witness);;
+    exact t
