@@ -4704,21 +4704,21 @@ let loc_includes_restrict_to_regions
   (rs: Set.set HH.rid)
 : Lemma
   (loc_includes l (restrict_to_regions l rs))
-= ()
+= Classical.forall_intro loc_aux_includes_refl'
 
 let loc_includes_loc_union_restrict_to_regions
   (l: loc)
   (rs: Set.set HH.rid)
 : Lemma
   (loc_includes (loc_union (restrict_to_regions l rs) (restrict_to_regions l (Set.complement rs))) l)
-= ()
+= Classical.forall_intro loc_aux_includes_refl'
 
 let loc_includes_loc_regions_restrict_to_regions
   (l: loc)
   (rs: Set.set HH.rid)
 : Lemma
   (loc_includes (loc_regions rs) (restrict_to_regions l rs))
-= ()
+= Classical.forall_intro loc_aux_includes_refl'
 
 let modifies_fresh_frame_popped
   (h0 h1: HS.mem)
