@@ -1,5 +1,5 @@
 [
-  "\b“£≤ÕË¢™ﬂÁØ\u001fcÅöI",
+  "âO⁄Ω¡ëÀ¶â\u0000\u00131˜!&`",
   [
     [ "FStar.Pointer.Base.uu___is_TUInt", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Pointer.Base.uu___is_TUInt8", 1, 2, 1, [ "@query" ], 0 ],
@@ -2236,6 +2236,14 @@
       0
     ],
     [
+      "FStar.Pointer.Base.modifies_loc_regions_intro",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
       "FStar.Pointer.Base.modifies_reference_elim",
       1,
       2,
@@ -2608,6 +2616,25 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.modifies_loc_addresses_intro",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.modifies_loc_addresses_intro",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
       0
     ],
     [
