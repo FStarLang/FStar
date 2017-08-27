@@ -3766,27 +3766,9 @@ let loc_includes_gsub_buffer_l #t b i1 len1 i2 len2 =
     assert (loc_aux_includes (LocBuffer g1) (LocBuffer g2))
   end
 
-let loc_includes_addresses_pointer
-  (#t: typ)
-  (r: HH.rid)
-  (s: Set.set nat)
-  (p: pointer t)
-: Lemma
-  (requires (frameOf p == r /\ Set.mem (as_addr p) s))
-  (ensures (loc_includes (loc_addresses r s) (loc_pointer p)))
-  [SMTPat (loc_includes (loc_addresses r s) (loc_pointer p))]
-= ()
+let loc_includes_addresses_pointer #t r s p = ()
 
-let loc_includes_addresses_buffer
-  (#t: typ)
-  (r: HH.rid)
-  (s: Set.set nat)
-  (p: buffer t)
-: Lemma
-  (requires (frameOf_buffer p == r /\ Set.mem (buffer_as_addr p) s))
-  (ensures (loc_includes (loc_addresses r s) (loc_buffer p)))
-  [SMTPat (loc_includes (loc_addresses r s) (loc_buffer p))]
-= ()
+let loc_includes_addresses_buffer #t r s p = ()
 
 let loc_includes_region_pointer #t s p = ()
 
@@ -4283,7 +4265,7 @@ let modifies_loc_includes s1 h h' s2 =
   in
   Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
 
-let modifies_only_live_regions
+let modifies_only_live_regions_weak
   (rs: Set.set HH.rid)
   (l: loc)
   (h h' : HS.mem)
@@ -4296,31 +4278,10 @@ let modifies_only_live_regions
   (ensures (modifies l h h'))
 = ()
 
-let modifies_regions_elim
-  (rs: Set.set HH.rid)
-  (h h' : HS.mem)
-: Lemma
-  (requires (
-    modifies (loc_regions rs) h h'
-  ))
-  (ensures (HH.modifies_just rs h.HS.h h'.HS.h))
-= ()
+let modifies_regions_elim rs h h' = ()
 
-let modifies_addresses_elim
-  (r: HH.rid)
-  (a: Set.set nat)
-  (l: loc)
-  (h h' : HS.mem)
-: Lemma
-  (requires (
-    modifies (loc_union (loc_addresses r a) l) h h' /\
-    loc_disjoint (loc_regions (Set.singleton r)) l /\
-    HS.live_region h r
-  ))
-  (ensures (
-    HH.modifies_rref r a h.HS.h h'.HS.h
-  ))
-= assert (Set.equal (addrs_of_loc (loc_addresses r a) r) a);
+let modifies_addresses_elim r a l h h' =
+  assert (Set.equal (addrs_of_loc (loc_addresses r a) r) a);
   assert (Set.equal (addrs_of_loc l r) Set.empty)
 
 let modifies_trans'
@@ -4720,22 +4681,8 @@ let loc_includes_loc_regions_restrict_to_regions
   (loc_includes (loc_regions rs) (restrict_to_regions l rs))
 = Classical.forall_intro loc_aux_includes_refl'
 
-let modifies_fresh_frame_popped
-  (h0 h1: HS.mem)
-  (s: loc)
-  (h2 h3: HS.mem)
-: Lemma
-  (requires (
-    HS.fresh_frame h0 h1 /\
-    modifies (loc_union (loc_regions (HH.mod_set (Set.singleton h1.HS.tip))) s) h1 h2 /\
-    h2.HS.tip == h1.HS.tip /\
-    HS.popped h2 h3
-  ))
-  (ensures (
-    modifies s h0 h3 /\
-    h3.HS.tip == h0.HS.tip
-  ))
-= (* NOTE: I could automate the proof, but at least this way here
+let modifies_fresh_frame_popped h0 h1 s h2 h3 =
+  (* NOTE: I could automate the proof, but at least this way here
      it is replayable and also readable. *)
   let rs = HH.mod_set (Set.singleton h1.HS.tip) in
   let c_rs = Set.complement rs in
@@ -4757,6 +4704,28 @@ let modifies_fresh_frame_popped
   modifies_fresh_frame_popped_weak h0 h1 s_c_rs h2 h3;
   loc_includes_restrict_to_regions s c_rs;
   modifies_loc_includes s h0 h3 s_c_rs
+
+let modifies_only_live_regions rs l h h' =
+  let s = l in
+  let c_rs = Set.complement rs in
+  let s_rs = restrict_to_regions s rs in
+  let s_c_rs = restrict_to_regions s c_rs in
+  let lrs = loc_regions rs in
+  loc_includes_loc_regions_restrict_to_regions s rs;
+  loc_includes_union_l lrs s_c_rs s_rs;
+  loc_includes_refl s_c_rs;
+  loc_includes_union_l lrs s_c_rs s_c_rs;
+  loc_includes_union_r (loc_union lrs s_c_rs) s_rs s_c_rs;
+  loc_includes_loc_union_restrict_to_regions s rs;
+  loc_includes_trans (loc_union lrs s_c_rs) (loc_union s_rs s_c_rs) s;
+  modifies_loc_includes (loc_union lrs s_c_rs) h h' (loc_union lrs s);
+  loc_includes_loc_regions_restrict_to_regions s c_rs;
+  loc_disjoint_regions rs c_rs;
+  loc_includes_refl lrs;
+  loc_disjoint_includes lrs (loc_regions c_rs) lrs s_c_rs;
+  modifies_only_live_regions_weak rs s_c_rs h h';
+  loc_includes_restrict_to_regions s c_rs;
+  modifies_loc_includes s h h' s_c_rs
 
 (* `modifies` and the readable permission *)
 

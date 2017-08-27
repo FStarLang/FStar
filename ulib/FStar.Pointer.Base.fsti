@@ -1591,6 +1591,26 @@ val loc_includes_gsub_buffer_l
   (ensures (UInt32.v i1 + UInt32.v len1 <= UInt32.v (buffer_length b) /\ UInt32.v i1 <= UInt32.v i2 /\ UInt32.v i2 + UInt32.v len2 <= UInt32.v i1 + UInt32.v len1 /\ loc_includes (loc_buffer (gsub_buffer b i1 len1)) (loc_buffer (gsub_buffer b i2 len2))))
   [SMTPat (loc_includes (loc_buffer (gsub_buffer b i1 len1)) (loc_buffer (gsub_buffer b i2 len2)))]
 
+val loc_includes_addresses_pointer
+  (#t: typ)
+  (r: HH.rid)
+  (s: Set.set nat)
+  (p: pointer t)
+: Lemma
+  (requires (frameOf p == r /\ Set.mem (as_addr p) s))
+  (ensures (loc_includes (loc_addresses r s) (loc_pointer p)))
+  [SMTPat (loc_includes (loc_addresses r s) (loc_pointer p))]
+
+val loc_includes_addresses_buffer
+  (#t: typ)
+  (r: HH.rid)
+  (s: Set.set nat)
+  (p: buffer t)
+: Lemma
+  (requires (frameOf_buffer p == r /\ Set.mem (buffer_as_addr p) s))
+  (ensures (loc_includes (loc_addresses r s) (loc_buffer p)))
+  [SMTPat (loc_includes (loc_addresses r s) (loc_buffer p))]
+
 val loc_includes_region_pointer
   (#t: typ)
   (s: Set.set HH.rid)
@@ -1919,6 +1939,30 @@ val modifies_loc_includes
   (ensures (modifies s1 h h'))
   [SMTPat (modifies s1 h h'); SMTPat (modifies s2 h h')]
 
+val modifies_regions_elim
+  (rs: Set.set HH.rid)
+  (h h' : HS.mem)
+: Lemma
+  (requires (
+    modifies (loc_regions rs) h h'
+  ))
+  (ensures (HH.modifies_just rs h.HS.h h'.HS.h))
+
+val modifies_addresses_elim
+  (r: HH.rid)
+  (a: Set.set nat)
+  (l: loc)
+  (h h' : HS.mem)
+: Lemma
+  (requires (
+    modifies (loc_union (loc_addresses r a) l) h h' /\
+    loc_disjoint (loc_regions (Set.singleton r)) l /\
+    HS.live_region h r
+  ))
+  (ensures (
+    HH.modifies_rref r a h.HS.h h'.HS.h
+  ))
+
 val modifies_trans
   (s12: loc)
   (h1 h2: HS.mem)
@@ -2065,6 +2109,17 @@ val modifies_fresh_frame_popped
     modifies s h0 h3 /\
     h3.HS.tip == h0.HS.tip
   ))
+
+val modifies_only_live_regions
+  (rs: Set.set HH.rid)
+  (l: loc)
+  (h h' : HS.mem)
+: Lemma
+  (requires (
+    modifies (loc_union (loc_regions rs) l) h h' /\
+    (forall r . Set.mem r rs ==> (~ (HS.live_region h r)))
+  ))
+  (ensures (modifies l h h'))
 
 
 (* `modifies` and the readable permission *)
