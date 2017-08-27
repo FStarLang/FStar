@@ -1852,6 +1852,13 @@ val modifies
   (h1 h2: HS.mem)
 : GTot Type0
 
+val modifies_loc_regions_intro
+  (rs: Set.set HH.rid)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (HH.modifies_just rs h1.HS.h h2.HS.h))
+  (ensures (modifies (loc_regions rs) h1 h2))
+
 val modifies_pointer_elim
   (s: loc)
   (h1 h2: HS.mem)
@@ -2121,6 +2128,17 @@ val modifies_only_live_regions
   ))
   (ensures (modifies l h h'))
 
+val modifies_loc_addresses_intro
+  (r: HH.rid)
+  (a: Set.set nat)
+  (l: loc)
+  (h1 h2: HS.mem)
+: Lemma
+  (requires (
+    modifies (loc_union (loc_regions (Set.singleton r)) l) h1 h2 /\
+    HH.modifies_rref r a h1.HS.h h2.HS.h
+  ))
+  (ensures (modifies (loc_union (loc_addresses r a) l) h1 h2))
 
 (* `modifies` and the readable permission *)
 

@@ -4124,35 +4124,21 @@ let modifies'
 
 let modifies = modifies'
 
-let modifies_loc_regions_intro
-  (rs: Set.set HH.rid)
-  (h1 h2: HS.mem)
-: Lemma
-  (requires (HH.modifies_just rs h1.HS.h h2.HS.h))
-  (ensures (modifies (loc_regions rs) h1 h2))
-= ()
+let modifies_loc_regions_intro rs h1 h2 = ()
 
-let modifies_loc_addresses_intro_1
+let modifies_loc_addresses_intro_weak
   (r: HH.rid)
   (s: Set.set nat)
-  (h1 h2: HS.mem)
-: Lemma
-  (requires (HH.modifies_one r h1.HS.h h2.HS.h /\ HH.modifies_rref r s h1.HS.h h2.HS.h))
-  (ensures (modifies (loc_addresses r s) h1 h2))
-= ()
-
-let modifies_loc_addresses_intro_2
-  (r1 r2: HH.rid)
-  (s1 s2: Set.set nat)
+  (l: loc)
   (h1 h2: HS.mem)
 : Lemma
   (requires (
-    r1 <> r2 /\
-    HH.modifies_just (Set.union (Set.singleton r1) (Set.singleton r2)) h1.HS.h h2.HS.h /\
-    HH.modifies_rref r1 s1 h1.HS.h h2.HS.h /\
-    HH.modifies_rref r2 s2 h1.HS.h h2.HS.h
+    modifies (loc_union (loc_regions (Set.singleton r)) l) h1 h2 /\
+    HH.modifies_rref r s h1.HS.h h2.HS.h /\
+    HS.live_region h1 r /\
+    loc_disjoint l (loc_regions (Set.singleton r))
   ))
-  (ensures (modifies (loc_union (loc_addresses r1 s1) (loc_addresses r2 s2)) h1 h2))
+  (ensures (modifies (loc_union (loc_addresses r s) l) h1 h2))
 = ()
 
 let modifies_pointer_elim s h1 h2 #a' p' =
@@ -4726,6 +4712,42 @@ let modifies_only_live_regions rs l h h' =
   modifies_only_live_regions_weak rs s_c_rs h h';
   loc_includes_restrict_to_regions s c_rs;
   modifies_loc_includes s h h' s_c_rs
+
+let modifies_loc_addresses_intro r a l h1 h2 =
+  let rs = Set.singleton r in
+  let s = l in
+  let c_rs = Set.complement rs in
+  let s_rs = restrict_to_regions s rs in
+  let s_c_rs = restrict_to_regions s c_rs in
+  let lrs = loc_regions rs in
+  if StrongExcludedMiddle.strong_excluded_middle (HS.live_region h1 r)
+  then begin
+    loc_includes_loc_regions_restrict_to_regions s rs;
+    loc_includes_union_l lrs s_c_rs s_rs;
+    loc_includes_refl s_c_rs;
+    loc_includes_union_l lrs s_c_rs s_c_rs;
+    loc_includes_union_r (loc_union lrs s_c_rs) s_rs s_c_rs;
+    loc_includes_loc_union_restrict_to_regions s rs;
+    loc_includes_trans (loc_union lrs s_c_rs) (loc_union s_rs s_c_rs) s;
+    modifies_loc_includes (loc_union lrs s_c_rs) h1 h2 (loc_union lrs s);
+    loc_includes_loc_regions_restrict_to_regions s c_rs;
+    loc_disjoint_regions rs c_rs;
+    loc_includes_refl lrs;
+    loc_disjoint_includes lrs (loc_regions c_rs) lrs s_c_rs;
+    modifies_loc_addresses_intro_weak r a s_c_rs h1 h2;
+    loc_includes_restrict_to_regions s c_rs;
+    loc_includes_union_l (loc_addresses r a) l s_c_rs;
+    loc_includes_refl (loc_addresses r a);
+    loc_includes_union_l (loc_addresses r a) l (loc_addresses r a);
+    loc_includes_union_r (loc_union (loc_addresses r a) l) (loc_addresses r a) s_c_rs;
+    modifies_loc_includes (loc_union (loc_addresses r a) l) h1 h2 (loc_union (loc_addresses r a) s_c_rs)
+  end else begin
+    modifies_only_live_regions rs l h1 h2;
+    loc_includes_refl l;
+    loc_includes_union_l (loc_addresses r a) l l;
+    modifies_loc_includes (loc_union (loc_addresses r a) l) h1 h2 l
+  end
+
 
 (* `modifies` and the readable permission *)
 
