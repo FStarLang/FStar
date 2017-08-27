@@ -1,5 +1,5 @@
 [
-  "Â\u0016m…\u000b\u0019~Â\nπGC«öQË",
+  "\b“£≤ÕË¢™ﬂÁØ\u001fcÅöI",
   [
     [ "FStar.Pointer.Base.uu___is_TUInt", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Pointer.Base.uu___is_TUInt8", 1, 2, 1, [ "@query" ], 0 ],
@@ -1857,6 +1857,50 @@
       0
     ],
     [
+      "FStar.Pointer.Base.loc_includes_addresses_pointer",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.loc_includes_addresses_pointer",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.loc_includes_addresses_buffer",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.loc_includes_addresses_buffer",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
       "FStar.Pointer.Base.loc_includes_region_pointer",
       1,
       2,
@@ -2353,6 +2397,33 @@
       0
     ],
     [
+      "FStar.Pointer.Base.modifies_regions_elim",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.modifies_addresses_elim",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.modifies_addresses_elim",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
       "FStar.Pointer.Base.modifies_0",
       1,
       2,
@@ -2518,6 +2589,22 @@
     [
       "FStar.Pointer.Base.modifies_fresh_frame_popped",
       1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.modifies_only_live_regions",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.modifies_only_live_regions",
+      2,
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
