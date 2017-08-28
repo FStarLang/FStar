@@ -831,16 +831,20 @@ let run_compute st term rules =
       match parse frag with
       | None -> (QueryNOK, JsonStr "Could not parse this term")
       | Some decls ->
-        try
+        let aux () =
           let decls = desugar dsenv decls in
           let ses = typecheck tcenv decls in
           match find_let_body ses with
           | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
           | Some def -> let normalized = normalize_term tcenv rules def in
-                       (QueryOK, JsonStr (term_to_string tcenv normalized))
-        with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
-                                | Some issue -> JsonStr (FStar.Errors.format_issue issue)
-                                | None -> raise e)))
+                       (QueryOK, JsonStr (term_to_string tcenv normalized)) in
+        if Options.trace_error () then
+          aux ()
+        else
+          try aux ()
+          with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
+                                  | Some issue -> JsonStr (FStar.Errors.format_issue issue)
+                                  | None -> raise e)))
 
 type search_term' =
 | NameContainsStr of string
@@ -1018,15 +1022,19 @@ let interactive_mode' (filename:string): unit =
 
 let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
-  FStar.Errors.set_handler interactive_error_handler;
 
   if Option.isSome (Options.codegen())
   then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
-  try
+  if Options.trace_error () then
+    // This prevents the error catcher below from swallowing backtraces
     interactive_mode' filename
-  with
-  | e -> (// Revert to default handler since we won't have an opportunity to
-          // print errors ourselves.
-          FStar.Errors.set_handler FStar.Errors.default_handler;
-          raise e)
+  else
+    try
+      FStar.Errors.set_handler interactive_error_handler;
+      interactive_mode' filename
+    with
+    | e -> (// Revert to default handler since we won't have an opportunity to
+           // print errors ourselves.
+           FStar.Errors.set_handler FStar.Errors.default_handler;
+           raise e)
