@@ -796,7 +796,8 @@ let run_compute st term rules =
 
   let find_let_body ses =
     match ses with
-    | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _) }] -> Some def
+    | [{ SS.sigel = SS.Sig_let((_, [lb]), _) }] ->
+      Some (lb.SS.lbunivs, lb.SS.lbdef)
     | _ -> None in
 
   let parse frag =
@@ -836,8 +837,11 @@ let run_compute st term rules =
           let ses = typecheck tcenv decls in
           match find_let_body ses with
           | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
-          | Some def -> let normalized = normalize_term tcenv rules def in
-                       (QueryOK, JsonStr (term_to_string tcenv normalized)) in
+          | Some (univs, def) ->
+            let univs, def = Syntax.Subst.open_univ_vars univs def in
+            let tcenv = TcEnv.push_univ_vars tcenv univs in
+            let normalized = normalize_term tcenv rules def in
+            (QueryOK, JsonStr (term_to_string tcenv normalized)) in
         if Options.trace_error () then
           aux ()
         else
