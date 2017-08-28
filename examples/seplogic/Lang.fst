@@ -3,8 +3,6 @@ module Lang
 open FStar.Seq
 open FStar.Set
 open FStar.Classical
-open FStar.Buffer
-open FStar.Seq
 
 open FStar.ST
 open FStar.Heap  //this order of opening the modules is important, we want ref from FStar.Heap
@@ -94,10 +92,30 @@ let lift_wpsep (#a:Type0) (wp_sep:st_wp a) :st_wp a
   = fun p h0 -> exists h0' h0''. h0 == h0' `join` h0'' /\
                          wp_sep (fun x h1' -> p x (h1' `join` h0'')) h0'
 
+let rec lift_command (#a:Type0) (c:command a) :st_wp a
+  = match c with
+    | Return #a x        -> fun p h0 ->  p x h0
+    
+    | Bind #a #b c1 c2   ->    
+       FStar.Classical.forall_intro (FStar.WellFounded.axiom1 #a #(command b) c2);
+       fun p h0 -> exists h0' h0''. h0 == h0' `join` h0'' /\
+                            (lift_command c1) (fun x h1 -> lift_command (c2 x)  (fun x h2 -> p x (h2 `join` h0''))  h1)  h0' 
+ 
+    | Read r    -> fun p h0 -> let h0' = restrict h0 (Set.singleton (addr_of r)) in
+                             exists h0''. h0 == h0' `join` h0'' /\
+                             (exists x. points_to r x h0') /\ (forall x. points_to r x h0'  ==>  p x (h0' `join` h0''))
+					    
+    | Write r y -> fun p h0 -> let h0' = restrict h0 (Set.singleton (addr_of r)) in
+                             exists h0''. h0 == h0' `join` h0'' /\
+                             (exists x. points_to r x h0') /\ (forall h1. points_to r y h1 ==> p () (h1 `join` h0''))  
+					   
+    | Alloc     -> fun p h0 -> (forall r h1. points_to r 0 h1 ==> p r (h1 `join` h0)) 
+
 let steps :list step = [delta_only
   ["Lang.wp_command";
    "Lang.wpsep_command";
    "Lang.lift_wpsep";
+   "Lang.lift_command";
    "Lang.disjoint_partitions";
    "Lang.uu___is_Return";
    "Lang.uu___is_Bind";
@@ -119,7 +137,7 @@ let steps :list step = [delta_only
 #reset-options "--z3rlimit 5"
 
 let unfold_fns :list string = [
-  "wp_command"; "wpsep_command"; "lift_wpsep"; "disjoint_partitions"; "uu___is_Return"; "uu___is_Bind";
+  "wp_command"; "wpsep_command"; "lift_wpsep"; "lift_command"; "disjoint_partitions"; "uu___is_Return"; "uu___is_Bind";
   "uu___is_Read"; "uu___is_Write"; "uu___is_Alloc"; "__proj__Return__item__v";
    "__proj__Bind__item__c1"; "__proj__Bind__item__c2"; "__proj__Read__item__id";
    "__proj__Write__item__id"; "__proj__Write__item__v"
@@ -131,7 +149,8 @@ unfold let unfold_steps =
 let foo (r1:addr) (r2:addr) (h:heap{sel h r2 == 4 /\ addr_of r1 <> addr_of r2})
   = let c = Bind (Write r1 3) (fun _ -> Read r1) in
     let p :st_post int = fun _ h -> sel h r2 == 4 in
-    let t = (lift_wpsep (wpsep_command c)) p h in
+(*    let t = (lift_wpsep (wpsep_command c)) p h in *)
+    let t = (lift_command c) p h in
     assert_by_tactic t (norm [Delta; UnfoldOnly unfold_steps; Primops];; dump "Foo")
 
 
