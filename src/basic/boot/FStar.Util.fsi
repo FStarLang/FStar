@@ -262,8 +262,7 @@ val char_at: string -> int -> char
 val is_upper: char -> Tot<bool>
 val contains: string -> string -> Tot<bool>
 val substring_from: string -> int -> string
-(* Second argument is a length, not an index. *)
-val substring: string -> int -> int -> string
+val substring: string -> start:int -> len:int -> string
 val replace_char: string -> char -> char -> Tot<string>
 val replace_chars: string -> char -> string -> Tot<string>
 val hashcode: string -> Tot<int>
