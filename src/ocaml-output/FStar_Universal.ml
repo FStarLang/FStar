@@ -496,8 +496,7 @@ let tc_one_file:
                      else
                        (let uu____1144 =
                           FStar_Util.format1
-                            "The file %s.checked is stale; delete it"
-                            cache_file in
+                            "The file %s is stale; delete it" cache_file in
                         failwith uu____1144))
           else tc_source_file ()
 let needs_interleaving: Prims.string -> Prims.string -> Prims.bool =
