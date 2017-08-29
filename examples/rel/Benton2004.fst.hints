@@ -1,5 +1,5 @@
 [
-  "±„&Rh`±†7ÛèCÆWf:",
+  "_\u00059€®Éo’·¶Ï˙=%Á",
   [
     [
       "Benton2004.reify_computation",
@@ -314,6 +314,7 @@
       ],
       0
     ],
+    [ "Benton2004.holds_flip'", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Benton2004.eval_equiv_flip",
       1,
@@ -633,7 +634,7 @@
         "equation_Prims.eqtype", "equation_Prims.nat",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
-        "lemma_Benton2004.exec_equiv_flip", "lemma_Benton2004.holds_flip",
+        "lemma_Benton2004.exec_equiv_flip", "lemma_Benton2004.holds_flip_",
         "refinement_interpretation_Benton2004_Tm_refine_72f59247ec9aa4a8317b20902c00c895",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_Benton2004.reify_raw_computation"

@@ -100,11 +100,8 @@ let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
 (* Infix notations *)
 unfold let op_Plus_Hat = add
-unfold let op_Plus_Percent_Hat = add_mod
 unfold let op_Subtraction_Hat = sub
-unfold let op_Subtraction_Percent_Hat = sub_mod
 unfold let op_Star_Hat = mul
-unfold let op_Star_Percent_Hat = mul_mod
 unfold let op_Slash_Hat = div
 unfold let op_Percent_Hat = rem
 unfold let op_Hat_Hat = logxor
