@@ -63,7 +63,6 @@ val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
 val parse_cmd_line              : unit    -> parse_cmdline_res * list<string>
 val add_verify_module           : string  -> unit
-
 val add_light_off_file          : string  -> unit
 
 type opt_type =
@@ -91,6 +90,9 @@ type opt_type =
   // For options like --version that have side effects
 
 val all_specs_with_types        : list<(char * string * opt_type * string)>
+val settable                    : string -> bool
+val resettable                  : string -> bool
+
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
