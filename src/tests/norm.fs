@@ -118,7 +118,11 @@ let run_all_nbe () =
             (let_ y (app mul [nm x; nm x])
                 (let_ h (app mul [nm y; nm y])
                         (minus (nm h) (nm h))))) z;
-    run 16 (let_ x (app succ [one])
+    run 16 (mk_let x (app succ [one])
+             (mk_let y (app mul [nm x; nm x])
+                     (mk_let h (app mul [nm y; nm y])
+                             (minus (nm h) (nm h))))) z;
+    run 17 (let_ x (app succ [one])
             (let_ y (app mul [nm x; nm x])
                 (let_ h (app mul [nm y; nm y])
                           (minus (nm h) (nm h))))) z;

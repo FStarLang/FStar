@@ -10,6 +10,7 @@ module SS = FStar.Syntax.Subst
 module Range = FStar.Range
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
+module BU = FStar.Util
 
 (* Utils *)
 
@@ -27,12 +28,17 @@ type atom = //JUST FSHARP
   (* keep original branches for readback -- 
      only used to find the original patterns *)
   | Match of list<branch> * t * (t -> t) 
+  (* Fix is used to represent fixpoints whose evaluation 
+     is stuck because the recursive argument is not a contructor. *)
+  (* Zoe: I'm not sure how to use this in our setting since F*'s ast does not
+     mark the recursive argument and therefore I'm not sure how to prevent 
+     infinite fixpoint unrolling *) 
   | Fix of (t -> t) * t * int
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
   | Lam of (t -> t)
   | Accu of atom * list<t>
-  (* For simplicity represent constructors with fv as in F* terms *)
+  (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<t>
   | Unit
   | Bool of bool
@@ -50,8 +56,7 @@ let app (f:t) (x:t) =
 let mkConstruct i ts = Construct(i,ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
-let mkAccuMatch (b : list<branch>) (s : t) (c : t -> t) = 
-  Accu(Match (b, s, c), [])
+let mkAccuMatch (b : list<branch>) (s : t) (c : t -> t) = Accu(Match (b, s, c), [])
 
 let rec pickBranch (c : fv) (branches : list<branch>) : term = 
   match branches with
@@ -125,6 +130,18 @@ let rec translate (bs:list<t>) (e:term) : t =
       in 
       case (translate bs scrut)
 
+    | Tm_let((false, [lb]), body) -> // non-recursive let
+      let def = translate bs lb.lbdef in
+      translate (def::bs) body
+
+    | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
+      // this will loop infinitely when the recursive argument is symbolic 
+      // let def = lb.lbdef in 
+      // let fnorm f = translate (f::bs) def in
+      // let rec f = fnorm f in
+      // translate (f::bs) body
+      failwith "Not yet implemented"
+      
     | _ -> debug_term e; failwith "Not yet implemented"
 
 and readback (x:t) : term =
