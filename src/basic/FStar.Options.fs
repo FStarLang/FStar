@@ -1018,7 +1018,7 @@ let set_options o s =
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
 let parse_cmd_line () =
-  let res = Getopt.parse_cmdline (specs()) (fun i -> file_list_ := !file_list_ @ [i]) in
+  let res = Getopt.parse_cmdline all_specs (fun i -> file_list_ := !file_list_ @ [i]) in
   res, List.map FC.try_convert_file_name_to_mixed !file_list_
 
 let file_list () =
