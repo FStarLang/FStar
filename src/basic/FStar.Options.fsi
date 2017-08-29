@@ -45,7 +45,6 @@ type options =
     | Restore
 
 val defaults                    : list<(string * option_val)>
-val docs                        : unit -> list<(string * string)>
 
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits

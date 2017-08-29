@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 #light "off"
-
 module FStar.Interactive.Ide
 open FStar.ST
 open FStar.Exn
@@ -302,6 +301,7 @@ let js_reductionrule s = match js_str s with
 
 type completion_kind =
 | CKSymbol
+| CKOption of bool (* #set-options (false) or #reset-options (true) *)
 | CKModuleOrNamespace of bool (* modules *) * bool (* namespaces *)
 
 let js_optional_completion_kind k =
@@ -310,6 +310,8 @@ let js_optional_completion_kind k =
   | Some k ->
     match js_str k with
     | "symbol" -> CKSymbol
+    | "set-options" -> CKOption false
+    | "reset-options" -> CKOption true
     | "open" -> CKModuleOrNamespace (true, true)
     | "let-open"
     | "include"
@@ -418,12 +420,12 @@ let read_interactive_query stream : query =
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
 
-let rec json_of_fstar_option = function
+let rec json_of_fstar_option_value = function
   | Options.Bool b -> JsonBool b
   | Options.String s
   | Options.Path s -> JsonStr s
   | Options.Int n -> JsonInt n
-  | Options.List vs -> JsonList (List.map json_of_fstar_option vs)
+  | Options.List vs -> JsonList (List.map json_of_fstar_option_value vs)
   | Options.Unset -> JsonNull
 
 let json_of_opt json_of_a opt_a =
@@ -522,20 +524,82 @@ type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_env: env_t; repl_ts: m_timestamps;
                     repl_stdin: stream_reader; repl_names: CompletionTable.table }
 
+type fstar_option_permission_level =
+| OptSet
+| OptReset
+| OptReadOnly
+
+let string_of_option_permission_level = function
+  | OptSet -> "#set-options"
+  | OptReset -> "#reset-options"
+  | OptReadOnly -> "--read-only--"
+
+type fstar_option =
+  { opt_name: string;
+    opt_value: Options.option_val;
+    opt_default: Options.option_val;
+    opt_type: Options.opt_type;
+    opt_snippet: string;
+    opt_documentation: option<string>;
+    opt_permission_level: fstar_option_permission_level }
+
+let rec kind_of_fstar_option_type = function
+  | Options.Const _ -> "flag"
+  | Options.IntStr _ -> "int"
+  | Options.BoolStr -> "bool"
+  | Options.PathStr _ -> "path"
+  | Options.SimpleStr _ -> "string"
+  | Options.EnumStr _ -> "enum"
+  | Options.OpenEnumStr _ -> "open enum"
+  | Options.PostProcessed (_, typ)
+  | Options.Accumulated typ
+  | Options.ReverseAccumulated typ
+  | Options.WithSideEffect (_, typ) -> kind_of_fstar_option_type typ
+
+let rec snippet_of_fstar_option name typ =
+  "--" ^
+  (match typ with
+   | Options.Const _ -> name
+   | typ -> String.concat "" [name; " ${"; (Options.desc_of_opt_type typ); "}"])
+
+let json_of_fstar_option opt =
+  JsonAssoc [("name", JsonStr opt.opt_name);
+             ("value", json_of_fstar_option_value opt.opt_value);
+             ("default", json_of_fstar_option_value opt.opt_default);
+             ("documentation", json_of_opt JsonStr opt.opt_documentation);
+             ("type", JsonStr (kind_of_fstar_option_type opt.opt_type));
+             ("permission-level", JsonStr (string_of_option_permission_level opt.opt_permission_level))]
+
+let fstar_options_static_cache =
+  let defaults = Util.smap_of_list Options.defaults in
+  Options.all_specs_with_types
+  |> List.filter_map (fun (_shortname, name, typ, doc) ->
+       Util.smap_try_find defaults name // Keep only options with a default value
+       |> Util.map_option (fun default_value ->
+             { opt_name = name;
+               opt_value = Options.Unset;
+               opt_default = default_value;
+               opt_type = typ;
+               opt_snippet = snippet_of_fstar_option name typ;
+               opt_documentation = if doc = "" then None else Some doc;
+               opt_permission_level = if Options.settable name then OptSet
+                                      else if Options.resettable name then OptReset
+                                      else OptReadOnly }))
+  |> List.sortWith (fun o1 o2 -> String.compare (o1.opt_name) (o2.opt_name))
+
+let collect_fstar_options (filter: fstar_option -> bool) =
+  let filter_update opt =
+    if filter opt then
+      Some ({ opt with opt_value = Options.get_option opt.opt_name })
+    else
+      None in
+  List.filter_map filter_update fstar_options_static_cache
+
 let json_of_repl_state st =
-  let opts_and_defaults =
-    let opt_docs = Util.smap_of_list (Options.docs ()) in
-    let get_doc k = Util.smap_try_find opt_docs k in
-    List.map (fun (k, v) -> (k, Options.get_option k, get_doc k, v)) Options.defaults in
   [("loaded-dependencies",
     JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts));
    ("options",
-    JsonList (List.map (fun (name, value, doc, dflt) ->
-                        JsonAssoc [("name", JsonStr name);
-                                   ("value", json_of_fstar_option value);
-                                   ("default", json_of_fstar_option dflt);
-                                   ("documentation", json_of_opt JsonStr doc)])
-                       opts_and_defaults))]
+    JsonList (List.map json_of_fstar_option (collect_fstar_options (fun _ -> true))))]
 
 let with_printed_effect_args k =
   Options.with_saved_options
@@ -762,13 +826,14 @@ let run_symbol_autocomplete st search_term =
     | path_and_symb -> Some path_and_symb in
   run_autocomplete' st search_term filter
 
-let rec split_last = function
-  | [] -> failwith "split_last on empty list"
-  | [h] -> h, []
-  | h :: t -> let last, butlast = split_last t in last, h :: butlast
-
 let run_module_autocomplete st search_term namespaces modules =
   let dsenv, tcenv = st.repl_env in
+
+  let rec split_last = function
+    | [] -> failwith "split_last on empty list"
+    | [h] -> h, []
+    | h :: t -> let last, butlast = split_last t in last, h :: butlast in
+
   let mod_filter pred loaded path symb =
     if pred then
       let last_elem, path_but_last = split_last path in
@@ -776,17 +841,42 @@ let run_module_autocomplete st search_term namespaces modules =
       | Some _ -> None // Exclude matches that reach the final ‘.’
       | _ -> Some (path_but_last, symb)
     else None in
+
   let filter path symb =
     match symb with
     | CompletionTable.Lid _ -> None
     | CompletionTable.Module loaded -> mod_filter modules loaded path symb
     | CompletionTable.Namespace loaded -> mod_filter namespaces loaded path symb in
+
   run_autocomplete' st search_term filter
+
+let candidate_of_fstar_option match_len is_reset opt =
+  // let may_set =
+  //   match opt.opt_permission_level with
+  //   | OptSet -> true
+  //   | OptReset -> is_reset
+  //   | ReadOnly -> false in
+  // let annot =
+  //   if may_set
+  // FIXME meta string (on annotation, or as a new primitive?
+  { CompletionTable.completion_match_length = match_len;
+    CompletionTable.completion_candidate = opt.opt_snippet;
+    CompletionTable.completion_annotation = kind_of_fstar_option_type opt.opt_type }
+
+let run_option_autocomplete st search_term is_reset =
+  let matcher opt = Util.starts_with opt.opt_snippet search_term in
+  let options = collect_fstar_options matcher in
+  let c_of_opt = candidate_of_fstar_option (String.length search_term) is_reset in
+  let results = List.map c_of_opt options in
+  let json = List.map CompletionTable.json_of_completion_result results in
+  ((QueryOK, JsonList json), Inl st)
 
 let run_autocomplete st search_term kind =
   match kind with
   | CKSymbol ->
     run_symbol_autocomplete st search_term
+  | CKOption is_reset ->
+    run_option_autocomplete st search_term is_reset
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
 
