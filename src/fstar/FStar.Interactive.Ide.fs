@@ -539,7 +539,7 @@ type fstar_option =
     opt_value: Options.option_val;
     opt_default: Options.option_val;
     opt_type: Options.opt_type;
-    opt_snippet: string;
+    opt_snippets: list<string>;
     opt_documentation: option<string>;
     opt_permission_level: fstar_option_permission_level }
 
@@ -556,11 +556,25 @@ let rec kind_of_fstar_option_type = function
   | Options.ReverseAccumulated typ
   | Options.WithSideEffect (_, typ) -> kind_of_fstar_option_type typ
 
-let rec snippet_of_fstar_option name typ =
-  "--" ^
-  (match typ with
-   | Options.Const _ -> name
-   | typ -> String.concat "" [name; " ${"; (Options.desc_of_opt_type typ); "}"])
+let rec snippets_of_fstar_option name typ =
+  let mk_field field_name =
+    "${" ^ field_name ^ "}" in
+  let mk_snippet name argstring =
+    "--" ^ name ^ (if argstring <> "" then " " ^ argstring else "") in
+  let rec arg_snippets_of_type typ =
+    match typ with
+    | Options.Const _ -> [""]
+    | Options.BoolStr -> ["true"; "false"]
+    | Options.IntStr desc
+    | Options.PathStr desc
+    | Options.SimpleStr desc -> [mk_field desc]
+    | Options.EnumStr strs -> strs
+    | Options.OpenEnumStr (strs, desc) -> strs @ [mk_field desc]
+    | Options.PostProcessed (_, elem_spec)
+    | Options.Accumulated elem_spec
+    | Options.ReverseAccumulated elem_spec
+    | Options.WithSideEffect (_, elem_spec) -> arg_snippets_of_type elem_spec in
+  List.map (mk_snippet name) (arg_snippets_of_type typ)
 
 let json_of_fstar_option opt =
   JsonAssoc [("name", JsonStr opt.opt_name);
@@ -580,12 +594,14 @@ let fstar_options_static_cache =
                opt_value = Options.Unset;
                opt_default = default_value;
                opt_type = typ;
-               opt_snippet = snippet_of_fstar_option name typ;
+               opt_snippets = snippets_of_fstar_option name typ;
                opt_documentation = if doc = "" then None else Some doc;
                opt_permission_level = if Options.settable name then OptSet
                                       else if Options.resettable name then OptReset
                                       else OptReadOnly }))
-  |> List.sortWith (fun o1 o2 -> String.compare (o1.opt_name) (o2.opt_name))
+  |> List.sortWith (fun o1 o2 ->
+        String.compare (String.lowercase (o1.opt_name))
+                       (String.lowercase (o2.opt_name)))
 
 let collect_fstar_options (filter: fstar_option -> bool) =
   let filter_update opt =
@@ -850,26 +866,38 @@ let run_module_autocomplete st search_term namespaces modules =
 
   run_autocomplete' st search_term filter
 
-let candidate_of_fstar_option match_len is_reset opt =
-  // let may_set =
-  //   match opt.opt_permission_level with
-  //   | OptSet -> true
-  //   | OptReset -> is_reset
-  //   | ReadOnly -> false in
-  // let annot =
-  //   if may_set
-  // FIXME meta string (on annotation, or as a new primitive?
-  { CompletionTable.completion_match_length = match_len;
-    CompletionTable.completion_candidate = opt.opt_snippet;
-    CompletionTable.completion_annotation = kind_of_fstar_option_type opt.opt_type }
+let candidates_of_fstar_option match_len is_reset opt =
+  let may_set, explanation =
+    match opt.opt_permission_level with
+    | OptSet -> true, ""
+    | OptReset -> is_reset, "#reset-only"
+    | OptReadOnly -> false, "read-only" in
+  let opt_kind =
+    kind_of_fstar_option_type opt.opt_type in
+  let annot =
+    if may_set then opt_kind else "(" ^ explanation ^ " " ^ opt_kind ^ ")" in
+  opt.opt_snippets
+  |> List.map (fun snippet ->
+        { CompletionTable.completion_match_length = match_len;
+          CompletionTable.completion_candidate = snippet;
+          CompletionTable.completion_annotation = annot })
 
 let run_option_autocomplete st search_term is_reset =
-  let matcher opt = Util.starts_with opt.opt_snippet search_term in
-  let options = collect_fstar_options matcher in
-  let c_of_opt = candidate_of_fstar_option (String.length search_term) is_reset in
-  let results = List.map c_of_opt options in
-  let json = List.map CompletionTable.json_of_completion_result results in
-  ((QueryOK, JsonList json), Inl st)
+  let opt_prefix = "--" in
+  if Util.starts_with search_term opt_prefix then
+    let __len = String.length opt_prefix in
+    let search_term = Util.substring_from search_term __len in
+    let matcher opt = Util.starts_with opt.opt_name search_term in
+    let options = collect_fstar_options matcher in
+
+    let match_len = __len + String.length search_term in
+    let collect_candidates = candidates_of_fstar_option match_len is_reset in
+    let results = List.concatMap collect_candidates options in
+
+    let json = List.map CompletionTable.json_of_completion_result results in
+    ((QueryOK, JsonList json), Inl st)
+  else
+    ((QueryNOK, JsonStr "Options should start with '--'"), Inl st)
 
 let run_autocomplete st search_term kind =
   match kind with
