@@ -20,6 +20,7 @@ module FStar.Options
 open FStar.ST
 open FStar.All
 open FStar.Getopt
+open FStar.BaseTypes
 
 //let __test_norm_all = Util.mk_ref false
 
@@ -65,6 +66,31 @@ val add_verify_module           : string  -> unit
 
 val add_light_off_file          : string  -> unit
 
+type opt_type =
+| Const of option_val
+  // --cache_checked_modules
+| IntStr of string (* label *)
+  // --z3rlimit 5
+| BoolStr
+  // --admit_smt_queries true
+| PathStr of string (* label *)
+  // --fstar_home /build/fstar
+| SimpleStr of string (* label *)
+  // --admit_except xyz
+| EnumStr of list<string>
+  // --codegen OCaml
+| OpenEnumStr of list<string> (* values *) * string (* label *)
+  // --debug_level …
+| PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
+  // For options like --extract_module that require post-processing or validation
+| Accumulated of opt_type (* elem spec *)
+  // For options like --extract_module that can be repeated (LIFO)
+| ReverseAccumulated of opt_type (* elem spec *)
+  // For options like --include that can be repeated (FIFO)
+| WithSideEffect of ((unit -> unit) * opt_type (* elem spec *))
+  // For options like --version that have side effects
+
+val all_specs_with_types        : list<(char * string * opt_type * string)>
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
