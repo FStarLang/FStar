@@ -434,14 +434,16 @@ let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : opt
     failwith (Util.format1 "Invalid argument to --%s" opt_name)
 
 let rec desc_of_opt_type typ : string =
+  let desc_of_enum cases =
+    "[" ^ (String.concat "|" cases) ^ "]" in
   match typ with
   | Const c -> ""
   | IntStr desc -> desc
-  | BoolStr -> String.concat "|" ["true"; "false"]
+  | BoolStr -> desc_of_enum ["true"; "false"]
   | PathStr desc -> desc
   | SimpleStr desc -> desc
-  | EnumStr strs -> String.concat "|" strs
-  | OpenEnumStr (strs, desc) -> String.concat "|" strs ^ "|" ^ desc
+  | EnumStr strs -> desc_of_enum strs
+  | OpenEnumStr (strs, desc) -> desc_of_enum (strs @ [desc])
   | PostProcessed (_, elem_spec)
   | Accumulated elem_spec
   | ReverseAccumulated elem_spec
