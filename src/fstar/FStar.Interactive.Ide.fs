@@ -299,12 +299,12 @@ let js_reductionrule s = match js_str s with
   | "pure-subterms" -> FStar.TypeChecker.Normalize.PureSubtermsWithinComputations
   | _ -> js_fail "reduction rule" s
 
-type completion_kind =
+type completion_context =
 | CKSymbol
 | CKOption of bool (* #set-options (false) or #reset-options (true) *)
 | CKModuleOrNamespace of bool (* modules *) * bool (* namespaces *)
 
-let js_optional_completion_kind k =
+let js_optional_completion_context k =
   match k with
   | None -> CKSymbol
   | Some k ->
@@ -317,8 +317,8 @@ let js_optional_completion_kind k =
     | "include"
     | "module-alias" -> CKModuleOrNamespace (true, false)
     | _ ->
-      js_fail "completion kind (symbol, open, let-open, \
-include, module-alias)" k
+      js_fail "completion context (symbol, set-options, reset-options, \
+open, let-open, include, module-alias)" k
 
 type query' =
 | Exit
@@ -326,7 +326,7 @@ type query' =
 | DescribeRepl
 | Pop
 | Push of push_kind * string * int * int * bool
-| AutoComplete of string * completion_kind
+| AutoComplete of string * completion_context
 | Lookup of string * option<(string * int * int)> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
 | Search of string
@@ -390,7 +390,7 @@ let unpack_interactive_query json =
                                      arg "column" |> js_int,
                                      query = "peek")
            | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
-                                            try_arg "kind" |> js_optional_completion_kind)
+                                            try_arg "context" |> js_optional_completion_context)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
                                 try_arg "location"
                                   |> Util.map_option js_assoc
@@ -899,8 +899,8 @@ let run_option_autocomplete st search_term is_reset =
   else
     ((QueryNOK, JsonStr "Options should start with '--'"), Inl st)
 
-let run_autocomplete st search_term kind =
-  match kind with
+let run_autocomplete st search_term context =
+  match context with
   | CKSymbol ->
     run_symbol_autocomplete st search_term
   | CKOption is_reset ->
@@ -1084,7 +1084,7 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | DescribeRepl -> run_describe_repl st
   | Pop -> run_pop st
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
-  | AutoComplete (search_term, kind) -> run_autocomplete st search_term kind
+  | AutoComplete (search_term, context) -> run_autocomplete st search_term context
   | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
