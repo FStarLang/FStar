@@ -273,7 +273,7 @@ let gpointer_of_buffer_cell_gsub
     gpointer_of_buffer_cell (gsub b i1 len) i2 == gpointer_of_buffer_cell b FStar.UInt32.(i1 +^ i2)
   ))
   [SMTPat (gpointer_of_buffer_cell (gsub b i1 len) i2)]
-= ()
+= Pointer.gpointer_of_buffer_cell_gsub_buffer b i1 len i2
 
 let live_gpointer_of_buffer_cell
   (#t: typ)
