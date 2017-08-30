@@ -133,11 +133,13 @@ let infix_prim_ops = [
 ]
 
 (* -------------------------------------------------------------------- *)
-let prim_uni_ops = [
-    ("op_Negation", "not");
-    ("op_Minus", "~-");
-    ("op_Bang","Support.ST.read")
-]
+let prim_uni_ops = 
+    let op_minus = if Util.codegen_fsharp() 
+                        then "-" 
+                        else "~-" in 
+    [ ("op_Negation", "not");
+      ("op_Minus", op_minus);
+      ("op_Bang","Support.ST.read") ]
 
 (* -------------------------------------------------------------------- *)
 let prim_types = []
