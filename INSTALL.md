@@ -348,6 +348,7 @@ just run the following command:
         $ make -C src/ocaml-output -j 6
 
 The option `-j 6` controls the number of cores to be used in parallel build. This is a relatively standard unix feature.
+Using more cores resuls in greater RAM usage. This can make builds slow if your system does not have enough RAM to support all parralel builds. Consider monitoring RAM usage when building, and use less cores if you are using 100% of your RAM. 
 
 **Note:** On Windows this generates a native F\* binary, that is, a binary that
 does *not* depend on `cygwin1.dll`, since the installer above uses a
