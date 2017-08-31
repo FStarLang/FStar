@@ -47,7 +47,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/boot/parse.fsy fstar.exe
+all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/boot/parse.fsy fstar.exe install-compiler-lib
 
 # Choose the correct version of the ML prettyprinter, based on OCaml version
 ../extraction/ml/FStar_Extraction_ML_PrintML.ml:
@@ -101,6 +101,10 @@ fstar.exe: $(GENERATED_FILES)
 	$(OCAMLBUILD) main.native
 	cp -f _build/src/fstar/ml/main.native ../../bin/$@
 	cp -f _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
+
+install-compiler-lib: fstar.exe
+	mkdir -p ../../bin/fstar-compiler-lib/
+	find -name "*.cmi" -exec cp {} ../../bin/fstar-compiler-lib/ \;
 
 FStar_Parser_Parse.ml: parse.mly
 	# We are opening the same module twice but we need these modules
@@ -266,6 +270,7 @@ clean:
 	rm -rf _build
 	rm -f $(GENERATED_FILES)
 	rm -f *.tar.gz *.zip
+	rm -f ../../bin/fstar-compiler-lib/*.cm[aiox][as]
 
 # Purge (clean + delete *all* automatically generated files)
 # if you do this you'll need to run `make ocaml` in `src` to get them back
