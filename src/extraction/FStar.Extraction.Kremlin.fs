@@ -48,6 +48,7 @@ and decl =
   | DTypeFlat of lident * int * fields_t
   | DExternal of option<cc> * lident * typ
   | DTypeVariant of lident * list<flag> * int * branches_t
+  | DTypeMutual of list<decl>
 
 and cc =
   | StdCall
@@ -166,7 +167,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 24
+let current_version: version = 25
 
 type file = string * program
 type binary_format = version * list<file>
@@ -425,33 +426,23 @@ and translate_decl env d: option<decl> =
   | MLM_Loc _ ->
       None
 
-  | MLM_Ty [ (assumed, name, _mangled_name, args, _, Some (MLTD_Abbrev t)) ] ->
-      let name = env.module_name, name in
-      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
-      if assumed then
-        None
-      else
-        Some (DTypeAlias (name, List.length args, translate_type env t))
+  | MLM_Ty [ ty_decl ] ->
+    translate_single_type_decl env ty_decl
 
-  | MLM_Ty [ (_, name, _mangled_name, args, _, Some (MLTD_Record fields)) ] ->
-      let name = env.module_name, name in
-      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
-      Some (DTypeFlat (name, List.length args, List.map (fun (f, t) ->
-        f, (translate_type env t, false)) fields))
-
-  | MLM_Ty [ (_, name, _mangled_name, args, attrs, Some (MLTD_DType branches)) ] ->
-      let name = env.module_name, name in
-      let flags = translate_flags attrs in
-      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
-      Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
-        cons, List.map (fun (name, t) ->
-          name, (translate_type env t, false)
-        ) ts
-      ) branches))
-
-  | MLM_Ty ((_, name, _mangled_name, _, _, _) :: _) ->
-      BU.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
-      None
+  | MLM_Ty (ty_decls) ->
+      // BU.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
+      let rec traverse (#a #b:Type) (f : a -> option b) (xs : list a) : option (list b) =
+        match xs with
+        | [] -> Some []
+        | (o :: os) ->
+            match traverse f os with
+            | None -> None
+            | Some os' -> match f o with
+                | None -> None
+                | Some o' -> Some (o' :: os')
+       in (match traverse (translate_single_type_decl env) ty_decls with
+       | None -> None
+       | Some decls -> Some (DTypeMutual decls))
 
   | MLM_Ty [] ->
       BU.print_string "Impossible!! Empty block of mutually recursive type declarations";
@@ -462,6 +453,32 @@ and translate_decl env d: option<decl> =
 
   | MLM_Exn _ ->
       failwith "todo: translate_decl [MLM_Exn]"
+
+and translate_single_type_decl env (ty_decl : one_mltydecl) =
+    match ty_decl with
+    | (assumed, name, _mangled_name, args, _, Some (MLTD_Abbrev t)) ->
+      let name = env.module_name, name in
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
+      if assumed then
+        None
+      else
+        Some (DTypeAlias (name, List.length args, translate_type env t))
+
+  | (_, name, _mangled_name, args, _, Some (MLTD_Record fields)) ->
+      let name = env.module_name, name in
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
+      Some (DTypeFlat (name, List.length args, List.map (fun (f, t) ->
+        f, (translate_type env t, false)) fields))
+
+  | (_, name, _mangled_name, args, attrs, Some (MLTD_DType branches)) ->
+      let name = env.module_name, name in
+      let flags = translate_flags attrs in
+      let env = List.fold_left (fun env (name, _) -> extend_t env name) env args in
+      Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
+        cons, List.map (fun (name, t) ->
+          name, (translate_type env t, false)
+        ) ts
+      ) branches))
 
 and translate_type env t: typ =
   match t with
