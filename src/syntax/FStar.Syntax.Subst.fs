@@ -100,11 +100,12 @@ let rec force_uvar' t =
 
 //wraps force_uvar' to propagate any position information
 //from the uvar to anything it may have been resolved to
+//AR: adding a boolean to returned value indicating whether the uvar was resolved
 let force_uvar t =
   let t' = force_uvar' t in
   if U.physical_equality t t'
-  then t
-  else delay t' ([], Some t.pos)
+  then t, false  //return false, we did not have a solution to this
+  else delay t' ([], Some t.pos), true
 
 //If a delayed node has already been memoized, then return the memo
 //THIS DOES NOT PUSH A SUBSTITUTION UNDER A DELAYED NODE---see push_subst for that
@@ -196,8 +197,11 @@ let rec subst' (s:subst_ts) t =
     match t0.n with
     | Tm_unknown
     | Tm_constant _                      //a constant cannot be substituted
-    | Tm_fvar _                          //fvars are never subject to substitution
-    | Tm_uvar _ -> tag_with_range t0 s    //uvars are always resolved to closed terms
+    | Tm_fvar _ -> tag_with_range t0 s                          //fvars are never subject to substitution
+    | Tm_uvar _ -> let t, b = force_uvar t in if b then subst' s t else tag_with_range t0 s    //uvars are always resolved to closed terms, AR: doesn't seem so
+                                                                                               //there could be free universe names, and so universe substs need to be taken care of
+                                                                                               //currently this is a bandaid solution that forces uvar and applies substitution to it
+                                                                                               //a proper solution would make substs part of the unionfind tree?
 
     | Tm_delayed((t', s'), m) ->
         //s' is the subsitution already associated with this node;
@@ -300,8 +304,8 @@ let push_subst s t =
 
     | Tm_constant _
     | Tm_fvar _
-    | Tm_unknown
-    | Tm_uvar _ -> tag_with_range t s
+    | Tm_unknown -> tag_with_range t s
+    | Tm_uvar _ -> let t', b = force_uvar t in if b then subst' s t' else tag_with_range t s  //AR: see the comment in the use of force_uvar in subst' above
 
     | Tm_type _
     | Tm_bvar _
@@ -381,7 +385,7 @@ let rec compress (t:term) =
         Unionfind.update_in_tx memo (Some t');
 //          memo := Some t';
         t'
-    | _ -> let t' = force_uvar t in
+    | _ -> let t', _ = force_uvar t in
            match t'.n with
            | Tm_delayed _ -> compress t'
            | _ -> t'

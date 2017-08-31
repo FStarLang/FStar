@@ -344,14 +344,14 @@ and pat_to_string x =
 
 
 and lbs_to_string quals lbs =
-    let lbs =
-        if (Options.print_universes())
-        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in
-                                        let t, d = match (Subst.compress td).n with
-                                            | Tm_app(_, [(t, _); (d, _)]) -> t, d
-                                            | _ -> failwith "Impossibe" in
-                                        {lb with lbunivs=us; lbtyp=t; lbdef=d}))
-        else lbs in
+//    let lbs =
+//        if (Options.print_universes())
+//        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in
+//                                        let t, d = match (Subst.compress td).n with
+//                                            | Tm_app(_, [(t, _); (d, _)]) -> t, d
+//                                            | _ -> failwith "Impossibe" in
+//                                        {lb with lbunivs=us; lbtyp=t; lbdef=d}))
+//        else lbs in
     U.format3 "%slet %s %s"
     (quals_to_string' quals)
     (if fst lbs then "rec" else "")
