@@ -2,7 +2,7 @@ open Prims
 let tacdbg: Prims.bool FStar_ST.ref = FStar_Util.mk_ref false
 let mk_tactic_interpretation_0:
   'a .
-    FStar_Tactics_Basic.proofstate ->
+    FStar_Tactics_Types.proofstate ->
       'a FStar_Tactics_Basic.tac ->
         ('a -> FStar_Syntax_Syntax.term) ->
           FStar_Syntax_Syntax.typ ->
@@ -36,7 +36,7 @@ let mk_tactic_interpretation_0:
                   failwith "Unexpected application of tactic primitive"
 let mk_tactic_interpretation_1:
   'a 'b .
-    FStar_Tactics_Basic.proofstate ->
+    FStar_Tactics_Types.proofstate ->
       ('b -> 'a FStar_Tactics_Basic.tac) ->
         (FStar_Syntax_Syntax.term -> 'b) ->
           ('a -> FStar_Syntax_Syntax.term) ->
@@ -82,7 +82,7 @@ let mk_tactic_interpretation_1:
                     failwith uu____209
 let mk_tactic_interpretation_2:
   'a 'b 'c .
-    FStar_Tactics_Basic.proofstate ->
+    FStar_Tactics_Types.proofstate ->
       ('a -> 'b -> 'c FStar_Tactics_Basic.tac) ->
         (FStar_Syntax_Syntax.term -> 'a) ->
           (FStar_Syntax_Syntax.term -> 'b) ->
@@ -135,7 +135,7 @@ let mk_tactic_interpretation_2:
                       failwith uu____362
 let mk_tactic_interpretation_3:
   'a 'b 'c 'd .
-    FStar_Tactics_Basic.proofstate ->
+    FStar_Tactics_Types.proofstate ->
       ('a -> 'b -> 'c -> 'd FStar_Tactics_Basic.tac) ->
         (FStar_Syntax_Syntax.term -> 'a) ->
           (FStar_Syntax_Syntax.term -> 'b) ->
@@ -191,7 +191,7 @@ let mk_tactic_interpretation_3:
                         failwith uu____547
 let mk_tactic_interpretation_5:
   'a 'b 'c 'd 'e 'f .
-    FStar_Tactics_Basic.proofstate ->
+    FStar_Tactics_Types.proofstate ->
       ('a -> 'b -> 'c -> 'd -> 'e -> 'f FStar_Tactics_Basic.tac) ->
         (FStar_Syntax_Syntax.term -> 'a) ->
           (FStar_Syntax_Syntax.term -> 'b) ->
@@ -257,7 +257,7 @@ let mk_tactic_interpretation_5:
                                 uu____797 uu____798 in
                             failwith uu____796
 let step_from_native_step:
-  FStar_Tactics_Basic.proofstate ->
+  FStar_Tactics_Types.proofstate ->
     FStar_Tactics_Native.native_primitive_step ->
       FStar_TypeChecker_Normalize.primitive_step
   =
@@ -272,7 +272,7 @@ let step_from_native_step:
           (fun _rng  -> fun args  -> s.FStar_Tactics_Native.tactic ps args)
       }
 let rec primitive_steps:
-  FStar_Tactics_Basic.proofstate ->
+  FStar_Tactics_Types.proofstate ->
     FStar_TypeChecker_Normalize.primitive_step Prims.list
   =
   fun ps  ->
@@ -698,7 +698,7 @@ and unembed_tactic_0:
                   let uu____1468 = primitive_steps proof_state in
                   FStar_TypeChecker_Normalize.normalize_with_primitive_steps
                     uu____1468 steps
-                    proof_state.FStar_Tactics_Basic.main_context tm in
+                    proof_state.FStar_Tactics_Types.main_context tm in
                 let uu____1471 =
                   FStar_All.pipe_left FStar_Tactics_Basic.mlog
                     (fun uu____1480  ->
@@ -724,7 +724,7 @@ let run_tactic_on_typ:
   FStar_Syntax_Syntax.term ->
     FStar_Tactics_Basic.env ->
       FStar_Syntax_Syntax.typ ->
-        (FStar_Tactics_Basic.goal Prims.list,FStar_Syntax_Syntax.term)
+        (FStar_Tactics_Types.goal Prims.list,FStar_Syntax_Syntax.term)
           FStar_Pervasives_Native.tuple2
   =
   fun tactic  ->
@@ -810,10 +810,10 @@ let run_tactic_on_typ:
                         try FStar_Tactics_Basic.run tau ps
                         with
                         | FStar_Tactics_Basic.TacFailure s ->
-                            FStar_Tactics_Basic.Failed
+                            FStar_Tactics_Result.Failed
                               ((Prims.strcat "EXCEPTION: " s), ps) in
                       (match r with
-                       | FStar_Tactics_Basic.Success (uu____1631,ps1) ->
+                       | FStar_Tactics_Result.Success (uu____1631,ps1) ->
                            ((let uu____1634 = FStar_ST.op_Bang tacdbg in
                              if uu____1634
                              then
@@ -830,8 +830,8 @@ let run_tactic_on_typ:
                                  then
                                    let uu____1653 =
                                      FStar_TypeChecker_Rel.teq_nosmt
-                                       g.FStar_Tactics_Basic.context
-                                       g.FStar_Tactics_Basic.witness
+                                       g.FStar_Tactics_Types.context
+                                       g.FStar_Tactics_Types.witness
                                        FStar_Syntax_Util.exp_unit in
                                    (if uu____1653
                                     then ()
@@ -839,15 +839,15 @@ let run_tactic_on_typ:
                                       (let uu____1655 =
                                          let uu____1656 =
                                            FStar_Syntax_Print.term_to_string
-                                             g.FStar_Tactics_Basic.witness in
+                                             g.FStar_Tactics_Types.witness in
                                          FStar_Util.format1
                                            "Irrelevant tactic witness does not unify with (): %s"
                                            uu____1656 in
                                        failwith uu____1655))
                                  else ())
                               (FStar_List.append
-                                 ps1.FStar_Tactics_Basic.goals
-                                 ps1.FStar_Tactics_Basic.smt_goals);
+                                 ps1.FStar_Tactics_Types.goals
+                                 ps1.FStar_Tactics_Types.smt_goals);
                             (let g =
                                let uu___123_1659 =
                                  FStar_TypeChecker_Rel.trivial_guard in
@@ -859,7 +859,7 @@ let run_tactic_on_typ:
                                  FStar_TypeChecker_Env.univ_ineqs =
                                    (uu___123_1659.FStar_TypeChecker_Env.univ_ineqs);
                                  FStar_TypeChecker_Env.implicits =
-                                   (ps1.FStar_Tactics_Basic.all_implicits)
+                                   (ps1.FStar_Tactics_Types.all_implicits)
                                } in
                              let g1 =
                                let uu____1661 =
@@ -870,9 +870,9 @@ let run_tactic_on_typ:
                              FStar_TypeChecker_Rel.force_trivial_guard env2
                                g1;
                              ((FStar_List.append
-                                 ps1.FStar_Tactics_Basic.goals
-                                 ps1.FStar_Tactics_Basic.smt_goals), w)))
-                       | FStar_Tactics_Basic.Failed (s,ps1) ->
+                                 ps1.FStar_Tactics_Types.goals
+                                 ps1.FStar_Tactics_Types.smt_goals), w)))
+                       | FStar_Tactics_Result.Failed (s,ps1) ->
                            (FStar_Tactics_Basic.dump_proofstate ps1
                               "at the time of failure";
                             (let uu____1668 =
@@ -895,7 +895,7 @@ let by_tactic_interp:
   pol ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
-        (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
+        (FStar_Syntax_Syntax.term,FStar_Tactics_Types.goal Prims.list)
           FStar_Pervasives_Native.tuple2
   =
   fun pol  ->
@@ -946,13 +946,13 @@ let rec traverse:
   (pol ->
      FStar_TypeChecker_Env.env ->
        FStar_Syntax_Syntax.term ->
-         (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
+         (FStar_Syntax_Syntax.term,FStar_Tactics_Types.goal Prims.list)
            FStar_Pervasives_Native.tuple2)
     ->
     pol ->
       FStar_TypeChecker_Env.env ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Syntax_Syntax.term,FStar_Tactics_Basic.goal Prims.list)
+          (FStar_Syntax_Syntax.term,FStar_Tactics_Types.goal Prims.list)
             FStar_Pervasives_Native.tuple2
   =
   fun f  ->
@@ -1126,14 +1126,14 @@ let preprocess:
                       | (n1,gs1) ->
                           let phi =
                             let uu____2905 =
-                              getprop g.FStar_Tactics_Basic.context
-                                g.FStar_Tactics_Basic.goal_ty in
+                              getprop g.FStar_Tactics_Types.context
+                                g.FStar_Tactics_Types.goal_ty in
                             match uu____2905 with
                             | FStar_Pervasives_Native.None  ->
                                 let uu____2908 =
                                   let uu____2909 =
                                     FStar_Syntax_Print.term_to_string
-                                      g.FStar_Tactics_Basic.goal_ty in
+                                      g.FStar_Tactics_Types.goal_ty in
                                   FStar_Util.format1
                                     "Tactic returned proof-relevant goal: %s"
                                     uu____2909 in
@@ -1156,8 +1156,8 @@ let preprocess:
                               FStar_TypeChecker_Util.label uu____2927
                                 goal.FStar_Syntax_Syntax.pos phi in
                             ((n1 + (Prims.parse_int "1")),
-                              (((g.FStar_Tactics_Basic.context), gt',
-                                 (g.FStar_Tactics_Basic.opts)) :: gs1))))) s
+                              (((g.FStar_Tactics_Types.context), gt',
+                                 (g.FStar_Tactics_Types.opts)) :: gs1))))) s
                  gs in
              let uu____2943 = s1 in
              match uu____2943 with
