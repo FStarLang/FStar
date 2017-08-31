@@ -5,7 +5,7 @@ let char_code = n:nat{n < pow2 21}
 private type char' =
   | Char : char_code -> char'
 
-type char = char'
+type char = FStar.UInt8.t
 
 val lowercase: char -> Tot char
 val uppercase: char -> Tot char

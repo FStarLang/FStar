@@ -25,17 +25,9 @@ assume val lemma_repr_bytes_values: n:nat ->
 
 
 let length (b:bytes) : Tot (n:nat) = Seq.length b
-//private let length (b:bytes) : Tot (n:nat{n = Seq.length b}) = Seq.length b
 
 val index: b:bytes -> i:nat{i < length b} -> Tot byte
 let index b i = Seq.index b i
-
-(*
-abstract val createEmpty: #a:Type -> Tot (s:(seq a){length s=0})
-let createEmpty #a = MkSeq []
-*)
-
-//val createEmpty: Tot (s:(bytes){length s=0})
 
 val create: len:nat -> v:byte -> Tot (bytes)
 let rec create len v =
@@ -54,7 +46,6 @@ type lbytes (n:nat) = b:bytes{length b = n}
 val empty_bytes : lbytes 0
 let empty_bytes = Seq.createEmpty
 
-
 #set-options "--max_fuel 1 --max_ifuel 1 --detail_errors"
 val abyte: byte -> Tot (lbytes 1)
 let abyte b = Seq.create 1 b
@@ -65,7 +56,7 @@ let abyte2 (b:byte*byte) : Tot (lbytes 2) =
 let get (b:bytes) (pos:nat{pos < length b}) : Tot byte = Seq.index b pos
 
 val append: b1:bytes -> b2:bytes -> Tot (b:bytes{length b = length b1 + length b2})
-let append (b1:bytes) (b2:bytes) = append b1 b2
+let append (b1:bytes) (b2:bytes) = Seq.append b1 b2
 
 val lemma_append_empty: b:bytes -> Lemma
   (ensures (append b empty_bytes = b))
@@ -109,15 +100,6 @@ let rec decode_big_endian_acc b k acc =
 val eq_lemma_decode_big_endion: b:bytes ->
   Lemma (decode_big_endian b = decode_big_endian_acc b 0 0)
 
-//let rec eq_lemma b =
-//  if length b = 0 then unit
-//  else eq_lemma (tail b)
-
-
-
-
-// TODO only use abstract functions on bytes rather than Seq functions
-
 (* Little endian integer value of a sequence of bytes *)
 val decode_little_endian: b:bytes ->
   Tot (uint_t (length b)) (decreases (length b))
@@ -149,38 +131,6 @@ let rec slice b i j =
     if j = 0 then Seq.createEmpty
     else cons (head b) (slice (tail b) i (j - 1))
 
-(*
-val eq_lemma_decode_big_endion:
-  b:bytes ->
-  Lemma (decode_big_endian b = decode_big_endian_acc b 0 0)
-  (decreases (lengtjh ))
-
-let rec eq_lemma_decode_big_endion b =
-  if length b = 0 then ()
-  //else eq_lemma_decode_big_endion (tail b)
-  else
-    let sub = slice b 0 (length b - 1) in
-    assert(length sub = length b - 1);
-    eq_lemma_decode_big_endion sub
-*)
-(*
-val eq_lemma_decode_big_endion: b:bytes ->
-  GTot (u:unit{decode_big_endian b = decode_big_endian_acc b 0 0})
-  (decreases (length b))
-*)
-(*
-val eq_lemma_decode_big_endian: b:bytes ->
-  Lemma (decode_big_endian b = decode_big_endian_acc b 0 0)
-
-let rec eq_lemma_decode_big_endion b =
-  if length b = 0 then ()
-  else eq_lemma_decode_big_endion (tail b)
-  //else eq_lemma_decode_big_endion (slice b 0 (length b - 1))
-*)
-
-
-
-
 (* code transfered from Platform.Bytes.fst *)
 
 val seq_of_bytes: b:bytes -> GTot (bytes)
@@ -188,10 +138,6 @@ let seq_of_bytes b = b
 
 val op_At_Bar: bytes -> bytes -> Tot bytes
 let op_At_Bar (b1:bytes) (b2:bytes) = append b1 b2
-
-(*@ type (l:nat) lbytes = (b:bytes){Length (b) = l} @*)
-(*type lbytes (l:nat) = b:bytes{length b = l}*)
-
 
 val createBytes : l:nat -> byte -> Tot (lbytes l)
 let createBytes l b = Seq.create l b
@@ -222,53 +168,11 @@ private val split: b:bytes -> n:nat{n <= length b} ->
   Tot (x:(bytes * bytes) {length (fst (x))= n /\ length (snd (x)) == (length b) - n }) //(lbytes n * lbytes (length b - n))
 //val split: bytes -> nat -> Tot (bytes * bytes)
 let split b (n:nat { n <= length b}) = split b n
-(*
-val lemma_split : s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
-  (ensures ((fst (split s i)) @| (snd (split s i)) = s))
-let lemma_split s i =
-  cut (Seq.equal ((fst (split s i)) @| (snd (split s i)))  s)
 
-val split_eq: s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Pure
-  (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i})
-  (requires True)
-  (ensures (fun x -> ((fst x) @| (snd x) = s)))
-let split_eq s i =
-  let x = split s i in
-  lemma_split s i;
-  x
-*)
-
-(*
 val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes -> t2:bytes {length s1 = length t1 \/ length s2 = length t2} ->
   Lemma (requires (Seq.equal (append s1 s2) (append t1 t2)))
         (ensures (Seq.equal s1 t1 /\ Seq.equal s2 t2))
-*)
-
-
-(*
-let length (b:bytes) : Tot (n:nat) = Seq.length b
-//private let length (b:bytes) : Tot (n:nat{n = Seq.length b}) = Seq.length b
-
-val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes ->
-  t2:bytes {length s1 = length t1 \/ length s2 = length t2} ->
-  Lemma (requires (Seq.equal (append s1 s2) (append t1 t2)))
-        (ensures (Seq.equal s1 t1 /\ Seq.equal s2 t2))
-*)
-(*
-val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes ->
-  t2:bytes ->
-  Lemma (requires (Seq.equal (append s1 s2) (append t1 t2)))
-        (ensures (Seq.equal s1 t1 /\ Seq.equal s2 t2))
-
 let lemma_append_inj s1 s2 t1 t2 = admit()
-*)
-
-val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes ->
-  t2:bytes {length s1 = length t1 \/ length s2 = length t2} ->
-  Lemma (requires (equal (append s1 s2) (append t1 t2)))
-        (ensures (equal s1 t1 /\ equal s2 t2))
-let lemma_append_inj s1 s2 t1 t2 = admit() (* CH: this used to fail *)
-
 
 let append_empty_bytes_l (l: bytes): Lemma (ensures (empty_bytes @| l == l)) =
   Seq.append_empty_l l
@@ -285,19 +189,6 @@ val lemma_append_assoc: b1:bytes -> b2:bytes -> b3:bytes ->
   Lemma (append b1 (append b2 b3) == append (append b1 b2) b3)
 
 let lemma_append_assoc b1 b2 b3 = admit()
-
-
-(*
-
-val append_assoc : #a:Type -> l1:list a -> l2:list a -> l3: list a ->
-  Lemma (append l1 (append l2 l3) == append (append l1 l2) l3)
-let rec append_assoc #a l1 l2 l3 =
-  match l1 with
-  | [] -> ()
-  | h1 :: t1 -> append_assoc t1 l2 l3
-
-*)
-
 
 val get_binary: n:nat -> Tot (bytes)
 let rec get_binary n =
