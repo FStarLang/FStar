@@ -257,7 +257,7 @@ val string_of_bytes: array<byte> -> Tot<string>
 val bytes_of_string: string -> Tot<array<byte>>
 val starts_with: long:string -> short:string -> Tot<bool>
 val trim_string: string -> Tot<string>
-val ends_with: string -> string -> Tot<bool>
+val ends_with: long:string -> short:string -> Tot<bool>
 val char_at: string -> int -> char
 val is_upper: char -> Tot<bool>
 val contains: string -> string -> Tot<bool>
@@ -268,7 +268,7 @@ val replace_chars: string -> char -> string -> Tot<string>
 val hashcode: string -> Tot<int>
 val compare: string -> string -> Tot<int>
 val splitlines: string -> Tot<list<string>>
-val split: string -> string -> Tot<list<string>>
+val split: str:string -> sep:string -> Tot<list<string>>
 
 type either<'a,'b> =
   | Inl of 'a
