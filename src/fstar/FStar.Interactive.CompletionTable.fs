@@ -460,7 +460,7 @@ let completion_result_of_lid _lid path =
 let completion_result_of_mod annot loaded path =
   { completion_match_length = match_length_of_path path;
     completion_candidate = string_of_path path;
-    completion_annotation = annot ^ (if loaded then "+" else "-") }
+    completion_annotation = Util.format1 (if loaded then " %s " else "(%s)") annot }
 
 let completion_result_of_path_and_symb (path, symb) =
   match symb with
