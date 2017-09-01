@@ -300,16 +300,17 @@ let js_reductionrule s = match js_str s with
   | _ -> js_fail "reduction rule" s
 
 type completion_context =
-| CKSymbol
+| CKCode
 | CKOption of bool (* #set-options (false) or #reset-options (true) *)
 | CKModuleOrNamespace of bool (* modules *) * bool (* namespaces *)
 
 let js_optional_completion_context k =
   match k with
-  | None -> CKSymbol
+  | None -> CKCode
   | Some k ->
     match js_str k with
-    | "symbol" -> CKSymbol
+    | "symbol" // Backwards compatibility
+    | "code" -> CKCode
     | "set-options" -> CKOption false
     | "reset-options" -> CKOption true
     | "open" -> CKModuleOrNamespace (true, true)
@@ -317,7 +318,8 @@ let js_optional_completion_context k =
     | "include"
     | "module-alias" -> CKModuleOrNamespace (true, false)
     | _ ->
-      js_fail "completion context (symbol, set-options, reset-options, \
+      js_fail "completion context (code, set-options, reset-options, \
+open, let-open, include, module-alias)" k
 open, let-open, include, module-alias)" k
 
 type query' =
@@ -901,8 +903,8 @@ let run_option_autocomplete st search_term is_reset =
 
 let run_autocomplete st search_term context =
   match context with
-  | CKSymbol ->
-    run_symbol_autocomplete st search_term
+  | CKCode ->
+    run_code_autocomplete st search_term
   | CKOption is_reset ->
     run_option_autocomplete st search_term is_reset
   | CKModuleOrNamespace (modules, namespaces) ->
