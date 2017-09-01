@@ -88,6 +88,7 @@ type opt_type =
 | WithSideEffect of ((unit -> unit) * opt_type (* elem spec *))
   // For options like --version that have side effects
 
+val desc_of_opt_type            : opt_type -> option<string>
 val all_specs_with_types        : list<(char * string * opt_type * string)>
 val settable                    : string -> bool
 val resettable                  : string -> bool

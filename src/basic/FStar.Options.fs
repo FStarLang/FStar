@@ -433,15 +433,15 @@ let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : opt
   | InvalidArgument opt_name ->
     failwith (Util.format1 "Invalid argument to --%s" opt_name)
 
-let rec desc_of_opt_type typ : string =
+let rec desc_of_opt_type typ : option<string> =
   let desc_of_enum cases =
-    "[" ^ (String.concat "|" cases) ^ "]" in
+    Some ("[" ^ (String.concat "|" cases) ^ "]") in
   match typ with
-  | Const c -> ""
-  | IntStr desc -> desc
+  | Const c -> None
+  | IntStr desc -> Some desc
   | BoolStr -> desc_of_enum ["true"; "false"]
-  | PathStr desc -> desc
-  | SimpleStr desc -> desc
+  | PathStr desc -> Some desc
+  | SimpleStr desc -> Some desc
   | EnumStr strs -> desc_of_enum strs
   | OpenEnumStr (strs, desc) -> desc_of_enum (strs @ [desc])
   | PostProcessed (_, elem_spec)
@@ -449,27 +449,11 @@ let rec desc_of_opt_type typ : string =
   | ReverseAccumulated elem_spec
   | WithSideEffect (_, elem_spec) -> desc_of_opt_type elem_spec
 
-let rec nargs_of_opt_type typ : int =
-  match typ with
-  | Const _ -> 0
-  | IntStr _
-  | BoolStr
-  | PathStr _
-  | SimpleStr _
-  | EnumStr _
-  | OpenEnumStr _ -> 1
-  | PostProcessed (_, elem_spec)
-  | Accumulated elem_spec
-  | ReverseAccumulated elem_spec
-  | WithSideEffect (_, elem_spec) -> nargs_of_opt_type elem_spec
-
 let rec arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
-  let nargs = nargs_of_opt_type typ in
   let parser = parse_opt_val opt_name typ in
-  match nargs with
-  | 0 -> ZeroArgs (fun () -> parser "")
-  | _ -> let desc = desc_of_opt_type typ in
-        OneArg (parser, desc)
+  match desc_of_opt_type typ with
+  | None -> ZeroArgs (fun () -> parser "")
+  | Some desc -> OneArg (parser, desc)
 
 let pp_validate_dir p =
   let pp = as_string p in
