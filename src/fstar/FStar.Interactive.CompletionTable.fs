@@ -351,9 +351,16 @@ let trie_find_prefix (tr: trie<'a>) (query: query) : list<(path * 'a)> =
 
 (** * High level interface * **)
 
+type ns_info = { ns_name: string;
+                 ns_loaded: bool }
+
+type mod_info = { mod_name: string;
+                  mod_path: string;
+                  mod_loaded: bool }
+
 type symbol =
-| Module of bool
-| Namespace of bool
+| Module of mod_info
+| Namespace of ns_info
 | Lid of Ident.lid
 
 type table = trie<symbol>
@@ -379,22 +386,28 @@ let register_open (tbl: table) (is_module: bool) (host_query: query) (included_q
 let module_marker = "${id}"
 let namespace_marker = "(${_})"
 
-let register_module_path (tbl: table) (loaded: bool) (mod_query: query) =
-  let ins_ns bindings loaded =
+let register_module_path (tbl: table) (loaded: bool) (path: string) (mod_query: query) =
+  let ins_ns name bindings loaded =
     match names_find_exact bindings module_marker with
     | Some (Module _) -> bindings // Already a module
     | Some _ -> failwith "ins_ns: namespace or lid under module key"
     | None -> match names_find_exact bindings namespace_marker, loaded with
-             | None, _ | Some (Namespace false), true ->
-               names_insert bindings namespace_marker (Namespace loaded)
-             | Some _, _ -> // Already registered
+             | None, _ // Never seen before
+             | Some (Namespace { ns_loaded = false }), true -> // Seen, but unloaded
+               names_insert bindings namespace_marker
+                 (Namespace ({ ns_name = name; ns_loaded = loaded }))
+             | Some _, _ -> // Seen as loaded namespace or module
                bindings in
-  let ins_mod bindings loaded =
+  let ins_mod name bindings loaded =
     let bindings = names_remove bindings namespace_marker in
-    names_insert bindings module_marker (Module loaded) in
-  trie_mutate tbl mod_query (fun tr namespaces ->
-      { tr with namespaces = namespaces; bindings = ins_ns tr.bindings loaded })
-    (fun tr -> { tr with bindings = ins_mod tr.bindings loaded })
+    names_insert bindings module_marker
+      (Module ({ mod_name = name; mod_loaded = loaded; mod_path = path })) in
+  let name_of_revq query =
+    String.concat "." (List.rev query) in
+  trie_mutate tbl mod_query [] (fun tr revq namespaces ->
+      { tr with namespaces = namespaces;
+                bindings = ins_ns (name_of_revq revq) tr.bindings loaded })
+    (fun tr revq -> { tr with bindings = ins_mod (name_of_revq revq) tr.bindings loaded })
 
 let string_of_path (path: path) : string =
   String.concat "." (List.map (fun el -> el.segment.completion) path)
@@ -420,6 +433,15 @@ let first_import_of_path (path: path) : option<string> =
   | [] -> None
   | { imports = imports } :: _ -> List.last imports
 
+let alist_of_ns_info ns_info =
+  [("name", FStar.Util.JsonStr ns_info.ns_name);
+   ("loaded", FStar.Util.JsonBool ns_info.ns_loaded)]
+
+let alist_of_mod_info mod_info =
+  [("name", FStar.Util.JsonStr mod_info.mod_name);
+   ("path", FStar.Util.JsonStr mod_info.mod_path);
+   ("loaded", FStar.Util.JsonBool mod_info.mod_loaded)]
+
 type completion_result =
   { completion_match_length: int;
     completion_candidate: string;
@@ -443,8 +465,8 @@ let completion_result_of_mod annot loaded path =
 let completion_result_of_path_and_symb (path, symb) =
   match symb with
   | Lid l -> completion_result_of_lid l path
-  | Module loaded -> completion_result_of_mod "mod" loaded path
-  | Namespace loaded -> completion_result_of_mod "ns" loaded path
+  | Module { mod_loaded = loaded } -> completion_result_of_mod "mod" loaded path
+  | Namespace { ns_loaded = loaded } -> completion_result_of_mod "ns" loaded path
 
 let incorrect_result path symbol =
   match symbol with
