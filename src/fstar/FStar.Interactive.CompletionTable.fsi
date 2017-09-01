@@ -12,16 +12,18 @@ type ns_info = { ns_name: string;
 type mod_info = { mod_name: string;
                   mod_path: string;
                   mod_loaded: bool }
-type symbol =
+
+type mod_symbol =
 | Module of mod_info
 | Namespace of ns_info
-| Lid of FStar.Ident.lid
+
+type lid_symbol = Ident.lid
 
 type trie<'a>
-type table = trie<symbol>
+type table
 
 val empty : table
-val insert : tbl:table -> host_query:query -> id:string -> c:symbol -> table
+val insert : tbl:table -> host_query:query -> id:string -> c:lid_symbol -> table
 val register_alias : tbl:table -> key:string -> host_query:query -> included_query:query -> table
 val register_open : tbl:table -> is_module:bool -> host_query:query -> included_query:query -> table
 val register_include : tbl:table -> host_query:query -> included_query:query -> table
@@ -36,6 +38,9 @@ type completion_result =
     completion_annotation: string }
 val json_of_completion_result : completion_result -> FStar.Util.json
 
-val find : tbl:table -> query:query -> option<symbol>
-val find_module_or_ns : tbl:table -> query:query -> option<symbol>
-val autocomplete : tbl:table -> query:query -> filter:(path -> symbol -> option<(path * symbol)>) -> list<completion_result>
+val find_module_or_ns :
+  tbl:table -> query:query -> option<mod_symbol>
+val autocomplete_lid :
+  tbl:table -> query:query -> list<completion_result>
+val autocomplete_mod_or_ns :
+  tbl:table -> query:query -> filter:((path * mod_symbol) -> option<(path * mod_symbol)>) -> list<completion_result>

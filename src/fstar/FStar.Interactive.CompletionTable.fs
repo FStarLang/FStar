@@ -237,31 +237,25 @@ let names_insert (name_collections: names<'a>) (id: string) (v: 'a) : names<'a> 
     | _ -> (StrEmpty, name_collections) in
   Names (btree_insert_replace bt id v) :: name_collections
 
-let names_remove (name_collections: names<'a>) (id: string) : names<'a> =
-  List.map (function
-            | Names bt -> Names (btree_remove bt id)
-            | _ -> failwith "names_delete: Deleting in imported collection")
-           name_collections
-
 let rec namespaces_mutate (namespaces: names<trie<'a>>) (ns: string) (q: query)
                           (rev_acc: query)
-                          (mut_node: trie<'a> -> query -> names<trie<'a>> -> trie<'a>)
+                          (mut_node: trie<'a> -> string -> query -> query -> names<trie<'a>> -> trie<'a>)
                           (mut_leaf: trie<'a> -> query -> trie<'a>)=
   let trie = Util.dflt trie_empty (names_find_exact namespaces ns) in
   names_insert namespaces ns (trie_mutate trie q rev_acc mut_node mut_leaf)
 
 and trie_mutate (tr: trie<'a>) (q: query) (rev_acc: query)
-                (mut_node: trie<'a> -> query -> names<trie<'a>> -> trie<'a>)
+                (mut_node: trie<'a> -> string -> query -> query -> names<trie<'a>> -> trie<'a>)
                 (mut_leaf: trie<'a> -> query -> trie<'a>) : trie<'a> =
   match q with
   | [] ->
     mut_leaf tr rev_acc
   | id :: q ->
     let ns' = namespaces_mutate tr.namespaces id q (id :: rev_acc) mut_node mut_leaf in
-    mut_node tr rev_acc ns'
+    mut_node tr id q rev_acc ns'
 
 let trie_mutate_leaf (tr: trie<'a>) (query: query) =
-  trie_mutate tr query [] (fun tr _ namespaces -> { tr with namespaces = namespaces })
+  trie_mutate tr query [] (fun tr _ _ _ namespaces -> { tr with namespaces = namespaces })
 
 let trie_insert (tr: trie<'a>) (ns_query: query) (id: string) (v: 'a) : trie<'a> =
   trie_mutate_leaf tr ns_query (fun tr _ -> { tr with bindings = names_insert tr.bindings id v })
@@ -358,56 +352,70 @@ type mod_info = { mod_name: string;
                   mod_path: string;
                   mod_loaded: bool }
 
-type symbol =
+type mod_symbol =
 | Module of mod_info
 | Namespace of ns_info
-| Lid of Ident.lid
 
-type table = trie<symbol>
+type lid_symbol = Ident.lid
+
+type symbol =
+| ModOrNs of mod_symbol
+| Lid of lid_symbol
+
+type table =
+  { tbl_lids: trie<lid_symbol>;
+    tbl_mods: trie<mod_symbol> }
 
 let empty : table =
-  trie_empty
+  { tbl_lids = trie_empty;
+    tbl_mods = trie_empty }
 
-let insert (tbl: table) (host_query: query) (id: string) (c: symbol) : table =
-  trie_insert tbl host_query id c
+// Note that we never add aliases to tbl_mods: we use tbl_mods only for
+// completion of opens and includes, and these take full module paths.
+// Inclusions handling would have to be reinstated should we wish to also
+// complete partial names of unloaded (e.g. [open FStar // let x = List._] when
+// FStar.List isn't loaded).
+
+let insert (tbl: table) (host_query: query) (id: string) (c: lid_symbol) : table =
+  { tbl with tbl_lids = trie_insert tbl.tbl_lids host_query id c }
 
 let register_alias (tbl: table) (key: string) (host_query: query) (included_query: query) : table =
-  trie_add_alias tbl key host_query included_query
+  { tbl with tbl_lids = trie_add_alias tbl.tbl_lids key host_query included_query }
 
 let register_include (tbl: table) (host_query: query) (included_query: query) : table =
-  trie_include tbl host_query included_query
+  { tbl with tbl_lids = trie_include tbl.tbl_lids host_query included_query }
 
 let register_open (tbl: table) (is_module: bool) (host_query: query) (included_query: query) : table =
   if is_module then
-    trie_include tbl host_query included_query
+    // We only process module opens for the current module, where they are just like includes
+    register_include tbl host_query included_query
   else
-    trie_open_namespace tbl host_query included_query
-
-let module_marker = "${id}"
-let namespace_marker = "(${_})"
+    { tbl with tbl_lids = trie_open_namespace tbl.tbl_lids host_query included_query }
 
 let register_module_path (tbl: table) (loaded: bool) (path: string) (mod_query: query) =
-  let ins_ns name bindings loaded =
-    match names_find_exact bindings module_marker with
-    | Some (Module _) -> bindings // Already a module
-    | Some _ -> failwith "ins_ns: namespace or lid under module key"
-    | None -> match names_find_exact bindings namespace_marker, loaded with
-             | None, _ // Never seen before
-             | Some (Namespace { ns_loaded = false }), true -> // Seen, but unloaded
-               names_insert bindings namespace_marker
-                 (Namespace ({ ns_name = name; ns_loaded = loaded }))
-             | Some _, _ -> // Seen as loaded namespace or module
-               bindings in
-  let ins_mod name bindings loaded =
-    let bindings = names_remove bindings namespace_marker in
-    names_insert bindings module_marker
-      (Module ({ mod_name = name; mod_loaded = loaded; mod_path = path })) in
+  let ins_ns id bindings full_name loaded =
+    match names_find_exact bindings id, loaded with
+    | None, _ // Never seen before
+    | Some (Namespace { ns_loaded = false }), true -> // Seen, but not loaded yet
+      names_insert bindings id
+        (Namespace ({ ns_name = full_name; ns_loaded = loaded }))
+    | Some _, _ -> // Already seen as a loaded namespace, or as a module
+      bindings in
+  let ins_mod id bindings full_name loaded =
+    names_insert bindings id
+      (Module ({ mod_name = full_name; mod_loaded = loaded; mod_path = path })) in
   let name_of_revq query =
     String.concat "." (List.rev query) in
-  trie_mutate tbl mod_query [] (fun tr revq namespaces ->
-      { tr with namespaces = namespaces;
-                bindings = ins_ns (name_of_revq revq) tr.bindings loaded })
-    (fun tr revq -> { tr with bindings = ins_mod (name_of_revq revq) tr.bindings loaded })
+  let ins id q revq bindings loaded =
+    let name = name_of_revq (id :: revq) in
+    match q with
+    | [] -> ins_mod id bindings name loaded
+    | _ -> ins_ns id bindings name loaded in
+  { tbl with tbl_mods =
+    trie_mutate tbl.tbl_mods mod_query [] (fun tr id q revq namespaces ->
+        { tr with namespaces = namespaces;
+                  bindings = ins id q revq tr.bindings loaded })
+      (fun tr _ -> tr) }
 
 let string_of_path (path: path) : string =
   String.concat "." (List.map (fun el -> el.segment.completion) path)
@@ -452,7 +460,7 @@ let json_of_completion_result (result: completion_result) =
                  Util.JsonStr result.completion_annotation;
                  Util.JsonStr result.completion_candidate]
 
-let completion_result_of_lid _lid path =
+let completion_result_of_lid (path, _lid) =
   { completion_match_length = match_length_of_path path;
     completion_candidate = string_of_path path;
     completion_annotation = Util.dflt "" (first_import_of_path path) }
@@ -462,41 +470,18 @@ let completion_result_of_mod annot loaded path =
     completion_candidate = string_of_path path;
     completion_annotation = Util.format1 (if loaded then " %s " else "(%s)") annot }
 
-let completion_result_of_path_and_symb (path, symb) =
+let completion_result_of_ns_or_mod (path, symb) =
   match symb with
-  | Lid l -> completion_result_of_lid l path
   | Module { mod_loaded = loaded } -> completion_result_of_mod "mod" loaded path
   | Namespace { ns_loaded = loaded } -> completion_result_of_mod "ns" loaded path
 
-let incorrect_result path symbol =
-  match symbol with
-  | Module _ | Namespace _ ->
-    (match first_import_of_path path with
-     | Some _ -> true // Exclude module names obtained through includes or opens
-     | None -> false)
-  | _ -> false
-
-let find (tbl: table) (query: query) =
-  trie_find_exact tbl query
-
 let find_module_or_ns (tbl:table) (query:query) =
-  // Modules and namespaces are stored as special markers in the bindings table
-  // FIXME change this; it's broken when a module is included in another one,
-  // since the special marker of the included module overrides the special
-  // marker of the parent ones, causing e.g. the marker in FStar.All to point to
-  // FStar.Exn
-  match List.last query with
-  | None -> None
-  | Some suffix ->
-    if List.mem suffix [module_marker; namespace_marker] then
-      find tbl query
-    else
-      match find tbl (query @ [module_marker]) with
-      | Some symbol -> Some symbol
-      | None -> find tbl (query @ [namespace_marker])
+  trie_find_exact tbl.tbl_mods query
 
-let autocomplete (tbl: table) (query: query) (filter: path -> symbol -> option<(path * symbol)>) =
-  List.filter_map (fun (path, symbol) ->
-      if incorrect_result path symbol then None
-      else Util.map_option completion_result_of_path_and_symb (filter path symbol))
-    (trie_find_prefix tbl query)
+let autocomplete_lid (tbl: table) (query: query) =
+  List.map completion_result_of_lid (trie_find_prefix tbl.tbl_lids query)
+
+let autocomplete_mod_or_ns (tbl: table) (query: query) (filter: (path * mod_symbol) -> option<(path * mod_symbol)>) =
+  trie_find_prefix tbl.tbl_mods query
+  |> List.filter_map filter
+  |> List.map completion_result_of_ns_or_mod

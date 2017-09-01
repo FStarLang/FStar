@@ -760,7 +760,7 @@ let update_names_from_event cur_mod_str table evt =
          let ns_query = if lid.nsstr = cur_mod_str then []
                         else query_of_ids lid.ns in
          CompletionTable.insert
-           tbl ns_query (text_of_id lid.ident) (CompletionTable.Lid lid))
+           tbl ns_query (text_of_id lid.ident) lid)
       table lids
 
 let commit_name_tracking (cur_mod: modul_t) names name_events =
@@ -896,8 +896,7 @@ let run_option_lookup opt_name =
 let run_module_lookup st symbol =
   let query = Util.split symbol "." in
   match CompletionTable.find_module_or_ns st.repl_names query with
-  | None
-  | Some (CompletionTable.Lid _) ->
+  | None ->
     Inl "No such module or namespace"
   | Some (CompletionTable.Module mod_info) ->
     Inr ("module", CompletionTable.alist_of_mod_info mod_info)
@@ -907,7 +906,9 @@ let run_module_lookup st symbol =
 let run_code_lookup st symbol pos_opt requested_info =
   match run_symbol_lookup st symbol pos_opt requested_info with
   | Inr alist -> Inr alist
-  | Inl _ -> run_module_lookup st symbol
+  | Inl _ -> match run_module_lookup st symbol with
+            | Inr alist -> Inr alist
+            | Inl err_msg -> Inl "No such symbol, module, or namespace."
 
 let run_lookup' st symbol context pos_opt requested_info =
   match context with
@@ -923,42 +924,24 @@ let run_lookup st symbol context pos_opt requested_info =
   | Inr (kind, info) ->
     ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
 
-let run_autocomplete' st search_term filter =
-  let needle = Util.split search_term "." in
-  let results = CompletionTable.autocomplete st.repl_names needle filter in
-  let json = List.map CompletionTable.json_of_completion_result results in
-  ((QueryOK, JsonList json), Inl st)
+let code_autocomplete_mod_filter =
+  let open FStar.Interactive.CompletionTable in function
+  | _, Namespace _
+  | _, Module { mod_loaded = true } -> None
+  | pth, Module mod -> Some (pth, Module ({ mod with mod_name = mod.mod_name ^ "." }))
 
 let run_code_autocomplete st search_term =
-  let filter path symb = match path, symb with
-    | _,   CompletionTable.Module { CompletionTable.mod_loaded = true } -> None
-    | [_], CompletionTable.Namespace _ -> None // Exclude (...) at root
-    | path_and_symb -> Some path_and_symb in
-  run_autocomplete' st search_term filter
+  let needle = Util.split search_term "." in
+  let mods_and_nss = CompletionTable.autocomplete_mod_or_ns st.repl_names needle code_autocomplete_mod_filter in
+  let lids = CompletionTable.autocomplete_lid st.repl_names needle in
+  let json = List.map CompletionTable.json_of_completion_result (lids @ mods_and_nss) in
+  ((QueryOK, JsonList json), Inl st)
 
 let run_module_autocomplete st search_term modules namespaces =
-  let dsenv, tcenv = st.repl_env in
-
-  let rec split_last = function
-    | [] -> failwith "split_last on empty list"
-    | [h] -> h, []
-    | h :: t -> let last, butlast = split_last t in last, h :: butlast in
-
-  let mod_filter pred path symb =
-    if pred then
-      let last_elem, path_but_last = split_last path in
-      match CompletionTable.matched_prefix_of_path_elem last_elem with
-      | Some _ -> None // Exclude matches that reach the final ‘.’
-      | _ -> Some (path_but_last, symb) // Trim last segment of match
-    else None in
-
-  let filter path symb =
-    match symb with
-    | CompletionTable.Lid _ -> None
-    | CompletionTable.Module _ -> mod_filter modules path symb
-    | CompletionTable.Namespace _ -> mod_filter namespaces path symb in
-
-  run_autocomplete' st search_term filter
+  let needle = Util.split search_term "." in
+  let mods_and_nss = CompletionTable.autocomplete_mod_or_ns st.repl_names needle Some in
+  let json = List.map CompletionTable.json_of_completion_result mods_and_nss in
+  ((QueryOK, JsonList json), Inl st)
 
 let candidates_of_fstar_option match_len is_reset opt =
   let may_set, explanation =
