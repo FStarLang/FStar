@@ -313,8 +313,8 @@ let js_optional_completion_context k =
     | "code" -> CKCode
     | "set-options" -> CKOption false
     | "reset-options" -> CKOption true
-    | "open" -> CKModuleOrNamespace (true, true)
-    | "let-open"
+    | "open"
+    | "let-open" -> CKModuleOrNamespace (true, true)
     | "include"
     | "module-alias" -> CKModuleOrNamespace (true, false)
     | _ ->
