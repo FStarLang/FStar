@@ -36,7 +36,9 @@ fstartaclib.mgen: fstarlib.mgen
 # OCaml extraction of fstarlib and fstar-tactics-lib #
 ######################################################
 
-OCAMLPATH=$(realpath $(FSTAR_HOME)/bin/)
+# relative path to build directory, which is ulib/ml/_build
+OCAMLPATH=../../../bin/
+
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 OCAMLBUILD=cd ../ && OCAMLPATH="$(OCAMLPATH)" ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
 
