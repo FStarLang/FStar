@@ -1216,7 +1216,6 @@ let interactive_printer =
     printer_prerror = (fun s -> write_message "error" (JsonStr s));
     printer_prgeneric = (fun label get_string get_json -> write_message label (get_json ()) )}
 
-open FStar.TypeChecker.Common
 let capitalize str =
   if str = "" then str
   else let first = String.substring str 0 1 in
