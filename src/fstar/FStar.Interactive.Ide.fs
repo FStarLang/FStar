@@ -1222,7 +1222,7 @@ let capitalize str =
   else let first = String.substring str 0 1 in
        String.uppercase first ^ String.substring str 1 (String.length str - 1)
 
-let add_module_completions deps table =
+let add_module_completions this_fname deps table =
   let mods =
     FStar.Parser.Dep.build_inclusion_candidates_list () in
   let loaded_mods_set =
@@ -1230,10 +1230,17 @@ let add_module_completions deps table =
       (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
       (psmap_empty ()) (Options.prims () :: deps) in // Prims is an implicit dependency
   let loaded modname =
-    psmap_find_default loaded_mods_set (String.lowercase modname) false in
+    psmap_find_default loaded_mods_set modname false in
+  let this_mod_key =
+    Parser.Dep.lowercase_module_name this_fname in
   List.fold_left (fun table (modname, mod_path) ->
-      let ns_query = Util.split (capitalize modname) "." in
-      CompletionTable.register_module_path table (loaded modname) mod_path ns_query)
+      // modname is the filename part of mod_path
+      let mod_key = String.lowercase modname in
+      if this_mod_key = mod_key then
+        table // Exclude current module from completion
+      else
+        let ns_query = Util.split (capitalize modname) "." in
+        CompletionTable.register_module_path table (loaded mod_key) mod_path ns_query)
     table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
 // filename is the name of the file currently edited
@@ -1261,7 +1268,7 @@ let interactive_mode' (filename:string): unit =
   TcEnv.toggle_id_info (snd env) true;
 
   let names =
-    add_module_completions deps CompletionTable.empty in
+    add_module_completions filename deps CompletionTable.empty in
   let init_st =
     { repl_line = 1; repl_column = 0; repl_fname = filename;
       repl_stack = stack; repl_curmod = None;
