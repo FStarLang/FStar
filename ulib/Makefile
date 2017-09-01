@@ -36,7 +36,7 @@ fstartaclib.mgen: fstarlib.mgen
 # OCaml extraction of fstarlib and fstar-tactics-lib #
 ######################################################
 
-OCAMLPATH=$(realpath ../bin/)
+OCAMLPATH=$(realpath $(FSTAR_HOME)/bin/)
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 OCAMLBUILD=cd ../ && OCAMLPATH="$(OCAMLPATH)" ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -use-ocamlfind
 
@@ -96,8 +96,10 @@ install-fstar-tactics: $(TACLIB_OBJECTS)
 
 clean:
 	rm -f *.mgen
-	rm -fr ml/extracted tactics_ml/extracted
-	rm -f ml/*.mllib tactics_ml/*.mldylib *~
-	rm -f $(FSTARLIB_DIR)/*.cm[aiox][as]
-	rm -f $(FSTARTACLIB_DIR)/*.cm[aiox][as]
+	rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
+	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
+	rm -f $(FSTARLIB_DIR)/*.cm[aiox]
+	rm -f $(FSTARLIB_DIR)/*.cmx[as]
+	rm -f $(TACLIB_DIR)/*.cm[aiox]
+	rm -f $(TACLIB_DIR)/*.cmx[as]
 	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin

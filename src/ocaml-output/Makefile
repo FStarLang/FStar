@@ -272,7 +272,8 @@ clean:
 	rm -rf _build
 	rm -f $(GENERATED_FILES)
 	rm -f *.tar.gz *.zip
-	rm -f ../../bin/fstar-compiler-lib/*.cm[aiox][as]
+	rm -f ../../bin/fstar-compiler-lib/*.cm[aiox]
+	rm -f ../../bin/fstar-compiler-lib/*.cmx[as]
 
 # Purge (clean + delete *all* automatically generated files)
 # if you do this you'll need to run `make ocaml` in `src` to get them back

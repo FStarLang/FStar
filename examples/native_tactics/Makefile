@@ -14,16 +14,13 @@ MODULES=Print Split Canon
 
 all: $(patsubst %,%.cmxs,$(MODULES)) $(patsubst %,%.test,$(MODULES))
 
-.fstar-tactics-lib: fstartaclib.cmxs
-	touch $@
-
 fstartaclib.cmxs:
 	$(MAKE) -C $(FSTAR_HOME)/ulib install-fstar-tactics
 
 $(CACHE):
 	mkdir $@
 
-%.cmxs: %.Test.fst .fstar-tactics-lib $(CACHE)
+%.cmxs: %.Test.fst fstartaclib.cmxs $(CACHE)
 	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE) $<
 
 %.test: %.Test.fst %.cmxs
