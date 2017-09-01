@@ -122,6 +122,12 @@ let rec btree_find_exact (bt: btree<'a>) (k: string) : option<'a> =
     else
       Some v
 
+let rec btree_extract_min (bt: btree<'a>) : option<(string * 'a * btree<'a>)> =
+  match bt with
+  | StrEmpty -> None
+  | StrBranch (k, v, StrEmpty, rbt) -> Some (k, v, rbt)
+  | StrBranch (_, _, lbt, _) -> btree_extract_min lbt
+
 let rec btree_remove (bt: btree<'a>) (k: string) : btree<'a> =
   match bt with
   | StrEmpty -> StrEmpty
@@ -132,7 +138,12 @@ let rec btree_remove (bt: btree<'a>) (k: string) : btree<'a> =
     else if cmp > 0 then
       StrBranch (k', v, lbt, btree_remove rbt k)
     else
-      StrEmpty
+      match lbt with
+      | StrEmpty -> bt
+      | _ -> match btree_extract_min rbt with
+            | None -> lbt
+            | Some (rbt_min_k, rbt_min_v, rbt') ->
+              StrBranch (rbt_min_k, rbt_min_v, lbt, rbt')
 
 type prefix_match =
   { prefix: option<string>;
