@@ -728,7 +728,7 @@ let mk_letbinding lbname univ_vars typ eff def =
      lbeff=eff;
      lbdef=def}
 
-let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
+let close_univs_and_mk_letbinding lbname univ_vars typ eff def =
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
     mk_letbinding lbname univ_vars typ eff def
@@ -1175,7 +1175,6 @@ let destruct_typ_as_formula f : option<connective> =
 let action_as_lb eff_lid a =
   let lb =
     close_univs_and_mk_letbinding
-      None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
       (Inr (lid_as_fv a.action_name Delta_equational None))
       a.action_univs
