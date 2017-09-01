@@ -1234,7 +1234,7 @@ let add_module_completions deps table =
   List.fold_left (fun table (modname, mod_path) ->
       let ns_query = Util.split (capitalize modname) "." in
       CompletionTable.register_module_path table (loaded modname) mod_path ns_query)
-    table mods
+    table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
 // filename is the name of the file currently edited
 let interactive_mode' (filename:string): unit =
