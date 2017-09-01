@@ -222,6 +222,14 @@ let rec trie_descend_exact (tr: trie<'a>) (query: query) : option<trie<'a>> =
     Util.bind_opt (names_find_exact tr.namespaces ns)
       (fun scope -> trie_descend_exact scope query)
 
+let rec trie_find_exact (tr: trie<'a>) (query: query) : option<'a> =
+  match query with
+  | [] -> failwith "Empty query in trie_find_exact"
+  | [name] -> names_find_exact tr.bindings name
+  | ns :: query ->
+    Util.bind_opt (names_find_exact tr.namespaces ns)
+      (fun scope -> trie_find_exact scope query)
+
 let names_insert (name_collections: names<'a>) (id: string) (v: 'a) : names<'a> =
   let bt, name_collections =
     match name_collections with
