@@ -377,7 +377,7 @@ let register_open (tbl: table) (is_module: bool) (host_query: query) (included_q
     trie_open_namespace tbl host_query included_query
 
 let module_marker = "${id}"
-let namespace_marker = "(${...})"
+let namespace_marker = "(${_})"
 
 let register_module_path (tbl: table) (loaded: bool) (mod_query: query) =
   let ins_ns bindings loaded =
