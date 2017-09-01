@@ -34,6 +34,8 @@ type completion_result =
   { completion_match_length: int;
     completion_candidate: string;
     completion_annotation: string }
-
 val json_of_completion_result : completion_result -> FStar.Util.json
+
+val find : tbl:table -> query:query -> option<symbol>
+val find_module_or_ns : tbl:table -> query:query -> option<symbol>
 val autocomplete : tbl:table -> query:query -> filter:(path -> symbol -> option<(path * symbol)>) -> list<completion_result>

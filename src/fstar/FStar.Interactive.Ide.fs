@@ -320,7 +320,31 @@ let js_optional_completion_context k =
     | _ ->
       js_fail "completion context (code, set-options, reset-options, \
 open, let-open, include, module-alias)" k
+
+type lookup_context =
+| LKSymbolOnly
+| LKModule
+| LKOption
+| LKCode
+
+let js_optional_lookup_context k =
+  match k with
+  | None -> LKSymbolOnly // Backwards-compatible default
+  | Some k ->
+    match js_str k with
+    | "symbol-only" -> LKSymbolOnly
+    | "code" -> LKCode
+    | "set-options"
+    | "reset-options" -> LKOption
+    | "open"
+    | "let-open"
+    | "include"
+    | "module-alias" -> LKModule
+    | _ ->
+      js_fail "lookup context (symbol-only, code, set-options, reset-options, \
 open, let-open, include, module-alias)" k
+
+type position = string * int * int
 
 type query' =
 | Exit
@@ -329,7 +353,7 @@ type query' =
 | Pop
 | Push of push_kind * string * int * int * bool
 | AutoComplete of string * completion_context
-| Lookup of string * option<(string * int * int)> * list<string>
+| Lookup of string * lookup_context * option<position> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
 | Search of string
 | MissingCurrentModule
@@ -344,10 +368,10 @@ let query_needs_current_module = function
 let interactive_protocol_vernum = 2
 
 let interactive_protocol_features =
-  ["autocomplete";
+  ["autocomplete"; "autocomplete/context";
    "compute"; "compute/reify"; "compute/pure-subterms";
    "describe-protocol"; "describe-repl"; "exit";
-   "lookup"; "lookup/documentation"; "lookup/definition";
+   "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"]
 
 exception InvalidQuery of string
@@ -394,6 +418,7 @@ let unpack_interactive_query json =
            | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
                                             try_arg "context" |> js_optional_completion_context)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
+                                try_arg "context" |> js_optional_lookup_context,
                                 try_arg "location"
                                   |> Util.map_option js_assoc
                                   |> Util.map_option (fun loc ->
@@ -421,14 +446,6 @@ let read_interactive_query stream : query =
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
-
-let rec json_of_fstar_option_value = function
-  | Options.Bool b -> JsonBool b
-  | Options.String s
-  | Options.Path s -> JsonStr s
-  | Options.Int n -> JsonInt n
-  | Options.List vs -> JsonList (List.map json_of_fstar_option_value vs)
-  | Options.Unset -> JsonNull
 
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
@@ -472,59 +489,23 @@ let json_of_issue issue =
                               [json_of_def_range r]
                             | _ -> [])))]
 
-type lookup_result = { lr_name: string;
-                       lr_def_range: option<Range.range>;
-                       lr_typ: option<string>;
-                       lr_doc: option<string>;
-                       lr_def: option<string> }
+type symbol_lookup_result = { slr_name: string;
+                              slr_def_range: option<Range.range>;
+                              slr_typ: option<string>;
+                              slr_doc: option<string>;
+                              slr_def: option<string> }
 
-let json_of_lookup_result lr =
-  JsonAssoc [("name", JsonStr lr.lr_name);
-             ("defined-at", json_of_opt json_of_def_range lr.lr_def_range);
-             ("type", json_of_opt JsonStr lr.lr_typ);
-             ("documentation", json_of_opt JsonStr lr.lr_doc);
-             ("definition", json_of_opt JsonStr lr.lr_def)]
+let alist_of_symbol_lookup_result lr =
+  [("name", JsonStr lr.slr_name);
+   ("defined-at", json_of_opt json_of_def_range lr.slr_def_range);
+   ("type", json_of_opt JsonStr lr.slr_typ);
+   ("documentation", json_of_opt JsonStr lr.slr_doc);
+   ("definition", json_of_opt JsonStr lr.slr_def)]
 
-let json_of_protocol_info =
+let alist_of_protocol_info =
   let js_version = JsonInt interactive_protocol_vernum in
   let js_features = JsonList <| List.map JsonStr interactive_protocol_features in
   [("version", js_version); ("features", js_features)]
-
-let write_json json =
-  Util.print_raw (Util.string_of_json json);
-  Util.print_raw "\n"
-
-let write_response qid status response =
-  let qid = JsonStr qid in
-  let status = match status with
-               | QueryOK -> JsonStr "success"
-               | QueryNOK -> JsonStr "failure"
-               | QueryViolatesProtocol -> JsonStr "protocol-violation" in
-  write_json (JsonAssoc [("kind", JsonStr "response");
-                         ("query-id", qid);
-                         ("status", status);
-                         ("response", response)])
-
-let write_message level contents =
-  write_json (JsonAssoc [("kind", JsonStr "message");
-                         ("level", JsonStr level);
-                         ("contents", contents)])
-
-let write_hello () =
-  let js_version = JsonInt interactive_protocol_vernum in
-  let js_features = JsonList (List.map JsonStr interactive_protocol_features) in
-  write_json (JsonAssoc (("kind", JsonStr "protocol-info") :: json_of_protocol_info))
-
-(******************************************************************************************)
-(* The main interactive loop *)
-(******************************************************************************************)
-open FStar.Parser.ParseIt
-
-// FIXME: Store repl_names in the stack, too
-type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
-                    repl_stack: stack_t; repl_curmod: modul_t;
-                    repl_env: env_t; repl_ts: m_timestamps;
-                    repl_stdin: stream_reader; repl_names: CompletionTable.table }
 
 type fstar_option_permission_level =
 | OptSet
@@ -532,12 +513,13 @@ type fstar_option_permission_level =
 | OptReadOnly
 
 let string_of_option_permission_level = function
-  | OptSet -> "#set-options"
-  | OptReset -> "#reset-options"
-  | OptReadOnly -> "--read-only--"
+  | OptSet -> ""
+  | OptReset -> "requires #reset-options"
+  | OptReadOnly -> "read-only"
 
 type fstar_option =
   { opt_name: string;
+    opt_sig: string;
     opt_value: Options.option_val;
     opt_default: Options.option_val;
     opt_type: Options.opt_type;
@@ -578,21 +560,69 @@ let rec snippets_of_fstar_option name typ =
     | Options.WithSideEffect (_, elem_spec) -> arg_snippets_of_type elem_spec in
   List.map (mk_snippet name) (arg_snippets_of_type typ)
 
-let json_of_fstar_option opt =
-  JsonAssoc [("name", JsonStr opt.opt_name);
-             ("value", json_of_fstar_option_value opt.opt_value);
-             ("default", json_of_fstar_option_value opt.opt_default);
-             ("documentation", json_of_opt JsonStr opt.opt_documentation);
-             ("type", JsonStr (kind_of_fstar_option_type opt.opt_type));
-             ("permission-level", JsonStr (string_of_option_permission_level opt.opt_permission_level))]
+let rec json_of_fstar_option_value = function
+  | Options.Bool b -> JsonBool b
+  | Options.String s
+  | Options.Path s -> JsonStr s
+  | Options.Int n -> JsonInt n
+  | Options.List vs -> JsonList (List.map json_of_fstar_option_value vs)
+  | Options.Unset -> JsonNull
 
-let fstar_options_static_cache =
+let alist_of_fstar_option opt =
+  [("name", JsonStr opt.opt_name);
+   ("signature", JsonStr opt.opt_sig);
+   ("value", json_of_fstar_option_value opt.opt_value);
+   ("default", json_of_fstar_option_value opt.opt_default);
+   ("documentation", json_of_opt JsonStr opt.opt_documentation);
+   ("type", JsonStr (kind_of_fstar_option_type opt.opt_type));
+   ("permission-level", JsonStr (string_of_option_permission_level opt.opt_permission_level))]
+
+let json_of_fstar_option opt =
+  JsonAssoc (alist_of_fstar_option opt)
+
+let write_json json =
+  Util.print_raw (Util.string_of_json json);
+  Util.print_raw "\n"
+
+let write_response qid status response =
+  let qid = JsonStr qid in
+  let status = match status with
+               | QueryOK -> JsonStr "success"
+               | QueryNOK -> JsonStr "failure"
+               | QueryViolatesProtocol -> JsonStr "protocol-violation" in
+  write_json (JsonAssoc [("kind", JsonStr "response");
+                         ("query-id", qid);
+                         ("status", status);
+                         ("response", response)])
+
+let write_message level contents =
+  write_json (JsonAssoc [("kind", JsonStr "message");
+                         ("level", JsonStr level);
+                         ("contents", contents)])
+
+let write_hello () =
+  let js_version = JsonInt interactive_protocol_vernum in
+  let js_features = JsonList (List.map JsonStr interactive_protocol_features) in
+  write_json (JsonAssoc (("kind", JsonStr "protocol-info") :: alist_of_protocol_info))
+
+(*****************)
+(* Options cache *)
+(*****************)
+
+let sig_of_fstar_option name typ =
+  let flag = "--" ^ name in
+  match Options.desc_of_opt_type typ with
+  | None -> flag
+  | Some arg_sig -> flag ^ " " ^ arg_sig
+
+let fstar_options_list_cache =
   let defaults = Util.smap_of_list Options.defaults in
   Options.all_specs_with_types
   |> List.filter_map (fun (_shortname, name, typ, doc) ->
        Util.smap_try_find defaults name // Keep only options with a default value
        |> Util.map_option (fun default_value ->
              { opt_name = name;
+               opt_sig = sig_of_fstar_option name typ;
                opt_value = Options.Unset;
                opt_default = default_value;
                opt_type = typ;
@@ -605,19 +635,43 @@ let fstar_options_static_cache =
         String.compare (String.lowercase (o1.opt_name))
                        (String.lowercase (o2.opt_name)))
 
-let collect_fstar_options (filter: fstar_option -> bool) =
-  let filter_update opt =
-    if filter opt then
-      Some ({ opt with opt_value = Options.get_option opt.opt_name })
-    else
-      None in
-  List.filter_map filter_update fstar_options_static_cache
+let fstar_options_map_cache =
+  let cache = Util.smap_create 50 in
+  List.iter (fun opt -> Util.smap_add cache opt.opt_name opt) fstar_options_list_cache;
+  cache
+
+let update_option opt =
+  { opt with opt_value = Options.get_option opt.opt_name }
+
+let current_fstar_options filter =
+  List.map update_option (List.filter filter fstar_options_list_cache)
+
+let trim_option_name opt_name =
+  let opt_prefix = "--" in
+  if Util.starts_with opt_name opt_prefix then
+    let __len = String.length opt_prefix in
+    (opt_prefix, Util.substring_from opt_name __len)
+  else
+    ("", opt_name)
+
+(*************************)
+(* Main interactive loop *)
+(*************************)
+
+open FStar.Parser.ParseIt
+
+// FIXME: Store repl_names in the stack, too
+type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
+                    repl_stack: stack_t; repl_curmod: modul_t;
+                    repl_env: env_t; repl_ts: m_timestamps;
+                    repl_stdin: stream_reader; repl_names: CompletionTable.table }
 
 let json_of_repl_state st =
-  [("loaded-dependencies",
-    JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts));
-   ("options",
-    JsonList (List.map json_of_fstar_option (collect_fstar_options (fun _ -> true))))]
+  JsonAssoc
+    [("loaded-dependencies",
+      JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts));
+     ("options",
+      JsonList (List.map json_of_fstar_option (current_fstar_options (fun _ -> true))))]
 
 let with_printed_effect_args k =
   Options.with_saved_options
@@ -633,10 +687,10 @@ let run_exit st =
   ((QueryOK, JsonNull), Inr 0)
 
 let run_describe_protocol st =
-  ((QueryOK, JsonAssoc json_of_protocol_info), Inl st)
+  ((QueryOK, JsonAssoc alist_of_protocol_info), Inl st)
 
 let run_describe_repl st =
-  ((QueryOK, JsonAssoc (json_of_repl_state st)), Inl st)
+  ((QueryOK, json_of_repl_state st), Inl st)
 
 let run_protocol_violation st message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
@@ -778,7 +832,7 @@ let run_push st kind text line column peek_only =
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
 
-let run_lookup st symbol pos_opt requested_info =
+let run_symbol_lookup st symbol pos_opt requested_info =
   let dsenv, tcenv = st.repl_env in
 
   let info_of_lid_str lid_str =
@@ -804,7 +858,7 @@ let run_lookup st symbol pos_opt requested_info =
     | None -> if symbol = "" then None else info_of_lid_str symbol in
 
   let response = match info_opt with
-    | None -> (QueryNOK, JsonNull)
+    | None -> None
     | Some (name_or_lid, typ, rng) ->
       let name =
         match name_or_lid with
@@ -825,11 +879,49 @@ let run_lookup st symbol pos_opt requested_info =
       let def_range =
         if List.mem "defined-at" requested_info then Some rng else None in
 
-      let result = { lr_name = name; lr_def_range = def_range;
-                     lr_typ = typ_str; lr_doc = doc_str; lr_def = def_str } in
-      (QueryOK, json_of_lookup_result result) in
+      let result = { slr_name = name; slr_def_range = def_range;
+                     slr_typ = typ_str; slr_doc = doc_str; slr_def = def_str } in
+      Some ("symbol", alist_of_symbol_lookup_result result) in
 
-  (response, Inl st)
+  match response with
+  | None -> Inl "Symbol not found"
+  | Some info -> Inr info
+
+let run_option_lookup opt_name =
+  let _, trimmed_name = trim_option_name opt_name in
+  match Util.smap_try_find fstar_options_map_cache trimmed_name with
+  | None -> Inl ("Unknown option:" ^ opt_name)
+  | Some opt -> Inr ("option", alist_of_fstar_option (update_option opt))
+
+let run_module_lookup st symbol =
+  let query = Util.split symbol "." in
+  match CompletionTable.find_module_or_ns st.repl_names query with
+  | None
+  | Some (CompletionTable.Lid _) ->
+    Inl "No such module or namespace"
+  | Some (CompletionTable.Module mod_info) ->
+    Inr ("module", CompletionTable.alist_of_mod_info mod_info)
+  | Some (CompletionTable.Namespace ns_info) ->
+    Inr ("namespace", CompletionTable.alist_of_ns_info ns_info)
+
+let run_code_lookup st symbol pos_opt requested_info =
+  match run_symbol_lookup st symbol pos_opt requested_info with
+  | Inr alist -> Inr alist
+  | Inl _ -> run_module_lookup st symbol
+
+let run_lookup' st symbol context pos_opt requested_info =
+  match context with
+  | LKSymbolOnly -> run_symbol_lookup st symbol pos_opt requested_info
+  | LKModule -> run_module_lookup st symbol
+  | LKOption -> run_option_lookup symbol
+  | LKCode -> run_code_lookup st symbol pos_opt requested_info
+
+let run_lookup st symbol context pos_opt requested_info =
+  match run_lookup' st symbol context pos_opt requested_info with
+  | Inl err_msg ->
+    ((QueryNOK, JsonStr err_msg), Inl st)
+  | Inr (kind, info) ->
+    ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
 
 let run_autocomplete' st search_term filter =
   let needle = Util.split search_term "." in
@@ -837,14 +929,14 @@ let run_autocomplete' st search_term filter =
   let json = List.map CompletionTable.json_of_completion_result results in
   ((QueryOK, JsonList json), Inl st)
 
-let run_symbol_autocomplete st search_term =
+let run_code_autocomplete st search_term =
   let filter path symb = match path, symb with
-    | _,   CompletionTable.Module true -> None // Exclude loaded modules
+    | _,   CompletionTable.Module { CompletionTable.mod_loaded = true } -> None
     | [_], CompletionTable.Namespace _ -> None // Exclude (...) at root
     | path_and_symb -> Some path_and_symb in
   run_autocomplete' st search_term filter
 
-let run_module_autocomplete st search_term namespaces modules =
+let run_module_autocomplete st search_term modules namespaces =
   let dsenv, tcenv = st.repl_env in
 
   let rec split_last = function
@@ -852,19 +944,19 @@ let run_module_autocomplete st search_term namespaces modules =
     | [h] -> h, []
     | h :: t -> let last, butlast = split_last t in last, h :: butlast in
 
-  let mod_filter pred loaded path symb =
+  let mod_filter pred path symb =
     if pred then
       let last_elem, path_but_last = split_last path in
       match CompletionTable.matched_prefix_of_path_elem last_elem with
       | Some _ -> None // Exclude matches that reach the final ‘.’
-      | _ -> Some (path_but_last, symb)
+      | _ -> Some (path_but_last, symb) // Trim last segment of match
     else None in
 
   let filter path symb =
     match symb with
     | CompletionTable.Lid _ -> None
-    | CompletionTable.Module loaded -> mod_filter modules loaded path symb
-    | CompletionTable.Namespace loaded -> mod_filter namespaces loaded path symb in
+    | CompletionTable.Module _ -> mod_filter modules path symb
+    | CompletionTable.Namespace _ -> mod_filter namespaces path symb in
 
   run_autocomplete' st search_term filter
 
@@ -874,10 +966,10 @@ let candidates_of_fstar_option match_len is_reset opt =
     | OptSet -> true, ""
     | OptReset -> is_reset, "#reset-only"
     | OptReadOnly -> false, "read-only" in
-  let opt_kind =
+  let opt_type =
     kind_of_fstar_option_type opt.opt_type in
   let annot =
-    if may_set then opt_kind else "(" ^ explanation ^ " " ^ opt_kind ^ ")" in
+    if may_set then opt_type else "(" ^ explanation ^ " " ^ opt_type ^ ")" in
   opt.opt_snippets
   |> List.map (fun snippet ->
         { CompletionTable.completion_match_length = match_len;
@@ -885,21 +977,18 @@ let candidates_of_fstar_option match_len is_reset opt =
           CompletionTable.completion_annotation = annot })
 
 let run_option_autocomplete st search_term is_reset =
-  let opt_prefix = "--" in
-  if Util.starts_with search_term opt_prefix then
-    let __len = String.length opt_prefix in
-    let search_term = Util.substring_from search_term __len in
-    let matcher opt = Util.starts_with opt.opt_name search_term in
-    let options = collect_fstar_options matcher in
+  match trim_option_name search_term with
+  | ("--", trimmed_name) ->
+    let matcher opt = Util.starts_with opt.opt_name trimmed_name in
+    let options = current_fstar_options matcher in
 
-    let match_len = __len + String.length search_term in
+    let match_len = String.length "--" + String.length search_term in
     let collect_candidates = candidates_of_fstar_option match_len is_reset in
     let results = List.concatMap collect_candidates options in
 
     let json = List.map CompletionTable.json_of_completion_result results in
     ((QueryOK, JsonList json), Inl st)
-  else
-    ((QueryNOK, JsonStr "Options should start with '--'"), Inl st)
+  | (_, _) -> ((QueryNOK, JsonStr "Options should start with '--'"), Inl st)
 
 let run_autocomplete st search_term context =
   match context with
@@ -1087,7 +1176,7 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | Pop -> run_pop st
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
   | AutoComplete (search_term, context) -> run_autocomplete st search_term context
-  | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
+  | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
   | MissingCurrentModule -> run_missing_current_module st query
@@ -1130,16 +1219,17 @@ let interactive_printer =
 open FStar.TypeChecker.Common
 
 let add_module_completions deps table =
-  let mods = FStar.Parser.Dep.build_inclusion_candidates_list () in
-  let deps_set =
+  let mods =
+    FStar.Parser.Dep.build_inclusion_candidates_list () in
+  let loaded_mods_set =
     List.fold_left
       (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
       (psmap_empty ()) deps in
   let loaded modname =
-    psmap_find_default deps_set (String.lowercase modname) false in
-  List.fold_left (fun table (modname, _path) ->
-      let ns_query = Util.split modname "." in
-      CompletionTable.register_module_path table (loaded modname) ns_query)
+    psmap_find_default loaded_mods_set (String.lowercase modname) false in
+  List.fold_left (fun table (modname, mod_path) ->
+      let ns_query = Util.split modname "." in // FIXME capitalize first letter at least
+      CompletionTable.register_module_path table (loaded modname) mod_path ns_query)
     table mods
 
 // filename is the name of the file currently edited
@@ -1166,7 +1256,8 @@ let interactive_mode' (filename:string): unit =
 
   TcEnv.toggle_id_info (snd env) true;
 
-  let names = add_module_completions deps CompletionTable.empty in
+  let names =
+    add_module_completions deps CompletionTable.empty in
   let init_st =
     { repl_line = 1; repl_column = 0; repl_fname = filename;
       repl_stack = stack; repl_curmod = None;

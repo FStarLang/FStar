@@ -476,6 +476,25 @@ let incorrect_result path symbol =
      | None -> false)
   | _ -> false
 
+let find (tbl: table) (query: query) =
+  trie_find_exact tbl query
+
+let find_module_or_ns (tbl:table) (query:query) =
+  // Modules and namespaces are stored as special markers in the bindings table
+  // FIXME change this; it's broken when a module is included in another one,
+  // since the special marker of the included module overrides the special
+  // marker of the parent ones, causing e.g. the marker in FStar.All to point to
+  // FStar.Exn
+  match List.last query with
+  | None -> None
+  | Some suffix ->
+    if List.mem suffix [module_marker; namespace_marker] then
+      find tbl query
+    else
+      match find tbl (query @ [module_marker]) with
+      | Some symbol -> Some symbol
+      | None -> find tbl (query @ [namespace_marker])
+
 let autocomplete (tbl: table) (query: query) (filter: path -> symbol -> option<(path * symbol)>) =
   List.filter_map (fun (path, symbol) ->
       if incorrect_result path symbol then None
