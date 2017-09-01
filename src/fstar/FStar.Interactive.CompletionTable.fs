@@ -352,6 +352,8 @@ type mod_info = { mod_name: string;
                   mod_path: string;
                   mod_loaded: bool }
 
+let mod_name md = md.mod_name
+
 type mod_symbol =
 | Module of mod_info
 | Namespace of ns_info

@@ -13,11 +13,13 @@ type mod_info = { mod_name: string;
                   mod_path: string;
                   mod_loaded: bool }
 
+val mod_name : mod_info -> string // F# doesn't like md.CompletionTable.mod_name
+
 type mod_symbol =
 | Module of mod_info
 | Namespace of ns_info
 
-type lid_symbol = Ident.lid
+type lid_symbol = FStar.Ident.lid
 
 type trie<'a>
 type table

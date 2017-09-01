@@ -33,6 +33,7 @@ open FStar.Interactive
 module SS = FStar.Syntax.Syntax
 module DsEnv = FStar.ToSyntax.Env
 module TcEnv = FStar.TypeChecker.Env
+module CTable = FStar.Interactive.CompletionTable
 
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
@@ -664,7 +665,7 @@ open FStar.Parser.ParseIt
 type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                     repl_stack: stack_t; repl_curmod: modul_t;
                     repl_env: env_t; repl_ts: m_timestamps;
-                    repl_stdin: stream_reader; repl_names: CompletionTable.table }
+                    repl_stdin: stream_reader; repl_names: CTable.table }
 
 let json_of_repl_state st =
   JsonAssoc
@@ -724,10 +725,10 @@ type name_tracking_event =
 | NTInclude of lid (* host *) * lid (* included *)
 | NTBinding of binding
 
-let query_of_ids (ids: list<ident>) : CompletionTable.query =
+let query_of_ids (ids: list<ident>) : CTable.query =
   List.map text_of_id ids
 
-let query_of_lid (lid: lident) : CompletionTable.query =
+let query_of_lid (lid: lident) : CTable.query =
   query_of_ids (lid.ns @ [lid.ident])
 
 let update_names_from_event cur_mod_str table evt =
@@ -735,18 +736,18 @@ let update_names_from_event cur_mod_str table evt =
   match evt with
   | NTAlias (host, id, included) ->
     if is_cur_mod host then
-      CompletionTable.register_alias
+      CTable.register_alias
         table (text_of_id id) [] (query_of_lid included)
     else
       table
   | NTOpen (host, (included, kind)) ->
     if is_cur_mod host then
-      CompletionTable.register_open
+      CTable.register_open
         table (kind = DsEnv.Open_module) [] (query_of_lid included)
     else
       table
   | NTInclude (host, included) ->
-    CompletionTable.register_include
+    CTable.register_include
       table (if is_cur_mod host then [] else query_of_lid host) (query_of_lid included)
   | NTBinding binding ->
     let lids =
@@ -759,7 +760,7 @@ let update_names_from_event cur_mod_str table evt =
       (fun tbl lid ->
          let ns_query = if lid.nsstr = cur_mod_str then []
                         else query_of_ids lid.ns in
-         CompletionTable.insert
+         CTable.insert
            tbl ns_query (text_of_id lid.ident) lid)
       table lids
 
@@ -895,13 +896,13 @@ let run_option_lookup opt_name =
 
 let run_module_lookup st symbol =
   let query = Util.split symbol "." in
-  match CompletionTable.find_module_or_ns st.repl_names query with
+  match CTable.find_module_or_ns st.repl_names query with
   | None ->
     Inl "No such module or namespace"
-  | Some (CompletionTable.Module mod_info) ->
-    Inr ("module", CompletionTable.alist_of_mod_info mod_info)
-  | Some (CompletionTable.Namespace ns_info) ->
-    Inr ("namespace", CompletionTable.alist_of_ns_info ns_info)
+  | Some (CTable.Module mod_info) ->
+    Inr ("module", CTable.alist_of_mod_info mod_info)
+  | Some (CTable.Namespace ns_info) ->
+    Inr ("namespace", CTable.alist_of_ns_info ns_info)
 
 let run_code_lookup st symbol pos_opt requested_info =
   match run_symbol_lookup st symbol pos_opt requested_info with
@@ -924,23 +925,23 @@ let run_lookup st symbol context pos_opt requested_info =
   | Inr (kind, info) ->
     ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
 
-let code_autocomplete_mod_filter =
-  let open FStar.Interactive.CompletionTable in function
-  | _, Namespace _
-  | _, Module { mod_loaded = true } -> None
-  | pth, Module mod -> Some (pth, Module ({ mod with mod_name = mod.mod_name ^ "." }))
+let code_autocomplete_mod_filter = function
+  | _, CTable.Namespace _
+  | _, CTable.Module { CTable.mod_loaded = true } -> None
+  | pth, CTable.Module md ->
+    Some (pth, CTable.Module ({ md with CTable.mod_name = CTable.mod_name md ^ "." }))
 
 let run_code_autocomplete st search_term =
   let needle = Util.split search_term "." in
-  let mods_and_nss = CompletionTable.autocomplete_mod_or_ns st.repl_names needle code_autocomplete_mod_filter in
-  let lids = CompletionTable.autocomplete_lid st.repl_names needle in
-  let json = List.map CompletionTable.json_of_completion_result (lids @ mods_and_nss) in
+  let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle code_autocomplete_mod_filter in
+  let lids = CTable.autocomplete_lid st.repl_names needle in
+  let json = List.map CTable.json_of_completion_result (lids @ mods_and_nss) in
   ((QueryOK, JsonList json), Inl st)
 
 let run_module_autocomplete st search_term modules namespaces =
   let needle = Util.split search_term "." in
-  let mods_and_nss = CompletionTable.autocomplete_mod_or_ns st.repl_names needle Some in
-  let json = List.map CompletionTable.json_of_completion_result mods_and_nss in
+  let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle Some in
+  let json = List.map CTable.json_of_completion_result mods_and_nss in
   ((QueryOK, JsonList json), Inl st)
 
 let candidates_of_fstar_option match_len is_reset opt =
@@ -955,9 +956,9 @@ let candidates_of_fstar_option match_len is_reset opt =
     if may_set then opt_type else "(" ^ explanation ^ " " ^ opt_type ^ ")" in
   opt.opt_snippets
   |> List.map (fun snippet ->
-        { CompletionTable.completion_match_length = match_len;
-          CompletionTable.completion_candidate = snippet;
-          CompletionTable.completion_annotation = annot })
+        { CTable.completion_match_length = match_len;
+          CTable.completion_candidate = snippet;
+          CTable.completion_annotation = annot })
 
 let run_option_autocomplete st search_term is_reset =
   match trim_option_name search_term with
@@ -969,7 +970,7 @@ let run_option_autocomplete st search_term is_reset =
     let collect_candidates = candidates_of_fstar_option match_len is_reset in
     let results = List.concatMap collect_candidates options in
 
-    let json = List.map CompletionTable.json_of_completion_result results in
+    let json = List.map CTable.json_of_completion_result results in
     ((QueryOK, JsonList json), Inl st)
   | (_, _) -> ((QueryNOK, JsonStr "Options should start with '--'"), Inl st)
 
@@ -1222,7 +1223,7 @@ let add_module_completions this_fname deps table =
         table // Exclude current module from completion
       else
         let ns_query = Util.split (capitalize modname) "." in
-        CompletionTable.register_module_path table (loaded mod_key) mod_path ns_query)
+        CTable.register_module_path table (loaded mod_key) mod_path ns_query)
     table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
 // filename is the name of the file currently edited
@@ -1250,7 +1251,7 @@ let interactive_mode' (filename:string): unit =
   TcEnv.toggle_id_info (snd env) true;
 
   let names =
-    add_module_completions filename deps CompletionTable.empty in
+    add_module_completions filename deps CTable.empty in
   let init_st =
     { repl_line = 1; repl_column = 0; repl_fname = filename;
       repl_stack = stack; repl_curmod = None;
