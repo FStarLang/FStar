@@ -1217,6 +1217,10 @@ let interactive_printer =
     printer_prgeneric = (fun label get_string get_json -> write_message label (get_json ()) )}
 
 open FStar.TypeChecker.Common
+let capitalize str =
+  if str = "" then str
+  else let first = String.substring str 0 1 in
+       String.uppercase first ^ String.substring str 1 (String.length str - 1)
 
 let add_module_completions deps table =
   let mods =
@@ -1228,7 +1232,7 @@ let add_module_completions deps table =
   let loaded modname =
     psmap_find_default loaded_mods_set (String.lowercase modname) false in
   List.fold_left (fun table (modname, mod_path) ->
-      let ns_query = Util.split modname "." in // FIXME capitalize first letter at least
+      let ns_query = Util.split (capitalize modname) "." in
       CompletionTable.register_module_path table (loaded modname) mod_path ns_query)
     table mods
 
