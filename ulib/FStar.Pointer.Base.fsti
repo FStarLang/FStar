@@ -1144,7 +1144,7 @@ val buffer_length_gsub_buffer
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_length (gsub_buffer b i len) == len))
   [SMTPat (buffer_length (gsub_buffer b i len))]
 
-val buffer_live_gsub_buffer
+val buffer_live_gsub_buffer_equiv
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
@@ -1153,6 +1153,17 @@ val buffer_live_gsub_buffer
 : Lemma
   (requires (UInt32.v len > 0 /\ UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ (buffer_live h (gsub_buffer b i len) <==> buffer_live h b)))
+  [SMTPat (buffer_live h (gsub_buffer b i len))]
+
+val buffer_live_gsub_buffer_intro
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (h: HS.mem)
+: Lemma
+  (requires (buffer_live h b /\ UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_live h (gsub_buffer b i len)))
   [SMTPat (buffer_live h (gsub_buffer b i len))]
 
 val gsub_buffer_gsub_buffer
@@ -1404,7 +1415,7 @@ val buffer_readable_gsub_buffer
   (i: UInt32.t)
   (len: UInt32.t)
 : Lemma
-  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_readable h b /\ UInt32.v len > 0))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_readable h b))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_readable h (gsub_buffer b i len)))
   [SMTPat (buffer_readable h (gsub_buffer b i len))]
 

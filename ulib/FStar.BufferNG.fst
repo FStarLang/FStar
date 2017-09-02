@@ -149,7 +149,7 @@ let length_gsub
   [SMTPat (length (gsub b i len))]
 = ()
 
-let live_gsub
+let live_gsub_equiv
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
@@ -158,6 +158,18 @@ let live_gsub
 : Lemma
   (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ UInt32.v len > 0))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ (live h (gsub b i len) <==> live h b)))
+  [SMTPat (live h (gsub b i len))]
+= ()
+
+let live_gsub_intro
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (h: HS.mem)
+: Lemma
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ live h b))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ live h (gsub b i len)))
   [SMTPat (live h (gsub b i len))]
 = ()
 
