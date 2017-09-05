@@ -636,7 +636,17 @@ and desugar_typ env e : S.term =
     desugar_term_maybe_top false env e
 
 and desugar_machine_integer env repr (signedness, width) range =
-  let lower, upper = FStar.Const.bounds signedness width in
+  let size = match width with
+             | Int8  -> 8
+             | Int16  -> 16
+             | Int32  -> 32
+             | Int64  -> 64 in
+  let lower, upper = begin match signedness with
+                           | Unsigned -> 0I, System.Numerics.BigInteger.Pow(2I, size) - 1I
+                           | Signed -> 
+                              let upper' = System.Numerics.BigInteger.Pow(2I, size - 1) in
+                              -upper' , upper' - 1I
+                      end in
   let value = FStar.Util.int_of_string (FStar.Util.ensure_decimal repr) in
   let tnm = "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
@@ -646,7 +656,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   //and coerce them to the appropriate type using the internal coercion
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
-  if not (lower <= value && value <= upper)
+  if not (lower <= bigint value && bigint value <= upper)
   then raise (Error(BU.format2 "%s is not in the expected range for %s"
                                repr tnm,
                     range));
