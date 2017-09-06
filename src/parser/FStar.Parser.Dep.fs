@@ -22,6 +22,7 @@
 *)
 module FStar.Parser.Dep
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 open FStar
@@ -290,20 +291,7 @@ let collect_one
 
   let num_of_toplevelmods = BU.mk_ref 0 in
 
-  let rec collect_fragment = function
-    | Inl file ->
-        collect_file file
-    | Inr decls ->
-        collect_decls decls
-
-  and collect_file = function
-    | [ modul ] ->
-        collect_module modul
-    | modules ->
-        Util.print1_warning "Warning: file %s does not respect the one module per file convention\n" filename;
-        List.iter collect_module modules
-
-  and collect_module = function
+  let rec collect_module = function
     | Module (lid, decls)
     | Interface (lid, decls, _) ->
         check_module_declaration_against_filename lid filename;
@@ -354,7 +342,7 @@ let collect_one
         collect_term t0;
         collect_term t1
     | Tycon (_, ts) ->
-        let ts = List.map (fun (x,doc) -> x) ts in
+        let ts = List.map (fun (x,docnik) -> x) ts in
         List.iter collect_tycon ts
     | Exception (_, t) ->
         iter_opt t collect_term
@@ -538,7 +526,7 @@ let collect_one
 
   in
   let ast, _ = Driver.parse_file filename in
-  collect_file ast;
+  collect_module ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps
 
@@ -557,7 +545,7 @@ let print_graph graph =
   )
 
 (** Collect the dependencies for a list of given files. *)
-let collect (verify_mode: verify_mode) (filenames: list<string>): _ =
+let collect (verify_mode: verify_mode) (filenames: list<string>) =
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
   let graph = smap_create 41 in

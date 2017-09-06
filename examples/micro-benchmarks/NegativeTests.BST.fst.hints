@@ -80,14 +80,6 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0
-    ],
-    [
-      "NegativeTests.BST.__proj__Node__item__left",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query",
         "disc_equation_NegativeTests.BST.Node", "int_inversion",
@@ -139,8 +131,9 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "data_elim_NegativeTests.BST.Node",
-        "disc_equation_NegativeTests.BST.Node", "disc_equation_Prims.None",
-        "int_inversion", "proj_equation_NegativeTests.BST.Node_l",
+        "disc_equation_FStar.Pervasives.None",
+        "disc_equation_NegativeTests.BST.Node", "int_inversion",
+        "proj_equation_NegativeTests.BST.Node_l",
         "proj_equation_NegativeTests.BST.Node_left",
         "proj_equation_NegativeTests.BST.Node_n",
         "proj_equation_NegativeTests.BST.Node_r",
@@ -151,7 +144,7 @@
         "projection_inverse_NegativeTests.BST.Node_r",
         "projection_inverse_NegativeTests.BST.Node_right",
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4",
-        "refinement_interpretation_NegativeTests.BST_Tm_refine_96da7bad5ebe66e395a507d441709378"
+        "refinement_interpretation_NegativeTests.BST_Tm_refine_9f48321d21f76681b2293999125b5267"
       ],
       0
     ],
@@ -197,9 +190,6 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0
-    ],
-    null,
-    null,
-    null
+    ]
   ]
 ]

@@ -50,6 +50,13 @@ val init                        : unit    -> unit  //sets the current options to
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
 val restore_cmd_line_options    : bool    -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
 
+type optionstate = Util.smap<option_val>
+(* Control the option stack *)
+val push                        : unit -> unit
+val pop                         : unit -> unit
+val peek                        : unit -> optionstate
+val set                         : optionstate -> unit
+
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
@@ -61,12 +68,14 @@ val add_light_off_file          : string  -> unit
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
+val cache_checked_modules       : unit    -> bool
 val codegen                     : unit    -> option<string>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
 val debug_at_level              : string  -> debug_level_t -> bool
 val dep                         : unit    -> option<string>
 val detail_errors               : unit    -> bool
+val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit
 val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool
@@ -91,6 +100,7 @@ val initial_fuel                : unit    -> int
 val initial_ifuel               : unit    -> int
 val interactive                 : unit    -> bool
 val lax                         : unit    -> bool
+val load                        : unit    -> list<string>
 val legacy_interactive          : unit    -> bool
 val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
@@ -104,7 +114,6 @@ val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
 val no_location_info            : unit    -> bool
 val output_dir                  : unit    -> option<string>
-val pop                         : unit    -> unit
 val prepend_output_dir          : string  -> string
 val prims                       : unit    -> string
 val prims_basename              : unit    -> string
@@ -113,20 +122,19 @@ val pervasives_basename         : unit    -> string
 val pervasives_native_basename  : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
-val print_fuels                 : unit    -> bool
 val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
-val push                        : unit    -> unit
+val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
-val check_hints                 : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
 val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
 val should_verify               : string  -> bool
+val should_verify_file          : string  -> bool
 val silent                      : unit    -> bool
 val smtencoding_elim_box        : unit -> bool
 val smtencoding_nl_arith_default: unit -> bool
@@ -153,8 +161,8 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
-val z3_timeout                  : unit    -> int
 val no_positivity               : unit    -> bool
+val ml_no_eta_expand_coertions  : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

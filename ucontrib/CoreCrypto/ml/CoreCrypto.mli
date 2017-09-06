@@ -8,12 +8,12 @@ type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type stream_cipher = RC4_128
 type rsa_padding = Pad_none | Pad_PKCS1
 
-type aead_cipher = 
-  | AES_128_GCM   
+type aead_cipher =
+  | AES_128_GCM
   | AES_256_GCM
-  | CHACHA20_POLY1305 
+  | CHACHA20_POLY1305
   | AES_128_CCM
-  | AES_256_CCM   
+  | AES_256_CCM
   | AES_128_CCM_8
   | AES_256_CCM_8
 
@@ -56,9 +56,9 @@ val hmac : hash_alg -> bytes -> bytes -> bytes
 
 (* digest functions *)
 type hash_ctx
-val digest_create : hash_alg -> hash_ctx 
+val digest_create : hash_alg -> hash_ctx
 val digest_update : hash_ctx -> bytes -> unit
-val digest_final : hash_ctx -> bytes 
+val digest_final : hash_ctx -> bytes
 
 val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
@@ -76,8 +76,8 @@ val random : Z.t -> bytes
 val rsa_gen_key : Z.t -> rsa_key
 val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> bytes
 val rsa_decrypt : rsa_key -> rsa_padding -> bytes -> bytes option
-val rsa_sign : hash_alg option -> rsa_key -> bytes -> bytes
-val rsa_verify : hash_alg option -> rsa_key -> bytes -> bytes -> bool
+val rsa_sign : hash_alg option -> rsa_key -> bool -> bytes -> bytes
+val rsa_verify : hash_alg option -> rsa_key -> bool -> bytes -> bytes -> bool
 
 val dsa_gen_key : Z.t -> dsa_key
 val dsa_sign : hash_alg option -> dsa_key -> bytes -> bytes

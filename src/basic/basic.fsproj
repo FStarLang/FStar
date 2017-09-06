@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -65,35 +65,39 @@
     <Compile Include="basetypes-fake.fs" />
     <Compile Include="prims-fake.fs" />
     <Compile Include="st-fake.fs" />
+    <Compile Include="exn-fake.fs" />
     <Compile Include="all-fake.fs" />
     <Compile Include="mul-fake.fs" />
-    <Compile Include="char.fsi" />
-    <Compile Include="char.fs" />
-    <Compile Include="string.fsi" />
-    <Compile Include="string.fs" />
-    <Compile Include="list.fsi" />
-    <Compile Include="list.fs" />
+    <Compile Include="fs/char.fsi" />
+    <Compile Include="fs/char.fs" />
+    <Compile Include="boot/FStar.String.fsi" />
+    <Compile Include="boot/FStar.String.fs" />
+    <Compile Include="boot/FStar.List.fsi" />
+    <Compile Include="boot/FStar.List.fs" />
+    <Compile Include="boot/FStar.Util.fsi" />
+    <Compile Include="boot/FStar.Util.fs" />
+    <Compile Include="boot/FStar.Bytes.fsi" />
+    <Compile Include="boot/FStar.Bytes.fs" />
+    <Compile Include="boot/FStar.Range.fsi" />
+    <Compile Include="boot/FStar.Range.fs" />
+    <Compile Include="boot/FStar.Dyn.fsi" />
+    <Compile Include="boot/FStar.Dyn.fs" />
     <Compile Include="profiling.fs" />
-    <Compile Include="util.fsi" />
-    <Compile Include="util.fs" />
-    <Compile Include="platform.fsi" />
-    <Compile Include="platform.fs" />
-    <Compile Include="bytes.fsi" />
-    <Compile Include="bytes.fs" />
+    <Compile Include="FStar.Platform.fsi" />
+    <Compile Include="FStar.Platform.fs" />
     <Compile Include="FStar.Common.fs" />
-    <Compile Include="range.fsi" />
-    <Compile Include="range.fs" />
-    <Compile Include="getopt.fsi" />
-    <Compile Include="getopt.fs" />
+    <Compile Include="FStar.Getopt.fsi" />
+    <Compile Include="FStar.Getopt.fs" />
     <Compile Include="FStar.Options.fsi" />
     <Compile Include="FStar.Options.fs" />
-    <Compile Include="unionfind.fsi" />
-    <Compile Include="unionfind.fs" />
+    <Compile Include="FStar.Unionfind.fsi" />
+    <Compile Include="FStar.Unionfind.fs" />
     <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Const.fs" />
+    <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />
-    <Compile Include="version.fsi" />
-    <Compile Include="version.fs" />
+    <Compile Include="FStar.Version.fsi" />
+    <Compile Include="FStar.Version.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -102,22 +106,6 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\VS\packages\FSPowerPack.Core.Community.3.0.0.0\lib\Net40\FSharp.PowerPack.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Linq">
-      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.1\lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Metadata">
-      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.1\lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Parallel.Seq">
-      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.1\lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">

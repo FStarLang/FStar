@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Parser.AST
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar.Errors
 module C = FStar.Parser.Const
@@ -209,7 +210,7 @@ and effect_decl =
 type modul =
   | Module of lid * list<decl>
   | Interface of lid * list<decl> * bool (* flag to mark admitted interfaces *)
-type file = list<modul>
+type file = modul
 type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
@@ -291,14 +292,14 @@ let mkApp t args r = match args with
       | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
-  let empty_lid, singleton_lid, union_lid =
-      C.tset_empty, C.tset_singleton, C.tset_union in
+  let empty_lid, singleton_lid, union_lid, addr_of_lid =
+      C.set_empty, C.set_singleton, C.set_union, C.heap_addr_of_lid in
   let empty = mk_term (Var(set_lid_range empty_lid r)) r Expr in
-  let ref_constr = mk_term (Var (set_lid_range C.heap_ref r)) r Expr in
+  let addr_of = mk_term (Var (set_lid_range addr_of_lid r)) r Expr in
   let singleton = mk_term (Var (set_lid_range singleton_lid r)) r Expr in
   let union = mk_term (Var(set_lid_range union_lid r)) r Expr in
   List.fold_right (fun e tl ->
-    let e = mkApp ref_constr [(e, Nothing)] r in
+    let e = mkApp addr_of [(e, Nothing)] r in
     let single_e = mkApp singleton [(e, Nothing)] r in
     mkApp union [(single_e, Nothing); (tl, Nothing)] r) elts empty
 
@@ -414,19 +415,19 @@ let rec extract_named_refinement t1  =
 
 //NS: needed to hoist this to workaround a bootstrapping bug
 //    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
-let rec as_mlist (out:list<modul>) (cur: (lid * decl) * list<decl>) (ds:list<decl>) : list<modul> =
+let rec as_mlist (cur: (lid * decl) * list<decl>) (ds:list<decl>) : modul =
     let ((m_name, m_decl), cur) = cur in
     match ds with
-    | [] -> List.rev (Module(m_name, m_decl :: List.rev cur)::out)
+    | [] -> Module(m_name, m_decl :: List.rev cur)
     | d :: ds ->
         begin match d.d with
         | TopLevelModule m' ->
-            as_mlist (Module(m_name, m_decl :: List.rev cur)::out) ((m', d), []) ds
+            raise (Error("Unexpected module declaration", d.drange))
         | _ ->
-            as_mlist out ((m_name, m_decl), d::cur) ds
+            as_mlist ((m_name, m_decl), d::cur) ds
         end
 
-let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<modul>),(list<decl>)> =
+let as_frag is_light (light_range:Range.range) (ds:list<decl>) : inputFragment =
   let d, ds = match ds with
     | d :: ds -> d, ds
     | [] -> raise Empty_frag
@@ -434,16 +435,8 @@ let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<mo
   match d.d with
   | TopLevelModule m ->
       let ds = if is_light then mk_decl (Pragma LightOff) light_range [] :: ds else ds in
-      let ms = as_mlist [] ((m,d), []) ds in
-      begin match List.tl ms with
-      | Module (m', _) :: _ ->
-          (* This check is coded to hard-fail in dep.num_of_toplevelmods. *)
-          let msg = "Support for more than one module in a file is deprecated" in
-          print2_warning "%s (Warning): %s\n" (string_of_range (range_of_lid m')) msg
-      | _ ->
-          ()
-      end;
-      Inl ms
+      let m = as_mlist ((m,d), []) ds in
+      Inl m
   | _ ->
       let ds = d::ds in
       List.iter (function
@@ -452,14 +445,16 @@ let as_frag is_light (light_range:Range.range) (ds:list<decl>) : either<(list<mo
       ) ds;
       Inr ds
 
-let compile_op arity s =
+let compile_op arity s r =
     let name_of_char = function
       |'&' -> "Amp"
       |'@'  -> "At"
       |'+' -> "Plus"
       |'-' when (arity=1) -> "Minus"
       |'-' -> "Subtraction"
+      |'~' -> "Tilde"
       |'/' -> "Slash"
+      |'\\' -> "Backslash"
       |'<' -> "Less"
       |'=' -> "Equals"
       |'>' -> "Greater"
@@ -471,7 +466,10 @@ let compile_op arity s =
       |'*' -> "Star"
       |'?' -> "Question"
       |':' -> "Colon"
-      | _ -> "UNKNOWN" in
+      |'$' -> "Dollar"
+      |'.' -> "Dot"
+      | c -> raise (Error ("Unexpected operator symbol: '" ^ string_of_char c ^ "'" , r))
+    in
     match s with
     | ".[]<-" -> "op_String_Assignment"
     | ".()<-" -> "op_Array_Assignment"
@@ -479,8 +477,8 @@ let compile_op arity s =
     | ".()" -> "op_Array_Access"
     | _ -> "op_"^ (String.concat "_" (List.map name_of_char (String.list_of_string s)))
 
-let compile_op' s =
-  compile_op (-1) s
+let compile_op' s r =
+  compile_op (-1) s r
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Printing ASTs, mostly for debugging

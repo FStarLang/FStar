@@ -18,6 +18,7 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Options
 open FStar.ST
+open FStar.Exn
 open FStar.All
 open FStar
 open FStar.Util
@@ -39,6 +40,16 @@ type option_val =
   | Int of int
   | List of list<option_val>
   | Unset
+
+//These wrappers provide each constructor with the ML effect
+//They are needed to make type-inference work well with the
+//--eager_inference flag that is used during bootstrapping,
+//which explicitly disables some subtyping/sub-effecting
+let mk_bool   : bool -> option_val = Bool
+let mk_string : string -> option_val = String
+let mk_path   : string -> option_val = Path
+let mk_int    : int -> option_val = Int
+let mk_list   : list<option_val> -> option_val = List
 
 type options =
     | Set
@@ -70,7 +81,9 @@ let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
 
-let fstar_options : ref<list<Util.smap<option_val>> > = Util.mk_ref []
+type optionstate = Util.smap<option_val>
+
+let fstar_options : ref<list<optionstate> > = Util.mk_ref []
 let peek () = List.hd !fstar_options
 let pop  () =
     match !fstar_options with
@@ -78,6 +91,11 @@ let pop  () =
     | [_] -> failwith "TOO MANY POPS!"
     | _::tl -> fstar_options := tl
 let push () = fstar_options := Util.smap_copy (peek()) :: !fstar_options
+let set o =
+    match !fstar_options with
+    | [] -> failwith "set on empty option stack"
+    | _::os -> fstar_options := (o::os)
+
 let set_option k v = Util.smap_add (peek()) k v
 let set_option' (k,v) =  set_option k v
 
@@ -94,13 +112,14 @@ let defaults =
       ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
-      ("check_hints"                  , Bool false);
+      ("cache_checked_modules"        , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
       ("debug"                        , List []);
       ("debug_level"                  , List []);
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
+      ("detail_hint_replay"           , Bool false);
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
@@ -122,6 +141,7 @@ let defaults =
       ("initial_fuel"                 , Int 2);
       ("initial_ifuel"                , Int 1);
       ("lax"                          , Bool false);
+      ("load"                         , List []);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -138,12 +158,12 @@ let defaults =
       ("prims_ref"                    , Unset);
       ("print_bound_var_types"        , Bool false);
       ("print_effect_args"            , Bool false);
-      ("print_fuels"                  , Bool false);
       ("print_full_names"             , Bool false);
       ("print_implicits"              , Bool false);
       ("print_universes"              , Bool false);
       ("print_z3_statistics"          , Bool false);
       ("prn"                          , Bool false);
+      ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("reuse_hint_for"               , Unset);
       ("show_signatures"              , List []);
@@ -169,9 +189,9 @@ let defaults =
       ("z3rlimit"                     , Int 5);
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
-      ("z3timeout"                    , Int 5);
       ("z3cliopt"                     , List []);
-      ("__no_positivity"              , Bool false)]
+      ("__no_positivity"              , Bool false);
+      ("__ml_no_eta_expand_coertions" , Bool false)]
 
 let init () =
    let o = peek () in
@@ -196,13 +216,14 @@ let lookup_opt s c =
 
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
-let get_check_hints             ()      = lookup_opt "check_hints"              as_bool
+let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
 let get_debug_level             ()      = lookup_opt "debug_level"              (as_list as_string)
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
+let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
@@ -223,6 +244,7 @@ let get_indent                  ()      = lookup_opt "indent"                   
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
+let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -238,12 +260,12 @@ let get_ugly                    ()      = lookup_opt "ugly"                     
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
-let get_print_fuels             ()      = lookup_opt "print_fuels"              as_bool
 let get_print_full_names        ()      = lookup_opt "print_full_names"         as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
+let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
 let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
@@ -270,8 +292,8 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
-let get_z3timeout               ()      = lookup_opt "z3timeout"                as_int
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
+let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 
 let dlevel = function
    | "Low" -> Low
@@ -358,78 +380,88 @@ let rec specs () : list<Getopt.opt> =
   let specs =
     [  ( noshort,
        "admit_smt_queries",
-       OneArg ((fun s -> if s="true" then Bool true
-                         else if s="false" then Bool false
+       OneArg ((fun s -> if s="true" then mk_bool true
+                         else if s="false" then mk_bool false
                          else failwith("Invalid argument to --admit_smt_queries")),
                 "[true|false]"),
        "Admit SMT queries, unsafe! (default 'false')");
 
       ( noshort,
         "admit_except",
-         OneArg (String, "[id]"),
-        "Admit all verification conditions, except those with query label <id>");
+         OneArg (mk_string, "[id]"),
+        "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
 
+      ( noshort,
+        "cache_checked_modules",
+        ZeroArgs (fun () -> mk_bool true),
+        "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
 
       ( noshort,
         "codegen",
-        OneArg ((fun s -> String (parse_codegen s)),
+        OneArg ((fun s -> mk_string (parse_codegen s)),
                  "[OCaml|FSharp|Kremlin]"),
         "Generate code for execution");
 
       ( noshort,
         "codegen-lib",
-        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map String)),
+        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map mk_string)),
                  "[namespace]"),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
 
       ( noshort,
         "debug",
-        OneArg ((fun x -> List (x::get_debug() |> List.map String)),
+        OneArg ((fun x -> List (x::get_debug() |> List.map mk_string)),
                  "[module name]"),
         "Print lots of debugging information while checking module");
 
        ( noshort,
         "debug_level",
-        OneArg ((fun x -> List (x::get_debug_level() |> List.map String)),
+        OneArg ((fun x -> List (x::get_debug_level() |> List.map mk_string)),
                  "[Low|Medium|High|Extreme|...]"),
         "Control the verbosity of debugging info");
 
        ( noshort,
         "dep",
-        OneArg ((fun x -> if x = "make" || x = "graph" then String x else failwith "invalid argument to 'dep'"),
+        OneArg ((fun x -> if x = "make" || x = "graph" then mk_string x else failwith "invalid argument to 'dep'"),
                  "[make|graph]"),
         "Output the transitive closure of the dependency graph in a format suitable for the given tool");
 
        ( noshort,
         "detail_errors",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
          "Emit a detailed error report by asking the SMT solver many queries; will take longer;
          implies n_cores=1");
 
        ( noshort,
+        "detail_hint_replay",
+        ZeroArgs (fun () -> mk_bool true),
+         "Emit a detailed report for proof whose unsat core fails to replay;
+         implies n_cores=1");
+
+       ( noshort,
         "doc",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
          "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory.");
 
        ( noshort,
         "dump_module",
-        OneArg ((fun x -> (x::get_dump_module()) |> List.map String |> List),
+        OneArg ((fun x -> (x::get_dump_module()) |> List.map mk_string |> mk_list),
                  "[module name]"),
         "");
 
        ( noshort,
         "eager_inference",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
 
        ( noshort,
         "explicit_deps",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Do not find dependencies automatically, the user provides them on the command-line");
 
        ( noshort,
         "extract_all",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Discover the complete dependency graph and do not stop at interface boundaries");
 
        ( noshort,
@@ -446,210 +478,211 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "fstar_home",
-        OneArg (Path,
+        OneArg (mk_path,
                 "[dir]"),
         "Set the FSTAR_HOME variable to [dir]");
 
        ( noshort,
         "hide_genident_nums",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Don't print generated identifier numbers");
 
        ( noshort,
         "hide_uvar_nums",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Don't print unification variable numbers");
 
        ( noshort,
-        "hint_info",
-        ZeroArgs(fun () -> Bool true),
-        "Print information regarding hints");
-
-       ( noshort,
          "hint_file",
-         OneArg (Path,
+         OneArg (mk_path,
                  "[path]"),
         "Read/write hints to <path> (instead of module-specific hints files)");
 
        ( noshort,
+        "hint_info",
+        ZeroArgs(fun () -> mk_bool true),
+        "Print information regarding hints (deprecated; use --query_stats instead)");
+
+       ( noshort,
         "in",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Legacy interactive mode; reads input from stdin");
 
        ( noshort,
         "ide",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "JSON-based interactive mode for IDEs");
 
        ( noshort,
         "include",
-        OneArg ((fun s -> List (List.map String (get_include()) @ [Path s])),
+        OneArg ((fun s -> mk_list (List.map mk_string (get_include()) @ [mk_path s])),
                 "[path]"),
         "A directory in which to search for files included on the command line");
 
        ( noshort,
         "indent",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Parses and outputs the files on the command line");
 
        ( noshort,
         "initial_fuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Number of unrolling of recursive functions to try initially (default 2)");
 
        ( noshort,
         "initial_ifuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Number of unrolling of inductive datatypes to try at first (default 1)");
 
        ( noshort,
         "inline_arith",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Inline definitions of arithmetic functions in the SMT encoding");
 
        ( noshort,
         "lax",
-        ZeroArgs (fun () -> Bool true), //pretype := true; verify := false),
+        ZeroArgs (fun () -> mk_bool true), //pretype := true; verify := false),
         "Run the lax-type checker only (admit all verification conditions)");
+
+      ( noshort,
+       "load",
+        OneArg ((fun s -> mk_list (List.map mk_string (get_load()) @ [mk_path s])),
+                "[module]"),
+        "Load compiled module");
 
        ( noshort,
         "log_types",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print types computed for data/val/let-bindings");
 
        ( noshort,
         "log_queries",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Log the Z3 queries in several queries-*.smt2 files, as we go");
 
        ( noshort,
         "max_fuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Number of unrolling of recursive functions to try at most (default 8)");
 
        ( noshort,
         "max_ifuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Number of unrolling of inductive datatypes to try at most (default 2)");
 
        ( noshort,
         "min_fuel",
-        OneArg((fun x -> Int (int_of_string x)),
+        OneArg((fun x -> mk_int (int_of_string x)),
                 "[non-negative integer]"),
         "Minimum number of unrolling of recursive functions to try (default 1)");
 
        ( noshort,
         "MLish",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
 
        ( noshort,
         "n_cores",
-        OneArg ((fun x -> Int (int_of_string x)),//; detail_errors := false),
+        OneArg ((fun x -> mk_int (int_of_string x)),//; detail_errors := false),
                  "[positive integer]"),
         "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)");
 
        ( noshort,
         "no_default_includes",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Ignore the default module search paths");
 
        ( noshort,
         "no_extract",
-        OneArg ((fun x -> List (x :: get_no_extract() |> List.map String)),
+        OneArg ((fun x -> mk_list (x :: get_no_extract() |> List.map mk_string)),
                  "[module name]"),
         "Do not extract code from this module");
 
        ( noshort,
         "no_location_info",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
 
        ( noshort,
         "odir",
-        OneArg ((fun p -> Path (validate_dir p)),
+        OneArg ((fun p -> mk_path (validate_dir p)),
                 "[dir]"),
         "Place output in directory [dir]");
 
        ( noshort,
         "prims",
-        OneArg (String,
+        OneArg (mk_string,
                 "file"),
         "");
 
        ( noshort,
         "print_bound_var_types",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Print the types of bound variables");
 
        ( noshort,
         "print_effect_args",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print inferred predicate transformers for all computation types");
 
        ( noshort,
-        "print_fuels",
-        ZeroArgs (fun () -> Bool true),
-        "Print the fuel amounts used for each successful query");
-
-       ( noshort,
         "print_full_names",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print full names of variables");
 
        ( noshort,
         "print_implicits",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Print implicit arguments");
 
        ( noshort,
         "print_universes",
-        ZeroArgs(fun () -> Bool true),
+        ZeroArgs(fun () -> mk_bool true),
         "Print universes");
 
        ( noshort,
         "print_z3_statistics",
-        ZeroArgs(fun () -> Bool true),
-        "Print Z3 statistics for each SMT query");
+        ZeroArgs(fun () -> mk_bool true),
+        "Print Z3 statistics for each SMT query (deprecated; use --query_stats instead)");
 
        ( noshort,
         "prn",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
+        "query_stats",
+        ZeroArgs(fun () -> mk_bool true),
+        "Print SMT query statistics");
+
+       ( noshort,
         "record_hints",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Record a database of hints for efficient proof replay");
 
        ( noshort,
-        "check_hints",
-        ZeroArgs (fun () -> Bool true),
-        "Check new hints for replayability");
-
-       ( noshort,
         "reuse_hint_for",
-        OneArg (String, "top-level name in the current module"),
+        OneArg (mk_string, "top-level name in the current module"),
         "Optimistically, attempt using the recorded hint for 'f' when trying to verify some other term 'g'");
 
        ( noshort,
         "show_signatures",
-        OneArg((fun x -> List (x::get_show_signatures() |> List.map String)),
+        OneArg((fun x -> mk_list (x::get_show_signatures() |> List.map mk_string)),
                 "[module name]"),
         "Show the checked signatures for all top-level symbols in the module");
 
        ( noshort,
         "silent",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         " ");
 
        ( noshort,
         "smt",
-        OneArg (Path,
+        OneArg (mk_path,
                  "[path]"),
         "Path to the Z3 SMT solver (we could eventually support other solvers)");
 
@@ -661,7 +694,7 @@ let rec specs () : list<Getopt.opt> =
 
        (noshort,
         "smtencoding.nl_arith_repr",
-        OneArg (String,
+        OneArg (mk_string,
                 "native|wrapped|boxwrap"),
         "Control the representation of non-linear arithmetic functions in the SMT encoding:\n\t\t\
          i.e., if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'; \n\t\t\
@@ -671,7 +704,7 @@ let rec specs () : list<Getopt.opt> =
 
        (noshort,
         "smtencoding.l_arith_repr",
-        OneArg (String,
+        OneArg (mk_string,
                 "native|boxwrap"),
         "Toggle the representation of linear arithmetic functions in the SMT encoding:\n\t\t\
          i.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\t\
@@ -680,43 +713,43 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "split_cases",
-        OneArg ((fun n -> Int (int_of_string n)),
+        OneArg ((fun n -> mk_int (int_of_string n)),
                  "[positive integer]"),
         "Partition VC of a match into groups of [n] cases");
 
        ( noshort,
         "timing",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Print the time it takes to verify each top-level definition");
 
        ( noshort,
         "trace_error",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Don't print an error message; show an exception trace instead");
 
       ( noshort,
         "ugly",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Emit output formatted for debugging");
 
        ( noshort,
         "unthrottle_inductives",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
 
        ( noshort,
         "use_eq_at_higher_order",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Use equality constraints when comparing higher-order types (Temporary)");
 
        ( noshort,
         "use_hints",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
         "no_tactics",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Do not run the tactic engine before discharging a VC");
 
        ( noshort,
@@ -728,7 +761,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "verify_all",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line.");
 
        ( noshort,
@@ -739,7 +772,7 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "__temp_no_proj",
-         OneArg ((fun x -> List (x :: get___temp_no_proj() |> List.map String)),
+         OneArg ((fun x -> mk_list (x :: get___temp_no_proj() |> List.map mk_string)),
                   "[module name]"),
         "Don't generate projectors for this module");
 
@@ -750,47 +783,46 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
          "warn_default_effects",
-         ZeroArgs (fun _ -> Bool true),
+         ZeroArgs (fun _ -> mk_bool true),
          "Warn when (a -> b) is desugared to (a -> Tot b)");
 
        ( noshort,
          "z3cliopt",
-         OneArg ((fun s -> List (get_z3cliopt() @ [s] |> List.map String)), "[option]"),
+         OneArg ((fun s -> mk_list (get_z3cliopt() @ [s] |> List.map mk_string)), "[option]"),
          "Z3 command line options");
 
        ( noshort,
         "z3refresh",
-        ZeroArgs (fun () -> Bool true),
+        ZeroArgs (fun () -> mk_bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
 
        ( noshort,
         "z3rlimit",
-         OneArg ((fun s -> Int (int_of_string s)),
+         OneArg ((fun s -> mk_int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)");
 
        ( noshort,
         "z3rlimit_factor",
-         OneArg ((fun s -> Int (int_of_string s)),
+         OneArg ((fun s -> mk_int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)");
 
        ( noshort,
         "z3seed",
-         OneArg ((fun s -> Int (int_of_string s)),
+         OneArg ((fun s -> mk_int (int_of_string s)),
                   "[positive integer]"),
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
-        "z3timeout",
-         OneArg ((fun s -> Util.print_string "Warning: z3timeout ignored; use z3rlimit instead\n"; Int (int_of_string s)),
-                  "[positive integer]"),
-        "Set the Z3 per-query (soft) timeout to [t] seconds (default 5)");
+        "__no_positivity",
+        ZeroArgs (fun () -> mk_bool true),
+        "Don't check positivity of inductive types");
 
        ( noshort,
-        "__no_positivity",
-        ZeroArgs (fun () -> Bool true),
-        "Don't check positivity of inductive types");
+        "__ml_no_eta_expand_coertions",
+        ZeroArgs (fun () -> mk_bool true),
+        "Do not eta-expand coertions in generated OCaml");
 
 
   ] in
@@ -809,8 +841,8 @@ and parse_codegen s =
       display_usage_aux (specs ()); exit 1)
 
 and string_as_bool option_name = function
-    | "true" -> Bool true
-    | "false" -> Bool false
+    | "true" -> mk_bool true
+    | "false" -> mk_bool false
     | _ ->
       Util.print1 "Wrong argument to %s\n" option_name;
       display_usage_aux (specs ()); exit 1
@@ -830,6 +862,7 @@ let settable = function
     | "debug"
     | "debug_level"
     | "detail_errors"
+    | "detail_hint_replay"
     | "eager_inference"
     | "hide_genident_nums"
     | "hide_uvar_nums"
@@ -847,12 +880,12 @@ let settable = function
     | "ugly"
     | "print_bound_var_types"
     | "print_effect_args"
-    | "print_fuels"
     | "print_full_names"
     | "print_implicits"
     | "print_universes"
     | "print_z3_statistics"
     | "prn"
+    | "query_stats"
     | "show_signatures"
     | "silent"
     | "smtencoding.elim_box"
@@ -875,7 +908,7 @@ let settable = function
 // JP: the two options below are options that are passed to z3 using
 // command-line arguments; only #reset_options re-starts the z3 process, meaning
 // these two options are resettable, but not settable
-let resettable s = settable s || s="z3timeout" || s="z3seed" || s="z3cliopt"
+let resettable s = settable s || s="z3seed" || s="z3cliopt"
 let all_specs = specs ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
@@ -892,7 +925,7 @@ let fstar_home () =
       let x = Util.get_exec_dir () in
       let x = x ^ "/.." in
       // Memoizes to avoid repeatedly forking an external process
-      set_option' ("fstar_home", String x);
+      set_option' ("fstar_home", mk_string x);
       x
     | Some x ->
       x
@@ -926,8 +959,13 @@ let restore_cmd_line_options should_clear =
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
     let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
-    set_option' ("verify_module", List (List.map String old_verify_module));
+    set_option' ("verify_module", List (List.map mk_string old_verify_module));
     r
+
+let module_name_of_file_name f =
+    let f = basename f in
+    let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
+    String.lowercase f
 
 let should_verify m =
   if get_lax () then
@@ -940,13 +978,11 @@ let should_verify m =
          * meaning that this case is only called when in [--explicit_deps] mode.
          * If we could remove [--explicit_deps], there would be less complexity
          * here. *)
-        List.existsML (fun f ->
-          let f = basename f in
-          let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
-          String.lowercase f = m
-        ) (file_list ())
+        List.existsML (fun f -> module_name_of_file_name f = m) (file_list ())
     | l ->
         List.contains (String.lowercase m) l
+
+let should_verify_file fn = should_verify (module_name_of_file_name fn)
 
 let dont_gen_projectors m = List.contains m (get___temp_no_proj())
 
@@ -1014,14 +1050,15 @@ let prepend_output_dir fname =
 
 let __temp_no_proj               s  = get___temp_no_proj() |> List.contains s
 let admit_smt_queries            () = get_admit_smt_queries           ()
-let admit_except                 () = get_admit_except                  ()
-let check_hints                  () = get_check_hints                 ()
+let admit_except                 () = get_admit_except                ()
+let cache_checked_modules        () = get_cache_checked_modules       ()
 let codegen                      () = get_codegen                     ()
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
-let debug_at_level      modul level = (modul = "" || get_debug () |> List.contains modul) && debug_level_geq level
+let debug_at_level      modul level = (get_debug () |> List.contains modul) && debug_level_geq level
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
+let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
@@ -1032,6 +1069,7 @@ let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
+                                    || get_query_stats                 ()
 let hint_file                    () = get_hint_file                   ()
 let ide                          () = get_ide                         ()
 let indent                       () = get_indent                      ()
@@ -1039,6 +1077,7 @@ let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ()
 let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel ())
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
+let load                         () = get_load                        ()
 let legacy_interactive           () = get_in                          ()
 let log_queries                  () = get_log_queries                 ()
 let log_types                    () = get_log_types                   ()
@@ -1055,11 +1094,12 @@ let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
-let print_fuels                  () = get_print_fuels                 ()
 let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
+                                    || get_query_stats                ()
+let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
 let silent                       () = get_silent                      ()
@@ -1088,8 +1128,8 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
-let z3_timeout                   () = get_z3timeout                   ()
 let no_positivity                () = get_no_positivity               ()
+let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 
 
 let should_extract m =
@@ -1100,4 +1140,3 @@ let should_extract m =
      | [] -> true
      | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
   | l -> List.contains (String.lowercase m) l))
-

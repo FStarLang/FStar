@@ -50,6 +50,7 @@ let lextop_lid   = pconst "LexTop"
 let smtpat_lid   = pconst "smt_pat"
 let smtpatOr_lid = pconst "smt_pat_or"
 let monadic_lid  = pconst "M"
+let spinoff_lid  = pconst "spinoff"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]
@@ -88,9 +89,18 @@ let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
 
+(* Constructive variants *)
+let c_true_lid   = pconst "c_True"
+let c_false_lid  = pconst "c_False"
+let c_and_lid    = pconst "c_and"
+let c_or_lid     = pconst "c_or"
+let dtuple2_lid  = pconst "dtuple2" // for l_Exists
+
 (* Various equality predicates *)
 let eq2_lid    = pconst  "eq2"
 let eq3_lid    = pconst  "eq3"
+let c_eq2_lid  = pconst "equals"
+let c_eq3_lid  = pconst "h_equals"
 
 (* Some common term constructors *)
 let cons_lid        = pconst  "Cons"
@@ -104,9 +114,11 @@ let list_append_lid = p2l ["FStar"; "List"; "append"]
 (* list_tot_append_lid is used to desugar @ everywhere else *)
 let list_tot_append_lid = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let strcat_lid      = p2l ["Prims"; "strcat"]
+let strcat_lid'     = p2l ["FStar"; "String"; "strcat"]
 let let_in_typ      = p2l ["Prims"; "Let"]
 let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
+let string_compare = p2l ["FStar"; "String"; "compare"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -125,6 +137,28 @@ let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
 
+
+let bvconst s = p2l ["FStar"; "BV"; s]
+
+(* BitVector constants *)
+let bv_t_lid = bvconst "bv_t" //redundant
+//let bv_zero_vec_lid = bvconst "bv_zero"
+//let bv_ones_vec_lid = bvconst "ones_vec"
+
+(* BitVector operators *)
+let nat_to_bv_lid      = bvconst "int2bv"
+let bv_to_nat_lid      = bvconst "bv2int"
+let bv_and_lid         = bvconst "bvand"
+let bv_xor_lid         = bvconst "bvxor"
+let bv_or_lid          = bvconst "bvor"
+let bv_shift_left_lid  = bvconst "bvshl"
+let bv_shift_right_lid = bvconst "bvshr"
+let bv_udiv_lid        = bvconst "bvdiv"
+let bv_mod_lid         = bvconst "bvmod"
+let bv_mul_lid         = bvconst "bvmul"
+let bv_ult_lid         = bvconst "bvult"
+let bv_uext_lid        = bvconst "bv_uext"
+
 (* Array constants *)
 let array_lid          = p2l ["FStar"; "Array"; "array"]
 let array_mk_array_lid = p2l ["FStar"; "Array"; "mk_array"]
@@ -137,16 +171,13 @@ let alloc_lid    = p2l ["FStar"; "ST"; "alloc"]
 let op_ColonEq   = p2l ["FStar"; "ST"; "op_Colon_Equals"]
 
 (* Constants for sets and ref sets *)
-let ref_lid       = p2l ["FStar"; "Heap"; "ref"]
-let heap_ref      = p2l ["FStar"; "Heap"; "Ref"]
-let set_empty     = p2l ["FStar"; "Set"; "empty"]
-let set_singleton = p2l ["FStar"; "Set"; "singleton"]
-let set_union     = p2l ["FStar"; "Set"; "union"]
+let ref_lid             = p2l ["FStar"; "Heap"; "ref"]
+let heap_addr_of_lid    = p2l ["FStar"; "Heap"; "addr_of"]
+let set_empty           = p2l ["FStar"; "Set"; "empty"]
+let set_singleton       = p2l ["FStar"; "Set"; "singleton"]
+let set_union           = p2l ["FStar"; "Set"; "union"]
 let fstar_hyperheap_lid = p2l ["FStar"; "HyperHeap"]
-let rref_lid      = p2l ["FStar"; "HyperHeap"; "rref"]
-let tset_empty     = p2l ["FStar"; "TSet"; "empty"]
-let tset_singleton = p2l ["FStar"; "TSet"; "singleton"]
-let tset_union     = p2l ["FStar"; "TSet"; "union"]
+let rref_lid            = p2l ["FStar"; "HyperHeap"; "rref"]
 
 (* Other special constants *)
 let erased_lid    = p2l ["FStar"; "Ghost"; "erased"]
@@ -179,10 +210,17 @@ let range_of_lid   = pconst "range_of"
 let labeled_lid    = pconst "labeled"
 let range_0        = pconst "range_0"
 let guard_free     = pconst "guard_free"
+let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]
 
 (* Constants for marking terms with normalization hints *)
 let normalize      = pconst "normalize"
 let normalize_term = pconst "normalize_term"
+let norm           = pconst "norm"
+let steps_zeta       = pconst "zeta"
+let steps_iota       = pconst "iota"
+let steps_primops    = pconst "primops"
+let steps_delta      = pconst "delta"
+let steps_delta_only = pconst "delta_only"
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -216,6 +254,8 @@ let mk_tuple_lid n r =
   let t = U.format1 "tuple%s" (U.string_of_int n) in
   set_lid_range (psnconst t) r
 
+let lid_tuple2   = mk_tuple_lid 2 dummyRange
+
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
@@ -224,6 +264,8 @@ let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_id lid)
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
   set_lid_range (psnconst t) r
+
+let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
@@ -265,10 +307,16 @@ let is_name (lid:lident) =
   let c = U.char_at lid.ident.idText 0 in
   U.is_upper c
 
-
 (* tactic constants *)
-let fstar_tactics_lid s = lid_of_path (["FStar"; "Tactics"]@[s]) FStar.Range.dummyRange
-let tactic_lid = fstar_tactics_lid "tactic"
-let by_tactic_lid = fstar_tactics_lid "by_tactic"
-let reify_tactic_lid = fstar_tactics_lid "reify_tactic"
-let fstar_tactics_embed_lid = fstar_tactics_lid "__embed"
+let fstar_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStar.Range.dummyRange
+let fstar_tactics_lid  s = fstar_tactics_lid' [s]
+let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
+let u_tac_lid = fstar_tactics_lid' ["Effect"; "__tac"]
+let tac_effect_lid = fstar_tactics_lid "TAC"
+let by_tactic_lid = fstar_tactics_lid' ["Effect"; "__by_tactic"]
+let synth_lid = fstar_tactics_lid' ["Effect"; "synth_by_tactic"]
+let assert_by_tactic_lid = fstar_tactics_lid' ["Effect"; "assert_by_tactic"]
+let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]
+let quote_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "quote"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
+let fstar_refl_embed_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "__embed"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
+let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"

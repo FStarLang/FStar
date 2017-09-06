@@ -153,8 +153,8 @@ assume val random : l:nat -> EXT (lbytes l)
 assume val rsa_gen_key : int -> EXT (k:rsa_key{Some? k.rsa_prv_exp})
 assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> EXT bytes
 assume val rsa_decrypt : k:rsa_key{Some? k.rsa_prv_exp} -> rsa_padding -> bytes -> EXT (option bytes)
-assume val rsa_sign : option hash_alg -> k:rsa_key{Some? k.rsa_prv_exp} -> bytes -> EXT bytes
-assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> EXT bool
+assume val rsa_sign : option hash_alg -> k:rsa_key{Some? k.rsa_prv_exp} -> pss:bool -> bytes -> EXT bytes
+assume val rsa_verify : option hash_alg -> rsa_key -> pss:bool -> bytes -> bytes -> EXT bool
 
 assume val dsa_gen_key : int -> EXT (k:dsa_key{Some? k.dsa_private})
 assume val dsa_sign : option hash_alg -> k:dsa_key{Some? k.dsa_private} -> bytes -> EXT bytes

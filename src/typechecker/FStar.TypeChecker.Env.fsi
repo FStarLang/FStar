@@ -35,6 +35,7 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of delta_depth
+  | UnfoldTac
 
 (* Type of wp liftings [l] between 2 effects Msource and Mtarget : *)
 (* given a computational type [Msource t wp], [wp' = mlift_wp t wp] should *)
@@ -63,6 +64,18 @@ type effects = {
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
 
+// A name prefix, such as ["FStar";"Math"]
+type name_prefix = list<string>
+// A choice of which name prefixes are enabled/disabled
+// The leftmost match takes precedence. Empty list means everything is on.
+// To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
+type flat_proof_namespace = list<(name_prefix * bool)>
+
+// A stack of namespace choices. Provides simple push/pop behaviour.
+// For the purposes of filtering facts, this is just flattened.
+// CAN NEVER BE EMPTY
+type proof_namespace = list<flat_proof_namespace>
+
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 type env = {
@@ -86,10 +99,15 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   type_of        :env -> term ->term*typ*guard_t; (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
   universe_of    :env -> term -> universe;        (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                           (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
+  proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
+  synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  is_native_tactic: lid -> bool;                   (* callback into the native tactics engine *)
+  identifier_info: ref<FStar.TypeChecker.Common.id_info_table> (* information on identifiers *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -100,7 +118,7 @@ and solver_t = {
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
-    preprocess   :env -> goal -> list<(env * goal)>;  //a hook for a tactic; still too simple
+    preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
     is_trivial   :env -> goal -> bool;
     finish       :unit -> unit;
@@ -134,6 +152,10 @@ val debug          : env -> Options.debug_level_t -> bool
 val current_module : env -> lident
 val set_range      : env -> Range.range -> env
 val get_range      : env -> Range.range
+val insert_bv_info : env -> bv -> typ -> unit
+val insert_fv_info : env -> fv -> typ -> unit
+val toggle_id_info : env -> bool -> unit
+val promote_id_info : env -> (typ -> typ) -> unit
 
 (* Querying identifiers *)
 val lid_exists             : env -> lident -> bool
@@ -196,7 +218,7 @@ val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> FStar.Util.set<universe_uvar>
-val univnames   : env -> FStar.Util.set<univ_name>
+val univnames   : env -> FStar.Util.fifo_set<univ_name>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
@@ -215,10 +237,21 @@ val reify_comp          : env -> comp -> universe -> term
 (* [is_reifiable_* env x] returns true if the effect name/computational effect (of *)
 (* a body or codomain of an arrow) [x] is reifiable *)
 val is_reifiable_effect : env -> lident -> bool
-val is_reifiable : env -> BU.either<lcomp, residual_comp> -> bool
+val is_reifiable : env -> residual_comp -> bool
 val is_reifiable_comp : env -> comp -> bool
 val is_reifiable_function : env -> term -> bool
 
 
 (* A coercion *)
 val binders_of_bindings : list<binding> -> binders
+
+(* Toggling of encoding of namespaces *)
+val should_enc_path : env -> list<string> -> bool
+val should_enc_lid  : env -> lident -> bool
+val add_proof_ns    : env -> name_prefix -> env
+val rem_proof_ns    : env -> name_prefix -> env
+val push_proof_ns   : env -> env
+val pop_proof_ns    : env -> env
+val get_proof_ns    : env -> proof_namespace
+val set_proof_ns    : proof_namespace -> env -> env
+val string_of_proof_ns : env -> string

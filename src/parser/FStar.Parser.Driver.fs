@@ -16,6 +16,7 @@
 #light "off"
 module FStar.Parser.Driver
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 open FStar
@@ -34,17 +35,11 @@ type fragment =
 
 let parse_fragment frag : fragment =
     match ParseIt.parse (Inr frag) with
-    | Inl (Inl [], _) ->
-      Empty
-
-    | Inl (Inl [modul], _) -> //interactive mode: module
+    | Inl (Inl modul, _) -> //interactive mode: module
       Modul modul
 
     | Inl (Inr decls, _) -> //interactive mode: more decls
       Decls decls
-
-    | Inl (Inl _, _) ->
-      raise (Err("Refusing to check more than one module at a time incrementally"))
 
     | Inr (msg,r) ->
       raise (Error(msg, r))

@@ -22,38 +22,12 @@ val add: a:t -> b:t -> Pure t
 let add a b =
   Mk (add (v a) (v b))
 
-val add_underspec: a:t -> b:t -> Pure t
-  (requires True)
-  (ensures (fun c ->
-    size (v a + v b) n ==> v a + v b = v c))
-let add_underspec a b =
-  Mk (add_underspec (v a) (v b))
-
-val add_mod: a:t -> b:t -> Pure t
-  (requires True)
-  (ensures (fun c -> (v a + v b) @% pow2 n = v c))
-let add_mod a b =
-  Mk (add_mod (v a) (v b))
-
 (* Subtraction primitives *)
 val sub: a:t -> b:t -> Pure t
   (requires (size (v a - v b) n))
   (ensures (fun c -> v a - v b = v c))
 let sub a b =
   Mk (sub (v a) (v b))
-
-val sub_underspec: a:t -> b:t -> Pure t
-  (requires True)
-  (ensures (fun c ->
-    size (v a - v b) n ==> v a - v b = v c))
-let sub_underspec a b =
-  Mk (sub_underspec (v a) (v b))
-
-val sub_mod: a:t -> b:t -> Pure t
-  (requires True)
-  (ensures (fun c -> (v a - v b) @% pow2 n = v c))
-let sub_mod a b =
-  Mk (sub_mod (v a) (v b))
 
 (* Multiplication primitives *)
 val mul: a:t -> b:t -> Pure t
@@ -62,32 +36,13 @@ val mul: a:t -> b:t -> Pure t
 let mul a b =
   Mk (mul (v a) (v b))
 
-val mul_underspec: a:t -> b:t -> Pure t
-  (requires True)
-  (ensures (fun c ->
-    size (v a * v b) n ==> v a * v b = v c))
-let mul_underspec a b =
-  Mk (mul_underspec (v a) (v b))
-
-val mul_mod: a:t -> b:t -> Pure t
-  (requires True)
-  (ensures (fun c -> (v a * v b) @% pow2 n = v c))
-let mul_mod a b =
-  Mk (mul_mod (v a) (v b))
-
 (* Division primitives *)
 val div: a:t -> b:t{v b <> 0} -> Pure t
+  // division overflows on INT_MIN / -1
   (requires (size (v a / v b) n))
-  (ensures (fun c -> v b <> 0 ==> v a / v b = v c))
+  (ensures (fun c -> v a / v b = v c))
 let div a b =
   Mk (div (v a) (v b))
-
-val div_underspec: a:t -> b:t{v b <> 0} -> Pure t
-  (requires True)
-  (ensures (fun c ->
-    (v b <> 0 /\ size (v a / v b) n) ==> v a / v b = v c))
-let div_underspec a b =
-  Mk (div_underspec (v a) (v b))
 
 (* Modulo primitives *)
 val rem: a:t -> b:t{v b <> 0} -> Pure t
@@ -127,13 +82,13 @@ let __int_to_t (x:int) : Tot t
 
 (* Shift operators *)
 val shift_right: a:t -> s:UInt32.t -> Pure t
-  (requires True)
-  (ensures (fun c -> UInt32.v s < n ==> v c = (v a /% (pow2 (UInt32.v s)))))
+  (requires (UInt32.v s < n))
+  (ensures (fun c -> v c = (v a /% (pow2 (UInt32.v s)))))
 let shift_right a s = Mk (shift_right (v a) (UInt32.v s))
 
 val shift_left: a:t -> s:UInt32.t -> Pure t
-  (requires True)
-  (ensures (fun c -> UInt32.v s < n ==> v c = ((v a * pow2 (UInt32.v s)) @% pow2 n)))
+  (requires (UInt32.v s < n))
+  (ensures (fun c -> v c = ((v a * pow2 (UInt32.v s)) @% pow2 n)))
 let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 (* Comparison operators *)
@@ -145,14 +100,8 @@ let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
 (* Infix notations *)
 unfold let op_Plus_Hat = add
-unfold let op_Plus_Question_Hat = add_underspec
-unfold let op_Plus_Percent_Hat = add_mod
 unfold let op_Subtraction_Hat = sub
-unfold let op_Subtraction_Question_Hat = sub_underspec
-unfold let op_Subtraction_Percent_Hat = sub_mod
 unfold let op_Star_Hat = mul
-unfold let op_Star_Question_Hat = mul_underspec
-unfold let op_Star_Percent_Hat = mul_mod
 unfold let op_Slash_Hat = div
 unfold let op_Percent_Hat = rem
 unfold let op_Hat_Hat = logxor

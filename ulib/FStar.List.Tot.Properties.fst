@@ -39,6 +39,16 @@ let rec mem_existsb #a f xs =
   | [] -> ()
   | hd::tl -> mem_existsb f tl
 
+let rec mem_count
+  (#a: eqtype)
+  (l: list a)
+  (x: a)
+: Lemma
+  (mem x l <==> count x l > 0)
+= match l with
+  | [] -> ()
+  | x' :: l' -> mem_count l' x
+
 (** Properties about rev **)
 
 val rev_acc_length : l:list 'a -> acc:list 'a ->
@@ -737,6 +747,7 @@ let rec strict_prefix_of_trans (#a: Type) (l1 l2 l3: list a)
   (requires True)
   (ensures ((strict_prefix_of l1 l2 /\ strict_prefix_of l2 l3) ==> strict_prefix_of l1 l3))
   (decreases l3)
+  [SMTPat (strict_prefix_of l1 l2); SMTPat (strict_prefix_of l2 l3)]
 = match l3 with
   | [] -> ()
   | _ :: q -> strict_prefix_of_trans l1 l2 q
@@ -873,3 +884,20 @@ let assoc_precedes
 = assoc_memP_some x y l;
   memP_precedes (x, y) l
 
+(** Properties about find *)
+
+let rec find_none
+  (#a: Type)
+  (f: (a -> Tot bool))
+  (l: list a)
+  (x: a)
+: Lemma
+  (requires (find f l == None /\ memP x l))
+  (ensures (f x == false))
+= let (x' :: l') = l in
+  Classical.or_elim
+    #(x == x')
+    #(~ (x == x'))
+    #(fun _ -> f x == false)
+    (fun h -> ())
+    (fun h -> find_none f l' x)

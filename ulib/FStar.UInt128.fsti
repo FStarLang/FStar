@@ -8,7 +8,7 @@ module U64 = FStar.UInt64
 
 let n = 128
 
-val t:Type0
+val t: (x:Type0{hasEq x})
 
 val v (x:t) : Tot (uint_t n)
 
@@ -78,12 +78,12 @@ let __uint_to_t (x:int) : Tot t =
 
 (* Shift operators *)
 val shift_left: a:t -> s:UInt32.t -> Pure t
-  (requires True)
-  (ensures (fun c -> UInt32.v s < n ==> v c = ((v a * pow2 (UInt32.v s)) % pow2 n)))
+  (requires (U32.v s < n))
+  (ensures (fun c -> v c = ((v a * pow2 (UInt32.v s)) % pow2 n)))
 
 val shift_right: a:t -> s:UInt32.t -> Pure t
-  (requires True)
-  (ensures (fun c -> UInt32.v s < n ==> v c = (v a / (pow2 (UInt32.v s)))))
+  (requires (U32.v s < n))
+  (ensures (fun c -> v c = (v a / (pow2 (UInt32.v s)))))
 
 (* Comparison operators *)
 
@@ -140,10 +140,10 @@ unfold let op_Less_Equals_Hat = lte
 (* Multiplication primitives *)
 (* Note that unlike UIntN, we do not provide uint128 * uint128 primitives (mul,
   mul_underspec, mul_mod, and mul_div) *)
-val mul32: a:U64.t -> b:U32.t -> Pure t
+val mul32: x:U64.t -> y:U32.t -> Pure t
   (requires True)
-  (ensures (fun r -> v r == U64.v a * U32.v b))
+  (ensures (fun r -> v r == U64.v x * U32.v y))
 
-val mul_wide: a:U64.t -> b:U64.t -> Pure t
+val mul_wide: x:U64.t -> y:U64.t -> Pure t
   (requires True)
-  (ensures (fun r -> v r == U64.v a * U64.v b))
+  (ensures (fun r -> v r == U64.v x * U64.v y))

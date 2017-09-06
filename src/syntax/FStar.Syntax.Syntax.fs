@@ -26,49 +26,76 @@ open FStar.Util
 open FStar.Range
 open FStar.Ident
 open FStar.Const
+open FStar.Dyn
 
 (* Objects with metadata *)
-type withinfo_t<'a,'t> = {
+///[@ PpxDerivingShow ]
+type withinfo_t<'a> = {
   v:  'a;
-  ty: 't;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-type var<'t>  = withinfo_t<lident,'t>
+///[@ PpxDerivingShow ]
+type var = withinfo_t<lident>
+
 (* Term language *)
+///[@ PpxDerivingShow ]
 type sconst = FStar.Const.sconst
 
+///[@ PpxDerivingShow ]
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
   | LightOff
 
+///[@ (PpxDerivingShowConstant "None") ]
 type memo<'a> = ref<option<'a>>
 
+//versioning for unification variables
+type version = {
+    major:int;
+    minor:int
+}
+
+///[@ PpxDerivingShow ]
 type arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Equality
+
+///[@ PpxDerivingShow ]
 type aqual = option<arg_qualifier>
+
+///[@ PpxDerivingShow ]
 type universe =
   | U_zero
   | U_succ  of universe
   | U_max   of list<universe>
   | U_bvar  of int
   | U_name  of univ_name
-  | U_unif  of Unionfind.uvar<option<universe>>
+  | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version
 
-type universe_uvar = Unionfind.uvar<option<universe>>
+
+///[@ PpxDerivingShow ]
 type univ_names    = list<univ_name>
+
+///[@ PpxDerivingShow ]
 type universes     = list<universe>
+
+///[@ PpxDerivingShow ]
 type monad_name    = lident
+
+///[@ PpxDerivingShow ]
 type delta_depth =
   | Delta_constant                  //A defined constant, e.g., int, list, etc.
-  | Delta_defined_at_level of int         //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
+  | Delta_defined_at_level of int   //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int
   | Delta_equational                //A symbol that may be equated to another by extensional reasoning
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
+
+///[@ PpxDerivingShow ]
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
@@ -76,15 +103,15 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        of binders*term*option<either<lcomp, residual_comp>>  (* fun (xi:ti) -> t : (M t' wp | N) *)
+  | Tm_abs        of binders*term*option<residual_comp>          (* fun (xi:ti) -> t : (M t' wp | N) *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
-  | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right; with monadic application in monad_name *)
+  | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * ascription * option<lident>          (* an effect label is the third arg, filled in by the type-checker *)
-  | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e; monadic bind in monad_name *)
+  | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of either<(term * subst_ts), (unit -> term)>
+  | Tm_delayed    of (term * subst_ts)
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
@@ -114,10 +141,10 @@ and comp' =
   | Total  of typ * option<universe>
   | GTotal of typ * option<universe>
   | Comp   of comp_typ
-and term = syntax<term',term'>
+and term = syntax<term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
-and pat = withinfo_t<pat',term'>
-and comp = syntax<comp', unit>
+and pat = withinfo_t<pat'>
+and comp = syntax<comp'>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
 and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
@@ -131,7 +158,7 @@ and cflags =
   | LEMMA
   | CPS
   | DECREASES of term
-and uvar = Unionfind.uvar<uvar_basis<term>>
+and uvar = Unionfind.p_uvar<option<term>> * version
 and metadata =
   | Meta_pattern       of list<args>                             (* Patterns for SMT quantifier instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
@@ -141,9 +168,7 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-and uvar_basis<'a> =
-  | Uvar
-  | Fixed of 'a
+  | Meta_alien         of dyn * string                           (* A blob embedded into syntax, with an annotation to print it *)
 and meta_source_info =
   | Data_app
   | Sequence
@@ -154,8 +179,8 @@ and meta_source_info =
   | Mutable_rval
 and fv_qual =
   | Data_ctor
-  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
-  | Record_ctor of lident * list<ident>       (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Record_projector of (lident * ident)          (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_ctor of lident * list<ident>         (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, fv>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
@@ -167,10 +192,9 @@ and subst_elt =
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
 and freenames = set<bv>
-and uvars    = set<(uvar * typ)>
-and syntax<'a,'b> = {
+and uvars     = set<(uvar*typ)>
+and syntax<'a> = {
     n:'a;
-    tk:memo<'b>;
     pos:Range.range;
     vars:memo<free_vars>;
 }
@@ -180,15 +204,15 @@ and bv = {
     sort:term
 }
 and fv = {
-    fv_name :var<term>;
+    fv_name :var;
     fv_delta:delta_depth;
     fv_qual :option<fv_qual>
 }
 and free_vars = {
-    free_names:set<bv>;
-    free_uvars:uvars;
-    free_univs:set<universe_uvar>;
-    free_univ_names:fifo_set<univ_name>;
+    free_names:list<bv>;
+    free_uvars:list<(uvar*typ)>;
+    free_univs:list<universe_uvar>;
+    free_univ_names:list<univ_name>; //fifo
 }
 and lcomp = {
     eff_name: lident;
@@ -197,7 +221,12 @@ and lcomp = {
     comp: unit -> comp //a lazy computation
 }
 
-and residual_comp = lident * list<cflags>
+(* Residual of a computation type after typechecking *)
+and residual_comp = {
+    residual_effect:lident;                (* first component is the effect name *)
+    residual_typ   :option<typ>;           (* second component: result type *)
+    residual_flags :list<cflags>           (* third component: contains (an approximation of) the cflags *)
+}
 
 type tscheme = list<univ_name> * typ
 
@@ -311,9 +340,9 @@ type sigelt' =
                        * typ
   | Sig_let            of letbindings
                        * list<lident>               //mutually defined
-                       * list<attribute>
   | Sig_main           of term
   | Sig_assume         of lident
+                       * univ_names
                        * formula
   | Sig_new_effect     of eff_decl
   | Sig_new_effect_for_free of eff_decl
@@ -328,7 +357,8 @@ and sigelt = {
     sigel:    sigelt';
     sigrng:   Range.range;
     sigquals: list<qualifier>;
-    sigmeta:  sig_metadata
+    sigmeta:  sig_metadata;
+    sigattrs: list<attribute>
 }
 
 type sigelts = list<sigelt>
@@ -341,8 +371,8 @@ type modul = {
 }
 type path = list<string>
 type subst_t = list<subst_elt>
-type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
-type mk_t = mk_t_a<term',term'>
+type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
+type mk_t = mk_t_a<term'>
 
 
 
@@ -352,8 +382,8 @@ let contains_reflectable (l: list<qualifier>): bool =
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
-let withinfo v s r = {v=v; ty=s; p=r}
-let withsort v s = withinfo v s dummyRange
+let withinfo v r = {v=v; p=r}
+let withsort v = withinfo v dummyRange
 
 let bv_eq (bv1:bv) (bv2:bv) = bv1.ppname.idText=bv2.ppname.idText && bv1.index=bv2.index
 let order_bv x y =
@@ -378,46 +408,31 @@ open FStar.Range
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
-let new_fv_set () :set<lident> = Util.new_set order_fv (fun x -> Util.hashcode x.str)
-let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y)
-                                           (fun (x, _) -> Unionfind.uvar_id x)
-let new_universe_uvar_set () : set<universe_uvar> =
-    Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y)
-                 (fun x -> Unionfind.uvar_id x)
-let new_universe_names_fifo_set () : fifo_set<univ_name> =
-    Util.new_fifo_set (fun  x y -> String.compare (Ident.text_of_id x) (Ident.text_of_id y))
-                 (fun x -> Util.hashcode (Ident.text_of_id x))
+let new_bv_set () : set<bv> = Util.new_set order_bv
+let new_fv_set () :set<lident> = Util.new_set order_fv
+let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
+let new_universe_names_fifo_set () : fifo_set<univ_name> = Util.new_fifo_set order_univ_name
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
-let no_uvs : uvars = new_uv_set()
-let no_universe_uvars = new_universe_uvar_set()
 let no_universe_names = new_universe_names_fifo_set ()
-let empty_free_vars = {
-        free_names=no_names;
-        free_uvars=no_uvs;
-        free_univs=no_universe_uvars;
-        free_univ_names=no_universe_names;
-    }
-let memo_no_uvs = Util.mk_ref (Some no_uvs)
-let memo_no_names = Util.mk_ref (Some no_names)
+//let memo_no_uvs = Util.mk_ref (Some no_uvs)
+//let memo_no_names = Util.mk_ref (Some no_names)
 let freenames_of_list l = List.fold_right Util.set_add l no_names
 let list_of_freenames (fvs:freenames) = Util.set_elements fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-let mk (t:'a) = fun (topt:option<'b>) r -> {
+let mk (t:'a) = fun (_:option<unit>) r -> {
     n=t;
     pos=r;
-    tk=Util.mk_ref topt;
     vars=Util.mk_ref None;
 }
-let bv_to_tm   bv :term = mk (Tm_bvar bv) (Some bv.sort.n) (range_of_bv bv)
-let bv_to_name bv :term = mk (Tm_name bv) (Some bv.sort.n) (range_of_bv bv)
-let mk_Tm_app (t1:typ) (args:list<arg>) k p =
+let bv_to_tm   bv :term = mk (Tm_bvar bv) None (range_of_bv bv)
+let bv_to_name bv :term = mk (Tm_name bv) None (range_of_bv bv)
+let mk_Tm_app (t1:typ) (args:list<arg>) (k:option<unit>) p =
     match args with
     | [] -> t1
-    | _ -> mk (Tm_app (t1, args)) k p
+    | _ -> mk (Tm_app (t1, args)) None p
 let mk_Tm_uinst (t:term) = function
     | [] -> t
     | us ->
@@ -437,13 +452,13 @@ let mk_GTotal t = mk_GTotal' t None
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
 let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta }
+let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) None dummyRange
-let teff : term = mk (Tm_constant Const_effect) (Some Tm_unknown) dummyRange
+let teff : term = mk (Tm_constant Const_effect) None dummyRange
 let is_teff (t:term) = match t.n with
     | Tm_constant Const_effect -> true
     | _ -> false
@@ -513,7 +528,7 @@ let fv_eq fv1 fv2 = lid_equals fv1.fv_name.v fv2.fv_name.v
 let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
 let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
 let lid_as_fv l dd dq : fv = {
-    fv_name=withinfo l tun (range_of_lid l);
+    fv_name=withinfo l (range_of_lid l);
     fv_delta=dd;
     fv_qual =dq;
 }
@@ -530,3 +545,24 @@ let has_simple_attribute (l: list<term>) s =
     | _ ->
         false
   ) l
+
+///////////////////////////////////////////////////////////////////////
+//Some common constants
+///////////////////////////////////////////////////////////////////////
+module C = FStar.Parser.Const
+let tconst l = mk (Tm_fvar(lid_as_fv l Delta_constant None)) None Range.dummyRange
+let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
+let tdataconstr l = fv_to_tm (lid_as_fv l Delta_constant (Some Data_ctor))
+let t_unit   = tconst C.unit_lid
+let t_bool   = tconst C.bool_lid
+let t_int    = tconst C.int_lid
+let t_string = tconst C.string_lid
+let t_float  = tconst C.float_lid
+let t_char   = tabbrev C.char_lid
+let t_range  = tconst C.range_lid
+let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev C.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
+let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
+let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange
+

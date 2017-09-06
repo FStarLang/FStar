@@ -1,5 +1,5 @@
 [
-  "ñ\u001f∞M\\\u0010ÊMıó‰·π›qÿ",
+  "‡ÂÔöë˜ W‘Y[çØ\nö¶",
   [
     [
       "Ex10a.entry",
@@ -72,14 +72,41 @@
       0
     ],
     [
+      "Ex10a.acls",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
       "Ex10a.grant",
       1,
       2,
       1,
       [
-        "@query", "equation_Ex10a.db", "equation_FStar.ST.ref",
-        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
-        "lemma_FStar.Heap.lemma_sel_upd1"
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Ex10a.grant",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0
     ],
@@ -94,6 +121,69 @@
     [
       "Ex10a.revoke",
       2,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Ex10a.grant",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Heap_interpretation_Tm_arrow_01c653c57ba778af6ddcddd2c63488b1",
+        "FStar.Preorder_interpretation_Tm_arrow_76a60dab4e3b3182a3b4dae5a57cfb2d",
+        "equation_Ex10a.db", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Monotonic.Heap.valid_upd",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.relation", "equation_FStar.ST.mref",
+        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
+        "function_token_typing_FStar.Heap.trivial_preorder",
+        "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_910d39030c36174d69dfa7c713b6a7e7",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Ex10a.grant",
+      4,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Ex10a.grant",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Ex10a.revoke",
+      3,
       2,
       1,
       [
@@ -107,27 +197,90 @@
         "Ex10a_pretyping_9ab526030749815b532b60f20894130b",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "assumption_Ex10a.entry_haseq", "equation_Ex10a.db",
-        "equation_FStar.ST.ref", "equation_Prims.eqtype",
-        "function_token_typing_Ex10a.acls", "function_token_typing_Ex10a.db",
+        "assumption_Ex10a.entry_haseq", "bool_inversion",
+        "equation_Ex10a.db", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Monotonic.Heap.valid_upd",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.relation", "equation_FStar.ST.mref",
+        "equation_Prims.eqtype", "function_token_typing_Ex10a.acls",
+        "function_token_typing_Ex10a.db",
         "interpretation_Ex10a_Tm_abs_f2cecc49b12d616bde57bf0e98039db1",
-        "kinding_Ex10a.entry@tok", "lemma_FStar.Heap.lemma_sel_upd1",
+        "kinding_Ex10a.entry@tok",
         "lemma_FStar.List.Tot.Base.mem_filter_forall",
+        "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "partial_app_typing_859af28ef02ec7101f0b4123c7c2daa0",
         "primitive_Prims.op_disEquality",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb",
+        "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_910d39030c36174d69dfa7c713b6a7e7",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp",
         "typing_Ex10a_Tm_abs_f2cecc49b12d616bde57bf0e98039db1",
-        "typing_FStar.Heap.sel", "typing_FStar.List.Tot.Base.mem"
+        "typing_FStar.List.Tot.Base.mem", "typing_FStar.Monotonic.Heap.sel"
       ],
       0
     ],
     [
       "Ex10a.revoke",
-      3,
+      4,
       2,
       1,
       [ "@query", "assumption_Ex10a.entry_haseq" ],
+      0
+    ],
+    [
+      "Ex10a.revoke",
+      5,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Ex10a.revoke",
+      6,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Ex10a.canRead_t",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
+      0
+    ],
+    [
+      "Ex10a.canWrite_t",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
+      ],
       0
     ],
     [
@@ -137,15 +290,28 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "data_typing_intro_FStar.Pervasives.V@tok", "eq2-interp",
         "equation_Ex10a.canWrite_t", "equation_Ex10a.file",
-        "equation_FStar.Heap.modifies", "equation_FStar.Heap.modifies_t",
+        "equation_FStar.Monotonic.Heap.modifies",
+        "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_FStar.ST.modifies_none",
-        "function_token_typing_Prims.unit",
-        "proj_equation_FStar.Pervasives.V_v",
-        "projection_inverse_FStar.Pervasives.V_v", "string_inversion",
+        "function_token_typing_Prims.unit", "string_inversion",
         "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Ex10a.safe_delete",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Ex10a.db",
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0
     ],
@@ -158,13 +324,14 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "bool_typing", "constructor_distinct_Ex10a.Readable",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_typing",
+        "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_FStar.Pervasives.V", "eq2-interp",
+        "disc_equation_FStar.Pervasives.Native.Some", "eq2-interp",
         "equation_Ex10a.canRead", "equation_Ex10a.canRead_t",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
         "interpretation_Ex10a_Tm_abs_bfa07ed00b702381db27b21147165776",
         "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
@@ -172,7 +339,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl"
+        "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0
     ]

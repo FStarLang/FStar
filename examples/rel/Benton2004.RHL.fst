@@ -119,7 +119,6 @@ let exp_to_gexp_const
 = gfeq2 (exp_to_gexp (const c) side) (gconst c)
 
 let exp_to_gexp_evar
-  (#t: Type0)
   (x: var)
   (side: pos)
 : Lemma
@@ -297,7 +296,11 @@ let r_seq
   (ensures (
     exec_equiv p0 p2 (seq c01 c12) (seq c01' c12')
   ))
-  [SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12'))]
+  [SMTPatOr [
+    [SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12')); SMTPat (exec_equiv p0 p1 c01 c01')];
+    [SMTPat (exec_equiv p0 p2 (seq c01 c12) (seq c01' c12')); SMTPat (exec_equiv p1 p2 c12 c12')];
+    [SMTPat (exec_equiv p0 p1 c01 c01'); SMTPat (exec_equiv p1 p2 c12 c12')];
+  ]]
 = d_seq (interp p0) (interp p1) (interp p2) c01 c01' c12 c12'
 
 let r_ass
@@ -396,7 +399,7 @@ let flip (phi: gexp bool) : Tot (gexp bool) =
 let holds_interp_flip (phi: gexp bool) : Lemma
   (forall s1 s2 . holds (interp (flip phi)) s1 s2 <==> holds (Benton2004.flip (interp phi)) s1 s2)
   [SMTPat (holds (interp (flip phi)))]
-= ()
+= Benton2004.holds_flip (interp phi)
 
 let exec_equiv_flip
   (p p': gexp bool)
@@ -404,7 +407,9 @@ let exec_equiv_flip
 : Lemma
   (exec_equiv (flip p) (flip p') f f' <==> exec_equiv p p' f' f)
   [SMTPat (exec_equiv (flip p) (flip p') f f')]
-= exec_equiv_flip (interp p) (interp p') f f'
+= holds_interp_flip p;
+  holds_interp_flip p';
+  exec_equiv_flip (interp p) (interp p') f f'
 
 let r_while_terminates
   (b b' : exp bool)
@@ -493,12 +498,14 @@ let is_per_gand
   (ensures (is_per (gand e1 e2)))
 = assert (forall s1 s2 . holds (interp (gand e1 e2)) s1 s2 <==> holds (interp e1) s1 s2 /\ holds (interp e2) s1 s2)
 
+(* FIXME: holds but not replayable
 let is_per_gor
   (e1 e2 : gexp bool)
 : Lemma
   (requires (is_per e1 /\ is_per e2 /\ (forall s1 s2 . ~ (holds (interp e1) s1 s2 /\ holds (interp e2) s1 s2))))
   (ensures (is_per (gor e1 e2)))
 = assert (forall s1 s2 . holds (interp (gor e1 e2)) s1 s2 <==> holds (interp e1) s1 s2 \/ holds (interp e2) s1 s2)
+*)
 
 let r_sym
   (p p': gexp bool)
@@ -526,6 +533,7 @@ let interpolable_gand_exp_to_gexp
   (interpolable (gand (exp_to_gexp b Left) (exp_to_gexp b Right)))
 = ()
 
+(* FIXME: holds but not replayable
 let interpolable_gand
   (e1 e2 : gexp bool)
 : Lemma
@@ -539,6 +547,7 @@ let interpolable_gor
   (requires (is_per e1 /\ is_per e2 /\ interpolable e1 /\ interpolable e2))
   (ensures (interpolable (gor e1 e2)))
 = assert (forall s1 s2 . holds (interp (gor e1 e2)) s1 s2 <==> holds (interp e1) s1 s2 \/ holds (interp e2) s1 s2)
+*)
 
 let r_trans
   (p p' : gexp bool)
@@ -578,7 +587,11 @@ let d_su1'
     exec_equiv phi' phi'' c' c''
   ))
   (ensures (exec_equiv phi phi'' (seq c c') c''))
-  [SMTPat (exec_equiv phi phi'' (seq c c') c'')]
+  [SMTPatOr [
+    [SMTPat (exec_equiv phi phi'' (seq c c') c''); SMTPat (exec_equiv phi phi' c skip)];
+    [SMTPat (exec_equiv phi phi'' (seq c c') c''); SMTPat (exec_equiv phi' phi'' c' c'')];
+    [SMTPat (exec_equiv phi' phi'' c' c''); SMTPat (exec_equiv phi phi' c skip)];
+  ]]
 = Benton2004.d_su1' c c' c'' (interp phi) (interp phi') (interp phi'')
 
 let d_su2
@@ -611,7 +624,11 @@ let d_cc
   (ensures (
     exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3))
   ))
-  [SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3)))]
+  [SMTPatOr [
+    [SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3))); SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2))];
+    [SMTPat (exec_equiv phi phi'' (seq (ifthenelse b c1 c2) c3) (ifthenelse b (seq c1 c3) (seq c2 c3))); SMTPat (exec_equiv phi' phi'' c3 c3)];
+    [SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) (ifthenelse b c1 c2)); SMTPat (exec_equiv phi' phi'' c3 c3)];
+  ]]
 = Benton2004.d_cc b c1 c2 c3 (interp phi) (interp phi') (interp phi'')
 
 let d_lu1

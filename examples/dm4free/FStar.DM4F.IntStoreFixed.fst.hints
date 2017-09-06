@@ -26,9 +26,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.IntStoreFixed.INT_STORE", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntStoreFixed.INT_STORE", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntStoreFixed.INT_STORE", 3, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.IntStoreFixed.read", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.DM4F.IntStoreFixed.write", 1, 2, 1, [ "@query" ], 0 ],
     [

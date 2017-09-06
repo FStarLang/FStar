@@ -506,7 +506,7 @@ val prf_enxor:
   (requires (fun h0 ->
      Crypto.Plain.live h0 plain /\ 
      Buffer.live h0 cipher /\
-     (safeId i ==> find_otp #t.mac_rgn #i (HS.sel h0 t.table) x == None)))
+     (safeId i ==> find_otp #t.mac_rgn #i (HS.sel h0 (itable i t)) x == None)))
   (ensures (fun h0 _ h1 ->
      Crypto.Plain.live h1 plain /\ Buffer.live h1 cipher /\
      modifies_x_buffer_1 t x cipher h0 h1 /\
