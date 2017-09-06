@@ -32,16 +32,14 @@ let unembed_int (t:term) : int =
     | _ -> failwith "Not an embedded int"
 
 let embed_string (s:string) : term =
-    let bytes = BU.unicode_of_string s in
-    S.mk (Tm_constant(FStar.Const.Const_string(bytes, Range.dummyRange)))
+    S.mk (Tm_constant(FStar.Const.Const_string(s, Range.dummyRange)))
          None
          Range.dummyRange
 
 let unembed_string (t:term) : string =
     let t = U.unmeta t in
     match t.n with
-    | Tm_constant(FStar.Const.Const_string(bytes, _)) ->
-      BU.string_of_unicode bytes
+    | Tm_constant(FStar.Const.Const_string(s, _)) -> s
     | _ ->
       failwith ("Not an embedded string (" ^ Print.term_to_string t ^ ")")
 

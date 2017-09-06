@@ -2138,8 +2138,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     in
     let is_uninterpreted_by_smt (t:S.term) =
         match (SS.compress t).n with
-        | Tm_constant (Const_string(bytes, _)) ->
-          BU.string_of_bytes bytes = "uninterpreted_by_smt"
+        | Tm_constant (Const_string(s, _)) -> s = "uninterpreted_by_smt"
         | _ -> false
     in
     match se.sigel with
