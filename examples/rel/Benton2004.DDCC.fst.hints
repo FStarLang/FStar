@@ -1,5 +1,5 @@
 [
-  "Ä\u0019∏û”∞\u001cbåÅ¿ôÇ\u0012˘Õ",
+  "‰l°©√AŒÕ·ó/?∑\r•\u0007",
   [
     [
       "Benton2004.DDCC.ns_f",
@@ -1092,6 +1092,18 @@
         "equation_Benton2004.exec_equiv",
         "equation_Benton2004.reify_computation", "equation_Benton2004.seq",
         "equation_Benton2004.skip"
+      ],
+      0
+    ],
+    [
+      "Benton2004.DDCC.d_su1''",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Benton2004.included", "equation_Benton2004.skip",
+        "function_token_typing_Benton2004.skip",
+        "lemma_Benton2004.DDCC.d_csub"
       ],
       0
     ],
