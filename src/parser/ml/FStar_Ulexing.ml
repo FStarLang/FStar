@@ -81,7 +81,7 @@ let new_line b =
   b.cur_p <- { b.cur_p with
     L.pos_lnum = b.cur_p.L.pos_lnum + 1;
     L.pos_bol = b.cur_p.L.pos_cnum;
-    L.pos_cnum = 0 }
+  }
 
 let range b = (b.start_p, b.cur_p)
 
