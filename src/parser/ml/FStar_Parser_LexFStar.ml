@@ -26,12 +26,12 @@ let unescape (a:int array) : int =
     | 102 (*f*) -> 12
     | 114 (*r*) -> 13
     | 117 (*u*) ->
-      let s = Utf8.from_int_array a 1 4 in
+      let s = Utf8.from_int_array a 2 4 in
       int_of_string ("0x"^s)
     | 120 (*x*) ->
-      let s = Utf8.from_int_array a 1 2 in
+      let s = Utf8.from_int_array a 2 2 in
       int_of_string ("0x"^s)
-    | c -> assert false)
+    | c -> c)
   | c -> c
 
 let keywords = Hashtbl.create 0
@@ -145,7 +145,7 @@ let is_typ_app lexbuf =
         else (upd i; aux (i + 1))
       in aux (pos + 1)
     in
-    let res = balanced (L.lookahead lexbuf (L.get_cur lexbuf)) 0 in
+    let res = balanced (L.lookahead lexbuf (L.get_cur lexbuf - 1)) 0 in
     if res then incr n_typ_apps; res
    with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
 
