@@ -33,12 +33,12 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise(Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
+      raise(Err (FStar_Util.format1 "Unable to find file: %s\n" filename))
 
 let read_file (filename:string) =
   try
     BatFile.with_file_in filename BatIO.read_all
-  with e -> raise (Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
+  with e -> raise (Err (FStar_Util.format1 "Unable to read file: %s\n" filename))
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
@@ -66,7 +66,7 @@ let parse fn =
         check_extension f;
         let f' = find_file f in
         (try create (read_file f') f' 1 0, f'
-         with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
+         with _ -> raise (Err(FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f')))
     | U.Inr s ->
       create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), ""
   in
