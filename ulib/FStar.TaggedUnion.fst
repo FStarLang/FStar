@@ -341,19 +341,19 @@ let readable_field
 let raw_get_tag (#l: P.union_typ) (tu: raw l)
 : Tot UInt32.t
 =
-  P.struct_sel tu (tag_field l)
+  P.struct_sel #(typ_l l) tu (tag_field l)
 
 let raw_get_field (#l: P.union_typ) (tu: raw l)
 : GTot (P.struct_field l)
 =
-  P.union_get_key #l (P.struct_sel tu (union_field l))
+  P.union_get_key #l (P.struct_sel #(typ_l l) tu (union_field l))
 
 let raw_get_value (#l: P.union_typ) (tu: raw l) (f: P.struct_field l)
 : Pure (P.type_of_typ (P.typ_of_struct_field l f))
   (requires (raw_get_field tu == f))
   (ensures (fun _ -> True))
 =
-  let u : P.union l = P.struct_sel tu (union_field l) in
+  let u : P.union l = P.struct_sel #(typ_l l) tu (union_field l) in
   P.union_get_value u f
 
 (* Lemma: "valid p ==> matching_tags (gread p)" *)

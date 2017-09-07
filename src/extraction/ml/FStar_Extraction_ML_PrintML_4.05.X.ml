@@ -100,7 +100,7 @@ let build_constant (c: mlconstant): Parsetree.constant =
      let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
      Const.integer i
   | MLC_Float v -> failwith "Case not handled"
-  | MLC_Char v -> Const.char v
+  | MLC_Char v -> Const.int v
   | MLC_String v -> Const.string v
   | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
 

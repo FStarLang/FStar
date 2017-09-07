@@ -1,5 +1,5 @@
 [
-  "љ“¦Yі\u0013Ты\u001aЬўvdї\u0000<",
+  "t\u0007\u0006c—AП9/\u0002<ф-s~­",
   [
     [
       "FStar.TaggedUnion.typ_l",
@@ -2034,20 +2034,6 @@
       0
     ],
     [
-      "FStar.TaggedUnion.raw_get_tag",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_elim_FStar.Pointer.Base.TStruct",
-        "equation_FStar.TaggedUnion.typ",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
-        "typing_FStar.TaggedUnion.typ"
-      ],
-      0
-    ],
-    [
       "FStar.TaggedUnion.raw_get_field",
       1,
       2,
@@ -2110,20 +2096,6 @@
       0
     ],
     [
-      "FStar.TaggedUnion.raw_get_field",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_elim_FStar.Pointer.Base.TStruct",
-        "equation_FStar.TaggedUnion.typ",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
-        "typing_FStar.TaggedUnion.typ"
-      ],
-      0
-    ],
-    [
       "FStar.TaggedUnion.raw_get_value",
       1,
       2,
@@ -2180,23 +2152,6 @@
         "typing_FStar.Pointer.Base.struct_sel",
         "typing_FStar.TaggedUnion.typ",
         "typing_FStar.TaggedUnion.union_field"
-      ],
-      0
-    ],
-    [
-      "FStar.TaggedUnion.raw_get_value",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
-        "data_elim_FStar.Pointer.Base.TStruct",
-        "equation_FStar.Pointer.Base.struct_field",
-        "equation_FStar.TaggedUnion.typ",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_fa66d432c7ec241ca4caf7160d2af5c9",
-        "typing_FStar.TaggedUnion.typ"
       ],
       0
     ],

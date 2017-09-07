@@ -49,8 +49,7 @@ let mlconst_of_const (sctt : sconst) =
   | Const_bytearray (bytes, _) ->
       MLC_Bytes bytes
 
-  | Const_string (bytes, _) ->
-      MLC_String (string_of_unicode (bytes))
+  | Const_string (s, _) -> MLC_String (s)
 
   | Const_reify
   | Const_reflect _ ->

@@ -541,7 +541,7 @@ let set_range_of_fv (fv:fv) (r:Range.range) =
     {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
 let has_simple_attribute (l: list<term>) s =
   List.existsb (function
-    | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->
+    | { n = Tm_constant (Const_string (data, _)) } when data = s ->
         true
     | _ ->
         false
