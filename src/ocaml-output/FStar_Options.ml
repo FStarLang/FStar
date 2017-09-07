@@ -915,7 +915,7 @@ let rec specs: Prims.unit -> FStar_Getopt.opt Prims.list =
                   FStar_All.pipe_right uu____3162 (FStar_List.map mk_string) in
                 mk_list uu____3159)), "[module name]")),
         "Don't generate projectors for this module");
-      ('v', "version",
+      (118, "version",
         (FStar_Getopt.ZeroArgs
            ((fun uu____3186  ->
                display_version (); FStar_All.exit (Prims.parse_int "0")))),
@@ -961,7 +961,7 @@ let rec specs: Prims.unit -> FStar_Getopt.opt Prims.list =
         (FStar_Getopt.ZeroArgs ((fun uu____3327  -> mk_bool true))),
         "Do not eta-expand coertions in generated OCaml")] in
     let uu____3338 = FStar_List.map mk_spec specs1 in
-    ('h', "help",
+    (104, "help",
       (FStar_Getopt.ZeroArgs
          (fun x  ->
             display_usage_aux specs1; FStar_All.exit (Prims.parse_int "0"))),
