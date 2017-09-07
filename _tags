@@ -21,6 +21,7 @@ true: \
   package(menhirLib), \
   package(dynlink), \
   package(pprint), \
+  package(ulex), \
   package(yojson)
 
 # Turn off warnings for extracted files
