@@ -56,7 +56,7 @@ let udiv_qn    = ["FStar" ; "UInt" ; "udiv"]
 let umod_qn    = ["FStar" ; "UInt" ; "mod"]
 let mul_mod_qn = ["FStar" ; "UInt" ; "mul_mod"]
 let nat_bv_qn  = ["FStar" ; "BV"   ; "int2bv"]
-
+let mk32_qn      = ["FStar" ; "UInt32" ; "Mk"]
 
 (* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =

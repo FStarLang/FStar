@@ -2,10 +2,9 @@ module FStar.Tactics.BV
 
 open FStar.Tactics
 open FStar.Reflection.Syntax
-open FStar.Reflection.Arith
+open FStar.Reflection.SimpleArith
 open FStar.BV
 open FStar.UInt
-// using uint_t' instead of uint_t breaks the tactic (goes to inl).
 
 (* Congruence lemmas *)
 val cong_bvand : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
@@ -57,7 +56,7 @@ val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
 let eq_to_bv #n #x #y pf = int2bv_lemma_2 #n x y
 
 val lt_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
-              (b2t (bvult #n (int2bv #n x) (int2bv #n y))) -> Lemma (x < y)
+              squash (bvult #n (int2bv #n x) (int2bv #n y)) -> Lemma (x < y)
 let lt_to_bv #n #x #y pf = int2bv_lemma_ult_2 #n x y
 
 (* Creates two fresh variables and two equations of the form int2bv
@@ -70,14 +69,19 @@ val trans: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) ->
 let trans #n #x #y #z #w pf1 pf2 pf3 = ()
 
 val trans_lt: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
-		  (eq2 #(bv_t n) x z) -> (eq2 #(bv_t n) y w) -> squash (bvult #n z w) -> 
-		  Lemma (bvult #n x y)
+		  squash (x == z) -> squash (y == w) -> squash (bvult #n z w) -> 
+		  squash (bvult #n x y)
 let trans_lt #n #x #y #z #w pf1 pf2 pf3 = ()
 
-assume val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
-		  squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> (b2t (bvult #n z w)) -> 
+val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
+		  squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> squash (bvult #n z w) -> 
 		  Lemma (x < y)
-// let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = ()
+let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 =
+  lt_to_bv #n #x #y (trans_lt pf1 pf2 pf3)
+
+// val cong_f1_uint: #n:pos -> #f:uint_t n -> #w:bv_t n -> #y:bv_t n -> squash (w == y) ->
+// 			   Lemma (#n w x == bvmul #n y x)
+// let cong_bvmul #n #w #x #y pf = ()
 
 (*
  * This is being proven terminating.
@@ -119,7 +123,9 @@ let rec arith_expr_to_bv e : tactic unit =
         apply_lemma (quote int2bv_logor);;
         apply_lemma (quote cong_bvor);;
         arith_expr_to_bv e1;;
-        arith_expr_to_bv e2	
+        arith_expr_to_bv e2
+    | NatToBv (MkUInt32 e) | MkUInt32 e ->
+      trefl
     | _ ->
         trefl
 
@@ -129,14 +135,9 @@ let arith_to_bv_tac : tactic unit =
     let f = term_as_formula g in
     match f with
     | Comp Eq t l r ->
-     begin match run_tm (is_arith_expr l) with
-      | Inl s ->
-    	  dump s;;
-          trefl
-      | Inr e ->
-    	    // dump "inr arith_to_bv";;
+      let e = is_arith_expr l in
+    	    dump "arith_to_bv";;
             seq (arith_expr_to_bv e) trefl
-        end
     | _ ->
         fail ("impossible: ")
 

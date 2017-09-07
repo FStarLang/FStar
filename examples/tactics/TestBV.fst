@@ -3,7 +3,18 @@ module TestBV
 open FStar.UInt
 open FStar.Tactics
 open FStar.Tactics.BV
+module U = FStar.UInt32
 
+let test0 (x y: U.t) =
+  assert_by_tactic (U.add x y == U.add y x) (bv_tac ())
+
+
+
+bvadd (int2bv (v x)) (int2bv (v y))
+---------------------------------------------
+add (v x) (v y) == add (v y) (v x)
+----------------------------------------------
+Mk (add (v x) (v y)) == Mk (add (v y) (v x))
 
 let test1 (x y: uint_t 64) =
     assert_by_tactic (logand #64 x y == logand #64 y x)
