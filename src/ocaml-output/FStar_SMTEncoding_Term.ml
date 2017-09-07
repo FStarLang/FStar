@@ -644,7 +644,7 @@ let isInjective: Prims.string -> Prims.bool =
        uu____1803 = "Box") &&
         (let uu____1805 =
            let uu____1806 = FStar_String.list_of_string s in
-           FStar_List.existsML (fun c  -> c = '.') uu____1806 in
+           FStar_List.existsML (fun c  -> c = 46) uu____1806 in
          Prims.op_Negation uu____1805)
     else false
 let mk: term' -> FStar_Range.range -> term =
@@ -1574,7 +1574,7 @@ let caption_to_string:
 let rec declToSmt: Prims.string -> decl -> Prims.string =
   fun z3options  ->
     fun decl  ->
-      let escape s = FStar_Util.replace_char s '\'' '_' in
+      let escape s = FStar_Util.replace_char s 39 95 in
       match decl with
       | DefPrelude  -> mkPrelude z3options
       | Caption c ->

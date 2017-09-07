@@ -450,7 +450,7 @@ let built_in_primitive_steps : list<primitive_step> =
         fun p b -> const_as_tm (FC.Const_bool b) p
     in
     let string_as_const : Range.range -> string -> term =
-        fun p b -> const_as_tm (FC.Const_string (BU.bytes_of_string b, p)) p
+        fun p b -> const_as_tm (FC.Const_string (b, p)) p
     in
     let arg_as_int (a, _) : option<int> =
         match (SS.compress a).n with
@@ -482,8 +482,8 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let arg_as_string (a, _) : option<string> =
         match (SS.compress a).n with
-        | Tm_constant (FC.Const_string(bytes, _)) ->
-          Some (BU.string_of_bytes bytes)
+        | Tm_constant (FC.Const_string(s, _)) ->
+          Some s
         | _ ->
           None
     in

@@ -44,7 +44,7 @@ module Env = FStar.TypeChecker.Env
 let fail_exp (lid:lident) (t:typ) =
     mk (Tm_app(S.fvar PC.failwith_lid Delta_constant None,
                [ S.iarg t
-               ; S.as_arg <| mk (Tm_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.lid_to_string lid)), Range.dummyRange))) None Range.dummyRange]))
+               ; S.as_arg <| mk (Tm_constant (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange))) None Range.dummyRange]))
         None
         Range.dummyRange
 
@@ -68,8 +68,8 @@ let rec extract_attr x =
   match SS.compress x with
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShow" ->
       Some PpxDerivingShow
-  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
-      Some (PpxDerivingShowConstant (string_of_unicode data))
+  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
+      Some (PpxDerivingShowConstant (s))
   | { n = Tm_meta (x, _) } ->
       extract_attr x
   | a ->
@@ -390,8 +390,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 | _ -> None
               ) quals in
               let flags' = List.choose (function
-                | { n = Tm_constant (Const_string (data, _)) } ->
-                    Some (Attribute (string_of_unicode data))
+                | { n = Tm_constant (Const_string (s, _)) } ->
+                    Some (Attribute (s))
                 | _ ->
                     print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
                     None

@@ -23,7 +23,7 @@ open FStar_String
 %}
 
 %token <bytes> BYTEARRAY
-%token <bytes> STRING
+%token <string> STRING
 %token <string> IDENT
 %token <string> NAME
 %token <string> TVAR
@@ -96,9 +96,8 @@ open FStar_String
 
 %start inputFragment
 %start term
-%type <inputFragment> inputFragment
-%type <term> term
-
+%type <FStar_Parser_AST.inputFragment> inputFragment
+%type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
 
 %%
@@ -929,7 +928,7 @@ atomicUniverse:
 /******************************************************************************/
 
 %inline string:
-  | s=STRING { string_of_bytes s }
+  | s=STRING { s }
 
 %inline operator:
   | op=OPPREFIX

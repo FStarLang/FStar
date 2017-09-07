@@ -65,7 +65,7 @@ let text_of_id: ident -> Prims.string = fun id  -> id.idText
 let text_of_path: Prims.string Prims.list -> Prims.string =
   fun path  -> FStar_Util.concat_l "." path
 let path_of_text: Prims.string -> Prims.string Prims.list =
-  fun text  -> FStar_String.split ['.'] text
+  fun text  -> FStar_String.split [46] text
 let path_of_ns: ident Prims.list -> Prims.string Prims.list =
   fun ns  -> FStar_List.map text_of_id ns
 let path_of_lid: lident -> Prims.string Prims.list =

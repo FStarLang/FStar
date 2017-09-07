@@ -588,7 +588,7 @@ let doZ3Exe:
       fun label_messages  ->
         let parse z3out =
           let lines =
-            FStar_All.pipe_right (FStar_String.split ['\n'] z3out)
+            FStar_All.pipe_right (FStar_String.split [10] z3out)
               (FStar_List.map FStar_Util.trim_string) in
           let smt_output = smt_output_sections lines in
           let unsat_core =

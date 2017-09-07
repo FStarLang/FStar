@@ -3998,7 +3998,7 @@ let maybe_monadic:
                  (e, (FStar_Syntax_Syntax.Meta_monadic (m, t))))
               FStar_Pervasives_Native.None e.FStar_Syntax_Syntax.pos
 let d: Prims.string -> Prims.unit =
-  fun s  -> FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s
+  fun s  -> FStar_Util.print1 "\027[01;36m%s\027[00m\n" s
 let mk_toplevel_definition:
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
