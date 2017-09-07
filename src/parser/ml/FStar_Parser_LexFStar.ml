@@ -347,6 +347,9 @@ let rec token = lexer
  | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
 
+ | anywhite+ -> token lexbuf
+ | newline -> L.new_line lexbuf; token lexbuf
+
  (* Must appear before tvar to avoid 'a <-> 'a' conflict *)
  | ('\'' char '\'') -> CHAR (unescape (utrim_both lexbuf 1 1))
  | ('\'' char '\'' 'B') -> CHAR (unescape (utrim_both lexbuf 1 2))
@@ -386,10 +389,6 @@ let rec token = lexer
  | "//" [^ 10 13 0x2028 0x2029]* -> push_one_line_comment lexbuf; token lexbuf
 
  | '"' -> string (Buffer.create 0) lexbuf
-
- | anywhite+ -> token lexbuf
-
- | newline -> L.new_line lexbuf; token lexbuf
 
  | '`' '`' (([^'`' 10 13 0x2028 0x2029] | '`' [^'`' 10 13 0x2028 0x2029])+) '`' '`' ->
    IDENT (trim_both lexbuf 2 2)
@@ -434,7 +433,7 @@ and string buffer = lexer
 and comment inner buffer startpos = lexer
  | "(*" ->
    Buffer.add_string buffer "(*" ;
-   let close_eof = comment true buffer startpos lexbuf in
+   let _ = comment true buffer startpos lexbuf in
    comment inner buffer startpos lexbuf
  | newline ->
    L.new_line lexbuf;
@@ -479,9 +478,7 @@ and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
  | _ -> fsdoc_kw_arg (n, doc, kw, kwn, kwa^(L.lexeme lexbuf)) lexbuf
 
 and cpp_filename = lexer
- | " \"" [^ '"' 10 13 0x2028 0x2029]+ '"' ->
-   let s = trim_both lexbuf 2 1 in
-   ignore_endline lexbuf
+ | " \"" [^ '"' 10 13 0x2028 0x2029]+ '"' -> ignore_endline lexbuf
 
 and ignore_endline = lexer
  | ' '* newline -> token lexbuf

@@ -69,16 +69,12 @@ let parse fn =
          with _ -> raise (Err(FStar_Util.format1 "Unable to open file: %s\n" f')))
     | U.Inr s ->
       create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), ""
-    in
+  in
 
-  let lexer =
-    let pos = ref (lexbuf.cur_p) in
-    fun () ->
-      let old = !pos in
-      let tok = FStar_Parser_LexFStar.token lexbuf in
-      pos := lexbuf.cur_p;
-      (tok, old, !pos)
-    in
+  let lexer () =
+    let tok = FStar_Parser_LexFStar.token lexbuf in
+    (tok, lexbuf.start_p, lexbuf.cur_p)
+  in
 
   try
       let fileOrFragment = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer in
