@@ -1625,17 +1625,18 @@
       ],
       0
     ],
-    null,
     [
       "FStar.Math.Lemmas.lemma_mod_mul_distr_l",
       3,
       2,
-      2,
+      1,
       [
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "__MaxIFuel_assumption", "__query", "equation_Prims.nat",
         "equation_Prims.pos", "int_inversion", "int_typing",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Division",
+        "primitive_Prims.op_Modulus", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_d21a96787e481538f7b3668138ba066d",
         "refinement_interpretation_Prims_Tm_refine_d2e2db8602bbddfb2772cf5783889241"
       ],
@@ -2042,12 +2043,11 @@
       ],
       0
     ],
-    null,
     [
       "FStar.Math.Lemmas.lemma_mod_plus_injective_1",
       1,
       2,
-      2,
+      1,
       [
         "__MaxIFuel_assumption", "__query", "equation_Prims.nat",
         "equation_Prims.pos", "int_inversion", "int_typing",
