@@ -4156,36 +4156,7 @@ let tc_decl:
                              (FStar_Syntax_Syntax.Masked_effect ))
                             -> FStar_Syntax_Syntax.HasMaskedEffect :: quals
                         | uu____6468 -> quals in
-                      let quals2 =
-                        FStar_List.choose
-                          (fun uu___91_6474  ->
-                             match uu___91_6474 with
-                             | FStar_Syntax_Syntax.Inline_for_extraction  ->
-                                 let uu____6477 =
-                                   let uu____6478 =
-                                     FStar_List.for_all
-                                       (fun lb  ->
-                                          let ok =
-                                            FStar_Syntax_Util.is_pure_or_ghost_function
-                                              lb.FStar_Syntax_Syntax.lbtyp in
-                                          if Prims.op_Negation ok
-                                          then
-                                            (let uu____6485 =
-                                               FStar_Syntax_Print.lbname_to_string
-                                                 lb.FStar_Syntax_Syntax.lbname in
-                                             FStar_Util.print1_warning
-                                               "Dropping inline_for_extraction from %s because it is not a pure function\n"
-                                               uu____6485)
-                                          else ();
-                                          ok)
-                                       (FStar_Pervasives_Native.snd lbs2) in
-                                   Prims.op_Negation uu____6478 in
-                                 if uu____6477
-                                 then FStar_Pervasives_Native.None
-                                 else
-                                   FStar_Pervasives_Native.Some
-                                     FStar_Syntax_Syntax.Inline_for_extraction
-                             | q -> FStar_Pervasives_Native.Some q) quals1 in
+                      let quals2 = quals1 in
                       ((let uu___122_6500 = se in
                         {
                           FStar_Syntax_Syntax.sigel =
