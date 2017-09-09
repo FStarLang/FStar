@@ -5029,7 +5029,8 @@ and check_top_level_let:
                             ((lb.FStar_Syntax_Syntax.lbname), e1,
                               uu____12949) in
                           [uu____12936] in
-                        FStar_TypeChecker_Util.generalize env1 uu____12927 in
+                        FStar_TypeChecker_Util.generalize env1 false
+                          uu____12927 in
                       FStar_List.hd uu____12916 in
                     match uu____12907 with
                     | (uu____12998,univs1,e11,c11) ->
@@ -5405,7 +5406,7 @@ and check_top_level_let_rec:
                                                  (lb.FStar_Syntax_Syntax.lbdef),
                                                  uu____13498))) in
                                      FStar_TypeChecker_Util.generalize env1
-                                       uu____13458 in
+                                       true uu____13458 in
                                    FStar_All.pipe_right ecs
                                      (FStar_List.map
                                         (fun uu____13538  ->
