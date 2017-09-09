@@ -1061,31 +1061,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       begin match bs with
                         | [] -> failwith "Impossible"
                         | [_] ->
-                          (* TODO : what happens if the argument is implicit ? is it already elaborated on the stack ? *)
-                          begin match lopt with
-                            | None when (Options.__unit_tests()) ->
-                              log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
-                              norm cfg (c :: env) stack_rest body
-
-                            | Some rc
-                            (* TODO (KM) : wouldn't it be better to check the TOTAL cflag ? *)
-                                when (Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
-                                      || Ident.lid_equals rc.residual_effect PC.effect_GTot_lid
-                                      || rc.residual_flags |> BU.for_some (function TOTAL -> true | _ -> false)) ->
-                              log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
-                              norm cfg (c :: env) stack_rest body
-
-
-                            | _ when cfg.steps |> List.contains Reify
-                                  || cfg.steps |> List.contains CheckNoUvars ->
-                              norm cfg (c :: env) stack_rest body
-
-                            | _ -> //can't reduce, as it may not terminate
-//                              printfn "REFUSING TO NORMALIZE APPLICATION BECAUSE IT MAY BE IMPURE: %s" (Print.term_to_string t);
-//                              printfn "Stack has %d elements" (List.length stack_rest);;
-                              let cfg = {cfg with steps=WHNF::Exclude Iota::Exclude Zeta::cfg.steps} in
-                              rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
-                          end
+                          log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
+                          norm cfg (c :: env) stack_rest body
                         | _::tl ->
                           log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
                           let body = mk (Tm_abs(tl, body, lopt)) t.pos in
