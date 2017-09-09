@@ -242,10 +242,9 @@
       ],
       0
     ],
-    [ "FStar.Monotonic.HyperHeap.extends", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.HyperHeap.extends",
-      2,
+      1,
       2,
       1,
       [

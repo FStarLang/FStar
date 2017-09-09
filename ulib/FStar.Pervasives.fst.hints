@@ -41,7 +41,6 @@
       ],
       0
     ],
-    [ "FStar.Pervasives.ex_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Pervasives.all_bind_wp",
       1,

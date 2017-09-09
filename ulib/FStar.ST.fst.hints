@@ -2,7 +2,6 @@
   "©ÈÊ\rW÷£Æ\u001cü'Ö\u001a›Z¦",
   [
     [ "FStar.ST.gst_witness", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.ST.gst_recall", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.ST.lemma_functoriality", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.ST.mref",

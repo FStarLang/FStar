@@ -1443,7 +1443,6 @@
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0
     ],
-    [ "FStar.OrdSet.lemma_strict_subset_size", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.OrdSet.lemma_minus_mem", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.OrdSet.lemma_minus_mem",
@@ -1461,14 +1460,6 @@
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [
-      "FStar.OrdSet.lemma_strict_subset_minus_size",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0
-    ],
     [ "FStar.OrdSet.lemma_disjoint_union_subset", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.OrdSet.lemma_subset_union",
@@ -1483,14 +1474,6 @@
         "primitive_Prims.op_BarBar", "typing_FStar.OrdSet.subset",
         "typing_FStar.OrdSet.union", "unit_typing"
       ],
-      0
-    ],
-    [
-      "FStar.OrdSet.lemma_strict_subset_transitive",
-      1,
-      2,
-      1,
-      [ "@query" ],
       0
     ],
     [ "FStar.OrdSet.lemma_intersect_symmetric", 1, 2, 1, [ "@query" ], 0 ],

@@ -378,7 +378,6 @@
       ],
       0
     ],
-    [ "Swap.lemma_replace_cond", 2, 0, 0, [ "@query" ], 0 ],
     [
       "Swap.lemma_skip_c1",
       1,
