@@ -7,6 +7,11 @@ open FStar.Reflection.Data
 assume private val __type_of_binder: binder -> term
 let type_of_binder (b:binder) : term = __type_of_binder b
 
+let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
+    match l with
+    | [] -> True
+    | x::xs -> p x /\ forall_list p xs
+
 (* Comparison of a term_view to term. Allows to recurse while changing the view *)
 val smaller : term_view -> term -> Type0
 let smaller tv t =
@@ -19,12 +24,17 @@ let smaller tv t =
     | Tv_Refine b t' ->
         type_of_binder b << t /\ t' << t
 
+    | Tv_Let b t1 t2 ->
+        type_of_binder b << t /\ t1 << t /\ t2 << t
+
+    | Tv_Match t1 brs ->
+        t1 << t /\ (forall_list (fun (b, t') -> t' << t) brs)
+
     | Tv_Type _
     | Tv_Const _
     | Tv_Unknown
     | Tv_Var _
     | Tv_Uvar _ _
-    | Tv_Match _ _ // TODO
     | Tv_FVar _ -> True
 
 (* The main characters *)

@@ -44,7 +44,7 @@ module Env = FStar.TypeChecker.Env
 let fail_exp (lid:lident) (t:typ) =
     mk (Tm_app(S.fvar PC.failwith_lid Delta_constant None,
                [ S.iarg t
-               ; S.as_arg <| mk (Tm_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.lid_to_string lid)), Range.dummyRange))) None Range.dummyRange]))
+               ; S.as_arg <| mk (Tm_constant (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange))) None Range.dummyRange]))
         None
         Range.dummyRange
 
@@ -68,8 +68,8 @@ let rec extract_attr x =
   match SS.compress x with
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShow" ->
       Some PpxDerivingShow
-  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
-      Some (PpxDerivingShowConstant (string_of_unicode data))
+  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
+      Some (PpxDerivingShowConstant (s))
   | { n = Tm_meta (x, _) } ->
       extract_attr x
   | a ->
@@ -349,6 +349,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
               MLM_Top app in
 
+            // Don't even bother when NoExtract is present. cf. Issue #54 in Kremlin
+            if List.contains S.NoExtract quals then [] else
+
             (match (snd lbs) with
              | [hd] ->
                 let bs, comp = U.arrow_formals_comp hd.lbtyp in
@@ -390,8 +393,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 | _ -> None
               ) quals in
               let flags' = List.choose (function
-                | { n = Tm_constant (Const_string (data, _)) } ->
-                    Some (Attribute (string_of_unicode data))
+                | { n = Tm_constant (Const_string (s, _)) } ->
+                    Some (Attribute (s))
                 | _ ->
                     print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
                     None
@@ -456,7 +459,14 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
   if Options.debug_any ()
   then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
+  let codegen_opt = Options.codegen () in
   let _ = Options.restore_cmd_line_options true in
+  (* since command line options are reset, need to set OCaml extraction for when
+     extraction is driven from the F* compiler itself; currently this is only the case for
+     automatic tactic compilation *)
+  let _ = match codegen_opt with
+    | Some "OCaml" -> Options.set_option "codegen" (Options.String "OCaml")
+    | _ -> () in
   let name = MLS.mlpath_of_lident m.name in
   let g = {g with tcenv=FStar.TypeChecker.Env.set_current_module g.tcenv m.name;
                   currentModule = name} in

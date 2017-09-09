@@ -3675,6 +3675,8 @@ let check_and_ascribe:
                 (uu___148_9819.FStar_TypeChecker_Env.lax_universes);
               FStar_TypeChecker_Env.failhard =
                 (uu___148_9819.FStar_TypeChecker_Env.failhard);
+              FStar_TypeChecker_Env.nosynth =
+                (uu___148_9819.FStar_TypeChecker_Env.nosynth);
               FStar_TypeChecker_Env.type_of =
                 (uu___148_9819.FStar_TypeChecker_Env.type_of);
               FStar_TypeChecker_Env.universe_of =
@@ -3998,7 +4000,7 @@ let maybe_monadic:
                  (e, (FStar_Syntax_Syntax.Meta_monadic (m, t))))
               FStar_Pervasives_Native.None e.FStar_Syntax_Syntax.pos
 let d: Prims.string -> Prims.unit =
-  fun s  -> FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s
+  fun s  -> FStar_Util.print1 "\027[01;36m%s\027[00m\n" s
 let mk_toplevel_definition:
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->

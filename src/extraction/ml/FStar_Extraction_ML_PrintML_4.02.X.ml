@@ -99,7 +99,7 @@ let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 let build_constant (c: mlconstant): constant =
   match c with
   | MLC_Float v -> failwith "Case not handled"
-  | MLC_Char v -> Const_char v
+  | MLC_Char v -> Const_int v
   | MLC_String v -> Const_string (v, None)
   | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
 

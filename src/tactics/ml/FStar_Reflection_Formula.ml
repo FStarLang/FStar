@@ -224,17 +224,21 @@ let term_as_formula': FStar_Reflection_Types.term -> formula =
                           (FStar_Reflection_Basic.inspect_fv fv) =
                             FStar_Reflection_Syntax.or_qn
                         then Or (a1, a2)
-                        else
-                          if
-                            (FStar_Reflection_Basic.inspect_fv fv) =
-                              FStar_Reflection_Syntax.forall_qn
-                          then mk_Forall a1 a2
-                          else
-                            if
-                              (FStar_Reflection_Basic.inspect_fv fv) =
-                                FStar_Reflection_Syntax.exists_qn
-                            then mk_Exists a1 a2
-                            else App (h0, (FStar_Pervasives_Native.fst t1))
+                        else App (h0, (FStar_Pervasives_Native.fst t1))
+              | (FStar_Reflection_Data.Tv_FVar
+                 fv,(a1,FStar_Reflection_Data.Q_Implicit )::(a2,FStar_Reflection_Data.Q_Explicit
+                                                             )::[])
+                  ->
+                  if
+                    (FStar_Reflection_Basic.inspect_fv fv) =
+                      FStar_Reflection_Syntax.forall_qn
+                  then mk_Forall a1 a2
+                  else
+                    if
+                      (FStar_Reflection_Basic.inspect_fv fv) =
+                        FStar_Reflection_Syntax.exists_qn
+                    then mk_Exists a1 a2
+                    else App (h0, (FStar_Pervasives_Native.fst t1))
               | (FStar_Reflection_Data.Tv_FVar
                  fv,(a,FStar_Reflection_Data.Q_Explicit )::[]) ->
                   if
@@ -242,19 +246,19 @@ let term_as_formula': FStar_Reflection_Types.term -> formula =
                       FStar_Reflection_Syntax.not_qn
                   then Not a
                   else App (h0, (FStar_Pervasives_Native.fst t1))
-              | uu____823 -> App (h0, (FStar_Pervasives_Native.fst t1))))
+              | uu____847 -> App (h0, (FStar_Pervasives_Native.fst t1))))
     | FStar_Reflection_Data.Tv_Arrow (b,t1) ->
         if FStar_Reflection_Basic.is_free b t1
         then Forall (b, t1)
         else Implies ((FStar_Reflection_Basic.type_of_binder b), t1)
     | FStar_Reflection_Data.Tv_Const (FStar_Reflection_Data.C_Int i) ->
         IntLit i
-    | FStar_Reflection_Data.Tv_Type uu____839 -> F_Unknown
-    | FStar_Reflection_Data.Tv_Abs (uu____840,uu____841) -> F_Unknown
-    | FStar_Reflection_Data.Tv_Refine (uu____842,uu____843) -> F_Unknown
+    | FStar_Reflection_Data.Tv_Type uu____863 -> F_Unknown
+    | FStar_Reflection_Data.Tv_Abs (uu____864,uu____865) -> F_Unknown
+    | FStar_Reflection_Data.Tv_Refine (uu____866,uu____867) -> F_Unknown
     | FStar_Reflection_Data.Tv_Const (FStar_Reflection_Data.C_Unit ) ->
         F_Unknown
-    | uu____844 -> F_Unknown
+    | uu____868 -> F_Unknown
 let rec is_name_imp:
   FStar_Reflection_Types.name -> FStar_Reflection_Types.term -> Prims.bool =
   fun nm  ->
@@ -263,9 +267,9 @@ let rec is_name_imp:
       | FStar_Reflection_Data.Tv_FVar fv ->
           if (FStar_Reflection_Basic.inspect_fv fv) = nm then true else false
       | FStar_Reflection_Data.Tv_App
-          (l,(uu____863,FStar_Reflection_Data.Q_Implicit )) ->
+          (l,(uu____887,FStar_Reflection_Data.Q_Implicit )) ->
           is_name_imp nm l
-      | uu____864 -> false
+      | uu____888 -> false
 let rec unsquash:
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term FStar_Pervasives_Native.option
@@ -277,7 +281,7 @@ let rec unsquash:
         if is_name_imp FStar_Reflection_Syntax.squash_qn l
         then FStar_Pervasives_Native.Some r
         else FStar_Pervasives_Native.None
-    | uu____883 -> FStar_Pervasives_Native.None
+    | uu____907 -> FStar_Pervasives_Native.None
 let rec term_as_formula: FStar_Reflection_Types.term -> formula =
   fun t  ->
     match unsquash t with

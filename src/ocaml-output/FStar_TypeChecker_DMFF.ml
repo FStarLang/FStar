@@ -56,7 +56,7 @@ let gen_wps_for_free:
                   (uu___106_104.FStar_Syntax_Syntax.index);
                 FStar_Syntax_Syntax.sort = uu____105
               } in
-            let d s = FStar_Util.print1 "\\x1b[01;36m%s\\x1b[00m\n" s in
+            let d s = FStar_Util.print1 "\027[01;36m%s\027[00m\n" s in
             (let uu____113 =
                FStar_TypeChecker_Env.debug env (FStar_Options.Other "ED") in
              if uu____113
