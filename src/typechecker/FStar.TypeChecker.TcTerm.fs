@@ -1702,7 +1702,7 @@ and check_top_level_let env e =
             then g1, N.reduce_uvar_solutions env e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  assert (univ_vars = []) ;
-                 let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
+                 let _, univs, e1, c1 = List.hd (TcUtil.generalize env false [lb.lbname, e1, c1.comp()]) in
                  g1, e1, univs, U.lcomp_of_comp c1
          in
 
@@ -1813,7 +1813,7 @@ and check_top_level_let_rec env top =
                     if lb.lbunivs = []
                     then lb
                     else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef)
-              else let ecs = TcUtil.generalize env (lbs |> List.map (fun lb ->
+              else let ecs = TcUtil.generalize env true (lbs |> List.map (fun lb ->
                                 lb.lbname,
                                 lb.lbdef,
                                 S.mk_Total lb.lbtyp)) in
