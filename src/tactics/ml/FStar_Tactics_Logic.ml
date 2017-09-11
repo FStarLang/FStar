@@ -4,7 +4,7 @@ let revert_squash:
   = fun s  -> fun x  -> ()
 let l_revert: Prims.unit FStar_Tactics_Effect.tactic =
   FStar_Tactics_Effect.bind FStar_Tactics_Builtins.revert
-    (fun uu___70_64  ->
+    (fun uu___58_64  ->
        FStar_Tactics_Builtins.apply
          (FStar_Tactics_Derived.quote_lid
             ["FStar"; "Tactics"; "Logic"; "revert_squash"]))
@@ -15,7 +15,7 @@ let rec l_revert_all:
     | [] -> FStar_Tactics_Effect.return ()
     | uu____77::tl1 ->
         FStar_Tactics_Effect.bind l_revert
-          (fun uu___71_82  -> l_revert_all tl1)
+          (fun uu___59_82  -> l_revert_all tl1)
 let fa_intro_lem:
   'Aa 'Ab .
     ('Aa -> 'Ab Prims.squash) -> ('Aa,'Ab) Prims.l_Forall Prims.squash
@@ -29,7 +29,7 @@ let forall_intro: FStar_Reflection_Types.binder FStar_Tactics_Effect.tactic =
              (FStar_Tactics_Builtins.apply
                 (FStar_Tactics_Derived.quote_lid
                    ["FStar"; "Tactics"; "Logic"; "fa_intro_lem"]))
-             (fun uu___72_169  -> FStar_Tactics_Builtins.intro)
+             (fun uu___60_169  -> FStar_Tactics_Builtins.intro)
        | uu____170 -> FStar_Tactics_Derived.fail "not a forall")
 let forall_intros:
   FStar_Reflection_Types.binder Prims.list FStar_Tactics_Effect.tactic =
@@ -61,7 +61,7 @@ let implies_intro: FStar_Reflection_Types.binder FStar_Tactics_Effect.tactic
              (FStar_Tactics_Builtins.apply
                 (FStar_Tactics_Derived.quote_lid
                    ["FStar"; "Tactics"; "Logic"; "imp_intro_lem"]))
-             (fun uu___73_320  ->
+             (fun uu___61_320  ->
                 FStar_Tactics_Effect.bind FStar_Tactics_Builtins.intro
                   (fun b  -> FStar_Tactics_Effect.return b))
        | uu____323 -> FStar_Tactics_Derived.fail "not an implication")
@@ -90,10 +90,10 @@ let rec visit:
                  | FStar_Reflection_Formula.And (p,q) ->
                      FStar_Tactics_Builtins.seq split
                        (FStar_Tactics_Effect.bind (visit callback)
-                          (fun uu___74_439  -> FStar_Tactics_Effect.return ()))
+                          (fun uu___62_439  -> FStar_Tactics_Effect.return ()))
                  | FStar_Reflection_Formula.Implies (p,q) ->
                      FStar_Tactics_Effect.bind implies_intro
-                       (fun uu___75_443  ->
+                       (fun uu___63_443  ->
                           FStar_Tactics_Builtins.seq (visit callback)
                             l_revert)
                  | uu____450 ->
@@ -123,10 +123,10 @@ let rec simplify_eq_implication:
                          (fun eq_h  ->
                             FStar_Tactics_Effect.bind
                               (FStar_Tactics_Builtins.rewrite eq_h)
-                              (fun uu___77_536  ->
+                              (fun uu___65_536  ->
                                  FStar_Tactics_Effect.bind
                                    FStar_Tactics_Builtins.clear
-                                   (fun uu___76_538  ->
+                                   (fun uu___64_538  ->
                                       visit simplify_eq_implication)))))) ()
 let rewrite_all_equalities:
   Prims.unit ->
@@ -163,10 +163,10 @@ let rec unfold_definition_and_simplify_eq':
                           (fun eq_h  ->
                              FStar_Tactics_Effect.bind
                                (FStar_Tactics_Builtins.rewrite eq_h)
-                               (fun uu___79_672  ->
+                               (fun uu___67_672  ->
                                   FStar_Tactics_Effect.bind
                                     FStar_Tactics_Builtins.clear
-                                    (fun uu___78_674  ->
+                                    (fun uu___66_674  ->
                                        visit
                                          (unfold_definition_and_simplify_eq'
                                             tm)))))) ()
@@ -192,7 +192,7 @@ let unsquash:
            (FStar_Tactics_Builtins.apply
               (FStar_Tactics_Effect.return
                  (FStar_Reflection_Syntax.mk_e_app v [t])))
-           (fun uu___80_780  ->
+           (fun uu___68_780  ->
               FStar_Tactics_Effect.bind FStar_Tactics_Builtins.intro
                 (fun b  ->
                    FStar_Tactics_Effect.return
@@ -242,8 +242,8 @@ let cases_bool:
                     (fun b1  ->
                        FStar_Tactics_Effect.bind
                          (FStar_Tactics_Builtins.rewrite b1)
-                         (fun uu___81_993  -> FStar_Tactics_Builtins.clear))))
-              (fun uu___82_995  -> FStar_Tactics_Derived.idtac)))
+                         (fun uu___69_993  -> FStar_Tactics_Builtins.clear))))
+              (fun uu___70_995  -> FStar_Tactics_Derived.idtac)))
 let or_intro_1:
   'Ap 'Aq . 'Ap Prims.squash -> ('Ap,'Aq) Prims.l_or Prims.squash =
   fun uu____1028  -> ()

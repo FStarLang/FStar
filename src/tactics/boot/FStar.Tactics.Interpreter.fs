@@ -116,7 +116,6 @@ let mk_tactic_interpretation_5 (ps:proofstate)
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
 let step_from_native_step (ps: proofstate) (s: native_primitive_step): N.primitive_step =
-    BU.print1 "Registered primitive step %s\n" (Ident.string_of_lid s.name);
     { N.name=s.name;
       N.arity=s.arity;
       N.strong_reduction_ok=s.strong_reduction_ok;
@@ -160,13 +159,15 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                               embed_binder RD.fstar_refl_binder)
                                          (E.pair_typ RD.fstar_refl_binder RD.fstar_refl_binder);
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
+      mktac2 "__norm_term"     norm_term (unembed_list unembed_norm_step) unembed_term embed_term RD.fstar_refl_term;
       mktac0 "__revert"        revert embed_unit t_unit;
       mktac0 "__clear"         clear embed_unit t_unit;
       mktac1 "__rewrite"       rewrite unembed_binder embed_unit t_unit;
       mktac0 "__smt"           smt embed_unit t_unit;
       mktac1 "__exact"         exact unembed_term embed_unit t_unit;
       mktac1 "__exact_lemma"   exact_lemma unembed_term embed_unit t_unit;
-      mktac1 "__apply"         apply unembed_term embed_unit t_unit;
+      mktac1 "__apply"         (apply  true) unembed_term embed_unit t_unit;
+      mktac1 "__apply_raw"     (apply false) unembed_term embed_unit t_unit;
       mktac1 "__apply_lemma"   apply_lemma unembed_term embed_unit t_unit;
       // A tac 5... oh my...
       mktac5 "__divide"        (fun _ _ -> divide) (fun t -> t) (fun t -> t) unembed_int (unembed_tactic_0 (fun t -> t)) (unembed_tactic_0 (fun t -> t))
@@ -200,6 +201,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
 
       mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term RD.fstar_refl_term;
       mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;
+      mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
     ]@reflection_primops @native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output

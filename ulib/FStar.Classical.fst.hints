@@ -119,7 +119,6 @@
       0
     ],
     [ "FStar.Classical.impl_intro_gen", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Classical.impl_intro_gen", 3, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Classical.ghost_lemma",
       1,

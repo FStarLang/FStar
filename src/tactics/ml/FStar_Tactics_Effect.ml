@@ -83,7 +83,7 @@ let _dm4f_TAC_lift1:
     ('At1 -> 'At2) ->
       (FStar_Tactics_Types.proofstate -> Prims.unit -> 'At1) ->
         FStar_Tactics_Types.proofstate -> Prims.unit -> 'At2
-  = fun f  -> fun a1  -> fun uu____891  -> fun uu____892  -> Obj.magic ()
+  = fun f1  -> fun a1  -> fun uu____891  -> fun uu____892  -> Obj.magic ()
 let _dm4f_TAC_lift2:
   'Aa 'At1 'At2 'At3 .
     ('At1 -> 'At2 -> 'At3) ->
@@ -91,13 +91,13 @@ let _dm4f_TAC_lift2:
         (FStar_Tactics_Types.proofstate -> Prims.unit -> 'At2) ->
           FStar_Tactics_Types.proofstate -> Prims.unit -> 'At3
   =
-  fun f  ->
+  fun f1  ->
     fun a1  -> fun a2  -> fun uu____982  -> fun uu____983  -> Obj.magic ()
 let _dm4f_TAC_push:
   'Aa 'At1 'At2 .
     ('At1 -> FStar_Tactics_Types.proofstate -> Prims.unit -> 'At2) ->
       FStar_Tactics_Types.proofstate -> Prims.unit -> 'At1 -> 'At2
-  = fun f  -> fun uu____1058  -> fun uu____1059  -> fun e1  -> Obj.magic ()
+  = fun f1  -> fun uu____1058  -> fun uu____1059  -> fun e1  -> Obj.magic ()
 type ('Aa,'Ac,'Auu____1091,'Auu____1092,'Auu____1093,'Auu____1094) _dm4f_TAC_wp_if_then_else =
   Prims.unit
 type ('Aa,'Aq,'Awp,'Auu____1129,'Auu____1130) _dm4f_TAC_wp_assert =
@@ -117,11 +117,11 @@ let return: 'Aa . 'Aa -> 'Aa tactic =
   fun x  -> fun uu____1435  -> fun s  -> Success (x, s)
 let bind: 'Aa 'Ab . 'Aa tactic -> ('Aa -> 'Ab tactic) -> 'Ab tactic =
   fun t  ->
-    fun f  ->
+    fun f1  ->
       fun uu____1483  ->
         fun p  ->
           match (t ()) p with
-          | Success (a,q) -> (f a ()) q
+          | Success (a,q) -> (f1 a ()) q
           | Failed (msg,q) -> Failed (msg, q)
 let get:
   Prims.unit ->
@@ -129,16 +129,17 @@ let get:
                                       Obj.t) Prims.l_Forall)
       _dm4f_TAC_repr
   =
-  fun a267  ->
-    (Obj.magic (fun uu____1560  -> __proj__TAC__item____get ())) a267
+  fun a648  ->
+    (Obj.magic (fun uu____1560  -> __proj__TAC__item____get ())) a648
 let reify_tactic: 'a . 'a tactic -> 'a __tac = fun t  -> fun s  -> (t ()) s
 type ('a,'At,'Ap) __by_tactic = 'Ap
 type ('a,'At,'Ap) by_tactic = (Obj.t,Prims.unit,'Ap) __by_tactic
 let synth_by_tactic: 'At 'Aa . 'Aa tactic -> 'At =
-  fun a268  ->
+  fun a649  ->
     (Obj.magic
        (fun uu____1652  -> failwith "Not yet implemented:synth_by_tactic"))
-      a268
-let assert_by_tactic: 'Ap . Prims.unit tactic -> Prims.unit = fun t  -> ()
+      a649
+let assert_by_tactic: Prims.unit -> Prims.unit tactic -> Prims.unit =
+  fun p  -> fun t  -> ()
 let by_tactic_seman: 'Aa . 'Aa tactic -> Prims.unit -> Prims.unit =
   fun tau  -> fun phi  -> ()

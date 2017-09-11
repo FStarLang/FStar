@@ -7,7 +7,7 @@ open Lexing
 include FStar_BaseTypes
 type single = float
 type decimal = int
-type bytes = int array
+type bytes = byte array
 
 let parseState = ()
 

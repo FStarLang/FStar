@@ -64,8 +64,10 @@ let repeat1 (#a:Type) (t : tactic a) : tactic (list a) =
 let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
     (trytac (seq (t;; return ()) (repeatseq t));; return ()) ()
 
-let simpl : tactic unit = norm [Simpl; Primops]
-let whnf  : tactic unit = norm [WHNF; Primops]
+let simpl : tactic unit = norm [simpl; primops]
+let whnf  : tactic unit = norm [whnf; primops]
+
+let intros : tactic (list binder) = repeat intro
 
 private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
 private let __cut #b a f x = f x
@@ -147,7 +149,7 @@ let unfold_point (t:term) : tactic unit =
     match f with
     | Comp Eq _ l r ->
         if term_eq l t
-        then (norm [Delta];; trefl)
+        then (norm [delta];; trefl)
         else trefl
     | _ ->
         fail "impossible"
@@ -184,3 +186,10 @@ let rec iseq (ts : list (tactic unit)) : tactic unit =
         divide 1 t (iseq ts);;
         return ()
     | [] -> return ()
+
+private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
+private let __witness #a x #p _ = ()
+
+let witness (t : tactic term) : tactic unit =
+    apply_raw (quote __witness);;
+    exact t

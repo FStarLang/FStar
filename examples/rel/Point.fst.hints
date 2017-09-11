@@ -1,5 +1,5 @@
 [
-  "\u000e\u0005æ∏J≠\u001fJ¯U\"ºzA¯$",
+  "™¿\u0018≠Ï=&¿\u007f¬Å:ë\u0013;Ï",
   [
     [ "Point.__proj__C__item__inv", 1, 2, 1, [ "@query" ], 0 ],
     [ "Point.__proj__C__item__fp", 1, 2, 1, [ "@query" ], 0 ],
@@ -445,19 +445,6 @@
         "typing_FStar.List.Tot.Base.hd", "typing_FStar.List.Tot.Base.length",
         "typing_FStar.Pervasives.Native.fst",
         "typing_Point.__proj__C__item__fp", "unit_inversion", "unit_typing"
-      ],
-      0
-    ],
-    [
-      "Point.lemma",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple2_haseq",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "function_token_typing_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0
     ]

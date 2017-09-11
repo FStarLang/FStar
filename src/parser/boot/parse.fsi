@@ -26,7 +26,7 @@ type token =
   | SUB_EFFECT
   | SUBTYPE
   | SUBKIND
-  | STRING of (bytes)
+  | STRING of (string)
   | SQUIGGLY_RARROW
   | SEMICOLON_SEMICOLON
   | SEMICOLON

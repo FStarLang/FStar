@@ -1,5 +1,5 @@
 [
-  "à◊yä\u0018Øi⁄¢è≥_¢¢J\u0016",
+  "\u0001aôàŒ/IB áñN8#ëÆ",
   [
     [
       "FStar.Pointer.includes_gfield_gen",
@@ -670,6 +670,53 @@
         "lemma_FStar.Pointer.Base.modifies_trans",
         "typing_FStar.Pointer.Base.loc_union"
       ],
+      0
+    ],
+    [
+      "FStar.Pointer.modifies_fresh_frame_popped'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Monotonic.HyperHeap.HasEq_rid",
+        "assumption_FStar.Monotonic.HyperHeap.Mod_set_def",
+        "equation_FStar.Monotonic.HyperStack.fresh_frame",
+        "equation_FStar.Monotonic.HyperStack.popped",
+        "equation_FStar.Set.eqtype", "equation_FStar.Set.subset",
+        "equation_Prims.eqtype",
+        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "function_token_typing_FStar.Monotonic.HyperHeap.rid",
+        "lemma_FStar.Monotonic.HyperHeap.lemma_includes_refl",
+        "lemma_FStar.Pointer.Base.loc_includes_refl",
+        "lemma_FStar.Pointer.Base.loc_includes_region_region",
+        "lemma_FStar.Pointer.Base.loc_includes_union_l",
+        "lemma_FStar.Pointer.Base.loc_includes_union_r",
+        "lemma_FStar.Pointer.Base.modifies_loc_includes",
+        "proj_equation_FStar.Monotonic.HyperStack.HS_tip",
+        "refinement_interpretation_FStar.Monotonic.HyperStack_Tm_refine_b05295ea25e1fbfe5a4bd48cb81ddfff",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Monotonic.HyperHeap.mod_set",
+        "typing_FStar.Monotonic.HyperStack.__proj__HS__item__tip",
+        "typing_FStar.Pointer.Base.loc_regions",
+        "typing_FStar.Pointer.Base.loc_union", "typing_FStar.Set.singleton"
+      ],
+      0
+    ],
+    [
+      "FStar.Pointer.modifies_fresh_frame_popped'",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      0
+    ],
+    [
+      "FStar.Pointer.modifies_fresh_frame_popped'",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0
     ]
   ]

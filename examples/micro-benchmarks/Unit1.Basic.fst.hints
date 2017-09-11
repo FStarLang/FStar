@@ -610,10 +610,9 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [ "Unit1.Basic.short_circuit1", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Unit1.Basic.short_circuit1",
-      3,
+      2,
       2,
       1,
       [
