@@ -1,5 +1,5 @@
 [
-  "‰OÚ½Á‘Ë¦‰\u0000\u00131÷!&`",
+  "CÏ¥ÓðåÕ¬®DÁÒ!w”ô",
   [
     [ "FStar.Pointer.Base.uu___is_TUInt", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Pointer.Base.uu___is_TUInt8", 1, 2, 1, [ "@query" ], 0 ],
@@ -2712,6 +2712,30 @@
     [
       "FStar.Pointer.Base.modifies_1_readable_struct",
       7,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pointer.Base.struct_typ",
+        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
+      ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.modifies_1_readable_struct",
+      8,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pointer.Base.struct_typ",
+        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
+      ],
+      0
+    ],
+    [
+      "FStar.Pointer.Base.modifies_1_readable_struct",
+      9,
       2,
       1,
       [
