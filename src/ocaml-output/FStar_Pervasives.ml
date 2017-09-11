@@ -113,9 +113,6 @@ let rec false_elim : 'Aa . Prims.unit -> 'Aa = fun u  -> false_elim ()
 type __internal_ocaml_attributes =
   | PpxDerivingShow 
   | PpxDerivingShowConstant of Prims.string 
-  | CInline 
-  | Substitute 
-  | Gc 
 let uu___is_PpxDerivingShow : __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
     match projectee with | PpxDerivingShow  -> true | uu____2259 -> false
@@ -130,13 +127,3 @@ let uu___is_PpxDerivingShowConstant :
 let __proj__PpxDerivingShowConstant__item___0 :
   __internal_ocaml_attributes -> Prims.string =
   fun projectee  -> match projectee with | PpxDerivingShowConstant _0 -> _0 
-let uu___is_CInline : __internal_ocaml_attributes -> Prims.bool =
-  fun projectee  ->
-    match projectee with | CInline  -> true | uu____2278 -> false
-  
-let uu___is_Substitute : __internal_ocaml_attributes -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Substitute  -> true | uu____2283 -> false
-  
-let uu___is_Gc : __internal_ocaml_attributes -> Prims.bool =
-  fun projectee  -> match projectee with | Gc  -> true | uu____2288 -> false 

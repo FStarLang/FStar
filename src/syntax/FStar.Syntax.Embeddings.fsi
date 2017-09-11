@@ -27,3 +27,23 @@ val unembed_list : (term -> 'a) -> term -> list<'a>
 
 val embed_string_list   : list<string> -> term
 val unembed_string_list : term -> list<string>
+
+type norm_step =
+    | Simpl
+    | WHNF
+    | Primops
+    | Delta
+    | Zeta
+    | Iota
+    | UnfoldOnly of list<string>
+
+val steps_Simpl : term
+val steps_WHNF : term
+val steps_Primops : term
+val steps_Delta : term
+val steps_Zeta : term
+val steps_Iota : term
+val steps_UnfoldOnly : term
+
+val embed_norm_step : norm_step -> term
+val unembed_norm_step : term -> norm_step

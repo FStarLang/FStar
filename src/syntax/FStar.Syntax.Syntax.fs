@@ -27,6 +27,7 @@ open FStar.Range
 open FStar.Ident
 open FStar.Const
 open FStar.Dyn
+module PC = FStar.Parser.Const
 
 (* Objects with metadata *)
 ///[@ PpxDerivingShow ]
@@ -565,4 +566,3 @@ let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev C.u_tac_lid) [U_zero]) [as_a
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange
-

@@ -47,6 +47,17 @@ let gt_qn        = ["Prims"; "op_GreaterThan"]
 let gte_qn       = ["Prims"; "op_GreaterThanOrEqual"]
 let mod_qn       = ["Prims"; "op_Modulus"]
 
+let nil_qn       = ["Prims"; "Nil"]
+let cons_qn      = ["Prims"; "Cons"]
+
+let mktuple2_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]
+let mktuple3_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple3"]
+let mktuple4_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple4"]
+let mktuple5_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple5"]
+let mktuple6_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple6"]
+let mktuple7_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple7"]
+let mktuple8_qn  = ["FStar"; "Pervasives"; "Native"; "Mktuple8"]
+
 let land_qn    = ["FStar" ; "UInt" ; "logand"]
 let lxor_qn    = ["FStar" ; "UInt" ; "logxor"]
 let lor_qn     = ["FStar" ; "UInt" ; "logor"]
@@ -56,7 +67,6 @@ let udiv_qn    = ["FStar" ; "UInt" ; "udiv"]
 let umod_qn    = ["FStar" ; "UInt" ; "mod"]
 let mul_mod_qn = ["FStar" ; "UInt" ; "mul_mod"]
 let nat_bv_qn  = ["FStar" ; "BV"   ; "int2bv"]
-
 
 (* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list argv) (t : term) : Tot (term * list argv) (decreases t) =
@@ -78,24 +88,33 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
-let rec collect_arr' (typs : list typ) (t : typ) : Tot (typ * list typ) (decreases t) =
+let rec collect_arr' (typs : list typ) (t : typ) : Tot (list typ * typ) (decreases t) =
     match inspect t with
     | Tv_Arrow b r ->
         let t = type_of_binder b in
         collect_arr' (t::typs) r
-    | _ -> (t, typs)
+    | _ -> (typs, t)
 
-val collect_arr : typ -> typ * list typ
-let collect_arr = collect_arr' []
+val collect_arr : typ -> list typ * typ
+let collect_arr t =
+    let (ts, c) = collect_arr' [] t in
+    (List.Tot.rev ts, c)
 
-// TODO: move away
-let rec eqlist (f : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : Tot bool =
-    match xs, ys with
-    | [], [] -> true
-    | x::xs, y::ys -> f x y && eqlist f xs ys
-    | _ -> false
+let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
+    match inspect t with
+    | Tv_Abs b t' ->
+        collect_abs' (b::bs) t'
+    | _ -> (bs, t)
+
+val collect_abs : term -> list binder * term
+let collect_abs t =
+    let (bs, t') = collect_abs' [] t in
+    (List.Tot.rev bs, t')
 
 let fv_to_string (fv:fv) : string = String.concat "." (inspect_fv fv)
+
+let binder_to_string b =
+  "(" ^ inspect_bv b ^ ":" ^ term_to_string (type_of_binder b) ^ ")"
 
 let compare_fv (f1 f2 : fv) : order =
     compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) (inspect_fv f1) (inspect_fv f2)
@@ -138,6 +157,11 @@ let rec compare_term (s t : term) : order =
     | Tv_Uvar u1 _, Tv_Uvar u2 _->
         compare_int u1 u2
 
+    | Tv_Let b1 t1 t1', Tv_Let b2 t2 t2' ->
+        lex (compare_binder b1 b2) (fun () ->
+        lex (compare_term t1 t2) (fun () ->
+             compare_term t1' t2'))
+
     | Tv_Match _ _, Tv_Match _ _ ->
         Eq // TODO
 
@@ -163,3 +187,41 @@ and compare_argv (a1 a2 : argv) : order =
     | Q_Implicit, Q_Explicit -> Lt
     | Q_Explicit, Q_Implicit -> Gt
     | _, _ -> compare_term a1 a2
+
+
+let mk_stringlit (s : string) : term =
+    pack (Tv_Const (C_String s))
+
+let mk_strcat (t1 t2 : term) : term =
+    mk_e_app (pack (Tv_FVar (pack_fv ["Prims"; "strcat"]))) [t1; t2]
+
+let mk_cons (h t : term) : term =
+   mk_e_app (pack (Tv_FVar (pack_fv cons_qn))) [h; t]
+
+let mk_cons_t (ty h t : term) : term =
+   mk_app (pack (Tv_FVar (pack_fv cons_qn))) [(ty, Q_Implicit); (h, Q_Explicit); (t, Q_Explicit)]
+
+let rec mk_list (ts : list term) : term =
+    match ts with
+    | [] -> pack (Tv_FVar (pack_fv nil_qn))
+    | t::ts -> mk_cons t (mk_list ts)
+
+let mktuple_n (ts : list term) : term =
+    assume (List.length ts <= 8);
+    match List.length ts with
+    | 0 -> pack (Tv_Const C_Unit)
+    | 1 -> let [x] = ts in x
+    | n -> begin
+           let qn = match n with
+                    | 2 -> mktuple2_qn
+                    | 3 -> mktuple3_qn
+                    | 4 -> mktuple4_qn
+                    | 5 -> mktuple5_qn
+                    | 6 -> mktuple6_qn
+                    | 7 -> mktuple7_qn
+                    | 8 -> mktuple8_qn
+           in mk_e_app (pack (Tv_FVar (pack_fv qn))) ts
+           end
+
+let mkpair (t1 t2 : term) : term =
+    mktuple_n [t1;t2]

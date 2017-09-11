@@ -742,6 +742,27 @@ let lemma_modifies_2_1'' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 
 
 (* TODO: lemmas for modifies_3 *)
 
+let lemma_modifies_0_unalloc (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
+  (requires (b `unused_in` h0 /\
+    frameOf b == h0.tip /\
+    modifies_0 h0 h1 /\
+    modifies_1 b h1 h2))
+  (ensures (modifies_0 h0 h2))
+  = ()
+
+let lemma_modifies_none_1_trans (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
+  (requires (modifies_none h0 h1 /\
+    live h0 b /\
+    modifies_1 b h1 h2))
+  (ensures (modifies_1 b h0 h2))
+  = ()
+
+let lemma_modifies_0_none_trans h0 h1 h2 : Lemma
+  (requires (modifies_0 h0 h1 /\
+    modifies_none h1 h2))
+  (ensures (modifies_0 h0 h2))
+  = ()
+
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
 (** Concrete getters and setters *)

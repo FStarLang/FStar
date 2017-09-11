@@ -24,6 +24,7 @@ module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
 module RD = FStar.Reflection.Data
 module UF = FStar.Syntax.Unionfind
+module EMB = FStar.Syntax.Embeddings
 
 type name = bv
 type env = Env.env
@@ -351,11 +352,6 @@ let intro : tac<binder> =
     bind cur_goal (fun goal ->
     match U.arrow_one goal.goal_ty with
     | Some (b, c) ->
-        let bs, c = SS.open_comp [b] c in
-        let b = match bs with
-                | [b] -> b
-                | _ -> failwith "impossible: open_comp returned different amount of binders"
-        in
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
         else let env' = Env.push_binders goal.context [b] in
@@ -379,11 +375,6 @@ let intro_rec : tac<(binder * binder)> =
     BU.print_string "WARNING (intro_rec): proceed at your own risk...\n";
     match U.arrow_one goal.goal_ty with
     | Some (b, c) ->
-        let bs, c = SS.open_comp [b] c in
-        let b = match bs with
-                | [b] -> b
-                | _ -> failwith "impossible: open_comp returned different amount of binders"
-        in
         if not (U.is_total_comp c)
         then fail "Codomain is effectful"
         else let bv = gen_bv "__recf" None goal.goal_ty in
@@ -407,20 +398,20 @@ let intro_rec : tac<(binder * binder)> =
         fail1 "intro_rec: goal is not an arrow (%s)" (Print.term_to_string goal.goal_ty)
     )
 
-let norm (s : list<RD.norm_step>) : tac<unit> =
+let norm (s : list<EMB.norm_step>) : tac<unit> =
     bind cur_goal (fun goal ->
     // Translate to actual normalizer steps
-    let tr s = match s with
-        | RD.Simpl   -> [N.Simplify]
-        | RD.WHNF    -> [N.WHNF]
-        | RD.Primops -> [N.Primops]
-        | RD.Delta   -> [N.UnfoldUntil Delta_constant]
-        | RD.UnfoldOnly l -> [N.UnfoldOnly (List.map S.lid_of_fv l)]
-    in
-    let steps = [N.Reify; N.UnfoldTac]@(List.flatten (List.map tr s)) in
+    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let w = normalize steps goal.context goal.witness in
     let t = normalize steps goal.context goal.goal_ty in
     replace_cur ({goal with goal_ty = t; witness = w})
+    )
+
+let norm_term (s : list<EMB.norm_step>) (t : term) : tac<term> =
+    bind get (fun ps ->
+    let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
+    let t = normalize steps ps.main_context t in
+    ret t
     )
 
 let istrivial (e:env) (t:term) : bool =
@@ -474,6 +465,8 @@ let uvar_free_in_goal (u:uvar) (g:goal) =
 let uvar_free (u:uvar) (ps:proofstate) : bool =
     List.existsML (uvar_free_in_goal u) ps.goals
 
+exception NoUnif
+
 // uopt: Don't add goals for implicits that appear free in posterior goals.
 // This is very handy for users, allowing to turn
 //
@@ -486,22 +479,21 @@ let uvar_free (u:uvar) (ps:proofstate) : bool =
 //
 // without asking for ?u first, which will most likely be instantiated when
 // solving any of these two goals. In any case, if ?u is not solved, we fail afterwards.
-let rec __apply (uopt:bool) (tm:term) : tac<unit> =
+let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (trytac (exact tm)) (fun r ->
     match r with
     | Some r -> ret r // if tm is a solution, we're done
     | None ->
         // exact failed, try to instantiate more arguments
-        let tm, typ, guard = goal.context.type_of goal.context tm in
-        if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply: got non-trivial guard" else
         match U.arrow_one typ with
-        | None -> fail1 "apply: cannot unify (%s)" (Print.term_to_string typ)
+        | None -> raise NoUnif
         | Some ((bv, aq), c) ->
-            if not (U.is_total_comp c) then fail "apply: not total" else
+            if not (U.is_total_comp c) then fail "apply: not total codomain" else
             bind (new_uvar goal.context bv.sort) (fun u ->
             let tm' = mk_Tm_app tm [(u, aq)] None goal.context.range in
-            bind (__apply uopt tm') (fun _ ->
+            let typ' = SS.subst [S.NT (bv, u)] <| comp_to_typ c in
+            bind (__apply uopt tm' typ') (fun _ ->
             match (SS.compress (fst (U.head_and_args u))).n with
             | Tm_uvar (uvar, _) ->
                 bind get (fun ps ->
@@ -513,9 +505,24 @@ let rec __apply (uopt:bool) (tm:term) : tac<unit> =
                                  opts    = goal.opts; }])
             | _ -> ret ()))))
 
+// The exception is thrown only when the tactic runs, not when it's defined,
+// so we need to do this to catch it
+let try_unif (t : tac<'a>) (t' : tac<'a>) : tac<'a> =
+    mk_tac (fun ps ->
+        try run t ps
+        with NoUnif -> run t' ps)
+
 let apply (tm:term) : tac<unit> =
+    bind cur_goal (fun goal ->
+    let tm, typ, guard = goal.context.type_of goal.context tm in
+    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply: got non-trivial guard" else
     // Focus not really needed, but might help a bit for speed
-    focus (__apply true tm)
+    try_unif (focus (__apply true tm typ))
+             (fail3 "apply: Cannot instantiate %s (of type %s) to match goal (%s)"
+                            (Print.term_to_string tm)
+                            (Print.term_to_string typ)
+                            (Print.term_to_string goal.goal_ty))
+    )
 
 let apply_lemma (tm:term) : tac<unit> =
     let is_unit_t t = match (SS.compress t).n with
@@ -866,6 +873,16 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
     ret (Rel.teq_nosmt ps.main_context t1 t2)
+    )
+
+let launch_process (prog : string) (args : string) (input : string) : tac<string> =
+    // The `bind idtac` thunks the tactic
+    bind idtac (fun () ->
+    if Options.unsafe_tactic_exec () then
+        let s = BU.launch_process true "tactic_launch" prog args input (fun _ _ -> false) in
+        ret s
+    else
+        fail "launch_process: will not run anything unless --unsafe_tactic_exec is provided"
     )
 
 let goal_of_goal_ty env typ : goal * guard_t =

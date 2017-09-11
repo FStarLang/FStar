@@ -2,6 +2,9 @@ FSTAR_HOME=../..
 include ../Makefile.include
 
 FST_FILES :=	Slice.fst \
+		Parsing.fst \
+		Serializing.fst \
+		IntegerParsing.fst \
 		KeyValue.fst \
 		PureParser.fst \
 		PureValidator.fst \
@@ -10,13 +13,16 @@ FST_FILES :=	Slice.fst \
 		ValidatedAccess.fst \
 		PureEncoder.fst \
 		Serializer.fst \
-		EnumParsing.fst
+		EnumParsing.fst \
+		VectorParsing.fst
 
-EXTRACT_FILES := Validator.fst \
+EXTRACT_FILES := IntegerParsing.fst \
+		 Validator.fst \
 		 ValidatedParser.fst \
 		 ValidatedAccess.fst \
 		 Serializer.fst \
-		 EnumParsing.fst
+		 EnumParsing.fst \
+		 VectorParsing.fst
 
 FSTAR_INCLUDE_PATHS:=--include $(KREMLIN_HOME)/kremlib
 

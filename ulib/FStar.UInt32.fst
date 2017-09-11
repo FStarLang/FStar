@@ -110,10 +110,10 @@ let logor a b = Mk (logor (v a) (v b))
 val lognot: t -> Tot t
 let lognot a = Mk (lognot (v a))
 
-val uint_to_t: x:uint_t n -> Pure t
+abstract val uint_to_t: x:uint_t n -> Pure t
   (requires True)
   (ensures (fun y -> v y = x))
-let uint_to_t x = Mk x
+abstract let uint_to_t x = Mk x
 
 #set-options "--lax"
 //This private primitive is used internally by the
@@ -142,11 +142,11 @@ val shift_left: a:t -> s:t -> Pure t
 let shift_left a s = Mk (shift_left (v a) (v s))
 
 (* Comparison operators *)
-let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
-let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
-let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
-let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
-let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
+abstract let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
+abstract let gt (a:t) (b:t) : Tot bool = gt #n (v a) (v b)
+abstract let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
+abstract let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
+abstract let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
 assume val eq_mask: a:t -> b:t -> Tot (c:t{(v a = v b ==> v c = pow2 n - 1) /\ (v a <> v b ==> v c = 0)})
 assume val gte_mask: a:t -> b:t -> Tot (c:t{(v a >= v b ==> v c = pow2 n - 1) /\ (v a < v b ==> v c = 0)})

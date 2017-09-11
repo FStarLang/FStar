@@ -1,6 +1,8 @@
 module ValidatedAccess
 
 open KeyValue
+open Parsing
+open IntegerParsing
 open PureParser
 open Validator
 open ValidatedParser
@@ -149,8 +151,8 @@ let for_readonly2 #t init start finish #a1 buf1 #a2 buf2 inv f =
            let h1' = get() in
            B.upd ptr_state 0ul v';
            let h2' = get() in
-           lemma_modifies_none_1_trans ptr_state h0' h1' h2';
-           lemma_modifies_0_unalloc ptr_state h1 h0' h2';
+           B.lemma_modifies_none_1_trans ptr_state h0' h1' h2';
+           B.lemma_modifies_0_unalloc ptr_state h1 h0' h2';
            break)
     end in
   let v = B.index ptr_state 0ul in
