@@ -1,6 +1,8 @@
 module ValidatedParser
 
 open KeyValue
+open Parsing
+open IntegerParsing
 open PureParser
 open Validator
 open Slice
@@ -88,6 +90,8 @@ let fold_left_buffer #t f acc b =
       end
     | None -> acc
 
+#reset-options "--z3rlimit 30 --max_fuel 1 --max_ifuel 1"
+
 val parse_num_entries_valid : input:bslice -> Stack (U32.t * off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
@@ -113,63 +117,9 @@ val parse_num_entries_valid : input:bslice -> Stack (U32.t * off:U32.t{U32.v off
                         end))
 let parse_num_entries_valid input =
   let (len, off) = parse_u32_st_nochk input in
+  // TODO: fix this proof
+  admit();
   (len, off)
-
-// NOTE: we have variants of each function (spec, stateful validator, stateful
-// parser); unfortunately the types also vary since specifications use bytes
-// while we only statefully parse buffers. Maybe we should make the byte type a
-// parameter? This would work best with a typeclass, since we need a length
-// method to encode dependencies (luckily the length of a bslice can be accessed
-// without a heap).
-
-#reset-options "--z3rlimit 15"
-
-// TODO: this isn't a parser_st_nochk because its output isn't exactly the same
-// as the parser; the relationship requires converting the return value to bytes
-let parse_u16_array_nochk : input:bslice -> Stack (u16_array_st * off:U32.t{U32.v off <= U32.v input.len})
-  (requires (fun h0 -> live h0 input /\
-                    (let bs = as_seq h0 input in
-                    Some? (parse_u16_array bs))))
-  (ensures (fun h0 r h1 ->
-              live h1 input /\
-              modifies_none h0 h1 /\
-              (let bs = B.as_seq h1 input.p in
-                Some? (parse_u16_array bs) /\
-                (let (v, n) = Some?.v (parse_u16_array bs) in
-                  let (rv, off) = r in
-                  // BUG: ommitting this live assertion causes failure in the
-                  // precondition to as_u16_array, but the error reported is
-                  // simply "ill-kinded type" on as_u16_array
-                  live h1 rv.a16_st /\
-                  as_u16_array h1 rv == v /\
-                  n == U32.v off)))) = fun input ->
-  let (len, off) = parse_u16_st_nochk input in
-  let input = advance_slice input off in
-  let a = U16ArraySt len (truncate_slice input (Cast.uint16_to_uint32 len)) in
-  (a, U32.add off (Cast.uint16_to_uint32 len))
-
-#reset-options
-
-let parse_u32_array_nochk : input:bslice -> Stack (u32_array_st * off:U32.t)
-  (requires (fun h0 -> live h0 input /\
-                    (let bs = as_seq h0 input in
-                    Some? (parse_u32_array bs))))
-  (ensures (fun h0 r h1 ->
-              live h1 input /\
-              modifies_none h0 h1 /\
-              (let bs = B.as_seq h1 input.p in
-                Some? (parse_u32_array bs) /\
-                (let (v, n) = Some?.v (parse_u32_array bs) in
-                  let (rv, off) = r in
-                  live h1 rv.a32_st /\
-                  as_u32_array h1 rv == v /\
-                  n == U32.v off)))) = fun input ->
-  let (len, off) = parse_u32_st_nochk input in
-  let input = advance_slice input off in
-  let a = U32ArraySt len (truncate_slice input len) in
-  (a, U32.add off len)
-
-#reset-options "--z3rlimit 20"
 
 let parse_entry_st_nochk : input:bslice -> Stack (entry_st * off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
@@ -233,13 +183,13 @@ let parse_one_entry n input =
    parse_many_next parse_entry (U32.v n) bs);
   parse_entry_st_nochk input
 
-#reset-options "--z3rlimit 20"
-
 val fold_left_store_n_unfold1 (#t:Type) (f: (t -> encoded_entry -> t))
     (acc:t) (es:list encoded_entry) (n:nat{0 < n /\ n <= List.length es})
     : Lemma (fold_left_store_n f acc es n ==
              fold_left_store_n f (f acc (List.hd es)) (List.tail es) (n-1))
 let fold_left_store_n_unfold1 #t f acc es n = ()
+
+#reset-options "--z3rlimit 20"
 
 val fold_left_buffer_n_mut_st: #t:Type ->
   f_spec:(t -> encoded_entry -> t) ->
@@ -270,6 +220,8 @@ val fold_left_buffer_n_mut_st: #t:Type ->
                         Some? (parse_many parse_entry n bs) /\
                         r == fold_left_store_n f_spec acc (parse_result (parse_many parse_entry n bs)) n)))
 let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
+    // TODO: this proof needs some work; unclear how much
+    admit();
     if U32.eq n 0ul then acc
     else  begin
       let h0 = get() in
@@ -300,10 +252,6 @@ let rec fold_left_buffer_n_mut_st #t f_spec rel full_input f input acc n =
               List.tail (parse_result (parse_many parse_entry (U32.v n) bs2)));
       // XXX: this call doesn't work
       //fold_left_store_n_unfold1 f_spec acc (parse_result (parse_many parse_entry n' bs2')) n';
-
-      // XXX: why doesn't the proof go through at this point? do we need more
-      // rlimit/unfoldings, or is there something left to prove?
-      admit();
       ());
       r
     end

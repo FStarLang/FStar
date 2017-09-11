@@ -1,11 +1,15 @@
 module EnumParsing
 
+open Parsing
+open IntegerParsing
+open Serializing
 open PureParser
 open Validator
 open PureEncoder
 open Serializer
 open Slice
 
+open FStar.Tactics
 open FStar.Ghost
 open FStar.Seq
 open FStar.HyperStack
@@ -102,6 +106,8 @@ let make_correct #t (p: parser t) (v:pure_validator) :
     (requires (validate_ok p v))
     (ensures (fun r -> True)) = v
 
+#reset-options "--z3rlimit 20 --max_fuel 1 --max_ifuel 1"
+
 let validate_Nothing_pure = make_correct (parser_forget parse_Nothing)
                             (fun input -> Some 0)
 
@@ -119,7 +125,7 @@ let validate_numbers_data_pure (t:numbers_tag) : pure_validator' (parse_numbers_
     then validate_OneNum_pure
   else validate_TwoNums_pure)
 
-#reset-options "--z3rlimit 15"
+#reset-options "--z3rlimit 30"
 
 val seq_pure_validate (v1 v2: pure_validator) : pure_validator
 let seq_pure_validate v1 v2 = fun input ->
@@ -272,10 +278,10 @@ val encode_Nothing : b:bytes{length b == 0}
 let encode_Nothing = Seq.createEmpty
 
 val encode_OneNum : n:U32.t -> b:bytes{length b == 4}
-let encode_OneNum n = u32_to_be n
+let encode_OneNum n = encode_u32 n
 
 val encode_TwoNums : n:U32.t -> m:U32.t -> b:bytes{length b == 8}
-let encode_TwoNums n m = u32_to_be n `append` u32_to_be m
+let encode_TwoNums n m = encode_u32 n `append` encode_u32 m
 
 val encode_numbers_data: numbers -> b:bytes
 let encode_numbers_data ns = match ns with
@@ -299,8 +305,30 @@ let ser_Nothing = fun buf -> Some 0ul
 val ser_OneNum : n:U32.t -> serializer (hide (encode_OneNum n))
 let ser_OneNum n = ser_u32 n
 
+#reset-options "--z3rlimit 10"
+
 val ser_TwoNums : n:U32.t -> m:U32.t -> serializer (hide (encode_TwoNums n m))
 let ser_TwoNums n m = fun buf -> (ser_u32 n `ser_append` ser_u32 m) buf
+
+inline_for_extraction
+let serializer_ty  = buf:bslice -> Stack (option (offset_into buf))
+  (requires (fun h0 -> live h0 buf))
+  (ensures (fun h0 r h1 -> live h1 buf))
+
+let ser_TwoNums' (n m:U32.t) : serializer_ty =
+  ser_TwoNums n m
+
+let unfold_only (ns:list (list string)) : Tot (list norm_step) =
+  FStar.List.Tot.map delta_only ns
+
+#reset-options "--lax"
+
+let ser_TwoNums'' (n m:U32.t) : serializer_ty =
+  synth_by_tactic (normalize [delta_only
+                  ["EnumParsing.ser_TwoNums";
+                  "Serializing.ser_append"]] (ser_TwoNums n m <: serializer_ty))
+
+#reset-options
 
 // this works, but perhaps it should be eta expanded for extraction purposes
 val ser_numbers_data: ns:numbers -> serializer (hide (encode_numbers_data ns))
@@ -310,7 +338,24 @@ let ser_numbers_data ns =
   | OneNum n -> ser_OneNum n
   | TwoNums n m -> ser_TwoNums n m
 
+val ser_numbers_data': numbers -> serializer_ty
+let ser_numbers_data' ns =
+  fun buf -> match ns with
+          | Nothing -> ser_Nothing buf
+          | OneNum n -> ser_OneNum n buf
+          | TwoNums n m -> ser_TwoNums n m buf
+
+// this is the same as ser_numbers_data; haven't synthesized the eta expansion
+let ser_numbers_data'' ns : serializer_ty =
+    synth_by_tactic (normalize' [delta_only
+                                ["EnumParsing.ser_numbers_data"]] (ser_numbers_data ns <: serializer_ty))
+
 val ser_numbers: ns:numbers -> serializer (hide (encode_numbers ns))
 let ser_numbers ns = fun buf ->
   (ser_numbers_tag (numbers_tag_val ns) `ser_append`
    ser_numbers_data ns) buf
+
+let ser_numbers' ns : serializer_ty =
+  synth_by_tactic (normalize' [delta_only
+                  ["EnumParsing.ser_numbers";
+                   "Serializing.ser_append"]] (ser_numbers ns <: serializer_ty))

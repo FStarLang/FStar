@@ -11,6 +11,8 @@ module Cast = FStar.Int.Cast
 
 open KeyValue
 open Slice
+open IntegerParsing
+open Serializing
 open PureEncoder
 
 (*! Efficient serializing *)
@@ -18,219 +20,7 @@ open PureEncoder
 (* NOTE: I'm using ser out of laziness, but they should NOT be abbreviated, we
 can serialize everywhere *)
 
-let offset_into (buf:bslice) = off:U32.t{U32.v off <= U32.v buf.len}
-
-let serialized (enc:bytes) (buf:bslice) (r:option (offset_into buf)) (h0 h1:mem) :
-    Pure Type0
-    (requires (live h1 buf))
-    (ensures (fun _ -> True)) =
-    match r with
-    | Some off ->
-      let (b1, b2) = bslice_split_at buf off in
-      modifies_slice b1 h0 h1 /\
-      as_seq h1 b1 == enc
-    | None ->
-      modifies_slice buf h0 h1
-
-let buffer_fun (inputs:erased (TSet.set bslice)) =
-    f:(h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b} -> GTot bytes){
-      forall (h0 h1: h:mem{forall b. TSet.mem b (reveal inputs) ==> live h b}).
-      (forall b. TSet.mem b (reveal inputs) ==> as_seq h0 b == as_seq h1 b) ==>
-      f h0 == f h1}
-
-let disjoint_in (h:mem) (inputs:TSet.set bslice) (buf:bslice) =
-  forall b. TSet.mem b inputs ==> live h b /\ B.disjoint b.p buf.p
-
-inline_for_extraction
-let serializer_any (inputs:erased (TSet.set bslice))
-                   (enc: buffer_fun inputs) =
-  buf:bslice ->
-  Stack (option (off:offset_into buf))
-     (requires (fun h0 -> live h0 buf /\
-                       disjoint_in h0 (reveal inputs) buf))
-     (ensures (fun h0 r h1 ->
-        live h0 buf /\
-        live h1 buf /\
-        (forall b. TSet.mem b (reveal inputs) ==>
-           live h0 b /\
-           live h1 b /\
-           as_seq h0 b == as_seq h1 b) /\
-        serialized (enc h1) buf r h0 h1))
-
-inline_for_extraction
-let serializer (enc:erased bytes) = serializer_any (hide TSet.empty) (fun _ -> reveal enc)
-
-inline_for_extraction
-let serializer_1 (input:bslice) (enc: buffer_fun (hide (TSet.singleton input))) =
-    serializer_any (hide (TSet.singleton input)) (fun h -> enc h)
-
-let lemma_index_upd_gt (#a:Type) (s:Seq.seq a) (n:nat{n < length s}) (i:nat{n < i /\ i < length s}) (v:a) :
-  Lemma (index (Seq.upd s n v) i == index s i)
-  [SMTPat (index (Seq.upd s n v) i)] = ()
-
 #reset-options "--z3rlimit 10"
-
-val upd_len_1 : #a:Type -> s:Seq.seq a{length s == 1} -> v:a ->
-  Lemma (Seq.upd s 0 v == Seq.create 1 v)
-let upd_len_1 #a s v =
-  lemma_eq_intro (Seq.upd s 0 v) (Seq.create 1 v)
-
-val ser_byte: v:byte -> serializer (hide (Seq.create 1 v))
-let ser_byte v = fun buf ->
-  if U32.lt buf.len 1ul then None
-  else
-    let (buf, _) = bslice_split_at buf 1ul in
-    let h0 = get() in
-    B.upd buf.p 0ul v;
-    begin
-      let s0 = as_seq h0 buf in
-      upd_len_1 s0 v
-    end;
-    Some 1ul
-
-let upd_len_2 (#a:Type) (s:Seq.seq a{length s == 2}) (vs:Seq.seq a{length vs == 2}) :
-  Lemma (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1) == vs) =
-  lemma_eq_intro (Seq.upd (Seq.upd s 0 (index vs 0)) 1 (index vs 1)) vs
-
-[@"substitute"]
-val ser_u16: v:U16.t -> serializer (hide (u16_to_be v))
-[@"substitute"]
-let ser_u16 v = fun buf ->
-  if U32.lt buf.len 2ul then None
-  else
-    let bs = u16_to_be v in
-    let b0 = Cast.uint16_to_uint8 (U16.shift_right v 8ul) in
-    let b1 = Cast.uint16_to_uint8 (U16.rem v 256us) in
-    let (buf, _) = bslice_split_at buf 2ul in
-    let h0 = get() in
-    B.upd buf.p 0ul b0;
-    B.upd buf.p 1ul b1;
-    begin
-      let s0 = as_seq h0 buf in
-      assert (index bs 0 == b0);
-      assert (index bs 1 == b1);
-      upd_len_2 s0 bs
-    end;
-    Some 2ul
-
-let upd_len_4 (#a:Type) (s:Seq.seq a{length s == 4}) (vs:Seq.seq a{length vs == 4}) :
-  Lemma (Seq.upd
-          (Seq.upd
-            (Seq.upd
-              (Seq.upd s 0 (index vs 0))
-            1 (index vs 1))
-          2 (index vs 2))
-        3 (index vs 3) == vs) =
-  lemma_eq_intro (Seq.upd
-  (Seq.upd
-  (Seq.upd
-  (Seq.upd s 0 (index vs 0))
-  1 (index vs 1))
-  2 (index vs 2))
-  3 (index vs 3)) vs
-
-val ser_u32: v:U32.t -> serializer (hide (u32_to_be v))
-let ser_u32 v = fun buf ->
-  if U32.lt buf.len 4ul then None
-  else
-    let bs = u32_to_be v in
-    let (buf, _) = bslice_split_at buf 4ul in
-    let h0 = get() in
-    B.upd buf.p 0ul (index bs 0);
-    B.upd buf.p 1ul (index bs 1);
-    B.upd buf.p 2ul (index bs 2);
-    B.upd buf.p 3ul (index bs 3);
-    begin
-      let s0 = as_seq h0 buf in
-      upd_len_4 s0 bs
-    end;
-    Some 4ul
-
-// this is really a coercion that lifts a pure bytes serializer to one that
-// takes an input buffer (and ignores it)
-[@"substitute"]
-let ser_input (input:bslice) (#b:erased bytes) (s:serializer b) : serializer_1 input (fun _ -> reveal b) =
-    fun buf -> s buf
-
-// coercion to increase the size of the inputs set
-[@"substitute"]
-let ser_inputs (#inputs1:erased (TSet.set bslice))
-               (inputs2:erased (TSet.set bslice){TSet.subset (reveal inputs1) (reveal inputs2)})
-               (#b: buffer_fun inputs1)
-               (s:serializer_any inputs1 b) : serializer_any inputs2 (fun h -> b h) =
-    fun buf -> s buf
-
-#reset-options "--z3rlimit 30"
-
-[@"substitute"]
-let ser_append (#inputs1 #inputs2:erased (TSet.set bslice))
-               (#b1: buffer_fun inputs1) (#b2: buffer_fun inputs2)
-               (s1:serializer_any inputs1 b1) (s2:serializer_any inputs2 b2) :
-               serializer_any (elift2 TSet.union inputs1 inputs2) (fun h -> append (b1 h) (b2 h)) =
-  fun buf ->
-  let h0 = get() in
-  match s1 buf with
-  | Some off ->
-    begin
-      let h1 = get() in
-      let buf0 = buf in
-      let (buf1, buf) = bslice_split_at buf off in
-      match s2 buf with
-      | Some off' -> (if u32_add_overflows off off' then None
-                     else begin
-                      begin
-                        let h2 = get() in
-                        let (buf2, buf3) = bslice_split_at buf off' in
-                        let (buf12, buf3') = bslice_split_at buf0 (U32.add off off') in
-                        assert (live h2 buf12);
-                        assert (as_seq h2 buf2 == b2 h2);
-                        assert (as_seq h2 buf1 == b1 h2);
-                        is_concat_append buf12.p buf1.p buf2.p h2;
-                        assert (as_seq h2 buf12 == append (b1 h2) (b2 h2));
-                        //assert (modifies_slice buf1 h0 h1);
-                        //assert (modifies_slice buf2 h1 h2);
-                        modifies_grow_from_b1 buf12 buf1 buf2 h0 h1;
-                        modifies_grow_from_b2 buf12 buf1 buf2 h1 h2;
-                        assert (modifies_slice buf12 h0 h2)
-                      end;
-                      Some (U32.add off off')
-                     end)
-      | None -> None
-    end
-  | None -> None
-
-#reset-options
-
-[@"substitute"]
-val ser_copy : data:bslice -> serializer_1 data (fun h -> as_seq h data)
-[@"substitute"]
-let ser_copy data = fun buf ->
-  if U32.lt buf.len data.len then None
-  else begin
-    let (buf1, buf2) = bslice_split_at buf data.len in
-    B.blit data.p 0ul buf1.p 0ul data.len;
-    Some data.len
-  end
-
-let enc_u16_array_st (a: u16_array_st) (h:mem{live h a.a16_st}) : GTot bytes =
-    u16_to_be a.len16_st `append` as_seq h a.a16_st
-
-inline_for_extraction [@"substitute"]
-val ser_u16_array : a:u16_array_st ->
-  serializer_any (hide (TSet.singleton a.a16_st)) (fun h -> enc_u16_array_st a h)
-let ser_u16_array a = fun buf ->
-  (ser_u16 a.len16_st `ser_append` ser_copy a.a16_st) buf
-
-let ser_u16_array' a buf = ser_u16_array a buf
-
-let enc_u32_array_st (a: u32_array_st) (h:mem{live h a.a32_st}) : GTot bytes =
-  u32_to_be a.len32_st `append` as_seq h a.a32_st
-
-val ser_u32_array : a:u32_array_st ->
-  serializer_any (hide (TSet.singleton a.a32_st)) (fun h -> enc_u32_array_st a h)
-let ser_u32_array a = fun buf ->
-  (ser_u32 a.len32_st `ser_append`
-   ser_copy a.a32_st) buf
 
 noextract
 val entry_st_bufs : e:entry_st -> TSet.set bslice
@@ -313,7 +103,7 @@ let writer_init (b:bslice) : Stack (option writer)
     assert (writer_valid w);
     Some w
 
-#reset-options "--z3rlimit 10"
+#reset-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
 
 // writer_reinit takes an encoded store at b (and its parsed number of entries)
 // and some adjacent scratch space and allows to extend that store
@@ -347,7 +137,7 @@ let writer_reinit b num_entries s scratch =
       let s = reveal s in
       assert (writer_valid w);
       is_concat_append b.p length_field.p entries_written_buf.p h;
-      lemma_append_inj (u32_to_be s.num_entries) (encode_many s.entries encode_entry (U32.v s.num_entries))
+      lemma_append_inj (encode_u32 s.num_entries) (encode_many s.entries encode_entry (U32.v s.num_entries))
                        (as_seq h length_field) (as_seq h entries_written_buf);
       ()
     end;
@@ -393,7 +183,7 @@ let join_adjacent_stable (b1 b2 b':bslice) :
 val writer_append (w:writer) (e:entry_st) : Stack (option writer)
        (requires (fun h0 -> writer_inv h0 w /\
                          entry_live h0 e /\
-                         disjoint_in h0 (entry_st_bufs e) w.entries_scratch ))
+                         disjoint_from h0 (entry_st_bufs e) w.entries_scratch ))
        (ensures (fun h0 w' h1 ->
                 Some? w' ==>
                 begin
