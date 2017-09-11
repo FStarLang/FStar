@@ -2169,7 +2169,8 @@ val modifies_1_readable_struct
     [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h' p)];
     [SMTPat (readable h p); SMTPat (readable h' (gfield p f))];
     [SMTPat (readable h' p); SMTPat (readable h' (gfield p f))];
-  ]]
+    [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gfield p f)];
+]]
 
 val modifies_1_readable_array
   (#t: typ)
@@ -2185,6 +2186,7 @@ val modifies_1_readable_array
     [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h' p)];
     [SMTPat (readable h p); SMTPat (readable h' (gcell p i))];
     [SMTPat (readable h' p); SMTPat (readable h' (gcell p i))];
+    [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gcell p i)];
   ]]
 
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)

@@ -4767,12 +4767,8 @@ let modifies_loc_addresses_intro r a l h1 h2 =
 (** NOTE: we historically used to have this lemma for arbitrary
 pointer inclusion, but that became wrong for unions. *)
 
-let modifies_1_readable_struct
-  (#l: struct_typ)
-  (f: struct_field l)
-  (p: pointer (TStruct l))
-  (h h' : HS.mem)
-= readable_struct h' p
+let modifies_1_readable_struct #l f p h h' =
+  readable_struct h' p
 
 let modifies_1_readable_array #t #len i p h h' =
   readable_array h' p
