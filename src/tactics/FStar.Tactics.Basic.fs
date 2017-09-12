@@ -308,7 +308,7 @@ let push_irrelevant_goal env phi opts : tac<unit> =
     push_goals [goal])
 
 let istrivial (e:env) (t:term) : bool =
-    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac] in
+    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
     let t = normalize steps e t in
     is_true t
 
