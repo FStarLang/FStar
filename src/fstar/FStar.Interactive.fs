@@ -308,6 +308,8 @@ let js_reductionrule s = match js_str s with
   | "delta" -> FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant
   | "iota" -> FStar.TypeChecker.Normalize.Iota
   | "zeta" -> FStar.TypeChecker.Normalize.Zeta
+  | "reify" -> FStar.TypeChecker.Normalize.Reify
+  | "pure-subterms" -> FStar.TypeChecker.Normalize.PureSubtermsWithinComputations
   | _ -> js_fail "reduction rule" s
 
 type query' =
@@ -332,9 +334,11 @@ let query_needs_current_module = function
 let interactive_protocol_vernum = 2
 
 let interactive_protocol_features =
-  ["autocomplete"; "compute"; "describe-protocol"; "describe-repl"; "exit";
+  ["autocomplete";
+   "compute"; "compute/reify"; "compute/pure-subterms";
+   "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/documentation"; "lookup/definition";
-   "pop"; "peek"; "push"; "search"]
+   "peek"; "pop"; "push"; "search"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
