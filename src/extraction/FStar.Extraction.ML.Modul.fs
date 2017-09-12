@@ -356,9 +356,6 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
               MLM_Top app in
 
-            // Don't even bother when NoExtract is present. cf. Issue #54 in Kremlin
-            if List.contains S.NoExtract quals then [] else
-
             (match (snd lbs) with
              | [hd] ->
                 let bs, comp = U.arrow_formals_comp hd.lbtyp in
