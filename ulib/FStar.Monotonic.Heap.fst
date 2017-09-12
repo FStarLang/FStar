@@ -91,7 +91,11 @@ let restrict h s =
   { h with memory = (fun r' -> if Set.mem r' s
 			    then h.memory r'
 			    else None) }
-
+			    
+let exclude h s =
+  { h with memory = (fun r' -> if Set.mem r' s 
+                                                          then None
+		                      else h.memory r') }
 let disjoint h1 h2 =
   let _ = () in
   (forall (r:nat). ~(Some?(h1.memory r) && Some?(h2.memory r))) 
@@ -227,7 +231,10 @@ let lemma_join_comm h1 h2 = ()
 let lemma_subheap_disj h1 h2 h3 = ()
 let lemma_heapjoin_disj h1 h2 h3 = ()
 let lemma_join_assoc h1 h2 h3 = ()
-
+let lemma_exclude_contains #a #rel h s r = ()
+let lemma_exclude_unused #a #rel h s r = ()
+let lemma_exclude_sel #a #rel h s r = ()
+let lemma_join_restrict_exclude h s = ()
 (*** Untyped views of references *)
 
 (* Definition and ghost decidable equality *)

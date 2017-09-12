@@ -64,6 +64,8 @@ val free_mm: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` 
 
 val restrict: h:heap -> s:set nat -> GTot heap
 
+val exclude: h:heap -> s:set nat -> GTot heap
+
 val disjoint: h1:heap -> h2:heap -> Tot Type0
 
 val join_tot: h1:heap -> h2:heap{disjoint h1 h2} -> GTot heap
@@ -321,6 +323,27 @@ val lemma_join_assoc (h1:heap) (h2:heap) (h3:heap)
          (ensures (equal (join h1 (join h2 h3)) (join (join h1 h2) h3)))
 	 [SMTPat (join h1 (join h2 h3))]
 
+val lemma_exclude_contains (#a:Type0) (#rel:preorder a) (h:heap) (s:set nat) (r:mref a rel)
+  :Lemma (requires True)
+              (ensures (let h1 = exclude h s in
+	          (h1 `contains` r) <==> (h `contains` r /\ ~(Set.mem (addr_of r) s))))
+              [SMTPat ((exclude h s) `contains` r)]	
+
+val lemma_exclude_unused (#a:Type0) (#rel:preorder a) (h:heap) (s:set nat) (r:mref a rel)
+  :Lemma (requires True)
+              (ensures (let h1 = exclude h s in
+	          (r `unused_in` h1) <==> (r `unused_in` h \/ Set.mem (addr_of r) s)))
+              [SMTPat (r `unused_in` (exclude h s))]
+	      
+val lemma_exclude_sel (#a:Type0) (#rel:preorder a) (h:heap) (s:set nat) (r:mref a rel)
+  :Lemma (requires ~(Set.mem (addr_of r) s))
+              (ensures (let h1 = exclude h s in
+	          (sel h1 r == sel h r)))
+              [SMTPat (sel (exclude h s) r)]
+
+val lemma_join_restrict_exclude (h:heap) (s:set nat)
+  :Lemma (requires True)
+              (ensures (h `equal` ((restrict h s) `join` (exclude h s))))
 (*** Untyped views of monotonic references *)
 
 (* Definition and ghost decidable equality *)
