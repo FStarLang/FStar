@@ -71,6 +71,7 @@ type step =
   | CompressUvars
   | NoFullNorm
   | CheckNoUvars
+  | Unmeta          //remove all non-monadic metas.
 and steps = list<step>
 
 type primitive_step = {
@@ -1462,7 +1463,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head
 
               | _ ->
-                begin match stack with
+                if List.contains Unmeta cfg.steps
+                then norm cfg env stack head
+                else begin match stack with
                   | _::_ ->
                     begin match m with
                       | Meta_labeled(l, r, _) ->
