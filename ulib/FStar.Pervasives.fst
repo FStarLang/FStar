@@ -1,5 +1,9 @@
 module FStar.Pervasives
 
+(* This is a file from the core library, dependencies must be explicit *)
+open Prims
+include FStar.Pervasives.Native
+
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
 
@@ -9,6 +13,10 @@ effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
 
 effect Dv (a:Type) =
      DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
+
+(* We use the EXT effect to underspecify external system calls
+   as being impure but having no observable effect on the state *)
+effect EXT (a:Type) = Dv a
 
 let st_pre_h  (heap:Type)          = heap -> GTot Type0
 let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0
@@ -133,8 +141,6 @@ unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (
 sub_effect DIV ~> EXN = lift_div_exn
 effect Ex (a:Type) = Exn a True (fun v -> True)
 
-assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
-
 let all_pre_h  (h:Type)           = h -> GTot Type0
 let all_post_h (h:Type) (a:Type)  = result a -> h -> GTot Type0
 let all_wp_h   (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)
@@ -150,7 +156,10 @@ unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:all_wp_h heap a)
                        (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-  wp1 (fun ra h1 -> (V? ra ==> wp2 (V?.v ra) p h1)) h0
+  wp1 (fun ra h1 -> (match ra with
+                  | V v     -> wp2 v p h1
+		  | E e     -> p (E e) h1
+		  | Err msg -> p (Err msg) h1)) h0
 
 unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
@@ -203,10 +212,6 @@ let allow_inversion (a:Type)
   : Pure unit (requires True) (ensures (fun x -> inversion a))
   = ()
 
-type option (a:Type) =
-  | None : option a
-  | Some : v:a -> option a
-
 //allowing inverting option without having to globally increase the fuel just for this
 val invertOption : a:Type -> Lemma
   (requires True)
@@ -218,72 +223,7 @@ type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
   | Inr : v:'b -> either 'a 'b
 
-(* 'a * 'b *)
-type tuple2 'a 'b =
-  | Mktuple2: _1:'a
-           -> _2:'b
-           -> tuple2 'a 'b
 
-let fst (x:'a * 'b) :'a = Mktuple2?._1 x
-
-let snd (x:'a * 'b) :'b = Mktuple2?._2 x
-
-(* 'a * 'b * 'c *)
-type tuple3 'a 'b 'c =
-  | Mktuple3: _1:'a
-           -> _2:'b
-           -> _3:'c
-          -> tuple3 'a 'b 'c
-
-(* 'a * 'b * 'c * 'd *)
-type tuple4 'a 'b 'c 'd =
-  | Mktuple4: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> tuple4 'a 'b 'c 'd
-
-(* 'a * 'b * 'c * 'd * 'e *)
-type tuple5 'a 'b 'c 'd 'e =
-  | Mktuple5: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> _5:'e
-           -> tuple5 'a 'b 'c 'd 'e
-
-(* 'a * 'b * 'c * 'd * 'e * 'f *)
-type tuple6 'a 'b 'c 'd 'e 'f =
-  | Mktuple6: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> _5:'e
-           -> _6:'f
-           -> tuple6 'a 'b 'c 'd 'e 'f
-
-(* 'a * 'b * 'c * 'd * 'e * 'f * 'g *)
-type tuple7 'a 'b 'c 'd 'e 'f 'g =
-  | Mktuple7: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> _5:'e
-           -> _6:'f
-           -> _7:'g
-           -> tuple7 'a 'b 'c 'd 'e 'f 'g
-
-(* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h *)
-type tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
-  | Mktuple8: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> _5:'e
-           -> _6:'f
-           -> _7:'g
-           -> _8:'h
-           -> tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
 val dfst : #a:Type -> #b:(a -> GTot Type) -> dtuple2 a b -> Tot a
 let dfst #a #b t = Mkdtuple2?._1 t
@@ -295,7 +235,7 @@ let dsnd #a #b t = Mkdtuple2?._2 t
 unopteq type dtuple3 (a:Type)
              (b:(a -> GTot Type))
              (c:(x:a -> b x -> GTot Type)) =
-   | Mkdtuple3:_1:a
+  | Mkdtuple3:_1:a
              -> _2:b _1
              -> _3:c _1 _2
              -> dtuple3 a b c
@@ -315,3 +255,13 @@ val ignore: #a:Type -> a -> Tot unit
 let ignore #a x = ()
 irreducible
 let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
+
+(* For the compiler. Use as follows:
+ *
+ * [@ PpxDerivingShow ]
+ * type t = A | B
+ *
+ * The resulting OCaml extracted type definition will have [@@ ppx_deriving show] attached to it. *)
+type __internal_ocaml_attributes =
+  | PpxDerivingShow
+  | PpxDerivingShowConstant of string

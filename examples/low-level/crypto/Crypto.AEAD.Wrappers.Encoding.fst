@@ -6,6 +6,7 @@ module Crypto.AEAD.Wrappers.Encoding
 open FStar.UInt32
 open FStar.Ghost
 open Buffer.Utils
+open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
 
 open FStar.Math.Lib
@@ -17,6 +18,7 @@ open Flag
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
+module ST = FStar.HyperStack.ST
 
 module MAC = Crypto.Symmetric.MAC
 module CMA = Crypto.Symmetric.UF1CMA

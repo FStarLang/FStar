@@ -1,0 +1,3 @@
+User tactics can be compiled and dynamically loaded using the following 2 flags:
+- `--gen_native_tactics [dir] A.fst` will typecheck A.fst in lax mode, extract its dependencies to OCaml (in `dir`), and compile the modules which contain user defined tactics. You need to re-generate the native tactics if you rebuild F*.
+- `--use_native_tactics [dir] A.fst` will dynlink all `.cmxs` plugins from `dir` and run all the tactics it find natively instead of interpreted

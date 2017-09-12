@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -70,20 +70,20 @@
   </Target>
   <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <ItemGroup>
-    <FsYacc Include="parse.fsy">
-      <OtherFlags>--module FStar.Parser.Parse --open FStar.Parser.AST</OtherFlags>
-    </FsYacc>
     <FsLex Include="lex.fsl">
       <OtherFlags>--unicode</OtherFlags>
     </FsLex>
     <Compile Include="FStar.Parser.Const.fs" />
     <Compile Include="FStar.Parser.AST.fs" />
     <Compile Include="parseutil.fs" />
-    <Compile Include="parse.fs" />
+    <FsYacc Include="boot/parse.fsy">
+      <OtherFlags>--module FStar.Parser.Parse --open FStar.Parser.AST -o boot/parse.fs</OtherFlags>
+    </FsYacc>
+    <Compile Include="boot/parse.fs" />
     <Compile Include="FStar.Parser.Lexhelp.fs" />
     <Compile Include="lex.fs" />
-    <Compile Include="parseit.fsi" />
-    <Compile Include="parseit.fs" />
+    <Compile Include="FStar.Parser.ParseIt.fsi" />
+    <Compile Include="FStar.Parser.ParseIt.fs" />
     <Compile Include="FStar.Parser.Driver.fs" />
     <Content Include="packages.config" />
     <Compile Include="FStar.Parser.Dep.fsi" />
@@ -99,22 +99,6 @@
     </ProjectReference>
     <Reference Include="FSharp.Compatibility.OCaml">
       <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\VS\packages\FSPowerPack.Core.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Linq">
-      <HintPath>..\VS\packages\FSPowerPack.Linq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Linq.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Metadata">
-      <HintPath>..\VS\packages\FSPowerPack.Metadata.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Metadata.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Parallel.Seq">
-      <HintPath>..\VS\packages\FSPowerPack.Parallel.Seq.Community.2.0.0.0\lib\Net40\FSharp.PowerPack.Parallel.Seq.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">

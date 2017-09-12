@@ -1,6 +1,7 @@
 ﻿#light "off"
 
 module FStar.SMTEncoding.Util
+open FStar.ST
 open FStar.All
 
 open FStar
@@ -17,17 +18,17 @@ module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 
 let mkAssume (tm, cap, nm) =
-    Term.Assume ({
+    Assume ({
         assumption_name=nm;
         assumption_caption=cap;
         assumption_term=tm;
         assumption_fact_ids=[]
     })
 let norng f = fun x -> f x Range.dummyRange
-let mkTrue   = Term.mkTrue Range.dummyRange
-let mkFalse  = Term.mkFalse Range.dummyRange
-let mkInteger  = norng Term.mkInteger
-let mkInteger' = norng Term.mkInteger'
+let mkTrue   = mkTrue Range.dummyRange
+let mkFalse  = mkFalse Range.dummyRange
+let mkInteger  = norng mkInteger
+let mkInteger' = norng mkInteger'
 let mkBoundV   = norng mkBoundV
 let mkFreeV    = norng mkFreeV
 let mkApp'     = norng mkApp'
@@ -48,6 +49,18 @@ let mkSub = norng mkSub
 let mkDiv = norng mkDiv
 let mkMul = norng mkMul
 let mkMod = norng mkMod
+let mkNatToBv sz = norng (mkNatToBv sz)
+let mkBvAnd = norng mkBvAnd
+let mkBvXor = norng mkBvXor
+let mkBvOr = norng mkBvOr
+let mkBvShl sz = norng (mkBvShl sz)
+let mkBvShr sz = norng (mkBvShr sz)
+let mkBvUdiv sz = norng (mkBvUdiv sz)
+let mkBvMod sz = norng (mkBvMod sz)
+let mkBvMul sz = norng (mkBvMul sz)
+let mkBvUlt = norng mkBvUlt
+let mkBvUext sz = norng (mkBvUext sz)
+let mkBvToNat = norng mkBvToNat
 let mkITE = norng mkITE
 let mkCases = norng mkCases
 let mkForall = norng mkForall

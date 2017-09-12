@@ -6,8 +6,8 @@ include ../Makefile.include
 
 NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCircuiting.fst \
 	 NegativeTests.Bug260.fst  NegativeTests.Neg.fst   NegativeTests.Termination.fst \
-	 NegativeTests.False.fst   NegativeTests.Set.fst   NegativeTests.ImplicitFalse.fst \
-         NegativeTests.Positivity.fst
+	 NegativeTests.False.fst   NegativeTests.Set.fst   NegativeTests.Positivity.fst \
+         NegativeTests.ZZImplicitFalse.fst #this one needs to be last, since it contains an unrecoverable error (implicit arg could not be resolved)
 
 
 # if the `--lax` flag is used, negative tests will report a single error.
@@ -21,11 +21,13 @@ all: uall
 
 uall: all-pos all-neg
 
+# add Unit1.TopLevelPats.uver when fixed, I want CI to test the rest for now
 all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.Parser.uver \
 	 Unit1.RefinementInference.uver Unit1.WPsAndTriples_ST.uver Unit1.Projectors1.uver \
-	 Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver \
+	 Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver  \
 	 Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver \
-	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.fst
+	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.fst \
+	 Pruning.fst NormVsSMT.fst
 	#TestHasEq.uver #temporarily removed from mac_universes branch
 
 basictests: $(VERFILES)
@@ -43,5 +45,3 @@ inverse:
 
 testghost:
 	$(FSTAR) testghost.fst
-
-

@@ -157,3 +157,29 @@ val pr_eq: #a:Type -> #b:Type ->
 let pr_eq #a #b c1 c2 p1 p2 bij =
   pr_leq c1 c2 p1 p2 bij;
   pr_leq c2 c1 p2 p1 (inverse bij)
+
+val cond: #a:Type ->
+  pre:Type ->
+  post:(a -> a -> Type) ->
+  b1:bool ->
+  b2:bool ->
+  c1 :(store -> M (a * id)) ->
+  c1':(store -> M (a * id)) ->
+  c2 :(store -> M (a * id)) ->
+  c2':(store -> M (a * id)) ->
+  h:tape ->
+  Lemma
+  (requires (
+    forall h.
+      let r1,_  = c1  (to_id 0, h) in
+      let r2,_  = c2  (to_id 0, h) in
+      let r1',_ = c1' (to_id 0, h) in
+      let r2',_ = c2' (to_id 0, h) in
+      (pre ==> b1 == b2) /\
+      (pre /\ b1  ==> post r1 r2) /\
+      (pre /\ ~b1 ==> post r1' r2')))
+  (ensures (
+    let r1,_ = (if b1 then c1 else c1') (to_id 0, h) in
+    let r2,_ = (if b2 then c2 else c2') (to_id 0, h) in
+    pre ==> post r1 r2))
+let cond #a pre post b1 b2 c1 c1' c2 c2' h = ()

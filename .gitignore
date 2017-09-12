@@ -12,20 +12,14 @@ dump*
 cache/
 /VS/packages
 
-/src/parser/parse.fs
+/src/parser/boot/parse.fs
 /src/parser/lex.fs
-/src/parser/parse.ml
-/src/parser/parse.mli
 
-/src/boot_fstis
-/src/boot_fsts
-/src/format/formatml.fsi
+/src/boot
 
-/lib/FStar.Util.fsti
-/lib/FStar.GetOpt.fsti
-/lib/FStar.Unionfind.fsti
-
+/ulib/.mgen
 /ulib/ml/extracted
+/ulib/ml/compiler-extracted
 
 /bin/*.dll
 /bin/*.pdb
@@ -57,6 +51,7 @@ dump
 *.cmi
 *.cmo
 *.cmx
+*.cma
 *.o
 
 .depend
@@ -71,8 +66,13 @@ tags
 *~
 *.swp
 
+*.exe
+
 /.nubuild
 /nucache/
 /nuobj/
 nubuild.log
 nubuild.progress
+
+# Z3/F* nightly/weekly files
+/nightly

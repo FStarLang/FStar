@@ -18,6 +18,7 @@
 #light "off"
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.ML.Syntax
+open FStar.ST
 open FStar.All
 open FStar
 open FStar.Ident
@@ -72,7 +73,7 @@ let rec gensyms x = match x with
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =
-    if Ident.lid_equals x FStar.Syntax.Const.failwith_lid
+    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
     then ([], x.ident.idText)
     else (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 
@@ -126,6 +127,13 @@ type c_flag = // C backend only
   | NoExtract
   | Attribute of string
 
+// JP: merge these two?
+type tyattr = // OCaml only
+  | PpxDerivingShow
+  | PpxDerivingShowConstant of string
+
+type tyattrs = list<tyattr>
+
 type mlletflavor =
   | Rec
   | NonRec
@@ -172,19 +180,19 @@ and mlletbinding = mlletflavor * c_flags * list<mllb>
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list<(mlsymbol * mlty)>
-| MLTD_DType  of list<(mlsymbol * list<mlty>)>
+| MLTD_DType  of list<(mlsymbol * list<(mlsymbol * mlty)>)>
     (*list of constructors? list<mlty> is the list of arguments of the constructors?
         One could have instead used a mlty and tupled the argument types?
      *)
 
 // bool: this was assumed (C backend)
-type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * option<mltybody>
+type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * tyattrs * option<mltybody>
 type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =
 | MLM_Ty  of mltydecl
 | MLM_Let of mlletbinding
-| MLM_Exn of mlsymbol * list<mlty>
+| MLM_Exn of mlsymbol * list<(mlsymbol * mlty)>
 | MLM_Top of mlexpr // this seems outdated
 | MLM_Loc of mlloc // Location information; line number + file; only for the OCaml backend
 
@@ -215,7 +223,7 @@ let ml_int_ty  = MLTY_Named ([], (["Prims"], "int"))
 let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
-let apply_obj_repr x t =
+let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name(["Obj"], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
@@ -254,3 +262,17 @@ let bv_as_mlident (x:bv): mlident =
   || is_null_bv x || is_reserved x.ppname.idText
   then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
   else x.ppname.idText, 0
+
+let push_unit (ts : mltyscheme) : mltyscheme =
+    let vs, ty = ts in
+    vs, MLTY_Fun(ml_unit_ty, E_PURE, ty)
+
+let pop_unit (ts : mltyscheme) : mltyscheme =
+    let vs, ty = ts in
+    match ty with
+    | MLTY_Fun (l, E_PURE, t) ->
+        if l = ml_unit_ty
+        then vs, t
+        else failwith "unexpected: pop_unit: domain was not unit"
+    | _ ->
+        failwith "unexpected: pop_unit: not a function type"

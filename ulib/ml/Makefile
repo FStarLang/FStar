@@ -1,48 +1,49 @@
-ULIB_GEN_DIR=./extracted
+FSTAR_HOME=../..
+include $(FSTAR_HOME)/src/gmake/z3.mk
+include $(FSTAR_HOME)/src/gmake/fstar.mk
 
-ifeq ($(MEM),HST)
-	ST=$(ULIB_GEN_DIR)/FStar_TSet.ml $(ULIB_GEN_DIR)/FStar_Map.ml $(ULIB_GEN_DIR)/FStar_HyperHeap.ml $(ULIB_GEN_DIR)/FStar_HyperStack.ml hyperstack/FStar_ST.ml hyperstack/FStar_All.ml
-else
-	ST=FStar_ST.ml FStar_All.ml
-endif
+all: fstarlib.cmxa
 
-FILES=prims.ml $(ULIB_GEN_DIR)/FStar_Pervasives.ml FStar_Mul.ml FStar_Float.ml FStar_Char.ml \
-      FStar_Int8.ml FStar_UInt8.ml FStar_Int16.ml FStar_UInt16.ml \
-      FStar_Int32.ml FStar_UInt32.ml FStar_Int64.ml FStar_UInt64.ml FStar_UInt128.ml \
-      FStar_Int_Cast.ml \
-      FStar_BaseTypes.ml \
-      FStar_IO.ml FStar_Heap.ml FStar_List_Tot_Base.ml FStar_List.ml \
-      FStar_Option.ml FStar_String.ml FStar_Set.ml \
-      FStar_Buffer.ml FStar_CommonST.ml $(ST)
 
-OCAMLOPT=ocamlfind opt -thread -package batteries,zarith,stdint -linkpkg -g $(INCLUDES)
-OCAMLDEP=ocamlfind dep
-OCAMLMKLIB=ocamlfind mklib
+ULIB_GEN_DIR=extracted
 
-OBJS=$(FILES:.ml=.o)
-CMX=$(FILES:.ml=.cmx)
+FIND=$(shell which gfind > /dev/null 2>&1 && echo gfind || echo find)
+SED=$(shell which gsed > /dev/null 2>&1 && echo gsed || echo sed)
+OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_GEN_DIR) -build-dir ulib/ml/_build
+
+.PHONY:clean
+
+all: .mgen install
+
+fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
+	$(FIND) . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
+		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
+		| sort | uniq > $@
+	touch fstarlib.ml
+
+FSTARLIB_DIR=../../bin/fstarlib/
+
+fstarlib.cma:fstarlib.mllib
+	$(OCAMLBUILD) $@
+	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
+
+fstarlib.cmxa:fstarlib.mllib | fstarlib.cma
+	$(OCAMLBUILD) $@
+	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
+
+install: fstarlib.cmxa fstarlib.cma
+	cp _build/ulib/ml/fstarlib.a $(FSTARLIB_DIR)
+	cp _build/ulib/ml/*.cmi $(FSTARLIB_DIR)
+	cp _build/ulib/ml/extracted/*.cmi $(FSTARLIB_DIR)
 
 .mgen:
-	make -C .. mgen
+	$(MAKE) -C .. .mgen
 
-all: .mgen
-	make $(OBJS)
-	ocamlopt -a $(CMX) -o fstarlib.cmxa
 
 # Common rules
-.SUFFIXES: .ml .mli .cmo .cmi .cmx
-
-%.o: %.ml
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c -I $(PRIMS_DIR) $(ULIB_GEN_DIR) -linkpkg $<
-
-depend:
-	$(OCAMLDEP) $(FILES) > .depend
-
-CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.a *.cmxa *~ $(subst .ml,.cmx,$(ST)) $(subst .ml,.cmi,$(ST)) $(subst .ml,.o,$(ST))
-
 clean:
-	rm -f $(CLEAN)
-	rm -f $(ULIB_GEN_DIR)/*
-	rm -f hyperstack/*.o hyperstack/*.cm*
-
--include .depend
+	rm -f fstarlib.mllib *~
+	rm -fr $(ULIB_GEN_DIR) compiler-extracted
+	rm -f $(FSTARLIB_DIR)/*.cm[aiox]a?
+	rm -f ../.mgen
+	rm -rf _build # ← ocamlbuild -clean does not work on Cygwin

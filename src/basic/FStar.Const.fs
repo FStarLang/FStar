@@ -1,10 +1,13 @@
 ﻿#light "off"
 module FStar.Const
+open FStar.ST
 open FStar.All
 
 open FStar.BaseTypes
 
+///[@ PpxDerivingShow ]
 type signedness = | Unsigned | Signed
+///[@ PpxDerivingShow ]
 type width = | Int8 | Int16 | Int32 | Int64
 
 (* NB:
@@ -20,16 +23,16 @@ type width = | Int8 | Int16 | Int32 | Int64
     eq_const below does that for you
 *)
 
+///[@ PpxDerivingShow ]
 type sconst =
   | Const_effect
   | Const_unit
   | Const_bool        of bool
   | Const_int         of string * option<(signedness * width)> (* When None, means "mathematical integer", i.e. Prims.int. *)
-  | Const_char        of char
+  | Const_char        of char (* unicode code point: char in F#, int in OCaml *)
   | Const_float       of double
   | Const_bytearray   of array<byte> * Range.range
-  | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
-      // JP: does one mean UTF-8 encoded?
+  | Const_string      of string * Range.range                (* UTF-8 encoded *)
   | Const_range       of Range.range                         (* not denotable by the programmer *)
   | Const_reify                                              (* a coercion from a computation to a Tot term *)
   | Const_reflect     of Ident.lid                           (* a coercion from a Tot term to an l-computation type *)
@@ -39,7 +42,7 @@ let eq_const c1 c2 =
     | Const_int (s1, o1), Const_int(s2, o2) ->
       FStar.Util.ensure_decimal s1 = FStar.Util.ensure_decimal s2 &&
       o1=o2
-    | Const_bytearray(a, _), Const_bytearray(b, _)
+    | Const_bytearray(a, _), Const_bytearray(b, _) -> a=b
     | Const_string(a, _), Const_string(b, _) -> a=b
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
     | _ -> c1=c2

@@ -1,17 +1,21 @@
 ﻿#light "off"
 module FStar.Ident
 open Prims
+open FStar.ST
 open FStar.All
 open FStar.Range
 
+///[@ PpxDerivingShow ]
 type ident = {idText:string;
               idRange:Range.range}
 
+///[@ PpxDerivingShow ]
 type lident = {ns:list<ident>; //["FStar"; "Basic"]
                ident:ident;    //"lident"
                nsstr:string; // Cached version of the namespace
                str:string} // Cached version of string_of_lid
 
+///[@ PpxDerivingShow ]
 type lid = lident
 
 let mk_ident (text,range) = {idText=text; idRange=range}
@@ -48,6 +52,7 @@ let set_lid_range l r = {l with ident={l.ident with idRange=r}}
 let lid_add_suffix l s =
     let path = path_of_lid l in
     lid_of_path (path@[s]) (range_of_lid l)
+let ml_path_of_lid lid = String.concat "_" <| (path_of_ns lid.ns)@[text_of_id lid.ident]
 
 (* JP: I don't understand why a lid has both a str and a semantic list of
  * namespaces followed by a lowercase identifiers... *)

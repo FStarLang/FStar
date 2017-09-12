@@ -1,6 +1,7 @@
 ﻿#light "off"
 module FStar.Reflection.Placeholder
 open FStar
+open FStar.ST
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util

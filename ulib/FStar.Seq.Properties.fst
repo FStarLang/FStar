@@ -384,7 +384,9 @@ let lemma_seq_frame_lo #a s1 s2 i j m n =
 
 val lemma_tail_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s}
   -> Lemma
+  (requires True)
   (ensures (tail (slice s i j) == slice s (i + 1) j))
+  [SMTPat (tail (slice s i j))]
 let lemma_tail_slice #a s i j =
   cut (equal (tail (slice s i j)) (slice s (i + 1) j))
 
@@ -561,6 +563,15 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
 
 let seq_find #a f l =
   seq_find_aux f l (Seq.length l)
+
+let for_all
+  (#a: Type)
+  (f: (a -> Tot bool))
+  (l: seq a)
+: Pure bool
+  (requires True)
+  (ensures (fun b -> (b == true <==> (forall (i: nat {i < Seq.length l} ) . f (index l i) == true))))
+= None? (seq_find (fun i -> not (f i)) l)
 
 #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 1 --max_fuel 1"
 val seq_mem_k: #a:eqtype -> s:seq a -> n:nat{n < Seq.length s} -> 
@@ -801,3 +812,84 @@ let mem_cons
 : Lemma
   (ensures (forall y. mem y (cons x s) <==> mem y s \/ x=y))
 = lemma_append_count (create 1 x) s
+
+let snoc_slice_index
+  (#a: Type)
+  (s: seq a)
+  (i: nat)
+  (j: nat {i <= j /\ j < length s} )
+: Lemma
+  (requires True)
+  (ensures (snoc (slice s i j) (index s j) == slice s i (j + 1)))
+  [SMTPat (snoc (slice s i j) (index s j))]
+= lemma_eq_elim (snoc (slice s i j) (index s j)) (slice s i (j + 1))
+
+let cons_index_slice
+  (#a: Type)
+  (s: seq a)
+  (i: nat)
+  (j: nat {i < j /\ j <= length s} )
+: Lemma
+  (requires True)
+  (ensures (cons (index s i) (slice s (i + 1) j) == slice s i j))
+  [SMTPat (cons (index s i) (slice s (i + 1) j))]
+= lemma_eq_elim (cons (index s i) (slice s (i + 1) j)) (slice s i j)
+
+let slice_is_empty
+  (#a: Type)
+  (s: seq a)
+  (i: nat {i <= length s})
+: Lemma
+  (requires True)
+  (ensures (slice s i i == createEmpty))
+  [SMTPat (slice s i i)]
+= lemma_eq_elim (slice s i i) createEmpty
+
+let slice_length
+  (#a: Type)
+  (s: seq a)
+: Lemma
+  (requires True)
+  (ensures (slice s 0 (length s) == s))
+  [SMTPat (slice s 0 (length s))]
+= lemma_eq_elim (slice s 0 (length s)) s
+
+let slice_slice
+  (#a: Type)
+  (s: seq a)
+  (i1: nat)
+  (j1: nat {i1 <= j1 /\ j1 <= length s} )
+  (i2: nat)
+  (j2: nat {i2 <= j2 /\ j2 <= j1 - i1} )
+: Lemma
+  (requires True)
+  (ensures (slice (slice s i1 j1) i2 j2 == slice s (i1 + i2) (i1 + j2)))
+  [SMTPat (slice (slice s i1 j1) i2 j2)]
+= lemma_eq_elim (slice (slice s i1 j1) i2 j2) (slice s (i1 + i2) (i1 + j2))
+
+let seq_of_list_tl
+  (#a: Type)
+  (l: list a { List.Tot.length l > 0 } )
+: Lemma
+  (requires True)
+  (ensures (seq_of_list (List.Tot.tl l) == tail (seq_of_list l)))
+  [SMTPat (seq_of_list (List.Tot.tl l))]
+= lemma_tl (List.Tot.hd l) (seq_of_list (List.Tot.tl l))
+
+let rec mem_seq_of_list
+  (#a: eqtype)
+  (x: a)
+  (l: list a)
+: Lemma
+  (requires True)
+  (ensures (mem x (seq_of_list l) == List.Tot.mem x l))
+  [SMTPat (mem x (seq_of_list l))]
+= match l with
+  | [] -> ()
+  | y :: q ->
+    let _ : squash (head (seq_of_list l) == y) = () in
+    let _ : squash (tail (seq_of_list l) == seq_of_list q) = seq_of_list_tl l in
+    let _ : squash (mem x (seq_of_list l) == (x = y || mem x (seq_of_list q))) =
+     lemma_mem_inversion (seq_of_list l)
+    in
+    mem_seq_of_list x q

@@ -80,7 +80,7 @@ let append #a s1 s2 = MkSeq (List.append (MkSeq?.l s1) (MkSeq?.l s2))
 
 let op_At_Bar (#a:Type) (s1:seq a) (s2:seq a) = append s1 s2
 
-abstract val slice:  #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Tot (seq a) (decreases (length s))
+abstract val slice:  #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Tot (r:seq a) (decreases (length s))
 let rec slice #a s i j =
   if i > 0 then slice #a (tl s) (i - 1) (j - 1)
   else
@@ -264,7 +264,7 @@ val init_index (#a:Type) (len:nat) (contents:(i:nat { i < len } -> Tot a))
 private
 let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
   : Lemma (requires True)
-    (ensures (forall (i:nat{i < len - k}). index (init_aux len k contents) i == contents (k + i)))
+    (ensures (forall (i:nat{i < len - k}).index (init_aux len k contents) i == contents (k + i)))
     (decreases (len - k))
 =
   if k + 1 = len

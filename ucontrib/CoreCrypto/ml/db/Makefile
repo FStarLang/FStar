@@ -10,7 +10,7 @@ OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 all: DB.cmi DB.cmx
 
 clean:
-	rm -fr *~ *.cm* *.o
+	rm -fr *~ *.cm* *.o .depend
 
 .mli.cmi:
 	$(OCAMLC) $(OCAMLFLAGS) -c $<
@@ -21,7 +21,7 @@ clean:
 .ml.cmx:
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
-depend:
+.depend:
 	$(OCAMLDEP) *.ml* > .depend
 
 -include .depend

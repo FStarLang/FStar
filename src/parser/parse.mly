@@ -13,7 +13,7 @@ open FStar_Range
 open FStar_Options
 (* TODO : these files should be deprecated and removed *)
 open FStar_Syntax_Syntax
-open FStar_Syntax_Const
+open FStar_Parser_Const
 open FStar_Syntax_Util
 open FStar_Parser_AST
 open FStar_Parser_Util
@@ -23,7 +23,7 @@ open FStar_String
 %}
 
 %token <bytes> BYTEARRAY
-%token <bytes> STRING
+%token <string> STRING
 %token <string> IDENT
 %token <string> NAME
 %token <string> TVAR
@@ -96,9 +96,8 @@ open FStar_String
 
 %start inputFragment
 %start term
-%type <inputFragment> inputFragment
-%type <term> term
-
+%type <FStar_Parser_AST.inputFragment> inputFragment
+%type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
 
 %%
@@ -455,7 +454,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { {id with idText = compile_op' id.idText} }
+    { {id with idText = compile_op' id.idText id.idRange} }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -501,7 +500,7 @@ term:
 (* ... which is actually be benign, since the same conflict already *)
 (*     exists for the previous production *)
   | e1=noSeqTerm SEMICOLON_SEMICOLON e2=term
-      { mk_term (Bind(gen (rhs parseState 1), e1, e2)) (rhs2 parseState 1 3) Expr }
+      { mk_term (Bind(gen (rhs parseState 2), e1, e2)) (rhs2 parseState 1 3) Expr }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
@@ -929,7 +928,7 @@ atomicUniverse:
 /******************************************************************************/
 
 %inline string:
-  | s=STRING { string_of_bytes s }
+  | s=STRING { s }
 
 %inline operator:
   | op=OPPREFIX

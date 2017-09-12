@@ -4,6 +4,9 @@ open FStar.UInt32
 open FStar.Ghost
 open FStar.Mul
 open FStar.Int.Cast
+open FStar.HyperStack.ST
+
+module ST = FStar.HyperStack.ST
 
 //-------------------- this part now lives in FStar.Endian ---------------------
 
@@ -11,11 +14,11 @@ open FStar.Int.Cast
 #set-options "--z3rlimit 30"
 let uint128_to_uint8 (a:UInt128.t) : Tot (b:UInt8.t{UInt8.v b = UInt128.v a % pow2 8}) = 
   Math.Lemmas.pow2_modulo_modulo_lemma_2 (UInt128.v a) 64 8;
-  uint64_to_uint8 (uint128_to_uint64 a)
+  uint64_to_uint8 (FStar.UInt128.uint128_to_uint64 a)
 
 (* TODO: Add to FStar.Int.Cast and Kremlin and OCaml implementations *)
 val uint8_to_uint128: a:UInt8.t -> Tot (b:UInt128.t{UInt128.v b == UInt8.v a})
-let uint8_to_uint128 a = uint64_to_uint128 (uint8_to_uint64 a)
+let uint8_to_uint128 a = FStar.UInt128.uint64_to_uint128 (uint8_to_uint64 a)
 
 
 // relocate too?
@@ -525,7 +528,7 @@ val load_uint128: len:UInt32.t { v len <= 16 } -> buf:lbuffer (v len) -> ST UInt
     h0 == h1 /\ live h0 buf /\ 
     UInt128.v n == little_endian (sel_bytes h1 len buf)))
 let rec load_uint128 len buf = 
-  if len = 0ul then uint64_to_uint128 0UL // Need 128-bit constants?
+  if len = 0ul then FStar.UInt128.uint64_to_uint128 0UL // Need 128-bit constants?
   else
     let n = load_uint128 (len -^ 1ul) (sub buf 1ul (len -^ 1ul)) in
     let b = buf.(0ul) in 
