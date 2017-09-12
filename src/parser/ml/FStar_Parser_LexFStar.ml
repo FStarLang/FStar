@@ -158,7 +158,7 @@ let rec mknewline n lexbuf =
   if n = 0 then ()
   else (L.new_line lexbuf; mknewline (n-1) lexbuf)
 
-let clean_number x = String.strip ~chars:"uzyslLUnIN" x
+let clean_number x = String.strip ~chars:"uzyslLUnINZ" x
 let comments : (string * FStar_Range.range) list ref = ref []
 
 let flush_comments () =
@@ -302,6 +302,7 @@ let regexp uint32 = any_integer unsigned 'l'
 let regexp int64 = any_integer 'L'
 let regexp uint64 = any_integer unsigned 'L'
 let regexp char8 = any_integer 'z'
+let regexp char_unicode = any_integer 'Z'
 
 let regexp floatp     = digit+ '.' digit*
 let regexp floate     = digit+ ('.' digit* )? ["eE"] ["+-"]? digit+
@@ -361,12 +362,12 @@ let rec token = lexer
  | constructor -> NAME (L.lexeme lexbuf)
  | tvar -> TVAR (L.lexeme lexbuf)
  | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf), false)
- (* TODO: check bounds!! *)
- | uint8 -> UINT8 (clean_number (L.lexeme lexbuf))
- | char8 ->
-   let c = int_of_string (clean_number (L.lexeme lexbuf)) in
-   if c < 0 || c > 255 then failwith "Out-of-range character literal"
-   else CHAR (c)
+ | (uint8 | char8) ->
+   let c = clean_number (L.lexeme lexbuf) in
+   let cv = int_of_string c in
+   if cv < 0 || cv > 255 then failwith "Out-of-range character literal"
+   else UINT8 (c)
+ | char_unicode -> CHAR (int_of_string (clean_number (L.lexeme lexbuf)))
  | int8 -> INT8 (clean_number (L.lexeme lexbuf), false)
  | uint16 -> UINT16 (clean_number (L.lexeme lexbuf))
  | int16 -> INT16 (clean_number (L.lexeme lexbuf), false)

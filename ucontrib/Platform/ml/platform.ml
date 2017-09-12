@@ -25,7 +25,7 @@ module StdBytes = Bytes
 
 module Bytes = struct
 
-  type byte = char
+  type byte = int
   type nat = int
   type cbytes = string
   type bytes = string
@@ -33,7 +33,7 @@ module Bytes = struct
   let lemma_repr_bytes_values n = ()
 
   let cbyte (b:bytes) =
-    try String.get b 0
+    try int_of_char (String.get b 0)
     with _ -> failwith "cbyte: called on empty string"
 
   let cbyte2 (b:bytes) =
@@ -46,9 +46,9 @@ module Bytes = struct
 
   let get_cbytes (b:bytes) = b
   let abytes (ba:cbytes) = ba
-  let abyte (ba:byte) = String.make 1 ba
+  let abyte (ba:byte) = String.make 1 (char_of_int ba)
   let abyte2 (ba1,ba2) =
-    String.init 2 (fun i -> if i = 0 then ba1 else ba2)
+    String.init 2 (fun i -> if i = 0 then char_of_int ba1 else char_of_int ba2)
 
   let (@|) (a:bytes) (b:bytes) = a ^ b
   let op_At_Bar a b = a @| b
@@ -65,14 +65,14 @@ module Bytes = struct
   let length (b:bytes) = Z.of_int (String.length b)
 
   let empty_bytes = ""
-  let createBytes len (value:char) : bytes =
+  let createBytes len (value:int) : bytes =
       let len = Z.to_int len in
-      try abytes (String.make len value)
+      try abytes (String.make len (char_of_int value))
       with _ -> failwith "Default integer for createBytes was greater than max_value"
 
   let initBytes len f : bytes =
       let len = Z.to_int len in
-      try abytes (String.init len (fun i -> f (Z.of_int i)))
+      try abytes (String.init len (fun i -> char_of_int (f (Z.of_int i))))
       with _ -> failwith "Platform.Bytes.initBytes: invalid char returned"
 
   type 'a lbytes = bytes
