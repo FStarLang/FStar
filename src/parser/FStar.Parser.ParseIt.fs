@@ -74,6 +74,7 @@ let check_extension fn =
                   message ^ " (pass --MLish to process .fs and .fsi files)"
                 else message))
 
+//val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 let parse fn =
   Parser.Util.warningHandler := (function
     | e -> let msg = Printf.sprintf "Warning: %A\n" e in
@@ -114,19 +115,19 @@ let parse fn =
       in
       let fileOrFragment = Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
-        | Inl mods ->
+        | Inl modul ->
            if has_extension filename interface_extensions
-           then Inl (mods |> List.map (function
+           then match modul with
                 | AST.Module(l,d) ->
-                  AST.Interface(l, d, true)
-                | _ -> failwith "Impossible"))
-           else Inl mods
+                  Inl (AST.Interface(l, d, true))
+                | _ -> failwith "Impossible"
+           else Inl modul
         | _ -> fileOrFragment in
        let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
        Inl (frags, non_polymorphic_nil)
   with
     | Empty_frag ->
-        Inl (Inl [], [])
+      Inl (Inr [], [])
     | Error(msg, r) ->
       Inr (msg, r)
     | e ->

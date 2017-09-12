@@ -40,31 +40,18 @@ module TcUtil = FStar.TypeChecker.Util
 // The type definition is now in [FStar.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
-type z3_err = error_labels * error_kind
-type z3_result = either<Z3.unsat_core, z3_err>
 type z3_replay_result = either<Z3.unsat_core, error_labels>
 let z3_result_as_replay_result = function
     | Inl l -> Inl l
     | Inr (r, _) -> Inr r
-type hint_stat = {
-    hint:option<hint>;
-    replay_result:z3_replay_result;
-    elapsed_time:int;
-    source_location:Range.range
-}
-type hint_stats_t = list<hint_stat>
 let recorded_hints : ref<(option<hints>)> = BU.mk_ref None
 let replaying_hints: ref<(option<hints>)> = BU.mk_ref None
-let hint_stats     : ref<hint_stats_t>    = BU.mk_ref []
-
-let format_hints_file_name src_filename =
-    BU.format1 "%s.hints" src_filename
+let format_hints_file_name src_filename = BU.format1 "%s.hints" src_filename
 
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
 let initialize_hints_db src_filename format_filename : unit =
-    hint_stats := [];
     if Options.record_hints() then recorded_hints := Some [];
     if Options.use_hints()
     then let norm_src_filename = BU.normalize_file_path src_filename in
@@ -103,17 +90,8 @@ let finalize_hints_db src_filename : unit =
                             | None -> (format_hints_file_name norm_src_filename) in
           BU.write_hints val_filename hints_db
     end;
-    begin if Options.hint_info() then
-        let stats = !hint_stats |> List.rev in
-        stats |> List.iter (fun s ->
-            BU.print3 "Hint-info (%s): Replay %s in %s milliseconds.\n"
-            (Range.string_of_range s.source_location)
-            (match s.replay_result with | Inl _ -> "succeeded" | Inr _ -> "failed")
-            (BU.string_of_int s.elapsed_time))
-    end;
     recorded_hints := None;
-    replaying_hints := None;
-    hint_stats := []
+    replaying_hints := None
 
 let with_hints_db fname f =
     initialize_hints_db fname false;
@@ -122,31 +100,6 @@ let with_hints_db fname f =
     // no cleanup needs to occur if an error occurs.
     finalize_hints_db fname;
     result
-
-let next_hint qname qindex =
-    match !replaying_hints with
-    | Some hints ->
-      BU.find_map hints (function
-        | Some hint when hint.hint_name=qname && hint.hint_index=qindex -> Some hint
-        | _ -> None)
-    | _ -> None
-
-let record_hint hint =
-    let hint = match hint with
-        | None -> None //recording the elapsed time prevents us from reaching a fixpoint in the hints db
-        | Some h -> Some ({h with query_elapsed_time=0}) in
-    match !recorded_hints with
-    | Some l -> recorded_hints := Some (l@[hint])
-    | _ -> ()
-
-let record_hint_stat (h:option<hint>) (res:z3_result) (time:int) (r:Range.range) =
-    let s = {
-        hint=h;
-        replay_result=z3_result_as_replay_result res;
-        elapsed_time=time;
-        source_location=r;
-    } in
-    hint_stats := s::!hint_stats
 
 let filter_using_facts_from (e:env) (theory:decls_t) =
     let should_enc_fid fid =
@@ -197,31 +150,6 @@ let filter_assertions (e:env) (core:Z3.unsat_core) (theory:decls_t) =
                 else theory, n_retained, n_pruned+1
             | _ -> d::theory, n_retained, n_pruned)
             theory ([], 0, 0) in
-        let missed_assertions th core =
-            let missed =
-                core |> List.filter (fun nm ->
-                    th |> BU.for_some (function Assume a -> nm=a.assumption_name | _ -> false) |> not)
-                |> String.concat ", "
-        in
-        let included =
-            th
-            |> List.collect (function Assume a -> [a.assumption_name] | _ -> [])
-            |> String.concat ", "
-        in
-        BU.format2 "missed={%s}; included={%s}" missed included in
-        if Options.hint_info ()
-        && Options.debug_any()
-        then begin
-            let n = List.length core in
-            let missed = if n <> n_retained then missed_assertions theory' core else "" in
-            BU.print3 "\tHint-info: Retained %s assertions%s and pruned %s assertions using recorded unsat core\n"
-                            (BU.string_of_int n_retained)
-                            (if n <> n_retained
-                            then BU.format2 " (expected %s (%s); replay may be inaccurate)"
-                                (BU.string_of_int n) missed
-                            else "")
-                            (BU.string_of_int n_pruned)
-        end ;
         theory'@[Caption ("UNSAT CORE: " ^ (core |> String.concat ", "))], true
 
 let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
@@ -229,236 +157,329 @@ let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
 (***********************************************************************************)
-let ask_and_report_errors env all_labels prefix query suffix =
-    Z3.giveZ3 prefix;
-    let query_name, query_index = match env.qname_and_index with
-        | None -> failwith "No query name set!"
-        | Some (q, n) -> Ident.text_of_lid q, n in
-    let minimum_workable_fuel = BU.mk_ref None in
-    let set_minimum_workable_fuel f = function
-        | [], _ -> ()
-        | errs -> match !minimum_workable_fuel with
-                    | Some _ -> ()
-                    | None -> minimum_workable_fuel := Some (f, errs) in
+type errors = {
+    error_reason:string;
+    error_fuel: int;
+    error_ifuel: int;
+    error_hint: option<(list<string>)>;
+    error_messages: list<(string * Range.range)>
+}
 
-    let with_fuel label_assumptions p (n, i, rlimit) =
-       [Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
+let error_to_short_string err =
+    BU.format4 "%s (fuel=%s; ifuel=%s; %s)"
+            err.error_reason
+            (string_of_int err.error_fuel)
+            (string_of_int err.error_ifuel)
+            (if Option.isSome err.error_hint then "with hint" else "")
+
+type query_settings = {
+    query_env:env;
+    query_decl:decl;
+    query_name:string;
+    query_index:int;
+    query_range:Range.range;
+    query_fuel:int;
+    query_ifuel:int;
+    query_rlimit:int;
+    query_hint:option<(list<string>)>;
+    query_errors:list<errors>;
+    query_all_labels:error_labels;
+    query_suffix:list<decl>;
+}
+
+
+//surround the query with fuel options and various diagnostics
+let with_fuel_and_diagnostics settings label_assumptions =
+    let n = settings.query_fuel in
+    let i = settings.query_ifuel in
+    let rlimit = settings.query_rlimit in
+    [  //fuel and ifuel settings
+        Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>"
+                        (string_of_int n)
+                        (string_of_int i));
         Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
         Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
-        p]
-        @label_assumptions
-        @[Term.SetOption ("rlimit", string_of_int rlimit)]
-        @[Term.CheckSat]
-        @(if Options.record_hints() then [Term.GetUnsatCore] else [])
-        @(if Options.print_z3_statistics() || Options.check_hints() then [Term.GetStatistics; Term.GetReasonUnknown] else [])
-        @suffix in
+        settings.query_decl        //the query itself
+    ]
+    @label_assumptions         //the sub-goals that are currently disabled
+    @[  Term.SetOption ("rlimit", string_of_int rlimit); //the rlimit setting
+        Term.CheckSat; //go Z3!
+        Term.GetReasonUnknown //explain why it failed
+    ]
+    @(if Options.record_hints()        then [Term.GetUnsatCore]  else []) //unsat core is the recorded hint
+    @(if Options.print_z3_statistics() then [Term.GetStatistics] else []) //stats
+    @settings.query_suffix //recover error labels and a final "Done!" message
 
-    let check (p:decl) =
-        let rlimit = Prims.op_Multiply (Options.z3_rlimit_factor ()) (Prims.op_Multiply (Options.z3_rlimit ()) 544656) in
-        let default_initial_config = Options.initial_fuel(), Options.initial_ifuel(), rlimit in
-        let hint_opt = next_hint query_name query_index in
-        let unsat_core, initial_config =
-            match hint_opt with
-            | None -> None, default_initial_config
-            | Some hint ->
-              let core, timeout =
-                if Option.isSome hint.unsat_core
-                then hint.unsat_core, rlimit
-                else None, Prims.op_Multiply 60 544656 in
-              core,
-              (hint.fuel, hint.ifuel, timeout) in
-        let alt_configs = List.flatten
-           [(if default_initial_config <> initial_config
-             || Option.isSome unsat_core                          then [default_initial_config]                                       else []);
-            (if Options.max_ifuel()    >  Options.initial_ifuel() then [Options.initial_fuel(), Options.max_ifuel(), rlimit] else []);
-            (if Options.max_fuel() / 2 >  Options.initial_fuel()  then [Options.max_fuel() / 2, Options.max_ifuel(), rlimit] else []);
-            (if Options.max_fuel()     >  Options.initial_fuel() &&
-                Options.max_ifuel()   >=  Options.initial_ifuel() then [Options.max_fuel(),     Options.max_ifuel(), rlimit] else []);
-            (if Options.min_fuel()     <  Options.initial_fuel()  then [Options.min_fuel(), 1, rlimit]                       else [])] in
-        let report p (errs:z3_err) : unit =
-            let errs : z3_err =
-                if Options.detail_errors() && Options.n_cores() = 1
-                then let min_fuel, potential_errors = match !minimum_workable_fuel with
-                        | Some (f, errs) -> f, errs
-                        | None -> (Options.min_fuel(), 1, rlimit), errs in
-                     let ask_z3 label_assumptions =
-                        let res = BU.mk_ref None in
-                        Z3.ask (filter_facts_without_core env) all_labels (with_fuel label_assumptions p min_fuel) None (fun r -> res := Some r);
-                        Option.get (!res) in
-                     detail_errors false env all_labels ask_z3;
-                     [], Default
-                else match errs with
-                     | [], Timeout -> [(("", Term_sort), "Timeout: Unknown assertion failed", Range.dummyRange)], snd errs
-                     | [], Default -> [(("", Term_sort), "Unknown assertion failed", Range.dummyRange)], snd errs
-                     | _, Kill     -> [(("", Term_sort), "Killed: Unknown assertion failed", Range.dummyRange)], snd errs
-                     | _ -> errs in
-            record_hint None;
-            if Options.print_fuels()
-            then BU.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
-                    (Range.string_of_range (Env.get_range env))
-                    (Options.max_fuel()  |> BU.string_of_int)
-                    (Options.max_ifuel() |> BU.string_of_int);
-            Err.add_errors env (fst errs |> List.map (fun (_, x, y) -> x, y))
-        in
 
-        let use_errors (errs:error_labels * error_kind) (result:z3_result) : z3_result =
-            match errs, result with
-            | ([], _), _
-            | _, Inl _ -> result
-            | _, Inr _ -> Inr errs in
+let used_hint s = Option.isSome s.query_hint
 
-        let rec try_alt_configs prev_f (p:decl) (errs:z3_err) cfgs (scope:scope_t) =
-            set_minimum_workable_fuel prev_f errs;
-            match cfgs, snd errs with
-            | [], _
-            | _, Kill -> report p errs
-            | mi::tl, _ ->
-                    Z3.ask (filter_facts_without_core env) all_labels (with_fuel [] p mi) (Some scope)
-                        (fun (result, elapsed_time, statistics) -> cb false mi p tl scope (use_errors errs result, elapsed_time, statistics))
+let next_hint ({query_name=qname; query_index=qindex}) =
+    match !replaying_hints with
+    | Some hints ->
+      BU.find_map hints (function
+        | Some hint when hint.hint_name=qname && hint.hint_index=qindex -> Some hint
+        | _ -> None)
+    | _ -> None
 
-        and cb used_hint (prev_fuel, prev_ifuel, timeout) (p:decl) alt (scope:scope_t) (result, elapsed_time, statistics) =
-            if used_hint then (Z3.refresh(); record_hint_stat hint_opt result elapsed_time (Env.get_range env));
-            if Options.z3_refresh() || Options.check_hints() then Z3.refresh();
-            let query_info env name tag statistics =
-                if Options.print_fuels() || Options.hint_info() || Options.print_z3_statistics() then
-                    BU.print "%s\t%s (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
-                        ([(match env with | Some e -> "(" ^ (Range.string_of_range (Env.get_range e)) ^ at_log_file() ^ ")" | None -> "");
-                         name;
-                         query_name;
-                         BU.string_of_int query_index;
-                         tag;
-                         (match env with | Some e -> if used_hint then " (with hint)" else "" | None -> "");
-                         BU.string_of_int elapsed_time;
-                         BU.string_of_int prev_fuel;
-                         BU.string_of_int prev_ifuel;
-                         BU.string_of_int rlimit]
-                         @
-                         [(if Options.print_z3_statistics() then
-                            let f k v a = a ^ k ^ "=" ^ v ^ " " in
-                            let str = smap_fold statistics f "statistics={" in
-                             (substring str 0 ((String.length str) - 1)) ^ "}"
-                           else
-                            (match smap_try_find statistics "reason-unknown" with
-                             | Some v -> "(reason-unknown=" ^ v ^ ")" | _ -> ""))])
+let query_errors settings (z3status, elapsed_time, stats) =
+    match z3status with
+    | UNSAT _ -> None
+    | _ ->
+     let msg, error_labels = Z3.status_string_and_errors z3status in
+     let err =  {
+            error_reason = msg;
+            error_fuel = settings.query_fuel;
+            error_ifuel = settings.query_ifuel;
+            error_hint = settings.query_hint;
+            error_messages = List.map (fun (_, x, y) -> x,y) error_labels
+        }
+     in
+     Some err
+
+let detail_hint_replay settings (z3status, _, _) =
+    if used_hint settings
+    && Options.detail_hint_replay ()
+    then match z3status with
+         | UNSAT _ -> ()
+         | _failed ->
+           let ask_z3 label_assumptions =
+               let res = BU.mk_ref None in
+               Z3.ask (filter_assertions settings.query_env settings.query_hint)
+                      settings.query_all_labels
+                      (with_fuel_and_diagnostics settings label_assumptions)
+                      None
+                      (fun r -> res := Some r);
+               Option.get (!res)
+           in
+           detail_errors true settings.query_env settings.query_all_labels ask_z3
+
+let find_localized_errors errs =
+    errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
+
+let has_localized_errors errs = Option.isSome (find_localized_errors errs)
+
+let report_errors settings : unit =
+    if Options.detail_errors()
+    && Options.n_cores() = 1
+    then let initial_fuel = {
+                settings with query_fuel=Options.initial_fuel();
+                              query_ifuel=Options.initial_ifuel();
+                              query_hint=None
+            }
+         in
+         let ask_z3 label_assumptions =
+            let res = BU.mk_ref None in
+            Z3.ask (filter_facts_without_core settings.query_env)
+                    settings.query_all_labels
+                    (with_fuel_and_diagnostics initial_fuel label_assumptions)
+                    None
+                    (fun r -> res := Some r);
+            Option.get (!res)
             in
-            let refine_hint unsat_core scope =
-                let current_core = BU.mk_ref unsat_core in
-                let hint_worked = BU.mk_ref false in
-                let rec refine_hint (core_ext_max_dist:int) =
-                    if not !hint_worked then
-                        let hint_check_cb (result, elapsed_time, statistics) =
-                            let tag = (match result with
-                                | Inl _ -> hint_worked := true ; "succeeded"
-                                | Inr _ -> "failed") in
-                            if Options.hint_info() then
-                                query_info None "Hint-check" tag statistics in
-                        Z3.refresh() ;
-                        Z3.ask (filter_assertions env !current_core) all_labels
-                            (with_fuel [] p (prev_fuel, prev_ifuel, rlimit))
-                            (Some scope)
-                            (hint_check_cb) ;
-                        if not !hint_worked then (
-                            let refinement_ok = BU.mk_ref false in
-                            Options.set_option "z3cliopt" (Options.List
-                                [ (Options.String "smt.core.extend_patterns=true") ;
-                                    (Options.String (format "smt.core.extend_patterns.max_distance=%s"
-                                                            [ (BU.string_of_int core_ext_max_dist) ])) ]) ;
-                            let hint_refinement_cb (result, elapsed_time, statistics) =
-                                if Options.hint_info() then
-                                    let tag = (match result with
-                                        | Inl uc -> refinement_ok := true; current_core := uc ;
-                                            BU.format1 "succeeded (with smt.core.extend_patterns.max_distance=%s)"
-                                                        (BU.string_of_int core_ext_max_dist)
-                                        | Inr errs -> "failed") in
-                                    query_info None "Hint-refinement" tag statistics in
-                            Z3.refresh() ;
-                            // This could be done without actually solving the problem a second time.
-                            Z3.ask (filter_facts_without_core env) all_labels
-                                (with_fuel [] p (prev_fuel, prev_ifuel, rlimit))
-                                (Some scope)
-                                (hint_refinement_cb) ;
-                            if (!refinement_ok) then
-                                let cutoff = 10 in
-                                if (core_ext_max_dist) >= cutoff then (
-                                    BU.print "\tHint-fallback smt.core.extend_patterns.max_distance=%s reached, aborting refinement." [ (BU.string_of_int cutoff) ];
-                                    current_core := None
-                                ) else
-                                    refine_hint (core_ext_max_dist + 1)
-                        ) in
-                (let z3cliopts_before = Options.z3_cliopt() in
-                let log_queries_before = Options.log_queries() in
-                Options.set_option "log_queries" (Options.Bool false) ;
-                refine_hint (1) ;
-                Options.set_option "z3cliopt" (Options.List (List.map (fun x -> (Options.String x)) z3cliopts_before)) ;
-                Options.set_option "log_queries" (Options.Bool log_queries_before)) ;
-                { hint_name=query_name;
-                  hint_index=query_index;
-                  fuel=prev_fuel;
-                  ifuel=prev_ifuel;
-                  query_elapsed_time=elapsed_time;
-                  unsat_core = !current_core } in
-            match result with
-            | Inl unsat_core ->
-                query_info (Some env) "Query-stats" "succeeded" statistics ;
-                record_hint (if (not used_hint && Options.record_hints())
-                             then (Some (if Options.check_hints()
-                                         then (refine_hint unsat_core scope)
-                                         else {
-                                            hint_name=query_name;
-                                            hint_index=query_index;
-                                            fuel=prev_fuel;
-                                            ifuel=prev_ifuel;
-                                            query_elapsed_time=elapsed_time;
-                                            unsat_core = unsat_core }))
-                             else hint_opt)
-            | Inr errs ->
-                 query_info (Some env) "Query-stats" "failed" statistics;
-                 if used_hint
-                 && Options.hint_info()
-                 then begin
-                     print_string "Failed hint:\n";
-                     match unsat_core with
-                     | None -> BU.print_string "<empty>"
-                     | Some core ->
-                       List.iter (fun x -> print_string (" " ^ x)) core;
-                       print_string "\n"
-                 end;
-                 if used_hint
-                 && Options.detail_hint_replay ()
-                 then begin
-                      let ask_z3 label_assumptions =
-                        let res = BU.mk_ref None in
-                        Z3.ask (filter_assertions env unsat_core)
-                                all_labels
-                                (with_fuel label_assumptions p initial_config)
-                                None
-                                (fun r -> res := Some r);
-                        Option.get (!res)
-                      in
-                      detail_errors true env all_labels ask_z3
-                 end;
-                 try_alt_configs (prev_fuel, prev_ifuel, timeout) p errs alt scope
+         detail_errors false settings.query_env settings.query_all_labels ask_z3
+    else begin
+        match find_localized_errors settings.query_errors with
+        | Some err ->
+          settings.query_errors |> List.iter (fun e ->
+          FStar.Errors.diag settings.query_range ("SMT solver says: " ^ error_to_short_string e));
+          FStar.TypeChecker.Err.add_errors settings.query_env err.error_messages
+
+        | None ->
+          let err_detail =
+            settings.query_errors |>
+            List.map (fun e -> "SMT solver says: " ^ error_to_short_string e) |>
+            String.concat "; " in
+          FStar.TypeChecker.Err.add_errors
+                   settings.query_env
+                   [(BU.format1 "Unknown assertion failed (%s)" err_detail,
+                     settings.query_range)]
+    end
+
+let query_info settings z3result =
+    if Options.hint_info()
+    || Options.print_z3_statistics()
+    then begin
+        let z3status, elapsed_time, statistics = z3result in
+        let status_string, errs = Z3.status_string_and_errors z3status in
+        let tag = match z3status with
+         | UNSAT _ -> "succeeded"
+         | _ -> "failed {reason-unknown=" ^ status_string ^ "}"in
+        let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file() ^ ")" in
+        let used_hint_tag = if used_hint settings then " (with hint)" else "" in
+        let stats =
+            if Options.print_z3_statistics() then
+                let f k v a = a ^ k ^ "=" ^ v ^ " " in
+                let str = smap_fold statistics f "statistics={" in
+                    (substring str 0 ((String.length str) - 1)) ^ "}"
+            else "" in
+        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
+             [  range;
+                settings.query_name;
+                BU.string_of_int settings.query_index;
+                tag;
+                used_hint_tag;
+                BU.string_of_int elapsed_time;
+                BU.string_of_int settings.query_fuel;
+                BU.string_of_int settings.query_ifuel;
+                BU.string_of_int settings.query_rlimit;
+                stats ];
+        errs |> List.iter (fun (_, msg, range) ->
+            let e = FStar.Errors.mk_issue FStar.Errors.EInfo (Some range) msg in
+            let tag = if used_hint settings then "(Hint-replay failed): " else "" in
+            BU.print2 "\t\t%s%s\n" tag (FStar.Errors.format_issue e))
+    end
+
+let record_hint settings z3result =
+    if not (Options.record_hints()) then () else
+    begin
+      let z3status, _, _ = z3result in
+      let mk_hint core = {
+                  hint_name=settings.query_name;
+                  hint_index=settings.query_index;
+                  fuel=settings.query_fuel;
+                  ifuel=settings.query_ifuel;
+                  query_elapsed_time=0; //recording the elapsed_time prevents us from reaching a fixed point
+                  unsat_core = core
+          }
+      in
+      let store_hint hint =
+          match !recorded_hints with
+          | Some l -> recorded_hints := Some (l@[Some hint])
+          | _ -> assert false; ()
+      in
+      match z3status with
+      | UNSAT unsat_core ->
+        if used_hint settings //if we already successfully use a hint
+        then store_hint (mk_hint settings.query_hint) //just re-use the successful hint
+        else store_hint (mk_hint unsat_core)          //else store the new unsat core
+      | _ ->  () //the query failed, so nothing to do
+    end
+
+let process_result settings result : option<errors> =
+    if used_hint settings && not (Options.z3_refresh()) then Z3.refresh();
+    let errs = query_errors settings result in
+    query_info settings result;
+    record_hint settings result;
+    detail_hint_replay settings result;
+    errs
+
+let fold_queries (qs:list<query_settings>)
+                 (ask:query_settings -> (z3result -> unit) -> unit)
+                 (f:query_settings -> z3result -> option<errors>)
+                 (report:list<errors> -> unit) : unit =
+    let rec aux acc qs =
+        match qs with
+        | [] -> report acc
+        | q::qs ->
+          ask q (fun res ->
+                  match f q res with
+                  | None -> () //done
+                  | Some errs ->
+                    aux (errs::acc) qs)
+    in
+    aux [] qs
+
+let ask_and_report_errors env all_labels prefix query suffix =
+    Z3.giveZ3 prefix; //feed the context of the query to the solver
+
+    let default_settings =
+        let qname, index =
+            match env.qname_and_index with
+            | None -> failwith "No query name set!"
+            | Some (q, n) -> Ident.text_of_lid q, n
         in
+        let rlimit =
+            Prims.op_Multiply
+                (Options.z3_rlimit_factor ())
+                (Prims.op_Multiply (Options.z3_rlimit ()) 544656)
+        in
+        {
+            query_env=env;
+            query_decl=query;
+            query_name=qname;
+            query_index=index;
+            query_range=Env.get_range env;
+            query_fuel=Options.initial_fuel();
+            query_ifuel=Options.initial_ifuel();
+            query_rlimit=rlimit;
+            query_hint=None;
+            query_errors=[];
+            query_all_labels=all_labels;
+            query_suffix=suffix;
+        }
+    in
 
-        if Option.isSome unsat_core || Options.z3_refresh() then Z3.refresh();
-        let wf = (with_fuel [] p initial_config) in
-        Z3.ask (filter_assertions env unsat_core)
-               all_labels
-               wf
-               None
-               (cb (Option.isSome unsat_core) initial_config p alt_configs (Z3.mk_fresh_scope())) in
+    let use_hints_setting =
+        match next_hint default_settings with
+        | Some ({unsat_core=Some core; fuel=i; ifuel=j}) ->
+          [{default_settings with query_hint=Some core;
+                                  query_fuel=i;
+                                  query_ifuel=j}]
+        | _ ->
+          []
+    in
 
-    let process_query (q:decl) : unit =
-        check q
+    let initial_fuel_max_ifuel =
+        if Options.max_ifuel() > Options.initial_ifuel()
+        then [{default_settings with query_ifuel=Options.max_ifuel()}]
+        else []
+    in
+
+    let half_max_fuel_max_ifuel =
+        if Options.max_fuel() / 2 >  Options.initial_fuel()
+        then [{default_settings with query_fuel=Options.max_fuel() / 2;
+                                     query_ifuel=Options.max_ifuel()}]
+        else []
+    in
+
+    let max_fuel_max_ifuel =
+      if Options.max_fuel()     >  Options.initial_fuel()
+      && Options.max_ifuel()   >=  Options.initial_ifuel()
+      then [{default_settings with query_fuel=Options.max_fuel();
+                                   query_ifuel=Options.max_ifuel()}]
+      else []
+    in
+
+    let min_fuel =
+        if Options.min_fuel() < Options.initial_fuel()
+        then [{default_settings with query_fuel=Options.min_fuel();
+                                     query_ifuel=1}]
+        else []
+    in
+
+    let all_configs =
+        use_hints_setting
+        @ [default_settings]
+        @ initial_fuel_max_ifuel
+        @ half_max_fuel_max_ifuel
+        @ max_fuel_max_ifuel
+    in
+
+    let check_one_config config (k:z3result -> unit) : unit =
+          if used_hint config || Options.z3_refresh() then Z3.refresh();
+          Z3.ask (filter_assertions config.query_env config.query_hint)
+                  config.query_all_labels
+                  (with_fuel_and_diagnostics config [])
+                  (Some (Z3.mk_fresh_scope()))
+                  k
+    in
+
+    let check_all_configs configs =
+        let report errs = report_errors ({default_settings with query_errors=errs}) in
+        fold_queries configs check_one_config process_result report
     in
 
     match Options.admit_smt_queries(), Options.admit_except() with
     | true, _ -> ()
-    | false, None -> process_query query
+    | false, None -> check_all_configs all_configs
     | false, Some id ->
-        let cur_id = "(" ^ query_name ^ ", " ^ (BU.string_of_int query_index) ^ ")" in
-        if cur_id = id then (process_query query)
-
+      let skip =
+        if BU.starts_with id "("
+        then let full_query_id = "(" ^ default_settings.query_name ^ ", " ^ (BU.string_of_int default_settings.query_index) ^ ")" in
+             full_query_id <> id
+        else default_settings.query_name <> id
+      in
+      if not skip then check_all_configs all_configs
 
 let solve use_env_msg tcenv q : unit =
     Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
@@ -508,4 +529,3 @@ let dummy = {
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }
-

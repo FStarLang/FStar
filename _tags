@@ -11,12 +11,17 @@ true: \
   package(batteries), \
   package(zarith)
 
+# ADL: the new unicode lexer
+"src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)
+
 # ADL: Please do not enable compiler-libs unless absolutely necessary
 <ulib/ml/compiler/*.ml> or <ulib/ml/compiler-extracted/*.ml> or <src/*/ml/*> or <src/ocaml-output/*.ml>: \
   package(compiler-libs), \
   package(compiler-libs.common), \
+  package(menhirLib), \
   package(dynlink), \
   package(pprint), \
+  package(ulex), \
   package(yojson)
 
 # Turn off warnings for extracted files

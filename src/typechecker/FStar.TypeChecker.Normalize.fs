@@ -39,6 +39,7 @@ module FC = FStar.Const
 module PC = FStar.Parser.Const
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
+module EMB = FStar.Syntax.Embeddings
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -111,7 +112,7 @@ type stack_elt =
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
  | Steps    of steps * list<primitive_step> * list<Env.delta_level>
- | Debug    of term
+ | Debug    of term * BU.time
 
 type stack = list<stack_elt>
 
@@ -134,7 +135,7 @@ let stack_elt_to_string = function
     | Meta (m,_) -> "Meta"
     | Let  _ -> "Let"
     | Steps (_, _, _) -> "Steps"
-    | Debug t -> BU.format1 "Debug %s" (Print.term_to_string t)
+    | Debug (t, _) -> BU.format1 "Debug %s" (Print.term_to_string t)
     // | _ -> "Match"
 
 let stack_to_string s =
@@ -450,7 +451,7 @@ let built_in_primitive_steps : list<primitive_step> =
         fun p b -> const_as_tm (FC.Const_bool b) p
     in
     let string_as_const : Range.range -> string -> term =
-        fun p b -> const_as_tm (FC.Const_string (BU.bytes_of_string b, p)) p
+        fun p b -> const_as_tm (FC.Const_string (b, p)) p
     in
     let arg_as_int (a, _) : option<int> =
         match (SS.compress a).n with
@@ -482,8 +483,8 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let arg_as_string (a, _) : option<string> =
         match (SS.compress a).n with
-        | Tm_constant (FC.Const_string(bytes, _)) ->
-          Some (BU.string_of_bytes bytes)
+        | Tm_constant (FC.Const_string(s, _)) ->
+          Some s
         | _ ->
           None
     in
@@ -820,29 +821,21 @@ let is_norm_request hd args =
 
     | _ -> false
 
+let tr_norm_step = function
+    | EMB.Zeta ->    [Zeta]
+    | EMB.Iota ->    [Iota]
+    | EMB.Delta ->   [UnfoldUntil Delta_constant]
+    | EMB.Simpl ->   [Simplify]
+    | EMB.WHNF ->    [WHNF]
+    | EMB.Primops -> [Primops]
+    | EMB.UnfoldOnly names ->
+        [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
+
+let tr_norm_steps s =
+    List.concatMap tr_norm_step s
+
 let get_norm_request (full_norm:term -> term) args =
-    let parse_steps s =
-        let unembed_step s =
-            match (U.un_uinst s).n with
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_zeta ->
-              Zeta
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_iota ->
-              Iota
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_primops ->
-              Primops
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_delta ->
-              UnfoldUntil Delta_constant
-            | Tm_fvar fv when S.fv_eq_lid fv PC.steps_delta_only ->
-              UnfoldUntil Delta_constant
-            | Tm_app({n=Tm_fvar fv}, [(names, _)])
-                when S.fv_eq_lid fv PC.steps_delta_only ->
-              let names = FStar.Syntax.Embeddings.unembed_string_list names in
-              let lids = names |> List.map Ident.lid_of_str in
-              UnfoldOnly lids
-            | _ -> failwith "Not an embedded `Prims.step`"
-        in
-        FStar.Syntax.Embeddings.unembed_list unembed_step s
-    in
+    let parse_steps s = tr_norm_steps <| EMB.unembed_list EMB.unembed_norm_step s in
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
@@ -909,7 +902,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 then [Unfold Delta_constant]
                 else [NoDelta] in
             let cfg' = {cfg with steps=s; delta_level=delta_level} in
-            let stack' = Debug t :: Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+            let stack' =
+              let tail = Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+              if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
+              then Debug(t, BU.now())::tail
+              else tail in
             norm cfg' env stack' tm
 
           | Tm_app({n=Tm_constant FC.Const_reify}, a1::a2::rest) ->
@@ -987,6 +984,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 end
             in
 
+            log cfg (fun () -> BU.print3 ">>> For %s (%s), should_delta = %s\n"
+                            (Print.term_to_string t)
+                            (Range.string_of_range t.pos)
+                            (string_of_bool should_delta));
+
             if not should_delta
             then rebuild cfg env stack t
             else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
@@ -1057,31 +1059,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       begin match bs with
                         | [] -> failwith "Impossible"
                         | [_] ->
-                          (* TODO : what happens if the argument is implicit ? is it already elaborated on the stack ? *)
-                          begin match lopt with
-                            | None when (Options.__unit_tests()) ->
-                              log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
-                              norm cfg (c :: env) stack_rest body
-
-                            | Some rc
-                            (* TODO (KM) : wouldn't it be better to check the TOTAL cflag ? *)
-                                when (Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
-                                      || Ident.lid_equals rc.residual_effect PC.effect_GTot_lid
-                                      || rc.residual_flags |> BU.for_some (function TOTAL -> true | _ -> false)) ->
-                              log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
-                              norm cfg (c :: env) stack_rest body
-
-
-                            | _ when cfg.steps |> List.contains Reify
-                                  || cfg.steps |> List.contains CheckNoUvars ->
-                              norm cfg (c :: env) stack_rest body
-
-                            | _ -> //can't reduce, as it may not terminate
-//                              printfn "REFUSING TO NORMALIZE APPLICATION BECAUSE IT MAY BE IMPURE: %s" (Print.term_to_string t);
-//                              printfn "Stack has %d elements" (List.length stack_rest);;
-                              let cfg = {cfg with steps=WHNF::Exclude Iota::Exclude Zeta::cfg.steps} in
-                              rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
-                          end
+                          log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
+                          norm cfg (c :: env) stack_rest body
                         | _::tl ->
                           log cfg  (fun () -> BU.print1 "\tShifted %s\n" (closure_to_string c));
                           let body = mk (Tm_abs(tl, body, lopt)) t.pos in
@@ -1283,9 +1262,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         delta_level=[Env.Inlining; Env.Eager_unfolding_only]
                       }
                     else
-                      { cfg with
-                        steps=[NoDeltaSteps; Exclude Zeta]@cfg.steps;
-                        delta_level=[NoDelta]}
+                      { cfg with steps=[ Exclude Zeta]@cfg.steps }
                   in
                   (* meta doesn't block reduction, but we need to put the label back *)
                   norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head
@@ -1625,9 +1602,15 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   match stack with
   | [] -> t
 
-  | Debug tm :: stack ->
+  | Debug (tm, time_then) :: stack ->
     if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
-    then BU.print2 "Normalized %s to %s\n" (Print.term_to_string tm) (Print.term_to_string t);
+    then begin
+      let time_now = BU.now () in
+      BU.print3 "Normalized (%s ms) %s\n\tto %s\n"
+                   (BU.string_of_int (snd (BU.time_diff time_then time_now)))
+                   (Print.term_to_string tm)
+                   (Print.term_to_string t)
+    end;
     rebuild cfg env stack t
 
   | Steps (s, ps, dl) :: stack ->

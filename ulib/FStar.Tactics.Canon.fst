@@ -105,7 +105,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         // Fold constants
         | Inr (Plus (Lit _) (Lit _))
         | Inr (Mult (Lit _) (Lit _)) ->
-            norm [Delta; Primops];; // Need this to turn op_Star into op_Multiply, as there's no primop for it
+            norm [delta; primops];; // Need this to turn op_Star into op_Multiply, as there's no primop for it
             trefl
 
         // Forget about negations

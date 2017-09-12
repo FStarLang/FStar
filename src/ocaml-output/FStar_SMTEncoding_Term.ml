@@ -454,13 +454,13 @@ let freevar_eq: term -> term -> Prims.bool =
       | (FreeV x1,FreeV y1) -> fv_eq x1 y1
       | uu____1370 -> false
 let freevar_sort: term -> sort =
-  fun uu___87_1378  ->
-    match uu___87_1378 with
+  fun uu___86_1378  ->
+    match uu___86_1378 with
     | { tm = FreeV x; freevars = uu____1380; rng = uu____1381;_} -> fv_sort x
     | uu____1394 -> failwith "impossible"
 let fv_of_term: term -> fv =
-  fun uu___88_1398  ->
-    match uu___88_1398 with
+  fun uu___87_1398  ->
+    match uu___87_1398 with
     | { tm = FreeV fv; freevars = uu____1400; rng = uu____1401;_} -> fv
     | uu____1414 -> failwith "impossible"
 let rec freevars:
@@ -488,11 +488,11 @@ let free_variables: term -> fvs =
            (FStar_Pervasives_Native.Some fvs);
          fvs)
 let qop_to_string: qop -> Prims.string =
-  fun uu___89_1628  ->
-    match uu___89_1628 with | Forall  -> "forall" | Exists  -> "exists"
+  fun uu___88_1628  ->
+    match uu___88_1628 with | Forall  -> "forall" | Exists  -> "exists"
 let op_to_string: op -> Prims.string =
-  fun uu___90_1632  ->
-    match uu___90_1632 with
+  fun uu___89_1632  ->
+    match uu___89_1632 with
     | TrueOp  -> "true"
     | FalseOp  -> "false"
     | Not  -> "not"
@@ -530,8 +530,8 @@ let op_to_string: op -> Prims.string =
         FStar_Util.format1 "(_ int2bv %s)" uu____1636
     | Var s -> s
 let weightToSmt: Prims.int FStar_Pervasives_Native.option -> Prims.string =
-  fun uu___91_1643  ->
-    match uu___91_1643 with
+  fun uu___90_1643  ->
+    match uu___90_1643 with
     | FStar_Pervasives_Native.None  -> ""
     | FStar_Pervasives_Native.Some i ->
         let uu____1647 = FStar_Util.string_of_int i in
@@ -644,7 +644,7 @@ let isInjective: Prims.string -> Prims.bool =
        uu____1803 = "Box") &&
         (let uu____1805 =
            let uu____1806 = FStar_String.list_of_string s in
-           FStar_List.existsML (fun c  -> c = '.') uu____1806 in
+           FStar_List.existsML (fun c  -> c = 46) uu____1806 in
          Prims.op_Negation uu____1805)
     else false
 let mk: term' -> FStar_Range.range -> term =
@@ -1559,8 +1559,8 @@ let termToSmt: Prims.string -> term -> Prims.string =
       aux (Prims.parse_int "0") (Prims.parse_int "0") [] t
 let caption_to_string:
   Prims.string FStar_Pervasives_Native.option -> Prims.string =
-  fun uu___92_5288  ->
-    match uu___92_5288 with
+  fun uu___91_5288  ->
+    match uu___91_5288 with
     | FStar_Pervasives_Native.None  -> ""
     | FStar_Pervasives_Native.Some c ->
         let uu____5292 =
@@ -1574,7 +1574,7 @@ let caption_to_string:
 let rec declToSmt: Prims.string -> decl -> Prims.string =
   fun z3options  ->
     fun decl  ->
-      let escape s = FStar_Util.replace_char s '\'' '_' in
+      let escape s = FStar_Util.replace_char s 39 95 in
       match decl with
       | DefPrelude  -> mkPrelude z3options
       | Caption c ->
@@ -1583,8 +1583,8 @@ let rec declToSmt: Prims.string -> decl -> Prims.string =
           then
             let uu____5326 =
               FStar_All.pipe_right (FStar_Util.splitlines c)
-                (fun uu___93_5330  ->
-                   match uu___93_5330 with | [] -> "" | h::t -> h) in
+                (fun uu___92_5330  ->
+                   match uu___92_5330 with | [] -> "" | h::t -> h) in
             FStar_Util.format1 "\n; %s" uu____5326
           else ""
       | DeclFun (f,argsorts,retsort,c) ->
@@ -1610,8 +1610,8 @@ let rec declToSmt: Prims.string -> decl -> Prims.string =
           let fact_ids_to_string ids =
             FStar_All.pipe_right ids
               (FStar_List.map
-                 (fun uu___94_5425  ->
-                    match uu___94_5425 with
+                 (fun uu___93_5425  ->
+                    match uu___93_5425 with
                     | Name n1 ->
                         Prims.strcat "Name " (FStar_Ident.text_of_lid n1)
                     | Namespace ns ->
@@ -1637,7 +1637,7 @@ let rec declToSmt: Prims.string -> decl -> Prims.string =
           FStar_Util.format1 "(eval %s)" uu____5440
       | Echo s -> FStar_Util.format1 "(echo \"%s\")" s
       | RetainAssumptions uu____5442 -> ""
-      | CheckSat  -> "(check-sat)"
+      | CheckSat  -> "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
       | GetUnsatCore  ->
           "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
       | Push  -> "(push)"
@@ -1954,10 +1954,10 @@ let mk_Valid: term -> term =
           let uu____6412 = unboxBitVec sz t2 in (uu____6411, uu____6412) in
         mkBvUlt uu____6406 t.rng
     | App (Var "Prims.b2t",t1::[]) ->
-        let uu___95_6416 = unboxBool t1 in
+        let uu___94_6416 = unboxBool t1 in
         {
-          tm = (uu___95_6416.tm);
-          freevars = (uu___95_6416.freevars);
+          tm = (uu___94_6416.tm);
+          freevars = (uu___94_6416.freevars);
           rng = (t.rng)
         }
     | uu____6417 -> mkApp ("Valid", [t]) t.rng

@@ -1,9 +1,6 @@
 [
   "\u000e\u0005Qåv|F√Õ+†Ç¥?∆(",
   [
-    null,
-    null,
-    null,
     [
       "NegativeTests.Termination.ackermann_bad",
       2,
@@ -20,7 +17,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    null,
     [
       "NegativeTests.Termination.sumto",
       1,
@@ -47,7 +43,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    null,
     [
       "NegativeTests.Termination.strangeZeroBad",
       2,
@@ -71,11 +66,6 @@
         "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0
-    ],
-    null,
-    null,
-    null,
-    null,
-    null
+    ]
   ]
 ]

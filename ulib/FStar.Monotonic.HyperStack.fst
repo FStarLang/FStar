@@ -267,7 +267,13 @@ let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a r
 let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
   :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-= lemma_sel_same_addr h r1 r2
+= Classical.or_elim
+    #(h `contains` r1)
+    #(h `contains` r2)
+    #(fun _ -> h `contains` r1 /\ h `contains` r2)
+    (fun _ -> lemma_sel_same_addr h r1 r2)
+    (fun _ -> lemma_sel_same_addr h r2 r1);
+  lemma_upd_same_addr h.h (MkRef?.ref r1) (MkRef?.ref r2) x
 
 let lemma_upd_same_addr' (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
   :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
@@ -314,7 +320,7 @@ let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
    = ()
    
 ////////////////////////////////////////////////////////////////////////////////
-#set-options "--initial_fuel 0 --max_fuel 0 --log_queries"
+#set-options "--initial_fuel 0 --max_fuel 0"
 let f (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder nat)
                           (x:mreference a rel_a) (x':mreference a rel_a) 
 			  (y:mreference b rel_b) (z:mreference nat rel_n) 

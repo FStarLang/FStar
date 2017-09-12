@@ -23,9 +23,9 @@ ifeq ($(OS),Windows_NT)
     EXTRA_OPTS =
     EXTRA_LIBS = -L.
     ifeq ($(MARCH),x86_64)
-      OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64 enable-tls1_3 no-shared no-engine
+      OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64 enable-tls1_3
     else
-      OPENSSL_CONF = CC=i686-w64-mingw32-gcc ./Configure mingw enable-tls1_3 no-shared no-engine
+      OPENSSL_CONF = CC=i686-w64-mingw32-gcc ./Configure mingw enable-tls1_3
     endif
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is

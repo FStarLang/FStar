@@ -1,37 +1,14 @@
 let max_int = Z.of_int max_int
-let is_letter c = BatChar.is_letter c
-let is_digit  c = BatChar.is_digit  c
-let is_letter_or_digit c = (BatChar.is_letter c) || (BatChar.is_digit c)
-let is_symbol c = BatChar.is_symbol c
+let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
+let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
+let is_letter_or_digit c = is_letter c || is_digit c
+let is_symbol c = if c > 255 then false else BatChar.is_symbol (BatChar.chr c)
 
 (* Modeled after: Char.IsPunctuation in .NET
    (http://www.dotnetperls.com/char-ispunctuation)
 *)
-let is_punctuation c = (
-    c = '!' ||
-    c = '"' ||
-    c = '#' ||
-    c = '%' ||
-    c = '&' ||
-    c = '\'' ||
-    c = '(' ||
-    c = ')' ||
-    c = '*' ||
-    c = ',' ||
-    c = '-' ||
-    c = '.' ||
-    c = '/' ||
-    c = ':' ||
-    c = ';' ||
-    c = '?' ||
-    c = '@' ||
-    c = '[' ||
-    c = '\\' ||
-    c = ']' ||
-    c = '_' ||
-    c = '{' ||
-    c = '}'
-  )
+let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 46; 47; 58; 59; 63; 64; 91; 92; 93; 95; 123; 125]
+(*'!','"','#','%','&','\'','(',')','*',',','-','.','/',':',';','?','@','[','\\',']','_','{','}'*)
 
 let return_all x = x
 
@@ -88,7 +65,7 @@ let write_input in_write input =
 
 (*let cnt = ref 0*)
 
-let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
+let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
   (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
   output_string fc input;
   close_out fc;*)
@@ -113,10 +90,18 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
     let s, eof = (try
                     BatString.trim (input_line cin), false
                   with End_of_file ->
-                    Buffer.add_string out ("\nkilled\n") ; "", true) in
-    if not eof then
-      if s = "Done!" then ()
-      else (Buffer.add_string out (s ^ "\n"); read_out ())  in
+                    if not raw then
+                        Buffer.add_string out ("\nkilled\n")
+                    else (); "", true) in
+    if not raw then (
+        if not eof then
+          if s = "Done!" then ()
+          else (Buffer.add_string out (s ^ "\n"); read_out ())
+    ) else (
+        if not eof then
+          (Buffer.add_string out s; read_out ())
+    )
+  in
   let child_thread = Thread.create (fun _ -> read_out ()) () in
 
   (* writing to z3 *)
@@ -128,7 +113,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   close_in cin;
   Buffer.contents out
 
-let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
+let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
   let (inc,outc) = Unix.open_process command in
   let proc = {inc = inc; outc = outc; killed = false; id = prog^":"^id} in
@@ -221,8 +206,8 @@ let set_is_empty ((s, _):'a set) =
   | [] -> true
   | _ -> false
 
-let new_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_set (l:'a list) (cmp:('a -> 'a -> Z.t)) = (l, fun x y -> cmp x y = Z.zero)
+let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
 
 let set_elements ((s1, eq):'a set) : 'a list =
   let rec aux out = function
@@ -233,6 +218,7 @@ let set_elements ((s1, eq):'a set) : 'a list =
        else
          aux (hd::out) tl in
   aux [] s1
+
 let set_add a ((s, b):'a set) = (a::s, b)
 let set_remove x ((s1, eq):'a set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
@@ -256,8 +242,11 @@ let fifo_set_is_empty ((s, _):'a fifo_set) =
   | [] -> true
   | _ -> false
 
-let new_fifo_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a fifo_set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_fifo_set (l:'a list) (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+  (l, fun x y -> cmp x y = Z.zero)
+
+let new_fifo_set (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+    as_fifo_set [] cmp
 
 let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
   let rec aux out = function
@@ -405,13 +394,13 @@ let unicode_of_string (string:string) =
   BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
   t
 
-let char_of_int i = char_of_int (Z.to_int i)
+let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
-let int_of_char x= Z.of_int (Char.code x)
+let int_of_char x = Z.of_int x
 let int_of_byte x = x
-let int_of_uint8 = int_of_char
+let int_of_uint8 x = Z.of_int (Char.code x)
 let uint16_of_int i = Z.to_int i
-let byte_of_char (c:char) = Char.code c
+let byte_of_char c = c
 
 let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)
@@ -426,7 +415,7 @@ let string_of_bool = string_of_bool
 let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float
-let string_of_char  (i:char) = spr "%c" i
+let string_of_char i = BatUTF8.init 1 (fun _ -> BatUChar.chr i)
 let hex_string_of_byte (i:int) =
   let hs = spr "%x" i in
   if (String.length hs = 1) then "0" ^ hs
@@ -436,15 +425,16 @@ let bytes_of_string = unicode_of_string
 let starts_with = BatString.starts_with
 let trim_string = BatString.trim
 let ends_with = BatString.ends_with
-let char_at s index = BatString.get s (Z.to_int index)
-let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let char_at s index = BatUChar.code (BatUTF8.get s (Z.to_int index))
+let is_upper c = 65 <= c && c <= 90
 let contains (s1:string) (s2:string) = BatString.exists s1 s2
 let substring_from s index = BatString.tail s (Z.to_int index)
-let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
-let replace_char (s:string) (c1:char) (c2:char) =
-  BatString.map (fun c -> if c = c1 then c2 else c) s
-let replace_chars (s:string) (c:char) (by:string) =
-  BatString.replace_chars (fun x -> if x=c then by else BatString.of_char x) s
+let substring s i j = BatString.sub s (Z.to_int i) (Z.to_int j)
+let replace_char (s:string) c1 c2 =
+  let b = bytes_of_string s in
+  string_of_bytes (BatArray.map (fun x -> if x = c1 then c2 else x) b)
+let replace_chars (s:string) c (by:string) =
+  BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = if s = "" then [""] else BatString.nsplit s sep

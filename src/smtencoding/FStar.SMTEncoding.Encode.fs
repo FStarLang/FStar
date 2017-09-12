@@ -427,7 +427,7 @@ let encode_const = function
     | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))])
     | Const_int (i, None)  -> boxInt (mkInteger i)
     | Const_int (i, Some _) -> failwith "Machine integers should be desugared"
-    | Const_string(bytes, _) -> varops.string_const (BU.string_of_bytes <| bytes)
+    | Const_string(s, _) -> varops.string_const s
     | Const_range r -> mk_Range_const
     | Const_effect -> mk_Term_type
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
@@ -1356,7 +1356,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
               begin match (SS.compress r).n, (SS.compress msg).n with
                 | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) ->
-                  let phi = S.mk (Tm_meta(phi,  Meta_labeled(BU.string_of_unicode s, r, false))) None r in
+                  let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, r, false))) None r in
                   fallback phi
                 | _ ->
                   fallback phi
@@ -2133,14 +2133,12 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     let is_opaque_to_smt (t:S.term) =
         match (SS.compress t).n with
-        | Tm_constant (Const_string(bytes, _)) ->
-          BU.string_of_bytes bytes = "opaque_to_smt"
+        | Tm_constant (Const_string(s, _)) -> s = "opaque_to_smt"
         | _ -> false
     in
     let is_uninterpreted_by_smt (t:S.term) =
         match (SS.compress t).n with
-        | Tm_constant (Const_string(bytes, _)) ->
-          BU.string_of_bytes bytes = "uninterpreted_by_smt"
+        | Tm_constant (Const_string(s, _)) -> s = "uninterpreted_by_smt"
         | _ -> false
     in
     match se.sigel with
@@ -2767,7 +2765,7 @@ let encode_query use_env_msg tcenv q
         @label_prefix
         @qdecls in
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
-    let suffix = label_suffix @ [Term.Echo "Done!"] in
+    let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     query_prelude, labels, qry, suffix
 
 let is_trivial (tcenv:Env.env) (q:typ) : bool =

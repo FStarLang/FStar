@@ -26,18 +26,6 @@
       0
     ],
     [
-      "ImmutableSTwHeaps.upd",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.Heap.valid_upd",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
       "ImmutableSTwHeaps.heap_rel",
       1,
       2,
@@ -74,7 +62,7 @@
       0
     ],
     [
-      "ImmutableSTwHeaps.261036",
+      "ImmutableSTwHeaps.284046",
       1,
       2,
       1,

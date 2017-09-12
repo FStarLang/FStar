@@ -1,5 +1,5 @@
 name="fstarlib"
-version="0.9.4"
+version="0.9.5.0"
 description="FStar standard library"
 requires="batteries,stdint,zarith"
 archive(toploop)="fstarlib.cma"

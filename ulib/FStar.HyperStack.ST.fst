@@ -58,7 +58,8 @@ let inline_stack_inv h h' : GTot Type0 =
   /\ Map.domain h.h == Map.domain h'.h
   (* Any region that is not the tip has no seen any allocation *)
   /\ (forall (r:HH.rid). {:pattern (Map.contains h.h r)} (r <> h.tip /\ Map.contains h.h r)
-       ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r))
+       ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r) /\
+           Map.contains h'.h r)
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.

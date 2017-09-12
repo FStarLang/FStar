@@ -27,6 +27,7 @@ open FStar.Range
 open FStar.Ident
 open FStar.Const
 open FStar.Dyn
+module PC = FStar.Parser.Const
 
 (* Objects with metadata *)
 ///[@ PpxDerivingShow ]
@@ -209,10 +210,10 @@ and fv = {
     fv_qual :option<fv_qual>
 }
 and free_vars = {
-    free_names:set<bv>;
-    free_uvars:uvars;
-    free_univs:set<universe_uvar>;
-    free_univ_names:fifo_set<univ_name>;
+    free_names:list<bv>;
+    free_uvars:list<(uvar*typ)>;
+    free_univs:list<universe_uvar>;
+    free_univ_names:list<univ_name>; //fifo
 }
 and lcomp = {
     eff_name: lident;
@@ -408,11 +409,10 @@ open FStar.Range
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
-let new_fv_set () :set<lident> = Util.new_set order_fv (fun x -> Util.hashcode x.str)
-let new_universe_names_fifo_set () : fifo_set<univ_name> =
-    Util.new_fifo_set (fun  x y -> String.compare (Ident.text_of_id x) (Ident.text_of_id y))
-                 (fun x -> Util.hashcode (Ident.text_of_id x))
+let new_bv_set () : set<bv> = Util.new_set order_bv
+let new_fv_set () :set<lident> = Util.new_set order_fv
+let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
+let new_universe_names_fifo_set () : fifo_set<univ_name> = Util.new_fifo_set order_univ_name
 
 let no_names  = new_bv_set()
 let no_fvars  = new_fv_set()
@@ -541,7 +541,7 @@ let set_range_of_fv (fv:fv) (r:Range.range) =
     {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
 let has_simple_attribute (l: list<term>) s =
   List.existsb (function
-    | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->
+    | { n = Tm_constant (Const_string (data, _)) } when data = s ->
         true
     | _ ->
         false
@@ -566,4 +566,3 @@ let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev C.u_tac_lid) [U_zero]) [as_a
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange
-

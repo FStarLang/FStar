@@ -1,4 +1,5 @@
 FSTAR_HOME=../..
+CACHE = _cache
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
@@ -6,12 +7,12 @@ OCAML_OUTPUT=$(FSTAR_HOME)/src/ocaml-output
 INCLUDES=$(addprefix -I $(OCAML_OUTPUT)/_build/, src/tactics/ml ulib/ml src/ocaml-output/ src/basic/ml)
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
-.PRECIOUS: %.ml %.cmxs
+.PRECIOUS: %.cmxs
 .PHONY: %.test
 
 MODULES=Print Split Canon
 
-all: $(patsubst %,%.test,$(MODULES))
+all: $(patsubst %,%.cmxs,$(MODULES)) $(patsubst %,%.test,$(MODULES))
 
 .ulib: ../../bin/fstarlib/fstarlib.cmxa
 	touch $@
@@ -19,14 +20,14 @@ all: $(patsubst %,%.test,$(MODULES))
 ../../bin/fstarlib/fstarlib.cmxa:
 	$(MAKE) -C $(ULIB_ML)
 
-%.ml: %.fst .ulib
-	$(FSTAR) $(OTHERFLAGS) --lax --codegen OCaml $< --extract_module $(patsubst %.fst,%,$<)
+$(CACHE):
+	mkdir $@
 
-%.cmxs: %.ml
-	ocamlfind ocamlopt -shared $(INCLUDES) -linkpkg -package zarith -o $@ $<
+%.cmxs: %.Test.fst .ulib $(CACHE)
+	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE) $<
 
-%.test: %.cmxs %.Test.fst 
-	$(FSTAR) --load $^ --admit_smt_queries true
+%.test: %.Test.fst %.cmxs
+	$(FSTAR) $(OTHERFLAGS) --use_native_tactics $(CACHE) $<
 
 clean:
-	rm -f *.ml *.cm*
+	rm -f $(CACHE)/*.ml $(CACHE)/*.cm* $(CACHE)/*.o

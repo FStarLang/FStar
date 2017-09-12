@@ -1,7 +1,6 @@
 [
   "Ä©]\u0015‡§ıñê£\u0006ß¢í˚¸",
   [
-    [ "ArrayUtils.all_some", 1, 2, 1, [ "@query" ], 0 ],
     [ "ArrayUtils.some_equivalent_seqs", 1, 2, 1, [ "@query" ], 0 ],
     [
       "ArrayUtils.lemma_get_some_equivalent_length",
