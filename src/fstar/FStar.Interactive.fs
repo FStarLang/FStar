@@ -796,8 +796,8 @@ let run_compute st term rules =
 
   let find_let_body ses =
     match ses with
-    | [{ SS.sigel = SS.Sig_let((_, [lb]), _) }] ->
-      Some (lb.SS.lbunivs, lb.SS.lbdef)
+    | [{ SS.sigel = SS.Sig_let((_, [{ SS.lbunivs = univs; SS.lbdef = def }]), _) }] ->
+      Some (univs, def)
     | _ -> None in
 
   let parse frag =
