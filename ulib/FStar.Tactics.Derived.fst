@@ -69,8 +69,8 @@ let whnf  : tactic unit = norm [whnf; primops]
 
 let intros : tactic (list binder) = repeat intro
 
-private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
-private let __cut #b a f x = f x
+private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
+private let __cut a b f x = f x
 
 let tcut (t:term) : tactic binder =
     qq <-- quote_lid ["FStar";"Tactics";"Derived";"__cut"];

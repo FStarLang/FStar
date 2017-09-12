@@ -50,6 +50,8 @@ type goal = {
     witness : term;
     goal_ty : typ;
     opts    : FStar.Options.optionstate; // option state for this particular goal
+    is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
+                     // We make the distinction to be more user-friendly at times
 }
 
 type proofstate = {
@@ -296,16 +298,13 @@ let cur_goal : tac<goal> =
 let mk_irrelevant_goal (env:env) (phi:typ) opts : tac<goal> =
     let typ = U.mk_squash phi in
     bind (new_uvar env typ) (fun u ->
-    let goal = { context = env; witness = u; goal_ty = typ; opts = opts } in
+    let goal = { context = env; witness = u; goal_ty = typ; opts = opts; is_guard = false } in
     ret goal)
 
 let add_irrelevant_goal env phi opts : tac<unit> =
     bind (mk_irrelevant_goal env phi opts) (fun goal ->
     add_goals [goal])
 
-let push_irrelevant_goal env phi opts : tac<unit> =
-    bind (mk_irrelevant_goal env phi opts) (fun goal ->
-    push_goals [goal])
 
 let istrivial (e:env) (t:term) : bool =
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
@@ -323,7 +322,10 @@ let add_goal_from_guard (e:env) (g : guard_t) opts : tac<unit> =
     match (Rel.simplify_guard e g).guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
-        push_irrelevant_goal e f opts
+        if istrivial e f then ret () else
+        bind (mk_irrelevant_goal e f opts) (fun goal ->
+        let goal = { goal with is_guard = true } in
+        push_goals [goal])
 
 let smt : tac<unit> =
     bind cur_goal (fun g ->
@@ -477,6 +479,7 @@ let exact_lemma (t:term) : tac<unit> =
                     (Print.term_to_string goal.goal_ty)))
 
 let uvar_free_in_goal (u:uvar) (g:goal) =
+    if g.is_guard then false else
     let free_uvars = List.map fst (BU.set_elements (SF.uvars g.goal_ty)) in
     List.existsML (UF.equiv u) free_uvars
 
@@ -517,10 +520,10 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
                 bind get (fun ps ->
                 if uopt && uvar_free uvar ps
                 then ret ()
-                else add_goals [{context = goal.context;
-                                 witness = bnorm goal.context u;
-                                 goal_ty = bnorm goal.context bv.sort;
-                                 opts    = goal.opts; }])
+                else add_goals [{ goal with
+                                  witness  = bnorm goal.context u;
+                                  goal_ty  = bnorm goal.context bv.sort;
+                                  is_guard = false; }])
             | _ -> ret ()))))
 
 // The exception is thrown only when the tactic runs, not when it's defined,
@@ -600,10 +603,9 @@ let apply_lemma (tm:term) : tac<unit> = focus(
         in
         let sub_goals =
              implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
-                     {context = goal.context;
+                     { goal with
                       witness = bnorm goal.context term;
-                      goal_ty = bnorm goal.context typ;
-                      opts    = goal.opts; })
+                      goal_ty = bnorm goal.context typ })
         in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. TODO: maybe keep and check later?
@@ -909,6 +911,7 @@ let goal_of_goal_ty env typ : goal * guard_t =
         witness = u;
         goal_ty = typ;
         opts    = FStar.Options.peek ();
+        is_guard = false;
     }
     in
     g, g_u
