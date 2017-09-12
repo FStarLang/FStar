@@ -364,6 +364,8 @@ let reify_tactic (a : term) : term =
 let synth (env:Env.env) (typ:typ) (tau:term) : term =
     tacdbg := Env.debug env (Options.Other "Tac");
     let gs, w = run_tactic_on_typ (reify_tactic tau) env typ in
-    match gs with
-    | [] -> w
-    | _::_ -> raise (FStar.Errors.Error ("synthesis left open goals", typ.pos))
+    // Check that all goals left are irrelevant. We don't need to check their
+    // validity, as we will typecheck the witness independently.
+    if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
+    then raise (FStar.Errors.Error ("synthesis left open goals", typ.pos))
+    else w
