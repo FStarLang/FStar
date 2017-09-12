@@ -124,14 +124,19 @@ unopteq type dtuple2 (a:Type)
 (* exists (x:a). p x : specialized to Type#0 *)
 type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
+(* range is a type for the internal representations of source ranges
+         The functions that follow below allow manipulating ranges
+         abstractly.  Importantly, while we allow constructing ranges,
+         we do not allow destructing them, since that would reveal
+         that internally, set_range_of is not an identity function.
+*)
 assume new type range : Type0
-assume val range_0:range
 
 assume new type string : Type0
 assume HasEq_string: hasEq string
 
 irreducible let labeled (r:range) (msg:string) (b:Type) = b
-type range_of (#a:Type) (x:a) = range
+
 
 (* PURE effect *)
 let pure_pre = Type0
@@ -204,6 +209,14 @@ assume new type int : Type0
 
 assume HasEq_int: hasEq int
 
+assume val range_0 : range
+(* A total function to obtain the range of a term x *)
+assume val range_of : #a:Type -> x:a -> Tot range
+(* Building a range constant *)
+assume val mk_range : file:string -> from_line:int -> from_col:int -> to_line:int -> to_col:int -> Tot range
+(* Tagging a term x with the range r *)
+let set_range_of (#a:Type) (x:a) (r:range) = x
+
 assume val op_AmpAmp             : bool -> bool -> Tot bool
 assume val op_BarBar             : bool -> bool -> Tot bool
 assume val op_Negation           : bool -> Tot bool
@@ -262,7 +275,15 @@ let unsafe_coerce #a #b x = admit(); x
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
 val _assert : p:Type -> Pure unit (requires p) (ensures (fun x -> p))
 let _assert p = ()
-val cut     : p:Type -> Pure unit (requires p) (fun x -> p)
+
+// Can be used to mark a query for a separate SMT invocation
+abstract let spinoff (p:Type) : Type = p
+
+// Logically equivalent to assert, but spins off separate query
+val assert_spinoff : (p:Type) -> Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
+let assert_spinoff p = ()
+
+val cut : p:Type -> Pure unit (requires p) (fun x -> p)
 let cut p = ()
 
 type nat = i:int{i >= 0}
@@ -301,6 +322,28 @@ assume val string_of_int: int -> Tot string
 (*********************************************************************************)
 abstract let normalize_term (#a:Type) (x:a) : a = x
 abstract let normalize (a:Type0) = a
+
+abstract
+type norm_step =
+    | Simpl
+    | WHNF
+    | Primops
+    | Delta
+    | Zeta
+    | Iota
+    | UnfoldOnly : list string -> norm_step // each string is a fully qualified name like `A.M.f`
+
+// Helpers, so we don't expose the actual inductive
+let simpl   : norm_step = Simpl
+let whnf    : norm_step = WHNF
+let primops : norm_step = Primops
+let delta   : norm_step = Delta
+let zeta    : norm_step = Zeta
+let iota    : norm_step = Iota
+let delta_only (s:list string) : norm_step = UnfoldOnly s
+
+// Normalization marker
+abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()

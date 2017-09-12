@@ -20,13 +20,13 @@ open FStar.Classical
 open FStar.Squash
 (* open FStar.PredicateExtensionality *)
 
-open Preorder
-open Heapx
-open STx
-open Allx
-open MRefx
+open FStar.Preorder
+open FStar.Heap
+open FStar.ST
+open FStar.MRef
 
 module SHA1 = Ex12.SHA1
+module SEM = FStar.StrongExcludedMiddle
 open FStar.List.Tot
 
 (* key log *)
@@ -74,8 +74,8 @@ let unicity ()
 = fun keys -> noRepeats (map fst keys)
 
 let key_log : lr:key_lref{token lr (unicity ())} =
-  let lr = alloc _ [] in
-  witness lr (unicity ()) ;
+  let lr = alloc [] in
+  witness_token lr (unicity ()) ;
   lr
 
 let associated_to' (k:key) (p:text -> GTot bool)  =
@@ -91,22 +91,27 @@ type pkey (p:text -> Type) = k:key{token key_log (associated_to k (pred_to_dec_g
 
 let key_prop k t =  exists p. token key_log (associated_to k p) /\ p t
 
-let exists_stable0 rel p (w : squash (forall x. Preorder.stable (p x) rel)) y1 y2 : Lemma (requires (exists x. p x y1) /\ y1 `rel` y2) (ensures (exists x. p x y2)) = give_proof w
-let exists_stable rel p : Lemma (requires (forall x. Preorder.stable (p x) rel))
+let exists_stable0 (rel:preorder _) p (w : squash (forall x. Preorder.stable (p x) rel)) y1 y2 : Lemma (requires (exists x. p x y1) /\ y1 `rel` y2) (ensures (exists x. p x y2)) = give_proof w
+let exists_stable (rel:preorder _) p : Lemma (requires (forall x. Preorder.stable (p x) rel))
     (ensures (Preorder.stable (fun y -> exists x. p x y) rel))
 =
   forall_intro_2 (fun y1 y2 ->
     move_requires (exists_stable0 rel p (get_proof (forall x. Preorder.stable (p x) rel)) y1) y2
     <: Lemma ((exists x. p x y1) /\ y1 `rel` y2 ==> (exists x. p x y2)))
 
-let thing0 k t = fun x -> exists (p:text -> GTot bool). associated_to k p x /\ p t
+let thing0 k t : Tot _ = fun x -> exists (p:text -> GTot bool). associated_to k p x /\ p t
 let thing k t : spred unique_registry_order = exists_stable unique_registry_order (fun p x -> associated_to k p x /\ p t) ; thing0 k t
 let lemma_thing k t x : Lemma (thing k t x == (exists (p:text -> GTot bool). associated_to k p x /\ p t)) = ()
-let lemma_thing' k t x : Lemma (thing k t x <==> (exists (p:text -> GTot bool). associated_to k p x /\ p t)) = lemma_thing k t x ; assert (thing k t x <==> thing k t x)
+let lemma_thing1 k t x : Lemma ((exists (p:text -> GTot bool). associated_to k p x /\ p t) ==> thing k t x) = lemma_thing k t x
+
+let lemma_thing2 k t x : Lemma (thing k t x ==> (exists (p:text -> GTot bool). associated_to k p x /\ p t)) = assert_norm (thing k t x ==> (exists (p:text -> GTot bool). associated_to k p x /\ p t))
+
+let lemma_thing' k t x : Lemma (thing k t x <==> (exists (p:text -> GTot bool). associated_to k p x /\ p t)) = lemma_thing1 k t x ; lemma_thing2 k t x
+
 let stuff k t : Lemma (requires (key_prop k t)) (ensures (token key_log (thing k t))) =
   let aux p : Lemma (requires (token key_log (associated_to k p) /\ p t))
               (ensures (token key_log (thing k t))) =
-    MRefx.lemma_functoriality key_log (associated_to k p) (thing k t)
+    lemma_functoriality key_log (associated_to k p) (thing k t)
   in
   forall_to_exists (fun p -> move_requires aux p <: Lemma (token key_log (associated_to k p) /\ p t ==> token key_log (thing k t)))
 
@@ -116,7 +121,7 @@ let pand #rel (p q : spred rel) : spred rel = panda p q
 let token_intro_and #a #rel (r:mref a rel) (p q : spred rel)
   : ST unit (requires (fun _ -> token r p /\ token r q))
     (ensures (fun _ _ _ -> token r (pand p q)))
-= recall r p ; recall r q ; witness r(pand p q)
+= recall_token r p ; recall_token r q ; witness_token r(pand p q)
 
 let rec mem_assoc_unique (#a:eqtype) (#b:Type) (x:a) (l:list (a * b)) (y1 y2:b)
   : Lemma (requires ((x, y1) `memP` l /\ (x,y2) `memP` l /\ noRepeats (map fst l)))
@@ -141,9 +146,8 @@ let key_prop_unicity (k:key) (p:text -> GTot bool) (t:text) keys
     mem_assoc_unique k keys p p'
   in
   assert (thing k t keys) ;
-  lemma_thing k t keys ;
+  lemma_thing' k t keys ;
   assert( exists p. associated_to k p keys /\ p t ) ;
-  admit () ;
   forall_to_exists (move_requires aux)
 
 let key_prop_unicity' (k:key) (p:text -> GTot bool) (t:text)
@@ -175,10 +179,7 @@ let from_key_prop #p (k:pkey p) t : ST unit (requires (fun _ -> key_prop k t)) (
   token_intro_and key_log (unicity ()) (associated_to k p `pand` thing k t) ;
   key_prop_unicity' k p t ;
   lemma_functoriality key_log (unicity () `pand` (associated_to k p `pand` thing k t)) (fun _ -> p t) ;
-  admit ()
-
-
-  recall key_log (p t)
+  recall_token key_log (fun _ -> p t)
 
 (* to model authentication, we log all genuine calls
    to MACs; the ideal implementation below uses the
@@ -186,6 +187,7 @@ let from_key_prop #p (k:pkey p) t : ST unit (requires (fun _ -> key_prop k t)) (
 
 type tag = SHA1.tag
 
+noeq
 type entry =
   | Entry : k:key
          -> t:text{key_prop k t}
@@ -197,8 +199,9 @@ type entry =
 
 
 private type log_t = ref (list entry)
-let log:log_t = STx.alloc _ []
+let log:log_t = FStar.ST.alloc []
 
+open FStar.All
 
 // BEGIN: MacSpec
 val keygen: p:(text -> Type0) -> ML (pkey p)
@@ -219,7 +222,7 @@ let keygen (p: (text -> Type)) =
   then failwith "Not a valid key"
   else begin
     key_log := (k,p) :: !key_log ;
-    witness key_log (associated_to k p) ;
+    witness_token key_log (associated_to k p) ;
     k
   end
 
@@ -230,13 +233,18 @@ let mac k t =
 
 let verify k text tag =
   (* to verify, we simply recompute & compare *)
-  let m= hmac_sha1 k text in
+  let m = hmac_sha1 k text in
   let verified = (Platform.Bytes.equalBytes m tag) in
-  let found =
-    Some?
-      (List.Tot.find
-        (fun (Entry k' text' tag') -> Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes text text')
-        !log) in
+  let equal_entry (Entry k' text' tag') =
+    Platform.Bytes.equalBytes k k' && Platform.Bytes.equalBytes text text'
+  in
+  let entry_opt = List.Tot.find equal_entry !log in
+  let found = Some? entry_opt in
+  // begin match entry_opt with
+  //   | None -> ()
+  //   | Some (Entry k' text' _) -> ()
+  //   //assert (k == k' /\ text == text' /\ key_prop k' text')
+  // end ;
 
   (* plain, concrete implementation (ignoring the log) *)
 //verified

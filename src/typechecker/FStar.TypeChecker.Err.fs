@@ -34,7 +34,7 @@ module Env = FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
 let info_at_pos env file row col =
-    match TypeChecker.Common.info_at_pos file row col with
+    match TypeChecker.Common.id_info_at_pos !env.identifier_info file row col with
     | None -> None
     | Some info ->
       match info.identifier with
@@ -103,7 +103,7 @@ let basic_type_error env eopt t1 t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   match eopt with
     | None -> format2 "Expected type \"%s\"; got type \"%s\"" s1 s2
-    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (Print.term_to_string e) s2
+    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (N.term_to_string env e) s2
 
 let occurs_check =
   "Possibly infinite typ (occurs check failed)"

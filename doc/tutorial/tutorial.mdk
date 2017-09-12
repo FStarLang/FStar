@@ -3810,30 +3810,14 @@ Write down some types for `grant` and `revoke` that are sufficiently
 precise to allow the program to continue to type-check.
 
 ~~ ExerciseFragment {exname=Ex10a}
-val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> True))
-let grant e = ST.write acls (e :: ST.read acls)
-
-val revoke: e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> True))
-let revoke e =
-  let db = List.filterT (fun e' -> e<>e') (ST.read acls) in
-  ST.write acls db
+[INCLUDE=code/exercises/Ex10a.fst:Ex10aExercise]
 ~~
 
 ~~Answer
 ~~~ SolutionFragment {exname=Ex10a}
-val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> sel h' acls = e :: sel h acls))
-let grant e = ST.write acls (e :: ST.read acls)
-
-val revoke: e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> not(List.mem e (sel h' acls))))
-let revoke e =
-  let db = List.filter (fun e' -> e<>e') (ST.read acls) in
-  ST.write acls db
+[INCLUDE=code/solutions/Ex10a.fst:Ex10aSolution]
 ~~~
-~~
+~~ 
 ~
 
 ~KK

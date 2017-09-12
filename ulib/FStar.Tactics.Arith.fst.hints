@@ -1,0 +1,42 @@
+[
+  "ÌŽ§H³Û,Kù¦„ï\u0007•ÒŸ",
+  [
+    [
+      "FStar.Tactics.Arith.is_arith_goal",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "equation_FStar.Reflection.Arith.run_tm",
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "kinding_FStar.Reflection.Arith.prop@tok",
+        "typing_FStar.Reflection.Arith.is_arith_prop",
+        "typing_FStar.Reflection.Arith.run_tm"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Arith.split_arith",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Builtins.seq",
+        "equation_FStar.Tactics.Derived.cur_goal",
+        "equation_FStar.Tactics.Derived.repeat1",
+        "equation_FStar.Tactics.Effect.bind",
+        "equation_FStar.Tactics.Effect.goal",
+        "equation_FStar.Tactics.Logic.forall_intro",
+        "equation_FStar.Tactics.Logic.forall_intros",
+        "equation_FStar.Tactics.Logic.implies_intro",
+        "equation_FStar.Tactics.Logic.split", "unit_typing"
+      ],
+      0
+    ]
+  ]
+]

@@ -170,6 +170,19 @@ abstract val div_underspec: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (
 let div_underspec #n a b =
   if fits (a / b) n then a / b else magic ()
 
+val div_size: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} ->
+  Lemma (requires (size a n)) (ensures (size (a / b) n))
+let div_size #n a b =
+  FStar.Math.Lib.slash_decr_axiom a b; ()
+
+val udiv: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (uint_t n)
+  (requires (True))
+  (ensures (fun c -> b <> 0 ==> a / b = c))
+let udiv #n a b =
+  div_size #n a b;
+  a / b
+
+
 (* Modulo primitives *)
 val mod: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Tot (uint_t n)
 let mod #n a b = a - ((a/b) * b)
@@ -446,6 +459,25 @@ val logand_lemma_2: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logand #n a (ones n) = a))
 let logand_lemma_2 #n a = nth_lemma #n (logand #n a (ones n)) a
 
+(* subset_vec_le_lemma proves that a subset of bits is numerically smaller or equal. *)
+val subset_vec_le_lemma: #n:pos -> a:bv_t n -> b:bv_t n ->
+  Lemma (requires is_subset_vec #n a b) (ensures (from_vec a) <= (from_vec b))
+let rec subset_vec_le_lemma #n a b = match n with
+  | 1 -> ()
+  | _ -> lemma_slice_subset_vec #n a b 0 (n-1);
+        subset_vec_le_lemma #(n-1) (slice a 0 (n-1)) (slice b 0 (n-1))
+
+(* logand_le proves the the result of AND is less than or equal to both arguments. *)
+val logand_le: #n:pos -> a:uint_t n -> b:uint_t n ->
+  Lemma (requires True)
+        (ensures (logand a b) <= a /\ (logand a b) <= b)
+let logand_le #n a b =
+  let va = to_vec a in
+  let vb = to_vec b in
+  let vand = to_vec (logand a b) in
+  subset_vec_le_lemma #n vand va;
+  subset_vec_le_lemma #n vand vb
+
 (* Bitwise XOR operator *)
 val logxor_commutative: #n:pos -> a:uint_t n -> b:uint_t n ->
   Lemma (requires True) (ensures (logxor #n a b = logxor #n b a))
@@ -514,6 +546,28 @@ val logor_lemma_2: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (logor #n a (ones n) = ones n))
 let logor_lemma_2 #n a = nth_lemma (logor #n a (ones n)) (ones n)
 
+#set-options "--initial_fuel 1 --max_fuel 1"
+
+(* superset_vec_le_lemma proves that a superset of bits is numerically greater than or equal. *)
+val superset_vec_ge_lemma: #n:pos -> a:bv_t n -> b:bv_t n ->
+  Lemma (requires is_superset_vec #n a b)
+        (ensures (from_vec a) >= (from_vec b))
+let rec superset_vec_ge_lemma #n a b = match n with
+  | 1 -> ()
+  | _ -> lemma_slice_superset_vec #n a b 0 (n-1);
+        superset_vec_ge_lemma #(n-1) (slice a 0 (n-1)) (slice b 0 (n-1))
+
+(* logor_ge proves that the result of an OR is greater than or equal to both arguments. *)
+val logor_ge: #n:pos -> a:uint_t n -> b:uint_t n ->
+  Lemma (requires True)
+        (ensures (logor a b) >= a /\ (logor a b) >= b)
+let logor_ge #n a b =
+  let va = to_vec a in
+  let vb = to_vec b in
+  let vor = to_vec (logor a b) in
+  superset_vec_ge_lemma #n vor va;
+  superset_vec_ge_lemma #n vor vb
+
 (* Bitwise NOT operator *)
 val lognot_self: #n:pos -> a:uint_t n ->
   Lemma (requires True) (ensures (lognot #n (lognot #n a) = a))
@@ -522,8 +576,6 @@ let lognot_self #n a = nth_lemma (lognot #n (lognot #n a)) a
 val lognot_lemma_1: #n:pos -> 
   Lemma (requires True) (ensures (lognot #n (zero n) = ones n))
 let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
-
-#set-options "--initial_fuel 1 --max_fuel 1"
 
 (** Used in the next two lemmas *)
 private val to_vec_mod_pow2: #n:nat -> a:uint_t n -> m:pos -> i:nat{n - m <= i /\ i < n} ->

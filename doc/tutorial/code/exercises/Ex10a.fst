@@ -19,7 +19,6 @@ type db = list entry
 let canWrite db file =
   Some? (tryFind (function Writable x -> x=file | _ -> false) db)
 
-
 let canRead db file =
   Some? (tryFind (function Readable x | Writable x -> x=file) db)
 
@@ -36,11 +35,21 @@ let acls = ST.alloc []
    F* infers a fully precise predicate transformer semantics for them.
 *)
 
-let grant e = ST.write acls (e::ST.read acls)
+(* 
+// Uncomment these types and make them precise enough to pass the test
+// BEGIN: Ex10aExercise
+val grant : e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> True))
+val revoke: e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> True))
+// END: Ex10aExercise
+*)
+
+let grant e = acls := e::!acls
 
 let revoke e =
-  let db = filter (fun e' -> e<>e') (ST.read acls) in
-  ST.write acls db
+  let db = filter (fun e' -> e<>e') !acls in
+  acls := db
 
 (* Next, we model two primitives that provide access to files *)
 
@@ -89,3 +98,4 @@ let test_acls f =
   revoke (Readable f);
   //let _ = read f in       (* not ok any more *) 
   ()
+

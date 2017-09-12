@@ -1,5 +1,5 @@
 [
-  "»ôV@´ÜŽ\u001b2üÇBï¢2\u001d",
+  "šµ©Æ`\u0015”™$„ˆ•Ç,=ð",
   [
     [
       "FStar.UInt128.v",
@@ -252,6 +252,18 @@
       0
     ],
     [
+      "FStar.UInt128.__uint_to_t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.UInt.size", "equation_FStar.UInt128.n",
+        "int_inversion", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
       "FStar.UInt128.shift_left",
       1,
       2,
@@ -465,14 +477,6 @@
         "@query", "equation_FStar.UInt128.n", "equation_FStar.UInt64.n",
         "projection_inverse_BoxInt_proj_0"
       ],
-      0
-    ],
-    [
-      "FStar.UInt128.uint128_to_uint64",
-      2,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0
     ]
   ]

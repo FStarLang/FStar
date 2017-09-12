@@ -1,5 +1,5 @@
 [
-  "~Ñ*¡ﬂˆ√›.ﬂ5±ô\u001aÈ?",
+  "§äK#çªú€&\"≤8˙e˚¡",
   [
     [
       "Benton2004.DDCC.Examples.op_abs_singl",
@@ -171,15 +171,17 @@
         "equation_Benton2004.DDCC.st_fresh_in",
         "equation_Benton2004.DDCC.st_intersect",
         "equation_Benton2004.DDCC.st_var", "equation_Benton2004.DDCC.sttype",
-        "equation_Benton2004.assign", "equation_Benton2004.included",
-        "equation_Benton2004.skip", "equation_Benton2004.var",
+        "equation_Benton2004.included", "equation_Benton2004.skip",
+        "equation_Benton2004.var",
         "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
-        "equation_Prims.eqtype", "function_token_typing_Benton2004.skip",
+        "equation_Prims.eqtype", "equation_Prims.l_True",
+        "function_token_typing_Benton2004.skip",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
         "function_token_typing_Prims.int", "int_typing",
         "lemma_Benton2004.DDCC.d_csub", "lemma_Benton2004.DDCC.d_su1_",
         "lemma_Benton2004.DDCC.eval_equiv_const",
+        "lemma_Benton2004.DDCC.exec_equiv_sym",
         "lemma_Benton2004.DDCC.holds_ns_singl",
         "lemma_Benton2004.DDCC.holds_st_intersect",
         "lemma_Benton2004.DDCC.holds_st_var",
@@ -192,7 +194,8 @@
         "typing_Benton2004.DDCC.st_intersect",
         "typing_Benton2004.DDCC.st_var",
         "typing_Benton2004.DDCC_Tm_abs_18bbe7e30b30cac383126921427c4c53",
-        "typing_Benton2004.assign", "typing_Benton2004.intersect",
+        "typing_Benton2004.DDCC_Tm_abs_a0a13c11aa3964346153dd55506fa009",
+        "typing_Benton2004.intersect",
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0

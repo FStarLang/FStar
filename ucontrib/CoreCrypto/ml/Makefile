@@ -23,9 +23,9 @@ ifeq ($(OS),Windows_NT)
     EXTRA_OPTS =
     EXTRA_LIBS = -L.
     ifeq ($(MARCH),x86_64)
-      OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64
+      OPENSSL_CONF = CC=x86_64-w64-mingw32-gcc ./Configure mingw64 enable-tls1_3
     else
-      OPENSSL_CONF = CC=i686-w64-mingw32-gcc ./Configure mingw
+      OPENSSL_CONF = CC=i686-w64-mingw32-gcc ./Configure mingw enable-tls1_3
     endif
 else
     # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
@@ -37,13 +37,13 @@ else
         EXTRA_OPTS =
         EXTRA_LIBS = -L.
         ARCH = osx
-        OPENSSL_CONF = ./config
+        OPENSSL_CONF = ./config enable-tls1_3
     else
         EXTRA_OPTS = -thread -ccopt -fPIC
         EXTRA_LIBS = -L.
         ARCH = x86_64
 	# The HACL* test engine directly links with the .o files
-        OPENSSL_CONF = ./config -fPIC
+        OPENSSL_CONF = ./config enable-tls1_3 -fPIC
     endif
 endif
 
@@ -79,11 +79,11 @@ openssl/libcrypto.a: openssl/Configure
 libcrypto.a: openssl/libcrypto.a
 	cp openssl/libcrypto.a .
 
-DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o $(DB)/DB.cmx DHDB.cmx
+DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o # $(DB)/DB.cmx DHDB.cmx
 CoreCrypto.cmxa: $(DLL_OBJ)
 	$(OCAMLMKLIB) $(EXTRA_LIBS) $(CCLIBS) -o CoreCrypto $(DLL_OBJ)
 
-DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
+DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o # DHDB.cmo $(DB)/DB.cmo
 CoreCrypto.cma: $(DLL_BYTE)
 	$(OCAMLMKLIB) $(EXTRA_LIBS) -o CoreCrypto $^
 

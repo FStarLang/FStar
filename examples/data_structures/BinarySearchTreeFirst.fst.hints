@@ -89,18 +89,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_elim_BinarySearchTreeFirst.Node", "disc_equation_Prims.None",
-        "fuel_guarded_inversion_BinarySearchTreeFirst.tree",
         "proj_equation_BinarySearchTreeFirst.Node_l",
         "proj_equation_BinarySearchTreeFirst.Node_left",
         "proj_equation_BinarySearchTreeFirst.Node_n",
-        "proj_equation_BinarySearchTreeFirst.Node_r",
         "projection_inverse_BinarySearchTreeFirst.Node_l",
         "projection_inverse_BinarySearchTreeFirst.Node_left",
         "projection_inverse_BinarySearchTreeFirst.Node_n",
-        "projection_inverse_BinarySearchTreeFirst.Node_r",
-        "projection_inverse_BinarySearchTreeFirst.Node_right",
-        "refinement_interpretation_BinarySearchTreeFirst_Tm_refine_14c0cf24272e36bc03f3b9eac89c4c8b"
+        "refinement_interpretation_BinarySearchTreeFirst_Tm_refine_15517c156288727d06611ed8c341826d"
       ],
       0
     ],
@@ -117,7 +112,14 @@
       ],
       0
     ],
-    [ "BinarySearchTreeFirst.max", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "BinarySearchTreeFirst.max",
+      1,
+      2,
+      1,
+      [ "@MaxIFuel_assumption", "@query", "int_inversion" ],
+      0
+    ],
     [
       "BinarySearchTreeFirst.insert",
       1,
@@ -144,8 +146,7 @@
         "subterm_ordering_BinarySearchTreeFirst.Node",
         "subterm_ordering_FStar.Pervasives.Native.Some",
         "typing_BinarySearchTreeFirst.max",
-        "typing_FStar.Pervasives.Native.uu___is_None",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0
     ],
@@ -204,9 +205,10 @@
         "kinding_BinarySearchTreeFirst.tree@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
         "subterm_ordering_BinarySearchTreeFirst.Node",
         "subterm_ordering_FStar.Pervasives.Native.Some",
-        "typing_FStar.Pervasives.Native.uu___is_None"
+        "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0
     ],

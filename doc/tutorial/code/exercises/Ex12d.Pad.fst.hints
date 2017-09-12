@@ -12,7 +12,6 @@
       ],
       0
     ],
-    [ "Ex12d.Pad.b2n", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Ex12d.Pad.block",
       1,

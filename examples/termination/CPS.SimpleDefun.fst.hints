@@ -44,10 +44,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
         "binder_x_99791f65bbeea99a630052cdf78a93a2_0",
-        "constructor_distinct_CPS.SimpleDefun.C0",
         "disc_equation_CPS.SimpleDefun.C0",
         "disc_equation_CPS.SimpleDefun.C1",
         "fuel_guarded_inversion_CPS.SimpleDefun.cont", "int_inversion",
+        "projection_inverse_CPS.SimpleDefun.C1__0",
         "subterm_ordering_CPS.SimpleDefun.C1"
       ],
       0

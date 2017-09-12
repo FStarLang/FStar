@@ -1,6 +1,6 @@
 module AllocST
 
-open Preorder
+open FStar.Preorder
 open NatHeap
 
 
@@ -50,7 +50,7 @@ new_effect ISTATE = STATE_h heap
 
 (* DIV is a sub-effect/sub-monad of the allocated references instance of the preorder-indexed monad. *)
 
-unfold let lift_div_istate (state:Type) (rel:relation state{preorder rel}) 
+unfold let lift_div_istate (state:Type) (rel:preorder state)
                            (a:Type) (wp:pure_wp a) (p:ist_post state a) (s:state) = wp (fun x -> p x s)
 sub_effect DIV ~> ISTATE = lift_div_istate heap heap_rel
 
@@ -66,7 +66,7 @@ effect IST    (a:Type)
 
 (* A box-like modality for witnessed stable predicates for IST. *)
 
-assume type ist_witnessed : p:predicate heap{stable heap_rel p} -> Type0
+assume type ist_witnessed : p:predicate heap{stable p heap_rel} -> Type0
 
 
 (* Generic effects (operations) for IST. *)
@@ -76,10 +76,10 @@ assume val ist_get :     unit -> IST heap (fun s0 -> True) (fun s0 s s1 -> s0 ==
 assume val ist_put :     x:heap ->
 		         IST unit (fun s0 -> heap_rel s0 x) (fun s0 _ s1 -> s1 == x)
 
-assume val ist_witness : p:predicate heap{stable heap_rel p} ->
+assume val ist_witness : p:predicate heap{stable p heap_rel} ->
 		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
 
-assume val ist_recall :  p:predicate heap{stable heap_rel p} -> 
+assume val ist_recall :  p:predicate heap{stable p heap_rel} -> 
 		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
 
 (* *************************************************** *)

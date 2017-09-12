@@ -141,8 +141,6 @@ unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (
 sub_effect DIV ~> EXN = lift_div_exn
 effect Ex (a:Type) = Exn a True (fun v -> True)
 
-assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
-
 let all_pre_h  (h:Type)           = h -> GTot Type0
 let all_post_h (h:Type) (a:Type)  = result a -> h -> GTot Type0
 let all_wp_h   (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)
@@ -158,7 +156,10 @@ unfold let all_bind_wp (heap:Type) (r1:range) (a:Type) (b:Type)
                        (wp1:all_wp_h heap a)
                        (wp2:(a -> GTot (all_wp_h heap b)))
                        (p:all_post_h heap b) (h0:heap) : GTot Type0 =
-  wp1 (fun ra h1 -> (V? ra ==> wp2 (V?.v ra) p h1)) h0
+  wp1 (fun ra h1 -> (match ra with
+                  | V v     -> wp2 v p h1
+		  | E e     -> p (E e) h1
+		  | Err msg -> p (Err msg) h1)) h0
 
 unfold let all_if_then_else (heap:Type) (a:Type) (p:Type)
                              (wp_then:all_wp_h heap a) (wp_else:all_wp_h heap a)
@@ -254,3 +255,13 @@ val ignore: #a:Type -> a -> Tot unit
 let ignore #a x = ()
 irreducible
 let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
+
+(* For the compiler. Use as follows:
+ *
+ * [@ PpxDerivingShow ]
+ * type t = A | B
+ *
+ * The resulting OCaml extracted type definition will have [@@ ppx_deriving show] attached to it. *)
+type __internal_ocaml_attributes =
+  | PpxDerivingShow
+  | PpxDerivingShowConstant of string

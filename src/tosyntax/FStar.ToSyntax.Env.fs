@@ -18,6 +18,7 @@
 
 module FStar.ToSyntax.Env
 open FStar.ST
+open FStar.Exn
 open FStar.All
 
 
@@ -502,7 +503,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         begin match se.sigel with
           | Sig_inductive_typ _ ->   Some (Term_name(S.fvar source_lid Delta_constant None, false))
           | Sig_datacon _ ->         Some (Term_name(S.fvar source_lid Delta_constant (fv_qual_of_se se), false))
-          | Sig_let((_, lbs), _, _) ->
+          | Sig_let((_, lbs), _) ->
             let fv = lb_fv lbs source_lid in
             Some (Term_name(S.fvar source_lid fv.fv_delta fv.fv_qual, false))
           | Sig_declare_typ(lid, _, _) ->
@@ -511,7 +512,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
             || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
                  let dd = if U.is_primop_lid lid
-                          || (ns_of_lid_equals lid Const.prims_lid && quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+                          || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
@@ -608,7 +609,7 @@ let try_lookup_module env path =
 
 let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
-      | ({ sigel = Sig_let((_, lbs), _, _) }, _) ->
+      | ({ sigel = Sig_let((_, lbs), _) }, _) ->
         let fv = lb_fv lbs lid in
         Some (fvar lid fv.fv_delta fv.fv_qual)
       | _ -> None in
@@ -616,7 +617,7 @@ let try_lookup_let env (lid:lident) =
 
 let try_lookup_definition env (lid:lident) =
     let k_global_def lid = function
-      | ({ sigel = Sig_let(lbs, _, _) }, _) ->
+      | ({ sigel = Sig_let(lbs, _) }, _) ->
         BU.find_map (snd lbs) (fun lb ->
             match lb.lbname with
                 | Inr fv when S.fv_eq_lid fv lid ->
@@ -813,7 +814,7 @@ let try_lookup_dc_by_field_name env (fieldname:lident) =
         | Some r -> Some (set_lid_range (lid_of_ids (r.typename.ns @ [r.constrname])) (range_of_lid fieldname), r.is_record)
         | _ -> None
 
-let string_set_ref_new () = BU.mk_ref (BU.new_set BU.compare BU.hashcode)
+let string_set_ref_new () = BU.mk_ref (BU.new_set BU.compare)
 let exported_id_set_new () =
     let term_type_set = string_set_ref_new () in
     let field_set = string_set_ref_new () in
@@ -1002,7 +1003,7 @@ let finish env modul =
       if List.contains Private quals
       then BU.smap_remove (sigmap env) lid.str
 
-    | Sig_let((_,lbs), _, _) ->
+    | Sig_let((_,lbs), _) ->
       if List.contains Private quals
       || List.contains Abstract quals
       then begin
@@ -1093,7 +1094,57 @@ let finish_module_or_interface env modul =
   then check_admits env;
   finish env modul
 
-let prepare_module_or_interface intf admitted env mname = (* AR: open the pervasives namespace *)
+type exported_ids = {
+    exported_id_terms:list<string>;
+    exported_id_fields:list<string>
+}
+let as_exported_ids (e:exported_id_set) =
+    let terms = FStar.Util.set_elements (!(e Exported_id_term_type)) in
+    let fields = FStar.Util.set_elements (!(e Exported_id_field)) in
+    {exported_id_terms=terms;
+     exported_id_fields=fields}
+
+let as_exported_id_set (e:option<exported_ids>) =
+    match e with
+    | None -> exported_id_set_new ()
+    | Some e ->
+      let terms =
+          BU.mk_ref (FStar.Util.as_set e.exported_id_terms BU.compare) in
+      let fields =
+          BU.mk_ref (FStar.Util.as_set e.exported_id_fields BU.compare) in
+      function
+        | Exported_id_term_type -> terms
+        | Exported_id_field -> fields
+
+
+type module_inclusion_info = {
+    mii_exported_ids:option<exported_ids>;
+    mii_trans_exported_ids:option<exported_ids>;
+    mii_includes:option<list<lident>>
+}
+
+let default_mii = {
+    mii_exported_ids=None;
+    mii_trans_exported_ids=None;
+    mii_includes=None
+}
+
+let as_includes = function
+    | None -> BU.mk_ref []
+    | Some l -> BU.mk_ref l
+
+let inclusion_info env (l:lident) =
+   let mname = FStar.Ident.string_of_lid l in
+   let as_ids_opt m =
+      BU.map_opt (BU.smap_try_find m mname) as_exported_ids
+   in
+   {
+      mii_exported_ids = as_ids_opt env.exported_ids;
+      mii_trans_exported_ids = as_ids_opt env.trans_exported_ids;
+      mii_includes = BU.map_opt (BU.smap_try_find env.includes mname) (fun r -> !r)
+   }
+
+let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_info) = (* AR: open the pervasives namespace *)
   let prep env =
     let filename = BU.strcat (text_of_lid mname) ".fst" in
     let auto_open = FStar.Parser.Dep.hard_coded_dependencies filename in
@@ -1109,11 +1160,11 @@ let prepare_module_or_interface intf admitted env mname = (* AR: open the pervas
     let auto_open = List.rev (auto_open @ namespace_of_module) in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
-    let () = BU.smap_add env.exported_ids mname.str (exported_id_set_new ()) in
+    let () = BU.smap_add env.exported_ids mname.str (as_exported_id_set mii.mii_exported_ids) in
     (* Create new empty set of transitively exported identifiers for the current module, for 'include' *)
-    let () = BU.smap_add env.trans_exported_ids mname.str (exported_id_set_new ()) in
+    let () = BU.smap_add env.trans_exported_ids mname.str (as_exported_id_set mii.mii_trans_exported_ids) in
     (* Create new empty list of includes for the current module *)
-    let () = BU.smap_add env.includes mname.str (BU.mk_ref []) in
+    let () = BU.smap_add env.includes mname.str (as_includes mii.mii_includes) in
     {
       env with curmodule=Some mname;
       sigmap=env.sigmap;

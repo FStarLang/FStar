@@ -1,37 +1,14 @@
 let max_int = Z.of_int max_int
-let is_letter c = BatChar.is_letter c
-let is_digit  c = BatChar.is_digit  c
-let is_letter_or_digit c = (BatChar.is_letter c) || (BatChar.is_digit c)
-let is_symbol c = BatChar.is_symbol c
+let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
+let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
+let is_letter_or_digit c = is_letter c || is_digit c
+let is_symbol c = if c > 255 then false else BatChar.is_symbol (BatChar.chr c)
 
 (* Modeled after: Char.IsPunctuation in .NET
    (http://www.dotnetperls.com/char-ispunctuation)
 *)
-let is_punctuation c = (
-    c = '!' ||
-    c = '"' ||
-    c = '#' ||
-    c = '%' ||
-    c = '&' ||
-    c = '\'' ||
-    c = '(' ||
-    c = ')' ||
-    c = '*' ||
-    c = ',' ||
-    c = '-' ||
-    c = '.' ||
-    c = '/' ||
-    c = ':' ||
-    c = ';' ||
-    c = '?' ||
-    c = '@' ||
-    c = '[' ||
-    c = '\\' ||
-    c = ']' ||
-    c = '_' ||
-    c = '{' ||
-    c = '}'
-  )
+let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 46; 47; 58; 59; 63; 64; 91; 92; 93; 95; 123; 125]
+(*'!','"','#','%','&','\'','(',')','*',',','-','.','/',':',';','?','@','[','\\',']','_','{','}'*)
 
 let return_all x = x
 
@@ -46,7 +23,7 @@ let record_time f =
     let res = f () in
     let _, elapsed = time_diff start (now()) in
     res, elapsed
-let get_file_last_modification_time f = (BatUnix.stat f).st_mtime
+let get_file_last_modification_time f = (BatUnix.stat f).BatUnix.st_mtime
 let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
 
@@ -88,7 +65,7 @@ let write_input in_write input =
 
 (*let cnt = ref 0*)
 
-let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
+let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool): string =
   (*let fc = open_out ("tmp/q"^(string_of_int !cnt)) in
   output_string fc input;
   close_out fc;*)
@@ -97,7 +74,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   let (from_chd_r, from_chd_w) = Unix.pipe () in
   Unix.set_close_on_exec to_chd_w;
   Unix.set_close_on_exec from_chd_r;
-  let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
+  let _pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; cmd |]
   (*let pid = Unix.create_process "/bin/sh" [| "/bin/sh"; "-c"; ("run.sh "^(string_of_int (!cnt)))^" | " ^ cmd |]*)
                                to_chd_r from_chd_w Unix.stderr
   in
@@ -113,10 +90,18 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
     let s, eof = (try
                     BatString.trim (input_line cin), false
                   with End_of_file ->
-                    Buffer.add_string out ("\nkilled\n") ; "", true) in
-    if not eof then
-      if s = "Done!" then ()
-      else (Buffer.add_string out (s ^ "\n"); read_out ())  in
+                    if not raw then
+                        Buffer.add_string out ("\nkilled\n")
+                    else (); "", true) in
+    if not raw then (
+        if not eof then
+          if s = "Done!" then ()
+          else (Buffer.add_string out (s ^ "\n"); read_out ())
+    ) else (
+        if not eof then
+          (Buffer.add_string out s; read_out ())
+    )
+  in
   let child_thread = Thread.create (fun _ -> read_out ()) () in
 
   (* writing to z3 *)
@@ -128,7 +113,7 @@ let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:
   close_in cin;
   Buffer.contents out
 
-let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
+let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
   let command = prog^" "^args in
   let (inc,outc) = Unix.open_process command in
   let proc = {inc = inc; outc = outc; killed = false; id = prog^":"^id} in
@@ -214,14 +199,15 @@ let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let set_is_empty ((s, _):'a set) =
   match s with
   | [] -> true
   | _ -> false
 
-let new_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_set (l:'a list) (cmp:('a -> 'a -> Z.t)) = (l, fun x y -> cmp x y = Z.zero)
+let new_set (cmp:'a -> 'a -> Z.t) : 'a set = as_set [] cmp
 
 let set_elements ((s1, eq):'a set) : 'a list =
   let rec aux out = function
@@ -232,6 +218,7 @@ let set_elements ((s1, eq):'a set) : 'a list =
        else
          aux (hd::out) tl in
   aux [] s1
+
 let set_add a ((s, b):'a set) = (a::s, b)
 let set_remove x ((s1, eq):'a set) =
   (BatList.filter (fun y -> not (eq x y)) s1, eq)
@@ -248,14 +235,18 @@ let set_difference ((s1, eq):'a set) ((s2, _):'a set) : 'a set =
 
 (* See ../Util.fsi for documentation and ../Util.fs for implementation details *)
 type 'a fifo_set = ('a list) * ('a -> 'a -> bool)
+[@@deriving show]
 
 let fifo_set_is_empty ((s, _):'a fifo_set) =
   match s with
   | [] -> true
   | _ -> false
 
-let new_fifo_set (cmp:'a -> 'a -> Z.t) (hash:'a -> Z.t) : 'a fifo_set =
-  ([], fun x y -> cmp x y = Z.zero)
+let as_fifo_set (l:'a list) (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+  (l, fun x y -> cmp x y = Z.zero)
+
+let new_fifo_set (cmp:'a -> 'a -> Z.t) : 'a fifo_set =
+    as_fifo_set [] cmp
 
 let fifo_set_elements ((s1, eq):'a fifo_set) : 'a list =
   let rec aux out = function
@@ -290,6 +281,14 @@ let smap_keys (m:'value smap) = smap_fold m (fun k _ acc -> k::acc) []
 let smap_copy (m:'value smap) = BatHashtbl.copy m
 let smap_size (m:'value smap) = BatHashtbl.length m
 
+type 'value psmap = (string, 'value) BatMap.t
+let psmap_empty (_: unit) : 'value psmap = BatMap.empty
+let psmap_add (map: 'value psmap) (key: string) (value: 'value) = BatMap.add key value map
+let psmap_find_default (map: 'value psmap) (key: string) (dflt: 'value) =
+  try BatMap.find key map with Not_found -> dflt
+let psmap_try_find (map: 'value psmap) (key: string) =
+  try Some (BatMap.find key map) with Not_found -> None
+
 type 'value imap = (Z.t, 'value) BatHashtbl.t
 let imap_create (i:Z.t) : 'value imap = BatHashtbl.create (Z.to_int i)
 let imap_clear (s:('value imap)) = BatHashtbl.clear s
@@ -303,6 +302,14 @@ let imap_fold (m:'value imap) f a = BatHashtbl.fold f m a
 let imap_remove (m:'value imap) k = BatHashtbl.remove m k
 let imap_keys (m:'value imap) = imap_fold m (fun k _ acc -> k::acc) []
 let imap_copy (m:'value imap) = BatHashtbl.copy m
+
+type 'value pimap = (Z.t, 'value) BatMap.t
+let pimap_empty (_: unit) : 'value pimap = BatMap.empty
+let pimap_add (map: 'value pimap) (key: Z.t) (value: 'value) = BatMap.add key value map
+let pimap_find_default (map: 'value pimap) (key: Z.t) (dflt: 'value) =
+  try BatMap.find key map with Not_found -> dflt
+let pimap_try_find (map: 'value pimap) (key: Z.t) =
+  try Some (BatMap.find key map) with Not_found -> None
 
 let format (fmt:string) (args:string list) =
   let frags = BatString.nsplit fmt "%s" in
@@ -347,22 +354,33 @@ let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
 
+type json =
+| JsonNull
+| JsonBool of bool
+| JsonInt of Z.t
+| JsonStr of string
+| JsonList of json list
+| JsonAssoc of (string * json) list
+
 type printer = {
   printer_prinfo: string -> unit;
   printer_prwarning: string -> unit;
   printer_prerror: string -> unit;
+  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
 }
 
 let default_printer =
   { printer_prinfo = (fun s -> pr "%s" s; flush stdout);
     printer_prwarning = (fun s -> fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr);
-    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr); }
+    printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr);
+    printer_prgeneric = fun label get_string get_json -> pr "%s: %s" label (get_string ())}
 
 let current_printer = ref default_printer
 let set_printer printer = current_printer := printer
 
 let print_raw s = pr "%s" s; flush stdout
 let print_string s = (!current_printer).printer_prinfo s
+let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
 let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:string list) = BatString.concat sep l
@@ -376,13 +394,13 @@ let unicode_of_string (string:string) =
   BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
   t
 
-let char_of_int i = char_of_int (Z.to_int i)
+let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
-let int_of_char x= Z.of_int (Char.code x)
+let int_of_char x = Z.of_int x
 let int_of_byte x = x
-let int_of_uint8 = int_of_char
+let int_of_uint8 x = Z.of_int (Char.code x)
 let uint16_of_int i = Z.to_int i
-let byte_of_char (c:char) = Char.code c
+let byte_of_char c = c
 
 let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)
@@ -397,7 +415,7 @@ let string_of_bool = string_of_bool
 let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float
-let string_of_char  (i:char) = spr "%c" i
+let string_of_char i = BatUTF8.init 1 (fun _ -> BatUChar.chr i)
 let hex_string_of_byte (i:int) =
   let hs = spr "%x" i in
   if (String.length hs = 1) then "0" ^ hs
@@ -407,15 +425,16 @@ let bytes_of_string = unicode_of_string
 let starts_with = BatString.starts_with
 let trim_string = BatString.trim
 let ends_with = BatString.ends_with
-let char_at s index = BatString.get s (Z.to_int index)
-let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let char_at s index = BatUChar.code (BatUTF8.get s (Z.to_int index))
+let is_upper c = 65 <= c && c <= 90
 let contains (s1:string) (s2:string) = BatString.exists s1 s2
 let substring_from s index = BatString.tail s (Z.to_int index)
-let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
-let replace_char (s:string) (c1:char) (c2:char) =
-  BatString.map (fun c -> if c = c1 then c2 else c) s
-let replace_chars (s:string) (c:char) (by:string) =
-  BatString.replace_chars (fun x -> if x=c then by else BatString.of_char x) s
+let substring s i j = BatString.sub s (Z.to_int i) (Z.to_int j)
+let replace_char (s:string) c1 c2 =
+  let b = bytes_of_string s in
+  string_of_bytes (BatArray.map (fun x -> if x = c1 then c2 else x) b)
+let replace_chars (s:string) c (by:string) =
+  BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = if s = "" then [""] else BatString.nsplit s sep
@@ -450,6 +469,7 @@ let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
+[@@deriving show]
 
 let is_left = function
   | Inl _ -> true
@@ -516,6 +536,11 @@ let bind_opt opt f =
   match opt with
   | None -> None
   | Some x -> f x
+
+let catch_opt opt f =
+  match opt with
+  | Some x -> opt
+  | None -> f ()
 
 let map_opt opt f =
   match opt with
@@ -589,8 +614,11 @@ let first_N n l =
   in
   f [] 0 l
 
-let rec nth_tail n l =
-  if n=0 then l else nth_tail (n - 1) (BatList.tl l)
+let nth_tail n l =
+  let rec aux n l = 
+    if n=0 then l else aux (n - 1) (BatList.tl l)
+  in
+  aux (Z.to_int n) l
 
 let prefix l =
   match BatList.rev l with
@@ -929,14 +957,6 @@ let read_hints (filename: string): hints_db option =
 
 (** Interactive protocol **)
 
-type json =
-| JsonNull
-| JsonBool of bool
-| JsonInt of Z.t
-| JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
-
 exception UnsupportedJson
 
 let json_of_yojson yjs: json option =
@@ -971,8 +991,11 @@ let string_of_json json =
 
 (* Outside of this file the reference to FStar_Util.ref must use the following combinators *)
 (* Export it at the end of the file so that we don't break other internal uses of ref *)
-type 'a ref = 'a FStar_Heap.ref
+type 'a ref = 'a FStar_Monotonic_Heap.ref
 let read = FStar_ST.read
 let write = FStar_ST.write
 let (!) = FStar_ST.read
 let (:=) = FStar_ST.write
+
+let marshal (x:'a) : string = Marshal.to_string x []
+let unmarshal (x:string) : 'a = Marshal.from_string x 0

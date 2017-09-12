@@ -1,4 +1,4 @@
-FSTAR_HOME?=../..
+FSTAR_HOME=../..
 include $(FSTAR_HOME)/src/gmake/z3.mk
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
@@ -19,6 +19,7 @@ fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
 	$(FIND) . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
 		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
 		| sort | uniq > $@
+	touch fstarlib.ml
 
 FSTARLIB_DIR=../../bin/fstarlib/
 
@@ -41,7 +42,8 @@ install: fstarlib.cmxa fstarlib.cma
 
 # Common rules
 clean:
-	rm -f fstarlib.mllib
-	rm -f $(ULIB_GEN_DIR)/*
+	rm -f fstarlib.mllib *~
+	rm -fr $(ULIB_GEN_DIR) compiler-extracted
+	rm -f $(FSTARLIB_DIR)/*.cm[aiox]a?
 	rm -f ../.mgen
 	rm -rf _build # ← ocamlbuild -clean does not work on Cygwin

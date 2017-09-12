@@ -1,0 +1,1129 @@
+[
+  "∫Tj.Q÷¡`ºcé\u0000&q\u000ea",
+  [
+    [
+      "Ariadne.case",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [ "Ariadne.uu___is_Ok", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ariadne.__proj__Ok__item__saved",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Ok",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ariadne_Tm_refine_433d08d8d7a72b888729343254dd5f4a"
+      ],
+      0
+    ],
+    [ "Ariadne.uu___is_Recover", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ariadne.__proj__Recover__item__read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Recover",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ariadne_Tm_refine_4866c1405a82ccc72c55102aa593b7ee"
+      ],
+      0
+    ],
+    [
+      "Ariadne.__proj__Recover__item__other",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Recover",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ariadne_Tm_refine_4866c1405a82ccc72c55102aa593b7ee"
+      ],
+      0
+    ],
+    [ "Ariadne.uu___is_Writing", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ariadne.__proj__Writing__item__latest",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Writing",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ariadne_Tm_refine_4fff7e1627aecb8a01ff14db8bd98023"
+      ],
+      0
+    ],
+    [
+      "Ariadne.__proj__Writing__item__prior",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Writing",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ariadne_Tm_refine_4fff7e1627aecb8a01ff14db8bd98023"
+      ],
+      0
+    ],
+    [ "Ariadne.uu___is_Crash", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ariadne.__proj__Crash__item__read",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Crash",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ariadne_Tm_refine_afc93d5e07c3e90000704a2ee31d4fab"
+      ],
+      0
+    ],
+    [
+      "Ariadne.__proj__Crash__item__other",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Crash",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ariadne_Tm_refine_afc93d5e07c3e90000704a2ee31d4fab"
+      ],
+      0
+    ],
+    [
+      "Ariadne.counter",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Ariadne.case_haseq",
+        "assumption_Prims.HasEq_int", "equation_Ariadne.index",
+        "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [ "Ariadne.__proj__Counter__item__n", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Ariadne.__proj__Counter__item__c", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ariadne.sealable",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Ariadne.Ok",
+        "constructor_distinct_Ariadne.Recover",
+        "constructor_distinct_Ariadne.Writing",
+        "disc_equation_Ariadne.Crash", "disc_equation_Ariadne.Ok",
+        "disc_equation_Ariadne.Recover", "disc_equation_Ariadne.Writing",
+        "equation_Prims.l_False", "fuel_guarded_inversion_Ariadne.case"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Ariadne.index",
+        "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      6,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      8,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      10,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      11,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      12,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Ariadne.record",
+        "equation_Ariadne.sealable", "equation_FStar.Preorder.preorder_rel",
+        "forall-interp", "fuel_guarded_inversion_Ariadne.counter",
+        "interpretation_Ariadne_Tm_abs_78f516a5da3ec0e81855f30332d9a3af",
+        "interpretation_Ariadne_Tm_abs_bb831da80e375d01f2458292ff2c7fcb",
+        "l_imp-interp"
+      ],
+      0
+    ],
+    [
+      "Ariadne.enclave",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable_pred",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.sealable_pred",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.entry",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Ariadne.enclave",
+        "equation_Ariadne.index", "equation_Ariadne.pre",
+        "equation_Ariadne.record", "equation_Ariadne.sealable",
+        "equation_Ariadne.sealable_pred", "equation_Ariadne.volatile",
+        "equation_FStar.Preorder.preorder", "equation_FStar.ST.heap_rel",
+        "equation_FStar.ST.mref", "equation_FStar.ST.stable",
+        "equation_Prims.nat", "forall-interp",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Ariadne.pre",
+        "interpretation_Ariadne_Tm_abs_bb831da80e375d01f2458292ff2c7fcb",
+        "kinding_Ariadne.counter@tok", "l_and-interp", "l_imp-interp",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "token_correspondence_Ariadne.sealable_pred"
+      ],
+      0
+    ],
+    [
+      "Ariadne.backup_pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
+        "@query", "equation_Ariadne.backup_pre_", "equation_Ariadne.enclave",
+        "equation_Ariadne.entry", "equation_Ariadne.prefix_of",
+        "equation_FStar.Monotonic.Heap.mref",
+        "equation_FStar.Preorder.preorder_rel", "equation_FStar.ST.mref",
+        "equation_with_fuel_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
+        "false_interp", "fuel_guarded_inversion_FStar.Monotonic.Heap.mref_",
+        "fuel_guarded_inversion_Prims.list",
+        "interpretation_Ariadne_Tm_abs_2af6ba86dcf73c262a8dfde163f754b5",
+        "lemma_FStar.List.Tot.Properties.strict_prefix_of_trans",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "typing_Ariadne.entry"
+      ],
+      0
+    ],
+    [
+      "Ariadne.create",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [ "Ariadne.create", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ariadne.create",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Ariadne_pretyping_aa7fb1e4d4d9e1f5c4d43327f007a8ad",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "b2t_def",
+        "constructor_distinct_Ariadne.Ok", "equation_Ariadne.enclave",
+        "equation_Ariadne.index", "equation_Ariadne.pre",
+        "equation_Ariadne.record", "equation_Ariadne.sealable",
+        "equation_Ariadne.sealable_pred", "equation_Ariadne.volatile",
+        "equation_FStar.Monotonic.Heap.fresh",
+        "equation_FStar.Monotonic.Heap.modifies",
+        "equation_FStar.Monotonic.Heap.modifies_t",
+        "equation_FStar.Preorder.preorder", "equation_FStar.ST.heap_rel",
+        "equation_FStar.ST.mref", "equation_FStar.ST.stable",
+        "equation_Prims.eqtype", "equation_Prims.nat", "forall-interp",
+        "function_token_typing_Ariadne.pre",
+        "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_typing",
+        "interpretation_Ariadne_Tm_abs_bb831da80e375d01f2458292ff2c7fcb",
+        "kinding_Ariadne.counter@tok", "l_and-interp", "l_imp-interp",
+        "l_or-interp", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.TSet.lemma_mem_tset_of_set",
+        "primitive_Prims.op_Equality",
+        "projection_inverse_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Counter_n",
+        "projection_inverse_Ariadne.Ok_saved",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "string_inversion", "token_correspondence_Ariadne.sealable_pred",
+        "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty"
+      ],
+      0
+    ],
+    [
+      "Ariadne.create",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.pre0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Crash",
+        "disc_equation_Ariadne.Ok", "disc_equation_Ariadne.Recover",
+        "disc_equation_Ariadne.Writing", "equation_Prims.l_True",
+        "fuel_guarded_inversion_Ariadne.case"
+      ],
+      0
+    ],
+    [
+      "Ariadne.step0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Crash",
+        "disc_equation_Ariadne.Ok", "disc_equation_Ariadne.Recover",
+        "disc_equation_Ariadne.Writing",
+        "fuel_guarded_inversion_Ariadne.case"
+      ],
+      0
+    ],
+    [
+      "Ariadne.step0",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.step0",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.step0",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.seal",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.seal",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.seal",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [ "Ariadne.seal", 4, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ariadne.seal",
+      5,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
+        "@query", "Ariadne_pretyping_aa7fb1e4d4d9e1f5c4d43327f007a8ad",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "assumption_Prims.HasEq_int", "b2t_def", "bool_inversion",
+        "bool_typing", "constructor_distinct_Ariadne.Crash",
+        "constructor_distinct_Ariadne.Ok",
+        "constructor_distinct_Ariadne.Writing",
+        "constructor_distinct_Ariadne.counter",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.list",
+        "constructor_distinct_Tm_unit",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Pervasives.V@tok", "eq2-interp",
+        "equation_Ariadne.backup", "equation_Ariadne.backup_pre",
+        "equation_Ariadne.backup_pre_", "equation_Ariadne.enclave",
+        "equation_Ariadne.entry", "equation_Ariadne.index",
+        "equation_Ariadne.pre", "equation_Ariadne.pre0",
+        "equation_Ariadne.prefix_of", "equation_Ariadne.record",
+        "equation_Ariadne.sealable", "equation_Ariadne.sealable_pred",
+        "equation_Ariadne.step0", "equation_Ariadne.volatile",
+        "equation_FStar.Monotonic.Heap.modifies",
+        "equation_FStar.Monotonic.Heap.modifies_t",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel", "equation_FStar.ST.heap_rel",
+        "equation_FStar.ST.mref", "equation_FStar.ST.stable",
+        "equation_Prims.eqtype", "equation_Prims.l_False",
+        "equation_Prims.nat",
+        "equation_with_fuel_FStar.List.Tot.Base.strict_prefix_of.fuel_instrumented",
+        "false_interp", "forall-interp",
+        "fuel_guarded_inversion_Ariadne.case",
+        "function_token_typing_Ariadne.pre",
+        "function_token_typing_Prims.nat",
+        "function_token_typing_Prims.string",
+        "function_token_typing_Prims.unit",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "int_typing",
+        "interpretation_Ariadne_Tm_abs_2af6ba86dcf73c262a8dfde163f754b5",
+        "interpretation_Ariadne_Tm_abs_bb831da80e375d01f2458292ff2c7fcb",
+        "kinding_Ariadne.counter@tok", "kinding_Prims.list@tok",
+        "l_and-interp", "l_imp-interp", "l_or-interp",
+        "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_distinct_types",
+        "lemma_FStar.Set.mem_singleton",
+        "lemma_FStar.TSet.lemma_mem_tset_of_set",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThan", "proj_equation_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Counter_n",
+        "projection_inverse_Ariadne.Crash_other",
+        "projection_inverse_Ariadne.Crash_read",
+        "projection_inverse_Ariadne.Writing_latest",
+        "projection_inverse_Ariadne.Writing_prior",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "string_inversion", "token_correspondence_Ariadne.backup_pre",
+        "token_correspondence_Ariadne.sealable_pred",
+        "typing_Ariadne.backup_pre", "typing_Ariadne.entry",
+        "typing_Ariadne.step0", "typing_FStar.Monotonic.Heap.addr_of",
+        "typing_FStar.Monotonic.Heap.sel", "typing_FStar.Set.singleton",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Ariadne.seal",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.seal",
+      7,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.step1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_Ariadne.Crash", "disc_equation_Ariadne.Writing",
+        "equation_Ariadne.pre1", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ariadne_Tm_refine_4187e98250438914a336576d12992752",
+        "typing_Ariadne.uu___is_Writing"
+      ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      6,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Ariadne.index",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      7,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Ariadne_pretyping_aa7fb1e4d4d9e1f5c4d43327f007a8ad",
+        "Ariadne_pretyping_e7427cf45b373c9ca2ad9a1d8711584a",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
+        "constructor_distinct_Ariadne.Ok",
+        "constructor_distinct_Ariadne.Recover",
+        "constructor_distinct_Ariadne.case",
+        "constructor_distinct_FStar.Pervasives.V",
+        "constructor_distinct_Prims.unit",
+        "data_typing_intro_Ariadne.Counter@tok",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "disc_equation_FStar.Pervasives.Err", "equation_Ariadne.enclave",
+        "equation_Ariadne.index", "equation_Ariadne.pre",
+        "equation_Ariadne.record", "equation_Ariadne.sealable",
+        "equation_Ariadne.step1", "equation_FStar.Monotonic.Heap.valid_upd",
+        "equation_FStar.Preorder.preorder", "equation_FStar.ST.mref",
+        "equation_Prims.nat", "false_interp", "forall-interp",
+        "fuel_guarded_inversion_Ariadne.case",
+        "function_token_typing_Ariadne.pre",
+        "function_token_typing_Prims.unit",
+        "interpretation_Ariadne_Tm_abs_bb831da80e375d01f2458292ff2c7fcb",
+        "kinding_Ariadne.counter@tok", "l_and-interp", "l_imp-interp",
+        "l_or-interp", "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThan", "proj_equation_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Counter_n",
+        "projection_inverse_Ariadne.Ok_saved",
+        "projection_inverse_Ariadne.Recover_other",
+        "projection_inverse_Ariadne.Recover_read",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd",
+        "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_910d39030c36174d69dfa7c713b6a7e7",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "unit_inversion", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      8,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      9,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Ariadne.incr",
+      10,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.store_state",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.store_state",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.store_state",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Ariadne.case_haseq" ],
+      0
+    ],
+    [ "Ariadne.store_state", 4, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ariadne.store_state",
+      5,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_Ariadne.Writing", "disc_equation_Ariadne.Ok",
+        "disc_equation_Ariadne.Writing", "disc_equation_FStar.Pervasives.V",
+        "equation_Ariadne.enclave", "equation_Ariadne.pre0",
+        "equation_Ariadne.pre1", "equation_Ariadne.step0",
+        "equation_Ariadne.step1", "equation_Ariadne.volatile",
+        "equation_FStar.Monotonic.Heap.heap",
+        "equation_FStar.Monotonic.Heap.mref",
+        "equation_FStar.Monotonic.Heap.sel", "equation_FStar.ST.mref",
+        "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Monotonic.Heap.heap_rec",
+        "fuel_guarded_inversion_FStar.Monotonic.Heap.mref_",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
+        "proj_equation_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Writing_latest",
+        "projection_inverse_Ariadne.Writing_prior",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_7c7651c371da79be589f809cd0074619",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "string_inversion", "true_interp", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      6,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      8,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "equation_Ariadne.volatile"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      10,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Ariadne.Crash",
+        "disc_equation_Ariadne.Ok", "disc_equation_Ariadne.Recover",
+        "disc_equation_Ariadne.Writing",
+        "equation_FStar.Monotonic.Heap.heap", "equation_Prims.eq2",
+        "equation_Prims.l_True", "equation_Prims.nat",
+        "fuel_guarded_inversion_Ariadne.case",
+        "fuel_guarded_inversion_FStar.Monotonic.Heap.heap_rec",
+        "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_7c7651c371da79be589f809cd0074619"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      11,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Ariadne_pretyping_aa7fb1e4d4d9e1f5c4d43327f007a8ad",
+        "Ariadne_pretyping_e7427cf45b373c9ca2ad9a1d8711584a",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
+        "bool_inversion", "bool_typing",
+        "constructor_distinct_Ariadne.Crash",
+        "constructor_distinct_Ariadne.Ok",
+        "constructor_distinct_Ariadne.Recover",
+        "constructor_distinct_Ariadne.Writing",
+        "constructor_distinct_Ariadne.case",
+        "constructor_distinct_FStar.Pervasives.E",
+        "constructor_distinct_FStar.Pervasives.Err",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Pervasives.V",
+        "constructor_distinct_Prims.unit", "constructor_distinct_Tm_unit",
+        "data_elim_Ariadne.Crash", "data_elim_FStar.Pervasives.E",
+        "data_elim_FStar.Pervasives.Err",
+        "data_typing_intro_FStar.Pervasives.E@tok",
+        "data_typing_intro_FStar.Pervasives.Err@tok",
+        "data_typing_intro_FStar.Pervasives.Native.Some@tok",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "disc_equation_Ariadne.Crash", "disc_equation_Ariadne.Writing",
+        "eq2-interp", "equation_Ariadne.enclave", "equation_Ariadne.entry",
+        "equation_Ariadne.index", "equation_Ariadne.pre",
+        "equation_Ariadne.pre0", "equation_Ariadne.pre1",
+        "equation_Ariadne.record", "equation_Ariadne.sealable",
+        "equation_Ariadne.sealable_pred", "equation_Ariadne.step0",
+        "equation_Ariadne.step1", "equation_Ariadne.volatile",
+        "equation_FStar.Preorder.preorder", "equation_FStar.ST.heap_rel",
+        "equation_FStar.ST.mref", "equation_FStar.ST.stable",
+        "equation_Prims.nat", "forall-interp",
+        "fuel_guarded_inversion_Ariadne.case",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
+        "function_token_typing_Ariadne.pre",
+        "function_token_typing_Prims.string",
+        "interpretation_Ariadne_Tm_abs_bb831da80e375d01f2458292ff2c7fcb",
+        "kinding_Ariadne.counter@tok",
+        "kinding_FStar.Pervasives.Native.option@tok", "l_and-interp",
+        "l_imp-interp", "l_or-interp", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
+        "proj_equation_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Counter_n",
+        "projection_inverse_Ariadne.Crash_other",
+        "projection_inverse_Ariadne.Crash_read",
+        "projection_inverse_Ariadne.Ok_saved",
+        "projection_inverse_Ariadne.Recover_other",
+        "projection_inverse_Ariadne.Recover_read",
+        "projection_inverse_Ariadne.Writing_latest",
+        "projection_inverse_Ariadne.Writing_prior",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
+        "refinement_interpretation_Ariadne_Tm_refine_4187e98250438914a336576d12992752",
+        "refinement_interpretation_Ariadne_Tm_refine_508146f3c077a8284475e78c710e1b0a",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "string_inversion", "string_typing",
+        "token_correspondence_Ariadne.sealable_pred", "true_interp",
+        "typing_Ariadne.__proj__Counter__item__c", "typing_Ariadne.step0",
+        "typing_Ariadne.step1", "typing_FStar.Monotonic.Heap.sel",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      12,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_Ariadne.pre",
+        "refinement_interpretation_Ariadne_Tm_refine_e50eebbafecdb257461f6aebb21031dd"
+      ],
+      0
+    ],
+    [
+      "Ariadne.recover_state",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Ariadne.index",
+        "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0
+    ],
+    [
+      "Ariadne.example",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_Ariadne.Ok",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Pervasives.V",
+        "data_elim_FStar.Pervasives.E", "data_elim_FStar.Pervasives.Err",
+        "data_elim_FStar.Pervasives.V",
+        "data_typing_intro_FStar.Pervasives.E@tok",
+        "data_typing_intro_FStar.Pervasives.Err@tok",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "disc_equation_Ariadne.Ok",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Ariadne.enclave", "equation_Ariadne.volatile",
+        "equation_FStar.Monotonic.Heap.heap",
+        "equation_FStar.Monotonic.Heap.mref",
+        "equation_FStar.Monotonic.Heap.sel", "equation_FStar.ST.mref",
+        "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Monotonic.Heap.heap_rec",
+        "fuel_guarded_inversion_FStar.Monotonic.Heap.mref_",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
+        "function_token_typing_Prims.unit",
+        "proj_equation_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Counter_c",
+        "projection_inverse_Ariadne.Ok_saved",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v",
+        "projection_inverse_Prims.Mkdtuple2__1",
+        "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_7c7651c371da79be589f809cd0074619",
+        "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "string_inversion", "string_typing", "unit_inversion", "unit_typing"
+      ],
+      0
+    ]
+  ]
+]

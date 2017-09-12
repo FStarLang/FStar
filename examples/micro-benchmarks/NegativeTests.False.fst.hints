@@ -37,7 +37,6 @@
       ],
       0
     ],
-    null,
     [
       "NegativeTests.False.f",
       1,
@@ -66,11 +65,7 @@
       1,
       2,
       1,
-      [
-        "@query", "constructor_distinct_Prims.Left",
-        "constructor_distinct_Prims.Right", "equality_tok_Prims.T@tok",
-        "equation_Prims.l_True"
-      ],
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0
     ]
   ]

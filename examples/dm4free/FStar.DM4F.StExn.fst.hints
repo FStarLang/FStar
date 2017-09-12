@@ -15,6 +15,7 @@
         "equation_FStar.DM4F.StExn.stexn", "function_token_typing_Prims.int",
         "int_inversion", "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0
@@ -33,6 +34,7 @@
         "function_token_typing_Prims.int",
         "kinding_FStar.Pervasives.Native.option@tok",
         "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0
@@ -61,10 +63,6 @@
       [ "@query" ],
       0
     ],
-    [ "FStar.DM4F.StExn.STEXN", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.STEXN", 2, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.STEXN", 3, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.StExn.STEXN", 4, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.StExn.div_intrinsic",
       1,
@@ -132,9 +130,12 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "data_typing_intro_FStar.Pervasives.Native.None@tok",
         "data_typing_intro_FStar.Pervasives.Native.Some@tok",
         "function_token_typing_Prims.int", "int_inversion",
+        "kinding_FStar.Pervasives.Native.option@tok",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
@@ -163,7 +164,7 @@
         "data_typing_intro_FStar.Pervasives.Native.Some@tok",
         "function_token_typing_Prims.int", "int_inversion",
         "kinding_FStar.Pervasives.Native.option@tok",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+        "primitive_Prims.op_Equality"
       ],
       0
     ],

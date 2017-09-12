@@ -8,7 +8,7 @@ module U64 = FStar.UInt64
 
 let n = 128
 
-val t:Type0
+val t: (x:Type0{hasEq x})
 
 val v (x:t) : Tot (uint_t n)
 
@@ -62,7 +62,6 @@ val lognot: a:t -> Pure t
   (requires True)
   (ensures (fun r -> v r == lognot (v a)))
 
-#set-options "--lax"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,
@@ -72,19 +71,19 @@ val lognot: a:t -> Pure t
 //eliminating the verification overhead of the wrapper
 private
 unfold
-let __uint_to_t (x:int) : Tot t
-    = uint_to_t x
-#reset-options
+let __uint_to_t (x:int) : Tot t =
+      assume (fits x 128);
+      uint_to_t x
 
 
 (* Shift operators *)
 val shift_left: a:t -> s:UInt32.t -> Pure t
-  (requires True)
-  (ensures (fun c -> UInt32.v s < n ==> v c = ((v a * pow2 (UInt32.v s)) % pow2 n)))
+  (requires (U32.v s < n))
+  (ensures (fun c -> v c = ((v a * pow2 (UInt32.v s)) % pow2 n)))
 
 val shift_right: a:t -> s:UInt32.t -> Pure t
-  (requires True)
-  (ensures (fun c -> UInt32.v s < n ==> v c = (v a / (pow2 (UInt32.v s)))))
+  (requires (U32.v s < n))
+  (ensures (fun c -> v c = (v a / (pow2 (UInt32.v s)))))
 
 (* Comparison operators *)
 
@@ -112,14 +111,8 @@ val eq_mask: a:t -> b:t -> Tot (c:t{(v a = v b ==> v c = pow2 n - 1) /\ (v a <> 
 val gte_mask: a:t -> b:t -> Tot (c:t{(v a >= v b ==> v c = pow2 n - 1) /\ (v a < v b ==> v c = 0)})
 
 (* Casts *)
-
-val uint64_to_uint128: a:U64.t -> Pure t
-  (requires True)
-  (ensures (fun r -> v r == U64.v a))
-
-val uint128_to_uint64: a:t -> Pure U64.t
-  (requires (v a < pow2 64))
-  (ensures (fun r -> U64.v r == v a))
+val uint64_to_uint128: a:U64.t -> b:t{v b == U64.v a}
+val uint128_to_uint64: a:t -> b:U64.t{U64.v b == v a % pow2 64}
 
 (* To input / output constants *)
 (* TODO: assume these without implementations *)
@@ -147,10 +140,10 @@ unfold let op_Less_Equals_Hat = lte
 (* Multiplication primitives *)
 (* Note that unlike UIntN, we do not provide uint128 * uint128 primitives (mul,
   mul_underspec, mul_mod, and mul_div) *)
-val mul32: a:U64.t -> b:U32.t -> Pure t
+val mul32: x:U64.t -> y:U32.t -> Pure t
   (requires True)
-  (ensures (fun r -> v r == U64.v a * U32.v b))
+  (ensures (fun r -> v r == U64.v x * U32.v y))
 
-val mul_wide: a:U64.t -> b:U64.t -> Pure t
+val mul_wide: x:U64.t -> y:U64.t -> Pure t
   (requires True)
-  (ensures (fun r -> v r == U64.v a * U64.v b))
+  (ensures (fun r -> v r == U64.v x * U64.v y))

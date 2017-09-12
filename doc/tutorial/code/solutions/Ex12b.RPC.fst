@@ -1,12 +1,12 @@
 module Ex12b.RPC
 
 open FStar.IO
-(* TODO : revert *x to FStar* once aseem_monotonicity landed in master *)
-open Preorder
-open Heapx
-open STx
-open Allx
-open MRefx
+
+open FStar.Preorder
+open FStar.Heap
+open FStar.ST
+open FStar.All
+open FStar.MRef
 
 open FStar.List.Tot
 open FStar.String
@@ -26,7 +26,7 @@ module Formatting = Ex12b2.Format
 
 
 val msg_buffer: ref message
-let msg_buffer = alloc _ (empty_bytes)
+let msg_buffer = alloc (empty_bytes)
 
 // BEGIN: Network
 private val send: message -> St unit
@@ -58,7 +58,7 @@ let subset (#a:eqtype) : Tot (preorder (list a)) = subset'
 
 type lref = mref (list log_entry) subset
 
-private let log : lref = alloc (subset #log_entry) []
+private let log : lref = alloc #_ #(subset #log_entry) []
 
 let add_to_log (r:lref) (v:log_entry) :
       ST unit (requires (fun _ -> True))
@@ -86,10 +86,9 @@ type reqresp text =
   \/ (exists s t. text = Formatting.response s t /\ pResponse s t)
 // END: MsgProperty
 
-val k: k:pkey reqresp
+val k:pkey reqresp
 let k = print_string "generating shared key...\n";
   keygen reqresp
-
 
 
 val client_send : s:string16 -> ML unit
@@ -97,11 +96,12 @@ let client_send (s:string16) =
   print_string "\nclient send:";
   print_string s;
   add_to_log log (Request s);
-  witness log (req s);
+  witness_token log (req s);
 
   assert(reqresp (Formatting.request s)); (* this works *)
   // assert(key_prop k == reqresp);          (* this also works *)
-  assert(key_prop k (Formatting.request s) == reqresp (Formatting.request s));
+  from_key_prop k (Formatting.request s) ;
+  assert (reqresp (Formatting.request s)) ;
   (*assert(key_prop k (Formatting.request s)); -- this fails *)
   send ( (utf8 s) @| (mac k (Formatting.request s)))
 
@@ -115,8 +115,9 @@ let client_recv (s:string16) =
       let t = iutf8 v in
       if verify k (Formatting.response s t) m'
       then (
+        from_key_prop k (Formatting.response s t);
         assert (pResponse s t);
-        recall log (resp s t);
+        recall_token log (resp s t);
         let xs = !log in
         assert (Response s t `mem` xs);
         print_string "\nclient verified:";
@@ -140,15 +141,16 @@ let server () =
         if verify k (Formatting.request s) m
         then
           (
+            from_key_prop k (Formatting.request s);
             assert (pRequest s);
-            recall log (req s);
+            recall_token log (req s);
             let xs = !log in
             assert (Request s `mem` xs);
             print_string "\nserver verified:";
             print_string s;
             let t = "42" in
             add_to_log log (Response s t);
-            witness log (resp s t);
+            witness_token log (resp s t);
             print_string "\nserver sent:";
             print_string t;
             send ( (utf8 t) @| (mac k (Formatting.response s t)))

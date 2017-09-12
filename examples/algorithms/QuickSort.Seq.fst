@@ -8,7 +8,7 @@ module Seq = FStar.Seq
 
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
-#reset-options "--z3rlimit 40"
+#reset-options "--z3rlimit 100"
 
 val partition: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
     -> s:seq a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->
