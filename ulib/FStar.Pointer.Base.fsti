@@ -1151,7 +1151,7 @@ val buffer_live_gsub_buffer_equiv
   (len: UInt32.t)
   (h: HS.mem)
 : Lemma
-  (requires (UInt32.v len > 0 /\ UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ (buffer_live h (gsub_buffer b i len) <==> buffer_live h b)))
   [SMTPat (buffer_live h (gsub_buffer b i len))]
 
@@ -1902,6 +1902,7 @@ val modifies_buffer_elim
   (requires (
     loc_disjoint (loc_buffer b) p /\
     buffer_live h b /\
+    UInt32.v (buffer_length b) > 0 /\ // necessary for liveness, because all buffers of size 0 are disjoint for any memory location, so we cannot talk about their liveness individually without referring to a larger nonempty buffer
     modifies p h h'
   ))
   (ensures (

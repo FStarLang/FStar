@@ -156,7 +156,7 @@ let live_gsub_equiv
   (len: UInt32.t)
   (h: HS.mem)
 : Lemma
-  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ UInt32.v len > 0))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b)))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ (live h (gsub b i len) <==> live h b)))
   [SMTPat (live h (gsub b i len))]
 = ()
@@ -400,7 +400,7 @@ let readable_gsub
   (i: UInt32.t)
   (len: UInt32.t)
 : Lemma
-  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h b /\ UInt32.v len > 0))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h b))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h (gsub b i len)))
   [SMTPat (readable h (gsub b i len))]
 = ()

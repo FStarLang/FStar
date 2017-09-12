@@ -2612,11 +2612,10 @@ let buffer_live
   (b: buffer t)
 : GTot Type0
 = let () = () in ( // necessary to somehow remove the `logic` qualifier
-  UInt32.v (buffer_length b) > 0 ==> ( // needed to preserve liveness through modifies
     match b.broot with
     | BufferRootSingleton p -> live h p
     | BufferRootArray #mlen p -> live h p
-  ))
+  )
 
 let buffer_live_gsingleton_buffer_of_pointer
   (#t: typ)
@@ -4166,10 +4165,7 @@ let modifies_pointer_elim s h1 h2 #a' p' =
 let modifies_buffer_elim #t1 b p h h' =
   loc_disjoint_sym (loc_buffer b) p;
   let n = UInt32.v (buffer_length b) in
-  if n = 0
-  then
-    assert (Seq.equal (buffer_as_seq h b) (buffer_as_seq h' b))
-  else begin
+  begin
     assert (n > 0);
     let pre
       (i: UInt32.t)
