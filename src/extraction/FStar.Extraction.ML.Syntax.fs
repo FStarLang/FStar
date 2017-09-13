@@ -224,7 +224,10 @@ let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
-    let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name(["Obj"], "repr")) in
+    let obj_ns = if Option.get (Options.codegen()) = "FSharp" 
+                 then "FSharp.Compatibility.OCaml.Obj" 
+                 else "Obj" in
+    let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name([obj_ns], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
 (* 20161021, JP: trying to make sense of this code...
