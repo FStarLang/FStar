@@ -23,27 +23,31 @@ that is a version of the standard F\* library written in Flow.
 #### Step 3 ####
 
 To compile the verified code, one needs to erasure types from `.flow` files and translate
-ES modules (export/import) to CommandJS modules.
+ES modules (the `export/import` style) to CommandJS modules (the `require/exports` style).
 
 ###  Getting started ###
 
-1. install Node v8.0.0
+1. install Node v8.5.0
   
-2. install Flow package (https://github.com/facebook/flow)
+2. install Flow package (https://flow.org/en/docs/install/)
+   
+   ```
+   npm install --save-dev flow-bin
+   ```
 
    - to create `.flowconfig` file, one can use the following command:
    
    ```
-   flow init
+   npm run flow init
    ```
    
    - to verify Flow code:
    
    ```
-   flow check
+   npm run flow
    ```
 
-3. how to run Flow code, see https://flow.org/en/docs/install/
+3. how to run Flow code
 
    - to erasure Flow types, one can install the following plugin:
    
@@ -51,13 +55,21 @@ ES modules (export/import) to CommandJS modules.
    npm install --save-dev babel-cli babel-preset-flow
    ```
 
-   - to translate ES modules (export/import) to CommandJS modules:
+   - to translate ES modules (the `export/import` style) to CommandJS modules 
+   (the `require/exports` style):
 
    ```
    npm install --save-dev babel-plugin-transform-es2015-modules-simple-commonjs
    ```
    
-   - the above plugins should be added to `.babelrc` file
+   - the above plugins should be added to `.babelrc` file:
+   
+   ```
+   {
+  "presets": ["flow"],
+  "plugins": ["transform-es2015-modules-simple-commonjs"]
+   }
+   ```
  
 4. The `Esformatter` with plugin `esformatter-flow` can be used for pretty printing 
    of Flow code: (see https://github.com/millermedeiros/esformatter)
