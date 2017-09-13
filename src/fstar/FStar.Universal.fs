@@ -44,6 +44,8 @@ module BU      = FStar.Util
 
 let module_or_interface_name m = m.is_interface, m.name
 
+let user_tactics_modules = Tc.user_tactics_modules
+
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
 (***********************************************************************)
@@ -215,7 +217,7 @@ let tc_one_file dsenv env pre_fn fn : (Syntax.modul * int) //checked module and 
             then let dsenv = FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii dsenv in
                  let tcenv = FStar.TypeChecker.Tc.load_checked_module env tcmod in
                  (tcmod, 0), dsenv, tcenv
-            else failwith (BU.format1 "The file %s.checked is stale; delete it" cache_file)
+            else failwith (BU.format1 "The file %s is stale; delete it" cache_file)
   else tc_source_file ()
 
 (***********************************************************************)

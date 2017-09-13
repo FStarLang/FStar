@@ -4,6 +4,7 @@ open FStar_Tactics_Effect
 module E = FStar_Tactics_Effect
 module B = FStar_Tactics_Basic
 module RT = FStar_Reflection_Types
+module EMB = FStar_Syntax_Embeddings
 
 let interpret_tac (t: 'a B.tac) (ps: proofstate): 'a E.__result =
   match B.run t ps with
@@ -14,6 +15,17 @@ let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a B.result =
   match t ps with
   | E.Success (a, state) -> B.Success (a, state)
   | E.Failed (s, state) -> B.Failed (s, state)
+
+let tr_repr_steps =
+    let tr1 = function
+              | Simpl         -> EMB.Simpl
+              | WHNF          -> EMB.WHNF
+              | Primops       -> EMB.Primops
+              | Delta         -> EMB.Delta
+              | Zeta          -> EMB.Zeta
+              | Iota          -> EMB.Iota
+              | UnfoldOnly ss -> EMB.UnfoldOnly ss
+    in List.map tr1
 
 let to_tac_0 (t: 'a __tac): 'a B.tac =
   (fun (ps: proofstate) ->
@@ -53,18 +65,17 @@ let cur_goal: unit -> RT.term __tac = fun () -> __cur_goal
 let __cur_witness: RT.term __tac = from_tac_0 B.cur_witness
 let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
 
-let __embed =
-  Obj.magic (fun uu____118  -> failwith "Not yet implemented:__embed")
-let quote x uu____135 s = E.Success ((__embed x), s)
-
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
 let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __trytac (E.reify_tactic t)
 
 let __trivial: unit __tac = from_tac_0 B.trivial
 let trivial: unit -> unit __tac = fun () -> __trivial
 
-let __norm (s: FStar_Reflection_Data.norm_step list): unit __tac = from_tac_1 B.norm s 
-let norm: FStar_Reflection_Data.norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
+let __norm (s: norm_step list): unit __tac = from_tac_1 B.norm (tr_repr_steps s)
+let norm: norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
+
+let __norm_term (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_2 B.norm_term (tr_repr_steps s) t
+let norm_term: norm_step list -> RT.term -> unit -> RT.term __tac = fun s t -> fun () -> __norm_term s t
 
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro
@@ -101,11 +112,18 @@ let exact_lemma: RT.term E.tactic -> unit -> unit __tac =
     | E.Success (a, state) -> __exact_lemma a state
     | E.Failed (s, state) -> E.Failed (s, state)
 
-let __apply (t: RT.term): unit __tac = from_tac_1 B.apply t
+let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
 let apply: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
     match (t ()) ps with
     | E.Success (a, state) -> __apply a state
+    | E.Failed (s, state) -> E.Failed (s, state)
+
+let __apply_raw (t: RT.term): unit __tac = from_tac_1 (B.apply false) t
+let apply_raw: RT.term E.tactic -> unit -> unit __tac =
+  fun t  -> fun () -> fun ps ->
+    match (t ()) ps with
+    | E.Success (a, state) -> __apply_raw a state
     | E.Failed (s, state) -> E.Failed (s, state)
 
 let __apply_lemma (t: RT.term): unit __tac = from_tac_1 B.apply_lemma t

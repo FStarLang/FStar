@@ -5,12 +5,8 @@ module DM = FStar.DependentMap
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 
-(** Code
+(** Code of a tagged union *)
 
-  The code of a tagged union with fields `l` is `typ l`
-*)
-
-abstract
 let typ_l (l: P.union_typ) =
   P.([("tag", TBase TUInt32); ("union", TUnion l)])
 
@@ -21,50 +17,15 @@ let typ (l: P.union_typ) : P.typ = P.TStruct (typ_l l)
 
 (******************************************************************************)
 
-(* Tagging, at the logical level
+(* Tagging, at the logical level *)
 
-  `tags l` defines "physical tags" (i.e. integers) for the fields of `l`.
-*)
+(* Abstract predicate providing a proof that some field matches some tag. *)
 
-let tags (l: P.union_typ) : Tot Type0 =
-  tl: list UInt32.t {
-    List.Tot.length tl == List.Tot.length l /\
-    List.Tot.noRepeats tl
-  }
-
-(* Get a field from its physical tag. *)
-let rec field_of_tag
-  (#l: P.union_typ)
-  (tgs: tags l)
-  (t: UInt32.t)
-: Pure (P.struct_field l)
-  (requires (List.Tot.mem t tgs))
-  (ensures (fun _ -> True))
-= let ((f, _) :: l') = l in
-  let (t' :: tgs') = tgs in
-  if t = t' then f
-  else (
-    assert (Cons? l');
-    let ff' : string = field_of_tag #l' tgs' t in
-    ff'
-  )
-
-(* Get the physical tag corresponding to a field. *)
-let rec tag_of_field
-  (#l: P.union_typ)
-  (tgs: tags l)
-  (f: P.struct_field l)
-: Pure UInt32.t
-  (requires True)
-  (ensures (fun t -> List.Tot.mem t tgs))
-= let ((f', _) :: l') = l in
-  let (t :: tgs') = tgs in
-  if f = f' then t
-  else (
-    assert (Cons? l');
-    let ff : string = f in
-    tag_of_field #l' tgs' ff
-  )
+let field_matches_tag
+  (#l: P.union_typ) (tgs: tags l)
+  (f: P.struct_field l) (t: UInt32.t)
+: Tot Type0
+= tag_of_field tgs f == t
 
 let rec field_of_tag_of_field
   (#l: P.union_typ)
@@ -98,14 +59,33 @@ let rec tag_of_field_of_tag
     tag_of_field_of_tag #l' tgs' t
   )
 
+let field_matches_tag_intro
+  (#l: P.union_typ) (tgs: tags l)
+  (f: P.struct_field l) (t: UInt32.t)
+: Lemma
+  (requires (tag_of_field tgs f == t))
+  (ensures (field_matches_tag tgs f t))
+= ()
+
+let field_matches_tag_elim
+  (#l: P.union_typ) (tgs: tags l)
+  (f: P.struct_field l) (t: UInt32.t)
+: Lemma
+  (requires (field_matches_tag tgs f t))
+  (ensures (tag_of_field tgs f == t))
+= ()
+
+let assert_field_matches_tag
+  (#l: P.union_typ) (tgs: tags l)
+  (f: P.struct_field l) (t: UInt32.t)
+: Lemma
+  (requires (normalize_term (tag_of_field tgs f) == t))
+  (ensures (field_matches_tag tgs f t))
+= ()
+
 (******************************************************************************)
 
-(* Stateful invariant
-
-   `valid h tgs p` states that p points to a tagged union:
-   - which physical tag is readable and valid wrt `tgs`
-   - which union has an active field corresponding to its physical tag
-*)
+(* Stateful invariant *)
 
 let valid
   (#l: P.union_typ)
@@ -178,6 +158,7 @@ let field
   ))
   (ensures (fun h0 p' h1 ->
     h0 == h1 /\
+    field_matches_tag tgs f (gread_tag h0 tgs p) /\
     p' == gfield tgs p f
   ))
 = P.ufield (P.field p (union_field l)) f
@@ -201,7 +182,8 @@ let write
     P.modifies_1 p h0 h1 /\
     P.readable h1 p /\
     valid h1 tgs p /\
-    gread_tag #l h1 tgs p == normalize_term (tag_of_field tgs f) /\
+    gread_tag h1 tgs p == normalize_term (tag_of_field tgs f) /\
+    field_matches_tag tgs f (gread_tag h1 tgs p) /\
     P.gread h1 (gfield tgs p f) == v
   ))
 =
@@ -213,10 +195,10 @@ let write
   P.write (P.ufield u_ptr f) v;
   let h1 = HST.get () in
   // SMTPats for this lemma do not seem to trigger?
-  P.no_upd_lemma_1 h11 h1 u_ptr tag_ptr;
+//  P.no_upd_lemma_1 h11 h1 u_ptr tag_ptr;
   assert (P.readable h1 tag_ptr);
   assert (P.readable h1 u_ptr);
-  P.readable_struct h1 p;
+  P.readable_struct_fields_readable_struct h1 p;
   P.is_active_union_field_includes_readable #l h1 u_ptr f (P.ufield u_ptr f);
   assert (P.is_active_union_field #l h1 u_ptr f)
 
@@ -232,7 +214,8 @@ let write_tag
   (ensures (fun h0 _ h1 ->
     valid h0 tgs p /\ valid h1 tgs p
     /\ P.modifies_1 p h0 h1
-    /\ gread_tag #l h1 tgs p == normalize_term (tag_of_field tgs f)
+    /\ gread_tag h1 tgs p == normalize_term (tag_of_field tgs f)
+    /\ field_matches_tag tgs f (gread_tag h1 tgs p)
   ))
 =
   let tag_ptr = P.field p (tag_field l) in
@@ -245,6 +228,18 @@ let write_tag
 
 (* Lemmas *)
 
+let includes_gfield
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+: Lemma
+  (requires True)
+  (ensures (P.includes p (gfield tgs p f)))
+  [SMTPat (P.includes p (gfield tgs p f))]
+= ()
+
+let live_gfield #l tgs p f h = ()
 
 let modifies_1_valid
   (#l: P.union_typ)
@@ -257,7 +252,7 @@ let modifies_1_valid
 : Lemma
   (requires (
     valid h0 tgs p /\
-    gread_tag h0 tgs p == normalize_term (tag_of_field tgs f) /\
+    field_matches_tag tgs f (gread_tag h0 tgs p) /\
     P.modifies_1 (gfield tgs p f) h0 h1 /\
     P.includes (gfield tgs p f) p' /\
     P.readable h1 p'
@@ -274,15 +269,13 @@ let modifies_1_field_tag
   (tgs: tags l)
   (p: P.pointer (typ l))
   (f: P.struct_field l)
-  (t: UInt32.t)
   (h0 h1: HS.mem)
 : Lemma
   (requires (
     valid h0 tgs p /\
-    gread_tag h0 tgs p == t /\
     P.modifies_1 (gfield tgs p f) h0 h1
   ))
-  (ensures (gread_tag h1 tgs p == t))
+  (ensures (gread_tag h1 tgs p == gread_tag h0 tgs p))
   [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1)]
 = ()
 
@@ -298,6 +291,18 @@ let modifies_1_field
   [SMTPat (valid #l h0 tgs p); SMTPat (P.modifies_1 (gfield #l tgs p f) h0 h1)]
 = ()
 
+let modifies_1_field_tag_equal
+  (#l: P.union_typ)
+  (tgs: tags l)
+  (p: P.pointer (typ l))
+  (f: P.struct_field l)
+  (h0 h1: HS.mem)
+: Lemma
+  (requires (valid h0 tgs p /\ P.modifies_1 (gfield tgs p f) h0 h1))
+  (ensures (gread_tag h0 tgs p == gread_tag h1 tgs p))
+  [SMTPat (valid h0 tgs p); SMTPat (gread_tag h1 tgs p); SMTPat (gfield tgs p f)]
+= ()
+
 let readable_intro
   (#l: P.union_typ)
   (tgs: tags l)
@@ -311,7 +316,7 @@ let readable_intro
   ))
   (ensures (P.readable h p))
   [SMTPat (valid #l h tgs p); SMTPat (P.readable h (gfield #l tgs p f))]
-= P.readable_struct h p
+= P.readable_struct_fields_readable_struct h p
 
 let readable_field
   (#l: P.union_typ)
@@ -322,7 +327,7 @@ let readable_field
 : Lemma
   (requires (
     valid h tgs p /\ P.readable h p /\
-    gread_tag h tgs p == normalize_term (tag_of_field tgs f)
+    field_matches_tag tgs f (gread_tag h tgs p)
   ))
   (ensures (P.readable h (gfield tgs p f)))
   [SMTPat (P.readable h (gfield tgs p f))]
@@ -333,63 +338,23 @@ let readable_field
 (* Logical representation of a tagged union.
 *)
 
-let raw (l: P.union_typ) : Tot Type0 = P.type_of_typ (typ l)
-
 let raw_get_tag (#l: P.union_typ) (tu: raw l)
 : Tot UInt32.t
 =
-  P.struct_sel tu (tag_field l)
+  P.struct_sel #(typ_l l) tu (tag_field l)
 
 let raw_get_field (#l: P.union_typ) (tu: raw l)
 : GTot (P.struct_field l)
 =
-  P.union_get_key #l (P.struct_sel tu (union_field l))
+  P.union_get_key #l (P.struct_sel #(typ_l l) tu (union_field l))
 
 let raw_get_value (#l: P.union_typ) (tu: raw l) (f: P.struct_field l)
 : Pure (P.type_of_typ (P.typ_of_struct_field l f))
   (requires (raw_get_field tu == f))
   (ensures (fun _ -> True))
 =
-  let u : P.union l = P.struct_sel tu (union_field l) in
+  let u : P.union l = P.struct_sel #(typ_l l) tu (union_field l) in
   P.union_get_value u f
-
-let matching_tags
-  (#l: P.union_typ)
-  (raw_tu: raw l)
-  (tgs: tags l)
-: Tot Type
-=
-  let t = raw_get_tag raw_tu in
-  List.Tot.mem t tgs /\
-  field_of_tag tgs t == raw_get_field raw_tu
-
-
-let t (l: P.union_typ) (tgs: tags l) : Tot Type0 =
-  tu : raw l { matching_tags tu tgs }
-
-let get_field (#l: P.union_typ) (#tgs: tags l) (tu: t l tgs)
-: GTot (P.struct_field l)
-=
-  raw_get_field tu
-
-let get_tag (#l: P.union_typ) (#tgs: tags l) (tu: t l tgs)
-: Pure (t: UInt32.t)
-  (requires True)
-  (ensures (fun t ->
-    List.Tot.mem t tgs /\
-    t == normalize_term (tag_of_field tgs (get_field tu))))
-=
-  raw_get_tag #l tu
-
-let get_value
-  (#l: P.union_typ) (#tgs: tags l)
-  (tu: t l tgs)
-  (f: P.struct_field l)
-: Pure (P.type_of_typ (P.typ_of_struct_field l f))
-  (requires (get_field tu == f))
-  (ensures (fun _ -> True))
-=
-  raw_get_value #l tu f
 
 (* Lemma: "valid p ==> matching_tags (gread p)" *)
 

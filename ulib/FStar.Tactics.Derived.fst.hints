@@ -1,5 +1,5 @@
 [
-  "\u0018.–©‘;g$ÎÝ9€¡øª_",
+  "\u001dD3œY½¦&Øƒ³µ\u001bèÊ\t",
   [
     [
       "FStar.Tactics.Derived.mapM",
@@ -156,6 +156,18 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_FStar.Tactics.Effect.tactic",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.Derived.__witness",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "exists-interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0
     ]

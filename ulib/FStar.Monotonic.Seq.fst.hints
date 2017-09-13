@@ -1436,7 +1436,6 @@
       ],
       0
     ],
-    [ "FStar.Monotonic.Seq.collect_has_at_index", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.Seq.collect_has_at_index_stable",
       1,

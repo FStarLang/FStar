@@ -1,42 +1,7 @@
-.PHONY: indent all extra
-
-FSTAR_HOME=..
-include $(FSTAR_HOME)/src/gmake/z3.mk
-include $(FSTAR_HOME)/src/gmake/fstar.mk
-
-EXTRA=FStar.Pointer.fst
-FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
-
-ALL=$(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
-
-all: $(addsuffix -ver, $(ALL))
-
-extra: $(addsuffix -ver, $(EXTRA))
-
-indent: $(addsuffix -indent, $(ALL))
-
-%-ver: %
-	$(FSTAR) $^
-	touch $@
-
-%.fst-in:
-	@echo --use_hints --hint_info
-
-%.fst-indent: %.fst
-	$(FSTAR) --indent $^ > $^.indent.fst
-
-%.fsti-indent: %.fsti
-	$(FSTAR) --indent $^ > $^.indent.fsti
-
-verify-indent: $(addsuffix -verindent, $(wildcard *.indent.fst))
-
-%-verindent: %
-	$(FSTAR) $^
-
-wc:
-	wc -l prims.fst $(ALL)
-
-##
+# Makefile.verify has been split off because it is the actual
+# Makefile that is distributed in the binary package. This
+# Makefile here is not.
+include Makefile.verify
 
 include ml/Makefile.include
 
@@ -54,7 +19,7 @@ EXTRACT_COMPILER=$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar
 	cp ../src/basic/ml/*.ml                                ml/compiler-extracted/
 	cp ../src/prettyprint/ml/*.ml                          ml/compiler-extracted/
 	cp ../src/extraction/ml/FStar_Extraction_ML_PrintML.ml ml/compiler-extracted/
-	cp ../src/parser/ml/FStar_Parser_LexFStar.mll          ml/compiler-extracted/
+	cp ../src/parser/ml/FStar_Parser_LexFStar.ml           ml/compiler-extracted/
 	cp ../src/parser/ml/FStar_Parser_ParseIt.ml            ml/compiler-extracted/
 	cp ../src/parser/ml/FStar_Parser_Util.ml               ml/compiler-extracted/
 	cp ../src/tactics/ml/FStar_Tactics_Native.ml           ml/compiler-extracted/

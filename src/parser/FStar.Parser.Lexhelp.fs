@@ -48,7 +48,7 @@ let intern_string : string -> string =
       | Some res -> res
       | None -> Util.smap_add strings s s; s
 
-let default_string_finish endm b s = STRING s
+let default_string_finish endm b s = STRING (Bytes.unicode_bytes_as_string s)
 
 let call_string_finish fin buf endm b = fin endm b (Bytes.close buf)
 
@@ -229,9 +229,9 @@ let kwd_or_id args (r:Range.range) s =
     | None ->
       match s with
         | "__SOURCE_DIRECTORY__" ->
-          STRING (Bytes.string_as_unicode_bytes (args.getSourceDirectory()))
+          STRING (args.getSourceDirectory())
         | "__SOURCE_FILE__" ->
-          STRING (Bytes.string_as_unicode_bytes (Range.file_of_range r))
+          STRING (Range.file_of_range r)
         | "__LINE__" ->
           INT (Util.string_of_int <| Range.line_of_pos (Range.start_of_range r), false)
         | _ ->

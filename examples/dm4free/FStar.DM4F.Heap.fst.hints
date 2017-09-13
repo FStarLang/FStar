@@ -57,7 +57,6 @@
       ],
       0
     ],
-    [ "FStar.DM4F.Heap.contains_a_well_typed", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Heap.sel_tot",
       1,
