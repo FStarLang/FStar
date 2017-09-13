@@ -174,7 +174,7 @@ TOSYNTAX_EXTRACTED_FILES=$(addprefix tosyntax/FStar.ToSyntax., Env.fs Interleave
 extract_tosyntax: boot $(TOSYNTAX_EXTRACTED_FILES)
 	$(FSTARBOOT) $(TOSYNTAX_EXTRACTED_FILES) --extract_namespace FStar.ToSyntax
 
-EXTRACTION_EXTRACTED_FILES=$(addprefix extraction/FStar.Extraction., ML.Syntax.fs ML.UEnv.fs ML.Util.fs ML.Code.fs ML.Term.fs ML.Modul.fs Kremlin.fs)
+EXTRACTION_EXTRACTED_FILES=$(addprefix extraction/FStar.Extraction., ML.Syntax.fs ML.UEnv.fs ML.Util.fs ML.Code.fs ML.Term.fs ML.Modul.fs Kremlin.fs JavaScript.Ast.fs JavaScript.Translate.fs JavaScript.PrintAst.fs)
 extract_extraction: boot $(EXTRACTION_EXTRACTED_FILES)
 	$(FSTARBOOT) $(EXTRACTION_EXTRACTED_FILES) --extract_namespace FStar.Extraction
 

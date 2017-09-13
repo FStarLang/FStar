@@ -2,6 +2,7 @@
 
 module FStar.Extraction.JavaScript.Translate
 
+open FStar.All
 open FStar
 open FStar.Util
 open FStar.Extraction.ML
@@ -194,7 +195,7 @@ and translate_decl env d: option<(source_t * env_t)> =
                      (Some t, env) in
         let is_private = List.contains Private c_flag in
         let (c, env) =
-            if is_pure_expr expr (name, None)
+            if is_pure_expr expr (name, t)
             then
                 let var_decl_q = if isMutable tys then JSV_Let else JSV_Const in
                 let env = extendEnv env ([], name) tys in
@@ -211,7 +212,7 @@ and translate_decl env d: option<(source_t * env_t)> =
 
   | MLM_Loc _ -> None (* only for OCaml backend *)
 
-  | MLM_Ty [(_, name, _, tparams, body)] ->
+  | MLM_Ty [(_, name, _, tparams, _, body)] ->
       let tparams =
         match tparams with
         | [] -> None
@@ -232,19 +233,19 @@ and translate_decl env d: option<(source_t * env_t)> =
             (get_export (JSS_TypeAlias ((name, None), tparams, JST_Object (tag @ fields_t))), env)
         | MLTD_DType lfields ->
             let tag n = [(JSO_Identifier ("_tag", None), JST_StringLiteral (n, ""))] in
-            let fields_t fields env = 
-                List.fold_left (fun (i, r, e) t ->
+            let fields_t fields env =
+                List.fold_left (fun (r, e) (n, t) ->
                     let (r1, e1) = translate_type t tparams e in
-                    (i + 1, r @ [JSO_Identifier ("_" ^ string_of_int i, None), r1], e1)) (0, [], env) fields in
+                    (r @ [JSO_Identifier ("_" ^ n, None), r1], e1)) ([], env) fields in
             let (lfields_t, env) = 
                 List.fold_left (fun (r, e) (n, l) ->
-                    let (_, r1, e1) = fields_t l e in
+                    let (r1, e1) = fields_t l e in
                     (r @ [get_export (JSS_TypeAlias ((n, None), tparams, JST_Object ((tag n) @ r1)))], e1)) ([], env) lfields in
             let tparams_gen =
                 match tparams with
                 | Some t -> List.map (fun x -> JST_Generic (x, None)) t |> Some
                 | None -> None in
-            let lnames = List.map (fun (n, l) -> JST_Generic (n, tparams_gen)) lfields in
+            let lnames = List.map (fun (n, _) -> JST_Generic (n, tparams_gen)) lfields in
             let union_t = get_export (JSS_TypeAlias ((name, None), tparams, JST_Union lnames)) in
             (JSS_Block (lfields_t @ [union_t]), env) in
       let (body_t, env) =
@@ -270,7 +271,7 @@ and translate_expr e var lstmt env isDecl: (list<statement_t> * env_t) =
     let is_inEnv = isInEnv env (fst var) in
     let (expr, env) = (* todo: JSV_Let and JSV_Const *)
       let res e =
-        let env = extendEnv env ([], fst var) None in
+        //let env = extendEnv env ([], fst var) None in
         if is_inEnv then ([JSS_Block e], env) else (e, env) in
       match expr with
        | JSE_Assignment _ ->
@@ -298,7 +299,7 @@ and translate_expr e var lstmt env isDecl: (list<statement_t> * env_t) =
       }]), continuation) ->
      let isEqName = isInEnv env name in
      let env = extendEnv env ([], name) tys in
-     if is_pure_expr body (name, None)
+     if is_pure_expr body (name, tys)
      then
         let var_decl_q = if isMutable tys then JSV_Let else JSV_Const in
         let (r, env) = translate_expr_pure body env in
@@ -346,7 +347,7 @@ and translate_expr e var lstmt env isDecl: (list<statement_t> * env_t) =
       let (expr, env) =
         if isDecl then ([JSS_Expression (JSE_Assignment (JGP_Identifier (fst var, None), expr))], env)
         else
-            let env = extendEnv env ([], fst var) None in 
+            //let env = extendEnv env ([], fst var) None in 
             ([JSS_VariableDeclaration ((JGP_Identifier (fst var, None), Some expr), JSV_Const)], env) in
       let env = {env with import_module_names = env.import_module_names @ env1.import_module_names} in
       (expr @ lstmt, env)
@@ -371,7 +372,7 @@ and translate_expr e var lstmt env isDecl: (list<statement_t> * env_t) =
       let (c, env) =
         if isDecl then (c, env) 
         else 
-            let env = extendEnv env ([], fst var) None in
+            //let env = extendEnv env ([], fst var) None in
             ([JSS_VariableDeclaration ((JGP_Identifier var, None), JSV_Let)] @ c, env) in
       let env = {env with import_module_names = env.import_module_names @
                           env1.import_module_names @ env2.import_module_names} in
@@ -410,7 +411,7 @@ and translate_expr e var lstmt env isDecl: (list<statement_t> * env_t) =
       let (c, env) =
         if isDecl then (c, env)
         else
-            let env = extendEnv env ([], fst var) None in 
+            //let env = extendEnv env ([], fst var) None in 
             ([JSS_VariableDeclaration ((JGP_Identifier var, None), JSV_Let)] @ c, env) in
       (c @ lstmt, env)
 
