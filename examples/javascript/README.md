@@ -64,20 +64,18 @@ ES modules (the `export/import` style) to CommandJS modules (the `require/export
    
    - the above plugins should be added to `.babelrc` file:
    
-   ```
-   {
-  "presets": ["flow"],
-  "plugins": ["transform-es2015-modules-simple-commonjs"]
-   }
-   ```
- 
+   {        
+  "presets": ["flow"],        
+  "plugins": ["transform-es2015-modules-simple-commonjs"]        
+   }              
+   
 4. The `Esformatter` with plugin `esformatter-flow` can be used for pretty printing 
-   of Flow code: (see https://github.com/millermedeiros/esformatter)
-  
+   of Flow code: (see https://github.com/millermedeiros/esformatter):
+   
    ```
    esformatter --plugins=esformatter-flow SimpleTest.flow > SimpleTest.js
    ```
-   
+  
   ###  Example ###
   
   Example that demonstrates how it works can be found in `examples/javascript` directory.
