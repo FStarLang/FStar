@@ -27,6 +27,7 @@ open FStar.Range
 open FStar.Ident
 open FStar.Const
 open FStar.Dyn
+module PC = FStar.Parser.Const
 
 (* Objects with metadata *)
 ///[@ PpxDerivingShow ]
@@ -540,7 +541,7 @@ let set_range_of_fv (fv:fv) (r:Range.range) =
     {fv with fv_name={fv.fv_name with v=Ident.set_lid_range (lid_of_fv fv) r}}
 let has_simple_attribute (l: list<term>) s =
   List.existsb (function
-    | { n = Tm_constant (Const_string (data, _)) } when string_of_unicode data = s ->
+    | { n = Tm_constant (Const_string (data, _)) } when data = s ->
         true
     | _ ->
         false
@@ -565,4 +566,3 @@ let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev C.u_tac_lid) [U_zero]) [as_a
 let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange
-

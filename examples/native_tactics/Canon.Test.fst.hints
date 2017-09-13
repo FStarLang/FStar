@@ -1,0 +1,33 @@
+[
+  "Û>\u0007:5ð&òÇŠ•ë¡>[ˆ",
+  [
+    [
+      "Canon.Test.lem1",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [ "Canon.Test.lem8", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Canon.Test.lem9",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Canon.Test.lem10",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ]
+  ]
+]

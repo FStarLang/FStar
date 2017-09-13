@@ -1144,15 +1144,26 @@ val buffer_length_gsub_buffer
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_length (gsub_buffer b i len) == len))
   [SMTPat (buffer_length (gsub_buffer b i len))]
 
-val buffer_live_gsub_buffer
+val buffer_live_gsub_buffer_equiv
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
   (len: UInt32.t)
   (h: HS.mem)
 : Lemma
-  (requires (UInt32.v len > 0 /\ UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ (buffer_live h (gsub_buffer b i len) <==> buffer_live h b)))
+  [SMTPat (buffer_live h (gsub_buffer b i len))]
+
+val buffer_live_gsub_buffer_intro
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (h: HS.mem)
+: Lemma
+  (requires (buffer_live h b /\ UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_live h (gsub_buffer b i len)))
   [SMTPat (buffer_live h (gsub_buffer b i len))]
 
 val gsub_buffer_gsub_buffer
@@ -1404,7 +1415,7 @@ val buffer_readable_gsub_buffer
   (i: UInt32.t)
   (len: UInt32.t)
 : Lemma
-  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_readable h b /\ UInt32.v len > 0))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_readable h b))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_readable h (gsub_buffer b i len)))
   [SMTPat (buffer_readable h (gsub_buffer b i len))]
 
@@ -1891,6 +1902,7 @@ val modifies_buffer_elim
   (requires (
     loc_disjoint (loc_buffer b) p /\
     buffer_live h b /\
+    UInt32.v (buffer_length b) > 0 /\ // necessary for liveness, because all buffers of size 0 are disjoint for any memory location, so we cannot talk about their liveness individually without referring to a larger nonempty buffer
     modifies p h h'
   ))
   (ensures (
@@ -2158,7 +2170,8 @@ val modifies_1_readable_struct
     [SMTPat (modifies_1 (gfield p f) h h'); SMTPat (readable h' p)];
     [SMTPat (readable h p); SMTPat (readable h' (gfield p f))];
     [SMTPat (readable h' p); SMTPat (readable h' (gfield p f))];
-  ]]
+    [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gfield p f)];
+]]
 
 val modifies_1_readable_array
   (#t: typ)
@@ -2174,6 +2187,7 @@ val modifies_1_readable_array
     [SMTPat (modifies_1 (gcell p i) h h'); SMTPat (readable h' p)];
     [SMTPat (readable h p); SMTPat (readable h' (gcell p i))];
     [SMTPat (readable h' p); SMTPat (readable h' (gcell p i))];
+    [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gcell p i)];
   ]]
 
 (* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)

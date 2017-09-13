@@ -576,6 +576,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     check_inner_let_rec env top
 
 and tc_synth env args rng =
+    // Quit early with a magic if nosynth is set, cf. issue #73 in fstar-mode.el
+    if env.nosynth
+    then tc_term env (mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit]
+                                None rng)
+    else
+
     let tau, atyp, rest =
     match args with
     | (tau, None)::rest ->
@@ -1696,7 +1702,7 @@ and check_top_level_let env e =
             then g1, N.reduce_uvar_solutions env e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  assert (univ_vars = []) ;
-                 let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
+                 let _, univs, e1, c1 = List.hd (TcUtil.generalize env false [lb.lbname, e1, c1.comp()]) in
                  g1, e1, univs, U.lcomp_of_comp c1
          in
 
@@ -1807,7 +1813,7 @@ and check_top_level_let_rec env top =
                     if lb.lbunivs = []
                     then lb
                     else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef)
-              else let ecs = TcUtil.generalize env (lbs |> List.map (fun lb ->
+              else let ecs = TcUtil.generalize env true (lbs |> List.map (fun lb ->
                                 lb.lbname,
                                 lb.lbdef,
                                 S.mk_Total lb.lbtyp)) in

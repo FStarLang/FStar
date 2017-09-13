@@ -19,7 +19,7 @@ EXTRACT_COMPILER=$(wildcard FStar.Reflection.*.fst FStar.Reflection.*.fsti FStar
 	cp ../src/basic/ml/*.ml                                ml/compiler-extracted/
 	cp ../src/prettyprint/ml/*.ml                          ml/compiler-extracted/
 	cp ../src/extraction/ml/FStar_Extraction_ML_PrintML.ml ml/compiler-extracted/
-	cp ../src/parser/ml/FStar_Parser_LexFStar.mll          ml/compiler-extracted/
+	cp ../src/parser/ml/FStar_Parser_LexFStar.ml           ml/compiler-extracted/
 	cp ../src/parser/ml/FStar_Parser_ParseIt.ml            ml/compiler-extracted/
 	cp ../src/parser/ml/FStar_Parser_Util.ml               ml/compiler-extracted/
 	cp ../src/tactics/ml/FStar_Tactics_Native.ml           ml/compiler-extracted/

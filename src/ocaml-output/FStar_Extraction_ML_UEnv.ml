@@ -355,19 +355,18 @@ let extend_ty:
 let sanitize: Prims.string -> Prims.string =
   fun s  ->
     let cs = FStar_String.list_of_string s in
-    let valid c =
-      ((FStar_Util.is_letter_or_digit c) || (c = '_')) || (c = '\'') in
+    let valid c = ((FStar_Util.is_letter_or_digit c) || (c = 95)) || (c = 39) in
     let cs' =
       FStar_List.fold_right
         (fun c  ->
            fun cs1  ->
              let uu____1025 =
                let uu____1028 = valid c in
-               if uu____1028 then [c] else ['_'; '_'] in
+               if uu____1028 then [c] else [95; 95] in
              FStar_List.append uu____1025 cs1) cs [] in
     let cs'1 =
       match cs' with
-      | c::cs1 when (FStar_Util.is_digit c) || (c = '\'') -> '_' :: c :: cs1
+      | c::cs1 when (FStar_Util.is_digit c) || (c = 39) -> 95 :: c :: cs1
       | uu____1041 -> cs in
     FStar_String.string_of_list cs'1
 let find_uniq: binding Prims.list -> Prims.string -> Prims.string =

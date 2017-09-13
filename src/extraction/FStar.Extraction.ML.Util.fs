@@ -49,8 +49,7 @@ let mlconst_of_const (sctt : sconst) =
   | Const_bytearray (bytes, _) ->
       MLC_Bytes bytes
 
-  | Const_string (bytes, _) ->
-      MLC_String (string_of_unicode (bytes))
+  | Const_string (s, _) -> MLC_String (s)
 
   | Const_reify
   | Const_reflect _ ->
@@ -341,6 +340,7 @@ let fstar_tc_common_prefix s = str_to_name ("FStar_TypeChecker_Common." ^ s)
 let fstar_refl_basic_prefix s = str_to_name ("FStar_Reflection_Basic." ^ s)
 let fstar_refl_data_prefix s = str_to_name ("FStar_Reflection_Data." ^ s)
 let fstar_emb_basic_prefix s = str_to_name ("FStar_Syntax_Embeddings." ^ s)
+
 let mk_basic_embedding (m: emb_decl) (s: string) =
     match m with
     | Embed -> fstar_emb_basic_prefix ("embed_" ^ s)
@@ -349,6 +349,16 @@ let mk_embedding (m: emb_decl) (s: string) =
     match m with
     | Embed -> fstar_refl_basic_prefix ("embed_" ^ s)
     | Unembed -> fstar_refl_basic_prefix ("unembed_" ^ s)
+
+let mk_tactic_unembedding (args: list<mlexpr'>) =
+    let tac_arg = "t" in
+    let reify_tactic = with_ty MLTY_Top  <| MLE_App (str_to_top_name "FStar_Tactics_Interpreter.reify_tactic", [str_to_top_name tac_arg]) in
+    let from_tac = str_to_top_name ("FStar_Tactics_Builtins.from_tac_" ^ BU.string_of_int (List.length args-1)) in
+    let unembed_tactic = str_to_top_name ("FStar_Tactics_Interpreter.unembed_tactic_" ^ BU.string_of_int (List.length args-1)) in
+    let app = match (List.length args) with
+    | 1 -> MLE_App (from_tac, [with_ty MLTY_Top (MLE_App (unembed_tactic, List.map (with_ty MLTY_Top) args@[reify_tactic]))])
+    | n -> failwith (BU.format "Unembedding not defined for tactics of %d arguments" [BU.string_of_int n]) in
+    MLE_Fun ([((tac_arg, 0), MLTY_Top); (("()", 0), MLTY_Top)], with_ty MLTY_Top app)
 
 let rec mk_tac_param_type (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
@@ -375,8 +385,8 @@ let rec mk_tac_param_type (t: term): mlexpr' =
         | _ -> failwith "Impossible")
      | _ -> failwith ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)))
 
-(* this assumes that functions for embedding/unembedding a type live in the same place
-   and are named embed_x, unembed_x *)
+(* Except for the `tactic` type, which is handled specially, this assumes that functions for embedding/unembedding a type
+   live in the same place and are named embed_x, unembed_x *)
 let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
     | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> mk_basic_embedding m "int"
@@ -391,21 +401,28 @@ let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
     | Tm_app (h, args) ->
         (match (FStar.Syntax.Subst.compress h).n with
          | Tm_uinst (h', _) ->
-            let ht, hargs, type_arg =
+            let ht, hargs, type_arg, is_tactic =
                 (match (FStar.Syntax.Subst.compress h').n with
                  | Tm_fvar fv when fv_eq_lid fv PC.list_lid ->
                      let arg_term = fst (List.hd args) in
-                     "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
+                     "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term, false
                  | Tm_fvar fv when fv_eq_lid fv PC.option_lid ->
                      let arg_term = fst (List.hd args) in
-                     "option", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
-                 | Tm_fvar fv when fv_eq_lid fv PC.tactic_lid -> failwith "Embedding for tactics not defined"
+                     "option", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term, false
+                 | Tm_fvar fv when fv_eq_lid fv PC.tactic_lid ->
+                     let arg_term = fst (List.hd args) in
+                     "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term, true
                  | _ -> failwith ("Embedding not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')))) in
             let hargs =
                 match m with
                 | Embed -> hargs @ [type_arg]
                 | Unembed -> hargs in
-            MLE_App (with_ty MLTY_Top (mk_embedding m ht), List.map (with_ty MLTY_Top) hargs)
+            if is_tactic then
+                match m with
+                | Embed -> failwith "Embedding not defined for tactic type"
+                | Unembed -> mk_tactic_unembedding hargs
+            else
+                MLE_App (with_ty MLTY_Top (mk_basic_embedding m ht), List.map (with_ty MLTY_Top) hargs)
          | _ -> failwith "Impossible")
     | _ -> failwith ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)))
 

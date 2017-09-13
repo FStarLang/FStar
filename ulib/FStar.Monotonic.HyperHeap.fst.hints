@@ -1,5 +1,5 @@
 [
-  "c8§ilŽ»Ü xjèæþ`•",
+  "@ö\u0014\u001c5®\u0005\u000fÿ1ÿÏ\"Dw®",
   [
     [
       "FStar.Monotonic.HyperHeap.color",
@@ -242,10 +242,9 @@
       ],
       0
     ],
-    [ "FStar.Monotonic.HyperHeap.extends", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Monotonic.HyperHeap.extends",
-      2,
+      1,
       2,
       1,
       [
@@ -1696,6 +1695,14 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
+      0
+    ],
+    [
+      "FStar.Monotonic.HyperHeap.lemma_sel_same_addr",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0
     ],
     [

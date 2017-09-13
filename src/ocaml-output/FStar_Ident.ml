@@ -65,7 +65,7 @@ let text_of_id: ident -> Prims.string = fun id  -> id.idText
 let text_of_path: Prims.string Prims.list -> Prims.string =
   fun path  -> FStar_Util.concat_l "." path
 let path_of_text: Prims.string -> Prims.string Prims.list =
-  fun text  -> FStar_String.split ['.'] text
+  fun text  -> FStar_String.split [46] text
 let path_of_ns: ident Prims.list -> Prims.string Prims.list =
   fun ns  -> FStar_List.map text_of_id ns
 let path_of_lid: lident -> Prims.string Prims.list =
@@ -124,5 +124,11 @@ let lid_add_suffix: lident -> Prims.string -> lident =
     fun s  ->
       let path = path_of_lid l in
       lid_of_path (FStar_List.append path [s]) (range_of_lid l)
+let ml_path_of_lid: lident -> Prims.string =
+  fun lid  ->
+    let uu____345 =
+      let uu____348 = path_of_ns lid.ns in
+      FStar_List.append uu____348 [text_of_id lid.ident] in
+    FStar_All.pipe_left (FStar_String.concat "_") uu____345
 let string_of_lid: lident -> Prims.string =
-  fun lid  -> let uu____345 = path_of_lid lid in text_of_path uu____345
+  fun lid  -> let uu____357 = path_of_lid lid in text_of_path uu____357

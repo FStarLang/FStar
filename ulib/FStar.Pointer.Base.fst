@@ -2611,8 +2611,7 @@ let buffer_live
   (h: HS.mem)
   (b: buffer t)
 : GTot Type0
-= let () = () in // necessary to somehow remove the `logic` qualifier
-  UInt32.v (buffer_length b) > 0 /\ ( // needed to preserve liveness through modifies
+= let () = () in ( // necessary to somehow remove the `logic` qualifier
     match b.broot with
     | BufferRootSingleton p -> live h p
     | BufferRootArray #mlen p -> live h p
@@ -2691,7 +2690,15 @@ let buffer_length_gsub_buffer
   len
 = ()
 
-let buffer_live_gsub_buffer
+let buffer_live_gsub_buffer_equiv
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  len
+  h
+= ()
+
+let buffer_live_gsub_buffer_intro
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
@@ -4158,39 +4165,41 @@ let modifies_pointer_elim s h1 h2 #a' p' =
 let modifies_buffer_elim #t1 b p h h' =
   loc_disjoint_sym (loc_buffer b) p;
   let n = UInt32.v (buffer_length b) in
-  assert (n > 0);
-  let pre
-    (i: UInt32.t)
-  : GTot Type0
-  = UInt32.v i < n
-  in
-  let post
-    (i: UInt32.t)
-  : GTot Type0
-  = pre i /\ (
-      let q = gpointer_of_buffer_cell b i in
-      equal_values h q h' q
-    )
-  in
-  let f
-    (i: UInt32.t)
-  : Lemma
-    (requires (pre i))
-    (ensures (post i))
-  = modifies_pointer_elim p h h' (gpointer_of_buffer_cell b i)
-  in
-  f 0ul; // for the liveness of the whole buffer
-  Classical.forall_intro (Classical.move_requires f);
-  assert (buffer_readable h b ==> buffer_readable h' b);
-  let g () : Lemma
-    (requires (buffer_readable h b))
-    (ensures (buffer_as_seq h b == buffer_as_seq h' b))
-  = let s = buffer_as_seq h b in
-    let s' = buffer_as_seq h' b in
-    Seq.lemma_eq_intro s s';
-    Seq.lemma_eq_elim s s'
-  in
-  Classical.move_requires g ()
+  begin
+    assert (n > 0);
+    let pre
+      (i: UInt32.t)
+    : GTot Type0
+    = UInt32.v i < n
+    in
+    let post
+      (i: UInt32.t)
+    : GTot Type0
+    = pre i /\ (
+	  let q = gpointer_of_buffer_cell b i in
+	  equal_values h q h' q
+      )
+    in
+    let f
+      (i: UInt32.t)
+    : Lemma
+      (requires (pre i))
+      (ensures (post i))
+    = modifies_pointer_elim p h h' (gpointer_of_buffer_cell b i)
+    in
+    f 0ul; // for the liveness of the whole buffer
+    Classical.forall_intro (Classical.move_requires f);
+    assert (buffer_readable h b ==> buffer_readable h' b);
+    let g () : Lemma
+      (requires (buffer_readable h b))
+      (ensures (buffer_as_seq h b == buffer_as_seq h' b))
+    = let s = buffer_as_seq h b in
+      let s' = buffer_as_seq h' b in
+      Seq.lemma_eq_intro s s';
+      Seq.lemma_eq_elim s s'
+    in
+    Classical.move_requires g ()
+  end
 
 let modifies_reference_elim #t b p h h' =
   loc_disjoint_sym (loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))) p
@@ -4754,12 +4763,8 @@ let modifies_loc_addresses_intro r a l h1 h2 =
 (** NOTE: we historically used to have this lemma for arbitrary
 pointer inclusion, but that became wrong for unions. *)
 
-let modifies_1_readable_struct
-  (#l: struct_typ)
-  (f: struct_field l)
-  (p: pointer (TStruct l))
-  (h h' : HS.mem)
-= readable_struct h' p
+let modifies_1_readable_struct #l f p h h' =
+  readable_struct h' p
 
 let modifies_1_readable_array #t #len i p h h' =
   readable_array h' p
