@@ -1370,6 +1370,35 @@ val index_buffer_as_seq
   (ensures (i < UInt32.v (buffer_length b) /\ Seq.index (buffer_as_seq h b) i == gread h (gpointer_of_buffer_cell b (UInt32.uint_to_t i))))
   [SMTPat (Seq.index (buffer_as_seq h b) i)]
 
+val gsingleton_buffer_of_pointer_gcell
+  (#t: typ)
+  (#len: array_length_t)
+  (p: pointer (TArray len t))
+  (i: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i < UInt32.v len
+  ))
+  (ensures (
+    UInt32.v i < UInt32.v len /\
+    gsingleton_buffer_of_pointer (gcell p i) == gsub_buffer (gbuffer_of_array_pointer p) i 1ul
+  ))
+  [SMTPat (gsingleton_buffer_of_pointer (gcell p i))]
+
+val gsingleton_buffer_of_pointer_gpointer_of_buffer_cell
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i < UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i < UInt32.v (buffer_length b) /\
+    gsingleton_buffer_of_pointer (gpointer_of_buffer_cell b i) == gsub_buffer b i 1ul
+  ))
+  [SMTPat (gsingleton_buffer_of_pointer (gpointer_of_buffer_cell b i))]
+
 (* The readable permission lifted to buffers. *)
 
 val buffer_readable
