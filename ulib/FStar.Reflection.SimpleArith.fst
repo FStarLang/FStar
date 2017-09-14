@@ -22,12 +22,10 @@ type expr =
     | Lit     : int -> expr
     //atom, contains both a numerical ID and the actual term encountered
     | Atom    : term -> expr 
-    | Plus    : expr -> expr -> expr
-    | Mult    : expr -> expr -> expr
-    | Minus   : expr -> expr -> expr
     | Land    : expr -> expr -> expr
     | Lxor    : expr -> expr -> expr
     | Lor     : expr -> expr -> expr
+    | Ladd    : expr -> expr -> expr
     | Shl     : expr -> expr -> expr
     | Shr     : expr -> expr -> expr
     | Neg     : expr -> expr
@@ -62,18 +60,8 @@ let rec is_arith_expr (t:term) =
       else if qn = udiv_qn then Udiv e2' e3'
       else if qn = umod_qn then Umod e2' e3'
       else if qn = mul_mod_qn then MulMod e2' e3'
+      else if qn = ladd_qn then Ladd e2' e3'
       else Unknown
-    | Tv_FVar fv, [(l, Q_Explicit); (r, _)] ->
-        let qn = inspect_fv fv in
-        // Have to go through hoops to get F* to typecheck this.
-        // Maybe the do notation is twisting the terms somehow unexpected?
-        let ll = is_arith_expr l in
-        let rr = is_arith_expr r in
-        if      qn = add_qn   then Plus ll rr
-        else if qn = minus_qn then Minus ll rr
-        else if qn = mult_qn  then Mult ll rr
-        else if qn = mult'_qn then Mult ll rr
-	else Unknown
     | Tv_FVar fv, [(l, Q_Implicit); (r, _)] ->
         let qn = inspect_fv fv in
         let ll = is_arith_expr l in //TODO:REMOVE
@@ -98,9 +86,6 @@ let rec expr_to_string (e:expr) : string =
     match e with
     | Atom _ -> "a"
     | Lit i -> string_of_int i
-    | Plus l r -> "(" ^ (expr_to_string l) ^ " + " ^ (expr_to_string r) ^ ")"
-    | Minus l r -> "(" ^ (expr_to_string l) ^ " - " ^ (expr_to_string r) ^ ")"
-    | Mult l r -> "(" ^ (expr_to_string l) ^ " * " ^ (expr_to_string r) ^ ")"
     | Neg l -> "(- " ^ (expr_to_string l) ^ ")"
     | Land l r -> "(" ^ (expr_to_string l) ^ " & " ^ (expr_to_string r) ^ ")"
     | Lor l r -> "(" ^ (expr_to_string l) ^ " | " ^ (expr_to_string r) ^ ")"

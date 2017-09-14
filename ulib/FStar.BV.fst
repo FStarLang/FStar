@@ -24,6 +24,8 @@ let bvult #n a b = (bv2int #n a) < (bv2int #n b)
 let int2bv_lemma_1 = U.to_vec_lemma_1
 let int2bv_lemma_2 = U.to_vec_lemma_2
 
+let bvadd #n a b = int2bv #n (U.add_mod (bv2int #n a) (bv2int #n b))
+let bvsub #n a b = int2bv #n (U.sub (bv2int #n a) (bv2int #n b))
 let bvdiv #n a b = 
   int2bv #n (U.udiv #n (bv2int #n a) b)    
 let bvmod #n a b = 
@@ -75,4 +77,12 @@ let int2bv_mod #n #x #y #z pf =
 
 let int2bv_mul #n #x #y #z pf =
   inverse_vec_lemma #n (bvmul #n (int2bv #n x) y);
+  ()
+
+let int2bv_add #n #x #y #z pf =
+  inverse_vec_lemma #n (bvadd #n (int2bv #n x) (int2bv #n y));
+  ()
+
+let int2bv_sub #n #x #y #z pf =
+  inverse_vec_lemma #n (bvsub #n (int2bv #n x) (int2bv #n y));
   ()
