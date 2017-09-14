@@ -79,7 +79,6 @@ let as_u32_array h (a:u32_array_st) : Ghost u32_array
   (ensures (fun _ -> True)) =
   U32Array a.len32_st (as_seq h a.a32_st)
 
-#set_options "--lax"
 
 let parse_u8_st_nochk :
     parser_st_nochk (hide parse_u8) = fun input ->
@@ -93,7 +92,6 @@ let parse_u8_st : parser_st (hide parse_u8) = fun input ->
 let parse_u16_st_nochk :
   parser_st_nochk (hide parse_u16) = fun input ->
   let n = C.load16_be (truncated_slice input 2ul).p in
-  assert (input.length < 2ul);
   (n, 2ul)
 
 let parse_u16_st : parser_st (hide parse_u16) = fun input ->

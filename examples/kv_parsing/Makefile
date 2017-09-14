@@ -26,7 +26,7 @@ EXTRACT_FILES := IntegerParsing.fst \
 
 FSTAR_INCLUDE_PATHS:=--include $(KREMLIN_HOME)/kremlib
 
-OTHERFLAGS+=$(FSTAR_INCLUDE_PATHS)
+OTHERFLAGS+=$(FSTAR_INCLUDE_PATHS) --z3rlimit_factor 4
 
 all: $(FST_FILES:.fst=.uver)
 
