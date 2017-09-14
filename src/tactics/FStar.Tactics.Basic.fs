@@ -654,6 +654,27 @@ let rewrite (h:binder) : tac<unit> =
          fail "Not an equality hypothesis with a variable on the LHS")
     | _ -> fail "Not an equality hypothesis"))
 
+let subst_goal (b1 b2 : bv) (s:list<subst_elt>) (g:goal) : goal =
+    let rec alpha e =
+        match Env.pop_bv e with
+        | None -> e
+        | Some (bv, e') ->
+            if S.bv_eq bv b1
+            then Env.push_bv e'         b2
+            else Env.push_bv (alpha e') ({bv with sort = SS.subst s bv.sort })
+    in
+    let c = alpha g.context in
+    let w = SS.subst s g.witness in
+    let t = SS.subst s g.goal_ty in
+    { g with context = c; witness = w; goal_ty = t }
+
+let rename_to (b : binder) (s : string) : tac<unit> =
+    bind cur_goal (fun goal ->
+    let bv, _ = b in
+    let bv' = freshen_bv ({ bv with ppname = mk_ident (s, bv.ppname.idRange) }) in
+    let s = [NT (bv, S.bv_to_name bv')] in
+    replace_cur (subst_goal bv bv' s goal))
+
 let revert : tac<unit> =
     bind cur_goal (fun goal ->
     match Env.pop_bv goal.context with

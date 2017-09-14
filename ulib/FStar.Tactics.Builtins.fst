@@ -87,6 +87,12 @@ Currently broken (c.f. issue #1103)
 *)
 let intro_rec : tactic (binder * binder) = fun () -> TAC?.reflect __intro_rec
 
+assume private val __rename_to  : binder -> string -> __tac unit
+(** [rename_to b nm] will rename the binder [b] to [nm] in
+the environment, goal, and witness in a safe manner. The only use of this
+is to make goals and terms more user readable. *)
+let rename_to bv s : tactic unit = fun () -> TAC?.reflect (__rename_to bv s)
+
 assume private val __revert  : __tac unit
 (** [revert] pushes out a binder from the environment into the goal type,
 so a behaviour opposite to [intros].
