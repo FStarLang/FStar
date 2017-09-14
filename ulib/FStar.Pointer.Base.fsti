@@ -2246,3 +2246,138 @@ val write_buffer
     Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\
     (buffer_readable h b ==> buffer_readable h' b)
   ))
+
+
+(* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
+
+(* Returns the greatest buffer (of the same type) including b *)
+
+val root_buffer
+  (#t: typ)
+  (b: buffer t)
+: GTot (buffer t)
+
+(* Return the "offset" of b within its root buffer *)
+
+val buffer_idx
+  (#t: typ)
+  (b: buffer t)
+: Ghost UInt32.t
+  (requires True)
+  (ensures (fun y ->
+    UInt32.v y + UInt32.v (buffer_length b) <=
+      UInt32.v (buffer_length (root_buffer b))
+  ))
+
+val buffer_eq_gsub_root
+  (#t: typ)
+  (b: buffer t)
+: Lemma
+  (b == gsub_buffer (root_buffer b) (buffer_idx b) (buffer_length b))
+
+val root_buffer_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    root_buffer (gsub_buffer b i len) == root_buffer b
+  ))
+  [SMTPat (root_buffer (gsub_buffer b i len))]
+
+val buffer_idx_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_idx (gsub_buffer b i len) == UInt32.add (buffer_idx b) i
+  ))
+  [SMTPat (buffer_idx (gsub_buffer b i len))]
+
+val buffer_includes
+  (#t: typ)
+  (blarge bsmall: buffer t)
+: GTot Type0
+
+val buffer_includes_refl
+  (#t: typ)
+  (b: buffer t)
+: Lemma
+  (buffer_includes b b)
+  [SMTPat (buffer_includes b b)]
+
+val buffer_includes_trans
+  (#t: typ)
+  (b1 b2 b3: buffer t)
+: Lemma
+  (requires (buffer_includes b1 b2 /\ buffer_includes b2 b3))
+  (ensures (buffer_includes b1 b3))
+
+val buffer_includes_gsub_r
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_includes b (gsub_buffer b i len)
+  ))
+
+val buffer_includes_gsub
+  (#t: typ)
+  (b: buffer t)
+  (i1: UInt32.t)
+  (i2: UInt32.t)
+  (len1: UInt32.t)
+  (len2: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i1 <= UInt32.v i2 /\
+    UInt32.v i2 + UInt32.v len2 <= UInt32.v i1 + UInt32.v len1 /\
+    UInt32.v i1 + UInt32.v len1 <= UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i1 + UInt32.v len1 <= UInt32.v (buffer_length b) /\
+    UInt32.v i2 + UInt32.v len2 <= UInt32.v (buffer_length b) /\
+    buffer_includes (gsub_buffer b i1 len1) (gsub_buffer b i2 len2)
+  ))
+  [SMTPat (buffer_includes (gsub_buffer b i1 len1) (gsub_buffer b i2 len2))]
+
+val buffer_includes_elim
+  (#t: typ)
+  (b1 b2: buffer t)
+: Lemma
+  (requires (
+    buffer_includes b1 b2
+  ))
+  (ensures (
+    UInt32.v (buffer_idx b1) <= UInt32.v (buffer_idx b2) /\
+    UInt32.v (buffer_idx b2) + UInt32.v (buffer_length b2) <= UInt32.v (buffer_idx b1) + UInt32.v (buffer_length b1) /\
+    b2 == gsub_buffer b1 (UInt32.sub (buffer_idx b2) (buffer_idx b1)) (buffer_length b2)
+  ))
+
+val buffer_includes_loc_includes
+  (#t: typ)
+  (b1 b2: buffer t)
+: Lemma
+  (requires (buffer_includes b1 b2))
+  (ensures (loc_includes (loc_buffer b1) (loc_buffer b2)))
+  [SMTPatOr [
+    [SMTPat (buffer_includes b1 b2)];
+    [SMTPat (loc_includes(loc_buffer b1) (loc_buffer b2))]
+  ]]

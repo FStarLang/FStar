@@ -4799,3 +4799,43 @@ let write_buffer
   (b: buffer t)
   i v
 = write (pointer_of_buffer_cell b i) v
+
+(* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
+
+let root_buffer #t b =
+  let root = Buffer?.broot b in 
+  match root with
+  | BufferRootSingleton p -> Buffer root 0ul 1ul
+  | BufferRootArray #_ #len _ -> Buffer root 0ul len
+
+let buffer_idx #t b =
+  Buffer?.bidx b
+
+let buffer_eq_gsub_root #t b =
+  assert (UInt32.add 0ul (buffer_idx b) == buffer_idx b)
+
+let root_buffer_gsub_buffer #t b i len = ()
+
+let buffer_idx_gsub_buffer #t b i len = ()
+
+let buffer_includes #t blarge bsmall =
+  let () = () in (
+    root_buffer blarge == root_buffer bsmall /\
+    UInt32.v (buffer_idx blarge) <= UInt32.v (buffer_idx bsmall) /\
+    UInt32.v (buffer_idx bsmall) + UInt32.v (buffer_length bsmall) <= UInt32.v (buffer_idx blarge) + UInt32.v (buffer_length blarge)
+  )
+
+let buffer_includes_refl #t b = ()
+
+let buffer_includes_trans #t b1 b2 b3 = ()
+
+let buffer_includes_gsub_r #t b i len = ()
+
+let buffer_includes_gsub #t b i1 i2 len1 len2 = ()
+
+let buffer_includes_elim #t b1 b2 = ()
+
+let buffer_includes_loc_includes #t b1 b2 =
+  buffer_includes_elim b1 b2;
+  loc_includes_refl (loc_buffer b1);
+  loc_includes_gsub_buffer_r (loc_buffer b1) b1 (UInt32.sub (buffer_idx b2) (buffer_idx b1)) (buffer_length b2)

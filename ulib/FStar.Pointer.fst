@@ -327,3 +327,22 @@ let modifies_fresh_frame_popped'
     h3.HS.tip == h0.HS.tip
   ))
 = modifies_fresh_frame_popped h0 h1 s h2 h3
+
+let buffer_includes_gsub_r_gen
+  (#t: typ)
+  (b0: buffer t)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_includes b0 b
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_includes b0 (gsub_buffer b i len)
+  ))
+  [SMTPat (buffer_includes b0 (gsub_buffer b i len))]
+= buffer_includes_gsub_r b i len;
+  buffer_includes_trans b0 b (gsub_buffer b i len)
