@@ -750,8 +750,8 @@ let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : term) : tac<term> =
     let t, lcomp, g = TcTerm.tc_term env t in
-    if not (U.is_total_lcomp lcomp) || not (Rel.is_trivial g) then
-        ret t // Don't do anything for possibly impure terms
+    if (* not (U.is_total_lcomp lcomp) || *) not (Rel.is_trivial g) then
+        ret t
     else
         let typ = lcomp.res_typ in
         bind (new_uvar env typ) (fun ut ->
