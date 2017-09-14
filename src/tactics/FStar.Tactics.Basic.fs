@@ -101,7 +101,9 @@ let idtac : tac<unit> = ret ()
 
 let goal_to_string (g:goal) =
     let g_binders = Env.all_binders g.context |> Print.binders_to_string ", " in
-    Util.format3 "%s |- %s : %s" g_binders (Print.term_to_string g.witness) (Print.term_to_string g.goal_ty)
+    let w = bnorm g.context g.witness in
+    let t = bnorm g.context g.goal_ty in
+    Util.format3 "%s |- %s : %s" g_binders (Print.term_to_string w) (Print.term_to_string t)
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
 let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
