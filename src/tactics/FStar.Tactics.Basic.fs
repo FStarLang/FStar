@@ -654,7 +654,7 @@ let rewrite (h:binder) : tac<unit> =
          fail "Not an equality hypothesis with a variable on the LHS")
     | _ -> fail "Not an equality hypothesis"))
 
-let subst_goal (b1 b2 : bv) (s:list<subst_elt>) (g:goal) : goal =
+let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : goal =
     let rec alpha e =
         match Env.pop_bv e with
         | None -> e
