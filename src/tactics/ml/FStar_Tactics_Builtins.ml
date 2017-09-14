@@ -83,8 +83,11 @@ let intro: unit -> RT.binder __tac = fun () -> __intro
 let __revert: unit __tac = from_tac_0 B.revert
 let revert: unit -> unit __tac = fun () -> __revert
 
-let __clear: unit __tac = from_tac_0 B.clear
-let clear: unit -> unit __tac = fun () -> __clear
+let __clear_top: unit __tac = from_tac_0 B.clear_top
+let clear_top: unit -> unit __tac = fun () -> __clear_top
+
+let __clear (h: RT.binder) : unit __tac = from_tac_1 B.clear h
+let clear: RT.binder -> unit -> unit __tac = fun b -> fun () -> __clear b
 
 let __rewrite (h: RT.binder): unit __tac = from_tac_1 B.rewrite h
 let rewrite: RT.binder -> unit -> unit __tac = fun b  -> fun () -> __rewrite b

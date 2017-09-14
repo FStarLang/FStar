@@ -93,11 +93,17 @@ so a behaviour opposite to [intros].
 *)
 let revert : tactic unit = fun () -> TAC?.reflect __revert
 
-assume private val __clear   : __tac unit
-(** [clear] will drop the outermost binder from the environment.
+assume private val __clear_top : __tac unit
+(** [clear_top] will drop the outermost binder from the environment.
 Can only be used if the goal does not at all depend on it.
 *)
-let clear : tactic unit = fun () -> TAC?.reflect __clear
+let clear_top : tactic unit = fun () -> TAC?.reflect __clear_top
+
+assume private val __clear : binder -> __tac unit
+(** [clear] will drop the given binder from the context, is
+nothing depends on it.
+*)
+let clear (b : binder) : tactic unit = fun () -> TAC?.reflect (__clear b)
 
 assume private val __rewrite : binder -> __tac unit
 (** If [b] is a binder of type [v == r], [rewrite b] will rewrite

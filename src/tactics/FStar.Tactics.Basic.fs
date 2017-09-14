@@ -652,31 +652,6 @@ let rewrite (h:binder) : tac<unit> =
          fail "Not an equality hypothesis with a variable on the LHS")
     | _ -> fail "Not an equality hypothesis"))
 
-let clear : tac<unit> =
-    bind cur_goal (fun goal ->
-    match Env.pop_bv goal.context with
-    | None -> fail "Cannot clear; empty context"
-    | Some (x, env') ->
-        let fns_ty = FStar.Syntax.Free.names goal.goal_ty in
-//        let fns_tm = FStar.Syntax.Free.names goal.witness in
-        if Util.set_mem x fns_ty
-        then fail "Cannot clear; variable appears in goal"
-        else bind (new_uvar env' goal.goal_ty) (fun u ->
-             if not (Rel.teq_nosmt goal.context goal.witness u)
-             then fail "clear: unification failed"
-             else let new_goal = {goal with context = env'; witness = bnorm env' u} in
-                  bind dismiss (fun _ ->
-                  add_goals [new_goal])))
-
-let clear_hd (x:name) : tac<unit> =
-    bind cur_goal (fun goal ->
-    match Env.pop_bv goal.context with
-    | None -> fail "Cannot clear_hd; empty context"
-    | Some (y, env') ->
-        if not (S.bv_eq x y)
-        then fail "Cannot clear_hd; head variable mismatch"
-        else clear)
-
 let revert : tac<unit> =
     bind cur_goal (fun goal ->
     match Env.pop_bv goal.context with
@@ -687,7 +662,7 @@ let revert : tac<unit> =
         replace_cur ({ goal with context = env'; witness = w'; goal_ty = typ' })
     )
 
-let revert_hd (x:name) : tac<unit> =
+let revert_hd (x : name) : tac<unit> =
     bind cur_goal (fun goal ->
     match Env.pop_bv goal.context with
     | None -> fail "Cannot revert_hd; empty context"
@@ -698,12 +673,33 @@ let revert_hd (x:name) : tac<unit> =
                               (Print.bv_to_string y)
         else revert)
 
-let rec revert_all_hd (xs:list<name>) : tac<unit> =
-    match xs with
-    | [] -> ret ()
-    | x::xs ->
-        bind (revert_all_hd xs) (fun _ ->
-        revert_hd x)
+let clear_top : tac<unit> =
+    bind cur_goal (fun goal ->
+    match Env.pop_bv goal.context with
+    | None -> fail "Cannot clear; empty context"
+    | Some (x, env') ->
+        let fns_ty = FStar.Syntax.Free.names goal.goal_ty in
+        (* let fns_tm = FStar.Syntax.Free.names goal.witness in *)
+        if Util.set_mem x fns_ty (* || Util.set_mem x fns_tm *)
+        then fail "Cannot clear; variable appears in goal"
+        else bind (new_uvar env' goal.goal_ty) (fun u ->
+             if not (Rel.teq_nosmt goal.context goal.witness u)
+             then fail "clear: unification failed"
+             else let new_goal = {goal with context = env'; witness = bnorm env' u} in
+                  bind dismiss (fun _ ->
+                  add_goals [new_goal])))
+
+let rec clear (b : binder) : tac<unit> =
+    bind cur_goal (fun goal ->
+    match Env.pop_bv goal.context with
+    | None -> fail "Cannot clear; empty context"
+    | Some (b', env') ->
+        if S.bv_eq (fst b) b'
+        then clear_top
+        else bind revert (fun _ ->
+             bind (clear b) (fun _ ->
+             bind intro (fun _ ->
+             ret ()))))
 
 let prune (s:string) : tac<unit> =
     bind cur_goal (fun g ->
