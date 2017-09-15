@@ -220,10 +220,14 @@ let trytac (t : tac<'a>) : tac<option<'a>> =
 let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
-let trysolve goal solution =
-    Rel.teq_nosmt goal.context goal.witness solution
+let do_unify (env : env) (t1 : term) (t2 : term) : bool =
+    try Rel.teq_nosmt env t1 t2
+    with | _ -> false
 
-let solve goal solution =
+let trysolve (goal : goal) (solution : term) : bool =
+    do_unify goal.context solution goal.witness
+
+let solve (goal : goal) (solution : term) : unit =
     if trysolve goal solution
     then ()
     else raise (TacFailure(BU.format3 "%s does not solve %s : %s"
@@ -419,7 +423,6 @@ let intro_rec : tac<(binder * binder)> =
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
              let tm = mk (Tm_let ((true, lbs), body)) None goal.witness.pos in
-             BU.print_string "calling teq_nosmt\n";
              let res = trysolve goal tm in
              if res
              then bind (replace_cur ({ goal with context = env';
@@ -454,7 +457,7 @@ let __exact (t:term) : tac<unit> =
           with e -> // printfn "Exception %A" e;
                     fail2 "exact: term is not typeable: %s (%s)" (Print.term_to_string t) (Print.tag_of_term t)) (fun (t, typ, guard) ->
     if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "exact: got non-trivial guard" else
-    if Rel.teq_nosmt goal.context typ goal.goal_ty
+    if do_unify goal.context typ goal.goal_ty
     then let _ = solve goal t in dismiss
     else fail3 "%s : %s does not exactly solve the goal %s"
                     (Print.term_to_string t)
@@ -476,7 +479,7 @@ let exact_lemma (t:term) : tac<unit> =
                     | pre::post::_ -> fst pre, fst post
                     | _ -> failwith "exact_lemma: impossible: not a lemma"
     in
-    if Rel.teq_nosmt goal.context post goal.goal_ty
+    if do_unify goal.context post goal.goal_ty
     then let _ = solve goal t in bind dismiss (fun _ -> add_irrelevant_goal goal.context pre goal.opts)
     else fail3 "%s : %s does not exactly solve the goal %s"
                     (Print.term_to_string t)
@@ -580,8 +583,8 @@ let apply_lemma (tm:term) : tac<unit> = focus(
                     | pre::post::_ -> fst pre, fst post
                     | _ -> failwith "apply_lemma: impossible: not a lemma"
     in
-    if not (Rel.teq_nosmt goal.context (U.mk_squash post) goal.goal_ty)
-    then fail3 "apply_lemma: Cannot instantiate lemma %s (with postcondition %s) to match goal (%s)"
+    if not (do_unify goal.context (U.mk_squash post) goal.goal_ty)
+    then fail3 "apply_lemma: Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
                             (Print.term_to_string tm)
                             (Print.term_to_string (U.mk_squash post))
                             (Print.term_to_string goal.goal_ty)
@@ -816,7 +819,7 @@ let trefl : tac<unit> =
         let hd, args = U.head_and_args' t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
-            if not (Rel.teq_nosmt g.context l r)
+            if not (do_unify g.context l r)
             then fail2 "trefl: not a trivial equality (%s vs %s)" (Print.term_to_string l) (Print.term_to_string r)
             else
             begin
@@ -913,7 +916,7 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
 
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
-    ret (Rel.teq_nosmt ps.main_context t1 t2)
+    ret (do_unify ps.main_context t1 t2)
     )
 
 let launch_process (prog : string) (args : string) (input : string) : tac<string> =
