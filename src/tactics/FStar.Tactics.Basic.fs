@@ -581,7 +581,7 @@ let apply_lemma (tm:term) : tac<unit> = focus(
                     | _ -> failwith "apply_lemma: impossible: not a lemma"
     in
     if not (Rel.teq_nosmt goal.context (U.mk_squash post) goal.goal_ty)
-    then fail3 "apply: Cannot instantiate lemma %s (with postcondition %s) to match goal (%s)"
+    then fail3 "apply_lemma: Cannot instantiate lemma %s (with postcondition %s) to match goal (%s)"
                             (Print.term_to_string tm)
                             (Print.term_to_string (U.mk_squash post))
                             (Print.term_to_string goal.goal_ty)
