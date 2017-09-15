@@ -625,7 +625,7 @@ let apply_lemma (tm:term) : tac<unit> = focus(
         in
         let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
         bind (add_goal_from_guard goal.context guard goal.opts) (fun _ ->
-        bind (if not (istrivial goal.context pre)
+        bind (if not (istrivial goal.context (U.mk_squash pre))
               then add_irrelevant_goal goal.context pre goal.opts
               else ret ()) (fun _ ->
         add_goals sub_goals))))))
