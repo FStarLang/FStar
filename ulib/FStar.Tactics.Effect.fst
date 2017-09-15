@@ -53,6 +53,10 @@ reifiable reflectable new_effect {
 }
 effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
 
+let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
+    fun ps p -> wp (fun x -> p (Success x ps))
+
+sub_effect DIV ~> TAC = lift_div_tac
 
 let tactic (a:Type) = unit -> Tac a
 

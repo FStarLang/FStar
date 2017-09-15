@@ -178,27 +178,27 @@ let lemma_points_to (h:heap) (r:addr) (x:int)
               (ensures sel h r  == x)
   = ()
 
-let steps :list step = [delta_only
-  ["Lang.wp_command";
-   "Lang.wpsep_command";
-   "Lang.lift_wpsep";
-   "Lang.disjoint_partitions";
-   "Lang.uu___is_Return";
-   "Lang.uu___is_Bind";
-   "Lang.uu___is_Read";
-   "Lang.uu___is_Write";
-   "Lang.uu___is_Alloc";
-   "Lang.__proj__Return__item__v";
-   "Lang.__proj__Bind__item__c1";
-   "Lang.__proj__Bind__item__c2";
-   "Lang.__proj__Read__item__id";
-   "Lang.__proj__Write__item__id";
-   "Lang.__proj__Write__item__v";
-   "Lang.c1";
-   "Lang.bind"];
+// let steps :list step = [delta_only
+//   ["Lang.wp_command";
+//    "Lang.wpsep_command";
+//    "Lang.lift_wpsep";
+//    "Lang.disjoint_partitions";
+//    "Lang.uu___is_Return";
+//    "Lang.uu___is_Bind";
+//    "Lang.uu___is_Read";
+//    "Lang.uu___is_Write";
+//    "Lang.uu___is_Alloc";
+//    "Lang.__proj__Return__item__v";
+//    "Lang.__proj__Bind__item__c1";
+//    "Lang.__proj__Bind__item__c2";
+//    "Lang.__proj__Read__item__id";
+//    "Lang.__proj__Write__item__id";
+//    "Lang.__proj__Write__item__v";
+//    "Lang.c1";
+//    "Lang.bind"];
 
-   zeta; iota; primops
-  ]
+//    zeta; iota; primops
+//   ]
 
 #reset-options "--z3rlimit 5"
 
@@ -209,115 +209,152 @@ let unfold_fns :list string = [
    "__proj__Write__item__id"; "__proj__Write__item__v"
   ]
 
+// unfold let unfold_steps =
+//   List.Tot.map (fun s -> pack_fv ["Lang"; s]) unfold_fns
+
 unfold let unfold_steps =
-  List.Tot.map (fun s -> pack_fv ["Lang"; s]) unfold_fns
-
+  List.Tot.map (fun s -> "Lang." ^ s) unfold_fns
+  
 (* Writing to a pointer *)
-// let foo (r1:addr) (h:heap)
-//   = let c = (Write r1 3) in
-//     let p = fun _ h -> sel h r1 == 3 in
-//     let t = (lift_wpsep (wpsep_command c)) p h in
-//     assert_by_tactic ((h `contains` r1) ==> t) (implies_intro;; norm [Delta; UnfoldOnly unfold_steps; Primops];;
-//                                                            apply_lemma (quote (lemma_read_write));;
-//                                                            implies_intro;;
-//                                                            forall_intro;;
-//                                                            implies_intro;;
-//                                                            apply_lemma (quote (lemma_select_excluded_join));;
-//                                                            norm[];;
-//                                                            apply_lemma (quote (lemma_points_to));;
-//                                                            smt;;
-//                                                            dump "Foo")
+let write_tau :tactic unit =
+  implies_intro;;
+  norm [delta; delta_only unfold_steps; primops];;
+  apply_lemma (quote (lemma_read_write));;
+  implies_intro;;
+  forall_intro;;
+  implies_intro;;
+  apply_lemma (quote (lemma_select_excluded_join));;
+  norm [];;
+  apply_lemma (quote (lemma_points_to));;
+  smt
+  
+let write_ok (r:addr) (h:heap)
+  = let c = (Write r 3) in
+    let p = fun _ h -> sel h r == 3 in
+    let t = (lift_wpsep (wpsep_command c)) p h in
+    assert_by_tactic ((h `contains` r) ==> t) write_tau
 
-(* Swapping two pointers *)
-// let bar (r1:addr) (r2:addr) (h:heap)
-//   = let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
-//     let p = fun _ h -> sel h r1 == 4 in
-//     let t = (lift_wpsep (wpsep_command c)) p h in
-//     assert_by_tactic ((sel h r1 == 3 /\ sel h r2 == 4) ==> t ) (implies_intro;; norm [Delta; UnfoldOnly unfold_steps; Primops];;
-//                                                                                     apply_lemma (quote (lemma_split_h_emp));;
-//                                                                                     norm [];;
-//                                                                                     apply_lemma (quote (lemma_read_write));;
-//                                                                                     implies_intro;;
-//                                                                                     forall_intro;;
-//                                                                                     implies_intro;;
-//                                                                                     apply_lemma (quote (lemma_split_h_emp));;
-//                                                                                     norm [];;
-//                                                                                     apply_lemma (quote (lemma_read_write));;
-//                                                                                     implies_intro;;
-//                                                                                     forall_intro;;
-//                                                                                     implies_intro;;
-//                                                                                     apply_lemma (quote (lemma_split_h_emp));;
-//                                                                                     norm [];;
-//                                                                                     dump ("Bar");;                                                  
-//                                                                                     fail "stop")
-
-(* Incrementing a value *)
-// let foobar (r:addr) (h:heap)
+(* Incrementing a pointer *)
+let increment_tau :tactic unit =
+  implies_intro;;
+  norm [delta; delta_only unfold_steps; primops];;
+  apply_lemma (quote (lemma_split_h_emp));;
+  norm [];;
+  apply_lemma (quote (lemma_read_write));;
+  norm [];;
+  implies_intro;;
+  forall_intro;;
+  implies_intro;;
+  apply_lemma (quote (lemma_read_write));;
+  norm [];;
+  implies_intro;;
+  forall_intro;;
+  implies_intro;;
+  fail "Increment example: stop"
+  
+// let increment_ok (r:addr) (h:heap)
 //   = let c = Bind (Read r) (fun n -> Write r (n + 1)) in
 //     let p = fun _ h -> sel h r == 4 in
 //     let t = (lift_wpsep (wpsep_command c)) p h in
-//     assert_by_tactic (sel h r == 3 ==> t) (implies_intro;; norm [Delta; UnfoldOnly unfold_steps; Primops];;
-//                                                         apply_lemma (quote (lemma_split_h_emp));; 
-//                                                         norm [];;
-//                                                         apply_lemma (quote (lemma_read_write));;
-//                                                         norm [];;
-//                                                         implies_intro;; 
-//                                                         forall_intro;; 
-//                                                         implies_intro;;
-//                                                         apply_lemma (quote (lemma_read_write));; 
-//                                                         norm [];;
-//                                                         implies_intro;; 
-//                                                         forall_intro;; 
-//                                                         implies_intro;;
-//                                                         dump "FooBar";;
-//                                                         fail "stop")
+//     assert_by_tactic (sel h r == 3 ==> t) increment_tau
+
+(* Swapping two pointers *)
+let swap_tau :tactic unit =
+  implies_intro;;
+  norm [delta; delta_only unfold_steps; primops];;
+  apply_lemma (quote (lemma_split_h_emp));;
+  norm [];;
+  apply_lemma (quote (lemma_read_write));;
+  implies_intro;;
+  forall_intro;;
+  implies_intro;;
+  apply_lemma (quote (lemma_split_h_emp));;
+  norm [];;
+  apply_lemma (quote (lemma_read_write));;
+  implies_intro;;
+  forall_intro;;
+  implies_intro;;
+  apply_lemma (quote (lemma_split_h_emp));;
+  norm [];;
+  apply_lemma (quote (lemma_read_write));;
+  implies_intro;;
+  forall_intro;;
+  implies_intro;;
+  apply_lemma (quote (lemma_split_h_emp));;
+  norm [];;
+  fail "Swap example: stop"
+
+// let swap_ok (r1:addr) (r2:addr) (h:heap)
+//   = let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
+//     let p = fun _ h -> sel h r1 == 4 in
+//     let t = (lift_wpsep (wpsep_command c)) p h in
+//     assert_by_tactic ((sel h r1 == 3 /\ sel h r2 == 4) ==> t ) swap_tau
 
 (* Allocating a pointer and reading from it *)
-// let foofoo (r1:addr) (h:heap)
+let alloc_read_tau :tactic unit =
+  norm [delta; delta_only unfold_steps; primops];;
+  apply_lemma (quote (lemma_split_h_emp));;
+  norm [];;
+  apply_lemma (quote (lemma_return_alloc));;
+  norm [];;
+  forall_intros;;
+  implies_intro;;
+  apply_lemma (quote (lemma_split_h_emp));;
+  norm [];;
+  apply_lemma (quote (lemma_read_write));;
+  norm [];;
+  implies_intro;;
+  forall_intro;;
+  implies_intro;;
+  apply_lemma (quote (lemma_return_alloc));; 
+  norm [];;
+  fail "Alloc and read example: stop"
+  
+// let alloc_read_ok (h:heap)
 //   = let c = Bind (Alloc) (fun r -> Bind (Read r) (fun n -> Return n)) in
-//     let p = fun _ h -> sel h r1 == 0 in
+//     let p = fun v h -> v == 0 in
 //     let t = (lift_wpsep (wpsep_command c)) p h in
-//     assert_by_tactic t (norm [Delta; UnfoldOnly unfold_steps;  Primops];;
-//                               apply_lemma (quote (lemma_split_h_emp));; 
-//                               norm [];;
-//                               apply_lemma (quote (lemma_return_alloc));;
-//                               norm [];; 
-//                               forall_intros;; 
-//                               implies_intro;;
-//                               apply_lemma (quote (lemma_split_h_emp));; 
-//                               norm [];;
-//                               apply_lemma (quote (lemma_read_write));;
-//                               norm [];;
-//                               implies_intro;; 
-//                               forall_intro;;
-//                               implies_intro;;
-//                               apply_lemma (quote (lemma_return_alloc));; norm[];;
-//                               dump "FooFoo";;
-//                               fail "stop")
+//     assert_by_tactic t alloc_read_tau
 
-// let split_tactic: tactic unit =
-//   apply_lemma (quote (lemma_split_h_emp));;
-//   norm[]
+let split_h_emp_tactic :tactic unit =
+  apply_lemma (quote (lemma_split_h_emp));;
+  norm []
 
-// let read_write_tactic: tactic unit =
-//   apply_lemma (quote (lemma_read_write));;
-//   implies_intro;;
-//   forall_intro;;
-//   implies_intro;;
-//   norm []
+let read_write_tactic :tactic unit =
+  apply_lemma (quote (lemma_read_write));;
+  implies_intro;;
+  forall_intro;;
+  implies_intro;;
+  norm []
+  
+let return_alloc_tactic :tactic unit =
+  apply_lemma (quote (lemma_return_alloc));;
+  norm []
 
-// let step: tactic unit =
-//   or_else split_tactic read_write_tactic;;
-//   idtac
+let select_excluded_join_tactic :tactic unit =
+  apply_lemma (quote (lemma_select_excluded_join));;
+  norm []
+  
+let step_tactic: tactic unit =
+  or_else (or_else read_write_tactic split_h_emp_tactic) select_excluded_join_tactic;;
+  idtac
 
-// let barbar (r1:addr) (h:heap)
-  // = let c = (Write r1 3) in
-  //   let p = fun _ h -> sel h r1 == 3 in
-  //   let t = (lift_wpsep (wpsep_command c)) p h in
-  //   assert_by_tactic (h `contains` r1 ==> t) (implies_intro;; norm [Delta; UnfoldOnly unfold_steps; Primops];;                           
-  //                                                          dump "BarBar";;
-  //                                                          fail "stop")      
-							   
+(* Writing to a pointer *)
+let write_tau' :tactic unit =
+  implies_intro;;
+  norm [delta; delta_only unfold_steps; primops];;
+  step_tactic;;
+  dump "Before unification";;
+  (* lemma_read_write should ideally not unify *)
+  apply_lemma (quote (lemma_read_write));;
+//  step_tactic;;			
+  fail "Write example: stop"
+  
+let write_ok' (r:addr) (h:heap)
+  = let c = (Write r 3) in
+    let p = fun _ h -> sel h r == 3 in
+    let t = (lift_wpsep (wpsep_command c)) p h in
+    assert_by_tactic (h `contains` r ==> t) write_tau'		   
                               
 // exists h0' h0''. h == h0' `join` h0'' /\
 //                  (exists h2' h2''. h0' == h2' `join` h2'' /\

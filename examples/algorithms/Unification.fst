@@ -18,7 +18,7 @@
    A verified implementation of first-order unification. 
 
    The termination argument is based on  Ana Bove's Licentiate Thesis:
-         Programming in Martin-Löf Type Theory Unification - A non-trivial Example
+         Programming in Martin-LÃ¶f Type Theory Unification - A non-trivial Example
 	 Department of Computer Science, Chalmers University of Technology
 	 1999
 	 http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.40.3532

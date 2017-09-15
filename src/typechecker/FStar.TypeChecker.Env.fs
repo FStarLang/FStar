@@ -102,6 +102,7 @@ type env = {
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
+  nosynth        :bool;                         (* don't run synth tactics *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
@@ -176,6 +177,7 @@ let initial_env type_of universe_of solver module_lid =
     lax=false;
     lax_universes=false;
     failhard=false;
+    nosynth=false;
     type_of=type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
@@ -1177,6 +1179,13 @@ let eq_gamma env env' =
          && List.forall2 (fun (b1, _) (b2, _) -> S.bv_eq b1 b2) g g'
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
+
+let string_of_delta_level = function
+  | NoDelta -> "NoDelta"
+  | Inlining -> "Inlining"
+  | Eager_unfolding_only -> "Eager_unfolding_only"
+  | Unfold _ -> "Unfold _"
+  | UnfoldTac -> "UnfoldTac"
 
 let lidents env : list<lident> =
   let keys = List.fold_left (fun keys -> function

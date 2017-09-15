@@ -1,0 +1,56 @@
+[
+  "沑u0010嚬\u000e檈󍿄#拚傱",
+  [
+    [ "Normalization.def_of", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Normalization.uu___91",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [ "Normalization.uu___91", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Normalization.uu___92",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [ "Normalization.uu___92", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Normalization.uu___93",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [ "Normalization.uu___93", 2, 2, 1, [ "@query" ], 0 ],
+    [
+      "Normalization.uu___94",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Normalization.does_not_normalize",
+        "equation_Normalization.four__",
+        "function_token_typing_Normalization.four__", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "Normalization.uu___95",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0
+    ],
+    [ "Normalization.uu___95", 2, 2, 1, [ "@query" ], 0 ]
+  ]
+]
