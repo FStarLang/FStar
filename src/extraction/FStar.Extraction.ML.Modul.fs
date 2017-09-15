@@ -352,12 +352,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               let lid_arg = MLE_Const (MLC_String (string_of_lid assm_lid)) in
               let tac_arity = List.length bs in
               let arity = MLE_Name (mlpath_of_lident (lid_of_str (BU.string_of_int (tac_arity + 1)))) in
-              let tac_interpretation = mk_interpretation_fun tac_lid lid_arg t bs in
-              let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
-              MLM_Top app in
-
-            // Don't even bother when NoExtract is present. cf. Issue #54 in Kremlin
-            if List.contains S.NoExtract quals then [] else
+              match mk_interpretation_fun tac_lid lid_arg t bs with
+              | Some tac_interpretation ->
+                  let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
+                  [MLM_Top app]
+              | None -> [] in
 
             (match (snd lbs) with
              | [hd] ->
@@ -373,7 +372,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                         // BU.print1 "Head %s \n" (Print.term_to_string h);
                         // BU.print1 "Arg %s \n" (Print.term_to_string (fst(List.hd args)));
                         // BU.print1 "Type: %s\n" (Print.term_to_string hd.lbtyp);
-                        [mk_registration tac_lid assm_lid (fst(List.hd args)) bs]
+                        mk_registration tac_lid assm_lid (fst(List.hd args)) bs
                       end else []
                  | _ -> [])
              | _ -> []
