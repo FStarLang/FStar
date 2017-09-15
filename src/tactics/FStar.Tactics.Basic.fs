@@ -586,12 +586,13 @@ let apply_lemma (tm:term) : tac<unit> = focus(
                             (Print.term_to_string (U.mk_squash post))
                             (Print.term_to_string goal.goal_ty)
     else
-        let solution = S.mk_Tm_app tm uvs None goal.context.range in
+        let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
         let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
              let hd, _ = U.head_and_args tm in
              match (SS.compress hd).n with
              | Tm_uvar _ -> true //still unresolved
              | _ -> false) in
+        let _ = printfn "TRYING TO SOLVE THE GOAL WITNESS with %s" (N.term_to_string goal.context solution) in
         solve goal solution;
         bind (add_implicits implicits) (fun _ ->
         bind dismiss (fun _ ->

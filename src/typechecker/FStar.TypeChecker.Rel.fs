@@ -1620,243 +1620,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                 let lhs = force_refinement (base1, refinement1) in
                                 let rhs = force_refinement (base2, refinement2) in
                                 solve_t env ({problem with lhs=lhs; rhs=rhs}) wl
-                    end in
+                    end
+    in
     (* <rigid_rigid_delta> *)
 
-
-    (* <imitate> used in flex-rigid *)
-    let imitate orig (env:Env.env) (wl:worklist) (p:im_or_proj_t) : solution =
-        let ((u,k), xs, c), ps, (h, _, qs) = p in
-        let xs = sn_binders env xs in
-        //U p1..pn REL h q1..qm
-        //if h is not a free variable
-        //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
-        //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
-        let r = Env.get_range env in
-        let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
-        let im = U.abs xs (h gs_xs) (U.residual_comp_of_comp c |> Some) in
-        if Env.debug env <| Options.Other "Rel"
-        then BU.print
-                "Imitating gs_xs=%s\n\t binders are {%s}, comp=%s\n\t%s (%s)\nsub_probs = %s\nformula=%s\n"
-                   [(List.map tc_to_string gs_xs |> String.concat "\n\t");
-                    (Print.binders_to_string ", " xs);
-                    (Print.comp_to_string c);
-                    (Print.term_to_string im);
-                    (Print.tag_of_term im);
-                    (List.map (prob_to_string env) sub_probs |> String.concat ", ");
-                    (N.term_to_string env formula)];
-        let wl = solve_prob orig (Some formula) [TERM((u,k), im)] wl in
-        solve env (attempt sub_probs wl) in
-    (* </imitate> *)
-
-    let imitate' orig env wl = function
-        | None -> giveup env "unable to compute subterms" orig
-        | Some p ->imitate orig env wl p in
-
-    (* <project> used in flex_rigid *)
-    let project orig (env:Env.env) (wl:worklist) (i:int) (p:im_or_proj_t) : option<solution> =
-        let (u, xs, c), ps, (h, matches, qs) = p in
-        //U p1..pn REL h q1..qm
-        //extend subst: U -> \x1..xn. xi(G1(x1...xn) ... Gk(x1..xm)) ... where k is the arity of ti
-        //sub-problems: pi(G1(p1..pn)..Gk(p1..pn)) REL h q1..qm
-        let r = Env.get_range env in
-        let pi, _ = List.nth ps i in
-        let xi, _ = List.nth xs i in
-
-        let rec gs k =
-            let bs, k = U.arrow_formals k in
-            let rec aux subst bs = match bs with
-                | [] -> [], []
-                | (a, _)::tl ->
-                    let k_a = SS.subst subst a.sort in
-                    let gi_xs, gi = new_uvar r xs k_a in
-                    let gi_xs = N.eta_expand env gi_xs in
-                    let gi_ps = mk_Tm_app gi ps None r in
-                    let subst = NT(a, gi_xs)::subst in
-                    let gi_xs', gi_ps' = aux subst tl in
-                    as_arg gi_xs::gi_xs', as_arg gi_ps::gi_ps' in
-              aux [] bs in
-
-        if not <| matches pi
-        then None
-        else let g_xs, _ = gs xi.sort in
-             let xi = S.bv_to_name xi in
-             let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) (U.residual_comp_of_comp c |> Some) in
-             let sub = TProb <| mk_problem (p_scope orig) orig (S.mk_Tm_app proj ps None r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
-             if debug env <| Options.Other "Rel" then BU.print2 "Projecting %s\n\tsubprob=%s\n" (Print.term_to_string proj) (prob_to_string env sub);
-             let wl = solve_prob orig (Some (fst <| p_guard sub)) [TERM(u, proj)] wl in
-             Some <| solve env (attempt [sub] wl) in
-    (* </project_t> *)
-
-    (* <flex-rigid> *)
-    let solve_t_flex_rigid (patterns_only:bool) (orig:prob)
-                           (lhs:(flex_t * option<binders>)) (t2:typ) (wl:worklist)
-        : solution =
-        let (t1, uv, k_uv, args_lhs), maybe_pat_vars = lhs in
-        let subterms ps : option<im_or_proj_t> =
-            let xs, c = U.arrow_formals_comp k_uv in
-            if List.length xs = List.length ps //easy, common case
-            then Some (((uv,k_uv),xs,c), ps, decompose env t2)
-            else let k_uv = N.normalize [N.Beta] env k_uv in
-                 let rec elim k args : option<(binders * comp)> =
-                     match (SS.compress k).n, args with
-                     | _, [] -> Some ([], S.mk_Total k)
-                     | Tm_uvar _, _
-                     | Tm_app _, _ -> //k=?u x1..xn
-                       let uv, uv_args = U.head_and_args k in
-                       begin match (SS.compress uv).n with
-                        | Tm_uvar (uvar, _) ->
-                          (match pat_vars env [] uv_args with
-                           | None -> None
-                           | Some scope ->
-                             let xs = args |> List.map (fun _ ->
-                                Syntax.mk_binder <|
-                                    Syntax.new_bv (Some k.pos)
-                                                  (fst (new_uvar k.pos scope (U.type_u () |> fst)))) in
-                             let c = S.mk_Total (fst (new_uvar k.pos scope (U.type_u () |> fst))) in
-                             let k' = U.arrow xs c in
-                             let uv_sol = U.abs scope k' (Some (U.residual_tot (U.type_u () |> fst))) in
-                             UF.change uvar uv_sol;
-                             Some (xs, c))
-                        | _ -> None
-                       end
-                     | Tm_arrow(xs, c), _ ->
-                       let n_args = List.length args in
-                       let n_xs = List.length xs in
-                       if n_xs = n_args
-                       then SS.open_comp xs c |> Some
-                       else if n_xs < n_args
-                       then let args, rest = BU.first_N n_xs args in
-                            let xs, c = SS.open_comp xs c in
-                            BU.bind_opt
-                                   (elim (U.comp_result c) rest)
-                                   (fun (xs', c) -> Some (xs@xs', c))
-                       else //n_args < n_xs
-                            let xs, rest = BU.first_N n_args xs in
-                            let t = mk (Tm_arrow(rest, c)) None k.pos in
-                            SS.open_comp xs (S.mk_Total t) |> Some
-                     | _ -> failwith (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
-                                        (Print.uvar_to_string uv)
-                                        (Print.term_to_string k)
-                                        (Print.term_to_string k_uv)) in
-                BU.bind_opt
-                    (elim k_uv ps)
-                    (fun (xs, c) -> Some (((uv, k_uv), xs, c), ps, decompose env t2)) in
-
-        let rec imitate_or_project (n:int) (stopt:option<im_or_proj_t>) (i:int) : solution =
-            if i >= n || Option.isNone stopt
-            then giveup env "flex-rigid case failed all backtracking attempts" orig
-            else let st = Option.get stopt in
-                 let tx = UF.new_transaction () in
-                 if i = -1
-                 then match imitate orig env wl st with
-                        | Failed _ ->
-                          UF.rollback tx;
-                          imitate_or_project n stopt (i + 1) //backtracking point
-                        | sol -> //no need to commit; we'll commit the enclosing transaction at the top-level
-                          sol
-                 else match project orig env wl i st with
-                        | None
-                        | Some (Failed _) ->
-                          UF.rollback tx;
-                          imitate_or_project n stopt (i + 1) //backtracking point
-                        | Some sol -> sol in
-
-        let check_head fvs1 t2 =
-            let hd, _ = U.head_and_args t2 in
-            match hd.n with
-                | Tm_arrow _
-                | Tm_constant _
-                | Tm_abs _  -> true
-                | _ ->
-                    let fvs_hd = Free.names hd in
-                    if BU.set_is_subset_of fvs_hd fvs1
-                    then true
-                    else (if Env.debug env <| Options.Other "Rel"
-                          then BU.print1 "Free variables are %s" (names_to_string fvs_hd); false) in
-
-        let imitate_ok t2 = (* -1 means begin by imitating *)
-            let fvs_hd = U.head_and_args t2 |> fst |> Free.names in
-            if BU.set_is_empty fvs_hd
-            then -1 (* yes, start by imitating *)
-            else 0 (* no, start by projecting *) in
-
-        match maybe_pat_vars with
-          | Some vars ->
-            let t1 = sn env t1 in
-            let t2 = sn env t2 in
-            let fvs1 = Free.names t1 in
-            let fvs2 = Free.names t2 in
-            let occurs_ok, msg = occurs_check env wl (uv,k_uv) t2 in
-            if not occurs_ok
-            then giveup_or_defer orig ("occurs-check failed: " ^ (Option.get msg))
-            else if BU.set_is_subset_of fvs2 fvs1
-            then (if not patterns_only
-                  && U.is_function_typ t2
-                  && p_rel orig <> EQ //function types have structural subtyping and have to be imitated
-                  then imitate' orig env wl (subterms args_lhs)
-                  else //fast solution, pattern equality
-                    let _  = if debug env <| Options.Other "Rel"
-                             then BU.print3 "Pattern %s with fvars=%s succeeded fvar check: %s\n"
-                                    (Print.term_to_string t1)
-                                    (names_to_string fvs1)
-                                    (names_to_string fvs2) in
-                    let sol = match vars with
-                        | [] -> t2
-                        | _ -> u_abs k_uv (sn_binders env vars) t2 in
-                    let wl = solve_prob orig None [TERM((uv,k_uv), sol)] wl in
-                    solve env wl)
-            else if not patterns_only
-                 && wl.defer_ok
-                 && p_rel orig <> EQ
-            then solve env (defer "flex pattern/rigid: occurs or freevar check" orig wl)
-            else if not patterns_only
-                 && check_head fvs1 t2
-            then let _ = if debug env <| Options.Other "Rel"
-                            then BU.print3 "Pattern %s with fvars=%s failed fvar check: %s ... imitating\n"
-                                            (Print.term_to_string t1)
-                                            (names_to_string fvs1)
-                                            (names_to_string fvs2) in
-                    imitate_or_project (List.length args_lhs) (subterms args_lhs) (-1)
-            else giveup env "free-variable check failed on a non-redex" orig
-
-          | None when patterns_only ->
-                giveup env "not a pattern" orig
-
-          | None ->
-                if wl.defer_ok
-                then solve env (defer "not a pattern" orig wl)
-                else if check_head (Free.names t1) t2
-                then let im_ok = imitate_ok t2 in
-                     let _ = if debug env <| Options.Other "Rel"
-                             then BU.print2 "Not a pattern (%s) ... %s\n"
-                                                (Print.term_to_string t1) (if im_ok < 0 then "imitating" else "projecting") in
-                     imitate_or_project (List.length args_lhs) (subterms args_lhs) im_ok
-                else giveup env "head-symbol is free" orig in
-   (* </flex-rigid> *)
-
-   (* <flex-flex>:
-      Always delay flex-flex constraints, if possible.
-      Then, if it delaying is not an option, interpret a flex-flex constraint as an equality, even if it is tagged as SUB/SUBINV
-      This may cause a loss of generality. Consider:
-
-        nat <: u1 <: u2
-               int <: u2
-               u1 <: nat
-
-      By collapsing u1 and u2, the constraints become unsolveable, since we then have
-        nat <: u <: nat and int <: u
-
-      However, it seems unlikely that this would arise in practice,
-      since all the other non-flex-flex constraints would be attempted first.
-
-      The alternative is to delay all flex-flex subtyping constraints, even the pattern cases.
-      But, it seems that performance would suffer greatly then. TBD.
-   *)
-   let flex_flex orig (lhs:flex_t) (rhs:flex_t) : solution =
-        if wl.defer_ok && p_rel orig <> EQ then solve env (defer "flex-flex deferred" orig wl) else
-
-        let force_quasi_pattern xs_opt (t, u, k, args) =
+    (* <force_quasi_pattern> *)
+    let force_quasi_pattern xs_opt (t, u, k, args) =
             (* A quasi pattern is a U x1...xn, where not all the xi are distinct
             *)
            let k = N.normalize [N.Beta] env k in
@@ -1904,8 +1673,281 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
                  | _ -> failwith "Impossible" in
 
-           aux [] [] (S.new_bv_set()) all_formals args in
+           aux [] [] (S.new_bv_set()) all_formals args
+    in
+    (* </force_quasi_pattern> *)
 
+    (* <try_pattern_equality>: attempt solution using a fast common case,
+                               fall back on imitation/projection otherwise *)
+    let try_pattern_equality (orig:prob) (env:Env.env) (wl:worklist)
+                             (lhs:flex_t)
+                             (maybe_pat_vars:option<binders>)
+                             (rhs: term) : solution =
+
+        match maybe_pat_vars with
+        | Some vars ->
+          let (t1, uv, k_uv, args_lhs) = lhs in
+          let sol =
+            match vars with
+            | [] -> rhs
+            | _ -> u_abs k_uv (sn_binders env vars) rhs in
+          let wl = solve_prob orig None [TERM((uv,k_uv), sol)] wl in
+          solve env wl
+
+        | _ ->
+          let sol, forced_lhs_pattern = force_quasi_pattern None lhs in
+          let wl = extend_solution (p_pid orig) [sol] wl in
+          solve_t env (as_tprob orig) wl
+    in
+
+    (* <imitate> used in flex-rigid *)
+    let imitate orig (env:Env.env) (wl:worklist) (p:im_or_proj_t) : solution =
+        let ((u,k), xs, c), ps, (h, _, qs) = p in
+        let xs = sn_binders env xs in
+        //U p1..pn REL h q1..qm
+        //if h is not a free variable
+        //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
+        //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
+        let r = Env.get_range env in
+        let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
+        let im = U.abs xs (h gs_xs) (U.residual_comp_of_comp c |> Some) in
+        if Env.debug env <| Options.Other "Rel"
+        then BU.print
+                "Imitating gs_xs=%s\n\t binders are {%s}, comp=%s\n\t%s (%s)\nsub_probs = %s\nformula=%s\n"
+                   [(List.map tc_to_string gs_xs |> String.concat "\n\t");
+                    (Print.binders_to_string ", " xs);
+                    (Print.comp_to_string c);
+                    (Print.term_to_string im);
+                    (Print.tag_of_term im);
+                    (List.map (prob_to_string env) sub_probs |> String.concat ", ");
+                    (N.term_to_string env formula)];
+        let wl = solve_prob orig (Some formula) [TERM((u,k), im)] wl in
+        solve env (attempt sub_probs wl) in
+    (* </imitate> *)
+
+    let imitate' orig env wl = function
+        | None -> giveup env "unable to compute subterms" orig
+        | Some p ->imitate orig env wl p in
+
+    (* <project> used in flex_rigid *)
+    let project orig (env:Env.env) (wl:worklist) (i:int) (p:im_or_proj_t) : option<solution> =
+        let (u, xs, c), ps, (h, matches, qs) = p in
+        //U p1..pn REL h q1..qm
+        //extend subst: U -> \x1..xn. xi(G1(x1...xn) ... Gk(x1..xm)) ... where k is the arity of ti
+        //sub-problems: pi(G1(p1..pn)..Gk(p1..pn)) REL h q1..qm
+        let r = Env.get_range env in
+        let pi, _ = List.nth ps i in
+        let xi, _ = List.nth xs i in
+
+        let rec gs k =
+            let bs, k = U.arrow_formals (N.unfold_whnf env k) in
+            let rec aux subst bs = match bs with
+                | [] -> [], []
+                | (a, _)::tl ->
+                    let k_a = SS.subst subst a.sort in
+                    let gi_xs, gi = new_uvar r xs k_a in
+                    let gi_xs = N.eta_expand env gi_xs in
+                    let gi_ps = mk_Tm_app gi ps None r in
+                    let subst = NT(a, gi_xs)::subst in
+                    let gi_xs', gi_ps' = aux subst tl in
+                    as_arg gi_xs::gi_xs', as_arg gi_ps::gi_ps' in
+              aux [] bs in
+
+        if not <| matches pi
+        then (printfn "%d does not match" i; None)
+        else let g_xs, _ = gs xi.sort in
+             let xi = S.bv_to_name xi in
+             let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) (U.residual_comp_of_comp c |> Some) in
+             let sub = TProb <| mk_problem (p_scope orig) orig (S.mk_Tm_app proj ps None r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
+             if debug env <| Options.Other "Rel" then BU.print2 "Projecting %s\n\tsubprob=%s\n" (Print.term_to_string proj) (prob_to_string env sub);
+             let wl = solve_prob orig (Some (fst <| p_guard sub)) [TERM(u, proj)] wl in
+             Some <| solve env (attempt [sub] wl) in
+    (* </project_t> *)
+
+    (* <flex-rigid> *)
+    let solve_t_flex_rigid (patterns_only:bool) (orig:prob)
+                           (lhs:(flex_t * option<binders>)) (t2:typ) (wl:worklist)
+        : solution =
+        let (t1, uv, k_uv, args_lhs), maybe_pat_vars = lhs in
+        let subterms ps : option<im_or_proj_t> =
+            let xs, c = U.arrow_formals_comp k_uv in
+            if List.length xs = List.length ps //easy, common case
+            then Some (((uv,k_uv),xs,c), ps, decompose env t2)
+            else let rec elim k args : option<(binders * comp)> =
+                     let k = N.unfold_whnf env k in
+                     match (SS.compress k).n, args with
+                     | _, [] -> Some ([], S.mk_Total k)
+                     | Tm_uvar _, _
+                     | Tm_app _, _ -> //k=?u x1..xn
+                       let uv, uv_args = U.head_and_args k in
+                       begin match (SS.compress uv).n with
+                        | Tm_uvar (uvar, _) ->
+                          (match pat_vars env [] uv_args with
+                           | None -> None
+                           | Some scope ->
+                             let xs = args |> List.map (fun _ ->
+                                Syntax.mk_binder <|
+                                    Syntax.new_bv (Some k.pos)
+                                                  (fst (new_uvar k.pos scope (U.type_u () |> fst)))) in
+                             let c = S.mk_Total (fst (new_uvar k.pos scope (U.type_u () |> fst))) in
+                             let k' = U.arrow xs c in
+                             let uv_sol = U.abs scope k' (Some (U.residual_tot (U.type_u () |> fst))) in
+                             UF.change uvar uv_sol;
+                             Some (xs, c))
+                        | _ -> None
+                       end
+                     | Tm_arrow(xs, c), _ ->
+                       let n_args = List.length args in
+                       let n_xs = List.length xs in
+                       if n_xs = n_args
+                       then SS.open_comp xs c |> Some
+                       else if n_xs < n_args
+                       then let args, rest = BU.first_N n_xs args in
+                            let xs, c = SS.open_comp xs c in
+                            BU.bind_opt
+                                   (elim (U.comp_result c) rest)
+                                   (fun (xs', c) -> Some (xs@xs', c))
+                       else //n_args < n_xs
+                            let xs, rest = BU.first_N n_args xs in
+                            let t = mk (Tm_arrow(rest, c)) None k.pos in
+                            SS.open_comp xs (S.mk_Total t) |> Some
+                     | _ -> failwith (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
+                                        (Print.uvar_to_string uv)
+                                        (Print.term_to_string k)
+                                        (Print.term_to_string k_uv)) in
+                BU.bind_opt
+                    (elim k_uv ps)
+                    (fun (xs, c) -> Some (((uv, k_uv), xs, c), ps, decompose env t2)) in
+
+        let imitate_ok rhs = (* -1 means begin by imitating *)
+            let fvs_hd = U.head_and_args t2 |> fst |> Free.names in
+            BU.set_is_empty fvs_hd
+        in
+
+        let pattern_eq_imitate_or_project (n:int)
+                                          (lhs:flex_t)
+                                          (rhs:term)
+                                          (stopt:option<im_or_proj_t>) =
+            let fail () = giveup env "flex-rigid case failed all backtracking attempts" orig in
+            let rec try_project st i =
+                if i>=n
+                then fail ()
+                else let tx = UF.new_transaction () in
+                     match project orig env wl i st with
+                     | None
+                     | Some (Failed _) ->
+                       UF.rollback tx;
+                       try_project st (i + 1) //backtracking point
+                     | Some sol -> sol
+            in
+            let try_imitate_else_project stopt =
+                if Option.isSome stopt
+                then let st = BU.must stopt in
+                     if imitate_ok rhs
+                     then let tx = UF.new_transaction () in
+                          match imitate orig env wl st with
+                          | Failed _ ->
+                            UF.rollback tx;
+                            try_project st 0
+                          | sol -> //no need to commit; we'll commit the enclosing transaction at the top-level
+                            sol
+                     else try_project st 0
+                 else fail()
+            in
+            let tx = UF.new_transaction () in
+            match try_pattern_equality orig env wl lhs None rhs with
+            | Failed _ ->
+              UF.rollback tx;
+              try_imitate_else_project stopt
+            | sol -> sol
+        in
+
+        let check_head fvs1 t2 =
+            let hd, _ = U.head_and_args t2 in
+            match hd.n with
+                | Tm_arrow _
+                | Tm_constant _
+                | Tm_abs _  -> true
+                | _ ->
+                    let fvs_hd = Free.names hd in
+                    if BU.set_is_subset_of fvs_hd fvs1
+                    then true
+                    else (if Env.debug env <| Options.Other "Rel"
+                          then BU.print1 "Free variables are %s" (names_to_string fvs_hd); false) in
+
+        match maybe_pat_vars with
+          | Some vars ->
+            let t1 = sn env t1 in
+            let t2 = sn env t2 in
+            let lhs = (t1, uv, k_uv, args_lhs) in
+            let fvs1 = Free.names t1 in
+            let fvs2 = Free.names t2 in
+            let occurs_ok, msg = occurs_check env wl (uv,k_uv) t2 in
+            if not occurs_ok
+            then giveup_or_defer orig ("occurs-check failed: " ^ (Option.get msg))
+            else if BU.set_is_subset_of fvs2 fvs1
+            then (if not patterns_only
+                  && U.is_function_typ t2
+                  && p_rel orig <> EQ //function types have structural subtyping and have to be imitated
+                  then imitate' orig env wl (subterms args_lhs)
+                  else begin
+                       let _  = if debug env <| Options.Other "Rel"
+                                then BU.print3 "Pattern %s with fvars=%s succeeded fvar check: %s\n"
+                                        (Print.term_to_string t1)
+                                        (names_to_string fvs1)
+                                        (names_to_string fvs2) in
+                       try_pattern_equality orig env wl lhs maybe_pat_vars t2
+                  end)
+            else if not patterns_only
+                 && wl.defer_ok
+                 && p_rel orig <> EQ
+            then solve env (defer "flex pattern/rigid: occurs or freevar check" orig wl)
+            else if not patterns_only
+                 && check_head fvs1 t2
+            then let _ = if debug env <| Options.Other "Rel"
+                            then BU.print3 "Pattern %s with fvars=%s failed fvar check: %s ... imitating\n"
+                                            (Print.term_to_string t1)
+                                            (names_to_string fvs1)
+                                            (names_to_string fvs2) in
+                  pattern_eq_imitate_or_project (List.length args_lhs) lhs t2 (subterms args_lhs)
+            else giveup env "free-variable check failed on a non-redex" orig
+
+          | None when patterns_only ->
+                giveup env "not a pattern" orig
+
+          | None ->
+                if wl.defer_ok
+                then solve env (defer "not a pattern" orig wl)
+                else if check_head (Free.names t1) t2
+                then let n_args_lhs = List.length args_lhs in
+                     let _ = if debug env <| Options.Other "Rel"
+                             then BU.print2 "Not a pattern (%s) ... (lhs has %s args)\n"
+                                                (Print.term_to_string t1)
+                                                (string_of_int n_args_lhs) in
+                     pattern_eq_imitate_or_project n_args_lhs (fst lhs) t2 (subterms args_lhs)
+                else giveup env "head-symbol is free" orig in
+   (* </flex-rigid> *)
+
+   (* <flex-flex>:
+      Always delay flex-flex constraints, if possible.
+      Then, if it delaying is not an option, interpret a flex-flex constraint as an equality, even if it is tagged as SUB/SUBINV
+      This may cause a loss of generality. Consider:
+
+        nat <: u1 <: u2
+               int <: u2
+               u1 <: nat
+
+      By collapsing u1 and u2, the constraints become unsolveable, since we then have
+        nat <: u <: nat and int <: u
+
+      However, it seems unlikely that this would arise in practice,
+      since all the other non-flex-flex constraints would be attempted first.
+
+      The alternative is to delay all flex-flex subtyping constraints, even the pattern cases.
+      But, it seems that performance would suffer greatly then. TBD.
+   *)
+   let flex_flex orig (lhs:flex_t) (rhs:flex_t) : solution =
+        if wl.defer_ok && p_rel orig <> EQ then solve env (defer "flex-flex deferred" orig wl) else
 
         let solve_both_pats wl (u1, k1, xs, args1) (u2, k2, ys, args2) r =
             if UF.equiv u1 u2
