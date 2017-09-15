@@ -349,12 +349,23 @@ let write_tau' :tactic unit =
   apply_lemma (quote (lemma_read_write));;
 //  step_tactic;;			
   fail "Write example: stop"
-  
-let write_ok' (r:addr) (h:heap)
+
+let unification_test (r:addr) (h:heap)
   = let c = (Write r 3) in
-    let p = fun _ h -> sel h r == 3 in
+    let p = (fun _ h -> sel h r == 3) in
     let t = (lift_wpsep (wpsep_command c)) p h in
-    assert_by_tactic (h `contains` r ==> t) write_tau'		   
+    assert_by_tactic t
+      (norm [delta; delta_only unfold_steps; primops];;
+       step_tactic;;
+       apply_lemma (quote (lemma_read_write));;
+       dump "Foo";;
+       fail "Bar")
+
+// let write_ok' (r:addr) (h:heap)
+//   = let c = (Write r 3) in
+//     let p = fun _ h -> sel h r == 3 in
+//     let t = (lift_wpsep (wpsep_command c)) p h in
+//     assert_by_tactic (h `contains` r ==> t) write_tau'
                               
 // exists h0' h0''. h == h0' `join` h0'' /\
 //                  (exists h2' h2''. h0' == h2' `join` h2'' /\
