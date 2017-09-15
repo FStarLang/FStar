@@ -227,8 +227,8 @@ let solve goal solution =
     if trysolve goal solution
     then ()
     else raise (TacFailure(BU.format3 "%s does not solve %s : %s"
-                          (Print.term_to_string solution)
-                          (Print.term_to_string goal.witness)
+                          (N.term_to_string goal.context solution)
+                          (N.term_to_string goal.context goal.witness)
                           (Print.term_to_string goal.goal_ty)))
 
 let dismiss : tac<unit> =
