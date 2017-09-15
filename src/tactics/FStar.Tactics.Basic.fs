@@ -220,8 +220,11 @@ let trytac (t : tac<'a>) : tac<option<'a>> =
 let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
+let trysolve goal solution =
+    Rel.teq_nosmt goal.context goal.witness solution
+
 let solve goal solution =
-    if Rel.teq_nosmt goal.context goal.witness solution
+    if trysolve goal solution
     then ()
     else raise (TacFailure(BU.format3 "%s does not solve %s : %s"
                           (Print.term_to_string solution)
@@ -388,7 +391,7 @@ let intro : tac<binder> =
         else let env' = Env.push_binders goal.context [b] in
              let typ' = comp_to_typ c in
              bind (new_uvar env' typ') (fun u ->
-             if Rel.teq_nosmt goal.context goal.witness (U.abs [b] u None)
+             if trysolve goal (U.abs [b] u None)
              then bind (replace_cur ({ goal with context = env';
                                                  goal_ty = bnorm env' typ';
                                                  witness = bnorm env' u})) (fun _ ->
@@ -417,7 +420,7 @@ let intro_rec : tac<(binder * binder)> =
              let lbs, body = SS.close_let_rec [lb] body in
              let tm = mk (Tm_let ((true, lbs), body)) None goal.witness.pos in
              BU.print_string "calling teq_nosmt\n";
-             let res = Rel.teq_nosmt goal.context goal.witness tm in
+             let res = trysolve goal tm in
              if res
              then bind (replace_cur ({ goal with context = env';
                                                  goal_ty = bnorm env' (comp_to_typ c);
@@ -706,7 +709,7 @@ let clear_top : tac<unit> =
         if Util.set_mem x fns_ty (* || Util.set_mem x fns_tm *)
         then fail "Cannot clear; variable appears in goal"
         else bind (new_uvar env' goal.goal_ty) (fun u ->
-             if not (Rel.teq_nosmt goal.context goal.witness u)
+             if not (trysolve goal u)
              then fail "clear: unification failed"
              else let new_goal = {goal with context = env'; witness = bnorm env' u} in
                   bind dismiss (fun _ ->
