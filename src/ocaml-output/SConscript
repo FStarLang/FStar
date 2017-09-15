@@ -17,6 +17,7 @@ if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows 32-bit or 64-
   # extension.
   menhir = env.WhereIs('menhir', env['ENV']['PATH'], '')
   if menhir == None:
+    print 'Failed to find menhir on path ' + env['ENV']['PATH']
     menhir_tool = None
   else:
     menhir_tool = tempfile.gettempdir() + '\\menhir.exe'
