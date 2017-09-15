@@ -237,7 +237,7 @@ Extractions=[
   ('extract_parser',ExtractNamespace(
    addprefix('parser/FStar.Parser.','AST.fs ParseIt.fsi Driver.fs Dep.fs ToDocument.fs'),
    'FStar.Parser',
-   'FStar.Parser.ParseIt') #[bb]
+   'FStar.Parser.ParseIt')
    ),
   ('extract_normalizer',ExtractNamespace(
    addprefix('typechecker/FStar.TypeChecker.','Common.fs Env.fs Normalize.fs Err.fs'),
@@ -283,16 +283,12 @@ Extractions=[
   ('extract_reflection',ExtractNamespace(
    ['../ulib/FStar.Reflection.Types.fsti', addprefix('reflection/FStar.Reflection.','Basic.fs Data.fs Interpreter.fs')],
    'FStar.Reflection',
-   'FStar.Reflection.Types')  #[bb]
+   'FStar.Reflection.Types')
    ),
   ('extract_smtencoding_base',ExtractNamespace(
    addprefix('smtencoding/FStar.SMTEncoding.','Term.fs Util.fs Z3.fs SplitQueryCases.fs ErrorReporting.fs'),
    'FStar.SMTEncoding')
    ),
-  #[bb]('extract_uz',ExtractNamespace(
-  #[bb] addprefix('smtencoding/FStar.SMTEncoding.','Util.fs Z3.fs'),
-  #[bb] 'FStar.SMTEncoding')
-  #[bb] ),
   ('extract_encode',ExtractModule(
    'smtencoding/FStar.SMTEncoding.Encode.fs',
    'FStar.SMTEncoding.Encode')
