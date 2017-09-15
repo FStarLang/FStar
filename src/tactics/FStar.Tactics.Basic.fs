@@ -580,11 +580,12 @@ let apply_lemma (tm:term) : tac<unit> = focus(
                     | pre::post::_ -> fst pre, fst post
                     | _ -> failwith "apply_lemma: impossible: not a lemma"
     in
-    match Rel.try_teq false goal.context (U.mk_squash post) goal.goal_ty with
-    | None -> fail2 "apply_lemma: does not unify with goal: %s vs %s"
-                                 (Print.term_to_string (U.mk_squash post))
-                                 (Print.term_to_string goal.goal_ty)
-    | Some g ->
+    if not (Rel.teq_nosmt goal.context (U.mk_squash post) goal.goal_ty)
+    then fail3 "apply: Cannot instantiate lemma %s (with postcondition %s) to match goal (%s)"
+                            (Print.term_to_string tm)
+                            (Print.term_to_string (U.mk_squash post))
+                            (Print.term_to_string goal.goal_ty)
+    else
         let solution = S.mk_Tm_app tm uvs None goal.context.range in
         let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
              let hd, _ = U.head_and_args tm in
@@ -621,11 +622,10 @@ let apply_lemma (tm:term) : tac<unit> = focus(
         in
         let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
         bind (add_goal_from_guard goal.context guard goal.opts) (fun _ ->
-        bind (add_goal_from_guard goal.context g   goal.opts) (fun _ ->
         bind (add_irrelevant_goal goal.context pre goal.opts) (fun _ ->
         // Try to discharge the precondition, which is often trivial
         bind (trytac trivial) (fun _ ->
-        add_goals sub_goals))))))))
+        add_goals sub_goals)))))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
