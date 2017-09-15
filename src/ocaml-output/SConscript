@@ -13,15 +13,19 @@ env = My_env.Clone()  # ensure changes here don't have impact on other SConscrip
 # --------------------------------------------------------------------
 conf = Configure(env)
 if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows 32-bit or 64-bit
-  # Windows Python doesn't know how to handle menhir, which is a PE file with no
-  # extension.
-  menhir = env.WhereIs('menhir', env['ENV']['PATH'], '')
+  menhir = env.WhereIs('menhir', env['ENV']['PATH'], '') # try 'menhir' with no extension
   if menhir == None:
-    print 'Failed to find menhir on path ' + env['ENV']['PATH']
-    menhir_tool = None
+    menhir = env.WhereIs('menhir.exe', env['ENV']['PATH']) # try with .exe
+    if menhir == None:
+      print 'Failed to find menhir on path ' + env['ENV']['PATH']
+      menhir_tool = None
+    else:
+      menhir_tool = menhir
   else:
+    # Windows Python doesn't know how to handle menhir, which is a PE file with no
+    # extension.  Copy it to a temp directory and rename.
     menhir_tool = tempfile.gettempdir() + '\\menhir.exe'
-    Execute(Copy(menhir_tool, menhir))
+    env.Command(menhir_tool, menhir, Copy("$TARGET", "$SOURCE"))
 else:
   menhir_tool = conf.CheckProg('menhir') # returns None or the full path to it
 
@@ -49,6 +53,7 @@ env['OCAMLBUILDARGS']='-cflag \'-g\' -I src/ocaml-output -I src/basic/ml ' \
 parse_mly=env.Command('parse.mly', '../parser/parse.mly',
                       ['cd ../..',
                        '$MENHIR $MENHIRARGS --only-preprocess-for-ocamlyacc $SOURCE >$TARGET'])
+Depends(parse_mly, menhir_tool)
 
 parse_ml=env.Command(['parse.ml', 'parse.mli'], 'parse.mly', 'ocamlyacc $SOURCE')
 
