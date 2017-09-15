@@ -217,7 +217,7 @@ let new_z3proc: Prims.string -> FStar_Util.proc =
     let cond pid s = let x = (FStar_Util.trim_string s) = "Done!" in x in
     let uu____519 = FStar_Options.z3_exe () in
     let uu____520 = ini_params () in
-    FStar_Util.start_process id uu____519 uu____520 cond
+    FStar_Util.start_process false id uu____519 uu____520 cond
 type bgproc =
   {
   grab: Prims.unit -> FStar_Util.proc;
@@ -588,7 +588,7 @@ let doZ3Exe:
       fun label_messages  ->
         let parse z3out =
           let lines =
-            FStar_All.pipe_right (FStar_String.split ['\n'] z3out)
+            FStar_All.pipe_right (FStar_String.split [10] z3out)
               (FStar_List.map FStar_Util.trim_string) in
           let smt_output = smt_output_sections lines in
           let unsat_core =
@@ -715,8 +715,8 @@ let doZ3Exe:
             let uu____3023 = tid () in
             let uu____3024 = FStar_Options.z3_exe () in
             let uu____3025 = ini_params () in
-            FStar_Util.launch_process uu____3023 uu____3024 uu____3025 input
-              cond
+            FStar_Util.launch_process false uu____3023 uu____3024 uu____3025
+              input cond
           else
             (let proc = bg_z3_proc.grab () in
              let stdout1 = FStar_Util.ask_process proc input in

@@ -124,7 +124,7 @@ let rec arith_expr_to_bv e : tactic unit =
         trefl
 
 let arith_to_bv_tac : tactic unit =
-    // norm [Simpl];;
+    // norm [simpl];;
     g <-- cur_goal;
     let f = term_as_formula g in
     match f with

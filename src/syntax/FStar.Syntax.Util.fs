@@ -100,6 +100,19 @@ let rec unmeta e =
         | Tm_ascribed(e, _, _) -> unmeta e
         | _ -> e
 
+let rec unmeta_safe e =
+    let e = compress e in
+    match e.n with
+        | Tm_meta(e', m) ->
+            begin match m with
+            | Meta_monadic _
+            | Meta_monadic_lift _ ->
+              e // don't remove monadic metas
+            | _ -> unmeta_safe e'
+            end
+        | Tm_ascribed(e, _, _) -> unmeta_safe e
+        | _ -> e
+
 (********************************************************************************)
 (*************************** Utilities for universes ****************************)
 (********************************************************************************)
@@ -837,14 +850,14 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh () in
     mk (Tm_type u) None dummyRange, u
 
-let attr_substitute = mk (Tm_constant (Const_string (bytes_of_string "substitute", Range.dummyRange))) None Range.dummyRange
+let attr_substitute = mk (Tm_constant (Const_string ("substitute", Range.dummyRange))) None Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
 let exp_unit : term = mk (Tm_constant (Const_unit)) None dummyRange
 (* Makes an (unbounded) integer from its string repr. *)
 let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
-let exp_string s : term = mk (Tm_constant (Const_string (unicode_of_string s, dummyRange))) None dummyRange
+let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) None dummyRange
 
 let fvar_const l = fvar l Delta_constant None
 let tand    = fvar_const PC.and_lid
@@ -977,15 +990,21 @@ let un_squash t =
       None
 
 let arrow_one (t:typ) : option<(binder * comp)> =
-    match (compress t).n with
-    | Tm_arrow ([], c) ->
-        failwith "fatal: empty binders on arrow?"
-    | Tm_arrow ([b], c) ->
-        Some (b, c)
-    | Tm_arrow (b::bs, c) ->
-        Some (b, mk_Total (arrow bs c))
-    | _ ->
-        None
+    bind_opt (match (compress t).n with
+              | Tm_arrow ([], c) ->
+                  failwith "fatal: empty binders on arrow?"
+              | Tm_arrow ([b], c) ->
+                  Some (b, c)
+              | Tm_arrow (b::bs, c) ->
+                  Some (b, mk_Total (arrow bs c))
+              | _ ->
+                  None) (fun (b, c) ->
+    let bs, c = Subst.open_comp [b] c in
+    let b = match bs with
+            | [b] -> b
+            | _ -> failwith "impossible: open_comp returned different amount of binders"
+    in
+    Some (b, c))
 
 let is_free_in (bv:bv) (t:term) : bool =
     U.set_mem bv (FStar.Syntax.Free.names t)
@@ -1303,15 +1322,15 @@ let rec term_eq t1 t2 =
                   { t with n = Tm_app (hd, args) }
     | _ -> t
   in
-  let t1 = canon_app t1 in
-  let t2 = canon_app t2 in
+  let t1 = canon_app (unmeta_safe t1) in
+  let t2 = canon_app (unmeta_safe t2) in
   match t1.n, t2.n with
   | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
   | Tm_uinst (t1, us1), Tm_uinst (t2, us2) ->
         eqlist eq_univs us1 us2 && term_eq t1 t2
-  | Tm_constant x, Tm_constant y -> x = y
+  | Tm_constant c1, Tm_constant c2 -> eq_const c1 c2
   | Tm_type x, Tm_type y -> x = y
   | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlist binder_eq b1 b2 && term_eq t1 t2 //&& eqopt (eqsum lcomp_eq residual_eq) k1 k2
   | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 && eqlist arg_eq a1 a2

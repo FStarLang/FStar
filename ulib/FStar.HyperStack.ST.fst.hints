@@ -127,7 +127,6 @@
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0
     ],
-    [ "FStar.HyperStack.ST.pop_frame", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.HyperStack.ST.salloc_post",
       1,
