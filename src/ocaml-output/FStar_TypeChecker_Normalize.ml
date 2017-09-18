@@ -1657,7 +1657,7 @@ let maybe_simplify:
             FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.false_lid ->
             FStar_Pervasives_Native.Some false
         | uu____7353 -> FStar_Pervasives_Native.None in
-      let simplify arg = ((simp_t (FStar_Pervasives_Native.fst arg)), arg) in
+      let simplify1 arg = ((simp_t (FStar_Pervasives_Native.fst arg)), arg) in
       let tm1 = reduce_primops cfg tm in
       let uu____7393 =
         FStar_All.pipe_left Prims.op_Negation
@@ -1680,7 +1680,7 @@ let maybe_simplify:
              if uu____7426
              then
                let uu____7427 =
-                 FStar_All.pipe_right args (FStar_List.map simplify) in
+                 FStar_All.pipe_right args (FStar_List.map simplify1) in
                (match uu____7427 with
                 | (FStar_Pervasives_Native.Some (true ),uu____7482)::
                     (uu____7483,(arg,uu____7485))::[] -> arg
@@ -1699,7 +1699,7 @@ let maybe_simplify:
                 if uu____7762
                 then
                   let uu____7763 =
-                    FStar_All.pipe_right args (FStar_List.map simplify) in
+                    FStar_All.pipe_right args (FStar_List.map simplify1) in
                   match uu____7763 with
                   | (FStar_Pervasives_Native.Some (true ),uu____7818)::uu____7819::[]
                       -> w FStar_Syntax_Util.t_true
@@ -1719,7 +1719,7 @@ let maybe_simplify:
                    if uu____8098
                    then
                      let uu____8099 =
-                       FStar_All.pipe_right args (FStar_List.map simplify) in
+                       FStar_All.pipe_right args (FStar_List.map simplify1) in
                      match uu____8099 with
                      | uu____8154::(FStar_Pervasives_Native.Some (true
                                     ),uu____8155)::[]
@@ -1742,7 +1742,8 @@ let maybe_simplify:
                       if uu____8438
                       then
                         let uu____8439 =
-                          FStar_All.pipe_right args (FStar_List.map simplify) in
+                          FStar_All.pipe_right args
+                            (FStar_List.map simplify1) in
                         match uu____8439 with
                         | (FStar_Pervasives_Native.Some (true ),uu____8494)::[]
                             -> w FStar_Syntax_Util.t_false
@@ -1832,7 +1833,7 @@ let maybe_simplify:
              if uu____8902
              then
                let uu____8903 =
-                 FStar_All.pipe_right args (FStar_List.map simplify) in
+                 FStar_All.pipe_right args (FStar_List.map simplify1) in
                (match uu____8903 with
                 | (FStar_Pervasives_Native.Some (true ),uu____8958)::
                     (uu____8959,(arg,uu____8961))::[] -> arg
@@ -1851,7 +1852,7 @@ let maybe_simplify:
                 if uu____9238
                 then
                   let uu____9239 =
-                    FStar_All.pipe_right args (FStar_List.map simplify) in
+                    FStar_All.pipe_right args (FStar_List.map simplify1) in
                   match uu____9239 with
                   | (FStar_Pervasives_Native.Some (true ),uu____9294)::uu____9295::[]
                       -> w FStar_Syntax_Util.t_true
@@ -1871,7 +1872,7 @@ let maybe_simplify:
                    if uu____9574
                    then
                      let uu____9575 =
-                       FStar_All.pipe_right args (FStar_List.map simplify) in
+                       FStar_All.pipe_right args (FStar_List.map simplify1) in
                      match uu____9575 with
                      | uu____9630::(FStar_Pervasives_Native.Some (true
                                     ),uu____9631)::[]
@@ -1894,7 +1895,8 @@ let maybe_simplify:
                       if uu____9914
                       then
                         let uu____9915 =
-                          FStar_All.pipe_right args (FStar_List.map simplify) in
+                          FStar_All.pipe_right args
+                            (FStar_List.map simplify1) in
                         match uu____9915 with
                         | (FStar_Pervasives_Native.Some (true ),uu____9970)::[]
                             -> w FStar_Syntax_Util.t_false
