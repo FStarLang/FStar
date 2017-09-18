@@ -5306,7 +5306,8 @@ and mk_comment_attr:
         let summary =
           match FStar_List.assoc "summary" kv with
           | FStar_Pervasives_Native.None  -> ""
-          | FStar_Pervasives_Native.Some s -> Prims.strcat s "\n" in
+          | FStar_Pervasives_Native.Some s ->
+              Prims.strcat "  " (Prims.strcat s "\n") in
         let pp =
           match FStar_List.assoc "type" kv with
           | FStar_Pervasives_Native.Some uu____16786 ->
@@ -5315,7 +5316,7 @@ and mk_comment_attr:
                   FStar_Parser_ToDocument.signature_to_document d in
                 FStar_Pprint.pretty_string 0.95 (Prims.parse_int "80")
                   uu____16788 in
-              Prims.strcat "\n" uu____16787
+              Prims.strcat "\n  " uu____16787
           | uu____16789 -> "" in
         let other =
           FStar_List.filter_map

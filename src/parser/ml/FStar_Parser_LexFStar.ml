@@ -464,7 +464,7 @@ and fsdoc (n, doc, kw) = lexer
    else FSDOC(doc, kw)
  | anywhite* "@" ['a'-'z' 'A'-'Z']+ [':']? anywhite* ->
      fsdoc_kw_arg (n, doc, kw, BatString.strip ~chars:" \r\n\t@:" (L.lexeme lexbuf), "") lexbuf
- | newline anywhite* -> L.new_line lexbuf; fsdoc (n, doc^"\n", kw) lexbuf
+ | newline -> L.new_line lexbuf; fsdoc (n, doc^"\n", kw) lexbuf
  | _ -> fsdoc(n, doc^(L.lexeme lexbuf), kw) lexbuf
 
 and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer

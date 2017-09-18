@@ -2094,11 +2094,11 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
 // JP: crappy formatting, use PPrint
 and mk_comment_attr (d: decl) =
   let text, kv = match d.doc with | None -> "", [] | Some fsdoc -> fsdoc in
-  let summary = match List.assoc "summary" kv with | None -> "" | Some s -> s ^ "\n" in
+  let summary = match List.assoc "summary" kv with | None -> "" | Some s -> "  " ^ s ^ "\n" in
   let pp =
     match List.assoc "type" kv with
     | Some _ ->
-        "\n" ^ FStar.Pprint.pretty_string 0.95 80 (FStar.Parser.ToDocument.signature_to_document d)
+        "\n  " ^ FStar.Pprint.pretty_string 0.95 80 (FStar.Parser.ToDocument.signature_to_document d)
     | _ ->
         ""
   in
