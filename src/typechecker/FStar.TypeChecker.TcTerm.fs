@@ -210,7 +210,7 @@ let rec get_pat_vars (pats:term) (acc:set<bv>) :set<bv> =
   let head, args = head_and_args pats in
   match (un_uinst head).n with
   | Tm_fvar fv when fv_eq_lid fv Const.nil_lid      -> acc
-  | Tm_fvar fv when fv_eq_lid fv Const.smtpat_lid   -> get_pat_vars_args (List.tl args) acc
+  | Tm_fvar fv when fv_eq_lid fv Const.smtpat_lid   -> get_pat_vars_args (List.tl args) acc  //we should ignore the first argument of smtpat
   | Tm_fvar fv when fv_eq_lid fv Const.smtpatOr_lid -> get_pat_vars_args args acc
   | Tm_fvar fv when fv_eq_lid fv Const.cons_lid     -> get_pat_vars_args args acc
   | _                                               -> BU.set_union acc (Free.names pats)
