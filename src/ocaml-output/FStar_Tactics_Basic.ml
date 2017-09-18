@@ -139,8 +139,8 @@ let goal_to_string: goal -> Prims.string =
         (FStar_Syntax_Print.binders_to_string ", ") in
     let w = bnorm g.context g.witness in
     let t = bnorm g.context g.goal_ty in
-    let uu____471 = FStar_Syntax_Print.term_to_string w in
-    let uu____472 = FStar_Syntax_Print.term_to_string t in
+    let uu____471 = FStar_TypeChecker_Normalize.term_to_string g.context w in
+    let uu____472 = FStar_TypeChecker_Normalize.term_to_string g.context t in
     FStar_Util.format3 "%s |- %s : %s" g_binders uu____471 uu____472
 let tacprint: Prims.string -> Prims.unit =
   fun s  -> FStar_Util.print1 "TAC>> %s\n" s
@@ -219,14 +219,17 @@ let goal_to_json: goal -> FStar_Util.json =
             let uu____642 =
               let uu____649 =
                 let uu____654 =
-                  let uu____655 = FStar_Syntax_Print.term_to_string g.witness in
+                  let uu____655 =
+                    FStar_TypeChecker_Normalize.term_to_string g.context
+                      g.witness in
                   FStar_Util.JsonStr uu____655 in
                 ("witness", uu____654) in
               let uu____656 =
                 let uu____663 =
                   let uu____668 =
                     let uu____669 =
-                      FStar_Syntax_Print.term_to_string g.goal_ty in
+                      FStar_TypeChecker_Normalize.term_to_string g.context
+                        g.goal_ty in
                     FStar_Util.JsonStr uu____669 in
                   ("type", uu____668) in
                 [uu____663] in
@@ -356,9 +359,15 @@ let solve: goal -> FStar_Syntax_Syntax.term -> Prims.unit =
       else
         (let uu____1077 =
            let uu____1078 =
-             let uu____1079 = FStar_Syntax_Print.term_to_string solution in
-             let uu____1080 = FStar_Syntax_Print.term_to_string goal.witness in
-             let uu____1081 = FStar_Syntax_Print.term_to_string goal.goal_ty in
+             let uu____1079 =
+               FStar_TypeChecker_Normalize.term_to_string goal.context
+                 solution in
+             let uu____1080 =
+               FStar_TypeChecker_Normalize.term_to_string goal.context
+                 goal.witness in
+             let uu____1081 =
+               FStar_TypeChecker_Normalize.term_to_string goal.context
+                 goal.goal_ty in
              FStar_Util.format3 "%s does not solve %s : %s" uu____1079
                uu____1080 uu____1081 in
            TacFailure uu____1078 in
@@ -545,7 +554,9 @@ let trivial: Prims.unit tac =
        if uu____1374
        then (solve goal FStar_Syntax_Util.exp_unit; dismiss)
        else
-         (let uu____1379 = FStar_Syntax_Print.term_to_string goal.goal_ty in
+         (let uu____1379 =
+            FStar_TypeChecker_Normalize.term_to_string goal.context
+              goal.goal_ty in
           fail1 "Not a trivial goal: %s" uu____1379))
 let add_goal_from_guard:
   env ->
@@ -585,7 +596,8 @@ let smt: Prims.unit tac =
        if uu____1418
        then bind dismiss (fun uu____1422  -> add_smt_goals [g])
        else
-         (let uu____1424 = FStar_Syntax_Print.term_to_string g.goal_ty in
+         (let uu____1424 =
+            FStar_TypeChecker_Normalize.term_to_string g.context g.goal_ty in
           fail1 "goal is not irrelevant: cannot dispatch to smt (%s)"
             uu____1424))
 let divide:
@@ -730,7 +742,9 @@ let intro: FStar_Syntax_Syntax.binder tac =
                      bind uu____1841 (fun uu____1849  -> ret b)
                    else fail "intro: unification failed"))
        | FStar_Pervasives_Native.None  ->
-           let uu____1855 = FStar_Syntax_Print.term_to_string goal.goal_ty in
+           let uu____1855 =
+             FStar_TypeChecker_Normalize.term_to_string goal.context
+               goal.goal_ty in
            fail1 "intro: goal is not an arrow (%s)" uu____1855)
 let intro_rec:
   (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.binder)
@@ -806,7 +820,9 @@ let intro_rec:
                                ret uu____1989)
                         else fail "intro_rec: unification failed"))
         | FStar_Pervasives_Native.None  ->
-            let uu____2008 = FStar_Syntax_Print.term_to_string goal.goal_ty in
+            let uu____2008 =
+              FStar_TypeChecker_Normalize.term_to_string goal.context
+                goal.goal_ty in
             fail1 "intro_rec: goal is not an arrow (%s)" uu____2008))
 let norm: FStar_Syntax_Embeddings.norm_step Prims.list -> Prims.unit tac =
   fun s  ->
@@ -876,12 +892,16 @@ let __exact: FStar_Syntax_Syntax.term -> Prims.unit tac =
                      if uu____2171
                      then (solve goal t1; dismiss)
                      else
-                       (let uu____2176 = FStar_Syntax_Print.term_to_string t1 in
+                       (let uu____2176 =
+                          FStar_TypeChecker_Normalize.term_to_string
+                            goal.context t1 in
                         let uu____2177 =
                           let uu____2178 = bnorm goal.context typ in
-                          FStar_Syntax_Print.term_to_string uu____2178 in
+                          FStar_TypeChecker_Normalize.term_to_string
+                            goal.context uu____2178 in
                         let uu____2179 =
-                          FStar_Syntax_Print.term_to_string goal.goal_ty in
+                          FStar_TypeChecker_Normalize.term_to_string
+                            goal.context goal.goal_ty in
                         fail3 "%s : %s does not exactly solve the goal %s"
                           uu____2176 uu____2177 uu____2179))))
 let exact: FStar_Syntax_Syntax.term -> Prims.unit tac =
@@ -939,12 +959,14 @@ let exact_lemma: FStar_Syntax_Syntax.term -> Prims.unit tac =
                                       goal.opts))
                             else
                               (let uu____2405 =
-                                 FStar_Syntax_Print.term_to_string t1 in
+                                 FStar_TypeChecker_Normalize.term_to_string
+                                   goal.context t1 in
                                let uu____2406 =
-                                 FStar_Syntax_Print.term_to_string post in
+                                 FStar_TypeChecker_Normalize.term_to_string
+                                   goal.context post in
                                let uu____2407 =
-                                 FStar_Syntax_Print.term_to_string
-                                   goal.goal_ty in
+                                 FStar_TypeChecker_Normalize.term_to_string
+                                   goal.context goal.goal_ty in
                                fail3
                                  "%s : %s does not exactly solve the goal %s"
                                  uu____2405 uu____2406 uu____2407)))))
@@ -1078,10 +1100,15 @@ let apply: Prims.bool -> FStar_Syntax_Syntax.term -> Prims.unit tac =
                         add_goal_from_guard goal.context guard goal.opts) in
                  focus uu____2701 in
                let uu____2709 =
-                 let uu____2712 = FStar_Syntax_Print.term_to_string tm1 in
-                 let uu____2713 = FStar_Syntax_Print.term_to_string typ in
+                 let uu____2712 =
+                   FStar_TypeChecker_Normalize.term_to_string goal.context
+                     tm1 in
+                 let uu____2713 =
+                   FStar_TypeChecker_Normalize.term_to_string goal.context
+                     typ in
                  let uu____2714 =
-                   FStar_Syntax_Print.term_to_string goal.goal_ty in
+                   FStar_TypeChecker_Normalize.term_to_string goal.context
+                     goal.goal_ty in
                  fail3
                    "apply: Cannot instantiate %s (of type %s) to match goal (%s)"
                    uu____2712 uu____2713 uu____2714 in
@@ -1172,15 +1199,16 @@ let apply_lemma: FStar_Syntax_Syntax.term -> Prims.unit tac =
                                 if uu____3188
                                 then
                                   let uu____3193 =
-                                    FStar_Syntax_Print.term_to_string tm1 in
+                                    FStar_TypeChecker_Normalize.term_to_string
+                                      goal.context tm1 in
                                   let uu____3194 =
                                     let uu____3195 =
                                       FStar_Syntax_Util.mk_squash post in
-                                    FStar_Syntax_Print.term_to_string
-                                      uu____3195 in
+                                    FStar_TypeChecker_Normalize.term_to_string
+                                      goal.context uu____3195 in
                                   let uu____3196 =
-                                    FStar_Syntax_Print.term_to_string
-                                      goal.goal_ty in
+                                    FStar_TypeChecker_Normalize.term_to_string
+                                      goal.context goal.goal_ty in
                                   fail3
                                     "apply_lemma: Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
                                     uu____3193 uu____3194 uu____3196
@@ -1787,13 +1815,18 @@ let trefl: Prims.unit tac =
                        Prims.op_Negation uu____4775 in
                      if uu____4774
                      then
-                       let uu____4778 = FStar_Syntax_Print.term_to_string l in
-                       let uu____4779 = FStar_Syntax_Print.term_to_string r in
+                       let uu____4778 =
+                         FStar_TypeChecker_Normalize.term_to_string g.context
+                           l in
+                       let uu____4779 =
+                         FStar_TypeChecker_Normalize.term_to_string g.context
+                           r in
                        fail2 "trefl: not a trivial equality (%s vs %s)"
                          uu____4778 uu____4779
                      else (solve g FStar_Syntax_Util.exp_unit; dismiss)
                  | (hd2,uu____4783) ->
-                     let uu____4800 = FStar_Syntax_Print.term_to_string t in
+                     let uu____4800 =
+                       FStar_TypeChecker_Normalize.term_to_string g.context t in
                      fail1 "trefl: not an equality (%s)" uu____4800))
        | FStar_Pervasives_Native.None  -> fail "not an irrelevant goal")
 let dup: Prims.unit tac =
@@ -1926,7 +1959,9 @@ let cases:
                                    (uu____5072, uu____5073) in
                                  ret uu____5067))
                    | uu____5078 ->
-                       let uu____5091 = FStar_Syntax_Print.term_to_string typ in
+                       let uu____5091 =
+                         FStar_TypeChecker_Normalize.term_to_string g.context
+                           typ in
                        fail1 "Not a disjunction: %s" uu____5091)))
 let set_options: Prims.string -> Prims.unit tac =
   fun s  ->
