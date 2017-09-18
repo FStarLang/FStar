@@ -1,0 +1,2 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"#light \"off\"\n","line":1,"column":0}}
+{"query-id":"2","query":"push","args":{"kind":"full","code":"\nmodule GH1217\n","line":2,"column":0}}

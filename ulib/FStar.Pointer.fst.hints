@@ -1,5 +1,5 @@
 [
-  "\u0001a™ˆÎ/IB ‡–N8#‘®",
+  "u›ö\u0010Ý‡|‡Ã©#BYÚ\u001bœ",
   [
     [
       "FStar.Pointer.includes_gfield_gen",
@@ -718,6 +718,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0
-    ]
+    ],
+    [ "FStar.Pointer.buffer_includes_gsub_r_gen", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

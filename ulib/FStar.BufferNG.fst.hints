@@ -1,5 +1,5 @@
 [
-  "ˆ°\u0018½é£Õ\u000b©$TÂ¿xÓ\f",
+  "øV¥p´¦¹\u0012ŽÉ\u001eE\tzö¤",
   [
     [
       "FStar.BufferNG.singleton_buffer_of_pointer",
@@ -156,7 +156,7 @@
       0
     ],
     [
-      "FStar.BufferNG.live_gsub",
+      "FStar.BufferNG.live_gsub_equiv",
       1,
       2,
       1,
@@ -169,7 +169,23 @@
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "fuel_guarded_inversion_FStar.UInt32.t_",
         "function_token_typing_FStar.Monotonic.HyperHeap.test0",
-        "lemma_FStar.Pointer.Base.buffer_live_gsub_buffer"
+        "lemma_FStar.Pointer.Base.buffer_live_gsub_buffer_equiv"
+      ],
+      0
+    ],
+    [
+      "FStar.BufferNG.live_gsub_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Monotonic.HyperHeap.test0",
+        "equation_FStar.UInt32.t", "equation_Prims._assert",
+        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
+        "fuel_guarded_inversion_FStar.UInt32.t_",
+        "function_token_typing_FStar.Monotonic.HyperHeap.test0",
+        "lemma_FStar.BufferNG.live_gsub_equiv"
       ],
       0
     ],
