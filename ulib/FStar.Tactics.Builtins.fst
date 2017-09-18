@@ -56,13 +56,15 @@ assume private val __norm  : list norm_step -> __tac unit
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized
 by the flags in [steps].
-Currently, the flags (defined in FStar.Reflection.Syntax) are
-[Simpl] (do logical simplifications)
-[WHNF] (only reduce until weak head-normal-form)
-[Primops] (performing primitive reductions, such as arithmetic and
+Currently, the flags (provided in Prims) are
+[simpl] (do logical simplifications)
+[whnf] (only reduce until weak head-normal-form)
+[primops] (performing primitive reductions, such as arithmetic and
 string operations)
-[Delta] (unfold names)
-[UnfoldOnly] (restricts unfolding to those names)
+[delta] (unfold names)
+[zeta] (inline let bindings)
+[iota] (reduce match statements over constructors)
+[delta_only] (restrict delta to only unfold this list of fully-qualfied identifiers)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
@@ -135,6 +137,11 @@ of [f] to any amount of arguments (which need to be solved as further goals).
 The amount of arguments introduced is the least such that [f a_i] unifies
 with the goal's type. *)
 let apply (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply tt)
+
+assume private val __apply_raw : term -> __tac unit
+(** [apply_raw f] is like [apply], but will ask for all arguments regardless
+of whether they appear free in further goals. *)
+let apply_raw (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply_raw tt)
 
 assume private val __apply_lemma : term -> __tac unit
 (** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a Lemma

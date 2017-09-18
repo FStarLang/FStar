@@ -1,20 +1,6 @@
 [
-  "°á6#∑ª— ∏Xr·\u0011_≤A",
+  "»!\u0003\u0013}\u0000Ae∞Ÿ¨ÉN\u001f@'",
   [
-    [ "Printers.mk_strcat", 1, 2, 1, [ "@query" ], 0 ],
-    [
-      "Printers.mk_list",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_54b8d13345a0876202ad05586d3a7a11_0",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
-      ],
-      0
-    ],
     [ "Printers.mk_concat", 1, 2, 1, [ "@query" ], 0 ],
     [ "Printers.paren", 1, 2, 1, [ "@query" ], 0 ],
     [ "Printers.mk_print_binder", 1, 2, 1, [ "@query" ], 0 ],
@@ -27,12 +13,13 @@
         "@MaxIFuel_assumption",
         "@fuel_correspondence_Printers.mk_concat.fuel_instrumented",
         "@query", "disc_equation_FStar.Reflection.Data.Sg_Inductive",
+        "disc_equation_FStar.Reflection.Data.Sg_Let",
         "disc_equation_FStar.Reflection.Data.Unk",
         "equality_tok_FStar.Reflection.Data.Unk@tok",
         "equation_FStar.Reflection.Basic.lookup_typ",
         "equation_Printers.paren",
         "fuel_guarded_inversion_FStar.Reflection.Data.sigelt_view",
-        "typing_FStar.Reflection.Basic.__lookup_typ"
+        "typing_FStar.Reflection.Basic.lookup_typ"
       ],
       0
     ],
@@ -111,31 +98,31 @@
       0
     ],
     [
-      "Printers.uu___71",
+      "Printers.uu___85",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
-    [ "Printers.uu___71", 2, 2, 1, [ "@query" ], 0 ],
+    [ "Printers.uu___85", 2, 2, 1, [ "@query" ], 0 ],
     [
-      "Printers.uu___72",
+      "Printers.uu___86",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
-    [ "Printers.uu___72", 2, 2, 1, [ "@query" ], 0 ],
+    [ "Printers.uu___86", 2, 2, 1, [ "@query" ], 0 ],
     [
-      "Printers.uu___73",
+      "Printers.uu___87",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0
     ],
-    [ "Printers.uu___73", 2, 2, 1, [ "@query" ], 0 ]
+    [ "Printers.uu___87", 2, 2, 1, [ "@query" ], 0 ]
   ]
 ]

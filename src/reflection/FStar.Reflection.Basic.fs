@@ -286,7 +286,7 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
     | FStar.Const.Const_bool true  -> C_True
     | FStar.Const.Const_bool false -> C_False
-    | FStar.Const.Const_string (bs, _) -> C_String (BU.string_of_bytes bs)
+    | FStar.Const.Const_string (s, _) -> C_String s
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 // TODO: consider effects? probably not too useful, but something should be done
@@ -394,7 +394,7 @@ let pack_const (c:vconst) : sconst =
     | C_Int i   -> C.Const_int (BU.string_of_int i, None)
     | C_True    -> C.Const_bool true
     | C_False   -> C.Const_bool false
-    | C_String s -> C.Const_string (BU.bytes_of_string s, Range.dummyRange)
+    | C_String s -> C.Const_string (s, Range.dummyRange)
 
 // TODO: pass in range?
 let pack (tv:term_view) : term =

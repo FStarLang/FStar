@@ -345,16 +345,30 @@ let ser_numbers_data' ns =
           | OneNum n -> ser_OneNum n buf
           | TwoNums n m -> ser_TwoNums n m buf
 
+
+// this works ...
+val ser_numbers_data2: ns:numbers -> serializer_ty 
+let ser_numbers_data2 ns =
+  match ns with
+  | Nothing -> ser_Nothing
+  | OneNum n -> ser_OneNum n
+  | TwoNums n m -> ser_TwoNums n m
+
+//but doing it via tactic normalization does not; NS/JR/JP: We added the --lax on 09/14
 // this is the same as ser_numbers_data; haven't synthesized the eta expansion
+#set-options "--lax"
 let ser_numbers_data'' ns : serializer_ty =
     synth_by_tactic (normalize' [delta_only
-                                ["EnumParsing.ser_numbers_data"]] (ser_numbers_data ns <: serializer_ty))
+                                ["EnumParsing.ser_numbers_data2"]] (ser_numbers_data2 ns))
 
+#reset-options
 val ser_numbers: ns:numbers -> serializer (hide (encode_numbers ns))
 let ser_numbers ns = fun buf ->
   (ser_numbers_tag (numbers_tag_val ns) `ser_append`
    ser_numbers_data ns) buf
 
+//same problem as ser_numbers_data''
+#set-options "--lax"
 let ser_numbers' ns : serializer_ty =
   synth_by_tactic (normalize' [delta_only
                   ["EnumParsing.ser_numbers";

@@ -14,3 +14,7 @@ configure eol=lf
 # Don't show diffs for generated ocaml-output files
 /src/ocaml-output/*.ml -diff
 *.hints -diff
+
+# Checked modules
+*.checked binary
+*.checked.lax binary

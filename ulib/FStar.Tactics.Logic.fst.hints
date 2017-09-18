@@ -28,7 +28,6 @@
       ],
       0
     ],
-    [ "FStar.Tactics.Logic.fa_intro_lem", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Logic.forall_intro",
       1,

@@ -48,6 +48,8 @@ let s_typ : P.typ = P.TStruct s_l
 let st_typ = either_typ s_typ P.(TBase TUInt16)
 let st_tags = either_tags s_typ P.(TBase TUInt16)
 
+#set-options "--z3rlimit 20"
+
 let step_0 (p: P.pointer st_typ) :
   HST.Stack unit
   (requires (fun h -> TU.valid h st_tags p /\ P.readable h p /\ TU.gread_tag h st_tags p == 0ul ))
@@ -58,11 +60,15 @@ let step_0 (p: P.pointer st_typ) :
     P.modifies_1 p h0 h1
   ))
 =
+    let h0 = HST.get () in
     let s_ptr : P.pointer (P.TStruct s_l) = TU.field st_tags p "left" in
     let x_ptr = P.field s_ptr "x" in
     let x : UInt8.t = P.read x_ptr in
     let y : UInt8.t = P.read (P.field s_ptr s_y) in
-    P.write x_ptr (UInt8.logxor x y)
+    P.write x_ptr (UInt8.logxor x y);
+    let h1 = HST.get () in
+    (* pattern on modifies_1 does not trigger *)
+    P.modifies_1_readable_struct "x" s_ptr h0 h1
 
 let step (p: P.pointer st_typ) :
   HST.Stack unit
@@ -84,8 +90,6 @@ let step (p: P.pointer st_typ) :
     let v : P.struct s_l = P.struct_create s_l [(|"x", x|); (|"y", 0uy|)] in
     TU.write st_tags p "left" v
   )
-
-#set-options "--z3rlimit 20"
 
 let step_alt (p: P.pointer st_typ):
   HST.Stack unit

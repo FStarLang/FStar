@@ -309,7 +309,8 @@ let lemma_sel_same_addr (#i: rid) (#a:Type0) (#rel:preorder a) (h:t) (r1:mrref i
   :Lemma (requires (contains_ref r1 h /\ addr_of r1 = addr_of r2))
          (ensures  (contains_ref r2 h /\ sel h r1 == sel h r2))
 	 [SMTPat (sel h r1); SMTPat (sel h r2)]
-= ()
+= let m = Map.sel h i in
+  FStar.Monotonic.Heap.lemma_sel_same_addr m r1 r2
 
 let lemma_upd_same_addr (#i: rid) (#a: Type0) (#rel: preorder a) (h: t) (r1 r2: mrref i a rel) (x: a)
   :Lemma (requires ((contains_ref r1 h \/ contains_ref r2 h) /\ addr_of r1 = addr_of r2))

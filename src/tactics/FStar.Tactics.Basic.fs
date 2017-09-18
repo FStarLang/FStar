@@ -21,6 +21,7 @@ module Rel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
+module TcComm = FStar.TypeChecker.Common
 module N = FStar.TypeChecker.Normalize
 module RD = FStar.Reflection.Data
 module UF = FStar.Syntax.Unionfind
@@ -292,11 +293,37 @@ let cur_goal : tac<goal> =
     | [] -> fail "No more goals (1)"
     | hd::tl -> ret hd)
 
-let add_irrelevant_goal (env:env) (phi:typ) opts : tac<unit> =
+let mk_irrelevant_goal (env:env) (phi:typ) opts : tac<goal> =
     let typ = U.mk_squash phi in
     bind (new_uvar env typ) (fun u ->
     let goal = { context = env; witness = u; goal_ty = typ; opts = opts } in
+    ret goal)
+
+let add_irrelevant_goal env phi opts : tac<unit> =
+    bind (mk_irrelevant_goal env phi opts) (fun goal ->
     add_goals [goal])
+
+let push_irrelevant_goal env phi opts : tac<unit> =
+    bind (mk_irrelevant_goal env phi opts) (fun goal ->
+    push_goals [goal])
+
+let istrivial (e:env) (t:term) : bool =
+    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac] in
+    let t = normalize steps e t in
+    is_true t
+
+let trivial : tac<unit> =
+    bind cur_goal (fun goal ->
+    if istrivial goal.context goal.goal_ty
+    then (solve goal U.exp_unit; dismiss)
+    else fail1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty)
+    )
+
+let add_goal_from_guard (e:env) (g : guard_t) opts : tac<unit> =
+    match (Rel.simplify_guard e g).guard_f with
+    | TcComm.Trivial -> ret ()
+    | TcComm.NonTrivial f ->
+        push_irrelevant_goal e f opts
 
 let smt : tac<unit> =
     bind cur_goal (fun g ->
@@ -414,19 +441,7 @@ let norm_term (s : list<EMB.norm_step>) (t : term) : tac<term> =
     ret t
     )
 
-let istrivial (e:env) (t:term) : bool =
-    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac] in
-    let t = normalize steps e t in
-    is_true t
-
-let trivial : tac<unit> =
-    bind cur_goal (fun goal ->
-    if istrivial goal.context goal.goal_ty
-    then (solve goal U.exp_unit; dismiss)
-    else fail1 "Not a trivial goal: %s" (Print.term_to_string goal.goal_ty)
-    )
-
-let exact (t:term) : tac<unit> =
+let __exact (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (try ret (goal.context.type_of goal.context t)
           with e -> // printfn "Exception %A" e;
@@ -438,6 +453,9 @@ let exact (t:term) : tac<unit> =
                     (Print.term_to_string t)
                     (Print.term_to_string (bnorm goal.context typ))
                     (Print.term_to_string goal.goal_ty)))
+
+let exact (t:term) : tac<unit> =
+    focus (__exact t)
 
 let exact_lemma (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
@@ -481,7 +499,7 @@ exception NoUnif
 // solving any of these two goals. In any case, if ?u is not solved, we fail afterwards.
 let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
     bind cur_goal (fun goal ->
-    bind (trytac (exact tm)) (fun r ->
+    bind (trytac (__exact tm)) (fun r ->
     match r with
     | Some r -> ret r // if tm is a solution, we're done
     | None ->
@@ -512,26 +530,24 @@ let try_unif (t : tac<'a>) (t' : tac<'a>) : tac<'a> =
         try run t ps
         with NoUnif -> run t' ps)
 
-let apply (tm:term) : tac<unit> =
+let apply (uopt:bool) (tm:term) : tac<unit> =
     bind cur_goal (fun goal ->
     let tm, typ, guard = goal.context.type_of goal.context tm in
-    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply: got non-trivial guard" else
-    // Focus not really needed, but might help a bit for speed
-    try_unif (focus (__apply true tm typ))
+    // Focus helps keep the goal order
+    try_unif (focus (bind (__apply uopt tm typ) (fun _ -> add_goal_from_guard goal.context guard goal.opts)))
              (fail3 "apply: Cannot instantiate %s (of type %s) to match goal (%s)"
                             (Print.term_to_string tm)
                             (Print.term_to_string typ)
                             (Print.term_to_string goal.goal_ty))
     )
 
-let apply_lemma (tm:term) : tac<unit> =
+let apply_lemma (tm:term) : tac<unit> = focus(
     let is_unit_t t = match (SS.compress t).n with
     | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
     | _ -> false
     in
     bind cur_goal (fun goal ->
     let tm, t, guard = goal.context.type_of goal.context tm in
-    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "apply_lemma: got non-trivial guard" else
     let bs, comp = U.arrow_formals_comp t in
     if not (U.is_lemma_comp comp) then fail "apply_lemma: not a lemma" else
     let uvs, implicits, subst =
@@ -561,7 +577,6 @@ let apply_lemma (tm:term) : tac<unit> =
                                  (Print.term_to_string (U.mk_squash post))
                                  (Print.term_to_string goal.goal_ty)
     | Some g ->
-        let _ = Rel.discharge_guard goal.context g in
         let solution = S.mk_Tm_app tm uvs None goal.context.range in
         let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
              let hd, _ = U.head_and_args tm in
@@ -598,10 +613,12 @@ let apply_lemma (tm:term) : tac<unit> =
              | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
         in
         let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
+        bind (add_goal_from_guard goal.context guard goal.opts) (fun _ ->
+        bind (add_goal_from_guard goal.context g   goal.opts) (fun _ ->
         bind (add_irrelevant_goal goal.context pre goal.opts) (fun _ ->
         // Try to discharge the precondition, which is often trivial
         bind (trytac trivial) (fun _ ->
-        add_goals sub_goals)))))
+        add_goals sub_goals))))))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with

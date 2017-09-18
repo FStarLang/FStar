@@ -124,10 +124,9 @@
       ],
       0
     ],
-    [ "Protocol.entries", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Protocol.entries",
-      2,
+      1,
       2,
       1,
       [

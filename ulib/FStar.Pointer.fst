@@ -310,3 +310,39 @@ let modifies_trans_incl_r
   (ensures (modifies s23 h1 h3))
   [SMTPat (modifies s12 h1 h2); SMTPat (modifies s23 h2 h3)]
 = ()
+
+let modifies_fresh_frame_popped'
+  (h0 h1: HS.mem)
+  (s: loc)
+  (h2 h3: HS.mem)
+: Lemma
+  (requires (
+    HS.fresh_frame h0 h1 /\
+    modifies (loc_union (loc_regions (Set.singleton h1.HS.tip)) s) h1 h2 /\
+    h2.HS.tip == h1.HS.tip /\
+    HS.popped h2 h3
+  ))
+  (ensures (
+    modifies s h0 h3 /\
+    h3.HS.tip == h0.HS.tip
+  ))
+= modifies_fresh_frame_popped h0 h1 s h2 h3
+
+let buffer_includes_gsub_r_gen
+  (#t: typ)
+  (b0: buffer t)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_includes b0 b
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_includes b0 (gsub_buffer b i len)
+  ))
+  [SMTPat (buffer_includes b0 (gsub_buffer b i len))]
+= buffer_includes_gsub_r b i len;
+  buffer_includes_trans b0 b (gsub_buffer b i len)

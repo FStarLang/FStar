@@ -94,8 +94,15 @@ let fig3_d3
       (seq (assign x (const 7)) (assign z (const 8)))
       (assign z (const 8))
   ))
-= d_das x (const 7) (st_cons phi z ns_t) (ns_singl 3);
-  d_assign (st_cons phi x ns_t) z ns_t (ns_singl 8) (const 8) (const 8)
+= let c = assign x (const 7) in
+  let c' = assign z (const 8) in
+  let c'' = c' in
+  let phi_ = st_cons (st_cons phi x (ns_singl 3)) z ns_t in
+  let phi' = st_cons (st_cons phi x ns_t) z ns_t in
+  let phi'' = st_cons (st_cons phi x ns_t) z (ns_singl 8) in
+  d_das x (const 7) (st_cons phi z ns_t) (ns_singl 3);
+  d_assign (st_cons phi x ns_t) z ns_t (ns_singl 8) (const 8) (const 8);
+  d_su1' c c' c'' phi_ phi' phi'' // FIXME: WHY WHY WHY does the pattern on d_su1'' NOT trigger?
 
 let fig3
   (x: var)

@@ -1,0 +1,3 @@
+{"features": ["autocomplete", "compute", "describe-protocol", "describe-repl", "exit", "lookup", "lookup/documentation", "lookup/definition", "pop", "peek", "push", "search"], "kind": "protocol-info", "version": 2}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [], "status": "success"}
