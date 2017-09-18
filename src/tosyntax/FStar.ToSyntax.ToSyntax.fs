@@ -2094,11 +2094,11 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
 // JP: crappy formatting, use PPrint
 and mk_comment_attr (d: decl) =
   let text, kv = match d.doc with | None -> "", [] | Some fsdoc -> fsdoc in
-  let summary = match List.assoc "summary" kv with | None -> "" | Some s -> "\n" ^ s in
+  let summary = match List.assoc "summary" kv with | None -> "" | Some s -> s ^ "\n" in
   let pp =
-    match List.assoc "type" kv, d.d with
-    | Some _, Val _ ->
-        FStar.Pprint.pretty_string 0.95 80 (FStar.Parser.ToDocument.decl_to_document d) ^ "\n"
+    match List.assoc "type" kv with
+    | Some _ ->
+        "\n" ^ FStar.Pprint.pretty_string 0.95 80 (FStar.Parser.ToDocument.signature_to_document d)
     | _ ->
         ""
   in
@@ -2110,7 +2110,7 @@ and mk_comment_attr (d: decl) =
   ) kv
   in
   let other = if other <> [] then String.concat "\n" other ^ "\n" else "" in
-  let str = pp ^ summary ^ other ^ text in
+  let str = summary ^ pp ^ other ^ text in
   (* Building a fake term *)
   let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") Delta_constant None in
   let arg = U.exp_string str in
@@ -2351,10 +2351,33 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigattrs = [] } in
     env, [se]
 
- let desugar_decls env decls =
+let desugar_decls env decls =
+  let env, sigelts = 
     List.fold_left (fun (env, sigelts) d ->
-        let env, se = desugar_decl env d in
-        env, sigelts@se) (env, []) decls
+      let env, se = desugar_decl env d in
+      env, sigelts@se) (env, []) decls
+  in
+  (* Propagate the doc from a val to a let. *)
+  let rec forward acc = function
+    | se1 :: se2 :: sigelts ->
+        begin match se1.sigel, se2.sigel with
+        | Sig_declare_typ _, Sig_let _ ->
+            forward ({ se2 with sigattrs =
+              List.filter (function
+                | { n = Tm_app ({ n = Tm_fvar fv }, _) }
+                  when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
+                    true
+                | _ -> false
+              ) se1.sigattrs @ se2.sigattrs
+            } :: se1 :: acc) sigelts
+        | _ ->
+            forward (se1 :: acc) (se2 :: sigelts)
+        end
+    | sigelts ->
+        List.rev_append acc sigelts
+  in
+  env, forward [] sigelts
+
 
 let open_prims_all =
     [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;

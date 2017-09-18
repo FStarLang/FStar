@@ -456,21 +456,21 @@ and fsdoc (n, doc, kw) = lexer
  | "(*" -> fsdoc (n + 1, doc ^ "(*", kw) lexbuf
  | "*)" newline newline ->
    mknewline 2 lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ (L.lexeme lexbuf), kw) lexbuf
+   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
    else FSDOC_STANDALONE(doc, kw)
  | "*)" newline ->
    L.new_line lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ (L.lexeme lexbuf), kw) lexbuf
+   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
    else FSDOC(doc, kw)
  | anywhite* "@" ['a'-'z' 'A'-'Z']+ [':']? anywhite* ->
-     fsdoc_kw_arg (n, doc, kw, BatString.strip ~chars:" \r\n\t\v@:" (L.lexeme lexbuf), "") lexbuf
- | newline -> L.new_line lexbuf; fsdoc (n, doc^(L.lexeme lexbuf), kw) lexbuf
- | _ -> fsdoc(n, doc^(BatString.trim (L.lexeme lexbuf)), kw) lexbuf
+     fsdoc_kw_arg (n, doc, kw, BatString.strip ~chars:" \r\n\t@:" (L.lexeme lexbuf), "") lexbuf
+ | newline anywhite* -> L.new_line lexbuf; fsdoc (n, doc^"\n", kw) lexbuf
+ | _ -> fsdoc(n, doc^(L.lexeme lexbuf), kw) lexbuf
 
 and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
  | newline ->
    L.new_line lexbuf;
-   fsdoc (n, doc^(L.lexeme lexbuf), (kwn, kwa)::kw) lexbuf
+   fsdoc (n, doc, (kwn, kwa)::kw) lexbuf
  | _ -> fsdoc_kw_arg (n, doc, kw, kwn, kwa^(L.lexeme lexbuf)) lexbuf
 
 and cpp_filename = lexer
