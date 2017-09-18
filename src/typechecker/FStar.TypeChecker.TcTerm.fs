@@ -204,11 +204,25 @@ let print_expected_ty env = match Env.expected_typ env with
 (************************************************************************************************************)
 (* check the patterns in an SMT lemma to make sure all bound vars are mentiond *)
 (************************************************************************************************************)
+
+let rec get_pat_vars (pats:term) (acc:set<bv>) :set<bv> =
+  let pats = unmeta pats in
+  let head, args = head_and_args pats in
+  match (un_uinst head).n with
+  | Tm_fvar fv when fv_eq_lid fv Const.nil_lid      -> acc
+  | Tm_fvar fv when fv_eq_lid fv Const.smtpat_lid   -> get_pat_vars_args (List.tl args) acc
+  | Tm_fvar fv when fv_eq_lid fv Const.smtpatOr_lid -> get_pat_vars_args args acc
+  | Tm_fvar fv when fv_eq_lid fv Const.cons_lid     -> get_pat_vars_args args acc
+  | _                                               -> BU.set_union acc (Free.names pats)
+
+and get_pat_vars_args (args:args) (acc:set<bv>) :set<bv> =
+  List.fold_left (fun s arg -> get_pat_vars (fst arg) s) acc args
+
 let check_smt_pat env t bs c =
     if U.is_smt_lemma t //check patterns cover the bound vars
     then match c.n with
         | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
-            let pat_vars = Free.names (N.normalize [N.Beta] env pats) in
+            let pat_vars = get_pat_vars (N.normalize [N.Beta] env pats) (BU.new_set Syntax.order_bv) in
             begin match bs |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
                 | None -> ()
                 | Some (x,_) -> Errors.warn t.pos (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x))
