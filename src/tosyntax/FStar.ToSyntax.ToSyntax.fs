@@ -2091,12 +2091,38 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     let env = push_doc env mname d.doc in
     env, [se]
 
+// JP: crappy formatting, use PPrint
+and mk_comment_attr (d: decl) =
+  let text, kv = match d.doc with | None -> "", [] | Some fsdoc -> fsdoc in
+  let summary = match List.assoc "summary" kv with | None -> "" | Some s -> "\n" ^ s in
+  let pp =
+    match List.assoc "type" kv, d.d with
+    | Some _, Val _ ->
+        FStar.Pprint.pretty_string 0.95 80 (FStar.Parser.ToDocument.decl_to_document d) ^ "\n"
+    | _ ->
+        ""
+  in
+  let other = List.filter_map (fun (k, v) ->
+    if k <> "summary" && k <> "type" then
+      Some (k ^ ": " ^ v)
+    else
+      None
+  ) kv
+  in
+  let other = if other <> [] then String.concat "\n" other ^ "\n" else "" in
+  let str = pp ^ summary ^ other ^ text in
+  (* Building a fake term *)
+  let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") Delta_constant None in
+  let arg = U.exp_string str in
+  U.mk_app fv [ S.as_arg arg ]
+
 and desugar_decl env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
+  let attrs = mk_comment_attr d :: attrs in
   env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =

@@ -66,6 +66,9 @@ and flag =
   | CInline
   | Substitute
   | GCType
+  | Comments of list<fsdoc>
+
+and fsdoc = string
 
 and lifetime =
   | Eternal

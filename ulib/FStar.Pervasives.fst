@@ -268,3 +268,4 @@ type __internal_ocaml_attributes =
   | CInline
   | Substitute
   | Gc
+  | Comment of string
