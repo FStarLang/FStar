@@ -1323,13 +1323,13 @@ and desugar_comp r env t =
           | [req;ens;smtpat]
                 when is_requires req
                   && is_ensures ens
-                  && is_ensures smtpat ->
+                  && is_smt_pat smtpat ->
             unit_tm::args
 
           | [req;ens;dec;smtpat]
                 when is_requires req
                   && is_ensures ens
-                  && is_ensures smtpat
+                  && is_smt_pat smtpat
                   && is_decreases dec ->
             unit_tm::args
 
