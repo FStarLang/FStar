@@ -19,7 +19,7 @@ type step =
   | Reify
   | CompressUvars
   | NoFullNorm
-  | CheckNoUvars
+  | CheckNoUvars[@@deriving show]
 let uu___is_Beta: step -> Prims.bool =
   fun projectee  -> match projectee with | Beta  -> true | uu____19 -> false
 let uu___is_Iota: step -> Prims.bool =
@@ -86,7 +86,7 @@ let uu___is_NoFullNorm: step -> Prims.bool =
 let uu___is_CheckNoUvars: step -> Prims.bool =
   fun projectee  ->
     match projectee with | CheckNoUvars  -> true | uu____149 -> false
-type steps = step Prims.list
+type steps = step Prims.list[@@deriving show]
 type primitive_step =
   {
   name: FStar_Ident.lid;
@@ -95,7 +95,8 @@ type primitive_step =
   interpretation:
     FStar_Range.range ->
       FStar_Syntax_Syntax.args ->
-        FStar_Syntax_Syntax.term FStar_Pervasives_Native.option;}
+        FStar_Syntax_Syntax.term FStar_Pervasives_Native.option;}[@@deriving
+                                                                   show]
 let __proj__Mkprimitive_step__item__name: primitive_step -> FStar_Ident.lid =
   fun projectee  ->
     match projectee with
@@ -135,7 +136,7 @@ type closure =
                                                  FStar_Syntax_Syntax.memo,
   Prims.bool) FStar_Pervasives_Native.tuple4
   | Univ of FStar_Syntax_Syntax.universe
-  | Dummy
+  | Dummy[@@deriving show]
 let uu___is_Clos: closure -> Prims.bool =
   fun projectee  ->
     match projectee with | Clos _0 -> true | uu____303 -> false
@@ -155,7 +156,7 @@ let __proj__Univ__item___0: closure -> FStar_Syntax_Syntax.universe =
 let uu___is_Dummy: closure -> Prims.bool =
   fun projectee  ->
     match projectee with | Dummy  -> true | uu____384 -> false
-type env = closure Prims.list
+type env = closure Prims.list[@@deriving show]
 let closure_to_string: closure -> Prims.string =
   fun uu___147_390  ->
     match uu___147_390 with
@@ -168,7 +169,7 @@ type cfg =
   steps: steps;
   tcenv: FStar_TypeChecker_Env.env;
   delta_level: FStar_TypeChecker_Env.delta_level Prims.list;
-  primitive_steps: primitive_step Prims.list;}
+  primitive_steps: primitive_step Prims.list;}[@@deriving show]
 let __proj__Mkcfg__item__steps: cfg -> steps =
   fun projectee  ->
     match projectee with
@@ -198,8 +199,8 @@ let __proj__Mkcfg__item__primitive_steps: cfg -> primitive_step Prims.list =
 type branches =
   (FStar_Syntax_Syntax.pat,FStar_Syntax_Syntax.term
                              FStar_Pervasives_Native.option,FStar_Syntax_Syntax.term)
-    FStar_Pervasives_Native.tuple3 Prims.list
-type subst_t = FStar_Syntax_Syntax.subst_elt Prims.list
+    FStar_Pervasives_Native.tuple3 Prims.list[@@deriving show]
+type subst_t = FStar_Syntax_Syntax.subst_elt Prims.list[@@deriving show]
 type stack_elt =
   | Arg of (closure,FStar_Syntax_Syntax.aqual,FStar_Range.range)
   FStar_Pervasives_Native.tuple3
@@ -225,7 +226,7 @@ type stack_elt =
                                      Prims.list)
   FStar_Pervasives_Native.tuple3
   | Debug of (FStar_Syntax_Syntax.term,FStar_Util.time)
-  FStar_Pervasives_Native.tuple2
+  FStar_Pervasives_Native.tuple2[@@deriving show]
 let uu___is_Arg: stack_elt -> Prims.bool =
   fun projectee  ->
     match projectee with | Arg _0 -> true | uu____636 -> false
@@ -306,7 +307,7 @@ let __proj__Debug__item___0:
   stack_elt ->
     (FStar_Syntax_Syntax.term,FStar_Util.time) FStar_Pervasives_Native.tuple2
   = fun projectee  -> match projectee with | Debug _0 -> _0
-type stack = stack_elt Prims.list
+type stack = stack_elt Prims.list[@@deriving show]
 let mk:
   'Auu____1066 .
     'Auu____1066 ->

@@ -533,7 +533,7 @@ let push_context:
           let env1 = FStar_TypeChecker_Env.push env msg in (dsenv1, env1)
 type uenv =
   (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
-    FStar_Pervasives_Native.tuple2
+    FStar_Pervasives_Native.tuple2[@@deriving show]
 let tc_one_file_from_remaining:
   Prims.string Prims.list ->
     uenv ->

@@ -66,7 +66,7 @@ and flag =
   | CInline
   | Substitute
   | GCType
-  | Comments of list<fsdoc>
+  | Comment of string
 
 and fsdoc = string
 
@@ -344,6 +344,7 @@ and translate_flags flags =
     | Syntax.CInline -> Some CInline
     | Syntax.Substitute -> Some Substitute
     | Syntax.GCType -> Some GCType
+    | Syntax.Comment s -> Some (Comment s)
     | _ -> None // is this all of them?
   ) flags
 

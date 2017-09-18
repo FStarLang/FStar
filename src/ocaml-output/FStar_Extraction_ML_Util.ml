@@ -216,7 +216,8 @@ let mk_ty_fun:
                  (t0, FStar_Extraction_ML_Syntax.E_PURE, t))
 type unfold_t =
   FStar_Extraction_ML_Syntax.mlty ->
-    FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option
+    FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option[@@deriving
+                                                                    show]
 let rec type_leq_c:
   unfold_t ->
     FStar_Extraction_ML_Syntax.mlexpr FStar_Pervasives_Native.option ->
@@ -630,7 +631,7 @@ let not_implemented_warning: Prims.string -> Prims.unit =
     FStar_All.pipe_right uu____1439 FStar_Util.print_warning
 type emb_decl =
   | Embed
-  | Unembed
+  | Unembed[@@deriving show]
 let uu___is_Embed: emb_decl -> Prims.bool =
   fun projectee  ->
     match projectee with | Embed  -> true | uu____1444 -> false

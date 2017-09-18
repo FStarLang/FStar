@@ -1,5 +1,5 @@
 open Prims
-type name = FStar_Syntax_Syntax.bv
+type name = FStar_Syntax_Syntax.bv[@@deriving show]
 let fstar_tactics_lid': Prims.string Prims.list -> FStar_Ident.lid =
   fun s  -> FStar_Parser_Const.fstar_tactics_lid' s
 let lid_as_tm: FStar_Ident.lident -> FStar_Syntax_Syntax.term =

@@ -150,7 +150,7 @@ type varops_t =
   fresh: Prims.string -> Prims.string;
   string_const: Prims.string -> FStar_SMTEncoding_Term.term;
   next_id: Prims.unit -> Prims.int;
-  mk_unique: Prims.string -> Prims.string;}
+  mk_unique: Prims.string -> Prims.string;}[@@deriving show]
 let __proj__Mkvarops_t__item__push: varops_t -> Prims.unit -> Prims.unit =
   fun projectee  ->
     match projectee with
@@ -377,7 +377,7 @@ type binding =
   (FStar_Ident.lident,Prims.string,FStar_SMTEncoding_Term.term
                                      FStar_Pervasives_Native.option,FStar_SMTEncoding_Term.term
                                                                     FStar_Pervasives_Native.option)
-  FStar_Pervasives_Native.tuple4
+  FStar_Pervasives_Native.tuple4[@@deriving show]
 let uu___is_Binding_var: binding -> Prims.bool =
   fun projectee  ->
     match projectee with | Binding_var _0 -> true | uu____2194 -> false
@@ -407,7 +407,7 @@ type cache_entry =
   cache_symbol_name: Prims.string;
   cache_symbol_arg_sorts: FStar_SMTEncoding_Term.sort Prims.list;
   cache_symbol_decls: FStar_SMTEncoding_Term.decl Prims.list;
-  cache_symbol_assumption_names: Prims.string Prims.list;}
+  cache_symbol_assumption_names: Prims.string Prims.list;}[@@deriving show]
 let __proj__Mkcache_entry__item__cache_symbol_name:
   cache_entry -> Prims.string =
   fun projectee  ->
@@ -458,7 +458,7 @@ type env_t =
   nolabels: Prims.bool;
   use_zfuel_name: Prims.bool;
   encode_non_total_function_typ: Prims.bool;
-  current_module_name: Prims.string;}
+  current_module_name: Prims.string;}[@@deriving show]
 let __proj__Mkenv_t__item__bindings: env_t -> binding Prims.list =
   fun projectee  ->
     match projectee with
@@ -1212,8 +1212,8 @@ let is_an_eta_expansion:
         check_partial_applications body (FStar_List.rev vars)
 type label =
   (FStar_SMTEncoding_Term.fv,Prims.string,FStar_Range.range)
-    FStar_Pervasives_Native.tuple3
-type labels = label Prims.list
+    FStar_Pervasives_Native.tuple3[@@deriving show]
+type labels = label Prims.list[@@deriving show]
 type pattern =
   {
   pat_vars:
@@ -1227,7 +1227,7 @@ type pattern =
   projections:
     FStar_SMTEncoding_Term.term ->
       (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.term)
-        FStar_Pervasives_Native.tuple2 Prims.list;}
+        FStar_Pervasives_Native.tuple2 Prims.list;}[@@deriving show]
 let __proj__Mkpattern__item__pat_vars:
   pattern ->
     (FStar_Syntax_Syntax.bv,FStar_SMTEncoding_Term.fv)
@@ -3877,7 +3877,7 @@ type prims_t =
       Prims.string ->
         (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.decl Prims.list)
           FStar_Pervasives_Native.tuple2;
-  is: FStar_Ident.lident -> Prims.bool;}
+  is: FStar_Ident.lident -> Prims.bool;}[@@deriving show]
 let __proj__Mkprims_t__item__mk:
   prims_t ->
     FStar_Ident.lident ->
