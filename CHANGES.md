@@ -91,3 +91,7 @@ Guidelines for the changelog:
   used to take a `list fv`) has been replaced with `delta_only`, which takes a
   list of fully-qualfied identifiers (eg, `FStar.Map.map`). The other reduction
   steps are nullary and have simply been renamed.
+
+* `clear`, which removed the innermost binder from the context, now takes a binder as
+   an argument an will attempt to remove it from any position (given that dependency allows it).
+   The old behaviour can be recovered with `clear_top` instead.
