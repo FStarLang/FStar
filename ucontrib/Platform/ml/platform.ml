@@ -37,11 +37,11 @@ module Bytes = struct
     with _ -> failwith "cbyte: called on empty string"
 
   let cbyte2 (b:bytes) =
-    try (String.get b 0, String.get b 1)
+    try (int_of_char (String.get b 0), int_of_char (String.get b 1))
     with _ -> failwith "cbyte2: need at least length 2"
 
   let index (b:bytes) i =
-    try String.get b (Z.to_int i)
+    try int_of_char (String.get b (Z.to_int i))
     with _ -> failwith "index: called out of bound"
 
   let get_cbytes (b:bytes) = b

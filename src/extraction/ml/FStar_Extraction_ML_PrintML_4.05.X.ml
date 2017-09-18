@@ -96,12 +96,13 @@ let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): Parsetree.constant =
   match c with
-  | MLC_Int (v, _) ->
+  | MLC_Int (v, None) ->
      let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
      Const.integer i
   | MLC_Float v -> failwith "Case not handled"
   | MLC_Char v -> Const.int v
   | MLC_String v -> Const.string v
+  | MLC_Int (v, Some _) -> Const.int (int_of_string v) (* this is for pattern matching on machine integers *)
   | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
 
 let build_constant_expr (c: mlconstant): expression =

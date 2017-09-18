@@ -789,7 +789,16 @@ and tc_constant r (c:sconst) : typ =
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
       | Const_int (_, None) -> t_int
-      | Const_int (_, Some _) -> failwith "machine integers should be desugared"
+      | Const_int (_, Some msize) ->
+        tconst (match msize with
+          | Signed, Int8 -> Const.int8_lid
+          | Signed, Int16 -> Const.int16_lid
+          | Signed, Int32 -> Const.int32_lid
+          | Signed, Int64 -> Const.int64_lid
+          | Unsigned, Int8 -> Const.uint8_lid
+          | Unsigned, Int16 -> Const.uint16_lid
+          | Unsigned, Int32 -> Const.uint32_lid
+          | Unsigned, Int64 -> Const.uint64_lid)
       | Const_string _ -> t_string
       | Const_float _ -> t_float
       | Const_char _ -> t_char
