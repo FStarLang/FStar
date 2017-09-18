@@ -1298,8 +1298,10 @@ and desugar_comp r env t =
                   && is_ensures ens ->
             [unit_tm;req;ens;nil_pat]
 
-          | [ens;smtpat]
-                when is_ensures ens
+          | [ens;smtpat] //either Lemma p [SMTPat ...]; or Lemma (ensures p) [SMTPat ...]
+                when not (is_requires ens)
+                  && not (is_smt_pat ens)
+                  && not (is_decreases ens)
                   && is_smt_pat smtpat ->
             [unit_tm;req_true;ens;smtpat]
 
@@ -1337,6 +1339,7 @@ and desugar_comp r env t =
              let expected_one_of = ["Lemma post";
                                     "Lemma (ensures post)";
                                     "Lemma (requires pre) (ensures post)";
+                                    "Lemma post [SMTPat ...]";
                                     "Lemma (ensures post) [SMTPat ...]";
                                     "Lemma (ensures post) (decreases d)";
                                     "Lemma (ensures post) (decreases d) [SMTPat ...]";
