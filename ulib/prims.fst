@@ -334,7 +334,7 @@ type norm_step =
     | UnfoldOnly : list string -> norm_step // each string is a fully qualified name like `A.M.f`
 
 // Helpers, so we don't expose the actual inductive
-let simpl   : norm_step = Simpl
+let simplify : norm_step = Simpl
 let whnf    : norm_step = WHNF
 let primops : norm_step = Primops
 let delta   : norm_step = Delta

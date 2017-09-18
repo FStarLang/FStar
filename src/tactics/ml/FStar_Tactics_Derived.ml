@@ -119,7 +119,7 @@ let rec repeatseq:
               (repeatseq t)))
         (fun uu___51_678  -> FStar_Tactics_Effect.return ()) ()
 let simpl: Prims.unit FStar_Tactics_Effect.tactic =
-  FStar_Tactics_Builtins.norm [Prims.simpl; Prims.primops]
+  FStar_Tactics_Builtins.norm [Prims.simplify; Prims.primops]
 let whnf: Prims.unit FStar_Tactics_Effect.tactic =
   FStar_Tactics_Builtins.norm [Prims.whnf; Prims.primops]
 let intros:
