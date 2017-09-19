@@ -3200,7 +3200,11 @@ let rec norm:
                         ((Let (env, bs, lb1, (t1.FStar_Syntax_Syntax.pos)))
                         :: stack1) body1)
            | FStar_Syntax_Syntax.Tm_let ((true ,lbs),body) when
-               FStar_List.contains CompressUvars cfg.steps ->
+               (FStar_List.contains CompressUvars cfg.steps) ||
+                 ((FStar_List.contains (Exclude Zeta) cfg.steps) &&
+                    (FStar_List.contains PureSubtermsWithinComputations
+                       cfg.steps))
+               ->
                let uu____13034 = FStar_Syntax_Subst.open_let_rec lbs body in
                (match uu____13034 with
                 | (lbs1,body1) ->
