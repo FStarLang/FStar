@@ -909,12 +909,18 @@ let rephrase_dependency_error issue =
                        issue.issue_message }
 
 let run_push_without_deps st query =
+  let set_nosynth_flag st flag =
+    { st with repl_env = { st.repl_env with nosynth = flag } } in
+
   let { push_code = text; push_line = line; push_column = column;
         push_peek_only = peek_only; push_kind = push_kind } = query in
 
-  TcEnv.toggle_id_info st.repl_env true;
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
+
+  TcEnv.toggle_id_info st.repl_env true;
+  let st = set_nosynth_flag st peek_only in
   let success, st = run_repl_transaction st push_kind peek_only (PushFragment frag) in
+  let st = set_nosynth_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
   let json_errors = JsonList (collect_errors () |> List.map json_of_issue) in
