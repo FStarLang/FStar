@@ -1,11 +1,7 @@
 module FStar.Char
 
-let char_code = n:nat{n <= 255}
-
-private type char' =
-  | Char : char_code -> char'
-
-type char = char'
+type char_code = n:nat{n < pow2 32}
+type char = FStar.UInt32.t
 
 val lowercase: char -> Tot char
 val uppercase: char -> Tot char

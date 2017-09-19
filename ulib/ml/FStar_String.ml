@@ -1,4 +1,4 @@
-let make i = String.make (Z.to_int i)
+let make i c = BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)
 let strcat s t = s ^ t
 let split seps s =
   let rec repeat_split acc = function

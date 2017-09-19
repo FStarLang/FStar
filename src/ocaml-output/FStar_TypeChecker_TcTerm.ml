@@ -2574,7 +2574,7 @@ and tc_constant:
       | FStar_Const.Const_bool uu____5974 -> FStar_Syntax_Util.t_bool
       | FStar_Const.Const_int (uu____5975,FStar_Pervasives_Native.None ) ->
           FStar_Syntax_Syntax.t_int
-      | FStar_Const.Const_int (uu____5878,FStar_Pervasives_Native.Some msize)
+      | FStar_Const.Const_int (uu____5986,FStar_Pervasives_Native.Some msize)
           ->
           FStar_Syntax_Syntax.tconst
             (match msize with
@@ -2594,9 +2594,9 @@ and tc_constant:
                  FStar_Parser_Const.uint32_lid
              | (FStar_Const.Unsigned ,FStar_Const.Int64 ) ->
                  FStar_Parser_Const.uint64_lid)
-      | FStar_Const.Const_string uu____5894 -> FStar_Syntax_Syntax.t_string
-      | FStar_Const.Const_float uu____5899 -> FStar_Syntax_Syntax.t_float
-      | FStar_Const.Const_char uu____5900 -> FStar_Syntax_Syntax.t_char
+      | FStar_Const.Const_string uu____6002 -> FStar_Syntax_Syntax.t_string
+      | FStar_Const.Const_float uu____6007 -> FStar_Syntax_Syntax.t_float
+      | FStar_Const.Const_char uu____6008 -> FStar_Syntax_Syntax.t_char
       | FStar_Const.Const_effect  -> FStar_Syntax_Util.ktype0
       | FStar_Const.Const_range uu____6009 -> FStar_Syntax_Syntax.t_range
       | uu____6010 ->
