@@ -258,7 +258,7 @@ let rec build_expr ?annot (e: mlexpr): expression =
   | None -> e'
   | Some ts ->
           (* Remove the leading tick *)
-          let vars = List.map (fun (s, _) -> String.sub s 1 (String.length s - 1)) (fst ts) in
+          let vars = List.map (fun s -> String.sub s 1 (String.length s - 1)) (fst ts) in
           let ty = snd ts in
           Exp.constraint_ e' (build_core_type ~annots:vars ty)
 
