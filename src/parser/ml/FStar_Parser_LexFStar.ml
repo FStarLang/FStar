@@ -35,6 +35,7 @@ let unescape (a:int array) : int =
   | c -> c
 
 let keywords = Hashtbl.create 0
+let constructors = Hashtbl.create 0
 let operators = Hashtbl.create 0
 
 let () =
@@ -55,7 +56,6 @@ let () =
   Hashtbl.add keywords "exception"     EXCEPTION   ;
   Hashtbl.add keywords "exists"        EXISTS      ;
   Hashtbl.add keywords "false"         FALSE       ;
-  Hashtbl.add keywords "False"         L_FALSE     ;
   Hashtbl.add keywords "forall"        FORALL      ;
   Hashtbl.add keywords "fun"           FUN         ;
   Hashtbl.add keywords "λ"             FUN         ;
@@ -87,7 +87,6 @@ let () =
   Hashtbl.add keywords "then"          THEN        ;
   Hashtbl.add keywords "total"         TOTAL       ;
   Hashtbl.add keywords "true"          TRUE        ;
-  Hashtbl.add keywords "True"          L_TRUE      ;
   Hashtbl.add keywords "try"           TRY         ;
   Hashtbl.add keywords "type"          TYPE        ;
   Hashtbl.add keywords "unfold"        UNFOLD      ;
@@ -96,6 +95,32 @@ let () =
   Hashtbl.add keywords "when"          WHEN        ;
   Hashtbl.add keywords "with"          WITH        ;
   Hashtbl.add keywords "_"             UNDERSCORE  ;
+  Hashtbl.add keywords "α"             (TVAR "a")  ;
+  Hashtbl.add keywords "β"             (TVAR "b")  ;
+  Hashtbl.add keywords "γ"             (TVAR "c")  ;
+  Hashtbl.add keywords "δ"             (TVAR "d")  ;
+  Hashtbl.add keywords "ε"             (TVAR "e")  ;
+  Hashtbl.add keywords "φ"             (TVAR "f")  ;
+  Hashtbl.add keywords "χ"             (TVAR "g")  ;
+  Hashtbl.add keywords "η"             (TVAR "h")  ;
+  Hashtbl.add keywords "ι"             (TVAR "i")  ;
+  Hashtbl.add keywords "κ"             (TVAR "k")  ;
+  Hashtbl.add keywords "μ"             (TVAR "m")  ;
+  Hashtbl.add keywords "ν"             (TVAR "n")  ;
+  Hashtbl.add keywords "π"             (TVAR "p")  ;
+  Hashtbl.add keywords "θ"             (TVAR "q")  ;
+  Hashtbl.add keywords "ρ"             (TVAR "r")  ;
+  Hashtbl.add keywords "σ"             (TVAR "s")  ;
+  Hashtbl.add keywords "τ"             (TVAR "t")  ;
+  Hashtbl.add keywords "ψ"             (TVAR "u")  ;
+  Hashtbl.add keywords "ω"             (TVAR "w")  ;
+  Hashtbl.add keywords "ξ"             (TVAR "x")  ;
+  Hashtbl.add keywords "ζ"             (TVAR "z")  ;
+  Hashtbl.add constructors "ℕ"         (IDENT "nat");
+  Hashtbl.add constructors "ℤ"         (IDENT "int");
+  Hashtbl.add constructors "𝔹"         (IDENT "bool");
+  Hashtbl.add constructors "True"      L_TRUE      ;
+  Hashtbl.add constructors "False"     L_FALSE     ;
   let l =
     ["~", TILDE "~"; "-", MINUS; "/\\", CONJUNCTION; "\\/", DISJUNCTION;
      "<:", SUBTYPE; "<@", SUBKIND; "(|", LENS_PAREN_LEFT; "|)", LENS_PAREN_RIGHT;
@@ -110,8 +135,15 @@ let () =
      "{", LBRACE; "|", BAR; "}", RBRACE; "$", DOLLAR;
      (* New Unicode equivalents *)
      "∀", FORALL; "∃", EXISTS; "⊤", L_TRUE; "⊥", L_FALSE;
-     "⇒", IMPLIES; "⇔", IFF; "→", RARROW; "←", LARROW;
-     "∧", CONJUNCTION; "∨", DISJUNCTION] in
+     "⟹", IMPLIES; "⟺", IFF; "→", RARROW; "←", LARROW;
+     "⟵", LONG_LEFT_ARROW; "↝", SQUIGGLY_RARROW; "≔", COLON_EQUALS;
+     "∧", CONJUNCTION; "∨", DISJUNCTION; "¬", TILDE "~";
+     "⸬", COLON_COLON; "▹", PIPE_RIGHT; "÷", OPINFIX3 "÷";
+     "‖", OPINFIX0a "||"; "×", IDENT "op_Multiply"; "∗", OPINFIX3 "*";
+     "⇒", OPINFIX0c "=>"; "≥", OPINFIX0c ">="; "≤", OPINFIX0c "<=";
+     "≠", OPINFIX0c "<>"; "≪", OPINFIX0c "<<"; "◃", OPINFIX0c "<|";
+     "±", OPPREFIX "±"; "∁", OPPREFIX "∁"; "∂", OPPREFIX "∂"; "√", OPPREFIX "√";
+    ] in
    List.iter (fun (k,v) -> Hashtbl.add operators k v) l
 
 type delimiters = { angle:int ref; paren:int ref; }
@@ -280,10 +312,7 @@ let regexp op_token =
   "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" |
   "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[" | ".(" | "$" |
   "{:pattern" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" |
-  "!{" | "[@" | "[" | "[|" | "|>" | "]" | "|]" | "{" | "|" | "}" |
-  [0x2200] | [0x2203] | [0x22A4] | [0x22A5] | (* FORALL EXISTS TRUE FALSE *)
-  [0x2192] | [0x2194] | [0x21D2] | [0x21D4] | (* LARROW RARROW IMPLIES IFF *)
-  [0x2227] | [0x2228] (* CONJUNCTION DISJUNCTION LEQ GEQ *)
+  "!{" | "[@" | "[" | "[|" | "|>" | "]" | "|]" | "{" | "|" | "}"
 
 (* -------------------------------------------------------------------- *)
 let regexp xinteger =
@@ -301,26 +330,26 @@ let regexp int32 = any_integer 'l'
 let regexp uint32 = any_integer unsigned 'l'
 let regexp int64 = any_integer 'L'
 let regexp uint64 = any_integer unsigned 'L'
-let regexp char8 = any_integer 'z'
+let regexp charint = any_integer 'z'
 
 let regexp floatp     = digit+ '.' digit*
 let regexp floate     = digit+ ('.' digit* )? ["eE"] ["+-"]? digit+
 let regexp ieee64     = floatp | floate
 let regexp xieee64    = xinteger 'L' 'F'
 
-let regexp op_prefix  = ["!~?" 0x00ac 0x00B1 0x2201 0x2202 0x221A] (* NOT PLUSMINUS COMPLEMENT DIFF SQRT *)
+let regexp op_prefix  = ["!~?"]
 let regexp op_infix0a = ["|"] (* left *)
 let regexp op_infix0b = ["&"] (* left *)
-let regexp op_infix0c = ["=<>" 0x2264 0x2265] (* left *)
-let regexp op_infix0c_nogt = ["=<" 0x2264 0x2265] (* left *)
+let regexp op_infix0c = ["=<>"] (* left *)
+let regexp op_infix0c_nogt = ["=<"] (* left *)
 let regexp op_infix0d = ["$"] (* left *)
 
 let regexp op_infix0  = op_infix0a | op_infix0b | op_infix0c | op_infix0d
 let regexp op_infix1  = ["@^"] (* right *)
-let regexp op_infix2  = ["+-" 0x2212 0x2214 0x2295 0x2296 0x229E 0x229F 0x222A] (* left *)
-let regexp op_infix3  = ["*/%" 0x00D7 0x00F7 0x2215-0x2219 0x2229] (* left *)
+let regexp op_infix2  = ["+-"] (* left *)
+let regexp op_infix3  = ["*/%"] (* left *)
 let regexp symbolchar = op_prefix | op_infix0 | op_infix1 | op_infix2 | op_infix3 | [".:"]
-let regexp usymbol    = u_math_nonascii
+let regexp uoperator  = u_math_nonascii
 
 (* -------------------------------------------------------------------- *)
 let regexp escape_char = '\\' (["\\\"'bfntrv0"] | "x" hex hex | "u" hex hex hex hex)
@@ -353,20 +382,18 @@ let rec token = lexer
  (* Must appear before tvar to avoid 'a <-> 'a' conflict *)
  | ('\'' char '\'') -> CHAR (unescape (utrim_both lexbuf 1 1))
  | ('\'' char '\'' 'B') -> CHAR (unescape (utrim_both lexbuf 1 2))
-
  | '`' -> BACKTICK
+
  | ident -> let id = L.lexeme lexbuf in
    Hashtbl.find_option keywords id |> Option.default (IDENT id)
+ | constructor -> let id = L.lexeme lexbuf in
+   Hashtbl.find_option constructors id |> Option.default (NAME id)
 
- | constructor -> NAME (L.lexeme lexbuf)
  | tvar -> TVAR (L.lexeme lexbuf)
  | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf), false)
  (* TODO: check bounds!! *)
  | uint8 -> UINT8 (clean_number (L.lexeme lexbuf))
- | char8 ->
-   let c = int_of_string (clean_number (L.lexeme lexbuf)) in
-   if c < 0 || c > 255 then failwith "Out-of-range character literal"
-   else CHAR (c)
+ | charint -> CHAR (int_of_string (clean_number (L.lexeme lexbuf)))
  | int8 -> INT8 (clean_number (L.lexeme lexbuf), false)
  | uint16 -> UINT16 (clean_number (L.lexeme lexbuf))
  | int16 -> INT16 (clean_number (L.lexeme lexbuf), false)
@@ -407,7 +434,10 @@ let rec token = lexer
  | op_infix2  symbolchar* -> OPINFIX2 (L.lexeme lexbuf)
  | op_infix3  symbolchar* -> OPINFIX3 (L.lexeme lexbuf)
  | "**"       symbolchar* -> OPINFIX4 (L.lexeme lexbuf)
- | usymbol -> OPINFIX4 (L.lexeme lexbuf)
+
+ (* Unicode Operators *)
+ | uoperator -> let id = L.lexeme lexbuf in
+   Hashtbl.find_option operators id |> Option.default (OPINFIX4 id)
 
  | eof -> EOF
  | _ -> failwith "unexpected char"
