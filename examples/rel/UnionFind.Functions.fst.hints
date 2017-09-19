@@ -691,18 +691,6 @@
       0
     ],
     [
-      "UnionFind.Functions.well_formed_decreases_lemma",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "haseqUnionFind.Forest_Tm_refine_8b033739c1a35292bba71f91eb73f206"
-      ],
-      0
-    ],
-    [
       "UnionFind.Functions.merge",
       1,
       2,

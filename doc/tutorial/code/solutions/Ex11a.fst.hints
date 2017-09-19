@@ -1941,17 +1941,6 @@
       0
     ],
     [
-      "Ex11a.lemma_frame_robot_inv_and_flying",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid",
-        "equation_Ex11a.rid"
-      ],
-      0
-    ],
-    [
       "Ex11a.fly_robot_army",
       1,
       2,

@@ -647,14 +647,6 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
-    ],
-    [
-      "Loops.equiv_sum_up_dn",
-      3,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
     ]
   ]
 ]
