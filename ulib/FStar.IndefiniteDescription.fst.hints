@@ -80,14 +80,6 @@
       0
     ],
     [
-      "FStar.IndefiniteDescription.aux",
-      10,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
-    ],
-    [
       "FStar.IndefiniteDescription.strong_excluded_middle",
       1,
       2,
