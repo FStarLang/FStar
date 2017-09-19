@@ -650,8 +650,7 @@ let current_fstar_options filter =
 let trim_option_name opt_name =
   let opt_prefix = "--" in
   if Util.starts_with opt_name opt_prefix then
-    let __len = String.length opt_prefix in
-    (opt_prefix, Util.substring_from opt_name __len)
+    (opt_prefix, Util.substring_from opt_name (String.length opt_prefix))
   else
     ("", opt_name)
 
@@ -966,7 +965,7 @@ let run_option_autocomplete st search_term is_reset =
     let matcher opt = Util.starts_with opt.opt_name trimmed_name in
     let options = current_fstar_options matcher in
 
-    let match_len = String.length "--" + String.length search_term in
+    let match_len = String.length search_term in
     let collect_candidates = candidates_of_fstar_option match_len is_reset in
     let results = List.concatMap collect_candidates options in
 
