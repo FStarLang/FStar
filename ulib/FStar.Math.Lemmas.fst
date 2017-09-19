@@ -301,6 +301,7 @@ val lemma_mod_spec2: a:nat -> p:pos -> Lemma
 let lemma_mod_spec2 a p =
   lemma_mod_spec a p
 
+#set-options "--max_fuel 2 --max_ifuel 2"
 private let lemma_mod_plus_injective_1 (p:pos) (a:nat) (b:nat) (c:nat) : Lemma
   (requires (b < p /\ c < p /\ (a + b) % p = (a + c) % p))
   (ensures  (
@@ -336,7 +337,7 @@ let lemma_mod_plus_distr_l a b p =
   lemma_mod_spec2 a p;
   lemma_mod_plus (a % p + b) q p
 
-#reset-options "--z3rlimit 90 --initial_fuel 0 --max_fuel 0"
+#reset-options "--z3rlimit 90 --initial_fuel 0 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
