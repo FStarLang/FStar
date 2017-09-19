@@ -46,3 +46,11 @@ let rec compare_list f l1 l2 =
     | [], _ -> Lt
     | _, [] -> Gt
     | x::xs, y::ys -> lex (f x y) (fun () -> compare_list f xs ys)
+
+type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
+  (forall a. f a a) (* reflexive *)
+  /\ (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
+  /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)   (* transitivity  *)
+  /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                 (* totality      *)
+
+type cmp (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}

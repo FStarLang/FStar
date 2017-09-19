@@ -1,11 +1,6 @@
 module FStar.OrdSet
 
-type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
-   (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
- /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)   (* transitivity  *)
- /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                 (* totality      *)
-
-type cmp (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
+open FStar.Order
 
 val sorted: #a:eqtype -> f:cmp a -> list a -> Tot bool
 let rec sorted #a f l = match l with
@@ -101,6 +96,58 @@ let rec subset (#a:eqtype) #f s1 s2 = match s1, s2 with
   | _, _           -> false
 
 let singleton (#a:eqtype) #f x = [x]
+
+private
+let rec ordset_cmp_aux (#a:eqtype) (f:cmp a) (s1 s2:ordset a f) =
+  match s1, s2 with
+  | [], _ -> true
+  | _, [] -> false
+  | hd::tl, hd'::tl' ->
+    if hd = hd' then ordset_cmp_aux f tl tl' else f hd hd'
+
+private
+let rec ordset_cmp_aux_reflexive (#a:eqtype) (f:cmp a) s : Lemma (ordset_cmp_aux f s s) =
+  match s with
+  | [] -> ()
+  | _ :: tl -> ordset_cmp_aux_reflexive f tl
+
+private
+let rec ordset_cmp_aux_antisymmetry (#a:eqtype) (f:cmp a) s1 s2
+  : Lemma (requires (ordset_cmp_aux f s1 s2 /\ ordset_cmp_aux f s2 s1))
+    (ensures (s1 = s2))
+= match s1 with
+  | [] -> assert (Nil? s2)
+  | _ :: tl -> ordset_cmp_aux_antisymmetry f tl (Cons?.tl s2)
+
+private
+let rec ordset_cmp_aux_transitivity (#a:eqtype) (f:cmp a) s1 s2 s3
+  : Lemma (requires (ordset_cmp_aux f s1 s2 /\ ordset_cmp_aux f s2 s3))
+    (ensures (ordset_cmp_aux f s1 s3))
+= match s1 with
+  | [] -> ()
+  | hd1 :: tl1 ->
+    let hd2 :: tl2 = s2 in
+    let hd3 :: tl3 = s3 in
+    if hd1 = hd2 && hd2 = hd3 then
+      ordset_cmp_aux_transitivity f tl1 tl2 tl3
+    else assert (f hd1 hd3)
+
+private
+let rec ordset_cmp_aux_total (#a:eqtype) (f:cmp a) s1 s2 : Lemma (ordset_cmp_aux f s1 s2 \/ ordset_cmp_aux f s2 s1)
+= match s1, s2 with
+  | [], _ -> ()
+  | _, [] -> assert (ordset_cmp_aux f s2 s1)
+  | hd1::tl1, hd2::tl2 -> if hd1 = hd2 then ordset_cmp_aux_total f tl1 tl2 else ()
+
+let ordset_cmp (#a:eqtype) (f:cmp a) : cmp (ordset a f) =
+  let open FStar.Classical in
+  forall_intro (ordset_cmp_aux_reflexive f) ;
+  forall_intro_2 (fun s1 -> move_requires (ordset_cmp_aux_antisymmetry f s1));
+  forall_intro_3 (fun s1 s2 -> move_requires (ordset_cmp_aux_transitivity f s1 s2));
+  forall_intro_2 (ordset_cmp_aux_total f) ;
+  ordset_cmp_aux f
+
+
 
 type equal (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
   (forall x. mem #_ #f x s1 = mem #_ #f x s2)
@@ -401,3 +448,11 @@ let lemma_intersect_union_empty (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordse
          (ensures  (intersect (union s1 s2) s3 == empty))
    [SMTPat (intersect (union s1 s2) s3)]
   = admit ()
+
+
+(* TODO : place to the right place *)
+let add_elt (#a:eqtype) #f (s:ordset a f) (x:a) = singleton x `union` s
+
+let from_list (#a:eqtype) #f (l:list a) : ordset a f = FStar.List.Tot.fold_left add_elt empty l
+
+let cardinal (#a:eqtype) #f (s:ordset a f) : nat = List.Tot.Base.length s

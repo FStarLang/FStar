@@ -1,15 +1,8 @@
 module FStar.OrdMap
 
+open FStar.Order
 open FStar.OrdSet
 open FStar.FunctionalExtensionality
-
-(* TODO (KM) : move me this should go in a common file on relations *)
-type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
-    (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2) (* anti-symmetry *)
- /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3) (* transitivity  *)
- /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                (* totality      *)
-
-let cmp (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 
 abstract let map_t (k:eqtype) (v:eqtype) (f:cmp k) (d:ordset k f) =
   g:(k -> Tot (option v)){(forall x. (mem x d = Some? (g x)))}

@@ -103,3 +103,13 @@ let rec pigeonhole (#n:nat) (s:S.seq (fin n))
 (*     (requires True) *)
 (*     (ensures (fun v' -> exists x. L.forallp (fun i -> S.index v i == x) v')) *)
 (* = pigeonhole_gen_aux #n #k #n (seqn n nat) *)
+
+let rec range #n (i j: fin n)
+ : Pure (list (fin n)) (requires (i <= j)) (ensures (fun l -> forall k. i <= k /\ k <= j ==> L.mem k l)) (decreases (j - i))
+= if i = j then [i] else i :: (range (i+1) j)
+
+open FStar.Order
+
+let fin_cmp (n:nat) : cmp (fin n) =
+  let f (i j:fin n) = i <= j in
+  f
