@@ -76,16 +76,11 @@ let push ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
     res
 
 let mark (dsenv, env) =
-    let dsenv = DsEnv.mark dsenv in
-    let env = TcEnv.mark env in
-    Options.push();
-    dsenv, env
+    push (dsenv, env) env.lax false "#mark"
 
-let reset_mark (_, env) =
-    let dsenv = DsEnv.reset_mark () in
-    let env = TcEnv.reset_mark env in
-    Options.pop();
-    dsenv, env
+let reset_mark env =
+    pop env "#reset_mark";
+    env
 
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
 
@@ -563,7 +558,7 @@ let rec go (line_col:(int*int))
 
   | Code (text, (ok, fail)) ->
       // This does not grow any of the internal stacks.
-      let fail curmod env_mark =
+      let fail curmod (env_mark: (DsEnv.env * TcEnv.env)) =
         report_fail();
         Util.print1 "%s\n" fail;
         // Side-effect: pops from an internal, hidden stack

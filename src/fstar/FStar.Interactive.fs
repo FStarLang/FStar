@@ -84,16 +84,11 @@ let push ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg =
     res
 
 let mark (dsenv, env) =
-    let dsenv = DsEnv.mark dsenv in
-    let env = TcEnv.mark env in
-    Options.push();
-    dsenv, env
+    push (dsenv, env) (if env.lax then LaxCheck else FullCheck) false "#mark"
 
-let reset_mark (_, env) =
-    let dsenv = DsEnv.reset_mark () in
-    let env = TcEnv.reset_mark env in
-    Options.pop();
-    dsenv, env
+let reset_mark env =
+    pop env "#reset_mark";
+    env
 
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
 
