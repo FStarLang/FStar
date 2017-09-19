@@ -150,34 +150,34 @@ let lift_wpsep (#a:Type0) (wp_sep:st_wp a) :st_wp a
 
 let lemma_split_h_emp (h:heap) (phi:heap -> heap -> prop)
   :Lemma (requires phi h emp)
-              (ensures (exists (h':heap) (h'':heap). (h `equal`  (h' `join` h'')) /\ phi h' h''))
+         (ensures (exists (h':heap) (h'':heap). (h `equal`  (h' `join` h'')) /\ phi h' h''))
   = ()
   
 let lemma_read_write (phi:heap -> heap -> prop) (r:addr) (h:heap)
   :Lemma (requires (exists x. points_to r x (restrict_r h r)) ==> phi (restrict_r h r) (exclude_r h r))
-              (ensures (exists h1 h2. h `equal` (h1 `join` h2) /\ ((exists x. points_to r x h1) /\ phi h1 h2)))
+         (ensures (exists h1 h2. h `equal` (h1 `join` h2) /\ ((exists x. points_to r x h1) /\ phi h1 h2)))
   = lemma_join_restrict_exclude h (Set.singleton (addr_of r))
 
 let lemma_return_alloc (h:heap) (phi:heap -> heap -> prop)
   :Lemma (requires phi emp h)
-              (ensures (exists h1 h2. (h `equal` (h1 `join` h2)) /\ ((h1 `equal` emp) /\ phi h1 h2)))
+         (ensures (exists h1 h2. (h `equal` (h1 `join` h2)) /\ ((h1 `equal` emp) /\ phi h1 h2)))
   = ()
   
 let lemma_select_excluded_join (x:int) (r:addr) (h1:heap) (h2:heap)
   :Lemma (requires sel h1 r == x)
-              (ensures sel (h1 `join` (exclude_r h2 r)) r == x)
+         (ensures sel (h1 `join` (exclude_r h2 r)) r == x)
   = admit()
 
 let lemma_select_join_emp (x:int) (r:addr) (h1:heap) 
   :Lemma (requires sel h1 r == x)
-              (ensures sel (h1 `join` emp) r == x)
+         (ensures sel (h1 `join` emp) r == x)
   = ()
   
 let lemma_points_to (h:heap) (r:addr) (x:int)
   :Lemma (requires points_to r x h)
-              (ensures sel h r  == x)
+         (ensures sel h r  == x)
   = ()
-
+  
 // let steps :list step = [delta_only
 //   ["Lang.wp_command";
 //    "Lang.wpsep_command";
@@ -228,11 +228,11 @@ let write_tau :tactic unit =
   apply_lemma (quote (lemma_points_to));;
   smt
   
-let write_ok (r:addr) (h:heap)
-  = let c = (Write r 3) in
-    let p = fun _ h -> sel h r == 3 in
-    let t = (lift_wpsep (wpsep_command c)) p h in
-    assert_by_tactic ((h `contains` r) ==> t) write_tau
+// let write_ok (r:addr) (h:heap)
+//   = let c = (Write r 3) in
+//     let p = fun _ h -> sel h r == 3 in
+//     let t = (lift_wpsep (wpsep_command c)) p h in
+//     assert_by_tactic ((h `contains` r) ==> t) write_tau
 
 (* Incrementing a pointer *)
 let increment_tau :tactic unit =
@@ -334,9 +334,16 @@ let return_alloc_tactic :tactic unit =
 let select_excluded_join_tactic :tactic unit =
   apply_lemma (quote (lemma_select_excluded_join));;
   norm []
+
+let points_to_tactic :tactic unit =
+  apply_lemma (quote (lemma_points_to));;
+  norm []
   
 let step_tactic: tactic unit =
-  or_else (or_else read_write_tactic split_h_emp_tactic) select_excluded_join_tactic;;
+  (((read_write_tactic `or_else`
+  split_h_emp_tactic) `or_else`
+  select_excluded_join_tactic) `or_else`
+  points_to_tactic);;
   idtac
 
 (* Writing to a pointer *)
@@ -344,28 +351,41 @@ let write_tau' :tactic unit =
   implies_intro;;
   norm [delta; delta_only unfold_steps; primops];;
   step_tactic;;
-  dump "Before unification";;
-  (* lemma_read_write should ideally not unify *)
-  apply_lemma (quote (lemma_read_write));;
-//  step_tactic;;			
-  fail "Write example: stop"
+  step_tactic;;
+  step_tactic;;
+  smt
 
-let unification_test (r:addr) (h:heap)
-  = let c = (Write r 3) in
-    let p = (fun _ h -> sel h r == 3) in
-    let t = (lift_wpsep (wpsep_command c)) p h in
-    assert_by_tactic t
-      (norm [delta; delta_only unfold_steps; primops];;
-       step_tactic;;
-       apply_lemma (quote (lemma_read_write));;
-       dump "Foo";;
-       fail "Bar")
+// let unification_test (r:addr) (h:heap)
+//   = let c = (Write r 3) in
+//     let p = (fun _ h -> sel h r == 3) in
+//     let t = (lift_wpsep (wpsep_command c)) p h in
+//     assert_by_tactic t
+//       (norm [delta; delta_only unfold_steps; primops];;
+//        step_tactic;;
+//        apply_lemma (quote (lemma_read_write));;
+//        dump "Foo";;
+//        fail "Bar")
 
 // let write_ok' (r:addr) (h:heap)
 //   = let c = (Write r 3) in
 //     let p = fun _ h -> sel h r == 3 in
 //     let t = (lift_wpsep (wpsep_command c)) p h in
 //     assert_by_tactic (h `contains` r ==> t) write_tau'
+
+(* Incrementing a pointer *)
+let increment_tau' :tactic unit =
+  implies_intro;;
+  norm [delta; delta_only unfold_steps; primops];;
+  step_tactic;;
+  step_tactic;;
+  step_tactic;;
+  fail "Increment example: stop"
+
+let increment_ok' (r:addr) (h:heap) =
+  let c = Bind (Read r) (fun n -> Write r (n + 1)) in
+  let p = fun _ h -> sel h r == 4 in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (sel h r == 3 ==> t) increment_tau'
                               
 // exists h0' h0''. h == h0' `join` h0'' /\
 //                  (exists h2' h2''. h0' == h2' `join` h2'' /\
