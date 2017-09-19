@@ -1753,7 +1753,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               aux [] bs in
 
         if not <| matches pi
-        then (printfn "%d does not match" i; None)
+        then None
         else let g_xs, _ = gs xi.sort in
              let xi = S.bv_to_name xi in
              let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) (U.residual_comp_of_comp c |> Some) in
@@ -1852,7 +1852,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                           (stopt:option<im_or_proj_t>) =
             match force_quasi_pattern None lhs with
             | None ->
-              printfn "force_quasi_pattern failed ... falling back on imitate_or_project";
               imitate_or_project n lhs rhs stopt
             | Some(sol, forced_lhs_pattern) ->
               let tx = UF.new_transaction () in

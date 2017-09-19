@@ -592,7 +592,6 @@ let apply_lemma (tm:term) : tac<unit> = focus(
              match (SS.compress hd).n with
              | Tm_uvar _ -> true //still unresolved
              | _ -> false) in
-        let _ = printfn "TRYING TO SOLVE THE GOAL WITNESS with %s" (N.term_to_string goal.context solution) in
         solve goal solution;
         bind (add_implicits implicits) (fun _ ->
         bind dismiss (fun _ ->
