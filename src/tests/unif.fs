@@ -44,13 +44,12 @@ let guard_eq i g g' =
 
 let unify i x y g' check =
     printfn "%d ..." i;
-//    FStar.Main.process_args () |> ignore; //set options
+    FStar.Main.process_args () |> ignore; //set options
     printfn "Unify %s\nand %s\n" (FStar.Syntax.Print.term_to_string x) (FStar.Syntax.Print.term_to_string y);
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
-    printfn "Got back a guard";
     guard_eq i g.guard_f g';
-    check()
-//    Options.init()    //reset them; exceptions are fatal, so don't worry about resetting them in case guard_eq fails
+    check();
+    Options.init()    //reset them; exceptions are fatal, so don't worry about resetting them in case guard_eq fails
 
 let should_fail x y =
     try
