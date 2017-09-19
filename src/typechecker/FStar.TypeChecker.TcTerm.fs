@@ -1063,14 +1063,15 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g = expected_function_typ env topt body in
     let body, cbody, guard =
         let should_check_expected_effect =
-            match (SS.compress body).n with
-            | Tm_ascribed (_, (Inr _expected_c, _), _) ->
+            match c_opt, (SS.compress body).n with
+            | None, Tm_ascribed (_, (Inr expected_c, _), _) ->
               //body is already ascribed a computation type;
               //don't check it again
               //Not only is it redundant and inefficient, it also sometimes leads to bizarre errors
               //e.g., Issue #1208
               false
-            | _ -> true
+            | _ ->
+              true
         in
         let body, cbody, guard_body =
             tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
@@ -1081,6 +1082,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
              body, cbody, Rel.conj_guard guard_body guard
         else body, cbody.comp(), guard_body
     in
+
     let guard = if env.top_level || not(Env.should_verify env)
                 then Rel.discharge_guard envbody (Rel.conj_guard g guard)
                 else let guard = Rel.close_guard env (bs@letrec_binders) (Rel.conj_guard g guard) in
@@ -1105,6 +1107,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
     let c = if env.top_level then   mk_Total tfun else TcUtil.return_value env tfun e in
     let c, g = TcUtil.strengthen_precondition None env e (U.lcomp_of_comp c) guard in
+
     e, c, g
 
 (******************************************************************************)
