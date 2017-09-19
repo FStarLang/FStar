@@ -268,17 +268,6 @@
       0
     ],
     [
-      "FStar.BufferNG.length_as_seq",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.UInt32.n",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0
-    ],
-    [
       "FStar.BufferNG.as_seq_gsingleton_buffer_of_pointer",
       1,
       2,

@@ -298,17 +298,6 @@
       0
     ],
     [
-      "MonotonicArray.fcreate",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
       "MonotonicArray.create",
       1,
       2,
@@ -391,17 +380,6 @@
       0
     ],
     [
-      "MonotonicArray.create",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
       "MonotonicArray.as_seq",
       1,
       2,
@@ -458,17 +436,6 @@
     [
       "MonotonicArray.lemma_as_seq_length",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "MonotonicArray.lemma_as_seq_length",
-      3,
       2,
       1,
       [
@@ -1027,28 +994,6 @@
     [
       "MonotonicArray.lemma_sub_footprint",
       3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "MonotonicArray.lemma_sub_footprint",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "MonotonicArray.lemma_sub_footprint",
-      5,
       2,
       1,
       [
@@ -1668,17 +1613,6 @@
       0
     ],
     [
-      "MonotonicArray.lemma_framing_of_is_mutable",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
       "MonotonicArray.lemma_framing_of_as_seq",
       1,
       2,
@@ -1715,17 +1649,6 @@
     [
       "MonotonicArray.lemma_framing_of_as_seq",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "MonotonicArray.lemma_framing_of_as_seq",
-      3,
       2,
       1,
       [
@@ -1831,30 +1754,6 @@
     [
       "MonotonicArray.lemma_disjoint_sibling_suffix_prefix",
       3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
-      ],
-      0
-    ],
-    [
-      "MonotonicArray.lemma_disjoint_sibling_suffix_prefix",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_MonotonicArray_Tm_refine_8ae4abcfc6bc8d4903b7e1f40e070ec2"
-      ],
-      0
-    ],
-    [
-      "MonotonicArray.lemma_disjoint_sibling_suffix_prefix",
-      5,
       2,
       1,
       [
