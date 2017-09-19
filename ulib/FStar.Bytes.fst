@@ -1,82 +1,101 @@
 module FStar.Bytes
 
-open FStar.Seq
-
+module S = FStar.Seq
 module U = FStar.UInt
 module U8 = FStar.UInt8
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
+module Str = FStar.String
+module Chr = FStar.Char
 
 type byte = U8.t
-abstract type bytes = seq byte
-abstract type string = seq FStar.Char.char
+abstract type bytes = S.seq byte
 
-let length (b:bytes) : Tot (n:nat{n = Seq.length b}) = Seq.length b
+let reveal (b:bytes) : GTot (S.seq byte) = b
+let hide (s:S.seq byte) : GTot (b:bytes{reveal b = s}) = s
 
-val index: b:bytes -> i:nat{i < length b} -> Tot byte
-let index b i = Seq.index b i
-
-(*
-abstract val createEmpty: #a:Type -> Tot (s:(seq a){length s=0})
-let createEmpty #a = MkSeq []
-*)
-
-//val createEmpty: Tot (s:(bytes){length s=0})
-
-val create: len:nat -> v:byte -> Tot (bytes)
-let rec create len v =
-  if len = 0 then Seq.createEmpty
-  else cons v (create (len - 1) v)
-
-val init: len:nat -> contents: (i:nat { i < len } -> Tot byte) -> Tot (bytes)
-let rec init_aux (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot byte))
-  : Tot (bytes) (decreases (len - k)) =
-  if k + 1 = len then cons (contents k) Seq.createEmpty
-  else cons (contents k) (init_aux len (k+1) contents)
-let rec init len contents = if len = 0 then Seq.createEmpty else init_aux len 0 contents
-
-type lbytes (n:nat) = b:bytes{length b = n}
-
-val empty_bytes : lbytes 0
-let empty_bytes = Seq.createEmpty
-
-
-#set-options "--max_fuel 1 --max_ifuel 1 --detail_errors"
-val abyte: byte -> Tot (lbytes 1)
-let abyte b = Seq.create 1 b
-
-let abyte2 (b:byte*byte) : Tot (lbytes 2) =
-  Seq.init 2 (fun i -> if i = 0 then fst b else snd b)
+let length (b:bytes) : Tot (n:nat{n = S.length (reveal b)}) = S.length b
+type lbytes (l:nat) = b:bytes{length b = l}
+let empty_bytes : lbytes 0 = S.createEmpty
+let lemma_empty (b:bytes) : Lemma (length b = 0 ==> b = empty_bytes) = S.lemma_empty b
 
 let get (b:bytes) (pos:nat{pos < length b}) : Tot byte = Seq.index b pos
+unfold let op_String_Access (b:bytes) (i:nat{i < length b}) = get b i
 
-val append: b1:bytes -> b2:bytes -> Tot (b:bytes{length b = length b1 + length b2})
-let append (b1:bytes) (b2:bytes) = Seq.append b1 b2
+type bytes8 = b:bytes{length b < pow2 8}
+let length8 (b:bytes8) : U8.t = U8.uint_to_t (length b)
+type lbytes8 (l:U8.t) = b:bytes8{length8 b = l}
+let get8 (b:bytes8) (i:U8.t{U8.(i <^ length8 b)}) = b.[U8.v i]
 
-val lemma_append_empty: b:bytes -> Lemma
-  (ensures (append b empty_bytes = b))
+type bytes16 = b:bytes{length b < pow2 16}
+let length16 (b:bytes16) : U16.t = U16.uint_to_t (length b)
+type lbytes16 (l:U16.t) = b:bytes16{length16 b = l}
+let get16 (b:bytes16) (i:U16.t{U16.(i <^ length16 b)}) = b.[U16.v i]
 
-let rec lemma_append_empty (b:bytes) =
-  Seq.append_empty_r b
+type bytes32 = b:bytes{length b < pow2 32}
+let length32 (b:bytes32) : U32.t = U32.uint_to_t (length b)
+type lbytes32 (l:U32.t) = b:bytes32{length32 b = l}
+let get32 (b:bytes32) (i:U32.t{U32.(i <^ length32 b)}) = b.[U32.v i]
 
-val sub: b:bytes -> s:nat{s < length b} -> e:nat{e < length b /\ s <= e} ->
-  Tot (sub:bytes)
-let sub b s e = Seq.slice b s e
+let create (len:nat) (v:byte) : b:lbytes len{forall (i:nat{i<len}). b.[i] = v} =
+  S.lemma_create_len len v;
+  S.create len v
 
-let lemma_sub_length (b:bytes) (s:nat{s < length b})
-  (e:nat{e < length b /\ s <= e})
-  : Lemma (length (sub b s e) = e - s)
-  = lemma_len_slice b s e
+let create8 (len:U8.t) (v:byte) : b:lbytes8 len{forall (i:U8.t{U8.(i <^ len)}). get8 b i = v} =
+  create (U8.v len) v
+let create16 (len:U16.t) (v:byte) : b:lbytes16 len{forall (i:U16.t{U16.(i <^ len)}). get16 b i = v} =
+  create (U16.v len) v
+let create32 (len:U32.t) (v:byte) : b:lbytes32 len{forall (i:U32.t{U32.(i <^ len)}). get32 b i = v} =
+  create (U32.v len) v
 
-type uint_t (k:nat) = n:nat{n < pow2 FStar.Mul.(8 * k)}
+let init (len:nat) (f: i:nat{i<len} -> byte) : b:lbytes len{forall (i:nat{i<len}). get b i = f i} =
+  S.lemma_init_len len f;
+  S.init len f
 
-#reset-options ""
+let init8 (len:U8.t) (f: i:U8.t{U8.(i <^ len)} -> byte)
+  : b:lbytes8 len{forall (i:U8.t{U8.(i <^ len)}). get8 b i = f i} =
+  init (U8.v len) (fun (i:nat{i < U8.v len}) -> f (U8.uint_to_t i))
+let init16 (len:U16.t) (f: i:U16.t{U16.(i <^ len)} -> byte)
+  : b:lbytes16 len{forall (i:U16.t{U16.(i <^ len)}). get16 b i = f i} =
+  init (U16.v len) (fun (i:nat{i < U16.v len}) -> f (U16.uint_to_t i))
+let init32 (len:U32.t) (f: i:U32.t{U32.(i <^ len)} -> byte)
+  : b:lbytes32 len{forall (i:U32.t{U32.(i <^ len)}). get32 b i = f i} =
+  init (U32.v len) (fun (i:nat{i < U32.v len}) -> f (U32.uint_to_t i))
+
+let abyte (b:byte) : lbytes 1 = create 1 b
+let twobytes (b:byte*byte) : Tot (lbytes 2) =
+  Seq.init 2 (fun i -> if i = 0 then fst b else snd b)
+
+let abyte8 (b:byte) : lbytes8 1uy = abyte b
+let abyte16 (b:byte) : lbytes16 1us = abyte b
+let abyte32 (b:byte) : lbytes32 1ul = abyte b
+
+let twobytes8 (b:byte*byte) : lbytes8 2uy = twobytes b
+let twobytes16 (b:byte*byte) : lbytes16 2us = twobytes b
+let twobytes32 (b:byte*byte) : lbytes32 2ul = twobytes b
+
+let append (b1:bytes) (b2:bytes) : b:bytes{length b = length b1 + length b2} =
+  Seq.append b1 b2
+val lemma_append_empty: b:bytes -> Lemma (ensures (append b empty_bytes = b /\ append empty_bytes b = b))
+let op_Hat (b1:bytes) (b2:bytes) : b:bytes{length b = length b1 + length b2} = append b1 b2
+let op_At_Bar (b1:bytes) (b2:bytes) : b:bytes{length b = length b1 + length b2} = append b1 b2
+
+let slice (b:bytes) (s:nat{s < length b}) (e:nat{e < length b /\ s <= e}) : b:bytes{length b = e - s} =
+  Seq.slice b s e
+type range = a:nat & b:nat{a <= b}
+let op_Amp_Colon (a:nat) (b:nat{a <= b}) : range = (| a, b |)
+let op_Array_Access (b:bytes) ((|x, y|):r:range{dsnd r < length b}) = slice b x y
+let op_At (b:bytes) ((|x,y|):range{y < length b}) = slice b x y
+
+let sub (b:bytes) (s:nat{s < length b}) (l:nat{s + l < length b}) : b:bytes{length b = l} =
+  b @ (s &: (s+l))
+
 (* Big endian integer value of a sequence of bytes *)
-val decode_big_endian: b:bytes -> Tot (uint_t (length b)) (decreases (length b))
+val decode_big_endian: b:bytes -> Tot (U.uint_t (length b)) (decreases (length b))
 let rec decode_big_endian b =
   let open FStar.Mul in
-  if length b = 0 then 0
+  if b = empty_bytes then 0
   else UInt8.v (last b) + pow2 8 * decode_big_endian (Seq.slice b 0 (length b - 1))
 
 val decode_big_endian_acc: b:bytes -> k:nat -> acc:uint_t k ->
@@ -95,15 +114,6 @@ let rec decode_big_endian_acc b k acc =
 
 val eq_lemma_decode_big_endion: b:bytes ->
   Lemma (decode_big_endian b = decode_big_endian_acc b 0 0)
-
-//let rec eq_lemma b =
-//  if length b = 0 then unit
-//  else eq_lemma (tail b)
-
-
-
-
-// TODO only use abstract functions on bytes rather than Seq functions
 
 (* Little endian integer value of a sequence of bytes *)
 val decode_little_endian: b:bytes ->
@@ -127,14 +137,6 @@ let rec decode_little_endian_acc b k acc =
 
 val eq_lemma_decode_little_endian: b:bytes ->
   Lemma (decode_little_endian b = decode_little_endian_acc b 0 0)
-
-val slice: b:bytes -> i:nat -> j:nat{i <= j && j <= length b} ->
-  Tot (bytes) (decreases (length b))
-let rec slice b i j =
-  if i > 0 then slice (tail b) (i - 1) (j - 1)
-  else
-    if j = 0 then Seq.createEmpty
-    else cons (head b) (slice (tail b) i (j - 1))
 
 (*
 val eq_lemma_decode_big_endion:
@@ -165,41 +167,9 @@ let rec eq_lemma_decode_big_endion b =
   //else eq_lemma_decode_big_endion (slice b 0 (length b - 1))
 *)
 
-
-
-
-(* code transfered from Platform.Bytes.fst *)
-
-val seq_of_bytes: b:bytes -> GTot (bytes)
-let seq_of_bytes b = b
-
-val op_At_Bar: bytes -> bytes -> Tot bytes
-let op_At_Bar (b1:bytes) (b2:bytes) = append b1 b2
-
-(*@ type (l:nat) lbytes = (b:bytes){Length (b) = l} @*)
-(*type lbytes (l:nat) = b:bytes{length b = l}*)
-
-
-val createBytes : l:nat -> byte -> Tot (lbytes l)
-let createBytes l b = Seq.create l b
-
-val initBytes: l:nat -> (i:nat {i<l} -> Tot byte) -> Tot (lbytes l)
-let initBytes l f = Seq.init l f
-
 assume val make: len:nat -> f:(n:nat{n < len} -> Tot byte) -> Tot (lbytes len)
 assume val utf8_encode: string -> bytes
 assume val utf8_decode: bytes -> option string
-
-
-
-
-
-
-
-
-(*@ assume val equalBytes : (b0:bytes -> (b1:bytes -> (r:bool){r = True /\ B (b0) = B (b1) \/ r = False /\ B (b0) <> B (b1)})) @*)
-assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
-(*@ assume val xor : (bytes -> (bytes -> (nb:nat -> (b3:bytes){Length (b3) = nb}))) @*)
 
 assume val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 
