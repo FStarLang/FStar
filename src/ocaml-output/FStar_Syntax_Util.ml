@@ -720,7 +720,7 @@ let rec ascribe:
 type eq_result =
   | Equal
   | NotEqual
-  | Unknown[@@deriving show]
+  | Unknown
 let uu___is_Equal: eq_result -> Prims.bool =
   fun projectee  ->
     match projectee with | Equal  -> true | uu____1981 -> false
@@ -2117,14 +2117,14 @@ let is_free_in:
     fun t  ->
       let uu____5971 = FStar_Syntax_Free.names t in
       FStar_Util.set_mem bv uu____5971
-type qpats = FStar_Syntax_Syntax.args Prims.list[@@deriving show]
+type qpats = FStar_Syntax_Syntax.args Prims.list
 type connective =
   | QAll of (FStar_Syntax_Syntax.binders,qpats,FStar_Syntax_Syntax.typ)
   FStar_Pervasives_Native.tuple3
   | QEx of (FStar_Syntax_Syntax.binders,qpats,FStar_Syntax_Syntax.typ)
   FStar_Pervasives_Native.tuple3
   | BaseConn of (FStar_Ident.lident,FStar_Syntax_Syntax.args)
-  FStar_Pervasives_Native.tuple2[@@deriving show]
+  FStar_Pervasives_Native.tuple2
 let uu___is_QAll: connective -> Prims.bool =
   fun projectee  ->
     match projectee with | QAll _0 -> true | uu____6015 -> false

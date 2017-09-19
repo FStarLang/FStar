@@ -31,7 +31,7 @@ type issue_level =
   | ENotImplemented
   | EInfo
   | EWarning
-  | EError[@@deriving show]
+  | EError
 let uu___is_ENotImplemented: issue_level -> Prims.bool =
   fun projectee  ->
     match projectee with | ENotImplemented  -> true | uu____101 -> false
@@ -48,8 +48,7 @@ type issue =
   {
   issue_message: Prims.string;
   issue_level: issue_level;
-  issue_range: FStar_Range.range FStar_Pervasives_Native.option;}[@@deriving
-                                                                   show]
+  issue_range: FStar_Range.range FStar_Pervasives_Native.option;}
 let __proj__Mkissue__item__issue_message: issue -> Prims.string =
   fun projectee  ->
     match projectee with
@@ -74,7 +73,7 @@ type error_handler =
   eh_add_one: issue -> Prims.unit;
   eh_count_errors: Prims.unit -> Prims.int;
   eh_report: Prims.unit -> issue Prims.list;
-  eh_clear: Prims.unit -> Prims.unit;}[@@deriving show]
+  eh_clear: Prims.unit -> Prims.unit;}
 let __proj__Mkerror_handler__item__eh_add_one:
   error_handler -> issue -> Prims.unit =
   fun projectee  ->
@@ -238,7 +237,7 @@ type error_message_prefix =
   {
   set_prefix: Prims.string -> Prims.unit;
   append_prefix: Prims.string -> Prims.string;
-  clear_prefix: Prims.unit -> Prims.unit;}[@@deriving show]
+  clear_prefix: Prims.unit -> Prims.unit;}
 let __proj__Mkerror_message_prefix__item__set_prefix:
   error_message_prefix -> Prims.string -> Prims.unit =
   fun projectee  ->

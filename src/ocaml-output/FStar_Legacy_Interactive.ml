@@ -45,11 +45,9 @@ let tc_prims:
     match uu____265 with | (uu____280,dsenv,env) -> (dsenv, env)
 type env_t =
   (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
+    FStar_Pervasives_Native.tuple2
 type modul_t = FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option
-[@@deriving show]
 type stack_t = (env_t,modul_t) FStar_Pervasives_Native.tuple2 Prims.list
-[@@deriving show]
 let pop:
   'Auu____309 .
     ('Auu____309,FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple2 ->
@@ -249,7 +247,7 @@ type input_chunks =
                              FStar_Pervasives_Native.tuple3
                              FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.tuple3
-  | Completions of Prims.string[@@deriving show]
+  | Completions of Prims.string
 let uu___is_Push: input_chunks -> Prims.bool =
   fun projectee  ->
     match projectee with | Push _0 -> true | uu____810 -> false
@@ -292,7 +290,6 @@ type interactive_state =
     FStar_Util.stream_reader FStar_Pervasives_Native.option FStar_ST.ref;
   buffer: input_chunks Prims.list FStar_ST.ref;
   log: FStar_Util.file_handle FStar_Pervasives_Native.option FStar_ST.ref;}
-[@@deriving show]
 let __proj__Mkinteractive_state__item__chunk:
   interactive_state -> FStar_Util.string_builder =
   fun projectee  ->
@@ -504,8 +501,7 @@ let deps_of_our_file:
 type m_timestamps =
   (Prims.string FStar_Pervasives_Native.option,Prims.string,FStar_Util.time
                                                               FStar_Pervasives_Native.option,
-    FStar_Util.time) FStar_Pervasives_Native.tuple4 Prims.list[@@deriving
-                                                                show]
+    FStar_Util.time) FStar_Pervasives_Native.tuple4 Prims.list
 let rec tc_deps:
   modul_t ->
     stack_t ->

@@ -272,7 +272,7 @@ type norm_step =
   | Delta
   | Zeta
   | Iota
-  | UnfoldOnly of Prims.string Prims.list[@@deriving show]
+  | UnfoldOnly of Prims.string Prims.list
 let uu___is_Simpl: norm_step -> Prims.bool =
   fun projectee  ->
     match projectee with | Simpl  -> true | uu____813 -> false

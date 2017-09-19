@@ -1,7 +1,7 @@
 open Prims
 type free_vars_and_fvars =
   (FStar_Syntax_Syntax.free_vars,FStar_Ident.lident FStar_Util.set)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
+    FStar_Pervasives_Native.tuple2
 let no_free_vars:
   (FStar_Syntax_Syntax.free_vars,FStar_Ident.lident FStar_Util.set)
     FStar_Pervasives_Native.tuple2

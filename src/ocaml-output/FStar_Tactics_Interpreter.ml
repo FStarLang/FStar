@@ -912,7 +912,7 @@ let run_tactic_on_typ:
                              FStar_Exn.raise uu____1676)))))
 type pol =
   | Pos
-  | Neg[@@deriving show]
+  | Neg
 let uu___is_Pos: pol -> Prims.bool =
   fun projectee  -> match projectee with | Pos  -> true | uu____1693 -> false
 let uu___is_Neg: pol -> Prims.bool =

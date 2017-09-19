@@ -1,9 +1,7 @@
 open Prims
-type mlsymbol = Prims.string[@@deriving show]
-type mlident = (mlsymbol,Prims.int) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                    show]
+type mlsymbol = Prims.string
+type mlident = (mlsymbol,Prims.int) FStar_Pervasives_Native.tuple2
 type mlpath = (mlsymbol Prims.list,mlsymbol) FStar_Pervasives_Native.tuple2
-[@@deriving show]
 let ocamlkeywords: Prims.string Prims.list =
   ["and";
   "as";
@@ -72,7 +70,7 @@ let string_of_mlpath: mlpath -> mlsymbol =
 type gensym_t =
   {
   gensym: Prims.unit -> mlident;
-  reset: Prims.unit -> Prims.unit;}[@@deriving show]
+  reset: Prims.unit -> Prims.unit;}
 let __proj__Mkgensym_t__item__gensym: gensym_t -> Prims.unit -> mlident =
   fun projectee  ->
     match projectee with
@@ -125,12 +123,12 @@ let mlpath_of_lident: FStar_Ident.lident -> mlpath =
       (let uu____248 =
          FStar_List.map (fun x1  -> x1.FStar_Ident.idText) x.FStar_Ident.ns in
        (uu____248, ((x.FStar_Ident.ident).FStar_Ident.idText)))
-type mlidents = mlident Prims.list[@@deriving show]
-type mlsymbols = mlsymbol Prims.list[@@deriving show]
+type mlidents = mlident Prims.list
+type mlsymbols = mlsymbol Prims.list
 type e_tag =
   | E_PURE
   | E_GHOST
-  | E_IMPURE[@@deriving show]
+  | E_IMPURE
 let uu___is_E_PURE: e_tag -> Prims.bool =
   fun projectee  ->
     match projectee with | E_PURE  -> true | uu____263 -> false
@@ -140,8 +138,7 @@ let uu___is_E_GHOST: e_tag -> Prims.bool =
 let uu___is_E_IMPURE: e_tag -> Prims.bool =
   fun projectee  ->
     match projectee with | E_IMPURE  -> true | uu____273 -> false
-type mlloc = (Prims.int,Prims.string) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                    show]
+type mlloc = (Prims.int,Prims.string) FStar_Pervasives_Native.tuple2
 let dummy_loc: (Prims.int,Prims.string) FStar_Pervasives_Native.tuple2 =
   ((Prims.parse_int "0"), "")
 type mlty =
@@ -149,7 +146,7 @@ type mlty =
   | MLTY_Fun of (mlty,e_tag,mlty) FStar_Pervasives_Native.tuple3
   | MLTY_Named of (mlty Prims.list,mlpath) FStar_Pervasives_Native.tuple2
   | MLTY_Tuple of mlty Prims.list
-  | MLTY_Top[@@deriving show]
+  | MLTY_Top
 let uu___is_MLTY_Var: mlty -> Prims.bool =
   fun projectee  ->
     match projectee with | MLTY_Var _0 -> true | uu____317 -> false
@@ -175,8 +172,7 @@ let __proj__MLTY_Tuple__item___0: mlty -> mlty Prims.list =
 let uu___is_MLTY_Top: mlty -> Prims.bool =
   fun projectee  ->
     match projectee with | MLTY_Top  -> true | uu____428 -> false
-type mltyscheme = (mlidents,mlty) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                  show]
+type mltyscheme = (mlidents,mlty) FStar_Pervasives_Native.tuple2
 type mlconstant =
   | MLC_Unit
   | MLC_Bool of Prims.bool
@@ -188,7 +184,7 @@ type mlconstant =
   | MLC_Float of FStar_BaseTypes.float
   | MLC_Char of FStar_BaseTypes.char
   | MLC_String of Prims.string
-  | MLC_Bytes of FStar_BaseTypes.byte Prims.array[@@deriving show]
+  | MLC_Bytes of FStar_BaseTypes.byte Prims.array
 let uu___is_MLC_Unit: mlconstant -> Prims.bool =
   fun projectee  ->
     match projectee with | MLC_Unit  -> true | uu____473 -> false
@@ -238,7 +234,7 @@ type mlpattern =
   (mlsymbol Prims.list,(mlsymbol,mlpattern) FStar_Pervasives_Native.tuple2
                          Prims.list)
   FStar_Pervasives_Native.tuple2
-  | MLP_Tuple of mlpattern Prims.list[@@deriving show]
+  | MLP_Tuple of mlpattern Prims.list
 let uu___is_MLP_Wild: mlpattern -> Prims.bool =
   fun projectee  ->
     match projectee with | MLP_Wild  -> true | uu____656 -> false
@@ -282,7 +278,7 @@ type c_flag =
   | Assumed
   | Private
   | NoExtract
-  | Attribute of Prims.string[@@deriving show]
+  | Attribute of Prims.string
 let uu___is_Mutable: c_flag -> Prims.bool =
   fun projectee  ->
     match projectee with | Mutable  -> true | uu____837 -> false
@@ -302,7 +298,7 @@ let __proj__Attribute__item___0: c_flag -> Prims.string =
   fun projectee  -> match projectee with | Attribute _0 -> _0
 type tyattr =
   | PpxDerivingShow
-  | PpxDerivingShowConstant of Prims.string[@@deriving show]
+  | PpxDerivingShowConstant of Prims.string
 let uu___is_PpxDerivingShow: tyattr -> Prims.bool =
   fun projectee  ->
     match projectee with | PpxDerivingShow  -> true | uu____875 -> false
@@ -313,16 +309,16 @@ let uu___is_PpxDerivingShowConstant: tyattr -> Prims.bool =
     | uu____881 -> false
 let __proj__PpxDerivingShowConstant__item___0: tyattr -> Prims.string =
   fun projectee  -> match projectee with | PpxDerivingShowConstant _0 -> _0
-type tyattrs = tyattr Prims.list[@@deriving show]
+type tyattrs = tyattr Prims.list
 type mlletflavor =
   | Rec
-  | NonRec[@@deriving show]
+  | NonRec
 let uu___is_Rec: mlletflavor -> Prims.bool =
   fun projectee  -> match projectee with | Rec  -> true | uu____896 -> false
 let uu___is_NonRec: mlletflavor -> Prims.bool =
   fun projectee  ->
     match projectee with | NonRec  -> true | uu____901 -> false
-type c_flags = c_flag Prims.list[@@deriving show]
+type c_flags = c_flag Prims.list
 type mlexpr' =
   | MLE_Const of mlconstant
   | MLE_Var of mlident
@@ -353,18 +349,18 @@ type mlexpr' =
   | MLE_Try of
   (mlexpr,(mlpattern,mlexpr FStar_Pervasives_Native.option,mlexpr)
             FStar_Pervasives_Native.tuple3 Prims.list)
-  FStar_Pervasives_Native.tuple2[@@deriving show]
+  FStar_Pervasives_Native.tuple2
 and mlexpr = {
   expr: mlexpr';
   mlty: mlty;
-  loc: mlloc;}[@@deriving show]
+  loc: mlloc;}
 and mllb =
   {
   mllb_name: mlident;
   mllb_tysc: mltyscheme FStar_Pervasives_Native.option;
   mllb_add_unit: Prims.bool;
   mllb_def: mlexpr;
-  print_typ: Prims.bool;}[@@deriving show]
+  print_typ: Prims.bool;}
 let uu___is_MLE_Const: mlexpr' -> Prims.bool =
   fun projectee  ->
     match projectee with | MLE_Const _0 -> true | uu____1109 -> false
@@ -519,16 +515,15 @@ let __proj__Mkmllb__item__print_typ: mllb -> Prims.bool =
         print_typ = __fname__print_typ;_} -> __fname__print_typ
 type mlbranch =
   (mlpattern,mlexpr FStar_Pervasives_Native.option,mlexpr)
-    FStar_Pervasives_Native.tuple3[@@deriving show]
+    FStar_Pervasives_Native.tuple3
 type mlletbinding =
   (mlletflavor,c_flags,mllb Prims.list) FStar_Pervasives_Native.tuple3
-[@@deriving show]
 type mltybody =
   | MLTD_Abbrev of mlty
   | MLTD_Record of (mlsymbol,mlty) FStar_Pervasives_Native.tuple2 Prims.list
   | MLTD_DType of
   (mlsymbol,(mlsymbol,mlty) FStar_Pervasives_Native.tuple2 Prims.list)
-  FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
+  FStar_Pervasives_Native.tuple2 Prims.list
 let uu___is_MLTD_Abbrev: mltybody -> Prims.bool =
   fun projectee  ->
     match projectee with | MLTD_Abbrev _0 -> true | uu____1867 -> false
@@ -551,8 +546,8 @@ let __proj__MLTD_DType__item___0:
 type one_mltydecl =
   (Prims.bool,mlsymbol,mlsymbol FStar_Pervasives_Native.option,mlidents,
     tyattrs,mltybody FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple6[@@deriving show]
-type mltydecl = one_mltydecl Prims.list[@@deriving show]
+    FStar_Pervasives_Native.tuple6
+type mltydecl = one_mltydecl Prims.list
 type mlmodule1 =
   | MLM_Ty of mltydecl
   | MLM_Let of mlletbinding
@@ -560,7 +555,7 @@ type mlmodule1 =
   (mlsymbol,(mlsymbol,mlty) FStar_Pervasives_Native.tuple2 Prims.list)
   FStar_Pervasives_Native.tuple2
   | MLM_Top of mlexpr
-  | MLM_Loc of mlloc[@@deriving show]
+  | MLM_Loc of mlloc
 let uu___is_MLM_Ty: mlmodule1 -> Prims.bool =
   fun projectee  ->
     match projectee with | MLM_Ty _0 -> true | uu____2029 -> false
@@ -589,13 +584,12 @@ let uu___is_MLM_Loc: mlmodule1 -> Prims.bool =
     match projectee with | MLM_Loc _0 -> true | uu____2125 -> false
 let __proj__MLM_Loc__item___0: mlmodule1 -> mlloc =
   fun projectee  -> match projectee with | MLM_Loc _0 -> _0
-type mlmodule = mlmodule1 Prims.list[@@deriving show]
+type mlmodule = mlmodule1 Prims.list
 type mlsig1 =
   | MLS_Mod of (mlsymbol,mlsig1 Prims.list) FStar_Pervasives_Native.tuple2
   | MLS_Ty of mltydecl
   | MLS_Val of (mlsymbol,mltyscheme) FStar_Pervasives_Native.tuple2
   | MLS_Exn of (mlsymbol,mlty Prims.list) FStar_Pervasives_Native.tuple2
-[@@deriving show]
 let uu___is_MLS_Mod: mlsig1 -> Prims.bool =
   fun projectee  ->
     match projectee with | MLS_Mod _0 -> true | uu____2179 -> false
@@ -619,7 +613,7 @@ let uu___is_MLS_Exn: mlsig1 -> Prims.bool =
 let __proj__MLS_Exn__item___0:
   mlsig1 -> (mlsymbol,mlty Prims.list) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | MLS_Exn _0 -> _0
-type mlsig = mlsig1 Prims.list[@@deriving show]
+type mlsig = mlsig1 Prims.list
 let with_ty_loc: mlty -> mlexpr' -> mlloc -> mlexpr =
   fun t  -> fun e  -> fun l  -> { expr = e; mlty = t; loc = l }
 let with_ty: mlty -> mlexpr' -> mlexpr =
@@ -628,7 +622,7 @@ type mllib =
   | MLLib of
   (mlpath,(mlsig,mlmodule) FStar_Pervasives_Native.tuple2
             FStar_Pervasives_Native.option,mllib)
-  FStar_Pervasives_Native.tuple3 Prims.list[@@deriving show]
+  FStar_Pervasives_Native.tuple3 Prims.list
 let uu___is_MLLib: mllib -> Prims.bool = fun projectee  -> true
 let __proj__MLLib__item___0:
   mllib ->

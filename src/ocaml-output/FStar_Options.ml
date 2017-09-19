@@ -4,7 +4,7 @@ type debug_level_t =
   | Medium
   | High
   | Extreme
-  | Other of Prims.string[@@deriving show]
+  | Other of Prims.string
 let uu___is_Low: debug_level_t -> Prims.bool =
   fun projectee  -> match projectee with | Low  -> true | uu____9 -> false
 let uu___is_Medium: debug_level_t -> Prims.bool =
@@ -26,7 +26,7 @@ type option_val =
   | Path of Prims.string
   | Int of Prims.int
   | List of option_val Prims.list
-  | Unset[@@deriving show]
+  | Unset
 let uu___is_Bool: option_val -> Prims.bool =
   fun projectee  ->
     match projectee with | Bool _0 -> true | uu____66 -> false
@@ -63,7 +63,7 @@ let mk_list: option_val Prims.list -> option_val = fun _0_32  -> List _0_32
 type options =
   | Set
   | Reset
-  | Restore[@@deriving show]
+  | Restore
 let uu___is_Set: options -> Prims.bool =
   fun projectee  -> match projectee with | Set  -> true | uu____165 -> false
 let uu___is_Reset: options -> Prims.bool =
@@ -115,7 +115,7 @@ let as_option:
       | Unset  -> FStar_Pervasives_Native.None
       | v1 ->
           let uu____301 = as_t v1 in FStar_Pervasives_Native.Some uu____301
-type optionstate = option_val FStar_Util.smap[@@deriving show]
+type optionstate = option_val FStar_Util.smap
 let fstar_options: optionstate Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let peek: Prims.unit -> optionstate =
   fun uu____320  ->

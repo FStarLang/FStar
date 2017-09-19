@@ -1,2 +1,2 @@
 open Prims
-type proofstate = FStar_Tactics_Basic.proofstate[@@deriving show]
+type proofstate = FStar_Tactics_Basic.proofstate

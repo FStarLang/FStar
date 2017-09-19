@@ -4,7 +4,7 @@ type assoc =
   | IRight
   | Left
   | Right
-  | NonAssoc[@@deriving show]
+  | NonAssoc
 let uu___is_ILeft: assoc -> Prims.bool =
   fun projectee  -> match projectee with | ILeft  -> true | uu____5 -> false
 let uu___is_IRight: assoc -> Prims.bool =
@@ -20,7 +20,7 @@ let uu___is_NonAssoc: assoc -> Prims.bool =
 type fixity =
   | Prefix
   | Postfix
-  | Infix of assoc[@@deriving show]
+  | Infix of assoc
 let uu___is_Prefix: fixity -> Prims.bool =
   fun projectee  ->
     match projectee with | Prefix  -> true | uu____34 -> false
@@ -32,9 +32,8 @@ let uu___is_Infix: fixity -> Prims.bool =
     match projectee with | Infix _0 -> true | uu____45 -> false
 let __proj__Infix__item___0: fixity -> assoc =
   fun projectee  -> match projectee with | Infix _0 -> _0
-type opprec = (Prims.int,fixity) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                 show]
-type level = (opprec,assoc) FStar_Pervasives_Native.tuple2[@@deriving show]
+type opprec = (Prims.int,fixity) FStar_Pervasives_Native.tuple2
+type level = (opprec,assoc) FStar_Pervasives_Native.tuple2
 let t_prio_fun: (Prims.int,fixity) FStar_Pervasives_Native.tuple2 =
   ((Prims.parse_int "10"), (Infix Right))
 let t_prio_tpl: (Prims.int,fixity) FStar_Pervasives_Native.tuple2 =

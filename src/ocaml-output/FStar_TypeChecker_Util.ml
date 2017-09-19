@@ -1,7 +1,7 @@
 open Prims
 type lcomp_with_binder =
   (FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option,FStar_Syntax_Syntax.lcomp)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
+    FStar_Pervasives_Native.tuple2
 let report:
   FStar_TypeChecker_Env.env -> Prims.string Prims.list -> Prims.unit =
   fun env  ->

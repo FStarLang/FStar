@@ -8,7 +8,7 @@ type binding =
   | Binding_univ of FStar_Syntax_Syntax.univ_name
   | Binding_sig_inst of
   (FStar_Ident.lident Prims.list,FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universes)
-  FStar_Pervasives_Native.tuple3[@@deriving show]
+  FStar_Pervasives_Native.tuple3
 let uu___is_Binding_var: binding -> Prims.bool =
   fun projectee  ->
     match projectee with | Binding_var _0 -> true | uu____44 -> false
@@ -48,7 +48,7 @@ type delta_level =
   | Inlining
   | Eager_unfolding_only
   | Unfold of FStar_Syntax_Syntax.delta_depth
-  | UnfoldTac[@@deriving show]
+  | UnfoldTac
 let uu___is_NoDelta: delta_level -> Prims.bool =
   fun projectee  ->
     match projectee with | NoDelta  -> true | uu____189 -> false
@@ -75,7 +75,7 @@ type mlift =
     (FStar_Syntax_Syntax.typ ->
        FStar_Syntax_Syntax.typ ->
          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-      FStar_Pervasives_Native.option;}[@@deriving show]
+      FStar_Pervasives_Native.option;}
 let __proj__Mkmlift__item__mlift_wp:
   mlift ->
     FStar_Syntax_Syntax.typ ->
@@ -100,7 +100,7 @@ type edge =
   {
   msource: FStar_Ident.lident;
   mtarget: FStar_Ident.lident;
-  mlift: mlift;}[@@deriving show]
+  mlift: mlift;}
 let __proj__Mkedge__item__msource: edge -> FStar_Ident.lident =
   fun projectee  ->
     match projectee with
@@ -124,7 +124,7 @@ type effects =
   order: edge Prims.list;
   joins:
     (FStar_Ident.lident,FStar_Ident.lident,FStar_Ident.lident,mlift,mlift)
-      FStar_Pervasives_Native.tuple5 Prims.list;}[@@deriving show]
+      FStar_Pervasives_Native.tuple5 Prims.list;}
 let __proj__Mkeffects__item__decls:
   effects ->
     (FStar_Syntax_Syntax.eff_decl,FStar_Syntax_Syntax.qualifier Prims.list)
@@ -148,19 +148,18 @@ let __proj__Mkeffects__item__joins:
     match projectee with
     | { decls = __fname__decls; order = __fname__order;
         joins = __fname__joins;_} -> __fname__joins
-type name_prefix = Prims.string Prims.list[@@deriving show]
+type name_prefix = Prims.string Prims.list
 type flat_proof_namespace =
-  (name_prefix,Prims.bool) FStar_Pervasives_Native.tuple2 Prims.list[@@deriving
-                                                                    show]
-type proof_namespace = flat_proof_namespace Prims.list[@@deriving show]
+  (name_prefix,Prims.bool) FStar_Pervasives_Native.tuple2 Prims.list
+type proof_namespace = flat_proof_namespace Prims.list
 type cached_elt =
   (((FStar_Syntax_Syntax.universes,FStar_Syntax_Syntax.typ)
       FStar_Pervasives_Native.tuple2,(FStar_Syntax_Syntax.sigelt,FStar_Syntax_Syntax.universes
                                                                    FStar_Pervasives_Native.option)
                                        FStar_Pervasives_Native.tuple2)
      FStar_Util.either,FStar_Range.range)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
-type goal = FStar_Syntax_Syntax.term[@@deriving show]
+    FStar_Pervasives_Native.tuple2
+type goal = FStar_Syntax_Syntax.term
 type env =
   {
   solver: solver_t;
@@ -205,7 +204,6 @@ type env =
         FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term;
   is_native_tactic: FStar_Ident.lid -> Prims.bool;
   identifier_info: FStar_TypeChecker_Common.id_info_table FStar_ST.ref;}
-[@@deriving show]
 and solver_t =
   {
   init: env -> Prims.unit;
@@ -226,7 +224,7 @@ and solver_t =
       env -> FStar_Syntax_Syntax.typ -> Prims.unit;
   is_trivial: env -> FStar_Syntax_Syntax.typ -> Prims.bool;
   finish: Prims.unit -> Prims.unit;
-  refresh: Prims.unit -> Prims.unit;}[@@deriving show]
+  refresh: Prims.unit -> Prims.unit;}
 and guard_t =
   {
   guard_f: FStar_TypeChecker_Common.guard_formula;
@@ -238,7 +236,7 @@ and guard_t =
   implicits:
     (Prims.string,env,FStar_Syntax_Syntax.uvar,FStar_Syntax_Syntax.term,
       FStar_Syntax_Syntax.typ,FStar_Range.range)
-      FStar_Pervasives_Native.tuple6 Prims.list;}[@@deriving show]
+      FStar_Pervasives_Native.tuple6 Prims.list;}
 let __proj__Mkenv__item__solver: env -> solver_t =
   fun projectee  ->
     match projectee with
@@ -1098,9 +1096,9 @@ let __proj__Mkguard_t__item__implicits:
 type implicits =
   (Prims.string,env,FStar_Syntax_Syntax.uvar,FStar_Syntax_Syntax.term,
     FStar_Syntax_Syntax.typ,FStar_Range.range) FStar_Pervasives_Native.tuple6
-    Prims.list[@@deriving show]
-type env_t = env[@@deriving show]
-type sigtable = FStar_Syntax_Syntax.sigelt FStar_Util.smap[@@deriving show]
+    Prims.list
+type env_t = env
+type sigtable = FStar_Syntax_Syntax.sigelt FStar_Util.smap
 let should_verify: env -> Prims.bool =
   fun env  ->
     ((Prims.op_Negation env.lax) && (Prims.op_Negation env.admit)) &&
@@ -1628,7 +1626,7 @@ let inst_effect_fun_with:
 type tri =
   | Yes
   | No
-  | Maybe[@@deriving show]
+  | Maybe
 let uu___is_Yes: tri -> Prims.bool =
   fun projectee  -> match projectee with | Yes  -> true | uu____6295 -> false
 let uu___is_No: tri -> Prims.bool =

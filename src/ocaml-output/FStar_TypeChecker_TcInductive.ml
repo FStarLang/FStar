@@ -612,8 +612,8 @@ let try_get_fv:
     | uu____1622 -> failwith "Node is not an fvar or a Tm_uinst"
 type unfolded_memo_elt =
   (FStar_Ident.lident,FStar_Syntax_Syntax.args)
-    FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
-type unfolded_memo_t = unfolded_memo_elt FStar_ST.ref[@@deriving show]
+    FStar_Pervasives_Native.tuple2 Prims.list
+type unfolded_memo_t = unfolded_memo_elt FStar_ST.ref
 let already_unfolded:
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.args ->

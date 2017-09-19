@@ -1,13 +1,13 @@
 open Prims
-type name = Prims.string Prims.list[@@deriving show]
-type typ = FStar_Syntax_Syntax.term[@@deriving show]
-type binders = FStar_Syntax_Syntax.binder Prims.list[@@deriving show]
+type name = Prims.string Prims.list
+type typ = FStar_Syntax_Syntax.term
+type binders = FStar_Syntax_Syntax.binder Prims.list
 type vconst =
   | C_Unit
   | C_Int of Prims.int
   | C_True
   | C_False
-  | C_String of Prims.string[@@deriving show]
+  | C_String of Prims.string
 let uu___is_C_Unit: vconst -> Prims.bool =
   fun projectee  ->
     match projectee with | C_Unit  -> true | uu____17 -> false
@@ -32,7 +32,7 @@ type pattern =
   | Pat_Cons of (FStar_Syntax_Syntax.fv,pattern Prims.list)
   FStar_Pervasives_Native.tuple2
   | Pat_Var of FStar_Syntax_Syntax.bv
-  | Pat_Wild of FStar_Syntax_Syntax.bv[@@deriving show]
+  | Pat_Wild of FStar_Syntax_Syntax.bv
 let uu___is_Pat_Constant: pattern -> Prims.bool =
   fun projectee  ->
     match projectee with | Pat_Constant _0 -> true | uu____83 -> false
@@ -57,11 +57,10 @@ let uu___is_Pat_Wild: pattern -> Prims.bool =
 let __proj__Pat_Wild__item___0: pattern -> FStar_Syntax_Syntax.bv =
   fun projectee  -> match projectee with | Pat_Wild _0 -> _0
 type branch =
-  (pattern,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2[@@deriving
-                                                                    show]
+  (pattern,FStar_Syntax_Syntax.term) FStar_Pervasives_Native.tuple2
 type aqualv =
   | Q_Implicit
-  | Q_Explicit[@@deriving show]
+  | Q_Explicit
 let uu___is_Q_Implicit: aqualv -> Prims.bool =
   fun projectee  ->
     match projectee with | Q_Implicit  -> true | uu____166 -> false
@@ -69,7 +68,6 @@ let uu___is_Q_Explicit: aqualv -> Prims.bool =
   fun projectee  ->
     match projectee with | Q_Explicit  -> true | uu____171 -> false
 type argv = (FStar_Syntax_Syntax.term,aqualv) FStar_Pervasives_Native.tuple2
-[@@deriving show]
 type term_view =
   | Tv_Var of FStar_Syntax_Syntax.binder
   | Tv_FVar of FStar_Syntax_Syntax.fv
@@ -88,7 +86,7 @@ type term_view =
   FStar_Pervasives_Native.tuple3
   | Tv_Match of (FStar_Syntax_Syntax.term,branch Prims.list)
   FStar_Pervasives_Native.tuple2
-  | Tv_Unknown[@@deriving show]
+  | Tv_Unknown
 let uu___is_Tv_Var: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_Var _0 -> true | uu____257 -> false
@@ -164,7 +162,7 @@ let uu___is_Tv_Unknown: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_Unknown  -> true | uu____538 -> false
 type ctor =
-  | Ctor of (name,typ) FStar_Pervasives_Native.tuple2[@@deriving show]
+  | Ctor of (name,typ) FStar_Pervasives_Native.tuple2
 let uu___is_Ctor: ctor -> Prims.bool = fun projectee  -> true
 let __proj__Ctor__item___0: ctor -> (name,typ) FStar_Pervasives_Native.tuple2
   = fun projectee  -> match projectee with | Ctor _0 -> _0
@@ -174,7 +172,7 @@ type sigelt_view =
   FStar_Pervasives_Native.tuple4
   | Sg_Let of (FStar_Syntax_Syntax.fv,typ,FStar_Syntax_Syntax.term)
   FStar_Pervasives_Native.tuple3
-  | Unk[@@deriving show]
+  | Unk
 let uu___is_Sg_Inductive: sigelt_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Sg_Inductive _0 -> true | uu____611 -> false

@@ -343,7 +343,7 @@ type uvi =
      FStar_Pervasives_Native.tuple2,FStar_Syntax_Syntax.term)
   FStar_Pervasives_Native.tuple2
   | UNIV of (FStar_Syntax_Syntax.universe_uvar,FStar_Syntax_Syntax.universe)
-  FStar_Pervasives_Native.tuple2[@@deriving show]
+  FStar_Pervasives_Native.tuple2
 let uu___is_TERM: uvi -> Prims.bool =
   fun projectee  ->
     match projectee with | TERM _0 -> true | uu____514 -> false
@@ -370,7 +370,7 @@ type worklist =
   ctr: Prims.int;
   defer_ok: Prims.bool;
   smt_ok: Prims.bool;
-  tcenv: FStar_TypeChecker_Env.env;}[@@deriving show]
+  tcenv: FStar_TypeChecker_Env.env;}
 let __proj__Mkworklist__item__attempting:
   worklist -> FStar_TypeChecker_Common.probs =
   fun projectee  ->
@@ -419,7 +419,7 @@ let __proj__Mkworklist__item__tcenv: worklist -> FStar_TypeChecker_Env.env =
 type solution =
   | Success of FStar_TypeChecker_Common.deferred
   | Failed of (FStar_TypeChecker_Common.prob,Prims.string)
-  FStar_Pervasives_Native.tuple2[@@deriving show]
+  FStar_Pervasives_Native.tuple2
 let uu___is_Success: solution -> Prims.bool =
   fun projectee  ->
     match projectee with | Success _0 -> true | uu____750 -> false
@@ -436,7 +436,7 @@ let __proj__Failed__item___0:
 type variance =
   | COVARIANT
   | CONTRAVARIANT
-  | INVARIANT[@@deriving show]
+  | INVARIANT
 let uu___is_COVARIANT: variance -> Prims.bool =
   fun projectee  ->
     match projectee with | COVARIANT  -> true | uu____793 -> false
@@ -448,12 +448,10 @@ let uu___is_INVARIANT: variance -> Prims.bool =
     match projectee with | INVARIANT  -> true | uu____803 -> false
 type tprob =
   (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term)
-    FStar_TypeChecker_Common.problem[@@deriving show]
+    FStar_TypeChecker_Common.problem
 type cprob =
   (FStar_Syntax_Syntax.comp,Prims.unit) FStar_TypeChecker_Common.problem
-[@@deriving show]
-type ('a,'b) problem_t = ('a,'b) FStar_TypeChecker_Common.problem[@@deriving
-                                                                   show]
+type ('a,'b) problem_t = ('a,'b) FStar_TypeChecker_Common.problem
 let rel_to_string: FStar_TypeChecker_Common.rel -> Prims.string =
   fun uu___113_827  ->
     match uu___113_827 with
@@ -1689,7 +1687,7 @@ type match_result =
                                                                     FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.tuple2
   | HeadMatch
-  | FullMatch[@@deriving show]
+  | FullMatch
 let uu___is_MisMatch: match_result -> Prims.bool =
   fun projectee  ->
     match projectee with | MisMatch _0 -> true | uu____5009 -> false
@@ -2002,7 +2000,7 @@ type tc =
   (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.binders ->
                               FStar_Range.range -> FStar_Syntax_Syntax.term)
   FStar_Pervasives_Native.tuple2
-  | C of FStar_Syntax_Syntax.comp[@@deriving show]
+  | C of FStar_Syntax_Syntax.comp
 let uu___is_T: tc -> Prims.bool =
   fun projectee  -> match projectee with | T _0 -> true | uu____6064 -> false
 let __proj__T__item___0:
@@ -2015,7 +2013,7 @@ let uu___is_C: tc -> Prims.bool =
   fun projectee  -> match projectee with | C _0 -> true | uu____6102 -> false
 let __proj__C__item___0: tc -> FStar_Syntax_Syntax.comp =
   fun projectee  -> match projectee with | C _0 -> _0
-type tcs = tc Prims.list[@@deriving show]
+type tcs = tc Prims.list
 let tc_to_string: tc -> Prims.string =
   fun uu___130_6116  ->
     match uu___130_6116 with
@@ -2337,7 +2335,7 @@ let imitation_sub_probs:
             aux scope ps qs
 type flex_t =
   (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.uvar,FStar_Syntax_Syntax.typ,
-    FStar_Syntax_Syntax.args) FStar_Pervasives_Native.tuple4[@@deriving show]
+    FStar_Syntax_Syntax.args) FStar_Pervasives_Native.tuple4
 type im_or_proj_t =
   (((FStar_Syntax_Syntax.uvar,FStar_Syntax_Syntax.typ)
       FStar_Pervasives_Native.tuple2,FStar_Syntax_Syntax.binders,FStar_Syntax_Syntax.comp)
@@ -2350,7 +2348,7 @@ type im_or_proj_t =
                                                              FStar_Pervasives_Native.tuple3
                                                              Prims.list)
       FStar_Pervasives_Native.tuple3)
-    FStar_Pervasives_Native.tuple3[@@deriving show]
+    FStar_Pervasives_Native.tuple3
 let rigid_rigid: Prims.int = Prims.parse_int "0"
 let flex_rigid_eq: Prims.int = Prims.parse_int "1"
 let flex_refine_inner: Prims.int = Prims.parse_int "2"
@@ -2633,7 +2631,7 @@ let is_rigid_flex: Prims.int -> Prims.bool =
 type univ_eq_sol =
   | UDeferred of worklist
   | USolved of worklist
-  | UFailed of Prims.string[@@deriving show]
+  | UFailed of Prims.string
 let uu___is_UDeferred: univ_eq_sol -> Prims.bool =
   fun projectee  ->
     match projectee with | UDeferred _0 -> true | uu____8787 -> false

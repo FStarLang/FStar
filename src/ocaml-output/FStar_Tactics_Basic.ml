@@ -1,7 +1,7 @@
 open Prims
-type name = FStar_Syntax_Syntax.bv[@@deriving show]
-type env = FStar_TypeChecker_Env.env[@@deriving show]
-type implicits = FStar_TypeChecker_Env.implicits[@@deriving show]
+type name = FStar_Syntax_Syntax.bv
+type env = FStar_TypeChecker_Env.env
+type implicits = FStar_TypeChecker_Env.implicits
 let normalize:
   FStar_TypeChecker_Normalize.step Prims.list ->
     FStar_TypeChecker_Env.env ->
@@ -22,7 +22,7 @@ type goal =
   witness: FStar_Syntax_Syntax.term;
   goal_ty: FStar_Syntax_Syntax.typ;
   opts: FStar_Options.optionstate;
-  is_guard: Prims.bool;}[@@deriving show]
+  is_guard: Prims.bool;}
 let __proj__Mkgoal__item__context: goal -> env =
   fun projectee  ->
     match projectee with
@@ -59,7 +59,7 @@ type proofstate =
   main_goal: goal;
   all_implicits: implicits;
   goals: goal Prims.list;
-  smt_goals: goal Prims.list;}[@@deriving show]
+  smt_goals: goal Prims.list;}
 let __proj__Mkproofstate__item__main_context: proofstate -> env =
   fun projectee  ->
     match projectee with
@@ -93,7 +93,6 @@ let __proj__Mkproofstate__item__smt_goals: proofstate -> goal Prims.list =
 type 'a result =
   | Success of ('a,proofstate) FStar_Pervasives_Native.tuple2
   | Failed of (Prims.string,proofstate) FStar_Pervasives_Native.tuple2
-[@@deriving show]
 let uu___is_Success: 'a . 'a result -> Prims.bool =
   fun projectee  ->
     match projectee with | Success _0 -> true | uu____228 -> false
@@ -113,7 +112,7 @@ let uu___is_TacFailure: Prims.exn -> Prims.bool =
 let __proj__TacFailure__item__uu___: Prims.exn -> Prims.string =
   fun projectee  -> match projectee with | TacFailure uu____318 -> uu____318
 type 'a tac = {
-  tac_f: proofstate -> 'a result;}[@@deriving show]
+  tac_f: proofstate -> 'a result;}
 let __proj__Mktac__item__tac_f: 'a . 'a tac -> proofstate -> 'a result =
   fun projectee  ->
     match projectee with | { tac_f = __fname__tac_f;_} -> __fname__tac_f

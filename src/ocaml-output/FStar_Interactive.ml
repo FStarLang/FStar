@@ -45,11 +45,9 @@ let tc_prims:
     match uu____265 with | (uu____280,dsenv,env) -> (dsenv, env)
 type env_t =
   (FStar_ToSyntax_Env.env,FStar_TypeChecker_Env.env)
-    FStar_Pervasives_Native.tuple2[@@deriving show]
+    FStar_Pervasives_Native.tuple2
 type modul_t = FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option
-[@@deriving show]
 type stack_t = (env_t,modul_t) FStar_Pervasives_Native.tuple2 Prims.list
-[@@deriving show]
 let pop:
   'Auu____309 .
     ('Auu____309,FStar_TypeChecker_Env.env) FStar_Pervasives_Native.tuple2 ->
@@ -63,7 +61,7 @@ let pop:
 type push_kind =
   | SyntaxCheck
   | LaxCheck
-  | FullCheck[@@deriving show]
+  | FullCheck
 let uu___is_SyntaxCheck: push_kind -> Prims.bool =
   fun projectee  ->
     match projectee with | SyntaxCheck  -> true | uu____333 -> false
@@ -293,8 +291,7 @@ let deps_of_our_file:
 type m_timestamps =
   (Prims.string FStar_Pervasives_Native.option,Prims.string,FStar_Util.time
                                                               FStar_Pervasives_Native.option,
-    FStar_Util.time) FStar_Pervasives_Native.tuple4 Prims.list[@@deriving
-                                                                show]
+    FStar_Util.time) FStar_Pervasives_Native.tuple4 Prims.list
 let rec tc_deps:
   modul_t ->
     stack_t ->
@@ -518,10 +515,10 @@ type query' =
   FStar_Pervasives_Native.tuple2
   | Search of Prims.string
   | MissingCurrentModule
-  | ProtocolViolation of Prims.string[@@deriving show]
+  | ProtocolViolation of Prims.string
 and query = {
   qq: query';
-  qid: Prims.string;}[@@deriving show]
+  qid: Prims.string;}
 let uu___is_Exit: query' -> Prims.bool =
   fun projectee  ->
     match projectee with | Exit  -> true | uu____1899 -> false
@@ -628,7 +625,7 @@ let __proj__InvalidQuery__item__uu___: Prims.exn -> Prims.string =
 type query_status =
   | QueryOK
   | QueryNOK
-  | QueryViolatesProtocol[@@deriving show]
+  | QueryViolatesProtocol
 let uu___is_QueryOK: query_status -> Prims.bool =
   fun projectee  ->
     match projectee with | QueryOK  -> true | uu____2219 -> false
@@ -908,7 +905,7 @@ type lookup_result =
   lr_def_range: FStar_Range.range FStar_Pervasives_Native.option;
   lr_typ: Prims.string FStar_Pervasives_Native.option;
   lr_doc: Prims.string FStar_Pervasives_Native.option;
-  lr_def: Prims.string FStar_Pervasives_Native.option;}[@@deriving show]
+  lr_def: Prims.string FStar_Pervasives_Native.option;}
 let __proj__Mklookup_result__item__lr_name: lookup_result -> Prims.string =
   fun projectee  ->
     match projectee with
@@ -1032,7 +1029,7 @@ type repl_state =
   repl_curmod: modul_t;
   repl_env: env_t;
   repl_ts: m_timestamps;
-  repl_stdin: FStar_Util.stream_reader;}[@@deriving show]
+  repl_stdin: FStar_Util.stream_reader;}
 let __proj__Mkrepl_state__item__repl_line: repl_state -> Prims.int =
   fun projectee  ->
     match projectee with
@@ -1785,10 +1782,10 @@ let run_compute:
                                 (QueryNOK, uu____6184)))))
 type search_term' =
   | NameContainsStr of Prims.string
-  | TypeContainsLid of FStar_Ident.lid[@@deriving show]
+  | TypeContainsLid of FStar_Ident.lid
 and search_term = {
   st_negate: Prims.bool;
-  st_term: search_term';}[@@deriving show]
+  st_term: search_term';}
 let uu___is_NameContainsStr: search_term' -> Prims.bool =
   fun projectee  ->
     match projectee with | NameContainsStr _0 -> true | uu____6211 -> false
@@ -1821,7 +1818,7 @@ type search_candidate =
     FStar_Syntax_Syntax.typ FStar_Pervasives_Native.option FStar_ST.ref;
   sc_fvars:
     FStar_Ident.lid FStar_Util.set FStar_Pervasives_Native.option
-      FStar_ST.ref;}[@@deriving show]
+      FStar_ST.ref;}
 let __proj__Mksearch_candidate__item__sc_lid:
   search_candidate -> FStar_Ident.lid =
   fun projectee  ->

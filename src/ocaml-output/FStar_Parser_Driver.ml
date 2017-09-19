@@ -5,7 +5,7 @@ let is_cache_file: Prims.string -> Prims.bool =
 type fragment =
   | Empty
   | Modul of FStar_Parser_AST.modul
-  | Decls of FStar_Parser_AST.decl Prims.list[@@deriving show]
+  | Decls of FStar_Parser_AST.decl Prims.list
 let uu___is_Empty: fragment -> Prims.bool =
   fun projectee  -> match projectee with | Empty  -> true | uu____20 -> false
 let uu___is_Modul: fragment -> Prims.bool =
