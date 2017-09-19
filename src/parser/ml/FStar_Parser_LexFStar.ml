@@ -119,8 +119,6 @@ let () =
   Hashtbl.add constructors "ℕ"         (IDENT "nat");
   Hashtbl.add constructors "ℤ"         (IDENT "int");
   Hashtbl.add constructors "𝔹"         (IDENT "bool");
-  Hashtbl.add constructors "True"      L_TRUE      ;
-  Hashtbl.add constructors "False"     L_FALSE     ;
   let l =
     ["~", TILDE "~"; "-", MINUS; "/\\", CONJUNCTION; "\\/", DISJUNCTION;
      "<:", SUBTYPE; "<@", SUBKIND; "(|", LENS_PAREN_LEFT; "|)", LENS_PAREN_RIGHT;
@@ -134,7 +132,7 @@ let () =
      "[|", LBRACK_BAR; "|>", PIPE_RIGHT; "]", RBRACK; "|]", BAR_RBRACK;
      "{", LBRACE; "|", BAR; "}", RBRACE; "$", DOLLAR;
      (* New Unicode equivalents *)
-     "∀", FORALL; "∃", EXISTS; "⊤", L_TRUE; "⊥", L_FALSE;
+     "∀", FORALL; "∃", EXISTS; "⊤", NAME "True"; "⊥", NAME "False";
      "⟹", IMPLIES; "⟺", IFF; "→", RARROW; "←", LARROW;
      "⟵", LONG_LEFT_ARROW; "↝", SQUIGGLY_RARROW; "≔", COLON_EQUALS;
      "∧", CONJUNCTION; "∨", DISJUNCTION; "¬", TILDE "~";
