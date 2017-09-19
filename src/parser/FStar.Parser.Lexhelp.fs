@@ -154,7 +154,6 @@ let keywords =
     ALWAYS, "exception"  ,EXCEPTION;
     ALWAYS, "exists"     ,EXISTS;
     ALWAYS, "false"      ,FALSE;
-    ALWAYS, "False"      ,L_FALSE;
     ALWAYS, "forall"     ,FORALL;
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
@@ -185,7 +184,6 @@ let keywords =
     ALWAYS, "then"       ,THEN;
     ALWAYS, "total"      ,TOTAL;
     ALWAYS, "true"       ,TRUE;
-    ALWAYS, "True"       ,L_TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
     ALWAYS, "unfold"     ,UNFOLD;
