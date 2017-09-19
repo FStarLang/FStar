@@ -2,12 +2,19 @@ import sys
 import os, os.path
 import re
 import collections
+import subprocess
+import traceback
 import SCons
 
-
 Import('My_env')
+
 env = My_env.Clone()  # ensure changes here don't have impact on other SConscripts
 ocaml_output = 'ocaml-output/'  # directory to extract Ocaml code to
+
+# Set to True, and each entry in Extractions[] is handled as a batch call to fstar.exe
+# with multiple inputs and multiple outputs.  Set to False, and each entry expands
+# to one or more calls to fstar.exe, one per output file, with precise dependencies.
+Import('batch_extraction')
 
 # --------------------------------------------------------------------
 # Generate boot files
@@ -168,105 +175,95 @@ boot_includes=addprefix('--include ', '../ulib boot basic extraction format fsdo
 # This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
-env['FSTARBOOT'] = '$FSTAR $OTHERFLAGS --eager_inference --lax --MLish --no_location_info ' + \
+env['FSTARARGS'] = '$OTHERFLAGS --eager_inference --lax --MLish --no_location_info ' + \
   '--odir ocaml-output --codegen OCaml ' + ' '.join(boot_includes)
+
+ExtractionAction = collections.namedtuple('ExtractionAction', 'source target command')
 
 # Common base for ExtractModule and ExtractNamespace
 class ExtractionBase:
-  def __init__(self, command, sources, targets):
-    self.command = command;             # string
-    self.sources = Flatten(sources);    # flattened list of source .fs filenames
-    self.targets = Flatten(targets);    # flattened list of target .fst filenames
-
-# Helper class for extracting a set of modules
-class ExtractModule(ExtractionBase):
-  def __init__(self, sources, modules):
-    if type(sources)==type(''):
-      sources = sources.split(' ')
-    if type(modules)==type(''):
-      modules = modules.split(' ')
-    sources = Flatten(sources)
-    m = Flatten(modules)
-    self.command = ['--extract_module '+module for module in m]
-    self.sources = sources
-    self.targets = [ocaml_output+module.replace('.','_') + '.ml' for module in m]
-
+  def __init__(self):
+    self.commonaction = ''
+    self.actions = [];    # list of ExtractionAction tuples
+    
 # Generate the .ml target filename given an F* source filename
 def GetTargetNameFromSourceFile(sourcefile):
   path,filename = os.path.split(sourcefile)
   base,ext = os.path.splitext(filename)
   return base.replace('.','_') + '.ml'
 
+# Helper class for extracting a set of modules
+class ExtractModules(ExtractionBase):
+  def __init__(self, modulelist):
+    ExtractionBase.__init__(self)
+    for mtuple in modulelist:
+      module, src = mtuple
+      action = ExtractionAction(src, ocaml_output+module.replace('.','_') + '.ml', '--extract_module '+module);
+      self.actions.append(action)
+
 # Helper class for extracting a set of namespaces
 class ExtractNamespace(ExtractionBase):
-  def __init__(self, sources, namespaces, noextractions=[]):
+  def __init__(self, sources, namespace, noextractions=[]):
+    ExtractionBase.__init__(self)
     if type(sources)==type(''):
       sources = sources.split(' ')
-    if type(namespaces)==type(''):
-      namespaces = namespaces.split(' ')
     if type(noextractions)==type(''):
       noextractions = noextractions.split(' ')
     sources = Flatten(sources)
-    namespaces = Flatten(namespaces)
-    self.command = ['--extract_namespace ' + namespace for namespace in namespaces] + \
-                   [' --no_extract ' + noextract for noextract in noextractions]
-    self.sources = sources
-    # filter out noextract files from the sources list, to build the targets list
-    targets = []
-    for t in sources:
-      skip = False
-      for n in Flatten(noextractions):
-        if n in t:
-          skip = True
-          break
-      if not skip:
-        targets.append(t)
-    self.targets = [ocaml_output+GetTargetNameFromSourceFile(file) for file in targets]
+    argslist = [' --extract_namespace ' + namespace] + [' --no_extract ' + noextract for noextract in noextractions]
+    self.commonaction = ' '.join(argslist)
+    for file in sources:
+      action = ExtractionAction(file, ocaml_output+GetTargetNameFromSourceFile(file), '')
+      self.actions.append(action)
 
 # The list of all things to extract from the boot files
 # Tuples are:  (targetname, ExtractModule|ExtractNamespace)
 Extractions=[
-  ('extract_misc',ExtractModule(
-   [addprefix('basic/','FStar.Common.fs FStar.Options.fs FStar.Ident.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs'),'format/FStar.Format.fs'],
-   'FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order')
+  ('extract_misc',ExtractModules([
+    ('FStar.Pervasives',    'basic/FStar.Common.fs'),
+    ('FStar.Common',        'basic/FStar.Common.fs'),
+    ('FStar.Options',       'basic/FStar.Options.fs'),
+    ('FStar.Ident',         'basic/FStar.Ident.fs'),
+    ('FStar.Errors',        'basic/FStar.Errors.fs'),
+    ('FStar.Const',         'basic/FStar.Const.fs'),
+    ('FStar.Order',         'basic/FStar.Order.fs'),
+    ('FStar.Format',        'format/FStar.Format.fs')
+  ])),
+  ('extract_syntax_basic',ExtractNamespace(
+   [addprefix('syntax/FStar.Syntax.','Syntax.fs Subst.fs Free.fs InstFV.fs Util.fs Print.fs Embeddings.fs MutRecTy.fs Resugar.fs Unionfind.fs')],
+   'FStar.Syntax')
    ),
-  ('extract_syntax',ExtractNamespace(
-    [addprefix('syntax/FStar.Syntax.','Syntax.fs Subst.fs Free.fs InstFV.fs Util.fs Print.fs Embeddings.fs MutRecTy.fs Resugar.fs Unionfind.fs'),'fsdoc/FStar.Fsdoc.Generator.fs'],
-   'FStar.Syntax FStar.Fsdoc')
+  ('extract_fsdoc',ExtractNamespace(
+   ['fsdoc/FStar.Fsdoc.Generator.fs'],
+   'FStar.Fsdoc')
    ),
-  ('extract_parser',ExtractNamespace(
-   addprefix('parser/FStar.Parser.','AST.fs ParseIt.fsi Driver.fs Dep.fs ToDocument.fs'),
+   ('extract_parser',ExtractNamespace(
+   addprefix('parser/FStar.Parser.','AST.fs Const.fs Driver.fs Dep.fs ToDocument.fs'),
    'FStar.Parser',
-   'FStar.Parser.ParseIt')
+   'FStar.Parser.ParseIt') # --no-extract FStar.Parser.ParseIt
    ),
   ('extract_normalizer',ExtractNamespace(
    addprefix('typechecker/FStar.TypeChecker.','Common.fs Env.fs Normalize.fs Err.fs'),
    'FStar.TypeChecker')
    ),
-  ('extract_rel',ExtractModule(
-   'typechecker/FStar.TypeChecker.Rel.fs',
-   'FStar.TypeChecker.Rel')
-   ),
-  ('extract_util',ExtractModule(
-   'typechecker/FStar.TypeChecker.Util.fs',
-   'FStar.TypeChecker.Util')
-   ),
-  ('extract_dmff',ExtractModule(
-   'typechecker/FStar.TypeChecker.DMFF.fs',
-   'FStar.TypeChecker.DMFF')
-   ),
-  ('extract_tcterm',ExtractModule(
-   'typechecker/FStar.TypeChecker.TcTerm.fs',
-   'FStar.TypeChecker.TcTerm')
-   ),
-  ('extract_tcinductive',ExtractModule(
-   'typechecker/FStar.TypeChecker.TcInductive.fs',
-   'FStar.TypeChecker.TcInductive')
-   ),
-  ('extract_tc',ExtractModule(
-   'typechecker/FStar.TypeChecker.Tc.fs',
-   'FStar.TypeChecker.Tc')
-   ),
+  ('extract_rel',ExtractModules([
+   ('FStar.TypeChecker.Rel', 'typechecker/FStar.TypeChecker.Rel.fs')
+   ])),
+  ('extract_util',ExtractModules([
+   ('FStar.TypeChecker.Util', 'typechecker/FStar.TypeChecker.Util.fs')
+   ])),
+  ('extract_dmff',ExtractModules([
+   ('FStar.TypeChecker.DMFF', 'typechecker/FStar.TypeChecker.DMFF.fs')
+   ])),
+  ('extract_tcterm',ExtractModules([
+   ('FStar.TypeChecker.TcTerm', 'typechecker/FStar.TypeChecker.TcTerm.fs')
+   ])),
+  ('extract_tcinductive',ExtractModules([
+   ('FStar.TypeChecker.TcInductive', 'typechecker/FStar.TypeChecker.TcInductive.fs')
+   ])),
+  ('extract_tc',ExtractModules([
+   ('FStar.TypeChecker.Tc', 'typechecker/FStar.TypeChecker.Tc.fs')
+   ])),
   ('extract_tosyntax',ExtractNamespace(
    addprefix('tosyntax/FStar.ToSyntax.','Env.fs Interleave.fs ToSyntax.fs'),
    'FStar.ToSyntax')
@@ -276,35 +273,38 @@ Extractions=[
    'FStar.Extraction')
    ),
   ('extract_tactics',ExtractNamespace(
-   ['../ulib/FStar.Tactics.Types.fsti', addprefix('tactics/FStar.Tactics.','Types.fs Basic.fs Embedding.fs Native.fs'), 'boot/FStar.Tactics.Interpreter.fst'],
+   [addprefix('tactics/FStar.Tactics.','Types.fs Basic.fs Embedding.fs'), 'boot/FStar.Tactics.Interpreter.fst'],
    'FStar.Tactics',
    'FStar.Tactics.Native')  # --no-extract FStar.Tactics.Native
    ),
   ('extract_reflection',ExtractNamespace(
-   ['../ulib/FStar.Reflection.Types.fsti', addprefix('reflection/FStar.Reflection.','Basic.fs Data.fs Interpreter.fs')],
+   addprefix('reflection/FStar.Reflection.','Basic.fs Data.fs Interpreter.fs'),
    'FStar.Reflection',
-   'FStar.Reflection.Types')
+   'FStar.Reflection.Types')  # --no-extract FStar.Reflection.Types
    ),
   ('extract_smtencoding_base',ExtractNamespace(
    addprefix('smtencoding/FStar.SMTEncoding.','Term.fs Util.fs Z3.fs SplitQueryCases.fs ErrorReporting.fs'),
    'FStar.SMTEncoding')
    ),
-  ('extract_encode',ExtractModule(
-   'smtencoding/FStar.SMTEncoding.Encode.fs',
-   'FStar.SMTEncoding.Encode')
-   ),
-  ('extract_solver',ExtractModule(
-   'smtencoding/FStar.SMTEncoding.Solver.fs',
-   'FStar.SMTEncoding.Solver')
-   ),
-  ('extract_fstar',ExtractModule(
-   addprefix('fstar/FStar.','Dependencies.fs Legacy.Interactive.fs Interactive.fs Universal.fs Indent.fs Main.fs'),
-   'FStar.Dependencies FStar.Interactive FStar.Legacy.Interactive FStar.Universal FStar.Indent FStar.Main')
-   )
+  ('extract_encode',ExtractModules([
+   ('FStar.SMTEncoding.Encode', 'smtencoding/FStar.SMTEncoding.Encode.fs')
+   ])),
+  ('extract_solver',ExtractModules([
+   ('FStar.SMTEncoding.Solver', 'smtencoding/FStar.SMTEncoding.Solver.fs')
+   ])),
+  ('extract_fstar',ExtractModules([
+   ('FStar.Dependencies',       'fstar/FStar.Dependencies.fs'),
+   ('FStar.Interactive',        'fstar/FStar.Interactive.fs'),
+   ('FStar.Legacy.Interactive', 'fstar/FStar.Legacy.Interactive.fs'),
+   ('FStar.Universal',          'fstar/FStar.Universal.fs'),
+   ('FStar.Indent',             'fstar/FStar.Indent.fs'),
+   ('FStar.Main',               'fstar/FStar.Main.fs')
+   ]))
 ]
 
 # List of handy target names that alias sets of targets listed above
 ExtractionTargets = [
+  ('extract_syntax',     'extract_syntax_basic extract_fsdoc'),
   ('extract_typechecker','extract_normalizer extract_rel extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc'),
   ('extract_smtencoding','extract_smtencoding_base extract_encode extract_solver'),
   ('extract_all',        'extract_tactics extract_reflection extract_misc extract_syntax extract_parser extract_typechecker extract_tosyntax extract_smtencoding extract_extraction extract_fstar')
@@ -313,17 +313,79 @@ ExtractionTargets = [
 # Generate SCons targets for each Extraction entry
 extraction_targets = {}
 for name, e in Extractions:
-  command = ' '.join(e.command)
-  t_cmd = env.Command(e.targets, e.sources, '$FSTARBOOT $SOURCES ' + command)
-  env.Depends(t_cmd, env['FSTAR'])  # take explicit dependency on the F* compiler executable
-  env.Requires(t_cmd, boot_target)  # and boot_ files, they are includes for extraction
-  env.Alias(name, t_cmd)            # create an alias to this command
+  command = '$FSTAR $FSTARARGS $SOURCES ' + e.commonaction + ' '
+  if batch_extraction:
+    sources = []
+    targets = []
+    for action in e.actions:
+      command += ' ' + action.command
+      sources.append(action.source)
+      targets.append(action.target)
+    t_cmd = env.Command(targets, sources, command)
+    env.Depends(t_cmd, env['FSTAR'])  # take explicit dependency on the F* compiler executable
+    env.Requires(t_cmd, boot_target)  # and boot_ files, they are includes for extraction
+    env.Alias(name, t_cmd)            # create an alias to this command
+  else:
+    for action in e.actions:
+      t_cmd = env.Command(action.target, action.source, command + '$SOURCE ' + action.command)
+      env.Depends(t_cmd, env['FSTAR'])  # take explicit dependency on the F* compiler executable
+      env.Alias(name, t_cmd)            # add this target to the alias
 
 # Turn the ExtractionTargets[] into actual SCons targets
 for name, targets in ExtractionTargets:
   for t in targets.split(' '):
     env.Alias(name, t)
 extract_target = env.Alias('extract', 'extract_all')
+
+# --------------------------------------------------------------------
+def formatExceptionInfo(maxTBlevel=5):
+   cla, exc, trbk = sys.exc_info()
+   excName = cla.__name__
+   try:
+       excArgs = exc.__dict__["args"]
+   except KeyError:
+       excArgs = "<no args>"
+   excTb = traceback.format_tb(trbk, maxTBlevel)
+   return (excName, excArgs, excTb)
+
+# launch an external process and return its stdout as a list of lines of text
+def docmd(env, cmd):
+  try:
+    pipe = SCons.Action._subproc(env, cmd,
+                                 stdin = 'devnull',
+                                 stderr = 'devnull',
+                                 stdout = subprocess.PIPE)  
+  except:
+    e = sys.exc_info()[0]
+    print ("Error invoking: %s" % cmd)
+    print formatExceptionInfo()
+    print ("Exception: %s" % e)
+    Exit(1)
+  result = []
+  line = pipe.stdout.readline()
+  while line:
+    result.append(line)
+    line = pipe.stdout.readline()
+  return result
+  
+# Scan a .fs file to discover its dependencies, and add .fst/.fsti targets for each.
+# Returns a list of File representing the discovered .fs dependencies.      
+def fs_file_scan(node, env, path):
+  print('Scanning ' + str(node))
+  output = docmd(env, env.subst('$FSTAR $FSTARARGS --dep make') + ' ' + str(node))
+  deps = []
+  # output is a list of lines of the form "file: file[ file]*"
+  for deplist in output:
+    s = deplist.rstrip().split(' ') # trim \r and \n then split by spaces
+    target = s[0][:-1] #the 0th string is the target name.  Remove the trailing ':'
+    sources = s[1:]    #the remaining strings are the sources.
+    #print "target="+target
+    #print sources
+    #deps = deps + sources
+  return deps
+
+fs_scan = Scanner(function = fs_file_scan, skeys = ['.fs'])
+env.Append(SCANNERS = fs_scan)
 
 # --------------------------------------------------------------------
 

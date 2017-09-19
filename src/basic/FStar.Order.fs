@@ -1,6 +1,7 @@
 #light "off"
 
 module FStar.Order
+open FStar.All
 
 type order = | Lt | Eq | Gt
 

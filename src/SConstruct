@@ -35,6 +35,13 @@ AddOption('--target',
     help='Specify the build target:  ocaml-output, boot, or extract')
 build_target=GetOption('build_target')
 
+AddOption('--batch-extraction',
+    dest='batch_extraction',
+    default=False,
+    action='store_true',
+    help='Batch extractions together into fewer calls to fstar.exe')
+batch_extraction=GetOption('batch_extraction')
+
 # construct a default environment
 env = Environment()
 
@@ -53,11 +60,11 @@ if build_target == 'ocaml-output':
   Default(Alias('ocaml-output', fstar_exe_ocaml))
 elif build_target == 'boot':
   # extract F# to F*, and F* to OCaml
-  boot, extract = SConscript('SConscript', exports={'My_env' : env})
+  boot, extract = SConscript('SConscript', exports={'My_env' : env, 'batch_extraction' : batch_extraction})
   Default(boot)
 elif build_target == 'extract':
   # extract F# to F*, and F* to OCaml
-  boot, extract = SConscript('SConscript', exports={'My_env' : env})
+  boot, extract = SConscript('SConscript', exports={'My_env' : env, 'batch_extraction' : batch_extraction})
   Default(extract)
 else:
   raise SCons.Errors.UserError("Unsupported --target %s" % build_target)
