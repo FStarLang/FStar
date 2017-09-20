@@ -540,7 +540,7 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
                                   is_guard = false; }]
                 end)
             | t -> begin
-                BU.print1 "__apply: uvar was instantiated to %s\n" (Print.term_to_string u);
+                (* BU.print1 "__apply: uvar was instantiated to %s\n" (Print.term_to_string u); *)
                 ret ()
                 end
             ))))
