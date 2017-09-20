@@ -216,8 +216,10 @@ class ExtractNamespace(ExtractionBase):
       action = ExtractionAction(file, ocaml_output+GetTargetNameFromSourceFile(file), '')
       self.actions.append(action)
 
+# --------------------------------------------------------------------
 # The list of all things to extract from the boot files
-# Tuples are:  (targetname, ExtractModule|ExtractNamespace)
+# Tuples are:  (targetname, ExtractModules|ExtractNamespace)
+# --------------------------------------------------------------------
 Extractions=[
   ('extract_misc',ExtractModules([
     ('FStar.Pervasives',    'basic/FStar.Common.fs'),
@@ -337,6 +339,9 @@ for name, targets in ExtractionTargets:
     env.Alias(name, t)
 extract_target = env.Alias('extract', 'extract_all')
 
+
+# --------------------------------------------------------------------
+# Automatic dependency scanning
 # --------------------------------------------------------------------
 def formatExceptionInfo(maxTBlevel=5):
    cla, exc, trbk = sys.exc_info()
@@ -371,19 +376,23 @@ def docmd(env, cmd):
 # Scan a .fs file to discover its dependencies, and add .fst/.fsti targets for each.
 # Returns a list of File representing the discovered .fs dependencies.      
 def fs_file_scan(node, env, path):
-  print('Scanning ' + str(node))
-  output = docmd(env, env.subst('$FSTAR $FSTARARGS --dep make') + ' ' + str(node))
+  # convert from Node to string and fully qualify.  FStar will emit the
+  # name in the dependency output as specified on the command line, and
+  # we want fully qualified names only in the output.
+  fullnode = os.path.abspath(str(node))
+  print('Dependency scan: ' + fullnode)
+  output = docmd(env, env.subst('$FSTAR $FSTARARGS --dep make') + ' ' + fullnode)
   deps = []
   # output is a list of lines of the form "file: file[ file]*"
   for deplist in output:
     s = deplist.rstrip().split(' ') # trim \r and \n then split by spaces
     target = s[0][:-1] #the 0th string is the target name.  Remove the trailing ':'
     sources = s[1:]    #the remaining strings are the sources.
-    #print "target="+target
-    #print sources
-    #deps = deps + sources
+    deps.append(target)
+    deps += sources
   return deps
 
+# register the .fs scanner with SCons
 fs_scan = Scanner(function = fs_file_scan, skeys = ['.fs'])
 env.Append(SCANNERS = fs_scan)
 
