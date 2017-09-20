@@ -78,7 +78,6 @@ let push_with_kind ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
 
 let commit_mark (dsenv, env) =
-    let dsenv = DsEnv.commit_mark dsenv in
     let env = TcEnv.commit_mark env in
     dsenv, env
 

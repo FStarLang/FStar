@@ -90,7 +90,6 @@ let push_with_kind ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
 
 let commit_mark (dsenv, env) =
-  let dsenv = DsEnv.commit_mark dsenv in
   let env = TcEnv.commit_mark env in
   dsenv, env
 
@@ -547,7 +546,7 @@ let run_missing_current_module st message =
   ((QueryNOK, JsonStr "Current module unset"), Inl st)
 
 let nothing_left_to_pop st =
-  (* The initial dependency check creates [n] entires in [st.repl_ts] and [n]
+  (* The initial dependency check creates [n] entries in [st.repl_ts] and [n]
      entries in [st.repl_stack].  Subsequent pushes do not grow [st.repl_ts]
      (only [st.repl_stack]), so [length st.repl_stack <= length st.repl_ts]
      indicates that there's nothing left to pop. *)
@@ -591,7 +590,6 @@ let run_push st kind text line column peek_only =
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
-    // At this stage, the internal stack has grown with size 1.
     let env = commit_mark env in
     ((QueryOK, JsonList errors),
       Inl ({ st' with repl_curmod = curmod; repl_env = env }))

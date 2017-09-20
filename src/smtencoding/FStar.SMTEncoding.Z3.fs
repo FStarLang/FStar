@@ -508,7 +508,7 @@ let refresh () =
 // - in case of failure, the new scope is discarded
 let commit_mark (msg:string) =
     begin match !fresh_scope with
-        | hd::s::tl -> fresh_scope := (hd@s)::tl
+        | hd::s::tl -> fresh_scope := (hd@s)::s::tl // Merge previous context into current one
         | _ -> failwith "Impossible"
     end
 

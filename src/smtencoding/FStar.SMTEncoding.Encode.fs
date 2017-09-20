@@ -73,7 +73,6 @@ let mk_data_tester env l x = mk_tester (escape l.str) x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
-    commit_mark: unit -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
     fresh:string -> string;
@@ -107,15 +106,8 @@ let varops =
             f in
     let push () = scopes := new_scope()::!scopes in
     let pop () = scopes := List.tl !scopes in
-    let commit_mark () = match !scopes with
-        | (hd1, hd2)::(next1, next2)::tl ->
-          BU.smap_fold hd1 (fun key value v  -> BU.smap_add next1 key value) ();
-          BU.smap_fold hd2 (fun key value v  -> BU.smap_add next2 key value) ();
-          scopes := (next1, next2)::tl
-        | _ -> failwith "Impossible" in
     {push=push;
      pop=pop;
-     commit_mark=commit_mark;
      new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;
@@ -2638,10 +2630,6 @@ let push_env () = match !last_env with
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl
-let commit_mark_env () =
-    match !last_env with
-        | hd::_::tl -> last_env := hd::tl
-        | _ -> failwith "Impossible"
 (* TOP-LEVEL API *)
 
 let init tcenv =
@@ -2657,8 +2645,6 @@ let pop msg   =
     varops.pop();
     Z3.pop msg
 let commit_mark (msg:string) =
-    commit_mark_env();
-    varops.commit_mark();
     Z3.commit_mark msg
 
 //////////////////////////////////////////////////////////////////////////

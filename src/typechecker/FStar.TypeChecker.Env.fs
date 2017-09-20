@@ -206,9 +206,6 @@ let add_query_index (l, n) = match !query_indices with
     | _ -> failwith "Empty query indices"
 
 let peek_query_indices () = List.hd !query_indices
-let commit_query_index_mark () = match !query_indices with
-    | hd::_::tl -> query_indices := hd::tl
-    | _ -> failwith "Unmarked query index stack"
 
 let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
@@ -237,9 +234,7 @@ let pop env msg =
     pop_stack ()
 
 let commit_mark (env: env) =
-    commit_query_index_mark();
     env.solver.commit_mark "";
-    ignore (pop_stack ());
     env
 
 let incr_query_index env =

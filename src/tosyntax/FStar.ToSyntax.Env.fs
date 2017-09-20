@@ -676,18 +676,14 @@ let record_cache_aux_with_filter =
         record_cache := List.tl !record_cache in
     let peek () = List.hd !record_cache in
     let insert r = record_cache := (r::peek())::List.tl (!record_cache) in
-    let commit () = match !record_cache with
-        | hd::_::tl -> record_cache := hd::tl
-        | _ -> failwith "Impossible" in
     (* remove private/abstract records *)
     let filter () =
         let rc = peek () in
-        let () = pop () in
         let filtered = List.filter (fun r -> not r.is_private_or_abstract) rc in
-        record_cache := filtered :: !record_cache
+        record_cache := filtered :: List.tl !record_cache
     in
     let aux =
-    (push, pop, peek, insert, commit)
+    (push, pop, peek, insert)
     in (aux, filter)
 
 let record_cache_aux =
@@ -697,24 +693,20 @@ let filter_record_cache =
     let (_, filter) = record_cache_aux_with_filter in filter
 
 let push_record_cache =
-    let push, _, _, _, _ = record_cache_aux in
+    let push, _, _, _ = record_cache_aux in
     push
 
 let pop_record_cache =
-    let _, pop, _, _, _ = record_cache_aux in
+    let _, pop, _, _ = record_cache_aux in
     pop
 
 let peek_record_cache =
-    let _, _, peek, _, _ = record_cache_aux in
+    let _, _, peek, _ = record_cache_aux in
     peek
 
 let insert_record_cache =
-    let _, _, _, insert, _ = record_cache_aux in
+    let _, _, _, insert = record_cache_aux in
     insert
-
-let commit_record_cache =
-    let _, _, _, _, commit = record_cache_aux in
-    commit
 
 let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match se.sigel with
   | Sig_bundle(sigs, _) ->
@@ -1052,14 +1044,6 @@ let pop () =
   match !stack with
   | env::tl ->
     pop_record_cache();
-    stack := tl;
-    env
-  | _ -> failwith "Impossible: Too many pops"
-
-let commit_mark (env: env) =
-  commit_record_cache();
-  match !stack with
-  | _::tl ->
     stack := tl;
     env
   | _ -> failwith "Impossible: Too many pops"
