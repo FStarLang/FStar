@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 #light "off"
+
 module FStar.Interactive.Ide
 open FStar.ST
 open FStar.Exn
@@ -56,14 +57,8 @@ let tc_prims env = //:uenv =
   let _, dsenv, env = tc_prims env in
   (dsenv, env)
 
-
-// The interactive mode has its own notion of a stack that is super flaky,
-// seeing that there's a lot of mutable state under the hood. This is most
-// likely not working as the original author intended it to.
-
 type env_t = DsEnv.env * TcEnv.env
 type modul_t = option<Syntax.Syntax.modul>
-type stack_t = list<(env_t * modul_t)>
 
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
@@ -81,12 +76,10 @@ let pop env msg =
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
-let push_with_kind ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg =
-  let tcenv = { tcenv with lax = (kind = LaxCheck) } in
-  let dsenv = DsEnv.set_syntax_only dsenv (kind = SyntaxCheck) in
-  let res = push (dsenv, tcenv) msg in
-  if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
-  res
+let set_check_kind (dsenv, tcenv) check_kind =
+  let tcenv = { tcenv with lax = (check_kind = LaxCheck) } in
+  let dsenv = DsEnv.set_syntax_only dsenv (check_kind = SyntaxCheck) in
+  (dsenv, tcenv)
 
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
 
@@ -144,26 +137,24 @@ let deps_of_our_file filename =
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
+type deps_stack_t = list<env_t> // Environments created while typechecking deps
 
 (*
  * type check remaining dependencies and record the timestamps.
- * m is the current module name, not the module name of the dependency. it's actually a dummy that is pushed on the stack and never used.
- * it is used for type checking the fragments of the current module, but for dependencies it is a dummy.
- * adding it as the stack entry needed it.
  * env is the environment in which next dependency should be type checked.
  * the returned timestamps are in the reverse order (i.e. final dependency first), it's the same order as the stack.
  * note that for dependencies, the stack and ts go together (i.e. their sizes are same)
- * returns the new stack, environment, and timestamps.
+ * returns the new environment, deps stack, and timestamps.
  *)
-let rec tc_deps (m:modul_t) (stack:stack_t)
-                (env:env_t) (remaining:list<string>) (ts:m_timestamps)
-//      : stack<'env,modul_t> * 'env * m_timestamps
+let rec tc_deps (deps_stack: deps_stack_t) (env: env_t)
+                (remaining: list<string>) (ts: m_timestamps)
   = match remaining with
-    | [] -> stack, env, ts
+    | [] -> env, (deps_stack, ts)
     | _  ->
-      let stack = (env, m)::stack in
-      //setting the restore command line options flag true
-      let env = push_with_kind env (if Options.lax () then LaxCheck else FullCheck) true "typecheck_modul" in
+      let deps_stack = env :: deps_stack in
+      let push_kind = if Options.lax () then LaxCheck else FullCheck in
+      let env = push (set_check_kind env push_kind) "typecheck_modul" in
+      Options.restore_cmd_line_options false |> ignore;
       let (intf, impl), env, remaining = tc_one_file remaining env in
       let intf_t, impl_t =
         let intf_t =
@@ -174,8 +165,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
         let impl_t = get_file_last_modification_time impl in
         intf_t, impl_t
       in
-      tc_deps m stack env remaining ((intf, impl, intf_t, impl_t)::ts)
-
+      tc_deps deps_stack env remaining ((intf, impl, intf_t, impl_t)::ts)
 
 (*
  * check if some dependencies have been modified, added, or deleted
@@ -184,11 +174,10 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
  * if we find that the dependency at the head of ts does not match that at the head of the newly computed dependency,
  * or that the dependency is stale, we will typecheck that dependency, and everything that comes after that again
  * the stack and timestamps are passed in "last dependency first" order, so we will reverse them before checking
- * as with tc_deps, m is the dummy argument used for the stack entry
- * returns the new stack, environment, and timestamps
+ * returns the new environment, deps stack, and timestamps
  *)
-let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_timestamps)
-  : (stack_t * env_t * m_timestamps) =
+let update_deps (filename:string) (env:env_t) ((stk, ts): deps_stack_t * m_timestamps)
+  : (env_t * (deps_stack_t * m_timestamps)) =
   let is_stale (intf:option<string>) (impl:string) (intf_t:option<time>) (impl_t:time) :bool =
     let impl_mt = get_file_last_modification_time impl in
     (is_before impl_t impl_mt ||
@@ -209,8 +198,9 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
    * during recursive calls, the good_stack and good_ts grow "last dependency first" order.
    * returns the new stack, environment, and timestamps
    *)
-  let rec iterate (depnames:list<string>) (st:stack_t) (env':env_t)
-  (ts:m_timestamps) (good_stack:stack_t) (good_ts:m_timestamps) = //:(stack<'env, modul_t> * 'env * m_timestamps) =
+  let rec iterate (depnames:list<string>) (st:deps_stack_t) (env':env_t)
+                  (ts:m_timestamps) (good_stack:deps_stack_t) (good_ts:m_timestamps)
+          : (env_t * (list<env_t> * m_timestamps)) =
     //invariant length good_stack = length good_ts, and same for stack and ts
 
     let match_dep (depnames:list<string>) (intf:option<string>) (impl:string) : (bool * list<string>) =
@@ -226,13 +216,13 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
     in
 
     //expected the stack to be in "last dependency first order", we want to pop in the proper order (although should not matter)
-    let rec pop_tc_and_stack env (stack:list<(env_t * modul_t)>) ts =
+    let rec pop_tc_and_stack env (stack:list<env_t>) ts =
       match ts with
         | []    -> (* stack should also be empty here *) env
         | _::ts ->
           //pop
           pop env "";
-          let (env, _), stack = List.hd stack, List.tl stack in
+          let env, stack = List.hd stack, List.tl stack in
           pop_tc_and_stack env stack ts
     in
 
@@ -243,11 +233,11 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
         if not b || (is_stale intf impl intf_t impl_t) then
           //reverse st from "first dependency first order" to "last dependency first order"
           let env = pop_tc_and_stack env' (List.rev_append st []) ts in
-          tc_deps m good_stack env depnames good_ts
+          tc_deps good_stack env depnames good_ts
         else
           let stack_elt, st' = List.hd st, List.tl st in
           iterate depnames' st' env' ts' (stack_elt::good_stack) (ts_elt::good_ts)
-      | []           -> (* st should also be empty here *) tc_deps m good_stack env' depnames good_ts
+      | []           -> (* st should also be empty here *) tc_deps good_stack env' depnames good_ts
   in
 
   (* Well, the file list hasn't changed, so our (single) file is still there. *)
@@ -662,14 +652,34 @@ open FStar.Parser.ParseIt
 
 // FIXME: Store repl_names in the stack, too
 type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
-                    repl_stack: stack_t; repl_curmod: modul_t;
-                    repl_env: env_t; repl_ts: m_timestamps;
+                    repl_deps: (deps_stack_t * m_timestamps);
+                    repl_curmod: modul_t; repl_env: env_t;
                     repl_stdin: stream_reader; repl_names: CTable.table }
+
+let repl_stack: ref<list<repl_state>> = Util.mk_ref []
+
+let repl_stack_empty () =
+  match !repl_stack with
+  | [] -> true
+  | _ -> false
+
+let pop_repl env =
+  match !repl_stack with
+  | [] -> failwith "Too many pops"
+  | st' :: stack ->
+    pop env "#pop";
+    repl_stack := stack;
+    if repl_stack_empty () then cleanup st'.repl_env;
+    st'
+
+let push_repl push_kind st =
+  repl_stack := st :: !repl_stack;
+  push (set_check_kind st.repl_env push_kind) ""
 
 let json_of_repl_state st =
   JsonAssoc
     [("loaded-dependencies",
-      JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts));
+      JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) (snd st.repl_deps)));
      ("options",
       JsonList (List.map json_of_fstar_option (current_fstar_options (fun _ -> true))))]
 
@@ -698,25 +708,11 @@ let run_protocol_violation st message =
 let run_missing_current_module st message =
   ((QueryNOK, JsonStr "Current module unset"), Inl st)
 
-let nothing_left_to_pop st =
-  (* The initial dependency check creates [n] entries in [st.repl_ts] and [n]
-     entries in [st.repl_stack].  Subsequent pushes do not grow [st.repl_ts]
-     (only [st.repl_stack]), so [length st.repl_stack <= length st.repl_ts]
-     indicates that there's nothing left to pop. *)
-  List.length st.repl_stack <= List.length st.repl_ts
-
-let run_pop st = // This shrinks all internal stacks by 1
-  if nothing_left_to_pop st then
+let run_pop st =
+  if repl_stack_empty () then
     ((QueryNOK, JsonStr "Too many pops"), Inl st)
   else
-    match st.repl_stack with
-    | [] -> failwith "impossible"
-    | (env, curmod) :: stack ->
-      pop st.repl_env "#pop";
-      let st' = { st with repl_env = env; repl_curmod = curmod; repl_stack = stack } in
-      // Clean up if all the fragments from the current buffer have been popped
-      if nothing_left_to_pop st' then cleanup env;
-      ((QueryOK, JsonNull), Inl st')
+    ((QueryOK, JsonNull), Inl (pop_repl st.repl_env))
 
 type name_tracking_event =
 | NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
@@ -794,20 +790,20 @@ let track_name_changes ((dsenv, tcenv): env_t)
       List.rev !events))
 
 let run_push st kind text line column peek_only =
-  let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
+  let env = push_repl kind st in
 
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
 
   // If we are at a stage where we have not yet pushed a fragment from the
   // current buffer, see if some dependency is stale. If so, update it. Also
   // if this is the first chunk, we need to restore the command line options.
-  let restore_cmd_line_options, (stack, env, ts) =
-    if nothing_left_to_pop st
-    then true, update_deps st.repl_fname st.repl_curmod stack env ts
-    else false, (stack, env, ts) in
+  let restore_cmd_line_options, (env, deps) =
+    if repl_stack_empty ()
+    then true, update_deps st.repl_fname env st.repl_deps
+    else false, (env, st.repl_deps) in
 
-  let stack = (env, st.repl_curmod) :: stack in
-  let env = push_with_kind env kind restore_cmd_line_options "#push" in
+  if restore_cmd_line_options then
+    Options.restore_cmd_line_options false |> ignore;
 
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
   let res = check_frag env st.repl_curmod (frag, false) in
@@ -815,8 +811,7 @@ let run_push st kind text line column peek_only =
   let errors = FStar.Errors.report_all() |> List.map json_of_issue in
   FStar.Errors.clear ();
 
-  let st' = { st with repl_stack = stack; repl_ts = ts;
-                      repl_line = line; repl_column = column } in
+  let st' = { st with repl_deps = deps; repl_line = line; repl_column = column } in
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
@@ -1225,37 +1220,37 @@ let add_module_completions this_fname deps table =
         CTable.register_module_path table (loaded mod_key) mod_path ns_query)
     table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
-// filename is the name of the file currently edited
-let interactive_mode' (filename:string): unit =
+let initial_range =
+  Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
+
+let interactive_mode' (filename: string): unit =
   write_hello ();
 
-  //type check prims and the dependencies
-  let deps, maybe_intf = deps_of_our_file filename in
   let env = init_env () in
+  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+
+  //type check prims and the dependencies
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
   let env = tc_prims env in
-  let stack, env, ts = tc_deps None [] env deps [] in
-  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
-  let env =
-    match maybe_intf with
+  let deps, maybe_inferface = deps_of_our_file filename in
+  let env, repl_deps = tc_deps [] env deps [] in
+  let env = match maybe_inferface with
+    | None -> env
     | Some intf ->
-        // We found an interface: record its contents in the desugaring environment
-        // to be interleaved with the module implementation on-demand
-        FStar.Universal.load_interface_decls env intf
-    | None ->
-        env in
+      // We found an interface: record its contents in the desugaring environment
+      // to be interleaved with the module implementation on-demand
+      FStar.Universal.load_interface_decls env intf in
   let env, name_events = finish_name_tracking env in // …end name tracking
 
   TcEnv.toggle_id_info (snd env) true;
 
-  let names =
+  let initial_names =
     add_module_completions filename deps CTable.empty in
   let init_st =
     { repl_line = 1; repl_column = 0; repl_fname = filename;
-      repl_stack = stack; repl_curmod = None;
-      repl_env = env; repl_ts = ts; repl_stdin = open_stdin ();
-      repl_names = commit_name_tracking None names name_events } in
+      repl_curmod = None; repl_env = env; repl_deps = repl_deps;
+      repl_stdin = open_stdin ();
+      repl_names = commit_name_tracking None initial_names name_events } in
 
   if FStar.Options.record_hints() || FStar.Options.use_hints() then
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
