@@ -1,5 +1,5 @@
 [
-  "@ˆ\u0014\u001c5Æ\u0005\u000fˇ1ˇœ\"DwÆ",
+  "\u007fNçΩ3|·YÇ§=§.›NÉ",
   [
     [
       "FStar.Monotonic.HyperHeap.color",
@@ -89,14 +89,6 @@
     [
       "FStar.Monotonic.HyperHeap.root_has_color_zero",
       2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "FStar.Monotonic.HyperHeap.root_has_color_zero",
-      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -337,14 +329,6 @@
     [
       "FStar.Monotonic.HyperHeap.lemma_includes_anti_symmetric",
       2,
-      2,
-      1,
-      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
-    ],
-    [
-      "FStar.Monotonic.HyperHeap.lemma_includes_anti_symmetric",
-      3,
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
@@ -1534,14 +1518,6 @@
       0
     ],
     [
-      "FStar.Monotonic.HyperHeap.extends_parent",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
-    ],
-    [
       "FStar.Monotonic.HyperHeap.includes_child",
       1,
       2,
@@ -1584,14 +1560,6 @@
       0
     ],
     [
-      "FStar.Monotonic.HyperHeap.includes_child",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
-    ],
-    [
       "FStar.Monotonic.HyperHeap.root_is_root",
       1,
       2,
@@ -1624,14 +1592,6 @@
     [
       "FStar.Monotonic.HyperHeap.root_is_root",
       2,
-      2,
-      1,
-      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
-    ],
-    [
-      "FStar.Monotonic.HyperHeap.root_is_root",
-      3,
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
@@ -1691,17 +1651,6 @@
       3,
       2,
       1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "FStar.Monotonic.HyperHeap.lemma_sel_same_addr",
-      4,
-      2,
-      1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0
     ],
@@ -1738,17 +1687,6 @@
     [
       "FStar.Monotonic.HyperHeap.lemma_upd_same_addr",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "FStar.Monotonic.HyperHeap.lemma_upd_same_addr",
-      3,
       2,
       1,
       [

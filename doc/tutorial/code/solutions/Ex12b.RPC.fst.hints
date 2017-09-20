@@ -234,22 +234,6 @@
       0
     ],
     [
-      "Ex12b.RPC.add_to_log",
-      6,
-      2,
-      1,
-      [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
-      0
-    ],
-    [
-      "Ex12b.RPC.add_to_log",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
-      0
-    ],
-    [
       "Ex12b.RPC.req",
       1,
       2,
@@ -288,14 +272,6 @@
       0
     ],
     [
-      "Ex12b.RPC.req",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
-      0
-    ],
-    [
       "Ex12b.RPC.resp",
       1,
       2,
@@ -328,14 +304,6 @@
     [
       "Ex12b.RPC.resp",
       3,
-      2,
-      1,
-      [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
-      0
-    ],
-    [
-      "Ex12b.RPC.resp",
-      4,
       2,
       1,
       [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],

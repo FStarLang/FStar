@@ -1078,57 +1078,6 @@
       0
     ],
     [
-      "CntProtocol.recall_all",
-      10,
-      0,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "CntProtocol.recall_all",
-      11,
-      0,
-      1,
-      [
-        "@query", "equation_CntFormat.message",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Platform.Bytes.bytes",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "CntProtocol.recall_all",
-      12,
-      0,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "CntProtocol.recall_all",
-      13,
-      0,
-      1,
-      [
-        "@query", "equation_CntFormat.uint16",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
       "CntProtocol.client",
       1,
       0,
