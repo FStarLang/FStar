@@ -142,7 +142,7 @@ val string_of_delta_level : delta_level -> string
 (* Marking and resetting the environment, for the interactive mode *)
 val push               : env -> string -> env
 val pop                : env -> string -> env
-val commit_mark        : env -> env
+val commit_mark        : env -> unit
 val cleanup_interactive: env -> unit
 
 (* Checking the per-module debug level and position info *)

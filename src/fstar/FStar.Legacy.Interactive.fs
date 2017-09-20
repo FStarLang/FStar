@@ -78,8 +78,7 @@ let push_with_kind ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
 
 let commit_mark (dsenv, env) =
-    let env = TcEnv.commit_mark env in
-    dsenv, env
+    TcEnv.commit_mark env
 
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
     try
@@ -565,7 +564,7 @@ let rec go (line_col:(int*int))
         | Some (curmod, env, n_errs) ->
             if n_errs=0 then begin
               Util.print1 "\n%s\n" ok;
-              let env = commit_mark env in
+              commit_mark env;
               go line_col filename stack curmod env ts
               end
             else fail curmod env

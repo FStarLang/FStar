@@ -233,9 +233,8 @@ let pop env msg =
     pop_query_indices();
     pop_stack ()
 
-let commit_mark (env: env) =
-    env.solver.commit_mark "";
-    env
+let commit_mark env =
+    env.solver.commit_mark ""
 
 let incr_query_index env =
     let qix = peek_query_indices () in
