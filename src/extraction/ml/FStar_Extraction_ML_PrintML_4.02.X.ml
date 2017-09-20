@@ -101,7 +101,8 @@ let build_constant (c: mlconstant): constant =
   | MLC_Float v -> failwith "Case not handled"
   | MLC_Char v -> Const_int v
   | MLC_String v -> Const_string (v, None)
-  | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
+  | MLC_Bytes _ -> failwith "Case not handled" (* do we need this? *)
+  | _ -> failwith "Case not handled"
 
 let build_constant_expr (c: mlconstant): expression =
   match c with
@@ -243,7 +244,6 @@ let rec build_expr ?annot (e: mlexpr): expression =
       let fields = map (fun (x,y) -> (path_to_ident(path, x), build_expr y)) l in
       Exp.record fields None
    | MLE_Proj (e, path) ->
-      let field = match path with (_, f) -> f in
       Exp.field (build_expr e) (path_to_ident (path))
    (* MLE_If always desugared to match? *)
    | MLE_If (e, e1, e2) ->
@@ -275,8 +275,7 @@ and resugar_app f args es: expression =
           | MLE_Match (_, branches) ->
              assert (length branches == 1);
              (match (hd branches) with
-              | (_, _, x) -> build_expr x
-              | _ -> failwith "Cannot resugar FStar.All.try_with")
+              | (_, _, x) -> build_expr x)
           | _ -> failwith "Cannot resugar FStar.All.try_with"
          )
       | _ -> failwith "Cannot resugar FStar.All.try_with" in
@@ -384,7 +383,6 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): t
     Some (Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ?attrs:ptype_attrs ptype_name)
 
 let build_tydecl (td: mltydecl): structure_item_desc option =
-  let recf = Recursive in
   let type_declarations = map build_one_tydecl td |> flatmap opt_to_list in
   if type_declarations = [] then None else Some (Pstr_type type_declarations)
 
@@ -393,12 +391,6 @@ let build_exn (sym, tys): extension_constructor =
   let name = mk_sym sym in
   let args = Some (map build_core_type tys) in
   Te.decl ?args:args name
-
-let build_mlsig1 = function
-    MLS_Mod (sym, s) -> failwith "not defined0"
-  | MLS_Ty  tydecl -> failwith "not defined1"
-  | MLS_Val (sym, tyscheme) -> failwith "not defined2"
-  | MLS_Exn (sym, mltys) -> failwith "not defined3"
 
 let build_module1 path (m1: mlmodule1): structure_item option =
   match m1 with
@@ -422,7 +414,6 @@ let build_m path (md: (mlsig * mlmodule) option) : structure =
   | Some(s, m) ->
      let open_prims =
        Str.open_ (Opn.mk ?override:(Some Fresh) (mk_lident "Prims")) in
-     let a = map build_mlsig1 s in (* module signatures not yet implemented *)
      open_prims::(map (build_module1 path) m |> flatmap opt_to_list)
   | None -> []
 
