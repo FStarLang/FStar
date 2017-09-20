@@ -227,17 +227,17 @@ let do_unify (env : env) (t1 : term) (t2 : term) : bool =
 let trysolve (goal : goal) (solution : term) : bool =
     do_unify goal.context solution goal.witness
 
-let solve (goal : goal) (solution : term) : unit =
-    if trysolve goal solution
-    then ()
-    else raise (TacFailure(BU.format3 "%s does not solve %s : %s"
-                          (N.term_to_string goal.context solution)
-                          (N.term_to_string goal.context goal.witness)
-                          (N.term_to_string goal.context goal.goal_ty)))
-
 let dismiss : tac<unit> =
     bind get (fun p ->
     set ({p with goals=List.tl p.goals}))
+
+let solve (goal : goal) (solution : term) : tac<unit> =
+    if trysolve goal solution
+    then dismiss
+    else fail (BU.format3 "%s does not solve %s : %s"
+              (N.term_to_string goal.context solution)
+              (N.term_to_string goal.context goal.witness)
+              (N.term_to_string goal.context goal.goal_ty))
 
 let dismiss_all : tac<unit> =
     bind get (fun p ->
@@ -323,7 +323,7 @@ let istrivial (e:env) (t:term) : bool =
 let trivial : tac<unit> =
     bind cur_goal (fun goal ->
     if istrivial goal.context goal.goal_ty
-    then (solve goal U.exp_unit; dismiss)
+    then solve goal U.exp_unit
     else fail1 "Not a trivial goal: %s" (N.term_to_string goal.context goal.goal_ty)
     )
 
@@ -458,7 +458,7 @@ let __exact (t:term) : tac<unit> =
                     fail2 "exact: term is not typeable: %s (%s)" (Print.term_to_string t) (Print.tag_of_term t)) (fun (t, typ, guard) ->
     if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "exact: got non-trivial guard" else
     if do_unify goal.context typ goal.goal_ty
-    then let _ = solve goal t in dismiss
+    then solve goal t
     else fail3 "%s : %s does not exactly solve the goal %s"
                     (N.term_to_string goal.context t)
                     (N.term_to_string goal.context (bnorm goal.context typ))
@@ -480,7 +480,7 @@ let exact_lemma (t:term) : tac<unit> =
                     | _ -> failwith "exact_lemma: impossible: not a lemma"
     in
     if do_unify goal.context post goal.goal_ty
-    then let _ = solve goal t in bind dismiss (fun _ -> add_irrelevant_goal goal.context pre goal.opts)
+    then bind (solve goal t) (fun _ -> add_irrelevant_goal goal.context pre goal.opts)
     else fail3 "%s : %s does not exactly solve the goal %s"
                     (N.term_to_string goal.context t)
                     (N.term_to_string goal.context post)
@@ -606,9 +606,8 @@ let apply_lemma (tm:term) : tac<unit> = focus(
              match (SS.compress hd).n with
              | Tm_uvar _ -> true //still unresolved
              | _ -> false) in
-        solve goal solution;
+        bind (solve goal solution) (fun _ ->
         bind (add_implicits implicits) (fun _ ->
-        bind dismiss (fun _ ->
         let is_free_uvar uv t =
             let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
             List.existsML (fun u -> UF.equiv u uv) free_uvars
@@ -832,11 +831,7 @@ let trefl : tac<unit> =
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
             if not (do_unify g.context l r)
             then fail2 "trefl: not a trivial equality (%s vs %s)" (N.term_to_string g.context l) (N.term_to_string g.context r)
-            else
-            begin
-                solve g U.exp_unit;
-                dismiss
-            end
+            else solve g U.exp_unit
         | hd, _ ->
             fail1 "trefl: not an equality (%s)" (N.term_to_string g.context t)
         end
