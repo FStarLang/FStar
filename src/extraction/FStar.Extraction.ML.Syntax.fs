@@ -48,10 +48,6 @@ let ocamlkeywords = [
 let is_reserved k =
   List.existsb (fun k' -> k' = k) ocamlkeywords
 
-//remove me
-let idsym (s : mlident) : mlsymbol =
-    s
-
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
 

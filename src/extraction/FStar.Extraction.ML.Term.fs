@@ -296,10 +296,6 @@ let rec is_ml_value e =
     | _ -> false
 
 
-(*copied from ocaml-asttrans.fs*)
-let fresh = let c = mk_ref 0 in
-            fun (x:string) -> (incr c; (x ^ string_of_int (!c), !c))
-
 //pre-condition: SS.compress t = Tm_abs _
 //Collapses adjacent abstractions into a single n-ary abstraction
 let normalize_abs (t0:term) : term =
@@ -1300,14 +1296,13 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         | Tm_arrow (binders, _) ->
             binders
             |> List.filter (function (_, (Some (Implicit _))) -> true | _ -> false)
-            |> List.map (fun _ -> (*fresh*) "_", MLTY_Top)
+            |> List.map (fun _ -> "_", MLTY_Top)
         | _ ->
             failwith "Discriminator must be a function"
     in
     // Unfortunately, looking up the constructor name in the environment would give us a _curried_ type.
     // So, we don't bother popping arrows until we find the return type of the constructor.
     // We just use Top.
-    // let mlid = fresh "_discr_" in
     let mlid = "_discr_" in
     let targ = MLTY_Top in
     // Ugly hack: we don't know what to put in there, so we just write a dummy
@@ -1317,7 +1312,7 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         with_ty disc_ty <|
             MLE_Fun(wildcards @ [(mlid, targ)],
                     with_ty ml_bool_ty <|
-                        (MLE_Match(with_ty targ <| MLE_Name([], idsym mlid),
+                        (MLE_Match(with_ty targ <| MLE_Name([], mlid),
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
                                    [MLP_CTor(mlpath_of_lident constrName, [MLP_Wild]), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
                                     MLP_Wild, None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)]))) in

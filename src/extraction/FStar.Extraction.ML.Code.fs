@@ -273,7 +273,7 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
             if BU.starts_with s "'_" //this denotes a weak type variable in OCaml; it cannot be written in source programs
             then BU.replace_char s '_' 'u'
             else s in
-        text (escape_tyvar <| idsym x)
+        text (escape_tyvar x)
 
     | MLTY_Tuple tys ->
         let doc = List.map (doc_of_mltype currentModule (t_prio_tpl, Left)) tys in
@@ -384,7 +384,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
           ] when (string_of_mlpath p = "FStar.All.try_with") ->
             let branches =
               match possible_match with
-              | ({ expr = MLE_Match ({ expr = MLE_Var arg' }, branches) }) when (idsym arg = idsym arg') ->
+              | ({ expr = MLE_Match ({ expr = MLE_Var arg' }, branches) }) when (arg = arg') ->
                   branches
               | e ->
                   (* F* may reduce [match ... with ... -> e | ... -> e] into [e]. *)
@@ -581,7 +581,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
                       let vars = vs |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
                       reduce1 [text ":"; vars; text "."; ty]
             else text "" in
-        reduce1 [text (idsym name); reduce1 ids; ty_annot; text "="; e] in
+        reduce1 [text name; reduce1 ids; ty_annot; text "="; e] in
 
     let letdoc = if rec_ = Rec then reduce1 [text "let"; text "rec"] else text "let" in
 
@@ -609,9 +609,9 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
         let tparams =
             match tparams with
             | []  -> empty
-            | [x] -> text (idsym x)
+            | [x] -> text x
             | _   ->
-                let doc = List.map (fun x -> (text (idsym x))) tparams in
+                let doc = List.map (fun x -> (text x)) tparams in
                 parens (combine (text ", ") doc) in
 
         let forbody (body : mltybody) =
