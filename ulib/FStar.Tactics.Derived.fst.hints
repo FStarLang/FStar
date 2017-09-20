@@ -1,5 +1,5 @@
 [
-  "\u001dD3œY½¦&Øƒ³µ\u001bèÊ\t",
+  "Ô\u0018x–ß&#Å¿VÎ\u000e0-‚Õ",
   [
     [
       "FStar.Tactics.Derived.mapM",
@@ -14,6 +14,7 @@
       ],
       0
     ],
+    [ "FStar.Tactics.Derived.guard", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Tactics.Derived.or_else",
       1,

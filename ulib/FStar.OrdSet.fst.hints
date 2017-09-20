@@ -1494,24 +1494,14 @@
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0
     ],
-    [ "FStar.OrdSet.lemma_minus_mem", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.OrdSet.lemma_minus_mem",
-      2,
+      1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0
     ],
-    [
-      "FStar.OrdSet.lemma_minus_mem",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
-    ],
-    [ "FStar.OrdSet.lemma_disjoint_union_subset", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.OrdSet.lemma_subset_union",
       1,
@@ -1526,8 +1516,6 @@
         "typing_FStar.OrdSet.union", "unit_typing"
       ],
       0
-    ],
-    [ "FStar.OrdSet.lemma_intersect_symmetric", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.OrdSet.lemma_intersect_union_empty", 1, 2, 1, [ "@query" ], 0 ]
+    ]
   ]
 ]

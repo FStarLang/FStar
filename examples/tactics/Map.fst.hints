@@ -1,0 +1,42 @@
+[
+  "˜ª¢á\ré<ÈýZ†Gù¨sÖ",
+  [
+    [ "Map.upd", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Map.upd",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
+    [
+      "Map.sel_upd1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Map.sel", "equation_Map.upd",
+        "interpretation_Map_Tm_abs_130c2f30bd8262f24e6cf58a5019ec1a",
+        "primitive_Prims.op_Equality", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "Map.sel_upd2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Map.sel", "equation_Map.upd",
+        "interpretation_Map_Tm_abs_130c2f30bd8262f24e6cf58a5019ec1a",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "unit_typing"
+      ],
+      0
+    ]
+  ]
+]
