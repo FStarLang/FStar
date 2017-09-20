@@ -20,17 +20,18 @@ module Cast = FStar.Int.Cast
 
 (*** API using validated but unparsed key-value buffer *)
 
+val fold_left_store_aux: #t:Type -> f:(t -> encoded_entry -> t) -> t -> es:list encoded_entry -> t 
+    (decreases es)
+let rec fold_left_store_aux #t f acc es =
+      match es with
+      | [] -> acc
+      | e::es -> fold_left_store_aux f (f acc e) es
+      
 // sufficient to expose iteration over the key-value pairs (specifically pointers to them)
-
 // spec: fold over fully parsed store
 val fold_left_store: #t:Type -> f:(t -> encoded_entry -> t) -> t -> s:store -> t
-let fold_left_store #t f acc s =
-    let rec aux (es: list encoded_entry) (acc:t) : t =
-        match es with
-        | [] -> acc
-        | e::es -> aux es (f acc e) in
-    aux s.entries acc
-
+let fold_left_store #t f acc s = fold_left_store_aux f acc s.entries
+    
 // XXX: this is just computation, right?
 assume val fold_left_empty (#t:Type) (f:(t -> encoded_entry -> t)) (acc:t) (s:store) :
   Lemma (requires (s.entries == []))
@@ -54,7 +55,7 @@ let rec fold_left_store_n_spec f acc s =
   | 0 -> fold_left_empty f acc s
   | _ ->
     let n' = U32.sub s.num_entries (U32.uint_to_t 1) in
-    fold_left_store_n_spec f (f acc (List.hd s.entries)) (Store n' (List.tail s.entries))
+    fold_left_store_n_spec f (f acc (List.hd s.entries)) (Store n' (List.tl s.entries))
 
 // This is a stateful fold over pure entries - intended to be used as a
 // specification, since we will not materialized [encoded_entry]s at runtime
