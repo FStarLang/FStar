@@ -1275,21 +1275,35 @@ and desugar_comp r env t =
           let ens = Ensures (mk_term (Name C.true_lid) t.range Formula, None) in
           mk_term ens t.range Type_level, Nothing
         in
+        let fail_lemma () = 
+             let expected_one_of = ["Lemma post";
+                                    "Lemma (ensures post)";
+                                    "Lemma (requires pre) (ensures post)";
+                                    "Lemma post [SMTPat ...]";
+                                    "Lemma (ensures post) [SMTPat ...]";
+                                    "Lemma (ensures post) (decreases d)";
+                                    "Lemma (ensures post) (decreases d) [SMTPat ...]";
+                                    "Lemma (requires pre) (ensures post) (decreases d)";
+                                    "Lemma (requires pre) (ensures post) [SMTPat ...]";
+                                    "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
+             let msg = String.concat "\n\t" expected_one_of in
+             raise (Error("Invalid arguments to 'Lemma'; expected one of the following:\n\t" ^ msg, t.range))
+        in
         let args = match args with
-          | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
+          | [] -> fail_lemma ()
 
           | [req] //a single requires clause (cf. Issue #1208)
                when is_requires req ->
-             raise (Error("Not enough arguments to 'Lemma'", t.range))
+            fail_lemma()
 
           | [smtpat]
                 when is_smt_pat smtpat ->
-             raise (Error("Not enough arguments to 'Lemma'", t.range))
+            fail_lemma()
 
           | [dec]
                 when is_decreases dec ->
-             raise (Error("Not enough arguments to 'Lemma'", t.range))
-
+            fail_lemma()
+                         
           | [ens] -> //otherwise, a single argument is always treated as just an ensures clause
             [unit_tm;req_true;ens;nil_pat]
 
@@ -1336,18 +1350,7 @@ and desugar_comp r env t =
             unit_tm::args
 
           | _other ->
-             let expected_one_of = ["Lemma post";
-                                    "Lemma (ensures post)";
-                                    "Lemma (requires pre) (ensures post)";
-                                    "Lemma post [SMTPat ...]";
-                                    "Lemma (ensures post) [SMTPat ...]";
-                                    "Lemma (ensures post) (decreases d)";
-                                    "Lemma (ensures post) (decreases d) [SMTPat ...]";
-                                    "Lemma (requires pre) (ensures post) (decreases d)";
-                                    "Lemma (requires pre) (ensures post) [SMTPat ...]";
-                                    "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
-             let msg = String.concat "; " expected_one_of in
-             raise (Error("Invalid combination of arguments to 'Lemma'; expected one of the following: " ^ msg, t.range))
+            fail_lemma()
         in
         let head_and_attributes = fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma in
         head_and_attributes, args
