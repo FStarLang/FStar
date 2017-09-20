@@ -29,6 +29,7 @@ all:	Apply.uver		\
 	Simplifier.uver		\
 	Neg.uver		\
 	Caller.uver		\
+	Retype.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\
