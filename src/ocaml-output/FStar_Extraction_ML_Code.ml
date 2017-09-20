@@ -310,14 +310,14 @@ let escape_or:
   fun fallback  ->
     fun uu___125_1049  ->
       match uu___125_1049 with
-      | c when c = '\\' -> "\\\\"
-      | c when c = ' ' -> " "
-      | c when c = '\b' -> "\\b"
-      | c when c = '\t' -> "\\t"
-      | c when c = '\r' -> "\\r"
-      | c when c = '\n' -> "\\n"
-      | c when c = '\'' -> "\\'"
-      | c when c = '"' -> "\\\""
+      | c when c = 92 -> "\\\\"
+      | c when c = 32 -> " "
+      | c when c = 8 -> "\\b"
+      | c when c = 9 -> "\\t"
+      | c when c = 13 -> "\\r"
+      | c when c = 10 -> "\\n"
+      | c when c = 39 -> "\\'"
+      | c when c = 34 -> "\\\""
       | c when FStar_Util.is_letter_or_digit c -> FStar_Util.string_of_char c
       | c when FStar_Util.is_punctuation c -> FStar_Util.string_of_char c
       | c when FStar_Util.is_symbol c -> FStar_Util.string_of_char c
@@ -380,7 +380,7 @@ let rec doc_of_mltype':
         | FStar_Extraction_ML_Syntax.MLTY_Var x ->
             let escape_tyvar s =
               if FStar_Util.starts_with s "'_"
-              then FStar_Util.replace_char s '_' 'u'
+              then FStar_Util.replace_char s 95 117
               else s in
             let uu____1204 =
               let uu____1205 = FStar_Extraction_ML_Syntax.idsym x in
