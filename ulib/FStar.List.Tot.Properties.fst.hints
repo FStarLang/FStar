@@ -1546,17 +1546,6 @@
       0
     ],
     [
-      "FStar.List.Tot.Properties.assoc_cons_not_eq",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0
-    ],
-    [
       "FStar.List.Tot.Properties.assoc_append_elim_r",
       1,
       2,

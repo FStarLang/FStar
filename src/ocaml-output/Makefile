@@ -99,8 +99,8 @@ endif
 fstar.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
 fstar.exe: $(GENERATED_FILES)
 	$(OCAMLBUILD) main.native
-	cp _build/src/fstar/ml/main.native ../../bin/$@
-	cp _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
+	cp -f _build/src/fstar/ml/main.native ../../bin/$@
+	cp -f _build/src/fstar/ml/main.native ../../bin/fstar.ocaml
 
 FStar_Parser_Parse.ml: parse.mly
 	# We are opening the same module twice but we need these modules

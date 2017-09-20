@@ -43,6 +43,11 @@ let idtac : tactic unit = return ()
 private let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
 let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
 
+let guard (b : bool) : tactic unit =
+    if b
+    then return ()
+    else fail "guard failed"
+
 let or_else (#a:Type) (t1 : tactic a) (t2 : tactic a) : tactic a =
     r <-- trytac t1;
     (match r with
@@ -69,8 +74,8 @@ let whnf  : tactic unit = norm [whnf; primops]
 
 let intros : tactic (list binder) = repeat intro
 
-private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
-private let __cut #b a f x = f x
+private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
+private let __cut a b f x = f x
 
 let tcut (t:term) : tactic binder =
     qq <-- quote_lid ["FStar";"Tactics";"Derived";"__cut"];

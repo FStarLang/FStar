@@ -37,6 +37,8 @@ effect ML (a:Type) = ALL a (all_null_wp heap a)
 
 assume val pipe_right : 'a -> ('a -> ML 'b) -> ML 'b
 assume val pipe_left : ('a -> ML 'b) -> 'a -> ML 'b
-assume val failwith : string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h == h')
 assume val exit : int -> ML 'a
 assume val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
+
+assume exception Failure of string
+assume val failwith : string -> All 'a (fun h -> True) (fun h a h' -> Err? a /\ h == h')

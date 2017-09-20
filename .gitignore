@@ -68,6 +68,9 @@ tags
 
 *.exe
 
+*.checked
+*.checked.lax
+
 /.nubuild
 /nucache/
 /nuobj/

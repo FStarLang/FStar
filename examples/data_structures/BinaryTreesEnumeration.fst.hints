@@ -569,14 +569,6 @@
       0
     ],
     [
-      "BinaryTreesEnumeration.unfold_tos",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
       "BinaryTreesEnumeration.tos_complete",
       1,
       1,
