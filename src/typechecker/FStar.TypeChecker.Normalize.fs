@@ -1170,7 +1170,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
-          | Tm_let((true, lbs), body) when List.contains CompressUvars cfg.steps -> //no fixpoint reduction allowed
+          | Tm_let((true, lbs), body)
+                when List.contains CompressUvars cfg.steps
+                  || (List.contains (Exclude Zeta) cfg.steps &&
+                      List.contains PureSubtermsWithinComputations cfg.steps) -> //no fixpoint reduction allowed
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
                 let ty = norm cfg env [] lb.lbtyp in

@@ -125,9 +125,9 @@ let rec pow2 n =
   else
     ~$2 * pow2 (n - ~$1)
 
-let __proj__Cons__item__tl = function
-  | _::tl -> tl
-  | _     -> failwith "Impossible"
+let __proj__Cons__item__hd = List.hd
+
+let __proj__Cons__item__tl = List.tl
 
 let min = min
 

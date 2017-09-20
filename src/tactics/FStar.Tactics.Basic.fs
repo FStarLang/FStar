@@ -600,7 +600,7 @@ let apply_lemma (tm:term) : tac<unit> = focus(
                             (N.term_to_string goal.context (U.mk_squash post))
                             (N.term_to_string goal.context goal.goal_ty)
     else
-        let solution = S.mk_Tm_app tm uvs None goal.context.range in
+        let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
         let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
              let hd, _ = U.head_and_args tm in
              match (SS.compress hd).n with

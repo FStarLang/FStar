@@ -462,28 +462,6 @@
       0
     ],
     [
-      "IfcRulesReify.seq_nil1",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_Prims.HasEq_unit", "function_token_typing_Prims.unit"
-      ],
-      0
-    ],
-    [
-      "IfcRulesReify.seq_nil1",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_Prims.HasEq_unit", "function_token_typing_Prims.unit"
-      ],
-      0
-    ],
-    [
       "IfcRulesReify.seq_nil2",
       1,
       2,
@@ -544,28 +522,6 @@
     [
       "IfcRulesReify.seq_nil2",
       3,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_Prims.HasEq_unit", "function_token_typing_Prims.unit"
-      ],
-      0
-    ],
-    [
-      "IfcRulesReify.seq_nil2",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.option_haseq",
-        "assumption_Prims.HasEq_unit", "function_token_typing_Prims.unit"
-      ],
-      0
-    ],
-    [
-      "IfcRulesReify.seq_nil2",
-      5,
       2,
       1,
       [
@@ -853,14 +809,6 @@
       0
     ],
     [
-      "IfcRulesReify.interpret_cond",
-      3,
-      1,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
       "IfcRulesReify.cond_ni_com'",
       1,
       1,
@@ -1040,14 +988,6 @@
       0
     ],
     [
-      "IfcRulesReify.interpret_while_nil",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
       "IfcRulesReify.interpret_while_loops",
       1,
       2,
@@ -1139,14 +1079,6 @@
     [
       "IfcRulesReify.interpret_while_loops",
       2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "IfcRulesReify.interpret_while_loops",
-      3,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],

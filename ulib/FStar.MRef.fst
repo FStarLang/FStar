@@ -24,6 +24,11 @@ abstract val recall_token: #a:Type -> #b:preorder a -> m:mref a b -> p:(a -> Typ
                                      (ensures (fun h0 _ h1 -> h0==h1 /\ p (sel h1 m)))
 let recall_token #a #b m p = gst_recall (p_pred m p)
 
+let spred (#a:Type) (rel:preorder a) = p:(a -> Type){Preorder.stable p rel}
+let lemma_functoriality (#a:Type) (#rel:preorder a) (r:mref a rel) (p q:spred rel)
+  : Lemma (requires (token r p /\ (forall x. p x ==> q x)))
+    (ensures (token r q))
+= lemma_functoriality (p_pred r p) (p_pred r q)
 
 (* KM : These don't have much to do here... *)
 
