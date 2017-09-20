@@ -114,8 +114,6 @@ and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
-    mark         :string -> unit;
-    reset_mark   :string -> unit;
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
@@ -144,8 +142,6 @@ val string_of_delta_level : delta_level -> string
 (* Marking and resetting the environment, for the interactive mode *)
 val push               : env -> string -> env
 val pop                : env -> string -> env
-val mark               : env -> env
-val reset_mark         : env -> env
 val commit_mark        : env -> env
 val cleanup_interactive: env -> unit
 

@@ -153,8 +153,6 @@ val push_doc: env -> lident -> option<Parser.AST.fsdoc> -> env
 
 val pop: unit -> env
 val push: env -> env
-val mark: env -> env
-val reset_mark: unit -> env
 val commit_mark: env -> env
 val finish_module_or_interface: env -> modul -> env
 val enter_monad_scope: env -> ident -> env

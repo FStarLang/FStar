@@ -1064,9 +1064,6 @@ let commit_mark (env: env) =
     env
   | _ -> failwith "Impossible: Too many pops"
 
-let mark x = push x
-let reset_mark () = pop ()
-
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
     let sigelt_in_m se =

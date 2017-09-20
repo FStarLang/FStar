@@ -73,8 +73,6 @@ let mk_data_tester env l x = mk_tester (escape l.str) x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
-    mark: unit -> unit;
-    reset_mark: unit -> unit;
     commit_mark: unit -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
@@ -109,8 +107,6 @@ let varops =
             f in
     let push () = scopes := new_scope()::!scopes in
     let pop () = scopes := List.tl !scopes in
-    let mark () = push () in
-    let reset_mark () = pop () in
     let commit_mark () = match !scopes with
         | (hd1, hd2)::(next1, next2)::tl ->
           BU.smap_fold hd1 (fun key value v  -> BU.smap_add next1 key value) ();
@@ -119,8 +115,6 @@ let varops =
         | _ -> failwith "Impossible" in
     {push=push;
      pop=pop;
-     mark=mark;
-     reset_mark=reset_mark;
      commit_mark=commit_mark;
      new_var=new_var;
      new_fvar=new_fvar;
@@ -2644,8 +2638,6 @@ let push_env () = match !last_env with
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl
-let mark_env () = push_env()
-let reset_mark_env () = pop_env()
 let commit_mark_env () =
     match !last_env with
         | hd::_::tl -> last_env := hd::tl
@@ -2664,14 +2656,6 @@ let pop msg   =
     let _ = pop_env() in
     varops.pop();
     Z3.pop msg
-let mark msg =
-    mark_env();
-    varops.mark();
-    Z3.mark msg
-let reset_mark msg =
-    reset_mark_env();
-    varops.reset_mark();
-    Z3.reset_mark msg
 let commit_mark (msg:string) =
     commit_mark_env();
     varops.commit_mark();

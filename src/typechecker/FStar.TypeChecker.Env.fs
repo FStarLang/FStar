@@ -116,8 +116,6 @@ and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
-    mark         :string -> unit;
-    reset_mark   :string -> unit;
     commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
@@ -238,21 +236,11 @@ let pop env msg =
     pop_query_indices();
     pop_stack ()
 
-let mark env =
-    env.solver.mark "USER MARK";
-    push_query_indices();
-    push_stack env
-
 let commit_mark (env: env) =
     commit_query_index_mark();
-    env.solver.commit_mark "USER MARK";
+    env.solver.commit_mark "";
     ignore (pop_stack ());
     env
-
-let reset_mark env =
-    env.solver.reset_mark "USER MARK";
-    pop_query_indices();
-    pop_stack ()
 
 let incr_query_index env =
     let qix = peek_query_indices () in
@@ -1260,8 +1248,6 @@ let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
-    mark=(fun _ -> ());
-    reset_mark=(fun _ -> ());
     commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
