@@ -68,7 +68,7 @@ let parse fn =
         (try create (read_file f') f' 1 0, f'
          with _ -> raise (Err(FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f')))
     | U.Inr s ->
-      create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), ""
+      create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
   in
 
   let lexer () =

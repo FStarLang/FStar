@@ -285,14 +285,12 @@ let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) =
      forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
 
 let extends_parent (tip:rid{tip<>root}) (r:rid)
-  : Lemma (requires True)
-          (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip)
+  : Lemma (ensures (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip))
           [SMTPat (extends r (parent tip))]
   = ()
 
 let includes_child (tip:rid{tip<>root}) (r:rid)
-  : Lemma (requires True)
-          (includes r tip ==> r=tip \/ includes r (parent tip))
+  : Lemma (ensures (includes r tip ==> r=tip \/ includes r (parent tip)))
           [SMTPat (includes r (parent tip))]
   = ()
 

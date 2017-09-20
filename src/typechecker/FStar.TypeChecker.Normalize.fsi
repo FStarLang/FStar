@@ -44,6 +44,7 @@ type step =
   | CompressUvars
   | NoFullNorm
   | CheckNoUvars
+  | Unmeta
 and steps = list<step>
 type primitive_step = {
     name:FStar.Ident.lid;

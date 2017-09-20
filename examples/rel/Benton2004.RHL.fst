@@ -512,7 +512,7 @@ let r_sym
   (f f' : computation)
 : Lemma
   (requires (is_per p /\ is_per p'))
-  (exec_equiv p p' f f' <==> exec_equiv p p' f' f)
+  (ensures (exec_equiv p p' f f' <==> exec_equiv p p' f' f))
   [SMTPat (exec_equiv p p' f f'); SMTPat (is_per p); SMTPat (is_per p')]
 = exec_equiv_sym (interp p) (interp p') f f'
 

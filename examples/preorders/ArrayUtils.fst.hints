@@ -159,22 +159,6 @@
       0
     ],
     [
-      "ArrayUtils.lemma_get_equivalent_sequence_slice",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "ArrayUtils.lemma_get_equivalent_sequence_slice",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
       "ArrayUtils.copy_seq",
       1,
       2,

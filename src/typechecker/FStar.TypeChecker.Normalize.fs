@@ -71,6 +71,7 @@ type step =
   | CompressUvars
   | NoFullNorm
   | CheckNoUvars
+  | Unmeta          //remove all non-monadic metas.
 and steps = list<step>
 
 type primitive_step = {
@@ -1169,7 +1170,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
-          | Tm_let((true, lbs), body) when List.contains CompressUvars cfg.steps -> //no fixpoint reduction allowed
+          | Tm_let((true, lbs), body)
+                when List.contains CompressUvars cfg.steps
+                  || (List.contains (Exclude Zeta) cfg.steps &&
+                      List.contains PureSubtermsWithinComputations cfg.steps) -> //no fixpoint reduction allowed
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
                 let ty = norm cfg env [] lb.lbtyp in
@@ -1462,7 +1466,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head
 
               | _ ->
-                begin match stack with
+                if List.contains Unmeta cfg.steps
+                then norm cfg env stack head
+                else begin match stack with
                   | _::_ ->
                     begin match m with
                       | Meta_labeled(l, r, _) ->
