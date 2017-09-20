@@ -22,9 +22,7 @@ open Ex12.MAC
 
 module Formatting = Ex12b2.Format
 
-(* some basic, untrusted network controlled by the adversary *)
-
-
+(** some basic, untrusted network controlled by the adversary *)
 val msg_buffer: ref message
 let msg_buffer = alloc (empty_bytes)
 
@@ -44,13 +42,10 @@ let rec recv call =
     call msg)
   else recv call
 
-(* two events, recording genuine requests and responses *)
-
-
+(** two events, recording genuine requests and responses *)
 type log_entry =
   | Request: string -> log_entry
   | Response: string -> string -> log_entry
-
 
 let subset' (#a:eqtype) (l1:list a) (l2:list a)
   = (forall x. x `mem` l1 ==> x `mem` l2)
@@ -100,9 +95,8 @@ let client_send (s:string16) =
 
   assert(reqresp (Formatting.request s)); (* this works *)
   // assert(key_prop k == reqresp);          (* this also works *)
-  from_key_prop k (Formatting.request s) ;
   assert (reqresp (Formatting.request s)) ;
-  (*assert(key_prop k (Formatting.request s)); -- this fails *)
+  // assert(key_prop k (Formatting.request s));  (* this fails *) 
   send ( (utf8 s) @| (mac k (Formatting.request s)))
 
 
