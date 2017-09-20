@@ -518,21 +518,32 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
         match U.arrow_one typ with
         | None -> raise NoUnif
         | Some ((bv, aq), c) ->
+            (* BU.print1 "__apply: pushing arg of type %s\n" (Print.term_to_string bv.sort); *)
             if not (U.is_total_comp c) then fail "apply: not total codomain" else
             bind (new_uvar goal.context bv.sort) (fun u ->
+            (* BU.print1 "__apply: witness is %s\n" (Print.term_to_string u); *)
             let tm' = mk_Tm_app tm [(u, aq)] None goal.context.range in
             let typ' = SS.subst [S.NT (bv, u)] <| comp_to_typ c in
             bind (__apply uopt tm' typ') (fun _ ->
+            let u = bnorm goal.context u in
             match (SS.compress (fst (U.head_and_args u))).n with
             | Tm_uvar (uvar, _) ->
                 bind get (fun ps ->
                 if uopt && uvar_free uvar ps
                 then ret ()
-                else add_goals [{ goal with
+                else begin
+                    (* BU.print2 "__apply: adding goal %s : %s\n" (Print.term_to_string u) *)
+                    (*                                            (Print.term_to_string bv.sort); *)
+                    add_goals [{ goal with
                                   witness  = bnorm goal.context u;
                                   goal_ty  = bnorm goal.context bv.sort;
-                                  is_guard = false; }])
-            | _ -> ret ()))))
+                                  is_guard = false; }]
+                end)
+            | t -> begin
+                BU.print1 "__apply: uvar was instantiated to %s\n" (Print.term_to_string u);
+                ret ()
+                end
+            ))))
 
 // The exception is thrown only when the tactic runs, not when it's defined,
 // so we need to do this to catch it
