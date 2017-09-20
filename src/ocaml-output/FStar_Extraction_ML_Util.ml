@@ -110,8 +110,8 @@ let udelta_unfold:
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option
   =
   fun g  ->
-    fun uu___116_236  ->
-      match uu___116_236 with
+    fun uu___119_236  ->
+      match uu___119_236 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____245 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1 in
           (match uu____245 with
@@ -149,8 +149,8 @@ let eff_leq:
          ,FStar_Extraction_ML_Syntax.E_IMPURE ) -> true
       | uu____276 -> false
 let eff_to_string: FStar_Extraction_ML_Syntax.e_tag -> Prims.string =
-  fun uu___117_284  ->
-    match uu___117_284 with
+  fun uu___120_284  ->
+    match uu___120_284 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -216,8 +216,7 @@ let mk_ty_fun:
                  (t0, FStar_Extraction_ML_Syntax.E_PURE, t))
 type unfold_t =
   FStar_Extraction_ML_Syntax.mlty ->
-    FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option[@@deriving
-                                                                    show]
+    FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option
 let rec type_leq_c:
   unfold_t ->
     FStar_Extraction_ML_Syntax.mlexpr FStar_Pervasives_Native.option ->
@@ -384,8 +383,8 @@ let is_type_abstraction:
     (('Auu____826,'Auu____825) FStar_Util.either,'Auu____824)
       FStar_Pervasives_Native.tuple2 Prims.list -> Prims.bool
   =
-  fun uu___118_840  ->
-    match uu___118_840 with
+  fun uu___121_840  ->
+    match uu___121_840 with
     | (FStar_Util.Inl uu____851,uu____852)::uu____853 -> true
     | uu____876 -> false
 let is_xtuple:
@@ -421,8 +420,8 @@ let resugar_exp:
     | uu____937 -> e
 let record_field_path:
   FStar_Ident.lident Prims.list -> Prims.string Prims.list =
-  fun uu___119_945  ->
-    match uu___119_945 with
+  fun uu___122_945  ->
+    match uu___122_945 with
     | f::uu____951 ->
         let uu____954 = FStar_Util.prefix f.FStar_Ident.ns in
         (match uu____954 with
@@ -631,7 +630,7 @@ let not_implemented_warning: Prims.string -> Prims.unit =
     FStar_All.pipe_right uu____1439 FStar_Util.print_warning
 type emb_decl =
   | Embed
-  | Unembed[@@deriving show]
+  | Unembed
 let uu___is_Embed: emb_decl -> Prims.bool =
   fun projectee  ->
     match projectee with | Embed  -> true | uu____1444 -> false

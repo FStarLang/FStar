@@ -80,11 +80,17 @@ let norm_term: norm_step list -> RT.term -> unit -> RT.term __tac = fun s t -> f
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro
 
+let __rename_to (b: RT.binder) (nm : string) : unit __tac = from_tac_2 B.rename_to b nm
+let rename_to: RT.binder -> string -> unit -> unit __tac = fun b s -> fun () -> __rename_to b s
+
 let __revert: unit __tac = from_tac_0 B.revert
 let revert: unit -> unit __tac = fun () -> __revert
 
-let __clear: unit __tac = from_tac_0 B.clear
-let clear: unit -> unit __tac = fun () -> __clear
+let __clear_top: unit __tac = from_tac_0 B.clear_top
+let clear_top: unit -> unit __tac = fun () -> __clear_top
+
+let __clear (h: RT.binder) : unit __tac = from_tac_1 B.clear h
+let clear: RT.binder -> unit -> unit __tac = fun b -> fun () -> __clear b
 
 let __rewrite (h: RT.binder): unit __tac = from_tac_1 B.rewrite h
 let rewrite: RT.binder -> unit -> unit __tac = fun b  -> fun () -> __rewrite b
