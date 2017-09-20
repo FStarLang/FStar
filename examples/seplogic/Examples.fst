@@ -94,13 +94,46 @@ let swap_ok (r1:addr) (r2:addr) (h:heap) (x:int) (y:int) =
 
 (* Rotate three pointers *)
 let rotate_tau :tactic unit =
+  dump "Bar";;
   norm [delta; delta_only unfold_steps; primops];;
-  fail "Foo"
-
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  fail "Rotate"
+  
 let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (x:int) (y:int) (z:int) =
-  let swap1 = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
-  let swap2 = Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r1 n3))) in
-  let c = Bind swap1 (fun _ -> swap2) in
+  let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) 
+               (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r1 n3)))) in
   let p = fun _ h -> sel h r1 == y /\ sel h r2 == z /\ sel h r3 == x in 
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (sel h r1 == x /\ sel h r2 == y /\ sel h r2 == z ==> t) rotate_tau
+
