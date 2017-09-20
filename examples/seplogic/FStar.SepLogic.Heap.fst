@@ -3,7 +3,6 @@ module FStar.SepLogic.Heap
 include FStar.Heap
 
 type addr = ref int
-type heap  = FStar.Monotonic.Heap.heap
 
 abstract let restrict (h:heap) (r:addr) :heap
   = admit()

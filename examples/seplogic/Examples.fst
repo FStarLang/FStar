@@ -27,10 +27,18 @@ let unfold_fns :list string = [
 unfold let unfold_steps =
   List.Tot.map (fun s -> "Lang." ^ s) unfold_fns
 
+let step :tactic unit =
+  (apply_lemma (quote lemma_destruct_exists_subheaps);; norm[]) `or_else`
+  (apply_lemma (quote lemma_read_write);; norm [])              `or_else`
+  (apply_lemma (quote lemma_alloc_return);; norm [])            `or_else`
+  (implies_intro;; idtac)                                       `or_else`
+  (forall_intro;; idtac)                                        `or_else`
+  idtac
+
 (* Writing to a pointer *)
 let write_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
-  apply_lemma (quote lemma_read_write)
+  step
 
 let write_ok (r:addr) (h:heap) =
   let c = (Write r 3) in
@@ -38,24 +46,21 @@ let write_ok (r:addr) (h:heap) =
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic t write_tau
 
+(* Incrementing a pointer *)
 let increment_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
-  implies_intro;;
-  apply_lemma (quote lemma_destruct_exists_subheaps);;
-  apply_lemma (quote lemma_read_write);;
-//  forall_intro;;
-  fail "stop"
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  smt
 
 let increment_ok (r:addr) (h:heap) =
   let c = Bind (Read r) (fun n -> Write r (n + 1)) in
   let p = fun _ h -> sel h r == 4 in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (sel h r == 3 ==> t) increment_tau
-
-
-  
-  
-  
-  
-
-  
