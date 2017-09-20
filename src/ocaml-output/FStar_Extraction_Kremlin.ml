@@ -928,7 +928,8 @@ and translate_decl:
              with
              | e ->
                  ((let uu____3460 = FStar_Util.print_exn e in
-                   FStar_Util.print2 "Warning: writing a stub for %s (%s)\n"
+                   FStar_Util.print2_warning
+                     "Warning: writing a stub for %s (%s)\n"
                      (FStar_Pervasives_Native.snd name1) uu____3460);
                   FStar_Pervasives_Native.Some
                     (DFunction
@@ -1004,7 +1005,8 @@ and translate_decl:
              with
              | e ->
                  ((let uu____3611 = FStar_Util.print_exn e in
-                   FStar_Util.print2 "Warning: writing a stub for %s (%s)\n"
+                   FStar_Util.print2_warning
+                     "Warning: writing a stub for %s (%s)\n"
                      (FStar_Pervasives_Native.snd name1) uu____3611);
                   FStar_Pervasives_Native.Some
                     (DFunction
@@ -1030,7 +1032,7 @@ and translate_decl:
            with
            | e ->
                ((let uu____3680 = FStar_Util.print_exn e in
-                 FStar_Util.print2
+                 FStar_Util.print2_warning
                    "Warning: not translating definition for %s (%s)\n"
                    (FStar_Pervasives_Native.snd name1) uu____3680);
                 FStar_Pervasives_Native.Some
@@ -1047,7 +1049,7 @@ and translate_decl:
                                    FStar_Extraction_ML_Syntax.print_typ =
                                      uu____3697;_}::uu____3698)
           ->
-          (FStar_Util.print1
+          (FStar_Util.print1_warning
              "Warning: not translating definition for %s (and possibly others)\n"
              name;
            (match ts with
@@ -1132,7 +1134,7 @@ and translate_decl:
       | FStar_Extraction_ML_Syntax.MLM_Ty
           ((uu____4226,name,_mangled_name,uu____4229,uu____4230,uu____4231)::uu____4232)
           ->
-          (FStar_Util.print1
+          (FStar_Util.print1_warning
              "Warning: not translating definition for %s (and possibly others)\n"
              name;
            FStar_Pervasives_Native.None)

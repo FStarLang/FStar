@@ -97,8 +97,8 @@ let ini_params: Prims.unit -> Prims.string =
            FStar_Util.format1
              "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n"
              uu____245 in
-         FStar_Util.Failure uu____244 in
-       FStar_All.pipe_left FStar_Exn.raise uu____243
+         FStar_Util.HardError uu____244 in
+       FStar_Exn.raise uu____243
      else ());
     (let uu____247 =
        let uu____250 =

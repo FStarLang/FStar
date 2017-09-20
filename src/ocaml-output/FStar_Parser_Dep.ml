@@ -361,12 +361,11 @@ let collect_one:
                     if uu____1035
                     then
                       let uu____1036 =
-                        FStar_Range.string_of_range
-                          (FStar_Ident.range_of_lid lid) in
-                      let uu____1037 = string_of_lid lid false in
-                      FStar_Util.print2_warning
-                        "%s (Warning): unbound module reference %s\n"
-                        uu____1036 uu____1037
+                        let uu____1037 = string_of_lid lid false in
+                        FStar_Util.format1 "Unbound module reference %s"
+                          uu____1037 in
+                      FStar_Errors.warn (FStar_Ident.range_of_lid lid)
+                        uu____1036
                     else () in
               let uu____1040 = lowercase_join_longident lid false in
               try_key uu____1040 in
@@ -844,7 +843,7 @@ let collect:
          | (direct_deps,color) ->
              (match color with
               | Gray  ->
-                  (FStar_Util.print1
+                  (FStar_Util.print1_warning
                      "Warning: recursive dependency on module %s\n" key;
                    (let cycle1 =
                       FStar_All.pipe_right cycle
