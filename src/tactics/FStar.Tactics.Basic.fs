@@ -691,6 +691,29 @@ let rename_to (b : binder) (s : string) : tac<unit> =
     let s = [NT (bv, S.bv_to_name bv')] in
     replace_cur (subst_goal bv bv' s goal))
 
+let rec find_bv_env (e : env) (bv : bv) : tac<(env * term * term * universe * env * list<subst_elt>)> =
+    match Env.pop_bv e with
+    | None -> fail "binder_retype: binder is not present in environment"
+    | Some (bv', e') ->
+        if S.bv_eq bv bv'
+        then bind (let (ty, u) = U.type_u () in ret (ty, u)) (fun (ty, u) ->
+             bind (new_uvar e' ty) (fun t' ->
+             let bv'' = {bv with sort = t'} in
+             ret (e', ty, t', u, Env.push_bv e' bv'', [S.NT (bv, S.bv_to_name bv'')] )))
+        else bind (find_bv_env e' bv) (fun (e1, ty, t, u, e2, s) ->
+             let bv' = {bv' with sort = SS.subst s bv'.sort } in
+             ret (e1, ty, t,  u, Env.push_bv e2 bv', s))
+
+let binder_retype (b : binder) : tac<unit> =
+    bind cur_goal (fun goal ->
+    let bv, _ = b in
+    bind dismiss (fun _ ->
+    bind (find_bv_env goal.context bv) (fun (env', ty, t', u, env, s) ->
+    bind (add_goals [{goal with context = env;
+                                witness = SS.subst s goal.witness;
+                                goal_ty = SS.subst s goal.goal_ty }]) (fun _ ->
+          add_irrelevant_goal env' (U.mk_eq2 (U_succ u) ty bv.sort t') goal.opts))))
+
 let revert : tac<unit> =
     bind cur_goal (fun goal ->
     match Env.pop_bv goal.context with
