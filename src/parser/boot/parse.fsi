@@ -68,8 +68,6 @@ type token =
   | MODULE
   | MINUS
   | MATCH
-  | L_TRUE
-  | L_FALSE
   | LPAREN_RPAREN
   | LPAREN
   | LONG_LEFT_ARROW
@@ -205,8 +203,6 @@ type tokenId =
     | TOKEN_MODULE
     | TOKEN_MINUS
     | TOKEN_MATCH
-    | TOKEN_L_TRUE
-    | TOKEN_L_FALSE
     | TOKEN_LPAREN_RPAREN
     | TOKEN_LPAREN
     | TOKEN_LONG_LEFT_ARROW

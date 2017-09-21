@@ -32,8 +32,9 @@ let issue f =
 
 let redeem f t =
   let bs = (utf8 f) in
-  if MAC.verify k bs t then 
-    ()
-  else 
+  if MAC.verify k bs t then
+    (MAC.from_key_prop k bs ;
+    assert(ACLs.canRead f))
+  else
     failwith "bad capability"
 // END: CapImplementation

@@ -220,8 +220,8 @@ let solve goal solution =
     if Rel.teq_nosmt goal.context goal.witness solution
     then ()
     else raise (TacFailure(BU.format3 "%s does not solve %s : %s"
-                          (Print.term_to_string solution)
-                          (Print.term_to_string goal.witness)
+                          (N.term_to_string goal.context solution)
+                          (N.term_to_string goal.context goal.witness)
                           (Print.term_to_string goal.goal_ty)))
 
 let dismiss : tac<unit> =
@@ -572,12 +572,13 @@ let apply_lemma (tm:term) : tac<unit> = focus(
                     | pre::post::_ -> fst pre, fst post
                     | _ -> failwith "apply_lemma: impossible: not a lemma"
     in
-    match Rel.try_teq false goal.context (U.mk_squash post) goal.goal_ty with
-    | None -> fail2 "apply_lemma: does not unify with goal: %s vs %s"
-                                 (Print.term_to_string (U.mk_squash post))
-                                 (Print.term_to_string goal.goal_ty)
-    | Some g ->
-        let solution = S.mk_Tm_app tm uvs None goal.context.range in
+    if not (Rel.teq_nosmt goal.context (U.mk_squash post) goal.goal_ty)
+    then fail3 "apply: Cannot instantiate lemma %s (with postcondition %s) to match goal (%s)"
+                            (Print.term_to_string tm)
+                            (Print.term_to_string (U.mk_squash post))
+                            (Print.term_to_string goal.goal_ty)
+    else
+        let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
         let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
              let hd, _ = U.head_and_args tm in
              match (SS.compress hd).n with

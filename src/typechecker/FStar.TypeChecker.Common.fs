@@ -51,6 +51,10 @@ type prob =
   | TProb of problem<typ,term>
   | CProb of problem<comp,unit>
 
+let as_tprob = function
+   | TProb p -> p
+   | _ -> failwith "Expected a TProb"
+
 type probs = list<prob>
 
 type guard_formula =

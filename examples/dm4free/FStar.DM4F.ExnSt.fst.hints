@@ -233,38 +233,6 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
-    ],
-    [
-      "FStar.DM4F.ExnSt.lemma_div_extrinsic",
-      6,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "FStar.DM4F.ExnSt.lemma_div_extrinsic",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "FStar.DM4F.ExnSt.lemma_div_extrinsic",
-      8,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "FStar.DM4F.ExnSt.lemma_div_extrinsic",
-      9,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
     ]
   ]
 ]

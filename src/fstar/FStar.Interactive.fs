@@ -109,14 +109,24 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
       Some (m, (dsenv, env), FStar.Errors.get_err_count())
     | _ -> None
   with
-  | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+  | Failure (msg) when not (Options.trace_error ()) ->
+    let msg = "ASSERTION FAILURE: " ^ msg ^ "\n" ^
+              "F* may be in an inconsistent state.\n" ^
+              "Please file a bug report, ideally with a " ^
+              "minimized version of the program that triggered the error." in
+    FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
+    // Make sure the user sees the error, even if it happened transiently while
+    // running an automatic syntax checker like FlyCheck.
+    Util.print_error msg;
+    None
+
+  | FStar.Errors.Error(msg, r) when not (Options.trace_error ()) ->
     FStar.TypeChecker.Err.add_errors env [(msg, r)];
     None
 
-  | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+  | FStar.Errors.Err msg when not (Options.trace_error ()) ->
     FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
     None
-
 
 (*********************)
 (* Dependency checks *)
@@ -298,6 +308,8 @@ let js_reductionrule s = match js_str s with
   | "delta" -> FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant
   | "iota" -> FStar.TypeChecker.Normalize.Iota
   | "zeta" -> FStar.TypeChecker.Normalize.Zeta
+  | "reify" -> FStar.TypeChecker.Normalize.Reify
+  | "pure-subterms" -> FStar.TypeChecker.Normalize.PureSubtermsWithinComputations
   | _ -> js_fail "reduction rule" s
 
 type query' =
@@ -322,9 +334,11 @@ let query_needs_current_module = function
 let interactive_protocol_vernum = 2
 
 let interactive_protocol_features =
-  ["autocomplete"; "compute"; "describe-protocol"; "describe-repl"; "exit";
+  ["autocomplete";
+   "compute"; "compute/reify"; "compute/pure-subterms";
+   "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/documentation"; "lookup/definition";
-   "pop"; "peek"; "push"; "search"]
+   "peek"; "pop"; "push"; "search"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -786,7 +800,8 @@ let run_compute st term rules =
 
   let find_let_body ses =
     match ses with
-    | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _) }] -> Some def
+    | [{ SS.sigel = SS.Sig_let((_, [{ SS.lbunivs = univs; SS.lbdef = def }]), _) }] ->
+      Some (univs, def)
     | _ -> None in
 
   let parse frag =
@@ -819,18 +834,25 @@ let run_compute st term rules =
     | None -> (QueryNOK, JsonStr "Current module unset")
     | _ ->
       match parse frag with
-      | None -> (QueryNOK, JsonStr "Count not parse this term")
+      | None -> (QueryNOK, JsonStr "Could not parse this term")
       | Some decls ->
-        try
+        let aux () =
           let decls = desugar dsenv decls in
           let ses = typecheck tcenv decls in
           match find_let_body ses with
           | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
-          | Some def -> let normalized = normalize_term tcenv rules def in
-                       (QueryOK, JsonStr (term_to_string tcenv normalized))
-        with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
-                                | Some issue -> JsonStr (FStar.Errors.format_issue issue)
-                                | None -> raise e)))
+          | Some (univs, def) ->
+            let univs, def = Syntax.Subst.open_univ_vars univs def in
+            let tcenv = TcEnv.push_univ_vars tcenv univs in
+            let normalized = normalize_term tcenv rules def in
+            (QueryOK, JsonStr (term_to_string tcenv normalized)) in
+        if Options.trace_error () then
+          aux ()
+        else
+          try aux ()
+          with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
+                                  | Some issue -> JsonStr (FStar.Errors.format_issue issue)
+                                  | None -> raise e)))
 
 type search_term' =
 | NameContainsStr of string
@@ -1008,15 +1030,19 @@ let interactive_mode' (filename:string): unit =
 
 let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
-  FStar.Errors.set_handler interactive_error_handler;
 
   if Option.isSome (Options.codegen())
   then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
-  try
+  if Options.trace_error () then
+    // This prevents the error catcher below from swallowing backtraces
     interactive_mode' filename
-  with
-  | e -> (// Revert to default handler since we won't have an opportunity to
-          // print errors ourselves.
-          FStar.Errors.set_handler FStar.Errors.default_handler;
-          raise e)
+  else
+    try
+      FStar.Errors.set_handler interactive_error_handler;
+      interactive_mode' filename
+    with
+    | e -> (// Revert to default handler since we won't have an opportunity to
+           // print errors ourselves.
+           FStar.Errors.set_handler FStar.Errors.default_handler;
+           raise e)
