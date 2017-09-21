@@ -2644,8 +2644,6 @@ let pop msg   =
     let _ = pop_env() in
     varops.pop();
     Z3.pop msg
-let commit_mark (msg:string) =
-    Z3.commit_mark msg
 
 //////////////////////////////////////////////////////////////////////////
 //guarding top-level terms with fact database triggers

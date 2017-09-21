@@ -116,7 +116,6 @@ and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
-    commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
@@ -232,9 +231,6 @@ let pop env msg =
     env.solver.pop msg;
     pop_query_indices();
     pop_stack ()
-
-let commit_mark env =
-    env.solver.commit_mark ""
 
 let incr_query_index env =
     let qix = peek_query_indices () in
@@ -1242,7 +1238,6 @@ let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
-    commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);

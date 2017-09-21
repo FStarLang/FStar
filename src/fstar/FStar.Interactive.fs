@@ -89,9 +89,6 @@ let push_with_kind ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg
 
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
 
-let commit_mark (dsenv, env) =
-  TcEnv.commit_mark env
-
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
   try
     match tc_one_fragment curmod dsenv env frag with
@@ -589,7 +586,6 @@ let run_push st kind text line column peek_only =
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
-    commit_mark env;
     ((QueryOK, JsonList errors),
       Inl ({ st' with repl_curmod = curmod; repl_env = env }))
   | _ ->
