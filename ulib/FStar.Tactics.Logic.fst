@@ -102,7 +102,7 @@ let rec simplify_eq_implication (u:unit) : Tac unit = (
     | Some (_, rhs) ->
         eq_h <-- implies_intro; // G, eq_h:x=e |- P
         rewrite eq_h;; // G, eq_h:x=e |- P[e/x]
-        clear_top;; // G |- P[e/x]
+        clear;; // G |- P[e/x]
         visit simplify_eq_implication) ()
 
 let rewrite_all_equalities : tactic unit =
@@ -123,7 +123,7 @@ let rec unfold_definition_and_simplify_eq' (tm:term) (u:unit) : Tac unit = (
         | Some (_, rhs) ->
             eq_h <-- implies_intro;
             rewrite eq_h;;
-            clear_top;;
+            clear;;
             visit (unfold_definition_and_simplify_eq' tm)
         end) ()
 
@@ -162,7 +162,7 @@ let bool_ind b phi l r = ()
 let cases_bool (b:term) : tactic unit =
     bi <-- quote_lid ["FStar";"Tactics";"Logic";"bool_ind"];
     seq (apply (return (mk_e_app bi [b])))
-        (trytac (b <-- implies_intro; rewrite b;; clear_top);; idtac)
+        (trytac (b <-- implies_intro; rewrite b;; clear);; idtac)
 
 private val or_intro_1 : (#p:Type) -> (#q:Type) -> squash p -> squash (p \/ q)
 let or_intro_1 #p #q _ = ()

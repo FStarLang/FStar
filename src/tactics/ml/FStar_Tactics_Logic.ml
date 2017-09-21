@@ -125,7 +125,7 @@ let rec simplify_eq_implication:
                               (FStar_Tactics_Builtins.rewrite eq_h)
                               (fun uu___65_536  ->
                                  FStar_Tactics_Effect.bind
-                                   FStar_Tactics_Builtins.clear_top
+                                   FStar_Tactics_Builtins.clear
                                    (fun uu___64_538  ->
                                       visit simplify_eq_implication)))))) ()
 let rewrite_all_equalities:
@@ -165,7 +165,7 @@ let rec unfold_definition_and_simplify_eq':
                                (FStar_Tactics_Builtins.rewrite eq_h)
                                (fun uu___67_672  ->
                                   FStar_Tactics_Effect.bind
-                                    FStar_Tactics_Builtins.clear_top
+                                    FStar_Tactics_Builtins.clear
                                     (fun uu___66_674  ->
                                        visit
                                          (unfold_definition_and_simplify_eq'
@@ -242,7 +242,7 @@ let cases_bool:
                     (fun b1  ->
                        FStar_Tactics_Effect.bind
                          (FStar_Tactics_Builtins.rewrite b1)
-                         (fun uu___69_993  -> FStar_Tactics_Builtins.clear_top))))
+                         (fun uu___69_993  -> FStar_Tactics_Builtins.clear))))
               (fun uu___70_995  -> FStar_Tactics_Derived.idtac)))
 let or_intro_1:
   'Ap 'Aq . 'Ap Prims.squash -> ('Ap,'Aq) Prims.l_or Prims.squash =
