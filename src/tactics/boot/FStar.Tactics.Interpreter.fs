@@ -238,10 +238,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     let ps, w = proofstate_of_goal_ty env typ in
-    let r = try run tau ps
-            with | TacFailure s -> Failed ("EXCEPTION: " ^ s, ps)
-    in
-    match r with
+    match run tau ps with
     | Success (_, ps) ->
         if !tacdbg then
             BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); //FIXME: Is this right?

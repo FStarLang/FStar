@@ -38,12 +38,6 @@ let bnorm e t = normalize [] e t
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 
-(* An exception, typically used only to simplify local data flow,
-                 although, when not handled, it signifies a fatal error
-                           in the tactic engine
-*)
-exception TacFailure of string
-
 (* The main monad for tactics.
  * A record, so we can keep it somewhat encapsulated and
  * can more easily add things to it if need be.
