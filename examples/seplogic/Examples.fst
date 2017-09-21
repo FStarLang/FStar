@@ -54,7 +54,7 @@ let increment_tau :tactic unit =
   step;;
   step;;
   dump "Foo";;
-  pointwise (or_else (apply_lemma (quote lemma0);; qed) idtac);;
+  pointwise (or_else (apply_lemma (quote lemma0);; qed) trefl);;
   dump "Bar"
   //smt
 
