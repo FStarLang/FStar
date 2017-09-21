@@ -25,7 +25,7 @@ if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows 32-bit or 64-
     # Windows Python doesn't know how to handle menhir, which is a PE file with no
     # extension.  Copy it to a temp directory and rename.
     menhir_tool = tempfile.gettempdir() + '\\menhir.exe'
-    env.Command(menhir_tool, menhir, Copy("$TARGET", "$SOURCE"))
+    Execute(Copy(menhir_tool, menhir))
 else:
   menhir_tool = conf.CheckProg('menhir') # returns None or the full path to it
 
@@ -40,9 +40,14 @@ if menhir_tool:
 else:
   raise SCons.Errors.UserError('Cannot find menhir')
 
-env['ENV']['MENHIRLIB'] = os.environ['MENHIRLIB']
-env['ENV']['OCAMLFIND_CONF']=os.environ['OCAMLFIND_CONF']
-env['ENV']['OCAML_TOPLEVEL_PATH']=os.environ['OCAML_TOPLEVEL_PATH']
+def CopyEnvironmentVariable(env, name):
+  value = os.environ.get(name)
+  if value:
+    env['ENV'][name] = value
+    
+CopyEnvironmentVariable(env, 'MENHIRLIB')
+CopyEnvironmentVariable(env, 'OCAMLFIND_CONF')
+CopyEnvironmentVariable(env, 'OCAML_TOPLEVEL_PATH')
 env['MENHIRARGS']='' #'--explain --infer -la 1 --table'
 env['OCAMLLEX']='ocamllex'
 env['OCAMLBUILD']='ocamlbuild'
