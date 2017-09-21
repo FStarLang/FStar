@@ -648,16 +648,25 @@ let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
 
 let rewrite (h:binder) : tac<unit> =
     bind cur_goal (fun goal ->
-    bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort))) (fun _ ->
-    match destruct_eq (fst <| Env.lookup_bv goal.context (fst h)) with
-    | Some  (x, e) ->
-    (match (SS.compress x).n with
-       | Tm_name x ->
-         let goal = {goal with goal_ty=SS.subst [NT(x, e)] goal.goal_ty; witness = SS.subst [NT(x, e)] goal.witness} in
-         replace_cur goal
-       | _ ->
-         fail "Not an equality hypothesis with a variable on the LHS")
-    | _ -> fail "Not an equality hypothesis"))
+    let bv, _ = h in
+    bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort))) (fun _ ->
+    match split_env bv goal.context with
+    | None -> fail "rewrite: binder not found in environment"
+    | Some (e0, bvs) -> begin
+        match destruct_eq bv.sort with
+        | Some (x, e) ->
+        (match (SS.compress x).n with
+           | Tm_name x ->
+             let s = [NT(x,e)] in
+             let s1 bv = { bv with sort = SS.subst s bv.sort } in
+             let bvs = List.map s1 bvs in
+             replace_cur ({goal with context = push_bvs e0 (bv::bvs);
+                                     goal_ty = SS.subst s goal.goal_ty;
+                                     witness = SS.subst s goal.witness;})
+           | _ ->
+             fail "rewrite: Not an equality hypothesis with a variable on the LHS")
+        | _ -> fail "rewrite: Not an equality hypothesis"
+        end))
 
 let rename_to (b : binder) (s : string) : tac<unit> =
     bind cur_goal (fun goal ->
