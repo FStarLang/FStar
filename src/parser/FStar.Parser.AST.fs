@@ -118,6 +118,9 @@ type knd = term
 type typ = term
 type expr = term
 
+// type fsdoc_key = string
+// type fsdoc_value = string
+
 // Documentation comment. May appear appear as follows:
 //  - Immediately before a top-level declaration
 //  - Immediately after a type constructor or record field

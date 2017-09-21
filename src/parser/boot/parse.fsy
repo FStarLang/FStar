@@ -60,7 +60,11 @@ open FStar.String
 %token FALSE
 %token FORALL
 %token <fsdoc> FSDOC
+%token FSDOC_DOUBLE_NEWLINE
+%token <string> FSDOC_KEY
+%token FSDOC_NEWLINE
 %token <fsdoc> FSDOC_STANDALONE
+%token <string> FSDOC_TEXT
 %token FUN
 %token FUNCTION
 %token HASH

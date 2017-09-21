@@ -309,7 +309,7 @@ rule token args = parse
 
  | "(|"             { LENS_PAREN_LEFT }
  | "|)"             { LENS_PAREN_RIGHT }
- 
+
  | "(*" '*'* "*)" // Silly to have, but fsdoc breaks bootstrapping otherwise
     { token args lexbuf }
 

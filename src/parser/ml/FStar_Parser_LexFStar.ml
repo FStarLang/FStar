@@ -184,7 +184,7 @@ let is_typ_app_gt () =
   then (decr n_typ_apps; true)
   else false
 
-let rec mknewline n lexbuf = 
+let rec mknewline n lexbuf =
   if n = 0 then ()
   else (L.new_line lexbuf; mknewline (n-1) lexbuf)
 
@@ -400,7 +400,7 @@ let rec token = lexer
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
  | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
  | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
- 
+
  | (integer | xinteger | ieee64 | xieee64) ident_char+ ->
    failwith "This is not a valid numeric literal."
 
@@ -421,7 +421,7 @@ let rec token = lexer
  | op_token  -> L.lexeme lexbuf |> Hashtbl.find operators
  | "<"       -> if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")
  | ">"       -> if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser lexbuf
- 
+
  (* Operators. *)
  | op_prefix  symbolchar* -> OPPREFIX (L.lexeme lexbuf)
  | op_infix0a symbolchar* -> OPINFIX0a (L.lexeme lexbuf)
@@ -448,7 +448,7 @@ and string buffer = lexer
  | newline ->
    Buffer.add_string buffer (L.lexeme lexbuf);
    L.new_line lexbuf; string buffer lexbuf
- | escape_char -> 
+ | escape_char ->
    Buffer.add_string buffer (BatUTF8.init 1 (fun _ -> unescape (L.ulexeme lexbuf) |> BatUChar.chr));
    string buffer lexbuf
  | '"' -> STRING (Buffer.contents buffer)
@@ -476,30 +476,20 @@ and comment inner buffer startpos = lexer
  | eof ->
    terminate_comment buffer startpos lexbuf; EOF
 
-(* Initially called with (1, "", []), i.e. comment nesting depth, accumulated
-   unstructured text, and list of key-value pairs parsed so far.
-   JP: this is a parser encoded within a lexer using regexps. This is
-   suboptimal. *)
-and fsdoc (n, doc, kw) = lexer
- | "(*" -> fsdoc (n + 1, doc ^ "(*", kw) lexbuf
+and fsdoc doc = lexer
  | "*)" newline newline ->
    mknewline 2 lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
-   else FSDOC_STANDALONE(doc, kw)
+   FSDOC_DOUBLE_NEWLINE
  | "*)" newline ->
    L.new_line lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
-   else FSDOC(doc, kw)
- | anywhite* "@" ['a'-'z' 'A'-'Z']+ [':']? anywhite* ->
-     fsdoc_kw_arg (n, doc, kw, BatString.strip ~chars:" \r\n\t@:" (L.lexeme lexbuf), "") lexbuf
- | newline -> L.new_line lexbuf; fsdoc (n, doc^"\n", kw) lexbuf
- | _ -> fsdoc(n, doc^(L.lexeme lexbuf), kw) lexbuf
+   FSDOC_NEWLINE
+  | anywhite* "@" ['a'-'z' 'A'-'Z']+ [':']? anywhite* ->
+    FSDOC_KEY (BatString.strip ~chars:" \r\n\t@:" (L.lexeme lexbuf))
 
-and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
  | newline ->
    L.new_line lexbuf;
-   fsdoc (n, doc, (kwn, kwa)::kw) lexbuf
- | _ -> fsdoc_kw_arg (n, doc, kw, kwn, kwa^(L.lexeme lexbuf)) lexbuf
+   FSDOC_NEWLINE
+ | _ -> FSDOC_TEXT (L.lexeme lexbuf)
 
 and cpp_filename = lexer
  | " \"" [^ '"' 10 13 0x2028 0x2029]+ '"' -> ignore_endline lexbuf
