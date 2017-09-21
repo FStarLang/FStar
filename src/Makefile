@@ -59,13 +59,13 @@ nuget-clean:
 $(FSYACC) $(FSLEX): nuget-restore
 
 boot:
-	$(SCONS) --target=boot
+	$(SCONS) $(SCONSFLAGS) --target=boot
 
 clean_boot:
-	$(SCONS) -c --target=boot
+	$(SCONS) $(SCONSFLAGS) -c --target=boot
 
 clean_extracted:
-	$(SCONS) -c --target=ocaml-output
+	$(SCONS) $(SCONSFLAGS) -c --target=ocaml-output
 
 ocaml:
 	$(SCONS) $(SCONSFLAGS) --target=extract
@@ -74,7 +74,7 @@ boot-ocaml:
 	$(SCONS) $(SCONSFLAGS) --target=ocaml-output
 
 clean-ocaml:
-	$(SCONS) -c --target=extract
+	$(SCONS) $(SCONSFLAGS) -c --target=extract
 
 fstar-ocaml:
 	$(SCONS) $(SCONSFLAGS) --target=extract
