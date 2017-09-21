@@ -2,6 +2,7 @@ module FStar.Tactics.Derived
 
 open FStar.Reflection
 open FStar.Reflection.Types
+open FStar.Tactics.Result
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
@@ -40,7 +41,7 @@ let rec mapM f l = match l with
 let idtac : tactic unit = return ()
 
 (* working around #885 *)
-private let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
+private let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed (msg, s0)
 let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
 
 let guard (b : bool) : tactic unit =

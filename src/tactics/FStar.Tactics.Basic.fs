@@ -35,37 +35,8 @@ type implicits = Env.implicits
 let normalize s e t = N.normalize_with_primitive_steps FStar.Reflection.Interpreter.reflection_primops s e t
 let bnorm e t = normalize [] e t
 
-(*
-   f: x:int -> P
-   ==================
-      P
- *)
-//A goal is typically of the form
-//    G |- ?u : t
-// where context = G
-//       witness = ?u, although, more generally, witness is a partial solution and can be any term
-//       goal_ty = t
-type goal = {
-    context : env;
-    witness : term;
-    goal_ty : typ;
-    opts    : FStar.Options.optionstate; // option state for this particular goal
-    is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
-                     // We make the distinction to be more user-friendly at times
-}
-
-type proofstate = {
-    main_context : env;          //the shared top-level context for all goals
-    main_goal    : goal;         //this is read only; it helps keep track of the goal we started working on initially
-    all_implicits: implicits ;   //all the implicits currently open, partially resolved (unclear why we really need this)
-    goals        : list<goal>;   //all the goals remaining to be solved
-    smt_goals    : list<goal>;   //goals that have been deferred to SMT
-}
-
-type result<'a> =
-    | Success of 'a * proofstate
-    | Failed  of string    //error message
-              * proofstate //the proofstate at time of failure
+open FStar.Tactics.Types
+open FStar.Tactics.Result
 
 (* An exception, typically used only to simplify local data flow,
                  although, when not handled, it signifies a fatal error
@@ -78,10 +49,10 @@ exception TacFailure of string
  * can more easily add things to it if need be.
  *)
 type tac<'a> = {
-    tac_f : proofstate -> result<'a>;
+    tac_f : proofstate -> __result<'a>;
 }
 
-let mk_tac (f : proofstate -> result<'a>) : tac<'a> =
+let mk_tac (f : proofstate -> __result<'a>) : tac<'a> =
     { tac_f = f }
 
 let run t p = t.tac_f p

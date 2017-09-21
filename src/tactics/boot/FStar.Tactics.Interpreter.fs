@@ -19,6 +19,8 @@ module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module TcTerm = FStar.TypeChecker.TcTerm
 module N = FStar.TypeChecker.Normalize
+open FStar.Tactics.Types
+open FStar.Tactics.Result
 open FStar.Tactics.Basic
 module E = FStar.Tactics.Embedding
 module Core = FStar.Tactics.Basic
