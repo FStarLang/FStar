@@ -98,7 +98,7 @@ let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): constant =
   match c with
-  | MLC_Float v -> failwith "Case not handled"
+  | MLC_Float v -> Const_float (string_of_float v)
   | MLC_Char v -> Const_int v
   | MLC_String v -> Const_string (v, None)
   | MLC_Bytes _ -> failwith "Case not handled" (* do we need this? *)
@@ -229,6 +229,8 @@ let rec build_expr ?annot (e: mlexpr): expression =
       let args = map (fun x -> (no_label, build_expr x)) es in
       let f = build_expr e in
       resugar_app f args es
+   | MLE_TApp (e, ts) ->
+     build_expr e
    | MLE_Fun (l, e) -> build_fun l e
    | MLE_Match (e, branches) ->
       let ep = build_expr e in
@@ -357,19 +359,19 @@ let build_ty_manifest (b: mltybody): core_type option=
 let skip_type_defn (current_module:string) (type_name:string) :bool =
   current_module = "FStar_Pervasives" && type_name = "option"
 
-let type_attrs (attrs: tyattrs): attributes option =
+let type_metadata (metadata: metadata): attributes option =
   let deriving_show = (mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident "show"))]) in
-  if BatList.is_empty attrs then None else (Some [deriving_show])
+  if BatList.is_empty metadata then None else (Some [deriving_show])
 
-let add_deriving_const (attrs: tyattrs) (ptype_manifest: core_type option): core_type option =
-  match attrs with
+let add_deriving_const (md: metadata) (ptype_manifest: core_type option): core_type option =
+  match md with
   | [PpxDerivingShowConstant s] ->
       let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(no_label, Exp.ident (mk_lident "fmt")); (no_label, Exp.constant (Const_string(s, None)))] in
       let deriving_const = (mk_sym "printer", PStr [Str.eval (Exp.fun_ "" None (build_binding_pattern "fmt") (Exp.fun_ "" None (Pat.any ()) e))]) in
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
   | _ -> ptype_manifest
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): type_declaration option =
+let build_one_tydecl ((_, x, mangle_opt, tparams, metadata, body): one_mltydecl): type_declaration option =
   if skip_type_defn !current_module x then None
   else
     let ptype_name = match mangle_opt with
@@ -377,9 +379,9 @@ let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): t
       | None -> mk_sym x in
     let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), Invariant) tparams) in
     let (ptype_manifest: core_type option) =
-      BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
+      BatOption.map_default build_ty_manifest None body |> add_deriving_const metadata in
     let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
-    let ptype_attrs = type_attrs attrs in
+    let ptype_attrs = type_metadata metadata in
     Some (Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ?attrs:ptype_attrs ptype_name)
 
 let build_tydecl (td: mltydecl): structure_item_desc option =

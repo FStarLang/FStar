@@ -293,6 +293,7 @@ let rec is_ml_value e =
     | MLE_CTor (_, exps)
     | MLE_Tuple exps -> BU.for_all is_ml_value exps
     | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
+    | MLE_TApp (h, _) -> is_ml_value h
     | _ -> false
 
 
@@ -737,7 +738,8 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
     match mlAppExpr.expr, qual with
         | _, None -> mlAppExpr
 
-        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f)) ->
+        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f))
+        | MLE_App({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mle::args), Some (Record_projector (constrname, f))->
           let f = lid_of_ids (constrname.ns @ [f]) in
           let fn = Util.mlpath_of_lid f in
           let proj = MLE_Proj(mle, fn) in
@@ -747,11 +749,15 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
           with_ty mlAppExpr.mlty e
 
         | MLE_App ({expr=MLE_Name mlp}, mlargs), Some Data_ctor
-        | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _) ->
+        | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _)
+        | MLE_App ({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mlargs), Some Data_ctor
+        | MLE_App ({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mlargs), Some (Record_ctor _) ->
           resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp,mlargs))
 
         | MLE_Name mlp, Some Data_ctor
-        | MLE_Name mlp, Some (Record_ctor _) ->
+        | MLE_Name mlp, Some (Record_ctor _)
+        | MLE_TApp({expr=MLE_Name mlp}, _), Some Data_ctor
+        | MLE_TApp({expr=MLE_Name mlp}, _), Some (Record_ctor _) ->
           resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp, []))
 
         | _ -> mlAppExpr
@@ -1017,10 +1023,33 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                let prefixAsMLTypes = List.map (fun (x, _) -> term_as_mlty g x) prefix in
         //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
                                let t = instantiate (vars, t) prefixAsMLTypes in
+                               // If I understand this code correctly when we reach this branch we are observing an
+                               // application of the form:
+                               //
+                               // (f u_1 .. u_n) e_1 .. e_2
+                               //
+                               // where f : forall (t_1 ... t_n : Type), t1 -> ... t_n
+                               //
+                               // The old code was converting `f u_1 ... u_n`, to a term with a type `u_1 -> ... -> u_n`.
+                               //
+                               // We now preserve these type applications, by wrapping the head in type applications,
+                               // instantiating the type assigning it to this new type application expression,
+                               // and continuing with the rest of the pipeline.
+                               //
+                               // @jroesch
+                               //
+                               // This helper ensures we don't generate empty type applications, which will cause
+                               // problems in FStar.Extraction.Kremlin when trying match aganist head symbols which
+                               // are now wrapped with empty type applications.
+                               let mk_tapp e ty_args =
+                                match ty_args with
+                                | [] -> e
+                                | _ -> { e with expr=MLE_TApp(e, ty_args)} in
                                let head = match head_ml.expr with
                                  | MLE_Name _
-                                 | MLE_Var _ -> {head_ml with mlty=t}
-                                 | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
+                                 | MLE_Var _ -> { mk_tapp head_ml prefixAsMLTypes with mlty=t }
+                                 | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) ->
+                                    MLE_App({ mk_tapp head prefixAsMLTypes with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
                                  | _ -> failwith "Impossible: Unexpected head term" in
                                head, t, rest
                           else err_uninst g head (vars, t) top in
