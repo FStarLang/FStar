@@ -28,11 +28,11 @@ unfold let unfold_steps =
   List.Tot.map (fun s -> "Lang." ^ s) unfold_fns
 
 let step :tactic unit =
-  (apply_lemma (quote lemma_destruct_exists_subheaps);; norm[]) `or_else`
-  (apply_lemma (quote lemma_read_write);; norm [])              `or_else`
-  (apply_lemma (quote lemma_alloc_return);; norm [])            `or_else`
-  (implies_intro;; idtac)                                       `or_else`
-  (forall_intro;; idtac)                                        `or_else`
+  (apply_lemma (quote lemma_destruct_exists_subheaps);; norm[])                            `or_else`
+  (apply_lemma (quote lemma_read_write);; norm [];; forall_intro;; implies_intro;; idtac)  `or_else`
+  (apply_lemma (quote lemma_alloc_return);; norm [];; forall_intro;; implies_intro;; idtac)`or_else`
+  (apply_lemma (quote lemma_read_write);; norm [])                                         `or_else`
+  (apply_lemma (quote lemma_alloc_return);; norm [])                                       `or_else`
   idtac
 
 (* Writing to a pointer *)
@@ -49,11 +49,7 @@ let write_ok (r:addr) (h:heap) (x:int) =
 (* Incrementing a pointer *)
 let increment_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
+  implies_intro;;
   step;;
   step;;
   step;;
@@ -68,6 +64,7 @@ let increment_ok (r:addr) (h:heap) (x:int) =
 (* Swapping two pointers *)
 let swap_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
+  implies_intro;;
   step;;
   step;;
   step;;
@@ -75,15 +72,7 @@ let swap_tau :tactic unit =
   step;;
   step;;
   step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
+  dump "Foo";;
   smt
 
 let swap_ok (r1:addr) (r2:addr) (h:heap) (x:int) (y:int) =
@@ -94,25 +83,8 @@ let swap_ok (r1:addr) (r2:addr) (h:heap) (x:int) (y:int) =
 
 (* Rotate three pointers *)
 let rotate_tau :tactic unit =
-  dump "Bar";;
   norm [delta; delta_only unfold_steps; primops];;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
-  step;;
+  implies_intro;;
   step;;
   step;;
   step;;
