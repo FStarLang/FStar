@@ -11,11 +11,6 @@ Import('My_env')
 env = My_env.Clone()  # ensure changes here don't have impact on other SConscripts
 ocaml_output = 'ocaml-output/'  # directory to extract Ocaml code to
 
-# Set to True, and each entry in Extractions[] is handled as a batch call to fstar.exe
-# with multiple inputs and multiple outputs.  Set to False, and each entry expands
-# to one or more calls to fstar.exe, one per output file, with precise dependencies.
-Import('batch_extraction')
-
 # --------------------------------------------------------------------
 # Generate boot files
 # --------------------------------------------------------------------
@@ -315,23 +310,20 @@ ExtractionTargets = [
 # Generate SCons targets for each Extraction entry
 extraction_targets = {}
 for name, e in Extractions:
-  command = '$FSTAR $FSTARARGS $SOURCES ' + e.commonaction + ' '
-  if batch_extraction:
-    sources = []
-    targets = []
-    for action in e.actions:
-      command += ' ' + action.command
-      sources.append(action.source)
-      targets.append(action.target)
-    t_cmd = env.Command(targets, sources, command)
-    env.Depends(t_cmd, env['FSTAR'])  # take explicit dependency on the F* compiler executable
-    env.Requires(t_cmd, boot_target)  # and boot_ files, they are includes for extraction
-    env.Alias(name, t_cmd)            # create an alias to this command
-  else:
-    for action in e.actions:
-      t_cmd = env.Command(action.target, action.source, command + '$SOURCE ' + action.command)
-      env.Depends(t_cmd, env['FSTAR'])  # take explicit dependency on the F* compiler executable
-      env.Alias(name, t_cmd)            # add this target to the alias
+  command = '$FSTAR $FSTARARGS $CHANGED_SOURCES ' + e.commonaction + ' '
+  for action in e.actions:
+    command += ' ' + action.command
+  # Set batch_key=None to have Scons launch fstar.exe separately for each .ml file to extract
+  fstar_builder = Builder(action=Action(command, batch_key=True, targets='$CHANGED_TARGETS'))
+  # Clone the environment for each Extraction, so each can have a different
+  # FStarBuilder.  Their command lines all differ.
+  benv = env.Clone()
+  benv.Append(BUILDERS={'FStarBuilder':fstar_builder})
+  for action in e.actions:
+    print 'builder'+str(action.target)+' ' + str(action.source)
+    t_cmd = benv.FStarBuilder(action.target, action.source)
+    #benv.Depends(t_cmd, benv['FSTAR'])  # take explicit dependency on the F* compiler executable
+    benv.Alias(name, t_cmd)            # add this target to the alias
 
 # Turn the ExtractionTargets[] into actual SCons targets
 for name, targets in ExtractionTargets:
