@@ -622,6 +622,30 @@ let destruct_eq (typ : typ) : option<(term * term)> =
         | None -> None
         end
 
+let split_env (bvar : bv) (e : env) : option<(env * list<bv>)> =
+    let rec aux e =
+        match Env.pop_bv e with
+        | None -> None
+        | Some (bv', e') ->
+            if S.bv_eq bvar bv'
+            then Some (e', [])
+            else map_opt (aux e') (fun (e'', bvs) -> (e'', bv'::bvs ))
+    in
+    map_opt (aux e) (fun (e', bvs) -> (e', List.rev bvs))
+
+let push_bvs e bvs =
+    List.fold_right (fun b e -> Env.push_bv e b) bvs e
+
+let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
+    map_opt (split_env b1 g.context) (fun (e0, bvs) ->
+        let s1 bv = { bv with sort = SS.subst s bv.sort } in
+        let bvs = List.map s1 bvs in
+        let c = push_bvs e0 (b2::bvs) in
+        let w = SS.subst s g.witness in
+        let t = SS.subst s g.goal_ty in
+        { g with context = c; witness = w; goal_ty = t }
+    )
+
 let rewrite (h:binder) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string (fst h)) (Print.term_to_string (fst h).sort))) (fun _ ->
@@ -635,49 +659,33 @@ let rewrite (h:binder) : tac<unit> =
          fail "Not an equality hypothesis with a variable on the LHS")
     | _ -> fail "Not an equality hypothesis"))
 
-let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : goal =
-    let rec alpha e =
-        match Env.pop_bv e with
-        | None -> e
-        | Some (bv, e') ->
-            if S.bv_eq bv b1
-            then Env.push_bv e'         b2
-            else Env.push_bv (alpha e') ({bv with sort = SS.subst s bv.sort })
-    in
-    let c = alpha g.context in
-    let w = SS.subst s g.witness in
-    let t = SS.subst s g.goal_ty in
-    { g with context = c; witness = w; goal_ty = t }
-
 let rename_to (b : binder) (s : string) : tac<unit> =
     bind cur_goal (fun goal ->
     let bv, _ = b in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, bv.ppname.idRange) }) in
     let s = [NT (bv, S.bv_to_name bv')] in
-    replace_cur (subst_goal bv bv' s goal))
-
-let rec find_bv_env (e : env) (bv : bv) : tac<(env * term * term * universe * env * list<subst_elt>)> =
-    match Env.pop_bv e with
-    | None -> fail "binder_retype: binder is not present in environment"
-    | Some (bv', e') ->
-        if S.bv_eq bv bv'
-        then bind (let (ty, u) = U.type_u () in ret (ty, u)) (fun (ty, u) ->
-             bind (new_uvar e' ty) (fun t' ->
-             let bv'' = {bv with sort = t'} in
-             ret (e', ty, t', u, Env.push_bv e' bv'', [S.NT (bv, S.bv_to_name bv'')] )))
-        else bind (find_bv_env e' bv) (fun (e1, ty, t, u, e2, s) ->
-             let bv' = {bv' with sort = SS.subst s bv'.sort } in
-             ret (e1, ty, t,  u, Env.push_bv e2 bv', s))
+    match subst_goal bv bv' s goal with
+    | None -> fail "rename_to: binder not found in environment"
+    | Some goal -> replace_cur goal)
 
 let binder_retype (b : binder) : tac<unit> =
     bind cur_goal (fun goal ->
     let bv, _ = b in
-    bind dismiss (fun _ ->
-    bind (find_bv_env goal.context bv) (fun (env', ty, t', u, env, s) ->
-    bind (add_goals [{goal with context = env;
-                                witness = SS.subst s goal.witness;
-                                goal_ty = SS.subst s goal.goal_ty }]) (fun _ ->
-          add_irrelevant_goal env' (U.mk_eq2 (U_succ u) ty bv.sort t') goal.opts))))
+    match split_env bv goal.context with
+    | None -> fail "binder_retype: binder is not present in environment"
+    | Some (e0, bvs) -> begin
+        let (ty, u) = U.type_u () in
+        bind (new_uvar e0 ty) (fun t' ->
+        let bv'' = {bv with sort = t'} in
+        let s = [S.NT (bv, S.bv_to_name bv'')] in
+        let bvs = List.map (fun b -> { b with sort = SS.subst s b.sort}) bvs in
+        let env' = push_bvs e0 (bv''::bvs) in
+        bind dismiss (fun _ ->
+        bind (add_goals [{goal with context = env';
+                                    witness = SS.subst s goal.witness;
+                                    goal_ty = SS.subst s goal.goal_ty }]) (fun _ ->
+              add_irrelevant_goal e0 (U.mk_eq2 (U_succ u) ty bv.sort t') goal.opts)))
+         end)
 
 let revert : tac<unit> =
     bind cur_goal (fun goal ->
