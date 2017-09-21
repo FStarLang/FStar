@@ -283,7 +283,7 @@ let extract_typ_abbrev:
 type data_constructor =
   {
   dname: FStar_Ident.lident;
-  dtyp: FStar_Syntax_Syntax.typ;}
+  dtyp: FStar_Syntax_Syntax.typ;}[@@deriving show]
 let __proj__Mkdata_constructor__item__dname:
   data_constructor -> FStar_Ident.lident =
   fun projectee  ->
@@ -301,7 +301,7 @@ type inductive_family =
   ityp: FStar_Syntax_Syntax.term;
   idatas: data_constructor Prims.list;
   iquals: FStar_Syntax_Syntax.qualifier Prims.list;
-  imetadata: FStar_Extraction_ML_Syntax.metadata;}
+  imetadata: FStar_Extraction_ML_Syntax.metadata;}[@@deriving show]
 let __proj__Mkinductive_family__item__iname:
   inductive_family -> FStar_Ident.lident =
   fun projectee  ->
@@ -468,7 +468,7 @@ let bundle_as_inductive_families:
                    | uu____1086 -> (env1, [])) env ses in
           match uu____832 with
           | (env1,ifams) -> (env1, (FStar_List.flatten ifams))
-type env_t = FStar_Extraction_ML_UEnv.env
+type env_t = FStar_Extraction_ML_UEnv.env[@@deriving show]
 let extract_bundle:
   env_t ->
     FStar_Syntax_Syntax.sigelt ->

@@ -6,11 +6,12 @@ type ty_or_exp_b =
                                       FStar_Extraction_ML_Syntax.mltyscheme,
                                       Prims.bool)
                                       FStar_Pervasives_Native.tuple4)
-    FStar_Util.either
+    FStar_Util.either[@@deriving show]
 type binding =
   | Bv of (FStar_Syntax_Syntax.bv,ty_or_exp_b)
   FStar_Pervasives_Native.tuple2
   | Fv of (FStar_Syntax_Syntax.fv,ty_or_exp_b) FStar_Pervasives_Native.tuple2
+[@@deriving show]
 let uu___is_Bv: binding -> Prims.bool =
   fun projectee  -> match projectee with | Bv _0 -> true | uu____42 -> false
 let __proj__Bv__item___0:
@@ -31,7 +32,7 @@ type env =
     (FStar_Extraction_ML_Syntax.mlsymbol Prims.list,FStar_Extraction_ML_Syntax.mltydecl)
       FStar_Pervasives_Native.tuple2 Prims.list;
   type_names: FStar_Syntax_Syntax.fv Prims.list;
-  currentModule: FStar_Extraction_ML_Syntax.mlpath;}
+  currentModule: FStar_Extraction_ML_Syntax.mlpath;}[@@deriving show]
 let __proj__Mkenv__item__tcenv: env -> FStar_TypeChecker_Env.env =
   fun projectee  ->
     match projectee with
