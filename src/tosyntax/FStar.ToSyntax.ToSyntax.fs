@@ -1271,21 +1271,86 @@ and desugar_comp r env t =
           let req = Requires (mk_term (Name C.true_lid) t.range Formula, None) in
           mk_term req t.range Type_level, Nothing
         in
+        let ens_true =
+          let ens = Ensures (mk_term (Name C.true_lid) t.range Formula, None) in
+          mk_term ens t.range Type_level, Nothing
+        in
+        let fail_lemma () = 
+             let expected_one_of = ["Lemma post";
+                                    "Lemma (ensures post)";
+                                    "Lemma (requires pre) (ensures post)";
+                                    "Lemma post [SMTPat ...]";
+                                    "Lemma (ensures post) [SMTPat ...]";
+                                    "Lemma (ensures post) (decreases d)";
+                                    "Lemma (ensures post) (decreases d) [SMTPat ...]";
+                                    "Lemma (requires pre) (ensures post) (decreases d)";
+                                    "Lemma (requires pre) (ensures post) [SMTPat ...]";
+                                    "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
+             let msg = String.concat "\n\t" expected_one_of in
+             raise (Error("Invalid arguments to 'Lemma'; expected one of the following:\n\t" ^ msg, t.range))
+        in
         let args = match args with
-          | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
-          (* a single ensures clause *)
-          | [ens] -> [unit_tm;req_true;ens;nil_pat]
-          | [ens;smtpat] when is_smt_pat smtpat ->
-              [unit_tm;req_true;ens;smtpat]
-          | [req;ens] when (is_requires req && is_ensures ens) ->
-              [unit_tm;req;ens;nil_pat]
-          | [ens;dec] when (is_ensures ens && is_decreases dec) ->
-              [unit_tm;req_true;ens;nil_pat;dec]
-          | [ens;dec;smtpat] when (is_ensures ens && is_decreases dec && is_smt_pat smtpat) ->
-              [unit_tm;req_true;ens;smtpat;dec]
-          | [req;ens;dec] when (is_requires req && is_ensures ens && is_decreases dec) ->
-              [unit_tm;req;ens;nil_pat;dec]
-          | more -> unit_tm::more
+          | [] -> fail_lemma ()
+
+          | [req] //a single requires clause (cf. Issue #1208)
+               when is_requires req ->
+            fail_lemma()
+
+          | [smtpat]
+                when is_smt_pat smtpat ->
+            fail_lemma()
+
+          | [dec]
+                when is_decreases dec ->
+            fail_lemma()
+                         
+          | [ens] -> //otherwise, a single argument is always treated as just an ensures clause
+            [unit_tm;req_true;ens;nil_pat]
+
+          | [req;ens]
+                when is_requires req
+                  && is_ensures ens ->
+            [unit_tm;req;ens;nil_pat]
+
+          | [ens;smtpat] //either Lemma p [SMTPat ...]; or Lemma (ensures p) [SMTPat ...]
+                when not (is_requires ens)
+                  && not (is_smt_pat ens)
+                  && not (is_decreases ens)
+                  && is_smt_pat smtpat ->
+            [unit_tm;req_true;ens;smtpat]
+
+          | [ens;dec]
+                when is_ensures ens
+                  && is_decreases dec ->
+            [unit_tm;req_true;ens;nil_pat;dec]
+
+          | [ens;dec;smtpat]
+                when is_ensures ens
+                  && is_decreases dec
+                  && is_smt_pat smtpat ->
+            [unit_tm;req_true;ens;smtpat;dec]
+
+          | [req;ens;dec]
+                when is_requires req
+                  && is_ensures ens
+                  && is_decreases dec ->
+            [unit_tm;req;ens;nil_pat;dec]
+
+          | [req;ens;smtpat]
+                when is_requires req
+                  && is_ensures ens
+                  && is_smt_pat smtpat ->
+            unit_tm::args
+
+          | [req;ens;dec;smtpat]
+                when is_requires req
+                  && is_ensures ens
+                  && is_smt_pat smtpat
+                  && is_decreases dec ->
+            unit_tm::args
+
+          | _other ->
+            fail_lemma()
         in
         let head_and_attributes = fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma in
         head_and_attributes, args
@@ -1660,9 +1725,10 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
              let quals = if List.contains S.Assumption quals
                          then quals
                          else (if not (Options.ml_ish ()) then
-                                 BU.print2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
-                                                (Range.string_of_range se.sigrng) (Print.lid_to_string l);
-                               S.Assumption :: S.New :: quals) in
+                                 FStar.Errors.warn se.sigrng
+                                   (BU.format1 "Adding an implicit 'assume new' qualifier on %s"
+                                               (Print.lid_to_string l));
+                                 S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None se.sigrng in

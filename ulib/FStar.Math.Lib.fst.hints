@@ -121,14 +121,6 @@
       0
     ],
     [
-      "FStar.Math.Lib.lemma_mul_minus_distr_l",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
       "FStar.Math.Lib.slash_star_axiom",
       1,
       2,

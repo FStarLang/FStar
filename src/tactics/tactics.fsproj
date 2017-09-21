@@ -85,6 +85,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FStar.Tactics.Types.fs" />
+    <Compile Include="FStar.Tactics.Result.fs" />
     <Compile Include="FStar.Tactics.Basic.fs" />
     <Compile Include="FStar.Tactics.Embedding.fs" />
     <Compile Include="FStar.Tactics.Native.fs" />
