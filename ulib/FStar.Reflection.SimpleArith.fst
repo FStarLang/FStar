@@ -26,6 +26,7 @@ type expr =
     | Lxor    : expr -> expr -> expr
     | Lor     : expr -> expr -> expr
     | Ladd    : expr -> expr -> expr
+    | Lsub    : expr -> expr -> expr
     | Shl     : expr -> expr -> expr
     | Shr     : expr -> expr -> expr
     | Neg     : expr -> expr
@@ -61,6 +62,7 @@ let rec is_arith_expr (t:term) =
       else if qn = umod_qn then Umod e2' e3'
       else if qn = mul_mod_qn then MulMod e2' e3'
       else if qn = ladd_qn then Ladd e2' e3'
+      else if qn = lsub_qn then Lsub e2' e3'
       else Unknown
     | Tv_FVar fv, [(l, Q_Implicit); (r, _)] ->
         let qn = inspect_fv fv in
@@ -90,6 +92,8 @@ let rec expr_to_string (e:expr) : string =
     | Land l r -> "(" ^ (expr_to_string l) ^ " & " ^ (expr_to_string r) ^ ")"
     | Lor l r -> "(" ^ (expr_to_string l) ^ " | " ^ (expr_to_string r) ^ ")"
     | Lxor l r -> "(" ^ (expr_to_string l) ^ " ^ " ^ (expr_to_string r) ^ ")"
+    | Ladd l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
+    | Lsub l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | Shl l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
     | Shr l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | NatToBv l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"

@@ -25,7 +25,7 @@ let int2bv_lemma_1 = U.to_vec_lemma_1
 let int2bv_lemma_2 = U.to_vec_lemma_2
 
 let bvadd #n a b = int2bv #n (U.add_mod (bv2int #n a) (bv2int #n b))
-let bvsub #n a b = int2bv #n (U.sub (bv2int #n a) (bv2int #n b))
+let bvsub #n a b = int2bv #n (U.sub_mod (bv2int #n a) (bv2int #n b))
 let bvdiv #n a b = 
   int2bv #n (U.udiv #n (bv2int #n a) b)    
 let bvmod #n a b = 

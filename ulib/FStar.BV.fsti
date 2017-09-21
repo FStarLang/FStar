@@ -101,4 +101,4 @@ val int2bv_add : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
 
 val int2bv_sub : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
 			    squash (bvsub #n (int2bv #n x) (int2bv #n y) == z) ->
-			    Lemma (int2bv #n (sub #n x y) == z)
+			    Lemma (int2bv #n (sub_mod #n x y) == z)

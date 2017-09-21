@@ -54,7 +54,7 @@ val cong_bvadd : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) ->
 			  (#y:bv_t n) -> (#z:bv_t n) ->
 			  squash (w == y) -> squash (x == z) ->
 			  Lemma (bvadd w x == bvadd y z)
-let cong_bvadd #n #w #x #y pf = ()
+let cong_bvadd #n #w #x #y #z pf1 pf2 = ()
 
 (* Used to reduce the initial equation to an equation on bitvectors*)
 val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
