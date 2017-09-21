@@ -122,6 +122,7 @@ val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
 val format5: string -> string -> string -> string -> string -> string -> string
+val format6: string -> string -> string -> string -> string -> string -> string -> string
 
 val print: string -> list<string> -> unit
 val print1: string -> string -> unit
