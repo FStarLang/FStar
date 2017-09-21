@@ -320,10 +320,9 @@ for name, e in Extractions:
   benv = env.Clone()
   benv.Append(BUILDERS={'FStarBuilder':fstar_builder})
   for action in e.actions:
-    print 'builder'+str(action.target)+' ' + str(action.source)
     t_cmd = benv.FStarBuilder(action.target, action.source)
-    #benv.Depends(t_cmd, benv['FSTAR'])  # take explicit dependency on the F* compiler executable
-    benv.Alias(name, t_cmd)            # add this target to the alias
+    Depends(t_cmd, boot_target)     # ensure boot files are built ahead of extraction
+    benv.Alias(name, t_cmd)         # add this target to the alias
 
 # Turn the ExtractionTargets[] into actual SCons targets
 for name, targets in ExtractionTargets:
@@ -387,6 +386,7 @@ def fs_file_scan(node, env, path):
 # register the .fs scanner with SCons
 fs_scan = Scanner(function = fs_file_scan, skeys = ['.fs'])
 env.Append(SCANNERS = fs_scan)
+
 
 # --------------------------------------------------------------------
 
