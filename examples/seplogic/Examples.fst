@@ -30,7 +30,7 @@ unfold let unfold_steps =
 let step :tactic unit =
   (apply_lemma (quote lemma_destruct_exists_subheaps);; norm[])                            `or_else`
   (apply_lemma (quote lemma_read_write);; norm [];; forall_intro;; implies_intro;; idtac)  `or_else`
-  (apply_lemma (quote lemma_alloc_return);; norm [];; forall_intro;; implies_intro;; idtac)`or_else`
+  (apply_lemma (quote lemma_alloc_return);; norm [];; forall_intros;; implies_intro;; idtac)`or_else`
   (apply_lemma (quote lemma_read_write);; norm [])                                         `or_else`
   (apply_lemma (quote lemma_alloc_return);; norm [])                                       `or_else`
   idtac
@@ -101,7 +101,7 @@ let rotate_tau :tactic unit =
   step;;
   step;;
   fail "Rotate"
-  
+
 let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (x:int) (y:int) (z:int) =
   let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) 
                (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r1 n3)))) in
@@ -109,3 +109,25 @@ let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (x:int) (y:int) (z:int) =
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (sel h r1 == x /\ sel h r2 == y /\ sel h r2 == z ==> t) rotate_tau
 
+
+let lemma_init (phi:heap -> heap -> prop) (h:heap)
+  :Lemma (requires (phi emp h))
+         (ensures (exists h1 h2. (h == h1 `join` h2) /\ ((h1 == emp) /\ phi h1 h2)))
+  = ()
+  
+(* Initializing a fresh object *)
+let init_tau :tactic unit =
+  norm [delta; delta_only unfold_steps; primops];;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  dump "Init";;
+  smt
+
+let init_ok (h:heap) =
+  let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7) (fun _ -> Return r1)) in
+  let p = fun r h -> sel h r == 7 in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic t init_tau

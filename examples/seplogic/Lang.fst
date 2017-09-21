@@ -28,7 +28,7 @@ let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
       fun p h0 -> (exists (x:int). h0 == (r `points_to` x)) /\ (forall (h1:heap). h1 == (r `points_to` y) ==> p () h1)
 
     | Alloc ->
-      fun p h0 -> (h0 == emp) /\ (forall r h1. (h1 == r `points_to` 0) ==> p r h1)
+      fun p h0 -> (h0 == emp) /\ (forall (r:addr) (h1:heap). (h1 == r `points_to` 0) ==> p r h1)
 
 let lift_wpsep (#a:Type0) (wp_sep:st_wp a) :st_wp a
   = fun p h0 -> exists (h0':heap) (h0'':heap). h0 == (h0' `join` h0'') /\
@@ -40,9 +40,9 @@ let lemma_read_write (phi:heap -> heap -> prop) (r:addr) (h:heap)
 	                                  ((exists x. h' == (r `points_to` x)) /\ phi h' h'')))
   = ()
 
-let lemma_alloc_return (phi:heap -> heap -> prop) (r:addr) (h:heap)
-  :Lemma (requires phi emp h)
-         (ensures (exists (h':heap) (h'':heap). h == h' `join` h'' /\ (h' == emp /\ phi h' h'')))
+let lemma_alloc_return (phi:heap -> heap -> prop) (h:heap)
+  :Lemma (requires (phi emp h))
+         (ensures (exists (h':heap) (h'':heap). h == h' `join` h'' /\ ((h' == emp) /\ phi h' h'')))
   = ()
 
 let lemma_destruct_exists_subheaps (phi:heap -> heap -> heap -> heap -> prop) (h:heap)
@@ -52,10 +52,6 @@ let lemma_destruct_exists_subheaps (phi:heap -> heap -> heap -> heap -> prop) (h
 	          (exists (h2':heap) (h2'':heap). h1' == h2' `join` h2'' /\
 		                             phi h1' h1'' h2' h2'')))
   = ()
-
-
-
-
 
 
 
