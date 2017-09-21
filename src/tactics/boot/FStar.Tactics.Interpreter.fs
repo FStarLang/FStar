@@ -237,7 +237,8 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     // that make normalization SUPER slow (probably exponential). Doing this first pass
     // gets rid of those redexes and leaves a much smaller term, which performs a lot better.
     let tactic = N.reduce_uvar_solutions env tactic in
-    BU.print1 "About to check tactic term: %s\n" (Print.term_to_string tactic);
+    if !tacdbg then
+        BU.print1 "About to check tactic term: %s\n" (Print.term_to_string tactic);
     let tactic, _, _ = TcTerm.tc_reified_tactic env tactic in
     let tau = unembed_tactic_0 unembed_unit tactic in
     let env, _ = Env.clear_expected_typ env in
