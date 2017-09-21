@@ -270,7 +270,17 @@ let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 let lexConsTerm r hd tl = mk_term (Construct(C.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
-let mkConsList r elts =
+let rec mkfsDoc = function
+| [] -> ("", [])
+| (d :: ds) ->
+  begin match d with
+  | Left(text) -> mkfsdoc ds // todo fix me
+  | Right(kv) ->
+    let (text, kvs) = mkfsdoc ds
+    in (text, kv :: kvs)
+  end
+
+let mkConsList r elts
   let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
     List.fold_right (fun e tl -> consTerm r e tl) elts nil
 

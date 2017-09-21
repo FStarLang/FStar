@@ -59,11 +59,9 @@ open FStar.String
 %token EXISTS
 %token FALSE
 %token FORALL
-%token <fsdoc> FSDOC
 %token FSDOC_DOUBLE_NEWLINE
 %token <string> FSDOC_KEY
 %token FSDOC_NEWLINE
-%token <fsdoc> FSDOC_STANDALONE
 %token <string> FSDOC_TEXT
 %token FUN
 %token FUNCTION
@@ -182,13 +180,6 @@ open FStar.String
 %type <term> term
 %%
 
-option_FSDOC_:
-  
-    {    ( None )}
-| FSDOC
-    {let x = $1 in
-    ( Some x )}
-
 option___anonymous_1_:
   
     {    ( None )}
@@ -263,6 +254,13 @@ option_fsTypeArgs_:
     {let x = $1 in
     ( Some x )}
 
+option_fsdoc_:
+  
+    {    ( None )}
+| fsdoc
+    {let x = $1 in
+    ( Some x )}
+
 option_mainDecl_:
   
     {    ( None )}
@@ -323,6 +321,13 @@ loption_separated_nonempty_list_SEMICOLON_tuplePattern__:
   
     {    ( [] )}
 | separated_nonempty_list_SEMICOLON_tuplePattern_
+    {let x = $1 in
+    ( x )}
+
+loption_separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE__:
+  
+    {    ( [] )}
+| separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE_
     {let x = $1 in
     ( x )}
 
@@ -492,8 +497,8 @@ separated_nonempty_list_AND_letbinding_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
-separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__:
-  option_FSDOC_ typeDecl
+separated_nonempty_list_AND_pair_option_fsdoc__typeDecl__:
+  option_fsdoc_ typeDecl
     {let (x0, y0) = ($1, $2) in
 let x =
   let y = y0 in
@@ -501,7 +506,7 @@ let x =
       ( (x, y) )
 in
     ( [ x ] )}
-| option_FSDOC_ typeDecl AND separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+| option_fsdoc_ typeDecl AND separated_nonempty_list_AND_pair_option_fsdoc__typeDecl__
     {let (x0, y0, _2, xs) = ($1, $2, (), $4) in
 let x =
   let y = y0 in
@@ -598,6 +603,43 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
+separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE_:
+  FSDOC_NEWLINE
+    {let x = () in
+    ( [ x ] )}
+| FSDOC_NEWLINE fsdoc_item separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE_
+    {let (x, _2, xs) = ((), $2, $3) in
+    ( x :: xs )}
+
+fsdocKeyValue:
+  FSDOC_KEY FSDOC_TEXT
+    {let (k, v) = ($1, $2) in
+   ( let key = FSDOC_KEY k in
+     let value = FSDOC_TEXT v in
+     (key, value) )}
+
+fsdoc_item:
+  fsdocKeyValue
+    {let kv = $1 in
+  ( Left kv )}
+| FSDOC_TEXT
+    {let text = $1 in
+  ( Right text )}
+
+fsdoc:
+  loption_separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE__
+    {let xs0 = $1 in
+let ds =
+  let xs = xs0 in
+      ( xs )
+in
+  ( FStar_Parser_AST.mkfsDoc ds )}
+
+fsdocStandalone:
+  separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE_ FSDOC_DOUBLE_NEWLINE
+    {let (ds, _2) = ($1, ()) in
+  ( FStar_Parser_AST.mkfsDoc ds )}
+
 inputFragment:
   boption___anonymous_0_ list_decl_ option_mainDecl_ EOF
     {let (is_light, decls, main_opt, _4) = ($1, $2, $3, ()) in
@@ -609,7 +651,7 @@ inputFragment:
       )}
 
 mainDecl:
-  SEMICOLON_SEMICOLON option_FSDOC_ term
+  SEMICOLON_SEMICOLON option_fsdoc_ term
     {let (_1, doc, t) = ((), $2, $3) in
       ( let decorations = match doc with
         | Some d -> [ Doc d ]
@@ -630,7 +672,7 @@ in
       ( ResetOptions s_opt )}
 
 decoration:
-  FSDOC
+  fsdoc
     {let x = $1 in
       ( Doc x )}
 | LBRACK_AT list_atomicTerm_ RBRACK
@@ -671,7 +713,7 @@ rawDecl:
 | MODULE quident
     {let (_1, uid) = ((), $2) in
       (  TopLevelModule uid )}
-| TYPE separated_nonempty_list_AND_pair_option_FSDOC__typeDecl__
+| TYPE separated_nonempty_list_AND_pair_option_fsdoc__typeDecl__
     {let (_1, tcdefs) = ((), $2) in
       ( Tycon (false, List.map (fun (doc, f) -> (f, doc)) tcdefs) )}
 | EFFECT uident typars EQUALS typ
@@ -703,7 +745,7 @@ rawDecl:
 | SUB_EFFECT subEffect
     {let (_1, se) = ((), $2) in
       ( SubEffect se )}
-| FSDOC_STANDALONE
+| fsdocStandalone
     {let doc = $1 in
       ( Fsdoc doc )}
 
@@ -745,7 +787,7 @@ let doc_opt =
       ( None )
 in
       ( (lid, t, doc_opt) )}
-| FSDOC lident COLON typ
+| fsdoc lident COLON typ
     {let (x0, lid, _3, t) = ($1, $2, (), $4) in
 let doc_opt =
   let x = x0 in
@@ -754,10 +796,10 @@ in
       ( (lid, t, doc_opt) )}
 
 constructorDecl:
-  BAR option_FSDOC_ uident COLON typ
+  BAR option_fsdoc_ uident COLON typ
     {let (_1, doc_opt, uid, _4, t) = ((), $2, $3, (), $5) in
                                                              ( (uid, Some t, doc_opt, false) )}
-| BAR option_FSDOC_ uident option___anonymous_2_
+| BAR option_fsdoc_ uident option___anonymous_2_
     {let (_1, doc_opt, uid, t_opt) = ((), $2, $3, $4) in
                                                              ( (uid, t_opt, doc_opt, true) )}
 
