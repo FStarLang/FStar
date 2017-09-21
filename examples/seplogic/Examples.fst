@@ -53,8 +53,10 @@ let increment_tau :tactic unit =
   step;;
   step;;
   step;;
-  dump "Increment";;
-  smt
+  dump "Foo";;
+  pointwise (or_else (apply_lemma (quote lemma0);; qed) idtac);;
+  dump "Bar"
+  //smt
 
 let increment_ok (r:addr) (h:heap) (x:int) =
   let c = Bind (Read r) (fun n -> Write r (n + 1)) in
@@ -109,6 +111,7 @@ let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (x:int) (y:int) (z:int) =
   let p = fun _ h -> sel h r1 == y /\ sel h r2 == z /\ sel h r3 == x in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (sel h r1 == x /\ sel h r2 == y /\ sel h r2 == z ==> t) rotate_tau
+
 let lemma_init (phi:heap -> heap -> prop) (h:heap)
   :Lemma (requires (phi emp h))
          (ensures (exists h1 h2. (h == h1 `join` h2) /\ ((h1 == emp) /\ phi h1 h2)))

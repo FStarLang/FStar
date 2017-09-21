@@ -19,6 +19,11 @@ abstract let join (h1:heap) (h2:heap) :heap
 abstract let points_to (r:addr) (x:int) :heap
   = admit()
 
+let lemma0 (r:addr) (h:heap)
+  :Lemma (requires True)
+         (ensures  (join (restrict h r) (minus h r) == h))
+  = admit ()
+  
 let lemma1 (r:addr) (x:int) (h:heap)
   :Lemma (requires True)
          (ensures ((r `points_to` x) `join` (h `minus` r)) == h)
