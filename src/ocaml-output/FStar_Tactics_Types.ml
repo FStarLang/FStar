@@ -4,30 +4,38 @@ type goal =
   context: FStar_TypeChecker_Env.env;
   witness: FStar_Syntax_Syntax.term;
   goal_ty: FStar_Syntax_Syntax.typ;
-  opts: FStar_Options.optionstate;}
+  opts: FStar_Options.optionstate;
+  is_guard: Prims.bool;}
 let __proj__Mkgoal__item__context: goal -> FStar_TypeChecker_Env.env =
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
-        goal_ty = __fname__goal_ty; opts = __fname__opts;_} ->
-        __fname__context
+        goal_ty = __fname__goal_ty; opts = __fname__opts;
+        is_guard = __fname__is_guard;_} -> __fname__context
 let __proj__Mkgoal__item__witness: goal -> FStar_Syntax_Syntax.term =
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
-        goal_ty = __fname__goal_ty; opts = __fname__opts;_} ->
-        __fname__witness
+        goal_ty = __fname__goal_ty; opts = __fname__opts;
+        is_guard = __fname__is_guard;_} -> __fname__witness
 let __proj__Mkgoal__item__goal_ty: goal -> FStar_Syntax_Syntax.typ =
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
-        goal_ty = __fname__goal_ty; opts = __fname__opts;_} ->
-        __fname__goal_ty
+        goal_ty = __fname__goal_ty; opts = __fname__opts;
+        is_guard = __fname__is_guard;_} -> __fname__goal_ty
 let __proj__Mkgoal__item__opts: goal -> FStar_Options.optionstate =
   fun projectee  ->
     match projectee with
     | { context = __fname__context; witness = __fname__witness;
-        goal_ty = __fname__goal_ty; opts = __fname__opts;_} -> __fname__opts
+        goal_ty = __fname__goal_ty; opts = __fname__opts;
+        is_guard = __fname__is_guard;_} -> __fname__opts
+let __proj__Mkgoal__item__is_guard: goal -> Prims.bool =
+  fun projectee  ->
+    match projectee with
+    | { context = __fname__context; witness = __fname__witness;
+        goal_ty = __fname__goal_ty; opts = __fname__opts;
+        is_guard = __fname__is_guard;_} -> __fname__is_guard
 type proofstate =
   {
   main_context: FStar_TypeChecker_Env.env;

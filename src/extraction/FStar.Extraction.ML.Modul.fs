@@ -44,7 +44,7 @@ module Env = FStar.TypeChecker.Env
 let fail_exp (lid:lident) (t:typ) =
     mk (Tm_app(S.fvar PC.failwith_lid Delta_constant None,
                [ S.iarg t
-               ; S.as_arg <| mk (Tm_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.lid_to_string lid)), Range.dummyRange))) None Range.dummyRange]))
+               ; S.as_arg <| mk (Tm_constant (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange))) None Range.dummyRange]))
         None
         Range.dummyRange
 
@@ -68,8 +68,8 @@ let rec extract_attr x =
   match SS.compress x with
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShow" ->
       Some PpxDerivingShow
-  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (data, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
-      Some (PpxDerivingShowConstant (string_of_unicode data))
+  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
+      Some (PpxDerivingShowConstant (s))
   | { n = Tm_meta (x, _) } ->
       extract_attr x
   | a ->
@@ -171,7 +171,7 @@ let bundle_as_inductive_families env ses quals attrs : UEnv.env * list<inductive
 type env_t = UEnv.env
 
 let extract_bundle env se =
-    let extract_ctor (ml_tyvars:list<(mlsymbol*int)>) (env:env_t) (ctor: data_constructor):
+    let extract_ctor (ml_tyvars:list<mlsymbol>) (env:env_t) (ctor: data_constructor):
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env) (Term.term_as_mlty env ctor.dtyp) in
@@ -191,7 +191,7 @@ let extract_bundle env se =
        let env, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor vars) env in
        let indices, _ = U.arrow_formals ind.ityp in
-       let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i, 0)) in
+       let ml_params = List.append vars (indices |> List.mapi (fun i _ -> "'dummyV" ^ BU.string_of_int i)) in
        let tbody =
          match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
@@ -234,7 +234,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           let extend_env g lid ml_name tm tysc =
             let g, mangled_name = extend_fv' g (S.lid_as_fv lid Delta_equational None) ml_name tysc false false in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then
-            BU.print1 "Mangled name: %s\n" (fst mangled_name);
+            BU.print1 "Mangled name: %s\n" mangled_name;
             let lb = {
                 mllb_name=mangled_name;
                 mllb_tysc=None;
@@ -279,7 +279,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               | _ -> failwith "Impossible" in
             if Env.debug g.tcenv <| Options.Other "ExtractionReify" then begin
               BU.print1 "Extracted action type: %s\n" (Code.string_of_mlty a_nm (snd tysc));
-              List.iter (fun x -> BU.print1 "and binders: %s\n" (fst x)) (fst tysc) end;
+              List.iter (fun x -> BU.print1 "and binders: %s\n" x) (fst tysc) end;
             extend_env g a_lid a_nm exp tysc in
 
           let g, return_decl =
@@ -345,12 +345,11 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
               let lid_arg = MLE_Const (MLC_String (string_of_lid assm_lid)) in
               let tac_arity = List.length bs in
               let arity = MLE_Name (mlpath_of_lident (lid_of_str (BU.string_of_int (tac_arity + 1)))) in
-              let tac_interpretation = mk_interpretation_fun tac_lid lid_arg t bs in
-              let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
-              MLM_Top app in
-
-            // Don't even bother when NoExtract is present. cf. Issue #54 in Kremlin
-            if List.contains S.NoExtract quals then [] else
+              match mk_interpretation_fun tac_lid lid_arg t bs with
+              | Some tac_interpretation ->
+                  let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) [lid_arg; arity; tac_interpretation]) in
+                  [MLM_Top app]
+              | None -> [] in
 
             (match (snd lbs) with
              | [hd] ->
@@ -366,7 +365,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                         // BU.print1 "Head %s \n" (Print.term_to_string h);
                         // BU.print1 "Arg %s \n" (Print.term_to_string (fst(List.hd args)));
                         // BU.print1 "Type: %s\n" (Print.term_to_string hd.lbtyp);
-                        [mk_registration tac_lid assm_lid (fst(List.hd args)) bs]
+                        mk_registration tac_lid assm_lid (fst(List.hd args)) bs
                       end else []
                  | _ -> [])
              | _ -> []
@@ -382,7 +381,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                     if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
                     then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
                          let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
-                         env, {ml_lb with mllb_name=(snd mname,0)}
+                         env, {ml_lb with mllb_name=snd mname }
                     else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
               (g, []) bindings (snd lbs) in
@@ -393,8 +392,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 | _ -> None
               ) quals in
               let flags' = List.choose (function
-                | { n = Tm_constant (Const_string (data, _)) } ->
-                    Some (Attribute (string_of_unicode data))
+                | { n = Tm_constant (Const_string (s, _)) } ->
+                    Some (Attribute (s))
                 | _ ->
                     print_warning "Warning: unrecognized, non-string attribute, bother protz for a better error message";
                     None

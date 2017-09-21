@@ -11,14 +11,19 @@ true: \
   package(batteries), \
   package(zarith)
 
+# ADL: the new unicode lexer
+"src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)
+
 # ADL: Please do not enable compiler-libs unless absolutely necessary
 <src/*/ml/*> or <src/ocaml-output/*.ml>: \
   package(compiler-libs), \
   package(compiler-libs.common), \
+  package(menhirLib), \
   package(dynlink), \
   package(pprint), \
-  package(yojson), \
-  package(stdint)
+  package(ulex), \
+  package(stdint), \
+  package(yojson)
 
 # This ensures that main.native bundles its dependencies, which dynlinked tactics might need.
 "src/fstar/ml/main.native": \

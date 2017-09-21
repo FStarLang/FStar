@@ -162,8 +162,10 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                          (E.pair_typ RD.fstar_refl_binder RD.fstar_refl_binder);
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
       mktac2 "__norm_term"     norm_term (unembed_list unembed_norm_step) unembed_term embed_term RD.fstar_refl_term;
+      mktac2 "__rename_to"     rename_to unembed_binder unembed_string embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
-      mktac0 "__clear"         clear embed_unit t_unit;
+      mktac0 "__clear_top"     clear_top embed_unit t_unit;
+      mktac1 "__clear"         clear unembed_binder embed_unit t_unit;
       mktac1 "__rewrite"       rewrite unembed_binder embed_unit t_unit;
       mktac0 "__smt"           smt embed_unit t_unit;
       mktac1 "__exact"         exact unembed_term embed_unit t_unit;
@@ -366,6 +368,8 @@ let reify_tactic (a : term) : term =
 let synth (env:Env.env) (typ:typ) (tau:term) : term =
     tacdbg := Env.debug env (Options.Other "Tac");
     let gs, w = run_tactic_on_typ (reify_tactic tau) env typ in
-    match gs with
-    | [] -> w
-    | _::_ -> raise (FStar.Errors.Error ("synthesis left open goals", typ.pos))
+    // Check that all goals left are irrelevant. We don't need to check their
+    // validity, as we will typecheck the witness independently.
+    if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
+    then raise (FStar.Errors.Error ("synthesis left open goals", typ.pos))
+    else w

@@ -971,7 +971,8 @@ let rec unfold_effect_abbrev env comp =
       unfold_effect_abbrev env c
 
 let effect_repr_aux only_reifiable env c u_c =
-    match effect_decl_opt env (norm_eff_name env (U.comp_effect_name c)) with
+    let effect_name = norm_eff_name env (U.comp_effect_name c) in
+    match effect_decl_opt env effect_name with
     | None -> None
     | Some (ed, qualifiers) ->
         if only_reifiable && not (qualifiers |> List.contains Reifiable)
@@ -980,7 +981,16 @@ let effect_repr_aux only_reifiable env c u_c =
         | Tm_unknown -> None
         | _ ->
           let c = unfold_effect_abbrev env c in
-          let res_typ, wp = c.result_typ, List.hd c.effect_args in
+          let res_typ = c.result_typ in
+          let wp =
+            match c.effect_args with
+            | hd :: _ -> hd
+            | [] ->
+              let name = Ident.string_of_lid effect_name in
+              let message = BU.format1 "Not enough arguments for effect %s. " name ^
+                "This usually happens when you use a partially applied DM4F effect, " ^
+                "like [TAC int] instead of [Tac int]." in
+              raise (Error (message, get_range env)) in
           let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
           Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
 

@@ -20,6 +20,8 @@ type goal = {
     witness : term;
     goal_ty : typ;
     opts    : FStar.Options.optionstate; // option state for this particular goal
+    is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
+                     // We make the distinction to be more user-friendly at times
 }
 
 type proofstate = {

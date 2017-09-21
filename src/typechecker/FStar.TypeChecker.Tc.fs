@@ -1252,23 +1252,6 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
             | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
             | _ -> quals
         in
-        // drop inline_for_extraction unless pure (otherwise, this now
-        // generates beta-redexes that kreMLin is particularly unhappy with)
-        let quals = List.choose (function
-          | Inline_for_extraction ->
-              if not (List.for_all (fun lb ->
-                let ok = is_pure_or_ghost_function lb.lbtyp in
-                if not ok then
-                  BU.print1_warning "Dropping inline_for_extraction from %s because it is not a pure function\n"
-                    (SP.lbname_to_string lb.lbname);
-                ok
-              ) (snd lbs)) then
-                None
-              else
-                Some Inline_for_extraction
-          | q ->
-              Some q
-        ) quals in
         { se with sigel = Sig_let(lbs, lids);
                   sigquals =  quals },
         lbs

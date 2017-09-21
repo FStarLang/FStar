@@ -208,30 +208,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
-    [
-      "FStar.DM4F.Exceptions.lemma_div_extrinsic",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "FStar.DM4F.Exceptions.lemma_div_extrinsic",
-      6,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "FStar.DM4F.Exceptions.lemma_div_extrinsic",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
     [ "FStar.DM4F.Exceptions.raise_", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Exceptions.raise__",

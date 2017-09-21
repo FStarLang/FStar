@@ -1,37 +1,14 @@
 let max_int = Z.of_int max_int
-let is_letter c = BatChar.is_letter c
-let is_digit  c = BatChar.is_digit  c
-let is_letter_or_digit c = (BatChar.is_letter c) || (BatChar.is_digit c)
-let is_symbol c = BatChar.is_symbol c
+let is_letter c = if c > 255 then false else BatChar.is_letter (BatChar.chr c)
+let is_digit  c = if c > 255 then false else BatChar.is_digit  (BatChar.chr c)
+let is_letter_or_digit c = is_letter c || is_digit c
+let is_symbol c = if c > 255 then false else BatChar.is_symbol (BatChar.chr c)
 
 (* Modeled after: Char.IsPunctuation in .NET
    (http://www.dotnetperls.com/char-ispunctuation)
 *)
-let is_punctuation c = (
-    c = '!' ||
-    c = '"' ||
-    c = '#' ||
-    c = '%' ||
-    c = '&' ||
-    c = '\'' ||
-    c = '(' ||
-    c = ')' ||
-    c = '*' ||
-    c = ',' ||
-    c = '-' ||
-    c = '.' ||
-    c = '/' ||
-    c = ':' ||
-    c = ';' ||
-    c = '?' ||
-    c = '@' ||
-    c = '[' ||
-    c = '\\' ||
-    c = ']' ||
-    c = '_' ||
-    c = '{' ||
-    c = '}'
-  )
+let is_punctuation c = List.mem c [33; 34; 35; 37; 38; 39; 40; 41; 42; 44; 45; 46; 47; 58; 59; 63; 64; 91; 92; 93; 95; 123; 125]
+(*'!','"','#','%','&','\'','(',')','*',',','-','.','/',':',';','?','@','[','\\',']','_','{','}'*)
 
 let return_all x = x
 
@@ -52,7 +29,7 @@ let string_of_time = string_of_float
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
 
 type proc =
     {inc : in_channel;
@@ -417,13 +394,13 @@ let unicode_of_string (string:string) =
   BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
   t
 
-let char_of_int i = char_of_int (Z.to_int i)
+let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
-let int_of_char x= Z.of_int (Char.code x)
+let int_of_char x = Z.of_int x
 let int_of_byte x = x
-let int_of_uint8 = int_of_char
+let int_of_uint8 x = Z.of_int (Char.code x)
 let uint16_of_int i = Z.to_int i
-let byte_of_char (c:char) = Char.code c
+let byte_of_char c = c
 
 let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)
@@ -438,7 +415,7 @@ let string_of_bool = string_of_bool
 let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float
-let string_of_char  (i:char) = spr "%c" i
+let string_of_char i = BatUTF8.init 1 (fun _ -> BatUChar.chr i)
 let hex_string_of_byte (i:int) =
   let hs = spr "%x" i in
   if (String.length hs = 1) then "0" ^ hs
@@ -448,15 +425,16 @@ let bytes_of_string = unicode_of_string
 let starts_with = BatString.starts_with
 let trim_string = BatString.trim
 let ends_with = BatString.ends_with
-let char_at s index = BatString.get s (Z.to_int index)
-let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let char_at s index = BatUChar.code (BatUTF8.get s (Z.to_int index))
+let is_upper c = 65 <= c && c <= 90
 let contains (s1:string) (s2:string) = BatString.exists s1 s2
 let substring_from s index = BatString.tail s (Z.to_int index)
-let substring s i j= BatString.sub s (Z.to_int i) (Z.to_int j)
-let replace_char (s:string) (c1:char) (c2:char) =
-  BatString.map (fun c -> if c = c1 then c2 else c) s
-let replace_chars (s:string) (c:char) (by:string) =
-  BatString.replace_chars (fun x -> if x=c then by else BatString.of_char x) s
+let substring s i j = BatString.sub s (Z.to_int i) (Z.to_int j)
+let replace_char (s:string) c1 c2 =
+  let b = bytes_of_string s in
+  string_of_bytes (BatArray.map (fun x -> if x = c1 then c2 else x) b)
+let replace_chars (s:string) c (by:string) =
+  BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
 let split s sep = if s = "" then [""] else BatString.nsplit s sep
@@ -971,10 +949,10 @@ let read_hints (filename: string): hints_db option =
     )
   with
    | Exit ->
-      Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
+      print1_warning "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
    | Sys_error _ ->
-      Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
+      print1_warning "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None
 
 (** Interactive protocol **)

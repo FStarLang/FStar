@@ -149,15 +149,27 @@ let length_gsub
   [SMTPat (length (gsub b i len))]
 = ()
 
-let live_gsub
+let live_gsub_equiv
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
   (len: UInt32.t)
   (h: HS.mem)
 : Lemma
-  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ UInt32.v len > 0))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b)))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ (live h (gsub b i len) <==> live h b)))
+  [SMTPat (live h (gsub b i len))]
+= ()
+
+let live_gsub_intro
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (h: HS.mem)
+: Lemma
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ live h b))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ live h (gsub b i len)))
   [SMTPat (live h (gsub b i len))]
 = ()
 
@@ -273,7 +285,7 @@ let gpointer_of_buffer_cell_gsub
     gpointer_of_buffer_cell (gsub b i1 len) i2 == gpointer_of_buffer_cell b FStar.UInt32.(i1 +^ i2)
   ))
   [SMTPat (gpointer_of_buffer_cell (gsub b i1 len) i2)]
-= ()
+= Pointer.gpointer_of_buffer_cell_gsub_buffer b i1 len i2
 
 let live_gpointer_of_buffer_cell
   (#t: typ)
@@ -388,7 +400,7 @@ let readable_gsub
   (i: UInt32.t)
   (len: UInt32.t)
 : Lemma
-  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h b /\ UInt32.v len > 0))
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h b))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (length b) /\ readable h (gsub b i len)))
   [SMTPat (readable h (gsub b i len))]
 = ()

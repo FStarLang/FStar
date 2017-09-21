@@ -87,16 +87,6 @@
       0
     ],
     [
-      "FStar.Int8.v_inj",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Int8.n", "projection_inverse_BoxInt_proj_0"
-      ],
-      0
-    ],
-    [
       "FStar.Int8.add",
       1,
       2,

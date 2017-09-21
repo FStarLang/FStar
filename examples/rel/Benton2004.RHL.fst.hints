@@ -1,5 +1,5 @@
 [
-  "Ÿ÷=»≈óﬂëˆWé8áí\"±",
+  "ç|ST>Ù\u001d√\u007f4\\’H\r\u001c≥",
   [
     [ "Benton2004.RHL.uu___is_Left", 1, 2, 1, [ "@query" ], 0 ],
     [ "Benton2004.RHL.uu___is_Right", 1, 2, 1, [ "@query" ], 0 ],
@@ -139,27 +139,6 @@
     [
       "Benton2004.RHL.gsubst_gvar_other",
       3,
-      2,
-      1,
-      [ "@query", "assumption_Benton2004.RHL.pos_haseq" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.gsubst_gvar_other",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0
-    ],
-    [
-      "Benton2004.RHL.gsubst_gvar_other",
-      5,
       2,
       1,
       [ "@query", "assumption_Benton2004.RHL.pos_haseq" ],
@@ -1008,22 +987,6 @@
     [
       "Benton2004.RHL.r_while_terminates",
       9,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.r_while_terminates",
-      10,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.r_while_terminates",
-      11,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
