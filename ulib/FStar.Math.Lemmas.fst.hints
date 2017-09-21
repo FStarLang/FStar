@@ -1,5 +1,5 @@
 [
-  "'§š^ni\u0011.ª*`Ëòî{1",
+  "§F™ù!î“Y?E\u0014#]´©e",
   [
     [
       "FStar.Math.Lemmas.euclidean_div_axiom",
@@ -1466,8 +1466,8 @@
     [
       "FStar.Math.Lemmas.lemma_mod_plus_injective",
       4,
-      2,
-      1,
+      0,
+      0,
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",

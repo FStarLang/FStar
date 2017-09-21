@@ -25,8 +25,8 @@ let st_wp_h   (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
 unfold let st_return        (heap:Type) (a:Type)
                             (x:a) (p:st_post_h heap a) =
      p x
-unfold let st_bind_wp       (heap:Type) 
-			    (r1:range) 
+unfold let st_bind_wp       (heap:Type)
+			    (r1:range)
 			    (a:Type) (b:Type)
                             (wp1:st_wp_h heap a)
                             (wp2:(a -> GTot (st_wp_h heap b)))
@@ -265,3 +265,7 @@ let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
 type __internal_ocaml_attributes =
   | PpxDerivingShow
   | PpxDerivingShowConstant of string
+  | CInline
+  | Substitute
+  | Gc
+  | Comment of string
