@@ -72,7 +72,9 @@ let rec extract_meta x =
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Substitute" -> Some Substitute
   | { n = Tm_fvar fv } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Gc" -> Some GCType
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.PpxDerivingShowConstant" ->
-      Some (PpxDerivingShowConstant (s))
+      Some (PpxDerivingShowConstant s)
+  | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
+      Some (Comment s)
   // These are only for backwards compatibility, they should be removed at some point.
   | { n = Tm_constant (Const_string (data, _)) } when data = "c_inline" -> Some CInline
   | { n = Tm_constant (Const_string (data, _)) } when data = "substitute" -> Some Substitute

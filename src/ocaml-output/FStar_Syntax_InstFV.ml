@@ -1,7 +1,7 @@
 open Prims
 type inst_t =
   (FStar_Ident.lident,FStar_Syntax_Syntax.universes)
-    FStar_Pervasives_Native.tuple2 Prims.list
+    FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
 let mk:
   'Auu____15 'Auu____16 .
     'Auu____16 FStar_Syntax_Syntax.syntax ->

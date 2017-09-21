@@ -303,17 +303,6 @@
       0
     ],
     [
-      "FStar.TaggedUnion.get_tag",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.UInt32.t__haseq",
-        "equation_FStar.UInt32.t"
-      ],
-      0
-    ],
-    [
       "FStar.TaggedUnion.get_value",
       1,
       2,

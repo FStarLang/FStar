@@ -67,6 +67,9 @@ and flag =
   | CInline
   | Substitute
   | GCType
+  | Comment of string
+
+and fsdoc = string
 
 and lifetime =
   | Eternal
@@ -342,6 +345,7 @@ and translate_flags flags =
     | Syntax.CInline -> Some CInline
     | Syntax.Substitute -> Some Substitute
     | Syntax.GCType -> Some GCType
+    | Syntax.Comment s -> Some (Comment s)
     | _ -> None // is this all of them?
   ) flags
 

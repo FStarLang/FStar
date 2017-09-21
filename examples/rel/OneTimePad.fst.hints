@@ -247,42 +247,6 @@
         "function_token_typing_Prims.bool"
       ],
       0
-    ],
-    [
-      "OneTimePad.one_time_pad_ok",
-      5,
-      0,
-      4,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple4_haseq",
-        "assumption_Prims.HasEq_bool", "equation_OneTimePad.nib",
-        "function_token_typing_Prims.bool"
-      ],
-      0
-    ],
-    [
-      "OneTimePad.one_time_pad_ok",
-      6,
-      0,
-      4,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple4_haseq",
-        "assumption_Prims.HasEq_bool", "equation_OneTimePad.nib",
-        "function_token_typing_Prims.bool"
-      ],
-      0
-    ],
-    [
-      "OneTimePad.one_time_pad_ok",
-      7,
-      0,
-      4,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple4_haseq",
-        "assumption_Prims.HasEq_bool", "equation_OneTimePad.nib",
-        "function_token_typing_Prims.bool"
-      ],
-      0
     ]
   ]
 ]

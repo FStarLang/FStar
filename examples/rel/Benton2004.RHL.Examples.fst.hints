@@ -105,38 +105,6 @@
       0
     ],
     [
-      "Benton2004.RHL.Examples.sec42_ex1",
-      8,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex1",
-      9,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex1",
-      10,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex1",
-      11,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
       "Benton2004.RHL.Examples.sec42_ex2",
       1,
       2,
@@ -226,57 +194,12 @@
       7,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
       8,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex2",
-      9,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex2",
-      10,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex2",
-      11,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex2",
-      12,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex2",
-      13,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -336,30 +259,6 @@
     [
       "Benton2004.RHL.Examples.sec42_ex3",
       4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex3",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex3",
-      6,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex3",
-      7,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
@@ -436,43 +335,6 @@
       0
     ],
     [
-      "Benton2004.RHL.Examples.sec42_ex4",
-      6,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex4",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex4",
-      8,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex4",
-      9,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
       "Benton2004.RHL.Examples.sec42_ex5",
       1,
       2,
@@ -537,43 +399,6 @@
     [
       "Benton2004.RHL.Examples.sec42_ex5",
       5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex5",
-      6,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex5",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex5",
-      8,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Benton2004.RHL.Examples.sec42_ex5",
-      9,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],

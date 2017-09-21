@@ -130,6 +130,7 @@ type meta = // C backend only
   | GCType
   | PpxDerivingShow
   | PpxDerivingShowConstant of string
+  | Comment of string
 
 // rename
 type metadata = list<meta>
