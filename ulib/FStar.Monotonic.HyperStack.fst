@@ -258,7 +258,7 @@ let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a r
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
 	 [SMTPatOr [
            [SMTPat (sel h r1); SMTPat (sel h r2)];
-           [SMTPat (frameOf r1); SMTPat (frameOf r2); SMTPat (as_addr r1); SMTPat (as_addr r2)]
+           [SMTPat (frameOf r1); SMTPat (frameOf r2); SMTPat (as_addr r1); SMTPat (as_addr r2); SMTPat(h `contains` r1)]
          ]]
 = lemma_sel_same_addr h r1 r2
 
