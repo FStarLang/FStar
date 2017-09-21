@@ -20,7 +20,7 @@ module Cast = FStar.Int.Cast
 
 (*** API using validated but unparsed key-value buffer *)
 
-val fold_left_store_aux: #t:Type -> f:(t -> encoded_entry -> t) -> t -> es:list encoded_entry -> t 
+val fold_left_store_aux: #t:Type -> f:(t -> encoded_entry -> t) -> t -> es:list encoded_entry -> Tot t
     (decreases es)
 let rec fold_left_store_aux #t f acc es =
       match es with
