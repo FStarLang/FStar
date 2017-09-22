@@ -1050,6 +1050,38 @@ val buffer_live_gbuffer_of_array_pointer
   (ensures (buffer_live h (gbuffer_of_array_pointer p) <==> live h p))
   [SMTPat (buffer_live h (gbuffer_of_array_pointer p))]
 
+val buffer_unused_in
+  (#t: typ)
+  (b: buffer t)
+  (h: HS.mem)
+: GTot Type0
+
+val buffer_live_not_unused_in
+  (#t: typ)
+  (b: buffer t)
+  (h: HS.mem)
+: Lemma
+  ((buffer_live h b /\ buffer_unused_in b h) ==> False)
+
+
+val buffer_unused_in_gsingleton_buffer_of_pointer
+  (#t: typ)
+  (p: pointer t)
+  (h: HS.mem)
+: Lemma
+  (ensures (buffer_unused_in (gsingleton_buffer_of_pointer p) h <==> unused_in p h ))
+  [SMTPat (buffer_unused_in (gsingleton_buffer_of_pointer p) h)]
+
+val buffer_unused_in_gbuffer_of_array_pointer
+  (#t: typ)
+  (#length: array_length_t)
+  (p: pointer (TArray length t))
+  (h: HS.mem)
+: Lemma
+  (requires True)
+  (ensures (buffer_unused_in (gbuffer_of_array_pointer p) h <==> unused_in p h))
+  [SMTPat (buffer_unused_in (gbuffer_of_array_pointer p) h)]
+
 val frameOf_buffer
   (#t: typ)
   (b: buffer t)
@@ -1165,6 +1197,17 @@ val buffer_live_gsub_buffer_intro
   (requires (buffer_live h b /\ UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
   (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_live h (gsub_buffer b i len)))
   [SMTPat (buffer_live h (gsub_buffer b i len))]
+
+val buffer_unused_in_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (h: HS.mem)
+: Lemma
+  (requires (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)))
+  (ensures (UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ (buffer_unused_in (gsub_buffer b i len) h <==> buffer_unused_in b h)))
+  [SMTPat (buffer_unused_in (gsub_buffer b i len) h)]
 
 val gsub_buffer_gsub_buffer
   (#a: typ)
@@ -1799,6 +1842,27 @@ val live_unused_in_disjoint
     [SMTPat (live h p1); SMTPat (unused_in p2 h)];
   ]]
 
+val pointer_live_reference_unused_in_disjoint
+  (#value1: typ)
+  (#value2: Type0)
+  (h: HS.mem)
+  (p1: pointer value1)
+  (p2: HS.reference value2)
+: Lemma
+  (requires (live h p1 /\ HS.unused_in p2 h))
+  (ensures (loc_disjoint (loc_pointer p1) (loc_addresses (HS.frameOf p2) (Set.singleton (HS.as_addr p2)))))
+  [SMTPat (live h p1); SMTPat (HS.unused_in p2 h)]
+
+val reference_live_pointer_unused_in_disjoint
+  (#value1: Type0)
+  (#value2: typ)
+  (h: HS.mem)
+  (p1: HS.reference value1)
+  (p2: pointer value2)
+: Lemma
+  (requires (HS.contains h p1 /\ unused_in p2 h))
+  (ensures (loc_disjoint (loc_addresses (HS.frameOf p1) (Set.singleton (HS.as_addr p1))) (loc_pointer p2)))
+  [SMTPat (HS.contains h p1); SMTPat (unused_in p2 h)]
 
 val loc_disjoint_gsub_buffer
   (#t: typ)
@@ -2247,7 +2311,57 @@ val write_buffer
     Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\
     (buffer_readable h b ==> buffer_readable h' b)
   ))
+  
+val buffer_live_unused_in_disjoint
+  (#t1 #t2: typ)
+  (h: HS.mem)
+  (b1: buffer t1)
+  (b2: buffer t2)
+: Lemma
+  (requires (buffer_live h b1 /\ buffer_unused_in b2 h))
+  (ensures (loc_disjoint (loc_buffer b1) (loc_buffer b2)))
+  [SMTPat (buffer_live h b1); SMTPat (buffer_unused_in b2 h)]
 
+val pointer_live_buffer_unused_in_disjoint
+  (#t1 #t2: typ)
+  (h: HS.mem)
+  (b1: pointer t1)
+  (b2: buffer t2)
+: Lemma
+  (requires (live h b1 /\ buffer_unused_in b2 h))
+  (ensures (loc_disjoint (loc_pointer b1) (loc_buffer b2)))
+  [SMTPat (live h b1); SMTPat (buffer_unused_in b2 h)]
+
+val buffer_live_pointer_unused_in_disjoint
+  (#t1 #t2: typ)
+  (h: HS.mem)
+  (b1: buffer t1)
+  (b2: pointer t2)
+: Lemma
+  (requires (buffer_live h b1 /\ unused_in b2 h))
+  (ensures (loc_disjoint (loc_buffer b1) (loc_pointer b2)))
+  [SMTPat (buffer_live h b1); SMTPat (unused_in b2 h)]
+
+val reference_live_buffer_unused_in_disjoint
+  (#t1: Type0)
+  (#t2: typ)
+  (h: HS.mem)
+  (b1: HS.reference t1)
+  (b2: buffer t2)
+: Lemma
+  (requires (HS.contains h b1 /\ buffer_unused_in b2 h))
+  (ensures (loc_disjoint (loc_addresses (HS.frameOf b1) (Set.singleton (HS.as_addr b1))) (loc_buffer b2)))
+  [SMTPat (HS.contains h b1); SMTPat (buffer_unused_in b2 h)]
+
+val buffer_live_reference_unused_in_disjoint
+  (#t1: typ)
+  (#t2: Type0)
+  (h: HS.mem)
+  (b1: buffer t1)
+  (b2: HS.reference t2)
+: Lemma
+  (requires (buffer_live h b1 /\ HS.unused_in b2 h))
+  (ensures (loc_disjoint (loc_buffer b1) (loc_addresses (HS.frameOf b2) (Set.singleton (HS.as_addr b2)))))
 
 (* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
 

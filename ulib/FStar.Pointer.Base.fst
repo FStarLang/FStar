@@ -2644,6 +2644,17 @@ let buffer_live_gbuffer_of_array_pointer
   [SMTPat (buffer_live h (gbuffer_of_array_pointer p))]
 = ()
 
+let buffer_unused_in #t b h =
+  match b.broot with
+  | BufferRootSingleton p -> unused_in p h
+  | BufferRootArray #mlen p -> unused_in p h
+
+let buffer_live_not_unused_in #t b h = ()
+
+let buffer_unused_in_gsingleton_buffer_of_pointer #t p h = ()
+
+let buffer_unused_in_gbuffer_of_array_pointer #t #length p h = ()
+
 let frameOf_buffer
   (#t: typ)
   (b: buffer t)
@@ -2712,6 +2723,8 @@ let buffer_live_gsub_buffer_intro
   len
   h
 = ()
+
+let buffer_unused_in_gsub_buffer #t b i len h = ()
 
 let gsub_buffer_gsub_buffer
   (#a: typ)
@@ -4111,6 +4124,12 @@ let live_unused_in_disjoint #value1 #value2 h p1 p2 =
   live_unused_in_disjoint_strong h p1 p2;
   disjoint_root p1 p2
 
+let pointer_live_reference_unused_in_disjoint #value1 #value2 h p1 p2 =
+  disjoint_roots_intro_pointer_vs_reference h p1 p2
+
+let reference_live_pointer_unused_in_disjoint #value1 #value2 h p1 p2 =
+  disjoint_roots_intro_reference_vs_pointer h p1 p2
+
 let loc_disjoint_gsub_buffer #t b i1 len1 i2 len2 = ()
 
 let loc_disjoint_gpointer_of_buffer_cell #t b i1 i2 = ()
@@ -4799,6 +4818,18 @@ let write_buffer
   (b: buffer t)
   i v
 = write (pointer_of_buffer_cell b i) v
+
+(* unused_in, cont'd *)
+
+let buffer_live_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let pointer_live_buffer_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let buffer_live_pointer_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let reference_live_buffer_unused_in_disjoint #t1 #t2 h b1 b2 = ()
+
+let buffer_live_reference_unused_in_disjoint #t1 #t2 h b1 b2 = ()
 
 (* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
 
