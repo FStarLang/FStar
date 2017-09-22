@@ -591,12 +591,6 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     check_inner_let_rec env top
 
 and tc_synth env args rng =
-    // Quit early with a magic if nosynth is set, cf. issue #73 in fstar-mode.el
-    if env.nosynth
-    then tc_term env (mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit]
-                                None rng)
-    else
-
     let tau, atyp, rest =
     match args with
     | (tau, None)::rest ->
@@ -619,7 +613,6 @@ and tc_synth env args rng =
 
     let env', _ = Env.clear_expected_typ env in
 
-
     // Check the result type
     let typ, _, g1 = tc_term env' typ in
     Rel.force_trivial_guard env' g1;
@@ -628,11 +621,19 @@ and tc_synth env args rng =
     let tau, _, g2 = tc_tactic env' tau in
     Rel.force_trivial_guard env' g2;
 
-    if Env.debug env <| Options.Other "Tac" then
-        BU.print2 "Running tactic %s at return type %s\n" (Print.term_to_string tau) (Print.term_to_string typ);
-    let t = env.synth env' typ tau in
-    if Env.debug env <| Options.Other "Tac" then
-        BU.print1 "Got %s\n" (Print.term_to_string t);
+    // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
+    let t =
+        if env.nosynth
+        then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
+        else begin
+            if Env.debug env <| Options.Other "Tac" then
+                BU.print2 "Running tactic %s at return type %s\n" (Print.term_to_string tau) (Print.term_to_string typ);
+            let t = env.synth env' typ tau in
+            if Env.debug env <| Options.Other "Tac" then
+                BU.print1 "Got %s\n" (Print.term_to_string t);
+            t
+        end
+    in
 
     // TODO: fix, this gives a crappy error
     TcUtil.check_uvars tau.pos t;

@@ -885,6 +885,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_app(hd, args)
             when U.is_fstar_tactics_embed hd
+              || (U.is_fstar_tactics_quote hd && List.contains NoDeltaSteps cfg.steps)
               || U.is_fstar_tactics_by_tactic hd ->
             let args = closures_as_args_delayed cfg env args in
             let hd = closure_as_term cfg env hd in

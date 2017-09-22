@@ -163,6 +163,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
       mktac2 "__norm_term"     norm_term (unembed_list unembed_norm_step) unembed_term embed_term RD.fstar_refl_term;
       mktac2 "__rename_to"     rename_to unembed_binder unembed_string embed_unit t_unit;
+      mktac1 "__binder_retype" binder_retype unembed_binder embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
       mktac0 "__clear_top"     clear_top embed_unit t_unit;
       mktac1 "__clear"         clear unembed_binder embed_unit t_unit;
@@ -232,15 +233,20 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
 let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals, to be fed to SMT
                                                         * term // witness, in case it's needed, as in synthesis)
                                                         =
+    // This bit is really important: a typechecked tactic can contain many uvar redexes
+    // that make normalization SUPER slow (probably exponential). Doing this first pass
+    // gets rid of those redexes and leaves a much smaller term, which performs a lot better.
+    if !tacdbg then
+        BU.print1 "About to reduce uvars on: %s\n" (Print.term_to_string tactic);
+    let tactic = N.reduce_uvar_solutions env tactic in
+    if !tacdbg then
+        BU.print1 "About to check tactic term: %s\n" (Print.term_to_string tactic);
     let tactic, _, _ = TcTerm.tc_reified_tactic env tactic in
     let tau = unembed_tactic_0 unembed_unit tactic in
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     let ps, w = proofstate_of_goal_ty env typ in
-    let r = try run tau ps
-            with | TacFailure s -> Failed ("EXCEPTION: " ^ s, ps)
-    in
-    match r with
+    match run tau ps with
     | Success (_, ps) ->
         if !tacdbg then
             BU.print1 "Tactic generated proofterm %s\n" (Print.term_to_string w); //FIXME: Is this right?
