@@ -1166,6 +1166,14 @@ val sub_buffer
   (requires (fun h -> UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_live h b))
   (ensures (fun h b' h' -> UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ h' == h /\ b' == gsub_buffer b i len ))
 
+val offset_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+: HST.Stack (buffer t)
+  (requires (fun h -> UInt32.v i <= UInt32.v (buffer_length b) /\ buffer_live h b))
+  (ensures (fun h b' h' -> UInt32.v i <= UInt32.v (buffer_length b) /\ h' == h /\ b' == gsub_buffer b i (UInt32.sub (buffer_length b) i)))
+
 val buffer_length_gsub_buffer
   (#t: typ)
   (b: buffer t)
