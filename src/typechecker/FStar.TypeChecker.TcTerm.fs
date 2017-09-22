@@ -1736,7 +1736,7 @@ and check_top_level_let env e =
          (* the result has the same effect as c1, except it returns unit *)
          let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero t_unit in
 
-(*close*)let lb = U.close_univs_and_mk_letbinding lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 in
+(*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 in
          mk (Tm_let((false, [lb]), e2))
             None
             e.pos,
@@ -1820,13 +1820,13 @@ and check_top_level_let_rec env top =
                     let lbdef = N.reduce_uvar_solutions env lb.lbdef in
                     if lb.lbunivs = []
                     then lb
-                    else U.close_univs_and_mk_letbinding lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef)
+                    else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef)
               else let ecs = TcUtil.generalize env (lbs |> List.map (fun lb ->
                                 lb.lbname,
                                 lb.lbdef,
                                 S.mk_Total lb.lbtyp)) in
                    ecs |> List.map (fun (x, uvs, e, c) ->
-                      U.close_univs_and_mk_letbinding x uvs (U.comp_result c) (U.comp_effect_name c) e) in
+                      U.close_univs_and_mk_letbinding all_lb_names x uvs (U.comp_result c) (U.comp_effect_name c) e) in
 
           let cres = U.lcomp_of_comp <| S.mk_Total t_unit in
 
