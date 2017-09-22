@@ -49,13 +49,27 @@ let find_file filename =
     | None ->
       raise (Err(Util.format1 "Unable to find file: %s\n" filename))
 
+let vfs_entries : Util.smap<string> = Util.smap_create 1
+
+let read_vfs_entry fname =
+  Util.smap_try_find vfs_entries fname
+
+let add_vfs_entry fname contents =
+  Util.smap_add vfs_entries fname contents
+
 let read_file (filename:string) =
-  if Options.debug_any()
-  then Util.print1 "Opening file: %s\n" filename;
-  try
-  let fs = new System.IO.StreamReader(filename) in
-  fs.ReadToEnd()
-  with _ -> raise (Err (Util.format1 "Unable to open file: %s" filename))
+  let debug = Options.debug_any () in
+  match read_vfs_entry filename with
+  | Some contents ->
+    if debug then Util.print1 "Reading in-memory file %s" filename;
+    contents
+  | None ->
+    try
+      if debug then Util.print1 "Opening file %s" filename;
+      let fs = new System.IO.StreamReader(filename) in
+      fs.ReadToEnd ()
+    with _ ->
+      raise (Err (Util.format1 "Unable to read file %s" filename))
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]

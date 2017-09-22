@@ -351,6 +351,7 @@ type query' =
 | DescribeRepl
 | Pop
 | Push of push_query
+| VfsAdd of string (* fname *) * string (* contents *)
 | AutoComplete of string * completion_context
 | Lookup of string * lookup_context * option<position> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
@@ -361,7 +362,7 @@ and query = { qq: query'; qid: string }
 
 let query_needs_current_module = function
   | Exit | DescribeProtocol | DescribeRepl
-  | Pop | Push { push_peek_only = false }
+  | Pop | Push { push_peek_only = false } | VfsAdd _
   | GenericError _ | ProtocolViolation _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
@@ -371,6 +372,7 @@ let interactive_protocol_features =
   ["autocomplete"; "autocomplete/context";
    "compute"; "compute/reify"; "compute/pure-subterms";
    "describe-protocol"; "describe-repl"; "exit";
+   "vfs-add";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"]
 
@@ -430,6 +432,7 @@ let unpack_interactive_query json =
                                   try_arg "rules"
                                     |> Util.map_option (js_list js_reductionrule))
            | "search" -> Search (arg "terms" |> js_str)
+           | "vfs-add" -> VfsAdd (arg "filename" |> js_str, arg "contents" |> js_str)
            | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
   with
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
@@ -726,6 +729,10 @@ let run_protocol_violation (st: repl_state) message =
 
 let run_generic_error (st: repl_state) message =
   ((QueryNOK, JsonStr message), Inl st)
+
+let run_vfs_add (st: repl_state) fname contents =
+  Parser.ParseIt.add_vfs_entry fname contents;
+  ((QueryOK, JsonNull), Inl st)
 
 let run_pop (st: full_repl_state) =
   if repl_stack_empty () then
@@ -1243,6 +1250,7 @@ let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
   | DescribeRepl -> run_describe_repl st
   | GenericError message -> run_generic_error st message
   | ProtocolViolation query -> run_protocol_violation st query
+  | VfsAdd (fname, contents) -> run_vfs_add st fname contents
   | Push pquery when pquery.push_peek_only = false -> wrap <| run_push st pquery
   | _ -> // … then queries that only work on full states
     match st with
@@ -1258,7 +1266,7 @@ let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
         | Search term -> run_search st term
         | Push pquery when pquery.push_peek_only = true -> run_regular_push st pquery
         | Exit | DescribeProtocol | DescribeRepl | GenericError _
-        | ProtocolViolation _ | Push _ -> failwith "impossible")
+        | ProtocolViolation _ | Push _ | VfsAdd _ -> failwith "impossible")
 
 let validate_query st (q: query) : query =
   match q.qq with

@@ -35,10 +35,26 @@ let find_file filename =
     | None ->
       raise(Err (FStar_Util.format1 "Unable to find file: %s\n" filename))
 
+let vfs_entries : string U.smap = U.smap_create (Z.of_int 1)
+
+let read_vfs_entry fname =
+  U.smap_try_find vfs_entries fname
+
+let add_vfs_entry fname contents =
+  U.smap_add vfs_entries fname contents
+
 let read_file (filename:string) =
-  try
-    BatFile.with_file_in filename BatIO.read_all
-  with e -> raise (Err (FStar_Util.format1 "Unable to read file: %s\n" filename))
+  let debug = FStar_Options.debug_any () in
+  match read_vfs_entry filename with
+  | Some contents ->
+    if debug then U.print1 "Reading in-memory file %s" filename;
+    contents
+  | None ->
+    try
+      if debug then U.print1 "Opening file %s" filename;
+      BatFile.with_file_in filename BatIO.read_all
+    with e ->
+      raise (Err (U.format1 "Unable to read file %s\n" filename))
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]

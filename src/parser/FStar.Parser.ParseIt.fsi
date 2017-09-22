@@ -29,5 +29,8 @@ type input_frag = {
     frag_col:int
 }
 
+// This lets the ide tell us about edits not (yet) reflected on disk.
+val add_vfs_entry: fname:string -> contents:string -> unit
+
 val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 val find_file: string -> string
