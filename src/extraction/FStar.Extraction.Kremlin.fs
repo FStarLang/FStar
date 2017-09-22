@@ -49,6 +49,7 @@ and decl =
   | DExternal of option<cc> * lident * typ * list<binder>
   | DTypeVariant of lident * list<flag> * int * branches_t
   | DTypeMutual of list<decl>
+  | DFunctionMutual of list<decl>
 
 and cc =
   | StdCall
@@ -426,9 +427,9 @@ match (flavor, flags, binding) with
 
 and translate_decl env d: option<decl> =
   match d with
-  | MLM_Let (flavor, flags, [ letbinding ]) ->
-    translate_single_let env flavor flags letbinding
-
+  | MLM_Let (flavor, flags, lbs) ->
+    let ls = List.filter_map (translate_single_let env flavor flags) lbs
+    in Some(DFunctionMutual(ls))
   | MLM_Loc _ ->
       None
 
