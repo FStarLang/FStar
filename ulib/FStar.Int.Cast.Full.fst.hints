@@ -12,7 +12,6 @@
       ],
       0
     ],
-    [ "FStar.Int.Cast.Full.uint64_to_uint128", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int.Cast.Full.uint128_to_uint64",
       1,

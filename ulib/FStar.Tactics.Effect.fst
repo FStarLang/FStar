@@ -1,28 +1,24 @@
 module FStar.Tactics.Effect
 
 open FStar.Tactics.Types
+open FStar.Tactics.Result
 open FStar.Reflection
-
-
-noeq type __result (a:Type) =
-  | Success: a -> proofstate -> __result a
-  | Failed: string -> proofstate -> __result a
 
 let __tac (a:Type) = proofstate -> M (__result a)
 
 (* monadic return *)
 val __ret : a:Type -> x:a -> __tac a
-let __ret a x = fun (s:proofstate) -> Success x s
+let __ret a x = fun (s:proofstate) -> Success(x, s)
 
 (* monadic bind *)
 let __bind (a:Type) (b:Type) (t1:__tac a) (t2:a -> __tac b) : __tac b =
     fun p -> let r = t1 p in
              match r with
-             | Success a q  -> t2 a q
-             | Failed msg q -> Failed msg q
+             | Success(a, q)  -> t2 a q
+             | Failed(msg, q) -> Failed(msg, q)
 
 (* Actions *)
-let __get () : __tac proofstate = fun s0 -> Success s0 s0
+let __get () : __tac proofstate = fun s0 -> Success(s0, s0)
 
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
@@ -34,8 +30,8 @@ let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
  *)
 unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
-                     | Success a q -> f a q post
-                     | Failed msg q -> post (Failed msg q))
+                     | Success(a, q) -> f a q post
+                     | Failed(msg, q) -> post (Failed(msg, q)))
 
 unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
     fun ps post -> forall post'. (forall (r:__result a). post r <==> post' r) ==> wp ps post'
@@ -53,6 +49,10 @@ reifiable reflectable new_effect {
 }
 effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
 
+let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
+    fun ps p -> wp (fun x -> p (Success(x, ps)))
+
+sub_effect DIV ~> TAC = lift_div_tac
 
 let tactic (a:Type) = unit -> Tac a
 

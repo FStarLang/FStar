@@ -108,3 +108,17 @@ let _ = assert_by_tactic (le Lt) trivial
 let _ = assert_by_tactic (le Eq) trivial
 let _ = assert_by_tactic (ne Lt) trivial
 let _ = assert_by_tactic (ne Gt) trivial
+
+let _ = assert_by_tactic (exists (n:int). n == 5)
+                         (witness (quote 5);; trefl;; qed)
+
+// This one doesn't work, currently, as 5 gets typed as int, and not as nat
+// Fixing this seemss non-trivial, after some attempts...
+(* let _ = assert_by_tactic (exists (n:nat). n == 5) *)
+(*                          (witness (quote 5);; trefl;; qed) *)
+
+assume val l' : nat -> unit -> Lemma p1
+let _ =
+    assert_by_tactic p1
+                     (apply_lemma (quote (l' 5));;
+                      trivial)

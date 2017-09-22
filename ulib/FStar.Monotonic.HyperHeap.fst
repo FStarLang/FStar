@@ -222,7 +222,7 @@ abstract val lemma_modifies_includes: m1:t -> m2:t
                        -> i:rid -> j:rid
                        -> Lemma (requires (modifies (Set.singleton i) m1 m2 /\ includes j i))
                                 (ensures (modifies (Set.singleton j) m1 m2))
-let lemma_modifies_includes m1 m2 s1 s2 = ()
+let lemma_modifies_includes m1 m2 i j = ()
 
 abstract val lemma_modifies_includes2: m1:t -> m2:t
                        -> s1:Set.set rid -> s2:Set.set rid
@@ -285,14 +285,12 @@ let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) =
      forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
 
 let extends_parent (tip:rid{tip<>root}) (r:rid)
-  : Lemma (requires True)
-          (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip)
+  : Lemma (ensures (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip))
           [SMTPat (extends r (parent tip))]
   = ()
 
 let includes_child (tip:rid{tip<>root}) (r:rid)
-  : Lemma (requires True)
-          (includes r tip ==> r=tip \/ includes r (parent tip))
+  : Lemma (ensures (includes r tip ==> r=tip \/ includes r (parent tip)))
           [SMTPat (includes r (parent tip))]
   = ()
 
@@ -309,7 +307,8 @@ let lemma_sel_same_addr (#i: rid) (#a:Type0) (#rel:preorder a) (h:t) (r1:mrref i
   :Lemma (requires (contains_ref r1 h /\ addr_of r1 = addr_of r2))
          (ensures  (contains_ref r2 h /\ sel h r1 == sel h r2))
 	 [SMTPat (sel h r1); SMTPat (sel h r2)]
-= ()
+= let m = Map.sel h i in
+  FStar.Monotonic.Heap.lemma_sel_same_addr m r1 r2
 
 let lemma_upd_same_addr (#i: rid) (#a: Type0) (#rel: preorder a) (h: t) (r1 r2: mrref i a rel) (x: a)
   :Lemma (requires ((contains_ref r1 h \/ contains_ref r2 h) /\ addr_of r1 = addr_of r2))

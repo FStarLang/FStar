@@ -151,6 +151,9 @@
       ],
       0
     ],
+    [ "Memo.forall_prop_assoc_lemma2", 2, 2, 1, [ "@query" ], 0 ],
+    [ "Memo.forall_prop_assoc_lemma2", 3, 2, 1, [ "@query" ], 0 ],
+    [ "Memo.forall_prop_assoc_lemma2", 4, 2, 1, [ "@query" ], 0 ],
     [ "Memo.valid_memo", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Memo.valid_memo_preserve",
@@ -319,7 +322,7 @@
         "interpretation_Prims_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Memo_Tm_refine_01a3e7ba4c18f679654536b14b1a32c8",
-        "refinement_interpretation_Memo_Tm_refine_81af0ffb9c5d490be25094ef54e8e471",
+        "refinement_interpretation_Memo_Tm_refine_51aa7b3fa99006af961acdd71af95dc0",
         "true_interp"
       ],
       0
@@ -1162,14 +1165,6 @@
       0
     ],
     [
-      "Memo.fixp_eq",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int", "equation_Memo.codom" ],
-      0
-    ],
-    [
       "Memo.fibonnacci_partial",
       1,
       2,
@@ -1237,14 +1232,6 @@
     [
       "Memo.fibo_complete_fixp_eq_proof",
       3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Memo.fibo_complete_fixp_eq_proof",
-      4,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],

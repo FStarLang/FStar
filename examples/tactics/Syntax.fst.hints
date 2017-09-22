@@ -1,5 +1,5 @@
 [
-  "\u0018\\ÜsÜ37ÿJzeÓ§√¶5",
+  "»æ‚Åm˚5•v¸Uµ+ïnΩ",
   [
     [ "Syntax.quote_sanity_check", 1, 2, 1, [ "@query" ], 0 ],
     [ "Syntax.goal_sanity_check", 1, 2, 1, [ "@query" ], 0 ],
@@ -16,7 +16,8 @@
         "constructor_distinct_FStar.Reflection.Data.Tv_Abs",
         "constructor_distinct_FStar.Reflection.Data.Tv_App",
         "constructor_distinct_FStar.Reflection.Data.Tv_Arrow",
-        "constructor_distinct_FStar.Reflection.Data.Tv_Type",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Match",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Refine",
         "data_elim_FStar.Reflection.Data.Tv_App",
         "data_typing_intro_FStar.Reflection.Data.Q_Explicit@tok",
         "disc_equation_FStar.Reflection.Data.Tv_Abs",
@@ -24,6 +25,7 @@
         "disc_equation_FStar.Reflection.Data.Tv_Arrow",
         "disc_equation_FStar.Reflection.Data.Tv_Const",
         "disc_equation_FStar.Reflection.Data.Tv_FVar",
+        "disc_equation_FStar.Reflection.Data.Tv_Let",
         "disc_equation_FStar.Reflection.Data.Tv_Match",
         "disc_equation_FStar.Reflection.Data.Tv_Refine",
         "disc_equation_FStar.Reflection.Data.Tv_Type",
@@ -48,12 +50,12 @@
       ],
       0
     ],
-    [ "Syntax.uu___87", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___88", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___89", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___90", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___91", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___92", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___93", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___94", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___95", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___96", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___97", 1, 2, 1, [ "@query" ], 0 ],
+    [ "Syntax.uu___98", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Syntax.arith_test1",
       1,
@@ -87,6 +89,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0
-    ]
+    ],
+    [ "Syntax.uu___99", 1, 2, 1, [ "@query" ], 0 ]
   ]
 ]

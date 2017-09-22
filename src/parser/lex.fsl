@@ -92,7 +92,7 @@ let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*Unicode
                             BYTEARRAY (Lexhelp.stringbuf_as_bytes buf)
                         )
                      else
-                        STRING s)  in
+                        Lexhelp.default_string_finish m2 b s)  in
     buf,fin,m
 
 let lc = Util.mk_ref 1
@@ -614,6 +614,7 @@ and fsdoc_kw cargs = parse
 and fsdoc_kw_arg cargs = parse
  | newline
      { let n,doc,kw,kwn,kwa = cargs in
+	   mknewline 1 lexbuf;
 	   fsdoc(n,doc^(ulexeme lexbuf),(kwn,kwa)::kw) lexbuf}
  | _ { let n,doc,kw,kwn,kwa = cargs in
        fsdoc_kw_arg(n,doc,kw,kwn,kwa^(ulexeme lexbuf)) lexbuf }

@@ -2,7 +2,7 @@ open Prims
 type order =
   | Lt
   | Eq
-  | Gt
+  | Gt[@@deriving show]
 let uu___is_Lt: order -> Prims.bool =
   fun projectee  -> match projectee with | Lt  -> true | uu____5 -> false
 let uu___is_Eq: order -> Prims.bool =
@@ -36,8 +36,8 @@ let rec compare_list:
       fun l2  ->
         match (l1, l2) with
         | ([],[]) -> Eq
-        | ([],uu____132) -> Lt
-        | (uu____139,[]) -> Gt
+        | ([],uu____131) -> Lt
+        | (uu____138,[]) -> Gt
         | (x::xs,y::ys) ->
-            let uu____158 = f x y in
-            lex uu____158 (fun uu____160  -> compare_list f xs ys)
+            let uu____157 = f x y in
+            lex uu____157 (fun uu____159  -> compare_list f xs ys)

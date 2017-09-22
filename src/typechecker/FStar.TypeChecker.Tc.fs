@@ -62,14 +62,27 @@ let set_hint_correlator env se =
 
 let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current_module env))
 
-let is_native_tactic env (tac_lid: lident) (h: term) =
+let get_tactic_fv env (tac_lid: lident) (h: term) =
   match h.n with
   | Tm_uinst (h', _) ->
     (match (SS.compress h').n with
-      | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) ->
-                env.is_native_tactic tac_lid
-      | _ -> false)
-  | _ -> false
+      | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) -> Some fv
+      | _ -> None)
+  | _ -> None
+
+let is_builtin_tactic md =
+  let path = Ident.path_of_lid md in
+  if List.length(path) > 2 then
+    match fst (List.splitAt 2 path) with
+    | ["FStar"; "Tactics"]
+    | ["FStar"; "Reflection"] -> true
+    | _ -> false
+  else false
+
+(* This reference keeps a list of modules which contain user-defined tactics. It is only
+   modified in tc_decl to add these modules and only read in FStar.Main (via FStar.Universal,
+   in order to compile these modules when generating native tactics. *)
+let user_tactics_modules: ref<list<string>> = BU.mk_ref []
 
 (*****************Type-checking the signature of a module*****************************)
 
@@ -1239,23 +1252,6 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
             | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
             | _ -> quals
         in
-        // drop inline_for_extraction unless pure (otherwise, this now
-        // generates beta-redexes that kreMLin is particularly unhappy with)
-        let quals = List.choose (function
-          | Inline_for_extraction ->
-              if not (List.for_all (fun lb ->
-                let ok = is_pure_or_ghost_function lb.lbtyp in
-                if not ok then
-                  BU.print1_warning "Dropping inline_for_extraction from %s because it is not a pure function\n"
-                    (SP.lbname_to_string lb.lbname);
-                ok
-              ) (snd lbs)) then
-                None
-              else
-                Some Inline_for_extraction
-          | q ->
-              Some q
-        ) quals in
         { se with sigel = Sig_let(lbs, lids);
                   sigquals =  quals },
         lbs
@@ -1347,12 +1343,27 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
                 let h = SS.compress h in
                 let tac_lid = (right hd.lbname).fv_name.v in
                 let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                (* check if tactic has been dynamically loaded and has not already been typechecked *)
-                if is_native_tactic env assm_lid h && not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
-                  let se_assm = reified_tactic_decl assm_lid hd in
-                  let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
-                  Some (se_assm, se_refl)
-                end else None
+                (match get_tactic_fv env assm_lid h with
+                 | Some fv ->
+                    (* check if the tactic has already been typechecked *)
+                    if not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
+                      (* if it's a user tactic, add the name of the module to the list of modules which contain user tactics,
+                         if the module has not already been added *)
+                      if (not (is_builtin_tactic env.curmodule)) then
+                        let added_modules = !user_tactics_modules in
+                        let module_name = Ident.ml_path_of_lid env.curmodule in
+                        if not (List.contains module_name added_modules) then
+                          user_tactics_modules := added_modules @ [module_name]
+                         else ()
+                      else ();
+                      (* check if tactic has been dynamically loaded *)
+                      if env.is_native_tactic assm_lid then begin
+                        let se_assm = reified_tactic_decl assm_lid hd in
+                        let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
+                        Some (se_assm, se_refl)
+                      end else None
+                    end else None
+                 | None -> None)
             | _ -> None)
         | _ -> None
       ) in

@@ -93,17 +93,6 @@
       0
     ],
     [
-      "FStar.UInt64.v_inj",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.UInt64.n",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0
-    ],
-    [
       "FStar.UInt64.add",
       1,
       2,

@@ -124,9 +124,14 @@ let g_is_null_intro
 
 (** Buffers *)
 
+let not_an_array_cell (#t: typ) (p: pointer t) : GTot bool =
+  match Pointer?.p p with
+  | PathStep _ _ _ (StepCell _ _ _) -> false
+  | _ -> true
+
 noeq type buffer_root (t: typ) =
 | BufferRootSingleton:
-  (p: pointer t) ->
+  (p: pointer t { not_an_array_cell p } ) ->
   buffer_root t
 | BufferRootArray:
   (#max_length: array_length_t) ->
@@ -2551,19 +2556,21 @@ let is_active_union_field_includes_readable
 
 (** Operations on buffers *)
 
-let gsingleton_buffer_of_pointer
+let _singleton_buffer_of_pointer
   (#t: typ)
   (p: pointer t)
-: GTot (buffer t)
-= Buffer (BufferRootSingleton p) 0ul 1ul
+: Tot (buffer t)
+= let Pointer from contents pth = p in
+  match pth with
+  | PathStep _ _ pth' (StepCell ln ty i) ->
+    (* reconstruct the buffer to the enclosing array *)
+    Buffer (BufferRootArray #ty #ln (Pointer from contents pth')) i 1ul 
+  | _ ->
+    Buffer (BufferRootSingleton p) 0ul 1ul
 
-let singleton_buffer_of_pointer
-  (#t: typ)
-  (p: pointer t)
-: HST.Stack (buffer t)
-  (requires (fun h -> live h p))
-  (ensures (fun h b h' -> h' == h /\ b == gsingleton_buffer_of_pointer p))
-= Buffer (BufferRootSingleton p) 0ul 1ul
+let gsingleton_buffer_of_pointer #t p = _singleton_buffer_of_pointer p
+
+let singleton_buffer_of_pointer #t p = _singleton_buffer_of_pointer p
 
 let gbuffer_of_array_pointer
   (#t: typ)
@@ -2611,8 +2618,7 @@ let buffer_live
   (h: HS.mem)
   (b: buffer t)
 : GTot Type0
-= let () = () in // necessary to somehow remove the `logic` qualifier
-  UInt32.v (buffer_length b) > 0 /\ ( // needed to preserve liveness through modifies
+= let () = () in ( // necessary to somehow remove the `logic` qualifier
     match b.broot with
     | BufferRootSingleton p -> live h p
     | BufferRootArray #mlen p -> live h p
@@ -2691,7 +2697,15 @@ let buffer_length_gsub_buffer
   len
 = ()
 
-let buffer_live_gsub_buffer
+let buffer_live_gsub_buffer_equiv
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  len
+  h
+= ()
+
+let buffer_live_gsub_buffer_intro
   (#t: typ)
   (b: buffer t)
   (i: UInt32.t)
@@ -2746,11 +2760,26 @@ let buffer_length_buffer_as_seq
   (b: buffer t)
 = ()
 
-let buffer_as_seq_gsingleton_buffer_of_pointer
-  (#t: typ)
-  (h: HS.mem)
-  (p: pointer t)
-= Seq.slice_length (Seq.create 1 (gread h p))
+let buffer_as_seq_gsingleton_buffer_of_pointer #t h p =
+  let Pointer from contents pth = p in
+  match pth with
+  | PathStep through to pth' (StepCell ln ty i) ->
+    assert (through == TArray ln ty);
+    assert (to == ty);
+    assert (t == ty);
+    let p' : pointer (TArray ln ty) = Pointer from contents pth' in
+    let s : array ln (type_of_typ t) = gread h p' in
+    let s1 = Seq.slice s (UInt32.v i) (UInt32.v i + 1) in
+    let v = gread h p in
+    assert (v == Seq.index s (UInt32.v i));
+    let s2 = Seq.create 1 v in
+    assert (Seq.length s1 == 1);
+    assert (Seq.length s2 == 1);
+    assert (Seq.index s1 0 == v);
+    assert (Seq.index s2 0 == v);
+    assert (Seq.equal s1 s2)
+  | _ ->
+    Seq.slice_length (Seq.create 1 (gread h p))
 
 let buffer_as_seq_gbuffer_of_array_pointer
   (#length: array_length_t)
@@ -2835,6 +2864,10 @@ let index_buffer_as_seq
   (b: buffer t)
   i
 = ()
+
+let gsingleton_buffer_of_pointer_gcell #t #len p i = ()
+
+let gsingleton_buffer_of_pointer_gpointer_of_buffer_cell #t b i = ()
 
 (* The readable permission lifted to buffers. *)
 
@@ -4074,17 +4107,8 @@ let live_unused_in_disjoint_strong
   (ensures (frameOf p1 <> frameOf p2 \/ as_addr p1 <> as_addr p2))
 = ()
 
-let live_unused_in_disjoint
-  (#value1: typ)
-  (#value2: typ)
-  (h: HS.mem)
-  (p1: pointer value1)
-  (p2: pointer value2)
-: Lemma
-  (requires (live h p1 /\ unused_in p2 h))
-  (ensures (disjoint p1 p2))
-  [SMTPatT (disjoint p1 p2); SMTPatT (live h p1)]
-= live_unused_in_disjoint_strong h p1 p2;
+let live_unused_in_disjoint #value1 #value2 h p1 p2 =
+  live_unused_in_disjoint_strong h p1 p2;
   disjoint_root p1 p2
 
 let loc_disjoint_gsub_buffer #t b i1 len1 i2 len2 = ()
@@ -4158,39 +4182,41 @@ let modifies_pointer_elim s h1 h2 #a' p' =
 let modifies_buffer_elim #t1 b p h h' =
   loc_disjoint_sym (loc_buffer b) p;
   let n = UInt32.v (buffer_length b) in
-  assert (n > 0);
-  let pre
-    (i: UInt32.t)
-  : GTot Type0
-  = UInt32.v i < n
-  in
-  let post
-    (i: UInt32.t)
-  : GTot Type0
-  = pre i /\ (
-      let q = gpointer_of_buffer_cell b i in
-      equal_values h q h' q
-    )
-  in
-  let f
-    (i: UInt32.t)
-  : Lemma
-    (requires (pre i))
-    (ensures (post i))
-  = modifies_pointer_elim p h h' (gpointer_of_buffer_cell b i)
-  in
-  f 0ul; // for the liveness of the whole buffer
-  Classical.forall_intro (Classical.move_requires f);
-  assert (buffer_readable h b ==> buffer_readable h' b);
-  let g () : Lemma
-    (requires (buffer_readable h b))
-    (ensures (buffer_as_seq h b == buffer_as_seq h' b))
-  = let s = buffer_as_seq h b in
-    let s' = buffer_as_seq h' b in
-    Seq.lemma_eq_intro s s';
-    Seq.lemma_eq_elim s s'
-  in
-  Classical.move_requires g ()
+  begin
+    assert (n > 0);
+    let pre
+      (i: UInt32.t)
+    : GTot Type0
+    = UInt32.v i < n
+    in
+    let post
+      (i: UInt32.t)
+    : GTot Type0
+    = pre i /\ (
+	  let q = gpointer_of_buffer_cell b i in
+	  equal_values h q h' q
+      )
+    in
+    let f
+      (i: UInt32.t)
+    : Lemma
+      (requires (pre i))
+      (ensures (post i))
+    = modifies_pointer_elim p h h' (gpointer_of_buffer_cell b i)
+    in
+    f 0ul; // for the liveness of the whole buffer
+    Classical.forall_intro (Classical.move_requires f);
+    assert (buffer_readable h b ==> buffer_readable h' b);
+    let g () : Lemma
+      (requires (buffer_readable h b))
+      (ensures (buffer_as_seq h b == buffer_as_seq h' b))
+    = let s = buffer_as_seq h b in
+      let s' = buffer_as_seq h' b in
+      Seq.lemma_eq_intro s s';
+      Seq.lemma_eq_elim s s'
+    in
+    Classical.move_requires g ()
+  end
 
 let modifies_reference_elim #t b p h h' =
   loc_disjoint_sym (loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))) p
@@ -4754,12 +4780,8 @@ let modifies_loc_addresses_intro r a l h1 h2 =
 (** NOTE: we historically used to have this lemma for arbitrary
 pointer inclusion, but that became wrong for unions. *)
 
-let modifies_1_readable_struct
-  (#l: struct_typ)
-  (f: struct_field l)
-  (p: pointer (TStruct l))
-  (h h' : HS.mem)
-= readable_struct h' p
+let modifies_1_readable_struct #l f p h h' =
+  readable_struct h' p
 
 let modifies_1_readable_array #t #len i p h h' =
   readable_array h' p
@@ -4777,3 +4799,43 @@ let write_buffer
   (b: buffer t)
   i v
 = write (pointer_of_buffer_cell b i) v
+
+(* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
+
+let root_buffer #t b =
+  let root = Buffer?.broot b in 
+  match root with
+  | BufferRootSingleton p -> Buffer root 0ul 1ul
+  | BufferRootArray #_ #len _ -> Buffer root 0ul len
+
+let buffer_idx #t b =
+  Buffer?.bidx b
+
+let buffer_eq_gsub_root #t b =
+  assert (UInt32.add 0ul (buffer_idx b) == buffer_idx b)
+
+let root_buffer_gsub_buffer #t b i len = ()
+
+let buffer_idx_gsub_buffer #t b i len = ()
+
+let buffer_includes #t blarge bsmall =
+  let () = () in (
+    root_buffer blarge == root_buffer bsmall /\
+    UInt32.v (buffer_idx blarge) <= UInt32.v (buffer_idx bsmall) /\
+    UInt32.v (buffer_idx bsmall) + UInt32.v (buffer_length bsmall) <= UInt32.v (buffer_idx blarge) + UInt32.v (buffer_length blarge)
+  )
+
+let buffer_includes_refl #t b = ()
+
+let buffer_includes_trans #t b1 b2 b3 = ()
+
+let buffer_includes_gsub_r #t b i len = ()
+
+let buffer_includes_gsub #t b i1 i2 len1 len2 = ()
+
+let buffer_includes_elim #t b1 b2 = ()
+
+let buffer_includes_loc_includes #t b1 b2 =
+  buffer_includes_elim b1 b2;
+  loc_includes_refl (loc_buffer b1);
+  loc_includes_gsub_buffer_r (loc_buffer b1) b1 (UInt32.sub (buffer_idx b2) (buffer_idx b1)) (buffer_length b2)

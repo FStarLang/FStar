@@ -420,6 +420,8 @@ type pattern = {
  }
 exception Let_rec_unencodeable
 
+exception Inner_let_rec
+
 let encode_const = function
     | Const_unit -> mk_Term_unit
     | Const_bool true -> boxBool mkTrue
@@ -427,7 +429,7 @@ let encode_const = function
     | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))])
     | Const_int (i, None)  -> boxInt (mkInteger i)
     | Const_int (i, Some _) -> failwith "Machine integers should be desugared"
-    | Const_string(bytes, _) -> varops.string_const (BU.string_of_bytes <| bytes)
+    | Const_string(s, _) -> varops.string_const s
     | Const_range r -> mk_Range_const
     | Const_effect -> mk_Term_type
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
@@ -1095,10 +1097,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let _ ->
-        Errors.diag t0.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
-        let e = varops.fresh "let-rec" in
-        let decl_e = Term.DeclFun(e, [], Term_sort, None) in
-        mkFreeV(e, Term_sort), [decl_e]
+        Errors.diag t0.pos "Non-top-level recursive functions, and their enclosings let bindings (including the top-level let) are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
+        raise Inner_let_rec
 
       | Tm_match(e, pats) ->
         encode_match e pats mk_Term_unit env encode_term
@@ -1356,7 +1356,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
               begin match (SS.compress r).n, (SS.compress msg).n with
                 | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) ->
-                  let phi = S.mk (Tm_meta(phi,  Meta_labeled(BU.string_of_unicode s, r, false))) None r in
+                  let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, r, false))) None r in
                   fallback phi
                 | _ ->
                   fallback phi
@@ -1874,7 +1874,7 @@ let encode_top_level_let :
         let binders, body, lopt = U.abs_formals e in
         match binders with
         | _::_ -> begin
-            match (SS.compress t_norm).n with
+            match (U.unascribe <| SS.compress t_norm).n with
             | Tm_arrow(formals, c) ->
               let formals, c = SS.open_comp formals c in
               let nformals = List.length formals in
@@ -1954,19 +1954,13 @@ let encode_top_level_let :
                   else mkApp(f, List.map mkFreeV vars)
         in
 
-        if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
-        || typs  |> BU.for_some (fun t -> not <| (U.is_pure_or_ghost_function t ||
-                                                  is_reifiable_function env.tcenv t))
-        then decls, env
-        else if not is_rec
-        then
-          (* Encoding non-recursive definitions *)
-          match bindings, typs, toks with
-          | [{lbunivs=uvs;lbdef=e}], [t_norm], [(flid_fv, (f, ftok))] ->
+        let encode_non_rec_lbdef (bindings:list<letbinding>) (typs:list<S.term>) (toks:list<(S.fv * (string * option<term>))>) (env:env_t) =
+            match bindings, typs, toks with
+            | [{lbunivs=uvs;lbdef=e}], [t_norm], [(flid_fv, (f, ftok))] ->
 
-              (* Open universes *)
-              let flid = flid_fv.fv_name.v in
-              let env', e, t_norm =
+                (* Open universes *)
+                let flid = flid_fv.fv_name.v in
+                let env', e, t_norm =
                 let tcenv', _, e_t =
                     Env.open_universes_in env.tcenv uvs [e; t_norm] in
                 let e, t_norm =
@@ -1974,40 +1968,41 @@ let encode_top_level_let :
                     | [e; t_norm] -> e, t_norm
                     | _ -> failwith "Impossible" in
                 {env with tcenv=tcenv'}, e, t_norm
-              in
+                in
 
-              (* Open binders *)
-              let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
-              if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-              then BU.print2 "Encoding let : binders=[%s], body=%s\n"
+                (* Open binders *)
+                let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
+                if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+                then BU.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (Print.binders_to_string ", " binders)
                                 (Print.term_to_string body);
-              (* Encode binders *)
-              let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
+                (* Encode binders *)
+                let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
 
-              let body =
+                let body =
                 (* Reify the body if needed *)
                 if is_reifiable_function env'.tcenv t_norm
                 then TcUtil.reify_body env'.tcenv body
                 else body
-              in
-              let app = mk_app curry f ftok vars in
-              let app, (body, decls2) =
-                  if quals |> List.contains Logic
-                  then mk_Valid app, encode_formula body env'
-                  else app, encode_term body env'
-              in
+                in
+                let app = mk_app curry f ftok vars in
+                let app, (body, decls2) =
+                    if quals |> List.contains Logic
+                    then mk_Valid app, encode_formula body env'
+                    else app, encode_term body env'
+                in
 
-              //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
-              //But the guard is unnecessary given the pattern
-              let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body)),
-                                  Some (BU.format1 "Equation for %s" flid.str),
-                                  ("equation_"^f)) in
-              decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
-              env
+                //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
+                //But the guard is unnecessary given the pattern
+                let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body)),
+                                    Some (BU.format1 "Equation for %s" flid.str),
+                                    ("equation_"^f)) in
+                decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
+                env
+            | _ -> failwith "Impossible"
+        in
 
-          | _ -> failwith "Impossible"
-        else
+        let encode_rec_lbdefs (bindings:list<letbinding>) (typs:list<S.term>) (toks:list<(S.fv * (string * option<term>))>) (env:env_t) =
           (* encoding recursive definitions using fuel to throttle unfoldings *)
           (* We create a new variable corresponding to the current fuel *)
           let fuel = varops.fresh "fuel", Fuel_sort in
@@ -2110,6 +2105,21 @@ let encode_top_level_let :
           in
           let eqns = List.rev eqns in
           prefix_decls@rest@eqns, env0
+        in
+
+        if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
+        || typs  |> BU.for_some (fun t -> not <| (U.is_pure_or_ghost_function t ||
+                                                  is_reifiable_function env.tcenv t))
+        then decls, env
+        else
+          try
+            if not is_rec
+            then
+              (* Encoding non-recursive definitions *)
+              encode_non_rec_lbdef bindings typs toks env
+            else
+              encode_rec_lbdefs bindings typs toks env
+          with Inner_let_rec -> decls, env  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->
       let msg = bindings |> List.map (fun lb -> Print.lbname_to_string lb.lbname) |> String.concat " and " in
@@ -2133,14 +2143,12 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     let is_opaque_to_smt (t:S.term) =
         match (SS.compress t).n with
-        | Tm_constant (Const_string(bytes, _)) ->
-          BU.string_of_bytes bytes = "opaque_to_smt"
+        | Tm_constant (Const_string(s, _)) -> s = "opaque_to_smt"
         | _ -> false
     in
     let is_uninterpreted_by_smt (t:S.term) =
         match (SS.compress t).n with
-        | Tm_constant (Const_string(bytes, _)) ->
-          BU.string_of_bytes bytes = "uninterpreted_by_smt"
+        | Tm_constant (Const_string(s, _)) -> s = "uninterpreted_by_smt"
         | _ -> false
     in
     match se.sigel with

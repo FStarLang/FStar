@@ -1,6 +1,20 @@
 [
-  "\u0014QßYŠšû—š\u001f\u0013\u0018\u00033¨Ë",
+  "µaç\u0010¾ŒŽçfR“6÷ÕíË",
   [
+    [
+      "FStar.Reflection.Basic.forall_list",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.l_True", "fuel_guarded_inversion_Prims.list",
+        "subterm_ordering_Prims.Cons"
+      ],
+      0
+    ],
     [
       "FStar.Reflection.Basic.smaller",
       1,
@@ -9,11 +23,18 @@
       [
         "@MaxIFuel_assumption", "@query",
         "constructor_distinct_FStar.Reflection.Data.Tv_Abs",
+        "constructor_distinct_FStar.Reflection.Data.Tv_App",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Arrow",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Let",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Match",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Refine",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Unknown",
         "disc_equation_FStar.Reflection.Data.Tv_Abs",
         "disc_equation_FStar.Reflection.Data.Tv_App",
         "disc_equation_FStar.Reflection.Data.Tv_Arrow",
         "disc_equation_FStar.Reflection.Data.Tv_Const",
         "disc_equation_FStar.Reflection.Data.Tv_FVar",
+        "disc_equation_FStar.Reflection.Data.Tv_Let",
         "disc_equation_FStar.Reflection.Data.Tv_Match",
         "disc_equation_FStar.Reflection.Data.Tv_Refine",
         "disc_equation_FStar.Reflection.Data.Tv_Type",

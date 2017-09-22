@@ -130,6 +130,7 @@ let defaults =
       ("fs_typ_app"                   , Bool false);
       ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
+      ("gen_native_tactics"           , Unset);
       ("hide_genident_nums"           , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
@@ -152,6 +153,7 @@ let defaults =
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
       ("no_location_info"             , Bool false);
+      ("no_tactics"                   , Bool false);
       ("odir"                         , Unset);
       ("prims"                        , Unset);
       ("pretype"                      , Bool true);
@@ -177,9 +179,10 @@ let defaults =
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
       ("unthrottle_inductives"        , Bool false);
+      ("unsafe_tactic_exec"           , Bool false);
+      ("use_native_tactics"           , Unset);
       ("use_eq_at_higher_order"       , Bool false);
       ("use_hints"                    , Bool false);
-      ("no_tactics"                   , Bool false);
       ("using_facts_from"             , Unset);
       ("verify"                       , Bool true);
       ("verify_all"                   , Bool false);
@@ -233,6 +236,7 @@ let get_extract_module          ()      = lookup_opt "extract_module"           
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
+let get_gen_native_tactics      ()      = lookup_opt "gen_native_tactics"       (as_option as_string)
 let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
@@ -278,8 +282,10 @@ let get_split_cases             ()      = lookup_opt "split_cases"              
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
+let get_unsafe_tactic_exec      ()      = lookup_opt "unsafe_tactic_exec"       as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
+let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
 let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
@@ -481,6 +487,12 @@ let rec specs () : list<Getopt.opt> =
         OneArg (mk_path,
                 "[dir]"),
         "Set the FSTAR_HOME variable to [dir]");
+
+       ( noshort,
+         "gen_native_tactics",
+         OneArg (mk_path,
+                 "[path]"),
+        "Compile all user tactics used in the module in <path>");
 
        ( noshort,
         "hide_genident_nums",
@@ -738,6 +750,12 @@ let rec specs () : list<Getopt.opt> =
         "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
 
        ( noshort,
+        "unsafe_tactic_exec",
+        ZeroArgs (fun () -> mk_bool true),
+        "Allow tactics to run external processes. WARNING: checking an untrusted F* file while \
+         using this options can have disastrous effects.");
+
+       ( noshort,
         "use_eq_at_higher_order",
         ZeroArgs (fun () -> mk_bool true),
         "Use equality constraints when comparing higher-order types (Temporary)");
@@ -746,6 +764,12 @@ let rec specs () : list<Getopt.opt> =
         "use_hints",
         ZeroArgs (fun () -> mk_bool true),
         "Use a previously recorded hints database for proof replay");
+
+       ( noshort,
+         "use_native_tactics",
+         OneArg (mk_path,
+                 "[path]"),
+        "Use compiled tactics from <path>");
 
        ( noshort,
         "no_tactics",
@@ -872,6 +896,7 @@ let settable = function
     | "initial_ifuel"
     | "inline_arith"
     | "lax"
+    | "load"
     | "log_types"
     | "log_queries"
     | "max_fuel"
@@ -1022,7 +1047,7 @@ let prims () =
       | Some result ->
         result
       | None ->
-        raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+        failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
     end
   | Some x -> x
 
@@ -1032,14 +1057,14 @@ let pervasives () =
   let filename = "FStar.Pervasives.fst" in
   match find_file filename with
   | Some result -> result
-  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+  | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
 
 let pervasives_basename () = basename (pervasives ())
 let pervasives_native_basename () =
   let filename = "FStar.Pervasives.Native.fst" in
   match find_file filename with
   | Some result -> basename result
-  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+  | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
 
 
 let prepend_output_dir fname =
@@ -1065,6 +1090,7 @@ let eager_inference              () = get_eager_inference             ()
 let explicit_deps                () = get_explicit_deps               ()
 let extract_all                  () = get_extract_all                 ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
+let gen_native_tactics           () = get_gen_native_tactics          ()
 let full_context_dependency      () = true
 let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
@@ -1113,8 +1139,10 @@ let split_cases                  () = get_split_cases                 ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
+let unsafe_tactic_exec           () = get_unsafe_tactic_exec          ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
+let use_native_tactics           () = get_use_native_tactics          ()
 let use_tactics                  () = get_use_tactics                 ()
 let using_facts_from             () = get_using_facts_from            ()
 let verify_all                   () = get_verify_all                  ()

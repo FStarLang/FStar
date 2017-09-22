@@ -49,14 +49,6 @@
       1,
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0
-    ],
-    [
-      "ReifyLong.bidule",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_unit" ],
-      0
     ]
   ]
 ]

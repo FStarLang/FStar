@@ -238,7 +238,9 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Unit -> "()"
   | MLC_Bool true  -> "true"
   | MLC_Bool false -> "false"
-  | MLC_Char c -> "'"^ escape_or escape_char_hex c ^"'"
+  | MLC_Char c -> (* Unicode characters, in OCaml we use BatUChar (wraper for int) *)
+    let nc = Char.int_of_char c in (string_of_int nc)
+    ^(if nc >= 32 && nc <= 127 && nc <> 34 then " (*" ^ (string_of_char c) ^"*)" else "")
   | MLC_Int (s, Some (Signed, Int32)) -> s ^"l"
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))
@@ -271,7 +273,7 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
             if BU.starts_with s "'_" //this denotes a weak type variable in OCaml; it cannot be written in source programs
             then BU.replace_char s '_' 'u'
             else s in
-        text (escape_tyvar <| idsym x)
+        text (escape_tyvar x)
 
     | MLTY_Tuple tys ->
         let doc = List.map (doc_of_mltype currentModule (t_prio_tpl, Left)) tys in
@@ -324,7 +326,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_Const c ->
         text (string_of_mlconstant c)
 
-    | MLE_Var (x, _) ->
+    | MLE_Var x ->
         text x
 
     | MLE_Name path ->
@@ -382,7 +384,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
           ] when (string_of_mlpath p = "FStar.All.try_with") ->
             let branches =
               match possible_match with
-              | ({ expr = MLE_Match ({ expr = MLE_Var arg' }, branches) }) when (idsym arg = idsym arg') ->
+              | ({ expr = MLE_Match ({ expr = MLE_Var arg' }, branches) }) when (arg = arg') ->
                   branches
               | e ->
                   (* F* may reduce [match ... with ... -> e | ... -> e] into [e]. *)
@@ -423,7 +425,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
                           (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule outer xxt] | _ -> text "");
                           text ")"]
             else text x in
-        let ids  = List.map (fun ((x, _),xt) -> bvar_annot x (Some xt)) ids in
+        let ids  = List.map (fun (x ,xt) -> bvar_annot x (Some xt)) ids in
         let body = doc_of_expr currentModule (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc
@@ -474,6 +476,10 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
             text "with";
             combine hardline (List.map (doc_of_branch currentModule) pats)
         ]
+    | MLE_TApp (head, ty_args) ->
+        // Type applications are only useful meta-data for backends without inference, for example Kremlin.
+        // We just skip them here.
+        doc_of_expr currentModule outer head
 and  doc_of_binop currentModule p e1 e2 : doc =
         let (_, prio, txt) = Option.get (as_bin_op p) in
         let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
@@ -491,7 +497,7 @@ and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
     match pattern with
     | MLP_Wild     -> text "_"
     | MLP_Const  c -> text (string_of_mlconstant c)
-    | MLP_Var    x -> text (fst x)
+    | MLP_Var    x -> text x
 
     | MLP_Record (path, fields) ->
         let for1 (name, p) = reduce1 [text (ptsym currentModule  (path, name)); text "="; doc_of_pattern currentModule p] in
@@ -579,7 +585,7 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
                       let vars = vs |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
                       reduce1 [text ":"; vars; text "."; ty]
             else text "" in
-        reduce1 [text (idsym name); reduce1 ids; ty_annot; text "="; e] in
+        reduce1 [text name; reduce1 ids; ty_annot; text "="; e] in
 
     let letdoc = if rec_ = Rec then reduce1 [text "let"; text "rec"] else text "let" in
 
@@ -607,9 +613,9 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
         let tparams =
             match tparams with
             | []  -> empty
-            | [x] -> text (idsym x)
+            | [x] -> text x
             | _   ->
-                let doc = List.map (fun x -> (text (idsym x))) tparams in
+                let doc = List.map (fun x -> (text x)) tparams in
                 parens (combine (text ", ") doc) in
 
         let forbody (body : mltybody) =

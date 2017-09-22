@@ -23,7 +23,7 @@ open FStar.BaseTypes
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
 
 val max_int: int
 val return_all: 'a -> ML<'a>
@@ -213,8 +213,8 @@ val trace_of_exn: exn -> string
 
 (* not relying on representation *)
 type proc
-val launch_process: string -> string -> string -> string -> (string -> string -> bool) -> string
-val start_process: string -> string -> string -> (string -> string -> bool) -> proc
+val launch_process: bool -> string -> string -> string -> string -> (string -> string -> bool) -> string
+val start_process: bool -> string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
@@ -254,7 +254,7 @@ val string_of_char:  char -> Tot<string>
 val hex_string_of_byte:  byte -> Tot<string>
 val string_of_bytes: array<byte> -> Tot<string>
 val bytes_of_string: string -> Tot<array<byte>>
-val starts_with: string -> string -> Tot<bool>
+val starts_with: long:string -> short:string -> Tot<bool>
 val trim_string: string -> Tot<string>
 val ends_with: string -> string -> Tot<bool>
 val char_at: string -> int -> char

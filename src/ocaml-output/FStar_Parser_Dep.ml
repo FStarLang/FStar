@@ -2,7 +2,7 @@ open Prims
 type verify_mode =
   | VerifyAll
   | VerifyUserList
-  | VerifyFigureItOut
+  | VerifyFigureItOut[@@deriving show]
 let uu___is_VerifyAll: verify_mode -> Prims.bool =
   fun projectee  ->
     match projectee with | VerifyAll  -> true | uu____5 -> false
@@ -15,11 +15,11 @@ let uu___is_VerifyFigureItOut: verify_mode -> Prims.bool =
 type map =
   (Prims.string FStar_Pervasives_Native.option,Prims.string
                                                  FStar_Pervasives_Native.option)
-    FStar_Pervasives_Native.tuple2 FStar_Util.smap
+    FStar_Pervasives_Native.tuple2 FStar_Util.smap[@@deriving show]
 type color =
   | White
   | Gray
-  | Black
+  | Black[@@deriving show]
 let uu___is_White: color -> Prims.bool =
   fun projectee  -> match projectee with | White  -> true | uu____30 -> false
 let uu___is_Gray: color -> Prims.bool =
@@ -28,7 +28,7 @@ let uu___is_Black: color -> Prims.bool =
   fun projectee  -> match projectee with | Black  -> true | uu____40 -> false
 type open_kind =
   | Open_module
-  | Open_namespace
+  | Open_namespace[@@deriving show]
 let uu___is_Open_module: open_kind -> Prims.bool =
   fun projectee  ->
     match projectee with | Open_module  -> true | uu____45 -> false
@@ -63,7 +63,7 @@ let is_interface: Prims.string -> Prims.bool =
   fun f  ->
     let uu____144 =
       FStar_String.get f ((FStar_String.length f) - (Prims.parse_int "1")) in
-    uu____144 = 'i'
+    uu____144 = 105
 let is_implementation: Prims.string -> Prims.bool =
   fun f  -> let uu____149 = is_interface f in Prims.op_Negation uu____149
 let list_of_option:
@@ -361,12 +361,11 @@ let collect_one:
                     if uu____1035
                     then
                       let uu____1036 =
-                        FStar_Range.string_of_range
-                          (FStar_Ident.range_of_lid lid) in
-                      let uu____1037 = string_of_lid lid false in
-                      FStar_Util.print2_warning
-                        "%s (Warning): unbound module reference %s\n"
-                        uu____1036 uu____1037
+                        let uu____1037 = string_of_lid lid false in
+                        FStar_Util.format1 "Unbound module reference %s"
+                          uu____1037 in
+                      FStar_Errors.warn (FStar_Ident.range_of_lid lid)
+                        uu____1036
                     else () in
               let uu____1040 = lowercase_join_longident lid false in
               try_key uu____1040 in
@@ -742,7 +741,7 @@ let print_graph:
                       let uu____2774 = FStar_Util.smap_try_find graph k in
                       FStar_Util.must uu____2774 in
                     FStar_Pervasives_Native.fst uu____2767 in
-                  let r s = FStar_Util.replace_char s '.' '_' in
+                  let r s = FStar_Util.replace_char s 46 95 in
                   FStar_List.map
                     (fun dep1  ->
                        FStar_Util.format2 "  %s -> %s" (r k) (r dep1)) deps)
@@ -844,7 +843,7 @@ let collect:
          | (direct_deps,color) ->
              (match color with
               | Gray  ->
-                  (FStar_Util.print1
+                  (FStar_Util.print1_warning
                      "Warning: recursive dependency on module %s\n" key;
                    (let cycle1 =
                       FStar_All.pipe_right cycle
@@ -983,8 +982,8 @@ let print_make:
          match uu____4030 with
          | (f,deps1) ->
              let deps2 =
-               FStar_List.map
-                 (fun s  -> FStar_Util.replace_chars s ' ' "\\ ") deps1 in
+               FStar_List.map (fun s  -> FStar_Util.replace_chars s 32 "\\ ")
+                 deps1 in
              FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps2))
       deps
 let print:

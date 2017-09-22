@@ -38,6 +38,9 @@ let parse_fragment frag : fragment =
     | Inl (Inl modul, _) -> //interactive mode: module
       Modul modul
 
+    | Inl (Inr [], _) -> //interactive mode: blank space
+      Empty
+
     | Inl (Inr decls, _) -> //interactive mode: more decls
       Decls decls
 

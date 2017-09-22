@@ -75,7 +75,7 @@ let get_z3version () =
 let ini_params () =
   let z3_v = get_z3version () in
   begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
+  then raise (Util.HardError (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v)))
   else ()
   end;
   (String.concat " "
@@ -115,7 +115,7 @@ let new_z3proc id =
     (let x = BU.trim_string s = "Done!" in
 //     BU.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
      x) in
-   BU.start_process id ((Options.z3_exe())) (ini_params()) cond
+   BU.start_process false id ((Options.z3_exe())) (ini_params()) cond
 
 type bgproc = {
     grab:unit -> proc;
@@ -358,7 +358,7 @@ let doZ3Exe (fresh:bool) (input:string) (label_messages:error_labels) : z3status
      x) in
   let stdout =
     if fresh then
-      BU.launch_process (tid()) ((Options.z3_exe())) (ini_params()) input cond
+      BU.launch_process false (tid()) ((Options.z3_exe())) (ini_params()) input cond
     else
       let proc = bg_z3_proc.grab() in
       let stdout = BU.ask_process proc input in

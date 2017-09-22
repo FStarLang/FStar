@@ -148,7 +148,7 @@ let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_float x ->      U.string_of_float x
-  | Const_string(bytes, _) -> U.format1 "\"%s\"" (U.string_of_bytes bytes)
+  | Const_string(s, _) -> U.format1 "\"%s\"" s
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"

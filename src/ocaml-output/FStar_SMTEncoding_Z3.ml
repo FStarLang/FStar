@@ -2,6 +2,7 @@ open Prims
 type z3version =
   | Z3V_Unknown of Prims.string
   | Z3V of (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
+[@@deriving show]
 let uu___is_Z3V_Unknown: z3version -> Prims.bool =
   fun projectee  ->
     match projectee with | Z3V_Unknown _0 -> true | uu____20 -> false
@@ -13,8 +14,8 @@ let __proj__Z3V__item___0:
   z3version -> (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Z3V _0 -> _0
 let z3version_as_string: z3version -> Prims.string =
-  fun uu___95_70  ->
-    match uu___95_70 with
+  fun uu___96_70  ->
+    match uu___96_70 with
     | Z3V_Unknown s -> FStar_Util.format1 "unknown version: %s" s
     | Z3V (i,j,k) ->
         let uu____75 = FStar_Util.string_of_int i in
@@ -97,8 +98,8 @@ let ini_params: Prims.unit -> Prims.string =
            FStar_Util.format1
              "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n"
              uu____245 in
-         FStar_Util.Failure uu____244 in
-       FStar_All.pipe_left FStar_Exn.raise uu____243
+         FStar_Util.HardError uu____244 in
+       FStar_Exn.raise uu____243
      else ());
     (let uu____247 =
        let uu____250 =
@@ -114,8 +115,9 @@ let ini_params: Prims.unit -> Prims.string =
        let uu____259 = FStar_Options.z3_cliopt () in
        FStar_List.append uu____250 uu____259 in
      FStar_String.concat " " uu____247)
-type label = Prims.string
+type label = Prims.string[@@deriving show]
 type unsat_core = Prims.string Prims.list FStar_Pervasives_Native.option
+[@@deriving show]
 type z3status =
   | UNSAT of unsat_core
   | SAT of
@@ -130,7 +132,7 @@ type z3status =
   (FStar_SMTEncoding_Term.error_labels,Prims.string
                                          FStar_Pervasives_Native.option)
   FStar_Pervasives_Native.tuple2
-  | KILLED
+  | KILLED[@@deriving show]
 let uu___is_UNSAT: z3status -> Prims.bool =
   fun projectee  ->
     match projectee with | UNSAT _0 -> true | uu____305 -> false
@@ -166,10 +168,10 @@ let __proj__TIMEOUT__item___0:
 let uu___is_KILLED: z3status -> Prims.bool =
   fun projectee  ->
     match projectee with | KILLED  -> true | uu____432 -> false
-type z3statistics = Prims.string FStar_Util.smap
+type z3statistics = Prims.string FStar_Util.smap[@@deriving show]
 let status_tag: z3status -> Prims.string =
-  fun uu___96_438  ->
-    match uu___96_438 with
+  fun uu___97_438  ->
+    match uu___97_438 with
     | SAT uu____439 -> "sat"
     | UNSAT uu____446 -> "unsat"
     | UNKNOWN uu____447 -> "unknown"
@@ -217,13 +219,13 @@ let new_z3proc: Prims.string -> FStar_Util.proc =
     let cond pid s = let x = (FStar_Util.trim_string s) = "Done!" in x in
     let uu____519 = FStar_Options.z3_exe () in
     let uu____520 = ini_params () in
-    FStar_Util.start_process id uu____519 uu____520 cond
+    FStar_Util.start_process false id uu____519 uu____520 cond
 type bgproc =
   {
   grab: Prims.unit -> FStar_Util.proc;
   release: Prims.unit -> Prims.unit;
   refresh: Prims.unit -> Prims.unit;
-  restart: Prims.unit -> Prims.unit;}
+  restart: Prims.unit -> Prims.unit;}[@@deriving show]
 let __proj__Mkbgproc__item__grab: bgproc -> Prims.unit -> FStar_Util.proc =
   fun projectee  ->
     match projectee with
@@ -254,7 +256,7 @@ type query_log =
   set_module_name: Prims.string -> Prims.unit;
   write_to_log: Prims.string -> Prims.unit;
   close_log: Prims.unit -> Prims.unit;
-  log_file_name: Prims.unit -> Prims.string;}
+  log_file_name: Prims.unit -> Prims.string;}[@@deriving show]
 let __proj__Mkquery_log__item__get_module_name:
   query_log -> Prims.unit -> Prims.string =
   fun projectee  ->
@@ -451,14 +453,15 @@ let at_log_file: Prims.unit -> Prims.string =
       let uu____2017 = query_logging.log_file_name () in
       Prims.strcat "@" uu____2017
     else ""
-type smt_output_section = Prims.string Prims.list
+type smt_output_section = Prims.string Prims.list[@@deriving show]
 type smt_output =
   {
   smt_result: smt_output_section;
   smt_reason_unknown: smt_output_section FStar_Pervasives_Native.option;
   smt_unsat_core: smt_output_section FStar_Pervasives_Native.option;
   smt_statistics: smt_output_section FStar_Pervasives_Native.option;
-  smt_labels: smt_output_section FStar_Pervasives_Native.option;}
+  smt_labels: smt_output_section FStar_Pervasives_Native.option;}[@@deriving
+                                                                   show]
 let __proj__Mksmt_output__item__smt_result: smt_output -> smt_output_section
   =
   fun projectee  ->
@@ -588,7 +591,7 @@ let doZ3Exe:
       fun label_messages  ->
         let parse z3out =
           let lines =
-            FStar_All.pipe_right (FStar_String.split ['\n'] z3out)
+            FStar_All.pipe_right (FStar_String.split [10] z3out)
               (FStar_List.map FStar_Util.trim_string) in
           let smt_output = smt_output_sections lines in
           let unsat_core =
@@ -715,8 +718,8 @@ let doZ3Exe:
             let uu____3023 = tid () in
             let uu____3024 = FStar_Options.z3_exe () in
             let uu____3025 = ini_params () in
-            FStar_Util.launch_process uu____3023 uu____3024 uu____3025 input
-              cond
+            FStar_Util.launch_process false uu____3023 uu____3024 uu____3025
+              input cond
           else
             (let proc = bg_z3_proc.grab () in
              let stdout1 = FStar_Util.ask_process proc input in
@@ -727,7 +730,7 @@ let z3_options: Prims.unit -> Prims.string =
     "(set-option :global-decls false)\n(set-option :smt.mbqi false)\n(set-option :auto_config false)\n(set-option :produce-unsat-cores true)\n"
 type 'a job = {
   job: Prims.unit -> 'a;
-  callback: 'a -> Prims.unit;}
+  callback: 'a -> Prims.unit;}[@@deriving show]
 let __proj__Mkjob__item__job: 'a . 'a job -> Prims.unit -> 'a =
   fun projectee  ->
     match projectee with
@@ -739,6 +742,7 @@ let __proj__Mkjob__item__callback: 'a . 'a job -> 'a -> Prims.unit =
         __fname__callback
 type z3job =
   (z3status,Prims.int,z3statistics) FStar_Pervasives_Native.tuple3 job
+[@@deriving show]
 let job_queue: z3job Prims.list FStar_ST.ref = FStar_Util.mk_ref []
 let pending_jobs: Prims.int FStar_ST.ref =
   FStar_Util.mk_ref (Prims.parse_int "0")
@@ -841,7 +845,8 @@ let finish: Prims.unit -> Prims.unit =
           then FStar_ST.op_Colon_Equals running false
           else (FStar_Util.sleep (Prims.parse_int "500"); aux ()) in
     aux ()
-type scope_t = FStar_SMTEncoding_Term.decl Prims.list Prims.list
+type scope_t = FStar_SMTEncoding_Term.decl Prims.list Prims.list[@@deriving
+                                                                  show]
 let fresh_scope:
   FStar_SMTEncoding_Term.decl Prims.list Prims.list FStar_ST.ref =
   FStar_Util.mk_ref [[]]
@@ -876,8 +881,8 @@ let giveZ3: FStar_SMTEncoding_Term.decl Prims.list -> Prims.unit =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___97_3829  ->
-            match uu___97_3829 with
+         (fun uu___98_3829  ->
+            match uu___98_3829 with
             | FStar_SMTEncoding_Term.Push  -> failwith "Unexpected push/pop"
             | FStar_SMTEncoding_Term.Pop  -> failwith "Unexpected push/pop"
             | uu____3830 -> ()));
@@ -924,8 +929,9 @@ let mk_input: FStar_SMTEncoding_Term.decl Prims.list -> Prims.string =
      if uu____4122 then query_logging.write_to_log r else ());
     r
 type z3result =
-  (z3status,Prims.int,z3statistics) FStar_Pervasives_Native.tuple3
-type cb = z3result -> Prims.unit
+  (z3status,Prims.int,z3statistics) FStar_Pervasives_Native.tuple3[@@deriving
+                                                                    show]
+type cb = z3result -> Prims.unit[@@deriving show]
 let ask_1_core:
   (FStar_SMTEncoding_Term.decls_t ->
      (FStar_SMTEncoding_Term.decls_t,Prims.bool)

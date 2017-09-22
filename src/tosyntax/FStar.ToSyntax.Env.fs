@@ -980,7 +980,8 @@ let check_admits env =
       begin match try_lookup_lid env l with
         | None ->
           if not (Options.interactive ()) then
-            BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
+            FStar.Errors.warn (range_of_lid l)
+              (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l));
           let quals = Assumption :: se.sigquals in
           BU.smap_add (sigmap env) l.str ({ se with sigquals = quals },
                                           false)
