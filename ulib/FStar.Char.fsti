@@ -1,7 +1,9 @@
 module FStar.Char
 
-type char_code = n:nat{n < pow2 32}
-type char = FStar.UInt32.t
+module U32 = FStar.UInt32
+
+type char_code = n:nat{n < pow2 21}
+type char = n:U32.t{U32.v n < pow2 21}
 
 val lowercase: char -> Tot char
 val uppercase: char -> Tot char
