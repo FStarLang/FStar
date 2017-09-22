@@ -46,7 +46,7 @@ and decl =
   | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
   | DTypeFlat of lident * int * fields_t
-  | DExternal of option<cc> * lident * typ
+  | DExternal of option<cc> * lident * typ * list<binder>
   | DTypeVariant of lident * list<flag> * int * branches_t
   | DTypeMutual of list<decl>
 
@@ -379,7 +379,7 @@ match (flavor, flags, binding) with
       | _ -> translate_flags flags) in
       if assumed then
         if List.length tvars = 0 then
-          Some (DExternal (None, name, translate_type env t0))
+          Some (DExternal (None, name, translate_type env t0, binders))
         else
           None
       else begin
