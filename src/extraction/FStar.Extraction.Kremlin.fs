@@ -170,7 +170,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 25
+let current_version: version = 26
 
 type file = string * program
 type binary_format = version * list<file>
@@ -349,18 +349,18 @@ and translate_flags flags =
     | _ -> None // is this all of them?
   ) flags
 
-and translate_decl env d: option<decl> =
-  match d with
-  | MLM_Let (flavor, flags, [ {
+and translate_single_let env flavor flags binding =
+match (flavor, flags, binding) with
+| (flavor, flags, {
       mllb_name = name, _;
       mllb_tysc = Some (tvars, t0);
       mllb_def = { expr = MLE_Fun (args, body) }
-    } ])
-  | MLM_Let (flavor, flags, [ {
+    })
+| (flavor, flags, {
       mllb_name = name, _;
       mllb_tysc = Some (tvars, t0);
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
-    } ]) ->
+    }) ->
       let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) flags in
       let env = if flavor = Rec then extend env name false else env in
       let env = List.fold_left (fun env (name, _) -> extend_t env name) env tvars in
@@ -392,12 +392,11 @@ and translate_decl env d: option<decl> =
           let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg))
       end
-
-  | MLM_Let (flavor, flags, [ {
+| (flavor, flags, {
       mllb_name = name, _;
       mllb_tysc = Some ([], t);
       mllb_def = expr
-    } ]) ->
+    }) ->
       let flags = translate_flags flags in
       let t = translate_type env t in
       let name = env.module_name, name in
@@ -409,7 +408,7 @@ and translate_decl env d: option<decl> =
         Some (DGlobal (flags, name, t, EAny))
       end
 
-  | MLM_Let (_, _, { mllb_name = name, _; mllb_tysc = ts } :: _) ->
+| (_, _, { mllb_name = name, _; mllb_tysc = ts }) ->
       (* Things we currently do not translate:
        * - polymorphic functions (lemmas do count, sadly)
        *)
@@ -423,9 +422,12 @@ and translate_decl env d: option<decl> =
           ()
       end;
       None
+| _ -> failwith "impossible"
 
-  | MLM_Let _ ->
-      failwith "impossible"
+and translate_decl env d: option<decl> =
+  match d with
+  | MLM_Let (flavor, flags, [ letbinding ]) ->
+    translate_single_let env flavor flags letbinding
 
   | MLM_Loc _ ->
       None
