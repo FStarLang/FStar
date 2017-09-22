@@ -104,23 +104,21 @@ open FStar_String
 %%
 (* F* Document String parsing *)
 fsdocKeyValue:
-| k = FSDOC_KEY v = FSDOC_TEXT
-   { let key = FSDOC_KEY k in
-     let value = FSDOC_TEXT v in
-     (key, value) }
+| key = FSDOC_KEY value = FSDOC_TEXT
+   { (key, value) }
 
 fsdoc_item:
 | kv = fsdocKeyValue
-  { Left kv }
-| text = FSDOC_TEXT
-  { Right text }
+  { Key(kv) }
+| t = FSDOC_TEXT
+  { Text(t) }
 
 fsdoc:
-ds = separated_list(fsdoc_item, FSDOC_NEWLINE)
+ds = separated_list(FSDOC_NEWLINE, fsdoc_item)
   { mkfsDoc ds }
 
 fsdocStandalone:
-| ds = separated_nonempty_list(fsdoc_item, FSDOC_NEWLINE) FSDOC_DOUBLE_NEWLINE
+| ds = separated_nonempty_list(FSDOC_NEWLINE, fsdoc_item) FSDOC_DOUBLE_NEWLINE
   { mkfsDoc ds }
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)

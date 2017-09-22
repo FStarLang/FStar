@@ -317,17 +317,17 @@ loption_separated_nonempty_list_COMMA_appTerm__:
     {let x = $1 in
     ( x )}
 
+loption_separated_nonempty_list_FSDOC_NEWLINE_fsdoc_item__:
+  
+    {    ( [] )}
+| separated_nonempty_list_FSDOC_NEWLINE_fsdoc_item_
+    {let x = $1 in
+    ( x )}
+
 loption_separated_nonempty_list_SEMICOLON_tuplePattern__:
   
     {    ( [] )}
 | separated_nonempty_list_SEMICOLON_tuplePattern_
-    {let x = $1 in
-    ( x )}
-
-loption_separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE__:
-  
-    {    ( [] )}
-| separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE_
     {let x = $1 in
     ( x )}
 
@@ -571,6 +571,14 @@ separated_nonempty_list_DISJUNCTION_conjunctivePat_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
+separated_nonempty_list_FSDOC_NEWLINE_fsdoc_item_:
+  fsdoc_item
+    {let x = $1 in
+    ( [ x ] )}
+| fsdoc_item FSDOC_NEWLINE separated_nonempty_list_FSDOC_NEWLINE_fsdoc_item_
+    {let (x, _2, xs) = ($1, (), $3) in
+    ( x :: xs )}
+
 separated_nonempty_list_SEMICOLON_appTerm_:
   appTerm
     {let x = $1 in
@@ -603,42 +611,32 @@ separated_nonempty_list_SEMICOLON_tuplePattern_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
-separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE_:
-  FSDOC_NEWLINE
-    {let x = () in
-    ( [ x ] )}
-| FSDOC_NEWLINE fsdoc_item separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE_
-    {let (x, _2, xs) = ((), $2, $3) in
-    ( x :: xs )}
-
 fsdocKeyValue:
   FSDOC_KEY FSDOC_TEXT
-    {let (k, v) = ($1, $2) in
-   ( let key = FSDOC_KEY k in
-     let value = FSDOC_TEXT v in
-     (key, value) )}
+    {let (key, value) = ($1, $2) in
+   ( (key, value) )}
 
 fsdoc_item:
   fsdocKeyValue
     {let kv = $1 in
-  ( Left kv )}
+  ( Key(kv) )}
 | FSDOC_TEXT
-    {let text = $1 in
-  ( Right text )}
+    {let t = $1 in
+  ( Text(t) )}
 
 fsdoc:
-  loption_separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE__
+  loption_separated_nonempty_list_FSDOC_NEWLINE_fsdoc_item__
     {let xs0 = $1 in
 let ds =
   let xs = xs0 in
       ( xs )
 in
-  ( FStar_Parser_AST.mkfsDoc ds )}
+  ( mkfsDoc ds )}
 
 fsdocStandalone:
-  separated_nonempty_list_fsdoc_item_FSDOC_NEWLINE_ FSDOC_DOUBLE_NEWLINE
+  separated_nonempty_list_FSDOC_NEWLINE_fsdoc_item_ FSDOC_DOUBLE_NEWLINE
     {let (ds, _2) = ($1, ()) in
-  ( FStar_Parser_AST.mkfsDoc ds )}
+  ( mkfsDoc ds )}
 
 inputFragment:
   boption___anonymous_0_ list_decl_ option_mainDecl_ EOF

@@ -483,7 +483,7 @@ and fsdoc doc = lexer
  | "*)" newline ->
    L.new_line lexbuf;
    FSDOC_NEWLINE
-  | anywhite* "@" ['a'-'z' 'A'-'Z']+ [':']? anywhite* ->
+  | newline anywhite* "@" ['a'-'z' 'A'-'Z']+ [':']? anywhite* ->
     FSDOC_KEY (BatString.strip ~chars:" \r\n\t@:" (L.lexeme lexbuf))
 
  | newline ->

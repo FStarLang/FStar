@@ -126,6 +126,10 @@ type expr = term
 //  - Immediately after a type constructor or record field
 //  - In the middle of a file, as a standalone documentation declaration
 (* KM : Would need some range information on fsdocs to be able to print them correctly *)
+type fsdoc_item =
+| Text of string
+| Key of (string * string)
+
 type fsdoc = string * list<(string * string)> // comment + (name,value) keywords
 
 (* TODO (KM) : it would be useful for the printer to have range information for those *)
@@ -274,13 +278,13 @@ let rec mkfsDoc = function
 | [] -> ("", [])
 | (d :: ds) ->
   begin match d with
-  | Left(text) -> mkfsdoc ds // todo fix me
-  | Right(kv) ->
-    let (text, kvs) = mkfsdoc ds
+  | Text(text) -> mkfsDoc ds // todo fix me
+  | Key(kv) ->
+    let (text, kvs) = mkfsDoc ds
     in (text, kv :: kvs)
   end
 
-let mkConsList r elts
+let mkConsList r elts =
   let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
     List.fold_right (fun e tl -> consTerm r e tl) elts nil
 
