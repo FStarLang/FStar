@@ -1011,11 +1011,11 @@ let remove_reify (t: S.term): S.term =
 (* Instantiation and generalization *)
 (*********************************************************************************************)
 let maybe_instantiate (env:Env.env) e t =
+  let torig = SS.compress t in
   if not env.instantiate_imp
-  then e, t, Rel.trivial_guard
-  else let torig = N.unfold_whnf env t in
-       let number_of_implicits t =
-            let formals, _ = U.arrow_formals (N.unfold_whnf env t) in
+  then e, torig, Rel.trivial_guard
+  else let number_of_implicits t =
+            let formals, _ = U.arrow_formals t in
             let n_implicits =
             match formals |> BU.prefix_until (fun (_, imp) -> imp=None || imp=Some Equality) with
                 | None -> List.length formals
@@ -1056,7 +1056,7 @@ let maybe_instantiate (env:Env.env) e t =
                       (v, Some (Implicit dot))::args, bs, subst, Rel.conj_guard g g'
                  | _, bs -> [], bs, subst, Rel.trivial_guard
               in
-              let args, bs, subst, guard = aux [] (inst_n_binders torig) bs in
+              let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
               begin match args, bs with
                 | [], _ -> //no implicits were instantiated
                   e, torig, guard
