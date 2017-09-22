@@ -68,3 +68,5 @@ val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt
 
 val tr_norm_steps : list<FStar.Syntax.Embeddings.norm_step> -> list<step>
+
+val remove_uvar_solutions: Env.env -> term -> term

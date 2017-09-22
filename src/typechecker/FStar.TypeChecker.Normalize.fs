@@ -1885,7 +1885,7 @@ let normalize_refinement steps env t0 =
 let unfold_whnf env t = normalize [WHNF; UnfoldUntil Delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
-              @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm])
+              @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])
               env
               t
 let reduce_uvar_solutions env t = reduce_or_remove_uvar_solutions false env t
