@@ -8,9 +8,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0
     ],
@@ -21,9 +22,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0
     ],
@@ -34,11 +36,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
         "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_Prims.unit",
-        "typing_FStar.Tactics.Builtins.__embed", "unit_typing"
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0
     ],
@@ -50,9 +51,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0
     ],
@@ -63,9 +65,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0
     ],
@@ -76,9 +79,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0
     ],
@@ -89,9 +93,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0
     ],
@@ -102,8 +107,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term"
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0
     ],
