@@ -14,132 +14,148 @@ open FStar.Mul
  * - every occurrence of [@%] has been replaced with [%].
  *)
 
-private type t' = | Mk: v:uint_t n -> t'
-type t = t'
+abstract type t =
+  | Mk: v:uint_t n -> t
 
+abstract
 let v (x:t) : Tot (uint_t n) = x.v
 
-let v_inj (x1 x2: t): Lemma (requires (v x1 == v x2)) (ensures (x1 == x2)) = ()
+abstract
+let uint_to_t (x:uint_t n) : Pure t
+  (requires True)
+  (ensures (fun y -> v y = x)) = Mk x
 
-val add: a:t -> b:t -> Pure t
+let uv_inv (x : t) : Lemma 
+  (ensures (uint_to_t (v x) == x))
+  [SMTPat (v x)] = ()
+
+let vu_inv (x : uint_t n) : Lemma 
+  (ensures (v (uint_to_t x) == x))
+  [SMTPat (uint_to_t x)] = ()
+
+let v_inj (x1 x2: t): Lemma 
+  (requires (v x1 == v x2)) 
+  (ensures (x1 == x2)) 
+  = ()
+
+abstract
+let add (a:t) (b:t) : Pure t
   (requires (size (v a + v b) n))
   (ensures (fun c -> v a + v b = v c))
-let add a b =
-  Mk (add (v a) (v b))
+  = Mk (add (v a) (v b))
 
-val add_underspec: a:t -> b:t -> Pure t
+abstract
+let add_underspec (a:t) (b:t) : Pure t
   (requires True)
   (ensures (fun c ->
     size (v a + v b) n ==> v a + v b = v c))
-let add_underspec a b =
-  Mk (add_underspec (v a) (v b))
+ = Mk (add_underspec (v a) (v b))
 
-val add_mod: a:t -> b:t -> Pure t
+abstract
+let add_mod (a:t) (b:t) : Pure t
   (requires True)
   (ensures (fun c -> (v a + v b) % pow2 n = v c))
-let add_mod a b =
-  Mk (add_mod (v a) (v b))
+  = Mk (add_mod (v a) (v b))
 
 (* Subtraction primitives *)
-val sub: a:t -> b:t -> Pure t
+abstract
+let sub (a:t) (b:t) : Pure t
   (requires (size (v a - v b) n))
   (ensures (fun c -> v a - v b = v c))
-let sub a b =
-  Mk (sub (v a) (v b))
+  = Mk (sub (v a) (v b))
 
-val sub_underspec: a:t -> b:t -> Pure t
+abstract
+let sub_underspec (a:t) (b:t) : Pure t
   (requires True)
   (ensures (fun c ->
     size (v a - v b) n ==> v a - v b = v c))
-let sub_underspec a b =
-  Mk (sub_underspec (v a) (v b))
+  = Mk (sub_underspec (v a) (v b))
 
-val sub_mod: a:t -> b:t -> Pure t
+abstract
+let sub_mod (a:t) (b:t) : Pure t
   (requires True)
   (ensures (fun c -> (v a - v b) % pow2 n = v c))
-let sub_mod a b =
-  Mk (sub_mod (v a) (v b))
+  = Mk (sub_mod (v a) (v b))
 
 (* Multiplication primitives *)
-val mul: a:t -> b:t -> Pure t
+abstract
+let mul (a:t) (b:t) : Pure t
   (requires (size (v a * v b) n))
   (ensures (fun c -> v a * v b = v c))
-let mul a b =
-  Mk (mul (v a) (v b))
+  = Mk (mul (v a) (v b))
 
-val mul_underspec: a:t -> b:t -> Pure t
+abstract
+let mul_underspec (a:t) (b:t) : Pure t
   (requires True)
   (ensures (fun c ->
     size (v a * v b) n ==> v a * v b = v c))
-let mul_underspec a b =
-  Mk (mul_underspec (v a) (v b))
+   = Mk (mul_underspec (v a) (v b))
 
-val mul_mod: a:t -> b:t -> Pure t
+abstract
+let mul_mod (a:t) (b:t) : Pure t
   (requires True)
   (ensures (fun c -> (v a * v b) % pow2 n = v c))
-let mul_mod a b =
-  Mk (mul_mod (v a) (v b))
+  = Mk (mul_mod (v a) (v b))
 
-val mul_div: a:t -> b:t -> Pure t
+abstract
+let mul_div (a:t) (b:t) : Pure t
   (requires True)
   (ensures (fun c -> (v a * v b) / pow2 n = v c))
-let mul_div a b =
-  Mk (mul_div (v a) (v b))
+  = Mk (mul_div (v a) (v b))
 
 (* Division primitives *)
-val div: a:t -> b:t{v b <> 0} -> Pure t
+abstract
+let div (a:t) (b:t{v b <> 0}) : Pure t
   (requires (True))
   (ensures (fun c -> v a / v b = v c))
-let div a b =
-  Mk (div (v a) (v b))
+  = Mk (div (v a) (v b))
 
 (* Modulo primitives *)
-val rem: a:t -> b:t{v b <> 0} -> Pure t
+abstract
+let rem (a:t) (b:t{v b <> 0}) : Pure t
   (requires True)
   (ensures (fun c ->
     v a - ((v a / v b) * v b) = v c))
-let rem a b = Mk (mod (v a) (v b))
+  = Mk (mod (v a) (v b))
 
 (* Bitwise operators *)
-val logand: t -> t -> Tot t
-let logand a b = Mk (logand (v a) (v b))
-val logxor: t -> t -> Tot t
-let logxor a b = Mk (logxor (v a) (v b))
-val logor: t -> t -> Tot t
-let logor a b = Mk (logor (v a) (v b))
-val lognot: t -> Tot t
-let lognot a = Mk (lognot (v a))
 
-val uint_to_t: x:uint_t n -> Pure t
+abstract
+let logand (x:t) (y:t) : Pure t
   (requires True)
-  (ensures (fun y -> v y = x))
-let uint_to_t x = Mk x
+  (ensures (fun z -> v z == v x `logand` v y))
+  = Mk (logand (v x) (v y))
 
-#set-options "--lax"
-//This private primitive is used internally by the
-//compiler to translate bounded integer constants
-//with a desugaring-time check of the size of the number,
-//rather than an expensive verifiation check.
-//Since it is marked private, client programs cannot call it directly
-//Since it is marked unfold, it eagerly reduces,
-//eliminating the verification overhead of the wrapper
-private
-unfold
-let __uint_to_t (x:int) : Tot t
-    = uint_to_t x
-#reset-options
+abstract
+let logxor (x:t) (y:t) : Pure t
+  (requires True)
+  (ensures (fun z -> v z == v x `logxor` v y))
+  = Mk (logxor (v x) (v y))
 
+abstract
+let logor (x:t) (y:t) : Pure t
+  (requires True)
+  (ensures (fun z -> v z == v x `logor` v y))
+  = Mk (logor (v x) (v y))
+
+abstract
+let lognot (x:t) : Pure t
+  (requires True)
+  (ensures (fun z -> v z == lognot (v x)))
+  = Mk (lognot (v x))
 
 (* Shift operators *)
-val shift_right: a:t -> s:t -> Pure t
+abstract
+let shift_right (a:t) (s:t) : Pure t
   (requires (v s < n))
   (ensures (fun c -> v c = (v a / (pow2 (v s)))))
-let shift_right a s = Mk (shift_right (v a) (v s))
+  = Mk (shift_right (v a) (v s))
 
-val shift_left: a:t -> s:t -> Pure t
+abstract
+let shift_left (a:t) (s:t) : Pure t
   (requires (v s < n))
   (ensures (fun c -> v c = ((v a * pow2 (v s)) % pow2 n)))
-let shift_left a s = Mk (shift_left (v a) (v s))
+  = Mk (shift_left (v a) (v s))
 
 (* Comparison operators *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
@@ -178,3 +194,18 @@ unfold let op_Less_Equals_Hat = lte
 (* To input / output constants *)
 assume val to_string: t -> Tot string
 assume val of_string: string -> Tot t
+
+
+#set-options "--lax"
+//This private primitive is used internally by the
+//compiler to translate bounded integer constants
+//with a desugaring-time check of the size of the number,
+//rather than an expensive verifiation check.
+//Since it is marked private, client programs cannot call it directly
+//Since it is marked unfold, it eagerly reduces,
+//eliminating the verification overhead of the wrapper
+private
+unfold
+let __uint_to_t (x:int) : Tot t
+    = uint_to_t x
+#reset-options
