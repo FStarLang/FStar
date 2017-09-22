@@ -78,14 +78,12 @@ let set_check_kind (dsenv, tcenv) check_kind =
   let dsenv = DsEnv.set_syntax_only dsenv (check_kind = SyntaxCheck) in
   (dsenv, tcenv)
 
-let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
+let cleanup (dsenv, env) =
+  TcEnv.cleanup_interactive env
 
-let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
+let with_captured_errors env f =
   try
-    match tc_one_fragment curmod dsenv env frag with
-    | Some (m, dsenv, env) ->
-      Some (m, (dsenv, env), FStar.Errors.get_err_count())
-    | _ -> None
+    f ()
   with
   | Failure (msg) when not (Options.trace_error ()) ->
     let msg = "ASSERTION FAILURE: " ^ msg ^ "\n" ^
@@ -105,6 +103,13 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
   | FStar.Errors.Err msg when not (Options.trace_error ()) ->
     FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
     None
+
+let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
+  with_captured_errors env (fun () ->
+    match tc_one_fragment curmod dsenv env frag with
+    | Some (m, dsenv, env) ->
+      Some (m, (dsenv, env), FStar.Errors.get_err_count())
+    | _ -> None)
 
 (*********************)
 (* Dependency checks *)
@@ -334,23 +339,30 @@ open, let-open, include, module-alias)" k
 
 type position = string * int * int
 
+type push_query =
+  { push_kind: push_kind;
+    push_code: string;
+    push_line: int; push_column: int;
+    push_peek_only: bool }
+
 type query' =
 | Exit
 | DescribeProtocol
 | DescribeRepl
 | Pop
-| Push of push_kind * string * int * int * bool
+| Push of push_query
 | AutoComplete of string * completion_context
 | Lookup of string * lookup_context * option<position> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
 | Search of string
-| MissingCurrentModule
+| GenericError of string
 | ProtocolViolation of string
 and query = { qq: query'; qid: string }
 
 let query_needs_current_module = function
-  | Exit | DescribeProtocol | DescribeRepl | Pop | Push (_, _, _, _, false)
-  | MissingCurrentModule | ProtocolViolation _ -> false
+  | Exit | DescribeProtocol | DescribeRepl
+  | Pop | Push { push_peek_only = false }
+  | GenericError _ | ProtocolViolation _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
 let interactive_protocol_vernum = 2
@@ -398,11 +410,11 @@ let unpack_interactive_query json =
            | "pop" -> Pop
            | "describe-protocol" -> DescribeProtocol
            | "describe-repl" -> DescribeRepl
-           | "peek" | "push" -> Push (arg "kind" |> js_pushkind,
-                                     arg "code" |> js_str,
-                                     arg "line" |> js_int,
-                                     arg "column" |> js_int,
-                                     query = "peek")
+           | "peek" | "push" -> Push ({ push_kind = arg "kind" |> js_pushkind;
+                                       push_code = arg "code" |> js_str;
+                                       push_line = arg "line" |> js_int;
+                                       push_column = arg "column" |> js_int;
+                                       push_peek_only = query = "peek" })
            | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
                                             try_arg "context" |> js_optional_completion_context)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
@@ -647,13 +659,19 @@ let trim_option_name opt_name =
 
 open FStar.Parser.ParseIt
 
-// FIXME: Store repl_names in the stack, too
-type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
-                    repl_deps: (deps_stack_t * m_timestamps);
-                    repl_curmod: modul_t; repl_env: env_t;
-                    repl_stdin: stream_reader; repl_names: CTable.table }
+type partial_repl_state =
+  { prepl_fname: string; prepl_stdin: stream_reader }
 
-let repl_stack: ref<list<repl_state>> = Util.mk_ref []
+type full_repl_state = { repl_line: int; repl_column: int; repl_fname: string;
+                         repl_deps: (deps_stack_t * m_timestamps);
+                         repl_curmod: modul_t; repl_env: env_t;
+                         repl_stdin: stream_reader; repl_names: CTable.table }
+
+type repl_state =
+| PartialReplState of partial_repl_state
+| FullReplState of full_repl_state
+
+let repl_stack: ref<list<full_repl_state>> = Util.mk_ref []
 
 let repl_stack_empty () =
   match !repl_stack with
@@ -669,14 +687,18 @@ let pop_repl env =
     if repl_stack_empty () then cleanup st'.repl_env;
     st'
 
-let push_repl push_kind st =
+let push_repl push_kind (st: full_repl_state) =
   repl_stack := st :: !repl_stack;
   push (set_check_kind st.repl_env push_kind) ""
 
-let json_of_repl_state st =
+let json_of_repl_state (st: repl_state) =
+  let deps =
+    match st with
+    | PartialReplState pst -> []
+    | FullReplState st -> snd st.repl_deps in
   JsonAssoc
     [("loaded-dependencies",
-      JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) (snd st.repl_deps)));
+      JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) deps));
      ("options",
       JsonList (List.map json_of_fstar_option (current_fstar_options (fun _ -> true))))]
 
@@ -690,22 +712,22 @@ let term_to_string tcenv t =
 let sigelt_to_string se =
   with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string se)
 
-let run_exit st =
+let run_exit (st: repl_state) =
   ((QueryOK, JsonNull), Inr 0)
 
-let run_describe_protocol st =
+let run_describe_protocol (st: repl_state) =
   ((QueryOK, JsonAssoc alist_of_protocol_info), Inl st)
 
-let run_describe_repl st =
+let run_describe_repl (st: repl_state) =
   ((QueryOK, json_of_repl_state st), Inl st)
 
-let run_protocol_violation st message =
+let run_protocol_violation (st: repl_state) message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
 
-let run_missing_current_module st message =
-  ((QueryNOK, JsonStr "Current module unset"), Inl st)
+let run_generic_error (st: repl_state) message =
+  ((QueryNOK, JsonStr message), Inl st)
 
-let run_pop st =
+let run_pop (st: full_repl_state) =
   if repl_stack_empty () then
     ((QueryNOK, JsonStr "Too many pops"), Inl st)
   else
@@ -786,7 +808,12 @@ let track_name_changes ((dsenv, tcenv): env_t)
        TcEnv.set_tc_hooks tcenv tcenv_old_hooks),
       List.rev !events))
 
-let run_push st kind text line column peek_only =
+let run_push (st: repl_state) query =
+  let { push_kind = kind; push_code = text; push_line = line;
+        push_column = column; push_peek_only = peek_only } = query in
+  match st with
+  | PartialReplState st -> failwith "CPC"
+  | FullReplState st ->
   let env = push_repl kind st in
 
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
@@ -824,7 +851,7 @@ let run_push st kind text line column peek_only =
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
 
-let run_symbol_lookup st symbol pos_opt requested_info =
+let run_symbol_lookup (st: full_repl_state) symbol pos_opt requested_info =
   let dsenv, tcenv = st.repl_env in
 
   let info_of_lid_str lid_str =
@@ -885,7 +912,7 @@ let run_option_lookup opt_name =
   | None -> Inl ("Unknown option:" ^ opt_name)
   | Some opt -> Inr ("option", alist_of_fstar_option (update_option opt))
 
-let run_module_lookup st symbol =
+let run_module_lookup (st: full_repl_state) symbol =
   let query = Util.split symbol "." in
   match CTable.find_module_or_ns st.repl_names query with
   | None ->
@@ -895,21 +922,21 @@ let run_module_lookup st symbol =
   | Some (CTable.Namespace ns_info) ->
     Inr ("namespace", CTable.alist_of_ns_info ns_info)
 
-let run_code_lookup st symbol pos_opt requested_info =
+let run_code_lookup (st: full_repl_state) symbol pos_opt requested_info =
   match run_symbol_lookup st symbol pos_opt requested_info with
   | Inr alist -> Inr alist
   | Inl _ -> match run_module_lookup st symbol with
             | Inr alist -> Inr alist
             | Inl err_msg -> Inl "No such symbol, module, or namespace."
 
-let run_lookup' st symbol context pos_opt requested_info =
+let run_lookup' (st: full_repl_state) symbol context pos_opt requested_info =
   match context with
   | LKSymbolOnly -> run_symbol_lookup st symbol pos_opt requested_info
   | LKModule -> run_module_lookup st symbol
   | LKOption -> run_option_lookup symbol
   | LKCode -> run_code_lookup st symbol pos_opt requested_info
 
-let run_lookup st symbol context pos_opt requested_info =
+let run_lookup (st: full_repl_state) symbol context pos_opt requested_info =
   match run_lookup' st symbol context pos_opt requested_info with
   | Inl err_msg ->
     ((QueryNOK, JsonStr err_msg), Inl st)
@@ -929,7 +956,7 @@ let run_code_autocomplete st search_term =
   let json = List.map CTable.json_of_completion_result (lids @ mods_and_nss) in
   ((QueryOK, JsonList json), Inl st)
 
-let run_module_autocomplete st search_term modules namespaces =
+let run_module_autocomplete (st: full_repl_state) search_term modules namespaces =
   let needle = Util.split search_term "." in
   let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle Some in
   let json = List.map CTable.json_of_completion_result mods_and_nss in
@@ -951,7 +978,7 @@ let candidates_of_fstar_option match_len is_reset opt =
           CTable.completion_candidate = snippet;
           CTable.completion_annotation = annot })
 
-let run_option_autocomplete st search_term is_reset =
+let run_option_autocomplete (st: full_repl_state) search_term is_reset =
   match trim_option_name search_term with
   | ("--", trimmed_name) ->
     let matcher opt = Util.starts_with opt.opt_name trimmed_name in
@@ -965,7 +992,7 @@ let run_option_autocomplete st search_term is_reset =
     ((QueryOK, JsonList json), Inl st)
   | (_, _) -> ((QueryNOK, JsonStr "Options should start with '--'"), Inl st)
 
-let run_autocomplete st search_term context =
+let run_autocomplete (st: full_repl_state) search_term context =
   match context with
   | CKCode ->
     run_code_autocomplete st search_term
@@ -974,8 +1001,8 @@ let run_autocomplete st search_term context =
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
 
-let run_compute st term rules =
-  let run_and_rewind st task =
+let run_compute (st: full_repl_state) term rules =
+  let run_and_rewind (st: full_repl_state) task =
     let env' = push st.repl_env "#compute" in
     let results = task st in
     pop env' "#compute";
@@ -1083,7 +1110,7 @@ let json_of_search_result dsenv tcenv sc =
 
 exception InvalidSearch of string
 
-let run_search st search_str =
+let run_search (st: full_repl_state) search_str =
   let dsenv, tcenv = st.repl_env in
   let empty_fv_set = SS.new_fv_set () in
 
@@ -1144,31 +1171,50 @@ let run_search st search_str =
     with InvalidSearch s -> (QueryNOK, JsonStr s) in
   (results, Inl st)
 
-let run_query st : query' -> (query_status * json) * either<repl_state,int> = function
+let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
+  let wrap r =
+    match r with
+    | (status, Inr n) -> (status, Inr n)
+    | (status, Inl full_st) -> (status, Inl (FullReplState full_st)) in
+  // First handle queries that support both partial and full states…
+  match q with
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
   | DescribeRepl -> run_describe_repl st
-  | Pop -> run_pop st
-  | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
-  | AutoComplete (search_term, context) -> run_autocomplete st search_term context
-  | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
-  | Compute (term, rules) -> run_compute st term rules
-  | Search term -> run_search st term
-  | MissingCurrentModule -> run_missing_current_module st query
+  | GenericError message -> run_generic_error st message
   | ProtocolViolation query -> run_protocol_violation st query
+  | Push push_query -> wrap <| run_push st push_query
+  | _ -> // … then queries that only work on full states
+    match st with
+    | PartialReplState _ ->
+      run_generic_error st "Please send a code fragment before running this query"
+    | FullReplState st ->
+      wrap
+       (match q with
+        | Pop -> run_pop st
+        | AutoComplete (search_term, context) -> run_autocomplete st search_term context
+        | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
+        | Compute (term, rules) -> run_compute st term rules
+        | Search term -> run_search st term
+        | Exit | DescribeProtocol | DescribeRepl
+        | GenericError _ | ProtocolViolation _ | Push _ -> failwith "impossible")
 
 let validate_query st (q: query) : query =
   match q.qq with
-  | Push (SyntaxCheck, _, _, _, false) ->
+  | Push { push_kind = SyntaxCheck; push_peek_only = false } ->
     { qid = q.qid; qq = ProtocolViolation "Cannot use 'kind': 'syntax' with 'query': 'push'" }
-  | _ -> match st.repl_curmod with
-        | None when query_needs_current_module q.qq ->
-          { qid = q.qid; qq = MissingCurrentModule }
+  | _ -> match st with
+        | FullReplState { repl_curmod = None } when query_needs_current_module q.qq ->
+          { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
+
+let stdin = function
+  | PartialReplState st -> st.prepl_stdin
+  | FullReplState st -> st.repl_stdin
 
 let rec go st : int =
   let rec loop st : int =
-    let query = validate_query st (read_interactive_query st.repl_stdin) in
+    let query = validate_query st (read_interactive_query (stdin st)) in
     let (status, response), state_opt = run_query st query.qq in
     write_response query.qid status response;
     match state_opt with
@@ -1260,9 +1306,9 @@ let interactive_mode' (filename: string): unit =
 
   let exit_code =
     if FStar.Options.record_hints() || FStar.Options.use_hints() then
-      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
+      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go (FullReplState init_st))
     else
-      go init_st in
+      go (FullReplState init_st) in
   exit exit_code
 
 let interactive_mode (filename:string): unit =
