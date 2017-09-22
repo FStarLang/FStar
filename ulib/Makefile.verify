@@ -16,7 +16,7 @@ extra: $(addsuffix -ver, $(EXTRA))
 indent: $(addsuffix -indent, $(ALL))
 
 %-ver: %
-	$(FSTAR) --debug $(basename $^) --debug_level 2-Phase-Checking $^
+	$(FSTAR) $^
 	touch $@
 
 %.fst-in:
