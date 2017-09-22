@@ -469,7 +469,7 @@ let norm_universe:
                | uu____2122 -> us1)
           | FStar_Syntax_Syntax.U_succ u3 ->
               let uu____2126 = aux u3 in
-              FStar_List.map (fun _0_41  -> FStar_Syntax_Syntax.U_succ _0_41)
+              FStar_List.map (fun _0_42  -> FStar_Syntax_Syntax.U_succ _0_42)
                 uu____2126 in
         let uu____2129 =
           FStar_All.pipe_right cfg.steps (FStar_List.contains EraseUniverses) in
@@ -730,7 +730,7 @@ let rec closure_as_term:
                               FStar_Syntax_Syntax.index =
                                 (uu___167_3118.FStar_Syntax_Syntax.index);
                               FStar_Syntax_Syntax.sort = ty
-                            }) (fun _0_42  -> FStar_Util.Inl _0_42)) in
+                            }) (fun _0_43  -> FStar_Util.Inl _0_43)) in
                     let uu___168_3119 = lb in
                     let uu____3120 =
                       closure_as_term cfg env2 lb.FStar_Syntax_Syntax.lbdef in

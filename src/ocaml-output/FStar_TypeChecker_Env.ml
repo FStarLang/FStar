@@ -2964,7 +2964,7 @@ let build_lattice: env -> FStar_Syntax_Syntax.sigelt -> env =
                 if FStar_Ident.lid_equals i j
                 then
                   FStar_All.pipe_right (id_edge i)
-                    (fun _0_40  -> FStar_Pervasives_Native.Some _0_40)
+                    (fun _0_41  -> FStar_Pervasives_Native.Some _0_41)
                 else
                   FStar_All.pipe_right order1
                     (FStar_Util.find_opt
@@ -3198,7 +3198,7 @@ let rec unfold_effect_abbrev:
                      FStar_Errors.Error uu____12260 in
                    FStar_Exn.raise uu____12259)
                 else ();
-                (let inst =
+                (let inst1 =
                    let uu____12284 =
                      let uu____12293 =
                        FStar_Syntax_Syntax.as_arg
@@ -3211,7 +3211,7 @@ let rec unfold_effect_abbrev:
                           | ((x,uu____12333),(t,uu____12335)) ->
                               FStar_Syntax_Syntax.NT (x, t)) binders1
                      uu____12284 in
-                 let c1 = FStar_Syntax_Subst.subst_comp inst cdef1 in
+                 let c1 = FStar_Syntax_Subst.subst_comp inst1 cdef1 in
                  let c2 =
                    let uu____12354 =
                      let uu___132_12355 = comp_to_comp_typ env c1 in
