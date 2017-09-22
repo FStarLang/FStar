@@ -220,7 +220,7 @@ let check_smt_pat env t bs c =
 (* guards the recursively bound names with a termination check                                              *)
 (************************************************************************************************************)
 let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
-    //if not (Env.should_verify env) then env.letrecs else -- AR: don't see harm in guarding letrecs even in lax mode ... 2 phase gives an error with this (unless we normalize after phase 1)
+    if not (Env.should_verify env) then env.letrecs else
     match env.letrecs with
     | [] -> []
     | letrecs ->
@@ -1036,7 +1036,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 in
 
                 let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
-                let envbody, letrecs = mk_letrec_env envbody bs c in //if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in  -- AR: perhaps ok to guard even in lax mode?
+                let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
                 let envbody = Env.set_expected_typ envbody (U.comp_result c) in
                 Some t, bs, letrecs, Some c, None, envbody, body, g
 
@@ -1936,7 +1936,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                   ignore <| Rel.discharge_guard env g;
                   norm env0 t) in
         let env = if termination_check_enabled lb.lbname e t
-                  //&& Env.should_verify env (* store the let rec names separately for termination checks *)  -- AR: commenting as part of guarding letrecs even in lax mode
+                  && Env.should_verify env (* store the let rec names separately for termination checks *)
                   then {env with letrecs=(lb.lbname,t)::env.letrecs}
                   else Env.push_let_binding env lb.lbname ([], t) in //no polymorphic recursion on universes
         let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
