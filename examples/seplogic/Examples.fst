@@ -55,14 +55,14 @@ let increment_tau :tactic unit =
   step;;
   dump "Foo";;
   pointwise (or_else (apply_lemma (quote lemma0);; qed) trefl);;
-  dump "Bar"
-  //smt
+  smt
 
-let increment_ok (r:addr) (h:heap) (x:int) =
+#set-options "--log_queries --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
+let increment_ok (r:addr) (h:heap) (y:int) =
   let c = Bind (Read r) (fun n -> Write r (n + 1)) in
-  let p = fun _ h -> sel h r == (x + 1) in
+  let p = fun _ h -> sel h r == (y + 1) in
   let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r == x ==> t) increment_tau
+  assert_by_tactic (sel h r == y ==> t) increment_tau
 
 (* Swapping two pointers *)
 let swap_tau :tactic unit =

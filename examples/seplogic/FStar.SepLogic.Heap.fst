@@ -24,11 +24,11 @@ let lemma0 (r:addr) (h:heap)
          (ensures  (join (restrict h r) (minus h r) == h))
   = admit ()
   
-let lemma1 (r:addr) (x:int) (h:heap)
-  :Lemma (requires True)
-         (ensures ((r `points_to` x) `join` (h `minus` r)) == h)
-	 [SMTPat ((r `points_to` x) `join` (h `minus` r))]
-  = admit()
+// let lemma1 (r:addr) (x:int) (h:heap)
+//   :Lemma (requires True)
+//          (ensures ((r `points_to` x) `join` (h `minus` r)) == h)
+// 	 [SMTPat ((r `points_to` x) `join` (h `minus` r))]
+//   = admit()
 
 let lemma2 (h1:heap) (h2:heap)
   :Lemma (requires True)
