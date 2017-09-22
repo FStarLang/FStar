@@ -2140,8 +2140,10 @@ let rec norm:
                    (FStar_Syntax_Syntax.Record_ctor uu____10858);_}
                -> rebuild cfg env stack1 t1
            | FStar_Syntax_Syntax.Tm_app (hd1,args) when
-               (FStar_Syntax_Util.is_fstar_tactics_embed hd1) ||
-                 (FStar_Syntax_Util.is_fstar_tactics_by_tactic hd1)
+               ((FStar_Syntax_Util.is_fstar_tactics_embed hd1) ||
+                  ((FStar_Syntax_Util.is_fstar_tactics_quote hd1) &&
+                     (FStar_List.contains NoDeltaSteps cfg.steps)))
+                 || (FStar_Syntax_Util.is_fstar_tactics_by_tactic hd1)
                ->
                let args1 = closures_as_args_delayed cfg env args in
                let hd2 = closure_as_term cfg env hd1 in
