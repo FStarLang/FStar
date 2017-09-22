@@ -54,11 +54,6 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
   in
   (intf, impl), (dsenv, env), remaining
 
-// Ibid.
-let tc_prims env = //:uenv =
-  let _, dsenv, env = tc_prims env in
-  (dsenv, env)
-
 type env_t = DsEnv.env * TcEnv.env
 type modul_t = option<Syntax.Syntax.modul>
 
@@ -1231,23 +1226,26 @@ let add_module_completions this_fname deps table =
 let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
-let interactive_mode' (filename: string): unit =
-  write_hello ();
-
-  let env = init_env () in
-  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
-
-  //type check prims and the dependencies
-  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
-  let env = tc_prims env in
+let tc_prims_and_deps env filename =
+  let _, dsenv, tcenv = tc_prims env in
   let deps, maybe_inferface = deps_of_our_file filename in
-  let env, repl_deps = tc_deps [] env deps [] in
+  let env, repl_deps = tc_deps [] (dsenv, tcenv) deps [] in
   let env = match maybe_inferface with
     | None -> env
     | Some intf ->
       // We found an interface: record its contents in the desugaring environment
       // to be interleaved with the module implementation on-demand
       FStar.Universal.load_interface_decls env intf in
+  (deps, repl_deps, env)
+
+let interactive_mode' (filename: string): unit =
+  write_hello ();
+
+  let env = init_env () in
+  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+
+  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
+  let deps, repl_deps, env = tc_prims_and_deps env filename in
   let env, name_events = finish_name_tracking env in // …end name tracking
 
   TcEnv.toggle_id_info (snd env) true;
