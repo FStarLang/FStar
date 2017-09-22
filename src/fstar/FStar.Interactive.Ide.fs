@@ -660,7 +660,7 @@ let trim_option_name opt_name =
 open FStar.Parser.ParseIt
 
 type partial_repl_state =
-  { prepl_fname: string; prepl_stdin: stream_reader }
+  { prepl_env: env_t; prepl_fname: string; prepl_stdin: stream_reader }
 
 type full_repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                          repl_deps: (deps_stack_t * m_timestamps);
@@ -808,12 +808,10 @@ let track_name_changes ((dsenv, tcenv): env_t)
        TcEnv.set_tc_hooks tcenv tcenv_old_hooks),
       List.rev !events))
 
-let run_push (st: repl_state) query =
+let run_regular_push (st: full_repl_state) query =
   let { push_kind = kind; push_code = text; push_line = line;
         push_column = column; push_peek_only = peek_only } = query in
-  match st with
-  | PartialReplState st -> failwith "CPC"
-  | FullReplState st ->
+
   let env = push_repl kind st in
 
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
@@ -850,6 +848,69 @@ let run_push (st: repl_state) query =
     let _, st'' = run_pop ({ st' with repl_env = env }) in
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
+
+let capitalize str =
+  if str = "" then str
+  else let first = String.substring str 0 1 in
+       String.uppercase first ^ String.substring str 1 (String.length str - 1)
+
+let add_module_completions this_fname deps table =
+  let mods =
+    FStar.Parser.Dep.build_inclusion_candidates_list () in
+  let loaded_mods_set =
+    List.fold_left
+      (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
+      (psmap_empty ()) (Options.prims () :: deps) in // Prims is an implicit dependency
+  let loaded modname =
+    psmap_find_default loaded_mods_set modname false in
+  let this_mod_key =
+    Parser.Dep.lowercase_module_name this_fname in
+  List.fold_left (fun table (modname, mod_path) ->
+      // modname is the filename part of mod_path
+      let mod_key = String.lowercase modname in
+      if this_mod_key = mod_key then
+        table // Exclude current module from completion
+      else
+        let ns_query = Util.split (capitalize modname) "." in
+        CTable.register_module_path table (loaded mod_key) mod_path ns_query)
+    table (List.rev mods) // List.rev to process files in order or *increasing* precedence
+
+let tc_prims_and_deps env filename =
+  let _, dsenv, tcenv = tc_prims env in
+  let deps, maybe_inferface = deps_of_our_file filename in
+  let env, repl_deps = tc_deps [] (dsenv, tcenv) deps [] in
+  let env = match maybe_inferface with
+    | None -> env
+    | Some intf ->
+      // We found an interface: record its contents in the desugaring environment
+      // to be interleaved with the module implementation on-demand
+      FStar.Universal.load_interface_decls env intf in
+  (deps, repl_deps, env)
+
+let run_initial_push (st: partial_repl_state) query =
+  assert (not query.push_peek_only);
+
+  let env = st.prepl_env in
+  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
+  let deps, repl_deps, env = tc_prims_and_deps env st.prepl_fname in
+  let env, name_events = finish_name_tracking env in // …end name tracking
+
+  TcEnv.toggle_id_info (snd env) true;
+
+  let initial_names =
+    add_module_completions st.prepl_fname deps CTable.empty in
+  let full_st =
+    { repl_line = 1; repl_column = 0; repl_fname = st.prepl_fname;
+      repl_curmod = None; repl_env = env; repl_deps = repl_deps;
+      repl_stdin = st.prepl_stdin;
+      repl_names = commit_name_tracking None initial_names name_events } in
+
+  run_regular_push full_st query
+
+let run_push (st: repl_state) query =
+  match st with
+  | PartialReplState st -> run_initial_push st query
+  | FullReplState st -> run_regular_push st query
 
 let run_symbol_lookup (st: full_repl_state) symbol pos_opt requested_info =
   let dsenv, tcenv = st.repl_env in
@@ -1176,14 +1237,13 @@ let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
     match r with
     | (status, Inr n) -> (status, Inr n)
     | (status, Inl full_st) -> (status, Inl (FullReplState full_st)) in
-  // First handle queries that support both partial and full states…
-  match q with
+  match q with // First handle queries that support both partial and full states…
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
   | DescribeRepl -> run_describe_repl st
   | GenericError message -> run_generic_error st message
   | ProtocolViolation query -> run_protocol_violation st query
-  | Push push_query -> wrap <| run_push st push_query
+  | Push pquery when pquery.push_peek_only = false -> wrap <| run_push st pquery
   | _ -> // … then queries that only work on full states
     match st with
     | PartialReplState _ ->
@@ -1196,8 +1256,9 @@ let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
         | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
         | Compute (term, rules) -> run_compute st term rules
         | Search term -> run_search st term
-        | Exit | DescribeProtocol | DescribeRepl
-        | GenericError _ | ProtocolViolation _ | Push _ -> failwith "impossible")
+        | Push pquery when pquery.push_peek_only = true -> run_regular_push st pquery
+        | Exit | DescribeProtocol | DescribeRepl | GenericError _
+        | ProtocolViolation _ | Push _ -> failwith "impossible")
 
 let validate_query st (q: query) : query =
   match q.qq with
@@ -1243,46 +1304,8 @@ let interactive_printer =
     printer_prerror = (fun s -> write_message "error" (JsonStr s));
     printer_prgeneric = (fun label get_string get_json -> write_message label (get_json ()) )}
 
-let capitalize str =
-  if str = "" then str
-  else let first = String.substring str 0 1 in
-       String.uppercase first ^ String.substring str 1 (String.length str - 1)
-
-let add_module_completions this_fname deps table =
-  let mods =
-    FStar.Parser.Dep.build_inclusion_candidates_list () in
-  let loaded_mods_set =
-    List.fold_left
-      (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
-      (psmap_empty ()) (Options.prims () :: deps) in // Prims is an implicit dependency
-  let loaded modname =
-    psmap_find_default loaded_mods_set modname false in
-  let this_mod_key =
-    Parser.Dep.lowercase_module_name this_fname in
-  List.fold_left (fun table (modname, mod_path) ->
-      // modname is the filename part of mod_path
-      let mod_key = String.lowercase modname in
-      if this_mod_key = mod_key then
-        table // Exclude current module from completion
-      else
-        let ns_query = Util.split (capitalize modname) "." in
-        CTable.register_module_path table (loaded mod_key) mod_path ns_query)
-    table (List.rev mods) // List.rev to process files in order or *increasing* precedence
-
 let initial_range =
   Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
-
-let tc_prims_and_deps env filename =
-  let _, dsenv, tcenv = tc_prims env in
-  let deps, maybe_inferface = deps_of_our_file filename in
-  let env, repl_deps = tc_deps [] (dsenv, tcenv) deps [] in
-  let env = match maybe_inferface with
-    | None -> env
-    | Some intf ->
-      // We found an interface: record its contents in the desugaring environment
-      // to be interleaved with the module implementation on-demand
-      FStar.Universal.load_interface_decls env intf in
-  (deps, repl_deps, env)
 
 let interactive_mode' (filename: string): unit =
   write_hello ();
@@ -1290,25 +1313,16 @@ let interactive_mode' (filename: string): unit =
   let env = init_env () in
   let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
 
-  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
-  let deps, repl_deps, env = tc_prims_and_deps env filename in
-  let env, name_events = finish_name_tracking env in // …end name tracking
-
-  TcEnv.toggle_id_info (snd env) true;
-
-  let initial_names =
-    add_module_completions filename deps CTable.empty in
   let init_st =
-    { repl_line = 1; repl_column = 0; repl_fname = filename;
-      repl_curmod = None; repl_env = env; repl_deps = repl_deps;
-      repl_stdin = open_stdin ();
-      repl_names = commit_name_tracking None initial_names name_events } in
+    PartialReplState ({ prepl_env = env;
+                        prepl_fname = filename;
+                        prepl_stdin = open_stdin () }) in
 
   let exit_code =
     if FStar.Options.record_hints() || FStar.Options.use_hints() then
-      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go (FullReplState init_st))
+      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
     else
-      go (FullReplState init_st) in
+      go init_st in
   exit exit_code
 
 let interactive_mode (filename:string): unit =
