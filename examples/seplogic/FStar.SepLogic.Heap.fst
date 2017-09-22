@@ -24,12 +24,6 @@ let lemma0 (r:addr) (h:heap)
          (ensures  (join (restrict h r) (minus h r) == h))
   = admit ()
   
-// let lemma1 (r:addr) (x:int) (h:heap)
-//   :Lemma (requires True)
-//          (ensures ((r `points_to` x) `join` (h `minus` r)) == h)
-// 	 [SMTPat ((r `points_to` x) `join` (h `minus` r))]
-//   = admit()
-
 let lemma2 (h1:heap) (h2:heap)
   :Lemma (requires True)
          (ensures (h1 `join` h2) == (h2 `join` h1))
@@ -65,3 +59,9 @@ let lemma7 (r:addr) (h:heap)
          (ensures (h `restrict` r) == (r `points_to` (sel h r)))
 	 [SMTPat (h `restrict` r)]
   = admit()
+
+let lemma8 (r:addr) (x:int) (y:int)
+  :Lemma (requires (points_to r x == points_to r y))
+         (ensures  (x == y))
+	 [SMTPat (points_to r x); SMTPat (points_to r y)]
+  = admit ()

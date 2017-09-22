@@ -53,11 +53,12 @@ let increment_tau :tactic unit =
   step;;
   step;;
   step;;
-  dump "Foo";;
   pointwise (or_else (apply_lemma (quote lemma0);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma6);; qed) trefl);;
+  dump "Foo";;
   smt
 
-#set-options "--log_queries --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
+#set-options "--initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
 let increment_ok (r:addr) (h:heap) (y:int) =
   let c = Bind (Read r) (fun n -> Write r (n + 1)) in
   let p = fun _ h -> sel h r == (y + 1) in
@@ -75,6 +76,9 @@ let swap_tau :tactic unit =
   step;;
   step;;
   step;;
+  pointwise (or_else (apply_lemma (quote lemma0);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma6);; qed) trefl);;
+  dump "Foo";;
   dump "Swap";;
   smt
 
