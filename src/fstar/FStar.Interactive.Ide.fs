@@ -81,7 +81,7 @@ let set_check_kind (dsenv, tcenv) check_kind =
 let cleanup (dsenv, env) =
   TcEnv.cleanup_interactive env
 
-let with_captured_errors env f =
+let with_captured_errors' env f =
   try
     f ()
   with
@@ -103,6 +103,10 @@ let with_captured_errors env f =
   | FStar.Errors.Err msg when not (Options.trace_error ()) ->
     FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
     None
+
+let with_captured_errors env f =
+  if Options.trace_error () then f ()
+  else with_captured_errors' env f
 
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
   with_captured_errors env (fun () ->
