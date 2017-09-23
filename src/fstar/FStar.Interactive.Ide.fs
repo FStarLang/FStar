@@ -902,30 +902,48 @@ let tc_prims_and_deps env filename =
       FStar.Universal.load_interface_decls env intf in
   (deps, repl_deps, env)
 
+let rephrase_dependency_error issue =
+  { issue with
+    issue_message = format1 "While loading dependencies: %s"
+                            issue.issue_message }
+
 let run_initial_push (st: partial_repl_state) query =
   assert (not query.push_peek_only);
 
   let env = st.prepl_env in
+
+  let on_successful_init (env, name_events) deps repl_deps  =
+    TcEnv.toggle_id_info (snd env) true;
+
+    let initial_names =
+      add_module_completions st.prepl_fname deps CTable.empty in
+    let full_st =
+      { repl_line = 1; repl_column = 0; repl_fname = st.prepl_fname;
+        repl_curmod = None; repl_env = env; repl_deps = repl_deps;
+        repl_stdin = st.prepl_stdin;
+        repl_names = commit_name_tracking None initial_names name_events } in
+
+    wrap_repl_state FullReplState <| run_regular_push full_st query in
+
+  let on_failed_init (env, name_events) =
+    let errors = List.map rephrase_dependency_error (collect_errors ()) in
+    let js_errors = errors |> List.map json_of_issue in
+    ((QueryNOK, JsonList js_errors), Inl (PartialReplState st)) in
+
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
-  let deps, repl_deps, env = tc_prims_and_deps env st.prepl_fname in
-  let env, name_events = finish_name_tracking env in // …end name tracking
 
-  TcEnv.toggle_id_info (snd env) true;
-
-  let initial_names =
-    add_module_completions st.prepl_fname deps CTable.empty in
-  let full_st =
-    { repl_line = 1; repl_column = 0; repl_fname = st.prepl_fname;
-      repl_curmod = None; repl_env = env; repl_deps = repl_deps;
-      repl_stdin = st.prepl_stdin;
-      repl_names = commit_name_tracking None initial_names name_events } in
-
-  run_regular_push full_st query
+  match with_captured_errors (snd env)
+          (fun () -> Some (tc_prims_and_deps env st.prepl_fname)) with
+  | Some (deps, repl_deps, env) ->
+    on_successful_init (finish_name_tracking env) deps repl_deps
+  | None ->
+    // CPC This should pop until the dependency checker's stack is empty
+    on_failed_init (finish_name_tracking env)
 
 let run_push (st: repl_state) query =
   match st with
   | PartialReplState st -> run_initial_push st query
-  | FullReplState st -> run_regular_push st query
+  | FullReplState st -> wrap_repl_state FullReplState <| run_regular_push st query
 
 let run_symbol_lookup (st: full_repl_state) symbol pos_opt requested_info =
   let dsenv, tcenv = st.repl_env in
