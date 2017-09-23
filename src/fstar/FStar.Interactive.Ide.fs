@@ -355,7 +355,7 @@ type query' =
 | DescribeRepl
 | Pop
 | Push of push_query
-| VfsAdd of string (* fname *) * string (* contents *)
+| VfsAdd of option<string> (* fname *) * string (* contents *)
 | AutoComplete of string * completion_context
 | Lookup of string * lookup_context * option<position> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
@@ -436,7 +436,8 @@ let unpack_interactive_query json =
                                   try_arg "rules"
                                     |> Util.map_option (js_list js_reductionrule))
            | "search" -> Search (arg "terms" |> js_str)
-           | "vfs-add" -> VfsAdd (arg "filename" |> js_str, arg "contents" |> js_str)
+           | "vfs-add" -> VfsAdd (try_arg "filename" |> Util.map_option js_str,
+                                 arg "contents" |> js_str)
            | _ -> ProtocolViolation (Util.format1 "Unknown query '%s'" query) }
   with
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
@@ -683,6 +684,14 @@ let wrap_repl_state fn r =
   | (status, Inr n) -> (status, Inr n)
   | (status, Inl full_st) -> (status, Inl (fn full_st))
 
+let repl_stdin = function
+  | PartialReplState st -> st.prepl_stdin
+  | FullReplState st -> st.repl_stdin
+
+let repl_fname = function
+  | PartialReplState st -> st.prepl_fname
+  | FullReplState st -> st.repl_fname
+
 let repl_stack: ref<list<full_repl_state>> = Util.mk_ref []
 
 let repl_stack_empty () =
@@ -739,7 +748,8 @@ let run_protocol_violation (st: repl_state) message =
 let run_generic_error (st: repl_state) message =
   ((QueryNOK, JsonStr message), Inl st)
 
-let run_vfs_add (st: repl_state) fname contents =
+let run_vfs_add (st: repl_state) opt_fname contents =
+  let fname = Util.dflt (repl_fname st) opt_fname in
   Parser.ParseIt.add_vfs_entry fname contents;
   ((QueryOK, JsonNull), Inl st)
 
@@ -1303,13 +1313,9 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
-let stdin = function
-  | PartialReplState st -> st.prepl_stdin
-  | FullReplState st -> st.repl_stdin
-
 let rec go st : int =
   let rec loop st : int =
-    let query = validate_query st (read_interactive_query (stdin st)) in
+    let query = validate_query st (read_interactive_query (repl_stdin st)) in
     let (status, response), state_opt = run_query st query.qq in
     write_response query.qid status response;
     match state_opt with
