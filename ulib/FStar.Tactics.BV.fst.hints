@@ -1,5 +1,5 @@
 [
-  "g¶ÔJ”\\±=>£\r~∞i\u0007ò",
+  "çS\u0012Tîî\"\\\nö∞Á•“ˇ\\",
   [
     [ "FStar.Tactics.BV.cong_bvand", 1, 2, 1, [ "@query" ], 0 ],
     [ "FStar.Tactics.BV.cong_bvand", 2, 2, 1, [ "@query" ], 0 ],
@@ -349,6 +349,18 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0
+    ],
+    [
+      "FStar.Tactics.BV.trans_lt2",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "eq2-interp",
+        "equation_Prims.eq2", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0
     ],
@@ -792,7 +804,7 @@
         "equation_FStar.Tactics.Effect.bind",
         "fuel_guarded_inversion_FStar.Pervasives.either",
         "kinding_FStar.Reflection.Arith.expr@tok",
-        "typing_FStar.Reflection.Arith.is_arith_expr",
+        "typing_FStar.Reflection.Arith.as_arith_expr",
         "typing_FStar.Reflection.Arith.run_tm", "unit_typing"
       ],
       0

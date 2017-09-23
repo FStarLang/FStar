@@ -7,8 +7,8 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.UInt8.t__haseq",
-        "equation_Ex12d.Pad.uint8", "equation_FStar.UInt8.t"
+        "@query", "assumption_FStar.UInt8.t_haseq",
+        "equation_Ex12d.Pad.uint8"
       ],
       0
     ],
@@ -66,9 +66,7 @@
       2,
       2,
       1,
-      [
-        "@query", "assumption_FStar.UInt8.t__haseq", "equation_FStar.UInt8.t"
-      ],
+      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
       0
     ]
   ]
