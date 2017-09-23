@@ -40,14 +40,19 @@ if menhir_tool:
 else:
   raise SCons.Errors.UserError('Cannot find menhir')
 
-def CopyEnvironmentVariable(env, name):
+# copy environment variable from the OS env block into child process env blocks,
+# if the variable exists on the OS side.
+def ForwardEnvironmentVariable(env, name):
   value = os.environ.get(name)
   if value:
     env['ENV'][name] = value
     
-CopyEnvironmentVariable(env, 'MENHIRLIB')
-CopyEnvironmentVariable(env, 'OCAMLFIND_CONF')
-CopyEnvironmentVariable(env, 'OCAML_TOPLEVEL_PATH')
+ForwardEnvironmentVariable(env, 'MENHIRLIB')
+ForwardEnvironmentVariable(env, 'OCAMLFIND_CONF')
+ForwardEnvironmentVariable(env, 'OCAML_TOPLEVEL_PATH')
+ForwardEnvironmentVariable(env, 'CAMLP4LIB')
+ForwardEnvironmentVariable(env, 'OCAMLLIB')
+
 env['MENHIRARGS']='' #'--explain --infer -la 1 --table'
 env['OCAMLLEX']='ocamllex'
 env['OCAMLBUILD']='ocamlbuild'
