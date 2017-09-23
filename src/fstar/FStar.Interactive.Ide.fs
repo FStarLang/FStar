@@ -815,6 +815,11 @@ let track_name_changes ((dsenv, tcenv): env_t)
        TcEnv.set_tc_hooks tcenv tcenv_old_hooks),
       List.rev !events))
 
+let collect_errors () =
+  let errors = FStar.Errors.report_all() in
+  FStar.Errors.clear ();
+  errors
+
 let run_regular_push (st: full_repl_state) query =
   let { push_kind = kind; push_code = text; push_line = line;
         push_column = column; push_peek_only = peek_only } = query in
@@ -837,9 +842,7 @@ let run_regular_push (st: full_repl_state) query =
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
   let res = check_frag env st.repl_curmod (frag, false) in
 
-  let errors = FStar.Errors.report_all() |> List.map json_of_issue in
-  FStar.Errors.clear ();
-
+  let errors = collect_errors () |> List.map json_of_issue in
   let st' = { st with repl_deps = deps; repl_line = line; repl_column = column } in
 
   match res with
