@@ -146,16 +146,16 @@ let lognot (x:t) : Pure t
 
 (* Shift operators *)
 abstract
-let shift_right (a:t) (s:t) : Pure t
-  (requires (v s < n))
-  (ensures (fun c -> v c = (v a / (pow2 (v s)))))
-  = Mk (shift_right (v a) (v s))
+let shift_right (a:t) (s:UInt32.t) : Pure t
+  (requires (UInt32.v s < n))
+  (ensures (fun c -> v c = (v a / (pow2 (UInt32.v s)))))
+  = Mk (shift_right (v a) (UInt32.v s))
 
 abstract
-let shift_left (a:t) (s:t) : Pure t
-  (requires (v s < n))
-  (ensures (fun c -> v c = ((v a * pow2 (v s)) % pow2 n)))
-  = Mk (shift_left (v a) (v s))
+let shift_left (a:t) (s:UInt32.t) : Pure t
+  (requires (UInt32.v s < n))
+  (ensures (fun c -> v c = ((v a * pow2 (UInt32.v s)) % pow2 n)))
+  = Mk (shift_left (v a) (UInt32.v s))
 
 (* Comparison operators *)
 let eq (a:t) (b:t) : Tot bool = eq #n (v a) (v b)
