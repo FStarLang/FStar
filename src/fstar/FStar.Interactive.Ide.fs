@@ -674,6 +674,11 @@ type repl_state =
 | PartialReplState of partial_repl_state
 | FullReplState of full_repl_state
 
+let wrap_repl_state fn r =
+  match r with
+  | (status, Inr n) -> (status, Inr n)
+  | (status, Inl full_st) -> (status, Inl (fn full_st))
+
 let repl_stack: ref<list<full_repl_state>> = Util.mk_ref []
 
 let repl_stack_empty () =
@@ -1243,10 +1248,6 @@ let run_search (st: full_repl_state) search_str =
   (results, Inl st)
 
 let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
-  let wrap r =
-    match r with
-    | (status, Inr n) -> (status, Inr n)
-    | (status, Inl full_st) -> (status, Inl (FullReplState full_st)) in
   match q with // First handle queries that support both partial and full states…
   | Exit -> run_exit st
   | DescribeProtocol -> run_describe_protocol st
@@ -1254,13 +1255,13 @@ let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
   | GenericError message -> run_generic_error st message
   | ProtocolViolation query -> run_protocol_violation st query
   | VfsAdd (fname, contents) -> run_vfs_add st fname contents
-  | Push pquery when pquery.push_peek_only = false -> wrap <| run_push st pquery
+  | Push pquery when pquery.push_peek_only = false -> run_push st pquery
   | _ -> // … then queries that only work on full states
     match st with
     | PartialReplState _ ->
       run_generic_error st "Please send a code fragment before running this query"
     | FullReplState st ->
-      wrap
+      wrap_repl_state FullReplState
        (match q with
         | Pop -> run_pop st
         | AutoComplete (search_term, context) -> run_autocomplete st search_term context
