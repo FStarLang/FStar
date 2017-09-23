@@ -307,22 +307,49 @@ ExtractionTargets = [
   ('extract_all',        'extract_tactics extract_reflection extract_misc extract_syntax extract_parser extract_typechecker extract_tosyntax extract_smtencoding extract_extraction extract_fstar')
 ]
 
+# This class is a wrapper on the Command Action.  It
+# overrides CommandAction.process in order to munge the
+# command line passed to fstar, to fold in the --extract-module
+# arguments.
+class FStarBatchAction(SCons.Action.CommandAction):
+  def __init__(self, cmd, **kw):
+    SCons.Action.CommandAction.__init__(self, cmd, **kw)
+
+  def process(self, target, source, env, executor=None):
+    old_cmd_list = self.cmd_list
+    if executor:
+      lvars = executor.get_lvars()
+      changed_targets = lvars['CHANGED_TARGETS'] # get the list of changed target files
+      e = env['FSTAR_EXTRACTIONS']
+      for c in changed_targets:
+        c = str(c).replace('\\', '/')    # For Windows, convert back into '/' based paths
+        for action in e.actions:         # Search for this source file in the ExtractionActions
+          if action.target == c:
+            self.cmd_list += ' ' + action.command # Found:  append the --extract-module command
+            break
+    # Call the CommandAction's process to do variable substitutions, etc.
+    cmd_list, ignore, silent = SCons.Action.CommandAction.process(self, target, source, env, executor)
+    # Restore the old self.cmd_list, which is included in the hash of this
+    # Action.  Otherwise, differing $CHANGED_TARGETS will trigger rebuilds
+    # due to differing hashes.
+    self.cmd_list = old_cmd_list
+    return cmd_list, ignore, silent
+
 # Generate SCons targets for each Extraction entry
 extraction_targets = {}
 for name, e in Extractions:
   command = '$FSTAR $FSTARARGS $CHANGED_SOURCES ' + e.commonaction + ' '
-  for action in e.actions:
-    command += ' ' + action.command
   # Set batch_key=None to have Scons launch fstar.exe separately for each .ml file to extract
-  fstar_builder = Builder(action=Action(command, batch_key=True, targets='$CHANGED_TARGETS'))
+  fstar_builder = Builder(action=FStarBatchAction(command, batch_key=True, targets='$CHANGED_TARGETS'))
   # Clone the environment for each Extraction, so each can have a different
   # FStarBuilder.  Their command lines all differ.
-  benv = env.Clone()
-  benv.Append(BUILDERS={'FStarBuilder':fstar_builder})
+  batchenv = env.Clone()
+  batchenv.Append(BUILDERS={'FStarBuilder':fstar_builder})
+  batchenv['FSTAR_EXTRACTIONS'] = e # pass the set of extractions via side-channel, to FStarBatchAction
   for action in e.actions:
-    t_cmd = benv.FStarBuilder(action.target, action.source)
+    t_cmd = batchenv.FStarBuilder(action.target, action.source)
     Depends(t_cmd, boot_target)     # ensure boot files are built ahead of extraction
-    benv.Alias(name, t_cmd)         # add this target to the alias
+    batchenv.Alias(name, t_cmd)     # add this target to the alias
 
 # Turn the ExtractionTargets[] into actual SCons targets
 for name, targets in ExtractionTargets:
