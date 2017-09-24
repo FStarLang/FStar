@@ -55,6 +55,11 @@ let run t p = t.tac_f p
 let ret (x:'a) : tac<'a> =
     mk_tac (fun p -> Success (x, p))
 
+let decr_depth (ps:proofstate) : proofstate =
+    { ps with depth = ps.depth - 1 }
+let incr_depth (ps:proofstate) : proofstate =
+    { ps with depth = ps.depth + 1 }
+
 (* monadic bind *)
 let bind (t1:tac<'a>) (t2:'a -> tac<'b>) : tac<'b> =
     mk_tac (fun p ->
@@ -105,7 +110,8 @@ let dump_cur ps msg =
         dump_goal ps (List.hd ps.goals)
         end
 
-let ps_to_string (msg, ps) = format5 "State dump (%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
+let ps_to_string (msg, ps) = format6 "State dump @ depth %s(%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
+                (string_of_int ps.depth)
                 msg (string_of_int (List.length ps.goals)) (String.concat "\n" (List.map goal_to_string ps.goals))
                 (string_of_int (List.length ps.smt_goals)) (String.concat "\n" (List.map goal_to_string ps.smt_goals))
 let goal_to_json g =
@@ -138,6 +144,11 @@ let print_proof_state1 (msg:string) : tac<unit> =
 let print_proof_state (msg:string) : tac<unit> =
     mk_tac (fun p -> dump_proofstate p msg;
                      Success ((), p))
+
+let tracepoint ps : unit =
+    if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ())
+    then dump_proofstate ps "TRACE"
+    else ()
 
 (* get : get the current proof state *)
 let get : tac<proofstate> =
@@ -960,6 +971,7 @@ let proofstate_of_goal_ty env typ =
         all_implicits = g_u.implicits;
         goals = [g];
         smt_goals = [];
+        depth = 0;
     }
     in
     (ps, g.witness)

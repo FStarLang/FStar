@@ -144,6 +144,8 @@ val smtencoding_nl_arith_native : unit -> bool
 val smtencoding_l_arith_default : unit -> bool
 val smtencoding_l_arith_native  : unit -> bool
 val split_cases                 : unit    -> int
+val tactic_trace                : unit    -> bool
+val tactic_trace_d              : unit    -> int
 val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
 val ugly                        : unit    -> bool

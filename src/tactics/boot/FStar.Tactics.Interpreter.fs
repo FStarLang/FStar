@@ -152,6 +152,43 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                (e_f : 'f -> term) (tc : typ) : N.primitive_step =
         mk name 6 (mk_tactic_interpretation_5 ps f u_a u_b u_c u_d u_e e_f tc)
     in
+    let decr_depth_interp rng (args : args) =
+        match args with
+        | [(ps, _)] -> Some (E.embed_proofstate (decr_depth (E.unembed_proofstate ps)))
+        | _ -> failwith "Unexpected application of decr_depth"
+    in
+    let decr_depth_step : N.primitive_step =
+        {N.name = Ident.lid_of_str "FStar.Tactics.Effect.__decr_depth";
+         N.arity = 1;
+         N.strong_reduction_ok = false;
+         N.interpretation = decr_depth_interp
+         }
+    in
+    let incr_depth_interp rng (args : args) =
+        match args with
+        | [(ps, _)] -> Some (E.embed_proofstate (incr_depth (E.unembed_proofstate ps)))
+        | _ -> failwith "Unexpected application of incr_depth"
+    in
+    let incr_depth_step : N.primitive_step =
+        {N.name = Ident.lid_of_str "FStar.Tactics.Effect.__incr_depth";
+         N.arity = 1;
+         N.strong_reduction_ok = false;
+         N.interpretation = incr_depth_interp
+         }
+    in
+    let tracepoint_interp rng (args : args) =
+        match args with
+        | [(ps, _)] -> (tracepoint (E.unembed_proofstate ps); Some U.exp_unit)
+        | _ -> failwith "Unexpected application of tracepoint"
+    in
+    let tracepoint_step : N.primitive_step =
+        let nm = Ident.lid_of_str "FStar.Tactics.Effect.__tracepoint" in
+        {N.name = nm;
+         N.arity = 1;
+         N.strong_reduction_ok = false;
+         N.interpretation = tracepoint_interp
+        }
+    in
     [
       mktac0 "__trivial"       trivial embed_unit t_unit;
       mktac2 "__trytac"        (fun _ -> trytac) (fun t-> t) (unembed_tactic_0 (fun t -> t)) (embed_option (fun t -> t) t_unit) t_unit;
@@ -207,6 +244,9 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term RD.fstar_refl_term;
       mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
+      decr_depth_step;
+      incr_depth_step;
+      tracepoint_step;
     ]@reflection_primops @native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output

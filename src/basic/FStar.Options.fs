@@ -175,6 +175,8 @@ let defaults =
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("split_cases"                  , Int 0);
+      ("tactic_trace"                 , Bool false);
+      ("tactic_trace_d"               , Int 0);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
@@ -279,6 +281,8 @@ let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
+let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
+let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
@@ -730,6 +734,17 @@ let rec specs () : list<Getopt.opt> =
         "Partition VC of a match into groups of [n] cases");
 
        ( noshort,
+        "tactic_trace",
+        ZeroArgs (fun () -> mk_bool true),
+        "Print a depth-indexed trace of tactic execution (Warning: very verbose)");
+
+       ( noshort,
+        "tactic_trace_d",
+        OneArg ((fun n -> mk_int (int_of_string n)),
+                 "[positive integer]"),
+        "Trace tactics up to a certain binding depth");
+
+       ( noshort,
         "timing",
         ZeroArgs (fun () -> mk_bool true),
         "Print the time it takes to verify each top-level definition");
@@ -922,6 +937,8 @@ let settable = function
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
     | "no_tactics"
+    | "tactic_trace"
+    | "tactic_trace_d"
     | "using_facts_from"
     | "__temp_no_proj"
     | "reuse_hint_for"
@@ -1136,6 +1153,8 @@ let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwra
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let split_cases                  () = get_split_cases                 ()
+let tactic_trace                 () = get_tactic_trace                ()
+let tactic_trace_d               () = get_tactic_trace_d              ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
