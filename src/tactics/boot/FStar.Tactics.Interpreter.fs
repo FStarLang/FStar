@@ -45,7 +45,7 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run t ps in
     Some (E.embed_result ps res embed_a t_a)
   | _ ->
@@ -61,7 +61,7 @@ let mk_tactic_interpretation_1 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run (t (unembed_b b)) ps in
     Some (E.embed_result ps res embed_a t_a)
   | _ ->
@@ -77,7 +77,7 @@ let mk_tactic_interpretation_2 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run (t (unembed_a a) (unembed_b b)) ps in
     Some (E.embed_result ps res embed_c t_c)
   | _ ->
@@ -93,7 +93,7 @@ let mk_tactic_interpretation_3 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run (t (unembed_a a) (unembed_b b) (unembed_c c)) ps in
     Some (E.embed_result ps res embed_d t_d)
   | _ ->
@@ -111,7 +111,7 @@ let mk_tactic_interpretation_5 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run (t (unembed_a a) (unembed_b b) (unembed_c c) (unembed_d d) (unembed_e e)) ps in
     Some (E.embed_result ps res embed_f t_f)
   | _ ->
