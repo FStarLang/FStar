@@ -150,7 +150,7 @@ let mul_mod #n a b =
   (a * b) % (pow2 n)
 
 val mul_div: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
-#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 20"
+#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 40"
 let mul_div #n a b =
   FStar.Math.Lemmas.lemma_mult_lt_sqr a b (pow2 n);
   (a * b) / (pow2 n)
