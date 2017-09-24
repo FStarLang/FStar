@@ -87,35 +87,6 @@ let alloc #a rel h x mm =
 let free_mm #a #rel h r =
   { h with memory = (fun r' -> if r' = r.addr then None else h.memory r') }
 
-let restrict h s =
-  { h with memory = (fun r' -> if Set.mem r' s
-			    then h.memory r'
-			    else None) }
-			    
-let exclude h s =
-  { h with memory = (fun r' -> if Set.mem r' s 
-                                                          then None
-		                      else h.memory r') }
-let disjoint h1 h2 =
-  let _ = () in
-  (forall (r:nat). ~(Some?(h1.memory r) && Some?(h2.memory r))) 
-
-let join_tot h1 h2 =
-  let heap_memory = (fun r' ->  match (h1.memory r', h2.memory r') with
-                              | (Some v1, None) -> Some v1 
-			      | (None, Some v2) -> Some v2
-			      | (None, None) -> None) in
-
-  if (h1.next_addr < h2.next_addr)
-  then { h2 with memory = heap_memory }
-  else { h1 with memory = heap_memory }
-
-(* should join return an empty heap if input heaps are disjoint? *)
-let join h1 h2 = 
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (disjoint h1 h2) 
-  then join_tot h1 h2
-  else emp
-  
 (*
  * update of a well-typed mreference
  *)
@@ -218,23 +189,7 @@ let lemma_sel_equals_sel_tot_for_contained_refs #a #rel h r = ()
 let lemma_upd_equals_upd_tot_for_contained_refs #a #rel h r x = ()
 let lemma_modifies_and_equal_dom_sel_diff_addr #a #rel s h0 h1 r = ()
 
-let lemma_restrict_contains #a #rel h s r = ()
-let lemma_restrict_unused #a #rel h s r = ()
-let lemma_restrict_sel #a #rel h s r = ()
-let lemma_join_contains #a #rel h1 h2 r = ()
-let lemma_join_unused #a #rel h1 h2 r = ()
-let lemma_join_sel #a #rel h1 h2 r = ()
-let lemma_disjoint_emp h1 h2 = ()
-let lemma_join_emp h1 h2 = ()
-let lemma_disjoint_comm h1 h2 = ()
-let lemma_join_comm h1 h2 = ()
-let lemma_subheap_disj h1 h2 h3 = ()
-let lemma_heapjoin_disj h1 h2 h3 = ()
-let lemma_join_assoc h1 h2 h3 = ()
-let lemma_exclude_contains #a #rel h s r = ()
-let lemma_exclude_unused #a #rel h s r = ()
-let lemma_exclude_sel #a #rel h s r = ()
-let lemma_join_restrict_exclude h s = ()
+
 (*** Untyped views of references *)
 
 (* Definition and ghost decidable equality *)

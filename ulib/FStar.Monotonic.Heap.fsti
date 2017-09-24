@@ -62,16 +62,6 @@ val alloc: #a:Type0 -> rel:preorder a -> heap -> a -> mm:bool -> Tot (mref a rel
 
 val free_mm: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` r /\ is_mm r} -> GTot heap
 
-val restrict: h:heap -> s:set nat -> GTot heap
-
-val exclude: h:heap -> s:set nat -> GTot heap
-
-val disjoint: h1:heap -> h2:heap -> Tot Type0
-
-val join_tot: h1:heap -> h2:heap{disjoint h1 h2} -> GTot heap
-
-val join: h1:heap -> h2:heap -> GTot heap
-
 let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (rel:preorder a) (r:mref a rel).{:pattern (sel h1 r)}
                                ((~ (TS.mem (addr_of r) s)) /\ h0 `contains` r) ==> sel h1 r == sel h0 r) /\
@@ -251,99 +241,6 @@ val lemma_modifies_and_equal_dom_sel_diff_addr
          (ensures  (sel h0 r == sel h1 r))
 	 [SMTPat (modifies s h0 h1); SMTPat (equal_dom h0 h1); SMTPat (sel h1 r)]
 
-val lemma_restrict_contains (#a:Type0) (#rel:preorder a) (h:heap) (s:set nat) (r:mref a rel)
-  :Lemma (requires True)
-	 (ensures (let h1 = restrict h s in 
-		   (h1 `contains` r) <==> (h `contains` r /\ Set.mem (addr_of r) s)))
-         [SMTPat ((restrict h s) `contains` r)]
-
-val lemma_restrict_unused (#a:Type0) (#rel:preorder a) (h:heap) (s:set nat) (r:mref a rel)
-  :Lemma (requires True)
-         (ensures (let h1 = restrict h s in
-	           (r `unused_in` h1) <==> (r `unused_in` h \/ ~(Set.mem (addr_of r) s))))
-         [SMTPat (r `unused_in` (restrict h s))]
-
-val lemma_restrict_sel (#a:Type0) (#rel:preorder a) (h:heap) (s:set nat) (r:mref a rel)
-  :Lemma (requires (Set.mem (addr_of r) s))
-         (ensures (let h1 = restrict h s in
-	           (sel h1 r == sel h r)))
-         [SMTPat (sel (restrict h s) r)]
-
- 
-val lemma_join_contains (#a:Type0) (#rel:preorder a) (h1:heap) (h2:heap) (r:mref a rel)
-  :Lemma (requires (disjoint h1 h2))
-         (ensures (let h = join h1 h2 in
-                   (h `contains` r) <==> ((h1 `contains` r) \/ (h2 `contains` r))))	   
-         [SMTPat ((join h1 h2) `contains` r)]
-
-val lemma_join_unused (#a:Type0) (#rel:preorder a) (h1:heap) (h2:heap) (r:mref a rel)
-  :Lemma (requires (disjoint h1 h2))
-         (ensures (let h = join h1 h2 in
-	           (r `unused_in` h) <==> ((r `unused_in` h1) /\ (r `unused_in` h2))))
-	 [SMTPat (r `unused_in` (join h1 h2))]
-
-val lemma_join_sel (#a:Type0) (#rel:preorder a) (h1:heap) (h2:heap) (r:mref a rel)
-  :Lemma (requires (disjoint h1 h2))
-         (ensures (let h = join h1 h2 in
-	           (sel h r == sel h1 r) \/ (sel h r == sel h2 r)))
-	 [SMTPat (sel (join h1 h2) r)] 	  
-
-val lemma_disjoint_emp (h1:heap) (h2:heap)
-  :Lemma (requires (equal h2 emp))
-         (ensures (disjoint h1 h2))
- 	 [SMTPat (disjoint h1 h2)]
-
-val lemma_join_emp (h1:heap) (h2:heap)
-  :Lemma (requires (equal h2 emp))
-         (ensures (equal h1 (join h1 h2)))
-	 [SMTPat (join h1 h2)]
-
-val lemma_disjoint_comm (h1:heap) (h2:heap)
-  :Lemma (requires True)
-         (ensures (disjoint h1 h2) <==> (disjoint h2 h1))
-	 [SMTPat (disjoint h1 h2)]
-
-val lemma_join_comm (h1:heap) (h2:heap)
-  :Lemma (requires True)
-         (ensures (equal (join h1 h2) (join h2 h1)))
-	 [SMTPat (join h1 h2)]
-
-val lemma_subheap_disj (h1:heap) (h2:heap) (h3:heap)
-  :Lemma (requires (disjoint h1 (join h2 h3) /\ disjoint h2 h3))
-         (ensures (disjoint h1 h2) /\ (disjoint h1 h3))
-	 [SMTPat (disjoint h1 (join h2 h3)); SMTPatT (disjoint h2 h3)]
-
-val lemma_heapjoin_disj (h1:heap) (h2:heap) (h3:heap)
-  :Lemma (requires (disjoint h1 h2) /\ (disjoint h1 h3))
-         (ensures (disjoint h1 (join h2 h3)))
-	 [SMTPat (disjoint h1 (join h2 h3))]
-
-val lemma_join_assoc (h1:heap) (h2:heap) (h3:heap)
-  :Lemma (requires disjoint h1 h2 /\ disjoint h1 h3 /\ disjoint h2 h3)
-         (ensures (equal (join h1 (join h2 h3)) (join (join h1 h2) h3)))
-	 [SMTPat (join h1 (join h2 h3))]
-
-val lemma_exclude_contains (#a:Type0) (#rel:preorder a) (h:heap) (s:set nat) (r:mref a rel)
-  :Lemma (requires True)
-              (ensures (let h1 = exclude h s in
-	          (h1 `contains` r) <==> (h `contains` r /\ ~(Set.mem (addr_of r) s))))
-              [SMTPat ((exclude h s) `contains` r)]	
-
-val lemma_exclude_unused (#a:Type0) (#rel:preorder a) (h:heap) (s:set nat) (r:mref a rel)
-  :Lemma (requires True)
-              (ensures (let h1 = exclude h s in
-	          (r `unused_in` h1) <==> (r `unused_in` h \/ Set.mem (addr_of r) s)))
-              [SMTPat (r `unused_in` (exclude h s))]
-	      
-val lemma_exclude_sel (#a:Type0) (#rel:preorder a) (h:heap) (s:set nat) (r:mref a rel)
-  :Lemma (requires ~(Set.mem (addr_of r) s))
-              (ensures (let h1 = exclude h s in
-	          (sel h1 r == sel h r)))
-              [SMTPat (sel (exclude h s) r)]
-
-val lemma_join_restrict_exclude (h:heap) (s:set nat)
-  :Lemma (requires True)
-              (ensures (h `equal` ((restrict h s) `join` (exclude h s))))
 (*** Untyped views of monotonic references *)
 
 (* Definition and ghost decidable equality *)

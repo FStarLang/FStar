@@ -22,8 +22,9 @@ abstract let points_to (r:addr) (x:int) :heap
 let lemma0 (r:addr) (h:heap)
   :Lemma (requires True)
          (ensures  (join (restrict h r) (minus h r) == h))
+	 [SMTPat ((h `restrict` r) `join` (h `minus` r))]
   = admit ()
-  
+
 let lemma2 (h1:heap) (h2:heap)
   :Lemma (requires True)
          (ensures (h1 `join` h2) == (h2 `join` h1))
