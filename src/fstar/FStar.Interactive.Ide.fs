@@ -129,28 +129,48 @@ let check_frag (dsenv, tcenv) curmod frag =
 (* Dependency checks *)
 (*********************)
 
-let deps_of_our_file filename =
-  (* Now that fstar-mode.el passes the name of the current file, we must parse
-   * and lax-check everything but the current module we're editing. This
-   * function may, optionally, return an interface if the currently edited
-   * module is an implementation and an interface was found. *)
-  let deps = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
-  let deps, same_name = List.partition (fun x ->
-    Parser.Dep.lowercase_module_name x <> Parser.Dep.lowercase_module_name filename
-  ) deps in
-  let maybe_intf = match same_name with
-    | [ intf; impl ] ->
-        if not (Parser.Dep.is_interface intf) || not (Parser.Dep.is_implementation impl) then
-          Util.print_warning (Util.format2 "Found %s and %s but not an interface + implementation" intf impl);
-        Some intf
-    | [ impl ] ->
-        None
+(** Compute dependencies of `filename` and steps needed to load them.
+
+The dependencies are a list of file name.  The steps are a list of
+``load_dependency_task`` elements, to be executed by ``load_one``. **)
+
+let deps_and_load_tasks_of_our_file filename =
+  let get_mod_name fname =
+    Parser.Dep.lowercase_module_name fname in
+  let our_mod_name =
+    get_mod_name filename in
+  let has_our_mod_name f =
+    (get_mod_name f = our_mod_name) in
+
+  let prims_fname =
+    Options.prims () in
+  let deps =
+    prims_fname ::
+    (FStar.Dependencies.find_deps_if_needed
+      Parser.Dep.VerifyFigureItOut [filename]) in
+
+  let same_name, real_deps =
+    List.partition has_our_mod_name deps in
+
+  let load_intf_tasks =
+    match same_name with
+    | [intf; impl] ->
+      if not (Parser.Dep.is_interface intf) then
+         raise (Err (Util.format1 "Expecting an interface, got %s" intf));
+      if not (Parser.Dep.is_implementation impl) then
+         raise (Err (Util.format1 "Expecting an implementation, got %s" impl));
+      [LDInterfaceOfCurrentFile intf]
+    | [impl] ->
+      []
     | _ ->
-        Util.print_warning (Util.format1 "Unsupported: ended up with %s" (String.concat " " same_name));
-        None
-  in
-  let prims_fname = Options.prims () in
-  prims_fname :: deps, maybe_intf
+      let mods_str = String.concat " " same_name in
+      let message = "Too many or too few files matching %s: %s" in
+      raise (Err (Util.format2 message our_mod_name mods_str));
+      [] in
+
+  let tasks =
+    tasks_of_deps deps load_intf_tasks in
+  deps, tasks
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
