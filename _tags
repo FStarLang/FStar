@@ -11,6 +11,9 @@ true: \
   package(batteries), \
   package(zarith)
 
+<ulib/ml/*.ml> or <ulib/ml/extracted/*.ml>:
+  package(ppx_deriving.show)
+
 # ADL: the new unicode lexer
 "src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)
 
@@ -30,8 +33,10 @@ true: \
 
 <ulib/ml/FStar_{U,}Int*.ml> or "ulib/ml/fstarlib.cma": \
   linkpkg, \
-  package(stdint)
+  package(stdint), \
+  package(ppx_deriving.show)
 
 "ulib/ml/fstarlib.cma": \
-  package(stdint)
+  package(stdint), \
+  package(ppx_deriving.show)
 

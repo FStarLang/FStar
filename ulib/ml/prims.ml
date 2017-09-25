@@ -1,5 +1,7 @@
 (** The [int] type and the various default operators. *)
 type int      = Big_int_Z.big_int
+(* TODO : may be better to integrate with deriving syntax *)
+let pp_int = Z.pp_print
 type nonzero  = int
 let ( + )     = Big_int_Z.add_big_int
 let ( - )     = Big_int_Z.sub_big_int
@@ -16,20 +18,20 @@ let parse_int = Big_int_Z.big_int_of_string
 let to_string = Big_int_Z.string_of_big_int
 
 (** Some misc. types defined in Prims *)
-type nonrec unit = unit
-type nonrec bool = bool
-type nonrec string = string
-type nonrec 'a array = 'a array
-type nonrec exn = exn
-type nonrec 'a list = 'a list
-type nonrec 'a option = 'a option
+type nonrec unit = unit [@@deriving show]
+type nonrec bool = bool  [@@deriving show]
+type nonrec string = string [@@deriving show]
+type nonrec 'a array = 'a array [@@deriving show]
+type nonrec exn = exn [@@deriving show]
+type nonrec 'a list = 'a list [@@deriving show]
+type nonrec 'a option = 'a option [@@deriving show]
 
-type range     = unit
-type nat       = int
-type pos       = int
-type 'd b2t    = unit
+type range     = unit [@@deriving show]
+type nat       = int [@@deriving show]
+type pos       = int [@@deriving show]
+type 'd b2t    = unit [@@deriving show]
 
-type 'a squash = unit
+type 'a squash = unit [@@deriving show]
 
 type (' p, ' q) c_or =
   | Left of ' p
