@@ -37,34 +37,45 @@ module U64 = FStar.UInt64
 module Str = FStar.String
 module Chr = FStar.Char
 
+(** Realized by uint8_t in C and int in OCaml (char does not have necessary operators...) *)
 type byte = U8.t
+
+(** Realized by uint8_t* in C and string in OCaml.
+    This is a variant for which length is NOT available at runtime *)
 abstract type bytes = S.seq byte
 
+(** Expose the represewntation for specs that need lemmas not defined here. *)
 let reveal (b:bytes) : GTot (S.seq byte) = b
 let hide (s:S.seq byte) : GTot (b:bytes{reveal b = s}) = s
 
-let length (b:bytes) : Tot (n:nat{n = S.length (reveal b)}) = S.length b
+let length (b:bytes) : GTot (n:nat{n = S.length (reveal b)}) = S.length b
 type lbytes (l:nat) = b:bytes{length b = l}
+type kbytes (k:nat) = b:bytes{length b < pow2 k}
+
 let empty_bytes : lbytes 0 = S.createEmpty
 let lemma_empty (b:bytes)
   : Lemma (length b = 0 ==> b = empty_bytes)
-  [SMTPat (b)] = S.lemma_empty b
+  [SMTPat (length b)] = S.lemma_empty b
 
+(** If you statically know the length, it is OK to read at arbitrary indexes *)
 let get (b:bytes) (pos:nat{pos < length b}) : Tot byte = Seq.index b pos
 unfold let op_String_Access (b:bytes) (i:nat{i < length b}) = get b i
 
-type bytes8 = b:bytes{length b < pow2 8}
-let length8 (b:bytes8) : U8.t = U8.uint_to_t (length b)
+(** If the length of bytes is not known statically, use on of these variants
+    that carry length information inside a machine integer carried with the bytes.
+    In C, realized by {uintX_t len; uint8_t *b} - in OCaml, still string *)
+type bytes8 = kbytes 8
+let length8 (b:bytes8) : n:U8.t{U8.v n = length b} = U8.uint_to_t (S.length b)
 type lbytes8 (l:U8.t) = b:bytes8{length8 b = l}
 let get8 (b:bytes8) (i:U8.t{U8.(i <^ length8 b)}) = b.[U8.v i]
 
-type bytes16 = b:bytes{length b < pow2 16}
-let length16 (b:bytes16) : U16.t = U16.uint_to_t (length b)
+type bytes16 = kbytes 16
+let length16 (b:bytes16) : n:U16.t{U16.v n = length b} = U16.uint_to_t (S.length b)
 type lbytes16 (l:U16.t) = b:bytes16{length16 b = l}
 let get16 (b:bytes16) (i:U16.t{U16.(i <^ length16 b)}) = b.[U16.v i]
 
-type bytes32 = b:bytes{length b < pow2 32}
-let length32 (b:bytes32) : U32.t = U32.uint_to_t (length b)
+type bytes32 = kbytes 32
+let length32 (b:bytes32) : n:U32.t{U32.v n = length b} = U32.uint_to_t (S.length b)
 type lbytes32 (l:U32.t) = b:bytes32{length32 b = l}
 let get32 (b:bytes32) (i:U32.t{U32.(i <^ length32 b)}) = b.[U32.v i]
 
@@ -105,8 +116,18 @@ let twobytes8 (b:byte*byte) : lbytes8 2uy = twobytes b
 let twobytes16 (b:byte*byte) : lbytes16 2us = twobytes b
 let twobytes32 (b:byte*byte) : lbytes32 2ul = twobytes b
 
-let append (b1:bytes) (b2:bytes) : b:bytes{length b = length b1 + length b2} =
-  Seq.append b1 b2
+let append (b1:bytes) (b2:bytes)
+  : b:bytes{length b = length b1 + length b2} = Seq.append b1 b2
+let append8 (b1:bytes8) (b2:bytes8{length b1 + length b2 < pow2 8})
+  : b:bytes8{length b = length b1 + length b2} = Seq.append b1 b2
+unfold let op_Hat_Hat = append8
+let append16 (b1:bytes16) (b2:bytes16{length b1 + length b2 < pow2 16})
+  : b:bytes16{length b = length b1 + length b2} = Seq.append b1 b2
+unfold let op_Hat_Hat_Hat = append16
+let append16_8 (b1:bytes16) (b2:bytes8{length b1 + length b2 < pow2 16})
+  : b:bytes16{length b = length b1 + length b2} = Seq.append b1 b2
+let append32 (b1:bytes32) (b2:bytes32{length b1 + length b2 < pow2 32})
+  : b:bytes32{length b = length b1 + length b2} = Seq.append b1 b2
 
 let lemma_append_empty_r (b:bytes)
   : Lemma (append b empty_bytes = b) [SMTPat (append b empty_bytes)] =
@@ -114,6 +135,14 @@ let lemma_append_empty_r (b:bytes)
 let lemma_append_empty_l (b:bytes)
   : Lemma (append empty_bytes b = b) [SMTPat (append empty_bytes b)] =
   S.append_empty_l b
+
+let lemma_equality (b1:bytes) (b2:bytes{length b2 = length b1})
+  : Lemma (requires (forall (i:nat{i < length b1}).{:pattern (get b1 i); (get b2 i)} (get b1 i = get b2 i)))
+    (ensures b1 = b2)
+  =
+  assert(forall (i:nat{i < length b1}).{:pattern (get b1 i); (get b2 i)} get b1 i = S.index b1 i /\ get b2 i = S.index b2 i);
+  assert(forall (i:nat{i < length b1}).{:pattern (S.index b1 i); (S.index b2 i)} (S.index b1 i == S.index b2 i));
+  S.lemma_eq_intro b1 b2
 
 unfold let op_Hat (b1:bytes) (b2:bytes) : b:bytes{length b = length b1 + length b2} = append b1 b2
 unfold let op_At_Bar (b1:bytes) (b2:bytes) : b:bytes{length b = length b1 + length b2} = append b1 b2
@@ -146,24 +175,19 @@ let lemma_split_append (b1:bytes) (b2:bytes)
 type uint_k (k:nat) = U.uint_t (op_Multiply 8 k)
 
 // Interpret a sequence of bytes as a mathematical integer encoded in big endian
-let rec int_of_bytes (b:bytes) : Tot (uint_k (length b)) (decreases (length b)) =
+let rec int_of_bytes (#k:nat) (b:lbytes k) : Tot (uint_k k) (decreases k) =
   let open FStar.Mul in
-  if length b = 0 then 0
+  if k = 0 then 0
   else
-    let b1, b0 = split b (length b - 1) in
+    let b1, b0 = split b (k - 1) in
     let x = UInt8.v (get b0 0) in
-    let y : uint_k (length b - 1) = int_of_bytes b1 in
+    let y : uint_k (k - 1) = int_of_bytes b1 in
     let z = pow2 8 * y + x in
-    FStar.Math.Lemmas.pow2_plus 8 (op_Multiply 8 (length b - 1));
+    FStar.Math.Lemmas.pow2_plus 8 (op_Multiply 8 (k - 1));
     z
 
-// Machine integer specializations - these will be realized as typecasts in C
-let u8_of_bytes (b:lbytes 1) : Tot (U8.t) = U8.uint_to_t (int_of_bytes b)
-let u16_of_bytes (b:lbytes 2) : Tot (U16.t) = U16.uint_to_t (int_of_bytes b)
-let u32_of_bytes (b:lbytes 4) : Tot (U32.t) = U32.uint_to_t (int_of_bytes b)
-
 #reset-options "--initial_fuel 2 --initial_ifuel 2 --z3rlimit 30"
-let rec bytes_of_int (k:nat) (n:uint_k k)
+let rec bytes_of_int (#k:nat) (n:uint_k k)
   : Tot (b:lbytes k{int_of_bytes b = n}) (decreases k) =
   let open FStar.Mul in
   match k with
@@ -177,24 +201,84 @@ let rec bytes_of_int (k:nat) (n:uint_k k)
     let r:nat = U.div n (pow2 8) in
     assert(pow2 8 * r + r0 = n);
     let b0 = abyte (U8.uint_to_t r0) in
-    let b = bytes_of_int (k - 1) r in
+    let b = bytes_of_int #(k - 1) r in
     lemma_split_append b b0;
     let result = b ^ b0 in
     assert(
-      let n' = int_of_bytes result in
+      let n' = int_of_bytes #k result in
       let b', b0' = split (b ^ b0) (length b) in
       b' = b /\ b0' = b0 /\ U8.v (get b0' 0) = r0 /\
-      int_of_bytes b' = r /\ n' = pow2 8 * r + r0 /\ n' = n);
+      int_of_bytes #(k-1) b' = r /\ n' = pow2 8 * r + r0 /\ n' = n);
     result
 
-let bytes_of_u8 (n:U8.t) : b:lbytes8 1uy{u8_of_bytes b = n} = bytes_of_int 1 (U8.v n)
-let bytes_of_u16 (n:U16.t) : b:lbytes8 2uy{u16_of_bytes b = n} = bytes_of_int 2 (U16.v n)
-let bytes_of_u32 (n:U32.t) : b:lbytes8 4uy{u32_of_bytes b = n} = bytes_of_int 4 (U32.v n)
+let lemma_bytes_of_int_inj (#k:nat) (n:uint_k k)
+  : Lemma (int_of_bytes (bytes_of_int n) = n)
+  [SMTPat (int_of_bytes (bytes_of_int n))] = ()
 
-let rec lemma_bytes_of_int_inj (k:nat) (n:uint_k k)
-  : Lemma (int_of_bytes (bytes_of_int k n) = n)
-  [SMTPat (int_of_bytes (bytes_of_int k n))] = ()
+private let lemma_div_pow2 (k:nat) (x:nat) (y:nat{y < pow2 k})
+  : Lemma ((op_Multiply (pow2 k) x + y) / (pow2 k) = x)
+  =
+  // a + n * b / b = a / b + n
+  FStar.Math.Lemmas.division_addition_lemma y (pow2 k) x;
+  assert((op_Multiply (pow2 k) x + y) / (pow2 k) = y / (pow2 k) + x);
+  FStar.Math.Lemmas.small_division_lemma_1 y (pow2 k)
 
+#reset-options "--initial_fuel 2 --initial_ifuel 2 --z3rlimit 25"
+let rec lemma_int_of_bytes_inj (#k:nat) (b:lbytes k)
+  : Lemma (ensures (bytes_of_int (int_of_bytes b) = b))
+  (decreases (length b))
+  [SMTPat (bytes_of_int (int_of_bytes b))] =
+  let n = int_of_bytes b in
+  let b' = bytes_of_int n in
+  match k with
+  | 0 -> lemma_empty b'; lemma_empty b
+  | 1 -> assert(b'.[0] = b.[0]); lemma_equality b b'
+  | _ ->
+    let open FStar.Mul in
+    FStar.Math.Lemmas.pow2_le_compat (8*k) 16;
+    FStar.Math.Lemmas.lemma_mod_lt n 256;
+    FStar.Math.Lemmas.lemma_div_lt n (8*k) 8;
+    let r0 : n:nat{n < pow2 8} = U.mod n 256 in
+    let r : n:nat{n < pow2 (op_Multiply 8 (k-1))} = U.div n (pow2 8) in
+    let r0' = abyte (U8.uint_to_t r0) in
+    let r' = bytes_of_int #(k - 1) r in
+    let r'', r0'' = split b (k - 1) in
+    let x = UInt8.v (get r0'' 0) in
+    let y = int_of_bytes #(k - 1) r'' in
+    let z = pow2 8 * y + x in
+    lemma_div_pow2 8 y x;
+    assert(r = int_of_bytes #(k - 1) r'');
+    lemma_int_of_bytes_inj #(k - 1) r'';
+    U8.v_inj (r0''.[0]) (r0'.[0]);
+    lemma_equality r0'' r0';
+    assert(r' ^ r0' = r'' ^ r0'')
+
+// Machine integer specializations - these will be realized as typecasts in C
+let u8_of_bytes (b:lbytes 1) : Tot (U8.t) = U8.uint_to_t (int_of_bytes b)
+let u16_of_bytes (b:lbytes 2) : Tot (U16.t) = U16.uint_to_t (int_of_bytes b)
+let u32_of_bytes (b:lbytes 4) : Tot (U32.t) = U32.uint_to_t (int_of_bytes b)
+
+let u8_of_bytes8 (b:lbytes8 1uy) : Tot (U8.t) = U8.uint_to_t (int_of_bytes #1 b)
+let u16_of_bytes8 (b:lbytes8 2uy) : Tot (U16.t) = U16.uint_to_t (int_of_bytes #2 b)
+let u32_of_bytes8 (b:lbytes8 4uy) : Tot (U32.t) = U32.uint_to_t (int_of_bytes #4 b)
+let u8_of_bytes16 (b:lbytes16 1us) : Tot (U8.t) = U8.uint_to_t (int_of_bytes #1 b)
+let u16_of_bytes16 (b:lbytes16 2us) : Tot (U16.t) = U16.uint_to_t (int_of_bytes #2 b)
+let u32_of_bytes16 (b:lbytes16 4us) : Tot (U32.t) = U32.uint_to_t (int_of_bytes #4 b)
+let u8_of_bytes32 (b:lbytes32 1ul) : Tot (U8.t) = U8.uint_to_t (int_of_bytes #1 b)
+let u16_of_bytes32 (b:lbytes32 2ul) : Tot (U16.t) = U16.uint_to_t (int_of_bytes #2 b)
+let u32_of_bytes32 (b:lbytes32 4ul) : Tot (U32.t) = U32.uint_to_t (int_of_bytes #4 b)
+
+let bytes8_of_u8 (n:U8.t) : b:lbytes8 1uy{u8_of_bytes8 b = n} = bytes_of_int #1 (U8.v n)
+let bytes8_of_u16 (n:U16.t) : b:lbytes8 2uy{u16_of_bytes8 b = n} = bytes_of_int #2 (U16.v n)
+let bytes8_of_u32 (n:U32.t) : b:lbytes8 4uy{u32_of_bytes8 b = n} = bytes_of_int #4 (U32.v n)
+let bytes16_of_u8 (n:U8.t) : b:lbytes16 1us{u8_of_bytes16 b = n} = bytes_of_int #1 (U8.v n)
+let bytes16_of_u16 (n:U16.t) : b:lbytes16 2us{u16_of_bytes16 b = n} = bytes_of_int #2 (U16.v n)
+let bytes16_of_u32 (n:U32.t) : b:lbytes16 4us{u32_of_bytes16 b = n} = bytes_of_int #4 (U32.v n)
+let bytes32_of_u8 (n:U8.t) : b:lbytes32 1ul{u8_of_bytes32 b = n} = bytes_of_int #1 (U8.v n)
+let bytes32_of_u16 (n:U16.t) : b:lbytes32 2ul{u16_of_bytes32 b = n} = bytes_of_int #2 (U16.v n)
+let bytes32_of_u32 (n:U32.t) : b:lbytes32 4ul{u32_of_bytes32 b = n} = bytes_of_int #4 (U32.v n)
+
+(*)
 // Tail recursive version of int_of_bytes that might be extracted
 // to avoid unverified realization (would presumably still be too slow)
 let rec decode_big_endian (b:bytes) (k:nat) (acc:uint_k k)
@@ -211,6 +295,7 @@ let rec decode_big_endian (b:bytes) (k:nat) (acc:uint_k k)
 let lemma_decode_big_endion (b:bytes)
   : Lemma (int_of_bytes b = decode_big_endian b 0 0)
   = admit ()
+*)
 
 type minbytes (n:nat) = b:bytes{length b >= n}
 
@@ -239,18 +324,6 @@ let rec lemma_xor_commutative (n:nat) (b1:minbytes n) (b2:minbytes n)
 let rec lemma_xor_append (b1:bytes) (b2:bytes) (x1:bytes{length x1 = length b1}) (x2:bytes{length x2 = length b2})
   : Lemma (xor (length b1 + length b2) (b1^b2) (x1^x2) = (xor (length b1) b1 x1) ^ (xor (length b2) b2 x2)) =
   admit()
-
-let lemma_xor_empty (b1:bytes) (b2:bytes)
-  : Lemma (xor 0 b1 b2 = empty_bytes)
-  [SMTPat (xor 0 b1 b2)] = ()
-
-let lemma_equality (b1:bytes) (b2:bytes{length b2 = length b1})
-  : Lemma (requires (forall (i:nat{i < length b1}).{:pattern (get b1 i); (get b2 i)} (get b1 i = get b2 i)))
-    (ensures b1 = b2)
-  =
-  assert(forall (i:nat{i < length b1}).{:pattern (get b1 i); (get b2 i)} get b1 i = S.index b1 i /\ get b2 i = S.index b2 i);
-  assert(forall (i:nat{i < length b1}).{:pattern (S.index b1 i); (S.index b2 i)} (S.index b1 i == S.index b2 i));
-  S.lemma_eq_intro b1 b2
 
 #reset-options "--z3rlimit 20 --max_ifuel 2 --max_fuel 2"
 let rec lemma_xor_idempotent (n:nat) (b1:lbytes n) (b2:lbytes n)
@@ -287,6 +360,7 @@ let rec lemma_xor_idempotent (n:nat) (b1:lbytes n) (b2:lbytes n)
 
 module IC = FStar.Int.Cast
 
+#reset-options "--z3rlimit 30 --max_ifuel 2 --max_fuel 2"
 let utf8_encode (s:string) : b:bytes{length b <= op_Multiply 4 (Str.length s)} =
   let len = Str.length s in
   let rec aux (i:nat{i < len}) (acc:bytes{length acc <= op_Multiply 4 i})
@@ -321,9 +395,17 @@ let utf8_encode (s:string) : b:bytes{length b <= op_Multiply 4 (Str.length s)} =
   if len = 0 then empty_bytes
   else aux 0 empty_bytes
 
+let utf8_encode8 (s:string{Str.length s < 64}) : (b:bytes8{U8.v (length8 b) <= op_Multiply 4 (Str.length s)})
+  = utf8_encode s
+let utf8_encode16 (s:string{Str.length s < 16384}) : (b:bytes16{U16.v (length16 b) <= op_Multiply 4 (Str.length s)})
+  = utf8_encode s
+let utf8_encode32 (s:string{Str.length s < 536870912}) : (b:bytes32{U32.v (length32 b) <= op_Multiply 4 (Str.length s)})
+  = utf8_encode s
 
-
-
+(*)
+let utf8_decode (b:bytes) : option (s:string{Str.length s <= length b}) =
+  let rec
+*)
 (* Little endian integer value of a sequence of bytes *)
 (*)
 val decode_little_endian: b:bytes ->
