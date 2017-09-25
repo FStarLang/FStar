@@ -1787,8 +1787,7 @@ let pointwise_rec:
             match uu____4214 with
             | (t1,lcomp,g) ->
                 let uu____4226 =
-                  (let uu____4229 =
-                     FStar_Syntax_Util.is_pure_or_ghost_lcomp lcomp in
+                  (let uu____4229 = FStar_Syntax_Util.is_total_lcomp lcomp in
                    Prims.op_Negation uu____4229) ||
                     (let uu____4231 = FStar_TypeChecker_Rel.is_trivial g in
                      Prims.op_Negation uu____4231) in
