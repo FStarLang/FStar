@@ -38,23 +38,33 @@ module CTable = FStar.Interactive.CompletionTable
 
 exception ExitREPL of int
 
-// A custom version of the function that's in FStar.Universal.fs just for the
-// sake of the interactive mode
-let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * modul option * string list) =
-  let dsenv, env = uenv in
-  let (intf, impl), dsenv, env, remaining =
-    match remaining with
-    | intf :: impl :: remaining when needs_interleaving intf impl ->
-      let _, dsenv, env = tc_one_file dsenv env (Some intf) impl in
-      (Some intf, impl), dsenv, env, remaining
-    | intf_or_impl :: remaining ->
-      let _, dsenv, env = tc_one_file dsenv env None intf_or_impl in
-      (None, intf_or_impl), dsenv, env, remaining
-    | [] -> failwith "Impossible"
-  in
-  (intf, impl), (dsenv, env), remaining
+type load_dependency_task =
+  | LDInterleaved of string (* interface *) * string (* impl *)
+  | LDSingle of string (* interface or implementation *)
+  | LDInterfaceOfCurrentFile of string (* interface *)
 
 type env_t = DsEnv.env * TcEnv.env
+
+(** Like ``tc_one_file``, but only return the new environment **)
+let tc_one ((dsenv, tcenv): env_t) intf_opt mod =
+  let _, dsenv, tcenv = tc_one_file dsenv tcenv intf_opt mod in
+  (dsenv, tcenv)
+
+(** Load the file or files described by `task` **)
+let load_one (env: env_t) (task: load_dependency_task) =
+  match task with
+  | LDInterleaved (intf, impl) -> tc_one env (Some intf) impl
+  | LDSingle intf_or_impl -> tc_one env None intf_or_impl
+  | LDInterfaceOfCurrentFile intf -> Universal.load_interface_decls env intf
+
+(** Build a list of load tasks from a list of dependencies **)
+let rec tasks_of_deps (deps: list string) =
+  match deps with
+  | intf :: impl :: deps' when needs_interleaving intf impl ->
+    LDInterleaved (intf, impl) :: tasks_of_deps deps'
+  | intf_or_impl :: deps' ->
+    LDSingle intf_or_impl :: tasks_of_deps deps'
+  | [] -> []
 
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
