@@ -67,40 +67,27 @@ type stack_t = list<(env_t * modul_t)>
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
 // not actually doing anything useful with the environment you're passing it (e.g.
-// pop or reset_mark).
+// pop).
 
-let pop (_, env) msg =
-    pop_context env msg;
-    Options.pop()
+let push env msg =
+  let res = push_context env msg in
+  Options.push();
+  res
+
+let pop env msg =
+  pop_context (snd env) msg;
+  Options.pop()
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
-let push ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg =
-    let tcenv = { tcenv with lax = (kind = LaxCheck) } in
-    let dsenv = DsEnv.set_syntax_only dsenv (kind = SyntaxCheck) in
-    let res = push_context (dsenv, tcenv) msg in
-    Options.push();
-    if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
-    res
-
-let mark (dsenv, env) =
-    let dsenv = DsEnv.mark dsenv in
-    let env = TcEnv.mark env in
-    Options.push();
-    dsenv, env
-
-let reset_mark (_, env) =
-    let dsenv = DsEnv.reset_mark () in
-    let env = TcEnv.reset_mark env in
-    Options.pop();
-    dsenv, env
+let push_with_kind ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg =
+  let tcenv = { tcenv with lax = (kind = LaxCheck) } in
+  let dsenv = DsEnv.set_syntax_only dsenv (kind = SyntaxCheck) in
+  let res = push (dsenv, tcenv) msg in
+  if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
+  res
 
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
-
-let commit_mark (dsenv, env) =
-    let dsenv = DsEnv.commit_mark dsenv in
-    let env = TcEnv.commit_mark env in
-    dsenv, env
 
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
   try
@@ -109,14 +96,24 @@ let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
       Some (m, (dsenv, env), FStar.Errors.get_err_count())
     | _ -> None
   with
-  | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
+  | Failure (msg) when not (Options.trace_error ()) ->
+    let msg = "ASSERTION FAILURE: " ^ msg ^ "\n" ^
+              "F* may be in an inconsistent state.\n" ^
+              "Please file a bug report, ideally with a " ^
+              "minimized version of the program that triggered the error." in
+    FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
+    // Make sure the user sees the error, even if it happened transiently while
+    // running an automatic syntax checker like FlyCheck.
+    Util.print_error msg;
+    None
+
+  | FStar.Errors.Error(msg, r) when not (Options.trace_error ()) ->
     FStar.TypeChecker.Err.add_errors env [(msg, r)];
     None
 
-  | FStar.Errors.Err msg when not ((Options.trace_error())) ->
+  | FStar.Errors.Err msg when not (Options.trace_error ()) ->
     FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
     None
-
 
 (*********************)
 (* Dependency checks *)
@@ -165,7 +162,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
     | _  ->
       let stack = (env, m)::stack in
       //setting the restore command line options flag true
-      let env = push env (if Options.lax () then LaxCheck else FullCheck) true "typecheck_modul" in
+      let env = push_with_kind env (if Options.lax () then LaxCheck else FullCheck) true "typecheck_modul" in
       let (intf, impl), env, remaining = tc_one_file remaining env in
       let intf_t, impl_t =
         let intf_t =
@@ -298,6 +295,8 @@ let js_reductionrule s = match js_str s with
   | "delta" -> FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant
   | "iota" -> FStar.TypeChecker.Normalize.Iota
   | "zeta" -> FStar.TypeChecker.Normalize.Zeta
+  | "reify" -> FStar.TypeChecker.Normalize.Reify
+  | "pure-subterms" -> FStar.TypeChecker.Normalize.PureSubtermsWithinComputations
   | _ -> js_fail "reduction rule" s
 
 type query' =
@@ -322,9 +321,11 @@ let query_needs_current_module = function
 let interactive_protocol_vernum = 2
 
 let interactive_protocol_features =
-  ["autocomplete"; "compute"; "describe-protocol"; "describe-repl"; "exit";
+  ["autocomplete";
+   "compute"; "compute/reify"; "compute/pure-subterms";
+   "describe-protocol"; "describe-repl"; "exit";
    "lookup"; "lookup/documentation"; "lookup/definition";
-   "pop"; "peek"; "push"; "search"]
+   "peek"; "pop"; "push"; "search"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -541,7 +542,7 @@ let run_missing_current_module st message =
   ((QueryNOK, JsonStr "Current module unset"), Inl st)
 
 let nothing_left_to_pop st =
-  (* The initial dependency check creates [n] entires in [st.repl_ts] and [n]
+  (* The initial dependency check creates [n] entries in [st.repl_ts] and [n]
      entries in [st.repl_stack].  Subsequent pushes do not grow [st.repl_ts]
      (only [st.repl_stack]), so [length st.repl_stack <= length st.repl_ts]
      indicates that there's nothing left to pop. *)
@@ -572,13 +573,10 @@ let run_push st kind text line column peek_only =
     else false, (stack, env, ts) in
 
   let stack = (env, st.repl_curmod) :: stack in
-  let env = push env kind restore_cmd_line_options "#push" in
-
-  // This pushes to an internal, hidden stack
-  let env_mark = mark env in
+  let env = push_with_kind env kind restore_cmd_line_options "#push" in
 
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
-  let res = check_frag env_mark st.repl_curmod (frag, false) in
+  let res = check_frag env st.repl_curmod (frag, false) in
 
   let errors = FStar.Errors.report_all() |> List.map json_of_issue in
   FStar.Errors.clear ();
@@ -588,14 +586,11 @@ let run_push st kind text line column peek_only =
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
-    // At this stage, the internal stack has grown with size 1.
-    let env = commit_mark env in
     ((QueryOK, JsonList errors),
       Inl ({ st' with repl_curmod = curmod; repl_env = env }))
   | _ ->
     // The previous version of the protocol required the client to send a #pop
     // immediately after failed pushes; this version pops automatically.
-    let env = reset_mark env_mark in
     let _, st'' = run_pop ({ st' with repl_env = env }) in
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
@@ -771,11 +766,10 @@ let run_completions st search_term =
 
 let run_compute st term rules =
   let run_and_rewind st task =
-    let env_mark = mark st.repl_env in
+    let env' = push st.repl_env "#compute" in
     let results = task st in
-    let env = reset_mark env_mark in
-    let st' = { st with repl_env = env } in
-    (results, Inl st') in
+    pop env' "#compute";
+    (results, Inl st) in
 
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
@@ -786,7 +780,8 @@ let run_compute st term rules =
 
   let find_let_body ses =
     match ses with
-    | [{ SS.sigel = SS.Sig_let((_, [{SS.lbdef = def}]), _) }] -> Some def
+    | [{ SS.sigel = SS.Sig_let((_, [{ SS.lbunivs = univs; SS.lbdef = def }]), _) }] ->
+      Some (univs, def)
     | _ -> None in
 
   let parse frag =
@@ -819,18 +814,25 @@ let run_compute st term rules =
     | None -> (QueryNOK, JsonStr "Current module unset")
     | _ ->
       match parse frag with
-      | None -> (QueryNOK, JsonStr "Count not parse this term")
+      | None -> (QueryNOK, JsonStr "Could not parse this term")
       | Some decls ->
-        try
+        let aux () =
           let decls = desugar dsenv decls in
           let ses = typecheck tcenv decls in
           match find_let_body ses with
           | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
-          | Some def -> let normalized = normalize_term tcenv rules def in
-                       (QueryOK, JsonStr (term_to_string tcenv normalized))
-        with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
-                                | Some issue -> JsonStr (FStar.Errors.format_issue issue)
-                                | None -> raise e)))
+          | Some (univs, def) ->
+            let univs, def = Syntax.Subst.open_univ_vars univs def in
+            let tcenv = TcEnv.push_univ_vars tcenv univs in
+            let normalized = normalize_term tcenv rules def in
+            (QueryOK, JsonStr (term_to_string tcenv normalized)) in
+        if Options.trace_error () then
+          aux ()
+        else
+          try aux ()
+          with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
+                                  | Some issue -> JsonStr (FStar.Errors.format_issue issue)
+                                  | None -> raise e)))
 
 type search_term' =
 | NameContainsStr of string
@@ -1008,15 +1010,19 @@ let interactive_mode' (filename:string): unit =
 
 let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
-  FStar.Errors.set_handler interactive_error_handler;
 
   if Option.isSome (Options.codegen())
   then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
-  try
+  if Options.trace_error () then
+    // This prevents the error catcher below from swallowing backtraces
     interactive_mode' filename
-  with
-  | e -> (// Revert to default handler since we won't have an opportunity to
-          // print errors ourselves.
-          FStar.Errors.set_handler FStar.Errors.default_handler;
-          raise e)
+  else
+    try
+      FStar.Errors.set_handler interactive_error_handler;
+      interactive_mode' filename
+    with
+    | e -> (// Revert to default handler since we won't have an opportunity to
+           // print errors ourselves.
+           FStar.Errors.set_handler FStar.Errors.default_handler;
+           raise e)

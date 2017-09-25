@@ -8,8 +8,8 @@ let uu___is_Not_a_wp_implication: Prims.exn -> Prims.bool =
 let __proj__Not_a_wp_implication__item__uu___: Prims.exn -> Prims.string =
   fun projectee  ->
     match projectee with | Not_a_wp_implication uu____17 -> uu____17
-type label = FStar_SMTEncoding_Term.error_label
-type labels = FStar_SMTEncoding_Term.error_labels
+type label = FStar_SMTEncoding_Term.error_label[@@deriving show]
+type labels = FStar_SMTEncoding_Term.error_labels[@@deriving show]
 let sort_labels:
   (FStar_SMTEncoding_Term.error_label,Prims.bool)
     FStar_Pervasives_Native.tuple2 Prims.list ->
@@ -37,9 +37,10 @@ let remove_dups:
            | ((uu____200,m1,r1),(uu____203,m2,r2)) -> (r1 = r2) && (m1 = m2))
       l
 type msg = (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2
+[@@deriving show]
 type ranges =
   (Prims.string FStar_Pervasives_Native.option,FStar_Range.range)
-    FStar_Pervasives_Native.tuple2 Prims.list
+    FStar_Pervasives_Native.tuple2 Prims.list[@@deriving show]
 let fresh_label:
   Prims.string ->
     FStar_Range.range ->
@@ -121,11 +122,11 @@ let label_goals:
                 match ropt with
                 | FStar_Pervasives_Native.None  -> rng
                 | FStar_Pervasives_Native.Some r1 ->
-                    let uu___107_524 = r1 in
+                    let uu___109_524 = r1 in
                     {
                       FStar_Range.def_range = (rng.FStar_Range.def_range);
                       FStar_Range.use_range =
-                        (uu___107_524.FStar_Range.use_range)
+                        (uu___109_524.FStar_Range.use_range)
                     } in
               fresh_label msg1 rng1 t in
             let rec aux default_msg ropt post_name_opt labels q1 =

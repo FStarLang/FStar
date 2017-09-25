@@ -116,9 +116,6 @@ and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
-    mark         :string -> unit;
-    reset_mark   :string -> unit;
-    commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
@@ -208,9 +205,6 @@ let add_query_index (l, n) = match !query_indices with
     | _ -> failwith "Empty query indices"
 
 let peek_query_indices () = List.hd !query_indices
-let commit_query_index_mark () = match !query_indices with
-    | hd::_::tl -> query_indices := hd::tl
-    | _ -> failwith "Unmarked query index stack"
 
 let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
@@ -235,22 +229,6 @@ let push env msg =
 
 let pop env msg =
     env.solver.pop msg;
-    pop_query_indices();
-    pop_stack ()
-
-let mark env =
-    env.solver.mark "USER MARK";
-    push_query_indices();
-    push_stack env
-
-let commit_mark (env: env) =
-    commit_query_index_mark();
-    env.solver.commit_mark "USER MARK";
-    ignore (pop_stack ());
-    env
-
-let reset_mark env =
-    env.solver.reset_mark "USER MARK";
     pop_query_indices();
     pop_stack ()
 
@@ -971,7 +949,8 @@ let rec unfold_effect_abbrev env comp =
       unfold_effect_abbrev env c
 
 let effect_repr_aux only_reifiable env c u_c =
-    match effect_decl_opt env (norm_eff_name env (U.comp_effect_name c)) with
+    let effect_name = norm_eff_name env (U.comp_effect_name c) in
+    match effect_decl_opt env effect_name with
     | None -> None
     | Some (ed, qualifiers) ->
         if only_reifiable && not (qualifiers |> List.contains Reifiable)
@@ -980,7 +959,16 @@ let effect_repr_aux only_reifiable env c u_c =
         | Tm_unknown -> None
         | _ ->
           let c = unfold_effect_abbrev env c in
-          let res_typ, wp = c.result_typ, List.hd c.effect_args in
+          let res_typ = c.result_typ in
+          let wp =
+            match c.effect_args with
+            | hd :: _ -> hd
+            | [] ->
+              let name = Ident.string_of_lid effect_name in
+              let message = BU.format1 "Not enough arguments for effect %s. " name ^
+                "This usually happens when you use a partially applied DM4F effect, " ^
+                "like [TAC int] instead of [Tac int]." in
+              raise (Error (message, get_range env)) in
           let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
           Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
 
@@ -1250,9 +1238,6 @@ let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
-    mark=(fun _ -> ());
-    reset_mark=(fun _ -> ());
-    commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);

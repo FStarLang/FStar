@@ -18,7 +18,7 @@ let one_toplevel:
          | uu____66 -> FStar_Pervasives_Native.None)
 type mforest =
   | Leaf of (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
-  | Branch of mforest FStar_Util.smap
+  | Branch of mforest FStar_Util.smap[@@deriving show]
 let uu___is_Leaf: mforest -> Prims.bool =
   fun projectee  ->
     match projectee with | Leaf _0 -> true | uu____98 -> false

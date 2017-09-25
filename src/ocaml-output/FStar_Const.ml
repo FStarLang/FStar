@@ -1,7 +1,7 @@
 open Prims
 type signedness =
   | Unsigned
-  | Signed
+  | Signed[@@deriving show]
 let uu___is_Unsigned: signedness -> Prims.bool =
   fun projectee  ->
     match projectee with | Unsigned  -> true | uu____5 -> false
@@ -12,7 +12,7 @@ type width =
   | Int8
   | Int16
   | Int32
-  | Int64
+  | Int64[@@deriving show]
 let uu___is_Int8: width -> Prims.bool =
   fun projectee  -> match projectee with | Int8  -> true | uu____15 -> false
 let uu___is_Int16: width -> Prims.bool =
@@ -37,7 +37,7 @@ type sconst =
   FStar_Pervasives_Native.tuple2
   | Const_range of FStar_Range.range
   | Const_reify
-  | Const_reflect of FStar_Ident.lid
+  | Const_reflect of FStar_Ident.lid[@@deriving show]
 let uu___is_Const_effect: sconst -> Prims.bool =
   fun projectee  ->
     match projectee with | Const_effect  -> true | uu____87 -> false

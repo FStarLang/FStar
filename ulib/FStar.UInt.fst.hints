@@ -3187,14 +3187,6 @@
       0
     ],
     [
-      "FStar.UInt.xor_lemma",
-      3,
-      0,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
-    ],
-    [
       "FStar.UInt.logxor_inv",
       1,
       0,

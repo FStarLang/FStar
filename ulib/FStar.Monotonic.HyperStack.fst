@@ -256,10 +256,7 @@ let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a re
 let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-	 [SMTPatOr [
-           [SMTPat (sel h r1); SMTPat (sel h r2)];
-           [SMTPat (frameOf r1); SMTPat (frameOf r2); SMTPat (as_addr r1); SMTPat (as_addr r2)]
-         ]]
+   [SMTPat (sel h r1); SMTPat (sel h r2)]
 = lemma_sel_same_addr h r1 r2
 
 #set-options "--z3rlimit 16"

@@ -1705,6 +1705,7 @@ val loc_disjoint_sym
 : Lemma
   (requires (loc_disjoint s1 s2))
   (ensures (loc_disjoint s2 s1))
+  [SMTPat (loc_disjoint s1 s2)]
 
 val loc_disjoint_none_r
   (s: loc)

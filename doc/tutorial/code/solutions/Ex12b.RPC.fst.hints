@@ -1,5 +1,5 @@
 [
-  "‚[Ç÷Lž\u0007\u000e;6¬´\u0000£Öž",
+  "ò1ëL©é¯Å@ûc¸~é\u0002J",
   [
     [
       "Ex12b.RPC.msg_buffer",
@@ -234,22 +234,6 @@
       0
     ],
     [
-      "Ex12b.RPC.add_to_log",
-      6,
-      2,
-      1,
-      [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
-      0
-    ],
-    [
-      "Ex12b.RPC.add_to_log",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
-      0
-    ],
-    [
       "Ex12b.RPC.req",
       1,
       2,
@@ -282,14 +266,6 @@
     [
       "Ex12b.RPC.req",
       3,
-      2,
-      1,
-      [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
-      0
-    ],
-    [
-      "Ex12b.RPC.req",
-      4,
       2,
       1,
       [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
@@ -334,14 +310,6 @@
       0
     ],
     [
-      "Ex12b.RPC.resp",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Ex12b.RPC.log_entry_haseq" ],
-      0
-    ],
-    [
       "Ex12b.RPC.pRequest",
       1,
       2,
@@ -392,20 +360,6 @@
       [
         "@query", "assumption_Platform.Bytes.HasEq_bytes",
         "equation_Ex12b2.Format.message"
-      ],
-      0
-    ],
-    [
-      "Ex12b.RPC.k",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.MAC.pkey",
-        "equation_Ex12.SHA1.text", "equation_Platform.Bytes.bytes",
-        "fuel_guarded_inversion_FStar.Pervasives.result",
-        "refinement_interpretation_Ex12.MAC_Tm_refine_bb3768dcb8aba5249319ea75b1a0eaec",
-        "token_correspondence_Ex12b.RPC.reqresp"
       ],
       0
     ],
@@ -418,7 +372,10 @@
         "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@query", "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "b2t_def", "equation_Ex12.SHA1.text", "equation_Ex12b.RPC.pRequest",
+        "b2t_def", "constructor_distinct_FStar.Pervasives.V",
+        "equation_Ex12.MAC.key_entry", "equation_Ex12.MAC.key_prop",
+        "equation_Ex12.MAC.pkey", "equation_Ex12.MAC.pred_to_dec_ghost",
+        "equation_Ex12.SHA1.text", "equation_Ex12b.RPC.pRequest",
         "equation_Ex12b.RPC.req", "equation_Ex12b.RPC.reqresp",
         "equation_Ex12b.RPC.subset", "equation_Ex12b2.Format.message",
         "equation_Ex12b2.Format.request", "equation_Ex12b2.Format.string16",
@@ -426,12 +383,20 @@
         "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "function_token_typing_Ex12b.RPC.k",
+        "function_token_typing_Ex12b.RPC.reqresp",
+        "function_token_typing_Platform.Bytes.bytes",
+        "interpretation_Ex12.MAC_Tm_abs_97c0e073b8cc174491198c8e97c1e166",
         "interpretation_Ex12b.RPC_Tm_abs_27023f5e08299af2b26fc24a24085e05",
-        "refinement_interpretation_Ex12b.RPC_Tm_refine_4ad6cff97fe1f0f612f90ab6b8b6c1b4",
-        "refinement_interpretation_Ex12b.RPC_Tm_refine_6918d8451ac8d4a7bba80c0ea3c7d25c",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Ex12.MAC_Tm_refine_572b7c2b1bdf079fa791115963523fc8",
         "refinement_interpretation_Ex12b2.Format_Tm_refine_4f1873878867b70a0de3794ca2e9d2b2",
+        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "string_inversion", "token_correspondence_Ex12b.RPC.req",
-        "typing_Ex12b.RPC.req", "typing_Ex12b2.Format.request", "unit_typing"
+        "token_correspondence_Ex12b.RPC.reqresp",
+        "typing_Ex12.MAC.pred_to_dec_ghost", "typing_Ex12b.RPC.reqresp",
+        "typing_Ex12b2.Format.request",
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
+        "unit_typing"
       ],
       0
     ],
@@ -514,21 +479,23 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "@query", "Ex12b.RPC_pretyping_e884d439514aab9828b6258fa5715719",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_interpretation_Tm_arrow_e06752ba152f81447b312efcdf8f0e23",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Ex12b2.Format.UTF8_inj",
-        "assumption_FStar.Char.char__haseq", "b2t_def",
+        "assumption_FStar.Char.char__haseq", "b2t_def", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.V",
-        "data_typing_intro_Ex12b.RPC.Request@tok",
-        "disc_equation_FStar.Pervasives.Err", "equation_Ex12.SHA1.macsize",
-        "equation_Ex12.SHA1.text", "equation_Ex12b.RPC.pRequest",
-        "equation_Ex12b.RPC.pResponse", "equation_Ex12b.RPC.req",
-        "equation_Ex12b.RPC.reqresp", "equation_Ex12b.RPC.resp",
-        "equation_Ex12b.RPC.subset", "equation_Ex12b2.Format.message",
-        "equation_Ex12b2.Format.request", "equation_Ex12b2.Format.string16",
+        "data_elim_FStar.Pervasives.V", "disc_equation_FStar.Pervasives.Err",
+        "equation_Ex12.MAC.key_entry", "equation_Ex12.MAC.key_prop",
+        "equation_Ex12.MAC.pkey", "equation_Ex12.MAC.pred_to_dec_ghost",
+        "equation_Ex12.SHA1.macsize", "equation_Ex12.SHA1.text",
+        "equation_Ex12b.RPC.pRequest", "equation_Ex12b.RPC.pResponse",
+        "equation_Ex12b.RPC.req", "equation_Ex12b.RPC.reqresp",
+        "equation_Ex12b.RPC.resp", "equation_Ex12b.RPC.subset",
+        "equation_Ex12b2.Format.message", "equation_Ex12b2.Format.request",
+        "equation_Ex12b2.Format.response", "equation_Ex12b2.Format.string16",
         "equation_Ex12b2.Format.tag0", "equation_Ex12b2.Format.uInt16",
         "equation_FStar.Char.char", "equation_FStar.MRef.stable",
         "equation_FStar.Pervasives.Native.fst",
@@ -538,7 +505,10 @@
         "equation_Platform.Bytes.split", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "function_token_typing_Ex12b.RPC.k",
+        "function_token_typing_Ex12b.RPC.reqresp",
         "function_token_typing_Ex12b2.Format.tag0",
+        "function_token_typing_Platform.Bytes.bytes",
+        "interpretation_Ex12.MAC_Tm_abs_97c0e073b8cc174491198c8e97c1e166",
         "interpretation_Ex12b.RPC_Tm_abs_27023f5e08299af2b26fc24a24085e05",
         "interpretation_Ex12b.RPC_Tm_abs_29569a37e3f5e09e2e2e338bb27bb1bc",
         "kinding_FStar.Char.char_@tok",
@@ -553,20 +523,25 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.V_a",
         "projection_inverse_FStar.Pervasives.V_v",
+        "refinement_interpretation_Ex12.MAC_Tm_refine_572b7c2b1bdf079fa791115963523fc8",
         "refinement_interpretation_Ex12b.RPC_Tm_refine_4ad6cff97fe1f0f612f90ab6b8b6c1b4",
-        "refinement_interpretation_Ex12b.RPC_Tm_refine_6918d8451ac8d4a7bba80c0ea3c7d25c",
         "refinement_interpretation_Ex12b.RPC_Tm_refine_afbae872b8ec7d5841d143ba20123c46",
         "refinement_interpretation_Ex12b.RPC_Tm_refine_c4b01d332b6bcd62e236bb2099103d4f",
         "refinement_interpretation_Ex12b2.Format_Tm_refine_4f1873878867b70a0de3794ca2e9d2b2",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_f904f6c16e829f6df71f9c4ec26e4ace",
+        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
         "refinement_interpretation_Platform.Bytes_Tm_refine_da0bdf24d63d3411887bce01b57c4f40",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "string_typing", "token_correspondence_Ex12b.RPC.req",
-        "token_correspondence_Ex12b.RPC.resp", "typing_Ex12b.RPC.req",
+        "token_correspondence_Ex12b.RPC.reqresp",
+        "token_correspondence_Ex12b.RPC.resp",
+        "typing_Ex12.MAC.pred_to_dec_ghost", "typing_Ex12b.RPC.req",
         "typing_Ex12b.RPC.resp", "typing_Ex12b2.Format.request",
-        "typing_FStar.Seq.Base.eq", "typing_Platform.Bytes.iutf8",
-        "typing_Platform.Bytes.utf8", "unit_inversion", "unit_typing"
+        "typing_FStar.Seq.Base.eq",
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
+        "typing_Platform.Bytes.iutf8", "typing_Platform.Bytes.utf8",
+        "unit_inversion", "unit_typing"
       ],
       0
     ],
