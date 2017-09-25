@@ -140,7 +140,8 @@ let deps_of_our_file filename =
         Util.print_warning (Util.format1 "Unsupported: ended up with %s" (String.concat " " same_name));
         None
   in
-  deps, maybe_intf
+  let prims_fname = Options.prims () in
+  prims_fname :: deps, maybe_intf
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
@@ -945,26 +946,22 @@ all steps succeed, return a list of computed dependencies, a dependencies stack
 (``deps_stack_t``), and the new environment (all wrapped in ``Inr``). **)
 
 let tc_prims_and_deps env filename =
-  match push_then_do_or_revert_all env [] (fun env -> Some <| tc_prims env) with
+  match push_then_do_or_revert_all env []
+          (fun _env -> Some <| deps_of_our_file filename) with
   | Inr env -> Inr env
-  | Inl (stack, (_, dsenv, tcenv)) ->
-    let env = dsenv, tcenv in
-    match push_then_do_or_revert_all env stack
-            (fun _env -> Some <| deps_of_our_file filename) with
+  | Inl (stack, (deps, maybe_interface)) ->
+    match tc_deps env stack deps with
     | Inr env -> Inr env
-    | Inl (stack, (deps, maybe_interface)) ->
-      match tc_deps env stack deps with
-      | Inr env -> Inr env
-      | Inl (stack, env, ts) ->
-        match maybe_interface with
-        | None -> Inl (deps, (stack, ts), env)
-        | Some intf ->
-          // We found an interface: record its contents in the desugaring environment
-          // to be interleaved with the module implementation on-demand
-          match push_then_do_or_revert_all env stack
-                  (fun env -> Some <| FStar.Universal.load_interface_decls env intf) with
-          | Inr env -> Inr env
-          | Inl (stack, env) -> Inl (deps, (stack, ts), env)
+    | Inl (stack, env, ts) ->
+      match maybe_interface with
+      | None -> Inl (deps, (stack, ts), env)
+      | Some intf ->
+        // We found an interface: record its contents in the desugaring environment
+        // to be interleaved with the module implementation on-demand
+        match push_then_do_or_revert_all env stack
+                (fun env -> Some <| FStar.Universal.load_interface_decls env intf) with
+        | Inr env -> Inr env
+        | Inl (stack, env) -> Inl (deps, (stack, ts), env)
 
 let rephrase_dependency_error issue =
   { issue with issue_message =
