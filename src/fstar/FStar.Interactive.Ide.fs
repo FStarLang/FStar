@@ -82,6 +82,7 @@ let cleanup (dsenv, env) =
   TcEnv.cleanup_interactive env
 
 let with_captured_errors' env f =
+  let tcenv = snd env in
   try
     f ()
   with
@@ -90,18 +91,18 @@ let with_captured_errors' env f =
               "F* may be in an inconsistent state.\n" ^
               "Please file a bug report, ideally with a " ^
               "minimized version of the program that triggered the error." in
-    FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
+    FStar.TypeChecker.Err.add_errors tcenv [(msg, TcEnv.get_range tcenv)];
     // Make sure the user sees the error, even if it happened transiently while
     // running an automatic syntax checker like FlyCheck.
     Util.print_error msg;
     None
 
   | FStar.Errors.Error(msg, r) when not (Options.trace_error ()) ->
-    FStar.TypeChecker.Err.add_errors env [(msg, r)];
+    FStar.TypeChecker.Err.add_errors tcenv [(msg, r)];
     None
 
   | FStar.Errors.Err msg when not (Options.trace_error ()) ->
-    FStar.TypeChecker.Err.add_errors env [(msg, TcEnv.get_range env)];
+    FStar.TypeChecker.Err.add_errors tcenv [(msg, TcEnv.get_range tcenv)];
     None
 
 let with_captured_errors env f =
@@ -109,7 +110,7 @@ let with_captured_errors env f =
   else with_captured_errors' env f
 
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
-  with_captured_errors env (fun () ->
+  with_captured_errors (dsenv, env) (fun () ->
     match tc_one_fragment curmod dsenv env frag with
     | Some (m, dsenv, env) ->
       Some (m, (dsenv, env), FStar.Errors.get_err_count())
@@ -946,7 +947,7 @@ let run_initial_push (st: partial_repl_state) query =
 
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
 
-  match with_captured_errors (snd env)
+  match with_captured_errors env
           (fun () -> Some (tc_prims_and_deps env st.prepl_fname)) with
   | Some (deps, repl_deps, env) ->
     on_successful_init (finish_name_tracking env) deps repl_deps
