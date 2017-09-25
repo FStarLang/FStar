@@ -38,10 +38,14 @@ module CTable = FStar.Interactive.CompletionTable
 
 exception ExitREPL of int
 
+type timed_fname =
+  { tf_fname: string;
+    tf_modtime: time }
+
 type load_dependency_task =
-  | LDInterleaved of string (* interface *) * string (* impl *)
-  | LDSingle of string (* interface or implementation *)
-  | LDInterfaceOfCurrentFile of string (* interface *)
+  | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
+  | LDSingle of timed_fname (* interface or implementation *)
+  | LDInterfaceOfCurrentFile of timed_fname (* interface *)
 
 type env_t = DsEnv.env * TcEnv.env
 
@@ -53,18 +57,30 @@ let tc_one ((dsenv, tcenv): env_t) intf_opt mod =
 (** Load the file or files described by `task` **)
 let load_one (env: env_t) (task: load_dependency_task) =
   match task with
-  | LDInterleaved (intf, impl) -> tc_one env (Some intf) impl
-  | LDSingle intf_or_impl -> tc_one env None intf_or_impl
-  | LDInterfaceOfCurrentFile intf -> Universal.load_interface_decls env intf
+  | LDInterleaved (intf, impl) -> tc_one env (Some intf.tf_fname) impl.tf_fname
+  | LDSingle intf_or_impl -> tc_one env None intf_or_impl.tf_fname
+  | LDInterfaceOfCurrentFile intf -> Universal.load_interface_decls env intf.tf_fname
+
+let tf_of_fname fname =
+  { tf_fname = fname;
+    tf_modtime = get_file_last_modification_time fname }
+
+(** Create a timed_fname with a dummy modtime **)
+let dummy_tf_of_fname fname =
+  { tf_fname = fname;
+    tf_modtime = Util.now () }
 
 (** Build a list of load tasks from a list of dependencies **)
-let rec tasks_of_deps (deps: list string) (final_tasks: list<load_dependency_task>) =
-  match deps with
-  | intf :: impl :: deps' when needs_interleaving intf impl ->
-    LDInterleaved (intf, impl) :: tasks_of_deps deps' final_tasks
-  | intf_or_impl :: deps' ->
-    LDSingle intf_or_impl :: tasks_of_deps deps' final_tasks
-  | [] -> final_tasks
+let tasks_of_deps (deps: list string) (final_tasks: list<load_dependency_task>) =
+  let wrap = dummy_tf_of_fname in
+  let rec aux deps final_tasks =
+    match deps with
+    | intf :: impl :: deps' when needs_interleaving intf impl ->
+      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
+    | intf_or_impl :: deps' ->
+      LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
+    | [] -> final_tasks in
+  aux deps final_tasks
 
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
@@ -159,7 +175,7 @@ let deps_and_load_tasks_of_our_file filename =
          raise (Err (Util.format1 "Expecting an interface, got %s" intf));
       if not (Parser.Dep.is_implementation impl) then
          raise (Err (Util.format1 "Expecting an implementation, got %s" impl));
-      [LDInterfaceOfCurrentFile intf]
+      [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)]
     | [impl] ->
       []
     | _ ->
@@ -172,9 +188,8 @@ let deps_and_load_tasks_of_our_file filename =
     tasks_of_deps deps load_intf_tasks in
   deps, tasks
 
-(* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
-type m_timestamps = list<(option<string> * string * option<time> * time)>
-type deps_stack_t = list<env_t> // Environments created while typechecking deps
+(** Environments created while processing dependency loading tasks **)
+type deps_stack_t = list<(load_dependency_task * env_t)>
 
 (** Push into `env`, then run `fn` and revert all changes in `stack` if it fails.
 
