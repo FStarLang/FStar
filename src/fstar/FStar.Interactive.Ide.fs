@@ -58,13 +58,13 @@ let load_one (env: env_t) (task: load_dependency_task) =
   | LDInterfaceOfCurrentFile intf -> Universal.load_interface_decls env intf
 
 (** Build a list of load tasks from a list of dependencies **)
-let rec tasks_of_deps (deps: list string) =
+let rec tasks_of_deps (deps: list string) (final_tasks: list<load_dependency_task>) =
   match deps with
   | intf :: impl :: deps' when needs_interleaving intf impl ->
-    LDInterleaved (intf, impl) :: tasks_of_deps deps'
+    LDInterleaved (intf, impl) :: tasks_of_deps deps' final_tasks
   | intf_or_impl :: deps' ->
-    LDSingle intf_or_impl :: tasks_of_deps deps'
-  | [] -> []
+    LDSingle intf_or_impl :: tasks_of_deps deps' final_tasks
+  | [] -> final_tasks
 
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
