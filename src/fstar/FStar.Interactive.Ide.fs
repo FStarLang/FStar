@@ -918,9 +918,9 @@ let tc_prims_and_deps env filename =
   (deps, repl_deps, env)
 
 let rephrase_dependency_error issue =
-  { issue with
-    issue_message = format1 "While loading dependencies: %s"
-                            issue.issue_message }
+  { issue with issue_message =
+               format1 "Error while computing or loading dependencies:\n%s"
+                       issue.issue_message }
 
 let run_initial_push (st: partial_repl_state) query =
   assert (not query.push_peek_only);
