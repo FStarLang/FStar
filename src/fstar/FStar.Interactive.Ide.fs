@@ -86,7 +86,7 @@ let with_captured_errors' env f =
   try
     f ()
   with
-  | Failure (msg) when not (Options.trace_error ()) ->
+  | Failure (msg) ->
     let msg = "ASSERTION FAILURE: " ^ msg ^ "\n" ^
               "F* may be in an inconsistent state.\n" ^
               "Please file a bug report, ideally with a " ^
@@ -97,11 +97,11 @@ let with_captured_errors' env f =
     Util.print_error msg;
     None
 
-  | FStar.Errors.Error(msg, r) when not (Options.trace_error ()) ->
+  | FStar.Errors.Error(msg, r) ->
     FStar.TypeChecker.Err.add_errors tcenv [(msg, r)];
     None
 
-  | FStar.Errors.Err msg when not (Options.trace_error ()) ->
+  | FStar.Errors.Err msg ->
     FStar.TypeChecker.Err.add_errors tcenv [(msg, TcEnv.get_range tcenv)];
     None
 
