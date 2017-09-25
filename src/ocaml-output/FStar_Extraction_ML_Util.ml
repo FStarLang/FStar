@@ -428,7 +428,7 @@ let record_field_path:
         (match uu____954 with
          | (ns,uu____964) ->
              FStar_All.pipe_right ns
-               (FStar_List.map (fun id  -> id.FStar_Ident.idText)))
+               (FStar_List.map (fun id1  -> id1.FStar_Ident.idText)))
     | uu____975 -> failwith "impos"
 let record_fields:
   'Auu____986 .

@@ -43,7 +43,7 @@ let mangle_projector_lid: FStar_Ident.lident -> FStar_Ident.lident =
   fun x  -> x
 let lident_as_mlsymbol:
   FStar_Ident.lident -> FStar_Extraction_ML_Syntax.mlsymbol =
-  fun id  -> (id.FStar_Ident.ident).FStar_Ident.idText
+  fun id1  -> (id1.FStar_Ident.ident).FStar_Ident.idText
 let as_pair:
   'Auu____72 .
     'Auu____72 Prims.list ->
@@ -560,13 +560,13 @@ let extract_bundle:
                              | (uu____1622,c_ty) ->
                                  let fields =
                                    FStar_List.map2
-                                     (fun id  ->
+                                     (fun id1  ->
                                         fun uu____1661  ->
                                           match uu____1661 with
                                           | (uu____1670,ty) ->
                                               let lid =
                                                 FStar_Ident.lid_of_ids
-                                                  (FStar_List.append ns [id]) in
+                                                  (FStar_List.append ns [id1]) in
                                               let uu____1673 =
                                                 lident_as_mlsymbol lid in
                                               (uu____1673, ty)) ids c_ty in

@@ -121,7 +121,7 @@ let removeTick:
         else (x, n1)
 let convRange: FStar_Range.range -> Prims.int = fun r  -> Prims.parse_int "0"
 let convIdent: FStar_Ident.ident -> FStar_Extraction_ML_Syntax.mlident =
-  fun id  -> ((id.FStar_Ident.idText), (Prims.parse_int "0"))
+  fun id1  -> ((id1.FStar_Ident.idText), (Prims.parse_int "0"))
 let bv_as_ml_tyvar:
   FStar_Syntax_Syntax.bv ->
     (Prims.string,Prims.int) FStar_Pervasives_Native.tuple2

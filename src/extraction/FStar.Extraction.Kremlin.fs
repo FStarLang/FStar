@@ -598,8 +598,13 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
+    when string_of_mlpath p = "FStar.HyperStack.ST.op_Bang" ->
+      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ]) when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ->
+      EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "0"))
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
@@ -623,6 +628,9 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
     when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
+    when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" ->
+      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.push_frame") ->
       EPushFrame
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.pop_frame") ->
