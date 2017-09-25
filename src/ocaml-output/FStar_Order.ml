@@ -36,8 +36,8 @@ let rec compare_list:
       fun l2  ->
         match (l1, l2) with
         | ([],[]) -> Eq
-        | ([],uu____131) -> Lt
-        | (uu____138,[]) -> Gt
+        | ([],uu____132) -> Lt
+        | (uu____139,[]) -> Gt
         | (x::xs,y::ys) ->
-            let uu____157 = f x y in
-            lex uu____157 (fun uu____159  -> compare_list f xs ys)
+            let uu____158 = f x y in
+            lex uu____158 (fun uu____160  -> compare_list f xs ys)

@@ -119,26 +119,26 @@ type __internal_ocaml_attributes =
   | Comment of Prims.string[@@deriving show]
 let uu___is_PpxDerivingShow: __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
-    match projectee with | PpxDerivingShow  -> true | uu____2263 -> false
+    match projectee with | PpxDerivingShow  -> true | uu____2264 -> false
 let uu___is_PpxDerivingShowConstant:
   __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
     match projectee with
     | PpxDerivingShowConstant _0 -> true
-    | uu____2269 -> false
+    | uu____2270 -> false
 let __proj__PpxDerivingShowConstant__item___0:
   __internal_ocaml_attributes -> Prims.string =
   fun projectee  -> match projectee with | PpxDerivingShowConstant _0 -> _0
 let uu___is_CInline: __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
-    match projectee with | CInline  -> true | uu____2282 -> false
+    match projectee with | CInline  -> true | uu____2283 -> false
 let uu___is_Substitute: __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
-    match projectee with | Substitute  -> true | uu____2287 -> false
+    match projectee with | Substitute  -> true | uu____2288 -> false
 let uu___is_Gc: __internal_ocaml_attributes -> Prims.bool =
-  fun projectee  -> match projectee with | Gc  -> true | uu____2292 -> false
+  fun projectee  -> match projectee with | Gc  -> true | uu____2293 -> false
 let uu___is_Comment: __internal_ocaml_attributes -> Prims.bool =
   fun projectee  ->
-    match projectee with | Comment _0 -> true | uu____2298 -> false
+    match projectee with | Comment _0 -> true | uu____2299 -> false
 let __proj__Comment__item___0: __internal_ocaml_attributes -> Prims.string =
   fun projectee  -> match projectee with | Comment _0 -> _0
