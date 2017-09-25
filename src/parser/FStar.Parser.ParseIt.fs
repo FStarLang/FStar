@@ -62,12 +62,13 @@ let read_file (filename:string) =
   match read_vfs_entry filename with
   | Some contents ->
     if debug then Util.print1 "Reading in-memory file %s" filename;
-    contents
+    filename, contents
   | None ->
+    let filename = find_file filename in
     try
       if debug then Util.print1 "Opening file %s" filename;
       let fs = new System.IO.StreamReader(filename) in
-      fs.ReadToEnd ()
+      filename, fs.ReadToEnd ()
     with _ ->
       raise (Err (Util.format1 "Unable to read file %s" filename))
 
@@ -99,8 +100,7 @@ let parse fn =
   let filename,sr,fs,line,col = match fn with
     | Inl (filename:string) ->
         check_extension filename;
-        let filename' = find_file filename in
-        let contents = read_file filename' in
+        let filename', contents = read_file filename in
         filename',
         new System.IO.StringReader(contents) :> System.IO.TextReader,
         contents,

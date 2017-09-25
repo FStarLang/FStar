@@ -48,11 +48,12 @@ let read_file (filename:string) =
   match read_vfs_entry filename with
   | Some contents ->
     if debug then U.print1 "Reading in-memory file %s" filename;
-    contents
+    filename, contents
   | None ->
+    let filename = find_file filename in
     try
       if debug then U.print1 "Opening file %s" filename;
-      BatFile.with_file_in filename BatIO.read_all
+      filename, BatFile.with_file_in filename BatIO.read_all
     with e ->
       raise (Err (U.format1 "Unable to read file %s\n" filename))
 
@@ -80,8 +81,8 @@ let parse fn =
   let lexbuf, filename = match fn with
     | U.Inl(f) ->
         check_extension f;
-        let f' = find_file f in
-        (try create (read_file f') f' 1 0, f'
+        let f', contents = read_file f in
+        (try create contents f' 1 0, f'
          with _ -> raise (Err(FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f')))
     | U.Inr s ->
       create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
