@@ -58,7 +58,8 @@ let inline_stack_inv h h' : GTot Type0 =
   /\ Map.domain h.h == Map.domain h'.h
   (* Any region that is not the tip has no seen any allocation *)
   /\ (forall (r:HH.rid). {:pattern (Map.contains h.h r)} (r <> h.tip /\ Map.contains h.h r)
-       ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r))
+       ==> Heap.equal_dom (Map.sel h.h r) (Map.sel h'.h r) /\
+           Map.contains h'.h r)
 
 (**
    Effect that indicates to the Kremlin compiler that allocation may occur in the caller's frame.
@@ -257,18 +258,18 @@ let test_do_nothing x =
 val test_do_something: s:stackref int -> Stack int
   (requires (fun h -> contains h s))
   (ensures (fun h r h1 -> contains h s /\ r = sel h s))
-let test_do_something x =
+let test_do_something s =
   push_frame();
-  let res = !x in
+  let res = !s in
   pop_frame ();
   res
 
 val test_do_something_else: s:stackref int -> v:int -> Stack unit
   (requires (fun h -> contains h s))
   (ensures (fun h r h1 -> contains h1 s /\ v = sel h1 s))
-let test_do_something_else x v =
+let test_do_something_else s v =
   push_frame();
-  x := v;
+  s := v;
   pop_frame ()
 
 val test_allocate: unit -> Stack unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))

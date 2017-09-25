@@ -2,6 +2,7 @@ module FStar.Tactics.Derived
 
 open FStar.Reflection
 open FStar.Reflection.Types
+open FStar.Tactics.Result
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
@@ -40,8 +41,13 @@ let rec mapM f l = match l with
 let idtac : tactic unit = return ()
 
 (* working around #885 *)
-private let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed #a msg s0
+private let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed (msg, s0)
 let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
+
+let guard (b : bool) : tactic unit =
+    if b
+    then return ()
+    else fail "guard failed"
 
 let or_else (#a:Type) (t1 : tactic a) (t2 : tactic a) : tactic a =
     r <-- trytac t1;
@@ -64,11 +70,13 @@ let repeat1 (#a:Type) (t : tactic a) : tactic (list a) =
 let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
     (trytac (seq (t;; return ()) (repeatseq t));; return ()) ()
 
-let simpl : tactic unit = norm [Simpl; Primops]
-let whnf  : tactic unit = norm [WHNF; Primops]
+let simpl : tactic unit = norm [simplify; primops]
+let whnf  : tactic unit = norm [whnf; primops]
 
-private val __cut : (#b:Type) -> (a:Type) -> (a -> b) -> a -> b
-private let __cut #b a f x = f x
+let intros : tactic (list binder) = repeat intro
+
+private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
+private let __cut a b f x = f x
 
 let tcut (t:term) : tactic binder =
     qq <-- quote_lid ["FStar";"Tactics";"Derived";"__cut"];
@@ -147,7 +155,7 @@ let unfold_point (t:term) : tactic unit =
     match f with
     | Comp Eq _ l r ->
         if term_eq l t
-        then (norm [Delta];; trefl)
+        then (norm [delta];; trefl)
         else trefl
     | _ ->
         fail "impossible"
@@ -184,3 +192,10 @@ let rec iseq (ts : list (tactic unit)) : tactic unit =
         divide 1 t (iseq ts);;
         return ()
     | [] -> return ()
+
+private val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (l_Exists p)
+private let __witness #a x #p _ = ()
+
+let witness (t : tactic term) : tactic unit =
+    apply_raw (quote __witness);;
+    exact t

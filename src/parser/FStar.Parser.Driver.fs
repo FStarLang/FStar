@@ -35,17 +35,14 @@ type fragment =
 
 let parse_fragment frag : fragment =
     match ParseIt.parse (Inr frag) with
-    | Inl (Inl [], _) ->
-      Empty
-
-    | Inl (Inl [modul], _) -> //interactive mode: module
+    | Inl (Inl modul, _) -> //interactive mode: module
       Modul modul
+
+    | Inl (Inr [], _) -> //interactive mode: blank space
+      Empty
 
     | Inl (Inr decls, _) -> //interactive mode: more decls
       Decls decls
-
-    | Inl (Inl _, _) ->
-      raise (Err("Refusing to check more than one module at a time incrementally"))
 
     | Inr (msg,r) ->
       raise (Error(msg, r))

@@ -26,7 +26,7 @@ let rec fib_norm (n : int) : tactic unit =
         dup;;
         apply (quote op_Addition);;
         iseq [fib_norm (n - 1); fib_norm (n - 2)];;
-        norm [Primops];;
+        norm [primops];;
         trefl
     )
 

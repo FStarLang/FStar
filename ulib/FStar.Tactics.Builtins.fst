@@ -35,6 +35,9 @@ assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 
 assume private val __unquote : #a:Type -> term -> __tac a
+(** [unquote t] with turn a quoted term [t] into an actual value, of
+any type. This will fail at tactic runtime if the quoted term does not
+typecheck to type [a]. *)
 let unquote (#a:Type) (t:term) : tactic a = fun () -> TAC?.reflect (__unquote #a t)
 
 assume private val __trytac : #a:Type -> __tac a -> __tac (option a)
@@ -53,15 +56,22 @@ assume private val __norm  : list norm_step -> __tac unit
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized
 by the flags in [steps].
-Currently, the flags (defined in FStar.Reflection.Syntax) are
-[Simpl] (do logical simplifications)
-[WHNF] (only reduce until weak head-normal-form)
-[Primops] (performing primitive reductions, such as arithmetic and
+Currently, the flags (provided in Prims) are
+[simpl] (do logical simplifications)
+[whnf] (only reduce until weak head-normal-form)
+[primops] (performing primitive reductions, such as arithmetic and
 string operations)
-[Delta] (unfold names)
-[UnfoldOnly] (restricts unfolding to those names)
+[delta] (unfold names)
+[zeta] (inline let bindings)
+[iota] (reduce match statements over constructors)
+[delta_only] (restrict delta to only unfold this list of fully-qualfied identifiers)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
+
+assume private val __norm_term  : list norm_step -> term -> __tac term
+(** [norm_term steps t] will call the normalizer on the term [t]
+using the list of steps [steps]. The list has the same meaning as for [norm]. *)
+let norm_term steps t : tactic term = fun () -> TAC?.reflect (__norm_term steps t)
 
 assume private val __intro  : __tac binder
 (** [intro] pushes the first argument of an arrow goal into the
@@ -77,18 +87,37 @@ Currently broken (c.f. issue #1103)
 *)
 let intro_rec : tactic (binder * binder) = fun () -> TAC?.reflect __intro_rec
 
-assume private val __revert  : __tac unit
+assume private val __rename_to  : binder -> string -> __tac unit
+(** [rename_to b nm] will rename the binder [b] to [nm] in
+the environment, goal, and witness in a safe manner. The only use of this
+is to make goals and terms more user readable. *)
+let rename_to bv s : tactic unit = fun () -> TAC?.reflect (__rename_to bv s)
 
+assume private val __revert  : __tac unit
 (** [revert] pushes out a binder from the environment into the goal type,
 so a behaviour opposite to [intros].
 *)
 let revert : tactic unit = fun () -> TAC?.reflect __revert
 
-assume private val __clear   : __tac unit
-(** [clear] will drop the outermost binder from the environment.
+assume private val __binder_retype  : binder -> __tac unit
+(** [binder_retype] changes the type of a binder in the context. After calling it
+with a binder of type `t`, the user is presented with a goal of the form `t == ?u`
+to be filled. The original goal (following that one) has the type of `b` in the
+context replaced by `?u`.
+*)
+let binder_retype (b : binder) : tactic unit = fun () -> TAC?.reflect (__binder_retype b)
+
+assume private val __clear_top : __tac unit
+(** [clear_top] will drop the outermost binder from the environment.
 Can only be used if the goal does not at all depend on it.
 *)
-let clear : tactic unit = fun () -> TAC?.reflect __clear
+let clear_top : tactic unit = fun () -> TAC?.reflect __clear_top
+
+assume private val __clear : binder -> __tac unit
+(** [clear] will drop the given binder from the context, is
+nothing depends on it.
+*)
+let clear (b : binder) : tactic unit = fun () -> TAC?.reflect (__clear b)
 
 assume private val __rewrite : binder -> __tac unit
 (** If [b] is a binder of type [v == r], [rewrite b] will rewrite
@@ -128,6 +157,11 @@ of [f] to any amount of arguments (which need to be solved as further goals).
 The amount of arguments introduced is the least such that [f a_i] unifies
 with the goal's type. *)
 let apply (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply tt)
+
+assume private val __apply_raw : term -> __tac unit
+(** [apply_raw f] is like [apply], but will ask for all arguments regardless
+of whether they appear free in further goals. *)
+let apply_raw (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__apply_raw tt)
 
 assume private val __apply_lemma : term -> __tac unit
 (** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a Lemma
@@ -181,7 +215,7 @@ some [?u] (possibly with exact) and then solving the other goal.
 let dup : tactic unit = fun () -> TAC?.reflect __dup
 
 assume private val __flip : __tac unit
-(** Flip the first two goals. *)
+(** Flip the order of the first two goals. *)
 let flip : tactic unit = fun () -> TAC?.reflect __flip
 
 assume private val __qed : __tac unit
@@ -214,7 +248,20 @@ change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
 let set_options s : tactic unit = fun () -> TAC?.reflect (__set_options s)
 
 assume private val __uvar_env : env -> option typ -> __tac term
+(** Creates a new, unconstrained unification variable in environment
+[env]. The type of the uvar can optionally be provided in [o]. If not
+provided, a second uvar is created for the type. *)
 let uvar_env (e : env) (o : option typ) : tactic term = fun () -> TAC?.reflect (__uvar_env e o)
 
 assume private val __unify : term -> term -> __tac bool
+(** Call the unifier on two terms. The return value is whether
+unification was possible. When the tactics returns true, the terms may
+have been instantited by unification. When false, there is no effect. *)
 let unify (t1 t2 : term) : tactic bool = fun () -> TAC?.reflect(__unify t1 t2)
+
+assume private val __launch_process : string -> string -> string -> __tac string
+(** Launches an external process [prog] with arguments [args] and input
+[input] and returns the output. For security reasons, this can only be
+performed when the `--unsafe_tactic_exec` options was provided for the
+current F* invocation. The tactic will fail if this is not so. *)
+let launch_process (prog args input : string) : tactic string = fun () -> TAC?.reflect (__launch_process prog args input)

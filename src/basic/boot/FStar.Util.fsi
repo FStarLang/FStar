@@ -23,7 +23,7 @@ open FStar.BaseTypes
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
 
 val max_int: int
 val return_all: 'a -> ML<'a>
@@ -41,7 +41,9 @@ val string_of_time: time -> string
 (* Functional sets *)
 type set<'a>
   = (list<'a> * ('a -> 'a -> bool)) // JUST FSHARP
-val new_set: ('a -> 'a -> int) -> ('a -> int) -> set<'a>
+val as_set : list<'a> -> ('a -> 'a -> int) -> set<'a>
+val set_elements: set<'a> -> list<'a>
+val new_set: ('a -> 'a -> int) -> set<'a>
 val set_is_empty: set<'a> -> bool
 val set_add: 'a -> set<'a> -> set<'a>
 val set_remove: 'a -> set<'a> -> set<'a>
@@ -51,12 +53,12 @@ val set_intersect: set<'a> -> set<'a> -> set<'a>
 val set_is_subset_of: set<'a> -> set<'a> -> bool
 val set_count: set<'a> -> int
 val set_difference: set<'a> -> set<'a> -> set<'a>
-val set_elements: set<'a> -> list<'a>
 
 (* A fifo_set is a set preserving the insertion order *)
 type fifo_set<'a>
   = set<'a> // JUST FSHARP
-val new_fifo_set: ('a -> 'a -> int) -> ('a -> int) -> fifo_set<'a>
+val new_fifo_set: ('a -> 'a -> int) -> fifo_set<'a>
+val as_fifo_set: list<'a> -> ('a -> 'a -> int) -> fifo_set<'a>
 val fifo_set_is_empty: fifo_set<'a> -> bool
 (* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
 val fifo_set_add: 'a -> fifo_set<'a> -> fifo_set<'a>
@@ -120,6 +122,7 @@ val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
 val format5: string -> string -> string -> string -> string -> string -> string
+val format6: string -> string -> string -> string -> string -> string -> string -> string
 
 val print: string -> list<string> -> unit
 val print1: string -> string -> unit
@@ -182,7 +185,7 @@ val concat_l : string -> list<string> -> string
 
 (* not relying on representation *)
 type file_handle
-  = System.IO.TextWriter// JUST FSHARP 
+  = System.IO.TextWriter// JUST FSHARP
 val open_file_for_writing: string -> file_handle
 val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
@@ -211,8 +214,8 @@ val trace_of_exn: exn -> string
 
 (* not relying on representation *)
 type proc
-val launch_process: string -> string -> string -> string -> (string -> string -> bool) -> string
-val start_process: string -> string -> string -> (string -> string -> bool) -> proc
+val launch_process: bool -> string -> string -> string -> string -> (string -> string -> bool) -> string
+val start_process: bool -> string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
@@ -252,7 +255,7 @@ val string_of_char:  char -> Tot<string>
 val hex_string_of_byte:  byte -> Tot<string>
 val string_of_bytes: array<byte> -> Tot<string>
 val bytes_of_string: string -> Tot<array<byte>>
-val starts_with: string -> string -> Tot<bool>
+val starts_with: long:string -> short:string -> Tot<bool>
 val trim_string: string -> Tot<string>
 val ends_with: string -> string -> Tot<bool>
 val char_at: string -> int -> char

@@ -145,18 +145,18 @@
       ],
       0
     ],
-    [ "Problem01.test_relaxed_prefix", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Problem01.test_relaxed_prefix",
-      2,
+      1,
       2,
       1,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_correspondence_Problem01.prefix.fuel_instrumented", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@fuel_correspondence_Problem01.prefix.fuel_instrumented",
+        "@fuel_correspondence_Problem01.test_prefix.fuel_instrumented",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
         "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",

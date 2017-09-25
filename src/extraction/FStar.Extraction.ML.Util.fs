@@ -49,8 +49,7 @@ let mlconst_of_const (sctt : sconst) =
   | Const_bytearray (bytes, _) ->
       MLC_Bytes bytes
 
-  | Const_string (bytes, _) ->
-      MLC_String (string_of_unicode (bytes))
+  | Const_string (s, _) -> MLC_String (s)
 
   | Const_reify
   | Const_reflect _ ->
@@ -137,7 +136,7 @@ type unfold_t = mlty -> option<mlty>
 let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * option<mlexpr>) =
     match t, t' with
         | MLTY_Var x, MLTY_Var y ->
-          if fst x = fst y
+          if x = y
           then true, e
           else false, None
 
@@ -292,7 +291,7 @@ let rec eraseTypeDeep unfold_ty (t:mlty) : mlty =
     | _ ->  t
 
 let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
-let prims_op_amp_amp  = with_ty (mk_ty_fun [(("x",0), ml_bool_ty); (("y",0), ml_bool_ty)] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
+let prims_op_amp_amp  = with_ty (mk_ty_fun [("x", ml_bool_ty); ("y", ml_bool_ty)] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
 let conjoin e1 e2 = with_ty ml_bool_ty <| MLE_App(prims_op_amp_amp, [e1;e2])
 let conjoin_opt e1 e2 = match e1, e2 with
     | None, None -> None
@@ -327,6 +326,9 @@ let rec uncurry_mlty_fun t =
    to FStar.Tactics.Native.register_tactic *)
 module RD = FStar.Reflection.Data
 
+exception CallNotImplemented
+let not_implemented_warning t = BU.format1 ". Tactic %s will not run natively.\n" t |> BU.print_warning
+
 type emb_decl =
     | Embed
     | Unembed
@@ -341,6 +343,7 @@ let fstar_tc_common_prefix s = str_to_name ("FStar_TypeChecker_Common." ^ s)
 let fstar_refl_basic_prefix s = str_to_name ("FStar_Reflection_Basic." ^ s)
 let fstar_refl_data_prefix s = str_to_name ("FStar_Reflection_Data." ^ s)
 let fstar_emb_basic_prefix s = str_to_name ("FStar_Syntax_Embeddings." ^ s)
+
 let mk_basic_embedding (m: emb_decl) (s: string) =
     match m with
     | Embed -> fstar_emb_basic_prefix ("embed_" ^ s)
@@ -349,6 +352,18 @@ let mk_embedding (m: emb_decl) (s: string) =
     match m with
     | Embed -> fstar_refl_basic_prefix ("embed_" ^ s)
     | Unembed -> fstar_refl_basic_prefix ("unembed_" ^ s)
+
+let mk_tactic_unembedding (args: list<mlexpr'>) =
+    let tac_arg = "t" in
+    let reify_tactic = with_ty MLTY_Top  <| MLE_App (str_to_top_name "FStar_Tactics_Interpreter.reify_tactic", [str_to_top_name tac_arg]) in
+    let from_tac = str_to_top_name ("FStar_Tactics_Builtins.from_tac_" ^ BU.string_of_int (List.length args-1)) in
+    let unembed_tactic = str_to_top_name ("FStar_Tactics_Interpreter.unembed_tactic_" ^ BU.string_of_int (List.length args-1)) in
+    let app = match (List.length args) with
+    | 1 -> MLE_App (from_tac, [with_ty MLTY_Top (MLE_App (unembed_tactic, List.map (with_ty MLTY_Top) args@[reify_tactic]))])
+    | n ->
+        BU.print_warning (BU.format "Unembedding not defined for tactics of %d arguments" [BU.string_of_int n]);
+        raise CallNotImplemented in
+    MLE_Fun ([(tac_arg, MLTY_Top); ("()", MLTY_Top)], with_ty MLTY_Top app)
 
 let rec mk_tac_param_type (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
@@ -371,12 +386,18 @@ let rec mk_tac_param_type (t: term): mlexpr' =
             | Tm_fvar fv when fv_eq_lid fv PC.option_lid ->
                 let arg_term = fst (List.hd args) in
                 MLE_App (with_ty MLTY_Top (fstar_tc_common_prefix "t_option_of"), List.map (with_ty MLTY_Top) [mk_tac_param_type arg_term] )
-            | _ -> failwith ("Type term not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h'))) )
-        | _ -> failwith "Impossible")
-     | _ -> failwith ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)))
+            | _ ->
+                BU.print_warning ("Type term not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')));
+                raise CallNotImplemented)
+        | _ ->
+            BU.print_warning "Impossible";
+            raise CallNotImplemented)
+     | _ ->
+         BU.print_warning ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)));
+         raise CallNotImplemented
 
-(* this assumes that functions for embedding/unembedding a type live in the same place
-   and are named embed_x, unembed_x *)
+(* Except for the `tactic` type, which is handled specially, this assumes that functions for embedding/unembedding a type
+   live in the same place and are named embed_x, unembed_x *)
 let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
     | Tm_fvar fv when fv_eq_lid fv PC.int_lid -> mk_basic_embedding m "int"
@@ -391,33 +412,52 @@ let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
     | Tm_app (h, args) ->
         (match (FStar.Syntax.Subst.compress h).n with
          | Tm_uinst (h', _) ->
-            let ht, hargs, type_arg =
+            let ht, hargs, type_arg, is_tactic =
                 (match (FStar.Syntax.Subst.compress h').n with
                  | Tm_fvar fv when fv_eq_lid fv PC.list_lid ->
                      let arg_term = fst (List.hd args) in
-                     "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
+                     "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term, false
                  | Tm_fvar fv when fv_eq_lid fv PC.option_lid ->
                      let arg_term = fst (List.hd args) in
-                     "option", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term
-                 | Tm_fvar fv when fv_eq_lid fv PC.tactic_lid -> failwith "Embedding for tactics not defined"
-                 | _ -> failwith ("Embedding not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')))) in
+                     "option", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term, false
+                 | Tm_fvar fv when fv_eq_lid fv PC.tactic_lid ->
+                     let arg_term = fst (List.hd args) in
+                     "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term, true
+                 | _ ->
+                     BU.print_warning ("Embedding not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')));
+                     raise CallNotImplemented) in
             let hargs =
                 match m with
                 | Embed -> hargs @ [type_arg]
                 | Unembed -> hargs in
-            MLE_App (with_ty MLTY_Top (mk_embedding m ht), List.map (with_ty MLTY_Top) hargs)
-         | _ -> failwith "Impossible")
-    | _ -> failwith ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)))
+            if is_tactic then
+                match m with
+                | Embed ->
+                    BU.print_warning "Embedding not defined for tactic type";
+                    raise CallNotImplemented
+                | Unembed -> mk_tactic_unembedding hargs
+            else
+                MLE_App (with_ty MLTY_Top (mk_basic_embedding m ht), List.map (with_ty MLTY_Top) hargs)
+         | _ ->
+             BU.print_warning "Impossible";
+             raise CallNotImplemented)
+    | _ ->
+        BU.print_warning ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)));
+        raise CallNotImplemented
 
 let mk_interpretation_fun tac_lid assm_lid t bs =
-    let arg_types = List.map (fun x -> (fst x).sort) bs in
-    let arity = List.length bs in
-    let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int arity) in
-    let tac_fun = MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name tac_lid]) in
-    let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [with_ty MLTY_Top assm_lid]) in
-    let args =
-        [str_to_name "ps"; tac_fun] @
-        (List.map (mk_tac_embedding_path Unembed) arg_types) @
-        [mk_tac_embedding_path Embed t; mk_tac_param_type t; tac_lid_app; str_to_name "args"] in
-    let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
-    MLE_Fun ([(("ps", 0), MLTY_Top); (("args", 0), MLTY_Top)], app)
+    try
+        let arg_types = List.map (fun x -> (fst x).sort) bs in
+        let arity = List.length bs in
+        let h = str_to_top_name ("FStar_Tactics_Interpreter.mk_tactic_interpretation_" ^ string_of_int arity) in
+        let tac_fun = MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name tac_lid]) in
+        let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [with_ty MLTY_Top assm_lid]) in
+        let args =
+            [str_to_name "ps"; tac_fun] @
+            (List.map (mk_tac_embedding_path Unembed) arg_types) @
+            [mk_tac_embedding_path Embed t; mk_tac_param_type t; tac_lid_app; str_to_name "args"] in
+        let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
+        Some (MLE_Fun ([("ps", MLTY_Top); ("args", MLTY_Top)], app))
+    with CallNotImplemented ->
+        not_implemented_warning (string_of_lid tac_lid);
+        None

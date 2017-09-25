@@ -251,15 +251,12 @@ let above_tip_is_live (#a:Type) (#rel:preorder a) (m:mem) (x:mreference a rel) :
 let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-= ()
+= lemma_sel_same_addr #(frameOf r1) #a #rel h.h r1.ref r2.ref
 
 let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-	 [SMTPatOr [
-           [SMTPat (sel h r1); SMTPat (sel h r2)];
-           [SMTPat (frameOf r1); SMTPat (frameOf r2); SMTPat (as_addr r1); SMTPat (as_addr r2)]
-         ]]
+   [SMTPat (sel h r1); SMTPat (sel h r2)]
 = lemma_sel_same_addr h r1 r2
 
 #set-options "--z3rlimit 16"
@@ -267,7 +264,13 @@ let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a r
 let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
   :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-= lemma_sel_same_addr h r1 r2
+= Classical.or_elim
+    #(h `contains` r1)
+    #(h `contains` r2)
+    #(fun _ -> h `contains` r1 /\ h `contains` r2)
+    (fun _ -> lemma_sel_same_addr h r1 r2)
+    (fun _ -> lemma_sel_same_addr h r2 r1);
+  lemma_upd_same_addr h.h (MkRef?.ref r1) (MkRef?.ref r2) x
 
 let lemma_upd_same_addr' (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
   :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
@@ -314,7 +317,7 @@ let eternal_disjoint_from_tip (h:mem{is_stack_region h.tip})
    = ()
    
 ////////////////////////////////////////////////////////////////////////////////
-#set-options "--initial_fuel 0 --max_fuel 0 --log_queries"
+#set-options "--initial_fuel 0 --max_fuel 0"
 let f (a:Type0) (b:Type0) (rel_a:preorder a) (rel_b:preorder b) (rel_n:preorder nat)
                           (x:mreference a rel_a) (x':mreference a rel_a) 
 			  (y:mreference b rel_b) (z:mreference nat rel_n) 
@@ -455,7 +458,7 @@ abstract let unused_in_aref_of
   (h: mem)
 : Lemma
   (aref_unused_in (aref_of r) h <==> unused_in r h)
-  [SMTPat (aref_unused_in (aref_of r))]
+  [SMTPat (aref_unused_in (aref_of r) h)]
 = HH.unused_in_aref_of r.ref h.h
 
 abstract
@@ -541,7 +544,6 @@ let aref_of_greference_of
 (* Operators lowered to rref *)
 
 abstract let frameOf_greference_of
-  (h: mem)
   (a: aref)
   (t: Type)
   (rel: preorder t)
@@ -582,7 +584,7 @@ let unused_in_greference_of
 : Lemma
   (requires (exists h . aref_live_at h a t rel))
   (ensures ((exists h . aref_live_at h a t rel) /\ (unused_in (greference_of a t rel) h <==> aref_unused_in a h)))
-  [SMTPat (unused_in (greference_of a t rel))]
+  [SMTPat (unused_in (greference_of a t rel) h)]
 = ()
 
 abstract

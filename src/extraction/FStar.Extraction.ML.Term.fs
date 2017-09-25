@@ -80,7 +80,7 @@ let fail r msg =
 let err_uninst env (t:term) (vars, ty) (app:term) =
     fail t.pos (BU.format4 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
                     (Print.term_to_string t)
-                    (vars |> List.map fst |> String.concat ", ")
+                    (vars |> String.concat ", ")
                     (Code.string_of_mlty env.currentModule ty)
                     (Print.term_to_string app))
 
@@ -293,12 +293,9 @@ let rec is_ml_value e =
     | MLE_CTor (_, exps)
     | MLE_Tuple exps -> BU.for_all is_ml_value exps
     | MLE_Record (_, fields) -> BU.for_all (fun (_, e) -> is_ml_value e) fields
+    | MLE_TApp (h, _) -> is_ml_value h
     | _ -> false
 
-
-(*copied from ocaml-asttrans.fs*)
-let fresh = let c = mk_ref 0 in
-            fun (x:string) -> (incr c; (x ^ string_of_int (!c), !c))
 
 //pre-condition: SS.compress t = Tm_abs _
 //Collapses adjacent abstractions into a single n-ary abstraction
@@ -376,7 +373,7 @@ let erase (g:env) e ty (f:e_tag) : (mlexpr * e_tag * mlty) =
 let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
     let ts, r = doms_and_cod t in
     if ts = [] then e else // just quit if this is not a function type
-    let vs = List.map (fun _ -> fresh "a") ts in
+    let vs = List.map (fun _ -> "a") ts in
     let vs_ts = List.zip vs ts in
     let vs_es = List.map (fun (v, t) -> with_ty t (MLE_Var v)) (List.zip vs ts) in
     let body = with_ty r <| MLE_App (e, vs_es) in
@@ -433,11 +430,11 @@ let rec term_as_mlty (g:env) (t0:term) : mlty =
           end
         | _ -> false
     in
-    let t = N.normalize [N.Beta; N.Eager_unfolding; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+    let t = N.normalize [N.Beta; N.Eager_unfolding; N.Iota; N.Zeta; N.Inlining; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
     let mlt = term_as_mlty' g t in
     if is_top_ty mlt
     then //Try normalizing t fully, this time with Delta steps, and translate again, to see if we can get a better translation for it
-         let t = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
+         let t = N.normalize [N.Beta; N.Eager_unfolding; N.UnfoldUntil Delta_constant; N.Iota; N.Zeta; N.Inlining; N.EraseUniverses; N.AllowUnboundUniverses] g.tcenv t0 in
          term_as_mlty' g t
     else mlt
 
@@ -741,7 +738,8 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
     match mlAppExpr.expr, qual with
         | _, None -> mlAppExpr
 
-        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f)) ->
+        | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f))
+        | MLE_App({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mle::args), Some (Record_projector (constrname, f))->
           let f = lid_of_ids (constrname.ns @ [f]) in
           let fn = Util.mlpath_of_lid f in
           let proj = MLE_Proj(mle, fn) in
@@ -751,11 +749,15 @@ let maybe_eta_data_and_project_record (g:env) (qual : option<fv_qual>) (residual
           with_ty mlAppExpr.mlty e
 
         | MLE_App ({expr=MLE_Name mlp}, mlargs), Some Data_ctor
-        | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _) ->
+        | MLE_App ({expr=MLE_Name mlp}, mlargs), Some (Record_ctor _)
+        | MLE_App ({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mlargs), Some Data_ctor
+        | MLE_App ({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mlargs), Some (Record_ctor _) ->
           resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp,mlargs))
 
         | MLE_Name mlp, Some Data_ctor
-        | MLE_Name mlp, Some (Record_ctor _) ->
+        | MLE_Name mlp, Some (Record_ctor _)
+        | MLE_TApp({expr=MLE_Name mlp}, _), Some Data_ctor
+        | MLE_TApp({expr=MLE_Name mlp}, _), Some (Record_ctor _) ->
           resugar_and_maybe_eta qual <| (with_ty mlAppExpr.mlty <| MLE_CTor (mlp, []))
 
         | _ -> mlAppExpr
@@ -1021,10 +1023,33 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                                let prefixAsMLTypes = List.map (fun (x, _) -> term_as_mlty g x) prefix in
         //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
                                let t = instantiate (vars, t) prefixAsMLTypes in
+                               // If I understand this code correctly when we reach this branch we are observing an
+                               // application of the form:
+                               //
+                               // (f u_1 .. u_n) e_1 .. e_2
+                               //
+                               // where f : forall (t_1 ... t_n : Type), t1 -> ... t_n
+                               //
+                               // The old code was converting `f u_1 ... u_n`, to a term with a type `u_1 -> ... -> u_n`.
+                               //
+                               // We now preserve these type applications, by wrapping the head in type applications,
+                               // instantiating the type assigning it to this new type application expression,
+                               // and continuing with the rest of the pipeline.
+                               //
+                               // @jroesch
+                               //
+                               // This helper ensures we don't generate empty type applications, which will cause
+                               // problems in FStar.Extraction.Kremlin when trying match aganist head symbols which
+                               // are now wrapped with empty type applications.
+                               let mk_tapp e ty_args =
+                                match ty_args with
+                                | [] -> e
+                                | _ -> { e with expr=MLE_TApp(e, ty_args)} in
                                let head = match head_ml.expr with
                                  | MLE_Name _
-                                 | MLE_Var _ -> {head_ml with mlty=t}
-                                 | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
+                                 | MLE_Var _ -> { mk_tapp head_ml prefixAsMLTypes with mlty=t }
+                                 | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) ->
+                                    MLE_App({ mk_tapp head prefixAsMLTypes with mlty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
                                  | _ -> failwith "Impossible: Unexpected head term" in
                                head, t, rest
                           else err_uninst g head (vars, t) top in
@@ -1300,14 +1325,14 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         | Tm_arrow (binders, _) ->
             binders
             |> List.filter (function (_, (Some (Implicit _))) -> true | _ -> false)
-            |> List.map (fun _ -> fresh "_", MLTY_Top)
+            |> List.map (fun _ -> "_", MLTY_Top)
         | _ ->
             failwith "Discriminator must be a function"
     in
     // Unfortunately, looking up the constructor name in the environment would give us a _curried_ type.
     // So, we don't bother popping arrows until we find the return type of the constructor.
     // We just use Top.
-    let mlid = fresh "_discr_" in
+    let mlid = "_discr_" in
     let targ = MLTY_Top in
     // Ugly hack: we don't know what to put in there, so we just write a dummy
     // polymorphic value to make sure that the type is not printed.
@@ -1316,7 +1341,7 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         with_ty disc_ty <|
             MLE_Fun(wildcards @ [(mlid, targ)],
                     with_ty ml_bool_ty <|
-                        (MLE_Match(with_ty targ <| MLE_Name([], idsym mlid),
+                        (MLE_Match(with_ty targ <| MLE_Name([], mlid),
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
                                    [MLP_CTor(mlpath_of_lident constrName, [MLP_Wild]), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
                                     MLP_Wild, None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)]))) in

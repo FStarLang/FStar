@@ -57,7 +57,6 @@
       ],
       0
     ],
-    [ "FStar.DM4F.Heap.contains_a_well_typed", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Heap.sel_tot",
       1,
@@ -382,17 +381,6 @@
     [
       "FStar.DM4F.Heap.sel_same_addr_of",
       2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "FStar.DM4F.Heap.sel_same_addr_of",
-      3,
       2,
       1,
       [

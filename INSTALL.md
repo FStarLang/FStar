@@ -39,7 +39,7 @@ required dependencies (except for Z3) using the following commands:
         $ opam install fstar
 
 ### Platform specific early troubleshooting ###
-- for mac users, make sure that `ginstall` is on your system (present in macports in `coreutils`) 
+- for mac users, make sure that `ginstall` is on your system (present in macports in `coreutils`)
 
 ## Binary releases ##
 
@@ -65,13 +65,17 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
         $ fstar.exe --version
-        F* 0.9.4.3
+        F* 0.9.5.0
         platform=Linux_x86_64
         compiler=OCaml 4.02.3
-        date=2017-05-04T08:24:02+02:00
-        commit=c0784052f
+        date=yyyy-mm-ddThh:nn:ss+02:00
+        commit=xxxxxxxx
         $ z3 --version
-        Z3 version 4.5.0
+        Z3 version 4.5.1 - 64 bit - build hashcode 1f29cebd4df6
+
+   Note: if you are using the binary package and extracted it to,
+   say, the `fstar` directory, then both `fstar.exe` and `z3` are in
+   the `fstar/bin` directory.
 
 2. Run the micro benchmarks:
 
@@ -81,18 +85,19 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -C examples/hello ocaml
 
-4. If you have F# installed the following command should print "Hello F\*!"
+   Note: to have a working OCaml install, please first read the
+   [Working OCaml
+   setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup) section
+   further below, especially steps 0 to 3 to first install OCaml on
+   your OS; then use the following command to install the packages
+   required to compile OCaml programs extracted from F\* code:
 
-        $ make -C examples/hello fs
-   
-   Note: Currently this is [known to fail](https://github.com/FStarLang/FStar/issues/1087)
+        $ opam install ocamlfind batteries stdint zarith
 
-5. You can verify all the examples, keeping in mind that this might
+4. You can verify all the examples, keeping in mind that this might
    take a long time.
 
         $ make -j6 -C examples
-   
-   Note: Currently this is [known to fail for the F# build of F\*](https://github.com/FStarLang/FStar/issues/1023).
 
 ### Homebrew formula for Mac OS X ###
 
@@ -109,13 +114,13 @@ For building and installing the latest F\* development version from GitHub
 ### Chocolatey Package on Windows ###
 
 On windows you can use chocolatey package manager to install and update fstar
-    
+
     > choco install fstar
 
 or
-    
+
     > cinst fstar
-    
+
 you can find the package description [here](https://chocolatey.org/packages/FStar)
 
 ### Running F\* from a docker image ###
@@ -308,10 +313,15 @@ that's over there (it's optimized for F\*). This will install both OCaml and OPA
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex
   ```
   Some of the examples also require the `sqlite3` opam package, which depends
   on SQLite itself that you can install with `opam depext sqlite3` (at least on Linux)
+
+  Please note that this list of packages is longer than the list in
+  the [Testing a binary package](#testing-a-binary-package) section
+  above, because the additional packages here are necessary to compile
+  F\*.
 
 ### Step 2. Extracting the sources of F\* itself to OCaml ###
 
@@ -350,8 +360,8 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
 ## Runtime dependency: Z3 SMT solver ##
 
-To use F\* for verification you need a Z3 4.5.0 binary.
+To use F\* for verification you need a Z3 binary.
 Our binary packages include that already in `bin`, but if you compile
 F\* from sources you need to get a Z3 binary yourself and add it to
-your `PATH`. We recommend you use the 4.5.0 binaries here:
-https://github.com/Z3Prover/z3/releases/tag/z3-4.5.0
+your `PATH`. We recommend you use the Everest tested binaries here:
+https://github.com/FStarLang/binaries/tree/master/z3-tested

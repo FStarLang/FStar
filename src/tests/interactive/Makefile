@@ -25,6 +25,9 @@ accept: ${ACCEPT_TARGETS}
 clean:
 	rm -f *.out
 
+touch:
+	touch ${IN}
+
 .FORCE:
 
 %.in: .FORCE

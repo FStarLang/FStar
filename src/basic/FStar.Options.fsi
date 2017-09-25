@@ -68,6 +68,7 @@ val add_light_off_file          : string  -> unit
 val __temp_no_proj              : string  -> bool
 val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
+val cache_checked_modules       : unit    -> bool
 val codegen                     : unit    -> option<string>
 val codegen_libs                : unit    -> list<list<string>>
 val debug_any                   : unit    -> bool
@@ -88,6 +89,7 @@ val fs_typ_app                  : string  -> bool
 val fstar_home                  : unit    -> string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
+val gen_native_tactics          : unit    -> option<string>
 val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
@@ -121,19 +123,19 @@ val pervasives_basename         : unit    -> string
 val pervasives_native_basename  : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
-val print_fuels                 : unit    -> bool
 val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
 val print_z3_statistics         : unit    -> bool
+val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
-val check_hints                 : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : options -> string -> parse_cmdline_res
 val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
 val should_verify               : string  -> bool
+val should_verify_file          : string  -> bool
 val silent                      : unit    -> bool
 val smtencoding_elim_box        : unit -> bool
 val smtencoding_nl_arith_default: unit -> bool
@@ -146,8 +148,10 @@ val timing                      : unit    -> bool
 val trace_error                 : unit    -> bool
 val ugly                        : unit    -> bool
 val unthrottle_inductives       : unit    -> bool
+val unsafe_tactic_exec          : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
+val use_native_tactics          : unit    -> option<string>
 val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> option<list<string>>
 val verify_all                  : unit    -> bool
