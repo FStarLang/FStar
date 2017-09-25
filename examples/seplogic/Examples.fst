@@ -55,15 +55,63 @@ let increment_tau :tactic unit =
   step;;
   pointwise (or_else (apply_lemma (quote lemma0);; qed) trefl);;
   pointwise (or_else (apply_lemma (quote lemma6);; qed) trefl);;
+  e <-- cur_env;
+  let binders_of_e = binders_of_env e in
+  rewrite_all_context_equalities binders_of_e;;
+  idtac;;
   dump "Foo";;
   smt
 
-#set-options "--initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
+#set-options "--initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2" 
 let increment_ok (r:addr) (h:heap) (y:int) =
   let c = Bind (Read r) (fun n -> Write r (n + 1)) in
   let p = fun _ h -> sel h r == (y + 1) in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (sel h r == y ==> t) increment_tau
+
+(* Testing pointwise behaviour *)
+assume val f: int -> int -> int
+
+let lemma_test1 (x:int) (y:int)
+  :Lemma (requires True)
+         (ensures f x y == 1 + 1)
+  = admit()
+  
+let test_ok1 (x:int) (y:int) =
+  let g = (f x y == 2) in
+  assert_by_tactic g (
+    pointwise (or_else (apply_lemma (quote lemma_test1);; qed) trefl);;
+    dump "Post pointwise :test_ok1"
+  )
+
+assume val t_heap :Type0
+assume val t_addr :Type0
+assume val t_sel : t_heap -> t_addr -> int
+
+let lemma_test3 (h:t_heap) (r:t_addr)
+  :Lemma (requires True)
+         (ensures t_sel h r == 1 + 1)
+  = admit()
+
+let test_ok3 (h:t_heap) (r:t_addr) =
+  let g = (t_sel h r == 2) in
+  assert_by_tactic g (
+    pointwise (or_else (apply_lemma (quote lemma_test3);; qed) trefl);;
+    dump "Post pointwise :test_ok3"
+  )
+
+let lemma_test2 (h:heap) (r:addr)
+  :Lemma (requires True)
+         (ensures sel h r == 1 + 1)
+  = admit()
+  
+let test_ok2 (h:heap) (r:addr) =
+  let g = (sel h r == 2) in
+  assert_by_tactic g (
+    dump "Pre pointwise :test_ok2";;
+    pointwise (or_else (apply_lemma (quote lemma_test2);; qed) trefl);;
+    dump "Post pointwise :test_ok2"
+  )
 
 (* Swapping two pointers *)
 let swap_tau :tactic unit =
