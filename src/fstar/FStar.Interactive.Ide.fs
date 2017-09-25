@@ -352,9 +352,9 @@ type query' =
 and query = { qq: query'; qid: string }
 
 let query_needs_current_module = function
-  | Exit | DescribeProtocol | DescribeRepl | Pop
-  | Push _ | MissingCurrentModule | ProtocolViolation _ -> false
-  | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
+  | Exit | DescribeProtocol | DescribeRepl | Pop | Push (_, _, _, _, false)
+  | MissingCurrentModule | ProtocolViolation _ -> false
+  | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
 let interactive_protocol_vernum = 2
 
