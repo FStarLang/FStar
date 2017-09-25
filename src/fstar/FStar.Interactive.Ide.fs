@@ -55,7 +55,6 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
   (intf, impl), (dsenv, env), remaining
 
 type env_t = DsEnv.env * TcEnv.env
-type modul_t = option<Syntax.Syntax.modul>
 
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
@@ -706,8 +705,10 @@ type partial_repl_state =
 
 type full_repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                          repl_deps: (deps_stack_t * m_timestamps);
-                         repl_curmod: modul_t; repl_env: env_t;
-                         repl_stdin: stream_reader; repl_names: CTable.table }
+                         repl_curmod: option<Syntax.Syntax.modul>;
+                         repl_env: env_t;
+                         repl_stdin: stream_reader;
+                         repl_names: CTable.table }
 
 type repl_state =
 | PartialReplState of partial_repl_state
@@ -838,7 +839,7 @@ let update_names_from_event cur_mod_str table evt =
            tbl ns_query (text_of_id lid.ident) lid)
       table lids
 
-let commit_name_tracking (cur_mod: modul_t) names name_events =
+let commit_name_tracking cur_mod names name_events =
   let cur_mod_str = match cur_mod with
                     | None -> "" | Some md -> (SS.mod_name md).str in
   let updater = update_names_from_event cur_mod_str in
