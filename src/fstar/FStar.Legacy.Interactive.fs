@@ -62,37 +62,20 @@ type stack_t = list<(env_t * modul_t)>
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
 // not actually doing anything useful with the environment you're passing it (e.g.
-// pop or reset_mark).
+// pop).
 
 let pop (_, env) msg =
     pop_context env msg;
     Options.pop()
 
-let push ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
+let push_with_kind ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
     let env = { env with lax = lax } in
     let res = push_context (dsenv, env) msg in
     Options.push();
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
     res
 
-let mark (dsenv, env) =
-    let dsenv = DsEnv.mark dsenv in
-    let env = TcEnv.mark env in
-    Options.push();
-    dsenv, env
-
-let reset_mark (_, env) =
-    let dsenv = DsEnv.reset_mark () in
-    let env = TcEnv.reset_mark env in
-    Options.pop();
-    dsenv, env
-
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
-
-let commit_mark (dsenv, env) =
-    let dsenv = DsEnv.commit_mark dsenv in
-    let env = TcEnv.commit_mark env in
-    dsenv, env
 
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
     try
@@ -290,7 +273,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
     | _  ->
       let stack = (env, m)::stack in
       //setting the restore command line options flag true
-      let env = push env (Options.lax ()) true "typecheck_modul" in
+      let env = push_with_kind env (Options.lax ()) true "typecheck_modul" in
       let (intf, impl), env, remaining = tc_one_file remaining env in
       let intf_t, impl_t =
         let intf_t =
@@ -558,38 +541,30 @@ let rec go (line_col:(int*int))
         if List.length stack = List.length ts then true, update_deps filename curmod stack env ts else false, (stack, env, ts)
       in
       let stack = (env, curmod)::stack in
-      let env = push env lax restore_cmd_line_options "#push" in
+      let env = push_with_kind env lax restore_cmd_line_options "#push" in
       go (l, c) filename stack curmod env ts
 
   | Code (text, (ok, fail)) ->
       // This does not grow any of the internal stacks.
-      let fail curmod env_mark =
+      let fail curmod (env: (DsEnv.env * TcEnv.env)) =
         report_fail();
         Util.print1 "%s\n" fail;
-        // Side-effect: pops from an internal, hidden stack
-        // At this stage, the internal stack has grown with size 1. BUT! The
-        // interactive mode will send us a pop message.
-        let env = reset_mark env_mark in
+        // The interactive mode will send a pop here
         go line_col filename stack curmod env ts
       in
 
-      // Side-effect: pushes to an internal, hidden stack
-      let env_mark = mark env in
       let frag = {frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
-      let res = check_frag env_mark curmod (frag, false) in begin
+      let res = check_frag env curmod (frag, false) in begin
         match res with
         | Some (curmod, env, n_errs) ->
             if n_errs=0 then begin
               Util.print1 "\n%s\n" ok;
-              // Side-effect: pops from an internal, hidden stack
-              // At this stage, the internal stack has grown with size 1.
-              let env = commit_mark env in
               go line_col filename stack curmod env ts
               end
-            else fail curmod env_mark
-        | _ -> fail curmod env_mark
+            else fail curmod env
+        | _ -> fail curmod env
         end
 end
 

@@ -55,7 +55,7 @@ let read_file (filename:string) =
   try
   let fs = new System.IO.StreamReader(filename) in
   fs.ReadToEnd()
-  with _ -> Util.format1 "Unable to open file: %s" filename
+  with _ -> raise (Err (Util.format1 "Unable to open file: %s" filename))
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]

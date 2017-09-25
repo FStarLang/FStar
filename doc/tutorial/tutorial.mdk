@@ -3577,7 +3577,7 @@ module Heap
 assume type heap
 assume val sel : #a:Type -> heap -> ref a -> Tot a
 assume val upd : #a:Type -> heap -> ref a -> a -> Tot heap
-assume val contains : #a:Type -> heap -> ref a -> a -> Tot bool
+assume val contains : #a:Type -> heap -> ref a -> Tot bool
 ```
 
 These functions are interpreted using standard axioms, which allows
