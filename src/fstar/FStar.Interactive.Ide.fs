@@ -38,55 +38,6 @@ module CTable = FStar.Interactive.CompletionTable
 
 exception ExitREPL of int
 
-type timed_fname =
-  { tf_fname: string;
-    tf_modtime: time }
-
-type load_dependency_task =
-  | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
-  | LDSingle of timed_fname (* interface or implementation *)
-  | LDInterfaceOfCurrentFile of timed_fname (* interface *)
-
-type env_t = DsEnv.env * TcEnv.env
-
-(** Like ``tc_one_file``, but only return the new environment **)
-let tc_one ((dsenv, tcenv): env_t) intf_opt mod =
-  let _, dsenv, tcenv = tc_one_file dsenv tcenv intf_opt mod in
-  (dsenv, tcenv)
-
-(** Load the file or files described by `task` **)
-let load_one (env: env_t) (task: load_dependency_task) =
-  match task with
-  | LDInterleaved (intf, impl) -> tc_one env (Some intf.tf_fname) impl.tf_fname
-  | LDSingle intf_or_impl -> tc_one env None intf_or_impl.tf_fname
-  | LDInterfaceOfCurrentFile intf -> Universal.load_interface_decls env intf.tf_fname
-
-let tf_of_fname fname =
-  { tf_fname = fname;
-    tf_modtime = get_file_last_modification_time fname }
-
-(** Create a timed_fname with a dummy modtime **)
-let dummy_tf_of_fname fname =
-  { tf_fname = fname;
-    tf_modtime = Util.now () }
-
-(** Build a list of load tasks from a list of dependencies **)
-let tasks_of_deps (deps: list string) (final_tasks: list<load_dependency_task>) =
-  let wrap = dummy_tf_of_fname in
-  let rec aux deps final_tasks =
-    match deps with
-    | intf :: impl :: deps' when needs_interleaving intf impl ->
-      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
-    | intf_or_impl :: deps' ->
-      LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
-    | [] -> final_tasks in
-  aux deps final_tasks
-
-// Note: many of these functions are passing env around just for the sake of
-// providing a link to the solver (to avoid a cross-project dependency). They're
-// not actually doing anything useful with the environment you're passing it (e.g.
-// pop).
-
 let push env msg =
   let res = push_context env msg in
   Options.push();
@@ -144,6 +95,52 @@ let check_frag (dsenv, tcenv) curmod frag =
 (*********************)
 (* Dependency checks *)
 (*********************)
+
+type timed_fname =
+  { tf_fname: string;
+    tf_modtime: time }
+
+let t0 = Util.now ()
+
+let tf_of_fname fname =
+  { tf_fname = fname;
+    tf_modtime = get_file_last_modification_time fname }
+
+(** Create a timed_fname with a dummy modtime **)
+let dummy_tf_of_fname fname =
+  { tf_fname = fname;
+    tf_modtime = t0 }
+
+type dep_task =
+  | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
+  | LDSingle of timed_fname (* interface or implementation *)
+  | LDInterfaceOfCurrentFile of timed_fname (* interface *)
+
+type env_t = DsEnv.env * TcEnv.env
+
+(** Like ``tc_one_file``, but only return the new environment **)
+let tc_one ((dsenv, tcenv): env_t) intf_opt mod =
+  let _, dsenv, tcenv = tc_one_file dsenv tcenv intf_opt mod in
+  (dsenv, tcenv)
+
+(** Load the file or files described by `task` **)
+let run_dep_task (env: env_t) (task: dep_task) =
+  match task with
+  | LDInterleaved (intf, impl) -> tc_one env (Some intf.tf_fname) impl.tf_fname
+  | LDSingle intf_or_impl -> tc_one env None intf_or_impl.tf_fname
+  | LDInterfaceOfCurrentFile intf -> Universal.load_interface_decls env intf.tf_fname
+
+(** Build a list of dep tasks from a list of dependencies **)
+let dep_tasks_of_deps (deps: list string) (final_tasks: list<dep_task>) =
+  let wrap = dummy_tf_of_fname in
+  let rec aux deps final_tasks =
+    match deps with
+    | intf :: impl :: deps' when needs_interleaving intf impl ->
+      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
+    | intf_or_impl :: deps' ->
+      LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
+    | [] -> final_tasks in
+  aux deps final_tasks
 
 (** Compute dependencies of `filename` and steps needed to load them.
 
