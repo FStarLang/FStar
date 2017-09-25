@@ -40,10 +40,14 @@ module BU = FStar.Util
 
 type program =
   list<decl>
-
+and source_info = {
+    file_name : string;
+    mod_name : list<string>;
+    position : (int * int) // line + col, note: col is always 0 for the time being
+}
 and decl =
   | DGlobal of list<flag> * lident * typ * expr
-  | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr
+  | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr * source_info
   | DTypeAlias of lident * int * typ
   | DTypeFlat of lident * int * fields_t
   | DExternal of option<cc> * lident * typ * list<binder>
@@ -355,12 +359,12 @@ match (flavor, flags, binding) with
 | (flavor, flags, {
       mllb_name = name, _;
       mllb_tysc = Some (tvars, t0);
-      mllb_def = { expr = MLE_Fun (args, body) }
+      mllb_def = { expr = MLE_Fun (args, body); loc = (row, file_name) }
     })
 | (flavor, flags, {
       mllb_name = name, _;
       mllb_tysc = Some (tvars, t0);
-      mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
+      mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body); loc = (row, file_name) }, _, _) }
     }) ->
       let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) flags in
       let env = if flavor = Rec then extend env name false else env in
@@ -384,14 +388,19 @@ match (flavor, flags, binding) with
         else
           None
       else begin
+        let si : source_info = {
+            mod_name = env.module_name;
+            file_name = file_name;
+            position = (row, 0);
+        } in
         try
           let body = translate_expr env body in
-          Some (DFunction (None, flags, List.length tvars, t, name, binders, body))
+          Some (DFunction (None, flags, List.length tvars, t, name, binders, body, si))
         with e ->
           let msg = BU.print_exn e in
           BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) msg;
           let msg = "This function was not extracted:\n" ^ msg in
-          Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg))
+          Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg, si))
       end
 | (flavor, flags, {
       mllb_name = name, _;
