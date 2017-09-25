@@ -184,6 +184,10 @@ let mk_range r (s:subst_ts) =
     | None -> r
     | Some r' -> Range.set_use_range r r'
 
+(* AR: suboptimal, traverses the substitution every time a uvar is encountered *)
+let is_univ_subst (s:subst_ts) :bool =
+  List.for_all (fun l -> List.for_all (fun s -> match s with | UN _ | UD _ -> true | _ -> false) l) (fst s)
+
 (* Applies a substitution to a node,
      immediately if it is a variable
      or builds a delayed node otherwise *)
@@ -198,10 +202,16 @@ let rec subst' (s:subst_ts) t =
     | Tm_unknown
     | Tm_constant _                      //a constant cannot be substituted
     | Tm_fvar _ -> tag_with_range t0 s                          //fvars are never subject to substitution
-    | Tm_uvar _ -> let t, b = force_uvar t in if b then subst' s t else tag_with_range t0 s    //uvars are always resolved to closed terms, AR: doesn't seem so
+    | Tm_uvar _ ->
+      if not (is_univ_subst s) then tag_with_range t0 s
+      else
+        let t, b = force_uvar t in
+        if b then subst' s t
+        else tag_with_range t0 s                                                               //uvars are always resolved to closed terms, AR: doesn't seem so
                                                                                                //there could be free universe names, and so universe substs need to be taken care of
                                                                                                //currently this is a bandaid solution that forces uvar and applies substitution to it
                                                                                                //a proper solution would make substs part of the unionfind tree?
+                                                                                               //AR: update, it happens that univ subst is applied to a uvar, see the example from commit: 3ac46a2a40dd97025522afb19b1437d0e4bbbe4a
 
     | Tm_delayed((t', s'), m) ->
         //s' is the subsitution already associated with this node;
@@ -305,8 +315,8 @@ let push_subst s t =
     | Tm_constant _
     | Tm_fvar _
     | Tm_unknown -> tag_with_range t s
-    | Tm_uvar _ -> let t', b = force_uvar t in if b then subst' s t' else tag_with_range t s  //AR: see the comment in the use of force_uvar in subst' above
 
+    | Tm_uvar _ //AR: see the comment in the use of force_uvar in subst' above
     | Tm_type _
     | Tm_bvar _
     | Tm_name _  -> subst' s t
