@@ -67,40 +67,27 @@ type stack_t = list<(env_t * modul_t)>
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
 // not actually doing anything useful with the environment you're passing it (e.g.
-// pop or reset_mark).
+// pop).
 
-let pop (_, env) msg =
-    pop_context env msg;
-    Options.pop()
+let push env msg =
+  let res = push_context env msg in
+  Options.push();
+  res
+
+let pop env msg =
+  pop_context (snd env) msg;
+  Options.pop()
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
-let push ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg =
-    let tcenv = { tcenv with lax = (kind = LaxCheck) } in
-    let dsenv = DsEnv.set_syntax_only dsenv (kind = SyntaxCheck) in
-    let res = push_context (dsenv, tcenv) msg in
-    Options.push();
-    if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
-    res
-
-let mark (dsenv, env) =
-    let dsenv = DsEnv.mark dsenv in
-    let env = TcEnv.mark env in
-    Options.push();
-    dsenv, env
-
-let reset_mark (_, env) =
-    let dsenv = DsEnv.reset_mark () in
-    let env = TcEnv.reset_mark env in
-    Options.pop();
-    dsenv, env
+let push_with_kind ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg =
+  let tcenv = { tcenv with lax = (kind = LaxCheck) } in
+  let dsenv = DsEnv.set_syntax_only dsenv (kind = SyntaxCheck) in
+  let res = push (dsenv, tcenv) msg in
+  if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
+  res
 
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
-
-let commit_mark (dsenv, env) =
-    let dsenv = DsEnv.commit_mark dsenv in
-    let env = TcEnv.commit_mark env in
-    dsenv, env
 
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
   try
@@ -175,7 +162,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
     | _  ->
       let stack = (env, m)::stack in
       //setting the restore command line options flag true
-      let env = push env (if Options.lax () then LaxCheck else FullCheck) true "typecheck_modul" in
+      let env = push_with_kind env (if Options.lax () then LaxCheck else FullCheck) true "typecheck_modul" in
       let (intf, impl), env, remaining = tc_one_file remaining env in
       let intf_t, impl_t =
         let intf_t =
@@ -555,7 +542,7 @@ let run_missing_current_module st message =
   ((QueryNOK, JsonStr "Current module unset"), Inl st)
 
 let nothing_left_to_pop st =
-  (* The initial dependency check creates [n] entires in [st.repl_ts] and [n]
+  (* The initial dependency check creates [n] entries in [st.repl_ts] and [n]
      entries in [st.repl_stack].  Subsequent pushes do not grow [st.repl_ts]
      (only [st.repl_stack]), so [length st.repl_stack <= length st.repl_ts]
      indicates that there's nothing left to pop. *)
@@ -586,13 +573,10 @@ let run_push st kind text line column peek_only =
     else false, (stack, env, ts) in
 
   let stack = (env, st.repl_curmod) :: stack in
-  let env = push env kind restore_cmd_line_options "#push" in
-
-  // This pushes to an internal, hidden stack
-  let env_mark = mark env in
+  let env = push_with_kind env kind restore_cmd_line_options "#push" in
 
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
-  let res = check_frag env_mark st.repl_curmod (frag, false) in
+  let res = check_frag env st.repl_curmod (frag, false) in
 
   let errors = FStar.Errors.report_all() |> List.map json_of_issue in
   FStar.Errors.clear ();
@@ -602,14 +586,11 @@ let run_push st kind text line column peek_only =
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
-    // At this stage, the internal stack has grown with size 1.
-    let env = commit_mark env in
     ((QueryOK, JsonList errors),
       Inl ({ st' with repl_curmod = curmod; repl_env = env }))
   | _ ->
     // The previous version of the protocol required the client to send a #pop
     // immediately after failed pushes; this version pops automatically.
-    let env = reset_mark env_mark in
     let _, st'' = run_pop ({ st' with repl_env = env }) in
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
@@ -785,11 +766,10 @@ let run_completions st search_term =
 
 let run_compute st term rules =
   let run_and_rewind st task =
-    let env_mark = mark st.repl_env in
+    let env' = push st.repl_env "#compute" in
     let results = task st in
-    let env = reset_mark env_mark in
-    let st' = { st with repl_env = env } in
-    (results, Inl st') in
+    pop env' "#compute";
+    (results, Inl st) in
 
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
