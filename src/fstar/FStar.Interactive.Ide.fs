@@ -84,7 +84,7 @@ let cleanup (dsenv, env) =
 let with_captured_errors' env f =
   let tcenv = snd env in
   try
-    f ()
+    f env
   with
   | Failure (msg) ->
     let msg = "ASSERTION FAILURE: " ^ msg ^ "\n" ^
@@ -106,12 +106,12 @@ let with_captured_errors' env f =
     None
 
 let with_captured_errors env f =
-  if Options.trace_error () then f ()
+  if Options.trace_error () then f env
   else with_captured_errors' env f
 
-let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
-  with_captured_errors (dsenv, env) (fun () ->
-    match tc_one_fragment curmod dsenv env frag with
+let check_frag (dsenv, tcenv) curmod frag =
+  with_captured_errors (dsenv, tcenv) (fun (dsenv, tcenv) ->
+    match tc_one_fragment curmod dsenv tcenv frag with
     | Some (m, dsenv, env) ->
       Some (m, (dsenv, env), FStar.Errors.get_err_count())
     | _ -> None)
@@ -146,34 +146,65 @@ let deps_of_our_file filename =
 type m_timestamps = list<(option<string> * string * option<time> * time)>
 type deps_stack_t = list<env_t> // Environments created while typechecking deps
 
-(*
- * type check remaining dependencies and record the timestamps.
- * env is the environment in which next dependency should be type checked.
- * the returned timestamps are in the reverse order (i.e. final dependency first), it's the same order as the stack.
- * note that for dependencies, the stack and ts go together (i.e. their sizes are same)
- * returns the new environment, deps stack, and timestamps.
- *)
-let rec tc_deps (deps_stack: deps_stack_t) (env: env_t)
-                (remaining: list<string>) (ts: m_timestamps)
-  = match remaining with
-    | [] -> env, (deps_stack, ts)
-    | _  ->
-      let deps_stack = env :: deps_stack in
-      let push_kind = if Options.lax () then LaxCheck else FullCheck in
-      let env = push (set_check_kind env push_kind) "typecheck_modul" in
-      Options.restore_cmd_line_options false |> ignore;
-      let (intf, impl), env, remaining = tc_one_file remaining env in
-      let intf_t, impl_t =
-        let intf_t =
-          match intf with
-            | Some intf -> Some (get_file_last_modification_time intf)
-            | None      -> None
-        in
-        let impl_t = get_file_last_modification_time impl in
-        intf_t, impl_t
-      in
-      tc_deps deps_stack env remaining ((intf, impl, intf_t, impl_t)::ts)
+(** Push into `env`, then run `fn` and revert all changes in `stack` if it fails.
 
+This function is useful to run part of a sequence of pushes that must be handled
+transactionally (in an all-or-nothing manner).
+
+Stack is a list of environments, each corresponding to a ``push`` to be
+cancelled if `fn` fails.  An additional ``push`` is used to snapshot `env`, then
+`fn` is called in the resulting snapshot.  If it fails, all elements on stack
+are popped, and the final environment is returned (wrapped in ``Inr``).
+Otherwise, the result of `fn` is returned, wrapped in ``Inl``. **)
+
+let rec push_then_do_or_revert_all env stack fn =
+  let revert env stack =
+    Util.print1 "Reverting %s entries" (string_of_int (List.length stack));
+    let rec aux env stack =
+      match stack with
+      | [] -> env
+      | env' :: stack' -> pop env "typecheck_modul"; aux env' stack' in
+    aux env stack in
+
+  let stack = env :: stack in
+  let env' = push env "tc prims, deps, or interface" in
+
+  match with_captured_errors env' fn with
+  | None -> Inr (revert env' stack)
+  | Some res -> Inl (stack, res)
+
+(** Typecheck `dependencies`, pushing results into `stack`.
+
+Returns either an environment (wrapped in ``Inr``) if typechecking fails, or a
+tuple of a new environment, a new stack, and a new list of timestamps (wrapped
+in ``Inl``) if typechecking succeeds.
+
+
+Timestamps are returned in reverse order (i.e. final dependency first; this is
+consistent with the order of the stack). **)
+
+let tc_deps (env: env_t) (stack: deps_stack_t) (dependencies: list<string>) =
+  let rec aux (env: env_t) (stack: deps_stack_t)
+              (ts: m_timestamps) (remaining: list<string>) =
+    match remaining with
+    | [] -> Inl (stack, env, ts)
+    | _ ->
+      let stack = env :: stack in
+
+      let push_kind = if Options.lax () then LaxCheck else FullCheck in
+      Options.restore_cmd_line_options false |> ignore;
+
+      match push_then_do_or_revert_all env stack
+              (fun env -> Some <| tc_one_file remaining (set_check_kind env push_kind)) with
+      | Inr env -> Inr env
+      | Inl (stack, ((intf, impl), env, remaining)) ->
+        let intf_t = intf |> Util.map_option get_file_last_modification_time in
+        let impl_t = get_file_last_modification_time impl in
+        aux env stack ((intf, impl, intf_t, impl_t) :: ts) remaining in
+
+  aux env stack [] dependencies
+
+(* FIXME: fix update_deps
 (*
  * check if some dependencies have been modified, added, or deleted
  * if so, only type check them and anything that follows, while maintaining others as is (current dependency graph is a total order)
@@ -251,6 +282,7 @@ let update_deps (filename:string) (env:env_t) ((stk, ts): deps_stack_t * m_times
   let filenames, _ = deps_of_our_file filename in
   //reverse stk and ts, since iterate expects them in "first dependency first order"
   iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
+*)
 
 (***********************************************************************)
 (* Reading queries and writing responses *)
@@ -853,7 +885,7 @@ let run_regular_push (st: full_repl_state) query =
   // if this is the first chunk, we need to restore the command line options.
   let restore_cmd_line_options, (env, deps) =
     if repl_stack_empty ()
-    then true, update_deps st.repl_fname env st.repl_deps
+    then true, (env, st.repl_deps) // FIXME: update_deps st.repl_fname env st.repl_deps
     else false, (env, st.repl_deps) in
 
   if restore_cmd_line_options then
@@ -905,17 +937,34 @@ let add_module_completions this_fname deps table =
         CTable.register_module_path table (loaded mod_key) mod_path ns_query)
     table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
+(** Typecheck prims.fst then compute and typecheck all dependencies of `filename`.
+
+If any of these steps fail, rollback the changes (so that calling this function
+again is safe) and return the resulting environment (wrapped in ``Inr``).  If
+all steps succeed, return a list of computed dependencies, a dependencies stack
+(``deps_stack_t``), and the new environment (all wrapped in ``Inr``). **)
+
 let tc_prims_and_deps env filename =
-  let _, dsenv, tcenv = tc_prims env in
-  let deps, maybe_inferface = deps_of_our_file filename in
-  let env, repl_deps = tc_deps [] (dsenv, tcenv) deps [] in
-  let env = match maybe_inferface with
-    | None -> env
-    | Some intf ->
-      // We found an interface: record its contents in the desugaring environment
-      // to be interleaved with the module implementation on-demand
-      FStar.Universal.load_interface_decls env intf in
-  (deps, repl_deps, env)
+  match push_then_do_or_revert_all env [] (fun env -> Some <| tc_prims env) with
+  | Inr env -> Inr env
+  | Inl (stack, (_, dsenv, tcenv)) ->
+    let env = dsenv, tcenv in
+    match push_then_do_or_revert_all env stack
+            (fun _env -> Some <| deps_of_our_file filename) with
+    | Inr env -> Inr env
+    | Inl (stack, (deps, maybe_interface)) ->
+      match tc_deps env stack deps with
+      | Inr env -> Inr env
+      | Inl (stack, env, ts) ->
+        match maybe_interface with
+        | None -> Inl (deps, (stack, ts), env)
+        | Some intf ->
+          // We found an interface: record its contents in the desugaring environment
+          // to be interleaved with the module implementation on-demand
+          match push_then_do_or_revert_all env stack
+                  (fun env -> Some <| FStar.Universal.load_interface_decls env intf) with
+          | Inr env -> Inr env
+          | Inl (stack, env) -> Inl (deps, (stack, ts), env)
 
 let rephrase_dependency_error issue =
   { issue with issue_message =
@@ -947,12 +996,10 @@ let run_initial_push (st: partial_repl_state) query =
 
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
 
-  match with_captured_errors env
-          (fun () -> Some (tc_prims_and_deps env st.prepl_fname)) with
-  | Some (deps, repl_deps, env) ->
+  match tc_prims_and_deps env st.prepl_fname with
+  | Inl (deps, repl_deps, env) ->
     on_successful_init (finish_name_tracking env) deps repl_deps
-  | None ->
-    // CPC This should pop until the dependency checker's stack is empty
+  | Inr env ->
     on_failed_init (finish_name_tracking env)
 
 let run_push (st: repl_state) query =
