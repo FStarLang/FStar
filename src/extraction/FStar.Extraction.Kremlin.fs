@@ -447,7 +447,7 @@ and translate_decl env d: option<decl> =
 
   | MLM_Ty (ty_decls) ->
       // BU.print1 "Warning: not translating definition for %s (and possibly others)\n" name;
-      let rec traverse (#a #b:Type) (f : a -> option b) (xs : list a) : option (list b) =
+      let rec traverse (f : 'a -> option<'b>) (xs : list<'a>) : option<list<'b>> =
         match xs with
         | [] -> Some []
         | (o :: os) ->
