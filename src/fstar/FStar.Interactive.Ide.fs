@@ -181,8 +181,8 @@ let deps_and_deps_tasks_of_our_file filename =
       [] in
 
   let tasks =
-    dep_tasks_of_deps deps intf_tasks in
-  deps, tasks
+    dep_tasks_of_deps real_deps intf_tasks in
+  real_deps, tasks
 
 (** Entries created while processing dependency loading tasks **)
 type completed_dep_task = dep_task * env_t
