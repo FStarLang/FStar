@@ -27,7 +27,7 @@ SCONSFLAGS=$(filter -j%,$(MAKEFLAGS))
 make_fstar:
 	$(SCONS) -u $(SCONSFLAGS) --target=ocaml-output
 
-.PHONY install-compiler-lib
+.PHONY: install-compiler-lib
 install-compiler-lib: make_fstar
 	mkdir -p ../../bin/fstar-compiler-lib/
 	$(FIND) -name "*.cmi" -exec cp {} ../../bin/fstar-compiler-lib/ \;
