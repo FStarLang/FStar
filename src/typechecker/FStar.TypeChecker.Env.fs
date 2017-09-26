@@ -103,6 +103,7 @@ type env = {
   lax_universes  :bool;                         (* don't check universe constraints *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   nosynth        :bool;                         (* don't run synth tactics *)
+  tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
@@ -155,7 +156,7 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env type_of universe_of solver module_lid =
+let initial_env tc_term type_of universe_of solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -178,6 +179,7 @@ let initial_env type_of universe_of solver module_lid =
     lax_universes=false;
     failhard=false;
     nosynth=false;
+    tc_term=tc_term;
     type_of=type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
