@@ -36,7 +36,7 @@ assume val lemma_repr_bytes_values: n:nat ->
          /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
          /\ ( (n >= 72057594037927936 /\ n < 18446744073709551616) <==> repr_bytes n = 8 ) )
 
-type byte = FStar.Char.char
+unfold let byte:Type0 = FStar.UInt8.t
 type cbytes = string
 (* abstract *) type bytes = Seq.seq byte
 
@@ -60,28 +60,28 @@ type lbytes (l:nat) = b:bytes{length b = l}
 
 (*@ val empty_bytes : (b:bytes){B (b) = C_array_of_list C_op_Nil ()} @*)
 val empty_bytes : lbytes 0
-let empty_bytes = Seq.create 0 (Char.char_of_int 0)
+let empty_bytes = Seq.create 0 0uy
 
 (*@ assume val abytes : (b:cbytes -> (a:bytes){B (a) = b}) @*)
 assume val abytes : (cbytes -> Tot bytes)
 (*@ assume val abyte : (b:byte -> (a:bytes){B (a) = C_array_of_list C_op_ColonColon (b, C_op_Nil ())}) @*)
 
-val abyte : (byte -> Tot bytes)
-let abyte (b:byte) = Seq.create 1 b
+val abyte : (FStar.UInt8.t -> Tot bytes)
+let abyte b = Seq.create 1 b
 
-val abyte2 : (byte * byte) -> Tot bytes
+val abyte2 : (FStar.UInt8.t * FStar.UInt8.t) -> Tot bytes
 let abyte2 (b1, b2) = Seq.append (Seq.create 1 b1) (Seq.create 1 b2)
 
 (*@ assume val get_cbytes : (a:bytes -> (b:cbytes){B (a) = b}) @*)
 assume val get_cbytes : (bytes -> Tot cbytes)
 
-val cbyte : b:bytes{Seq.length b > 0} -> Tot byte
+val cbyte : b:bytes{Seq.length b > 0} -> Tot FStar.UInt8.t
 let cbyte b = Seq.index b 0
 
-val cbyte2 : b:bytes{Seq.length b >= 2} -> Tot (byte * byte)
+val cbyte2 : b:bytes{Seq.length b >= 2} -> Tot (FStar.UInt8.t * FStar.UInt8.t)
 let cbyte2 b = (Seq.index b 0, Seq.index b 1)
 
-val index : b:bytes -> i:nat{Seq.length b > i} -> Tot byte
+val index : b:bytes -> i:nat{Seq.length b > i} -> Tot FStar.UInt8.t
 let index b i = Seq.index b i
 
 (*@ function assume val BLength : (cbytes -> int) @*)
@@ -93,7 +93,7 @@ let index b i = Seq.index b i
 (*@  assume (!x. Length (x) = BLength (B (x))) @*)
 
 (*@ assume val createBytes : (l:int -> ((v:int){C_pr_LessThanOrEqual(0, v) /\ C_pr_LessThan(v, 256)} -> (;l) lbytes)) @*)
-val createBytes : l:nat -> byte -> Tot (lbytes l)
+val createBytes : l:nat -> FStar.UInt8.t -> Tot (lbytes l)
 let createBytes l b = Seq.create l b
 
 // TODO: not implemented in ML

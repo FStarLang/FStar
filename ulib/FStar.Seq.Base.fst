@@ -72,6 +72,8 @@ let exFalso0 a n = ()
 abstract val createEmpty: #a:Type -> Tot (s:(seq a){length s=0})
 let createEmpty #a = MkSeq []
 
+let lemma_empty (#a:Type) (s:seq a) : Lemma (length s = 0 ==> s == createEmpty #a) = ()
+
 abstract val upd: #a:Type -> s:seq a -> n:nat{n < length s} -> a ->  Tot (seq a) (decreases (length s))
 let rec upd #a s n v = if n = 0 then cons v (tl s) else cons (hd s) (upd (tl s) (n - 1) v)
 

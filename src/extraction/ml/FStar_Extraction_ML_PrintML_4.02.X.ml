@@ -101,6 +101,7 @@ let build_constant (c: mlconstant): constant =
   | MLC_Float v -> Const_float (string_of_float v)
   | MLC_Char v -> Const_int v
   | MLC_String v -> Const_string (v, None)
+  | MLC_Int (v, Some _) -> Const_int (int_of_string v) (* this is for pattern matching on machine integers *)
   | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
 
 let build_constant_expr (c: mlconstant): expression =

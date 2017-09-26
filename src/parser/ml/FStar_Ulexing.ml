@@ -96,7 +96,7 @@ let lookahead b pos =
   else Utf8.from_int_array b.buf pos (b.len - pos)
 
 let source_file b =
-  b.cur_p.L.pos_fname
+  FStar_Range.file_of_file_idx (FStar_Range.decode_file_idx b.cur_p.L.pos_fname)
 
 let current_line b =
   b.cur_p.Lexing.pos_lnum
