@@ -52,17 +52,17 @@ let bv_tac ()  =
   dump "BEFORE SMT!" ;;
   smt
 
-let test6 (x y: U64.t) =
-    assert_by_tactic (U64.logand x y == U64.logand y x)
-                     (apply_lemma (quote v64_eq) ;;
-                      dump "A" ;;
-                      apply_lemma (quote trans) ;; 
-                      apply_lemma (quote unfold_logand64) ;;
-                      dump "B";;
-                      apply_lemma (quote unfold_logand64) ;;
-                      dump "C";;
-                      norm [] ;;
-                      bv_tac ())
+// let test6 (x y: U64.t) =
+//     assert_by_tactic (U64.logand x y == U64.logand y x)
+//                      (apply_lemma (quote v64_eq) ;;
+//                       dump "A" ;;
+//                       apply_lemma (quote trans) ;; 
+//                       apply_lemma (quote unfold_logand64) ;;
+//                       dump "B";;
+//                       apply_lemma (quote unfold_logand64) ;;
+//                       dump "C";;
+//                       norm [] ;;
+//                       bv_tac ())
                      
 // //cannot prove
 // (* let test5 (x : uint_t 32) = *)
