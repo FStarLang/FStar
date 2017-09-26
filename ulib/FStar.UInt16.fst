@@ -1,7 +1,7 @@
 module FStar.UInt16
 (* This module generated automatically using [mk_int.sh] *)
 
-let n = 16
+unfold let n = 16
 
 open FStar.UInt
 open FStar.Mul

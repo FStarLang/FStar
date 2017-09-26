@@ -1,7 +1,7 @@
 module FStar.UInt64
 (* This module generated automatically using [mk_int.sh] *)
 
-let n = 64
+unfold let n = 64
 
 open FStar.UInt
 open FStar.Mul

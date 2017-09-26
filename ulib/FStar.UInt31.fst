@@ -1,7 +1,7 @@
 module FStar.UInt31
 (* This module generated automatically using [mk_int.sh] *)
 
-let n = 31
+unfold let n = 31
 
 open FStar.UInt
 open FStar.Mul

@@ -1,7 +1,7 @@
 module FStar.UInt8
 (* This module generated automatically using [mk_int.sh] *)
 
-let n = 8
+unfold let n = 8
 
 open FStar.UInt
 open FStar.Mul
