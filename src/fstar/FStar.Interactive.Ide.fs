@@ -111,10 +111,22 @@ let dummy_tf_of_fname fname =
   { tf_fname = fname;
     tf_modtime = t0 }
 
+let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
+  if modtime = t0 then Util.format1 "{ %s }" fname
+  else Util.format2 "{ %s; %s }" fname (string_of_time modtime)
+
 type dep_task =
   | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
   | LDSingle of timed_fname (* interface or implementation *)
   | LDInterfaceOfCurrentFile of timed_fname (* interface *)
+
+let string_of_dep_task = function
+  | LDInterleaved (intf, impl) ->
+    Util.format2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
+  | LDSingle intf_or_impl ->
+    Util.format1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
+  | LDInterfaceOfCurrentFile intf ->
+    Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
 
 type env_t = DsEnv.env * TcEnv.env
 
@@ -219,10 +231,15 @@ When previous is non-empty, it should be a list returned by a previous
 invocation of this function. It is used to skip already completed tasks **)
 
 let run_dep_tasks (env: env_t) (tasks: list<dep_task>) (previous: list<completed_dep_task>) =
+  let debug verb task =
+    if Options.debug_any () then
+      Util.print2 "%s %s" verb (string_of_dep_task task) in
+
   let rec revert_many env = function
     | [] -> env
     | (task, env') :: entries ->
-      pop env' "load_deps";
+      debug "Reverting" task;
+      pop env' "run_dep_tasks";
       revert_many env' entries in
 
   let rec aux (env: env_t)
@@ -234,6 +251,7 @@ let run_dep_tasks (env: env_t) (tasks: list<dep_task>) (previous: list<completed
       Inl (env, List.rev rev_done)
 
     | task :: tasks, [] ->
+      debug "Loading" task;
       let timestamped_task = update_task_timestamps task in
       (match push_then_complete_task_or_revert env task with
        | Inr env -> Inr (env, List.rev rev_done)
@@ -241,6 +259,7 @@ let run_dep_tasks (env: env_t) (tasks: list<dep_task>) (previous: list<completed
 
     | task :: tasks, prev :: previous
         when (fst prev) = (update_task_timestamps task) ->
+      debug "Skipping" task;
       aux env tasks previous (prev :: rev_done)
 
     | tasks, previous ->
