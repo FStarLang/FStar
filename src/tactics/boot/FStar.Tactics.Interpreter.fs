@@ -261,7 +261,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         // the implicits, so make it do a lax check because we certainly
         // do not want to repeat all of the reasoning that took place in tactics.
         // It would also most likely fail.
-        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_lax in
+        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_tac in
         let _ = TcRel.force_trivial_guard env g in
         (ps.goals@ps.smt_goals, w)
     | Failed (s, ps) ->
