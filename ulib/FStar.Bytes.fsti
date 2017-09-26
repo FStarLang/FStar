@@ -1,3 +1,31 @@
+(*
+   Copyright 2008-2017 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+(*
+A standard library for manipulation of value bytes.
+
+This model is realized by Bytes.bytes in OCaml and by
+struct {uintX_t size; char *bytes} (or similar) in C.
+
+This file is essentially a specialized version of FStar.Seq,
+with lemmas and refinements taylored for typical operations on
+bytes, and with support for machine integers and C-extractible versions
+(which Seq does not provide.)
+
+@summary Value bytes standard library
+*)
 module FStar.Bytes
 
 module S = FStar.Seq
@@ -16,6 +44,8 @@ unfold let u32 = U32.t
 (** Realized by uint8_t in C and int in OCaml (char does not have necessary operators...) *)
 unfold type byte = u8
 
+(** Realized in C by a pair of a length field and uint8_t* in C
+    Realized in OCaml by a string *)
 val bytes : Type0
 val length : bytes -> u32
 
@@ -56,19 +86,16 @@ val empty_unique:
 (** If you statically know the length, it is OK to read at arbitrary indexes *)
 val get:
     b:bytes
-  -> pos:nat{pos < U32.v (length b)}
-  -> GTot byte
+  -> pos:u32{U32.v pos < U32.v (length b)}
+  -> byte
 
-val op_String_Access:
-    b:bytes
-  -> i:u32{U32.(i <^ length b)}
-  -> r:byte{r = get b (U32.v i)}
+unfold let op_String_Access = get
 
 val extensionality:
     b1:bytes
   -> b2:bytes
   -> Lemma (requires (length b1 = length b2 /\
-                     (forall (i:nat{i < U32.v (length b1)}).{:pattern (get b1 i); (get b2 i)} get b1 i == get b2 i)))
+                     (forall (i:u32{U32.v i < U32.v (length b1)}).{:pattern (b1.[i]); (b2.[i])} b1.[i] == b2.[i])))
           (ensures (b1 == b2))
 
 (** creating byte values **)
@@ -117,7 +144,7 @@ type uint_k (k:nat) = U.uint_t (op_Multiply 8 k)
 
 val int_of_bytes:
     b:bytes
-  -> GTot (uint_k (U32.v (length b)))
+  -> Tot (uint_k (U32.v (length b)))
 
 val bytes_of_int:
     #k:nat{k <= 32}
