@@ -142,8 +142,8 @@
       [
         "@MaxIFuel_assumption", "@query",
         "FStar.UInt64_pretyping_c8c563e063e4f547ecc8aacae59a7475",
-        "equation_FStar.UInt64.n", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.UInt64_Tm_refine_99cccccfed3afd7a78e0b6d03c3b5c37",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.UInt64_Tm_refine_3eddd6f6718ab081a94d9ef5c683e848",
         "typing_FStar.UInt64.logand", "unit_typing"
       ],
       0
