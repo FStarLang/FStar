@@ -1526,18 +1526,6 @@ val buffer_readable_intro
 
 (*** The modifies clause *)
 
-(** Sets of pointers. The set tracks not only the set of pointers, but
-also the corresponding set of addresses (which cannot be constructed
-by set comprehension, since it must be computational.)
-
-In practice, we assume that all pointers in a set should be of the
-same region, because that is how the modifies clause will be
-defined. However, we do not need to enforce this constraint.
-
-We could also completely remove this "assumption" and explicitly track
-the regions and addresses within those regions. But this way would
-actually defeat the practical purpose of regions.
-*)
 val loc : Type u#0
 
 val loc_none: loc
@@ -1545,23 +1533,6 @@ val loc_none: loc
 val loc_union
   (s1 s2: loc)
 : GTot loc
-
-(** NOTE: intersection cannot be easily defined, indeed consider two
-different (not necessarily disjoint) pointers p1, p2 coming from the
-same root address, intersect (singleton p1) (singleton p2) will be
-empty whereas intersect (singleton (as_addr p1)) (singleton (as_addr
-p2)) will not.
-
-However, if the pointer type had decidable equality, then it should work, by
-recording, for each address, the computational set of pointers in the
-global set of pointers, that have that address; and so the set of
-addresses will be computed as: every address whose corresponding set of
-pointers is nonempty.
-
-Anyway, it seems that we will not need intersection for use with the
-modifies clauses.
-
-*)
 
 val loc_pointer
   (#t: typ)
