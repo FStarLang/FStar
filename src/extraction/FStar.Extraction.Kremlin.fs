@@ -495,6 +495,7 @@ and translate_single_type_decl env (ty_decl : one_mltydecl) =
           name, (translate_type env t, false)
         ) ts
       ) branches))
+    | _ -> failwith "unable to translate type..." // todo: better error message
 
 and translate_type env t: typ =
   match t with
