@@ -52,13 +52,16 @@ ForwardEnvironmentVariable(env, 'OCAMLFIND_CONF')
 ForwardEnvironmentVariable(env, 'OCAML_TOPLEVEL_PATH')
 ForwardEnvironmentVariable(env, 'CAMLP4LIB')
 ForwardEnvironmentVariable(env, 'OCAMLLIB')
+env['FSTAR_OCAMLBUILD_EXTRAS'] = '-cflag -g'   # default value, unless overridden in the OS environment
+ForwardEnvironmentVariable(env, 'FSTAR_OCAMLBUILD_EXTRAS')
 
 env['MENHIRARGS']='' #'--explain --infer -la 1 --table'
 env['OCAMLLEX']='ocamllex'
 env['OCAMLBUILD']='ocamlbuild'
-env['OCAMLBUILDARGS']='-cflag \'-g\' -I src/ocaml-output -I src/basic/ml ' \
-                      '-I src/parser/ml -I src/fstar/ml -I src/extraction/ml -j 24 -build-dir src/ocaml-output/_build ' \
-                      '-I src/prettyprint/ml -I src/tactics/ml -I ulib/ml -I ulib/ml/compiler -use-ocamlfind'
+env['OCAMLBUILDARGS']='$FSTAR_OCAMLBUILD_EXTRAS -I src/ocaml-output -I src/basic/ml ' \
+                      '-I src/parser/ml -I src/fstar/ml -I src/extraction/ml ' \
+                      '-I src/prettyprint/ml -I src/tactics/ml -I ulib/ml -I ulib/ml/compiler ' \
+                      '-j 24 -build-dir src/ocaml-output/_build -use-ocamlfind'
 
 parse_mly=env.Command('parse.mly', '../parser/parse.mly',
                       ['cd ../..',
