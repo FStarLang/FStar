@@ -131,8 +131,8 @@ let string_of_dep_task = function
 type env_t = DsEnv.env * TcEnv.env
 
 (** Like ``tc_one_file``, but only return the new environment **)
-let tc_one ((dsenv, tcenv): env_t) intf_opt mod =
-  let _, dsenv, tcenv = tc_one_file dsenv tcenv intf_opt mod in
+let tc_one (dsenv, tcenv) intf_opt modf =
+  let _, dsenv, tcenv = tc_one_file dsenv tcenv intf_opt modf in
   (dsenv, tcenv)
 
 (** Load the file or files described by `task` **)
@@ -143,7 +143,7 @@ let run_dep_task (env: env_t) (task: dep_task) =
   | LDInterfaceOfCurrentFile intf -> Universal.load_interface_decls env intf.tf_fname
 
 (** Build a list of dep tasks from a list of dependencies **)
-let dep_tasks_of_deps (deps: list string) (final_tasks: list<dep_task>) =
+let dep_tasks_of_deps (deps: list<string>) (final_tasks: list<dep_task>) =
   let wrap = dummy_tf_of_fname in
   let rec aux deps final_tasks =
     match deps with
