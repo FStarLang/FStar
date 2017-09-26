@@ -4808,20 +4808,6 @@ let modifies_1_readable_struct #l f p h h' =
 let modifies_1_readable_array #t #len i p h h' =
   readable_array h' p
 
-(* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
-
-let read_buffer
-  (#t: typ)
-  (b: buffer t)
-  i
-= read (pointer_of_buffer_cell b i)
-
-let write_buffer
-  (#t: typ)
-  (b: buffer t)
-  i v
-= write (pointer_of_buffer_cell b i) v
-
 (* unused_in, cont'd *)
 
 let buffer_live_unused_in_disjoint #t1 #t2 h b1 b2 = ()

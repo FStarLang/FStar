@@ -2142,7 +2142,7 @@ val field
  (#l: struct_typ)
  (p: pointer (TStruct l))
  (fd: struct_field l)
-: HST.ST (pointer (typ_of_struct_field l fd))
+: HST.Stack (pointer (typ_of_struct_field l fd))
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gfield p fd))
 
@@ -2150,7 +2150,7 @@ val ufield
  (#l: union_typ)
  (p: pointer (TUnion l))
  (fd: struct_field l)
-: HST.ST (pointer (typ_of_struct_field l fd))
+: HST.Stack (pointer (typ_of_struct_field l fd))
   (requires (fun h -> live h p))
   (ensures (fun h0 p' h1 -> h0 == h1 /\ p' == gufield p fd))
 
@@ -2159,21 +2159,21 @@ val cell
  (#value: typ)
  (p: pointer (TArray length value))
  (i: UInt32.t)
-: HST.ST (pointer value)
+: HST.Stack (pointer value)
   (requires (fun h -> UInt32.v i < UInt32.v length /\ live h p))
   (ensures (fun h0 p' h1 -> UInt32.v i < UInt32.v length /\ h0 == h1 /\ p' == gcell p i))
 
 val read
  (#value: typ)
  (p: pointer value)
-: HST.ST (type_of_typ value)
+: HST.Stack (type_of_typ value)
   (requires (fun h -> readable h p))
   (ensures (fun h0 v h1 -> readable h0 p /\ h0 == h1 /\ v == gread h0 p))
 
 val is_null
   (#t: typ)
   (p: npointer t)
-: HST.ST bool
+: HST.Stack bool
   (requires (fun h -> nlive h p))
   (ensures (fun h b h' -> h' == h /\ b == g_is_null p))
 
@@ -2292,34 +2292,8 @@ val modifies_1_readable_array
     [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gcell p i)];
   ]]
 
-(* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
+(* unused_in, cont'd *)
 
-val read_buffer
-  (#t: typ)
-  (b: buffer t)
-  (i: UInt32.t)
-: HST.Stack (type_of_typ t)
-  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ readable h (gpointer_of_buffer_cell b i)))
-  (ensures (fun h v h' -> UInt32.v i < UInt32.v (buffer_length b) /\ h' == h /\ v == Seq.index (buffer_as_seq h b) (UInt32.v i)))
-
-(* buffer write: needs clearer "modifies" clauses *)
-
-val write_buffer
-  (#t: typ)
-  (b: buffer t)
-  (i: UInt32.t)
-  (v: type_of_typ t)
-: HST.Stack unit
-  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ buffer_live h b))
-  (ensures (fun h _ h' ->
-    UInt32.v i < UInt32.v (buffer_length b) /\
-    modifies_1 (gpointer_of_buffer_cell b i) h h' /\
-    buffer_live h' b /\
-    readable h' (gpointer_of_buffer_cell b i) /\
-    Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\
-    (buffer_readable h b ==> buffer_readable h' b)
-  ))
-  
 val buffer_live_unused_in_disjoint
   (#t1 #t2: typ)
   (h: HS.mem)
