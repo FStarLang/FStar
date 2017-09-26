@@ -121,6 +121,8 @@ let push:
                     (uu___237_364.FStar_TypeChecker_Env.failhard);
                   FStar_TypeChecker_Env.nosynth =
                     (uu___237_364.FStar_TypeChecker_Env.nosynth);
+                  FStar_TypeChecker_Env.tc_term =
+                    (uu___237_364.FStar_TypeChecker_Env.tc_term);
                   FStar_TypeChecker_Env.type_of =
                     (uu___237_364.FStar_TypeChecker_Env.type_of);
                   FStar_TypeChecker_Env.universe_of =

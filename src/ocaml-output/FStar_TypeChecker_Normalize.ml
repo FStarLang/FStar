@@ -4956,6 +4956,8 @@ let eta_expand:
                                      (uu___234_17285.FStar_TypeChecker_Env.failhard);
                                    FStar_TypeChecker_Env.nosynth =
                                      (uu___234_17285.FStar_TypeChecker_Env.nosynth);
+                                   FStar_TypeChecker_Env.tc_term =
+                                     (uu___234_17285.FStar_TypeChecker_Env.tc_term);
                                    FStar_TypeChecker_Env.type_of =
                                      (uu___234_17285.FStar_TypeChecker_Env.type_of);
                                    FStar_TypeChecker_Env.universe_of =
@@ -5023,6 +5025,8 @@ let eta_expand:
                              (uu___235_17298.FStar_TypeChecker_Env.failhard);
                            FStar_TypeChecker_Env.nosynth =
                              (uu___235_17298.FStar_TypeChecker_Env.nosynth);
+                           FStar_TypeChecker_Env.tc_term =
+                             (uu___235_17298.FStar_TypeChecker_Env.tc_term);
                            FStar_TypeChecker_Env.type_of =
                              (uu___235_17298.FStar_TypeChecker_Env.type_of);
                            FStar_TypeChecker_Env.universe_of =

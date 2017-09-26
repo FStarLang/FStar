@@ -88,7 +88,7 @@ let tc_prims:
              (uu___202_183.FStar_TypeChecker_Env.refresh)
          }) in
     let env =
-      FStar_TypeChecker_Env.initial_env
+      FStar_TypeChecker_Env.initial_env FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.type_of_tot_term
         FStar_TypeChecker_TcTerm.universe_of solver1
         FStar_Parser_Const.prims_lid in
@@ -138,6 +138,8 @@ let tc_prims:
           (uu___203_186.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
           (uu___203_186.FStar_TypeChecker_Env.nosynth);
+        FStar_TypeChecker_Env.tc_term =
+          (uu___203_186.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of =
           (uu___203_186.FStar_TypeChecker_Env.type_of);
         FStar_TypeChecker_Env.universe_of =
@@ -200,6 +202,8 @@ let tc_prims:
           (uu___204_188.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.nosynth =
           (uu___204_188.FStar_TypeChecker_Env.nosynth);
+        FStar_TypeChecker_Env.tc_term =
+          (uu___204_188.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of =
           (uu___204_188.FStar_TypeChecker_Env.type_of);
         FStar_TypeChecker_Env.universe_of =

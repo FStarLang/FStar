@@ -25,7 +25,7 @@ let mk_tactic_interpretation_0:
                         FStar_Util.print2 "Reached %s, args are: %s\n"
                           uu____83 uu____84);
                    (let ps1 =
-                      FStar_Tactics_Embedding.unembed_proofstate ps
+                      FStar_Tactics_Embedding.unembed_proofstate
                         embedded_state in
                     let res = FStar_Tactics_Basic.run t ps1 in
                     let uu____89 =
@@ -62,7 +62,7 @@ let mk_tactic_interpretation_1:
                           FStar_Util.print2 "Reached %s, goals are: %s\n"
                             uu____197 uu____198);
                      (let ps1 =
-                        FStar_Tactics_Embedding.unembed_proofstate ps
+                        FStar_Tactics_Embedding.unembed_proofstate
                           embedded_state in
                       let res =
                         let uu____203 =
@@ -112,7 +112,7 @@ let mk_tactic_interpretation_2:
                             FStar_Util.print2 "Reached %s, goals are: %s\n"
                               uu____349 uu____350);
                        (let ps1 =
-                          FStar_Tactics_Embedding.unembed_proofstate ps
+                          FStar_Tactics_Embedding.unembed_proofstate
                             embedded_state in
                         let res =
                           let uu____355 =
@@ -167,7 +167,7 @@ let mk_tactic_interpretation_3:
                               FStar_Util.print2 "Reached %s, goals are: %s\n"
                                 uu____533 uu____534);
                          (let ps1 =
-                            FStar_Tactics_Embedding.unembed_proofstate ps
+                            FStar_Tactics_Embedding.unembed_proofstate
                               embedded_state in
                           let res =
                             let uu____539 =
@@ -231,7 +231,7 @@ let mk_tactic_interpretation_5:
                                     "Reached %s, goals are: %s\n" uu____780
                                     uu____781);
                              (let ps1 =
-                                FStar_Tactics_Embedding.unembed_proofstate ps
+                                FStar_Tactics_Embedding.unembed_proofstate
                                   embedded_state in
                               let res =
                                 let uu____786 =
@@ -838,6 +838,8 @@ let run_tactic_on_typ:
                          (uu___134_1637.FStar_TypeChecker_Env.failhard);
                        FStar_TypeChecker_Env.nosynth =
                          (uu___134_1637.FStar_TypeChecker_Env.nosynth);
+                       FStar_TypeChecker_Env.tc_term =
+                         (uu___134_1637.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
                          (uu___134_1637.FStar_TypeChecker_Env.type_of);
                        FStar_TypeChecker_Env.universe_of =
@@ -915,7 +917,7 @@ let run_tactic_on_typ:
                                    FStar_TypeChecker_Rel.solve_deferred_constraints
                                      env2 g in
                                  FStar_All.pipe_right uu____1690
-                                   FStar_TypeChecker_Rel.resolve_implicits_lax in
+                                   FStar_TypeChecker_Rel.resolve_implicits_tac in
                                FStar_TypeChecker_Rel.force_trivial_guard env2
                                  g1;
                                ((FStar_List.append
