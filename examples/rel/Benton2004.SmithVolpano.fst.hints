@@ -364,19 +364,6 @@
       0
     ],
     [
-      "Benton2004.SmithVolpano.eval_equiv_var_other",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0
-    ],
-    [
       "Benton2004.SmithVolpano.eval_equiv_const",
       1,
       2,

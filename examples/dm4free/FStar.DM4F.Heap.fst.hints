@@ -390,17 +390,6 @@
       0
     ],
     [
-      "FStar.DM4F.Heap.sel_same_addr_of",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
       "FStar.DM4F.Heap.sel_upd1",
       1,
       2,

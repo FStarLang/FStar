@@ -116,3 +116,9 @@ let _ = assert_by_tactic (exists (n:int). n == 5)
 // Fixing this seemss non-trivial, after some attempts...
 (* let _ = assert_by_tactic (exists (n:nat). n == 5) *)
 (*                          (witness (quote 5);; trefl;; qed) *)
+
+assume val l' : nat -> unit -> Lemma p1
+let _ =
+    assert_by_tactic p1
+                     (apply_lemma (quote (l' 5));;
+                      trivial)

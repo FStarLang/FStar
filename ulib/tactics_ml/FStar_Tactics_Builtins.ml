@@ -1,4 +1,5 @@
 open Prims
+open FStar_Tactics_Result
 open FStar_Tactics_Types
 open FStar_Tactics_Effect
 module E = FStar_Tactics_Effect
@@ -6,15 +7,11 @@ module B = FStar_Tactics_Basic
 module RT = FStar_Reflection_Types
 module EMB = FStar_Syntax_Embeddings
 
-let interpret_tac (t: 'a B.tac) (ps: proofstate): 'a E.__result =
-  match B.run t ps with
-  | B.Success (a, state) -> E.Success (a, state)
-  | B.Failed (s, state) -> E.Failed (s, state)
+let interpret_tac (t: 'a B.tac) (ps: proofstate): 'a __result =
+  B.run t ps
 
-let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a B.result =
-  match t ps with
-  | E.Success (a, state) -> B.Success (a, state)
-  | E.Failed (s, state) -> B.Failed (s, state)
+let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a __result =
+  t ps
 
 let tr_repr_steps =
     let tr1 = function
@@ -80,11 +77,17 @@ let norm_term: norm_step list -> RT.term -> unit -> RT.term __tac = fun s t -> f
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro
 
+let __rename_to (b: RT.binder) (nm : string) : unit __tac = from_tac_2 B.rename_to b nm
+let rename_to: RT.binder -> string -> unit -> unit __tac = fun b s -> fun () -> __rename_to b s
+
 let __revert: unit __tac = from_tac_0 B.revert
 let revert: unit -> unit __tac = fun () -> __revert
 
-let __clear: unit __tac = from_tac_0 B.clear
-let clear: unit -> unit __tac = fun () -> __clear
+let __clear_top: unit __tac = from_tac_0 B.clear_top
+let clear_top: unit -> unit __tac = fun () -> __clear_top
+
+let __clear (h: RT.binder) : unit __tac = from_tac_1 B.clear h
+let clear: RT.binder -> unit -> unit __tac = fun b -> fun () -> __clear b
 
 let __rewrite (h: RT.binder): unit __tac = from_tac_1 B.rewrite h
 let rewrite: RT.binder -> unit -> unit __tac = fun b  -> fun () -> __rewrite b
@@ -102,36 +105,36 @@ let __exact (t: RT.term): unit __tac = from_tac_1 B.exact t
 let exact: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
     match (t ()) ps with
-    | E.Success (a, state) -> __exact a state
-    | E.Failed (s, state) -> E.Failed (s, state)
+    | Success (a, state) -> __exact a state
+    | Failed (s, state) -> Failed (s, state)
 
 let __exact_lemma (t: RT.term): unit __tac = from_tac_1 B.exact_lemma t
 let exact_lemma: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
     match (t ()) ps with
-    | E.Success (a, state) -> __exact_lemma a state
-    | E.Failed (s, state) -> E.Failed (s, state)
+    | Success (a, state) -> __exact_lemma a state
+    | Failed (s, state) -> Failed (s, state)
 
 let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
 let apply: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
     match (t ()) ps with
-    | E.Success (a, state) -> __apply a state
-    | E.Failed (s, state) -> E.Failed (s, state)
+    | Success (a, state) -> __apply a state
+    | Failed (s, state) -> Failed (s, state)
 
 let __apply_raw (t: RT.term): unit __tac = from_tac_1 (B.apply false) t
 let apply_raw: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
     match (t ()) ps with
-    | E.Success (a, state) -> __apply_raw a state
-    | E.Failed (s, state) -> E.Failed (s, state)
+    | Success (a, state) -> __apply_raw a state
+    | Failed (s, state) -> Failed (s, state)
 
 let __apply_lemma (t: RT.term): unit __tac = from_tac_1 B.apply_lemma t
 let apply_lemma: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
     match (t ()) ps with
-    | E.Success (a, state) -> __apply_lemma a state
-    | E.Failed (s, state) -> E.Failed (s, state)
+    | Success (a, state) -> __apply_lemma a state
+    | Failed (s, state) -> Failed (s, state)
 
 let __print (s: string): unit __tac = from_tac_1 (fun x -> B.ret (B.tacprint x)) s
 let print: string -> unit -> unit __tac = fun s -> fun () -> __print s

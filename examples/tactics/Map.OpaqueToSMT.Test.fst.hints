@@ -1,0 +1,31 @@
+[
+  "çØÂrRJG\bÊêŸª\u0007]ÓW",
+  [
+    [
+      "Map.OpaqueToSMT.Test.imap",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Map.OpaqueToSMT.Test.upd",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [
+      "Map.OpaqueToSMT.Test.sel",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0
+    ],
+    [ "Map.OpaqueToSMT.Test.test1", 1, 0, 0, [ "@query" ], 0 ],
+    [ "Map.OpaqueToSMT.Test.test2", 1, 0, 0, [ "@query" ], 0 ]
+  ]
+]

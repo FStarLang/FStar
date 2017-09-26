@@ -289,6 +289,23 @@ let loc_disjoint_addresses_pointer
   [SMTPat (loc_disjoint (loc_addresses r n) (loc_pointer p))]
 = loc_disjoint_sym (loc_pointer p) (loc_addresses r n)
 
+let loc_disjoint_union_r_elim
+  (l l1 l2: loc)
+: Lemma
+  (requires (loc_disjoint l (loc_union l1 l2)))
+  (ensures (loc_disjoint l l1 /\ loc_disjoint l l2))
+  [SMTPat (loc_disjoint l (loc_union l1 l2))]
+= loc_disjoint_includes l (loc_union l1 l2) l l1;
+  loc_disjoint_includes l (loc_union l1 l2) l l2
+
+let loc_disjoint_union_l_elim
+  (l l1 l2: loc)
+: Lemma
+  (requires (loc_disjoint (loc_union l1 l2) l))
+  (ensures (loc_disjoint l1 l /\ loc_disjoint l2 l))
+  [SMTPat (loc_disjoint (loc_union l1 l2) l)]
+= ()
+
 let modifies_trans_incl_l
   (s12: loc)
   (h1 h2: HS.mem)
@@ -327,3 +344,22 @@ let modifies_fresh_frame_popped'
     h3.HS.tip == h0.HS.tip
   ))
 = modifies_fresh_frame_popped h0 h1 s h2 h3
+
+let buffer_includes_gsub_r_gen
+  (#t: typ)
+  (b0: buffer t)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_includes b0 b
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_includes b0 (gsub_buffer b i len)
+  ))
+  [SMTPat (buffer_includes b0 (gsub_buffer b i len))]
+= buffer_includes_gsub_r b i len;
+  buffer_includes_trans b0 b (gsub_buffer b i len)

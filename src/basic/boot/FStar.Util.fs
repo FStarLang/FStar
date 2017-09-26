@@ -44,7 +44,8 @@ let string_of_time (t:time) = t.ToString "MM-dd-yyyy"
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
+
 let max_int = System.Int32.MaxValue
 
 type proc = {m:Object;

@@ -75,7 +75,7 @@ let get_z3version () =
 let ini_params () =
   let z3_v = get_z3version () in
   begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
+  then raise (Util.HardError (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v)))
   else ()
   end;
   (String.concat " "
@@ -496,28 +496,6 @@ let refresh () =
     if (Options.n_cores() < 2) then
         bg_z3_proc.refresh();
         bg_scope := List.flatten (List.rev !fresh_scope)
-
-//mark, reset_mark, commit_mark:
-//    setting rollback points for the interactive mode
-// JP: I suspect the expected usage for the interactive mode is as follows:
-// - the stack (fresh_scope) has size >= 1, the top scope contains the queries
-//   that have been successful so far
-// - one calls "mark" to push a new scope of tentative queries
-// - in case of success, the new scope is collapsed with the previous scope,
-//   effectively bringing the new queries into the scope of successful queries so far
-// - in case of failure, the new scope is discarded
-let mark msg =
-    push msg
-let reset_mark msg =
-    // JP: pop_context (in universal.fs) does the same thing: it calls pop,
-    // followed by refresh
-    pop msg;
-    refresh ()
-let commit_mark (msg:string) =
-    begin match !fresh_scope with
-        | hd::s::tl -> fresh_scope := (hd@s)::tl
-        | _ -> failwith "Impossible"
-    end
 
 let mk_input theory =
     let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in

@@ -120,7 +120,7 @@ hello:
 	+$(MAKE) -C ../examples/hello ocaml
 
 # Getting parallelism from this target
-uregressions: hello ulib tutorial uexamples native_tactics interactive-test
+uregressions: hello ulib tutorial uexamples extraction-examples native_tactics interactive-test
 
 # Getting parallelism from this target as well
 uregressions-ulong: uregressions ulib-extra
@@ -138,6 +138,9 @@ tutorial: hello
 # Depends on fstarlib.cmxa, which is built by hello
 native_tactics: hello
 	+$(MAKE) -C ../examples/native_tactics all
+
+extraction-examples: hello
+	+$(MAKE) -C ../examples/extraction all
 
 uexamples:
 	+$(MAKE) -C ../examples all
