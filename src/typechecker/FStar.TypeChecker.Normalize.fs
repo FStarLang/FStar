@@ -803,6 +803,11 @@ let maybe_simplify cfg tm =
                                 | _ -> tm
                        end
                     | _ -> tm
+              else if S.fv_eq_lid fv PC.b2t_lid
+              then match args with
+                     | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
+                     | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
+                     | _ -> tm
               else reduce_equality cfg tm
             | _ -> tm
 
