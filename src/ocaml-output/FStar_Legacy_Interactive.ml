@@ -824,7 +824,7 @@ let rec go:
                     FStar_TypeChecker_Env.lidents
                       (FStar_Pervasives_Native.snd env) in
                   let matches =
-                    let case_a_find_transitive_includes orig_ns m id =
+                    let case_a_find_transitive_includes orig_ns m id1 =
                       let dsenv = FStar_Pervasives_Native.fst env in
                       let exported_names =
                         FStar_ToSyntax_Env.transitive_exported_ids dsenv m in
@@ -834,11 +834,11 @@ let rec go:
                              fun s  ->
                                ((FStar_String.length s) + out) +
                                  (Prims.parse_int "1"))
-                          (FStar_String.length id) orig_ns in
+                          (FStar_String.length id1) orig_ns in
                       FStar_All.pipe_right exported_names
                         (FStar_List.filter_map
                            (fun n1  ->
-                              if FStar_Util.starts_with n1 id
+                              if FStar_Util.starts_with n1 id1
                               then
                                 let lid =
                                   FStar_Ident.lid_of_ns_and_id
@@ -870,10 +870,10 @@ let rec go:
                             (FStar_List.filter
                                (fun uu____3720  ->
                                   match uu____3720 with
-                                  | (ns,id,uu____3733) ->
+                                  | (ns,id1,uu____3733) ->
                                       let uu____3742 =
                                         let uu____3745 =
-                                          FStar_Ident.lid_of_ids id in
+                                          FStar_Ident.lid_of_ids id1 in
                                         FStar_ToSyntax_Env.resolve_to_fully_qualified_name
                                           dsenv uu____3745 in
                                       (match uu____3742 with
@@ -882,12 +882,12 @@ let rec go:
                                        | FStar_Pervasives_Native.Some l ->
                                            let uu____3747 =
                                              FStar_Ident.lid_of_ids
-                                               (FStar_List.append ns id) in
+                                               (FStar_List.append ns id1) in
                                            FStar_Ident.lid_equals l
                                              uu____3747))) in
                     let uu____3748 = FStar_Util.prefix needle in
                     match uu____3748 with
-                    | (ns,id) ->
+                    | (ns,id1) ->
                         let matched_ids =
                           match ns with
                           | [] -> case_b_find_matches_in_env ()
@@ -902,7 +902,7 @@ let rec go:
                                | FStar_Pervasives_Native.None  ->
                                    case_b_find_matches_in_env ()
                                | FStar_Pervasives_Native.Some m ->
-                                   case_a_find_transitive_includes ns m id) in
+                                   case_a_find_transitive_includes ns m id1) in
                         FStar_All.pipe_right matched_ids
                           (FStar_List.map
                              (fun x  ->

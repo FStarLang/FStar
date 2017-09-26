@@ -377,11 +377,12 @@ let id_info_insert:
       FStar_Syntax_Syntax.typ -> FStar_Range.range -> id_info_table
   =
   fun table  ->
-    fun id  ->
+    fun id1  ->
       fun ty  ->
         fun range  ->
           let info =
-            { identifier = id; identifier_ty = ty; identifier_range = range } in
+            { identifier = id1; identifier_ty = ty; identifier_range = range
+            } in
           let uu___110_1320 = table in
           {
             id_info_enabled = (uu___110_1320.id_info_enabled);

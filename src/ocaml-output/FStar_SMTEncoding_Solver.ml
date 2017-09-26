@@ -1084,9 +1084,9 @@ let ask_and_report_errors:
              | (true ,uu____2266) -> ()
              | (false ,FStar_Pervasives_Native.None ) ->
                  check_all_configs all_configs
-             | (false ,FStar_Pervasives_Native.Some id) ->
+             | (false ,FStar_Pervasives_Native.Some id1) ->
                  let skip =
-                   if FStar_Util.starts_with id "("
+                   if FStar_Util.starts_with id1 "("
                    then
                      let full_query_id =
                        let uu____2278 =
@@ -1099,8 +1099,8 @@ let ask_and_report_errors:
                            Prims.strcat ", " uu____2280 in
                          Prims.strcat default_settings.query_name uu____2279 in
                        Prims.strcat "(" uu____2278 in
-                     full_query_id <> id
-                   else default_settings.query_name <> id in
+                     full_query_id <> id1
+                   else default_settings.query_name <> id1 in
                  if Prims.op_Negation skip
                  then check_all_configs all_configs
                  else ())

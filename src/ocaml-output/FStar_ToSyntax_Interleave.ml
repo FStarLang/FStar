@@ -32,8 +32,8 @@ let definition_lids: FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list =
              (fun uu___203_140  ->
                 match uu___203_140 with
                 | (FStar_Parser_AST.TyconAbbrev
-                   (id,uu____150,uu____151,uu____152),uu____153) ->
-                    let uu____166 = FStar_Ident.lid_of_ids [id] in
+                   (id1,uu____150,uu____151,uu____152),uu____153) ->
+                    let uu____166 = FStar_Ident.lid_of_ids [id1] in
                     [uu____166]
                 | uu____167 -> []))
     | uu____174 -> []

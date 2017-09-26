@@ -1564,7 +1564,7 @@ let run_completions:
           let needle = FStar_Util.split search_term "." in
           let all_lidents_in_env = FStar_TypeChecker_Env.lidents tcenv in
           let matches =
-            let case_a_find_transitive_includes orig_ns m id =
+            let case_a_find_transitive_includes orig_ns m id1 =
               let exported_names =
                 FStar_ToSyntax_Env.transitive_exported_ids dsenv m in
               let matched_length =
@@ -1572,12 +1572,12 @@ let run_completions:
                   (fun out  ->
                      fun s  ->
                        ((FStar_String.length s) + out) +
-                         (Prims.parse_int "1")) (FStar_String.length id)
+                         (Prims.parse_int "1")) (FStar_String.length id1)
                   orig_ns in
               FStar_All.pipe_right exported_names
                 (FStar_List.filter_map
                    (fun n1  ->
-                      if FStar_Util.starts_with n1 id
+                      if FStar_Util.starts_with n1 id1
                       then
                         let lid =
                           FStar_Ident.lid_of_ns_and_id
@@ -1604,9 +1604,9 @@ let run_completions:
                 (FStar_List.filter
                    (fun uu____5522  ->
                       match uu____5522 with
-                      | (ns,id,uu____5535) ->
+                      | (ns,id1,uu____5535) ->
                           let uu____5544 =
-                            let uu____5547 = FStar_Ident.lid_of_ids id in
+                            let uu____5547 = FStar_Ident.lid_of_ids id1 in
                             FStar_ToSyntax_Env.resolve_to_fully_qualified_name
                               dsenv uu____5547 in
                           (match uu____5544 with
@@ -1614,11 +1614,11 @@ let run_completions:
                            | FStar_Pervasives_Native.Some l ->
                                let uu____5549 =
                                  FStar_Ident.lid_of_ids
-                                   (FStar_List.append ns id) in
+                                   (FStar_List.append ns id1) in
                                FStar_Ident.lid_equals l uu____5549))) in
             let uu____5550 = FStar_Util.prefix needle in
             match uu____5550 with
-            | (ns,id) ->
+            | (ns,id1) ->
                 let matched_ids =
                   match ns with
                   | [] -> case_b_find_matches_in_env ()
@@ -1631,7 +1631,7 @@ let run_completions:
                        | FStar_Pervasives_Native.None  ->
                            case_b_find_matches_in_env ()
                        | FStar_Pervasives_Native.Some m ->
-                           case_a_find_transitive_includes ns m id) in
+                           case_a_find_transitive_includes ns m id1) in
                 FStar_All.pipe_right matched_ids
                   (FStar_List.map
                      (fun x  ->
