@@ -35,14 +35,31 @@ let step :tactic unit =
   (apply_lemma (quote lemma_alloc_return);; norm [])                                         `or_else`
   idtac
 
+let context_rewrites :tactic unit =
+  e <-- cur_env;
+  mapM (fun b ->
+    let typ_b = type_of_binder b in
+    match term_as_formula' typ_b with
+    | Comp Eq _ lhs _ -> 
+       begin match inspect lhs with
+       | Tv_Var _     -> rewrite b
+       | _            -> idtac
+       end
+    | _               -> idtac
+  ) (binders_of_env e);;
+  idtac
+
 (* Writing to a pointer *)
 let write_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
-  step
+  step;;
+  context_rewrites;;
+  pointwise (or_else (apply_lemma (quote lemma4);; qed) trefl);;
+  dump "Write"
 
-let write_ok (r:addr) (h:heap) (x:int) =
-  let c = (Write r x) in
-  let p = fun _ h -> sel h r == x in
+let write_ok (r:addr) (h:heap) (n:int) =
+  let c = (Write r n) in
+  let p = fun _ h -> sel h r == n in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic t write_tau
 
@@ -55,63 +72,16 @@ let increment_tau :tactic unit =
   step;;
   pointwise (or_else (apply_lemma (quote lemma0);; qed) trefl);;
   pointwise (or_else (apply_lemma (quote lemma6);; qed) trefl);;
-  e <-- cur_env;
-  let binders_of_e = binders_of_env e in
-  rewrite_all_context_equalities binders_of_e;;
-  idtac;;
-  dump "Foo";;
-  smt
+  context_rewrites;;
+  pointwise (or_else (apply_lemma (quote lemma4);; qed) trefl);;
+  dump "Increment"
 
 #set-options "--initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2" 
-let increment_ok (r:addr) (h:heap) (y:int) =
+let increment_ok (r:addr) (h:heap) (n:int) =
   let c = Bind (Read r) (fun n -> Write r (n + 1)) in
-  let p = fun _ h -> sel h r == (y + 1) in
+  let p = fun _ h -> sel h r == (n + 1) in
   let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r == y ==> t) increment_tau
-
-(* Testing pointwise behaviour *)
-assume val f: int -> int -> int
-
-let lemma_test1 (x:int) (y:int)
-  :Lemma (requires True)
-         (ensures f x y == 1 + 1)
-  = admit()
-  
-let test_ok1 (x:int) (y:int) =
-  let g = (f x y == 2) in
-  assert_by_tactic g (
-    pointwise (or_else (apply_lemma (quote lemma_test1);; qed) trefl);;
-    dump "Post pointwise :test_ok1"
-  )
-
-assume val t_heap :Type0
-assume val t_addr :Type0
-assume val t_sel : t_heap -> t_addr -> int
-
-let lemma_test3 (h:t_heap) (r:t_addr)
-  :Lemma (requires True)
-         (ensures t_sel h r == 1 + 1)
-  = admit()
-
-let test_ok3 (h:t_heap) (r:t_addr) =
-  let g = (t_sel h r == 2) in
-  assert_by_tactic g (
-    pointwise (or_else (apply_lemma (quote lemma_test3);; qed) trefl);;
-    dump "Post pointwise :test_ok3"
-  )
-
-let lemma_test2 (h:heap) (r:addr)
-  :Lemma (requires True)
-         (ensures sel h r == 1 + 1)
-  = admit()
-  
-let test_ok2 (h:heap) (r:addr) =
-  let g = (sel h r == 2) in
-  assert_by_tactic g (
-    dump "Pre pointwise :test_ok2";;
-    pointwise (or_else (apply_lemma (quote lemma_test2);; qed) trefl);;
-    dump "Post pointwise :test_ok2"
-  )
+  assert_by_tactic (sel h r == n ==> t) increment_tau
 
 (* Swapping two pointers *)
 let swap_tau :tactic unit =
@@ -126,15 +96,18 @@ let swap_tau :tactic unit =
   step;;
   pointwise (or_else (apply_lemma (quote lemma0);; qed) trefl);;
   pointwise (or_else (apply_lemma (quote lemma6);; qed) trefl);;
-  dump "Foo";;
-  dump "Swap";;
-  smt
+  context_rewrites;;
+  pointwise (or_else (apply_lemma (quote lemma4);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma5);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma9);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma4);; qed) trefl);;
+  dump "Swap"
 
-let swap_ok (r1:addr) (r2:addr) (h:heap) (x:int) (y:int) =
+let swap_ok (r1:addr) (r2:addr) (h:heap) (a:int) (b:int) =
   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
-  let p = fun _ h -> sel h r1 == x /\ sel h r2 == y in
+  let p = fun _ h -> sel h r1 == b /\ sel h r2 == a in
   let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r1 == y /\ sel h r2 == x ==> t) swap_tau
+  assert_by_tactic (sel h r1 == a /\ sel h r2 == b ==> t) swap_tau
 
 (* Rotate three pointers *)
 let rotate_tau :tactic unit =
@@ -155,19 +128,29 @@ let rotate_tau :tactic unit =
   step;;
   step;;
   step;;
-  fail "Rotate"
+  pointwise (or_else (apply_lemma (quote lemma0);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma6);; qed) trefl);;
+  context_rewrites;;
+  pointwise (or_else (apply_lemma (quote lemma4);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma5);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma9);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma4);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma5);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma9);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma4);; qed) trefl);;  
+  pointwise (or_else (apply_lemma (quote lemma5);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma9);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma4);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma5);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma9);; qed) trefl);;
+  dump "Rotate"
 
-let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (x:int) (y:int) (z:int) =
-  let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) 
-               (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r1 n3)))) in
-  let p = fun _ h -> sel h r1 == y /\ sel h r2 == z /\ sel h r3 == x in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r1 == x /\ sel h r2 == y /\ sel h r2 == z ==> t) rotate_tau
-
-let lemma_init (phi:heap -> heap -> prop) (h:heap)
-  :Lemma (requires (phi emp h))
-         (ensures (exists h1 h2. (h == h1 `join` h2) /\ ((h1 == emp) /\ phi h1 h2)))
-  = ()
+// let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
+//   let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) 
+//                (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r1 n3)))) in
+//   let p = fun _ h -> sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i in
+//   let t = (lift_wpsep (wpsep_command c)) p h in
+//   assert_by_tactic (sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) rotate_tau
 
 (* Initializing a fresh object *)
 let init_tau :tactic unit =
@@ -177,6 +160,13 @@ let init_tau :tactic unit =
   step;;
   step;;
   step;;
+  pointwise (or_else (apply_lemma (quote lemma0);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma6);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma6');; qed) trefl);;
+  context_rewrites;;
+  pointwise (or_else (apply_lemma (quote lemma4);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma5);; qed) trefl);;
+  pointwise (or_else (apply_lemma (quote lemma9);; qed) trefl);;
   dump "Init";;
   smt
 
