@@ -9,9 +9,10 @@ open FStar.Mul
 (* NOTE: anything that you fix/update here should be reflected in [FStar.IntN.fstp], which is mostly
  * a copy-paste of this module. *)
 
-(* This is really the same thing as [FStar.IntN.fstp], with:
+(* Except, as compared to [FStar.IntN.fstp], here:
  * - every occurrence of [int_t] has been replaced with [uint_t]
  * - every occurrence of [@%] has been replaced with [%].
+ * - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
  *)
 
 abstract type t =
@@ -25,17 +26,17 @@ let uint_to_t (x:uint_t n) : Pure t
   (requires True)
   (ensures (fun y -> v y = x)) = Mk x
 
-let uv_inv (x : t) : Lemma 
+let uv_inv (x : t) : Lemma
   (ensures (uint_to_t (v x) == x))
   [SMTPat (v x)] = ()
 
-let vu_inv (x : uint_t n) : Lemma 
+let vu_inv (x : uint_t n) : Lemma
   (ensures (v (uint_to_t x) == x))
   [SMTPat (uint_to_t x)] = ()
 
-let v_inj (x1 x2: t): Lemma 
-  (requires (v x1 == v x2)) 
-  (ensures (x1 == x2)) 
+let v_inj (x1 x2: t): Lemma
+  (requires (v x1 == v x2))
+  (ensures (x1 == x2))
   = ()
 
 abstract
@@ -54,7 +55,7 @@ let add_underspec (a:t) (b:t) : Pure t
 abstract
 let add_mod (a:t) (b:t) : Pure t
   (requires True)
-  (ensures (fun c -> (v a + v b) % pow2 n = v c))
+  (ensures (fun c -> FStar.UInt.add_mod (v a) (v b) = v c))
   = Mk (add_mod (v a) (v b))
 
 (* Subtraction primitives *)
@@ -74,7 +75,7 @@ let sub_underspec (a:t) (b:t) : Pure t
 abstract
 let sub_mod (a:t) (b:t) : Pure t
   (requires True)
-  (ensures (fun c -> (v a - v b) % pow2 n = v c))
+  (ensures (fun c -> FStar.UInt.sub_mod (v a) (v b) = v c))
   = Mk (sub_mod (v a) (v b))
 
 (* Multiplication primitives *)
@@ -94,13 +95,13 @@ let mul_underspec (a:t) (b:t) : Pure t
 abstract
 let mul_mod (a:t) (b:t) : Pure t
   (requires True)
-  (ensures (fun c -> (v a * v b) % pow2 n = v c))
+  (ensures (fun c -> FStar.UInt.mul_mod (v a) (v b) = v c))
   = Mk (mul_mod (v a) (v b))
 
 abstract
 let mul_div (a:t) (b:t) : Pure t
   (requires True)
-  (ensures (fun c -> (v a * v b) / pow2 n = v c))
+  (ensures (fun c -> FStar.UInt.mul_div (v a) (v b) = v c))
   = Mk (mul_div (v a) (v b))
 
 (* Division primitives *)
@@ -114,8 +115,7 @@ let div (a:t) (b:t{v b <> 0}) : Pure t
 abstract
 let rem (a:t) (b:t{v b <> 0}) : Pure t
   (requires True)
-  (ensures (fun c ->
-    v a - ((v a / v b) * v b) = v c))
+  (ensures (fun c -> FStar.UInt.mod (v a) (v b) = v c))
   = Mk (mod (v a) (v b))
 
 (* Bitwise operators *)
@@ -123,38 +123,38 @@ let rem (a:t) (b:t{v b <> 0}) : Pure t
 abstract
 let logand (x:t) (y:t) : Pure t
   (requires True)
-  (ensures (fun z -> v z == v x `logand` v y))
+  (ensures (fun z -> v x `logand` v y = v z))
   = Mk (logand (v x) (v y))
 
 abstract
 let logxor (x:t) (y:t) : Pure t
   (requires True)
-  (ensures (fun z -> v z == v x `logxor` v y))
+  (ensures (fun z -> v x `logxor` v y == v z))
   = Mk (logxor (v x) (v y))
 
 abstract
 let logor (x:t) (y:t) : Pure t
   (requires True)
-  (ensures (fun z -> v z == v x `logor` v y))
+  (ensures (fun z -> v x `logor` v y == v z))
   = Mk (logor (v x) (v y))
 
 abstract
 let lognot (x:t) : Pure t
   (requires True)
-  (ensures (fun z -> v z == lognot (v x)))
+  (ensures (fun z -> lognot (v x) == v z))
   = Mk (lognot (v x))
 
 (* Shift operators *)
 abstract
 let shift_right (a:t) (s:t) : Pure t
   (requires (v s < n))
-  (ensures (fun c -> v c = (v a / (pow2 (v s)))))
+  (ensures (fun c -> FStar.UInt.shift_right (v a) (v s) = v c))
   = Mk (shift_right (v a) (v s))
 
 abstract
 let shift_left (a:t) (s:t) : Pure t
   (requires (v s < n))
-  (ensures (fun c -> v c = ((v a * pow2 (v s)) % pow2 n)))
+  (ensures (fun c -> FStar.UInt.shift_left (v a) (v s) = v c))
   = Mk (shift_left (v a) (v s))
 
 (* Comparison operators *)
@@ -164,8 +164,21 @@ let gte (a:t) (b:t) : Tot bool = gte #n (v a) (v b)
 let lt (a:t) (b:t) : Tot bool = lt #n (v a) (v b)
 let lte (a:t) (b:t) : Tot bool = lte #n (v a) (v b)
 
-assume val eq_mask: a:t -> b:t -> Tot (c:t{(v a = v b ==> v c = pow2 n - 1) /\ (v a <> v b ==> v c = 0)})
-assume val gte_mask: a:t -> b:t -> Tot (c:t{(v a >= v b ==> v c = pow2 n - 1) /\ (v a < v b ==> v c = 0)})
+abstract
+let eq_mask (a:t) (b:t) : Pure t
+  (requires True)
+  (ensures (fun c -> (v a = v b ==> v c = pow2 n - 1) /\
+                  (v a <> v b ==> v c = 0)))
+  = if v a = v b then Mk (pow2 n - 1)
+    else Mk 0
+
+abstract
+let gte_mask (a:t) (b:t) : Pure t
+  (requires True)
+  (ensures (fun c -> (v a >= v b ==> v c = pow2 n - 1) /\
+                  (v a < v b ==> v c = 0)))
+  = if v a >= v b then Mk (pow2 n - 1)
+    else Mk 0
 
 (* Infix notations *)
 unfold let op_Plus_Hat = add
@@ -194,7 +207,6 @@ unfold let op_Less_Equals_Hat = lte
 (* To input / output constants *)
 assume val to_string: t -> Tot string
 assume val of_string: string -> Tot t
-
 
 #set-options "--lax"
 //This private primitive is used internally by the
