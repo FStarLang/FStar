@@ -19,7 +19,6 @@ let choose: a:t -> dec a -> int -> dec a = function
 
 (* One recurring bug has been shadowing of variables when a function is eta-expanded two or
    more times during extraction. If this is the case, x will be 2 when executing the OCaml code *)
-let x = choose A 0 2
 let _ =
   match (choose A 0 2) with
   | 0 -> () (* correct behaviour *)
