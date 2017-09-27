@@ -864,12 +864,13 @@ let ensure_decimal s = Z.to_string (Z.of_string s)
 
 (** Hints. *)
 type hint = {
-    hint_name: string;
-    hint_index: Z.t;
+    hint_name:string;
+    hint_index:Z.t;
     fuel:Z.t;
     ifuel:Z.t;
-    unsat_core: string list option;
-    query_elapsed_time:Z.t
+    unsat_core:string list option;
+    query_elapsed_time:Z.t;
+    hash:string option
 }
 
 type hints = hint option list
@@ -884,7 +885,7 @@ let write_hints (filename: string) (hints: hints_db): unit =
     `String hints.module_digest;
     `List (List.map (function
       | None -> `Null
-      | Some { hint_name; hint_index; fuel; ifuel; unsat_core; query_elapsed_time } ->
+      | Some { hint_name; hint_index; fuel; ifuel; unsat_core; query_elapsed_time; hash } ->
           `List [
 	    `String hint_name;
 	    `Int (Z.to_int hint_index);
@@ -894,58 +895,84 @@ let write_hints (filename: string) (hints: hints_db): unit =
             | None -> `Null
             | Some strings ->
                 `List (List.map (fun s -> `String s) strings));
-            `Int (Z.to_int query_elapsed_time)
+            `Int (Z.to_int query_elapsed_time);
+            `String (match hash with | Some(h) -> h | _ -> "")
           ]
     ) hints.hints)
   ] in
   Yojson.Safe.pretty_to_channel (open_out_bin filename) json
 
 let read_hints (filename: string): hints_db option =
-    try
+  try
     let chan = open_in filename in
     let json = Yojson.Safe.from_channel chan in
     close_in chan;
-    Some (match json with
-    | `List [
-        `String module_digest;
-        `List hints
-      ] ->
-        {
-          module_digest;
-          hints = List.map (function
-            | `Null -> None
-            | `List [
-		`String hint_name;
-		`Int hint_index;
-                `Int fuel;
-                `Int ifuel;
-                unsat_core;
-                `Int query_elapsed_time
-              ] ->
-                Some {
-		  hint_name;
-		  hint_index = Z.of_int hint_index;
-                  fuel = Z.of_int fuel;
-                  ifuel = Z.of_int ifuel;
-                  unsat_core = begin match unsat_core with
-                    | `Null ->
-                        None
-                    | `List strings ->
-                        Some (List.map (function
-                          | `String s -> s
-                          | _ -> raise Exit
-                        ) strings)
-                    |  _ ->
-                        raise Exit
-                  end;
-                  query_elapsed_time = Z.of_int query_elapsed_time
-                }
-              | _ ->
-                 raise Exit
-          ) hints
-        }
-    | _ ->
-        raise Exit
+    Some (
+        match json with
+        | `List [
+            `String module_digest;
+            `List hints
+          ] -> {
+            module_digest;
+            hints = List.map (function
+                        | `Null -> None
+                        | `List [ `String hint_name;
+		                          `Int hint_index;
+                                  `Int fuel;
+                                  `Int ifuel;
+                                  unsat_core;
+                                  `Int query_elapsed_time ] ->
+                           Some {
+		                       hint_name;
+		                       hint_index = Z.of_int hint_index;
+                               fuel = Z.of_int fuel;
+                               ifuel = Z.of_int ifuel;
+                               unsat_core = begin match unsat_core with
+                                            | `Null ->
+                                               None
+                                            | `List strings ->
+                                               Some (List.map (function
+                                                         | `String s -> s
+                                                         | _ -> raise Exit
+                                                       ) strings)
+                                            |  _ ->
+                                                raise Exit
+                                            end;
+                               query_elapsed_time = Z.of_int query_elapsed_time;
+                               hash = None
+                             }
+                        | `List [ `String hint_name;
+		                          `Int hint_index;
+                                  `Int fuel;
+                                  `Int ifuel;
+                                  unsat_core;
+                                  `Int query_elapsed_time;
+                                  `String hash] ->
+                           Some {
+		                       hint_name;
+		                       hint_index = Z.of_int hint_index;
+                               fuel = Z.of_int fuel;
+                               ifuel = Z.of_int ifuel;
+                               unsat_core = begin match unsat_core with
+                                            | `Null ->
+                                               None
+                                            | `List strings ->
+                                               Some (List.map (function
+                                                         | `String s -> s
+                                                         | _ -> raise Exit
+                                                       ) strings)
+                                            |  _ ->
+                                                raise Exit
+                                            end;
+                               query_elapsed_time = Z.of_int query_elapsed_time;
+                               hash = if hash <> "" then Some(hash) else None
+                             }
+                        | _ ->
+                           raise Exit
+                      ) hints
+          }
+        | _ ->
+           raise Exit
     )
   with
    | Exit ->

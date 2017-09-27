@@ -377,7 +377,13 @@ type job<'a> = {
     callback: 'a -> unit
 }
 
-type z3job = job<(z3status * int * z3statistics)>
+type z3result =
+      z3status
+    * int
+    * z3statistics
+    * option<string> // query hash
+
+type z3job = job<z3result>
 
 let job_queue : ref<list<z3job>> = BU.mk_ref []
 
@@ -388,11 +394,11 @@ let with_monitor m f =
     BU.monitor_exit(m);
     res
 
-let z3_job fresh (label_messages:error_labels) input () : z3status * int * z3statistics =
+let z3_job fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
   let status, statistics = doZ3Exe fresh input label_messages in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
-  status, elapsed_time, statistics
+  status, elapsed_time, statistics, qhash
 
 let running = BU.mk_ref false
 
@@ -498,29 +504,67 @@ let refresh () =
         bg_scope := List.flatten (List.rev !fresh_scope)
 
 let mk_input theory =
+    let query_hash =
+        if Options.record_hints() || (Options.use_hints() && Options.use_hint_hashes()) then (
+            let ft = (fun x -> match x with
+                | Echo _
+                | Eval _
+                | CheckSat
+                | GetUnsatCore
+                | SetOption _
+                | GetStatistics
+                | GetReasonUnknown -> false
+                | _ -> true) in
+            let hash_content = List.filter ft theory in
+            let hash_strs = List.map (declToSmt (z3_options ())) hash_content in
+            let hash_str = String.concat "\n" hash_strs in
+            Some(BU.digest_of_string hash_str))
+        else
+            None in
     let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
     if Options.log_queries() then query_logging.write_to_log r ;
-    r
+    r, query_hash
 
-type z3result =
-      z3status
-    * int
-    * z3statistics
+
 type cb = z3result -> unit
+
+let cache_hit
+    (cache:option<string> * unsat_core)
+    (qhash:option<string>)
+    (cb:cb) =
+    if Options.use_hints() && Options.use_hint_hashes() then
+        match qhash with
+        | Some (x) when qhash = (fst cache) ->
+            let stats : z3statistics = BU.smap_create 0 in
+            smap_add stats "fstar_cache_hit" "1";
+            cb (UNSAT (snd cache), 0, stats, qhash);
+            true
+        //| Some(x) ->
+        //    (match (fst cache) with
+        //    | Some (y) -> print2 "%s != %s\n" x y
+        //    | _ -> print1 "%s != None\n" x);
+        //    false
+        | _ ->
+            false
+    else
+        false
 
 let ask_1_core
     (filter_theory:decls_t -> decls_t * bool)
+    (cache:option<string> * unsat_core)
     (label_messages:error_labels)
     (qry:decls_t)
-    (cb: cb)
+    (cb:cb)
   = let theory = !bg_scope@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input = mk_input theory in
+    let input, qhash = mk_input theory in
     bg_scope := [] ; // Now consumed.
-    run_job ({job=z3_job false label_messages input; callback=cb})
+    if not (cache_hit cache qhash cb) then
+        run_job ({job=z3_job false label_messages input qhash; callback=cb})
 
 let ask_n_cores
     (filter_theory:decls_t -> decls_t * bool)
+    (cache:option<string> * unsat_core)
     (label_messages:error_labels)
     (qry:decls_t)
     (scope:option<scope_t>)
@@ -531,16 +575,18 @@ let ask_n_cores
                     (List.rev !fresh_scope)) in
     let theory = theory@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input = mk_input theory in
-    enqueue ({job=z3_job true label_messages input; callback=cb})
+    let input, qhash = mk_input theory in
+    if not (cache_hit cache qhash cb) then
+        enqueue ({job=z3_job true label_messages input qhash; callback=cb})
 
 let ask
     (filter:decls_t -> decls_t * bool)
+    (cache:option<string> * unsat_core)
     (label_messages:error_labels)
     (qry:decls_t)
     (scope:option<scope_t>)
     (cb:cb)
   = if Options.n_cores() = 1 then
-        ask_1_core filter label_messages qry cb
+        ask_1_core filter cache label_messages qry cb
     else
-        ask_n_cores filter label_messages qry scope cb
+        ask_n_cores filter cache label_messages qry scope cb

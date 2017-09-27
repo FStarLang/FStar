@@ -183,6 +183,7 @@ let defaults =
       ("use_native_tactics"           , Unset);
       ("use_eq_at_higher_order"       , Bool false);
       ("use_hints"                    , Bool false);
+      ("use_hint_hashes"              , Bool false);
       ("using_facts_from"             , Unset);
       ("verify"                       , Bool true);
       ("verify_all"                   , Bool false);
@@ -285,6 +286,7 @@ let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    
 let get_unsafe_tactic_exec      ()      = lookup_opt "unsafe_tactic_exec"       as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
+let get_use_hint_hashes         ()      = lookup_opt "use_hint_hashes"          as_bool
 let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
 let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
@@ -766,6 +768,11 @@ let rec specs () : list<Getopt.opt> =
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
+        "use_hint_hashes",
+        ZeroArgs (fun () -> mk_bool true),
+        "Admit queries if their hash matches the hash recorded in the hints database");
+
+       ( noshort,
          "use_native_tactics",
          OneArg (mk_path,
                  "[path]"),
@@ -1142,6 +1149,7 @@ let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let unsafe_tactic_exec           () = get_unsafe_tactic_exec          ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
+let use_hint_hashes              () = get_use_hint_hashes             ()
 let use_native_tactics           () = get_use_native_tactics          ()
 let use_tactics                  () = get_use_tactics                 ()
 let using_facts_from             () = get_using_facts_from            ()

@@ -868,12 +868,13 @@ let ensure_decimal (s: string) =
 
 (** Hints. *)
 type hint = {
-    hint_name: string; //name associated to the top-level term in the source program
-    hint_index: int;   //the nth query associated with that top-level term
+    hint_name:string; //name associated to the top-level term in the source program
+    hint_index:int;   //the nth query associated with that top-level term
     fuel:int;  //fuel for unrolling recursive functions
     ifuel:int; //fuel for inverting inductive datatypes
     unsat_core:option<(list<string>)>; //unsat core, if requested
-    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+    query_elapsed_time:int; //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+    hash:option<string>; //hash of the smt2 query that last succeeded
 }
 
 type hints = list<(option<hint>)>
@@ -898,7 +899,8 @@ let internal json_db_from_hints_db (hdb) : json_db =
             h.fuel :> System.Object;
             h.ifuel :> System.Object;
             (json_unsat_core_from_unsat_core h.unsat_core) :> System.Object;
-            h.query_elapsed_time :> System.Object
+            h.query_elapsed_time :> System.Object;
+            (match h.hash with Some(h) -> h | _ -> "") :> System.Object;
         |]
     let json_hints_from_hints (hs) = List.map (fun x ->
         match x with
@@ -919,14 +921,19 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
         if  h = null then None
         else let ha = h :?> System.Object [] in
              if (Array.length ha) = 0 then None else
-                if (Array.length ha) <> 6 then failwith "malformed hint" else
-                Some {
+                if (Array.length ha) <> 6 && (Array.length ha) <> 7
+                then failwith "malformed hint"
+                else Some {
                     hint_name=ha.[0] :?> System.String;
                     hint_index=ha.[1] :?> int;
                     fuel=ha.[2] :?> int;
                     ifuel=ha.[3] :?> int;
                     unsat_core=unsat_core_from_json_unsat_core ha.[4];
-                    query_elapsed_time=ha.[5] :?> int
+                    query_elapsed_time=ha.[5] :?> int;
+                    hash=if ((Array.length ha) >= 7) then
+                            let h = (ha.[6] :?> System.String) in
+                            if h <> "" then Some(h) else None
+                         else None
                 } in
     let hints_from_json_hints (hs : System.Object) =
         let hint_list =

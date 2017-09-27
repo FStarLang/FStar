@@ -320,7 +320,7 @@ let detail_errors hint_replay
         | hd::tl ->
 	      BU.print1 "%s, " (BU.string_of_int (List.length active));
 	      let decls = elim <| (eliminated @ errors @ tl) in
-          let result, _, _ = askZ3 decls in //hd is the only thing to prove
+          let result, _, _, _ = askZ3 decls in //hd is the only thing to prove
           match result with
           | Z3.UNSAT _ -> //hd is provable
             linear_check (hd::eliminated) errors tl

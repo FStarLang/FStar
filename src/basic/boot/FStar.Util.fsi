@@ -402,12 +402,13 @@ val ensure_decimal: string -> string
 
 (** Hints. *)
 type hint = {
-    hint_name: string; //name associated to the top-level term in the source program
-    hint_index: int;   //the nth query associated with that top-level term
-    fuel:int;  //fuel for unrolling recursive functions
+    hint_name:string; //name associated to the top-level term in the source program
+    hint_index:int; //the nth query associated with that top-level term
+    fuel:int; //fuel for unrolling recursive functions
     ifuel:int; //fuel for inverting inductive datatypes
     unsat_core:option<(list<string>)>; //unsat core, if requested
-    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+    query_elapsed_time:int; //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+    hash:option<string>; //hash of the smt2 query that last succeeded
 }
 
 type hints = list<(option<hint>)>

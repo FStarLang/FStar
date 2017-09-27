@@ -38,9 +38,11 @@ type z3result =
       z3status
     * int
     * z3statistics
+    * option<string> // query hash
 type cb = z3result -> unit
 val giveZ3 : list<decl> -> unit
 val ask : filter:(decls_t -> decls_t * bool)
+       -> cache:(option<string> * unsat_core) // hash * core
        -> label_messages:error_labels
        -> qry:list<decl>
        -> scope:option<scope_t>
