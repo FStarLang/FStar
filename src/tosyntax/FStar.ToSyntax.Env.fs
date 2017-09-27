@@ -515,6 +515,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                           || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
+                 let dd = if quals |> BU.for_some (function Abstract -> true | _ -> false) then Delta_abstract dd else dd in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
@@ -980,7 +981,8 @@ let check_admits env =
       begin match try_lookup_lid env l with
         | None ->
           if not (Options.interactive ()) then
-            BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
+            FStar.Errors.warn (range_of_lid l)
+              (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l));
           let quals = Assumption :: se.sigquals in
           BU.smap_add (sigmap env) l.str ({ se with sigquals = quals },
                                           false)

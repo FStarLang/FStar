@@ -11,7 +11,7 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Gho
 	Pointer BufferNG Tactics.Builtins \
         TaggedUnion \
 	Reflection.Types Reflection.Basic Reflection.Data \
-	Tactics.Types Bytes Util \
+	Tactics.Result Tactics.Types Bytes Util \
 	Pervasives Order
 	# prims is realized by default hence not included in this list
 

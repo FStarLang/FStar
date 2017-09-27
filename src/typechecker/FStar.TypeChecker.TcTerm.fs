@@ -591,12 +591,6 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     check_inner_let_rec env top
 
 and tc_synth env args rng =
-    // Quit early with a magic if nosynth is set, cf. issue #73 in fstar-mode.el
-    if env.nosynth
-    then tc_term env (mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit]
-                                None rng)
-    else
-
     let tau, atyp, rest =
     match args with
     | (tau, None)::rest ->
@@ -619,7 +613,6 @@ and tc_synth env args rng =
 
     let env', _ = Env.clear_expected_typ env in
 
-
     // Check the result type
     let typ, _, g1 = tc_term env' typ in
     Rel.force_trivial_guard env' g1;
@@ -628,11 +621,19 @@ and tc_synth env args rng =
     let tau, _, g2 = tc_tactic env' tau in
     Rel.force_trivial_guard env' g2;
 
-    if Env.debug env <| Options.Other "Tac" then
-        BU.print2 "Running tactic %s at return type %s\n" (Print.term_to_string tau) (Print.term_to_string typ);
-    let t = env.synth env' typ tau in
-    if Env.debug env <| Options.Other "Tac" then
-        BU.print1 "Got %s\n" (Print.term_to_string t);
+    // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
+    let t =
+        if env.nosynth
+        then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
+        else begin
+            if Env.debug env <| Options.Other "Tac" then
+                BU.print2 "Running tactic %s at return type %s\n" (Print.term_to_string tau) (Print.term_to_string typ);
+            let t = env.synth env' typ tau in
+            if Env.debug env <| Options.Other "Tac" then
+                BU.print1 "Got %s\n" (Print.term_to_string t);
+            t
+        end
+    in
 
     // TODO: fix, this gives a crappy error
     TcUtil.check_uvars tau.pos t;
@@ -1342,8 +1343,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         let bs, cres' = SS.open_comp bs cres' in
                         let head_info = (head, chead, ghead, U.lcomp_of_comp cres') in
                         if debug env Options.Low
-                        then BU.print1 "%s: Warning: Potentially redundant explicit currying of a function type \n"
-                            (Range.string_of_range tres.pos);
+                        then FStar.Errors.warn tres.pos
+                               "Potentially redundant explicit currying of a function type";
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
                     | _ when not norm ->
                         aux true (N.unfold_whnf env tres)

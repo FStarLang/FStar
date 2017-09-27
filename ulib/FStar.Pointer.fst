@@ -289,6 +289,23 @@ let loc_disjoint_addresses_pointer
   [SMTPat (loc_disjoint (loc_addresses r n) (loc_pointer p))]
 = loc_disjoint_sym (loc_pointer p) (loc_addresses r n)
 
+let loc_disjoint_union_r_elim
+  (l l1 l2: loc)
+: Lemma
+  (requires (loc_disjoint l (loc_union l1 l2)))
+  (ensures (loc_disjoint l l1 /\ loc_disjoint l l2))
+  [SMTPat (loc_disjoint l (loc_union l1 l2))]
+= loc_disjoint_includes l (loc_union l1 l2) l l1;
+  loc_disjoint_includes l (loc_union l1 l2) l l2
+
+let loc_disjoint_union_l_elim
+  (l l1 l2: loc)
+: Lemma
+  (requires (loc_disjoint (loc_union l1 l2) l))
+  (ensures (loc_disjoint l1 l /\ loc_disjoint l2 l))
+  [SMTPat (loc_disjoint (loc_union l1 l2) l)]
+= ()
+
 let modifies_trans_incl_l
   (s12: loc)
   (h1 h2: HS.mem)

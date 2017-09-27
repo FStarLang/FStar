@@ -23,7 +23,7 @@ open FStar.BaseTypes
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
 
 val max_int: int
 val return_all: 'a -> ML<'a>
@@ -122,6 +122,7 @@ val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
 val format5: string -> string -> string -> string -> string -> string -> string
+val format6: string -> string -> string -> string -> string -> string -> string -> string
 
 val print: string -> list<string> -> unit
 val print1: string -> string -> unit
@@ -254,7 +255,7 @@ val string_of_char:  char -> Tot<string>
 val hex_string_of_byte:  byte -> Tot<string>
 val string_of_bytes: array<byte> -> Tot<string>
 val bytes_of_string: string -> Tot<array<byte>>
-val starts_with: string -> string -> Tot<bool>
+val starts_with: long:string -> short:string -> Tot<bool>
 val trim_string: string -> Tot<string>
 val ends_with: string -> string -> Tot<bool>
 val char_at: string -> int -> char

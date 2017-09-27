@@ -13,7 +13,10 @@ import re
 def cleanup_one(line):
     line = re.sub(r"\b(?<![\\])u[0-9][0-9]+\b", "u[...]", line)
     try:
-        return json.dumps(json.loads(line), ensure_ascii=False, sort_keys=True) + "\n"
+        js = json.loads(line)
+        if js.get("kind") == "protocol-info":
+            js = {"kind": "[...]"} # Drop entire message
+        return json.dumps(js, ensure_ascii=False, sort_keys=True) + "\n"
     except:
         return line
 

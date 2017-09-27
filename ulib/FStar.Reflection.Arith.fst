@@ -108,16 +108,16 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
     | [] -> True
     | x::xs -> p x /\ forall_list p xs
 
-val is_arith_expr : term -> tm expr
-let rec is_arith_expr (t:term) =
+val as_arith_expr : term -> tm expr
+let rec as_arith_expr (t:term) =
     let hd, tl = collect_app_ref t in
     // Admitting this subtyping on lists for now, it's provable, but tedious right now
     let tl : list ((a:term{a << t}) * aqualv) = admit(); tl in
     match inspect hd, tl with
     | Tv_FVar fv, [(e1, Q_Implicit); (e2, Q_Explicit) ; (e3, Q_Explicit)] ->
       let qn = inspect_fv fv in
-      let e2' = is_arith_expr e2 in
-      let e3' = is_arith_expr e3 in
+      let e2' = as_arith_expr e2 in
+      let e3' = as_arith_expr e3 in
       if qn = land_qn then liftM2 Land e2' e3'
       else if qn = lxor_qn then liftM2 Lxor e2' e3'
       else if qn = lor_qn then liftM2 Lor e2' e3'
@@ -126,36 +126,46 @@ let rec is_arith_expr (t:term) =
       else if qn = udiv_qn then liftM2 Udiv e2' e3'
       else if qn = umod_qn then liftM2 Umod e2' e3'
       else if qn = mul_mod_qn then liftM2 MulMod e2' e3'
-      else fail ("triary: " ^ fv_to_string fv)
+      else atom t
     | Tv_FVar fv, [(l, Q_Explicit); (r, Q_Explicit)] ->
         let qn = inspect_fv fv in
         // Have to go through hoops to get F* to typecheck this.
         // Maybe the do notation is twisting the terms somehow unexpected?
-        let ll = is_arith_expr l in
-        let rr = is_arith_expr r in
+        let ll = as_arith_expr l in
+        let rr = as_arith_expr r in
         if      qn = add_qn   then liftM2 Plus ll rr
         else if qn = minus_qn then liftM2 Minus ll rr
         else if qn = mult_qn  then liftM2 Mult ll rr
         else if qn = mult'_qn then liftM2 Mult ll rr
-        else fail ("binary (ee): " ^ fv_to_string fv)
+        else atom t
     | Tv_FVar fv, [(l, Q_Implicit); (r, Q_Explicit)] ->
         let qn = inspect_fv fv in
-        let ll = is_arith_expr l in
-        let rr = is_arith_expr r in
-             if qn = nat_bv_qn then liftM NatToBv rr
-        else fail ("binary (ie): " ^ fv_to_string fv)
+        let ll = as_arith_expr l in
+        let rr = as_arith_expr r in
+        if qn = nat_bv_qn then liftM NatToBv rr
+        else atom t
     | Tv_FVar fv, [(a, Q_Explicit)] ->
         let qn = inspect_fv fv in
-        let aa = is_arith_expr a in
+        let aa = as_arith_expr a in
         if qn = neg_qn then liftM Neg aa
-        else fail ("unary: " ^ fv_to_string fv)
+        else atom t
     | Tv_Const (C_Int i), _ ->
         return (Lit i)
-    | Tv_FVar _ , []
-    | Tv_Var _ , [] ->
+    | _ ->
         atom t
-    | _, _ ->
-        fail ("unk (" ^ term_to_string t ^ ")")
+
+val is_arith_expr : term -> tm expr
+let is_arith_expr t =
+  a <-- as_arith_expr t ;
+  match a with
+  | Atom _ t -> begin
+    let hd, tl = collect_app_ref t in
+    match inspect hd, tl with
+    | Tv_FVar _, []
+    | Tv_Var _, [] -> return a
+    | _ -> fail ("not an arithmetic expression: (" ^ term_to_string t ^ ")")
+  end
+  | _ -> return a
 
 val is_arith_prop : term -> tm prop
 let rec is_arith_prop (t:term) =

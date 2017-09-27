@@ -803,6 +803,11 @@ let maybe_simplify cfg tm =
                                 | _ -> tm
                        end
                     | _ -> tm
+              else if S.fv_eq_lid fv PC.b2t_lid
+              then match args with
+                     | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
+                     | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
+                     | _ -> tm
               else reduce_equality cfg tm
             | _ -> tm
 
@@ -885,6 +890,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_app(hd, args)
             when U.is_fstar_tactics_embed hd
+              || (U.is_fstar_tactics_quote hd && List.contains NoDeltaSteps cfg.steps)
               || U.is_fstar_tactics_by_tactic hd ->
             let args = closures_as_args_delayed cfg env args in
             let hd = closure_as_term cfg env hd in

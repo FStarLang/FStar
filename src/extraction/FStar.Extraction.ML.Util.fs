@@ -136,7 +136,7 @@ type unfold_t = mlty -> option<mlty>
 let rec type_leq_c (unfold_ty:unfold_t) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * option<mlexpr>) =
     match t, t' with
         | MLTY_Var x, MLTY_Var y ->
-          if fst x = fst y
+          if x = y
           then true, e
           else false, None
 
@@ -291,7 +291,7 @@ let rec eraseTypeDeep unfold_ty (t:mlty) : mlty =
     | _ ->  t
 
 let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
-let prims_op_amp_amp  = with_ty (mk_ty_fun [(("x",0), ml_bool_ty); (("y",0), ml_bool_ty)] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
+let prims_op_amp_amp  = with_ty (mk_ty_fun [("x", ml_bool_ty); ("y", ml_bool_ty)] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
 let conjoin e1 e2 = with_ty ml_bool_ty <| MLE_App(prims_op_amp_amp, [e1;e2])
 let conjoin_opt e1 e2 = match e1, e2 with
     | None, None -> None
@@ -363,7 +363,7 @@ let mk_tactic_unembedding (args: list<mlexpr'>) =
     | n ->
         BU.print_warning (BU.format "Unembedding not defined for tactics of %d arguments" [BU.string_of_int n]);
         raise CallNotImplemented in
-    MLE_Fun ([((tac_arg, 0), MLTY_Top); (("()", 0), MLTY_Top)], with_ty MLTY_Top app)
+    MLE_Fun ([(tac_arg, MLTY_Top); ("()", MLTY_Top)], with_ty MLTY_Top app)
 
 let rec mk_tac_param_type (t: term): mlexpr' =
     match (FStar.Syntax.Subst.compress t).n with
@@ -457,7 +457,7 @@ let mk_interpretation_fun tac_lid assm_lid t bs =
             (List.map (mk_tac_embedding_path Unembed) arg_types) @
             [mk_tac_embedding_path Embed t; mk_tac_param_type t; tac_lid_app; str_to_name "args"] in
         let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
-        Some (MLE_Fun ([(("ps", 0), MLTY_Top); (("args", 0), MLTY_Top)], app))
+        Some (MLE_Fun ([("ps", MLTY_Top); ("args", MLTY_Top)], app))
     with CallNotImplemented ->
         not_implemented_warning (string_of_lid tac_lid);
         None

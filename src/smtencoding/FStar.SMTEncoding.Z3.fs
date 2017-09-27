@@ -75,7 +75,7 @@ let get_z3version () =
 let ini_params () =
   let z3_v = get_z3version () in
   begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
+  then raise (Util.HardError (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v)))
   else ()
   end;
   (String.concat " "

@@ -173,6 +173,9 @@ Some convenience Makefile targets are available for steps 2 and 3:
 - To run steps 2 and 3, do `make -j 6 fstar-ocaml`.
 - To run steps 3, 2 and 3 again, do: `make -j 6 ocaml-fstar-ocaml`.
 
+The option `-j 6` controls the number of cores to be used in parallel build.
+Using more cores results in greater RAM usage. This can make builds slow if you do not have enough RAM to support all parallel builds. Consider monitoring RAM usage when building, and use fewer cores if you are using 100% of your RAM. 
+
 The latter step is not always guaranteed to work but almost always does,
 and is a tiny bit faster than extracting F\* using the F# version.
 

@@ -1725,9 +1725,10 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
              let quals = if List.contains S.Assumption quals
                          then quals
                          else (if not (Options.ml_ish ()) then
-                                 BU.print2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
-                                                (Range.string_of_range se.sigrng) (Print.lid_to_string l);
-                               S.Assumption :: S.New :: quals) in
+                                 FStar.Errors.warn se.sigrng
+                                   (BU.format1 "Adding an implicit 'assume new' qualifier on %s"
+                                               (Print.lid_to_string l));
+                                 S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None se.sigrng in

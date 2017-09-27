@@ -1548,7 +1548,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     match (SS.compress head).n with
                     | Tm_name _
                     | Tm_match _ -> true
-                    | Tm_fvar tc -> tc.fv_delta = Delta_equational
+                    | Tm_fvar ({fv_delta=Delta_equational})
+                    | Tm_fvar ({fv_delta=Delta_abstract _}) ->
+                      true //these may be relatable via a logical theory
                     | Tm_ascribed (t, _, _)
                     | Tm_uinst (t, _)
                     | Tm_meta (t, _) -> may_relate t

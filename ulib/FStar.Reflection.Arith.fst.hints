@@ -1,5 +1,5 @@
 [
-  "\u001b³õ\u001d\u0002KÃ,¼]\u000b\n\u001d_Ùs",
+  "\u0002™\u0000%ŽJ–þ#/ŒVSH™\u0004",
   [
     [ "FStar.Reflection.Arith.uu___is_Lit", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -584,7 +584,7 @@
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       1,
       2,
       1,
@@ -595,46 +595,40 @@
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       2,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Types.name",
-        "function_token_typing_Prims.string"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       3,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Syntax.name",
-        "function_token_typing_Prims.string"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       4,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Types.name",
-        "function_token_typing_Prims.string"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       5,
       2,
       1,
@@ -645,20 +639,18 @@
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       6,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Types.name",
-        "function_token_typing_Prims.string"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       7,
       2,
       1,
@@ -669,20 +661,18 @@
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       8,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Types.name",
-        "function_token_typing_Prims.string"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       9,
       2,
       1,
@@ -693,20 +683,18 @@
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       10,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Types.name",
-        "function_token_typing_Prims.string"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       11,
       2,
       1,
@@ -717,20 +705,18 @@
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       12,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Types.name",
-        "function_token_typing_Prims.string"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       13,
       2,
       1,
@@ -741,15 +727,24 @@
       0
     ],
     [
-      "FStar.Reflection.Arith.is_arith_expr",
+      "FStar.Reflection.Arith.as_arith_expr",
       14,
       2,
       1,
       [
         "@query", "assumption_Prims.HasEq_string",
-        "assumption_Prims.list_haseq",
-        "equation_FStar.Reflection.Types.name",
-        "function_token_typing_Prims.string"
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0
+    ],
+    [
+      "FStar.Reflection.Arith.is_arith_expr",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
       ],
       0
     ],

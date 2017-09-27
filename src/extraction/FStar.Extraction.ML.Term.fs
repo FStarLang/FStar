@@ -80,7 +80,7 @@ let fail r msg =
 let err_uninst env (t:term) (vars, ty) (app:term) =
     fail t.pos (BU.format4 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
                     (Print.term_to_string t)
-                    (vars |> List.map fst |> String.concat ", ")
+                    (vars |> String.concat ", ")
                     (Code.string_of_mlty env.currentModule ty)
                     (Print.term_to_string app))
 
@@ -297,10 +297,6 @@ let rec is_ml_value e =
     | _ -> false
 
 
-(*copied from ocaml-asttrans.fs*)
-let fresh = let c = mk_ref 0 in
-            fun (x:string) -> (incr c; (x ^ string_of_int (!c), !c))
-
 //pre-condition: SS.compress t = Tm_abs _
 //Collapses adjacent abstractions into a single n-ary abstraction
 let normalize_abs (t0:term) : term =
@@ -377,7 +373,7 @@ let erase (g:env) e ty (f:e_tag) : (mlexpr * e_tag * mlty) =
 let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
     let ts, r = doms_and_cod t in
     if ts = [] then e else // just quit if this is not a function type
-    let vs = List.map (fun _ -> fresh "a") ts in
+    let vs = List.map (fun _ -> "a") ts in
     let vs_ts = List.zip vs ts in
     let vs_es = List.map (fun (v, t) -> with_ty t (MLE_Var v)) (List.zip vs ts) in
     let body = with_ty r <| MLE_App (e, vs_es) in
@@ -1329,14 +1325,14 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         | Tm_arrow (binders, _) ->
             binders
             |> List.filter (function (_, (Some (Implicit _))) -> true | _ -> false)
-            |> List.map (fun _ -> fresh "_", MLTY_Top)
+            |> List.map (fun _ -> "_", MLTY_Top)
         | _ ->
             failwith "Discriminator must be a function"
     in
     // Unfortunately, looking up the constructor name in the environment would give us a _curried_ type.
     // So, we don't bother popping arrows until we find the return type of the constructor.
     // We just use Top.
-    let mlid = fresh "_discr_" in
+    let mlid = "_discr_" in
     let targ = MLTY_Top in
     // Ugly hack: we don't know what to put in there, so we just write a dummy
     // polymorphic value to make sure that the type is not printed.
@@ -1345,7 +1341,7 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         with_ty disc_ty <|
             MLE_Fun(wildcards @ [(mlid, targ)],
                     with_ty ml_bool_ty <|
-                        (MLE_Match(with_ty targ <| MLE_Name([], idsym mlid),
+                        (MLE_Match(with_ty targ <| MLE_Name([], mlid),
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
                                    [MLP_CTor(mlpath_of_lident constrName, [MLP_Wild]), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
                                     MLP_Wild, None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)]))) in
