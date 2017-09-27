@@ -146,6 +146,8 @@ val split:
      let x, y = p in
      (reveal x, reveal y) == Seq.split (reveal b) (U32.v k)}
 
+unfold let split_ b (k:nat{FStar.UInt.size k U32.n /\ k < length b}) = split b (U32.uint_to_t k)
+
 (** Interpret a sequence of bytes as a mathematical integer encoded in big endian **)
 let fits_in_k_bytes (n:nat) (k:nat) = FStar.UInt.size n (op_Multiply 8 k)
 type uint_k (k:nat) = n:nat{fits_in_k_bytes n k}
@@ -265,3 +267,4 @@ val bytes_of_hex: string -> Tot bytes
 val hex_of_bytes: bytes -> Tot string
 val string_of_hex: string -> Tot string
 val hex_of_string: string -> Tot string
+val print_bytes: bytes -> Tot string
