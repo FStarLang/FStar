@@ -93,11 +93,14 @@ val get:
 
 unfold let op_String_Access = get
 
+let equal b1 b2 =
+  length b1 = length b2 /\
+  (forall (i:u32{U32.v i < length b1}).{:pattern (b1.[i]); (b2.[i])} b1.[i] == b2.[i])
+  
 val extensionality:
     b1:bytes
   -> b2:bytes
-  -> Lemma (requires (length b1 = length b2 /\
-                     (forall (i:u32{U32.v i < length b1}).{:pattern (b1.[i]); (b2.[i])} b1.[i] == b2.[i])))
+  -> Lemma (requires (equal b1 b2))
           (ensures (b1 = b2))
 
 (** creating byte values **)
@@ -260,7 +263,9 @@ val utf8_encode:
     s:string{Str.length s < pow2 30}
   -> b:bytes{length b <= op_Multiply 4 (Str.length s)}
 
-
+val iutf8_opt:
+    m:bytes 
+  -> (option (s:string{Str.length s < pow2 30 /\ utf8_encode s = m}))
 
 // No definition for these: they're only meant for backwards compatibility with Platform.Bytes
 val bytes_of_hex: string -> Tot bytes

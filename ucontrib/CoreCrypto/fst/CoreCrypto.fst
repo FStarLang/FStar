@@ -1,6 +1,6 @@
 module CoreCrypto
 
-open Platform.Bytes
+open FStar.Bytes
 
 (* ------------ Hashing ------------ *)
 type hash_alg =
