@@ -47,18 +47,20 @@ unfold type byte = u8
 (** Realized in C by a pair of a length field and uint8_t* in C
     Realized in OCaml by a string *)
 val bytes : t:Type0{hasEq t}
-val length : bytes -> u32
+val len : bytes -> u32
+
+unfold let length b = FStar.UInt32.v (len b)
 
 (**  representation for specs that need lemmas not defined here. *)
 val reveal:
     bytes
   -> GTot (S.seq byte)
 
-val length_reveal:
+val len_reveal:
     x:bytes
-  -> Lemma (ensures (S.length (reveal x) = UInt32.v (length x)))
+  -> Lemma (ensures (S.length (reveal x) = length x))
           [SMTPatOr [[SMTPat (S.length (reveal x))];
-                     [SMTPat (length x)]]]
+                     [SMTPat (len x)]]]
 
 val hide:
     s:S.seq byte{S.length s < pow2 32}
@@ -74,19 +76,19 @@ val reveal_hide:
   -> Lemma (ensures (reveal (hide x) = x))
           [SMTPat (hide x)]
 
-type lbytes (l:nat) = b:bytes{U32.v (length b) = l}
-type kbytes (k:nat) = b:bytes{U32.v (length b) < pow2 k}
+type lbytes (l:nat) = b:bytes{length b = l}
+type kbytes (k:nat) = b:bytes{length b < pow2 k}
 
 val empty_bytes : lbytes 0
 val empty_unique:
     b:bytes
-  -> Lemma (U32.v (length b) = 0 ==> b = empty_bytes)
-    [SMTPat (length b)]
+  -> Lemma (length b = 0 ==> b = empty_bytes)
+    [SMTPat (len b)]
 
 (** If you statically know the length, it is OK to read at arbitrary indexes *)
 val get:
     b:bytes
-  -> pos:u32{U32.v pos < U32.v (length b)}
+  -> pos:u32{U32.v pos < length b}
   -> byte
 
 unfold let op_String_Access = get
@@ -95,19 +97,22 @@ val extensionality:
     b1:bytes
   -> b2:bytes
   -> Lemma (requires (length b1 = length b2 /\
-                     (forall (i:u32{U32.v i < U32.v (length b1)}).{:pattern (b1.[i]); (b2.[i])} b1.[i] == b2.[i])))
+                     (forall (i:u32{U32.v i < length b1}).{:pattern (b1.[i]); (b2.[i])} b1.[i] == b2.[i])))
           (ensures (b1 = b2))
 
 (** creating byte values **)
 val create:
     len:u32
   -> v:byte
-  -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}). b.[i] = v}
+  -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}).{:pattern b.[i]} b.[i] = v}
+
+unfold
+let create_ (n:nat{FStar.UInt.size n U32.n}) v = create (U32.uint_to_t n) v
 
 val init:
     len:u32
   -> f:(i:u32{U32.(i <^ len)} -> byte)
-  -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}). b.[i] = f i}
+  -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}).{:pattern b.[i]} b.[i] = f i}
 
 let abyte (b:byte) : lbytes 1 =
     create 1ul b
@@ -118,92 +123,112 @@ let twobytes (b:byte*byte) : lbytes 2 =
 (** appending bytes **)
 val append:
     b1:bytes
-  -> b2:bytes{UInt.size (U32.v (length b1) + U32.v (length b2)) U32.n}
-  -> Tot (b:bytes{
-      U32.v (length b) = U32.v (length b1) + U32.v (length b2)
-      /\ reveal b = S.append (reveal b1) (reveal b2)})
+  -> b2:bytes{UInt.size (length b1 + length b2) U32.n}
+  -> Tot (b:bytes{reveal b = S.append (reveal b1) (reveal b2)})
 unfold let op_At_Bar = append
-
+  
 val slice:
     b:bytes
-  -> s:u32{U32.(s <=^ length b)}
-  -> e:u32{U32.(e <=^ length b /\ s <=^ e)}
-  -> r:bytes{
-     U32.v (length r) = U32.v e - U32.v s
-    /\ reveal r == Seq.slice (reveal b) (U32.v s) (U32.v e)}
+  -> s:u32
+  -> e:u32{U32.(s <=^ e) /\ U32.v e <= length b}
+  -> r:bytes{reveal r == Seq.slice (reveal b) (U32.v s) (U32.v e)}
 
 val sub:
     b:bytes
-  -> s:u32{U32.(s <=^ length b)}
-  -> l:u32{U32.v s + U32.v l <= U32.v (length b)}
-  -> r:bytes{
-     U32.v (length r) = U32.v l
-    /\ reveal r == Seq.slice (reveal b) (U32.v s) (U32.v s + U32.v l)}
+  -> s:u32
+  -> l:u32{U32.v s + U32.v l <= length b}
+  -> r:bytes{reveal r == Seq.slice (reveal b) (U32.v s) (U32.v s + U32.v l)}
 
 val split:
     b:bytes
-  -> k:u32{U32.v k <= U32.v (length b)}
+  -> k:u32{U32.v k <= length b}
   -> p:(bytes*bytes){
      let x, y = p in
-     (reveal x, reveal y) == Seq.split (reveal b) (U32.v k)
-     /\ U32.v (length x) = U32.v k
-     /\ U32.v (length y) = U32.v (length b) - U32.v k
-     /\ x @| y = b}
+     (reveal x, reveal y) == Seq.split (reveal b) (U32.v k)}
 
 (** Interpret a sequence of bytes as a mathematical integer encoded in big endian **)
-type uint_k (k:nat) = U.uint_t (op_Multiply 8 k)
+let fits_in_k_bytes (n:nat) (k:nat) = FStar.UInt.size n (op_Multiply 8 k)
+type uint_k (k:nat) = n:nat{fits_in_k_bytes n k}
+
+(** repr_bytes n: The number of bytes needed to represent a nat **)
+val repr_bytes:
+    n:nat 
+  -> k:pos{fits_in_k_bytes n k}
+  
+val lemma_repr_bytes_values:
+    n:nat 
+  -> Lemma (ensures ( let k = repr_bytes n in
+                     if n < 256 then k==1
+                     else if n < 65536 then k==2
+                     else if n < 16777216 then k==3
+                     else if n < 4294967296 then k==4
+                     else if n < 1099511627776 then k==5
+                     else if n < 281474976710656 then k==6
+                     else if n < 72057594037927936 then k==7
+                     else if n < 18446744073709551616 then k==8
+                     else True ))
+          [SMTPat (repr_bytes n)]
+
+val repr_bytes_size:
+    k:nat 
+  -> n:uint_k k
+  -> Lemma (ensures (repr_bytes n <= k))
+          [SMTPat (fits_in_k_bytes n k)]
 
 val int_of_bytes:
     b:bytes
-  -> Tot (uint_k (U32.v (length b)))
+  -> Tot (uint_k (length b))
 
 val bytes_of_int:
-    #k:nat{k <= 32}
-  -> n:uint_k k
+    k:nat
+  -> n:nat{repr_bytes n <= k /\ k < pow2 32}
   -> lbytes k
 
 val int_of_bytes_of_int:
-    #k:nat{k <= 32}
+  #k:nat{k <= 32}
   -> n:uint_k k
-  -> Lemma (ensures (int_of_bytes (bytes_of_int n) == n))
-          [SMTPat (bytes_of_int n)]
+  -> Lemma (ensures (int_of_bytes (bytes_of_int k n) == n))
+          [SMTPat (bytes_of_int k n)]
 
 val bytes_of_int_of_bytes:
-    b:bytes{U32.v (length b) <= 32}
-  -> Lemma (ensures (bytes_of_int (int_of_bytes b) == b))
+    b:bytes{length b <= 32}
+  -> Lemma (ensures (bytes_of_int (length b) (int_of_bytes b) == b))
           [SMTPat (int_of_bytes b)]
 
 val int32_of_bytes:
-    b:bytes{U32.v (length b) <= 4}
+    b:bytes{length b <= 4}
   -> n:u32{U32.v n == int_of_bytes b}
 
 val int16_of_bytes:
-    b:bytes{U32.v (length b) <= 2}
+    b:bytes{length b <= 2}
   -> n:u16{U16.v n == int_of_bytes b}
 
 val int8_of_bytes:
-    b:bytes{U32.v (length b) = 1}
+    b:bytes{length b = 1}
   -> n:u8{U8.v n = int_of_bytes b}
 
 val bytes_of_int32:
     n:U32.t
-  -> b:lbytes 4{b == bytes_of_int #4 (U32.v n)}
+  -> b:lbytes 4{b == bytes_of_int 4 (U32.v n)}
 
 val bytes_of_int16:
     n:U16.t
-  -> b:lbytes 2{b == bytes_of_int #2 (U16.v n)}
+  -> b:lbytes 2{b == bytes_of_int 2 (U16.v n)}
 
 val bytes_of_int8:
     n:U8.t
-  -> b:lbytes 1{b == bytes_of_int #1 (U8.v n)}
+  -> b:lbytes 1{b == bytes_of_int 1 (U8.v n)}
 
-type minbytes (n:nat) = b:bytes{U32.v (length b) >= n}
+////////////////////////////////////////////////////////////////////////////////
+type minbytes (n:nat) = b:bytes{length b >= n}
 
 val xor:
     n:u32
   -> b1:minbytes (U32.v n)
   -> b2:minbytes (U32.v n)
-  -> b:bytes{length b = n}
+  -> b:bytes{len b = n}
+
+unfold let xor_ (#n:nat{FStar.UInt.size n U32.n}) (b1:minbytes n) (b2:minbytes n) = xor (U32.uint_to_t n) b1 b2
 
 val xor_commutative:
     n:u32
@@ -214,14 +239,14 @@ val xor_commutative:
 
 val xor_append:
     b1:bytes
-  -> b2:bytes{FStar.UInt.size (U32.v (length b1) + U32.v (length b2)) U32.n}
-  -> x1:bytes{length x1 = length b1}
-  -> x2:bytes{length x2 = length b2}
-  -> Lemma (ensures (xor U32.(length b1 +^ length b2)
+  -> b2:bytes{FStar.UInt.size (length b1 + length b2) U32.n}
+  -> x1:bytes{len x1 = len b1}
+  -> x2:bytes{len x2 = len b2}
+  -> Lemma (ensures (xor U32.(len b1 +^ len b2)
                         (b1 @| b2)
                         (x1 @| x2)
                     ==
-                    xor (length b1) b1 x1 @| xor (length b2) b2 x2))
+                    xor (len b1) b1 x1 @| xor (len b2) b2 x2))
 
 val xor_idempotent:
     n:u32
@@ -231,4 +256,12 @@ val xor_idempotent:
 
 val utf8_encode:
     s:string{Str.length s < pow2 30}
-  -> b:bytes{U32.v (length b) <= op_Multiply 4 (Str.length s)}
+  -> b:bytes{length b <= op_Multiply 4 (Str.length s)}
+
+
+
+// No definition for these: they're only meant for backwards compatibility with Platform.Bytes
+val bytes_of_hex: string -> Tot bytes
+val hex_of_bytes: bytes -> Tot string
+val string_of_hex: string -> Tot string
+val hex_of_string: string -> Tot string

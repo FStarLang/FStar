@@ -164,6 +164,22 @@ let bytes_of_int32 b = admit()
 let bytes_of_int16 b = admit()
 let bytes_of_int8  b = admit()
 
+let rec repr_bytes n =
+    if n < 256 then 1
+    else if n < 65536 then 2
+    else if n < 16777216 then (assert_norm (pow2 24 == 16777216); 3)
+    else if n < 4294967296 then 4
+    else if n < 1099511627776 then (assert_norm (pow2 40 == 1099511627776); 5)
+    else if n < 281474976710656 then (assert_norm (pow2 48 == 281474976710656); 6)
+    else if n < 72057594037927936 then (assert_norm (pow2 56 == 72057594037927936); 7)
+    else if n < 18446744073709551616 then 8
+    else let n' = n / pow2 8 in
+         let k' = repr_bytes n' in
+         FStar.Math.Lemmas.pow2_plus 8 (op_Multiply 8 k');
+         1 + k'
+
+let lemma_repr_bytes_values n = ()
+
 let rec xor' (n:u32) (b1:minbytes (U32.v n)) (b2:minbytes (U32.v n))
   : Tot (b:lbytes (U32.v n))
         (decreases (U32.v n)) =
