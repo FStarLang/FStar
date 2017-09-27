@@ -80,3 +80,15 @@ let lemma9 (r:addr) (r1:addr{addr_of r1 <> addr_of r})(h:heap)
          (ensures sel (minus h r1) r == sel h r)
          [SMTPat (sel (minus h r1) r)]
   = admit ()
+
+let lemma10 (r:addr) (x:int) (h1:heap)
+  :Lemma (requires True)
+         (ensures restrict ((r `points_to` x) `join` h1) r == (r `points_to` x))
+         [SMTPat (restrict ((r `points_to` x) `join` h1) r)]
+  = admit ()
+
+let lemma11 (r:addr) (r1:addr{addr_of r1 <> addr_of r})(x:int) (h1:heap)
+  :Lemma (requires True)
+         (ensures restrict ((r `points_to` x) `join` h1) r1 == restrict h1 r1)
+	 [SMTPat (restrict ((r `points_to` x) `join` h1) r1)]
+  = admit ()
