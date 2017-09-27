@@ -77,7 +77,7 @@ type opt_type =
   // --admit_except xyz
 | EnumStr of list<string>
   // --codegen OCaml
-| OpenEnumStr of list<string> (* values *) * string (* label *)
+| OpenEnumStr of list<string> (* suggested values (not exhaustive) *) * string (* label *)
   // --debug_level …
 | PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
   // For options like --extract_module that require post-processing or validation
