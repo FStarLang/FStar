@@ -522,6 +522,7 @@ type query' =
 | Exit
 | DescribeProtocol
 | DescribeRepl
+| Segment of string (* File contents *)
 | Pop
 | Push of push_query
 | VfsAdd of option<string> (* fname *) * string (* contents *)
@@ -534,7 +535,7 @@ type query' =
 and query = { qq: query'; qid: string }
 
 let query_needs_current_module = function
-  | Exit | DescribeProtocol | DescribeRepl
+  | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
   | GenericError _ | ProtocolViolation _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
@@ -545,9 +546,9 @@ let interactive_protocol_features =
   ["autocomplete"; "autocomplete/context";
    "compute"; "compute/reify"; "compute/pure-subterms";
    "describe-protocol"; "describe-repl"; "exit";
-   "vfs-add";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
-   "peek"; "pop"; "push"; "search"]
+   "peek"; "pop"; "push"; "search"; "segment";
+   "vfs-add"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -585,6 +586,7 @@ let unpack_interactive_query json =
            | "pop" -> Pop
            | "describe-protocol" -> DescribeProtocol
            | "describe-repl" -> DescribeRepl
+           | "segment" -> Segment (arg "code" |> js_str)
            | "peek" | "push" -> Push ({ push_kind = arg "kind" |> js_pushkind;
                                        push_code = arg "code" |> js_str;
                                        push_line = arg "line" |> js_int;
@@ -873,6 +875,35 @@ let run_protocol_violation st message =
 let run_generic_error st message =
   ((QueryNOK, JsonStr message), Inl st)
 
+let collect_errors () =
+  let errors = FStar.Errors.report_all() in
+  FStar.Errors.clear ();
+  errors
+
+let run_segment (st: repl_state) (code: string) =
+  let frag = { frag_text = code; frag_line = 1; frag_col = 0 } in
+
+  let collect_decls () =
+    match Parser.Driver.parse_fragment frag with
+    | Parser.Driver.Empty -> []
+    | Parser.Driver.Decls decls
+    | Parser.Driver.Modul (Parser.AST.Module (_, decls))
+    | Parser.Driver.Modul (Parser.AST.Interface (_, decls, _)) -> decls in
+
+  let json_of_decl d =
+    JsonAssoc [("range", json_of_def_range d.Parser.AST.drange)] in
+
+  match with_captured_errors st.repl_env (fun _ -> Some <| collect_decls ()) with
+    | None ->
+      let errors = collect_errors () |> List.map json_of_issue in
+      ((QueryNOK, JsonList errors), Inl st)
+    | Some decls ->
+      let js_of_decl decl =
+        JsonAssoc [("def_range", json_of_def_range decl.Parser.AST.drange)] in
+      let js_decls =
+        JsonList <| List.map js_of_decl decls in
+      ((QueryOK, JsonAssoc [("decls", js_decls)]), Inl st)
+
 let run_vfs_add st opt_fname contents =
   let fname = Util.dflt st.repl_fname opt_fname in
   Parser.ParseIt.add_vfs_entry fname contents;
@@ -884,11 +915,6 @@ let run_pop st =
   else
     let st' = pop_repl st in
     ((QueryOK, JsonNull), Inl st')
-
-let collect_errors () =
-  let errors = FStar.Errors.report_all() in
-  FStar.Errors.clear ();
-  errors
 
 (** Compute and load all dependencies of `filename`.
 
@@ -1300,6 +1326,7 @@ let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
   | DescribeRepl -> run_describe_repl st
   | GenericError message -> run_generic_error st message
   | ProtocolViolation query -> run_protocol_violation st query
+  | Segment c -> run_segment st c
   | VfsAdd (fname, contents) -> run_vfs_add st fname contents
   | Push pquery -> run_push st pquery
   | Pop -> run_pop st
