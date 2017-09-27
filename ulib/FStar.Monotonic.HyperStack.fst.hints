@@ -1040,7 +1040,7 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.List.Tot.Base_interpretation_Tm_arrow_9105589d4b48c1456d0057b53f4c3752",
+        "FStar.Ghost_interpretation_Tm_arrow_9105589d4b48c1456d0057b53f4c3752",
         "FStar.Set_interpretation_Tm_arrow_4019e894ab4058a3164e2b8786c32b27",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_FStar.Monotonic.HyperHeap.HasEq_rid", "bool_inversion",

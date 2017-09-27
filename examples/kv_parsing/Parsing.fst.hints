@@ -417,8 +417,10 @@
         "lemma_FStar.Map.lemma_SelConcat2",
         "lemma_FStar.Map.lemma_SelRestrict",
         "lemma_FStar.Map.lemma_equal_intro",
-        "lemma_FStar.Set.lemma_equal_refl", "primitive_Prims.op_AmpAmp",
+        "lemma_FStar.Set.lemma_equal_refl", "lemma_FStar.Set.mem_complement",
+        "lemma_FStar.Set.mem_empty", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Negation",
         "proj_equation_FStar.Monotonic.HyperStack.HS_h",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_FStar.Pervasives.Native.Some_v",
@@ -440,8 +442,7 @@
         "typing_FStar.Map.domain", "typing_FStar.Map.restrict",
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h",
         "typing_FStar.Set.complement", "typing_FStar.Set.empty",
-        "typing_FStar.Set.mem", "typing_Parsing.parser",
-        "typing_Slice.__proj__BSlice__item__len",
+        "typing_Parsing.parser", "typing_Slice.__proj__BSlice__item__len",
         "typing_Slice.__proj__BSlice__item__p", "unit_typing"
       ],
       0
