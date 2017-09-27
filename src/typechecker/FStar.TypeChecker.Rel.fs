@@ -1810,10 +1810,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             let xs, rest = BU.first_N n_args xs in
                             let t = mk (Tm_arrow(rest, c)) None k.pos in
                             SS.open_comp xs (S.mk_Total t) |> Some
-                     | _ -> failwith (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
-                                        (Print.uvar_to_string uv)
-                                        (Print.term_to_string k)
-                                        (Print.term_to_string k_uv)) in
+                     | _ -> raise (Error (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
+                                         (Print.uvar_to_string uv)
+                                         (Print.term_to_string k)
+                                         (Print.term_to_string k_uv), t1.pos)) in
                 BU.bind_opt
                     (elim k_uv ps)
                     (fun (xs, c) -> Some (((uv, k_uv), xs, c), ps, decompose env t2)) in
