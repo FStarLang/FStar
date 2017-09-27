@@ -1996,9 +1996,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let sub_prob = TProb <| mk_problem (p_scope orig) orig k1'_xs EQ k2'_ys None "flex-flex kinding" in
                     match (SS.compress k1').n, (SS.compress k2').n with
                     | Tm_type _, _ ->
-                      k1', [sub_prob]
+                      k1'_xs, [sub_prob]
                     | _, Tm_type _ ->
-                      k2', [sub_prob]
+                      k2'_ys, [sub_prob]
                     | _ ->
                       let t, _ = U.type_u() in
                       let k_zs, _ = new_uvar r zs t in
