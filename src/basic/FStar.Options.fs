@@ -409,6 +409,13 @@ type opt_type =
 
 exception InvalidArgument of string // option name
 
+(** Parse option value `str_val` according to specification `typ`.
+
+For example, to parse the value "OCaml" for the option "--codegen", this
+function is called as ``parse_opt_val "codegen" (EnumStr ["OCaml"; "FSharp";
+"Kremlin"]) "OCaml"`` and returns ``String "OCaml"``.
+
+`opt_name` is only used in error messages. **)
 let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : option_val =
   try
     match typ with
