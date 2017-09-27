@@ -46,7 +46,7 @@ unfold type byte = u8
 
 (** Realized in C by a pair of a length field and uint8_t* in C
     Realized in OCaml by a string *)
-val bytes : Type0
+val bytes : t:Type0{hasEq t}
 val length : bytes -> u32
 
 (**  representation for specs that need lemmas not defined here. *)
@@ -66,12 +66,12 @@ val hide:
 
 val hide_reveal:
     x:bytes
-  -> Lemma (ensures (hide (reveal x) == x))
+  -> Lemma (ensures (hide (reveal x) = x))
           [SMTPat (reveal x)]
 
 val reveal_hide:
     x:S.seq byte{S.length x < pow2 32}
-  -> Lemma (ensures (reveal (hide x) == x))
+  -> Lemma (ensures (reveal (hide x) = x))
           [SMTPat (hide x)]
 
 type lbytes (l:nat) = b:bytes{U32.v (length b) = l}
@@ -80,7 +80,7 @@ type kbytes (k:nat) = b:bytes{U32.v (length b) < pow2 k}
 val empty_bytes : lbytes 0
 val empty_unique:
     b:bytes
-  -> Lemma (U32.v (length b) = 0 ==> b == empty_bytes)
+  -> Lemma (U32.v (length b) = 0 ==> b = empty_bytes)
     [SMTPat (length b)]
 
 (** If you statically know the length, it is OK to read at arbitrary indexes *)
@@ -96,7 +96,7 @@ val extensionality:
   -> b2:bytes
   -> Lemma (requires (length b1 = length b2 /\
                      (forall (i:u32{U32.v i < U32.v (length b1)}).{:pattern (b1.[i]); (b2.[i])} b1.[i] == b2.[i])))
-          (ensures (b1 == b2))
+          (ensures (b1 = b2))
 
 (** creating byte values **)
 val create:
@@ -119,25 +119,36 @@ let twobytes (b:byte*byte) : lbytes 2 =
 val append:
     b1:bytes
   -> b2:bytes{UInt.size (U32.v (length b1) + U32.v (length b2)) U32.n}
-  -> Tot (b:bytes{reveal b == S.append (reveal b1) (reveal b2)})
+  -> Tot (b:bytes{
+      U32.v (length b) = U32.v (length b1) + U32.v (length b2)
+      /\ reveal b = S.append (reveal b1) (reveal b2)})
 unfold let op_At_Bar = append
 
 val slice:
     b:bytes
   -> s:u32{U32.(s <=^ length b)}
   -> e:u32{U32.(e <=^ length b /\ s <=^ e)}
-  -> r:bytes{reveal r == Seq.slice (reveal b) (U32.v s) (U32.v e)}
+  -> r:bytes{
+     U32.v (length r) = U32.v e - U32.v s
+    /\ reveal r == Seq.slice (reveal b) (U32.v s) (U32.v e)}
 
 val sub:
     b:bytes
   -> s:u32{U32.(s <=^ length b)}
   -> l:u32{U32.v s + U32.v l <= U32.v (length b)}
-  -> r:bytes{reveal r == Seq.slice (reveal b) (U32.v s) (U32.v s + U32.v l)}
+  -> r:bytes{
+     U32.v (length r) = U32.v l
+    /\ reveal r == Seq.slice (reveal b) (U32.v s) (U32.v s + U32.v l)}
 
 val split:
     b:bytes
   -> k:u32{U32.v k <= U32.v (length b)}
-  -> p:(bytes*bytes){let x, y = p in (reveal x, reveal y) == Seq.split (reveal b) (U32.v k)}
+  -> p:(bytes*bytes){
+     let x, y = p in
+     (reveal x, reveal y) == Seq.split (reveal b) (U32.v k)
+     /\ U32.v (length x) = U32.v k
+     /\ U32.v (length y) = U32.v (length b) - U32.v k
+     /\ x @| y = b}
 
 (** Interpret a sequence of bytes as a mathematical integer encoded in big endian **)
 type uint_k (k:nat) = U.uint_t (op_Multiply 8 k)

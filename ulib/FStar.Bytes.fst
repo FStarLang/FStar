@@ -40,7 +40,7 @@ let empty_unique b = S.lemma_empty b
 
 let get b i = Seq.index b (U32.v i)
 
-let extensionality b1 b2 = 
+let extensionality b1 b2 =
     assert (forall (b:bytes) (x:nat{x < U32.v (length b)}).{:pattern (Seq.index b x)} b.[U32.uint_to_t x] == Seq.index b x);
     S.lemma_eq_intro b1 b2
 
@@ -56,7 +56,11 @@ let init len f =
 let append b1 b2 = Seq.append b1 b2
 let slice b s e  = Seq.slice b (U32.v s) (U32.v e)
 let sub b s l = Seq.slice b (U32.v s) (U32.v s + U32.v l)
-let split b k = let x, y = S.split b (U32.v k) in x, y
+
+let split b k =
+  let x, y = S.split b (U32.v k) in
+  S.lemma_split b (U32.v k);
+  x, y
 
 // Interpret a sequence of bytes as a mathematical integer encoded in big endian
 private
@@ -90,7 +94,6 @@ let rec bytes_of_int' (#k:nat{k <= 32}) (n:uint_k k)
     assert(pow2 8 * r + r0 = n);
     let b0 = abyte (U8.uint_to_t r0) in
     let b = bytes_of_int' #(k - 1) r in
-    // lemma_split_append b b0;
     let result = b @| b0 in
     assume( //TODO: FIXME ... move this to the lemma?
       let n' = int_of_bytes result in
@@ -113,43 +116,45 @@ private let lemma_div_pow2 (k:nat{k <= 32}) (x:nat) (y:nat{y < pow2 k})
 #set-options "--z3rlimit_factor 4"
 private let lemma_mod_pow2 (k:nat{k <= 32}) (x:nat) (y:nat{y < pow2 k})
   : Lemma ((op_Multiply (pow2 k) x + y) % (pow2 k) = y) =
-  admit(); //TODO
+  assert(op_Multiply (pow2 k) x + y = y + op_Multiply x (pow2 k));
   FStar.Math.Lemmas.lemma_mod_plus y x (pow2 k);
-  FStar.Math.Lemmas.small_modulo_lemma_2 y (pow2 k)
+  FStar.Math.Lemmas.small_modulo_lemma_1 y (pow2 k)
 
-#reset-options
-let bytes_of_int_of_bytes b = admit()
+ #reset-options "--initial_fuel 2 --initial_ifuel 2 --max_ifuel 2 --max_fuel 2 --z3rlimit 60"
+ private let rec lemma_bytes_of_int_of_bytes' (b:bytes{U32.v (length b) <= 32})
+   : Lemma (requires True) (ensures bytes_of_int (int_of_bytes b) == b)
+   (decreases (U32.v (length b))) =
+   let k = U32.v (length b) in
+   let n = int_of_bytes b in
+   let b' = bytes_of_int #k n in
+   match k with
+   | 0 -> ()
+   | 1 -> extensionality b b'
+   | _ ->
+     let open FStar.Mul in
+     assert_norm (pow2 8 = 256);
+     FStar.Math.Lemmas.pow2_le_compat (8*k) 16;
+     FStar.Math.Lemmas.lemma_mod_lt n 256;
+     FStar.Math.Lemmas.lemma_div_lt n (8*k) 8;
+     let r0 : n:nat{n < pow2 8} = U.mod n 256 in
+     let r : n:nat{n < pow2 (8*(k-1))} = U.div n (pow2 8) in
+     let r0' = abyte (U8.uint_to_t r0) in
+     let r' = bytes_of_int #(k - 1) r in
+     let r'', r0'' = split b U32.(length b -^ 1ul) in
+     assert(r'' @| r0'' = b);
+     let x = UInt8.v (r0''.[0ul]) in
+     let y = int_of_bytes r'' in
+     let z = pow2 8 * y + x in
+     lemma_div_pow2 8 y x;
+     assert(r = int_of_bytes r'');
+     lemma_bytes_of_int_of_bytes' r'';
+     lemma_mod_pow2 8 y x;
+     assert(x = r0 /\ r0'.[0ul] = r0''.[0ul]);
+     extensionality r0'' r0';
+     assert(r' @| r0' = r'' @| r0'')
 
-// #reset-options "--initial_fuel 2 --initial_ifuel 2 --max_ifuel 2 --max_fuel 2 --z3rlimit 45"
-// let rec lemma_bytes_of_int_of_bytes (#k:nat{k <= 32}) (b:lbytes k)
-//   : Lemma (ensures (bytes_of_int (int_of_bytes b) = b)) (decreases k)
-//   [SMTPat (bytes_of_int (int_of_bytes b))] =
-//   let n = int_of_bytes b in
-//   let b' = bytes_of_int n in
-//   match k with
-//   | 0 -> lemma_empty b'; lemma_empty b
-//   | 1 -> assert(get b' 0 = get b 0); lemma_equality b b'
-//   | _ ->
-//     let open FStar.Mul in
-//     assert_norm (pow2 8 = 256);
-//     FStar.Math.Lemmas.pow2_le_compat (8*k) 16;
-//     FStar.Math.Lemmas.lemma_mod_lt n 256;
-//     FStar.Math.Lemmas.lemma_div_lt n (8*k) 8;
-//     let r0 : n:nat{n < pow2 8} = U.mod n 256 in
-//     let r : n:nat{n < pow2 (8*(k-1))} = U.div n (pow2 8) in
-//     let r0' = abyte (U8.uint_to_t r0) in
-//     let r' = bytes_of_int #(k - 1) r in
-//     let r'', r0'' = splitT b (k - 1) in
-//     let x = UInt8.v (get r0'' 0) in
-//     let y = int_of_bytes #(k - 1) r'' in
-//     let z = pow2 8 * y + x in
-//     lemma_div_pow2 8 y x;
-//     assert(r = int_of_bytes #(k - 1) r'');
-//     lemma_bytes_of_int_of_bytes #(k - 1) r'';
-//     lemma_mod_pow2 8 y x;
-//     assert(x = r0 /\ get r0' 0 = get r0'' 0);
-//     lemma_equality r0'' r0';
-//     assert(r' ^ r0' = r'' ^ r0'')
+let bytes_of_int_of_bytes b =
+  lemma_bytes_of_int_of_bytes' b
 
 //TODO
 let int32_of_bytes b = admit()
@@ -160,67 +165,56 @@ let bytes_of_int16 b = admit()
 let bytes_of_int8  b = admit()
 
 let rec xor' (n:u32) (b1:minbytes (U32.v n)) (b2:minbytes (U32.v n))
-  : Tot (b:lbytes (U32.v n)) 
+  : Tot (b:lbytes (U32.v n))
         (decreases (U32.v n)) =
   if n = 0ul then empty_bytes
   else
     let u, v = split b1 1ul in
     let x, y = split b2 1ul in
     (abyte (U8.logxor (get u 0ul) (get x 0ul))) @| (xor' (n `U32.sub` 1ul) v y)
-    
+
 let xor = xor'
 
-let xor_commutative n b1 b2 = admit()
+private let rec lemma_xor_commutative
+  (k:u32) (b1:minbytes (U32.v k)) (b2:minbytes (U32.v k))
+  : Lemma (ensures xor k b1 b2 == xor k b2 b1) (decreases (U32.v k)) =
+  if k = 0ul then ()
+  else
+    let u, v = split b1 1ul in
+    let x, y = split b2 1ul in
+    U.logxor_commutative (U8.v (u.[0ul])) (U8.v (x.[0ul]));
+    lemma_xor_commutative U32.(k -^ 1ul) v y
+
+let xor_commutative n b1 b2 = lemma_xor_commutative n b1 b2
+
 let xor_append b1 b2 x1 x2 = admit()
-let xor_idempotent n b1 b2 = admit()
 
-// let rec xor_commutative n b1 b2 =
-//   if n = 0 then ()
-//   else
-//     let u, v = splitT b1 1 in
-//     let x, y = splitT b2 1 in
-//     let u : U.uint_t 8 = U8.v (get u 0) in
-//     let x : U.uint_t 8 = U8.v (get x 0) in
-//     U.logxor_commutative u x;
-//     lemma_xor_commutative (n-1) v y
+private let lemma_xor_idempotent_1 (b1:lbytes 1) (b2:lbytes 1)
+  : Lemma (xor 1ul (xor 1ul b1 b2) b2 = b1) =
+  let b = xor 1ul b1 b2 in
+  let b' = xor 1ul b b2 in
+  let u0 : U.uint_t 8 = U8.v (b1.[0ul]) in
+  let x0 : U.uint_t 8 = U8.v (b2.[0ul]) in
+  assert(U8.v b.[0ul] = U.logxor u0 x0);
+  assert(U8.v b'.[0ul] = U.logxor (U.logxor u0 x0) x0);
+  U.logxor_inv u0 x0;
+  extensionality b' b1
 
-// let rec lemma_xor_append (b1:bytes) (b2:bytes{lengthT b2 + lengthT b1 < pow2 32})
-//                          (x1:bytes{lengthT x1 = lengthT b1}) (x2:bytes{lengthT x2 = lengthT b2})
-//   : Lemma (xorT (lengthT b1 + lengthT b2) (b1 ^ b2) (x1 ^ x2) = (xorT (lengthT b1) b1 x1) ^ (xorT (lengthT b2) b2 x2)) =
-//   admit()
+#reset-options "--z3rlimit 30 --initial_fuel 2 --initial_ifuel 2 --max_ifuel 2 --max_fuel 2"
+let rec lemma_xor_idempotent (k:u32) (b1:lbytes (U32.v k)) (b2:lbytes (U32.v k))
+  : Lemma (ensures xor k (xor k b1 b2) b2 = b1) (decreases (U32.v k)) =
+  match U32.v k with
+  | 0 -> ()
+  | 1 -> lemma_xor_idempotent_1 b1 b2
+  | _ ->
+    let u, v = split b1 1ul in
+    let x, y = split b2 1ul in
+    lemma_xor_idempotent_1 u x;
+    xor_append u v x y;
+    xor_append (xor 1ul u x) (xor U32.(k -^ 1ul) v y) x y;
+    lemma_xor_idempotent U32.(k -^ 1ul) v y
 
-// #reset-options "--z3rlimit 20 --max_ifuel 2 --max_fuel 2"
-// let rec lemma_xor_idempotent (n:nat) (b1:lbytes n) (b2:lbytes n)
-//   : Lemma (xorT n (xorT n b1 b2) b2 = b1) =
-//   match n with
-//   | 0 -> lemma_empty b1
-//   | 1 ->
-//     let b = xorT 1 b1 b2 in
-//     let b' = xorT 1 b b2 in
-//     let u0 : U.uint_t 8 = U8.v (get b1 0) in
-//     let x0 : U.uint_t 8 = U8.v (get b2 0) in
-//     assert(U8.v (get b 0) = U.logxor u0 x0);
-//     assert(U8.v (get b' 0) = U.logxor (U.logxor u0 x0) x0);
-//     U.logxor_inv u0 x0; // (u0 = logxorT #n (logxorT #n u0 x0) x0)
-//     assert(U.logxor (U.logxor u0 x0) x0 = u0);
-//     assert(forall (i:nat{i<1}).get b' i = get b1 i);
-//     lemma_equality b' b1
-//   | _ ->
-//     let u, v = splitT b1 1 in
-//     let x, y = splitT b2 1 in
-//     let u : lbytes 1 = u in
-//     let x : lbytes 1 = x in
-//     lemma_xor_idempotent 1 u x;
-//     assert(xorT 1 (xorT 1 u x) x = u);
-//     let v : lbytes (n-1) = v in
-//     let y : lbytes (n-1) = y in
-//     lemma_xor_append u v x y; // xorT (u^v) (x^y) = xorT u x ^ xorT v y
-//     assert(xorT n (xorT n b1 b2) b2 = xorT n (xorT 1 u x ^ xorT (n-1) v y) (x^y));
-//     lemma_xor_append (xorT 1 u x) (xorT (n-1) v y) x y;
-//     assert(xorT n (xorT n b1 b2) b2 = (xorT 1 (xorT 1 u x) x) ^ (xorT (n-1) (xorT (n-1) v y) y));
-//     lemma_xor_idempotent (n-1) v y; // xorT (xorT v y) y = v
-//     assert(xorT (n-1) (xorT (n-1) v y) y = v);
-//     assert(xorT n (xorT n b1 b2) b2 = u ^ v)
+let xor_idempotent n b1 b2 = lemma_xor_idempotent n b1 b2
 
 #reset-options "--z3rlimit 30 --initial_ifuel 2 --initial_fuel 2 --max_ifuel 2 --max_fuel 2"
 let utf8_encode s =
