@@ -816,7 +816,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "unsafe_tactic_exec",
         Const (mk_bool true),
         "Allow tactics to run external processes. WARNING: checking an untrusted F* file while \
-         using this options can have disastrous effects.");
+         using this option can have disastrous effects.");
 
        ( noshort,
         "use_eq_at_higher_order",
