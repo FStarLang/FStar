@@ -420,7 +420,9 @@ let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : opt
   try
     match typ with
     | Const c -> c
-    | IntStr _ -> mk_int (int_of_string str_val)
+    | IntStr _ -> (match safe_int_of_string str_val with
+                  | Some v -> mk_int v
+                  | None -> raise (InvalidArgument opt_name))
     | BoolStr -> mk_bool (if str_val = "true" then true
                          else if str_val = "false" then false
                          else raise (InvalidArgument opt_name))

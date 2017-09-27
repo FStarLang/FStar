@@ -387,6 +387,8 @@ let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
 
 let char_of_int (i:int) = char i
 let int_of_string (s:string) = int_of_string s
+let safe_int_of_string (s:string) =
+  try Some <| int_of_string s with :? System.FormatException -> None
 let int_of_char (s:char) = int32 s
 let int_of_byte (s:byte) = int32 s
 let int_of_uint8 (i:uint8) = int32 i

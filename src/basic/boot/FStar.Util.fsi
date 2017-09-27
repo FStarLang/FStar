@@ -234,6 +234,7 @@ open Prims
 val file_exists: string -> Tot<bool>
 
 val int_of_string: string -> int
+val safe_int_of_string: string -> option<int>
 val int_of_char:   char -> Tot<int>
 val int_of_byte:   byte -> Tot<int>
 val byte_of_char: char -> Tot<byte>
