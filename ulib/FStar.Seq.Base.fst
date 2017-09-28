@@ -158,6 +158,13 @@ let rec lemma_index_upd2 #a s n v i = match (MkSeq?.l s) with
       if n = 0 then ()
       else lemma_index_upd2 #a (MkSeq tl) (n - 1) v (i - 1)
 
+abstract val lemma_index_upd: #a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> i:nat{i < length s} -> Lemma
+  (requires True)
+  (ensures (index (upd s n v) i == (if i = n then v else index s i))) (decreases (length s))
+  [SMTPat (index (upd s n v) i)]
+
+let lemma_index_upd #a s n v i = ()
+
 abstract val lemma_index_app1: #a:Type -> s1:seq a -> s2:seq a -> i:nat{i < length s1} -> Lemma
   (requires True)
   (ensures (index (append s1 s2) i == index s1 i)) (decreases (length s1))
