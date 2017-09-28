@@ -27,38 +27,6 @@ let unfold_fns :list string = [
 unfold let unfold_steps =
   List.Tot.map (fun s -> "Lang." ^ s) unfold_fns
 
-let simplify :tactic unit =
-  pointwise (
-   (apply_lemma (quote lemma0);; qed)
-    `or_else`
-   (apply_lemma (quote lemma6);; qed)
-    `or_else`
-   (apply_lemma (quote lemma4);; qed)
-    `or_else`
-   (apply_lemma (quote lemma5);; qed)
-    `or_else`
-   (apply_lemma (quote lemma9);; qed)
-    `or_else`
-   (apply_lemma (quote lemma10);; qed)
-    `or_else`
-   (apply_lemma (quote lemma11);; qed)
-    `or_else`
-    trefl);;
-  idtac
-
-let step :tactic unit =
-  (apply_lemma (quote lemma_destruct_exists_subheaps);; norm[])
-   `or_else`
-  (apply_lemma (quote lemma_read_write);; norm [];; simplify;; forall_intro;; implies_intro;; idtac)
-   `or_else`
-  (apply_lemma (quote lemma_alloc_return);; norm [];; simplify;; forall_intros;; implies_intro;; idtac)
-   `or_else`
-  (apply_lemma (quote lemma_read_write);; norm [])
-   `or_else`
-  (apply_lemma (quote lemma_alloc_return);; norm [])
-   `or_else`
-  idtac
-
 let context_rewrites :tactic unit =
   e <-- cur_env;
   mapM (fun b ->
@@ -73,12 +41,36 @@ let context_rewrites :tactic unit =
   ) (binders_of_env e);;
   idtac
 
+let rewrite_with_lemma (tm:tactic term) :tactic unit =
+  pointwise ((apply_lemma tm;; qed) `or_else` trefl);;
+  idtac
+
+let simplify :tactic unit =
+  pointwise ((apply_lemma (quote lemma6);; qed) `or_else`
+             (apply_lemma (quote lemma0);; qed) `or_else`
+	     (apply_lemma (quote lemma14);; qed) `or_else`
+	      trefl);;
+  idtac
+
+let step :tactic unit =
+  (apply_lemma (quote lemma_destruct_exists_subheaps);; norm[])
+   `or_else`
+  (apply_lemma (quote lemma_read_write);; norm [];; simplify;; forall_intros;; implies_intro;; idtac)
+   `or_else`
+  (apply_lemma (quote lemma_alloc_return);; norm [];; simplify;; forall_intros;; implies_intro;; idtac)
+   `or_else`
+  (apply_lemma (quote lemma_read_write);; norm [])
+   `or_else`
+  (apply_lemma (quote lemma_alloc_return);; norm [])
+   `or_else`
+  idtac
+
 // (* Writing to a pointer *)
 // let write_tau :tactic unit =
 //   norm [delta; delta_only unfold_steps; primops];;
 //   step;;
 //   context_rewrites;;
-//   simplify;;
+//   rewrite_with_lemma (quote lemma4);;
 //   dump "Write";;
 //   smt
 
@@ -96,8 +88,11 @@ let context_rewrites :tactic unit =
 //   step;;
 //   step;;
 //   context_rewrites;;
-//   simplify;;
-//   dump "Increment"
+//   rewrite_with_lemma (quote lemma6);;
+//   rewrite_with_lemma (quote lemma0);;
+//   rewrite_with_lemma (quote lemma4);;
+//   dump "Increment";;
+//   smt
 
 // let increment_ok (r:addr) (h:heap) (n:int) =
 //   let c = Bind (Read r) (fun n -> Write r (n + 1)) in
@@ -117,16 +112,20 @@ let context_rewrites :tactic unit =
 //   step;;
 //   step;;
 //   context_rewrites;;
-//   simplify;;
-//   simplify;;
-//   simplify;;
-//   dump "Swap"
+//   rewrite_with_lemma (quote lemma6);;
+//   rewrite_with_lemma (quote lemma0);;
+//   rewrite_with_lemma (quote lemma4);;
+//   rewrite_with_lemma (quote lemma5);;
+//   rewrite_with_lemma (quote lemma9);;
+//   rewrite_with_lemma (quote lemma4);;
+//   dump "Swap";;
+//   smt
 
 // let swap_ok (r1:addr) (r2:addr) (h:heap) (a:int) (b:int) =
 //   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
 //   let p = fun _ h -> sel h r1 == b /\ sel h r2 == a in
 //   let t = (lift_wpsep (wpsep_command c)) p h in
-//   assert_by_tactic (addr_of r1 <> addr_of r2 /\ sel h r1 == a /\ sel h r2 == b ==> t) swap_tau
+//   assert_by_tactic (sel h r1 == a /\ sel h r2 == b ==> t) swap_tau
 
 // (* Double increment a pointer *)
 // let double_increment_tau :tactic unit =
@@ -140,7 +139,9 @@ let context_rewrites :tactic unit =
 //   step;;
 //   step;;
 //   context_rewrites;;
-//   simplify;;
+//   rewrite_with_lemma (quote lemma6);;
+//   rewrite_with_lemma (quote lemma0);;
+//   rewrite_with_lemma (quote lemma4);;
 //   dump "Double increment";;
 //   smt
 
@@ -170,11 +171,14 @@ let rotate_tau :tactic unit =
   step;;
   step;;
   context_rewrites;;
-  simplify;;
-  simplify;;
-  simplify;;
-  simplify;;
-  dump "Rotate"
+  rewrite_with_lemma (quote lemma6);;
+  rewrite_with_lemma (quote lemma0);;
+  rewrite_with_lemma (quote lemma4);;
+  rewrite_with_lemma (quote lemma5);;
+  rewrite_with_lemma (quote lemma9);;
+  rewrite_with_lemma (quote lemma4);;
+  dump "Rotate";;
+  smt
 
 let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
   let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in

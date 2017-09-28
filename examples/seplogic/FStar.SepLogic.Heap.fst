@@ -92,3 +92,21 @@ let lemma11 (r:addr) (r1:addr{addr_of r1 <> addr_of r})(x:int) (h1:heap)
          (ensures restrict ((r `points_to` x) `join` h1) r1 == restrict h1 r1)
 	 [SMTPat (restrict ((r `points_to` x) `join` h1) r1)]
   = admit ()
+
+// let lemma12 (r:addr) (h1:heap) (h2:heap)
+//   :Lemma (requires True)
+//          (ensures restrict ((restrict h1 r) `join` h2) r == restrict h1 r)
+// 	 [SMTPat (restrict ((restrict h1 r) `join` h2) r)]
+//   = admit ()
+
+// let lemma13 (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (h1:heap) (h2:heap)
+//   :Lemma (requires True)
+//          (ensures restrict ((restrict h1 r) `join` h2) r1 == restrict h2 r)
+// 	 [SMTPat (restrict ((restrict h1 r) `join` h2) r1)]
+//   = admit ()
+
+let lemma14 (r:addr) (h1:heap) (h2:heap)
+  :Lemma (requires True)
+         (ensures restrict (h1 `join` (h2 `minus` r)) r == restrict h1 r)
+	 [SMTPat (ensures (restrict (h1 `join` (h2 `minus` r)) r))]
+  = admit ()
