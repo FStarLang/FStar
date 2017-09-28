@@ -354,8 +354,8 @@ type json =
 | JsonBool of bool
 | JsonInt of int
 | JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
+| JsonList of list<json>
+| JsonAssoc of list<(string * json)>
 
 type printer = {
   printer_prinfo: string -> unit;
@@ -990,7 +990,8 @@ let rec json_to_obj js =
   | JsonInt i -> i :> obj
   | JsonStr s -> s :> obj
   | JsonList l -> List.map json_to_obj l :> obj
-  | JsonAssoc a -> dict [ for (k, v) in a -> (k, json_to_obj v) ] :> obj
+  | JsonAssoc a ->
+    Dictionary<string, obj>(dict [ for (k, v) in a -> (k, json_to_obj v) ]) :> obj
 
 let rec obj_to_json (o: obj) : option<json> =
   let rec aux (o : obj) : json =
