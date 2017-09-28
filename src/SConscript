@@ -17,7 +17,7 @@ ocaml_output = 'ocaml-output/'  # directory to extract Ocaml code to
 
 # Return a list, where each element is the concatenation of prefix 'p' with the original element
 def addprefix(p, l):
-  if isinstance(l, basestring):
+  if isinstance(l, str):
     # l is a space-separated string.  Split into a list of strings.
     l = l.split(' ')
   # else l is a list to begin with
@@ -29,7 +29,7 @@ def generate_boot_file(target, source, env, generator):
     # read the source file into memory
     try:
         fd = open(source[0].get_path(), 'r')
-    except (OSError,IOError), e:
+    except:
         raise SCons.Errors.UserError("Can't read source file %s" % source[0])
     sourcefile = fd.read()
     sourcelines = re.split('\r|\n', sourcefile)
@@ -41,7 +41,7 @@ def generate_boot_file(target, source, env, generator):
     # write the target file
     try:
         fd = open(target[0].get_path(), "w")
-    except (OSError,IOError), e:
+    except:
         raise SCons.Errors.UserError("Can't write target file %s" % target[0])
     for l in targetlines:
         fd.write(l)
@@ -381,7 +381,7 @@ def docmd(env, cmd):
   except:
     e = sys.exc_info()[0]
     print ("Error invoking: %s" % cmd)
-    print formatExceptionInfo()
+    print (formatExceptionInfo())
     print ("Exception: %s" % e)
     Exit(1)
   result = []
