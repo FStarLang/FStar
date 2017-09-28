@@ -59,39 +59,6 @@ let rec init () =
 open FStar.Parser.ParseIt
 let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
 
-let pars_term_or_fragment is_term s =
-  try
-      let env, tcenv = init() in
-      let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
-        lexbuf.EndPos <- {lexbuf.EndPos with
-        pos_fname= Range.encode_file filename;
-        pos_cnum=0;
-        pos_lnum=1 } in
-      let filename,sr,fs = "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
-      let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
-      resetLexbufPos filename lexbuf;
-      let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
-      let lexer = LexFStar.token lexargs in
-      let frag = frag_of_text s in
-      if is_term
-      then let t = Parser.Parse.term lexer lexbuf in
-           Some (ToSyntax.desugar_term env t)
-      else begin match FStar.Interactive.Ide.check_frag (env, tcenv) !test_mod_ref (frag, false) with
-                | Some (test_mod', (env', tcenv'), 0) ->
-                  test_mod_ref := test_mod';
-                  dsenv_ref := Some env';
-                  tcenv_ref := Some tcenv';
-                  None
-                | _ -> raise (Err ("Failed to check fragment: " ^s))
-            end
- with
-    | Err msg ->
-        printfn "Failed to parse %s\n%s\n" s msg;
-        exit -1
-    | Error(msg, r) ->
-        printfn "Failed to parse %s\n%s: %s\n" s (Range.string_of_range r) msg;
-        exit -1
-
 let failed_to_parse s e =
     match e with
         | Err msg ->
@@ -133,14 +100,15 @@ let pars_and_tc_fragment (s:string) =
     try
         let env, tcenv = init() in
         let frag = frag_of_text s in
-        match FStar.Interactive.Ide.check_frag (env, tcenv) !test_mod_ref (frag, false) with
-        | Some (test_mod', (env', tcenv'), n) ->
-            test_mod_ref := test_mod';
-            dsenv_ref := Some env';
-            tcenv_ref := Some tcenv';
-            if n <> 0
-            then (report ();
-                  raise (Err (Util.format1 "%s errors were reported" (string_of_int n))))
-        | _ -> report(); raise (Err ("check_frag returned None: " ^s))
+        try
+          let test_mod', (env', tcenv') = FStar.Universal.tc_one_fragment !test_mod_ref env tcenv (frag, false) in
+          test_mod_ref := test_mod';
+          dsenv_ref := Some env';
+          tcenv_ref := Some tcenv';
+          let n = get_err_count () in
+          if n <> 0
+          then (report ();
+                raise (Err (Util.format1 "%s errors were reported" (string_of_int n))))
+        with e -> report(); raise (Err ("tc_one_fragment failed: " ^s))
     with
         | e when not ((Options.trace_error())) -> failed_to_parse s e
