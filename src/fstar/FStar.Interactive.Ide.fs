@@ -685,38 +685,14 @@ let trim_option_name opt_name =
 
 open FStar.Parser.ParseIt
 
-type partial_repl_state =
-  { prepl_env: env_t;
-    prepl_fname: string;
-    prepl_stdin: stream_reader;
-    prepl_names: CompletionTable.table;
-    prepl_deps: list<completed_dep_task> }
-
-type full_repl_state = { repl_line: int; repl_column: int; repl_fname: string;
+type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
                          repl_deps: list<completed_dep_task>;
                          repl_curmod: option<Syntax.Syntax.modul>;
                          repl_env: env_t;
                          repl_stdin: stream_reader;
                          repl_names: CTable.table }
 
-type repl_state =
-| PartialReplState of partial_repl_state
-| FullReplState of full_repl_state
-
-let wrap_repl_state fn r =
-  match r with
-  | (status, Inr n) -> (status, Inr n)
-  | (status, Inl full_st) -> (status, Inl (fn full_st))
-
-let repl_stdin = function
-  | PartialReplState st -> st.prepl_stdin
-  | FullReplState st -> st.repl_stdin
-
-let repl_fname = function
-  | PartialReplState st -> st.prepl_fname
-  | FullReplState st -> st.repl_fname
-
-let repl_stack: ref<list<full_repl_state>> = Util.mk_ref []
+let repl_stack: ref<list<repl_state>> = Util.mk_ref []
 
 let repl_stack_empty () =
   match !repl_stack with
@@ -732,24 +708,20 @@ let pop_repl env =
     if repl_stack_empty () then cleanup st'.repl_env;
     st'
 
-let push_repl push_kind (st: full_repl_state) =
+let push_repl push_kind st =
   repl_stack := st :: !repl_stack;
   push (set_check_kind st.repl_env push_kind) ""
 
-let json_of_repl_state (st: repl_state) =
+let json_of_repl_state st =
   let filenames (task, _) =
     match task with
     | LDInterleaved (intf, impl) -> [intf.tf_fname; impl.tf_fname]
     | LDSingle intf_or_impl -> [intf_or_impl.tf_fname]
     | LDInterfaceOfCurrentFile intf -> [intf.tf_fname] in
 
-  let deps =
-    match st with
-    | PartialReplState pst -> pst.prepl_deps
-    | FullReplState st -> st.repl_deps in
   JsonAssoc
     [("loaded-dependencies",
-      JsonList (List.map JsonStr (List.concatMap filenames deps)));
+      JsonList (List.map JsonStr (List.concatMap filenames st.repl_deps)));
      ("options",
       JsonList (List.map json_of_fstar_option (current_fstar_options (fun _ -> true))))]
 
@@ -763,27 +735,27 @@ let term_to_string tcenv t =
 let sigelt_to_string se =
   with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string se)
 
-let run_exit (st: repl_state) =
+let run_exit st =
   ((QueryOK, JsonNull), Inr 0)
 
-let run_describe_protocol (st: repl_state) =
+let run_describe_protocol st =
   ((QueryOK, JsonAssoc alist_of_protocol_info), Inl st)
 
-let run_describe_repl (st: repl_state) =
+let run_describe_repl st =
   ((QueryOK, json_of_repl_state st), Inl st)
 
-let run_protocol_violation (st: repl_state) message =
+let run_protocol_violation st message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
 
-let run_generic_error (st: repl_state) message =
+let run_generic_error st message =
   ((QueryNOK, JsonStr message), Inl st)
 
-let run_vfs_add (st: repl_state) opt_fname contents =
-  let fname = Util.dflt (repl_fname st) opt_fname in
+let run_vfs_add st opt_fname contents =
+  let fname = Util.dflt st.repl_fname opt_fname in
   Parser.ParseIt.add_vfs_entry fname contents;
   ((QueryOK, JsonNull), Inl st)
 
-let run_pop (st: full_repl_state) =
+let run_pop st =
   if repl_stack_empty () then
     ((QueryNOK, JsonStr "Too many pops"), Inl st)
   else
@@ -894,7 +866,7 @@ let handle_deps_failure st =
   let js_errors = errors |> List.map json_of_issue in
   ((QueryNOK, JsonList js_errors), Inl st)
 
-let run_regular_push_without_deps (st: full_repl_state) env deps query =
+let run_push_without_deps st env deps query =
   let { push_code = text; push_line = line; push_column = column;
         push_peek_only = peek_only } = query in
 
@@ -920,12 +892,12 @@ let run_regular_push_without_deps (st: full_repl_state) env deps query =
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
 
-let run_regular_push (st: full_repl_state) query =
+let run_push st query =
   let commit_names st name_events =
     { st with repl_names = commit_name_tracking st.repl_curmod st.repl_names name_events } in
 
   let do_push st env deps =
-    run_regular_push_without_deps st env deps query in
+    run_push_without_deps st env deps query in
 
   let on_failed_init (env, name_events) deps =
     let st = { st with repl_env = env; repl_deps = deps } in
@@ -977,43 +949,7 @@ let add_module_completions this_fname deps table =
         CTable.register_module_path table (loaded mod_key) mod_path ns_query)
     table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
-let run_initial_push (st: partial_repl_state) query =
-  assert (not query.push_peek_only);
-
-  let commit_names st name_events =
-    { st with prepl_names = commit_name_tracking None st.prepl_names name_events } in
-
-  let on_successful_init (env, name_events) deps repl_deps  =
-    TcEnv.toggle_id_info (snd env) true;
-
-    let st = commit_names st name_events in
-    let full_st =
-      { repl_line = 1; repl_column = 0; repl_fname = st.prepl_fname;
-        repl_curmod = None; repl_env = env; repl_deps = repl_deps;
-        repl_stdin = st.prepl_stdin;
-        repl_names = add_module_completions st.prepl_fname deps st.prepl_names } in
-
-    wrap_repl_state FullReplState <| run_regular_push full_st query in
-
-  let on_failed_init (env, name_events) repl_deps =
-    let st = { st with prepl_env = env; prepl_deps = repl_deps } in
-    handle_deps_failure (PartialReplState (commit_names st name_events)) in
-
-  let env = st.prepl_env in
-  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
-
-  match load_deps env st.prepl_fname st.prepl_deps with
-  | Inl (env, deps, repl_deps) ->
-    on_successful_init (finish_name_tracking env) deps repl_deps
-  | Inr (env, completed_tasks) ->
-    on_failed_init (finish_name_tracking env) completed_tasks
-
-let run_push (st: repl_state) query =
-  match st with
-  | PartialReplState st -> run_initial_push st query
-  | FullReplState st -> wrap_repl_state FullReplState <| run_regular_push st query
-
-let run_symbol_lookup (st: full_repl_state) symbol pos_opt requested_info =
+let run_symbol_lookup st symbol pos_opt requested_info =
   let dsenv, tcenv = st.repl_env in
 
   let info_of_lid_str lid_str =
@@ -1074,7 +1010,7 @@ let run_option_lookup opt_name =
   | None -> Inl ("Unknown option:" ^ opt_name)
   | Some opt -> Inr ("option", alist_of_fstar_option (update_option opt))
 
-let run_module_lookup (st: full_repl_state) symbol =
+let run_module_lookup st symbol =
   let query = Util.split symbol "." in
   match CTable.find_module_or_ns st.repl_names query with
   | None ->
@@ -1084,21 +1020,21 @@ let run_module_lookup (st: full_repl_state) symbol =
   | Some (CTable.Namespace ns_info) ->
     Inr ("namespace", CTable.alist_of_ns_info ns_info)
 
-let run_code_lookup (st: full_repl_state) symbol pos_opt requested_info =
+let run_code_lookup st symbol pos_opt requested_info =
   match run_symbol_lookup st symbol pos_opt requested_info with
   | Inr alist -> Inr alist
   | Inl _ -> match run_module_lookup st symbol with
             | Inr alist -> Inr alist
             | Inl err_msg -> Inl "No such symbol, module, or namespace."
 
-let run_lookup' (st: full_repl_state) symbol context pos_opt requested_info =
+let run_lookup' st symbol context pos_opt requested_info =
   match context with
   | LKSymbolOnly -> run_symbol_lookup st symbol pos_opt requested_info
   | LKModule -> run_module_lookup st symbol
   | LKOption -> run_option_lookup symbol
   | LKCode -> run_code_lookup st symbol pos_opt requested_info
 
-let run_lookup (st: full_repl_state) symbol context pos_opt requested_info =
+let run_lookup st symbol context pos_opt requested_info =
   match run_lookup' st symbol context pos_opt requested_info with
   | Inl err_msg ->
     ((QueryNOK, JsonStr err_msg), Inl st)
@@ -1118,7 +1054,7 @@ let run_code_autocomplete st search_term =
   let json = List.map CTable.json_of_completion_result (lids @ mods_and_nss) in
   ((QueryOK, JsonList json), Inl st)
 
-let run_module_autocomplete (st: full_repl_state) search_term modules namespaces =
+let run_module_autocomplete st search_term modules namespaces =
   let needle = Util.split search_term "." in
   let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle Some in
   let json = List.map CTable.json_of_completion_result mods_and_nss in
@@ -1140,7 +1076,7 @@ let candidates_of_fstar_option match_len is_reset opt =
           CTable.completion_candidate = snippet;
           CTable.completion_annotation = annot })
 
-let run_option_autocomplete (st: full_repl_state) search_term is_reset =
+let run_option_autocomplete st search_term is_reset =
   match trim_option_name search_term with
   | ("--", trimmed_name) ->
     let matcher opt = Util.starts_with opt.opt_name trimmed_name in
@@ -1154,7 +1090,7 @@ let run_option_autocomplete (st: full_repl_state) search_term is_reset =
     ((QueryOK, JsonList json), Inl st)
   | (_, _) -> ((QueryNOK, JsonStr "Options should start with '--'"), Inl st)
 
-let run_autocomplete (st: full_repl_state) search_term context =
+let run_autocomplete st search_term context =
   match context with
   | CKCode ->
     run_code_autocomplete st search_term
@@ -1163,8 +1099,8 @@ let run_autocomplete (st: full_repl_state) search_term context =
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
 
-let run_compute (st: full_repl_state) term rules =
-  let run_and_rewind (st: full_repl_state) task =
+let run_compute st term rules =
+  let run_and_rewind st task =
     let env' = push st.repl_env "#compute" in
     let results = task st in
     pop env' "#compute";
@@ -1272,7 +1208,7 @@ let json_of_search_result dsenv tcenv sc =
 
 exception InvalidSearch of string
 
-let run_search (st: full_repl_state) search_str =
+let run_search st search_str =
   let dsenv, tcenv = st.repl_env in
   let empty_fv_set = SS.new_fv_set () in
 
@@ -1341,35 +1277,25 @@ let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
   | GenericError message -> run_generic_error st message
   | ProtocolViolation query -> run_protocol_violation st query
   | VfsAdd (fname, contents) -> run_vfs_add st fname contents
-  | Push pquery when pquery.push_peek_only = false -> run_push st pquery
-  | _ -> // … then queries that only work on full states
-    match st with
-    | PartialReplState _ ->
-      run_generic_error st "Please send a code fragment before running this query"
-    | FullReplState st ->
-      wrap_repl_state FullReplState
-       (match q with
-        | Pop -> run_pop st
-        | AutoComplete (search_term, context) -> run_autocomplete st search_term context
-        | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
-        | Compute (term, rules) -> run_compute st term rules
-        | Search term -> run_search st term
-        | Push pquery when pquery.push_peek_only = true -> run_regular_push st pquery
-        | Exit | DescribeProtocol | DescribeRepl | GenericError _
-        | ProtocolViolation _ | Push _ | VfsAdd _ -> failwith "impossible")
+  | Push pquery -> run_push st pquery
+  | Pop -> run_pop st
+  | AutoComplete (search_term, context) -> run_autocomplete st search_term context
+  | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
+  | Compute (term, rules) -> run_compute st term rules
+  | Search term -> run_search st term
 
 let validate_query st (q: query) : query =
   match q.qq with
   | Push { push_kind = SyntaxCheck; push_peek_only = false } ->
     { qid = q.qid; qq = ProtocolViolation "Cannot use 'kind': 'syntax' with 'query': 'push'" }
-  | _ -> match st with
-        | FullReplState { repl_curmod = None } when query_needs_current_module q.qq ->
+  | _ -> match st.repl_curmod with
+        | None when query_needs_current_module q.qq ->
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
 let rec go st : int =
   let rec loop st : int =
-    let query = validate_query st (read_interactive_query (repl_stdin st)) in
+    let query = validate_query st (read_interactive_query st.repl_stdin) in
     let (status, response), state_opt = run_query st query.qq in
     write_response query.qid status response;
     match state_opt with
@@ -1408,11 +1334,10 @@ let interactive_mode' (filename: string): unit =
   let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
 
   let init_st =
-    PartialReplState ({ prepl_env = env;
-                        prepl_fname = filename;
-                        prepl_stdin = open_stdin ();
-                        prepl_names = CompletionTable.empty;
-                        prepl_deps = [] }) in
+    { repl_line = 1; repl_column = 0; repl_fname = filename;
+      repl_curmod = None; repl_env = env; repl_deps = [];
+      repl_stdin = open_stdin ();
+      repl_names = CompletionTable.empty } in
 
   let exit_code =
     if FStar.Options.record_hints() || FStar.Options.use_hints() then
