@@ -39,7 +39,7 @@ let load_tactics tacs =
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
      let env_setter = U.format1 "OCAMLPATH=\"%s/bin/\"" fs_home in
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
-     print_string (cmd ^ "\n");
+     FStar_Util.print_string cmd;
      Sys.command cmd in
     ms
     |> List.map (fun m -> dir ^ "/" ^ m)

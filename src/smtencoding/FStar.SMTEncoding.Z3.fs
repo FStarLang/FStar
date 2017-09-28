@@ -497,28 +497,6 @@ let refresh () =
         bg_z3_proc.refresh();
         bg_scope := List.flatten (List.rev !fresh_scope)
 
-//mark, reset_mark, commit_mark:
-//    setting rollback points for the interactive mode
-// JP: I suspect the expected usage for the interactive mode is as follows:
-// - the stack (fresh_scope) has size >= 1, the top scope contains the queries
-//   that have been successful so far
-// - one calls "mark" to push a new scope of tentative queries
-// - in case of success, the new scope is collapsed with the previous scope,
-//   effectively bringing the new queries into the scope of successful queries so far
-// - in case of failure, the new scope is discarded
-let mark msg =
-    push msg
-let reset_mark msg =
-    // JP: pop_context (in universal.fs) does the same thing: it calls pop,
-    // followed by refresh
-    pop msg;
-    refresh ()
-let commit_mark (msg:string) =
-    begin match !fresh_scope with
-        | hd::s::tl -> fresh_scope := (hd@s)::tl
-        | _ -> failwith "Impossible"
-    end
-
 let mk_input theory =
     let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
     if Options.log_queries() then query_logging.write_to_log r ;
