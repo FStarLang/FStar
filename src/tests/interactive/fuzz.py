@@ -87,31 +87,59 @@ def segment(fstar_exe, fname):
     py_decls = list(segment_using_ranges(lines, ranges))
     return py_decls
 
-QUERY_KINDS = ["push", "pop", "peek"]
-DECL_ID_DELTA = {"push": 1, "peek": 0, "pop": -1}
+class QueryStream():
+    def __init__(self, decls, nqueries=50, seed=None, allow_empty_pops=True):
+        self.decls = decls
+        self.nqueries = nqueries
+        self.seed = seed
+        self.allow_empty_pops = allow_empty_pops
+        self.query_sources = [self.make_push, self.make_peek, self.make_pop]
 
-def make_queries(decls, nqueries=50, seed=None):
-    rnd = random.Random(seed)
+    def __iter__(self):
+        self.qid = 0
+        self.next_decl_id = 0
+        self.rng = random.Random(self.seed)
+        return self
 
-    qid = 0
-    next_decl_id = 0
-    while qid < nqueries:
-        kind = rnd.choice(QUERY_KINDS)
-        if kind == "push" or kind == "peek":
-            if next_decl_id >= len(decls):
-                continue
-            decl = decls[next_decl_id]
-            args = {"kind": "lax", "code": decl.code, "line": decl.line, "column": decl.column}
-        if kind == "pop":
-            if next_decl_id <= 0:
-                continue
-            args = {}
-        qid += 1
-        next_decl_id += DECL_ID_DELTA[kind]
-        yield {"query-id": str(qid), "query": kind, "args": args}
+    def random_query_params(self):
+        query = None
+        while query is None:
+            query = self.rng.choice(self.query_sources)()
+        return query
 
-        if qid % 100 == 0:
-            debug("{} / {}", qid, nqueries, end="\r")
+    def __next__(self):
+        if self.qid >= self.nqueries:
+            raise StopIteration
+
+        next_decl_id_delta, kind, args = self.random_query_params()
+        self.qid += 1
+        self.next_decl_id += next_decl_id_delta
+
+        if self.qid % 100 == 0:
+            debug("{} / {}", self.qid, self.nqueries, end="\r")
+
+        return {"query-id": str(self.qid), "query": kind, "args": args}
+
+    def args_for_push(self, push_kind, decl):
+        args = {"kind": push_kind, "code": decl.code,
+                "line": decl.line, "column": decl.column}
+        return args
+
+    def make_push(self):
+        if self.next_decl_id >= len(self.decls):
+            return None
+        return (1, "push", self.args_for_push("lax", self.decls[self.next_decl_id]))
+
+    def make_peek(self):
+        if self.next_decl_id >= len(self.decls):
+            return None
+        return (0, "peek", self.args_for_push("lax", self.decls[self.next_decl_id]))
+
+    def make_pop(self):
+        if self.next_decl_id <= 0:
+            return (0, "pop", {}) if self.allow_empty_pops else None
+        return (-1, "pop", {})
+
 
 def run(fstar_exe, fname, queries):
     process = subprocess.Popen(fstar_ide_cli(fstar_exe, fname),
@@ -126,12 +154,16 @@ def run(fstar_exe, fname, queries):
 
     for query in queries:
         in_line = json.dumps(query, sort_keys=True)
-        print(">>> {}".format(in_line), flush=True)
+        print("\n>>> {}".format(in_line), flush=True)
         pstdin.write(in_line + "\n")
         pstdin.flush()
-        out_line = pstdout.readline()
-        print("<<< {}".format(cleanup.cleanup_one(out_line)), flush=True)
-        yield json.loads(out_line)
+        while True:
+            out_line = pstdout.readline()
+            print("<<< {}".format(cleanup.cleanup_one(out_line).strip()), flush=True)
+            js = json.loads(out_line)
+            yield js
+            if js["kind"] == "response":
+                break
 
     pstdin.close()
     process.wait()
@@ -163,7 +195,7 @@ def main():
     debug("Segmenting {}...", args.source_file)
     decls = segment(args.fstar_parser, args.source_file)
     debug("Running {} queries...", args.nqueries)
-    queries = make_queries(decls, args.nqueries, args.seed)
+    queries = QueryStream(decls, args.nqueries, args.seed)
     list(run(args.fstar or args.fstar_parser, args.source_file, queries))
     debug("Done.")
 
