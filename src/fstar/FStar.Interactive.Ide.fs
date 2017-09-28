@@ -945,9 +945,10 @@ let run_regular_push (st: full_repl_state) query =
       on_failed_init (finish_name_tracking env) completed_tasks in
 
   let env = push_repl query.push_kind st in
-  if repl_stack_empty () then
+  if repl_stack_empty () then (
+    if Options.debug_any () then Util.print_string "Reloading dependencies";
     do_init_then_push st env // Update dependencies and restore options
-  else
+  ) else
     do_push st env st.repl_deps
 
 let capitalize str =
