@@ -117,9 +117,6 @@ and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
-    mark         :string -> unit;
-    reset_mark   :string -> unit;
-    commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
@@ -210,9 +207,6 @@ let add_query_index (l, n) = match !query_indices with
     | _ -> failwith "Empty query indices"
 
 let peek_query_indices () = List.hd !query_indices
-let commit_query_index_mark () = match !query_indices with
-    | hd::_::tl -> query_indices := hd::tl
-    | _ -> failwith "Unmarked query index stack"
 
 let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
@@ -237,22 +231,6 @@ let push env msg =
 
 let pop env msg =
     env.solver.pop msg;
-    pop_query_indices();
-    pop_stack ()
-
-let mark env =
-    env.solver.mark "USER MARK";
-    push_query_indices();
-    push_stack env
-
-let commit_mark (env: env) =
-    commit_query_index_mark();
-    env.solver.commit_mark "USER MARK";
-    ignore (pop_stack ());
-    env
-
-let reset_mark env =
-    env.solver.reset_mark "USER MARK";
     pop_query_indices();
     pop_stack ()
 
@@ -1262,9 +1240,6 @@ let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
-    mark=(fun _ -> ());
-    reset_mark=(fun _ -> ());
-    commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);

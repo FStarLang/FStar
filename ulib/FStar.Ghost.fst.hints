@@ -1,5 +1,5 @@
 [
-  "´\f6kI\u0007VÞ\u007fìæ¦§\bÉj",
+  "Ýõp„;$rh¥åËÜªÖ¸1",
   [
     [
       "FStar.Ghost.reveal",
@@ -116,6 +116,14 @@
         "equation_FStar.Ghost.reveal",
         "refinement_interpretation_FStar.Ghost_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
+      0
+    ],
+    [
+      "FStar.Ghost.lemma_haseq_erased",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Ghost.erased", "unit_typing" ],
       0
     ]
   ]

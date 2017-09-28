@@ -1153,9 +1153,6 @@ let solver: FStar_TypeChecker_Env.solver_t =
     FStar_TypeChecker_Env.init = FStar_SMTEncoding_Encode.init;
     FStar_TypeChecker_Env.push = FStar_SMTEncoding_Encode.push;
     FStar_TypeChecker_Env.pop = FStar_SMTEncoding_Encode.pop;
-    FStar_TypeChecker_Env.mark = FStar_SMTEncoding_Encode.mark;
-    FStar_TypeChecker_Env.reset_mark = FStar_SMTEncoding_Encode.reset_mark;
-    FStar_TypeChecker_Env.commit_mark = FStar_SMTEncoding_Encode.commit_mark;
     FStar_TypeChecker_Env.encode_modul =
       FStar_SMTEncoding_Encode.encode_modul;
     FStar_TypeChecker_Env.encode_sig = FStar_SMTEncoding_Encode.encode_sig;
@@ -1175,23 +1172,20 @@ let dummy: FStar_TypeChecker_Env.solver_t =
     FStar_TypeChecker_Env.init = (fun uu____2399  -> ());
     FStar_TypeChecker_Env.push = (fun uu____2401  -> ());
     FStar_TypeChecker_Env.pop = (fun uu____2403  -> ());
-    FStar_TypeChecker_Env.mark = (fun uu____2405  -> ());
-    FStar_TypeChecker_Env.reset_mark = (fun uu____2407  -> ());
-    FStar_TypeChecker_Env.commit_mark = (fun uu____2409  -> ());
     FStar_TypeChecker_Env.encode_modul =
-      (fun uu____2412  -> fun uu____2413  -> ());
+      (fun uu____2406  -> fun uu____2407  -> ());
     FStar_TypeChecker_Env.encode_sig =
-      (fun uu____2416  -> fun uu____2417  -> ());
+      (fun uu____2410  -> fun uu____2411  -> ());
     FStar_TypeChecker_Env.preprocess =
       (fun e  ->
          fun g  ->
-           let uu____2423 =
-             let uu____2430 = FStar_Options.peek () in (e, g, uu____2430) in
-           [uu____2423]);
+           let uu____2417 =
+             let uu____2424 = FStar_Options.peek () in (e, g, uu____2424) in
+           [uu____2417]);
     FStar_TypeChecker_Env.solve =
-      (fun uu____2446  -> fun uu____2447  -> fun uu____2448  -> ());
+      (fun uu____2440  -> fun uu____2441  -> fun uu____2442  -> ());
     FStar_TypeChecker_Env.is_trivial =
-      (fun uu____2455  -> fun uu____2456  -> false);
-    FStar_TypeChecker_Env.finish = (fun uu____2458  -> ());
-    FStar_TypeChecker_Env.refresh = (fun uu____2460  -> ())
+      (fun uu____2449  -> fun uu____2450  -> false);
+    FStar_TypeChecker_Env.finish = (fun uu____2452  -> ());
+    FStar_TypeChecker_Env.refresh = (fun uu____2454  -> ())
   }

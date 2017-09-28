@@ -908,25 +908,15 @@ let refresh: Prims.unit -> Prims.unit =
          FStar_List.rev uu____3964 in
        FStar_List.flatten uu____3959 in
      FStar_ST.op_Colon_Equals bg_scope uu____3956)
-let mark: Prims.string -> Prims.unit = fun msg  -> push msg
-let reset_mark: Prims.string -> Prims.unit = fun msg  -> pop msg; refresh ()
-let commit_mark: Prims.string -> Prims.unit =
-  fun msg  ->
-    let uu____4028 = FStar_ST.op_Bang fresh_scope in
-    match uu____4028 with
-    | hd1::s::tl1 ->
-        FStar_ST.op_Colon_Equals fresh_scope ((FStar_List.append hd1 s) ::
-          tl1)
-    | uu____4102 -> failwith "Impossible"
 let mk_input: FStar_SMTEncoding_Term.decl Prims.list -> Prims.string =
   fun theory  ->
     let r =
-      let uu____4116 =
+      let uu____4024 =
         FStar_List.map (FStar_SMTEncoding_Term.declToSmt (z3_options ()))
           theory in
-      FStar_All.pipe_right uu____4116 (FStar_String.concat "\n") in
-    (let uu____4122 = FStar_Options.log_queries () in
-     if uu____4122 then query_logging.write_to_log r else ());
+      FStar_All.pipe_right uu____4024 (FStar_String.concat "\n") in
+    (let uu____4030 = FStar_Options.log_queries () in
+     if uu____4030 then query_logging.write_to_log r else ());
     r
 type z3result =
   (z3status,Prims.int,z3statistics) FStar_Pervasives_Native.tuple3[@@deriving
@@ -945,12 +935,12 @@ let ask_1_core:
       fun qry  ->
         fun cb  ->
           let theory =
-            let uu____4166 = FStar_ST.op_Bang bg_scope in
-            FStar_List.append uu____4166
+            let uu____4074 = FStar_ST.op_Bang bg_scope in
+            FStar_List.append uu____4074
               (FStar_List.append [FStar_SMTEncoding_Term.Push]
                  (FStar_List.append qry [FStar_SMTEncoding_Term.Pop])) in
-          let uu____4187 = filter_theory theory in
-          match uu____4187 with
+          let uu____4095 = filter_theory theory in
+          match uu____4095 with
           | (theory1,used_unsat_core) ->
               let input = mk_input theory1 in
               (FStar_ST.op_Colon_Equals bg_scope [];
@@ -971,20 +961,20 @@ let ask_n_cores:
         fun scope  ->
           fun cb  ->
             let theory =
-              let uu____4264 =
+              let uu____4172 =
                 match scope with
                 | FStar_Pervasives_Native.Some s -> FStar_List.rev s
                 | FStar_Pervasives_Native.None  ->
                     (FStar_ST.op_Colon_Equals bg_scope [];
-                     (let uu____4295 = FStar_ST.op_Bang fresh_scope in
-                      FStar_List.rev uu____4295)) in
-              FStar_List.flatten uu____4264 in
+                     (let uu____4203 = FStar_ST.op_Bang fresh_scope in
+                      FStar_List.rev uu____4203)) in
+              FStar_List.flatten uu____4172 in
             let theory1 =
               FStar_List.append theory
                 (FStar_List.append [FStar_SMTEncoding_Term.Push]
                    (FStar_List.append qry [FStar_SMTEncoding_Term.Pop])) in
-            let uu____4331 = filter_theory theory1 in
-            match uu____4331 with
+            let uu____4239 = filter_theory theory1 in
+            match uu____4239 with
             | (theory2,used_unsat_core) ->
                 let input = mk_input theory2 in
                 enqueue
@@ -1003,9 +993,9 @@ let ask:
       fun qry  ->
         fun scope  ->
           fun cb  ->
-            let uu____4388 =
-              let uu____4389 = FStar_Options.n_cores () in
-              uu____4389 = (Prims.parse_int "1") in
-            if uu____4388
+            let uu____4296 =
+              let uu____4297 = FStar_Options.n_cores () in
+              uu____4297 = (Prims.parse_int "1") in
+            if uu____4296
             then ask_1_core filter1 label_messages qry cb
             else ask_n_cores filter1 label_messages qry scope cb

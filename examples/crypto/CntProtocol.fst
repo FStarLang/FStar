@@ -7,9 +7,7 @@ open FStar.All
 open FStar.Set
 open FStar.String
 open FStar.IO
-open FStar.Heap
-open FStar.ST
-
+open FStar.Ref
 
 let init_print = print_string "\ninitializing...\n\n"
 

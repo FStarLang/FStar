@@ -1,5 +1,5 @@
 [
-  "Buuïp˜Z†ï~%\u000f\u0019 TU",
+  "Fı…\u000e™®ù .Å\u0015\rª¥yÂ",
   [
     [ "FStar.Pervasives.uu___is_V", 1, 2, 1, [ "@query" ], 0 ],
     [
@@ -227,6 +227,23 @@
         "disc_equation_FStar.Pervasives.PpxDerivingShowConstant",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Pervasives_Tm_refine_564db2f0aa0878b4d96c60508be3dd36"
+      ],
+      0
+    ],
+    [ "FStar.Pervasives.uu___is_CInline", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Pervasives.uu___is_Substitute", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Pervasives.uu___is_Gc", 1, 2, 1, [ "@query" ], 0 ],
+    [ "FStar.Pervasives.uu___is_Comment", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Pervasives.__proj__Comment__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Comment",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Pervasives_Tm_refine_c53089e2d20d1b0f5a267296ac8e45f0"
       ],
       0
     ]

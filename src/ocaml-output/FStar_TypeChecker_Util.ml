@@ -3704,8 +3704,6 @@ let check_and_ascribe:
                 (uu___150_9992.FStar_TypeChecker_Env.failhard);
               FStar_TypeChecker_Env.nosynth =
                 (uu___150_9992.FStar_TypeChecker_Env.nosynth);
-              FStar_TypeChecker_Env.tc_term =
-                (uu___150_9992.FStar_TypeChecker_Env.tc_term);
               FStar_TypeChecker_Env.type_of =
                 (uu___150_9992.FStar_TypeChecker_Env.type_of);
               FStar_TypeChecker_Env.universe_of =
