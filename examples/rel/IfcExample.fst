@@ -3,8 +3,7 @@ module IfcExample
 open Rel
 open While
 open IfcRules
-open FStar.Heap
-open FStar.ST
+open FStar.Ref
 
 (* (Warning) Top-level let-bindings must be total; this term may have effects *)
 
