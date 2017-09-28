@@ -42,36 +42,49 @@ type proofstate =
   main_goal: goal;
   all_implicits: FStar_TypeChecker_Env.implicits;
   goals: goal Prims.list;
-  smt_goals: goal Prims.list;}[@@deriving show]
+  smt_goals: goal Prims.list;
+  depth: Prims.int;}[@@deriving show]
 let __proj__Mkproofstate__item__main_context:
   proofstate -> FStar_TypeChecker_Env.env =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
         all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals;_} -> __fname__main_context
+        smt_goals = __fname__smt_goals; depth = __fname__depth;_} ->
+        __fname__main_context
 let __proj__Mkproofstate__item__main_goal: proofstate -> goal =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
         all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals;_} -> __fname__main_goal
+        smt_goals = __fname__smt_goals; depth = __fname__depth;_} ->
+        __fname__main_goal
 let __proj__Mkproofstate__item__all_implicits:
   proofstate -> FStar_TypeChecker_Env.implicits =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
         all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals;_} -> __fname__all_implicits
+        smt_goals = __fname__smt_goals; depth = __fname__depth;_} ->
+        __fname__all_implicits
 let __proj__Mkproofstate__item__goals: proofstate -> goal Prims.list =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
         all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals;_} -> __fname__goals
+        smt_goals = __fname__smt_goals; depth = __fname__depth;_} ->
+        __fname__goals
 let __proj__Mkproofstate__item__smt_goals: proofstate -> goal Prims.list =
   fun projectee  ->
     match projectee with
     | { main_context = __fname__main_context; main_goal = __fname__main_goal;
         all_implicits = __fname__all_implicits; goals = __fname__goals;
-        smt_goals = __fname__smt_goals;_} -> __fname__smt_goals
+        smt_goals = __fname__smt_goals; depth = __fname__depth;_} ->
+        __fname__smt_goals
+let __proj__Mkproofstate__item__depth: proofstate -> Prims.int =
+  fun projectee  ->
+    match projectee with
+    | { main_context = __fname__main_context; main_goal = __fname__main_goal;
+        all_implicits = __fname__all_implicits; goals = __fname__goals;
+        smt_goals = __fname__smt_goals; depth = __fname__depth;_} ->
+        __fname__depth
