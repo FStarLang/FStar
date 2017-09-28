@@ -95,58 +95,49 @@ let tc_prims ((dsenv, env): DsEnv.env * TcEnv.env)
 (***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
+// FIXME is_interface_dependence is always false
 let tc_one_fragment curmod dsenv (env:TcEnv.env) (frag, is_interface_dependence) =
-  try
-    match Parser.Driver.parse_fragment frag with
-    | Parser.Driver.Empty ->
-      Some (curmod, dsenv, env)
+  match Parser.Driver.parse_fragment frag with
+  | Parser.Driver.Empty ->
+    (curmod, (dsenv, env))
 
-    | Parser.Driver.Modul ast_modul ->
-        (* It may seem surprising that this function, whose name indicates that
-        it type-checks a fragment, can actually parse an entire module.
-        Actually, this is an abuse, and just means that we're type-checking the
-        first chunk. *)
-      let ds_env, ast_modul = FStar.ToSyntax.Interleave.interleave_module dsenv ast_modul false in
-      let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
-      let dsenv = if is_interface_dependence then FStar.ToSyntax.Env.set_iface dsenv false else dsenv in
-      let env = match curmod with
-        | Some modul ->
-            (* Same-module is only allowed when editing a fst with an fsti,
-             * because we sent the interface as the first chunk. *)
-            if Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) <>
-              String.lowercase (string_of_lid modul.name)
-            then
-              raise (Err("Interactive mode only supports a single module at the top-level"))
-            else
-              env
-        | None ->
+  | Parser.Driver.Modul ast_modul ->
+      (* It may seem surprising that this function, whose name indicates that
+      it type-checks a fragment, can actually parse an entire module.
+      Actually, this is an abuse, and just means that we're type-checking the
+      first chunk. *)
+    let ds_env, ast_modul = FStar.ToSyntax.Interleave.interleave_module dsenv ast_modul false in
+    let dsenv, modul = Desugar.desugar_partial_modul curmod dsenv ast_modul in
+    let dsenv = if is_interface_dependence then FStar.ToSyntax.Env.set_iface dsenv false else dsenv in
+    let env = match curmod with
+      | Some modul ->
+          (* Same-module is only allowed when editing a fst with an fsti,
+           * because we sent the interface as the first chunk. *)
+          if Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) <>
+            String.lowercase (string_of_lid modul.name)
+          then
+            raise (Err("Interactive mode only supports a single module at the top-level"))
+          else
             env
-      in
-      let modul, _, env = if DsEnv.syntax_only dsenv then (modul, [], env)
-                          else Tc.tc_partial_modul env modul in
-      Some (Some modul, dsenv, env)
+      | None ->
+          env
+    in
+    let modul, _, env = if DsEnv.syntax_only dsenv then (modul, [], env)
+                        else Tc.tc_partial_modul env modul false in
+    (Some modul, (dsenv, env))
 
-    | Parser.Driver.Decls ast_decls ->
-      let dsenv, ast_decls_l =
-            BU.fold_map FStar.ToSyntax.Interleave.prefix_with_interface_decls
-                        dsenv
-                        ast_decls in
-      let dsenv, decls = Desugar.desugar_decls dsenv (List.flatten ast_decls_l) in
-      match curmod with
-        | None -> FStar.Util.print_error "fragment without an enclosing module"; exit 1
-        | Some modul ->
-            let modul, _, env  = if DsEnv.syntax_only dsenv then (modul, [], env)
-                                 else Tc.tc_more_partial_modul env modul decls in
-            Some (Some modul, dsenv, env)
-
-    with
-      | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-          TypeChecker.Err.add_errors env [(msg,r)];
-          None
-      | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-          TypeChecker.Err.add_errors env [(msg,Range.dummyRange)];
-          None
-      | e when not ((Options.trace_error())) -> raise e
+  | Parser.Driver.Decls ast_decls ->
+    let dsenv, ast_decls_l =
+          BU.fold_map FStar.ToSyntax.Interleave.prefix_with_interface_decls
+                      dsenv
+                      ast_decls in
+    let dsenv, decls = Desugar.desugar_decls dsenv (List.flatten ast_decls_l) in
+    match curmod with
+      | None -> FStar.Util.print_error "fragment without an enclosing module"; exit 1
+      | Some modul ->
+          let modul, _, env  = if DsEnv.syntax_only dsenv then (modul, [], env)
+                               else Tc.tc_more_partial_modul env modul decls in
+          (Some modul, (dsenv, env))
 
 let load_interface_decls (dsenv,env) interface_file_name : DsEnv.env * FStar.TypeChecker.Env.env =
   try

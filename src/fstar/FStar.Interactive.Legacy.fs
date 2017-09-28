@@ -75,14 +75,10 @@ let push_with_kind ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
     res
 
-let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
-
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
     try
-        match tc_one_fragment curmod dsenv env frag with
-            | Some (m, dsenv, env) ->
-                  Some (m, (dsenv, env), FStar.Errors.get_err_count())
-            | _ -> None
+        let m, env = tc_one_fragment curmod dsenv env frag in
+        Some (m, env, FStar.Errors.get_err_count())
     with
         | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
           FStar.TypeChecker.Err.add_errors env [(msg, r)];
@@ -528,8 +524,6 @@ let rec go (line_col:(int*int))
         | [] -> Util.print_error "too many pops"; exit 1
         | hd::tl -> hd, tl
       in
-      //all the fragments from the current buffer have been popped, call cleanup
-      let _ = if List.length stack = List.length ts then cleanup env else () in
       go line_col filename stack curmod env ts
 
   | Push (lax, l, c) ->
