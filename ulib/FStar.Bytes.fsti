@@ -93,6 +93,8 @@ val get:
 
 unfold let op_String_Access = get
 
+unfold let index (b:bytes) (i:nat{i < length b}) = get b (U32.uint_to_t i)
+
 let equal b1 b2 =
   length b1 = length b2 /\
   (forall (i:u32{U32.v i < length b1}).{:pattern (b1.[i]); (b2.[i])} b1.[i] == b2.[i])
@@ -126,8 +128,10 @@ let twobytes (b:byte*byte) : lbytes 2 =
 (** appending bytes **)
 val append:
     b1:bytes
-  -> b2:bytes{UInt.size (length b1 + length b2) U32.n}
-  -> Tot (b:bytes{reveal b = S.append (reveal b1) (reveal b2)})
+  -> b2:bytes
+  -> Pure bytes 
+         (requires (UInt.size (length b1 + length b2) U32.n))
+         (ensures (fun b -> reveal b = S.append (reveal b1) (reveal b2)))
 unfold let op_At_Bar = append
   
 val slice:
@@ -135,6 +139,7 @@ val slice:
   -> s:u32
   -> e:u32{U32.(s <=^ e) /\ U32.v e <= length b}
   -> r:bytes{reveal r == Seq.slice (reveal b) (U32.v s) (U32.v e)}
+let slice_ b (s:nat) (e:nat{s <= e /\ e <= length b}) = slice b (U32.uint_to_t e) (U32.uint_to_t e)
 
 val sub:
     b:bytes
@@ -273,3 +278,4 @@ val hex_of_bytes: bytes -> Tot string
 val string_of_hex: string -> Tot string
 val hex_of_string: string -> Tot string
 val print_bytes: bytes -> Tot string
+val bytes_of_string: string -> bytes //abytes
