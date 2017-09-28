@@ -120,20 +120,30 @@ class QueryStream():
 
         return {"query-id": str(self.qid), "query": kind, "args": args}
 
-    def args_for_push(self, push_kind, decl):
-        args = {"kind": push_kind, "code": decl.code,
+    def args_for_push(self, push_kind, decl, code):
+        args = {"kind": push_kind, "code": code,
                 "line": decl.line, "column": decl.column}
         return args
 
     def make_push(self):
         if self.next_decl_id >= len(self.decls):
             return None
-        return (1, "push", self.args_for_push("lax", self.decls[self.next_decl_id]))
+        decl = self.decls[self.next_decl_id]
+        return (1, "push", self.args_for_push("lax", decl, decl.code))
 
     def make_peek(self):
         if self.next_decl_id >= len(self.decls):
             return None
-        return (0, "peek", self.args_for_push("lax", self.decls[self.next_decl_id]))
+
+        decl = self.decls[self.next_decl_id]
+        code = decl.code
+
+        if self.rng.choice([True, False]):
+            return (0, "peek", self.args_for_push("lax", decl, code))
+        else:
+            beg = self.rng.randint(0, len(code) - 1)
+            end = beg + self.rng.randint(0, len(code) - beg)
+            return (0, "peek", self.args_for_push("lax", decl, code[beg:end]))
 
     def make_pop(self):
         if self.next_decl_id <= 0:
