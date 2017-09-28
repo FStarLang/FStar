@@ -238,6 +238,8 @@ let run_dep_tasks (env: env_t) (tasks: list<dep_task>) (previous: list<completed
   let rec revert_many env = function
     | [] -> env
     | (task, env') :: entries ->
+      // Note that we don't roll back additions to repl_names here.  It would be
+      // nice to do it, but it's a corner case and it's tricky to do cleanly.
       debug "Reverting" task;
       pop env' "run_dep_tasks";
       revert_many env' entries in
@@ -687,6 +689,7 @@ type partial_repl_state =
   { prepl_env: env_t;
     prepl_fname: string;
     prepl_stdin: stream_reader;
+    prepl_names: CompletionTable.table;
     prepl_deps: list<completed_dep_task> }
 
 type full_repl_state = { repl_line: int; repl_column: int; repl_fname: string;
@@ -866,24 +869,36 @@ let collect_errors () =
   FStar.Errors.clear ();
   errors
 
-let run_regular_push (st: full_repl_state) query =
-  let { push_kind = kind; push_code = text; push_line = line;
-        push_column = column; push_peek_only = peek_only } = query in
+(** Compute and typecheck all dependencies of `filename`.
 
-  let env = push_repl kind st in
+Return an environment and a list of completed dependency tasks wrapped in
+``Inr`` in case of failure, and an enviroment, a list of dependencies, and q
+list of completed tasks wrapped in ``Inl`` in case of success. **)
+let load_deps env filename previously_completed_tasks =
+  match with_captured_errors env
+          (fun _env -> Some <| deps_and_deps_tasks_of_our_file filename) with
+  | None ->
+    Inr (env, previously_completed_tasks)
+  | Some (deps, tasks) ->
+    match run_dep_tasks env tasks previously_completed_tasks with
+    | Inr (env, completed_tasks) -> Inr (env, completed_tasks)
+    | Inl (env, completed_tasks) -> Inl (env, deps, completed_tasks)
+
+let rephrase_dependency_error issue =
+  { issue with issue_message =
+               format1 "Error while computing or loading dependencies:\n%s"
+                       issue.issue_message }
+
+let handle_deps_failure st =
+  let errors = List.map rephrase_dependency_error (collect_errors ()) in
+  let js_errors = errors |> List.map json_of_issue in
+  ((QueryNOK, JsonList js_errors), Inl st)
+
+let run_regular_push_without_deps (st: full_repl_state) env deps query =
+  let { push_code = text; push_line = line; push_column = column;
+        push_peek_only = peek_only } = query in
 
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
-
-  // If we are at a stage where we have not yet pushed a fragment from the
-  // current buffer, see if some dependency is stale. If so, update it. Also
-  // if this is the first chunk, we need to restore the command line options.
-  let restore_cmd_line_options, (env, deps) =
-    if repl_stack_empty ()
-    then true, (env, st.repl_deps) // FIXME: update_deps st.repl_fname env st.repl_deps
-    else false, (env, st.repl_deps) in
-
-  if restore_cmd_line_options then
-    Options.restore_cmd_line_options false |> ignore;
 
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
   let res = check_frag env st.repl_curmod (frag, false) in
@@ -894,9 +909,9 @@ let run_regular_push (st: full_repl_state) query =
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
     let env, name_events = finish_name_tracking env in // …end name tracking
+    let names = commit_name_tracking curmod st'.repl_names name_events in
     ((QueryOK, JsonList errors),
-     Inl ({ st' with repl_curmod = curmod; repl_env = env;
-                     repl_names = commit_name_tracking curmod st'.repl_names name_events }))
+     Inl ({ st' with repl_curmod = curmod; repl_env = env; repl_names = names }))
   | _ ->
     // The previous version of the protocol required the client to send a #pop
     // immediately after failed pushes; this version pops automatically.
@@ -904,6 +919,36 @@ let run_regular_push (st: full_repl_state) query =
     let _, st'' = run_pop ({ st' with repl_env = env }) in
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
+
+let run_regular_push (st: full_repl_state) query =
+  let commit_names st name_events =
+    { st with repl_names = commit_name_tracking st.repl_curmod st.repl_names name_events } in
+
+  let do_push st env deps =
+    run_regular_push_without_deps st env deps query in
+
+  let on_failed_init (env, name_events) deps =
+    let st = { st with repl_env = env; repl_deps = deps } in
+    handle_deps_failure (commit_names st name_events) in
+
+  let on_successful_init (env, name_events) deps =
+    Options.restore_cmd_line_options false |> ignore;
+    do_push (commit_names st name_events) env st.repl_deps in
+
+  let do_init_then_push st env =
+    let env, finish_name_tracking = track_name_changes env in // begin name tracking…
+
+    match load_deps env st.repl_fname st.repl_deps with
+    | Inl (env, deps, repl_deps) -> // …end name tracking
+      on_successful_init (finish_name_tracking env) repl_deps
+    | Inr (env, completed_tasks) -> // …end name tracking
+      on_failed_init (finish_name_tracking env) completed_tasks in
+
+  let env = push_repl query.push_kind st in
+  if repl_stack_empty () then
+    do_init_then_push st env // Update dependencies and restore options
+  else
+    do_push st env st.repl_deps
 
 let capitalize str =
   if str = "" then str
@@ -931,50 +976,29 @@ let add_module_completions this_fname deps table =
         CTable.register_module_path table (loaded mod_key) mod_path ns_query)
     table (List.rev mods) // List.rev to process files in order or *increasing* precedence
 
-(** Compute and typecheck all dependencies of `filename`.
-
-Return an environment and a list of completed dependency tasks wrapped in
-``Inr`` in case of failure, and an enviroment, a list of dependencies, and q
-list of completed tasks wrapped in ``Inl`` in case of success. **)
-let load_deps env filename previously_completed_tasks =
-  match with_captured_errors env
-          (fun _env -> Some <| deps_and_deps_tasks_of_our_file filename) with
-  | None ->
-    Inr (env, previously_completed_tasks)
-  | Some (deps, tasks) ->
-    match run_dep_tasks env tasks previously_completed_tasks with
-    | Inr (env, completed_tasks) -> Inr (env, completed_tasks)
-    | Inl (env, completed_tasks) -> Inl (env, deps, completed_tasks)
-
-let rephrase_dependency_error issue =
-  { issue with issue_message =
-               format1 "Error while computing or loading dependencies:\n%s"
-                       issue.issue_message }
-
 let run_initial_push (st: partial_repl_state) query =
   assert (not query.push_peek_only);
 
-  let env = st.prepl_env in
+  let commit_names st name_events =
+    { st with prepl_names = commit_name_tracking None st.prepl_names name_events } in
 
   let on_successful_init (env, name_events) deps repl_deps  =
     TcEnv.toggle_id_info (snd env) true;
 
-    let initial_names =
-      add_module_completions st.prepl_fname deps CTable.empty in
+    let st = commit_names st name_events in
     let full_st =
       { repl_line = 1; repl_column = 0; repl_fname = st.prepl_fname;
         repl_curmod = None; repl_env = env; repl_deps = repl_deps;
         repl_stdin = st.prepl_stdin;
-        repl_names = commit_name_tracking None initial_names name_events } in
+        repl_names = add_module_completions st.prepl_fname deps st.prepl_names } in
 
     wrap_repl_state FullReplState <| run_regular_push full_st query in
 
   let on_failed_init (env, name_events) repl_deps =
-    let st = { st with prepl_deps = repl_deps } in
-    let errors = List.map rephrase_dependency_error (collect_errors ()) in
-    let js_errors = errors |> List.map json_of_issue in
-    ((QueryNOK, JsonList js_errors), Inl (PartialReplState st)) in
+    let st = { st with prepl_env = env; prepl_deps = repl_deps } in
+    handle_deps_failure (PartialReplState (commit_names st name_events)) in
 
+  let env = st.prepl_env in
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
 
   match load_deps env st.prepl_fname st.prepl_deps with
@@ -1386,6 +1410,7 @@ let interactive_mode' (filename: string): unit =
     PartialReplState ({ prepl_env = env;
                         prepl_fname = filename;
                         prepl_stdin = open_stdin ();
+                        prepl_names = CompletionTable.empty;
                         prepl_deps = [] }) in
 
   let exit_code =
