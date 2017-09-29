@@ -214,7 +214,7 @@ let with_fuel_and_diagnostics settings label_assumptions =
 
 let used_hint s = Option.isSome s.query_hint
 
-let next_hint ({query_name=qname; query_index=qindex}) =
+let next_hint qname qindex =
     match !replaying_hints with
     | Some hints ->
       BU.find_map hints (function
@@ -386,7 +386,7 @@ let fold_queries (qs:list<query_settings>)
 let ask_and_report_errors env all_labels prefix query suffix =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
-    let default_settings =
+    let default_settings, next_hint =
         let qname, index =
             match env.qname_and_index with
             | None -> failwith "No query name set!"
@@ -397,7 +397,8 @@ let ask_and_report_errors env all_labels prefix query suffix =
                 (Options.z3_rlimit_factor ())
                 (Prims.op_Multiply (Options.z3_rlimit ()) 544656)
         in
-        {
+        let next_hint = next_hint qname index in
+        let default_settings = {
             query_env=env;
             query_decl=query;
             query_name=qname;
@@ -410,17 +411,19 @@ let ask_and_report_errors env all_labels prefix query suffix =
             query_errors=[];
             query_all_labels=all_labels;
             query_suffix=suffix;
-            query_hash=None
-        }
+            query_hash=(match next_hint with
+                        | None -> None
+                        | Some {hash=h} -> h)
+        } in
+        default_settings, next_hint
     in
 
     let use_hints_setting =
-        match next_hint default_settings with
+        match next_hint with
         | Some ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) ->
           [{default_settings with query_hint=Some core;
                                   query_fuel=i;
-                                  query_ifuel=j;
-                                  query_hash=h}]
+                                  query_ifuel=j}]
         | _ ->
           []
     in
@@ -439,7 +442,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
     in
 
     let max_fuel_max_ifuel =
-      if Options.max_fuel()     >  Options.initial_fuel()
+      if Options.max_fuel()    >  Options.initial_fuel()
       && Options.max_ifuel()   >=  Options.initial_ifuel()
       then [{default_settings with query_fuel=Options.max_fuel();
                                    query_ifuel=Options.max_ifuel()}]

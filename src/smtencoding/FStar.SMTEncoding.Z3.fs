@@ -508,6 +508,7 @@ let refresh () =
         bg_scope := List.flatten (List.rev !fresh_scope)
 
 let mk_input theory =
+    let options = z3_options () in
     let r, hash =
         if Options.record_hints()
         || (Options.use_hints() && Options.use_hint_hashes()) then
@@ -517,21 +518,17 @@ let mk_input theory =
             //that vary depending on some user options (e.g., record_hints etc.)
             //They should not be included in the query hash,
             //so split the prefix out and use only it for the hash
-            let options = z3_options () in
-            let split_decl2smt (pre, suf) x =
-                let xstr = declToSmt options x in
-                match pre, suf with
-                | _, None when x = CheckSat -> pre, Some [xstr]
-                | _, Some s     -> pre, Some (xstr :: s)
-                | None, None    -> Some [xstr], None
-                | Some p, None  -> Some(xstr :: p), None
-                | _ -> failwith "unreachable" in
-            let pl, sl = List.fold_left split_decl2smt (None, None) theory in
-            let ps = String.concat "\n" (List.rev (Option.get pl)) in
-            let ss = String.concat "\n" (List.rev (Option.get sl)) in
+            let prefix, check_sat, suffix =
+                theory |>
+                BU.prefix_until (function CheckSat -> true | _ -> false) |>
+                Option.get
+            in
+            let suffix = check_sat::suffix in
+            let ps = String.concat "\n" (List.map (declToSmt options) prefix) in
+            let ss = String.concat "\n" (List.map (declToSmt options) suffix) in
             ps ^ "\n" ^ ss, Some(BU.digest_of_string ps)
         else
-            List.map (declToSmt (z3_options ())) theory |> String.concat "\n", None
+            List.map (declToSmt options) theory |> String.concat "\n", None
     in
     if Options.log_queries() then query_logging.write_to_log r ;
     r, hash
