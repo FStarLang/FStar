@@ -29,6 +29,7 @@ val concat:  string -> list string -> Tot string
 val compare: string -> string -> Tot int
 val strlen:  string -> Tot nat
 val lowercase:  string -> Tot string
+val uppercase:  string -> Tot string
 
 val index: s:string -> n:nat {n < length s} -> Tot char
 val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot char

@@ -354,8 +354,8 @@ type json =
 | JsonBool of bool
 | JsonInt of int
 | JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
+| JsonList of list<json>
+| JsonAssoc of list<(string * json)>
 
 type printer = {
   printer_prinfo: string -> unit;
@@ -387,6 +387,8 @@ let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
 
 let char_of_int (i:int) = char i
 let int_of_string (s:string) = int_of_string s
+let safe_int_of_string (s:string) =
+  try Some <| int_of_string s with :? System.FormatException -> None
 let int_of_char (s:char) = int32 s
 let int_of_byte (s:byte) = int32 s
 let int_of_uint8 (i:uint8) = int32 i
@@ -864,7 +866,12 @@ let ensure_decimal (s: string) =
   else
     s
 
-
+let measure_execution_time f =
+  let timer = new System.Diagnostics.Stopwatch () in
+  timer.Start();
+  let retv = f () in
+  print1 "Execution time: %s ms" (string_of_int64 timer.ElapsedMilliseconds);
+  retv
 
 (** Hints. *)
 type hint = {
@@ -997,7 +1004,8 @@ let rec json_to_obj js =
   | JsonInt i -> i :> obj
   | JsonStr s -> s :> obj
   | JsonList l -> List.map json_to_obj l :> obj
-  | JsonAssoc a -> dict [ for (k, v) in a -> (k, json_to_obj v) ] :> obj
+  | JsonAssoc a ->
+    Dictionary<string, obj>(dict [ for (k, v) in a -> (k, json_to_obj v) ]) :> obj
 
 let rec obj_to_json (o: obj) : option<json> =
   let rec aux (o : obj) : json =

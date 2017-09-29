@@ -396,6 +396,7 @@ let unicode_of_string (string:string) =
 
 let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
+let safe_int_of_string x = try Some (int_of_string x) with Invalid_argument _ -> None
 let int_of_char x = Z.of_int x
 let int_of_byte x = x
 let int_of_uint8 x = Z.of_int (Char.code x)
@@ -861,6 +862,11 @@ let digest_of_string (s:string) =
 
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
+let measure_execution_time f =
+  let t = Sys.time () in
+  let retv = f () in
+  print1 "Execution time: %s ms\n" (string_of_float (1000.0 *. (Sys.time() -. t)));
+  retv
 
 (** Hints. *)
 type hint = {

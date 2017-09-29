@@ -1766,11 +1766,10 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                         | [] -> decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
                         | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
-                                let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
                                 let name_tok_corr = Util.mkAssume(mkForall([[vtok_app]; [vapp]], vars, mkEq(vtok_app, vapp)),
                                                                 Some "Name-token correspondence",
                                                                 ("token_correspondence_"^vname)) in
-                                decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
+                                decls2@[vtok_decl;name_tok_corr;tok_typing], env in
                 vname_decl::tok_decl, env in
               let encoded_res_t, ty_pred, decls3 =
                    let res_t = SS.compress res_t in

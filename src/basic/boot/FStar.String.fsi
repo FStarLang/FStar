@@ -28,10 +28,10 @@ val compare: s1: string -> s2: string -> Tot<int>
 val strlen:  string -> Tot<nat>
 val length:  string -> Tot<nat>
 val lowercase: string -> Tot<string>
+val uppercase: string -> Tot<string>
 
 (* may fail with index out of bounds *)
-(* Second argument is a length, not an index. *)
-val substring: string -> int -> int -> string
+val substring: string -> start:int -> len:int -> string
 val get: string -> int -> char
 val collect: (char -> string) -> string -> string
 

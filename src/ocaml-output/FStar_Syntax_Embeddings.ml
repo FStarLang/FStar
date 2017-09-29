@@ -364,3 +364,13 @@ let unembed_norm_step: FStar_Syntax_Syntax.term -> norm_step =
              let uu____1058 = unembed_list unembed_string l in
              UnfoldOnly uu____1058
          | uu____1061 -> failwith "not an embedded norm_step")
+let embed_range: FStar_Range.range -> FStar_Syntax_Syntax.term =
+  fun r  ->
+    FStar_Syntax_Syntax.mk
+      (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r))
+      FStar_Pervasives_Native.None r
+let unembed_range: FStar_Syntax_Syntax.term -> FStar_Range.range =
+  fun t  ->
+    match t.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r) -> r
+    | uu____1083 -> failwith "not an embedded range"

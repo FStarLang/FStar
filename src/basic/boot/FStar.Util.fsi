@@ -122,6 +122,7 @@ val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
 val format5: string -> string -> string -> string -> string -> string -> string
+val format6: string -> string -> string -> string -> string -> string -> string -> string
 
 val print: string -> list<string> -> unit
 val print1: string -> string -> unit
@@ -233,6 +234,7 @@ open Prims
 val file_exists: string -> Tot<bool>
 
 val int_of_string: string -> int
+val safe_int_of_string: string -> option<int>
 val int_of_char:   char -> Tot<int>
 val int_of_byte:   byte -> Tot<int>
 val byte_of_char: char -> Tot<byte>
@@ -256,19 +258,18 @@ val string_of_bytes: array<byte> -> Tot<string>
 val bytes_of_string: string -> Tot<array<byte>>
 val starts_with: long:string -> short:string -> Tot<bool>
 val trim_string: string -> Tot<string>
-val ends_with: string -> string -> Tot<bool>
+val ends_with: long:string -> short:string -> Tot<bool>
 val char_at: string -> int -> char
 val is_upper: char -> Tot<bool>
 val contains: string -> string -> Tot<bool>
 val substring_from: string -> int -> string
-(* Second argument is a length, not an index. *)
-val substring: string -> int -> int -> string
+val substring: string -> start:int -> len:int -> string
 val replace_char: string -> char -> char -> Tot<string>
 val replace_chars: string -> char -> string -> Tot<string>
 val hashcode: string -> Tot<int>
 val compare: string -> string -> Tot<int>
 val splitlines: string -> Tot<list<string>>
-val split: string -> string -> Tot<list<string>>
+val split: str:string -> sep:string -> Tot<list<string>>
 
 type either<'a,'b> =
   | Inl of 'a
@@ -399,6 +400,7 @@ val digest_of_file: string -> string
 val digest_of_string: string -> string
 
 val ensure_decimal: string -> string
+val measure_execution_time: (unit -> 'a) -> 'a
 
 (** Hints. *)
 type hint = {

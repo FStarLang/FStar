@@ -15,7 +15,7 @@
 *)
 #light "off"
 
-module FStar.Legacy.Interactive
+module FStar.Interactive.Legacy
 open FStar.ST
 open FStar.All
 open FStar
@@ -47,7 +47,7 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
 
 // Ibid.
 let tc_prims () = //:uenv =
-  let _, dsenv, env = tc_prims () in
+  let _, dsenv, env = tc_prims (init_env ()) in
   (dsenv, env)
 
 
