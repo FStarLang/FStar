@@ -862,10 +862,10 @@ let digest_of_string (s:string) =
 
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
-let measure_execution_time f =
+let measure_execution_time tag f =
   let t = Sys.time () in
   let retv = f () in
-  print1 "Execution time: %s ms\n" (string_of_float (1000.0 *. (Sys.time() -. t)));
+  print2 "Execution time of %s: %s ms\n" tag (string_of_float (1000.0 *. (Sys.time() -. t)));
   retv
 
 (** Hints. *)
