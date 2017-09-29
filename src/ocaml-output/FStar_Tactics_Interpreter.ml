@@ -308,13 +308,13 @@ let rec primitive_steps:
           let uu____1246 =
             let uu____1247 =
               let uu____1248 = FStar_Tactics_Embedding.unembed_proofstate ps1 in
-              FStar_Tactics_Basic.decr_depth uu____1248 in
+              FStar_Tactics_Types.decr_depth uu____1248 in
             FStar_Tactics_Embedding.embed_proofstate uu____1247 in
           FStar_Pervasives_Native.Some uu____1246
       | uu____1249 -> failwith "Unexpected application of decr_depth" in
     let decr_depth_step =
       let uu____1253 =
-        FStar_Ident.lid_of_str "FStar.Tactics.Effect.__decr_depth" in
+        FStar_Ident.lid_of_str "FStar.Tactics.Types.decr_depth" in
       {
         FStar_TypeChecker_Normalize.name = uu____1253;
         FStar_TypeChecker_Normalize.arity = (Prims.parse_int "1");
@@ -327,13 +327,13 @@ let rec primitive_steps:
           let uu____1283 =
             let uu____1284 =
               let uu____1285 = FStar_Tactics_Embedding.unembed_proofstate ps1 in
-              FStar_Tactics_Basic.incr_depth uu____1285 in
+              FStar_Tactics_Types.incr_depth uu____1285 in
             FStar_Tactics_Embedding.embed_proofstate uu____1284 in
           FStar_Pervasives_Native.Some uu____1283
       | uu____1286 -> failwith "Unexpected application of incr_depth" in
     let incr_depth_step =
       let uu____1290 =
-        FStar_Ident.lid_of_str "FStar.Tactics.Effect.__incr_depth" in
+        FStar_Ident.lid_of_str "FStar.Tactics.Types.incr_depth" in
       {
         FStar_TypeChecker_Normalize.name = uu____1290;
         FStar_TypeChecker_Normalize.arity = (Prims.parse_int "1");
@@ -344,11 +344,11 @@ let rec primitive_steps:
       match args with
       | (ps1,uu____1307)::[] ->
           ((let uu____1325 = FStar_Tactics_Embedding.unembed_proofstate ps1 in
-            FStar_Tactics_Basic.tracepoint uu____1325);
+            FStar_Tactics_Types.tracepoint uu____1325);
            FStar_Pervasives_Native.Some FStar_Syntax_Util.exp_unit)
       | uu____1328 -> failwith "Unexpected application of tracepoint" in
     let tracepoint_step =
-      let nm = FStar_Ident.lid_of_str "FStar.Tactics.Effect.__tracepoint" in
+      let nm = FStar_Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
       {
         FStar_TypeChecker_Normalize.name = nm;
         FStar_TypeChecker_Normalize.arity = (Prims.parse_int "1");
