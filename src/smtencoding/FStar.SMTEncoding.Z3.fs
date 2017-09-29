@@ -517,17 +517,18 @@ let mk_input theory =
             //that vary depending on some user options (e.g., record_hints etc.)
             //They should not be included in the query hash,
             //so split the prefix out and use only it for the hash
+            let options = z3_options () in
             let split_decl2smt (pre, suf) x =
-                let xstr = declToSmt (z3_options ()) x in
+                let xstr = declToSmt options x in
                 match pre, suf with
                 | _, None when x = CheckSat -> pre, Some [xstr]
-                | _, Some s     -> pre, Some(s @ [xstr])
+                | _, Some s     -> pre, Some (xstr :: s)
                 | None, None    -> Some [xstr], None
-                | Some p, None  -> Some(p @ [xstr]), None
+                | Some p, None  -> Some(xstr :: p), None
                 | _ -> failwith "unreachable" in
             let pl, sl = List.fold_left split_decl2smt (None, None) theory in
-            let ps = String.concat "\n" (Option.get pl) in
-            let ss = String.concat "\n" (Option.get sl) in
+            let ps = String.concat "\n" (List.rev (Option.get pl)) in
+            let ss = String.concat "\n" (List.rev (Option.get sl)) in
             ps ^ "\n" ^ ss, Some(BU.digest_of_string ps)
         else
             List.map (declToSmt (z3_options ())) theory |> String.concat "\n", None
