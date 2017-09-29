@@ -36,6 +36,8 @@ module DsEnv = FStar.ToSyntax.Env
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
+exception ExitREPL of int
+
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
 let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * modul option * string list) =
@@ -429,7 +431,7 @@ let unpack_interactive_query json =
 let read_interactive_query stream : query =
   try
     match Util.read_line stream with
-    | None -> exit 0
+    | None -> raise (ExitREPL 0)
     | Some line ->
       match Util.json_of_string line with
       | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
@@ -1169,13 +1171,19 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = MissingCurrentModule }
         | _ -> q
 
-let rec go st : unit =
-  let query = validate_query st (read_interactive_query st.repl_stdin) in
-  let (status, response), state_opt = run_query st query.qq in
-  write_response query.qid status response;
-  match state_opt with
-  | Inl st' -> go st'
-  | Inr exitcode -> exit exitcode
+let rec go st : int =
+  let rec loop st : int =
+    let query = validate_query st (read_interactive_query st.repl_stdin) in
+    let (status, response), state_opt = run_query st query.qq in
+    write_response query.qid status response;
+    match state_opt with
+    | Inl st' -> loop st'
+    | Inr exitcode -> raise (ExitREPL exitcode) in
+
+  if Options.trace_error () then
+    loop st
+  else
+    try loop st with ExitREPL n -> n
 
 let interactive_error_handler = // No printing here — collect everything for future use
   let issues : ref<list<issue>> = Util.mk_ref [] in
@@ -1252,10 +1260,12 @@ let interactive_mode' (filename: string): unit =
       repl_stdin = open_stdin ();
       repl_names = commit_name_tracking None initial_names name_events } in
 
-  if FStar.Options.record_hints() || FStar.Options.use_hints() then
-    FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
-  else
-    go init_st
+  let exit_code =
+    if FStar.Options.record_hints() || FStar.Options.use_hints() then
+      FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
+    else
+      go init_st in
+  exit exit_code
 
 let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
