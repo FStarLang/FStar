@@ -377,11 +377,12 @@ type job<'a> = {
     callback: 'a -> unit
 }
 
-type z3result =
-      z3status
-    * int
-    * z3statistics
-    * option<string> // query hash
+type z3result = {
+      z3result_status      : z3status;
+      z3result_time        : int;
+      z3result_statistics  : z3statistics;
+      z3result_query_hash  : option<string>
+}
 
 type z3job = job<z3result>
 
@@ -398,7 +399,10 @@ let z3_job fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
   let status, statistics = doZ3Exe fresh input label_messages in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
-  status, elapsed_time, statistics, qhash
+  { z3result_status     = status;
+    z3result_time       = elapsed_time;
+    z3result_statistics = statistics;
+    z3result_query_hash = qhash }
 
 let running = BU.mk_ref false
 
@@ -505,22 +509,29 @@ let refresh () =
 
 let mk_input theory =
     let r, hash =
-        if Options.record_hints() || (Options.use_hints() && Options.use_hint_hashes()) then (
+        if Options.record_hints()
+        || (Options.use_hints() && Options.use_hint_hashes()) then
+            //the suffix of a "theory" that follows the "CheckSat" call
+            //contains semantically irrelevant things
+            //(e.g., get-model, get-statistics etc.)
+            //that vary depending on some user options (e.g., record_hints etc.)
+            //They should not be included in the query hash,
+            //so split the prefix out and use only it for the hash
             let split_decl2smt (pre, suf) x =
                 let xstr = declToSmt (z3_options ()) x in
                 match pre, suf with
-                | _, None when x = CheckSat -> (pre, Some([xstr]))
-                | _, Some(s)    -> (pre, Some(s @ [xstr]))
-                | None, None    -> (Some([xstr]), None)
-                | Some(p), None -> (Some(p @ [xstr]), None)
+                | _, None when x = CheckSat -> pre, Some [xstr]
+                | _, Some s     -> pre, Some(s @ [xstr])
+                | None, None    -> Some [xstr], None
+                | Some p, None  -> Some(p @ [xstr]), None
                 | _ -> failwith "unreachable" in
             let pl, sl = List.fold_left split_decl2smt (None, None) theory in
-            let ps = (String.concat "\n" (Option.get pl)) in
-            let ss = (String.concat "\n" (Option.get sl)) in
-            ps ^ "\n" ^ ss, Some(BU.digest_of_string ps))
+            let ps = String.concat "\n" (Option.get pl) in
+            let ss = String.concat "\n" (Option.get sl) in
+            ps ^ "\n" ^ ss, Some(BU.digest_of_string ps)
         else
             List.map (declToSmt (z3_options ())) theory |> String.concat "\n", None
-            in
+    in
     if Options.log_queries() then query_logging.write_to_log r ;
     r, hash
 
@@ -535,13 +546,14 @@ let cache_hit
         | Some (x) when qhash = (fst cache) ->
             let stats : z3statistics = BU.smap_create 0 in
             smap_add stats "fstar_cache_hit" "1";
-            cb (UNSAT (snd cache), 0, stats, qhash);
+            let result = {
+              z3result_status = UNSAT (snd cache);
+              z3result_time = 0;
+              z3result_statistics = stats;
+              z3result_query_hash = qhash
+            } in
+            cb result;
             true
-        //| Some(x) ->
-        //    (match (fst cache) with
-        //    | Some (y) -> print2 "Cache miss: %s != %s\n" x y
-        //    | _ -> print1 "Cache miss: %s != None\n" x);
-        //    false
         | _ ->
             false
     else

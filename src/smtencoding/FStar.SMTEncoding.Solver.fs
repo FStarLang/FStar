@@ -181,7 +181,7 @@ type query_settings = {
     query_fuel:int;
     query_ifuel:int;
     query_rlimit:int;
-    query_hint:unsat_core;
+    query_hint:Z3.unsat_core;
     query_errors:list<errors>;
     query_all_labels:error_labels;
     query_suffix:list<decl>;
@@ -222,11 +222,11 @@ let next_hint ({query_name=qname; query_index=qindex}) =
         | _ -> None)
     | _ -> None
 
-let query_errors settings (z3status, elapsed_time, stats, hash) =
-    match z3status with
+let query_errors settings z3result =
+    match z3result.z3result_status with
     | UNSAT _ -> None
     | _ ->
-     let msg, error_labels = Z3.status_string_and_errors z3status in
+     let msg, error_labels = Z3.status_string_and_errors z3result.z3result_status in
      let err =  {
             error_reason = msg;
             error_fuel = settings.query_fuel;
@@ -237,10 +237,10 @@ let query_errors settings (z3status, elapsed_time, stats, hash) =
      in
      Some err
 
-let detail_hint_replay settings (z3status, _, _, _) =
+let detail_hint_replay settings z3result =
     if used_hint settings
     && Options.detail_hint_replay ()
-    then match z3status with
+    then match z3result.z3result_status with
          | UNSAT _ -> ()
          | _failed ->
            let ask_z3 label_assumptions =
@@ -302,9 +302,8 @@ let query_info settings z3result =
     if Options.hint_info()
     || Options.print_z3_statistics()
     then begin
-        let z3status, elapsed_time, statistics, _ = z3result in
-        let status_string, errs = Z3.status_string_and_errors z3status in
-        let tag = match z3status with
+        let status_string, errs = Z3.status_string_and_errors z3result.z3result_status in
+        let tag = match z3result.z3result_status with
          | UNSAT _ -> "succeeded"
          | _ -> "failed {reason-unknown=" ^ status_string ^ "}"in
         let range = "(" ^ (Range.string_of_range settings.query_range) ^ at_log_file() ^ ")" in
@@ -312,7 +311,7 @@ let query_info settings z3result =
         let stats =
             if Options.print_z3_statistics() then
                 let f k v a = a ^ k ^ "=" ^ v ^ " " in
-                let str = smap_fold statistics f "statistics={" in
+                let str = smap_fold z3result.z3result_statistics f "statistics={" in
                     (substring str 0 ((String.length str) - 1)) ^ "}"
             else "" in
         BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
@@ -321,7 +320,7 @@ let query_info settings z3result =
                 BU.string_of_int settings.query_index;
                 tag;
                 used_hint_tag;
-                BU.string_of_int elapsed_time;
+                BU.string_of_int z3result.z3result_time;
                 BU.string_of_int settings.query_fuel;
                 BU.string_of_int settings.query_ifuel;
                 BU.string_of_int settings.query_rlimit;
@@ -335,7 +334,6 @@ let query_info settings z3result =
 let record_hint settings z3result =
     if not (Options.record_hints()) then () else
     begin
-      let z3status, _, z3stats, query_hash = z3result in
       let mk_hint core = {
                   hint_name=settings.query_name;
                   hint_index=settings.query_index;
@@ -343,7 +341,9 @@ let record_hint settings z3result =
                   ifuel=settings.query_ifuel;
                   unsat_core=core;
                   query_elapsed_time=0; //recording the elapsed_time prevents us from reaching a fixed point
-                  hash=match z3status with | UNSAT core -> query_hash | _ -> None
+                  hash=(match z3result.z3result_status with
+                        | UNSAT core -> z3result.z3result_query_hash
+                        | _ -> None)
           }
       in
       let store_hint hint =
@@ -351,7 +351,7 @@ let record_hint settings z3result =
           | Some l -> recorded_hints := Some (l@[Some hint])
           | _ -> assert false; ()
       in
-      match z3status with
+      match z3result.z3result_status with
       | UNSAT unsat_core ->
         if used_hint settings //if we already successfully use a hint
         then store_hint (mk_hint settings.query_hint) //just re-use the successful hint

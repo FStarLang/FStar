@@ -937,10 +937,13 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
                     ifuel=ha.[3] :?> int;
                     unsat_core=unsat_core_from_json_unsat_core ha.[4];
                     query_elapsed_time=ha.[5] :?> int;
-                    hash=if ((Array.length ha) >= 7) then
+                  (* This conditional below is for dealing with old-style hint files
+                     that lack a query-hashes field. We should remove this
+                     case once we definitively remove support for old hints *)
+                    hash=(if ((Array.length ha) >= 7) then
                             let h = (ha.[6] :?> System.String) in
                             if h <> "" then Some(h) else None
-                         else None
+                          else None)
                 } in
     let hints_from_json_hints (hs : System.Object) =
         let hint_list =
