@@ -70,7 +70,7 @@ let repeat1 (#a:Type) (t : tactic a) : tactic (list a) =
 let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
     (trytac (seq (t;; return ()) (repeatseq t));; return ()) ()
 
-let simpl : tactic unit = norm [simpl; primops]
+let simpl : tactic unit = norm [simplify; primops]
 let whnf  : tactic unit = norm [whnf; primops]
 
 let intros : tactic (list binder) = repeat intro

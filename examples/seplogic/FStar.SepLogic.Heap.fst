@@ -5,91 +5,63 @@ include FStar.Heap
 type addr = ref int
 
 abstract let restrict (h:heap) (r:addr) :heap
-  = admit ()
+  = admit()
 
 abstract let minus (h:heap) (r:addr) :heap
-  = admit ()
+  = admit()
 
 abstract let disjoint_from (h1:heap) (h2:heap) :Type0
-  = admit ()
+  = admit()
 
 abstract let join (h1:heap) (h2:heap) :heap
-  = admit ()
+  = admit()
 
 abstract let points_to (r:addr) (x:int) :heap
-  = admit ()
+  = admit()
 
-abstract let sel (h:heap) (r:addr) :Tot int
-  = admit ()
-
-let lemma_join_restrict_minus (r:addr) (h:heap)
+let lemma0 (r:addr) (h:heap)
   :Lemma (requires True)
          (ensures  (join (restrict h r) (minus h r) == h))
-	 [SMTPat (join (restrict h r) (minus h r))]
   = admit ()
-
-let lemma_join_is_comm (h1:heap) (h2:heap)
+  
+let lemma1 (r:addr) (x:int) (h:heap)
   :Lemma (requires True)
-         (ensures (join h1 h2) == (join h2 h1))
-	 [SMTPat (join h1 h2)]
-  = admit ()
+         (ensures ((r `points_to` x) `join` (h `minus` r)) == h)
+	 [SMTPat ((r `points_to` x) `join` (h `minus` r))]
+  = admit()
 
-let lemma_disjoint_is_comm (h1:heap) (h2:heap)
+let lemma2 (h1:heap) (h2:heap)
   :Lemma (requires True)
-         (ensures (disjoint_from h1 h2) == (disjoint_from h2 h1))
-	 [SMTPat (disjoint_from h1 h2)]
-  = admit ()
+         (ensures (h1 `join` h2) == (h2 `join` h1))
+	 [SMTPat (h1 `join` h2)]
+  = admit()
 
-let lemma_sel_r_from_points_to_join_h (r:addr) (x:int) (h1:heap)
+let lemma3 (h1:heap) (h2:heap)
   :Lemma (requires True)
-         (ensures sel (join (points_to r x) h1) r == x)
-	 [SMTPat (sel (join (points_to r x) h1) r)]
-  = admit ()
+         (ensures (h1 `disjoint_from` h2) == (h2 `disjoint_from` h1))
+	 [SMTPat (h1 `disjoint_from` h2)]
+  = admit()
 
-let lemma_sel_r1_from_points_to_join_h (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:int) (h1:heap)
+let lemma4 (r:addr) (x:int) (h1:heap)
   :Lemma (requires True)
-         (ensures sel (join (points_to r x) h1) r1 == sel h1 r1)
-	 [SMTPat (sel (join (points_to r x) h1) r1)]
-  = admit ()
+         (ensures sel ((r `points_to` x) `join` h1) r == x)
+	 [SMTPat (sel ((r `points_to` x) `join` h1) r)]
+  = admit()
 
-let lemma_join_h_emp (h:heap)
+let lemma5 (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:int) (h1:heap)
   :Lemma (requires True)
-         (ensures (join h emp) == h)
-	 [SMTPat (join h emp)]
-  = admit ()
+         (ensures sel ((r `points_to` x) `join` h1) r1 == sel h1 r1)
+	 [SMTPat (sel ((r `points_to` x) `join` h1) r1)]
+  = admit()
 
-let lemma_restrict_eq_points_to (r:addr) (h:heap)
+let lemma6 (h:heap)
   :Lemma (requires True)
-         (ensures (restrict h r) == (points_to r (sel h r)))
-	 [SMTPat (restrict h r)]
-  = admit ()
+         (ensures h `join` emp == h)
+	 [SMTPat (h `join` emp)]
+  = admit()
 
-let lemma_points_to_is_injective (r:addr) (x:int) (y:int)
-  :Lemma (requires (points_to r x == points_to r y))
-         (ensures  (x == y))
-	 [SMTPat (points_to r x); SMTPat (points_to r y)]
-  = admit ()
-
-let lemma_sel_r_from_minus (r:addr) (r1:addr{addr_of r1 <> addr_of r})(h:heap)
+let lemma7 (r:addr) (h:heap)
   :Lemma (requires True)
-         (ensures sel (minus h r1) r == sel h r)
-         [SMTPat (sel (minus h r1) r)]
-  = admit ()
-
-let lemma_restrict_points_to_join_h_to_r (r:addr) (x:int) (h1:heap)
-  :Lemma (requires True)
-         (ensures restrict (join (points_to r x) h1) r == (points_to r x))
-         [SMTPat (restrict (join (points_to r x) h1) r)]
-  = admit ()
-
-let lemma_restrict_points_to_join_h_to_r1 (r:addr) (r1:addr{addr_of r1 <> addr_of r})(x:int) (h1:heap)
-  :Lemma (requires True)
-         (ensures restrict (join (points_to r x) h1) r1 == restrict h1 r1)
-	 [SMTPat (restrict (join (points_to r x) h1) r1)]
-  = admit ()
-
-let lemma_restrict_h_join_minus_to_r (r:addr) (h1:heap) (h2:heap)
-  :Lemma (requires True)
-         (ensures restrict (join h1 (minus h2 r)) r == restrict h1 r)
-	 [SMTPat (restrict (join h1 (minus h2 r)) r)]
-  = admit ()
+         (ensures (h `restrict` r) == (r `points_to` (sel h r)))
+	 [SMTPat (h `restrict` r)]
+  = admit()

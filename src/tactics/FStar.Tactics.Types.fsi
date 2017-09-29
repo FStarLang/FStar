@@ -30,4 +30,5 @@ type proofstate = {
     all_implicits: implicits ;   //all the implicits currently open, partially resolved (unclear why we really need this)
     goals        : list<goal>;   //all the goals remaining to be solved
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
+    depth        : int;          //depth for tracing and debugging
 }

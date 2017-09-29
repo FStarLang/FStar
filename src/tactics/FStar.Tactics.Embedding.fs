@@ -50,7 +50,7 @@ let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;
 let embed_proofstate (ps:proofstate) : term =
     U.mk_alien ps "tactics.embed_proofstate" None
 
-let unembed_proofstate (ps:proofstate) (t:term) : proofstate =
+let unembed_proofstate (t:term) : proofstate =
     U.un_alien t |> FStar.Dyn.undyn
 
 let mk_app hd args =
@@ -92,10 +92,10 @@ let unembed_result (ps:proofstate) (res:term) (unembed_a:term -> 'a) : either<('
     match hd'_and_args res with
     | Tm_fvar fv, [_t; (tuple2, _)] when S.fv_eq_lid fv fstar_tactics_Success_lid ->
       let embedded_a, embedded_ps = tuple2_elements tuple2 in
-      Inl (unembed_a embedded_a, unembed_proofstate ps embedded_ps)
+      Inl (unembed_a embedded_a, unembed_proofstate embedded_ps)
     | Tm_fvar fv, [_t; (tuple2, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
       let embedded_msg, embedded_ps = tuple2_elements tuple2 in
-      Inr (unembed_string embedded_msg, unembed_proofstate ps embedded_ps)
+      Inr (unembed_string embedded_msg, unembed_proofstate embedded_ps)
     | _ ->
       failwith (BU.format1 "Expected Result.Success or Result.Failed applied to a single argument, got %s"
                            (Print.term_to_string res))
