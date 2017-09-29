@@ -504,27 +504,25 @@ let refresh () =
         bg_scope := List.flatten (List.rev !fresh_scope)
 
 let mk_input theory =
-    let query_hash =
+    let r, hash =
         if Options.record_hints() || (Options.use_hints() && Options.use_hint_hashes()) then (
-            let ft = (fun x -> match x with
-                | Echo _
-                | Eval _
-                | CheckSat
-                | GetUnsatCore
-                | SetOption _
-                | GetStatistics
-                | GetReasonUnknown -> false
-                | _ -> true) in
-            let hash_content = List.filter ft theory in
-            let hash_strs = List.map (declToSmt (z3_options ())) hash_content in
-            let hash_str = String.concat "\n" hash_strs in
-            Some(BU.digest_of_string hash_str))
+            let split_decl2smt (pre, suf) x =
+                let xstr = declToSmt (z3_options ()) x in
+                match pre, suf with
+                | _, None when x = CheckSat -> (pre, Some([xstr]))
+                | _, Some(s)    -> (pre, Some(s @ [xstr]))
+                | None, None    -> (Some([xstr]), None)
+                | Some(p), None -> (Some(p @ [xstr]), None)
+                | _ -> failwith "unreachable" in
+            let pl, sl = List.fold_left split_decl2smt (None, None) theory in
+            let ps = (String.concat "\n" (Option.get pl)) in
+            let ss = (String.concat "\n" (Option.get sl)) in
+            ps ^ "\n" ^ ss, Some(BU.digest_of_string ps))
         else
-            None in
-    let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
+            List.map (declToSmt (z3_options ())) theory |> String.concat "\n", None
+            in
     if Options.log_queries() then query_logging.write_to_log r ;
-    r, query_hash
-
+    r, hash
 
 type cb = z3result -> unit
 
@@ -541,8 +539,8 @@ let cache_hit
             true
         //| Some(x) ->
         //    (match (fst cache) with
-        //    | Some (y) -> print2 "%s != %s\n" x y
-        //    | _ -> print1 "%s != None\n" x);
+        //    | Some (y) -> print2 "Cache miss: %s != %s\n" x y
+        //    | _ -> print1 "Cache miss: %s != None\n" x);
         //    false
         | _ ->
             false

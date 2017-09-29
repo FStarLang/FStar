@@ -832,7 +832,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "use_hint_hashes",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Admit queries if their hash matches the hash recorded in the hints database");
 
        ( noshort,
