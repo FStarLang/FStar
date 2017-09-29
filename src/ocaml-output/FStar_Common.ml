@@ -2,7 +2,7 @@
 open Prims
 open FStar_Pervasives
 
-let has_cygpath : Prims.bool = (FStar_All.try_with (fun uu___46_6 -> (match (()) with
+let has_cygpath : Prims.bool = (FStar_All.try_with (fun uu___45_6 -> (match (()) with
 | () -> begin
 (
 
@@ -11,7 +11,7 @@ in (match (uu____7) with
 | (uu____14, t_out, uu____16) -> begin
 (Prims.op_Equality (FStar_Util.trim_string t_out) "/usr/bin/cygpath")
 end))
-end)) (fun uu___45_19 -> (match (uu___45_19) with
+end)) (fun uu___44_19 -> (match (uu___44_19) with
 | uu____20 -> begin
 false
 end)))

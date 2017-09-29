@@ -347,111 +347,200 @@ let embed_string_list : Prims.string Prims.list  ->  FStar_Syntax_Syntax.term = 
 let unembed_string_list : FStar_Syntax_Syntax.term  ->  Prims.string Prims.list = (fun t -> (unembed_list unembed_string t))
 
 type norm_step =
-  | Simpl
-  | WHNF
-  | Primops
-  | Delta
-  | Zeta
-  | Iota
-  | UnfoldOnly of Prims.string Prims.list[@@deriving show]
-let uu___is_Simpl: norm_step -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Simpl  -> true | uu____813 -> false
-let uu___is_WHNF: norm_step -> Prims.bool =
-  fun projectee  -> match projectee with | WHNF  -> true | uu____818 -> false
-let uu___is_Primops: norm_step -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Primops  -> true | uu____823 -> false
-let uu___is_Delta: norm_step -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Delta  -> true | uu____828 -> false
-let uu___is_Zeta: norm_step -> Prims.bool =
-  fun projectee  -> match projectee with | Zeta  -> true | uu____833 -> false
-let uu___is_Iota: norm_step -> Prims.bool =
-  fun projectee  -> match projectee with | Iota  -> true | uu____838 -> false
-let uu___is_UnfoldOnly: norm_step -> Prims.bool =
-  fun projectee  ->
-    match projectee with | UnfoldOnly _0 -> true | uu____846 -> false
-let __proj__UnfoldOnly__item___0: norm_step -> Prims.string Prims.list =
-  fun projectee  -> match projectee with | UnfoldOnly _0 -> _0
-let steps_Simpl: FStar_Syntax_Syntax.term =
-  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_simpl
-let steps_WHNF: FStar_Syntax_Syntax.term =
-  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_whnf
-let steps_Primops: FStar_Syntax_Syntax.term =
-  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_primops
-let steps_Delta: FStar_Syntax_Syntax.term =
-  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_delta
-let steps_Zeta: FStar_Syntax_Syntax.term =
-  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_zeta
-let steps_Iota: FStar_Syntax_Syntax.term =
-  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_iota
-let steps_UnfoldOnly: FStar_Syntax_Syntax.term =
-  FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_unfoldonly
-let embed_norm_step: norm_step -> FStar_Syntax_Syntax.term =
-  fun n1  ->
-    match n1 with
-    | Simpl  -> steps_Simpl
-    | WHNF  -> steps_WHNF
-    | Primops  -> steps_Primops
-    | Delta  -> steps_Delta
-    | Zeta  -> steps_Zeta
-    | Iota  -> steps_Iota
-    | UnfoldOnly l ->
-        let uu____868 =
-          let uu____869 =
-            let uu____870 =
-              let uu____871 =
-                embed_list embed_string FStar_Syntax_Syntax.t_string l in
-              FStar_Syntax_Syntax.as_arg uu____871 in
-            [uu____870] in
-          FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldOnly uu____869 in
-        uu____868 FStar_Pervasives_Native.None FStar_Range.dummyRange
-let unembed_norm_step: FStar_Syntax_Syntax.term -> norm_step =
-  fun t  ->
-    let t1 = FStar_Syntax_Util.unascribe t in
-    let uu____879 = FStar_Syntax_Util.head_and_args t1 in
-    match uu____879 with
-    | (hd1,args) ->
-        let uu____916 =
-          let uu____929 =
-            let uu____930 = FStar_Syntax_Util.un_uinst hd1 in
-            uu____930.FStar_Syntax_Syntax.n in
-          (uu____929, args) in
-        (match uu____916 with
-         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
-             FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_simpl
-             -> Simpl
-         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
-             FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_whnf
-             -> WHNF
-         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
-             FStar_Syntax_Syntax.fv_eq_lid fv
-               FStar_Parser_Const.steps_primops
-             -> Primops
-         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
-             FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_delta
-             -> Delta
-         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
-             FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_zeta
-             -> Zeta
-         | (FStar_Syntax_Syntax.Tm_fvar fv,[]) when
-             FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_iota
-             -> Iota
-         | (FStar_Syntax_Syntax.Tm_fvar fv,(l,uu____1033)::[]) when
-             FStar_Syntax_Syntax.fv_eq_lid fv
-               FStar_Parser_Const.steps_unfoldonly
-             ->
-             let uu____1058 = unembed_list unembed_string l in
-             UnfoldOnly uu____1058
-         | uu____1061 -> failwith "not an embedded norm_step")
-let embed_range: FStar_Range.range -> FStar_Syntax_Syntax.term =
-  fun r  ->
-    FStar_Syntax_Syntax.mk
-      (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r))
-      FStar_Pervasives_Native.None r
-let unembed_range: FStar_Syntax_Syntax.term -> FStar_Range.range =
-  fun t  ->
-    match t.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r) -> r
-    | uu____1083 -> failwith "not an embedded range"
+| Simpl
+| WHNF
+| Primops
+| Delta
+| Zeta
+| Iota
+| UnfoldOnly of Prims.string Prims.list
+
+
+let uu___is_Simpl : norm_step  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Simpl -> begin
+true
+end
+| uu____813 -> begin
+false
+end))
+
+
+let uu___is_WHNF : norm_step  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| WHNF -> begin
+true
+end
+| uu____818 -> begin
+false
+end))
+
+
+let uu___is_Primops : norm_step  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Primops -> begin
+true
+end
+| uu____823 -> begin
+false
+end))
+
+
+let uu___is_Delta : norm_step  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Delta -> begin
+true
+end
+| uu____828 -> begin
+false
+end))
+
+
+let uu___is_Zeta : norm_step  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Zeta -> begin
+true
+end
+| uu____833 -> begin
+false
+end))
+
+
+let uu___is_Iota : norm_step  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Iota -> begin
+true
+end
+| uu____838 -> begin
+false
+end))
+
+
+let uu___is_UnfoldOnly : norm_step  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| UnfoldOnly (_0) -> begin
+true
+end
+| uu____846 -> begin
+false
+end))
+
+
+let __proj__UnfoldOnly__item___0 : norm_step  ->  Prims.string Prims.list = (fun projectee -> (match (projectee) with
+| UnfoldOnly (_0) -> begin
+_0
+end))
+
+
+let steps_Simpl : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_simpl)
+
+
+let steps_WHNF : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_whnf)
+
+
+let steps_Primops : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_primops)
+
+
+let steps_Delta : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_delta)
+
+
+let steps_Zeta : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_zeta)
+
+
+let steps_Iota : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_iota)
+
+
+let steps_UnfoldOnly : FStar_Syntax_Syntax.term = (FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.steps_unfoldonly)
+
+
+let embed_norm_step : norm_step  ->  FStar_Syntax_Syntax.term = (fun n1 -> (match (n1) with
+| Simpl -> begin
+steps_Simpl
+end
+| WHNF -> begin
+steps_WHNF
+end
+| Primops -> begin
+steps_Primops
+end
+| Delta -> begin
+steps_Delta
+end
+| Zeta -> begin
+steps_Zeta
+end
+| Iota -> begin
+steps_Iota
+end
+| UnfoldOnly (l) -> begin
+(
+
+let uu____868 = (
+
+let uu____869 = (
+
+let uu____870 = (
+
+let uu____871 = (embed_list embed_string FStar_Syntax_Syntax.t_string l)
+in (FStar_Syntax_Syntax.as_arg uu____871))
+in (uu____870)::[])
+in (FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldOnly uu____869))
+in (uu____868 FStar_Pervasives_Native.None FStar_Range.dummyRange))
+end))
+
+
+let unembed_norm_step : FStar_Syntax_Syntax.term  ->  norm_step = (fun t -> (
+
+let t1 = (FStar_Syntax_Util.unascribe t)
+in (
+
+let uu____879 = (FStar_Syntax_Util.head_and_args t1)
+in (match (uu____879) with
+| (hd1, args) -> begin
+(
+
+let uu____916 = (
+
+let uu____929 = (
+
+let uu____930 = (FStar_Syntax_Util.un_uinst hd1)
+in uu____930.FStar_Syntax_Syntax.n)
+in ((uu____929), (args)))
+in (match (uu____916) with
+| (FStar_Syntax_Syntax.Tm_fvar (fv), []) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_simpl) -> begin
+Simpl
+end
+| (FStar_Syntax_Syntax.Tm_fvar (fv), []) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_whnf) -> begin
+WHNF
+end
+| (FStar_Syntax_Syntax.Tm_fvar (fv), []) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_primops) -> begin
+Primops
+end
+| (FStar_Syntax_Syntax.Tm_fvar (fv), []) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_delta) -> begin
+Delta
+end
+| (FStar_Syntax_Syntax.Tm_fvar (fv), []) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_zeta) -> begin
+Zeta
+end
+| (FStar_Syntax_Syntax.Tm_fvar (fv), []) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_iota) -> begin
+Iota
+end
+| (FStar_Syntax_Syntax.Tm_fvar (fv), ((l, uu____1033))::[]) when (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.steps_unfoldonly) -> begin
+(
+
+let uu____1058 = (unembed_list unembed_string l)
+in UnfoldOnly (uu____1058))
+end
+| uu____1061 -> begin
+(failwith "not an embedded norm_step")
+end))
+end))))
+
+
+let embed_range : FStar_Range.range  ->  FStar_Syntax_Syntax.term = (fun r -> (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range (r))) FStar_Pervasives_Native.None r))
+
+
+let unembed_range : FStar_Syntax_Syntax.term  ->  FStar_Range.range = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
+| FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range (r)) -> begin
+r
+end
+| uu____1083 -> begin
+(failwith "not an embedded range")
+end))
+
+
+
+
