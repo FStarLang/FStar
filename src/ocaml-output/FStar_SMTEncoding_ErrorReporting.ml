@@ -719,14 +719,12 @@ let detail_errors:
                      FStar_All.pipe_left elim
                        (FStar_List.append eliminated
                           (FStar_List.append errors tl1)) in
-                   let uu____2249 = askZ3 decls in
-                   match uu____2249 with
-                   | (result,uu____2263,uu____2264,uu____2265) ->
-                       (match result with
-                        | FStar_SMTEncoding_Z3.UNSAT uu____2282 ->
-                            linear_check (hd1 :: eliminated) errors tl1
-                        | uu____2283 ->
-                            linear_check eliminated (hd1 :: errors) tl1)))) in
+                   let result = askZ3 decls in
+                   match result.FStar_SMTEncoding_Z3.z3result_status with
+                   | FStar_SMTEncoding_Z3.UNSAT uu____2262 ->
+                       linear_check (hd1 :: eliminated) errors tl1
+                   | uu____2263 ->
+                       linear_check eliminated (hd1 :: errors) tl1))) in
           print_banner ();
           FStar_Options.set_option "z3rlimit"
             (FStar_Options.Int (Prims.parse_int "5"));
