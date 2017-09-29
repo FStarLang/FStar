@@ -721,11 +721,11 @@ let detail_errors:
                           (FStar_List.append errors tl1)) in
                    let uu____2249 = askZ3 decls in
                    match uu____2249 with
-                   | (result,uu____2263,uu____2264) ->
+                   | (result,uu____2263,uu____2264,uu____2265) ->
                        (match result with
-                        | FStar_SMTEncoding_Z3.UNSAT uu____2277 ->
+                        | FStar_SMTEncoding_Z3.UNSAT uu____2282 ->
                             linear_check (hd1 :: eliminated) errors tl1
-                        | uu____2278 ->
+                        | uu____2283 ->
                             linear_check eliminated (hd1 :: errors) tl1)))) in
           print_banner ();
           FStar_Options.set_option "z3rlimit"
