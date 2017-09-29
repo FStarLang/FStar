@@ -94,6 +94,10 @@ type env
 //  remaining_iface_decls:BU.smap<(list<Parser.AST.decl>)>
 //  syntax_only:          bool;                             (* Whether next push should skip type-checking *)
 //}
+type dsenv_hooks =
+  { ds_push_open_hook : env -> open_module_or_namespace -> unit;
+    ds_push_include_hook : env -> lident -> unit;
+    ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
 type foundname =
   | Term_name of typ * bool // indicates if mutable
@@ -102,6 +106,8 @@ type foundname =
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
+val ds_hooks : env -> dsenv_hooks
+val set_ds_hooks: env -> dsenv_hooks -> env
 val syntax_only: env -> bool
 val set_syntax_only: env -> bool -> env
 val qualify: env -> ident -> lident
@@ -114,6 +120,7 @@ val set_expect_typ: env -> bool -> env
 val empty_env: unit -> env
 val current_module: env -> lident
 val set_current_module: env -> lident -> env
+val open_modules_and_namespaces: env -> list<lident>
 val iface_decls : env -> lident -> option<(list<Parser.AST.decl>)>
 val set_iface_decls: env -> lident -> list<Parser.AST.decl> -> env
 val try_lookup_id: env -> ident -> option<(term*bool)>

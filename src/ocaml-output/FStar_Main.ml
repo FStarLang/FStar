@@ -1,5 +1,5 @@
 open Prims
-let uu___241: Prims.unit = FStar_Version.dummy ()
+let uu___270: Prims.unit = FStar_Version.dummy ()
 let process_args:
   Prims.unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -198,8 +198,8 @@ let go: 'Auu____391 . 'Auu____391 -> Prims.unit =
                       (let uu____463 = FStar_Options.legacy_interactive () in
                        if uu____463
                        then
-                         FStar_Legacy_Interactive.interactive_mode filename
-                       else FStar_Interactive.interactive_mode filename)))
+                         FStar_Interactive_Legacy.interactive_mode filename
+                       else FStar_Interactive_Ide.interactive_mode filename)))
                   else
                     (let uu____466 = FStar_Options.doc () in
                      if uu____466

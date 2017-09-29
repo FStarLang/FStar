@@ -8374,7 +8374,9 @@ let resolve_implicits':
                                   FStar_TypeChecker_Env.is_native_tactic =
                                     (uu___193_23146.FStar_TypeChecker_Env.is_native_tactic);
                                   FStar_TypeChecker_Env.identifier_info =
-                                    (uu___193_23146.FStar_TypeChecker_Env.identifier_info)
+                                    (uu___193_23146.FStar_TypeChecker_Env.identifier_info);
+                                  FStar_TypeChecker_Env.tc_hooks =
+                                    (uu___193_23146.FStar_TypeChecker_Env.tc_hooks)
                                 }
                               else env1 in
                             let g1 =
@@ -8449,7 +8451,9 @@ let resolve_implicits':
                                          (uu___194_23157.FStar_TypeChecker_Env.is_native_tactic);
                                        FStar_TypeChecker_Env.identifier_info
                                          =
-                                         (uu___194_23157.FStar_TypeChecker_Env.identifier_info)
+                                         (uu___194_23157.FStar_TypeChecker_Env.identifier_info);
+                                       FStar_TypeChecker_Env.tc_hooks =
+                                         (uu___194_23157.FStar_TypeChecker_Env.tc_hooks)
                                      }) tm1 in
                                 match uu____23149 with
                                 | (uu____23158,uu____23159,g1) -> g1
@@ -8523,7 +8527,9 @@ let resolve_implicits':
                                           (uu___195_23170.FStar_TypeChecker_Env.is_native_tactic);
                                         FStar_TypeChecker_Env.identifier_info
                                           =
-                                          (uu___195_23170.FStar_TypeChecker_Env.identifier_info)
+                                          (uu___195_23170.FStar_TypeChecker_Env.identifier_info);
+                                        FStar_TypeChecker_Env.tc_hooks =
+                                          (uu___195_23170.FStar_TypeChecker_Env.tc_hooks)
                                       }) tm1 in
                                  match uu____23162 with
                                  | (uu____23171,uu____23172,g1) -> g1) in

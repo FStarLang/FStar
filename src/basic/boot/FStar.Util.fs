@@ -387,6 +387,8 @@ let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
 
 let char_of_int (i:int) = char i
 let int_of_string (s:string) = int_of_string s
+let safe_int_of_string (s:string) =
+  try Some <| int_of_string s with :? System.FormatException -> None
 let int_of_char (s:char) = int32 s
 let int_of_byte (s:byte) = int32 s
 let int_of_uint8 (i:uint8) = int32 i
@@ -864,7 +866,12 @@ let ensure_decimal (s: string) =
   else
     s
 
-
+let measure_execution_time f =
+  let timer = new System.Diagnostics.Stopwatch () in
+  timer.Start();
+  let retv = f () in
+  print1 "Execution time: %s ms" (string_of_int64 timer.ElapsedMilliseconds);
+  retv
 
 (** Hints. *)
 type hint = {
