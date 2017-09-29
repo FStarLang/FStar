@@ -55,11 +55,6 @@ let run t p = t.tac_f p
 let ret (x:'a) : tac<'a> =
     mk_tac (fun p -> Success (x, p))
 
-let decr_depth (ps:proofstate) : proofstate =
-    { ps with depth = ps.depth - 1 }
-let incr_depth (ps:proofstate) : proofstate =
-    { ps with depth = ps.depth + 1 }
-
 (* monadic bind *)
 let bind (t1:tac<'a>) (t2:'a -> tac<'b>) : tac<'b> =
     mk_tac (fun p ->
@@ -144,11 +139,6 @@ let print_proof_state1 (msg:string) : tac<unit> =
 let print_proof_state (msg:string) : tac<unit> =
     mk_tac (fun p -> dump_proofstate p msg;
                      Success ((), p))
-
-let tracepoint ps : unit =
-    if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ())
-    then dump_proofstate ps "TRACE"
-    else ()
 
 (* get : get the current proof state *)
 let get : tac<proofstate> =
@@ -972,6 +962,7 @@ let proofstate_of_goal_ty env typ =
         goals = [g];
         smt_goals = [];
         depth = 0;
+        __dump = dump_proofstate;
     }
     in
     (ps, g.witness)

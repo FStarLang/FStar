@@ -4,9 +4,8 @@ open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Reflection
 
-assume val __incr_depth : proofstate -> proofstate
-assume val __decr_depth : proofstate -> proofstate
-assume val __tracepoint : proofstate -> unit
+(* This module is extracted, don't add any `assume val`s or extraction
+ * will break. (`synth_by_tactic` is fine) *)
 
 let __tac (a:Type) = proofstate -> M (__result a)
 
@@ -16,12 +15,12 @@ let __ret a x = fun (s:proofstate) -> Success(x, s)
 
 (* monadic bind *)
 let __bind (a:Type) (b:Type) (t1:__tac a) (t2:a -> __tac b) : __tac b =
-    fun p -> let r = t1 (__incr_depth p) in
+    fun p -> let r = t1 (incr_depth p) in
              match r with
              | Success(a, q)  ->
                  // Force evaluation of __tracepoint q
-                 begin match __tracepoint q  with
-                 | () -> t2 a (__decr_depth q)
+                 begin match tracepoint q  with
+                 | () -> t2 a (decr_depth q)
                  end
              | Failed(msg, q) -> Failed(msg, q)
 

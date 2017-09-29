@@ -31,4 +31,16 @@ type proofstate = {
     goals        : list<goal>;   //all the goals remaining to be solved
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
     depth        : int;          //depth for tracing and debugging
+    __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying ciruluarity
 }
+
+let decr_depth (ps:proofstate) : proofstate =
+    { ps with depth = ps.depth - 1 }
+
+let incr_depth (ps:proofstate) : proofstate =
+    { ps with depth = ps.depth + 1 }
+
+let tracepoint ps : unit =
+    if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ())
+    then ps.__dump ps "TRACE"
+    else ()

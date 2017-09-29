@@ -158,7 +158,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
         | _ -> failwith "Unexpected application of decr_depth"
     in
     let decr_depth_step : N.primitive_step =
-        {N.name = Ident.lid_of_str "FStar.Tactics.Effect.__decr_depth";
+        {N.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
          N.arity = 1;
          N.strong_reduction_ok = false;
          N.interpretation = decr_depth_interp
@@ -170,7 +170,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
         | _ -> failwith "Unexpected application of incr_depth"
     in
     let incr_depth_step : N.primitive_step =
-        {N.name = Ident.lid_of_str "FStar.Tactics.Effect.__incr_depth";
+        {N.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
          N.arity = 1;
          N.strong_reduction_ok = false;
          N.interpretation = incr_depth_interp
@@ -182,7 +182,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
         | _ -> failwith "Unexpected application of tracepoint"
     in
     let tracepoint_step : N.primitive_step =
-        let nm = Ident.lid_of_str "FStar.Tactics.Effect.__tracepoint" in
+        let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
         {N.name = nm;
          N.arity = 1;
          N.strong_reduction_ok = false;
