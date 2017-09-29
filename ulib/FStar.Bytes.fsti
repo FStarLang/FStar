@@ -93,6 +93,14 @@ val get:
 
 unfold let op_String_Access = get
 
+val set_byte:
+    b:bytes
+  -> pos:u32{U32.v pos < length b}
+  -> byte
+  -> bytes
+
+unfold let op_String_Assigment = set_byte
+
 unfold let index (b:bytes) (i:nat{i < length b}) = get b (U32.uint_to_t i)
 
 let equal b1 b2 =
