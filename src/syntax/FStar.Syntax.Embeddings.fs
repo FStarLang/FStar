@@ -170,3 +170,12 @@ let unembed_norm_step (t:term) : norm_step =
         UnfoldOnly (unembed_list unembed_string l)
     | _ ->
         failwith "not an embedded norm_step"
+
+let embed_range (r:Range.range) : term =
+    S.mk (Tm_constant (C.Const_range r)) None r
+
+let unembed_range (t:term) : Range.range =
+    match t.n with
+    | Tm_constant (C.Const_range r) -> r
+    | _ ->
+        failwith "not an embedded range"

@@ -41,7 +41,7 @@ let add_mods mod_names dsenv env =
 
 let init_once () : unit =
   let solver = SMT.dummy in
-  let env = TcEnv.initial_env TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
+  let env = TcEnv.initial_env TcTerm.tc_term TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
   let _prims_mod, env = Tc.check_module env prims_mod in
@@ -76,7 +76,7 @@ let pars_term_or_fragment is_term s =
       if is_term
       then let t = Parser.Parse.term lexer lexbuf in
            Some (ToSyntax.desugar_term env t)
-      else begin match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref (frag, false) with
+      else begin match FStar.Interactive.Ide.check_frag (env, tcenv) !test_mod_ref (frag, false) with
                 | Some (test_mod', (env', tcenv'), 0) ->
                   test_mod_ref := test_mod';
                   dsenv_ref := Some env';
@@ -133,7 +133,7 @@ let pars_and_tc_fragment (s:string) =
     try
         let env, tcenv = init() in
         let frag = frag_of_text s in
-        match FStar.Interactive.check_frag (env, tcenv) !test_mod_ref (frag, false) with
+        match FStar.Interactive.Ide.check_frag (env, tcenv) !test_mod_ref (frag, false) with
         | Some (test_mod', (env', tcenv'), n) ->
             test_mod_ref := test_mod';
             dsenv_ref := Some env';

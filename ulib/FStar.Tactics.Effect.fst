@@ -4,6 +4,10 @@ open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Reflection
 
+assume val __incr_depth : proofstate -> proofstate
+assume val __decr_depth : proofstate -> proofstate
+assume val __tracepoint : proofstate -> unit
+
 let __tac (a:Type) = proofstate -> M (__result a)
 
 (* monadic return *)
@@ -12,9 +16,13 @@ let __ret a x = fun (s:proofstate) -> Success(x, s)
 
 (* monadic bind *)
 let __bind (a:Type) (b:Type) (t1:__tac a) (t2:a -> __tac b) : __tac b =
-    fun p -> let r = t1 p in
+    fun p -> let r = t1 (__incr_depth p) in
              match r with
-             | Success(a, q)  -> t2 a q
+             | Success(a, q)  ->
+                 // Force evaluation of __tracepoint q
+                 begin match __tracepoint q  with
+                 | () -> t2 a (__decr_depth q)
+                 end
              | Failed(msg, q) -> Failed(msg, q)
 
 (* Actions *)
@@ -80,12 +88,17 @@ unfold let by_tactic (t : tactic 'a) (p:Type) : Type = __by_tactic (reify_tactic
 // TODO: `a` is really fixed to unit for now. Make it consistent
 assume val synth_by_tactic : (#t:Type) -> (#a:Type) -> tactic a -> Tot t
 
+private let trace_wrap (t : tactic 'a) : tactic 'a =
+    return ();;
+    r <-- t;
+    return r
+
 // Must run with tactics off, as it will otherwise try to run `by_tactic
 // (reify_tactic t)`, which fails as `t` is not a concrete tactic
 #reset-options "--no_tactics"
 let assert_by_tactic (p:Type) (t:tactic unit)
   : Pure unit
-         (requires (by_tactic t (squash p)))
+         (requires (by_tactic (trace_wrap t) (squash p)))
          (ensures (fun _ -> p))
   = ()
 #reset-options

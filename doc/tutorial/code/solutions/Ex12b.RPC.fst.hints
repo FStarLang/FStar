@@ -2,20 +2,6 @@
   "ò1ëL©é¯Å@ûc¸~é\u0002J",
   [
     [
-      "Ex12b.RPC.msg_buffer",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_Ex12b2.Format.message",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Platform.Bytes.bytes",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
       "Ex12b.RPC.send",
       1,
       2,
@@ -23,20 +9,9 @@
       [
         "@query", "equation_Ex12b2.Format.message",
         "equation_FStar.Heap.trivial_preorder",
-        "equation_Platform.Bytes.bytes", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Ex12b.RPC.send",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Ex12b2.Format.message",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Platform.Bytes.bytes",
+        "equation_FStar.Heap.trivial_rel", "equation_Platform.Bytes.bytes",
+        "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0
@@ -49,49 +24,9 @@
       [
         "@query", "equation_Ex12b2.Format.message",
         "equation_FStar.Heap.trivial_preorder",
-        "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.empty_bytes", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Ex12b.RPC.recv",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Ex12b2.Format.message",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Platform.Bytes.bytes",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Ex12b.RPC.recv",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_Ex12b2.Format.message",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Platform.Bytes.bytes",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Ex12b.RPC.recv",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_Ex12b2.Format.message",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Platform.Bytes.bytes",
+        "equation_FStar.Heap.trivial_rel", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.empty_bytes", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0
