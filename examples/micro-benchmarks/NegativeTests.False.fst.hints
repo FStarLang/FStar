@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
+      0,
+      "d11a690144ef32f0384027d325452b1c"
     ],
     [
       "NegativeTests.False.foo",
@@ -15,7 +16,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
+      0,
+      "cf3510f1465d4091804386c507c24f00"
     ],
     [
       "NegativeTests.False.foo",
@@ -23,7 +25,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
+      0,
+      "57abdbdcc694665f50ab2ef8aba5684f"
     ],
     [
       "NegativeTests.False.foo",
@@ -35,7 +38,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_NegativeTests.False_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
-      0
+      0,
+      "b9a0dc8c61fca90ee3873bf94b150a5e"
     ],
     [
       "NegativeTests.False.f",
@@ -46,7 +50,8 @@
         "@query", "assumption_Prims.HasEq_unit", "equation_Prims.l_True",
         "haseqNegativeTests.False_Tm_refine_bcb7d7b02fc420eb5dd6ef8d59203102"
       ],
-      0
+      0,
+      "287fab73e88a71987c9d7712d202c521"
     ],
     [
       "NegativeTests.False.f",
@@ -58,7 +63,8 @@
         "refinement_interpretation_FStar.Classical_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "unit_inversion", "unit_typing"
       ],
-      0
+      0,
+      "866711829acaa03dc6348a5288db6fe8"
     ],
     [
       "NegativeTests.False.absurd",
@@ -66,7 +72,8 @@
       2,
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
-      0
+      0,
+      "280ce926f9c0e08ed8b35f2230293d0b"
     ]
   ]
 ]

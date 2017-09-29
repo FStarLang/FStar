@@ -1,9 +1,33 @@
 [
   "Ä:îSü®ÕO2\u001cì\u0005ê#",
   [
-    [ "NegativeTests.Bug260.pnat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "NegativeTests.Bug260.uu___is_O", 1, 2, 1, [ "@query" ], 0 ],
-    [ "NegativeTests.Bug260.uu___is_S", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NegativeTests.Bug260.pnat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9ca290f3ffc7b408e7a83c43265cc8a3"
+    ],
+    [
+      "NegativeTests.Bug260.uu___is_O",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4fc50ed3d62c56d0212761fa7bc269bf"
+    ],
+    [
+      "NegativeTests.Bug260.uu___is_S",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "05dc57d3b406d80a84f2487dd1e72085"
+    ],
     [
       "NegativeTests.Bug260.__proj__S__item___0",
       1,
@@ -15,7 +39,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_NegativeTests.Bug260_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
-      0
+      0,
+      "f1b59af26301c3d2b4d3a324e0f2e394"
     ],
     [
       "NegativeTests.Bug260.validity",
@@ -23,7 +48,8 @@
       2,
       1,
       [ "@query", "assumption_NegativeTests.Bug260.pnat_haseq" ],
-      0
+      0,
+      "f0bf46674b5e736235f210f160267936"
     ],
     [
       "NegativeTests.Bug260.__proj__VSucc__item__n",
@@ -31,7 +57,8 @@
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "ade6d83cdbce79c5618008d2d42738cd"
     ]
   ]
 ]

@@ -13,7 +13,8 @@
         "equation_Prims.l_True", "fuel_guarded_inversion_Prims.list",
         "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "99ad2edf49f45c44512746db66b280c3"
     ],
     [
       "FStar.Reflection.Basic.smaller",
@@ -44,8 +45,17 @@
         "equation_Prims.l_True",
         "fuel_guarded_inversion_FStar.Reflection.Data.term_view"
       ],
-      0
+      0,
+      "f6645355a34aff60d43ab9c2e9ee7d7c"
     ],
-    [ "FStar.Reflection.Basic.term_eq", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.Reflection.Basic.term_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "75b8810a6f4fca9c5b9543956b1f3581"
+    ]
   ]
 ]

@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
-      0
+      0,
+      "9fe6a64882929f8bf553f7cca73e026d"
     ],
     [
       "Ex12a1.Cap.issue",
@@ -38,7 +39,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
-      0
+      0,
+      "83e53be60bef591cab9e4e9eb0677ed7"
     ],
     [
       "Ex12a1.Cap.redeem",
@@ -65,7 +67,8 @@
         "string_inversion", "token_correspondence_Ex12a1.Cap.capRead",
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
-      0
+      0,
+      "8dd7f4033d1312f89d4dc54a127cc58a"
     ]
   ]
 ]

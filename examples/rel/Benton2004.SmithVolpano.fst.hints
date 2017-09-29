@@ -1,8 +1,24 @@
 [
   ":×ŒÒBzY•YºUC\u001cöú¼",
   [
-    [ "Benton2004.SmithVolpano.uu___is_Low", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Benton2004.SmithVolpano.uu___is_High", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Benton2004.SmithVolpano.uu___is_Low",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "43f72b45edb9405f7e89c4577ded12c9"
+    ],
+    [
+      "Benton2004.SmithVolpano.uu___is_High",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d0e5c7553189d66303060d230d230c74"
+    ],
     [
       "Benton2004.SmithVolpano.interp_seclevel",
       1,
@@ -16,7 +32,8 @@
         "disc_equation_Benton2004.SmithVolpano.Low",
         "fuel_guarded_inversion_Benton2004.SmithVolpano.seclevel"
       ],
-      0
+      0,
+      "a4398c44bd7d0cad86a00b66f7d43cda"
     ],
     [
       "Benton2004.SmithVolpano.context",
@@ -29,7 +46,8 @@
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
-      0
+      0,
+      "f477ad35b80349dcc783b38d7f0d9915"
     ],
     [
       "Benton2004.SmithVolpano.interp_context",
@@ -100,7 +118,8 @@
         "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
-      0
+      0,
+      "8ff9af0aaf71ca7103f0fb5a23bdaac8"
     ],
     [
       "Benton2004.SmithVolpano.interp_context",
@@ -165,7 +184,8 @@
         "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
-      0
+      0,
+      "df914f9466f48a54fc48d0dc93d8a301"
     ],
     [
       "Benton2004.SmithVolpano.interp_context",
@@ -178,7 +198,8 @@
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
-      0
+      0,
+      "0bd22dad4a0af774563422260aa023f6"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_def",
@@ -189,7 +210,8 @@
         "@query", "equation_Benton2004.SmithVolpano.eval_equiv",
         "unit_typing"
       ],
-      0
+      0,
+      "c1668e52c61026b57c6400c582067fc7"
     ],
     [
       "Benton2004.SmithVolpano.exec_equiv",
@@ -203,7 +225,8 @@
         "equation_Benton2004.skip",
         "fuel_guarded_inversion_Benton2004.SmithVolpano.seclevel"
       ],
-      0
+      0,
+      "3608d24a64b928bd904e0042b7343226"
     ],
     [
       "Benton2004.SmithVolpano.exec_equiv_def",
@@ -221,9 +244,18 @@
         "fuel_guarded_inversion_Benton2004.SmithVolpano.seclevel",
         "unit_typing"
       ],
-      0
+      0,
+      "1172ffbf0d08847d32b1b9b217b994db"
     ],
-    [ "Benton2004.SmithVolpano.fresh_in", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Benton2004.SmithVolpano.fresh_in",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b52e851fdbac755ee6e101ad998b4535"
+    ],
     [
       "Benton2004.SmithVolpano.fresh_in",
       2,
@@ -235,7 +267,8 @@
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
-      0
+      0,
+      "a5a62974f2e06311ad85ae60af52d313"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_var_same",
@@ -286,7 +319,8 @@
         "typing_FStar.List.Tot.Base.map",
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
-      0
+      0,
+      "8cca476503d501d7f3b5c6bc87edab78"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_var_other",
@@ -348,7 +382,8 @@
         "typing_FStar.List.Tot.Base.map",
         "typing_FStar.List.Tot.Base.noRepeats", "unit_typing"
       ],
-      0
+      0,
+      "c41b463b971f9b5ec65beb20ed54b738"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_var_other",
@@ -361,7 +396,8 @@
         "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
-      0
+      0,
+      "a8077dbfa13d848d2cd4cea4d7196bf9"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_const",
@@ -386,7 +422,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "unit_inversion", "unit_typing"
       ],
-      0
+      0,
+      "c795f089e3617dec0c14d93a0ccaf14a"
     ],
     [
       "Benton2004.SmithVolpano.op_abs_interp_seclevel",
@@ -402,7 +439,8 @@
         "lemma_Benton2004.DDCC.holds_ns_delta",
         "lemma_Benton2004.DDCC.holds_ns_t", "unit_typing"
       ],
-      0
+      0,
+      "078374ccd5f0e691d2a5f3547482ee4d"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_op",
@@ -413,7 +451,8 @@
         "@query", "equation_Benton2004.SmithVolpano.eval_equiv",
         "equation_Benton2004.eop"
       ],
-      0
+      0,
+      "6a72a7128f50f280851380ac814f101b"
     ],
     [
       "Benton2004.SmithVolpano.exec_equiv_assign",
@@ -476,7 +515,8 @@
         "typing_FStar.List.Tot.Base.map",
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
-      0
+      0,
+      "cbfd31ef543d9c148d316be5e46c98e7"
     ],
     [
       "Benton2004.SmithVolpano.exec_equiv_seq",
@@ -498,7 +538,8 @@
         "token_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
         "unit_typing"
       ],
-      0
+      0,
+      "dbad3dd5d4e6662f48df26d0531b4394"
     ],
     [
       "Benton2004.SmithVolpano.exec_equiv_ifthenelse",
@@ -517,7 +558,8 @@
         "token_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
         "unit_typing"
       ],
-      0
+      0,
+      "8a883b8d7185fdf44d73e523d2ef2e95"
     ],
     [
       "Benton2004.SmithVolpano.exec_equiv_while",
@@ -536,7 +578,8 @@
         "token_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
         "unit_typing"
       ],
-      0
+      0,
+      "ab14a8258818e7c7f70389afacb9168f"
     ],
     [
       "Benton2004.SmithVolpano.eval_equiv_low_to_high",
@@ -555,7 +598,8 @@
         "token_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
         "unit_typing"
       ],
-      0
+      0,
+      "e0d24a1a4c4fe09478f52ccb158cec20"
     ],
     [
       "Benton2004.SmithVolpano.exec_equiv_high_to_low",
@@ -576,7 +620,8 @@
         "token_correspondence_Benton2004.SmithVolpano.interp_context.fuel_instrumented",
         "unit_typing"
       ],
-      0
+      0,
+      "70a48368eb76ba2b5025b71a417c4f9a"
     ]
   ]
 ]

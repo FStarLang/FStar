@@ -1,4 +1,14 @@
 [
   "·ÉËœšÛ#«P\u001fbê=H­I",
-  [ [ "Simplifier.goal_is_true", 1, 2, 1, [ "@query" ], 0 ] ]
+  [
+    [
+      "Simplifier.goal_is_true",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "126e8ed83d9aa717e7d939dee30bff54"
+    ]
+  ]
 ]

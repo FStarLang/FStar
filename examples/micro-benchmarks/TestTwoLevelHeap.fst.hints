@@ -10,7 +10,8 @@
         "@query", "assumption_Prims.HasEq_int",
         "equation_FStar.TwoLevelHeap.rid"
       ],
-      0
+      0,
+      "dea44f7627ed77dd33c7723627d696cc"
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -18,7 +19,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "2d32946ee8c47c09b7f310a6194370ee"
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -29,7 +31,8 @@
         "@query", "assumption_Prims.HasEq_int",
         "equation_FStar.TwoLevelHeap.rid"
       ],
-      0
+      0,
+      "d50752c948fe0836a02f77139716b3d4"
     ],
     [
       "TestTwoLevelHeap.test0",
@@ -75,7 +78,8 @@
         "typing_FStar.Set.singleton", "typing_FStar.Set.union",
         "typing_FStar.TwoLevelHeap.as_ref"
       ],
-      0
+      0,
+      "a824f43b2c1b911018e496a07cf209eb"
     ]
   ]
 ]

@@ -22,7 +22,8 @@
         "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.sel"
       ],
-      0
+      0,
+      "7dd858985d72643c98a6cf2660abf256"
     ],
     [
       "StRel.f2",
@@ -40,10 +41,27 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "ref_inversion"
       ],
-      0
+      0,
+      "523dc62eb939f3f701c93ee08f27db36"
     ],
-    [ "StRel.glift", 1, 2, 1, [ "@query" ], 0 ],
-    [ "StRel.glift2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StRel.glift",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "988b639cb87d6ce15e9bdaed2f70f277"
+    ],
+    [
+      "StRel.glift2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3add95465c05c8a45796e59ad9ade408"
+    ],
     [
       "StRel.f1_ni",
       1,
@@ -59,7 +77,8 @@
         "refinement_interpretation_Rel_Tm_refine_b7adc7274fb5942de957c81cfe96d74d",
         "token_correspondence_StRel.f1_hp", "unit_typing"
       ],
-      0
+      0,
+      "aa6d493d63f483ac6930dfea198f54f6"
     ],
     [
       "StRel.f2_ni",
@@ -78,7 +97,8 @@
         "token_correspondence_FStar.Pervasives.Native.snd",
         "token_correspondence_StRel.f2_hp", "unit_typing"
       ],
-      0
+      0,
+      "018972aaa65f70d07ad3c8c7bc1f19a7"
     ]
   ]
 ]

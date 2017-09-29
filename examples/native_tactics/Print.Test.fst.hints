@@ -1,4 +1,14 @@
 [
   "\"c†‚'ÁGúÚcğ¸ƒĞ",
-  [ [ "Print.Test.test_print_goal1", 1, 2, 1, [ "@query" ], 0 ] ]
+  [
+    [
+      "Print.Test.test_print_goal1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6c8d4b1715274f1dff0be256a59af775"
+    ]
+  ]
 ]

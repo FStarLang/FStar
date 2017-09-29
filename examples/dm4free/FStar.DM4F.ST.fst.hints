@@ -1,15 +1,32 @@
 [
   "\u000fÿ½µ©\fd\fo…Üv±}Bª",
   [
-    [ "FStar.DM4F.ST.bind_st", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.ST._dm4f_STATE_h_bind_wp", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.ST.bind_st",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0ae252e5ad574fa1459c8c350ef77493"
+    ],
+    [
+      "FStar.DM4F.ST._dm4f_STATE_h_bind_wp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "79a008e1df840c0f7c40e3d27dbcb084"
+    ],
     [
       "FStar.DM4F.ST._dm4f_STATE_h___proj__STATE_h__item__get_elab",
       1,
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "1254ee727cff86c8de54997bc0361235"
     ],
     [
       "FStar.DM4F.ST._dm4f_STATE_h___proj__STATE_h__item__put_elab",
@@ -17,7 +34,8 @@
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "517e4434d52d8964d1130eae3811464e"
     ]
   ]
 ]

@@ -64,9 +64,18 @@
         "typing_IfcRulesReify.join", "typing_IfcRulesReify.op_Less_Equals",
         "typing_tok_IfcRulesReify.Low@tok", "unit_typing"
       ],
-      0
+      0,
+      "8f581871e06abb2fb98903bc2d1c9113"
     ],
-    [ "IfcTypechecker.uu___is_Not_well_typed", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "IfcTypechecker.uu___is_Not_well_typed",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8615e374efc7c229dcdf4852a485adb2"
+    ],
     [
       "IfcTypechecker.tc_com",
       1,
@@ -157,7 +166,8 @@
         "typing_tok_IfcRulesReify.Low@tok",
         "typing_tok_IfcTypechecker.Not_well_typed@tok", "unit_typing"
       ],
-      0
+      0,
+      "c10ef3b942092c459752a752e17e7f70"
     ],
     [
       "IfcTypechecker.tc_com_hybrid",
@@ -242,7 +252,8 @@
         "typing_tok_IfcTypechecker.Not_well_typed@tok",
         "typing_tok_WhileReify.Skip@tok", "unit_typing"
       ],
-      0
+      0,
+      "109e6747bc9affb28bcda6fc52a26e81"
     ],
     [
       "IfcTypechecker.tc_com_hybrid",
@@ -250,7 +261,8 @@
       2,
       1,
       [ "@query", "assumption_WhileReify.com_haseq" ],
-      0
+      0,
+      "9ba41a2b72cf823b86c9d4da417f717c"
     ]
   ]
 ]

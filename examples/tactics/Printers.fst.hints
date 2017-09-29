@@ -1,9 +1,33 @@
 [
   "»!\u0003\u0013}\u0000Ae∞Ÿ¨ÉN\u001f@'",
   [
-    [ "Printers.mk_concat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Printers.paren", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Printers.mk_print_binder", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.mk_concat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ed91c5c6c4d1bd63a76efce0f55b9e8d"
+    ],
+    [
+      "Printers.paren",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e8aafca256c1433e3c16b63071e3094a"
+    ],
+    [
+      "Printers.mk_print_binder",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b2d9c04093518d133fff262f5566fe6a"
+    ],
     [
       "Printers.printer",
       1,
@@ -21,7 +45,8 @@
         "fuel_guarded_inversion_FStar.Reflection.Data.sigelt_view",
         "typing_FStar.Reflection.Basic.lookup_typ"
       ],
-      0
+      0,
+      "87317bf1510c073228749b2feae14967"
     ],
     [
       "Printers.t1",
@@ -32,9 +57,18 @@
         "@query", "assumption_Prims.HasEq_int",
         "assumption_Prims.HasEq_string"
       ],
-      0
+      0,
+      "835185c38215d5dec83ded6fdad4b3a6"
     ],
-    [ "Printers.uu___is_A", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.uu___is_A",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "818030bf303de422ef9aa745c3b819ec"
+    ],
     [
       "Printers.__proj__A__item___0",
       1,
@@ -45,7 +79,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
-      0
+      0,
+      "ada75ec5f9d62b4cb6c4dd7e796b6c4c"
     ],
     [
       "Printers.__proj__A__item___1",
@@ -57,9 +92,18 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
-      0
+      0,
+      "0ae050a4e35d102082181557d4a36769"
     ],
-    [ "Printers.uu___is_B", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.uu___is_B",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1a632b44100234b6a5e7b580334b81e8"
+    ],
     [
       "Printers.__proj__B__item___0",
       1,
@@ -70,9 +114,18 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Printers_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
       ],
-      0
+      0,
+      "a958058c389ef1428536ef2cab03679e"
     ],
-    [ "Printers.uu___is_C", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Printers.uu___is_C",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "19ee3216048288299bdbaeaba12405a5"
+    ],
     [
       "Printers.t1_print",
       1,
@@ -83,7 +136,8 @@
         "disc_equation_Printers.B", "disc_equation_Printers.C",
         "fuel_guarded_inversion_Printers.t1"
       ],
-      0
+      0,
+      "6b4257e6cf25b5a3457e06035f42b44f"
     ],
     [
       "Printers.t1_print",
@@ -95,34 +149,62 @@
         "disc_equation_Printers.A", "disc_equation_Printers.B",
         "disc_equation_Printers.C", "fuel_guarded_inversion_Printers.t1"
       ],
-      0
+      0,
+      "b3520dbc46f49811b04e04bc4c85b273"
     ],
-    [
-      "Printers.uu___85",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0
-    ],
-    [ "Printers.uu___85", 2, 2, 1, [ "@query" ], 0 ],
-    [
-      "Printers.uu___86",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0
-    ],
-    [ "Printers.uu___86", 2, 2, 1, [ "@query" ], 0 ],
     [
       "Printers.uu___87",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
-      0
+      0,
+      "1005aa8148018af14d3da3cfc08a2df4"
     ],
-    [ "Printers.uu___87", 2, 2, 1, [ "@query" ], 0 ]
+    [
+      "Printers.uu___87",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7df805bc252a17f6f80e6b451d8b175a"
+    ],
+    [
+      "Printers.uu___88",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "a71162dd33d344df5d2252f41efa5cd7"
+    ],
+    [
+      "Printers.uu___88",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "304e70ccce67a24fad0fc89ab9f3451a"
+    ],
+    [
+      "Printers.uu___89",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_string" ],
+      0,
+      "db682e088d283edbdadd52efbbf59873"
+    ],
+    [
+      "Printers.uu___89",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "41944f3449250e7ba3497e7140b0d34e"
+    ]
   ]
 ]

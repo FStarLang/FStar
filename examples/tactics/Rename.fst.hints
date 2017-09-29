@@ -1,4 +1,14 @@
 [
   "\u0006ÔĞsÏd„ª#¬º{Óøí",
-  [ [ "Rename.rename", 1, 2, 1, [ "@query" ], 0 ] ]
+  [
+    [
+      "Rename.rename",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2271dd7b50157b4d7eaa38024faec29f"
+    ]
+  ]
 ]

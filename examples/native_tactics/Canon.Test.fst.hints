@@ -11,16 +11,26 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "4ba5e6d245b9f83d4c8744d0ab41f278"
     ],
-    [ "Canon.Test.lem8", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Canon.Test.lem8",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b47c50c8ad6d7e5b6b97881791921a3e"
+    ],
     [
       "Canon.Test.lem9",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "58a55a07170db9f8c9f12699b6ee9db4"
     ],
     [
       "Canon.Test.lem10",
@@ -28,7 +38,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "146291bd2af9d4f0bbef523b7a1a44ae"
     ]
   ]
 ]

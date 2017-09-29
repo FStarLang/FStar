@@ -10,7 +10,8 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
       ],
-      0
+      0,
+      "fbd76a3733207a6d870954556161be61"
     ],
     [
       "FStar.Reader.f",
@@ -18,7 +19,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "dd5b0e13776c89cbd5710cd5e88f92d6"
     ],
     [
       "FStar.Reader.g",
@@ -33,7 +35,8 @@
         "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
-      0
+      0,
+      "b34243013b0bbc28b4b61b0fbbd1bc8e"
     ],
     [
       "FStar.Reader.g",
@@ -41,7 +44,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "6286e01d1dfb9a3f83b2307c9ad74f7b"
     ]
   ]
 ]

@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
-      0
+      0,
+      "841504401b6f07fbd76f5b1b38de353b"
     ],
     [
       "Ex12a2.Cap.issue_read",
@@ -38,7 +39,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
-      0
+      0,
+      "0fd35999d0787958f224e8d5542b2ce2"
     ],
     [
       "Ex12a2.Cap.redeem_read",
@@ -65,7 +67,8 @@
         "string_inversion", "token_correspondence_Ex12a2.Cap.capRead",
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
-      0
+      0,
+      "b50f45b11a51a7d99de8eed7174e24be"
     ],
     [
       "Ex12a2.Cap.capWrite",
@@ -73,7 +76,8 @@
       2,
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
-      0
+      0,
+      "e98ac899117a728db0a0544899744c01"
     ],
     [
       "Ex12a2.Cap.issue_write",
@@ -104,7 +108,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
-      0
+      0,
+      "edac83ef7360d15abee25effad33f563"
     ],
     [
       "Ex12a2.Cap.redeem_write",
@@ -131,7 +136,8 @@
         "string_inversion", "token_correspondence_Ex12a2.Cap.capWrite",
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
-      0
+      0,
+      "f47e2178883a74e4dbf3bd40ee654774"
     ]
   ]
 ]

@@ -13,54 +13,12 @@
         "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
-      0
-    ],
-    [
-      "Cases.test_cases",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
-      0
-    ],
-    [
-      "Cases.test_cases",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
-      0
-    ],
-    [ "Cases.test_cases", 4, 2, 1, [ "@query" ], 0 ],
-    [
-      "Cases.test_cases_unsquash",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
-      0
+      0,
+      "cb5a51cd7eac5f11067398106ad2e299"
     ],
     [
       "Cases.test_cases_unsquash",
-      2,
+      1,
       2,
       1,
       [
@@ -70,68 +28,26 @@
         "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
-      0
+      0,
+      "f5ba8d1a42f9106564c4c1f9637f2e5e"
     ],
     [
-      "Cases.test_cases_unsquash",
-      3,
+      "Cases.test_cases_bool",
+      1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
-      0
+      [ "@query" ],
+      0,
+      "cc3f1bcd6e7bb2b6d3137707ad55d671"
     ],
-    [
-      "Cases.test_cases_unsquash",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
-      0
-    ],
-    [
-      "Cases.test_cases_unsquash",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
-      0
-    ],
-    [ "Cases.test_cases_unsquash", 6, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 3, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 4, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 5, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 6, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 7, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 8, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 9, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 10, 2, 1, [ "@query" ], 0 ],
     [
       "Cases.test_cases_bool_2",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "89b32c0384baa464058cecb2a3c4bdd4"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -139,74 +55,24 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "a15df4cbf2b5c12ada99ccfd0ea99379"
     ],
     [
       "Cases.test_cases_bool_2",
       3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      6,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [ "Cases.test_cases_bool_2", 8, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool_2", 9, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool_2", 10, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool_2", 11, 2, 1, [ "@query" ], 0 ],
-    [
-      "Cases.test_cases_bool_2",
-      12,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      13,
       2,
       1,
       [
         "@query", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "e98b0b72beaa3103aa949d4923b966cf"
     ],
     [
       "Cases.test_cases_bool_2",
-      14,
+      4,
       2,
       1,
       [
@@ -215,15 +81,17 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "c8d39fddb871fe6e013b1f03a5478d9c"
     ],
     [
       "Cases.test_cases_bool_2",
-      15,
+      5,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "d9227c0ec32a3caea30f3e278f93d307"
     ]
   ]
 ]
