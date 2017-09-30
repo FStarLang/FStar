@@ -4,6 +4,7 @@ module FStar.Tactics.Types
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+module Options = FStar.Options
 
 (*
    f: x:int -> P
