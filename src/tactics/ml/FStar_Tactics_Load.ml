@@ -36,6 +36,7 @@ let load_tactics tacs =
      let packages = ["fstar-tactics-lib"] in
      let pkg pname = "-package " ^ pname in
      let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
+                @ ["-I"; dir]
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
      let env_setter = U.format1 "OCAMLPATH=\"%s/bin/\"" fs_home in
