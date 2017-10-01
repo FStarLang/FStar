@@ -133,7 +133,7 @@ let infix_prim_ops = [
 ]
 
 (* -------------------------------------------------------------------- *)
-let prim_uni_ops = 
+let prim_uni_ops () = 
     let op_minus = if Util.codegen_fsharp() 
                         then "-" 
                         else "~-" in 
@@ -170,7 +170,7 @@ let is_bin_op (p : mlpath) =
 (* -------------------------------------------------------------------- *)
 let as_uni_op ((ns, x) : mlpath) =
     if is_prims_ns ns then
-        List.tryFind (fun (y, _) -> x = y) prim_uni_ops
+        List.tryFind (fun (y, _) -> x = y) (prim_uni_ops ())
     else
         None
 
