@@ -283,7 +283,7 @@ tutorial: hello
 
 # Depends on fstarlib.cmxa, which is built by hello
 native_tactics: hello
-	# +$(MAKE) -C ../examples/native_tactics all
+	+$(MAKE) -C ../examples/native_tactics all
 
 extraction-examples: hello
 	+$(MAKE) -C ../examples/extraction all
