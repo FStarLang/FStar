@@ -1,5 +1,5 @@
 open Prims
-let uu___268: Prims.unit = FStar_Version.dummy ()
+let uu___273: Prims.unit = FStar_Version.dummy ()
 let process_args:
   Prims.unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -256,58 +256,58 @@ let go: 'Auu____391 . 'Auu____391 -> Prims.unit =
                              (let uu____499 =
                                 FStar_Universal.batch_mode_tc filenames1 in
                               match uu____499 with
-                              | (fmods,dsenv,env) ->
+                              | (fmods,env) ->
                                   let module_names_and_times =
                                     FStar_All.pipe_right fmods
                                       (FStar_List.map
-                                         (fun uu____569  ->
-                                            match uu____569 with
+                                         (fun uu____566  ->
+                                            match uu____566 with
                                             | (x,t) ->
                                                 ((FStar_Universal.module_or_interface_name
                                                     x), t))) in
                                   (report_errors module_names_and_times;
-                                   (let uu____590 =
-                                      let uu____597 =
+                                   (let uu____587 =
+                                      let uu____594 =
                                         FStar_All.pipe_right fmods
                                           (FStar_List.map
                                              FStar_Pervasives_Native.fst) in
-                                      (uu____597, env) in
-                                    codegen uu____590);
-                                   (let uu____615 =
+                                      (uu____594, env) in
+                                    codegen uu____587);
+                                   (let uu____612 =
                                       FStar_Options.gen_native_tactics () in
-                                    match uu____615 with
+                                    match uu____612 with
                                     | FStar_Pervasives_Native.Some dir ->
-                                        let uu____619 =
-                                          let uu____626 =
+                                        let uu____616 =
+                                          let uu____623 =
                                             FStar_All.pipe_right fmods
                                               (FStar_List.map
                                                  FStar_Pervasives_Native.fst) in
-                                          (uu____626, env) in
-                                        gen_native_tactics uu____619 dir
+                                          (uu____623, env) in
+                                        gen_native_tactics uu____616 dir
                                     | FStar_Pervasives_Native.None  -> ());
                                    finished_message module_names_and_times
                                      (Prims.parse_int "0"))))
                           else FStar_Util.print_error "no file provided\n"))))))
-let main: 'Auu____648 . Prims.unit -> 'Auu____648 =
-  fun uu____652  ->
+let main: 'Auu____645 . Prims.unit -> 'Auu____645 =
+  fun uu____649  ->
     try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")
     with
     | e ->
         let trace = FStar_Util.trace_of_exn e in
         (if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();
-         (let uu____671 = FStar_Options.trace_error () in
-          if uu____671
+         (let uu____668 = FStar_Options.trace_error () in
+          if uu____668
           then
-            let uu____672 = FStar_Util.message_of_exn e in
-            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____672
+            let uu____669 = FStar_Util.message_of_exn e in
+            FStar_Util.print2_error "Unexpected error\n%s\n%s\n" uu____669
               trace
           else
             if Prims.op_Negation (FStar_Errors.handleable e)
             then
-              (let uu____674 = FStar_Util.message_of_exn e in
+              (let uu____671 = FStar_Util.message_of_exn e in
                FStar_Util.print1_error
                  "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n"
-                 uu____674)
+                 uu____671)
             else ());
          cleanup ();
          report_errors [];
