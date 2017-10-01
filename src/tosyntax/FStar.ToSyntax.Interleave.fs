@@ -241,7 +241,8 @@ let prefix_one_decl iface impl =
 //Top-level interface
 //////////////////////////////////////////////////////////////////////////
 module E = FStar.ToSyntax.Env
-let initialize_interface (mname:Ident.lid) (l:list<decl>) (env:E.env) : unit * E.env =
+let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
+  fun (env:E.env) ->
     let decls =
         if Options.ml_ish()
         then ml_mode_check_initial_interface l
@@ -254,7 +255,8 @@ let initialize_interface (mname:Ident.lid) (l:list<decl>) (env:E.env) : unit * E
     | None ->
       (), E.set_iface_decls env mname decls
 
-let prefix_with_interface_decls (impl:decl) (env:E.env) : list<decl> * E.env =
+let prefix_with_interface_decls (impl:decl) : E.withenv<(list<decl>)> =
+  fun (env:E.env) ->
     match E.iface_decls env (E.current_module env) with
     | None ->
       [impl], env
@@ -263,7 +265,8 @@ let prefix_with_interface_decls (impl:decl) (env:E.env) : list<decl> * E.env =
       let env = E.set_iface_decls env (E.current_module env) iface in
       impl, env
 
-let interleave_module (a:modul) (expect_complete_modul:bool)  (env:E.env) : modul * E.env =
+let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> =
+  fun (env:E.env)  ->
     match a with
     | Interface _ -> a, env
     | Module(l, impls) -> begin

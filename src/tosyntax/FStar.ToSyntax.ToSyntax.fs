@@ -2505,20 +2505,24 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
 /////////////////////////////////////////////////////////////////////////////////////////
 //External API for modules
 /////////////////////////////////////////////////////////////////////////////////////////
-let ast_modul_to_modul modul env =
-    let env, modul = desugar_modul env modul in
-    modul,env
+let ast_modul_to_modul modul : withenv<S.modul> =
+    fun env ->
+        let env, modul = desugar_modul env modul in
+         modul,env
 
-let decls_to_sigelts decls env =
-    let env, sigelts = desugar_decls env decls in
-    sigelts, env
+let decls_to_sigelts decls : withenv<S.sigelts> =
+    fun env -> 
+        let env, sigelts = desugar_decls env decls in
+        sigelts, env
 
-let partial_ast_modul_to_modul modul a_modul env =
-    let env, modul = desugar_partial_modul modul env a_modul in
-    modul, env
+let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
+    fun env ->
+        let env, modul = desugar_partial_modul modul env a_modul in
+        modul, env
 
-let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (en: env) =
-  let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
-  let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
-  let env = Env.finish en m in
-  (), (if pop_when_done then export_interface m.name env else env)
+let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) : withenv<unit> =
+  fun en ->
+      let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
+      let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
+      let env = Env.finish en m in
+      (), (if pop_when_done then export_interface m.name env else env)
