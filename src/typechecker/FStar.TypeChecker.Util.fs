@@ -305,7 +305,7 @@ let decorate_pattern env p exp =
         match p.v, e.n with
             | _, Tm_uinst(e, _) -> aux p e
 
-            | Pat_constant _, Tm_constant _ ->
+            | Pat_constant _, _ ->
               pkg p.v
 
             | Pat_var x, Tm_name y ->
