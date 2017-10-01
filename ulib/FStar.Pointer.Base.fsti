@@ -2036,6 +2036,13 @@ let modifies_0 (h0 h1: HS.mem) : GTot Type0 =
 let modifies_1 (#t: typ) (p: pointer t) (h0 h1: HS.mem) : GTot Type0 =
   modifies (loc_pointer p) h0 h1
 
+val unchanged (l:loc) (h0 h1:HS.mem) :Type0
+
+val lemma_unchanged_loc_union (l1 l2:loc) (h0 h1:HS.mem)
+  :Lemma (requires (unchanged (loc_union l1 l2) h0 h1))
+         (ensures  (unchanged l1 h0 h1 /\ unchanged l2 h0 h1))
+	 [SMTPat (unchanged (loc_union l1 l2) h0 h1)]
+
 (** Concrete allocators, getters and setters *)
 
 val screate
