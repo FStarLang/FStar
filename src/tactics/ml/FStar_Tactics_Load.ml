@@ -39,7 +39,7 @@ let load_tactics tacs =
                 @ ["-I"; dir]
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
-     let env_setter = U.format1 "OCAMLPATH=\"%s/bin/\"" fs_home in
+     let env_setter = U.format1 "env OCAMLPATH=\"%s/bin/\"" fs_home in
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
      let rc = Sys.command cmd in
      if rc <> 0
