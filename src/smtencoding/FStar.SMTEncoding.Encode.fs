@@ -478,13 +478,9 @@ let rec encode_const c env =
     | Const_unit -> mk_Term_unit, []
     | Const_bool true -> boxBool mkTrue, []
     | Const_bool false -> boxBool mkFalse, []
+    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))]), []
     | Const_int (i, None)  -> boxInt (mkInteger i), []
     | Const_int (repr, Some sw) ->
-      let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
-      encode_term syntax_term env
-    | Const_char c ->
-      let repr = BU.string_of_int (BU.int_of_char c) in
-      let sw = (FStar.Const.Unsigned, FStar.Const.Int8) in
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
     | Const_string(s, _) -> varops.string_const s, []
