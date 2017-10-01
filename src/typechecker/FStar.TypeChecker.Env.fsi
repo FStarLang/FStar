@@ -108,7 +108,8 @@ type env = {
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                   (* callback into the native tactics engine *)
-  identifier_info: ref<FStar.TypeChecker.Common.id_info_table> (* information on identifiers *)
+  identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
+  dsenv          : FStar.ToSyntax.Env.env
 }
 and solver_t = {
     init         :env -> unit;
