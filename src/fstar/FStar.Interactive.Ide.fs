@@ -38,26 +38,24 @@ module CTable = FStar.Interactive.CompletionTable
 
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
-let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * modul option * string list) =
-  let dsenv, env = uenv in
-  let (intf, impl), dsenv, env, remaining =
+let tc_one_file (remaining:list<string>) (env:TcEnv.env) = //:((string option * string) * uenv * modul option * string list) =
+  let (intf, impl), env, remaining =
     match remaining with
     | intf :: impl :: remaining when needs_interleaving intf impl ->
-      let _, dsenv, env = tc_one_file dsenv env (Some intf) impl in
-      (Some intf, impl), dsenv, env, remaining
+      let _, env = tc_one_file env (Some intf) impl in
+      (Some intf, impl), env, remaining
     | intf_or_impl :: remaining ->
-      let _, dsenv, env = tc_one_file dsenv env None intf_or_impl in
-      (None, intf_or_impl), dsenv, env, remaining
+      let _, env = tc_one_file env None intf_or_impl in
+      (None, intf_or_impl), env, remaining
     | [] -> failwith "Impossible"
   in
-  (intf, impl), (dsenv, env), remaining
+  (intf, impl), env, remaining
 
 // Ibid.
 let tc_prims env = //:uenv =
-  let _, dsenv, env = tc_prims env in
-  (dsenv, env)
+  let _, env = tc_prims env in
+  env
 
-type env_t = DsEnv.env * TcEnv.env
 type modul_t = option<Syntax.Syntax.modul>
 
 // Note: many of these functions are passing env around just for the sake of
@@ -71,23 +69,22 @@ let push env msg =
   res
 
 let pop env msg =
-  pop_context (snd env) msg;
+  pop_context env msg;
   Options.pop()
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
-let set_check_kind (dsenv, tcenv) check_kind =
-  let tcenv = { tcenv with lax = (check_kind = LaxCheck) } in
-  let dsenv = DsEnv.set_syntax_only dsenv (check_kind = SyntaxCheck) in
-  (dsenv, tcenv)
+let set_check_kind env check_kind =
+  { env with lax = (check_kind = LaxCheck);
+             dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
 
-let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
+let cleanup env = TcEnv.cleanup_interactive env
 
-let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
+let check_frag (env:TcEnv.env) curmod frag =
   try
-    match tc_one_fragment curmod dsenv env frag with
-    | Some (m, dsenv, env) ->
-      Some (m, (dsenv, env), FStar.Errors.get_err_count())
+    match tc_one_fragment curmod env frag with
+    | Some (m, env) ->
+      Some (m, env, FStar.Errors.get_err_count())
     | _ -> None
   with
   | Failure (msg) when not (Options.trace_error ()) ->
@@ -778,16 +775,18 @@ let fresh_name_tracking_hooks () =
   { TcEnv.tc_push_in_gamma_hook =
       (fun _ s -> push_event (NTBinding s)) }
 
-let track_name_changes ((dsenv, tcenv): env_t)
-    : env_t * (env_t -> env_t * list<name_tracking_event>) =
-  let dsenv_old_hooks, tcenv_old_hooks = DsEnv.ds_hooks dsenv, TcEnv.tc_hooks tcenv in
+let track_name_changes (env:TcEnv.env)
+    : TcEnv.env * (TcEnv.env -> TcEnv.env * list<name_tracking_event>) =
+  let dsenv_old_hooks, tcenv_old_hooks = DsEnv.ds_hooks env.dsenv, TcEnv.tc_hooks env in
   let events, dsenv_new_hooks, tcenv_new_hooks = fresh_name_tracking_hooks () in
-  ((DsEnv.set_ds_hooks dsenv dsenv_new_hooks,
-    TcEnv.set_tc_hooks tcenv tcenv_new_hooks),
-   (fun (dsenv, tcenv) ->
-      (DsEnv.set_ds_hooks dsenv dsenv_old_hooks,
-       TcEnv.set_tc_hooks tcenv tcenv_old_hooks),
-      List.rev !events))
+  let env = {TcEnv.set_tc_hooks env tcenv_new_hooks
+                   with dsenv = DsEnv.set_ds_hooks env.dsenv dsenv_new_hooks } in
+  env,
+  (fun env ->
+    let env = {TcEnv.set_tc_hooks env tcenv_old_hooks
+                   with dsenv = DsEnv.set_ds_hooks env.dsenv dsenv_old_hooks} in
+    env,
+    List.rev !events)
 
 let run_push st kind text line column peek_only =
   let env = push_repl kind st in
@@ -828,15 +827,15 @@ let run_push st kind text line column peek_only =
     ((status, JsonList errors), st'')
 
 let run_symbol_lookup st symbol pos_opt requested_info =
-  let dsenv, tcenv = st.repl_env in
+  let tcenv = st.repl_env in
 
   let info_of_lid_str lid_str =
     let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split lid_str ".")) in
-    let lid = Util.dflt lid <| DsEnv.resolve_to_fully_qualified_name dsenv lid in
+    let lid = Util.dflt lid <| DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid in
     try_lookup_lid tcenv lid |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
 
   let docs_of_lid lid =
-    DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst in
+    DsEnv.try_lookup_doc tcenv.dsenv lid |> Util.map_option fst in
 
   let def_of_lid lid =
     Util.bind_opt (TcEnv.lookup_qname tcenv lid) (function
@@ -1002,8 +1001,8 @@ let run_compute st term rules =
     | Inl (Inr decls, _) -> Some decls
     | _ -> None in
 
-  let desugar dsenv decls =
-    snd (FStar.ToSyntax.ToSyntax.desugar_decls dsenv decls) in
+  let desugar env decls =
+    fst (FStar.ToSyntax.ToSyntax.decls_to_sigelts decls env.dsenv) in
 
   let typecheck tcenv decls =
     let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
@@ -1021,7 +1020,7 @@ let run_compute st term rules =
        FStar.TypeChecker.Normalize.Primops] in
 
   run_and_rewind st (fun st ->
-    let dsenv, tcenv = st.repl_env in
+    let tcenv = st.repl_env in
     let frag = dummy_let_fragment term in
     match st.repl_curmod with
     | None -> (QueryNOK, JsonStr "Current module unset")
@@ -1030,7 +1029,7 @@ let run_compute st term rules =
       | None -> (QueryNOK, JsonStr "Could not parse this term")
       | Some decls ->
         let aux () =
-          let decls = desugar dsenv decls in
+          let decls = desugar tcenv decls in
           let ses = typecheck tcenv decls in
           match find_let_body ses with
           | None -> (QueryNOK, JsonStr "Typechecking yielded an unexpected term")
@@ -1079,15 +1078,15 @@ let sc_fvars tcenv sc = // Memoized version of fc_vars
    | None -> let fv = Syntax.Free.fvars (sc_typ tcenv sc) in
              sc.sc_fvars := Some fv; fv
 
-let json_of_search_result dsenv tcenv sc =
+let json_of_search_result tcenv sc =
   let typ_str = term_to_string tcenv (sc_typ tcenv sc) in
-  JsonAssoc [("lid", JsonStr (DsEnv.shorten_lid dsenv sc.sc_lid).str);
+  JsonAssoc [("lid", JsonStr (DsEnv.shorten_lid tcenv.dsenv sc.sc_lid).str);
              ("type", JsonStr typ_str)]
 
 exception InvalidSearch of string
 
 let run_search st search_str =
-  let dsenv, tcenv = st.repl_env in
+  let tcenv = st.repl_env in
   let empty_fv_set = SS.new_fv_set () in
 
   let st_matches candidate term =
@@ -1115,7 +1114,7 @@ let run_search st search_str =
           NameContainsStr (strip_quotes term)
         else
           let lid = Ident.lid_of_str term in
-          match DsEnv.resolve_to_fully_qualified_name dsenv lid with
+          match DsEnv.resolve_to_fully_qualified_name tcenv.dsenv lid with
           | None -> raise (InvalidSearch (Util.format1 "Unknown identifier: %s" term))
           | Some lid -> TypeContainsLid lid in
       { st_negate = negate; st_term = parsed } in
@@ -1139,7 +1138,7 @@ let run_search st search_str =
       let cmp r1 r2 = Util.compare r1.sc_lid.str r2.sc_lid.str in
       let results = List.filter matches_all all_candidates in
       let sorted = Util.sort_with cmp results in
-      let js = List.map (json_of_search_result dsenv tcenv) sorted in
+      let js = List.map (json_of_search_result tcenv) sorted in
       match results with
       | [] -> let kwds = Util.concat_l " " (List.map pprint_one terms) in
               raise (InvalidSearch (Util.format1 "No results found for query [%s]" kwds))
@@ -1227,7 +1226,7 @@ let interactive_mode' (filename: string): unit =
   write_hello ();
 
   let env = init_env () in
-  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+  let env = FStar.TypeChecker.Env.set_range env initial_range in
 
   //type check prims and the dependencies
   let env, finish_name_tracking = track_name_changes env in // begin name tracking…
@@ -1242,7 +1241,7 @@ let interactive_mode' (filename: string): unit =
       FStar.Universal.load_interface_decls env intf in
   let env, name_events = finish_name_tracking env in // …end name tracking
 
-  TcEnv.toggle_id_info (snd env) true;
+  TcEnv.toggle_id_info env true;
 
   let initial_names =
     add_module_completions filename deps CTable.empty in
