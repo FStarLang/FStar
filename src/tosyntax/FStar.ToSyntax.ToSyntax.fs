@@ -2521,4 +2521,4 @@ let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (en: env) =
   let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
   let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
   let env = Env.finish en m in
-  (), if pop_when_done then export_interface m.name env else env
+  (), (if pop_when_done then export_interface m.name env else env)
