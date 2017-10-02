@@ -133,11 +133,13 @@ let infix_prim_ops = [
 ]
 
 (* -------------------------------------------------------------------- *)
-let prim_uni_ops = [
-    ("op_Negation", "not");
-    ("op_Minus", "~-");
-    ("op_Bang","Support.ST.read")
-]
+let prim_uni_ops () = 
+    let op_minus = if Util.codegen_fsharp() 
+                        then "-" 
+                        else "~-" in 
+    [ ("op_Negation", "not");
+      ("op_Minus", op_minus);
+      ("op_Bang","Support.ST.read") ]
 
 (* -------------------------------------------------------------------- *)
 let prim_types = []
@@ -168,7 +170,7 @@ let is_bin_op (p : mlpath) =
 (* -------------------------------------------------------------------- *)
 let as_uni_op ((ns, x) : mlpath) =
     if is_prims_ns ns then
-        List.tryFind (fun (y, _) -> x = y) prim_uni_ops
+        List.tryFind (fun (y, _) -> x = y) (prim_uni_ops ())
     else
         None
 
@@ -315,7 +317,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_Coerce (e, t, t') ->
       let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
       if Util.codegen_fsharp()
-      then parens (reduce [text "Prims.checked_cast"; doc])
+      then parens (reduce [text "Prims.unsafe_coerce "; doc])
       else parens (reduce [text "Obj.magic "; parens doc])
 
     | MLE_Seq es ->
