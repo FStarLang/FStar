@@ -13,7 +13,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "3ac04090030db874924ea60bcfb8c3ee"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +28,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "1409d67b0c0226251c134c828957d52d"
     ],
     [
       "Ex05a.rev",
@@ -41,7 +43,8 @@
         "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "d0bbfa427777d263539e58b450c32d1b"
     ],
     [
       "Ex05a.append_assoc",
@@ -62,7 +65,8 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "subterm_ordering_Prims.Cons", "unit_typing"
       ],
-      0
+      0,
+      "22c68585560655ee11608afb023aba10"
     ]
   ]
 ]

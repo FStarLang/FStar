@@ -23,6 +23,7 @@ open FStar.All
 open FStar
 open FStar.Util
 open FStar.Getopt
+open FStar.BaseTypes
 
 module FC = FStar.Common
 
@@ -74,9 +75,11 @@ let as_string = function
   | String b -> b
   | Path b -> FStar.Common.try_convert_file_name_to_mixed b
   | _ -> failwith "Impos: expected String"
-let as_list as_t = function
-  | List ts -> ts |> List.map as_t
+let as_list' = function
+  | List ts -> ts
   | _ -> failwith "Impos: expected List"
+let as_list as_t x =
+  as_list' x |> List.map as_t
 let as_option as_t = function
   | Unset -> None
   | v -> Some (as_t v)
@@ -175,6 +178,8 @@ let defaults =
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("split_cases"                  , Int 0);
+      ("tactic_trace"                 , Bool false);
+      ("tactic_trace_d"               , Int 0);
       ("timing"                       , Bool false);
       ("trace_error"                  , Bool false);
       ("ugly"                         , Bool false);
@@ -183,6 +188,7 @@ let defaults =
       ("use_native_tactics"           , Unset);
       ("use_eq_at_higher_order"       , Bool false);
       ("use_hints"                    , Bool false);
+      ("use_hint_hashes"              , Bool false);
       ("using_facts_from"             , Unset);
       ("verify"                       , Bool true);
       ("verify_all"                   , Bool false);
@@ -279,12 +285,15 @@ let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
+let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
+let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
 let get_trace_error             ()      = lookup_opt "trace_error"              as_bool
 let get_unthrottle_inductives   ()      = lookup_opt "unthrottle_inductives"    as_bool
 let get_unsafe_tactic_exec      ()      = lookup_opt "unsafe_tactic_exec"       as_bool
 let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   as_bool
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
+let get_use_hint_hashes         ()      = lookup_opt "use_hint_hashes"          as_bool
 let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
 let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
@@ -349,365 +358,413 @@ let mk_spec o : opt =
     let arg =
         match arg with
         | ZeroArgs f ->
-          let g () = set_option' (name, f()) in
+          let g () = set_option name (f()) in
           ZeroArgs g
 
         | OneArg (f, d) ->
-          let g x = set_option' (name, f x) in
+          let g x = set_option name (f x) in
           OneArg (g, d) in
     ns, name, arg, desc
 
-let cons_extract_module s  =
-    List (String.lowercase s::get_extract_module() |> List.map String)
+let accumulated_option name value =
+    let prev_values = Util.dflt [] (lookup_opt name (as_option as_list')) in
+    mk_list (value :: prev_values)
 
-let cons_extract_namespace s  =
-    List (String.lowercase s::get_extract_namespace() |> List.map String)
+let reverse_accumulated_option name value =
+    mk_list ((lookup_opt name as_list') @ [value])
+
+let accumulate_string name post_processor value =
+    set_option name (accumulated_option name (mk_string (post_processor value)))
 
 let add_extract_module s =
-    set_option "extract_module" (cons_extract_module s)
+    accumulate_string "extract_module" String.lowercase s
 
 let add_extract_namespace s =
-    set_option "extract_namespace" (cons_extract_namespace s)
-
-let cons_verify_module s  =
-    List (String.lowercase s::get_verify_module() |> List.map String)
-
-let cons_using_facts_from s =
-    set_option "z3refresh" (Bool true);
-    match get_using_facts_from() with
-    | None -> List [String s]
-    | Some l -> List (List.map String (s :: l))
+    accumulate_string "extract_namespace" String.lowercase s
 
 let add_verify_module s =
-    set_option "verify_module" (cons_verify_module s)
+    accumulate_string "verify_module" String.lowercase s
 
+type opt_type =
+| Const of option_val
+  // --cache_checked_modules
+| IntStr of string (* label *)
+  // --z3rlimit 5
+| BoolStr
+  // --admit_smt_queries true
+| PathStr of string (* label *)
+  // --fstar_home /build/fstar
+| SimpleStr of string (* label *)
+  // --admit_except xyz
+| EnumStr of list<string>
+  // --codegen OCaml
+| OpenEnumStr of list<string> (* suggested values (not exhaustive) *) * string (* label *)
+  // --debug_level …
+| PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
+  // For options like --extract_module that require post-processing or validation
+| Accumulated of opt_type (* elem spec *)
+  // For options like --extract_module that can be repeated (LIFO)
+| ReverseAccumulated of opt_type (* elem spec *)
+  // For options like --include that can be repeated (FIFO)
+| WithSideEffect of ((unit -> unit) * opt_type (* elem spec *))
+  // For options like --version that have side effects
 
-let rec specs () : list<Getopt.opt> =
-  let specs =
-    [  ( noshort,
-       "admit_smt_queries",
-       OneArg ((fun s -> if s="true" then mk_bool true
-                         else if s="false" then mk_bool false
-                         else failwith("Invalid argument to --admit_smt_queries")),
-                "[true|false]"),
-       "Admit SMT queries, unsafe! (default 'false')");
+exception InvalidArgument of string // option name
+
+(** Parse option value `str_val` according to specification `typ`.
+
+For example, to parse the value "OCaml" for the option "--codegen", this
+function is called as ``parse_opt_val "codegen" (EnumStr ["OCaml"; "FSharp";
+"Kremlin"]) "OCaml"`` and returns ``String "OCaml"``.
+
+`opt_name` is only used in error messages. **)
+let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : option_val =
+  try
+    match typ with
+    | Const c -> c
+    | IntStr _ -> (match safe_int_of_string str_val with
+                  | Some v -> mk_int v
+                  | None -> raise (InvalidArgument opt_name))
+    | BoolStr -> mk_bool (if str_val = "true" then true
+                         else if str_val = "false" then false
+                         else raise (InvalidArgument opt_name))
+    | PathStr _ -> mk_path str_val
+    | SimpleStr _ -> mk_string str_val
+    | EnumStr strs -> if List.mem str_val strs then mk_string str_val
+                     else raise (InvalidArgument opt_name)
+    | OpenEnumStr _ -> mk_string str_val
+    | PostProcessed (pp, elem_spec) -> pp (parse_opt_val opt_name elem_spec str_val)
+    | Accumulated elem_spec -> let v = parse_opt_val opt_name elem_spec str_val in
+                              accumulated_option opt_name v
+    | ReverseAccumulated elem_spec -> let v = parse_opt_val opt_name elem_spec str_val in
+                                     reverse_accumulated_option opt_name v
+    | WithSideEffect (side_effect, elem_spec) -> side_effect ();
+                                                parse_opt_val opt_name elem_spec str_val
+  with
+  | InvalidArgument opt_name ->
+    failwith (Util.format1 "Invalid argument to --%s" opt_name)
+
+let rec desc_of_opt_type typ : option<string> =
+  let desc_of_enum cases =
+    Some ("[" ^ (String.concat "|" cases) ^ "]") in
+  match typ with
+  | Const c -> None
+  | IntStr desc -> Some desc
+  | BoolStr -> desc_of_enum ["true"; "false"]
+  | PathStr desc -> Some desc
+  | SimpleStr desc -> Some desc
+  | EnumStr strs -> desc_of_enum strs
+  | OpenEnumStr (strs, desc) -> desc_of_enum (strs @ [desc])
+  | PostProcessed (_, elem_spec)
+  | Accumulated elem_spec
+  | ReverseAccumulated elem_spec
+  | WithSideEffect (_, elem_spec) -> desc_of_opt_type elem_spec
+
+let rec arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
+  let parser = parse_opt_val opt_name typ in
+  match desc_of_opt_type typ with
+  | None -> ZeroArgs (fun () -> parser "")
+  | Some desc -> OneArg (parser, desc)
+
+let pp_validate_dir p =
+  let pp = as_string p in
+  mkdir false pp;
+  p
+
+let pp_lowercase s =
+  mk_string (String.lowercase (as_string s))
+
+let rec specs_with_types () : list<(char * string * opt_type * string)> =
+     [( noshort,
+        "admit_smt_queries",
+        BoolStr,
+        "Admit SMT queries, unsafe! (default 'false')");
 
       ( noshort,
         "admit_except",
-         OneArg (mk_string, "[id]"),
-        "Admit all verification conditions, except those with query label <id> (eg, --admit_except '(FStar.Fin.pigeonhole, 1)'");
+        SimpleStr "(symbol, id)",
+        "Admit all verification conditions, except those with query label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)'");
 
       ( noshort,
         "cache_checked_modules",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Write a '.checked' file for each module after verification and read from it if present, instead of re-verifying");
 
       ( noshort,
         "codegen",
-        OneArg ((fun s -> mk_string (parse_codegen s)),
-                 "[OCaml|FSharp|Kremlin]"),
+        EnumStr ["OCaml"; "FSharp"; "Kremlin"],
         "Generate code for execution");
 
       ( noshort,
         "codegen-lib",
-        OneArg ((fun s -> List (s::get_codegen_lib() |> List.map mk_string)),
-                 "[namespace]"),
+        Accumulated (SimpleStr "namespace"),
         "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
 
       ( noshort,
         "debug",
-        OneArg ((fun x -> List (x::get_debug() |> List.map mk_string)),
-                 "[module name]"),
+        Accumulated (SimpleStr "module_name"),
         "Print lots of debugging information while checking module");
 
        ( noshort,
         "debug_level",
-        OneArg ((fun x -> List (x::get_debug_level() |> List.map mk_string)),
-                 "[Low|Medium|High|Extreme|...]"),
+        Accumulated (OpenEnumStr (["Low"; "Medium"; "High"; "Extreme"], "...")),
         "Control the verbosity of debugging info");
 
        ( noshort,
         "dep",
-        OneArg ((fun x -> if x = "make" || x = "graph" then mk_string x else failwith "invalid argument to 'dep'"),
-                 "[make|graph]"),
+        EnumStr ["make"; "graph"],
         "Output the transitive closure of the dependency graph in a format suitable for the given tool");
 
        ( noshort,
         "detail_errors",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
          "Emit a detailed error report by asking the SMT solver many queries; will take longer;
          implies n_cores=1");
 
        ( noshort,
         "detail_hint_replay",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
          "Emit a detailed report for proof whose unsat core fails to replay;
          implies n_cores=1");
 
        ( noshort,
         "doc",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
          "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory.");
 
        ( noshort,
         "dump_module",
-        OneArg ((fun x -> (x::get_dump_module()) |> List.map mk_string |> mk_list),
-                 "[module name]"),
+        Accumulated (SimpleStr "module_name"),
         "");
 
        ( noshort,
         "eager_inference",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
 
        ( noshort,
         "explicit_deps",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Do not find dependencies automatically, the user provides them on the command-line");
 
        ( noshort,
         "extract_all",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Discover the complete dependency graph and do not stop at interface boundaries");
 
        ( noshort,
         "extract_module",
-        OneArg (cons_extract_module,
-                 "[module name]"),
+        Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
         "Only extract the specified modules (instead of the possibly-partial dependency graph)");
 
        ( noshort,
         "extract_namespace",
-        OneArg (cons_extract_namespace,
-                 "[namespace name]"),
+        Accumulated (PostProcessed (pp_lowercase, (SimpleStr "namespace name"))),
         "Only extract modules in the specified namespace");
 
        ( noshort,
         "fstar_home",
-        OneArg (mk_path,
-                "[dir]"),
-        "Set the FSTAR_HOME variable to [dir]");
+        PathStr "dir",
+        "Set the FSTAR_HOME variable to <dir>");
 
        ( noshort,
          "gen_native_tactics",
-         OneArg (mk_path,
-                 "[path]"),
+         PathStr "[path]",
         "Compile all user tactics used in the module in <path>");
 
        ( noshort,
         "hide_genident_nums",
-        ZeroArgs(fun () -> mk_bool true),
+        Const (mk_bool true),
         "Don't print generated identifier numbers");
 
        ( noshort,
         "hide_uvar_nums",
-        ZeroArgs(fun () -> mk_bool true),
+        Const (mk_bool true),
         "Don't print unification variable numbers");
 
        ( noshort,
          "hint_file",
-         OneArg (mk_path,
-                 "[path]"),
+         PathStr "path",
         "Read/write hints to <path> (instead of module-specific hints files)");
 
        ( noshort,
         "hint_info",
-        ZeroArgs(fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print information regarding hints (deprecated; use --query_stats instead)");
 
        ( noshort,
         "in",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Legacy interactive mode; reads input from stdin");
 
        ( noshort,
         "ide",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "JSON-based interactive mode for IDEs");
 
        ( noshort,
         "include",
-        OneArg ((fun s -> mk_list (List.map mk_string (get_include()) @ [mk_path s])),
-                "[path]"),
+        ReverseAccumulated (PathStr "path"),
         "A directory in which to search for files included on the command line");
 
        ( noshort,
         "indent",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Parses and outputs the files on the command line");
 
        ( noshort,
         "initial_fuel",
-        OneArg((fun x -> mk_int (int_of_string x)),
-                "[non-negative integer]"),
+        IntStr "non-negative integer",
         "Number of unrolling of recursive functions to try initially (default 2)");
 
        ( noshort,
         "initial_ifuel",
-        OneArg((fun x -> mk_int (int_of_string x)),
-                "[non-negative integer]"),
+        IntStr "non-negative integer",
         "Number of unrolling of inductive datatypes to try at first (default 1)");
 
        ( noshort,
-        "inline_arith",
-        ZeroArgs(fun () -> mk_bool true),
-        "Inline definitions of arithmetic functions in the SMT encoding");
-
-       ( noshort,
         "lax",
-        ZeroArgs (fun () -> mk_bool true), //pretype := true; verify := false),
+        Const (mk_bool true), //pretype := true; verify := false),
         "Run the lax-type checker only (admit all verification conditions)");
 
       ( noshort,
        "load",
-        OneArg ((fun s -> mk_list (List.map mk_string (get_load()) @ [mk_path s])),
-                "[module]"),
+        ReverseAccumulated (PathStr "module"),
         "Load compiled module");
 
        ( noshort,
         "log_types",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print types computed for data/val/let-bindings");
 
        ( noshort,
         "log_queries",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Log the Z3 queries in several queries-*.smt2 files, as we go");
 
        ( noshort,
         "max_fuel",
-        OneArg((fun x -> mk_int (int_of_string x)),
-                "[non-negative integer]"),
+        IntStr "non-negative integer",
         "Number of unrolling of recursive functions to try at most (default 8)");
 
        ( noshort,
         "max_ifuel",
-        OneArg((fun x -> mk_int (int_of_string x)),
-                "[non-negative integer]"),
+        IntStr "non-negative integer",
         "Number of unrolling of inductive datatypes to try at most (default 2)");
 
        ( noshort,
         "min_fuel",
-        OneArg((fun x -> mk_int (int_of_string x)),
-                "[non-negative integer]"),
+        IntStr "non-negative integer",
         "Minimum number of unrolling of recursive functions to try (default 1)");
 
        ( noshort,
         "MLish",
-        ZeroArgs(fun () -> mk_bool true),
+        Const (mk_bool true),
         "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
 
        ( noshort,
         "n_cores",
-        OneArg ((fun x -> mk_int (int_of_string x)),//; detail_errors := false),
-                 "[positive integer]"),
+        IntStr "positive_integer", //; detail_errors := false),
         "Maximum number of cores to use for the solver (implies detail_errors = false) (default 1)");
 
        ( noshort,
         "no_default_includes",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Ignore the default module search paths");
 
        ( noshort,
         "no_extract",
-        OneArg ((fun x -> mk_list (x :: get_no_extract() |> List.map mk_string)),
-                 "[module name]"),
+        Accumulated (PathStr "module name"),
         "Do not extract code from this module");
 
        ( noshort,
         "no_location_info",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Suppress location information in the generated OCaml output (only relevant with --codegen OCaml)");
 
        ( noshort,
         "odir",
-        OneArg ((fun p -> mk_path (validate_dir p)),
-                "[dir]"),
-        "Place output in directory [dir]");
+        PostProcessed (pp_validate_dir, PathStr "dir"),
+        "Place output in directory <dir>");
 
        ( noshort,
         "prims",
-        OneArg (mk_string,
-                "file"),
+        PathStr "file",
         "");
 
        ( noshort,
         "print_bound_var_types",
-        ZeroArgs(fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print the types of bound variables");
 
        ( noshort,
         "print_effect_args",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print inferred predicate transformers for all computation types");
 
        ( noshort,
         "print_full_names",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print full names of variables");
 
        ( noshort,
         "print_implicits",
-        ZeroArgs(fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print implicit arguments");
 
        ( noshort,
         "print_universes",
-        ZeroArgs(fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print universes");
 
        ( noshort,
         "print_z3_statistics",
-        ZeroArgs(fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print Z3 statistics for each SMT query (deprecated; use --query_stats instead)");
 
        ( noshort,
         "prn",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
         "query_stats",
-        ZeroArgs(fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print SMT query statistics");
 
        ( noshort,
         "record_hints",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Record a database of hints for efficient proof replay");
 
        ( noshort,
         "reuse_hint_for",
-        OneArg (mk_string, "top-level name in the current module"),
-        "Optimistically, attempt using the recorded hint for 'f' when trying to verify some other term 'g'");
+        SimpleStr "toplevel_name",
+        "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
 
        ( noshort,
         "show_signatures",
-        OneArg((fun x -> mk_list (x::get_show_signatures() |> List.map mk_string)),
-                "[module name]"),
+        Accumulated (SimpleStr "module_name"),
         "Show the checked signatures for all top-level symbols in the module");
 
        ( noshort,
         "silent",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         " ");
 
        ( noshort,
         "smt",
-        OneArg (mk_path,
-                 "[path]"),
+        PathStr "path",
         "Path to the Z3 SMT solver (we could eventually support other solvers)");
 
        (noshort,
         "smtencoding.elim_box",
-        OneArg (string_as_bool "smtencoding.elim_box",
-                "true|false"),
+        BoolStr,
         "Toggle a peephole optimization that eliminates redundant uses of boxing/unboxing in the SMT encoding (default 'false')");
 
        (noshort,
         "smtencoding.nl_arith_repr",
-        OneArg (mk_string,
-                "native|wrapped|boxwrap"),
+        EnumStr ["native"; "wrapped"; "boxwrap"],
         "Control the representation of non-linear arithmetic functions in the SMT encoding:\n\t\t\
          i.e., if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'; \n\t\t\
                if 'native' use '*, div, mod';\n\t\t\
@@ -716,8 +773,7 @@ let rec specs () : list<Getopt.opt> =
 
        (noshort,
         "smtencoding.l_arith_repr",
-        OneArg (mk_string,
-                "native|boxwrap"),
+        EnumStr ["native"; "boxwrap"],
         "Toggle the representation of linear arithmetic functions in the SMT encoding:\n\t\t\
          i.e., if 'boxwrap', use 'Prims.op_Addition, Prims.op_Subtraction, Prims.op_Minus'; \n\t\t\
                if 'native', use '+, -, -'; \n\t\t\
@@ -725,158 +781,148 @@ let rec specs () : list<Getopt.opt> =
 
        ( noshort,
         "split_cases",
-        OneArg ((fun n -> mk_int (int_of_string n)),
-                 "[positive integer]"),
-        "Partition VC of a match into groups of [n] cases");
+        IntStr "positive_integer",
+        "Partition VC of a match into groups of <positive_integer> cases");
+
+       ( noshort,
+        "tactic_trace",
+        Const (mk_bool true),
+        "Print a depth-indexed trace of tactic execution (Warning: very verbose)");
+
+       ( noshort,
+        "tactic_trace_d",
+        IntStr "positive_integer",
+        "Trace tactics up to a certain binding depth");
 
        ( noshort,
         "timing",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Print the time it takes to verify each top-level definition");
 
        ( noshort,
         "trace_error",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Don't print an error message; show an exception trace instead");
 
       ( noshort,
         "ugly",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Emit output formatted for debugging");
 
        ( noshort,
         "unthrottle_inductives",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
 
        ( noshort,
         "unsafe_tactic_exec",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Allow tactics to run external processes. WARNING: checking an untrusted F* file while \
-         using this options can have disastrous effects.");
+         using this option can have disastrous effects.");
 
        ( noshort,
         "use_eq_at_higher_order",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Use equality constraints when comparing higher-order types (Temporary)");
 
        ( noshort,
         "use_hints",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Use a previously recorded hints database for proof replay");
 
        ( noshort,
+        "use_hint_hashes",
+        Const (mk_bool true),
+        "Admit queries if their hash matches the hash recorded in the hints database");
+
+       ( noshort,
          "use_native_tactics",
-         OneArg (mk_path,
-                 "[path]"),
+         PathStr "path",
         "Use compiled tactics from <path>");
 
        ( noshort,
         "no_tactics",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Do not run the tactic engine before discharging a VC");
 
        ( noshort,
         "using_facts_from",
-        OneArg (cons_using_facts_from, "[namespace | fact id]"),
+        WithSideEffect ((fun () -> set_option "z3refresh" (mk_bool true)),
+                        Accumulated (SimpleStr "namespace | fact id")),
         "Implies --z3refresh; prunes the context to include facts from the given namespace of fact id \
          (multiple uses of this option will prune the context to include those \
          facts that match any of the provided namespaces / fact ids");
 
        ( noshort,
         "verify_all",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line.");
 
        ( noshort,
         "verify_module",
-        OneArg (cons_verify_module,
-                 "[module name]"),
+        Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
         "Name of the module to verify");
 
        ( noshort,
         "__temp_no_proj",
-         OneArg ((fun x -> mk_list (x :: get___temp_no_proj() |> List.map mk_string)),
-                  "[module name]"),
+        Accumulated (SimpleStr "module_name"),
         "Don't generate projectors for this module");
 
        ( 'v',
          "version",
-         ZeroArgs (fun _ -> display_version(); exit 0),
+         WithSideEffect ((fun _ -> display_version(); exit 0),
+                         (Const (mk_bool true))),
          "Display version number");
 
        ( noshort,
          "warn_default_effects",
-         ZeroArgs (fun _ -> mk_bool true),
+         Const (mk_bool true),
          "Warn when (a -> b) is desugared to (a -> Tot b)");
 
        ( noshort,
          "z3cliopt",
-         OneArg ((fun s -> mk_list (get_z3cliopt() @ [s] |> List.map mk_string)), "[option]"),
+         ReverseAccumulated (SimpleStr "option"),
          "Z3 command line options");
 
        ( noshort,
         "z3refresh",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Restart Z3 after each query; useful for ensuring proof robustness");
 
        ( noshort,
         "z3rlimit",
-         OneArg ((fun s -> mk_int (int_of_string s)),
-                  "[positive integer]"),
+        IntStr "positive_integer",
         "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)");
 
        ( noshort,
         "z3rlimit_factor",
-         OneArg ((fun s -> mk_int (int_of_string s)),
-                  "[positive integer]"),
+        IntStr "positive_integer",
         "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)");
 
        ( noshort,
         "z3seed",
-         OneArg ((fun s -> mk_int (int_of_string s)),
-                  "[positive integer]"),
+        IntStr "positive_integer",
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
         "__no_positivity",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Don't check positivity of inductive types");
 
        ( noshort,
         "__ml_no_eta_expand_coertions",
-        ZeroArgs (fun () -> mk_bool true),
+        Const (mk_bool true),
         "Do not eta-expand coertions in generated OCaml");
 
+       ('h',
+        "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
+                                (Const (mk_bool true))),
+        "Display this information")]
 
-  ] in
-     ( 'h',
-        "help",
-        ZeroArgs (fun x -> display_usage_aux specs; exit 0),
-        "Display this information")::List.map mk_spec specs
-
-and parse_codegen s =
-  match s with
-  | "Kremlin"
-  | "OCaml"
-  | "FSharp" -> s
-  | _ ->
-     (Util.print_string "Wrong argument to codegen flag\n";
-      display_usage_aux (specs ()); exit 1)
-
-and string_as_bool option_name = function
-    | "true" -> mk_bool true
-    | "false" -> mk_bool false
-    | _ ->
-      Util.print1 "Wrong argument to %s\n" option_name;
-      display_usage_aux (specs ()); exit 1
-
-and validate_dir p =
-  mkdir false p;
-  p
-
-let docs () =
-  List.map (fun (_, name, _, doc) -> (name, doc)) (specs ())
+and specs () : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode log the type of opt_specs_with_types as a triple??
+  List.map (fun (short, long, typ, doc) ->
+            mk_spec (short, long, arg_spec_of_opt_type long typ, doc))
+           (specs_with_types ())
 
 //Several options can only be set at the time the process is created, and not controlled interactively via pragmas
 //Additionaly, the --smt option is a security concern
@@ -894,7 +940,6 @@ let settable = function
     | "hint_file"
     | "initial_fuel"
     | "initial_ifuel"
-    | "inline_arith"
     | "lax"
     | "load"
     | "log_types"
@@ -922,6 +967,8 @@ let settable = function
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
     | "no_tactics"
+    | "tactic_trace"
+    | "tactic_trace_d"
     | "using_facts_from"
     | "__temp_no_proj"
     | "reuse_hint_for"
@@ -935,6 +982,7 @@ let settable = function
 // these two options are resettable, but not settable
 let resettable s = settable s || s="z3seed" || s="z3cliopt"
 let all_specs = specs ()
+let all_specs_with_types = specs_with_types ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 let resettable_specs = all_specs |> List.filter (fun (_, x, _, _) -> resettable x)
 
@@ -972,7 +1020,7 @@ let set_options o s =
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
 let parse_cmd_line () =
-  let res = Getopt.parse_cmdline (specs()) (fun i -> file_list_ := !file_list_ @ [i]) in
+  let res = Getopt.parse_cmdline all_specs (fun i -> file_list_ := !file_list_ @ [i]) in
   res, List.map FC.try_convert_file_name_to_mixed !file_list_
 
 let file_list () =
@@ -1047,7 +1095,7 @@ let prims () =
       | Some result ->
         result
       | None ->
-        raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+        failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
     end
   | Some x -> x
 
@@ -1057,14 +1105,14 @@ let pervasives () =
   let filename = "FStar.Pervasives.fst" in
   match find_file filename with
   | Some result -> result
-  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+  | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
 
 let pervasives_basename () = basename (pervasives ())
 let pervasives_native_basename () =
   let filename = "FStar.Pervasives.Native.fst" in
   match find_file filename with
   | Some result -> basename result
-  | None        -> raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename))
+  | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
 
 
 let prepend_output_dir fname =
@@ -1136,12 +1184,15 @@ let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwra
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let split_cases                  () = get_split_cases                 ()
+let tactic_trace                 () = get_tactic_trace                ()
+let tactic_trace_d               () = get_tactic_trace_d              ()
 let timing                       () = get_timing                      ()
 let trace_error                  () = get_trace_error                 ()
 let unthrottle_inductives        () = get_unthrottle_inductives       ()
 let unsafe_tactic_exec           () = get_unsafe_tactic_exec          ()
 let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
+let use_hint_hashes              () = get_use_hint_hashes             ()
 let use_native_tactics           () = get_use_native_tactics          ()
 let use_tactics                  () = get_use_tactics                 ()
 let using_facts_from             () = get_using_facts_from            ()

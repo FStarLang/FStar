@@ -1,8 +1,24 @@
 [
   "‰Ö\u0001šìãPÿGTðì“ƒ×\u0014",
   [
-    [ "TestGhost.h", 1, 2, 1, [ "@query" ], 0 ],
-    [ "TestGhost.i", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [
+      "TestGhost.h",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9469007c660ff0c66f6b61a57e990ce3"
+    ],
+    [
+      "TestGhost.i",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "21e36e3d6e4b7aa1577a08238b2d101d"
+    ],
     [
       "TestGhost.i",
       2,
@@ -12,8 +28,17 @@
         "@query", "function_token_typing_Prims.int",
         "lemma_FStar.Ghost.hide_reveal"
       ],
-      0
+      0,
+      "17538998a475284607f2271181147843"
     ],
-    [ "TestGhost.j", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ]
+    [
+      "TestGhost.j",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "f568d6564ffbc143f9e98876b09ee068"
+    ]
   ]
 ]

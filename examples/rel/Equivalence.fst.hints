@@ -1,7 +1,15 @@
 [
   "µ³Sq5t\u001a!Cµ5:·¾{1",
   [
-    [ "Equivalence.if_left", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Equivalence.if_left",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e377f954eca5a8bfdd2e0ec6113fcaaa"
+    ],
     [
       "Equivalence.if_left",
       2,
@@ -14,7 +22,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "unit_typing"
       ],
-      0
+      0,
+      "e581b305a6094b366b8414a572bf09c2"
     ],
     [
       "Equivalence.if_left_wp",
@@ -32,7 +41,8 @@
         "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281",
         "unit_typing"
       ],
-      0
+      0,
+      "239b80857c409a53002698815dac73f2"
     ],
     [
       "Equivalence.if_left_wp",
@@ -43,7 +53,8 @@
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Equivalence_Tm_refine_2b5f2d484e596d06d6d46c7ceda588e0"
       ],
-      0
+      0,
+      "99bbe5d4f0f09cf5ddbea86e6168a24a"
     ],
     [
       "Equivalence.if_left_wp'",
@@ -59,7 +70,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
-      0
+      0,
+      "8ee401a4658d7d506cac0a6e2e9b5eef"
     ]
   ]
 ]

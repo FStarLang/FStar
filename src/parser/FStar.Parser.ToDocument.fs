@@ -480,6 +480,16 @@ and p_fsdoc (doc, kwd_args) =
   (* TODO : these newlines should not always be there *)
   hardline ^^ lparen ^^ star ^^ star ^^ str doc ^^ kwd_args_doc ^^ star ^^ rparen ^^ hardline
 
+
+and p_justSig d = match d.d with
+  | Val (lid, t) ->
+      (str "val" ^^ space ^^ p_lident lid ^^ space ^^ colon) ^/+^ p_typ t
+  | TopLevelLet (_, lbs) ->
+      separate_map hardline (fun lb -> group (str "let" ^/^ p_letlhs lb)) lbs
+  | _ ->
+      empty
+
+
 and p_rawDecl d = match d.d with
   | Open uid ->
     group (str "open" ^/^ p_quident uid)
@@ -587,22 +597,22 @@ and p_constructorDecl (uid, t_opt, doc_opt, use_of) =
   (* TODO : Should we allow tagging individual constructor with a comment ? *)
   optional p_fsdoc doc_opt ^^ break_ 0 ^^  default_or_map uid_doc (fun t -> (uid_doc ^^ space ^^ sep) ^/+^ p_typ t) t_opt
 
-and p_letbinding (pat, e) =
+and p_letlhs (pat, _) =
   (* TODO : this should be refined when head is an applicative pattern (function definition) *)
-  let pat_doc =
-    let pat, ascr_doc =
-      match pat.pat with
-      | PatAscribed (pat, t) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
-      | _ -> pat, empty
-    in
+  let pat, ascr_doc =
     match pat.pat with
-    | PatApp ({pat=PatVar (x, _)}, pats) ->
-        surround 2 1 (p_lident x)
-                      (separate_map_or_flow break1 p_atomicPattern pats ^^ ascr_doc)
-                      equals
-    | _ -> group (p_tuplePattern pat ^^ ascr_doc ^/^ equals)
+    | PatAscribed (pat, t) -> pat, break1 ^^ group (colon ^^ space ^^ p_tmArrow p_tmNoEq t)
+    | _ -> pat, empty
   in
-  prefix2 pat_doc (p_term e)
+  match pat.pat with
+  | PatApp ({pat=PatVar (x, _)}, pats) ->
+      group (p_lident x ^/^ separate_map_or_flow break1 p_atomicPattern pats ^^ ascr_doc)
+  | _ ->
+      group (p_tuplePattern pat ^^ ascr_doc)
+
+and p_letbinding (pat, e) =
+  let pat_doc = p_letlhs (pat, e) in
+  prefix2 (group (pat_doc ^/^ equals)) (p_term e)
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1243,6 +1253,8 @@ and p_atomicUniverse u = match (unparen u).tm with
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e = p_term e
+
+let signature_to_document e = p_justSig e
 
 let decl_to_document e = p_decl e
 

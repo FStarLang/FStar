@@ -1,7 +1,15 @@
 [
   "Ä©]\u0015‡§ıñê£\u0006ß¢í˚¸",
   [
-    [ "ArrayUtils.some_equivalent_seqs", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ArrayUtils.some_equivalent_seqs",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3530c3423d0309f71c92afc27eb39554"
+    ],
     [
       "ArrayUtils.lemma_get_some_equivalent_length",
       1,
@@ -13,7 +21,8 @@
         "refinement_interpretation_ArrayUtils_Tm_refine_e50addb6c1bbd8f85fb54bf03b146e15",
         "typing_ArrayUtils.get_some_equivalent", "unit_typing"
       ],
-      0
+      0,
+      "f976321eee994c74532c03840088b3d7"
     ],
     [
       "ArrayUtils.lemma_get_some_equivalent_index",
@@ -28,7 +37,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_ArrayUtils.get_some_equivalent", "unit_typing"
       ],
-      0
+      0,
+      "2bc233812ffcde9eb60993f522f0a700"
     ],
     [
       "ArrayUtils.lemma_get_some_equivalent_snoc",
@@ -59,7 +69,8 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Base.index",
         "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Properties.snoc"
       ],
-      0
+      0,
+      "7f9dd709359d219a74da4f492705538f"
     ],
     [
       "ArrayUtils.lemma_get_some_equivalent_append",
@@ -82,7 +93,8 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "c1acf8c1698bcc3d6f4efba36d70b187"
     ],
     [
       "ArrayUtils.lemma_get_some_equivalent_slice",
@@ -108,7 +120,8 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_aebc5aa9049e78f605051015a3436e68",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "f1e1900dcd8b498c4779b8aa271a0fb1"
     ],
     [
       "ArrayUtils.lemma_get_equivalent_sequence_slice",
@@ -140,7 +153,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.index"
       ],
-      0
+      0,
+      "dc3280bfe1066eed8ea6a5005905e2b7"
     ],
     [
       "ArrayUtils.lemma_get_equivalent_sequence_slice",
@@ -148,7 +162,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "893600737b83e2c582c01fe36ef2f22d"
     ],
     [
       "ArrayUtils.lemma_get_equivalent_sequence_slice",
@@ -156,23 +171,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "ArrayUtils.lemma_get_equivalent_sequence_slice",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "ArrayUtils.lemma_get_equivalent_sequence_slice",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "96f8981212068f82ae48506a6fdbd44f"
     ],
     [
       "ArrayUtils.copy_seq",
@@ -180,7 +180,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "039c236c8c6143cc0733804b70a531f6"
     ],
     [
       "ArrayUtils.copy_seq",
@@ -188,7 +189,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "7cd27443864311f29ce90f7ebce967f8"
     ],
     [
       "ArrayUtils.copy_seq",
@@ -205,9 +207,18 @@
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "d42758012cfb161f7ed198c3fb0991ce"
     ],
-    [ "ArrayUtils.is_prefix_of", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "ArrayUtils.is_prefix_of",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0669e8a627a84e1558af17adf2a83926"
+    ],
     [
       "ArrayUtils.lemma_is_prefix_of_slice",
       1,
@@ -222,7 +233,8 @@
         "refinement_interpretation_ArrayUtils_Tm_refine_c1711d8a7b0919288364d7fa4be66673",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "90431a0acd3fdc43b2f0a660dc6a30ac"
     ],
     [
       "ArrayUtils.seq_map",
@@ -233,8 +245,17 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "54c6ca05c0905d80fe30f4ba2dfb876a"
     ],
-    [ "ArrayUtils.seq_map", 2, 2, 1, [ "@query" ], 0 ]
+    [
+      "ArrayUtils.seq_map",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6a229433194fbdbeee43a908bedce2c9"
+    ]
   ]
 ]

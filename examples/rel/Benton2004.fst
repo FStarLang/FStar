@@ -164,7 +164,7 @@ let is_per_holds_sym
   (s s' : t)
 : Lemma
   (requires (is_per p))
-  (holds p s s' <==> holds p s' s)
+  (ensures (holds p s s' <==> holds p s' s))
   [SMTPat (holds p s s')]
 = holds_equiv p s s';
   holds_equiv p s' s
@@ -324,7 +324,7 @@ let exec_equiv_sym
   (f f' : computation)
 : Lemma
   (requires (is_per p /\ is_per p'))
-  (exec_equiv p p' f f' <==> exec_equiv p p' f' f)
+  (ensures (exec_equiv p p' f f' <==> exec_equiv p p' f' f))
   [SMTPat (exec_equiv p p' f f')]
 = ()
 

@@ -75,7 +75,7 @@ let get_z3version () =
 let ini_params () =
   let z3_v = get_z3version () in
   begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
+  then raise (Util.HardError (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v)))
   else ()
   end;
   (String.concat " "
@@ -377,7 +377,14 @@ type job<'a> = {
     callback: 'a -> unit
 }
 
-type z3job = job<(z3status * int * z3statistics)>
+type z3result = {
+      z3result_status      : z3status;
+      z3result_time        : int;
+      z3result_statistics  : z3statistics;
+      z3result_query_hash  : option<string>
+}
+
+type z3job = job<z3result>
 
 let job_queue : ref<list<z3job>> = BU.mk_ref []
 
@@ -388,11 +395,14 @@ let with_monitor m f =
     BU.monitor_exit(m);
     res
 
-let z3_job fresh (label_messages:error_labels) input () : z3status * int * z3statistics =
+let z3_job fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
   let status, statistics = doZ3Exe fresh input label_messages in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
-  status, elapsed_time, statistics
+  { z3result_status     = status;
+    z3result_time       = elapsed_time;
+    z3result_statistics = statistics;
+    z3result_query_hash = qhash }
 
 let running = BU.mk_ref false
 
@@ -497,52 +507,72 @@ let refresh () =
         bg_z3_proc.refresh();
         bg_scope := List.flatten (List.rev !fresh_scope)
 
-//mark, reset_mark, commit_mark:
-//    setting rollback points for the interactive mode
-// JP: I suspect the expected usage for the interactive mode is as follows:
-// - the stack (fresh_scope) has size >= 1, the top scope contains the queries
-//   that have been successful so far
-// - one calls "mark" to push a new scope of tentative queries
-// - in case of success, the new scope is collapsed with the previous scope,
-//   effectively bringing the new queries into the scope of successful queries so far
-// - in case of failure, the new scope is discarded
-let mark msg =
-    push msg
-let reset_mark msg =
-    // JP: pop_context (in universal.fs) does the same thing: it calls pop,
-    // followed by refresh
-    pop msg;
-    refresh ()
-let commit_mark (msg:string) =
-    begin match !fresh_scope with
-        | hd::s::tl -> fresh_scope := (hd@s)::tl
-        | _ -> failwith "Impossible"
-    end
-
 let mk_input theory =
-    let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
+    let options = z3_options () in
+    let r, hash =
+        if Options.record_hints()
+        || (Options.use_hints() && Options.use_hint_hashes()) then
+            //the suffix of a "theory" that follows the "CheckSat" call
+            //contains semantically irrelevant things
+            //(e.g., get-model, get-statistics etc.)
+            //that vary depending on some user options (e.g., record_hints etc.)
+            //They should not be included in the query hash,
+            //so split the prefix out and use only it for the hash
+            let prefix, check_sat, suffix =
+                theory |>
+                BU.prefix_until (function CheckSat -> true | _ -> false) |>
+                Option.get
+            in
+            let suffix = check_sat::suffix in
+            let ps = String.concat "\n" (List.map (declToSmt options) prefix) in
+            let ss = String.concat "\n" (List.map (declToSmt options) suffix) in
+            ps ^ "\n" ^ ss, Some(BU.digest_of_string ps)
+        else
+            List.map (declToSmt options) theory |> String.concat "\n", None
+    in
     if Options.log_queries() then query_logging.write_to_log r ;
-    r
+    r, hash
 
-type z3result =
-      z3status
-    * int
-    * z3statistics
 type cb = z3result -> unit
+
+let cache_hit
+    (cache:option<string> * unsat_core)
+    (qhash:option<string>)
+    (cb:cb) =
+    if Options.use_hints() && Options.use_hint_hashes() then
+        match qhash with
+        | Some (x) when qhash = (fst cache) ->
+            let stats : z3statistics = BU.smap_create 0 in
+            smap_add stats "fstar_cache_hit" "1";
+            let result = {
+              z3result_status = UNSAT (snd cache);
+              z3result_time = 0;
+              z3result_statistics = stats;
+              z3result_query_hash = qhash
+            } in
+            cb result;
+            true
+        | _ ->
+            false
+    else
+        false
 
 let ask_1_core
     (filter_theory:decls_t -> decls_t * bool)
+    (cache:option<string> * unsat_core)
     (label_messages:error_labels)
     (qry:decls_t)
-    (cb: cb)
+    (cb:cb)
   = let theory = !bg_scope@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input = mk_input theory in
+    let input, qhash = mk_input theory in
     bg_scope := [] ; // Now consumed.
-    run_job ({job=z3_job false label_messages input; callback=cb})
+    if not (cache_hit cache qhash cb) then
+        run_job ({job=z3_job false label_messages input qhash; callback=cb})
 
 let ask_n_cores
     (filter_theory:decls_t -> decls_t * bool)
+    (cache:option<string> * unsat_core)
     (label_messages:error_labels)
     (qry:decls_t)
     (scope:option<scope_t>)
@@ -553,16 +583,18 @@ let ask_n_cores
                     (List.rev !fresh_scope)) in
     let theory = theory@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input = mk_input theory in
-    enqueue ({job=z3_job true label_messages input; callback=cb})
+    let input, qhash = mk_input theory in
+    if not (cache_hit cache qhash cb) then
+        enqueue ({job=z3_job true label_messages input qhash; callback=cb})
 
 let ask
     (filter:decls_t -> decls_t * bool)
+    (cache:option<string> * unsat_core)
     (label_messages:error_labels)
     (qry:decls_t)
     (scope:option<scope_t>)
     (cb:cb)
   = if Options.n_cores() = 1 then
-        ask_1_core filter label_messages qry cb
+        ask_1_core filter cache label_messages qry cb
     else
-        ask_n_cores filter label_messages qry scope cb
+        ask_n_cores filter cache label_messages qry scope cb

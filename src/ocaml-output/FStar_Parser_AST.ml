@@ -4,7 +4,7 @@ type level =
   | Expr
   | Type_level
   | Kind
-  | Formula
+  | Formula[@@deriving show]
 let uu___is_Un: level -> Prims.bool =
   fun projectee  -> match projectee with | Un  -> true | uu____5 -> false
 let uu___is_Expr: level -> Prims.bool =
@@ -21,7 +21,7 @@ type imp =
   | FsTypApp
   | Hash
   | UnivApp
-  | Nothing
+  | Nothing[@@deriving show]
 let uu___is_FsTypApp: imp -> Prims.bool =
   fun projectee  ->
     match projectee with | FsTypApp  -> true | uu____30 -> false
@@ -35,18 +35,18 @@ let uu___is_Nothing: imp -> Prims.bool =
     match projectee with | Nothing  -> true | uu____45 -> false
 type arg_qualifier =
   | Implicit
-  | Equality
+  | Equality[@@deriving show]
 let uu___is_Implicit: arg_qualifier -> Prims.bool =
   fun projectee  ->
     match projectee with | Implicit  -> true | uu____50 -> false
 let uu___is_Equality: arg_qualifier -> Prims.bool =
   fun projectee  ->
     match projectee with | Equality  -> true | uu____55 -> false
-type aqual = arg_qualifier FStar_Pervasives_Native.option
+type aqual = arg_qualifier FStar_Pervasives_Native.option[@@deriving show]
 type let_qualifier =
   | NoLetQualifier
   | Rec
-  | Mutable
+  | Mutable[@@deriving show]
 let uu___is_NoLetQualifier: let_qualifier -> Prims.bool =
   fun projectee  ->
     match projectee with | NoLetQualifier  -> true | uu____62 -> false
@@ -109,23 +109,23 @@ type term' =
   | Labeled of (term,Prims.string,Prims.bool) FStar_Pervasives_Native.tuple3
   | Assign of (FStar_Ident.ident,term) FStar_Pervasives_Native.tuple2
   | Discrim of FStar_Ident.lid
-  | Attributes of term Prims.list
+  | Attributes of term Prims.list[@@deriving show]
 and term = {
   tm: term';
   range: FStar_Range.range;
-  level: level;}
+  level: level;}[@@deriving show]
 and binder' =
   | Variable of FStar_Ident.ident
   | TVariable of FStar_Ident.ident
   | Annotated of (FStar_Ident.ident,term) FStar_Pervasives_Native.tuple2
   | TAnnotated of (FStar_Ident.ident,term) FStar_Pervasives_Native.tuple2
-  | NoName of term
+  | NoName of term[@@deriving show]
 and binder =
   {
   b: binder';
   brange: FStar_Range.range;
   blevel: level;
-  aqual: aqual;}
+  aqual: aqual;}[@@deriving show]
 and pattern' =
   | PatWild
   | PatConst of FStar_Const.sconst
@@ -144,10 +144,10 @@ and pattern' =
   Prims.list
   | PatAscribed of (pattern,term) FStar_Pervasives_Native.tuple2
   | PatOr of pattern Prims.list
-  | PatOp of FStar_Ident.ident
+  | PatOp of FStar_Ident.ident[@@deriving show]
 and pattern = {
   pat: pattern';
-  prange: FStar_Range.range;}
+  prange: FStar_Range.range;}[@@deriving show]
 let uu___is_Wild: term' -> Prims.bool =
   fun projectee  -> match projectee with | Wild  -> true | uu____539 -> false
 let uu___is_Const: term' -> Prims.bool =
@@ -503,14 +503,14 @@ let __proj__Mkpattern__item__prange: pattern -> FStar_Range.range =
     | { pat = __fname__pat; prange = __fname__prange;_} -> __fname__prange
 type branch =
   (pattern,term FStar_Pervasives_Native.option,term)
-    FStar_Pervasives_Native.tuple3
-type knd = term
-type typ = term
-type expr = term
+    FStar_Pervasives_Native.tuple3[@@deriving show]
+type knd = term[@@deriving show]
+type typ = term[@@deriving show]
+type expr = term[@@deriving show]
 type fsdoc =
   (Prims.string,(Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
                   Prims.list)
-    FStar_Pervasives_Native.tuple2
+    FStar_Pervasives_Native.tuple2[@@deriving show]
 type tycon =
   | TyconAbstract of
   (FStar_Ident.ident,binder Prims.list,knd FStar_Pervasives_Native.option)
@@ -528,7 +528,7 @@ type tycon =
   (FStar_Ident.ident,term FStar_Pervasives_Native.option,fsdoc
                                                            FStar_Pervasives_Native.option,
     Prims.bool) FStar_Pervasives_Native.tuple4 Prims.list)
-  FStar_Pervasives_Native.tuple4
+  FStar_Pervasives_Native.tuple4[@@deriving show]
 let uu___is_TyconAbstract: tycon -> Prims.bool =
   fun projectee  ->
     match projectee with | TyconAbstract _0 -> true | uu____2335 -> false
@@ -585,7 +585,7 @@ type qualifier =
   | Reifiable
   | Reflectable
   | Opaque
-  | Logic
+  | Logic[@@deriving show]
 let uu___is_Private: qualifier -> Prims.bool =
   fun projectee  ->
     match projectee with | Private  -> true | uu____2660 -> false
@@ -646,12 +646,12 @@ let uu___is_Opaque: qualifier -> Prims.bool =
 let uu___is_Logic: qualifier -> Prims.bool =
   fun projectee  ->
     match projectee with | Logic  -> true | uu____2750 -> false
-type qualifiers = qualifier Prims.list
-type attributes_ = term Prims.list
+type qualifiers = qualifier Prims.list[@@deriving show]
+type attributes_ = term Prims.list[@@deriving show]
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of term Prims.list
-  | Doc of fsdoc
+  | Doc of fsdoc[@@deriving show]
 let uu___is_Qualifier: decoration -> Prims.bool =
   fun projectee  ->
     match projectee with | Qualifier _0 -> true | uu____2774 -> false
@@ -670,7 +670,7 @@ let __proj__Doc__item___0: decoration -> fsdoc =
 type lift_op =
   | NonReifiableLift of term
   | ReifiableLift of (term,term) FStar_Pervasives_Native.tuple2
-  | LiftForFree of term
+  | LiftForFree of term[@@deriving show]
 let uu___is_NonReifiableLift: lift_op -> Prims.bool =
   fun projectee  ->
     match projectee with | NonReifiableLift _0 -> true | uu____2840 -> false
@@ -691,7 +691,7 @@ type lift =
   {
   msource: FStar_Ident.lid;
   mdest: FStar_Ident.lid;
-  lift_op: lift_op;}
+  lift_op: lift_op;}[@@deriving show]
 let __proj__Mklift__item__msource: lift -> FStar_Ident.lid =
   fun projectee  ->
     match projectee with
@@ -710,7 +710,7 @@ let __proj__Mklift__item__lift_op: lift -> lift_op =
 type pragma =
   | SetOptions of Prims.string
   | ResetOptions of Prims.string FStar_Pervasives_Native.option
-  | LightOff
+  | LightOff[@@deriving show]
 let uu___is_SetOptions: pragma -> Prims.bool =
   fun projectee  ->
     match projectee with | SetOptions _0 -> true | uu____2941 -> false
@@ -747,19 +747,20 @@ type decl' =
   | Pragma of pragma
   | Fsdoc of fsdoc
   | Assume of (FStar_Ident.ident,term) FStar_Pervasives_Native.tuple2
+[@@deriving show]
 and decl =
   {
   d: decl';
   drange: FStar_Range.range;
   doc: fsdoc FStar_Pervasives_Native.option;
   quals: qualifiers;
-  attrs: attributes_;}
+  attrs: attributes_;}[@@deriving show]
 and effect_decl =
   | DefineEffect of
   (FStar_Ident.ident,binder Prims.list,term,decl Prims.list)
   FStar_Pervasives_Native.tuple4
   | RedefineEffect of (FStar_Ident.ident,binder Prims.list,term)
-  FStar_Pervasives_Native.tuple3
+  FStar_Pervasives_Native.tuple3[@@deriving show]
 let uu___is_TopLevelModule: decl' -> Prims.bool =
   fun projectee  ->
     match projectee with | TopLevelModule _0 -> true | uu____3128 -> false
@@ -887,7 +888,7 @@ type modul =
   | Module of (FStar_Ident.lid,decl Prims.list)
   FStar_Pervasives_Native.tuple2
   | Interface of (FStar_Ident.lid,decl Prims.list,Prims.bool)
-  FStar_Pervasives_Native.tuple3
+  FStar_Pervasives_Native.tuple3[@@deriving show]
 let uu___is_Module: modul -> Prims.bool =
   fun projectee  ->
     match projectee with | Module _0 -> true | uu____3679 -> false
@@ -902,8 +903,9 @@ let __proj__Interface__item___0:
     (FStar_Ident.lid,decl Prims.list,Prims.bool)
       FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Interface _0 -> _0
-type file = modul
-type inputFragment = (file,decl Prims.list) FStar_Util.either
+type file = modul[@@deriving show]
+type inputFragment = (file,decl Prims.list) FStar_Util.either[@@deriving
+                                                               show]
 let check_id: FStar_Ident.ident -> Prims.unit =
   fun id  ->
     let first_char =

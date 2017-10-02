@@ -7,19 +7,30 @@
       2,
       1,
       [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "a2d36fa9fe60b64ff1c0e246c74b3f6c"
     ],
-    [ "Canon.Test.lem8", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Canon.Test.lem8",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "72dbcb0e5b2ed519e1b293ac99388c16"
+    ],
     [
       "Canon.Test.lem9",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "f995b67b03349c173833ee96fa1672f9"
     ],
     [
       "Canon.Test.lem10",
@@ -27,7 +38,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "02b19c21a3b5c8e3ce26cf71da9a93ff"
     ]
   ]
 ]

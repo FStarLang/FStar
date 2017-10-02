@@ -1,21 +1,23 @@
 open Dynlink
-open String
-module U = FStar_Util
 
-(* This module needs to be referenced in order for Dynlink to work *)
-module X = FStar_Tactics_Effect
+module U = FStar_Util
+module E = FStar_Errors
+
+let loaded_taclib = ref false
 
 let load_tactic tac =
-    let _ = (try Dynlink.loadfile tac with
-    | e ->
-        let str =
-            match e with
-            | Dynlink.Error e -> Dynlink.error_message e
-            | _ -> "Could not dynlink tactic"
-        in
-        failwith str) in
-    U.print1 "Dynlinked %s\n" tac;
-    ()
+  let dynlink fname =
+    try
+      Dynlink.loadfile fname
+    with Dynlink.Error e ->
+      failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e)) in
+
+  if not !loaded_taclib then begin
+      dynlink (FStar_Options.fstar_home () ^ "/bin/fstar-tactics-lib/fstartaclib.cmxs");
+      loaded_taclib := true
+    end;
+  dynlink tac;
+  ignore (U.print1 "Dynlinked %s\n" tac)
 
 let load_tactics tacs =
     List.iter load_tactic tacs
@@ -28,16 +30,22 @@ let load_tactics tacs =
     |> List.map (fun s -> dir ^ "/" ^ s)
     |> List.iter load_tactic
 
-let compile_modules dir ms =
-    let fs_home = FStar_Options.fstar_home () in
-    let compile m =
-        Sys.command ("ocamlfind ocamlopt -shared " ^
-        "-I " ^ fs_home ^ "/src/ocaml-output/_build/src/tactics/ml " ^
-        "-I " ^ fs_home ^ "/src/ocaml-output/_build/ulib/ml " ^
-        "-I " ^ fs_home ^ "/src/ocaml-output/_build/ulib/ml/compiler " ^
-        "-I " ^ fs_home ^ "/src/ocaml-output/_build/src/ocaml-output/ " ^
-        "-I " ^ fs_home ^ "/src/ocaml-output/_build/src/basic/ml " ^
-        "-linkpkg -package zarith -o " ^ m ^ ".cmxs " ^ m ^ ".ml") in
-    ms
-    |> List.map (fun m -> dir ^ "/" ^ m)
-    |> List.iter (fun x -> compile x; ())
+ let compile_modules dir ms =
+   let fs_home = FStar_Options.fstar_home () in
+   let compile m =
+     let packages = ["fstar-tactics-lib"] in
+     let pkg pname = "-package " ^ pname in
+     let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
+                @ ["-I"; dir]
+                @ (List.map pkg packages)
+                @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
+     let env_setter = U.format1 "env OCAMLPATH=\"%s/bin/\"" fs_home in
+     let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
+     let rc = Sys.command cmd in
+     if rc <> 0
+     then raise (E.Err (U.format2 "Failed to compile native tactic. Command\n`%s`\nreturned with exit code %s"
+                                  cmd (string_of_int rc)))
+     else ()
+   in ms
+      |> List.map (fun m -> dir ^ "/" ^ m)
+      |> List.iter compile

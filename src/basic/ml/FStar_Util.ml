@@ -29,7 +29,7 @@ let string_of_time = string_of_float
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
 
 type proc =
     {inc : in_channel;
@@ -396,6 +396,7 @@ let unicode_of_string (string:string) =
 
 let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
+let safe_int_of_string x = try Some (int_of_string x) with Invalid_argument _ -> None
 let int_of_char x = Z.of_int x
 let int_of_byte x = x
 let int_of_uint8 x = Z.of_int (Char.code x)
@@ -615,7 +616,7 @@ let first_N n l =
   f [] 0 l
 
 let nth_tail n l =
-  let rec aux n l = 
+  let rec aux n l =
     if n=0 then l else aux (n - 1) (BatList.tl l)
   in
   aux (Z.to_int n) l
@@ -861,15 +862,21 @@ let digest_of_string (s:string) =
 
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
+let measure_execution_time tag f =
+  let t = Sys.time () in
+  let retv = f () in
+  print2 "Execution time of %s: %s ms\n" tag (string_of_float (1000.0 *. (Sys.time() -. t)));
+  retv
 
 (** Hints. *)
 type hint = {
-    hint_name: string;
-    hint_index: Z.t;
+    hint_name:string;
+    hint_index:Z.t;
     fuel:Z.t;
     ifuel:Z.t;
-    unsat_core: string list option;
-    query_elapsed_time:Z.t
+    unsat_core:string list option;
+    query_elapsed_time:Z.t;
+    hash:string option
 }
 
 type hints = hint option list
@@ -884,75 +891,90 @@ let write_hints (filename: string) (hints: hints_db): unit =
     `String hints.module_digest;
     `List (List.map (function
       | None -> `Null
-      | Some { hint_name; hint_index; fuel; ifuel; unsat_core; query_elapsed_time } ->
+      | Some { hint_name; hint_index; fuel; ifuel; unsat_core; query_elapsed_time; hash } ->
           `List [
-	    `String hint_name;
-	    `Int (Z.to_int hint_index);
+            `String hint_name;
+            `Int (Z.to_int hint_index);
             `Int (Z.to_int fuel);
             `Int (Z.to_int ifuel);
             (match unsat_core with
             | None -> `Null
             | Some strings ->
                 `List (List.map (fun s -> `String s) strings));
-            `Int (Z.to_int query_elapsed_time)
+            `Int (Z.to_int query_elapsed_time);
+            `String (match hash with | Some(h) -> h | _ -> "")
           ]
     ) hints.hints)
   ] in
   Yojson.Safe.pretty_to_channel (open_out_bin filename) json
 
 let read_hints (filename: string): hints_db option =
-    try
+  let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {
+      hint_name = nm;
+      hint_index = Z.of_int ix;
+      fuel = Z.of_int fuel;
+      ifuel = Z.of_int ifuel;
+      unsat_core = begin
+        match unsat_core with
+        | `Null ->
+           None
+        | `List strings ->
+           Some (List.map (function
+                           | `String s -> s
+                           | _ -> raise Exit)
+                           strings)
+        |  _ ->
+           raise Exit
+        end;
+      query_elapsed_time = Z.of_int time;
+      hash = hash_opt
+  }
+  in
+  try
     let chan = open_in filename in
     let json = Yojson.Safe.from_channel chan in
     close_in chan;
-    Some (match json with
-    | `List [
-        `String module_digest;
-        `List hints
-      ] ->
-        {
-          module_digest;
-          hints = List.map (function
-            | `Null -> None
-            | `List [
-		`String hint_name;
-		`Int hint_index;
-                `Int fuel;
-                `Int ifuel;
-                unsat_core;
-                `Int query_elapsed_time
-              ] ->
-                Some {
-		  hint_name;
-		  hint_index = Z.of_int hint_index;
-                  fuel = Z.of_int fuel;
-                  ifuel = Z.of_int ifuel;
-                  unsat_core = begin match unsat_core with
-                    | `Null ->
-                        None
-                    | `List strings ->
-                        Some (List.map (function
-                          | `String s -> s
-                          | _ -> raise Exit
-                        ) strings)
-                    |  _ ->
-                        raise Exit
-                  end;
-                  query_elapsed_time = Z.of_int query_elapsed_time
-                }
-              | _ ->
-                 raise Exit
-          ) hints
-        }
-    | _ ->
-        raise Exit
+    Some (
+        match json with
+        | `List [
+            `String module_digest;
+            `List hints
+          ] -> {
+            module_digest;
+            hints = List.map (function
+                        | `Null -> None
+                        | `List [ `String hint_name;
+                                  `Int hint_index;
+                                  `Int fuel;
+                                  `Int ifuel;
+                                  unsat_core;
+                                  `Int query_elapsed_time ] ->
+                          (* This case is for dealing with old-style hint files
+                             that lack a query-hashes field. We should remove this
+                             case once we definitively remove support for old hints *)
+                           Some (mk_hint hint_name hint_index fuel ifuel unsat_core query_elapsed_time None)
+                        | `List [ `String hint_name;
+                                  `Int hint_index;
+                                  `Int fuel;
+                                  `Int ifuel;
+                                  unsat_core;
+                                  `Int query_elapsed_time;
+                                  `String hash ] ->
+                           let hash_opt = if hash <> "" then Some(hash) else None in
+                           Some (mk_hint hint_name hint_index fuel ifuel unsat_core query_elapsed_time hash_opt)
+                        | _ ->
+                           raise Exit
+                      ) hints
+          }
+        | _ ->
+           raise Exit
     )
   with
    | Exit ->
-      Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
+      print1_warning "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
       None
    | Sys_error _ ->
-      Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
+      print1_warning "Warning: Unable to open hints file: %s; ran without hints\n" filename;
       None
 
 (** Interactive protocol **)

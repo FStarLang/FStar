@@ -1,3 +1,8 @@
 *.fst-ver
 *.fsti-ver
-.mgen
+*.mgen
+ml/extracted
+ml/fstarlib.mllib
+tactics_ml/extracted
+tactics_ml/fstarlib_leftovers
+tactics_ml/fstartaclib.mllib

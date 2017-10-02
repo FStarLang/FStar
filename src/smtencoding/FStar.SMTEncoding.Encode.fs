@@ -73,9 +73,6 @@ let mk_data_tester env l x = mk_tester (escape l.str) x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
-    mark: unit -> unit;
-    reset_mark: unit -> unit;
-    commit_mark: unit -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
     fresh:string -> string;
@@ -109,19 +106,8 @@ let varops =
             f in
     let push () = scopes := new_scope()::!scopes in
     let pop () = scopes := List.tl !scopes in
-    let mark () = push () in
-    let reset_mark () = pop () in
-    let commit_mark () = match !scopes with
-        | (hd1, hd2)::(next1, next2)::tl ->
-          BU.smap_fold hd1 (fun key value v  -> BU.smap_add next1 key value) ();
-          BU.smap_fold hd2 (fun key value v  -> BU.smap_add next2 key value) ();
-          scopes := (next1, next2)::tl
-        | _ -> failwith "Impossible" in
     {push=push;
      pop=pop;
-     mark=mark;
-     reset_mark=reset_mark;
-     commit_mark=commit_mark;
      new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;
@@ -420,17 +406,7 @@ type pattern = {
  }
 exception Let_rec_unencodeable
 
-let encode_const = function
-    | Const_unit -> mk_Term_unit
-    | Const_bool true -> boxBool mkTrue
-    | Const_bool false -> boxBool mkFalse
-    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))])
-    | Const_int (i, None)  -> boxInt (mkInteger i)
-    | Const_int (i, Some _) -> failwith "Machine integers should be desugared"
-    | Const_string(s, _) -> varops.string_const s
-    | Const_range r -> mk_Range_const
-    | Const_effect -> mk_Term_type
-    | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
+exception Inner_let_rec
 
 let as_function_typ env t0 =
     let rec aux norm t =
@@ -497,7 +473,22 @@ let is_BitVector_primitive head args =
     | _ -> false
 
 
-let rec encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
+let rec encode_const c env =
+    match c with
+    | Const_unit -> mk_Term_unit, []
+    | Const_bool true -> boxBool mkTrue, []
+    | Const_bool false -> boxBool mkFalse, []
+    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))]), []
+    | Const_int (i, None)  -> boxInt (mkInteger i), []
+    | Const_int (repr, Some sw) ->
+      let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
+      encode_term syntax_term env
+    | Const_string(s, _) -> varops.string_const s, []
+    | Const_range r -> mk_Range_const, []
+    | Const_effect -> mk_Term_type, []
+    | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
+
+and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             (list<fv>                       (* translated bound variables *)
                             * list<term>                    (* guards *)
                             * env_t                         (* extended context *)
@@ -708,7 +699,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_term t env
 
       | Tm_constant c ->
-        encode_const c, []
+        encode_const c env
 
       | Tm_arrow(binders, c) ->
         let module_name = env.current_module_name in
@@ -1095,10 +1086,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let _ ->
-        Errors.diag t0.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
-        let e = varops.fresh "let-rec" in
-        let decl_e = Term.DeclFun(e, [], Term_sort, None) in
-        mkFreeV(e, Term_sort), [decl_e]
+        Errors.diag t0.pos "Non-top-level recursive functions, and their enclosings let bindings (including the top-level let) are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
+        raise Inner_let_rec
 
       | Tm_match(e, pats) ->
         encode_match e pats mk_Term_unit env encode_term
@@ -1154,7 +1143,9 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
         | Pat_wild _
         | Pat_dot_term _ -> mkTrue
         | Pat_constant c ->
-            mkEq(scrutinee, encode_const c)
+            let tm, decls = encode_const c env in
+            let _ = match decls with _::_ -> failwith "Unexpected encoding of constant pattern" | _ -> () in
+            mkEq(scrutinee, tm)
         | Pat_cons(f, args) ->
             let is_f =
                 let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
@@ -1780,11 +1771,10 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                         | [] -> decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
                         | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
-                                let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
                                 let name_tok_corr = Util.mkAssume(mkForall([[vtok_app]; [vapp]], vars, mkEq(vtok_app, vapp)),
                                                                 Some "Name-token correspondence",
                                                                 ("token_correspondence_"^vname)) in
-                                decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
+                                decls2@[vtok_decl;name_tok_corr;tok_typing], env in
                 vname_decl::tok_decl, env in
               let encoded_res_t, ty_pred, decls3 =
                    let res_t = SS.compress res_t in
@@ -1874,7 +1864,7 @@ let encode_top_level_let :
         let binders, body, lopt = U.abs_formals e in
         match binders with
         | _::_ -> begin
-            match (SS.compress t_norm).n with
+            match (U.unascribe <| SS.compress t_norm).n with
             | Tm_arrow(formals, c) ->
               let formals, c = SS.open_comp formals c in
               let nformals = List.length formals in
@@ -1954,19 +1944,13 @@ let encode_top_level_let :
                   else mkApp(f, List.map mkFreeV vars)
         in
 
-        if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
-        || typs  |> BU.for_some (fun t -> not <| (U.is_pure_or_ghost_function t ||
-                                                  is_reifiable_function env.tcenv t))
-        then decls, env
-        else if not is_rec
-        then
-          (* Encoding non-recursive definitions *)
-          match bindings, typs, toks with
-          | [{lbunivs=uvs;lbdef=e}], [t_norm], [(flid_fv, (f, ftok))] ->
+        let encode_non_rec_lbdef (bindings:list<letbinding>) (typs:list<S.term>) (toks:list<(S.fv * (string * option<term>))>) (env:env_t) =
+            match bindings, typs, toks with
+            | [{lbunivs=uvs;lbdef=e}], [t_norm], [(flid_fv, (f, ftok))] ->
 
-              (* Open universes *)
-              let flid = flid_fv.fv_name.v in
-              let env', e, t_norm =
+                (* Open universes *)
+                let flid = flid_fv.fv_name.v in
+                let env', e, t_norm =
                 let tcenv', _, e_t =
                     Env.open_universes_in env.tcenv uvs [e; t_norm] in
                 let e, t_norm =
@@ -1974,40 +1958,41 @@ let encode_top_level_let :
                     | [e; t_norm] -> e, t_norm
                     | _ -> failwith "Impossible" in
                 {env with tcenv=tcenv'}, e, t_norm
-              in
+                in
 
-              (* Open binders *)
-              let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
-              if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-              then BU.print2 "Encoding let : binders=[%s], body=%s\n"
+                (* Open binders *)
+                let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
+                if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+                then BU.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (Print.binders_to_string ", " binders)
                                 (Print.term_to_string body);
-              (* Encode binders *)
-              let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
+                (* Encode binders *)
+                let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
 
-              let body =
+                let body =
                 (* Reify the body if needed *)
                 if is_reifiable_function env'.tcenv t_norm
                 then TcUtil.reify_body env'.tcenv body
                 else body
-              in
-              let app = mk_app curry f ftok vars in
-              let app, (body, decls2) =
-                  if quals |> List.contains Logic
-                  then mk_Valid app, encode_formula body env'
-                  else app, encode_term body env'
-              in
+                in
+                let app = mk_app curry f ftok vars in
+                let app, (body, decls2) =
+                    if quals |> List.contains Logic
+                    then mk_Valid app, encode_formula body env'
+                    else app, encode_term body env'
+                in
 
-              //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
-              //But the guard is unnecessary given the pattern
-              let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body)),
-                                  Some (BU.format1 "Equation for %s" flid.str),
-                                  ("equation_"^f)) in
-              decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
-              env
+                //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
+                //But the guard is unnecessary given the pattern
+                let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body)),
+                                    Some (BU.format1 "Equation for %s" flid.str),
+                                    ("equation_"^f)) in
+                decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
+                env
+            | _ -> failwith "Impossible"
+        in
 
-          | _ -> failwith "Impossible"
-        else
+        let encode_rec_lbdefs (bindings:list<letbinding>) (typs:list<S.term>) (toks:list<(S.fv * (string * option<term>))>) (env:env_t) =
           (* encoding recursive definitions using fuel to throttle unfoldings *)
           (* We create a new variable corresponding to the current fuel *)
           let fuel = varops.fresh "fuel", Fuel_sort in
@@ -2110,6 +2095,21 @@ let encode_top_level_let :
           in
           let eqns = List.rev eqns in
           prefix_decls@rest@eqns, env0
+        in
+
+        if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
+        || typs  |> BU.for_some (fun t -> not <| (U.is_pure_or_ghost_function t ||
+                                                  is_reifiable_function env.tcenv t))
+        then decls, env
+        else
+          try
+            if not is_rec
+            then
+              (* Encoding non-recursive definitions *)
+              encode_non_rec_lbdef bindings typs toks env
+            else
+              encode_rec_lbdefs bindings typs toks env
+          with Inner_let_rec -> decls, env  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->
       let msg = bindings |> List.map (fun lb -> Print.lbname_to_string lb.lbname) |> String.concat " and " in
@@ -2634,12 +2634,6 @@ let push_env () = match !last_env with
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl
-let mark_env () = push_env()
-let reset_mark_env () = pop_env()
-let commit_mark_env () =
-    match !last_env with
-        | hd::_::tl -> last_env := hd::tl
-        | _ -> failwith "Impossible"
 (* TOP-LEVEL API *)
 
 let init tcenv =
@@ -2654,18 +2648,6 @@ let pop msg   =
     let _ = pop_env() in
     varops.pop();
     Z3.pop msg
-let mark msg =
-    mark_env();
-    varops.mark();
-    Z3.mark msg
-let reset_mark msg =
-    reset_mark_env();
-    varops.reset_mark();
-    Z3.reset_mark msg
-let commit_mark (msg:string) =
-    commit_mark_env();
-    varops.commit_mark();
-    Z3.commit_mark msg
 
 //////////////////////////////////////////////////////////////////////////
 //guarding top-level terms with fact database triggers

@@ -18,12 +18,14 @@ open FStar.Map
 open FStar.Preorder
 open FStar.Monotonic.Heap
 
-abstract let rid = list (int * int)
+open FStar.Ghost
 
-let reveal (r:rid) : GTot (list (int * int)) = r
+abstract type rid = erased (list (int * int))
+
+let reveal (r:rid) : GTot (list (int * int)) = reveal r
 
 abstract let color (x:rid): GTot int =
-  match x with
+  match reveal x with
   | [] -> 0
   | (c, _)::_ -> c
 
@@ -36,11 +38,12 @@ let has_eq_rid (u:unit) :
 
 assume HasEq_rid: hasEq rid //TODO: we just proved this above, but we need to expose it as an argument-free SMT lemma, which isn't supported yet
 
-abstract let root : rid = []
+(* AR: see issue#1262 *)
+abstract let root :rid = let x:rid = hide [] in x
 
 //is this SMTPat bad ?
-val lemma_root_has_color_zero: r:rid{r = root}
-                               -> Lemma (requires (True)) (ensures (color r = 0))
+val lemma_root_has_color_zero: r:rid{r == root}
+                               -> Lemma (requires True) (ensures (color r = 0))
                                  [SMTPat (color r)]
 let lemma_root_has_color_zero r = ()
 
@@ -73,11 +76,16 @@ val lemma_as_ref_inj: #a:Type -> #i:rid -> #rel:preorder a -> r:mrref i a rel
        [SMTPat (as_ref r)]
 let lemma_as_ref_inj #a #i #rel r = ()
 
-abstract val includes : rid -> rid -> GTot bool
+private let rid_tail (r:rid{Cons? (reveal r)}) :rid =
+  elift1_p Cons?.tl r
+
+private let rid_length (r:rid) :GTot nat = List.Tot.length (reveal r)
+
+abstract val includes : r1:rid -> r2:rid -> GTot bool (decreases (reveal r2))
 let rec includes r1 r2 =
   if r1=r2 then true
-  else if List.Tot.length r2 > List.Tot.length r1
-  then includes r1 (Cons?.tl r2)
+  else if rid_length r2 > rid_length r1
+  then includes r1 (rid_tail r2)
   else false
 
 let disjoint (i:rid) (j:rid) : GTot bool =
@@ -85,13 +93,13 @@ let disjoint (i:rid) (j:rid) : GTot bool =
 
 private val lemma_aux: k:rid -> i:rid
       -> Lemma  (requires
-                    List.Tot.length k > 0
-                    /\ List.Tot.length k <= List.Tot.length i
+                    rid_length k > 0
+                    /\ rid_length k <= rid_length i
                     /\ includes k i
-                    /\ not (includes (Cons?.tl k) i))
+                    /\ not (includes (rid_tail k) i))
                  (ensures False)
-                 (decreases (List.Tot.length i))
-let rec lemma_aux k i = lemma_aux k (Cons?.tl i)
+                 (decreases (rid_length i))
+let rec lemma_aux k i = lemma_aux k (rid_tail i)
 
 abstract val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
   Lemma (requires (disjoint i j /\ includes j k))
@@ -100,20 +108,20 @@ abstract val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
         [SMTPat (disjoint i j);
          SMTPat (includes j k)]
 let rec lemma_disjoint_includes i j k =
-  if List.Tot.length k <= List.Tot.length j
+  if rid_length k <= rid_length j
   then ()
-  else (lemma_disjoint_includes i j (Cons?.tl k);
-        if List.Tot.length i <= List.Tot.length (Cons?.tl k)
+  else (lemma_disjoint_includes i j (rid_tail k);
+        if rid_length i <= rid_length (rid_tail k)
         then ()
         else (if includes k i
               then lemma_aux k i
               else ()))
 
 abstract val extends: rid -> rid -> GTot bool
-let extends r0 r1 = Cons? r0 && Cons?.tl r0 = r1
+let extends r0 r1 = Cons? (reveal r0) && rid_tail r0 = r1
 
-abstract val parent: r:rid{r<>root} -> Tot rid
-let parent r = Cons?.tl r
+abstract val parent: r:rid{r<>root} -> GTot rid
+let parent r = rid_tail r
 
 abstract val lemma_includes_refl: i:rid
                       -> Lemma (requires (True))
@@ -156,8 +164,8 @@ abstract val lemma_extends_only_parent: i:rid -> j:rid{extends j i} ->
         [SMTPat (extends j i)]
 let lemma_extends_only_parent i j = ()
 
-private let test0 = assert (includes [(0, 1) ; (1, 0)] [(2, 2); (0, 1); (1, 0)])
-private let test1 (r1:rid) (r2:rid{includes r1 r2}) = assert (includes r1 ((0,0)::r2))
+private let test0 = assert (includes (hide [(0, 1) ; (1, 0)]) (hide [(2, 2); (0, 1); (1, 0)]))
+private let test1 (r1:rid) (r2:rid{includes r1 r2}) = assert (includes r1 (hide ((0,0)::(reveal r2))))
 
 let fresh_region (i:rid) (m0:t) (m1:t) =
  (forall j. includes i j ==> not (Map.contains m0 j))
@@ -205,13 +213,14 @@ let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 
 abstract val lemma_includes_trans: i:rid -> j:rid -> k:rid
                         -> Lemma (requires (includes i j /\ includes j k))
-                                 (ensures (includes i k))
-                                 [SMTPat (includes i j);
-                                  SMTPat (includes j k)]
+                                (ensures (includes i k))
+				(decreases (reveal k))
+                                [SMTPat (includes i j);
+                                 SMTPat (includes j k)]
 let rec lemma_includes_trans i j k =
   if j=k then ()
-  else match k with
-        | hd::tl -> lemma_includes_trans i j tl
+  else match reveal k with
+        | hd::tl -> lemma_includes_trans i j (hide tl)
 
 abstract val lemma_modset: i:rid -> j:rid
                   -> Lemma (requires (includes j i))
@@ -222,7 +231,7 @@ abstract val lemma_modifies_includes: m1:t -> m2:t
                        -> i:rid -> j:rid
                        -> Lemma (requires (modifies (Set.singleton i) m1 m2 /\ includes j i))
                                 (ensures (modifies (Set.singleton j) m1 m2))
-let lemma_modifies_includes m1 m2 s1 s2 = ()
+let lemma_modifies_includes m1 m2 i j = ()
 
 abstract val lemma_modifies_includes2: m1:t -> m2:t
                        -> s1:Set.set rid -> s2:Set.set rid
@@ -285,14 +294,12 @@ let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) =
      forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
 
 let extends_parent (tip:rid{tip<>root}) (r:rid)
-  : Lemma (requires True)
-          (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip)
+  : Lemma (ensures (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip))
           [SMTPat (extends r (parent tip))]
   = ()
 
 let includes_child (tip:rid{tip<>root}) (r:rid)
-  : Lemma (requires True)
-          (includes r tip ==> r=tip \/ includes r (parent tip))
+  : Lemma (ensures (includes r tip ==> r=tip \/ includes r (parent tip)))
           [SMTPat (includes r (parent tip))]
   = ()
 
@@ -303,8 +310,8 @@ let root_is_root (s:rid)
   = ()
 
 (*
- * AR: we can prove this lemma only if both the mreferences have same preorder
- *)
+//  * AR: we can prove this lemma only if both the mreferences have same preorder
+//  *)
 let lemma_sel_same_addr (#i: rid) (#a:Type0) (#rel:preorder a) (h:t) (r1:mrref i a rel) (r2:mrref i a rel)
   :Lemma (requires (contains_ref r1 h /\ addr_of r1 = addr_of r2))
          (ensures  (contains_ref r2 h /\ sel h r1 == sel h r2))
