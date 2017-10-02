@@ -1,7 +1,15 @@
 [
   "d\u001fÛ‹Àf«ô2\u0018\u0004–¶¸“ø",
   [
-    [ "Encrypt_SymEnc.uu___is_Ideal", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Encrypt_SymEnc.uu___is_Ideal",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b20324244b29280041c3057fdd1a09af"
+    ],
     [
       "Encrypt_SymEnc.__proj__Ideal__item__plain",
       1,
@@ -13,7 +21,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Encrypt_SymEnc_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
       ],
-      0
+      0,
+      "932078dc321ef7054d22a29debcf811e"
     ],
     [
       "Encrypt_SymEnc.__proj__Ideal__item__repr",
@@ -26,7 +35,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Encrypt_SymEnc_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
       ],
-      0
+      0,
+      "bf88b92bbb994e8dd87d4af7d5617575"
     ],
     [
       "Encrypt_SymEnc.__proj__Ideal__item___2",
@@ -39,7 +49,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Encrypt_SymEnc_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
       ],
-      0
+      0,
+      "5cf6f80394d3d86806c9c9f3b5efcb2b"
     ],
     [
       "Encrypt_SymEnc.__proj__Ideal__item__i",
@@ -52,9 +63,18 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Encrypt_SymEnc_Tm_refine_aeba281ff3db5ef268124d6ac4de91c8"
       ],
-      0
+      0,
+      "8ae5a5cee140596fd7740da0b087a2c3"
     ],
-    [ "Encrypt_SymEnc.uu___is_Concrete", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Encrypt_SymEnc.uu___is_Concrete",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e64154b19a2609e2afcf7c445eefdccd"
+    ],
     [
       "Encrypt_SymEnc.__proj__Concrete__item__plain",
       1,
@@ -66,7 +86,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Encrypt_SymEnc_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
       ],
-      0
+      0,
+      "3527c4efa9e1fa060c3ab11d696d0975"
     ],
     [
       "Encrypt_SymEnc.__proj__Concrete__item__repr",
@@ -79,7 +100,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Encrypt_SymEnc_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
       ],
-      0
+      0,
+      "76f9a54ceda1e523c5c456584ae00ed1"
     ],
     [
       "Encrypt_SymEnc.__proj__Concrete__item___2",
@@ -92,7 +114,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Encrypt_SymEnc_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
       ],
-      0
+      0,
+      "6ad5199b3613d15bf199e657bbd62456"
     ],
     [
       "Encrypt_SymEnc.__proj__Concrete__item__i",
@@ -105,7 +128,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Encrypt_SymEnc_Tm_refine_c498f4d14808e5b989acda0ba70ad0bf"
       ],
-      0
+      0,
+      "a3b035e0101f3f16613ad4fd5b92d082"
     ],
     [
       "Encrypt_SymEnc.c",
@@ -117,15 +141,8 @@
         "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
-      0
-    ],
-    [
-      "Encrypt_SymEnc.c",
-      2,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxBool_proj_0" ],
-      0
+      0,
+      "383137a90107288f25ebc9b29b188e6b"
     ],
     [
       "Encrypt_SymEnc.keygen",
@@ -136,59 +153,31 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_AES.blocksize", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.relation", "equation_FStar.ST.mref",
-        "equation_Prims.nat", "function_token_typing_AES.blocksize",
+        "equation_FStar.Heap.trivial_rel", "equation_FStar.ST.mref",
+        "equation_Prims.l_True", "equation_Prims.nat",
+        "function_token_typing_AES.blocksize",
         "function_token_typing_Encrypt_SymEnc.c",
         "function_token_typing_Prims.nat",
-        "partial_app_typing_859af28ef02ec7101f0b4123c7c2daa0",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp",
+        "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.sel"
       ],
-      0
+      0,
+      "b8fc7ab8474a4f82404e45c5515af962"
     ],
     [
-      "Encrypt_SymEnc.keygen",
-      2,
+      "Encrypt_SymEnc.__proj__Entry__item__k",
+      1,
       2,
       1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      [ "@query" ],
+      0,
+      "22804ab5a975704e92230a3dd9c1855a"
     ],
-    [
-      "Encrypt_SymEnc.keygen",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Encrypt_SymEnc.keygen",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel", "equation_Prims.nat",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [ "Encrypt_SymEnc.__proj__Entry__item__k", 1, 2, 1, [ "@query" ], 0 ],
     [
       "Encrypt_SymEnc.__proj__Entry__item__c",
       1,
@@ -198,28 +187,26 @@
         "@query", "proj_equation_Encrypt_SymEnc.Entry_k",
         "projection_inverse_Encrypt_SymEnc.Entry_k"
       ],
-      0
+      0,
+      "37f1d37995e5d2b4302f7982db8a14f1"
     ],
-    [ "Encrypt_SymEnc.__proj__Entry__item__plain", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Encrypt_SymEnc.__proj__Entry__item__plain",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5594cf9b23e09ceb7f2150f9f2911489"
+    ],
     [
       "Encrypt_SymEnc.log",
       1,
       2,
       1,
       [ "@query", "equation_FStar.ST.ref" ],
-      0
-    ],
-    [
-      "Encrypt_SymEnc.log",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "7935cf8cd6c6dca19a0233cd0a2cf52a"
     ],
     [
       "Encrypt_SymEnc.encrypt",
@@ -232,31 +219,8 @@
         "disc_equation_Encrypt_SymEnc.Ideal", "equation_AES.plain",
         "fuel_guarded_inversion_Encrypt_SymEnc.key"
       ],
-      0
-    ],
-    [
-      "Encrypt_SymEnc.encrypt",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Encrypt_SymEnc.encrypt",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "b8d27eafa8556fb0d9eaac9fa845c30b"
     ],
     [
       "Encrypt_SymEnc.decrypt",
@@ -270,7 +234,8 @@
         "equation_AES.nbytes", "equation_AES.plain", "equation_AES.psize",
         "fuel_guarded_inversion_Encrypt_SymEnc.key"
       ],
-      0
+      0,
+      "41422cfb6eb82bea7b1e6cab639895c2"
     ],
     [
       "Encrypt_SymEnc.decrypt",
@@ -285,19 +250,8 @@
         "haseqEncrypt_SymEnc_Tm_refine_a4882effbbffebcebded1bfc535411cb",
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
-      0
-    ],
-    [
-      "Encrypt_SymEnc.decrypt",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "9bb7b4a023c596c4a2d5ae2ed934f459"
     ]
   ]
 ]

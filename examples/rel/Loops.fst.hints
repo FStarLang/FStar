@@ -19,7 +19,8 @@
         "refinement_interpretation_Loops_Tm_refine_b154ce3b342a495bb8730cab2e6b9e58",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "c9d52cf5a25538b4145ae85b20dc52f8"
     ],
     [
       "Loops.sum_up",
@@ -27,7 +28,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "f4da9e829a37bdcdfb9aae4cd5228576"
     ],
     [
       "Loops.sum_up_eq",
@@ -35,7 +37,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "a2c8b16d28a1b89d94f8d33d92687a50"
     ],
     [
       "Loops.sum_up_eq",
@@ -46,7 +49,8 @@
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
-      0
+      0,
+      "9fc3288243585ac9e61036508b75a711"
     ],
     [
       "Loops.sum_up_eq",
@@ -111,7 +115,8 @@
         "true_interp", "typing_FStar.DM4F.Heap.upd", "typing_Loops.sum_up",
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "3bd537fcda6cb596c2d5c7d55575b352"
     ],
     [
       "Loops.sum_up_eq",
@@ -119,7 +124,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "1e4ac062d6113e802a671e911379d98c"
     ],
     [
       "Loops.sum_up_eq",
@@ -127,7 +133,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "5c9e456041cf95668e442e3a93c607a4"
     ],
     [
       "Loops.sum_up_commute",
@@ -135,7 +142,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "72e805a3c42cdd15f240a226cb844cbd"
     ],
     [
       "Loops.sum_up_commute",
@@ -149,7 +157,8 @@
         "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
-      0
+      0,
+      "51887af882f24f0109b7855c023ab58e"
     ],
     [
       "Loops.sum_up_commute",
@@ -218,7 +227,8 @@
         "typing_Loops.sum_up", "unit_inversion", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "ceef676c01650a1b828d46cb0aa8dbef"
     ],
     [
       "Loops.sum_up_commute",
@@ -226,7 +236,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "96e9558626ba6f3640bd46b5743129bc"
     ],
     [
       "Loops.sum_up_commute",
@@ -234,7 +245,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "b27d755e2553ee4a48dab7d01860b9bd"
     ],
     [
       "Loops.sum_up_commute",
@@ -242,7 +254,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "6bb38745eaed738e096bf13bd97dc03b"
     ],
     [
       "Loops.sum_up_commute",
@@ -250,7 +263,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "51c31dd916e6277f073e8c49f529c3a5"
     ],
     [
       "Loops.sum_up_commute",
@@ -258,7 +272,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "1f630b7d900749fbeb534f93a829d909"
     ],
     [
       "Loops.sum_up_commute",
@@ -266,7 +281,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "a5b706d3c16d64d549dfa05bbe3d6cc4"
     ],
     [
       "Loops.sum_dn",
@@ -285,7 +301,8 @@
         "refinement_interpretation_Loops_Tm_refine_b154ce3b342a495bb8730cab2e6b9e58",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "df90d999414ed1128947acca308bada8"
     ],
     [
       "Loops.sum_dn",
@@ -293,7 +310,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "5f46d1703d9fa9cc108e808a0b68598f"
     ],
     [
       "Loops.sum_dn_eq",
@@ -301,7 +319,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "4c82cda98890a5fa0610cb19da0fa8e1"
     ],
     [
       "Loops.sum_dn_eq",
@@ -312,7 +331,8 @@
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
-      0
+      0,
+      "70170333267ded0ae44dee8b61fc0c20"
     ],
     [
       "Loops.sum_dn_eq",
@@ -366,7 +386,8 @@
         "refinement_interpretation_Loops_Tm_refine_b154ce3b342a495bb8730cab2e6b9e58",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "ec1463d779515e3d9d426046896f8e61"
     ],
     [
       "Loops.sum_dn_eq",
@@ -374,7 +395,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "1287a645016640e0f86ab5a26bb1e746"
     ],
     [
       "Loops.sum_dn_eq",
@@ -382,7 +404,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "b39e1aca956d3655509acd2088cb4790"
     ],
     [
       "Loops.sum_dn_commute",
@@ -390,7 +413,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "fb961b7fdf955aea1381f86c8c6a8672"
     ],
     [
       "Loops.sum_dn_commute",
@@ -404,7 +428,8 @@
         "lemma_FStar.DM4F.Heap.upd_contains_a_well_typed",
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f"
       ],
-      0
+      0,
+      "62aefb0638f2cf539f91360dfea63498"
     ],
     [
       "Loops.sum_dn_commute",
@@ -460,7 +485,8 @@
         "typing_FStar.DM4F.Heap.upd", "typing_FStar.DM4F.Heap.upd_tot",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "0f7ace7d00b5087db89a219168c6371d"
     ],
     [
       "Loops.sum_dn_commute",
@@ -468,7 +494,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "8018ec0e77e53fe0db062ff02b2543ac"
     ],
     [
       "Loops.sum_dn_commute",
@@ -476,7 +503,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "c57ebc25ed31c995b8c45c25182b39c3"
     ],
     [
       "Loops.sum_dn_commute",
@@ -484,7 +512,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "92093b77c3085d5e21f578c9c9cdabfe"
     ],
     [
       "Loops.sum_dn_commute",
@@ -492,7 +521,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "7090faa4c971271fe3ab8b4edbd747b1"
     ],
     [
       "Loops.sum_dn_commute",
@@ -500,7 +530,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "b655d321c3808aef28d4e735891f702a"
     ],
     [
       "Loops.sum_dn_commute",
@@ -508,7 +539,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "803611c16a81cb5bd1e6f92875195c1c"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -516,7 +548,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "a7e397722c7d1bf5641b6ab9c90f4f01"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -528,7 +561,8 @@
         "refinement_interpretation_FStar.DM4F.Heap.ST_Tm_refine_d3cff47ff117e43191fee5488bb29a1f",
         "refinement_interpretation_Loops_Tm_refine_5d68b4aedab07e9543c96792e76744c9"
       ],
-      0
+      0,
+      "d92b854cbcccd1f1ff314ecb6eaba037"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -595,7 +629,8 @@
         "true_interp", "typing_Loops.sum_up", "typing_Loops.v",
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "001f365a1d7476c872cb89b2517bd14f"
     ],
     [
       "Loops.sum_up_dn_aux",
@@ -603,7 +638,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "65ea43b9a46976cb051b9980bc83036c"
     ],
     [
       "Loops.equiv_sum_up_dn",
@@ -638,7 +674,8 @@
         "true_interp", "typing_Loops.sum_dn", "typing_Loops.v",
         "unit_inversion", "unit_typing"
       ],
-      0
+      0,
+      "83435b6dd7730667a69517c184ee8c52"
     ],
     [
       "Loops.equiv_sum_up_dn",
@@ -646,15 +683,8 @@
       1,
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Loops.equiv_sum_up_dn",
-      3,
-      1,
       0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      "c8da93348c1d82d00a5851669098b3a9"
     ]
   ]
 ]

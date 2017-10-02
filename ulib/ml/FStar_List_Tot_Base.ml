@@ -1,5 +1,5 @@
 (* We give an implementation here using OCaml's BatList,
-   which privide tail-recursive versions of most functions *)
+   which provide tail-recursive versions of most functions *)
 let isEmpty l = l = []
 let hd = BatList.hd
 let tail = BatList.tl
@@ -34,7 +34,7 @@ let choose = BatList.filter_map
 let partition = BatList.partition
 let subset _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: subset"
 let noRepeats _ = failwith "FStar_List_Tot_Base.ml: Not implemented: noRepeats"
-let assoc _ _ = failwith "FStar_List_Tot_Base.ml: Not implemented: assoc"
+let assoc x l = match List.assoc x l with exception Not_found -> None | x -> Some x
 let split = BatList.split
 let unzip = split
 let rec unzip3 = function

@@ -87,17 +87,37 @@ Currently broken (c.f. issue #1103)
 *)
 let intro_rec : tactic (binder * binder) = fun () -> TAC?.reflect __intro_rec
 
+assume private val __rename_to  : binder -> string -> __tac unit
+(** [rename_to b nm] will rename the binder [b] to [nm] in
+the environment, goal, and witness in a safe manner. The only use of this
+is to make goals and terms more user readable. *)
+let rename_to bv s : tactic unit = fun () -> TAC?.reflect (__rename_to bv s)
+
 assume private val __revert  : __tac unit
 (** [revert] pushes out a binder from the environment into the goal type,
 so a behaviour opposite to [intros].
 *)
 let revert : tactic unit = fun () -> TAC?.reflect __revert
 
-assume private val __clear   : __tac unit
-(** [clear] will drop the outermost binder from the environment.
+assume private val __binder_retype  : binder -> __tac unit
+(** [binder_retype] changes the type of a binder in the context. After calling it
+with a binder of type `t`, the user is presented with a goal of the form `t == ?u`
+to be filled. The original goal (following that one) has the type of `b` in the
+context replaced by `?u`.
+*)
+let binder_retype (b : binder) : tactic unit = fun () -> TAC?.reflect (__binder_retype b)
+
+assume private val __clear_top : __tac unit
+(** [clear_top] will drop the outermost binder from the environment.
 Can only be used if the goal does not at all depend on it.
 *)
-let clear : tactic unit = fun () -> TAC?.reflect __clear
+let clear_top : tactic unit = fun () -> TAC?.reflect __clear_top
+
+assume private val __clear : binder -> __tac unit
+(** [clear] will drop the given binder from the context, is
+nothing depends on it.
+*)
+let clear (b : binder) : tactic unit = fun () -> TAC?.reflect (__clear b)
 
 assume private val __rewrite : binder -> __tac unit
 (** If [b] is a binder of type [v == r], [rewrite b] will rewrite

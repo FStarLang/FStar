@@ -1,0 +1,78 @@
+#+TITLE: Low-level binary format parsing
+* Data format
+#+BEGIN_EXAMPLE
+  +---------------------------+
+  | number of entries (32bit) |
+  +---------------------------+
+
+  repeated:
+     +---------------------+--------------+
+     | key length (16 bit) | key data ... |
+     +---------------------+--------------+
+     +-----------------------+---------------+
+     | value length (32 bit) | value data... |
+     +-----------------------+---------------+
+#+END_EXAMPLE
+
+* F* pure and stateful representations
+  [[file:KeyValue.fst][KeyValue.fst]]
+
+  Note the difference between ~encoded_entry~ and ~entry_st~.
+* Pure parsing (spec)
+  [[file:PureParser.fst][PureParser.fst]]
+** Parser combinators
+   ~parser t~ is a monad ~bytes -> Tot (option (t * n:nat{n <= length b}~
+
+   return some parsed value and the number of bytes consumed
+
+   our parsers never look ahead, but this turned out to be hard to encode and prove
+** No proofs - spec only
+* Detour: slices
+simple wrapper around buffers
+[[file:Slice.fst][Slice.fst]]
+** Buffers with runtime length
+   roughly []byte from Go (though that has a capacity)
+   same as &[u8] in Rust
+* Stateful validators
+idea is to validate input initially and then read without checking lengths
+[[file:Validator.fst][Validator.fst]]
+
+** Validators are roughly ~parser unit~ where success is validation
+** Validation requires parsing (eg, lengths)
+** Validators are correct wrt parsers
+   ~parser_st_nochk~ and ~parser_st~ are stateful parsers wit
+** Validators can be combined by sequencing
+   ~then_check~ is a monoid for validators (this gave a bunch of extraction trouble)
+** Parsing without checks examples
+   [[file:SkipChecksParsing.fst][SkipChecksParsing.fst]]
+* Validated parsing
+once we have a ~Some?~ from validation, let's access fields and parse on-the-fly
+[[file:ValidatedParser.fst][ValidatedParser.fst]]
+** the only API is ~fold_left_store~
+** could also get number of records
+** could also get an entry by index, but we didn't remember how many records there are
+** could also search for a key (linearly, didn't build an index)
+* Pure serialization (spec)
+[[file:PureEncoder.fst][PureEncoder.fst]]
+** Redundant, implied by parsing (better yet, vice versa)
+** Note this is easy, and so is pure parsing
+* Serialization
+[[file:Serializer.fst][Serializer.fst]]
+** Framing much more complicated, but structured
+** key primitive is splitting a bslice
+** similar ~ser_append~ monoid
+** start with ~serializer~: correctness is a specific ~seq byte~, no inputs
+** ~serializer_any~ has correctness in terms of an encoder, which uses pointers (~B.buffer~ or ~bslice~)
+** writing the entries is more complicated; haven't identified a pattern
+*** ~writer~ is a token or builder
+*** ~init~, ~append~ to add entries, ~finish~ to write dependent length and get a fact about a buffer
+*** writer does not have proper framing (yet)
+*** not really proven correct
+* Notes from presentation:
+** pass key-value store parser parser for the values
+** do notation for names "bind" and "return"
+** ask how this will integrate into TLS
+** ask how the key-value store will be used (if at all...)
+** fix for writer_append (move as_entry into Tot function)
+** fold_left should extract as (tail) recursive C function, something is wrong
+** writer should extract

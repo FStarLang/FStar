@@ -370,11 +370,12 @@ type modul = {
   exports: sigelts;
   is_interface:bool
 }
+let mod_name (m: modul) = m.name
+
 type path = list<string>
 type subst_t = list<subst_elt>
 type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
 type mk_t = mk_t_a<term'>
-
 
 
 let contains_reflectable (l: list<qualifier>): bool =

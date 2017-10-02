@@ -1,7 +1,23 @@
 [
   "π‘\u0003#å\u0000Ù>IV¥\u0010Æk÷h",
   [
-    [ "FStar.SquashEffect.return_squash", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.SquashEffect.bind_squash", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.SquashEffect.return_squash",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1cf6fa1445b3da208094fac6d62e00b2"
+    ],
+    [
+      "FStar.SquashEffect.bind_squash",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "51a11e30ae8f3fef5b4cd8e2c7d49b29"
+    ]
   ]
 ]

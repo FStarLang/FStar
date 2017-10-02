@@ -1,0 +1,18 @@
+[
+  "?´oJ∏èMs\u0018\u0005\u0005≥ñŸGm",
+  [
+    [
+      "Unify.uu___97",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Unify.h",
+        "function_token_typing_Unify.h", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "a16368261ba693ca42a8ff93d88050a0"
+    ]
+  ]
+]

@@ -833,6 +833,11 @@ let is_fstar_tactics_embed t =
     | Tm_fvar fv -> fv_eq_lid fv PC.fstar_refl_embed_lid
     | _ -> false
 
+let is_fstar_tactics_quote t =
+    match (un_uinst t).n with
+    | Tm_fvar fv -> fv_eq_lid fv PC.quote_lid
+    | _ -> false
+
 let is_fstar_tactics_by_tactic t =
     match (un_uinst t).n with
     | Tm_fvar fv -> fv_eq_lid fv PC.by_tactic_lid
@@ -850,7 +855,8 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh () in
     mk (Tm_type u) None dummyRange, u
 
-let attr_substitute = mk (Tm_constant (Const_string ("substitute", Range.dummyRange))) None Range.dummyRange
+let attr_substitute =
+mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) Delta_constant None)) None Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange

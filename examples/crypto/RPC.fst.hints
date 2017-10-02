@@ -2,42 +2,19 @@
   "_™L4‡\u0013\u0017±eÄÉ™‹zù~",
   [
     [
-      "RPC.msg_buffer",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
       "RPC.send",
       1,
       2,
       1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
-        "true_interp"
-      ],
-      0
-    ],
-    [
-      "RPC.send",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "equation_FStar.Heap.trivial_rel", "equation_Formatting.message",
+        "equation_Platform.Bytes.bytes", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
-      0
+      0,
+      "6f6072bb27d869436e140a9c129627d1"
     ],
     [
       "RPC.recv",
@@ -46,49 +23,14 @@
       1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.empty_bytes", "true_interp"
-      ],
-      0
-    ],
-    [
-      "RPC.recv",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
+        "equation_FStar.Heap.trivial_rel", "equation_Formatting.message",
+        "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.empty_bytes", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
-      0
-    ],
-    [
-      "RPC.recv",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "RPC.recv",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_Formatting.message", "equation_Platform.Bytes.bytes",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "d6b4284985fc067e6b2a5e566311a794"
     ],
     [
       "RPC.reqresp",
@@ -99,7 +41,8 @@
         "@query", "assumption_Platform.Bytes.HasEq_bytes",
         "equation_Formatting.message"
       ],
-      0
+      0,
+      "4da37306bd2f5aa66c84cf513b4be73c"
     ],
     [
       "RPC.reqresp",
@@ -110,7 +53,8 @@
         "@query", "assumption_Platform.Bytes.HasEq_bytes",
         "equation_Formatting.message"
       ],
-      0
+      0,
+      "e9271ead3f74c34aadc712fc1c34a6e6"
     ],
     [
       "RPC.k",
@@ -124,7 +68,8 @@
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2"
       ],
-      0
+      0,
+      "464d34d5781891923e74a6932acf00ef"
     ],
     [
       "RPC.client_send",
@@ -148,7 +93,8 @@
         "string_inversion", "token_correspondence_MAC.key_prop",
         "token_correspondence_RPC.reqresp", "unit_typing"
       ],
-      0
+      0,
+      "2b744f5adfd94e6b64674eef705a27bd"
     ],
     [
       "RPC.client_recv",
@@ -186,7 +132,8 @@
         "token_correspondence_RPC.reqresp", "typing_FStar.Seq.Base.eq",
         "typing_Formatting.response", "typing_Platform.Bytes.iutf8"
       ],
-      0
+      0,
+      "b13f6fb1291e2ee01b4ec2de191aa18c"
     ],
     [
       "RPC.server",
@@ -237,7 +184,8 @@
         "typing_Formatting.request", "typing_Platform.Bytes.iutf8",
         "typing_Platform.Bytes.utf8", "unit_inversion", "unit_typing"
       ],
-      0
+      0,
+      "6856d77efc2528a1c811a8c516c0e002"
     ],
     [
       "RPC.test",
@@ -263,7 +211,8 @@
         "string_typing", "typing_Formatting.length",
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
-      0
+      0,
+      "6150134bccdfbd049a5c843ee71c1859"
     ]
   ]
 ]

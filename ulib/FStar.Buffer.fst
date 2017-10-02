@@ -3,6 +3,7 @@ module FStar.Buffer
 open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.UInt32
+module Int32 = FStar.Int32
 open FStar.HyperStack
 open FStar.Ghost
 
@@ -670,7 +671,8 @@ let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2
   (requires (live h0 b /\ live h0 b' /\ modifies_1 b h0 h1 /\ modifies_1 b' h1 h2))
   (ensures  (modifies_2 b b' h0 h2 /\ modifies_2 b' b h0 h2))
   [SMTPatT (modifies_1 b h0 h1); SMTPatT (modifies_1 b' h1 h2)]
-  = ()
+  = if frameOf b = frameOf b' then modifies_trans_1_1' (frameOf b) b b' h0 h1 h2
+    else ()
 
 #reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0"
 
@@ -740,6 +742,27 @@ let lemma_modifies_2_1'' (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 
   = ()
 
 (* TODO: lemmas for modifies_3 *)
+
+let lemma_modifies_0_unalloc (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
+  (requires (b `unused_in` h0 /\
+    frameOf b == h0.tip /\
+    modifies_0 h0 h1 /\
+    modifies_1 b h1 h2))
+  (ensures (modifies_0 h0 h2))
+  = ()
+
+let lemma_modifies_none_1_trans (#a:Type) (b:buffer a) h0 h1 h2 : Lemma
+  (requires (modifies_none h0 h1 /\
+    live h0 b /\
+    modifies_1 b h1 h2))
+  (ensures (modifies_1 b h0 h2))
+  = ()
+
+let lemma_modifies_0_none_trans h0 h1 h2 : Lemma
+  (requires (modifies_0 h0 h1 /\
+    modifies_none h1 h2))
+  (ensures (modifies_0 h0 h2))
+  = ()
 
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
@@ -908,7 +931,7 @@ private val lemma_aux: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> z:
   [SMTPat (HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z))]
 let lemma_aux #a b n z h0 = lemma_aux_2 b n z h0
 
-val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
+abstract val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
   (requires (fun h -> live h b /\ v n < length b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
     /\ modifies_1 b h0 h1
