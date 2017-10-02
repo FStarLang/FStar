@@ -202,9 +202,9 @@ SOLVER_EXTRACTED_FILES=smtencoding/FStar.SMTEncoding.Solver.fs
 extract_solver: boot $(SOLVER_EXTRACTED_FILES)
 	$(FSTARBOOT) $(SOLVER_EXTRACTED_FILES) --extract_module FStar.SMTEncoding.Solver
 
-FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Legacy.Interactive.fs Interactive.fs Universal.fs Indent.fs Main.fs)
+FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Interactive.Legacy.fs Interactive.CompletionTable.fs Interactive.Ide.fs Universal.fs Indent.fs Main.fs)
 extract_fstar: boot $(FSTAR_EXTRACTED_FILES)
-	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Legacy.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
+	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive.CompletionTable --extract_module FStar.Interactive.Ide --extract_module FStar.Interactive.Legacy --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
 extract_typechecker: extract_normalizer extract_rel extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc
 
@@ -266,7 +266,7 @@ hello:
 	+$(MAKE) -C ../examples/hello ocaml
 
 # Getting parallelism from this target
-uregressions: hello ulib tutorial uexamples native_tactics interactive-test
+uregressions: hello native_tactics ulib tutorial uexamples extraction-examples interactive-test
 
 # Getting parallelism from this target as well
 uregressions-ulong: uregressions ulib-extra
@@ -284,6 +284,9 @@ tutorial: hello
 # Depends on fstarlib.cmxa, which is built by hello
 native_tactics: hello
 	+$(MAKE) -C ../examples/native_tactics all
+
+extraction-examples: hello
+	+$(MAKE) -C ../examples/extraction all
 
 uexamples:
 	+$(MAKE) -C ../examples all

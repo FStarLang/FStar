@@ -1,10 +1,42 @@
 [
   "\f‡nç7?∑Ñ\b<´2—N€$",
   [
-    [ "Ex12g.TMAC2.__proj__Keys__item__k0", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex12g.TMAC2.__proj__Keys__item__k1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex12g.TMAC2.bspec0", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex12g.TMAC2.bspec1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex12g.TMAC2.__proj__Keys__item__k0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "534b5fb902e669d9570f48209f2c94aa"
+    ],
+    [
+      "Ex12g.TMAC2.__proj__Keys__item__k1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b3008f277064d36e1f3a631d501c2cc7"
+    ],
+    [
+      "Ex12g.TMAC2.bspec0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "346ca05b15766b480ae0f059af94c099"
+    ],
+    [
+      "Ex12g.TMAC2.bspec1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "07fdc9d4b360934f3a1b6170018b1677"
+    ],
     [
       "Ex12g.TMAC2.keygen",
       1,
@@ -24,7 +56,8 @@
         "refinement_interpretation_Ex12.BMAC_Tm_refine_cdab0a4f5774a60caddf7613d39bb432",
         "typing_Ex12.BMAC.keygen"
       ],
-      0
+      0,
+      "abc2d4a8e8f0a61aed86887f90cd68c1"
     ],
     [
       "Ex12g.TMAC2.mac",
@@ -60,7 +93,8 @@
         "token_correspondence_Ex12g.TMAC2.bspec1",
         "typing_FStar.Seq.Base.length"
       ],
-      0
+      0,
+      "1bdf60e9d9cfe30734ffaff6b273bef8"
     ],
     [
       "Ex12g.TMAC2.verify",
@@ -99,7 +133,8 @@
         "token_correspondence_Ex12g.TMAC2.bspec1",
         "typing_FStar.Seq.Base.length"
       ],
-      0
+      0,
+      "cbcf768ea6bae0c3ebd2e2b6ec85cff3"
     ]
   ]
 ]

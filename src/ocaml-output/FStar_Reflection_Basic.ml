@@ -730,8 +730,8 @@ let rec inspect: FStar_Syntax_Syntax.term -> FStar_Reflection_Data.term_view
         let brs1 = FStar_List.map FStar_Syntax_Subst.open_branch brs in
         let brs2 =
           FStar_List.map
-            (fun uu___80_2150  ->
-               match uu___80_2150 with
+            (fun uu___104_2150  ->
+               match uu___104_2150 with
                | (pat,uu____2172,t4) ->
                    let uu____2190 = inspect_pat pat in (uu____2190, t4)) brs1 in
         FStar_Reflection_Data.Tv_Match (t3, brs2)
@@ -830,8 +830,8 @@ let pack: FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term =
               FStar_All.pipe_left wrap (FStar_Syntax_Syntax.Pat_wild bv) in
         let brs1 =
           FStar_List.map
-            (fun uu___81_2429  ->
-               match uu___81_2429 with
+            (fun uu___105_2429  ->
+               match uu___105_2429 with
                | (pat,t1) ->
                    let uu____2446 = pack_pat pat in
                    (uu____2446, FStar_Pervasives_Native.None, t1)) brs in

@@ -71,6 +71,7 @@ type step =
   | CompressUvars
   | NoFullNorm
   | CheckNoUvars
+  | Unmeta          //remove all non-monadic metas.
 and steps = list<step>
 
 type primitive_step = {
@@ -603,7 +604,8 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let set_range_of (r:Range.range) args : option<term> =
       match args with
-      | [_; (t, _); ({n=Tm_constant (FStar.Const.Const_range r)}, _)] ->
+      | [_; (t, _); (r, _)] ->
+        let r = EMB.unembed_range r in
         Some ({t with pos=r})
       | _ -> None
     in
@@ -884,6 +886,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_app(hd, args)
             when U.is_fstar_tactics_embed hd
+              || (U.is_fstar_tactics_quote hd && List.contains NoDeltaSteps cfg.steps)
               || U.is_fstar_tactics_by_tactic hd ->
             let args = closures_as_args_delayed cfg env args in
             let hd = closure_as_term cfg env hd in
@@ -1169,7 +1172,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
-          | Tm_let((true, lbs), body) when List.contains CompressUvars cfg.steps -> //no fixpoint reduction allowed
+          | Tm_let((true, lbs), body)
+                when List.contains CompressUvars cfg.steps
+                  || (List.contains (Exclude Zeta) cfg.steps &&
+                      List.contains PureSubtermsWithinComputations cfg.steps) -> //no fixpoint reduction allowed
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
                 let ty = norm cfg env [] lb.lbtyp in
@@ -1462,7 +1468,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head
 
               | _ ->
-                begin match stack with
+                if List.contains Unmeta cfg.steps
+                then norm cfg env stack head
+                else begin match stack with
                   | _::_ ->
                     begin match m with
                       | Meta_labeled(l, r, _) ->

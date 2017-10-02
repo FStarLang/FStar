@@ -91,18 +91,35 @@ let lowercase_module_name f =
   | None ->
       raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
 
-(** List the contents of all include directories, then build a map from long
-    names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are
-    all normalized to lowercase. The first component of the pair is the
-    interface (if any). The second component of the pair is the implementation
-    (if any). *)
-let build_map (filenames: list<string>): map =
+(** Enumerate all F* files in include directories.
+    Return a list of pairs of long names and full paths. *)
+let build_inclusion_candidates_list (): list<(string * string)> =
   let include_directories = Options.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in
   let cwd = normalize_file_path (getcwd ()) in
+  List.concatMap (fun d ->
+    if file_exists d then
+      let files = readdir d in
+      List.filter_map (fun f ->
+        let f = basename f in
+        check_and_strip_suffix f
+        |> Util.map_option (fun longname ->
+              let full_path = if d = cwd then f else join_paths d f in
+              (longname, full_path))
+      ) files
+    else
+      raise (Err (Util.format1 "not a valid include directory: %s\n" d))
+  ) include_directories
+
+(** List the contents of all include directories, then build a map from long
+    names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are
+    all normalized to lowercase. The first component of the pair is the
+    interface (if any). The second component of the pair is the implementation
+    (if any). *)
+let build_map (filenames: list<string>): map =
   let map = smap_create 41 in
   let add_entry key full_path =
     match smap_try_find map key with
@@ -117,28 +134,16 @@ let build_map (filenames: list<string>): map =
         else
           smap_add map key (None, Some full_path)
   in
-  List.iter (fun d ->
-    if file_exists d then
-      let files = readdir d in
-      List.iter (fun f ->
-        let f = basename f in
-        match check_and_strip_suffix f with
-        | Some longname ->
-            let full_path = if d = cwd then f else join_paths d f in
-            let key = String.lowercase longname in
-            add_entry key full_path
-        | None ->
-            ()
-      ) files
-    else
-      raise (Err (Util.format1 "not a valid include directory: %s\n" d))
-  ) include_directories;
+
+  (* Add files from all include directories *)
+  List.iter (fun (longname, full_path) ->
+    add_entry (String.lowercase longname) full_path
+  ) (build_inclusion_candidates_list ());
   (* All the files we've been given on the command-line must be valid FStar files. *)
   List.iter (fun f ->
     add_entry (lowercase_module_name f) f
   ) filenames;
   map
-
 
 (** For all items [i] in the map that start with [prefix], add an additional
     entry where [i] stripped from [prefix] points to the same value. Returns a
@@ -275,9 +280,8 @@ let collect_one
           List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
       | None ->
           if List.length lid.ns > 0 && Options.debug_any () then
-            Util.print2_warning "%s (Warning): unbound module reference %s\n"
-                                (Range.string_of_range (range_of_lid lid))
-                                (string_of_lid lid false)
+            FStar.Errors.warn (range_of_lid lid)
+              (BU.format1 "Unbound module reference %s" (string_of_lid lid false))
       end
     in
     // Option.Some x
@@ -402,6 +406,10 @@ let collect_one
         let u = match signedness with | Unsigned -> "u" | Signed -> "" in
         let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
         add_dep (Util.format2 "fstar.%sint%s" u w)
+    | Const_char _ ->
+        add_dep "fstar.char"
+    | Const_float _ ->
+        add_dep "fstar.float"
     | _ ->
         ()
 
@@ -627,7 +635,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
     let direct_deps, color = must (smap_try_find graph key) in
     match color with
     | Gray ->
-        Util.print1 "Warning: recursive dependency on module %s\n" key;
+        Util.print1_warning "Warning: recursive dependency on module %s\n" key;
         let cycle = cycle |> List.map file_names_of_key in
         Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
         print_graph immediate_graph;

@@ -1,4 +1,4 @@
-let make i = String.make (Z.to_int i)
+let make i ci = String.make (Z.to_int i) (Char.chr ci)
 let strcat s t = s ^ t
 let split seps s =
   let rec repeat_split acc = function

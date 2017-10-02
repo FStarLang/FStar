@@ -7,5 +7,5 @@ open FStar.Reflection.Types
 let compiled_split (): tactic unit =
     dump "In";;
 //    apply (return lemma);;
-    apply (quote_lid ["FStar";"Tactics";"Logic";"split_lem"]);;
+    apply_lemma (quote_lid ["FStar";"Tactics";"Logic";"split_lem"]);;
     dump "Out"

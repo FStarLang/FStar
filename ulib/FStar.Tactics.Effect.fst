@@ -1,28 +1,31 @@
 module FStar.Tactics.Effect
 
 open FStar.Tactics.Types
+open FStar.Tactics.Result
 open FStar.Reflection
 
-
-noeq type __result (a:Type) =
-  | Success: a -> proofstate -> __result a
-  | Failed: string -> proofstate -> __result a
+(* This module is extracted, don't add any `assume val`s or extraction
+ * will break. (`synth_by_tactic` is fine) *)
 
 let __tac (a:Type) = proofstate -> M (__result a)
 
 (* monadic return *)
 val __ret : a:Type -> x:a -> __tac a
-let __ret a x = fun (s:proofstate) -> Success x s
+let __ret a x = fun (s:proofstate) -> Success(x, s)
 
 (* monadic bind *)
 let __bind (a:Type) (b:Type) (t1:__tac a) (t2:a -> __tac b) : __tac b =
-    fun p -> let r = t1 p in
+    fun p -> let r = t1 (incr_depth p) in
              match r with
-             | Success a q  -> t2 a q
-             | Failed msg q -> Failed msg q
+             | Success(a, q)  ->
+                 // Force evaluation of __tracepoint q
+                 begin match tracepoint q  with
+                 | () -> t2 a (decr_depth q)
+                 end
+             | Failed(msg, q) -> Failed(msg, q)
 
 (* Actions *)
-let __get () : __tac proofstate = fun s0 -> Success s0 s0
+let __get () : __tac proofstate = fun s0 -> Success(s0, s0)
 
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
@@ -34,8 +37,8 @@ let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
  *)
 unfold let g_bind (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) = fun ps post ->
     wp ps (fun m' -> match m' with
-                     | Success a q -> f a q post
-                     | Failed msg q -> post (Failed msg q))
+                     | Success(a, q) -> f a q post
+                     | Failed(msg, q) -> post (Failed(msg, q)))
 
 unfold let g_compact (a:Type) (wp:__tac_wp a) : __tac_wp a =
     fun ps post -> forall post'. (forall (r:__result a). post r <==> post' r) ==> wp ps post'
@@ -54,7 +57,7 @@ reifiable reflectable new_effect {
 effect Tac (a:Type) = TAC a (fun i post -> forall j. post j)
 
 let lift_div_tac (a:Type) (wp:pure_wp a) : __tac_wp a =
-    fun ps p -> wp (fun x -> p (Success x ps))
+    fun ps p -> wp (fun x -> p (Success(x, ps)))
 
 sub_effect DIV ~> TAC = lift_div_tac
 
@@ -84,12 +87,17 @@ unfold let by_tactic (t : tactic 'a) (p:Type) : Type = __by_tactic (reify_tactic
 // TODO: `a` is really fixed to unit for now. Make it consistent
 assume val synth_by_tactic : (#t:Type) -> (#a:Type) -> tactic a -> Tot t
 
+private let trace_wrap (t : tactic 'a) : tactic 'a =
+    return ();;
+    r <-- t;
+    return r
+
 // Must run with tactics off, as it will otherwise try to run `by_tactic
 // (reify_tactic t)`, which fails as `t` is not a concrete tactic
 #reset-options "--no_tactics"
 let assert_by_tactic (p:Type) (t:tactic unit)
   : Pure unit
-         (requires (by_tactic t (squash p)))
+         (requires (by_tactic (trace_wrap t) (squash p)))
          (ensures (fun _ -> p))
   = ()
 #reset-options

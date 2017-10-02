@@ -1,8 +1,24 @@
 [
   "±aE\u001d¬ñ[ú\u0014¨T\u0006œzNæ",
   [
-    [ "MetaCoq.ttry", 1, 2, 1, [ "@query" ], 0 ],
-    [ "MetaCoq.or", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "MetaCoq.ttry",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fc7614d2f5a943f29c7cd5315945f07d"
+    ],
+    [
+      "MetaCoq.or",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "74c8f0ec7853aff4dc2fc646eb3914d0"
+    ],
     [
       "MetaCoq.exact",
       1,
@@ -12,7 +28,8 @@
         "@MaxIFuel_assumption", "@query",
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
-      0
+      0,
+      "22b4270465185481fce1852562ffcd0e"
     ],
     [
       "MetaCoq.apply",
@@ -24,7 +41,8 @@
         "constructor_distinct_FStar.Pervasives.V",
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
-      0
+      0,
+      "a9fadb5ae1af013aac7306e8a54ef280"
     ],
     [
       "MetaCoq.cut",
@@ -47,7 +65,8 @@
         "projection_inverse_FStar.Pervasives.V_a",
         "projection_inverse_FStar.Pervasives.V_v", "unit_typing"
       ],
-      0
+      0,
+      "8e9e67c4293467e27d181852fd0eabed"
     ]
   ]
 ]

@@ -2,18 +2,6 @@
   "&3ŠgˆìtøQ,¶ž{8óP",
   [
     [
-      "StRel.f1_hp",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
       "StRel.f1",
       1,
       2,
@@ -23,35 +11,19 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Preorder.preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.relation", "equation_FStar.ST.mref",
+        "equation_FStar.Pervasives.Native.snd", "equation_FStar.ST.mref",
         "equation_FStar.ST.ref", "equation_StRel.f1_hp",
         "function_token_typing_Prims.int",
-        "partial_app_typing_859af28ef02ec7101f0b4123c7c2daa0",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp",
+        "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.sel"
       ],
-      0
-    ],
-    [
-      "StRel.f1",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "f6f368b0457f382d65ada81b28ea45e5"
     ],
     [
       "StRel.f2",
@@ -69,10 +41,27 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "ref_inversion"
       ],
-      0
+      0,
+      "efbfb7702fdc96a2f9039590887f9fbb"
     ],
-    [ "StRel.glift", 1, 2, 1, [ "@query" ], 0 ],
-    [ "StRel.glift2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "StRel.glift",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3c34cdae5f2aea3e8b909b14914ed90d"
+    ],
+    [
+      "StRel.glift2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "610687b86a9ffe242ebb553bc0bff83c"
+    ],
     [
       "StRel.f1_ni",
       1,
@@ -88,7 +77,8 @@
         "refinement_interpretation_Rel_Tm_refine_b7adc7274fb5942de957c81cfe96d74d",
         "token_correspondence_StRel.f1_hp", "unit_typing"
       ],
-      0
+      0,
+      "26ca235c2462d591750b03dbfbddef3f"
     ],
     [
       "StRel.f2_ni",
@@ -107,7 +97,8 @@
         "token_correspondence_FStar.Pervasives.Native.snd",
         "token_correspondence_StRel.f2_hp", "unit_typing"
       ],
-      0
+      0,
+      "c7ec1a4cdee95446f496491dcc1144ee"
     ]
   ]
 ]

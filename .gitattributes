@@ -5,7 +5,9 @@
 *.ml* eol=lf
 Makefile eol=lf
 *.sh eol=lf
+configure eol=lf
 *.mdk eol=lf
+kremlin_ref eol=lf
 
 /src/tools/* eol=lf
 /src/tests/interactive/* eol=lf

@@ -258,18 +258,18 @@ let test_do_nothing x =
 val test_do_something: s:stackref int -> Stack int
   (requires (fun h -> contains h s))
   (ensures (fun h r h1 -> contains h s /\ r = sel h s))
-let test_do_something x =
+let test_do_something s =
   push_frame();
-  let res = !x in
+  let res = !s in
   pop_frame ();
   res
 
 val test_do_something_else: s:stackref int -> v:int -> Stack unit
   (requires (fun h -> contains h s))
   (ensures (fun h r h1 -> contains h1 s /\ v = sel h1 s))
-let test_do_something_else x v =
+let test_do_something_else s v =
   push_frame();
-  x := v;
+  s := v;
   pop_frame ()
 
 val test_allocate: unit -> Stack unit (requires (fun _ -> True)) (ensures (fun _ _ _ -> True))

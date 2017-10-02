@@ -8,41 +8,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
-      ],
-      0
-    ],
-    [
-      "Cases.test_cases",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
-      ],
-      0
-    ],
-    [
-      "Cases.test_cases",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
         "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_Prims.unit",
-        "typing_FStar.Tactics.Builtins.__embed", "unit_typing"
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
-      0
+      0,
+      "5bf1a322bc758e3e2731c2e2a2c07b16"
     ],
-    [ "Cases.test_cases", 4, 2, 1, [ "@query" ], 0 ],
     [
       "Cases.test_cases_unsquash",
       1,
@@ -50,81 +23,31 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Tactics.Result.Success@tok",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
-      0
+      0,
+      "cd3eac49e34b1880dd930336384d81c1"
     ],
     [
-      "Cases.test_cases_unsquash",
-      2,
+      "Cases.test_cases_bool",
+      1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
-      ],
-      0
+      [ "@query" ],
+      0,
+      "7fe70541c84cbf665371ee8997dfa66f"
     ],
-    [
-      "Cases.test_cases_unsquash",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
-      ],
-      0
-    ],
-    [
-      "Cases.test_cases_unsquash",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term", "unit_typing"
-      ],
-      0
-    ],
-    [
-      "Cases.test_cases_unsquash",
-      5,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Tactics.Effect.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term"
-      ],
-      0
-    ],
-    [ "Cases.test_cases_unsquash", 6, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 2, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 3, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 4, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 5, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 6, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 7, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 8, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 9, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool", 10, 2, 1, [ "@query" ], 0 ],
     [
       "Cases.test_cases_bool_2",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "1cd95a0751ea494538c16c9ecf56cc97"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -132,74 +55,24 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "1fa5fa9885c210dba756f89502e1734d"
     ],
     [
       "Cases.test_cases_bool_2",
       3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      6,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      7,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [ "Cases.test_cases_bool_2", 8, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool_2", 9, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool_2", 10, 2, 1, [ "@query" ], 0 ],
-    [ "Cases.test_cases_bool_2", 11, 2, 1, [ "@query" ], 0 ],
-    [
-      "Cases.test_cases_bool_2",
-      12,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0
-    ],
-    [
-      "Cases.test_cases_bool_2",
-      13,
       2,
       1,
       [
         "@query", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "7e71891a75a54ed0b5347e12a7619b88"
     ],
     [
       "Cases.test_cases_bool_2",
-      14,
+      4,
       2,
       1,
       [
@@ -208,15 +81,17 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "9dd7884130c39651946e29e22f51c7ad"
     ],
     [
       "Cases.test_cases_bool_2",
-      15,
+      5,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "0c53314b1fd1d54def7c61bb27b8a263"
     ]
   ]
 ]
