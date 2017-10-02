@@ -31,6 +31,8 @@ type input_frag = {
 
 // This lets the ide tell us about edits not (yet) reflected on disk.
 val add_vfs_entry: fname:string -> contents:string -> unit
+// This reads mtimes from the VFS as well
+val get_file_last_modification_time: fname:string -> time
 
 val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 val find_file: string -> string

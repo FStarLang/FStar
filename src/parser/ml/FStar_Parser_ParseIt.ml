@@ -35,18 +35,23 @@ let find_file filename =
     | None ->
       raise(Err (FStar_Util.format1 "Unable to find file: %s\n" filename))
 
-let vfs_entries : string U.smap = U.smap_create (Z.of_int 1)
+let vfs_entries : (U.time * string) U.smap = U.smap_create (Z.of_int 1)
 
 let read_vfs_entry fname =
-  U.smap_try_find vfs_entries fname
+  U.smap_try_find vfs_entries (U.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  U.smap_add vfs_entries fname contents
+  U.smap_add vfs_entries (U.normalize_file_path fname) (U.now (), contents)
+
+let get_file_last_modification_time filename =
+  match read_vfs_entry filename with
+  | Some (mtime, _contents) -> mtime
+  | None -> U.get_file_last_modification_time filename
 
 let read_file (filename:string) =
   let debug = FStar_Options.debug_any () in
   match read_vfs_entry filename with
-  | Some contents ->
+  | Some (_mtime, contents) ->
     if debug then U.print1 "Reading in-memory file %s" filename;
     filename, contents
   | None ->

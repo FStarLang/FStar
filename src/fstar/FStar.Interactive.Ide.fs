@@ -94,7 +94,7 @@ let t0 = Util.now ()
 
 let tf_of_fname fname =
   { tf_fname = fname;
-    tf_modtime = get_file_last_modification_time fname }
+    tf_modtime = Parser.ParseIt.get_file_last_modification_time fname }
 
 (** Create a timed_fname with a dummy modtime **)
 let dummy_tf_of_fname fname =

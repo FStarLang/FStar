@@ -49,18 +49,23 @@ let find_file filename =
     | None ->
       raise (Err(Util.format1 "Unable to find file: %s\n" filename))
 
-let vfs_entries : Util.smap<string> = Util.smap_create 1
+let vfs_entries : Util.smap<(time * string)> = Util.smap_create 1
 
 let read_vfs_entry fname =
-  Util.smap_try_find vfs_entries fname
+  Util.smap_try_find vfs_entries (Util.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  Util.smap_add vfs_entries fname contents
+  Util.smap_add vfs_entries (Util.normalize_file_path fname) (Util.now (), contents)
+
+let get_file_last_modification_time filename =
+  match read_vfs_entry filename with
+  | Some (mtime, _contents) -> mtime
+  | None -> Util.get_file_last_modification_time filename
 
 let read_file (filename:string) =
   let debug = Options.debug_any () in
   match read_vfs_entry filename with
-  | Some contents ->
+  | Some (_mtime, contents) ->
     if debug then Util.print1 "Reading in-memory file %s" filename;
     filename, contents
   | None ->
