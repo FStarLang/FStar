@@ -912,6 +912,7 @@ let run_push_without_deps st query =
   let { push_code = text; push_line = line; push_column = column;
         push_peek_only = peek_only; push_kind = push_kind } = query in
 
+  TcEnv.toggle_id_info st.repl_env true;
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
   let success, st = run_repl_transaction st push_kind peek_only (PushFragment frag) in
 
@@ -949,6 +950,7 @@ let add_module_completions this_fname deps table =
 let run_push_with_deps st query =
   if Options.debug_any () then
     Util.print_string "Reloading dependencies";
+  TcEnv.toggle_id_info st.repl_env false;
   match load_deps st with
   | Inr st ->
     let errors = List.map rephrase_dependency_error (collect_errors ()) in
