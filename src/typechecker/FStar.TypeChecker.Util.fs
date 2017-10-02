@@ -201,7 +201,13 @@ let pat_as_exp allow_implicits env p
                                     * pat) =     //the elaborated pattern itself
         match p.v with
            | Pat_constant c ->
-             let e = mk (Tm_constant c) None p.p in
+             let e =
+                match c with
+                | FStar.Const.Const_int(repr, Some sw) ->
+                  FStar.ToSyntax.ToSyntax.desugar_machine_integer env.dsenv repr sw p.p
+                | _ ->
+                  mk (Tm_constant c) None p.p
+             in
              ([], [], [], env, e, p)
 
            | Pat_dot_term(x, _) ->
@@ -299,7 +305,7 @@ let decorate_pattern env p exp =
         match p.v, e.n with
             | _, Tm_uinst(e, _) -> aux p e
 
-            | Pat_constant _, Tm_constant _ ->
+            | Pat_constant _, _ ->
               pkg p.v
 
             | Pat_var x, Tm_name y ->

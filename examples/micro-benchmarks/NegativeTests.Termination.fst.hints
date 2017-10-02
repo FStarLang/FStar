@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "19007fb59483840bf2fc3362f203a860"
+      "5afcc789226294c8e11dd43ddb7c4e36"
     ],
     [
       "NegativeTests.Termination.ackermann_bad",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a6932298fc7408af00e5a6a92bd3e4fb"
+      "71f14fe73cc49f83a68cf421d77274bf"
     ],
     [
       "NegativeTests.Termination.sumto",
@@ -36,7 +36,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a4bc4f0e68e9c789111988c778691978"
+      "8837893354aabd56630ed9d4dd844c78"
     ],
     [
       "NegativeTests.Termination.sumto",
@@ -45,7 +45,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "de6a1c328228950d7413c76466b5be72"
+      "9e1ca8e8ee635da759ab732aa19d4dda"
     ],
     [
       "NegativeTests.Termination.strangeZeroBad",
@@ -54,7 +54,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "43fd0affbfd3530ad3925107bf642c8f"
+      "e43162affc82d8e0b787149d118e1a0f"
     ],
     [
       "NegativeTests.Termination.snat",
@@ -63,7 +63,7 @@
       1,
       [ "@query" ],
       0,
-      "223d10e3b8e9d25b8fefbb87baa90655"
+      "fa04d8c1726abf2694f36db515571f01"
     ],
     [
       "NegativeTests.Termination.uu___is_O",
@@ -72,7 +72,7 @@
       1,
       [ "@query" ],
       0,
-      "7fa7bc3305d7de18adc0ed36d4062416"
+      "3c615d322099d61bc84e2ee59a84489f"
     ],
     [
       "NegativeTests.Termination.uu___is_S",
@@ -81,7 +81,7 @@
       1,
       [ "@query" ],
       0,
-      "3e051b6b3c03606ebc63504d25243e4b"
+      "963d55240bf61b1191a9523f2cb8e655"
     ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
@@ -95,7 +95,7 @@
         "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
       0,
-      "a22e193b747fcbf0458c9d829a33064b"
+      "9326adfb2d8b54125a38e30dbd5e3fad"
     ]
   ]
 ]
