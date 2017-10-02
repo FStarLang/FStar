@@ -113,7 +113,8 @@ type env = {
   synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
-  tc_hooks       : tcenv_hooks                        (* hooks that the interactive more relies onto for symbol tracking *)
+  tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
+  dsenv          : FStar.ToSyntax.Env.env
 }
 and solver_t = {
     init         :env -> unit;
@@ -197,7 +198,8 @@ let initial_env tc_term type_of universe_of solver module_lid =
     synth = (fun e g tau -> failwith "no synthesizer available");
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
-    tc_hooks = default_tc_hooks
+    tc_hooks = default_tc_hooks;
+    dsenv = FStar.ToSyntax.Env.empty_env()
   }
 
 (* Marking and resetting the environment, for the interactive mode *)

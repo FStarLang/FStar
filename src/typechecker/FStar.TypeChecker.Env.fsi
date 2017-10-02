@@ -111,7 +111,8 @@ type env = {
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                   (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
-  tc_hooks       : tcenv_hooks                     (* hooks that the interactive more relies onto for symbol tracking *)
+  tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
+  dsenv          : FStar.ToSyntax.Env.env
 }
 and solver_t = {
     init         :env -> unit;

@@ -406,6 +406,10 @@ let collect_one
         let u = match signedness with | Unsigned -> "u" | Signed -> "" in
         let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
         add_dep (Util.format2 "fstar.%sint%s" u w)
+    | Const_char _ ->
+        add_dep "fstar.char"
+    | Const_float _ ->
+        add_dep "fstar.float"
     | _ ->
         ()
 

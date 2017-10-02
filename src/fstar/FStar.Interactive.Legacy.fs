@@ -31,31 +31,29 @@ module TcEnv   = FStar.TypeChecker.Env
 
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
-let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * string) * uenv * string list) =
-  let dsenv, env = uenv in
-  let (intf, impl), dsenv, env, remaining =
+let tc_one_file (remaining:list<string>) (env:TcEnv.env) = //:((string option * string) * uenv * string list) =
+  let (intf, impl), env, remaining =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let _, dsenv, env = tc_one_file dsenv env (Some intf) impl in
-          (Some intf, impl), dsenv, env, remaining
+          let _, env = tc_one_file env (Some intf) impl in
+          (Some intf, impl), env, remaining
         | intf_or_impl :: remaining ->
-          let _, dsenv, env = tc_one_file dsenv env None intf_or_impl in
-          (None, intf_or_impl), dsenv, env, remaining
+          let _, env = tc_one_file env None intf_or_impl in
+          (None, intf_or_impl), env, remaining
         | [] -> failwith "Impossible"
   in
-  (intf, impl), (dsenv, env), remaining
+  (intf, impl), env, remaining
 
 // Ibid.
 let tc_prims () = //:uenv =
-  let _, dsenv, env = tc_prims (init_env ()) in
-  (dsenv, env)
-
+  let _, env = tc_prims (init_env ()) in
+  env
 
 // The interactive mode has its own notion of a stack that is super flaky,
 // seeing that there's a lot of mutable state under the hood. This is most
 // likely not working as the original author intended it to.
 
-type env_t = DsEnv.env * TcEnv.env
+type env_t = TcEnv.env
 type modul_t = option<Syntax.Syntax.modul>
 type stack_t = list<(env_t * modul_t)>
 
@@ -64,20 +62,20 @@ type stack_t = list<(env_t * modul_t)>
 // not actually doing anything useful with the environment you're passing it (e.g.
 // pop).
 
-let pop (_, env) msg =
+let pop env msg =
     pop_context env msg;
     Options.pop()
 
-let push_with_kind ((dsenv: DsEnv.env), env) lax restore_cmd_line_options msg =
+let push_with_kind env lax restore_cmd_line_options msg =
     let env = { env with lax = lax } in
-    let res = push_context (dsenv, env) msg in
+    let res = push_context env msg in
     Options.push();
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
     res
 
-let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
+let check_frag (env:TcEnv.env) curmod frag =
     try
-        let m, env = tc_one_fragment curmod dsenv env frag in
+        let m, env = tc_one_fragment curmod env frag in
         Some (m, env, FStar.Errors.get_err_count())
     with
         | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
@@ -262,7 +260,7 @@ type m_timestamps = list<(option<string> * string * option<time> * time)>
  * returns the new stack, environment, and timestamps.
  *)
 let rec tc_deps (m:modul_t) (stack:stack_t)
-                (env:env_t) (remaining:list<string>) (ts:m_timestamps)
+                (env:TcEnv.env) (remaining:list<string>) (ts:m_timestamps)
 //      : stack<'env,modul_t> * 'env * m_timestamps
   = match remaining with
     | [] -> stack, env, ts
@@ -332,7 +330,7 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
     in
 
     //expected the stack to be in "last dependency first order", we want to pop in the proper order (although should not matter)
-    let rec pop_tc_and_stack env (stack:list<(env_t * modul_t)>) ts =
+    let rec pop_tc_and_stack (env:env_t) (stack:list<(env_t * modul_t)>) ts =
       match ts with
         | []    -> (* stack should also be empty here *) env
         | _::ts ->
@@ -375,20 +373,19 @@ let rec go (line_col:(int*int))
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
   | Info(symbol, fqn_only, pos_opt) ->
-    let dsenv, tcenv = env in
     let info_at_pos_opt = match pos_opt with
       | None -> None
-      | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos (snd env) file row col in
+      | Some (file, row, col) -> FStar.TypeChecker.Err.info_at_pos env file row col in
     let info_opt = match info_at_pos_opt with
       | Some _ -> info_at_pos_opt
       | None -> // Use name lookup as a fallback
         if symbol = "" then None
         else let lid = Ident.lid_of_ids (List.map Ident.id_of_text (Util.split symbol ".")) in
              let lid = if fqn_only then lid
-                       else match DsEnv.resolve_to_fully_qualified_name dsenv lid with
+                       else match DsEnv.resolve_to_fully_qualified_name env.dsenv lid with
                             | None -> lid
                             | Some lid -> lid in
-             try_lookup_lid (snd env) lid
+             try_lookup_lid env lid
                |> Util.map_option (fun ((_, typ), r) -> (Inr lid, typ, r)) in
     (match info_opt with
      | None -> Util.print_string "\n#done-nok\n"
@@ -396,8 +393,8 @@ let rec go (line_col:(int*int))
        let name, doc =
          match name_or_lid with
          | Inl name -> name, None
-         | Inr lid -> Ident.string_of_lid lid, (DsEnv.try_lookup_doc dsenv lid |> Util.map_option fst) in
-       Util.print1 "%s\n#done-ok\n" (format_info (snd env) name typ rng doc));
+         | Inr lid -> Ident.string_of_lid lid, (DsEnv.try_lookup_doc env.dsenv lid |> Util.map_option fst) in
+       Util.print1 "%s\n#done-ok\n" (format_info env name typ rng doc));
     go line_col filename stack curmod env ts
   | Completions search_term ->
     //search_term is the partially written identifer by the user
@@ -444,7 +441,7 @@ let rec go (line_col:(int*int))
     in
     let shorten_namespace (prefix, matched, match_len) =
       let naked_match = match matched with [_] -> true | _ -> false in
-      let stripped_ns, shortened = ToSyntax.Env.shorten_module_path (fst env) prefix naked_match in
+      let stripped_ns, shortened = ToSyntax.Env.shorten_module_path env.dsenv prefix naked_match in
       (str_of_ids shortened, str_of_ids matched, str_of_ids stripped_ns, match_len) in
     let prepare_candidate (prefix, matched, stripped_ns, match_len) =
       if prefix = "" then
@@ -452,7 +449,7 @@ let rec go (line_col:(int*int))
       else
         (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + 1) in
     let needle = Util.split search_term "." in
-    let all_lidents_in_env = FStar.TypeChecker.Env.lidents (snd env) in
+    let all_lidents_in_env = FStar.TypeChecker.Env.lidents env in
     let matches =
         //There are two cases here:
         //Either the needle is of the form:
@@ -465,8 +462,7 @@ let rec go (line_col:(int*int))
         let case_a_find_transitive_includes (orig_ns:list<string>) (m:lident) (id:string)
             : list<(list<ident> * list<ident> * int)>
             =
-            let dsenv = fst env in
-            let exported_names = DsEnv.transitive_exported_ids dsenv m in
+            let exported_names = DsEnv.transitive_exported_ids env.dsenv m in
             let matched_length =
               List.fold_left
                 (fun out s -> String.length s + out + 1)
@@ -478,16 +474,15 @@ let rec go (line_col:(int*int))
             if Util.starts_with n id
             then let lid = Ident.lid_of_ns_and_id (Ident.ids_of_lid m) (Ident.id_of_text n) in
                  Option.map (fun fqn -> [], (List.map Ident.id_of_text orig_ns)@[fqn.ident], matched_length)
-                            (DsEnv.resolve_to_fully_qualified_name dsenv lid)
+                            (DsEnv.resolve_to_fully_qualified_name env.dsenv lid)
             else None)
         in
         let case_b_find_matches_in_env ()
           : list<(list<ident> * list<ident> * int)>
-          = let dsenv, _ = env in
-            let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
+          = let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
             //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
             matches |> List.filter (fun (ns, id, _) ->
-              match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with
+              match DsEnv.resolve_to_fully_qualified_name env.dsenv (Ident.lid_of_ids id) with
               | None -> false
               | Some l -> Ident.lid_equals l (Ident.lid_of_ids (ns@id)))
         in
@@ -497,7 +492,7 @@ let rec go (line_col:(int*int))
             | [] -> case_b_find_matches_in_env ()
             | _ ->
               let l = Ident.lid_of_path ns Range.dummyRange in
-              match FStar.ToSyntax.Env.resolve_module_name (fst env) l true with
+              match FStar.ToSyntax.Env.resolve_module_name env.dsenv l true with
               | None ->
                 case_b_find_matches_in_env ()
               | Some m ->
@@ -540,11 +535,11 @@ let rec go (line_col:(int*int))
 
   | Code (text, (ok, fail)) ->
       // This does not grow any of the internal stacks.
-      let fail curmod (env: (DsEnv.env * TcEnv.env)) =
+      let fail curmod tcenv =
         report_fail();
         Util.print1 "%s\n" fail;
         // The interactive mode will send a pop here
-        go line_col filename stack curmod env ts
+        go line_col filename stack curmod tcenv ts
       in
 
       let frag = {frag_text=text;
@@ -573,7 +568,7 @@ let interactive_mode (filename:string): unit =
   let env = tc_prims () in
   let stack, env, ts = tc_deps None [] env filenames [] in
   let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+  let env = FStar.TypeChecker.Env.set_range env initial_range in
   let env =
     match maybe_intf with
     | Some intf ->

@@ -14,8 +14,8 @@ let __proj__Z3V__item___0:
   z3version -> (Prims.int,Prims.int,Prims.int) FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Z3V _0 -> _0
 let z3version_as_string: z3version -> Prims.string =
-  fun uu___97_70  ->
-    match uu___97_70 with
+  fun uu___115_70  ->
+    match uu___115_70 with
     | Z3V_Unknown s -> FStar_Util.format1 "unknown version: %s" s
     | Z3V (i,j,k) ->
         let uu____75 = FStar_Util.string_of_int i in
@@ -170,8 +170,8 @@ let uu___is_KILLED: z3status -> Prims.bool =
     match projectee with | KILLED  -> true | uu____496 -> false
 type z3statistics = Prims.string FStar_Util.smap[@@deriving show]
 let status_tag: z3status -> Prims.string =
-  fun uu___98_502  ->
-    match uu___98_502 with
+  fun uu___116_502  ->
+    match uu___116_502 with
     | SAT uu____503 -> "sat"
     | UNSAT uu____510 -> "unsat"
     | UNKNOWN uu____511 -> "unknown"
@@ -924,8 +924,8 @@ let giveZ3: FStar_SMTEncoding_Term.decl Prims.list -> Prims.unit =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___99_5353  ->
-            match uu___99_5353 with
+         (fun uu___117_5353  ->
+            match uu___117_5353 with
             | FStar_SMTEncoding_Term.Push  -> failwith "Unexpected push/pop"
             | FStar_SMTEncoding_Term.Pop  -> failwith "Unexpected push/pop"
             | uu____5354 -> ()));
@@ -968,8 +968,8 @@ let mk_input:
           let uu____5759 =
             FStar_All.pipe_right theory
               (FStar_Util.prefix_until
-                 (fun uu___100_5787  ->
-                    match uu___100_5787 with
+                 (fun uu___118_5787  ->
+                    match uu___118_5787 with
                     | FStar_SMTEncoding_Term.CheckSat  -> true
                     | uu____5788 -> false)) in
           FStar_All.pipe_right uu____5759 FStar_Option.get in
