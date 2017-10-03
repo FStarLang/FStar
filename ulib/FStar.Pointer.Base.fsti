@@ -2240,6 +2240,7 @@ val modifies_fresh_frame_popped
     modifies s h0 h3 /\
     h3.HS.tip == h0.HS.tip
   ))
+  [SMTPat (HS.fresh_frame h0 h1); SMTPat (HS.popped h2 h3); SMTPat (modifies s h0 h3)]
 
 val modifies_only_live_regions
   (rs: Set.set HH.rid)
