@@ -890,18 +890,15 @@ let run_segment (st: repl_state) (code: string) =
     | Parser.Driver.Modul (Parser.AST.Module (_, decls))
     | Parser.Driver.Modul (Parser.AST.Interface (_, decls, _)) -> decls in
 
-  let json_of_decl d =
-    JsonAssoc [("range", json_of_def_range d.Parser.AST.drange)] in
-
   match with_captured_errors st.repl_env (fun _ -> Some <| collect_decls ()) with
     | None ->
       let errors = collect_errors () |> List.map json_of_issue in
       ((QueryNOK, JsonList errors), Inl st)
     | Some decls ->
-      let js_of_decl decl =
+      let json_of_decl decl =
         JsonAssoc [("def_range", json_of_def_range decl.Parser.AST.drange)] in
       let js_decls =
-        JsonList <| List.map js_of_decl decls in
+        JsonList <| List.map json_of_decl decls in
       ((QueryOK, JsonAssoc [("decls", js_decls)]), Inl st)
 
 let run_vfs_add st opt_fname contents =
