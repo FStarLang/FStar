@@ -36,7 +36,8 @@
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "ae4959b46c2582e13fe9665f0d1def88"
     ],
     [
       "Test.struct_t",
@@ -49,7 +50,8 @@
         "function_token_typing_Test.struct",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
       ],
-      0
+      0,
+      "3f04c43fa1221c85880d640410916632"
     ],
     [
       "Test.callee",
@@ -123,7 +125,8 @@
         "typing_FStar.Pointer.Base.loc_pointer",
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
-      0
+      0,
+      "f470ea9e6fa8102ff48152262dc142d9"
     ],
     [
       "Test.callee",
@@ -147,7 +150,8 @@
         "projection_inverse_Prims.Cons_tl",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "194d1dcefebdf114c6b105f9b589de02"
     ],
     [
       "Test.callee",
@@ -171,7 +175,8 @@
         "projection_inverse_Prims.Cons_tl",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "4b5e0826412197b90b63dd846bb9c516"
     ],
     [
       "Test.callee",
@@ -195,7 +200,8 @@
         "projection_inverse_Prims.Cons_tl",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "6cf3b7b80432ba8443fa1bad8392f657"
     ],
     [
       "Test.callee",
@@ -219,7 +225,8 @@
         "projection_inverse_Prims.Cons_tl",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "52677f55b5a74151a49e6eb4af3f9e61"
     ],
     [
       "Test.callee",
@@ -243,7 +250,8 @@
         "projection_inverse_Prims.Cons_tl",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "f46e02300bdd951cf7fc47f64695cc28"
     ],
     [
       "Test.callee",
@@ -267,7 +275,8 @@
         "projection_inverse_Prims.Cons_tl",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "ffcf470622fb5ba878c83b09ce6c1732"
     ],
     [
       "Test.callee",
@@ -291,7 +300,8 @@
         "projection_inverse_Prims.Cons_tl",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "c10a987d1038056d6155c460cf7f6116"
     ],
     [
       "Test.callee",
@@ -315,7 +325,8 @@
         "projection_inverse_Prims.Cons_tl",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "7b1d7d1150a8e6fc4afafa1ab0f2bae9"
     ],
     [
       "Test.callee",
@@ -339,7 +350,8 @@
         "projection_inverse_Prims.Cons_tl",
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
-      0
+      0,
+      "110971678cf03d8b523a2f023a1631fc"
     ],
     [
       "Test.more_struct",
@@ -382,7 +394,8 @@
         "token_correspondence_FStar.Pervasives.Native.fst",
         "typing_FStar.List.Tot.Base.map"
       ],
-      0
+      0,
+      "2914b12f5ffc2766c885413352d97c8e"
     ],
     [
       "Test.more_struct_t",
@@ -396,7 +409,8 @@
         "function_token_typing_Test.more_struct",
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
       ],
-      0
+      0,
+      "b3cac55ce9b3e6fd9a628a0d336750cd"
     ],
     [
       "Test.caller",
@@ -568,7 +582,8 @@
         "typing_FStar.Set.mem", "typing_FStar.Set.singleton",
         "typing_FStar.Set.union", "typing_Prims.uu___is_Cons"
       ],
-      0
+      0,
+      "b60f5f543cede62d92c4d779ecb47b14"
     ]
   ]
 ]

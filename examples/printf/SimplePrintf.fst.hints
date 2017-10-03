@@ -1,10 +1,42 @@
 [
   "\u0003N\u001d¿©!£¦æk\n\u0002…ŸÌÏ",
   [
-    [ "SimplePrintf.uu___is_Bool", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SimplePrintf.uu___is_Int", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SimplePrintf.uu___is_Char", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SimplePrintf.uu___is_String", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SimplePrintf.uu___is_Bool",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cd9d9a7504b18e50213f91dd63bce5e8"
+    ],
+    [
+      "SimplePrintf.uu___is_Int",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a15f70d4644fb74fd9b1e886340b9001"
+    ],
+    [
+      "SimplePrintf.uu___is_Char",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "816afdccb871330b688736542ec08298"
+    ],
+    [
+      "SimplePrintf.uu___is_String",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "32a1af07d4accf9c157ef1b7e3f4afd3"
+    ],
     [
       "SimplePrintf.dir",
       1,
@@ -15,9 +47,18 @@
         "assumption_SimplePrintf.arg_haseq", "equation_FStar.Char.char",
         "equation_FStar.String.char"
       ],
-      0
+      0,
+      "53ddb38a88c611874a0090ee0083ea17"
     ],
-    [ "SimplePrintf.uu___is_Lit", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SimplePrintf.uu___is_Lit",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2989d28ebfa77a37992e8467289acf3a"
+    ],
     [
       "SimplePrintf.__proj__Lit__item___0",
       1,
@@ -28,9 +69,18 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_SimplePrintf_Tm_refine_4c947cba4356c53de258d6a2aaf1bdcf"
       ],
-      0
+      0,
+      "f72134b1f99cb07b7eb0e0c4b36a1b4b"
     ],
-    [ "SimplePrintf.uu___is_Arg", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SimplePrintf.uu___is_Arg",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "498ec1b2f1099eac73dce8c49e93b600"
+    ],
     [
       "SimplePrintf.__proj__Arg__item___0",
       1,
@@ -41,7 +91,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_SimplePrintf_Tm_refine_18496ceb9c66ce4705128a993a338a20"
       ],
-      0
+      0,
+      "44df1026472b6e5a20eef1e2981b530a"
     ],
     [
       "SimplePrintf.arg_type",
@@ -60,7 +111,8 @@
         "equation_FStar.String.char",
         "fuel_guarded_inversion_SimplePrintf.arg"
       ],
-      0
+      0,
+      "4d87670451ecc7331830bfd42553e8d7"
     ],
     [
       "SimplePrintf.dir_type",
@@ -80,7 +132,8 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__hd"
       ],
-      0
+      0,
+      "7b0398aee9dd0a8f0eebbe3cceec36f4"
     ],
     [
       "SimplePrintf.string_of_dirs",
@@ -127,7 +180,8 @@
         "typing_Prims.__proj__Cons__item__hd",
         "typing_SimplePrintf_Tm_abs_ebd05b398fdfa7e177dc58aee43fb9d0"
       ],
-      0
+      0,
+      "18e84f0c8e898cb1926c3aec1ad2d0df"
     ],
     [
       "SimplePrintf.example1",
@@ -146,11 +200,36 @@
         "equation_with_fuel_SimplePrintf.dir_type.fuel_instrumented",
         "int_typing", "projection_inverse_Prims.Nil_a", "string_typing"
       ],
-      0
+      0,
+      "41fdd1d317776fa706e8e7838f65f5bb"
     ],
-    [ "SimplePrintf.hoption", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SimplePrintf.uu___is_Nothing", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SimplePrintf.uu___is_Just", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SimplePrintf.hoption",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3cd7f2eda5ce3a886bc917fe1ece9858"
+    ],
+    [
+      "SimplePrintf.uu___is_Nothing",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4cf4dcdb0e9c0846cba71b49533a7658"
+    ],
+    [
+      "SimplePrintf.uu___is_Just",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9bd3d06533eacd86bb6c8f3963271263"
+    ],
     [
       "SimplePrintf.__proj__Just__item__v",
       1,
@@ -161,7 +240,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_SimplePrintf_Tm_refine_a2795d8fcc71bdbaee0ccebeef97db28"
       ],
-      0
+      0,
+      "f2c209a65c870d1dd98909604da94b1a"
     ],
     [
       "SimplePrintf.just",
@@ -173,7 +253,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_SimplePrintf_Tm_refine_a2795d8fcc71bdbaee0ccebeef97db28"
       ],
-      0
+      0,
+      "71a72fa651408fb4b2e6e00d8581598f"
     ],
     [
       "SimplePrintf.add_dir",
@@ -185,7 +266,8 @@
         "disc_equation_SimplePrintf.Nothing",
         "fuel_guarded_inversion_SimplePrintf.hoption"
       ],
-      0
+      0,
+      "6ef72f14eeb7971fe6c62ec5e5bc9939"
     ],
     [
       "SimplePrintf.parse_format_pure",
@@ -205,7 +287,8 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
-      0
+      0,
+      "4432f5a570f2e5feaea12423acacf054"
     ],
     [
       "SimplePrintf.sprintf",
@@ -248,7 +331,8 @@
         "typing_SimplePrintf_Tm_abs_2acbc3396cea5b92ad46160e748057a7",
         "typing_SimplePrintf_Tm_abs_69e5a6be57ae13be830377c30466c1e7"
       ],
-      0
+      0,
+      "3dc4f493657dc87c5f27258dce5cbb90"
     ],
     [
       "SimplePrintf.example2",
@@ -256,7 +340,8 @@
       0,
       1,
       [ "@query", "equation_FStar.Char.char" ],
-      0
+      0,
+      "30a8543bef0211a06026cb35eeca7252"
     ],
     [
       "SimplePrintf.example2_lemma",
@@ -264,7 +349,8 @@
       0,
       1,
       [ "@query", "equation_FStar.String.char" ],
-      0
+      0,
+      "54fd16eebab02e0f4ef5450ed129105b"
     ],
     [
       "SimplePrintf.example2_lemma_looks_nicer_but_not_usable",
@@ -272,11 +358,36 @@
       0,
       1,
       [ "@query", "equation_FStar.Char.char", "unit_typing" ],
-      0
+      0,
+      "6d6ee0ea56b7f1f89da2eec03751c019"
     ],
-    [ "SimplePrintf.example3_lemma", 1, 0, 1, [ "@query" ], 0 ],
-    [ "SimplePrintf.example4_lemma", 1, 0, 1, [ "@query" ], 0 ],
-    [ "SimplePrintf.id", 1, 0, 1, [ "@query" ], 0 ],
+    [
+      "SimplePrintf.example3_lemma",
+      1,
+      0,
+      1,
+      [ "@query" ],
+      0,
+      "fd0beb9deaf5a3fe831683ddce1bcd14"
+    ],
+    [
+      "SimplePrintf.example4_lemma",
+      1,
+      0,
+      1,
+      [ "@query" ],
+      0,
+      "dbddda9492b9fa8c044c4e9ee5075b2b"
+    ],
+    [
+      "SimplePrintf.id",
+      1,
+      0,
+      1,
+      [ "@query" ],
+      0,
+      "5544bfe28ad660b5ac7d340f3c526a84"
+    ],
     [
       "SimplePrintf.example5",
       1,
@@ -289,7 +400,8 @@
         "projection_inverse_SimplePrintf.Just_a",
         "projection_inverse_SimplePrintf.Just_v"
       ],
-      0
+      0,
+      "825ef27fdde8143a019c460195a6c168"
     ]
   ]
 ]

@@ -1,6 +1,7 @@
 open Dynlink
 
 module U = FStar_Util
+module E = FStar_Errors
 
 let loaded_taclib = ref false
 
@@ -35,12 +36,16 @@ let load_tactics tacs =
      let packages = ["fstar-tactics-lib"] in
      let pkg pname = "-package " ^ pname in
      let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
+                @ ["-I"; dir]
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
-     let env_setter = U.format1 "OCAMLPATH=\"%s/bin/\"" fs_home in
+     let env_setter = U.format1 "env OCAMLPATH=\"%s/bin/\"" fs_home in
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
-     FStar_Util.print_string cmd;
-     Sys.command cmd in
-    ms
-    |> List.map (fun m -> dir ^ "/" ^ m)
-    |> List.iter (fun x -> ignore (compile x))
+     let rc = Sys.command cmd in
+     if rc <> 0
+     then raise (E.Err (U.format2 "Failed to compile native tactic. Command\n`%s`\nreturned with exit code %s"
+                                  cmd (string_of_int rc)))
+     else ()
+   in ms
+      |> List.map (fun m -> dir ^ "/" ^ m)
+      |> List.iter compile
