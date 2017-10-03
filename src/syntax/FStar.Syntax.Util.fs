@@ -1394,10 +1394,10 @@ let is_synth_by_tactic t =
 
 (* Spooky behaviours are possible with this, procede with caution *)
 
-let mk_alien (b : 'a) (s : string) (r : option<range>) : term =
-    mk (Tm_meta (tun, Meta_alien (mkdyn b, s))) None (match r with | Some r -> r | None -> dummyRange)
+let mk_alien (ty : typ) (b : 'a) (s : string) (r : option<range>) : term =
+    mk (Tm_meta (tun, Meta_alien (mkdyn b, s, ty))) None (match r with | Some r -> r | None -> dummyRange)
 
 let un_alien (t : term) : dyn =
     match t.n with
-    | Tm_meta (_, Meta_alien (blob, _)) -> blob
+    | Tm_meta (_, Meta_alien (blob, _, _)) -> blob
     | _ -> failwith "unexpected: term was not an alien embedding"

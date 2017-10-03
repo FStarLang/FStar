@@ -1477,7 +1477,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         (* meta doesn't block reduction, but we need to put the label back *)
                         norm cfg env (Meta(m,r)::stack) head
 
-                      | Meta_alien (b, s) ->
+                      | Meta_alien _ ->
                         norm cfg env (Meta(m, t.pos)::stack) head
 
                       | Meta_pattern args ->

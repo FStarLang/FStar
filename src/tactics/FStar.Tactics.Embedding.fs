@@ -47,6 +47,10 @@ let fstar_tactics_bottomup_lid = fstar_tactics_lid' ["Types"; "BottomUp"]
 let fstar_tactics_topdown = lid_as_data_tm fstar_tactics_topdown_lid
 let fstar_tactics_bottomup = lid_as_data_tm fstar_tactics_bottomup_lid
 
+let mktuple2_tm = lid_as_data_tm (PC.lid_Mktuple2)
+
+let t_proofstate = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
+
 let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;U_zero])
                                       [S.as_arg t;
                                        S.as_arg s]
@@ -54,17 +58,13 @@ let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;
                                       Range.dummyRange
 
 let embed_proofstate (ps:proofstate) : term =
-    U.mk_alien ps "tactics.embed_proofstate" None
+    U.mk_alien t_proofstate ps "tactics.embed_proofstate" None
 
 let unembed_proofstate (t:term) : proofstate =
     U.un_alien t |> FStar.Dyn.undyn
 
 let mk_app hd args =
   S.mk_Tm_app hd args None Range.dummyRange
-
-let mktuple2_tm = lid_as_data_tm (PC.lid_Mktuple2)
-
-let t_proofstate = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
 
 let embed_result (ps:proofstate) (res:__result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
     match res with
