@@ -3006,31 +3006,35 @@ let is_synth_by_tactic: FStar_Syntax_Syntax.term -> Prims.bool =
     | uu____9819 -> false
 let mk_alien:
   'a .
-    'a ->
-      Prims.string ->
-        FStar_Range.range FStar_Pervasives_Native.option ->
-          FStar_Syntax_Syntax.term
+    FStar_Syntax_Syntax.typ ->
+      'a ->
+        Prims.string ->
+          FStar_Range.range FStar_Pervasives_Native.option ->
+            FStar_Syntax_Syntax.term
   =
-  fun b  ->
-    fun s  ->
-      fun r  ->
-        let uu____9845 =
-          let uu____9848 =
-            let uu____9849 =
-              let uu____9856 =
-                let uu____9857 =
-                  let uu____9862 = FStar_Dyn.mkdyn b in (uu____9862, s) in
-                FStar_Syntax_Syntax.Meta_alien uu____9857 in
-              (FStar_Syntax_Syntax.tun, uu____9856) in
-            FStar_Syntax_Syntax.Tm_meta uu____9849 in
-          FStar_Syntax_Syntax.mk uu____9848 in
-        uu____9845 FStar_Pervasives_Native.None
-          (match r with
-           | FStar_Pervasives_Native.Some r1 -> r1
-           | FStar_Pervasives_Native.None  -> FStar_Range.dummyRange)
+  fun ty  ->
+    fun b  ->
+      fun s  ->
+        fun r  ->
+          let uu____9851 =
+            let uu____9854 =
+              let uu____9855 =
+                let uu____9862 =
+                  let uu____9863 =
+                    let uu____9872 = FStar_Dyn.mkdyn b in (uu____9872, s, ty) in
+                  FStar_Syntax_Syntax.Meta_alien uu____9863 in
+                (FStar_Syntax_Syntax.tun, uu____9862) in
+              FStar_Syntax_Syntax.Tm_meta uu____9855 in
+            FStar_Syntax_Syntax.mk uu____9854 in
+          uu____9851 FStar_Pervasives_Native.None
+            (match r with
+             | FStar_Pervasives_Native.Some r1 -> r1
+             | FStar_Pervasives_Native.None  -> FStar_Range.dummyRange)
 let un_alien: FStar_Syntax_Syntax.term -> FStar_Dyn.dyn =
   fun t  ->
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_meta
-        (uu____9874,FStar_Syntax_Syntax.Meta_alien (blob,uu____9876)) -> blob
-    | uu____9881 -> failwith "unexpected: term was not an alien embedding"
+        (uu____9884,FStar_Syntax_Syntax.Meta_alien
+         (blob,uu____9886,uu____9887))
+        -> blob
+    | uu____9896 -> failwith "unexpected: term was not an alien embedding"

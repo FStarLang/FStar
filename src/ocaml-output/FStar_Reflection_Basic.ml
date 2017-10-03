@@ -46,8 +46,8 @@ let un_protect_embedded_term:
              failwith uu____144)
 let embed_binder: FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.term =
   fun b  ->
-    FStar_Syntax_Util.mk_alien b "reflection.embed_binder"
-      FStar_Pervasives_Native.None
+    FStar_Syntax_Util.mk_alien FStar_Reflection_Data.fstar_refl_binder b
+      "reflection.embed_binder" FStar_Pervasives_Native.None
 let unembed_binder: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.binder =
   fun t  ->
     let uu____154 = FStar_Syntax_Util.un_alien t in
@@ -66,16 +66,16 @@ let unembed_term: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
   fun t  -> un_protect_embedded_term t
 let embed_fvar: FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term =
   fun fv  ->
-    FStar_Syntax_Util.mk_alien fv "reflection.embed_fvar"
-      FStar_Pervasives_Native.None
+    FStar_Syntax_Util.mk_alien FStar_Reflection_Data.fstar_refl_fvar fv
+      "reflection.embed_fvar" FStar_Pervasives_Native.None
 let unembed_fvar: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.fv =
   fun t  ->
     let uu____185 = FStar_Syntax_Util.un_alien t in
     FStar_All.pipe_right uu____185 FStar_Dyn.undyn
 let embed_env: FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term =
   fun env  ->
-    FStar_Syntax_Util.mk_alien env "tactics_embed_env"
-      FStar_Pervasives_Native.None
+    FStar_Syntax_Util.mk_alien FStar_Reflection_Data.fstar_refl_env env
+      "tactics_embed_env" FStar_Pervasives_Native.None
 let unembed_env: FStar_Syntax_Syntax.term -> FStar_TypeChecker_Env.env =
   fun t  ->
     let uu____194 = FStar_Syntax_Util.un_alien t in

@@ -37,6 +37,11 @@ let fstar_tactics_topdown: FStar_Syntax_Syntax.term =
   lid_as_data_tm fstar_tactics_topdown_lid
 let fstar_tactics_bottomup: FStar_Syntax_Syntax.term =
   lid_as_data_tm fstar_tactics_bottomup_lid
+let mktuple2_tm: FStar_Syntax_Syntax.term =
+  lid_as_data_tm FStar_Parser_Const.lid_Mktuple2
+let t_proofstate: FStar_Syntax_Syntax.term =
+  let uu____29 = fstar_tactics_lid' ["Types"; "proofstate"] in
+  FStar_Syntax_Syntax.tconst uu____29
 let pair_typ:
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
@@ -44,28 +49,28 @@ let pair_typ:
   =
   fun t  ->
     fun s  ->
-      let uu____39 =
-        let uu____40 =
-          let uu____41 = lid_as_tm FStar_Parser_Const.lid_tuple2 in
-          FStar_Syntax_Syntax.mk_Tm_uinst uu____41
+      let uu____40 =
+        let uu____41 =
+          let uu____42 = lid_as_tm FStar_Parser_Const.lid_tuple2 in
+          FStar_Syntax_Syntax.mk_Tm_uinst uu____42
             [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero] in
-        let uu____42 =
-          let uu____43 = FStar_Syntax_Syntax.as_arg t in
-          let uu____44 =
-            let uu____47 = FStar_Syntax_Syntax.as_arg s in [uu____47] in
-          uu____43 :: uu____44 in
-        FStar_Syntax_Syntax.mk_Tm_app uu____40 uu____42 in
-      uu____39 FStar_Pervasives_Native.None FStar_Range.dummyRange
+        let uu____43 =
+          let uu____44 = FStar_Syntax_Syntax.as_arg t in
+          let uu____45 =
+            let uu____48 = FStar_Syntax_Syntax.as_arg s in [uu____48] in
+          uu____44 :: uu____45 in
+        FStar_Syntax_Syntax.mk_Tm_app uu____41 uu____43 in
+      uu____40 FStar_Pervasives_Native.None FStar_Range.dummyRange
 let embed_proofstate:
   FStar_Tactics_Types.proofstate -> FStar_Syntax_Syntax.term =
   fun ps  ->
-    FStar_Syntax_Util.mk_alien ps "tactics.embed_proofstate"
+    FStar_Syntax_Util.mk_alien t_proofstate ps "tactics.embed_proofstate"
       FStar_Pervasives_Native.None
 let unembed_proofstate:
   FStar_Syntax_Syntax.term -> FStar_Tactics_Types.proofstate =
   fun t  ->
-    let uu____58 = FStar_Syntax_Util.un_alien t in
-    FStar_All.pipe_right uu____58 FStar_Dyn.undyn
+    let uu____59 = FStar_Syntax_Util.un_alien t in
+    FStar_All.pipe_right uu____59 FStar_Dyn.undyn
 let mk_app:
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.args ->
@@ -75,11 +80,6 @@ let mk_app:
     fun args  ->
       FStar_Syntax_Syntax.mk_Tm_app hd1 args FStar_Pervasives_Native.None
         FStar_Range.dummyRange
-let mktuple2_tm: FStar_Syntax_Syntax.term =
-  lid_as_data_tm FStar_Parser_Const.lid_Mktuple2
-let t_proofstate: FStar_Syntax_Syntax.term =
-  let uu____69 = fstar_tactics_lid' ["Types"; "proofstate"] in
-  FStar_Syntax_Syntax.tconst uu____69
 let embed_result:
   'a .
     FStar_Tactics_Types.proofstate ->
