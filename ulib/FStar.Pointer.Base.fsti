@@ -2171,7 +2171,7 @@ val write_union_field
 
 val no_upd_fresh: h0:HS.mem -> h1:HS.mem -> Lemma
   (requires (HS.fresh_frame h0 h1))
-  (ensures  (modifies_0 h0 h1))
+  (ensures  (modifies loc_none h0 h1))
   [SMTPatT (HS.fresh_frame h0 h1)]
 
 val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
