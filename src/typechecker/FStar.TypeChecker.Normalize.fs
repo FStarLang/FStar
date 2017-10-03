@@ -320,8 +320,9 @@ let rec closure_as_term cfg env t =
              mk (Tm_meta(closure_as_term_delayed cfg env t',
                          Meta_pattern (args |> List.map (closures_as_args_delayed cfg env)))) t.pos
 
-           | Tm_meta(t', Meta_monadic(m, tbody)) -> //other metadata's do not have any embedded closures
+           | Tm_meta(t', Meta_monadic(m, tbody)) ->
              mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic(m, closure_as_term_delayed cfg env tbody))) t.pos
+
            | Tm_meta(t', Meta_monadic_lift(m1, m2, tbody)) ->
                  mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic_lift(m1, m2, closure_as_term_delayed cfg env tbody))) t.pos
 
@@ -938,8 +939,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
               (* KM : This case reall y does not make any sense to me *)
               // | Tm_match(e, branches) ->
               //   //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
-              //   let e = BU.mk_reify e in
-              //   let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, BU.mk_reify tm) in
+              //   let e = U.mk_reify e in
+              //   let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
               //   let tm = mk (Tm_match(e, branches)) t.pos in
               //   norm cfg env stack tm
 
@@ -1366,7 +1367,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         let _, bind_repr = ed.bind_repr in
 
                         (* [maybe_unfold_action head] test whether [head] is an action and tries to unfold it if it is *)
-                        let maybe_unfold_action head =
+                        let maybe_unfold_action head : term * option<bool> =
                           let maybe_extract_fv t =
                             let t = match (SS.compress t).n with
                               | Tm_uinst (t, _) -> t
@@ -1500,7 +1501,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
 (* Reifies the lifting of the term [e] of type [t] from computational  *)
 (* effect [m] to computational effect [m'] using lifting data in [env] *)
-and reify_lift (env : Env.env) e msrc mtgt t =
+and reify_lift (env : Env.env) e msrc mtgt t : term =
   (* check if the lift is concrete, if so replace by its definition on terms *)
   (* if msrc is PURE or Tot we can use mtgt.return *)
   if U.is_pure_effect msrc
