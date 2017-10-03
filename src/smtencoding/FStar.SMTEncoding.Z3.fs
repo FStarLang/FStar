@@ -399,7 +399,7 @@ let z3_job fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
   let status, statistics =
     try doZ3Exe fresh input label_messages
-    with _ ->
+    with _ when not (Options.trace_error()) ->
          bg_z3_proc.refresh();
          UNKNOWN([], Some "Z3 raised an exception"), BU.smap_create 0
   in
