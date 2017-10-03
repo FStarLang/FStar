@@ -29,6 +29,14 @@ let fstar_tactics_Failed_tm: FStar_Syntax_Syntax.term =
   lid_as_data_tm fstar_tactics_Failed_lid
 let fstar_tactics_Success_tm: FStar_Syntax_Syntax.term =
   lid_as_data_tm fstar_tactics_Success_lid
+let fstar_tactics_topdown_lid: FStar_Ident.lid =
+  fstar_tactics_lid' ["Types"; "TopDown"]
+let fstar_tactics_bottomup_lid: FStar_Ident.lid =
+  fstar_tactics_lid' ["Types"; "BottomUp"]
+let fstar_tactics_topdown: FStar_Syntax_Syntax.term =
+  lid_as_data_tm fstar_tactics_topdown_lid
+let fstar_tactics_bottomup: FStar_Syntax_Syntax.term =
+  lid_as_data_tm fstar_tactics_bottomup_lid
 let pair_typ:
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->
@@ -223,3 +231,29 @@ let unembed_result:
                 "Expected Result.Success or Result.Failed applied to a single argument, got %s"
                 uu____612 in
             failwith uu____611
+let embed_direction:
+  FStar_Tactics_Types.direction -> FStar_Syntax_Syntax.term =
+  fun d  ->
+    match d with
+    | FStar_Tactics_Types.TopDown  -> fstar_tactics_topdown
+    | FStar_Tactics_Types.BottomUp  -> fstar_tactics_bottomup
+let unembed_direction:
+  FStar_Syntax_Syntax.term -> FStar_Tactics_Types.direction =
+  fun t  ->
+    let uu____633 =
+      let uu____634 = FStar_Syntax_Subst.compress t in
+      uu____634.FStar_Syntax_Syntax.n in
+    match uu____633 with
+    | FStar_Syntax_Syntax.Tm_fvar fv when
+        FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_topdown_lid ->
+        FStar_Tactics_Types.TopDown
+    | FStar_Syntax_Syntax.Tm_fvar fv when
+        FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_bottomup_lid ->
+        FStar_Tactics_Types.BottomUp
+    | uu____639 ->
+        let uu____640 =
+          let uu____641 = FStar_Syntax_Print.term_to_string t in
+          FStar_Util.format1
+            "Expected FStar.Tactics.Types.TopDown or FStar.Tactics.Types.BottomUp, got %s"
+            uu____641 in
+        failwith uu____640
