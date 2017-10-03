@@ -20,7 +20,7 @@ module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
 
-(* These file provides implementation for reflection primitives in F*.
+(* This file provides implementation for reflection primitives in F*.
  *
  * Users can be exposed to (mostly) raw syntax of terms when working in
  * a metaprogramming effect (such as TAC). These effects are irrelevant
