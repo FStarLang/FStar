@@ -2674,6 +2674,8 @@ let frameOf_buffer_gbuffer_of_array_pointer
   (p: pointer (TArray length t))
 = ()
 
+let live_region_frameOf_buffer #value h p = ()
+
 let buffer_as_addr #t b =
   match b.broot with
   | BufferRootSingleton p -> as_addr p

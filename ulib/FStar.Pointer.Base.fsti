@@ -1102,6 +1102,18 @@ val frameOf_buffer_gbuffer_of_array_pointer
   (ensures (frameOf_buffer (gbuffer_of_array_pointer p) == frameOf p))
   [SMTPat (frameOf_buffer (gbuffer_of_array_pointer p))]
 
+val live_region_frameOf_buffer
+  (#value: typ)
+  (h: HS.mem)
+  (p: buffer value)
+: Lemma
+  (requires (buffer_live h p))
+  (ensures (HS.live_region h (frameOf_buffer p)))
+  [SMTPatOr [
+    [SMTPat (HS.live_region h (frameOf_buffer p))];
+    [SMTPat (buffer_live h p)]
+  ]]
+
 val buffer_as_addr
   (#t: typ)
   (b: buffer t)
