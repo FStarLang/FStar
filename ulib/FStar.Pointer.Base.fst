@@ -4652,8 +4652,11 @@ let modifies_fresh_frame_popped_weak
   Classical.forall_intro_2 (fun t -> Classical.move_requires (g t))
 
 let no_upd_popped #t h0 h1 b =
+  (* hint replayability *)
   let g = greference_of b in
   assert (HS.sel h1 g == HS.sel h0 g)
+
+let no_upd_popped_buffer #t h0 h1 b = ()
 
 (* Restrict a set of locations along a set of regions *)
 

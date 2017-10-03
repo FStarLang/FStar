@@ -2196,6 +2196,23 @@ val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
     [SMTPatT (gread h1 b); SMTPatT (HS.popped h0 h1)];    
   ]]
 
+val no_upd_popped_buffer: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:buffer t -> Lemma
+  (requires (buffer_live h0 b /\ frameOf_buffer b <> h0.HS.tip /\ HS.popped h0 h1))
+  (ensures  (
+    buffer_live h1 b /\ (
+    buffer_readable h0 b ==> (
+    buffer_readable h1 b /\
+    buffer_as_seq h1 b == buffer_as_seq h0 b
+  ))))
+  [SMTPatOr [
+    [SMTPatT (buffer_live h0 b); SMTPatT (HS.popped h0 h1)];
+    [SMTPatT (buffer_readable h0 b); SMTPatT (HS.popped h0 h1)];    
+    [SMTPatT (buffer_as_seq h0 b); SMTPatT (HS.popped h0 h1)];    
+    [SMTPatT (buffer_live h1 b); SMTPatT (HS.popped h0 h1)];
+    [SMTPatT (buffer_readable h1 b); SMTPatT (HS.popped h0 h1)];    
+    [SMTPatT (buffer_as_seq h1 b); SMTPatT (HS.popped h0 h1)];    
+  ]]
+
 val modifies_fresh_frame_popped
   (h0 h1: HS.mem)
   (s: loc)
