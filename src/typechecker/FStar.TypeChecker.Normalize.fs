@@ -1479,7 +1479,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         norm cfg env (Meta(m,r)::stack) head
 
                       | Meta_alien _ ->
-                        norm cfg env (Meta(m, t.pos)::stack) head
+                        rebuild cfg env stack t
 
                       | Meta_pattern args ->
                           let args = norm_pattern_args cfg env args in
