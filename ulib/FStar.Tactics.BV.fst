@@ -165,6 +165,7 @@ let bv_tac ()  =
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
+  norm [delta] ;;
   smt
 
 let bv_tac_lt n =
