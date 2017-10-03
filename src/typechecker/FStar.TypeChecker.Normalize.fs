@@ -1032,12 +1032,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    then match !r with
                         | Some (env, t') ->
                             log cfg  (fun () -> BU.print2 "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
-                            begin match (compress t').n with
-                                | Tm_abs _  ->
-                                    norm cfg env stack t'
-                                | _ ->
-                                    rebuild cfg env stack t'
-                            end
+                            norm cfg env stack t'
                         | None -> norm cfg env (MemoLazy r::stack) t0
                    else norm cfg env stack t0 //Fixpoint steps are excluded; so don't take the recursive knot
             end
