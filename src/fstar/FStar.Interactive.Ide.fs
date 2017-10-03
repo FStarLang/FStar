@@ -896,7 +896,7 @@ let run_segment (st: repl_state) (code: string) =
       ((QueryNOK, JsonList errors), Inl st)
     | Some decls ->
       let json_of_decl decl =
-        JsonAssoc [("def_range", json_of_def_range decl.Parser.AST.drange)] in
+        JsonAssoc [("def_range", json_of_def_range (Parser.AST.decl_drange decl))] in
       let js_decls =
         JsonList <| List.map json_of_decl decls in
       ((QueryOK, JsonAssoc [("decls", js_decls)]), Inl st)
