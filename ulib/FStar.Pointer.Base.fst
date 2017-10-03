@@ -4141,6 +4141,8 @@ let loc_disjoint_addresses r1 r2 n1 n2 = ()
 
 let loc_disjoint_pointer_addresses #t p r n = ()
 
+let loc_disjoint_buffer_addresses #t p r n = ()
+
 let loc_disjoint_regions rs1 rs2 = ()
 
 (** The modifies clause proper *)

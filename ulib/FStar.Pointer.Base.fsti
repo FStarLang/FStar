@@ -1922,6 +1922,16 @@ val loc_disjoint_pointer_addresses
   (ensures (loc_disjoint (loc_pointer p) (loc_addresses r n)))
   [SMTPat (loc_disjoint (loc_pointer p) (loc_addresses r n))]
 
+val loc_disjoint_buffer_addresses
+  (#t: typ)
+  (p: buffer t)
+  (r: HH.rid)
+  (n: Set.set nat)
+: Lemma
+  (requires (r <> frameOf_buffer p \/ (~ (Set.mem (buffer_as_addr p) n))))
+  (ensures (loc_disjoint (loc_buffer p) (loc_addresses r n)))
+  [SMTPat (loc_disjoint (loc_buffer p) (loc_addresses r n))]
+  
 val loc_disjoint_regions
   (rs1 rs2: Set.set HH.rid)
 : Lemma
