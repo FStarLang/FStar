@@ -464,13 +464,14 @@ let rec tc_deps:
                          match intf with
                          | FStar_Pervasives_Native.Some intf1 ->
                              let uu____1776 =
-                               FStar_Util.get_file_last_modification_time
+                               FStar_Parser_ParseIt.get_file_last_modification_time
                                  intf1 in
                              FStar_Pervasives_Native.Some uu____1776
                          | FStar_Pervasives_Native.None  ->
                              FStar_Pervasives_Native.None in
                        let impl_t =
-                         FStar_Util.get_file_last_modification_time impl in
+                         FStar_Parser_ParseIt.get_file_last_modification_time
+                           impl in
                        (intf_t, impl_t) in
                      (match uu____1763 with
                       | (intf_t,impl_t) ->
@@ -490,13 +491,15 @@ let update_deps:
         fun env  ->
           fun ts  ->
             let is_stale intf impl intf_t impl_t =
-              let impl_mt = FStar_Util.get_file_last_modification_time impl in
+              let impl_mt =
+                FStar_Parser_ParseIt.get_file_last_modification_time impl in
               (FStar_Util.is_before impl_t impl_mt) ||
                 (match (intf, intf_t) with
                  | (FStar_Pervasives_Native.Some
                     intf1,FStar_Pervasives_Native.Some intf_t1) ->
                      let intf_mt =
-                       FStar_Util.get_file_last_modification_time intf1 in
+                       FStar_Parser_ParseIt.get_file_last_modification_time
+                         intf1 in
                      FStar_Util.is_before intf_t1 intf_mt
                  | (FStar_Pervasives_Native.None
                     ,FStar_Pervasives_Native.None ) -> false
