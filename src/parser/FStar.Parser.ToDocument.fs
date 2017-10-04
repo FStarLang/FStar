@@ -201,7 +201,7 @@ let rec extract_from_list e = match (unparen e).tm with
 
 let is_array e = match (unparen e).tm with
     (* TODO check that there is no implicit parameters *)
-    | App ({tm=Var lid}, l, Nothing) -> lid_equals lid C.array_mk_array_lid && is_list l
+    | App ({tm=Var lid}, l, Nothing) -> lid_equals lid C.array_of_list_lid && is_list l
     | _ -> false
 
 let rec is_ref_set e = match (unparen e).tm with

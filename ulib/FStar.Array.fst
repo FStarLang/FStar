@@ -70,6 +70,15 @@ abstract val to_seq: #a:Type -> s:array a -> ST (seq a)
 let to_seq #a s =
   !s
 
+// Used by the compiler for array litterals
+abstract val of_list: #a:Type -> s:list a -> ST (array a)
+  (requires (fun h -> True))
+  (ensures  (fun h0 x h1 -> (x `unused_in` h0
+                             /\ contains h1 x
+                             /\ modifies Set.empty h0 h1
+                             /\ sel h1 x== Seq.of_list s)))
+let of_list #a l = of_seq (Seq.of_list l)
+
 abstract val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (x `unused_in` h0
