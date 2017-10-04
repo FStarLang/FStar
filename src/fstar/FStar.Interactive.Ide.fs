@@ -15,7 +15,7 @@
 *)
 #light "off"
 
-module FStar.Interactive
+module FStar.Interactive.Ide
 open FStar.ST
 open FStar.Exn
 open FStar.All
@@ -29,10 +29,12 @@ open FStar.Errors
 open FStar.Universal
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
+open FStar.Interactive
 
 module SS = FStar.Syntax.Syntax
-module DsEnv   = FStar.ToSyntax.Env
-module TcEnv   = FStar.TypeChecker.Env
+module DsEnv = FStar.ToSyntax.Env
+module TcEnv = FStar.TypeChecker.Env
+module CTable = FStar.Interactive.CompletionTable
 
 // A custom version of the function that's in FStar.Universal.fs just for the
 // sake of the interactive mode
@@ -51,56 +53,35 @@ let tc_one_file (remaining:list<string>) (uenv:uenv) = //:((string option * stri
   (intf, impl), (dsenv, env), remaining
 
 // Ibid.
-let tc_prims () = //:uenv =
-  let _, dsenv, env = tc_prims () in
+let tc_prims env = //:uenv =
+  let _, dsenv, env = tc_prims env in
   (dsenv, env)
-
-
-// The interactive mode has its own notion of a stack that is super flaky,
-// seeing that there's a lot of mutable state under the hood. This is most
-// likely not working as the original author intended it to.
 
 type env_t = DsEnv.env * TcEnv.env
 type modul_t = option<Syntax.Syntax.modul>
-type stack_t = list<(env_t * modul_t)>
 
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
 // not actually doing anything useful with the environment you're passing it (e.g.
-// pop or reset_mark).
+// pop).
 
-let pop (_, env) msg =
-    pop_context env msg;
-    Options.pop()
+let push env msg =
+  let res = push_context env msg in
+  Options.push();
+  res
+
+let pop env msg =
+  pop_context (snd env) msg;
+  Options.pop()
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
-let push ((dsenv: DsEnv.env), tcenv) kind restore_cmd_line_options msg =
-    let tcenv = { tcenv with lax = (kind = LaxCheck) } in
-    let dsenv = DsEnv.set_syntax_only dsenv (kind = SyntaxCheck) in
-    let res = push_context (dsenv, tcenv) msg in
-    Options.push();
-    if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;
-    res
-
-let mark (dsenv, env) =
-    let dsenv = DsEnv.mark dsenv in
-    let env = TcEnv.mark env in
-    Options.push();
-    dsenv, env
-
-let reset_mark (_, env) =
-    let dsenv = DsEnv.reset_mark () in
-    let env = TcEnv.reset_mark env in
-    Options.pop();
-    dsenv, env
+let set_check_kind (dsenv, tcenv) check_kind =
+  let tcenv = { tcenv with lax = (check_kind = LaxCheck) } in
+  let dsenv = DsEnv.set_syntax_only dsenv (check_kind = SyntaxCheck) in
+  (dsenv, tcenv)
 
 let cleanup (dsenv, env) = TcEnv.cleanup_interactive env
-
-let commit_mark (dsenv, env) =
-    let dsenv = DsEnv.commit_mark dsenv in
-    let env = TcEnv.commit_mark env in
-    dsenv, env
 
 let check_frag (dsenv, (env:TcEnv.env)) curmod frag =
   try
@@ -156,26 +137,24 @@ let deps_of_our_file filename =
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
+type deps_stack_t = list<env_t> // Environments created while typechecking deps
 
 (*
  * type check remaining dependencies and record the timestamps.
- * m is the current module name, not the module name of the dependency. it's actually a dummy that is pushed on the stack and never used.
- * it is used for type checking the fragments of the current module, but for dependencies it is a dummy.
- * adding it as the stack entry needed it.
  * env is the environment in which next dependency should be type checked.
  * the returned timestamps are in the reverse order (i.e. final dependency first), it's the same order as the stack.
  * note that for dependencies, the stack and ts go together (i.e. their sizes are same)
- * returns the new stack, environment, and timestamps.
+ * returns the new environment, deps stack, and timestamps.
  *)
-let rec tc_deps (m:modul_t) (stack:stack_t)
-                (env:env_t) (remaining:list<string>) (ts:m_timestamps)
-//      : stack<'env,modul_t> * 'env * m_timestamps
+let rec tc_deps (deps_stack: deps_stack_t) (env: env_t)
+                (remaining: list<string>) (ts: m_timestamps)
   = match remaining with
-    | [] -> stack, env, ts
+    | [] -> env, (deps_stack, ts)
     | _  ->
-      let stack = (env, m)::stack in
-      //setting the restore command line options flag true
-      let env = push env (if Options.lax () then LaxCheck else FullCheck) true "typecheck_modul" in
+      let deps_stack = env :: deps_stack in
+      let push_kind = if Options.lax () then LaxCheck else FullCheck in
+      let env = push (set_check_kind env push_kind) "typecheck_modul" in
+      Options.restore_cmd_line_options false |> ignore;
       let (intf, impl), env, remaining = tc_one_file remaining env in
       let intf_t, impl_t =
         let intf_t =
@@ -186,8 +165,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
         let impl_t = get_file_last_modification_time impl in
         intf_t, impl_t
       in
-      tc_deps m stack env remaining ((intf, impl, intf_t, impl_t)::ts)
-
+      tc_deps deps_stack env remaining ((intf, impl, intf_t, impl_t)::ts)
 
 (*
  * check if some dependencies have been modified, added, or deleted
@@ -196,11 +174,10 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
  * if we find that the dependency at the head of ts does not match that at the head of the newly computed dependency,
  * or that the dependency is stale, we will typecheck that dependency, and everything that comes after that again
  * the stack and timestamps are passed in "last dependency first" order, so we will reverse them before checking
- * as with tc_deps, m is the dummy argument used for the stack entry
- * returns the new stack, environment, and timestamps
+ * returns the new environment, deps stack, and timestamps
  *)
-let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_timestamps)
-  : (stack_t * env_t * m_timestamps) =
+let update_deps (filename:string) (env:env_t) ((stk, ts): deps_stack_t * m_timestamps)
+  : (env_t * (deps_stack_t * m_timestamps)) =
   let is_stale (intf:option<string>) (impl:string) (intf_t:option<time>) (impl_t:time) :bool =
     let impl_mt = get_file_last_modification_time impl in
     (is_before impl_t impl_mt ||
@@ -221,8 +198,9 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
    * during recursive calls, the good_stack and good_ts grow "last dependency first" order.
    * returns the new stack, environment, and timestamps
    *)
-  let rec iterate (depnames:list<string>) (st:stack_t) (env':env_t)
-  (ts:m_timestamps) (good_stack:stack_t) (good_ts:m_timestamps) = //:(stack<'env, modul_t> * 'env * m_timestamps) =
+  let rec iterate (depnames:list<string>) (st:deps_stack_t) (env':env_t)
+                  (ts:m_timestamps) (good_stack:deps_stack_t) (good_ts:m_timestamps)
+          : (env_t * (list<env_t> * m_timestamps)) =
     //invariant length good_stack = length good_ts, and same for stack and ts
 
     let match_dep (depnames:list<string>) (intf:option<string>) (impl:string) : (bool * list<string>) =
@@ -238,13 +216,13 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
     in
 
     //expected the stack to be in "last dependency first order", we want to pop in the proper order (although should not matter)
-    let rec pop_tc_and_stack env (stack:list<(env_t * modul_t)>) ts =
+    let rec pop_tc_and_stack env (stack:list<env_t>) ts =
       match ts with
         | []    -> (* stack should also be empty here *) env
         | _::ts ->
           //pop
           pop env "";
-          let (env, _), stack = List.hd stack, List.tl stack in
+          let env, stack = List.hd stack, List.tl stack in
           pop_tc_and_stack env stack ts
     in
 
@@ -255,11 +233,11 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
         if not b || (is_stale intf impl intf_t impl_t) then
           //reverse st from "first dependency first order" to "last dependency first order"
           let env = pop_tc_and_stack env' (List.rev_append st []) ts in
-          tc_deps m good_stack env depnames good_ts
+          tc_deps good_stack env depnames good_ts
         else
           let stack_elt, st' = List.hd st, List.tl st in
           iterate depnames' st' env' ts' (stack_elt::good_stack) (ts_elt::good_ts)
-      | []           -> (* st should also be empty here *) tc_deps m good_stack env' depnames good_ts
+      | []           -> (* st should also be empty here *) tc_deps good_stack env' depnames good_ts
   in
 
   (* Well, the file list hasn't changed, so our (single) file is still there. *)
@@ -312,14 +290,61 @@ let js_reductionrule s = match js_str s with
   | "pure-subterms" -> FStar.TypeChecker.Normalize.PureSubtermsWithinComputations
   | _ -> js_fail "reduction rule" s
 
+type completion_context =
+| CKCode
+| CKOption of bool (* #set-options (false) or #reset-options (true) *)
+| CKModuleOrNamespace of bool (* modules *) * bool (* namespaces *)
+
+let js_optional_completion_context k =
+  match k with
+  | None -> CKCode
+  | Some k ->
+    match js_str k with
+    | "symbol" // Backwards compatibility
+    | "code" -> CKCode
+    | "set-options" -> CKOption false
+    | "reset-options" -> CKOption true
+    | "open"
+    | "let-open" -> CKModuleOrNamespace (true, true)
+    | "include"
+    | "module-alias" -> CKModuleOrNamespace (true, false)
+    | _ ->
+      js_fail "completion context (code, set-options, reset-options, \
+open, let-open, include, module-alias)" k
+
+type lookup_context =
+| LKSymbolOnly
+| LKModule
+| LKOption
+| LKCode
+
+let js_optional_lookup_context k =
+  match k with
+  | None -> LKSymbolOnly // Backwards-compatible default
+  | Some k ->
+    match js_str k with
+    | "symbol-only" -> LKSymbolOnly
+    | "code" -> LKCode
+    | "set-options"
+    | "reset-options" -> LKOption
+    | "open"
+    | "let-open"
+    | "include"
+    | "module-alias" -> LKModule
+    | _ ->
+      js_fail "lookup context (symbol-only, code, set-options, reset-options, \
+open, let-open, include, module-alias)" k
+
+type position = string * int * int
+
 type query' =
 | Exit
 | DescribeProtocol
 | DescribeRepl
 | Pop
 | Push of push_kind * string * int * int * bool
-| AutoComplete of string
-| Lookup of string * option<(string * int * int)> * list<string>
+| AutoComplete of string * completion_context
+| Lookup of string * lookup_context * option<position> * list<string>
 | Compute of string * option<list<FStar.TypeChecker.Normalize.step>>
 | Search of string
 | MissingCurrentModule
@@ -327,17 +352,17 @@ type query' =
 and query = { qq: query'; qid: string }
 
 let query_needs_current_module = function
-  | Exit | DescribeProtocol | DescribeRepl | Pop
-  | Push _ | MissingCurrentModule | ProtocolViolation _ -> false
-  | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
+  | Exit | DescribeProtocol | DescribeRepl | Pop | Push (_, _, _, _, false)
+  | MissingCurrentModule | ProtocolViolation _ -> false
+  | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
 let interactive_protocol_vernum = 2
 
 let interactive_protocol_features =
-  ["autocomplete";
+  ["autocomplete"; "autocomplete/context";
    "compute"; "compute/reify"; "compute/pure-subterms";
    "describe-protocol"; "describe-repl"; "exit";
-   "lookup"; "lookup/documentation"; "lookup/definition";
+   "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "search"]
 
 exception InvalidQuery of string
@@ -381,8 +406,10 @@ let unpack_interactive_query json =
                                      arg "line" |> js_int,
                                      arg "column" |> js_int,
                                      query = "peek")
-           | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str)
+           | "autocomplete" -> AutoComplete (arg "partial-symbol" |> js_str,
+                                            try_arg "context" |> js_optional_completion_context)
            | "lookup" -> Lookup (arg "symbol" |> js_str,
+                                try_arg "context" |> js_optional_lookup_context,
                                 try_arg "location"
                                   |> Util.map_option js_assoc
                                   |> Util.map_option (fun loc ->
@@ -410,14 +437,6 @@ let read_interactive_query stream : query =
   with
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
-
-let rec json_of_fstar_option = function
-  | Options.Bool b -> JsonBool b
-  | Options.String s
-  | Options.Path s -> JsonStr s
-  | Options.Int n -> JsonInt n
-  | Options.List vs -> JsonList (List.map json_of_fstar_option vs)
-  | Options.Unset -> JsonNull
 
 let json_of_opt json_of_a opt_a =
   Util.dflt JsonNull (Util.map_option json_of_a opt_a)
@@ -461,23 +480,96 @@ let json_of_issue issue =
                               [json_of_def_range r]
                             | _ -> [])))]
 
-type lookup_result = { lr_name: string;
-                       lr_def_range: option<Range.range>;
-                       lr_typ: option<string>;
-                       lr_doc: option<string>;
-                       lr_def: option<string> }
+type symbol_lookup_result = { slr_name: string;
+                              slr_def_range: option<Range.range>;
+                              slr_typ: option<string>;
+                              slr_doc: option<string>;
+                              slr_def: option<string> }
 
-let json_of_lookup_result lr =
-  JsonAssoc [("name", JsonStr lr.lr_name);
-             ("defined-at", json_of_opt json_of_def_range lr.lr_def_range);
-             ("type", json_of_opt JsonStr lr.lr_typ);
-             ("documentation", json_of_opt JsonStr lr.lr_doc);
-             ("definition", json_of_opt JsonStr lr.lr_def)]
+let alist_of_symbol_lookup_result lr =
+  [("name", JsonStr lr.slr_name);
+   ("defined-at", json_of_opt json_of_def_range lr.slr_def_range);
+   ("type", json_of_opt JsonStr lr.slr_typ);
+   ("documentation", json_of_opt JsonStr lr.slr_doc);
+   ("definition", json_of_opt JsonStr lr.slr_def)]
 
-let json_of_protocol_info =
+let alist_of_protocol_info =
   let js_version = JsonInt interactive_protocol_vernum in
   let js_features = JsonList <| List.map JsonStr interactive_protocol_features in
   [("version", js_version); ("features", js_features)]
+
+type fstar_option_permission_level =
+| OptSet
+| OptReset
+| OptReadOnly
+
+let string_of_option_permission_level = function
+  | OptSet -> ""
+  | OptReset -> "requires #reset-options"
+  | OptReadOnly -> "read-only"
+
+type fstar_option =
+  { opt_name: string;
+    opt_sig: string;
+    opt_value: Options.option_val;
+    opt_default: Options.option_val;
+    opt_type: Options.opt_type;
+    opt_snippets: list<string>;
+    opt_documentation: option<string>;
+    opt_permission_level: fstar_option_permission_level }
+
+let rec kind_of_fstar_option_type = function
+  | Options.Const _ -> "flag"
+  | Options.IntStr _ -> "int"
+  | Options.BoolStr -> "bool"
+  | Options.PathStr _ -> "path"
+  | Options.SimpleStr _ -> "string"
+  | Options.EnumStr _ -> "enum"
+  | Options.OpenEnumStr _ -> "open enum"
+  | Options.PostProcessed (_, typ)
+  | Options.Accumulated typ
+  | Options.ReverseAccumulated typ
+  | Options.WithSideEffect (_, typ) -> kind_of_fstar_option_type typ
+
+let rec snippets_of_fstar_option name typ =
+  let mk_field field_name =
+    "${" ^ field_name ^ "}" in
+  let mk_snippet name argstring =
+    "--" ^ name ^ (if argstring <> "" then " " ^ argstring else "") in
+  let rec arg_snippets_of_type typ =
+    match typ with
+    | Options.Const _ -> [""]
+    | Options.BoolStr -> ["true"; "false"]
+    | Options.IntStr desc
+    | Options.PathStr desc
+    | Options.SimpleStr desc -> [mk_field desc]
+    | Options.EnumStr strs -> strs
+    | Options.OpenEnumStr (strs, desc) -> strs @ [mk_field desc]
+    | Options.PostProcessed (_, elem_spec)
+    | Options.Accumulated elem_spec
+    | Options.ReverseAccumulated elem_spec
+    | Options.WithSideEffect (_, elem_spec) -> arg_snippets_of_type elem_spec in
+  List.map (mk_snippet name) (arg_snippets_of_type typ)
+
+let rec json_of_fstar_option_value = function
+  | Options.Bool b -> JsonBool b
+  | Options.String s
+  | Options.Path s -> JsonStr s
+  | Options.Int n -> JsonInt n
+  | Options.List vs -> JsonList (List.map json_of_fstar_option_value vs)
+  | Options.Unset -> JsonNull
+
+let alist_of_fstar_option opt =
+  [("name", JsonStr opt.opt_name);
+   ("signature", JsonStr opt.opt_sig);
+   ("value", json_of_fstar_option_value opt.opt_value);
+   ("default", json_of_fstar_option_value opt.opt_default);
+   ("documentation", json_of_opt JsonStr opt.opt_documentation);
+   ("type", JsonStr (kind_of_fstar_option_type opt.opt_type));
+   ("permission-level", JsonStr (string_of_option_permission_level opt.opt_permission_level))]
+
+let json_of_fstar_option opt =
+  JsonAssoc (alist_of_fstar_option opt)
 
 let write_json json =
   Util.print_raw (Util.string_of_json json);
@@ -502,32 +594,94 @@ let write_message level contents =
 let write_hello () =
   let js_version = JsonInt interactive_protocol_vernum in
   let js_features = JsonList (List.map JsonStr interactive_protocol_features) in
-  write_json (JsonAssoc (("kind", JsonStr "protocol-info") :: json_of_protocol_info))
+  write_json (JsonAssoc (("kind", JsonStr "protocol-info") :: alist_of_protocol_info))
 
-(******************************************************************************************)
-(* The main interactive loop *)
-(******************************************************************************************)
+(*****************)
+(* Options cache *)
+(*****************)
+
+let sig_of_fstar_option name typ =
+  let flag = "--" ^ name in
+  match Options.desc_of_opt_type typ with
+  | None -> flag
+  | Some arg_sig -> flag ^ " " ^ arg_sig
+
+let fstar_options_list_cache =
+  let defaults = Util.smap_of_list Options.defaults in
+  Options.all_specs_with_types
+  |> List.filter_map (fun (_shortname, name, typ, doc) ->
+       Util.smap_try_find defaults name // Keep only options with a default value
+       |> Util.map_option (fun default_value ->
+             { opt_name = name;
+               opt_sig = sig_of_fstar_option name typ;
+               opt_value = Options.Unset;
+               opt_default = default_value;
+               opt_type = typ;
+               opt_snippets = snippets_of_fstar_option name typ;
+               opt_documentation = if doc = "" then None else Some doc;
+               opt_permission_level = if Options.settable name then OptSet
+                                      else if Options.resettable name then OptReset
+                                      else OptReadOnly }))
+  |> List.sortWith (fun o1 o2 ->
+        String.compare (String.lowercase (o1.opt_name))
+                       (String.lowercase (o2.opt_name)))
+
+let fstar_options_map_cache =
+  let cache = Util.smap_create 50 in
+  List.iter (fun opt -> Util.smap_add cache opt.opt_name opt) fstar_options_list_cache;
+  cache
+
+let update_option opt =
+  { opt with opt_value = Options.get_option opt.opt_name }
+
+let current_fstar_options filter =
+  List.map update_option (List.filter filter fstar_options_list_cache)
+
+let trim_option_name opt_name =
+  let opt_prefix = "--" in
+  if Util.starts_with opt_name opt_prefix then
+    (opt_prefix, Util.substring_from opt_name (String.length opt_prefix))
+  else
+    ("", opt_name)
+
+(*************************)
+(* Main interactive loop *)
+(*************************)
+
 open FStar.Parser.ParseIt
 
+// FIXME: Store repl_names in the stack, too
 type repl_state = { repl_line: int; repl_column: int; repl_fname: string;
-                    repl_stack: stack_t; repl_curmod: modul_t;
-                    repl_env: env_t; repl_ts: m_timestamps;
-                    repl_stdin: stream_reader }
+                    repl_deps: (deps_stack_t * m_timestamps);
+                    repl_curmod: modul_t; repl_env: env_t;
+                    repl_stdin: stream_reader; repl_names: CTable.table }
+
+let repl_stack: ref<list<repl_state>> = Util.mk_ref []
+
+let repl_stack_empty () =
+  match !repl_stack with
+  | [] -> true
+  | _ -> false
+
+let pop_repl env =
+  match !repl_stack with
+  | [] -> failwith "Too many pops"
+  | st' :: stack ->
+    pop env "#pop";
+    repl_stack := stack;
+    if repl_stack_empty () then cleanup st'.repl_env;
+    st'
+
+let push_repl push_kind st =
+  repl_stack := st :: !repl_stack;
+  push (set_check_kind st.repl_env push_kind) ""
 
 let json_of_repl_state st =
-  let opts_and_defaults =
-    let opt_docs = Util.smap_of_list (Options.docs ()) in
-    let get_doc k = Util.smap_try_find opt_docs k in
-    List.map (fun (k, v) -> (k, Options.get_option k, get_doc k, v)) Options.defaults in
-  [("loaded-dependencies",
-    JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) st.repl_ts));
-   ("options",
-    JsonList (List.map (fun (name, value, doc, dflt) ->
-                        JsonAssoc [("name", JsonStr name);
-                                   ("value", json_of_fstar_option value);
-                                   ("default", json_of_fstar_option dflt);
-                                   ("documentation", json_of_opt JsonStr doc)])
-                       opts_and_defaults))]
+  JsonAssoc
+    [("loaded-dependencies",
+      JsonList (List.map (fun (_, fstname, _, _) -> JsonStr fstname) (snd st.repl_deps)));
+     ("options",
+      JsonList (List.map json_of_fstar_option (current_fstar_options (fun _ -> true))))]
 
 let with_printed_effect_args k =
   Options.with_saved_options
@@ -543,10 +697,10 @@ let run_exit st =
   ((QueryOK, JsonNull), Inr 0)
 
 let run_describe_protocol st =
-  ((QueryOK, JsonAssoc json_of_protocol_info), Inl st)
+  ((QueryOK, JsonAssoc alist_of_protocol_info), Inl st)
 
 let run_describe_repl st =
-  ((QueryOK, JsonAssoc (json_of_repl_state st)), Inl st)
+  ((QueryOK, json_of_repl_state st), Inl st)
 
 let run_protocol_violation st message =
   ((QueryViolatesProtocol, JsonStr message), Inl st)
@@ -554,67 +708,126 @@ let run_protocol_violation st message =
 let run_missing_current_module st message =
   ((QueryNOK, JsonStr "Current module unset"), Inl st)
 
-let nothing_left_to_pop st =
-  (* The initial dependency check creates [n] entires in [st.repl_ts] and [n]
-     entries in [st.repl_stack].  Subsequent pushes do not grow [st.repl_ts]
-     (only [st.repl_stack]), so [length st.repl_stack <= length st.repl_ts]
-     indicates that there's nothing left to pop. *)
-  List.length st.repl_stack <= List.length st.repl_ts
-
-let run_pop st = // This shrinks all internal stacks by 1
-  if nothing_left_to_pop st then
+let run_pop st =
+  if repl_stack_empty () then
     ((QueryNOK, JsonStr "Too many pops"), Inl st)
   else
-    match st.repl_stack with
-    | [] -> failwith "impossible"
-    | (env, curmod) :: stack ->
-      pop st.repl_env "#pop";
-      let st' = { st with repl_env = env; repl_curmod = curmod; repl_stack = stack } in
-      // Clean up if all the fragments from the current buffer have been popped
-      if nothing_left_to_pop st' then cleanup env;
-      ((QueryOK, JsonNull), Inl st')
+    ((QueryOK, JsonNull), Inl (pop_repl st.repl_env))
+
+type name_tracking_event =
+| NTAlias of lid (* host *) * ident (* alias *) * lid (* aliased *)
+| NTOpen of lid (* host *) * DsEnv.open_module_or_namespace (* opened *)
+| NTInclude of lid (* host *) * lid (* included *)
+| NTBinding of binding
+
+let query_of_ids (ids: list<ident>) : CTable.query =
+  List.map text_of_id ids
+
+let query_of_lid (lid: lident) : CTable.query =
+  query_of_ids (lid.ns @ [lid.ident])
+
+let update_names_from_event cur_mod_str table evt =
+  let is_cur_mod lid = lid.str = cur_mod_str in
+  match evt with
+  | NTAlias (host, id, included) ->
+    if is_cur_mod host then
+      CTable.register_alias
+        table (text_of_id id) [] (query_of_lid included)
+    else
+      table
+  | NTOpen (host, (included, kind)) ->
+    if is_cur_mod host then
+      CTable.register_open
+        table (kind = DsEnv.Open_module) [] (query_of_lid included)
+    else
+      table
+  | NTInclude (host, included) ->
+    CTable.register_include
+      table (if is_cur_mod host then [] else query_of_lid host) (query_of_lid included)
+  | NTBinding binding ->
+    let lids =
+      match binding with
+      | Binding_lid (lid, _) -> [lid]
+      | Binding_sig (lids, _) -> lids
+      | Binding_sig_inst (lids, _, _) -> lids
+      | _ -> [] in
+    List.fold_left
+      (fun tbl lid ->
+         let ns_query = if lid.nsstr = cur_mod_str then []
+                        else query_of_ids lid.ns in
+         CTable.insert
+           tbl ns_query (text_of_id lid.ident) lid)
+      table lids
+
+let commit_name_tracking (cur_mod: modul_t) names name_events =
+  let cur_mod_str = match cur_mod with
+                    | None -> "" | Some md -> (SS.mod_name md).str in
+  let updater = update_names_from_event cur_mod_str in
+  List.fold_left updater names name_events
+
+let fresh_name_tracking_hooks () =
+  let events = Util.mk_ref [] in
+  let push_event evt = events := evt :: !events in
+  events,
+  { DsEnv.ds_push_module_abbrev_hook =
+      (fun dsenv x l -> push_event (NTAlias (DsEnv.current_module dsenv, x, l)));
+    DsEnv.ds_push_include_hook =
+      (fun dsenv ns -> push_event (NTInclude (DsEnv.current_module dsenv, ns)));
+    DsEnv.ds_push_open_hook =
+      (fun dsenv op -> push_event (NTOpen (DsEnv.current_module dsenv, op))) },
+  { TcEnv.tc_push_in_gamma_hook =
+      (fun _ s -> push_event (NTBinding s)) }
+
+let track_name_changes ((dsenv, tcenv): env_t)
+    : env_t * (env_t -> env_t * list<name_tracking_event>) =
+  let dsenv_old_hooks, tcenv_old_hooks = DsEnv.ds_hooks dsenv, TcEnv.tc_hooks tcenv in
+  let events, dsenv_new_hooks, tcenv_new_hooks = fresh_name_tracking_hooks () in
+  ((DsEnv.set_ds_hooks dsenv dsenv_new_hooks,
+    TcEnv.set_tc_hooks tcenv tcenv_new_hooks),
+   (fun (dsenv, tcenv) ->
+      (DsEnv.set_ds_hooks dsenv dsenv_old_hooks,
+       TcEnv.set_tc_hooks tcenv tcenv_old_hooks),
+      List.rev !events))
 
 let run_push st kind text line column peek_only =
-  let stack, env, ts = st.repl_stack, st.repl_env, st.repl_ts in
+  let env = push_repl kind st in
+
+  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
 
   // If we are at a stage where we have not yet pushed a fragment from the
   // current buffer, see if some dependency is stale. If so, update it. Also
   // if this is the first chunk, we need to restore the command line options.
-  let restore_cmd_line_options, (stack, env, ts) =
-    if nothing_left_to_pop st
-    then true, update_deps st.repl_fname st.repl_curmod stack env ts
-    else false, (stack, env, ts) in
+  let restore_cmd_line_options, (env, deps) =
+    if repl_stack_empty ()
+    then true, update_deps st.repl_fname env st.repl_deps
+    else false, (env, st.repl_deps) in
 
-  let stack = (env, st.repl_curmod) :: stack in
-  let env = push env kind restore_cmd_line_options "#push" in
-
-  // This pushes to an internal, hidden stack
-  let env_mark = mark env in
+  if restore_cmd_line_options then
+    Options.restore_cmd_line_options false |> ignore;
 
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
-  let res = check_frag env_mark st.repl_curmod (frag, false) in
+  let res = check_frag env st.repl_curmod (frag, false) in
 
   let errors = FStar.Errors.report_all() |> List.map json_of_issue in
   FStar.Errors.clear ();
 
-  let st' = { st with repl_stack = stack; repl_ts = ts;
-                      repl_line = line; repl_column = column } in
+  let st' = { st with repl_deps = deps; repl_line = line; repl_column = column } in
 
   match res with
   | Some (curmod, env, nerrs) when nerrs = 0 && peek_only = false ->
-    // At this stage, the internal stack has grown with size 1.
-    let env = commit_mark env in
+    let env, name_events = finish_name_tracking env in // …end name tracking
     ((QueryOK, JsonList errors),
-      Inl ({ st' with repl_curmod = curmod; repl_env = env }))
+     Inl ({ st' with repl_curmod = curmod; repl_env = env;
+                     repl_names = commit_name_tracking curmod st'.repl_names name_events }))
   | _ ->
     // The previous version of the protocol required the client to send a #pop
     // immediately after failed pushes; this version pops automatically.
-    let env = reset_mark env_mark in
+    let env, _ = finish_name_tracking env in // …end name tracking
     let _, st'' = run_pop ({ st' with repl_env = env }) in
     let status = if peek_only then QueryOK else QueryNOK in
     ((status, JsonList errors), st'')
 
-let run_lookup st symbol pos_opt requested_info =
+let run_symbol_lookup st symbol pos_opt requested_info =
   let dsenv, tcenv = st.repl_env in
 
   let info_of_lid_str lid_str =
@@ -640,7 +853,7 @@ let run_lookup st symbol pos_opt requested_info =
     | None -> if symbol = "" then None else info_of_lid_str symbol in
 
   let response = match info_opt with
-    | None -> (QueryNOK, JsonNull)
+    | None -> None
     | Some (name_or_lid, typ, rng) ->
       let name =
         match name_or_lid with
@@ -661,135 +874,115 @@ let run_lookup st symbol pos_opt requested_info =
       let def_range =
         if List.mem "defined-at" requested_info then Some rng else None in
 
-      let result = { lr_name = name; lr_def_range = def_range;
-                     lr_typ = typ_str; lr_doc = doc_str; lr_def = def_str } in
-      (QueryOK, json_of_lookup_result result) in
+      let result = { slr_name = name; slr_def_range = def_range;
+                     slr_typ = typ_str; slr_doc = doc_str; slr_def = def_str } in
+      Some ("symbol", alist_of_symbol_lookup_result result) in
 
-  (response, Inl st)
+  match response with
+  | None -> Inl "Symbol not found"
+  | Some info -> Inr info
 
-let run_completions st search_term =
-  let dsenv, tcenv = st.repl_env in
-  //search_term is the partially written identifer by the user
-  // FIXME a regular expression might be faster than this explicit matching
-  let rec measure_anchored_match
-    : list<string> -> list<ident> -> option<(list<ident> * int)>
-    //determines it the candidate may match the search term
-    //and, if so, provides an integer measure of the degree of the match
-    //Q: isn't the output list<ident> always the same as the candidate?
-      // About the degree of the match, cpitclaudel says:
-      //      Because we're measuring the length of the match and we allow partial
-      //      matches. Say we're matching FS.Li.app against FStar.List.Append. Then
-      //      the length we want is (length "FStar" + 1 + length "List" + 1 + length
-      //      "app"), not (length "FStar" + 1 + length "List" + 1 + length
-      //      "append"). This length is used to know how much of the candidate to
-      //      highlight in the company-mode popup (we want to display the candidate
-      //      as FStar.List.append.
-    = fun search_term candidate ->
-        match search_term, candidate with
-        | [], _ -> Some ([], 0)
-        | _, [] -> None
-        | hs :: ts, hc :: tc ->
-          let hc_text = FStar.Ident.text_of_id hc in
-          if Util.starts_with hc_text hs then
-             match ts with
-             | [] -> Some (candidate, String.length hs)
-             | _ -> measure_anchored_match ts tc |>
-                      Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
-          else None in
-  let rec locate_match
-    : list<string> -> list<ident> -> option<(list<ident> * list<ident> * int)>
-    = fun needle candidate ->
-    match measure_anchored_match needle candidate with
-    | Some (matched, n) -> Some ([], matched, n)
-    | None ->
-      match candidate with
-      | [] -> None
-      | hc :: tc ->
-        locate_match needle tc |>
-          Util.map_option (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
-  let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.text_of_id ids) in
-  let match_lident_against needle lident =
-      locate_match needle (lident.ns @ [lident.ident])
-  in
-  let shorten_namespace (prefix, matched, match_len) =
-    let naked_match = match matched with [_] -> true | _ -> false in
-    let stripped_ns, shortened = ToSyntax.Env.shorten_module_path dsenv prefix naked_match in
-    (str_of_ids shortened, str_of_ids matched, str_of_ids stripped_ns, match_len) in
-  let prepare_candidate (prefix, matched, stripped_ns, match_len) =
-    if prefix = "" then
-      (matched, stripped_ns, match_len)
-    else
-      (prefix ^ "." ^ matched, stripped_ns, String.length prefix + match_len + 1) in
+let run_option_lookup opt_name =
+  let _, trimmed_name = trim_option_name opt_name in
+  match Util.smap_try_find fstar_options_map_cache trimmed_name with
+  | None -> Inl ("Unknown option:" ^ opt_name)
+  | Some opt -> Inr ("option", alist_of_fstar_option (update_option opt))
+
+let run_module_lookup st symbol =
+  let query = Util.split symbol "." in
+  match CTable.find_module_or_ns st.repl_names query with
+  | None ->
+    Inl "No such module or namespace"
+  | Some (CTable.Module mod_info) ->
+    Inr ("module", CTable.alist_of_mod_info mod_info)
+  | Some (CTable.Namespace ns_info) ->
+    Inr ("namespace", CTable.alist_of_ns_info ns_info)
+
+let run_code_lookup st symbol pos_opt requested_info =
+  match run_symbol_lookup st symbol pos_opt requested_info with
+  | Inr alist -> Inr alist
+  | Inl _ -> match run_module_lookup st symbol with
+            | Inr alist -> Inr alist
+            | Inl err_msg -> Inl "No such symbol, module, or namespace."
+
+let run_lookup' st symbol context pos_opt requested_info =
+  match context with
+  | LKSymbolOnly -> run_symbol_lookup st symbol pos_opt requested_info
+  | LKModule -> run_module_lookup st symbol
+  | LKOption -> run_option_lookup symbol
+  | LKCode -> run_code_lookup st symbol pos_opt requested_info
+
+let run_lookup st symbol context pos_opt requested_info =
+  match run_lookup' st symbol context pos_opt requested_info with
+  | Inl err_msg ->
+    ((QueryNOK, JsonStr err_msg), Inl st)
+  | Inr (kind, info) ->
+    ((QueryOK, JsonAssoc (("kind", JsonStr kind) :: info)), Inl st)
+
+let code_autocomplete_mod_filter = function
+  | _, CTable.Namespace _
+  | _, CTable.Module { CTable.mod_loaded = true } -> None
+  | pth, CTable.Module md ->
+    Some (pth, CTable.Module ({ md with CTable.mod_name = CTable.mod_name md ^ "." }))
+
+let run_code_autocomplete st search_term =
   let needle = Util.split search_term "." in
-  let all_lidents_in_env = TcEnv.lidents tcenv in
-  let matches =
-      //There are two cases here:
-      //Either the needle is of the form:
-      //   (a) A.x   where A resolves to the module L.M.N
-      //or (b) the needle's namespace is not a well-formed module.
-      //In case (a), we go to the desugaring to find the names
-      //   transitively exported by L.M.N
-      //In case (b), we find all lidents in the type-checking environment
-      //   and rank them by potential matches to the needle
-      let case_a_find_transitive_includes (orig_ns:list<string>) (m:lident) (id:string)
-          : list<(list<ident> * list<ident> * int)>
-          =
-          let exported_names = DsEnv.transitive_exported_ids dsenv m in
-          let matched_length =
-            List.fold_left
-              (fun out s -> String.length s + out + 1)
-              (String.length id)
-              orig_ns
-          in
-          exported_names |>
-          List.filter_map (fun n ->
-          if Util.starts_with n id
-          then let lid = Ident.lid_of_ns_and_id (Ident.ids_of_lid m) (Ident.id_of_text n) in
-               Option.map (fun fqn -> [], (List.map Ident.id_of_text orig_ns)@[fqn.ident], matched_length)
-                          (DsEnv.resolve_to_fully_qualified_name dsenv lid)
-          else None)
-      in
-      let case_b_find_matches_in_env ()
-        : list<(list<ident> * list<ident> * int)>
-        = let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
-          //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
-          matches |> List.filter (fun (ns, id, _) ->
-            match DsEnv.resolve_to_fully_qualified_name dsenv (Ident.lid_of_ids id) with
-            | None -> false
-            | Some l -> Ident.lid_equals l (Ident.lid_of_ids (ns@id)))
-      in
-      let ns, id = Util.prefix needle in
-      let matched_ids =
-          match ns with
-          | [] -> case_b_find_matches_in_env ()
-          | _ ->
-            let l = Ident.lid_of_path ns Range.dummyRange in
-            match FStar.ToSyntax.Env.resolve_module_name dsenv l true with
-            | None ->
-              case_b_find_matches_in_env ()
-            | Some m ->
-              case_a_find_transitive_includes ns m id
-      in
-      matched_ids |>
-      List.map (fun x -> prepare_candidate (shorten_namespace x))
-  in
-  let json_candidates =
-    List.map (fun (candidate, ns, match_len) ->
-              JsonList [JsonInt match_len; JsonStr ns; JsonStr candidate])
-             (Util.sort_with (fun (cd1, ns1, _) (cd2, ns2, _) ->
-                              match String.compare cd1 cd2 with
-                              | 0 -> String.compare ns1 ns2
-                              | n -> n)
-                             matches) in
-  ((QueryOK, JsonList json_candidates), Inl st)
+  let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle code_autocomplete_mod_filter in
+  let lids = CTable.autocomplete_lid st.repl_names needle in
+  let json = List.map CTable.json_of_completion_result (lids @ mods_and_nss) in
+  ((QueryOK, JsonList json), Inl st)
+
+let run_module_autocomplete st search_term modules namespaces =
+  let needle = Util.split search_term "." in
+  let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle Some in
+  let json = List.map CTable.json_of_completion_result mods_and_nss in
+  ((QueryOK, JsonList json), Inl st)
+
+let candidates_of_fstar_option match_len is_reset opt =
+  let may_set, explanation =
+    match opt.opt_permission_level with
+    | OptSet -> true, ""
+    | OptReset -> is_reset, "#reset-only"
+    | OptReadOnly -> false, "read-only" in
+  let opt_type =
+    kind_of_fstar_option_type opt.opt_type in
+  let annot =
+    if may_set then opt_type else "(" ^ explanation ^ " " ^ opt_type ^ ")" in
+  opt.opt_snippets
+  |> List.map (fun snippet ->
+        { CTable.completion_match_length = match_len;
+          CTable.completion_candidate = snippet;
+          CTable.completion_annotation = annot })
+
+let run_option_autocomplete st search_term is_reset =
+  match trim_option_name search_term with
+  | ("--", trimmed_name) ->
+    let matcher opt = Util.starts_with opt.opt_name trimmed_name in
+    let options = current_fstar_options matcher in
+
+    let match_len = String.length search_term in
+    let collect_candidates = candidates_of_fstar_option match_len is_reset in
+    let results = List.concatMap collect_candidates options in
+
+    let json = List.map CTable.json_of_completion_result results in
+    ((QueryOK, JsonList json), Inl st)
+  | (_, _) -> ((QueryNOK, JsonStr "Options should start with '--'"), Inl st)
+
+let run_autocomplete st search_term context =
+  match context with
+  | CKCode ->
+    run_code_autocomplete st search_term
+  | CKOption is_reset ->
+    run_option_autocomplete st search_term is_reset
+  | CKModuleOrNamespace (modules, namespaces) ->
+    run_module_autocomplete st search_term modules namespaces
 
 let run_compute st term rules =
   let run_and_rewind st task =
-    let env_mark = mark st.repl_env in
+    let env' = push st.repl_env "#compute" in
     let results = task st in
-    let env = reset_mark env_mark in
-    let st' = { st with repl_env = env } in
-    (results, Inl st') in
+    pop env' "#compute";
+    (results, Inl st) in
 
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
@@ -960,8 +1153,8 @@ let run_query st : query' -> (query_status * json) * either<repl_state,int> = fu
   | DescribeRepl -> run_describe_repl st
   | Pop -> run_pop st
   | Push (kind, text, l, c, peek) -> run_push st kind text l c peek
-  | AutoComplete search_term -> run_completions st search_term
-  | Lookup (symbol, pos_opt, rqi) -> run_lookup st symbol pos_opt rqi
+  | AutoComplete (search_term, context) -> run_autocomplete st search_term context
+  | Lookup (symbol, context, pos_opt, rq_info) -> run_lookup st symbol context pos_opt rq_info
   | Compute (term, rules) -> run_compute st term rules
   | Search term -> run_search st term
   | MissingCurrentModule -> run_missing_current_module st query
@@ -1001,29 +1194,65 @@ let interactive_printer =
     printer_prerror = (fun s -> write_message "error" (JsonStr s));
     printer_prgeneric = (fun label get_string get_json -> write_message label (get_json ()) )}
 
-open FStar.TypeChecker.Common
-// filename is the name of the file currently edited
-let interactive_mode' (filename:string): unit =
+let capitalize str =
+  if str = "" then str
+  else let first = String.substring str 0 1 in
+       String.uppercase first ^ String.substring str 1 (String.length str - 1)
+
+let add_module_completions this_fname deps table =
+  let mods =
+    FStar.Parser.Dep.build_inclusion_candidates_list () in
+  let loaded_mods_set =
+    List.fold_left
+      (fun acc dep -> psmap_add acc (Parser.Dep.lowercase_module_name dep) true)
+      (psmap_empty ()) (Options.prims () :: deps) in // Prims is an implicit dependency
+  let loaded modname =
+    psmap_find_default loaded_mods_set modname false in
+  let this_mod_key =
+    Parser.Dep.lowercase_module_name this_fname in
+  List.fold_left (fun table (modname, mod_path) ->
+      // modname is the filename part of mod_path
+      let mod_key = String.lowercase modname in
+      if this_mod_key = mod_key then
+        table // Exclude current module from completion
+      else
+        let ns_query = Util.split (capitalize modname) "." in
+        CTable.register_module_path table (loaded mod_key) mod_path ns_query)
+    table (List.rev mods) // List.rev to process files in order or *increasing* precedence
+
+let initial_range =
+  Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
+
+let interactive_mode' (filename: string): unit =
   write_hello ();
+
+  let env = init_env () in
+  let env = fst env, FStar.TypeChecker.Env.set_range (snd env) initial_range in
+
   //type check prims and the dependencies
-  let filenames, maybe_intf = deps_of_our_file filename in
-  let env = tc_prims () in
-  let stack, env, ts = tc_deps None [] env filenames [] in
-  let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
-  let env = fst env, TcEnv.set_range (snd env) initial_range in
-  let env =
-    match maybe_intf with
+  let env, finish_name_tracking = track_name_changes env in // begin name tracking…
+  let env = tc_prims env in
+  let deps, maybe_inferface = deps_of_our_file filename in
+  let env, repl_deps = tc_deps [] env deps [] in
+  let env = match maybe_inferface with
+    | None -> env
     | Some intf ->
       // We found an interface: record its contents in the desugaring environment
       // to be interleaved with the module implementation on-demand
-      FStar.Universal.load_interface_decls env intf
-    | None -> env in
+      FStar.Universal.load_interface_decls env intf in
+  let env, name_events = finish_name_tracking env in // …end name tracking
 
   TcEnv.toggle_id_info (snd env) true;
-  let init_st = { repl_line = 1; repl_column = 0; repl_fname = filename;
-                  repl_stack = stack; repl_curmod = None;
-                  repl_env = env; repl_ts = ts; repl_stdin = open_stdin () } in
-  if FStar.Options.record_hints() || FStar.Options.use_hints() then //and if we're recording or using hints
+
+  let initial_names =
+    add_module_completions filename deps CTable.empty in
+  let init_st =
+    { repl_line = 1; repl_column = 0; repl_fname = filename;
+      repl_curmod = None; repl_env = env; repl_deps = repl_deps;
+      repl_stdin = open_stdin ();
+      repl_names = commit_name_tracking None initial_names name_events } in
+
+  if FStar.Options.record_hints() || FStar.Options.use_hints() then
     FStar.SMTEncoding.Solver.with_hints_db (List.hd (Options.file_list ())) (fun () -> go init_st)
   else
     go init_st

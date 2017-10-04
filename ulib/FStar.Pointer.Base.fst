@@ -2690,6 +2690,9 @@ let sub_buffer
   len
 = Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
 
+let offset_buffer #t b i =
+  Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) (UInt32.sub (Buffer?.blength b) i)
+
 let buffer_length_gsub_buffer
   (#t: typ)
   (b: buffer t)

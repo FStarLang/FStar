@@ -49,7 +49,7 @@ let diff (n:nat) (s:subtree_t) :Tot nat = size (minus (set_n n) s)
 	                            (r = i \/ strict_subset (subtree uf i h1) (subtree uf r h1)) /\  //we need this because when we write p' as i's parent
 				                                                   //we need to ensure wellformedness i.e. subtree of p'
 										   //is a strict superset of subtee of i
-				     (forall (j:id n).{:pattern (sel h1 (index uf j))} strict_subset (subtree uf j h0) (subtree uf i h0) ==>
+				     (forall (j:id n).{:pattern (sel h1 (index uf j)) \/ (sel h0 (index uf j))} strict_subset (subtree uf j h0) (subtree uf i h0) ==>
 	                                          sel h1 (index uf j) == sel h0 (index uf j))))  //this last clause to say that i remains unchanged in the recursive call, else when we write its subtree to be s, we have trouble proving that p's subtree is a strict superset of s
 	      (decreases (diff n (subtree #n uf i ghost_heap)))
   = let (p, d, s) = get uf i in

@@ -105,7 +105,8 @@ let dump_cur ps msg =
         dump_goal ps (List.hd ps.goals)
         end
 
-let ps_to_string (msg, ps) = format5 "State dump (%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
+let ps_to_string (msg, ps) = format6 "State dump @ depth %s(%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
+                (string_of_int ps.depth)
                 msg (string_of_int (List.length ps.goals)) (String.concat "\n" (List.map goal_to_string ps.goals))
                 (string_of_int (List.length ps.smt_goals)) (String.concat "\n" (List.map goal_to_string ps.smt_goals))
 let goal_to_json g =
@@ -767,23 +768,29 @@ let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
         bind (mapM f xs) (fun ys ->
         ret (y::ys)))
 
-let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term) : tac<term> =
+let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) (t : term) : tac<term> =
     let tn = (SS.compress t).n in
+    bind (if d = TopDown
+          then f env ({ t with n = tn })
+          else ret t) (fun t ->
     let tn = match tn with
              | Tm_app (hd, args) ->
-                  let ff = tac_bottom_fold_env f env in
+                  let ff = tac_fold_env d f env in
                   bind (ff hd) (fun hd ->
                   let fa (a,q) = bind (ff a) (fun a -> (ret (a,q))) in
                   bind (mapM fa args) (fun args ->
                   ret (Tm_app (hd, args))))
              | Tm_abs (bs, t, k) ->
                  let bs, t' = SS.open_term bs t in
-                 bind (tac_bottom_fold_env f (Env.push_binders env bs) t') (fun t'' ->
+                 bind (tac_fold_env d f (Env.push_binders env bs) t') (fun t'' ->
                  ret (Tm_abs (SS.close_binders bs, SS.close bs t'', k)))
              | Tm_arrow (bs, k) -> ret tn //TODO
              | _ -> ret tn in
     bind tn (fun tn ->
-    f env ({ t with n = tn }))
+    let t' = { t with n = tn } in
+    if d = BottomUp
+    then f env t'
+    else ret t'))
 
 (*
  * Allows for replacement of individual subterms in the goal, asking the user to provide
@@ -794,7 +801,7 @@ let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : term) : tac<term> =
     let t, lcomp, g = TcTerm.tc_term env t in
-    if not (U.is_total_lcomp lcomp) || not (Rel.is_trivial g) then
+    if not (U.is_pure_or_ghost_lcomp lcomp) || not (Rel.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
         let typ = lcomp.res_typ in
@@ -810,7 +817,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
             ret ut))
         ))
 
-let pointwise (tau:tac<unit>) : tac<unit> =
+let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
     bind get (fun ps ->
     let g, gs = match ps.goals with
                 | g::gs -> g, gs
@@ -820,7 +827,7 @@ let pointwise (tau:tac<unit>) : tac<unit> =
     log ps (fun () ->
         BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
-    bind (tac_bottom_fold_env (pointwise_rec ps tau g.opts) g.context gt) (fun gt' ->
+    bind (tac_fold_env d (pointwise_rec ps tau g.opts) g.context gt) (fun gt' ->
     log ps (fun () ->
         BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->
@@ -960,6 +967,8 @@ let proofstate_of_goal_ty env typ =
         all_implicits = g_u.implicits;
         goals = [g];
         smt_goals = [];
+        depth = 0;
+        __dump = dump_proofstate;
     }
     in
     (ps, g.witness)

@@ -30,7 +30,8 @@
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Properties.tail", "unit_typing"
       ],
-      0
+      0,
+      "a87942b68de599c52bf9acaa4b109f83"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_sorted_lemma",
@@ -62,7 +63,8 @@
         "typing_FStar.Seq.Base.length", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "cce0ddbbd9f13d0bf16f4f46833f835e"
     ],
     [
       "FStar.Seq.Sorted.intro_sorted_pred",
@@ -80,7 +82,8 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
-      0
+      0,
+      "027d2af31e2ae79d4441cc5ee5ef1a96"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_cons_lemma",
@@ -91,7 +94,8 @@
         "@MaxIFuel_assumption", "@query", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_FStar.Seq.Sorted_Tm_refine_db53fa9c4814b0d5bbe0b7987448300c"
       ],
-      0
+      0,
+      "b9bea7c6fd52b48fcf8887749536c565"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_cons_lemma",
@@ -126,7 +130,8 @@
         "typing_FStar.Seq.Base.index", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Base.slice", "unit_typing"
       ],
-      0
+      0,
+      "6baecb90b0af82ca57d795c95fbb9fcb"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_cons_lemma",
@@ -134,7 +139,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "32b9f5cb914e2fb42355c2f437f9d2b9"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_cons_lemma",
@@ -142,7 +148,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "dd17eb1d3bd67e6b75b566ecb32d45b7"
     ],
     [
       "FStar.Seq.Sorted.sorted_sorted_pred_lemma",
@@ -181,7 +188,8 @@
         "typing_FStar.Seq.Base.slice", "unit_inversion", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "9daf8e05e8cb2b22dc2a19c5892a230e"
     ],
     [
       "FStar.Seq.Sorted.sorted_sorted_pred_lemma",
@@ -189,7 +197,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "d93322f9dd8e5450d40d4ba96d0b34d1"
     ],
     [
       "FStar.Seq.Sorted.sorted_sorted_pred_lemma",
@@ -197,7 +206,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "cf3c5399a05df91ffbf91892a64c1b72"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_slice_lemma",
@@ -212,7 +222,8 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "d3fbcabed917a29f27e1f875ba27f183"
     ],
     [
       "FStar.Seq.Sorted.sorted_pred_slice_lemma",
@@ -238,7 +249,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "unit_typing"
       ],
-      0
+      0,
+      "4ee120017214ecaa8618d5d3a106de1a"
     ],
     [
       "FStar.Seq.Sorted.sorted_slice_lemma",
@@ -253,7 +265,8 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "0ba0e30e6fdc3f9b703e5dcd82a790a0"
     ],
     [
       "FStar.Seq.Sorted.sorted_slice_lemma",
@@ -266,7 +279,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_3321cbe2f573e3c988fd0895bf1f0cf9"
       ],
-      0
+      0,
+      "b8c772a5b9bbd7165e83890423e87d30"
     ],
     [
       "FStar.Seq.Sorted.sorted_split_lemma",
@@ -278,7 +292,8 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "823dc5efbec86f21bc3f8697a2f92ee1"
     ],
     [
       "FStar.Seq.Sorted.sorted_split_lemma",
@@ -294,9 +309,18 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "ad77604d6ae20d0c1e181332a265312b"
     ],
-    [ "FStar.Seq.Sorted.sorted_pred_append_lemma", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Seq.Sorted.sorted_pred_append_lemma",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "83a49c9dc1a36731df11bcf74ed4f2bf"
+    ],
     [
       "FStar.Seq.Sorted.sorted_pred_append_lemma",
       2,
@@ -330,7 +354,8 @@
         "typing_FStar.Seq.Properties.head",
         "typing_FStar.Seq.Properties.last"
       ],
-      0
+      0,
+      "a6ea771a792bf6b759d6a0676c17d61b"
     ]
   ]
 ]

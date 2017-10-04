@@ -17,7 +17,8 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
-      0
+      0,
+      "bdb1d9fa4294f13607add46e6db0671f"
     ],
     [
       "Ex06e.mem",
@@ -34,9 +35,18 @@
         "int_inversion", "projection_inverse_Prims.Cons_tl",
         "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "9d594e1d64c6b35989a485987a1cbeb1"
     ],
-    [ "Ex06e.mem", 2, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
+    [
+      "Ex06e.mem",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "74c7082ce46ff8a4ed3c32a0009f3a36"
+    ],
     [
       "Ex06e.sorted_smaller",
       1,
@@ -66,7 +76,8 @@
         "token_correspondence_Ex06e.sorted.fuel_instrumented",
         "typing_Ex06e.mem", "unit_typing"
       ],
-      0
+      0,
+      "9314f8e3100433ad3425afdbcc9f26f3"
     ],
     [
       "Ex06e.sorted_smaller",
@@ -74,7 +85,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "6e6885d1a85f20f497a1325a1d60d99b"
     ],
     [
       "Ex06e.insert",
@@ -111,7 +123,8 @@
         "token_correspondence_Ex06e.sorted.fuel_instrumented",
         "typing_Ex06e.mem", "typing_Ex06e.sorted"
       ],
-      0
+      0,
+      "10549b4780be7c59433494c5e04eecdc"
     ],
     [
       "Ex06e.sort",
@@ -139,7 +152,8 @@
         "subterm_ordering_Prims.Cons", "typing_Ex06e.insert",
         "typing_Ex06e.mem"
       ],
-      0
+      0,
+      "c3192716d8107da97b9231387ebfe83c"
     ]
   ]
 ]

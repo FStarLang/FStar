@@ -26,9 +26,6 @@ module Env = FStar.TypeChecker.Env
 val push: string -> unit
 val pop:  string -> unit
 val init: Env.env -> unit
-val mark: string -> unit
-val reset_mark: string -> unit
-val commit_mark: string -> unit
 val encode_sig: Env.env -> S.sigelt -> unit
 val encode_modul: Env.env -> S.modul -> unit
 val is_trivial: Env.env -> S.term -> bool

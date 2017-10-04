@@ -1812,10 +1812,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             let xs, rest = BU.first_N n_args xs in
                             let t = mk (Tm_arrow(rest, c)) None k.pos in
                             SS.open_comp xs (S.mk_Total t) |> Some
-                     | _ -> failwith (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
-                                        (Print.uvar_to_string uv)
-                                        (Print.term_to_string k)
-                                        (Print.term_to_string k_uv)) in
+                     | _ -> raise (Error (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
+                                         (Print.uvar_to_string uv)
+                                         (Print.term_to_string k)
+                                         (Print.term_to_string k_uv), t1.pos)) in
                 BU.bind_opt
                     (elim k_uv ps)
                     (fun (xs, c) -> Some (((uv, k_uv), xs, c), ps, decompose env t2)) in
@@ -1998,9 +1998,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let sub_prob = TProb <| mk_problem (p_scope orig) orig k1'_xs EQ k2'_ys None "flex-flex kinding" in
                     match (SS.compress k1').n, (SS.compress k2').n with
                     | Tm_type _, _ ->
-                      k1', [sub_prob]
+                      k1'_xs, [sub_prob]
                     | _, Tm_type _ ->
-                      k2', [sub_prob]
+                      k2'_ys, [sub_prob]
                     | _ ->
                       let t, _ = U.type_u() in
                       let k_zs, _ = new_uvar r zs t in
@@ -2746,7 +2746,7 @@ let discharge_guard env g =
   | Some g -> g
   | None  -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
 
-let resolve_implicits' forcelax g =
+let resolve_implicits' must_total forcelax g =
   let unresolved u = match UF.find u with
     | None -> true
     | _ -> false in
@@ -2764,7 +2764,10 @@ let resolve_implicits' forcelax g =
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
                let env = if forcelax then {env with lax=true} else env in
-               let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in
+               let g = if must_total
+                       then let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in g
+                       else let _, _, g = env.tc_term ({env with use_bv_sorts=true}) tm in g
+               in
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload
                        else g in
@@ -2776,8 +2779,8 @@ let resolve_implicits' forcelax g =
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
-let resolve_implicits     g = resolve_implicits' false g
-let resolve_implicits_lax g = resolve_implicits' true  g
+let resolve_implicits     g = resolve_implicits' true  false g
+let resolve_implicits_tac g = resolve_implicits' false true  g
 
 let force_trivial_guard env g =
     let g = solve_deferred_constraints env g |> resolve_implicits in

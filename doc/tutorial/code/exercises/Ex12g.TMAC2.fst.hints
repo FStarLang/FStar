@@ -1,10 +1,42 @@
 [
   "<tûŸk83²yš·÷Ë—M0",
   [
-    [ "Ex12g.TMAC2.__proj__Keys__item__k0", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex12g.TMAC2.__proj__Keys__item__k1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex12g.TMAC2.bspec0", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex12g.TMAC2.bspec1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex12g.TMAC2.__proj__Keys__item__k0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a7bb3dda8c4e28725e3c8a9da21ce540"
+    ],
+    [
+      "Ex12g.TMAC2.__proj__Keys__item__k1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d3545675b63c8c25846d71f5b52d1192"
+    ],
+    [
+      "Ex12g.TMAC2.bspec0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fb50351a7438cb2fe4e4a233f3275ac0"
+    ],
+    [
+      "Ex12g.TMAC2.bspec1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0685639b206fb8ff87427daf8ce47f28"
+    ],
     [
       "Ex12g.TMAC2.keygen",
       1,
@@ -24,7 +56,8 @@
         "refinement_interpretation_Ex12.BMAC_Tm_refine_cdab0a4f5774a60caddf7613d39bb432",
         "typing_Ex12.BMAC.keygen"
       ],
-      0
+      0,
+      "3489900cc31084aca02401c77258f786"
     ]
   ]
 ]

@@ -313,6 +313,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
+  | Tm_meta ({n = Tm_unknown}, Meta_alien (_, _, ty)) ->
+    top, S.mk_Total ty |> U.lcomp_of_comp, Rel.trivial_guard
+
   | Tm_meta(e, Meta_desugared Meta_smt_pat) ->
     let e, c, g = tc_tot_or_gtot_term env e in
     let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant

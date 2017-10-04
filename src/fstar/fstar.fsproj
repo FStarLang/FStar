@@ -71,8 +71,10 @@
   <ItemGroup>
     <Compile Include="FStar.Dependencies.fs" />
     <Compile Include="FStar.Universal.fs" />
-    <Compile Include="FStar.Interactive.fs" />
-    <Compile Include="FStar.Legacy.Interactive.fs" />
+    <Compile Include="FStar.Interactive.CompletionTable.fsi" />
+    <Compile Include="FStar.Interactive.CompletionTable.fs" />
+    <Compile Include="FStar.Interactive.Ide.fs" />
+    <Compile Include="FStar.Interactive.Legacy.fs" />
     <Compile Include="FStar.Indent.fs" />
     <Compile Include="FStar.Main.fs" />
     <Compile Include="FStar.Top.fs" />

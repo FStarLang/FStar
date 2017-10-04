@@ -20,7 +20,7 @@ module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
 
-(* These file provides implementation for reflection primitives in F*.
+(* This file provides implementation for reflection primitives in F*.
  *
  * Users can be exposed to (mostly) raw syntax of terms when working in
  * a metaprogramming effect (such as TAC). These effects are irrelevant
@@ -57,7 +57,7 @@ let un_protect_embedded_term : term -> term =
           failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
 
 let embed_binder (b:binder) : term =
-    U.mk_alien b "reflection.embed_binder" None
+    U.mk_alien fstar_refl_binder b "reflection.embed_binder" None
 
 let unembed_binder (t:term) : binder =
     U.un_alien t |> FStar.Dyn.undyn
@@ -72,13 +72,13 @@ let unembed_term (t:term) : term =
     un_protect_embedded_term t
 
 let embed_fvar (fv:fv) : term =
-    U.mk_alien fv "reflection.embed_fvar" None
+    U.mk_alien fstar_refl_fvar fv "reflection.embed_fvar" None
 
 let unembed_fvar (t:term) : fv =
     U.un_alien t |> FStar.Dyn.undyn
 
 let embed_env (env:Env.env) : term =
-    U.mk_alien env "tactics_embed_env" None
+    U.mk_alien fstar_refl_env env "tactics_embed_env" None
 
 let unembed_env (t:term) : Env.env =
     U.un_alien t |> FStar.Dyn.undyn

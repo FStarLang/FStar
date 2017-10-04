@@ -1258,8 +1258,6 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       | _ -> failwith "impossible (typechecking should preserve Tm_let)"
     in
 
-    // CPC doc: Actually I don't need the let-val pairing; It's enough to register the docs of the val independently, since they won't be overwritten when the let is desugared with no docs.
-
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in

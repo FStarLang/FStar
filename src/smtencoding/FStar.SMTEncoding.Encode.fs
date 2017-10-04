@@ -73,9 +73,6 @@ let mk_data_tester env l x = mk_tester (escape l.str) x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
-    mark: unit -> unit;
-    reset_mark: unit -> unit;
-    commit_mark: unit -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
     fresh:string -> string;
@@ -109,19 +106,8 @@ let varops =
             f in
     let push () = scopes := new_scope()::!scopes in
     let pop () = scopes := List.tl !scopes in
-    let mark () = push () in
-    let reset_mark () = pop () in
-    let commit_mark () = match !scopes with
-        | (hd1, hd2)::(next1, next2)::tl ->
-          BU.smap_fold hd1 (fun key value v  -> BU.smap_add next1 key value) ();
-          BU.smap_fold hd2 (fun key value v  -> BU.smap_add next2 key value) ();
-          scopes := (next1, next2)::tl
-        | _ -> failwith "Impossible" in
     {push=push;
      pop=pop;
-     mark=mark;
-     reset_mark=reset_mark;
-     commit_mark=commit_mark;
      new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;
@@ -1780,11 +1766,10 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                         | [] -> decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
                         | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
-                                let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
                                 let name_tok_corr = Util.mkAssume(mkForall([[vtok_app]; [vapp]], vars, mkEq(vtok_app, vapp)),
                                                                 Some "Name-token correspondence",
                                                                 ("token_correspondence_"^vname)) in
-                                decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
+                                decls2@[vtok_decl;name_tok_corr;tok_typing], env in
                 vname_decl::tok_decl, env in
               let encoded_res_t, ty_pred, decls3 =
                    let res_t = SS.compress res_t in
@@ -2644,12 +2629,6 @@ let push_env () = match !last_env with
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl
-let mark_env () = push_env()
-let reset_mark_env () = pop_env()
-let commit_mark_env () =
-    match !last_env with
-        | hd::_::tl -> last_env := hd::tl
-        | _ -> failwith "Impossible"
 (* TOP-LEVEL API *)
 
 let init tcenv =
@@ -2664,18 +2643,6 @@ let pop msg   =
     let _ = pop_env() in
     varops.pop();
     Z3.pop msg
-let mark msg =
-    mark_env();
-    varops.mark();
-    Z3.mark msg
-let reset_mark msg =
-    reset_mark_env();
-    varops.reset_mark();
-    Z3.reset_mark msg
-let commit_mark (msg:string) =
-    commit_mark_env();
-    varops.commit_mark();
-    Z3.commit_mark msg
 
 //////////////////////////////////////////////////////////////////////////
 //guarding top-level terms with fact database triggers

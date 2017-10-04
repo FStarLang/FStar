@@ -30,4 +30,14 @@ type proofstate = {
     all_implicits: implicits ;   //all the implicits currently open, partially resolved (unclear why we really need this)
     goals        : list<goal>;   //all the goals remaining to be solved
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
+    depth        : int;          //depth for tracing and debugging
+    __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying ciruluarity
 }
+
+val decr_depth : proofstate -> proofstate
+val incr_depth : proofstate -> proofstate
+val tracepoint : proofstate -> unit
+
+type direction =
+    | TopDown
+    | BottomUp
