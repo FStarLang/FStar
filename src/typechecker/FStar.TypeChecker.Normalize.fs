@@ -858,6 +858,12 @@ let is_reify_head = function
     | _ ->
       false
 
+let should_reify cfg stack = match stack with
+    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
+        // BU.print1 "Found a reify on the stack. %s" "" ;
+        cfg.steps |> List.contains Reify
+    | _ -> false
+
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t = compress t in
@@ -1224,17 +1230,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             begin match m with
               | Meta_monadic (m, t) ->
+                // BU.print2 "Will %sreify : %s \n" (if should_reify cfg stack then "" else "not ") (stack_to_string stack);
 
-                let should_reify = match stack with
-                    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
-                        // BU.print1 "Found a reify on the stack. %s" "" ;
-                        cfg.steps |> List.contains Reify
-                    | _ -> false
-                in
-
-                // BU.print2 "Will %sreify : %s \n" (if should_reify then "" else "not ") (stack_to_string stack);
-
-                if not should_reify
+                if not (should_reify cfg stack)
                 then
                  (*  We have an impure computation, and we aim to perform any pure steps within that computation.   *
                   *                                                                                                 *
@@ -1427,16 +1425,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
 
               | Meta_monadic_lift (m, m', t) ->
-                (* KM : This code is a partial duplicate of what can be found in Meta_monadic *)
-                (* KM : Not exactly sure which case should be eliminated *)
-                let should_reify = match stack with
-                    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
-                        // BU.print1 "Found a reify on the stack. %s" "" ;
-                        cfg.steps |> List.contains Reify
-                    | _ -> false
-                in
-
-                if should_reify
+                if should_reify cfg stack
                 then
                     norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
                 else
