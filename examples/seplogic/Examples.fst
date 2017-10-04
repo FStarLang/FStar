@@ -47,9 +47,9 @@ let rewrite_with_lemma (tm:tactic term) :tactic unit =
 
 let simplify :tactic unit =
   pointwise (
-  (apply_lemma (quote lemma_join_h_emp);; qed)                   `or_else`
-  (apply_lemma (quote lemma_join_restrict_minus);; qed)          `or_else`
-  (apply_lemma (quote lemma_restrict_h_join_minus_to_r);; qed)   `or_else`
+  (apply_lemma (quote lemma_join_h_emp);; qed)                       `or_else`
+  (apply_lemma (quote lemma_join_restrict_minus);; qed)              `or_else`
+  (apply_lemma (quote lemma_restrict_points_to_join_h_to_r);; qed)   `or_else`
   trefl);;
   idtac
 
@@ -143,12 +143,11 @@ let double_increment_tau :tactic unit =
   dump "Double increment";;
   smt
 
-// (* This proof doesn't go through *)
-// let double_increment_ok (r:addr) (h:heap) (n:int) =
-//   let c = Bind (Bind (Read r) (fun y -> Write r (y + 1))) (fun _ -> (Bind (Read r) (fun y -> Write r (y + 1))))  in
-//   let p = fun _ h -> sel h r == (n + 2) in
-//   let t = (lift_wpsep (wpsep_command c)) p h in
-//   assert_by_tactic (sel h r == n ==> t) double_increment_tau
+let double_increment_ok (r:addr) (h:heap) (n:int) =
+  let c = Bind (Bind (Read r) (fun y -> Write r (y + 1))) (fun _ -> (Bind (Read r) (fun y -> Write r (y + 1))))  in
+  let p = fun _ h -> sel h r == (n + 2) in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (sel h r == n ==> t) double_increment_tau
 
 (* Rotate three pointers *)
 let rotate_tau :tactic unit =
@@ -203,3 +202,22 @@ let init_ok (h:heap) =
   let p = fun r h -> sel h r == 7 in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic t init_tau
+
+(* Debugging behaviour of context_rewrites *)
+let test_tau :tactic unit =
+  norm [delta; delta_only unfold_steps; primops];;
+  implies_intro;;
+  step;;
+  step;;
+  step;;
+  step;;
+  step;;
+  dump "Pre context_rewrites";;
+  context_rewrites;;
+  dump "Post context_rewrites"
+
+let test_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
+  let c = Bind (Bind (Read r2) (fun n1 -> Write r1 n1)) (fun _ -> Read r1) in
+  let p = fun _ h -> (sel h r1 == j) in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) test_tau
