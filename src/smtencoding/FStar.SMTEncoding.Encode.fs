@@ -73,9 +73,6 @@ let mk_data_tester env l x = mk_tester (escape l.str) x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
-    mark: unit -> unit;
-    reset_mark: unit -> unit;
-    commit_mark: unit -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
     fresh:string -> string;
@@ -109,19 +106,8 @@ let varops =
             f in
     let push () = scopes := new_scope()::!scopes in
     let pop () = scopes := List.tl !scopes in
-    let mark () = push () in
-    let reset_mark () = pop () in
-    let commit_mark () = match !scopes with
-        | (hd1, hd2)::(next1, next2)::tl ->
-          BU.smap_fold hd1 (fun key value v  -> BU.smap_add next1 key value) ();
-          BU.smap_fold hd2 (fun key value v  -> BU.smap_add next2 key value) ();
-          scopes := (next1, next2)::tl
-        | _ -> failwith "Impossible" in
     {push=push;
      pop=pop;
-     mark=mark;
-     reset_mark=reset_mark;
-     commit_mark=commit_mark;
      new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;
@@ -422,18 +408,6 @@ exception Let_rec_unencodeable
 
 exception Inner_let_rec
 
-let encode_const = function
-    | Const_unit -> mk_Term_unit
-    | Const_bool true -> boxBool mkTrue
-    | Const_bool false -> boxBool mkFalse
-    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))])
-    | Const_int (i, None)  -> boxInt (mkInteger i)
-    | Const_int (i, Some _) -> failwith "Machine integers should be desugared"
-    | Const_string(s, _) -> varops.string_const s
-    | Const_range r -> mk_Range_const
-    | Const_effect -> mk_Term_type
-    | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
-
 let as_function_typ env t0 =
     let rec aux norm t =
         let t = SS.compress t in
@@ -499,7 +473,22 @@ let is_BitVector_primitive head args =
     | _ -> false
 
 
-let rec encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
+let rec encode_const c env =
+    match c with
+    | Const_unit -> mk_Term_unit, []
+    | Const_bool true -> boxBool mkTrue, []
+    | Const_bool false -> boxBool mkFalse, []
+    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))]), []
+    | Const_int (i, None)  -> boxInt (mkInteger i), []
+    | Const_int (repr, Some sw) ->
+      let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
+      encode_term syntax_term env
+    | Const_string(s, _) -> varops.string_const s, []
+    | Const_range r -> mk_Range_const, []
+    | Const_effect -> mk_Term_type, []
+    | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
+
+and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             (list<fv>                       (* translated bound variables *)
                             * list<term>                    (* guards *)
                             * env_t                         (* extended context *)
@@ -710,7 +699,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_term t env
 
       | Tm_constant c ->
-        encode_const c, []
+        encode_const c env
 
       | Tm_arrow(binders, c) ->
         let module_name = env.current_module_name in
@@ -1154,7 +1143,9 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
         | Pat_wild _
         | Pat_dot_term _ -> mkTrue
         | Pat_constant c ->
-            mkEq(scrutinee, encode_const c)
+            let tm, decls = encode_const c env in
+            let _ = match decls with _::_ -> failwith "Unexpected encoding of constant pattern" | _ -> () in
+            mkEq(scrutinee, tm)
         | Pat_cons(f, args) ->
             let is_f =
                 let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
@@ -1780,11 +1771,10 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                         | [] -> decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
                         | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
-                                let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
                                 let name_tok_corr = Util.mkAssume(mkForall([[vtok_app]; [vapp]], vars, mkEq(vtok_app, vapp)),
                                                                 Some "Name-token correspondence",
                                                                 ("token_correspondence_"^vname)) in
-                                decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
+                                decls2@[vtok_decl;name_tok_corr;tok_typing], env in
                 vname_decl::tok_decl, env in
               let encoded_res_t, ty_pred, decls3 =
                    let res_t = SS.compress res_t in
@@ -2644,12 +2634,6 @@ let push_env () = match !last_env with
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl
-let mark_env () = push_env()
-let reset_mark_env () = pop_env()
-let commit_mark_env () =
-    match !last_env with
-        | hd::_::tl -> last_env := hd::tl
-        | _ -> failwith "Impossible"
 (* TOP-LEVEL API *)
 
 let init tcenv =
@@ -2664,18 +2648,6 @@ let pop msg   =
     let _ = pop_env() in
     varops.pop();
     Z3.pop msg
-let mark msg =
-    mark_env();
-    varops.mark();
-    Z3.mark msg
-let reset_mark msg =
-    reset_mark_env();
-    varops.reset_mark();
-    Z3.reset_mark msg
-let commit_mark (msg:string) =
-    commit_mark_env();
-    varops.commit_mark();
-    Z3.commit_mark msg
 
 //////////////////////////////////////////////////////////////////////////
 //guarding top-level terms with fact database triggers

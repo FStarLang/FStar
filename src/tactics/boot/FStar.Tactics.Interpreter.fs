@@ -45,7 +45,7 @@ let mk_tactic_interpretation_0 (ps:proofstate) (t:tac<'a>) (embed_a:'a -> term) 
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
             (Print.args_to_string args));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run t ps in
     Some (E.embed_result ps res embed_a t_a)
   | _ ->
@@ -61,7 +61,7 @@ let mk_tactic_interpretation_1 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run (t (unembed_b b)) ps in
     Some (E.embed_result ps res embed_a t_a)
   | _ ->
@@ -77,7 +77,7 @@ let mk_tactic_interpretation_2 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run (t (unembed_a a) (unembed_b b)) ps in
     Some (E.embed_result ps res embed_c t_c)
   | _ ->
@@ -93,7 +93,7 @@ let mk_tactic_interpretation_3 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run (t (unembed_a a) (unembed_b b) (unembed_c c)) ps in
     Some (E.embed_result ps res embed_d t_d)
   | _ ->
@@ -111,7 +111,7 @@ let mk_tactic_interpretation_5 (ps:proofstate)
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let ps = E.unembed_proofstate ps embedded_state in
+    let ps = E.unembed_proofstate embedded_state in
     let res = run (t (unembed_a a) (unembed_b b) (unembed_c c) (unembed_d d) (unembed_e e)) ps in
     Some (E.embed_result ps res embed_f t_f)
   | _ ->
@@ -151,6 +151,43 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                (u_d : term -> 'd) (u_e : term -> 'e)
                                (e_f : 'f -> term) (tc : typ) : N.primitive_step =
         mk name 6 (mk_tactic_interpretation_5 ps f u_a u_b u_c u_d u_e e_f tc)
+    in
+    let decr_depth_interp rng (args : args) =
+        match args with
+        | [(ps, _)] -> Some (E.embed_proofstate (decr_depth (E.unembed_proofstate ps)))
+        | _ -> failwith "Unexpected application of decr_depth"
+    in
+    let decr_depth_step : N.primitive_step =
+        {N.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
+         N.arity = 1;
+         N.strong_reduction_ok = false;
+         N.interpretation = decr_depth_interp
+         }
+    in
+    let incr_depth_interp rng (args : args) =
+        match args with
+        | [(ps, _)] -> Some (E.embed_proofstate (incr_depth (E.unembed_proofstate ps)))
+        | _ -> failwith "Unexpected application of incr_depth"
+    in
+    let incr_depth_step : N.primitive_step =
+        {N.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
+         N.arity = 1;
+         N.strong_reduction_ok = false;
+         N.interpretation = incr_depth_interp
+         }
+    in
+    let tracepoint_interp rng (args : args) =
+        match args with
+        | [(ps, _)] -> (tracepoint (E.unembed_proofstate ps); Some U.exp_unit)
+        | _ -> failwith "Unexpected application of tracepoint"
+    in
+    let tracepoint_step : N.primitive_step =
+        let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
+        {N.name = nm;
+         N.arity = 1;
+         N.strong_reduction_ok = false;
+         N.interpretation = tracepoint_interp
+        }
     in
     [
       mktac0 "__trivial"       trivial embed_unit t_unit;
@@ -207,6 +244,9 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term RD.fstar_refl_term;
       mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
+      decr_depth_step;
+      incr_depth_step;
+      tracepoint_step;
     ]@reflection_primops @native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
@@ -261,7 +301,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         // the implicits, so make it do a lax check because we certainly
         // do not want to repeat all of the reasoning that took place in tactics.
         // It would also most likely fail.
-        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_lax in
+        let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_tac in
         let _ = TcRel.force_trivial_guard env g in
         (ps.goals@ps.smt_goals, w)
     | Failed (s, ps) ->

@@ -604,7 +604,8 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let set_range_of (r:Range.range) args : option<term> =
       match args with
-      | [_; (t, _); ({n=Tm_constant (FStar.Const.Const_range r)}, _)] ->
+      | [_; (t, _); (r, _)] ->
+        let r = EMB.unembed_range r in
         Some ({t with pos=r})
       | _ -> None
     in

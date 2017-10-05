@@ -16,7 +16,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "4477ffeeb1c9cc80136ec7d1dce93a61"
     ],
     [
       "Ex03a.factorial",
@@ -24,7 +25,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "5c4def33f9dd1d1b9ed57aa41d02b091"
     ]
   ]
 ]

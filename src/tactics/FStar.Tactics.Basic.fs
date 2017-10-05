@@ -105,7 +105,8 @@ let dump_cur ps msg =
         dump_goal ps (List.hd ps.goals)
         end
 
-let ps_to_string (msg, ps) = format5 "State dump (%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
+let ps_to_string (msg, ps) = format6 "State dump @ depth %s(%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
+                (string_of_int ps.depth)
                 msg (string_of_int (List.length ps.goals)) (String.concat "\n" (List.map goal_to_string ps.goals))
                 (string_of_int (List.length ps.smt_goals)) (String.concat "\n" (List.map goal_to_string ps.smt_goals))
 let goal_to_json g =
@@ -794,7 +795,7 @@ let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term
  *)
 let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : term) : tac<term> =
     let t, lcomp, g = TcTerm.tc_term env t in
-    if not (U.is_total_lcomp lcomp) || not (Rel.is_trivial g) then
+    if not (U.is_pure_or_ghost_lcomp lcomp) || not (Rel.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
         let typ = lcomp.res_typ in
@@ -960,6 +961,8 @@ let proofstate_of_goal_ty env typ =
         all_implicits = g_u.implicits;
         goals = [g];
         smt_goals = [];
+        depth = 0;
+        __dump = dump_proofstate;
     }
     in
     (ps, g.witness)

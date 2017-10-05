@@ -1258,8 +1258,6 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       | _ -> failwith "impossible (typechecking should preserve Tm_let)"
     in
 
-    // CPC doc: Actually I don't need the let-val pairing; It's enough to register the docs of the val independently, since they won't be overwritten when the let is desugared with no docs.
-
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
         let fv = right lb.lbname in
@@ -1568,7 +1566,7 @@ let tc_decls env ses =
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
-let tc_partial_modul env modul =
+let tc_partial_modul env modul push_before_typechecking =
   let verify = Options.should_verify modul.name.str in
   let action = if verify then "Verifying" else "Lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
@@ -1578,10 +1576,7 @@ let tc_partial_modul env modul =
   let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
   let msg = "Internals for " ^name in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
-  //AR: the interactive mode calls this function, because of which there is an extra solver push.
-  //    the interactive mode does not call finish_partial_modul, so this push is not popped.
-  //    currently, there is a cleanup function in the interactive mode tc, that does this extra pop.
-  env.solver.push msg;
+  if push_before_typechecking then env.solver.push msg;
   let env = Env.set_current_module env modul.name in
   let ses, exports, env = tc_decls env modul.declarations in
   {modul with declarations=ses}, exports, env
@@ -1679,7 +1674,7 @@ let finish_partial_modul env modul exports =
   modul, env
 
 let tc_modul env modul =
-  let modul, non_private_decls, env = tc_partial_modul env modul in
+  let modul, non_private_decls, env = tc_partial_modul env modul true in
   finish_partial_modul env modul non_private_decls
 
 let check_module env m =

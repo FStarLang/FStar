@@ -1,5 +1,5 @@
 (* We give an implementation here using OCaml's BatList,
-   which privide tail-recursive versions of most functions *)
+   which provide tail-recursive versions of most functions *)
 let isEmpty l = l = []
 let hd = BatList.hd
 let tail = BatList.tl

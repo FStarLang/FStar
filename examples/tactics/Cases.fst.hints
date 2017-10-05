@@ -13,7 +13,8 @@
         "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
-      0
+      0,
+      "5bf1a322bc758e3e2731c2e2a2c07b16"
     ],
     [
       "Cases.test_cases_unsquash",
@@ -27,16 +28,26 @@
         "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
-      0
+      0,
+      "cd3eac49e34b1880dd930336384d81c1"
     ],
-    [ "Cases.test_cases_bool", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Cases.test_cases_bool",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7fe70541c84cbf665371ee8997dfa66f"
+    ],
     [
       "Cases.test_cases_bool_2",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "1cd95a0751ea494538c16c9ecf56cc97"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -44,7 +55,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "1fa5fa9885c210dba756f89502e1734d"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -55,7 +67,8 @@
         "@query", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "7e71891a75a54ed0b5347e12a7619b88"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -68,7 +81,8 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "9dd7884130c39651946e29e22f51c7ad"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -76,7 +90,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "0c53314b1fd1d54def7c61bb27b8a263"
     ]
   ]
 ]
