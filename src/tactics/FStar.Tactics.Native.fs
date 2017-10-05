@@ -6,7 +6,7 @@ open FStar.Tactics.Basic
 open FStar.Syntax.Syntax
 open FStar.Range
 
-type itac = proofstate -> args -> option<term>
+type itac = args -> option<term>
 
 type native_primitive_step =
     { name: FStar.Ident.lid;
