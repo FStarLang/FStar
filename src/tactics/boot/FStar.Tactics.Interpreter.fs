@@ -254,6 +254,11 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
                          [S.as_arg (E.embed_proofstate proof_state)]
                           None
                           Range.dummyRange in
+
+    // Why not WHNF? While we don't care about strong reduction we need more than head
+    // normal form due to primitive steps. Consider `norm (steps 2)`: we need to normalize
+    // `steps 2` before caling norm, or it will fail to unembed the set of steps. Further,
+    // at this moment at least, the normalizer will not call into any step of arity > 1.
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops] in
     if !tacdbg then
         BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
