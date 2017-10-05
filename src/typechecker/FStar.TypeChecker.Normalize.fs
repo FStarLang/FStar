@@ -99,6 +99,11 @@ type cfg = {
     primitive_steps:list<primitive_step>
 }
 
+let only_strong_steps' steps =
+    List.filter (fun ps -> ps.strong_reduction_ok) steps
+let only_strong_steps cfg =
+    { cfg with primitive_steps = only_strong_steps' cfg.primitive_steps}
+
 type branches = list<(pat * option<term> * term)>
 
 type subst_t = list<subst_elt>
@@ -1100,7 +1105,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
-                       let cfg = {cfg with primitive_steps=List.filter (fun ps -> ps.strong_reduction_ok) cfg.primitive_steps} in
+                       let cfg = only_strong_steps cfg in
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
 
@@ -1171,6 +1176,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                    lbtyp=ty;
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
+                 let cfg = only_strong_steps cfg in
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
           | Tm_let((true, lbs), body)
