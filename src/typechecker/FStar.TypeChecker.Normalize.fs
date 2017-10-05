@@ -728,10 +728,23 @@ let reduce_primops cfg tm =
            | None -> tm
            | Some prim_step ->
              if List.length args < prim_step.arity
-             then tm //partial application; can't step
-             else match prim_step.interpretation head.pos args with
-                  | None -> tm
-                  | Some reduced -> reduced
+             then begin log cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
+                                                     (Print.lid_to_string prim_step.name)
+                                                     (string_of_int (List.length args))
+                                                     (string_of_int prim_step.arity));
+                        tm //partial application; can't step
+                  end
+             else begin log cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
+                  match prim_step.interpretation head.pos args with
+                  | None ->
+                      log cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
+                      tm
+                  | Some reduced ->
+                      log cfg (fun () -> BU.print2 "primop: <%s> reduced to <%s>\n"
+                                              (Print.term_to_string tm)
+                                              (Print.term_to_string reduced));
+                      reduced
+                 end
            end
          | _ -> tm
    end
