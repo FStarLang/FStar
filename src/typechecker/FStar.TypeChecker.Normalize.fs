@@ -739,17 +739,16 @@ let reduce_equality cfg tm =
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
 (*******************************************************************)
 let maybe_simplify cfg tm =
-    let steps = cfg.steps in
+    let tm = reduce_primops cfg tm in
+    if not <| List.contains Simplify cfg.steps then tm
+    else
     let w t = {t with pos=tm.pos} in
     let simp_t t = match t.n with
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None in
     let simplify arg = (simp_t (fst arg), arg) in
-    let tm = reduce_primops cfg tm in
-    if not <| List.contains Simplify steps
-    then tm
-    else match tm.n with
+    match tm.n with
             | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
             | Tm_app({n=Tm_fvar fv}, args) ->
               if S.fv_eq_lid fv PC.and_lid
