@@ -163,7 +163,7 @@ let go _ =
              Util.print1 "Generating native tactics in %s\n" dir;
              Options.set_option "lax" (Options.Bool true)
           | None -> ());
-          let fmods, dsenv, env = Universal.batch_mode_tc filenames in
+          let fmods, env = Universal.batch_mode_tc filenames in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);

@@ -122,11 +122,11 @@ let label_goals:
                 match ropt with
                 | FStar_Pervasives_Native.None  -> rng
                 | FStar_Pervasives_Native.Some r1 ->
-                    let uu___109_560 = r1 in
+                    let uu___131_560 = r1 in
                     {
                       FStar_Range.def_range = (rng.FStar_Range.def_range);
                       FStar_Range.use_range =
-                        (uu___109_560.FStar_Range.use_range)
+                        (uu___131_560.FStar_Range.use_range)
                     } in
               fresh_label msg1 rng1 t in
             let rec aux default_msg ropt post_name_opt labels q1 =
@@ -719,14 +719,12 @@ let detail_errors:
                      FStar_All.pipe_left elim
                        (FStar_List.append eliminated
                           (FStar_List.append errors tl1)) in
-                   let uu____2249 = askZ3 decls in
-                   match uu____2249 with
-                   | (result,uu____2263,uu____2264) ->
-                       (match result with
-                        | FStar_SMTEncoding_Z3.UNSAT uu____2277 ->
-                            linear_check (hd1 :: eliminated) errors tl1
-                        | uu____2278 ->
-                            linear_check eliminated (hd1 :: errors) tl1)))) in
+                   let result = askZ3 decls in
+                   match result.FStar_SMTEncoding_Z3.z3result_status with
+                   | FStar_SMTEncoding_Z3.UNSAT uu____2262 ->
+                       linear_check (hd1 :: eliminated) errors tl1
+                   | uu____2263 ->
+                       linear_check eliminated (hd1 :: errors) tl1))) in
           print_banner ();
           FStar_Options.set_option "z3rlimit"
             (FStar_Options.Int (Prims.parse_int "5"));

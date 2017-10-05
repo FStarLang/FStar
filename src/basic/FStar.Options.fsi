@@ -165,12 +165,12 @@ val should_extract              : string  -> bool
 val should_verify               : string  -> bool
 val should_verify_file          : string  -> bool
 val silent                      : unit    -> bool
-val smtencoding_elim_box        : unit -> bool
-val smtencoding_nl_arith_default: unit -> bool
-val smtencoding_nl_arith_wrapped: unit -> bool
-val smtencoding_nl_arith_native : unit -> bool
-val smtencoding_l_arith_default : unit -> bool
-val smtencoding_l_arith_native  : unit -> bool
+val smtencoding_elim_box        : unit    -> bool
+val smtencoding_nl_arith_default: unit    -> bool
+val smtencoding_nl_arith_wrapped: unit    -> bool
+val smtencoding_nl_arith_native : unit    -> bool
+val smtencoding_l_arith_default : unit    -> bool
+val smtencoding_l_arith_native  : unit    -> bool
 val split_cases                 : unit    -> int
 val tactic_trace                : unit    -> bool
 val tactic_trace_d              : unit    -> int
@@ -181,6 +181,7 @@ val unthrottle_inductives       : unit    -> bool
 val unsafe_tactic_exec          : unit    -> bool
 val use_eq_at_higher_order      : unit    -> bool
 val use_hints                   : unit    -> bool
+val use_hint_hashes             : unit    -> bool
 val use_native_tactics          : unit    -> option<string>
 val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> option<list<string>>
