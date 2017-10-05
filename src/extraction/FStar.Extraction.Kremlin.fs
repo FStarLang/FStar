@@ -484,7 +484,7 @@ and translate_single_type_decl env (ty_decl : one_mltydecl) =
 
   | (_, name, _mangled_name, args, _, Some (MLTD_Record fields)) ->
       let name = env.module_name, name in
-      let env = List.fold_left (fun env name -> extend_t env name) env args in
+      let env = List.fold_left extend_t env args in
       Some (DTypeFlat (name, List.length args, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
