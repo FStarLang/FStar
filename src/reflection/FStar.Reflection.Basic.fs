@@ -144,7 +144,7 @@ let rec unembed_pattern (t : term) : pattern =
     | _ ->
         failwith "not an embedded pattern"
 
-let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term fstar_refl_term
+let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term
 let unembed_branch = unembed_pair unembed_pattern unembed_term
 
 let embed_aqualv (q : aqualv) : term =
@@ -160,7 +160,7 @@ let unembed_aqualv (t : term) : aqualv =
     | _ ->
         failwith "not an embedded aqualv"
 
-let embed_argv = embed_pair embed_term fstar_refl_term embed_aqualv fstar_refl_aqualv
+let embed_argv = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv
 let unembed_argv = unembed_pair unembed_term unembed_aqualv
 
 let embed_term_view (t:term_view) : term =

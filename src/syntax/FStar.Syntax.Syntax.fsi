@@ -472,6 +472,7 @@ val t_string      : term
 val t_float       : term
 val t_char        : term
 val t_range       : term
+val t_term        : term
 val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term

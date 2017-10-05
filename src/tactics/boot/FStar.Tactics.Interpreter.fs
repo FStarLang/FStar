@@ -198,7 +198,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
                                               embed_binder RD.fstar_refl_binder)
                                          (E.pair_typ RD.fstar_refl_binder RD.fstar_refl_binder);
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
-      mktac2 "__norm_term"     norm_term (unembed_list unembed_norm_step) unembed_term embed_term RD.fstar_refl_term;
+      mktac2 "__norm_term"     norm_term (unembed_list unembed_norm_step) unembed_term embed_term S.t_term;
       mktac2 "__rename_to"     rename_to unembed_binder unembed_string embed_unit t_unit;
       mktac1 "__binder_retype" binder_retype unembed_binder embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
@@ -233,15 +233,15 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac0 "__flip"          flip embed_unit t_unit;
       mktac0 "__qed"           qed embed_unit t_unit;
       mktac1 "__cases"         cases unembed_term (embed_pair
-                                                      embed_term RD.fstar_refl_term
-                                                      embed_term RD.fstar_refl_term)
-                                                  (E.pair_typ RD.fstar_refl_term RD.fstar_refl_term);
+                                                      embed_term S.t_term
+                                                      embed_term S.t_term)
+                                                  (E.pair_typ S.t_term S.t_term);
 
       mktac0 "__cur_env"       cur_env     embed_env RD.fstar_refl_env;
-      mktac0 "__cur_goal"      cur_goal'   embed_term RD.fstar_refl_term;
-      mktac0 "__cur_witness"   cur_witness embed_term RD.fstar_refl_term;
+      mktac0 "__cur_goal"      cur_goal'   embed_term S.t_term;
+      mktac0 "__cur_witness"   cur_witness embed_term S.t_term;
 
-      mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term RD.fstar_refl_term;
+      mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term S.t_term;
       mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;
       mktac3 "__launch_process" launch_process unembed_string unembed_string unembed_string embed_string t_string;
       decr_depth_step;
