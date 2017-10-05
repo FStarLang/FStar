@@ -1535,6 +1535,21 @@ val buffer_readable_intro
   (ensures (buffer_readable h b))
 //  [SMTPat (buffer_readable h b)] // TODO: dubious pattern, may trigger unreplayable hints
 
+val buffer_readable_elim
+  (#t: typ)
+  (h: HS.mem)
+  (b: buffer t)
+: Lemma
+  (requires (
+    buffer_readable h b
+  ))
+  (ensures (
+    buffer_live h b /\ (
+     forall (i: UInt32.t) .
+     UInt32.v i < UInt32.v (buffer_length b) ==>
+     readable h (gpointer_of_buffer_cell b i)
+  )))
+
 
 (*** The modifies clause *)
 
@@ -2303,6 +2318,33 @@ val modifies_1_readable_array
     [SMTPat (readable h p); SMTPat (readable h' p); SMTPat (gcell p i)];
   ]]
 
+(* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)		
+val read_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  (i: UInt32.t)		
+: HST.Stack (type_of_typ t)		
+  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ readable h (gpointer_of_buffer_cell b i)))		
+  (ensures (fun h v h' -> UInt32.v i < UInt32.v (buffer_length b) /\ h' == h /\ v == Seq.index (buffer_as_seq h b) (UInt32.v i)))		
+		
+(* buffer write: needs clearer "modifies" clauses *)		
+		
+val write_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  (i: UInt32.t)		
+  (v: type_of_typ t)		
+: HST.Stack unit		
+  (requires (fun h -> UInt32.v i < UInt32.v (buffer_length b) /\ buffer_live h b))		
+  (ensures (fun h _ h' ->		
+    UInt32.v i < UInt32.v (buffer_length b) /\		
+    modifies_1 (gpointer_of_buffer_cell b i) h h' /\		
+    buffer_live h' b /\		
+    readable h' (gpointer_of_buffer_cell b i) /\		
+    Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\		
+    (buffer_readable h b ==> buffer_readable h' b)		
+  ))		
+  
 (* unused_in, cont'd *)
 
 val buffer_live_unused_in_disjoint

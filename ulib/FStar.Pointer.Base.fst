@@ -2965,6 +2965,8 @@ let buffer_readable_intro
   (b: buffer t)
 = ()
 
+let buffer_readable_elim #t h b = ()
+
 (*** Disjointness of pointers *)
 
 let disjoint
@@ -4814,6 +4816,20 @@ let modifies_1_readable_struct #l f p h h' =
 
 let modifies_1_readable_array #t #len i p h h' =
   readable_array h' p
+
+(* buffer read: can be defined as a derived operation: pointer_of_buffer_cell ; read *)
+		
+let read_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  i		
+= read (pointer_of_buffer_cell b i)		
+		
+let write_buffer		
+  (#t: typ)		
+  (b: buffer t)		
+  i v		
+= write (pointer_of_buffer_cell b i) v		
 
 (* unused_in, cont'd *)
 
