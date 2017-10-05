@@ -259,16 +259,18 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
                           None
                           Range.dummyRange in
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops] in
-    bind (mlog <| (fun _ -> BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm))) (fun _ ->
+    if !tacdbg then
+        BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
     let result = N.normalize_with_primitive_steps (primitive_steps proof_state) steps proof_state.main_context tm in
-    bind (mlog <| (fun _ -> BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result))) (fun _ ->
+    if !tacdbg then
+        BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
     match E.unembed_result proof_state result unembed_b with
     | Inl (b, ps) ->
         bind (set ps) (fun _ -> ret b)
 
     | Inr (msg, ps) ->
         bind (set ps) (fun _ -> fail msg)
-    )))
+    )
 
 let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals, to be fed to SMT
                                                         * term // witness, in case it's needed, as in synthesis)
