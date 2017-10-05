@@ -19,6 +19,7 @@ all:	Apply.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	Trace.uver		\
+	Nest.uver		\
 	TestBV.uver		\
 	Map.uver		\
 	Map.OpaqueToSMT.uver	\
