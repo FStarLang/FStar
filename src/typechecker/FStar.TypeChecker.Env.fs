@@ -123,7 +123,6 @@ and solver_t = {
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> typ -> unit;
-    is_trivial   :env -> typ -> bool;
     finish       :unit -> unit;
     refresh      :unit -> unit;
 }
@@ -1256,7 +1255,6 @@ let dummy_solver = {
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=(fun _ _ _ -> ());
-    is_trivial=(fun _ _ -> false);
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }
