@@ -408,18 +408,6 @@ exception Let_rec_unencodeable
 
 exception Inner_let_rec
 
-let encode_const = function
-    | Const_unit -> mk_Term_unit
-    | Const_bool true -> boxBool mkTrue
-    | Const_bool false -> boxBool mkFalse
-    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))])
-    | Const_int (i, None)  -> boxInt (mkInteger i)
-    | Const_int (i, Some _) -> failwith "Machine integers should be desugared"
-    | Const_string(s, _) -> varops.string_const s
-    | Const_range r -> mk_Range_const
-    | Const_effect -> mk_Term_type
-    | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
-
 let as_function_typ env t0 =
     let rec aux norm t =
         let t = SS.compress t in
@@ -485,7 +473,22 @@ let is_BitVector_primitive head args =
     | _ -> false
 
 
-let rec encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
+let rec encode_const c env =
+    match c with
+    | Const_unit -> mk_Term_unit, []
+    | Const_bool true -> boxBool mkTrue, []
+    | Const_bool false -> boxBool mkFalse, []
+    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))]), []
+    | Const_int (i, None)  -> boxInt (mkInteger i), []
+    | Const_int (repr, Some sw) ->
+      let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
+      encode_term syntax_term env
+    | Const_string(s, _) -> varops.string_const s, []
+    | Const_range r -> mk_Range_const, []
+    | Const_effect -> mk_Term_type, []
+    | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
+
+and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             (list<fv>                       (* translated bound variables *)
                             * list<term>                    (* guards *)
                             * env_t                         (* extended context *)
@@ -702,7 +705,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_term t env
 
       | Tm_constant c ->
-        encode_const c, []
+        encode_const c env
 
       | Tm_arrow(binders, c) ->
         let module_name = env.current_module_name in
@@ -1146,7 +1149,9 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
         | Pat_wild _
         | Pat_dot_term _ -> mkTrue
         | Pat_constant c ->
-            mkEq(scrutinee, encode_const c)
+            let tm, decls = encode_const c env in
+            let _ = match decls with _::_ -> failwith "Unexpected encoding of constant pattern" | _ -> () in
+            mkEq(scrutinee, tm)
         | Pat_cons(f, args) ->
             let is_f =
                 let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in

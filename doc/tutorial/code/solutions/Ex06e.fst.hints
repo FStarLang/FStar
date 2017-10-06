@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "bdb1d9fa4294f13607add46e6db0671f"
+      "0301ecfa3721f824a2b2547af7668380"
     ],
     [
       "Ex06e.mem",
@@ -36,7 +36,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9d594e1d64c6b35989a485987a1cbeb1"
+      "c8a5be368b837aa9f2c3ed5b44b3de3e"
     ],
     [
       "Ex06e.mem",
@@ -45,7 +45,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "74c7082ce46ff8a4ed3c32a0009f3a36"
+      "c5846c9cd968aeead42a61f78accfd57"
     ],
     [
       "Ex06e.sorted_smaller",
@@ -77,7 +77,7 @@
         "typing_Ex06e.mem", "unit_typing"
       ],
       0,
-      "9314f8e3100433ad3425afdbcc9f26f3"
+      "75ef487c4dfc238f6811ff0541b8f305"
     ],
     [
       "Ex06e.sorted_smaller",
@@ -86,7 +86,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6e6885d1a85f20f497a1325a1d60d99b"
+      "a76360488b522ef3d84633981969ccce"
     ],
     [
       "Ex06e.insert",
@@ -124,7 +124,7 @@
         "typing_Ex06e.mem", "typing_Ex06e.sorted"
       ],
       0,
-      "10549b4780be7c59433494c5e04eecdc"
+      "1b2fc6d0d1d196f70962f3bbbe249b1f"
     ],
     [
       "Ex06e.sort",
@@ -153,7 +153,7 @@
         "typing_Ex06e.mem"
       ],
       0,
-      "c3192716d8107da97b9231387ebfe83c"
+      "cd3a9899b97750579f2b3dee8f97db60"
     ]
   ]
 ]

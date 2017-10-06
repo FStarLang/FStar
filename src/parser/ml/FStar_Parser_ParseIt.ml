@@ -35,10 +35,32 @@ let find_file filename =
     | None ->
       raise(Err (FStar_Util.format1 "Unable to find file: %s\n" filename))
 
+let vfs_entries : (U.time * string) U.smap = U.smap_create (Z.of_int 1)
+
+let read_vfs_entry fname =
+  U.smap_try_find vfs_entries (U.normalize_file_path fname)
+
+let add_vfs_entry fname contents =
+  U.smap_add vfs_entries (U.normalize_file_path fname) (U.now (), contents)
+
+let get_file_last_modification_time filename =
+  match read_vfs_entry filename with
+  | Some (mtime, _contents) -> mtime
+  | None -> U.get_file_last_modification_time filename
+
 let read_file (filename:string) =
-  try
-    BatFile.with_file_in filename BatIO.read_all
-  with e -> raise (Err (FStar_Util.format1 "Unable to read file: %s\n" filename))
+  let debug = FStar_Options.debug_any () in
+  match read_vfs_entry filename with
+  | Some (_mtime, contents) ->
+    if debug then U.print1 "Reading in-memory file %s" filename;
+    filename, contents
+  | None ->
+    let filename = find_file filename in
+    try
+      if debug then U.print1 "Opening file %s" filename;
+      filename, BatFile.with_file_in filename BatIO.read_all
+    with e ->
+      raise (Err (U.format1 "Unable to read file %s\n" filename))
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
@@ -64,8 +86,8 @@ let parse fn =
   let lexbuf, filename = match fn with
     | U.Inl(f) ->
         check_extension f;
-        let f' = find_file f in
-        (try create (read_file f') f' 1 0, f'
+        let f', contents = read_file f in
+        (try create contents f' 1 0, f'
          with _ -> raise (Err(FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f')))
     | U.Inr s ->
       create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
