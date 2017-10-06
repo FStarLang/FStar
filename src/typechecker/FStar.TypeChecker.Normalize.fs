@@ -1708,8 +1708,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           (* KM : Why are we excluding Iota (pattern matching) here ? *)
           else [Exclude Iota; Exclude Zeta]
         in
-        {cfg with delta_level=new_delta;
-                        steps=steps'@cfg.steps}
+        only_strong_steps ({cfg with delta_level=new_delta; steps=steps'@cfg.steps})
       in
       let norm_or_whnf env t =
         if whnf
