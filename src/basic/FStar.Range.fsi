@@ -19,16 +19,18 @@ open FStar.ST
 open FStar.All
 open FStar.BaseTypes
 
+type rng
 type range
 type pos
 
 val dummyRange: range
-val set_use_range: range -> range -> range
+val use_range: range -> rng
+val def_range: range -> rng
+val range_of_rng: def_rng:rng -> use_rng:rng -> range
+val set_use_range: range -> rng -> range
+val set_def_range: range -> rng -> range
 val mk_pos: int -> int -> pos
-// val mk_file_idx_range:file_idx -> pos -> pos -> range
 val mk_range: string -> pos -> pos -> range
-// val encode_file:string -> string
-// val decode_file_idx:string -> file_idx
 val union_ranges: range -> range -> range
 val string_of_range: range -> string
 val string_of_use_range: range -> string
@@ -43,7 +45,6 @@ val col_of_pos: pos -> int
 val end_range: range -> range
 val compare: range -> range -> int
 val compare_use_range: range -> range -> int
-val set_file_of_range: range -> string -> unit
 val range_before_pos : range -> pos -> bool
-val end_of_line : pos -> pos
-val extend_to_end_of_line : range -> range
+val end_of_line: pos -> pos
+val extend_to_end_of_line: range -> range

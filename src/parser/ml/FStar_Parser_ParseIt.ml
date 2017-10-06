@@ -14,14 +14,14 @@ type input_frag = {
 
 let resetLexbufPos filename lexbuf =
   lexbuf.cur_p <- {
-    pos_fname= FStar_Range.encode_file filename;
+    pos_fname= filename;
     pos_cnum = 0;
     pos_bol = 0;
     pos_lnum = 1 }
 
 let setLexbufPos filename lexbuf line col =
   lexbuf.cur_p <- {
-    pos_fname= FStar_Range.encode_file filename;
+    pos_fname= filename;
     pos_cnum = col;
     pos_bol  = 0;
     pos_lnum = line }

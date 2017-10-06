@@ -516,14 +516,14 @@ let lookup_bv env bv =
     match try_lookup_bv env bv with
     | None -> raise (Error(variable_not_found bv, bvr))
     | Some (t, r) -> Subst.set_use_range bvr t,
-                     Range.set_use_range r bvr
+                     Range.set_use_range r (Range.use_range bvr)
 
 let try_lookup_lid env l =
     match try_lookup_lid_aux env l with
     | None -> None
     | Some ((us, t), r) ->
       let use_range = range_of_lid l in
-      let r = Range.set_use_range r use_range in
+      let r = Range.set_use_range r (Range.use_range use_range) in
       Some ((us, Subst.set_use_range use_range t), r)
 
 let lookup_lid env l =
@@ -601,7 +601,7 @@ let lookup_effect_lid env (ftv:lident) : typ =
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
   match lookup_qname env lid0 with
     | Some (Inr ({ sigel = Sig_effect_abbrev (lid, univs, binders, c, _); sigquals = quals }, None), _) ->
-      let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
+      let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Range.use_range (Ident.range_of_lid lid0))) in
       if quals |> BU.for_some (function Irreducible -> true | _ -> false)
       then None
       else let insts = if List.length univ_insts = List.length univs
