@@ -430,8 +430,10 @@ let __exact (t:term) : tac<unit> =
                     (N.term_to_string goal.context (bnorm goal.context typ))
                     (N.term_to_string goal.context goal.goal_ty)))
 
-let exact (t:term) : tac<unit> =
-    focus (__exact t)
+let exact (tm:term) : tac<unit> =
+    bind (mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm))) (fun _ ->
+    focus (__exact tm)
+    )
 
 let exact_lemma (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
@@ -519,6 +521,7 @@ let try_unif (t : tac<'a>) (t' : tac<'a>) : tac<'a> =
         with NoUnif -> run t' ps)
 
 let apply (uopt:bool) (tm:term) : tac<unit> =
+    bind (mlog (fun () -> BU.print1 "apply: tm = %s\n" (Print.term_to_string tm))) (fun _ ->
     bind cur_goal (fun goal ->
     let tm, typ, guard = goal.context.type_of goal.context tm in
     // Focus helps keep the goal order
@@ -527,9 +530,10 @@ let apply (uopt:bool) (tm:term) : tac<unit> =
                             (N.term_to_string goal.context tm)
                             (N.term_to_string goal.context typ)
                             (N.term_to_string goal.context goal.goal_ty))
-    )
+    ))
 
 let apply_lemma (tm:term) : tac<unit> = focus(
+    bind (mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm))) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
     | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
     | _ -> false
@@ -604,7 +608,7 @@ let apply_lemma (tm:term) : tac<unit> = focus(
         bind (if not (istrivial goal.context (U.mk_squash pre))
               then add_irrelevant_goal goal.context pre goal.opts
               else ret ()) (fun _ ->
-        add_goals sub_goals))))))
+        add_goals sub_goals)))))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
