@@ -2616,9 +2616,26 @@ and tc_constant:
       | FStar_Const.Const_bool uu____5972 -> FStar_Syntax_Util.t_bool
       | FStar_Const.Const_int (uu____5973,FStar_Pervasives_Native.None ) ->
           FStar_Syntax_Syntax.t_int
-      | FStar_Const.Const_int
-          (uu____5984,FStar_Pervasives_Native.Some uu____5985) ->
-          failwith "machine integers should be desugared"
+      | FStar_Const.Const_int (uu____5984,FStar_Pervasives_Native.Some msize)
+          ->
+          FStar_Syntax_Syntax.tconst
+            (match msize with
+             | (FStar_Const.Signed ,FStar_Const.Int8 ) ->
+                 FStar_Parser_Const.int8_lid
+             | (FStar_Const.Signed ,FStar_Const.Int16 ) ->
+                 FStar_Parser_Const.int16_lid
+             | (FStar_Const.Signed ,FStar_Const.Int32 ) ->
+                 FStar_Parser_Const.int32_lid
+             | (FStar_Const.Signed ,FStar_Const.Int64 ) ->
+                 FStar_Parser_Const.int64_lid
+             | (FStar_Const.Unsigned ,FStar_Const.Int8 ) ->
+                 FStar_Parser_Const.uint8_lid
+             | (FStar_Const.Unsigned ,FStar_Const.Int16 ) ->
+                 FStar_Parser_Const.uint16_lid
+             | (FStar_Const.Unsigned ,FStar_Const.Int32 ) ->
+                 FStar_Parser_Const.uint32_lid
+             | (FStar_Const.Unsigned ,FStar_Const.Int64 ) ->
+                 FStar_Parser_Const.uint64_lid)
       | FStar_Const.Const_string uu____6000 -> FStar_Syntax_Syntax.t_string
       | FStar_Const.Const_float uu____6005 -> FStar_Syntax_Syntax.t_float
       | FStar_Const.Const_char uu____6006 -> FStar_Syntax_Syntax.t_char

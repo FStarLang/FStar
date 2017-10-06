@@ -1962,10 +1962,10 @@ let try_lookup_bv:
       FStar_Util.find_map env.gamma
         (fun uu___133_8056  ->
            match uu___133_8056 with
-           | Binding_var id when FStar_Syntax_Syntax.bv_eq id bv ->
+           | Binding_var id1 when FStar_Syntax_Syntax.bv_eq id1 bv ->
                FStar_Pervasives_Native.Some
-                 ((id.FStar_Syntax_Syntax.sort),
-                   ((id.FStar_Syntax_Syntax.ppname).FStar_Ident.idRange))
+                 ((id1.FStar_Syntax_Syntax.sort),
+                   ((id1.FStar_Syntax_Syntax.ppname).FStar_Ident.idRange))
            | uu____8074 -> FStar_Pervasives_Native.None)
 let lookup_type_of_let:
   FStar_Syntax_Syntax.sigelt ->

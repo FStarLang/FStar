@@ -128,7 +128,7 @@ val init:
   -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}).{:pattern b.[i]} b.[i] = f i}
 
 let abyte (b:byte) : lbytes 1 =
-    admit () (* create 1ul b *)
+    create 1ul b <: lbytes 1
 
 let twobytes (b:byte*byte) : lbytes 2 =
     init 2ul (fun i -> if i = 0ul then fst b else snd b)
