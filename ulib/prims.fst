@@ -124,9 +124,6 @@ unopteq type dtuple2 (a:Type)
 (* exists (x:a). p x : specialized to Type#0 *)
 type l_Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 
-(* Type of quoted terms *)
-assume new type term : Type0
-
 (* range is a type for the internal representations of source ranges
          The functions that follow below allow manipulating ranges
          abstractly.  Importantly, while we allow constructing ranges,
