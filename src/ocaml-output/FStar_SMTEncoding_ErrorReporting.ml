@@ -122,12 +122,8 @@ let label_goals:
                 match ropt with
                 | FStar_Pervasives_Native.None  -> rng
                 | FStar_Pervasives_Native.Some r1 ->
-                    let uu___131_560 = r1 in
-                    {
-                      FStar_Range.def_range = (rng.FStar_Range.def_range);
-                      FStar_Range.use_range =
-                        (uu___131_560.FStar_Range.use_range)
-                    } in
+                    let uu____560 = FStar_Range.def_range rng in
+                    FStar_Range.set_def_range r1 uu____560 in
               fresh_label msg1 rng1 t in
             let rec aux default_msg ropt post_name_opt labels q1 =
               match q1.FStar_SMTEncoding_Term.tm with
