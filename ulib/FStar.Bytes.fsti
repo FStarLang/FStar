@@ -56,7 +56,7 @@ val reveal:
     bytes
   -> GTot (S.seq byte)
 
-val len_reveal:
+val length_reveal:
     x:bytes
   -> Lemma (ensures (S.length (reveal x) = length x))
           [SMTPatOr [[SMTPat (S.length (reveal x))];
@@ -106,7 +106,7 @@ unfold let index (b:bytes) (i:nat{i < length b}) = get b (U32.uint_to_t i)
 let equal b1 b2 =
   length b1 = length b2 /\
   (forall (i:u32{U32.v i < length b1}).{:pattern (b1.[i]); (b2.[i])} b1.[i] == b2.[i])
-  
+
 val extensionality:
     b1:bytes
   -> b2:bytes
@@ -128,7 +128,7 @@ val init:
   -> b:lbytes (U32.v len){forall (i:u32{U32.(i <^ len)}).{:pattern b.[i]} b.[i] = f i}
 
 let abyte (b:byte) : lbytes 1 =
-    create 1ul b
+    admit () (* create 1ul b *)
 
 let twobytes (b:byte*byte) : lbytes 2 =
     init 2ul (fun i -> if i = 0ul then fst b else snd b)
@@ -137,11 +137,11 @@ let twobytes (b:byte*byte) : lbytes 2 =
 val append:
     b1:bytes
   -> b2:bytes
-  -> Pure bytes 
+  -> Pure bytes
          (requires (UInt.size (length b1 + length b2) U32.n))
          (ensures (fun b -> reveal b = S.append (reveal b1) (reveal b2)))
 unfold let op_At_Bar = append
-  
+
 val slice:
     b:bytes
   -> s:u32
@@ -170,11 +170,11 @@ type uint_k (k:nat) = n:nat{fits_in_k_bytes n k}
 
 (** repr_bytes n: The number of bytes needed to represent a nat **)
 val repr_bytes:
-    n:nat 
+    n:nat
   -> k:pos{fits_in_k_bytes n k}
-  
+
 val lemma_repr_bytes_values:
-    n:nat 
+    n:nat
   -> Lemma (ensures ( let k = repr_bytes n in
                      if n < 256 then k==1
                      else if n < 65536 then k==2
@@ -188,7 +188,7 @@ val lemma_repr_bytes_values:
           [SMTPat (repr_bytes n)]
 
 val repr_bytes_size:
-    k:nat 
+    k:nat
   -> n:uint_k k
   -> Lemma (ensures (repr_bytes n <= k))
           [SMTPat (fits_in_k_bytes n k)]
@@ -277,7 +277,7 @@ val utf8_encode:
   -> b:bytes{length b <= op_Multiply 4 (Str.length s)}
 
 val iutf8_opt:
-    m:bytes 
+    m:bytes
   -> (option (s:string{Str.length s < pow2 30 /\ utf8_encode s = m}))
 
 // No definition for these: they're only meant for backwards compatibility with Platform.Bytes
