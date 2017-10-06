@@ -1859,8 +1859,9 @@ let rec specs_with_types:
             (EnumStr ["OCaml"; "FSharp"; "Kremlin"]),
             "Generate code for execution") :: uu____3101 in
         uu____3079 :: uu____3090 in
-      (FStar_Getopt.noshort, "admit_except", (SimpleStr "(symbol, id)"),
-        "Admit all verification conditions, except those with query label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)'")
+      (FStar_Getopt.noshort, "admit_except",
+        (SimpleStr "[symbol|(symbol, id)]"),
+        "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)")
         :: uu____3068 in
     (FStar_Getopt.noshort, "admit_smt_queries", BoolStr,
       "Admit SMT queries, unsafe! (default 'false')") :: uu____3057
