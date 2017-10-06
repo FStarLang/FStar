@@ -67,6 +67,22 @@ let mk_tactic_interpretation_1 (ps:proofstate)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
+let mk_tactic_interpretation_1_env (ps:proofstate)
+                               (t:N.env -> 'b -> tac<'a>) (unembed_b:term -> 'b)
+                               (embed_a:'a -> term) (t_a:typ)
+                               (nm:Ident.lid) (env:N.env) (args:args) : option<term> =
+  match args with
+  | [(b, _); (embedded_state, _)] ->
+    log ps (fun () ->
+    BU.print2 "Reached %s, goals are: %s\n"
+            (Ident.string_of_lid nm)
+            (Print.term_to_string embedded_state));
+    let ps = E.unembed_proofstate embedded_state in
+    let res = run (t env (unembed_b b)) ps in
+    Some (E.embed_result ps res embed_a t_a)
+  | _ ->
+    failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
+
 let mk_tactic_interpretation_2 (ps:proofstate)
                                (t:'a -> 'b -> tac<'c>) (unembed_a:term -> 'a) (unembed_b:term -> 'b)
                                (embed_c:'c -> term) (t_c:typ)
@@ -131,6 +147,13 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.strong_reduction_ok=false;
       N.interpretation=(fun _rng args -> interpretation nm args)
     } in
+    let mk_env nm arity interpretation =
+      let nm = E.fstar_tactics_lid' ["Builtins";nm] in {
+      N.name=nm;
+      N.arity=arity;
+      N.strong_reduction_ok=false;
+      N.interpretation=(fun (_rng, env, _stack) args -> interpretation nm env args)
+    } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map (step_from_native_step ps) native_tactics in
     let mktac0 (name : string) (f : tac<'a>) (e_a : 'a -> term) (ta : typ) : N.primitive_step =
@@ -138,6 +161,9 @@ let rec primitive_steps ps : list<N.primitive_step> =
     in
     let mktac1 (name : string) (f : 'a -> tac<'b>) (u_a : term -> 'a) (e_b : 'b -> term) (tb : typ) : N.primitive_step =
         mk name 2 (mk_tactic_interpretation_1 ps f u_a e_b tb)
+    in
+    let mktac1_env (name : string) (f : N.env -> 'a -> tac<'b>) (u_a : term -> 'a) (e_b : 'b -> term) (tb : typ) : N.primitive_step =
+        mk_env name 2 (mk_tactic_interpretation_1_env ps f u_a e_b tb)
     in
     let mktac2 (name : string) (f : 'a -> 'b -> tac<'c>) (u_a : term -> 'a) (u_b : term -> 'b) (e_c : 'c -> term) (tc : typ) : N.primitive_step =
         mk name 3 (mk_tactic_interpretation_2 ps f u_a u_b e_c tc)
@@ -223,7 +249,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       mktac1 "__addns"         addns unembed_string embed_unit t_unit;
 
       mktac1 "__print"         (fun x -> ret (tacprint x)) unembed_string embed_unit t_unit;
-      mktac1 "__dump"          print_proof_state unembed_string embed_unit t_unit;
+      mktac1_env "__dump"          print_proof_state unembed_string embed_unit t_unit;
       mktac1 "__dump1"         print_proof_state1 unembed_string embed_unit t_unit;
 
       mktac1 "__pointwise"     pointwise (unembed_tactic_0 unembed_unit) embed_unit t_unit;
@@ -305,7 +331,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         let _ = TcRel.force_trivial_guard env g in
         (ps.goals@ps.smt_goals, w)
     | Failed (s, ps) ->
-        dump_proofstate ps "at the time of failure";
+        dump_proofstate ps [] "at the time of failure";
         raise (FStar.Errors.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
 
 

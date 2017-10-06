@@ -149,6 +149,7 @@ val initial_env : (env -> term -> term*lcomp*guard_t) ->
 val should_verify   : env -> bool
 val incr_query_index: env -> env
 val string_of_delta_level : delta_level -> string
+val rename_env : subst_t -> env -> env
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push               : env -> string -> env

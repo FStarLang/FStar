@@ -46,12 +46,32 @@ type step =
   | CheckNoUvars
   | Unmeta
 and steps = list<step>
-type primitive_step = {
+type closure =
+  | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
+  | Univ of universe                                //universe terms do not have free variables
+  | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
+and env = list<(option<binder> * closure)>
+
+type branches = list<(pat * option<term> * term)>
+type stack_elt =
+ | Arg      of closure * aqual * FStar.Range.range
+ | UnivArgs of list<universe> * FStar.Range.range
+ | MemoLazy of memo<(env * term)>
+ | Match    of env * branches * FStar.Range.range
+ | Abs      of env * binders * env * option<residual_comp> * FStar.Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
+ | App      of term * aqual * FStar.Range.range
+ | Meta     of metadata * FStar.Range.range
+ | Let      of env * binders * letbinding * FStar.Range.range
+ | Steps    of steps * list<primitive_step> * list<Env.delta_level>
+ | Debug    of term * FStar.Util.time
+and primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
     strong_reduction_ok:bool;
-    interpretation:(FStar.Range.range -> args -> option<term>)
+    interpretation:((FStar.Range.range * env * stack) -> args -> option<term>)
 }
+and stack = list<stack_elt>
+
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
 val normalize:            steps -> Env.env -> term -> term

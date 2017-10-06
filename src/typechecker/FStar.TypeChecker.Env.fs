@@ -138,6 +138,16 @@ and implicits = list<(string * env * uvar * term * typ * Range.range)>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> binding -> unit) }
 
+let rename_gamma subst gamma =
+    gamma |> List.map (function
+      | Binding_var x -> begin
+        let y = Subst.subst subst (S.bv_to_name x) in
+        match (Subst.compress y).n with
+        | Tm_name y -> Binding_var y
+        | _ -> failwith "Not a renaming"
+        end
+      | b -> b)
+let rename_env subst env = {env with gamma=rename_gamma subst env.gamma}
 let default_tc_hooks =
   { tc_push_in_gamma_hook = (fun _ _ -> ()) }
 let tc_hooks (env: env) = env.tc_hooks

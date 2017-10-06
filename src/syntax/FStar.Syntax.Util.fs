@@ -795,9 +795,11 @@ let is_constructor t lid =
     | Tm_fvar tc -> lid_equals tc.fv_name.v lid
     | _ -> false
 
-let rec is_constructed_typ t lid = match (pre_typ t).n with
+let rec is_constructed_typ t lid =
+  match (pre_typ t).n with
   | Tm_fvar _ -> is_constructor t lid
-  | Tm_app(t, _) -> is_constructed_typ t lid
+  | Tm_app(t, _)
+  | Tm_uinst(t, _) -> is_constructed_typ t lid
   | _ -> false
 
 let rec get_tycon t =
