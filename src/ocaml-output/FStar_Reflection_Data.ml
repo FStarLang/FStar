@@ -222,8 +222,6 @@ let fstar_refl_tdataconstr:
   fun s  ->
     let uu____746 = fstar_refl_lid s in
     FStar_Syntax_Syntax.tdataconstr uu____746
-let fstar_refl_term: FStar_Syntax_Syntax.term =
-  mk_refl_types_lid_as_term "term"
 let fstar_refl_aqualv: FStar_Syntax_Syntax.term =
   mk_refl_data_lid_as_term "aqualv"
 let fstar_refl_env: FStar_Syntax_Syntax.term =

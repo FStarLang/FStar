@@ -1924,6 +1924,7 @@ let t_string: term = tconst FStar_Parser_Const.string_lid
 let t_float: term = tconst FStar_Parser_Const.float_lid
 let t_char: term = tabbrev FStar_Parser_Const.char_lid
 let t_range: term = tconst FStar_Parser_Const.range_lid
+let t_term: term = tconst FStar_Parser_Const.term_lid
 let t_tactic_unit: term' syntax =
   let uu____6631 =
     let uu____6632 =

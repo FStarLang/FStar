@@ -253,7 +253,7 @@ let embed_branch:
   =
   FStar_Syntax_Embeddings.embed_pair embed_pattern
     FStar_Reflection_Data.fstar_refl_pattern embed_term
-    FStar_Reflection_Data.fstar_refl_term
+    FStar_Syntax_Syntax.t_term
 let unembed_branch:
   FStar_Syntax_Syntax.term ->
     (FStar_Reflection_Data.pattern,FStar_Syntax_Syntax.term)
@@ -292,9 +292,8 @@ let embed_argv:
   (FStar_Syntax_Syntax.term,FStar_Reflection_Data.aqualv)
     FStar_Pervasives_Native.tuple2 -> FStar_Syntax_Syntax.term
   =
-  FStar_Syntax_Embeddings.embed_pair embed_term
-    FStar_Reflection_Data.fstar_refl_term embed_aqualv
-    FStar_Reflection_Data.fstar_refl_aqualv
+  FStar_Syntax_Embeddings.embed_pair embed_term FStar_Syntax_Syntax.t_term
+    embed_aqualv FStar_Reflection_Data.fstar_refl_aqualv
 let unembed_argv:
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.term,FStar_Reflection_Data.aqualv)

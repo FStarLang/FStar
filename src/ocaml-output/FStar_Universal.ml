@@ -73,8 +73,6 @@ let init_env:
              FStar_Tactics_Interpreter.preprocess;
            FStar_TypeChecker_Env.solve =
              (uu___228_171.FStar_TypeChecker_Env.solve);
-           FStar_TypeChecker_Env.is_trivial =
-             (uu___228_171.FStar_TypeChecker_Env.is_trivial);
            FStar_TypeChecker_Env.finish =
              (uu___228_171.FStar_TypeChecker_Env.finish);
            FStar_TypeChecker_Env.refresh =
