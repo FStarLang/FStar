@@ -79,7 +79,7 @@ let delay t s =
     //s is the new subsitution to add to it
     //compose substitutions by concatenating them
     //the order of concatenation is important!
-    mk_Tm_delayed ((t', compose_subst s' s)) t.pos
+    mk_Tm_delayed (t', compose_subst s' s) t.pos
  | _ ->
     mk_Tm_delayed ((t, s)) t.pos
 
