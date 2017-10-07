@@ -1222,6 +1222,16 @@ let add_proof_ns e path = cons_proof_ns true  e path
 let rem_proof_ns e path = cons_proof_ns false e path
 let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
+
+let unbound_vars (e : env) (t : term) : BU.set<bv> =
+    List.fold_left (fun s bv -> BU.set_remove bv s) (Free.names t) (bound_vars e)
+
+let closed (e : env) (t : term) =
+    BU.set_is_empty (unbound_vars e t)
+
+let closed' (t : term) =
+    BU.set_is_empty (Free.names t)
+
 let string_of_proof_ns env =
     let aux (p,b) =
         if p = [] && b then "*"

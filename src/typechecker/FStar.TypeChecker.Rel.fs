@@ -64,6 +64,28 @@ let abstract_guard x g = match g with
         | _ -> failwith "impossible" in
       Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f (Some (U.residual_tot U.ktype0))})
 
+let guard_unbound_vars env g =
+    match g.guard_f with
+    | Trivial      -> BU.new_set S.order_bv
+    | NonTrivial f -> unbound_vars env f
+
+let check_guard msg env g =
+    let s = guard_unbound_vars env g in
+    if BU.set_is_empty s
+    then ()
+    else raise (Err (BU.format2 "Guard has free variables (%s): %s"
+                                msg
+                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", ")))
+
+let check_term msg env t =
+    let s = unbound_vars env t in
+    if BU.set_is_empty s
+    then ()
+    else raise (Err (BU.format3 "Term <%s> has free variables (%s): %s"
+                                (Print.term_to_string t)
+                                msg
+                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", ")))
+
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
   | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) None f.pos}
