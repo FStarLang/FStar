@@ -1281,6 +1281,7 @@ let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
 
 let unbound_vars (e : env) (t : term) : BU.set<bv> =
+    // FV(t) \ Vars(Γ)
     List.fold_left (fun s bv -> BU.set_remove bv s) (Free.names t) (bound_vars e)
 
 let closed (e : env) (t : term) =
