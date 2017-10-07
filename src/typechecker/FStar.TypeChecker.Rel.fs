@@ -55,14 +55,15 @@ let is_trivial g = match g with
 
 let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
 
-let abstract_guard x g = match g with
-    | None
-    | Some ({guard_f=Trivial}) -> g
-    | Some g ->
-      let f = match g.guard_f with
-        | NonTrivial f -> f
-        | _ -> failwith "impossible" in
-      Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f (Some (U.residual_tot U.ktype0))})
+let abstract_guard_n bs g =
+    match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+        let f' = U.abs bs f (Some (U.residual_tot U.ktype0)) in
+        ({ g with guard_f = NonTrivial f' })
+
+let abstract_guard b g =
+    abstract_guard_n [b] g
 
 let guard_unbound_vars env g =
     match g.guard_f with
@@ -2594,7 +2595,7 @@ let try_subtype' env t1 t2 smt_ok =
                     (N.term_to_string env t1)
                     (N.term_to_string env t2)
                     (guard_to_string env (BU.must g));
- abstract_guard x g
+ map_opt g (abstract_guard (S.mk_binder x))
 
 let try_subtype env t1 t2 = try_subtype' env t1 t2 true
 
