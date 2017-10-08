@@ -46,15 +46,14 @@ let fstar_refl_embed = lid_as_tm PC.fstar_refl_embed_lid
 let protect_embedded_term (t:typ) (x:term) =
     S.mk_Tm_app fstar_refl_embed [S.iarg t; S.as_arg x] None x.pos
 
-let un_protect_embedded_term : term -> term =
-    fun (t:term) ->
-        let head, args = U.head_and_args t in
-        match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [_; (x, _)]
-            when S.fv_eq_lid fv PC.fstar_refl_embed_lid ->
-          x
-        | _ ->
-          failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
+let un_protect_embedded_term (t : term) : term =
+    let head, args = U.head_and_args (U.unmeta t) in
+    match (U.un_uinst head).n, args with
+    | Tm_fvar fv, [_; (x, _)]
+        when S.fv_eq_lid fv PC.fstar_refl_embed_lid ->
+      x
+    | _ ->
+      failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
 
 let embed_binder (b:binder) : term =
     U.mk_alien fstar_refl_binder b "reflection.embed_binder" None
