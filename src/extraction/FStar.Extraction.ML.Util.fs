@@ -264,13 +264,12 @@ let resugar_mlty t = match t with
       end
     | _ -> t
 
-let codegen_fsharp () = Option.get (Options.codegen()) = "FSharp"
 let flatten_ns ns =
-    if codegen_fsharp()
+    if Options.codegen_fsharp()
     then String.concat "." ns
     else String.concat "_" ns
 let flatten_mlpath (ns, n) =
-    if codegen_fsharp()
+    if Options.codegen_fsharp()
     then String.concat "." (ns@[n])
     else String.concat "_" (ns@[n])
 let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.idText)

@@ -70,7 +70,7 @@ let fsharpkeywords = [
 
 let is_reserved k =
   let reserved_keywords () = 
-      if Option.get (Options.codegen()) = "FSharp"
+      if Options.codegen_fsharp()
       then fsharpkeywords
       else ocamlkeywords
   in
@@ -249,7 +249,7 @@ let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
-    let obj_ns = if Option.get (Options.codegen()) = "FSharp" 
+    let obj_ns = if Options.codegen_fsharp() 
                  then "FSharp.Compatibility.OCaml.Obj" 
                  else "Obj" in
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name([obj_ns], "repr")) in
