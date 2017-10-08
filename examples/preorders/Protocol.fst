@@ -10,8 +10,6 @@ open MonotonicArray
 
 open ProtocolUtils
 
-(***** basic messages interface *****)
-
 type message  = s:seq byte{length s <= fragment_size}
 type fragment = s:seq byte{length s = fragment_size}
 
@@ -19,53 +17,40 @@ type rand_fn = nat -> fragment
 
 let zeroes (n:nat) :(s:seq byte{length s = n}) = Seq.create n (zero_b)
 
-let pad (m:message) :fragment = append m (zeroes (fragment_size - (length m)))
-
-(* an unpad function that strips off the trailing pad *)
-assume val unpad (s:fragment)
-  :(r:(nat * message){length (snd r) = fst r /\ s == pad (snd r)})
-
-assume val lemma_pad_unpad (x:unit) :Lemma (ensures (forall (m:message). snd (unpad (pad m)) == m))
-
-(* a MAC function, returning a tag *)
 assume val mac: cipher:fragment -> i:nat -> seq byte
 
-(* an entry in the message log *)
 noeq type entry (rand:rand_fn) =
-  | E: i:nat -> msg:message -> cipher:fragment{xor (pad msg) (rand i) == cipher} -> tag:seq byte{tag == mac cipher i}
+  | E: i:nat
+       -> msg:message
+       -> cipher:fragment{xor (pad msg) (rand i) == cipher}
+       -> tag:seq byte{tag == mac cipher i}
        -> entry rand
 
-(* sequence of messages *)
 type entries (rand:rand_fn) = s:seq (entry rand){forall (i:nat). i < length s ==> E?.i (Seq.index s i) = i}
 
-let is_prefix_of (#a:Type) (s1:seq a) (s2:seq a) :Type0
-  = length s1 <= length s2 /\
-    (forall (i:nat). i < length s1 ==> Seq.index s1 i == Seq.index s2 i)
-
-(* entries are only appended to *)
-let entries_rel (rand:rand_fn) :relation (entries rand) =
+let entries_pre0 (rand:rand_fn) :relation (entries rand) =
   fun (es1:entries rand) (es2:entries rand) -> es1 `is_prefix_of` es2
 
-let entries_pre (rand:rand_fn) :preorder (entries rand) = entries_rel rand
+let entries_pre (rand:rand_fn) :preorder (entries rand) = entries_pre0 rand
 
-(* a single state stable predicate on the counter, saying that it is less than the length of the log *)
-let counter_pred (#rand:rand_fn) (n:nat) (es_ref:mref (entries rand) (entries_rel rand)) :(p:heap_predicate{stable p})
+let counter_pred (#rand:rand_fn) (n:nat) (es_ref:mref (entries rand) (entries_pre rand))
+  :(p:heap_predicate{stable p})
   = fun h -> h `contains` es_ref /\ n <= length (sel h es_ref)
 
-(* counter type is a nat, witnessed with counter_pred *)
-type counter_t (#rand:rand_fn) (es_ref:mref (entries rand) (entries_rel rand))
+type counter_t (#rand:rand_fn) (es_ref:mref (entries rand) (entries_pre rand))
   = n:nat{witnessed (counter_pred n es_ref)}
 
-(* counter increases monotonically *)
-let counter_rel (#rand:rand_fn) (es_ref:mref (entries rand) (entries_rel rand)) :relation (counter_t es_ref)
+let counter_pre0 (#rand:rand_fn) (es_ref:mref (entries rand) (entries_pre rand))
+  :relation (counter_t es_ref)
   = fun n1 n2 -> b2t (n1 <= n2)
 
-let counter_pre (#rand:rand_fn) (es_ref:mref (entries rand) (entries_rel rand)) :preorder (counter_t es_ref)
-  = counter_rel es_ref
+let counter_pre (#rand:rand_fn) (es_ref:mref (entries rand) (entries_pre rand))
+  :preorder (counter_t es_ref)
+  = counter_pre0 es_ref
 
 noeq type connection =
-  | S: rand:rand_fn -> entries:mref (entries rand) (entries_rel rand) -> connection
-  | R: rand:rand_fn -> entries:mref (entries rand) (entries_rel rand)
+  | S: rand:rand_fn -> entries:mref (entries rand) (entries_pre rand) -> connection
+  | R: rand:rand_fn -> entries:mref (entries rand) (entries_pre rand)
        -> ctr:mref (counter_t entries) (counter_pre entries) -> connection
 
 let rand_of (c:connection) :rand_fn =
@@ -73,7 +58,7 @@ let rand_of (c:connection) :rand_fn =
   | S r _
   | R r _ _ -> r
 
-let entries_of (c:connection) :(mref (entries (rand_of c)) (entries_rel (rand_of c))) =
+let entries_of (c:connection) :(mref (entries (rand_of c)) (entries_pre (rand_of c))) =
   match c with
   | S _ es   -> es
   | R _ es _ -> es
@@ -89,46 +74,50 @@ let recall_connection_liveness (c:connection)
     | S _ es_ref         -> ST.recall es_ref
     | R _ es_ref ctr_ref -> ST.recall es_ref; ST.recall ctr_ref
 
-(* seq of plain messages sent so far on this connection *)
 let log (c:connection) (h:heap{h `live_connection` c}) :Tot (seq message) =
-  ArrayUtils.seq_map (fun (E _ m _ _) -> m) (sel_tot h (entries_of c))
+  seq_map (fun (E _ m _ _) -> m) (sel_tot h (entries_of c))
 
 let lemma_prefix_entries_implies_prefix_log
   (c:connection) (h1:heap) (h2:heap{h1 `live_connection` c /\ h2 `live_connection` c})
   :Lemma (requires (sel h1 (entries_of c) `is_prefix_of` sel h2 (entries_of c)))
 	 (ensures  (log c h1 `is_prefix_of` log c h2))
 	 [SMTPat (log c h1); SMTPat (log c h2)]
-  = ArrayUtils.lemma_map_commutes_with_prefix (fun (E _ m _ _) -> m) (sel h1 (entries_of c)) (sel h2 (entries_of c))
+  = lemma_map_commutes_with_prefix (fun (E _ m _ _) -> m) (sel h1 (entries_of c)) (sel h2 (entries_of c))
 
-(* current counter for the connection *)
+let lemma_snoc_log
+  (c:connection) (i:nat) (cipher:fragment) (msg:message{xor (pad msg) ((rand_of c) i) == cipher})
+  (tag:seq byte{tag == mac cipher i})
+  (h0:heap) (h1:heap{h0 `live_connection` c /\ h1 `live_connection` c})
+  :Lemma (requires (sel h1 (entries_of c) == snoc (sel h0 (entries_of c)) (E i msg cipher tag)))
+	 (ensures  (log c h1 == snoc (log c h0) msg))
+  = lemma_map_commutes_with_snoc (fun (E _ m _ _) -> m) (sel h0 (entries_of c)) (E i msg cipher tag)
+
+let ciphers (c:connection) (h:heap) :GTot (seq fragment) =
+  seq_map (fun (E _ _ cipher _) -> cipher) (sel h (entries_of c))
+
+let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
+  seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
+
 let ctr (c:connection) (h:heap{h `live_connection` c}) :Tot nat =
   match c with
   | S _ es_ref    -> length (sel_tot h es_ref)
   | R _ _ ctr_ref -> sel_tot h ctr_ref
 
-(* recall_counter, as mentioned in the paper *)
+
+
 let recall_counter (c:connection)
-  :ST unit (requires (fun _ -> True)) (ensures (fun h0 _ h1 -> h0 == h1 /\ h0 `live_connection` c /\ ctr c h0 <= Seq.length (log c h0)))
+  :ST unit (requires (fun _ -> True))
+           (ensures (fun h0 _ h1 -> h0 == h1 /\ h0 `live_connection` c /\ ctr c h0 <= Seq.length (log c h0)))
   = recall_connection_liveness c;
     match c with
     | S _ _              -> ()
     | R _ es_ref ctr_ref -> let n = !ctr_ref in gst_recall (counter_pred n es_ref)
 
-(* stable predicate for counter *)
-let snapshot_pred (c:connection) (h0:heap{h0 `live_connection` c}) :(p:heap_predicate{stable p}) =
-  fun h -> h `live_connection` c /\
-        ctr c h0 <= ctr  c h /\ ctr c h0 <= length (log c h) /\ log c h0 `is_prefix_of` log c h
 
-let snap (c:connection) :ST unit (requires (fun _ -> True))
-                                 (ensures  (fun h0 _ h1 -> h0 `live_connection` c /\ witnessed (snapshot_pred c h0) /\ h0 == h1))
-  = let h0 = ST.get () in
-    recall_connection_liveness c;
-    recall_counter c;
-    gst_witness (snapshot_pred c h0)
 
 type iarray (a:Type0) (n:nat) = x:array a n{all_init x}
 
-let sender (c:connection) :Tot bool   = S? c
+let sender   (c:connection) :Tot bool = S? c
 let receiver (c:connection) :Tot bool = R? c
 
 let connection_footprint (c:connection) :GTot (Set.set nat)
@@ -136,15 +125,7 @@ let connection_footprint (c:connection) :GTot (Set.set nat)
     | S _ es_ref         -> Set.singleton (addr_of es_ref)
     | R _ es_ref ctr_ref -> Set.union (Set.singleton (addr_of es_ref)) (Set.singleton (addr_of ctr_ref))
 
-let lemma_snoc_log
-  (c:connection{sender c}) (i:nat) (cipher:fragment) (msg:message{xor (pad msg) ((rand_of c) i) == cipher})
-  (tag:seq byte{tag == mac cipher i})
-  (h0:heap) (h1:heap{h0 `live_connection` c /\ h1 `live_connection` c})
-  :Lemma (requires (sel h1 (entries_of c) == snoc (sel h0 (entries_of c)) (E i msg cipher tag)))
-	 (ensures  (log c h1 == snoc (log c h0) msg))
-  = ArrayUtils.lemma_map_commutes_with_snoc (fun (E _ m _ _) -> m) (sel h0 (entries_of c)) (E i msg cipher tag)
 
-(* network send, actually sends bytes on the network, once the log has been prepared *)
 assume val network_send
   (c:connection{sender c}) (f:fragment) (tag:seq byte)
   :ST unit (requires (fun h0 -> h0 `live_connection` c /\ 
@@ -155,7 +136,7 @@ assume val network_send
 			       c == f /\ t == tag))))
            (ensures  (fun h0 _ h1 -> h0 == h1))
 
-(* protocol send operation *)
+
 #set-options "--z3rlimit 50"
 let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
   :ST nat (requires (fun h0 -> True))
@@ -178,8 +159,7 @@ let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
 
     let sent = min n fragment_size in
     let msg = read_subseq_i_j buf 0 sent in
-    let frag = append msg (zeroes (fragment_size - sent)) in
-    let cipher = xor frag (rand i0) in
+    let cipher = xor (pad msg) (rand i0) in
 
     let msgs1 = snoc msgs0 (E i0 msg cipher (mac cipher i0)) in
 
@@ -190,10 +170,6 @@ let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
     lemma_snoc_log c i0 cipher msg (mac cipher i0) h0 h1;
     
     sent
-
-(* seq of ciphers sent so far on this connection *)
-let ciphers (c:connection) (h:heap) :GTot (seq fragment) =
-  ArrayUtils.seq_map (fun (E _ _ cipher _) -> cipher) (sel h (entries_of c))
 
 assume val network_receive (c:connection)
   :ST (option (fragment * seq byte)) (requires (fun h0 -> h0 `live_connection` c))
@@ -261,29 +237,6 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
 #reset-options
 
 (***** sender and receiver *****)
-
-let lemma_is_prefix_of_slice
-  (#a:Type0) (s1:seq a) (s2:seq a{s1 `is_prefix_of` s2}) (i:nat) (j:nat{j >= i /\ j <= Seq.length s1})
-  :Lemma (requires True)
-         (ensures  (Seq.slice s1 i j == Seq.slice s2 i j))
-	 [SMTPat (s1 `is_prefix_of` s2); SMTPat (Seq.slice s1 i j); SMTPat (Seq.slice s2 i j)]
-  = ArrayUtils.lemma_is_prefix_of_slice s1 s2 i j
-
-(*****)
-
-(*
- * assuming a flattening function that flattens a sequence of messages into sequence of bytes
- * and a couple of associated lemmas
- *)
-assume val flatten (s:seq message) :Tot (seq byte)
-
-assume val lemma_flatten_snoc (s:seq message) (m:message)
-  :Lemma (requires True)
-         (ensures  (flatten (snoc s m) == append (flatten s) m))
-
-assume val flatten_empty (u:unit) : Lemma (flatten Seq.createEmpty == Seq.createEmpty)
-
-(*****)
 
 let sent_file_pred' (file:seq byte) (c:connection) (from:nat) (to:nat{from <= to}) :heap_predicate
   = fun h -> h `live_connection` c /\ 
@@ -571,10 +524,6 @@ let receive_file #n file c =
     gst_witness (sent_file_pred file_bytes1 c from (ctr c h1));
     assert (sent_file file_bytes1 c);
     Some r
-
-(* seq of tags sent so far on this connection *)
-let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
-  ArrayUtils.seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
 
 irreducible type trigger (#a:Type) (x:a) = True
 
