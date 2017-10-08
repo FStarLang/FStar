@@ -8,34 +8,16 @@ open FStar.ST
 
 open MonotonicArray
 
+open ProtocolUtils
+
 (***** basic messages interface *****)
-
-(* size of each message fragment sent over the network *)
-assume val fragment_size:nat
-
-type byte
-assume val zero_b:byte
 
 type message  = s:seq byte{length s <= fragment_size}
 type fragment = s:seq byte{length s = fragment_size}
 
-(* random bytes for ideal cipher? *)
-type randomness = nat -> fragment
+type rand_fn = nat -> fragment
 
-(* the xor operation on fragments *)
-assume val xor: fragment -> fragment -> fragment
-
-(* basic lemma about xor *)
-assume val lemma_xor (a:fragment) (b:fragment)
-  :Lemma (xor (xor a b) b == a)
-   [SMTPat (xor (xor a b) b)]
-
-assume val lemma_xor_comm (a:fragment) (b:fragment)
-  :Lemma (xor a b == xor b a)
-   [SMTPatOr [[SMTPat (xor a b)]; [SMTPat (xor b a)]]]
-
-val zeroes: n:nat -> (s:seq byte{length s = n})
-let zeroes n = Seq.create n (zero_b)
+let zeroes (n:nat) :(s:seq byte{length s = n}) = Seq.create n (zero_b)
 
 let pad (m:message) :fragment = append m (zeroes (fragment_size - (length m)))
 
@@ -49,44 +31,44 @@ assume val lemma_pad_unpad (x:unit) :Lemma (ensures (forall (m:message). snd (un
 assume val mac: cipher:fragment -> i:nat -> seq byte
 
 (* an entry in the message log *)
-noeq type entry (rand:randomness) =
+noeq type entry (rand:rand_fn) =
   | E: i:nat -> msg:message -> cipher:fragment{xor (pad msg) (rand i) == cipher} -> tag:seq byte{tag == mac cipher i}
        -> entry rand
 
 (* sequence of messages *)
-type entries (rand:randomness) = s:seq (entry rand){forall (i:nat). i < length s ==> E?.i (Seq.index s i) = i}
+type entries (rand:rand_fn) = s:seq (entry rand){forall (i:nat). i < length s ==> E?.i (Seq.index s i) = i}
 
 let is_prefix_of (#a:Type) (s1:seq a) (s2:seq a) :Type0
   = length s1 <= length s2 /\
     (forall (i:nat). i < length s1 ==> Seq.index s1 i == Seq.index s2 i)
 
 (* entries are only appended to *)
-let entries_rel (rand:randomness) :relation (entries rand) =
+let entries_rel (rand:rand_fn) :relation (entries rand) =
   fun (es1:entries rand) (es2:entries rand) -> es1 `is_prefix_of` es2
 
-let entries_pre (rand:randomness) :preorder (entries rand) = entries_rel rand
+let entries_pre (rand:rand_fn) :preorder (entries rand) = entries_rel rand
 
 (* a single state stable predicate on the counter, saying that it is less than the length of the log *)
-let counter_pred (#rand:randomness) (n:nat) (es_ref:mref (entries rand) (entries_rel rand)) :(p:heap_predicate{stable p})
+let counter_pred (#rand:rand_fn) (n:nat) (es_ref:mref (entries rand) (entries_rel rand)) :(p:heap_predicate{stable p})
   = fun h -> h `contains` es_ref /\ n <= length (sel h es_ref)
 
 (* counter type is a nat, witnessed with counter_pred *)
-type counter_t (#rand:randomness) (es_ref:mref (entries rand) (entries_rel rand))
+type counter_t (#rand:rand_fn) (es_ref:mref (entries rand) (entries_rel rand))
   = n:nat{witnessed (counter_pred n es_ref)}
 
 (* counter increases monotonically *)
-let counter_rel (#rand:randomness) (es_ref:mref (entries rand) (entries_rel rand)) :relation (counter_t es_ref)
+let counter_rel (#rand:rand_fn) (es_ref:mref (entries rand) (entries_rel rand)) :relation (counter_t es_ref)
   = fun n1 n2 -> b2t (n1 <= n2)
 
-let counter_pre (#rand:randomness) (es_ref:mref (entries rand) (entries_rel rand)) :preorder (counter_t es_ref)
+let counter_pre (#rand:rand_fn) (es_ref:mref (entries rand) (entries_rel rand)) :preorder (counter_t es_ref)
   = counter_rel es_ref
 
 noeq type connection =
-  | S: rand:randomness -> entries:mref (entries rand) (entries_rel rand) -> connection
-  | R: rand:randomness -> entries:mref (entries rand) (entries_rel rand)
+  | S: rand:rand_fn -> entries:mref (entries rand) (entries_rel rand) -> connection
+  | R: rand:rand_fn -> entries:mref (entries rand) (entries_rel rand)
        -> ctr:mref (counter_t entries) (counter_pre entries) -> connection
 
-let rand_of (c:connection) :randomness =
+let rand_of (c:connection) :rand_fn =
   match c with
   | S r _
   | R r _ _ -> r
@@ -606,14 +588,15 @@ let bijective (#a:Type) (#b:Type) (f:a -> b) = injective f /\ surjective f
 
 let bijection (a:Type) (b:Type) = f:(a -> b){bijective f}
 
-let related_tapes (rand0:randomness) (rand1:randomness) (reln:nat -> bijection fragment fragment)
+let related_tapes (rand0:rand_fn) (rand1:rand_fn) (reln:nat -> bijection fragment fragment)
   = forall (i:nat). rand1 i == reln i (rand0 i)
 
 let sample_relation (s0:seq message) (s1:seq message) (i:nat) :bijection fragment fragment
-  = let fn = fun f -> if (i < Seq.length s0 && i < Seq.length s1)
-                   then xor (xor (pad (Seq.index s0 i)) f)
-                        (pad (Seq.index s1 i))
-                   else f
+  = let fn :fragment -> fragment =
+      fun f -> if (i < Seq.length s0 && i < Seq.length s1)
+            then xor (xor (pad (Seq.index s0 i)) f)
+                     (pad (Seq.index s1 i))
+            else f
     in
     let fn_inv = fun frag -> if i < Seq.length s0 && i < Seq.length s1
                  then xor (xor (pad (Seq.index s1 i)) frag) (pad (Seq.index s0 i))
