@@ -144,7 +144,7 @@ let string_of_abspat_binder_kind = function
 type abspat_continuation =
   list (abspat_binder_kind * varname) * term
 
-let classify_abspat_binder binder : Tac (abspat_binder_kind * term) =
+let classify_abspat_binder binder : match_res (abspat_binder_kind * term) =
   admit ();
   let varname = "v" in
   let var_pat = PQn var_qn in
@@ -153,15 +153,14 @@ let classify_abspat_binder binder : Tac (abspat_binder_kind * term) =
 
   let typ = type_of_binder binder in
   match interp_pattern var_pat typ with
-  | Success [] -> ABKNone, typ
+  | Success [] -> Success (ABKNone, typ)
   | Failure _ ->
     match interp_pattern hyp_pat typ with
-    | Success [(_, hyp_typ)] -> ABKHyp, hyp_typ
+    | Success [(_, hyp_typ)] -> Success (ABKHyp, hyp_typ)
     | Failure _ ->
       match interp_pattern goal_pat typ with
-      | Success [(_, goal_typ)] -> ABKGoal, goal_typ
-      | Failure _ -> fail ("Incorrect type in pattern-matching binder: " ^
-                          "use one of ``var``, ``hyp …``, or ``goal …``") ()
+      | Success [(_, goal_typ)] -> Success (ABKGoal, goal_typ)
+      | Failure _ -> Failure IncorrectTypeInAbsPatBinder
 
 (** Split an abstraction `tm` into a list of binders and a body. **)
 let rec binders_and_body_of_abs tm : binders * term =
@@ -192,7 +191,7 @@ let matching_problem_of_abs (tm: term) : Tac (matching_problem * abspat_continua
       (fun problem (binder: binder) ->
          let bv_name = inspect_bv binder in
          debug ("Got binder: " ^ (inspect_bv binder));
-         let binder_kind, typ = classify_abspat_binder binder in
+         let binder_kind, typ = lift_exn_tac classify_abspat_binder binder in
          debug ("Compiling binder " ^ inspect_bv binder ^
                 ", classified as " ^ string_of_abspat_binder_kind binder_kind ^
                 ", with type " ^ term_to_string typ);
@@ -205,8 +204,9 @@ let matching_problem_of_abs (tm: term) : Tac (matching_problem * abspat_continua
 
   let continuation =
     let continuation_arg_of_binder binder : Tac (abspat_binder_kind * varname) =
-      (fst (classify_abspat_binder binder), inspect_bv binder) in
+      (fst (lift_exn_tac classify_abspat_binder binder), inspect_bv binder) in
     (tacmap continuation_arg_of_binder binders, tm) in
+
   let mp =
     { mp_vars = List.rev #varname problem.mp_vars;
       mp_hyps = List.rev #(varname * pattern) problem.mp_hyps;

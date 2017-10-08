@@ -16,6 +16,7 @@ noeq type match_exception =
 | SimpleMismatch of pattern * term
 | NonLinearMismatch of varname * term * term
 | UnsupportedTermInPattern of term
+| IncorrectTypeInAbsPatBinder
 
 let string_of_match_exception = function
   | NameMismatch (qn1, qn2) ->
@@ -27,6 +28,8 @@ let string_of_match_exception = function
     " needs to match both " ^ (term_to_string t1) ^ " and " ^ (term_to_string t2)
   | UnsupportedTermInPattern tm ->
     "Match failure (unsupported term in pattern): " ^ term_to_string tm
+  | IncorrectTypeInAbsPatBinder ->
+    "Incorrect type in pattern-matching binder: use one of ``var``, ``hyp …``, or ``goal …``"
 
 /// Exception monad
 /// ===============
