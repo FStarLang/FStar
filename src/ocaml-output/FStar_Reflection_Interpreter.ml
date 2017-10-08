@@ -57,94 +57,99 @@ let reflection_primops: FStar_TypeChecker_Normalize.primitive_step Prims.list
       FStar_TypeChecker_Normalize.name = l;
       FStar_TypeChecker_Normalize.arity = arity;
       FStar_TypeChecker_Normalize.strong_reduction_ok = false;
-      FStar_TypeChecker_Normalize.interpretation = fn
+      FStar_TypeChecker_Normalize.requires_binder_substitution = false;
+      FStar_TypeChecker_Normalize.interpretation =
+        (fun ctxt  ->
+           fun args  ->
+             let uu____230 = FStar_TypeChecker_Normalize.psc_range ctxt in
+             fn uu____230 args)
     } in
   let mk11 nm f u1 em =
     let l = mklid nm in mk1 l (Prims.parse_int "1") (int1 l f u1 em) in
   let mk2 nm f u1 u2 em =
     let l = mklid nm in mk1 l (Prims.parse_int "2") (int2 l f u1 u2 em) in
-  let uu____324 =
+  let uu____330 =
     mk11 "__inspect" FStar_Reflection_Basic.inspect
       FStar_Reflection_Basic.unembed_term
       FStar_Reflection_Basic.embed_term_view in
-  let uu____325 =
-    let uu____328 =
+  let uu____331 =
+    let uu____334 =
       mk11 "__pack" FStar_Reflection_Basic.pack
         FStar_Reflection_Basic.unembed_term_view
         FStar_Reflection_Basic.embed_term in
-    let uu____329 =
-      let uu____332 =
+    let uu____335 =
+      let uu____338 =
         mk11 "__inspect_fv" FStar_Reflection_Basic.inspect_fv
           FStar_Reflection_Basic.unembed_fvar
           FStar_Syntax_Embeddings.embed_string_list in
-      let uu____335 =
-        let uu____338 =
+      let uu____341 =
+        let uu____344 =
           mk11 "__pack_fv" FStar_Reflection_Basic.pack_fv
             (FStar_Syntax_Embeddings.unembed_list
                FStar_Syntax_Embeddings.unembed_string)
             FStar_Reflection_Basic.embed_fvar in
-        let uu____341 =
-          let uu____344 =
+        let uu____347 =
+          let uu____350 =
             mk11 "__inspect_bv" FStar_Reflection_Basic.inspect_bv
               FStar_Reflection_Basic.unembed_binder
               FStar_Syntax_Embeddings.embed_string in
-          let uu____345 =
-            let uu____348 =
+          let uu____351 =
+            let uu____354 =
               mk2 "__compare_binder" FStar_Reflection_Basic.compare_binder
                 FStar_Reflection_Basic.unembed_binder
                 FStar_Reflection_Basic.unembed_binder
                 FStar_Reflection_Basic.embed_order in
-            let uu____349 =
-              let uu____352 =
+            let uu____355 =
+              let uu____358 =
                 mk11 "__type_of_binder" FStar_Reflection_Basic.type_of_binder
                   FStar_Reflection_Basic.unembed_binder
                   FStar_Reflection_Basic.embed_term in
-              let uu____359 =
-                let uu____362 =
+              let uu____365 =
+                let uu____368 =
                   mk2 "__is_free" FStar_Reflection_Basic.is_free
                     FStar_Reflection_Basic.unembed_binder
                     FStar_Reflection_Basic.unembed_term
                     FStar_Syntax_Embeddings.embed_bool in
-                let uu____363 =
-                  let uu____366 =
+                let uu____369 =
+                  let uu____372 =
                     mk11 "__fresh_binder" FStar_Reflection_Basic.fresh_binder
                       FStar_Reflection_Basic.unembed_term
                       FStar_Reflection_Basic.embed_binder in
-                  let uu____373 =
-                    let uu____376 =
+                  let uu____379 =
+                    let uu____382 =
                       mk2 "__term_eq" FStar_Reflection_Basic.term_eq
                         FStar_Reflection_Basic.unembed_term
                         FStar_Reflection_Basic.unembed_term
                         FStar_Syntax_Embeddings.embed_bool in
-                    let uu____377 =
-                      let uu____380 =
+                    let uu____383 =
+                      let uu____386 =
                         mk11 "__term_to_string"
                           FStar_Reflection_Basic.term_to_string
                           FStar_Reflection_Basic.unembed_term
                           FStar_Syntax_Embeddings.embed_string in
-                      let uu____381 =
-                        let uu____384 =
+                      let uu____387 =
+                        let uu____390 =
                           mk11 "__binders_of_env"
                             FStar_Reflection_Basic.binders_of_env
                             FStar_Reflection_Basic.unembed_env
                             FStar_Reflection_Basic.embed_binders in
-                        let uu____385 =
-                          let uu____388 =
+                        let uu____391 =
+                          let uu____394 =
                             mk2 "__lookup_typ"
                               FStar_Reflection_Basic.lookup_typ
                               FStar_Reflection_Basic.unembed_env
                               FStar_Syntax_Embeddings.unembed_string_list
                               FStar_Reflection_Basic.embed_sigelt_view in
-                          [uu____388] in
-                        uu____384 :: uu____385 in
-                      uu____380 :: uu____381 in
-                    uu____376 :: uu____377 in
-                  uu____366 :: uu____373 in
-                uu____362 :: uu____363 in
-              uu____352 :: uu____359 in
-            uu____348 :: uu____349 in
-          uu____344 :: uu____345 in
-        uu____338 :: uu____341 in
-      uu____332 :: uu____335 in
-    uu____328 :: uu____329 in
-  uu____324 :: uu____325
+                          [uu____394] in
+                        uu____390 :: uu____391 in
+                      uu____386 :: uu____387 in
+                    uu____382 :: uu____383 in
+                  uu____372 :: uu____379 in
+                uu____368 :: uu____369 in
+              uu____358 :: uu____365 in
+            uu____354 :: uu____355 in
+          uu____350 :: uu____351 in
+        uu____344 :: uu____347 in
+      uu____338 :: uu____341 in
+    uu____334 :: uu____335 in
+  uu____330 :: uu____331

@@ -324,3 +324,4 @@ let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]
 let quote_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "quote"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
 let fstar_refl_embed_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "__embed"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
 let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"
+let fstar_reflection_types_binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.Range.dummyRange

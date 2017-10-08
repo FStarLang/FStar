@@ -68,9 +68,9 @@ let mk_tactic_interpretation_1 (ps:proofstate)
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
 let mk_tactic_interpretation_1_env (ps:proofstate)
-                               (t:N.env -> 'b -> tac<'a>) (unembed_b:term -> 'b)
+                               (t:N.psc -> 'b -> tac<'a>) (unembed_b:term -> 'b)
                                (embed_a:'a -> term) (t_a:typ)
-                               (nm:Ident.lid) (env:N.env) (args:args) : option<term> =
+                               (nm:Ident.lid) ctxt (args:args) : option<term> =
   match args with
   | [(b, _); (embedded_state, _)] ->
     log ps (fun () ->
@@ -78,7 +78,7 @@ let mk_tactic_interpretation_1_env (ps:proofstate)
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
     let ps = E.unembed_proofstate embedded_state in
-    let res = run (t env (unembed_b b)) ps in
+    let res = run (t ctxt (unembed_b b)) ps in
     Some (E.embed_result ps res embed_a t_a)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
@@ -137,6 +137,7 @@ let step_from_native_step (ps: proofstate) (s: native_primitive_step): N.primiti
     { N.name=s.name;
       N.arity=s.arity;
       N.strong_reduction_ok=s.strong_reduction_ok;
+      N.requires_binder_substitution = false;
       N.interpretation=(fun _rng args -> s.tactic ps args) }
 
 let rec primitive_steps ps : list<N.primitive_step> =
@@ -145,6 +146,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.name=nm;
       N.arity=arity;
       N.strong_reduction_ok=false;
+      N.requires_binder_substitution = false;
       N.interpretation=(fun _rng args -> interpretation nm args)
     } in
     let mk_env nm arity interpretation =
@@ -152,7 +154,8 @@ let rec primitive_steps ps : list<N.primitive_step> =
       N.name=nm;
       N.arity=arity;
       N.strong_reduction_ok=false;
-      N.interpretation=(fun (_rng, env, _stack) args -> interpretation nm env args)
+      N.requires_binder_substitution = true;
+      N.interpretation=(fun ctxt args -> interpretation nm ctxt args)
     } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map (step_from_native_step ps) native_tactics in
@@ -162,7 +165,8 @@ let rec primitive_steps ps : list<N.primitive_step> =
     let mktac1 (name : string) (f : 'a -> tac<'b>) (u_a : term -> 'a) (e_b : 'b -> term) (tb : typ) : N.primitive_step =
         mk name 2 (mk_tactic_interpretation_1 ps f u_a e_b tb)
     in
-    let mktac1_env (name : string) (f : N.env -> 'a -> tac<'b>) (u_a : term -> 'a) (e_b : 'b -> term) (tb : typ) : N.primitive_step =
+    let mktac1_env (name : string) (f : N.psc -> 'a -> tac<'b>)
+                    (u_a : term -> 'a) (e_b : 'b -> term) (tb : typ) : N.primitive_step =
         mk_env name 2 (mk_tactic_interpretation_1_env ps f u_a e_b tb)
     in
     let mktac2 (name : string) (f : 'a -> 'b -> tac<'c>) (u_a : term -> 'a) (u_b : term -> 'b) (e_c : 'c -> term) (tc : typ) : N.primitive_step =
@@ -187,6 +191,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
         {N.name = Ident.lid_of_str "FStar.Tactics.Types.decr_depth";
          N.arity = 1;
          N.strong_reduction_ok = false;
+         N.requires_binder_substitution = false;
          N.interpretation = decr_depth_interp
          }
     in
@@ -199,6 +204,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
         {N.name = Ident.lid_of_str "FStar.Tactics.Types.incr_depth";
          N.arity = 1;
          N.strong_reduction_ok = false;
+         N.requires_binder_substitution = false;
          N.interpretation = incr_depth_interp
          }
     in
@@ -212,6 +218,7 @@ let rec primitive_steps ps : list<N.primitive_step> =
         {N.name = nm;
          N.arity = 1;
          N.strong_reduction_ok = false;
+         N.requires_binder_substitution = false;
          N.interpretation = tracepoint_interp
         }
     in
@@ -331,7 +338,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         let _ = TcRel.force_trivial_guard env g in
         (ps.goals@ps.smt_goals, w)
     | Failed (s, ps) ->
-        dump_proofstate ps [] "at the time of failure";
+        dump_proofstate ps N.null_psc "at the time of failure";
         raise (FStar.Errors.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
 
 

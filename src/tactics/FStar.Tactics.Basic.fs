@@ -121,26 +121,12 @@ let ps_to_json (msg, ps) =
                ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))]
 
 let fstar_refl_binder_lid = FStar.Reflection.Data.fstar_refl_types_lid "binder"
-let dump_proofstate ps (env:FStar.TypeChecker.Normalize.env) msg =
+let dump_proofstate ps (ctxt:N.psc) msg =
     Options.with_saved_options (fun () ->
         Options.set_option "print_effect_args" (Options.Bool true);
-        printfn "Env has %s elements" (BU.string_of_int (List.length env));
-        let subst =
-            List.fold_right
-               (fun (binder_opt, closure) subst ->
-                    match binder_opt, closure with
-                    | Some b, N.Clos(_, term, _, _) ->
-                      printfn "++++++++++++Name in environment is %s" (Print.binder_to_string b);
-                      let b,_ = b in
-                      if not (U.is_constructed_typ b.sort fstar_refl_binder_lid)
-                      then subst
-                      else let x : S.binder = U.un_alien term |> FStar.Dyn.undyn in
-                           let b = S.freshen_bv ({b with sort=SS.subst subst (fst x).sort}) in
-                           let b_for_x = S.NT(fst x, S.bv_to_name b) in
-                           b_for_x :: subst
-                    | _ -> subst)
-                env [] in
-        printfn "Applying substution to proof state: %s" (Print.subst_to_string subst);
+        let subst = N.psc_subst ctxt in
+        BU.print1 "psc substitution: %s\n"
+                       (Print.subst_to_string subst);
         let ps = subst_proof_state subst ps in
         print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
     // tacprint "";
@@ -155,8 +141,8 @@ let print_proof_state1 (msg:string) : tac<unit> =
     mk_tac (fun p -> dump_cur p msg;
                      Success ((), p))
 
-let print_proof_state env (msg:string) : tac<unit> =
-    mk_tac (fun p -> dump_proofstate p env msg;
+let print_proof_state ctxt (msg:string) : tac<unit> =
+    mk_tac (fun p -> dump_proofstate p ctxt msg;
                      Success ((), p))
 
 (* get : get the current proof state *)
@@ -178,7 +164,7 @@ let mlog f : tac<unit> =
 let fail msg =
     mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail")
-        then dump_proofstate ps [] ("TACTING FAILING: " ^ msg); //TODO: fixme ... fail should send along the env too
+        then dump_proofstate ps N.null_psc ("TACTING FAILING: " ^ msg); //TODO: fixme ... fail should send along the env too
         Failed (msg, ps)
     )
 
@@ -981,7 +967,7 @@ let proofstate_of_goal_ty env typ =
         goals = [g];
         smt_goals = [];
         depth = 0;
-        __dump = (fun ps msg -> dump_proofstate ps [] msg);
+        __dump = (fun ps msg -> dump_proofstate ps N.null_psc msg);
     }
     in
     (ps, g.witness)

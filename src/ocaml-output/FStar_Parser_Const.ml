@@ -293,3 +293,6 @@ let fstar_refl_embed_lid: FStar_Ident.lident =
     FStar_Range.dummyRange
 let fstar_syntax_syntax_term: FStar_Ident.lident =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.term"
+let fstar_reflection_types_binder_lid: FStar_Ident.lident =
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "binder"]
+    FStar_Range.dummyRange

@@ -1400,6 +1400,7 @@ let mk_alien (b : 'a) (s : string) (r : option<range>) : term =
     mk (Tm_meta (tun, Meta_alien (mkdyn b, s))) None (match r with | Some r -> r | None -> dummyRange)
 
 let un_alien (t : term) : dyn =
+    let t = Subst.compress t in
     match t.n with
     | Tm_meta (_, Meta_alien (blob, _)) -> blob
     | _ -> failwith "unexpected: term was not an alien embedding"
