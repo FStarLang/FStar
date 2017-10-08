@@ -37,6 +37,10 @@ assume val lemma_xor (a:fragment) (b:fragment)
   :Lemma (xor (xor a b) b == a)
    [SMTPat (xor (xor a b) b)]
 
+assume val lemma_xor_comm (a:fragment) (b:fragment)
+  :Lemma (xor a b == xor b a)
+   [SMTPatOr [[SMTPat (xor a b)]; [SMTPat (xor b a)]]]
+
 val zeroes: n:nat -> (s:seq byte{length s = n})
 let zeroes n = Seq.create n (zero_b)
 
@@ -597,6 +601,34 @@ let receive_file #n file c =
 let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
   ArrayUtils.seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
 
+irreducible type trigger (#a:Type) (x:a) = True
+
+let injective (#a:Type) (#b:Type) (f:a -> b) =
+  forall (x:a).{:pattern (trigger x)} (forall (y:a).{:pattern (trigger y)} f x == f y ==> x == y)
+
+let surjective (#a:Type) (#b:Type) (f:a -> b) =
+  forall (y:b).{:pattern (trigger y)} (exists (x:a). f x == y)
+
+let bijective (#a:Type) (#b:Type) (f:a -> b) = injective f /\ surjective f
+
+let bijection (a:Type) (b:Type) = f:(a -> b){bijective f}
+
+let related_tapes (rand0:randomness) (rand1:randomness) (reln:nat -> bijection fragment fragment)
+  = forall (i:nat). rand1 i == reln i (rand0 i)
+
+let sample_relation (s0:seq message) (s1:seq message) (i:nat) :bijection fragment fragment
+  = let fn = fun f -> if (i < Seq.length s0 && i < Seq.length s1)
+                   then xor (xor (pad (Seq.index s0 i)) f)
+                        (pad (Seq.index s1 i))
+                   else f
+    in
+    let fn_inv = fun frag -> if i < Seq.length s0 && i < Seq.length s1
+                 then xor (xor (pad (Seq.index s1 i)) frag) (pad (Seq.index s0 i))
+                 else frag
+    in
+    assert (forall frag. fn_inv (fn frag) == frag);
+    fn
+
 #reset-options "--z3rlimit 50"
 let lemma_partial_length_hiding
   (#n:nat) (#m:nat)
@@ -612,18 +644,7 @@ let lemma_partial_length_hiding
 	              let f1 = as_initialized_seq file1 h in
 	              sent_file_pred f0 c0 from to h /\
 	              sent_file_pred f1 c1 from to h /\
-	              (forall (i:nat). (i >= from /\ i < to) ==>
-		                 xor (pad (Seq.index (log c0 h) i)) (rand0 i) ==
-	                         xor (pad (Seq.index (log c1 h) i)) (rand1 i))))))
+		      related_tapes rand0 rand1 (sample_relation (log c0 h) (log c1 h))))))
 	 (ensures  (forall (i:nat). (i >= from /\ i < to) ==> (Seq.index (ciphers c0 h) i == Seq.index (ciphers c1 h) i) /\
 	                                              Seq.index (tags c0 h) i == Seq.index (tags c1 h) i))
-  = let S rand0 _ = c0 in
-    let S rand1 _ = c1 in
-    let ciphers0 = ciphers c0 h in
-    let ciphers1 = ciphers c1 h in
-    let tags0 = tags c0 h in
-    let tags1 = tags c1 h in
-    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index ciphers0 i == xor (pad (Seq.index (log c0 h) i)) (rand0 i));
-    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index ciphers1 i == xor (pad (Seq.index (log c1 h) i)) (rand1 i));
-    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index tags0 i == mac (Seq.index ciphers0 i) i);
-    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index tags1 i == mac (Seq.index ciphers1 i) i)
+  = ()

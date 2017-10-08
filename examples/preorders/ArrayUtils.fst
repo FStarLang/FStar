@@ -99,7 +99,7 @@ let lemma_is_prefix_of_slice
 
 assume val seq_map:
   #a:Type -> #b:Type -> f:(a -> b) -> s:seq a
-  -> (r:seq b{length s = length r /\ (forall (i:nat). i < length s ==> Seq.index r i == f (Seq.index s i))})
+  -> (r:seq b{length s = length r /\ (forall (i:nat).{:pattern Seq.index r i} i < length s ==> Seq.index r i == f (Seq.index s i))})
 
 assume val lemma_map_commutes_with_prefix:
   #a:Type -> #b:Type -> f:(a -> b) -> s1:seq a -> s2:seq a
