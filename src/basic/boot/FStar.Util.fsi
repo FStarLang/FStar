@@ -434,3 +434,9 @@ val write : ref<'a> -> 'a -> unit
 (* Marshaling to and from strings *)
 val marshal: 'a -> string
 val unmarshal: string -> 'a
+
+
+type signedness = | Unsigned | Signed
+type width = | Int8 | Int16 | Int32 | Int64
+
+val within_bounds: string -> signedness -> width -> bool

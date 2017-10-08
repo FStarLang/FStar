@@ -6,9 +6,9 @@ open FStar.All
 open FStar.BaseTypes
 
 ///[@ PpxDerivingShow ]
-type signedness = | Unsigned | Signed
+type signedness = FStar.Util.signedness
 ///[@ PpxDerivingShow ]
-type width = | Int8 | Int16 | Int32 | Int64
+type width = FStar.Util.width
 
 (* NB:
     Const_int (_, None) is not a canonical representation for a mathematical integer
@@ -57,16 +57,16 @@ let rec pow2 (x:int) : int =
 let bounds signedness width =
     let n =
         match width with
-        | Int8 -> 8
-        | Int16 -> 16
-        | Int32 -> 32
-        | Int64 -> 64
+        | FStar.Util.Int8 -> 8
+        | FStar.Util.Int16 -> 16
+        | FStar.Util.Int32 -> 32
+        | FStar.Util.Int64 -> 64
     in
     let lower, upper =
       match signedness with
-      | Unsigned ->
+      | FStar.Util.Unsigned ->
         0, pow2 n - 1
-      | Signed ->
+      | FStar.Util.Signed ->
         let upper = pow2 (n - 1) in
         - upper, upper - 1
     in

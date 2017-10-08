@@ -387,6 +387,7 @@ let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
 
 let char_of_int (i:int) = char i
 let int_of_string (s:string) = int_of_string s
+let bigint_of_string (s:string) = System.Numerics.BigInteger.Parse s
 let safe_int_of_string (s:string) =
   try Some <| int_of_string s with :? System.FormatException -> None
 let int_of_char (s:char) = int32 s
@@ -1041,3 +1042,33 @@ let write r x = r := x
 
 let marshal (x:'a) : string = failwith "Marshaling to/from strings: not yet supported in F#"
 let unmarshal (x:string) : 'a = failwith "Marshaling to/from strings: not yet supported in F#"
+
+type signedness = | Unsigned | Signed
+type width = | Int8 | Int16 | Int32 | Int64
+
+let rec bigint_pow2 (n:bigint) =
+    if n = 0I then 1I else 2I * bigint_pow2 (n-1I)
+
+let bounds signedness width =
+    let n =
+        match width with
+        | Int8 -> 8I
+        | Int16 -> 16I
+        | Int32 -> 32I
+        | Int64 -> 64I
+    in
+    let lower, upper =
+      match signedness with
+      | Unsigned ->
+        0I, bigint_pow2 n - 1I
+      | Signed ->
+        let upper = bigint_pow2 (n - 1I) in
+        - upper, upper - 1I
+    in
+    lower, upper
+
+let within_bounds repr signedness width =
+  let lower, upper = bounds signedness width in
+  let value = bigint_of_string (ensure_decimal repr) in
+  lower <= value && value <= upper
+ 
