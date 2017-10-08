@@ -8,13 +8,6 @@ open FStar.ST
 
 open MonotonicArray
 
-(***** Ugh *****)
-
-let lemma_seq_append_whats_wrong_with_me (#a:Type0) (s:seq a) (s1:seq a) (s2:seq a) (s3:seq a) (pos:nat) (sent:nat{pos + sent <= length s})
-  :Lemma (requires (s1 == slice s 0 pos /\ s2 == slice s pos (pos + sent) /\ s3 == slice s 0 (pos + sent)))
-         (ensures  (s3 == append s1 s2))
-  = assert (Seq.equal s3 (append s1 s2))
-
 (***** basic messages interface *****)
 
 (* size of each message fragment sent over the network *)
@@ -377,7 +370,7 @@ let append_subseq #a #n (f:iarray a n) (pos:nat) (sent:nat{pos + sent <= n}) (h:
       assert (f0 == Seq.slice sbs 0 pos);
       assert (f1 == Seq.slice sbs 0 (pos + sent));
       assert (sent_frag == Seq.slice sbs pos (pos + sent));
-      lemma_seq_append_whats_wrong_with_me sbs f0 sent_frag f1 pos sent
+      ArrayUtils.lemma_seq_append_slice sbs f0 sent_frag f1 pos sent
 
 let lemma_sender_connection_ctr_equals_length_log
   (c:connection{sender c}) (h:heap{h `live_connection` c})
@@ -647,4 +640,13 @@ let lemma_partial_length_hiding
 		      related_tapes rand0 rand1 (sample_relation (log c0 h) (log c1 h))))))
 	 (ensures  (forall (i:nat). (i >= from /\ i < to) ==> (Seq.index (ciphers c0 h) i == Seq.index (ciphers c1 h) i) /\
 	                                              Seq.index (tags c0 h) i == Seq.index (tags c1 h) i))
-  = ()
+  = let S rand0 _ = c0 in
+    let S rand1 _ = c1 in
+    let ciphers0 = ciphers c0 h in
+    let ciphers1 = ciphers c1 h in
+    let tags0 = tags c0 h in
+    let tags1 = tags c1 h in
+    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index ciphers0 i == xor (pad (Seq.index (log c0 h) i)) (rand0 i));
+    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index ciphers1 i == xor (pad (Seq.index (log c1 h) i)) (rand1 i));
+    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index tags0 i == mac (Seq.index ciphers0 i) i);
+    assert (forall (i:nat). (i >= from /\ i < to) ==> Seq.index tags1 i == mac (Seq.index ciphers1 i) i)
