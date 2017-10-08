@@ -45,8 +45,36 @@ let ocamlkeywords = [
   "with"; "nonrec"
 ]
 
+let fsharpkeywords = [
+  "abstract"; "and"; "as"; "assert"; "base"; "begin"; "class";
+  "default"; "delegate"; "do"; "done"; "downcast"; "downto";
+  "elif"; "else"; "end"; "exception"; "extern"; "false";
+  "finally"; "fixed"; "for"; "fun"; "function"; "global"; "if";
+  "in"; "inherit"; "inline"; "interface"; "internal"; "lazy";
+  "let"; "let!"; "match"; "member"; "module"; "mutable";
+  "namespace"; "new"; "not"; "null"; "of"; "open"; "or";
+  "override"; "private"; "public"; "rec"; "return"; "return!";
+  "select"; "static"; "struct"; "then"; "to"; "true"; "try";
+  "type"; "upcast"; "use"; "use!"; "val"; "void"; "when";
+  "while"; "with"; "yield"; "yield!"; 
+  // --mlcompatibility keywords
+  "asr"; "land"; "lor";
+  "lsl"; "lsr"; "lxor"; "mod"; "sig";
+  // reserved keywords
+  "atomic"; "break"; "checked"; "component"; "const";
+  "constraint"; "constructor"; "continue"; "eager"; "event";
+  "external"; "fixed"; "functor"; "include"; "method"; "mixin";
+  "object"; "parallel"; "process"; "protected"; "pure";
+  "sealed"; "tailcall"; "trait"; "virtual"; "volatile"
+]
+
 let is_reserved k =
-  List.existsb (fun k' -> k' = k) ocamlkeywords
+  let reserved_keywords () = 
+      if Options.codegen_fsharp()
+      then fsharpkeywords
+      else ocamlkeywords
+  in
+  List.existsb (fun k' -> k' = k) (reserved_keywords ())
 
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
@@ -221,7 +249,7 @@ let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
-    let obj_ns = if Option.get (Options.codegen()) = "FSharp" 
+    let obj_ns = if Options.codegen_fsharp() 
                  then "FSharp.Compatibility.OCaml.Obj" 
                  else "Obj" in
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name([obj_ns], "repr")) in

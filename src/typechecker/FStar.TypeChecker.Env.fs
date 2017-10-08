@@ -235,8 +235,6 @@ let pop_stack () =
       env
     | _ -> failwith "Impossible: Too many pops"
 
-let cleanup_interactive env = env.solver.pop ""
-
 let push env msg =
     push_query_indices();
     env.solver.push msg;

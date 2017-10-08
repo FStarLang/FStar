@@ -397,7 +397,12 @@ let with_monitor m f =
 
 let z3_job fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
-  let status, statistics = doZ3Exe fresh input label_messages in
+  let status, statistics =
+    try doZ3Exe fresh input label_messages
+    with _ when not (Options.trace_error()) ->
+         bg_z3_proc.refresh();
+         UNKNOWN([], Some "Z3 raised an exception"), BU.smap_create 0
+  in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
   { z3result_status     = status;
     z3result_time       = elapsed_time;

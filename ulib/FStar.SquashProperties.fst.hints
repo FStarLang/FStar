@@ -33,24 +33,7 @@
       "b45f4f9e2756ea951e429dc0521f78bd"
     ],
     [
-      "FStar.SquashProperties.excluded_middle_squash",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
-        "equation_Prims.l_not", "equation_Prims.l_or",
-        "equation_Prims.squash", "l_not-interp", "l_or-interp",
-        "projection_inverse_BoxBool_proj_0",
-        "ref_valid_FStar.SquashProperties_Tm_refine_3d9be3f8c1f455cdaac99a8638e52c06",
-        "ref_valid_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "refinement_interpretation_FStar.SquashProperties_Tm_refine_3d9be3f8c1f455cdaac99a8638e52c06",
-        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "unit_typing"
-      ],
-      0,
+      "FStar.SquashProperties.excluded_middle_squash", 1, 2, 1, null, 0,
       "88781c939ebc281dfffa04a072e20ebb"
     ],
     [
