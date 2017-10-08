@@ -1646,7 +1646,7 @@
         "typing_Platform.Bytes.sum_length"
       ],
       0,
-      "20766c2317adcd2e2a34b1560044d0e5"
+      "09613ec2d9443b68d2ff85750130054c"
     ],
     [
       "Platform.Bytes.op_At_Bar",
@@ -1978,7 +1978,7 @@
         "typing_Platform.Bytes.get_cbytes_"
       ],
       0,
-      "0564e083db3b02fac936f61433102803"
+      "19f8dccef735ad1a5c668eb638fca4ec"
     ],
     [
       "Platform.Bytes.split",
@@ -2099,7 +2099,7 @@
         "unit_typing"
       ],
       0,
-      "1f11b1258abb15fe8b538e65c0ff0854"
+      "c2b6d4b34caedccfb8da31202721b23f"
     ],
     [
       "Platform.Bytes.lemma_split_1",
@@ -2229,7 +2229,7 @@
         "typing_Platform.Bytes.get_cbytes_"
       ],
       0,
-      "9b23420297e4cb3766dc74de4444666c"
+      "5615652b9b512e98bbc6e716d5f30b43"
     ],
     [
       "Platform.Bytes.lemma_split_2",
@@ -2237,8 +2237,9 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Platform.Bytes.getBytes.fuel_instrumented",
+        "@fuel_irrelevance_Platform.Bytes.getBytes.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
@@ -2275,7 +2276,7 @@
         "unit_typing"
       ],
       0,
-      "f3d6969e14f29948cf4c66b8b87b95aa"
+      "7e4413345daa6f19268b6b18063d87ba"
     ],
     [
       "Platform.Bytes.lemma_split_2",
@@ -2334,7 +2335,7 @@
         "unit_typing"
       ],
       0,
-      "fa1a28782ff3adc40fa7cb8eb19fdbb7"
+      "022f43de6fd43c08b04a760a0acd9e26"
     ],
     [
       "Platform.Bytes.lemma_split",
@@ -2501,7 +2502,7 @@
         "typing_Platform.Bytes.get_cbytes_"
       ],
       0,
-      "6abc5887ff6fb8602eb97842e17f5784"
+      "9768c1236287562d61871110af1e2a84"
     ],
     [
       "Platform.Bytes.lemma_append_inj",
@@ -2660,7 +2661,7 @@
         "typing_Platform.Bytes.repr_bytes"
       ],
       0,
-      "00ce6522458b9b14e19995df3e541b14"
+      "b39eea9239e66dc0d824b35b80ee1f30"
     ],
     [
       "Platform.Bytes.abytes_get_cbytes",
@@ -2712,7 +2713,7 @@
         "typing_Platform.Bytes.abytes", "unit_typing"
       ],
       0,
-      "3f0e184c78dfbc0516e3f05054350738"
+      "dd1d9d7357f1ca12ac0963f78613846f"
     ],
     [
       "Platform.Bytes.int_of_bytes_of_int",

@@ -580,6 +580,7 @@
         "equation_FStar.Monotonic.HyperHeap.t",
         "equation_FStar.Monotonic.HyperStack.contains",
         "equation_FStar.Monotonic.HyperStack.hh",
+        "equation_FStar.Monotonic.HyperStack.is_in",
         "equation_FStar.Monotonic.HyperStack.modifies",
         "equation_FStar.Set.eqtype", "equation_FStar.Set.subset",
         "equation_FStar.UInt32.uint_to_t", "equation_FStar.UInt32.v",
@@ -590,7 +591,6 @@
         "equation_Slice.bytes", "equation_Slice.lbuffer",
         "equation_Slice.live",
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
-        "fuel_guarded_inversion_Slice.bslice",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_IntegerParsing.parse_u8",
@@ -617,15 +617,15 @@
         "refinement_interpretation_Slice_Tm_refine_b89bf9d8a6bca42f733fb835128df8e8",
         "token_correspondence_FStar.Ghost.reveal",
         "token_correspondence_IntegerParsing.parse_u8",
-        "typing_FStar.Map.concat", "typing_FStar.Map.contains",
-        "typing_FStar.Map.restrict",
+        "typing_FStar.Map.concat", "typing_FStar.Map.restrict",
         "typing_FStar.Monotonic.HyperStack.__proj__HS__item__h",
+        "typing_FStar.Monotonic.HyperStack.is_in",
         "typing_FStar.Set.complement", "typing_FStar.Set.empty",
         "typing_Parsing.parser", "typing_Slice.__proj__BSlice__item__p",
         "typing_Slice.as_seq"
       ],
       0,
-      "56f74f27a61fc5f48c49bddd0d6dd6d9"
+      "cb750adb0c05bb695d69318b11d6e5bf"
     ],
     [
       "IntegerParsing.parse_u8_st",
@@ -838,7 +838,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "804bfa9d32127b41a6174034d7451565"
+      "f8ad652caa3958a9db4c596915ee781d"
     ],
     [
       "IntegerParsing.parse_u16_st",
@@ -1049,7 +1049,7 @@
         "typing_Slice.__proj__BSlice__item__p", "typing_Slice.as_seq"
       ],
       0,
-      "f1019b03c845665c26e33547f421c1ab"
+      "8cb20d99d0fba80ab9fd06e21f27964a"
     ],
     [
       "IntegerParsing.parse_u32_st",

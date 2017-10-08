@@ -243,35 +243,8 @@
       "62b08d840aeb9b3276732de24f6027fd"
     ],
     [
-      "FStar.Reflection.Syntax.mktuple_n",
-      1,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Reflection.Syntax.mktuple2_qn",
-        "equation_FStar.Reflection.Syntax.mktuple3_qn",
-        "equation_FStar.Reflection.Syntax.mktuple4_qn",
-        "equation_FStar.Reflection.Syntax.mktuple5_qn",
-        "equation_FStar.Reflection.Syntax.mktuple6_qn",
-        "equation_FStar.Reflection.Syntax.mktuple7_qn",
-        "equation_FStar.Reflection.Syntax.mktuple8_qn", "equation_Prims.nat",
-        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Reflection.Types.term", "int_inversion",
-        "int_typing", "primitive_Prims.op_Addition",
-        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.length"
-      ],
-      0,
-      "c1e2779251c3c3d1926a0dffc97f2d73"
+      "FStar.Reflection.Syntax.mktuple_n", 1, 2, 1, null, 0,
+      "0779e8756b7adaaf8eb5926b4d351f2c"
     ],
     [
       "FStar.Reflection.Syntax.mkpair",
