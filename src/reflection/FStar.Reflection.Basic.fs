@@ -20,7 +20,7 @@ module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
 
-(* These file provides implementation for reflection primitives in F*.
+(* This file provides implementation for reflection primitives in F*.
  *
  * Users can be exposed to (mostly) raw syntax of terms when working in
  * a metaprogramming effect (such as TAC). These effects are irrelevant
@@ -46,18 +46,17 @@ let fstar_refl_embed = lid_as_tm PC.fstar_refl_embed_lid
 let protect_embedded_term (t:typ) (x:term) =
     S.mk_Tm_app fstar_refl_embed [S.iarg t; S.as_arg x] None x.pos
 
-let un_protect_embedded_term : term -> term =
-    fun (t:term) ->
-        let head, args = U.head_and_args t in
-        match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [_; (x, _)]
-            when S.fv_eq_lid fv PC.fstar_refl_embed_lid ->
-          x
-        | _ ->
-          failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
+let un_protect_embedded_term (t : term) : term =
+    let head, args = U.head_and_args (U.unmeta t) in
+    match (U.un_uinst head).n, args with
+    | Tm_fvar fv, [_; (x, _)]
+        when S.fv_eq_lid fv PC.fstar_refl_embed_lid ->
+      x
+    | _ ->
+      failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
 
 let embed_binder (b:binder) : term =
-    U.mk_alien b "reflection.embed_binder" None
+    U.mk_alien fstar_refl_binder b "reflection.embed_binder" None
 
 let unembed_binder (t:term) : binder =
     U.un_alien t |> FStar.Dyn.undyn
@@ -72,13 +71,13 @@ let unembed_term (t:term) : term =
     un_protect_embedded_term t
 
 let embed_fvar (fv:fv) : term =
-    U.mk_alien fv "reflection.embed_fvar" None
+    U.mk_alien fstar_refl_fvar fv "reflection.embed_fvar" None
 
 let unembed_fvar (t:term) : fv =
     U.un_alien t |> FStar.Dyn.undyn
 
 let embed_env (env:Env.env) : term =
-    U.mk_alien env "tactics_embed_env" None
+    U.mk_alien fstar_refl_env env "tactics_embed_env" None
 
 let unembed_env (t:term) : Env.env =
     U.un_alien t |> FStar.Dyn.undyn
@@ -144,7 +143,7 @@ let rec unembed_pattern (t : term) : pattern =
     | _ ->
         failwith "not an embedded pattern"
 
-let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term fstar_refl_term
+let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term
 let unembed_branch = unembed_pair unembed_pattern unembed_term
 
 let embed_aqualv (q : aqualv) : term =
@@ -160,7 +159,7 @@ let unembed_aqualv (t : term) : aqualv =
     | _ ->
         failwith "not an embedded aqualv"
 
-let embed_argv = embed_pair embed_term fstar_refl_term embed_aqualv fstar_refl_aqualv
+let embed_argv = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv
 let unembed_argv = unembed_pair unembed_term unembed_aqualv
 
 let embed_term_view (t:term_view) : term =

@@ -430,8 +430,10 @@ let __exact (t:term) : tac<unit> =
                     (N.term_to_string goal.context (bnorm goal.context typ))
                     (N.term_to_string goal.context goal.goal_ty)))
 
-let exact (t:term) : tac<unit> =
-    focus (__exact t)
+let exact (tm:term) : tac<unit> =
+    bind (mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm))) (fun _ ->
+    focus (__exact tm)
+    )
 
 let exact_lemma (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
@@ -519,6 +521,7 @@ let try_unif (t : tac<'a>) (t' : tac<'a>) : tac<'a> =
         with NoUnif -> run t' ps)
 
 let apply (uopt:bool) (tm:term) : tac<unit> =
+    bind (mlog (fun () -> BU.print1 "apply: tm = %s\n" (Print.term_to_string tm))) (fun _ ->
     bind cur_goal (fun goal ->
     let tm, typ, guard = goal.context.type_of goal.context tm in
     // Focus helps keep the goal order
@@ -527,9 +530,10 @@ let apply (uopt:bool) (tm:term) : tac<unit> =
                             (N.term_to_string goal.context tm)
                             (N.term_to_string goal.context typ)
                             (N.term_to_string goal.context goal.goal_ty))
-    )
+    ))
 
 let apply_lemma (tm:term) : tac<unit> = focus(
+    bind (mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm))) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
     | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
     | _ -> false
@@ -604,7 +608,7 @@ let apply_lemma (tm:term) : tac<unit> = focus(
         bind (if not (istrivial goal.context (U.mk_squash pre))
               then add_irrelevant_goal goal.context pre goal.opts
               else ret ()) (fun _ ->
-        add_goals sub_goals))))))
+        add_goals sub_goals)))))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
@@ -768,23 +772,29 @@ let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
         bind (mapM f xs) (fun ys ->
         ret (y::ys)))
 
-let rec tac_bottom_fold_env (f : env -> term -> tac<term>) (env : env) (t : term) : tac<term> =
+let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) (t : term) : tac<term> =
     let tn = (SS.compress t).n in
+    bind (if d = TopDown
+          then f env ({ t with n = tn })
+          else ret t) (fun t ->
     let tn = match tn with
              | Tm_app (hd, args) ->
-                  let ff = tac_bottom_fold_env f env in
+                  let ff = tac_fold_env d f env in
                   bind (ff hd) (fun hd ->
                   let fa (a,q) = bind (ff a) (fun a -> (ret (a,q))) in
                   bind (mapM fa args) (fun args ->
                   ret (Tm_app (hd, args))))
              | Tm_abs (bs, t, k) ->
                  let bs, t' = SS.open_term bs t in
-                 bind (tac_bottom_fold_env f (Env.push_binders env bs) t') (fun t'' ->
+                 bind (tac_fold_env d f (Env.push_binders env bs) t') (fun t'' ->
                  ret (Tm_abs (SS.close_binders bs, SS.close bs t'', k)))
              | Tm_arrow (bs, k) -> ret tn //TODO
              | _ -> ret tn in
     bind tn (fun tn ->
-    f env ({ t with n = tn }))
+    let t' = { t with n = tn } in
+    if d = BottomUp
+    then f env t'
+    else ret t'))
 
 (*
  * Allows for replacement of individual subterms in the goal, asking the user to provide
@@ -811,7 +821,7 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
             ret ut))
         ))
 
-let pointwise (tau:tac<unit>) : tac<unit> =
+let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
     bind get (fun ps ->
     let g, gs = match ps.goals with
                 | g::gs -> g, gs
@@ -821,7 +831,7 @@ let pointwise (tau:tac<unit>) : tac<unit> =
     log ps (fun () ->
         BU.print1 "Pointwise starting with %s\n" (Print.term_to_string gt));
     bind dismiss_all (fun _ ->
-    bind (tac_bottom_fold_env (pointwise_rec ps tau g.opts) g.context gt) (fun gt' ->
+    bind (tac_fold_env d (pointwise_rec ps tau g.opts) g.context gt) (fun gt' ->
     log ps (fun () ->
         BU.print1 "Pointwise seems to have succeded with %s\n" (Print.term_to_string gt'));
     bind (push_goals gs) (fun _ ->

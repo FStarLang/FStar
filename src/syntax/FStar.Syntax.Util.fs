@@ -1060,13 +1060,13 @@ let destruct_typ_as_formula f : option<connective> =
         let t = compress t in
         match t.n with
             | Tm_meta(t, Meta_pattern pats) -> pats, compress t
-            | _ -> [], compress t in
+            | _ -> [], t in
 
     let destruct_q_conn t =
         let is_q (fa:bool) (fv:fv) : bool =
             if fa
-            then is_forall fv.fv_name.v else
-            is_exists fv.fv_name.v
+            then is_forall fv.fv_name.v
+            else is_exists fv.fv_name.v
         in
         let flat t =
             let t, args = head_and_args t in
@@ -1148,11 +1148,6 @@ let destruct_typ_as_formula f : option<connective> =
             then None
             else
                 let q = (comp_to_comp_typ c).result_typ in
-                let bs, q = open_term [b] q in
-                let b = match bs with // coverage...
-                        | [b] -> b
-                        | _ -> failwith "impossible"
-                in
                 if is_free_in (fst b) q
                 then (
                     let pats, q = patterns q in
@@ -1318,9 +1313,7 @@ let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
 // We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
 // indices.
-// TODO: consider unification variables.. somehow? Not sure why we have some of them unresolved at tactic run time
-// TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure
-// that's ok.
+// TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure that's ok.
 let rec term_eq t1 t2 =
   let canon_app t =
     match t.n with
@@ -1392,12 +1385,12 @@ let is_synth_by_tactic t =
     | Tm_fvar fv -> fv_eq_lid fv PC.synth_lid
     | _ -> false
 
-(* Spooky behaviours are possible with this, procede with caution *)
+(* Spooky behaviours are possible with this, proceed with caution *)
 
-let mk_alien (b : 'a) (s : string) (r : option<range>) : term =
-    mk (Tm_meta (tun, Meta_alien (mkdyn b, s))) None (match r with | Some r -> r | None -> dummyRange)
+let mk_alien (ty : typ) (b : 'a) (s : string) (r : option<range>) : term =
+    mk (Tm_meta (tun, Meta_alien (mkdyn b, s, ty))) None (match r with | Some r -> r | None -> dummyRange)
 
 let un_alien (t : term) : dyn =
     match t.n with
-    | Tm_meta (_, Meta_alien (blob, _)) -> blob
+    | Tm_meta (_, Meta_alien (blob, _, _)) -> blob
     | _ -> failwith "unexpected: term was not an alien embedding"

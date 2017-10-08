@@ -1198,7 +1198,6 @@ let solver: FStar_TypeChecker_Env.solver_t =
              let uu____2679 = FStar_Options.peek () in (e, g, uu____2679) in
            [uu____2672]);
     FStar_TypeChecker_Env.solve = solve;
-    FStar_TypeChecker_Env.is_trivial = FStar_SMTEncoding_Encode.is_trivial;
     FStar_TypeChecker_Env.finish = FStar_SMTEncoding_Z3.finish;
     FStar_TypeChecker_Env.refresh = FStar_SMTEncoding_Z3.refresh
   }
@@ -1219,8 +1218,6 @@ let dummy: FStar_TypeChecker_Env.solver_t =
            [uu____2712]);
     FStar_TypeChecker_Env.solve =
       (fun uu____2735  -> fun uu____2736  -> fun uu____2737  -> ());
-    FStar_TypeChecker_Env.is_trivial =
-      (fun uu____2744  -> fun uu____2745  -> false);
-    FStar_TypeChecker_Env.finish = (fun uu____2747  -> ());
-    FStar_TypeChecker_Env.refresh = (fun uu____2749  -> ())
+    FStar_TypeChecker_Env.finish = (fun uu____2743  -> ());
+    FStar_TypeChecker_Env.refresh = (fun uu____2745  -> ())
   }

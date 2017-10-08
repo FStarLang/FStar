@@ -1048,40 +1048,37 @@ let mk_interpretation_fun:
               FStar_Extraction_ML_Syntax.MLE_App uu____2040 in
             let args =
               let uu____2053 =
-                let uu____2056 = str_to_name "ps" in [uu____2056; tac_fun] in
-              let uu____2057 =
-                let uu____2060 =
+                let uu____2056 =
                   FStar_List.map (mk_tac_embedding_path Unembed) arg_types in
-                let uu____2063 =
-                  let uu____2066 = mk_tac_embedding_path Embed t in
-                  let uu____2067 =
-                    let uu____2070 = mk_tac_param_type t in
-                    let uu____2071 =
-                      let uu____2074 =
-                        let uu____2077 = str_to_name "args" in [uu____2077] in
-                      tac_lid_app :: uu____2074 in
-                    uu____2070 :: uu____2071 in
-                  uu____2066 :: uu____2067 in
-                FStar_List.append uu____2060 uu____2063 in
-              FStar_List.append uu____2053 uu____2057 in
+                let uu____2059 =
+                  let uu____2062 = mk_tac_embedding_path Embed t in
+                  let uu____2063 =
+                    let uu____2066 = mk_tac_param_type t in
+                    let uu____2067 =
+                      let uu____2070 =
+                        let uu____2073 = str_to_name "args" in [uu____2073] in
+                      tac_lid_app :: uu____2070 in
+                    uu____2066 :: uu____2067 in
+                  uu____2062 :: uu____2063 in
+                FStar_List.append uu____2056 uu____2059 in
+              FStar_List.append [tac_fun] uu____2053 in
             let app =
-              let uu____2079 =
-                let uu____2080 =
-                  let uu____2087 =
+              let uu____2075 =
+                let uu____2076 =
+                  let uu____2083 =
                     FStar_List.map
                       (FStar_Extraction_ML_Syntax.with_ty
                          FStar_Extraction_ML_Syntax.MLTY_Top) args in
-                  (h, uu____2087) in
-                FStar_Extraction_ML_Syntax.MLE_App uu____2080 in
+                  (h, uu____2083) in
+                FStar_Extraction_ML_Syntax.MLE_App uu____2076 in
               FStar_All.pipe_left
                 (FStar_Extraction_ML_Syntax.with_ty
-                   FStar_Extraction_ML_Syntax.MLTY_Top) uu____2079 in
+                   FStar_Extraction_ML_Syntax.MLTY_Top) uu____2075 in
             FStar_Pervasives_Native.Some
               (FStar_Extraction_ML_Syntax.MLE_Fun
-                 ([("ps", FStar_Extraction_ML_Syntax.MLTY_Top);
-                  ("args", FStar_Extraction_ML_Syntax.MLTY_Top)], app))
+                 ([("args", FStar_Extraction_ML_Syntax.MLTY_Top)], app))
           with
           | CallNotImplemented  ->
-              ((let uu____2116 = FStar_Ident.string_of_lid tac_lid in
-                not_implemented_warning uu____2116);
+              ((let uu____2108 = FStar_Ident.string_of_lid tac_lid in
+                not_implemented_warning uu____2108);
                FStar_Pervasives_Native.None)

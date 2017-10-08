@@ -148,8 +148,9 @@ let dump1: string -> unit -> unit __tac = fun s -> fun () -> __dump1 s
 let __trefl: unit __tac = from_tac_0 B.trefl
 let trefl: unit -> unit __tac = fun () -> __trefl
 
-let __pointwise (t: unit __tac): unit __tac = from_tac_1 B.pointwise (to_tac_0 t)
-let pointwise: unit E.tactic -> unit -> unit __tac = fun tau -> fun () -> __pointwise (E.reify_tactic tau)
+let __pointwise (d : direction) (t: unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 t)
+let pointwise: unit E.tactic -> unit -> unit __tac = fun tau -> fun () -> __pointwise BottomUp (E.reify_tactic tau)
+let pointwise': unit E.tactic -> unit -> unit __tac = fun tau -> fun () -> __pointwise TopDown (E.reify_tactic tau)
 
 let __later: unit __tac = from_tac_0 B.later
 let later: unit -> unit __tac = fun () -> __later

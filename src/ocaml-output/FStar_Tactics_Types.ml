@@ -128,3 +128,12 @@ let tracepoint: proofstate -> Prims.unit =
         (let uu____273 = FStar_Options.tactic_trace_d () in
          ps.depth <= uu____273) in
     if uu____271 then ps.__dump ps "TRACE" else ()
+type direction =
+  | TopDown
+  | BottomUp[@@deriving show]
+let uu___is_TopDown: direction -> Prims.bool =
+  fun projectee  ->
+    match projectee with | TopDown  -> true | uu____279 -> false
+let uu___is_BottomUp: direction -> Prims.bool =
+  fun projectee  ->
+    match projectee with | BottomUp  -> true | uu____284 -> false

@@ -118,25 +118,22 @@ let go _ =
 
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
-        else if Options.interactive () then begin //--in
-          if Options.explicit_deps () then begin
-            Util.print_error "--explicit_deps incompatible with --in\n";
-            exit 1
-          end;
-          if List.length filenames <> 1 then begin
-            Util.print_error "fstar-mode.el should pass the current filename to F*\n";
-            exit 1
-          end;
-          let filename = List.hd filenames in
+        else if Options.interactive () then begin
+          match filenames with
+          | [] ->
+            Util.print_error "--ide: Name of current file missing in command line invocation\n"; exit 1
+          | _ :: _ :: _ ->
+            Util.print_error "--ide: Too many files in command line invocation\n"; exit 1
+          | [filename] ->
+            if Options.explicit_deps () then begin
+              Util.print_error "--ide: --explicit_deps not supported in interactive mode\n";
+              exit 1 end;
 
-          if Options.verify_module () <> [] then
-            Util.print_warning "Interactive mode; ignoring --verify_module";
-
-          (* interactive_mode takes care of calling [find_deps_if_needed] *)
-          if Options.legacy_interactive () then FStar.Interactive.Legacy.interactive_mode filename
-          else FStar.Interactive.Ide.interactive_mode filename
-	    //and then start checking chunks from the current buffer
-        end //end interactive mode
+            if Options.legacy_interactive () then
+              FStar.Interactive.Legacy.interactive_mode filename
+            else
+              FStar.Interactive.Ide.interactive_mode filename
+          end
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
