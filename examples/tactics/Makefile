@@ -20,7 +20,6 @@ all:	Apply.uver		\
 	Logic.uver		\
 	Trace.uver		\
 	Nest.uver		\
-	Aliens.uver		\
 	TestBV.uver		\
 	Map.uver		\
 	Map.OpaqueToSMT.uver	\
