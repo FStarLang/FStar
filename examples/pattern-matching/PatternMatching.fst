@@ -231,16 +231,16 @@ let assoc_str_fail (#b: Type) (key: string) (ls: list (string * b)) : Tac b =
 
 // FIXME simplify this instead of applying the continuations directly
 
-let ms_locate_hyp #a (solution: matching_solution)
+let ms_locate_hyp (solution: matching_solution)
                   (binder_name: string) : Tac binder =
   assoc_str_fail binder_name solution.ms_hyps
 
-let ms_locate_var #a (solution: matching_solution)
+let ms_locate_var (solution: matching_solution)
                   (binder_name: string) : Tac Type0 =
   admit ();
   unquote #Type0 (assoc_str_fail binder_name solution.ms_vars) ()
 
-let ms_locate_unit #a _solution _binder_name : Tac unit =
+let ms_locate_unit _solution _binder_name : Tac unit =
   ()
 
 let locateandbind_fn_of_binder_kind binder_kind =
