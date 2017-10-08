@@ -384,7 +384,7 @@
         "typing_UnionFind.Functions.diff", "well-founded-ordering-on-nat"
       ],
       0,
-      "e858fb9f4caba167e6dcc847b589076f"
+      "027bf4fd8906b272ef96cb01a3790a09"
     ],
     [
       "UnionFind.Functions.find",
@@ -577,7 +577,7 @@
         "typing_UnionFind.Functions.diff", "well-founded-ordering-on-nat"
       ],
       0,
-      "c93a75b13ed317132a782cf33bed04b6"
+      "7210fc0c3a7c342577f1246db8a19cfe"
     ],
     [
       "UnionFind.Functions.find_opt",
@@ -721,7 +721,7 @@
         "unit_typing"
       ],
       0,
-      "1f31faab36ba89d4e8206a1bdca00a8c"
+      "bde0cb88958c5174404db572414604d6"
     ],
     [
       "UnionFind.Functions.well_formed_decreases_lemma",
@@ -794,7 +794,7 @@
         "unit_typing"
       ],
       0,
-      "e065f2edf5a4ce91bb7b8a18c9aa8892"
+      "410fb960daa6442469e840653d6a3f74"
     ],
     [
       "UnionFind.Functions.merge",
@@ -975,7 +975,7 @@
         "unit_typing"
       ],
       0,
-      "4ac6e58e9fb5bfa885bf7ef33a8a2200"
+      "c50448f15f2c91fb7f6784647cbdc4b9"
     ],
     [
       "UnionFind.Functions.merge_opt",
