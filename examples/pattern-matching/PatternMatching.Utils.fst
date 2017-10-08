@@ -25,16 +25,16 @@ let term_head t : string =
   | Tv_Unknown -> "Unknown"
 
 let desc_of_pattern = function
-| SPAny -> "anything"
-| SPVar _ -> "a variable"
-| SPQn qn -> "a constant (" ^ string_of_qn qn ^ ")"
-| SPApp _ _ -> "a function application"
+| PAny -> "anything"
+| PVar _ -> "a variable"
+| PQn qn -> "a constant (" ^ string_of_qn qn ^ ")"
+| PApp _ _ -> "a function application"
 
 let rec string_of_pattern = function
-| SPAny -> "__"
-| SPVar x -> "?" ^ x
-| SPQn qn -> string_of_qn qn
-| SPApp l r -> "(" ^ string_of_pattern l ^ " "
+| PAny -> "__"
+| PVar x -> "?" ^ x
+| PQn qn -> string_of_qn qn
+| PApp l r -> "(" ^ string_of_pattern l ^ " "
               ^ string_of_pattern r ^ ")"
 
 let print_term t = print (term_to_string t)
