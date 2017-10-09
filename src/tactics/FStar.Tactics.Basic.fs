@@ -152,8 +152,8 @@ let rec log ps f : unit =
     | Some true -> f ()
     | Some false -> ()
 
-let mlog f : tac<unit> =
-    bind get (fun ps -> log ps f; ret ())
+let mlog f (cont : unit -> tac<'a>) : tac<'a> =
+    bind get (fun ps -> log ps f; cont ())
 
 //val fail : string -> tac<'a>
 let fail msg =
@@ -430,7 +430,7 @@ let __exact (t:term) : tac<unit> =
                     (N.term_to_string goal.context goal.goal_ty)))
 
 let exact (tm:term) : tac<unit> =
-    bind (mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm))) (fun _ ->
+    mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     focus (__exact tm)
     )
 
@@ -485,7 +485,8 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
         match U.arrow_one typ with
         | None -> raise NoUnif
         | Some ((bv, aq), c) ->
-            (* BU.print1 "__apply: pushing arg of type %s\n" (Print.term_to_string bv.sort); *)
+            mlog (fun () ->
+                BU.print1 "__apply: pushing binder %s\n" (Print.binder_to_string (bv, aq))) (fun _ ->
             if not (U.is_total_comp c) then fail "apply: not total codomain" else
             bind (new_uvar "apply" goal.context bv.sort) (fun u ->
             (* BU.print1 "__apply: witness is %s\n" (Print.term_to_string u); *)
@@ -510,7 +511,7 @@ let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
                 (* BU.print1 "__apply: uvar was instantiated to %s\n" (Print.term_to_string u); *)
                 ret ()
                 end
-            ))))
+            )))))
 
 // The exception is thrown only when the tactic runs, not when it's defined,
 // so we need to do this to catch it
@@ -520,7 +521,7 @@ let try_unif (t : tac<'a>) (t' : tac<'a>) : tac<'a> =
         with NoUnif -> run t' ps)
 
 let apply (uopt:bool) (tm:term) : tac<unit> =
-    bind (mlog (fun () -> BU.print1 "apply: tm = %s\n" (Print.term_to_string tm))) (fun _ ->
+    mlog (fun () -> BU.print1 "apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind cur_goal (fun goal ->
     let tm, typ, guard = goal.context.type_of goal.context tm in
     // Focus helps keep the goal order
@@ -532,7 +533,7 @@ let apply (uopt:bool) (tm:term) : tac<unit> =
     ))
 
 let apply_lemma (tm:term) : tac<unit> = focus(
-    bind (mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm))) (fun _ ->
+    mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
     | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
     | _ -> false
@@ -653,7 +654,7 @@ let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
 let rewrite (h:binder) : tac<unit> =
     bind cur_goal (fun goal ->
     let bv, _ = h in
-    bind (mlog <| (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort))) (fun _ ->
+    mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort)) (fun _ ->
     match split_env bv goal.context with
     | None -> fail "rewrite: binder not found in environment"
     | Some (e0, bvs) -> begin
