@@ -525,7 +525,7 @@ let ignore #a (x: a) : Tot unit = ()
 let implies_intro' : tactic unit =
   _ <-- implies_intro; return ()
 
-let repeat' f : tactic unit =
+let repeat' #a (f: tactic a) : tactic unit =
   _ <-- repeat f; return ()
 
 let and_elim' (h: binder) : tactic unit =
@@ -551,9 +551,29 @@ let done : tactic unit =
 
 let example #a #b #c: unit =
   assert_by_tactic (a /\ b ==> c == b ==> c)
-                   (tfirst
+                   (repeat' // FIXME why does adding #unit here fail?
+                     (idtac;; // FIXME: removing this ``idtac`` makes everything fail, really slowly
+                      lpm #unit (fun (a: var Type) (h: hyp (squash a)) ->
+                             clear h ())
+                      `or_else`
+                      lpm #unit (fun (a b: var Type0) (_: goal (squash (a ==> b))) ->
+                             implies_intro' () <: Tac unit)
+                      `or_else`
+                      lpm #unit (fun (a b: var Type0) (h: hyp (a /\ b)) ->
+                             and_elim' h () <: Tac unit)
+                      `or_else`
+                      lpm #unit (fun (a b: var Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
+                             rewrite h () <: Tac unit)
+                      `or_else`
+                      lpm #unit (fun (a: var Type0) (h: hyp a) (_: goal (squash a)) ->
+                                   exact_hyp a h () <: Tac unit));;
+                    done)
+
+let example #a #b #c: unit =
+  assert_by_tactic (a /\ b ==> c == b ==> c)
+                   (tfirst #unit
                       [lpm (fun (a: var Type) (h: hyp (squash a)) ->
-                              clear h ());
+                              clear h () <: Tac unit);
                        lpm (fun (a b: var Type0) (_: goal (squash (a ==> b))) ->
                               implies_intro' () <: Tac unit);
                        lpm (fun (a b: var Type0) (h: hyp (a /\ b)) ->
@@ -562,27 +582,6 @@ let example #a #b #c: unit =
                               rewrite h () <: Tac unit);
                        lpm (fun (a: var Type0) (h: hyp a) (_: goal (squash a)) ->
                               exact_hyp a h () <: Tac unit)];;
-                    done)
-
-
-let example #a #b #c: unit =
-  assert_by_tactic (a /\ b ==> c == b ==> c)
-                   (repeat'
-                     (dump "";; // FIXME: removing this ``dump`` makes everything really slow
-                      lpm (fun (a: var Type) (h: hyp (squash a)) ->
-                             clear h ())
-                      `or_else`
-                      lpm (fun (a b: var Type0) (_: goal (squash (a ==> b))) ->
-                             implies_intro' () <: Tac unit)
-                      `or_else`
-                      lpm (fun (a b: var Type0) (h: hyp (a /\ b)) ->
-                             and_elim' h () <: Tac unit)
-                      `or_else`
-                      lpm (fun (a b: var Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
-                             rewrite h () <: Tac unit)
-                      `or_else`
-                      lpm (fun (a: var Type0) (h: hyp a) (_: goal (squash a)) ->
-                             exact_hyp a h () <: Tac unit));;
                     done)
 
 // let example (a b: int) =
