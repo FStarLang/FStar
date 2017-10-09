@@ -130,12 +130,11 @@ val decrypt: k:key -> c:cipher -> ST msg
     invariant k h1 /\
     (b2t ind_cpa_rest_adv ==> Seq.mem (Entry res c) log)))
 
-let entry_has_cipher (c:cipher) (e:log_entry) = Entry?.c e = c
-
 let find_entry (log:seq log_entry) (c:cipher) : Pure log_entry
     (requires (exists p. Seq.mem (Entry p c) log))
-    (ensures (fun e -> Seq.mem e log /\ entry_has_cipher c e))
-  = let eopt = Seq.seq_find (entry_has_cipher c) log in
+    (ensures (fun e -> Seq.mem e log /\ Entry?.c e == c))
+  = let entry_has_cipher (c:cipher) (e:log_entry) = Entry?.c e = c in
+    let eopt = Seq.seq_find (entry_has_cipher c) log in
     FStar.Classical.exists_elim
              (Some? eopt /\ Seq.mem (Some?.v eopt) log /\ entry_has_cipher c (Some?.v eopt))
              ()
@@ -149,7 +148,6 @@ let decrypt k c =
   let raw_plain = CC.block_dec CC.AES_128_CBC raw_key iv c' in
   if ind_cpa_rest_adv then
     let log = m_read log in
-    let eopt = seq_find (entry_has_cipher c) log in
     let Entry plain _ = find_entry log c in
     split_entry plain c iv c';
     if not ind_cpa then begin
