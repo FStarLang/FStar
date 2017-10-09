@@ -17,7 +17,7 @@ all: .mgen install
 
 fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
 	$(FIND) . extracted -maxdepth 1 -name "*.ml" -print \
-		| $(SED) -e 's!\([^/]*/\)!!g' \
+		| xargs -n 1 basename \
 		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
 		| sort | uniq > $@
 	touch fstarlib.ml
