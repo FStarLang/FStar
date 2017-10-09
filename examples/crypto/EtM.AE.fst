@@ -46,13 +46,41 @@ let invariant (h:mem) (k:key) =
   Map.contains h.h (CPA.Key?.region k.ke) /\
   Seq.length log = Seq.length mac_log /\
   Seq.length mac_log = Seq.length cpa_log /\
-  (forall (i:int). indexable log i ==>
-    (let m1,t = Seq.index mac_log i in
-     let m2,c = Seq.index cpa_log i in
-     m1 = c /\
-     Seq.index log i == (m2,(c,t))
-    )
-  )
+  //Only valid ciphers are mac'd
+  (forall (c:cipher). {:pattern (Seq.mem c (get_mac_log h k))}
+     Seq.mem c (get_mac_log h k)
+      <==>
+     (exists (p:Plain.plain). Seq.mem (p, fst c) (get_cpa_log h k))) /\
+  //The AE log abstracts the mac and cpa logs     
+  (forall (p:Plain.plain) (c:cipher).{:pattern (Seq.mem (p, c) (get_log h k))}
+     Seq.mem (p,c) (get_log h k)
+     <==>
+     (Seq.mem c (get_mac_log h k) /\
+      Seq.mem (p, fst c) (get_cpa_log h k)))
+
+let test (k:key) (c:cipher) (h:mem) : 
+  Lemma (requires (invariant h k /\
+                   Seq.mem c (get_mac_log h k)))
+        (ensures  (Some? (seq_find (fun mc -> snd mc = c) (get_cpa_log h k))))
+  = ()        
+        
+  //   (
+  // (forall (i:int).{:pattern (Seq.index log i)}
+  //   indexable log i ==>
+  //   (let cipher,tag = Seq.index mac_log i in
+  //    let plain,cipher' = Seq.index cpa_log i in
+  //    cipher = cipher' /\
+  //    Seq.index log i == (plain,(cipher,tag))
+  //   )
+  // )
+
+let invariant_mem (k:key) (c:cipher) (p:Plain.plain) (h:mem)
+    : Lemma 
+    (requires (invariant h k /\
+               Seq.mem c (get_mac_log h k) /\
+               Seq.mem (p, fst c) (get_cpa_log h k)))
+    (ensures (Seq.mem (p, c) (get_log h k)))
+    = ()
 
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
@@ -84,11 +112,12 @@ val encrypt: k:key -> m:Plain.plain -> ST cipher
      /\ witnessed (at_least (Seq.length log0) (m, c) k.log)
      /\ invariant h1 k)))
 
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 100"
+// #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 100"
 let encrypt k plain =
   let c = CPA.encrypt k.ke plain in
   let t = MAC.mac k.km c in
   write_at_end k.log (plain, (c, t));
+  admit();
   (c, t)
 
 val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
@@ -96,22 +125,24 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
   (ensures (fun h0 res h1 ->
     modifies_none h0 h1 /\
     invariant h1 k /\
-      ( (b2t Ideal.uf_cma /\ Some? res) ==>
-        (Some? (seq_find (fun (_,c') -> c = c') (get_log h0 k)))
-
-(* CH*MK: If we wanted to also prove correctness of the EtM.AE
-          we would use this stronger post-condition:
-        Seq.mem (Some.v res, c) (m_sel h0 k.log) *)
-
-      )
-  ))
+    (Ideal.uf_cma /\ Some? res ==>
+     Seq.mem (Some?.v res, c) (get_log h0 k))))
+         
+//         (Some? (seq_find (fun (m,c') -> m = Some?.v res && c = c') (get_log h0 k)))
+// (* CH*MK: If we wanted to also prove correctness of the EtM.AE
+//           we would use this stronger post-condition:
+//         Seq.mem (Some.v res, c) (m_sel h0 k.log) *)
+//       )
+//   ))
 
 let decrypt k (c,tag) =
+  // assume (b2t (Ideal.uf_cma));
+  let h = FStar.HyperStack.ST.get () in
   if MAC.verify k.km c tag
-  then (
-    if (Ideal.uf_cma) then
-      Some (CPA.decrypt k.ke c)
-    else
-      Some (CPA.decrypt k.ke c)
-  )
-  else ( None )
+  then let msg = CPA.decrypt k.ke c in
+       let _ = admit() in
+       Some msg
+        // assert (Seq.mem (msg, c) (get_cpa_log h k));
+        // invariant_mem k (c, tag) msg h;
+        // Some msg)
+  else None

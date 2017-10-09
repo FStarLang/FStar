@@ -8,45 +8,58 @@ open FStar.Monotonic.RRef
 open EtM.Ideal
 
 open Platform.Bytes
-open CoreCrypto
-module CC = CoreCrypto
+module CC = EtM.CoreCrypto
 module B = Platform.Bytes
 
 open EtM.Plain
 
-let ivsize = blockSize AES_128_CBC
+let ivsize = CC.blockSize CC.AES_128_CBC
 let keysize = 16
 type aes_key = lbytes keysize (* = b:bytes{B.length b = keysize} *)
 type msg = plain
-type cipher = b:bytes{B.length b >= ivsize}
+type cipher = b:bytes
 (* MK: minimal cipher length twice blocksize? *)
 
-type log_t (r:rid) = m_rref r (seq (msg * cipher)) grows
+// type log_t (r:rid) = m_rref r (seq (msg * cipher)) grows
 
-(* CH*MK: If we wanted to also prove correctness of the EtM.AE
-          we would additionally need this
-type log_t (r:rid) (raw:aes_key) =
-  Monotonic.Seq.log_t r (m:msg & c:cipher{
-    let p = if ind_cpa then createBytes (length m) 0z else repr m in
-    let (iv,c') = split c ivsize in
-    c' = CoreCrypto.block_encrypt AES_128_CBC raw iv p}) *)
+type log_entry (raw:aes_key) =
+  | Entry: m:msg
+        -> iv:bytes
+        -> c:cipher{
+            let p = if ind_cpa then createBytes (length m) 0z else repr m in
+            c == CC.block_encrypt_spec CC.AES_128_CBC raw iv p}
+        -> log_entry raw
+       
+let log_t (r:rid) (raw:aes_key) =
+    Monotonic.Seq.log_t r (log_entry raw)
 
-noeq type key =
-  | Key: #region:rid -> raw:aes_key -> log:log_t region -> key
+noeq 
+type key =
+  | Key: #region:rid -> raw:aes_key -> log:log_t region raw -> key
 
+let log (k:key) (h:mem) 
+  : GTot (seq (log_entry (Key?.raw k))) =
+    m_sel h (Key?.log k)
+
+let invariant (k:key) (h:mem) = //distinct ivs
+    let log = log k h in
+    (forall i j. indexable log i /\ indexable log j /\ i<>j ==>
+            Entry?.iv (Seq.index log i) <> Entry?.iv (Seq.index log j))
+            
 let genPost parent (m0:mem) (k:key) (m1:mem) =
     modifies Set.empty m0 m1
   /\ extends k.region parent
   /\ stronger_fresh_region k.region m0 m1
   /\ m_contains k.log m1
   /\ m_sel m1 k.log == createEmpty
-
+  /\ invariant k m1
+  
 val keygen: parent:rid -> ST key
   (requires (fun _ -> True))
   (ensures  (genPost parent))
 
 let keygen parent =
-  let raw = random keysize in
+  let raw = CC.random keysize in
   let region = new_region parent in
   let log = alloc_mref_seq region createEmpty in
   Key #region raw log
