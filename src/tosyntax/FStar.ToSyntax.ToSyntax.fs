@@ -1212,8 +1212,8 @@ and not_ascribed t =
     | Ascribed _ -> false
     | _ ->  true
 
-// In this case, we might have implicits in the way
 and is_synth_by_tactic e t =
+    // In this case, we might have implicits in the way
     match t.tm with
     | App (l, r, Hash) -> is_synth_by_tactic e l
     | Var lid ->

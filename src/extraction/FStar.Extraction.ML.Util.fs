@@ -326,7 +326,7 @@ let rec uncurry_mlty_fun t =
 module RD = FStar.Reflection.Data
 
 exception CallNotImplemented
-let not_implemented_warning t = BU.format1 ". Tactic %s will not run natively.\n" t |> BU.print_warning
+let not_implemented_warning t = BU.print1_warning ". Tactic %s will not run natively.\n" t
 
 type emb_decl =
     | Embed
@@ -360,7 +360,7 @@ let mk_tactic_unembedding (args: list<mlexpr'>) =
     let app = match (List.length args) with
     | 1 -> MLE_App (from_tac, [with_ty MLTY_Top (MLE_App (unembed_tactic, List.map (with_ty MLTY_Top) args@[reify_tactic]))])
     | n ->
-        BU.print_warning (BU.format "Unembedding not defined for tactics of %d arguments" [BU.string_of_int n]);
+        BU.print1_warning "Unembedding not defined for tactics of %s arguments" (BU.string_of_int n);
         raise CallNotImplemented in
     MLE_Fun ([(tac_arg, MLTY_Top); ("()", MLTY_Top)], with_ty MLTY_Top app)
 

@@ -180,7 +180,7 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
     FStar.Errors.warn (range_of_lid lid)
-      (Util.format2 "Warning: the module declaration \"module %s\" \
+      (Util.format2 "The module declaration \"module %s\" \
          found in file %s does not match its filename. Dependencies will be \
          incorrect.\n" (string_of_lid lid true) filename)
 
@@ -226,8 +226,8 @@ let collect_one
           raise (Errors.Error ("let-open only supported for modules, not namespaces", (range_of_lid lid)))
         else
           FStar.Errors.warn (range_of_lid lid)
-            (Util.format1 "Warning: no modules in namespace %s and no file with \
-              that name either\n" (string_of_lid lid true))
+            (Util.format1 "No modules in namespace %s and no file with \
+              that name either" (string_of_lid lid true))
       end ;
       false
   in
@@ -241,8 +241,8 @@ let collect_one
           raise (Errors.Error (e, range_of_lid lid))
       | None ->
         FStar.Errors.warn (range_of_lid lid)
-          (Util.format1 "Warning: no modules in namespace %s and no file with \
-            that name either\n" (string_of_lid lid true))
+          (Util.format1 "No modules in namespace %s and no file with \
+            that name either" (string_of_lid lid true))
   in
 
   let record_open let_open lid =
@@ -639,7 +639,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
     let direct_deps, color = must (smap_try_find graph key) in
     match color with
     | Gray ->
-        Util.print1_warning "Warning: recursive dependency on module %s\n" key;
+        Util.print1_warning "Recursive dependency on module %s\n" key;
         let cycle = cycle |> List.map file_names_of_key in
         Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
         print_graph immediate_graph;

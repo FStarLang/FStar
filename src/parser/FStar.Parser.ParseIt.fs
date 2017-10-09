@@ -97,8 +97,8 @@ let check_extension fn =
 //val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 let parse fn =
   Parser.Util.warningHandler := (function
-    | e -> let msg = Printf.sprintf "Warning: %A\n" e in
-           Util.print_warning msg);
+    | e -> let msg = Printf.sprintf "%A\n" e in
+          Util.print_warning msg);
   Parser.Util.errorHandler := (function
     | e -> raise e);
 

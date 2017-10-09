@@ -43,7 +43,7 @@ let find_deps_if_needed verify_mode files =
           if basename (List.hd deps) = prims then
             List.tl deps
           else begin
-            Util.print1_error "dependency analysis did not find prims module %s?!" prims;
+            Util.print1_error "Dependency analysis did not find prims module %s?!" prims;
             exit 1
           end
         in

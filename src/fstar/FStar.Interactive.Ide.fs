@@ -1368,7 +1368,7 @@ let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
 
   if Options.verify_module () <> [] then
-     Util.print_warning "--ide: ignoring --verify_module";
+    Util.print_warning "--ide: ignoring --verify_module";
 
   if Option.isSome (Options.codegen ()) then
     Util.print_warning "--ide: ignoring --codegen";
