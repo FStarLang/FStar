@@ -28,49 +28,6 @@ module BU = FStar.Util
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
-type z3version =
-| Z3V_Unknown of string
-| Z3V of int * int * int
-
-let z3version_as_string = function
-    | Z3V_Unknown s -> BU.format1 "unknown version: %s" s
-    | Z3V (i, j, k) -> BU.format3 "%s.%s.%s" (BU.string_of_int i) (BU.string_of_int j) (BU.string_of_int k)
-
-let z3v_compare known (w1, w2, w3) =
-    match known with
-    | Z3V_Unknown _-> None
-    | Z3V (k1, k2, k3) -> Some(
-        if k1 <> w1 then w1 - k1 else
-        if k2 <> w2 then w2 - k2 else
-        w3 - k3
-    )
-
-let z3v_le known wanted =
-    match z3v_compare known wanted with
-    | None   -> false
-    | Some i -> i >= 0
-
-let _z3version : ref<option<z3version>> = BU.mk_ref None
-
-let get_z3version () =
-    let prefix = "Z3 version " in
-
-    match !_z3version with
-    | Some version -> version
-    | None ->
-        let _, out, _ = BU.run_proc (Options.z3_exe()) "-version" "" in
-        let out =
-            match splitlines out with
-            | x :: _ when starts_with x prefix -> begin
-                let x = trim_string (substring_from x (String.length prefix)) in
-                let x = try List.map int_of_string (split x ".") with _ -> [] in
-                match x with
-                | [i1; i2; i3] -> Z3V (i1, i2, i3)
-                | _ -> Z3V_Unknown out
-            end
-            | _ -> Z3V_Unknown out
-        in
-            _z3version := Some out; out
 
 (* Check the Z3 commit hash once, and issue a warning if it is not
    equal to the one that we are expecting from the Z3 url below
@@ -136,11 +93,6 @@ let check_z3hash () =
     end
 
 let ini_params () =
-  let z3_v = get_z3version () in
-  begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
-  else ()
-  end;
   check_z3hash ();
   (String.concat " "
                 (List.append
