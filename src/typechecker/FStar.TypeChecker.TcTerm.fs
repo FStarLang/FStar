@@ -140,7 +140,8 @@ let comp_check_expected_typ env e lc : term * lcomp * guard_t =
 (************************************************************************************************************)
 (* check_expected_effect: triggers a sub-effecting, WP implication, etc. if needed                          *)
 (************************************************************************************************************)
-let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t =
+let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * comp * guard_t =
+  let e, c = ec in
   let tot_or_gtot c = //expects U.is_pure_or_ghost_comp c
      if U.is_pure_comp c
      then mk_Total (U.comp_result c)
