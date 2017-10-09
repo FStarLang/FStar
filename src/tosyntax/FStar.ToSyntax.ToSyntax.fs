@@ -331,7 +331,7 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatAscribed (pat, _) -> gather_pattern_bound_vars_maybe_top acc pat
 
 let gather_pattern_bound_vars =
-  let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) (fun _ -> 0) in
+  let acc = new_set (fun id1 id2 -> if id1.idText = id2.idText then 0 else 1) in
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
 type bnd =
@@ -1271,21 +1271,86 @@ and desugar_comp r env t =
           let req = Requires (mk_term (Name C.true_lid) t.range Formula, None) in
           mk_term req t.range Type_level, Nothing
         in
+        let ens_true =
+          let ens = Ensures (mk_term (Name C.true_lid) t.range Formula, None) in
+          mk_term ens t.range Type_level, Nothing
+        in
+        let fail_lemma () =
+             let expected_one_of = ["Lemma post";
+                                    "Lemma (ensures post)";
+                                    "Lemma (requires pre) (ensures post)";
+                                    "Lemma post [SMTPat ...]";
+                                    "Lemma (ensures post) [SMTPat ...]";
+                                    "Lemma (ensures post) (decreases d)";
+                                    "Lemma (ensures post) (decreases d) [SMTPat ...]";
+                                    "Lemma (requires pre) (ensures post) (decreases d)";
+                                    "Lemma (requires pre) (ensures post) [SMTPat ...]";
+                                    "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
+             let msg = String.concat "\n\t" expected_one_of in
+             raise (Error("Invalid arguments to 'Lemma'; expected one of the following:\n\t" ^ msg, t.range))
+        in
         let args = match args with
-          | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
-          (* a single ensures clause *)
-          | [ens] -> [unit_tm;req_true;ens;nil_pat]
-          | [ens;smtpat] when is_smt_pat smtpat ->
-              [unit_tm;req_true;ens;smtpat]
-          | [req;ens] when (is_requires req && is_ensures ens) ->
-              [unit_tm;req;ens;nil_pat]
-          | [ens;dec] when (is_ensures ens && is_decreases dec) ->
-              [unit_tm;req_true;ens;nil_pat;dec]
-          | [ens;dec;smtpat] when (is_ensures ens && is_decreases dec && is_smt_pat smtpat) ->
-              [unit_tm;req_true;ens;smtpat;dec]
-          | [req;ens;dec] when (is_requires req && is_ensures ens && is_decreases dec) ->
-              [unit_tm;req;ens;nil_pat;dec]
-          | more -> unit_tm::more
+          | [] -> fail_lemma ()
+
+          | [req] //a single requires clause (cf. Issue #1208)
+               when is_requires req ->
+            fail_lemma()
+
+          | [smtpat]
+                when is_smt_pat smtpat ->
+            fail_lemma()
+
+          | [dec]
+                when is_decreases dec ->
+            fail_lemma()
+
+          | [ens] -> //otherwise, a single argument is always treated as just an ensures clause
+            [unit_tm;req_true;ens;nil_pat]
+
+          | [req;ens]
+                when is_requires req
+                  && is_ensures ens ->
+            [unit_tm;req;ens;nil_pat]
+
+          | [ens;smtpat] //either Lemma p [SMTPat ...]; or Lemma (ensures p) [SMTPat ...]
+                when not (is_requires ens)
+                  && not (is_smt_pat ens)
+                  && not (is_decreases ens)
+                  && is_smt_pat smtpat ->
+            [unit_tm;req_true;ens;smtpat]
+
+          | [ens;dec]
+                when is_ensures ens
+                  && is_decreases dec ->
+            [unit_tm;req_true;ens;nil_pat;dec]
+
+          | [ens;dec;smtpat]
+                when is_ensures ens
+                  && is_decreases dec
+                  && is_smt_pat smtpat ->
+            [unit_tm;req_true;ens;smtpat;dec]
+
+          | [req;ens;dec]
+                when is_requires req
+                  && is_ensures ens
+                  && is_decreases dec ->
+            [unit_tm;req;ens;nil_pat;dec]
+
+          | [req;ens;smtpat]
+                when is_requires req
+                  && is_ensures ens
+                  && is_smt_pat smtpat ->
+            unit_tm::args
+
+          | [req;ens;dec;smtpat]
+                when is_requires req
+                  && is_ensures ens
+                  && is_smt_pat smtpat
+                  && is_decreases dec ->
+            unit_tm::args
+
+          | _other ->
+            fail_lemma()
         in
         let head_and_attributes = fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma in
         head_and_attributes, args
@@ -1660,9 +1725,10 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
              let quals = if List.contains S.Assumption quals
                          then quals
                          else (if not (Options.ml_ish ()) then
-                                 BU.print2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
-                                                (Range.string_of_range se.sigrng) (Print.lid_to_string l);
-                               S.Assumption :: S.New :: quals) in
+                                 FStar.Errors.warn se.sigrng
+                                   (BU.format1 "Adding an implicit 'assume new' qualifier on %s"
+                                               (Print.lid_to_string l));
+                                 S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None se.sigrng in
@@ -2091,12 +2157,38 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     let env = push_doc env mname d.doc in
     env, [se]
 
+// JP: crappy formatting, use PPrint
+and mk_comment_attr (d: decl) =
+  let text, kv = match d.doc with | None -> "", [] | Some fsdoc -> fsdoc in
+  let summary = match List.assoc "summary" kv with | None -> "" | Some s -> "  " ^ s ^ "\n" in
+  let pp =
+    match List.assoc "type" kv with
+    | Some _ ->
+        "\n  " ^ FStar.Pprint.pretty_string 0.95 80 (FStar.Parser.ToDocument.signature_to_document d)
+    | _ ->
+        ""
+  in
+  let other = List.filter_map (fun (k, v) ->
+    if k <> "summary" && k <> "type" then
+      Some (k ^ ": " ^ v)
+    else
+      None
+  ) kv
+  in
+  let other = if other <> [] then String.concat "\n" other ^ "\n" else "" in
+  let str = summary ^ pp ^ other ^ text in
+  (* Building a fake term *)
+  let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") Delta_constant None in
+  let arg = U.exp_string str in
+  U.mk_app fv [ S.as_arg arg ]
+
 and desugar_decl env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
+  let attrs = mk_comment_attr d :: attrs in
   env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
@@ -2325,10 +2417,33 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigattrs = [] } in
     env, [se]
 
- let desugar_decls env decls =
+let desugar_decls env decls =
+  let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
-        let env, se = desugar_decl env d in
-        env, sigelts@se) (env, []) decls
+      let env, se = desugar_decl env d in
+      env, sigelts@se) (env, []) decls
+  in
+  (* Propagate the doc from a val to a let. *)
+  let rec forward acc = function
+    | se1 :: se2 :: sigelts ->
+        begin match se1.sigel, se2.sigel with
+        | Sig_declare_typ _, Sig_let _ ->
+            forward ({ se2 with sigattrs =
+              List.filter (function
+                | { n = Tm_app ({ n = Tm_fvar fv }, _) }
+                  when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
+                    true
+                | _ -> false
+              ) se1.sigattrs @ se2.sigattrs
+            } :: se1 :: acc) sigelts
+        | _ ->
+            forward (se1 :: acc) (se2 :: sigelts)
+        end
+    | sigelts ->
+        List.rev_append acc sigelts
+  in
+  env, forward [] sigelts
+
 
 let open_prims_all =
     [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;
@@ -2350,9 +2465,9 @@ let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * S
         Env.finish_module_or_interface env prev_mod in
   let (env, pop_when_done), mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
-      Env.prepare_module_or_interface true admitted env mname, mname, decls, true
+      Env.prepare_module_or_interface true admitted env mname Env.default_mii, mname, decls, true
     | Module(mname, decls) ->
-      Env.prepare_module_or_interface false false env mname, mname, decls, false in
+      Env.prepare_module_or_interface false false env mname Env.default_mii, mname, decls, false in
   let env, sigelts = desugar_decls env decls in
   let modul = {
     name = mname;
@@ -2386,14 +2501,28 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   then BU.print1 "%s\n" (Print.modul_to_string modul);
   (if pop_when_done then export_interface modul.name env else env), modul
 
-let desugar_file (env:env_t) (f:file) =
-  let env, mods = List.fold_left (fun (env, mods) m ->
-    let env, m = desugar_modul env m in
-    env, m::mods) (env, []) f in
-  env, List.rev mods
 
-let add_modul_to_env (m:Syntax.modul) (en: env) :env =
-  let en, pop_when_done = Env.prepare_module_or_interface false false en m.name in
-  let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
-  let env = Env.finish_module_or_interface en m in
-  if pop_when_done then export_interface m.name env else env
+/////////////////////////////////////////////////////////////////////////////////////////
+//External API for modules
+/////////////////////////////////////////////////////////////////////////////////////////
+let ast_modul_to_modul modul : withenv<S.modul> =
+    fun env ->
+        let env, modul = desugar_modul env modul in
+         modul,env
+
+let decls_to_sigelts decls : withenv<S.sigelts> =
+    fun env -> 
+        let env, sigelts = desugar_decls env decls in
+        sigelts, env
+
+let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
+    fun env ->
+        let env, modul = desugar_partial_modul modul env a_modul in
+        modul, env
+
+let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) : withenv<unit> =
+  fun en ->
+      let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
+      let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
+      let env = Env.finish en m in
+      (), (if pop_when_done then export_interface m.name env else env)

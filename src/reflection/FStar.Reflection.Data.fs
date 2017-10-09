@@ -24,16 +24,23 @@ type pattern =
 
 type branch = pattern * term
 
+type aqualv =
+    | Q_Implicit
+    | Q_Explicit
+
+type argv = term * aqualv
+
 type term_view =
     | Tv_Var    of binder
     | Tv_FVar   of fv
-    | Tv_App    of term * term
+    | Tv_App    of term * argv
     | Tv_Abs    of binder * term
     | Tv_Arrow  of binder * term
     | Tv_Type   of unit
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
     | Tv_Uvar   of int * typ
+    | Tv_Let    of binder * term * term
     | Tv_Match  of term * list<branch>
     | Tv_Unknown
 
@@ -42,14 +49,8 @@ type ctor =
     | Ctor of  name * typ
 type sigelt_view =
     | Sg_Inductive of name * list<binder> * typ * list<ctor>
+    | Sg_Let of fv * typ * term
     | Unk
-
-type norm_step =
-    | Simpl
-    | WHNF
-    | Primops
-    | Delta
-    | UnfoldOnly of list<fv>
 
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
@@ -64,7 +65,7 @@ let mk_refl_data_lid_as_term (s:string)  = tconst (fstar_refl_data_lid s)
 let fstar_refl_tdataconstr s = tdataconstr (fstar_refl_lid s)
 
 (* types *)
-let fstar_refl_term      = mk_refl_types_lid_as_term "term"
+let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
 let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
@@ -74,6 +75,12 @@ let fstar_refl_sigelt    = mk_refl_types_lid_as_term "sigelt"
 let fstar_refl_ctor      = mk_refl_types_lid_as_term "ctor"
 let fstar_refl_pattern   = mk_refl_syntax_lid_as_term "pattern"
 let fstar_refl_branch    = mk_refl_types_lid_as_term "branch"
+
+(* quals *)
+let ref_Q_Explicit_lid   = fstar_refl_data_lid "Q_Explicit"
+let ref_Q_Implicit_lid   = fstar_refl_data_lid "Q_Implicit"
+let ref_Q_Explicit       = tdataconstr ref_Q_Explicit_lid
+let ref_Q_Implicit       = tdataconstr ref_Q_Implicit_lid
 
 (* const *)
 let ref_C_Unit_lid  = fstar_refl_data_lid "C_Unit"
@@ -109,6 +116,7 @@ let ref_Tv_Type_lid    = fstar_refl_data_lid "Tv_Type"
 let ref_Tv_Refine_lid  = fstar_refl_data_lid "Tv_Refine"
 let ref_Tv_Const_lid   = fstar_refl_data_lid "Tv_Const"
 let ref_Tv_Uvar_lid    = fstar_refl_data_lid "Tv_Uvar"
+let ref_Tv_Let_lid     = fstar_refl_data_lid "Tv_Let"
 let ref_Tv_Match_lid   = fstar_refl_data_lid "Tv_Match"
 let ref_Tv_Unknown_lid = fstar_refl_data_lid "Tv_Unknown"
 
@@ -121,36 +129,24 @@ let ref_Tv_Type    = tdataconstr ref_Tv_Type_lid
 let ref_Tv_Refine  = tdataconstr ref_Tv_Refine_lid
 let ref_Tv_Const   = tdataconstr ref_Tv_Const_lid
 let ref_Tv_Uvar    = tdataconstr ref_Tv_Uvar_lid
+let ref_Tv_Let     = tdataconstr ref_Tv_Let_lid
 let ref_Tv_Match   = tdataconstr ref_Tv_Match_lid
 let ref_Tv_Unknown = tdataconstr ref_Tv_Unknown_lid
 
 (* inductives & sigelts *)
 let ref_Sg_Inductive_lid = fstar_refl_data_lid "Sg_Inductive"
+let ref_Sg_Let_lid       = fstar_refl_data_lid "Sg_Let"
 let ref_Unk_lid          = fstar_refl_data_lid "Unk"
 let ref_Ctor_lid         = fstar_refl_data_lid "Ctor"
 let ref_Sg_Inductive = tdataconstr ref_Sg_Inductive_lid
+let ref_Sg_Let       = tdataconstr ref_Sg_Let_lid
 let ref_Unk          = tdataconstr ref_Unk_lid
 let ref_Ctor         = tdataconstr ref_Ctor_lid
-
-let fstar_refl_norm_step = mk_refl_data_lid_as_term "norm_step"
-
-let ref_Simpl_lid      = fstar_refl_data_lid "Simpl"
-let ref_WHNF_lid       = fstar_refl_data_lid "WHNF"
-let ref_Primops_lid    = fstar_refl_data_lid "Primops"
-let ref_Delta_lid      = fstar_refl_data_lid "Delta"
-let ref_UnfoldOnly_lid = fstar_refl_data_lid "UnfoldOnly"
-
-let ref_Simpl          = tdataconstr ref_Simpl_lid
-let ref_WHNF           = tdataconstr ref_WHNF_lid
-let ref_Primops        = tdataconstr ref_Primops_lid
-let ref_Delta          = tdataconstr ref_Delta_lid
-let ref_UnfoldOnly     = tdataconstr ref_UnfoldOnly_lid
 
 let t_binder = tabbrev <| fstar_refl_types_lid "binder"
 let t_term = tabbrev <| fstar_refl_types_lid "term"
 let t_fv = tabbrev <| fstar_refl_types_lid "fv"
 let t_binders = tabbrev <| fstar_refl_types_lid "binders"
-let t_norm_step = tabbrev <| fstar_refl_types_lid "norm_step"
 
 let ord_Lt_lid = Ident.lid_of_path (["FStar"; "Order"; "Lt"]) Range.dummyRange
 let ord_Eq_lid = Ident.lid_of_path (["FStar"; "Order"; "Eq"]) Range.dummyRange

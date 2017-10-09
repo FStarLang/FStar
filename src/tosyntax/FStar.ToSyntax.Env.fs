@@ -95,7 +95,19 @@ type env = {
   docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
   remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
+  ds_hooks:             dsenv_hooks                       (* hooks that the interactive more relies onto for symbol tracking *)
 }
+and dsenv_hooks =
+  { ds_push_open_hook : env -> open_module_or_namespace -> unit;
+    ds_push_include_hook : env -> lident -> unit;
+    ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
+
+type withenv<'a> = env -> 'a * env
+
+let default_ds_hooks =
+  { ds_push_open_hook = (fun _ _ -> ());
+    ds_push_include_hook = (fun _ _ -> ());
+    ds_push_module_abbrev_hook = (fun _ _ _ -> ()) }
 
 type foundname =
   | Term_name of typ * bool // indicates if mutable
@@ -114,6 +126,11 @@ let transitive_exported_ids env lid =
     | None -> []
     | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
 let open_modules e = e.modules
+let open_modules_and_namespaces env =
+  List.filter_map (function
+                   | Open_module_or_namespace (lid, _info) -> Some lid
+                   | _ -> None)
+    env.scope_mods
 let set_current_module e l = {e with curmodule=Some l}
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
@@ -136,6 +153,8 @@ let qualify env id =
     | Some monad -> mk_field_projector_name_from_ident (qual (current_module env) monad) id
 let syntax_only env = env.syntax_only
 let set_syntax_only env b = { env with syntax_only = b }
+let ds_hooks env = env.ds_hooks
+let set_ds_hooks env hooks = { env with ds_hooks = hooks }
 let new_sigmap () = BU.smap_create 100
 let empty_env () = {curmodule=None;
                     curmonad=None;
@@ -151,7 +170,8 @@ let empty_env () = {curmodule=None;
                     expect_typ=false;
                     docs=new_sigmap();
                     remaining_iface_decls=[];
-                    syntax_only=false}
+                    syntax_only=false;
+                    ds_hooks=default_ds_hooks}
 
 let sigmap env = env.sigmap
 let has_all_in_scope env =
@@ -676,18 +696,14 @@ let record_cache_aux_with_filter =
         record_cache := List.tl !record_cache in
     let peek () = List.hd !record_cache in
     let insert r = record_cache := (r::peek())::List.tl (!record_cache) in
-    let commit () = match !record_cache with
-        | hd::_::tl -> record_cache := hd::tl
-        | _ -> failwith "Impossible" in
     (* remove private/abstract records *)
     let filter () =
         let rc = peek () in
-        let () = pop () in
         let filtered = List.filter (fun r -> not r.is_private_or_abstract) rc in
-        record_cache := filtered :: !record_cache
+        record_cache := filtered :: List.tl !record_cache
     in
     let aux =
-    (push, pop, peek, insert, commit)
+    (push, pop, peek, insert)
     in (aux, filter)
 
 let record_cache_aux =
@@ -697,24 +713,20 @@ let filter_record_cache =
     let (_, filter) = record_cache_aux_with_filter in filter
 
 let push_record_cache =
-    let push, _, _, _, _ = record_cache_aux in
+    let push, _, _, _ = record_cache_aux in
     push
 
 let pop_record_cache =
-    let _, pop, _, _, _ = record_cache_aux in
+    let _, pop, _, _ = record_cache_aux in
     pop
 
 let peek_record_cache =
-    let _, _, peek, _, _ = record_cache_aux in
+    let _, _, peek, _ = record_cache_aux in
     peek
 
 let insert_record_cache =
-    let _, _, _, insert, _ = record_cache_aux in
+    let _, _, _, insert = record_cache_aux in
     insert
-
-let commit_record_cache =
-    let _, _, _, _, commit = record_cache_aux in
-    commit
 
 let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match se.sigel with
   | Sig_bundle(sigs, _) ->
@@ -814,7 +826,7 @@ let try_lookup_dc_by_field_name env (fieldname:lident) =
         | Some r -> Some (set_lid_range (lid_of_ids (r.typename.ns @ [r.constrname])) (range_of_lid fieldname), r.is_record)
         | _ -> None
 
-let string_set_ref_new () = BU.mk_ref (BU.new_set BU.compare BU.hashcode)
+let string_set_ref_new () = BU.mk_ref (BU.new_set BU.compare)
 let exported_id_set_new () =
     let term_type_set = string_set_ref_new () in
     let field_set = string_set_ref_new () in
@@ -911,6 +923,7 @@ let push_namespace env ns =
      let _ = fail_if_curmodule env ns ns' in
      (ns', Open_module)
   in
+     env.ds_hooks.ds_push_open_hook env (ns', kd);
      push_scope_mod env (Open_module_or_namespace (ns', kd))
 
 let push_include env ns =
@@ -919,6 +932,7 @@ let push_include env ns =
     let ns0 = ns in
     match resolve_module_name env ns false with
     | Some ns ->
+      env.ds_hooks.ds_push_include_hook env ns;
       let _ = fail_if_curmodule env ns0 ns in
       (* from within the current module, include is equivalent to open *)
       let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module)) in
@@ -958,6 +972,7 @@ let push_module_abbrev env x l =
      in 'module A = B', B must be fully qualified *)
   if module_is_defined env l
   then let _ = fail_if_curmodule env l l in
+       env.ds_hooks.ds_push_module_abbrev_hook env x l;
        push_scope_mod env (Module_abbrev (x,l))
   else raise (Error(BU.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
@@ -980,7 +995,8 @@ let check_admits env =
       begin match try_lookup_lid env l with
         | None ->
           if not (Options.interactive ()) then
-            BU.print_string (BU.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
+            FStar.Errors.warn (range_of_lid l)
+              (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l));
           let quals = Assumption :: se.sigquals in
           BU.smap_add (sigmap env) l.str ({ se with sigquals = quals },
                                           false)
@@ -1055,17 +1071,6 @@ let pop () =
     env
   | _ -> failwith "Impossible: Too many pops"
 
-let commit_mark (env: env) =
-  commit_record_cache();
-  match !stack with
-  | _::tl ->
-    stack := tl;
-    env
-  | _ -> failwith "Impossible: Too many pops"
-
-let mark x = push x
-let reset_mark () = pop ()
-
 let export_interface (m:lident) env =
 //    printfn "Exporting interface %s" m.str;
     let sigelt_in_m se =
@@ -1094,7 +1099,57 @@ let finish_module_or_interface env modul =
   then check_admits env;
   finish env modul
 
-let prepare_module_or_interface intf admitted env mname = (* AR: open the pervasives namespace *)
+type exported_ids = {
+    exported_id_terms:list<string>;
+    exported_id_fields:list<string>
+}
+let as_exported_ids (e:exported_id_set) =
+    let terms = FStar.Util.set_elements (!(e Exported_id_term_type)) in
+    let fields = FStar.Util.set_elements (!(e Exported_id_field)) in
+    {exported_id_terms=terms;
+     exported_id_fields=fields}
+
+let as_exported_id_set (e:option<exported_ids>) =
+    match e with
+    | None -> exported_id_set_new ()
+    | Some e ->
+      let terms =
+          BU.mk_ref (FStar.Util.as_set e.exported_id_terms BU.compare) in
+      let fields =
+          BU.mk_ref (FStar.Util.as_set e.exported_id_fields BU.compare) in
+      function
+        | Exported_id_term_type -> terms
+        | Exported_id_field -> fields
+
+
+type module_inclusion_info = {
+    mii_exported_ids:option<exported_ids>;
+    mii_trans_exported_ids:option<exported_ids>;
+    mii_includes:option<list<lident>>
+}
+
+let default_mii = {
+    mii_exported_ids=None;
+    mii_trans_exported_ids=None;
+    mii_includes=None
+}
+
+let as_includes = function
+    | None -> BU.mk_ref []
+    | Some l -> BU.mk_ref l
+
+let inclusion_info env (l:lident) =
+   let mname = FStar.Ident.string_of_lid l in
+   let as_ids_opt m =
+      BU.map_opt (BU.smap_try_find m mname) as_exported_ids
+   in
+   {
+      mii_exported_ids = as_ids_opt env.exported_ids;
+      mii_trans_exported_ids = as_ids_opt env.trans_exported_ids;
+      mii_includes = BU.map_opt (BU.smap_try_find env.includes mname) (fun r -> !r)
+   }
+
+let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_info) = (* AR: open the pervasives namespace *)
   let prep env =
     let filename = BU.strcat (text_of_lid mname) ".fst" in
     let auto_open = FStar.Parser.Dep.hard_coded_dependencies filename in
@@ -1107,20 +1162,22 @@ let prepare_module_or_interface intf admitted env mname = (* AR: open the pervas
     in
     let namespace_of_module = if List.length mname.ns > 0 then [ (lid_of_ids mname.ns, Open_namespace) ] else [] in
     (* [scope_mods] is a stack, so reverse the order *)
-    let auto_open = List.rev (auto_open @ namespace_of_module) in
+    let auto_open = namespace_of_module @ List.rev auto_open in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
-    let () = BU.smap_add env.exported_ids mname.str (exported_id_set_new ()) in
+    let () = BU.smap_add env.exported_ids mname.str (as_exported_id_set mii.mii_exported_ids) in
     (* Create new empty set of transitively exported identifiers for the current module, for 'include' *)
-    let () = BU.smap_add env.trans_exported_ids mname.str (exported_id_set_new ()) in
+    let () = BU.smap_add env.trans_exported_ids mname.str (as_exported_id_set mii.mii_trans_exported_ids) in
     (* Create new empty list of includes for the current module *)
-    let () = BU.smap_add env.includes mname.str (BU.mk_ref []) in
-    {
+    let () = BU.smap_add env.includes mname.str (as_includes mii.mii_includes) in
+    let env' = {
       env with curmodule=Some mname;
       sigmap=env.sigmap;
       scope_mods = List.map (fun x -> Open_module_or_namespace x) auto_open;
       iface=intf;
-      admitted_iface=admitted }
+      admitted_iface=admitted } in
+    List.iter (fun op -> env.ds_hooks.ds_push_open_hook env' op) (List.rev auto_open);
+    env'
   in
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with

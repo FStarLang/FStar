@@ -18,7 +18,7 @@ let one_toplevel:
          | uu____66 -> FStar_Pervasives_Native.None)
 type mforest =
   | Leaf of (Prims.string,Prims.string) FStar_Pervasives_Native.tuple2
-  | Branch of mforest FStar_Util.smap
+  | Branch of mforest FStar_Util.smap[@@deriving show]
 let uu___is_Leaf: mforest -> Prims.bool =
   fun projectee  ->
     match projectee with | Leaf _0 -> true | uu____98 -> false
@@ -308,7 +308,7 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
 let generate: Prims.string Prims.list -> Prims.unit =
   fun files  ->
     let modules =
-      FStar_List.collect
+      FStar_List.map
         (fun fn  ->
            let uu____1308 = FStar_Parser_Driver.parse_file fn in
            FStar_Pervasives_Native.fst uu____1308) files in

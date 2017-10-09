@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "09f46e0b50f88cd88fa0db1b7e7c0551"
     ],
     [
       "FStar.DM4F.Heap.__proj__Mkheap_rec__item__memory",
@@ -15,17 +16,35 @@
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "a56d6512e64db227c70c636784ac6a25"
     ],
-    [ "FStar.DM4F.Heap.__proj__Mkref__item__addr", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.Heap.__proj__Mkref__item__init", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.Heap.__proj__Mkref__item__addr",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9f20871022d62f091ecf258f9d0aef80"
+    ],
+    [
+      "FStar.DM4F.Heap.__proj__Mkref__item__init",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4b36c3cd7f2fa04521066e767d89deea"
+    ],
     [
       "FStar.DM4F.Heap.compare_addrs",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
-      0
+      0,
+      "68afd39650c399fcb3acb96d87c83d47"
     ],
     [
       "FStar.DM4F.Heap.compare_addrs",
@@ -36,7 +55,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "46bfa8df8c080c0c19210395a4beb6f5"
     ],
     [
       "FStar.DM4F.Heap.compare_addrs",
@@ -44,7 +64,8 @@
       2,
       1,
       [ "@query", "equation_FStar.DM4F.Heap.addr_of" ],
-      0
+      0,
+      "69fa49839bb3d36c87cd1e6be1f91e54"
     ],
     [
       "FStar.DM4F.Heap.compare_addrs",
@@ -55,9 +76,9 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "e5407f4bf6d17293e6a412e1bffff0eb"
     ],
-    [ "FStar.DM4F.Heap.contains_a_well_typed", 1, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.DM4F.Heap.sel_tot",
       1,
@@ -75,7 +96,8 @@
         "projection_inverse_Prims.Mkdtuple2__1",
         "refinement_interpretation_FStar.DM4F.Heap_Tm_refine_33c56d04cd2b4870da0423961c379a8a"
       ],
-      0
+      0,
+      "b58d6e6299e5fb6362c272c878524088"
     ],
     [
       "FStar.DM4F.Heap.sel",
@@ -86,7 +108,8 @@
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_FStar.DM4F.Heap_Tm_refine_21289dc55e15f9aa09f9343c2dd9dd86"
       ],
-      0
+      0,
+      "e5b4771db6f02684f0dc3c70ee1f2fee"
     ],
     [
       "FStar.DM4F.Heap.upd_tot",
@@ -113,7 +136,8 @@
         "refinement_interpretation_FStar.DM4F.Heap_Tm_refine_66b29a86794cf4ad2cb1691b30550eae",
         "token_correspondence_FStar.DM4F.Heap.__proj__Mkheap_rec__item__memory"
       ],
-      0
+      0,
+      "92b7ba4686a5baafca28ab824b19feb7"
     ],
     [
       "FStar.DM4F.Heap.upd_tot",
@@ -124,7 +148,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "49a4ba9299bca11d76116804116dc1b3"
     ],
     [
       "FStar.DM4F.Heap.upd",
@@ -153,7 +178,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.DM4F.Heap.__proj__Mkheap_rec__item__memory"
       ],
-      0
+      0,
+      "c1c741fd9b56dd7fb42c849fcdd3592a"
     ],
     [
       "FStar.DM4F.Heap.upd",
@@ -164,7 +190,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "778a6ffd7803abeebf999935f23318dd"
     ],
     [
       "FStar.DM4F.Heap.upd",
@@ -175,7 +202,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "97a37eada06531122f808152f8cd4455"
     ],
     [
       "FStar.DM4F.Heap.alloc",
@@ -228,7 +256,8 @@
         "typing_FStar.DM4F.Heap.__proj__Mkheap_rec__item__next_addr",
         "typing_FStar.DM4F.Heap_Tm_abs_8e79f8338fa78ede6dd0d546095ef0e8"
       ],
-      0
+      0,
+      "f04a14569399135f02a9b114e354e0fb"
     ],
     [
       "FStar.DM4F.Heap.alloc",
@@ -239,7 +268,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "7565d067378f36706e3b25313dbbdbfa"
     ],
     [
       "FStar.DM4F.Heap.contains_a_well_typed_implies_contains",
@@ -253,7 +283,8 @@
         "equation_FStar.DM4F.Heap.contains_a_well_typed",
         "fuel_guarded_inversion_FStar.DM4F.Heap.ref", "unit_typing"
       ],
-      0
+      0,
+      "c342ccd350f11321459b87ef27425541"
     ],
     [
       "FStar.DM4F.Heap.contains_addr_of",
@@ -264,7 +295,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "91ad54aa89414df16c538d7c92cdce20"
     ],
     [
       "FStar.DM4F.Heap.contains_addr_of",
@@ -277,7 +309,8 @@
         "equation_FStar.DM4F.Heap.contains",
         "fuel_guarded_inversion_FStar.DM4F.Heap.ref", "unit_typing"
       ],
-      0
+      0,
+      "b196bede47cf0de135885553f8a9d16e"
     ],
     [
       "FStar.DM4F.Heap.fresh",
@@ -288,7 +321,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "f9ae90d2812544373340a9c8fd22661c"
     ],
     [
       "FStar.DM4F.Heap.fresh",
@@ -299,7 +333,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "c54b3f7716026fdac7f23da46cab133d"
     ],
     [
       "FStar.DM4F.Heap.only",
@@ -310,9 +345,18 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "324cf3e19e72a0a1a70f456504b64f5f"
     ],
-    [ "FStar.DM4F.Heap.alloc_lemma", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.Heap.alloc_lemma",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2b9de019cb6bc959a35d3e881254460c"
+    ],
     [
       "FStar.DM4F.Heap.alloc_lemma",
       2,
@@ -354,7 +398,8 @@
         "typing_FStar.DM4F.Heap.__proj__Mkheap_rec__item__next_addr",
         "typing_FStar.DM4F.Heap.alloc", "unit_typing"
       ],
-      0
+      0,
+      "2010bc9e7f8eac7853f1741c56e8c7f6"
     ],
     [
       "FStar.DM4F.Heap.sel_same_addr_of",
@@ -377,7 +422,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
       ],
-      0
+      0,
+      "7931d9a4cdf94aa3c55c608e3543f9c9"
     ],
     [
       "FStar.DM4F.Heap.sel_same_addr_of",
@@ -388,18 +434,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
-    ],
-    [
-      "FStar.DM4F.Heap.sel_same_addr_of",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
+      0,
+      "6744b58c10f6df5df98f7958775ee50c"
     ],
     [
       "FStar.DM4F.Heap.sel_upd1",
@@ -410,7 +446,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "3909ede7d138cc73f262d935415d6a2d"
     ],
     [
       "FStar.DM4F.Heap.sel_upd1",
@@ -458,7 +495,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
       ],
-      0
+      0,
+      "1211f18a3fc2e27787b000bc5d8699ac"
     ],
     [
       "FStar.DM4F.Heap.sel_upd2",
@@ -469,7 +507,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "b9cd4ebab4bdce52a570a70f8c66539f"
     ],
     [
       "FStar.DM4F.Heap.sel_upd2",
@@ -506,7 +545,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
       ],
-      0
+      0,
+      "b2f4556fc2763d51fe3a4ae9a4685e00"
     ],
     [
       "FStar.DM4F.Heap.upd_sel",
@@ -554,7 +594,8 @@
         "typing_FStar.DM4F.Heap.contains_a_well_typed",
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
-      0
+      0,
+      "a60623786e20524be2633717aafead32"
     ],
     [
       "FStar.DM4F.Heap.emp",
@@ -571,7 +612,8 @@
         "projection_inverse_FStar.Pervasives.Native.None_a",
         "token_correspondence_FStar.DM4F.Heap.__proj__Mkheap_rec__item__memory"
       ],
-      0
+      0,
+      "b24d0967075b80644872825cc40eeffc"
     ],
     [
       "FStar.DM4F.Heap.in_dom_emp",
@@ -592,7 +634,8 @@
         "token_correspondence_FStar.DM4F.Heap.__proj__Mkheap_rec__item__memory",
         "unit_typing"
       ],
-      0
+      0,
+      "42c6278cc7b2d46cd73c774ec0a6bfb0"
     ],
     [
       "FStar.DM4F.Heap.upd_contains",
@@ -657,7 +700,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
       ],
-      0
+      0,
+      "594339671d0b2886b7a63730e41607bf"
     ],
     [
       "FStar.DM4F.Heap.upd_contains_a_well_typed",
@@ -719,7 +763,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
       ],
-      0
+      0,
+      "b4e201427fd7e91ba10fbae8bc303afa"
     ],
     [
       "FStar.DM4F.Heap.modifies",
@@ -730,7 +775,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "c5bfb617443982fc6bb8e290d157fbaf"
     ],
     [
       "FStar.DM4F.Heap.modifies",
@@ -741,7 +787,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "4e24ececcd59db1141c15ba74612ff9e"
     ],
     [
       "FStar.DM4F.Heap.modifies",
@@ -752,7 +799,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "a5e037deceb9527e90476239b37c2ca3"
     ],
     [
       "FStar.DM4F.Heap.lemma_modifies_trans",
@@ -763,7 +811,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "c37222ef758a7cf2ceadc9ab1388d162"
     ],
     [
       "FStar.DM4F.Heap.lemma_modifies_trans",
@@ -776,7 +825,8 @@
         "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_typing"
       ],
-      0
+      0,
+      "cb1722a4adb9b655bbb933d844538295"
     ],
     [
       "FStar.DM4F.Heap.lemma_modifies_trans",
@@ -801,7 +851,8 @@
         "typing_FStar.DM4F.Heap.addr_of", "typing_FStar.Set.mem",
         "typing_FStar.Set.union", "unit_typing"
       ],
-      0
+      0,
+      "5388ed2ddcee43218a9fb5707ea11893"
     ],
     [
       "FStar.DM4F.Heap.lemma_sel_tot_is_sel_if_contains_a_well_typed",
@@ -816,7 +867,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
       ],
-      0
+      0,
+      "f7d26a5b0cea3db74d0092a2cd82a096"
     ],
     [
       "FStar.DM4F.Heap.lemma_upd_tot_is_upd_if_contains_a_well_typed",
@@ -831,7 +883,8 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
         "unit_typing"
       ],
-      0
+      0,
+      "1f52dbe4c3f1199e7b3e02fb82f9e4ec"
     ],
     [
       "FStar.DM4F.Heap.op_Hat_Plus_Plus",
@@ -844,7 +897,8 @@
         "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_typing"
       ],
-      0
+      0,
+      "c430ea04c3bd3161e18557579696866f"
     ],
     [
       "FStar.DM4F.Heap.op_Hat_Plus_Plus",
@@ -855,7 +909,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "f49f96c15667415909711c87bb96d6e0"
     ],
     [
       "FStar.DM4F.Heap.op_Plus_Plus_Hat",
@@ -868,7 +923,8 @@
         "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_typing"
       ],
-      0
+      0,
+      "77217e715bc2181c3ab8580c7358fcc4"
     ],
     [
       "FStar.DM4F.Heap.op_Plus_Plus_Hat",
@@ -879,7 +935,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "e023f81a67615efb7a8ec702231df341"
     ],
     [
       "FStar.DM4F.Heap.op_Hat_Plus_Hat",
@@ -890,7 +947,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "4f0e3abc5fbfdb7fdbbfc3a8014168bf"
     ],
     [
       "FStar.DM4F.Heap.op_Hat_Plus_Hat",
@@ -901,7 +959,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "e342f80a3744ba0ccfe9a6bbf459b2aa"
     ]
   ]
 ]

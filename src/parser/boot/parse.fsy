@@ -92,8 +92,6 @@ open FStar.String
 %token LONG_LEFT_ARROW
 %token LPAREN
 %token LPAREN_RPAREN
-%token L_FALSE
-%token L_TRUE
 %token MATCH
 %token MINUS
 %token MODULE
@@ -135,7 +133,7 @@ open FStar.String
 %token SEMICOLON
 %token SEMICOLON_SEMICOLON
 %token SQUIGGLY_RARROW
-%token <bytes> STRING
+%token <string> STRING
 %token SUBKIND
 %token SUBTYPE
 %token SUB_EFFECT
@@ -287,7 +285,7 @@ option_string_:
     {let s0 = $1 in
 let x =
   let s = s0 in
-               ( string_of_bytes s )
+               ( s )
 in
     ( Some x )}
 
@@ -620,7 +618,7 @@ pragma:
     {let (_1, s0) = ((), $2) in
 let s =
   let s = s0 in
-               ( string_of_bytes s )
+               ( s )
 in
       ( SetOptions s )}
 | PRAGMA_RESET_OPTIONS option_string_
@@ -965,7 +963,7 @@ letqualifier:
 aqual:
   EQUALS
     {let _1 = () in
-              ( print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
+              ( warn (lhs parseState) "The '=' notation for equality constraints on binders is deprecated; use '$' instead";
                                         Equality )}
 | aqualUniverses
     {let q = $1 in
@@ -2009,12 +2007,6 @@ atomicTermNotQUident:
 | constant
     {let c = $1 in
                ( mk_term (Const c) (rhs parseState 1) Expr )}
-| L_TRUE
-    {let _1 = () in
-             ( mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type_level )}
-| L_FALSE
-    {let _1 = () in
-              ( mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type_level )}
 | opPrefixTerm_atomicTermNotQUident_
     {let x = $1 in
     ( x )}

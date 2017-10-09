@@ -1,5 +1,5 @@
 [
-  "Ÿ1Ô:çM$ÖDV3˝2R6ø",
+  "1\u0011\u0006\u0013\u0011ÿ)≈ì\\÷pΩÇ\u0016ÿ",
   [
     [
       "Ex12a1.Cap.capRead",
@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
-      0
+      0,
+      "1a0313c2f312ae5aa86702a470dbb4b0"
     ],
     [
       "Ex12a1.Cap.issue",
@@ -18,22 +19,28 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_Ex12a1.Cap.UTF8_inj", "bool_inversion",
-        "data_typing_intro_FStar.Pervasives.V@tok", "equation_Ex12.MAC.pkey",
-        "equation_Ex12.MAC.tag", "equation_Ex12.SHA1.tag",
+        "equation_Ex12.MAC.key_entry", "equation_Ex12.MAC.key_prop",
+        "equation_Ex12.MAC.pkey", "equation_Ex12.MAC.pred_to_dec_ghost",
         "equation_Ex12.SHA1.text", "equation_Ex12a.ACLs.canRead",
         "equation_Ex12a.ACLs.filename", "equation_Ex12a1.Cap.capRead",
         "equation_Platform.Bytes.bytes",
+        "function_token_typing_Ex12a1.Cap.capRead",
         "function_token_typing_Ex12a1.Cap.k",
         "function_token_typing_Platform.Bytes.bytes",
+        "interpretation_Ex12.MAC_Tm_abs_97c0e073b8cc174491198c8e97c1e166",
         "primitive_Prims.op_Equality",
-        "refinement_interpretation_Ex12.MAC_Tm_refine_bb3768dcb8aba5249319ea75b1a0eaec",
+        "refinement_interpretation_Ex12.MAC_Tm_refine_572b7c2b1bdf079fa791115963523fc8",
         "refinement_interpretation_Ex12a1.Cap_Tm_refine_47fc00d9af5452fdc3a5434abc5c3970",
+        "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
         "string_inversion", "token_correspondence_Ex12a1.Cap.capRead",
-        "typing_Ex12a.ACLs.canRead", "typing_Platform.Bytes.equalBytes",
-        "typing_Platform.Bytes.utf8"
+        "typing_Ex12.MAC.pred_to_dec_ghost", "typing_Ex12a.ACLs.canRead",
+        "typing_Ex12a1.Cap.capRead",
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
+        "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
-      0
+      0,
+      "5c7cb1d410c5c8da682212ec288a033e"
     ],
     [
       "Ex12a1.Cap.redeem",
@@ -60,7 +67,8 @@
         "string_inversion", "token_correspondence_Ex12a1.Cap.capRead",
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
-      0
+      0,
+      "46a9975977cab4e33d1bab2339a26e9b"
     ]
   ]
 ]

@@ -41,7 +41,6 @@ EtM.AE.fst
 
 
 FSTAR_HOME=../../../../
-HINTS_ENABLED?=--use_hints
 include ../Makefile.include
 
 verify-%: __force__

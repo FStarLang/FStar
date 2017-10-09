@@ -44,7 +44,8 @@ let string_of_time (t:time) = t.ToString "MM-dd-yyyy"
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
+
 let max_int = System.Int32.MaxValue
 
 type proc = {m:Object;
@@ -69,7 +70,7 @@ let atomically (f:unit -> 'a) =
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
 
-let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
+let start_process (raw:bool) (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
     let driverOutput = new StringBuilder() in
@@ -94,9 +95,11 @@ let start_process (id:string) (prog:string) (args:string) (cond:string -> string
                     if !killed then ()
                     else
                         ignore <| driverOutput.Append(args.Data);
-                        ignore <| driverOutput.Append("\n");
-                        if null = args.Data
-                            then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+                        if not raw then (
+                            ignore <| driverOutput.Append("\n");
+                            if null = args.Data
+                                then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+                        );
                         if null = args.Data || cond id args.Data
                         then
                             System.Threading.Monitor.Enter(signal);
@@ -149,8 +152,8 @@ let kill_process (p:proc) =
     System.Threading.Monitor.Exit(p.m);
     p.proc.WaitForExit()
 
-let launch_process (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
-  let proc = start_process id prog args cond in
+let launch_process (raw:bool) (id:string) (prog:string) (args:string) (input:string) (cond:string -> string -> bool) : string =
+  let proc = start_process raw id prog args cond in
   let output = ask_process proc input in
   kill_process proc; output
 
@@ -197,8 +200,8 @@ let set_is_empty ((s, _):set<'a>) =
     | [] -> true
     | _ -> false
 
-let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> =
-    ([], fun x y -> cmp x y = 0)
+let as_set (l:list<'a>) (cmp:('a -> 'a -> int)) = (l, fun x y -> cmp x y = 0)
+let new_set (cmp:'a -> 'a -> int) : set<'a> = as_set [] cmp
 
 let set_elements ((s1, eq):set<'a>) :list<'a> =
    let rec aux out = function
@@ -228,8 +231,11 @@ let fifo_set_is_empty ((s, _):fifo_set<'a>) =
     | [] -> true
     | _ -> false
 
-let new_fifo_set (cmp:'a -> 'a -> int) (hash:'a -> int) : fifo_set<'a> =
-    ([], fun x y -> cmp x y = 0)
+let as_fifo_set (l:list<'a>) (cmp:'a -> 'a -> int) : fifo_set<'a> =
+    (l, fun x y -> cmp x y = 0)
+
+let new_fifo_set (cmp:'a -> 'a -> int) : fifo_set<'a> =
+    as_fifo_set [] cmp
 
 (* The input list [s1] is in reverse order and we need to keep only the last       *)
 (* occurence of each elements in s1. Note that accumulating over such elements     *)
@@ -348,8 +354,8 @@ type json =
 | JsonBool of bool
 | JsonInt of int
 | JsonStr of string
-| JsonList of json list
-| JsonAssoc of (string * json) list
+| JsonList of list<json>
+| JsonAssoc of list<(string * json)>
 
 type printer = {
   printer_prinfo: string -> unit;
@@ -381,6 +387,8 @@ let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
 
 let char_of_int (i:int) = char i
 let int_of_string (s:string) = int_of_string s
+let safe_int_of_string (s:string) =
+  try Some <| int_of_string s with :? System.FormatException -> None
 let int_of_char (s:char) = int32 s
 let int_of_byte (s:byte) = int32 s
 let int_of_uint8 (i:uint8) = int32 i
@@ -797,9 +805,23 @@ let print_endline x =
 let map_option f opt = Option.map f opt
 
 let save_value_to_file (fname:string) value =
-  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`. this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
-  use writer = new System.IO.StreamWriter(fname) in
-  output_value writer value
+  try
+    use writer = new System.IO.FileStream(fname,
+                                          FileMode.OpenOrCreate,
+                                          FileAccess.Write,
+                                          FileShare.Write) in
+    let formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter() in
+    formatter.Serialize(writer, value)
+  with
+  | e ->
+    printfn "Failed to write value to file because: %A" e;
+    raise e
+
+//
+//  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`.
+//  //this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
+//  use writer = new System.IO.StreamWriter(fname) in
+//  output_value writer value
 
 let load_value_from_file (fname:string) =
   // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`.
@@ -813,7 +835,8 @@ let load_value_from_file (fname:string) =
     let result = formatter.Deserialize(reader) :?> 'a in
     Some result
   with
-  | _ ->
+  | e ->
+    printfn "Failed to load file because: %A" e;
     None
 
 let print_exn (e: exn): string =
@@ -843,16 +866,22 @@ let ensure_decimal (s: string) =
   else
     s
 
-
+let measure_execution_time tag f =
+  let timer = new System.Diagnostics.Stopwatch () in
+  timer.Start();
+  let retv = f () in
+  print2 "Execution time (%s): %s ms" tag (string_of_int64 timer.ElapsedMilliseconds);
+  retv
 
 (** Hints. *)
 type hint = {
-    hint_name: string; //name associated to the top-level term in the source program
-    hint_index: int;   //the nth query associated with that top-level term
+    hint_name:string; //name associated to the top-level term in the source program
+    hint_index:int;   //the nth query associated with that top-level term
     fuel:int;  //fuel for unrolling recursive functions
     ifuel:int; //fuel for inverting inductive datatypes
     unsat_core:option<(list<string>)>; //unsat core, if requested
-    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+    query_elapsed_time:int; //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+    hash:option<string>; //hash of the smt2 query that last succeeded
 }
 
 type hints = list<(option<hint>)>
@@ -877,7 +906,8 @@ let internal json_db_from_hints_db (hdb) : json_db =
             h.fuel :> System.Object;
             h.ifuel :> System.Object;
             (json_unsat_core_from_unsat_core h.unsat_core) :> System.Object;
-            h.query_elapsed_time :> System.Object
+            h.query_elapsed_time :> System.Object;
+            (match h.hash with Some(h) -> h | _ -> "") :> System.Object;
         |]
     let json_hints_from_hints (hs) = List.map (fun x ->
         match x with
@@ -898,14 +928,22 @@ let internal hints_db_from_json_db (jdb : json_db) : hints_db =
         if  h = null then None
         else let ha = h :?> System.Object [] in
              if (Array.length ha) = 0 then None else
-                if (Array.length ha) <> 6 then failwith "malformed hint" else
-                Some {
+                if (Array.length ha) <> 6 && (Array.length ha) <> 7
+                then failwith "malformed hint"
+                else Some {
                     hint_name=ha.[0] :?> System.String;
                     hint_index=ha.[1] :?> int;
                     fuel=ha.[2] :?> int;
                     ifuel=ha.[3] :?> int;
                     unsat_core=unsat_core_from_json_unsat_core ha.[4];
-                    query_elapsed_time=ha.[5] :?> int
+                    query_elapsed_time=ha.[5] :?> int;
+                  (* This conditional below is for dealing with old-style hint files
+                     that lack a query-hashes field. We should remove this
+                     case once we definitively remove support for old hints *)
+                    hash=(if ((Array.length ha) >= 7) then
+                            let h = (ha.[6] :?> System.String) in
+                            if h <> "" then Some(h) else None
+                          else None)
                 } in
     let hints_from_json_hints (hs : System.Object) =
         let hint_list =
@@ -969,7 +1007,8 @@ let rec json_to_obj js =
   | JsonInt i -> i :> obj
   | JsonStr s -> s :> obj
   | JsonList l -> List.map json_to_obj l :> obj
-  | JsonAssoc a -> dict [ for (k, v) in a -> (k, json_to_obj v) ] :> obj
+  | JsonAssoc a ->
+    Dictionary<string, obj>(dict [ for (k, v) in a -> (k, json_to_obj v) ]) :> obj
 
 let rec obj_to_json (o: obj) : option<json> =
   let rec aux (o : obj) : json =

@@ -62,14 +62,27 @@ let set_hint_correlator env se =
 
 let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current_module env))
 
-let is_native_tactic env (tac_lid: lident) (h: term) =
+let get_tactic_fv env (tac_lid: lident) (h: term) =
   match h.n with
   | Tm_uinst (h', _) ->
     (match (SS.compress h').n with
-      | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) ->
-                env.is_native_tactic tac_lid
-      | _ -> false)
-  | _ -> false
+      | Tm_fvar fv when (S.fv_eq_lid fv PC.tactic_lid) -> Some fv
+      | _ -> None)
+  | _ -> None
+
+let is_builtin_tactic md =
+  let path = Ident.path_of_lid md in
+  if List.length(path) > 2 then
+    match fst (List.splitAt 2 path) with
+    | ["FStar"; "Tactics"]
+    | ["FStar"; "Reflection"] -> true
+    | _ -> false
+  else false
+
+(* This reference keeps a list of modules which contain user-defined tactics. It is only
+   modified in tc_decl to add these modules and only read in FStar.Main (via FStar.Universal,
+   in order to compile these modules when generating native tactics. *)
+let user_tactics_modules: ref<list<string>> = BU.mk_ref []
 
 (*****************Type-checking the signature of a module*****************************)
 
@@ -386,7 +399,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                   flags = []
                 } in
                 U.arrow bs (S.mk_Comp c)
-              | _ -> failwith "" in
+              | _ -> failwith "Impossible (expected_k is an arrow)" in
 
           (* printfn "Checked action %s against type %s\n" *)
           (*         (Print.term_to_string act_defn) *)
@@ -411,7 +424,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   let signature = match effect_params, (SS.compress t).n with
     | [], _ -> t
     | _, Tm_arrow(_, c) -> U.comp_result c
-    | _ -> failwith "Impossible" in
+    | _ -> failwith "Impossible : t is an arrow" in
   let close n ts =
     let ts = SS.close_univ_vars_tscheme univs (SS.close_tscheme effect_params ts) in
     // We always close [bind_repr], even though it may be [Tm_unknown]
@@ -419,12 +432,12 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
     let m = List.length (fst ts) in
     if n >= 0 && not (is_unknown (snd ts)) && m <> n
     then begin
-        let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
-        failwith (BU.format3
-                  "The effect combinator is %s (n=%s) (%s)"
-                  error
-                  (string_of_int n)
-                  (Print.tscheme_to_string ts))
+      let error = if m < n then "not universe-polymorphic enough" else "too universe-polymorphic" in
+      let err_msg =
+        BU.format3 "The effect combinator is %s (n=%s) (%s)"
+          error (string_of_int n) (Print.tscheme_to_string ts)
+      in
+      raise (Error (err_msg, (snd ts ).pos))
     end ;
     ts in
   let close_action act =
@@ -471,6 +484,10 @@ let cps_and_elaborate env ed =
   let signature, _ = tc_trivial_guard env signature_un in
   // We will open binders through [open_and_check]
 
+  let raise_error : string -> 'a = fun err_msg ->
+    raise (Error (err_msg, signature.pos))
+  in
+
   let effect_binders = List.map (fun (bv, qual) ->
     { bv with sort = N.normalize [ N.EraseUniverses ] env bv.sort }, qual
   ) effect_binders in
@@ -484,7 +501,7 @@ let cps_and_elaborate env ed =
     | Tm_arrow ([(a, _)], effect_marker) ->
         a, effect_marker
     | _ ->
-        failwith "bad shape for effect-for-free signature"
+        raise_error "bad shape for effect-for-free signature"
   in
 
   (* TODO : having "_" as a variable name can create a really strange shadowing
@@ -574,7 +591,7 @@ let cps_and_elaborate env ed =
               (match what' with
                | None -> "None"
                | Some rc -> FStar.Ident.text_of_lid rc.residual_effect)
-          in failwith error_msg
+          in raise_error error_msg
         in
         begin match what' with
         | None -> fail ()
@@ -600,7 +617,7 @@ let cps_and_elaborate env ed =
               (Some rc_gtot)
 
       | _ ->
-          failwith "unexpected shape for return"
+          raise_error "unexpected shape for return"
   in
 
   let return_wp =
@@ -609,7 +626,7 @@ let cps_and_elaborate env ed =
     | Tm_abs (b1 :: b2 :: bs, body, what) ->
         U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
     | _ ->
-        failwith "unexpected shape for return"
+        raise_error "unexpected shape for return"
   in
   let bind_wp =
     match (SS.compress bind_wp).n with
@@ -618,7 +635,7 @@ let cps_and_elaborate env ed =
         let r = S.lid_as_fv PC.range_lid (S.Delta_defined_at_level 1) None in
         U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
     | _ ->
-        failwith "unexpected shape for bind"
+        raise_error "unexpected shape for bind"
   in
 
   let apply_close t =
@@ -628,23 +645,25 @@ let cps_and_elaborate env ed =
       close effect_binders (mk (Tm_app (t, snd (U.args_of_binders effect_binders))))
   in
   let rec apply_last f l = match l with
-  | [] -> failwith "empty path.."
-  | [a] -> [f a]
-  | (x::xs) -> x :: (apply_last f xs) in
+    | [] -> failwith "empty path.."
+    | [a] -> [f a]
+    | (x::xs) -> x :: (apply_last f xs)
+  in
   let register name item =
     let p = path_of_lid ed.mname in
     let p' = apply_last (fun s -> "__" ^ s ^ "_eff_override_" ^ name) p in
     let l' = lid_of_path p' Range.dummyRange in
     match try_lookup_lid env l' with
     | Some (_us,_t) -> begin
-        if Options.debug_any () then
-            BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
-        // TODO: GM: get exact delta depth, needs a change of interfaces
-        fv_to_tm (lid_as_fv l' Delta_equational None)
-        end
-    | None -> let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
-              sigelts := sigelt :: !sigelts;
-              fv
+      if Options.debug_any () then
+          BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
+      // TODO: GM: get exact delta depth, needs a change of interfaces
+      fv_to_tm (lid_as_fv l' Delta_equational None)
+      end
+    | None ->
+      let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
+      sigelts := sigelt :: !sigelts;
+      fv
   in
   let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
 
@@ -730,17 +749,27 @@ let cps_and_elaborate env ed =
             in
             let post = match post_args with
                 | [post] -> post
-                | _ -> failwith (BU.format1 "Impossible: multiple post candidates %s" (Print.term_to_string arrow))
+                | [] ->
+                  let err_msg =
+                    BU.format1 "Impossible to generate DM effect: no post candidate %s (Type variable does not appear)"
+                      (Print.term_to_string arrow)
+                  in
+                  raise (Err err_msg)
+                | _ ->
+                  let err_msg =
+                      BU.format1 "Impossible to generate DM effect: multiple post candidates %s" (Print.term_to_string arrow)
+                  in
+                  raise (Err err_msg)
             in
             // Pre-condition does not mention the return type; don't close over it
             U.arrow pre_args c,
             // Post-condition does, however!
             U.abs (type_param :: effect_param) (fst post).sort None
         | _ ->
-            failwith (BU.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow))
+            raise_error (BU.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow))
         end
     | _ ->
-        failwith (BU.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type))
+        raise_error (BU.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type))
   in
   // Desugaring is aware of these names and generates references to them when
   // the user writes something such as [STINT.repr]
@@ -789,12 +818,13 @@ let tc_lex_t env ses quals lids =
           datacon LexCons<ucons1, ucons2> : #a:Type(ucons1) -> hd:a -> tl:lex_t<ucons2> -> lex_t<max ucons1 ucons2>
     *)
     assert (quals = []);
+    let err_range = (List.hd ses).sigrng in
     begin match lids with
         | [lex_t; lex_top; lex_cons] when
             (lid_equals lex_t PC.lex_t_lid
              && lid_equals lex_top PC.lextop_lid
              && lid_equals lex_cons PC.lexcons_lid) -> ()
-        | _ -> assert false
+        | _ -> raise (Error ("Invalid (partial) redefinition of lex_t", err_range))
     end;
     begin match ses with
       | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _);  sigquals = []; sigrng = r };
@@ -842,7 +872,11 @@ let tc_lex_t env ses quals lids =
           sigmeta = default_sigmeta;
           sigattrs = []  }
       | _ ->
-        failwith (BU.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, lids)))))
+        let err_msg =
+          BU.format1 "Invalid (re)definition of lex_t: %s\n"
+            (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, lids))))
+        in
+        raise (Error (err_msg, err_range))
     end
 
 let tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
@@ -1010,7 +1044,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let lift, lift_wp =
       match sub.lift, sub.lift_wp with
       | None, None ->
-        failwith "Impossible"
+        failwith "Impossible (parser)"
       | lift, Some (_, lift_wp) ->
         (* Covers both the "classic" format and the reifiable case. *)
         lift, check_and_gen env lift_wp expected_k
@@ -1071,7 +1105,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let tps, c = match tps, (SS.compress t).n with
       | [], Tm_arrow(_, c) -> [], c
       | _,  Tm_arrow(tps, c) -> tps, c
-      | _ -> failwith "Impossible" in
+      | _ -> failwith "Impossible (t is an arrow)" in
     if List.length uvs <> 1
     then (let _, t = Subst.open_univ_vars uvs t in
           raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
@@ -1209,39 +1243,20 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
 
     (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
     let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
-        | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
-          // Propagate binder names into signature
-          let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
+      | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
+        // Propagate binder names into signature
+        let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
 
-          //propagate the MaskedEffect tag to the qualifiers
-          let quals = match e.n with
-              | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
-              | _ -> quals
-          in
-          // drop inline_for_extraction unless pure (otherwise, this now
-          // generates beta-redexes that kreMLin is particularly unhappy with)
-          let quals = List.choose (function
-            | Inline_for_extraction ->
-                if not (List.for_all (fun lb ->
-                  let ok = is_pure_or_ghost_function lb.lbtyp in
-                  if not ok then
-                    BU.print1_warning "Dropping inline_for_extraction from %s because it is not a pure function\n"
-                      (SP.lbname_to_string lb.lbname);
-                  ok
-                ) (snd lbs)) then
-                  None
-                else
-                  Some Inline_for_extraction
-            | q ->
-                Some q
-          ) quals in
-          { se with sigel = Sig_let(lbs, lids);
-                    sigquals =  quals },
-          lbs
-      | _ -> failwith "impossible"
+        //propagate the MaskedEffect tag to the qualifiers
+        let quals = match e.n with
+            | Tm_meta(_, Meta_desugared Masked_effect) -> HasMaskedEffect::quals
+            | _ -> quals
+        in
+        { se with sigel = Sig_let(lbs, lids);
+                  sigquals =  quals },
+        lbs
+      | _ -> failwith "impossible (typechecking should preserve Tm_let)"
     in
-
-    // CPC doc: Actually I don't need the let-val pairing; It's enough to register the docs of the val independently, since they won't be overwritten when the let is desugared with no docs.
 
     (* 4. Record the type of top-level lets, and log if requested *)
     snd lbs |> List.iter (fun lb ->
@@ -1326,12 +1341,27 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
                 let h = SS.compress h in
                 let tac_lid = (right hd.lbname).fv_name.v in
                 let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                (* check if tactic has been dynamically loaded and has not already been typechecked *)
-                if is_native_tactic env assm_lid h && not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
-                  let se_assm = reified_tactic_decl assm_lid hd in
-                  let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
-                  Some (se_assm, se_refl)
-                end else None
+                (match get_tactic_fv env assm_lid h with
+                 | Some fv ->
+                    (* check if the tactic has already been typechecked *)
+                    if not (is_some <| Env.try_lookup_val_decl env tac_lid) then begin
+                      (* if it's a user tactic, add the name of the module to the list of modules which contain user tactics,
+                         if the module has not already been added *)
+                      if (not (is_builtin_tactic env.curmodule)) then
+                        let added_modules = !user_tactics_modules in
+                        let module_name = Ident.ml_path_of_lid env.curmodule in
+                        if not (List.contains module_name added_modules) then
+                          user_tactics_modules := added_modules @ [module_name]
+                         else ()
+                      else ();
+                      (* check if tactic has been dynamically loaded *)
+                      if env.is_native_tactic assm_lid then begin
+                        let se_assm = reified_tactic_decl assm_lid hd in
+                        let se_refl = reflected_tactic_decl (fst lbs) hd bs assm_lid comp in
+                        Some (se_assm, se_refl)
+                      end else None
+                    end else None
+                 | None -> None)
             | _ -> None)
         | _ -> None
       ) in
@@ -1380,7 +1410,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
   | Sig_pragma         _ -> [], hidden
 
   | Sig_inductive_typ _
-  | Sig_datacon _ -> failwith "Impossible"
+  | Sig_datacon _ -> failwith "Impossible (Already handled)"
 
   | Sig_bundle(ses, _) ->
     if is_abstract se.sigquals
@@ -1458,14 +1488,15 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_pragma (p) ->
     (match p with
+     | SetOptions _
      | ResetOptions _ ->
-        env.solver.refresh ();
         // `using_facts_from` requires some special handling..
         begin match Options.using_facts_from () with
         | Some ns ->
             let proof_ns = [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]] in
             { env with proof_ns = proof_ns }
-        | None -> env
+        | None ->
+            { env with proof_ns = [[]] }
         end
      | _ -> env)
   | Sig_new_effect_for_free _ -> env
@@ -1535,7 +1566,7 @@ let tc_decls env ses =
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
-let tc_partial_modul env modul =
+let tc_partial_modul env modul push_before_typechecking =
   let verify = Options.should_verify modul.name.str in
   let action = if verify then "Verifying" else "Lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
@@ -1545,10 +1576,7 @@ let tc_partial_modul env modul =
   let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
   let msg = "Internals for " ^name in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
-  //AR: the interactive mode calls this function, because of which there is an extra solver push.
-  //    the interactive mode does not call finish_partial_modul, so this push is not popped.
-  //    currently, there is a cleanup function in the interactive mode tc, that does this extra pop.
-  env.solver.push msg;
+  if push_before_typechecking then env.solver.push msg;
   let env = Env.set_current_module env modul.name in
   let ses, exports, env = tc_decls env modul.declarations in
   {modul with declarations=ses}, exports, env
@@ -1624,6 +1652,14 @@ let check_exports env (modul:modul) exports =
     then ()
     else List.iter check_sigelt exports
 
+let load_checked_module env modul =
+  let env = Env.set_current_module env modul.name in
+  let env = List.fold_left Env.push_sigelt env modul.exports in
+  let env = Env.finish_module env modul in
+  env.solver.encode_modul env modul;
+  env.solver.refresh();
+  let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
+  env
 
 let finish_partial_modul env modul exports =
   let modul = {modul with exports=exports; is_interface=modul.is_interface} in
@@ -1638,7 +1674,7 @@ let finish_partial_modul env modul exports =
   modul, env
 
 let tc_modul env modul =
-  let modul, non_private_decls, env = tc_partial_modul env modul in
+  let modul, non_private_decls, env = tc_partial_modul env modul true in
   finish_partial_modul env modul non_private_decls
 
 let check_module env m =

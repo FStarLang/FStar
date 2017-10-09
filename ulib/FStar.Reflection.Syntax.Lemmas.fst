@@ -11,7 +11,7 @@ let uncurry f (x, y) = f x y
 val curry : ('a * 'b -> 'c) -> ('a -> 'b -> 'c)
 let curry f x y = f (x, y)
 
-val mk_app_collect_inv_s : (t:term) -> (args:list term) ->
+val mk_app_collect_inv_s : (t:term) -> (args:list argv) ->
                             Lemma (uncurry mk_app (collect_app' args t) == mk_app t args)
 let rec mk_app_collect_inv_s t args =
     match inspect t with
@@ -27,12 +27,7 @@ let rec mk_app_collect_inv t = mk_app_collect_inv_s t []
  * The way back is not stricly true: the list of arguments could grow.
  * It's annoying to even state, might do it later
  *)
-let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
-    match l with
-    | [] -> True
-    | x::xs -> p x /\ forall_list p xs
-
-val collect_app_order' : (args:list term) -> (tt:term) -> (t:term) ->
+val collect_app_order' : (args:list argv) -> (tt:term) -> (t:term) ->
             Lemma (requires (forall_list (fun a -> a << tt) args)
                              /\ t << tt)
                   (ensures (forall_list (fun a -> a << tt) (snd (collect_app' args t)))
@@ -44,7 +39,7 @@ let rec collect_app_order' args tt t =
     | _ -> ()
 
 val collect_app_order : (t:term) ->
-            Lemma (ensures (forall (f:term). forall (s:list term). (f,s) == collect_app t ==>
+            Lemma (ensures (forall (f:term). forall (s:list argv). (f,s) == collect_app t ==>
                               (f << t /\ forall_list (fun a -> a << t) (snd (collect_app t)))
                            \/ (f == t /\ s == [])))
 let collect_app_order t =
@@ -62,7 +57,7 @@ let rec list_ref #a #p l =
     | [] -> []
     | x::xs -> x :: list_ref #a #p xs
 
-val collect_app_ref : (t:term) -> (h:term{h == t \/ h << t}) * list (a:term{a << t})
+val collect_app_ref : (t:term) -> (h:term{h == t \/ h << t}) * list (a:argv{a << t})
 let collect_app_ref t =
     let h, a = collect_app t in
     collect_app_order t;

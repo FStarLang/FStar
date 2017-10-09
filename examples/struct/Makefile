@@ -3,10 +3,20 @@
 FSTAR_HOME=../..
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
-POSTESTS=$(wildcard *.pos)
+# was: $(wildcard *.pos)
+POSTESTS=\
+  array.pos \
+  disjoint.pos \
+  point.pos \
+  point-with-nesting.pos \
+  nested.pos \
+  union.pos \
+  taggedunion.pos \
+
 POSTARGETS=$(addsuffix .pver,$(POSTESTS))
 
-NEGTESTS=$(wildcard *.neg)
+# was: $(wildcard *.neg)
+NEGTESTS=
 NEGTARGETS=$(addsuffix .nver,$(NEGTESTS))
 
 all: uall

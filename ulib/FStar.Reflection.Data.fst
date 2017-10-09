@@ -21,17 +21,24 @@ type pattern =
 
 type branch = pattern * term  // | pattern -> term
 
+type aqualv =
+    | Q_Implicit
+    | Q_Explicit
+
+type argv = term * aqualv
+
 noeq
 type term_view =
   | Tv_Var    : binder -> term_view
   | Tv_FVar   : fv -> term_view
-  | Tv_App    : term -> term -> term_view
+  | Tv_App    : term -> argv -> term_view
   | Tv_Abs    : binder -> term -> term_view
   | Tv_Arrow  : binder -> term -> term_view
   | Tv_Type   : unit -> term_view
   | Tv_Refine : binder -> term -> term_view
   | Tv_Const  : vconst -> term_view
   | Tv_Uvar   : int -> typ -> term_view
+  | Tv_Let    : binder -> term -> term -> term_view
   | Tv_Match  : term -> list branch -> term_view
   | Tv_Unknown : term_view // Baked in "None"
 
@@ -54,12 +61,11 @@ type sigelt_view =
       (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
       list ctor ->              // constructors
       sigelt_view
-  | Unk
 
-noeq
-type norm_step =
-    | Simpl
-    | WHNF
-    | Primops
-    | Delta
-    | UnfoldOnly : list fv -> norm_step
+  | Sg_Let :
+      (fv:fv) ->
+      (typ:typ) ->
+      (def:term) ->
+      sigelt_view
+
+  | Unk

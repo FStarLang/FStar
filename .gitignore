@@ -17,9 +17,6 @@ cache/
 
 /src/boot
 
-/ulib/.mgen
-/ulib/ml/extracted
-
 /bin/*.dll
 /bin/*.pdb
 /bin/*.mdb
@@ -39,6 +36,7 @@ examples/wysteria/ocaml-output/*
 examples/incl/*.neg/error.log
 
 _build/
+/ulib/ml/_taclib_build/
 
 *.native
 *.byte
@@ -51,6 +49,8 @@ dump
 *.cmo
 *.cmx
 *.cma
+*.cmxs
+*.cmxa
 *.o
 
 .depend
@@ -66,6 +66,9 @@ tags
 *.swp
 
 *.exe
+
+*.checked
+*.checked.lax
 
 /.nubuild
 /nucache/

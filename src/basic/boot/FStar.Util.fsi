@@ -23,7 +23,7 @@ open FStar.BaseTypes
 
 exception Impos
 exception NYI of string
-exception Failure of string
+exception HardError of string
 
 val max_int: int
 val return_all: 'a -> ML<'a>
@@ -41,7 +41,9 @@ val string_of_time: time -> string
 (* Functional sets *)
 type set<'a>
   = (list<'a> * ('a -> 'a -> bool)) // JUST FSHARP
-val new_set: ('a -> 'a -> int) -> ('a -> int) -> set<'a>
+val as_set : list<'a> -> ('a -> 'a -> int) -> set<'a>
+val set_elements: set<'a> -> list<'a>
+val new_set: ('a -> 'a -> int) -> set<'a>
 val set_is_empty: set<'a> -> bool
 val set_add: 'a -> set<'a> -> set<'a>
 val set_remove: 'a -> set<'a> -> set<'a>
@@ -51,12 +53,12 @@ val set_intersect: set<'a> -> set<'a> -> set<'a>
 val set_is_subset_of: set<'a> -> set<'a> -> bool
 val set_count: set<'a> -> int
 val set_difference: set<'a> -> set<'a> -> set<'a>
-val set_elements: set<'a> -> list<'a>
 
 (* A fifo_set is a set preserving the insertion order *)
 type fifo_set<'a>
   = set<'a> // JUST FSHARP
-val new_fifo_set: ('a -> 'a -> int) -> ('a -> int) -> fifo_set<'a>
+val new_fifo_set: ('a -> 'a -> int) -> fifo_set<'a>
+val as_fifo_set: list<'a> -> ('a -> 'a -> int) -> fifo_set<'a>
 val fifo_set_is_empty: fifo_set<'a> -> bool
 (* [fifo_set_add x s] pushes an element [x] at the end of the set [s] *)
 val fifo_set_add: 'a -> fifo_set<'a> -> fifo_set<'a>
@@ -120,6 +122,7 @@ val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
 val format5: string -> string -> string -> string -> string -> string -> string
+val format6: string -> string -> string -> string -> string -> string -> string -> string
 
 val print: string -> list<string> -> unit
 val print1: string -> string -> unit
@@ -182,7 +185,7 @@ val concat_l : string -> list<string> -> string
 
 (* not relying on representation *)
 type file_handle
-  = System.IO.TextWriter// JUST FSHARP 
+  = System.IO.TextWriter// JUST FSHARP
 val open_file_for_writing: string -> file_handle
 val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
@@ -211,8 +214,8 @@ val trace_of_exn: exn -> string
 
 (* not relying on representation *)
 type proc
-val launch_process: string -> string -> string -> string -> (string -> string -> bool) -> string
-val start_process: string -> string -> string -> (string -> string -> bool) -> proc
+val launch_process: bool -> string -> string -> string -> string -> (string -> string -> bool) -> string
+val start_process: bool -> string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
@@ -231,6 +234,7 @@ open Prims
 val file_exists: string -> Tot<bool>
 
 val int_of_string: string -> int
+val safe_int_of_string: string -> option<int>
 val int_of_char:   char -> Tot<int>
 val int_of_byte:   byte -> Tot<int>
 val byte_of_char: char -> Tot<byte>
@@ -252,21 +256,20 @@ val string_of_char:  char -> Tot<string>
 val hex_string_of_byte:  byte -> Tot<string>
 val string_of_bytes: array<byte> -> Tot<string>
 val bytes_of_string: string -> Tot<array<byte>>
-val starts_with: string -> string -> Tot<bool>
+val starts_with: long:string -> short:string -> Tot<bool>
 val trim_string: string -> Tot<string>
-val ends_with: string -> string -> Tot<bool>
+val ends_with: long:string -> short:string -> Tot<bool>
 val char_at: string -> int -> char
 val is_upper: char -> Tot<bool>
 val contains: string -> string -> Tot<bool>
 val substring_from: string -> int -> string
-(* Second argument is a length, not an index. *)
-val substring: string -> int -> int -> string
+val substring: string -> start:int -> len:int -> string
 val replace_char: string -> char -> char -> Tot<string>
 val replace_chars: string -> char -> string -> Tot<string>
 val hashcode: string -> Tot<int>
 val compare: string -> string -> Tot<int>
 val splitlines: string -> Tot<list<string>>
-val split: string -> string -> Tot<list<string>>
+val split: str:string -> sep:string -> Tot<list<string>>
 
 type either<'a,'b> =
   | Inl of 'a
@@ -397,15 +400,17 @@ val digest_of_file: string -> string
 val digest_of_string: string -> string
 
 val ensure_decimal: string -> string
+val measure_execution_time: string -> (unit -> 'a) -> 'a
 
 (** Hints. *)
 type hint = {
-    hint_name: string; //name associated to the top-level term in the source program
-    hint_index: int;   //the nth query associated with that top-level term
-    fuel:int;  //fuel for unrolling recursive functions
+    hint_name:string; //name associated to the top-level term in the source program
+    hint_index:int; //the nth query associated with that top-level term
+    fuel:int; //fuel for unrolling recursive functions
     ifuel:int; //fuel for inverting inductive datatypes
     unsat_core:option<(list<string>)>; //unsat core, if requested
-    query_elapsed_time:int //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+    query_elapsed_time:int; //time in milliseconds taken for the query, to decide if a fresh replay is worth it
+    hash:option<string>; //hash of the smt2 query that last succeeded
 }
 
 type hints = list<(option<hint>)>

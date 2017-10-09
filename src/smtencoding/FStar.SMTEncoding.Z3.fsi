@@ -26,18 +26,24 @@ module BU = FStar.Util
 
 type unsat_core = option<list<string>>
 type scope_t = list<list<decl>>
-type error_kind =
-    | Timeout
-    | Kill
-    | Default
+type z3status =
+    | UNSAT   of unsat_core
+    | SAT     of error_labels * option<string>         //error labels * z3 reason
+    | UNKNOWN of error_labels * option<string>         //error labels * z3 reason
+    | TIMEOUT of error_labels * option<string>         //error labels * z3 reason
+    | KILLED
+val status_string_and_errors : z3status -> string * error_labels
 type z3statistics = BU.smap<string>
-type z3result =
-    either<unsat_core, (error_labels*error_kind)>
-    * int
-    * z3statistics
+type z3result = {
+      z3result_status      : z3status;
+      z3result_time        : int;
+      z3result_statistics  : z3statistics;
+      z3result_query_hash  : option<string>
+}
 type cb = z3result -> unit
 val giveZ3 : list<decl> -> unit
-val ask : filter:(decls_t -> decls_t * bool)
+val ask: filter:(decls_t -> decls_t * bool)
+       -> cache:(option<string> * unsat_core) // hash * core
        -> label_messages:error_labels
        -> qry:list<decl>
        -> scope:option<scope_t>
@@ -51,9 +57,6 @@ val mk_fresh_scope: unit -> scope_t
 val init : unit -> unit
 val push : msg:string -> unit
 val pop : msg:string -> unit
-val mark : msg:string -> unit
-val reset_mark : msg:string -> unit
-val commit_mark : msg:string -> unit
 
 type query_log = {
     get_module_name: unit -> string;

@@ -32,13 +32,13 @@ type input_frag = {
 
 let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
   lexbuf.EndPos <- {lexbuf.EndPos with
-    pos_fname= Range.encode_file filename;
+    pos_fname=filename;
     pos_cnum=0;
     pos_lnum=1 }
 
 let setLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) line col =
   lexbuf.EndPos <- {lexbuf.EndPos with
-    pos_fname= Range.encode_file filename;
+    pos_fname=filename;
     pos_cnum=col;
     pos_lnum=line }
 
@@ -49,13 +49,33 @@ let find_file filename =
     | None ->
       raise (Err(Util.format1 "Unable to find file: %s\n" filename))
 
+let vfs_entries : Util.smap<(time * string)> = Util.smap_create 1
+
+let read_vfs_entry fname =
+  Util.smap_try_find vfs_entries (Util.normalize_file_path fname)
+
+let add_vfs_entry fname contents =
+  Util.smap_add vfs_entries (Util.normalize_file_path fname) (Util.now (), contents)
+
+let get_file_last_modification_time filename =
+  match read_vfs_entry filename with
+  | Some (mtime, _contents) -> mtime
+  | None -> Util.get_file_last_modification_time filename
+
 let read_file (filename:string) =
-  if Options.debug_any()
-  then Util.print1 "Opening file: %s\n" filename;
-  try
-  let fs = new System.IO.StreamReader(filename) in
-  fs.ReadToEnd()
-  with _ -> Util.format1 "Unable to open file: %s" filename
+  let debug = Options.debug_any () in
+  match read_vfs_entry filename with
+  | Some (_mtime, contents) ->
+    if debug then Util.print1 "Reading in-memory file %s" filename;
+    filename, contents
+  | None ->
+    let filename = find_file filename in
+    try
+      if debug then Util.print1 "Opening file %s" filename;
+      let fs = new System.IO.StreamReader(filename) in
+      filename, fs.ReadToEnd ()
+    with _ ->
+      raise (Err (Util.format1 "Unable to read file %s" filename))
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
@@ -74,6 +94,7 @@ let check_extension fn =
                   message ^ " (pass --MLish to process .fs and .fsi files)"
                 else message))
 
+//val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 let parse fn =
   Parser.Util.warningHandler := (function
     | e -> let msg = Printf.sprintf "Warning: %A\n" e in
@@ -84,8 +105,7 @@ let parse fn =
   let filename,sr,fs,line,col = match fn with
     | Inl (filename:string) ->
         check_extension filename;
-        let filename' = find_file filename in
-        let contents = read_file filename' in
+        let filename', contents = read_file filename in
         filename',
         new System.IO.StringReader(contents) :> System.IO.TextReader,
         contents,
@@ -114,19 +134,19 @@ let parse fn =
       in
       let fileOrFragment = Parse.inputFragment lexer lexbuf in
       let frags = match fileOrFragment with
-        | Inl mods ->
+        | Inl modul ->
            if has_extension filename interface_extensions
-           then Inl (mods |> List.map (function
+           then match modul with
                 | AST.Module(l,d) ->
-                  AST.Interface(l, d, true)
-                | _ -> failwith "Impossible"))
-           else Inl mods
+                  Inl (AST.Interface(l, d, true))
+                | _ -> failwith "Impossible"
+           else Inl modul
         | _ -> fileOrFragment in
        let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
        Inl (frags, non_polymorphic_nil)
   with
     | Empty_frag ->
-        Inl (Inl [], [])
+      Inl (Inr [], [])
     | Error(msg, r) ->
       Inr (msg, r)
     | e ->

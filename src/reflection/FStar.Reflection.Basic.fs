@@ -20,7 +20,7 @@ module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
 
-(* These file provides implementation for reflection primitives in F*.
+(* This file provides implementation for reflection primitives in F*.
  *
  * Users can be exposed to (mostly) raw syntax of terms when working in
  * a metaprogramming effect (such as TAC). These effects are irrelevant
@@ -46,18 +46,17 @@ let fstar_refl_embed = lid_as_tm PC.fstar_refl_embed_lid
 let protect_embedded_term (t:typ) (x:term) =
     S.mk_Tm_app fstar_refl_embed [S.iarg t; S.as_arg x] None x.pos
 
-let un_protect_embedded_term : term -> term =
-    fun (t:term) ->
-        let head, args = U.head_and_args t in
-        match (U.un_uinst head).n, args with
-        | Tm_fvar fv, [_; (x, _)]
-            when S.fv_eq_lid fv PC.fstar_refl_embed_lid ->
-          x
-        | _ ->
-          failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
+let un_protect_embedded_term (t : term) : term =
+    let head, args = U.head_and_args (U.unmeta t) in
+    match (U.un_uinst head).n, args with
+    | Tm_fvar fv, [_; (x, _)]
+        when S.fv_eq_lid fv PC.fstar_refl_embed_lid ->
+      x
+    | _ ->
+      failwith (BU.format1 "Not a protected embedded term: %s" (Print.term_to_string t))
 
 let embed_binder (b:binder) : term =
-    U.mk_alien b "reflection.embed_binder" None
+    U.mk_alien fstar_refl_binder b "reflection.embed_binder" None
 
 let unembed_binder (t:term) : binder =
     U.un_alien t |> FStar.Dyn.undyn
@@ -66,19 +65,19 @@ let embed_binders l = embed_list embed_binder fstar_refl_binder l
 let unembed_binders t = unembed_list unembed_binder t
 
 let embed_term (t:term) : term =
-    protect_embedded_term fstar_refl_term t
+    protect_embedded_term S.tun t
 
 let unembed_term (t:term) : term =
     un_protect_embedded_term t
 
 let embed_fvar (fv:fv) : term =
-    U.mk_alien fv "reflection.embed_fvar" None
+    U.mk_alien fstar_refl_fvar fv "reflection.embed_fvar" None
 
 let unembed_fvar (t:term) : fv =
     U.un_alien t |> FStar.Dyn.undyn
 
 let embed_env (env:Env.env) : term =
-    U.mk_alien env "tactics_embed_env" None
+    U.mk_alien fstar_refl_env env "tactics_embed_env" None
 
 let unembed_env (t:term) : Env.env =
     U.un_alien t |> FStar.Dyn.undyn
@@ -144,8 +143,24 @@ let rec unembed_pattern (t : term) : pattern =
     | _ ->
         failwith "not an embedded pattern"
 
-let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term fstar_refl_term
+let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term
 let unembed_branch = unembed_pair unembed_pattern unembed_term
+
+let embed_aqualv (q : aqualv) : term =
+    match q with
+    | Data.Q_Explicit -> ref_Q_Explicit
+    | Data.Q_Implicit -> ref_Q_Implicit
+let unembed_aqualv (t : term) : aqualv =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Explicit_lid -> Data.Q_Explicit
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Implicit_lid -> Data.Q_Implicit
+    | _ ->
+        failwith "not an embedded aqualv"
+
+let embed_argv = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv
+let unembed_argv = unembed_pair unembed_term unembed_aqualv
 
 let embed_term_view (t:term_view) : term =
     match t with
@@ -158,7 +173,7 @@ let embed_term_view (t:term_view) : term =
                     None Range.dummyRange
 
     | Tv_App (hd, a) ->
-        S.mk_Tm_app ref_Tv_App [S.as_arg (embed_term hd); S.as_arg (embed_term a)]
+        S.mk_Tm_app ref_Tv_App [S.as_arg (embed_term hd); S.as_arg (embed_argv a)]
                     None Range.dummyRange
 
     | Tv_Abs (b, t) ->
@@ -185,6 +200,10 @@ let embed_term_view (t:term_view) : term =
         S.mk_Tm_app ref_Tv_Uvar [S.as_arg (embed_int u); S.as_arg (embed_term t)]
                     None Range.dummyRange
 
+    | Tv_Let (b, t1, t2) ->
+        S.mk_Tm_app ref_Tv_Let [S.as_arg (embed_binder b); S.as_arg (embed_term t1); S.as_arg (embed_term t2)]
+                    None Range.dummyRange
+
     | Tv_Match (t, brs) ->
         S.mk_Tm_app ref_Tv_Match [S.as_arg (embed_term t); S.as_arg (embed_list embed_branch fstar_refl_branch brs)]
                     None Range.dummyRange
@@ -203,7 +222,7 @@ let unembed_term_view (t:term) : term_view =
         Tv_FVar (unembed_fvar b)
 
     | Tm_fvar fv, [(l, _); (r, _)] when S.fv_eq_lid fv ref_Tv_App_lid ->
-        Tv_App (unembed_term l, unembed_term r)
+        Tv_App (unembed_term l, unembed_argv r)
 
     | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Abs_lid ->
         Tv_Abs (unembed_binder b, unembed_term t)
@@ -222,6 +241,9 @@ let unembed_term_view (t:term) : term_view =
 
     | Tm_fvar fv, [(u, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Uvar_lid ->
         Tv_Uvar (unembed_int u, unembed_term t)
+
+    | Tm_fvar fv, [(b, _); (t1, _); (t2, _)] when S.fv_eq_lid fv ref_Tv_Let_lid ->
+        Tv_Let (unembed_binder b, unembed_term t1, unembed_term t2)
 
     | Tm_fvar fv, [(t, _); (brs, _)] when S.fv_eq_lid fv ref_Tv_Match_lid ->
         Tv_Match (unembed_term t, unembed_list unembed_branch brs)
@@ -263,13 +285,17 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
     | FStar.Const.Const_bool true  -> C_True
     | FStar.Const.Const_bool false -> C_False
-    | FStar.Const.Const_string (bs, _) -> C_String (BU.string_of_bytes bs)
+    | FStar.Const.Const_string (s, _) -> C_String s
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 // TODO: consider effects? probably not too useful, but something should be done
-let inspect (t:term) : term_view =
+let rec inspect (t:term) : term_view =
+    let t = U.unascribe t in
     let t = U.un_uinst t in
     match t.n with
+    | Tm_meta (t, _) ->
+        inspect t
+
     | Tm_name bv ->
         Tv_Var (S.mk_binder bv)
 
@@ -282,8 +308,13 @@ let inspect (t:term) : term_view =
     | Tm_app (hd, args) ->
         // We split at the last argument, since the term_view does not
         // expose n-ary lambdas buy unary ones.
-        let (a, _) = last args in
-        Tv_App (S.mk_Tm_app hd (init args) None t.pos, a) // TODO: The range and tk are probably wrong. Fix
+        let (a, q) = last args in
+        let q' = match q with
+                 | Some (Implicit _) -> Data.Q_Implicit
+                 | Some Equality
+                 | None -> Data.Q_Explicit
+        in
+        Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
 
     | Tm_abs ([], _, _) ->
         failwith "inspect: empty arguments on Tm_abs"
@@ -324,6 +355,21 @@ let inspect (t:term) : term_view =
     | Tm_uvar (u, t) ->
         Tv_Uvar (UF.uvar_id u, t)
 
+    | Tm_let ((false, [lb]), t2) ->
+        if lb.lbunivs <> [] then Tv_Unknown else
+        begin match lb.lbname with
+        | BU.Inr _ -> Tv_Unknown // no top level lets
+        | BU.Inl bv ->
+            // The type of `bv` should match `lb.lbtyp`
+            let b = S.mk_binder bv in
+            let bs, t2 = SS.open_term [b] t2 in
+            let b = match bs with
+                    | [b] -> b
+                    | _ -> failwith "impossible: open_term returned different amount of binders"
+            in
+            Tv_Let (b, lb.lbdef, t2)
+        end
+
     | Tm_match (t, brs) ->
         let rec inspect_pat p =
             match p.v with
@@ -347,7 +393,7 @@ let pack_const (c:vconst) : sconst =
     | C_Int i   -> C.Const_int (BU.string_of_int i, None)
     | C_True    -> C.Const_bool true
     | C_False   -> C.Const_bool false
-    | C_String s -> C.Const_string (BU.bytes_of_string s, Range.dummyRange)
+    | C_String s -> C.Const_string (s, Range.dummyRange)
 
 // TODO: pass in range?
 let pack (tv:term_view) : term =
@@ -358,8 +404,11 @@ let pack (tv:term_view) : term =
     | Tv_FVar fv ->
         S.fv_to_tm fv
 
-    | Tv_App (l, r) ->
-        U.mk_app l [S.as_arg r] // TODO: implicits
+    | Tv_App (l, (r, q)) ->
+        begin match q with
+        | Data.Q_Explicit -> U.mk_app l [S.as_arg r]
+        | Data.Q_Implicit -> U.mk_app l [S.iarg r]
+        end
 
     | Tv_Abs (b, t) ->
         U.abs [b] t None // TODO: effect?
@@ -378,6 +427,11 @@ let pack (tv:term_view) : term =
 
     | Tv_Uvar (u, t) ->
         U.uvar_from_id u t
+
+    | Tv_Let (b, t1, t2) ->
+        let bv = fst b in
+        let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 in
+        S.mk (Tm_let ((false, [lb]), SS.close [b] t2)) None Range.dummyRange
 
     | Tv_Match (t, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
@@ -419,37 +473,6 @@ let compare_binder (x:binder) (y:binder) : order =
 let is_free (x:binder) (t:term) : bool =
     U.is_free_in (fst x) t
 
-let embed_norm_step (n:norm_step) : term =
-    match n with
-    | Simpl ->
-        ref_Simpl
-    | WHNF ->
-        ref_WHNF
-    | Primops ->
-        ref_Primops
-    | Delta ->
-        ref_Delta
-    | UnfoldOnly l ->
-        S.mk_Tm_app ref_UnfoldOnly [S.as_arg (embed_list embed_fvar fstar_refl_fvar l)]
-                    None Range.dummyRange
-
-let unembed_norm_step (t:term) : norm_step =
-    let t = U.unascribe t in
-    let hd, args = U.head_and_args t in
-    match (U.un_uinst hd).n, args with
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Simpl_lid ->
-        Simpl
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_WHNF_lid ->
-        WHNF
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Primops_lid ->
-        Primops
-    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Delta_lid ->
-        Delta
-    | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv ref_UnfoldOnly_lid ->
-        UnfoldOnly (unembed_list unembed_fvar l)
-    | _ ->
-        failwith "not an embedded norm_step"
-
 // Only for inductives, at the moment
 let lookup_typ (env:Env.env) (ns:list<string>) : sigelt_view =
     let lid = PC.p2l ns in
@@ -476,6 +499,13 @@ let lookup_typ (env:Env.env) (ns:list<string>) : sigelt_view =
             in
             let ctors = List.map ctor1 dc_lids in
             Sg_Inductive (nm, bs, t, ctors)
+        | Sig_let ((false, [lb]), _) ->
+            let fv = match lb.lbname with
+                     | BU.Inr fv -> fv
+                     | BU.Inl _  -> failwith "global Sig_let has bv"
+            in
+            Sg_Let (fv, lb.lbtyp, lb.lbdef)
+
         | _ ->
             Unk
         end
@@ -506,6 +536,14 @@ let embed_sigelt_view (sev:sigelt_view) : term =
                         S.as_arg (embed_term t);
                         S.as_arg (embed_list embed_ctor fstar_refl_ctor dcs)]
                     None Range.dummyRange
+
+    | Sg_Let (fv, ty, t) ->
+        S.mk_Tm_app ref_Sg_Let
+                    [S.as_arg (embed_fvar fv);
+                        S.as_arg (embed_term ty);
+                        S.as_arg (embed_term t)]
+                    None Range.dummyRange
+
     | Unk ->
         ref_Unk
 
@@ -515,8 +553,13 @@ let unembed_sigelt_view (t:term) : sigelt_view =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [(nm, _); (bs, _); (t, _); (dcs, _)] when S.fv_eq_lid fv ref_Sg_Inductive_lid ->
         Sg_Inductive (unembed_string_list nm, unembed_binders bs, unembed_term t, unembed_list unembed_ctor dcs)
+
+    | Tm_fvar fv, [(fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let_lid ->
+        Sg_Let (unembed_fvar fvar, unembed_term ty, unembed_term t)
+
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Unk_lid ->
         Unk
+
     | _ ->
         failwith "not an embedded sigelt_view"
 

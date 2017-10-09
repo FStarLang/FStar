@@ -10,7 +10,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "c531d44a1ea14500a605be663e1efe56"
     ],
     [
       "Swap.heap_equiv_on",
@@ -21,10 +22,27 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "12b0f1a13b792063355d15d19a944718"
     ],
-    [ "Swap.fp_body", 1, 0, 0, [ "@query" ], 0 ],
-    [ "Swap.seq'", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "Swap.fp_body",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "db76c38870c574d12d73eb9f9de00d3a"
+    ],
+    [
+      "Swap.seq'",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "bddf7c0fec618e806f56d0432c7672ed"
+    ],
     [
       "Swap.seq'_lem",
       1,
@@ -54,7 +72,8 @@
         "typing_FStar.Set.mem", "typing_FStar.Set.union", "unit_inversion",
         "unit_typing"
       ],
-      0
+      0,
+      "c0f38fceb61a6613af7e00d5a87f2202"
     ],
     [
       "Swap.seq'_lem",
@@ -65,7 +84,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "8a886f2c67db5bb350215184b17423ed"
     ],
     [
       "Swap.seq'_lem",
@@ -76,7 +96,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "8037e0f0feb2eaab2408c26001a063a7"
     ],
     [
       "Swap.seq'_lem",
@@ -87,7 +108,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "74801ad8c7ed66da85a0d0d135b6461c"
     ],
     [
       "Swap.seq'_lem",
@@ -98,7 +120,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "576987d31a074e2901dc048dd972fa44"
     ],
     [
       "Swap.seq'_lem",
@@ -109,55 +132,18 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "9e108d7d58c48d9ee58fd50adb09bbd3"
     ],
     [
-      "Swap.seq'_lem",
-      7,
+      "Swap.op_Greater_Greater",
+      1,
       0,
       0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
+      [ "@query" ],
+      0,
+      "15606ed10a0a10aa9b0ba80411c43af6"
     ],
-    [
-      "Swap.seq'_lem",
-      8,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "Swap.seq'_lem",
-      9,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "Swap.seq'_lem",
-      10,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d", "int_typing"
-      ],
-      0
-    ],
-    [ "Swap.op_Greater_Greater", 1, 0, 0, [ "@query" ], 0 ],
     [
       "Swap.op_Greater_Greater",
       2,
@@ -167,7 +153,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "42145280e1d9391618880f2df2432c39"
     ],
     [
       "Swap.op_Greater_Greater",
@@ -178,31 +165,18 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "bc4daeeeed71b6290f5c8db0b0eb497d"
     ],
     [
-      "Swap.op_Greater_Greater",
-      4,
+      "Swap.equiv_on_h",
+      1,
       0,
       0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
+      [ "@query" ],
+      0,
+      "7b65c149428808a804b2f2fe15e7a846"
     ],
-    [
-      "Swap.op_Greater_Greater",
-      5,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [ "Swap.equiv_on_h", 1, 0, 0, [ "@query" ], 0 ],
     [
       "Swap.swap",
       1,
@@ -233,7 +207,8 @@
         "token_correspondence_Swap.seq_", "typing_FStar.DM4F.Heap.addr_of",
         "typing_Swap.op_Greater_Greater", "unit_typing"
       ],
-      0
+      0,
+      "f8a6501efb068cba977a321e93f2211a"
     ],
     [
       "Swap.swap",
@@ -244,7 +219,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "25fae9db0dcbe05d89cadaad22e2d278"
     ],
     [
       "Swap.swap",
@@ -255,7 +231,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "d684a53305a5c76c5f9d744076904f2c"
     ],
     [
       "Swap.swap",
@@ -266,40 +243,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
-    ],
-    [
-      "Swap.swap",
-      5,
       0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "Swap.swap",
-      6,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [
-      "Swap.swap",
-      7,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
+      "b1677226288464ee8547deca21c9c6a1"
     ],
     [
       "Swap.idem",
@@ -331,7 +276,8 @@
         "token_correspondence_Swap.seq_", "typing_FStar.DM4F.Heap.addr_of",
         "typing_Swap.op_Greater_Greater", "unit_typing"
       ],
-      0
+      0,
+      "ea5814d93f2e26da142f395f25224ca3"
     ],
     [
       "Swap.idem",
@@ -342,21 +288,27 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "af482721f2b90d5b57f4018c235cf8e7"
     ],
     [
-      "Swap.idem",
-      3,
+      "Swap.guard_is_readonly",
+      1,
       0,
       0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
+      [ "@query" ],
+      0,
+      "66f94f3a3db7e438367a7d6868404287"
     ],
-    [ "Swap.guard_is_readonly", 1, 0, 0, [ "@query" ], 0 ],
-    [ "Swap.cond", 1, 0, 0, [ "@query" ], 0 ],
+    [
+      "Swap.cond",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "6dd4531e98c79e36805fc147843dacf9"
+    ],
     [
       "Swap.lemma_replace_cond",
       1,
@@ -376,9 +328,9 @@
         "ref_valid_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "token_correspondence_Swap.cond", "unit_typing"
       ],
-      0
+      0,
+      "c56467fdecfe75c8ed757f7217445950"
     ],
-    [ "Swap.lemma_replace_cond", 2, 0, 0, [ "@query" ], 0 ],
     [
       "Swap.lemma_skip_c1",
       1,
@@ -410,7 +362,8 @@
         "token_correspondence_Swap.seq_", "typing_FStar.DM4F.Heap.addr_of",
         "typing_Swap.op_Greater_Greater", "unit_typing"
       ],
-      0
+      0,
+      "f52b935ca9098caaa6b0c187511bbee2"
     ],
     [
       "Swap.lemma_skip_c1",
@@ -421,7 +374,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "2693355f905c667bc39ab783e5d4ee37"
     ],
     [
       "Swap.lemma_skip_c1",
@@ -432,31 +386,18 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "59a0f781ab7620d45b1e30aaecf69af0"
     ],
     [
-      "Swap.lemma_skip_c1",
-      4,
+      "Swap.footprint2",
+      1,
       0,
       0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
+      [ "@query" ],
+      0,
+      "0f118f44a95366cd38a0a27d53c56b40"
     ],
-    [
-      "Swap.lemma_skip_c1",
-      5,
-      0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
-    ],
-    [ "Swap.footprint2", 1, 0, 0, [ "@query" ], 0 ],
     [
       "Swap.swap_old",
       1,
@@ -466,7 +407,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "151db521a55ff8be232455f631178322"
     ],
     [
       "Swap.swap_old",
@@ -477,7 +419,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "0952d6591c36f19e0ab73a7a2d60a83d"
     ],
     [
       "Swap.swap_old",
@@ -488,9 +431,18 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "2d918f1813adb7d475cb6e94e253b6ed"
     ],
-    [ "Swap.swap_old", 4, 0, 0, [ "@query" ], 0 ],
+    [
+      "Swap.swap_old",
+      4,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "abb684d3ffb69296994dd4e31a404032"
+    ],
     [
       "Swap.swap_old",
       5,
@@ -510,7 +462,8 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.DM4F.Heap.addr_of", "unit_typing"
       ],
-      0
+      0,
+      "cfdbd57fc087a9a9c0d36df2c7dcf2e6"
     ],
     [
       "Swap.idem_old",
@@ -532,7 +485,8 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.DM4F.Heap.addr_of", "unit_typing"
       ],
-      0
+      0,
+      "f58898f546322707d10dd54c89a8c29d"
     ],
     [
       "Swap.idem_old",
@@ -543,18 +497,8 @@
         "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
-    ],
-    [
-      "Swap.idem_old",
-      3,
       0,
-      0,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0
+      "51e6c015f0b993677cae6bb8cc5694b3"
     ]
   ]
 ]

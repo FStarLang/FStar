@@ -1,7 +1,15 @@
 [
   "˛¥\u001f}Éˆ—Î¨;æa‹˙\"ê",
   [
-    [ "Eval.DB.uu___is_O", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Eval.DB.uu___is_O",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b015e89bc9de42259af8666f3a160562"
+    ],
     [
       "Eval.DB.__proj__O__item__g",
       1,
@@ -12,7 +20,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_484127013bba2593946d02c4a721e275"
       ],
-      0
+      0,
+      "105f4aaf43318ba4bc4dac86032876c0"
     ],
     [
       "Eval.DB.__proj__O__item__a",
@@ -24,9 +33,18 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_484127013bba2593946d02c4a721e275"
       ],
-      0
+      0,
+      "33530f29e305f0350d2ce10b21f48e71"
     ],
-    [ "Eval.DB.uu___is_S", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Eval.DB.uu___is_S",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d7e4ba333bbd385a70ed966245015657"
+    ],
     [
       "Eval.DB.__proj__S__item__g",
       1,
@@ -37,7 +55,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
       ],
-      0
+      0,
+      "ffba4fb96b16c1fa5e707375b388c5bf"
     ],
     [
       "Eval.DB.__proj__S__item__a",
@@ -49,7 +68,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
       ],
-      0
+      0,
+      "adc8f37c66fe61eaf6b0f3be8fc20ffb"
     ],
     [
       "Eval.DB.__proj__S__item__b",
@@ -61,7 +81,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
       ],
-      0
+      0,
+      "9f4be224bb8b4379847b479f7afa105d"
     ],
     [
       "Eval.DB.__proj__S__item___3",
@@ -75,9 +96,18 @@
         "projection_inverse_Eval.DB.S_a", "projection_inverse_Eval.DB.S_g",
         "refinement_interpretation_Eval.DB_Tm_refine_7953764d4affd5fc53963a3447f7bdde"
       ],
-      0
+      0,
+      "1753a2ff64baa971d3e485c58e46fcbf"
     ],
-    [ "Eval.DB.uu___is_Var", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Eval.DB.uu___is_Var",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5045eb7aa18a5c77e141aff34e9ee9a3"
+    ],
     [
       "Eval.DB.__proj__Var__item__g",
       1,
@@ -88,7 +118,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_510090c4b8d9bd9a52cee793ac3e6455"
       ],
-      0
+      0,
+      "22fe12a5d9bcd5e19587507c5e6d3ff0"
     ],
     [
       "Eval.DB.__proj__Var__item__a",
@@ -100,7 +131,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_510090c4b8d9bd9a52cee793ac3e6455"
       ],
-      0
+      0,
+      "c586d32285d402c885c884f6965ea209"
     ],
     [
       "Eval.DB.__proj__Var__item___2",
@@ -115,9 +147,18 @@
         "projection_inverse_Eval.DB.Var_g",
         "refinement_interpretation_Eval.DB_Tm_refine_510090c4b8d9bd9a52cee793ac3e6455"
       ],
-      0
+      0,
+      "c1a6c3423e6f164026b140ce56f82ba3"
     ],
-    [ "Eval.DB.uu___is_Lam", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Eval.DB.uu___is_Lam",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "13d6b4bfae07f610910f9692be339c84"
+    ],
     [
       "Eval.DB.__proj__Lam__item__g",
       1,
@@ -128,7 +169,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
       ],
-      0
+      0,
+      "48787b70acc5db0b046dbf57ead66184"
     ],
     [
       "Eval.DB.__proj__Lam__item__a",
@@ -140,7 +182,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
       ],
-      0
+      0,
+      "6f2d444b2a695f277d9476cc215e2693"
     ],
     [
       "Eval.DB.__proj__Lam__item__b",
@@ -152,7 +195,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
       ],
-      0
+      0,
+      "25cbabc7bfcf58e2a57fa095517637ec"
     ],
     [
       "Eval.DB.__proj__Lam__item__body",
@@ -168,9 +212,18 @@
         "projection_inverse_Eval.DB.Lam_g",
         "refinement_interpretation_Eval.DB_Tm_refine_8ba4e4e3f13cea313e3b1698266f8372"
       ],
-      0
+      0,
+      "6382838b3889366f08e9950f4b541d49"
     ],
-    [ "Eval.DB.uu___is_App", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Eval.DB.uu___is_App",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b42a94ede97b1deaea7f15b0dd3429e0"
+    ],
     [
       "Eval.DB.__proj__App__item__g",
       1,
@@ -181,7 +234,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
-      0
+      0,
+      "055899120ce06d163244cb098202d6ca"
     ],
     [
       "Eval.DB.__proj__App__item__a",
@@ -193,7 +247,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
-      0
+      0,
+      "e557476994132ed187131c2a3bee0e0d"
     ],
     [
       "Eval.DB.__proj__App__item__b",
@@ -205,7 +260,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
-      0
+      0,
+      "be34485ff253c4cb8c08e96ab1dc600b"
     ],
     [
       "Eval.DB.__proj__App__item__e1",
@@ -222,7 +278,8 @@
         "projection_inverse_Eval.DB.App_g",
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
-      0
+      0,
+      "a97934a8eef62b11f7bc99425aff4854"
     ],
     [
       "Eval.DB.__proj__App__item__e2",
@@ -237,7 +294,8 @@
         "projection_inverse_Eval.DB.App_g",
         "refinement_interpretation_Eval.DB_Tm_refine_2349da90c7b3931f487aa92691daa8cd"
       ],
-      0
+      0,
+      "6fac8f2d4606a418a0312a805342e401"
     ],
     [
       "Eval.DB.eval_var",
@@ -252,7 +310,8 @@
         "disc_equation_Eval.DB.S", "fuel_guarded_inversion_Eval.DB.var",
         "subterm_ordering_Eval.DB.S"
       ],
-      0
+      0,
+      "73d6c5f6dfe3ca606074d33df47f4612"
     ],
     [
       "Eval.DB.eval",
@@ -279,7 +338,8 @@
         "subterm_ordering_Eval.DB.Lam",
         "typing_Eval.DB_Tm_abs_f194870b934b0e45086850ee97d529d3"
       ],
-      0
+      0,
+      "faea79af197876d1690f2550e80dabf4"
     ]
   ]
 ]

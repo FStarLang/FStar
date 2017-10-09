@@ -80,6 +80,7 @@ type proof_namespace = list<flat_proof_namespace>
 
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
+
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
@@ -101,27 +102,28 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
   lax_universes  :bool;                         (* don't check universe constraints *)
+  failhard       :bool;                         (* don't try to carry on after a typechecking error *)
+  nosynth        :bool;                         (* don't run synth tactics *)
+  tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qname_and_index:option<(lident*int)>;              (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth          :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
-  is_native_tactic: lid -> bool;                      (* callback into the native tactics engine *)
-  identifier_info: ref<FStar.TypeChecker.Common.id_info_table> (* information on identifiers *)
+  is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
+  identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
+  tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
+  dsenv          : FStar.ToSyntax.Env.env
 }
 and solver_t = {
     init         :env -> unit;
     push         :string -> unit;
     pop          :string -> unit;
-    mark         :string -> unit;
-    reset_mark   :string -> unit;
-    commit_mark  :string -> unit;
     encode_modul :env -> modul -> unit;
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> typ -> unit;
-    is_trivial   :env -> typ -> bool;
     finish       :unit -> unit;
     refresh      :unit -> unit;
 }
@@ -132,6 +134,14 @@ and guard_t = {
   implicits:  implicits;
 }
 and implicits = list<(string * env * uvar * term * typ * Range.range)>
+and tcenv_hooks =
+  { tc_push_in_gamma_hook : (env -> binding -> unit) }
+
+let default_tc_hooks =
+  { tc_push_in_gamma_hook = (fun _ _ -> ()) }
+let tc_hooks (env: env) = env.tc_hooks
+let set_tc_hooks env hooks = { env with tc_hooks = hooks }
+
 type env_t = env
 
 type sigtable = BU.smap<sigelt>
@@ -153,7 +163,7 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env type_of universe_of solver module_lid =
+let initial_env tc_term type_of universe_of solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -174,6 +184,9 @@ let initial_env type_of universe_of solver module_lid =
     admit=false;
     lax=false;
     lax_universes=false;
+    failhard=false;
+    nosynth=false;
+    tc_term=tc_term;
     type_of=type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
@@ -183,7 +196,9 @@ let initial_env type_of universe_of solver module_lid =
                | None -> [[]]);
     synth = (fun e g tau -> failwith "no synthesizer available");
     is_native_tactic = (fun _ -> false);
-    identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty
+    identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
+    tc_hooks = default_tc_hooks;
+    dsenv = FStar.ToSyntax.Env.empty_env()
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -204,9 +219,6 @@ let add_query_index (l, n) = match !query_indices with
     | _ -> failwith "Empty query indices"
 
 let peek_query_indices () = List.hd !query_indices
-let commit_query_index_mark () = match !query_indices with
-    | hd::_::tl -> query_indices := hd::tl
-    | _ -> failwith "Unmarked query index stack"
 
 let stack: ref<(list<env>)> = BU.mk_ref []
 let push_stack env =
@@ -222,8 +234,6 @@ let pop_stack () =
       env
     | _ -> failwith "Impossible: Too many pops"
 
-let cleanup_interactive env = env.solver.pop ""
-
 let push env msg =
     push_query_indices();
     env.solver.push msg;
@@ -231,22 +241,6 @@ let push env msg =
 
 let pop env msg =
     env.solver.pop msg;
-    pop_query_indices();
-    pop_stack ()
-
-let mark env =
-    env.solver.mark "USER MARK";
-    push_query_indices();
-    push_stack env
-
-let commit_mark (env: env) =
-    commit_query_index_mark();
-    env.solver.commit_mark "USER MARK";
-    ignore (pop_stack ());
-    env
-
-let reset_mark env =
-    env.solver.reset_mark "USER MARK";
     pop_query_indices();
     pop_stack ()
 
@@ -521,14 +515,14 @@ let lookup_bv env bv =
     match try_lookup_bv env bv with
     | None -> raise (Error(variable_not_found bv, bvr))
     | Some (t, r) -> Subst.set_use_range bvr t,
-                     Range.set_use_range r bvr
+                     Range.set_use_range r (Range.use_range bvr)
 
 let try_lookup_lid env l =
     match try_lookup_lid_aux env l with
     | None -> None
     | Some ((us, t), r) ->
       let use_range = range_of_lid l in
-      let r = Range.set_use_range r use_range in
+      let r = Range.set_use_range r (Range.use_range use_range) in
       Some ((us, Subst.set_use_range use_range t), r)
 
 let lookup_lid env l =
@@ -606,7 +600,7 @@ let lookup_effect_lid env (ftv:lident) : typ =
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
   match lookup_qname env lid0 with
     | Some (Inr ({ sigel = Sig_effect_abbrev (lid, univs, binders, c, _); sigquals = quals }, None), _) ->
-      let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Ident.range_of_lid lid0)) in
+      let lid = Ident.set_lid_range lid (Range.set_use_range (Ident.range_of_lid lid) (Range.use_range (Ident.range_of_lid lid0))) in
       if quals |> BU.for_some (function Irreducible -> true | _ -> false)
       then None
       else let insts = if List.length univ_insts = List.length univs
@@ -967,7 +961,8 @@ let rec unfold_effect_abbrev env comp =
       unfold_effect_abbrev env c
 
 let effect_repr_aux only_reifiable env c u_c =
-    match effect_decl_opt env (norm_eff_name env (U.comp_effect_name c)) with
+    let effect_name = norm_eff_name env (U.comp_effect_name c) in
+    match effect_decl_opt env effect_name with
     | None -> None
     | Some (ed, qualifiers) ->
         if only_reifiable && not (qualifiers |> List.contains Reifiable)
@@ -976,7 +971,16 @@ let effect_repr_aux only_reifiable env c u_c =
         | Tm_unknown -> None
         | _ ->
           let c = unfold_effect_abbrev env c in
-          let res_typ, wp = c.result_typ, List.hd c.effect_args in
+          let res_typ = c.result_typ in
+          let wp =
+            match c.effect_args with
+            | hd :: _ -> hd
+            | [] ->
+              let name = Ident.string_of_lid effect_name in
+              let message = BU.format1 "Not enough arguments for effect %s. " name ^
+                "This usually happens when you use a partially applied DM4F effect, " ^
+                "like [TAC int] instead of [Tac int]." in
+              raise (Error (message, get_range env)) in
           let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
           Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
 
@@ -1031,6 +1035,7 @@ let push_in_gamma env s =
     | local :: rest ->
         local :: push x rest
   in
+  env.tc_hooks.tc_push_in_gamma_hook env s;
   { env with gamma = push s env.gamma }
 
 let push_sigelt env s =
@@ -1176,6 +1181,13 @@ let eq_gamma env env' =
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
+let string_of_delta_level = function
+  | NoDelta -> "NoDelta"
+  | Inlining -> "Inlining"
+  | Eager_unfolding_only -> "Eager_unfolding_only"
+  | Unfold _ -> "Unfold _"
+  | UnfoldTac -> "UnfoldTac"
+
 let lidents env : list<lident> =
   let keys = List.fold_left (fun keys -> function
     | Binding_sig(lids, _) -> lids@keys
@@ -1239,14 +1251,10 @@ let dummy_solver = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
-    mark=(fun _ -> ());
-    reset_mark=(fun _ -> ());
-    commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=(fun _ _ _ -> ());
-    is_trivial=(fun _ _ -> false);
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }

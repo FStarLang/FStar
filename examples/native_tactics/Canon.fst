@@ -11,7 +11,7 @@ let uncurry f (x, y) = f x y
 val curry : (tuple2 'a 'b -> 'c) -> ('a -> 'b -> 'c)
 let curry f x y = f (x, y)
 
-val mk_app_collect_inv_s : (t:term) -> (args:list term) ->
+val mk_app_collect_inv_s : (t:term) -> (args:list argv) ->
                             Lemma (uncurry mk_app (collect_app' args t) == mk_app t args)
 let rec mk_app_collect_inv_s t args =
     match inspect t with
@@ -32,7 +32,7 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
     | [] -> True
     | x::xs -> p x /\ forall_list p xs
 
-val collect_app_order' : (args:list term) -> (tt:term) -> (t:term) ->
+val collect_app_order' : (args:list argv) -> (tt:term) -> (t:term) ->
             Lemma (requires (forall_list (fun a -> a << tt) args)
                              /\ t << tt)
                   (ensures (forall_list (fun a -> a << tt) (snd (collect_app' args t)))
@@ -44,7 +44,7 @@ let rec collect_app_order' args tt t =
     | _ -> ()
 
 val collect_app_order : (t:term) ->
-            Lemma (ensures (forall (f:term). forall (s:list term). (f,s) == collect_app t ==>
+            Lemma (ensures (forall (f:term). forall (s:list argv). (f,s) == collect_app t ==>
                               (f << t /\ forall_list (fun a -> a << t) (snd (collect_app t)))
                            \/ (f == t /\ s == [])))
 let collect_app_order t =
@@ -133,7 +133,7 @@ val is_arith_expr : term -> tm expr
 let rec is_arith_expr (t:term) =
     let hd, tl = collect_app t in
     match inspect hd, tl with
-    | Tv_FVar fv, [l; r] ->
+    | Tv_FVar fv, [(l, Q_Explicit); (r, Q_Explicit)] ->
         let qn = inspect_fv fv in
         collect_app_order t;
         // Have to go through hoops to get F* to typecheck this.
@@ -145,7 +145,7 @@ let rec is_arith_expr (t:term) =
         else if qn = mult_qn  then liftM2 Mult ll rr
         else if qn = mult'_qn then liftM2 Mult ll rr
         else fail ("binary: " ^ fv_to_string fv)
-    | Tv_FVar fv, [a] ->
+    | Tv_FVar fv, [a, Q_Explicit] ->
         let qn = inspect_fv fv in
         collect_app_order t;
         let aa = is_arith_expr (a <: x:term{x << t}) in
@@ -299,7 +299,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         // Fold constants
         | Inr (Plus (Lit _) (Lit _))
         | Inr (Mult (Lit _) (Lit _)) ->
-            norm [Delta; Primops];;
+            norm [delta; primops];;
             trefl
 
         // Forget about negations

@@ -19,7 +19,8 @@
         "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
         "unit_typing"
       ],
-      0
+      0,
+      "a4cf88d720d5a710bed01e613b576507"
     ],
     [
       "DelimCC.left_unit",
@@ -34,7 +35,8 @@
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
         "unit_typing"
       ],
-      0
+      0,
+      "2fd943d686119350a83ca39cb69b30d0"
     ],
     [
       "DelimCC.associativity",
@@ -53,7 +55,8 @@
         "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
         "unit_typing"
       ],
-      0
+      0,
+      "f25c0c61ee120de282858d437951e6a4"
     ],
     [
       "DelimCC.right_unit2",
@@ -73,7 +76,8 @@
         "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
         "unit_typing"
       ],
-      0
+      0,
+      "5b0c82aa1451c00d5457aebcd4286a4a"
     ],
     [
       "DelimCC.left_unit2",
@@ -88,7 +92,8 @@
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
         "unit_typing"
       ],
-      0
+      0,
+      "0829e2a75be74b847788405e483058fd"
     ],
     [
       "DelimCC.associativity2",
@@ -107,11 +112,44 @@
         "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
         "unit_typing"
       ],
-      0
+      0,
+      "cb50aed86391634425cc76b891e2263d"
     ],
-    [ "DelimCC.ext", 1, 2, 1, [ "@query", "unit_typing" ], 0 ],
-    [ "DelimCC.left_unit3", 1, 2, 1, [ "@query" ], 0 ],
-    [ "DelimCC.right_unit3", 1, 2, 1, [ "@query", "unit_typing" ], 0 ],
-    [ "DelimCC.associativity3", 1, 2, 1, [ "@query", "unit_typing" ], 0 ]
+    [
+      "DelimCC.ext",
+      1,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
+      0,
+      "64d808651a574caee231bb128870b125"
+    ],
+    [
+      "DelimCC.left_unit3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5b2077574b97f305eca217d99fcbdd4d"
+    ],
+    [
+      "DelimCC.right_unit3",
+      1,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
+      0,
+      "da53be407840c39c6f75ea27798315ed"
+    ],
+    [
+      "DelimCC.associativity3",
+      1,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
+      0,
+      "0b371e0d9fb7b83c23f2ce0a05e48535"
+    ]
   ]
 ]

@@ -148,7 +148,7 @@ let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_float x ->      U.string_of_float x
-  | Const_string(bytes, _) -> U.format1 "\"%s\"" (U.string_of_bytes bytes)
+  | Const_string(s, _) -> U.format1 "\"%s\"" s
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
@@ -276,7 +276,7 @@ let rec term_to_string x =
 
       | Tm_meta(t, Meta_monadic (m, t')) -> U.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
       | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> U.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
-      | Tm_meta(t, Meta_alien(_, s)) -> U.format1 "(Meta_alien \"%s\")" s
+      | Tm_meta(t, Meta_alien(_, s, _)) -> U.format1 "(Meta_alien \"%s\")" s
       | Tm_meta(t, Meta_labeled(l,r,b)) when Options.print_implicits() ->
         U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
       | Tm_meta(t, _) ->    term_to_string t

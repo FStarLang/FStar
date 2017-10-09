@@ -1,15 +1,95 @@
 [
   "\u00130T)ÝŽôo9\\˜*ô>ï",
   [
-    [ "Rel.rel", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.__proj__R__item__l", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.__proj__R__item__r", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.lift", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.lift2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.lift3", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.lift4", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.lift5", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.r_eq", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Rel.split", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "Rel.rel",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a26656a0ce5b4ec14d11b3c1dfa4239b"
+    ],
+    [
+      "Rel.__proj__R__item__l",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "854ef3c55ae5bdc5dd63aa03216b1010"
+    ],
+    [
+      "Rel.__proj__R__item__r",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "293f60911fa99d4cd83fd4e19e15977e"
+    ],
+    [
+      "Rel.lift",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6425367c3dc0c3e13b392d0305662c83"
+    ],
+    [
+      "Rel.lift2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "249631961a18f42b9d95bfb092784383"
+    ],
+    [
+      "Rel.lift3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1ead416e4eeaafa93d6885a47fb32827"
+    ],
+    [
+      "Rel.lift4",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ba768b68cf8de6cff66ea3ccbd46d010"
+    ],
+    [
+      "Rel.lift5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "aa25d64462376259835ed74e92fb16b8"
+    ],
+    [
+      "Rel.r_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "877fcd98aedb88c92ae657de166cea48"
+    ],
+    [
+      "Rel.split",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "64d472b3dad470e80c33a153b8fe4b95"
+    ]
   ]
 ]
