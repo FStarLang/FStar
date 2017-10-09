@@ -291,8 +291,8 @@ let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
                      (solution_term, Q_Explicit); (name_tm, Q_Explicit)] in
   mk_app loc_fn locate_args
 
-let interp_abspat_continuation' (continuation: abspat_continuation)
-    : solution_term:term -> Tac term =
+let specialize_abspat_continuation' (continuation: abspat_continuation)
+    : Tot (solution_term:term -> Tac term) =
   admit ();
   fun solution_term ->
     let mk_arg argspec =
@@ -300,17 +300,29 @@ let interp_abspat_continuation' (continuation: abspat_continuation)
     let argspecs, body = continuation in
     mk_app body (tacmap mk_arg argspecs)
 
+let specialize_abspat_continuation (continuation: abspat_continuation)
+    : Tac term =
+  admit ();
+  let solution_binder = fresh_binder (quote matching_solution ()) in
+  let solution_term = pack (Tv_Var solution_binder) in
+  let applied = specialize_abspat_continuation' continuation solution_term in
+  let thunked = pack (Tv_Abs solution_binder applied) in
+  debug ("Specialized into " ^ (term_to_string thunked));
+  let normalized = beta_reduce thunked in
+  debug ("… which reduces to " ^ (term_to_string normalized));
+  normalized
+
 let interp_abspat_continuation a (continuation: abspat_continuation)
     : Tac (matching_solution -> Tac a) =
   admit ();
+  let applied = specialize_abspat_continuation continuation in
+  unquote #(matching_solution -> Tac a) applied ()
 
-  let solution_binder = fresh_binder (quote matching_solution ()) in
-  let solution_term = pack (Tv_Var solution_binder) in
-  let applied = interp_abspat_continuation' continuation solution_term in
-  let thunked = pack (Tv_Abs solution_binder applied) in
-  debug ("Constructed " ^ (term_to_string thunked));
-  let normalized = beta_reduce thunked in
-  unquote #(matching_solution -> Tac a) thunked ()
+let tinterp_abspat_continuation a (continuation: abspat_continuation)
+    : Tac (matching_solution -> tactic a) =
+  admit ();
+  let applied = specialize_abspat_continuation continuation in
+  unquote #(matching_solution -> tactic a) applied ()
 
 /// Resolution
 /// ----------
@@ -395,19 +407,19 @@ let fff =
      ) (ms_locate_var Type0 solution "b#937581")
      ) (ms_locate_var Type0 solution "a#937576")
 
-let xxxx () : Tot unit =
-  assert_by_tactic True
-                   (let open FStar.Tactics in
-                    print "0";;
-                    abs  <--  quote (fun (a b: var Type0) (h1: hyp (a ==> b)) (h2: hyp (a)) (_: goal (squash b)) ->
-                                   print "AA" ());
-                    print "1";;
-                    pc  <--  (fun () -> matching_problem_of_abs abs);
-                    print "2";;
-                    let problem, continuation = pc in
-                    print "2b";;
-                    _k <-- (fun () -> interp_abspat_continuation unit continuation);
-                    print "3")
+// let xxxx () : Tot unit =
+//   assert_by_tactic True
+//                    (let open FStar.Tactics in
+//                     print "0";;
+//                     abs  <--  quote (fun (a b: var Type0) (h1: hyp (a ==> b)) (h2: hyp (a)) (_: goal (squash b)) ->
+//                                    print "AA" ());
+//                     print "1";;
+//                     pc  <--  (fun () -> matching_problem_of_abs abs);
+//                     print "2";;
+//                     let problem, continuation = pc in
+//                     print "2b";;
+//                     _k <-- (fun () -> interp_abspat_continuation unit continuation);
+//                     print "3")
 
 /// Examples
 /// --------
@@ -431,22 +443,102 @@ open FStar.Tactics
 //   let binders, tm = bdtm in
 //   print (String.concat ", " (List.Tot.map inspect_bv binders)) ()
 
-let mgw #a b (abspat: a) : tactic b =
+let interp_abspat #a (abspat: a) : Tac (matching_problem * abspat_continuation) =
+  admit ();
+  let abs = quote abspat () in
+  matching_problem_of_abs abs
+
+let match_abspat #b #a (abspat: a)
+                 (k: abspat_continuation -> Tac (matching_solution -> Tac b))
+    : Tac b =
+  admit ();
+  let goal = cur_goal () in
+  let hypotheses = binders_of_env (cur_env ()) in
+  let problem, continuation = interp_abspat abspat in
+  solve_mp #matching_solution problem hypotheses goal (k continuation)
+
+let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
+  fst (interp_abspat #a abspat)
+
+let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
+  admit ();
+  match_abspat abspat (fun _ -> (fun solution -> solution) <: Tac _)
+
+#set-options "--admit_smt_queries true"
+let tpair #a #b : a -> Tac (b -> Tac (a * b)) =
+  fun (x: a) -> (fun (y: b) -> (x, y) <: Tac _) <: Tac _
+#reset-options
+
+let lpm #b #a (abspat: a) : tactic b =
+  admit ();
   fun () ->
-    admit ();
-    let abs = quote abspat () in
-    let problem, continuation = matching_problem_of_abs abs in
-    let goal = cur_goal () in
-    let hypotheses = binders_of_env (cur_env ()) in
-    let kinds_and_vars, _ = continuation in
-    let s = String.concat ", " (List.Tot.map snd kinds_and_vars) in
-    print s ();
-    let solution = solve_mp #matching_solution problem hypotheses goal
-                     (fun solution -> solution) in
-    print (string_of_matching_solution solution) ();
+    let continuation, solution = match_abspat abspat tpair in
     interp_abspat_continuation b continuation solution
 
-// #set-options "--ugly"
+let tlpm #b #a (abspat: a) : tactic b =
+  admit ();
+  fun () ->
+    let continuation, solution = match_abspat abspat tpair in
+    tinterp_abspat_continuation b continuation solution
+
+let pm (#b: Type u#0) (#a: Type u#1) (abspat: a) : tactic b =
+  admit ();
+  fun () ->
+    match_abspat abspat (interp_abspat_continuation b)
+
+#set-options "--print_bound_var_types --print_full_names --print_implicits --print_universes" // --ugly
+
+let rec first #a (tacs: list (tactic a)) : Tac a (decreases tacs) =
+  match tacs with
+  | [] -> fail #a "All tactics failed" ()
+  | t1 :: tacs -> match trytac t1 () with
+                | Some r -> r
+                | None -> first tacs
+
+let tfirst #a (tacs: list (tactic a)) : tactic a =
+  fun () -> first tacs
+
+let split_hyp_lemma #a #b #c
+    : Lemma (requires a ==> b ==> c)
+            (ensures a /\ b ==> c) =
+  ()
+
+#set-options "--ugly"
+
+// let xxx =
+//   (fun (a b: var Type0) (h: hyp (a /\ b)) ->
+//      apply_lemma (quote split_hyp_lemma) () <: Tac unit)
+
+let exxx () =
+  assert_by_tactic (True /\ True ==> False)
+                   (_ <-- implies_intros;
+                    dump "A";;
+                    (fun () -> let pb = inspect_abspat_solution
+                           (fun (a b: var Type0) (h: hyp (a /\ b)) ->
+                                apply_lemma (quote split_hyp_lemma) () <: Tac unit) in
+                            print (string_of_matching_solution pb) ()))
+
+                    // pm #unit #(a:var Type0 -> b:var Type0 -> h:hyp (a /\ b) -> Tac unit)
+                    //          (fun (a b: var Type0) (h: hyp (a /\ b)) ->
+                    //             apply_lemma (quote split_hyp_lemma) () <: Tac unit))
+
+let example (a b: int) =
+  assert_by_tactic (a == b ==> a + 1 == b + 1)
+                   (_ <-- implies_intro;
+                    // first [pm #unit (fun (a b: var int) (h: hyp (a == b)) ->
+                    //                    rewrite h (); trefl ());
+                    pm #unit (fun (a b: var Type) (h: hyp (a /\ b)) ->
+                                apply_lemma (quote split_hyp_lemma) ()))
+
+// let example (a b: int) =
+//   assert_by_tactic (a == b ==> a + 1 == b + 1)
+//                    (_ <-- implies_intro;
+//                     ms <-- (fun () -> inspect_abspat_solution
+//                            (fun (a b: var int) (h: hyp (a == b)) -> rewrite h));
+//                     print "AAA";;
+//                     print (string_of_matching_solution ms);;
+//                     // print (string_of_matching_problem mp);;
+//                     fail "A")
 
 let example (a b: int) =
   assert_by_tactic (a == b ==> a + 1 == b + 1)
@@ -460,12 +552,6 @@ let example (a b: int) =
                     | h :: _ ->
                       rewrite h;;
                       dump "BB")
-
-let example (a b: int) =
-  assert_by_tactic (a == b ==> a + 1 == b + 1)
-                   (_ <-- implies_intro;
-                    mgw unit (fun (a b: var int) (h: hyp (a == b)) ->
-                                rewrite h))
 
 
 let example (p1 p2: Type0) =
