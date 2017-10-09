@@ -103,7 +103,7 @@ let pattern_of_term tm : Tac pattern =
 /// Pattern-matching problems
 /// =========================
 
-let debug msg : Tac unit = ()
+let debug msg : Tac unit = print msg ()
 
 /// Definitions
 /// -----------
@@ -140,9 +140,12 @@ let string_of_abspat_binder_kind = function
   | ABKHyp -> "hyp"
   | ABKGoal -> "goal"
 
+type abspat_argspec =
+  abspat_binder_kind * varname
+
 // Must store this because recomputing it yields different names
 type abspat_continuation =
-  list (abspat_binder_kind * varname) * term
+  list abspat_argspec * term
 
 let classify_abspat_binder binder : match_res (abspat_binder_kind * term) =
   admit ();
@@ -203,9 +206,9 @@ let matching_problem_of_abs (tm: term) : Tac (matching_problem * abspat_continua
       binders in
 
   let continuation =
-    let continuation_arg_of_binder binder : Tac (abspat_binder_kind * varname) =
+    let abspat_argspec_of_binder binder : Tac abspat_argspec =
       (fst (lift_exn_tac classify_abspat_binder binder), inspect_bv binder) in
-    (tacmap continuation_arg_of_binder binders, tm) in
+    (tacmap abspat_argspec_of_binder binders, tm) in
 
   let mp =
     { mp_vars = List.rev #varname problem.mp_vars;
@@ -243,41 +246,41 @@ let ms_locate_var (solution: matching_solution)
 let ms_locate_unit _solution _binder_name : Tac unit =
   ()
 
-let locateandbind_fn_of_binder_kind binder_kind =
+let locate_fn_of_binder_kind binder_kind =
   match binder_kind with
   | ABKNone -> quote_lid ["PatternMatching"; "ms_locate_var"] ()
   | ABKHyp -> quote_lid ["PatternMatching"; "ms_locate_hyp"] ()
   | ABKGoal -> quote_lid ["PatternMatching"; "ms_locate_unit"] ()
 
-let rec apply_abspat (solution_term: term)
-                     (fn_term: term)
-                     (fn_argspecs: list (abspat_binder_kind * varname))
-                     (args_acc: list argv) : Tac term (decreases fn_argspecs) =
+let abspat_arg_of_abspat_argspec solution_term (argspec: abspat_argspec)
+    : Tac term =
   admit ();
-  print (">>> " ^ term_to_string fn_term) ();
-  match fn_argspecs with
-  | [] -> mk_app fn_term (List.rev args_acc)
-  | (binder_kind, binder_name) :: fn_argspecs ->
-    let arg = fresh_binder (arg_type_of_binder_kind binder_kind) in
-    let args_acc = (pack (Tv_Var arg), Q_Explicit) :: args_acc in
-    let let_body = apply_abspat solution_term fn_term fn_argspecs args_acc in
-    let let_value = mk_app (locateandbind_fn_of_binder_kind binder_kind)
-                                  [(solution_term, Q_Explicit);
-                                   (pack (Tv_Const (C_String binder_name)), Q_Explicit)] in
-    pack (Tv_Let arg let_value let_body)
+  let binder_kind, binder_name = argspec in
+  let loc_fn = locate_fn_of_binder_kind binder_kind in
+  let name_tm = pack (Tv_Const (C_String binder_name)) in
+  let locate_args = [(solution_term, Q_Explicit); (name_tm, Q_Explicit)] in
+  mk_app loc_fn locate_args
+
+let interp_abspat_continuation' (continuation: abspat_continuation)
+    : solution_term:term -> Tac term =
+  admit ();
+  fun solution_term ->
+    let mk_arg argspec =
+      (abspat_arg_of_abspat_argspec solution_term argspec, Q_Explicit) in
+    let argspecs, body = continuation in
+    mk_app body (tacmap mk_arg argspecs)
 
 let interp_abspat_continuation a (continuation: abspat_continuation)
     : Tac (matching_solution -> Tac a) =
   admit ();
 
-  let argspecs, continuation_fn = continuation in
   let solution_binder = fresh_binder (quote matching_solution ()) in
-
-  let applied = apply_abspat (pack (Tv_Var solution_binder)) continuation_fn argspecs [] in
-  let accepting_solution = pack (Tv_Abs solution_binder applied) in
-  print ("Constructed that term: " ^ (term_to_string accepting_solution)) ();
-  let accepting_solution_fn = unquote #(matching_solution -> Tac a) accepting_solution () in
-  accepting_solution_fn
+  let solution_term = pack (Tv_Var solution_binder) in
+  let applied = interp_abspat_continuation' continuation solution_term in
+  let thunked = pack (Tv_Abs solution_binder applied) in
+  debug ("Constructed " ^ (term_to_string thunked));
+  let normalized = beta_reduce thunked in
+  unquote #(matching_solution -> Tac a) thunked ()
 
 /// Resolution
 /// ----------
@@ -346,23 +349,21 @@ let solve_mp #a (problem: matching_problem)
 /// Binding solutions
 /// -----------------
 
-#set-options "--print_bound_var_types --print_full_names --print_implicits"
+#set-options "--print_bound_var_types --print_full_names --print_implicits" // --ugly
 
-// FIXME try to let-bind or pass arguments directly (with a single let-binding for the solution)
-
-let x () : Tot unit =
-  assert_by_tactic True
-                   (let open FStar.Tactics in
-                    print "0";;
-                    abs  <--  quote (fun (a b: var) (h1: hyp (a ==> b)) (h2: hyp (a)) (_: goal (squash b)) ->
-                                   print "AA" ());
-                    print "1";;
-                    pc  <--  (fun () -> matching_problem_of_abs abs);
-                    print "2";;
-                    let problem, continuation = pc in
-                    print "2b";;
-                    _k <-- (fun () -> interp_abspat_continuation unit continuation);
-                    print "3")
+// let xxxx () : Tot unit =
+//   assert_by_tactic True
+//                    (let open FStar.Tactics in
+//                     print "0";;
+//                     abs  <--  quote (fun (a b: var) (h1: hyp (a ==> b)) (h2: hyp (a)) (_: goal (squash b)) ->
+//                                    print "AA" ());
+//                     print "1";;
+//                     pc  <--  (fun () -> matching_problem_of_abs abs);
+//                     print "2";;
+//                     let problem, continuation = pc in
+//                     print "2b";;
+//                     _k <-- (fun () -> interp_abspat_continuation unit continuation);
+//                     print "3")
 
 /// Examples
 /// --------
@@ -396,7 +397,7 @@ let string_of_matching_solution ms =
 //   let binders, tm = bdtm in
 //   print (String.concat ", " (List.Tot.map inspect_bv binders)) ()
 
-let mgw #a #b (abspat: a) : tactic b =
+let mgw #a b (abspat: a) : tactic b =
   fun () ->
     admit ();
     let abs = quote abspat () in
@@ -409,17 +410,28 @@ let mgw #a #b (abspat: a) : tactic b =
     let solution = solve_mp #matching_solution problem hypotheses goal
                      (fun solution -> solution) in
     print (string_of_matching_solution solution) ();
-    apply_matching_solution b continuation solution
+    interp_abspat_continuation b continuation solution
+
+// #set-options "--ugly"
 
 let example (p1 p2: Type0) =
   assert_by_tactic (p1 ==> (p1 ==> p2) ==> p2)
                    (_ <-- implies_intros;
-                    mgw (fun (a b: Type) (h1: hyp (a ==> b)) (h2: hyp (a)) (_: goal (squash b)) ->
-                            let open FStar.Tactics in
-                            print "hello!" ();
-                            print (inspect_bv h1) ();
-                            print (inspect_bv h2) ();
-                            idtac ()))
+                    env <-- cur_env;
+                    dump "AA";;
+                    let binders = binders_of_env env in
+                    print (String.concat "\n\n" (List.Tot.map (fun b -> inspect_bv b ^ ": " ^ (term_to_string (type_of_binder b))) binders));;
+                    match List.Tot.rev binders with
+                    | [] -> print "??"
+                    | h :: _ ->
+                      let t = pack (Tv_Var h) in
+                      apply_lemma (return t))
+                    // mgw unit (fun (a b: var) (h1: hyp (a ==> b)) (h2: hyp (a)) (_: goal (squash b)) ->
+                    //             let open FStar.Tactics in
+                    //             print "hello!" ();
+                    //             print (inspect_bv h1) ();
+                    //             print (inspect_bv h2) ();
+                    //             apply_lemma (fun () -> (pack (Tv_Var h1))) ())
 
 // let __ =
 //   assert_by_tactic (1 == 1)
