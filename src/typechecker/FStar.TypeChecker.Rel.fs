@@ -76,7 +76,7 @@ let check_guard msg env g =
     then ()
     else raise_err (Errors.Fatal_FreeVariables, BU.format2 "Guard has free variables (%s): %s"
                                 msg
-                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
+                                (BU.set_elements s |> Print.bvs_to_string ", "))
 
 let check_term msg env t =
     let s = unbound_vars env t in
@@ -85,7 +85,7 @@ let check_term msg env t =
     else raise_err (Errors.Fatal_FreeVariables, BU.format3 "Term <%s> has free variables (%s): %s"
                                 (Print.term_to_string t)
                                 msg
-                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
+                                (BU.set_elements s |> Print.bvs_to_string ", "))
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g

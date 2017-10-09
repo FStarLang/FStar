@@ -729,3 +729,5 @@ let set_to_string f s =
             U.string_builder_append strb "}" ;
             (* U.string_builder_append strb (list_to_string f (raw_list s)) ; *)
             U.string_of_string_builder strb
+
+let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
