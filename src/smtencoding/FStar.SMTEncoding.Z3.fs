@@ -72,12 +72,76 @@ let get_z3version () =
         in
             _z3version := Some out; out
 
+(* Check the Z3 commit hash once, and issue a warning if it is not
+   equal to the one that we are expecting from the Z3 url below
+*)
+let _z3hash_checked : ref<bool> = BU.mk_ref false
+
+let _z3hash_expected = "1f29cebd4df6"
+
+let _z3url = "https://github.com/FStarLang/binaries/tree/master/z3-tested"
+
+let z3hash_warning_message () =
+    let _, out, _ = BU.run_proc (Options.z3_exe()) "-version" "" in
+    match splitlines out with
+    | x :: _ ->
+        begin
+            let trimmed = trim_string x in
+            let parts = split trimmed " " in
+            let rec aux = function
+            | [hash] ->
+              if hash = _z3hash_expected
+              then begin
+                  if Options.debug_any ()
+                  then
+                      let msg =
+                          BU.format1
+                              "Successfully found expected Z3 commit hash %s"
+                              _z3hash_expected
+                      in
+                      print_string msg
+                  else ();
+                  None
+              end else
+                  let msg =
+                      BU.format2
+                          "Expected Z3 commit hash %s, got %s"
+                          _z3hash_expected
+                          hash
+                  in
+                  Some msg
+            | _ :: q -> aux q
+            | _ -> Some "No Z3 commit hash found"
+            in
+            aux parts
+        end
+    | _ -> Some "No Z3 version string found"
+
+let check_z3hash () =
+    if not !_z3hash_checked
+    then begin
+        _z3hash_checked := true;
+        match z3hash_warning_message () with
+        | None -> ()
+        | Some msg ->
+          let msg =
+              BU.format4
+                  "%s\n%s\n%s\n%s\n"
+                  msg
+                  "Please download the version of Z3 corresponding to your platform from:"
+                  _z3url
+                  "and add the bin/ subdirectory into your PATH"
+          in
+          FStar.Errors.add_one (FStar.Errors.mk_issue FStar.Errors.EWarning None msg)
+    end
+
 let ini_params () =
   let z3_v = get_z3version () in
   begin if z3v_le (get_z3version ()) (4, 4, 0)
   then raise <| BU.Failure (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v))
   else ()
   end;
+  check_z3hash ();
   (String.concat " "
                 (List.append
                  [ "-smt2 -in auto_config=false model=true smt.relevancy=2";
