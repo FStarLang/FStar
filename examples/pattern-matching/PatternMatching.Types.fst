@@ -9,4 +9,5 @@ type pattern =
 | PAny: pattern
 | PVar: name: varname -> pattern
 | PQn: qn: qn -> pattern
+| PType: pattern
 | PApp: hd: pattern -> arg: pattern -> pattern
