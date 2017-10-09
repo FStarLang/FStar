@@ -104,6 +104,16 @@ let rec count #a x s =
 val mem: #a:eqtype -> a -> seq a -> Tot bool
 let mem #a x l = count x l > 0
 
+#set-options "--max_fuel 1 --initial_fuel 1"
+let rec mem_index (#a:eqtype) (x:a) (s:seq a)
+    : Lemma (requires (mem x s))
+            (ensures (exists i. index s i == x))
+            (decreases (length s))
+    = if length s = 0 then ()
+      else if head s = x then ()
+      else mem_index x (tail s)
+
+#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val swap: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{j<length s} -> Tot (seq a)
 let swap #a s i j = upd (upd s j (index s i)) i (index s j)
 
@@ -563,6 +573,13 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
 
 let seq_find #a f l =
   seq_find_aux f l (Seq.length l)
+
+let find_mem (#a:eqtype) (s:seq a) (f:a -> bool) (x:a{f x})
+   : Lemma (requires (mem x s))
+           (ensures (Some? (seq_find f s) /\ f (Some?.v (seq_find f s))))
+   = match seq_find f s with
+     | None -> mem_index x s
+     | Some _ -> ()
 
 let for_all
   (#a: Type)
