@@ -98,9 +98,11 @@ let tc_prims (env: TcEnv.env)
 (***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
+// FIXME is_interface_dependence is always false
 let tc_one_fragment curmod (env:TcEnv.env) (frag, is_interface_dependence) =
   match Parser.Driver.parse_fragment frag with
-  | Parser.Driver.Empty ->
+  | Parser.Driver.Empty
+  | Parser.Driver.Decls [] ->
     (curmod, env)
 
   | Parser.Driver.Modul ast_modul ->
@@ -132,7 +134,12 @@ let tc_one_fragment curmod (env:TcEnv.env) (frag, is_interface_dependence) =
     (Some modul, env)
 
   | Parser.Driver.Decls ast_decls ->
-    let env, ast_decls_l =
+    match curmod with
+    | None ->
+      let rng = (List.hd ast_decls).Parser.AST.drange in
+      raise (Errors.Error ("First statement must be a module declaration", rng))
+    | Some modul ->
+      let env, ast_decls_l =
           BU.fold_map
               (fun env a_decl ->
                   let decls, env =
@@ -142,33 +149,21 @@ let tc_one_fragment curmod (env:TcEnv.env) (frag, is_interface_dependence) =
                   env, decls)
               env
               ast_decls in
-    let sigelts, env = with_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
-    match curmod with
-      | None -> FStar.Util.print_error "fragment without an enclosing module"; exit 1
-      | Some modul ->
-          let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
-                               else Tc.tc_more_partial_modul env modul sigelts in
-          (Some modul, env)
+      let sigelts, env = with_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
+      let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
+                           else Tc.tc_more_partial_modul env modul sigelts in
+      (Some modul, env)
 
 let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
-  try
-    let r = FStar.Parser.ParseIt.parse (Inl interface_file_name) in
-    match r with
-    | Inl (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
-      snd (with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
-    | Inl _ ->
-      raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
-                               interface_file_name))
-    | Inr (err, rng) ->
-      raise (FStar.Errors.Error(err, rng))
-  with
-      | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-          TypeChecker.Err.add_errors env [(msg,r)];
-          env
-      | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-          TypeChecker.Err.add_errors env [(msg,Range.dummyRange)];
-          env
-      | e when not ((Options.trace_error())) -> raise e
+  let r = FStar.Parser.ParseIt.parse (Inl interface_file_name) in
+  match r with
+  | Inl (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
+    snd (with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
+  | Inl _ ->
+    raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
+                             interface_file_name))
+  | Inr (err, rng) ->
+    raise (FStar.Errors.Error(err, rng))
 
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
