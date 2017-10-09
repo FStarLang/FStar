@@ -276,6 +276,15 @@ let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
     let goal = { context = env; witness = u; goal_ty = typ; opts = opts; is_guard = false } in
     ret goal)
 
+let tc (t : term) : tac<typ> =
+    bind cur_goal (fun goal ->
+    bind (try ret (goal.context.type_of goal.context t)
+          with e -> fail "tc: not typeable") (fun (t, typ, guard) ->
+    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard)
+    then fail "tc: got non-trivial guard"
+    else ret typ
+    ))
+
 let add_irrelevant_goal reason env phi opts : tac<unit> =
     bind (mk_irrelevant_goal reason env phi opts) (fun goal ->
     add_goals [goal])
