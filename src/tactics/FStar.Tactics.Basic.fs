@@ -443,25 +443,6 @@ let exact (tm:term) : tac<unit> =
     focus (__exact tm)
     )
 
-let exact_lemma (t:term) : tac<unit> =
-    bind cur_goal (fun goal ->
-    bind (try ret (TcTerm.tc_term goal.context t)
-          with e -> // printfn "Exception %A" e;
-                    fail2 "exact_lemma: term is not typeable: %s (%s)" (Print.term_to_string t) (Print.tag_of_term t)) (fun (t, lcomp, guard) ->
-    let comp = lcomp.comp () in
-    if not (U.is_lemma_comp comp) then fail "exact_lemma: not a lemma" else
-    if not (Rel.is_trivial guard) then fail "exact: got non-trivial guard" else
-    let pre, post = match (U.comp_to_comp_typ comp).effect_args with
-                    | pre::post::_ -> fst pre, fst post
-                    | _ -> failwith "exact_lemma: impossible: not a lemma"
-    in
-    if do_unify goal.context post goal.goal_ty
-    then bind (solve goal t) (fun _ -> add_irrelevant_goal "exact_lemma precondition"goal.context pre goal.opts)
-    else fail3 "%s : %s does not exactly solve the goal %s"
-                    (N.term_to_string goal.context t)
-                    (N.term_to_string goal.context post)
-                    (N.term_to_string goal.context goal.goal_ty)))
-
 let uvar_free_in_goal (u:uvar) (g:goal) =
     if g.is_guard then false else
     let free_uvars = List.map fst (BU.set_elements (SF.uvars g.goal_ty)) in
