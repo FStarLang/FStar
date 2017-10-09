@@ -486,8 +486,6 @@ let pm (#b: Type u#0) (#a: Type u#1) (abspat: a) : tactic b =
   fun () ->
     match_abspat abspat (interp_abspat_continuation b)
 
-#set-options "--print_bound_var_types --print_full_names --print_implicits --print_universes" // --ugly
-
 let rec first #a (tacs: list (tactic a)) : Tac a (decreases tacs) =
   match tacs with
   | [] -> fail #a "All tactics failed" ()
@@ -498,29 +496,34 @@ let rec first #a (tacs: list (tactic a)) : Tac a (decreases tacs) =
 let tfirst #a (tacs: list (tactic a)) : tactic a =
   fun () -> first tacs
 
-let split_hyp_lemma #a #b #c
-    : Lemma (requires a ==> b ==> c)
-            (ensures a /\ b ==> c) =
-  ()
+let unsquash #a : a -> squash a =
+  fun _ -> ()
 
-#set-options "--ugly"
+let split_hd #a #b #c (pr: a -> b -> c) : (a `c_and` b -> c) =
+  function (Prims.And a b) -> pr a b
 
-// let xxx =
-//   (fun (a b: var Type0) (h: hyp (a /\ b)) ->
-//      apply_lemma (quote split_hyp_lemma) () <: Tac unit)
+// #set-options "--print_bound_var_types --print_full_names --print_implicits --print_effect_args" // --ugly
 
-let exxx () =
+// let split_hyp_lemma #a #b #c : Lemma (a `c_and` b -> c) =
+//   assert_by_tactic (a `c_and` b -> c)
+//                    (apply (quote (unsquash #(a `c_and` b -> c)));;
+//                     dump "BB";;
+//                     apply (quote (split_hd #a #b #c));;
+//                     _ <-- intros;
+//                     dump "CC")
+
+let exxx () : unit =
   assert_by_tactic (True /\ True ==> False)
-                   (_ <-- implies_intros;
-                    dump "A";;
-                    (fun () -> let pb = inspect_abspat_solution
-                           (fun (a b: var Type0) (h: hyp (a /\ b)) ->
-                                apply_lemma (quote split_hyp_lemma) () <: Tac unit) in
-                            print (string_of_matching_solution pb) ()))
+                   (tfirst [lpm (fun (a b: var Type0) (_: goal (squash (a ==> b))) ->
+                                   (fun () -> implies_intro ()) ())];;
+                    // h <-- implies_intro;
+                    // and_elim (pack (Tv_Var h));;
+                    // _ <-- implies_intros;
+                    dump "AAA")
 
-                    // pm #unit #(a:var Type0 -> b:var Type0 -> h:hyp (a /\ b) -> Tac unit)
-                    //          (fun (a b: var Type0) (h: hyp (a /\ b)) ->
-                    //             apply_lemma (quote split_hyp_lemma) () <: Tac unit))
+                    // lpm // #unit #(a:var Type0 -> b:var Type0 -> h:hyp (a /\ b) -> Tac unit)
+                    //    (fun (a b: var Type0) (h: hyp (a /\ b)) ->
+                    //       ))
 
 let example (a b: int) =
   assert_by_tactic (a == b ==> a + 1 == b + 1)
