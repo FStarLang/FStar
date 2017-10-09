@@ -273,7 +273,7 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t *
   | LDInterfaceOfCurrentFile intf ->
     curmod, Universal.load_interface_decls env intf.tf_fname
   | PushFragment frag ->
-    tc_one_fragment curmod env (frag, false)
+    tc_one_fragment curmod env frag
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =

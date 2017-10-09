@@ -98,41 +98,40 @@ let tc_prims (env: TcEnv.env)
 (***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
-// FIXME is_interface_dependence is always false
-let tc_one_fragment curmod (env:TcEnv.env) (frag, is_interface_dependence) =
+let tc_one_fragment curmod (env:TcEnv.env) frag =
+  let acceptable_mod_name mod =
+    (* Interface is sent as the first chunk, so we must allow repeating the same module. *)
+    Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) =
+    String.lowercase (string_of_lid mod.name) in
+
+  let range_of_first_mod_decl mod =
+    match mod with
+    | Parser.AST.Module (_, d :: _)
+    | Parser.AST.Interface (_, d :: _, _) -> d.Parser.AST.drange
+    | _ -> Range.dummyRange in
+
   match Parser.Driver.parse_fragment frag with
   | Parser.Driver.Empty
   | Parser.Driver.Decls [] ->
     (curmod, env)
 
   | Parser.Driver.Modul ast_modul ->
-      (* It may seem surprising that this function, whose name indicates that
-      it type-checks a fragment, can actually parse an entire module.
-      Actually, this is an abuse, and just means that we're type-checking the
-      first chunk. *)
-    let ast_modul, env = with_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
-    let modul, env = with_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
-    let env =
-      if is_interface_dependence then
-          {env with dsenv=FStar.ToSyntax.Env.set_iface env.dsenv false}
-      else env in
-    let env = match curmod with
-      | Some modul ->
-          (* Same-module is only allowed when editing a fst with an fsti,
-           * because we sent the interface as the first chunk. *)
-          if Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) <>
-            String.lowercase (string_of_lid modul.name)
-          then
-            raise (Err("Interactive mode only supports a single module at the top-level"))
-          else
-            env
-      | None ->
-          env
-    in
+    (* It may seem surprising that this function, whose name indicates that
+       it type-checks a fragment, can actually parse an entire module.
+       Actually, this is an abuse, and just means that we're type-checking the
+       first chunk. *)
+    let ast_modul, env =
+      with_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
+    let modul, env =
+      with_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
+    (match curmod with
+     | Some _ when not (acceptable_mod_name modul) ->
+       raise (Errors.Error ("Interactive mode only supports a single module at the top-level",
+                             range_of_first_mod_decl ast_modul))
+     | _ -> ());
     let modul, _, env = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                         else Tc.tc_partial_modul env modul false in
     (Some modul, env)
-
   | Parser.Driver.Decls ast_decls ->
     match curmod with
     | None ->
