@@ -12,6 +12,7 @@ open FStar.Errors
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module PC = FStar.Parser.Const
+open FStar.TypeChecker.Env
 module Env = FStar.TypeChecker.Env
 module BU = FStar.Util
 module U = FStar.Syntax.Util
