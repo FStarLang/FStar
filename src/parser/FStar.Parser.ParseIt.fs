@@ -66,12 +66,12 @@ let read_file (filename:string) =
   let debug = Options.debug_any () in
   match read_vfs_entry filename with
   | Some (_mtime, contents) ->
-    if debug then Util.print1 "Reading in-memory file %s" filename;
+    if debug then Util.print1 "Reading in-memory file %s\n" filename;
     filename, contents
   | None ->
     let filename = find_file filename in
     try
-      if debug then Util.print1 "Opening file %s" filename;
+      if debug then Util.print1 "Opening file %s\n" filename;
       let fs = new System.IO.StreamReader(filename) in
       filename, fs.ReadToEnd ()
     with _ ->

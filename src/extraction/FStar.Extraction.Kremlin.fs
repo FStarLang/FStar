@@ -458,7 +458,7 @@ and translate_decl env d: option<decl> =
       None
 
   | MLM_Ty [] ->
-      BU.print_string "Impossible!! Empty block of mutually recursive type declarations";
+      BU.print_string "Impossible!! Empty block of mutually recursive type declarations\n";
       None
 
   | MLM_Top _ ->
