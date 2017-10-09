@@ -179,9 +179,10 @@ let namespace_of_lid l =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    Util.print2_warning "Warning: the module declaration \"module %s\" \
-      found in file %s does not match its filename. Dependencies will be \
-      incorrect.\n" (string_of_lid lid true) filename
+    FStar.Errors.warn (range_of_lid lid)
+      (Util.format2 "Warning: the module declaration \"module %s\" \
+         found in file %s does not match its filename. Dependencies will be \
+         incorrect.\n" (string_of_lid lid true) filename)
 
 exception Exit
 
@@ -222,10 +223,11 @@ let collect_one
       let r = enter_namespace original_map working_map key in
       begin if not r then
         if let_open then
-          raise (Err ("let-open only supported for modules, not namespaces"))
+          raise (Errors.Error ("let-open only supported for modules, not namespaces", (range_of_lid lid)))
         else
-            Util.print2_warning "Warning: in %s: no modules in namespace %s and no file with \
-              that name either\n" filename (string_of_lid lid true)
+          FStar.Errors.warn (range_of_lid lid)
+            (Util.format1 "Warning: no modules in namespace %s and no file with \
+              that name either\n" (string_of_lid lid true))
       end ;
       false
   in
@@ -236,10 +238,11 @@ let collect_one
     if not r then
       match error_msg with
       | Some e ->
-          raise (Err e)
+          raise (Errors.Error (e, range_of_lid lid))
       | None ->
-          Util.print1_warning "Warning: no modules in namespace %s and no file with \
-            that name either\n" (string_of_lid lid true)
+        FStar.Errors.warn (range_of_lid lid)
+          (Util.format1 "Warning: no modules in namespace %s and no file with \
+            that name either\n" (string_of_lid lid true))
   in
 
   let record_open let_open lid =
@@ -268,7 +271,7 @@ let collect_one
     | Some deps_of_aliased_module ->
         smap_add working_map key deps_of_aliased_module
     | None ->
-        raise (Err (Util.format1 "module not found in search path: %s\n" alias))
+        raise (Errors.Error (Util.format1 "module not found in search path: %s\n" alias, range_of_lid lid))
   in
   let record_lid lid =
     (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
@@ -358,8 +361,9 @@ let collect_one
     | TopLevelModule lid ->
         incr num_of_toplevelmods;
         if (!num_of_toplevelmods > 1) then
-            raise (Err (Util.format1 "Automatic dependency analysis demands one \
-              module per file (module %s not supported)" (string_of_lid lid true)))
+            raise (Errors.Error (Util.format1 "Automatic dependency analysis demands one \
+              module per file (module %s not supported)" (string_of_lid lid true),
+                                 range_of_lid lid))
 
   and collect_tycon = function
     | TyconAbstract (_, binders, k) ->
