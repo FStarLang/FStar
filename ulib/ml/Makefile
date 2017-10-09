@@ -16,7 +16,8 @@ OCAMLBUILD=cd ../../ && ocamlbuild -use-ocamlfind -I ulib/ml -I ulib/ml/$(ULIB_G
 all: .mgen install
 
 fstarlib.mllib: .mgen *.ml $(wildcard extracted/*.ml)
-	$(FIND) . extracted -maxdepth 1 -name "*.ml" -printf '%f\n' \
+	$(FIND) . extracted -maxdepth 1 -name "*.ml" -print \
+		| $(SED) -e 's!\([^/]*/\)!!g' \
 		| $(SED) -e 's/\.ml//g' -e 's/\./_/g' -e 's/\<./\u&/g' \
 		| sort | uniq > $@
 	touch fstarlib.ml
