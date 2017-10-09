@@ -38,8 +38,7 @@ let _z3hash_expected = "1f29cebd4df6"
 
 let _z3url = "https://github.com/FStarLang/binaries/tree/master/z3-tested"
 
-let z3hash_warning_message () =
-    let _, out, _ = BU.run_proc (Options.z3_exe()) "-version" "" in
+let parse_z3_version_lines out =
     match splitlines out with
     | x :: _ ->
         begin
@@ -74,13 +73,27 @@ let z3hash_warning_message () =
         end
     | _ -> Some "No Z3 version string found"
 
+let z3hash_warning_message () =
+    let run_proc_result =
+        try
+            Some (BU.run_proc (Options.z3_exe()) "-version" "")
+        with _ -> None
+    in
+    match run_proc_result with
+    | None -> Some (FStar.Errors.EError, "Could not run Z3")
+    | Some (_, out, _) ->
+        begin match parse_z3_version_lines out with
+        | None -> None
+        | Some msg -> Some (FStar.Errors.EWarning, msg)
+        end
+
 let check_z3hash () =
     if not !_z3hash_checked
     then begin
         _z3hash_checked := true;
         match z3hash_warning_message () with
         | None -> ()
-        | Some msg ->
+        | Some (level, msg) ->
           let msg =
               BU.format4
                   "%s\n%s\n%s\n%s\n"
@@ -89,7 +102,7 @@ let check_z3hash () =
                   _z3url
                   "and add the bin/ subdirectory into your PATH"
           in
-          FStar.Errors.add_one (FStar.Errors.mk_issue FStar.Errors.EWarning None msg)
+          FStar.Errors.add_one (FStar.Errors.mk_issue level None msg)
     end
 
 let ini_params () =
