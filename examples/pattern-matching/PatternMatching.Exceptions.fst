@@ -27,7 +27,8 @@ let string_of_match_exception = function
     "Match failure (nonlinear mismatch): variable " ^ nm ^
     " needs to match both " ^ (term_to_string t1) ^ " and " ^ (term_to_string t2)
   | UnsupportedTermInPattern tm ->
-    "Match failure (unsupported term in pattern): " ^ term_to_string tm
+    "Match failure (unsupported term in pattern): " ^ term_to_string tm ^
+    " (" ^ term_head tm ^ ")"
   | IncorrectTypeInAbsPatBinder ->
     "Incorrect type in pattern-matching binder: use one of ``var``, ``hyp …``, or ``goal …``"
 
