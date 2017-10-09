@@ -34,6 +34,10 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings)
       if inspect_fv fv = qn then return cur_bindings
       else raise (NameMismatch (qn, (inspect_fv fv)))
     | _ -> raise (SimpleMismatch (pat, tm)) in
+  let interp_type cur_bindings tm =
+    match inspect tm with
+    | Tv_Type () -> return cur_bindings
+    | _ -> raise (SimpleMismatch (pat, tm)) in
   let interp_app (p_hd p_arg: p:pattern{p << pat}) cur_bindings tm =
     match inspect tm with
     | Tv_App hd (arg, _) ->
@@ -46,6 +50,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings)
     | PAny -> interp_any () cur_bindings tm
     | PVar var -> interp_var var cur_bindings tm
     | PQn qn -> interp_qn qn cur_bindings tm
+    | PType -> interp_type cur_bindings tm
     | PApp p_hd p_arg -> interp_app p_hd p_arg cur_bindings tm
 
 (** Match it against a term.
@@ -71,10 +76,13 @@ let any_qn = ["PatternMatching"; "__"]
 (** Compile a term `tm` into a pattern. **)
 let rec pattern_of_term_ex tm : match_res pattern =
   match inspect tm with
-  | Tv_Var bv -> return (PVar (inspect_bv bv))
+  | Tv_Var bv ->
+    return (PVar (inspect_bv bv))
   | Tv_FVar fv ->
     let qn = inspect_fv fv in
     return (if qn = any_qn then PAny else PQn qn)
+  | Tv_Type () ->
+    return PType
   | Tv_App f (x, _) ->
     let is_any = match inspect f with
                  | Tv_FVar fv -> inspect_fv fv = any_qn
@@ -87,7 +95,7 @@ let rec pattern_of_term_ex tm : match_res pattern =
        return (PApp fpat xpat))
   | _ -> raise (UnsupportedTermInPattern tm)
 
-(** β-reduced a term `tm`.
+(** β-reduce a term `tm`.
 This is useful to remove needles function applications introduced by F*, like
 ``(fun a b c -> a) 1 2 3``. **)
 let beta_reduce (tm: term) : Tac term =

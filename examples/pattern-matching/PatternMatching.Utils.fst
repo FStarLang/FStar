@@ -28,14 +28,16 @@ let desc_of_pattern = function
 | PAny -> "anything"
 | PVar _ -> "a variable"
 | PQn qn -> "a constant (" ^ string_of_qn qn ^ ")"
+| PType -> "Type"
 | PApp _ _ -> "a function application"
 
 let rec string_of_pattern = function
 | PAny -> "__"
 | PVar x -> "?" ^ x
 | PQn qn -> string_of_qn qn
+| PType -> "Type"
 | PApp l r -> "(" ^ string_of_pattern l ^ " "
-              ^ string_of_pattern r ^ ")"
+                 ^ string_of_pattern r ^ ")"
 
 let print_term t = print (term_to_string t)
 
