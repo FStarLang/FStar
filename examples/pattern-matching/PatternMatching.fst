@@ -198,13 +198,16 @@ let rec binders_and_body_of_abs tm : binders * term =
     binder :: binders, body
   | _ -> [], tm
 
+let unfold_vars (t: typ) : Tac typ =
+  norm_term [delta_only ["PatternMatching.var"]] t ()
+
 (** Parse a notation into a matching problem and a continuation.
 
 Pattern-matching notations are of the form ``(fun binders… -> continuation)``,
-where ``binders`` are of one of the forms ``var``, ``hyp …``, or ``goal …``.
-``var`` binders are (capturing) holes to be used in other binders; ``hyp``
-binders indicate a pattern to be matched against hypotheses; and ``goal``
-binders match the goal.
+where ``binders`` are of one of the forms ``var …``, ``hyp …``, or ``goal …``.
+``var`` binders are typed holes to be used in other binders; ``hyp`` binders
+indicate a pattern to be matched against hypotheses; and ``goal`` binders match
+the goal.
 
 The continuation returned can't directly be applied to a pattern-matching solution;
 see ``interp_abspat_continuation`` below for that. **)
@@ -220,19 +223,20 @@ let matching_problem_of_abs (tm: term) : Tac (matching_problem * abspat_continua
          let bv_name = inspect_bv binder in
          debug ("Got binder: " ^ (inspect_bv binder));
          let binder_kind, typ = lift_exn_tac classify_abspat_binder binder in
+         let typ_novars = unfold_vars typ in
          debug ("Compiling binder " ^ inspect_bv binder ^
                 ", classified as " ^ string_of_abspat_binder_kind binder_kind ^
                 ", with type " ^ term_to_string typ);
          match binder_kind with
          | ABKVar _ -> { problem with mp_vars = bv_name :: problem.mp_vars }
-         | ABKHyp -> { problem with mp_hyps = (bv_name, (pattern_of_term typ)) :: problem.mp_hyps }
-         | ABKGoal -> { problem with mp_goal = Some (pattern_of_term typ) })
+         | ABKHyp -> { problem with mp_hyps = (bv_name, (pattern_of_term typ_novars)) :: problem.mp_hyps }
+         | ABKGoal -> { problem with mp_goal = Some (pattern_of_term typ_novars) })
       ({ mp_vars = []; mp_hyps = []; mp_goal = None })
       binders in
 
   let continuation =
     let abspat_argspec_of_binder binder : Tac abspat_argspec =
-      let binder_kind, typ = lift_exn_tac classify_abspat_binder binder in
+      let binder_kind, _ = lift_exn_tac classify_abspat_binder binder in
       { asa_name = binder; asa_kind = binder_kind } in
     (tacmap abspat_argspec_of_binder binders, tm) in
 
