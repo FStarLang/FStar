@@ -111,7 +111,7 @@ let pattern_of_term tm : Tac pattern =
 /// Pattern-matching problems
 /// =========================
 
-let debug msg : Tac unit = print msg ()
+let debug msg : Tac unit = () // print msg ()
 
 /// Definitions
 /// -----------
@@ -520,26 +520,70 @@ let split_hd #a #b #c (pr: a -> b -> c) : (a `c_and` b -> c) =
 //                     _ <-- intros;
 //                     dump "CC")
 
-let exxx () : unit =
-  assert_by_tactic (True /\ True ==> False)
-                   (tfirst [lpm (fun (a b: var Type0) (_: goal (squash (a ==> b))) ->
-                                   (fun () -> implies_intro ()) ())];;
-                    // h <-- implies_intro;
-                    // and_elim (pack (Tv_Var h));;
-                    // _ <-- implies_intros;
-                    dump "AAA")
+let ignore #a (x: a) : Tot unit = ()
 
-                    // lpm // #unit #(a:var Type0 -> b:var Type0 -> h:hyp (a /\ b) -> Tac unit)
-                    //    (fun (a b: var Type0) (h: hyp (a /\ b)) ->
-                    //       ))
+let implies_intro' : tactic unit =
+  _ <-- implies_intro; return ()
 
-let example (a b: int) =
-  assert_by_tactic (a == b ==> a + 1 == b + 1)
-                   (_ <-- implies_intro;
-                    // first [pm #unit (fun (a b: var int) (h: hyp (a == b)) ->
-                    //                    rewrite h (); trefl ());
-                    pm #unit (fun (a b: var Type) (h: hyp (a /\ b)) ->
-                                apply_lemma (quote split_hyp_lemma) ()))
+let repeat' f : tactic unit =
+  _ <-- repeat f; return ()
+
+let and_elim' (h: binder) : tactic unit =
+  and_elim (pack (Tv_Var h));;
+  clear h
+
+let exact_hyp (a: Type0) (h: binder) : tactic unit =
+  hd <-- quote (FStar.Squash.return_squash #a);
+  exact (return (mk_app hd [((pack (Tv_Var h)), Q_Explicit)]))
+  // apply (quote (FStar.Squash.return_squash #a));;
+  // exact (return (pack (Tv_Var h)))
+
+let mustfail #a (t: tactic a) (message: string) : tactic unit =
+  fun () ->
+    match trytac t () with
+    | Some _ -> fail message ()
+    | None -> ()
+
+let done : tactic unit =
+  mustfail cur_goal "Some goals are left"
+
+#set-options "--admit_smt_queries true"
+
+let example #a #b #c: unit =
+  assert_by_tactic (a /\ b ==> c == b ==> c)
+                   (tfirst
+                      [lpm (fun (a: var Type) (h: hyp (squash a)) ->
+                              clear h ());
+                       lpm (fun (a b: var Type0) (_: goal (squash (a ==> b))) ->
+                              implies_intro' () <: Tac unit);
+                       lpm (fun (a b: var Type0) (h: hyp (a /\ b)) ->
+                              and_elim' h () <: Tac unit);
+                       lpm (fun (a b: var Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
+                              rewrite h () <: Tac unit);
+                       lpm (fun (a: var Type0) (h: hyp a) (_: goal (squash a)) ->
+                              exact_hyp a h () <: Tac unit)];;
+                    done)
+
+
+let example #a #b #c: unit =
+  assert_by_tactic (a /\ b ==> c == b ==> c)
+                   (repeat'
+                     (dump "";; // FIXME: removing this ``dump`` makes everything really slow
+                      lpm (fun (a: var Type) (h: hyp (squash a)) ->
+                             clear h ())
+                      `or_else`
+                      lpm (fun (a b: var Type0) (_: goal (squash (a ==> b))) ->
+                             implies_intro' () <: Tac unit)
+                      `or_else`
+                      lpm (fun (a b: var Type0) (h: hyp (a /\ b)) ->
+                             and_elim' h () <: Tac unit)
+                      `or_else`
+                      lpm (fun (a b: var Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
+                             rewrite h () <: Tac unit)
+                      `or_else`
+                      lpm (fun (a: var Type0) (h: hyp a) (_: goal (squash a)) ->
+                             exact_hyp a h () <: Tac unit));;
+                    done)
 
 // let example (a b: int) =
 //   assert_by_tactic (a == b ==> a + 1 == b + 1)
