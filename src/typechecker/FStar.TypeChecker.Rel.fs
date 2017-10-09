@@ -1521,7 +1521,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
    let rec aux scope env subst (xs:binders) (ys:binders) : either<(probs * formula), string> =
         match xs, ys with
             | [], [] ->
-              let rhs_prob = rhs (List.rev scope) env subst in
+              let rhs_prob = rhs scope env subst in
               if debug env <| Options.Other "Rel"
               then BU.print1 "rhs_prob = %s\n" (prob_to_string env rhs_prob);
               let formula = p_guard rhs_prob |> fst in
@@ -1534,7 +1534,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                let hd1 = freshen_bv hd1 in
                let subst = DB(0, hd1)::SS.shift_subst 1 subst in  //extend the substitution
                let env = Env.push_bv env hd1 in
-               begin match aux ((hd1,imp)::scope) env subst xs ys with
+               begin match aux (scope @ [(hd1, imp)]) env subst xs ys with
                  | Inl (sub_probs, phi) ->
                    let phi =
                         U.mk_conj (p_guard prob |> fst)
