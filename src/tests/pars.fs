@@ -73,7 +73,7 @@ let pars s =
           let tcenv = init() in
           let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
             lexbuf.EndPos <- {lexbuf.EndPos with
-            pos_fname= Range.encode_file filename;
+            pos_fname= filename;
             pos_cnum=0;
             pos_lnum=1 } in
           let filename,sr,fs = "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in

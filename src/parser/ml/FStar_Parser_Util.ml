@@ -15,7 +15,7 @@ let pos_of_lexpos (p:position) =
   mk_pos (Z.of_int p.pos_lnum) (Z.of_int (p.pos_cnum - p.pos_bol))
 
 let mksyn_range (p1:position) p2 =
-  mk_file_idx_range (decode_file_idx p1.pos_fname) (pos_of_lexpos p1) (pos_of_lexpos p2)
+  mk_range p1.pos_fname (pos_of_lexpos p1) (pos_of_lexpos p2)
 
 let getLexerRange (lexbuf:lexbuf) =
   mksyn_range lexbuf.lex_start_p lexbuf.lex_curr_p
