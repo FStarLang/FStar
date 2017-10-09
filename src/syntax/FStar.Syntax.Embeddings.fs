@@ -32,16 +32,14 @@ let unembed_int (t:term) : int =
     | _ -> failwith "Not an embedded int"
 
 let embed_string (s:string) : term =
-    let bytes = BU.unicode_of_string s in
-    S.mk (Tm_constant(FStar.Const.Const_string(bytes, Range.dummyRange)))
+    S.mk (Tm_constant(FStar.Const.Const_string(s, Range.dummyRange)))
          None
          Range.dummyRange
 
 let unembed_string (t:term) : string =
     let t = U.unmeta t in
     match t.n with
-    | Tm_constant(FStar.Const.Const_string(bytes, _)) ->
-      BU.string_of_unicode bytes
+    | Tm_constant(FStar.Const.Const_string(s, _)) -> s
     | _ ->
       failwith ("Not an embedded string (" ^ Print.term_to_string t ^ ")")
 
@@ -116,3 +114,68 @@ let rec unembed_list (unembed_a: (term -> 'a)) (l:term) : list<'a> =
 let embed_string_list ss = embed_list embed_string S.t_string ss
 let unembed_string_list t = unembed_list unembed_string t
 
+type norm_step =
+    | Simpl
+    | WHNF
+    | Primops
+    | Delta
+    | Zeta
+    | Iota
+    | UnfoldOnly of list<string>
+
+(* the steps as terms *)
+let steps_Simpl      = tdataconstr PC.steps_simpl
+let steps_WHNF       = tdataconstr PC.steps_whnf
+let steps_Primops    = tdataconstr PC.steps_primops
+let steps_Delta      = tdataconstr PC.steps_delta
+let steps_Zeta       = tdataconstr PC.steps_zeta
+let steps_Iota       = tdataconstr PC.steps_iota
+let steps_UnfoldOnly = tdataconstr PC.steps_unfoldonly
+
+let embed_norm_step (n:norm_step) : term =
+    match n with
+    | Simpl ->
+        steps_Simpl
+    | WHNF ->
+        steps_WHNF
+    | Primops ->
+        steps_Primops
+    | Delta ->
+        steps_Delta
+    | Zeta ->
+        steps_Zeta
+    | Iota ->
+        steps_Iota
+    | UnfoldOnly l ->
+        S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed_list embed_string S.t_string l)]
+                    None Range.dummyRange
+
+let unembed_norm_step (t:term) : norm_step =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
+        Simpl
+    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_whnf ->
+        WHNF
+    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_primops ->
+        Primops
+    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_delta ->
+        Delta
+    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_zeta ->
+        Zeta
+    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
+        Iota
+    | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldonly ->
+        UnfoldOnly (unembed_list unembed_string l)
+    | _ ->
+        failwith "not an embedded norm_step"
+
+let embed_range (r:Range.range) : term =
+    S.mk (Tm_constant (C.Const_range r)) None r
+
+let unembed_range (t:term) : Range.range =
+    match t.n with
+    | Tm_constant (C.Const_range r) -> r
+    | _ ->
+        failwith "not an embedded range"

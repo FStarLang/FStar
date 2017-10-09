@@ -1,1 +1,23 @@
-[ "2-mFWÄ÷\f‚˘\u000eA—UNÅ", [] ]
+[
+  "ªX\u0000∆À∞ï\u0014∑\"NrC¸å◊",
+  [
+    [
+      "FStar.Tactics.Types.uu___is_TopDown",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "dfbe4cbb9b2cdf4e3c4395aeb61bee60"
+    ],
+    [
+      "FStar.Tactics.Types.uu___is_BottomUp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7feec746ff1c48892c8a652b033e8fd6"
+    ]
+  ]
+]

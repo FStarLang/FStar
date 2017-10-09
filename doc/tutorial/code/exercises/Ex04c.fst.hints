@@ -13,7 +13,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "cda9e017fbdd67656b44dd0ef2b8065c"
     ],
     [
       "Ex04c.mem",
@@ -27,7 +28,8 @@
         "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "56ecbea3465cd3870f13ce1a18e621cb"
     ],
     [
       "Ex04c.mem",
@@ -40,7 +42,8 @@
         "equation_Prims.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
-      0
+      0,
+      "0eeaee49c12b8b422ca99ee7d9973f23"
     ]
   ]
 ]

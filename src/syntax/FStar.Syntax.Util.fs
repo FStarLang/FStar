@@ -100,6 +100,19 @@ let rec unmeta e =
         | Tm_ascribed(e, _, _) -> unmeta e
         | _ -> e
 
+let rec unmeta_safe e =
+    let e = compress e in
+    match e.n with
+        | Tm_meta(e', m) ->
+            begin match m with
+            | Meta_monadic _
+            | Meta_monadic_lift _ ->
+              e // don't remove monadic metas
+            | _ -> unmeta_safe e'
+            end
+        | Tm_ascribed(e, _, _) -> unmeta_safe e
+        | _ -> e
+
 (********************************************************************************)
 (*************************** Utilities for universes ****************************)
 (********************************************************************************)
@@ -820,6 +833,11 @@ let is_fstar_tactics_embed t =
     | Tm_fvar fv -> fv_eq_lid fv PC.fstar_refl_embed_lid
     | _ -> false
 
+let is_fstar_tactics_quote t =
+    match (un_uinst t).n with
+    | Tm_fvar fv -> fv_eq_lid fv PC.quote_lid
+    | _ -> false
+
 let is_fstar_tactics_by_tactic t =
     match (un_uinst t).n with
     | Tm_fvar fv -> fv_eq_lid fv PC.by_tactic_lid
@@ -837,14 +855,15 @@ let type_u () : typ * universe =
     let u = U_unif <| Unionfind.univ_fresh () in
     mk (Tm_type u) None dummyRange, u
 
-let attr_substitute = mk (Tm_constant (Const_string (bytes_of_string "substitute", Range.dummyRange))) None Range.dummyRange
+let attr_substitute =
+mk (Tm_fvar (lid_as_fv (lid_of_path ["FStar"; "Pervasives"; "Substitute"] Range.dummyRange) Delta_constant None)) None Range.dummyRange
 
 let exp_true_bool : term = mk (Tm_constant (Const_bool true)) None dummyRange
 let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
 let exp_unit : term = mk (Tm_constant (Const_unit)) None dummyRange
 (* Makes an (unbounded) integer from its string repr. *)
 let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
-let exp_string s : term = mk (Tm_constant (Const_string (unicode_of_string s, dummyRange))) None dummyRange
+let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) None dummyRange
 
 let fvar_const l = fvar l Delta_constant None
 let tand    = fvar_const PC.and_lid
@@ -977,15 +996,21 @@ let un_squash t =
       None
 
 let arrow_one (t:typ) : option<(binder * comp)> =
-    match (compress t).n with
-    | Tm_arrow ([], c) ->
-        failwith "fatal: empty binders on arrow?"
-    | Tm_arrow ([b], c) ->
-        Some (b, c)
-    | Tm_arrow (b::bs, c) ->
-        Some (b, mk_Total (arrow bs c))
-    | _ ->
-        None
+    bind_opt (match (compress t).n with
+              | Tm_arrow ([], c) ->
+                  failwith "fatal: empty binders on arrow?"
+              | Tm_arrow ([b], c) ->
+                  Some (b, c)
+              | Tm_arrow (b::bs, c) ->
+                  Some (b, mk_Total (arrow bs c))
+              | _ ->
+                  None) (fun (b, c) ->
+    let bs, c = Subst.open_comp [b] c in
+    let b = match bs with
+            | [b] -> b
+            | _ -> failwith "impossible: open_comp returned different amount of binders"
+    in
+    Some (b, c))
 
 let is_free_in (bv:bv) (t:term) : bool =
     U.set_mem bv (FStar.Syntax.Free.names t)
@@ -1035,13 +1060,13 @@ let destruct_typ_as_formula f : option<connective> =
         let t = compress t in
         match t.n with
             | Tm_meta(t, Meta_pattern pats) -> pats, compress t
-            | _ -> [], compress t in
+            | _ -> [], t in
 
     let destruct_q_conn t =
         let is_q (fa:bool) (fv:fv) : bool =
             if fa
-            then is_forall fv.fv_name.v else
-            is_exists fv.fv_name.v
+            then is_forall fv.fv_name.v
+            else is_exists fv.fv_name.v
         in
         let flat t =
             let t, args = head_and_args t in
@@ -1123,11 +1148,6 @@ let destruct_typ_as_formula f : option<connective> =
             then None
             else
                 let q = (comp_to_comp_typ c).result_typ in
-                let bs, q = open_term [b] q in
-                let b = match bs with // coverage...
-                        | [b] -> b
-                        | _ -> failwith "impossible"
-                in
                 if is_free_in (fst b) q
                 then (
                     let pats, q = patterns q in
@@ -1293,9 +1313,7 @@ let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
 // We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
 // indices.
-// TODO: consider unification variables.. somehow? Not sure why we have some of them unresolved at tactic run time
-// TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure
-// that's ok.
+// TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure that's ok.
 let rec term_eq t1 t2 =
   let canon_app t =
     match t.n with
@@ -1303,15 +1321,15 @@ let rec term_eq t1 t2 =
                   { t with n = Tm_app (hd, args) }
     | _ -> t
   in
-  let t1 = canon_app t1 in
-  let t2 = canon_app t2 in
+  let t1 = canon_app (unmeta_safe t1) in
+  let t2 = canon_app (unmeta_safe t2) in
   match t1.n, t2.n with
   | Tm_bvar x, Tm_bvar y -> x.index = y.index
   | Tm_name x, Tm_name y -> bv_eq x y
   | Tm_fvar x, Tm_fvar y -> fv_eq x y
   | Tm_uinst (t1, us1), Tm_uinst (t2, us2) ->
         eqlist eq_univs us1 us2 && term_eq t1 t2
-  | Tm_constant x, Tm_constant y -> x = y
+  | Tm_constant c1, Tm_constant c2 -> eq_const c1 c2
   | Tm_type x, Tm_type y -> x = y
   | Tm_abs (b1,t1,k1), Tm_abs (b2,t2,k2) -> eqlist binder_eq b1 b2 && term_eq t1 t2 //&& eqopt (eqsum lcomp_eq residual_eq) k1 k2
   | Tm_app (f1,a1), Tm_app (f2,a2) -> term_eq f1 f2 && eqlist arg_eq a1 a2
@@ -1367,12 +1385,12 @@ let is_synth_by_tactic t =
     | Tm_fvar fv -> fv_eq_lid fv PC.synth_lid
     | _ -> false
 
-(* Spooky behaviours are possible with this, procede with caution *)
+(* Spooky behaviours are possible with this, proceed with caution *)
 
-let mk_alien (b : 'a) (s : string) (r : option<range>) : term =
-    mk (Tm_meta (tun, Meta_alien (mkdyn b, s))) None (match r with | Some r -> r | None -> dummyRange)
+let mk_alien (ty : typ) (b : 'a) (s : string) (r : option<range>) : term =
+    mk (Tm_meta (tun, Meta_alien (mkdyn b, s, ty))) None (match r with | Some r -> r | None -> dummyRange)
 
 let un_alien (t : term) : dyn =
     match t.n with
-    | Tm_meta (_, Meta_alien (blob, _)) -> blob
+    | Tm_meta (_, Meta_alien (blob, _, _)) -> blob
     | _ -> failwith "unexpected: term was not an alien embedding"

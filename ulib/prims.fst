@@ -322,13 +322,28 @@ assume val string_of_int: int -> Tot string
 (*********************************************************************************)
 abstract let normalize_term (#a:Type) (x:a) : a = x
 abstract let normalize (a:Type0) = a
-abstract let step    : Type0 = unit
-abstract let zeta    : step = ()
-abstract let iota    : step = ()
-abstract let primops : step = ()
-abstract let delta   : step = ()
-abstract let delta_only (s:list string) : step = ()
-abstract let norm (s:list step) (#a:Type) (x:a) : a = x
+
+abstract
+type norm_step =
+    | Simpl
+    | WHNF
+    | Primops
+    | Delta
+    | Zeta
+    | Iota
+    | UnfoldOnly : list string -> norm_step // each string is a fully qualified name like `A.M.f`
+
+// Helpers, so we don't expose the actual inductive
+let simplify : norm_step = Simpl
+let whnf    : norm_step = WHNF
+let primops : norm_step = Primops
+let delta   : norm_step = Delta
+let zeta    : norm_step = Zeta
+let iota    : norm_step = Iota
+let delta_only (s:list string) : norm_step = UnfoldOnly s
+
+// Normalization marker
+abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
 
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()

@@ -1,5 +1,5 @@
 [
-  "\u0018.–©‘;g$ÎÝ9€¡øª_",
+  "—£îpbd…´±¹\nÀ:Õö\u000b",
   [
     [
       "FStar.Tactics.Derived.mapM",
@@ -12,7 +12,17 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "a670342d1e31f3f1c6b6e07125daa2cd"
+    ],
+    [
+      "FStar.Tactics.Derived.guard",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3f7064c695ac45802c7f8fecdcc7be35"
     ],
     [
       "FStar.Tactics.Derived.or_else",
@@ -27,7 +37,8 @@
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
-      0
+      0,
+      "136573e45f638d8d7f6c97bb7e134995"
     ],
     [
       "FStar.Tactics.Derived.repeat",
@@ -42,10 +53,27 @@
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
-      0
+      0,
+      "032ca225d158e229ee79336e9e775b2a"
     ],
-    [ "FStar.Tactics.Derived.repeatseq", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Tactics.Derived.tcut", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Derived.repeatseq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cf6723cb9bd3929cd17354179fa5030f"
+    ],
+    [
+      "FStar.Tactics.Derived.tcut",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d676b3905e60bedda85215e662636af9"
+    ],
     [
       "FStar.Tactics.Derived.revert_all",
       1,
@@ -59,7 +87,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "4b217dd5f49b0b1f85d6d1ebc6d8ba9d"
     ],
     [
       "FStar.Tactics.Derived.assumption",
@@ -72,7 +101,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "03fd6f27e84c134a597039d9ee3a67ac"
     ],
     [
       "FStar.Tactics.Derived.destruct_equality_implication",
@@ -80,7 +110,8 @@
       2,
       1,
       [ "@query", "equation_FStar.Tactics.Effect.return" ],
-      0
+      0,
+      "6be04deeafac17dbe3d3fc10dbbb5457"
     ],
     [
       "FStar.Tactics.Derived.try_rewrite_equality",
@@ -98,7 +129,8 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "8bb8aa82330d78ff2ec94206e5faa4c3"
     ],
     [
       "FStar.Tactics.Derived.rewrite_all_context_equalities",
@@ -116,7 +148,8 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "a382c8b9176a3a2d3d04d312bd806a20"
     ],
     [
       "FStar.Tactics.Derived.unfold_point",
@@ -129,7 +162,8 @@
         "equation_FStar.Tactics.Derived.fail",
         "equation_FStar.Tactics.Effect.bind", "unit_typing"
       ],
-      0
+      0,
+      "f9679764e4b1124107d63d5645af5113"
     ],
     [
       "FStar.Tactics.Derived.grewrite'",
@@ -142,9 +176,18 @@
         "equation_FStar.Tactics.Builtins.exact",
         "equation_FStar.Tactics.Derived.fail", "unit_typing"
       ],
-      0
+      0,
+      "38a826d5e40f971977c9971d32987332"
     ],
-    [ "FStar.Tactics.Derived.mk_sq_eq", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Derived.mk_sq_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7a60aed7d4abc630c8a72e0bf12c17ba"
+    ],
     [
       "FStar.Tactics.Derived.iseq",
       1,
@@ -157,7 +200,21 @@
         "equation_FStar.Tactics.Effect.tactic",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "7e818c7b8d5883524fca6ab4699b0775"
+    ],
+    [
+      "FStar.Tactics.Derived.__witness",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "exists-interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "c403b3ac11b6e0a2c4ad594dd36bbb82"
     ]
   ]
 ]

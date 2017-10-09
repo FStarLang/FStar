@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
+      0,
+      "fdc55c3a90fd84bc10d1105adc380e31"
     ],
     [
       "FStar.HyperHeap.ST.modifies_none",
@@ -15,7 +16,8 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
+      0,
+      "de7c346161d6ee2424f99b8d023a83be"
     ],
     [
       "FStar.HyperHeap.ST.new_region",
@@ -23,7 +25,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "d23d760b58fd02455f1a802971cafd92"
     ],
     [
       "FStar.HyperHeap.ST.new_region",
@@ -31,7 +34,8 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
+      0,
+      "445cc0bdb551471e7538fb40191d8436"
     ],
     [
       "FStar.HyperHeap.ST.new_colored_region",
@@ -39,7 +43,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "711065fd806cf53c0e037f1939ccd5be"
     ],
     [
       "FStar.HyperHeap.ST.new_colored_region",
@@ -47,7 +52,8 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
+      0,
+      "600282b1e8f8ca3df31dba9e995c35e7"
     ],
     [
       "FStar.HyperHeap.ST.ralloc_post",
@@ -55,43 +61,8 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.ralloc_post",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.ralloc_post",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.ralloc_post",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "cd9550f0f50b7222aa69c492806c9465"
     ],
     [
       "FStar.HyperHeap.ST.alloc_post",
@@ -99,43 +70,8 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.alloc_post",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.alloc_post",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.alloc_post",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "6718a88d97f8092a780acf86ea09f406"
     ],
     [
       "FStar.HyperHeap.ST.assign_post",
@@ -143,31 +79,8 @@
       2,
       1,
       [ "@query", "equation_FStar.Heap.trivial_preorder", "true_interp" ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.assign_post",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.deref_post",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "c9aec2372ed519e043e4f4c622e9ca64"
     ],
     [
       "FStar.HyperHeap.ST.recall",
@@ -175,39 +88,17 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
+      0,
+      "c53ed7f44e0640247567e921be840fcc"
     ],
     [
       "FStar.HyperHeap.ST.recall",
       2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.recall",
-      3,
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
-    ],
-    [
-      "FStar.HyperHeap.ST.recall",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "b858e78aa32afcd9d50001b2156d22e4"
     ],
     [
       "FStar.HyperHeap.ST.recall_region",
@@ -215,7 +106,8 @@
       2,
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
-      0
+      0,
+      "d6121fe4b23e238bf2a411cdf468e3c1"
     ]
   ]
 ]

@@ -1,0 +1,31 @@
+[
+  "\\èzÙ)œUﬂ˝'È∞-á∑É",
+  [
+    [
+      "Map.OpaqueToSMT.sel_upd1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Map.sel", "equation_Map.upd",
+        "interpretation_Map_Tm_abs_130c2f30bd8262f24e6cf58a5019ec1a",
+        "primitive_Prims.op_Equality"
+      ],
+      0,
+      "7e4d13322cbd8c7bcfee7d9aa5258d9f"
+    ],
+    [
+      "Map.OpaqueToSMT.sel_upd2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Map.sel", "equation_Map.upd",
+        "interpretation_Map_Tm_abs_130c2f30bd8262f24e6cf58a5019ec1a",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "9d3f3973fc5d4afea2851cc40e442554"
+    ]
+  ]
+]

@@ -1,13 +1,7 @@
 module Apply
 
-#reset-options "--eager_inference"
-
-//
-
 open FStar.Mul
 open FStar.Tactics
-open FStar.Tactics.Arith
-open FStar.Reflection.Arith
 
 assume val x : int
 

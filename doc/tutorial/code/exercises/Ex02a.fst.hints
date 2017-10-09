@@ -1,14 +1,23 @@
 [
   "±\\\u001d'8ƒJxÓêoõ…¶?œ",
   [
-    [ "Ex02a.canWrite", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex02a.canWrite",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3fd8260fb231bbbefd68b8d3ee188ac5"
+    ],
     [
       "Ex02a.canRead",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
-      0
+      0,
+      "4470dcb096ae4bbfa15e3987835ee5d6"
     ]
   ]
 ]

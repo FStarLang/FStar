@@ -10,9 +10,9 @@
         "@query", "equation_FStar.UInt128.n", "equation_FStar.UInt64.n",
         "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "04fed5f4a80327e7104537dab4882cdd"
     ],
-    [ "FStar.Int.Cast.Full.uint64_to_uint128", 2, 2, 1, [ "@query" ], 0 ],
     [
       "FStar.Int.Cast.Full.uint128_to_uint64",
       1,
@@ -29,7 +29,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
-      0
+      0,
+      "fa74c663e50a9f2ed47a73360789deda"
     ]
   ]
 ]

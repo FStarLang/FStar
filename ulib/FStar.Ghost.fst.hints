@@ -1,5 +1,5 @@
 [
-  "´\f6kI\u0007VÞ\u007fìæ¦§\bÉj",
+  "Ýõp„;$rh¥åËÜªÖ¸1",
   [
     [
       "FStar.Ghost.reveal",
@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query", "equation_FStar.Ghost.erased" ],
-      0
+      0,
+      "963ff5d84e55360c9f794ed1220953ea"
     ],
     [
       "FStar.Ghost.hide",
@@ -15,7 +16,8 @@
       2,
       1,
       [ "@query", "equation_FStar.Ghost.erased" ],
-      0
+      0,
+      "49a4dbedc324739d254ecb98319b2ffd"
     ],
     [
       "FStar.Ghost.hide_reveal",
@@ -26,7 +28,8 @@
         "@query", "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
         "unit_typing"
       ],
-      0
+      0,
+      "42e40a44c1306734e57d5078c36daa80"
     ],
     [
       "FStar.Ghost.reveal_hide",
@@ -37,7 +40,8 @@
         "@query", "equation_FStar.Ghost.hide", "equation_FStar.Ghost.reveal",
         "unit_typing"
       ],
-      0
+      0,
+      "ed0d896747eb9519396a596e94ce2715"
     ],
     [
       "FStar.Ghost.elift1",
@@ -48,7 +52,8 @@
         "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal"
       ],
-      0
+      0,
+      "c1d1d31e9d76f7b1c22d64639f77a15a"
     ],
     [
       "FStar.Ghost.elift2",
@@ -59,7 +64,8 @@
         "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal"
       ],
-      0
+      0,
+      "31a3321852032be77d832ef55c9b18d6"
     ],
     [
       "FStar.Ghost.elift3",
@@ -70,7 +76,8 @@
         "@query", "equation_FStar.Ghost.erased",
         "equation_FStar.Ghost.reveal"
       ],
-      0
+      0,
+      "4fa6725dc87de10c357177cab0ea6cd8"
     ],
     [
       "FStar.Ghost.elift1_p",
@@ -81,7 +88,8 @@
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_FStar.Ghost_Tm_refine_4861ff30b18822886452f698558931e8"
       ],
-      0
+      0,
+      "6b956b761274ed94465d65d4e91cea5e"
     ],
     [
       "FStar.Ghost.elift1_p",
@@ -93,7 +101,8 @@
         "equation_FStar.Ghost.reveal",
         "refinement_interpretation_FStar.Ghost_Tm_refine_4861ff30b18822886452f698558931e8"
       ],
-      0
+      0,
+      "708aef6455debe259ba89cbd73dcc39c"
     ],
     [
       "FStar.Ghost.elift2_p",
@@ -104,7 +113,8 @@
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_FStar.Ghost_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
-      0
+      0,
+      "1f43e37484405c82a5d65c9b85b53aef"
     ],
     [
       "FStar.Ghost.elift2_p",
@@ -116,7 +126,17 @@
         "equation_FStar.Ghost.reveal",
         "refinement_interpretation_FStar.Ghost_Tm_refine_50e552dc638ed7dac9f2492d99576667"
       ],
-      0
+      0,
+      "466c8844d4f348d9c48476a8a5bae9ff"
+    ],
+    [
+      "FStar.Ghost.lemma_haseq_erased",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.Ghost.erased", "unit_typing" ],
+      0,
+      "064ff193beb340522176313677480673"
     ]
   ]
 ]

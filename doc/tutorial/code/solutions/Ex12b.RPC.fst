@@ -22,9 +22,7 @@ open Ex12.MAC
 
 module Formatting = Ex12b2.Format
 
-(* some basic, untrusted network controlled by the adversary *)
-
-
+(** some basic, untrusted network controlled by the adversary *)
 val msg_buffer: ref message
 let msg_buffer = alloc (empty_bytes)
 
@@ -44,13 +42,10 @@ let rec recv call =
     call msg)
   else recv call
 
-(* two events, recording genuine requests and responses *)
-
-
+(** two events, recording genuine requests and responses *)
 type log_entry =
   | Request: string -> log_entry
   | Response: string -> string -> log_entry
-
 
 let subset' (#a:eqtype) (l1:list a) (l2:list a)
   = (forall x. x `mem` l1 ==> x `mem` l2)
@@ -86,10 +81,9 @@ type reqresp text =
   \/ (exists s t. text = Formatting.response s t /\ pResponse s t)
 // END: MsgProperty
 
-val k: k:key{forall x. key_prop k x <==> reqresp x}
+val k:pkey reqresp
 let k = print_string "generating shared key...\n";
   keygen reqresp
-
 
 
 val client_send : s:string16 -> ML unit
@@ -100,9 +94,9 @@ let client_send (s:string16) =
   witness_token log (req s);
 
   assert(reqresp (Formatting.request s)); (* this works *)
-  assert(forall x. key_prop k x <==> reqresp x); (* this also works *)
-  assert(key_prop k (Formatting.request s) <==> reqresp (Formatting.request s));
-  (*assert(key_prop k (Formatting.request s)); -- this fails *)
+  // assert(key_prop k == reqresp);          (* this also works *)
+  assert (reqresp (Formatting.request s)) ;
+  // assert(key_prop k (Formatting.request s));  (* this fails *) 
   send ( (utf8 s) @| (mac k (Formatting.request s)))
 
 
@@ -115,6 +109,7 @@ let client_recv (s:string16) =
       let t = iutf8 v in
       if verify k (Formatting.response s t) m'
       then (
+        from_key_prop k (Formatting.response s t);
         assert (pResponse s t);
         recall_token log (resp s t);
         let xs = !log in
@@ -140,6 +135,7 @@ let server () =
         if verify k (Formatting.request s) m
         then
           (
+            from_key_prop k (Formatting.request s);
             assert (pRequest s);
             recall_token log (req s);
             let xs = !log in

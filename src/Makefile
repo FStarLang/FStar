@@ -90,7 +90,7 @@ FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_i
 
 ALL_BOOT=$(addprefix boot/FStar., \
            Util.fsti List.fsti Bytes.fsti String.fsti \
-		   Range.fsti Pprint.fsti Parser.Parse.fsti \
+		   Pprint.fsti Parser.Parse.fsti \
 		   Tactics.Interpreter.fst Tactics.Interpreter.fsti)
 
 boot/%.fsti: basic/boot/%.fsi | boot_dir
@@ -130,9 +130,9 @@ boot: $(ALL_BOOT)
 clean_boot:
 	rm -rf boot
 
-MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Options.fs FStar.Ident.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
+MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Options.fs FStar.Range.fs FStar.Ident.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
 extract_misc: boot $(MISC_EXTRACTED_FILES)
-	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
+	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Range FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
 
 SYNTAX_EXTRACTED_FILES=$(addprefix syntax/FStar.Syntax., Syntax.fs Subst.fs Free.fs InstFV.fs Util.fs Print.fs Embeddings.fs MutRecTy.fs Resugar.fs Unionfind.fs) fsdoc/FStar.Fsdoc.Generator.fs
 extract_syntax: boot $(SYNTAX_EXTRACTED_FILES)
@@ -202,9 +202,9 @@ SOLVER_EXTRACTED_FILES=smtencoding/FStar.SMTEncoding.Solver.fs
 extract_solver: boot $(SOLVER_EXTRACTED_FILES)
 	$(FSTARBOOT) $(SOLVER_EXTRACTED_FILES) --extract_module FStar.SMTEncoding.Solver
 
-FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Legacy.Interactive.fs Interactive.fs Universal.fs Indent.fs Main.fs)
+FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Interactive.Legacy.fs Interactive.CompletionTable.fs Interactive.Ide.fs Universal.fs Indent.fs Main.fs)
 extract_fstar: boot $(FSTAR_EXTRACTED_FILES)
-	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive --extract_module FStar.Legacy.Interactive --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
+	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive.CompletionTable --extract_module FStar.Interactive.Ide --extract_module FStar.Interactive.Legacy --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
 extract_typechecker: extract_normalizer extract_rel extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc
 
@@ -266,7 +266,7 @@ hello:
 	+$(MAKE) -C ../examples/hello ocaml
 
 # Getting parallelism from this target
-uregressions: hello ulib tutorial uexamples interactive-test
+uregressions: hello native_tactics ulib tutorial uexamples extraction-examples interactive-test
 
 # Getting parallelism from this target as well
 uregressions-ulong: uregressions ulib-extra
@@ -284,6 +284,9 @@ tutorial: hello
 # Depends on fstarlib.cmxa, which is built by hello
 native_tactics: hello
 	+$(MAKE) -C ../examples/native_tactics all
+
+extraction-examples: hello
+	+$(MAKE) -C ../examples/extraction all
 
 uexamples:
 	+$(MAKE) -C ../examples all

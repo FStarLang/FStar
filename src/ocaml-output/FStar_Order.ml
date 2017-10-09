@@ -2,7 +2,7 @@ open Prims
 type order =
   | Lt
   | Eq
-  | Gt
+  | Gt[@@deriving show]
 let uu___is_Lt: order -> Prims.bool =
   fun projectee  -> match projectee with | Lt  -> true | uu____5 -> false
 let uu___is_Eq: order -> Prims.bool =

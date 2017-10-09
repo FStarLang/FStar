@@ -46,7 +46,7 @@ let finished_message fmods errs =
     then if errs = 1
          then Util.print_error "1 error was reported (see above)\n"
          else Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs)
-    else print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
+    else print1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully")
   end
 
 (* printing total error count *)
@@ -84,7 +84,24 @@ let codegen (umods, env) =
         save_value_to_file (Options.prepend_output_dir "out.krml") bin
    | _ -> failwith "Unrecognized option"
 
+let gen_native_tactics (umods, env) out_dir =
+    (* Extract module and its dependencies to OCaml *)
+    Options.set_option "codegen" (Options.String "OCaml");
+    let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
+    let mllibs = List.flatten mllibs in
+    List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
 
+    (* Compile the modules which contain tactics into dynamically-linkable OCaml plugins *)
+    let user_tactics_modules = Universal.user_tactics_modules in
+    Tactics.Load.compile_modules out_dir (!user_tactics_modules)
+
+let init_native_tactics () =
+  Tactics.Load.load_tactics (Options.load ());
+  match Options.use_native_tactics () with
+  | Some dir ->
+      Util.print1 "Using native tactics from %s\n" dir;
+      Tactics.Load.load_tactics_dir dir
+  | None -> ()
 
 (****************************************************************************)
 (* Main function                                                            *)
@@ -97,27 +114,26 @@ let go _ =
     | Error msg ->
         Util.print_string msg
     | Success ->
+        init_native_tactics ();
+
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
-        else if Options.interactive () then begin //--in
-          if Options.explicit_deps () then begin
-            Util.print_error "--explicit_deps incompatible with --in\n";
-            exit 1
-          end;
-          if List.length filenames <> 1 then begin
-            Util.print_error "fstar-mode.el should pass the current filename to F*\n";
-            exit 1
-          end;
-          let filename = List.hd filenames in
+        else if Options.interactive () then begin
+          match filenames with
+          | [] ->
+            Util.print_error "--ide: Name of current file missing in command line invocation\n"; exit 1
+          | _ :: _ :: _ ->
+            Util.print_error "--ide: Too many files in command line invocation\n"; exit 1
+          | [filename] ->
+            if Options.explicit_deps () then begin
+              Util.print_error "--ide: --explicit_deps not supported in interactive mode\n";
+              exit 1 end;
 
-          if Options.verify_module () <> [] then
-            Util.print_warning "Interactive mode; ignoring --verify_module";
-
-          (* interactive_mode takes care of calling [find_deps_if_needed] *)
-          if Options.legacy_interactive () then FStar.Legacy.Interactive.interactive_mode filename
-          else FStar.Interactive.interactive_mode filename
-	  //and then start checking chunks from the current buffer
-        end //end interactive mode
+            if Options.legacy_interactive () then
+              FStar.Interactive.Legacy.interactive_mode filename
+            else
+              FStar.Interactive.Ide.interactive_mode filename
+          end
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
@@ -139,11 +155,19 @@ let go _ =
               Parser.Dep.VerifyFigureItOut
           in
           let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
-          Tactics.Load.load_tactics (Options.load ());
-          let fmods, dsenv, env = Universal.batch_mode_tc filenames in
+          (match Options.gen_native_tactics () with
+          | Some dir ->
+             Util.print1 "Generating native tactics in %s\n" dir;
+             Options.set_option "lax" (Options.Bool true)
+          | None -> ());
+          let fmods, env = Universal.batch_mode_tc filenames in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);
+          (match Options.gen_native_tactics () with
+          | Some dir ->
+              gen_native_tactics (fmods |> List.map fst, env) dir
+          | None -> ());
           finished_message module_names_and_times 0
         end //end normal batch mode
         else

@@ -13,7 +13,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "b4bcbcba9ded63497e716781b7d58e45"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +28,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "92355f24c6d90ae14e1f85dc0b3284f4"
     ],
     [
       "Ex05a.rev",
@@ -41,7 +43,8 @@
         "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "a5036247221f7871cb2c27244322175f"
     ],
     [
       "Ex05a.append_assoc",
@@ -62,7 +65,8 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "subterm_ordering_Prims.Cons", "unit_typing"
       ],
-      0
+      0,
+      "0abf00949a95e16235c521aa41681a59"
     ],
     [
       "Ex05a.rev_is_ok_aux",
@@ -89,7 +93,8 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "subterm_ordering_Prims.Cons", "unit_typing"
       ],
-      0
+      0,
+      "731a84b6e5c4fbb181a4ab3ca64e2eba"
     ],
     [
       "Ex05a.append_nil",
@@ -108,7 +113,8 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "subterm_ordering_Prims.Cons", "unit_typing"
       ],
-      0
+      0,
+      "14a6c9f34db4707c038c85e876f81139"
     ],
     [
       "Ex05a.rev_is_ok",
@@ -120,7 +126,8 @@
         "equation_Prims.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
-      0
+      0,
+      "f1deb89637f4fb6961df27b6e4749d2d"
     ]
   ]
 ]

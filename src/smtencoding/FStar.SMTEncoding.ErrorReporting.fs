@@ -24,6 +24,7 @@ open FStar.BaseTypes
 open FStar.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding.Util
+open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding
 open FStar.Range
 module BU = FStar.Util
@@ -95,7 +96,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                   else msg in
         let rng = match ropt with
                   | None -> rng
-                  | Some r -> {r with def_range=rng.def_range}
+                  | Some r -> Range.set_def_range r (Range.def_range rng)
         in
         fresh_label msg rng t
     in
@@ -320,8 +321,8 @@ let detail_errors hint_replay
         | hd::tl ->
 	      BU.print1 "%s, " (BU.string_of_int (List.length active));
 	      let decls = elim <| (eliminated @ errors @ tl) in
-          let result, _, _ = askZ3 decls in //hd is the only thing to prove
-          match result with
+          let result = askZ3 decls in //hd is the only thing to prove
+          match result.z3result_status with
           | Z3.UNSAT _ -> //hd is provable
             linear_check (hd::eliminated) errors tl
           | _ -> linear_check eliminated (hd::errors) tl in

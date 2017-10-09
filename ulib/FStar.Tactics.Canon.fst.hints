@@ -1,5 +1,5 @@
 [
-  "æ»$\\\u0012ÿÀﬂ\u000eÚaƒmªô’",
+  "ÚÅ\u0014ç≠\u0006\u0002¯É\u001d:∞iV£\n",
   [
     [
       "FStar.Tactics.Canon.distr",
@@ -11,7 +11,8 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0", "unit_typing"
       ],
-      0
+      0,
+      "dddae9b4d6b5637be1adaaece9bb0b10"
     ],
     [
       "FStar.Tactics.Canon.distl",
@@ -23,7 +24,8 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0", "unit_typing"
       ],
-      0
+      0,
+      "2dcf127820f1884ef262a57914432183"
     ],
     [
       "FStar.Tactics.Canon.ass_plus_l",
@@ -35,7 +37,8 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "5efc7e2a7f9ac87f9ab6549d40018914"
     ],
     [
       "FStar.Tactics.Canon.ass_mult_l",
@@ -47,7 +50,8 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "d5e488fc275cba9056b9cf8758f6c0c1"
     ],
     [
       "FStar.Tactics.Canon.comm_plus",
@@ -58,7 +62,8 @@
         "@MaxIFuel_assumption", "@query", "int_inversion",
         "primitive_Prims.op_Addition", "unit_typing"
       ],
-      0
+      0,
+      "7c67090bae85bbc9ec49e2a6f4439014"
     ],
     [
       "FStar.Tactics.Canon.sw_plus",
@@ -70,7 +75,8 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "3837aadf09efd690382907c960901db7"
     ],
     [
       "FStar.Tactics.Canon.sw_mult",
@@ -82,7 +88,8 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "49f3592f03fc5d2af624afa1a33b7516"
     ],
     [
       "FStar.Tactics.Canon.comm_mult",
@@ -93,7 +100,8 @@
         "@MaxIFuel_assumption", "@query", "int_inversion",
         "primitive_Prims.op_Multiply", "unit_typing"
       ],
-      0
+      0,
+      "df49addfe4c6625eb15670280745556a"
     ],
     [
       "FStar.Tactics.Canon.trans",
@@ -106,7 +114,8 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
-      0
+      0,
+      "e772b6068f6d9361c9cdee0f76c041ec"
     ],
     [
       "FStar.Tactics.Canon.cong_plus",
@@ -119,7 +128,8 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
-      0
+      0,
+      "5e0b30e29eaab093ebd06d4cbba19ed2"
     ],
     [
       "FStar.Tactics.Canon.cong_mult",
@@ -132,7 +142,8 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
-      0
+      0,
+      "427b7a0a47a0a37cf359a757df219d82"
     ],
     [
       "FStar.Tactics.Canon.neg_minus_one",
@@ -144,7 +155,8 @@
         "primitive_Prims.op_Minus", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0", "unit_typing"
       ],
-      0
+      0,
+      "d33fdc42c3ccda613c439b342ccc3955"
     ],
     [
       "FStar.Tactics.Canon.mult1",
@@ -156,7 +168,8 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "e575cbb7b7b0ffaaf81bddc7abe4dd27"
     ],
     [
       "FStar.Tactics.Canon.x_plus_zero",
@@ -168,7 +181,8 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "d804ceb9b661a95a6da20a83b16d8e55"
     ],
     [
       "FStar.Tactics.Canon.zero_plus_x",
@@ -180,7 +194,8 @@
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "5465ad01164545640ada965cf6d69a03"
     ],
     [
       "FStar.Tactics.Canon.x_mult_zero",
@@ -192,7 +207,8 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "bd0abbb5b4e2e159486b86adf71b84f8"
     ],
     [
       "FStar.Tactics.Canon.zero_mult_x",
@@ -204,7 +220,8 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "444a79fff8f9bdd77e8e9023c758235c"
     ],
     [
       "FStar.Tactics.Canon.x_mult_one",
@@ -216,7 +233,8 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "673315ddd94e119be88bedefaa9c80af"
     ],
     [
       "FStar.Tactics.Canon.one_mult_x",
@@ -228,7 +246,8 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "2b812251ace0d1312827e5278ca95fba"
     ],
     [
       "FStar.Tactics.Canon.minus_is_plus",
@@ -241,7 +260,8 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "unit_typing"
       ],
-      0
+      0,
+      "4367b8832f12f747f1f7394bf2fc0b7e"
     ],
     [
       "FStar.Tactics.Canon.canon_point",
@@ -264,7 +284,8 @@
         "typing_FStar.Reflection.Arith.is_arith_expr",
         "typing_FStar.Reflection.Arith.run_tm", "unit_typing"
       ],
-      0
+      0,
+      "2ea57deb97ac5e668a93213f541a8b31"
     ]
   ]
 ]

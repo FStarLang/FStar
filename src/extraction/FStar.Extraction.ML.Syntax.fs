@@ -28,7 +28,7 @@ open FStar.BaseTypes
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
-type mlident  = mlsymbol * int //what is the second component? Why do we need it?
+type mlident  = mlsymbol
 type mlpath   = list<mlsymbol> * mlsymbol //Path and name of a module
 
 (* -------------------------------------------------------------------- *)
@@ -45,11 +45,36 @@ let ocamlkeywords = [
   "with"; "nonrec"
 ]
 
-let is_reserved k =
-  List.existsb (fun k' -> k' = k) ocamlkeywords
+let fsharpkeywords = [
+  "abstract"; "and"; "as"; "assert"; "base"; "begin"; "class";
+  "default"; "delegate"; "do"; "done"; "downcast"; "downto";
+  "elif"; "else"; "end"; "exception"; "extern"; "false";
+  "finally"; "fixed"; "for"; "fun"; "function"; "global"; "if";
+  "in"; "inherit"; "inline"; "interface"; "internal"; "lazy";
+  "let"; "let!"; "match"; "member"; "module"; "mutable";
+  "namespace"; "new"; "not"; "null"; "of"; "open"; "or";
+  "override"; "private"; "public"; "rec"; "return"; "return!";
+  "select"; "static"; "struct"; "then"; "to"; "true"; "try";
+  "type"; "upcast"; "use"; "use!"; "val"; "void"; "when";
+  "while"; "with"; "yield"; "yield!"; 
+  // --mlcompatibility keywords
+  "asr"; "land"; "lor";
+  "lsl"; "lsr"; "lxor"; "mod"; "sig";
+  // reserved keywords
+  "atomic"; "break"; "checked"; "component"; "const";
+  "constraint"; "constructor"; "continue"; "eager"; "event";
+  "external"; "fixed"; "functor"; "include"; "method"; "mixin";
+  "object"; "parallel"; "process"; "protected"; "pure";
+  "sealed"; "tailcall"; "trait"; "virtual"; "volatile"
+]
 
-let idsym ((s, _) : mlident) : mlsymbol =
-    s
+let is_reserved k =
+  let reserved_keywords () = 
+      if Options.codegen_fsharp()
+      then fsharpkeywords
+      else ocamlkeywords
+  in
+  List.existsb (fun k' -> k' = k) (reserved_keywords ())
 
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
@@ -62,7 +87,7 @@ type gensym_t = {
 let gs =
   let ctr = Util.mk_ref 0 in
   let n_resets = Util.mk_ref 0 in
-  {gensym =(fun () -> incr ctr; "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (!ctr)), 0);
+  {gensym =(fun () -> incr ctr; "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (!ctr)));
    reset = (fun () -> ctr := 0; incr n_resets)}
 
 let gensym () = gs.gensym()
@@ -120,25 +145,24 @@ type mlpattern =
 | MLP_Tuple  of list<mlpattern>
 
 
-type c_flag = // C backend only
+type meta = // C backend only
   | Mutable
   | Assumed
   | Private
   | NoExtract
-  | Attribute of string
-
-// JP: merge these two?
-type tyattr = // OCaml only
+  | CInline
+  | Substitute
+  | GCType
   | PpxDerivingShow
   | PpxDerivingShowConstant of string
+  | Comment of string
 
-type tyattrs = list<tyattr>
+// rename
+type metadata = list<meta>
 
 type mlletflavor =
   | Rec
   | NonRec
-
-type c_flags = list<c_flag>
 
 type mlexpr' =
 | MLE_Const  of mlconstant
@@ -146,6 +170,7 @@ type mlexpr' =
 | MLE_Name   of mlpath
 | MLE_Let    of mlletbinding * mlexpr //tyscheme for polymorphic recursion
 | MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried
+| MLE_TApp   of mlexpr * list<mlty>
 | MLE_Fun    of list<(mlident * mlty)> * mlexpr
 | MLE_Match  of mlexpr * list<mlbranch>
 | MLE_Coerce of mlexpr * mlty * mlty
@@ -175,7 +200,7 @@ and mllb = {
     print_typ:bool;
 }
 
-and mlletbinding = mlletflavor * c_flags * list<mllb>
+and mlletbinding = mlletflavor * metadata * list<mllb>
 
 type mltybody =
 | MLTD_Abbrev of mlty
@@ -186,7 +211,7 @@ type mltybody =
      *)
 
 // bool: this was assumed (C backend)
-type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * tyattrs * option<mltybody>
+type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * metadata * option<mltybody>
 type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =
@@ -224,7 +249,10 @@ let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
-    let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name(["Obj"], "repr")) in
+    let obj_ns = if Options.codegen_fsharp() 
+                 then "FSharp.Compatibility.OCaml.Obj" 
+                 else "Obj" in
+    let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name([obj_ns], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
 (* 20161021, JP: trying to make sense of this code...
@@ -260,8 +288,8 @@ open FStar.Syntax.Syntax
 let bv_as_mlident (x:bv): mlident =
   if Util.starts_with x.ppname.idText Ident.reserved_prefix
   || is_null_bv x || is_reserved x.ppname.idText
-  then x.ppname.idText ^ "_" ^ (string_of_int x.index), 0
-  else x.ppname.idText, 0
+  then x.ppname.idText ^ "_" ^ (string_of_int x.index)
+  else x.ppname.idText
 
 let push_unit (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in

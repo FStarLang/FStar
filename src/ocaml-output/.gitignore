@@ -19,7 +19,6 @@ FStar_Parser_ParseIt.ml
 FStar_Parser_Util.ml
 FStar_Parser_Interleave.ml
 FStar_Platform.ml
-FStar_Range.ml
 FStar_ST.ml
 FStar_String.ml
 FStar_Unionfind.ml

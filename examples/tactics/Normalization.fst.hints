@@ -1,0 +1,101 @@
+[
+  "沑u0010嚬\u000e檈󍿄#拚傱",
+  [
+    [
+      "Normalization.def_of",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "72f193ef4dc47bb41b99bd3840498e1d"
+    ],
+    [
+      "Normalization.uu___93",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "aea04750425b19a6219c914487836882"
+    ],
+    [
+      "Normalization.uu___93",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6d855da6522f5553394e2fdca0a8e105"
+    ],
+    [
+      "Normalization.uu___94",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "6d69fb64544824214cae9eeeb1c9aef5"
+    ],
+    [
+      "Normalization.uu___94",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "150b38e9a9cecf3b2b3d29a2685ba2b3"
+    ],
+    [
+      "Normalization.uu___95",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "ca722959788694ee330464ca3247f91a"
+    ],
+    [
+      "Normalization.uu___95",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4e8c5c570a3fa89ddb324b44d19d7073"
+    ],
+    [
+      "Normalization.uu___96",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Normalization.does_not_normalize",
+        "equation_Normalization.four__",
+        "function_token_typing_Normalization.four__", "int_inversion",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "d3ea1fcfff66ca4ef0bde50c892c28f7"
+    ],
+    [
+      "Normalization.uu___97",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "64cb8994716b80d84edbfb183c878f22"
+    ],
+    [
+      "Normalization.uu___97",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a5fdec58318a8d20961e8355168b9b50"
+    ]
+  ]
+]

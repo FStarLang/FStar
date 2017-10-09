@@ -51,6 +51,10 @@ type prob =
   | TProb of problem<typ,term>
   | CProb of problem<comp,unit>
 
+let as_tprob = function
+   | TProb p -> p
+   | _ -> failwith "Expected a TProb"
+
 type probs = list<prob>
 
 type guard_formula =
@@ -148,7 +152,7 @@ open FStar.Range
 
 let id_info__insert ty_map db info =
     let range = info.identifier_range in
-    let use_range = { range with def_range = range.use_range } in
+    let use_range = Range.set_def_range range (Range.use_range range) in
     let info = { info with identifier_range = use_range;
                            identifier_ty = ty_map info.identifier_ty } in
 

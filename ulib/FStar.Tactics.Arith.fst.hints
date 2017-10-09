@@ -16,7 +16,8 @@
         "typing_FStar.Reflection.Arith.is_arith_prop",
         "typing_FStar.Reflection.Arith.run_tm"
       ],
-      0
+      0,
+      "4cd080e9de342cedd3f9a46e13dacdec"
     ],
     [
       "FStar.Tactics.Arith.split_arith",
@@ -36,7 +37,8 @@
         "equation_FStar.Tactics.Logic.implies_intro",
         "equation_FStar.Tactics.Logic.split", "unit_typing"
       ],
-      0
+      0,
+      "4265aa050ea4ae3a2796dde9d11a7d47"
     ]
   ]
 ]

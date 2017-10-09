@@ -1,8 +1,32 @@
 [
   "\u001dÆ\\‚\u0017ˆû\u000evr¸ˆ\u00018—<",
   [
-    [ "Unit1.WPsAndTriples.f", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples.h", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Unit1.WPsAndTriples.g", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "Unit1.WPsAndTriples.f",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f4183086a01469c46e3797f3bf95825d"
+    ],
+    [
+      "Unit1.WPsAndTriples.h",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "79fcf1c4ed0ce5250a8ce1e75ad63858"
+    ],
+    [
+      "Unit1.WPsAndTriples.g",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e4acd33ccdf53422b1ad37591b52ddde"
+    ]
   ]
 ]

@@ -1,21 +1,23 @@
 [
-  "iMç\ti≠¸é–,o.ÙM!9",
+  "dqT[\u0015\u001e\u0010ˆø≈äŒΩf\u0014ª",
   [
     [
-      "UnitTests.uu___94",
+      "UnitTests.uu___116",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "8c2c156cd15ad8566b903a4811b275b2"
     ],
     [
-      "UnitTests.uu___96",
+      "UnitTests.uu___118",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
-      0
+      0,
+      "2093c6ff4de33ac5f53f3cb2ea2aadf6"
     ],
     [
       "UnitTests.fib",
@@ -29,21 +31,63 @@
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "be54ab37a48e761d4e6a711dece3e009"
     ],
     [
-      "UnitTests.uu___99",
+      "UnitTests.uu___121",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "368d8059c5c6d6c5b58f79dfbee85d9b"
     ],
-    [ "UnitTests.t", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "UnitTests.uu___is_A", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UnitTests.uu___is_B", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UnitTests.uu___is_C", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UnitTests.uu___is_D", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "UnitTests.t",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "40d4953291b0845f933449a237a7e1f5"
+    ],
+    [
+      "UnitTests.uu___is_A",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b3849398f9128c1d58a8cb16a74dfd5e"
+    ],
+    [
+      "UnitTests.uu___is_B",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8078e3a33126cbdd3ac3677beb403667"
+    ],
+    [
+      "UnitTests.uu___is_C",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "77cf01bbd780ccb811c610d3255486cc"
+    ],
+    [
+      "UnitTests.uu___is_D",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a466f87986ad0ba14204aad58fc48873"
+    ],
     [
       "UnitTests.__proj__D__item__x",
       1,
@@ -54,7 +98,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_UnitTests_Tm_refine_d5280682073b2e7543fac398f926302c"
       ],
-      0
+      0,
+      "71ad0db9d0581026365adfc83c776748"
     ],
     [
       "UnitTests.f",
@@ -69,10 +114,11 @@
         "equality_tok_UnitTests.B@tok", "equality_tok_UnitTests.C@tok",
         "fuel_guarded_inversion_UnitTests.t"
       ],
-      0
+      0,
+      "bc446cd1092b88ccabe1c0653a4d7cf5"
     ],
     [
-      "UnitTests.uu___106",
+      "UnitTests.uu___128",
       1,
       2,
       1,
@@ -81,66 +127,107 @@
         "disc_equation_UnitTests.D", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_UnitTests.D_x"
       ],
-      0
+      0,
+      "8c17c5733ccf536d9a780c458f5bdb7b"
     ],
-    [ "UnitTests.l2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UnitTests.r", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "UnitTests.__proj__Mkr__item__x", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "UnitTests.uu___109",
+      "UnitTests.l2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cd7ff514882f5c1490af1130518b1121"
+    ],
+    [
+      "UnitTests.r",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "62acc5aa76825581af121672f65ddcf3"
     ],
     [
-      "UnitTests.uu___113",
+      "UnitTests.__proj__Mkr__item__x",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cbaf0367d82ce74549e8b72444ab408e"
+    ],
+    [
+      "UnitTests.uu___131",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "f77737792d5a718e3ed7d9698db90188"
+    ],
+    [
+      "UnitTests.uu___135",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "84a9b030f185009e1be8d8b15d2f8d06"
     ],
     [
-      "UnitTests.uu___114",
+      "UnitTests.uu___136",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "8a52932659d02aaaa1dbba7cc130605f"
     ],
     [
-      "UnitTests.uu___115",
+      "UnitTests.uu___137",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "4c7072375efef52a9ad2c932eaf442f2"
     ],
     [
-      "UnitTests.uu___116",
+      "UnitTests.uu___138",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "cc8e3dfaeecdb9ce687e812870ab17ab"
     ],
     [
-      "UnitTests.uu___117",
+      "UnitTests.uu___139",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "a8b807cbb40606f5d0b0ee13a3ddf85f"
     ],
     [
-      "UnitTests.uu___118",
+      "UnitTests.uu___140",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "73e5c18f4fef55c1e6e1c9b956545350"
+    ],
+    [
+      "UnitTests.uu___148",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "aa2f0a7064f1581d7af7c02879c782e4"
     ]
   ]
 ]
