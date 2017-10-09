@@ -7,6 +7,7 @@ open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Range
+open FStar.Errors
 
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -273,6 +274,20 @@ and unembed_tactic_0<'b> (unembed_b:term -> 'b) (embedded_tac_b:term) : tac<'b> 
         bind (set ps) (fun _ -> fail msg)
     )
 
+let report_implicits ps (is : Env.implicits) : unit =
+    let errs = List.map (fun (r, _, uv, _, ty, rng) ->
+                (BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
+                             (Print.uvar_to_string uv) (Print.term_to_string ty) r,
+                 rng)) is in
+    match errs with
+    | [] -> ()
+    | hd::tl -> begin
+        dump_proofstate ps "failing due to uninstantiated implicits";
+        // A trick to print each error exactly once.
+        Errors.add_errors tl;
+        raise (Error hd)
+    end
+
 let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals, to be fed to SMT
                                                         * term // witness, in case it's needed, as in synthesis)
                                                         =
@@ -299,17 +314,19 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
                                  else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s" (Print.term_to_string g.witness))
                             else ())
                   (ps.goals @ ps.smt_goals);
-        let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
+
         // Check that all implicits are instantiated. This will also typecheck
         // the implicits, so make it do a lax check because we certainly
         // do not want to repeat all of the reasoning that took place in tactics.
         // It would also most likely fail.
+        let g = {TcRel.trivial_guard with Env.implicits=ps.all_implicits} in
         let g = TcRel.solve_deferred_constraints env g |> TcRel.resolve_implicits_tac in
-        let _ = TcRel.force_trivial_guard env g in
+        report_implicits ps g.implicits;
         (ps.goals@ps.smt_goals, w)
+
     | Failed (s, ps) ->
         dump_proofstate ps "at the time of failure";
-        raise (FStar.Errors.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
+        raise (Error (BU.format1 "user tactic failed: %s" s, typ.pos))
 
 
 // Polarity
@@ -420,5 +437,5 @@ let synth (env:Env.env) (typ:typ) (tau:term) : term =
     // Check that all goals left are irrelevant. We don't need to check their
     // validity, as we will typecheck the witness independently.
     if List.existsML (fun g -> not (Option.isSome (getprop g.context g.goal_ty))) gs
-    then raise (FStar.Errors.Error ("synthesis left open goals", typ.pos))
+    then raise (Error ("synthesis left open goals", typ.pos))
     else w
