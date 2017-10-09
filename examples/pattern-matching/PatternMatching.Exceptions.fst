@@ -14,7 +14,7 @@ open PatternMatching.Utils
 noeq type match_exception =
 | NameMismatch of qn * qn
 | SimpleMismatch of pattern * term
-| NonLinearMismatch of var * term * term
+| NonLinearMismatch of varname * term * term
 | UnsupportedTermInPattern of term
 
 let string_of_match_exception = function
