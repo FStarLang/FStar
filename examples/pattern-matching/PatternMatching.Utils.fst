@@ -11,18 +11,18 @@ let string_of_qn qn = String.concat "." qn
 
 let term_head t : string =
   match inspect t with
-  | Tv_Var bv -> "Var"
-  | Tv_FVar fv -> "FVar"
-  | Tv_App f x -> "App"
-  | Tv_Abs x t -> "Abs"
-  | Tv_Arrow x t -> "Arrow"
-  | Tv_Type () -> "Type"
-  | Tv_Refine x t -> "Refine"
-  | Tv_Const cst -> "Const"
-  | Tv_Uvar i t -> "Uvar"
-  | Tv_Let b t t -> "Let"
-  | Tv_Match t branches -> "Match"
-  | Tv_Unknown -> "Unknown"
+  | Tv_Var bv -> "Tv_Var"
+  | Tv_FVar fv -> "Tv_FVar"
+  | Tv_App f x -> "Tv_App"
+  | Tv_Abs x t -> "Tv_Abs"
+  | Tv_Arrow x t -> "Tv_Arrow"
+  | Tv_Type () -> "Tv_Type"
+  | Tv_Refine x t -> "Tv_Refine"
+  | Tv_Const cst -> "Tv_Const"
+  | Tv_Uvar i t -> "Tv_Uvar"
+  | Tv_Let b t t -> "Tv_Let"
+  | Tv_Match t branches -> "Tv_Match"
+  | Tv_Unknown -> "Tv_Unknown"
 
 let desc_of_pattern = function
 | PAny -> "anything"
