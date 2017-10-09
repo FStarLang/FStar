@@ -2362,3 +2362,7 @@ let should_extract: Prims.string -> Prims.bool =
                    FStar_Util.for_some
                      (FStar_Util.starts_with (FStar_String.lowercase m)) ns)
           | l -> FStar_List.contains (FStar_String.lowercase m) l))
+let codegen_fsharp: Prims.unit -> Prims.bool =
+  fun uu____6481  ->
+    let uu____6482 = codegen () in
+    uu____6482 = (FStar_Pervasives_Native.Some "FSharp")
