@@ -452,11 +452,11 @@ let mk_interpretation_fun tac_lid assm_lid t bs =
         let tac_fun = MLE_App (str_to_top_name ("FStar_Tactics_Native.from_tactic_" ^ string_of_int arity), [lid_to_top_name tac_lid]) in
         let tac_lid_app = MLE_App (str_to_top_name "FStar_Ident.lid_of_str", [with_ty MLTY_Top assm_lid]) in
         let args =
-            [str_to_name "ps"; tac_fun] @
+            [tac_fun] @
             (List.map (mk_tac_embedding_path Unembed) arg_types) @
             [mk_tac_embedding_path Embed t; mk_tac_param_type t; tac_lid_app; str_to_name "args"] in
         let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
-        Some (MLE_Fun ([("ps", MLTY_Top); ("args", MLTY_Top)], app))
+        Some (MLE_Fun ([("args", MLTY_Top)], app))
     with CallNotImplemented ->
         not_implemented_warning (string_of_lid tac_lid);
         None

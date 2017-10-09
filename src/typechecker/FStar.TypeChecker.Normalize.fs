@@ -99,6 +99,11 @@ type cfg = {
     primitive_steps:list<primitive_step>
 }
 
+let only_strong_steps' steps =
+    List.filter (fun ps -> ps.strong_reduction_ok) steps
+let only_strong_steps cfg =
+    { cfg with primitive_steps = only_strong_steps' cfg.primitive_steps}
+
 type branches = list<(pat * option<term> * term)>
 
 type subst_t = list<subst_elt>
@@ -320,8 +325,9 @@ let rec closure_as_term cfg env t =
              mk (Tm_meta(closure_as_term_delayed cfg env t',
                          Meta_pattern (args |> List.map (closures_as_args_delayed cfg env)))) t.pos
 
-           | Tm_meta(t', Meta_monadic(m, tbody)) -> //other metadata's do not have any embedded closures
+           | Tm_meta(t', Meta_monadic(m, tbody)) ->
              mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic(m, closure_as_term_delayed cfg env tbody))) t.pos
+
            | Tm_meta(t', Meta_monadic_lift(m1, m2, tbody)) ->
                  mk (Tm_meta(closure_as_term_delayed cfg env t', Meta_monadic_lift(m1, m2, closure_as_term_delayed cfg env tbody))) t.pos
 
@@ -722,10 +728,23 @@ let reduce_primops cfg tm =
            | None -> tm
            | Some prim_step ->
              if List.length args < prim_step.arity
-             then tm //partial application; can't step
-             else match prim_step.interpretation head.pos args with
-                  | None -> tm
-                  | Some reduced -> reduced
+             then begin log cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
+                                                     (Print.lid_to_string prim_step.name)
+                                                     (string_of_int (List.length args))
+                                                     (string_of_int prim_step.arity));
+                        tm //partial application; can't step
+                  end
+             else begin log cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
+                  match prim_step.interpretation head.pos args with
+                  | None ->
+                      log cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
+                      tm
+                  | Some reduced ->
+                      log cfg (fun () -> BU.print2 "primop: <%s> reduced to <%s>\n"
+                                              (Print.term_to_string tm)
+                                              (Print.term_to_string reduced));
+                      reduced
+                 end
            end
          | _ -> tm
    end
@@ -738,17 +757,16 @@ let reduce_equality cfg tm =
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
 (*******************************************************************)
 let maybe_simplify cfg tm =
-    let steps = cfg.steps in
+    let tm = reduce_primops cfg tm in
+    if not <| List.contains Simplify cfg.steps then tm
+    else
     let w t = {t with pos=tm.pos} in
     let simp_t t = match t.n with
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None in
     let simplify arg = (simp_t (fst arg), arg) in
-    let tm = reduce_primops cfg tm in
-    if not <| List.contains Simplify steps
-    then tm
-    else match tm.n with
+    match tm.n with
             | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
             | Tm_app({n=Tm_fvar fv}, args) ->
               if S.fv_eq_lid fv PC.and_lid
@@ -857,6 +875,12 @@ let is_reify_head = function
     | _ ->
       false
 
+let should_reify cfg stack = match stack with
+    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
+        // BU.print1 "Found a reify on the stack. %s" "" ;
+        cfg.steps |> List.contains Reify
+    | _ -> false
+
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
         let t = compress t in
@@ -938,8 +962,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
               (* KM : This case reall y does not make any sense to me *)
               // | Tm_match(e, branches) ->
               //   //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
-              //   let e = BU.mk_reify e in
-              //   let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, BU.mk_reify tm) in
+              //   let e = U.mk_reify e in
+              //   let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
               //   let tm = mk (Tm_match(e, branches)) t.pos in
               //   norm cfg env stack tm
 
@@ -1099,7 +1123,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
-                       let cfg = {cfg with primitive_steps=List.filter (fun ps -> ps.strong_reduction_ok) cfg.primitive_steps} in
+                       let cfg = only_strong_steps cfg in
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
 
@@ -1170,6 +1194,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                    lbtyp=ty;
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
+                 let cfg = only_strong_steps cfg in
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
           | Tm_let((true, lbs), body)
@@ -1228,17 +1253,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             begin match m with
               | Meta_monadic (m, t) ->
+                // BU.print2 "Will %sreify : %s \n" (if should_reify cfg stack then "" else "not ") (stack_to_string stack);
 
-                let should_reify = match stack with
-                    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
-                        // BU.print1 "Found a reify on the stack. %s" "" ;
-                        cfg.steps |> List.contains Reify
-                    | _ -> false
-                in
-
-                // BU.print2 "Will %sreify : %s \n" (if should_reify then "" else "not ") (stack_to_string stack);
-
-                if not should_reify
+                if not (should_reify cfg stack)
                 then
                  (*  We have an impure computation, and we aim to perform any pure steps within that computation.   *
                   *                                                                                                 *
@@ -1366,7 +1383,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         let _, bind_repr = ed.bind_repr in
 
                         (* [maybe_unfold_action head] test whether [head] is an action and tries to unfold it if it is *)
-                        let maybe_unfold_action head =
+                        let maybe_unfold_action head : term * option<bool> =
                           let maybe_extract_fv t =
                             let t = match (SS.compress t).n with
                               | Tm_uinst (t, _) -> t
@@ -1431,16 +1448,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
 
               | Meta_monadic_lift (m, m', t) ->
-                (* KM : This code is a partial duplicate of what can be found in Meta_monadic *)
-                (* KM : Not exactly sure which case should be eliminated *)
-                let should_reify = match stack with
-                    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
-                        // BU.print1 "Found a reify on the stack. %s" "" ;
-                        cfg.steps |> List.contains Reify
-                    | _ -> false
-                in
-
-                if should_reify
+                if should_reify cfg stack
                 then
                     norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
                 else
@@ -1477,8 +1485,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         (* meta doesn't block reduction, but we need to put the label back *)
                         norm cfg env (Meta(m,r)::stack) head
 
-                      | Meta_alien (b, s) ->
-                        norm cfg env (Meta(m, t.pos)::stack) head
+                      | Meta_alien _ ->
+                        rebuild cfg env stack t
 
                       | Meta_pattern args ->
                           let args = norm_pattern_args cfg env args in
@@ -1500,7 +1508,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
 (* Reifies the lifting of the term [e] of type [t] from computational  *)
 (* effect [m] to computational effect [m'] using lifting data in [env] *)
-and reify_lift (env : Env.env) e msrc mtgt t =
+and reify_lift (env : Env.env) e msrc mtgt t : term =
   (* check if the lift is concrete, if so replace by its definition on terms *)
   (* if msrc is PURE or Tot we can use mtgt.return *)
   if U.is_pure_effect msrc
@@ -1705,8 +1713,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           (* KM : Why are we excluding Iota (pattern matching) here ? *)
           else [Exclude Iota; Exclude Zeta]
         in
-        {cfg with delta_level=new_delta;
-                        steps=steps'@cfg.steps}
+        only_strong_steps ({cfg with delta_level=new_delta; steps=steps'@cfg.steps})
       in
       let norm_or_whnf env t =
         if whnf
