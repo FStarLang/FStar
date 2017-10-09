@@ -44,6 +44,9 @@ let reflection_primops : list<N.primitive_step> =
         mk1 "__inspect_fv" inspect_fv unembed_fvar embed_string_list;
         mk1 "__pack_fv" pack_fv (unembed_list unembed_string) embed_fvar;
 
+        mk1 "__inspect_comp" inspect_comp unembed_comp embed_comp_view;
+        mk1 "__pack_comp"    pack_comp unembed_comp_view embed_comp;
+
         mk1 "__inspect_bv" inspect_bv unembed_binder embed_string;
         mk2 "__compare_binder" compare_binder unembed_binder unembed_binder embed_order;
         mk1 "__type_of_binder" type_of_binder unembed_binder embed_term;
