@@ -482,7 +482,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High then BU.print2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
-    let isquote = match head.n with
+    let isquote =
+        let head, _ = U.head_and_args head in
+        match (U.un_uinst head).n with
                   | Tm_fvar fv when S.fv_eq_lid fv Const.quote_lid -> true
                   | _ -> false
     in
