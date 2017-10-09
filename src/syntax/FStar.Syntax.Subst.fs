@@ -79,7 +79,7 @@ let delay t s =
     //s is the new subsitution to add to it
     //compose substitutions by concatenating them
     //the order of concatenation is important!
-    mk_Tm_delayed ((t', compose_subst s' s)) t.pos
+    mk_Tm_delayed (t', compose_subst s' s) t.pos
  | _ ->
     mk_Tm_delayed ((t, s)) t.pos
 
@@ -162,7 +162,7 @@ let tag_with_range t s =
     match snd s with
     | None -> t
     | Some r ->
-      let r = Range.set_use_range t.pos r in
+      let r = Range.set_use_range t.pos (Range.use_range r) in
       let t' = match t.n with
         | Tm_bvar bv -> Tm_bvar (Syntax.set_range_of_bv bv r)
         | Tm_name bv -> Tm_name (Syntax.set_range_of_bv bv r)
@@ -176,12 +176,12 @@ let tag_with_range t s =
 let tag_lid_with_range l s =
     match (snd s) with
     | None -> l
-    | Some r -> Ident.set_lid_range l (Range.set_use_range (Ident.range_of_lid l) r)
+    | Some r -> Ident.set_lid_range l (Range.set_use_range (Ident.range_of_lid l) (Range.use_range r))
 
 let mk_range r (s:subst_ts) =
     match snd s with
     | None -> r
-    | Some r' -> Range.set_use_range r r'
+    | Some r' -> Range.set_use_range r (Range.use_range r')
 
 (* Applies a substitution to a node,
      immediately if it is a variable
@@ -388,7 +388,7 @@ let rec compress (t:term) =
 
 
 let subst s t = subst' ([s], None) t
-let set_use_range r t = subst' ([], Some ({r with def_range=r.use_range})) t
+let set_use_range r t = subst' ([], Some (Range.set_def_range r (Range.use_range r))) t
 let subst_comp s t = subst_comp' ([s], None) t
 let closing_subst (bs:binders) =
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst

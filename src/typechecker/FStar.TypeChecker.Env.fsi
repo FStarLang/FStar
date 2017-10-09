@@ -122,7 +122,6 @@ and solver_t = {
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
-    is_trivial   :env -> goal -> bool;
     finish       :unit -> unit;
     refresh      :unit -> unit;
 }

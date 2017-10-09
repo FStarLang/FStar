@@ -136,7 +136,7 @@
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "3d136077d6ab438a9ee19f7c9c877f85"
+      "7ba4ad2b273f893a186196376bfe96ff"
     ],
     [
       "Test.flip",
@@ -847,7 +847,7 @@
         "typing_FStar.Pointer.Base.typ_of_struct_field"
       ],
       0,
-      "76a5898eff7afea08e88c4d941668be8"
+      "d1f13a57942cd7144b9f4539ad4f0439"
     ],
     [
       "Test.flip'",

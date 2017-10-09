@@ -341,22 +341,19 @@ let id_info__insert:
     fun db  ->
       fun info  ->
         let range = info.identifier_range in
-        let use_range =
-          let uu___126_1159 = range in
-          {
-            FStar_Range.def_range = (range.FStar_Range.use_range);
-            FStar_Range.use_range = (uu___126_1159.FStar_Range.use_range)
-          } in
+        let use_range1 =
+          let uu____1159 = FStar_Range.use_range range in
+          FStar_Range.set_def_range range uu____1159 in
         let info1 =
-          let uu___127_1161 = info in
+          let uu___126_1161 = info in
           let uu____1162 = ty_map info.identifier_ty in
           {
-            identifier = (uu___127_1161.identifier);
+            identifier = (uu___126_1161.identifier);
             identifier_ty = uu____1162;
-            identifier_range = use_range
+            identifier_range = use_range1
           } in
-        let fn = FStar_Range.file_of_range use_range in
-        let start = FStar_Range.start_of_range use_range in
+        let fn = FStar_Range.file_of_range use_range1 in
+        let start = FStar_Range.start_of_range use_range1 in
         let uu____1165 =
           let uu____1170 = FStar_Range.line_of_pos start in
           let uu____1171 = FStar_Range.col_of_pos start in
@@ -382,10 +379,10 @@ let id_info_insert:
         fun range  ->
           let info =
             { identifier = id; identifier_ty = ty; identifier_range = range } in
-          let uu___128_1320 = table in
+          let uu___127_1320 = table in
           {
-            id_info_enabled = (uu___128_1320.id_info_enabled);
-            id_info_db = (uu___128_1320.id_info_db);
+            id_info_enabled = (uu___127_1320.id_info_enabled);
+            id_info_db = (uu___127_1320.id_info_db);
             id_info_buffer = (info :: (table.id_info_buffer))
           }
 let id_info_insert_bv:
@@ -415,12 +412,12 @@ let id_info_insert_fv:
 let id_info_toggle: id_info_table -> Prims.bool -> id_info_table =
   fun table  ->
     fun enabled  ->
-      let uu___129_1357 = table in
+      let uu___128_1357 = table in
       let uu____1358 = enabled && (FStar_Options.ide ()) in
       {
         id_info_enabled = uu____1358;
-        id_info_db = (uu___129_1357.id_info_db);
-        id_info_buffer = (uu___129_1357.id_info_buffer)
+        id_info_db = (uu___128_1357.id_info_db);
+        id_info_buffer = (uu___128_1357.id_info_buffer)
       }
 let id_info_promote:
   id_info_table ->
@@ -428,12 +425,12 @@ let id_info_promote:
   =
   fun table  ->
     fun ty_map  ->
-      let uu___130_1372 = table in
+      let uu___129_1372 = table in
       let uu____1373 =
         FStar_List.fold_left (id_info__insert ty_map) table.id_info_db
           table.id_info_buffer in
       {
-        id_info_enabled = (uu___130_1372.id_info_enabled);
+        id_info_enabled = (uu___129_1372.id_info_enabled);
         id_info_db = uu____1373;
         id_info_buffer = []
       }

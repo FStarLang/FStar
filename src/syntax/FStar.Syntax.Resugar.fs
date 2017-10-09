@@ -698,7 +698,7 @@ let rec resugar_term (t : S.term) : A.term =
           mk (A.Labeled(resugar_term e, l, p))
       | Meta_desugared i ->
           resugar_meta_desugared i
-      | Meta_alien (_, s) ->
+      | Meta_alien (_, s, _) ->
           resugar_term e
       | Meta_named t ->
           mk (A.Name t)
