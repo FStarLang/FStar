@@ -116,9 +116,32 @@ noeq type matching_problem =
     mp_hyps: list (varname * pattern);
     mp_goal: option pattern }
 
+let string_of_matching_problem mp =
+  let vars =
+    String.concat ", " mp.mp_vars in
+  let hyps =
+    String.concat "\n        "
+      (List.Tot.map (fun (nm, pat) -> nm ^ ": " ^ (string_of_pattern pat)) mp.mp_hyps) in
+  let goal = match mp.mp_goal with
+             | None -> "_"
+             | Some pat -> string_of_pattern pat in
+  "\n{ vars: " ^ vars ^ "\n" ^
+  "  hyps: " ^ hyps ^ "\n" ^
+  "  goal: " ^ goal ^ " }"
+
 noeq type matching_solution =
   { ms_vars: list (varname * term);
     ms_hyps: list (varname * hypothesis) }
+
+let string_of_matching_solution ms =
+  let vars =
+    String.concat "\n            "
+      (List.Tot.map (fun (varname, tm) -> varname ^ ": " ^ (term_to_string tm)) ms.ms_vars) in
+  let hyps =
+    String.concat "\n        "
+      (List.Tot.map (fun (nm, binder) -> nm ^ ": " ^ (inspect_bv binder)) ms.ms_hyps) in
+  "\n{ vars: " ^ vars ^ "\n" ^
+  "  hyps: " ^ hyps ^ " }"
 
 /// Notations
 /// ---------
@@ -398,16 +421,6 @@ open FStar.Tactics
 //       // let qq = quote mp () in
 //       // print_term qq ();
 //       exact (quote mp) ())
-
-let string_of_matching_solution ms =
-  let vars =
-    String.concat "\n            "
-      (List.Tot.map (fun (varname, tm) -> varname ^ ": " ^ (term_to_string tm)) ms.ms_vars) in
-  let hyps =
-    String.concat "\n        "
-      (List.Tot.map (fun (hyp, binder) -> hyp ^ ": " ^ (inspect_bv binder)) ms.ms_hyps) in
-  "\n{ bindings: " ^ vars ^ "\n" ^
-  "  hyps: " ^ hyps ^ " }"
 
 // let print_binders abs : Tac unit =
 //   let bdtm = binders_and_body_of_abs abs in
