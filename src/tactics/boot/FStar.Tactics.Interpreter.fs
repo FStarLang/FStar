@@ -289,8 +289,8 @@ let report_implicits ps (is : Env.implicits) : unit =
         raise (Error hd)
     end
 
-let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals, to be fed to SMT
-                                                        * term // witness, in case it's needed, as in synthesis)
+let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remaining goals
+                                                        * term // witness
                                                         =
     // This bit is really important: a typechecked tactic can contain many uvar redexes
     // that make normalization SUPER slow (probably exponential). Doing this first pass
