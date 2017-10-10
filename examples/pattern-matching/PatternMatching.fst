@@ -401,6 +401,8 @@ let solve_mp #a (problem: matching_problem)
 
 #set-options "--print_bound_var_types --print_full_names --print_implicits" // --ugly
 
+// FIXME it'd be better if the generated term looked like this:
+
 let fff =
   fun (solution: matching_solution) ->
    (fun (a:var Type0) ->
@@ -433,18 +435,6 @@ let fff =
 /// --------
 
 open FStar.Tactics
-
-// let mp_example : matching_problem =
-//   synth_by_tactic
-//     (fun () ->
-//       let abs = quote (fun (a b: Type) (h1: hyp (a ==> b)) (h2: hyp (a)) (_: goal (squash b)) ->
-//                          let open FStar.Tactics in
-//                          print (inspect_bv h1);;
-//                          print (inspect_bv h2)) () in
-//       let mp, continuation = matching_problem_of_abs abs in
-//       // let qq = quote mp () in
-//       // print_term qq ();
-//       exact (quote mp) ())
 
 // let print_binders abs : Tac unit =
 //   let bdtm = binders_and_body_of_abs abs in
@@ -547,27 +537,31 @@ let mustfail #a (t: tactic a) (message: string) : tactic unit =
 let done : tactic unit =
   mustfail cur_goal "Some goals are left"
 
-#set-options "--admit_smt_queries true"
+#set-options "--admit_smt_queries true --print_implicits"
+
+let (<||>) = or_else
 
 let example #a #b #c: unit =
   assert_by_tactic (a /\ b ==> c == b ==> c)
                    (repeat' // FIXME why does adding #unit here fail?
                      (idtac;; // FIXME: removing this ``idtac`` makes everything fail, really slowly
-                      lpm #unit (fun (a: var Type) (h: hyp (squash a)) ->
+                      lpm (fun (a: var Type) (h: hyp (squash a)) ->
                              clear h ())
-                      `or_else`
-                      lpm #unit (fun (a b: var Type0) (_: goal (squash (a ==> b))) ->
+                      <||>
+                      lpm (fun (a b: var Type0) (_: goal (squash (a ==> b))) ->
                              implies_intro' () <: Tac unit)
-                      `or_else`
-                      lpm #unit (fun (a b: var Type0) (h: hyp (a /\ b)) ->
+                      <||>
+                      lpm (fun (a b: var Type0) (h: hyp (a /\ b)) ->
                              and_elim' h () <: Tac unit)
-                      `or_else`
-                      lpm #unit (fun (a b: var Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
+                      <||>
+                      lpm (fun (a b: var Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
                              rewrite h () <: Tac unit)
-                      `or_else`
+                      <||>
                       lpm #unit (fun (a: var Type0) (h: hyp a) (_: goal (squash a)) ->
                                    exact_hyp a h () <: Tac unit));;
                     done)
+
+#set-options "--ugly"
 
 let example #a #b #c: unit =
   assert_by_tactic (a /\ b ==> c == b ==> c)
@@ -581,7 +575,8 @@ let example #a #b #c: unit =
                        lpm (fun (a b: var Type0) (h: hyp (a == b)) (_: goal (squash a)) ->
                               rewrite h () <: Tac unit);
                        lpm (fun (a: var Type0) (h: hyp a) (_: goal (squash a)) ->
-                              exact_hyp a h () <: Tac unit)];;
+                              exact_hyp a h () <: Tac unit);
+                       idtac];;
                     done)
 
 // let example (a b: int) =
