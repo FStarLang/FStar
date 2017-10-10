@@ -206,11 +206,11 @@ FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Interactive.Lega
 extract_fstar: boot $(FSTAR_EXTRACTED_FILES)
 	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive.CompletionTable --extract_module FStar.Interactive.Ide --extract_module FStar.Interactive.Legacy --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
-extract_typechecker: extract_normalizer extract_rel extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc
+extract_typechecker: extract_rel extract_normalizer extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc
 
-extract_smtencoding: extract_smtencoding_base extract_encode extract_solver
+extract_smtencoding: extract_encode extract_smtencoding_base extract_solver
 
-extract_all: extract_tactics extract_reflection extract_misc extract_syntax extract_parser extract_typechecker extract_tosyntax extract_smtencoding extract_extraction extract_fstar
+extract_all: extract_tactics extract_smtencoding extract_typechecker extract_reflection extract_misc extract_syntax extract_parser extract_tosyntax extract_extraction extract_fstar
 
 clean_extracted:
 	rm -f ocaml-output/FStar_*.ml
