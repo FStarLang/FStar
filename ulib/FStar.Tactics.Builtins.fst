@@ -35,6 +35,11 @@ let cur_witness = fun () -> TAC?.reflect __cur_witness
 assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
 
+assume private val __tc : term -> __tac term
+(** [tc] returns the type of a term in the current environment,
+or fails if it is untypeable. *)
+let tc (t : term) = fun () -> TAC?.reflect (__tc t)
+
 assume private val __unquote : #a:Type -> term -> __tac a
 (** [unquote t] with turn a quoted term [t] into an actual value, of
 any type. This will fail at tactic runtime if the quoted term does not

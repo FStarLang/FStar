@@ -751,20 +751,14 @@ and resugar_comp (c:S.comp) : A.term =
     if (Options.print_effect_args()) then
       let universe = List.map (fun u -> resugar_universe u) c.comp_univs in
       let args =
-       if (lid_equals c.effect_name C.effect_Lemma_lid) then
-        let rec aux l = function
-          | [] -> l
-          | (t,aq)::tl ->
-            match (t.n) with
-            | Tm_fvar fv when S.fv_eq_lid fv C.true_lid ->
-              aux l tl
-            | Tm_meta _ (* where metadata == Meta_desuagard(Meta_smt_pat) *) ->
-              aux l tl
-            | _ ->
-              aux ((t,aq)::l) tl
-        in
-        aux [] c.effect_args
-       else
+       if (lid_equals c.effect_name C.effect_Lemma_lid) then (
+        match c.effect_args with
+        | pre::post::pats::[] ->
+             (if U.is_fvar C.true_lid (fst pre) then [] else [pre])
+            @[post]
+            @(if U.is_fvar C.nil_lid (fst pats) then [] else [pats])
+        | _ -> c.effect_args
+       ) else
         c.effect_args
       in
       let args = List.map(fun (e,_) -> (resugar_term e, A.Nothing)) args in

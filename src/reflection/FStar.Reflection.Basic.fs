@@ -76,6 +76,12 @@ let embed_fvar (fv:fv) : term =
 let unembed_fvar (t:term) : fv =
     U.un_alien t |> FStar.Dyn.undyn
 
+let embed_comp (c:comp) : term =
+    U.mk_alien fstar_refl_comp c "reflection.embed_comp" None
+
+let unembed_comp (t:term) : comp =
+    U.un_alien t |> FStar.Dyn.undyn
+
 let embed_env (env:Env.env) : term =
     U.mk_alien fstar_refl_env env "tactics_embed_env" None
 
@@ -180,8 +186,8 @@ let embed_term_view (t:term_view) : term =
         S.mk_Tm_app ref_Tv_Abs [S.as_arg (embed_binder b); S.as_arg (embed_term t)]
                     None Range.dummyRange
 
-    | Tv_Arrow (b, t) ->
-        S.mk_Tm_app ref_Tv_Arrow [S.as_arg (embed_binder b); S.as_arg (embed_term t)]
+    | Tv_Arrow (b, c) ->
+        S.mk_Tm_app ref_Tv_Arrow [S.as_arg (embed_binder b); S.as_arg (embed_comp c)]
                     None Range.dummyRange
 
     | Tv_Type u ->
@@ -228,7 +234,7 @@ let unembed_term_view (t:term) : term_view =
         Tv_Abs (unembed_binder b, unembed_term t)
 
     | Tm_fvar fv, [(b, _); (t, _)] when S.fv_eq_lid fv ref_Tv_Arrow_lid ->
-        Tv_Arrow (unembed_binder b, unembed_term t)
+        Tv_Arrow (unembed_binder b, unembed_comp t)
 
     | Tm_fvar fv, [(u, _)] when S.fv_eq_lid fv ref_Tv_Type_lid ->
         Tv_Type (unembed_unit u)
@@ -253,6 +259,35 @@ let unembed_term_view (t:term) : term_view =
 
     | _ ->
         failwith "not an embedded term_view"
+
+let embed_comp_view (cv : comp_view) : term =
+    match cv with
+    | C_Total t ->
+        S.mk_Tm_app ref_C_Total [S.as_arg (embed_term t)]
+                    None Range.dummyRange
+
+    | C_Lemma (pre, post) ->
+        S.mk_Tm_app ref_C_Lemma [S.as_arg (embed_term pre); S.as_arg (embed_term post)]
+                    None Range.dummyRange
+
+    | C_Unknown ->
+        ref_C_Unknown
+
+let unembed_comp_view (t : term) : comp_view =
+    let t = U.unascribe t in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_C_Total_lid ->
+        C_Total (unembed_term t)
+
+    | Tm_fvar fv, [(pre, _); (post, _)] when S.fv_eq_lid fv ref_C_Lemma_lid ->
+        C_Lemma (unembed_term pre, unembed_term post)
+
+    | Tm_fvar fv, [] when S.fv_eq_lid fv ref_C_Unknown_lid ->
+        C_Unknown
+
+    | _ ->
+        failwith "not an embedded comp_view"
 
 // TODO: move to library?
 let rec last (l:list<'a>) : 'a =
@@ -288,7 +323,6 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_string (s, _) -> C_String s
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
-// TODO: consider effects? probably not too useful, but something should be done
 let rec inspect (t:term) : term_view =
     let t = U.unascribe t in
     let t = U.un_uinst t in
@@ -333,11 +367,10 @@ let rec inspect (t:term) : term_view =
     | Tm_arrow ([], k) ->
         failwith "inspect: empty binders on arrow"
 
-    | Tm_arrow (bs, k) ->
-        let bs, k =  SS.open_comp bs k in
-        begin match bs with
-        | [] -> failwith "impossible"
-        | b::bs -> Tv_Arrow (b, U.arrow bs k) // TODO: this drops the effect
+    | Tm_arrow _ ->
+        begin match U.arrow_one t with
+        | Some (b, c) -> Tv_Arrow (b, c)
+        | None -> failwith "impossible"
         end
 
     | Tm_refine (bv, t) ->
@@ -387,6 +420,26 @@ let rec inspect (t:term) : term_view =
         BU.print2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t);
         Tv_Unknown
 
+let inspect_comp (c : comp) : comp_view =
+    match c.n with
+    | Total (t, _) -> C_Total t
+    | Comp ct -> begin
+        if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
+            match ct.effect_args with
+            | (pre,_)::(post,_)::_ ->
+                C_Lemma (pre, post)
+            | _ ->
+                failwith "inspect_comp: Lemma does not have enough arguments?"
+        else
+            C_Unknown
+      end
+    | GTotal _ -> C_Unknown
+
+let pack_comp (cv : comp_view) : comp =
+    match cv with
+    | C_Total t -> mk_Total t
+    | _ -> failwith "sorry, can embed comp_views other than C_Total for now"
+
 let pack_const (c:vconst) : sconst =
     match c with
     | C_Unit    -> C.Const_unit
@@ -413,8 +466,8 @@ let pack (tv:term_view) : term =
     | Tv_Abs (b, t) ->
         U.abs [b] t None // TODO: effect?
 
-    | Tv_Arrow (b, t) ->
-        U.arrow [b] (mk_Total t)
+    | Tv_Arrow (b, c) ->
+        U.arrow [b] c
 
     | Tv_Type () ->
         U.ktype
@@ -446,7 +499,7 @@ let pack (tv:term_view) : term =
         let brs = List.map SS.close_branch brs in
         S.mk (Tm_match (t, brs)) None Range.dummyRange
 
-    | _ ->
+    | Tv_Unknown ->
         failwith "pack: unexpected term view"
 
 let embed_order (o:order) : term =

@@ -670,7 +670,7 @@ let rec go:
                         FStar_Pervasives_Native.Some
                           ([], (Prims.parse_int "0"))
                     | (uu____2903,[]) -> FStar_Pervasives_Native.None
-                    | (hs::ts1,hc::tc) ->
+                    | (hs::ts1,hc::tc1) ->
                         let hc_text = FStar_Ident.text_of_id hc in
                         if FStar_Util.starts_with hc_text hs
                         then
@@ -679,7 +679,8 @@ let rec go:
                                FStar_Pervasives_Native.Some
                                  (candidate, (FStar_String.length hs))
                            | uu____2953 ->
-                               let uu____2956 = measure_anchored_match ts1 tc in
+                               let uu____2956 =
+                                 measure_anchored_match ts1 tc1 in
                                FStar_All.pipe_right uu____2956
                                  (FStar_Util.map_option
                                     (fun uu____2996  ->
@@ -698,8 +699,8 @@ let rec go:
                     | FStar_Pervasives_Native.None  ->
                         (match candidate with
                          | [] -> FStar_Pervasives_Native.None
-                         | hc::tc ->
-                             let uu____3130 = locate_match needle tc in
+                         | hc::tc1 ->
+                             let uu____3130 = locate_match needle tc1 in
                              FStar_All.pipe_right uu____3130
                                (FStar_Util.map_option
                                   (fun uu____3191  ->

@@ -1,5 +1,5 @@
 [
-  "»æ‚Åm˚5•v¸Uµ+ïnΩ",
+  "™{Ä“πáÁ0ÈÕÎ4A‚ìü",
   [
     [
       "Syntax.quote_sanity_check",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "0678c737f998d92103928b80934f2c90"
+      "9c47108e3efa5c3aa7e62d85d2b248b7"
     ],
     [
       "Syntax.goal_sanity_check",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "16544487a1ffa3b5fdcd0b3496a9d694"
+      "a74d42846e6f2c5f791c90ec10400d6b"
     ],
     [
       "Syntax.test2",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "acc87726ac35e8cbbcdc87428cd88889"
+      "e2a0ef77aeee7567dd592dce6653c737"
     ],
     [
       "Syntax.blah",
@@ -73,43 +73,7 @@
         "typing_FStar.Reflection.Basic.inspect"
       ],
       0,
-      "7bde97553f52c8d1c5e7f07fdeff723f"
-    ],
-    [
-      "Syntax.uu___95",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7c29ea94d6f6cd2e2efe8df9df50e4ae"
-    ],
-    [
-      "Syntax.uu___96",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "2593bacc1054e103447485a4fae83d7a"
-    ],
-    [
-      "Syntax.uu___97",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4441eabdaa3382d0a19dd8f7114c2182"
-    ],
-    [
-      "Syntax.uu___98",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e5507d4fd40952db75838106332379e7"
+      "e18c430fc1e45fed8ef2bbec7f5a8c70"
     ],
     [
       "Syntax.uu___99",
@@ -118,7 +82,7 @@
       1,
       [ "@query" ],
       0,
-      "ac8af98161152df88cb154ea4a7f041c"
+      "38d916d282072f000132eb47787ac9b4"
     ],
     [
       "Syntax.uu___100",
@@ -127,7 +91,43 @@
       1,
       [ "@query" ],
       0,
-      "f977c84ffb98025ce1377cb532b2e4bc"
+      "4e93cb7bee757701da63ba4302cbef5d"
+    ],
+    [
+      "Syntax.uu___101",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b39b7697afaa240b980621ebcdc86bff"
+    ],
+    [
+      "Syntax.uu___102",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a85a45ae7a89b50ef67d4e8c2c869b9f"
+    ],
+    [
+      "Syntax.uu___103",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1064518ac4e7e3c3119a7f50b243de06"
+    ],
+    [
+      "Syntax.uu___104",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "75fcd55ea2337d66840511acdae7d9b6"
     ],
     [
       "Syntax.arith_test1",
@@ -145,7 +145,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "ae545b2375beaaba2b082005c4cbb9c6"
+      "f9cc3412d1c4b6268bff43be54dda6d6"
     ],
     [
       "Syntax.arith_test2",
@@ -163,16 +163,16 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "e4aede6069f2372135c26550ea0ad86e"
+      "6686715ce3f7fef281cd33ece0a17262"
     ],
     [
-      "Syntax.uu___101",
+      "Syntax.uu___105",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "9f1ef39aed73c103550883461aa3f54f"
+      "c682d6ae40377737c0985f641e65f4cb"
     ]
   ]
 ]
