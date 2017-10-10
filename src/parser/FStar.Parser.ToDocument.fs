@@ -840,7 +840,7 @@ and p_term e = match (unparen e).tm with
   | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
   | Bind(x, e1, e2) ->
-      group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^ (p_noSeqTerm e1 ^^ space ^^ semi)) ^/^ p_term e2
+      group ((p_tuplePattern x ^^ space ^^ long_left_arrow) ^/+^ (p_noSeqTerm e1 ^^ space ^^ semi)) ^/^ p_term e2
   | _ ->
       group (p_noSeqTerm e)
 
