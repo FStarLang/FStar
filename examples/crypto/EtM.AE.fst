@@ -15,33 +15,65 @@ module MAC = EtM.MAC
 module Ideal = EtM.Ideal
 module Plain = EtM.Plain
 
+(*** Basic types ***)
+
+/// An AE cipher includes a mac tag
 type cipher = (CPA.cipher * MAC.tag)
 
-type rid = FStar.Monotonic.Seq.rid
-
-let log_entry = CPA.msg * cipher
+/// An AE log pairs plain texts with MAC'd ciphers
+let log_entry = Plain.plain * cipher
 type log_t (r:rid) = m_rref r (seq log_entry) grows
 
+/// An AE key pairs an encryption key, ke, with a MAC'ing key, km,
+/// with an invariant ensuring that their memory footprints of their
+/// ideal state are disjoint.
+/// 
+/// Aside from this, we have an AE log, which is a view of the two
+/// other logs.
 noeq type key =
-  | Key:  #region:rid ->
-               ke:CPA.key { extends (CPA.Key?.region ke) region  } ->
-               km:MAC.key { extends (MAC.Key?.region km) region /\
-                 (disjoint( CPA.Key?.region ke) (MAC.Key?.region km)) } ->
-               log:log_t region -> key
+  | Key: #region:rid
+       -> ke:CPA.key { extends (CPA.Key?.region ke) region  }
+       -> km:MAC.key { extends (MAC.Key?.region km) region /\
+                      disjoint( CPA.Key?.region ke) (MAC.Key?.region km) } 
+       -> log:log_t region
+       -> key
 
+(** Accessors for the three logs **)
+/// ae log
 let get_log (h:mem) (k:key) =
   m_sel h k.log
 
+/// mac log
 let get_mac_log (h:mem) (k:key) =
   m_sel h (MAC.Key?.log k.km)
 
+/// cpa log
 let get_cpa_log (h:mem) (k:key) =
   m_sel h (CPA.Key?.log k.ke)
 
-//Only valid ciphers are mac'd
+(*** Main invariant on the ideal state ***)
+(** There are three components to this invariant
+
+    1. The CPA invariant (pairwise distinctness of IVs, notably)
+
+    2. mac_only_cpa_ciphers: 
+       
+       The MAC log and CPA logs are related, in that the MAC log only
+       contains entries for valid ciphers recorded the CPA log
+
+    3. mac_and_cpa_refine_ae: 
+
+       The AE log is a combined view of the MAC and CPA logs Each of
+       its entries corresponds is combination of a single entry in the
+       MAC log and another in the CPA log 
+**)
+
 let mac_cpa_related (mac:EtM.MAC.log_entry) (cpa:EtM.CPA.log_entry) =
   CPA.Entry?.c cpa == fst mac
-  
+
+/// See the comment above, for part 2 of the invariant
+///   -- As in EtM.CPA, we state the invariant recursively
+///      matching entries up pointwise
 let rec mac_only_cpa_ciphers (macs:Seq.seq EtM.MAC.log_entry) 
                              (cpas:Seq.seq EtM.CPA.log_entry)
       : Tot Type0 (decreases (Seq.length macs)) =
@@ -53,6 +85,7 @@ let rec mac_only_cpa_ciphers (macs:Seq.seq EtM.MAC.log_entry)
      mac_only_cpa_ciphers macs cpas
     else True)
 
+/// A lemma to intro/elim the recursive predicate above
 let mac_only_cpa_ciphers_snoc (macs:Seq.seq EtM.MAC.log_entry) (mac:EtM.MAC.log_entry)
                                      (cpas:Seq.seq EtM.CPA.log_entry) (cpa:EtM.CPA.log_entry)
   : Lemma (mac_only_cpa_ciphers (snoc macs mac) (snoc cpas cpa) <==>
@@ -60,6 +93,8 @@ let mac_only_cpa_ciphers_snoc (macs:Seq.seq EtM.MAC.log_entry) (mac:EtM.MAC.log_
   = un_snoc_snoc macs mac;
     un_snoc_snoc cpas cpa
 
+/// A lemma that shows that if an cipher is MAC'd
+/// then a corresponding entry must exists in the CPA log
 let rec mac_only_cpa_ciphers_mem (macs:Seq.seq EtM.MAC.log_entry) 
                                  (cpas:Seq.seq EtM.CPA.log_entry)
                                  (c:cipher)
@@ -76,14 +111,19 @@ let rec mac_only_cpa_ciphers_mem (macs:Seq.seq EtM.MAC.log_entry)
            if mac = c then ()
            else mac_only_cpa_ciphers_mem macs cpas c
 
+/// See part 3 of the invariant:
+///     -- An AE entry is related to a MAC and CPA entry
+///        if its plain text + cipher appears in the CPA entry
+///        and its cipher+tag appear in the MAC table
 let mac_and_cpa_refine_ae_entry (ae:log_entry)
                                 (mac:EtM.MAC.log_entry)
                                 (cpa:EtM.CPA.log_entry) =
     let p, c = ae in
     mac == c /\
     CPA.Entry p (fst c) == cpa
-    
-//AE log abstracts the mac and cpa logs
+
+/// See part 3 of the invariant:
+///     -- A pointwise lifting the relation between the entries in the three logs
 let rec mac_and_cpa_refine_ae (ae_entries:Seq.seq log_entry) 
                               (mac_entries:Seq.seq EtM.MAC.log_entry)
                               (cpa_entries:Seq.seq EtM.CPA.log_entry)
@@ -98,7 +138,7 @@ let rec mac_and_cpa_refine_ae (ae_entries:Seq.seq log_entry)
         mac_and_cpa_refine_ae ae_prefix mac_prefix cpa_prefix
    else True)
 
-
+/// A lemma to intro/elim the recursive predicate above
 let mac_and_cpa_refine_ae_snoc (ae_entries:Seq.seq log_entry) 
                                (mac_entries:Seq.seq EtM.MAC.log_entry)
                                (cpa_entries:Seq.seq EtM.CPA.log_entry)
@@ -113,7 +153,10 @@ let mac_and_cpa_refine_ae_snoc (ae_entries:Seq.seq log_entry)
     = Seq.un_snoc_snoc ae_entries ae;
       Seq.un_snoc_snoc mac_entries mac;
       Seq.un_snoc_snoc cpa_entries cpa
-                            
+
+/// The main invariant:
+///     -- A conjunction of the 3 components already mentioned
+///      + some technical invariants about logs being allocated
 let invariant (h:mem) (k:key) =
   let log = get_log h k in
   let mac_log = get_mac_log h k in
@@ -121,12 +164,23 @@ let invariant (h:mem) (k:key) =
   Map.contains h.h k.region /\
   Map.contains h.h (MAC.Key?.region k.km) /\
   Map.contains h.h (CPA.Key?.region k.ke) /\
-  Seq.length log = Seq.length mac_log /\
-  Seq.length mac_log = Seq.length cpa_log /\
   EtM.CPA.invariant (Key?.ke k) h /\
   mac_only_cpa_ciphers (get_mac_log h k) (get_cpa_log h k) /\
   mac_and_cpa_refine_ae (get_log h k) (get_mac_log h k) (get_cpa_log h k)
-    
+
+(*** The main AE lemma relying on the invariant  ***)
+
+(** For logs that respect the main invariant:
+       if  (c, t) is a valid MAC
+       and (p, c) is a valid CPA
+       then (p, (c, t)) must be a in the AE log
+
+    The pairwise distinctness of ciphers in the CPA log
+    plays a crucial role.
+
+    For instance, using it, and knowing that (c, t) is a valid MAC, 
+    we can conclude that their must be exactly one entry 
+    in the CPA table containing c. **)
 let rec invert_invariant_aux (c:cipher) (p:Plain.plain)
                              (macs:Seq.seq MAC.log_entry)
                              (cpas:Seq.seq CPA.log_entry)
@@ -166,6 +220,7 @@ let rec invert_invariant_aux (c:cipher) (p:Plain.plain)
              invert_invariant_aux c p macs cpas aes
            end
 
+/// Lifting the lemma above to work on the current state, h
 let invert_invariant (h:mem) (k:key) (c:cipher) (p:Plain.plain)
     : Lemma (requires (invariant h k /\
                        Seq.mem c (get_mac_log h k) /\
@@ -176,35 +231,40 @@ let invert_invariant (h:mem) (k:key) (c:cipher) (p:Plain.plain)
       let aes  = get_log h k in
       invert_invariant_aux c p macs cpas aes
 
-let genPost parent h0 (k:key) h1 =
-    modifies Set.empty h0 h1
-  /\ extends k.region parent
-  /\ fresh_region k.region h0.h h1.h
-  /\ Map.contains h1.h k.region
-  /\ m_contains k.log h1
-  /\ m_sel h1 k.log == createEmpty
-  /\ invariant h1 k
+(*** Main interface of AE
+       keygen, encrypt, decrypt ***)
 
-val keygen: parent:rid -> ST key
+/// keygen: create a fresh key in the caller's region
+///         its ae log is initially empty
+let keygen (parent:rid)
+  : ST key
   (requires (fun _ -> True))
-  (ensures  (genPost parent))
-
-let keygen parent =
+  (ensures  (fun h0 k h1 ->
+    modifies Set.empty h0 h1 /\
+    extends k.region parent /\
+    fresh_region k.region h0.h h1.h /\
+    Map.contains h1.h k.region /\
+    m_contains k.log h1 /\
+    m_sel h1 k.log == createEmpty /\
+    invariant h1 k)) =
   let region = new_region parent in
   let ke = CPA.keygen region in
   let ka = MAC.keygen region in
   let log = alloc_mref_seq region createEmpty in
   Key #region ke ka log
 
-val encrypt: k:key -> m:Plain.plain -> ST cipher
+/// encrypt:
+///       We return a cipher, preserve the invariant,
+///       and extend the log by exactly one entry
+let encrypt (k:key) (plain:Plain.plain)
+  : ST cipher
   (requires (fun h0 -> invariant h0 k))
   (ensures  (fun h0 c h1 ->
     (let log0 = get_log h0 k in
      let log1 = get_log h1 k in
      HyperHeap.modifies (Set.singleton k.region)  h0.h h1.h
      /\ invariant h1 k
-     /\ log1 == snoc log0 (m, c))))
-let encrypt k plain =
+     /\ log1 == snoc log0 (plain, c)))) =
   let h0 = FStar.HyperStack.ST.get () in
   let c = CPA.encrypt k.ke plain in
   let t = MAC.mac k.km c in
@@ -217,15 +277,18 @@ let encrypt k plain =
                             (get_cpa_log h0 k) (CPA.Entry plain c);
   (c, t)
 
-
-val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
+/// decrypt:
+///     In the ideal case, we prove it functionally correct and secure
+///     meaning that we the plain text returned is exactly the one in in AE log
+let decrypt (k:key) (c:cipher)
+  : ST (option Plain.plain)
   (requires (fun h0 -> invariant h0 k))
   (ensures (fun h0 res h1 ->
     modifies_none h0 h1 /\
     invariant h1 k /\
     (b2t Ideal.uf_cma /\ Some? res ==>
-     Seq.mem (Some?.v res, c) (get_log h0 k))))
-let decrypt k (c,tag) =
+     Seq.mem (Some?.v res, c) (get_log h0 k)))) =
+  let c, tag = c in
   let h0 = FStar.HyperStack.ST.get () in
   if MAC.verify k.km c tag
   then begin

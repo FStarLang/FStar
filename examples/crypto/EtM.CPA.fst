@@ -153,30 +153,38 @@ let cipher_functional_correctness (raw_key:bytes) (log:seq log_entry) =
       entry_functional_correctness raw_key e
 
 /// The invariant is the conjunction of distinctness and correctness
-/// Together with a 
+///   -- Together with a technical requirement of the log actually
+///      being present in the memory
 let invariant (k:key) (h:mem) =
     let Key raw_key lg = k in
     let log = log k h in
-    m_contains lg h /\
+    m_contains lg h /\ //<-- technical: the log must be allocated
     pairwise_distinct_ivs log /\
     cipher_functional_correctness raw_key log
 
-let genPost parent (m0:mem) (k:key) (m1:mem) =
-    modifies Set.empty m0 m1
-  /\ extends k.region parent
-  /\ stronger_fresh_region k.region m0 m1
-  /\ log k m1 == createEmpty
-  /\ invariant k m1
-  
-val keygen: parent:rid -> ST key
+
+(*** The main interface:
+       keygen, encrypt, decrypt  ***)
+/// keygen: allocating a new key
+///       -- Caller provides a parent region in which to allocate the ideal log
+///       -- Returns a fresh key satisfying its invariant whose log is initially empty
+let keygen (parent:rid)
+  : ST key
   (requires (fun _ -> True))
-  (ensures  (genPost parent))
-let keygen parent =
+  (ensures  (fun m0 k m1 -> 
+               modifies Set.empty m0 m1 /\
+               extends k.region parent /\
+               stronger_fresh_region k.region m0 m1 /\
+               log k m1 == createEmpty /\
+               invariant k m1)) =
   let raw = CC.random keysize in
   let region = new_region parent in
   let log = alloc_mref_seq region createEmpty in
   Key #region raw log
 
+/// A primitive to sample a fresh iv distinct from others
+///    Exercise: Implement this, e.g, by simply incrementing a counter
+///              Or by sampling and retrying
 assume 
 val fresh_iv (k:key) : ST iv
     (requires (fun h -> True))
@@ -184,7 +192,13 @@ val fresh_iv (k:key) : ST iv
                 h0 == h1 /\
                 iv_not_in iv (log k h0)))
 
-val encrypt: k:key -> m:plain -> ST cipher
+
+/// encrypt:
+///     -- requires a key initially in the invariant
+///     -- ensures that only the key's region is modifie
+///        and that the the key's log grows by just one entry
+let encrypt (k:key) (m:plain)
+  : ST cipher
   (requires (invariant k))
   (ensures  (fun h0 c h1 ->
     (let log0 = log k h0 in
@@ -192,8 +206,7 @@ val encrypt: k:key -> m:plain -> ST cipher
      invariant k h1 /\
      modifies_one k.region h0 h1 /\
      m_contains k.log h1 /\
-     log1 == snoc log0 (Entry m c))))
-let encrypt k m =
+     log1 == snoc log0 (Entry m c)))) =
   let iv = fresh_iv k in
   let text = if ind_cpa
              then createBytes (length m) 0z
@@ -210,6 +223,11 @@ let encrypt k m =
   pairwise_snoc (log k h0) e;
   c
 
+/// find_entry: An auxiliary function with a somewhhat technical proof
+///    -- We search for an entry in a log that contains a cipher using
+///       a left-to-right scan of the sequence provide by Seq.seq_find
+///    -- Knowing that a the cipher exists in the log (via Seq.mem)
+///       guarantees that this scan will succeed.
 let find_entry (log:seq log_entry) (c:cipher) : Pure log_entry
     (requires (exists p. Seq.mem (Entry p c) log))
     (ensures (fun e -> Seq.mem e log /\ Entry?.c e == c))
@@ -222,7 +240,15 @@ let find_entry (log:seq log_entry) (c:cipher) : Pure log_entry
                 Seq.find_mem log (entry_has_cipher c) (Entry p c));
     Some?.v eopt                
 
-val decrypt: k:key -> c:cipher -> ST plain
+/// decrypt:
+///    -- An important pre-condition of decrypt is that when idealizing
+///       (ind_cpa_rest_adv), we need to know that the cipher being decrypted
+///       is actually the valid encryption of some plain text already in the log.
+///
+///    -- This allow us to prove that the plain text returned is a
+///       valid decryption
+let decrypt (k:key) (c:cipher)
+  : ST plain
   (requires (fun h0 ->
     let log = log k h0 in
     invariant k h0 /\
@@ -231,9 +257,7 @@ val decrypt: k:key -> c:cipher -> ST plain
     let log = log k h1 in
     modifies_none h0 h1 /\
     invariant k h1 /\
-    (b2t ind_cpa_rest_adv ==> Seq.mem (Entry res c) log)))
-
-let decrypt k c =
+    (b2t ind_cpa_rest_adv ==> Seq.mem (Entry res c) log))) =
   let Key raw_key log = k in
   let iv,c' = split c ivsize in
   let raw_plain = CC.block_dec CC.AES_128_CBC raw_key iv c' in
@@ -242,7 +266,7 @@ let decrypt k c =
     let Entry plain _ = find_entry log c in
     split_entry plain c iv c';
     if not ind_cpa then begin
-       //no correction necessary
+       //no correction necessary: raw_plain is the corrext plain text already
        CC.enc_dec_inverses CC.AES_128_CBC raw_key iv (repr plain);
        assert (repr plain == raw_plain);
        plain
