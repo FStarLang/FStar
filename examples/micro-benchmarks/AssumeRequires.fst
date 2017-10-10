@@ -20,3 +20,8 @@ let get_ghost (Some x) = x
 
 val get_exn : o:(option 'a) -> Exn 'a (Some? o) (fun x -> V (Some?.v o) == x)
 let get_exn (Some x) = x
+
+open FStar.ST
+
+val get_st : o:(option 'a) -> ST 'a (fun h0 -> Some? o) (fun h0 x h1 -> Some?.v o == x)
+let get_st (Some x) = x
