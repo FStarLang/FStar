@@ -15,7 +15,7 @@ module MAC = EtM.MAC
 module Ideal = EtM.Ideal
 module Plain = EtM.Plain
 
-abstract type cipher = (CPA.cipher * MAC.tag)
+type cipher = (CPA.cipher * MAC.tag)
 
 type rid = FStar.Monotonic.Seq.rid
 

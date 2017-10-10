@@ -13,47 +13,102 @@ module B = Platform.Bytes
 
 open EtM.Plain
 
+(*** Basic types ***)
+
+/// Initialization vectors: bytes of a given size
 let ivsize = CC.blockSize CC.AES_128_CBC
 let iv = lbytes ivsize
+
+/// Raw keys for AES 128
 let keysize = 16
 let aes_key = lbytes keysize
-let msg = plain
-let cipher = (b:bytes{B.length b >= ivsize})
-  (* MK: minimal cipher length twice blocksize? *)
 
+/// Cipher-texts are a concatenation of the IV and the AES cipher
+///    -- we underspecify its length
+///    -- MK says: minimal cipher length twice blocksize?
+let cipher = (b:bytes{B.length b >= ivsize})
+
+(*** Ideal state ***)
+
+/// CPA log entries are pairs of a plain text and its corresponding cipher
 type log_entry =
-  | Entry: plain:msg
+  | Entry: plain:plain
          -> c:cipher
          -> log_entry
 
+/// Recover the IV from an entry by splitting out a prefix of the cipher
 let iv_of_entry (Entry _ c) : iv = fst (B.split c ivsize)
+
+/// Recover the AES cipher from an entry by splitting out a suffix of the cipher
 let raw_cipher (Entry _ c) : bytes = snd (B.split c ivsize)
+
+/// A lemma inverting the iv+cipher construction
 let split_entry (p:plain) (c:cipher) (iv:iv) (r:bytes)
    : Lemma  (iv_of_entry (Entry p (iv@|r)) == iv /\
              raw_cipher  (Entry p (iv@|r)) == r)
    = assert (Seq.equal (iv_of_entry (Entry p (iv@|r))) iv);
      assert (Seq.equal (raw_cipher (Entry p (iv@|r))) r)
+
+/// A lemma showing that entries that differ on their IVs differ on their ciphers
+///    -- because append is injective on both its arguments
 let iv_of_entry_inj (e1 e2:log_entry)
   : Lemma (iv_of_entry e1 <> iv_of_entry e2 
            ==> Entry?.c e1 <> Entry?.c e2)
   = let iv1, r1 = iv_of_entry e1, raw_cipher e1 in
     let iv2, r2 = iv_of_entry e2, raw_cipher e2 in
     FStar.Classical.move_requires (Platform.Bytes.lemma_append_inj iv1 r1 iv2) r2
-  
-let log_t (r:rid) =
-    Monotonic.Seq.log_t r log_entry
 
+/// A key includes the raw AES key but also an monotonic log of entries
+/// representing the ideal state
 noeq 
 type key =
-  | Key: #region:rid -> raw:aes_key -> log:log_t region -> key
+  | Key: #region:rid 
+       -> raw:aes_key 
+       -> log:Monotonic.Seq.log_t region log_entry
+       -> key
 
+(** Exercise: (conceptually easy; technically difficult)
+
+      The type `key` above contains a reference to an ideal log
+      unconditionally.  However, this log is redundant when not
+      idealizing.  Revise the `key` type as shown below and propagate
+      it through the development.
+
+      noeq 
+      type key =
+      | Key: #region:rid 
+          -> raw:aes_key 
+          -> log:(if Ideal.ind_cpa then Monotonic.Seq.log_t region log_entry else unit)
+          -> key
+ **)
+
+/// An accessor for the log in state h
 let log (k:key) (h:mem) 
   : GTot (seq log_entry) =
     m_sel h (Key?.log k)
 
+(*** Invariants on the ideal state ***)
+
+(** Informally, there are two main components to the invariant:
+
+      1. The IVs in the log are pairwise-distinct. 
+         We rely on this to obtain an injectivity property in EtM.AE,
+         using it to relate the CPA and MAC logs to the composite AE log.
+         
+      2. The ciphers in each entry are required to be valid encryptions of
+         the corresponding plain texts and IVs
+ **)
+
+/// ---------------------------------------
+/// Invariant part 1: distinctness of IVs
+/// ---------------------------------------
+
 let iv_not_in (iv:iv) (log:seq log_entry) =
     forall (e:log_entry{Seq.mem e log}). iv_of_entry e <> iv
 
+/// We state pairwise-distinctness of IVs in this recursive form
+/// It makes it more convenient to work with as we
+/// append each new entry (aka snoc) to the end of the log
 let rec pairwise_distinct_ivs (log:seq log_entry) 
   : Tot Type0 (decreases (Seq.length log)) =
   if Seq.length log > 0 then
@@ -62,15 +117,14 @@ let rec pairwise_distinct_ivs (log:seq log_entry)
     iv_not_in (iv_of_entry tl) log
   else True
 
-let un_snoc_snoc (#a:Type) (s:seq a) (x:a) : Lemma (Seq.un_snoc (Seq.snoc s x) == (s, x)) =
-  let s', x = un_snoc (snoc s x) in
-  assert (Seq.equal s s')
-
+/// A simple lemma to introduce and eliminate pairwise_distinct_ivs
 let pairwise_snoc (cpas:Seq.seq log_entry) (tl:log_entry)
     : Lemma ((pairwise_distinct_ivs cpas /\ iv_not_in (iv_of_entry tl) cpas) <==>
              (pairwise_distinct_ivs (Seq.snoc cpas tl)))
     = un_snoc_snoc cpas tl
 
+/// It's convenient to lift the pairwise-distinctness of IVs to
+/// pairwise distinctness of the cipher texts
 let invert_pairwise (cpas:Seq.seq log_entry) (e:log_entry) (c:cipher)
     : Lemma (requires (pairwise_distinct_ivs (snoc cpas e) /\
                        Entry?.c e == c))
@@ -78,18 +132,28 @@ let invert_pairwise (cpas:Seq.seq log_entry) (e:log_entry) (c:cipher)
     = pairwise_snoc cpas e;
       FStar.Classical.forall_intro (iv_of_entry_inj e)
 
+/// -----------------------------------------
+/// Invariant part 2: correctness of ciphers
+/// -----------------------------------------
+
+/// Each entry contains a valid AES encryption
+/// 
+///   -- A wrinkle is that when ind_cpa, rather than encrypting the
+///      plaintext we just encrypt zeros
 let entry_functional_correctness (raw_key:bytes) (e:log_entry) : Type0 =
     let iv = iv_of_entry e in
     let c = raw_cipher e in
     let plain = Entry?.plain e in
-    //cipher text is an encryption of plain and iv
     let p = if ind_cpa then createBytes (length plain) 0z else repr plain in
      c == CC.block_encrypt_spec CC.AES_128_CBC raw_key iv p
 
+/// Lifting the correctness of individual entries pointwise to correctness of the entire log
 let cipher_functional_correctness (raw_key:bytes) (log:seq log_entry) =
     forall (e:log_entry{Seq.mem e log}). {:pattern (Seq.mem e log)}
       entry_functional_correctness raw_key e
 
+/// The invariant is the conjunction of distinctness and correctness
+/// Together with a 
 let invariant (k:key) (h:mem) =
     let Key raw_key lg = k in
     let log = log k h in
@@ -120,7 +184,7 @@ val fresh_iv (k:key) : ST iv
                 h0 == h1 /\
                 iv_not_in iv (log k h0)))
 
-val encrypt: k:key -> m:msg -> ST cipher
+val encrypt: k:key -> m:plain -> ST cipher
   (requires (invariant k))
   (ensures  (fun h0 c h1 ->
     (let log0 = log k h0 in
@@ -158,7 +222,7 @@ let find_entry (log:seq log_entry) (c:cipher) : Pure log_entry
                 Seq.find_mem log (entry_has_cipher c) (Entry p c));
     Some?.v eopt                
 
-val decrypt: k:key -> c:cipher -> ST msg
+val decrypt: k:key -> c:cipher -> ST plain
   (requires (fun h0 ->
     let log = log k h0 in
     invariant k h0 /\
