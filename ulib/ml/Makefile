@@ -32,10 +32,14 @@ fstarlib.cmxa:fstarlib.mllib | fstarlib.cma
 	$(OCAMLBUILD) $@
 	cp _build/ulib/ml/$@ $(FSTARLIB_DIR)
 
+# Rewrote recipe to make it work on Alpine Linux 3.6
+# (_build/ulib/ml/extracted/*.cmi glob was empty)
 install: fstarlib.cmxa fstarlib.cma
-	cp _build/ulib/ml/fstarlib.a $(FSTARLIB_DIR)
-	cp _build/ulib/ml/*.cmi $(FSTARLIB_DIR)
-	cp _build/ulib/ml/extracted/*.cmi $(FSTARLIB_DIR)
+	for f in \
+	  _build/ulib/ml/fstarlib.a \
+	  $(wildcard _build/ulib/ml/*.cmi) \
+	  $(wildcard _build/ulib/ml/extracted/*.cmi) \
+        ; do cp $$f $(FSTARLIB_DIR) ; done
 
 .mgen:
 	$(MAKE) -C .. .mgen
