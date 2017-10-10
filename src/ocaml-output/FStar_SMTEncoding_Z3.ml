@@ -10,8 +10,8 @@ let parse_z3_version_lines:
     | x::uu____19 ->
         let trimmed = FStar_Util.trim_string x in
         let parts = FStar_Util.split trimmed " " in
-        let rec aux uu___115_33 =
-          match uu___115_33 with
+        let rec aux uu___117_33 =
+          match uu___117_33 with
           | hash::[] ->
               if hash = _z3hash_expected
               then
@@ -149,8 +149,8 @@ let uu___is_KILLED: z3status -> Prims.bool =
     match projectee with | KILLED  -> true | uu____478 -> false
 type z3statistics = Prims.string FStar_Util.smap[@@deriving show]
 let status_tag: z3status -> Prims.string =
-  fun uu___116_484  ->
-    match uu___116_484 with
+  fun uu___118_484  ->
+    match uu___118_484 with
     | SAT uu____485 -> "sat"
     | UNSAT uu____492 -> "unsat"
     | UNKNOWN uu____493 -> "unknown"
@@ -915,8 +915,8 @@ let giveZ3: FStar_SMTEncoding_Term.decl Prims.list -> Prims.unit =
   fun decls  ->
     FStar_All.pipe_right decls
       (FStar_List.iter
-         (fun uu___117_5366  ->
-            match uu___117_5366 with
+         (fun uu___119_5366  ->
+            match uu___119_5366 with
             | FStar_SMTEncoding_Term.Push  -> failwith "Unexpected push/pop"
             | FStar_SMTEncoding_Term.Pop  -> failwith "Unexpected push/pop"
             | uu____5367 -> ()));
@@ -959,8 +959,8 @@ let mk_input:
           let uu____5772 =
             FStar_All.pipe_right theory
               (FStar_Util.prefix_until
-                 (fun uu___118_5800  ->
-                    match uu___118_5800 with
+                 (fun uu___120_5800  ->
+                    match uu___120_5800 with
                     | FStar_SMTEncoding_Term.CheckSat  -> true
                     | uu____5801 -> false)) in
           FStar_All.pipe_right uu____5772 FStar_Option.get in
