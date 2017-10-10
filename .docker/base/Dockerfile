@@ -3,12 +3,12 @@ FROM ubuntu:xenial
 MAINTAINER Benjamin Beurdouche <benjamin.beurdouche@inria.fr>; Daniel Fabian <daniel.fabian@integral-it.ch>
 
 # Define versions of dependencies
-ENV opamv 4.04.0
-ENV z3v z3-4.5.0
+ENV opamv 4.04.2
+ENV z3v 4.5.1.1f29cebd4df6-x64-ubuntu-14.04
 
 # Install required packages and set versions
 RUN apt-get -qq update
-RUN apt-get install --yes sudo libssl-dev libsqlite3-dev g++-5 gcc-5 m4 make opam pkg-config python libgmp3-dev
+RUN apt-get install --yes sudo wget libssl-dev libsqlite3-dev g++-5 gcc-5 m4 make opam pkg-config python libgmp3-dev unzip
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 200
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 200
 
@@ -26,12 +26,10 @@ RUN opam switch ${opamv}
 RUN opam install ocamlfind batteries sqlite3 fileutils stdint zarith yojson pprint menhir ulex
 
 # Prepare and build Z3
-RUN git clone -b ${z3v} https://github.com/Z3Prover/z3.git
-WORKDIR z3
-RUN python scripts/mk_make.py
-WORKDIR build
-RUN make
-RUN sudo make install
+RUN wget https://github.com/FStarLang/binaries/raw/master/z3-tested/z3-${z3v}.zip
+RUN unzip z3-${z3v}.zip
+RUN mv z3-${z3v} z3
+ENV PATH "/home/FStar/z3/bin:$PATH"
 WORKDIR /home/FStar
 
 # Prepare and build F*
