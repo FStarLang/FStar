@@ -110,14 +110,14 @@ let range_of_lid: lid -> FStar_Range.range = fun lid  -> (lid.ident).idRange
 let set_lid_range: lident -> FStar_Range.range -> lident =
   fun l  ->
     fun r  ->
-      let uu___51_435 = l in
+      let uu___57_435 = l in
       {
-        ns = (uu___51_435.ns);
+        ns = (uu___57_435.ns);
         ident =
-          (let uu___52_437 = l.ident in
-           { idText = (uu___52_437.idText); idRange = r });
-        nsstr = (uu___51_435.nsstr);
-        str = (uu___51_435.str)
+          (let uu___58_437 = l.ident in
+           { idText = (uu___58_437.idText); idRange = r });
+        nsstr = (uu___57_435.nsstr);
+        str = (uu___57_435.str)
       }
 let lid_add_suffix: lident -> Prims.string -> lident =
   fun l  ->
