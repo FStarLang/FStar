@@ -813,7 +813,7 @@ and resugar_pat (p:S.pat) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt =
-    BU.bind_opt bopt (fun b -> if true then Some A.Implicit else None)
+    BU.bind_opt bopt (fun b -> if b then Some A.Implicit else None)
   in
   let rec aux (p:S.pat) (imp_opt:option<bool>)=
     match p.v with
