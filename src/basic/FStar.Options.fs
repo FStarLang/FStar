@@ -1219,3 +1219,7 @@ let should_extract m =
      | [] -> true
      | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
   | l -> List.contains (String.lowercase m) l))
+
+let codegen_fsharp () =
+    codegen() = Some "FSharp"
+  

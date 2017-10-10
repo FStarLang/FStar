@@ -1831,8 +1831,7 @@ and term_as_mlexpr':
                            let evaluation_order_guaranteed =
                              (((FStar_List.length mlargs_f) =
                                  (Prims.parse_int "1"))
-                                ||
-                                (FStar_Extraction_ML_Util.codegen_fsharp ()))
+                                || (FStar_Options.codegen_fsharp ()))
                                ||
                                (match head1.FStar_Syntax_Syntax.n with
                                 | FStar_Syntax_Syntax.Tm_fvar fv ->
