@@ -31,11 +31,14 @@ let raw_cipher (Entry _ c) : bytes = snd (B.split c ivsize)
 let split_entry (p:plain) (c:cipher) (iv:iv) (r:bytes)
    : Lemma  (iv_of_entry (Entry p (iv@|r)) == iv /\
              raw_cipher  (Entry p (iv@|r)) == r)
-   = admit()
+   = assert (Seq.equal (iv_of_entry (Entry p (iv@|r))) iv);
+     assert (Seq.equal (raw_cipher (Entry p (iv@|r))) r)
 let iv_of_entry_inj (e1 e2:log_entry)
   : Lemma (iv_of_entry e1 <> iv_of_entry e2 
            ==> Entry?.c e1 <> Entry?.c e2)
-  = admit()
+  = let iv1, r1 = iv_of_entry e1, raw_cipher e1 in
+    let iv2, r2 = iv_of_entry e2, raw_cipher e2 in
+    FStar.Classical.move_requires (Platform.Bytes.lemma_append_inj iv1 r1 iv2) r2
   
 let log_t (r:rid) =
     Monotonic.Seq.log_t r log_entry
@@ -94,14 +97,6 @@ let invariant (k:key) (h:mem) =
     pairwise_distinct_ivs log /\
     cipher_functional_correctness raw_key log
 
-let ivs (k:key) 
-  : ST (Set.set iv)
-       (fun h -> True)
-       (fun h0 ivs h1 -> h0 == h1 /\
-                      (forall i. indexable (log k h1) i ==> 
-                            iv_of_entry (Seq.index (log k h1) i) `Set.mem` ivs))
-  = admit()
-
 let genPost parent (m0:mem) (k:key) (m1:mem) =
     modifies Set.empty m0 m1
   /\ extends k.region parent
@@ -113,10 +108,17 @@ val keygen: parent:rid -> ST key
   (requires (fun _ -> True))
   (ensures  (genPost parent))
 let keygen parent =
-  let raw = CC.rand keysize FStar.Set.empty in
+  let raw = CC.random keysize in
   let region = new_region parent in
   let log = alloc_mref_seq region createEmpty in
   Key #region raw log
+
+assume 
+val fresh_iv (k:key) : ST iv
+    (requires (fun h -> True))
+    (ensures (fun h0 iv h1 -> 
+                h0 == h1 /\
+                iv_not_in iv (log k h0)))
 
 val encrypt: k:key -> m:msg -> ST cipher
   (requires (invariant k))
@@ -128,9 +130,8 @@ val encrypt: k:key -> m:msg -> ST cipher
      m_contains k.log h1 /\
      log1 == snoc log0 (Entry m c))))
 let encrypt k m =
-  let ivs = ivs k in
-  let iv = CC.rand ivsize ivs in
-  let text = if ind_cpa // && ind_cpa_rest_adv
+  let iv = fresh_iv k in
+  let text = if ind_cpa
              then createBytes (length m) 0z
              else repr m in
   let raw_c = CC.block_enc CC.AES_128_CBC k.raw iv text in
@@ -142,20 +143,8 @@ let encrypt k m =
   write_at_end k.log e;
   let h1 = FStar.HyperStack.ST.get () in
   lemma_mem_snoc (log k h0) e;
-  assume (iv_not_in (iv_of_entry e) (log k h0));
   pairwise_snoc (log k h0) e;
   c
-
-val decrypt: k:key -> c:cipher -> ST msg
-  (requires (fun h0 ->
-    let log = log k h0 in
-    invariant k h0 /\
-    (b2t ind_cpa_rest_adv ==> (exists p. Seq.mem (Entry p c) log))))
-  (ensures  (fun h0 res h1 ->
-    let log = log k h1 in
-    modifies_none h0 h1 /\
-    invariant k h1 /\
-    (b2t ind_cpa_rest_adv ==> Seq.mem (Entry res c) log)))
 
 let find_entry (log:seq log_entry) (c:cipher) : Pure log_entry
     (requires (exists p. Seq.mem (Entry p c) log))
@@ -168,7 +157,18 @@ let find_entry (log:seq log_entry) (c:cipher) : Pure log_entry
              (fun (p:plain{Seq.mem (Entry p c) log}) -> 
                 Seq.find_mem log (entry_has_cipher c) (Entry p c));
     Some?.v eopt                
-  
+
+val decrypt: k:key -> c:cipher -> ST msg
+  (requires (fun h0 ->
+    let log = log k h0 in
+    invariant k h0 /\
+    (b2t ind_cpa_rest_adv ==> (exists p. Seq.mem (Entry p c) log))))
+  (ensures  (fun h0 res h1 ->
+    let log = log k h1 in
+    modifies_none h0 h1 /\
+    invariant k h1 /\
+    (b2t ind_cpa_rest_adv ==> Seq.mem (Entry res c) log)))
+
 let decrypt k c =
   let Key raw_key log = k in
   let iv,c' = split c ivsize in

@@ -33,9 +33,3 @@ let block_dec (b:block_cipher) (raw_key:bytes) (iv:bytes) (cipher:bytes) :
     EXT (p:bytes{p == block_decrypt_spec b raw_key iv cipher}) = 
     admit();
     block_decrypt b raw_key iv cipher
-
-open FStar.Set
-let rand (size:nat) (s:FStar.Set.set (lbytes size))
-    : EXT (b:lbytes size{not (b `mem` s)})
-    = admit();
-      random size
