@@ -32,7 +32,11 @@ let split_entry (p:plain) (c:cipher) (iv:iv) (r:bytes)
    : Lemma  (iv_of_entry (Entry p (iv@|r)) == iv /\
              raw_cipher  (Entry p (iv@|r)) == r)
    = admit()
-
+let iv_of_entry_inj (e1 e2:log_entry)
+  : Lemma (iv_of_entry e1 <> iv_of_entry e2 
+           ==> Entry?.c e1 <> Entry?.c e2)
+  = admit()
+  
 let log_t (r:rid) =
     Monotonic.Seq.log_t r log_entry
 
@@ -44,10 +48,32 @@ let log (k:key) (h:mem)
   : GTot (seq log_entry) =
     m_sel h (Key?.log k)
 
-let pairwise_distinct_ivs (log:seq log_entry) =
-    forall (e1:log_entry{Seq.mem e1 log}) 
-      (e2:log_entry{Seq.mem e2 log}). {:pattern Seq.mem e1 log; Seq.mem e2 log}
-        e1 <> e2 ==> iv_of_entry e1 <> iv_of_entry e2
+let iv_not_in (iv:iv) (log:seq log_entry) =
+    forall (e:log_entry{Seq.mem e log}). iv_of_entry e <> iv
+
+let rec pairwise_distinct_ivs (log:seq log_entry) 
+  : Tot Type0 (decreases (Seq.length log)) =
+  if Seq.length log > 0 then
+    let log, tl = Seq.un_snoc log in
+    pairwise_distinct_ivs log /\
+    iv_not_in (iv_of_entry tl) log
+  else True
+
+let un_snoc_snoc (#a:Type) (s:seq a) (x:a) : Lemma (Seq.un_snoc (Seq.snoc s x) == (s, x)) =
+  let s', x = un_snoc (snoc s x) in
+  assert (Seq.equal s s')
+
+let pairwise_snoc (cpas:Seq.seq log_entry) (tl:log_entry)
+    : Lemma ((pairwise_distinct_ivs cpas /\ iv_not_in (iv_of_entry tl) cpas) <==>
+             (pairwise_distinct_ivs (Seq.snoc cpas tl)))
+    = un_snoc_snoc cpas tl
+
+let invert_pairwise (cpas:Seq.seq log_entry) (e:log_entry) (c:cipher)
+    : Lemma (requires (pairwise_distinct_ivs (snoc cpas e) /\
+                       Entry?.c e == c))
+            (ensures (forall e'. Seq.mem e' cpas ==> Entry?.c e' <> c))
+    = pairwise_snoc cpas e;
+      FStar.Classical.forall_intro (iv_of_entry_inj e)
 
 let entry_functional_correctness (raw_key:bytes) (e:log_entry) : Type0 =
     let iv = iv_of_entry e in
@@ -116,7 +142,8 @@ let encrypt k m =
   write_at_end k.log e;
   let h1 = FStar.HyperStack.ST.get () in
   lemma_mem_snoc (log k h0) e;
-  assume (pairwise_distinct_ivs (log k h1));
+  assume (iv_not_in (iv_of_entry e) (log k h0));
+  pairwise_snoc (log k h0) e;
   c
 
 val decrypt: k:key -> c:cipher -> ST msg

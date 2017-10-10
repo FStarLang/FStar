@@ -149,12 +149,11 @@ let invariant (h:mem) (k:key) =
   mac_only_cpa_ciphers (get_mac_log h k) (get_cpa_log h k) /\
   mac_and_cpa_refine_ae (get_log h k) (get_mac_log h k) (get_cpa_log h k)
 
-
-let invert_pairwise (cpas:Seq.seq CPA.log_entry) (e:CPA.log_entry) (c:CPA.cipher)
-    : Lemma (requires (CPA.pairwise_distinct_ivs (snoc cpas e) /\
-                       CPA.Entry?.c e == c))
-            (ensures (forall e'. Seq.mem e' cpas ==> CPA.Entry?.c e' <> c))
-    = admit()
+// let invert_pairwise (cpas:Seq.seq CPA.log_entry) (e:CPA.log_entry) (c:CPA.cipher)
+//     : Lemma (requires (CPA.pairwise_distinct_ivs (snoc cpas e) /\
+//                        CPA.Entry?.c e == c))
+//             (ensures (forall e'. Seq.mem e' cpas ==> CPA.Entry?.c e' <> c))
+//     = admit()
     
 let rec invert_invariant_aux (c:cipher) (p:Plain.plain)
                              (macs:Seq.seq MAC.log_entry)
@@ -177,20 +176,21 @@ let rec invert_invariant_aux (c:cipher) (p:Plain.plain)
            mem_snoc cpas cpa (CPA.Entry p (fst c));
            if mac = c then begin
              assert (CPA.Entry?.c cpa == fst c);
-             invert_pairwise cpas cpa (fst c);
+             CPA.invert_pairwise cpas cpa (fst c);
              assert (not (Seq.mem (CPA.Entry p (fst c)) cpas));
              assert (CPA.Entry?.plain cpa == p);
              assert (ae = (p, c))
            end
            else if fst mac = fst c then begin
              assert (CPA.Entry?.c cpa == fst c);
-             assume (exists q1. Seq.mem (CPA.Entry q1 (fst c)) cpas);
-             invert_pairwise cpas cpa (fst c)
+             mac_only_cpa_ciphers_mem macs cpas c;
+             assert (exists q1. Seq.mem (CPA.Entry q1 (fst c)) cpas);
+             CPA.invert_pairwise cpas cpa (fst c)
            end
            else begin
              assert (mac_and_cpa_refine_ae aes macs cpas);
              mac_only_cpa_ciphers_snoc macs mac cpas cpa;
-             assume (CPA.pairwise_distinct_ivs cpas);
+             CPA.pairwise_snoc cpas cpa;
              invert_invariant_aux c p macs cpas aes
            end
 
