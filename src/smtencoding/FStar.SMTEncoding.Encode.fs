@@ -1248,6 +1248,9 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
 
     let decls' = List.flatten decls' in
 
+    (* Postcondition is thunked, c.f. #57 *)
+    let post = U.unthunk_lemma_post post in
+
     let env = {env with nolabels=true} in
     let pre, decls'' = encode_formula (U.unmeta pre) env in
     let post, decls''' = encode_formula (U.unmeta post) env in

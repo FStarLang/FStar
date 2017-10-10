@@ -1199,6 +1199,16 @@ let destruct_typ_as_formula f : option<connective> =
         catch_opt (destruct_sq_exists phi) (fun () ->
                    None)))))
 
+let unthunk_lemma_post t =
+    match (compress t).n with
+    | Tm_abs ([b], e, _) ->
+        let bs, e = open_term [b] e in
+        let b = List.hd bs in
+        if is_free_in (fst b) e
+        then mk_app t [as_arg exp_unit]
+        else e
+    | _ ->
+        mk_app t [as_arg exp_unit]
 
 let action_as_lb eff_lid a =
   let lb =

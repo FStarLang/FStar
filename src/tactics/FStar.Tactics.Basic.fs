@@ -554,6 +554,8 @@ let apply_lemma (tm:term) : tac<unit> = focus(
                     | pre::post::_ -> fst pre, fst post
                     | _ -> failwith "apply_lemma: impossible: not a lemma"
     in
+    // Lemma post is thunked
+    let post = U.mk_app post [S.as_arg U.exp_unit] in
     if not (do_unify goal.context (U.mk_squash post) goal.goal_ty)
     then fail3 "apply_lemma: Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
                             (N.term_to_string goal.context tm)

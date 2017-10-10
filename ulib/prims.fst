@@ -247,17 +247,26 @@ irreducible let smt_pat_or (x:list (list pattern)) : pattern = ()
 assume type decreases : #a:Type -> a -> Type0
 
 (*
-   Lemma is desugared specially. You can write:
+   Lemma is desugared specially. The valid forms are:
 
-     Lemma phi                 for   Lemma (requires True) phi []
-     Lemma t1..tn              for   Lemma unit t1..tn
+     Lemma (ensures post)
+     Lemma post [SMTPat ...]
+     Lemma (ensures post) [SMTPat ...]
+     Lemma (ensures post) (decreases d)
+     Lemma (ensures post) (decreases d) [SMTPat ...]
+     Lemma (requires pre) (ensures post) (decreases d)
+     Lemma (requires pre) (ensures post) [SMTPat ...]
+     Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]
+
+   and
+
+     Lemma post    (== Lemma (ensures post))
+
+   the squash argument on the postcondition allows to assume the
+   precondition for the *well-formedness* of the postcondition.
+   C.f. #57.
 *)
-effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) =
-       Pure a pre (fun r -> post)
-
-(* This variant allows to assume the precondition for the w.f. of the postcondition,
- * but has no desugaring (for now) *)
-effect Lemma' (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
+effect Lemma (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
        Pure a pre (fun r -> post ())
 
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",

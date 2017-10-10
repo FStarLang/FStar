@@ -1271,10 +1271,13 @@ and desugar_comp r env t =
           let req = Requires (mk_term (Name C.true_lid) t.range Formula, None) in
           mk_term req t.range Type_level, Nothing
         in
-        let ens_true =
-          let ens = Ensures (mk_term (Name C.true_lid) t.range Formula, None) in
-          mk_term ens t.range Type_level, Nothing
+        (* The postcondition for Lemma is thunked, to allow to assume the precondition
+         * (c.f. #57), so add the thunking here *)
+        let thunk_ens_ (ens : AST.term) : AST.term =
+            let wildpat = mk_pattern PatWild ens.range in
+            mk_term (Abs ([wildpat], ens)) ens.range Expr
         in
+        let thunk_ens (e, i) = (thunk_ens_ e, i) in
         let fail_lemma () =
              let expected_one_of = ["Lemma post";
                                     "Lemma (ensures post)";
@@ -1305,49 +1308,49 @@ and desugar_comp r env t =
             fail_lemma()
 
           | [ens] -> //otherwise, a single argument is always treated as just an ensures clause
-            [unit_tm;req_true;ens;nil_pat]
+            [unit_tm;req_true;thunk_ens ens;nil_pat]
 
           | [req;ens]
                 when is_requires req
                   && is_ensures ens ->
-            [unit_tm;req;ens;nil_pat]
+            [unit_tm;req;thunk_ens ens;nil_pat]
 
           | [ens;smtpat] //either Lemma p [SMTPat ...]; or Lemma (ensures p) [SMTPat ...]
                 when not (is_requires ens)
                   && not (is_smt_pat ens)
                   && not (is_decreases ens)
                   && is_smt_pat smtpat ->
-            [unit_tm;req_true;ens;smtpat]
+            [unit_tm;req_true;thunk_ens ens;smtpat]
 
           | [ens;dec]
                 when is_ensures ens
                   && is_decreases dec ->
-            [unit_tm;req_true;ens;nil_pat;dec]
+            [unit_tm;req_true;thunk_ens ens;nil_pat;dec]
 
           | [ens;dec;smtpat]
                 when is_ensures ens
                   && is_decreases dec
                   && is_smt_pat smtpat ->
-            [unit_tm;req_true;ens;smtpat;dec]
+            [unit_tm;req_true;thunk_ens ens;smtpat;dec]
 
           | [req;ens;dec]
                 when is_requires req
                   && is_ensures ens
                   && is_decreases dec ->
-            [unit_tm;req;ens;nil_pat;dec]
+            [unit_tm;req;thunk_ens ens;nil_pat;dec]
 
           | [req;ens;smtpat]
                 when is_requires req
                   && is_ensures ens
                   && is_smt_pat smtpat ->
-            unit_tm::args
+            [unit_tm;req;thunk_ens ens;smtpat]
 
           | [req;ens;dec;smtpat]
                 when is_requires req
                   && is_ensures ens
                   && is_smt_pat smtpat
                   && is_decreases dec ->
-            unit_tm::args
+            [unit_tm;req;thunk_ens ens;dec;smtpat]
 
           | _other ->
             fail_lemma()

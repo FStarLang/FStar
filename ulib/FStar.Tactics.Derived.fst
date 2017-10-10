@@ -229,6 +229,7 @@ let rec apply_squash_or_lem d t =
        match r with
        | Some _ -> return () // Success
        | None ->
+           post <-- norm_term [] post;
            (* Is the lemma an implication? We can try to intro *)
            match term_as_formula' post with
            | Implies p q ->

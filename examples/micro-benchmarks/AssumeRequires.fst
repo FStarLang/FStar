@@ -7,6 +7,6 @@ let well_typed o = admit ()
 val get : o:(option 'a) -> Pure 'a (Some? o) (fun x -> Some?.v o == x)
 let get (Some x) = x
 
-// No desugaring for Lemma', yet
-val lem : o:(option unit) -> Lemma' unit (Some? o) (fun _ -> Some?.v o == ()) []
+// Lemma works too
+val lem : o:(option unit) -> Lemma (requires (Some? o)) (ensures (Some?.v o == ()))
 let lem o = ()

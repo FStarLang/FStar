@@ -267,6 +267,7 @@ let embed_comp_view (cv : comp_view) : term =
                     None Range.dummyRange
 
     | C_Lemma (pre, post) ->
+        let post = U.unthunk_lemma_post post in
         S.mk_Tm_app ref_C_Lemma [S.as_arg (embed_term pre); S.as_arg (embed_term post)]
                     None Range.dummyRange
 
