@@ -108,13 +108,6 @@ let exact: RT.term E.tactic -> unit -> unit __tac =
     | Success (a, state) -> __exact a state
     | Failed (s, state) -> Failed (s, state)
 
-let __exact_lemma (t: RT.term): unit __tac = from_tac_1 B.exact_lemma t
-let exact_lemma: RT.term E.tactic -> unit -> unit __tac =
-  fun t  -> fun () -> fun ps ->
-    match (t ()) ps with
-    | Success (a, state) -> __exact_lemma a state
-    | Failed (s, state) -> Failed (s, state)
-
 let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
 let apply: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
