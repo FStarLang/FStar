@@ -99,27 +99,27 @@ let __proj__Mkproofstate__item____dump:
         __dump = __fname____dump;_} -> __fname____dump
 let decr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___106_261 = ps in
+    let uu___105_261 = ps in
     {
-      main_context = (uu___106_261.main_context);
-      main_goal = (uu___106_261.main_goal);
-      all_implicits = (uu___106_261.all_implicits);
-      goals = (uu___106_261.goals);
-      smt_goals = (uu___106_261.smt_goals);
+      main_context = (uu___105_261.main_context);
+      main_goal = (uu___105_261.main_goal);
+      all_implicits = (uu___105_261.all_implicits);
+      goals = (uu___105_261.goals);
+      smt_goals = (uu___105_261.smt_goals);
       depth = (ps.depth - (Prims.parse_int "1"));
-      __dump = (uu___106_261.__dump)
+      __dump = (uu___105_261.__dump)
     }
 let incr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___107_266 = ps in
+    let uu___106_266 = ps in
     {
-      main_context = (uu___107_266.main_context);
-      main_goal = (uu___107_266.main_goal);
-      all_implicits = (uu___107_266.all_implicits);
-      goals = (uu___107_266.goals);
-      smt_goals = (uu___107_266.smt_goals);
+      main_context = (uu___106_266.main_context);
+      main_goal = (uu___106_266.main_goal);
+      all_implicits = (uu___106_266.all_implicits);
+      goals = (uu___106_266.goals);
+      smt_goals = (uu___106_266.smt_goals);
       depth = (ps.depth + (Prims.parse_int "1"));
-      __dump = (uu___107_266.__dump)
+      __dump = (uu___106_266.__dump)
     }
 let tracepoint: proofstate -> Prims.unit =
   fun ps  ->
@@ -128,3 +128,12 @@ let tracepoint: proofstate -> Prims.unit =
         (let uu____273 = FStar_Options.tactic_trace_d () in
          ps.depth <= uu____273) in
     if uu____271 then ps.__dump ps "TRACE" else ()
+type direction =
+  | TopDown
+  | BottomUp[@@deriving show]
+let uu___is_TopDown: direction -> Prims.bool =
+  fun projectee  ->
+    match projectee with | TopDown  -> true | uu____279 -> false
+let uu___is_BottomUp: direction -> Prims.bool =
+  fun projectee  ->
+    match projectee with | BottomUp  -> true | uu____284 -> false

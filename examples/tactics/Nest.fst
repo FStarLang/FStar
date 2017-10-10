@@ -1,6 +1,6 @@
 module Nest
 
-(* This is simply testing that #1065 doesn't pop back up again *)
+(* This is simply testing that #1065.2 doesn't pop back up again *)
 
 open FStar.Tactics
 

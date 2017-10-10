@@ -4,15 +4,37 @@ open Platform.Bytes
 open CoreCrypto
 open EtM.Ideal
 
-abstract type plain = bytes
+abstract 
+type plain : eqtype = bytes
 
-assume Plain_hasEq: hasEq plain
+abstract
+let reveal (p:plain) : GTot bytes = p
 
-val repr: p:plain{not conf} -> Tot bytes
-let repr p = p
+abstract
+let hide (b:bytes) : GTot plain = b
 
-val coerce: r:bytes{not auth} -> Tot plain
-let coerce r = r
+let reveal_hide (p:plain) 
+  : Lemma (hide (reveal p) == p)
+          [SMTPat (reveal p)]
+  = ()
 
-val length: plain -> Tot nat
-let length p = length p
+let hide_reveal (b:bytes) 
+  : Lemma (reveal (hide b) == b)
+          [SMTPat (hide b)]
+  = ()
+
+abstract
+let repr (p:plain{not conf}) 
+  : (b:bytes{b == reveal p}) 
+  = p
+
+abstract
+let coerce (r:bytes{not auth}) 
+  : (p:plain{p == hide r}) 
+  = r
+
+module B = Platform.Bytes
+abstract
+let length (p:plain) 
+  : (n:nat{n = B.length (reveal p)})
+  = B.length p

@@ -313,6 +313,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_type _
   | Tm_unknown -> tc_value env e
 
+  | Tm_meta ({n = Tm_unknown}, Meta_alien (_, _, ty)) ->
+    top, S.mk_Total ty |> U.lcomp_of_comp, Rel.trivial_guard
+
   | Tm_meta(e, Meta_desugared Meta_smt_pat) ->
     let e, c, g = tc_tot_or_gtot_term env e in
     let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant
@@ -479,7 +482,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High then BU.print2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
-    let isquote = match head.n with
+    let isquote =
+        let head, _ = U.head_and_args head in
+        match (U.un_uinst head).n with
                   | Tm_fvar fv when S.fv_eq_lid fv Const.quote_lid -> true
                   | _ -> false
     in
