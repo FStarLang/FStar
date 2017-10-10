@@ -165,20 +165,7 @@
       "f36bffafe7e49c5165f2af7049af0eba"
     ],
     [
-      "FStar.Math.Lib.slash_star_axiom",
-      4,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "equation_Prims.pos", "int_inversion", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
-        "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
+      "FStar.Math.Lib.slash_star_axiom", 4, 2, 1, null, 0,
       "417fd44329286f5cb3abfeb7caf1e520"
     ],
     [
