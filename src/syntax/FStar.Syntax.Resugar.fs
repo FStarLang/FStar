@@ -44,8 +44,7 @@ module E = FStar.Errors
 let doc_to_string doc = FStar.Pprint.pretty_string (float_of_string "1.0") 100 doc
 let parser_term_to_string t = doc_to_string (D.term_to_document t)
 
-let map_opt (f:'a -> option<'b>) (l:list<'a>) : list<'b> =
-  snd (BU.choose_map (fun () x -> (), f x) () l)
+let map_opt = List.filter_map
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
