@@ -99,15 +99,15 @@ let tc_prims (env: TcEnv.env)
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 let tc_one_fragment curmod (env:TcEnv.env) frag =
-  let acceptable_mod_name mod =
+  let acceptable_mod_name modul =
     (* Interface is sent as the first chunk, so we must allow repeating the same module. *)
     Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) =
-    String.lowercase (string_of_lid mod.name) in
+    String.lowercase (string_of_lid modul.name) in
 
-  let range_of_first_mod_decl mod =
-    match mod with
-    | Parser.AST.Module (_, d :: _)
-    | Parser.AST.Interface (_, d :: _, _) -> d.Parser.AST.drange
+  let range_of_first_mod_decl modul =
+    match modul with
+    | Parser.AST.Module (_, { Parser.AST.drange = d } :: _)
+    | Parser.AST.Interface (_, { Parser.AST.drange = d } :: _, _) -> d
     | _ -> Range.dummyRange in
 
   match Parser.Driver.parse_fragment frag with
@@ -135,7 +135,7 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
   | Parser.Driver.Decls ast_decls ->
     match curmod with
     | None ->
-      let rng = (List.hd ast_decls).Parser.AST.drange in
+      let { Parser.AST.drange = rng } = List.hd ast_decls in
       raise (Errors.Error ("First statement must be a module declaration", rng))
     | Some modul ->
       let env, ast_decls_l =
