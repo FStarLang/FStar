@@ -426,6 +426,7 @@ let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
 
 let base_and_refinement env wl t1 =
    let rec aux norm t1 =
+        let t1 = U.unmeta t1 in
         match t1.n with
         | Tm_refine(x, phi) ->
             if norm
