@@ -213,10 +213,10 @@ private let push1 #p #q f u = ()
  * Some easier applying, which should prevent frustation
  * (or cause more when it doesn't do what you wanted to)
  *)
-let rec apply_squash_or_lem d (t : term) : tactic unit =
-    if d > 10
-    then fail "mapply: stopping at depth 10"
-    else idtac;;
+val apply_squash_or_lem : d:nat -> term -> Tot (tactic unit) (decreases d)
+let rec apply_squash_or_lem d t =
+    // This terminates because of the fuel, but we could just expand into Tac and diverge
+    if d <= 0 then fail "mapply: out of fuel" else begin
     g <-- cur_goal;
     ty <-- tc t;
     let tys, c = collect_arr ty in
@@ -233,7 +233,7 @@ let rec apply_squash_or_lem d (t : term) : tactic unit =
            match term_as_formula' post with
            | Implies p q ->
                apply (quote push1);;
-               apply_squash_or_lem (d+1) t
+               apply_squash_or_lem (d-1) t
 
            | _ ->
                fail "mapply: can't apply (1)"
@@ -248,8 +248,9 @@ let rec apply_squash_or_lem d (t : term) : tactic unit =
            apply (return t)
        end
     | _ -> fail "mapply: can't apply (2)"
+    end
 
 (* `m` is for `magic` *)
 let mapply (t : tactic term) : tactic unit =
     tt <-- t;
-    apply_squash_or_lem 0 tt
+    apply_squash_or_lem 10 tt
