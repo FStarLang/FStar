@@ -147,7 +147,7 @@ let rec is_name_imp (nm : name) (t : term) : bool =
     | _ -> false
     end
 
-let rec unsquash (t : term) : option term =
+let unsquash (t : term) : option term =
     match inspect t with
     | Tv_App l (r, Q_Explicit) ->
         if is_name_imp squash_qn l

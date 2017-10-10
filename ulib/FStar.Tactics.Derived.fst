@@ -199,3 +199,29 @@ private let __witness #a x #p _ = ()
 let witness (t : tactic term) : tactic unit =
     apply_raw (quote __witness);;
     exact t
+
+(*
+ * Some easier applying, which should prevent frustation
+ * (or cause more when it doesn't do what you wanted to)
+ *)
+let apply_squash_or_lem (t : term) : tactic unit =
+     g <-- cur_goal;
+     ty <-- tc t;
+     let tys, c = collect_arr ty in
+     match inspect_comp c with
+     | C_Lemma _ _ -> apply_lemma (return t)
+     | C_Total rt ->
+        begin match unsquash rt with
+        (* If the function returns a squash, just apply it, since our goals are squashed *)
+        | Some _ -> apply (return t)
+        (* If not, we can try to introduce the squash ourselves first *)
+        | None ->
+            apply (quote FStar.Squash.return_squash);;
+            apply (return t)
+        end
+     | _ -> fail ""
+
+(* `m` is for `magic` *)
+let mapply (t : tactic term) : tactic unit =
+    tt <-- t;
+    apply_squash_or_lem tt
