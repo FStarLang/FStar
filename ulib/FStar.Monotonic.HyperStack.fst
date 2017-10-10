@@ -221,7 +221,7 @@ let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Le
 	    /\ modifies_one (frameOf x) h (upd h x v)
 	    /\ modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
 	    /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPatT (contains h x)]
+  [SMTPat (upd h x v); SMTPat (contains h x)]
   = ()
 
 let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
@@ -230,7 +230,7 @@ let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{re
 	    /\ modifies_one h.tip h (upd h x v)
 	    /\ modifies_ref h.tip Set.empty h (upd h x v)
 	    /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPatT (x `unused_in` h)]
+  [SMTPat (upd h x v); SMTPat (x `unused_in` h)]
   = ()
 
 val lemma_live_1: #a:Type ->  #a':Type -> #rel:preorder a -> #rel':preorder a'

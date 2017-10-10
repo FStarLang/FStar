@@ -139,7 +139,7 @@ val subArrayExists :
 -> Lemma
     (requires (arrayExixtsInMem ch m))
     (ensures (arrayExixtsInMem (subVector offset len ch) m))
-    [SMTPat (subVector #(lref a) #n offset len ch); SMTPatT (arrayExixtsInMem #a #n ch m)]
+    [SMTPat (subVector #(lref a) #n offset len ch); SMTPat (arrayExixtsInMem #a #n ch m)]
 
 let subArrayExists 'a #n ch offset len m = (admit ())
 (*Note that subVector is opaque and Fstar doesnot know anything about it*)

@@ -3,7 +3,7 @@ module Bug282
 assume new type p:unit -> Type
 
 assume val lem1: u:unit -> Lemma (requires True) (ensures (p u))
-assume val lem2: u:unit -> Lemma (requires True) (ensures (p u)) [SMTPatT (p u)]
+assume val lem2: u:unit -> Lemma (requires True) (ensures (p u)) [SMTPat (p u)]
 
 assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 
@@ -24,5 +24,5 @@ $ fstar.exe --universes Bug282.fst --print_effect_args
 
 Bug282.fst(12,43-12,47) : Error
 Expected expression of type "(x:Prims.unit -> Lemma (Prims.unit) Prims.l_True, (Bug282.p x@0), (Prims.Nil ))";
-got expression "Bug282.lem2" of type "(u:Prims.unit -> Lemma (Prims.unit) Prims.l_True, (Bug282.p u@0), (Prims.Cons (Prims.SMTPatT (Bug282.p u@0)) (Prims.Nil )))"
+got expression "Bug282.lem2" of type "(u:Prims.unit -> Lemma (Prims.unit) Prims.l_True, (Bug282.p u@0), (Prims.Cons (Prims.SMTPat (Bug282.p u@0)) (Prims.Nil )))"
 *)

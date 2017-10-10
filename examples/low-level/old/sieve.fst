@@ -84,7 +84,7 @@ val multiplesMarkedAsDividesIff :
    (requires (markedIffDividesOrInit2 n lo (reveal initv) (reveal newv)))
    (ensures (markedIffDividesOrInit n lo (reveal initv) (reveal newv)))
 
-      [SMTPatT (markedIffDividesOrInit n lo (reveal initv) (reveal newv))]
+      [SMTPat (markedIffDividesOrInit n lo (reveal initv) (reveal newv))]
 
 let multiplesMarkedAsDividesIff n initv newv lo = (multiplesMarkedAsDivides n newv lo)
 
@@ -117,7 +117,7 @@ let innerLoop n lo li res initres =
       memwrite li (liv+1);
       mark res (lov * liv)))
 
-    (*the part below has no computaional content; why does SMTPatT not work?*)
+    (*the part below has no computaional content; why does SMTPat not work?*)
       //let newv = memread res in
       //let lov = memread lo in
     (*      (multiplesMarkedAsDividesIff n initres newv lo) // how to invoke this lemma now? unlike previously, we cannot read a full Seq from an array
@@ -135,7 +135,7 @@ val markedIffHasDivisorSmallerThanInc :
       (requires (markedIffHasDivisorSmallerThan n lo (reveal old))
               /\ markedIffDividesOrInit2 n lo (reveal old) (reveal neww))
       (ensures (markedIffHasDivisorSmallerThan n (lo+1) (reveal neww)))
-      (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
+      (*[SMTPat (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
 let markedIffHasDivisorSmallerThanInc n lo old neww  = ((multiplesMarkedAsDividesIff n old neww lo))
 
 type allUnmarked

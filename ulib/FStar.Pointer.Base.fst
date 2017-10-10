@@ -2296,7 +2296,7 @@ let unused_in_includes
 : Lemma
   (requires (includes p1 p2))
   (unused_in p1 h <==> unused_in p2 h)
-  [SMTPatT (unused_in p2 h); SMTPatT (includes p1 p2)]
+  [SMTPat (unused_in p2 h); SMTPat (includes p1 p2)]
 = includes_ind
   (fun #v1 #v2 p1 p2 -> unused_in p1 h <==> unused_in p2 h)
   (fun l p fd -> unused_in_gfield p fd h)
@@ -2315,7 +2315,7 @@ let live_includes
 : Lemma
   (requires (includes p1 p2))
   (ensures (live h p1 <==> live h p2))
-  [SMTPatT (live h p2); SMTPatT (includes p1 p2)]
+  [SMTPat (live h p2); SMTPat (includes p1 p2)]
 = includes_ind
   (fun #v1 #v2 p1 p2 -> live h p1 <==> live h p2)
   (fun l p fd -> live_gfield h p fd)
@@ -3133,13 +3133,13 @@ let disjoint_sym''
 let disjoint_includes_l #a #as #a' (x: pointer a) (subx:pointer as) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint subx y))
-  [SMTPatT (disjoint subx y); SMTPatT (includes x subx)]
+  [SMTPat (disjoint subx y); SMTPat (includes x subx)]
   = disjoint_includes x y subx y
 
 let disjoint_includes_l_swap #a #as #a' (x:pointer a) (subx:pointer as) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint y subx))
-  [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
+  [SMTPat (disjoint y subx); SMTPat (includes x subx)]
   = disjoint_includes_l x subx y;
     disjoint_sym subx y
 

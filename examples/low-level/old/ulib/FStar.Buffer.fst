@@ -10,7 +10,7 @@ module StackHeap = FStar.StackHeap2
 
 let lemma_uSize (x:int) (pos:nat) : Lemma (requires (UInt.size x n))
 				     (ensures (x >= 0))
-				     [SMTPatT (UInt.size x n)]
+				     [SMTPat (UInt.size x n)]
   = ()
   
 (* Buffer general type, fully implemented on FStar's arrays *)
@@ -104,40 +104,40 @@ let disjoint_only_lemma #t #t' b b' = ()
 let equal_lemma #a rid h0 h1 b bufs : 
   Lemma (requires (live h0 b /\ disjointSet b bufs /\ modifies_buf rid bufs Set.empty h0 h1))
 	(ensures (equal h0 b h1 b))
-	[SMTPatT (disjointSet b bufs); SMTPatT (modifies_buf rid bufs Set.empty h0 h1)]
+	[SMTPat (disjointSet b bufs); SMTPat (modifies_buf rid bufs Set.empty h0 h1)]
  = ()
 
 let equal_lemma_2 #a h0 h1 rid b bufs refs : 
   Lemma (requires (live h0 b /\ disjointSet b bufs /\ disjointRef b refs /\ modifies_buf rid bufs refs h0 h1))
 	(ensures (equal h0 b h1 b))
-	[SMTPatT (equal h0 b h1 b)]
-//	[SMTPatT (disjointSet a bufs); SMTPatT (disjointSet SMTPatT (modifies bufs refs h0 h1)]
+	[SMTPat (equal h0 b h1 b)]
+//	[SMTPat (disjointSet a bufs); SMTPat (disjointSet SMTPat (modifies bufs refs h0 h1)]
  = ()
 
 let modifies_trans #rid bufs h0 h1 h2 :
   Lemma (requires (modifies_buf rid bufs Set.empty h0 h1 /\ modifies_buf rid bufs Set.empty h1 h2))
 	(ensures (modifies_buf rid bufs Set.empty h0 h2))
-	[SMTPatT (modifies_buf rid bufs Set.empty h0 h1); SMTPatT (modifies_buf rid bufs Set.empty h1 h2)]
+	[SMTPat (modifies_buf rid bufs Set.empty h0 h1); SMTPat (modifies_buf rid bufs Set.empty h1 h2)]
  = ()
 
 let modifies_trans_2 #rid bufs refs h0 h1 h2 :
   Lemma (requires (modifies_buf rid bufs refs h0 h1 /\ modifies_buf rid bufs refs h1 h2))
 	(ensures (modifies_buf rid bufs refs h0 h2))
-	[SMTPatT (modifies_buf rid bufs refs h0 h1); SMTPatT (modifies_buf rid bufs refs h1 h2)]
+	[SMTPat (modifies_buf rid bufs refs h0 h1); SMTPat (modifies_buf rid bufs refs h1 h2)]
  = ()
 
 let modifies_sub #rid bufs subbufs h0 h1 :
   Lemma 
     (requires (Set.subset subbufs bufs /\ modifies_buf rid subbufs Set.empty h0 h1))
     (ensures (modifies_buf rid bufs Set.empty h0 h1))
-    [SMTPatT (modifies_buf rid subbufs Set.empty h0 h1); SMTPat (Set.subset subbufs bufs)]
+    [SMTPat (modifies_buf rid subbufs Set.empty h0 h1); SMTPat (Set.subset subbufs bufs)]
  = ()
 
 let modifies_sub_2 #rid bufs subbufs refs subrefs h0 h1 :
   Lemma 
     (requires (Set.subset subbufs bufs /\ Set.subset subrefs refs /\ modifies_buf rid subbufs refs h0 h1))
     (ensures (modifies_buf rid bufs refs h0 h1))
-    [SMTPatT (modifies_buf rid subbufs refs h0 h1); SMTPat (Set.subset subbufs bufs); SMTPatT (Set.subset subrefs refs)]
+    [SMTPat (modifies_buf rid subbufs refs h0 h1); SMTPat (Set.subset subbufs bufs); SMTPat (Set.subset subrefs refs)]
  = ()
 
 let modifies_none h : Lemma (requires (True)) (ensures (forall i. List.Tot.contains i (frame_ids h) ==> modifies_buf i Set.empty Set.empty h h)) = ()
@@ -154,7 +154,7 @@ let modifies_fresh #a h0 h1 bufs refs (b:buffer a) :
 	       /\ modifies_buf (frameOf (content b)) (bufs ++ b) refs h0 h1
 	       /\ frame_ids h0 = frame_ids h1))
     (ensures (modifies_buf (frameOf (content b)) bufs refs h0 h1))
-    [SMTPat (not(contains h0 b)); SMTPatT (modifies_buf (frameOf (content b)) (bufs ++ b) refs h0 h1)]
+    [SMTPat (not(contains h0 b)); SMTPat (modifies_buf (frameOf (content b)) (bufs ++ b) refs h0 h1)]
  = ()
 
 (* Equality between fragments of buffers *)

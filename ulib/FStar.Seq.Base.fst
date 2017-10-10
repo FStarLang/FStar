@@ -211,19 +211,19 @@ abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (length s1 = length s2
                /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i))))
      (ensures (equal s1 s2))
-     [SMTPatT (equal s1 s2)]
+     [SMTPat (equal s1 s2)]
 let lemma_eq_intro #a s1 s2 = ()
 
 abstract val lemma_eq_refl: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (s1 == s2))
      (ensures (equal s1 s2))
-     [SMTPatT (equal s1 s2)]
+     [SMTPat (equal s1 s2)]
 let lemma_eq_refl #a s1 s2  = ()
 
 abstract val lemma_eq_elim: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (equal s1 s2))
      (ensures (s1==s2))
-     [SMTPatT (equal s1 s2)]
+     [SMTPat (equal s1 s2)]
 let lemma_eq_elim #a s1 s2  =
   assert ( length s1 == List.length (MkSeq?.l s1) );
   assert ( length s2 == List.length (MkSeq?.l s2) );

@@ -284,8 +284,8 @@ abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:ri
                   /\ extends j jpar
                   /\ i<>j))
         (ensures (disjoint i j))
-        [SMTPatT (fresh_region i m0 m1);
-         SMTPatT (fresh_region j m0 m1);
+        [SMTPat (fresh_region i m0 m1);
+         SMTPat (fresh_region j m0 m1);
          SMTPat (extends i ipar);
          SMTPat (extends j jpar)]
 let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()

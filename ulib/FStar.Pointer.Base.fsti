@@ -451,7 +451,7 @@ val live_not_unused_in
   (p: pointer value)
 : Lemma
   (ensures (live h p /\ p `unused_in` h ==> False))
-  [SMTPatT (live h p); SMTPatT (p `unused_in` h)]
+  [SMTPat (live h p); SMTPat (p `unused_in` h)]
 
 val gread
   (#value: typ)
@@ -1802,8 +1802,8 @@ val live_unused_in_disjoint
   (requires (live h p1 /\ unused_in p2 h))
   (ensures (loc_disjoint (loc_pointer p1) (loc_pointer p2)))
   [SMTPatOr [
-    [SMTPatT (loc_disjoint (loc_pointer p1) (loc_pointer p2)); SMTPatT (live h p1)];
-    [SMTPatT (loc_disjoint (loc_pointer p1) (loc_pointer p2)); SMTPatT (unused_in p2 h)];
+    [SMTPat (loc_disjoint (loc_pointer p1) (loc_pointer p2)); SMTPat (live h p1)];
+    [SMTPat (loc_disjoint (loc_pointer p1) (loc_pointer p2)); SMTPat (unused_in p2 h)];
     [SMTPat (live h p1); SMTPat (unused_in p2 h)];
   ]]
 
@@ -1923,12 +1923,12 @@ val modifies_pointer_elim
     equal_values h1 p' h2 p'
   ))
   [SMTPatOr [
-    [ SMTPatT (modifies s h1 h2); SMTPatT (gread h1 p') ] ;
-    [ SMTPatT (modifies s h1 h2); SMTPat (readable h1 p') ] ;
-    [ SMTPatT (modifies s h1 h2); SMTPatT (live h1 p') ];
-    [ SMTPatT (modifies s h1 h2); SMTPatT (gread h2 p') ] ;
-    [ SMTPatT (modifies s h1 h2); SMTPat (readable h2 p') ] ;
-    [ SMTPatT (modifies s h1 h2); SMTPatT (live h2 p') ]
+    [ SMTPat (modifies s h1 h2); SMTPat (gread h1 p') ] ;
+    [ SMTPat (modifies s h1 h2); SMTPat (readable h1 p') ] ;
+    [ SMTPat (modifies s h1 h2); SMTPat (live h1 p') ];
+    [ SMTPat (modifies s h1 h2); SMTPat (gread h2 p') ] ;
+    [ SMTPat (modifies s h1 h2); SMTPat (readable h2 p') ] ;
+    [ SMTPat (modifies s h1 h2); SMTPat (live h2 p') ]
   ] ]
 
 val modifies_buffer_elim
@@ -1950,12 +1950,12 @@ val modifies_buffer_elim
 	buffer_as_seq h b == buffer_as_seq h' b
   ))))
   [SMTPatOr [
-    [ SMTPatT (modifies p h h'); SMTPatT (buffer_as_seq h b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPat (buffer_readable h b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPatT (buffer_live h b) ];
-    [ SMTPatT (modifies p h h'); SMTPatT (buffer_as_seq h' b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPat (buffer_readable h' b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPatT (buffer_live h' b) ]
+    [ SMTPat (modifies p h h'); SMTPat (buffer_as_seq h b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (buffer_readable h b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (buffer_live h b) ];
+    [ SMTPat (modifies p h h'); SMTPat (buffer_as_seq h' b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (buffer_readable h' b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (buffer_live h' b) ]
   ] ]
 
 val modifies_reference_elim
@@ -1974,10 +1974,10 @@ val modifies_reference_elim
     HS.sel h b == HS.sel h' b
   ))
   [SMTPatOr [
-    [ SMTPatT (modifies p h h'); SMTPatT (HS.sel h b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPatT (HS.contains h b) ];
-    [ SMTPatT (modifies p h h'); SMTPatT (HS.sel h' b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPatT (HS.contains h' b) ]
+    [ SMTPat (modifies p h h'); SMTPat (HS.sel h b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (HS.contains h b) ];
+    [ SMTPat (modifies p h h'); SMTPat (HS.sel h' b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (HS.contains h' b) ]
   ] ]
 
 val modifies_refl
@@ -2137,18 +2137,18 @@ val write_union_field
 val no_upd_fresh: h0:HS.mem -> h1:HS.mem -> Lemma
   (requires (HS.fresh_frame h0 h1))
   (ensures  (modifies_0 h0 h1))
-  [SMTPatT (HS.fresh_frame h0 h1)]
+  [SMTPat (HS.fresh_frame h0 h1)]
 
 val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
   (requires (live h0 b /\ frameOf b <> h0.HS.tip /\ HS.popped h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
   [SMTPatOr [
-    [SMTPatT (live h0 b); SMTPatT (HS.popped h0 h1)];
-    [SMTPatT (readable h0 b); SMTPatT (HS.popped h0 h1)];    
-    [SMTPatT (gread h0 b); SMTPatT (HS.popped h0 h1)];    
-    [SMTPatT (live h1 b); SMTPatT (HS.popped h0 h1)];
-    [SMTPatT (readable h1 b); SMTPatT (HS.popped h0 h1)];    
-    [SMTPatT (gread h1 b); SMTPatT (HS.popped h0 h1)];    
+    [SMTPat (live h0 b); SMTPat (HS.popped h0 h1)];
+    [SMTPat (readable h0 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (gread h0 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (live h1 b); SMTPat (HS.popped h0 h1)];
+    [SMTPat (readable h1 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (gread h1 b); SMTPat (HS.popped h0 h1)];    
   ]]
 
 val modifies_fresh_frame_popped
