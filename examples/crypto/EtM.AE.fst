@@ -55,9 +55,9 @@ let mac_and_cpa_refine_ae_entry (ae:log_entry)
     CPA.Entry p (fst c) == cpa
     
 // //AE log abstracts the mac and cpa logs
-// let mac_and_cpa_refine_ae (ae:Seq.seq log_entry) 
-//                           (mac:Seq.seq EtM.MAC.log_entry)
-//                           (cpa:Seq.seq EtM.CPA.log_entry) =
+// let mac_and_cpa_refine_ae (ae_entries:Seq.seq log_entry) 
+//                           (mac_entries:Seq.seq EtM.MAC.log_entry)
+//                           (cpa_entries:Seq.seq EtM.CPA.log_entry) =
 //   forall (p:Plain.plain) (c:cipher).{:pattern (Seq.mem (p, c) ae)}
 //      Seq.mem (p,c) ae
 //      <==>
@@ -122,6 +122,57 @@ let invariant (h:mem) (k:key) =
   mac_only_cpa_ciphers (get_mac_log h k) (get_cpa_log h k) /\
   mac_and_cpa_refine_ae (get_log h k) (get_mac_log h k) (get_cpa_log h k)
 
+let un_snoc (#a:Type) (s:seq a{Seq.length s > 0}) : r:(seq a * a){s == Seq.snoc (fst r) (snd r)}
+    = let r = Seq.un_snoc s in
+      un_snoc_snoc (fst r) (snd r);
+      r
+let mem_snoc (#a:eqtype) (s:seq a) (x:a) (y:a) : Lemma ((Seq.mem y s \/ y = x) <==> Seq.mem y (snoc s x))
+   = admit()
+
+let rec invert_invariant_aux (c:cipher) (p:Plain.plain)
+                             (macs:Seq.seq MAC.log_entry)
+                             (cpas:Seq.seq CPA.log_entry)
+                             (aes :Seq.seq log_entry)
+    : Lemma (requires (mac_only_cpa_ciphers macs cpas /\
+                       mac_and_cpa_refine_ae aes macs cpas /\
+                       CPA.pairwise_distinct_ivs cpas /\
+                       Seq.mem c macs /\
+                       Seq.mem (CPA.Entry p (fst c)) cpas))
+            (ensures (Seq.mem (p, c) aes))
+            (decreases (Seq.length macs))
+    = assert (Seq.length macs == Seq.length aes);
+      if Seq.length macs = 0 then ()
+      else let macs, mac = un_snoc macs in
+           let cpas, cpa = un_snoc cpas in
+           let aes,   ae = un_snoc aes  in
+           mem_snoc aes ae (p, c);
+           mem_snoc macs mac c;
+           if mac = c then begin
+             assert (CPA.Entry?.c cpa == fst mac);
+             assume (CPA.Entry?.plain cpa == p);
+             assert (ae = (p, c))
+           end
+           else admit()
+           
+
+           // else begin
+           //   assert (mac_and_cpa_refine_ae aes macs cpas);
+           //   assume (mac_only_cpa_ciphers macs cpas /\
+           //           CPA.pairwise_distinct_ivs cpas);
+           //   assume (Seq.mem (CPA.Entry p (fst c)) cpas);                     
+           //   invert_invariant_aux c p macs cpas aes
+           // end
+
+let invert_invariant (h:mem) (k:key) (c:cipher) (p:Plain.plain)
+    : Lemma (requires (invariant h k /\
+                       Seq.mem c (get_mac_log h k) /\
+                       Seq.mem (CPA.Entry p (fst c)) (get_cpa_log h k)))
+            (ensures (Seq.mem (p, c) (get_log h k)))
+    = let macs = get_mac_log h k in
+      let cpas = get_cpa_log h k in
+      let aes  = get_log h k in
+      invert_invariant_aux c p macs cpas aes
+
 let genPost parent h0 (k:key) h1 =
     modifies Set.empty h0 h1
   /\ extends k.region parent
@@ -150,11 +201,6 @@ val encrypt: k:key -> m:Plain.plain -> ST cipher
      HyperHeap.modifies (Set.singleton k.region)  h0.h h1.h
      /\ invariant h1 k
      /\ log1 == snoc log0 (m, c))))
-     
-     // /\ witnessed (at_least (Seq.length log0) (m, c) k.log)
-     // /\ invariant h1 k)))
-
-// #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 100"
 let encrypt k plain =
   let h0 = FStar.HyperStack.ST.get () in
   let c = CPA.encrypt k.ke plain in
@@ -168,6 +214,7 @@ let encrypt k plain =
                           (c,t) (CPA.Entry plain c);
   (c, t)
 
+
 val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
   (requires (fun h0 -> invariant h0 k))
   (ensures (fun h0 res h1 ->
@@ -177,5 +224,9 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
      Seq.mem (Some?.v res, c) (get_log h0 k))))
 let decrypt k (c,tag) =
   if MAC.verify k.km c tag
-  then Some (CPA.decrypt k.ke c)
+  then let p = CPA.decrypt k.ke c in
+       if Ideal.uf_cma then 
+         (let h = FStar.HyperStack.ST.get() in
+          invert_invariant h k (c,tag) p);
+       Some p
   else None
