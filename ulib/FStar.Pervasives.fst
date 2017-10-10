@@ -18,9 +18,10 @@ effect Dv (a:Type) =
    as being impure but having no observable effect on the state *)
 effect EXT (a:Type) = Dv a
 
-let st_pre_h  (heap:Type)          = heap -> GTot Type0
-let st_post_h (heap:Type) (a:Type) = a -> heap -> GTot Type0
-let st_wp_h   (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
+let st_pre_h   (heap:Type) = heap -> GTot Type0
+let st_post_h' (heap:Type) (a:Type) (pre:Type) = a -> _:heap{pre} -> GTot Type0
+let st_post_h  (heap:Type) (a:Type) = st_post_h' heap a True
+let st_wp_h    (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
 
 unfold let st_return        (heap:Type) (a:Type)
                             (x:a) (p:st_post_h heap a) =

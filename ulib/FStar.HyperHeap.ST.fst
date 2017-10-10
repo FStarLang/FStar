@@ -19,12 +19,13 @@ let modifies s h0 h1 = HyperHeap.modifies s h0 h1
 let modifies_none h0 h1 = modifies Set.empty h0 h1
 let ref (t:Type) = rref root t
 let st_pre = st_pre_h t
-let st_post (a:Type) = st_post_h t a
+let st_post' (a:Type) (pre:Type) = st_post_h' t a pre
+let st_post  (a:Type) = st_post' a True
 let st_wp (a:Type) = st_wp_h t a
 new_effect STATE = STATE_h t
 effect State (a:Type) (wp:st_wp a) =
        STATE a wp
-effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
+effect ST (a:Type) (pre:st_pre) (post: (x:t -> Tot (st_post' a (pre x)))) =
        STATE a
              (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
 effect St (a:Type) =
