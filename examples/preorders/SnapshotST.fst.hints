@@ -30,7 +30,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_typing"
       ],
       0,
-      "994d0bc4f16536840c8a18890d5b5897"
+      "980fee30550d112cbd884eee058d483d"
     ],
     [
       "SnapshotST.witnessing_predicate",
@@ -42,7 +42,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "d7588fb710fe3bab4ee32da5e30aa543"
+      "9b6ffbe8fcd165c8430f5805d550fb3a"
     ],
     [
       "SnapshotST.witnessing_predicate_stable",
@@ -54,7 +54,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "7b7e2a224ac4a2479d8db25f82474fab"
+      "7ed6b454f66684bc02605ed2435a0770"
     ],
     [
       "SnapshotST.witnessing_predicate_stable",
@@ -83,10 +83,10 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_typing"
       ],
       0,
-      "e82dc0d372ddbbb9023bc4128eae29f0"
+      "e4774c7e766aad71260cffc3dc58365b"
     ],
     [
-      "SnapshotST.172088",
+      "SnapshotST.172310",
       1,
       2,
       1,
@@ -94,7 +94,6 @@
         "@MaxIFuel_assumption", "@query",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
-        "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
         "equation_SnapshotST.snapshot_rel",
@@ -110,7 +109,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "c5a577df9ca1927bdaa0bd788be7ffce"
+      "57774a67ff8ddbd8912a59dbab587312"
     ],
     [
       "SnapshotST.ist_witnessed",
@@ -136,7 +135,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "744739fdd8ab603d08eae5a1d7e6ea00"
+      "aa19d13fc7b7b448a44ba41a0c7aaced"
     ],
     [
       "SnapshotST.ist_witness",
@@ -162,7 +161,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "6b66069c34a5a7a8b352fbc53518f91e"
+      "de3aabb0cfff265339a7db9c5211ee8b"
     ],
     [
       "SnapshotST.ist_recall",
@@ -188,7 +187,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "a616305a9dd53790246a6c1f9fde3f65"
+      "fe8555a3e527687b4d13ed35216de62a"
     ],
     [
       "SnapshotST.witnessed",
@@ -206,7 +205,7 @@
         "token_correspondence_SnapshotST.snapshot_rel"
       ],
       0,
-      "6979a1a3b43eaadbb4dcade78b32422d"
+      "0b847fe70b131776c8dc7113de304724"
     ],
     [
       "SnapshotST.read",
@@ -215,7 +214,7 @@
       1,
       [ "@query" ],
       0,
-      "5a5418ae72350d04f91f3e91d26a9b01"
+      "d5bc8a94c83be4452fdaeba0e62797cd"
     ],
     [
       "SnapshotST.write",
@@ -224,7 +223,7 @@
       1,
       [ "@query" ],
       0,
-      "37a98179da4b8d6839fe650eef211f32"
+      "9b12d327baf1bb3be04a2c73f5341f04"
     ],
     [
       "SnapshotST.witness",
@@ -237,7 +236,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "1757f95f32a62724f9d16f2ebe49aa68"
+      "0d251d8fc68465f6462400163e36a30e"
     ],
     [
       "SnapshotST.witness",
@@ -260,7 +259,7 @@
         "token_correspondence_SnapshotST.snapshot_rel"
       ],
       0,
-      "b557786243a0ed5579186d8bf341895b"
+      "5a403e07e8817e544f0342679fd5cff8"
     ],
     [
       "SnapshotST.recall",
@@ -273,7 +272,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "9d8f7ebd4245654a050415b139e02802"
+      "d450a52fd1fbbdccc5d7cdf6643eff7e"
     ],
     [
       "SnapshotST.recall",
@@ -293,7 +292,7 @@
         "token_correspondence_SnapshotST.snapshot_rel"
       ],
       0,
-      "8540ac0c1e48454e16e5eee28325f242"
+      "b8a721bcc9848f3600f5ff35b2504ed6"
     ],
     [
       "SnapshotST.make_snapshot",
@@ -322,7 +321,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "c1f7681f822124dc4dc4942f47c1527a"
+      "cca41e0fd112dadeff614c6d6138c9bf"
     ],
     [
       "SnapshotST.restore_consistency",
@@ -342,7 +341,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "abb5e38a72956c8735d52e1636293183"
+      "c91229d1d49f0f69f104e212b8457e32"
     ]
   ]
 ]
