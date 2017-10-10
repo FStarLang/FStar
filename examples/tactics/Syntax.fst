@@ -36,8 +36,7 @@ let rec blah  (t : term) =
                                  return (Tv_App l (r, q))
             | Tv_Abs b t -> t <-- blah t;
                             return (Tv_Abs b t)
-            | Tv_Arrow b t -> t <-- blah t;
-                              return (Tv_Arrow b t)
+            | Tv_Arrow b t -> return (Tv_Arrow b t)
             | Tv_Refine b t -> t <-- blah t;
                                return (Tv_Refine b t)
             | Tv_Type u -> return (Tv_Type ())

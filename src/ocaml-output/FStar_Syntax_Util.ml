@@ -2987,14 +2987,17 @@ let rec sizeof: FStar_Syntax_Syntax.term -> Prims.int =
             (Prims.parse_int "0") args in
         uu____9740 + uu____9741
     | uu____9760 -> Prims.parse_int "1"
+let is_fvar: FStar_Ident.lident -> FStar_Syntax_Syntax.term -> Prims.bool =
+  fun lid  ->
+    fun t  ->
+      let uu____9769 =
+        let uu____9770 = un_uinst t in uu____9770.FStar_Syntax_Syntax.n in
+      match uu____9769 with
+      | FStar_Syntax_Syntax.Tm_fvar fv ->
+          FStar_Syntax_Syntax.fv_eq_lid fv lid
+      | uu____9774 -> false
 let is_synth_by_tactic: FStar_Syntax_Syntax.term -> Prims.bool =
-  fun t  ->
-    let uu____9765 =
-      let uu____9766 = un_uinst t in uu____9766.FStar_Syntax_Syntax.n in
-    match uu____9765 with
-    | FStar_Syntax_Syntax.Tm_fvar fv ->
-        FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.synth_lid
-    | uu____9770 -> false
+  fun t  -> is_fvar FStar_Parser_Const.synth_lid t
 let mk_alien:
   'a .
     FStar_Syntax_Syntax.typ ->
@@ -3007,17 +3010,17 @@ let mk_alien:
     fun b  ->
       fun s  ->
         fun r  ->
-          let uu____9802 =
-            let uu____9805 =
-              let uu____9806 =
-                let uu____9813 =
-                  let uu____9814 =
-                    let uu____9823 = FStar_Dyn.mkdyn b in (uu____9823, s, ty) in
-                  FStar_Syntax_Syntax.Meta_alien uu____9814 in
-                (FStar_Syntax_Syntax.tun, uu____9813) in
-              FStar_Syntax_Syntax.Tm_meta uu____9806 in
-            FStar_Syntax_Syntax.mk uu____9805 in
-          uu____9802 FStar_Pervasives_Native.None
+          let uu____9810 =
+            let uu____9813 =
+              let uu____9814 =
+                let uu____9821 =
+                  let uu____9822 =
+                    let uu____9831 = FStar_Dyn.mkdyn b in (uu____9831, s, ty) in
+                  FStar_Syntax_Syntax.Meta_alien uu____9822 in
+                (FStar_Syntax_Syntax.tun, uu____9821) in
+              FStar_Syntax_Syntax.Tm_meta uu____9814 in
+            FStar_Syntax_Syntax.mk uu____9813 in
+          uu____9810 FStar_Pervasives_Native.None
             (match r with
              | FStar_Pervasives_Native.Some r1 -> r1
              | FStar_Pervasives_Native.None  -> FStar_Range.dummyRange)
@@ -3025,7 +3028,7 @@ let un_alien: FStar_Syntax_Syntax.term -> FStar_Dyn.dyn =
   fun t  ->
     match t.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_meta
-        (uu____9835,FStar_Syntax_Syntax.Meta_alien
-         (blob,uu____9837,uu____9838))
+        (uu____9843,FStar_Syntax_Syntax.Meta_alien
+         (blob,uu____9845,uu____9846))
         -> blob
-    | uu____9847 -> failwith "unexpected: term was not an alien embedding"
+    | uu____9855 -> failwith "unexpected: term was not an alien embedding"

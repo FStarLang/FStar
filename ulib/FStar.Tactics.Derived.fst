@@ -173,10 +173,13 @@ let grewrite' (t1 t2 eq : term) : tactic unit =
     | _ ->
         fail "impossible"
 
-let mk_sq_eq (t1 t2 : term) : term =
+let mk_squash (t : term) : term =
     let sq : term = pack (Tv_FVar (pack_fv squash_qn)) in
+    mk_e_app sq [t]
+
+let mk_sq_eq (t1 t2 : term) : term =
     let eq : term = pack (Tv_FVar (pack_fv eq2_qn)) in
-    mk_e_app sq [mk_e_app eq [t1; t2]]
+    mk_squash (mk_e_app eq [t1; t2])
 
 let grewrite (t1 t2 : term) : tactic unit =
     e <-- tcut (mk_sq_eq t1 t2);
@@ -199,3 +202,55 @@ private let __witness #a x #p _ = ()
 let witness (t : tactic term) : tactic unit =
     apply_raw (quote __witness);;
     exact t
+
+private val push1 : (#p:Type) -> (#q:Type) ->
+                        squash (p ==> q) ->
+                        squash p ->
+                        squash q
+private let push1 #p #q f u = ()
+
+(*
+ * Some easier applying, which should prevent frustation
+ * (or cause more when it doesn't do what you wanted to)
+ *)
+val apply_squash_or_lem : d:nat -> term -> Tot (tactic unit) (decreases d)
+let rec apply_squash_or_lem d t =
+    // This terminates because of the fuel, but we could just expand into Tac and diverge
+    if d <= 0 then fail "mapply: out of fuel" else begin
+    g <-- cur_goal;
+    ty <-- tc t;
+    let tys, c = collect_arr ty in
+    match inspect_comp c with
+    | C_Lemma pre post ->
+       begin
+       (* What I would really like to do here is unify `mk_squash post` and the goal,
+        * but it didn't work on a first try, so just doing this for now *)
+       r <-- trytac (apply_lemma (return t));
+       match r with
+       | Some _ -> return () // Success
+       | None ->
+           (* Is the lemma an implication? We can try to intro *)
+           match term_as_formula' post with
+           | Implies p q ->
+               apply (quote push1);;
+               apply_squash_or_lem (d-1) t
+
+           | _ ->
+               fail "mapply: can't apply (1)"
+       end
+    | C_Total rt ->
+       begin match unsquash rt with
+       (* If the function returns a squash, just apply it, since our goals are squashed *)
+       | Some _ -> apply (return t)
+       (* If not, we can try to introduce the squash ourselves first *)
+       | None ->
+           apply (quote FStar.Squash.return_squash);;
+           apply (return t)
+       end
+    | _ -> fail "mapply: can't apply (2)"
+    end
+
+(* `m` is for `magic` *)
+let mapply (t : tactic term) : tactic unit =
+    tt <-- t;
+    apply_squash_or_lem 10 tt
