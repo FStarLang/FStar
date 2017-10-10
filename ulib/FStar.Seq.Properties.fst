@@ -528,10 +528,15 @@ let find_snoc #a s x f =
   if Some? (find_l f s) then find_append_some s (Seq.create 1 x) f
   else find_append_none s (Seq.create 1 x) f
 
-let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (seq a * a) =
-  let s, a = split s (length s - 1) in
-  s, Seq.index a 0
-  
+let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (r:(seq a * a){s == snoc (fst r) (snd r)}) =
+  let s', a = split s (length s - 1) in
+  assert (Seq.equal (snoc s' (Seq.index a 0)) s);
+  s', Seq.index a 0
+
+let un_snoc_snoc (#a:Type) (s:seq a) (x:a) : Lemma (un_snoc (snoc s x) == (s, x)) =
+  let s', x = un_snoc (snoc s x) in
+  assert (Seq.equal s s')
+
 val find_r: #a:Type -> f:(a -> Tot bool) -> l:seq a -> Tot (o:option a{Some? o ==> f (Some?.v o)})
   (decreases (Seq.length l))
 let rec find_r #a f l = 

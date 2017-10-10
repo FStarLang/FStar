@@ -53,24 +53,12 @@ let rec mac_only_cpa_ciphers (macs:Seq.seq EtM.MAC.log_entry)
      mac_only_cpa_ciphers macs cpas
     else True)
 
-let un_snoc_snoc (#a:Type) (s:seq a) (x:a) : Lemma (un_snoc (snoc s x) == (s, x)) =
-  let s', x = un_snoc (snoc s x) in
-  assert (Seq.equal s s')
-
 let mac_only_cpa_ciphers_snoc (macs:Seq.seq EtM.MAC.log_entry) (mac:EtM.MAC.log_entry)
                                      (cpas:Seq.seq EtM.CPA.log_entry) (cpa:EtM.CPA.log_entry)
   : Lemma (mac_only_cpa_ciphers (snoc macs mac) (snoc cpas cpa) <==>
           (mac_only_cpa_ciphers macs cpas /\ mac_cpa_related mac cpa))
   = un_snoc_snoc macs mac;
     un_snoc_snoc cpas cpa
-
-let un_snoc (#a:Type) (s:seq a{Seq.length s > 0}) : r:(seq a * a){s == Seq.snoc (fst r) (snd r)}
-    = let r = Seq.un_snoc s in
-      un_snoc_snoc (fst r) (snd r);
-      r
-
-let mem_snoc (#a:eqtype) (s:seq a) (x:a) (y:a) : Lemma ((Seq.mem y s \/ y = x) <==> Seq.mem y (snoc s x))
-   = admit()
 
 let rec mac_only_cpa_ciphers_mem (macs:Seq.seq EtM.MAC.log_entry) 
                                  (cpas:Seq.seq EtM.CPA.log_entry)
@@ -83,8 +71,8 @@ let rec mac_only_cpa_ciphers_mem (macs:Seq.seq EtM.MAC.log_entry)
          ()
       else let macs, mac = un_snoc macs in
            let cpas, cpa = un_snoc cpas in
-           FStar.Classical.forall_intro (mem_snoc macs mac);
-           FStar.Classical.forall_intro (mem_snoc cpas cpa);
+           Seq.lemma_mem_snoc macs mac;
+           Seq.lemma_mem_snoc cpas cpa;
            if mac = c then ()
            else mac_only_cpa_ciphers_mem macs cpas c
 
@@ -95,16 +83,6 @@ let mac_and_cpa_refine_ae_entry (ae:log_entry)
     mac == c /\
     CPA.Entry p (fst c) == cpa
     
-// //AE log abstracts the mac and cpa logs
-// let mac_and_cpa_refine_ae (ae_entries:Seq.seq log_entry) 
-//                           (mac_entries:Seq.seq EtM.MAC.log_entry)
-//                           (cpa_entries:Seq.seq EtM.CPA.log_entry) =
-//   forall (p:Plain.plain) (c:cipher).{:pattern (Seq.mem (p, c) ae)}
-//      Seq.mem (p,c) ae
-//      <==>
-//      (Seq.mem c mac /\
-//       Seq.mem (CPA.Entry p (fst c)) cpa)
-
 //AE log abstracts the mac and cpa logs
 let rec mac_and_cpa_refine_ae (ae_entries:Seq.seq log_entry) 
                               (mac_entries:Seq.seq EtM.MAC.log_entry)
@@ -132,9 +110,9 @@ let mac_and_cpa_refine_ae_snoc (ae_entries:Seq.seq log_entry)
                                    (snoc cpa_entries cpa) <==>
             (mac_and_cpa_refine_ae ae_entries mac_entries cpa_entries /\
              mac_and_cpa_refine_ae_entry ae mac cpa))
-    = un_snoc_snoc ae_entries ae;
-      un_snoc_snoc mac_entries mac;
-      un_snoc_snoc cpa_entries cpa
+    = Seq.un_snoc_snoc ae_entries ae;
+      Seq.un_snoc_snoc mac_entries mac;
+      Seq.un_snoc_snoc cpa_entries cpa
                             
 let invariant (h:mem) (k:key) =
   let log = get_log h k in
@@ -148,12 +126,6 @@ let invariant (h:mem) (k:key) =
   EtM.CPA.invariant (Key?.ke k) h /\
   mac_only_cpa_ciphers (get_mac_log h k) (get_cpa_log h k) /\
   mac_and_cpa_refine_ae (get_log h k) (get_mac_log h k) (get_cpa_log h k)
-
-// let invert_pairwise (cpas:Seq.seq CPA.log_entry) (e:CPA.log_entry) (c:CPA.cipher)
-//     : Lemma (requires (CPA.pairwise_distinct_ivs (snoc cpas e) /\
-//                        CPA.Entry?.c e == c))
-//             (ensures (forall e'. Seq.mem e' cpas ==> CPA.Entry?.c e' <> c))
-//     = admit()
     
 let rec invert_invariant_aux (c:cipher) (p:Plain.plain)
                              (macs:Seq.seq MAC.log_entry)
@@ -171,9 +143,9 @@ let rec invert_invariant_aux (c:cipher) (p:Plain.plain)
       else let macs, mac = un_snoc macs in
            let cpas, cpa = un_snoc cpas in
            let aes,   ae = un_snoc aes  in
-           mem_snoc aes ae (p, c);
-           mem_snoc macs mac c;
-           mem_snoc cpas cpa (CPA.Entry p (fst c));
+           Seq.lemma_mem_snoc aes ae;
+           Seq.lemma_mem_snoc macs mac;
+           Seq.lemma_mem_snoc cpas cpa;
            if mac = c then begin
              assert (CPA.Entry?.c cpa == fst c);
              CPA.invert_pairwise cpas cpa (fst c);
