@@ -39,11 +39,13 @@ let get_cpa_log (h:mem) (k:key) =
   m_sel h (CPA.Key?.log k.ke)
 
 //Only valid ciphers are mac'd
+let mac_cpa_related (mac:EtM.MAC.log_entry) (cpa:EtM.CPA.log_entry) =
+  CPA.Entry?.c cpa == fst mac
+  
 let mac_only_cpa_ciphers (mac:Seq.seq EtM.MAC.log_entry) (cpa:Seq.seq EtM.CPA.log_entry) =
-  forall (c:cipher). {:pattern (Seq.mem c mac)}
-     Seq.mem c mac
-      <==>
-     (exists (p:Plain.plain). Seq.mem (CPA.Entry p (fst c)) cpa)
+   forall (c:cipher). {:pattern (Seq.mem c mac)}
+     Seq.mem c mac ==>
+     (exists (e:CPA.log_entry). Seq.mem e cpa /\ mac_cpa_related c e)
 
 let mac_and_cpa_refine_ae_entry (ae:log_entry)
                                 (mac:EtM.MAC.log_entry)
@@ -96,8 +98,16 @@ let extend_ae_refinement (ae_entries:Seq.seq log_entry)
       un_snoc_snoc mac_entries mac;
       un_snoc_snoc cpa_entries cpa
 
-// let extend_mac_cpa_relation (mac_entries: Seq.seq EtM.MAC.log_entry)
-//                             (cpa_entries: Seq.seq EtM.CPA.log_entry)
+let extend_mac_cpa_relation (mac_entries: Seq.seq EtM.MAC.log_entry)
+                            (cpa_entries: Seq.seq EtM.CPA.log_entry)
+                            (mac:EtM.MAC.log_entry)
+                            (cpa:EtM.CPA.log_entry)
+   : Lemma (requires (mac_only_cpa_ciphers mac_entries cpa_entries /\
+                      mac_cpa_related mac cpa))
+           (ensures (mac_only_cpa_ciphers (snoc mac_entries mac)
+                                          (snoc cpa_entries cpa)))
+   = Seq.lemma_mem_snoc mac_entries mac;   
+     Seq.lemma_mem_snoc cpa_entries cpa
                             
 let invariant (h:mem) (k:key) =
   let log = get_log h k in
@@ -154,7 +164,8 @@ let encrypt k plain =
   assert (EtM.CPA.invariant (Key?.ke k) h1);
   extend_ae_refinement (get_log h0 k) (get_mac_log h0 k) (get_cpa_log h0 k)
                        (plain, (c,t)) (c,t) (CPA.Entry plain c);
-  assume (mac_only_cpa_ciphers (get_mac_log h1 k) (get_cpa_log h1 k));                       
+  extend_mac_cpa_relation (get_mac_log h0 k) (get_cpa_log h0 k)
+                          (c,t) (CPA.Entry plain c);
   (c, t)
 
 val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
