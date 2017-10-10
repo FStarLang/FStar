@@ -42,10 +42,51 @@ let get_cpa_log (h:mem) (k:key) =
 let mac_cpa_related (mac:EtM.MAC.log_entry) (cpa:EtM.CPA.log_entry) =
   CPA.Entry?.c cpa == fst mac
   
-let mac_only_cpa_ciphers (mac:Seq.seq EtM.MAC.log_entry) (cpa:Seq.seq EtM.CPA.log_entry) =
-   forall (c:cipher). {:pattern (Seq.mem c mac)}
-     Seq.mem c mac ==>
-     (exists (e:CPA.log_entry). Seq.mem e cpa /\ mac_cpa_related c e)
+let rec mac_only_cpa_ciphers (macs:Seq.seq EtM.MAC.log_entry) 
+                             (cpas:Seq.seq EtM.CPA.log_entry)
+      : Tot Type0 (decreases (Seq.length macs)) =
+   Seq.length macs == Seq.length cpas /\
+   (if Seq.length macs > 0 then
+     let macs, mac = Seq.un_snoc macs in
+     let cpas, cpa = Seq.un_snoc cpas in
+     mac_cpa_related mac cpa /\
+     mac_only_cpa_ciphers macs cpas
+    else True)
+
+let un_snoc_snoc (#a:Type) (s:seq a) (x:a) : Lemma (un_snoc (snoc s x) == (s, x)) =
+  let s', x = un_snoc (snoc s x) in
+  assert (Seq.equal s s')
+
+let mac_only_cpa_ciphers_snoc (macs:Seq.seq EtM.MAC.log_entry) (mac:EtM.MAC.log_entry)
+                                     (cpas:Seq.seq EtM.CPA.log_entry) (cpa:EtM.CPA.log_entry)
+  : Lemma (mac_only_cpa_ciphers (snoc macs mac) (snoc cpas cpa) <==>
+          (mac_only_cpa_ciphers macs cpas /\ mac_cpa_related mac cpa))
+  = un_snoc_snoc macs mac;
+    un_snoc_snoc cpas cpa
+
+let un_snoc (#a:Type) (s:seq a{Seq.length s > 0}) : r:(seq a * a){s == Seq.snoc (fst r) (snd r)}
+    = let r = Seq.un_snoc s in
+      un_snoc_snoc (fst r) (snd r);
+      r
+
+let mem_snoc (#a:eqtype) (s:seq a) (x:a) (y:a) : Lemma ((Seq.mem y s \/ y = x) <==> Seq.mem y (snoc s x))
+   = admit()
+
+let rec mac_only_cpa_ciphers_mem (macs:Seq.seq EtM.MAC.log_entry) 
+                                 (cpas:Seq.seq EtM.CPA.log_entry)
+                                 (c:cipher)
+    : Lemma (requires (mac_only_cpa_ciphers macs cpas /\
+                       Seq.mem c macs))
+            (ensures (exists p. Seq.mem (CPA.Entry p (fst c)) cpas))
+            (decreases (Seq.length macs))
+    = if Seq.length macs = 0 then
+         ()
+      else let macs, mac = un_snoc macs in
+           let cpas, cpa = un_snoc cpas in
+           FStar.Classical.forall_intro (mem_snoc macs mac);
+           FStar.Classical.forall_intro (mem_snoc cpas cpa);
+           if mac = c then ()
+           else mac_only_cpa_ciphers_mem macs cpas c
 
 let mac_and_cpa_refine_ae_entry (ae:log_entry)
                                 (mac:EtM.MAC.log_entry)
@@ -79,35 +120,21 @@ let rec mac_and_cpa_refine_ae (ae_entries:Seq.seq log_entry)
         mac_and_cpa_refine_ae ae_prefix mac_prefix cpa_prefix
    else True)
 
-let un_snoc_snoc (#a:Type) (s:seq a) (x:a) : Lemma (un_snoc (snoc s x) == (s, x)) =
-  let s', x = un_snoc (snoc s x) in
-  assert (Seq.equal s s')
 
-let extend_ae_refinement (ae_entries:Seq.seq log_entry) 
-                         (mac_entries:Seq.seq EtM.MAC.log_entry)
-                         (cpa_entries:Seq.seq EtM.CPA.log_entry)
-                         (ae:log_entry)
-                         (mac:EtM.MAC.log_entry)
-                         (cpa:EtM.CPA.log_entry)
-    : Lemma (requires (mac_and_cpa_refine_ae ae_entries mac_entries cpa_entries /\
-                       mac_and_cpa_refine_ae_entry ae mac cpa))
-            (ensures (mac_and_cpa_refine_ae (snoc ae_entries ae)
-                                            (snoc mac_entries mac)
-                                            (snoc cpa_entries cpa)))
+let mac_and_cpa_refine_ae_snoc (ae_entries:Seq.seq log_entry) 
+                               (mac_entries:Seq.seq EtM.MAC.log_entry)
+                               (cpa_entries:Seq.seq EtM.CPA.log_entry)
+                               (ae:log_entry)
+                               (mac:EtM.MAC.log_entry)
+                               (cpa:EtM.CPA.log_entry)
+    : Lemma (mac_and_cpa_refine_ae (snoc ae_entries ae)
+                                   (snoc mac_entries mac)
+                                   (snoc cpa_entries cpa) <==>
+            (mac_and_cpa_refine_ae ae_entries mac_entries cpa_entries /\
+             mac_and_cpa_refine_ae_entry ae mac cpa))
     = un_snoc_snoc ae_entries ae;
       un_snoc_snoc mac_entries mac;
       un_snoc_snoc cpa_entries cpa
-
-let extend_mac_cpa_relation (mac_entries: Seq.seq EtM.MAC.log_entry)
-                            (cpa_entries: Seq.seq EtM.CPA.log_entry)
-                            (mac:EtM.MAC.log_entry)
-                            (cpa:EtM.CPA.log_entry)
-   : Lemma (requires (mac_only_cpa_ciphers mac_entries cpa_entries /\
-                      mac_cpa_related mac cpa))
-           (ensures (mac_only_cpa_ciphers (snoc mac_entries mac)
-                                          (snoc cpa_entries cpa)))
-   = Seq.lemma_mem_snoc mac_entries mac;   
-     Seq.lemma_mem_snoc cpa_entries cpa
                             
 let invariant (h:mem) (k:key) =
   let log = get_log h k in
@@ -122,13 +149,13 @@ let invariant (h:mem) (k:key) =
   mac_only_cpa_ciphers (get_mac_log h k) (get_cpa_log h k) /\
   mac_and_cpa_refine_ae (get_log h k) (get_mac_log h k) (get_cpa_log h k)
 
-let un_snoc (#a:Type) (s:seq a{Seq.length s > 0}) : r:(seq a * a){s == Seq.snoc (fst r) (snd r)}
-    = let r = Seq.un_snoc s in
-      un_snoc_snoc (fst r) (snd r);
-      r
-let mem_snoc (#a:eqtype) (s:seq a) (x:a) (y:a) : Lemma ((Seq.mem y s \/ y = x) <==> Seq.mem y (snoc s x))
-   = admit()
 
+let invert_pairwise (cpas:Seq.seq CPA.log_entry) (e:CPA.log_entry) (c:CPA.cipher)
+    : Lemma (requires (CPA.pairwise_distinct_ivs (snoc cpas e) /\
+                       CPA.Entry?.c e == c))
+            (ensures (forall e'. Seq.mem e' cpas ==> CPA.Entry?.c e' <> c))
+    = admit()
+    
 let rec invert_invariant_aux (c:cipher) (p:Plain.plain)
                              (macs:Seq.seq MAC.log_entry)
                              (cpas:Seq.seq CPA.log_entry)
@@ -147,21 +174,25 @@ let rec invert_invariant_aux (c:cipher) (p:Plain.plain)
            let aes,   ae = un_snoc aes  in
            mem_snoc aes ae (p, c);
            mem_snoc macs mac c;
+           mem_snoc cpas cpa (CPA.Entry p (fst c));
            if mac = c then begin
-             assert (CPA.Entry?.c cpa == fst mac);
-             assume (CPA.Entry?.plain cpa == p);
+             assert (CPA.Entry?.c cpa == fst c);
+             invert_pairwise cpas cpa (fst c);
+             assert (not (Seq.mem (CPA.Entry p (fst c)) cpas));
+             assert (CPA.Entry?.plain cpa == p);
              assert (ae = (p, c))
            end
-           else admit()
-           
-
-           // else begin
-           //   assert (mac_and_cpa_refine_ae aes macs cpas);
-           //   assume (mac_only_cpa_ciphers macs cpas /\
-           //           CPA.pairwise_distinct_ivs cpas);
-           //   assume (Seq.mem (CPA.Entry p (fst c)) cpas);                     
-           //   invert_invariant_aux c p macs cpas aes
-           // end
+           else if fst mac = fst c then begin
+             assert (CPA.Entry?.c cpa == fst c);
+             assume (exists q1. Seq.mem (CPA.Entry q1 (fst c)) cpas);
+             invert_pairwise cpas cpa (fst c)
+           end
+           else begin
+             assert (mac_and_cpa_refine_ae aes macs cpas);
+             mac_only_cpa_ciphers_snoc macs mac cpas cpa;
+             assume (CPA.pairwise_distinct_ivs cpas);
+             invert_invariant_aux c p macs cpas aes
+           end
 
 let invert_invariant (h:mem) (k:key) (c:cipher) (p:Plain.plain)
     : Lemma (requires (invariant h k /\
@@ -208,10 +239,10 @@ let encrypt k plain =
   write_at_end k.log (plain, (c, t));
   let h1 = FStar.HyperStack.ST.get () in
   assert (EtM.CPA.invariant (Key?.ke k) h1);
-  extend_ae_refinement (get_log h0 k) (get_mac_log h0 k) (get_cpa_log h0 k)
-                       (plain, (c,t)) (c,t) (CPA.Entry plain c);
-  extend_mac_cpa_relation (get_mac_log h0 k) (get_cpa_log h0 k)
-                          (c,t) (CPA.Entry plain c);
+  mac_and_cpa_refine_ae_snoc (get_log h0 k) (get_mac_log h0 k) (get_cpa_log h0 k)
+                             (plain, (c,t)) (c,t) (CPA.Entry plain c);
+  mac_only_cpa_ciphers_snoc (get_mac_log h0 k) (c,t)
+                            (get_cpa_log h0 k) (CPA.Entry plain c);
   (c, t)
 
 
@@ -223,10 +254,14 @@ val decrypt: k:key -> c:cipher -> ST (option Plain.plain)
     (b2t Ideal.uf_cma /\ Some? res ==>
      Seq.mem (Some?.v res, c) (get_log h0 k))))
 let decrypt k (c,tag) =
+  let h0 = FStar.HyperStack.ST.get () in
   if MAC.verify k.km c tag
-  then let p = CPA.decrypt k.ke c in
+  then begin
+       if Ideal.uf_cma then mac_only_cpa_ciphers_mem (get_mac_log h0 k) (get_cpa_log h0 k) (c, tag);
+       let p = CPA.decrypt k.ke c in
        if Ideal.uf_cma then 
          (let h = FStar.HyperStack.ST.get() in
           invert_invariant h k (c,tag) p);
        Some p
+  end
   else None
