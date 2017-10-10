@@ -272,15 +272,15 @@ let rec primitive_steps:
     let mktac1 name f u_a e_b tb =
       mk1 name (Prims.parse_int "2")
         (mk_tactic_interpretation_1 f u_a e_b tb) in
-    let mktac2 name f u_a u_b e_c tc =
+    let mktac2 name f u_a u_b e_c tc1 =
       mk1 name (Prims.parse_int "3")
-        (mk_tactic_interpretation_2 f u_a u_b e_c tc) in
-    let mktac3 name f u_a u_b u_c e_d tc =
+        (mk_tactic_interpretation_2 f u_a u_b e_c tc1) in
+    let mktac3 name f u_a u_b u_c e_d tc1 =
       mk1 name (Prims.parse_int "4")
-        (mk_tactic_interpretation_3 f u_a u_b u_c e_d tc) in
-    let mktac5 name f u_a u_b u_c u_d u_e e_f tc =
+        (mk_tactic_interpretation_3 f u_a u_b u_c e_d tc1) in
+    let mktac5 name f u_a u_b u_c u_d u_e e_f tc1 =
       mk1 name (Prims.parse_int "6")
-        (mk_tactic_interpretation_5 f u_a u_b u_c u_d u_e e_f tc) in
+        (mk_tactic_interpretation_5 f u_a u_b u_c u_d u_e e_f tc1) in
     let decr_depth_interp rng args =
       match args with
       | (ps,uu____1195)::[] ->
@@ -425,65 +425,65 @@ let rec primitive_steps:
                                     FStar_Syntax_Syntax.t_unit in
                                 let uu____1378 =
                                   let uu____1381 =
-                                    mktac1 "__exact_lemma"
-                                      FStar_Tactics_Basic.exact_lemma
+                                    mktac1 "__apply"
+                                      (FStar_Tactics_Basic.apply true)
                                       FStar_Reflection_Basic.unembed_term
                                       FStar_Syntax_Embeddings.embed_unit
                                       FStar_Syntax_Syntax.t_unit in
                                   let uu____1382 =
                                     let uu____1385 =
-                                      mktac1 "__apply"
-                                        (FStar_Tactics_Basic.apply true)
+                                      mktac1 "__apply_raw"
+                                        (FStar_Tactics_Basic.apply false)
                                         FStar_Reflection_Basic.unembed_term
                                         FStar_Syntax_Embeddings.embed_unit
                                         FStar_Syntax_Syntax.t_unit in
                                     let uu____1386 =
                                       let uu____1389 =
-                                        mktac1 "__apply_raw"
-                                          (FStar_Tactics_Basic.apply false)
+                                        mktac1 "__apply_lemma"
+                                          FStar_Tactics_Basic.apply_lemma
                                           FStar_Reflection_Basic.unembed_term
                                           FStar_Syntax_Embeddings.embed_unit
                                           FStar_Syntax_Syntax.t_unit in
                                       let uu____1390 =
                                         let uu____1393 =
-                                          mktac1 "__apply_lemma"
-                                            FStar_Tactics_Basic.apply_lemma
-                                            FStar_Reflection_Basic.unembed_term
-                                            FStar_Syntax_Embeddings.embed_unit
+                                          mktac5 "__divide"
+                                            (fun uu____1404  ->
+                                               fun uu____1405  ->
+                                                 FStar_Tactics_Basic.divide)
+                                            (fun t  -> t) (fun t  -> t)
+                                            FStar_Syntax_Embeddings.unembed_int
+                                            (unembed_tactic_0 (fun t  -> t))
+                                            (unembed_tactic_0 (fun t  -> t))
+                                            (FStar_Syntax_Embeddings.embed_pair
+                                               (fun t  -> t)
+                                               FStar_Syntax_Syntax.t_unit
+                                               (fun t  -> t)
+                                               FStar_Syntax_Syntax.t_unit)
                                             FStar_Syntax_Syntax.t_unit in
-                                        let uu____1394 =
-                                          let uu____1397 =
-                                            mktac5 "__divide"
-                                              (fun uu____1408  ->
-                                                 fun uu____1409  ->
-                                                   FStar_Tactics_Basic.divide)
-                                              (fun t  -> t) (fun t  -> t)
-                                              FStar_Syntax_Embeddings.unembed_int
-                                              (unembed_tactic_0 (fun t  -> t))
-                                              (unembed_tactic_0 (fun t  -> t))
-                                              (FStar_Syntax_Embeddings.embed_pair
-                                                 (fun t  -> t)
-                                                 FStar_Syntax_Syntax.t_unit
-                                                 (fun t  -> t)
-                                                 FStar_Syntax_Syntax.t_unit)
+                                        let uu____1418 =
+                                          let uu____1421 =
+                                            mktac1 "__set_options"
+                                              FStar_Tactics_Basic.set_options
+                                              FStar_Syntax_Embeddings.unembed_string
+                                              FStar_Syntax_Embeddings.embed_unit
                                               FStar_Syntax_Syntax.t_unit in
                                           let uu____1422 =
                                             let uu____1425 =
-                                              mktac1 "__set_options"
-                                                FStar_Tactics_Basic.set_options
-                                                FStar_Syntax_Embeddings.unembed_string
+                                              mktac2 "__seq"
+                                                FStar_Tactics_Basic.seq
+                                                (unembed_tactic_0
+                                                   FStar_Syntax_Embeddings.unembed_unit)
+                                                (unembed_tactic_0
+                                                   FStar_Syntax_Embeddings.unembed_unit)
                                                 FStar_Syntax_Embeddings.embed_unit
                                                 FStar_Syntax_Syntax.t_unit in
-                                            let uu____1426 =
-                                              let uu____1429 =
-                                                mktac2 "__seq"
-                                                  FStar_Tactics_Basic.seq
-                                                  (unembed_tactic_0
-                                                     FStar_Syntax_Embeddings.unembed_unit)
-                                                  (unembed_tactic_0
-                                                     FStar_Syntax_Embeddings.unembed_unit)
-                                                  FStar_Syntax_Embeddings.embed_unit
-                                                  FStar_Syntax_Syntax.t_unit in
+                                            let uu____1430 =
+                                              let uu____1433 =
+                                                mktac1 "__tc"
+                                                  FStar_Tactics_Basic.tc
+                                                  FStar_Reflection_Basic.unembed_term
+                                                  FStar_Reflection_Basic.embed_term
+                                                  FStar_Syntax_Syntax.t_term in
                                               let uu____1434 =
                                                 let uu____1437 =
                                                   mktac2 "__unquote"
@@ -712,10 +712,10 @@ let rec primitive_steps:
                                                     uu____1449 :: uu____1450 in
                                                   uu____1445 :: uu____1446 in
                                                 uu____1437 :: uu____1442 in
-                                              uu____1429 :: uu____1434 in
-                                            uu____1425 :: uu____1426 in
-                                          uu____1397 :: uu____1422 in
-                                        uu____1393 :: uu____1394 in
+                                              uu____1433 :: uu____1434 in
+                                            uu____1425 :: uu____1430 in
+                                          uu____1421 :: uu____1422 in
+                                        uu____1393 :: uu____1418 in
                                       uu____1389 :: uu____1390 in
                                     uu____1385 :: uu____1386 in
                                   uu____1381 :: uu____1382 in
