@@ -183,7 +183,9 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
      ; trivial      = pure_trivial
 }
 
-effect Pure (a:Type) (pre:pure_pre) (post:pure_post a) =
+// Note the type of post, which allows to assume the precondition
+// for the well-formedness of the postcondition. c.f. #57
+effect Pure (a:Type) (pre:pure_pre) (post:(_:a{pre}) -> GTot Type0) =
         PURE a
              (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x)) // pure_wp
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
@@ -252,6 +254,11 @@ assume type decreases : #a:Type -> a -> Type0
 *)
 effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) =
        Pure a pre (fun r -> post)
+
+(* This variant allows to assume the precondition for the w.f. of the postcondition,
+ * but has no desugaring (for now) *)
+effect Lemma' (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
+       Pure a pre (fun r -> post ())
 
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",
  * either as an alias for reasoning about the direct definitions, or as a marker
