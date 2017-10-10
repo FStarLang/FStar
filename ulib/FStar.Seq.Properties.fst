@@ -579,7 +579,7 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
 let seq_find #a f l =
   seq_find_aux f l (Seq.length l)
 
-let find_mem (#a:eqtype) (s:seq a) (f:a -> bool) (x:a{f x})
+let find_mem (#a:eqtype) (s:seq a) (f:a -> Tot bool) (x:a{f x})
    : Lemma (requires (mem x s))
            (ensures (Some? (seq_find f s) /\ f (Some?.v (seq_find f s))))
    = match seq_find f s with
