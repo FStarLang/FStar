@@ -805,14 +805,7 @@ and tc_constant r (c:sconst) : typ =
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
       | Const_int (_, None) -> t_int
-      | Const_int (_, Some (Signed, Int8))    -> t_int8
-      | Const_int (_, Some (Unsigned, Int8))  -> t_uint8
-      | Const_int (_, Some (Signed, Int16))   -> t_int16
-      | Const_int (_, Some (Unsigned, Int16)) -> t_uint16
-      | Const_int (_, Some (Signed, Int32))   -> t_int32
-      | Const_int (_, Some (Unsigned, Int32)) -> t_uint32
-      | Const_int (_, Some (Signed, Int64))   -> t_int64
-      | Const_int (_, Some (Unsigned, Int64)) -> t_uint64
+      | Const_int (_, Some _) -> failwith "machine integers should be desugared"
       | Const_string _ -> t_string
       | Const_float _ -> t_float
       | Const_char _ -> t_char

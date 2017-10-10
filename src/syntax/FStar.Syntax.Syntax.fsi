@@ -468,14 +468,6 @@ val tdataconstr   : lident -> term
 val t_unit        : term
 val t_bool        : term
 val t_int         : term
-val t_int8        : term
-val t_uint8       : term
-val t_int16       : term
-val t_uint16      : term
-val t_int32       : term
-val t_uint32      : term
-val t_int64       : term
-val t_uint64      : term
 val t_string      : term
 val t_float       : term
 val t_char        : term

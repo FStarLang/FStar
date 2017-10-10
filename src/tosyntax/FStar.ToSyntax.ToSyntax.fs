@@ -968,9 +968,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       aux [] top
 
     | Bind(x, t1, t2) ->
-      //let xpat = AST.mk_pattern (AST.PatVar(x, None)) x.idRange in
-      let k = AST.mk_term (Abs([x], t2)) t2.range t2.level in
-      let bind = AST.mk_term (AST.Var(Ident.lid_of_path ["bind"] x.prange)) x.prange AST.Expr in
+      let xpat = AST.mk_pattern (AST.PatVar(x, None)) x.idRange in
+      let k = AST.mk_term (Abs([xpat], t2)) t2.range t2.level in
+      let bind = AST.mk_term (AST.Var(Ident.lid_of_path ["bind"] x.idRange)) x.idRange AST.Expr in
       desugar_term env (AST.mkExplicitApp bind [t1; k] top.range)
 
     | Seq(t1, t2) ->
