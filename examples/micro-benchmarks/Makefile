@@ -27,7 +27,7 @@ all-pos: Unit1.Basic.uver Unit1.Projectors2.uver Unit1.WPsAndTriples.uver Unit1.
 	 Unit1.UnificationTests.uver Unit1.RecursiveTypeFunctions.uver  \
 	 Unit2.uver TestSet.uver TestHeap.uver ShortCircuit.uver FirstProofs.uver TestMRef.uver \
 	 TestTwoLevelHeap.uver Mac.uver TestGhost.uver Normalization.uver Positivity.uver DoNotation.fst \
-	 Pruning.fst NormVsSMT.fst
+	 Pruning.fst NormVsSMT.fst AssumeRequires.fst
 	#TestHasEq.uver #temporarily removed from mac_universes branch
 
 basictests: $(VERFILES)
