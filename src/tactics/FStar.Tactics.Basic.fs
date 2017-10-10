@@ -929,6 +929,16 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     bind (new_uvar "uvar_env" env typ) (fun t ->
     ret t))
 
+let unshelve (t : term) : tac<unit> =
+    bind cur_goal (fun goal ->
+    bind (try ret (goal.context.type_of goal.context t)
+          with e -> fail "unshelve: not typeable") (fun (t, typ, guard) ->
+    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard)
+    then fail "unshelve: got non-trivial guard"
+    else add_goals [{ goal with witness  = bnorm goal.context t;
+                                goal_ty  = bnorm goal.context typ;
+                                is_guard = false; }]))
+
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
     ret (do_unify ps.main_context t1 t2)

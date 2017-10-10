@@ -40,6 +40,11 @@ assume private val __tc : term -> __tac term
 or fails if it is untypeable. *)
 let tc (t : term) = fun () -> TAC?.reflect (__tc t)
 
+assume private val __unshelve : term -> __tac unit
+(** [tc] returns the type of a term in the current environment,
+or fails if it is untypeable. *)
+let unshelve (t : term) = fun () -> TAC?.reflect (__unshelve t)
+
 assume private val __unquote : #a:Type -> term -> __tac a
 (** [unquote t] with turn a quoted term [t] into an actual value, of
 any type. This will fail at tactic runtime if the quoted term does not
