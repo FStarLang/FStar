@@ -662,7 +662,7 @@ let json_of_issue issue =
                             | None -> []
                             | Some r -> [json_of_use_range r]) @
                            (match issue.issue_range with
-                            | Some r when r.def_range <> r.use_range ->
+                            | Some r when def_range r <> use_range r ->
                               [json_of_def_range r]
                             | _ -> [])))]
 
@@ -1367,8 +1367,11 @@ let interactive_mode' (filename: string): unit =
 let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
 
-  if Option.isSome (Options.codegen())
-  then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
+  if Options.verify_module () <> [] then
+     Util.print_warning "--ide: ignoring --verify_module";
+
+  if Option.isSome (Options.codegen ()) then
+    Util.print_warning "--ide: ignoring --codegen";
 
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces

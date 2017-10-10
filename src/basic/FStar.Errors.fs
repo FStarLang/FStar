@@ -46,7 +46,7 @@ let format_issue issue =
         | None -> "", ""
         | Some r ->
           (BU.format1 "%s: " (Range.string_of_use_range r),
-           (if r.use_range = r.def_range then ""
+           (if use_range r = def_range r then ""
             else BU.format1 " (see also %s)" (Range.string_of_range r))) in
     BU.format4 "%s%s%s%s\n" range_str level_header issue.issue_message see_also_str
 

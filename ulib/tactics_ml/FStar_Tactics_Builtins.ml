@@ -62,6 +62,9 @@ let cur_goal: unit -> RT.term __tac = fun () -> __cur_goal
 let __cur_witness: RT.term __tac = from_tac_0 B.cur_witness
 let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
 
+let __tc (t: RT.term) : RT.term __tac = from_tac_1 B.tc t
+let tc: RT.term -> unit -> RT.term __tac = fun t -> fun () -> __tc t
+
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
 let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __trytac (E.reify_tactic t)
 
@@ -108,13 +111,6 @@ let exact: RT.term E.tactic -> unit -> unit __tac =
     | Success (a, state) -> __exact a state
     | Failed (s, state) -> Failed (s, state)
 
-let __exact_lemma (t: RT.term): unit __tac = from_tac_1 B.exact_lemma t
-let exact_lemma: RT.term E.tactic -> unit -> unit __tac =
-  fun t  -> fun () -> fun ps ->
-    match (t ()) ps with
-    | Success (a, state) -> __exact_lemma a state
-    | Failed (s, state) -> Failed (s, state)
-
 let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
 let apply: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
@@ -148,8 +144,9 @@ let dump1: string -> unit -> unit __tac = fun s -> fun () -> __dump1 s
 let __trefl: unit __tac = from_tac_0 B.trefl
 let trefl: unit -> unit __tac = fun () -> __trefl
 
-let __pointwise (t: unit __tac): unit __tac = from_tac_1 B.pointwise (to_tac_0 t)
-let pointwise: unit E.tactic -> unit -> unit __tac = fun tau -> fun () -> __pointwise (E.reify_tactic tau)
+let __pointwise (d : direction) (t: unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 t)
+let pointwise: unit E.tactic -> unit -> unit __tac = fun tau -> fun () -> __pointwise BottomUp (E.reify_tactic tau)
+let pointwise': unit E.tactic -> unit -> unit __tac = fun tau -> fun () -> __pointwise TopDown (E.reify_tactic tau)
 
 let __later: unit __tac = from_tac_0 B.later
 let later: unit -> unit __tac = fun () -> __later

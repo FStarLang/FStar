@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "2a7df2cbd111f0b241d812987c7f584e"
+      "e36dacadf3d016b6f92d71bdaf95f039"
     ],
     [
       "IntSort.test_sorted",
@@ -119,7 +119,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "bf710e331339a8aedafc5d789bacaa73"
+      "8ff9f6df17459989641c1ab2b4c2dbf5"
     ],
     [
       "IntSort.sorted_smaller",

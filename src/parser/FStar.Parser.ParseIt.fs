@@ -32,13 +32,13 @@ type input_frag = {
 
 let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
   lexbuf.EndPos <- {lexbuf.EndPos with
-    pos_fname= Range.encode_file filename;
+    pos_fname=filename;
     pos_cnum=0;
     pos_lnum=1 }
 
 let setLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) line col =
   lexbuf.EndPos <- {lexbuf.EndPos with
-    pos_fname= Range.encode_file filename;
+    pos_fname=filename;
     pos_cnum=col;
     pos_lnum=line }
 

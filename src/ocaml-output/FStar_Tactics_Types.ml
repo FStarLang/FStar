@@ -36,20 +36,6 @@ let __proj__Mkgoal__item__is_guard: goal -> Prims.bool =
     | { context = __fname__context; witness = __fname__witness;
         goal_ty = __fname__goal_ty; opts = __fname__opts;
         is_guard = __fname__is_guard;_} -> __fname__is_guard
-let subst_goal: FStar_Syntax_Syntax.subst_t -> goal -> goal =
-  fun subst1  ->
-    fun goal  ->
-      let uu___106_74 = goal in
-      let uu____75 = FStar_TypeChecker_Env.rename_env subst1 goal.context in
-      let uu____76 = FStar_Syntax_Subst.subst subst1 goal.witness in
-      let uu____77 = FStar_Syntax_Subst.subst subst1 goal.goal_ty in
-      {
-        context = uu____75;
-        witness = uu____76;
-        goal_ty = uu____77;
-        opts = (uu___106_74.opts);
-        is_guard = (uu___106_74.is_guard)
-      }
 type proofstate =
   {
   main_context: FStar_TypeChecker_Env.env;
@@ -111,50 +97,43 @@ let __proj__Mkproofstate__item____dump:
         all_implicits = __fname__all_implicits; goals = __fname__goals;
         smt_goals = __fname__smt_goals; depth = __fname__depth;
         __dump = __fname____dump;_} -> __fname____dump
-let subst_proof_state:
-  FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate =
-  fun subst1  ->
-    fun ps  ->
-      let uu___107_277 = ps in
-      let uu____278 = subst_goal subst1 ps.main_goal in
-      let uu____279 = FStar_List.map (subst_goal subst1) ps.goals in
-      {
-        main_context = (uu___107_277.main_context);
-        main_goal = uu____278;
-        all_implicits = (uu___107_277.all_implicits);
-        goals = uu____279;
-        smt_goals = (uu___107_277.smt_goals);
-        depth = (uu___107_277.depth);
-        __dump = (uu___107_277.__dump)
-      }
 let decr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___108_286 = ps in
+    let uu___105_261 = ps in
     {
-      main_context = (uu___108_286.main_context);
-      main_goal = (uu___108_286.main_goal);
-      all_implicits = (uu___108_286.all_implicits);
-      goals = (uu___108_286.goals);
-      smt_goals = (uu___108_286.smt_goals);
+      main_context = (uu___105_261.main_context);
+      main_goal = (uu___105_261.main_goal);
+      all_implicits = (uu___105_261.all_implicits);
+      goals = (uu___105_261.goals);
+      smt_goals = (uu___105_261.smt_goals);
       depth = (ps.depth - (Prims.parse_int "1"));
-      __dump = (uu___108_286.__dump)
+      __dump = (uu___105_261.__dump)
     }
 let incr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___109_291 = ps in
+    let uu___106_266 = ps in
     {
-      main_context = (uu___109_291.main_context);
-      main_goal = (uu___109_291.main_goal);
-      all_implicits = (uu___109_291.all_implicits);
-      goals = (uu___109_291.goals);
-      smt_goals = (uu___109_291.smt_goals);
+      main_context = (uu___106_266.main_context);
+      main_goal = (uu___106_266.main_goal);
+      all_implicits = (uu___106_266.all_implicits);
+      goals = (uu___106_266.goals);
+      smt_goals = (uu___106_266.smt_goals);
       depth = (ps.depth + (Prims.parse_int "1"));
-      __dump = (uu___109_291.__dump)
+      __dump = (uu___106_266.__dump)
     }
 let tracepoint: proofstate -> Prims.unit =
   fun ps  ->
-    let uu____296 =
+    let uu____271 =
       (FStar_Options.tactic_trace ()) ||
-        (let uu____298 = FStar_Options.tactic_trace_d () in
-         ps.depth <= uu____298) in
-    if uu____296 then ps.__dump ps "TRACE" else ()
+        (let uu____273 = FStar_Options.tactic_trace_d () in
+         ps.depth <= uu____273) in
+    if uu____271 then ps.__dump ps "TRACE" else ()
+type direction =
+  | TopDown
+  | BottomUp[@@deriving show]
+let uu___is_TopDown: direction -> Prims.bool =
+  fun projectee  ->
+    match projectee with | TopDown  -> true | uu____279 -> false
+let uu___is_BottomUp: direction -> Prims.bool =
+  fun projectee  ->
+    match projectee with | BottomUp  -> true | uu____284 -> false

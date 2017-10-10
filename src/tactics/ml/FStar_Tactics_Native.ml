@@ -14,7 +14,7 @@ type 'a tactic = Prims.unit -> 'a __tac
 
 let r = dummyRange
 
-type itac = proofstate -> args -> term option
+type itac = args -> term option
 type native_primitive_step =
     { name: FStar_Ident.lid;
       arity: Prims.int;
