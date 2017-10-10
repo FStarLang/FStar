@@ -301,11 +301,15 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     let tactic = N.reduce_uvar_solutions env tactic in
     if !tacdbg then
         BU.print1 "About to check tactic term: %s\n" (Print.term_to_string tactic);
-    let tactic, _, _ = TcTerm.tc_reified_tactic env tactic in
+    let tactic, _, g = TcTerm.tc_reified_tactic env tactic in
+    TcRel.force_trivial_guard env g;
+    Errors.stop_if_err ();
     let tau = unembed_tactic_0 unembed_unit tactic in
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     let ps, w = proofstate_of_goal_ty env typ in
+    if !tacdbg then
+        BU.print_string "Running tactic.\n";
     match run tau ps with
     | Success (_, ps) ->
         if !tacdbg then

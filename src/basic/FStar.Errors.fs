@@ -148,3 +148,8 @@ let handleable = function
   | NYI _
   | Err _ -> true
   | _ -> false
+
+let stop_if_err () =
+    if get_err_count () > 0
+    then raise (Err "Stopping due to errors")
+    else ()
