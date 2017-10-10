@@ -7,7 +7,7 @@ include FStar.Pervasives.Native
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
 
-effect Div (a:Type) (pre:pure_pre) (post:pure_post a) =
+effect Div (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
        DIV a
            (fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
 
@@ -89,7 +89,8 @@ noeq type result (a:Type) =
 
 (* Effect EXCEPTION *)
 let ex_pre  = Type0
-let ex_post (a:Type) = result a -> GTot Type0
+let ex_post' (a:Type) (pre:ex_pre) = (_:result a{pre}) -> GTot Type0
+let ex_post  (a:Type) = ex_post' a True
 let ex_wp   (a:Type) = ex_post a -> GTot ex_pre
 unfold let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot Type0 = p (V x)
 unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
@@ -133,7 +134,7 @@ new_effect {
   ; null_wp      = ex_null_wp
   ; trivial      = ex_trivial
 }
-effect Exn (a:Type) (pre:ex_pre) (post:ex_post a) =
+effect Exn (a:Type) (pre:ex_pre) (post:ex_post' a pre) =
        EXN a
          (fun (p:ex_post a) -> pre /\ (forall (r:result a). post r ==> p r)) (* WP *)
 
