@@ -62,6 +62,9 @@ let cur_goal: unit -> RT.term __tac = fun () -> __cur_goal
 let __cur_witness: RT.term __tac = from_tac_0 B.cur_witness
 let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
 
+let __tc (t: RT.term) : RT.term __tac = from_tac_1 B.tc t
+let tc: RT.term -> unit -> RT.term __tac = fun t -> fun () -> __tc t
+
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
 let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __trytac (E.reify_tactic t)
 
