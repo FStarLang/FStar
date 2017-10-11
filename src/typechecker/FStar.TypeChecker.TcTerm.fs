@@ -198,7 +198,7 @@ let no_logical_guard env (te, kt, f) =
     | NonTrivial f -> raise (Error(Err.unexpected_non_trivial_precondition_on_term env f, Env.get_range env))
 
 let print_expected_ty env = match Env.expected_typ env with
-    | None -> BU.print_string "Expected type is None"
+    | None -> BU.print_string "Expected type is None\n"
     | Some t -> BU.print1 "Expected type is %s" (Print.term_to_string t)
 
 (************************************************************************************************************)

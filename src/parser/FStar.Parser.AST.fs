@@ -213,6 +213,8 @@ type modul =
 type file = modul
 type inputFragment = either<file,list<decl>>
 
+let decl_drange decl = decl.drange
+
 (********************************************************************************)
 let check_id id =
     let first_char = String.substring id.idText 0 1 in

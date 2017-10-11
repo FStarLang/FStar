@@ -387,7 +387,7 @@ and translate_decl env d: option<decl> =
           Some (DFunction (None, flags, List.length tvars, t, name, binders, body))
         with e ->
           let msg = BU.print_exn e in
-          BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) msg;
+          BU.print2_warning "Writing a stub for %s (%s)\n" (snd name) msg;
           let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg))
       end
@@ -404,7 +404,7 @@ and translate_decl env d: option<decl> =
         let expr = translate_expr env expr in
         Some (DGlobal (flags, name, t, expr))
       with e ->
-        BU.print2_warning "Warning: not translating definition for %s (%s)\n" (snd name) (BU.print_exn e);
+        BU.print2_warning "Not translating definition for %s (%s)\n" (snd name) (BU.print_exn e);
         Some (DGlobal (flags, name, t, EAny))
       end
 
@@ -412,7 +412,7 @@ and translate_decl env d: option<decl> =
       (* Things we currently do not translate:
        * - polymorphic functions (lemmas do count, sadly)
        *)
-      BU.print1_warning "Warning: not translating definition for %s (and possibly others)\n" name;
+      BU.print1_warning "Not translating definition for %s (and possibly others)\n" name;
       begin match ts with
       | Some (idents, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
@@ -454,11 +454,11 @@ and translate_decl env d: option<decl> =
       ) branches))
 
   | MLM_Ty ((_, name, _mangled_name, _, _, _) :: _) ->
-      BU.print1_warning "Warning: not translating definition for %s (and possibly others)\n" name;
+      BU.print1_warning "Not translating definition for %s (and possibly others)\n" name;
       None
 
   | MLM_Ty [] ->
-      BU.print_string "Impossible!! Empty block of mutually recursive type declarations";
+      BU.print_string "Impossible!! Empty block of mutually recursive type declarations\n";
       None
 
   | MLM_Top _ ->

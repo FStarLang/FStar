@@ -34,7 +34,7 @@ let find_deps_if_needed verify_mode files =
     let _, deps, _ = Parser.Dep.collect verify_mode files in
     match deps with
     | [] ->
-        Util.print_error "Dependency analysis failed; reverting to using only the files provided";
+        Util.print_error "Dependency analysis failed; reverting to using only the files provided\n";
         files
     | _ ->
         let deps = List.rev deps in
@@ -43,7 +43,7 @@ let find_deps_if_needed verify_mode files =
           if basename (List.hd deps) = prims then
             List.tl deps
           else begin
-            Util.print1_error "dependency analysis did not find prims module %s?!" prims;
+            Util.print1_error "Dependency analysis did not find prims module %s?!\n" prims;
             exit 1
           end
         in

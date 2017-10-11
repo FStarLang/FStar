@@ -99,27 +99,27 @@ let __proj__Mkproofstate__item____dump:
         __dump = __fname____dump;_} -> __fname____dump
 let decr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___113_261 = ps in
+    let uu___105_261 = ps in
     {
-      main_context = (uu___113_261.main_context);
-      main_goal = (uu___113_261.main_goal);
-      all_implicits = (uu___113_261.all_implicits);
-      goals = (uu___113_261.goals);
-      smt_goals = (uu___113_261.smt_goals);
+      main_context = (uu___105_261.main_context);
+      main_goal = (uu___105_261.main_goal);
+      all_implicits = (uu___105_261.all_implicits);
+      goals = (uu___105_261.goals);
+      smt_goals = (uu___105_261.smt_goals);
       depth = (ps.depth - (Prims.parse_int "1"));
-      __dump = (uu___113_261.__dump)
+      __dump = (uu___105_261.__dump)
     }
 let incr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___114_266 = ps in
+    let uu___106_266 = ps in
     {
-      main_context = (uu___114_266.main_context);
-      main_goal = (uu___114_266.main_goal);
-      all_implicits = (uu___114_266.all_implicits);
-      goals = (uu___114_266.goals);
-      smt_goals = (uu___114_266.smt_goals);
+      main_context = (uu___106_266.main_context);
+      main_goal = (uu___106_266.main_goal);
+      all_implicits = (uu___106_266.all_implicits);
+      goals = (uu___106_266.goals);
+      smt_goals = (uu___106_266.smt_goals);
       depth = (ps.depth + (Prims.parse_int "1"));
-      __dump = (uu___114_266.__dump)
+      __dump = (uu___106_266.__dump)
     }
 let tracepoint: proofstate -> Prims.unit =
   fun ps  ->

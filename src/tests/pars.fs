@@ -100,7 +100,7 @@ let pars_and_tc_fragment (s:string) =
         let tcenv = init() in
         let frag = frag_of_text s in
         try
-          let test_mod', tcenv' = FStar.Universal.tc_one_fragment !test_mod_ref tcenv (frag, false) in
+          let test_mod', tcenv' = FStar.Universal.tc_one_fragment !test_mod_ref tcenv frag in
           test_mod_ref := test_mod';
           tcenv_ref := Some tcenv';
           let n = get_err_count () in

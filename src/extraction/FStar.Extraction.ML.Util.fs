@@ -326,7 +326,7 @@ let rec uncurry_mlty_fun t =
 module RD = FStar.Reflection.Data
 
 exception CallNotImplemented
-let not_implemented_warning t = BU.format1 ". Tactic %s will not run natively.\n" t |> BU.print_warning
+let not_implemented_warning t = BU.print1_warning ". Tactic %s will not run natively.\n" t
 
 type emb_decl =
     | Embed
@@ -360,7 +360,7 @@ let mk_tactic_unembedding (args: list<mlexpr'>) =
     let app = match (List.length args) with
     | 1 -> MLE_App (from_tac, [with_ty MLTY_Top (MLE_App (unembed_tactic, List.map (with_ty MLTY_Top) args@[reify_tactic]))])
     | n ->
-        BU.print_warning (BU.format "Unembedding not defined for tactics of %d arguments" [BU.string_of_int n]);
+        BU.print1_warning "Unembedding not defined for tactics of %s arguments\n" (BU.string_of_int n);
         raise CallNotImplemented in
     MLE_Fun ([(tac_arg, MLTY_Top); ("()", MLTY_Top)], with_ty MLTY_Top app)
 
@@ -389,7 +389,7 @@ let rec mk_tac_param_type (t: term): mlexpr' =
                 BU.print_warning ("Type term not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')));
                 raise CallNotImplemented)
         | _ ->
-            BU.print_warning "Impossible";
+            BU.print_warning "Impossible\n";
             raise CallNotImplemented)
      | _ ->
          BU.print_warning ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)));
@@ -432,13 +432,13 @@ let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
             if is_tactic then
                 match m with
                 | Embed ->
-                    BU.print_warning "Embedding not defined for tactic type";
+                    BU.print_warning "Embedding not defined for tactic type\n";
                     raise CallNotImplemented
                 | Unembed -> mk_tactic_unembedding hargs
             else
                 MLE_App (with_ty MLTY_Top (mk_basic_embedding m ht), List.map (with_ty MLTY_Top) hargs)
          | _ ->
-             BU.print_warning "Impossible";
+             BU.print_warning "Impossible\n";
              raise CallNotImplemented)
     | _ ->
         BU.print_warning ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)));
