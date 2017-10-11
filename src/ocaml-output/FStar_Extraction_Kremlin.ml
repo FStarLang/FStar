@@ -954,7 +954,7 @@ and translate_decl:
              with
              | e ->
                  let msg = FStar_Util.print_exn e in
-                 (FStar_Util.print2 "Warning: writing a stub for %s (%s)\n"
+                 (FStar_Util.print2_warning "Writing a stub for %s (%s)\n"
                     (FStar_Pervasives_Native.snd name1) msg;
                   (let msg1 =
                      Prims.strcat "This function was not extracted:\n" msg in
@@ -1039,7 +1039,7 @@ and translate_decl:
              with
              | e ->
                  let msg = FStar_Util.print_exn e in
-                 (FStar_Util.print2 "Warning: writing a stub for %s (%s)\n"
+                 (FStar_Util.print2_warning "Writing a stub for %s (%s)\n"
                     (FStar_Pervasives_Native.snd name1) msg;
                   (let msg1 =
                      Prims.strcat "This function was not extracted:\n" msg in
@@ -1068,7 +1068,7 @@ and translate_decl:
            | e ->
                ((let uu____3782 = FStar_Util.print_exn e in
                  FStar_Util.print2_warning
-                   "Warning: not translating definition for %s (%s)\n"
+                   "Not translating definition for %s (%s)\n"
                    (FStar_Pervasives_Native.snd name1) uu____3782);
                 FStar_Pervasives_Native.Some
                   (DGlobal (flags1, name1, t1, EAny))))
@@ -1085,8 +1085,7 @@ and translate_decl:
                                      uu____3799;_}::uu____3800)
           ->
           (FStar_Util.print1_warning
-             "Warning: not translating definition for %s (and possibly others)\n"
-             name;
+             "Not translating definition for %s (and possibly others)\n" name;
            (match ts with
             | FStar_Pervasives_Native.Some (idents,t) ->
                 let uu____3815 =
@@ -1169,12 +1168,11 @@ and translate_decl:
           ((uu____4333,name,_mangled_name,uu____4336,uu____4337,uu____4338)::uu____4339)
           ->
           (FStar_Util.print1_warning
-             "Warning: not translating definition for %s (and possibly others)\n"
-             name;
+             "Not translating definition for %s (and possibly others)\n" name;
            FStar_Pervasives_Native.None)
       | FStar_Extraction_ML_Syntax.MLM_Ty [] ->
           (FStar_Util.print_string
-             "Impossible!! Empty block of mutually recursive type declarations";
+             "Impossible!! Empty block of mutually recursive type declarations\n";
            FStar_Pervasives_Native.None)
       | FStar_Extraction_ML_Syntax.MLM_Top uu____4384 ->
           failwith "todo: translate_decl [MLM_Top]"

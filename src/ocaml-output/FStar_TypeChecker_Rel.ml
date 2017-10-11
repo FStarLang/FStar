@@ -4716,7 +4716,7 @@ and solve_t': FStar_TypeChecker_Env.env -> tprob -> worklist -> solution =
                              if uu____15533
                              then
                                let uu____15534 = names_to_string fvs_hd in
-                               FStar_Util.print1 "Free variables are %s"
+                               FStar_Util.print1 "Free variables are %s\n"
                                  uu____15534
                              else ());
                             false)) in
