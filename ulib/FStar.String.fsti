@@ -15,8 +15,6 @@
 *)
 module FStar.String
 
-open FStar.All
-
 type char = FStar.Char.char
 
 (* Not much in here; we should extend and refine this interface *)
