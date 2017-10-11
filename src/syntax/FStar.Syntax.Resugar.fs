@@ -327,17 +327,15 @@ let rec resugar_term (t : S.term) : A.term =
       else mk (A.Const c)
 
     | Tm_type u ->
-        begin match u with
-        | U_zero ->  mk (name "Type0" t.pos)
-        | U_unknown -> mk (name "Type" t.pos)
-        | _ ->
-          if (Options.print_universes()) then
-            let u = resugar_universe u t.pos in
-            let l = lid_of_path ["Type"] t.pos in
-            mk (A.Construct (l, [(u, UnivApp)]))
-          else
-            mk (name "Type" t.pos)
-        end
+      let nm, needs_app =
+        match u with
+        | U_zero ->  "Type0", false
+        | U_unknown -> "Type", false
+        | _ -> "Type", true in
+      let typ = mk (name nm t.pos) in
+      if needs_app && Options.print_universes ()
+      then mk (A.App (typ, resugar_universe u t.pos, UnivApp))
+      else typ
 
     | Tm_abs(xs, body, _) -> //fun x1 .. xn -> body
       //before inspecting any syntactic form that has binding structure
