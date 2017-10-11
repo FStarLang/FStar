@@ -51,7 +51,7 @@ FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FS
 %.fst-in: 
 	@echo $(FSTAR_INCLUDE_PATHS) \
 	      --z3rlimit 20 \
-	      --verify_module $(basename $(notdir $@))
+	      --use_hints
 
 verify-%: __force__
 	$(FSTAR) $(FSTAR_INCLUDE_PATHS) \

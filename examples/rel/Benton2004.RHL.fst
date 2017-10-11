@@ -682,20 +682,6 @@ let r_dassl
   ))
 = ()
 
-let r_dassr
-  (x: var)
-  (e: exp int)
-  (phi: gexp bool)
-: Lemma
-  (ensures (
-    exec_equiv
-      (gsubst phi x Right (exp_to_gexp e Right))
-      phi
-      skip
-      (assign x e)
-  ))
-= r_dassl x e (flip phi)
-
 (* Common branch *)
 
 let r_cbl
