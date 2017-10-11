@@ -12,7 +12,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e523999e2edde4d79634fc1a63648c67"
+      "9e60e35d331b25ea89601a0728f8a741"
     ],
     [
       "QuickSort.List.total_order",
@@ -43,7 +43,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bfe06616848fd9d2e364f8afeafd2c73"
+      "bae6534792e1e336a1ab4e59d6a7f33b"
     ],
     [
       "QuickSort.List.count",
@@ -98,7 +98,7 @@
         "typing_QuickSort.List.count", "unit_typing"
       ],
       0,
-      "41be80c7ac663ffe9fffcf421b22fe86"
+      "d2ca2e5a3cc2a1a28b12fa70399bc3af"
     ],
     [
       "QuickSort.List.partition",
@@ -112,7 +112,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6e3c29c4e493685057952db835bf32e3"
+      "2d53e6dae8b14a5ed5a1a2168a40f774"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -139,7 +139,7 @@
       1,
       [ "@query" ],
       0,
-      "60be1373498e27e52cbbd650f0ea331a"
+      "4921ee9aa2505c454c51018c418ae234"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -195,7 +195,7 @@
         "typing_QuickSort.List.partition", "unit_typing"
       ],
       0,
-      "231b3dd2af697a662bdfe9593d0ddf8a"
+      "61549c5ef45f0ad30ab995d7c8ac9e3f"
     ],
     [
       "QuickSort.List.sorted_app_lemma",
@@ -236,7 +236,7 @@
         "unit_typing"
       ],
       0,
-      "05e642cc725f97e677d6b0fa3fa661f3"
+      "a930a6defa7ec8fcb217a3382581238b"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -294,7 +294,7 @@
         "unit_typing"
       ],
       0,
-      "9ec85829e4adef7de6bdde8fcc6ae71f"
+      "10956dd707beedc5a5522392cfba6da8"
     ],
     [
       "QuickSort.List.permutation_app_lemma",
@@ -322,7 +322,7 @@
         "typing_FStar.List.Tot.Base.op_At", "typing_QuickSort.List.count"
       ],
       0,
-      "4c4463b6a56227ef88a67505c026dd4f"
+      "d5a55d8841e2dc0da0c8a53f9be65820"
     ],
     [
       "QuickSort.List.permutation_app_lemma",
@@ -399,7 +399,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "def4c1e47f1ab5cceeed3ea32ae40ba1"
+      "6d8f42fed7d5da999e3d4ba2e2ae8804"
     ]
   ]
 ]

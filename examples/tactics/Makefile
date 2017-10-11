@@ -9,6 +9,7 @@ all:	Apply.uver		\
 	Pruning.uver		\
 	Cut.uver		\
 	Fail.uver		\
+	MApply.uver		\
 	Clear.uver		\
 	Cases.uver		\
 	Tutorial.uver		\

@@ -14,14 +14,14 @@ type input_frag = {
 
 let resetLexbufPos filename lexbuf =
   lexbuf.cur_p <- {
-    pos_fname= FStar_Range.encode_file filename;
+    pos_fname= filename;
     pos_cnum = 0;
     pos_bol = 0;
     pos_lnum = 1 }
 
 let setLexbufPos filename lexbuf line col =
   lexbuf.cur_p <- {
-    pos_fname= FStar_Range.encode_file filename;
+    pos_fname= filename;
     pos_cnum = col;
     pos_bol  = 0;
     pos_lnum = line }
@@ -52,12 +52,12 @@ let read_file (filename:string) =
   let debug = FStar_Options.debug_any () in
   match read_vfs_entry filename with
   | Some (_mtime, contents) ->
-    if debug then U.print1 "Reading in-memory file %s" filename;
+    if debug then U.print1 "Reading in-memory file %s\n" filename;
     filename, contents
   | None ->
     let filename = find_file filename in
     try
-      if debug then U.print1 "Opening file %s" filename;
+      if debug then U.print1 "Opening file %s\n" filename;
       filename, BatFile.with_file_in filename BatIO.read_all
     with e ->
       raise (Err (U.format1 "Unable to read file %s\n" filename))

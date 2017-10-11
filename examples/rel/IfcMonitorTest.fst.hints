@@ -1,0 +1,263 @@
+[
+  "mÚ‘Xπ5√z\\?.ën˛êz",
+  [
+    [
+      "IfcMonitorTest.env",
+      1,
+      2,
+      1,
+      [
+        "@query", "equality_tok_Label.High@tok",
+        "equality_tok_Label.Low@tok",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.env",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.env",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.p1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.test1",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.p2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.test2",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.p3",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.test3",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_IfcMonitor.interpret_exp_st.fuel_instrumented",
+        "@query",
+        "FStar.DM4F.IntStoreExcFixed.__proj__INT_STORE_EXC__item__raise__equality",
+        "FStar.DM4F.IntStoreExcFixed.__proj__INT_STORE_EXC__item__raise__token_correspondence",
+        "FStar.DM4F.IntStoreFixedReader.__proj__INT_STORE_READER__item__get_equality",
+        "FStar.DM4F.IntStoreFixedReader.__proj__INT_STORE_READER__item__get_token_correspondence",
+        "IfcMonitor_interpretation_Tm_arrow_0a3a958df2f82381acbe6e800f9d1b5b",
+        "IfcMonitor_interpretation_Tm_arrow_8d9a034092f4de070a9606172e235c87",
+        "Label_pretyping_ed8014fc6ac81aa9f68d67ea36895982",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "bool_typing", "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_IfcMonitor.AInt",
+        "constructor_distinct_IfcMonitor.AVar",
+        "constructor_distinct_IfcMonitor.Assign",
+        "constructor_distinct_Label.High", "constructor_distinct_Label.Low",
+        "data_elim_FStar.Pervasives.Native.Mktuple2",
+        "data_elim_IfcMonitor.Assign",
+        "data_typing_intro_FStar.Pervasives.Native.None@tok",
+        "data_typing_intro_Label.High@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equality_tok_Label.High@tok", "equality_tok_Label.Low@tok",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.create",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.to_id",
+        "equation_FStar.DM4F.IntStoreExcFixed.raise_",
+        "equation_FStar.DM4F.IntStoreFixedReader.read",
+        "equation_IfcMonitor.label_fun", "equation_IfcMonitorTest.env",
+        "equation_IfcMonitorTest.h0", "equation_IfcMonitorTest.p2",
+        "equation_Label.join", "equation_Label.op_Less_Equals",
+        "equation_Prims.as_requires", "equation_Prims.assert_norm",
+        "equation_Prims.eqtype", "equation_Prims.l_False",
+        "equation_Prims.l_True", "equation_Prims.nat",
+        "equation_with_fuel_IfcMonitor.interpret_exp_st.fuel_instrumented",
+        "forall-interp", "fuel_guarded_inversion_Label.label",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "function_token_typing_IfcMonitorTest.env",
+        "function_token_typing_IfcMonitorTest.h0",
+        "function_token_typing_IfcMonitorTest.p2",
+        "function_token_typing_Prims.int", "int_typing",
+        "interpretation_FStar.DM4F.IntStoreExcFixed_Tm_abs_43c254713b07f66c95c49767010d3551",
+        "interpretation_FStar.DM4F.IntStoreExcFixed_Tm_abs_603b1e9a8673b4fd863720c97da61568",
+        "interpretation_FStar.DM4F.IntStoreExcFixed_Tm_abs_f39d04a45745d110dbfe70065bbcc3ed",
+        "interpretation_FStar.DM4F.IntStoreFixedReader_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da",
+        "interpretation_FStar.DM4F.IntStoreFixedReader_Tm_abs_4e96ca165a406577a5ca096c6a621ad3",
+        "interpretation_FStar.DM4F.IntStoreFixedReader_Tm_abs_b34c206b4f74d444d8a3891713f9c0ba",
+        "interpretation_IfcMonitorTest_Tm_abs_1262df7554a8eebcab2e8372ceb355a5",
+        "interpretation_IfcMonitorTest_Tm_abs_2c5acc60819d9e3bf68db76f91cd6ae8",
+        "interpretation_IfcMonitorTest_Tm_abs_4f29eaf6663e79774f84f92b153e1261",
+        "interpretation_IfcMonitorTest_Tm_abs_a2a98930813f638747acb521548c1fe2",
+        "interpretation_IfcMonitor_Tm_abs_4d0ae5752e8a3ef1bcb416de3a6ee8ff",
+        "interpretation_IfcMonitor_Tm_abs_c7459844964375412ded31d9e9a71ca2",
+        "interpretation_IfcMonitor_Tm_abs_cca24088c9eb434c575954e71d877818",
+        "interpretation_IfcMonitor_Tm_abs_dad83586978941ce772aac3be386a66e",
+        "interpretation_Prims_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "lemma_FStar.DM4F.Heap.IntStoreFixed.lemma_index_create",
+        "lemma_FStar.Pervasives.invertOption",
+        "lemma_FStar.Seq.Base.lemma_index_create",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_IfcMonitor.AInt__0",
+        "projection_inverse_IfcMonitor.AVar__0",
+        "projection_inverse_IfcMonitor.Assign_term",
+        "projection_inverse_IfcMonitor.Assign_var",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
+        "refinement_interpretation_IfcMonitor_Tm_refine_087d7fa9f435b8ff90c316c3fff102ae",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_IfcMonitorTest.env", "true_interp",
+        "typing_FStar.DM4F.Heap.IntStoreFixed.to_id",
+        "typing_IfcMonitor.interpret_exp_st", "unit_typing"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.p4",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.test4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_IfcMonitor.Skip",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equality_tok_IfcMonitor.Skip@tok", "equality_tok_Label.Low@tok",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.create",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "equation_IfcMonitor.interpret_com", "equation_IfcMonitor.label_fun",
+        "equation_IfcMonitorTest.h0", "equation_IfcMonitorTest.p1",
+        "equation_Prims.assert_norm", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "function_token_typing_IfcMonitorTest.env",
+        "function_token_typing_IfcMonitorTest.h0",
+        "function_token_typing_IfcMonitorTest.p1",
+        "function_token_typing_Prims.int", "int_typing",
+        "interpretation_IfcMonitor_Tm_abs_e7758be48acf7f590e3405e463df8b93",
+        "lemma_FStar.Seq.Base.lemma_index_create",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_IfcMonitor.interpret_com", "typing_tok_Label.Low@tok",
+        "unit_typing"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.p5",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0
+    ],
+    [
+      "IfcMonitorTest.test5",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "projection_inverse_FStar.Pervasives.Native.None_a"
+      ],
+      0
+    ]
+  ]
+]

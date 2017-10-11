@@ -1874,7 +1874,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     if BU.set_is_subset_of fvs_hd fvs1
                     then true
                     else (if Env.debug env <| Options.Other "Rel"
-                          then BU.print1 "Free variables are %s" (names_to_string fvs_hd); false)
+                          then BU.print1 "Free variables are %s\n" (names_to_string fvs_hd); false)
         in
 
         match maybe_pat_vars with

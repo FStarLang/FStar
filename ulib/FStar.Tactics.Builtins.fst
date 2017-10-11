@@ -8,6 +8,7 @@ open FStar.Tactics.Effect
 open FStar.Order
 open FStar.Reflection
 open FStar.Reflection.Types
+open FStar.Tactics.Types
 
 assume private val __cur_env     : __tac env
 (** [cur_env] returns the current goal's environment *)
@@ -33,6 +34,11 @@ let cur_witness = fun () -> TAC?.reflect __cur_witness
  *)
 assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
+
+assume private val __tc : term -> __tac term
+(** [tc] returns the type of a term in the current environment,
+or fails if it is untypeable. *)
+let tc (t : term) = fun () -> TAC?.reflect (__tc t)
 
 assume private val __unquote : #a:Type -> term -> __tac a
 (** [unquote t] with turn a quoted term [t] into an actual value, of
@@ -190,7 +196,7 @@ assume private val __trefl : __tac unit
 when trying to [apply] a reflexivity lemma. *)
 let trefl : tactic unit = fun () -> TAC?.reflect __trefl
 
-assume private val __pointwise : __tac unit -> __tac unit
+assume private val __pointwise : direction -> __tac unit -> __tac unit
 (** (TODO: explain bettter) When running [pointwise tau] For every
 subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
 |= t' == ?u] and run [tau] on it. When the tactic proves the goal,
@@ -198,7 +204,8 @@ the engine will rewrite [t'] for [?u] in the original goal type. This
 is done for every subterm, bottom-up. This allows to recurse over an
 unknown goal type. By inspecting the goal, the [tau] can then decide
 what to do (to not do anything, use [trefl]). *)
-let pointwise (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__pointwise (reify_tactic tau))
+let pointwise (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__pointwise BottomUp (reify_tactic tau))
+let pointwise' (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__pointwise TopDown (reify_tactic tau))
 
 assume private val __later : __tac unit
 (** Push the current goal to the back. *)
