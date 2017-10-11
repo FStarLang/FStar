@@ -4742,8 +4742,8 @@ let term_to_string:
         with
         | e ->
             ((let uu____17094 = FStar_Util.message_of_exn e in
-              FStar_Util.print1_warning "Normalization failed with error %s"
-                uu____17094);
+              FStar_Util.print1_warning
+                "Normalization failed with error %s\n" uu____17094);
              t) in
       FStar_Syntax_Print.term_to_string t1
 let comp_to_string:
@@ -4757,8 +4757,8 @@ let comp_to_string:
         with
         | e ->
             ((let uu____17114 = FStar_Util.message_of_exn e in
-              FStar_Util.print1_warning "Normalization failed with error %s"
-                uu____17114);
+              FStar_Util.print1_warning
+                "Normalization failed with error %s\n" uu____17114);
              c) in
       FStar_Syntax_Print.comp_to_string c1
 let normalize_refinement:

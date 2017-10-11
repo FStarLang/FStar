@@ -569,7 +569,7 @@ let print_expected_ty: FStar_TypeChecker_Env.env -> Prims.unit =
     let uu____709 = FStar_TypeChecker_Env.expected_typ env in
     match uu____709 with
     | FStar_Pervasives_Native.None  ->
-        FStar_Util.print_string "Expected type is None"
+        FStar_Util.print_string "Expected type is None\n"
     | FStar_Pervasives_Native.Some t ->
         let uu____713 = FStar_Syntax_Print.term_to_string t in
         FStar_Util.print1 "Expected type is %s" uu____713
