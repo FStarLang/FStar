@@ -1,3 +1,5 @@
 module Bug541
 
-type bla = | Bla: #t:Type -> b:ref t -> bla
+open FStar.Ref
+
+noeq type bla = | Bla: #t:Type -> b:ref t -> bla

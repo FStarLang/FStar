@@ -1,5 +1,6 @@
 module Bug655
 
+open FStar.All
 open FStar.Heap
 
 let ghost_one () : GTot int = 1

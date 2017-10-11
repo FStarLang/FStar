@@ -1,4 +1,6 @@
-module M
+module Bug581
+
+open FStar.All
 
 #set-options "--log_types --print_effect_args"
 

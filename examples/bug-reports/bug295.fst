@@ -1,5 +1,5 @@
 module Bug295
-type t : Type -> Type
+assume new type t : Type -> Type
 
 assume val lookupRef: #a:Type -> t (t a) -> GTot (t a)
 assume val length : #a:Type -> t a -> Tot nat
@@ -16,9 +16,8 @@ assume val readIndex :  #a:Type  -> r:t (t a)
 assume type erased : Type -> Type
 assume val hide : 'a -> GTot (erased 'a)
 
-type s = 
+type s =
   | MkS : x:erased nat -> l:t nat{hide (length l) = x} -> s
 
 val test: x:t nat{length x = 2} -> GTot s
 let test x = MkS (hide 2) x
-

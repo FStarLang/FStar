@@ -7,7 +7,7 @@ type value =
 and env = nat -> Tot value
 
 // A workaround
-//type env value = nat -> Tot value
-//type value =
-//  | C: nat -> value
-//  | F: env value -> value
+type env value = nat -> Tot value
+noeq type value =
+ | C: nat -> value
+ | F: env value -> value

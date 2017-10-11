@@ -1,4 +1,4 @@
-module Bug16
+module Bug016
 
 val impossible : u : unit { False } -> Tot 'a
 let impossible = failwith "this won't happen"

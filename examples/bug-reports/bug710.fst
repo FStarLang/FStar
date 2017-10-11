@@ -1,4 +1,4 @@
-module Bug
+module Bug710
 
 type label =
   | Low

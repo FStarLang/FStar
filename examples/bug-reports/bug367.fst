@@ -9,7 +9,7 @@ Invalid_argument("for_all2: Different_list_size")
 
 (*
 val f : int * int -> Tot unit
-let f p = match p with 
+let f p = match p with
 | x,y
 | x,_ -> ()
 Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.

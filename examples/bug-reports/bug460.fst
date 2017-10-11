@@ -1,14 +1,18 @@
 module Bug460
 
 open FStar.IO
+open FStar.ST
 
-let x = alloc 0
+// let x = alloc 0
 
-let y = alloc 0
+// let y = alloc 0
 
-let z = alloc 1
+// let z = alloc 1
 
 let print_test () =
+  let x = alloc 0 in
+  let y = alloc 0 in
+  let z = alloc 1 in
   print_string "Test (x = y) = ";
   print_string (string_of_bool (x = y));
   print_string "\n";

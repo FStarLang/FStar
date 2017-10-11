@@ -4,10 +4,11 @@ val t : bool -> Tot Type0
 let t b = if b then int else (int -> Tot int)
 
 (* CH: at the top level everything explodes  *)
-(* val f0 : t false *)
-(* let f0 n = n *)
+val f0 : t false
+let f0 n = n
 (* Error: Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error. *)
 (* Failure("Impossible! let-bound lambda Bug578.f0 = (fun n -> n@0) has a type that's not a function: ((_:Prims.int -> Tot Prims.int) : Type)\n") *)
+(* VD: This no longer fails *)
 
 (* CH: or just fails to work *)
 (* val f1 : unit -> t false *)
@@ -24,7 +25,7 @@ let t b = if b then int else (int -> Tot int)
 (* got a function "(fun uu___ n -> n@0)" (Function definition takes more arguments than expected from its annotated type) *)
 
 (* CH: And when things get trickier things fail too *)
-(* val f3 : b:bool -> (if b then int else int -> Tot int) *)
+(*val f3 : b:bool -> (if b then int else int -> Tot int) *)
 (* let f3 b = if b then 42 else (fun n -> n) *)
 (* ./bug578.fst(29,29-29,41): Failed to resolve implicit argument of type 'Type' introduced in (?39422 b uu___) because user-provided implicit term *)
 

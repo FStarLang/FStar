@@ -1,4 +1,4 @@
-module ProofOfFalse
+module Bug284
 
 val foo : f:(unit -> Tot bool){f () = true}
           -> Tot (r:bool {r = f () /\ r = true})

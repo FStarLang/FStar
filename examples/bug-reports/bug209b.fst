@@ -1,4 +1,4 @@
-module Bug209_EDITED
+module Bug209b
 
 val foo : #t:Type -> x:t -> Lemma (x = x)
 let foo (#t:Type) x = ()

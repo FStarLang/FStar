@@ -1,6 +1,6 @@
 module Bug212
 
-type foo : (unit -> Tot bool) -> Type =
+noeq type foo : (unit -> Tot bool) -> Type =
   | Test : f:(unit -> Tot bool) -> foo f
 
 val bar : foo (fun x -> true) -> unit

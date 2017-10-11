@@ -1,4 +1,4 @@
-module M
+module Bug433
 
 // Substituting `pos` for a non-refined type makes `f` below typecheck
 // type num = | N of int

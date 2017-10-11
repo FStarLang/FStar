@@ -1,4 +1,6 @@
-module Bug623 
+module Bug623
+
+open FStar.All
 
 val null: unit -> All unit
   (requires (fun h -> True))

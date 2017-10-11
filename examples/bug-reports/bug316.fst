@@ -5,7 +5,7 @@ type a (#max:nat) = x:int{ x < max }
 type t (#max:nat) = a #max
 
 (* Works *)
-type c (#max:nat) = 
+type c (#max:nat) =
    | C : x:a #max -> c #max
 
 (* Now works also *)

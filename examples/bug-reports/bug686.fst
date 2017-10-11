@@ -1,4 +1,3 @@
-
 module Bug686
 
 type bidule (a:Type) : a -> Tot Type =

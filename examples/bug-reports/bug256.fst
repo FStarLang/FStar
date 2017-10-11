@@ -1,6 +1,5 @@
 module Bug256
 
-
 assume type p : int -> Type
 
 assume val witness: i:int{p i}

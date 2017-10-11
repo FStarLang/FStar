@@ -1,5 +1,7 @@
 module Bug484
 
+open FStar.All
+
 (* With "Tot", works fine *)
 val ok : #a:Type
          -> p:(a -> GTot bool)
@@ -14,6 +16,7 @@ let rec ok #a p f l acc =
 
 
 (* Changing the effect to ML works when binding the result of the recursive call *)
+(* VD: This example now fails with "Bound term variable not found (after unmangling)" *)
 val also_ok : #a:Type
          -> p:(a -> GTot bool)
          -> f:(d:a -> Tot (r:a{p d ==> p r}))

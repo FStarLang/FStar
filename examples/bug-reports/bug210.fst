@@ -3,11 +3,11 @@ module Bug210
 (* This is a working version; the problem is that we were forced into this.
    See 210b.fst for what we actually wanted to write. *)
 
-type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
+noeq type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
   | AccIntro : (y:a -> r y x -> Tot (acc a r y)) -> acc a r x
 
 (* Working around silly implicit argument stuff in F*,
-   can't name these things otherwise in function body 
+   can't name these things otherwise in function body
    + putting this just before fix_F also causes lots of troubles
      (see all the commented out admitPs in fix_F;
       even transitivity doesn't work) *)

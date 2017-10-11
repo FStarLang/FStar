@@ -1,9 +1,9 @@
-module Bug853
+module Bug853b
 
 open FStar.Heap
 open FStar.ST
 
-type state = 
+type state =
   | Open
   | Closed
 

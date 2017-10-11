@@ -1,4 +1,4 @@
-module DList
+module Bug442b
 open FStar.List
 
 type dList1 't =

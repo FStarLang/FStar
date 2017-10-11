@@ -3,11 +3,12 @@ module Bug281
 (* Test of substitution on big terms *)
 
 open FStar.Classical
+open FStar.StrongExcludedMiddle
 
 type exp =
 | EVar : nat -> exp
-| EApp : exp -> exp -> exp 
-| ELam : exp -> exp 
+| EApp : exp -> exp -> exp
+| ELam : exp -> exp
 
 type sub = nat -> Tot (exp)
 
@@ -15,7 +16,7 @@ type renaming (s:sub) = (forall x. EVar? (s x))
 
 val is_renaming : s:sub -> GTot nat
 let is_renaming s =
-  if (excluded_middle (renaming s)) then 0 else 1
+  if (strong_excluded_middle (renaming s)) then 0 else 1
 
 val is_evar : exp -> Tot nat
 let is_evar e = if (EVar? e) then 0 else 1
@@ -32,7 +33,7 @@ let rec sub_elam s =
 let res : sub = fun x ->
 if x = 0 then EVar 0 else esubst (sub_einc) (s (x-1))
 in res
-and esubst s e = 
+and esubst s e =
 match e with
 | EVar x -> s x
 | EApp e1 e2 -> EApp (esubst s e1) (esubst s e2)

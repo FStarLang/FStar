@@ -3,11 +3,11 @@ module Bug853
 open FStar.Heap
 open FStar.ST
 
-type state = 
+type state =
   | Open
   | Closed
 
-type file = {name: string; state: ref state}
+noeq type file = {name: string; state: ref state}
 
 type isClosed file heap = (sel heap file.state) == Closed
 type isOpen file heap = (sel heap file.state) == Open
