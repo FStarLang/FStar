@@ -189,6 +189,7 @@ val fresh_constructor : (string * list<sort> * sort * int) -> decl
 val constructor_to_decl: constructor_t -> decls_t
 val mkBvConstructor: int -> decls_t
 val declToSmt: string -> decl -> string
+val declToSmt_no_caps: string -> decl -> string
 
 val mk_Term_app : term -> term -> Range.range -> term
 val mk_Term_uvar: int -> Range.range -> term

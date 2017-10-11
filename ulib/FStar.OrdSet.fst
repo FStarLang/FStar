@@ -108,7 +108,7 @@ type equal (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
 val eq_lemma: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
               -> Lemma (requires (equal s1 s2))
                        (ensures (s1 = s2))
-                 [SMTPatT (equal s1 s2)]
+                 [SMTPat (equal s1 s2)]
 
 val mem_empty: #a:eqtype -> #f:cmp a -> x:a
                -> Lemma (requires True) (ensures (not (mem #a #f x (empty #a #f))))

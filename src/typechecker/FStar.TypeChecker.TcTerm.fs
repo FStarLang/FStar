@@ -198,7 +198,7 @@ let no_logical_guard env (te, kt, f) =
     | NonTrivial f -> raise (Error(Err.unexpected_non_trivial_precondition_on_term env f, Env.get_range env))
 
 let print_expected_ty env = match Env.expected_typ env with
-    | None -> BU.print_string "Expected type is None"
+    | None -> BU.print_string "Expected type is None\n"
     | Some t -> BU.print1 "Expected type is %s" (Print.term_to_string t)
 
 (************************************************************************************************************)
@@ -631,8 +631,6 @@ and tc_synth env args rng =
         if env.nosynth
         then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
         else begin
-            if Env.debug env <| Options.Other "Tac" then
-                BU.print2 "Running tactic %s at return type %s\n" (Print.term_to_string tau) (Print.term_to_string typ);
             let t = env.synth env' typ tau in
             if Env.debug env <| Options.Other "Tac" then
                 BU.print1 "Got %s\n" (Print.term_to_string t);

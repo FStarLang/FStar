@@ -8,7 +8,7 @@ type optResult 'a 'b =
 val invertOptResult : a:Type -> b:Type -> Lemma 
   (requires True)
   (ensures (forall (x:optResult a b). Error? x \/ Correct? x))
-  [SMTPatT (optResult a b)]
+  [SMTPat (optResult a b)]
 let invertOptResult a b = allow_inversion (optResult a b)
 
 assume val perror: string -> int -> string -> Tot string

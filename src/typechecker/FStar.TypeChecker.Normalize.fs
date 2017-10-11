@@ -611,8 +611,8 @@ let built_in_primitive_steps : list<primitive_step> =
     let set_range_of (r:Range.range) args : option<term> =
       match args with
       | [_; (t, _); (r, _)] ->
-        let r = EMB.unembed_range r in
-        Some ({t with pos=r})
+        BU.bind_opt (EMB.unembed_range r) (fun r ->
+        Some ({t with pos=r}))
       | _ -> None
     in
     let mk_range (r:Range.range) args : option<term> =
@@ -855,7 +855,7 @@ let tr_norm_steps s =
     List.concatMap tr_norm_step s
 
 let get_norm_request (full_norm:term -> term) args =
-    let parse_steps s = tr_norm_steps <| EMB.unembed_list EMB.unembed_norm_step s in
+    let parse_steps s = EMB.unembed_list EMB.unembed_norm_step s |> BU.must |> tr_norm_steps in
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
@@ -902,11 +902,22 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_uvar _
           | Tm_constant _
           | Tm_name _
+
           | Tm_fvar( {fv_delta=Delta_constant} )
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
+
+          // we don't unfold dm4f actions unless reifying
+          | Tm_fvar fv when Env.is_action cfg.tcenv (S.lid_of_fv fv) ->
+            let b = should_reify cfg stack in
+            log cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
+                                     (Print.term_to_string t)
+                                     (string_of_bool b));
+            if b
+            then do_unfold_fv cfg env (List.tl stack) t fv
+            else rebuild cfg env stack t
 
           | Tm_app(hd, args)
             when U.is_fstar_tactics_embed hd
@@ -984,7 +995,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  norm cfg env stack t'
 
           | Tm_fvar f ->
-            let t0 = t in
             let should_delta =
                 cfg.delta_level |> BU.for_some (function
                     | Env.UnfoldTac
@@ -1018,33 +1028,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
             if not should_delta
             then rebuild cfg env stack t
-            else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
-                 begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
-                    | None ->
-                      log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
-                      rebuild cfg env stack t
-
-                    | Some (us, t) ->
-                      log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
-                                    (Print.term_to_string t0) (Print.term_to_string t));
-                      let t =
-                        if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
-                        //we're really trying to compute here; no point propagating range information
-                        //which can be expensive
-                        then t
-                        else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
-                      in
-                      let n = List.length us in
-                      if n > 0
-                      then match stack with //universe beta reduction
-                             | UnivArgs(us', _)::stack ->
-                               let env = us' |> List.fold_left (fun env u -> Univ u::env) env in
-                               norm cfg env stack t
-                             | _ when (cfg.steps |> List.contains EraseUniverses) ->
-                               norm cfg env stack t
-                             | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
-                      else norm cfg env stack t
-                 end
+            else do_unfold_fv cfg env stack t f
 
           | Tm_bvar x ->
             begin match lookup_bvar env x with
@@ -1506,6 +1490,35 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 end
         end
 
+and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
+    //preserve the range info on the returned def
+    let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in
+    match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
+       | None ->
+         log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
+         rebuild cfg env stack t0
+
+       | Some (us, t) ->
+         log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
+                       (Print.term_to_string t0) (Print.term_to_string t));
+         let t =
+           if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
+           //we're really trying to compute here; no point propagating range information
+           //which can be expensive
+           then t
+           else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
+         in
+         let n = List.length us in
+         if n > 0
+         then match stack with //universe beta reduction
+                | UnivArgs(us', _)::stack ->
+                  let env = us' |> List.fold_left (fun env u -> Univ u::env) env in
+                  norm cfg env stack t
+                | _ when (cfg.steps |> List.contains EraseUniverses) ->
+                  norm cfg env stack t
+                | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
+         else norm cfg env stack t
+
 (* Reifies the lifting of the term [e] of type [t] from computational  *)
 (* effect [m] to computational effect [m'] using lifting data in [env] *)
 and reify_lift (env : Env.env) e msrc mtgt t : term =
@@ -1865,14 +1878,14 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
 let term_to_string env t =
   let t =
     try normalize [AllowUnboundUniverses] env t
-    with e -> BU.print1_warning "Normalization failed with error %s" (BU.message_of_exn e) ; t
+    with e -> BU.print1_warning "Normalization failed with error %s\n" (BU.message_of_exn e) ; t
   in
   Print.term_to_string t
 
 let comp_to_string env c =
   let c =
     try norm_comp (config [AllowUnboundUniverses] env) [] c
-    with e -> BU.print1_warning "Normalization failed with error %s" (BU.message_of_exn e) ; c
+    with e -> BU.print1_warning "Normalization failed with error %s\n" (BU.message_of_exn e) ; c
   in
   Print.comp_to_string c
 

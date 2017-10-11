@@ -90,13 +90,13 @@ val lemma_distinct_addrs_distinct_types
   (#a:Type0) (#b:Type0) (#rel1:preorder a) (#rel2:preorder b) (h:heap) (r1:mref a rel1) (r2:mref b rel2)
   :Lemma (requires (a =!= b /\ h `contains` r1 /\ h `contains` r2))
          (ensures  (addr_of r1 <> addr_of r2))
-	 [SMTPatT (h `contains` r1); SMTPatT (h `contains` r2)]
+	 [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
 
 val lemma_distinct_addrs_distinct_preorders
   (#a:Type0) (#rel1:preorder a) (#rel2:preorder a) (h:heap) (r1:mref a rel1) (r2:mref a rel2)
   :Lemma (requires (rel1 =!= rel2 /\ h `contains` r1 /\ h `contains` r2))
          (ensures  (addr_of r1 <> addr_of r2))
-	 [SMTPatT (h `contains` r1); SMTPatT (h `contains` r2)]
+	 [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
 
 (*
  * AR: this is a bit surprising. i had to add ~ (r1 === r2) postcondition to make the lemma
@@ -214,7 +214,7 @@ val lemma_contains_upd_modifies (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a 
 val lemma_unused_upd_modifies (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{valid_upd h r x})
   :Lemma (requires (r `unused_in` h))
          (ensures  (modifies (Set.singleton (addr_of r)) h (upd h r x)))
-         [SMTPat (upd h r x); SMTPatT (r `unused_in` h)]
+         [SMTPat (upd h r x); SMTPat (r `unused_in` h)]
 
 val upd_upd_same_mref
   (#a:Type) (#rel:preorder a) (h:heap) (r:mref a rel)

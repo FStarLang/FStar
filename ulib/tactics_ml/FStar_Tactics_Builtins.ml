@@ -74,8 +74,8 @@ let trivial: unit -> unit __tac = fun () -> __trivial
 let __norm (s: norm_step list): unit __tac = from_tac_1 B.norm (tr_repr_steps s)
 let norm: norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
 
-let __norm_term (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_2 B.norm_term (tr_repr_steps s) t
-let norm_term: norm_step list -> RT.term -> unit -> RT.term __tac = fun s t -> fun () -> __norm_term s t
+let __norm_term_env (e:RT.env) (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_3 B.norm_term_env e (tr_repr_steps s) t
+let norm_term_env: RT.env -> norm_step list -> RT.term -> unit -> RT.term __tac = fun e s t -> fun () -> __norm_term_env e s t
 
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro

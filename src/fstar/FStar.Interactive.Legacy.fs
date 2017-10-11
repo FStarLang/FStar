@@ -545,7 +545,7 @@ let rec go (line_col:(int*int))
       let frag = {frag_text=text;
                   frag_line=fst line_col;
                   frag_col=snd line_col} in
-      let res = check_frag env curmod (frag, false) in begin
+      let res = check_frag env curmod frag in begin
         match res with
         | Some (curmod, env, n_errs) ->
             if n_errs=0 then begin

@@ -902,7 +902,7 @@ let build_lattice env se = match se.sigel with
                   begin match BU.is_some (find_edge order (k, ub)), BU.is_some (find_edge order (ub, k)) with
                     | true, true ->
                       if Ident.lid_equals k ub
-                      then (BU.print_warning "Looking multiple times at the same upper bound candidate" ; bopt)
+                      then (BU.print_warning "Looking multiple times at the same upper bound candidate\n" ; bopt)
                       else failwith "Found a cycle in the lattice"
                     | false, false -> bopt
                           (* KM : This seems a little fishy since we could obtain as *)

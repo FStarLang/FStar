@@ -97,7 +97,7 @@ val list_subterm_ordering_lemma:
                         -> Lemma (requires (l << bound))
                                  (ensures (mem x l ==> x << bound))
                                  [SMTPat (mem x l);
-                                  SMTPatT (x << bound)]
+                                  SMTPat (x << bound)]
 let rec list_subterm_ordering_lemma #a #b l bound x = match l with
   | [] -> ()
   | hd::tl -> list_subterm_ordering_lemma tl bound x
