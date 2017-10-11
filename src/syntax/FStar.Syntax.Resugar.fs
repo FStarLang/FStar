@@ -305,8 +305,9 @@ let rec resugar_term (t : S.term) : A.term =
             || lid_equals a C.assume_lid
             || Char.uppercase (String.get s 0) <> String.get s 0) then
               mk (var a.str t.pos)
-          else
-              mk (name a.str t.pos)
+          else // FIXME check in environment instead of checking case
+              mk (A.Construct (lid_of_fv fv, []))
+
     | Tm_uinst(e, universes) ->
       let e = resugar_term e in
       if Options.print_universes() then
