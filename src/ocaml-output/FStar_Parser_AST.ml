@@ -75,7 +75,7 @@ type term' =
   term) FStar_Pervasives_Native.tuple3
   | LetOpen of (FStar_Ident.lid,term) FStar_Pervasives_Native.tuple2
   | Seq of (term,term) FStar_Pervasives_Native.tuple2
-  | Bind of (FStar_Ident.ident,term,term) FStar_Pervasives_Native.tuple3
+  | Bind of (pattern,term,term) FStar_Pervasives_Native.tuple3
   | If of (term,term,term) FStar_Pervasives_Native.tuple3
   | Match of
   (term,(pattern,term FStar_Pervasives_Native.option,term)
@@ -230,7 +230,7 @@ let uu___is_Bind: term' -> Prims.bool =
   fun projectee  ->
     match projectee with | Bind _0 -> true | uu____941 -> false
 let __proj__Bind__item___0:
-  term' -> (FStar_Ident.ident,term,term) FStar_Pervasives_Native.tuple3 =
+  term' -> (pattern,term,term) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | Bind _0 -> _0
 let uu___is_If: term' -> Prims.bool =
   fun projectee  -> match projectee with | If _0 -> true | uu____979 -> false

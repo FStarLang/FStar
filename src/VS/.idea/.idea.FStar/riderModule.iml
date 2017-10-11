@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="RIDER_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$/../.." />
+    <content url="file://$MODULE_DIR$/../../../basic" />
+    <content url="file://$MODULE_DIR$/../../../extraction" />
+    <content url="file://$MODULE_DIR$/../../../format" />
+    <content url="file://$MODULE_DIR$/../../../fsdoc" />
+    <content url="file://$MODULE_DIR$/../../../fstar" />
+    <content url="file://$MODULE_DIR$/../../../parser" />
+    <content url="file://$MODULE_DIR$/../../../prettyprint" />
+    <content url="file://$MODULE_DIR$/../../../reflection" />
+    <content url="file://$MODULE_DIR$/../../../smtencoding" />
+    <content url="file://$MODULE_DIR$/../../../syntax" />
+    <content url="file://$MODULE_DIR$/../../../tactics" />
+    <content url="file://$MODULE_DIR$/../../../tests" />
+    <content url="file://$MODULE_DIR$/../../../tosyntax" />
+    <content url="file://$MODULE_DIR$/../../../typechecker" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

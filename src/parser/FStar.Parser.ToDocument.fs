@@ -836,21 +836,22 @@ and p_lidentOrUnderscore id =
 (*                                                                            *)
 (* ****************************************************************************)
 
-and p_term e = 
-  let maybe_paren : document -> document =
-      match (unparen e).tm with
-      | Match _
-      | TryWith _ -> soft_begin_end_with_nesting
-      | Abs([{pat=PatVar(x, _)}], {tm=Match(maybe_x, _)}) when matches_var maybe_x x ->
-          soft_begin_end_with_nesting
-      | _ -> fun x -> x
-    in
+(* [maybe_paren p e] applies [begin ... end] around [p e] if necessary. *)
+and maybe_paren (p: term -> document) (e:term) : document =
+    match (unparen e).tm with
+    | Match _
+    | TryWith _ -> 
+        soft_begin_end_with_nesting (p e)
+    | Abs([{pat=PatVar(x, _)}], {tm=Match(maybe_x, _)}) when matches_var maybe_x x ->
+        soft_begin_end_with_nesting (p e)
+    | _ -> p e
     
+and p_term e =
   match (unparen e).tm with
   | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
   | Bind(x, e1, e2) ->
-      group ((str "do" ^^ space ^^ p_tuplePattern x ^^ space ^^ long_left_arrow) ^/+^ (maybe_paren (p_noSeqTerm e1) ^^ space ^^ semi)) ^/^ p_term e2
+      group ((str "do" ^^ space ^^ p_tuplePattern x ^^ space ^^ long_left_arrow) ^/+^ (maybe_paren p_noSeqTerm e1 ^^ space ^^ semi)) ^/^ p_term e2
   | _ ->
       group (p_noSeqTerm e)
 
@@ -944,17 +945,9 @@ and p_maybeFocusArrow b =
 (* slight modification here : a patternBranch always begins with a `|` *)
 (* TODO : can we recover the focusing *)
 and p_patternBranch (pat, when_opt, e) =
-  let maybe_paren : document -> document =
-    match (unparen e).tm with
-    | Match _
-    | TryWith _ -> soft_begin_end_with_nesting
-    | Abs([{pat=PatVar(x, _)}], {tm=Match(maybe_x, _)}) when matches_var maybe_x x ->
-        soft_begin_end_with_nesting
-    | _ -> fun x -> x
-  in
   group (
       group (bar ^^ space ^^ p_disjunctivePattern pat ^/+^ p_maybeWhen when_opt ^^ rarrow )
-      ^/+^ maybe_paren (p_term e))
+      ^/+^ maybe_paren p_term e)
 
 and p_maybeWhen = function
     | None -> empty

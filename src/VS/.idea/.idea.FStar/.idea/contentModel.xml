@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="$USER_HOME$/.Rider2017.2/system/resharper-host/local/Transient/ReSharperHost/v10/SolutionCaches/_FStar.1966050062.00" t="ExcludeRecursive" />
+    <e p="$PROJECT_DIR$/../../bin" t="ExcludeRecursive" />
+    <e p="$PROJECT_DIR$" t="IncludeFlat">
+      <e p=".nuget" t="Include">
+        <e p="NuGet.Config" t="Include" />
+        <e p="NuGet.exe" t="Include" />
+        <e p="NuGet.targets" t="Include" />
+      </e>
+      <e p="FStar.sln" t="IncludeFlat" />
+      <e p="Performance1.psess" t="Include" />
+      <e p="Performance2.psess" t="Include" />
+      <e p="Performance3.psess" t="Include" />
+      <e p="Performance4.psess" t="Include" />
+      <e p="Performance5.psess" t="Include" />
+      <e p="Solution Items" t="Include" />
+      <e p="packages" t="ExcludeRecursive" />
+    </e>
+    <e p="$PROJECT_DIR$/../basic" t="IncludeRecursive">
+      <e p="FStar.Common.fs" t="Include" />
+      <e p="FStar.Const.fs" t="Include" />
+      <e p="FStar.Errors.fs" t="Include" />
+      <e p="FStar.Getopt.fs" t="Include" />
+      <e p="FStar.Getopt.fsi" t="Include" />
+      <e p="FStar.Ident.fs" t="Include" />
+      <e p="FStar.Options.fs" t="Include" />
+      <e p="FStar.Options.fsi" t="Include" />
+      <e p="FStar.Order.fs" t="Include" />
+      <e p="FStar.Platform.fs" t="Include" />
+      <e p="FStar.Platform.fsi" t="Include" />
+      <e p="FStar.Range.fs" t="Include" />
+      <e p="FStar.Range.fsi" t="Include" />
+      <e p="FStar.Unionfind.fs" t="Include" />
+      <e p="FStar.Unionfind.fsi" t="Include" />
+      <e p="FStar.Version.fs" t="Include" />
+      <e p="FStar.Version.fsi" t="Include" />
+      <e p="all-fake.fs" t="Include" />
+      <e p="basetypes-fake.fs" t="Include" />
+      <e p="basic.fsproj" t="IncludeRecursive" />
+      <e p="boot" t="Include">
+        <e p="FStar.Bytes.fs" t="Include" />
+        <e p="FStar.Bytes.fsi" t="Include" />
+        <e p="FStar.Dyn.fs" t="Include" />
+        <e p="FStar.Dyn.fsi" t="Include" />
+        <e p="FStar.List.fs" t="Include" />
+        <e p="FStar.List.fsi" t="Include" />
+        <e p="FStar.String.fs" t="Include" />
+        <e p="FStar.String.fsi" t="Include" />
+        <e p="FStar.Util.fs" t="Include" />
+        <e p="FStar.Util.fsi" t="Include" />
+      </e>
+      <e p="exn-fake.fs" t="Include" />
+      <e p="fs" t="Include">
+        <e p="char.fs" t="Include" />
+        <e p="char.fsi" t="Include" />
+      </e>
+      <e p="mul-fake.fs" t="Include" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+      <e p="prims-fake.fs" t="Include" />
+      <e p="profiling.fs" t="Include" />
+      <e p="st-fake.fs" t="Include" />
+    </e>
+    <e p="$PROJECT_DIR$/../extraction" t="IncludeRecursive">
+      <e p="FStar.Extraction.Kremlin.fs" t="Include" />
+      <e p="FStar.Extraction.ML.Code.fs" t="Include" />
+      <e p="FStar.Extraction.ML.Code.fsi" t="Include" />
+      <e p="FStar.Extraction.ML.Modul.fs" t="Include" />
+      <e p="FStar.Extraction.ML.PrintML.fs" t="Include" />
+      <e p="FStar.Extraction.ML.PrintML.fsi" t="Include" />
+      <e p="FStar.Extraction.ML.Syntax.fs" t="Include" />
+      <e p="FStar.Extraction.ML.Term.fs" t="Include" />
+      <e p="FStar.Extraction.ML.UEnv.fs" t="Include" />
+      <e p="FStar.Extraction.ML.Util.fs" t="Include" />
+      <e p="app.config" t="Include" />
+      <e p="extraction.fsproj" t="IncludeRecursive" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+    </e>
+    <e p="$PROJECT_DIR$/../format" t="IncludeRecursive">
+      <e p="format.fs" t="Include" />
+      <e p="format.fsi" t="Include" />
+      <e p="format.fsproj" t="IncludeRecursive" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+    </e>
+    <e p="$PROJECT_DIR$/../fsdoc" t="IncludeRecursive">
+      <e p="App.config" t="Include" />
+      <e p="FStar.Fsdoc.Generator.fs" t="Include" />
+      <e p="fsdoc.fsproj" t="IncludeRecursive" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+    </e>
+    <e p="$PROJECT_DIR$/../fstar" t="IncludeRecursive">
+      <e p="FStar.Dependencies.fs" t="Include" />
+      <e p="FStar.Indent.fs" t="Include" />
+      <e p="FStar.Interactive.CompletionTable.fs" t="Include" />
+      <e p="FStar.Interactive.CompletionTable.fsi" t="Include" />
+      <e p="FStar.Interactive.Ide.fs" t="Include" />
+      <e p="FStar.Interactive.Legacy.fs" t="Include" />
+      <e p="FStar.Main.fs" t="Include" />
+      <e p="FStar.Top.fs" t="Include" />
+      <e p="FStar.Universal.fs" t="Include" />
+      <e p="app.config" t="Include" />
+      <e p="fstar.fsproj" t="IncludeRecursive" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+    </e>
+    <e p="$PROJECT_DIR$/../parser" t="IncludeRecursive">
+      <e p="FStar.Parser.AST.fs" t="Include" />
+      <e p="FStar.Parser.Const.fs" t="Include" />
+      <e p="FStar.Parser.Dep.fs" t="Include" />
+      <e p="FStar.Parser.Dep.fsi" t="Include" />
+      <e p="FStar.Parser.Driver.fs" t="Include" />
+      <e p="FStar.Parser.Lexhelp.fs" t="Include" />
+      <e p="FStar.Parser.ParseIt.fs" t="Include" />
+      <e p="FStar.Parser.ParseIt.fsi" t="Include" />
+      <e p="FStar.Parser.ToDocument.fs" t="Include" />
+      <e p="FStar.Parser.ToDocument.fsi" t="Include" />
+      <e p="boot" t="Include">
+        <e p="parse.fs" t="Include" />
+        <e p="parse.fsy" t="Include" />
+      </e>
+      <e p="lex.fs" t="Include" />
+      <e p="lex.fsl" t="Include" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+      <e p="parser.fsproj" t="IncludeRecursive" />
+      <e p="parseutil.fs" t="Include" />
+    </e>
+    <e p="$PROJECT_DIR$/../prettyprint" t="IncludeRecursive">
+      <e p="boot" t="Include">
+        <e p="FStar.Pprint.fs" t="Include" />
+        <e p="FStar.Pprint.fsi" t="Include" />
+      </e>
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+      <e p="prettyprint.fsproj" t="IncludeRecursive" />
+    </e>
+    <e p="$PROJECT_DIR$/../reflection" t="IncludeRecursive">
+      <e p="FStar.Reflection.Basic.fs" t="Include" />
+      <e p="FStar.Reflection.Data.fs" t="Include" />
+      <e p="FStar.Reflection.Interpreter.fs" t="Include" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="reflection.fsproj" t="IncludeRecursive" />
+    </e>
+    <e p="$PROJECT_DIR$/../smtencoding" t="IncludeRecursive">
+      <e p="FStar.SMTEncoding.Encode.fs" t="Include" />
+      <e p="FStar.SMTEncoding.Encode.fsi" t="Include" />
+      <e p="FStar.SMTEncoding.ErrorReporting.fs" t="Include" />
+      <e p="FStar.SMTEncoding.ErrorReporting.fsi" t="Include" />
+      <e p="FStar.SMTEncoding.Solver.fs" t="Include" />
+      <e p="FStar.SMTEncoding.Solver.fsi" t="Include" />
+      <e p="FStar.SMTEncoding.SplitQueryCases.fs" t="Include" />
+      <e p="FStar.SMTEncoding.Term.fs" t="Include" />
+      <e p="FStar.SMTEncoding.Term.fsi" t="Include" />
+      <e p="FStar.SMTEncoding.Util.fs" t="Include" />
+      <e p="FStar.SMTEncoding.Z3.fs" t="Include" />
+      <e p="FStar.SMTEncoding.Z3.fsi" t="Include" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+      <e p="smtencoding.fsproj" t="IncludeRecursive" />
+    </e>
+    <e p="$PROJECT_DIR$/../syntax" t="IncludeRecursive">
+      <e p="FStar.Syntax.Embeddings.fs" t="Include" />
+      <e p="FStar.Syntax.Embeddings.fsi" t="Include" />
+      <e p="FStar.Syntax.Free.fs" t="Include" />
+      <e p="FStar.Syntax.Free.fsi" t="Include" />
+      <e p="FStar.Syntax.InstFV.fs" t="Include" />
+      <e p="FStar.Syntax.InstFV.fsi" t="Include" />
+      <e p="FStar.Syntax.MutRecTy.fs" t="Include" />
+      <e p="FStar.Syntax.MutRecTy.fsi" t="Include" />
+      <e p="FStar.Syntax.Print.fs" t="Include" />
+      <e p="FStar.Syntax.Print.fsi" t="Include" />
+      <e p="FStar.Syntax.Resugar.fs" t="Include" />
+      <e p="FStar.Syntax.Resugar.fsi" t="Include" />
+      <e p="FStar.Syntax.Subst.fs" t="Include" />
+      <e p="FStar.Syntax.Subst.fsi" t="Include" />
+      <e p="FStar.Syntax.Syntax.fs" t="Include" />
+      <e p="FStar.Syntax.Syntax.fsi" t="Include" />
+      <e p="FStar.Syntax.Unionfind.fs" t="Include" />
+      <e p="FStar.Syntax.Unionfind.fsi" t="Include" />
+      <e p="FStar.Syntax.Util.fs" t="Include" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+      <e p="syntax.fsproj" t="IncludeRecursive" />
+    </e>
+    <e p="$PROJECT_DIR$/../tactics" t="IncludeRecursive">
+      <e p="FStar.Tactics.Basic.fs" t="Include" />
+      <e p="FStar.Tactics.Embedding.fs" t="Include" />
+      <e p="FStar.Tactics.Load.fs" t="Include" />
+      <e p="FStar.Tactics.Load.fsi" t="Include" />
+      <e p="FStar.Tactics.Native.fs" t="Include" />
+      <e p="FStar.Tactics.Result.fs" t="Include" />
+      <e p="FStar.Tactics.Types.fs" t="Include" />
+      <e p="bin" t="ExcludeRecursive" />
+      <e p="boot" t="Include">
+        <e p="FStar.Tactics.Interpreter.fs" t="Include" />
+        <e p="FStar.Tactics.Interpreter.fsi" t="Include" />
+      </e>
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="tactics.fsproj" t="IncludeRecursive" />
+    </e>
+    <e p="$PROJECT_DIR$/../tests" t="IncludeRecursive">
+      <e p="norm.fs" t="Include" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+      <e p="pars.fs" t="Include" />
+      <e p="test.fs" t="Include" />
+      <e p="tests.fsproj" t="IncludeRecursive" />
+      <e p="unif.fs" t="Include" />
+      <e p="util.fs" t="Include" />
+    </e>
+    <e p="$PROJECT_DIR$/../tosyntax" t="IncludeRecursive">
+      <e p="FStar.ToSyntax.Env.fs" t="Include" />
+      <e p="FStar.ToSyntax.Env.fsi" t="Include" />
+      <e p="FStar.ToSyntax.Interleave.fs" t="Include" />
+      <e p="FStar.ToSyntax.Interleave.fsi" t="Include" />
+      <e p="FStar.ToSyntax.ToSyntax.fs" t="Include" />
+      <e p="FStar.ToSyntax.ToSyntax.fsi" t="Include" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+      <e p="tosyntax.fsproj" t="IncludeRecursive" />
+    </e>
+    <e p="$PROJECT_DIR$/../typechecker" t="IncludeRecursive">
+      <e p="FStar.TypeChecker.Common.fs" t="Include" />
+      <e p="FStar.TypeChecker.DMFF.fs" t="Include" />
+      <e p="FStar.TypeChecker.DMFF.fsi" t="Include" />
+      <e p="FStar.TypeChecker.Env.fs" t="Include" />
+      <e p="FStar.TypeChecker.Env.fsi" t="Include" />
+      <e p="FStar.TypeChecker.Err.fs" t="Include" />
+      <e p="FStar.TypeChecker.Normalize.fs" t="Include" />
+      <e p="FStar.TypeChecker.Normalize.fsi" t="Include" />
+      <e p="FStar.TypeChecker.Rel.fs" t="Include" />
+      <e p="FStar.TypeChecker.Rel.fsi" t="Include" />
+      <e p="FStar.TypeChecker.Tc.fs" t="Include" />
+      <e p="FStar.TypeChecker.Tc.fsi" t="Include" />
+      <e p="FStar.TypeChecker.TcInductive.fs" t="Include" />
+      <e p="FStar.TypeChecker.TcInductive.fsi" t="Include" />
+      <e p="FStar.TypeChecker.TcTerm.fs" t="Include" />
+      <e p="FStar.TypeChecker.TcTerm.fsi" t="Include" />
+      <e p="FStar.TypeChecker.Util.fs" t="Include" />
+      <e p="FStar.TypeChecker.Util.fsi" t="Include" />
+      <e p="obj" t="ExcludeRecursive" />
+      <e p="packages.config" t="Include" />
+      <e p="typechecker.fsproj" t="IncludeRecursive" />
+    </e>
+  </component>
+  <component name="RiderRiderContentModelStore">
+    <excludedPaths />
+  </component>
+</project>
