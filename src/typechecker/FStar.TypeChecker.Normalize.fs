@@ -611,8 +611,8 @@ let built_in_primitive_steps : list<primitive_step> =
     let set_range_of (r:Range.range) args : option<term> =
       match args with
       | [_; (t, _); (r, _)] ->
-        let r = EMB.unembed_range r in
-        Some ({t with pos=r})
+        BU.bind_opt (EMB.unembed_range r) (fun r ->
+        Some ({t with pos=r}))
       | _ -> None
     in
     let mk_range (r:Range.range) args : option<term> =
@@ -855,7 +855,7 @@ let tr_norm_steps s =
     List.concatMap tr_norm_step s
 
 let get_norm_request (full_norm:term -> term) args =
-    let parse_steps s = tr_norm_steps <| EMB.unembed_list EMB.unembed_norm_step s in
+    let parse_steps s = EMB.unembed_list EMB.unembed_norm_step s |> BU.must |> tr_norm_steps in
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->

@@ -11,17 +11,23 @@ open FStar.List
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
+module BU = FStar.Util
 
-let int1 (m:lid) (f:'a -> 'b) (ua:term -> 'a) (em:'b -> term)
+let int1 (m:lid) (f:'a -> 'b) (ua:term -> option<'a>) (em:'b -> term)
                  (r:Range.range) (args : args) : option<term> =
     match args with
-    | [(a, _)] -> Some (em (f (ua a)))
+    | [(a, _)] ->
+        BU.bind_opt (ua a) (fun a ->
+        Some (em (f a)))
     | _ -> None
 
-let int2 (m:lid) (f:'a -> 'b -> 'c) (ua:term -> 'a) (ub:term -> 'b) (em:'c -> term)
+let int2 (m:lid) (f:'a -> 'b -> 'c) (ua:term -> option<'a>) (ub:term -> option<'b>) (em:'c -> term)
                  (r:Range.range) (args : args) : option<term> =
     match args with
-    | [(a, _); (b, _)] -> Some (em (f (ua a) (ub b)))
+    | [(a, _); (b, _)] ->
+        BU.bind_opt (ua a) (fun a ->
+        BU.bind_opt (ub b) (fun b ->
+        Some (em (f a b))))
     | _ -> None
 
 let reflection_primops : list<N.primitive_step> =
