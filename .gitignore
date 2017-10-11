@@ -11,6 +11,7 @@
 dump*
 cache/
 /VS/packages
+/VS/.idea
 
 /src/parser/boot/parse.fs
 /src/parser/lex.fs
