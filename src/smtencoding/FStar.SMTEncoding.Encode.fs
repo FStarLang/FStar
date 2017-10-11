@@ -849,14 +849,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 Util.mkAssume(mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
                               Some ("haseq for " ^ tsym),
                               "haseq" ^ tsym) in
-              let t_valid =
-                let xx = (x, Term_sort) in
-                let valid_t = mkApp ("Valid", [t]) in
-                Util.mkAssume(mkForall ([[valid_t]], cvars,
-                    mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
-                              Some ("validity axiom for refinement"),
-                              "ref_valid_" ^ tsym)
-              in
+              // let t_valid =
+              //   let xx = (x, Term_sort) in
+              //   let valid_t = mkApp ("Valid", [t]) in
+              //   Util.mkAssume(mkForall ([[valid_t]], cvars,
+              //       mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
+              //                 Some ("validity axiom for refinement"),
+              //                 "ref_valid_" ^ tsym)
+              // in
 
               let t_kinding =
                 //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
@@ -873,7 +873,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @decls'
                             @[tdecl;
                               t_kinding;
-                              t_valid;
+                              // t_valid;
                               t_interp;t_haseq] in
 
               BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);

@@ -711,8 +711,8 @@ and mkPrelude z3options =
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
                 (assert (forall ((t Term))\n\
-                            (! (implies (exists ((e Term)) (HasType e t))\n\
-                                        (Valid t))\n\
+                            (! (iff (exists ((e Term)) (HasType e t))\n\
+                                    (Valid t))\n\
                                 :pattern ((Valid t)))))\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
                      (! (iff (Valid (Precedes t1 t2)) \n\
