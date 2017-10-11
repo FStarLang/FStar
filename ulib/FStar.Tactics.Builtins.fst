@@ -84,10 +84,10 @@ string operations)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
-assume private val __norm_term  : list norm_step -> term -> __tac term
-(** [norm_term steps t] will call the normalizer on the term [t]
-using the list of steps [steps]. The list has the same meaning as for [norm]. *)
-let norm_term steps t : tactic term = fun () -> TAC?.reflect (__norm_term steps t)
+assume private val __norm_term_env  : env -> list norm_step -> term -> __tac term
+(** [norm_term_env e steps t] will call the normalizer on the term [t]
+using the list of steps [steps], over environment [e]. The list has the same meaning as for [norm]. *)
+let norm_term_env env steps t : tactic term = fun () -> TAC?.reflect (__norm_term_env env steps t)
 
 assume private val __intro  : __tac binder
 (** [intro] pushes the first argument of an arrow goal into the

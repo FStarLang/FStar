@@ -421,12 +421,14 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
     replace_cur ({goal with goal_ty = t; witness = w})
     )
 
-let norm_term (s : list<EMB.norm_step>) (t : term) : tac<term> =
+let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> =
     bind get (fun ps ->
+    bind (__tc e t) (fun (t, _, guard) ->
+    Rel.force_trivial_guard e guard;
     let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
     let t = normalize steps ps.main_context t in
     ret t
-    )
+    ))
 
 let __exact (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
