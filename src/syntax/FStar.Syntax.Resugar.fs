@@ -341,14 +341,15 @@ let rec resugar_term (t : S.term) : A.term =
       //before inspecting any syntactic form that has binding structure
       //you must call SS.open_* to replace de Bruijn indexes with names
       let xs, body = SS.open_term xs body in
-      let xs = if (Options.print_implicits()) then xs else filter_imp xs in
+      let xs = if Options.print_implicits () then xs else filter_imp xs in
+      let body_bv = FStar.Syntax.Free.names body in
       let patterns = xs |> List.choose (fun (x, qual) ->
         //x.sort contains a type annotation for the bound variable
         //the pattern `p` below only contains the variable, not the annotation
         //but, if the user wrote the annotation, then we should record that and print it back
         //additionally, if we're in verbose mode, e.g., if --print_bound_var_types is set
         //    then we should print the annotation too
-        resugar_bv_as_pat x qual)
+        resugar_bv_as_pat x qual body_bv)
       in
       let body = resugar_term body in
       mk (A.Abs(patterns, body))
@@ -782,25 +783,22 @@ and resugar_binder (b:S.binder) r : option<A.binder> =
         A.mk_binder (A.Annotated (bv_as_unique_ident x, e)) r A.Type_level imp
   end
 
-and resugar_bv_as_pat (x:S.bv) qual: option<A.pattern> =
-  let mk a = A.mk_pattern a (S.range_of_bv x) in
-  match (SS.compress x.sort).n with
-  //| Tm_type U_unknown
-  | Tm_unknown ->
-    let i = String.compare x.ppname.idText I.reserved_prefix in
-    if i = 0 then
-      Some (mk (A.PatWild))
-    else
-      BU.bind_opt (resugar_arg_qual qual) (fun aq -> Some (mk (A.PatVar(bv_as_unique_ident x, aq))))
-  | _ ->
-    BU.bind_opt (resugar_arg_qual qual)
-      begin fun aq ->
-        let pat = mk (A.PatVar(bv_as_unique_ident x, aq)) in
-        if Options.print_bound_var_types() then
-          Some (mk (A.PatAscribed(pat, resugar_term x.sort)))
-        else
-          Some pat
-      end
+and resugar_bv_as_pat' (v: S.bv) aqual (body_bv: BU.set<bv>) typ_opt =
+  let mk a = A.mk_pattern a (S.range_of_bv v) in
+  let used = BU.set_mem v body_bv in
+  let pat =
+    mk (if used
+        then A.PatVar (bv_as_unique_ident v, aqual)
+        else A.PatWild) in // FIXME aqual on ``_``
+  match typ_opt with
+  | None | Some { n = Tm_unknown } -> pat
+  | Some typ -> if Options.print_bound_var_types ()
+               then mk (A.PatAscribed (pat, resugar_term typ))
+               else pat
+
+and resugar_bv_as_pat (x:S.bv) qual body_bv: option<A.pattern> =
+  BU.map_opt (resugar_arg_qual qual)
+    (fun aqual -> resugar_bv_as_pat' x aqual body_bv (Some <| SS.compress x.sort))
 
 and resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
@@ -887,7 +885,6 @@ and resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
       let args = map2 fields args |> List.rev in
       mk (A.PatRecord(args))
 
-
     | Pat_cons (fv, args) ->
       resugar_plain_pat_cons fv args
 
@@ -897,21 +894,14 @@ and resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
       // When resugaring it will be just a normal (explicitly bound) variable.
       begin match string_to_op v.ppname.idText with
        | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, v.ppname.idRange)))
-       | None ->
-         let var_used_in_branch = Util.set_mem v branch_bv in
-         mk (if not var_used_in_branch then A.PatWild
-             else A.PatVar (bv_as_unique_ident v, to_arg_qual imp_opt))
+       | None -> resugar_bv_as_pat' v (to_arg_qual imp_opt) branch_bv None
       end
 
     | Pat_wild _ -> mk (A.PatWild)
 
     | Pat_dot_term (bv, term) ->
       (* TODO : this should never be resugared unless in a comment *)
-      let pat = mk (A.PatVar(bv_as_unique_ident bv, Some A.Implicit)) in
-      if Options.print_bound_var_types() then
-        mk (A.PatAscribed(pat, resugar_term term))
-      else
-        pat
+      resugar_bv_as_pat' bv (Some A.Implicit) branch_bv (Some term)
   in
   aux p None
 
