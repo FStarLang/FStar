@@ -1146,19 +1146,18 @@ let run_autocomplete st search_term context =
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
 
-let run_compute st term rules =
-  let run_and_rewind st task =
-    let env' = push st.repl_env "#compute" in
-    let results = task st in
-    pop env' "#compute";
-    (results, Inl st) in
+let run_and_rewind st task =
+  let env' = push st.repl_env "#compute" in
+  let results = try Inl <| task st with e -> Inr e in
+  pop env' "#compute";
+  match results with
+  | Inl results -> (results, Inl st)
+  | Inr e -> raise e
 
+let run_with_parsed_and_tc_term st term line column continuation =
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
     { frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
-
-  let normalize_term tcenv rules t =
-    FStar.TypeChecker.Normalize.normalize rules tcenv t in
 
   let find_let_body ses =
     match ses with
@@ -1178,17 +1177,6 @@ let run_compute st term rules =
     let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
     ses in
 
-  let rules =
-    (match rules with
-     | Some rules -> rules
-     | None -> [FStar.TypeChecker.Normalize.Beta;
-               FStar.TypeChecker.Normalize.Iota;
-               FStar.TypeChecker.Normalize.Zeta;
-               FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant])
-    @ [FStar.TypeChecker.Normalize.Inlining;
-       FStar.TypeChecker.Normalize.Eager_unfolding;
-       FStar.TypeChecker.Normalize.Primops] in
-
   run_and_rewind st (fun st ->
     let tcenv = st.repl_env in
     let frag = dummy_let_fragment term in
@@ -1206,15 +1194,33 @@ let run_compute st term rules =
           | Some (univs, def) ->
             let univs, def = Syntax.Subst.open_univ_vars univs def in
             let tcenv = TcEnv.push_univ_vars tcenv univs in
-            let normalized = normalize_term tcenv rules def in
-            (QueryOK, JsonStr (term_to_string tcenv normalized)) in
+            continuation tcenv def in
         if Options.trace_error () then
           aux ()
         else
           try aux ()
           with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
-                                  | Some issue -> JsonStr (FStar.Errors.format_issue issue)
-                                  | None -> raise e)))
+                                 | Some issue -> JsonStr (FStar.Errors.format_issue issue)
+                                 | None -> raise e)))
+
+let run_compute st term rules =
+  let rules =
+    (match rules with
+     | Some rules -> rules
+     | None -> [FStar.TypeChecker.Normalize.Beta;
+               FStar.TypeChecker.Normalize.Iota;
+               FStar.TypeChecker.Normalize.Zeta;
+               FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant])
+    @ [FStar.TypeChecker.Normalize.Inlining;
+       FStar.TypeChecker.Normalize.Eager_unfolding;
+       FStar.TypeChecker.Normalize.Primops] in
+
+  let normalize_term tcenv rules t =
+    FStar.TypeChecker.Normalize.normalize rules tcenv t in
+
+  run_with_parsed_and_tc_term st term 0 0 (fun tcenv def ->
+      let normalized = normalize_term tcenv rules def in
+      (QueryOK, JsonStr (term_to_string tcenv normalized)))
 
 type search_term' =
 | NameContainsStr of string
