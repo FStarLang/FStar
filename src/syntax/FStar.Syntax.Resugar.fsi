@@ -36,8 +36,8 @@ module Range = FStar.Range
 val resugar_term: S.term -> A.term
 val resugar_sigelt: S.sigelt-> option<A.decl>
 val resugar_comp: S.comp -> A.term
-val resugar_pat: S.pat -> A.pattern
+val resugar_pat: S.pat -> set<S.bv> -> A.pattern
 val resugar_universe: S.universe -> Range.range -> A.term
-val resugar_binder: S.binder -> Range.range -> option<A.binder> 
+val resugar_binder: S.binder -> Range.range -> option<A.binder>
 val resugar_tscheme: S.tscheme -> A.decl
 val resugar_eff_decl: bool -> Range.range -> list<S.qualifier> -> eff_decl -> A.decl

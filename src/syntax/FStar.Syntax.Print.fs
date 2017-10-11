@@ -335,7 +335,7 @@ let rec term_to_string x =
 
 and pat_to_string x =
   if not (Options.ugly()) then
-    let e = Resugar.resugar_pat x in
+    let e = Resugar.resugar_pat x (new_bv_set ()) in
     let d = ToDocument.pat_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
   else match x.v with

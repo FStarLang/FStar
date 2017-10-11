@@ -39,10 +39,10 @@ module D = FStar.Parser.ToDocument
 module UF = FStar.Syntax.Unionfind
 module E = FStar.Errors
 
-
 (* Helpers to print/debug the resugaring phase *)
 let doc_to_string doc = FStar.Pprint.pretty_string (float_of_string "1.0") 100 doc
 let parser_term_to_string t = doc_to_string (D.term_to_document t)
+let parser_pat_to_string t = doc_to_string (D.pat_to_document t)
 
 let map_opt = List.filter_map
 
@@ -55,7 +55,11 @@ let bv_as_unique_ident (x:S.bv) : I.ident =
   in
   I.mk_ident (unique_name, x.ppname.idRange)
 
-let filter_imp a = a |> List.filter (function (_, Some (S.Implicit _)) -> false | _ -> true)
+let filter_imp a =
+  a |> List.filter (function (_, Some (S.Implicit _)) -> false | _ -> true)
+
+let filter_pattern_imp xs =
+  List.filter (fun (_, is_implicit) -> not is_implicit) xs
 
 let label s t =
   if s = "" then t
@@ -390,7 +394,7 @@ let rec resugar_term (t : S.term) : A.term =
                    A.Nothing in
         List.fold_left (fun acc (x, qual) -> mk (A.App(acc, x, res_impl x qual))) e args
       in
-      let args = if (Options.print_implicits()) then args else filter_imp args
+      let args = if Options.print_implicits () then args else filter_imp args
       in
       begin match resugar_term_as_op e with
         | None->
@@ -549,11 +553,13 @@ let rec resugar_term (t : S.term) : A.term =
           end
     end
 
-    | Tm_match(e, [(pat, _, t)]) ->
+    | Tm_match(e, [(pat, wopt, t)]) ->
       (* for match expressions that have exactly 1 branch, instead of printing them as `match e with | P -> e1`
         it would be better to print it as `let P = e in e1`. *)
       (* only do it when pat is not Pat_disj since ToDocument only expects disjunctivePattern in Match and TryWith *)
-      let bnds = [(resugar_pat pat, resugar_term e)] in
+      let pat, wopt, t = SS.open_branch (pat, wopt, t) in
+      let branch_bv = FStar.Syntax.Free.names t in
+      let bnds = [(resugar_pat pat branch_bv, resugar_term e)] in
       let body = resugar_term t in
       mk (A.Let(A.NoLetQualifier, bnds, body))
 
@@ -562,13 +568,15 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_match(e, branches) ->
       let resugar_branch (pat, wopt,b) =
-        let pat = resugar_pat pat in
+        let pat, wopt, b = SS.open_branch (pat, wopt, b) in
+        let branch_bv = FStar.Syntax.Free.names b in
+        let pat = resugar_pat pat branch_bv in
         let wopt = match wopt with
           | None -> None
           | Some e -> Some (resugar_term e) in
         let b = resugar_term b in
         (pat, wopt, b) in
-        mk (A.Match(resugar_term e, List.map resugar_branch branches))
+      mk (A.Match(resugar_term e, List.map resugar_branch branches))
 
     | Tm_ascribed(e, (asc, tac_opt), _) ->
       let term = match asc with
@@ -826,29 +834,74 @@ and resugar_bv_as_pat (x:S.bv) qual: option<A.pattern> =
           Some pat
       end
 
-and resugar_pat (p:S.pat) : A.pattern =
+and resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
-  let to_arg_qual bopt =
-    BU.bind_opt bopt (fun b -> if b then Some A.Implicit else None)
-  in
-  let rec aux (p:S.pat) (imp_opt:option<bool>)=
+  let to_arg_qual bopt = // FIXME do (Some false) and None mean the same thing?
+    BU.bind_opt bopt (fun b -> if b then Some A.Implicit else None) in
+  let may_drop_implicits args =
+    not (Options.print_implicits ()) &&
+    not (List.existsML (fun (pattern, is_implicit) ->
+             let might_be_used =
+               match pattern.v with
+               | Pat_var bv
+               | Pat_dot_term (bv, _) ->
+                 let is_used = Util.set_mem bv branch_bv in
+                 if is_used then
+                   Util.print1 "Binder %s is used" (bv.ppname.idText)
+                 else
+                   Util.print1 "Binder %s is not used" (bv.ppname.idText);
+                 is_used
+               | Pat_wild _ -> false
+               | _ -> true in
+             is_implicit && might_be_used) args) in
+  let resugar_plain_pat_cons' fv args =
+    mk (A.PatApp (mk (A.PatName fv.fv_name.v), args)) in
+  let is_tuple_constructor_fv fv =
+      C.is_tuple_data_lid' fv.fv_name.v
+    || C.is_dtuple_data_lid' fv.fv_name.v in
+  let rec resugar_plain_pat_cons fv args =
+    let args =
+      if may_drop_implicits args
+      then filter_pattern_imp args
+      else args in
+    let args = List.map (fun (p, b) -> aux p (Some b)) args in
+    resugar_plain_pat_cons' fv args
+  and aux (p:S.pat) (imp_opt:option<bool>)=
     match p.v with
     | Pat_constant c -> mk (A.PatConst c)
 
     | Pat_cons (fv, []) ->
       mk (A.PatName fv.fv_name.v)
 
-    | Pat_cons(fv, args) when lid_equals fv.fv_name.v C.cons_lid ->
-      let args = List.map(fun (p, b) -> aux p (Some b)) args in
-      mk (A.PatList(args))
+    | Pat_cons(fv, args) when (lid_equals fv.fv_name.v C.nil_lid
+                               && may_drop_implicits args) ->
+      if not (List.isEmpty (filter_pattern_imp args)) then
+        Errors.warn p.p "Prims.Nil given explicit arguments";
+      mk (A.PatList [])
 
-    | Pat_cons(fv, args) when C.is_tuple_data_lid' fv.fv_name.v || C.is_dtuple_data_lid' fv.fv_name.v ->
-      let args = List.map(fun (p, b) -> aux p (Some b)) args in
-      if (C.is_dtuple_data_lid' fv.fv_name.v) then
-        mk (A.PatTuple(args, true))
-      else
-        mk (A.PatTuple(args, false))
+    | Pat_cons(fv, args) when (lid_equals fv.fv_name.v C.cons_lid
+                               && may_drop_implicits args) ->
+      (match filter_pattern_imp args with
+       | [(hd, false); (tl, false)] ->
+         let hd' = aux hd (Some false) in
+         (match aux tl (Some false) with
+          | { pat = A.PatList tl'} -> mk (A.PatList (hd' :: tl'))
+          | tl' -> resugar_plain_pat_cons' fv [hd'; tl'])
+       | args' ->
+         Errors.warn p.p
+           (Util.format1 "Prims.Cons applied to %s explicit arguments"
+             (string_of_int (List.length args')));
+         resugar_plain_pat_cons fv args)
+
+    | Pat_cons(fv, args) when (is_tuple_constructor_fv fv
+                               && may_drop_implicits args) ->
+      let args =
+        args |>
+        List.filter_map (fun (p, is_implicit) ->
+            if is_implicit then None else Some (aux p (Some false))) in
+      let is_dependent_tuple = C.is_dtuple_data_lid' fv.fv_name.v in
+      mk (A.PatTuple (args, is_dependent_tuple))
 
     | Pat_cons({fv_qual=Some (Record_ctor(name, fields))}, args) ->
       // reverse the fields and args list to match them since the args added by the type checker
@@ -868,8 +921,7 @@ and resugar_pat (p:S.pat) : A.pattern =
 
 
     | Pat_cons (fv, args) ->
-      let args = List.map (fun (p, b) -> aux p (Some b)) args in
-      mk (A.PatApp(mk (A.PatName fv.fv_name.v), args))
+      resugar_plain_pat_cons fv args
 
     | Pat_var v ->
       // both A.PatTvar and A.PatVar are desugared to S.Pat_var. A PatTvar in the original file coresponds
