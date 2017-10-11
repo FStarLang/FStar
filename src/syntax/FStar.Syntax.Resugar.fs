@@ -929,7 +929,10 @@ and resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
       // When resugaring it will be just a normal (explicitly bound) variable.
       begin match string_to_op v.ppname.idText with
        | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, v.ppname.idRange)))
-       | None -> mk (A.PatVar (bv_as_unique_ident v, to_arg_qual imp_opt))
+       | None ->
+         let var_used_in_branch = Util.set_mem v branch_bv in
+         mk (if not var_used_in_branch then A.PatWild
+             else A.PatVar (bv_as_unique_ident v, to_arg_qual imp_opt))
       end
 
     | Pat_wild _ -> mk (A.PatWild)
