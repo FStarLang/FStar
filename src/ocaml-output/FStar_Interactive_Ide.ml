@@ -139,6 +139,8 @@ let with_captured_errors':
               [uu____147] in
             FStar_TypeChecker_Err.add_errors env uu____140);
            FStar_Pervasives_Native.None)
+      | FStar_Errors.Stop ->
+           FStar_Pervasives_Native.None
 let with_captured_errors:
   'Auu____167 .
     FStar_TypeChecker_Env.env ->
