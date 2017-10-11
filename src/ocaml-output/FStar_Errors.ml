@@ -321,3 +321,8 @@ let handleable: Prims.exn -> Prims.bool =
     | FStar_Util.NYI uu____1473 -> true
     | Err uu____1474 -> true
     | uu____1475 -> false
+let stop_if_err: Prims.unit -> Prims.unit =
+  fun uu____1479  ->
+    let uu____1480 =
+      let uu____1481 = get_err_count () in uu____1481 > (Prims.parse_int "0") in
+    if uu____1480 then FStar_Exn.raise (Err "Stopping due to errors") else ()
