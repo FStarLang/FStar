@@ -8,9 +8,10 @@ type heap2 = double heap
 
 new_effect STATE2 = STATE_h heap2
 let st2_Pre = st_pre_h heap2
-let st2_Post (a:Type) = st_post_h heap2 a
+let st2_Post' (a:Type) (pre:Type) = st_post_h' heap2 a pre
+let st2_Post  (a:Type) = st_post_h heap2 a
 let st2_WP (a:Type) = st_wp_h heap2 a
-effect ST2 (a:Type) (pre:st2_Pre) (post: (heap2 -> Tot (st2_Post a))) =
+effect ST2 (a:Type) (pre:st2_Pre) (post: (h:heap2 -> Tot (st2_Post' a (pre h)))) =
     STATE2 a
       (fun (p:st2_Post a) (h:heap2) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
 effect St2 (a:Type) = ST2 a (fun h -> True) (fun h0 r h1 -> True)

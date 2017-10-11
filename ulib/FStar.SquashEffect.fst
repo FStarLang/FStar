@@ -7,7 +7,7 @@ total new_effect SQUASH = PURE
 //kind pure_post (a:Type) = a -> Type
 //kind pure_wp   (a:Type) = pure_post a -> PurePre
 
-effect Squash (a:Type) (pre:pure_pre) (post:pure_post a) =
+effect Squash (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
        SQUASH a
            (fun (p:pure_post a) -> pre /\ (forall a. pre /\ post a ==> p a)) (* WP *)
 
@@ -28,9 +28,13 @@ assume val unsquash : #p:Type -> squash p -> Sq p
 
 // The post-condition of a Squash is really about the inhabitant,
 // but we can't allow that to escape into the non-squash world
-assume val resquash : #p:Type -> #pre:pure_pre -> #post:pure_post p ->
+
+assume val resquash : #p:Type -> #pre:pure_pre -> #post:(p -> GTot Type0) ->
                       (unit -> Squash p pre post) ->
                       Pure (squash p) (requires pre) (ensures (fun _ -> True))
+// Note: using `pure_post p` for the type of #post above fails with
+// "expected type Prims.pure_post' p pre; got type Prims.pure_post p"
+// even if `pure_post p <: pure_post' p pre` for any pre.
 
 // less general but much better inference
 val resquash' : #p:Type -> (unit -> Sq p) -> Tot (squash p)
