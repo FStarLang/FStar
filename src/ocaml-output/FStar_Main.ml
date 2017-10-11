@@ -1,5 +1,5 @@
 open Prims
-let uu___285: Prims.unit = FStar_Version.dummy ()
+let uu___293: Prims.unit = FStar_Version.dummy ()
 let process_args:
   Prims.unit ->
     (FStar_Getopt.parse_cmdline_res,Prims.string Prims.list)
@@ -225,7 +225,7 @@ let go: 'Auu____391 . 'Auu____391 -> Prims.unit =
                                    if uu____470
                                    then
                                      (FStar_Util.print_error
-                                        "--verify_module is incompatible with --verify_all";
+                                        "--verify_module is incompatible with --verify_all\n";
                                       FStar_All.exit (Prims.parse_int "1"))
                                    else ());
                                   FStar_Parser_Dep.VerifyAll)

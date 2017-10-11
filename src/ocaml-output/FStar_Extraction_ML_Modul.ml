@@ -154,7 +154,7 @@ let rec extract_meta:
     | a ->
         ((let uu____239 = FStar_Syntax_Print.term_to_string a in
           FStar_Util.print1_warning
-            "Warning: unrecognized attribute (%s), valid attributes are `c_inline`, `substitute`, and `gc`."
+            "Unrecognized attribute (%s), valid attributes are `c_inline`, `substitute`, and `gc`.\n"
             uu____239);
          FStar_Pervasives_Native.None)
 let extract_metadata:

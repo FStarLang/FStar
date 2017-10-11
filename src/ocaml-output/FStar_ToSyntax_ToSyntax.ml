@@ -1045,7 +1045,7 @@ let rec desugar_data_pat:
                               let uu____2688 =
                                 FStar_Syntax_Print.term_to_string t1 in
                               FStar_Util.print3_warning
-                                "Multiple ascriptions for %s in pattern, type %s was shadowed by %s"
+                                "Multiple ascriptions for %s in pattern, type %s was shadowed by %s\n"
                                 uu____2686 uu____2687 uu____2688)
                            else ();
                            LocalBinder

@@ -3275,7 +3275,7 @@ let build_lattice: env -> FStar_Syntax_Syntax.sigelt -> env =
                                                               k ub
                                                           then
                                                             (FStar_Util.print_warning
-                                                               "Looking multiple times at the same upper bound candidate";
+                                                               "Looking multiple times at the same upper bound candidate\n";
                                                              bopt)
                                                           else
                                                             failwith
