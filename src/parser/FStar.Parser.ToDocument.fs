@@ -836,11 +836,21 @@ and p_lidentOrUnderscore id =
 (*                                                                            *)
 (* ****************************************************************************)
 
-and p_term e = match (unparen e).tm with
+and p_term e = 
+  let maybe_paren : document -> document =
+      match (unparen e).tm with
+      | Match _
+      | TryWith _ -> soft_begin_end_with_nesting
+      | Abs([{pat=PatVar(x, _)}], {tm=Match(maybe_x, _)}) when matches_var maybe_x x ->
+          soft_begin_end_with_nesting
+      | _ -> fun x -> x
+    in
+    
+  match (unparen e).tm with
   | Seq (e1, e2) ->
       group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
   | Bind(x, e1, e2) ->
-      group ((p_tuplePattern x ^^ space ^^ long_left_arrow) ^/+^ (p_noSeqTerm e1 ^^ space ^^ semi)) ^/^ p_term e2
+      group ((str "do" ^^ space ^^ p_tuplePattern x ^^ space ^^ long_left_arrow) ^/+^ (maybe_paren (p_noSeqTerm e1) ^^ space ^^ semi)) ^/^ p_term e2
   | _ ->
       group (p_noSeqTerm e)
 
