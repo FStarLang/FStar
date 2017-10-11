@@ -811,13 +811,7 @@ and resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
              let might_be_used =
                match pattern.v with
                | Pat_var bv
-               | Pat_dot_term (bv, _) ->
-                 let is_used = Util.set_mem bv branch_bv in
-                 if is_used then
-                   Util.print1 "Binder %s is used" (bv.ppname.idText)
-                 else
-                   Util.print1 "Binder %s is not used" (bv.ppname.idText);
-                 is_used
+               | Pat_dot_term (bv, _) -> Util.set_mem bv branch_bv
                | Pat_wild _ -> false
                | _ -> true in
              is_implicit && might_be_used) args) in
@@ -852,7 +846,7 @@ and resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
        | [(hd, false); (tl, false)] ->
          let hd' = aux hd (Some false) in
          (match aux tl (Some false) with
-          | { pat = A.PatList tl'} -> mk (A.PatList (hd' :: tl'))
+          | { pat = A.PatList tl'; prange = p } -> A.mk_pattern (A.PatList (hd' :: tl')) p
           | tl' -> resugar_plain_pat_cons' fv [hd'; tl'])
        | args' ->
          Errors.warn p.p
