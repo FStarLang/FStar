@@ -848,10 +848,16 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
        ( noshort,
         "using_facts_from",
         WithSideEffect ((fun () -> set_option "z3refresh" (mk_bool true)),
-                        Accumulated (SimpleStr "namespace | fact id")),
-        "Implies --z3refresh; prunes the context to include facts from the given namespace of fact id \
-         (multiple uses of this option will prune the context to include those \
-         facts that match any of the provided namespaces / fact ids");
+                        Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'")),
+        "\n\t\tImplies --z3refresh; prunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
+         Facts can be include or excluded using the [+|-] qualifier. \n\t\t\t\
+         For example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
+         remove all facts from FStar.List.Tot.*, \n\t\t\t\t\
+         retain all remaining facts from FStar.List.*, \n\t\t\t\t\
+         remove all facts from FStar.Reflection.*, \n\t\t\t\t\
+         and retain all the rest.\n\t\t\
+         Note, the '+' is optional: --using_facts_from 'FStar.List' is equivalent to --using_facts_from '+FStar.List'. \n\t\t\
+         Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
 
        ( noshort,
         "verify_all",
@@ -1222,4 +1228,3 @@ let should_extract m =
 
 let codegen_fsharp () =
     codegen() = Some "FSharp"
-  

@@ -198,7 +198,7 @@ val z3_seed                     : unit    -> int
 val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
 
-val codegen_fsharp              : unit    -> bool 
+val codegen_fsharp              : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the
