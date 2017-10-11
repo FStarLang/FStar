@@ -171,7 +171,6 @@ and metadata =
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
   | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
 and meta_source_info =
-  | Data_app
   | Sequence
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect

@@ -65,6 +65,8 @@ let label s t =
   if s = "" then t
   else A.mk_term (A.Labeled (t,s,true)) t.range A.Un
 
+// FIXME inspect uses of resugar_arg_qual and resugar_imp
+
 (* If resugar_arg_qual returns None, the corresponding binder should *not* be resugared *)
 let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifier>)> =
   match q with
@@ -75,13 +77,12 @@ let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifie
     else Some (Some A.Implicit)
   | Some S.Equality -> Some (Some A.Equality)
 
-let resugar_imp (q:option<S.arg_qualifier>) : option<A.imp> =
+let resugar_imp (q:option<S.arg_qualifier>) : A.imp =
   match q with
-  | None -> Some A.Nothing
-  | Some (S.Implicit false) -> Some A.Hash
+  | None -> A.Nothing
+  | Some (S.Implicit false) -> A.Hash
   | Some S.Equality
-  | Some (S.Implicit true) ->
-    (* We don't have syntax for inaccessible arguments *) None
+  | Some (S.Implicit true) -> A.Nothing // We don't have syntax for inaccessible arguments
 
 let rec universe_to_int n u =
   match u with
@@ -307,11 +308,17 @@ let rec resugar_term (t : S.term) : A.term =
           else
               mk (name a.str t.pos)
     | Tm_uinst(e, universes) ->
-      if (Options.print_universes()) then
-        let e = resugar_term e in
-        List.fold_left(fun acc x -> mk (A.App(acc, resugar_universe x t.pos, A.UnivApp))) e universes
+      let e = resugar_term e in
+      if Options.print_universes() then
+        let univs = List.map (fun x -> resugar_universe x t.pos) universes in
+        match e with
+        | { tm = A.Construct (hd, args); range = r; level = l } ->
+          let args = args @ (List.map (fun u -> (u, A.UnivApp)) univs) in
+          A.mk_term (A.Construct (hd, args)) r l
+        | _ ->
+          List.fold_left (fun acc u -> mk (A.App (acc, u, A.UnivApp))) e univs
       else
-        resugar_term e
+        e
 
     | Tm_constant c ->
       if is_teff t
@@ -383,16 +390,13 @@ let rec resugar_term (t : S.term) : A.term =
             | _::t -> last_three t
       in
       let resugar_as_app e args =
-        let args = args |> List.map (fun (e, qual) -> resugar_term e, qual) in
-        let e = resugar_term e in
-        let res_impl desugared_tm qual =
-          match resugar_imp qual with
-          | Some imp -> imp
-          | None -> Errors.warn t.pos
-                     (BU.format1 "Inaccessible argument %s in function application"
-                                 (parser_term_to_string desugared_tm));
-                   A.Nothing in
-        List.fold_left (fun acc (x, qual) -> mk (A.App(acc, x, res_impl x qual))) e args
+        let args =
+          List.map (fun (e, qual) -> (resugar_term e, resugar_imp qual)) args in
+        match resugar_term e with
+        | { tm = A.Construct (hd, previous_args); range = r; level = l } ->
+          A.mk_term (A.Construct (hd, previous_args @ args)) r l
+        | e ->
+          List.fold_left (fun acc (x, qual) -> mk (A.App (acc, x, qual))) e args
       in
       let args = if Options.print_implicits () then args else filter_imp args
       in
@@ -636,41 +640,6 @@ let rec resugar_term (t : S.term) : A.term =
 
     | Tm_meta(e, m) ->
        let resugar_meta_desugared = function
-          | Data_app ->
-            let rec head_fv_universes_args h = match ((SS.compress h).n) with
-              | Tm_fvar fv -> lid_of_fv fv, [], []
-              | Tm_uinst(h, u) ->
-                let h, uvs, args = head_fv_universes_args h in
-                h, uvs@u, args
-              | Tm_app (head, args) ->
-                let h, uvs, args' = head_fv_universes_args head in
-                h, uvs, args' @ args
-              | _ ->
-                raise (E.Err (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h))))
-            in
-            let head, universes, args =
-              (* the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker *)
-              (* applies monadic_application *)
-              (* TODO : report this Meta_monadic if the right options are set *)
-              try head_fv_universes_args (U.unmeta e) with
-                | E.Err _ ->
-                  raise (E.Error ((BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e))), e.pos))
-            in
-            let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
-            let args =
-              List.filter_map (fun (t, q) ->
-                match resugar_imp q with
-                | Some rimp -> (* Real *) Some (resugar_term t, rimp)
-                | None -> (* Inaccessible *) None) args in
-            let args =
-              // ToDocument doesn't expect uvar that is added by the
-              // typechecker in tuple constructor
-              // TODO: where should be store the universe information?
-              if C.is_tuple_data_lid' head || not (Options.print_universes ()) then
-                  args
-              else universes @ args
-            in
-            mk (A.Construct(head, args))
           | Sequence ->
               let term = resugar_term e in
               let rec resugar_seq t = match t.tm with

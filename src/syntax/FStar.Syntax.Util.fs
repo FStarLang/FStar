@@ -587,10 +587,10 @@ let mk_app f args =
 let mk_data l args =
   match args with
     | [] ->
-      mk (Tm_meta(fvar l Delta_constant (Some Data_ctor), Meta_desugared Data_app)) None (range_of_lid l)
+      mk (fvar l Delta_constant (Some Data_ctor)) None (range_of_lid l)
     | _ ->
       let e = mk_app (fvar l Delta_constant (Some Data_ctor)) args in
-      mk (Tm_meta(e, Meta_desugared Data_app)) None e.pos
+      mk e None e.pos
 
 let mangle_field_name x = mk_ident("__fname__" ^ x.idText, x.idRange)
 let unmangle_field_name x =
