@@ -140,7 +140,7 @@ irreducible let labeled (r:range) (msg:string) (b:Type) = b
 
 (* PURE effect *)
 let pure_pre = Type0
-let pure_post' (a:Type) (pre:pure_pre) = (_:a{pre}) -> GTot Type0 // c.f. #57
+let pure_post' (a:Type) (pre:Type) = (_:a{pre}) -> GTot Type0 // c.f. #57
 let pure_post  (a:Type) = pure_post' a True
 let pure_wp    (a:Type) = pure_post a -> GTot pure_pre
 
@@ -187,8 +187,8 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
 // Note the type of post, which allows to assume the precondition
 // for the well-formedness of the postcondition. c.f. #57
 effect Pure (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-        PURE a
-             (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x)) // pure_wp
+        PURE a (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
+
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
@@ -205,8 +205,7 @@ sub_effect
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
 (* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
 effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
-       GHOST a
-           (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
+       GHOST a (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
 
 assume new type int : Type0
 

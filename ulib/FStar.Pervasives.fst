@@ -8,8 +8,7 @@ new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
 
 effect Div (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-       DIV a
-           (fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
+       DIV a (fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a))
 
 effect Dv (a:Type) =
      DIV a (fun (p:pure_post a) -> (forall (x:a). p x))
@@ -19,7 +18,7 @@ effect Dv (a:Type) =
 effect EXT (a:Type) = Dv a
 
 let st_pre_h   (heap:Type) = heap -> GTot Type0
-let st_post_h' (heap:Type) (a:Type) (pre:Type) = a -> _:heap{pre} -> GTot Type0
+let st_post_h' (heap:Type) (a:Type) (pre:Type) = a -> (_:heap{pre}) -> GTot Type0
 let st_post_h  (heap:Type) (a:Type) = st_post_h' heap a True
 let st_wp_h    (heap:Type) (a:Type) = st_post_h heap a -> Tot (st_pre_h heap)
 
@@ -90,9 +89,9 @@ noeq type result (a:Type) =
 
 (* Effect EXCEPTION *)
 let ex_pre  = Type0
-let ex_post' (a:Type) (pre:ex_pre) = (_:result a{pre}) -> GTot Type0
+let ex_post' (a:Type) (pre:Type) = (_:result a{pre}) -> GTot Type0
 let ex_post  (a:Type) = ex_post' a True
-let ex_wp   (a:Type) = ex_post a -> GTot ex_pre
+let ex_wp    (a:Type) = ex_post a -> GTot ex_pre
 unfold let ex_return   (a:Type) (x:a) (p:ex_post a) : GTot Type0 = p (V x)
 unfold let ex_bind_wp (r1:range) (a:Type) (b:Type)
 		       (wp1:ex_wp a)
@@ -136,15 +135,14 @@ new_effect {
   ; trivial      = ex_trivial
 }
 effect Exn (a:Type) (pre:ex_pre) (post:ex_post' a pre) =
-       EXN a
-         (fun (p:ex_post a) -> pre /\ (forall (r:result a). post r ==> p r)) (* WP *)
+       EXN a (fun (p:ex_post a) -> pre /\ (forall (r:result a). post r ==> p r))
 
 unfold let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
 sub_effect DIV ~> EXN = lift_div_exn
 effect Ex (a:Type) = Exn a True (fun v -> True)
 
 let all_pre_h   (h:Type)           = h -> GTot Type0
-let all_post_h' (h:Type) (a:Type) (pre:Type)  = result a -> _:h{pre} -> GTot Type0
+let all_post_h' (h:Type) (a:Type) (pre:Type)  = result a -> (_:h{pre}) -> GTot Type0
 let all_post_h  (h:Type) (a:Type)  = all_post_h' h a True
 let all_wp_h    (h:Type) (a:Type)  = all_post_h h a -> Tot (all_pre_h h)
 
