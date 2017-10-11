@@ -910,6 +910,7 @@ let set_options (s : string) : tac<unit> =
         fail1 "Setting options `%s` failed (got `Help`?)" s
     )
 
+let top_env     : tac<env>  = bind get (fun ps -> ret <| ps.main_context)
 let cur_env     : tac<env>  = bind cur_goal (fun g -> ret <| g.context)
 let cur_goal'   : tac<term> = bind cur_goal (fun g -> ret <| g.goal_ty)
 let cur_witness : tac<term> = bind cur_goal (fun g -> ret <| g.witness)

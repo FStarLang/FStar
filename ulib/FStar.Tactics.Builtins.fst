@@ -10,6 +10,11 @@ open FStar.Reflection
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 
+assume private val __top_env     : __tac env
+(** [top_env] returns the environment where the tactic started running.
+ * This works even if no goals are present. *)
+let top_env = fun () -> TAC?.reflect __top_env
+
 assume private val __cur_env     : __tac env
 (** [cur_env] returns the current goal's environment *)
 let cur_env = fun () -> TAC?.reflect __cur_env

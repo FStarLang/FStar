@@ -271,6 +271,7 @@ let rec primitive_steps () : list<N.primitive_step> =
                                                       embed_term S.t_term)
                                                   (E.pair_typ S.t_term S.t_term);
 
+      mktac0 "__top_env"       top_env     embed_env RD.fstar_refl_env;
       mktac0 "__cur_env"       cur_env     embed_env RD.fstar_refl_env;
       mktac0 "__cur_goal"      cur_goal'   embed_term S.t_term;
       mktac0 "__cur_witness"   cur_witness embed_term S.t_term;
