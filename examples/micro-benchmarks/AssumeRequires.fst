@@ -25,3 +25,8 @@ open FStar.ST
 
 val get_st : o:(option 'a) -> ST 'a (fun h0 -> Some? o) (fun h0 x h1 -> Some?.v o == x)
 let get_st (Some x) = x
+
+open FStar.HyperHeap.All
+
+val get_all : o:(option 'a) -> All 'a (fun h0 -> Some? o) (fun h0 x h1 -> V (Some?.v o) == x)
+let get_all (Some x) = x
