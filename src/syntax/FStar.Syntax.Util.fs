@@ -106,8 +106,9 @@ let rec unmeta_safe e =
         | Tm_meta(e', m) ->
             begin match m with
             | Meta_monadic _
-            | Meta_monadic_lift _ ->
-              e // don't remove monadic metas
+            | Meta_monadic_lift _
+            | Meta_alien _ ->
+              e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
             end
         | Tm_ascribed(e, _, _) -> unmeta_safe e

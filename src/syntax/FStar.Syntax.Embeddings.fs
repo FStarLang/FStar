@@ -24,13 +24,13 @@ type unembedder<'a> = term -> option<'a>
 // unembed: interpreting a term as a value, which might fail (userland -> compiler internals)
 
 let embed_unit (rng:range) (u:unit) : term = { U.exp_unit with pos = rng }
-let __unembed_unit (w:bool) (t:term) : option<unit> =
-    let t = U.unascribe t in
+let __unembed_unit (w:bool) (t0:term) : option<unit> =
+    let t = U.unascribe t0 in
     match t.n with
     | S.Tm_constant C.Const_unit -> Some ()
     | _ ->
         if w then
-        Err.warn t.pos (BU.format1 "Not an embedded unit: %s" (Print.term_to_string t));
+        Err.warn t0.pos (BU.format1 "Not an embedded unit: %s" (Print.term_to_string t));
         None
 
 (* These two, and every other unembedder, need to be eta-expanded
@@ -42,12 +42,13 @@ let embed_bool (rng:range) (b:bool) : term =
     let t = if b then U.exp_true_bool else U.exp_false_bool in
     { t with pos = rng }
 
-let __unembed_bool (w:bool) (t:term) : option<bool> =
-    match (SS.compress (U.unmeta t)).n with
+let __unembed_bool (w:bool) (t0:term) : option<bool> =
+    let t = U.unmeta_safe t0 in
+    match t.n with
     | Tm_constant(FStar.Const.Const_bool b) -> Some b
     | _ ->
         if w then
-        Err.warn t.pos (BU.format1 "Not an embedded bool: %s" (Print.term_to_string t));
+        Err.warn t0.pos (BU.format1 "Not an embedded bool: %s" (Print.term_to_string t0));
         None
 
 let unembed_bool      t = __unembed_bool true  t
@@ -57,12 +58,13 @@ let embed_char (rng:range) (c:char) : term =
     let t = U.exp_char c in
     { t with pos = rng }
 
-let __unembed_char (w:bool) (t:term) : option<char> =
-    match (SS.compress (U.unmeta t)).n with
+let __unembed_char (w:bool) (t0:term) : option<char> =
+    let t = U.unmeta_safe t0 in
+    match t.n with
     | Tm_constant(FStar.Const.Const_char c) -> Some c
     | _ ->
         if w then
-        Err.warn t.pos (BU.format1 "Not an embedded char: %s" (Print.term_to_string t));
+        Err.warn t0.pos (BU.format1 "Not an embedded char: %s" (Print.term_to_string t0));
         None
 
 let unembed_char      t = __unembed_char true  t
@@ -72,14 +74,15 @@ let embed_int (rng:range) (i:int) : term =
     let t = U.exp_int (BU.string_of_int i) in
     { t with pos = rng }
 
-let __unembed_int (w:bool) (t:term) : option<int> =
+let __unembed_int (w:bool) (t0:term) : option<int> =
+    let t = U.unmeta_safe t0 in
     // What's the portable solution? Let's do this for now
-    match (SS.compress (U.unmeta t)).n with
+    match t.n with
     | Tm_constant(FStar.Const.Const_int (s, _)) ->
         Some (BU.int_of_string s)
     | _ ->
         if w then
-        Err.warn t.pos (BU.format1 "Not an embedded int: %s" (Print.term_to_string t));
+        Err.warn t0.pos (BU.format1 "Not an embedded int: %s" (Print.term_to_string t0));
         None
 
 let unembed_int      t = __unembed_int true  t
@@ -90,13 +93,13 @@ let embed_string (rng:range) (s:string) : term =
          None
          rng
 
-let __unembed_string (w:bool) (t:term) : option<string> =
-    let t = U.unmeta t in
+let __unembed_string (w:bool) (t0:term) : option<string> =
+    let t = U.unmeta_safe t0 in
     match t.n with
     | Tm_constant(FStar.Const.Const_string(s, _)) -> Some s
     | _ ->
         if w then
-        Err.warn t.pos (BU.format1 "Not an embedded string: %s" (Print.term_to_string t));
+        Err.warn t0.pos (BU.format1 "Not an embedded string: %s" (Print.term_to_string t0));
         None
 
 let unembed_string      t = __unembed_string true  t
@@ -116,8 +119,8 @@ let embed_pair (embed_a:embedder<'a>) (t_a:term)
 let __unembed_pair (w:bool)
                    (unembed_a:unembedder<'a>)
                    (unembed_b:unembedder<'b>)
-                   (t:term) : option<('a * 'b)> =
-    let t = U.unmeta t in
+                   (t0:term) : option<('a * 'b)> =
+    let t = U.unmeta_safe t0 in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
@@ -126,7 +129,7 @@ let __unembed_pair (w:bool)
         Some (a, b)))
     | _ ->
         if w then
-        Err.warn t.pos (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t));
+        Err.warn t0.pos (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t0));
         None
 
 let unembed_pair      ul ur t = __unembed_pair true  ul ur t
@@ -143,16 +146,17 @@ let embed_option (embed_a:embedder<'a>) (typ:term) (rng:range) (o:option<'a>) : 
                   [S.iarg typ; S.as_arg (embed_a rng a)]
                   None rng
 
-let __unembed_option (w:bool) (unembed_a:unembedder<'a>) (t:term) : option<option<'a>> =
-   let hd, args = U.head_and_args (U.unmeta t) in
-   match (U.un_uinst hd).n, args with
-   | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
-   | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
-        BU.bind_opt (unembed_a a) (fun a -> Some (Some a))
-   | _ ->
-        if w then
-        Err.warn t.pos (BU.format1 "Not an embedded option: %s" (Print.term_to_string t));
-        None
+let __unembed_option (w:bool) (unembed_a:unembedder<'a>) (t0:term) : option<option<'a>> =
+    let t = U.unmeta_safe t0 in
+    let hd, args = U.head_and_args t in
+    match (U.un_uinst hd).n, args with
+    | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
+    | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
+         BU.bind_opt (unembed_a a) (fun a -> Some (Some a))
+    | _ ->
+         if w then
+         Err.warn t0.pos (BU.format1 "Not an embedded option: %s" (Print.term_to_string t0));
+         None
 
 let unembed_option      ua t = __unembed_option true  ua t
 let unembed_option_safe ua t = __unembed_option false ua t
@@ -171,8 +175,8 @@ let rec embed_list (embed_a:embedder<'a>) (typ:term) (rng:range) (l:list<'a>) : 
                         None
                         rng
 
-let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t:term) : option<list<'a>> =
-    let t = U.unmeta t in
+let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t0:term) : option<list<'a>> =
+    let t = U.unmeta_safe t0 in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, _
@@ -185,7 +189,7 @@ let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t:term) : option<li
         Some (hd :: tl)))
     | _ ->
         if w then
-        Err.warn t.pos (BU.format1 "Not an embedded list: %s" (Print.term_to_string t));
+        Err.warn t0.pos (BU.format1 "Not an embedded list: %s" (Print.term_to_string t0));
         None
 
 let unembed_list      ua t = __unembed_list true  ua t
@@ -232,8 +236,8 @@ let embed_norm_step (rng:range) (n:norm_step) : term =
         S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed_list embed_string S.t_string rng l)]
                     None rng
 
-let __unembed_norm_step (w:bool) (t:term) : option<norm_step> =
-    let t = U.unascribe t in
+let __unembed_norm_step (w:bool) (t0:term) : option<norm_step> =
+    let t = U.unmeta_safe t0 in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
@@ -253,7 +257,7 @@ let __unembed_norm_step (w:bool) (t:term) : option<norm_step> =
         Some <| UnfoldOnly ss)
     | _ ->
         if w then
-        Err.warn t.pos (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t));
+        Err.warn t0.pos (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0));
         None
 
 let unembed_norm_step      t = __unembed_norm_step true  t
@@ -262,12 +266,13 @@ let unembed_norm_step_safe t = __unembed_norm_step false t
 let embed_range (rng:range) (r:range) : term =
     S.mk (Tm_constant (C.Const_range r)) None rng
 
-let __unembed_range (w:bool) (t:term) : option<range> =
+let __unembed_range (w:bool) (t0:term) : option<range> =
+    let t = U.unmeta_safe t0 in
     match t.n with
     | Tm_constant (C.Const_range r) -> Some r
     | _ ->
         if w then
-        Err.warn t.pos (BU.format1 "Not an embedded range: %s" (Print.term_to_string t));
+        Err.warn t0.pos (BU.format1 "Not an embedded range: %s" (Print.term_to_string t0));
         None
 
 let unembed_range      t = __unembed_range true  t
