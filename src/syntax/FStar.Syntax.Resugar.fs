@@ -248,6 +248,9 @@ let is_wild_pat (p:S.pat) : bool = match p.v with
     | Pat_wild _ -> true
     | _ -> false
 
+let is_tuple_constructor_lid lid =
+  C.is_tuple_data_lid' lid || C.is_dtuple_data_lid' lid
+
 let rec resugar_term (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
     let mk (a:A.term') : A.term =
@@ -817,9 +820,6 @@ and resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
              is_implicit && might_be_used) args) in
   let resugar_plain_pat_cons' fv args =
     mk (A.PatApp (mk (A.PatName fv.fv_name.v), args)) in
-  let is_tuple_constructor_fv fv =
-      C.is_tuple_data_lid' fv.fv_name.v
-    || C.is_dtuple_data_lid' fv.fv_name.v in
   let rec resugar_plain_pat_cons fv args =
     let args =
       if may_drop_implicits args
@@ -854,7 +854,7 @@ and resugar_pat (p:S.pat) (branch_bv: set<bv>) : A.pattern =
              (string_of_int (List.length args')));
          resugar_plain_pat_cons fv args)
 
-    | Pat_cons(fv, args) when (is_tuple_constructor_fv fv
+    | Pat_cons(fv, args) when (is_tuple_constructor_lid fv.fv_name.v
                                && may_drop_implicits args) ->
       let args =
         args |>
