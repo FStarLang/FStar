@@ -608,24 +608,21 @@ let pow2_modulo_modulo_lemma_2 a b c =
   pow2_le_compat b c;
   small_modulo_lemma_1 (a % pow2 c) (pow2 b)
 
-
-////////////////////////////////////////
-
-val modulo_add : p:pos -> a:nat -> b:nat -> c:nat -> Lemma
+private val modulo_add : p:pos -> a:nat -> b:nat -> c:nat -> Lemma
   (requires (b % p = c % p))
   (ensures  ((a + b) % p = (a + c) % p))
-let modulo_add p a b c =
+private let modulo_add p a b c =
   modulo_distributivity a b p;
   modulo_distributivity a c p
 
-val modulo_sub : p:pos -> a:nat -> b:nat -> c:nat -> Lemma
+private val lemma_mod_twice : a:nat -> p:pos -> Lemma ((a % p) % p == a % p)
+private let lemma_mod_twice a p = lemma_mod_mod (a % p) a p
+
+private val modulo_sub : p:pos -> a:nat -> b:nat -> c:nat -> Lemma
   (requires ((a + b) % p = (a + c) % p))
   (ensures (b % p = c % p))
 
-val lemma_mod_twice : a:nat -> p:pos -> Lemma ((a % p) % p == a % p)
-let lemma_mod_twice a p = lemma_mod_mod (a % p) a p
-
-let modulo_sub p a b c =
+private let modulo_sub p a b c =
   modulo_distributivity a b p;
   modulo_distributivity a c p;
   // have : (a % p + b % p) % p = (a % p + c % p) % p
