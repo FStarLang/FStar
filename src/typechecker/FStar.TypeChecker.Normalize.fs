@@ -1143,9 +1143,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
               | Match _ :: _
               | Arg _ :: _
               | App ({n=Tm_constant FC.Const_reify}, _, _) :: _
-              | MemoLazy _ :: _ -> norm cfg env stack t1 //ascriptions should not block reduction
+              | MemoLazy _ :: _ ->
+                log cfg  (fun () -> BU.print_string "+++ Dropping ascription \n");
+                norm cfg env stack t1 //ascriptions should not block reduction
               | _ ->
                 (* Drops stack *)
+                log cfg  (fun () -> BU.print_string "+++ Keeping ascription \n");
                 let t1 = norm cfg env [] t1 in
                 log cfg  (fun () -> BU.print_string "+++ Normalizing ascription \n");
                 let tc = match tc with
