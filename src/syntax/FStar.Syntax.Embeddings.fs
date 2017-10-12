@@ -15,6 +15,7 @@ module U = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Ident = FStar.Ident
 module Err = FStar.Errors
+open FStar.Char
 
 type embedder<'a>   = range -> 'a -> term
 type unembedder<'a> = term -> option<'a>
@@ -51,6 +52,21 @@ let __unembed_bool (w:bool) (t:term) : option<bool> =
 
 let unembed_bool      t = __unembed_bool true  t
 let unembed_bool_safe t = __unembed_bool false t
+
+let embed_char (rng:range) (c:char) : term =
+    let t = U.exp_char c in
+    { t with pos = rng }
+
+let __unembed_char (w:bool) (t:term) : option<char> =
+    match (SS.compress (U.unmeta t)).n with
+    | Tm_constant(FStar.Const.Const_char c) -> Some c
+    | _ ->
+        if w then
+        Err.warn t.pos (BU.format1 "Not an embedded char: %s" (Print.term_to_string t));
+        None
+
+let unembed_char      t = __unembed_char true  t
+let unembed_char_safe t = __unembed_char false t
 
 let embed_int (rng:range) (i:int) : term =
     let t = U.exp_int (BU.string_of_int i) in

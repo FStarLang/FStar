@@ -3,6 +3,8 @@ module FStar.Syntax.Embeddings
 
 open FStar.All
 open FStar.Syntax.Syntax
+open FStar.Char
+
 module Range = FStar.Range
 
 (*
@@ -26,6 +28,10 @@ val unembed_unit_safe : unembedder<unit>
 val embed_bool        : embedder<bool>
 val unembed_bool      : unembedder<bool>
 val unembed_bool_safe : unembedder<bool>
+
+val embed_char        : embedder<char>
+val unembed_char      : unembedder<char>
+val unembed_char_safe : unembedder<char>
 
 val embed_int        : embedder<int>
 val unembed_int      : unembedder<int>

@@ -863,6 +863,7 @@ let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
 let exp_unit : term = mk (Tm_constant (Const_unit)) None dummyRange
 (* Makes an (unbounded) integer from its string repr. *)
 let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
+let exp_char c : term = mk (Tm_constant (Const_char c)) None dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) None dummyRange
 
 let fvar_const l = fvar l Delta_constant None
