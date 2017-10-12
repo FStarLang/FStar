@@ -16,7 +16,7 @@ module Range = FStar.Range
  * a propert well-typed term.
  *)
 
-type embedder<'a> = 'a -> term
+type embedder<'a>   = Range.range -> 'a -> term
 type unembedder<'a> = term -> option<'a>
 
 val embed_unit        : embedder<unit>

@@ -18,7 +18,7 @@ let int1 (m:lid) (f:'a -> 'b) (ua:unembedder<'a>) (em:embedder<'b>)
     match args with
     | [(a, _)] ->
         BU.bind_opt (ua a) (fun a ->
-        Some (em (f a)))
+        Some (em r (f a)))
     | _ -> None
 
 let int2 (m:lid) (f:'a -> 'b -> 'c) (ua:unembedder<'a>) (ub:unembedder<'b>) (em:embedder<'c>)
@@ -27,7 +27,7 @@ let int2 (m:lid) (f:'a -> 'b -> 'c) (ua:unembedder<'a>) (ub:unembedder<'b>) (em:
     | [(a, _); (b, _)] ->
         BU.bind_opt (ua a) (fun a ->
         BU.bind_opt (ub b) (fun b ->
-        Some (em (f a b))))
+        Some (em r (f a b))))
     | _ -> None
 
 let reflection_primops : list<N.primitive_step> =

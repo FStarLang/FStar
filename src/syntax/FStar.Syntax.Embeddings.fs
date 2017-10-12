@@ -3,25 +3,26 @@ module FStar.Syntax.Embeddings
 
 open FStar.All
 open FStar.Syntax.Syntax
+open FStar.Range
+
 module Print = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
 module C = FStar.Const
 module PC = FStar.Parser.Const
 module SS = FStar.Syntax.Subst
 module BU = FStar.Util
-module Range = FStar.Range
 module U = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Ident = FStar.Ident
 module Err = FStar.Errors
 
-type embedder<'a> = 'a -> term
+type embedder<'a>   = range -> 'a -> term
 type unembedder<'a> = term -> option<'a>
 
 // embed: turning a value into a term (compiler internals -> userland)
 // unembed: interpreting a term as a value, which might fail (userland -> compiler internals)
 
-let embed_unit (u:unit) : term = U.exp_unit
+let embed_unit (rng:range) (u:unit) : term = { U.exp_unit with pos = rng }
 let __unembed_unit (w:bool) (t:term) : option<unit> =
     let t = U.unascribe t in
     match t.n with
@@ -36,7 +37,10 @@ let __unembed_unit (w:bool) (t:term) : option<unit> =
 let unembed_unit      t = __unembed_unit true  t
 let unembed_unit_safe t = __unembed_unit false t
 
-let embed_bool (b:bool) : term = if b then U.exp_true_bool else U.exp_false_bool
+let embed_bool (rng:range) (b:bool) : term =
+    let t = if b then U.exp_true_bool else U.exp_false_bool in
+    { t with pos = rng }
+
 let __unembed_bool (w:bool) (t:term) : option<bool> =
     match (SS.compress (U.unmeta t)).n with
     | Tm_constant(FStar.Const.Const_bool b) -> Some b
@@ -48,7 +52,10 @@ let __unembed_bool (w:bool) (t:term) : option<bool> =
 let unembed_bool      t = __unembed_bool true  t
 let unembed_bool_safe t = __unembed_bool false t
 
-let embed_int (i:int) : term = U.exp_int (BU.string_of_int i)
+let embed_int (rng:range) (i:int) : term =
+    let t = U.exp_int (BU.string_of_int i) in
+    { t with pos = rng }
+
 let __unembed_int (w:bool) (t:term) : option<int> =
     // What's the portable solution? Let's do this for now
     match (SS.compress (U.unmeta t)).n with
@@ -62,10 +69,10 @@ let __unembed_int (w:bool) (t:term) : option<int> =
 let unembed_int      t = __unembed_int true  t
 let unembed_int_safe t = __unembed_int false t
 
-let embed_string (s:string) : term =
-    S.mk (Tm_constant(FStar.Const.Const_string(s, Range.dummyRange)))
+let embed_string (rng:range) (s:string) : term =
+    S.mk (Tm_constant(FStar.Const.Const_string(s, rng)))
          None
-         Range.dummyRange
+         rng
 
 let __unembed_string (w:bool) (t:term) : option<string> =
     let t = U.unmeta t in
@@ -81,14 +88,14 @@ let unembed_string_safe t = __unembed_string false t
 
 let embed_pair (embed_a:embedder<'a>) (t_a:term)
                (embed_b:embedder<'b>) (t_b:term)
-               (x:('a * 'b)) : term =
+               (rng:range) (x:('a * 'b)) : term =
     S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.lid_Mktuple2) [U_zero;U_zero])
                 [S.iarg t_a;
                  S.iarg t_b;
-                 S.as_arg (embed_a (fst x));
-                 S.as_arg (embed_b (snd x))]
+                 S.as_arg (embed_a rng (fst x));
+                 S.as_arg (embed_b rng (snd x))]
                 None
-                Range.dummyRange
+                rng
 
 let __unembed_pair (w:bool)
                    (unembed_a:unembedder<'a>)
@@ -109,16 +116,16 @@ let __unembed_pair (w:bool)
 let unembed_pair      ul ur t = __unembed_pair true  ul ur t
 let unembed_pair_safe ul ur t = __unembed_pair false ul ur t
 
-let embed_option (embed_a:embedder<'a>) (typ:term) (o:option<'a>) : term =
+let embed_option (embed_a:embedder<'a>) (typ:term) (rng:range) (o:option<'a>) : term =
     match o with
     | None ->
       S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.none_lid) [U_zero])
                   [S.iarg typ]
-                  None Range.dummyRange
+                  None rng
     | Some a ->
       S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.some_lid) [U_zero])
-                  [S.iarg typ; S.as_arg (embed_a a)]
-                  None Range.dummyRange
+                  [S.iarg typ; S.as_arg (embed_a rng a)]
+                  None rng
 
 let __unembed_option (w:bool) (unembed_a:unembedder<'a>) (t:term) : option<option<'a>> =
    let hd, args = U.head_and_args (U.unmeta t) in
@@ -134,19 +141,19 @@ let __unembed_option (w:bool) (unembed_a:unembedder<'a>) (t:term) : option<optio
 let unembed_option      ua t = __unembed_option true  ua t
 let unembed_option_safe ua t = __unembed_option false ua t
 
-let rec embed_list (embed_a:embedder<'a>) (typ:term) (l:list<'a>) : term =
+let rec embed_list (embed_a:embedder<'a>) (typ:term) (rng:range) (l:list<'a>) : term =
     match l with
     | [] -> S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.nil_lid) [U_zero])
                         [S.iarg typ]
                         None
-                        Range.dummyRange
+                        rng
     | hd::tl ->
             S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.cons_lid) [U_zero])
                         [S.iarg typ;
-                         S.as_arg (embed_a hd);
-                         S.as_arg (embed_list embed_a typ tl)]
+                         S.as_arg (embed_a rng hd);
+                         S.as_arg (embed_list embed_a typ rng tl)]
                         None
-                        Range.dummyRange
+                        rng
 
 let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t:term) : option<list<'a>> =
     let t = U.unmeta t in
@@ -169,7 +176,7 @@ let unembed_list      ua t = __unembed_list true  ua t
 let unembed_list_safe ua t = __unembed_list false ua t
 
 // Commonly called
-let embed_string_list ss       = embed_list embed_string S.t_string ss
+let embed_string_list rng ss   = embed_list embed_string S.t_string rng ss
 let unembed_string_list      t = unembed_list unembed_string t
 let unembed_string_list_safe t = unembed_list_safe unembed_string_safe t
 
@@ -191,7 +198,7 @@ let steps_Zeta       = tdataconstr PC.steps_zeta
 let steps_Iota       = tdataconstr PC.steps_iota
 let steps_UnfoldOnly = tdataconstr PC.steps_unfoldonly
 
-let embed_norm_step (n:norm_step) : term =
+let embed_norm_step (rng:range) (n:norm_step) : term =
     match n with
     | Simpl ->
         steps_Simpl
@@ -206,8 +213,8 @@ let embed_norm_step (n:norm_step) : term =
     | Iota ->
         steps_Iota
     | UnfoldOnly l ->
-        S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed_list embed_string S.t_string l)]
-                    None Range.dummyRange
+        S.mk_Tm_app steps_UnfoldOnly [S.as_arg (embed_list embed_string S.t_string rng l)]
+                    None rng
 
 let __unembed_norm_step (w:bool) (t:term) : option<norm_step> =
     let t = U.unascribe t in
@@ -236,10 +243,10 @@ let __unembed_norm_step (w:bool) (t:term) : option<norm_step> =
 let unembed_norm_step      t = __unembed_norm_step true  t
 let unembed_norm_step_safe t = __unembed_norm_step false t
 
-let embed_range (r:Range.range) : term =
-    S.mk (Tm_constant (C.Const_range r)) None r
+let embed_range (rng:range) (r:range) : term =
+    S.mk (Tm_constant (C.Const_range r)) None rng
 
-let __unembed_range (w:bool) (t:term) : option<Range.range> =
+let __unembed_range (w:bool) (t:term) : option<range> =
     match t.n with
     | Tm_constant (C.Const_range r) -> Some r
     | _ ->
