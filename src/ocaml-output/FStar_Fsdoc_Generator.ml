@@ -67,7 +67,7 @@ let string_of_tycon: FStar_Parser_AST.tycon -> Prims.string =
     match tycon with
     | FStar_Parser_AST.TyconAbstract uu____246 -> "abstract"
     | FStar_Parser_AST.TyconAbbrev uu____257 -> "abbrev"
-    | FStar_Parser_AST.TyconRecord (id,_bb,_ko,fields) ->
+    | FStar_Parser_AST.TyconRecord (id1,_bb,_ko,fields) ->
         let uu____302 =
           let uu____303 =
             let uu____304 =
@@ -76,20 +76,20 @@ let string_of_tycon: FStar_Parser_AST.tycon -> Prims.string =
                   (FStar_List.map
                      (fun uu____344  ->
                         match uu____344 with
-                        | (id1,t,doco) ->
+                        | (id2,t,doco) ->
                             let uu____390 = string_of_fsdoco doco in
                             let uu____391 =
                               let uu____392 =
                                 let uu____393 =
                                   FStar_Parser_AST.term_to_string t in
                                 Prims.strcat ":" uu____393 in
-                              Prims.strcat id1.FStar_Ident.idText uu____392 in
+                              Prims.strcat id2.FStar_Ident.idText uu____392 in
                             Prims.strcat uu____390 uu____391)) in
               FStar_All.pipe_right uu____305 (FStar_String.concat "; ") in
             Prims.strcat uu____304 " }" in
           Prims.strcat " = { " uu____303 in
-        Prims.strcat id.FStar_Ident.idText uu____302
-    | FStar_Parser_AST.TyconVariant (id,_bb,_ko,vars) ->
+        Prims.strcat id1.FStar_Ident.idText uu____302
+    | FStar_Parser_AST.TyconVariant (id1,_bb,_ko,vars) ->
         let uu____436 =
           let uu____437 =
             let uu____438 =
@@ -97,7 +97,7 @@ let string_of_tycon: FStar_Parser_AST.tycon -> Prims.string =
                 (FStar_List.map
                    (fun uu____486  ->
                       match uu____486 with
-                      | (id1,trmo,doco,u) ->
+                      | (id2,trmo,doco,u) ->
                           let uu____541 = string_of_fsdoco doco in
                           let uu____542 =
                             let uu____543 =
@@ -105,11 +105,11 @@ let string_of_tycon: FStar_Parser_AST.tycon -> Prims.string =
                                 string_of_optiont
                                   FStar_Parser_AST.term_to_string "" trmo in
                               Prims.strcat ":" uu____544 in
-                            Prims.strcat id1.FStar_Ident.idText uu____543 in
+                            Prims.strcat id2.FStar_Ident.idText uu____543 in
                           Prims.strcat uu____541 uu____542)) in
             FStar_All.pipe_right uu____438 (FStar_String.concat " | ") in
           Prims.strcat " = " uu____437 in
-        Prims.strcat id.FStar_Ident.idText uu____436
+        Prims.strcat id1.FStar_Ident.idText uu____436
 let string_of_decl': FStar_Parser_AST.decl' -> Prims.string =
   fun d  ->
     match d with
