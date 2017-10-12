@@ -8,6 +8,8 @@ INCLUDES=$(addprefix -I $(OCAML_OUTPUT)/_build/, src/tactics/ml ulib/ml src/ocam
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
+# The cache is shared and the tests can interactly badly.
+.NOTPARALLEL:
 .PRECIOUS: _cache/%.cmxs
 .PHONY: %.test fstartaclib
 
@@ -21,7 +23,7 @@ $(FSTARTACLIB):
 $(CACHE):
 	mkdir $@
 
-$(CACHE)/%.cmxs: %.Test.fst $(FSTARTACLIB) $(CACHE)
+$(CACHE)/%.cmxs: %.Test.fst $(FSTARTACLIB) | $(CACHE)
 	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE) $<
 
 %.test: %.Test.fst $(CACHE)/%.cmxs
