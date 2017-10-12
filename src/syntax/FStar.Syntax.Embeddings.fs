@@ -15,6 +15,9 @@ module UF = FStar.Syntax.Unionfind
 module Ident = FStar.Ident
 module Err = FStar.Errors
 
+type embedder<'a> = 'a -> term
+type unembedder<'a> = term -> option<'a>
+
 // embed: turning a value into a term (compiler internals -> userland)
 // unembed: interpreting a term as a value, which might fail (userland -> compiler internals)
 
@@ -28,6 +31,8 @@ let __unembed_unit (w:bool) (t:term) : option<unit> =
         Err.warn t.pos (BU.format1 "Not an embedded unit: %s" (Print.term_to_string t));
         None
 
+(* These two, and every other unembedder, need to be eta-expanded
+ * because F# is stupid about this *)
 let unembed_unit      t = __unembed_unit true  t
 let unembed_unit_safe t = __unembed_unit false t
 
@@ -74,8 +79,8 @@ let __unembed_string (w:bool) (t:term) : option<string> =
 let unembed_string      t = __unembed_string true  t
 let unembed_string_safe t = __unembed_string false t
 
-let embed_pair (embed_a:'a -> term) (t_a:term)
-               (embed_b:'b -> term) (t_b:term)
+let embed_pair (embed_a:embedder<'a>) (t_a:term)
+               (embed_b:embedder<'b>) (t_b:term)
                (x:('a * 'b)) : term =
     S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.lid_Mktuple2) [U_zero;U_zero])
                 [S.iarg t_a;
@@ -86,8 +91,8 @@ let embed_pair (embed_a:'a -> term) (t_a:term)
                 Range.dummyRange
 
 let __unembed_pair (w:bool)
-                   (unembed_a:term -> option<'a>)
-                   (unembed_b:term -> option<'b>)
+                   (unembed_a:unembedder<'a>)
+                   (unembed_b:unembedder<'b>)
                    (t:term) : option<('a * 'b)> =
     let t = U.unmeta t in
     let hd, args = U.head_and_args t in
@@ -104,7 +109,7 @@ let __unembed_pair (w:bool)
 let unembed_pair      ul ur t = __unembed_pair true  ul ur t
 let unembed_pair_safe ul ur t = __unembed_pair false ul ur t
 
-let embed_option (embed_a:'a -> term) (typ:term) (o:option<'a>) : term =
+let embed_option (embed_a:embedder<'a>) (typ:term) (o:option<'a>) : term =
     match o with
     | None ->
       S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.none_lid) [U_zero])
@@ -115,7 +120,7 @@ let embed_option (embed_a:'a -> term) (typ:term) (o:option<'a>) : term =
                   [S.iarg typ; S.as_arg (embed_a a)]
                   None Range.dummyRange
 
-let __unembed_option (w:bool) (unembed_a:term -> option<'a>) (t:term) : option<option<'a>> =
+let __unembed_option (w:bool) (unembed_a:unembedder<'a>) (t:term) : option<option<'a>> =
    let hd, args = U.head_and_args (U.unmeta t) in
    match (U.un_uinst hd).n, args with
    | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
@@ -129,7 +134,7 @@ let __unembed_option (w:bool) (unembed_a:term -> option<'a>) (t:term) : option<o
 let unembed_option      ua t = __unembed_option true  ua t
 let unembed_option_safe ua t = __unembed_option false ua t
 
-let rec embed_list (embed_a: ('a -> term)) (typ:term) (l:list<'a>) : term =
+let rec embed_list (embed_a:embedder<'a>) (typ:term) (l:list<'a>) : term =
     match l with
     | [] -> S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.nil_lid) [U_zero])
                         [S.iarg typ]
@@ -143,7 +148,7 @@ let rec embed_list (embed_a: ('a -> term)) (typ:term) (l:list<'a>) : term =
                         None
                         Range.dummyRange
 
-let rec __unembed_list (w:bool) (unembed_a: term -> option<'a>) (t:term) : option<list<'a>> =
+let rec __unembed_list (w:bool) (unembed_a: unembedder<'a>) (t:term) : option<list<'a>> =
     let t = U.unmeta t in
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
