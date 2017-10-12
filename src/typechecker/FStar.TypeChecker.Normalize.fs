@@ -450,64 +450,17 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 let built_in_primitive_steps : list<primitive_step> =
-    let const_as_tm c p = mk (Tm_constant c) p in
-    let int_as_const  : Range.range -> int  -> term =
-        fun p i -> const_as_tm (FC.Const_int (BU.string_of_int i, None)) p
-    in
-    let bool_as_const : Range.range -> bool -> term =
-        fun p b -> const_as_tm (FC.Const_bool b) p
-    in
-    let string_as_const : Range.range -> string -> term =
-        fun p b -> const_as_tm (FC.Const_string (b, p)) p
-    in
-    let arg_as_int (a, _) : option<int> =
-        match (SS.compress a).n with
-        | Tm_constant (FC.Const_int(i, None)) ->
-          Some (BU.int_of_string i)
-        | _ ->
-          None
-    in
+    let arg_as_int    (a:arg) = fst a |> EMB.unembed_int_safe in
+    let arg_as_bool   (a:arg) = fst a |> EMB.unembed_bool_safe in
+    let arg_as_char   (a:arg) = fst a |> EMB.unembed_char_safe in
+    let arg_as_string (a:arg) = fst a |> EMB.unembed_string_safe in
+    let arg_as_list (u : EMB.unembedder<'a>) a = fst a |> EMB.unembed_list_safe u in
     let arg_as_bounded_int (a, _) : option<(fv * int)> =
         match (SS.compress a).n with
         | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
             when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
           Some (fv1, BU.int_of_string i)
         | _ -> None
-    in
-    let arg_as_bool (a, _) : option<bool> =
-        match (SS.compress a).n with
-        | Tm_constant (FC.Const_bool b) ->
-          Some b
-        | _ ->
-          None
-    in
-    let arg_as_char (a, _) : option<char> =
-        match (SS.compress a).n with
-        | Tm_constant (Const_char c) ->
-          Some c
-        | _ ->
-          None
-    in
-    let arg_as_string (a, _) : option<string> =
-        match (SS.compress a).n with
-        | Tm_constant (FC.Const_string(s, _)) ->
-          Some s
-        | _ ->
-          None
-    in
-    let arg_as_list (f : arg -> option<'a>) (a, _) : option<list<'a>> =
-        let rec sequence (l:list<option<'a>>) : option<list<'a>> =
-            match l with
-            | [] -> Some []
-            | None::_ -> None
-            | Some x::xs -> begin match sequence xs with
-                            | None -> None
-                            | Some xs' -> Some (x::xs')
-                            end
-        in
-        match U.list_elements a with
-        | None -> None
-        | Some elts -> sequence (List.map (fun x -> f (as_arg x)) elts)
     in
     let lift_unary
         : ('a -> 'b) -> list<option<'a>> ->option<'b>
@@ -546,19 +499,19 @@ let built_in_primitive_steps : list<primitive_step> =
         interpretation=f
     } in
     let unary_int_op (f:int -> int) =
-        unary_op arg_as_int (fun r x -> int_as_const r (f x))
+        unary_op arg_as_int (fun r x -> EMB.embed_int r (f x))
     in
     let binary_int_op (f:int -> int -> int) =
-        binary_op arg_as_int (fun r x y -> int_as_const r (f x y))
+        binary_op arg_as_int (fun r x y -> EMB.embed_int r (f x y))
     in
     let unary_bool_op (f:bool -> bool) =
-        unary_op arg_as_bool (fun r x -> bool_as_const r (f x))
+        unary_op arg_as_bool (fun r x -> EMB.embed_bool r (f x))
     in
     let binary_bool_op (f:bool -> bool -> bool) =
-        binary_op arg_as_bool (fun r x y -> bool_as_const r (f x y))
+        binary_op arg_as_bool (fun r x y -> EMB.embed_bool r (f x y))
     in
     let binary_string_op (f : string -> string -> string) =
-        binary_op arg_as_string (fun r x y -> string_as_const r (f x y))
+        binary_op arg_as_string (fun r x y -> EMB.embed_string r (f x y))
     in
     let list_of_string' rng (s:string) : term =
         let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
@@ -572,17 +525,17 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let string_compare' rng (s1:string) (s2:string) : term =
         let r = String.compare s1 s2 in
-        int_as_const rng r
+        EMB.embed_int rng r
     in
     let string_concat' rng args : option<term> =
         match args with
         | [a1; a2] ->
             begin match arg_as_string a1 with
             | Some s1 ->
-                begin match arg_as_list arg_as_string a2 with
+                begin match arg_as_list EMB.unembed_string_safe a2 with
                 | Some s2 ->
                     let r = String.concat s1 s2 in
-                    Some (string_as_const rng r)
+                    Some (EMB.embed_string rng r)
                 | _ -> None
                 end
             | _ -> None
@@ -590,16 +543,16 @@ let built_in_primitive_steps : list<primitive_step> =
         | _ -> None
     in
     let string_of_int rng (i:int) : term =
-        string_as_const rng (BU.string_of_int i)
+        EMB.embed_string rng (BU.string_of_int i)
     in
     let string_of_bool rng (b:bool) : term =
-        string_as_const rng (if b then "true" else "false")
+        EMB.embed_string rng (if b then "true" else "false")
     in
     let string_of_int rng (i:int) : term =
-        string_as_const rng (BU.string_of_int i)
+        EMB.embed_string rng (BU.string_of_int i)
     in
     let string_of_bool rng (b:bool) : term =
-        string_as_const rng (if b then "true" else "false")
+        EMB.embed_string rng (if b then "true" else "false")
     in
     let term_of_range r = S.mk (Tm_constant (FStar.Const.Const_range r)) None r in
     let range_of _ args : option<term> =
@@ -611,7 +564,7 @@ let built_in_primitive_steps : list<primitive_step> =
     let set_range_of (r:Range.range) args : option<term> =
       match args with
       | [_; (t, _); (r, _)] ->
-        BU.bind_opt (EMB.unembed_range r) (fun r ->
+        BU.bind_opt (EMB.unembed_range_safe r) (fun r ->
         Some ({t with pos=r}))
       | _ -> None
     in
@@ -650,10 +603,10 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.op_Subtraction, 2, binary_int_op (fun x y -> (x - y)));
              (PC.op_Multiply,    2, binary_int_op (fun x y -> (Prims.op_Multiply x y)));
              (PC.op_Division,    2, binary_int_op (fun x y -> (x / y)));
-             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x < y)));
-             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x <= y)));
-             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x > y)));
-             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x >= y)));
+             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (x < y)));
+             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (x <= y)));
+             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (x > y)));
+             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (x >= y)));
              (PC.op_Modulus,     2, binary_int_op (fun x y -> (x % y)));
              (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
@@ -668,7 +621,7 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.p2l ["FStar"; "String"; "list_of_string"],
                                     1, unary_op arg_as_string list_of_string');
              (PC.p2l ["FStar"; "String"; "string_of_list"],
-                                    1, unary_op (arg_as_list arg_as_char) string_of_list');
+                                    1, unary_op (arg_as_list EMB.unembed_char_safe) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
              (PC.p2l ["Prims"; "range_of"], 2, range_of);
              (PC.p2l ["Prims"; "set_range_of"], 3, set_range_of);
@@ -679,7 +632,7 @@ let built_in_primitive_steps : list<primitive_step> =
            [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128"]
         in
         let int_as_bounded r int_to_t n =
-            let c = int_as_const r n in
+            let c = EMB.embed_int r n in
             let int_to_t = S.fv_to_tm int_to_t in
             S.mk_Tm_app int_to_t [S.as_arg c] None r
         in
