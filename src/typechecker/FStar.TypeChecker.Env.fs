@@ -208,9 +208,11 @@ let initial_env tc_term type_of universe_of solver module_lid =
     dsenv = FStar.ToSyntax.Env.empty_env()
   }
 
-(* Marking and resetting the environment, for the interactive mode *)
+let dsenv env = env.dsenv
 let sigtab env = env.sigtab
 let gamma_cache env = env.gamma_cache
+
+(* Marking and resetting the environment, for the interactive mode *)
 
 let query_indices: ref<(list<(list<(lident * int)>)>)> = BU.mk_ref [[]]
 let push_query_indices () = match !query_indices with

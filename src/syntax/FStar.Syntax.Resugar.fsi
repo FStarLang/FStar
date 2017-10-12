@@ -32,12 +32,22 @@ module C = FStar.Parser.Const
 module U = FStar.Syntax.Util
 module BU = FStar.Util
 module Range = FStar.Range
+module DsEnv = FStar.ToSyntax.Env
 
 val resugar_term: S.term -> A.term
-val resugar_sigelt: S.sigelt-> option<A.decl>
+val resugar_sigelt: S.sigelt -> option<A.decl>
 val resugar_comp: S.comp -> A.term
 val resugar_pat: S.pat -> set<S.bv> -> A.pattern
 val resugar_universe: S.universe -> Range.range -> A.term
 val resugar_binder: S.binder -> Range.range -> option<A.binder>
 val resugar_tscheme: S.tscheme -> A.decl
 val resugar_eff_decl: bool -> Range.range -> list<S.qualifier> -> eff_decl -> A.decl
+
+val resugar_term': DsEnv.env -> S.term -> A.term
+val resugar_sigelt': DsEnv.env -> S.sigelt -> option<A.decl>
+val resugar_comp': DsEnv.env -> S.comp -> A.term
+val resugar_pat': DsEnv.env -> S.pat -> set<S.bv> -> A.pattern
+val resugar_universe': DsEnv.env -> S.universe -> Range.range -> A.term
+val resugar_binder': DsEnv.env -> S.binder -> Range.range -> option<A.binder>
+val resugar_tscheme': DsEnv.env -> S.tscheme -> A.decl
+val resugar_eff_decl': DsEnv.env -> bool -> Range.range -> list<S.qualifier> -> eff_decl -> A.decl

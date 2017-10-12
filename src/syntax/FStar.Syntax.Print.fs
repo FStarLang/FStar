@@ -27,6 +27,7 @@ open FStar.Syntax.Util
 open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
+
 module U = FStar.Util
 module A = FStar.Parser.AST
 module Resugar = FStar.Syntax.Resugar
@@ -34,6 +35,7 @@ module ToDocument = FStar.Parser.ToDocument
 module Pp = FStar.Pprint
 module Unionfind = FStar.Syntax.Unionfind
 module C = FStar.Parser.Const
+module DsEnv = FStar.ToSyntax.Env
 
 let rec delta_depth_to_string = function
     | Delta_constant -> "Delta_constant"
@@ -253,6 +255,11 @@ let quals_to_string' quals =
     | [] -> ""
     | _ -> quals_to_string quals ^ " "
 
+let term_to_string' env x =
+  let e = Resugar.resugar_term' env x in
+  let d = ToDocument.term_to_document e in
+  Pp.pretty_string (float_of_string "1.0") 100 d
+
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
    function in normalize.fs instead, since elaboration
@@ -424,6 +431,11 @@ and args_to_string args =
     let args = if (Options.print_implicits()) then args else filter_imp args in
     args |> List.map arg_to_string |> String.concat " "
 
+and comp_to_string' env c =
+  let e = Resugar.resugar_comp' env c in
+  let d = ToDocument.term_to_document e in
+  Pp.pretty_string (float_of_string "1.0") 100 d
+
 and comp_to_string c =
   if not (Options.ugly()) then
     let e = Resugar.resugar_comp c in
@@ -486,15 +498,14 @@ and cflags_to_string c =
        only locally detecting certain patterns *)
 and formula_to_string phi = term_to_string phi
 
-let binder_to_json b =
-
+let binder_to_json env b =
     let (a, imp) = b in
     let n = if is_null_binder b then JsonNull else JsonStr (imp_to_string (nm_to_string a) imp) in
-    let t = JsonStr (term_to_string a.sort) in
+    let t = JsonStr (term_to_string' env a.sort) in
     JsonAssoc [("name", n); ("type", t)]
 
-let binders_to_json bs =
-    JsonList (List.map binder_to_json bs)
+let binders_to_json env bs =
+    JsonList (List.map (binder_to_json env) bs)
 
 
 //let subst_to_string subst =

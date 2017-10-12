@@ -1908,14 +1908,14 @@ let term_to_string env t =
     try normalize [AllowUnboundUniverses] env t
     with e -> BU.print1_warning "Normalization failed with error %s\n" (BU.message_of_exn e) ; t
   in
-  Print.term_to_string t
+  Print.term_to_string' env.dsenv t
 
 let comp_to_string env c =
   let c =
     try norm_comp (config [AllowUnboundUniverses] env) [] c
     with e -> BU.print1_warning "Normalization failed with error %s\n" (BU.message_of_exn e) ; c
   in
-  Print.comp_to_string c
+  Print.comp_to_string' env.dsenv c
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in

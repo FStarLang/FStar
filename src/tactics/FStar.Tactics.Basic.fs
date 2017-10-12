@@ -111,7 +111,7 @@ let ps_to_string (msg, ps) = format6 "State dump @ depth %s(%s):\nACTIVE goals (
                 msg (string_of_int (List.length ps.goals)) (String.concat "\n" (List.map goal_to_string ps.goals))
                 (string_of_int (List.length ps.smt_goals)) (String.concat "\n" (List.map goal_to_string ps.smt_goals))
 let goal_to_json g =
-    let g_binders = Env.all_binders g.context |> Print.binders_to_json in
+    let g_binders = Env.all_binders g.context |> Print.binders_to_json (Env.dsenv g.context) in
     JsonAssoc [("hyps", g_binders);
                ("goal", JsonAssoc [("witness", JsonStr (N.term_to_string g.context g.witness));
                                    ("type", JsonStr (N.term_to_string g.context g.goal_ty))])]
