@@ -224,7 +224,11 @@ let is_general_application e =
   not (is_array e || is_ref_set e)
 
 let is_general_construction e =
-  not (is_list e || is_lex_list e)
+  not (is_list e || is_lex_list e ||
+      (match (unparen e).tm with
+       | Construct (lid, _) ->
+         is_tuple_constructor lid || is_dtuple_constructor lid
+       | _ -> false))
 
 let is_general_prefix_op op =
   let op_starting_char =  char_at (Ident.text_of_id op) 0 in
@@ -1069,7 +1073,7 @@ and p_appTerm e = match (unparen e).tm with
       group (soft_surround_map_or_flow 2 0 head_doc (head_doc ^^ space) break1 empty p_argTerm args)
 
   (* dependent tuples are handled below *)
-  | Construct (lid, args) when is_general_construction e && not (is_dtuple_constructor lid) ->
+  | Construct (lid, args) when is_general_construction e ->
     begin match args with
       | [] -> p_quident lid
       | [arg] -> group (p_quident lid ^/^ p_argTerm arg)
