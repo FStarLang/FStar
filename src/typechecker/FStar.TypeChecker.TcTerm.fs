@@ -198,7 +198,7 @@ let no_logical_guard env (te, kt, f) =
     | NonTrivial f -> raise (Error(Err.unexpected_non_trivial_precondition_on_term env f, Env.get_range env))
 
 let print_expected_ty env = match Env.expected_typ env with
-    | None -> BU.print_string "Expected type is None"
+    | None -> BU.print_string "Expected type is None\n"
     | Some t -> BU.print1 "Expected type is %s" (Print.term_to_string t)
 
 (************************************************************************************************************)
@@ -312,6 +312,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_refine _
   | Tm_type _
   | Tm_unknown -> tc_value env e
+
+  | Tm_meta ({n = Tm_unknown}, Meta_alien (_, _, ty)) ->
+    top, S.mk_Total ty |> U.lcomp_of_comp, Rel.trivial_guard
 
   | Tm_meta(e, Meta_desugared Meta_smt_pat) ->
     let e, c, g = tc_tot_or_gtot_term env e in
@@ -479,7 +482,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High then BU.print2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
-    let isquote = match head.n with
+    let isquote =
+        let head, _ = U.head_and_args head in
+        match (U.un_uinst head).n with
                   | Tm_fvar fv when S.fv_eq_lid fv Const.quote_lid -> true
                   | _ -> false
     in
@@ -626,8 +631,6 @@ and tc_synth env args rng =
         if env.nosynth
         then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
         else begin
-            if Env.debug env <| Options.Other "Tac" then
-                BU.print2 "Running tactic %s at return type %s\n" (Print.term_to_string tau) (Print.term_to_string typ);
             let t = env.synth env' typ tau in
             if Env.debug env <| Options.Other "Tac" then
                 BU.print1 "Got %s\n" (Print.term_to_string t);

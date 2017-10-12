@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "93d5523df6940ce48cc50fe9b05a2157"
+      "bd9a6b8b5c212c2fa04295bc69bb596e"
     ],
     [
       "Effects.Def.st_laws",
@@ -90,7 +90,7 @@
         "projection_inverse_BoxBool_proj_0", "unit_inversion"
       ],
       0,
-      "14fac30a57248b6fd61ceda1f937b6b1"
+      "2724ab5c0c8d6a5cce7abb1f55b89517"
     ],
     [
       "Effects.Def.handle",
@@ -109,7 +109,7 @@
         "projection_inverse_BoxBool_proj_0", "unit_inversion"
       ],
       0,
-      "8920ae5258255dc8bc1e84deb5713674"
+      "481e9a62eb88ea60558785f269aa0748"
     ],
     [
       "Effects.Def.ex_laws",
@@ -169,7 +169,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "21e1a315b34e704aa2fae606efcd11fa"
+      "d5b401e9fb4d313afc37b23f7acdd529"
     ],
     [
       "Effects.Def.stexn_laws",
@@ -234,7 +234,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "d4c2a883701943abf529e610cf55e98d"
+      "5e2db146097efefd6ae025b102ec3fc5"
     ],
     [
       "Effects.Def.exnst_laws",
@@ -286,7 +286,7 @@
       1,
       [ "@query" ],
       0,
-      "e7c96882dffeeb0b81e98dd1850aa703"
+      "0605baec0c51888cca3d73c4b6f3de5d"
     ],
     [
       "Effects.Def.morphism_lift_st_exn",
@@ -428,7 +428,7 @@
         "lemma_FStar.Pervasives.invertOption", "unit_inversion"
       ],
       0,
-      "45c3264327b3ba6bf0ee13452e3a661e"
+      "fe0970eeaf688594d43e6f455326ab0a"
     ],
     [
       "Effects.Def.morphism_lift_ex_exnst",

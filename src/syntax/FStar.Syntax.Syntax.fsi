@@ -150,7 +150,7 @@ and metadata =
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
   | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name  m2 *)
-  | Meta_alien         of dyn * string                           (* A blob embedded into syntax, with an annotation to print it *)
+  | Meta_alien         of dyn * string * typ                     (* A blob embedded into syntax, with an annotation to print it and its type *)
 and meta_source_info =
   | Data_app
   | Sequence
@@ -472,6 +472,7 @@ val t_string      : term
 val t_float       : term
 val t_char        : term
 val t_range       : term
+val t_term        : term
 val t_tactic_unit : term
 val t_tac_unit    : term
 val t_list_of     : term -> term

@@ -9,6 +9,7 @@ all:	Apply.uver		\
 	Pruning.uver		\
 	Cut.uver		\
 	Fail.uver		\
+	MApply.uver		\
 	Clear.uver		\
 	Cases.uver		\
 	Tutorial.uver		\
@@ -19,6 +20,8 @@ all:	Apply.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	Trace.uver		\
+	Bug1299.fst		\
+	Nest.uver		\
 	TestBV.uver		\
 	Map.uver		\
 	Map.OpaqueToSMT.uver	\

@@ -45,3 +45,7 @@ let tracepoint ps : unit =
     if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ())
     then ps.__dump ps "TRACE"
     else ()
+
+type direction =
+    | TopDown
+    | BottomUp

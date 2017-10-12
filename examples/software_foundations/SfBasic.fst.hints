@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "9162ccf2f5fbfdd25fc5d7c87069b1eb"
+      "f0380b8ed4335b12a0921ee678095c93"
     ],
     [
       "SfBasic.uu___is_Tuesday",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "ae293c8e300f0ff4c84910812443b7b6"
+      "7f9675c5734716edcdabeb4fb95867bf"
     ],
     [
       "SfBasic.uu___is_Wednesday",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "9e6221fcb8d32715bb55cb02f0154ec6"
+      "e51d612cda06ade88c882c0548c40459"
     ],
     [
       "SfBasic.uu___is_Thursday",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "17cd62ec5e416c4c9732c67a7340fe93"
+      "ce93a2e4f197b75529c17bd0daa348c0"
     ],
     [
       "SfBasic.uu___is_Friday",
@@ -44,7 +44,7 @@
       1,
       [ "@query" ],
       0,
-      "b5933ae25953188c2a422c43fac5c381"
+      "0e4f54f3b7c2ada124dd4dc1517b28d9"
     ],
     [
       "SfBasic.uu___is_Saturday",
@@ -53,7 +53,7 @@
       1,
       [ "@query" ],
       0,
-      "5643445eef5c3e855e53d17ffdfe6ace"
+      "b2909bba24d769a28bf9837b59f9dfa2"
     ],
     [
       "SfBasic.uu___is_Sunday",
@@ -62,7 +62,7 @@
       1,
       [ "@query" ],
       0,
-      "704b7c6d27152e6513794b3e908c7310"
+      "8f20bc213e6a6f7f2c888b72b6b80829"
     ],
     [
       "SfBasic.next_weekday",
@@ -83,7 +83,7 @@
         "fuel_guarded_inversion_SfBasic.day"
       ],
       0,
-      "4e573803c48217aa9870b79e8f3fd3c2"
+      "bddae6f6a55c573b63d49222d98f4895"
     ],
     [
       "SfBasic.test_next_weekday",
@@ -116,7 +116,7 @@
       1,
       [ "@query" ],
       0,
-      "63108714ddf9988ca216b32543a3984f"
+      "3f38b98ec7ed8046c9d7ca431a4ccc7f"
     ],
     [
       "SfBasic.uu___is_MFalse",
@@ -125,7 +125,7 @@
       1,
       [ "@query" ],
       0,
-      "89f142c76fc2db1649f4cc71e082083c"
+      "cb9babeac15d2195906015ea431aab09"
     ],
     [
       "SfBasic.negb",
@@ -138,7 +138,7 @@
         "fuel_guarded_inversion_SfBasic.mbool"
       ],
       0,
-      "6f1d34527359be6795274accbf99520c"
+      "e6330bb5ecc9e21dbbe4f1c68bcaa3e1"
     ],
     [
       "SfBasic.andb",
@@ -153,7 +153,7 @@
         "fuel_guarded_inversion_SfBasic.mbool"
       ],
       0,
-      "8e9bce09eae4aa72d08a53e10929f3d3"
+      "07bd9d2ab8ae435d10c8ec40adb587d1"
     ],
     [
       "SfBasic.orb",
@@ -168,7 +168,7 @@
         "fuel_guarded_inversion_SfBasic.mbool"
       ],
       0,
-      "3d471ee1748369b3672977a25e918f88"
+      "07a77449269425bb595f14fa4dea143c"
     ],
     [
       "SfBasic.test_orb1",
@@ -276,7 +276,7 @@
       1,
       [ "@query" ],
       0,
-      "3d19c12f68c548373729b0ff5e7bb4c1"
+      "7aeb11c48d06e541af67c23031a2f1aa"
     ],
     [
       "SfBasic.uu___is_S",
@@ -285,7 +285,7 @@
       1,
       [ "@query" ],
       0,
-      "c82a54831a9e11ca3534f87b7a3aa974"
+      "23ba4ebf0052e90185107ffd9cd40ba3"
     ],
     [
       "SfBasic.__proj__S__item___0",
@@ -298,7 +298,7 @@
         "refinement_interpretation_SfBasic_Tm_refine_b7b70964a15ac3a2f4808938f2801faf"
       ],
       0,
-      "cd20e31b1c0331f10964adbd5cf80dfd"
+      "2b2eb01aa9380f033930c96b9dc5c36e"
     ],
     [
       "SfBasic.pred",
@@ -311,7 +311,7 @@
         "fuel_guarded_inversion_SfBasic.nat"
       ],
       0,
-      "2cf151b7848ab04e0383e148d29638f8"
+      "41195ad077209c1d0cc469482ceeb1a6"
     ],
     [
       "SfBasic.minustwo",
@@ -327,7 +327,7 @@
         "typing_SfBasic.__proj__S__item___0"
       ],
       0,
-      "ea6d043f67e993801b8c239c3fab0338"
+      "190099626b3a53edc5422d212a62aca2"
     ],
     [
       "SfBasic.evenb",
@@ -346,7 +346,7 @@
         "subterm_ordering_SfBasic.S", "typing_SfBasic.__proj__S__item___0"
       ],
       0,
-      "7451788c412851496544c191906ca310"
+      "f298af613e28f259774ddcc5beae2168"
     ],
     [
       "SfBasic.test_oddb1",
@@ -417,7 +417,7 @@
         "fuel_guarded_inversion_SfBasic.nat", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "d2702b8f765bcf067a11ef29a85020db"
+      "6cc89cd60615063987a9123543ed9a30"
     ],
     [
       "SfBasic.mult",
@@ -432,7 +432,7 @@
         "subterm_ordering_SfBasic.S"
       ],
       0,
-      "9d6a81986b0319bd79410e523ff9f00c"
+      "eaa0e445a3c58b777ca7adbac42bbc36"
     ],
     [
       "SfBasic.test_mult1",
@@ -480,7 +480,7 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "7c6ec2c14cc7543743c1f1bfde0c0658"
+      "36a419c2527a0a925e339e8e64299f46"
     ],
     [
       "SfBasic.beq_nat",
@@ -498,7 +498,7 @@
         "subterm_ordering_SfBasic.S", "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "16337a1fb23bbaff6212661030f55f69"
+      "e89e8d931c7b3fa35660f4a2a93a2414"
     ],
     [
       "SfBasic.ble_nat",
@@ -521,7 +521,7 @@
         "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "14196f4c8a89dd6f81237e94f310c466"
+      "9e92d32a3bf0951b80102008caf9f034"
     ],
     [
       "SfBasic.test_ble_nat1",
@@ -762,7 +762,7 @@
         "unit_typing"
       ],
       0,
-      "fefd1a7482cf936532550190dead613a"
+      "fe9d8ed62a9b5cdaa0b75015afec9877"
     ],
     [
       "SfBasic.plus_n_Sm",
@@ -792,7 +792,7 @@
         "unit_typing"
       ],
       0,
-      "e4621d0d6ef1e3c5d5afc5f4392634ab"
+      "0d815511c19869d18a495f7a900281f5"
     ],
     [
       "SfBasic.plus_comm",
@@ -821,7 +821,7 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "0ec0e08334744d284fcc99f226079e1f"
+      "98618caa54ac111efc39161efa1e2ea6"
     ],
     [
       "SfBasic.plus_rearrange",
@@ -839,7 +839,7 @@
       1,
       [ "@query" ],
       0,
-      "afc84628a6f3b36b41faa53db304a5f2"
+      "418dd689839f7ac5ead8a2cbc784fa1d"
     ]
   ]
 ]

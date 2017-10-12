@@ -482,8 +482,8 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
       ( noshort,
         "admit_except",
-        SimpleStr "(symbol, id)",
-        "Admit all verification conditions, except those with query label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)'");
+        SimpleStr "[symbol|(symbol, id)]",
+        "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
 
       ( noshort,
         "cache_checked_modules",
@@ -1219,3 +1219,7 @@ let should_extract m =
      | [] -> true
      | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
   | l -> List.contains (String.lowercase m) l))
+
+let codegen_fsharp () =
+    codegen() = Some "FSharp"
+  

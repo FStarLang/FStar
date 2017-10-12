@@ -517,7 +517,6 @@ let solver = {
     encode_modul=Encode.encode_modul;
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=solve;
-    is_trivial=Encode.is_trivial;
     finish=Z3.finish;
     refresh=Z3.refresh;
 }
@@ -529,7 +528,6 @@ let dummy = {
     encode_modul=(fun _ _ -> ());
     preprocess=(fun e g -> [e,g, FStar.Options.peek ()]);
     solve=(fun _ _ _ -> ());
-    is_trivial=(fun _ _ -> false);
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }

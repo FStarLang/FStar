@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5ec1ce411c1d5c466acabfb9d1a505e3"
+      "925ca75b717396afc2a990f5b7650c88"
     ],
     [
       "Ex06d.count",
@@ -47,7 +47,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a78d49f89a7feedca5738608c41f238e"
+      "8e76e6aaf8f42bfccc3e242abd33904f"
     ],
     [
       "Ex06d.append_count",
@@ -90,7 +90,7 @@
         "typing_Ex06d.count", "unit_typing"
       ],
       0,
-      "e44827ea20042012562b882124b8c94f"
+      "30a7c0bc24926441551d732584e936a3"
     ],
     [
       "Ex06d.append_mem",
@@ -119,7 +119,7 @@
         "typing_Ex06d.append", "typing_Ex06d.count", "typing_Ex06d.mem"
       ],
       0,
-      "b5654f12f1f8b0d6c9343ce8e5f838a8"
+      "5654259f8e919738f2f534365171a4da"
     ],
     [
       "Ex06d.length",
@@ -137,7 +137,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "15a74126407ea9c1a9220f8b51200968"
+      "4c6e08ff6c77a009ef559997d59b00fe"
     ],
     [
       "Ex06d.sorted",
@@ -156,7 +156,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "352a248a515f8a23c85e1d9f24d0d6ea"
+      "193b9ab14cc8671dc1835a3931adcfdb"
     ],
     [
       "Ex06d.partition",
@@ -171,7 +171,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2dc02bc1aae4ed813d87b7f15dc3e3a5"
+      "55f87697a6e3523cd6915b921bc99957"
     ],
     [
       "Ex06d.partition_lemma",
@@ -251,7 +251,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "f9432caa5a0234109faea31beecb8530"
+      "cdaedaf0048e9ed933fd9a1e9ccb7774"
     ],
     [
       "Ex06d.total_order",
@@ -316,7 +316,7 @@
         "unit_typing"
       ],
       0,
-      "0171fa20b34fa72c24ab4fb63cc96224"
+      "e9ffa0760de3a22495e2dafea3facb32"
     ],
     [
       "Ex06d.sort",
@@ -393,7 +393,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0018e7f6c5104a87e0926b7ee36ca7f9"
+      "2b04f680f51e25944ade887f1c000b26"
     ]
   ]
 ]

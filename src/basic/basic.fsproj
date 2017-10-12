@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -78,11 +78,11 @@
     <Compile Include="boot/FStar.Util.fs" />
     <Compile Include="boot/FStar.Bytes.fsi" />
     <Compile Include="boot/FStar.Bytes.fs" />
-    <Compile Include="boot/FStar.Range.fsi" />
-    <Compile Include="boot/FStar.Range.fs" />
     <Compile Include="boot/FStar.Dyn.fsi" />
     <Compile Include="boot/FStar.Dyn.fs" />
     <Compile Include="profiling.fs" />
+    <Compile Include="FStar.Range.fsi" />
+    <Compile Include="FStar.Range.fs" />
     <Compile Include="FStar.Platform.fsi" />
     <Compile Include="FStar.Platform.fs" />
     <Compile Include="FStar.Common.fs" />

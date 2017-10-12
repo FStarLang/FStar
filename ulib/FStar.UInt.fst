@@ -581,7 +581,7 @@ let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 private val to_vec_mod_pow2: #n:nat -> a:uint_t n -> m:pos -> i:nat{n - m <= i /\ i < n} ->
   Lemma (requires (a % pow2 m == 0))
         (ensures  (index (to_vec a) i == false))
-        [SMTPat (index (to_vec #n a) i); SMTPatT (a % pow2 m == 0)]
+        [SMTPat (index (to_vec #n a) i); SMTPat (a % pow2 m == 0)]
 let rec to_vec_mod_pow2 #n a m i =
   if i = n - 1 then
     begin
@@ -600,7 +600,7 @@ let rec to_vec_mod_pow2 #n a m i =
 private val to_vec_lt_pow2: #n:nat -> a:uint_t n -> m:nat -> i:nat{i < n - m} ->
   Lemma (requires (a < pow2 m))
         (ensures  (index (to_vec a) i == false))
-        [SMTPat (index (to_vec #n a) i); SMTPatT (a < pow2 m)]
+        [SMTPat (index (to_vec #n a) i); SMTPat (a < pow2 m)]
 let rec to_vec_lt_pow2 #n a m i =
   if n = 0 then ()
   else
