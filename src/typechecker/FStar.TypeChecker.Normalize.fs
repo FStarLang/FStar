@@ -152,6 +152,12 @@ let log cfg f =
     then f()
     else ()
 
+let log_primops cfg f =
+    if Env.debug cfg.tcenv (Options.Other "Norm")
+    || Env.debug cfg.tcenv (Options.Other "Primops")
+    then f()
+    else ()
+
 let is_empty = function
     | [] -> true
     | _ -> false
@@ -681,19 +687,19 @@ let reduce_primops cfg tm =
            | None -> tm
            | Some prim_step ->
              if List.length args < prim_step.arity
-             then begin log cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
+             then begin log_primops cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
                                                      (Print.lid_to_string prim_step.name)
                                                      (string_of_int (List.length args))
                                                      (string_of_int prim_step.arity));
                         tm //partial application; can't step
                   end
-             else begin log cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
+             else begin log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
                   match prim_step.interpretation head.pos args with
                   | None ->
-                      log cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
+                      log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
                       tm
                   | Some reduced ->
-                      log cfg (fun () -> BU.print2 "primop: <%s> reduced to <%s>\n"
+                      log_primops cfg (fun () -> BU.print2 "primop: <%s> reduced to <%s>\n"
                                               (Print.term_to_string tm)
                                               (Print.term_to_string reduced));
                       reduced
@@ -1124,17 +1130,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
             && (U.is_pure_effect n
             || (U.is_ghost_effect n && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
             then let env = Clos(env, lb.lbdef, BU.mk_ref None, false)::env in
+                 log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
             else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
+                 log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- type\n");
                  let ty = norm cfg env [] lb.lbtyp in
                  let lbname =
                     let x = fst (List.hd bs) in
                     Inl ({x with sort=ty}) in
+                 log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- definiens\n");
                  let lb = {lb with lbname=lbname;
                                    lbtyp=ty;
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                  let cfg = only_strong_steps cfg in
+                 log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- body\n");
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
           | Tm_let((true, lbs), body)
