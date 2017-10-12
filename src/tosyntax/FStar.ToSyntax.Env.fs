@@ -371,10 +371,13 @@ let lookup_default_id
     let lid = qual (current_module env) id in
     find_in_module env lid k_global_def k_not_found
 
+let lid_is_curmod env lid =
+  match env.curmodule with
+  | None -> false
+  | Some m -> lid_equals lid m
+
 let module_is_defined env lid =
-    (match env.curmodule with
-     | None -> false
-     | Some m -> lid_equals lid (current_module env)) ||
+    lid_is_curmod env lid ||
     List.existsb (fun x -> lid_equals lid (fst x)) env.modules
 
 let resolve_module_name env lid (honor_ns: bool) : option<lident> =
@@ -424,13 +427,19 @@ let fail_if_qualified_by_curmodule env lid =
     | _ -> ()
     end
 
-let namespace_is_open env lid =
+let is_open env lid open_kind =
   List.existsb (function
-                | Open_module_or_namespace (ns, Open_namespace) -> lid_equals lid ns
+                | Open_module_or_namespace (ns, k) -> k = open_kind && lid_equals lid ns
                 | _ -> false) env.scope_mods
 
+let namespace_is_open env lid =
+  is_open env lid Open_namespace
+
+let module_is_open env lid =
+  lid_is_curmod env lid || is_open env lid Open_module
+
+// FIXME this could be faster (module_is_open and namespace_is_open are slow)
 let shorten_module_path env ids is_full_path =
-  // FIXME this could be faster (module_is_defined and namespace_is_open are slow)
   let rec aux revns id =
     let lid = FStar.Ident.lid_of_ns_and_id (List.rev revns) id in
     if namespace_is_open env lid
@@ -441,18 +450,22 @@ let shorten_module_path env ids is_full_path =
            aux rev_ns_prefix ns_last_id |>
              BU.map_option (fun (stripped_ids, rev_kept_ids) ->
                             (stripped_ids, id :: rev_kept_ids)) in
-  if is_full_path && module_is_defined env (FStar.Ident.lid_of_ids ids)
-  then (ids, []) // FIXME is that right? If m is defined then all names in m are accessible?
-  else match List.rev ids with
-       | [] -> ([], [])
-       | ns_last_id :: ns_rev_prefix ->
-         match aux ns_rev_prefix ns_last_id with
-         | None -> ([], ids)
-         | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids)
+  let do_shorten env ids =
+    // Do the actual shortening.  FIXME This isn't optimal (no includes).
+    match List.rev ids with
+    | [] -> ([], [])
+    | ns_last_id :: ns_rev_prefix ->
+      match aux ns_rev_prefix ns_last_id with
+      | None -> ([], ids)
+      | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids) in
 
-let shorten_lid env lid =
-  let (_, short) = shorten_module_path env lid.ns true in
-  lid_of_ns_and_id short lid.ident
+  if is_full_path then
+    // Try to strip the entire prefix.  This is the cheap common case.
+    match resolve_module_name env (FStar.Ident.lid_of_ids ids) true with
+    | Some m when module_is_open env m -> (ids, [])
+    | _ -> do_shorten env ids
+  else
+    do_shorten env ids
 
 (* Generic name resolution. *)
 
@@ -662,6 +675,20 @@ let resolve_to_fully_qualified_name (env:env) (l:lident) =
       match (Subst.compress e).n with
       | Tm_fvar fv -> Some fv.fv_name.v
       | _ -> None
+
+let shorten_lid' env lid =
+  let (_, short) = shorten_module_path env lid.ns true in
+  lid_of_ns_and_id short lid.ident
+
+let shorten_lid env lid =
+  match env.curmodule with
+  | None -> shorten_lid' env lid
+  | _ ->
+    let lid_without_ns = lid_of_ns_and_id [] lid.ident in
+    match resolve_to_fully_qualified_name env lid_without_ns with
+    // Simple case: lid without namespace resolves to itself
+    | Some lid' when lid'.str = lid.str -> lid_without_ns
+    | _ -> shorten_lid' env lid
 
 let try_lookup_lid_no_resolve (env: env) l =
   let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
@@ -996,7 +1023,7 @@ let check_admits env =
         | None ->
           if not (Options.interactive ()) then
             FStar.Errors.warn (range_of_lid l)
-              (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l));
+              (BU.format1 "Admitting %s without a definition" l.str);
           let quals = Assumption :: se.sigquals in
           BU.smap_add (sigmap env) l.str ({ se with sigquals = quals },
                                           false)
