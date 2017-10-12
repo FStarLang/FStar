@@ -849,7 +849,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "using_facts_from",
         WithSideEffect ((fun () -> set_option "z3refresh" (mk_bool true)),
                         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'")),
-        "\n\t\tImplies --z3refresh; prunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
+        "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
          Facts can be include or excluded using the [+|-] qualifier. \n\t\t\t\
          For example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
          remove all facts from FStar.List.Tot.*, \n\t\t\t\t\
@@ -975,7 +975,6 @@ let settable = function
     | "no_tactics"
     | "tactic_trace"
     | "tactic_trace_d"
-    | "using_facts_from"
     | "__temp_no_proj"
     | "reuse_hint_for"
     | "z3rlimit_factor"
@@ -983,10 +982,11 @@ let settable = function
     | "z3refresh" -> true
     | _ -> false
 
-// JP: the two options below are options that are passed to z3 using
-// command-line arguments; only #reset_options re-starts the z3 process, meaning
-// these two options are resettable, but not settable
-let resettable s = settable s || s="z3seed" || s="z3cliopt"
+// the first two options below are options that are passed to z3 using
+// command-line arguments;
+// using_facts_from requires pruning the Z3 context.
+// All of these can only be used with #reset_options, with re-starts the z3 process
+let resettable s = settable s || s="z3seed" || s="z3cliopt" || s="using_facts_from"
 let all_specs = specs ()
 let all_specs_with_types = specs_with_types ()
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
@@ -1201,7 +1201,21 @@ let use_hints                    () = get_use_hints                   ()
 let use_hint_hashes              () = get_use_hint_hashes             ()
 let use_native_tactics           () = get_use_native_tactics          ()
 let use_tactics                  () = get_use_tactics                 ()
-let using_facts_from             () = get_using_facts_from            ()
+let using_facts_from             () =
+    let parse_one_setting s =
+        if s = "*" then ([], true)
+        else if FStar.Util.starts_with s "-"
+        then let path = FStar.Ident.path_of_text (FStar.Util.substring_from s 1) in
+             (path, false)
+        else let s = if FStar.Util.starts_with s "+"
+                     then FStar.Util.substring_from s 1
+                     else s in
+             (FStar.Ident.path_of_text s, true)
+    in
+    let parse_setting s = FStar.Util.split s " " |> List.map parse_one_setting in
+    match get_using_facts_from () with
+    | None -> [ [], true ] //if not set, then retain all facts
+    | Some ns -> List.collect parse_setting ns |> List.rev
 let verify_all                   () = get_verify_all                  ()
 let verify_module                () = get_verify_module               ()
 let warn_default_effects         () = get_warn_default_effects        ()
