@@ -4,15 +4,15 @@
     [
       "Canon.Test.lem1",
       1,
-      8,
       2,
+      1,
       [
         "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b29eed081f9a3c1b61a7864d6aed58f5"
+      "53d1a4c2bad643741768df65b5f75dd2"
     ],
     [
       "Canon.Test.lem8",

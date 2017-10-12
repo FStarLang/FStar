@@ -11,7 +11,7 @@
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
       ],
       0,
-      "746101709d206cd206e0d1592efcbf6a"
+      "6d4c3aa50ba06fdd64cbc4918a002a26"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -23,7 +23,7 @@
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
       ],
       0,
-      "d82e01c27f7e381c5157899c007c1261"
+      "592fc9eb7acbbf6eca5924e297b1e04f"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -35,7 +35,7 @@
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
       ],
       0,
-      "be878dfbdf278db040fd99abddc3fa5a"
+      "32fe9abc1b433b8cc06f401887f59ce9"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -53,7 +53,7 @@
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "7d7b2f438f4538c60773de3bcf2df25f"
+      "1d9424f05beb0f6a455fb716eb56a964"
     ]
   ]
 ]

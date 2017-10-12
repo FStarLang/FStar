@@ -18,7 +18,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "392865089b74f7b2bc44f4df25ea496e"
+      "688f05d550fbf6751df2e9df31687115"
     ],
     [
       "Ex06d.count",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a754c869078772bb11e0f3f140948470"
+      "50b67142769db868962765e6e3313b93"
     ],
     [
       "Ex06d.append",
@@ -47,7 +47,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "05a4f6bf972413a553632cce83556827"
+      "43e177f9c14ceca8307b6fa4c781420a"
     ],
     [
       "Ex06d.append_count",
@@ -56,7 +56,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b46ef72d2a234b5eab7ae8fdcc37e04a"
+      "277415002a2030b04ef50be18d02d0f0"
     ],
     [
       "Ex06d.append_count",
@@ -90,7 +90,7 @@
         "typing_Ex06d.count", "unit_typing"
       ],
       0,
-      "0e7ce740b6e9fffc561e56a879eec069"
+      "f89e261d99702a1dbf6598567cc2c236"
     ],
     [
       "Ex06d.append_mem",
@@ -99,7 +99,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "5aa5339dbfb7a5bd4d1c2b267f976c7d"
+      "33a401d6b91307b764fb225cbc5563ba"
     ],
     [
       "Ex06d.append_mem",
@@ -119,7 +119,7 @@
         "typing_Ex06d.append", "typing_Ex06d.count", "typing_Ex06d.mem"
       ],
       0,
-      "4b02d72983522931a782a2a6b6a66edc"
+      "617482671e22433ef56c24633d154e15"
     ],
     [
       "Ex06d.length",
@@ -137,7 +137,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "80b6bce9c5a7045d77e19eecaa911da2"
+      "b2f8bf0639100a77301a7dd822e3477e"
     ],
     [
       "Ex06d.sorted",
@@ -156,7 +156,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "3829f40dcd83793965ed799836e08c2e"
+      "482549adf105b54d0cb55330a9628a85"
     ],
     [
       "Ex06d.partition",
@@ -171,7 +171,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "dfd9cd159d5ff11a4c79ed399188df5c"
+      "60b9e5b06f675c0d149329cf3e22a1b6"
     ],
     [
       "Ex06d.partition_lemma",
@@ -180,7 +180,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f9cfcc1164146fedf7466a8bc5148e06"
+      "0d95e2b26490a160bf39468f24c5f1cb"
     ],
     [
       "Ex06d.partition_lemma",
@@ -189,7 +189,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "aa7272b208badecc43433977e498e918"
+      "6e90de5aa5b5c933c163c610af740916"
     ],
     [
       "Ex06d.partition_lemma",
@@ -198,7 +198,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0b047e7ccb94e382e586588dc4d07701"
+      "dbd98328c1c8e01109d3d2ab1b1bfb75"
     ],
     [
       "Ex06d.partition_lemma",
@@ -251,7 +251,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "abe1ecca2871a394d498eed224df3551"
+      "d8be366eee6742806d44c463a873dbe1"
     ],
     [
       "Ex06d.total_order",
@@ -263,7 +263,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "cec4a1c0f42a292c4ff334013d9689ba"
+      "9dd07a39d0ec0e79e7e75b3aed595061"
     ],
     [
       "Ex06d.sorted_concat_lemma",
@@ -316,7 +316,7 @@
         "unit_typing"
       ],
       0,
-      "33f1802e24f025cf23cd6ad157de7817"
+      "82ad7d2245623810c681d46ba6df4e61"
     ],
     [
       "Ex06d.sort",
@@ -325,7 +325,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "1df95a72bb59f75463b6613c30d85744"
+      "62ae766081ef769a42b38cfb7d3bcfd4"
     ],
     [
       "Ex06d.sort",
@@ -337,7 +337,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "6836b8ff9903e3b5d8b29696c79f3772"
+      "3820cd84e39e2cd3da68c2f70514e1ae"
     ],
     [
       "Ex06d.sort",
@@ -393,7 +393,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c75b955b60b405e5bbeb2e5e7cb35713"
+      "66cc3dbdd1385699806ba010c0003e8b"
     ]
   ]
 ]
