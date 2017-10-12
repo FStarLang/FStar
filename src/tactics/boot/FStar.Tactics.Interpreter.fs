@@ -49,7 +49,7 @@ let mk_tactic_interpretation_0 (t:tac<'a>) (embed_a:embedder<'a>) (t_a:typ) (nm:
             (Ident.string_of_lid nm)
             (Print.args_to_string args));
     let res = run t ps in
-    Some (E.embed_result ps res embed_a t_a))
+    Some (E.embed_result res embed_a t_a))
   | _ ->
     failwith ("Unexpected application of tactic primitive")
 
@@ -65,7 +65,7 @@ let mk_tactic_interpretation_1 (t:'a -> tac<'r>) (unembed_a:unembedder<'a>)
             (Print.term_to_string embedded_state));
     BU.bind_opt (unembed_a a) (fun a ->
     let res = run (t a) ps in
-    Some (E.embed_result ps res embed_r t_r)))
+    Some (E.embed_result res embed_r t_r)))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -83,7 +83,7 @@ let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
     BU.bind_opt (unembed_a a) (fun a ->
     BU.bind_opt (unembed_b b) (fun b ->
     let res = run (t a b) ps in
-    Some (E.embed_result ps res embed_r t_r))))
+    Some (E.embed_result res embed_r t_r))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -104,7 +104,7 @@ let mk_tactic_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
     BU.bind_opt (unembed_b b) (fun b ->
     BU.bind_opt (unembed_c c) (fun c ->
     let res = run (t a b c) ps in
-    Some (E.embed_result ps res embed_r t_r)))))
+    Some (E.embed_result res embed_r t_r)))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -129,7 +129,7 @@ let mk_tactic_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
     BU.bind_opt (unembed_d d) (fun d ->
     BU.bind_opt (unembed_e e) (fun e ->
     let res = run (t a b c d e) ps in
-    Some (E.embed_result ps res embed_r t_r)))))))
+    Some (E.embed_result res embed_r t_r)))))))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
@@ -304,7 +304,7 @@ and unembed_tactic_0<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : tac<
     let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
     if !tacdbg then
         BU.print1 "Reduced tactic: got %s\n" (Print.term_to_string result);
-    match E.unembed_result proof_state result unembed_b with
+    match E.unembed_result result unembed_b with
     | Some (Inl (b, ps)) ->
         bind (set ps) (fun _ -> ret b)
 

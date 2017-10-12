@@ -70,7 +70,7 @@ let unembed_proofstate (t:term) : option<proofstate> =
 let mk_app hd args =
   S.mk_Tm_app hd args None Range.dummyRange
 
-let embed_result (ps:proofstate) (res:__result<'a>) (embed_a:embedder<'a>) (t_a:typ) : term =
+let embed_result (res:__result<'a>) (embed_a:embedder<'a>) (t_a:typ) : term =
     match res with
     | Failed (msg, ps) ->
       mk_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
@@ -89,7 +89,7 @@ let embed_result (ps:proofstate) (res:__result<'a>) (embed_a:embedder<'a>) (t_a:
                                 S.as_arg (embed_a a);
                                 S.as_arg (embed_proofstate ps)])]
 
-let unembed_result (ps:proofstate) (t:term) (unembed_a:unembedder<'a>)
+let unembed_result (t:term) (unembed_a:unembedder<'a>)
         : option<either<('a * proofstate), (string * proofstate)>> =
     let hd'_and_args tm =
       let tm = U.unascribe tm in
