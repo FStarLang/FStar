@@ -24,6 +24,8 @@ let colored_object (t: S.typ) : Tot Type0 = S.pointer (colored_object_t t)
 
 let colored_point = colored_object point_t
 
+#set-options "--z3rlimit 10"
+
 let write_struct_field
   (#l: S.struct_typ)
   (p: S.pointer (S.TStruct l))
