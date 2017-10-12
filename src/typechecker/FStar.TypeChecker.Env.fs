@@ -1197,7 +1197,9 @@ let should_enc_path env path =
         | x::xs, y::ys -> x = y && list_prefix xs ys
         | _, _ -> false
     in
-    FStar.Util.for_some (fun (p, b) -> b && list_prefix p path) env.proof_ns
+    match FStar.List.tryFind (fun (p, _) -> list_prefix p path) env.proof_ns with
+    | None -> false
+    | Some (_, b) -> b
 
 let should_enc_lid env lid =
     should_enc_path env (path_of_lid lid)
@@ -1216,6 +1218,7 @@ let string_of_proof_ns env =
         else (if b then "+" else "-")^Ident.text_of_path p
     in
     List.map aux env.proof_ns
+    |> List.rev
     |> String.concat " "
 
 (* <Move> this out of here *)
