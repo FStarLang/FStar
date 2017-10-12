@@ -1,5 +1,5 @@
 [
-  "r4\t\u0014£\u001añ›Ï=“þÏ¯§Ú",
+  "\u0000ëä\u007f)wãØ©ÊÎlv™“F",
   [
     [
       "Recursive.fac",
@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "94793a19b66d175b4470b3962aa952ec"
+      "6b517ca844b7a58ea04b4d1a6e9335b4"
     ],
     [
       "Recursive.fac",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d55b220b155e212b4cffcf0e94d29eed"
+      "3690dc2c6328c0dcdf65536862c5a362"
     ],
     [
       "Recursive.fac_mon",
@@ -54,7 +54,7 @@
         "typing_Recursive.fac", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "3d4909fdcad0a5fa88aba2e2239282c5"
+      "c654ff221d5a73ecea4e2e90ec69c26e"
     ],
     [
       "Recursive.fac_sum",
@@ -70,7 +70,7 @@
         "typing_Recursive.fac"
       ],
       0,
-      "af1bcd47d6c20824f088de97ed5eb3e3"
+      "4d7dd94c40d155f13d203095675c00a2"
     ],
     [
       "Recursive.fac_sum_mon",
@@ -83,7 +83,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6058eaf4e0403cbe4ff5467d90e8637c"
+      "2e2e352ee4ad1f4a9660f3a40b0e41d7"
     ]
   ]
 ]

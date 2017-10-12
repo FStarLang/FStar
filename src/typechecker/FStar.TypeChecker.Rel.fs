@@ -426,6 +426,7 @@ let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
 
 let base_and_refinement env wl t1 =
    let rec aux norm t1 =
+        let t1 = U.unmeta t1 in
         match t1.n with
         | Tm_refine(x, phi) ->
             if norm
@@ -1874,7 +1875,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     if BU.set_is_subset_of fvs_hd fvs1
                     then true
                     else (if Env.debug env <| Options.Other "Rel"
-                          then BU.print1 "Free variables are %s" (names_to_string fvs_hd); false)
+                          then BU.print1 "Free variables are %s\n" (names_to_string fvs_hd); false)
         in
 
         match maybe_pat_vars with
@@ -2708,7 +2709,12 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                              (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
             let vcs =
                 if Options.use_tactics()
-                then env.solver.preprocess env vc
+                then begin
+                    Options.with_saved_options (fun () ->
+                        ignore <| Options.set_options Options.Set "--no_tactics";
+                        env.solver.preprocess env vc
+                    )
+                end
                 else [env,vc,FStar.Options.peek ()] in
             vcs |> List.iter (fun (env, goal, opts) ->
                     let goal = N.normalize [N.Simplify; N.Primops] env goal in

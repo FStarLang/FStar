@@ -2,7 +2,6 @@
 
 all:
 	$(MAKE) -C src/ocaml-output
-	$(MAKE) -C ulib
 
 package:
 	git clean -ffdx .

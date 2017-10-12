@@ -130,7 +130,7 @@ boot: $(ALL_BOOT)
 clean_boot:
 	rm -rf boot
 
-MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Options.fs FStar.Range.fs FStar.Ident.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
+MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Ident.fs FStar.Options.fs FStar.Range.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
 extract_misc: boot $(MISC_EXTRACTED_FILES)
 	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Range FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
 

@@ -9,6 +9,7 @@ open FStar.Range
 exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
+exception Stop
 
 (* Raised when an empty fragment is parsed *)
 exception Empty_frag
@@ -139,6 +140,8 @@ let issue_of_exn = function
     | _ -> None
 
 let err_exn exn =
+    if exn = Stop then ()
+    else
     match issue_of_exn exn with
     | Some issue -> add_one issue
     | None -> raise exn
@@ -146,5 +149,10 @@ let err_exn exn =
 let handleable = function
   | Error _
   | NYI _
+  | Stop
   | Err _ -> true
   | _ -> false
+
+let stop_if_err () =
+    if get_err_count () > 0
+    then raise Stop

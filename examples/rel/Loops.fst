@@ -7,7 +7,6 @@ open FStar.DM4F.Heap.ST
 
 let v (r:ref int) (res: (unit * heap)) : GTot int = sel (snd res) r
 
-
 let rec sum_up (r:ref int) (from:int) (to:int{from <= to})
     : ST unit (requires (fun h -> h `contains_a_well_typed` r))
               (ensures (fun _ _ h' -> h' `contains_a_well_typed` r))
@@ -26,6 +25,9 @@ let rec sum_up_eq (r:ref int) (from:int) (to:int{from <= to})
     = if from = to
       then ()
       else sum_up_eq r (from + 1) to (upd h0 r (sel h0 r + from)) (upd h1 r (sel h1 r + from))
+
+(* TODO : tweak me down if possible *)
+#set-options "--z3rlimit 128 --max_fuel 8 --max_ifuel 8"
 
 let rec sum_up_commute (r:ref int)
                        (from:int)
@@ -57,6 +59,7 @@ let rec sum_up_commute (r:ref int)
                   = v r (reify (sum_up r from to) h4))
         end
 
+#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 
 let rec sum_dn (r:ref int) (from:int) (to:int{from <= to})
     : ST unit (requires (fun h -> h `contains_a_well_typed` r))

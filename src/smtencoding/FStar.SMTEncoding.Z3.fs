@@ -557,10 +557,27 @@ let mk_input theory =
                 BU.prefix_until (function CheckSat -> true | _ -> false) |>
                 Option.get
             in
+            let pp        = List.map (declToSmt options) in
+            let pp_no_cap = List.map (declToSmt_no_caps options) in
             let suffix = check_sat::suffix in
-            let ps = String.concat "\n" (List.map (declToSmt options) prefix) in
-            let ss = String.concat "\n" (List.map (declToSmt options) suffix) in
-            ps ^ "\n" ^ ss, Some(BU.digest_of_string ps)
+            let ps_lines = pp prefix in
+            let ss_lines = pp suffix in
+            let ps = String.concat "\n" ps_lines in
+            let ss = String.concat "\n" ss_lines in
+
+            (* Ignore captions AND ranges when hashing, otherwise we depend on file names *)
+            let uncaption = function
+            | Caption _ -> Caption ""
+            | Assume a -> Assume ({ a with assumption_caption = None })
+            | DeclFun (n, a, s, _) -> DeclFun (n, a, s, None)
+            | DefineFun (n, a, s, b, _) -> DefineFun (n, a, s, b, None)
+            | d -> d
+            in
+            let hs = prefix |> List.map uncaption
+                            |> pp_no_cap
+                            |> List.filter (fun s -> s <> "")
+                            |> String.concat "\n" in
+            ps ^ "\n" ^ ss, Some (BU.digest_of_string hs)
         else
             List.map (declToSmt options) theory |> String.concat "\n", None
     in

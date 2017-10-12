@@ -1251,7 +1251,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
-        if q <> q' then BU.print2_warning "Incoherent implicit qualifiers %b %b" (print_implicit q) (print_implicit q') ;
+        if q <> q' then BU.print2_warning "Incoherent implicit qualifiers %b %b\n" (print_implicit q) (print_implicit q') ;
         trans_F_ env arg wp_arg, q)
       args wp_args))
   | Tm_arrow (binders, comp) ->

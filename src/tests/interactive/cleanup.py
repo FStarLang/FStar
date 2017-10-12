@@ -5,7 +5,7 @@
 This mostly consists in pretty-pretting JSON messages and sorting their
 fields, to permit text-based comparisons against reference transcripts.
 
-Usage: python2 cleanup.py [fname.clean] < [fname.dirty]
+Usage: python2 cleanup.py fname.clean < fname.dirty
 """
 
 import json

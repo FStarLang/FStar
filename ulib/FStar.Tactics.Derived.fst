@@ -14,6 +14,10 @@ let quote_lid (ns:name) : tactic term =
     let t = pack (Tv_FVar (pack_fv ns)) in
     return t
 
+let norm_term (s : list norm_step) (t : term) : tactic term =
+    e <-- cur_env;
+    norm_term_env e s t
+
 (* Monadic helpers, could be made generic for do notation? *)
 
 val liftM1' : ('a -> tactic 'b) -> (tactic 'a -> tactic 'b)

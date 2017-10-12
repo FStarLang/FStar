@@ -3055,7 +3055,7 @@ and trans_F_:
                                         (let uu____8465 = print_implicit q in
                                          let uu____8466 = print_implicit q' in
                                          FStar_Util.print2_warning
-                                           "Incoherent implicit qualifiers %b %b"
+                                           "Incoherent implicit qualifiers %b %b\n"
                                            uu____8465 uu____8466)
                                       else ();
                                       (let uu____8468 =
