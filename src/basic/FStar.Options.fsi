@@ -184,7 +184,7 @@ val use_hints                   : unit    -> bool
 val use_hint_hashes             : unit    -> bool
 val use_native_tactics          : unit    -> option<string>
 val use_tactics                 : unit    -> bool
-val using_facts_from            : unit    -> option<list<string>>
+val using_facts_from            : unit    -> list<(Ident.path * bool)>
 val verify_all                  : unit    -> bool
 val verify_module               : unit    -> list<string>
 val warn_default_effects        : unit    -> bool
@@ -198,7 +198,7 @@ val z3_seed                     : unit    -> int
 val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
 
-val codegen_fsharp              : unit    -> bool 
+val codegen_fsharp              : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the
