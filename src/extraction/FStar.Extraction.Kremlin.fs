@@ -136,6 +136,7 @@ and pattern =
   | PCons of (ident * list<pattern>)
   | PTuple of list<pattern>
   | PRecord of list<(ident * pattern)>
+  | PConstant of constant
 
 and width =
   | UInt8 | UInt16 | UInt32 | UInt64
@@ -798,10 +799,14 @@ and translate_pat env p =
       ) (env, []) ps in
       env, PTuple (List.rev ps)
 
-  | MLP_Const _ ->
-      failwith "todo: translate_pat [MLP_Const]"
+  | MLP_Const c ->
+      env, PConstant (translate_pat_constant c)
   | MLP_Branch _ ->
       failwith "todo: translate_pat [MLP_Branch]"
+
+and translate_pat_constant c : constant =
+   match c with
+   | MLC_Int (s, None) -> (CInt, s)
 
 and translate_constant c: expr =
   match c with
