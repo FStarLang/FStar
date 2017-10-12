@@ -3025,7 +3025,7 @@ and tc_abs:
                                         let c =
                                           FStar_Syntax_Subst.subst_comp
                                             subst1 c_expected2 in
-                                        if FStar_Syntax_Util.is_named_tot c
+                                        if FStar_Options.ml_ish () || FStar_Syntax_Util.is_named_tot c
                                         then
                                           let t3 =
                                             FStar_TypeChecker_Normalize.unfold_whnf
@@ -5691,6 +5691,7 @@ and build_let_rec_env:
       fun lbs  ->
         let env0 = env in
         let termination_check_enabled lbname lbdef lbtyp =
+          if FStar_Options.ml_ish () then false else
           let t = FStar_TypeChecker_Normalize.unfold_whnf env lbtyp in
           let uu____13864 =
             let uu____13869 =
