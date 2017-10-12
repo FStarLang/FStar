@@ -74,13 +74,6 @@ type step =
   | Unmeta          //remove all non-monadic metas.
 and steps = list<step>
 
-type closure =
-  | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
-  | Univ of universe                                //universe terms do not have free variables
-  | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
-and env = list<(option<binder> * closure)>
-type branches = list<(pat * option<term> * term)>
-
 type psc = {
     psc_range:FStar.Range.range;
     psc_subst:subst_t
@@ -100,7 +93,9 @@ type closure =
   | Clos of env * term * memo<(env * term)> * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                               //universe terms do not have free variables
   | Dummy                                          //Dummy is a placeholder for a binder when doing strong reduction
-and env = list<closure>
+and env = list<(option<binder>*closure)>
+
+let dummy : option<binder> * closure = None,Dummy
 
 let closure_to_string = function
     | Clos (_, t, _, _) -> Print.term_to_string t
@@ -133,19 +128,6 @@ type stack_elt =
  | Steps    of steps * list<primitive_step> * list<Env.delta_level>
  | Debug    of term * BU.time
 type stack = list<stack_elt>
-
-type cfg = {
-    steps: steps;
-    tcenv: Env.env;
-    delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
-    primitive_steps:list<primitive_step>
-}
-let dummy : option<binder> * closure = None,Dummy
-
-let closure_to_string = function
-    | Clos (_, t, _, _) -> Print.term_to_string t
-    | Univ _ -> "Univ"
-    | Dummy -> "dummy"
 
 let mk t r = mk t None r
 let set_memo r t =
@@ -361,7 +343,7 @@ let rec closure_as_term cfg (env:env) t =
 
            | Tm_let((false, [lb]), body) -> //non-recursive let
              let env0 = env in
-             let env = List.fold_left (fun env _ -> (None, Dummy)::env) env lb.lbunivs in
+             let env = List.fold_left (fun env _ -> dummy::env) env lb.lbunivs in
              let typ = closure_as_term_delayed cfg env lb.lbtyp in
              let def = closure_as_term cfg env lb.lbdef in
              let nm, body =
@@ -369,16 +351,16 @@ let rec closure_as_term cfg (env:env) t =
                 then lb.lbname, body
                 else let x = BU.left lb.lbname in
                      Inl ({x with sort=typ}),
-                     closure_as_term cfg ((None,Dummy)::env0) body in
+                     closure_as_term cfg (dummy::env0) body in
              let lb = {lb with lbname=nm; lbtyp=typ; lbdef=def} in
              mk (Tm_let((false, [lb]), body)) t.pos
 
            | Tm_let((_,lbs), body) -> //recursive let
              let norm_one_lb env lb =
-                let env_univs = List.fold_right (fun _ env -> (None,Dummy)::env) lb.lbunivs env in
+                let env_univs = List.fold_right (fun _ env -> dummy::env) lb.lbunivs env in
                 let env = if S.is_top_level lbs
                           then env_univs
-                          else List.fold_right (fun _ env -> (None,Dummy)::env) lbs env_univs in
+                          else List.fold_right (fun _ env -> dummy::env) lbs env_univs in
                 let ty = closure_as_term cfg env_univs lb.lbtyp in
                 let nm = if S.is_top_level lbs then lb.lbname else let x = BU.left lb.lbname in {x with sort=ty} |> Inl in
                 {lb with lbname=nm;
@@ -386,7 +368,7 @@ let rec closure_as_term cfg (env:env) t =
                          lbdef=closure_as_term cfg env lb.lbdef} in
              let lbs = lbs |> List.map (norm_one_lb env) in
              let body =
-                let body_env = List.fold_right (fun _ env -> (None,Dummy)::env) lbs env in
+                let body_env = List.fold_right (fun _ env -> dummy::env) lbs env in
                 closure_as_term cfg body_env body in
              mk (Tm_let((true, lbs), body)) t.pos
 
@@ -753,7 +735,7 @@ let mk_psc_subst cfg env =
         (fun (binder_opt, closure) subst ->
             match binder_opt, closure with
             | Some b, Clos(env, term, memo, _) ->
-                BU.print1 "++++++++++++Name in environment is %s" (Print.binder_to_string b);
+                // BU.print1 "++++++++++++Name in environment is %s" (Print.binder_to_string b);
                 let bv,_ = b in
                 if not (U.is_constructed_typ bv.sort FStar.Parser.Const.fstar_reflection_types_binder_lid)
                 then subst
@@ -880,7 +862,7 @@ let maybe_simplify cfg env stack tm =
            | _ -> tm
       else reduce_equality cfg env stack tm
     | _ -> tm
-                
+
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
@@ -933,7 +915,7 @@ let is_reify_head = function
 
 let firstn k l = if List.length l < k then l,[] else first_N k l
 let should_reify cfg stack = match stack with
-    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
+    | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _ ->
         // BU.print1 "Found a reify on the stack. %s" "" ;
         cfg.steps |> List.contains Reify
     | _ -> false
@@ -1571,7 +1553,7 @@ and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
          if n > 0
          then match stack with //universe beta reduction
                 | UnivArgs(us', _)::stack ->
-                  let env = us' |> List.fold_left (fun env u -> Univ u::env) env in
+                  let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) env in
                   norm cfg env stack t
                 | _ when (cfg.steps |> List.contains EraseUniverses) ->
                   norm cfg env stack t

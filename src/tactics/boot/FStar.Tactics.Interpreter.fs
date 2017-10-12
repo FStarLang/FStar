@@ -69,27 +69,27 @@ let mk_tactic_interpretation_1 (t:'a -> tac<'r>) (unembed_a:term -> option<'a>)
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_1_env (ps:proofstate)
-                                   (t:N.psc -> 'b -> tac<'a>) (unembed_b:term -> 'b)
+let mk_tactic_interpretation_1_env (t:N.psc -> 'b -> tac<'a>)
+                                   (unembed_b:term -> option<'b>)
                                    (embed_a:'a -> term) (t_a:typ)
-                                   (nm:Ident.lid) ctxt (args:args) : option<term> =
+                                   (nm:Ident.lid) (psc:N.psc) (args:args) : option<term> =
   match args with
   | [(b, _); (embedded_state, _)] ->
+    BU.bind_opt (E.unembed_proofstate embedded_state) (fun ps ->
     log ps (fun () ->
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
             (Print.term_to_string embedded_state));
-    let ps = E.unembed_proofstate embedded_state in
-    let res = run (t ctxt (unembed_b b)) ps in
-    Some (E.embed_result ps res embed_a t_a)
+    BU.bind_opt (unembed_b b) (fun b ->
+    let res = run (t psc b) ps in
+    Some (E.embed_result ps res embed_a t_a)))
   | _ ->
     failwith (Util.format2 "Unexpected application of tactic primitive %s %s" (Ident.string_of_lid nm) (Print.args_to_string args))
 
-let mk_tactic_interpretation_2 (ps:proofstate)
-                               (t:'a -> 'b -> tac<'r>)
+let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
                                (unembed_a:term -> option<'a>)
                                (unembed_b:term -> option<'b>)
-                               (embed_r:'r -> term) 
+                               (embed_r:'r -> term)
                                (t_r:typ)
                                (nm:Ident.lid) (args:args) : option<term> =
   match args with
@@ -157,7 +157,7 @@ let step_from_native_step (s: native_primitive_step): N.primitive_step =
       N.arity=s.arity;
       N.strong_reduction_ok=s.strong_reduction_ok;
       N.requires_binder_substitution = false;
-      N.interpretation=(fun ps args -> s.tactic ps args) }
+      N.interpretation=(fun _psc args -> s.tactic args) }
 
 let rec primitive_steps () : list<N.primitive_step> =
     let mk nm arity interpretation =
@@ -174,7 +174,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       N.arity=arity;
       N.strong_reduction_ok=false;
       N.requires_binder_substitution = true;
-      N.interpretation=(fun ctxt args -> interpretation nm ctxt args)
+      N.interpretation=(fun psc args -> interpretation nm psc args)
     } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map step_from_native_step native_tactics in
@@ -187,19 +187,14 @@ let rec primitive_steps () : list<N.primitive_step> =
                (e_r : 'r -> term) (tr : typ) : N.primitive_step =
         mk name 2 (mk_tactic_interpretation_1 f u_a e_r tr)
     in
-<<<<<<< HEAD
     let mktac1_env (name : string) (f : N.psc -> 'a -> tac<'b>)
-                    (u_a : term -> 'a) (e_b : 'b -> term) (tb : typ) : N.primitive_step =
-        mk_env name 2 (mk_tactic_interpretation_1_env ps f u_a e_b tb)
+                   (u_a : term -> option<'a>) (e_b : 'b -> term) (tb : typ) : N.primitive_step =
+        mk_env name 2 (mk_tactic_interpretation_1_env f u_a e_b tb)
     in
-    let mktac2 (name : string) (f : 'a -> 'b -> tac<'c>) (u_a : term -> 'a) (u_b : term -> 'b) (e_c : 'c -> term) (tc : typ) : N.primitive_step =
-        mk name 3 (mk_tactic_interpretation_2 f u_a u_b e_c tc)
-=======
     let mktac2 (name : string) (f : 'a -> 'b -> tac<'r>)
                (u_a : term -> option<'a>) (u_b : term -> option<'b>)
                (e_r : 'r -> term) (tr : typ) : N.primitive_step =
         mk name 3 (mk_tactic_interpretation_2 f u_a u_b e_r tr)
->>>>>>> origin/master
     in
     let mktac3 (name : string) (f : 'a -> 'b -> 'c -> tac<'r>)
                (u_a : term -> option<'a>) (u_b : term -> option<'b>) (u_c : term -> option<'c>)
@@ -298,7 +293,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__addns"         addns unembed_string embed_unit t_unit;
 
       mktac1 "__print"         (fun x -> ret (tacprint x)) unembed_string embed_unit t_unit;
-      mktac1_env "__dump"          print_proof_state unembed_string embed_unit t_unit;
+      mktac1_env "__dump"      print_proof_state unembed_string embed_unit t_unit;
       mktac1 "__dump1"         print_proof_state1 unembed_string embed_unit t_unit;
 
       mktac2 "__pointwise"     pointwise E.unembed_direction (unembed_tactic_0' unembed_unit) embed_unit t_unit;
@@ -367,7 +362,7 @@ let report_implicits ps (is : Env.implicits) : unit =
     match errs with
     | [] -> ()
     | hd::tl -> begin
-        dump_proofstate ps "failing due to uninstantiated implicits";
+        dump_proofstate ps N.null_psc "failing due to uninstantiated implicits";
         // A trick to print each error exactly once.
         Err.add_errors tl;
         raise (Err.Error hd)
@@ -414,13 +409,8 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         (ps.goals@ps.smt_goals, w)
 
     | Failed (s, ps) ->
-<<<<<<< HEAD
         dump_proofstate ps N.null_psc "at the time of failure";
-        raise (Error (BU.format1 "user tactic failed: %s" s, typ.pos))
-=======
-        dump_proofstate ps "at the time of failure";
         raise (Err.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
->>>>>>> origin/master
 
 // Polarity
 type pol = | Pos | Neg
