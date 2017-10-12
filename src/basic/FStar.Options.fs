@@ -1011,7 +1011,6 @@ let fstar_home () =
 exception File_argument of string
 
 let set_options o s =
-    printfn "set-options <%s>" s;
     let specs = match o with
         | Set -> settable_specs
         | Reset -> resettable_specs
