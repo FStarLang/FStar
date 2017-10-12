@@ -30,3 +30,9 @@ open FStar.HyperHeap.All
 
 val get_all : o:(option 'a) -> All 'a (fun h0 -> Some? o) (fun h0 x h1 -> V (Some?.v o) == x)
 let get_all (Some x) = x
+
+(* The return type must be unconditionally well-formed, thus this would fail *)
+
+(* val fails : o:(option 'a) -> Pure (x:'a{x == Some?.v o}) (requires (Some? o)) *)
+(*                                                          (ensures (fun _ -> True)) *)
+(* let fails (Some x) = x *)
