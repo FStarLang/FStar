@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "b3ecbb76f7428458e3d96191f655c0a8"
+      "d848f3928746ff8c1ea3de0d0436ac33"
     ],
     [
       "Normalization.id",
@@ -25,7 +25,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4cdc1acec740981ba827959e52746262"
+      "cb5a8b214a973e7048b98367e8e58188"
     ],
     [
       "Normalization.test2",
@@ -34,7 +34,7 @@
       0,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "fbd56de92ae1ee2b4045d5dc6f1ca1cf"
+      "2aadaace644dd9a9bbc3a82eccfba2b3"
     ],
     [
       "Normalization.test2",
@@ -43,7 +43,7 @@
       0,
       [ "@query", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "51a87b6ebc685e2470e0024b33ee960c"
+      "77373b8cb4e815e123eacb80121d26f2"
     ],
     [
       "Normalization.pow2_values",
@@ -52,7 +52,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8e152315ba45cec73604c3a9838ee752"
+      "938ae2c320735e131804a2748e8c5365"
     ],
     [
       "Normalization.pow2_values",
@@ -61,7 +61,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7569e860f47e881120c1d904936485bc"
+      "95c4cb78c57bec78846e85784c5729a1"
     ],
     [
       "Normalization.pow2_values",
@@ -70,7 +70,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6d33b25626641b2924690b9e0a30951a"
+      "d0e0e0062874cf7cb21719551aad6a22"
     ],
     [
       "Normalization.pow2_values",
@@ -79,7 +79,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "32c54c640fa0c4ece133773f8c3f5d5d"
+      "5a890454b1e25fc40d654cb260b0b2a2"
     ],
     [
       "Normalization.pow2_values",
@@ -88,7 +88,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d214b98e40ff7a6cb0a851d1688fb197"
+      "a41b518d8e8de7894f385b6c1430eebd"
     ],
     [
       "Normalization.pow2_values",
@@ -97,7 +97,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8fe38678cdb29271e98cbc14041c25ac"
+      "b1cfd232fcab60b9a1ded45e5da6f2a0"
     ],
     [
       "Normalization.pow2_values",
@@ -106,7 +106,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "863e9bb41cdae296c7da3a489b6b6def"
+      "a5fa854d985a03667816341d796098b8"
     ],
     [
       "Normalization.pow2_values",
@@ -115,7 +115,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "bfc32b7249e9c3fe49de2e98edbe63bd"
+      "13155be3e901285db65533e20297f11b"
     ],
     [
       "Normalization.pow2_values",
@@ -124,7 +124,7 @@
       0,
       [ "@query", "equation_Prims.l_True" ],
       0,
-      "8a863a033b17e7a5a2ce8e44d6ecde52"
+      "31a71b60264fe90857658c84615ccba0"
     ],
     [
       "Normalization.pow2_values",
@@ -136,7 +136,7 @@
         "projection_inverse_BoxInt_proj_0", "unit_typing"
       ],
       0,
-      "66c6d614b0b8de5ced2893ecfc68655d"
+      "0d16545e7591cdd15934a43bae78d44e"
     ],
     [
       "Normalization.compare",
@@ -145,7 +145,7 @@
       0,
       [ "@query" ],
       0,
-      "0c09dd2b4234c8a3e120950938bfe5ee"
+      "b782e4654df3c0bdcaa5aef5938304c6"
     ],
     [
       "Normalization.test_sort",
@@ -157,7 +157,7 @@
         "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
       ],
       0,
-      "80395b477368c9b55408ccbf02b625c6"
+      "3d6262f191db7d887a0208099eb0b269"
     ],
     [
       "Normalization.test_sort",
@@ -166,7 +166,7 @@
       0,
       [ "@query" ],
       0,
-      "5e9eb8660f8da6b5f3e9b5144319c0c2"
+      "b82d1f802d5dd1805684baa8a9650d7b"
     ]
   ]
 ]
