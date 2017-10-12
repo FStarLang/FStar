@@ -14,7 +14,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cda9e017fbdd67656b44dd0ef2b8065c"
+      "69b3bfa2b56d7290f892bd24071f480f"
     ],
     [
       "Ex04c.mem",
@@ -29,7 +29,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f864cbf8646f4c56dcadca4400be6f1f"
+      "03a8064e89fa5c0efbc2684c9835d7db"
     ],
     [
       "Ex04c.mem",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "967aa1048b7e8508f67b81deaca70ba5"
+      "8eb7bb7dcc8c3947b7f67939b1584d52"
     ],
     [
       "Ex04c.append_mem",
@@ -75,7 +75,7 @@
         "typing_Ex04c.mem", "unit_typing"
       ],
       0,
-      "368958174682c2c81f8bb3c28070afce"
+      "cf60ad8f85e0c2a8d3a3bad993a1586f"
     ]
   ]
 ]

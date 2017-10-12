@@ -14,7 +14,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "56a605d64befe076f2af92b8a5d3381a"
+      "96960050125c8e1f95c2ed194448b841"
     ],
     [
       "Cases.test_cases_unsquash",
@@ -29,7 +29,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "dd3c584d52d08d88368d8467d0f3cbf0"
+      "224802b9c9fe1a247132e2b8a9714d2a"
     ],
     [
       "Cases.test_cases_bool",
@@ -38,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "917a2d5e29d8233f06a8ff3924f4e4f0"
+      "80b53d6eede6d2544447001ee9ad3bd6"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "abf7281bbdda0cf1e0fcc5ec88e243f2"
+      "cec4813daedcc2e9a28dc581d9f441e1"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -56,19 +56,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4c9cf9f2351246d294dc95f0e0b9a968"
+      "0d12bff5efae85e6d2fdb8c18bbe1c01"
     ],
     [
       "Cases.test_cases_bool_2",
       3,
       2,
       1,
-      [
-        "@query", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
-      ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ecf5a557fcc0ed40ae1ed60cb3db9b7d"
+      "deaba9b8f73b12f4aa5bd91e5d6b22bd"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -82,16 +79,30 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "5cd7e75fc677e8f4c6ac5591bd66c9cb"
+      "b280ca4e5c59703e2dc9a1416738c833"
     ],
     [
       "Cases.test_cases_bool_2",
       5,
       2,
       1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "cae474b7e41854d4ff1c983a559dd146"
+    ],
+    [
+      "Cases.test_cases_bool_2",
+      6,
+      2,
+      1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "71d30c567276a9203217104153ec5f3b"
+      "ed9f7faf8aff0fab33c9e1a023e2b050"
     ]
   ]
 ]
