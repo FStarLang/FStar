@@ -846,9 +846,8 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Do not run the tactic engine before discharging a VC");
 
        ( noshort,
-        "using_facts_from",
-        WithSideEffect ((fun () -> set_option "z3refresh" (mk_bool true)),
-                        Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'")),
+         "using_facts_from",
+         Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'"),
         "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\t\
          Facts can be include or excluded using the [+|-] qualifier. \n\t\t\t\
          For example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\t\
@@ -1012,6 +1011,7 @@ let fstar_home () =
 exception File_argument of string
 
 let set_options o s =
+    printfn "set-options <%s>" s;
     let specs = match o with
         | Set -> settable_specs
         | Reset -> resettable_specs
