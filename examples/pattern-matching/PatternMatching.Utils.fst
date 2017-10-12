@@ -39,6 +39,11 @@ let rec string_of_pattern = function
 | PApp l r -> "(" ^ string_of_pattern l ^ " "
                  ^ string_of_pattern r ^ ")"
 
+let string_of_bindings (bindings: bindings) =
+  String.concat "\n"
+    (List.Tot.map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
+                  bindings)
+
 let print_term t = print (term_to_string t)
 
 let rec tacmap (f: 'a -> Tac 'b) (ls: list 'a) : Tac (list 'b) =

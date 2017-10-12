@@ -11,3 +11,5 @@ type pattern =
 | PQn: qn: qn -> pattern
 | PType: pattern
 | PApp: hd: pattern -> arg: pattern -> pattern
+
+type bindings = list (varname * term)

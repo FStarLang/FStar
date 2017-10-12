@@ -6,18 +6,11 @@ open PatternMatching.Types
 open PatternMatching.Utils
 open PatternMatching.Exceptions
 
-type bindings = list (varname * term)
-
-let string_of_bindings (bindings: bindings) =
-  String.concat "\n"
-    (List.Tot.map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
-                  bindings)
-
 /// Pattern interpretation
 /// ======================
 
 (** Match a pattern against a term.
-`cur_bindings` is a list of bindings colelcted while matching previous parts of
+`cur_bindings` is a list of bindings collected while matching previous parts of
 the pattern.  Returns a result in the exception monad. **)
 let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings)
     : term -> match_res bindings =
@@ -53,7 +46,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings)
     | PType -> interp_type cur_bindings tm
     | PApp p_hd p_arg -> interp_app p_hd p_arg cur_bindings tm
 
-(** Match it against a term.
+(** Match a pattern `pat` against a term.
 Returns a result in the exception monad. **)
 let interp_pattern (pat: pattern) : term -> match_res bindings =
   fun (tm: term) ->
@@ -569,24 +562,22 @@ let example #a #b #c: unit =
                    (repeat' // FIXME why does adding #unit here fail?
                      (dump "";; // FIXME: removing this ``idtac`` makes everything fail, really slowly
                       lpm (fun (a: Type) (h: hyp (squash a)) ->
-                             clear h () <: Tac unit)
-                      <||>
+                             clear h () <: Tac unit) <||>
                       lpm (fun (a b: Type0) (g: goal (squash (a ==> b))) ->
-                             implies_intro' () <: Tac unit)
-                      <||>
+                             implies_intro' () <: Tac unit) <||>
                       lpm (fun (a b: Type0) (h: hyp (a /\ b)) ->
-                             and_elim' h () <: Tac unit)
-                      <||>
+                             and_elim' h () <: Tac unit) <||>
                       lpm (fun (a b: Type0) (h: hyp (a == b)) (g: goal (squash a)) ->
-                             rewrite h () <: Tac unit)
-                      <||>
+                             rewrite h () <: Tac unit) <||>
                       lpm #unit (fun (a: Type0) (h: hyp a) (g: goal (squash a)) ->
                                    exact_hyp a h () <: Tac unit));;
                     done)
 
+
+
 #reset-options
 
-let example #a #b #c: unit =
+let example2 #a #b #c: unit =
   assert_by_tactic (a /\ b ==> c == b ==> c)
                    (tfirst #unit
                       [lpm (fun (a: Type) (h: hyp (squash a)) ->
@@ -611,46 +602,6 @@ let example #a #b #c: unit =
 //                     print (string_of_matching_solution ms);;
 //                     // print (string_of_matching_problem mp);;
 //                     fail "A")
-
-let example (a b: int) =
-  assert_by_tactic (a == b ==> a + 1 == b + 1)
-                   (_ <-- implies_intros;
-                    env <-- cur_env;
-                    dump "AA";;
-                    let binders = binders_of_env env in
-                    print (String.concat "\n\n" (List.Tot.map (fun b -> inspect_bv b ^ ": " ^ (term_to_string (type_of_binder b))) binders));;
-                    match List.Tot.rev binders with
-                    | [] -> print "??"
-                    | h :: _ ->
-                      rewrite h;;
-                      dump "BB")
-
-
-let example (p1 p2: Type0) =
-  assert_by_tactic (p1 ==> (p1 ==> p2) ==> p2)
-                   (_ <-- implies_intros;
-                    env <-- cur_env;
-                    dump "AA";;
-                    let binders = binders_of_env env in
-                    print (String.concat "\n\n" (List.Tot.map (fun b -> inspect_bv b ^ ": " ^ (term_to_string (type_of_binder b))) binders));;
-                    match List.Tot.rev binders with
-                    | [] -> print "??"
-                    | h :: _ ->
-                      let t = pack (Tv_Var h) in
-                      apply_lemma (return t))
-                    // mgw unit (fun (a b: var) (h1: hyp (a ==> b)) (h2: hyp (a)) (_: goal (squash b)) ->
-                    //             let open FStar.Tactics in
-                    //             print "hello!" ();
-                    //             print (inspect_bv h1) ();
-                    //             print (inspect_bv h2) ();
-                    //             apply_lemma (fun () -> (pack (Tv_Var h1))) ())
-
-// let __ =
-//   assert_by_tactic (1 == 1)
-//                    (fun () ->
-//                      let problem = { )
-
-//   hyp_binders <--
 
 let tmatch_term pat tm : tactic bindings =
   lift_exn_tactic (interp_pattern pat) tm
