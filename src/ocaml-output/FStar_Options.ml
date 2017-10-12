@@ -1571,7 +1571,7 @@ let rec specs_with_types:
                                                                     (Accumulated
                                                                     (SimpleStr
                                                                     "One or more space-separated occurrences of '[+|-]( * | namespace | fact id)'")))),
-                                                                    "\n\t\tImplies --z3refresh; prunes the context to include only the facts from the given namespace or fact id. \n\t\t\tFacts can be include or excluded using the [+|-] qualifier. \n\t\t\tFor example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\tremove all facts from FStar.List.Tot.*, \n\t\t\t\tretain all remaining facts from FStar.List.*, \n\t\t\t\tremove all facts from FStar.Reflection.*, \n\t\t\t\tand retain all the rest.\n\t\tNote, the '+' is optional: --using_facts_from 'FStar.List' is equivalent to --using_facts_from '+FStar.List'. \n\t\tMultiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.")
+                                                                    "\n\t\tPrunes the context to include only the facts from the given namespace or fact id. \n\t\t\tFacts can be include or excluded using the [+|-] qualifier. \n\t\t\tFor example --using_facts_from '* -FStar.Reflection +FStar.List -FStar.List.Tot' will \n\t\t\t\tremove all facts from FStar.List.Tot.*, \n\t\t\t\tretain all remaining facts from FStar.List.*, \n\t\t\t\tremove all facts from FStar.Reflection.*, \n\t\t\t\tand retain all the rest.\n\t\tNote, the '+' is optional: --using_facts_from 'FStar.List' is equivalent to --using_facts_from '+FStar.List'. \n\t\tMultiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.")
                                                                     ::
                                                                     uu____4278 in
                                                                     uu____4256
@@ -1921,7 +1921,6 @@ let settable: Prims.string -> Prims.bool =
     | "no_tactics" -> true
     | "tactic_trace" -> true
     | "tactic_trace_d" -> true
-    | "using_facts_from" -> true
     | "__temp_no_proj" -> true
     | "reuse_hint_for" -> true
     | "z3rlimit_factor" -> true
@@ -1929,7 +1928,9 @@ let settable: Prims.string -> Prims.bool =
     | "z3refresh" -> true
     | uu____5312 -> false
 let resettable: Prims.string -> Prims.bool =
-  fun s  -> ((settable s) || (s = "z3seed")) || (s = "z3cliopt")
+  fun s  ->
+    (((settable s) || (s = "z3seed")) || (s = "z3cliopt")) ||
+      (s = "using_facts_from")
 let all_specs: FStar_Getopt.opt Prims.list = specs ()
 let all_specs_with_types:
   (FStar_BaseTypes.char,Prims.string,opt_type,Prims.string)
@@ -2322,47 +2323,75 @@ let use_native_tactics:
 let use_tactics: Prims.unit -> Prims.bool =
   fun uu____6396  -> get_use_tactics ()
 let using_facts_from:
-  Prims.unit -> Prims.string Prims.list FStar_Pervasives_Native.option =
-  fun uu____6404  -> get_using_facts_from ()
+  Prims.unit ->
+    (FStar_Ident.path,Prims.bool) FStar_Pervasives_Native.tuple2 Prims.list
+  =
+  fun uu____6406  ->
+    let parse_one_setting s =
+      if s = "*"
+      then ([], true)
+      else
+        if FStar_Util.starts_with s "-"
+        then
+          (let path =
+             let uu____6435 =
+               FStar_Util.substring_from s (Prims.parse_int "1") in
+             FStar_Ident.path_of_text uu____6435 in
+           (path, false))
+        else
+          (let s1 =
+             if FStar_Util.starts_with s "+"
+             then FStar_Util.substring_from s (Prims.parse_int "1")
+             else s in
+           ((FStar_Ident.path_of_text s1), true)) in
+    let parse_setting s =
+      FStar_All.pipe_right (FStar_Util.split s " ")
+        (FStar_List.map parse_one_setting) in
+    let uu____6471 = get_using_facts_from () in
+    match uu____6471 with
+    | FStar_Pervasives_Native.None  -> [([], true)]
+    | FStar_Pervasives_Native.Some ns ->
+        let uu____6503 = FStar_List.collect parse_setting ns in
+        FStar_All.pipe_right uu____6503 FStar_List.rev
 let verify_all: Prims.unit -> Prims.bool =
-  fun uu____6408  -> get_verify_all ()
+  fun uu____6543  -> get_verify_all ()
 let verify_module: Prims.unit -> Prims.string Prims.list =
-  fun uu____6414  -> get_verify_module ()
+  fun uu____6549  -> get_verify_module ()
 let warn_default_effects: Prims.unit -> Prims.bool =
-  fun uu____6418  -> get_warn_default_effects ()
+  fun uu____6553  -> get_warn_default_effects ()
 let z3_exe: Prims.unit -> Prims.string =
-  fun uu____6422  ->
-    let uu____6423 = get_smt () in
-    match uu____6423 with
+  fun uu____6557  ->
+    let uu____6558 = get_smt () in
+    match uu____6558 with
     | FStar_Pervasives_Native.None  -> FStar_Platform.exe "z3"
     | FStar_Pervasives_Native.Some s -> s
 let z3_cliopt: Prims.unit -> Prims.string Prims.list =
-  fun uu____6432  -> get_z3cliopt ()
+  fun uu____6567  -> get_z3cliopt ()
 let z3_refresh: Prims.unit -> Prims.bool =
-  fun uu____6436  -> get_z3refresh ()
-let z3_rlimit: Prims.unit -> Prims.int = fun uu____6440  -> get_z3rlimit ()
+  fun uu____6571  -> get_z3refresh ()
+let z3_rlimit: Prims.unit -> Prims.int = fun uu____6575  -> get_z3rlimit ()
 let z3_rlimit_factor: Prims.unit -> Prims.int =
-  fun uu____6444  -> get_z3rlimit_factor ()
-let z3_seed: Prims.unit -> Prims.int = fun uu____6448  -> get_z3seed ()
+  fun uu____6579  -> get_z3rlimit_factor ()
+let z3_seed: Prims.unit -> Prims.int = fun uu____6583  -> get_z3seed ()
 let no_positivity: Prims.unit -> Prims.bool =
-  fun uu____6452  -> get_no_positivity ()
+  fun uu____6587  -> get_no_positivity ()
 let ml_no_eta_expand_coertions: Prims.unit -> Prims.bool =
-  fun uu____6456  -> get_ml_no_eta_expand_coertions ()
+  fun uu____6591  -> get_ml_no_eta_expand_coertions ()
 let should_extract: Prims.string -> Prims.bool =
   fun m  ->
-    (let uu____6463 = no_extract m in Prims.op_Negation uu____6463) &&
+    (let uu____6598 = no_extract m in Prims.op_Negation uu____6598) &&
       ((extract_all ()) ||
-         (let uu____6466 = get_extract_module () in
-          match uu____6466 with
+         (let uu____6601 = get_extract_module () in
+          match uu____6601 with
           | [] ->
-              let uu____6469 = get_extract_namespace () in
-              (match uu____6469 with
+              let uu____6604 = get_extract_namespace () in
+              (match uu____6604 with
                | [] -> true
                | ns ->
                    FStar_Util.for_some
                      (FStar_Util.starts_with (FStar_String.lowercase m)) ns)
           | l -> FStar_List.contains (FStar_String.lowercase m) l))
 let codegen_fsharp: Prims.unit -> Prims.bool =
-  fun uu____6481  ->
-    let uu____6482 = codegen () in
-    uu____6482 = (FStar_Pervasives_Native.Some "FSharp")
+  fun uu____6616  ->
+    let uu____6617 = codegen () in
+    uu____6617 = (FStar_Pervasives_Native.Some "FSharp")
