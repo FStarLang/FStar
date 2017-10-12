@@ -1786,9 +1786,9 @@ let gen_bv:
   fun s  ->
     fun r  ->
       fun t  ->
-        let id = FStar_Ident.mk_ident (s, (range_of_ropt r)) in
+        let id1 = FStar_Ident.mk_ident (s, (range_of_ropt r)) in
         let uu____6342 = next_id () in
-        { ppname = id; index = uu____6342; sort = t }
+        { ppname = id1; index = uu____6342; sort = t }
 let new_bv: FStar_Range.range FStar_Pervasives_Native.option -> typ -> bv =
   fun ropt  -> fun t  -> gen_bv FStar_Ident.reserved_prefix ropt t
 let freshen_bv: bv -> bv =
@@ -1811,10 +1811,10 @@ let freshen_bv: bv -> bv =
 let new_univ_name:
   FStar_Range.range FStar_Pervasives_Native.option -> univ_name =
   fun ropt  ->
-    let id = next_id () in
+    let id1 = next_id () in
     let uu____6376 =
       let uu____6381 =
-        let uu____6382 = FStar_Util.string_of_int id in
+        let uu____6382 = FStar_Util.string_of_int id1 in
         Prims.strcat FStar_Ident.reserved_prefix uu____6382 in
       (uu____6381, (range_of_ropt ropt)) in
     FStar_Ident.mk_ident uu____6376
