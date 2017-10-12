@@ -411,7 +411,7 @@ let with_comment printer tm tmrange =
   group (comments ^^ printed_e)
 
 (* [place_comments_until_pos k lbegin pos doc] appends to doc all the comments present in *)
-(* [comment_stack] whose range is before pos and separate each comments by as much lines *)
+(* [comment_stack] whose range is before pos_end and separate each comments by as much lines *)
 (* as indicated by the range information (at least [k]) using [lbegin] as the last line of *)
 (* [doc] in the original document. Between 2 comments [k] is set to [1] *)
 let rec place_comments_until_pos k lbegin pos_end doc =
@@ -838,19 +838,24 @@ and p_lidentOrUnderscore id =
 
 and p_term e = match (unparen e).tm with
   | Seq (e1, e2) ->
-      group (p_noSeqTerm e1 ^^ semi) ^/^ p_term e2
+      group (p_noSeqTerm_resolveSR e1 ^^ semi) ^/^ p_term e2
   | Bind(x, e1, e2) ->
       group ((p_lident x ^^ space ^^ long_left_arrow) ^/+^ (p_noSeqTerm e1 ^^ space ^^ semi)) ^/^ p_term e2
   | _ ->
       group (p_noSeqTerm e)
 
+and p_noSeqTerm_resolveSR e = match (unparen e1).tm with
+  | TryWith _
+  | Match _
+  | Abs _ -> soft_begin_end_with_nesting (p_noSeqTerm e)
+  | _ -> p_noSeqTerm e
+
 and p_noSeqTerm e = with_comment p_noSeqTerm' e e.range
 
 and p_noSeqTerm' e = match (unparen e).tm with
-  | Ascribed (e, t, None) ->
-      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t)
-  | Ascribed (e, t, Some tac) ->
-      group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ t ^/^ str "by" ^/^ p_typ tac)
+  | Ascribed (e, t, tac_opt) ->
+      let p_tac tac = break 1 ^^ group (str "by" ^/^ p_typ tac) in
+      group (p_tmIff e ^/^ group (langle ^^ colon ^/^ p_typ t) ^^ optional p_tac tac_opt)
   | Op ({idText = ".()<-"}, [ e1; e2; e3 ]) ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term e2)
@@ -1287,25 +1292,29 @@ let modul_with_comments_to_document (m:modul) comments =
   in
   should_print_fs_typ_app := false ;
   match decls with
-    | [] -> empty, comments
-    | d :: ds ->
-      (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
-      (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
-      let decls, first_range =
-        match ds with
-        | { d = Pragma LightOff } :: _ ->
-            let d0 = List.hd ds in
-            d0 :: d :: List.tl ds, d0.drange
-        | _ -> d :: ds, d.drange
-      in
-      (* TODO : take into account the space of the fsdoc (and attributes ?) *)
-      let extract_decl_range d = d.drange in
-      comment_stack := comments ;
-      let initial_comment = place_comments_until_pos 0 1 (start_of_range first_range) empty in
-  let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
-  let comments = !comment_stack in
-  comment_stack := [] ;
-  should_print_fs_typ_app := false ;
-  (initial_comment ^^ doc, comments)
+  | [] -> empty, comments
+  | d :: ds ->
+    (* KM : Hack to fix the inversion that is happening in FStar.Parser.ASTs.as_frag *)
+    (* '#light "off"' is supposed to come before 'module ..' but it is swapped there *)
+    let decls, first_range =
+      match ds with
+      | { d = Pragma LightOff } :: _ ->
+          let d0 = List.hd ds in
+          d0 :: d :: List.tl ds, d0.drange
+      | _ -> d :: ds, d.drange
+    in
+    (* TODO : take into account the space of the fsdoc (and attributes ?) *)
+    let extract_decl_range d = d.drange in
+    comment_stack := comments ;
+    let initial_comment =
+      let initial_line_skip = 0 in
+      let starting_line = 1 in
+      place_comments_until_pos initial_line_skip starting_line (start_of_range first_range) empty
+    in
+    let doc = separate_map_with_comments empty empty decl_to_document decls extract_decl_range in
+    let comments = !comment_stack in
+    comment_stack := [] ;
+    should_print_fs_typ_app := false ;
+    (initial_comment ^^ doc, comments)
 
 

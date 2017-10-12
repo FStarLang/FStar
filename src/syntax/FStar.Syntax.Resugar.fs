@@ -79,6 +79,12 @@ let resugar_imp (q:option<S.arg_qualifier>) : option<A.imp> =
   | Some (S.Implicit true) ->
     (* We don't have syntax for inaccessible arguments *) None
 
+
+let resugar_uvar mk u =
+  let s = "?u" ^ (UF.uvar_id u |> string_of_int) in
+  (* TODO : should we put a pretty_non_parseable option for these cases ? *)
+  label s (mk A.Wild)
+
 let rec universe_to_int n u =
   match u with
     | U_succ u -> universe_to_int (n+1) u
@@ -90,42 +96,42 @@ let universe_to_string univs =
   else ""
 
 let rec resugar_universe (u:S.universe) r: A.term =
-  let mk (a:A.term') r: A.term =
+  let mk (a:A.term') : A.term =
       //augment `a` an Unknown level (the level is unimportant ... we should maybe remove it altogether)
-      A.mk_term a r A.Un
+      A.mk_term a A.Un
   in
   begin match u with
     | U_zero ->
-      mk (A.Const(Const_int ("0", None))) r
+      mk (A.Const(Const_int ("0", None)))
 
     | U_succ _ ->
       let (n, u) = universe_to_int 0 u in
       begin match u with
       | U_zero ->
-        mk (A.Const(Const_int(string_of_int n, None))) r
+        mk (A.Const(Const_int(string_of_int n, None)))
 
       | _ ->
-        let e1 = mk (A.Const(Const_int(string_of_int n, None))) r in
+        let e1 = mk (A.Const(Const_int(string_of_int n, None))) in
         let e2 = resugar_universe u r in
-        mk (A.Op(Ident.id_of_text "+", [e1; e2])) r
+        mk (A.Op(Ident.id_of_text "+", [e1; e2]))
       end
 
     | U_max l ->
       begin match l with
       | [] -> failwith "Impossible: U_max without arguments"
       | _ ->
-        let t = mk (A.Var(lid_of_path ["max"] r)) r in
-        List.fold_left(fun acc x -> mk (A.App(acc, resugar_universe x r, A.Nothing)) r) t l
+        let t = mk (A.Var(lid_of_path ["max"] r)) in
+        List.fold_left(fun acc x -> mk (A.App(acc, resugar_universe x r, A.Nothing))) t l
       end
 
-    | U_name u -> mk (A.Uvar(u)) r
-    | U_unif _ -> mk A.Wild r
+    | U_name u -> mk (A.Uvar(u))
+    | U_unif u -> resugar_uvar mk u
     | U_bvar x ->
       (* This case can happen when trying to print a subterm of a term that is not opened.*)
       let id = I.mk_ident (strcat "uu__univ_bvar_" (string_of_int x), r) in
-      mk (A.Uvar(id)) r
+      mk (A.Uvar(id))
 
-    | U_unknown -> mk A.Wild r (* not sure what to resugar to since it is not created by desugar *)
+    | U_unknown -> mk A.Wild (* not sure what to resugar to since it is not created by desugar *)
   end
 
 let string_to_op s =
@@ -622,9 +628,7 @@ let rec resugar_term (t : S.term) : A.term =
       mk (A.Let((if is_rec then A.Rec else A.NoLetQualifier), bnds, body))
 
     | Tm_uvar (u, _) ->
-      let s = "?u" ^ (UF.uvar_id u |> string_of_int) in
-      (* TODO : should we put a pretty_non_parseable option for these cases ? *)
-      label s (mk A.Wild)
+      resugar_uvar u
 
     | Tm_meta(e, m) ->
        let resugar_meta_desugared = function
