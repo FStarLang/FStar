@@ -20,6 +20,7 @@ all:	Apply.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	Trace.uver		\
+	Bug1299.fst		\
 	Nest.uver		\
 	TestBV.uver		\
 	Map.uver		\

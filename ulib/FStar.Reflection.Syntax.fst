@@ -225,8 +225,8 @@ let rec mk_list (ts : list term) : term =
     | t::ts -> mk_cons t (mk_list ts)
 
 let mktuple_n (ts : list term) : term =
-    assume (List.length ts <= 8);
-    match List.length ts with
+    assume (List.Tot.length ts <= 8);
+    match List.Tot.length ts with
     | 0 -> pack (Tv_Const C_Unit)
     | 1 -> let [x] = ts in x
     | n -> begin

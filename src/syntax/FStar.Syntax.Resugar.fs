@@ -44,8 +44,7 @@ module E = FStar.Errors
 let doc_to_string doc = FStar.Pprint.pretty_string (float_of_string "1.0") 100 doc
 let parser_term_to_string t = doc_to_string (D.term_to_document t)
 
-let map_opt (f:'a -> option<'b>) (l:list<'a>) : list<'b> =
-  snd (BU.choose_map (fun () x -> (), f x) () l)
+let map_opt = List.filter_map
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
@@ -72,15 +71,13 @@ let resugar_arg_qual (q:option<S.arg_qualifier>) : option<(option<A.arg_qualifie
     else Some (Some A.Implicit)
   | Some S.Equality -> Some (Some A.Equality)
 
-let resugar_imp (q:option<S.arg_qualifier>) : A.imp =
+let resugar_imp (q:option<S.arg_qualifier>) : option<A.imp> =
   match q with
-  | None -> A.Nothing
-  | Some (S.Implicit false) -> A.Hash
+  | None -> Some A.Nothing
+  | Some (S.Implicit false) -> Some A.Hash
   | Some S.Equality
   | Some (S.Implicit true) ->
-    (* This should be a proper error rather than a failwith *)
-    failwith "Not an imp"
-
+    (* We don't have syntax for inaccessible arguments *) None
 
 let rec universe_to_int n u =
   match u with
@@ -384,7 +381,14 @@ let rec resugar_term (t : S.term) : A.term =
       let resugar_as_app e args =
         let args = args |> List.map (fun (e, qual) -> resugar_term e, qual) in
         let e = resugar_term e in
-        List.fold_left (fun acc (x, qual) -> mk (A.App(acc, x, resugar_imp qual))) e args
+        let res_impl desugared_tm qual =
+          match resugar_imp qual with
+          | Some imp -> imp
+          | None -> Errors.warn t.pos
+                     (BU.format1 "Inaccessible argument %s in function application"
+                                 (parser_term_to_string desugared_tm));
+                   A.Nothing in
+        List.fold_left (fun acc (x, qual) -> mk (A.App(acc, x, res_impl x qual))) e args
       in
       let args = if (Options.print_implicits()) then args else filter_imp args
       in
@@ -645,7 +649,11 @@ let rec resugar_term (t : S.term) : A.term =
                   raise (E.Error ((BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e))), e.pos))
             in
             let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
-            let args = List.map (fun (t, q) -> (resugar_term t, resugar_imp q)) args in
+            let args =
+              List.filter_map (fun (t, q) ->
+                match resugar_imp q with
+                | Some rimp -> (* Real *) Some (resugar_term t, rimp)
+                | None -> (* Inaccessible *) None) args in
             let args =
               // ToDocument doesn't expect uvar that is added by the
               // typechecker in tuple constructor
@@ -699,7 +707,13 @@ let rec resugar_term (t : S.term) : A.term =
       | Meta_desugared i ->
           resugar_meta_desugared i
       | Meta_alien (_, s, _) ->
-          resugar_term e
+          begin match e.n with
+          | Tm_unknown ->
+              mk (A.Const (Const_string ("(alien:" ^ s ^ ")", e.pos)))
+          | _ ->
+              E.warn e.pos "Meta_alien was not a Tm_unknown";
+              resugar_term e
+          end
       | Meta_named t ->
           mk (A.Name t)
       | Meta_monadic (name, t)
@@ -814,7 +828,7 @@ and resugar_pat (p:S.pat) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt =
-    BU.bind_opt bopt (fun b -> if true then Some A.Implicit else None)
+    BU.bind_opt bopt (fun b -> if b then Some A.Implicit else None)
   in
   let rec aux (p:S.pat) (imp_opt:option<bool>)=
     match p.v with

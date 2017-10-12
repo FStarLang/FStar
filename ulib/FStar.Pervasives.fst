@@ -216,7 +216,7 @@ let allow_inversion (a:Type)
 val invertOption : a:Type -> Lemma
   (requires True)
   (ensures (forall (x:option a). None? x \/ Some? x))
-  [SMTPatT (option a)]
+  [SMTPat (option a)]
 let invertOption a = allow_inversion (option a)
 
 type either 'a 'b =
