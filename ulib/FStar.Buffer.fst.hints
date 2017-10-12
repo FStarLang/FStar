@@ -4800,7 +4800,7 @@
         "lemma_FStar.Buffer.lemma_modifies_2_comm", "unit_typing"
       ],
       0,
-      "b6ffbb53c41ada6c559f756cc0b1cf63"
+      "3b0418bc0ec38ef9b3a2e5486e519eb1"
     ],
     [
       "FStar.Buffer.lemma_modifies_1_1_prime",
@@ -5133,7 +5133,7 @@
         "unit_typing"
       ],
       0,
-      "17a55b0e831dfe17c1fea2b8575dc2ac"
+      "29fa3549c684a00d799d93baa857ee80"
     ],
     [
       "FStar.Buffer.lemma_modifies_0_unalloc",
