@@ -14,7 +14,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "799ec0bbd5fa0e629dd4e20ac8aad314"
+      "1db81db8e3acfae26475ec3eeba710b1"
     ],
     [
       "Ex06b.mem",
@@ -43,7 +43,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b419832b37d62b06fd3b741dd23e2927"
+      "db17e83b396588ed36a18267228a658e"
     ],
     [
       "Ex06b.append_mem",
@@ -81,7 +81,7 @@
         "subterm_ordering_Prims.Cons", "typing_Ex06b.mem", "unit_typing"
       ],
       0,
-      "0db6847c0cfba5c662d5dba46d5f308a"
+      "981e7a575316f520c9495d7a2da75a23"
     ],
     [
       "Ex06b.length",
@@ -99,7 +99,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "415b2c18fadd648598c57bc6290f2603"
+      "caf604ec7eb8a1e68bd23e5c8fb1792c"
     ],
     [
       "Ex06b.sorted",
@@ -118,7 +118,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "e598c00e136781394678e3a1f9745e73"
+      "ee621aa0b60a0af62d7ec7d0e4733868"
     ],
     [
       "Ex06b.partition",
@@ -133,7 +133,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f12c47892b6a5cc08aa0d222d85113b9"
+      "6f20e06defc47e91fffce9e7de55f286"
     ],
     [
       "Ex06b.partition_lemma",
@@ -204,7 +204,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "289e080b9febbcf7653fa69741ea226e"
+      "e4f4490a71b637b70b84dd1c7c6a1828"
     ],
     [
       "Ex06b.sorted_concat_lemma",
@@ -261,7 +261,7 @@
         "typing_Ex06b.sorted", "unit_typing"
       ],
       0,
-      "62e112cdfacb73aa54f20cc447732879"
+      "111333496ece462b0464c2f7a5c05deb"
     ],
     [
       "Ex06b.sort",
@@ -351,7 +351,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "48842b0d247732ce29bec1c88beb3d7e"
+      "e313abbf43c1b35d1a401a60fd222a54"
     ],
     [
       "Ex06b.sort",

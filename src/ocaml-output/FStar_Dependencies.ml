@@ -15,7 +15,7 @@ let find_deps_if_needed:
              (match deps with
               | [] ->
                   (FStar_Util.print_error
-                     "Dependency analysis failed; reverting to using only the files provided";
+                     "Dependency analysis failed; reverting to using only the files provided\n";
                    files)
               | uu____88 ->
                   let deps1 = FStar_List.rev deps in
@@ -30,7 +30,7 @@ let find_deps_if_needed:
                     then FStar_List.tl deps1
                     else
                       (FStar_Util.print1_error
-                         "dependency analysis did not find prims module %s?!"
+                         "Dependency analysis did not find prims module %s?!\n"
                          prims1;
                        FStar_All.exit (Prims.parse_int "1")) in
                   deps2))

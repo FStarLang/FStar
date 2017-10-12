@@ -90,7 +90,7 @@ FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_i
 
 ALL_BOOT=$(addprefix boot/FStar., \
            Util.fsti List.fsti Bytes.fsti String.fsti \
-		   Range.fsti Pprint.fsti Parser.Parse.fsti \
+		   Pprint.fsti Parser.Parse.fsti \
 		   Tactics.Interpreter.fst Tactics.Interpreter.fsti)
 
 boot/%.fsti: basic/boot/%.fsi | boot_dir
@@ -130,9 +130,9 @@ boot: $(ALL_BOOT)
 clean_boot:
 	rm -rf boot
 
-MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Options.fs FStar.Ident.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
+MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Options.fs FStar.Range.fs FStar.Ident.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
 extract_misc: boot $(MISC_EXTRACTED_FILES)
-	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
+	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Range FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
 
 SYNTAX_EXTRACTED_FILES=$(addprefix syntax/FStar.Syntax., Syntax.fs Subst.fs Free.fs InstFV.fs Util.fs Print.fs Embeddings.fs MutRecTy.fs Resugar.fs Unionfind.fs) fsdoc/FStar.Fsdoc.Generator.fs
 extract_syntax: boot $(SYNTAX_EXTRACTED_FILES)

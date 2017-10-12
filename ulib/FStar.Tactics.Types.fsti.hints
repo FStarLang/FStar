@@ -1,1 +1,23 @@
-[ "d\u0007`‰M†\u001bë_Y=TÃ½¨ª", [] ]
+[
+  "»X\u0000ÆË°•\u0014·\"NrCüŒ×",
+  [
+    [
+      "FStar.Tactics.Types.uu___is_TopDown",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fabb321fdf4b7614ab5f7d6eaac995e2"
+    ],
+    [
+      "FStar.Tactics.Types.uu___is_BottomUp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7c02f473e1383414c21acc6629eafb94"
+    ]
+  ]
+]

@@ -18,6 +18,7 @@ module Rel = FStar.TypeChecker.Rel
 module Print = FStar.Syntax.Print
 module TcUtil = FStar.TypeChecker.Util
 module N = FStar.TypeChecker.Normalize
+module Err = FStar.Errors
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result
@@ -41,6 +42,16 @@ let fstar_tactics_Success_lid = fstar_tactics_lid' ["Result"; "Success"]
 let fstar_tactics_Failed_tm  = lid_as_data_tm fstar_tactics_Failed_lid
 let fstar_tactics_Success_tm = lid_as_data_tm fstar_tactics_Success_lid
 
+let fstar_tactics_topdown_lid = fstar_tactics_lid' ["Types"; "TopDown"]
+let fstar_tactics_bottomup_lid = fstar_tactics_lid' ["Types"; "BottomUp"]
+
+let fstar_tactics_topdown = lid_as_data_tm fstar_tactics_topdown_lid
+let fstar_tactics_bottomup = lid_as_data_tm fstar_tactics_bottomup_lid
+
+let mktuple2_tm = lid_as_data_tm (PC.lid_Mktuple2)
+
+let t_proofstate = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
+
 let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;U_zero])
                                       [S.as_arg t;
                                        S.as_arg s]
@@ -48,17 +59,16 @@ let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;
                                       Range.dummyRange
 
 let embed_proofstate (ps:proofstate) : term =
-    U.mk_alien ps "tactics.embed_proofstate" None
+    U.mk_alien t_proofstate ps "tactics.embed_proofstate" None
 
-let unembed_proofstate (t:term) : proofstate =
-    U.un_alien t |> FStar.Dyn.undyn
+let unembed_proofstate (t:term) : option<proofstate> =
+    try Some (U.un_alien t |> FStar.Dyn.undyn)
+    with | _ ->
+        Err.warn t.pos (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t));
+        None
 
 let mk_app hd args =
   S.mk_Tm_app hd args None Range.dummyRange
-
-let mktuple2_tm = lid_as_data_tm (PC.lid_Mktuple2)
-
-let t_proofstate = S.tconst (fstar_tactics_lid' ["Types"; "proofstate"])
 
 let embed_result (ps:proofstate) (res:__result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
     match res with
@@ -79,23 +89,33 @@ let embed_result (ps:proofstate) (res:__result<'a>) (embed_a:'a -> term) (t_a:ty
                                 S.as_arg (embed_a a);
                                 S.as_arg (embed_proofstate ps)])]
 
-let unembed_result (ps:proofstate) (res:term) (unembed_a:term -> 'a) : either<('a * proofstate), (string * proofstate)> =
+let unembed_result (ps:proofstate) (t:term) (unembed_a:term -> option<'a>)
+        : option<either<('a * proofstate), (string * proofstate)>> =
     let hd'_and_args tm =
       let tm = U.unascribe tm in
       let hd, args = U.head_and_args tm in
       (U.un_uinst hd).n, args in
-    let tuple2_elements tm =
-      match hd'_and_args tm with
-      | Tm_fvar fv, [_t1; _t2; (arg1, _); (arg2, _)]
-          when S.fv_eq_lid fv PC.lid_Mktuple2 -> (arg1, arg2)
-      | _ -> failwith (BU.format1 "Expected a two-elements tuple, got %s" (Print.term_to_string tm)) in
-    match hd'_and_args res with
+
+    match hd'_and_args t with
     | Tm_fvar fv, [_t; (tuple2, _)] when S.fv_eq_lid fv fstar_tactics_Success_lid ->
-      let embedded_a, embedded_ps = tuple2_elements tuple2 in
-      Inl (unembed_a embedded_a, unembed_proofstate embedded_ps)
+        BU.bind_opt (unembed_pair unembed_a unembed_proofstate tuple2) (fun x -> Some (Inl x))
+
     | Tm_fvar fv, [_t; (tuple2, _)] when S.fv_eq_lid fv fstar_tactics_Failed_lid ->
-      let embedded_msg, embedded_ps = tuple2_elements tuple2 in
-      Inr (unembed_string embedded_msg, unembed_proofstate embedded_ps)
+        BU.bind_opt (unembed_pair unembed_string unembed_proofstate tuple2) (fun x -> Some (Inr x))
+
     | _ ->
-      failwith (BU.format1 "Expected Result.Success or Result.Failed applied to a single argument, got %s"
-                           (Print.term_to_string res))
+        Err.warn t.pos (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t));
+        None
+
+let embed_direction (d : direction) : term =
+    match d with
+    | TopDown -> fstar_tactics_topdown
+    | BottomUp -> fstar_tactics_bottomup
+
+let unembed_direction (t : term) : option<direction> =
+    match (SS.compress t).n with
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
+    | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
+    | _ ->
+        Err.warn t.pos (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t));
+        None

@@ -60,11 +60,120 @@ let ocamlkeywords: Prims.string Prims.list =
   "while";
   "with";
   "nonrec"]
+let fsharpkeywords: Prims.string Prims.list =
+  ["abstract";
+  "and";
+  "as";
+  "assert";
+  "base";
+  "begin";
+  "class";
+  "default";
+  "delegate";
+  "do";
+  "done";
+  "downcast";
+  "downto";
+  "elif";
+  "else";
+  "end";
+  "exception";
+  "extern";
+  "false";
+  "finally";
+  "fixed";
+  "for";
+  "fun";
+  "function";
+  "global";
+  "if";
+  "in";
+  "inherit";
+  "inline";
+  "interface";
+  "internal";
+  "lazy";
+  "let";
+  "let!";
+  "match";
+  "member";
+  "module";
+  "mutable";
+  "namespace";
+  "new";
+  "not";
+  "null";
+  "of";
+  "open";
+  "or";
+  "override";
+  "private";
+  "public";
+  "rec";
+  "return";
+  "return!";
+  "select";
+  "static";
+  "struct";
+  "then";
+  "to";
+  "true";
+  "try";
+  "type";
+  "upcast";
+  "use";
+  "use!";
+  "val";
+  "void";
+  "when";
+  "while";
+  "with";
+  "yield";
+  "yield!";
+  "asr";
+  "land";
+  "lor";
+  "lsl";
+  "lsr";
+  "lxor";
+  "mod";
+  "sig";
+  "atomic";
+  "break";
+  "checked";
+  "component";
+  "const";
+  "constraint";
+  "constructor";
+  "continue";
+  "eager";
+  "event";
+  "external";
+  "fixed";
+  "functor";
+  "include";
+  "method";
+  "mixin";
+  "object";
+  "parallel";
+  "process";
+  "protected";
+  "pure";
+  "sealed";
+  "tailcall";
+  "trait";
+  "virtual";
+  "volatile"]
 let is_reserved: Prims.string -> Prims.bool =
-  fun k  -> FStar_List.existsb (fun k'  -> k' = k) ocamlkeywords
+  fun k  ->
+    let reserved_keywords uu____20 =
+      let uu____21 = FStar_Options.codegen_fsharp () in
+      if uu____21 then fsharpkeywords else ocamlkeywords in
+    let uu____25 = reserved_keywords () in
+    FStar_List.existsb (fun k'  -> k' = k) uu____25
 let string_of_mlpath: mlpath -> mlsymbol =
-  fun uu____18  ->
-    match uu____18 with
+  fun uu____33  ->
+    match uu____33 with
     | (p,s) -> FStar_String.concat "." (FStar_List.append p [s])
 type gensym_t =
   {
@@ -84,42 +193,42 @@ let gs: gensym_t =
   let n_resets = FStar_Util.mk_ref (Prims.parse_int "0") in
   {
     gensym =
-      (fun uu____83  ->
+      (fun uu____98  ->
          FStar_Util.incr ctr;
-         (let uu____106 =
-            let uu____107 =
-              let uu____108 = FStar_ST.op_Bang n_resets in
-              FStar_Util.string_of_int uu____108 in
-            let uu____169 =
-              let uu____170 =
-                let uu____171 = FStar_ST.op_Bang ctr in
-                FStar_Util.string_of_int uu____171 in
-              Prims.strcat "_" uu____170 in
-            Prims.strcat uu____107 uu____169 in
-          Prims.strcat "_" uu____106));
+         (let uu____121 =
+            let uu____122 =
+              let uu____123 = FStar_ST.op_Bang n_resets in
+              FStar_Util.string_of_int uu____123 in
+            let uu____184 =
+              let uu____185 =
+                let uu____186 = FStar_ST.op_Bang ctr in
+                FStar_Util.string_of_int uu____186 in
+              Prims.strcat "_" uu____185 in
+            Prims.strcat uu____122 uu____184 in
+          Prims.strcat "_" uu____121));
     reset =
-      (fun uu____234  ->
+      (fun uu____249  ->
          FStar_ST.op_Colon_Equals ctr (Prims.parse_int "0");
          FStar_Util.incr n_resets)
   }
-let gensym: Prims.unit -> mlident = fun uu____320  -> gs.gensym ()
-let reset_gensym: Prims.unit -> Prims.unit = fun uu____324  -> gs.reset ()
+let gensym: Prims.unit -> mlident = fun uu____335  -> gs.gensym ()
+let reset_gensym: Prims.unit -> Prims.unit = fun uu____339  -> gs.reset ()
 let rec gensyms: Prims.int -> mlident Prims.list =
   fun x  ->
     match x with
     | _0_41 when _0_41 = (Prims.parse_int "0") -> []
     | n1 ->
-        let uu____334 = gensym () in
-        let uu____335 = gensyms (n1 - (Prims.parse_int "1")) in uu____334 ::
-          uu____335
+        let uu____349 = gensym () in
+        let uu____350 = gensyms (n1 - (Prims.parse_int "1")) in uu____349 ::
+          uu____350
 let mlpath_of_lident: FStar_Ident.lident -> mlpath =
   fun x  ->
     if FStar_Ident.lid_equals x FStar_Parser_Const.failwith_lid
     then ([], ((x.FStar_Ident.ident).FStar_Ident.idText))
     else
-      (let uu____345 =
+      (let uu____360 =
          FStar_List.map (fun x1  -> x1.FStar_Ident.idText) x.FStar_Ident.ns in
-       (uu____345, ((x.FStar_Ident.ident).FStar_Ident.idText)))
+       (uu____360, ((x.FStar_Ident.ident).FStar_Ident.idText)))
 type mlidents = mlident Prims.list[@@deriving show]
 type mlsymbols = mlsymbol Prims.list[@@deriving show]
 type e_tag =
@@ -128,13 +237,13 @@ type e_tag =
   | E_IMPURE[@@deriving show]
 let uu___is_E_PURE: e_tag -> Prims.bool =
   fun projectee  ->
-    match projectee with | E_PURE  -> true | uu____360 -> false
+    match projectee with | E_PURE  -> true | uu____375 -> false
 let uu___is_E_GHOST: e_tag -> Prims.bool =
   fun projectee  ->
-    match projectee with | E_GHOST  -> true | uu____365 -> false
+    match projectee with | E_GHOST  -> true | uu____380 -> false
 let uu___is_E_IMPURE: e_tag -> Prims.bool =
   fun projectee  ->
-    match projectee with | E_IMPURE  -> true | uu____370 -> false
+    match projectee with | E_IMPURE  -> true | uu____385 -> false
 type mlloc = (Prims.int,Prims.string) FStar_Pervasives_Native.tuple2[@@deriving
                                                                     show]
 let dummy_loc: (Prims.int,Prims.string) FStar_Pervasives_Native.tuple2 =
@@ -147,29 +256,29 @@ type mlty =
   | MLTY_Top[@@deriving show]
 let uu___is_MLTY_Var: mlty -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLTY_Var _0 -> true | uu____414 -> false
+    match projectee with | MLTY_Var _0 -> true | uu____429 -> false
 let __proj__MLTY_Var__item___0: mlty -> mlident =
   fun projectee  -> match projectee with | MLTY_Var _0 -> _0
 let uu___is_MLTY_Fun: mlty -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLTY_Fun _0 -> true | uu____434 -> false
+    match projectee with | MLTY_Fun _0 -> true | uu____449 -> false
 let __proj__MLTY_Fun__item___0:
   mlty -> (mlty,e_tag,mlty) FStar_Pervasives_Native.tuple3 =
   fun projectee  -> match projectee with | MLTY_Fun _0 -> _0
 let uu___is_MLTY_Named: mlty -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLTY_Named _0 -> true | uu____472 -> false
+    match projectee with | MLTY_Named _0 -> true | uu____487 -> false
 let __proj__MLTY_Named__item___0:
   mlty -> (mlty Prims.list,mlpath) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | MLTY_Named _0 -> _0
 let uu___is_MLTY_Tuple: mlty -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLTY_Tuple _0 -> true | uu____506 -> false
+    match projectee with | MLTY_Tuple _0 -> true | uu____521 -> false
 let __proj__MLTY_Tuple__item___0: mlty -> mlty Prims.list =
   fun projectee  -> match projectee with | MLTY_Tuple _0 -> _0
 let uu___is_MLTY_Top: mlty -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLTY_Top  -> true | uu____525 -> false
+    match projectee with | MLTY_Top  -> true | uu____540 -> false
 type mltyscheme = (mlidents,mlty) FStar_Pervasives_Native.tuple2[@@deriving
                                                                   show]
 type mlconstant =
@@ -186,15 +295,15 @@ type mlconstant =
   | MLC_Bytes of FStar_BaseTypes.byte Prims.array[@@deriving show]
 let uu___is_MLC_Unit: mlconstant -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLC_Unit  -> true | uu____576 -> false
+    match projectee with | MLC_Unit  -> true | uu____585 -> false
 let uu___is_MLC_Bool: mlconstant -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLC_Bool _0 -> true | uu____582 -> false
+    match projectee with | MLC_Bool _0 -> true | uu____591 -> false
 let __proj__MLC_Bool__item___0: mlconstant -> Prims.bool =
   fun projectee  -> match projectee with | MLC_Bool _0 -> _0
 let uu___is_MLC_Int: mlconstant -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLC_Int _0 -> true | uu____606 -> false
+    match projectee with | MLC_Int _0 -> true | uu____615 -> false
 let __proj__MLC_Int__item___0:
   mlconstant ->
     (Prims.string,(FStar_Const.signedness,FStar_Const.width)
@@ -204,12 +313,12 @@ let __proj__MLC_Int__item___0:
   = fun projectee  -> match projectee with | MLC_Int _0 -> _0
 let uu___is_MLC_Float: mlconstant -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLC_Float _0 -> true | uu____650 -> false
+    match projectee with | MLC_Float _0 -> true | uu____659 -> false
 let __proj__MLC_Float__item___0: mlconstant -> FStar_BaseTypes.float =
   fun projectee  -> match projectee with | MLC_Float _0 -> _0
 let uu___is_MLC_Char: mlconstant -> Prims.bool =
   fun projectee  ->
-    match projectee with | MLC_Char _0 -> true | uu____664 -> false
+    match projectee with | MLC_Char _0 -> true | uu____673 -> false
 let __proj__MLC_Char__item___0: mlconstant -> FStar_BaseTypes.char =
   fun projectee  -> match projectee with | MLC_Char _0 -> _0
 let uu___is_MLC_String: mlconstant -> Prims.bool =
@@ -659,40 +768,46 @@ let mlp_lalloc:
 let apply_obj_repr: mlexpr -> mlty -> mlexpr =
   fun x  ->
     fun t  ->
+      let obj_ns =
+        let uu____2609 = FStar_Options.codegen_fsharp () in
+        if uu____2609 then "FSharp.Compatibility.OCaml.Obj" else "Obj" in
       let obj_repr =
-        with_ty (MLTY_Fun (t, E_PURE, MLTY_Top)) (MLE_Name (["Obj"], "repr")) in
+        with_ty (MLTY_Fun (t, E_PURE, MLTY_Top))
+          (MLE_Name ([obj_ns], "repr")) in
       with_ty_loc MLTY_Top (MLE_App (obj_repr, [x])) x.loc
 let avoid_keyword: Prims.string -> Prims.string =
-  fun s  -> if is_reserved s then Prims.strcat s "_" else s
+  fun s  ->
+    let uu____2620 = is_reserved s in
+    if uu____2620 then Prims.strcat s "_" else s
 let bv_as_mlident: FStar_Syntax_Syntax.bv -> mlident =
   fun x  ->
-    let uu____2622 =
+    let uu____2626 =
       ((FStar_Util.starts_with
           (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
           FStar_Ident.reserved_prefix)
          || (FStar_Syntax_Syntax.is_null_bv x))
         || (is_reserved (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText) in
-    if uu____2622
+    if uu____2626
     then
-      let uu____2623 =
-        let uu____2624 = FStar_Util.string_of_int x.FStar_Syntax_Syntax.index in
-        Prims.strcat "_" uu____2624 in
+      let uu____2627 =
+        let uu____2628 = FStar_Util.string_of_int x.FStar_Syntax_Syntax.index in
+        Prims.strcat "_" uu____2628 in
       Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
-        uu____2623
+        uu____2627
     else (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
 let push_unit: mltyscheme -> mltyscheme =
   fun ts  ->
-    let uu____2630 = ts in
-    match uu____2630 with
+    let uu____2634 = ts in
+    match uu____2634 with
     | (vs,ty) -> (vs, (MLTY_Fun (ml_unit_ty, E_PURE, ty)))
 let pop_unit: mltyscheme -> mltyscheme =
   fun ts  ->
-    let uu____2637 = ts in
-    match uu____2637 with
+    let uu____2641 = ts in
+    match uu____2641 with
     | (vs,ty) ->
         (match ty with
          | MLTY_Fun (l,E_PURE ,t) ->
              if l = ml_unit_ty
              then (vs, t)
              else failwith "unexpected: pop_unit: domain was not unit"
-         | uu____2643 -> failwith "unexpected: pop_unit: not a function type")
+         | uu____2647 -> failwith "unexpected: pop_unit: not a function type")

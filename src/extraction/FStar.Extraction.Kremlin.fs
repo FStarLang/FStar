@@ -399,7 +399,7 @@ match (flavor, flags, binding) with
           Some (DFunction (None, flags, List.length tvars, t, name, binders, body, si))
         with e ->
           let msg = BU.print_exn e in
-          BU.print2 "Warning: writing a stub for %s (%s)\n" (snd name) msg;
+          BU.print2_warning "Writing a stub for %s (%s)\n" (snd name) msg;
           let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg, si))
       end
@@ -416,7 +416,7 @@ match (flavor, flags, binding) with
         let expr = translate_expr env expr in
         Some (DGlobal (flags, name, t, expr))
       with e ->
-        BU.print2_warning "Warning: not translating definition for %s (%s)\n" (snd name) (BU.print_exn e);
+        BU.print2_warning "Not translating definition for %s (%s)\n" (snd name) (BU.print_exn e);
         Some (DGlobal (flags, name, t, EAny))
       end
 
@@ -425,7 +425,7 @@ match (flavor, flags, binding) with
       (* Things we currently do not translate:
        * - polymorphic functions (lemmas do count, sadly)
        *)
-      BU.print1_warning "Warning: not translating definition for %s (and possibly others)\n" name;
+      BU.print1_warning "Not translating definition for %s (and possibly others)\n" name;
       begin match ts with
       | Some (idents, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
@@ -499,7 +499,7 @@ and translate_single_type_decl env (ty_decl : one_mltydecl) =
         ) ts
       ) branches))
 
-  | _ -> failwith "unable to translate type..." // todo: better error message
+     | _ -> BU.print_string "Impossible!! Empty block of mutually recursive type declarations\n";
 
 and translate_type env t: typ =
   match t with

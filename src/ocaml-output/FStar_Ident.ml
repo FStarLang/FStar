@@ -61,7 +61,7 @@ let gen: FStar_Range.range -> ident =
      mk_ident uu____227)
 let id_of_text: Prims.string -> ident =
   fun str  -> mk_ident (str, FStar_Range.dummyRange)
-let text_of_id: ident -> Prims.string = fun id1  -> id1.idText
+let text_of_id: ident -> Prims.string = fun id  -> id.idText
 let text_of_path: Prims.string Prims.list -> Prims.string =
   fun path  -> FStar_Util.concat_l "." path
 let path_of_text: Prims.string -> Prims.string Prims.list =
@@ -75,23 +75,23 @@ let ids_of_lid: lident -> ident Prims.list =
   fun lid  -> FStar_List.append lid.ns [lid.ident]
 let lid_of_ns_and_id: ident Prims.list -> ident -> lident =
   fun ns  ->
-    fun id1  ->
+    fun id  ->
       let nsstr =
         let uu____352 = FStar_List.map text_of_id ns in
         FStar_All.pipe_right uu____352 text_of_path in
       {
         ns;
-        ident = id1;
+        ident = id;
         nsstr;
         str =
           (if nsstr = ""
-           then id1.idText
-           else Prims.strcat nsstr (Prims.strcat "." id1.idText))
+           then id.idText
+           else Prims.strcat nsstr (Prims.strcat "." id.idText))
       }
 let lid_of_ids: ident Prims.list -> lident =
   fun ids  ->
     let uu____366 = FStar_Util.prefix ids in
-    match uu____366 with | (ns,id1) -> lid_of_ns_and_id ns id1
+    match uu____366 with | (ns,id) -> lid_of_ns_and_id ns id
 let lid_of_str: Prims.string -> lident =
   fun str  ->
     let uu____383 = FStar_List.map id_of_text (FStar_Util.split str ".") in
@@ -110,14 +110,14 @@ let range_of_lid: lid -> FStar_Range.range = fun lid  -> (lid.ident).idRange
 let set_lid_range: lident -> FStar_Range.range -> lident =
   fun l  ->
     fun r  ->
-      let uu___46_435 = l in
+      let uu___49_435 = l in
       {
-        ns = (uu___46_435.ns);
+        ns = (uu___49_435.ns);
         ident =
-          (let uu___47_437 = l.ident in
-           { idText = (uu___47_437.idText); idRange = r });
-        nsstr = (uu___46_435.nsstr);
-        str = (uu___46_435.str)
+          (let uu___50_437 = l.ident in
+           { idText = (uu___50_437.idText); idRange = r });
+        nsstr = (uu___49_435.nsstr);
+        str = (uu___49_435.str)
       }
 let lid_add_suffix: lident -> Prims.string -> lident =
   fun l  ->
