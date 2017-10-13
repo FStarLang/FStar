@@ -124,21 +124,16 @@ let dump_proofstate ps msg =
     Options.with_saved_options (fun () ->
         Options.set_option "print_effect_args" (Options.Bool true);
         print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
-    // tacprint "";
-    // tacprint1 "State dump (%s):" msg;
-    // tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));
-    // List.iter (dump_goal ps) ps.goals;
-    // tacprint1 "SMT goals (%s):" (string_of_int (List.length ps.smt_goals));
-    // List.iter (dump_goal ps) ps.smt_goals;
-    // ()
 
-let print_proof_state1 (msg:string) : tac<unit> =
-    mk_tac (fun p -> dump_cur p msg;
-                     Success ((), p))
+let print_proof_state1 (psc:N.psc) (msg:string) : tac<unit> =
+    mk_tac (fun ps -> let subst = N.psc_subst psc in
+                   dump_cur (subst_proof_state subst ps) msg;
+                   Success ((), ps))
 
-let print_proof_state (msg:string) : tac<unit> =
-    mk_tac (fun p -> dump_proofstate p msg;
-                     Success ((), p))
+let print_proof_state (psc:N.psc) (msg:string) : tac<unit> =
+    mk_tac (fun ps -> let subst = N.psc_subst psc in
+                   dump_proofstate (subst_proof_state subst ps) msg;
+                   Success ((), ps))
 
 (* get : get the current proof state *)
 let get : tac<proofstate> =
@@ -159,7 +154,7 @@ let mlog f (cont : unit -> tac<'a>) : tac<'a> =
 let fail msg =
     mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail")
-        then dump_proofstate ps ("TACTING FAILING: " ^ msg);
+        then dump_proofstate ps ("TACTING FAILING: " ^ msg); //TODO: fixme ... fail should send along the env too
         Failed (msg, ps)
     )
 
@@ -988,7 +983,7 @@ let proofstate_of_goal_ty env typ =
         goals = [g];
         smt_goals = [];
         depth = 0;
-        __dump = dump_proofstate;
+        __dump = (fun ps msg -> dump_proofstate ps msg);
     }
     in
     (ps, g.witness)
