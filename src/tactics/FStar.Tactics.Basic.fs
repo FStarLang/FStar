@@ -179,6 +179,16 @@ let trytac (t : tac<'a>) : tac<option<'a>> =
                 Success (None, ps)
            )
 
+// This is relying on the fact that errors are strings
+let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
+    mk_tac (fun ps ->
+            match run t ps with
+            | Success (a, q) ->
+                Success (a, q)
+            | Failed (msg, q) ->
+                Failed (pref ^ ": " ^ msg, q)
+           )
+
 ////////////////////////////////////////////////////////////////////
 (* Some TRUSTED internal utilities *)
 
@@ -280,11 +290,11 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     try ret (ps.main_context.type_of e t) with e -> fail "not typeable")
 
-let tc (t : term) : tac<typ> =
+let tc (t : term) : tac<typ> = wrap_err "tc" <|
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->
     if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard)
-    then fail "tc: got non-trivial guard"
+    then fail "got non-trivial guard"
     else ret typ
     ))
 
@@ -421,7 +431,7 @@ let norm (s : list<EMB.norm_step>) : tac<unit> =
     replace_cur ({goal with goal_ty = t; witness = w})
     )
 
-let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> =
+let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = wrap_err "norm_term" <|
     bind get (fun ps ->
     bind (__tc e t) (fun (t, _, guard) ->
     Rel.force_trivial_guard e guard;
@@ -433,7 +443,7 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> =
 let __exact (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->
-    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "exact: got non-trivial guard" else
+    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "got non-trivial guard" else
     if do_unify goal.context typ goal.goal_ty
     then solve goal t
     else fail3 "%s : %s does not exactly solve the goal %s"
@@ -441,7 +451,7 @@ let __exact (t:term) : tac<unit> =
                     (N.term_to_string goal.context (bnorm goal.context typ))
                     (N.term_to_string goal.context goal.goal_ty)))
 
-let exact (tm:term) : tac<unit> =
+let exact (tm:term) : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     focus (__exact tm)
     )
@@ -513,19 +523,19 @@ let try_unif (t : tac<'a>) (t' : tac<'a>) : tac<'a> =
         try run t ps
         with NoUnif -> run t' ps)
 
-let apply (uopt:bool) (tm:term) : tac<unit> =
+let apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
     mlog (fun () -> BU.print1 "apply: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     bind cur_goal (fun goal ->
     bind (__tc goal.context tm) (fun (tm, typ, guard) ->
     // Focus helps keep the goal order
     try_unif (focus (bind (__apply uopt tm typ) (fun _ -> add_goal_from_guard "apply guard" goal.context guard goal.opts)))
-             (fail3 "apply: Cannot instantiate %s (of type %s) to match goal (%s)"
+             (fail3 "Cannot instantiate %s (of type %s) to match goal (%s)"
                             (N.term_to_string goal.context tm)
                             (N.term_to_string goal.context typ)
                             (N.term_to_string goal.context goal.goal_ty))
     )))
 
-let apply_lemma (tm:term) : tac<unit> = focus(
+let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
     mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
     | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
@@ -534,7 +544,7 @@ let apply_lemma (tm:term) : tac<unit> = focus(
     bind cur_goal (fun goal ->
     bind (__tc goal.context tm) (fun (tm, t, guard) ->
     let bs, comp = U.arrow_formals_comp t in
-    if not (U.is_lemma_comp comp) then fail "apply_lemma: not a lemma" else
+    if not (U.is_lemma_comp comp) then fail "not a lemma" else
     let uvs, implicits, subst =
        List.fold_left (fun (uvs, guard, subst) (b, aq) ->
                let b_t = SS.subst subst b.sort in
@@ -558,7 +568,7 @@ let apply_lemma (tm:term) : tac<unit> = focus(
                     | _ -> failwith "apply_lemma: impossible: not a lemma"
     in
     if not (do_unify goal.context (U.mk_squash post) goal.goal_ty)
-    then fail3 "apply_lemma: Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
+    then fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
                             (N.term_to_string goal.context tm)
                             (N.term_to_string goal.context (U.mk_squash post))
                             (N.term_to_string goal.context goal.goal_ty)
@@ -880,7 +890,7 @@ let qed : tac<unit> =
     | _ -> fail "Not done!"
     )
 
-let cases (t : term) : tac<(term * term)> =
+let cases (t : term) : tac<(term * term)> = wrap_err "cases" <|
     bind cur_goal (fun g ->
     bind (__tc g.context t) (fun (t, typ, guard) ->
     let hd, args = U.head_and_args typ in
@@ -918,7 +928,7 @@ let cur_env     : tac<env>  = bind cur_goal (fun g -> ret <| g.context)
 let cur_goal'   : tac<term> = bind cur_goal (fun g -> ret <| g.goal_ty)
 let cur_witness : tac<term> = bind cur_goal (fun g -> ret <| g.witness)
 
-let unquote (ty : term) (tm : term) : tac<term> =
+let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     bind cur_goal (fun goal ->
     let env = Env.set_expected_typ goal.context ty in
     bind (__tc env tm) (fun (tm, typ, guard) ->
@@ -933,11 +943,11 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
     bind (new_uvar "uvar_env" env typ) (fun t ->
     ret t))
 
-let unshelve (t : term) : tac<unit> =
+let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->
     if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard)
-    then fail "unshelve: got non-trivial guard"
+    then fail "got non-trivial guard"
     else add_goals [{ goal with witness  = bnorm goal.context t;
                                 goal_ty  = bnorm goal.context typ;
                                 is_guard = false; }]))
