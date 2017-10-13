@@ -28,7 +28,8 @@ type step =
   | Iota            //pattern matching
   | Zeta            //fixed points
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
-  | WHNF            //Only produce a weak head normal form
+  | Weak            //Do not descend into binders
+  | HNF             //Only produce a head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining

@@ -450,7 +450,7 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
     (t', gs@gs')
 
 let getprop (e:env) (t:term) : option<term> =
-    let tn = N.normalize [N.WHNF; N.UnfoldUntil Delta_constant] e t in
+    let tn = N.normalize [N.Weak; N.HNF; N.UnfoldUntil Delta_constant] e t in
     U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.optionstate)> =

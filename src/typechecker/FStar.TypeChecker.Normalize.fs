@@ -55,7 +55,8 @@ type step =
   | Iota            //pattern matching
   | Zeta            //fixed points
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
-  | WHNF            //Only produce a weak head normal form
+  | Weak            //Do not descend into binders
+  | HNF             //Only produce a head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining
@@ -805,7 +806,7 @@ let tr_norm_step = function
     | EMB.Iota ->    [Iota]
     | EMB.Delta ->   [UnfoldUntil Delta_constant]
     | EMB.Simpl ->   [Simplify]
-    | EMB.WHNF ->    [WHNF]
+    | EMB.WHNF ->    [Weak;HNF]
     | EMB.Primops -> [Primops]
     | EMB.UnfoldOnly names ->
         [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
@@ -1052,7 +1053,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | App _ :: _
                 | Abs _ :: _
                 | [] ->
-                  if List.contains WHNF cfg.steps //don't descend beneath a lambda if we're just doing WHNF
+                  if List.contains Weak cfg.steps //don't descend beneath a lambda if we're just doing weak reduction
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
@@ -1076,7 +1077,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg env stack head
 
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
-            if List.contains WHNF cfg.steps
+            if List.contains Weak cfg.steps
             then match env, stack with
                     | [], [] -> //TODO: Make this work in general!
                       let t_x = norm cfg env [] x.sort in
@@ -1090,7 +1091,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  rebuild cfg env stack t
 
           | Tm_arrow(bs, c) ->
-            if List.contains WHNF cfg.steps
+            if List.contains Weak cfg.steps
             then rebuild cfg env stack (closure_as_term cfg env t)
             else let bs, c = open_comp bs c in
                  let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> Dummy::env) env) c in
@@ -1644,7 +1645,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     // GM: This is basically saying "if exclude iota, don't memoize".
     // what's up with that?
     if List.contains (Exclude Iota) cfg.steps
-    then if List.contains WHNF cfg.steps
+    then if List.contains HNF cfg.steps
           then let arg = closure_as_term cfg env tm in
               let t = extend_app t (arg, aq) None r in
               rebuild cfg env stack t
@@ -1652,7 +1653,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               norm cfg env stack tm
     else begin match !m with
       | None ->
-        if List.contains WHNF cfg.steps
+        if List.contains HNF cfg.steps
         then let arg = closure_as_term cfg env tm in
               let t = extend_app t (arg, aq) None r in
               rebuild cfg env stack t
@@ -1678,7 +1679,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           BU.print2 "match is irreducible: scrutinee=%s\nbranches=%s\n"
                 (Print.term_to_string scrutinee)
                 (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
-      let whnf = List.contains WHNF cfg.steps in
+      // If either Weak or HNF, then don't descend into branch
+      let whnf = List.contains Weak cfg.steps || List.contains HNF cfg.steps in
       let cfg_exclude_iota_zeta =
         let new_delta =
           cfg.delta_level |> List.filter (function
@@ -1870,7 +1872,7 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let unfold_whnf env t = normalize [WHNF; UnfoldUntil Delta_constant; Beta] env t
+let unfold_whnf env t = normalize [Weak;HNF; UnfoldUntil Delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
               @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm])
