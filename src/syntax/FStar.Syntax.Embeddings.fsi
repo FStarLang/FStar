@@ -59,7 +59,8 @@ val unembed_string_list_safe : unembedder<list<string>>
 
 type norm_step =
     | Simpl
-    | WHNF
+    | Weak
+    | HNF
     | Primops
     | Delta
     | Zeta
@@ -67,7 +68,8 @@ type norm_step =
     | UnfoldOnly of list<string>
 
 val steps_Simpl : term
-val steps_WHNF : term
+val steps_Weak : term
+val steps_HNF  : term
 val steps_Primops : term
 val steps_Delta : term
 val steps_Zeta : term

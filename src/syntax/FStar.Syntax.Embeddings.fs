@@ -202,7 +202,8 @@ let unembed_string_list_safe t = unembed_list_safe unembed_string_safe t
 
 type norm_step =
     | Simpl
-    | WHNF
+    | Weak
+    | HNF
     | Primops
     | Delta
     | Zeta
@@ -211,7 +212,8 @@ type norm_step =
 
 (* the steps as terms *)
 let steps_Simpl      = tdataconstr PC.steps_simpl
-let steps_WHNF       = tdataconstr PC.steps_whnf
+let steps_Weak       = tdataconstr PC.steps_weak
+let steps_HNF        = tdataconstr PC.steps_hnf
 let steps_Primops    = tdataconstr PC.steps_primops
 let steps_Delta      = tdataconstr PC.steps_delta
 let steps_Zeta       = tdataconstr PC.steps_zeta
@@ -222,8 +224,10 @@ let embed_norm_step (rng:range) (n:norm_step) : term =
     match n with
     | Simpl ->
         steps_Simpl
-    | WHNF ->
-        steps_WHNF
+    | Weak ->
+        steps_Weak
+    | HNF ->
+        steps_HNF
     | Primops ->
         steps_Primops
     | Delta ->
@@ -242,8 +246,10 @@ let __unembed_norm_step (w:bool) (t0:term) : option<norm_step> =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
         Some Simpl
-    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_whnf ->
-        Some WHNF
+    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_weak ->
+        Some Weak
+    | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_hnf ->
+        Some HNF
     | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_primops ->
         Some Primops
     | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_delta ->

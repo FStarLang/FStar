@@ -16,7 +16,8 @@ let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a __result =
 let tr_repr_steps =
     let tr1 = function
               | Simpl         -> EMB.Simpl
-              | WHNF          -> EMB.WHNF
+              | Weak          -> EMB.Weak
+              | HNF           -> EMB.HNF
               | Primops       -> EMB.Primops
               | Delta         -> EMB.Delta
               | Zeta          -> EMB.Zeta

@@ -806,7 +806,8 @@ let tr_norm_step = function
     | EMB.Iota ->    [Iota]
     | EMB.Delta ->   [UnfoldUntil Delta_constant]
     | EMB.Simpl ->   [Simplify]
-    | EMB.WHNF ->    [Weak;HNF]
+    | EMB.Weak ->    [Weak]
+    | EMB.HNF  ->    [HNF]
     | EMB.Primops -> [Primops]
     | EMB.UnfoldOnly names ->
         [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
