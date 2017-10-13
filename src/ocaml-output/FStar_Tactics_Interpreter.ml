@@ -668,7 +668,7 @@ let rec primitive_steps:
                                                               FStar_Syntax_Syntax.t_unit in
                                                           let uu____1902 =
                                                             let uu____1905 =
-                                                              mktac1
+                                                              mktac1_env
                                                                 "__dump1"
                                                                 FStar_Tactics_Basic.print_proof_state1
                                                                 FStar_Syntax_Embeddings.unembed_string
@@ -996,7 +996,6 @@ let report_implicits:
       | [] -> ()
       | hd1::tl1 ->
           (FStar_Tactics_Basic.dump_proofstate ps
-             FStar_TypeChecker_Normalize.null_psc
              "failing due to uninstantiated implicits";
            FStar_Errors.add_errors tl1;
            FStar_Exn.raise (FStar_Errors.Error hd1))
@@ -1177,7 +1176,6 @@ let run_tactic_on_typ:
                                      ps1.FStar_Tactics_Types.smt_goals), w)))
                            | FStar_Tactics_Result.Failed (s,ps1) ->
                                (FStar_Tactics_Basic.dump_proofstate ps1
-                                  FStar_TypeChecker_Normalize.null_psc
                                   "at the time of failure";
                                 (let uu____2612 =
                                    let uu____2613 =
