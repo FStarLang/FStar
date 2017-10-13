@@ -302,7 +302,7 @@ and unembed_tactic_0<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : tac<
     // normal form due to primitive steps. Consider `norm (steps 2)`: we need to normalize
     // `steps 2` before caling norm, or it will fail to unembed the set of steps. Further,
     // at this moment at least, the normalizer will not call into any step of arity > 1.
-    let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops] in
+    let steps = [N.Weak; N.Reify; N.UnfoldUntil Delta_constant; N.UnfoldTac; N.Primops] in
     if !tacdbg then
         BU.print1 "Starting normalizer with %s\n" (Print.term_to_string tm);
     let result = N.normalize_with_primitive_steps (primitive_steps ()) steps proof_state.main_context tm in
