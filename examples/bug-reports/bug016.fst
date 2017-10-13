@@ -1,5 +1,7 @@
 module Bug016
 
+open FStar.All
+
 val impossible : u : unit { False } -> Tot 'a
 let impossible = failwith "this won't happen"
 

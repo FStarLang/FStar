@@ -4,7 +4,7 @@ noeq type rel (a:Type) (b:Type) : Type =
   | R : l:a -> r:b -> rel a b
 
 type double (t:Type) = rel t t
-type eq (t:Type) = p:(double t){R?.l p = R?.r p}
+type eq (t:Type{hasEq t}) = p:(double t){R?.l p = R?.r p}
 
 val rel_map2 : ('a -> 'b -> Tot 'c) -> (double 'a) -> (double 'b) -> Tot (double 'c)
 let rel_map2 f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
@@ -32,21 +32,22 @@ let lemma_inverses_bij f g = admit ()
 (* sample two random values such that they are related by a bijection f *)
 assume val sample : //#a:Type -> #b:Type
                     f:(int -> Tot int){bijection f}
-                    -> Tot (r:(rel int int) {R.r r = f (R.l r)})
+                    -> Tot (r:(rel int int) {R?.r r = f (R?.l r)})
 
 
 irreducible val triple_a : s:double int
-               -> Tot (r:(h:double int & shared h) {(R.l s) - (snd(R.l(dsnd r))) =
-                                                 (R.r s) - (snd(R.r(dsnd r)))})
+               -> Tot (r:(h:double int & shared h) {(R?.l s) - (snd(R?.l(dsnd r))) =
+                                                 (R?.r s) - (snd(R?.r(dsnd r)))})
 
 #reset-options
 
-let triple_a s = let sample_fun = (fun x ->  (x - (R.l s)) + (R.r s)) in
+
+let triple_a s = let sample_fun = (fun x ->  (x - (R?.l s)) + (R?.r s)) in
                  cut (inverses (fun x -> x) (fun x -> x));
                  lemma_inverses_bij (fun x -> x) (fun x -> x);
                  let as0 = sample (fun x -> x) in
 
-                 let sample_fun'= (fun x ->  (x - (R.r s)) + (R.l s)) in
+                 let sample_fun'= (fun x ->  (x - (R?.r s)) + (R?.l s)) in
                  cut (inverses sample_fun sample_fun');
                  lemma_inverses_bij sample_fun sample_fun';
                  cut (bijection sample_fun);

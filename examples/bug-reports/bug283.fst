@@ -1,5 +1,8 @@
 module Bug283
-assume new type block
+
+assume new type block: Type0
+assume HasEq_block: hasEq block
+
 assume val xor : block -> block -> Tot block
 
 assume XOR_Laws:forall a b.{:pattern (xor a b)} xor a b = xor b a /\ xor (xor a b) a = b

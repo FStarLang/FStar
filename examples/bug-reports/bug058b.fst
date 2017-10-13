@@ -1,4 +1,4 @@
-module Fibonacci
+module Bug058b
 
 (* Write the fibonacci function and several types for it. *)
 
@@ -9,7 +9,7 @@ let rec sub_fibo x n acc1 acc2 =
   else sub_fibo x (n+1) acc2 (acc1 + acc2)
 
 val fibonacci: (x:int{x>=0}) -> Tot int
-let fibonacci x = 
+let fibonacci x =
   if x <= 1
   then 1
   else sub_fibo x 2 1 1

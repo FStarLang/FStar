@@ -1,5 +1,5 @@
-module Test
+module Bug097a
 
 assume val f : list 'a -> Tot nat
 
-type Equivalence (a:Type) = forall x. f x = f x
+type equivalence (a:Type) = forall x. f x = f x

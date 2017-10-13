@@ -2,7 +2,7 @@ module Bug581
 
 open FStar.All
 
-#set-options "--log_types --print_effect_args"
+//#set-options "--log_types --print_effect_args"
 
 assume new type p: int -> Type0
 
