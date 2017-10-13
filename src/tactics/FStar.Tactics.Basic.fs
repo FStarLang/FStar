@@ -127,14 +127,12 @@ let dump_proofstate ps msg =
 
 let print_proof_state1 (psc:N.psc) (msg:string) : tac<unit> =
     mk_tac (fun ps -> let subst = N.psc_subst psc in
-                   let ps = subst_proof_state subst ps in
-                   dump_cur ps msg;
+                   dump_cur (subst_proof_state subst ps) msg;
                    Success ((), ps))
 
 let print_proof_state (psc:N.psc) (msg:string) : tac<unit> =
     mk_tac (fun ps -> let subst = N.psc_subst psc in
-                   let ps = subst_proof_state subst ps in
-                   dump_proofstate ps msg;
+                   dump_proofstate (subst_proof_state subst ps) msg;
                    Success ((), ps))
 
 (* get : get the current proof state *)
