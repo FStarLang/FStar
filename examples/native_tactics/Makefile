@@ -6,24 +6,27 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 OCAML_OUTPUT=$(FSTAR_HOME)/src/ocaml-output
 INCLUDES=$(addprefix -I $(OCAML_OUTPUT)/_build/, src/tactics/ml ulib/ml src/ocaml-output/ src/basic/ml)
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
-.PRECIOUS: %.cmxs
-.PHONY: %.test
+# The cache is shared and the tests can interactly badly.
+.NOTPARALLEL:
+.PRECIOUS: _cache/%.cmxs
+.PHONY: %.test fstartaclib
 
 MODULES=Print Split Canon
 
-all: $(patsubst %,%.cmxs,$(MODULES)) $(patsubst %,%.test,$(MODULES))
+all: $(patsubst %,%.test,$(MODULES))
 
-fstartaclib.cmxs:
+$(FSTARTACLIB):
 	$(MAKE) -C $(FSTAR_HOME)/ulib install-fstar-tactics
 
 $(CACHE):
 	mkdir $@
 
-%.cmxs: %.Test.fst fstartaclib.cmxs $(CACHE)
+$(CACHE)/%.cmxs: %.Test.fst $(FSTARTACLIB) | $(CACHE)
 	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE) $<
 
-%.test: %.Test.fst %.cmxs
+%.test: %.Test.fst $(CACHE)/%.cmxs
 	$(FSTAR) $(OTHERFLAGS) --use_native_tactics $(CACHE) $<
 
 clean:

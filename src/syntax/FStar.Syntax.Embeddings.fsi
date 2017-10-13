@@ -6,28 +6,28 @@ open FStar.Syntax.Syntax
 module Range = FStar.Range
 
 val embed_unit   : unit -> term
-val unembed_unit : term -> unit
+val unembed_unit : term -> option<unit>
 
 val embed_bool   : bool -> term
-val unembed_bool : term -> bool
+val unembed_bool : term -> option<bool>
 
 val embed_int   : int -> term
-val unembed_int : term -> int
+val unembed_int : term -> option<int>
 
 val embed_string   : string -> term
-val unembed_string : term -> string
+val unembed_string : term -> option<string>
 
 val embed_pair   : ('a -> term) -> term -> ('b -> term) -> term -> ('a*'b) -> term
-val unembed_pair : (term -> 'a) -> (term -> 'b) -> term -> 'a*'b
+val unembed_pair : (term -> option<'a>) -> (term -> option<'b>) -> term -> option<('a*'b)>
 
 val embed_option   : ('a -> term) -> term -> option<'a> -> term
-val unembed_option : (term -> 'a) -> term -> option<'a>
+val unembed_option : (term -> option<'a>) -> term -> option<option<'a>>
 
 val embed_list   : ('a -> term) -> term -> list<'a> -> term
-val unembed_list : (term -> 'a) -> term -> list<'a>
+val unembed_list : (term -> option<'a>) -> term -> option<list<'a>>
 
 val embed_string_list   : list<string> -> term
-val unembed_string_list : term -> list<string>
+val unembed_string_list : term -> option<list<string>>
 
 type norm_step =
     | Simpl
@@ -47,7 +47,7 @@ val steps_Iota : term
 val steps_UnfoldOnly : term
 
 val embed_norm_step : norm_step -> term
-val unembed_norm_step : term -> norm_step
+val unembed_norm_step : term -> option<norm_step>
 
 val embed_range : Range.range -> term
-val unembed_range : term -> Range.range
+val unembed_range : term -> option<Range.range>

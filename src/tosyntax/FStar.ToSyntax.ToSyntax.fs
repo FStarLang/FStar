@@ -503,7 +503,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
               let t = desugar_term env (close_fun env t) in
               (* TODO : This should be a real check instead of just a warning *)
               if (match x.sort.n with | S.Tm_unknown -> false | _ -> true)
-              then BU.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s"
+              then BU.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s\n"
                                        (Print.bv_to_string x)
                                        (Print.term_to_string x.sort)
                                        (Print.term_to_string t) ;
@@ -1212,8 +1212,8 @@ and not_ascribed t =
     | Ascribed _ -> false
     | _ ->  true
 
-// In this case, we might have implicits in the way
 and is_synth_by_tactic e t =
+    // In this case, we might have implicits in the way
     match t.tm with
     | App (l, r, Hash) -> is_synth_by_tactic e l
     | Var lid ->
@@ -1275,7 +1275,7 @@ and desugar_comp r env t =
           let ens = Ensures (mk_term (Name C.true_lid) t.range Formula, None) in
           mk_term ens t.range Type_level, Nothing
         in
-        let fail_lemma () = 
+        let fail_lemma () =
              let expected_one_of = ["Lemma post";
                                     "Lemma (ensures post)";
                                     "Lemma (requires pre) (ensures post)";
@@ -1303,7 +1303,7 @@ and desugar_comp r env t =
           | [dec]
                 when is_decreases dec ->
             fail_lemma()
-                         
+
           | [ens] -> //otherwise, a single argument is always treated as just an ensures clause
             [unit_tm;req_true;ens;nil_pat]
 
@@ -2418,7 +2418,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     env, [se]
 
 let desugar_decls env decls =
-  let env, sigelts = 
+  let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
       let env, se = desugar_decl env d in
       env, sigelts@se) (env, []) decls
@@ -2501,8 +2501,28 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   then BU.print1 "%s\n" (Print.modul_to_string modul);
   (if pop_when_done then export_interface modul.name env else env), modul
 
-let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (en: env) :env =
-  let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
-  let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
-  let env = Env.finish en m in
-  if pop_when_done then export_interface m.name env else env
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//External API for modules
+/////////////////////////////////////////////////////////////////////////////////////////
+let ast_modul_to_modul modul : withenv<S.modul> =
+    fun env ->
+        let env, modul = desugar_modul env modul in
+         modul,env
+
+let decls_to_sigelts decls : withenv<S.sigelts> =
+    fun env -> 
+        let env, sigelts = desugar_decls env decls in
+        sigelts, env
+
+let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
+    fun env ->
+        let env, modul = desugar_partial_modul modul env a_modul in
+        modul, env
+
+let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) : withenv<unit> =
+  fun en ->
+      let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
+      let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
+      let env = Env.finish en m in
+      (), (if pop_when_done then export_interface m.name env else env)

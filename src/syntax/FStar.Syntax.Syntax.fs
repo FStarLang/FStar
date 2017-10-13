@@ -551,19 +551,19 @@ let has_simple_attribute (l: list<term>) s =
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
 ///////////////////////////////////////////////////////////////////////
-module C = FStar.Parser.Const
 let tconst l = mk (Tm_fvar(lid_as_fv l Delta_constant None)) None Range.dummyRange
 let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_defined_at_level 1) None)) None Range.dummyRange
 let tdataconstr l = fv_to_tm (lid_as_fv l Delta_constant (Some Data_ctor))
-let t_unit   = tconst C.unit_lid
-let t_bool   = tconst C.bool_lid
-let t_int    = tconst C.int_lid
-let t_string = tconst C.string_lid
-let t_float  = tconst C.float_lid
-let t_char   = tabbrev C.char_lid
-let t_range  = tconst C.range_lid
-let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev C.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
-let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev C.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
-let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
-let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev C.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
+let t_unit   = tconst PC.unit_lid
+let t_bool   = tconst PC.bool_lid
+let t_int    = tconst PC.int_lid
+let t_string = tconst PC.string_lid
+let t_float  = tconst PC.float_lid
+let t_char   = tabbrev PC.char_lid
+let t_range  = tconst PC.range_lid
+let t_term   = tconst PC.term_lid
+let t_tactic_unit = mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_tac_unit    = mk_Tm_app (mk_Tm_uinst (tabbrev PC.u_tac_lid) [U_zero]) [as_arg t_unit] None Range.dummyRange
+let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
+let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
 let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange

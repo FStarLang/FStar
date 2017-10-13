@@ -1,116 +1,125 @@
 #light "off"
 module Prims
-  let down (x:obj) : 'b =
-      x :?> 'b
-  let lift (x:'a) : obj = x :> obj
-  let checked_cast (x:'a) : 'b = lift x |> down
-  type Tot<'a> = 'a
-  type unit      = Microsoft.FSharp.Core.unit
-  type bool      = Microsoft.FSharp.Core.bool
-  type char      = Microsoft.FSharp.Core.char
-  type string    = Microsoft.FSharp.Core.string
-  type 'a array  = 'a Microsoft.FSharp.Core.array
-  type double    = Microsoft.FSharp.Core.double
-  type float     = Microsoft.FSharp.Core.float
-  type int       = Microsoft.FSharp.Core.bigint
-  type byte 	 = Microsoft.FSharp.Core.byte
-  type exn       = Microsoft.FSharp.Core.exn
-  type 'a list'  = 'a list
-  type 'a list   = 'a list'
-  type 'a option = 'a Microsoft.FSharp.Core.option
-  type nat = int
-  type 'dummy b2t = Dummy_b2t of unit
-  //type ('a,'b) l__HashMultiMap = ('a, 'b) Microsoft.FSharp.Collections.HashMultiMap
-  type (' p, ' q) l_or =
+open System.Numerics
+module Obj = FSharp.Compatibility.OCaml.Obj
+
+type int       = bigint
+type nonzero = int
+let ( + )  (x:bigint) (y:int) = x + y
+let ( - )  (x:int) (y:int) = x - y
+let ( * )  (x:int) (y:int) = x * y
+let ( / )  (x:int) (y:int) = x / y
+let ( <= ) (x:int) (y:int) = x <= y
+let ( >= ) (x:int) (y:int) = x >= y
+let ( < )  (x:int) (y:int) = x < y
+let ( > )  (x:int) (y:int) = x > y
+let (mod) (x:int) (y:int) = x % y
+let ( ~- ) (x:int) = (~-) x
+let abs (x:int) = BigInteger.Abs x
+let parse_int = BigInteger.Parse
+let to_string (x:int) = x.ToString()
+
+type unit      = Microsoft.FSharp.Core.unit
+type bool      = Microsoft.FSharp.Core.bool
+type string    = Microsoft.FSharp.Core.string
+type 'a array  = 'a Microsoft.FSharp.Core.array
+type exn       = Microsoft.FSharp.Core.exn
+type 'a list'  = 'a list
+type 'a list   = 'a Microsoft.FSharp.Collections.list
+type 'a option = 'a Microsoft.FSharp.Core.option
+
+type range     = unit
+type nat       = int
+type pos       = int
+type 'd b2t    = B2t of unit
+
+type 'a squash = Squash of unit
+
+type (' p, ' q) c_or =
   | Left of ' p
   | Right of ' q
 
-  let uu___is_Left = function
-    | Left _ -> true
-    | _ -> false
+type (' p, ' q) l_or = ('p, 'q) c_or squash
 
-  let uu___is_Right = function
-    | Right _ -> true
-    | _ -> false
+let uu___is_Left = function Left _ -> true | Right _ -> false
 
-  type (' p, ' q) l_and =
-  | And of ' p * ' q
+let uu___is_Right = function Left _ -> false | Right _ -> true
 
-  let uu___is_And = function
-    | And _ -> true
+type (' p, ' q) c_and =
+| And of ' p * ' q
 
-  type l__True =
-    | T
+type (' p, ' q) l_and = ('p, 'q) c_and squash
 
-  let uu___is_T = function
-    | T -> true
-
-  type l__False = unit
-  (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
-    are no constructors and generate this type abbreviation*)
-
-  type (' p, ' q) l_imp =
-  ' p  ->  ' q
-
-  type (' p, ' q) l_iff =
-  ((' p, ' q) l_imp, (' q, ' p) l_imp) l_and
-
-  type ' p l_not =
-  (' p, l__False) l_imp
-
-  type (' a, ' p) l__Forall =
-  ' a  ->  ' p
-
-  type ' f l__ForallTyp =
-  unit  ->  ' f
-
-  type (' a, ' p) l__Exists =
-  | MkExists of ' a * ' p
+let uu___is_And _ = true
 
 
-  (* NS: Not sure why heap is still here? It is not there in prims.ml. Can it be removed? *)
-  type heap = unit (*perhaps implement Heap concretely, and hence get it extracted fully automatically?
-    We shoud get rid of this plethora of assumed primitives! *)
-  type (' p, ' q, 'dummyP, 'dummyQ) l__Eq2 = Dummy_Eq2 of unit
-  type prop = obj
-  let ignore _ = ()
-  let cut = ()
-  let fst = fst
-  let snd = snd
-  let admit () = ()
-  let _assume () = ()
-  let _assert x = ()
-  let magic () = failwith "no magic"
-  let min x y = if x < y then x else y
-  let strcat x y = x ^ y
-  let op_Negation x = not x
+type c_True =
+  | T
 
-  open System.Numerics
-  let ( + )  (x:bigint) (y:bigint) = x + y
-  let ( - )  (x:bigint) (y:bigint) = x - y
-  let ( * )  (x:bigint) (y:bigint) = x * y
-  let ( / )  (x:bigint) (y:bigint) = x / y
-  let ( <= ) (x:bigint) (y:bigint) = x <= y
-  let ( >= ) (x:bigint) (y:bigint) = x >= y
-  let ( < )  (x:bigint) (y:bigint) = x < y
-  let ( > )  (x:bigint) (y:bigint) = x > y
-  let ( % )  (x:bigint) (y:bigint) = x % y
-  let parse_int = BigInteger.Parse
+type l_True = c_True squash
 
-  let op_Equality x y = x = y
-  let op_disEquality x y = x<>y
-  let op_AmpAmp x y = x && y
-  let op_BarBar x y  = x || y
-  let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
-  let uu___is_Cons l = not (uu___is_Nil l)
-  let raise e = raise e
-  let string_of_bool b = sprintf "%b" b
-  let string_of_int i = sprintf "%d" i
+let uu___is_T _ = true
 
-  type ('a, 'b) dtuple2 =
+type c_False = unit
+(*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
+       are no constructors and generate this type abbreviation*)
+type l_False = c_False squash
+
+type (' p, ' q) l_imp = ('p -> 'q) squash
+
+type (' p, ' q) l_iff = ((' p, ' q) l_imp, (' q, ' p) l_imp) l_and
+
+type ' p l_not = (' p, l_False) l_imp
+
+type (' a, ' p) l_Forall = L_forall of unit
+
+type (' a, ' p) l_Exists = L_exists of unit
+
+
+type (' p, ' q, 'dummyP) eq2 = Eq2 of unit
+type (' p, ' q, 'dummyP, 'dummyQ) eq3 = Eq3 of unit
+
+type prop     = obj
+
+let cut = ()
+let admit () = failwith "no admits"
+let _assume () = ()
+let _assert x = ()
+let magic () = failwith "no magic"
+let unsafe_coerce x = Obj.magic x
+let op_Negation x = not x
+
+let range_0 = ()
+let range_of _ = ()
+let mk_range _ _ _ _ _ = ()
+let set_range_of x = x
+
+let op_Equality x y = x = y
+let op_disEquality x y = x<>y
+let op_AmpAmp x y = x && y
+let op_BarBar x y  = x || y
+let uu___is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
+let uu___is_Cons l = not (uu___is_Nil l)
+let strcat x y = x ^ y
+
+let string_of_bool (b:bool) = b.ToString()
+let string_of_int (i:int) = i.ToString()
+
+type ('a, 'b) dtuple2 =
   | Mkdtuple2 of 'a * 'b
 
-  let __proj__Mkdtuple2__item___1 x = match x with
+let __proj__Mkdtuple2__item___1 x = match x with
   | Mkdtuple2 (x, _) -> x
-  let __proj__Mkdtuple2__item___2 x = match x with
+let __proj__Mkdtuple2__item___2 x = match x with
   | Mkdtuple2 (_, x) -> x
+
+let rec pow2 (n:int) = if n = bigint 0 then
+                      bigint 1
+                   else
+                      (bigint 2) * pow2 (n - (bigint 1))
+
+let __proj__Cons__item__tl = function
+  | _::tl -> tl
+  | _     -> failwith "Impossible"
+
+let min = min

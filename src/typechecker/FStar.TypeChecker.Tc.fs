@@ -1486,23 +1486,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_pragma (p) ->
-    (match p with
-     | SetOptions _
-     | ResetOptions _ ->
-        // `using_facts_from` requires some special handling..
-        begin match Options.using_facts_from () with
-        | Some ns ->
-            let proof_ns = [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]] in
-            { env with proof_ns = proof_ns }
-        | None ->
-            { env with proof_ns = [[]] }
-        end
-     | _ -> env)
+  | Sig_pragma _
   | Sig_new_effect_for_free _ -> env
-  | Sig_new_effect (ne) ->
+  | Sig_new_effect ne ->
     let env = Env.push_sigelt env se in
-
     ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a)) env
   | Sig_declare_typ (_, _, _)
   | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env
@@ -1566,7 +1553,7 @@ let tc_decls env ses =
   let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
   List.rev_append ses [], List.rev_append exports [], env
 
-let tc_partial_modul env modul =
+let tc_partial_modul env modul push_before_typechecking =
   let verify = Options.should_verify modul.name.str in
   let action = if verify then "Verifying" else "Lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
@@ -1576,10 +1563,7 @@ let tc_partial_modul env modul =
   let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
   let msg = "Internals for " ^name in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
-  //AR: the interactive mode calls this function, because of which there is an extra solver push.
-  //    the interactive mode does not call finish_partial_modul, so this push is not popped.
-  //    currently, there is a cleanup function in the interactive mode tc, that does this extra pop.
-  env.solver.push msg;
+  if push_before_typechecking then env.solver.push msg;
   let env = Env.set_current_module env modul.name in
   let ses, exports, env = tc_decls env modul.declarations in
   {modul with declarations=ses}, exports, env
@@ -1677,7 +1661,7 @@ let finish_partial_modul env modul exports =
   modul, env
 
 let tc_modul env modul =
-  let modul, non_private_decls, env = tc_partial_modul env modul in
+  let modul, non_private_decls, env = tc_partial_modul env modul true in
   finish_partial_modul env modul non_private_decls
 
 let check_module env m =

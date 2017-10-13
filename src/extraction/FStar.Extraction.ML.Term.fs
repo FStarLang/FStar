@@ -931,7 +931,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         //   then evaluation order must be enforced to be L-to-R (by hoisting)
                         let evaluation_order_guaranteed =
                           List.length mlargs_f = 1 ||
-                          Util.codegen_fsharp () ||
+                          Options.codegen_fsharp () ||
                           (match head.n with
                            | Tm_fvar fv ->
 			                    S.fv_eq_lid fv PC.op_And ||

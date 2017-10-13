@@ -108,6 +108,11 @@
       <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\tosyntax\tosyntax.fsproj">
+      <Name>tosyntax</Name>
+      <Project>{b0968012-b93c-4198-9085-b89669e8e4e8}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">
       <Name>typechecker</Name>
       <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>

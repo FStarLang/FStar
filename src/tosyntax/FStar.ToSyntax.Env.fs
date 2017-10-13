@@ -102,6 +102,8 @@ and dsenv_hooks =
     ds_push_include_hook : env -> lident -> unit;
     ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
 
+type withenv<'a> = env -> 'a * env
+
 let default_ds_hooks =
   { ds_push_open_hook = (fun _ _ -> ());
     ds_push_include_hook = (fun _ _ -> ());

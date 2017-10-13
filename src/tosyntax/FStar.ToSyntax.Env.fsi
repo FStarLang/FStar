@@ -67,6 +67,7 @@ type exported_id_kind = (* kinds of identifiers exported by a module *)
 type exported_id_set = exported_id_kind -> ref<string_set>
 
 type env
+type withenv<'a> = env -> 'a * env
 // = {
 //  curmodule:            option<lident>;                   (* name of the module being desugared *)
 //  curmonad:             option<ident>;                    (* current monad being desugared *)

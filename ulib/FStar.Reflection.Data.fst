@@ -14,7 +14,7 @@ type vconst =
 // This is shadowing `pattern` from Prims (for smt_pats)
 noeq
 type pattern =
-    | Pat_Constant : vconst -> pattern                   // A built-in constant
+    | Pat_Constant : vconst -> pattern                  // A built-in constant
     | Pat_Cons     : fv -> list pattern -> pattern      // A fully applied constructor
     | Pat_Var      : binder -> pattern                  // Pattern bound variable
     | Pat_Wild     : binder -> pattern                  // Wildcard (GM: why is this not Pat_var too?)
@@ -33,7 +33,7 @@ type term_view =
   | Tv_FVar   : fv -> term_view
   | Tv_App    : term -> argv -> term_view
   | Tv_Abs    : binder -> term -> term_view
-  | Tv_Arrow  : binder -> term -> term_view
+  | Tv_Arrow  : binder -> comp -> term_view
   | Tv_Type   : unit -> term_view
   | Tv_Refine : binder -> term -> term_view
   | Tv_Const  : vconst -> term_view
@@ -41,6 +41,13 @@ type term_view =
   | Tv_Let    : binder -> term -> term -> term_view
   | Tv_Match  : term -> list branch -> term_view
   | Tv_Unknown : term_view // Baked in "None"
+
+// Very basic for now
+noeq
+type comp_view =
+  | C_Total     : typ -> comp_view
+  | C_Lemma     : term -> term -> comp_view // pre & post
+  | C_Unknown   : comp_view
 
 noeq
 type ctor =

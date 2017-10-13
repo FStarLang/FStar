@@ -62,6 +62,9 @@ let cur_goal: unit -> RT.term __tac = fun () -> __cur_goal
 let __cur_witness: RT.term __tac = from_tac_0 B.cur_witness
 let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
 
+let __tc (t: RT.term) : RT.term __tac = from_tac_1 B.tc t
+let tc: RT.term -> unit -> RT.term __tac = fun t -> fun () -> __tc t
+
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
 let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __trytac (E.reify_tactic t)
 
@@ -71,8 +74,8 @@ let trivial: unit -> unit __tac = fun () -> __trivial
 let __norm (s: norm_step list): unit __tac = from_tac_1 B.norm (tr_repr_steps s)
 let norm: norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
 
-let __norm_term (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_2 B.norm_term (tr_repr_steps s) t
-let norm_term: norm_step list -> RT.term -> unit -> RT.term __tac = fun s t -> fun () -> __norm_term s t
+let __norm_term_env (e:RT.env) (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_3 B.norm_term_env e (tr_repr_steps s) t
+let norm_term_env: RT.env -> norm_step list -> RT.term -> unit -> RT.term __tac = fun e s t -> fun () -> __norm_term_env e s t
 
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro
@@ -106,13 +109,6 @@ let exact: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
     match (t ()) ps with
     | Success (a, state) -> __exact a state
-    | Failed (s, state) -> Failed (s, state)
-
-let __exact_lemma (t: RT.term): unit __tac = from_tac_1 B.exact_lemma t
-let exact_lemma: RT.term E.tactic -> unit -> unit __tac =
-  fun t  -> fun () -> fun ps ->
-    match (t ()) ps with
-    | Success (a, state) -> __exact_lemma a state
     | Failed (s, state) -> Failed (s, state)
 
 let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t

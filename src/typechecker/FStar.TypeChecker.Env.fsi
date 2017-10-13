@@ -65,16 +65,11 @@ type effects = {
 }
 
 // A name prefix, such as ["FStar";"Math"]
-type name_prefix = list<string>
+type name_prefix = FStar.Ident.path
 // A choice of which name prefixes are enabled/disabled
-// The leftmost match takes precedence. Empty list means everything is on.
+// The leftmost match takes precedence. Empty list means everything is off.
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
-type flat_proof_namespace = list<(name_prefix * bool)>
-
-// A stack of namespace choices. Provides simple push/pop behaviour.
-// For the purposes of filtering facts, this is just flattened.
-// CAN NEVER BE EMPTY
-type proof_namespace = list<flat_proof_namespace>
+type proof_namespace = list<(name_prefix * bool)>
 
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
@@ -111,7 +106,8 @@ type env = {
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   is_native_tactic: lid -> bool;                   (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
-  tc_hooks       : tcenv_hooks                     (* hooks that the interactive more relies onto for symbol tracking *)
+  tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
+  dsenv          : FStar.ToSyntax.Env.env
 }
 and solver_t = {
     init         :env -> unit;
@@ -121,7 +117,6 @@ and solver_t = {
     encode_sig   :env -> sigelt -> unit;
     preprocess   :env -> goal -> list<(env * goal * FStar.Options.optionstate)>;
     solve        :option<(unit -> string)> -> env -> goal -> unit; //call to the smt solver
-    is_trivial   :env -> goal -> bool;
     finish       :unit -> unit;
     refresh      :unit -> unit;
 }
@@ -152,7 +147,6 @@ val string_of_delta_level : delta_level -> string
 (* Marking and resetting the environment, for the interactive mode *)
 val push               : env -> string -> env
 val pop                : env -> string -> env
-val cleanup_interactive: env -> unit
 
 (* Checking the per-module debug level and position info *)
 val debug          : env -> Options.debug_level_t -> bool
@@ -257,8 +251,6 @@ val should_enc_path : env -> list<string> -> bool
 val should_enc_lid  : env -> lident -> bool
 val add_proof_ns    : env -> name_prefix -> env
 val rem_proof_ns    : env -> name_prefix -> env
-val push_proof_ns   : env -> env
-val pop_proof_ns    : env -> env
 val get_proof_ns    : env -> proof_namespace
 val set_proof_ns    : proof_namespace -> env -> env
 val string_of_proof_ns : env -> string

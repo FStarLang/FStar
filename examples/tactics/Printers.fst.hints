@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ed91c5c6c4d1bd63a76efce0f55b9e8d"
+      "1b7188c10e987da20c40af6dc5bdbd68"
     ],
     [
       "Printers.paren",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "e8aafca256c1433e3c16b63071e3094a"
+      "4ae9a42c34227460935813fa97ea4a8d"
     ],
     [
       "Printers.mk_print_binder",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "b2d9c04093518d133fff262f5566fe6a"
+      "4ba214e700dfd6c61f14f9127f39d01a"
     ],
     [
       "Printers.printer",
@@ -46,7 +46,7 @@
         "typing_FStar.Reflection.Basic.lookup_typ"
       ],
       0,
-      "87317bf1510c073228749b2feae14967"
+      "e4cbd8517469661fe33d6e89238487a2"
     ],
     [
       "Printers.t1",
@@ -58,7 +58,7 @@
         "assumption_Prims.HasEq_string"
       ],
       0,
-      "835185c38215d5dec83ded6fdad4b3a6"
+      "cf50626bc77f9fe65784ea83f6f95c53"
     ],
     [
       "Printers.uu___is_A",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "818030bf303de422ef9aa745c3b819ec"
+      "54184ae87a8ff93d8f69da31610a59e1"
     ],
     [
       "Printers.__proj__A__item___0",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "ada75ec5f9d62b4cb6c4dd7e796b6c4c"
+      "d22c4eac173cb329d0ef63b74d0a8415"
     ],
     [
       "Printers.__proj__A__item___1",
@@ -93,7 +93,7 @@
         "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "0ae050a4e35d102082181557d4a36769"
+      "98387b0740fc17f0d9e330e280424b8f"
     ],
     [
       "Printers.uu___is_B",
@@ -102,7 +102,7 @@
       1,
       [ "@query" ],
       0,
-      "1a632b44100234b6a5e7b580334b81e8"
+      "af0af5ae68999c3083a1e039660d6c5d"
     ],
     [
       "Printers.__proj__B__item___0",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Printers_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
       ],
       0,
-      "a958058c389ef1428536ef2cab03679e"
+      "ea5785ebce728b284c7f9c3d7954e7ad"
     ],
     [
       "Printers.uu___is_C",
@@ -124,7 +124,7 @@
       1,
       [ "@query" ],
       0,
-      "19ee3216048288299bdbaeaba12405a5"
+      "d13254dadebb00ceb1e9894787a3403a"
     ],
     [
       "Printers.t1_print",
@@ -137,7 +137,7 @@
         "fuel_guarded_inversion_Printers.t1"
       ],
       0,
-      "6b4257e6cf25b5a3457e06035f42b44f"
+      "d930888e2b60c101c4070aa976279762"
     ],
     [
       "Printers.t1_print",
@@ -150,61 +150,61 @@
         "disc_equation_Printers.C", "fuel_guarded_inversion_Printers.t1"
       ],
       0,
-      "b3520dbc46f49811b04e04bc4c85b273"
+      "20d5de713057f9181ee1a2fe75f553b7"
     ],
     [
-      "Printers.uu___87",
+      "Printers.uu___79",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "1005aa8148018af14d3da3cfc08a2df4"
+      "12d9cad05427587343e0d9e02e77368d"
     ],
     [
-      "Printers.uu___87",
+      "Printers.uu___79",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "7df805bc252a17f6f80e6b451d8b175a"
+      "fa9f2883550de3b0eea0e8bbd501cb80"
     ],
     [
-      "Printers.uu___88",
+      "Printers.uu___80",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "f54626af3995f88735acaa872ec91233"
+      "2f518b87cfb418c5b3abaaa7a8ea1284"
     ],
     [
-      "Printers.uu___88",
+      "Printers.uu___80",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "69a4f8312fc2c23cdf22d2ee3e0bc60a"
+      "21f92ac3d540fb22ae255079519d8c85"
     ],
     [
-      "Printers.uu___89",
+      "Printers.uu___81",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "b77df243b901761f27ec4a9ac4d7cd46"
+      "8fcd60ae6e966c836dd0ef8980f58580"
     ],
     [
-      "Printers.uu___89",
+      "Printers.uu___81",
       2,
       2,
       1,
       [ "@query" ],
       0,
-      "131a79bb9b32d50cbc2db364ceb92dbc"
+      "b798a8f700aa12ec9b8fb8347370d89c"
     ]
   ]
 ]

@@ -1,0 +1,7 @@
+{"query-id":"1","query":"vfs-add","args":{"filename":null,"contents":"module Number\n\nlet a = -1\n"}}
+{"query-id":"2","query":"push","args":{"kind":"full","code":"module Number\n","line":1,"column":0}}
+{"query-id":"3","query":"push","args":{"kind":"full","code":"\nlet a = -1\n","line":2,"column":0}}
+{"query-id":"4","query":"pop","args":{}}
+{"query-id":"5","query":"vfs-add","args":{"filename":"number.fsti","contents":"module Number\n\nval a : a:int{a < 0}\n"}}
+{"query-id":"6","query":"push","args":{"kind":"full","code":"module Number\n","line":1,"column":0}}
+{"query-id":"7","query":"push","args":{"kind":"full","code":"\nlet a = -1\n","line":2,"column":0}}

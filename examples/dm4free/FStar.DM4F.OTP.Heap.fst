@@ -33,7 +33,7 @@ let equal (t1:tape) (t2:tape) = Seq.equal t1 t2
 abstract val lemma_eq_intro: s1:tape -> s2:tape -> Lemma
   (requires ((forall (i:id).{:pattern (index s1 i); (index s2 i)} index s1 i == index s2 i)))
   (ensures (equal s1 s2))
-  [SMTPatT (equal s1 s2)]
+  [SMTPat (equal s1 s2)]
 let lemma_eq_intro s1 s2 =
   assert (forall (i:id). index s1 i == Seq.index s1 i);
   assert (forall (i:id). index s2 i == Seq.index s2 i);
@@ -42,7 +42,7 @@ let lemma_eq_intro s1 s2 =
 abstract val lemma_eq_elim: s1:tape -> s2:tape -> Lemma
   (requires (equal s1 s2))
   (ensures (s1==s2))
-  [SMTPatT (equal s1 s2)]
+  [SMTPat (equal s1 s2)]
 let lemma_eq_elim s1 s2 = ()
 
 abstract val lemma_index_upd1: s:tape -> n:id -> v:elem -> Lemma

@@ -99,6 +99,11 @@ type cfg = {
     primitive_steps:list<primitive_step>
 }
 
+let only_strong_steps' steps =
+    List.filter (fun ps -> ps.strong_reduction_ok) steps
+let only_strong_steps cfg =
+    { cfg with primitive_steps = only_strong_steps' cfg.primitive_steps}
+
 type branches = list<(pat * option<term> * term)>
 
 type subst_t = list<subst_elt>
@@ -606,8 +611,8 @@ let built_in_primitive_steps : list<primitive_step> =
     let set_range_of (r:Range.range) args : option<term> =
       match args with
       | [_; (t, _); (r, _)] ->
-        let r = EMB.unembed_range r in
-        Some ({t with pos=r})
+        BU.bind_opt (EMB.unembed_range r) (fun r ->
+        Some ({t with pos=r}))
       | _ -> None
     in
     let mk_range (r:Range.range) args : option<term> =
@@ -723,10 +728,23 @@ let reduce_primops cfg tm =
            | None -> tm
            | Some prim_step ->
              if List.length args < prim_step.arity
-             then tm //partial application; can't step
-             else match prim_step.interpretation head.pos args with
-                  | None -> tm
-                  | Some reduced -> reduced
+             then begin log cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
+                                                     (Print.lid_to_string prim_step.name)
+                                                     (string_of_int (List.length args))
+                                                     (string_of_int prim_step.arity));
+                        tm //partial application; can't step
+                  end
+             else begin log cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
+                  match prim_step.interpretation head.pos args with
+                  | None ->
+                      log cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
+                      tm
+                  | Some reduced ->
+                      log cfg (fun () -> BU.print2 "primop: <%s> reduced to <%s>\n"
+                                              (Print.term_to_string tm)
+                                              (Print.term_to_string reduced));
+                      reduced
+                 end
            end
          | _ -> tm
    end
@@ -739,17 +757,16 @@ let reduce_equality cfg tm =
 (* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
 (*******************************************************************)
 let maybe_simplify cfg tm =
-    let steps = cfg.steps in
+    let tm = reduce_primops cfg tm in
+    if not <| List.contains Simplify cfg.steps then tm
+    else
     let w t = {t with pos=tm.pos} in
     let simp_t t = match t.n with
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None in
     let simplify arg = (simp_t (fst arg), arg) in
-    let tm = reduce_primops cfg tm in
-    if not <| List.contains Simplify steps
-    then tm
-    else match tm.n with
+    match tm.n with
             | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
             | Tm_app({n=Tm_fvar fv}, args) ->
               if S.fv_eq_lid fv PC.and_lid
@@ -843,7 +860,7 @@ let tr_norm_steps s =
     List.concatMap tr_norm_step s
 
 let get_norm_request (full_norm:term -> term) args =
-    let parse_steps s = tr_norm_steps <| EMB.unembed_list EMB.unembed_norm_step s in
+    let parse_steps s = EMB.unembed_list EMB.unembed_norm_step s |> BU.must |> tr_norm_steps in
     match args with
     | [_; (tm, _)]
     | [(tm, _)] ->
@@ -862,6 +879,12 @@ let is_reify_head = function
       true
     | _ ->
       false
+
+let should_reify cfg stack = match stack with
+    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
+        // BU.print1 "Found a reify on the stack. %s" "" ;
+        cfg.steps |> List.contains Reify
+    | _ -> false
 
 let rec norm : cfg -> env -> stack -> term -> term =
     fun cfg env stack t ->
@@ -884,11 +907,22 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_uvar _
           | Tm_constant _
           | Tm_name _
+
           | Tm_fvar( {fv_delta=Delta_constant} )
           | Tm_fvar( {fv_qual=Some Data_ctor } )
           | Tm_fvar( {fv_qual=Some (Record_ctor _)} ) -> //these last three are just constructors; no delta steps can apply
             //log cfg (fun () -> BU.print "Tm_fvar case 0\n" []) ;
             rebuild cfg env stack t
+
+          // we don't unfold dm4f actions unless reifying
+          | Tm_fvar fv when Env.is_action cfg.tcenv (S.lid_of_fv fv) ->
+            let b = should_reify cfg stack in
+            log cfg (fun () -> BU.print2 ">>> For DM4F action %s, should_reify = %s\n"
+                                     (Print.term_to_string t)
+                                     (string_of_bool b));
+            if b
+            then do_unfold_fv cfg env (List.tl stack) t fv
+            else rebuild cfg env stack t
 
           | Tm_app(hd, args)
             when U.is_fstar_tactics_embed hd
@@ -966,7 +1000,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  norm cfg env stack t'
 
           | Tm_fvar f ->
-            let t0 = t in
             let should_delta =
                 cfg.delta_level |> BU.for_some (function
                     | Env.UnfoldTac
@@ -1000,33 +1033,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
             if not should_delta
             then rebuild cfg env stack t
-            else let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in //preserve the range info on the returned def
-                 begin match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
-                    | None ->
-                      log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
-                      rebuild cfg env stack t
-
-                    | Some (us, t) ->
-                      log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
-                                    (Print.term_to_string t0) (Print.term_to_string t));
-                      let t =
-                        if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
-                        //we're really trying to compute here; no point propagating range information
-                        //which can be expensive
-                        then t
-                        else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
-                      in
-                      let n = List.length us in
-                      if n > 0
-                      then match stack with //universe beta reduction
-                             | UnivArgs(us', _)::stack ->
-                               let env = us' |> List.fold_left (fun env u -> Univ u::env) env in
-                               norm cfg env stack t
-                             | _ when (cfg.steps |> List.contains EraseUniverses) ->
-                               norm cfg env stack t
-                             | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
-                      else norm cfg env stack t
-                 end
+            else do_unfold_fv cfg env stack t f
 
           | Tm_bvar x ->
             begin match lookup_bvar env x with
@@ -1037,7 +1044,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    then match !r with
                         | Some (env, t') ->
                             log cfg  (fun () -> BU.print2 "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
-                            norm cfg env stack t'
+                            begin match (compress t').n with
+                                | Tm_abs _  ->
+                                    norm cfg env stack t'
+                                | _ ->
+                                    rebuild cfg env stack t'
+                            end
                         | None -> norm cfg env (MemoLazy r::stack) t0
                    else norm cfg env stack t0 //Fixpoint steps are excluded; so don't take the recursive knot
             end
@@ -1100,7 +1112,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
-                       let cfg = {cfg with primitive_steps=List.filter (fun ps -> ps.strong_reduction_ok) cfg.primitive_steps} in
+                       let cfg = only_strong_steps cfg in
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
 
@@ -1171,6 +1183,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                    lbtyp=ty;
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
+                 let cfg = only_strong_steps cfg in
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
           | Tm_let((true, lbs), body)
@@ -1229,17 +1242,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             begin match m with
               | Meta_monadic (m, t) ->
+                // BU.print2 "Will %sreify : %s \n" (if should_reify cfg stack then "" else "not ") (stack_to_string stack);
 
-                let should_reify = match stack with
-                    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
-                        // BU.print1 "Found a reify on the stack. %s" "" ;
-                        cfg.steps |> List.contains Reify
-                    | _ -> false
-                in
-
-                // BU.print2 "Will %sreify : %s \n" (if should_reify then "" else "not ") (stack_to_string stack);
-
-                if not should_reify
+                if not (should_reify cfg stack)
                 then
                  (*  We have an impure computation, and we aim to perform any pure steps within that computation.   *
                   *                                                                                                 *
@@ -1432,16 +1437,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
 
               | Meta_monadic_lift (m, m', t) ->
-                (* KM : This code is a partial duplicate of what can be found in Meta_monadic *)
-                (* KM : Not exactly sure which case should be eliminated *)
-                let should_reify = match stack with
-                    | App ({n=Tm_constant FC.Const_reify}, _, _) :: _ ->
-                        // BU.print1 "Found a reify on the stack. %s" "" ;
-                        cfg.steps |> List.contains Reify
-                    | _ -> false
-                in
-
-                if should_reify
+                if should_reify cfg stack
                 then
                     norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
                 else
@@ -1498,6 +1494,35 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     rebuild cfg env stack t
                 end
         end
+
+and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
+    //preserve the range info on the returned def
+    let r_env = Env.set_range cfg.tcenv (S.range_of_fv f) in
+    match Env.lookup_definition cfg.delta_level r_env f.fv_name.v with
+       | None ->
+         log cfg (fun () -> BU.print "Tm_fvar case 2\n" []) ;
+         rebuild cfg env stack t0
+
+       | Some (us, t) ->
+         log cfg (fun () -> BU.print2 ">>> Unfolded %s to %s\n"
+                       (Print.term_to_string t0) (Print.term_to_string t));
+         let t =
+           if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
+           //we're really trying to compute here; no point propagating range information
+           //which can be expensive
+           then t
+           else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
+         in
+         let n = List.length us in
+         if n > 0
+         then match stack with //universe beta reduction
+                | UnivArgs(us', _)::stack ->
+                  let env = us' |> List.fold_left (fun env u -> Univ u::env) env in
+                  norm cfg env stack t
+                | _ when (cfg.steps |> List.contains EraseUniverses) ->
+                  norm cfg env stack t
+                | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
+         else norm cfg env stack t
 
 (* Reifies the lifting of the term [e] of type [t] from computational  *)
 (* effect [m] to computational effect [m'] using lifting data in [env] *)
@@ -1706,8 +1731,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           (* KM : Why are we excluding Iota (pattern matching) here ? *)
           else [Exclude Iota; Exclude Zeta]
         in
-        {cfg with delta_level=new_delta;
-                        steps=steps'@cfg.steps}
+        only_strong_steps ({cfg with delta_level=new_delta; steps=steps'@cfg.steps})
       in
       let norm_or_whnf env t =
         if whnf
@@ -1859,14 +1883,14 @@ let ghost_to_pure_lcomp env (lc:lcomp) =
 let term_to_string env t =
   let t =
     try normalize [AllowUnboundUniverses] env t
-    with e -> BU.print1_warning "Normalization failed with error %s" (BU.message_of_exn e) ; t
+    with e -> BU.print1_warning "Normalization failed with error %s\n" (BU.message_of_exn e) ; t
   in
   Print.term_to_string t
 
 let comp_to_string env c =
   let c =
     try norm_comp (config [AllowUnboundUniverses] env) [] c
-    with e -> BU.print1_warning "Normalization failed with error %s" (BU.message_of_exn e) ; c
+    with e -> BU.print1_warning "Normalization failed with error %s\n" (BU.message_of_exn e) ; c
   in
   Print.comp_to_string c
 
