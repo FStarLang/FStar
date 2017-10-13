@@ -2,6 +2,7 @@ open Prims
 open FStar_Tactics_Result
 open FStar_Tactics_Types
 open FStar_Tactics_Effect
+module N = FStar_TypeChecker_Normalize
 module E = FStar_Tactics_Effect
 module B = FStar_Tactics_Basic
 module RT = FStar_Reflection_Types
@@ -135,7 +136,7 @@ let apply_lemma: RT.term E.tactic -> unit -> unit __tac =
 let __print (s: string): unit __tac = from_tac_1 (fun x -> B.ret (B.tacprint x)) s
 let print: string -> unit -> unit __tac = fun s -> fun () -> __print s
 
-let __dump (s: string): unit __tac = from_tac_1 B.print_proof_state s
+let __dump (s: string): unit __tac = from_tac_1 (B.print_proof_state N.null_psc) s
 let dump: string -> unit -> unit __tac = fun s -> fun () -> __dump s
 
 let __dump1 (s: string): unit __tac = from_tac_1 B.print_proof_state1 s

@@ -125,17 +125,8 @@ let dump_proofstate ps (ctxt:N.psc) msg =
     Options.with_saved_options (fun () ->
         Options.set_option "print_effect_args" (Options.Bool true);
         let subst = N.psc_subst ctxt in
-        BU.print1 "psc substitution: %s\n"
-                       (Print.subst_to_string subst);
         let ps = subst_proof_state subst ps in
         print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
-    // tacprint "";
-    // tacprint1 "State dump (%s):" msg;
-    // tacprint1 "ACTIVE goals (%s):" (string_of_int (List.length ps.goals));
-    // List.iter (dump_goal ps) ps.goals;
-    // tacprint1 "SMT goals (%s):" (string_of_int (List.length ps.smt_goals));
-    // List.iter (dump_goal ps) ps.smt_goals;
-    // ()
 
 let print_proof_state1 (msg:string) : tac<unit> =
     mk_tac (fun p -> dump_cur p msg;
