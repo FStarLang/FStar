@@ -131,8 +131,8 @@ let __proj__CProb__item___0:
   fun projectee  -> match projectee with | CProb _0 -> _0
 let as_tprob:
   prob -> (FStar_Syntax_Syntax.typ,FStar_Syntax_Syntax.term) problem =
-  fun uu___123_567  ->
-    match uu___123_567 with
+  fun uu___125_567  ->
+    match uu___125_567 with
     | TProb p -> p
     | uu____577 -> failwith "Expected a TProb"
 type probs = prob Prims.list[@@deriving show]
@@ -213,8 +213,8 @@ let rec decr_delta_depth:
   FStar_Syntax_Syntax.delta_depth ->
     FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option
   =
-  fun uu___124_679  ->
-    match uu___124_679 with
+  fun uu___126_679  ->
+    match uu___126_679 with
     | FStar_Syntax_Syntax.Delta_constant  -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Delta_equational  -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Delta_defined_at_level _0_40 when
@@ -285,8 +285,8 @@ let find_nearest_preceding_col_info:
   =
   fun col  ->
     fun col_infos  ->
-      let rec aux out uu___125_1023 =
-        match uu___125_1023 with
+      let rec aux out uu___127_1023 =
+        match uu___127_1023 with
         | [] -> out
         | (c,i)::rest ->
             if c > col
@@ -345,10 +345,10 @@ let id_info__insert:
           let uu____1159 = FStar_Range.use_range range in
           FStar_Range.set_def_range range uu____1159 in
         let info1 =
-          let uu___126_1161 = info in
+          let uu___128_1161 = info in
           let uu____1162 = ty_map info.identifier_ty in
           {
-            identifier = (uu___126_1161.identifier);
+            identifier = (uu___128_1161.identifier);
             identifier_ty = uu____1162;
             identifier_range = use_range1
           } in
@@ -379,10 +379,10 @@ let id_info_insert:
         fun range  ->
           let info =
             { identifier = id; identifier_ty = ty; identifier_range = range } in
-          let uu___127_1320 = table in
+          let uu___129_1320 = table in
           {
-            id_info_enabled = (uu___127_1320.id_info_enabled);
-            id_info_db = (uu___127_1320.id_info_db);
+            id_info_enabled = (uu___129_1320.id_info_enabled);
+            id_info_db = (uu___129_1320.id_info_db);
             id_info_buffer = (info :: (table.id_info_buffer))
           }
 let id_info_insert_bv:
@@ -412,12 +412,12 @@ let id_info_insert_fv:
 let id_info_toggle: id_info_table -> Prims.bool -> id_info_table =
   fun table  ->
     fun enabled  ->
-      let uu___128_1357 = table in
+      let uu___130_1357 = table in
       let uu____1358 = enabled && (FStar_Options.ide ()) in
       {
         id_info_enabled = uu____1358;
-        id_info_db = (uu___128_1357.id_info_db);
-        id_info_buffer = (uu___128_1357.id_info_buffer)
+        id_info_db = (uu___130_1357.id_info_db);
+        id_info_buffer = (uu___130_1357.id_info_buffer)
       }
 let id_info_promote:
   id_info_table ->
@@ -425,12 +425,12 @@ let id_info_promote:
   =
   fun table  ->
     fun ty_map  ->
-      let uu___129_1372 = table in
+      let uu___131_1372 = table in
       let uu____1373 =
         FStar_List.fold_left (id_info__insert ty_map) table.id_info_db
           table.id_info_buffer in
       {
-        id_info_enabled = (uu___129_1372.id_info_enabled);
+        id_info_enabled = (uu___131_1372.id_info_enabled);
         id_info_db = uu____1373;
         id_info_buffer = []
       }

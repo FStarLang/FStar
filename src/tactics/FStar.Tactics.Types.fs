@@ -5,6 +5,7 @@ open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 module Options = FStar.Options
+module SS = FStar.Syntax.Subst
 
 (*
    f: x:int -> P
@@ -25,6 +26,12 @@ type goal = {
                      // We make the distinction to be more user-friendly at times
 }
 
+let subst_goal subst goal = {
+    goal with context = FStar.TypeChecker.Env.rename_env subst goal.context;
+              witness = SS.subst subst goal.witness;
+              goal_ty = SS.subst subst goal.goal_ty
+}
+
 type proofstate = {
     main_context : env;          //the shared top-level context for all goals
     main_goal    : goal;         //this is read only; it helps keep track of the goal we started working on initially
@@ -34,6 +41,12 @@ type proofstate = {
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying ciruluarity
 }
+
+let subst_proof_state subst ps = {
+    ps with main_goal = subst_goal subst ps.main_goal;
+            goals = List.map (subst_goal subst) ps.goals
+}
+
 
 let decr_depth (ps:proofstate) : proofstate =
     { ps with depth = ps.depth - 1 }
