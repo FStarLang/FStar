@@ -155,7 +155,7 @@ let step_from_native_step (s: native_primitive_step): N.primitive_step =
       N.arity=s.arity;
       N.strong_reduction_ok=s.strong_reduction_ok;
       N.requires_binder_substitution = false;
-      N.interpretation=(fun _psc args -> s.tactic args) }
+      N.interpretation=(fun psc args -> s.tactic psc args) }
 
 let rec primitive_steps () : list<N.primitive_step> =
     // The difference is the value of `requires_binder_substitution`
