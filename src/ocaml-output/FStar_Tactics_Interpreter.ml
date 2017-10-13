@@ -376,7 +376,7 @@ let step_from_native_step:
         (s.FStar_Tactics_Native.strong_reduction_ok);
       FStar_TypeChecker_Normalize.requires_binder_substitution = false;
       FStar_TypeChecker_Normalize.interpretation =
-        (fun _psc  -> fun args  -> s.FStar_Tactics_Native.tactic args)
+        (fun psc  -> fun args  -> s.FStar_Tactics_Native.tactic psc args)
     }
 let rec primitive_steps:
   Prims.unit -> FStar_TypeChecker_Normalize.primitive_step Prims.list =
