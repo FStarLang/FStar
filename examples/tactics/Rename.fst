@@ -1,5 +1,8 @@
 module Rename
 
+(* This example is pretty pointless after the new printing
+ * based on the static environment *)
+
 open FStar.Tactics
 
 assume val phi : Type
