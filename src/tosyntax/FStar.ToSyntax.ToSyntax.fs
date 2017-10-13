@@ -497,7 +497,13 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p, imp = aux loc env p in
-        let binder = match binder with
+        let annot_pat_var p t =
+            match p.v with
+            | Pat_var x -> {p with v=Pat_var({x with sort=t})}
+            | Pat_wild x -> {p with v=Pat_wild({x with sort=t})}
+            | _ -> raise (Error ("Type annotations are only supported on variables and wild-cards", p.p))
+        in
+        let p, binder = match binder with
             | LetBinder _ -> failwith "impossible"
             | LocalBinder(x, aq) ->
               let t = desugar_term env (close_fun env t) in
@@ -507,6 +513,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
                                        (Print.bv_to_string x)
                                        (Print.term_to_string x.sort)
                                        (Print.term_to_string t) ;
+              annot_pat_var p t,
               LocalBinder({x with sort=t}, aq)
         in
         loc, env', binder, p, imp
@@ -2511,7 +2518,7 @@ let ast_modul_to_modul modul : withenv<S.modul> =
          modul,env
 
 let decls_to_sigelts decls : withenv<S.sigelts> =
-    fun env -> 
+    fun env ->
         let env, sigelts = desugar_decls env decls in
         sigelts, env
 
