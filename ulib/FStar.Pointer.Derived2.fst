@@ -41,7 +41,6 @@ let copy_buffer_contents_init #t a idx_a b idx_b len h =
   Seq.lemma_eq_intro (buffer_as_seq h (gsub_buffer b idx_b 0ul)) (buffer_as_seq h (gsub_buffer a idx_a 0ul))
 
 private
-assume
 val copy_buffer_contents_advance
   (#t: typ)
   (a: buffer t) (* source *)
@@ -61,6 +60,17 @@ val copy_buffer_contents_advance
     UInt32.v len' < UInt32.v len /\
     copy_buffer_contents_inv a idx_a b idx_b len (UInt32.add len' 1ul) (Ghost.reveal h) h2
   ))
+
+#set-options "--z3rlimit 16"
+
+let copy_buffer_contents_advance #t a idx_a b idx_b len len' h =
+  let v = read_buffer a (UInt32.add idx_a len') in
+  let h1 = HST.get () in
+  buffer_snoc b idx_b len' v;
+  let h2 = HST.get () in
+  assert (gpointer_of_buffer_cell b (UInt32.add idx_b len') == gpointer_of_buffer_cell (gsub_buffer b idx_b len) len');
+  assert (v == Seq.index (buffer_as_seq (Ghost.reveal h) (gsub_buffer a idx_a len)) (UInt32.v len'));
+  buffer_as_seq_gsub_buffer_snoc (Ghost.reveal h) a idx_a len'
 
 private
 val copy_buffer_contents_aux
