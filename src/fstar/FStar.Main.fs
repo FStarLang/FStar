@@ -137,10 +137,11 @@ let go _ =
         else if Options.doc() then // --doc Generate Markdown documentation files
           FStar.Fsdoc.Generator.generate filenames
         else if Options.indent () then
-          if FStar.Platform.is_fstar_compiler_using_ocaml
-          then FStar.Indent.generate filenames
-          else failwith "You seem to be using the F#-generated version ofthe compiler ; \
-                         reindenting is not known to work yet with this version"
+          FStar.Indent.generate filenames
+          //if FStar.Platform.is_fstar_compiler_using_ocaml
+          //then FStar.Indent.generate filenames
+          //else failwith "You seem to be using the F#-generated version ofthe compiler ; \
+          //               reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
           let verify_mode =
             if Options.verify_all () then begin

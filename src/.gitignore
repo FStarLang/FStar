@@ -7,5 +7,6 @@ u_ocaml-output
 
 [Bb]in/
 [Oo]bj/
+VS/.idea
 
 Makefile.local
