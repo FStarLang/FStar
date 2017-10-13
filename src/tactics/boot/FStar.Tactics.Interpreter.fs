@@ -294,7 +294,7 @@ let rec primitive_steps () : list<N.primitive_step> =
 
       mktac1 "__print"         (fun x -> ret (tacprint x)) unembed_string embed_unit t_unit;
       mktac1_env "__dump"      print_proof_state unembed_string embed_unit t_unit;
-      mktac1 "__dump1"         print_proof_state1 unembed_string embed_unit t_unit;
+      mktac1_env "__dump1"     print_proof_state1 unembed_string embed_unit t_unit;
 
       mktac2 "__pointwise"     pointwise E.unembed_direction (unembed_tactic_0' unembed_unit) embed_unit t_unit;
       mktac0 "__trefl"         trefl embed_unit t_unit;
@@ -362,7 +362,7 @@ let report_implicits ps (is : Env.implicits) : unit =
     match errs with
     | [] -> ()
     | hd::tl -> begin
-        dump_proofstate ps N.null_psc "failing due to uninstantiated implicits";
+        dump_proofstate ps "failing due to uninstantiated implicits";
         // A trick to print each error exactly once.
         Err.add_errors tl;
         raise (Err.Error hd)
@@ -409,7 +409,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         (ps.goals@ps.smt_goals, w)
 
     | Failed (s, ps) ->
-        dump_proofstate ps N.null_psc "at the time of failure";
+        dump_proofstate ps "at the time of failure";
         raise (Err.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
 
 // Polarity

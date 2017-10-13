@@ -120,21 +120,22 @@ let ps_to_json (msg, ps) =
                ("goals", JsonList (List.map goal_to_json ps.goals));
                ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))]
 
-let fstar_refl_binder_lid = FStar.Reflection.Data.fstar_refl_types_lid "binder"
-let dump_proofstate ps (ctxt:N.psc) msg =
+let dump_proofstate ps msg =
     Options.with_saved_options (fun () ->
         Options.set_option "print_effect_args" (Options.Bool true);
-        let subst = N.psc_subst ctxt in
-        let ps = subst_proof_state subst ps in
         print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
 
-let print_proof_state1 (msg:string) : tac<unit> =
-    mk_tac (fun p -> dump_cur p msg;
-                     Success ((), p))
+let print_proof_state1 (psc:N.psc) (msg:string) : tac<unit> =
+    mk_tac (fun ps -> let subst = N.psc_subst psc in
+                   let ps = subst_proof_state subst ps in
+                   dump_cur ps msg;
+                   Success ((), ps))
 
-let print_proof_state ctxt (msg:string) : tac<unit> =
-    mk_tac (fun p -> dump_proofstate p ctxt msg;
-                     Success ((), p))
+let print_proof_state (psc:N.psc) (msg:string) : tac<unit> =
+    mk_tac (fun ps -> let subst = N.psc_subst psc in
+                   let ps = subst_proof_state subst ps in
+                   dump_proofstate ps msg;
+                   Success ((), ps))
 
 (* get : get the current proof state *)
 let get : tac<proofstate> =
@@ -155,7 +156,7 @@ let mlog f (cont : unit -> tac<'a>) : tac<'a> =
 let fail msg =
     mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail")
-        then dump_proofstate ps N.null_psc ("TACTING FAILING: " ^ msg); //TODO: fixme ... fail should send along the env too
+        then dump_proofstate ps ("TACTING FAILING: " ^ msg); //TODO: fixme ... fail should send along the env too
         Failed (msg, ps)
     )
 
@@ -974,7 +975,7 @@ let proofstate_of_goal_ty env typ =
         goals = [g];
         smt_goals = [];
         depth = 0;
-        __dump = (fun ps msg -> dump_proofstate ps N.null_psc msg);
+        __dump = (fun ps msg -> dump_proofstate ps msg);
     }
     in
     (ps, g.witness)
