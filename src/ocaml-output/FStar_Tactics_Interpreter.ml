@@ -860,7 +860,8 @@ and unembed_tactic_0:
                FStar_Syntax_Syntax.mk_Tm_app embedded_tac_b uu____2036 in
              uu____2035 FStar_Pervasives_Native.None rng in
            let steps =
-             [FStar_TypeChecker_Normalize.Reify;
+             [FStar_TypeChecker_Normalize.Weak;
+             FStar_TypeChecker_Normalize.Reify;
              FStar_TypeChecker_Normalize.UnfoldUntil
                FStar_Syntax_Syntax.Delta_constant;
              FStar_TypeChecker_Normalize.UnfoldTac;
@@ -1326,7 +1327,8 @@ let getprop:
     fun t  ->
       let tn =
         FStar_TypeChecker_Normalize.normalize
-          [FStar_TypeChecker_Normalize.WHNF;
+          [FStar_TypeChecker_Normalize.Weak;
+          FStar_TypeChecker_Normalize.HNF;
           FStar_TypeChecker_Normalize.UnfoldUntil
             FStar_Syntax_Syntax.Delta_constant] e t in
       FStar_Syntax_Util.un_squash tn

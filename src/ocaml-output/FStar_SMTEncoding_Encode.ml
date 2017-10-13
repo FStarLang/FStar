@@ -1042,7 +1042,8 @@ let whnf: env_t -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term =
       else
         FStar_TypeChecker_Normalize.normalize
           [FStar_TypeChecker_Normalize.Beta;
-          FStar_TypeChecker_Normalize.WHNF;
+          FStar_TypeChecker_Normalize.Weak;
+          FStar_TypeChecker_Normalize.HNF;
           FStar_TypeChecker_Normalize.Exclude
             FStar_TypeChecker_Normalize.Zeta;
           FStar_TypeChecker_Normalize.Eager_unfolding;
@@ -2145,7 +2146,8 @@ and encode_term:
            let uu____6757 =
              let uu____6762 =
                FStar_TypeChecker_Normalize.normalize_refinement
-                 [FStar_TypeChecker_Normalize.WHNF;
+                 [FStar_TypeChecker_Normalize.Weak;
+                 FStar_TypeChecker_Normalize.HNF;
                  FStar_TypeChecker_Normalize.EraseUniverses] env.tcenv t0 in
              match uu____6762 with
              | { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_refine (x,f);
@@ -2640,7 +2642,8 @@ and encode_term:
                                let head_type2 =
                                  let uu____8211 =
                                    FStar_TypeChecker_Normalize.normalize_refinement
-                                     [FStar_TypeChecker_Normalize.WHNF;
+                                     [FStar_TypeChecker_Normalize.Weak;
+                                     FStar_TypeChecker_Normalize.HNF;
                                      FStar_TypeChecker_Normalize.EraseUniverses]
                                      env.tcenv head_type1 in
                                  FStar_All.pipe_left
@@ -5761,7 +5764,8 @@ let encode_top_level_let:
                                 FStar_TypeChecker_Normalize.normalize
                                   [FStar_TypeChecker_Normalize.AllowUnboundUniverses;
                                   FStar_TypeChecker_Normalize.Beta;
-                                  FStar_TypeChecker_Normalize.WHNF;
+                                  FStar_TypeChecker_Normalize.Weak;
+                                  FStar_TypeChecker_Normalize.HNF;
                                   FStar_TypeChecker_Normalize.Exclude
                                     FStar_TypeChecker_Normalize.Zeta;
                                   FStar_TypeChecker_Normalize.UnfoldUntil

@@ -997,7 +997,8 @@ let whnf:
         let uu____1867 = FStar_Syntax_Util.unmeta t in
         FStar_TypeChecker_Normalize.normalize
           [FStar_TypeChecker_Normalize.Beta;
-          FStar_TypeChecker_Normalize.WHNF] env uu____1867 in
+          FStar_TypeChecker_Normalize.Weak;
+          FStar_TypeChecker_Normalize.HNF] env uu____1867 in
       FStar_Syntax_Subst.compress uu____1866
 let sn:
   FStar_TypeChecker_Env.env ->
@@ -1096,8 +1097,9 @@ let base_and_refinement:
                   (FStar_Pervasives_Native.Some (x, phi)))
               else
                 (let uu____2113 =
-                   normalize_refinement [FStar_TypeChecker_Normalize.WHNF]
-                     env wl t12 in
+                   normalize_refinement
+                     [FStar_TypeChecker_Normalize.Weak;
+                     FStar_TypeChecker_Normalize.HNF] env wl t12 in
                  match uu____2113 with
                  | {
                      FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_refine
@@ -1118,8 +1120,9 @@ let base_and_refinement:
               then (t12, FStar_Pervasives_Native.None)
               else
                 (let t1' =
-                   normalize_refinement [FStar_TypeChecker_Normalize.WHNF]
-                     env wl t12 in
+                   normalize_refinement
+                     [FStar_TypeChecker_Normalize.Weak;
+                     FStar_TypeChecker_Normalize.HNF] env wl t12 in
                  let uu____2211 =
                    let uu____2212 = FStar_Syntax_Subst.compress t1' in
                    uu____2212.FStar_Syntax_Syntax.n in
@@ -1131,8 +1134,9 @@ let base_and_refinement:
               then (t12, FStar_Pervasives_Native.None)
               else
                 (let t1' =
-                   normalize_refinement [FStar_TypeChecker_Normalize.WHNF]
-                     env wl t12 in
+                   normalize_refinement
+                     [FStar_TypeChecker_Normalize.Weak;
+                     FStar_TypeChecker_Normalize.HNF] env wl t12 in
                  let uu____2282 =
                    let uu____2283 = FStar_Syntax_Subst.compress t1' in
                    uu____2283.FStar_Syntax_Syntax.n in
@@ -1144,8 +1148,9 @@ let base_and_refinement:
               then (t12, FStar_Pervasives_Native.None)
               else
                 (let t1' =
-                   normalize_refinement [FStar_TypeChecker_Normalize.WHNF]
-                     env wl t12 in
+                   normalize_refinement
+                     [FStar_TypeChecker_Normalize.Weak;
+                     FStar_TypeChecker_Normalize.HNF] env wl t12 in
                  let uu____2367 =
                    let uu____2368 = FStar_Syntax_Subst.compress t1' in
                    uu____2368.FStar_Syntax_Syntax.n in
@@ -1966,11 +1971,13 @@ let head_matches_delta:
                      let t12 =
                        normalize_refinement
                          [FStar_TypeChecker_Normalize.UnfoldUntil d;
-                         FStar_TypeChecker_Normalize.WHNF] env wl t11 in
+                         FStar_TypeChecker_Normalize.Weak;
+                         FStar_TypeChecker_Normalize.HNF] env wl t11 in
                      let t22 =
                        normalize_refinement
                          [FStar_TypeChecker_Normalize.UnfoldUntil d;
-                         FStar_TypeChecker_Normalize.WHNF] env wl t21 in
+                         FStar_TypeChecker_Normalize.Weak;
+                         FStar_TypeChecker_Normalize.HNF] env wl t21 in
                      aux retry (n_delta + (Prims.parse_int "1")) t12 t22)
             | MisMatch
                 (FStar_Pervasives_Native.Some d1,FStar_Pervasives_Native.Some
@@ -1984,13 +1991,15 @@ let head_matches_delta:
                     let t1' =
                       normalize_refinement
                         [FStar_TypeChecker_Normalize.UnfoldUntil d2;
-                        FStar_TypeChecker_Normalize.WHNF] env wl t11 in
+                        FStar_TypeChecker_Normalize.Weak;
+                        FStar_TypeChecker_Normalize.HNF] env wl t11 in
                     (t1', t21)
                   else
                     (let t2' =
                        normalize_refinement
                          [FStar_TypeChecker_Normalize.UnfoldUntil d1;
-                         FStar_TypeChecker_Normalize.WHNF] env wl t21 in
+                         FStar_TypeChecker_Normalize.Weak;
+                         FStar_TypeChecker_Normalize.HNF] env wl t21 in
                      (t11, t2')) in
                 (match uu____5998 with
                  | (t12,t22) ->
@@ -3204,12 +3213,14 @@ and solve_rigid_flex_meet:
                                                 FStar_Syntax_Syntax.Delta_constant in
                                             let t12 =
                                               FStar_TypeChecker_Normalize.normalize
-                                                [FStar_TypeChecker_Normalize.WHNF;
+                                                [FStar_TypeChecker_Normalize.Weak;
+                                                FStar_TypeChecker_Normalize.HNF;
                                                 FStar_TypeChecker_Normalize.UnfoldUntil
                                                   prev] env t11 in
                                             let t22 =
                                               FStar_TypeChecker_Normalize.normalize
-                                                [FStar_TypeChecker_Normalize.WHNF;
+                                                [FStar_TypeChecker_Normalize.Weak;
+                                                FStar_TypeChecker_Normalize.HNF;
                                                 FStar_TypeChecker_Normalize.UnfoldUntil
                                                   prev] env t21 in
                                             disjoin t12 t22
@@ -6906,7 +6917,8 @@ and solve_c:
                             FStar_TypeChecker_Normalize.normalize
                               [FStar_TypeChecker_Normalize.UnfoldUntil
                                  FStar_Syntax_Syntax.Delta_constant;
-                              FStar_TypeChecker_Normalize.WHNF] env
+                              FStar_TypeChecker_Normalize.Weak;
+                              FStar_TypeChecker_Normalize.HNF] env
                               uu____20966 in
                           let c2_repr =
                             let uu____20971 =
@@ -6920,7 +6932,8 @@ and solve_c:
                             FStar_TypeChecker_Normalize.normalize
                               [FStar_TypeChecker_Normalize.UnfoldUntil
                                  FStar_Syntax_Syntax.Delta_constant;
-                              FStar_TypeChecker_Normalize.WHNF] env
+                              FStar_TypeChecker_Normalize.Weak;
+                              FStar_TypeChecker_Normalize.HNF] env
                               uu____20971 in
                           let prob =
                             let uu____20975 =
