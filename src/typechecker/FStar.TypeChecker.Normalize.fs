@@ -690,6 +690,11 @@ let equality_ops : list<primitive_step> =
 
     [propositional_equality; hetero_propositional_equality]
 
+// Should match FStar.Reflection.Basic.unembed_binder
+let unembed_binder (t : term) : option<S.binder> =
+    try Some (U.un_alien t |> FStar.Dyn.undyn)
+    with | _ -> None
+
 let mk_psc_subst cfg env =
     List.fold_right
         (fun (binder_opt, closure) subst ->
@@ -700,14 +705,16 @@ let mk_psc_subst cfg env =
                 if not (U.is_constructed_typ bv.sort FStar.Parser.Const.fstar_reflection_types_binder_lid)
                 then subst
                 else let term = closure_as_term cfg env term in
-                     let x : S.binder = U.un_alien term |> FStar.Dyn.undyn in
-                     let b = S.freshen_bv ({bv with sort=SS.subst subst (fst x).sort}) in
-                     let b_for_x = S.NT(fst x, S.bv_to_name b) in
-                     //remove names shadowed by b
-                     let subst = List.filter (function NT(_, {n=Tm_name b'}) ->
-                                                              not (Ident.ident_equals b.ppname b'.ppname)
-                                                      | _ -> true) subst in
-                     b_for_x :: subst
+                     match unembed_binder term with
+                     | None -> subst
+                     | Some x ->
+                         let b = S.freshen_bv ({bv with sort=SS.subst subst (fst x).sort}) in
+                         let b_for_x = S.NT(fst x, S.bv_to_name b) in
+                         //remove names shadowed by b
+                         let subst = List.filter (function NT(_, {n=Tm_name b'}) ->
+                                                                  not (Ident.ident_equals b.ppname b'.ppname)
+                                                          | _ -> true) subst in
+                         b_for_x :: subst
             | _ -> subst)
         env []
 

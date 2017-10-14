@@ -37,7 +37,7 @@ let iszero (x : int) : int =
     synth_by_tactic (
         x <-- quote x;
         t_int <-- quote int;
-        _f <-- return (fresh_binder t_int); // need this hack...
+        let _f = fresh_binder t_int in
         let t = Tv_Match x
                     [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
                      (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in
