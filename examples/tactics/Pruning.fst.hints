@@ -20,7 +20,7 @@
         "true_interp"
       ],
       0,
-      "bbfc7898b58fbbcd6eb16f31e666e6a5"
+      "52ded2456078db26ee12a2ed2af082ab"
     ],
     [
       "Pruning.f",
@@ -51,25 +51,7 @@
         "typing_FStar.Integers.v", "typing_tok_FStar.Integers.Signed@tok"
       ],
       0,
-      "9588c0cc1e94eb04cf8de26a2510fc8d"
-    ],
-    [
-      "Pruning.f",
-      3,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxBool_proj_0" ],
-      0,
-      "6cb6ccfe1b9dae0753ac0b4679d17dc1"
-    ],
-    [
-      "Pruning.f",
-      4,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxBool_proj_0" ],
-      0,
-      "17909db98a2601dab72ec9ffb94623d0"
+      "d9c06527c0619a8b503b96d2427138a4"
     ],
     [
       "Pruning.uu___214",
@@ -87,7 +69,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "832f2e056483674418782d5b43b445a3"
+      "ba565ea0202bfbea9c985e39023efd11"
     ],
     [
       "Pruning.uu___215",
@@ -105,7 +87,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "c4d46270309e54c08d313133bd5913cd"
+      "93bc867e1bc3a12be4e186643ade2998"
     ]
   ]
 ]

@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "63058be4e0d6f2b2685cde1eb5a2d3b3"
+      "69ff59df1ff87d2a661475bb1c401702"
     ],
     [
       "Ex05b.fib",
@@ -37,7 +37,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "458833b6b36d9fb1df6011317c0513b0"
+      "32be206711b676b3c76bcdefb4654051"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -49,7 +49,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "98139983a9aa7c94961781a2d4e9e2e9"
+      "dcf3187edf991c965d19832ef0e2bf1b"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5e82bf5de47e38ac56d9fcb5e61cf69d"
+      "a27e1801588c0d00623d75ae621f3e28"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -94,7 +94,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f3bbf5ebbfa4c958a744ec21c6c0d61f"
+      "898c24b914097616bb43cbe82e3587c8"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -106,7 +106,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f2ae6079551a06bc90ec2f68328b0b85"
+      "09925b478e147fbfb0f64439a08f8427"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -118,20 +118,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "93972e5860a2d6036f096b0531cc2d6f"
+      "ef1e87eaac7b1867d6b9d68d87513986"
     ],
     [
       "Ex05b.fib_is_ok",
       2,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "3e19653393324d9da8a516cb40ef9dd3"
-    ],
-    [
-      "Ex05b.fib_is_ok",
-      3,
       2,
       1,
       [
@@ -141,15 +132,13 @@
         "equation_Prims.nat",
         "equation_with_fuel_Ex05b.fibonacci.fuel_instrumented",
         "int_inversion", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Ex05b_Tm_refine_6cd1a3c33b2175b6547b378acf37e491",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "unit_typing"
       ],
       0,
-      "337c82a55c0d90a4bf4af93a53e234f2"
+      "df28da25bf028929b8439f63a6e9e5da"
     ],
     [
       "Ex05b.fib_inner_aux",
@@ -166,7 +155,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f2460dc6b860e0bdb431e8e811cb5f2a"
+      "4c32f6657c057f541b03b861942e5a4c"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -178,7 +167,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "22dae4c91f3e336e0aff8ba2db45285e"
+      "651329c5932cd73c40d11ed2df564027"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -190,7 +179,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "02afed4b992960cb73f9dca962597f60"
+      "71fc16ed061b7f339f241893299fd4fd"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -202,7 +191,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4ea39558c41cbc90f7cea5d05dcf5d31"
+      "03c94ddae3cbddd44657cb23bdca348c"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -214,7 +203,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2aad1a37deb77a1f27b469ddff17e36e"
+      "20d31f7cd753126d5f080f9a066b6712"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -229,7 +218,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "1bbc2e8b9f6fc4bc5cf88ebe80ed5ca7"
+      "dcb7abfe527d27655451503d4914f33d"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -253,7 +242,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "e20b9ea299dce51c200b7d8b12fa10e3"
+      "96c504a166ee93823c23671dd1f019ef"
     ]
   ]
 ]
