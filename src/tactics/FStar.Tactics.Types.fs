@@ -6,6 +6,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 module Options = FStar.Options
 module SS = FStar.Syntax.Subst
+module N = FStar.TypeChecker.Normalize
 
 (*
    f: x:int -> P
@@ -40,6 +41,8 @@ type proofstate = {
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying ciruluarity
+
+    psc          : N.psc         //primitive step context where we started execution
 }
 
 let subst_proof_state subst ps = {
@@ -58,6 +61,8 @@ let tracepoint ps : unit =
     if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ())
     then ps.__dump ps "TRACE"
     else ()
+
+let set_ps_psc psc ps = { ps with psc = psc }
 
 type direction =
     | TopDown

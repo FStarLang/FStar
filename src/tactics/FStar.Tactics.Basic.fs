@@ -125,13 +125,17 @@ let dump_proofstate ps msg =
         Options.set_option "print_effect_args" (Options.Bool true);
         print_generic "proof-state" ps_to_string ps_to_json (msg, ps))
 
-let print_proof_state1 (psc:N.psc) (msg:string) : tac<unit> =
-    mk_tac (fun ps -> let subst = N.psc_subst psc in
+let print_proof_state1  (msg:string) : tac<unit> =
+    mk_tac (fun ps ->
+                   let psc = ps.psc in
+                   let subst = N.psc_subst psc in
                    dump_cur (subst_proof_state subst ps) msg;
                    Success ((), ps))
 
-let print_proof_state (psc:N.psc) (msg:string) : tac<unit> =
-    mk_tac (fun ps -> let subst = N.psc_subst psc in
+let print_proof_state (msg:string) : tac<unit> =
+    mk_tac (fun ps ->
+                   let psc = ps.psc in
+                   let subst = N.psc_subst psc in
                    dump_proofstate (subst_proof_state subst ps) msg;
                    Success ((), ps))
 
@@ -984,6 +988,7 @@ let proofstate_of_goal_ty env typ =
         smt_goals = [];
         depth = 0;
         __dump = (fun ps msg -> dump_proofstate ps msg);
+        psc = N.null_psc;
     }
     in
     (ps, g.witness)

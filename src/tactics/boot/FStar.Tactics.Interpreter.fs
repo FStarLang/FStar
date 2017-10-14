@@ -45,6 +45,7 @@ let mk_tactic_interpretation_0 (t:tac<'r>) (embed_r:embedder<'r>) (t_r:typ)
   match args with
   | [(embedded_state, _)] ->
     BU.bind_opt (E.unembed_proofstate embedded_state) (fun ps ->
+    let ps = set_ps_psc psc ps in
     log ps (fun () ->
     BU.print2 "Reached %s, args are: %s\n"
             (Ident.string_of_lid nm)
@@ -60,6 +61,7 @@ let mk_tactic_interpretation_1 (t:'a -> tac<'r>) (unembed_a:unembedder<'a>)
   match args with
   | [(a, _); (embedded_state, _)] ->
     BU.bind_opt (E.unembed_proofstate embedded_state) (fun ps ->
+    let ps = set_ps_psc psc ps in
     log ps (fun () ->
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
@@ -76,6 +78,7 @@ let mk_tactic_interpretation_1_env (t:N.psc -> 'a -> tac<'r>) (unembed_a:unembed
   match args with
   | [(a, _); (embedded_state, _)] ->
     BU.bind_opt (E.unembed_proofstate embedded_state) (fun ps ->
+    let ps = set_ps_psc psc ps in
     log ps (fun () ->
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
@@ -93,6 +96,7 @@ let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
   match args with
   | [(a, _); (b, _); (embedded_state, _)] ->
     BU.bind_opt (E.unembed_proofstate embedded_state) (fun ps ->
+    let ps = set_ps_psc psc ps in
     log ps (fun () ->
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
@@ -113,6 +117,7 @@ let mk_tactic_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
   match args with
   | [(a, _); (b, _); (c, _); (embedded_state, _)] ->
     BU.bind_opt (E.unembed_proofstate embedded_state) (fun ps ->
+    let ps = set_ps_psc psc ps in
     log ps (fun () ->
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
@@ -136,6 +141,7 @@ let mk_tactic_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
   match args with
   | [(a, _); (b, _); (c, _); (d, _); (e, _); (embedded_state, _)] ->
     BU.bind_opt (E.unembed_proofstate embedded_state) (fun ps ->
+    let ps = set_ps_psc psc ps in
     log ps (fun () ->
     BU.print2 "Reached %s, goals are: %s\n"
             (Ident.string_of_lid nm)
@@ -154,26 +160,17 @@ let step_from_native_step (s: native_primitive_step): N.primitive_step =
     { N.name=s.name;
       N.arity=s.arity;
       N.strong_reduction_ok=s.strong_reduction_ok;
-      N.requires_binder_substitution = false;
+      N.requires_binder_substitution = false; // GM: really?
       N.interpretation=(fun psc args -> s.tactic psc args) }
 
 let rec primitive_steps () : list<N.primitive_step> =
-    // The difference is the value of `requires_binder_substitution`
     let mk nm arity interpretation =
       let nm = E.fstar_tactics_lid' ["Builtins";nm] in {
       N.name=nm;
       N.arity=arity;
       N.strong_reduction_ok=false;
-      N.requires_binder_substitution = false;
-      N.interpretation=(fun psc args -> interpretation nm psc args);
-    } in
-    let mk_env nm arity interpretation =
-      let nm = E.fstar_tactics_lid' ["Builtins";nm] in {
-      N.name=nm;
-      N.arity=arity;
-      N.strong_reduction_ok=false;
       N.requires_binder_substitution = true;
-      N.interpretation=(fun psc args -> interpretation nm psc args)
+      N.interpretation=(fun psc args -> interpretation nm psc args);
     } in
     let native_tactics = list_all () in
     let native_tactics_steps = List.map step_from_native_step native_tactics in
@@ -185,10 +182,6 @@ let rec primitive_steps () : list<N.primitive_step> =
                (u_a : unembedder<'a>)
                (e_r : embedder<'r>) (tr : typ) : N.primitive_step =
         mk name 2 (mk_tactic_interpretation_1 f u_a e_r tr)
-    in
-    let mktac1_env (name : string) (f : N.psc -> 'a -> tac<'b>)
-                   (u_a:unembedder<'a>) (e_b:embedder<'b>) (tb : typ) : N.primitive_step =
-        mk_env name 2 (mk_tactic_interpretation_1_env f u_a e_b tb)
     in
     let mktac2 (name : string) (f : 'a -> 'b -> tac<'r>)
                (u_a : unembedder<'a>) (u_b : unembedder<'b>)
@@ -210,6 +203,7 @@ let rec primitive_steps () : list<N.primitive_step> =
         match args with
         | [(ps, _)] ->
             bind_opt (E.unembed_proofstate ps) (fun ps ->
+            let ps = set_ps_psc psc ps in
             Some (E.embed_proofstate (N.psc_range psc) (decr_depth ps)))
 
         | _ -> failwith "Unexpected application of decr_depth"
@@ -226,6 +220,7 @@ let rec primitive_steps () : list<N.primitive_step> =
         match args with
         | [(ps, _)] ->
             bind_opt (E.unembed_proofstate ps) (fun ps ->
+            let ps = set_ps_psc psc ps in
             Some (E.embed_proofstate (N.psc_range psc) (incr_depth ps)))
         | _ -> failwith "Unexpected application of incr_depth"
     in
@@ -241,6 +236,7 @@ let rec primitive_steps () : list<N.primitive_step> =
         match args with
         | [(ps, _)] ->
             bind_opt (E.unembed_proofstate ps) (fun ps ->
+            let ps = set_ps_psc psc ps in
             tracepoint ps;
             Some U.exp_unit)
         | _ -> failwith "Unexpected application of tracepoint"
@@ -294,8 +290,8 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__addns"         addns unembed_string embed_unit t_unit;
 
       mktac1 "__print"         (fun x -> ret (tacprint x)) unembed_string embed_unit t_unit;
-      mktac1_env "__dump"      print_proof_state unembed_string embed_unit t_unit;
-      mktac1_env "__dump1"     print_proof_state1 unembed_string embed_unit t_unit;
+      mktac1 "__dump"          print_proof_state unembed_string embed_unit t_unit;
+      mktac1 "__dump1"         print_proof_state1 unembed_string embed_unit t_unit;
 
       mktac2 "__pointwise"     pointwise E.unembed_direction (unembed_tactic_0' unembed_unit) embed_unit t_unit;
       mktac0 "__trefl"         trefl embed_unit t_unit;
