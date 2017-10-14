@@ -1065,12 +1065,12 @@ let run_tactic_on_typ:
          (let uu____2744 =
             FStar_TypeChecker_TcTerm.tc_reified_tactic env tactic1 in
           match uu____2744 with
-          | (tactic2,uu____2758,g) ->
+          | (uu____2757,uu____2758,g) ->
               (FStar_TypeChecker_Rel.force_trivial_guard env g;
                FStar_Errors.stop_if_err ();
                (let tau =
                   unembed_tactic_0 FStar_Syntax_Embeddings.unembed_unit
-                    tactic2 in
+                    tactic1 in
                 let uu____2765 = FStar_TypeChecker_Env.clear_expected_typ env in
                 match uu____2765 with
                 | (env1,uu____2779) ->
