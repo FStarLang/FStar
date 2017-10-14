@@ -258,3 +258,15 @@ let rec apply_squash_or_lem d t =
 let mapply (t : tactic term) : tactic unit =
     tt <-- t;
     apply_squash_or_lem 10 tt
+
+private
+let dump_admit a : tactic unit =
+  clear_top;; // gets rid of the unit binder
+  dump1 "Admitting goal";;
+  g <-- cur_goal;
+  gg <-- unquote #Type g;
+  exact (quote #gg (magic ()))
+
+assume val admit_goal : #a:Type -> unit ->
+    Pure a (requires (by_tactic (dump_admit a) a))
+           (ensures (fun _ -> False))

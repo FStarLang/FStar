@@ -22,6 +22,7 @@ all:	Apply.uver		\
 	Trace.uver		\
 	Bug1299.fst		\
 	Bug1272.fst		\
+	Admit.fst		\
 	Nest.uver		\
 	TestBV.uver		\
 	Map.uver		\
