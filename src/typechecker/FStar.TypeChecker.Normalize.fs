@@ -77,11 +77,11 @@ and steps = list<step>
 
 type psc = {
     psc_range:FStar.Range.range;
-    psc_subst:subst_t
+    psc_subst: unit -> subst_t // potentially expensive, so thunked
 }
-let null_psc = { psc_range = Range.dummyRange ; psc_subst = [] }
+let null_psc = { psc_range = Range.dummyRange ; psc_subst = fun () -> [] }
 let psc_range psc = psc.psc_range
-let psc_subst psc = psc.psc_subst
+let psc_subst psc = psc.psc_subst ()
 type primitive_step = {
     name:Ident.lid;
     arity:int;
@@ -731,7 +731,9 @@ let reduce_primops cfg env stack tm =
              else begin log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
                   let psc = {
                       psc_range = head.pos;
-                      psc_subst = if prim_step.requires_binder_substitution then mk_psc_subst cfg env else []
+                      psc_subst = fun () -> if prim_step.requires_binder_substitution
+                                            then mk_psc_subst cfg env
+                                            else []
                   } in
                   match prim_step.interpretation psc args with
                   | None ->
