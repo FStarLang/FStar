@@ -154,11 +154,10 @@ let rec log ps f : unit =
 let mlog f (cont : unit -> tac<'a>) : tac<'a> =
     bind get (fun ps -> log ps f; cont ())
 
-//val fail : string -> tac<'a>
-let fail msg =
+let fail (msg:string) =
     mk_tac (fun ps ->
         if Env.debug ps.main_context (Options.Other "TacFail")
-        then dump_proofstate ps ("TACTING FAILING: " ^ msg); //TODO: fixme ... fail should send along the env too
+        then dump_proofstate ps ("TACTING FAILING: " ^ msg);
         Failed (msg, ps)
     )
 

@@ -253,9 +253,13 @@ let rec primitive_steps () : list<N.primitive_step> =
     // When we want an identity embedding/unembedding, we use put/get
     // This is useful when, say, unembedding types for polymorphic tactics, due to our
     // parametricity argument.
+
+    // Note that when embedding, we use bogus types. This is wrong, and we should
+    // really keep the unembed types and use them.
     let put : embedder<term> = fun rng t -> { t with pos = rng } in
     let get : unembedder<term> = fun t -> Some t in
     [
+      mktac2 "__fail"          (fun _ -> fail) get unembed_string put t_unit; //nb: the put embedding is never used
       mktac0 "__trivial"       trivial embed_unit t_unit;
       mktac2 "__trytac"        (fun _ -> trytac) get (unembed_tactic_0' get) (embed_option put t_unit) t_unit;
       mktac0 "__intro"         intro embed_binder RD.fstar_refl_binder;
@@ -410,7 +414,7 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
         (ps.goals@ps.smt_goals, w)
 
     | Failed (s, ps) ->
-        dump_proofstate ps "at the time of failure";
+        dump_proofstate (subst_proof_state (N.psc_subst ps.psc) ps) "at the time of failure";
         raise (Err.Error (BU.format1 "user tactic failed: %s" s, typ.pos))
 
 // Polarity

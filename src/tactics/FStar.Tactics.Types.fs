@@ -50,7 +50,6 @@ let subst_proof_state subst ps = {
             goals = List.map (subst_goal subst) ps.goals
 }
 
-
 let decr_depth (ps:proofstate) : proofstate =
     { ps with depth = ps.depth - 1 }
 

@@ -44,10 +44,6 @@ let rec mapM f l = match l with
 
 let idtac : tactic unit = return ()
 
-(* working around #885 *)
-private let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed (msg, s0)
-let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
-
 let guard (b : bool) : tactic unit =
     if b
     then return ()

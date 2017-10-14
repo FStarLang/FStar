@@ -10,6 +10,9 @@ open FStar.Reflection
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 
+assume private val __fail : a:Type -> string -> __tac a
+let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
+
 assume private val __top_env     : __tac env
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
