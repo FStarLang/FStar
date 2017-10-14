@@ -55,6 +55,9 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
           let m = t x y z in
           interpret_tac m ps
 
+let __fail (msg : string) : 'a __tac = from_tac_1 B.fail msg
+let fail: string -> unit -> 'a __tac = fun msg -> fun () -> __fail msg
+
 let __cur_env: RT.env __tac = from_tac_0 B.cur_env
 let cur_env: unit -> RT.env __tac = fun () -> __cur_env
 
@@ -66,6 +69,12 @@ let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
 
 let __tc (t: RT.term) : RT.term __tac = from_tac_1 B.tc t
 let tc: RT.term -> unit -> RT.term __tac = fun t -> fun () -> __tc t
+
+let __unshelve (t:RT.term) : unit __tac = from_tac_1 B.unshelve t
+let unshelve : RT.term -> unit -> unit __tac = fun t -> fun () -> __unshelve t
+
+let unquote : RT.term -> unit -> 'a __tac = fun tm -> fun () ->
+        failwith "Sorry, unquote does not work in compiled tactics"
 
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
 let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __trytac (E.reify_tactic t)
@@ -137,10 +146,10 @@ let apply_lemma: RT.term E.tactic -> unit -> unit __tac =
 let __print (s: string): unit __tac = from_tac_1 (fun x -> B.ret (B.tacprint x)) s
 let print: string -> unit -> unit __tac = fun s -> fun () -> __print s
 
-let __dump (s: string): unit __tac = from_tac_1 (B.print_proof_state N.null_psc) s
+let __dump (s: string): unit __tac = from_tac_1 (B.print_proof_state) s
 let dump: string -> unit -> unit __tac = fun s -> fun () -> __dump s
 
-let __dump1 (s: string): unit __tac = from_tac_1 (B.print_proof_state1 N.null_psc) s
+let __dump1 (s: string): unit __tac = from_tac_1 (B.print_proof_state1) s
 let dump1: string -> unit -> unit __tac = fun s -> fun () -> __dump1 s
 
 let __trefl: unit __tac = from_tac_0 B.trefl
