@@ -2147,8 +2147,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let maybe_eta t =
             if is_abs t then Inl t
             else let t = N.eta_expand wl.tcenv t in
-                 if is_abs t then Inl t else Inr t in
-        begin match maybe_eta t1, maybe_eta t2 with
+                 if is_abs t then Inl t else Inr t
+        in
+        let force_eta t =
+            if is_abs t then t
+            else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+                 N.eta_expand_with_type env t (N.unfold_whnf env ty)
+        in
+        begin
+            match maybe_eta t1, maybe_eta t2 with
             | Inl t1, Inl t2 ->
               solve_t env ({problem with lhs=t1; rhs=t2}) wl
             | Inl t_abs, Inr not_abs
@@ -2158,7 +2165,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
               && p_rel orig = EQ
               then solve_t_flex_rigid true orig (destruct_flex_pattern env not_abs) t_abs wl
-              else giveup env "head tag mismatch: RHS is an abstraction" orig
+              else let t1 = force_eta t1 in
+                   let t2 = force_eta t2 in
+                   if is_abs t1 && is_abs t2
+                   then solve_t env ({problem with lhs=t1; rhs=t2}) wl
+                   else giveup env "head tag mismatch: RHS is an abstraction" orig
             | _ -> failwith "Impossible: at least one side is an abstraction"
         end
 

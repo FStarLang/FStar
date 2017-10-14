@@ -1227,8 +1227,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let shortcuts_evaluation_order =
         match (SS.compress head).n with
         | Tm_fvar fv ->
-			     S.fv_eq_lid fv Parser.Const.op_And ||
-			     S.fv_eq_lid fv Parser.Const.op_Or
+                             S.fv_eq_lid fv Parser.Const.op_And ||
+                             S.fv_eq_lid fv Parser.Const.op_Or
         | _ -> false
       in
 
@@ -1455,7 +1455,14 @@ and tc_eqn scrutinee env branch
       * term                               (* terms corresponding to the pattern                                    *)
       * term                               (* the same term in normal form                                          *)
       =
-    let pat_bvs, exp, p = TcUtil.pat_as_exp allow_implicits env p0 in //an expression for each clause in a disjunctive pattern
+    let tc_annot env t =
+        let tu, u = U.type_u () in
+        let t, _, g = tc_check_tot_or_gtot_term env t tu in
+        Rel.force_trivial_guard env g;
+        t
+    in
+    //an expression for each clause in a disjunctive pattern
+    let pat_bvs, exp, p = TcUtil.pat_as_exp allow_implicits env p0 tc_annot in
     if Env.debug env Options.High
     then BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
     let pat_env = List.fold_left Env.push_bv env pat_bvs in
@@ -2055,7 +2062,10 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
 and tc_binder env (x, imp) =
     let tu, u = U.type_u () in
     if Env.debug env Options.Extreme
-    then BU.print3 "Checking binders %s:%s at type %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string tu);
+    then BU.print3 "Checking binders %s:%s at type %s\n"
+                   (Print.bv_to_string x)
+                   (Print.term_to_string x.sort)
+                   (Print.term_to_string tu);
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
