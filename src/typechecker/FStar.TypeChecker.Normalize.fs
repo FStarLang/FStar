@@ -705,7 +705,7 @@ let mk_psc_subst cfg env =
                 if not (U.is_constructed_typ bv.sort FStar.Parser.Const.fstar_reflection_types_binder_lid)
                 then subst
                 else let term = closure_as_term cfg env term in
-                     match unembed_binder term with
+                     begin match unembed_binder term with
                      | None -> subst
                      | Some x ->
                          let b = S.freshen_bv ({bv with sort=SS.subst subst (fst x).sort}) in
@@ -715,6 +715,7 @@ let mk_psc_subst cfg env =
                                                                   not (Ident.ident_equals b.ppname b'.ppname)
                                                           | _ -> true) subst in
                          b_for_x :: subst
+                     end
             | _ -> subst)
         env []
 
