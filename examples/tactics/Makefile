@@ -21,6 +21,7 @@ all:	Apply.uver		\
 	Logic.uver		\
 	Trace.uver		\
 	Bug1299.fst		\
+	Bug1272.fst		\
 	Nest.uver		\
 	TestBV.uver		\
 	Map.uver		\

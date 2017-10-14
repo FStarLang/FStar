@@ -12,3 +12,11 @@ let broken (a: Type0) =
 
 let yy : (Type0 -> unit) =
   synth_by_tactic (fun () -> exact (norm_term [] (quote broken ())) ())
+
+let _ =
+  assert_by_tactic True
+                   (fun () ->
+                     admit ();
+                     let x = quote 1 () in
+                     print (term_to_string (norm_term [] x ())) ();
+                     fail "" ())
