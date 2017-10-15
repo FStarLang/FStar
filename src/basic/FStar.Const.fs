@@ -6,9 +6,9 @@ open FStar.All
 open FStar.BaseTypes
 
 ///[@ PpxDerivingShow ]
-type signedness = FStar.Util.signedness
+type signedness = | Unsigned | Signed
 ///[@ PpxDerivingShow ]
-type width = FStar.Util.width
+type width = | Int8 | Int16 | Int32 | Int64
 
 (* NB:
     Const_int (_, None) is not a canonical representation for a mathematical integer
@@ -47,27 +47,32 @@ let eq_const c1 c2 =
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
     | _ -> c1=c2
 
-open FStar.Mul
-let rec pow2 (x:int) : int =
-  match x with
-  | 0  -> 1
-  | _  -> Prims.op_Multiply 2 (pow2 (x-1))
+open FStar.BigInt
+let rec pow2 (x:bigint) : bigint =
+  if eq_big_int x zero
+  then one
+  else mult_big_int two (pow2 (pred_big_int x))
 
 
 let bounds signedness width =
     let n =
         match width with
-        | FStar.Util.Int8 -> 8
-        | FStar.Util.Int16 -> 16
-        | FStar.Util.Int32 -> 32
-        | FStar.Util.Int64 -> 64
+        | Int8 -> big_int_of_string "8"
+        | Int16 -> big_int_of_string "16"
+        | Int32 -> big_int_of_string "32"
+        | Int64 -> big_int_of_string "32"
     in
     let lower, upper =
       match signedness with
-      | FStar.Util.Unsigned ->
-        0, pow2 n - 1
-      | FStar.Util.Signed ->
-        let upper = pow2 (n - 1) in
-        - upper, upper - 1
+      | Unsigned ->
+        zero, pred_big_int (pow2 n)
+      | Signed ->
+        let upper = pow2 (pred_big_int n) in
+        minus_big_int upper, pred_big_int upper
     in
     lower, upper
+
+let within_bounds repr signedness width =
+  let lower, upper = bounds signedness width in
+  let value = big_int_of_string (FStar.Util.ensure_decimal repr) in
+  le_big_int lower value && le_big_int value upper

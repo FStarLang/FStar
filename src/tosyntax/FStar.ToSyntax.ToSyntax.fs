@@ -654,7 +654,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   //and coerce them to the appropriate type using the internal coercion
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
-  if not (FStar.Util.within_bounds repr signedness width)
+  if not (within_bounds repr signedness width)
   then raise (Error(BU.format2 "%s is not in the expected range for %s"
                                repr tnm,
                     range));
