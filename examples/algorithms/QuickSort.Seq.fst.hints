@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0cd9b7fe9473f8ce2d4889cb17b96b2e"
+      "8d560290af9073e854a0d198ba20142c"
     ],
     [
       "QuickSort.Seq.partition",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b546f1f5f6e6384f036e80a5ebcbf108"
+      "89501f87613527cd421efd46eb6f606d"
     ],
     [
       "QuickSort.Seq.partition",
@@ -29,7 +29,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6c7cbb33ed1d945f85217efcbe9bf37f"
+      "8e867179ae34db7d412d636b5ed382a2"
     ],
     [
       "QuickSort.Seq.partition",
@@ -38,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "fd84097a4fddf7add5d8ebe9dc37a0cd"
+      "4af78c6030dc47f83a21ab055d95a73d"
     ],
     [
       "QuickSort.Seq.partition",
@@ -94,7 +94,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "61d2e5f16952568d3904a53a88b3a71e"
+      "83cdf2ba0fd9412c639730e8d41c3e05"
     ],
     [
       "QuickSort.Seq.partition",
@@ -107,7 +107,7 @@
         "haseqQuickSort.Seq_Tm_refine_6150d17ccb40109bb49db53241f4b535"
       ],
       0,
-      "e06715080abd0ee829d378ef63d4b08e"
+      "4118274016132580d2b1c3bc16e064cc"
     ],
     [
       "QuickSort.Seq.sort",
@@ -162,7 +162,7 @@
         "typing_FStar.Seq.Properties.mem", "well-founded-ordering-on-nat"
       ],
       0,
-      "57b9e78723a467c253574b692aa51d2d"
+      "d60aafb887fafd2a9a79010c190d7d1e"
     ]
   ]
 ]

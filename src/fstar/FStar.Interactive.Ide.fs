@@ -78,6 +78,9 @@ let with_captured_errors' env f =
     TcErr.add_errors env [(msg, TcEnv.get_range env)];
     None
 
+  | Stop ->
+    None
+
 let with_captured_errors env f =
   if Options.trace_error () then f env
   else with_captured_errors' env f
@@ -273,7 +276,7 @@ let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t *
   | LDInterfaceOfCurrentFile intf ->
     curmod, Universal.load_interface_decls env intf.tf_fname
   | PushFragment frag ->
-    tc_one_fragment curmod env (frag, false)
+    tc_one_fragment curmod env frag
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
@@ -522,6 +525,7 @@ type query' =
 | Exit
 | DescribeProtocol
 | DescribeRepl
+| Segment of string (* File contents *)
 | Pop
 | Push of push_query
 | VfsAdd of option<string> (* fname *) * string (* contents *)
@@ -534,7 +538,7 @@ type query' =
 and query = { qq: query'; qid: string }
 
 let query_needs_current_module = function
-  | Exit | DescribeProtocol | DescribeRepl
+  | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
   | GenericError _ | ProtocolViolation _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
@@ -545,9 +549,9 @@ let interactive_protocol_features =
   ["autocomplete"; "autocomplete/context";
    "compute"; "compute/reify"; "compute/pure-subterms";
    "describe-protocol"; "describe-repl"; "exit";
-   "vfs-add";
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
-   "peek"; "pop"; "push"; "search"]
+   "peek"; "pop"; "push"; "search"; "segment";
+   "vfs-add"]
 
 exception InvalidQuery of string
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
@@ -585,6 +589,7 @@ let unpack_interactive_query json =
            | "pop" -> Pop
            | "describe-protocol" -> DescribeProtocol
            | "describe-repl" -> DescribeRepl
+           | "segment" -> Segment (arg "code" |> js_str)
            | "peek" | "push" -> Push ({ push_kind = arg "kind" |> js_pushkind;
                                        push_code = arg "code" |> js_str;
                                        push_line = arg "line" |> js_int;
@@ -662,7 +667,7 @@ let json_of_issue issue =
                             | None -> []
                             | Some r -> [json_of_use_range r]) @
                            (match issue.issue_range with
-                            | Some r when r.def_range <> r.use_range ->
+                            | Some r when def_range r <> use_range r ->
                               [json_of_def_range r]
                             | _ -> [])))]
 
@@ -873,6 +878,32 @@ let run_protocol_violation st message =
 let run_generic_error st message =
   ((QueryNOK, JsonStr message), Inl st)
 
+let collect_errors () =
+  let errors = FStar.Errors.report_all() in
+  FStar.Errors.clear ();
+  errors
+
+let run_segment (st: repl_state) (code: string) =
+  let frag = { frag_text = code; frag_line = 1; frag_col = 0 } in
+
+  let collect_decls () =
+    match Parser.Driver.parse_fragment frag with
+    | Parser.Driver.Empty -> []
+    | Parser.Driver.Decls decls
+    | Parser.Driver.Modul (Parser.AST.Module (_, decls))
+    | Parser.Driver.Modul (Parser.AST.Interface (_, decls, _)) -> decls in
+
+  match with_captured_errors st.repl_env (fun _ -> Some <| collect_decls ()) with
+    | None ->
+      let errors = collect_errors () |> List.map json_of_issue in
+      ((QueryNOK, JsonList errors), Inl st)
+    | Some decls ->
+      let json_of_decl decl =
+        JsonAssoc [("def_range", json_of_def_range (Parser.AST.decl_drange decl))] in
+      let js_decls =
+        JsonList <| List.map json_of_decl decls in
+      ((QueryOK, JsonAssoc [("decls", js_decls)]), Inl st)
+
 let run_vfs_add st opt_fname contents =
   let fname = Util.dflt st.repl_fname opt_fname in
   Parser.ParseIt.add_vfs_entry fname contents;
@@ -884,11 +915,6 @@ let run_pop st =
   else
     let st' = pop_repl st in
     ((QueryOK, JsonNull), Inl st')
-
-let collect_errors () =
-  let errors = FStar.Errors.report_all() in
-  FStar.Errors.clear ();
-  errors
 
 (** Compute and load all dependencies of `filename`.
 
@@ -909,12 +935,18 @@ let rephrase_dependency_error issue =
                        issue.issue_message }
 
 let run_push_without_deps st query =
+  let set_nosynth_flag st flag =
+    { st with repl_env = { st.repl_env with nosynth = flag } } in
+
   let { push_code = text; push_line = line; push_column = column;
         push_peek_only = peek_only; push_kind = push_kind } = query in
 
-  TcEnv.toggle_id_info st.repl_env true;
   let frag = { frag_text = text; frag_line = line; frag_col = column } in
+
+  TcEnv.toggle_id_info st.repl_env true;
+  let st = set_nosynth_flag st peek_only in
   let success, st = run_repl_transaction st push_kind peek_only (PushFragment frag) in
+  let st = set_nosynth_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
   let json_errors = JsonList (collect_errors () |> List.map json_of_issue) in
@@ -1117,19 +1149,18 @@ let run_autocomplete st search_term context =
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
 
-let run_compute st term rules =
-  let run_and_rewind st task =
-    let env' = push st.repl_env "#compute" in
-    let results = task st in
-    pop env' "#compute";
-    (results, Inl st) in
+let run_and_rewind st task =
+  let env' = push st.repl_env "#compute" in
+  let results = try Inl <| task st with e -> Inr e in
+  pop env' "#compute";
+  match results with
+  | Inl results -> (results, Inl st)
+  | Inr e -> raise e
 
+let run_with_parsed_and_tc_term st term line column continuation =
   let dummy_let_fragment term =
     let dummy_decl = Util.format1 "let __compute_dummy__ = (%s)" term in
     { frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
-
-  let normalize_term tcenv rules t =
-    FStar.TypeChecker.Normalize.normalize rules tcenv t in
 
   let find_let_body ses =
     match ses with
@@ -1149,17 +1180,6 @@ let run_compute st term rules =
     let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
     ses in
 
-  let rules =
-    (match rules with
-     | Some rules -> rules
-     | None -> [FStar.TypeChecker.Normalize.Beta;
-               FStar.TypeChecker.Normalize.Iota;
-               FStar.TypeChecker.Normalize.Zeta;
-               FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant])
-    @ [FStar.TypeChecker.Normalize.Inlining;
-       FStar.TypeChecker.Normalize.Eager_unfolding;
-       FStar.TypeChecker.Normalize.Primops] in
-
   run_and_rewind st (fun st ->
     let tcenv = st.repl_env in
     let frag = dummy_let_fragment term in
@@ -1177,15 +1197,33 @@ let run_compute st term rules =
           | Some (univs, def) ->
             let univs, def = Syntax.Subst.open_univ_vars univs def in
             let tcenv = TcEnv.push_univ_vars tcenv univs in
-            let normalized = normalize_term tcenv rules def in
-            (QueryOK, JsonStr (term_to_string tcenv normalized)) in
+            continuation tcenv def in
         if Options.trace_error () then
           aux ()
         else
           try aux ()
           with | e -> (QueryNOK, (match FStar.Errors.issue_of_exn e with
-                                  | Some issue -> JsonStr (FStar.Errors.format_issue issue)
-                                  | None -> raise e)))
+                                 | Some issue -> JsonStr (FStar.Errors.format_issue issue)
+                                 | None -> raise e)))
+
+let run_compute st term rules =
+  let rules =
+    (match rules with
+     | Some rules -> rules
+     | None -> [FStar.TypeChecker.Normalize.Beta;
+               FStar.TypeChecker.Normalize.Iota;
+               FStar.TypeChecker.Normalize.Zeta;
+               FStar.TypeChecker.Normalize.UnfoldUntil SS.Delta_constant])
+    @ [FStar.TypeChecker.Normalize.Inlining;
+       FStar.TypeChecker.Normalize.Eager_unfolding;
+       FStar.TypeChecker.Normalize.Primops] in
+
+  let normalize_term tcenv rules t =
+    FStar.TypeChecker.Normalize.normalize rules tcenv t in
+
+  run_with_parsed_and_tc_term st term 0 0 (fun tcenv def ->
+      let normalized = normalize_term tcenv rules def in
+      (QueryOK, JsonStr (term_to_string tcenv normalized)))
 
 type search_term' =
 | NameContainsStr of string
@@ -1294,6 +1332,7 @@ let run_query st (q: query') : (query_status * json) * either<repl_state, int> =
   | DescribeRepl -> run_describe_repl st
   | GenericError message -> run_generic_error st message
   | ProtocolViolation query -> run_protocol_violation st query
+  | Segment c -> run_segment st c
   | VfsAdd (fname, contents) -> run_vfs_add st fname contents
   | Push pquery -> run_push st pquery
   | Pop -> run_pop st
@@ -1368,7 +1407,7 @@ let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
 
   if Options.verify_module () <> [] then
-     Util.print_warning "--ide: ignoring --verify_module";
+    Util.print_warning "--ide: ignoring --verify_module";
 
   if Option.isSome (Options.codegen ()) then
     Util.print_warning "--ide: ignoring --codegen";

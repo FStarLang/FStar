@@ -28,56 +28,85 @@ module BU = FStar.Util
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
-type z3version =
-| Z3V_Unknown of string
-| Z3V of int * int * int
 
-let z3version_as_string = function
-    | Z3V_Unknown s -> BU.format1 "unknown version: %s" s
-    | Z3V (i, j, k) -> BU.format3 "%s.%s.%s" (BU.string_of_int i) (BU.string_of_int j) (BU.string_of_int k)
+(* Check the Z3 commit hash once, and issue a warning if it is not
+   equal to the one that we are expecting from the Z3 url below
+*)
+let _z3hash_checked : ref<bool> = BU.mk_ref false
 
-let z3v_compare known (w1, w2, w3) =
-    match known with
-    | Z3V_Unknown _-> None
-    | Z3V (k1, k2, k3) -> Some(
-        if k1 <> w1 then w1 - k1 else
-        if k2 <> w2 then w2 - k2 else
-        w3 - k3
-    )
+let _z3hash_expected = "1f29cebd4df6"
 
-let z3v_le known wanted =
-    match z3v_compare known wanted with
-    | None   -> false
-    | Some i -> i >= 0
+let _z3url = "https://github.com/FStarLang/binaries/tree/master/z3-tested"
 
-let _z3version : ref<option<z3version>> = BU.mk_ref None
+let parse_z3_version_lines out =
+    match splitlines out with
+    | x :: _ ->
+        begin
+            let trimmed = trim_string x in
+            let parts = split trimmed " " in
+            let rec aux = function
+            | [hash] ->
+              if hash = _z3hash_expected
+              then begin
+                  if Options.debug_any ()
+                  then
+                      let msg =
+                          BU.format1
+                              "Successfully found expected Z3 commit hash %s"
+                              _z3hash_expected
+                      in
+                      print_string msg
+                  else ();
+                  None
+              end else
+                  let msg =
+                      BU.format2
+                          "Expected Z3 commit hash %s, got %s"
+                          _z3hash_expected
+                          hash
+                  in
+                  Some msg
+            | _ :: q -> aux q
+            | _ -> Some "No Z3 commit hash found"
+            in
+            aux parts
+        end
+    | _ -> Some "No Z3 version string found"
 
-let get_z3version () =
-    let prefix = "Z3 version " in
+let z3hash_warning_message () =
+    let run_proc_result =
+        try
+            Some (BU.run_proc (Options.z3_exe()) "-version" "")
+        with _ -> None
+    in
+    match run_proc_result with
+    | None -> Some (FStar.Errors.EError, "Could not run Z3")
+    | Some (_, out, _) ->
+        begin match parse_z3_version_lines out with
+        | None -> None
+        | Some msg -> Some (FStar.Errors.EWarning, msg)
+        end
 
-    match !_z3version with
-    | Some version -> version
-    | None ->
-        let _, out, _ = BU.run_proc (Options.z3_exe()) "-version" "" in
-        let out =
-            match splitlines out with
-            | x :: _ when starts_with x prefix -> begin
-                let x = trim_string (substring_from x (String.length prefix)) in
-                let x = try List.map int_of_string (split x ".") with _ -> [] in
-                match x with
-                | [i1; i2; i3] -> Z3V (i1, i2, i3)
-                | _ -> Z3V_Unknown out
-            end
-            | _ -> Z3V_Unknown out
-        in
-            _z3version := Some out; out
+let check_z3hash () =
+    if not !_z3hash_checked
+    then begin
+        _z3hash_checked := true;
+        match z3hash_warning_message () with
+        | None -> ()
+        | Some (level, msg) ->
+          let msg =
+              BU.format4
+                  "%s\n%s\n%s\n%s\n"
+                  msg
+                  "Please download the version of Z3 corresponding to your platform from:"
+                  _z3url
+                  "and add the bin/ subdirectory into your PATH"
+          in
+          FStar.Errors.add_one (FStar.Errors.mk_issue level None msg)
+    end
 
 let ini_params () =
-  let z3_v = get_z3version () in
-  begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise (Util.HardError (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v)))
-  else ()
-  end;
+  check_z3hash ();
   (String.concat " "
                 (List.append
                  [ "-smt2 -in auto_config=false model=true smt.relevancy=2";
@@ -528,10 +557,27 @@ let mk_input theory =
                 BU.prefix_until (function CheckSat -> true | _ -> false) |>
                 Option.get
             in
+            let pp        = List.map (declToSmt options) in
+            let pp_no_cap = List.map (declToSmt_no_caps options) in
             let suffix = check_sat::suffix in
-            let ps = String.concat "\n" (List.map (declToSmt options) prefix) in
-            let ss = String.concat "\n" (List.map (declToSmt options) suffix) in
-            ps ^ "\n" ^ ss, Some(BU.digest_of_string ps)
+            let ps_lines = pp prefix in
+            let ss_lines = pp suffix in
+            let ps = String.concat "\n" ps_lines in
+            let ss = String.concat "\n" ss_lines in
+
+            (* Ignore captions AND ranges when hashing, otherwise we depend on file names *)
+            let uncaption = function
+            | Caption _ -> Caption ""
+            | Assume a -> Assume ({ a with assumption_caption = None })
+            | DeclFun (n, a, s, _) -> DeclFun (n, a, s, None)
+            | DefineFun (n, a, s, b, _) -> DefineFun (n, a, s, b, None)
+            | d -> d
+            in
+            let hs = prefix |> List.map uncaption
+                            |> pp_no_cap
+                            |> List.filter (fun s -> s <> "")
+                            |> String.concat "\n" in
+            ps ^ "\n" ^ ss, Some (BU.digest_of_string hs)
         else
             List.map (declToSmt options) theory |> String.concat "\n", None
     in

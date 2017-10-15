@@ -35,7 +35,7 @@ type term_view =
     | Tv_FVar   of fv
     | Tv_App    of term * argv
     | Tv_Abs    of binder * term
-    | Tv_Arrow  of binder * term
+    | Tv_Arrow  of binder * comp
     | Tv_Type   of unit
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
@@ -43,6 +43,11 @@ type term_view =
     | Tv_Let    of binder * term * term
     | Tv_Match  of term * list<branch>
     | Tv_Unknown
+
+type comp_view =
+    | C_Total of typ
+    | C_Lemma of term * term
+    | C_Unknown
 
 // See ulib/FStar.Reflection.Syntax.fst for explanations of these two
 type ctor =
@@ -65,10 +70,11 @@ let mk_refl_data_lid_as_term (s:string)  = tconst (fstar_refl_data_lid s)
 let fstar_refl_tdataconstr s = tdataconstr (fstar_refl_lid s)
 
 (* types *)
-let fstar_refl_term      = mk_refl_types_lid_as_term "term"
 let fstar_refl_aqualv    = mk_refl_data_lid_as_term "aqualv"
 let fstar_refl_env       = mk_refl_types_lid_as_term "env"
 let fstar_refl_fvar      = mk_refl_types_lid_as_term "fv" //TODO: be consistent
+let fstar_refl_comp      = mk_refl_types_lid_as_term "comp"
+let fstar_refl_comp_view = mk_refl_types_lid_as_term "comp_view"
 let fstar_refl_binder    = mk_refl_types_lid_as_term "binder" // TODO:  just bv, binder = bv * bool
 let fstar_refl_binders   = mk_refl_types_lid_as_term "binders"
 let fstar_refl_term_view = mk_refl_types_lid_as_term "term_view"
@@ -133,6 +139,15 @@ let ref_Tv_Uvar    = tdataconstr ref_Tv_Uvar_lid
 let ref_Tv_Let     = tdataconstr ref_Tv_Let_lid
 let ref_Tv_Match   = tdataconstr ref_Tv_Match_lid
 let ref_Tv_Unknown = tdataconstr ref_Tv_Unknown_lid
+
+(* comp_view *)
+let ref_C_Total_lid     = fstar_refl_data_lid "C_Total"
+let ref_C_Lemma_lid     = fstar_refl_data_lid "C_Lemma"
+let ref_C_Unknown_lid   = fstar_refl_data_lid "C_Unknown"
+
+let ref_C_Total         = tdataconstr ref_C_Total_lid
+let ref_C_Lemma         = tdataconstr ref_C_Lemma_lid
+let ref_C_Unknown       = tdataconstr ref_C_Unknown_lid
 
 (* inductives & sigelts *)
 let ref_Sg_Inductive_lid = fstar_refl_data_lid "Sg_Inductive"

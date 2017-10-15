@@ -88,16 +88,22 @@ let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
     mk_app t (List.Tot.map e args)
 
-let rec collect_arr' (typs : list typ) (t : typ) : Tot (list typ * typ) (decreases t) =
-    match inspect t with
-    | Tv_Arrow b r ->
-        let t = type_of_binder b in
-        collect_arr' (t::typs) r
-    | _ -> (typs, t)
+let rec collect_arr' (typs : list typ) (c : comp) : Tot (list typ * comp) (decreases c) =
+    begin match inspect_comp c with
+    | C_Total t ->
+        begin match inspect t with
+        | Tv_Arrow b c ->
+            let t = type_of_binder b in
+            collect_arr' (t::typs) c
+        | _ ->
+            (typs, c)
+        end
+    | _ -> (typs, c)
+    end
 
-val collect_arr : typ -> list typ * typ
+val collect_arr : typ -> list typ * comp
 let collect_arr t =
-    let (ts, c) = collect_arr' [] t in
+    let (ts, c) = collect_arr' [] (pack_comp (C_Total t)) in
     (List.Tot.rev ts, c)
 
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
@@ -144,9 +150,11 @@ let rec compare_term (s t : term) : order =
         lex (compare_term h1 h2) (fun () -> compare_argv a1 a2)
 
     | Tv_Abs b1 e1, Tv_Abs b2 e2
-    | Tv_Arrow b1 e1, Tv_Arrow b2 e2
     | Tv_Refine b1 e1, Tv_Refine b2 e2 ->
         lex (compare_binder b1 b2) (fun () -> compare_term e1 e2)
+
+    | Tv_Arrow b1 e1, Tv_Arrow b2 e2 ->
+        lex (compare_binder b1 b2) (fun () -> compare_comp e1 e2)
 
     | Tv_Type (), Tv_Type () ->
         Eq
@@ -187,7 +195,17 @@ and compare_argv (a1 a2 : argv) : order =
     | Q_Implicit, Q_Explicit -> Lt
     | Q_Explicit, Q_Implicit -> Gt
     | _, _ -> compare_term a1 a2
+and compare_comp (c1 c2 : comp) : order =
+    let cv1 = inspect_comp c1 in
+    let cv2 = inspect_comp c2 in
+    match cv1, cv2 with
+    | C_Total t1, C_Total t2 -> compare_term t1 t2
+    | C_Lemma p1 q1, C_Lemma p2 q2 -> lex (compare_term p1 p2) (fun () -> compare_term q1 q2)
 
+    | C_Unknown, C_Unknown -> Eq
+    | C_Total _,   _  -> Lt | _, C_Total _   -> Gt
+    | C_Lemma _ _, _  -> Lt | _, C_Lemma _ _ -> Gt
+    | C_Unknown,   _  -> Lt | _, C_Unknown   -> Gt
 
 let mk_stringlit (s : string) : term =
     pack (Tv_Const (C_String s))
@@ -207,8 +225,8 @@ let rec mk_list (ts : list term) : term =
     | t::ts -> mk_cons t (mk_list ts)
 
 let mktuple_n (ts : list term) : term =
-    assume (List.length ts <= 8);
-    match List.length ts with
+    assume (List.Tot.length ts <= 8);
+    match List.Tot.length ts with
     | 0 -> pack (Tv_Const C_Unit)
     | 1 -> let [x] = ts in x
     | n -> begin

@@ -145,7 +145,7 @@ let go _ =
           let verify_mode =
             if Options.verify_all () then begin
               if Options.verify_module () <> [] then begin
-                Util.print_error "--verify_module is incompatible with --verify_all";
+                Util.print_error "--verify_module is incompatible with --verify_all\n";
                 exit 1
               end;
               Parser.Dep.VerifyAll
