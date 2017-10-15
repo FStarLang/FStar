@@ -16,7 +16,7 @@
         "typing_FStar.Tactics.Types.incr_depth"
       ],
       0,
-      "2de2cd6200942c33552946e2511d1a05"
+      "f380766ce75d62ea1fb41a3be06a7b06"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -30,7 +30,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "326949cecdbb83d1a8c76e360ad9ccd1"
+      "5772ac88597acb45f0a88c429d393d75"
     ],
     [
       "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____get_elab",
@@ -39,7 +39,7 @@
       1,
       [ "@query" ],
       0,
-      "acc05c7dc0fe737ebab3848d8b2cf454"
+      "6a83e4578e3e54ed3e4c4a35295bd888"
     ],
     [
       "FStar.Tactics.Effect.return",
@@ -53,7 +53,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "b6200d66c44f0b64af392b35c5bf3800"
+      "083f28283e7a4e76ca8b6cad8f8a18a3"
     ],
     [
       "FStar.Tactics.Effect.bind",
@@ -69,7 +69,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "ec9b6df9d8ac7a4101ad14d99fcc48f5"
+      "d60238bf65f8f1af3cf177cb428e0e68"
     ],
     [
       "FStar.Tactics.Effect.get",
@@ -83,7 +83,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "2efe3458ccabc423659ebd3ade29eee2"
+      "730f06c7bb30745409d2e61afa1c63d6"
     ],
     [
       "FStar.Tactics.Effect.assert_by_tactic",
@@ -92,13 +92,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.Tactics.Effect.__by_tactic", "equation_Prims.squash",
-        "ref_valid_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
       0,
-      "7381b1b03803ee7372ddeea39d46543e"
+      "039568cbdba462e9e59cf7e2d4a81627"
     ],
     [
       "FStar.Tactics.Effect.by_tactic_seman",
@@ -107,7 +106,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "73c93cef7b22a9d7e47d2966f074c692"
+      "4177ad0362080ec5a65bb3fbfa248dd6"
     ]
   ]
 ]

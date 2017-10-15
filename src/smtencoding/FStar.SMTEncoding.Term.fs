@@ -534,9 +534,9 @@ let name_macro_binders sorts =
     List.rev names, binders
 
 let termToSmt
-  : enclosing_name:string -> t:term -> string
+  : print_ranges:bool -> enclosing_name:string -> t:term -> string
   =
-  fun enclosing_name t ->
+  fun print_ranges enclosing_name t ->
       let next_qid =
           let ctr = BU.mk_ref 0 in
           fun depth ->
@@ -606,7 +606,7 @@ let termToSmt
 
       and aux depth n names t =
         let s = aux' depth n names t in
-        if t.rng <> norng
+        if print_ranges && t.rng <> norng
         then BU.format3 "\n;; def=%s; use=%s\n%s\n" (Range.string_of_range t.rng) (Range.string_of_use_range t.rng) s
         else s
       in
@@ -622,7 +622,7 @@ let caption_to_string = function
             | hd::_ -> hd, "..." in
         format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix
 
-let rec declToSmt z3options decl =
+let rec declToSmt' print_ranges z3options decl =
   let escape (s:string) = BU.replace_char s '\'' '_' in
   match decl with
   | DefPrelude ->
@@ -637,7 +637,7 @@ let rec declToSmt z3options decl =
   | DefineFun(f,arg_sorts,retsort,body,c) ->
     let names, binders = name_macro_binders arg_sorts in
     let body = inst (List.map (fun x -> mkFreeV x norng) names) body in
-    format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt (escape f) body)
+    format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " binders) (strSort retsort) (termToSmt print_ranges (escape f) body)
   | Assume a ->
     let fact_ids_to_string ids =
         ids |> List.map (function
@@ -653,10 +653,10 @@ let rec declToSmt z3options decl =
     format4 "%s%s(assert (! %s\n:named %s))"
             (caption_to_string a.assumption_caption)
             fids
-            (termToSmt n a.assumption_term)
+            (termToSmt print_ranges n a.assumption_term)
             n
   | Eval t ->
-    format1 "(eval %s)" (termToSmt "eval" t)
+    format1 "(eval %s)" (termToSmt print_ranges "eval" t)
   | Echo s ->
     format1 "(echo \"%s\")" s
   | RetainAssumptions _ ->
@@ -668,6 +668,9 @@ let rec declToSmt z3options decl =
   | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
   | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
+
+and declToSmt         z3options decl = declToSmt' true  z3options decl
+and declToSmt_no_caps z3options decl = declToSmt' false z3options decl
 
 and mkPrelude z3options =
   let basic = z3options ^
@@ -711,8 +714,8 @@ and mkPrelude z3options =
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
                 (assert (forall ((t Term))\n\
-                            (! (implies (exists ((e Term)) (HasType e t))\n\
-                                        (Valid t))\n\
+                            (! (iff (exists ((e Term)) (HasType e t))\n\
+                                    (Valid t))\n\
                                 :pattern ((Valid t)))))\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
                      (! (iff (Valid (Precedes t1 t2)) \n\
@@ -745,6 +748,7 @@ and mkPrelude z3options =
                                              (and (= x1 y1)\n\
                                                   (Valid (Precedes x2 y2)))))))\n" in
    basic ^ bcons ^ lex_ordering
+
 
 (* Generate boxing/unboxing functions for bitvectors of various sizes. *) 
 (* For ids, to avoid dealing with generation of fresh ids, 

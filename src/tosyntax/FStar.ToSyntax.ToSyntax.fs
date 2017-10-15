@@ -490,9 +490,10 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
         let e, x = push_bv_maybe_mut e x in
         (x::l), e, x
   in
-  let rec aux (loc:lenv_t) env (p:pattern) =
+  let rec aux' (top:bool) (loc:lenv_t) env (p:pattern) =
     let pos q = Syntax.withinfo q p.prange in
     let pos_r r q = Syntax.withinfo q r in
+    let orig = p in
     match p.pat with
       | PatOr _ -> failwith "impossible"
 
@@ -501,16 +502,24 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p, imp = aux loc env p in
-        let binder = match binder with
+        let annot_pat_var p t =
+            match p.v with
+            | Pat_var x -> {p with v=Pat_var({x with sort=t})}
+            | Pat_wild x -> {p with v=Pat_wild({x with sort=t})}
+            | _ when top -> p
+            | _  -> raise (Error("Type ascriptions within patterns are only allowed on variables", orig.prange))
+        in
+        let p, binder = match binder with
             | LetBinder _ -> failwith "impossible"
             | LocalBinder(x, aq) ->
               let t = desugar_term env (close_fun env t) in
               (* TODO : This should be a real check instead of just a warning *)
               if (match x.sort.n with | S.Tm_unknown -> false | _ -> true)
-              then BU.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s"
+              then BU.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s\n"
                                        (Print.bv_to_string x)
                                        (Print.term_to_string x.sort)
                                        (Print.term_to_string t) ;
+              annot_pat_var p t,
               LocalBinder({x with sort=t}, aq)
         in
         loc, env', binder, p, imp
@@ -586,20 +595,21 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
             | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
             | _ -> p in
         env, e, b, p, false
+  and aux loc env p = aux' false loc env p
   in
   let aux_maybe_or env (p:pattern) =
     let loc = [] in
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
-        let loc, env, var, p, _ = aux loc env p in
+        let loc, env, var, p, _ = aux' true loc env p in
         let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
-          let loc, env, _, p, _ = aux loc env p in
+          let loc, env, _, p, _ = aux' true loc env p in
           loc, env, p::ps) (loc, env, []) ps in
         let pats = (p::List.rev ps) in
         env, var, pats
       | _ ->
-        let loc, env, vars, pat, b = aux loc env p in
+        let loc, env, vars, pat, b = aux' true loc env p in
         env, vars, [pat]
   in
   let env, b, pats = aux_maybe_or env p in
@@ -1216,8 +1226,8 @@ and not_ascribed t =
     | Ascribed _ -> false
     | _ ->  true
 
-// In this case, we might have implicits in the way
 and is_synth_by_tactic e t =
+    // In this case, we might have implicits in the way
     match t.tm with
     | App (l, r, Hash) -> is_synth_by_tactic e l
     | Var lid ->
@@ -2515,7 +2525,7 @@ let ast_modul_to_modul modul : withenv<S.modul> =
          modul,env
 
 let decls_to_sigelts decls : withenv<S.sigelts> =
-    fun env -> 
+    fun env ->
         let env, sigelts = desugar_decls env decls in
         sigelts, env
 

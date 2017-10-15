@@ -426,6 +426,7 @@ let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
 
 let base_and_refinement env wl t1 =
    let rec aux norm t1 =
+        let t1 = U.unmeta t1 in
         match t1.n with
         | Tm_refine(x, phi) ->
             if norm
@@ -1874,7 +1875,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     if BU.set_is_subset_of fvs_hd fvs1
                     then true
                     else (if Env.debug env <| Options.Other "Rel"
-                          then BU.print1 "Free variables are %s" (names_to_string fvs_hd); false)
+                          then BU.print1 "Free variables are %s\n" (names_to_string fvs_hd); false)
         in
 
         match maybe_pat_vars with
@@ -2146,8 +2147,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let maybe_eta t =
             if is_abs t then Inl t
             else let t = N.eta_expand wl.tcenv t in
-                 if is_abs t then Inl t else Inr t in
-        begin match maybe_eta t1, maybe_eta t2 with
+                 if is_abs t then Inl t else Inr t
+        in
+        let force_eta t =
+            if is_abs t then t
+            else let _, ty, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) t in
+                 N.eta_expand_with_type env t (N.unfold_whnf env ty)
+        in
+        begin
+            match maybe_eta t1, maybe_eta t2 with
             | Inl t1, Inl t2 ->
               solve_t env ({problem with lhs=t1; rhs=t2}) wl
             | Inl t_abs, Inr not_abs
@@ -2157,7 +2165,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
               if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
               && p_rel orig = EQ
               then solve_t_flex_rigid true orig (destruct_flex_pattern env not_abs) t_abs wl
-              else giveup env "head tag mismatch: RHS is an abstraction" orig
+              else let t1 = force_eta t1 in
+                   let t2 = force_eta t2 in
+                   if is_abs t1 && is_abs t2
+                   then solve_t env ({problem with lhs=t1; rhs=t2}) wl
+                   else giveup env "head tag mismatch: RHS is an abstraction" orig
             | _ -> failwith "Impossible: at least one side is an abstraction"
         end
 
@@ -2708,7 +2720,12 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                              (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
             let vcs =
                 if Options.use_tactics()
-                then env.solver.preprocess env vc
+                then begin
+                    Options.with_saved_options (fun () ->
+                        ignore <| Options.set_options Options.Set "--no_tactics";
+                        env.solver.preprocess env vc
+                    )
+                end
                 else [env,vc,FStar.Options.peek ()] in
             vcs |> List.iter (fun (env, goal, opts) ->
                     let goal = N.normalize [N.Simplify; N.Primops] env goal in

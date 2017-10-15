@@ -183,7 +183,7 @@ type list (a:Type) =
 
 type pattern =
   | SMTPat   : #a:Type -> a -> pattern
-  | SMTPatT  : a:Type -> pattern
+  | SMTPat  : a:Type -> pattern
 //  | SMTPatOr : list (list pattern) -> pattern //TODO: rechecking this fails some universe checks
 
 assume type decreases : #a:Type -> a -> Type0
