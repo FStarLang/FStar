@@ -2,6 +2,7 @@ module FStar.BigInt
 
 type bigint 
     = FSharp.Compatibility.OCaml.Big_int.big_int // JUST FSHARP
+type t = bigint
 
 val zero : bigint
 val one : bigint
@@ -28,3 +29,8 @@ val square_big_int : (bigint -> bigint)
 
 val string_of_big_int : (bigint -> string)
 val big_int_of_string : (string -> bigint)
+
+val of_int : (int -> bigint)
+val to_int : (bigint -> int)
+
+val to_int_fs: (bigint -> int)

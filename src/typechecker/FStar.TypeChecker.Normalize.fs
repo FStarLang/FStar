@@ -40,6 +40,7 @@ module PC = FStar.Parser.Const
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
+module Z = FStar.BigInt
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -458,8 +459,8 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (*******************************************************************)
 let built_in_primitive_steps : list<primitive_step> =
     let const_as_tm c p = mk (Tm_constant c) p in
-    let int_as_const  : Range.range -> int  -> term =
-        fun p i -> const_as_tm (FC.Const_int (BU.string_of_int i, None)) p
+    let int_as_const  : Range.range -> Z.t  -> term =
+        fun p i -> const_as_tm (FC.Const_int (Z.string_of_big_int i, None)) p
     in
     let bool_as_const : Range.range -> bool -> term =
         fun p b -> const_as_tm (FC.Const_bool b) p
@@ -467,18 +468,18 @@ let built_in_primitive_steps : list<primitive_step> =
     let string_as_const : Range.range -> string -> term =
         fun p b -> const_as_tm (FC.Const_string (b, p)) p
     in
-    let arg_as_int (a, _) : option<int> =
+    let arg_as_int (a, _) : option<Z.t> =
         match (SS.compress a).n with
         | Tm_constant (FC.Const_int(i, None)) ->
-          Some (BU.int_of_string i)
+          Some (Z.big_int_of_string i)
         | _ ->
           None
     in
-    let arg_as_bounded_int (a, _) : option<(fv * int)> =
+    let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
         match (SS.compress a).n with
         | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
             when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
-          Some (fv1, BU.int_of_string i)
+          Some (fv1, Z.big_int_of_string i)
         | _ -> None
     in
     let arg_as_bool (a, _) : option<bool> =
@@ -553,10 +554,10 @@ let built_in_primitive_steps : list<primitive_step> =
         requires_binder_substitution=false;
         interpretation=f
     } in
-    let unary_int_op (f:int -> int) =
+    let unary_int_op (f:Z.t -> Z.t) =
         unary_op arg_as_int (fun r x -> int_as_const r (f x))
     in
-    let binary_int_op (f:int -> int -> int) =
+    let binary_int_op (f:Z.t -> Z.t -> Z.t) =
         binary_op arg_as_int (fun r x y -> int_as_const r (f x y))
     in
     let unary_bool_op (f:bool -> bool) =
@@ -580,7 +581,7 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let string_compare' rng (s1:string) (s2:string) : term =
         let r = String.compare s1 s2 in
-        int_as_const rng r
+        int_as_const rng (Z.big_int_of_string (BU.string_of_int r))
     in
     let string_concat' psc args : option<term> =
         match args with
@@ -597,14 +598,14 @@ let built_in_primitive_steps : list<primitive_step> =
             end
         | _ -> None
     in
-    let string_of_int rng (i:int) : term =
-        string_as_const rng (BU.string_of_int i)
+    let string_of_int rng (i:Z.t) : term =
+        string_as_const rng (Z.string_of_big_int i)
     in
     let string_of_bool rng (b:bool) : term =
         string_as_const rng (if b then "true" else "false")
     in
-    let string_of_int rng (i:int) : term =
-        string_as_const rng (BU.string_of_int i)
+    let string_of_int rng (i:Z.t) : term =
+        string_as_const rng (Z.string_of_big_int i)
     in
     let string_of_bool rng (b:bool) : term =
         string_as_const rng (if b then "true" else "false")
@@ -633,8 +634,8 @@ let built_in_primitive_steps : list<primitive_step> =
               arg_as_int to_col with
         | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
           let r = FStar.Range.mk_range fn
-                              (FStar.Range.mk_pos from_l from_c)
-                              (FStar.Range.mk_pos to_l to_c) in
+                              (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
+                              (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
           Some (term_of_range r)
         | _ -> None
         end
@@ -655,17 +656,17 @@ let built_in_primitive_steps : list<primitive_step> =
             failwith "Unexpected number of arguments"
     in
     let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
-            [(PC.op_Minus,       1, unary_int_op (fun x -> - x));
-             (PC.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
-             (PC.op_Subtraction, 2, binary_int_op (fun x y -> (x - y)));
-             (PC.op_Multiply,    2, binary_int_op (fun x y -> (Prims.op_Multiply x y)));
-             (PC.op_Division,    2, binary_int_op (fun x y -> (x / y)));
-             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x < y)));
-             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x <= y)));
-             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x > y)));
-             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x >= y)));
-             (PC.op_Modulus,     2, binary_int_op (fun x y -> (x % y)));
-             (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
+            [(PC.op_Minus,       1, unary_int_op (fun x -> Z.minus_big_int x));
+             (PC.op_Addition,    2, binary_int_op (fun x y -> Z.add_big_int x y));
+             (PC.op_Subtraction, 2, binary_int_op (fun x y -> Z.sub_big_int x y));
+             (PC.op_Multiply,    2, binary_int_op (fun x y -> Z.mult_big_int x y));
+             (PC.op_Division,    2, binary_int_op (fun x y -> Z.div_big_int x y));
+             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (Z.lt_big_int x y)));
+             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (Z.le_big_int x y)));
+             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (Z.gt_big_int x y)));
+             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (Z.ge_big_int x y)));
+             (PC.op_Modulus,     2, binary_int_op (fun x y -> Z.mod_big_int x y));
+             (PC.op_Negation,    2, unary_bool_op (fun x -> not x));
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
@@ -684,7 +685,8 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.p2l ["Prims"; "set_range_of"], 3, set_range_of);
              (PC.p2l ["Prims"; "mk_range"], 5, mk_range);]
     in
-    let bounded_arith_ops =
+    let bounded_arith_ops
+        =
         let bounded_int_types =
            [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128"]
         in
@@ -694,9 +696,9 @@ let built_in_primitive_steps : list<primitive_step> =
             S.mk_Tm_app int_to_t [S.as_arg c] None r
         in
         bounded_int_types |> List.collect (fun m ->
-        [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x + y)));
-         (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)));
-         (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Prims.op_Multiply x y)))])
+        [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
+         (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
+         (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)))])
     in
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 

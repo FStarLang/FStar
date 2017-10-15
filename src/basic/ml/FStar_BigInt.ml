@@ -1,4 +1,5 @@
 type bigint = Z.t
+type t = bigint
 
 let zero = Z.zero
 let one = Z.one
@@ -25,3 +26,8 @@ let square_big_int = Z.sqrt
 
 let string_of_big_int = Z.to_string
 let big_int_of_string = Z.of_string
+
+let of_int = Z.of_int
+let to_int = Z.to_int
+
+let to_int_fs x = x
