@@ -20,8 +20,9 @@ all:	Apply.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	Trace.uver		\
-	Bug1299.fst		\
+	Bug1270.fst		\
 	Bug1272.fst		\
+	Bug1299.fst		\
 	Admit.fst		\
 	Nest.uver		\
 	TestBV.uver		\
