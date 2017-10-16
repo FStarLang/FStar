@@ -379,14 +379,13 @@ let run_tactic_on_typ (tactic:term) (env:env) (typ:typ) : list<goal> // remainin
     if !tacdbg then
         BU.print1 "About to reduce uvars on: %s\n" (Print.term_to_string tactic);
     let tactic = N.reduce_uvar_solutions env tactic in
-    if !tacdbg then
-        BU.print1 "About to check tactic term: %s\n" (Print.term_to_string tactic);
 
-    (* Do NOT use the returned tactic, the typechecker is not idempotent and
-     * will mess up the monadic lifts . c.f #1307 *)
-    let _, _, g = TcTerm.tc_reified_tactic env tactic in
-    TcRel.force_trivial_guard env g;
+    // At this point, I would like to typecheck the tactic again, to be defensive.
+    // However, everything blows up. C.f. #1270, #1272, #1287, #1307.
+
+    // If there were errors, don't even try, we might mask them!
     Err.stop_if_err ();
+
     let tau = unembed_tactic_0 unembed_unit tactic in
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
