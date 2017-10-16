@@ -4269,51 +4269,34 @@ let set_proof_ns: proof_namespace -> env -> env =
         tc_hooks = (uu___168_14717.tc_hooks);
         dsenv = (uu___168_14717.dsenv)
       }
-let unbound_vars:
-  env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Util.set =
-  fun e  ->
-    fun t  ->
-      let uu____14730 = FStar_Syntax_Free.names t in
-      let uu____14733 = bound_vars e in
-      FStar_List.fold_left (fun s  -> fun bv  -> FStar_Util.set_remove bv s)
-        uu____14730 uu____14733
-let closed: env -> FStar_Syntax_Syntax.term -> Prims.bool =
-  fun e  ->
-    fun t  ->
-      let uu____14752 = unbound_vars e t in
-      FStar_Util.set_is_empty uu____14752
-let closed': FStar_Syntax_Syntax.term -> Prims.bool =
-  fun t  ->
-    let uu____14759 = FStar_Syntax_Free.names t in
-    FStar_Util.set_is_empty uu____14759
 let string_of_proof_ns: env -> Prims.string =
   fun env  ->
-    let aux uu____14775 =
-      match uu____14775 with
+    let aux uu____14731 =
+      match uu____14731 with
       | (p,b) ->
           if (p = []) && b
           then "*"
           else
-            (let uu____14791 = FStar_Ident.text_of_path p in
-             Prims.strcat (if b then "+" else "-") uu____14791) in
-    let uu____14793 =
-      let uu____14796 = FStar_List.map aux env.proof_ns in
-      FStar_All.pipe_right uu____14796 FStar_List.rev in
-    FStar_All.pipe_right uu____14793 (FStar_String.concat " ")
+            (let uu____14747 = FStar_Ident.text_of_path p in
+             Prims.strcat (if b then "+" else "-") uu____14747) in
+    let uu____14749 =
+      let uu____14752 = FStar_List.map aux env.proof_ns in
+      FStar_All.pipe_right uu____14752 FStar_List.rev in
+    FStar_All.pipe_right uu____14749 (FStar_String.concat " ")
 let dummy_solver: solver_t =
   {
-    init = (fun uu____14813  -> ());
-    push = (fun uu____14815  -> ());
-    pop = (fun uu____14817  -> ());
-    encode_modul = (fun uu____14820  -> fun uu____14821  -> ());
-    encode_sig = (fun uu____14824  -> fun uu____14825  -> ());
+    init = (fun uu____14769  -> ());
+    push = (fun uu____14771  -> ());
+    pop = (fun uu____14773  -> ());
+    encode_modul = (fun uu____14776  -> fun uu____14777  -> ());
+    encode_sig = (fun uu____14780  -> fun uu____14781  -> ());
     preprocess =
       (fun e  ->
          fun g  ->
-           let uu____14831 =
-             let uu____14838 = FStar_Options.peek () in (e, g, uu____14838) in
-           [uu____14831]);
-    solve = (fun uu____14854  -> fun uu____14855  -> fun uu____14856  -> ());
-    finish = (fun uu____14862  -> ());
-    refresh = (fun uu____14864  -> ())
+           let uu____14787 =
+             let uu____14794 = FStar_Options.peek () in (e, g, uu____14794) in
+           [uu____14787]);
+    solve = (fun uu____14810  -> fun uu____14811  -> fun uu____14812  -> ());
+    finish = (fun uu____14818  -> ());
+    refresh = (fun uu____14820  -> ())
   }

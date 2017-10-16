@@ -49,9 +49,35 @@ let parse_cmdline specs others =
   else go_on ()
 
 let parse_string specs others (str:string) =
-  let args = Str.split (Str.regexp "[ \t]+") str in
-  let args = Array.of_list args in
-  parse specs others args 0 (Array.length args - 1) 0
+    let split_spaces (str:string) =
+        Str.split (Str.regexp "[ \t]+") str
+    in
+    (* to match the style of the F# code in FStar.GetOpt.fs *)
+    let index_of str c =
+      try
+        String.index str c
+      with Not_found -> -1
+    in
+    let substring_from s j =
+        let len = String.length s - j in
+        String.sub s j len
+    in
+    let rec split_quoted_fragments (str:string) =
+        let i = index_of str '\'' in
+        if i < 0 then Some (split_spaces str)
+        else let prefix = String.sub str 0 i in
+             let suffix = substring_from str (i + 1) in
+             let j = index_of suffix '\'' in
+             if j < 0 then None
+             else let quoted_frag = String.sub suffix 0 j in
+                  let rest = split_quoted_fragments (substring_from suffix (j + 1)) in
+                  match rest with
+                  | None -> None
+                  | Some rest -> Some (split_spaces prefix @ quoted_frag::rest)
 
-
-
+    in
+    match split_quoted_fragments str with
+    | None -> Error("Failed to parse options; unmatched quote \"'\"")
+    | Some args ->
+      let args = Array.of_list args in
+      parse specs others args 0 (Array.length args - 1) 0
