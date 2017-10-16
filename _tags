@@ -12,7 +12,7 @@ true: \
   package(zarith)
 
 <ulib/ml/*.ml> or <ulib/ml/extracted/*.ml>: \
-  package(ppx_deriving.show)
+  package(ppx_deriving.show), package(ppx_deriving.runtime), linkpkg
 
 # ADL: the new unicode lexer
 "src/parser/ml/FStar_Parser_LexFStar.ml": syntax(camlp4o)
@@ -28,9 +28,11 @@ true: \
   package(stdint), \
   package(yojson)
 
+
 # This ensures that main.native bundles its dependencies, which dynlinked tactics might need.
 "src/fstar/ml/main.native": \
-  linkall
+  linkall, \
+     package(ppx_deriving.show), package(ppx_deriving.runtime)
 
 # Turn off warnings for extracted files
 <src/ocaml-output/**/*.ml> or <ulib/**/extracted/*.ml> or <ulib/tactics_ml/fstarlib_leftovers/*.ml>: \

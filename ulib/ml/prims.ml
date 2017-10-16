@@ -18,17 +18,29 @@ let parse_int = Big_int_Z.big_int_of_string
 let to_string = Big_int_Z.string_of_big_int
 
 (** Some misc. types defined in Prims *)
-type nonrec unit = unit [@@deriving show]
-type nonrec bool = bool  [@@deriving show]
-type nonrec string = string [@@deriving show]
-type nonrec 'a array = 'a array [@@deriving show]
-type nonrec exn = exn [@@deriving show]
-type nonrec 'a list = 'a list [@@deriving show]
-type nonrec 'a option = 'a option [@@deriving show]
+
+module Hide = struct
+type nonrec_unit = unit [@@deriving show]
+type nonrec_bool = bool  [@@deriving show]
+type nonrec_string = string [@@deriving show]
+type 'a nonrec_array = 'a array [@@deriving show]
+type nonrec_exn = exn
+type 'a nonrec_list = 'a list [@@deriving show]
+type 'a nonrec_option = 'a option [@@deriving show]
+
+end
+
+type unit = Hide.nonrec_unit [@@deriving show]
+type bool = Hide.nonrec_bool  [@@deriving show]
+type string = Hide.nonrec_string [@@deriving show]
+type 'a array = 'a Hide.nonrec_array [@@deriving show]
+type exn = Hide.nonrec_exn
+type 'a list = 'a Hide.nonrec_list [@@deriving show]
+type 'a option = 'a Hide.nonrec_option [@@deriving show]
 
 type range     = unit [@@deriving show]
-type nat       = int [@@deriving show]
-type pos       = int [@@deriving show]
+type nat       = int
+type pos       = int
 type 'd b2t    = unit [@@deriving show]
 
 type 'a squash = unit [@@deriving show]
