@@ -42,7 +42,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t_haseq" ],
       0,
-      "75993a0b5d6da8601c58d57f162b774c"
+      "5c6a0119b9f77f97dccb188679c17f95"
     ],
     [
       "MAC.__proj__Entry__item__k",
@@ -117,7 +117,7 @@
         "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "571088d9405fc0274595b804c100821e"
+      "12607a5f5866d27af3b7034a32d39ab7"
     ],
     [
       "MAC.verify",
@@ -126,7 +126,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t_haseq" ],
       0,
-      "4c85abcee35724c883f4fa40f74d13d1"
+      "32c8ddd65fda48542bc85b1c5dd25f79"
     ],
     [
       "MAC.verify",
@@ -135,7 +135,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t_haseq" ],
       0,
-      "d0cbc2286d11e5a8cd48fb421ca42289"
+      "da36047018c4f4cb2790ff13ca204fa2"
     ],
     [
       "MAC.verify",
@@ -144,7 +144,7 @@
       1,
       [ "@query", "assumption_FStar.UInt8.t_haseq" ],
       0,
-      "ebc54ce520577c9ba6bcd534ead103cb"
+      "51fe5c103dc3d869e1bd6e0ab6a47002"
     ]
   ]
 ]

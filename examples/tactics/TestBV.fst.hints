@@ -68,7 +68,7 @@
       1,
       [ "@query" ],
       0,
-      "2b4fb20c9e6849048486559389191cbf"
+      "6d6ce4cd29c581b2ff97b42cab55ef8e"
     ],
     [
       "TestBV.unfold_logand64",
@@ -82,7 +82,7 @@
         "typing_FStar.UInt64.logand", "unit_typing"
       ],
       0,
-      "7571df8ca93dbaa67d0a092bcfa81595"
+      "a045728637f8d1ae837bd7630785036a"
     ],
     [
       "TestBV.unfold_logor64",
@@ -96,7 +96,7 @@
         "typing_FStar.UInt64.logor", "unit_typing"
       ],
       0,
-      "adef7617c70fdbdab3dcd2c3c856886c"
+      "7d6a1c6a5bc15895cc72d402b448d05b"
     ],
     [
       "TestBV.unfold_logxor64",
@@ -110,7 +110,7 @@
         "typing_FStar.UInt64.logxor", "unit_typing"
       ],
       0,
-      "f0ffc9682ccc5dd481ab605ffbd1a559"
+      "975a0cbb148dfbcff97eb8e5d8cc8429"
     ],
     [
       "TestBV.unfold64",
@@ -122,7 +122,7 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "d32586b728475fc653132ddbcc8f4073"
+      "e6e80fdc3e5879cc27b908aaf9505ead"
     ],
     [
       "TestBV.unfold64",
@@ -134,7 +134,7 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "2e7d23040dad23c25fcba8d1dae9d399"
+      "72938a7f5d90636c08ae902db5ac2281"
     ],
     [
       "TestBV.unfold64",
@@ -146,7 +146,7 @@
         "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
       ],
       0,
-      "5b22d805e5775099f2be494e81f21183"
+      "901d9339a6617420adc6c1a95e435a9c"
     ],
     [
       "TestBV.v64_eq",
@@ -155,7 +155,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv", "unit_typing" ],
       0,
-      "ab7953e9b43530c30f3af21135f8c5f0"
+      "78edbbafeb2e6c5df859ec6af6025fbe"
     ],
     [
       "TestBV.trans",
@@ -169,7 +169,7 @@
         "unit_typing"
       ],
       0,
-      "4cf11542b70015b9a1b60a52a5782358"
+      "89f7e77cd97aa028319d006f7dea8bf6"
     ],
     [
       "TestBV.test6",
@@ -185,7 +185,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "97aaaab8e009f4d7870e7b22ad62581b"
+      "1a31eb092a9ddbd1e2000cf070f439fa"
     ],
     [
       "TestBV.test6",
@@ -194,7 +194,7 @@
       1,
       [ "@query" ],
       0,
-      "08a2724fd7cd85b4792477fdc0f7be87"
+      "72d76dc7c36c0d1e8066e68beeb9bcea"
     ],
     [
       "TestBV.test6",
@@ -210,7 +210,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "ac41ecd90b1778d10db66f0c45646de3"
+      "7f2f5ac97d0114d54b5c476f03246b27"
     ]
   ]
 ]
