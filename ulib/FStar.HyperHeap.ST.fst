@@ -59,7 +59,7 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (ensures (ralloc_post i init))
 
 unfold let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 =
-   let region_i = Map.sel m0 root in
+   let region_i = H?.m (Map.sel m0 root) in
    ~ (Heap.contains region_i (as_ref x))
  /\ m1==(m0.[x]<-init)
 
@@ -86,7 +86,7 @@ assume val get: unit -> ST t
   (ensures (fun m0 x m1 -> m0==x /\ m1==m0 /\ map_invariant m1))
 
 assume val recall: #a:Type -> #i:rid -> r:rref i a -> STATE unit
-   (fun 'p m0 -> Map.contains m0 i /\ Heap.contains (Map.sel m0 i) (as_ref r) ==> 'p () m0)
+   (fun 'p m0 -> Map.contains m0 i /\ Heap.contains (H?.m (Map.sel m0 i)) (as_ref r) ==> 'p () m0)
 
 assume val recall_region: i:rid -> STATE unit
    (fun 'p m0 -> Map.contains m0 i /\ map_invariant m0  ==> 'p () m0)

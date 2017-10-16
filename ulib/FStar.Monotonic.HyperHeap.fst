@@ -61,7 +61,7 @@ let root_has_color_zero (u:unit) :Lemma (color root == 0) = ()
 (*! Operations on rids !*)
 
 abstract
-let addr_in_parent (r:rid{r =!= root}) = snd (Cons?.hd r)
+let addr_in_parent (r:rid{r =!= root}) = snd (Cons?.hd (reveal r))
 
 private let rid_tail (r:rid{Cons? (reveal r)}) :rid =
   elift1_p Cons?.tl r
@@ -86,15 +86,15 @@ let parent r = rid_tail r
 
 abstract
 let extend (r:rid) (addr:int) (c:int)
-  : Pure rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == c))
-= (c, addr) :: r
+  : Ghost rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == c))
+= hide ( (c, addr) :: (reveal r))
 
 abstract
 let extend_monochrome (r:rid) (addr:int)
-  : Pure rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == color r))
-= match r with
-  | [] -> (0, addr) :: r
-  | (c, _)::_ -> (c, addr) :: r
+  : Ghost rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == color r))
+= match reveal r with
+  | [] -> extend r addr 0
+  | (c, _)::_ -> extend r addr c
 
 
 let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) : Tot Type0 =
@@ -202,13 +202,13 @@ let lemma_include_cons i j = ()
 
 let extends_parent (tip:rid{tip=!=root}) (r:rid)
   : Lemma (requires True)
-    (extends r (parent tip) /\ r=!=tip ==> disjoint r tip \/ extends r tip)
+    (ensures (extends r (parent tip) /\ r=!=tip ==> disjoint r tip \/ extends r tip))
     [SMTPat (extends r (parent tip))]
 = ()
 
 let includes_child (tip:rid{tip=!=root}) (r:rid)
   : Lemma (requires True)
-    (includes r tip ==> r==tip \/ includes r (parent tip))
+    (ensures (includes r tip ==> r==tip \/ includes r (parent tip)))
     [SMTPat (includes r (parent tip))]
 = ()
 
@@ -218,8 +218,8 @@ let root_is_root (s:rid)
     [SMTPat (includes s root)]
 = ()
 
-private let test0 = assert (includes [(0, 1) ; (1, 0)] [(2, 2); (0, 1); (1, 0)])
-private let test1 (r1:rid) (r2:rid{includes r1 r2}) = assert (includes r1 ((0,0)::r2))
+private let test0 = assert (includes (hide [(0, 1) ; (1, 0)]) (hide [(2, 2); (0, 1); (1, 0)]))
+private let test1 (r1:rid) (r2:rid{includes r1 r2}) = assert (includes r1 (extend r2 0 0))
 
 (*+ Definition of monotonic region-based reference (mrref) +*)
 
@@ -443,15 +443,15 @@ let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
 //  * AR: we can prove this lemma only if both the mreferences have same preorder
 //  *)
 let lemma_sel_same_addr (#i: rid) (#a:Type0) (#rel:preorder a) (h:t) (r1:mrref i a rel) (r2:mrref i a rel)
-  :Lemma (requires (contains_ref r1 h /\ addr_of r1 = addr_of r2))
-         (ensures  (contains_ref r2 h /\ sel h r1 == sel h r2))
+  :Lemma (requires (contains_ref h r1 /\ addr_of r1 = addr_of r2))
+         (ensures  (contains_ref h r2 /\ sel h r1 == sel h r2))
 	 [SMTPat (sel h r1); SMTPat (sel h r2)]
-= let m = Map.sel h i in
+= let H b m = Map.sel h i in
   FStar.Monotonic.Heap.lemma_sel_same_addr m r1 r2
 
-let lemma_upd_same_addr (#i: rid) (#a: Type0) (#rel: preorder a) (h: t) (r1 r2: mrref i a rel) (x: a)
-  :Lemma (requires ((contains_ref r1 h \/ contains_ref r2 h) /\ addr_of r1 = addr_of r2))
-         (ensures (upd h r1 x == upd h r2 x))
+let lemma_upd_same_addr (#i: rid) (#a: Type0) (#rel: preorder a) (h: t) (r1 r2: mrref i a rel) (x:a{rel (sel h r1) x})
+  :Lemma (requires ((contains_ref h r1 \/ contains_ref h r2) /\ addr_of r1 = addr_of r2))
+         (ensures (sel h r1 == sel h r2 /\ upd h r1 x == upd h r2 x))
          [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
 = ()
 
@@ -522,7 +522,7 @@ abstract let aref_unused_in
   (m: t)
 : GTot Type0
 = not (Map.contains m i) \/
-  Heap.aref_unused_in r (Map.sel m i)
+  Heap.aref_unused_in r (H?.m (Map.sel m i))
 
 abstract let unused_in_aref_of
   (#i: rid)
@@ -533,19 +533,20 @@ abstract let unused_in_aref_of
 : Lemma
   (aref_unused_in (aref_of r) m <==> unused_in r m)
   [SMTPat (aref_unused_in (aref_of r) m)]
-= Heap.unused_in_aref_of r (Map.sel m i)
+= (* TODO *) admit () ;
+  Heap.unused_in_aref_of r (H?.m (Map.sel m i))
 
 abstract
 val contains_ref_aref_unused_in: #i: rid -> #a:Type -> #rel: preorder a -> h:t -> x:mrref i a rel -> y:aref i -> Lemma
-  (requires (contains_ref x h /\ aref_unused_in y h))
+  (requires (contains_ref h x /\ aref_unused_in y h))
   (ensures  (addr_of x <> addr_of_aref y))
-let contains_ref_aref_unused_in #i #a #rel h x y = Heap.contains_aref_unused_in (Map.sel h i) x y
+let contains_ref_aref_unused_in #i #a #rel h x y = Heap.contains_aref_unused_in (H?.m (Map.sel h i)) x y
 
 (* Elimination rule *)
 
 abstract let aref_live_at (m: t) (#i: rid) (a: aref i) (v: Type) (rel: preorder v) : GTot Type0 =
   Map.contains m i /\
-  Heap.aref_live_at (Map.sel m i) a v rel
+  Heap.aref_live_at (H?.m (Map.sel m i)) a v rel
 
 abstract let grref_of
   (#i: rid)
@@ -566,7 +567,7 @@ abstract let rref_of
 : Pure (mrref i v rel)
   (requires (aref_live_at m a v rel))
   (ensures (fun x -> aref_live_at m a v rel /\ addr_of x == addr_of_aref a /\ is_mm x == aref_is_mm a))
-= Heap.ref_of (Map.sel m i) a v rel
+= Heap.ref_of (H?.m (Map.sel m i)) a v rel
 
 abstract
 let aref_live_at_aref_of
@@ -576,9 +577,9 @@ let aref_live_at_aref_of
   (#rel: preorder v)
   (r: mrref i v rel)
 : Lemma
-  (ensures (aref_live_at m (aref_of r) v rel <==> contains_ref r m))
+  (ensures (aref_live_at m (aref_of r) v rel <==> contains_ref m r))
   [SMTPat (aref_live_at m (aref_of r) v rel)]
-= ()
+= (* TODO *) admit ()
 
 abstract
 let contains_ref_grref_of
@@ -589,12 +590,12 @@ let contains_ref_grref_of
   (rel: preorder v)
 : Lemma
   (requires (exists h' . aref_live_at h' a v rel))
-  (ensures ((exists h' . aref_live_at h' a v rel) /\ (contains_ref (grref_of a v rel) m <==> aref_live_at m a v rel)))
+  (ensures ((exists h' . aref_live_at h' a v rel) /\ (contains_ref m (grref_of a v rel) <==> aref_live_at m a v rel)))
   [SMTPatOr [
-    [SMTPat (contains_ref (grref_of a v rel) m)];
+    [SMTPat (contains_ref m (grref_of a v rel))];
     [SMTPat (aref_live_at m a v rel)];
   ]]
-= ()
+= admit () (* TODO *)
 
 abstract
 let aref_of_grref_of
@@ -645,7 +646,7 @@ let unused_in_gref_of
   (requires (exists h . aref_live_at h a v rel))
   (ensures ((exists h . aref_live_at h a v rel) /\ (unused_in (grref_of a v rel) h <==> aref_unused_in a h)))
   [SMTPat (unused_in (grref_of a v rel) h)]
-= ()
+= admit () (* TODO *)
 
 abstract
 let sel_rref_of
@@ -669,7 +670,15 @@ let upd_rref_of
   (h1 h2: t)
   (x: v)
 : Lemma
-  (requires (aref_live_at h1 a v rel /\ aref_live_at h2 a v rel))
-  (ensures (aref_live_at h2 a v rel /\ upd h1 (rref_of h2 a v rel) x == upd h1 (grref_of a v rel) x))
+  (requires
+    (aref_live_at h1 a v rel /\
+    aref_live_at h2 a v rel /\
+    rel (sel h1 (rref_of h2 a v rel)) x /\
+    rel (sel h1 (grref_of a v rel)) x))
+  (ensures
+    (aref_live_at h2 a v rel /\
+    rel (sel h1 (rref_of h2 a v rel)) x /\
+    rel (sel h1 (grref_of a v rel)) x /\
+    upd h1 (rref_of h2 a v rel) x == upd h1 (grref_of a v rel) x))
   [SMTPat (upd h1 (rref_of h2 a v rel) x)]
 = ()

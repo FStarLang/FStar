@@ -114,7 +114,7 @@ let popped m0 m1 =
     modifies_just (Set.singleton m0.tip) m0.h m1.h
     /\ ~(Map.sel m1.h m0.tip).live)
 
-let pop (m0:mem{poppable m0}) : Tot (m1:mem) =
+let pop (m0:mem{poppable m0}) : GTot (m1:mem) =
   let v = H false (m0.h `HH.at` m0.tip) in
   let h1 = Map.upd m0.h m0.tip v in
   let tip1 = HH.parent m0.tip in
@@ -187,7 +187,7 @@ let sel (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel)
   : GTot a
 = m.h.[s.ref]
 
-let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m s.id}) (v:a)
+let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m s.id}) (v:a{rel (sel m s) v})
   : GTot mem
 = HS (m.h.[s.ref] <- v) m.tip m.region_freshness
 
@@ -298,8 +298,17 @@ let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a r
 #set-options "--z3rlimit 16"
 
 let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
-  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
-         (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
+  : Lemma
+    (requires
+      (((h `contains` r1 /\ rel (sel h r1) x) \/ (h `contains` r2 /\ rel (sel h r2) x)) /\
+      frameOf r1 == frameOf r2 /\
+      as_addr r1 = as_addr r2))
+    (ensures
+      (h `contains` r1 /\
+      rel (sel h r1) x /\
+      h `contains` r2 /\
+      rel (sel h r2) x /\
+      upd h r1 x == upd h r2 x))
 = Classical.or_elim
     #(h `contains` r1)
     #(h `contains` r2)
@@ -309,8 +318,9 @@ let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreferen
   lemma_upd_same_addr h.h (MkRef?.ref r1) (MkRef?.ref r2) x
 
 let lemma_upd_same_addr' (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
-  :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
-         (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
+  : Lemma
+    (requires (((h `contains` r1 /\ rel (sel h r1) x) \/ (h `contains` r2 /\ rel (sel h r2) x)) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
+    (ensures (h `contains` r1 /\ rel (sel h r1) x /\  h `contains` r2 /\ rel (sel h r2) x /\  upd h r1 x == upd h r2 x))
          [SMTPat (upd h r1 x); SMTPat (upd h r2 x)]
 = lemma_upd_same_addr h r1 r2 x
 
@@ -643,7 +653,7 @@ let upd_reference_of
   (h1 h2: mem)
   (x: v)
 : Lemma
-  (requires (aref_live_at h1 a v rel /\ aref_live_at h2 a v rel))
-  (ensures (aref_live_at h1 a v rel /\ aref_live_at h2 a v rel /\ upd h1 (reference_of h2 a v rel) x == upd h1 (greference_of a v rel) x))
+(requires (aref_live_at h1 a v rel /\ aref_live_at h2 a v rel /\ rel (sel h1 (reference_of h2 a v rel)) x /\ rel (sel h1 (greference_of a v rel)) x))
+(ensures (aref_live_at h1 a v rel /\ aref_live_at h2 a v rel /\ rel (sel h1 (reference_of h2 a v rel)) x /\ rel (sel h1 (greference_of a v rel)) x /\ upd h1 (reference_of h2 a v rel) x == upd h1 (greference_of a v rel) x))
   [SMTPat (upd h1 (reference_of h2 a v rel) x)]
 = ()

@@ -21,19 +21,19 @@ let ref_liveness = fun h1 h2 ->
      h1 `contains` r /\ (is_stack_region r.id ==> r.id `is_above` h2.tip) ==>
        (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
 
-
-
 let region_liveness : preorder mem = fun h1 h2 ->
    (forall (i:HH.rid). Map.contains h1.h i ==> Map.contains h2.h i) /\
-   (forall (i:HH.rid). ~(i `is_alive` h1) ==> ~(i `is_alive` h2))
+   (forall (i:HH.rid). ~(i `is_alive` h1) ==> ~(i `is_alive` h2)) /\
+   (forall (i:HH.rid). i `is_above` h2.tip /\ Map.contains h1.h i ==> i `is_above` h1.tip)
 
 let region_freshness_increases : preorder mem = fun h1 h2 ->
   b2t (h1.region_freshness <= h2.region_freshness)
 
+(* TODO *)
 let mem_rel : preorder mem = fun h1 h2 ->
-  ref_liveness h1 h2 /\
   region_liveness h1 h2 /\
-  region_freshness_increases h1 h2
+  region_freshness_increases h1 h2 /\
+  ref_liveness h1 h2
 
 assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
 assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
@@ -147,7 +147,8 @@ let recall_weak_live_region (r:rid)
 let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) : p:mem_predicate{stable p} =
   fun (m:mem) ->
     region_allocated_pred r.id m /\
-    (~(is_mm r) /\ r.id `is_alive` m ==> HH.contains_ref m.h r.ref)
+    ((* ~(is_mm r) /\ *) (is_stack_region r.id ==> r.id `is_above` m.tip) /\ r.id `is_alive` m ==> HH.contains_ref m.h r.ref)
+
 
 type reference (a:Type) = r:reference a{witnessed(valid_ref r)}
 
