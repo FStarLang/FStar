@@ -5128,7 +5128,7 @@ let check_exports:
             FStar_TypeChecker_Env.dsenv =
               (uu___150_8561.FStar_TypeChecker_Env.dsenv)
           } in
-        let check_term lid univs1 t =
+        let check_term1 lid univs1 t =
           let uu____8572 = FStar_Syntax_Subst.open_univ_vars univs1 t in
           match uu____8572 with
           | (univs2,t1) ->
@@ -5160,7 +5160,7 @@ let check_exports:
                 let uu____8599 =
                   FStar_TypeChecker_TcTerm.tc_trivial_guard env2 t1 in
                 FStar_All.pipe_right uu____8599 FStar_Pervasives.ignore)) in
-        let check_term1 lid univs1 t =
+        let check_term2 lid univs1 t =
           (let uu____8623 =
              let uu____8624 =
                FStar_Syntax_Print.lid_to_string
@@ -5170,7 +5170,7 @@ let check_exports:
                "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)"
                uu____8624 uu____8625 in
            FStar_Errors.message_prefix.FStar_Errors.set_prefix uu____8623);
-          check_term lid univs1 t;
+          check_term1 lid univs1 t;
           FStar_Errors.message_prefix.FStar_Errors.clear_prefix () in
         let rec check_sigelt se =
           match se.FStar_Syntax_Syntax.sigel with
@@ -5195,17 +5195,17 @@ let check_exports:
                   FStar_Syntax_Syntax.mk uu____8668 in
                 uu____8665 FStar_Pervasives_Native.None
                   se.FStar_Syntax_Syntax.sigrng in
-              check_term1 l univs1 t
+              check_term2 l univs1 t
           | FStar_Syntax_Syntax.Sig_datacon
               (l,univs1,t,uu____8689,uu____8690,uu____8691) ->
-              check_term1 l univs1 t
+              check_term2 l univs1 t
           | FStar_Syntax_Syntax.Sig_declare_typ (l,univs1,t) ->
               let uu____8699 =
                 let uu____8700 =
                   FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
                     (FStar_List.contains FStar_Syntax_Syntax.Private) in
                 Prims.op_Negation uu____8700 in
-              if uu____8699 then check_term1 l univs1 t else ()
+              if uu____8699 then check_term2 l univs1 t else ()
           | FStar_Syntax_Syntax.Sig_let ((uu____8704,lbs),uu____8706) ->
               let uu____8721 =
                 let uu____8722 =
@@ -5219,7 +5219,7 @@ let check_exports:
                      (fun lb  ->
                         let fv =
                           FStar_Util.right lb.FStar_Syntax_Syntax.lbname in
-                        check_term1
+                        check_term2
                           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                           lb.FStar_Syntax_Syntax.lbunivs
                           lb.FStar_Syntax_Syntax.lbtyp))
@@ -5238,7 +5238,7 @@ let check_exports:
                     (FStar_Syntax_Syntax.Tm_arrow (binders, comp))
                     FStar_Pervasives_Native.None
                     se.FStar_Syntax_Syntax.sigrng in
-                check_term1 l univs1 arrow1
+                check_term2 l univs1 arrow1
               else ()
           | FStar_Syntax_Syntax.Sig_main uu____8749 -> ()
           | FStar_Syntax_Syntax.Sig_assume uu____8750 -> ()
