@@ -632,7 +632,7 @@ let split_env (bvar : bv) (e : env) : option<(env * list<bv>)> =
     map_opt (aux e) (fun (e', bvs) -> (e', List.rev bvs))
 
 let push_bvs e bvs =
-    List.fold_right (fun b e -> Env.push_bv e b) bvs e
+    List.fold_left (fun e b -> Env.push_bv e b) e bvs
 
 let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
     map_opt (split_env b1 g.context) (fun (e0, bvs) ->
