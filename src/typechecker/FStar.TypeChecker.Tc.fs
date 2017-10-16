@@ -1486,6 +1486,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
+  | Sig_pragma (ResetOptions _) ->
+    let env = Env.set_proof_ns (Options.using_facts_from ()) env in
+    env.solver.refresh();
+    env
   | Sig_pragma _
   | Sig_new_effect_for_free _ -> env
   | Sig_new_effect ne ->
