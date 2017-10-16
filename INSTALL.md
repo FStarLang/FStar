@@ -39,7 +39,7 @@ required dependencies (except for Z3) using the following commands:
         $ opam install fstar
 
 ### Platform specific early troubleshooting ###
-- for mac users, make sure that `ginstall` is on your system (present in macports in `coreutils`)
+- for mac users, make sure that `ginstall`, `gsed` and `gfind` are on your system (present in macports in `coreutils` and `findutils`)
 
 ## Binary releases ##
 
