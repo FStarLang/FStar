@@ -26,6 +26,7 @@ module N = FStar.TypeChecker.Normalize
 module RD = FStar.Reflection.Data
 module UF = FStar.Syntax.Unionfind
 module EMB = FStar.Syntax.Embeddings
+module Err = FStar.Errors
 
 type name = bv
 type env = Env.env
@@ -217,20 +218,42 @@ let dismiss_all : tac<unit> =
     bind get (fun p ->
     set ({p with goals=[]}))
 
+let check_valid_goal g =
+    let b = true in
+    let env = g.context in
+    let b = b && Env.closed env g.witness in
+    let b = b && Env.closed env g.goal_ty in
+    let rec aux b e =
+        match Env.pop_bv e with
+        | None -> b
+        | Some (bv, e) -> (
+            let b = b && Env.closed e bv.sort in
+            aux b e
+            )
+    in
+    if not (aux b env)
+    then Err.warn g.goal_ty.pos
+             (BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
+                         (goal_to_string g))
+
 let add_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
+    List.iter check_valid_goal gs;
     set ({p with goals=gs@p.goals}))
 
 let add_smt_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
+    List.iter check_valid_goal gs;
     set ({p with smt_goals=gs@p.smt_goals}))
 
 let push_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
+    List.iter check_valid_goal gs;
     set ({p with goals=p.goals@gs}))
 
 let push_smt_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
+    List.iter check_valid_goal gs;
     set ({p with smt_goals=p.smt_goals@gs}))
 
 let replace_cur (g:goal) : tac<unit> =
