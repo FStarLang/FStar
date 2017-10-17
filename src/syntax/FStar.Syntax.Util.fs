@@ -449,6 +449,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
 
+    // Ranges should be opaque, even to the normalizer. c.f. #1312
+    | Tm_constant (Const_range _), _
+    | _, Tm_constant (Const_range _) ->
+      Unknown
+
     | Tm_constant c, Tm_constant d ->
       equal_iff (eq_const c d)
 
