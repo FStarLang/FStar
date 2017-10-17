@@ -25,6 +25,38 @@ let unfold_fns :list string = [
 unfold let unfold_steps =
   List.Tot.map (fun s -> "Lang." ^ s) unfold_fns
 
+
+let step :tactic unit =
+  (apply_lemma (quote lemma_destruct_exists_subheaps);; norm[])  `or_else`
+  (apply_lemma (quote lemma_read_write);; norm [];; 
+  forall_intros;; implies_intro;; idtac)                         `or_else`
+  (apply_lemma (quote lemma_alloc_return);; norm [];;
+  forall_intros;; implies_intro;; idtac)                         `or_else`
+  (apply_lemma (quote lemma_read_write);; norm [])               `or_else`
+  (apply_lemma (quote lemma_alloc_return);; norm [])             `or_else`
+  fail "step: failed"
+
+
+let simplify :tactic unit =
+  pointwise (
+  (apply_lemma (quote lemma_join_h_emp);; qed)                       `or_else`
+  (apply_lemma (quote lemma_join_restrict_minus);; qed)              `or_else`
+  (apply_lemma (quote lemma_restrict_points_to_join_h_to_r);; qed)   `or_else`
+  trefl);;
+  idtac
+
+
+let simplify_context :tactic unit =
+  e <-- cur_env;
+  mapM (fun b ->
+    let typ_b = type_of_binder b in
+    match term_as_formula' typ_b with
+      | Comp Eq _ _ _ -> binder_retype b;; simplify;; trefl
+      | _             -> idtac
+  ) (binders_of_env e);;
+  idtac
+
+
 let context_rewrites :tactic unit =
   e <-- cur_env;
   mapM (fun b ->
@@ -35,42 +67,15 @@ let context_rewrites :tactic unit =
        | Tv_Var _     -> grewrite l r
        | _            -> idtac
        end
-    | _               -> idtac
+    | _            -> idtac
   ) (binders_of_env e);;
   idtac
 
-let simplify :tactic unit =
-  pointwise (
-  (apply_lemma (quote lemma_join_h_emp);; qed)                       `or_else`
-  (apply_lemma (quote lemma_join_restrict_minus);; qed)              `or_else`
-  (apply_lemma (quote lemma_restrict_points_to_join_h_to_r);; qed)   `or_else`
-  trefl);;
-  idtac
 
 let rewrite_with_lemma (tm:tactic term) :tactic unit =
   pointwise ((apply_lemma tm;; qed) `or_else` trefl);;
   idtac
- 
-let simplify_context :tactic unit =
-  e <-- cur_env;
-  mapM (fun b ->
-    let typ_b = type_of_binder b in
-    match term_as_formula' typ_b with
-    | Comp Eq _ l r ->
-       binder_retype b;;
-       trefl
-    | _  -> idtac) (binders_of_env e);;
-   idtac
 
-let step :tactic unit =
-  (apply_lemma (quote lemma_destruct_exists_subheaps);; norm[])  `or_else`
-  (apply_lemma (quote lemma_read_write);; norm [];; 
-  forall_intros;; implies_intro;; idtac)                         `or_else`
-  (apply_lemma (quote lemma_alloc_return);; norm [];;
-  forall_intros;; implies_intro;; idtac)                         `or_else`
-  (apply_lemma (quote lemma_read_write);; norm [])               `or_else`
-  (apply_lemma (quote lemma_alloc_return);; norm [])             `or_else`
-  idtac
 
 (* Writing to a pointer *)
 let write_tau :tactic unit =
@@ -92,9 +97,7 @@ let write_ok (r:addr) (h:heap) (n:int) =
 let increment_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
-  step;;
-  step;;
-  step;;
+  repeat step;;
   simplify_context;;
   context_rewrites;;
   rewrite_with_lemma (quote lemma_join_h_emp);;
@@ -113,15 +116,9 @@ let increment_ok (r:addr) (h:heap) (n:int) =
 // let swap_tau :tactic unit =
 //   norm [delta; delta_only unfold_steps; primops];;
 //   implies_intro;;
-//   step;;
-//   step;;
-//   step;;
-//   step;;
-//   step;;
-//   step;;
-//   step;;
-//   context_rewrites;;
+//   repeat step;;
 //   simplify_context;;
+//   context_rewrites;;
 //   rewrite_with_lemma (quote lemma_join_h_emp);;
 //   rewrite_with_lemma (quote lemma_join_restrict_minus);;
 //   rewrite_with_lemma (quote lemma_sel_r_from_points_to_join_h);;
