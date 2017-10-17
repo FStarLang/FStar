@@ -232,6 +232,8 @@ let rec primitive_steps () : list<N.primitive_step> =
                                          (E.pair_typ RD.fstar_refl_binder RD.fstar_refl_binder);
       mktac1 "__norm"          norm (unembed_list unembed_norm_step) embed_unit t_unit;
       mktac3 "__norm_term_env" norm_term_env unembed_env (unembed_list unembed_norm_step) unembed_term embed_term S.t_term;
+      mktac2 "__norm_binder_type"
+                               norm_binder_type (unembed_list unembed_norm_step) unembed_binder embed_unit t_unit;
       mktac2 "__rename_to"     rename_to unembed_binder unembed_string embed_unit t_unit;
       mktac1 "__binder_retype" binder_retype unembed_binder embed_unit t_unit;
       mktac0 "__revert"        revert embed_unit t_unit;
