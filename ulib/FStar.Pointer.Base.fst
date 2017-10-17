@@ -4283,7 +4283,7 @@ let modifies_loc_includes s1 h h' s2 =
   in
   Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
 
-#set-options "--z3rlimit 20 --max_fuel 1 --max_ifuel 1"
+#set-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
 
 let modifies_only_live_regions_weak
   (rs: Set.set HH.rid)
