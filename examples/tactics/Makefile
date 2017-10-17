@@ -14,6 +14,7 @@ all:	Apply.uver		\
 	Cases.uver		\
 	Tutorial.uver		\
 	Syntax.uver		\
+	NormBinderType.uver	\
 	Normalization.uver	\
 	GRewrite.uver		\
 	Rename.uver		\
