@@ -64,6 +64,28 @@ let abstract_guard x g = match g with
         | _ -> failwith "impossible" in
       Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f (Some (U.residual_tot U.ktype0))})
 
+let guard_unbound_vars env g =
+    match g.guard_f with
+    | Trivial      -> BU.new_set S.order_bv
+    | NonTrivial f -> unbound_vars env f
+
+let check_guard msg env g =
+    let s = guard_unbound_vars env g in
+    if BU.set_is_empty s
+    then ()
+    else raise (Err (BU.format2 "Guard has free variables (%s): %s"
+                                msg
+                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", ")))
+
+let check_term msg env t =
+    let s = unbound_vars env t in
+    if BU.set_is_empty s
+    then ()
+    else raise (Err (BU.format3 "Term <%s> has free variables (%s): %s"
+                                (Print.term_to_string t)
+                                msg
+                                (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", ")))
+
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
   | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) None f.pos}
@@ -399,7 +421,7 @@ let find_univ_uvar u s = BU.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let whnf env t     = SS.compress (N.normalize [N.Beta; N.WHNF] env (U.unmeta t))
+let whnf env t     = SS.compress (N.normalize [N.Beta; N.Weak; N.HNF] env (U.unmeta t))
 let sn env t       = SS.compress (N.normalize [N.Beta] env t)
 let norm_arg env t = sn env (fst t), snd t
 let sn_binders env (binders:binders) =
@@ -431,7 +453,7 @@ let base_and_refinement env wl t1 =
         | Tm_refine(x, phi) ->
             if norm
             then (x.sort, Some(x, phi))
-            else begin match normalize_refinement [N.WHNF] env wl t1 with
+            else begin match normalize_refinement [N.Weak; N.HNF] env wl t1 with
                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
                 | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
             end
@@ -441,7 +463,7 @@ let base_and_refinement env wl t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t1' = normalize_refinement [N.WHNF] env wl t1 in
+            else let t1' = normalize_refinement [N.Weak; N.HNF] env wl t1 in
                  begin match (SS.compress t1').n with
                             | Tm_refine _ -> aux true t1'
                             | _ -> t1, None
@@ -799,17 +821,17 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                   fail r
 
                 | Some d ->
-                  let t1 = normalize_refinement [N.UnfoldUntil d; N.WHNF] env wl t1 in
-                  let t2 = normalize_refinement [N.UnfoldUntil d; N.WHNF] env wl t2 in
+                  let t1 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t1 in
+                  let t2 = normalize_refinement [N.UnfoldUntil d; N.Weak; N.HNF] env wl t2 in
                   aux retry (n_delta + 1) t1 t2
               end
 
             | MisMatch(Some d1, Some d2) -> //these may be related after some delta steps
               let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
               let t1, t2 = if d1_greater_than_d2
-                           then let t1' = normalize_refinement [N.UnfoldUntil d2; N.WHNF] env wl t1 in
+                           then let t1' = normalize_refinement [N.UnfoldUntil d2; N.Weak; N.HNF] env wl t1 in
                                 t1', t2
-                           else let t2' = normalize_refinement [N.UnfoldUntil d1; N.WHNF] env wl t2 in
+                           else let t2' = normalize_refinement [N.UnfoldUntil d1; N.Weak; N.HNF] env wl t2 in
                                 t1, t2' in
               aux retry (n_delta + 1) t1 t2
 
@@ -1316,8 +1338,8 @@ and solve_rigid_flex_meet (env:Env.env) (tp:tprob) (wl:worklist) : option<workli
                       let prev = if i > 1
                                  then Delta_defined_at_level (i - 1)
                                  else Delta_constant in
-                      let t1 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t1 in
-                      let t2 = N.normalize [N.WHNF; N.UnfoldUntil prev] env t2 in
+                      let t1 = N.normalize [N.Weak; N.HNF; N.UnfoldUntil prev] env t1 in
+                      let t2 = N.normalize [N.Weak; N.HNF; N.UnfoldUntil prev] env t2 in
                       disjoin t1 t2
                     | _ ->  //head matches but no way to take the meet; TODO, generalize to handle function types, constructed types, etc.
                       None
@@ -2362,11 +2384,11 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              else let c2_decl, qualifiers = must (Env.effect_decl_opt env c2.effect_name) in
                   if qualifiers |> List.contains Reifiable
                   then let c1_repr =
-                           N.normalize [N.UnfoldUntil Delta_constant; N.WHNF] env
+                           N.normalize [N.UnfoldUntil Delta_constant; N.Weak; N.HNF] env
                                        (Env.reify_comp env (S.mk_Comp (lift_c1 ())) (env.universe_of env c1.result_typ))
                        in
                        let c2_repr =
-                           N.normalize [N.UnfoldUntil Delta_constant; N.WHNF] env
+                           N.normalize [N.UnfoldUntil Delta_constant; N.Weak; N.HNF] env
                                        (Env.reify_comp env (S.mk_Comp c2) (env.universe_of env c2.result_typ))
                        in
                        let prob =

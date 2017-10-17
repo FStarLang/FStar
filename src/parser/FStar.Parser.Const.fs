@@ -221,7 +221,8 @@ let norm           = pconst "norm"
 
 (* lids for normalizer steps *)
 let steps_simpl      = pconst "Simpl"
-let steps_whnf       = pconst "WHNF"
+let steps_weak       = pconst "Weak"
+let steps_hnf        = pconst "HNF"
 let steps_primops    = pconst "Primops"
 let steps_zeta       = pconst "Zeta"
 let steps_iota       = pconst "Iota"

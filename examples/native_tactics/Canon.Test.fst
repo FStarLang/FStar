@@ -8,13 +8,6 @@ assume val x : int
 assume val y : int
 assume val z : int
 
-// Testing the canonizer, it should be the only thing needed for this file
-let check_canon =
-    compiled_canon ();;
-    or_else qed
-            (dump "`canon` left the following goals";;
-             fail "")
-
 let lem0 = assert_by_tactic (x * (y * z) == (x * y) * z) check_canon
 
 // TODO: for now, canon is not enough as we don't collect factors
