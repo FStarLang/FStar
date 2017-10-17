@@ -88,6 +88,9 @@ let norm: norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
 let __norm_term_env (e:RT.env) (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_3 B.norm_term_env e (tr_repr_steps s) t
 let norm_term_env: RT.env -> norm_step list -> RT.term -> unit -> RT.term __tac = fun e s t -> fun () -> __norm_term_env e s t
 
+let __norm_binder_type (s: norm_step list) (b: RT.binder) : unit __tac = from_tac_2 B.norm_binder_type (tr_repr_steps s) b
+let norm_binder_type : norm_step list -> RT.binder -> unit -> unit __tac = fun s b -> fun () -> __norm_term_env s b
+
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro
 

@@ -726,6 +726,20 @@ let binder_retype (b : binder) : tac<unit> =
                   (U.mk_eq2 (U_succ u) ty bv.sort t') goal.opts)))
          end)
 
+let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> =
+    bind cur_goal (fun goal ->
+    let bv, _ = b in
+    match split_env bv goal.context with
+    | None -> fail "binder_retype: binder is not present in environment"
+    | Some (e0, bvs) -> begin
+        let steps = [N.Reify; N.UnfoldTac]@(N.tr_norm_steps s) in
+        let sort' = normalize steps e0 bv.sort in
+        let bv' = { bv with sort = sort' } in
+        let env' = push_bvs e0 (bv'::bvs) in
+        replace_cur ({ goal with context = env' })
+        end
+    )
+
 let revert : tac<unit> =
     bind cur_goal (fun goal ->
     match Env.pop_bv goal.context with

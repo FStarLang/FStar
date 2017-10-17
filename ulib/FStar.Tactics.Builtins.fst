@@ -92,6 +92,12 @@ assume private val __norm_term_env  : env -> list norm_step -> term -> __tac ter
 using the list of steps [steps], over environment [e]. The list has the same meaning as for [norm]. *)
 let norm_term_env env steps t : tactic term = fun () -> TAC?.reflect (__norm_term_env env steps t)
 
+assume private val __norm_binder_type  : list norm_step -> binder -> __tac unit
+(** [norm_binder_type steps b] will call the normalizer on the type of the [b]
+binder for the current goal. Notably, this cannot be done via binder_retype and norm,
+because of uvars being resolved to lambda-abstractions. *)
+let norm_binder_type steps b : tactic unit = fun () -> TAC?.reflect (__norm_binder_type steps b)
+
 assume private val __intro  : __tac binder
 (** [intro] pushes the first argument of an arrow goal into the
 environment, turning [Gamma |- ?u : x:a -> b] into [Gamma, x:a |- ?u' : b].
