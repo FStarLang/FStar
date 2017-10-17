@@ -37,7 +37,8 @@ let reflection_primops : list<N.primitive_step> =
             N.name = l;
             N.arity = arity;
             N.strong_reduction_ok = false;
-            N.interpretation = fn
+            N.requires_binder_substitution = false;
+            N.interpretation = (fun ctxt args -> fn (N.psc_range ctxt) args)
         } in
     // GM: we need the annotation, otherwise F* will try to unify the types
     // for all mk1 calls. I guess a consequence that we don't generalize inner lets
