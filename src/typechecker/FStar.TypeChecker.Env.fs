@@ -139,7 +139,9 @@ let rename_gamma subst gamma =
       | Binding_var x -> begin
         let y = Subst.subst subst (S.bv_to_name x) in
         match (Subst.compress y).n with
-        | Tm_name y -> Binding_var y
+        | Tm_name y ->
+            // We don't want to change the type
+            Binding_var ({ y with sort = Subst.subst subst x.sort })
         | _ -> failwith "Not a renaming"
         end
       | b -> b)
