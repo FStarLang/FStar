@@ -1,4 +1,4 @@
-module InsertionSortCmp
+module Bug171
 
 open FStar.List.Tot
 

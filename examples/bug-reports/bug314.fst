@@ -1,4 +1,4 @@
-module Bug
+module Bug314
 
 open FStar.All
 open FStar.String
@@ -13,13 +13,13 @@ val escape : lnat -> Tot nat
 let escape l = l
 
 
-(* logic *) type Request : string -> Type
-(* logic *) type Response : string -> string -> Type
+assume new type request : string -> Type
+assume new type response : string -> string -> Type
 
 (* the meaning of MACs, as used in RPC *)
 
 (* opaque logic *) type reqresp (msg:string) =
-    (exists s.    Request s)
+    (exists s.    request s)
 (* \/ (exists s t.  Response s t) *)
 
 (*
