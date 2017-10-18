@@ -56,6 +56,10 @@ let mlconst_of_const' (sctt : sconst) =
 
   | Const_string (s, _) -> MLC_String (s)
 
+  | Const_range_of
+  | Const_set_range_of ->
+    failwith "Unhandled constant: range_of/set_range_of"
+
   | Const_reify
   | Const_reflect _ ->
     failwith "Unhandled constant: reify/reflect"
