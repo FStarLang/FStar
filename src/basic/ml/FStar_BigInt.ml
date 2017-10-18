@@ -30,4 +30,5 @@ let big_int_of_string = Z.of_string
 let of_int = Z.of_int
 let to_int = Z.to_int
 
+let of_int_fs x = x
 let to_int_fs x = x

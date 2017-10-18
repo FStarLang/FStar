@@ -35,5 +35,7 @@ let big_int_of_string = Z.big_int_of_string
 let of_int (x:int) = bigint x
 let to_int (x:bigint) = int32 x
 
-// returns a bigint in OCaml, but an int32 in F#.
+// domain is int in F#, bigint in OCaml.
+let of_int_fs (x:int) = bigint x
+// returns int32 in F#, bigint in OCaml.
 let to_int_fs (x:bigint) = int32 x

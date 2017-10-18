@@ -33,4 +33,5 @@ val big_int_of_string : (string -> bigint)
 val of_int : (int -> bigint)
 val to_int : (bigint -> int)
 
+val of_int_fs: (int -> bigint)
 val to_int_fs: (bigint -> int)

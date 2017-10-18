@@ -445,7 +445,7 @@ let rec inspect (t:term) : term_view =
         Tv_Const (inspect_const c)
 
     | Tm_uvar (u, t) ->
-        Tv_Uvar (Z.of_int (UF.uvar_id u), t)
+        Tv_Uvar (Z.of_int_fs (UF.uvar_id u), t)
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
