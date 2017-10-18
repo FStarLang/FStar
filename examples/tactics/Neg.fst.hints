@@ -6,9 +6,13 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Neg.phi",
+        "equation_Neg.psi",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
       0,
-      "b90d255511ee8aa811bb0f99e82f5ca1"
+      "45e080dca313ad5e73c7d724ce95c2c6"
     ],
     [
       "Neg.c3",
@@ -21,7 +25,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "9d02019c9cf4bf4ba952f4cb46f1506f"
+      "2376763038fd5b106a991d45b0d4533e"
     ],
     [
       "Neg.c4",
@@ -30,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "34622d76d54c3ba08b095d57dc83fcf7"
+      "042b4935097dae5d4e38d2d019c616d5"
     ]
   ]
 ]

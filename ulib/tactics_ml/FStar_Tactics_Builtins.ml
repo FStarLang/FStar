@@ -2,6 +2,7 @@ open Prims
 open FStar_Tactics_Result
 open FStar_Tactics_Types
 open FStar_Tactics_Effect
+module N = FStar_TypeChecker_Normalize
 module E = FStar_Tactics_Effect
 module B = FStar_Tactics_Basic
 module RT = FStar_Reflection_Types
@@ -16,7 +17,8 @@ let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a __result =
 let tr_repr_steps =
     let tr1 = function
               | Simpl         -> EMB.Simpl
-              | WHNF          -> EMB.WHNF
+              | Weak          -> EMB.Weak
+              | HNF           -> EMB.HNF
               | Primops       -> EMB.Primops
               | Delta         -> EMB.Delta
               | Zeta          -> EMB.Zeta
@@ -53,6 +55,9 @@ let from_tac_3 (t: 'a -> 'b -> 'c -> 'd B.tac): 'a  -> 'b -> 'c -> 'd __tac =
           let m = t x y z in
           interpret_tac m ps
 
+let __fail (msg : string) : 'a __tac = from_tac_1 B.fail msg
+let fail: string -> unit -> 'a __tac = fun msg -> fun () -> __fail msg
+
 let __cur_env: RT.env __tac = from_tac_0 B.cur_env
 let cur_env: unit -> RT.env __tac = fun () -> __cur_env
 
@@ -61,6 +66,15 @@ let cur_goal: unit -> RT.term __tac = fun () -> __cur_goal
 
 let __cur_witness: RT.term __tac = from_tac_0 B.cur_witness
 let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
+
+let __tc (t: RT.term) : RT.term __tac = from_tac_1 B.tc t
+let tc: RT.term -> unit -> RT.term __tac = fun t -> fun () -> __tc t
+
+let __unshelve (t:RT.term) : unit __tac = from_tac_1 B.unshelve t
+let unshelve : RT.term -> unit -> unit __tac = fun t -> fun () -> __unshelve t
+
+let unquote : RT.term -> unit -> 'a __tac = fun tm -> fun () ->
+        failwith "Sorry, unquote does not work in compiled tactics"
 
 let __trytac (t: 'a __tac): ('a option) __tac = from_tac_1 B.trytac (to_tac_0 t)
 let trytac: 'a E.tactic -> unit -> ('a option) __tac = fun t -> fun () -> __trytac (E.reify_tactic t)
@@ -71,8 +85,11 @@ let trivial: unit -> unit __tac = fun () -> __trivial
 let __norm (s: norm_step list): unit __tac = from_tac_1 B.norm (tr_repr_steps s)
 let norm: norm_step list -> unit -> unit __tac = fun s -> fun () -> __norm s
 
-let __norm_term (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_2 B.norm_term (tr_repr_steps s) t
-let norm_term: norm_step list -> RT.term -> unit -> RT.term __tac = fun s t -> fun () -> __norm_term s t
+let __norm_term_env (e:RT.env) (s: norm_step list) (t: RT.term) : RT.term __tac = from_tac_3 B.norm_term_env e (tr_repr_steps s) t
+let norm_term_env: RT.env -> norm_step list -> RT.term -> unit -> RT.term __tac = fun e s t -> fun () -> __norm_term_env e s t
+
+let __norm_binder_type (s: norm_step list) (b: RT.binder) : unit __tac = from_tac_2 B.norm_binder_type (tr_repr_steps s) b
+let norm_binder_type : norm_step list -> RT.binder -> unit -> unit __tac = fun s b -> fun () -> __norm_binder_type s b
 
 let __intro: RT.binder __tac = from_tac_0 B.intro
 let intro: unit -> RT.binder __tac = fun () -> __intro
@@ -108,13 +125,6 @@ let exact: RT.term E.tactic -> unit -> unit __tac =
     | Success (a, state) -> __exact a state
     | Failed (s, state) -> Failed (s, state)
 
-let __exact_lemma (t: RT.term): unit __tac = from_tac_1 B.exact_lemma t
-let exact_lemma: RT.term E.tactic -> unit -> unit __tac =
-  fun t  -> fun () -> fun ps ->
-    match (t ()) ps with
-    | Success (a, state) -> __exact_lemma a state
-    | Failed (s, state) -> Failed (s, state)
-
 let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
 let apply: RT.term E.tactic -> unit -> unit __tac =
   fun t  -> fun () -> fun ps ->
@@ -139,17 +149,18 @@ let apply_lemma: RT.term E.tactic -> unit -> unit __tac =
 let __print (s: string): unit __tac = from_tac_1 (fun x -> B.ret (B.tacprint x)) s
 let print: string -> unit -> unit __tac = fun s -> fun () -> __print s
 
-let __dump (s: string): unit __tac = from_tac_1 B.print_proof_state s
+let __dump (s: string): unit __tac = from_tac_1 (B.print_proof_state) s
 let dump: string -> unit -> unit __tac = fun s -> fun () -> __dump s
 
-let __dump1 (s: string): unit __tac = from_tac_1 B.print_proof_state1 s
+let __dump1 (s: string): unit __tac = from_tac_1 (B.print_proof_state1) s
 let dump1: string -> unit -> unit __tac = fun s -> fun () -> __dump1 s
 
 let __trefl: unit __tac = from_tac_0 B.trefl
 let trefl: unit -> unit __tac = fun () -> __trefl
 
-let __pointwise (t: unit __tac): unit __tac = from_tac_1 B.pointwise (to_tac_0 t)
-let pointwise: unit E.tactic -> unit -> unit __tac = fun tau -> fun () -> __pointwise (E.reify_tactic tau)
+let __pointwise (d : direction) (t: unit __tac): unit __tac = from_tac_2 B.pointwise d (to_tac_0 t)
+let pointwise: unit E.tactic -> unit -> unit __tac = fun tau -> fun () -> __pointwise BottomUp (E.reify_tactic tau)
+let pointwise': unit E.tactic -> unit -> unit __tac = fun tau -> fun () -> __pointwise TopDown (E.reify_tactic tau)
 
 let __later: unit __tac = from_tac_0 B.later
 let later: unit -> unit __tac = fun () -> __later

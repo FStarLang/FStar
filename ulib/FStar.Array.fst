@@ -184,14 +184,13 @@ val blit_aux:
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     Seq.index (sel h1 t) i == Seq.index (sel h0 t) i) ))
 
-#set-options "--initial_fuel 1 --max_fuel 1 --z3rlimit 20"
+#set-options "--z3rlimit 60"
 let rec blit_aux #a s s_idx t t_idx len ctr =
   match len - ctr with
   | 0 -> ()
   | _ -> upd t (t_idx + ctr) (index s (s_idx + ctr));
-	 blit_aux s s_idx t t_idx len (ctr+1)
-
-#set-options "--initial_fuel 0 --max_fuel 0"
+         blit_aux s s_idx t t_idx len (ctr+1)
+#set-options "--z3rlimit 5"
 
 private val blit:
   #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat ->
@@ -232,6 +231,8 @@ val sub :
       /\ (Seq.length (sel h0 s) > 0)
       /\ (idx + len <= Seq.length (sel h0 s))
       /\ (Seq.equal (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t))))
+
+#set-options "--z3rlimit 120"
 let sub #a s idx len =
   let t = create len (index s 0) in
   blit s idx t 0 len;

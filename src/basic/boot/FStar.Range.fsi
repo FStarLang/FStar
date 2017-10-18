@@ -19,20 +19,16 @@ open FStar.ST
 open FStar.All
 open FStar.BaseTypes
 
-type range = {
-    def_range:int64;
-    use_range:int64
-}
-type file_idx
+type range
 type pos
 
 val dummyRange: range
 val set_use_range: range -> range -> range
 val mk_pos: int -> int -> pos
-val mk_file_idx_range:file_idx -> pos -> pos -> range
+// val mk_file_idx_range:file_idx -> pos -> pos -> range
 val mk_range: string -> pos -> pos -> range
-val encode_file:string -> string
-val decode_file_idx:string -> file_idx
+// val encode_file:string -> string
+// val decode_file_idx:string -> file_idx
 val union_ranges: range -> range -> range
 val string_of_range: range -> string
 val string_of_use_range: range -> string

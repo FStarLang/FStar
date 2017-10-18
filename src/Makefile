@@ -90,7 +90,7 @@ FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_i
 
 ALL_BOOT=$(addprefix boot/FStar., \
            Util.fsti List.fsti Bytes.fsti String.fsti \
-		   Range.fsti Pprint.fsti Parser.Parse.fsti \
+		   Pprint.fsti Parser.Parse.fsti \
 		   Tactics.Interpreter.fst Tactics.Interpreter.fsti)
 
 boot/%.fsti: basic/boot/%.fsi | boot_dir
@@ -130,9 +130,9 @@ boot: $(ALL_BOOT)
 clean_boot:
 	rm -rf boot
 
-MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Options.fs FStar.Ident.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
+MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Ident.fs FStar.Options.fs FStar.Range.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
 extract_misc: boot $(MISC_EXTRACTED_FILES)
-	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
+	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Range FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
 
 SYNTAX_EXTRACTED_FILES=$(addprefix syntax/FStar.Syntax., Syntax.fs Subst.fs Free.fs InstFV.fs Util.fs Print.fs Embeddings.fs MutRecTy.fs Resugar.fs Unionfind.fs) fsdoc/FStar.Fsdoc.Generator.fs
 extract_syntax: boot $(SYNTAX_EXTRACTED_FILES)
@@ -206,11 +206,11 @@ FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Interactive.Lega
 extract_fstar: boot $(FSTAR_EXTRACTED_FILES)
 	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive.CompletionTable --extract_module FStar.Interactive.Ide --extract_module FStar.Interactive.Legacy --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
-extract_typechecker: extract_normalizer extract_rel extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc
+extract_typechecker: extract_rel extract_normalizer extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc
 
-extract_smtencoding: extract_smtencoding_base extract_encode extract_solver
+extract_smtencoding: extract_encode extract_smtencoding_base extract_solver
 
-extract_all: extract_tactics extract_reflection extract_misc extract_syntax extract_parser extract_typechecker extract_tosyntax extract_smtencoding extract_extraction extract_fstar
+extract_all: extract_tactics extract_smtencoding extract_typechecker extract_reflection extract_misc extract_syntax extract_parser extract_tosyntax extract_extraction extract_fstar
 
 clean_extracted:
 	rm -f ocaml-output/FStar_*.ml

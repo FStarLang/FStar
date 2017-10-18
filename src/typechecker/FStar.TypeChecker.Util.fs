@@ -187,12 +187,25 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
   pat_as_exps allow_implicits env p:
     Turns a pattern p into a triple:
 *)
-let pat_as_exp allow_implicits env p
-                        : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
-                         * term              (* expressions corresponding to the pattern *)
-                         * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
-
-      let rec pat_as_arg_with_env allow_wc_dependence env (p:pat) :
+let pat_as_exp (allow_implicits:bool)
+               (env:Env.env)
+               (p:pat)
+               (tc_annot : Env.env -> term -> term)
+    : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
+     * term              (* expressions corresponding to the pattern *)
+     * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
+    let check_bv (env:Env.env) (x:bv) =
+          let t_x =
+              match (SS.compress x.sort) with
+              | {n=Tm_unknown} ->
+                let t, _ = U.type_u() in
+                new_uvar env t
+              | t -> //user-decorated type
+                tc_annot env t
+          in
+          {x with sort=t_x}
+    in
+    let rec pat_as_arg_with_env allow_wc_dependence env (p:pat) :
                                     (list<bv>    //all pattern-bound vars including wild-cards, in proper order
                                     * list<bv>   //just the accessible vars, for the disjunctive pattern test
                                     * list<bv>   //just the wildcards
@@ -219,72 +232,85 @@ let pat_as_exp allow_implicits env p
              ([], [], [], env, e, p)
 
            | Pat_wild x ->
-             let t, _ = U.type_u() in
-             let x = {x with sort=new_uvar env t} in
+             let x = check_bv env x in
              let env = if allow_wc_dependence then Env.push_bv env x else env in
              let e = mk (Tm_name x) None p.p in
              ([x], [], [x], env, e, p)
 
            | Pat_var x ->
-             let t, _ = U.type_u() in
-             let x = {x with sort=new_uvar env t} in
+             let x = check_bv env x in
              let env = Env.push_bv env x in
              let e = mk (Tm_name x) None p.p in
              ([x], [x], [], env, e, p)
 
            | Pat_cons(fv, pats) ->
-               let (b, a, w, env, args, pats) = pats |> List.fold_left (fun (b, a, w, env, args, pats) (p, imp) ->
-                   let (b', a', w', env, te, pat) = pat_as_arg_with_env allow_wc_dependence env p in
-                   let arg = if imp then iarg te else as_arg te in
-                   (b'::b, a'::a, w'::w, env, arg::args, (pat, imp)::pats))
-                 ([], [], [], env, [], []) in
-               let e = mk (Tm_meta(mk_Tm_app (Syntax.fv_to_tm fv) (args |> List.rev) None p.p, Meta_desugared Data_app)) None p.p in
-               (List.rev b |> List.flatten,
-                List.rev a |> List.flatten,
-                List.rev w |> List.flatten,
-                env,
-                e,
-                {p with v=Pat_cons(fv, List.rev pats)})
-          in
+             let (b, a, w, env, args, pats) =
+               pats |>
+               List.fold_left
+                 (fun (b, a, w, env, args, pats) (p, imp) ->
+                    let (b', a', w', env, te, pat) = pat_as_arg_with_env allow_wc_dependence env p in
+                    let arg = if imp then iarg te else as_arg te in
+                    (b'::b, a'::a, w'::w, env, arg::args, (pat, imp)::pats))
+               ([], [], [], env, [], [])
+             in
+             let e = mk (Tm_meta(mk_Tm_app (Syntax.fv_to_tm fv)
+                                           (args |> List.rev) None p.p,
+                                 Meta_desugared Data_app))
+                     None
+                     p.p in
+             (List.rev b |> List.flatten,
+              List.rev a |> List.flatten,
+              List.rev w |> List.flatten,
+              env,
+              e,
+              {p with v=Pat_cons(fv, List.rev pats)})
+    in
 
     let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
         let maybe_dot inaccessible a r =
             if allow_implicits && inaccessible
             then withinfo (Pat_dot_term(a, tun)) r
-            else withinfo (Pat_var a) r in
+            else withinfo (Pat_var a) r
+        in
         match p.v with
-           | Pat_cons(fv, pats) ->
-               let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
-               let _, t = Env.lookup_datacon env fv.fv_name.v in
-               let f, _ = U.arrow_formals t in
-               let rec aux formals pats = match formals, pats with
-                | [], [] -> []
-                | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid fv.fv_name.v))
-                | _::_, [] -> //fill the rest with dot patterns (if allowed), if all the remaining formals are implicit
-                    formals |> List.map (fun (t, imp) -> match imp with
-                        | Some (Implicit inaccessible) ->
-                          let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
-                          let r = range_of_lid fv.fv_name.v in
-                          maybe_dot inaccessible a r, true
+        | Pat_cons(fv, pats) ->
+          let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
+          let _, t = Env.lookup_datacon env fv.fv_name.v in
+          let f, _ = U.arrow_formals t in
+          let rec aux formals pats =
+              match formals, pats with
+              | [], [] -> []
+              | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid fv.fv_name.v))
+              | _::_, [] -> //fill the rest with dot patterns (if allowed), if all the remaining formals are implicit
+                formals |>
+                List.map (fun (t, imp) ->
+                            match imp with
+                            | Some (Implicit inaccessible) ->
+                            let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
+                            let r = range_of_lid fv.fv_name.v in
+                            maybe_dot inaccessible a r, true
 
-                        | _ ->
-                          raise (Error(BU.format1 "Insufficient pattern arguments (%s)" (Print.pat_to_string p), range_of_lid fv.fv_name.v)))
+                            | _ ->
+                              raise (Error(BU.format1 "Insufficient pattern arguments (%s)"
+                                                      (Print.pat_to_string p),
+                                           range_of_lid fv.fv_name.v)))
 
-                | f::formals', (p, p_imp)::pats' ->
-                    begin match f with
-                        | (_, Some (Implicit _)) when p_imp ->
-                            (p, true)::aux formals' pats'
+              | f::formals', (p, p_imp)::pats' ->
+                begin
+                match f with
+                | (_, Some (Implicit _)) when p_imp ->
+                  (p, true)::aux formals' pats'
 
-                        | (_, Some (Implicit inaccessible)) ->
-                            let a = Syntax.new_bv (Some p.p) tun in
-                            let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
-                            (p, true)::aux formals' pats
+                | (_, Some (Implicit inaccessible)) ->
+                  let a = Syntax.new_bv (Some p.p) tun in
+                  let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
+                  (p, true)::aux formals' pats
 
-                        | (_, imp) ->
-                            (p, S.is_implicit imp)::aux formals' pats'
-                    end in
-               {p with v=Pat_cons(fv, aux f pats)}
-
+                | (_, imp) ->
+                  (p, S.is_implicit imp)::aux formals' pats'
+                end
+         in
+         {p with v=Pat_cons(fv, aux f pats)}
         | _ -> p in
 
     let one_pat allow_wc_dependence env p =
@@ -292,10 +318,10 @@ let pat_as_exp allow_implicits env p
         let b, a, w, env, arg, p = pat_as_arg_with_env allow_wc_dependence env p in
         match b |> BU.find_dup bv_eq with
             | Some x -> raise (Error(Err.nonlinear_pattern_variable x, p.p))
-            | _ -> b, a, w, arg, p in
-
-   let b, _, _, tm, p = one_pat true env p in
-   b, tm, p
+            | _ -> b, a, w, arg, p
+    in
+    let b, _, _, tm, p = one_pat true env p in
+    b, tm, p
 
 let decorate_pattern env p exp =
     let qq = p in
@@ -846,7 +872,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         | Tm_type _ -> true
         | _ -> false
     in
-    match (SS.compress lc.res_typ).n with
+    match (U.unrefine lc.res_typ).n with
     | Tm_fvar fv
         when S.fv_eq_lid fv C.bool_lid
           && is_type t ->

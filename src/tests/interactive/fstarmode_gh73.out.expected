@@ -1,0 +1,7 @@
+{"kind": "[...]"}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "Expected expression of type \"Prims.int\"; got expression \"\"A\"\" of type \"Prims.string\"", "ranges": [{"beg": [4, 40], "end": [4, 41], "fname": "<input>"}]}], "status": "success"}
+{"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "Expected expression of type \"Prims.int\"; got expression \"\"A\"\" of type \"Prims.string\"", "ranges": [{"beg": [4, 40], "end": [4, 41], "fname": "<input>"}]}], "status": "failure"}
+{"kind": "response", "query-id": "4", "response": [], "status": "success"}
+{"contents": {"goals": [{"goal": {"type": "Prims.bool", "witness": "(*?u8*) _"}, "hyps": []}], "label": "at the time of failure", "smt-goals": []}, "kind": "message", "level": "proof-state"}
+{"kind": "response", "query-id": "5", "response": [{"level": "error", "message": "user tactic failed: exact: 1 : Prims.int does not exactly solve the goal Prims.bool", "ranges": [{"beg": [4, 7], "end": [4, 11], "fname": "<input>"}]}], "status": "failure"}

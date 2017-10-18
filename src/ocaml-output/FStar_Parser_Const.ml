@@ -146,6 +146,8 @@ let try_with_lid: FStar_Ident.lident = p2l ["FStar"; "All"; "try_with"]
 let as_requires: FStar_Ident.lident = pconst "as_requires"
 let as_ensures: FStar_Ident.lident = pconst "as_ensures"
 let decreases_lid: FStar_Ident.lident = pconst "decreases"
+let term_lid: FStar_Ident.lident =
+  p2l ["FStar"; "Reflection"; "Types"; "term"]
 let range_lid: FStar_Ident.lident = pconst "range"
 let range_of_lid: FStar_Ident.lident = pconst "range_of"
 let labeled_lid: FStar_Ident.lident = pconst "labeled"
@@ -157,7 +159,8 @@ let normalize: FStar_Ident.lident = pconst "normalize"
 let normalize_term: FStar_Ident.lident = pconst "normalize_term"
 let norm: FStar_Ident.lident = pconst "norm"
 let steps_simpl: FStar_Ident.lident = pconst "Simpl"
-let steps_whnf: FStar_Ident.lident = pconst "WHNF"
+let steps_weak: FStar_Ident.lident = pconst "Weak"
+let steps_hnf: FStar_Ident.lident = pconst "HNF"
 let steps_primops: FStar_Ident.lident = pconst "Primops"
 let steps_zeta: FStar_Ident.lident = pconst "Zeta"
 let steps_iota: FStar_Ident.lident = pconst "Iota"
@@ -293,3 +296,6 @@ let fstar_refl_embed_lid: FStar_Ident.lident =
     FStar_Range.dummyRange
 let fstar_syntax_syntax_term: FStar_Ident.lident =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.term"
+let fstar_reflection_types_binder_lid: FStar_Ident.lident =
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "binder"]
+    FStar_Range.dummyRange

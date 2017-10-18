@@ -311,7 +311,7 @@ let head_redex env t =
 
 let whnf env t =
     if head_normal env t then t
-    else N.normalize [N.Beta; N.WHNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
+    else N.normalize [N.Beta; N.Weak; N.HNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
                       N.Eager_unfolding; N.EraseUniverses] env.tcenv t
 let norm env t = N.normalize [N.Beta; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
                               N.Eager_unfolding; N.EraseUniverses] env.tcenv t
@@ -682,6 +682,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_ascribed(t, k, _) ->
         encode_term t env
 
+      | Tm_meta ({n = Tm_unknown}, Meta_alien (obj, desc, ty)) ->
+        let tsym = varops.fresh "t", Term_sort in
+        let t = mkFreeV tsym in
+        let decl = Term.DeclFun(fst tsym, [], Term_sort, Some (BU.format1 "alien term (%s)" desc)) in
+        t, [decl]
+
       | Tm_meta(t, _) ->
         encode_term t env
 
@@ -790,7 +796,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv t0 with
+        let x, f = match N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv t0 with
             | {n=Tm_refine(x, f)} ->
                let b, f = SS.open_term [x, None] f in
                fst (List.hd b), f
@@ -843,14 +849,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 Util.mkAssume(mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
                               Some ("haseq for " ^ tsym),
                               "haseq" ^ tsym) in
-              let t_valid =
-                let xx = (x, Term_sort) in
-                let valid_t = mkApp ("Valid", [t]) in
-                Util.mkAssume(mkForall ([[valid_t]], cvars,
-                    mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
-                              Some ("validity axiom for refinement"),
-                              "ref_valid_" ^ tsym)
-              in
+              // let t_valid =
+              //   let xx = (x, Term_sort) in
+              //   let valid_t = mkApp ("Valid", [t]) in
+              //   Util.mkAssume(mkForall ([[valid_t]], cvars,
+              //       mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
+              //                 Some ("validity axiom for refinement"),
+              //                 "ref_valid_" ^ tsym)
+              // in
 
               let t_kinding =
                 //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
@@ -867,7 +873,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @decls'
                             @[tdecl;
                               t_kinding;
-                              t_valid;
+                              // t_valid;
                               t_interp;t_haseq] in
 
               BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
@@ -953,7 +959,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             begin match head_type with
                 | None -> encode_partial_app None
                 | Some head_type ->
-                  let head_type = U.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
+                  let head_type = U.unrefine <| N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv head_type in
                   let formals, c = curried_arrow_formals_comp head_type in
                   begin match head.n with
                         | Tm_uinst({n=Tm_fvar fv}, _)
@@ -1241,6 +1247,9 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in
+
+    (* Postcondition is thunked, c.f. #57 *)
+    let post = U.unthunk_lemma_post post in
 
     let env = {env with nolabels=true} in
     let pre, decls'' = encode_formula (U.unmeta pre) env in
@@ -1887,7 +1896,7 @@ let encode_top_level_let :
 
             (* have another go, after unfolding all definitions *)
             | _ when not norm ->
-              let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.WHNF;
+              let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.Weak; N.HNF;
                                         (* we don't know if this will terminate; so don't do recursive steps *)
                                         N.Exclude N.Zeta;
                                         N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm
@@ -2681,6 +2690,8 @@ let encode_sig tcenv se =
     if Options.log_queries()
     then Term.Caption ("encoding sigelt " ^ (U.lids_of_sigelt se |> List.map Print.lid_to_string |> String.concat ", "))::decls
     else decls in
+   if Env.debug tcenv Options.Low
+   then BU.print1 "+++++++++++Encoding sigelt %s\n" (Print.sigelt_to_string se);
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
    set_env env;
@@ -2749,12 +2760,3 @@ let encode_query use_env_msg tcenv q
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     query_prelude, labels, qry, suffix
-
-let is_trivial (tcenv:Env.env) (q:typ) : bool =
-   let env = get_env (Env.current_module tcenv) tcenv in
-   push "query";
-   let f, _ = encode_formula q env in
-   pop "query";
-   match f.tm with
-   | App(TrueOp, _) -> true
-   | _ -> false

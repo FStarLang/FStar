@@ -37,12 +37,28 @@ let smaller tv t =
     | Tv_Uvar _ _
     | Tv_FVar _ -> True
 
+val smaller_comp : comp_view -> comp -> Type0
+let smaller_comp cv c =
+    match cv with
+    | C_Total t ->
+        t << c
+    | C_Lemma pre post ->
+        pre << c /\ post << c
+    | C_Unknown ->
+        True
+
 (* The main characters *)
 assume val __inspect : t:term -> tv:term_view{smaller tv t}
 let inspect t : term_view = __inspect t
 
 assume val __pack : term_view -> term
 let pack tv : term = __pack tv
+
+assume val __inspect_comp : c:comp -> cv:comp_view{smaller_comp cv c}
+let inspect_comp (c:comp) = __inspect_comp c
+
+assume val __pack_comp : comp_view -> comp
+let pack_comp (cv:comp_view) = __pack_comp cv
 
 (* They are inverses *)
 assume val pack_inspect_inv : (t:term) -> Lemma (pack (inspect t) == t)
