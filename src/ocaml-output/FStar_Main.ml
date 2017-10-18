@@ -2,7 +2,7 @@
 open Prims
 open FStar_Pervasives
 
-let uu___285 : Prims.unit = (FStar_Version.dummy ())
+let uu___287 : Prims.unit = (FStar_Version.dummy ())
 
 
 let process_args : Prims.unit  ->  (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list) = (fun uu____10 -> (FStar_Options.parse_cmd_line ()))
@@ -433,13 +433,13 @@ end)
 end)))
 
 
-let main : 'Auu____641 . Prims.unit  ->  'Auu____641 = (fun uu____645 -> (FStar_All.try_with (fun uu___287_649 -> (match (()) with
+let main : 'Auu____641 . Prims.unit  ->  'Auu____641 = (fun uu____645 -> (FStar_All.try_with (fun uu___289_649 -> (match (()) with
 | () -> begin
 ((go ());
 (cleanup ());
 (FStar_All.exit (Prims.parse_int "0"));
 )
-end)) (fun uu___286_658 -> (match (uu___286_658) with
+end)) (fun uu___288_658 -> (match (uu___288_658) with
 | e -> begin
 (
 

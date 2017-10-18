@@ -93,7 +93,7 @@ in (uu____40 FStar_Pervasives_Native.None FStar_Range.dummyRange)))
 let embed_proofstate : FStar_Tactics_Types.proofstate  ->  FStar_Syntax_Syntax.term = (fun ps -> (FStar_Syntax_Util.mk_alien t_proofstate ps "tactics.embed_proofstate" FStar_Pervasives_Native.None))
 
 
-let unembed_proofstate : FStar_Syntax_Syntax.term  ->  FStar_Tactics_Types.proofstate FStar_Pervasives_Native.option = (fun t -> (FStar_All.try_with (fun uu___162_67 -> (match (()) with
+let unembed_proofstate : FStar_Syntax_Syntax.term  ->  FStar_Tactics_Types.proofstate FStar_Pervasives_Native.option = (fun t -> (FStar_All.try_with (fun uu___164_67 -> (match (()) with
 | () -> begin
 (
 
@@ -102,7 +102,7 @@ let uu____70 = (
 let uu____71 = (FStar_Syntax_Util.un_alien t)
 in (FStar_All.pipe_right uu____71 FStar_Dyn.undyn))
 in FStar_Pervasives_Native.Some (uu____70))
-end)) (fun uu___161_75 -> (match (uu___161_75) with
+end)) (fun uu___163_75 -> (match (uu___163_75) with
 | uu____78 -> begin
 ((
 
