@@ -11,7 +11,7 @@ module U64 = FStar.UInt64
 
 module Math = FStar.Math.Lemmas
 
-#reset-options "--z3refresh --z3rlimit 40 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
 
 type uint128: Type0 = { low: U64.t; high: U64.t }
 
@@ -131,6 +131,7 @@ val mod_mod_pat: a:nat -> k:nat{k>0} -> k':nat{k'>0} ->
 let mod_mod_pat a k k' =
   assert (a % k < k)
 
+#set-options "--z3rlimit 20"
 let add_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a + v b) % pow2 128 = v r)) =
@@ -166,6 +167,7 @@ let add_mod (a b: t) : Pure t
           b_h * pow2 64 +
           a_l + b_l) % pow2 128);
   r
+#set-options "--z3rlimit 5"
 
 let sub (a b: t) : Pure t
   (requires (v a - v b >= 0))
@@ -184,11 +186,13 @@ let sub_mod_impl (a b: t) : t =
   { low = l;
     high = U64.sub_mod (U64.sub_mod a.high b.high) (carry a.low l); }
 
+#set-options "--z3rlimit 20"
 let sub_mod_pos_ok (a b:t) : Lemma
   (requires (v a - v b >= 0))
   (ensures (v (sub_mod_impl a b) = v a - v b)) =
   assert (sub a b == sub_mod_impl a b);
   ()
+#set-options "--z3rlimit 5"
 
 val u64_diff_wrap : a:U64.t -> b:U64.t ->
   Lemma  (requires (U64.v a < U64.v b))
@@ -235,6 +239,7 @@ let sub_mod_wrap_ok (a b:t) : Lemma
     then sub_mod_wrap1_ok a b
     else sub_mod_wrap2_ok a b
 
+#set-options "--z3rlimit 20"
 let sub_mod (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> v r = (v a - v b) % pow2 128)) =
@@ -242,6 +247,7 @@ let sub_mod (a b: t) : Pure t
     then sub_mod_pos_ok a b
     else sub_mod_wrap_ok a b);
   sub_mod_impl a b
+#set-options "--z3rlimit 5"
 
 val shift_bound : #n:nat -> num:UInt.uint_t n -> n':nat ->
   Lemma (num * pow2 n' <= pow2 (n'+n) - pow2 n')
@@ -359,9 +365,8 @@ let shift_past_mod (n:nat) (k1:nat) (k2:nat{k2 >= k1}) :
   Lemma ((n * pow2 k2) % pow2 k1 == 0) =
   assert (k2 == (k2 - k1) + k1);
   Math.pow2_plus (k2 - k1) k1;
-  mod_mul_cancel (n * pow2 (k2 - k1)) (pow2 k1);
-  Math.paren_mul_right n (pow2 (k2-k1)) (pow2 k1);
-  ()
+  Math.paren_mul_right n (pow2 (k2 - k1)) (pow2 k1);
+  mod_mul_cancel (n * pow2 (k2 - k1)) (pow2 k1)
 
 val mod_double: a:nat -> k:nat{k>0} ->
     Lemma (a % k % k == a % k)
@@ -374,8 +379,7 @@ let shift_left_large_val (#n1:nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_
   Math.paren_mul_right a2 (pow2 n1) (pow2 s);
   Math.pow2_plus n1 s
 
-#reset-options "--z3refresh --z3rlimit 60 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
-
+#set-options "--z3rlimit 40"
 let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.uint_t n2) (s: nat{s >= n2}) :
   Lemma (((a1 + a2 * pow2 n1) * pow2 s) % pow2 (n1+n2) ==
          (a1 * pow2 s) % pow2 (n1+n2)) =
@@ -384,8 +388,7 @@ let shift_left_large_lemma (#n1: nat) (#n2: nat) (a1:UInt.uint_t n1) (a2:UInt.ui
   shift_past_mod a2 (n1+n2) (n1+s);
   mod_double (a1 * pow2 s) (pow2 (n1+n2));
   ()
-
-#reset-options "--z3refresh --z3rlimit 40 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+#set-options "--z3rlimit 5"
 
 val shift_left_large_lemma_t : a:t -> s:nat ->
   Lemma (requires (s >= 64))
@@ -437,18 +440,20 @@ let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
 let div_plus_multiple (a:nat) (b:nat) (k:pos) :
   Lemma (requires (a < k))
         (ensures ((a + b * k) / k == b)) =
-  Math.lemma_mod_plus a b k;
+  Math.division_addition_lemma a k b;
   Math.small_division_lemma_1 a k
 
 val div_add_small: n:nat -> m:nat -> k1:pos -> k2:pos ->
   Lemma (requires (n < k1))
         (ensures (k1*m / (k1*k2) == (n + k1*m) / (k1*k2)))
+#set-options "--z3rlimit 40"
 let div_add_small n m k1 k2 =
   div_product (k1*m) k1 k2;
   div_product (n+k1*m) k1 k2;
   mul_div_cancel m k1;
   assert (k1*m/k1 == m);
   div_plus_multiple n m k1
+#set-options "--z3rlimit 5"
 
 val add_mod_small: n: nat -> m:nat -> k1:pos -> k2:pos ->
   Lemma (requires (n < k1))
@@ -486,6 +491,7 @@ let add_u64_shift_left_respec (hi lo:U64.t) (s:U32.t{U32.v s < 64}) : Pure U64.t
   mul_abc_to_acb hi (pow2 s) (pow2 64);
   r
 
+#set-options "--z3rlimit 40"
 val add_mod_small' : n:nat -> m:nat -> k:pos ->
   Lemma (requires (n + m % k < k))
         (ensures (n + m % k == (n + m) % k))
@@ -493,6 +499,7 @@ let add_mod_small' n m k =
   Math.lemma_mod_lt (n + m % k) k;
   Math.modulo_lemma n k;
   mod_add n m k
+#set-options "--z3rlimit 5"
 
 let shift_t_val (a: t) (s: nat) :
     Lemma (v a * pow2 s == U64.v a.low * pow2 s + U64.v a.high * pow2 (64+s)) =
@@ -517,8 +524,10 @@ let add_lt_le (a a' b b': int) :
 
 let u64_pow2_bound (a: UInt.uint_t 64) (s: nat) :
   Lemma (a * pow2 s < pow2 (64+s)) =
-  Math.pow2_plus 64 s
+  Math.pow2_plus 64 s;
+  Math.lemma_mult_le_right (pow2 s) a (pow2 64)
 
+#set-options "--z3rlimit 20"
 let shift_t_mod_val' (a: t) (s: nat{s < 64}) :
   Lemma ((v a * pow2 s) % pow2 128 ==
         U64.v a.low * pow2 s + U64.v a.high * pow2 (64+s) % pow2 128) =
@@ -531,7 +540,7 @@ let shift_t_mod_val' (a: t) (s: nat{s < 64}) :
   add_mod_small' (a_l * pow2 s) (a_h * pow2 (64+s)) (pow2 128);
   shift_t_val a s;
   ()
-
+#set-options "--z3rlimit 5"
 
 let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Lemma ((v a * pow2 s) % pow2 128 ==
@@ -557,10 +566,10 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
     shift_t_mod_val a s;
     r
 
-#reset-options "--z3refresh --z3rlimit 60 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
-
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
+
+#set-options "--z3rlimit 20"
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v h_shift < 64);
@@ -572,8 +581,7 @@ let shift_left_large a s =
   assert (U64.v r.high * pow2 64 == (U64.v a.low * pow2 (U32.v s)) % pow2 128);
   shift_left_large_lemma_t a (U32.v s);
   r
-
-#reset-options "--z3refresh --z3rlimit 40 --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+#set-options "--z3rlimit 5"
 
 let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
@@ -894,6 +902,7 @@ let u32_combine' (hi lo: U64.t) : Pure U64.t
   (ensures (fun r -> U64.v r = U64.v hi * pow2 32 % pow2 64 + U64.v lo)) =
   U64.add lo (U64.shift_left hi u32_32)
 
+#set-options "--z3rlimit 20"
 let mul_wide_impl (x: U64.t) (y: U64.t) :
     Tot (r:t{U64.v r.low == mul_wide_low x y /\
              U64.v r.high == mul_wide_high x y % pow2 64}) =
@@ -919,6 +928,7 @@ let mul_wide_impl (x: U64.t) (y: U64.t) :
   assert (U64.v r1 == (phh x y + (phl x y + pll_h x y) / pow2 32 + (plh x y + (phl x y + pll_h x y) % pow2 32) / pow2 32) % pow2 64);
   let r = { low = r0; high = r1; } in
   r
+#set-options "--z3rlimit 5"
 
 let product_sums (a b c d:nat) :
   Lemma ((a + b) * (c + d) == a * c + a * d + b * c + b * d) = ()
@@ -982,12 +992,15 @@ let product_high32 x y =
 
 val product_high_expand : x:U64.t -> y:U64.t ->
   Lemma ((U64.v x * U64.v y) / pow2 64 == phh x y + (plh x y + phl x y + pll_h x y) / pow2 32)
+
+#set-options "--z3rlimit 20"
 let product_high_expand x y =
   Math.pow2_plus 32 32;
   div_product (mul_wide_high x y) (pow2 32) (pow2 32);
   product_high32 x y;
   Math.division_addition_lemma (plh x y + phl x y + pll_h x y) (pow2 32) (phh x y);
   ()
+#set-options "--z3rlimit 5"
 
 val mod_spec_multiply : n:nat -> k:pos ->
   Lemma ((n - n%k) / k * k == n - n%k)
@@ -1032,6 +1045,7 @@ let sum_rounded_mod_exact n m k =
   mod_add (n - n%k) (m - m%k) k;
   Math.div_exact_r ((n - n%k) + (m - m % k)) k
 
+#set-options "--z3rlimit 20"
 val div_sum_combine : n:nat -> m:nat -> k:pos ->
   Lemma (n / k + m / k == (n + (m - n % k) - m % k) / k)
 let div_sum_combine n m k =
@@ -1039,6 +1053,7 @@ let div_sum_combine n m k =
   div_sum_combine1 n m k;
   mul_injective (n / k + m / k) (((n - n%k) + (m - m%k)) / k) k;
   assert (n + m - n % k - m % k == (n - n%k) + (m - m%k))
+#set-options "--z3rlimit 5"
 
 val sum_shift_carry : a:nat -> b:nat -> k:pos ->
   Lemma (a / k + (b + a%k) / k == (a + b) / k)

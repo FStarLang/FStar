@@ -1,1 +1,77 @@
-[ "p-,ê\u0007ˇ˚ \rw\u007fı9T\u0001ç", [] ]
+[
+  "‘g/ÅW!\u0010‡P®”rKmQ!",
+  [
+    [
+      "EtM.Plain.plain",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
+      0,
+      "40d27a093babe7e78b234cfc2a49a4b5"
+    ],
+    [
+      "EtM.Plain.reveal_hide",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_EtM.Plain.hide", "equation_EtM.Plain.reveal",
+        "unit_typing"
+      ],
+      0,
+      "fd7227bfc87cf84c6bff951331f511c3"
+    ],
+    [
+      "EtM.Plain.hide_reveal",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_EtM.Plain.hide", "equation_EtM.Plain.reveal",
+        "unit_typing"
+      ],
+      0,
+      "abcb830e1de7ad3b9718f52fe10b2ae6"
+    ],
+    [
+      "EtM.Plain.repr",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.reveal" ],
+      0,
+      "9297a4814e502aa6804c36b65fdc6c0f"
+    ],
+    [
+      "EtM.Plain.coerce",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.hide" ],
+      0,
+      "27eef605dd55fc1ecd7064012aaa6242"
+    ],
+    [
+      "EtM.Plain.length",
+      1,
+      2,
+      1,
+      [ "@query", "equation_EtM.Plain.reveal" ],
+      0,
+      "579387fb5f7d7f35adabbc1ad8fd7435"
+    ],
+    [
+      "EtM.Plain.length",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "f1c8c7c72cfaa2fc948b41cb20d59b50"
+    ]
+  ]
+]
