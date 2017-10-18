@@ -3293,6 +3293,9 @@ let loc_none = Loc
   (fun _ _ -> false_elim ())
 
 let loc_union s1 s2 =
+  if StrongExcludedMiddle.strong_excluded_middle (s1 == s2)
+  then s1
+  else
   let addr_regions1 = Ghost.reveal (Loc?.addr_regions s1) in
   let addr_regions2 = Ghost.reveal (Loc?.addr_regions s2) in
   let addr_regions = Set.union addr_regions1 addr_regions2 in
@@ -3345,6 +3348,8 @@ let loc_union s1 s2 =
     (Ghost.hide aux_regions)
     aux_addrs
     aux
+
+let loc_union_idem s = ()
 
 let loc_pointer #t p =
   Loc
@@ -3735,15 +3740,19 @@ let loc_includes_union_r s s1 s2 = ()
 
 let loc_includes_union_l s1 s2 s =
   let u12 = loc_union s1 s2 in
-  Classical.forall_intro loc_aux_includes_refl';
-  Classical.forall_intro_2 loc_aux_includes_union_l_l;    
-  Classical.forall_intro_2 loc_aux_includes_union_l_r;
-  Classical.or_elim
-    #(loc_includes s1 s)
-    #(loc_includes s2 s)
-    #(fun _ -> loc_includes (loc_union s1 s2) s)
-    (fun _ -> loc_includes_trans u12 s1 s)
-    (fun _ -> loc_includes_trans u12 s2 s)
+  if StrongExcludedMiddle.strong_excluded_middle (s1 == s2)
+  then ()
+  else begin
+    Classical.forall_intro loc_aux_includes_refl';
+    Classical.forall_intro_2 loc_aux_includes_union_l_l;    
+    Classical.forall_intro_2 loc_aux_includes_union_l_r;
+    Classical.or_elim
+      #(loc_includes s1 s)
+      #(loc_includes s2 s)
+      #(fun _ -> loc_includes (loc_union s1 s2) s)
+      (fun _ -> loc_includes_trans u12 s1 s)
+      (fun _ -> loc_includes_trans u12 s2 s)
+  end
 
 #reset-options "--z3rlimit 32"
 

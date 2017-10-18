@@ -1561,6 +1561,14 @@ val loc_union
   (s1 s2: loc)
 : GTot loc
 
+(** The following is useful to make Z3 cut matching loops with
+modifies_trans and modifies_refl *)
+val loc_union_idem
+  (s: loc)
+: Lemma
+  (loc_union s s == s)
+  [SMTPat (loc_union s s)]
+
 val loc_pointer
   (#t: typ)
   (p: pointer t)
