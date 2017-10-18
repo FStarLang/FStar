@@ -131,7 +131,7 @@ type stack_elt =
 type stack = list<stack_elt>
 
 let mk t r = mk t None r
-let set_memo r t =
+let set_memo (r:memo<'a>) (t:'a) =
   match !r with
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
     | None -> r := Some t
