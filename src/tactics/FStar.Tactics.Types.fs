@@ -56,9 +56,9 @@ let decr_depth (ps:proofstate) : proofstate =
 let incr_depth (ps:proofstate) : proofstate =
     { ps with depth = ps.depth + 1 }
 
-let tracepoint ps : unit =
+let tracepoint psc ps : unit =
     if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ())
-    then ps.__dump ps "TRACE"
+    then ps.__dump (subst_proof_state (N.psc_subst psc) ps) "TRACE"
     else ()
 
 let set_ps_psc psc ps = { ps with psc = psc }

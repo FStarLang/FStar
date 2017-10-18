@@ -237,7 +237,7 @@ let rec primitive_steps () : list<N.primitive_step> =
         | [(ps, _)] ->
             bind_opt (E.unembed_proofstate ps) (fun ps ->
             let ps = set_ps_psc psc ps in
-            tracepoint ps;
+            tracepoint psc ps;
             Some U.exp_unit)
         | _ -> failwith "Unexpected application of tracepoint"
     in
@@ -246,7 +246,7 @@ let rec primitive_steps () : list<N.primitive_step> =
         {N.name = nm;
          N.arity = 1;
          N.strong_reduction_ok = false;
-         N.requires_binder_substitution = false;
+         N.requires_binder_substitution = true;
          N.interpretation = tracepoint_interp
         }
     in
