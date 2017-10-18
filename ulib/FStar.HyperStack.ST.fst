@@ -17,9 +17,12 @@ let gst_wp (a:Type)   = st_wp_h mem a
 unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
 sub_effect DIV ~> GST = lift_div_gst
 
+
+let live_rid rid (h:mem) = (is_eternal_region rid \/ rid `is_above` h.tip)
+
 let ref_liveness = fun h1 h2 ->
    (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
-     h1 `contains` r /\ (is_stack_region r.id ==> r.id `is_above` h2.tip) ==>
+     h1 `contains` r /\ r.id `live_rid` h2 ==>
        (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
 
 let region_liveness : preorder mem = fun h1 h2 ->
@@ -29,6 +32,50 @@ let region_liveness : preorder mem = fun h1 h2 ->
 
 let region_freshness_increases : preorder mem = fun h1 h2 ->
   b2t (h1.region_freshness <= h2.region_freshness)
+
+
+let ref_liveness_haupstatz (x y z:mem) r :
+    Lemma (region_liveness x y /\ region_liveness y z /\ r `live_rid` z /\ r `live_rid` x ==> r `live_rid` y)
+    [SMTPat (region_liveness x y) ; SMTPat (region_liveness y z) ; SMTPat (r `live_rid` z)]
+= ()
+
+let contains_ref_impl_live_rid (h:mem) (#a:Type0) (#rel:preorder a) (r:mreference a rel)
+  : Lemma (h `contains` r ==> r.id `live_rid` h) [SMTPat (h `contains` r)] = ()
+
+open FStar.Tactics
+
+private
+let and_intro_lem (#p #q #r:Type) (f:p -> q -> squash r) : Lemma (p /\ q ==> r) =
+  let g (x:c_and p q) : squash r = match x with | Prims.And x y -> f x y in
+    FStar.Classical.impl_intro #(p /\ q) #r (fun x -> FStar.Squash.bind_squash x g <: Lemma r)
+
+let split_and : tactic unit =
+  apply_lemma (quote_lid ["FStar";"HyperStack";"ST";"and_intro_lem"])
+
+(* let _ = assert_by_tactic *)
+(*     (forall (x y z : mem). *)
+(*        region_liveness x y ==> *)
+(*        region_liveness y z ==> *)
+(*        ref_liveness x y ==> *)
+(*        ref_liveness y z ==> *)
+(*        ref_liveness x z) *)
+(*   ( *)
+(*   (\* norm [delta ; delta_only ["FStar.HyperStack.ST.ref_liveness"]] ;; *\) *)
+(*   x <-- forall_intro ; *)
+(*   y <-- forall_intro ; *)
+(*   z <-- forall_intro ; *)
+(*   dump "stuff" ;; *)
+(*   h_region_xy <-- implies_intro ; *)
+(*   h_region_yz <-- implies_intro ; *)
+(*   h_ref_xy <-- implies_intro ; *)
+(*   h_ref_yz <-- implies_intro ; *)
+(*   a <-- forall_intro ; *)
+(*   r <-- forall_intro ; *)
+(*   rel <-- forall_intro ; *)
+(*   split_and ;; *)
+(*   h_contains <-- intro ; *)
+(*   h_rid_live <-- intro; *)
+(*   fail "A") *)
 
 (* TODO *)
 let mem_rel : preorder mem = fun h1 h2 ->
