@@ -9,6 +9,7 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Char CommonST Constructive Float Gho
 	UInt16 UInt32 UInt63 UInt64 UInt8 \
         Pointer.Base \
 	Pointer.Derived1 Pointer.Derived2 \
+        Pointer.Derived3 \
 	Pointer BufferNG Tactics.Builtins \
         TaggedUnion \
 	Reflection.Types Reflection.Basic Reflection.Data \
