@@ -140,8 +140,9 @@ irreducible let labeled (r:range) (msg:string) (b:Type) = b
 
 (* PURE effect *)
 let pure_pre = Type0
-let pure_post (a:Type) = a -> GTot Type0
-let pure_wp   (a:Type) = pure_post a -> GTot pure_pre
+let pure_post' (a:Type) (pre:Type) = (_:a{pre}) -> GTot Type0 // c.f. #57
+let pure_post  (a:Type) = pure_post' a True
+let pure_wp    (a:Type) = pure_post a -> GTot pure_pre
 
 assume type guard_free: Type0 -> Type0
 
@@ -183,9 +184,11 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
      ; trivial      = pure_trivial
 }
 
-effect Pure (a:Type) (pre:pure_pre) (post:pure_post a) =
-        PURE a
-             (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x)) // pure_wp
+// Note the type of post, which allows to assume the precondition
+// for the well-formedness of the postcondition. c.f. #57
+effect Pure (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
+        PURE a (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
+
 effect Admit (a:Type) = PURE a (fun (p:pure_post a) -> True)
 
 (* The primitive effect Tot is definitionally equal to an instance of PURE *)
@@ -201,9 +204,8 @@ sub_effect
 (* The primitive effect GTot is definitionally equal to an instance of GHOST *)
 effect GTot (a:Type) = GHOST a (pure_null_wp a)
 (* #set-options "--print_universes --print_implicits --print_bound_var_types --debug Prims --debug_level Extreme" *)
-effect Ghost (a:Type) (pre:Type) (post:pure_post a) =
-       GHOST a
-           (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
+effect Ghost (a:Type) (pre:Type) (post:pure_post' a pre) =
+       GHOST a (fun (p:pure_post a) -> pre /\ (forall (x:a). post x ==> p x))
 
 assume new type int : Type0
 
@@ -245,13 +247,27 @@ irreducible let smt_pat_or (x:list (list pattern)) : pattern = ()
 assume type decreases : #a:Type -> a -> Type0
 
 (*
-   Lemma is desugared specially. You can write:
+   Lemma is desugared specially. The valid forms are:
 
-     Lemma phi                 for   Lemma (requires True) phi []
-     Lemma t1..tn              for   Lemma unit t1..tn
+     Lemma (ensures post)
+     Lemma post [SMTPat ...]
+     Lemma (ensures post) [SMTPat ...]
+     Lemma (ensures post) (decreases d)
+     Lemma (ensures post) (decreases d) [SMTPat ...]
+     Lemma (requires pre) (ensures post) (decreases d)
+     Lemma (requires pre) (ensures post) [SMTPat ...]
+     Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]
+
+   and
+
+     Lemma post    (== Lemma (ensures post))
+
+   the squash argument on the postcondition allows to assume the
+   precondition for the *well-formedness* of the postcondition.
+   C.f. #57.
 *)
-effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) =
-       Pure a pre (fun r -> post)
+effect Lemma (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
+       Pure a pre (fun r -> post ())
 
 (* This new bit for Dijkstra Monads for Free; it has a "double meaning",
  * either as an alias for reasoning about the direct definitions, or as a marker
@@ -326,7 +342,8 @@ abstract let normalize (a:Type0) = a
 abstract
 type norm_step =
     | Simpl
-    | WHNF
+    | Weak
+    | HNF
     | Primops
     | Delta
     | Zeta
@@ -335,7 +352,8 @@ type norm_step =
 
 // Helpers, so we don't expose the actual inductive
 let simplify : norm_step = Simpl
-let whnf    : norm_step = WHNF
+let weak    : norm_step = Weak
+let hnf     : norm_step = HNF
 let primops : norm_step = Primops
 let delta   : norm_step = Delta
 let zeta    : norm_step = Zeta

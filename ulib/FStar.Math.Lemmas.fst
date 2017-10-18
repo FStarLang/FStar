@@ -301,33 +301,6 @@ val lemma_mod_spec2: a:nat -> p:pos -> Lemma
 let lemma_mod_spec2 a p =
   lemma_mod_spec a p
 
-#set-options "--max_fuel 2 --max_ifuel 2"
-private let lemma_mod_plus_injective_1 (p:pos) (a:nat) (b:nat) (c:nat) : Lemma
-  (requires (b < p /\ c < p /\ (a + b) % p = (a + c) % p))
-  (ensures  (
-    let r = (a + b) % p in
-    (r <= a + b) /\ (r <= a + c) /\ (
-    let qb = ((a + b) - r) / p in
-    let qc = ((a + c) - r) / p in
-    a + b = (a + c) + p * qb - p * qc)))
-  = lemma_mod_spec2 (a + b) p;
-    lemma_mod_spec2 (a + c) p
-
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 200"
-val lemma_mod_plus_injective: p:pos -> a:nat -> b:nat -> c:nat -> Lemma
-  (requires (b < p /\ c < p /\ (a + b) % p = (a + c) % p))
-  (ensures  (b = c))
-let lemma_mod_plus_injective p a b c =
-  lemma_mod_spec2 (a + b) p;
-  lemma_mod_spec2 (a + c) p;
-  let r = (a + b) % p in
-  let qb = ((a + b) - r) / p in
-  let qc = ((a + c) - r) / p in
-  lemma_mod_plus_injective_1 p a b c;
-  lemma_mul_sub_distr p qb qc;
-  assert (b = c + p * (qb - qc));
-  assert (qb - qc = 0)
-
 val lemma_mod_plus_distr_l: a:nat -> b:nat -> p:pos -> Lemma
   ((a + b) % p = ((a % p) + b) % p)
 let lemma_mod_plus_distr_l a b p =
@@ -335,7 +308,7 @@ let lemma_mod_plus_distr_l a b p =
   lemma_mod_spec2 a p;
   lemma_mod_plus (a % p + b) q p
 
-#reset-options "--z3rlimit 90 --initial_fuel 0 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
+#reset-options "--z3rlimit 50 --initial_fuel 0 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
 
 val lemma_mod_plus_mul_distr: a:nat -> b:nat -> c:nat -> p:pos -> Lemma
   (((a + b) * c) % p = ((((a % p) + (b % p)) % p) * (c % p)) % p)
@@ -634,3 +607,56 @@ val pow2_modulo_modulo_lemma_2: a:nat -> b:nat -> c:nat{c <= b} ->
 let pow2_modulo_modulo_lemma_2 a b c =
   pow2_le_compat b c;
   small_modulo_lemma_1 (a % pow2 c) (pow2 b)
+
+private val modulo_add : p:pos -> a:nat -> b:nat -> c:nat -> Lemma
+  (requires (b % p = c % p))
+  (ensures  ((a + b) % p = (a + c) % p))
+private let modulo_add p a b c =
+  modulo_distributivity a b p;
+  modulo_distributivity a c p
+
+private val lemma_mod_twice : a:nat -> p:pos -> Lemma ((a % p) % p == a % p)
+private let lemma_mod_twice a p = lemma_mod_mod (a % p) a p
+
+private val modulo_sub : p:pos -> a:nat -> b:nat -> c:nat -> Lemma
+  (requires ((a + b) % p = (a + c) % p))
+  (ensures (b % p = c % p))
+
+private let modulo_sub p a b c =
+  modulo_distributivity a b p;
+  modulo_distributivity a c p;
+  // have : (a % p + b % p) % p = (a % p + c % p) % p
+  assert ((a % p + b % p) % p = (a % p + c % p) % p);
+  euclidean_division_definition a p;
+  let q = a / p in
+  let r = a % p in
+  assert ((r + b % p) % p = (r + c % p) % p);
+  if r = 0 then (
+    lemma_mod_twice b p;
+    lemma_mod_twice c p
+  ) else (
+    assert (r > 0);
+    lemma_mod_twice a p;
+
+    lemma_mod_sub_1 r p; // gives ((-r) % p) = p - (r % p)
+                         // ; and so r = r % p = p - ((-r) % p) = p - h
+
+    let h = (-r) % p in
+
+    // add h to both sides, that is (p-r)
+    modulo_add p h (r + b % p) (r + c % p);
+
+    // cancel the extra p
+    lemma_mod_plus (b % p) 1 p;
+    lemma_mod_plus (c % p) 1 p;
+    lemma_mod_twice b p;
+    lemma_mod_twice c p
+  )
+
+val lemma_mod_plus_injective: p:pos -> a:nat -> b:nat -> c:nat -> Lemma
+  (requires (b < p /\ c < p /\ (a + b) % p = (a + c) % p))
+  (ensures  (b = c))
+let lemma_mod_plus_injective p a b c =
+  modulo_sub p a b c;
+  modulo_lemma b p;
+  modulo_lemma c p

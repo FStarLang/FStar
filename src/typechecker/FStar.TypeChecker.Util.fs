@@ -872,7 +872,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         | Tm_type _ -> true
         | _ -> false
     in
-    match (SS.compress lc.res_typ).n with
+    match (U.unrefine lc.res_typ).n with
     | Tm_fvar fv
         when S.fv_eq_lid fv C.bool_lid
           && is_type t ->

@@ -293,8 +293,8 @@ let add_errors:
                   let uu____1441 = message_prefix.append_prefix msg in
                   err r uu____1441) errs)
 let issue_of_exn: Prims.exn -> issue FStar_Pervasives_Native.option =
-  fun uu___62_1447  ->
-    match uu___62_1447 with
+  fun uu___70_1447  ->
+    match uu___70_1447 with
     | Error (msg,r) ->
         let uu____1452 =
           let uu____1453 = message_prefix.append_prefix msg in
@@ -321,8 +321,8 @@ let err_exn: Prims.exn -> Prims.unit =
        | FStar_Pervasives_Native.Some issue -> add_one issue
        | FStar_Pervasives_Native.None  -> FStar_Exn.raise exn)
 let handleable: Prims.exn -> Prims.bool =
-  fun uu___63_1473  ->
-    match uu___63_1473 with
+  fun uu___71_1473  ->
+    match uu___71_1473 with
     | Error uu____1474 -> true
     | FStar_Util.NYI uu____1479 -> true
     | Stop  -> true

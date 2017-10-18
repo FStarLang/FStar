@@ -15,8 +15,10 @@ let assumption' : tactic unit =
     apply_raw (quote FStar.Squash.return_squash);;
     assumption
 
-
 let tau : tactic unit =
+    implies_intro;;
+    implies_intro;;
+    implies_intro;;
     b <-- implies_intro;
 
     binder_retype b;; // call retype, get a goal `p == ?u`
@@ -27,9 +29,20 @@ let tau : tactic unit =
 
     apply_lemma (quote l);; //prove (p == q), asked by grewrite
 
-    apply_lemma (quote l2);;
-    assumption';;
-    qed
+    e <-- cur_env;
+    match binders_of_env e with
+    | [_;_;_;b] ->
+        let t = type_of_binder b in
+        t <-- norm_term [] t; // contains uvar redexes.
+        if FStar.Order.ne (compare_term t rr)
+        then fail "binder was not retyped?"
+        else idtac;;
+
+        apply_lemma (quote l2);;
+        assumption';;
+        qed
+    | _ ->
+        fail "should be impossible"
 
 let _ = 
-    assert_by_tactic (p ==> q) tau
+    assert_by_tactic (True ==> True ==> True ==> p ==> q) tau

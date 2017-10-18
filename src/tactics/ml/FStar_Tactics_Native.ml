@@ -14,7 +14,7 @@ type 'a tactic = Prims.unit -> 'a __tac
 
 let r = dummyRange
 
-type itac = args -> term option
+type itac = FStar_TypeChecker_Normalize.psc -> args -> term option
 type native_primitive_step =
     { name: FStar_Ident.lid;
       arity: Prims.int;

@@ -30,7 +30,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_typing"
       ],
       0,
-      "4ece6c1325d8af6e8f9ea4818359ba30"
+      "37ee21b9ec6ccdc2cdacbf4bc08dc0aa"
     ],
     [
       "SnapshotST.witnessing_predicate",
@@ -42,7 +42,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "f13e302c5287f8c6e5f6a05a5878feb1"
+      "d0fbab8d35d311f1596070fdcab2c568"
     ],
     [
       "SnapshotST.witnessing_predicate_stable",
@@ -54,7 +54,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "26f1e42989adf654767f766aaa0e1b20"
+      "44c8d1a0733e3631409b811e0eeacc73"
     ],
     [
       "SnapshotST.witnessing_predicate_stable",
@@ -83,10 +83,10 @@
         "typing_FStar.Pervasives.Native.uu___is_Some", "unit_typing"
       ],
       0,
-      "1c8149468fd2c4ffa6ce5c0907f2d111"
+      "657284e0cd45f54ef8303eb19e93e046"
     ],
     [
-      "SnapshotST.172088",
+      "SnapshotST.173648",
       1,
       2,
       1,
@@ -110,7 +110,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "44c6d70e879bdcf028661f00791be8b5"
+      "629a38dc33f814470074e54e1db6f671"
     ],
     [
       "SnapshotST.ist_witnessed",
@@ -136,7 +136,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "5d26de697c5179c78fbe8efb5cb2d797"
+      "3167159596ddac206a31c9d44bc89af9"
     ],
     [
       "SnapshotST.ist_witness",
@@ -162,7 +162,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "f0a881f358e114b039f350fc7244e5d7"
+      "dc2d8a94aad38c0e09f89ff8fc15c3cc"
     ],
     [
       "SnapshotST.ist_recall",
@@ -188,7 +188,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "c776b7d0e75fc85bc6c133ab07a55f6c"
+      "33fc66586839e8b7c3e524d1dfbe2b1f"
     ],
     [
       "SnapshotST.witnessed",
@@ -206,7 +206,7 @@
         "token_correspondence_SnapshotST.snapshot_rel"
       ],
       0,
-      "9680548b05a376f946f5d33ec7cd786c"
+      "7ef604359af0b08e81fc3840ef0ca3ea"
     ],
     [
       "SnapshotST.read",
@@ -215,7 +215,7 @@
       1,
       [ "@query" ],
       0,
-      "31f5433f58e20ca9d0d1ec0e11d3c9f0"
+      "b1c59416543b33b329f47394a9b6f889"
     ],
     [
       "SnapshotST.write",
@@ -224,7 +224,7 @@
       1,
       [ "@query" ],
       0,
-      "2a7914cf6d43f1305e5bfd932e1531a4"
+      "5a5d43012ae730789838b94ed14c2663"
     ],
     [
       "SnapshotST.witness",
@@ -237,7 +237,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "72ec163ef8316288e762bacd26960ef4"
+      "7f07de8d89733a65a129b42720819366"
     ],
     [
       "SnapshotST.witness",
@@ -260,7 +260,7 @@
         "token_correspondence_SnapshotST.snapshot_rel"
       ],
       0,
-      "213b22d855be2138ab701a4b44128847"
+      "968827ce292fdf7c4d919b80d162e4d8"
     ],
     [
       "SnapshotST.recall",
@@ -273,7 +273,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "2c1fe67834a862615c3c951e3f027545"
+      "4d4bf1e7f5e828729d5d357498492886"
     ],
     [
       "SnapshotST.recall",
@@ -293,7 +293,7 @@
         "token_correspondence_SnapshotST.snapshot_rel"
       ],
       0,
-      "097f65523724dd274d02efce36e325f8"
+      "29dccf81870e0d4c4ce5dfae9000f6f3"
     ],
     [
       "SnapshotST.make_snapshot",
@@ -322,7 +322,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "82ae70745bc1262fb07a88a24413ed2f"
+      "09ba500c2bd5269d3b32cdeb5db3b766"
     ],
     [
       "SnapshotST.restore_consistency",
@@ -342,7 +342,7 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v"
       ],
       0,
-      "2d7336849ba377103b7bba068de6e01c"
+      "7db5b0b32740779a2fc53e78605eafc6"
     ]
   ]
 ]

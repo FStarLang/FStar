@@ -7,8 +7,9 @@ let _ = assert_norm (True \/ True)
 (* let _ = assert (c_and True True) *)
 (* let _ = assert (c_and c_True c_True) *)
 
-val l1 : (a : Type) -> Lemma (a ==> squash a)
-let l1 a = assert_norm (a ==> squash a)
+(* This fails after removing t_valid, c.f. 5ac0bd96d *)
+(* val l1 : (a : Type) -> Lemma (a ==> squash a) *)
+(* let l1 a = assert_norm (a ==> squash a) *)
 
 val l2 : (a : Type) -> Lemma (squash a ==> a)
 let l2 a = assert_norm (squash a ==> a)

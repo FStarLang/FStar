@@ -18,6 +18,9 @@ open HST // for := , !
     `nullptr #t` (of type `npointer t`) represents the "NULL" value.
 *)
 
+(* GM: Seems the initial fuels are needed, or we get queries with fuel=2 *)
+#set-options "--initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
+
 type step: (from: typ) -> (to: typ) -> Tot Type0 =
   | StepField:
     (l: struct_typ) ->
@@ -704,7 +707,7 @@ let value_of_ovalue_array_index
   (ensures (forall (i: nat) . i < UInt32.v len ==> Seq.index (value_of_ovalue (TArray len t') (Some sv)) i == value_of_ovalue t' (Seq.index sv i)))
 = ()
 
-#reset-options "--z3rlimit 16"
+#set-options "--z3rlimit 16"
 
 let rec value_of_ovalue_of_value
   (t: typ)
@@ -3728,7 +3731,7 @@ let loc_includes_union_l s1 s2 s =
     (fun _ -> loc_includes_trans u12 s1 s)
     (fun _ -> loc_includes_trans u12 s2 s)
 
-#reset-options "--z3rlimit 32"
+#set-options "--z3rlimit 32"
 
 let loc_includes_none s = ()
 
@@ -3743,7 +3746,7 @@ let loc_includes_gbuffer_of_array_pointer l #len #t p =
 let loc_includes_gpointer_of_array_cell l #t b i =
   loc_includes_trans l (loc_buffer b) (loc_pointer (gpointer_of_buffer_cell b i))
 
-#reset-options "--z3rlimit 64"
+#set-options "--z3rlimit 64"
 
 let loc_includes_gsub_buffer_r l #t b i len =
   if len = 0ul
@@ -4180,7 +4183,7 @@ let modifies_pointer_elim s h1 h2 #a' p' =
     let r = greference_of p' in
     assert (HS.sel h1 r == HS.sel h2 r)
 
-#reset-options "--z3rlimit 256"
+#set-options "--z3rlimit 256"
 
 let modifies_buffer_elim #t1 b p h h' =
   loc_disjoint_sym (loc_buffer b) p;
@@ -4226,10 +4229,10 @@ let modifies_reference_elim #t b p h h' =
 
 let modifies_refl s h = ()
 
-#reset-options "--z3rlimit 512"
+#reset-options "--z3rlimit 160 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
 
 let modifies_loc_includes s1 h h' s2 =
-  assert (
+  assert_spinoff (
     forall rs r . (
       HH.modifies_just rs h.HS.h h'.HS.h /\
       HS.live_region h r /\
@@ -4241,8 +4244,8 @@ let modifies_loc_includes s1 h h' s2 =
   aux_addrs_nonempty s2;
   let h1 = h in
   let h2 = h' in
-  assert (HH.modifies_just (regions_of_loc s1) h1.HS.h h2.HS.h);
-  assert (
+  assert_spinoff (HH.modifies_just (regions_of_loc s1) h1.HS.h h2.HS.h);
+  assert_spinoff (
     forall r . (
       HS.live_region h1 r /\
       Set.mem r (regions_of_loc s1) /\
@@ -4265,7 +4268,7 @@ let modifies_loc_includes s1 h h' s2 =
     (ensures (
       equal_values h1 p h2 p
     ))
-  = assert (~ (Set.mem (as_addr p) (addrs_of_loc_weak s2 (frameOf p))));
+  = assert_spinoff (~ (Set.mem (as_addr p) (addrs_of_loc_weak s2 (frameOf p))));
     if
       Set.mem (frameOf p) (Ghost.reveal (Loc?.aux_regions s2)) &&
       Set.mem (as_addr p) (Loc?.aux_addrs s2 (frameOf p))
@@ -4279,6 +4282,8 @@ let modifies_loc_includes s1 h h' s2 =
       ()
   in
   Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
+
+#set-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
 
 let modifies_only_live_regions_weak
   (rs: Set.set HH.rid)
