@@ -150,7 +150,7 @@ let mul_mod #n a b =
   (a * b) % (pow2 n)
 
 val mul_div: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
-#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 20"
+#reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 80"
 let mul_div #n a b =
   FStar.Math.Lemmas.lemma_mult_lt_sqr a b (pow2 n);
   (a * b) / (pow2 n)
@@ -581,7 +581,7 @@ let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 private val to_vec_mod_pow2: #n:nat -> a:uint_t n -> m:pos -> i:nat{n - m <= i /\ i < n} ->
   Lemma (requires (a % pow2 m == 0))
         (ensures  (index (to_vec a) i == false))
-        [SMTPat (index (to_vec #n a) i); SMTPatT (a % pow2 m == 0)]
+        [SMTPat (index (to_vec #n a) i); SMTPat (a % pow2 m == 0)]
 let rec to_vec_mod_pow2 #n a m i =
   if i = n - 1 then
     begin
@@ -600,7 +600,7 @@ let rec to_vec_mod_pow2 #n a m i =
 private val to_vec_lt_pow2: #n:nat -> a:uint_t n -> m:nat -> i:nat{i < n - m} ->
   Lemma (requires (a < pow2 m))
         (ensures  (index (to_vec a) i == false))
-        [SMTPat (index (to_vec #n a) i); SMTPatT (a < pow2 m)]
+        [SMTPat (index (to_vec #n a) i); SMTPat (a < pow2 m)]
 let rec to_vec_lt_pow2 #n a m i =
   if n = 0 then ()
   else
@@ -614,6 +614,7 @@ let rec to_vec_lt_pow2 #n a m i =
       end
 
 (** Used in the next two lemmas *)
+#reset-options "--initial_fuel 0 --max_fuel 1 --z3rlimit 40"
 private val index_to_vec_ones: #n:pos -> m:nat{m <= n} -> i:nat{i < n} ->
   Lemma (requires True)
         (ensures (pow2 m <= pow2 n /\

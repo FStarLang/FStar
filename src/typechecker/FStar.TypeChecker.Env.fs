@@ -70,14 +70,11 @@ type effects = {
 // A name prefix, such as ["FStar";"Math"]
 type name_prefix = list<string>
 // A choice of which name prefixes are enabled/disabled
-// The leftmost match takes precedence. Empty list means everything is on.
+// The leftmost match takes precedence. Empty list means everything is off.
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
-type flat_proof_namespace = list<(name_prefix * bool)>
+type proof_namespace = list<(name_prefix * bool)>
 
-// A stack of namespace choices. Provides simple push/pop behaviour.
-// For the purposes of filtering facts, this is just flattened.
-type proof_namespace = list<flat_proof_namespace>
-
+// A stack of namespace choices. Provides sim
 type cached_elt = either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
 
@@ -137,6 +134,18 @@ and implicits = list<(string * env * uvar * term * typ * Range.range)>
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> binding -> unit) }
 
+let rename_gamma subst gamma =
+    gamma |> List.map (function
+      | Binding_var x -> begin
+        let y = Subst.subst subst (S.bv_to_name x) in
+        match (Subst.compress y).n with
+        | Tm_name y ->
+            // We don't want to change the type
+            Binding_var ({ y with sort = Subst.subst subst x.sort })
+        | _ -> failwith "Not a renaming"
+        end
+      | b -> b)
+let rename_env subst env = {env with gamma=rename_gamma subst env.gamma}
 let default_tc_hooks =
   { tc_push_in_gamma_hook = (fun _ _ -> ()) }
 let tc_hooks (env: env) = env.tc_hooks
@@ -191,9 +200,7 @@ let initial_env tc_term type_of universe_of solver module_lid =
     universe_of=universe_of;
     use_bv_sorts=false;
     qname_and_index=None;
-    proof_ns = (match Options.using_facts_from () with
-               | Some ns -> [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]]
-               | None -> [[]]);
+    proof_ns = Options.using_facts_from ();
     synth = (fun e g tau -> failwith "no synthesizer available");
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
@@ -902,7 +909,7 @@ let build_lattice env se = match se.sigel with
                   begin match BU.is_some (find_edge order (k, ub)), BU.is_some (find_edge order (ub, k)) with
                     | true, true ->
                       if Ident.lid_equals k ub
-                      then (BU.print_warning "Looking multiple times at the same upper bound candidate" ; bopt)
+                      then (BU.print_warning "Looking multiple times at the same upper bound candidate\n" ; bopt)
                       else failwith "Found a cycle in the lattice"
                     | false, false -> bopt
                           (* KM : This seems a little fishy since we could obtain as *)
@@ -1202,49 +1209,39 @@ let should_enc_path env path =
         | x::xs, y::ys -> x = y && list_prefix xs ys
         | _, _ -> false
     in
-    let rec should_enc_path' (pns:flat_proof_namespace) path =
-        match pns with
-        | [] -> true
-        | (p,b)::pns ->
-            if list_prefix p path
-            then b
-            else should_enc_path' pns path
-    in
-    should_enc_path' (List.flatten env.proof_ns) path
+    match FStar.List.tryFind (fun (p, _) -> list_prefix p path) env.proof_ns with
+    | None -> false
+    | Some (_, b) -> b
 
 let should_enc_lid env lid =
     should_enc_path env (path_of_lid lid)
 
 let cons_proof_ns b e path =
-    match e.proof_ns with
-    | [] -> failwith "empty proof_ns stack!"
-    | pns::rest ->
-        let pns' = (path, b) :: pns in
-    { e with proof_ns = pns'::rest }
+    { e with proof_ns = (path,b) :: e.proof_ns }
 
 // F# forces me to fully apply this... ugh
 let add_proof_ns e path = cons_proof_ns true  e path
 let rem_proof_ns e path = cons_proof_ns false e path
-
-let push_proof_ns e =
-    { e with proof_ns = []::e.proof_ns }
-
-let pop_proof_ns e =
-    match e.proof_ns with
-    | [] -> failwith "empty proof_ns stack!"
-    | _::rest ->
-        { e with proof_ns = rest }
-
 let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
 
+let unbound_vars (e : env) (t : term) : BU.set<bv> =
+    List.fold_left (fun s bv -> BU.set_remove bv s) (Free.names t) (bound_vars e)
+
+let closed (e : env) (t : term) =
+    BU.set_is_empty (unbound_vars e t)
+
+let closed' (t : term) =
+    BU.set_is_empty (Free.names t)
+
 let string_of_proof_ns env =
-    let string_of_proof_ns' pns =
-        String.concat ";"
-            (List.map (fun fpns -> "["
-                                   ^ String.concat "," (List.map (fun (p,b) -> (if b then "+" else "-")^(String.concat "." p)) fpns)
-                                   ^ "]") pns)
-    in string_of_proof_ns' (env.proof_ns)
+    let aux (p,b) =
+        if p = [] && b then "*"
+        else (if b then "+" else "-")^Ident.text_of_path p
+    in
+    List.map aux env.proof_ns
+    |> List.rev
+    |> String.concat " "
 
 (* <Move> this out of here *)
 let dummy_solver = {

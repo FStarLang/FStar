@@ -10,6 +10,7 @@ module Set = FStar.Set
 new_effect GST = STATE_h mem
 
 let gst_pre           = st_pre_h mem
+let gst_post' (a:Type) (pre:Type) = st_post_h' mem a True
 let gst_post (a:Type) = st_post_h mem a
 let gst_wp (a:Type)   = st_wp_h mem a
 
@@ -53,7 +54,7 @@ assume val gst_recall:  p:mem_predicate -> GST unit (fun post h0 -> stable p /\ 
     WARNING: this effect is unsafe, for C/C++ extraction it shall only be used by
     code that would later extract to OCaml or by library functions
     *)
-effect Unsafe (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+effect Unsafe (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
 
@@ -63,7 +64,7 @@ effect Unsafe (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
    - both mem reference the same heaps (their map: rid -> heap have the same domain)
    - in each region id, the corresponding heaps contain the same references on both sides
  *)
-effect Stack (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+effect Stack (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_domains h h1) ==> p a h1)) (* WP *)
 
@@ -74,7 +75,7 @@ effect Stack (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
    - can call to Stack and ST code freely
    - respects the stack invariant: the stack has to be empty when returning
 *)
-effect Heap (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+effect Heap (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HH.root /\ h1.tip = HH.root ) ==> p a h1)) (* WP *)
 
@@ -83,7 +84,7 @@ effect Heap (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
   - maintains the allocation invariant on the stack: no allocation unless in a new frame that has to be popped before returning
   - not constraints on heap allocation
 *)
-effect ST (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+effect ST (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
 
@@ -104,7 +105,7 @@ let inline_stack_inv h h' : GTot Type0 =
    This effect maintains the stack AND the heap invariant: it can be inlined in the Stack effect
    function body as well as in a Heap effect function body
    *)
-effect StackInline (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+effect StackInline (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ is_stack_region h.tip /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
 
@@ -123,7 +124,7 @@ let inline_inv h h' : GTot Type0 =
    Region allocation is not constrained.
    Heap allocation is not constrained.
    *)
-effect Inline (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
+effect Inline (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ inline_inv h h1) ==> p a h1)) (* WP *)
 
@@ -131,7 +132,7 @@ effect Inline (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) =
     TODO:
     REMOVE AS SOON AS CONSENSUS IS REACHED ON NEW LOW EFFECT NAMES
   *)
-effect STL (a:Type) (pre:gst_pre) (post: (mem -> Tot (gst_post a))) = Stack a pre post
+effect STL (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) = Stack a pre post
 
 sub_effect
   DIV   ~> GST = fun (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) -> wp (fun a -> p a h)

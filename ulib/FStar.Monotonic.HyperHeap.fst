@@ -419,25 +419,29 @@ let extend_preserves_map_invariant (m0 m1 : t) (r r':rid) (addr c:int)
   assert (forall s. Map.contains m0 s ==> s =!= r') ;
   assert (forall s. Map.contains m0 s /\ includes s r' ==> includes s r)
 
-
-abstract
-val lemma_extends_fresh_disjoint:
-  i:rid -> j:rid -> ipar:rid -> jpar:rid ->
-  m0:t{map_invariant m0} -> m1:t{map_invariant m1} ->
-  Lemma (requires (
-      fresh_region i m0 m1
-      /\ fresh_region j m0 m1
-      /\ m0 `contains` ipar
-      /\ m0 `contains` jpar
-      /\ extends i ipar
-      /\ extends j jpar
-      /\ i=!=j))
-    (ensures (disjoint i j))
-    [SMTPatT (fresh_region i m0 m1);
-      SMTPatT (fresh_region j m0 m1);
-      SMTPat (extends i ipar);
-      SMTPat (extends j jpar)]
+abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
+                               -> m0:t{map_invariant m0} -> m1:t{map_invariant m1} ->
+  Lemma (requires (fresh_region i m0 m1
+                  /\ fresh_region j m0 m1
+                  /\ Map.contains m0 ipar
+                  /\ Map.contains m0 jpar
+                  /\ extends i ipar
+                  /\ extends j jpar
+                  /\ i<>j))
+        (ensures (disjoint i j))
+        [SMTPat (fresh_region i m0 m1);
+         SMTPat (fresh_region j m0 m1);
+         SMTPat (extends i ipar);
+         SMTPat (extends j jpar)]
 let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()
+
+let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) =
+     forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
+
+let extends_parent (tip:rid{tip<>root}) (r:rid)
+  : Lemma (ensures (extends r (parent tip) /\ r<>tip ==> disjoint r tip \/ extends r tip))
+          [SMTPat (extends r (parent tip))]
+  = ()
 
 (*
 //  * AR: we can prove this lemma only if both the mreferences have same preorder

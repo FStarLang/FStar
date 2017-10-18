@@ -10,6 +10,14 @@ open FStar.Reflection
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 
+assume private val __fail : a:Type -> string -> __tac a
+let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
+
+assume private val __top_env     : __tac env
+(** [top_env] returns the environment where the tactic started running.
+ * This works even if no goals are present. *)
+let top_env = fun () -> TAC?.reflect __top_env
+
 assume private val __cur_env     : __tac env
 (** [cur_env] returns the current goal's environment *)
 let cur_env = fun () -> TAC?.reflect __cur_env
@@ -34,6 +42,16 @@ let cur_witness = fun () -> TAC?.reflect __cur_witness
  *)
 assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
+
+assume private val __tc : term -> __tac term
+(** [tc] returns the type of a term in the current environment,
+or fails if it is untypeable. *)
+let tc (t : term) = fun () -> TAC?.reflect (__tc t)
+
+assume private val __unshelve : term -> __tac unit
+(** [tc] returns the type of a term in the current environment,
+or fails if it is untypeable. *)
+let unshelve (t : term) = fun () -> TAC?.reflect (__unshelve t)
 
 assume private val __unquote : #a:Type -> term -> __tac a
 (** [unquote t] with turn a quoted term [t] into an actual value, of
@@ -69,10 +87,16 @@ string operations)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
-assume private val __norm_term  : list norm_step -> term -> __tac term
-(** [norm_term steps t] will call the normalizer on the term [t]
-using the list of steps [steps]. The list has the same meaning as for [norm]. *)
-let norm_term steps t : tactic term = fun () -> TAC?.reflect (__norm_term steps t)
+assume private val __norm_term_env  : env -> list norm_step -> term -> __tac term
+(** [norm_term_env e steps t] will call the normalizer on the term [t]
+using the list of steps [steps], over environment [e]. The list has the same meaning as for [norm]. *)
+let norm_term_env env steps t : tactic term = fun () -> TAC?.reflect (__norm_term_env env steps t)
+
+assume private val __norm_binder_type  : list norm_step -> binder -> __tac unit
+(** [norm_binder_type steps b] will call the normalizer on the type of the [b]
+binder for the current goal. Notably, this cannot be done via binder_retype and norm,
+because of uvars being resolved to lambda-abstractions. *)
+let norm_binder_type steps b : tactic unit = fun () -> TAC?.reflect (__norm_binder_type steps b)
 
 assume private val __intro  : __tac binder
 (** [intro] pushes the first argument of an arrow goal into the

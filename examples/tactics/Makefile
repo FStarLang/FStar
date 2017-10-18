@@ -9,16 +9,22 @@ all:	Apply.uver		\
 	Pruning.uver		\
 	Cut.uver		\
 	Fail.uver		\
+	MApply.uver		\
 	Clear.uver		\
 	Cases.uver		\
 	Tutorial.uver		\
 	Syntax.uver		\
+	NormBinderType.uver	\
 	Normalization.uver	\
 	GRewrite.uver		\
 	Rename.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	Trace.uver		\
+	Bug1270.fst		\
+	Bug1272.fst		\
+	Bug1299.fst		\
+	Admit.fst		\
 	Nest.uver		\
 	TestBV.uver		\
 	Map.uver		\
