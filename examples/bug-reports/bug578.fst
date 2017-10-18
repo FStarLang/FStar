@@ -11,22 +11,22 @@ let f0 n = n
 (* VD: This no longer fails *)
 
 (* CH: or just fails to work *)
-(* val f1 : unit -> t false *)
-(* let f1 () n = n *)
+val f1 : unit -> t false
+let f1 () n = n
 (* ./bug578.fst(13,24-14,15) : Error *)
 (* Expected a term of type "(uu___:Prims.unit -> (Bug578.t false))"; *)
 (* got a function "(fun uu___ n -> n@0)" (Function definition takes more arguments than expected from its annotated type) *)
 
 (* CH: this fails too *)
-(* val f2 : unit -> t false *)
-(* let f2 () = (fun n -> n) *)
+val f2 : unit -> t false
+let f2 () = (fun n -> n)
 (* ./bug578.fst(21,24-22,24) : Error *)
 (* Expected a term of type "(uu___:Prims.unit -> (Bug578.t false))"; *)
 (* got a function "(fun uu___ n -> n@0)" (Function definition takes more arguments than expected from its annotated type) *)
 
 (* CH: And when things get trickier things fail too *)
-(*val f3 : b:bool -> (if b then int else int -> Tot int) *)
-(* let f3 b = if b then 42 else (fun n -> n) *)
+val f3 : b:bool -> (if b then int else int -> Tot int)
+ let f3 b = if b then 42 else (fun n -> n)
 (* ./bug578.fst(29,29-29,41): Failed to resolve implicit argument of type 'Type' introduced in (?39422 b uu___) because user-provided implicit term *)
 
 (* CH: ... and again *)
