@@ -470,7 +470,7 @@ let built_in_primitive_steps : list<primitive_step> =
     let arg_as_char   (a:arg) = fst a |> EMB.unembed_char_safe in
     let arg_as_string (a:arg) = fst a |> EMB.unembed_string_safe in
     let arg_as_list (u : EMB.unembedder<'a>) a = fst a |> EMB.unembed_list_safe u in
-    let arg_as_bounded_int (a, _) : option<(fv * int)> =
+    let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
         match (SS.compress a).n with
         | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
             when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
@@ -514,10 +514,10 @@ let built_in_primitive_steps : list<primitive_step> =
         requires_binder_substitution=false;
         interpretation=f
     } in
-    let unary_int_op (f:int -> int) =
+    let unary_int_op (f:Z.t -> Z.t) =
         unary_op arg_as_int (fun r x -> EMB.embed_int r (f x))
     in
-    let binary_int_op (f:int -> int -> int) =
+    let binary_int_op (f:Z.t -> Z.t -> Z.t) =
         binary_op arg_as_int (fun r x y -> EMB.embed_int r (f x y))
     in
     let unary_bool_op (f:bool -> bool) =
@@ -541,7 +541,7 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let string_compare' rng (s1:string) (s2:string) : term =
         let r = String.compare s1 s2 in
-        EMB.embed_int rng r
+        EMB.embed_int rng (Z.big_int_of_string (BU.string_of_int r))
     in
     let string_concat' psc args : option<term> =
         match args with
@@ -558,14 +558,8 @@ let built_in_primitive_steps : list<primitive_step> =
             end
         | _ -> None
     in
-    let string_of_int rng (i:int) : term =
-        EMB.embed_string rng (BU.string_of_int i)
-    in
-    let string_of_bool rng (b:bool) : term =
-        EMB.embed_string rng (if b then "true" else "false")
-    in
-    let string_of_int rng (i:int) : term =
-        EMB.embed_string rng (BU.string_of_int i)
+    let string_of_int rng (i:Z.t) : term =
+        EMB.embed_string rng (Z.string_of_big_int i)
     in
     let string_of_bool rng (b:bool) : term =
         EMB.embed_string rng (if b then "true" else "false")
@@ -616,17 +610,16 @@ let built_in_primitive_steps : list<primitive_step> =
             failwith "Unexpected number of arguments"
     in
     let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
-            [(PC.op_Minus,       1, unary_int_op (fun x -> - x));
-             (PC.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
-             (PC.op_Subtraction, 2, binary_int_op (fun x y -> (x - y)));
-             (PC.op_Multiply,    2, binary_int_op (fun x y -> (Prims.op_Multiply x y)));
-             (PC.op_Division,    2, binary_int_op (fun x y -> (x / y)));
-             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (x < y)));
-             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (x <= y)));
-             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (x > y)));
-             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (x >= y)));
-             (PC.op_Modulus,     2, binary_int_op (fun x y -> (x % y)));
-             (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
+            [(PC.op_Minus,       1, unary_int_op (fun x -> Z.minus_big_int x));
+             (PC.op_Addition,    2, binary_int_op (fun x y -> Z.add_big_int x y));
+             (PC.op_Subtraction, 2, binary_int_op (fun x y -> Z.sub_big_int x y));
+             (PC.op_Multiply,    2, binary_int_op (fun x y -> Z.mult_big_int x y));
+             (PC.op_Division,    2, binary_int_op (fun x y -> Z.div_big_int x y));
+             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.lt_big_int x y)));
+             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.le_big_int x y)));
+             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.gt_big_int x y)));
+             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.ge_big_int x y)));
+             (PC.op_Modulus,     2, binary_int_op (fun x y -> Z.mod_big_int x y));
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));

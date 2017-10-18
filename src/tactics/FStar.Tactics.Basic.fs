@@ -27,6 +27,7 @@ module RD = FStar.Reflection.Data
 module UF = FStar.Syntax.Unionfind
 module EMB = FStar.Syntax.Embeddings
 module Err = FStar.Errors
+module Z = FStar.BigInt
 
 type name = bv
 type env = Env.env
@@ -352,9 +353,9 @@ let smt : tac<unit> =
         fail1 "goal is not irrelevant: cannot dispatch to smt (%s)" (N.term_to_string g.context g.goal_ty)
     )
 
-let divide (n:int) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
+let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
     bind get (fun p ->
-    bind (try ret (List.splitAt n p.goals) with | _ -> fail "divide: not enough goals") (fun (lgs, rgs) ->
+    bind (try ret (List.splitAt (Z.to_int_fs n) p.goals) with | _ -> fail "divide: not enough goals") (fun (lgs, rgs) ->
     let lp = {p with goals=lgs; smt_goals=[]} in
     let rp = {p with goals=rgs; smt_goals=[]} in
     bind (set lp) (fun _ ->
@@ -370,7 +371,7 @@ let divide (n:int) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
 (* focus: runs f on the current goal only, and then restores all the goals *)
 (* There is a user defined version as well, we just use this one internally, but can't mark it as private *)
 let focus (f:tac<'a>) : tac<'a> =
-    bind (divide 1 f idtac) (fun (a, ()) -> ret a)
+    bind (divide Z.one f idtac) (fun (a, ()) -> ret a)
 
 (* Applies t to each of the current goals
       fails if t fails on any of the goals
@@ -380,7 +381,7 @@ let rec map (tau:tac<'a>): tac<(list<'a>)> =
         match p.goals with
         | [] -> ret []
         | _::_ ->
-            bind (divide 1 tau (map tau)) (fun (h,t) -> ret (h :: t))
+            bind (divide Z.one tau (map tau)) (fun (h,t) -> ret (h :: t))
         )
 
 (* Applies t1 to the current head goal

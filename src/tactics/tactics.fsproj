@@ -39,6 +39,9 @@
     <NoWarn>40</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FSharp.Compatibility.OCaml, Version=0.1.10.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
