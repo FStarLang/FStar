@@ -1209,7 +1209,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (uvs |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
                                                         (Print.uvar_to_string u)
-                                                        (Print.term_to_string t)) |> String.concat ", ");
+                                                        (N.term_to_string env t)) |> String.concat ", ");
 
          univs, uvs, (lbname, e, c)
      in
@@ -1262,6 +1262,17 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
          | _ ->
            let k = N.normalize [N.Beta; N.Exclude N.Zeta] env k in
            let bs, kres = U.arrow_formals k in
+           let _ =
+             match (N.unfold_whnf env kres).n with
+             | Tm_type _ -> () //we only generalize variables at type Type, for ML-style polymorphism
+             | _ -> //cf #1091
+               let lbname, e, c = lec_hd in
+               raise (Error(BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
+                                       (Print.term_to_string kres)
+                                       (Print.lbname_to_string lbname)
+                                       (Print.term_to_string (U.comp_result c)),
+                            Env.get_range env))
+           in
            let a = S.new_bv (Some <| Env.get_range env) kres in
            let t = U.abs bs (S.bv_to_name a) (Some (U.residual_tot kres)) in
            U.set_uvar u t; //t clearly has a free variable; this is the one place we break the
