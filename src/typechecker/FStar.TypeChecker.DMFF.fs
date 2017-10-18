@@ -657,8 +657,8 @@ and star_type' env t =
              if is_non_dependent_arrow ty (List.length args)
              then 
                // We need to check that the result of the application is a datatype
-                let res = N.normalize [N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
-                begin match res.n with
+                let res = N.normalize [N.EraseUniverses; N.Inlining ; N.UnfoldUntil S.Delta_constant] env.env t in
+                begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
                     BU.print1_warning "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head) ;
@@ -1091,8 +1091,7 @@ and infer (env: env) (e: term): nm * term * term =
         // binders and stuff
         match (SS.compress bv.sort).n with
         | Tm_type _ ->
-            let arg = arg, q in
-            arg, [ arg ]
+            (star_type' env arg, q), [ (arg, q) ]
         | _ ->
             let _, s_arg, u_arg = check_n env arg in
             (s_arg, q),
