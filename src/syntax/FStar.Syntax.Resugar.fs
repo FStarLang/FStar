@@ -1158,8 +1158,8 @@ let resugar_sigelt' env se : option<A.decl> =
 
 let empty_env = DsEnv.empty_env ()
 
-let noenv (f: (env: DsEnv.env) -> 'a) : 'a =
-    f empty_env
+let noenv (f: DsEnv.env -> 'a) : 'a =
+  f empty_env
 
 let resugar_term (t : S.term) : A.term =
   noenv resugar_term' t
