@@ -81,20 +81,18 @@ let disjoint (i:rid) (j:rid) : GTot bool =
 abstract val extends: rid -> rid -> GTot bool
 let extends r0 r1 = Cons? (reveal r0) && rid_tail r0 = r1
 
-abstract val parent: r:rid{r<>root} -> GTot rid
+abstract val parent: r:rid{r<>root} -> Tot rid
 let parent r = rid_tail r
 
 abstract
 let extend (r:rid) (addr:int) (c:int)
-  : Ghost rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == c))
-= hide ( (c, addr) :: (reveal r))
+  : Pure rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == c /\ addr_in_parent r' == addr))
+= elift1 (fun r -> (c, addr) :: r) r
 
 abstract
 let extend_monochrome (r:rid) (addr:int)
-  : Ghost rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == color r))
-= match reveal r with
-  | [] -> extend r addr 0
-  | (c, _)::_ -> extend r addr c
+  : Pure rid (requires True) (ensures (fun r' -> r' =!= root /\ parent r' == r /\ color r' == color r /\ addr_in_parent r' == addr))
+= elift1 (fun r -> ((match r with | [] -> 0 | (c, _) :: _ -> c) , addr) :: r) r
 
 
 let disjoint_regions (s1:Set.set rid) (s2:Set.set rid) : Tot Type0 =
@@ -418,6 +416,16 @@ let extend_preserves_map_invariant (m0 m1 : t) (r r':rid) (addr c:int)
 = assert (forall r0. Map.contains m1 r0 <==> r0 == r' \/ Map.contains m0 r0) ;
   assert (forall s. Map.contains m0 s ==> s =!= r') ;
   assert (forall s. Map.contains m0 s /\ includes s r' ==> includes s r)
+
+let extend_monochrome_preserves_map_invariant (m0 m1 : t) (r r':rid) (addr:int)
+    : Lemma (requires (map_invariant m0 /\ r' == extend_monochrome r addr /\ m1 == Map.upd m0 r' emp /\
+                      Map.contains m0 r /\
+                      (forall s. Map.contains m0 s /\ s =!= root ==> addr_in_parent s < addr)))
+      (ensures (map_invariant m1))
+  = assert (forall r0. Map.contains m1 r0 <==> r0 == r' \/ Map.contains m0 r0) ;
+    assert (forall s. Map.contains m0 s ==> s =!= r') ;
+    assert (forall s. Map.contains m0 s /\ includes s r' ==> includes s r)
+
 
 abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
                                -> m0:t{map_invariant m0} -> m1:t{map_invariant m1} ->

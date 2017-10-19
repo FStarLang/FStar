@@ -70,7 +70,7 @@ let empty_mem (m:HH.t) =
   HS h tip 0
 
 let at (m:mem) (r:HH.rid{r `is_in` m.h}) = m.h `HH.at` r
-let is_alive (i:HH.rid) (m:mem) = Map.contains m.h i /\ (Map.sel m.h i).HH.live
+let is_alive (i:HH.rid) (m:mem) = Map.contains m.h i ==> (Map.sel m.h i).HH.live
 
 (*+ Tests +*)
 
@@ -114,7 +114,7 @@ let popped m0 m1 =
     modifies_just (Set.singleton m0.tip) m0.h m1.h
     /\ ~(Map.sel m1.h m0.tip).live)
 
-let pop (m0:mem{poppable m0}) : GTot (m1:mem) =
+let pop (m0:mem{poppable m0}) : Tot (m1:mem) =
   let v = H false (m0.h `HH.at` m0.tip) in
   let h1 = Map.upd m0.h m0.tip v in
   let tip1 = HH.parent m0.tip in

@@ -6,6 +6,11 @@ module HS = FStar.HyperStack
 module Set = FStar.Set
 open FStar.Tactics
 
+private
+let local_unfold names : tactic unit =
+  norm [delta ; delta_only (List.Tot.map (fun s -> FStar.String.strcat "FStar.HyperStack.ST." s) names)]
+
+
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 
 new_effect GST = STATE_h mem
@@ -39,7 +44,7 @@ let ref_liveness_trans_trans (h1:mem) (h2:mem) (h3:mem)
           [SMTPat (ref_liveness h1 h2); SMTPat (ref_liveness h2 h3)]
 = assert_by_tactic
   (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 ==> ref_liveness h1 h3)
-  (clear_top ;; norm [delta; delta_only ["FStar.HyperStack.ST.region_liveness" ; "FStar.HyperStack.ST.ref_liveness"]] ;; smt)
+  (clear_top ;; local_unfold ["region_liveness" ; "ref_liveness"])
 
 
 let mem_rel : preorder mem = fun h1 h2 ->
@@ -56,10 +61,12 @@ type mem_predicate = mem -> Type0
 let stable (p:mem_predicate) =
   forall (h1:mem) (h2:mem). (p h1 /\ mem_rel h1 h2) ==> p h2
 
-assume type witnessed: (p:mem_predicate{stable p}) -> Type0
+let stable_predicate = p:mem_predicate{stable p}
 
-assume val gst_witness: p:mem_predicate -> GST unit (fun post h0 -> stable p /\ p h0 /\ (witnessed p ==> post () h0))
-assume val gst_recall:  p:mem_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
+assume type witnessed: stable_predicate -> Type0
+
+assume val gst_witness: p:stable_predicate -> GST unit (fun post h0 -> p h0 /\ (witnessed p ==> post () h0))
+assume val gst_recall:  p:stable_predicate -> GST unit (fun post h0 -> witnessed p /\ (p h0 ==> post () h0))
 
 
 (**
@@ -149,8 +156,11 @@ effect STL (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0))))
 sub_effect
   DIV   ~> GST = fun (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) -> wp (fun a -> p a h)
 
-let region_allocated_pred (i:HH.rid) : p:mem_predicate{stable p} =
+private
+let region_allocated_pred0 (i:HH.rid) : mem_predicate =
   fun (m:mem) -> Map.contains m.h i
+
+let region_allocated_pred i : stable_predicate = region_allocated_pred0 i
 
 let rid = i:HH.rid{witnessed (region_allocated_pred i)}
 let recall_weak_live_region (r:rid)
@@ -166,10 +176,9 @@ let valid_ref0 (#a:Type) (#rel:preorder a) (r:mreference a rel) =
 
 let valid_ref_lemma (#a:Type) (#rel:preorder a) (r:mreference a rel) : Lemma (stable (valid_ref0 r))=
   assert_by_tactic (stable (valid_ref0 r))
-  (norm [delta ; delta_only ["FStar.HyperStack.ST.stable" ; "FStar.HyperStack.ST.mem_rel" ; "FStar.HyperStack.ST.valid_ref0" ; "FStar.HyperStack.ST.ref_liveness"]] ;;
-  smt)
+    (local_unfold ["stable" ; "mem_rel" ; "valid_ref0" ; "ref_liveness"])
 
-let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel): p:mem_predicate{stable p} =
+let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel): stable_predicate =
   valid_ref_lemma r ; valid_ref0 r
 
 type reference (a:Type) = r:reference a{witnessed(valid_ref r)}
@@ -181,6 +190,7 @@ let mmstackref (a:Type) = r:mmstackref a{witnessed(valid_ref r)}
 let mmref (a:Type) = r:mmref a{witnessed(valid_ref r)}
 
 type s_ref (i:rid) (a:Type) = s:s_ref i a{witnessed(valid_ref s)}
+
 
 (**
   Pushes a new empty frame on the stack
@@ -200,9 +210,9 @@ let push_colored_frame (c:int) =
   assert (eternal_is_live h) ;
   let h : hh = h in
   let m1 = HS h tip n in
-  assert (ref_liveness m0 m1) ;
-  assert (region_liveness m0 m1) ;
   assert (region_freshness_increases m0 m1) ;
+  assert_by_tactic (region_liveness m0 m1) (local_unfold ["region_liveness"]) ;
+  assert_by_tactic (ref_liveness m0 m1) (local_unfold ["ref_liveness"]) ;
   gst_put m1
 
 (**
@@ -224,7 +234,7 @@ let pop_frame () =
   let m0 = gst_get () in
   let m1 = pop m0 in
   assert (popped m0 m1) ;
-  assert (mem_rel m0 m1) ;
+  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "region_liveness" ; "ref_liveness"]) ;
   gst_put m1
 
 let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}) (m1:mem) =
@@ -241,13 +251,25 @@ let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}
 private
 let lemma_upd_existing_rid_idempotent (i:HH.rid) (m:mem)
   : Lemma (requires (i `is_in` m.h))
-    (ensures (Map.domain m.h `Set.union` Set.singleton i == Map.domain m.h))
+    (ensures (Map.domain m.h `Set.add_elt` i == Map.domain m.h))
 = Set.lemma_mem_idempotent_union (Map.domain m.h) i
 
 private
 let lemma_upd_tip_idempotent (m:mem)
-  : Lemma (Map.domain m.h `Set.union` Set.singleton m.tip == Map.domain m.h)
+  : Lemma (Map.domain m.h `Set.add_elt` m.tip == Map.domain m.h)
 = Set.lemma_mem_idempotent_union (Map.domain m.h) m.tip
+
+private
+let to_stack_reference (#a:Type) (r:FStar.HyperStack.reference a)
+  : ST (s:reference a{is_stack_region s.id})
+       (fun h -> valid_ref r h /\ is_stack_region r.id)
+       (fun (h0:mem) s (h1:mem) -> r === s /\ h0 == h1)
+= gst_witness (valid_ref r) ;
+  let s : reference a = r in
+  assert (is_stack_region s.id) ;
+  let s : (s:reference a{is_stack_region s.id}) = s in
+  s
+
 
 private
 val salloc_maybe_mm: #a:Type -> init:a -> mm:bool -> StackInline (s:reference a{is_stack_region s.id})
@@ -258,10 +280,14 @@ let salloc_maybe_mm #a init mm =
   let r, h = HH.alloc m0.tip (Preorder.trivial_preorder a) m0.h init mm in
   HH.lemma_alloc m0.tip (Preorder.trivial_preorder a) m0.h init mm ;
   lemma_upd_tip_idempotent m0;
-  let m1 = HS h m0.tip in
+  let m1 = HS h m0.tip m0.region_freshness in
+  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "region_liveness" ; "ref_liveness"]) ;
   gst_put m1 ;
   let s = MkRef m0.tip r in
-  gst_witness (valid_ref s) ;
+  assert_by_tactic (valid_ref s m1) (local_unfold ["valid_ref"]) ;
+  let s = to_stack_reference s in
+  assert_by_tactic (salloc_post init m0 s m1 /\ is_mm s == mm) (local_unfold ["salloc_post"]);
+  assume (inline_stack_inv m0 m1) ;
   s
 
 val salloc: #a:Type -> init:a -> StackInline (stackref a)
@@ -278,7 +304,7 @@ let salloc_mm #a init =
 
 
 let remove_reference (#a:Type) (r:reference a) (m:mem{m `contains` r /\ is_mm r}) : Tot mem =
-  HS (HH.free_mm m.h r.ref) m.tip
+  HS (HH.free_mm m.h r.ref) m.tip m.region_freshness
 
 let ref_requiresminusmmstackref (#a:Type) (#rel:preorder a) (r:mreference a rel) (h:mem) =
   is_eternal_region r.id /\ ~(is_mm r) \/
@@ -296,6 +322,8 @@ val sfree: #a:Type -> r:mmstackref a -> StackInline unit
   (requires (fun m0 -> r.id == m0.tip /\ m0 `contains` r))
   (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 let sfree #a r =
+  admit () ;
+
   let m0 = gst_get () in
   let m1 = remove_reference r m0 in
   lemma_upd_tip_idempotent m0;
@@ -304,11 +332,7 @@ let sfree #a r =
     lemma_distinct_addrs_distinct_mm m0 r r0
   in
   FStar.Classical.(forall_intro_3 (fun a rel -> move_requires (aux a rel))) ;
-  assert (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
-        m0 `contains` r /\ ref_requires r m1 ==> (m1 `contains` r /\ rel (sel m0 r) (sel m1 r))) ;
-  assert (forall (i:HH.rid). Map.contains m0.h i ==> Map.contains m1.h i) ;
-  assert (forall (i:HH.rid). ~(i `is_alive` m0) ==> ~(i `is_alive` m1)) ;
-  assert (m0 `mem_rel` m1) ;
+  assert_by_tactic (m0 `mem_rel` m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]);
   gst_put m1
 
 let fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
@@ -338,9 +362,24 @@ let new_region r0 =
   let n = m0.region_freshness + 1 in
   let r1 = HH.extend_monochrome r0 n in
   let h1 = Map.upd m0.h r1 HH.emp in
+  assert (HH.root `is_in` h1) ;
+  gst_recall (region_allocated_pred r0) ;
+  HH.extend_monochrome_preserves_map_invariant m0.h h1 r0 r1 n ;
+  assert (HH.map_invariant h1) ;
+  assume (downward_closed h1) ;
+  assert (eternal_is_live h1) ;
   let m1 = HS h1 m0.tip n in
+  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
   gst_put m1 ;
-  r1
+  gst_witness (region_allocated_pred r1) ;
+  let r1 : rid = r1 in
+assert(r1 `HH.extends` r0);
+assert(HH.fresh_region r1 m0.h m1.h);
+assert(			    HH.color r1 == HH.color r0);
+assert(			    m1.h == Map.upd m0.h r1 HH.emp);
+assert(			    m1.tip == m0.tip);
+  admit () ;
+ r1
 
 let is_eternal_color = HS.is_eternal_color
 
