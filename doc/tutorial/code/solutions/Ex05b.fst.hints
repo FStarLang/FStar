@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "69ff59df1ff87d2a661475bb1c401702"
+      "e0d2ba0599d63b8d8426d36314d3f484"
     ],
     [
       "Ex05b.fib",
@@ -37,7 +37,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "32be206711b676b3c76bcdefb4654051"
+      "181346fa9aa07f9e2a52ea92e5123e30"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -49,7 +49,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "dcf3187edf991c965d19832ef0e2bf1b"
+      "7584723aec214cbe6802611e1ec3dfee"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a27e1801588c0d00623d75ae621f3e28"
+      "b3bbdb1acbcec92af381df05385e1123"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -94,7 +94,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "898c24b914097616bb43cbe82e3587c8"
+      "dd249fb82ed75740c756e88f087ee767"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -106,7 +106,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "09925b478e147fbfb0f64439a08f8427"
+      "a2f0fcf30b4143ecd61fdb28aad623d3"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -118,11 +118,20 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ef1e87eaac7b1867d6b9d68d87513986"
+      "aec938672186df5a8f8e09a371059b9c"
     ],
     [
       "Ex05b.fib_is_ok",
       2,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "24e520bcd128d7841ed56ee35058d93d"
+    ],
+    [
+      "Ex05b.fib_is_ok",
+      3,
       2,
       1,
       [
@@ -132,13 +141,15 @@
         "equation_Prims.nat",
         "equation_with_fuel_Ex05b.fibonacci.fuel_instrumented",
         "int_inversion", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Ex05b_Tm_refine_6cd1a3c33b2175b6547b378acf37e491",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "unit_typing"
       ],
       0,
-      "7690f5fdcf921212ba4ed69f0644646b"
+      "1e93458f999e3a781c6271fe406f4ed8"
     ],
     [
       "Ex05b.fib_inner_aux",
@@ -155,7 +166,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4c32f6657c057f541b03b861942e5a4c"
+      "bb469b09fe00d1eaf3c7110aec0d8722"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -167,7 +178,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "651329c5932cd73c40d11ed2df564027"
+      "86dc61a2b766128ac730ab656fb8125b"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -179,7 +190,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "71fc16ed061b7f339f241893299fd4fd"
+      "519763657c417967b0f078cc0bbd51ea"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -191,7 +202,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "03c94ddae3cbddd44657cb23bdca348c"
+      "820e639821fede73cad8bff0768ed0c2"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -203,7 +214,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "20d31f7cd753126d5f080f9a066b6712"
+      "8d051f99575652c41f4bf6608ce386e9"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -218,7 +229,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "dcb7abfe527d27655451503d4914f33d"
+      "68a745e4b581198d656386dadffff31a"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -242,7 +253,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "96c504a166ee93823c23671dd1f019ef"
+      "5e9579558090ff6082d399bf07f83191"
     ]
   ]
 ]

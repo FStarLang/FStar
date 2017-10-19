@@ -1,6 +1,6 @@
 module Unit1.WPsAndTriples_ST
 open FStar.Heap
-open FStar.ST
+open FStar.Ref
 unfold let as_requires (#a:Type) (wp:st_wp_h heap a)  = wp (fun x h -> True)
 unfold let as_ensures  (#a:Type) (wp:st_wp_h heap a) (h0:heap) (x:a) (h1:heap) = ~ (wp (fun y h1' -> y=!=x \/ h1=!=h1') h0)
 assume val as_ST: #a:Type -> #b:(a -> Type)

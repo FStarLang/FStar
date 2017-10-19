@@ -11,6 +11,8 @@ for h in $hints; do
   f="${h%.hints}"
   if ! [ -f "$f" ]; then
     echo "Hints file $h present but $f does not exist... git rm'ing it"
-    git rm "$h"
+    if git ls-files --error-unmatch $h; then
+      git rm "$h"
+    fi
   fi
 done

@@ -4,6 +4,7 @@ module FStar.Tactics.Types
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+module N = FStar.TypeChecker.Normalize
 
 (*
    f: x:int -> P
@@ -32,12 +33,16 @@ type proofstate = {
     smt_goals    : list<goal>;   //goals that have been deferred to SMT
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying ciruluarity
+
+    psc          : N.psc         //primitive step context where we started execution
 }
 
 val decr_depth : proofstate -> proofstate
 val incr_depth : proofstate -> proofstate
 val tracepoint : proofstate -> unit
 val subst_proof_state: subst_t -> proofstate -> proofstate
+
+val set_ps_psc : N.psc -> proofstate -> proofstate
 
 type direction =
     | TopDown

@@ -8,76 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "98cff904cf5915cfbc8b47e70926ed0e"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE_bind_wp",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "03bcc6171e420cb0515bf5fb01823f71"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__get_elab",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "08709d99d741bac931fafcfada0ca4c0"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__put_elab",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "aba9a65a4af42f4b0f765668540f6022"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixed.read",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b346cca2894ccc28231254698db36c67"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixed.write",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "98f230d032b16ff08d4a9bd107c62f66"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixed.refine_st",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
-      ],
-      0,
-      "d252b70523a180fcf33037057c0b6601"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixed.refine_st",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5f51ceb6bb50e22fdb32496e93d4f94b"
+      "6decc9e2cb912dbc2ddd7cfc37637804"
     ]
   ]
 ]
