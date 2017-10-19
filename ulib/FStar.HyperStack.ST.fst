@@ -64,7 +64,7 @@ let ref_liveness_lemma4 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r
 let ref_liveness_trans (h1:mem) (h2:mem) (h3:mem)
   : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3))
           (ensures  (ref_liveness h1 h3))
-          [SMTPat (region_liveness h1 h2); SMTPat (region_liveness h2 h3)]
+          [SMTPat (ref_liveness h1 h2); SMTPat (ref_liveness h2 h3)]
   = ()
 
 (*let ref_liveness_haupstatz (x y z:mem) r :
