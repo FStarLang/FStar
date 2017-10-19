@@ -674,7 +674,7 @@ Let's take a look at the factorial function:
       if n = 0 then 1 else n * (factorial (n - 1))
 
 ~ Remark
-By default the `op_Star` operator of F\* (the `*` above) is the type constructor of product types also known as typles. If, as in the example above, we are not doing anything with tuples, it is convenient to open the module `FStar.Mul` to let `*` be multiplication. Otherwise, one has to write `op_Multiply a b` instead of `a * b`.
+By default the `op_Star` operator of F\* (the `*` above) is the type constructor of product types also known as tuples. If, as in the example above, we are not doing anything with tuples, it is convenient to open the module `FStar.Mul` to let `*` be multiplication. Otherwise, one has to write `op_Multiply a b` instead of `a * b`.
 ~
 
 For a recursive function, without further annotation, F\* attempts to
