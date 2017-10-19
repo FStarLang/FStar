@@ -399,3 +399,9 @@ let compiled_canon (): tactic unit =
     dump "In";;
     canon;;
     dump "Out"
+
+let check_canon =
+    compiled_canon ();;
+    or_else qed
+            (dump "`canon` left the following goals";;
+             fail "")

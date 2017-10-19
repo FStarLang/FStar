@@ -106,8 +106,9 @@ let rec unmeta_safe e =
         | Tm_meta(e', m) ->
             begin match m with
             | Meta_monadic _
-            | Meta_monadic_lift _ ->
-              e // don't remove monadic metas
+            | Meta_monadic_lift _
+            | Meta_alien _ ->
+              e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
             end
         | Tm_ascribed(e, _, _) -> unmeta_safe e
@@ -447,6 +448,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
 
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
+
+    // Ranges should be opaque, even to the normalizer. c.f. #1312
+    | Tm_constant (Const_range _), _
+    | _, Tm_constant (Const_range _) ->
+      Unknown
 
     | Tm_constant c, Tm_constant d ->
       equal_iff (eq_const c d)
@@ -865,6 +871,7 @@ let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
 let exp_unit : term = mk (Tm_constant (Const_unit)) None dummyRange
 (* Makes an (unbounded) integer from its string repr. *)
 let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
+let exp_char c : term = mk (Tm_constant (Const_char c)) None dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) None dummyRange
 
 let fvar_const l = fvar l Delta_constant None
@@ -1201,6 +1208,16 @@ let destruct_typ_as_formula f : option<connective> =
         catch_opt (destruct_sq_exists phi) (fun () ->
                    None)))))
 
+let unthunk_lemma_post t =
+    match (compress t).n with
+    | Tm_abs ([b], e, _) ->
+        let bs, e = open_term [b] e in
+        let b = List.hd bs in
+        if is_free_in (fst b) e
+        then mk_app t [as_arg exp_unit]
+        else e
+    | _ ->
+        mk_app t [as_arg exp_unit]
 
 let action_as_lb eff_lid a =
   let lb =

@@ -1010,7 +1010,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       | Some (Inl more_bs) ->  //more actual args
                         let c = SS.subst_comp subst c_expected in
                         (* the expected type is explicitly curried *)
-                        if U.is_named_tot c then
+                        if Options.ml_ish () || U.is_named_tot c then
                           let t = N.unfold_whnf env (U.comp_result c) in
                           match t.n with
                           | Tm_arrow(bs_expected, c_expected) ->
@@ -1904,6 +1904,7 @@ and check_inner_let_rec env top =
 and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
    let env0 = env in
    let termination_check_enabled lbname lbdef lbtyp =
+     if Options.ml_ish () then false else
      let t = N.unfold_whnf env lbtyp in
      match (SS.compress t).n, (SS.compress lbdef).n with
      | Tm_arrow (formals, c), Tm_abs(actuals, _, _) ->

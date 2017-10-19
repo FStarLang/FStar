@@ -768,6 +768,8 @@ and resugar_comp (c:S.comp) : A.term =
        if (lid_equals c.effect_name C.effect_Lemma_lid) then (
         match c.effect_args with
         | pre::post::pats::[] ->
+            // Common case, post is thunked.
+            let post = (U.unthunk_lemma_post (fst post), snd post) in
              (if U.is_fvar C.true_lid (fst pre) then [] else [pre])
             @[post]
             @(if U.is_fvar C.nil_lid (fst pats) then [] else [pats])

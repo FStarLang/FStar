@@ -70,7 +70,26 @@ let parse_cmdline specs others =
     else go_on ()
 
 let parse_string specs others (str:string) =
-    // F#'s str.Split will return empty strings when there's two spaces together
-    // or at the boundaries. Filter them out, so we behave like OCaml
-    let args = Array.filter (fun s -> s <> "") <| str.Split([|' ';'\t'|]) in
-    parse specs others args 0 (args.Length - 1) 0
+    let split_spaces (str:string) =
+        // F#'s str.Split will return empty strings when there's two spaces together
+        // or at the boundaries. Filter them out, so we behave like OCaml
+        Array.filter (fun s -> s <> "") <| str.Split([|' ';'\t'|])
+    in
+    let rec split_quoted_fragments (str:string) =
+        let i = str.IndexOf '\'' in
+        if i < 0 then Some (split_spaces str)
+        else let prefix = str.Substring(0, i) in
+             let suffix = str.Substring(i+1) in
+             let j = suffix.IndexOf '\'' in
+             if j < 0 then None
+             else let quoted_frag = suffix.Substring(0, j) in
+                  let rest = split_quoted_fragments (suffix.Substring(j+1))
+                  match rest with
+                  | None -> None
+                  | Some rest -> Some (Array.append (split_spaces prefix)
+                                                    (Array.append [| quoted_frag |] rest))
+    in
+    match split_quoted_fragments str with
+    | None -> Error("Failed to parse options; unmatched quote \"'\"")
+    | Some args ->
+      parse specs others args 0 (args.Length - 1) 0

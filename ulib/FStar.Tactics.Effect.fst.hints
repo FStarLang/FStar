@@ -16,7 +16,7 @@
         "typing_FStar.Tactics.Types.incr_depth"
       ],
       0,
-      "f380766ce75d62ea1fb41a3be06a7b06"
+      "4f722ee8e3e3e3b0a77a04df3ee60bc1"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -30,60 +30,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "5772ac88597acb45f0a88c429d393d75"
-    ],
-    [
-      "FStar.Tactics.Effect._dm4f_TAC___proj__TAC__item____get_elab",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6a83e4578e3e54ed3e4c4a35295bd888"
-    ],
-    [
-      "FStar.Tactics.Effect.return",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
-      0,
-      "083f28283e7a4e76ca8b6cad8f8a18a3"
-    ],
-    [
-      "FStar.Tactics.Effect.bind",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Tactics.Types_pretyping_44d92714caae41c1068a904c983c4672",
-        "data_elim_FStar.Tactics.Result.Failed",
-        "data_typing_intro_FStar.Tactics.Result.Failed@tok",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result"
-      ],
-      0,
-      "d60238bf65f8f1af3cf177cb428e0e68"
-    ],
-    [
-      "FStar.Tactics.Effect.get",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
-      0,
-      "730f06c7bb30745409d2e61afa1c63d6"
+      "9fb544cf239c01e605ef46c4fda0c59a"
     ],
     [
       "FStar.Tactics.Effect.assert_by_tactic",
@@ -97,7 +44,7 @@
         "unit_typing"
       ],
       0,
-      "039568cbdba462e9e59cf7e2d4a81627"
+      "9912f9b91d62d93da85c200c0f4b0c60"
     ],
     [
       "FStar.Tactics.Effect.by_tactic_seman",
@@ -106,7 +53,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "4177ad0362080ec5a65bb3fbfa248dd6"
+      "e667a5e2b964130789508c8944a77b42"
     ]
   ]
 ]

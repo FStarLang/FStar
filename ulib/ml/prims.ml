@@ -133,7 +133,8 @@ let min = min
 
 type norm_step =
     | Simpl
-    | WHNF
+    | Weak
+    | HNF
     | Primops
     | Delta
     | Zeta
@@ -141,7 +142,8 @@ type norm_step =
     | UnfoldOnly : string list -> norm_step
 
 let simplify : norm_step = Simpl
-let whnf    : norm_step = WHNF
+let weak    : norm_step = Weak
+let hnf     : norm_step = HNF
 let primops : norm_step = Primops
 let delta   : norm_step = Delta
 let zeta    : norm_step = Zeta

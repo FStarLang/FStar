@@ -1526,8 +1526,8 @@ type mk_t = term' mk_t_a[@@deriving show]
 let contains_reflectable: qualifier Prims.list -> Prims.bool =
   fun l  ->
     FStar_Util.for_some
-      (fun uu___88_5356  ->
-         match uu___88_5356 with
+      (fun uu___96_5356  ->
+         match uu___96_5356 with
          | Reflectable uu____5357 -> true
          | uu____5358 -> false) l
 let withinfo: 'a . 'a -> FStar_Range.range -> 'a withinfo_t =
@@ -1559,11 +1559,11 @@ let range_of_bv: bv -> FStar_Range.range =
 let set_range_of_bv: bv -> FStar_Range.range -> bv =
   fun x  ->
     fun r  ->
-      let uu___95_5431 = x in
+      let uu___103_5431 = x in
       {
         ppname = (FStar_Ident.mk_ident (((x.ppname).FStar_Ident.idText), r));
-        index = (uu___95_5431.index);
-        sort = (uu___95_5431.sort)
+        index = (uu___103_5431.index);
+        sort = (uu___103_5431.sort)
       }
 let syn:
   'Auu____5444 'Auu____5445 'Auu____5446 .
@@ -1623,8 +1623,8 @@ let mk_Tm_app: term -> args -> mk_t =
               mk (Tm_app (t1, args)) FStar_Pervasives_Native.None p
 let mk_Tm_uinst: term -> universes -> term =
   fun t  ->
-    fun uu___89_5651  ->
-      match uu___89_5651 with
+    fun uu___97_5651  ->
+      match uu___97_5651 with
       | [] -> t
       | us ->
           (match t.n with
@@ -1717,8 +1717,8 @@ let is_null_bv: bv -> Prims.bool =
 let is_null_binder: binder -> Prims.bool =
   fun b  -> is_null_bv (FStar_Pervasives_Native.fst b)
 let is_top_level: letbinding Prims.list -> Prims.bool =
-  fun uu___90_5963  ->
-    match uu___90_5963 with
+  fun uu___98_5963  ->
+    match uu___98_5963 with
     | { lbname = FStar_Util.Inr uu____5966; lbunivs = uu____5967;
         lbtyp = uu____5968; lbeff = uu____5969; lbdef = uu____5970;_}::uu____5971
         -> true
@@ -1739,13 +1739,13 @@ let binders_of_freenames: freenames -> binders =
     let uu____6041 = FStar_Util.set_elements fvs in
     FStar_All.pipe_right uu____6041 binders_of_list
 let is_implicit: aqual -> Prims.bool =
-  fun uu___91_6049  ->
-    match uu___91_6049 with
+  fun uu___99_6049  ->
+    match uu___99_6049 with
     | FStar_Pervasives_Native.Some (Implicit uu____6050) -> true
     | uu____6051 -> false
 let as_implicit: Prims.bool -> aqual =
-  fun uu___92_6055  ->
-    if uu___92_6055
+  fun uu___100_6055  ->
+    if uu___100_6055
     then FStar_Pervasives_Native.Some imp_tag
     else FStar_Pervasives_Native.None
 let pat_bvs: pat -> bv Prims.list =
@@ -1776,8 +1776,8 @@ let reset_gensym: Prims.unit -> Prims.unit =
   FStar_Pervasives_Native.snd gen_reset
 let range_of_ropt:
   FStar_Range.range FStar_Pervasives_Native.option -> FStar_Range.range =
-  fun uu___93_6333  ->
-    match uu___93_6333 with
+  fun uu___101_6333  ->
+    match uu___101_6333 with
     | FStar_Pervasives_Native.None  -> FStar_Range.dummyRange
     | FStar_Pervasives_Native.Some r -> r
 let gen_bv:
@@ -1802,12 +1802,12 @@ let freshen_bv: bv -> bv =
         FStar_Pervasives_Native.Some uu____6383 in
       new_bv uu____6380 bv.sort
     else
-      (let uu___96_6385 = bv in
+      (let uu___104_6385 = bv in
        let uu____6386 = next_id () in
        {
-         ppname = (uu___96_6385.ppname);
+         ppname = (uu___104_6385.ppname);
          index = uu____6386;
-         sort = (uu___96_6385.sort)
+         sort = (uu___104_6385.sort)
        })
 let new_univ_name:
   FStar_Range.range FStar_Pervasives_Native.option -> univ_name =
@@ -1839,11 +1839,11 @@ let fv_eq_lid: fv -> FStar_Ident.lident -> Prims.bool =
 let set_bv_range: bv -> FStar_Range.range -> bv =
   fun bv  ->
     fun r  ->
-      let uu___97_6508 = bv in
+      let uu___105_6508 = bv in
       {
         ppname = (FStar_Ident.mk_ident (((bv.ppname).FStar_Ident.idText), r));
-        index = (uu___97_6508.index);
-        sort = (uu___97_6508.sort)
+        index = (uu___105_6508.index);
+        sort = (uu___105_6508.sort)
       }
 let lid_as_fv:
   FStar_Ident.lident ->
@@ -1872,24 +1872,24 @@ let range_of_fv: fv -> FStar_Range.range =
 let set_range_of_fv: fv -> FStar_Range.range -> fv =
   fun fv  ->
     fun r  ->
-      let uu___98_6564 = fv in
+      let uu___106_6564 = fv in
       let uu____6565 =
-        let uu___99_6566 = fv.fv_name in
+        let uu___107_6566 = fv.fv_name in
         let uu____6567 =
           let uu____6568 = lid_of_fv fv in
           FStar_Ident.set_lid_range uu____6568 r in
-        { v = uu____6567; p = (uu___99_6566.p) } in
+        { v = uu____6567; p = (uu___107_6566.p) } in
       {
         fv_name = uu____6565;
-        fv_delta = (uu___98_6564.fv_delta);
-        fv_qual = (uu___98_6564.fv_qual)
+        fv_delta = (uu___106_6564.fv_delta);
+        fv_qual = (uu___106_6564.fv_qual)
       }
 let has_simple_attribute: term Prims.list -> Prims.string -> Prims.bool =
   fun l  ->
     fun s  ->
       FStar_List.existsb
-        (fun uu___94_6588  ->
-           match uu___94_6588 with
+        (fun uu___102_6588  ->
+           match uu___102_6588 with
            | { n = Tm_constant (FStar_Const.Const_string (data,uu____6592));
                pos = uu____6593; vars = uu____6594;_} when data = s -> true
            | uu____6597 -> false) l

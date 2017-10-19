@@ -311,7 +311,7 @@ let head_redex env t =
 
 let whnf env t =
     if head_normal env t then t
-    else N.normalize [N.Beta; N.WHNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
+    else N.normalize [N.Beta; N.Weak; N.HNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
                       N.Eager_unfolding; N.EraseUniverses] env.tcenv t
 let norm env t = N.normalize [N.Beta; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
                               N.Eager_unfolding; N.EraseUniverses] env.tcenv t
@@ -796,7 +796,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv t0 with
+        let x, f = match N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv t0 with
             | {n=Tm_refine(x, f)} ->
                let b, f = SS.open_term [x, None] f in
                fst (List.hd b), f
@@ -959,7 +959,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             begin match head_type with
                 | None -> encode_partial_app None
                 | Some head_type ->
-                  let head_type = U.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
+                  let head_type = U.unrefine <| N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv head_type in
                   let formals, c = curried_arrow_formals_comp head_type in
                   begin match head.n with
                         | Tm_uinst({n=Tm_fvar fv}, _)
@@ -1247,6 +1247,9 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in
+
+    (* Postcondition is thunked, c.f. #57 *)
+    let post = U.unthunk_lemma_post post in
 
     let env = {env with nolabels=true} in
     let pre, decls'' = encode_formula (U.unmeta pre) env in
@@ -1893,7 +1896,7 @@ let encode_top_level_let :
 
             (* have another go, after unfolding all definitions *)
             | _ when not norm ->
-              let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.WHNF;
+              let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.Weak; N.HNF;
                                         (* we don't know if this will terminate; so don't do recursive steps *)
                                         N.Exclude N.Zeta;
                                         N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm
