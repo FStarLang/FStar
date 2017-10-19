@@ -4,6 +4,7 @@ open FStar.HyperStack
 module HH = FStar.Monotonic.HyperHeap
 module HS = FStar.HyperStack
 module Set = FStar.Set
+open FStar.Tactics
 
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 
@@ -18,19 +19,10 @@ unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fu
 sub_effect DIV ~> GST = lift_div_gst
 
 
-let live_rid rid (h:mem) = (is_eternal_region rid \/ rid `is_above` h.tip)
-
 let ref_liveness = fun h1 h2 ->
    (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
-     h1 `contains` r /\ r.id `live_rid` h2 ==>
+     h1 `contains` r /\ h2 `weak_live_region` r.id ==>
        (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
-
-let ref_liveness_unfold (h1:mem) (h2:mem) 
-  : Lemma (requires (ref_liveness h1 h2))
-          (ensures  (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
-                      h1 `contains` r /\ r.id `live_rid` h2 ==>
-                         (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))))
-  = ()
 
 let region_liveness : preorder mem = fun h1 h2 ->
    (forall (i:HH.rid). Map.contains h1.h i ==> Map.contains h2.h i) /\
@@ -40,70 +32,15 @@ let region_liveness : preorder mem = fun h1 h2 ->
 let region_freshness_increases : preorder mem = fun h1 h2 ->
   b2t (h1.region_freshness <= h2.region_freshness)
 
-let ref_liveness_trans_lemma1 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
-  : Lemma (requires (region_liveness h2 h3 /\ ref_liveness h1 h2 /\ h1 `contains` r /\ r.id `live_rid` h3))
-          (ensures  (r.id `live_rid` h2 /\ h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
-  = ref_liveness_unfold h1 h2
-
-let ref_liveness_trans_lemma2 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
-  : Lemma (requires (region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
-          (ensures  (h3 `contains` r /\ rel (sel h2 r) (sel h3 r)))
-  = ref_liveness_trans_lemma1 h1 h2 h3 a rel r; ref_liveness_unfold h2 h3
-
-let ref_liveness_trans_lemma3 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
-  : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
-          (ensures  (h3 `contains` r /\ rel (sel h1 r) (sel h3 r)))
-          [SMTPat (ref_liveness h1 h2); SMTPat (ref_liveness h2 h3); SMTPat (rel (sel h1 r) (sel h3 r))]
-  = ref_liveness_trans_lemma1 h1 h2 h3 a rel r; ref_liveness_trans_lemma2 h1 h2 h3 a rel r
-
+private
 let ref_liveness_trans_trans (h1:mem) (h2:mem) (h3:mem)
   : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3))
           (ensures  (ref_liveness h1 h3))
           [SMTPat (ref_liveness h1 h2); SMTPat (ref_liveness h2 h3)]
-  = ()
+= assert_by_tactic
+  (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 ==> ref_liveness h1 h3)
+  (clear_top ;; norm [delta; delta_only ["FStar.HyperStack.ST.region_liveness" ; "FStar.HyperStack.ST.ref_liveness"]] ;; smt)
 
-(*let ref_liveness_haupstatz (x y z:mem) r :
-    Lemma (region_liveness x y /\ region_liveness y z /\ r `live_rid` z /\ r `live_rid` x ==> r `live_rid` y)
-    [SMTPat (region_liveness x y) ; SMTPat (region_liveness y z) ; SMTPat (r `live_rid` z)]
-= ()
-
-let contains_ref_impl_live_rid (h:mem) (#a:Type0) (#rel:preorder a) (r:mreference a rel)
-  : Lemma (h `contains` r ==> r.id `live_rid` h) [SMTPat (h `contains` r)] = ()
-
-open FStar.Tactics
-
-private
-let and_intro_lem (#p #q #r:Type) (f:p -> q -> squash r) : Lemma (p /\ q ==> r) =
-  let g (x:c_and p q) : squash r = match x with | Prims.And x y -> f x y in
-    FStar.Classical.impl_intro #(p /\ q) #r (fun x -> FStar.Squash.bind_squash x g <: Lemma r)
-
-let split_and : tactic unit =
-  apply_lemma (quote_lid ["FStar";"HyperStack";"ST";"and_intro_lem"])*)
-
-(* let _ = assert_by_tactic *)
-(*     (forall (x y z : mem). *)
-(*        region_liveness x y ==> *)
-(*        region_liveness y z ==> *)
-(*        ref_liveness x y ==> *)
-(*        ref_liveness y z ==> *)
-(*        ref_liveness x z) *)
-(*   ( *)
-(*   (\* norm [delta ; delta_only ["FStar.HyperStack.ST.ref_liveness"]] ;; *\) *)
-(*   x <-- forall_intro ; *)
-(*   y <-- forall_intro ; *)
-(*   z <-- forall_intro ; *)
-(*   dump "stuff" ;; *)
-(*   h_region_xy <-- implies_intro ; *)
-(*   h_region_yz <-- implies_intro ; *)
-(*   h_ref_xy <-- implies_intro ; *)
-(*   h_ref_yz <-- implies_intro ; *)
-(*   a <-- forall_intro ; *)
-(*   r <-- forall_intro ; *)
-(*   rel <-- forall_intro ; *)
-(*   split_and ;; *)
-(*   h_contains <-- intro ; *)
-(*   h_rid_live <-- intro; *)
-(*   fail "A") *)
 
 let mem_rel : preorder mem = fun h1 h2 ->
   region_liveness h1 h2 /\
@@ -139,7 +76,7 @@ effect Unsafe (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)
    - both mem reference the same heaps (their map: rid -> heap have the same domain)
    - in each region id, the corresponding heaps contain the same references on both sides
  *)
-effect Stack (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
+effect Stack (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_domains h h1) ==> p a h1)) (* WP *)
 
@@ -150,7 +87,7 @@ effect Stack (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))
    - can call to Stack and ST code freely
    - respects the stack invariant: the stack has to be empty when returning
 *)
-effect Heap (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
+effect Heap (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HH.root /\ h1.tip = HH.root ) ==> p a h1)) (* WP *)
 
@@ -159,7 +96,7 @@ effect Heap (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0))))
   - maintains the allocation invariant on the stack: no allocation unless in a new frame that has to be popped before returning
   - not constraints on heap allocation
 *)
-effect ST (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
+effect ST (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ equal_stack_domains h h1) ==> p a h1)) (* WP *)
 
@@ -180,7 +117,7 @@ let inline_stack_inv h h' : GTot Type0 =
    This effect maintains the stack AND the heap invariant: it can be inlined in the Stack effect
    function body as well as in a Heap effect function body
    *)
-effect StackInline (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
+effect StackInline (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ is_stack_region h.tip /\ (forall a h1. (pre h /\ post h a h1 /\ inline_stack_inv h h1) ==> p a h1)) (* WP *)
 
@@ -199,7 +136,7 @@ let inline_inv h h' : GTot Type0 =
    Region allocation is not constrained.
    Heap allocation is not constrained.
    *)
-effect Inline (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) =
+effect Inline (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ inline_inv h h1) ==> p a h1)) (* WP *)
 
@@ -207,7 +144,7 @@ effect Inline (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0))
     TODO:
     REMOVE AS SOON AS CONSENSUS IS REACHED ON NEW LOW EFFECT NAMES
   *)
-effect STL (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post a (pre m0)))) = Stack a pre post
+effect STL (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) = Stack a pre post
 
 sub_effect
   DIV   ~> GST = fun (a:Type) (wp:pure_wp a) (p:gst_post a) (h:mem) -> wp (fun a -> p a h)
@@ -220,11 +157,20 @@ let recall_weak_live_region (r:rid)
   : GST unit (fun (p:gst_post unit) (m:mem) -> weak_live_region m r /\ (r `is_in` m.h ==> p () m))
 = gst_witness (region_allocated_pred HH.root) ; gst_recall (region_allocated_pred r)
 
-let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel) : p:mem_predicate{stable p} =
+private
+let valid_ref0 (#a:Type) (#rel:preorder a) (r:mreference a rel) =
   fun (m:mem) ->
     region_allocated_pred r.id m /\
-    ((* ~(is_mm r) /\ *) (is_stack_region r.id ==> r.id `is_above` m.tip) /\ r.id `is_alive` m ==> HH.contains_ref m.h r.ref)
+    (m `weak_live_region` r.id /\ r.id `is_alive` m ==> HH.contains_ref m.h r.ref)
 
+
+let valid_ref_lemma (#a:Type) (#rel:preorder a) (r:mreference a rel) : Lemma (stable (valid_ref0 r))=
+  assert_by_tactic (stable (valid_ref0 r))
+  (norm [delta ; delta_only ["FStar.HyperStack.ST.stable" ; "FStar.HyperStack.ST.mem_rel" ; "FStar.HyperStack.ST.valid_ref0" ; "FStar.HyperStack.ST.ref_liveness"]] ;;
+  smt)
+
+let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel): p:mem_predicate{stable p} =
+  valid_ref_lemma r ; valid_ref0 r
 
 type reference (a:Type) = r:reference a{witnessed(valid_ref r)}
 
