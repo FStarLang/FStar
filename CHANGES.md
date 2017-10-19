@@ -11,6 +11,41 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Basic type-checking and inference
+
+* A revision to implicit generalization of types
+    (Since [commit FStar@e15c2fa4eb4cd7a10dd74fc5532b6cac8e23b4f1])
+
+  F* has for a while supported implicit generalization of types in
+  support of ML-style, let-polymorphism. E.g., `let id x = x` would
+  have the implicitly generalized type `#a:Type -> a -> Tot a`.
+
+  However, F* would incorrectly also allow implicitly generalizing
+  over variables of types other than `Type`. For example, this program
+  would type-check, at a rather counter-intuitive type.
+
+  ```
+  type empty (x:False) =
+  let rec t (#x:False) (n:nat) : empty x = t #x n
+  let f () = t 0
+  ```
+
+  where, `f` would be given the type `#x:False -> unit -> empty x`.
+
+  Worse, sometimes F* would generalize over types with free variables,
+  leading to crashes as in bug #1091.
+
+  We now restrict implicit generalization to variables whose type is a
+  closed refinement of `Type`, e.g.,
+    `let id x = x` has the same type as before;
+    `let eq = op_Equality` has the type `#a:eqtype -> a -> a -> bool`;
+     etc.
+
+  This restriction is a breaking change. For a sampling of the changes
+  needed to accommodate it see:
+  
+       [commit mitls/hacl-star@c93dd40b89263056c6dec8c606eebd885ba2984e]
+       [commit FStar@8529b03e30e8dd77cd181256f0ec3473f8cd68bf]
 
 ## Standard library
 

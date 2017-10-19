@@ -46,7 +46,8 @@ let parse_z3_version_lines out =
             let parts = split trimmed " " in
             let rec aux = function
             | [hash] ->
-              let hash_prefix = String.substring hash 0 (String.strlen _z3hash_expected) in
+              let n = min (String.strlen _z3hash_expected) (String.strlen hash) in
+              let hash_prefix = String.substring hash 0 n in
               if hash_prefix = _z3hash_expected
               then begin
                   if Options.debug_any ()
@@ -62,7 +63,7 @@ let parse_z3_version_lines out =
               end else
                   let msg =
                       BU.format2
-                          "Expected Z3 commit hash %s, got %s"
+                          "Expected Z3 commit hash \"%s\", got \"%s\""
                           _z3hash_expected
                           hash
                   in

@@ -1209,7 +1209,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (uvs |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
                                                         (Print.uvar_to_string u)
-                                                        (Print.term_to_string t)) |> String.concat ", ");
+                                                        (N.term_to_string env t)) |> String.concat ", ");
 
          univs, uvs, (lbname, e, c)
      in
@@ -1256,12 +1256,34 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let lecs = lec_hd :: lecs in
 
      let gen_types uvs =
+         let fail k =
+             let lbname, e, c = lec_hd in
+               raise (Error(BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
+                                       (Print.term_to_string k)
+                                       (Print.lbname_to_string lbname)
+                                       (Print.term_to_string (U.comp_result c)),
+                            Env.get_range env))
+         in
          uvs |> List.map (fun (u, k) ->
          match Unionfind.find u with
          | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
          | _ ->
            let k = N.normalize [N.Beta; N.Exclude N.Zeta] env k in
            let bs, kres = U.arrow_formals k in
+           let _ =
+             //we only generalize variables at type k = a:Type{phi}
+             //where k is closed
+             //this is in support of ML-style polymorphism, while also allowing generalizing
+             //over things like eqtype, which is a common case
+             //Otherwise, things go badly wrong: see #1091
+             match (U.unrefine (N.unfold_whnf env kres)).n with
+             | Tm_type _ ->
+                let free = FStar.Syntax.Free.names kres in
+                if not (BU.set_is_empty free) then fail kres
+
+             | _ ->
+               fail kres
+           in
            let a = S.new_bv (Some <| Env.get_range env) kres in
            let t = U.abs bs (S.bv_to_name a) (Some (U.residual_tot kres)) in
            U.set_uvar u t; //t clearly has a free variable; this is the one place we break the
