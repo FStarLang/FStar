@@ -17,7 +17,8 @@ module FStar.HyperStack.All
 include FStar.HyperStack.ST
 
 let all_pre = all_pre_h HyperStack.mem
-let all_post (a:Type) = all_post_h HyperStack.mem a
+let all_post' (a:Type) (pre:Type) = all_post_h' HyperStack.mem a pre
+let all_post  (a:Type) = all_post_h HyperStack.mem a
 let all_wp (a:Type) = all_wp_h HyperStack.mem a
 new_effect ALL = ALL_h HyperStack.mem
 
@@ -27,7 +28,7 @@ sub_effect STATE ~> ALL = lift_state_all
 unfold let lift_exn_all (a:Type) (wp:ex_wp a)   (p:all_post a) (h:HyperStack.mem) = wp (fun ra -> p ra h)
 sub_effect EXN   ~> ALL = lift_exn_all
 
-effect All (a:Type) (pre:all_pre) (post: (HyperStack.mem -> Tot (all_post a))) =
+effect All (a:Type) (pre:all_pre) (post: (h0:HyperStack.mem -> Tot (all_post' a (pre h0)))) =
        ALL a
            (fun (p:all_post a) (h:HyperStack.mem) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* WP  *)
 effect ML (a:Type) =

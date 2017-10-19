@@ -28,7 +28,8 @@ type step =
   | Iota            //pattern matching
   | Zeta            //fixed points
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
-  | WHNF            //Only produce a weak head normal form
+  | Weak            //Do not descend into binders
+  | HNF             //Only produce a head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining
@@ -46,12 +47,25 @@ type step =
   | CheckNoUvars
   | Unmeta
 and steps = list<step>
+type closure =
+  | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
+  | Univ of universe                                //universe terms do not have free variables
+  | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
+and env = list<(option<binder> * closure)>
+type cfg
+type psc // primitive step context
+val null_psc : psc
+val psc_range : psc -> FStar.Range.range
+val psc_subst : psc -> subst_t
 type primitive_step = {
     name:FStar.Ident.lid;
     arity:int;
     strong_reduction_ok:bool;
-    interpretation:(FStar.Range.range -> args -> option<term>)
+    requires_binder_substitution:bool;
+    interpretation:(psc -> args -> option<term>)
 }
+
+val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
 val normalize:            steps -> Env.env -> term -> term

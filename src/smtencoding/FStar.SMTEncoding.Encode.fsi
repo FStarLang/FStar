@@ -28,7 +28,6 @@ val pop:  string -> unit
 val init: Env.env -> unit
 val encode_sig: Env.env -> S.sigelt -> unit
 val encode_modul: Env.env -> S.modul -> unit
-val is_trivial: Env.env -> S.term -> bool
 val encode_query: option<(unit -> string)>
                 -> Env.env
                 -> S.term
