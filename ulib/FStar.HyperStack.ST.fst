@@ -111,7 +111,7 @@ let split_and : tactic unit =
 (*   fail "A") *)
 
 (* TODO *)
-let mem_rel_def : preorder mem = fun h1 h2 ->
+let mem_rel : preorder mem = fun h1 h2 ->
   region_liveness h1 h2 /\
   region_freshness_increases h1 h2 /\
   ref_liveness h1 h2
