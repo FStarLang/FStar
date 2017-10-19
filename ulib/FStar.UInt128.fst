@@ -553,7 +553,7 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
-#set-options "--z3rlimit 40"
+#set-options "--z3rlimit 80"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
