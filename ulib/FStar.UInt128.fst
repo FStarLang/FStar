@@ -419,8 +419,7 @@ let mod_mul_pow2 n e1 e2 =
 let pow2_div_bound #b (n:UInt.uint_t b) (s:nat{s <= b}) :
   Lemma (n / pow2 s < pow2 (b - s)) =
   Math.lemma_div_lt n b s
-#set-options "--z3rlimit 40"
-
+#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.l_arith_repr native --z3rlimit 40"
 let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r = (U64.v hi * pow2 (U32.v s)) % pow2 64 + U64.v lo / pow2 (64 - U32.v s))) =
@@ -437,6 +436,8 @@ let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   assert (low_n < pow2 s);
   mod_mul_pow2 (U64.v hi) (64 - s) s;
   U64.add high low
+#reset-options "--max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+
 
 let div_plus_multiple (a:nat) (b:nat) (k:pos) :
   Lemma (requires (a < k))
