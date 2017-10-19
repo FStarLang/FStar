@@ -65,12 +65,7 @@
       "15f93888c7c15ae8ddffcc87aa0fa7c1"
     ],
     [
-      "NormVsSMT.uu___18",
-      1,
-      2,
-      1,
-      [ "@query", "int_typing", "primitive_Prims.op_GreaterThanOrEqual" ],
-      0,
+      "NormVsSMT.uu___18", 1, 2, 1, null, 0,
       "d475f1d74eb185abd8e11805d910d291"
     ]
   ]
