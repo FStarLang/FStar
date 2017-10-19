@@ -5,7 +5,7 @@ open FStar.DM4F.OTP.Random
 
 open FStar.BitVector
 
-let op_Hat_Hat = logxor_vec
+let op_Hat_Hat #n = logxor_vec #n
 
 val xor_idempotent: x:elem -> y:elem -> Lemma
   (requires True)
