@@ -669,15 +669,17 @@ let cps_and_elaborate env ed =
 
   // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
   let return_wp = register "return_wp" return_wp in
+  Options.push ();
   sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries true")) :: !sigelts;
   let return_elab = register "return_elab" return_elab in
-  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries false")) :: !sigelts;
+  Options.pop();
 
   // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
   let bind_wp = register "bind_wp" bind_wp in
+  Options.push ();
   sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries true")) :: !sigelts;
   let bind_elab = register "bind_elab" bind_elab in
-  sigelts := mk_sigelt (Sig_pragma (SetOptions "--admit_smt_queries false")) :: !sigelts;
+  Options.pop ();
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     let params_un = SS.open_binders action.action_params in
@@ -1486,23 +1488,14 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) :Env.env =
   match se.sigel with
   | Sig_inductive_typ _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
   | Sig_datacon _ -> failwith "add_sigelt_to_env: Impossible, bare data constructor"
-  | Sig_pragma (p) ->
-    (match p with
-     | SetOptions _
-     | ResetOptions _ ->
-        // `using_facts_from` requires some special handling..
-        begin match Options.using_facts_from () with
-        | Some ns ->
-            let proof_ns = [(List.map (fun s -> (Ident.path_of_text s, true)) ns)@[([], false)]] in
-            { env with proof_ns = proof_ns }
-        | None ->
-            { env with proof_ns = [[]] }
-        end
-     | _ -> env)
+  | Sig_pragma (ResetOptions _) ->
+    let env = Env.set_proof_ns (Options.using_facts_from ()) env in
+    env.solver.refresh();
+    env
+  | Sig_pragma _
   | Sig_new_effect_for_free _ -> env
-  | Sig_new_effect (ne) ->
+  | Sig_new_effect ne ->
     let env = Env.push_sigelt env se in
-
     ne.actions |> List.fold_left (fun env a -> Env.push_sigelt env (U.action_as_lb ne.mname a)) env
   | Sig_declare_typ (_, _, _)
   | Sig_let (_, _) when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) -> env

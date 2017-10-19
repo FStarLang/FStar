@@ -159,7 +159,8 @@ let normalize: FStar_Ident.lident = pconst "normalize"
 let normalize_term: FStar_Ident.lident = pconst "normalize_term"
 let norm: FStar_Ident.lident = pconst "norm"
 let steps_simpl: FStar_Ident.lident = pconst "Simpl"
-let steps_whnf: FStar_Ident.lident = pconst "WHNF"
+let steps_weak: FStar_Ident.lident = pconst "Weak"
+let steps_hnf: FStar_Ident.lident = pconst "HNF"
 let steps_primops: FStar_Ident.lident = pconst "Primops"
 let steps_zeta: FStar_Ident.lident = pconst "Zeta"
 let steps_iota: FStar_Ident.lident = pconst "Iota"
@@ -295,3 +296,6 @@ let fstar_refl_embed_lid: FStar_Ident.lident =
     FStar_Range.dummyRange
 let fstar_syntax_syntax_term: FStar_Ident.lident =
   FStar_Ident.lid_of_str "FStar.Syntax.Syntax.term"
+let fstar_reflection_types_binder_lid: FStar_Ident.lident =
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Types"; "binder"]
+    FStar_Range.dummyRange

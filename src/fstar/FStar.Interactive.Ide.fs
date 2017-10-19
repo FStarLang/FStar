@@ -78,6 +78,9 @@ let with_captured_errors' env f =
     TcErr.add_errors env [(msg, TcEnv.get_range env)];
     None
 
+  | Stop ->
+    None
+
 let with_captured_errors env f =
   if Options.trace_error () then f env
   else with_captured_errors' env f

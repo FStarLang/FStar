@@ -370,8 +370,8 @@ type-checker knows that the `read f` call is safe.
 Write a function called `checkedWrite` that takes a filename `f` and a
 string `s` as argument, checks the policy to make sure the file `f` is
 writable, and only if that is the case writes `s` to `f`. If the file
-is not writable your `checkedWrite` should raise an exception. As for
-`checkedRead`, your `checkedRead` should have no preconditions.
+is not writable your `checkedWrite` should raise an exception. As with
+`checkedRead`, your `checkedWrite` should have no preconditions.
 ~~ ExerciseFragment {exname=Ex01a}
 [INCLUDE=code/exercises/Ex01a.fst:CheckedWriteType]
 ~~

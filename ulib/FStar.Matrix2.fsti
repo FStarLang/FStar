@@ -96,11 +96,11 @@ assume new type eq: #a:Type -> #m:nat -> #n:nat -> matrix2 m n a -> matrix2 m n 
 val lemma_eq_intro: #a:Type -> #m:nat -> #n:nat -> x1:matrix2 m n a -> x2:matrix2 m n a -> Lemma
      (requires ((forall (i:nat{i < m}) (j:nat{j<n}). {:pattern (index x1 i j); (index x2 i j)} (index x1 i j == index x2 i j))))
      (ensures (eq x1 x2))
-     [SMTPatT (eq x1 x2)]
+     [SMTPat (eq x1 x2)]
 
 val lemma_eq_elim: #a:Type -> #m:nat -> #n:nat -> x1:matrix2 m n a -> x2:matrix2 m n a -> Lemma
      (requires (eq x1 x2))
      (ensures (x1==x2))
-     [SMTPatT (eq x1 x2)]
+     [SMTPat (eq x1 x2)]
 
 

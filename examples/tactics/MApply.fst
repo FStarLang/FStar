@@ -13,16 +13,16 @@ assume val f_unsq  : squash p -> q
 
 let _ =
     assert_by_tactic q (mapply (quote lem_imp);;
-                        exact (quote x))
+                        mapply (quote x))
 
 let _ =
     assert_by_tactic q (mapply (quote lem);;
-                        exact (quote x))
+                        mapply (quote x))
 
 let _ =
     assert_by_tactic q (mapply (quote f_sq);;
-                        exact (quote x))
+                        mapply (quote x))
 
 let _ =
     assert_by_tactic q (mapply (quote f_unsq);;
-                        exact (quote x))
+                        mapply (quote x))

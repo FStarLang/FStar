@@ -16,7 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8a75e91ec2a2dd97ba64ea67e4016a96"
+      "e84893ca03f558ec5465ad8913494c9e"
     ],
     [
       "Ex04a.append",
@@ -25,7 +25,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "479fd8495fc2549951a192d37d8de4b6"
+      "a4efefd8ddbe023d4527ee7fba2d4b1e"
     ],
     [
       "Ex04a.append",
@@ -51,7 +51,7 @@
         "subterm_ordering_Prims.Cons", "typing_Ex04a.length"
       ],
       0,
-      "53c1cfa2a82e3719b584df419e5be98c"
+      "da338f0b71d2d4a5bac26598a1e694fd"
     ]
   ]
 ]

@@ -631,8 +631,6 @@ and tc_synth env args rng =
         if env.nosynth
         then mk_Tm_app (TcUtil.fvar_const env Const.magic_lid) [S.as_arg exp_unit] None rng
         else begin
-            if Env.debug env <| Options.Other "Tac" then
-                BU.print2 "Running tactic %s at return type %s\n" (Print.term_to_string tau) (Print.term_to_string typ);
             let t = env.synth env' typ tau in
             if Env.debug env <| Options.Other "Tac" then
                 BU.print1 "Got %s\n" (Print.term_to_string t);
@@ -1012,7 +1010,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       | Some (Inl more_bs) ->  //more actual args
                         let c = SS.subst_comp subst c_expected in
                         (* the expected type is explicitly curried *)
-                        if U.is_named_tot c then
+                        if Options.ml_ish () || U.is_named_tot c then
                           let t = N.unfold_whnf env (U.comp_result c) in
                           match t.n with
                           | Tm_arrow(bs_expected, c_expected) ->
@@ -1229,8 +1227,8 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
       let shortcuts_evaluation_order =
         match (SS.compress head).n with
         | Tm_fvar fv ->
-			     S.fv_eq_lid fv Parser.Const.op_And ||
-			     S.fv_eq_lid fv Parser.Const.op_Or
+                             S.fv_eq_lid fv Parser.Const.op_And ||
+                             S.fv_eq_lid fv Parser.Const.op_Or
         | _ -> false
       in
 
@@ -1457,7 +1455,14 @@ and tc_eqn scrutinee env branch
       * term                               (* terms corresponding to the pattern                                    *)
       * term                               (* the same term in normal form                                          *)
       =
-    let pat_bvs, exp, p = TcUtil.pat_as_exp allow_implicits env p0 in //an expression for each clause in a disjunctive pattern
+    let tc_annot env t =
+        let tu, u = U.type_u () in
+        let t, _, g = tc_check_tot_or_gtot_term env t tu in
+        Rel.force_trivial_guard env g;
+        t
+    in
+    //an expression for each clause in a disjunctive pattern
+    let pat_bvs, exp, p = TcUtil.pat_as_exp allow_implicits env p0 tc_annot in
     if Env.debug env Options.High
     then BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
     let pat_env = List.fold_left Env.push_bv env pat_bvs in
@@ -1899,6 +1904,7 @@ and check_inner_let_rec env top =
 and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
    let env0 = env in
    let termination_check_enabled lbname lbdef lbtyp =
+     if Options.ml_ish () then false else
      let t = N.unfold_whnf env lbtyp in
      match (SS.compress t).n, (SS.compress lbdef).n with
      | Tm_arrow (formals, c), Tm_abs(actuals, _, _) ->
@@ -2056,7 +2062,10 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
 and tc_binder env (x, imp) =
     let tu, u = U.type_u () in
     if Env.debug env Options.Extreme
-    then BU.print3 "Checking binders %s:%s at type %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string tu);
+    then BU.print3 "Checking binders %s:%s at type %s\n"
+                   (Print.bv_to_string x)
+                   (Print.term_to_string x.sort)
+                   (Print.term_to_string tu);
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
