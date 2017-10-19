@@ -89,7 +89,7 @@ Guidelines for the changelog:
   ```
 
   This is because `FStar.ST` is now designed to work with monotonic
-  references, each of which are indexed by a preorder.
+  references which are indexed by preorders.
 
   If you do not intend to use preorders, open `FStar.Ref` instead. The
   program below is accepted.
