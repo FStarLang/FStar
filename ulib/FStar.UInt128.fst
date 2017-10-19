@@ -419,6 +419,7 @@ let mod_mul_pow2 n e1 e2 =
 let pow2_div_bound #b (n:UInt.uint_t b) (s:nat{s <= b}) :
   Lemma (n / pow2 s < pow2 (b - s)) =
   Math.lemma_div_lt n b s
+#set-options "--z3rlimit 40"
 
 let add_u64_shift_left (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
@@ -446,7 +447,6 @@ let div_plus_multiple (a:nat) (b:nat) (k:pos) :
 val div_add_small: n:nat -> m:nat -> k1:pos -> k2:pos ->
   Lemma (requires (n < k1))
         (ensures (k1*m / (k1*k2) == (n + k1*m) / (k1*k2)))
-#set-options "--z3rlimit 40"
 let div_add_small n m k1 k2 =
   div_product (k1*m) k1 k2;
   div_product (n+k1*m) k1 k2;
@@ -552,6 +552,7 @@ let shift_t_mod_val (a: t) (s: nat{s < 64}) :
   Math.paren_mul_right a_h (pow2 64) (pow2 s);
   ()
 
+#set-options "--z3rlimit 40"
 let shift_left_small (a: t) (s: U32.t) : Pure t
   (requires (U32.v s < 64))
   (ensures (fun r -> v r = (v a * pow2 (U32.v s)) % pow2 128)) =
@@ -569,7 +570,6 @@ let shift_left_small (a: t) (s: U32.t) : Pure t
 val shift_left_large : a:t -> s:U32.t{U32.v s >= 64 /\ U32.v s < 128} ->
   r:t{v r = (v a * pow2 (U32.v s)) % pow2 128}
 
-#set-options "--z3rlimit 20"
 let shift_left_large a s =
   let h_shift = U32.sub s u32_64 in
   assert (U32.v h_shift < 64);

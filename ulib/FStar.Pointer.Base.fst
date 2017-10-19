@@ -2833,12 +2833,14 @@ let live_gpointer_of_buffer_cell
   i h
 = ()
 
+#set-options "--initial_ifuel 2 --max_ifuel 2"
 let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
   (#t: typ)
   (p: pointer t)
   i
 = ()
 
+#set-options "--initial_ifuel 1 --max_ifuel 1"
 let gpointer_of_buffer_cell_gbuffer_of_array_pointer
   (#length: array_length_t)
   (#t: typ)
