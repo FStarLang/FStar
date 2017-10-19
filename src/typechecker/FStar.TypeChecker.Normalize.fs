@@ -609,6 +609,11 @@ let built_in_primitive_steps : list<primitive_step> =
         | _ ->
             failwith "Unexpected number of arguments"
     in
+    let idstep psc args : option<term> =
+        match args with
+        | [(a1, _)] -> Some a1
+        | _ -> failwith "Unexpected number of arguments"
+    in
     let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
             [(PC.op_Minus,       1, unary_int_op (fun x -> Z.minus_big_int x));
              (PC.op_Addition,    2, binary_int_op (fun x y -> Z.add_big_int x y));
@@ -636,7 +641,9 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
              (PC.p2l ["Prims"; "range_of"], 2, range_of);
              (PC.p2l ["Prims"; "set_range_of"], 3, set_range_of);
-             (PC.p2l ["Prims"; "mk_range"], 5, mk_range);]
+             (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
+             (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, idstep);
+             ]
     in
     let bounded_arith_ops
         =
