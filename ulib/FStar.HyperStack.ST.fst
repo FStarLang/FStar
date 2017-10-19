@@ -41,25 +41,20 @@ let region_freshness_increases : preorder mem = fun h1 h2 ->
   b2t (h1.region_freshness <= h2.region_freshness)
 
 let ref_liveness_lemma1 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
-  : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
-          (ensures  (h1 `contains` r /\ r.id `live_rid` h2))
-  = ()
+  : Lemma (requires (region_liveness h2 h3 /\ ref_liveness h1 h2 /\ h1 `contains` r /\ r.id `live_rid` h3))
+          (ensures  (r.id `live_rid` h2 /\ h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
+  = ref_liveness_unfold h1 h2
 
 let ref_liveness_lemma2 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
-  : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
-          (ensures  (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
-  = ref_liveness_lemma1 h1 h2 h3 a rel r; ref_liveness_unfold h1 h2
+  : Lemma (requires (region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
+          (ensures  (h3 `contains` r /\ rel (sel h1 r) (sel h2 r) /\ rel (sel h2 r) (sel h3 r)))
+  = ref_liveness_lemma1 h1 h2 h3 a rel r; ref_liveness_unfold h2 h3
 
 let ref_liveness_lemma3 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
   : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
-          (ensures  (h3 `contains` r /\ rel (sel h1 r) (sel h2 r) /\ rel (sel h2 r) (sel h3 r)))
-  = ref_liveness_lemma2 h1 h2 h3 a rel r; ref_liveness_unfold h2 h3
-
-let ref_liveness_lemma4 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
-  : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
           (ensures  (h3 `contains` r /\ rel (sel h1 r) (sel h3 r)))
           [SMTPat (ref_liveness h1 h2); SMTPat (ref_liveness h2 h3); SMTPat (rel (sel h1 r) (sel h3 r))]
-  = ref_liveness_lemma2 h1 h2 h3 a rel r; ref_liveness_lemma3 h1 h2 h3 a rel r
+  = ref_liveness_lemma1 h1 h2 h3 a rel r; ref_liveness_lemma2 h1 h2 h3 a rel r
 
 let ref_liveness_trans (h1:mem) (h2:mem) (h3:mem)
   : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3))
@@ -110,12 +105,12 @@ let split_and : tactic unit =
 (*   h_rid_live <-- intro; *)
 (*   fail "A") *)
 
-(* TODO *)
 let mem_rel : preorder mem = fun h1 h2 ->
   region_liveness h1 h2 /\
   region_freshness_increases h1 h2 /\
   ref_liveness h1 h2
 
+(* TODO *)
 assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
 assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
 
