@@ -241,6 +241,7 @@ type list (a:Type) =
   | Cons : hd:a -> tl:list a -> list a
 
 abstract type pattern = unit
+// SMTPat and SMTPatOr desugar to these two
 irreducible let smt_pat (#a:Type) (x:a) : pattern = ()
 irreducible let smt_pat_or (x:list (list pattern)) : pattern = ()
 
