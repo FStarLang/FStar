@@ -107,10 +107,18 @@ let dump_cur ps msg =
         dump_goal ps (List.hd ps.goals)
         end
 
-let ps_to_string (msg, ps) = format6 "State dump @ depth %s(%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
-                (string_of_int ps.depth)
-                msg (string_of_int (List.length ps.goals)) (String.concat "\n" (List.map goal_to_string ps.goals))
-                (string_of_int (List.length ps.smt_goals)) (String.concat "\n" (List.map goal_to_string ps.smt_goals))
+let ps_to_string (msg, ps) =
+    String.concat ""
+               [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
+                format1 "Position: %s\n" (Range.string_of_range ps.entry_range);
+                format2 "ACTIVE goals (%s):\n%s\n"
+                    (string_of_int (List.length ps.goals))
+                    (String.concat "\n" (List.map goal_to_string ps.goals));
+                format2 "SMT goals (%s):\n%s\n"
+                    (string_of_int (List.length ps.smt_goals))
+                    (String.concat "\n" (List.map goal_to_string ps.smt_goals));
+               ]
+
 let goal_to_json g =
     let g_binders = Env.all_binders g.context |> Print.binders_to_json in
     JsonAssoc [("hyps", g_binders);
@@ -1057,6 +1065,7 @@ let proofstate_of_goal_ty env typ =
         depth = 0;
         __dump = (fun ps msg -> dump_proofstate ps msg);
         psc = N.null_psc;
+        entry_range = Range.dummyRange;
     }
     in
     (ps, g.witness)

@@ -237,9 +237,27 @@ let rec primitive_steps () : list<N.primitive_step> =
         | [(ps, _)] ->
             bind_opt (E.unembed_proofstate ps) (fun ps ->
             let ps = set_ps_psc psc ps in
-            tracepoint psc ps;
+            tracepoint ps;
             Some U.exp_unit)
         | _ -> failwith "Unexpected application of tracepoint"
+    in
+    let set_proofstate_range_interp psc (args : args) =
+        match args with
+        | [(ps, _); (r, _)] ->
+            bind_opt (E.unembed_proofstate ps) (fun ps ->
+            bind_opt (unembed_range r) (fun r ->
+            let ps' = set_proofstate_range ps r in
+            Some (E.embed_proofstate (N.psc_range psc) ps')))
+        | _ -> failwith "Unexpected application of set_proofstate_range"
+    in
+    let set_proofstate_range_step : N.primitive_step =
+        let nm = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" in
+        {N.name = nm;
+         N.arity = 2;
+         N.strong_reduction_ok = false;
+         N.requires_binder_substitution = false;
+         N.interpretation = set_proofstate_range_interp
+        }
     in
     let tracepoint_step : N.primitive_step =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
@@ -322,6 +340,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       decr_depth_step;
       incr_depth_step;
       tracepoint_step;
+      set_proofstate_range_step;
     ]@reflection_primops @native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output
