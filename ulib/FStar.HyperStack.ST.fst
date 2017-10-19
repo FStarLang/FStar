@@ -25,6 +25,13 @@ let ref_liveness = fun h1 h2 ->
      h1 `contains` r /\ r.id `live_rid` h2 ==>
        (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
 
+let ref_liveness_unfold (h1:mem) (h2:mem) 
+  : Lemma (requires (ref_liveness h1 h2))
+          (ensures  (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
+                      h1 `contains` r /\ r.id `live_rid` h2 ==>
+                         (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))))
+  = ()
+
 let region_liveness : preorder mem = fun h1 h2 ->
    (forall (i:HH.rid). Map.contains h1.h i ==> Map.contains h2.h i) /\
    (forall (i:HH.rid). ~(i `is_alive` h1) ==> ~(i `is_alive` h2)) /\
@@ -33,8 +40,34 @@ let region_liveness : preorder mem = fun h1 h2 ->
 let region_freshness_increases : preorder mem = fun h1 h2 ->
   b2t (h1.region_freshness <= h2.region_freshness)
 
+let ref_liveness_lemma1 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
+  : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
+          (ensures  (h1 `contains` r /\ r.id `live_rid` h2))
+  = ()
 
-let ref_liveness_haupstatz (x y z:mem) r :
+let ref_liveness_lemma2 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
+  : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
+          (ensures  (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
+  = ref_liveness_lemma1 h1 h2 h3 a rel r; ref_liveness_unfold h1 h2
+
+let ref_liveness_lemma3 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
+  : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
+          (ensures  (h3 `contains` r /\ rel (sel h1 r) (sel h2 r) /\ rel (sel h2 r) (sel h3 r)))
+  = ref_liveness_lemma2 h1 h2 h3 a rel r; ref_liveness_unfold h2 h3
+
+let ref_liveness_lemma4 (h1:mem) (h2:mem) (h3:mem) (a:Type0) (rel:preorder a) (r:mreference a rel) 
+  : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 /\ h1 `contains` r /\ r.id `live_rid` h3))
+          (ensures  (h3 `contains` r /\ rel (sel h1 r) (sel h3 r)))
+          [SMTPat (ref_liveness h1 h2); SMTPat (ref_liveness h2 h3); SMTPat (rel (sel h1 r) (sel h3 r))]
+  = ref_liveness_lemma2 h1 h2 h3 a rel r; ref_liveness_lemma3 h1 h2 h3 a rel r
+
+let ref_liveness_trans (h1:mem) (h2:mem) (h3:mem)
+  : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3))
+          (ensures  (ref_liveness h1 h3))
+          [SMTPat (region_liveness h1 h2); SMTPat (region_liveness h2 h3)]
+  = ()
+
+(*let ref_liveness_haupstatz (x y z:mem) r :
     Lemma (region_liveness x y /\ region_liveness y z /\ r `live_rid` z /\ r `live_rid` x ==> r `live_rid` y)
     [SMTPat (region_liveness x y) ; SMTPat (region_liveness y z) ; SMTPat (r `live_rid` z)]
 = ()
@@ -50,7 +83,7 @@ let and_intro_lem (#p #q #r:Type) (f:p -> q -> squash r) : Lemma (p /\ q ==> r) 
     FStar.Classical.impl_intro #(p /\ q) #r (fun x -> FStar.Squash.bind_squash x g <: Lemma r)
 
 let split_and : tactic unit =
-  apply_lemma (quote_lid ["FStar";"HyperStack";"ST";"and_intro_lem"])
+  apply_lemma (quote_lid ["FStar";"HyperStack";"ST";"and_intro_lem"])*)
 
 (* let _ = assert_by_tactic *)
 (*     (forall (x y z : mem). *)
@@ -78,7 +111,7 @@ let split_and : tactic unit =
 (*   fail "A") *)
 
 (* TODO *)
-let mem_rel : preorder mem = fun h1 h2 ->
+let mem_rel_def : preorder mem = fun h1 h2 ->
   region_liveness h1 h2 /\
   region_freshness_increases h1 h2 /\
   ref_liveness h1 h2
