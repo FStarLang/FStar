@@ -9,15 +9,15 @@ open FStar.UInt
 // tweak options?
 #reset-options "--smtencoding.elim_box true"
 
-let lemma_shr2 x = 
+let lemma_shr2 x =
    assert_by_tactic (shift_right #64 x 2 == udiv #64 x 4) (bv_tac())
-   
+
 let lemma_shr4 x =
   assert_by_tactic (shift_right #64 x 4 == udiv #64 x 16) (bv_tac ())
 
 let lemma_and_mod_n x =
   assert_by_tactic (logand #64 x 3 == mod #64 x 4 /\ logand #64 x 15 == mod #64 x 16)
-                   (seq split (bv_tac ())) 
+                   (seq split (bv_tac ()))
 
 let lemma_clear_lower_2 x =
   assert_by_tactic
@@ -25,25 +25,24 @@ let lemma_clear_lower_2 x =
   (bv_tac ())
 
 let lemma_and_constants x =
-  assert_by_tactic 
-  (logand #64 x 0 == (0 <: uint_t 64) /\ 
+  assert_by_tactic
+  (logand #64 x 0 == (0 <: uint_t 64) /\
    logand #64 x 0xffffffffffffffff == x)
   (seq split (bv_tac ()))
-  
-let lemma_poly_constants x = 
- assert_by_tactic  
+
+let lemma_poly_constants x =
+ assert_by_tactic
    (logand #64 x 0x0ffffffc0fffffff < (0x1000000000000000 <: uint_t 64) /\
-     logand #64 x 0x0ffffffc0ffffffc < (0x1000000000000000 <: uint_t 64) /\
-     mod #64 (logand #64 x 0x0ffffffc0ffffffc) 4 == (0 <: uint_t 64))
-  (split;; split;; 
-		   bv_tac_lt 64;;
-                   smt;;
-		   bv_tac_lt 64;;
-                   smt;;
-		   bv_tac ())
-                   
+    logand #64 x 0x0ffffffc0ffffffc < (0x1000000000000000 <: uint_t 64) /\
+    mod #64 (logand #64 x 0x0ffffffc0ffffffc) 4 == (0 <: uint_t 64))
+   (split ;;
+    split ;;
+    bv_tac_lt 64;;
+    bv_tac_lt 64;;
+    bv_tac ())
+
 let lemma_and_commutes x y =
-  assert_by_tactic 
+  assert_by_tactic
     (logand #64 x y == logand #64 y x)
     (bv_tac ())
 
@@ -78,32 +77,32 @@ let lemma_bytes_shift_constants5 x =
   assert_by_tactic (shift_left #64 1 40 == (0x10000000000 <: uint_t 64)) (bv_tac())
 let lemma_bytes_shift_constants6 x =
   assert_by_tactic (shift_left #64 6 3 == (48 <: uint_t 64)) (bv_tac());
-  assert_by_tactic (shift_left #64 1 48 == (0x1000000000000 <: uint_t 64)) (bv_tac())   
+  assert_by_tactic (shift_left #64 1 48 == (0x1000000000000 <: uint_t 64)) (bv_tac())
 let lemma_bytes_shift_constants7 x =
-  assert_by_tactic (shift_left #64 7 3 == (56 <: uint_t 64)) (bv_tac()); 
+  assert_by_tactic (shift_left #64 7 3 == (56 <: uint_t 64)) (bv_tac());
   assert_by_tactic (shift_left #64 1 56 == (0x100000000000000 <: uint_t 64)) (bv_tac())
 
-let lemma_bytes_and_mod0 x = 
+let lemma_bytes_and_mod0 x =
   assert_by_tactic (logand #64 x (0x1 - 1) == mod #64 x 0x1) (bv_tac ())
 
-let lemma_bytes_and_mod1 x = 
+let lemma_bytes_and_mod1 x =
   assert_by_tactic (logand #64 x (0x100 - 1) == mod #64 x 0x100) (bv_tac ())
 
-let lemma_bytes_and_mod2 x = 
+let lemma_bytes_and_mod2 x =
   assert_by_tactic (logand #64 x (0x10000 - 1) == mod #64 x 0x10000) (bv_tac ())
 let lemma_bytes_and_mod3 x =
   assert_by_tactic (logand #64 x (0x1000000 - 1) == mod #64 x 0x1000000) (bv_tac ())
 
-let lemma_bytes_and_mod4 x = 
+let lemma_bytes_and_mod4 x =
   assert_by_tactic (logand #64 x (0x100000000 - 1) == mod #64 x 0x100000000) (bv_tac ())
 
-let lemma_bytes_and_mod5 x = 
+let lemma_bytes_and_mod5 x =
   assert_by_tactic (logand #64 x (0x10000000000 - 1) == mod #64 x 0x10000000000) (bv_tac ())
 
-let lemma_bytes_and_mod6 x = 
+let lemma_bytes_and_mod6 x =
   assert_by_tactic (logand #64 x (0x1000000000000 - 1) == mod #64 x 0x1000000000000) (bv_tac ())
 
-let lemma_bytes_and_mod7 x = 
+let lemma_bytes_and_mod7 x =
   assert_by_tactic (logand #64 x (0x100000000000000 - 1) == mod #64 x 0x100000000000000) (bv_tac ())
 
 let lemma_bytes_and_mod x y =
@@ -116,11 +115,11 @@ let lemma_bytes_and_mod x y =
     lemma_bytes_and_mod1 x
   | 2 ->
     lemma_bytes_shift_constants2 ();
-    lemma_bytes_and_mod2 x    
+    lemma_bytes_and_mod2 x
   | 3 ->
     lemma_bytes_shift_constants3 ();
     lemma_bytes_and_mod3 x
-  | 4 -> 
+  | 4 ->
      lemma_bytes_shift_constants4 ();
      lemma_bytes_and_mod4 x
   | 5 ->
@@ -147,9 +146,9 @@ let lemma_bytes_power2 () =
 
 let lemma_bytes_shift_power2 y =
   (match y with
-  | 0 -> 
+  | 0 ->
     lemma_bytes_shift_constants0 ()
-  | 1 -> 
+  | 1 ->
     lemma_bytes_shift_constants1 ()
   | 2 ->
     lemma_bytes_shift_constants2 ()
@@ -174,9 +173,9 @@ let lemma_bytes_shift_power2 y =
 //   y:uint_t 128 -> y0:uint_t 64 -> y1:uint_t 64 ->
 //   z:uint_t 128 -> z0:uint_t 64 -> z1:uint_t 64 ->
 //   Lemma (requires (z0 == logand #64 x0 y0 /\
-// 		   z1 == logand #64 x1 y1 /\
-// 		   x == lowerUpper128 x1 x0 /\
-// 		   y == lowerUpper128 y1 y0 /\
-// 		   z == lowerUpper128 z1 z0))
-// 	(ensures (z == logand #128 x y))
+//                 z1 == logand #64 x1 y1 /\
+//                 x == lowerUpper128 x1 x0 /\
+//                 y == lowerUpper128 y1 y0 /\
+//                 z == lowerUpper128 z1 z0))
+//      (ensures (z == logand #128 x y))
 // let lemma_lowerUpper128_and x x0 x1 y y0 y1 z z0 z1 = ()
