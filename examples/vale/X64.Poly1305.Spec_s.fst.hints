@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6a4f19df6092d3478e0f2c60e752e8a3"
+      "454df20231954c6814ba9aed0aa7ba1e"
     ],
     [
       "X64.Poly1305.Spec_s.uu___43",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "32d32ad86ba4ffea52786c94328942ad"
+      "e0fbb4bd35afac40c93dcfb82b6c9f5c"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -29,7 +29,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9b3ae0ed30d666a2a0b7c5c88e43836f"
+      "ff4c05644925df59ef710fa2cc93aeed"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -47,7 +47,7 @@
         "equation_X64.Poly1305.Spec_s.nat128",
         "equation_X64.Poly1305.Spec_s.nat128_max",
         "function_token_typing_X64.Poly1305.Spec_s.nat128_max",
-        "int_inversion", "lemma_FStar.UInt.pow2_values",
+        "int_inversion", "int_typing", "lemma_FStar.UInt.pow2_values",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_LessThanOrEqual",
         "projection_inverse_BoxBool_proj_0",
@@ -56,7 +56,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "2a2ba6c3d81217b879883af0881ffd82"
+      "901be4556d92edba548f591c39be4ef1"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -65,20 +65,11 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3612df31dff53b2ff62ca7f6cac3c216"
+      "29fa8052ea8453f60513229066ade712"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
       2,
-      1,
-      0,
-      [ "@query" ],
-      0,
-      "a6d4ccf9c430c57e2e61ea0950dfa4b2"
-    ],
-    [
-      "X64.Poly1305.Spec_s.poly1305_hash_blocks",
-      3,
       1,
       0,
       [
@@ -98,7 +89,16 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4644f1e5ffc4fb8035fdaee07fabf5ea"
+      "dc00759b29be05cd0a6e7d6731df1d64"
+    ],
+    [
+      "X64.Poly1305.Spec_s.poly1305_hash_blocks",
+      3,
+      1,
+      0,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "0a23caf48301dd207ffd312928f2e671"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -107,16 +107,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c730ccd89402ce2bcf352e0b9a65eaf9"
-    ],
-    [
-      "X64.Poly1305.Spec_s.poly1305_hash_blocks",
-      5,
-      1,
-      0,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "930e93c0cfea16183640d51c93073bf7"
+      "2f20fb60f23974cf33d298a9b14f58cc"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -134,7 +125,7 @@
         "equation_Prims.pos", "equation_X64.Poly1305.Spec_s.nat128",
         "equation_X64.Poly1305.Spec_s.nat128_max",
         "function_token_typing_X64.Poly1305.Spec_s.nat128_max",
-        "int_inversion", "lemma_FStar.UInt.pow2_values",
+        "int_inversion", "int_typing", "lemma_FStar.UInt.pow2_values",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "primitive_Prims.op_GreaterThanOrEqual",
         "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
@@ -146,7 +137,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "eb21a92e5c474813ee085be1bc5e94f7"
+      "7626ae225860c5936220b1c85eb70ddc"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -155,7 +146,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ab98a8186bae0027e3497b7c75eb997b"
+      "c5b3968cc59c10e9eb86e4d94b38568e"
     ]
   ]
 ]
