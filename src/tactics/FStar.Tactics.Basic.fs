@@ -165,6 +165,7 @@ let fail (msg:string) =
 let fail1 msg x     = fail (BU.format1 msg x)
 let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
+let fail4 msg w x y z = fail (BU.format4 msg w x y z)
 
 let trytac (t : tac<'a>) : tac<option<'a>> =
     mk_tac (fun ps ->
@@ -590,7 +591,24 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
     in
     // Lemma post is thunked
     let post = U.mk_app post [S.as_arg U.exp_unit] in
-    if not (do_unify goal.context (U.mk_squash post) goal.goal_ty)
+    let ok = 
+      let gopt = 
+        FStar.TypeChecker.Rel.try_teq false goal.context (U.mk_squash post) goal.goal_ty in
+      match gopt with 
+      | None -> BU.print_string "apply_lemma failed outright"; false
+      | Some g ->
+        try
+          let g' = FStar.TypeChecker.Rel.discharge_guard_no_smt goal.context g in
+          BU.print1 "apply_lemma left guard g' = %s\n"
+                    (Rel.guard_to_string goal.context g');
+          true
+        with
+         | _ -> 
+           BU.print1 "apply_lemma failed because of remaining guard g = %s\n"
+                   (Rel.guard_to_string goal.context g);
+           false
+      in
+    if not ok // (do_unify goal.context (U.mk_squash post) goal.goal_ty)
     then fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
                             (N.term_to_string goal.context tm)
                             (N.term_to_string goal.context (U.mk_squash post))
@@ -849,19 +867,31 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
     if not (U.is_pure_or_ghost_lcomp lcomp) || not (Rel.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
-        let typ = lcomp.res_typ in
-        bind (new_uvar "pointwise_rec" env typ) (fun ut ->
-        log ps (fun () ->
-            BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
-                                                                 (Print.term_to_string ut));
-        bind (add_irrelevant_goal "pointwise_rec equation" env
-                     (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts) (fun _ ->
-        focus (
-            bind tau (fun _ ->
-            // Try to get rid of all the unification lambdas
-            let ut = N.reduce_uvar_solutions env ut in
-            ret ut))
-        ))
+        let rewrite_eq =
+          let typ = lcomp.res_typ in
+          bind (new_uvar "pointwise_rec" env typ) (fun ut ->
+          log ps (fun () ->
+              BU.print2 "Pointwise_rec: making equality\n\t%s ==\n\t%s\n" (Print.term_to_string t)
+                                                                   (Print.term_to_string ut));
+          bind (add_irrelevant_goal "pointwise_rec equation" env
+                                    (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts) (fun _ ->
+          focus (
+                bind tau (fun _ ->
+                log ps (fun () ->
+                // Try to get rid of all the unification lambdas
+                let ut = N.reduce_uvar_solutions env ut in
+                BU.print2 "Pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n" (Print.term_to_string t)
+                                                                                (Print.term_to_string ut));
+                
+
+                ret ut))
+          )) 
+       in
+       bind (trytac rewrite_eq) (fun x -> 
+       match x with
+       | None -> ret t
+       | Some x -> ret x)
+       
 
 let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
     bind get (fun ps ->

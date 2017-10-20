@@ -3,7 +3,7 @@ module TestBV
 open FStar.UInt
 open FStar.Tactics
 open FStar.Tactics.BV
-
+#set-options "--lax"
 let test1 (x y: uint_t 64) =
     assert_by_tactic (logand x y == logand y x)
                      (bv_tac ())
@@ -75,3 +75,21 @@ let test6 (x y: U64.t) =
                       norm [] ;;
                       bv_tac ())
 
+let refl (a:Type) (x:a) : Lemma (x == x) = ()
+
+let must_unfold64 () = 
+  apply_lemma (quote unfold_logand64)
+          // (or_else (apply_lemma (quote unfold_logor64))
+          //          (or_else (apply_lemma (quote unfold_logxor64))
+          //                   ))
+
+#reset-options "--debug_level TacVerbose --debug TestBV --debug_level TacFail"
+let test7 (x y z: U64.t) =
+    assert_by_tactic (U64.logand x (U64.logand y z) == U64.logand (U64.logand x y) z)
+                     (apply_lemma (quote v64_eq) ;;
+                      dump "after trans" ;;
+                      norm [];;
+                      apply (quote FStar.Squash.return_squash) ;;
+                      dump "after squash" ;;
+                      pointwise' (must_unfold64 ()) ;;
+                      fail "here")
