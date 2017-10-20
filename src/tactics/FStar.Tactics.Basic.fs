@@ -311,13 +311,19 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     bind get (fun ps ->
     try ret (ps.main_context.type_of e t) with e -> fail "not typeable")
 
+let must_trivial (e : env) (g : guard_t) : tac<unit> =
+    try if not (Rel.is_trivial <| Rel.discharge_guard_no_smt e g)
+        then fail "got non-trivial guard"
+        else ret ()
+    with
+    | _ -> fail "got non-trivial guard"
+
 let tc (t : term) : tac<typ> = wrap_err "tc" <|
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->
-    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard)
-    then fail "got non-trivial guard"
-    else ret typ
-    ))
+    bind (must_trivial goal.context guard) (fun _ ->
+    ret typ
+    )))
 
 let add_irrelevant_goal reason env phi opts : tac<unit> =
     bind (mk_irrelevant_goal reason env phi opts) (fun goal ->
@@ -465,7 +471,7 @@ let __exact force_guard (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->
     bind (if force_guard
-          then (if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard) then fail "got non-trivial guard" else ret ())
+          then must_trivial goal.context guard
           else add_goal_from_guard "__exact typing" goal.context guard goal.opts
           ) (fun _ ->
     if do_unify goal.context typ goal.goal_ty
@@ -473,7 +479,7 @@ let __exact force_guard (t:term) : tac<unit> =
     else fail3 "%s : %s does not exactly solve the goal %s"
                     (N.term_to_string goal.context t)
                     (N.term_to_string goal.context (bnorm goal.context typ))
-                    (N.term_to_string goal.context goal.goal_ty)))
+                    (N.term_to_string goal.context goal.goal_ty))))
 
 let exact (tm:term) : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
@@ -991,11 +997,10 @@ let uvar_env (env : env) (ty : option<typ>) : tac<term> =
 let unshelve (t : term) : tac<unit> = wrap_err "unshelve" <|
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->
-    if not (Rel.is_trivial <| Rel.discharge_guard goal.context guard)
-    then fail "got non-trivial guard"
-    else add_goals [{ goal with witness  = bnorm goal.context t;
-                                goal_ty  = bnorm goal.context typ;
-                                is_guard = false; }]))
+    bind (must_trivial goal.context guard) (fun _ ->
+    add_goals [{ goal with witness  = bnorm goal.context t;
+                           goal_ty  = bnorm goal.context typ;
+                           is_guard = false; }])))
 
 let unify (t1 : term) (t2 : term) : tac<bool> =
     bind get (fun ps ->
