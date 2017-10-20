@@ -120,5 +120,4 @@ let _ = assert_by_tactic (exists (n:int). n == 5)
 assume val l' : nat -> unit -> Lemma p1
 let _ =
     assert_by_tactic p1
-                     (apply_lemma (quote (l' 5));;
-                      trivial)
+                     (apply_lemma (quote (l' 5)))

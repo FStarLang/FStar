@@ -988,7 +988,7 @@ let resugar_tscheme' name (ts:S.tscheme) =
   mk_decl typ.pos [] (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term typ), None)]))
 
 let resugar_tscheme (ts:S.tscheme) =
-  resugar_tscheme' "tsheme" ts
+  resugar_tscheme' "tscheme" ts
 
 let resugar_eff_decl for_free r q ed =
   let resugar_action d for_free =

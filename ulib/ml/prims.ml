@@ -149,3 +149,5 @@ let delta   : norm_step = Delta
 let zeta    : norm_step = Zeta
 let iota    : norm_step = Iota
 let delta_only (s:string list) : norm_step = UnfoldOnly s
+
+type ('a, 'b) admit = unit
