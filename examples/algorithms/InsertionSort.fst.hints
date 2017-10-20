@@ -42,7 +42,7 @@
         "typing_IntSort.sorted"
       ],
       0,
-      "9eafc02ebec5dbb7390e5a05c2fb0271"
+      "832f6b57dbd02ffd46e2b2b7537102ab"
     ],
     [
       "InsertionSort.insert",
@@ -51,7 +51,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1d7ffe79c00e8fc653be97fb955df780"
+      "6be0e19abc6a46c3965e4e0e306450ed"
     ],
     [
       "InsertionSort.insert_implicit",
@@ -90,7 +90,7 @@
         "subterm_ordering_Prims.Cons", "typing_IntSort.sorted"
       ],
       0,
-      "fbf367bbb2796dc0ca926df8c8d689d8"
+      "afce8b9ba7a38e084b9a625f28dea446"
     ],
     [
       "InsertionSort.sort",
@@ -121,7 +121,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e58ea6f0094768250d8615172dcd865e"
+      "1f7fbfd9fc82a443a5571ae35f2bf158"
     ]
   ]
 ]

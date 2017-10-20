@@ -129,7 +129,7 @@ let arith_to_bv_tac : tactic unit =
     let f = term_as_formula g in
     match f with
     | Comp Eq t l r ->
-     begin match run_tm (is_arith_expr l) with
+     begin match run_tm (as_arith_expr l) with
       | Inl s ->
     	  dump s;;
           trefl
@@ -165,6 +165,7 @@ let bv_tac ()  =
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
+  norm [delta] ;;
   smt
 
 let bv_tac_lt n =

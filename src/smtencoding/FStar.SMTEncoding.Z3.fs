@@ -65,7 +65,7 @@ let parse_z3_version_lines out =
                       BU.format2
                           "Expected Z3 commit hash \"%s\", got \"%s\""
                           _z3hash_expected
-                          hash
+                          trimmed
                   in
                   Some msg
             | _ :: q -> aux q
