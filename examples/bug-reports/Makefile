@@ -108,7 +108,7 @@ verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 %.iverify: %.fsti
 	$(FSTAR) $^
 
-iverify: $(subst .fsti,.verify,$(SHOULD_VERIFY_INTERFACE_CLOSED))
+iverify: $(subst .fsti,.iverify,$(SHOULD_VERIFY_INTERFACE_CLOSED))
 
 verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
