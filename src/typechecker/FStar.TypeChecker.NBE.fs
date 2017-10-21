@@ -31,50 +31,57 @@ type head = t
 type annot = t
 
 let app (f:t) (x:t) =
-    match f with
-    | Lam f -> f x
-    | Accu (a, ts) -> Accu(a, x::ts)
-    | Construct(i, ts) -> Construct (i, x::ts)
-    | Unit
-    | Bool _ -> failwith "Ill-typed application"
+  match f with
+  | Lam f -> f x
+  | Accu (a, ts) -> Accu(a, x::ts)
+  | Construct(i, ts) -> Construct (i, x::ts)
+  | Unit
+  | Bool _ -> failwith "Ill-typed application"
 
 let mkConstruct i ts = Construct(i,ts)
 
 let mkAccu (v:var) = Accu(Var v, [])
 
+let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
+  let rec aux l acc = 
+    match l with 
+    | [] -> acc 
+    | x :: xs -> aux xs (f x :: acc)
+  in  aux l []
+
 let rec translate (bs:list<t>) (e:term) : t =
-    match (SS.compress e).n with
-    | Tm_delayed _ -> failwith "Impossible"
+  match (SS.compress e).n with
+  | Tm_delayed _ -> failwith "Impossible"
 
-    | Tm_constant (FStar.Const.Const_unit) ->
-      Unit
+  | Tm_constant (FStar.Const.Const_unit) ->
+    Unit
 
-    | Tm_constant (FStar.Const.Const_bool b) ->
-      Bool b
+  | Tm_constant (FStar.Const.Const_bool b) ->
+    Bool b
 
-    | Tm_bvar db -> //de Bruijn
-      List.nth bs db.index
+  | Tm_bvar db -> //de Bruijn
+    List.nth bs db.index
 
-    | Tm_name x ->
-      mkAccu x
+  | Tm_name x ->
+    mkAccu x
 
-    | Tm_abs ([x], body, _) ->
-      Lam (fun (y:t) -> translate (y::bs) body)
+  | Tm_abs ([x], body, _) ->
+    Lam (fun (y:t) -> translate (y::bs) body)
 
-    | Tm_abs (x::xs, body, _) ->
-      let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
-      let tm = S.mk (Tm_abs([x], rest, None)) None e.pos in
-      translate bs tm
+  | Tm_abs (x::xs, body, _) ->
+    let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
+    let tm = S.mk (Tm_abs([x], rest, None)) None e.pos in
+    translate bs tm
 
-    | Tm_app (e, [arg]) ->
-      app (translate bs e) (translate bs (fst arg))
+  | Tm_app (e, [arg]) ->
+    app (translate bs e) (translate bs (fst arg))
 
-    | Tm_app(head, arg::args) ->
-      let first = S.mk (Tm_app(head, [arg])) None Range.dummyRange in
-      let tm = S.mk (Tm_app(first, args)) None e.pos in
-      translate bs tm
+  | Tm_app(head, arg::args) ->
+    let first = S.mk (Tm_app(head, [arg])) None Range.dummyRange in
+    let tm = S.mk (Tm_app(first, args)) None e.pos in
+    translate bs tm
 
-    | _ -> failwith "Not yet implemented"
+  | _ -> failwith "Not yet implemented"
 
 and readback (x:t) : term =
     match x with
@@ -88,7 +95,7 @@ and readback (x:t) : term =
     | Accu (Var bv, []) ->
       S.bv_to_name bv
     | Accu (Var bv, ts) ->
-      let args = List.map (fun x -> as_arg (readback x)) ts in
+      let args = map_rev (fun x -> as_arg (readback x)) ts in
       U.mk_app (S.bv_to_name bv) args
     | Accu _
     | Construct _ -> failwith "Not yet implemented"
