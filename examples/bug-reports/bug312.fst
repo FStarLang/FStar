@@ -41,7 +41,6 @@ irreducible val triple_a : s:double int
 
 #reset-options
 
-
 let triple_a s = let sample_fun = (fun x ->  (x - (R?.l s)) + (R?.r s)) in
                  cut (inverses (fun x -> x) (fun x -> x));
                  lemma_inverses_bij (fun x -> x) (fun x -> x);
