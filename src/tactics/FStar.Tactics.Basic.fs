@@ -167,17 +167,22 @@ let fail1 msg x     = fail (BU.format1 msg x)
 let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
 
-let trytac (t : tac<'a>) : tac<option<'a>> =
+let trytac' (t : tac<'a>) : tac<either<string,'a>> =
     mk_tac (fun ps ->
             let tx = UF.new_transaction () in
             match run t ps with
             | Success (a, q) ->
                 UF.commit tx;
-                Success (Some a, q)
-            | Failed (_, _) ->
+                Success (Inr a, q)
+            | Failed (m, _) ->
                 UF.rollback tx;
-                Success (None, ps)
+                Success (Inl m, ps)
            )
+let trytac (t : tac<'a>) : tac<option<'a>> =
+    bind (trytac' t) (fun r ->
+    match r with
+    | Inr v -> ret (Some v)
+    | Inl _ -> ret None)
 
 // This is relying on the fact that errors are strings
 let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
@@ -883,10 +888,11 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
                 ret ut))
           ))
        in
-       bind (trytac rewrite_eq) (fun x ->
+       bind (trytac' rewrite_eq) (fun x ->
        match x with
-       | None -> ret t
-       | Some x -> ret x)
+       | Inl "SKIP" -> ret t
+       | Inl e -> fail e
+       | Inr x -> ret x)
 
 let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
     bind get (fun ps ->
