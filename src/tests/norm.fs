@@ -16,6 +16,7 @@ open FStar.Ident
 open FStar.Range
 open FStar.Tests.Util
 
+
 let b = mk_binder
 let id     = pars "fun x -> x"
 let apply  = pars "fun f x -> f x"
@@ -92,8 +93,15 @@ let run_either i r expected normalizer =
 //    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
     Util.always i (Util.term_eq (U.unascribe x) expected)
 
+
 let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops])
 let run_nbe i r expected = run_either i r expected (fun _tcenv -> FStar.TypeChecker.NBE.normalize)
+
+let run_both_with_time i r expected =
+  let nbe () = run_either i r expected (fun _tcenv -> FStar.TypeChecker.NBE.normalize) in
+  let norm () = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops]) in
+  FStar.Util.measure_execution_time  "nbe" nbe;
+  FStar.Util.measure_execution_time "normalizer" norm
 
 let run_all_nbe () =
     Printf.printf "Testing NBE\n";
@@ -192,6 +200,10 @@ let run_all_interpreter () =
     run 1062 (Pars.tc "f (B 5 3)") (Pars.tc "2");
 //  run 24 (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"); -- CH: works up to an unfolding too much (char -> char')
     Printf.printf "Normalizer ok\n"
+
+let compare () =
+  Printf.printf "Comparing times for normalization and nbe\n";
+  run_both_with_time 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z
 
 let run_all () =
     run_all_nbe ()
