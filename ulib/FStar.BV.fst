@@ -59,12 +59,22 @@ let int2bv_logor #n #x #y #z pf =
   inverse_vec_lemma #n (bvor #n (int2bv x) (int2bv y));
   ()
 
+
+
 let int2bv_shl #n #x #y #z pf =
   inverse_vec_lemma #n (bvshl #n (int2bv #n x) y);			    
   ()
   
 let int2bv_shr #n #x #y #z pf =
   inverse_vec_lemma #n (bvshr #n (int2bv #n x) y);
+  ()
+
+let int2bv_add #n #x #y #z pf =
+  inverse_vec_lemma #n (bvadd #n (int2bv #n x) (int2bv #n y));
+  ()
+
+let int2bv_sub #n #x #y #z pf =
+  inverse_vec_lemma #n (bvsub #n (int2bv #n x) (int2bv #n y));
   ()
 
 let int2bv_div #n #x #y #z pf =
