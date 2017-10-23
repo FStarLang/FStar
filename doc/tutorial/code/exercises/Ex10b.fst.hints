@@ -12,7 +12,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "94a845613af31738eba6b1c54412c59f"
+      "5d3a6ff043ebaaa56dade070cb8ac594"
     ],
     [
       "Ex10b.__proj__Point__item__x",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "4c709fd6d249dbc6c2fadf7e5b7bba09"
+      "e7373976b8f19c57a23365ca93a19474"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -34,7 +34,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "aa9737d4777f67ca64238b194c7ccd83"
+      "77d58bd9f1b9ff745ce2b2ee47392551"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Ex10b_Tm_refine_f2a77ae22406f0f6f8f3003c6e41b99e"
       ],
       0,
-      "2d47f485aace74ffff9c0f3126b5a4b1"
+      "4a4919e4647e2424d8fc7f046e6c2f1b"
     ],
     [
       "Ex10b.new_point",
@@ -59,7 +59,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c11dce575fbc75407ed928b64a55401c"
+      "c5ee417c125306e8d9c23b25abbbbc50"
     ],
     [
       "Ex10b.new_point",
@@ -68,7 +68,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "428360f7f13f30fc65f1e2329e9d1b36"
+      "41340dc647d2493619d437d89c502ded"
     ],
     [
       "Ex10b.new_point",
@@ -77,7 +77,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3fbc13269b07729692bf9b83f3451dd7"
+      "e74835ac0331b7a11a8ce2afd3418cdf"
     ],
     [
       "Ex10b.new_point",
@@ -114,7 +114,7 @@
         "typing_FStar.Set.empty"
       ],
       0,
-      "6d11566f920c561fd0a1b4e8e9fe7b49"
+      "44375c45889a3c4b96df2edfcb39a8ab"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -127,7 +127,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7f225133c356aad6f07bc2e71991a313"
+      "05171c9b1157f5529d87fa78eac6cc60"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -140,7 +140,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fdb02ab4a6c130b2abe99c04983a988a"
+      "d0b2689625f20ae478ae2497986cd4a2"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -152,7 +152,7 @@
         "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
       ],
       0,
-      "e6bbe2d8b52d10f921769be393985aa6"
+      "b0b027b4c679de31fa032cb3a37bf9be"
     ],
     [
       "Ex10b.test",
@@ -183,7 +183,7 @@
         "typing_FStar.Ref.contains", "typing_FStar.Ref.fresh"
       ],
       0,
-      "1e7dc8c8cfe19cf1b924acb6fbd29d98"
+      "316e1fdc90cdf743e0bc3e3cadf2ba51"
     ]
   ]
 ]

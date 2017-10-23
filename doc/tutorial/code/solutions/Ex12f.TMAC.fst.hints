@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "6f6b4e17480dc21306b3493b292dcec4"
+      "cde5b7cb3c4b130eebc24990e5c3de3f"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -30,7 +30,7 @@
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
       0,
-      "a6952420c0cdd810af6c23f188421335"
+      "7a8ab2725f0579fc582b6f0773b5713b"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -51,7 +51,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],
       0,
-      "9eb310565cade7c00db40f5d0b33b6ce"
+      "e1b25cab630f447337be8238cc20b06b"
     ]
   ]
 ]
