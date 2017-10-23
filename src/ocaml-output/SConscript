@@ -168,7 +168,7 @@ fstar_version_ml=env.Command('FStar_Version.ml', '../../version.txt', generate_f
 readpipe, writepipe = os.pipe()
 os.write(writepipe, str.encode('print_endline Sys.ocaml_version'))
 os.close(writepipe)
-OCAML_VERSION = str(subprocess.check_output(['ocaml','get_branch.ml'], stdin=readpipe)).split('\n')[0]
+OCAML_VERSION = str(subprocess.check_output(['ocaml','get_branch.ml'], stdin=readpipe)).splitlines()[0]
 os.close(readpipe)
 env.Command('../extraction/ml/FStar_Extraction_ML_PrintML.ml',
             '../extraction/ml/FStar_Extraction_ML_PrintML_'+OCAML_VERSION+'.ml',
