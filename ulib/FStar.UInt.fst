@@ -82,13 +82,13 @@ abstract val incr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a < max_int n)))
   (ensures (fun b -> a + 1 = b))
 let incr_underspec #n a =
-  if a < max_int n then a + 1 else magic()
+  if a < max_int n then a + 1 else 0
 
 abstract val decr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
   (requires (b2t (a > min_int n)))
   (ensures (fun b -> a - 1 = b))
 let decr_underspec #n a =
-  if a > min_int n then a - 1 else magic()
+  if a > min_int n then a - 1 else 0
 
 val incr_mod: #n:nat -> a:uint_t n -> Tot (uint_t n)
 let incr_mod #n a = (a + 1) % (pow2 n)
@@ -107,7 +107,7 @@ abstract val add_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n
   (ensures (fun c ->
     size (a + b) n ==> a + b = c))
 let add_underspec #n a b =
-  if fits (a+b) n then a + b else magic ()
+  if fits (a+b) n then a + b else 0
 
 val add_mod: #n:nat -> uint_t n -> uint_t n -> Tot (uint_t n)
 let add_mod #n a b =
@@ -125,7 +125,7 @@ abstract val sub_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n
   (ensures (fun c ->
     size (a - b) n ==> a - b = c))
 let sub_underspec #n a b =
-  if fits (a-b) n then a - b else magic ()
+  if fits (a-b) n then a - b else 0
 
 val sub_mod: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let sub_mod #n a b =
@@ -143,16 +143,22 @@ abstract val mul_underspec: #n:nat -> a:uint_t n -> b:uint_t n -> Pure (uint_t n
   (ensures (fun c ->
     size (a * b) n ==> a * b = c))
 let mul_underspec #n a b =
-  if fits (a*b) n then a * b else magic ()
+  if fits (a*b) n then a * b else 0
 
 val mul_mod: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 let mul_mod #n a b =
   (a * b) % (pow2 n)
 
+let lt_square_div_lt (a:nat) (b:pos) : Lemma
+  (requires (a < b * b))
+  (ensures (a / b < b))
+  = ()
+
 val mul_div: #n:nat -> a:uint_t n -> b:uint_t n -> Tot (uint_t n)
 #reset-options "--max_fuel 0 --max_ifuel 0 --z3rlimit 80"
 let mul_div #n a b =
   FStar.Math.Lemmas.lemma_mult_lt_sqr a b (pow2 n);
+  lt_square_div_lt (a * b) (pow2 n);
   (a * b) / (pow2 n)
 
 #reset-options "--max_fuel 0 --max_ifuel 0"
@@ -168,7 +174,7 @@ abstract val div_underspec: #n:nat -> a:uint_t n -> b:uint_t n{b <> 0} -> Pure (
   (ensures (fun c ->
     (b <> 0 /\ size (a / b) n) ==> a / b = c))
 let div_underspec #n a b =
-  if fits (a / b) n then a / b else magic ()
+  if fits (a / b) n then a / b else 0
 
 val div_size: #n:pos -> a:uint_t n -> b:uint_t n{b <> 0} ->
   Lemma (requires (size a n)) (ensures (size (a / b) n))

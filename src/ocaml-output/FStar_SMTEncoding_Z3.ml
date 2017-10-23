@@ -33,7 +33,7 @@ let parse_z3_version_lines:
                 (let msg =
                    FStar_Util.format2
                      "Expected Z3 commit hash \"%s\", got \"%s\""
-                     _z3hash_expected hash in
+                     _z3hash_expected trimmed in
                  FStar_Pervasives_Native.Some msg)
           | uu____49::q -> aux q
           | uu____53 ->

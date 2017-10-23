@@ -419,11 +419,12 @@ let as_function_typ env t0 =
                    else failwith (BU.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (Print.term_to_string t0))
     in aux true t0
 
-let curried_arrow_formals_comp k =
+let rec curried_arrow_formals_comp k =
   let k = Subst.compress k in
   match k.n with
-  | Tm_arrow(bs, c) -> Subst.open_comp bs c
-  | _ -> [], Syntax.mk_Total k
+  | Tm_arrow(bs, c)  -> Subst.open_comp bs c
+  | Tm_refine(bv, _) -> curried_arrow_formals_comp bv.sort
+  | _                -> [], Syntax.mk_Total k
 
 let is_arithmetic_primitive head args =
     match head.n, args with
@@ -457,6 +458,8 @@ let is_BitVector_primitive head args =
       (S.fv_eq_lid fv Const.bv_and_lid
       || S.fv_eq_lid fv Const.bv_xor_lid
       || S.fv_eq_lid fv Const.bv_or_lid
+      || S.fv_eq_lid fv Const.bv_add_lid
+      || S.fv_eq_lid fv Const.bv_sub_lid
       || S.fv_eq_lid fv Const.bv_shift_left_lid
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
@@ -635,6 +638,8 @@ and encode_arith_term env head args_e =
     let bv_and  = mk_bv Util.mkBvAnd binary (Term.boxBitVec sz) in
     let bv_xor  = mk_bv Util.mkBvXor binary (Term.boxBitVec sz) in
     let bv_or   = mk_bv Util.mkBvOr binary (Term.boxBitVec sz) in
+    let bv_add  = mk_bv Util.mkBvAdd binary (Term.boxBitVec sz) in
+    let bv_sub  = mk_bv Util.mkBvSub binary (Term.boxBitVec sz) in
     let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith (Term.boxBitVec sz) in
     let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith (Term.boxBitVec sz) in
     let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith (Term.boxBitVec sz) in
@@ -650,6 +655,8 @@ and encode_arith_term env head args_e =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
          (Const.bv_or_lid, bv_or);
+	 (Const.bv_add_lid, bv_add);
+	 (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.bv_udiv_lid, bv_udiv);
@@ -1908,13 +1915,17 @@ let encode_top_level_let :
                         flid.str (Print.term_to_string e) (Print.term_to_string t_norm))
           end
         | _ -> begin
-            match (SS.compress t_norm).n with
-            | Tm_arrow(formals, c) ->
+            let rec aux' (t_norm:S.term) =
+              match (SS.compress t_norm).n with
+              | Tm_arrow(formals, c) ->
                 let formals, c = SS.open_comp formals c in
                 let tres = get_result_type c in
                 let binders, body = eta_expand [] formals e tres in
                 (binders, body, formals, tres), false
-            | _ -> ([], e, [], t_norm), false
+              | Tm_refine (bv, _) -> aux' bv.sort
+              | _ -> ([], e, [], t_norm), false
+            in
+            aux' t_norm
           end
       in
       aux false t_norm
@@ -1929,7 +1940,7 @@ let encode_top_level_let :
           bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
             (* some, but not all are lemmas; impossible *)
             if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
-            let t_norm = whnf env lb.lbtyp in
+                let t_norm = whnf env lb.lbtyp in
             (* We are declaring the top_level_let with t_norm which might contain *)
             (* non-reified reifiable computation type. *)
             (* TODO : clear this mess, the declaration should have a type corresponding to *)

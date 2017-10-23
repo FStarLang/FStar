@@ -12,7 +12,7 @@ dump*
 cache/
 /VS/packages
 
-/src/parser/boot/parse.fs
+/src/parser/parse.fs
 /src/parser/lex.fs
 
 /src/boot

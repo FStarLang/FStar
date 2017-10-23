@@ -1171,7 +1171,7 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     let ts = SS.close_univ_vars univs t in
     univs, ts
 
-let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbname * list<univ_name> * term * comp)>> =
+let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbname * list<univ_name> * term * comp * list<binder>)>> =
   if not <| (BU.for_all (fun (_, _, c) -> U.is_pure_or_ghost_comp c) lecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
@@ -1295,11 +1295,11 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let gen_tvars = gen_types uvs in
 
      let ecs = lecs |> List.map (fun (lbname, e, c) ->
-         let e, c =
+         let e, c, gvs =
             match gen_tvars, gen_univs with
             | [], [] ->
               //nothing generalized
-              e, c
+              e, c, []
 
             | _ ->
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
@@ -1325,11 +1325,11 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                     | _ ->
                       U.arrow gen_tvars c in
               let e' = U.abs gen_tvars e (Some (U.residual_comp_of_comp c)) in
-              e', S.mk_Total t in
-          (lbname, gen_univs, e, c)) in
+              e', S.mk_Total t, gen_tvars in
+          (lbname, gen_univs, e, c, gvs)) in
      Some ecs
 
-let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp)>) =
+let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp*list<binder>)>) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
   if debug env Options.Low
   then BU.print1 "Generalizing: %s\n"
@@ -1337,20 +1337,21 @@ let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname
   let univnames_lecs = List.map (fun (l, t, c) -> gather_free_univnames env t) lecs in
   let generalized_lecs =
       match gen env is_rec lecs with
-          | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c)
+          | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c,[])
           | Some luecs ->
             if debug env Options.Medium
             then luecs |> List.iter
-                    (fun (l, us, e, c) ->
-                         BU.print4 "(%s) Generalized %s at type %s\n%s\n"
+                    (fun (l, us, e, c, gvs) ->
+                         BU.print5 "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n"
                                           (Range.string_of_range e.pos)
                                           (Print.lbname_to_string l)
                                           (Print.term_to_string (U.comp_result c))
-                                          (Print.term_to_string e));
+                                          (Print.term_to_string e)
+                                          (Print.binders_to_string ", " gvs));
             luecs
    in
-   List.map2 (fun univnames (l,generalized_univs, t, c) ->
-              (l, check_universe_generalization univnames generalized_univs t, t, c))
+   List.map2 (fun univnames (l,generalized_univs, t, c, gvs) ->
+              (l, check_universe_generalization univnames generalized_univs t, t, c, gvs))
              univnames_lecs
              generalized_lecs
 

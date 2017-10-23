@@ -129,7 +129,7 @@ let arith_to_bv_tac : tactic unit =
     let f = term_as_formula g in
     match f with
     | Comp Eq t l r ->
-     begin match run_tm (is_arith_expr l) with
+     begin match run_tm (as_arith_expr l) with
       | Inl s ->
     	  dump s;;
           trefl
@@ -160,11 +160,12 @@ let arith_to_bv_tac : tactic unit =
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
 let bv_tac ()  =
-  apply_lemma (quote eq_to_bv);;
-  apply_lemma (quote trans);;
+  mapply (quote eq_to_bv);;
+  mapply (quote trans);;
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
+  norm [delta] ;;
   smt
 
 let bv_tac_lt n =

@@ -5,4 +5,4 @@ type tree =
 
 val in_tree : int -> tree -> Tot bool
 let in_tree x t = match t with
-  | Leaf n -> false 
+  | Leaf n -> false

@@ -176,6 +176,11 @@ assume private val __exact : term -> __tac unit
 always be the case since [w] is usually a uvar. *)
 let exact (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact tt)
 
+assume private val __exact_guard : term -> __tac unit
+(** Like [exact], but allows for the term [e] to have a type [t] only
+under some guard [g], adding the guard as a goal. *)
+let exact_guard (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact_guard tt)
+
 assume private val __apply : term -> __tac unit
 (** [apply f] will attempt to produce a solution to the goal by an application
 of [f] to any amount of arguments (which need to be solved as further goals).

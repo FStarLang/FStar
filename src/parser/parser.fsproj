@@ -31,7 +31,7 @@
     <NoWarn>1178</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin\</OutputPath>
@@ -76,10 +76,10 @@
     <Compile Include="FStar.Parser.Const.fs" />
     <Compile Include="FStar.Parser.AST.fs" />
     <Compile Include="parseutil.fs" />
-    <FsYacc Include="boot/parse.fsy">
-      <OtherFlags>--module FStar.Parser.Parse --open FStar.Parser.AST -o boot/parse.fs</OtherFlags>
+    <FsYacc Include="parse.fsy">
+      <OtherFlags>--module FStar.Parser.Parse --open FStar.Parser.AST</OtherFlags>
     </FsYacc>
-    <Compile Include="boot/parse.fs" />
+    <Compile Include="parse.fs" />
     <Compile Include="FStar.Parser.Lexhelp.fs" />
     <Compile Include="lex.fs" />
     <Compile Include="FStar.Parser.ParseIt.fsi" />

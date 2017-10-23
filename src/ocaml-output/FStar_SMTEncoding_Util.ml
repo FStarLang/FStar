@@ -115,6 +115,14 @@ let mkBvOr:
   (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
     FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
   = norng FStar_SMTEncoding_Term.mkBvOr
+let mkBvAdd:
+  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = norng FStar_SMTEncoding_Term.mkBvAdd
+let mkBvSub:
+  (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
+    FStar_Pervasives_Native.tuple2 -> FStar_SMTEncoding_Term.term
+  = norng FStar_SMTEncoding_Term.mkBvSub
 let mkBvShl:
   Prims.int ->
     (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.term)
@@ -179,9 +187,9 @@ let mkExists:
     FStar_SMTEncoding_Term.term
   = norng FStar_SMTEncoding_Term.mkExists
 let norng2:
-  'Auu____540 'Auu____541 'Auu____542 .
-    ('Auu____542 -> 'Auu____541 -> FStar_Range.range -> 'Auu____540) ->
-      'Auu____542 -> 'Auu____541 -> 'Auu____540
+  'Auu____562 'Auu____563 'Auu____564 .
+    ('Auu____564 -> 'Auu____563 -> FStar_Range.range -> 'Auu____562) ->
+      'Auu____564 -> 'Auu____563 -> 'Auu____562
   = fun f  -> fun x  -> fun y  -> f x y FStar_Range.dummyRange
 let mk_Term_app:
   FStar_SMTEncoding_Term.term ->
