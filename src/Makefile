@@ -244,9 +244,7 @@ utest:
 # The first tests have to be performed sequentially (but each one may use some parallelism)
 utest-prelude:
 	+$(MAKE) all
-ifeq ($(OS),Windows_NT)
-	+$(MAKE) fsharp-regressions #normalizer failures on linux so only run on windows
-endif
+	+$(MAKE) fsharp-regressions
 	+$(MAKE) boot-ocaml
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
