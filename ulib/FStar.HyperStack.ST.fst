@@ -206,7 +206,7 @@ let push_colored_frame (c:int) =
   assert (HH.root `is_in` h) ;
   HH.extend_preserves_map_invariant m0.h h m0.tip tip n c ;
   assert (HH.map_invariant h) ;
-  assume (downward_closed h) ;
+  assert (downward_closed h) ;
   assert (eternal_is_live h) ;
   let h : hh = h in
   let m1 = HS h tip n in
@@ -287,7 +287,7 @@ let salloc_maybe_mm #a init mm =
   assert_by_tactic (valid_ref s m1) (local_unfold ["valid_ref"]) ;
   let s = to_stack_reference s in
   assert_by_tactic (salloc_post init m0 s m1 /\ is_mm s == mm) (local_unfold ["salloc_post"]);
-  assume (inline_stack_inv m0 m1) ;
+  assert_by_tactic (inline_stack_inv m0 m1) (local_unfold ["inline_stack_inv"]);
   s
 
 val salloc: #a:Type -> init:a -> StackInline (stackref a)
@@ -347,6 +347,8 @@ let stronger_fresh_region (r:HH.rid) (m0:mem) (m1:mem) =
    (forall j. HH.includes r j ==> not (j `is_in` m0.h))
    /\ r `is_in` m1.h
 
+#set-options "--max_fuel 0 --z3rlimit 50"
+
 val new_region: r0:rid ->
   ST rid
     (requires (fun m -> is_eternal_region r0))
@@ -363,7 +365,7 @@ let new_region r0 =
   let r1 = HH.extend_monochrome r0 n in
   let h1 = Map.upd m0.h r1 HH.emp in
   assert (HH.root `is_in` h1) ;
-  gst_recall (region_allocated_pred r0) ;
+  recall_weak_live_region r0 ;
   HH.extend_monochrome_preserves_map_invariant m0.h h1 r0 r1 n ;
   assert (HH.map_invariant h1) ;
   assume (downward_closed h1) ;
@@ -378,8 +380,8 @@ assert(HH.fresh_region r1 m0.h m1.h);
 assert(			    HH.color r1 == HH.color r0);
 assert(			    m1.h == Map.upd m0.h r1 HH.emp);
 assert(			    m1.tip == m0.tip);
-  admit () ;
  r1
+
 
 let is_eternal_color = HS.is_eternal_color
 
@@ -398,16 +400,34 @@ let new_colored_region r0 c =
   let n = m0.region_freshness + 1 in
   let r1 = HH.extend r0 n c in
   let h1 = Map.upd m0.h r1 HH.emp in
+  HH.extend_preserves_map_invariant m0.h h1 r0 r1 n c;
   let m1 = HS h1 m0.tip n in
+  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
   gst_put m1 ;
+  gst_witness (region_allocated_pred r1) ;
+  let r1 : rid = r1 in
   r1
 
-unfold let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
-    let region_i = (Map.sel m0.h i).HH.m in
-    (HH.as_ref x.ref) `Heap.unused_in` region_i
-  /\ i `is_in` m0.h
-  /\ i = x.id
+#reset-options
+
+let ralloc_post (#a:Type) (i:HH.rid) (init:a) (m0:mem) (x:reference a{is_eternal_region x.id}) (m1:mem) =
+  i `is_in` m0.h
+  /\ i == x.id
   /\ m1 == upd m0 x init
+  /\ HH.fresh_rref x.ref m0.h m1.h
+
+private
+let to_eternal_reference (#a:Type) (r:FStar.HyperStack.reference a)
+  : ST (s:reference a{is_eternal_region s.id})
+        (fun h -> valid_ref r h /\ is_eternal_region r.id)
+        (fun (h0:mem) s (h1:mem) -> r === s /\ h0 == h1)
+= gst_witness (valid_ref r) ;
+  let x : reference a = r in
+  assert (is_eternal_region x.id) ;
+  let x : (x:reference a{is_eternal_region x.id}) = x in
+  x
+
+#set-options "--max_fuel 0 --z3rlimit 50"
 
 private
 val ralloc_maybe_mm: #a:Type -> i:rid -> init:a -> mm:bool -> ST (x:reference a{is_eternal_region x.id})
@@ -419,11 +439,16 @@ let ralloc_maybe_mm #a i init mm =
   let r, h = HH.alloc i (Preorder.trivial_preorder a) m0.h init mm in
   HH.lemma_alloc i (Preorder.trivial_preorder a) m0.h init mm ;
   lemma_upd_existing_rid_idempotent i m0;
-  let m1 = HS h m0.tip in
+  let m1 = HS h m0.tip m0.region_freshness in
+  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
   gst_put m1 ;
-  let s = MkRef i r in
-  gst_witness (valid_ref s) ;
-  s
+  let x = MkRef i r in
+  assert_by_tactic (valid_ref x m1) (local_unfold ["valid_ref"]) ;
+  let x = to_eternal_reference x in
+  assert_by_tactic (ralloc_post i init m0 x m1 /\ is_mm x == mm) (local_unfold ["ralloc_post"]);
+  x
+
+#reset-options
 
 val ralloc: #a:Type -> i:rid -> init:a -> ST (ref a)
     (requires (fun m -> is_eternal_region i))
@@ -439,13 +464,15 @@ val rfree: #a:Type -> r:mmref a -> ST unit
   (requires (fun m0 -> m0 `contains` r))
   (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == remove_reference r m0))
 let rfree #a r =
+  admit () ;
+  
   gst_recall (valid_ref r) ;
   let m0 = gst_get () in
   let m1 = remove_reference r m0 in
   lemma_upd_existing_rid_idempotent r.id m0;
   gst_put m1
 
-unfold let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
+let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
   m0 `contains` r /\ m1 == HyperStack.upd m0 r v
 
 (**
@@ -459,8 +486,16 @@ let op_Colon_Equals #a r v =
   let m0 = gst_get () in
   let h1 = HH.upd_tot m0.h r.ref v in
   lemma_upd_existing_rid_idempotent r.id m0 ;
-  let m1 = HS h1 m0.tip in
-  gst_put m1
+  let m1 = HS h1 m0.tip m0.region_freshness in
+  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
+  gst_put m1 ;
+  assert_by_tactic (assign_post r v m0 () m1) (local_unfold ["assign_post"]) ;
+    assert(m0.tip == m1.tip);
+assert     (forall r. (Map.contains m0.h r /\ (Map.sel m0.h r).HH.live) <==> (Map.contains m1.h r /\ (Map.sel m1.h r).HH.live));
+           admit () ;
+assert     (forall r. r `is_in` m0.h ==> Heap.equal_dom (m0.h `HH.at` r) (m1.h `HH.at` r))
+  (* assert (equal_domains m0 m1) ; *)
+
 
 unfold let deref_post (#a:Type) (r:reference a) m0 x m1 =
   m1==m0 /\ x==HyperStack.sel m0 r
