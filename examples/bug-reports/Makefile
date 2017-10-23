@@ -25,7 +25,7 @@ SHOULD_VERIFY_CLOSED=bug022.fst bug024.fst bug025.fst bug026.fst bug026b.fst bug
   bug516.fst bug516b.fst bug517.fst bug540.fst bug552.fst bug566.fst bug574.fst bug577.fst bug579.fst bug581.fst\
   bug590.fst bug601.fst bug605.fst bug609.fst bug613.fst bug686.fst bug705.fst bug706.fst bug707.fst bug709.fst\
   bug710.fst bug712.fst bug713.fst bug736.fst bug765.fst bug769c.fst bug836.fst bug844.fst bug989.fst\
-  BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst
+  BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst bug1150.fst
 SHOULD_VERIFY_INTERFACE_CLOSED=bug771.fsti bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=bug016.fst
 
@@ -37,7 +37,7 @@ SHOULD_VERIFY_OPEN=bug045.fst bug057.fst bug064.fst bug065.fst bug071.fst bug121
   bug171b.fst bug171c.fst bug258.fst bug259.fst bug282.fst bug291.fst bug400.fst bug419.fst bug442.fst\
   bug442b.fst bug466.fst bug484.fst bug542.fst bug543.fst bug554.fst bug575.fst bug604.fst bug606.fst\
   bug626.fst bug682.fst bug715.fst bug739.fst bug815.fst bug815b.fst bug851.fst bug933.fst bug933b.fst\
-  bug1038.fst bug1055b.fst bug1091.fst bug1150.fst
+  bug1038.fst bug1055b.fst bug1091.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.
