@@ -40,7 +40,8 @@ val int2bv_lemma_1: #n:pos -> a:uint_t n -> b:uint_t n ->
 val int2bv_lemma_2: #n:pos -> a:uint_t n -> b:uint_t n ->
   Lemma (requires (int2bv a = int2bv b)) (ensures a = b)
 
-
+val bvadd :#n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
+val bvsub :#n:pos -> a:bv_t n -> b:bv_t n -> Tot (bv_t n)
 val bvdiv :#n:pos -> a:bv_t n -> b:uint_t n{b <> 0} -> Tot (bv_t n)
 val bvmod :#n:pos -> a:bv_t n -> b:uint_t n{b <> 0} -> Tot (bv_t n)
 val bvmul :#n:pos -> a:bv_t n -> b:uint_t n -> Tot (bv_t n)

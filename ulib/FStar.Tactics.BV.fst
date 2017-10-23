@@ -51,6 +51,18 @@ val cong_bvmul : #n:pos -> #w:bv_t n -> (#x:uint_t n) ->
 			   Lemma (bvmul #n w x == bvmul #n y x)
 let cong_bvmul #n #w #x #y pf = ()
 
+val cong_bvadd : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+			  (#y:bv_t n) -> (#z:bv_t n) ->
+			  squash (w == y) -> squash (x == z) ->
+			  Lemma (bvadd w x == bvadd y z)
+let cong_bvadd #n #w #x #y #z pf1 pf2 = ()
+
+val cong_bvsub : #n:pos -> (#w:bv_t n) -> (#x:bv_t n) -> 
+			  (#y:bv_t n) -> (#z:bv_t n) ->
+			  squash (w == y) -> squash (x == z) ->
+			  Lemma (bvsub w x == bvsub y z)
+let cong_bvsub #n #w #x #y #z pf1 pf2 = ()
+
 (* Used to reduce the initial equation to an equation on bitvectors*)
 val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
               squash (int2bv #n x == int2bv #n y) -> Lemma (x == y)
@@ -119,7 +131,12 @@ let rec arith_expr_to_bv e : tactic unit =
         apply_lemma (quote int2bv_logor);;
         apply_lemma (quote cong_bvor);;
         arith_expr_to_bv e1;;
-        arith_expr_to_bv e2	
+        arith_expr_to_bv e2
+    | NatToBv (Ladd e1 e2) | (Ladd e1 e2) ->
+        apply_lemma (quote int2bv_add);;
+        apply_lemma (quote cong_bvadd);;
+        arith_expr_to_bv e1;;
+        arith_expr_to_bv e2
     | _ ->
         trefl
 
