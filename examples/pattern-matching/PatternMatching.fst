@@ -852,6 +852,8 @@ open FStar.Tactics
 ///
 /// Here's the example from the intro, which we can now run!
 
+#set-options "--ugly" // FIXME: F* crashes with “wrong data-app head format”
+
 let fetch_eq_side' #a : tactic (term * term) =
   gpm (fun (left right: a) (g: goal (squash (left == right))) ->
          (quote left (), quote right ()) <: Tac (term * term))
