@@ -419,11 +419,12 @@ let as_function_typ env t0 =
                    else failwith (BU.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (Print.term_to_string t0))
     in aux true t0
 
-let curried_arrow_formals_comp k =
+let rec curried_arrow_formals_comp k =
   let k = Subst.compress k in
   match k.n with
-  | Tm_arrow(bs, c) -> Subst.open_comp bs c
-  | _ -> [], Syntax.mk_Total k
+  | Tm_arrow(bs, c)  -> Subst.open_comp bs c
+  | Tm_refine(bv, _) -> curried_arrow_formals_comp bv.sort
+  | _                -> [], Syntax.mk_Total k
 
 let is_arithmetic_primitive head args =
     match head.n, args with
@@ -1914,13 +1915,17 @@ let encode_top_level_let :
                         flid.str (Print.term_to_string e) (Print.term_to_string t_norm))
           end
         | _ -> begin
-            match (SS.compress t_norm).n with
-            | Tm_arrow(formals, c) ->
+            let rec aux' (t_norm:S.term) =
+              match (SS.compress t_norm).n with
+              | Tm_arrow(formals, c) ->
                 let formals, c = SS.open_comp formals c in
                 let tres = get_result_type c in
                 let binders, body = eta_expand [] formals e tres in
                 (binders, body, formals, tres), false
-            | _ -> ([], e, [], t_norm), false
+              | Tm_refine (bv, _) -> aux' bv.sort
+              | _ -> ([], e, [], t_norm), false
+            in
+            aux' t_norm
           end
       in
       aux false t_norm
@@ -1935,7 +1940,7 @@ let encode_top_level_let :
           bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
             (* some, but not all are lemmas; impossible *)
             if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
-            let t_norm = whnf env lb.lbtyp in
+                let t_norm = whnf env lb.lbtyp in
             (* We are declaring the top_level_let with t_norm which might contain *)
             (* non-reified reifiable computation type. *)
             (* TODO : clear this mess, the declaration should have a type corresponding to *)
