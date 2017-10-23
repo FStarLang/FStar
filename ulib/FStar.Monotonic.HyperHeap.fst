@@ -326,6 +326,15 @@ let free_mm (#a:Type0) (#id:rid) (#rel:preorder a) (m:t) (r:mrref id a rel{m `co
   let h1 = Heap.free_mm h0 (as_ref r) in
   Map.upd m id (H true h1)
 
+
+let lemma_upd_tot (#a:Type) (#rel:preorder a) (#i:rid) (m0 m1:t) (r:mrref i a rel{m0 `contains_ref` r}) (v:a{rel (sel m0 r) v})
+  : Lemma (requires (m1 == upd_tot #a #rel #i m0 r v))
+    (ensures
+      (forall r. (Map.contains m0 r /\ (Map.sel m0 r).live) <==> (Map.contains m1 r /\ (Map.sel m1 r).live)) /\
+      (forall r. m0 `contains` r ==> Heap.equal_dom (m0 `at` r) (m1 `at` r)))
+= ()
+
+
 let lemma_alloc (id:rid) (#a:Type0) (rel:preorder a) (m0:t) (init:a) (mm:bool)
   : Lemma (requires (m0 `contains` id))
     (ensures (

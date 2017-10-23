@@ -475,6 +475,8 @@ let rfree #a r =
 let assign_post (#a:Type) (r:reference a) (v:a) m0 (_u:unit) m1 =
   m0 `contains` r /\ m1 == HyperStack.upd m0 r v
 
+#set-options "--max_fuel 0 --z3rlimit 50"
+
 (**
    Assigns, provided that the reference exists.
    Guaranties the strongest low-level effect: Stack
@@ -490,14 +492,12 @@ let op_Colon_Equals #a r v =
   assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
   gst_put m1 ;
   assert_by_tactic (assign_post r v m0 () m1) (local_unfold ["assign_post"]) ;
-    assert(m0.tip == m1.tip);
-assert     (forall r. (Map.contains m0.h r /\ (Map.sel m0.h r).HH.live) <==> (Map.contains m1.h r /\ (Map.sel m1.h r).HH.live));
-           admit () ;
-assert     (forall r. r `is_in` m0.h ==> Heap.equal_dom (m0.h `HH.at` r) (m1.h `HH.at` r))
-  (* assert (equal_domains m0 m1) ; *)
+  HH.lemma_upd_tot m0.h h1 r.ref v ;
+  assert_by_tactic (equal_domains m0 m1) (norm [delta ; delta_only ["FStar.HyperStack.equal_domains"] ])
 
+#reset-options
 
-unfold let deref_post (#a:Type) (r:reference a) m0 x m1 =
+let deref_post (#a:Type) (r:reference a) m0 x m1 =
   m1==m0 /\ x==HyperStack.sel m0 r
 
 (**
