@@ -82,6 +82,14 @@ val int2bv_logand : (#n:pos) -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
 			    squash (bvshr #n (int2bv #n x) y == z) ->
 			    Lemma (int2bv #n (shift_right #n x y) == z)
 
+val int2bv_add : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+			    squash (bvadd #n (int2bv #n x) (int2bv #n y) == z) ->
+			    Lemma (int2bv #n (add_mod #n x y) == z)
+
+val int2bv_sub : #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) ->
+			    squash (bvsub #n (int2bv #n x) (int2bv #n y) == z) ->
+			    Lemma (int2bv #n (sub_mod #n x y) == z)
+
  val int2bv_div : #n:pos -> (#x:uint_t n) -> (#y:uint_t n{y <> 0}) -> (#z:bv_t n) ->
 			    squash (bvdiv #n (int2bv #n x) y == z) ->
 			    Lemma (int2bv #n (udiv #n x y) == z)
