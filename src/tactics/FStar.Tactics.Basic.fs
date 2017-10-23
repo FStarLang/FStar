@@ -832,7 +832,7 @@ let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) 
     bind (if d = TopDown
           then f env ({ t with n = tn })
           else ret t) (fun t ->
-    let tn = match tn with
+    let tn = match (SS.compress t).n with
              | Tm_app (hd, args) ->
                   let ff = tac_fold_env d f env in
                   bind (ff hd) (fun hd ->
@@ -863,19 +863,29 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
     if not (U.is_pure_or_ghost_lcomp lcomp) || not (Rel.is_trivial g) then
         ret t // Don't do anything for possibly impure terms
     else
-        let typ = lcomp.res_typ in
-        bind (new_uvar "pointwise_rec" env typ) (fun ut ->
-        log ps (fun () ->
-            BU.print2 "Pointwise_rec: making equality %s = %s\n" (Print.term_to_string t)
-                                                                 (Print.term_to_string ut));
-        bind (add_irrelevant_goal "pointwise_rec equation" env
-                     (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts) (fun _ ->
-        focus (
-            bind tau (fun _ ->
-            // Try to get rid of all the unification lambdas
-            let ut = N.reduce_uvar_solutions env ut in
-            ret ut))
-        ))
+        let rewrite_eq =
+          let typ = lcomp.res_typ in
+          bind (new_uvar "pointwise_rec" env typ) (fun ut ->
+          log ps (fun () ->
+              BU.print2 "Pointwise_rec: making equality\n\t%s ==\n\t%s\n" (Print.term_to_string t)
+                                                                   (Print.term_to_string ut));
+          bind (add_irrelevant_goal "pointwise_rec equation" env
+                                    (U.mk_eq2 (TcTerm.universe_of env typ) typ t ut) opts) (fun _ ->
+          focus (
+                bind tau (fun _ ->
+                // Try to get rid of all the unification lambdas
+                let ut = N.reduce_uvar_solutions env ut in
+                log ps (fun () ->
+                    BU.print2 "Pointwise_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+                                (Print.term_to_string t)
+                                (Print.term_to_string ut));
+                ret ut))
+          ))
+       in
+       bind (trytac rewrite_eq) (fun x ->
+       match x with
+       | None -> ret t
+       | Some x -> ret x)
 
 let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
     bind get (fun ps ->

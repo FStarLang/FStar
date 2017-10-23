@@ -131,7 +131,6 @@ let lemma_bytes_and_mod x y =
   | 7 ->
     lemma_bytes_shift_constants7 ();
     lemma_bytes_and_mod7 x
-  | _ -> magic ()
 
 let lemma_bytes_power2 () =
   assert_norm (pow2 0 == 0x1);
