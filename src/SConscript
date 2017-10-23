@@ -177,9 +177,6 @@ for t in ALL_BOOT:
   x = None
   for target, source, action in Boot_Rules:
     if target == t:
-        print ("boot rule");
-        print target
-        print source
         x = env.Command(target, source,  action)
         break
     elif '%' in target:
@@ -189,9 +186,6 @@ for t in ALL_BOOT:
       if os.path.exists(computedsource):
         targetparts = split_path(target)
         computedtarget = targetparts.path + '/' + tparts.basename + targetparts.extension
-        print ("boot rule computed");
-        print computedtarget
-        print computedsource
         x = env.Command(computedtarget, computedsource, action)
         break
   if x == None:
