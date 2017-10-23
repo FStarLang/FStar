@@ -95,6 +95,12 @@ let mkBvXor : (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  F
 let mkBvOr : (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (norng FStar_SMTEncoding_Term.mkBvOr)
 
 
+let mkBvAdd : (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (norng FStar_SMTEncoding_Term.mkBvAdd)
+
+
+let mkBvSub : (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (norng FStar_SMTEncoding_Term.mkBvSub)
+
+
 let mkBvShl : Prims.int  ->  (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (fun sz -> (norng (FStar_SMTEncoding_Term.mkBvShl sz)))
 
 
@@ -137,7 +143,7 @@ let mkForall'' : (FStar_SMTEncoding_Term.pat Prims.list Prims.list * Prims.int F
 let mkExists : (FStar_SMTEncoding_Term.pat Prims.list Prims.list * FStar_SMTEncoding_Term.fvs * FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term = (norng FStar_SMTEncoding_Term.mkExists)
 
 
-let norng2 : 'Auu____540 'Auu____541 'Auu____542 . ('Auu____542  ->  'Auu____541  ->  FStar_Range.range  ->  'Auu____540)  ->  'Auu____542  ->  'Auu____541  ->  'Auu____540 = (fun f x y -> (f x y FStar_Range.dummyRange))
+let norng2 : 'Auu____562 'Auu____563 'Auu____564 . ('Auu____564  ->  'Auu____563  ->  FStar_Range.range  ->  'Auu____562)  ->  'Auu____564  ->  'Auu____563  ->  'Auu____562 = (fun f x y -> (f x y FStar_Range.dummyRange))
 
 
 let mk_Term_app : FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term = (norng2 FStar_SMTEncoding_Term.mk_Term_app)
