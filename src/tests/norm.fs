@@ -82,8 +82,8 @@ module N = TypeChecker.Normalize
 
 let run_either i r expected normalizer =
 //    force_term r;
-    Printf.printf "%d: ...\n" i;
-    let _, tcenv = Pars.init() in
+    Printf.printf "%d: ... \n" i;
+    let tcenv = Pars.init() in
     FStar.Main.process_args() |> ignore; //set the command line args for debugging
     let x = normalizer tcenv r in
     Options.init(); //reset them
@@ -98,10 +98,12 @@ let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta;
 let run_nbe i r expected = run_either i r expected (fun _tcenv -> FStar.TypeChecker.NBE.normalize)
 
 let run_both_with_time i r expected =
-  let nbe () = run_either i r expected (fun _tcenv -> FStar.TypeChecker.NBE.normalize) in
-  let norm () = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops]) in
+  let nbe () = run_interpreter i r expected in
+  let norm () = run_nbe i r expected in
   FStar.Util.measure_execution_time  "nbe" nbe;
-  FStar.Util.measure_execution_time "normalizer" norm
+  Printf.printf "\n";
+  FStar.Util.measure_execution_time "normalizer" norm;
+  Printf.printf "\n"
 
 let run_all_nbe () =
     Printf.printf "Testing NBE\n";
@@ -206,5 +208,6 @@ let compare () =
   run_both_with_time 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z
 
 let run_all () =
-    run_all_nbe ()
+    run_all_nbe ();
+    compare ()
 //    run_all_interpreter ()

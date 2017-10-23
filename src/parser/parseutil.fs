@@ -11,7 +11,7 @@ let pos_of_lexpos (p:Microsoft.FSharp.Text.Lexing.Position) =
     mk_pos p.Line p.Column
 
 let mksyn_range (p1:Microsoft.FSharp.Text.Lexing.Position) p2 =
-    mk_file_idx_range (decode_file_idx p1.FileName) (pos_of_lexpos p1) (pos_of_lexpos p2)
+    mk_range p1.FileName (pos_of_lexpos p1) (pos_of_lexpos p2)
 
 let getLexerRange (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char>) = (* UnicodeLexing.Lexbuf) = *)
   mksyn_range lexbuf.StartPos lexbuf.EndPos

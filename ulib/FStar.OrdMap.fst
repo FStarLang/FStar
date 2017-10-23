@@ -77,12 +77,12 @@ abstract type equal (#k:eqtype) (#v:eqtype) (#f:cmp k) (m1:ordmap k v f) (m2:ord
 abstract val eq_intro: #k:eqtype -> #v:eqtype -> #f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
               -> Lemma (requires (forall x. select #k #v #f x m1 = select #k #v #f x m2))
                       (ensures (equal m1 m2))
-                 [SMTPatT (equal m1 m2)]
+                 [SMTPat (equal m1 m2)]
   
 abstract val eq_lemma: #k:eqtype -> #v:eqtype -> #f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
               -> Lemma (requires (equal m1 m2))
                       (ensures (m1 == m2))
-                 [SMTPatT (equal m1 m2)]
+                 [SMTPat (equal m1 m2)]
 
 abstract val upd_order: #k:eqtype -> #v:eqtype -> #f:cmp k -> x:k -> y:v -> x':k -> y':v
                -> m:ordmap k v f

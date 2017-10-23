@@ -255,7 +255,7 @@ noeq type partial_result (x0:dom) : Type =
 (* The rule [f x << f] is currently not primitive but take as an axiom in FStar.WellFounded *)
 (* We define a convenience operator doing the application and ensuring the corresponding decreasing clause *)
 unfold
-let ( <| ) = apply #codom #(fun _ -> partial_result _)
+let ( <| ) #x = apply #codom #(fun _ -> partial_result x)
 
 
 (* We can define the actual total function represented *)

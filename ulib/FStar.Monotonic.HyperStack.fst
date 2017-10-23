@@ -221,7 +221,7 @@ let lemma_upd_1 #a #rel (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Le
 	    /\ modifies_one (frameOf x) h (upd h x v)
 	    /\ modifies_ref (frameOf x) (Set.singleton (as_addr x)) h (upd h x v)
 	    /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPatT (contains h x)]
+  [SMTPat (upd h x v); SMTPat (contains h x)]
   = ()
 
 let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{rel (sel h x) v}) : Lemma
@@ -230,7 +230,7 @@ let lemma_upd_2 (#a:Type) (#rel:preorder a) (h:mem) (x:mreference a rel) (v:a{re
 	    /\ modifies_one h.tip h (upd h x v)
 	    /\ modifies_ref h.tip Set.empty h (upd h x v)
 	    /\ sel (upd h x v) x == v ))
-  [SMTPat (upd h x v); SMTPatT (x `unused_in` h)]
+  [SMTPat (upd h x v); SMTPat (x `unused_in` h)]
   = ()
 
 val lemma_live_1: #a:Type ->  #a':Type -> #rel:preorder a -> #rel':preorder a'
@@ -256,10 +256,7 @@ let lemma_sel_same_addr (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a re
 let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a rel) (r2:mreference a rel)
   :Lemma (requires (h `contains` r1 /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures  (h `contains` r2 /\ sel h r1 == sel h r2))
-	 [SMTPatOr [
-           [SMTPat (sel h r1); SMTPat (sel h r2)];
-           [SMTPat (frameOf r1); SMTPat (frameOf r2); SMTPat (as_addr r1); SMTPat (as_addr r2)]
-         ]]
+   [SMTPat (sel h r1); SMTPat (sel h r2)]
 = lemma_sel_same_addr h r1 r2
 
 #set-options "--z3rlimit 16"
@@ -267,7 +264,13 @@ let lemma_sel_same_addr' (#a:Type0) (#rel:preorder a) (h:mem) (r1:mreference a r
 let lemma_upd_same_addr (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
   :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))
          (ensures (h `contains` r1 /\ h `contains` r2 /\ upd h r1 x == upd h r2 x))
-= lemma_sel_same_addr h r1 r2
+= Classical.or_elim
+    #(h `contains` r1)
+    #(h `contains` r2)
+    #(fun _ -> h `contains` r1 /\ h `contains` r2)
+    (fun _ -> lemma_sel_same_addr h r1 r2)
+    (fun _ -> lemma_sel_same_addr h r2 r1);
+  lemma_upd_same_addr h.h (MkRef?.ref r1) (MkRef?.ref r2) x
 
 let lemma_upd_same_addr' (#a: Type0) (#rel: preorder a) (h: mem) (r1 r2: mreference a rel) (x: a)
   :Lemma (requires ((h `contains` r1 \/ h `contains` r2) /\ frameOf r1 == frameOf r2 /\ as_addr r1 = as_addr r2))

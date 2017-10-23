@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "b3348e7a080b211edda83e10392a3a0a"
     ],
     [
       "NegativeTests.Termination.ackermann_bad",
@@ -15,7 +16,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "d28207cec619ebad7d391d12f598a754"
     ],
     [
       "NegativeTests.Termination.sumto",
@@ -33,7 +35,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "afa98532033998a3dcedd4655dc70f80"
     ],
     [
       "NegativeTests.Termination.sumto",
@@ -41,7 +44,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "d22c2f01bbf7c858ecdaf33377445d11"
     ],
     [
       "NegativeTests.Termination.strangeZeroBad",
@@ -49,11 +53,36 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "1eafa7aff00b8038d55d9033880366e7"
     ],
-    [ "NegativeTests.Termination.snat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "NegativeTests.Termination.uu___is_O", 1, 2, 1, [ "@query" ], 0 ],
-    [ "NegativeTests.Termination.uu___is_S", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "NegativeTests.Termination.snat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cba5cb06ab6191c8aff758107203a524"
+    ],
+    [
+      "NegativeTests.Termination.uu___is_O",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "446fc709fe926d512ff11308d3266647"
+    ],
+    [
+      "NegativeTests.Termination.uu___is_S",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "df5e4d9e2b3041cbaf57a53ba580aa73"
+    ],
     [
       "NegativeTests.Termination.__proj__S__item___0",
       1,
@@ -65,7 +94,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_NegativeTests.Termination_Tm_refine_58d69b53f68a55a0902003d29e7d86f7"
       ],
-      0
+      0,
+      "ab31e8971d7a7815ca707059c23472ae"
     ]
   ]
 ]

@@ -1,5 +1,5 @@
 [
-  "Õ0ÖäÔ\u007føV\u001d\u0018èAx‘_¯",
+  "Êþ(s;ãš2GO Ö“Ã›´",
   [
     [
       "FStar.Tactics.Logic.revert_squash",
@@ -11,7 +11,8 @@
         "equation_Prims.squash", "forall-interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "cb64697d878707985c56aa331aabba2a"
     ],
     [
       "FStar.Tactics.Logic.l_revert_all",
@@ -26,9 +27,24 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "2db615708b5e037c5f5f8390691d7abe"
     ],
-    [ "FStar.Tactics.Logic.fa_intro_lem", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Logic.fa_intro_lem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
+      0,
+      "cd2cb6b3751a909f49da42b405dad68d"
+    ],
     [
       "FStar.Tactics.Logic.forall_intro",
       1,
@@ -39,7 +55,8 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.Tactics.Effect.bind", "unit_typing"
       ],
-      0
+      0,
+      "ffa29a729a16025920555bfb4fab7758"
     ],
     [
       "FStar.Tactics.Logic.split_lem",
@@ -50,7 +67,8 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "11649f4a50dfd09849daaef344ed3345"
     ],
     [
       "FStar.Tactics.Logic.split",
@@ -62,7 +80,23 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.Tactics.Derived.fail", "unit_typing"
       ],
-      0
+      0,
+      "7912ec2e815a8562af40ca2df103fd3a"
+    ],
+    [
+      "FStar.Tactics.Logic.imp_intro_lem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
+      0,
+      "e82998878272281b2f869865875fe652"
     ],
     [
       "FStar.Tactics.Logic.implies_intro",
@@ -74,7 +108,8 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.Tactics.Effect.bind", "unit_typing"
       ],
-      0
+      0,
+      "cd2565e0fdab7a1ae69f796e5aa4eb3a"
     ],
     [
       "FStar.Tactics.Logic.visit",
@@ -95,7 +130,8 @@
         "equation_FStar.Tactics.Logic.implies_intro",
         "equation_FStar.Tactics.Logic.split", "unit_typing"
       ],
-      0
+      0,
+      "7fbc15ae0ace64f60f8e02937339e4f4"
     ],
     [
       "FStar.Tactics.Logic.simplify_eq_implication",
@@ -116,7 +152,8 @@
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
-      0
+      0,
+      "70e08004796c6c8fb59da3b972844196"
     ],
     [
       "FStar.Tactics.Logic.unfold_definition_and_simplify_eq'",
@@ -137,9 +174,30 @@
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
-      0
+      0,
+      "8d45449290293a9096cbbd7885b73c94"
     ],
-    [ "FStar.Tactics.Logic.unsquash", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Logic.vbind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "6520859e87febf40712d84deacf71dd2"
+    ],
+    [
+      "FStar.Tactics.Logic.unsquash",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "994c2e0f70d3e879ae984562598a8369"
+    ],
     [
       "FStar.Tactics.Logic.or_ind",
       1,
@@ -151,9 +209,18 @@
         "refinement_interpretation_FStar.Tactics.Logic_Tm_refine_4fb1d161aef9b25d910956869a6f6bec",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "a411613b7a2753400cc1934ad347b460"
     ],
-    [ "FStar.Tactics.Logic.cases_or", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Logic.cases_or",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "871c6db7624671ddebbe3fb8fb9328bb"
+    ],
     [
       "FStar.Tactics.Logic.bool_ind",
       1,
@@ -164,9 +231,18 @@
         "equation_Prims.l_imp", "equation_Prims.squash", "l_imp-interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "215cf1e33ec91a6619b904f54d343869"
     ],
-    [ "FStar.Tactics.Logic.cases_bool", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Logic.cases_bool",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b8f3607796e2a53401f64c41d894fefe"
+    ],
     [
       "FStar.Tactics.Logic.or_intro_1",
       1,
@@ -176,7 +252,8 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "6db6ff85cfdb4e8ccb61d78df911ad16"
     ],
     [
       "FStar.Tactics.Logic.or_intro_2",
@@ -187,7 +264,8 @@
         "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "67bdd16635ec61f14959410b27370b3c"
     ],
     [
       "FStar.Tactics.Logic.__and_elim",
@@ -200,8 +278,17 @@
         "refinement_interpretation_FStar.Tactics.Logic_Tm_refine_b889b19b3d1b749e7e6619d0022a6af7",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "4ca8d7223cf10882343a974507173a0c"
     ],
-    [ "FStar.Tactics.Logic.and_elim", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.Tactics.Logic.and_elim",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e56d9cf6343fa602bed374e2af4c1354"
+    ]
   ]
 ]

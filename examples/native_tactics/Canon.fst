@@ -299,7 +299,7 @@ let rec canon_point : unit -> Tac unit = fun () -> (
         // Fold constants
         | Inr (Plus (Lit _) (Lit _))
         | Inr (Mult (Lit _) (Lit _)) ->
-            norm [Delta; Primops];;
+            norm [delta; primops];;
             trefl
 
         // Forget about negations
@@ -399,3 +399,9 @@ let compiled_canon (): tactic unit =
     dump "In";;
     canon;;
     dump "Out"
+
+let check_canon =
+    compiled_canon ();;
+    or_else qed
+            (dump "`canon` left the following goals";;
+             fail "")

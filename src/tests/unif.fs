@@ -20,7 +20,7 @@ open FStar.Ident
 open FStar.Range
 open FStar.Tests.Util
 
-let tcenv () = Pars.init() |> snd
+let tcenv () = Pars.init()
 
 let guard_to_string g = match g with
     | Trivial -> "trivial"
@@ -127,6 +127,7 @@ let run_all () =
             (NonTrivial (tc "(forall (x:int). (forall (y:int). (forall (z:int). y==z)))"));
 
     //imitation: unifies u to a constant
+    FStar.Main.process_args () |> ignore; //set options
     let tm, us = inst 1 (tc "fun u x -> u x") in
     let sol = tc "fun x -> c_and x x" in
     unify_check 9 tm
@@ -154,6 +155,42 @@ let run_all () =
     let tm2 = tc ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
     unify 12 tm1 tm2
             Trivial;
+
+    let tm1, tm2 =
+        let int_typ = tc "int" in
+        let x = FStar.Syntax.Syntax.new_bv None int_typ in
+
+        let typ = tc "unit -> Type0" in
+        let l = tc ("fun (q:(unit -> Type0)) -> q ()") in
+        let q = FStar.Syntax.Syntax.new_bv None typ in
+        let tm1 = norm (app l [FStar.Syntax.Syntax.bv_to_name q]) in
+
+        let l = tc ("fun (p:unit -> Type0) -> p") in
+        let unit = tc "()" in
+        let u_p, _ = Rel.new_uvar dummyRange [S.mk_binder x; S.mk_binder q] typ in
+        let tm2 = app (norm (app l [u_p])) [unit] in
+        tm1, tm2
+    in
+
+    unify 13 tm1 tm2 (NonTrivial (tc "Prims.l_True"));
+
+    let tm1, tm2 =
+        let int_typ = tc "int" in
+        let x = FStar.Syntax.Syntax.new_bv None int_typ in
+
+        let typ = tc "pure_post unit" in
+        let l = tc ("fun (q:pure_post unit) -> q ()") in
+        let q = FStar.Syntax.Syntax.new_bv None typ in
+        let tm1 = norm (app l [FStar.Syntax.Syntax.bv_to_name q]) in
+
+        let l = tc ("fun (p:pure_post unit) -> p") in
+        let unit = tc "()" in
+        let u_p, _ = Rel.new_uvar dummyRange [S.mk_binder x; S.mk_binder q] typ in
+        let tm2 = app (norm (app l [u_p])) [unit] in
+        tm1, tm2
+    in
+
+    unify 14 tm1 tm2 (NonTrivial (tc "Prims.l_True"));
 
     Options.__clear_unit_tests();
 

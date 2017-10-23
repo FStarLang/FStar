@@ -1,4 +1,4 @@
-module Bug25 
+module Bug025
 
 val length: list 'a -> nat
 let rec length = function

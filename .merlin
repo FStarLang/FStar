@@ -4,6 +4,7 @@ PKG compiler-libs.common
 PKG pprint
 PKG yojson
 PKG zarith
+PKG menhirLib
 
 S src/basic/ml
 S src/extraction/ml

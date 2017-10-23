@@ -15,7 +15,7 @@ let obj = S.pointer struct_t
 let callee
    (pfrom pto: obj)
 : HST.Stack int
-  (requires (fun h -> S.readable h pfrom /\ S.live h pto /\ S.disjoint pfrom pto))
+  (requires (fun h -> S.readable h pfrom /\ S.live h pto /\ S.loc_disjoint (S.loc_pointer pfrom) (S.loc_pointer pto)))
   (ensures (fun h z h' ->
     S.live h pfrom /\ S.live h pto /\
     S.live h' pfrom /\ S.live h' pto /\

@@ -18,7 +18,8 @@
     Francois Pottier's pprint package. *)
 include PPrint
 
-let doc_of_char = PPrint.char
+(* FIXME(adl) also print the char in a comment if it's representable *)
+let doc_of_char = PPrintOCaml.int
 let doc_of_string = PPrint.string
 let doc_of_bool b = PPrint.string (string_of_bool b)
 

@@ -26,7 +26,7 @@ let rec fib_norm (n : int) : tactic unit =
         dup;;
         apply (quote op_Addition);;
         iseq [fib_norm (n - 1); fib_norm (n - 2)];;
-        norm [Primops];;
+        norm [primops];;
         trefl
     )
 
@@ -41,7 +41,8 @@ let iszero (x : int) : int =
         let t = Tv_Match x
                     [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
                      (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in
-        exact (return (pack t)))
+        exact_guard (return (pack t));;
+        smt)
 
 let _ = assert (iszero 0 = 1)
 let _ = assert (iszero 1 = 0)

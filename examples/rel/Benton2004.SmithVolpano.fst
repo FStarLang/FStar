@@ -154,7 +154,10 @@ let exec_equiv_seq
     exec_equiv gamma (seq c c') s
   ))
   [SMTPat (exec_equiv gamma (seq c c') s)]
-= ()
+= match s with
+  | Low -> ()
+  | High -> d_su1' c c' skip (interp_context gamma) (interp_context gamma) (interp_context gamma) // FIXME: WHY WHY WHY does this pattern NOT trigger?
+  
 
 let exec_equiv_ifthenelse
   (gamma: context)
@@ -195,7 +198,6 @@ let eval_equiv_low_to_high
 = ()
 
 let exec_equiv_high_to_low
-  (#t: Type0)
   (gamma: context)
   (c: computation)
 : Lemma

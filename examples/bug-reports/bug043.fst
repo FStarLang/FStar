@@ -1,4 +1,4 @@
-module Bug43
+module Bug043
 
 type nat =
   | O : nat
@@ -10,7 +10,7 @@ assume val f : e:nat -> Tot bool
 
 val free_in_context : e:nat -> g:env -> Pure unit
       (requires True)
-      (ensures \r -> (Some? (g 42)))
+      (ensures (Some? (g 42)))
 let rec free_in_context e g =
   match e with
   | S n' -> free_in_context n' g

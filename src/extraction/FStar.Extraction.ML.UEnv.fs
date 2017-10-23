@@ -71,11 +71,11 @@ let erasableTypeNoDelta (t:mlty) =
 let unknownType : mlty =  MLTY_Top
 
 (*copied from ocaml-strtrans.fs*)
-let prependTick (x,n) = if BU.starts_with x "'" then (x,n) else ("'A"^x,n) ///the addition of the space is intentional; it's apparently valid syntax of tvars
-let removeTick (x,n) = if BU.starts_with x "'" then (BU.substring_from x 1,n) else (x,n)
+let prependTick x = if BU.starts_with x "'" then x else "'A"^x ///the addition of the space is intentional; it's apparently valid syntax of tvars
+let removeTick x = if BU.starts_with x "'" then BU.substring_from x 1 else x
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
-let convIdent (id:ident) : mlident = id.idText, 0
+let convIdent (id:ident) : mlident = id.idText
 
 (* TODO : need to make sure that the result of this name change does not collide with a variable already in the context. That might cause a change in semantics.
    E.g. , consider the following in F*
@@ -211,7 +211,7 @@ let find_uniq gamma mlident =
     let target_mlident = mlident ^ suffix in
     let has_collision = List.existsb (function
         | Bv (_, Inl (mlident', _))
-        | Fv (_, Inl (mlident', _)) -> target_mlident = fst mlident'
+        | Fv (_, Inl (mlident', _)) -> target_mlident = mlident'
         | Fv (_, Inr (mlident', _, _, _))
         | Bv (_, Inr (mlident', _, _, _)) -> target_mlident = mlident'
       ) gamma in
@@ -229,17 +229,15 @@ let extend_bv (g:env) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
-    let mlident, nocluewhat = bv_as_mlident x in
-    let mlsymbol = find_uniq g.gamma mlident in
-    let mlident = mlsymbol, nocluewhat in
+    let mlident = find_uniq g.gamma (bv_as_mlident x) in
     let mlx = MLE_Var mlident in
     let mlx = if mk_unit
               then ml_unit
               else if add_unit
               then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
-    let t_x = if add_unit then pop_unit t_x else t_x in
-    let gamma = Bv(x, Inr(mlsymbol, mlx, t_x, is_rec))::g.gamma in
+   let t_x = if add_unit then pop_unit t_x else t_x in
+    let gamma = Bv(x, Inr(mlident, mlx, t_x, is_rec))::g.gamma in
     let tcenv = TypeChecker.Env.push_binders g.tcenv (binders_of_list [x]) in
     {g with gamma=gamma; tcenv=tcenv}, mlident
 
@@ -275,7 +273,7 @@ let extend_fv' (g:env) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_re
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let t_x = if add_unit then pop_unit t_x else t_x in
         let gamma = Fv(x, Inr(mlsymbol, mly, t_x, is_rec))::g.gamma in
-        {g with gamma=gamma}, (mlsymbol, 0)
+        {g with gamma=gamma}, mlsymbol
     else failwith "freevars found"
 
 let extend_fv (g:env) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool) : env * mlident =
@@ -308,7 +306,7 @@ let emptyMlPath : mlpath = ([],"")
 
 let mkContext (e:TypeChecker.Env.env) : env =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
-   let a = "'a", -1 in
+   let a = "'a" in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
    extend_lb env (Inr (lid_as_fv Const.failwith_lid Delta_constant None)) tun failwith_ty false false |> fst
 

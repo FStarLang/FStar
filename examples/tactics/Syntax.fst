@@ -36,13 +36,13 @@ let rec blah  (t : term) =
                                  return (Tv_App l (r, q))
             | Tv_Abs b t -> t <-- blah t;
                             return (Tv_Abs b t)
-            | Tv_Arrow b t -> t <-- blah t;
-                              return (Tv_Arrow b t)
+            | Tv_Arrow b t -> return (Tv_Arrow b t)
             | Tv_Refine b t -> t <-- blah t;
                                return (Tv_Refine b t)
             | Tv_Type u -> return (Tv_Type ())
             | Tv_Const c -> return (Tv_Const c)
             | Tv_Uvar u t -> return (Tv_Uvar u t)
+            | Tv_Let b t1 t2 -> return (Tv_Let b t1 t2)
             | Tv_Match t brs -> return (Tv_Match t brs)
             | Tv_Unknown -> return Tv_Unknown);
      return (pack tv)
@@ -117,3 +117,14 @@ let arith_test2 (x : int) =
                              | Inr (Plus (Atom 0 _) (Atom 0 _)) -> print "alright!"
                              | Inr _ -> fail "different thing"
                              | Inl s -> fail ("oops: " ^ s))
+
+let _ = assert_by_tactic True
+            (t <-- quote (let x = 2 in x + 6);
+             match inspect t with
+             | Tv_Let b t1 t2 -> (
+                print ("b = " ^ binder_to_string b);;
+                print ("t1 = " ^ term_to_string t1);;
+                print ("t2 = " ^ term_to_string t2)
+                )
+             | _ -> fail "wat?"
+             )

@@ -1,0 +1,5 @@
+{"query-id":"1","query":"push","args":{"kind":"lax","code":"module InfoTable\n","line":1,"column":0}}
+{"query-id":"2","query":"push","args":{"kind":"lax","code":"\nlet x =\n  let aaa: int = 111 in\n  let bbb: string * int = \"AAA\", aaa in\n  let ccc: nat * (string * int) = (123 <: nat), bbb in\n  aaa, bbb, ccc\n","line":2,"column":0}}
+{"query-id":"3","query":"lookup","args":{"context":"code","symbol":"ccc","requested-info":["type","documentation"],"location":{"filename":"<input>","line":7,"column":14}}}
+{"query-id":"4","query":"lookup","args":{"context":"code","symbol":"aaa","requested-info":["type","documentation"],"location":{"filename":"<input>","line":5,"column":34}}}
+{"query-id":"5","query":"lookup","args":{"context":"code","symbol":"bbb","requested-info":["type","documentation"],"location":{"filename":"<input>","line":6,"column":49}}}

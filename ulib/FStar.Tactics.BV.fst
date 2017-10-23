@@ -74,10 +74,10 @@ val trans_lt: #n:pos -> (#x:bv_t n) -> (#y:bv_t n) -> (#z:bv_t n) -> (#w:bv_t n)
 		  Lemma (bvult #n x y)
 let trans_lt #n #x #y #z #w pf1 pf2 pf3 = ()
 
-assume val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
+val trans_lt2: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) -> (#z:bv_t n) -> (#w:bv_t n) -> 
 		  squash (int2bv #n x == z) -> squash (int2bv #n y == w) -> (b2t (bvult #n z w)) -> 
 		  Lemma (x < y)
-// let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = ()
+let trans_lt2 #n #x #y #z #w pf1 pf2 pf3 = int2bv_lemma_ult_2 x y
 
 (*
  * This is being proven terminating.
@@ -124,12 +124,12 @@ let rec arith_expr_to_bv e : tactic unit =
         trefl
 
 let arith_to_bv_tac : tactic unit =
-    // norm [Simpl];;
+    // norm [simpl];;
     g <-- cur_goal;
     let f = term_as_formula g in
     match f with
     | Comp Eq t l r ->
-     begin match run_tm (is_arith_expr l) with
+     begin match run_tm (as_arith_expr l) with
       | Inl s ->
     	  dump s;;
           trefl
@@ -160,11 +160,12 @@ let arith_to_bv_tac : tactic unit =
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
 let bv_tac ()  =
-  apply_lemma (quote eq_to_bv);;
-  apply_lemma (quote trans);;
+  mapply (quote eq_to_bv);;
+  mapply (quote trans);;
   arith_to_bv_tac;;
   arith_to_bv_tac;;
   set_options "--smtencoding.elim_box true";;
+  norm [delta] ;;
   smt
 
 let bv_tac_lt n =

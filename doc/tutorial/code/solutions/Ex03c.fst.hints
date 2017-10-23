@@ -16,7 +16,8 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "1da9a8ccb4a8fa0aa760cb6d1df69c36"
     ],
     [
       "Ex03c.fibonacci_greater_than_arg",
@@ -42,7 +43,8 @@
         "typing_Ex03c.fibonacci", "unit_typing",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "d981d064f49e6d47216f873f00606f81"
     ]
   ]
 ]

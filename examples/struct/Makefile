@@ -8,6 +8,7 @@ POSTESTS=\
   array.pos \
   disjoint.pos \
   point.pos \
+  point-with-nesting.pos \
   nested.pos \
   union.pos \
   taggedunion.pos \

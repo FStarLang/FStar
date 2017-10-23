@@ -486,9 +486,10 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
         let e, x = push_bv_maybe_mut e x in
         (x::l), e, x
   in
-  let rec aux (loc:lenv_t) env (p:pattern) =
+  let rec aux' (top:bool) (loc:lenv_t) env (p:pattern) =
     let pos q = Syntax.withinfo q p.prange in
     let pos_r r q = Syntax.withinfo q r in
+    let orig = p in
     match p.pat with
       | PatOr _ -> failwith "impossible"
 
@@ -497,16 +498,24 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p, imp = aux loc env p in
-        let binder = match binder with
+        let annot_pat_var p t =
+            match p.v with
+            | Pat_var x -> {p with v=Pat_var({x with sort=t})}
+            | Pat_wild x -> {p with v=Pat_wild({x with sort=t})}
+            | _ when top -> p
+            | _  -> raise (Error("Type ascriptions within patterns are only allowed on variables", orig.prange))
+        in
+        let p, binder = match binder with
             | LetBinder _ -> failwith "impossible"
             | LocalBinder(x, aq) ->
               let t = desugar_term env (close_fun env t) in
               (* TODO : This should be a real check instead of just a warning *)
               if (match x.sort.n with | S.Tm_unknown -> false | _ -> true)
-              then BU.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s"
+              then BU.print3_warning "Multiple ascriptions for %s in pattern, type %s was shadowed by %s\n"
                                        (Print.bv_to_string x)
                                        (Print.term_to_string x.sort)
                                        (Print.term_to_string t) ;
+              annot_pat_var p t,
               LocalBinder({x with sort=t}, aq)
         in
         loc, env', binder, p, imp
@@ -582,20 +591,21 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
             | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
             | _ -> p in
         env, e, b, p, false
+  and aux loc env p = aux' false loc env p
   in
   let aux_maybe_or env (p:pattern) =
     let loc = [] in
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
-        let loc, env, var, p, _ = aux loc env p in
+        let loc, env, var, p, _ = aux' true loc env p in
         let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
-          let loc, env, _, p, _ = aux loc env p in
+          let loc, env, _, p, _ = aux' true loc env p in
           loc, env, p::ps) (loc, env, []) ps in
         let pats = (p::List.rev ps) in
         env, var, pats
       | _ ->
-        let loc, env, vars, pat, b = aux loc env p in
+        let loc, env, vars, pat, b = aux' true loc env p in
         env, vars, [pat]
   in
   let env, b, pats = aux_maybe_or env p in
@@ -749,6 +759,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
 
     | Construct (n, [(a, _)]) when n.str = "SMTPatT" ->
+        Errors.warn top.range "SMTPatT is deprecated; please just use SMTPat";
         desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
 
     | Construct (n, [(a, _)]) when n.str = "SMTPatOr" ->
@@ -1212,8 +1223,8 @@ and not_ascribed t =
     | Ascribed _ -> false
     | _ ->  true
 
-// In this case, we might have implicits in the way
 and is_synth_by_tactic e t =
+    // In this case, we might have implicits in the way
     match t.tm with
     | App (l, r, Hash) -> is_synth_by_tactic e l
     | Var lid ->
@@ -1271,21 +1282,89 @@ and desugar_comp r env t =
           let req = Requires (mk_term (Name C.true_lid) t.range Formula, None) in
           mk_term req t.range Type_level, Nothing
         in
+        (* The postcondition for Lemma is thunked, to allow to assume the precondition
+         * (c.f. #57), so add the thunking here *)
+        let thunk_ens_ (ens : AST.term) : AST.term =
+            let wildpat = mk_pattern PatWild ens.range in
+            mk_term (Abs ([wildpat], ens)) ens.range Expr
+        in
+        let thunk_ens (e, i) = (thunk_ens_ e, i) in
+        let fail_lemma () =
+             let expected_one_of = ["Lemma post";
+                                    "Lemma (ensures post)";
+                                    "Lemma (requires pre) (ensures post)";
+                                    "Lemma post [SMTPat ...]";
+                                    "Lemma (ensures post) [SMTPat ...]";
+                                    "Lemma (ensures post) (decreases d)";
+                                    "Lemma (ensures post) (decreases d) [SMTPat ...]";
+                                    "Lemma (requires pre) (ensures post) (decreases d)";
+                                    "Lemma (requires pre) (ensures post) [SMTPat ...]";
+                                    "Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]"] in
+             let msg = String.concat "\n\t" expected_one_of in
+             raise (Error("Invalid arguments to 'Lemma'; expected one of the following:\n\t" ^ msg, t.range))
+        in
         let args = match args with
-          | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
-          (* a single ensures clause *)
-          | [ens] -> [unit_tm;req_true;ens;nil_pat]
-          | [ens;smtpat] when is_smt_pat smtpat ->
-              [unit_tm;req_true;ens;smtpat]
-          | [req;ens] when (is_requires req && is_ensures ens) ->
-              [unit_tm;req;ens;nil_pat]
-          | [ens;dec] when (is_ensures ens && is_decreases dec) ->
-              [unit_tm;req_true;ens;nil_pat;dec]
-          | [ens;dec;smtpat] when (is_ensures ens && is_decreases dec && is_smt_pat smtpat) ->
-              [unit_tm;req_true;ens;smtpat;dec]
-          | [req;ens;dec] when (is_requires req && is_ensures ens && is_decreases dec) ->
-              [unit_tm;req;ens;nil_pat;dec]
-          | more -> unit_tm::more
+          | [] -> fail_lemma ()
+
+          | [req] //a single requires clause (cf. Issue #1208)
+               when is_requires req ->
+            fail_lemma()
+
+          | [smtpat]
+                when is_smt_pat smtpat ->
+            fail_lemma()
+
+          | [dec]
+                when is_decreases dec ->
+            fail_lemma()
+
+          | [ens] -> //otherwise, a single argument is always treated as just an ensures clause
+            [unit_tm;req_true;thunk_ens ens;nil_pat]
+
+          | [req;ens]
+                when is_requires req
+                  && is_ensures ens ->
+            [unit_tm;req;thunk_ens ens;nil_pat]
+
+          | [ens;smtpat] //either Lemma p [SMTPat ...]; or Lemma (ensures p) [SMTPat ...]
+                when not (is_requires ens)
+                  && not (is_smt_pat ens)
+                  && not (is_decreases ens)
+                  && is_smt_pat smtpat ->
+            [unit_tm;req_true;thunk_ens ens;smtpat]
+
+          | [ens;dec]
+                when is_ensures ens
+                  && is_decreases dec ->
+            [unit_tm;req_true;thunk_ens ens;nil_pat;dec]
+
+          | [ens;dec;smtpat]
+                when is_ensures ens
+                  && is_decreases dec
+                  && is_smt_pat smtpat ->
+            [unit_tm;req_true;thunk_ens ens;smtpat;dec]
+
+          | [req;ens;dec]
+                when is_requires req
+                  && is_ensures ens
+                  && is_decreases dec ->
+            [unit_tm;req;thunk_ens ens;nil_pat;dec]
+
+          | [req;ens;smtpat]
+                when is_requires req
+                  && is_ensures ens
+                  && is_smt_pat smtpat ->
+            [unit_tm;req;thunk_ens ens;smtpat]
+
+          | [req;ens;dec;smtpat]
+                when is_requires req
+                  && is_ensures ens
+                  && is_smt_pat smtpat
+                  && is_decreases dec ->
+            [unit_tm;req;thunk_ens ens;dec;smtpat]
+
+          | _other ->
+            fail_lemma()
         in
         let head_and_attributes = fail_or env (Env.try_lookup_effect_name_and_attributes env) lemma in
         head_and_attributes, args
@@ -1660,9 +1739,10 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
              let quals = if List.contains S.Assumption quals
                          then quals
                          else (if not (Options.ml_ish ()) then
-                                 BU.print2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n"
-                                                (Range.string_of_range se.sigrng) (Print.lid_to_string l);
-                               S.Assumption :: S.New :: quals) in
+                                 FStar.Errors.warn se.sigrng
+                                   (BU.format1 "Adding an implicit 'assume new' qualifier on %s"
+                                               (Print.lid_to_string l));
+                                 S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None se.sigrng in
@@ -2091,12 +2171,38 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
     let env = push_doc env mname d.doc in
     env, [se]
 
+// JP: crappy formatting, use PPrint
+and mk_comment_attr (d: decl) =
+  let text, kv = match d.doc with | None -> "", [] | Some fsdoc -> fsdoc in
+  let summary = match List.assoc "summary" kv with | None -> "" | Some s -> "  " ^ s ^ "\n" in
+  let pp =
+    match List.assoc "type" kv with
+    | Some _ ->
+        "\n  " ^ FStar.Pprint.pretty_string 0.95 80 (FStar.Parser.ToDocument.signature_to_document d)
+    | _ ->
+        ""
+  in
+  let other = List.filter_map (fun (k, v) ->
+    if k <> "summary" && k <> "type" then
+      Some (k ^ ": " ^ v)
+    else
+      None
+  ) kv
+  in
+  let other = if other <> [] then String.concat "\n" other ^ "\n" else "" in
+  let str = summary ^ pp ^ other ^ text in
+  (* Building a fake term *)
+  let fv = S.fvar (lid_of_str "FStar.Pervasives.Comment") Delta_constant None in
+  let arg = U.exp_string str in
+  U.mk_app fv [ S.as_arg arg ]
+
 and desugar_decl env (d: decl): (env_t * sigelts) =
   // Rather than carrying the attributes down the maze of recursive calls, we
   // let each desugar_foo function provide an empty list, then override it here.
   let env, sigelts = desugar_decl_noattrs env d in
   let attrs = d.attrs in
   let attrs = List.map (desugar_term env) attrs in
+  let attrs = mk_comment_attr d :: attrs in
   env, List.map (fun sigelt -> { sigelt with sigattrs = attrs }) sigelts
 
 and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
@@ -2325,10 +2431,33 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
                sigattrs = [] } in
     env, [se]
 
- let desugar_decls env decls =
+let desugar_decls env decls =
+  let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
-        let env, se = desugar_decl env d in
-        env, sigelts@se) (env, []) decls
+      let env, se = desugar_decl env d in
+      env, sigelts@se) (env, []) decls
+  in
+  (* Propagate the doc from a val to a let. *)
+  let rec forward acc = function
+    | se1 :: se2 :: sigelts ->
+        begin match se1.sigel, se2.sigel with
+        | Sig_declare_typ _, Sig_let _ ->
+            forward ({ se2 with sigattrs =
+              List.filter (function
+                | { n = Tm_app ({ n = Tm_fvar fv }, _) }
+                  when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
+                    true
+                | _ -> false
+              ) se1.sigattrs @ se2.sigattrs
+            } :: se1 :: acc) sigelts
+        | _ ->
+            forward (se1 :: acc) (se2 :: sigelts)
+        end
+    | sigelts ->
+        List.rev_append acc sigelts
+  in
+  env, forward [] sigelts
+
 
 let open_prims_all =
     [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;
@@ -2386,8 +2515,28 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   then BU.print1 "%s\n" (Print.modul_to_string modul);
   (if pop_when_done then export_interface modul.name env else env), modul
 
-let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (en: env) :env =
-  let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
-  let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
-  let env = Env.finish en m in
-  if pop_when_done then export_interface m.name env else env
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//External API for modules
+/////////////////////////////////////////////////////////////////////////////////////////
+let ast_modul_to_modul modul : withenv<S.modul> =
+    fun env ->
+        let env, modul = desugar_modul env modul in
+         modul,env
+
+let decls_to_sigelts decls : withenv<S.sigelts> =
+    fun env ->
+        let env, sigelts = desugar_decls env decls in
+        sigelts, env
+
+let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
+    fun env ->
+        let env, modul = desugar_partial_modul modul env a_modul in
+        modul, env
+
+let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) : withenv<unit> =
+  fun en ->
+      let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
+      let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
+      let env = Env.finish en m in
+      (), (if pop_when_done then export_interface m.name env else env)

@@ -125,8 +125,29 @@ let rec pow2 n =
   else
     ~$2 * pow2 (n - ~$1)
 
-let __proj__Cons__item__tl = function
-  | _::tl -> tl
-  | _     -> failwith "Impossible"
+let __proj__Cons__item__hd = List.hd
+
+let __proj__Cons__item__tl = List.tl
 
 let min = min
+
+type norm_step =
+    | Simpl
+    | Weak
+    | HNF
+    | Primops
+    | Delta
+    | Zeta
+    | Iota
+    | UnfoldOnly : string list -> norm_step
+
+let simplify : norm_step = Simpl
+let weak    : norm_step = Weak
+let hnf     : norm_step = HNF
+let primops : norm_step = Primops
+let delta   : norm_step = Delta
+let zeta    : norm_step = Zeta
+let iota    : norm_step = Iota
+let delta_only (s:string list) : norm_step = UnfoldOnly s
+
+type ('a, 'b) admit = unit

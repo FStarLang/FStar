@@ -48,7 +48,7 @@ let add_errors env errs =
         errs |> List.map (fun (msg, r) ->
                         if r = dummyRange
                         then msg, Env.get_range env
-                        else let r' = {r with def_range=r.use_range} in
+                        else let r' = Range.set_def_range r (Range.use_range r) in
                              if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
                              then (msg ^ ("(Also see: " ^ (Range.string_of_use_range r) ^")")), Env.get_range env
                              else msg, r) in
@@ -103,7 +103,7 @@ let basic_type_error env eopt t1 t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   match eopt with
     | None -> format2 "Expected type \"%s\"; got type \"%s\"" s1 s2
-    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (Print.term_to_string e) s2
+    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (N.term_to_string env e) s2
 
 let occurs_check =
   "Possibly infinite typ (occurs check failed)"

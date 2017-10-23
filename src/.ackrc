@@ -1,2 +1,2 @@
 --ignore-dir=ocaml-output
---ignore-dir=boot_fsts
+--ignore-dir=boot

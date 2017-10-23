@@ -1,13 +1,69 @@
 [
   "I›è≤IÈ\boäé∆\u0004Ü\bÄ‰",
   [
-    [ "SfBasic.uu___is_Monday", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SfBasic.uu___is_Tuesday", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SfBasic.uu___is_Wednesday", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SfBasic.uu___is_Thursday", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SfBasic.uu___is_Friday", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SfBasic.uu___is_Saturday", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SfBasic.uu___is_Sunday", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SfBasic.uu___is_Monday",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "db98a03f916264f1d286dc92ee27f672"
+    ],
+    [
+      "SfBasic.uu___is_Tuesday",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0e54007058ba740808455b085bcacedc"
+    ],
+    [
+      "SfBasic.uu___is_Wednesday",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6bd3fa70015ac9272cf04274051406a5"
+    ],
+    [
+      "SfBasic.uu___is_Thursday",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3f790be1413157fe795ef4c1c447f4cf"
+    ],
+    [
+      "SfBasic.uu___is_Friday",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c1a76585b340f04beb2a6bcf32084c1e"
+    ],
+    [
+      "SfBasic.uu___is_Saturday",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "85e5ffc4cb2f25958953cb06631133ba"
+    ],
+    [
+      "SfBasic.uu___is_Sunday",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "36a9e79c352796c9f6dc062c86c26e87"
+    ],
     [
       "SfBasic.next_weekday",
       1,
@@ -26,7 +82,8 @@
         "equality_tok_SfBasic.Wednesday@tok",
         "fuel_guarded_inversion_SfBasic.day"
       ],
-      0
+      0,
+      "e5abacf9f5567d31caeb779b9a9a04dc"
     ],
     [
       "SfBasic.test_next_weekday",
@@ -34,7 +91,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.day_haseq" ],
-      0
+      0,
+      "99d4ecf47d9411efdac098ccb016f2d5"
     ],
     [
       "SfBasic.test_next_weekday",
@@ -48,10 +106,27 @@
         "equality_tok_SfBasic.Saturday@tok", "equation_SfBasic.next_weekday",
         "unit_typing"
       ],
-      0
+      0,
+      "c6e8ba10acff277eb02e2d2131d42b45"
     ],
-    [ "SfBasic.uu___is_MTrue", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SfBasic.uu___is_MFalse", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SfBasic.uu___is_MTrue",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "685341d3fddd76dbb0858a0afbf2769a"
+    ],
+    [
+      "SfBasic.uu___is_MFalse",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4e4341e3ed8cfe04fd671c3c725d3053"
+    ],
     [
       "SfBasic.negb",
       1,
@@ -62,7 +137,8 @@
         "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MTrue@tok",
         "fuel_guarded_inversion_SfBasic.mbool"
       ],
-      0
+      0,
+      "13f401830cb18e43ae9ef8dd33b00c40"
     ],
     [
       "SfBasic.andb",
@@ -76,7 +152,8 @@
         "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MFalse@tok",
         "fuel_guarded_inversion_SfBasic.mbool"
       ],
-      0
+      0,
+      "9e63d60653c9dac935f70550fa6cc77c"
     ],
     [
       "SfBasic.orb",
@@ -90,7 +167,8 @@
         "disc_equation_SfBasic.MTrue", "equality_tok_SfBasic.MTrue@tok",
         "fuel_guarded_inversion_SfBasic.mbool"
       ],
-      0
+      0,
+      "84c4529bf9d60b205e6898fb20bacca6"
     ],
     [
       "SfBasic.test_orb1",
@@ -98,7 +176,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "c98797cfab7491db1e0fb8f9d7017364"
     ],
     [
       "SfBasic.test_orb1",
@@ -110,7 +189,8 @@
         "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
         "equation_SfBasic.orb", "unit_typing"
       ],
-      0
+      0,
+      "35731181eae71a9a064f8b60892a9134"
     ],
     [
       "SfBasic.test_orb2",
@@ -118,7 +198,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "57ea7af9c8a51b23c7b04c3f8b001039"
     ],
     [
       "SfBasic.test_orb2",
@@ -132,7 +213,8 @@
         "fuel_guarded_inversion_SfBasic.mbool", "typing_SfBasic.orb",
         "typing_tok_SfBasic.MFalse@tok", "unit_typing"
       ],
-      0
+      0,
+      "c33b6b04af41aafa79b84737bd507fd7"
     ],
     [
       "SfBasic.test_orb3",
@@ -140,7 +222,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "3aa4ab6799acd0d0188013eae3fb0aa5"
     ],
     [
       "SfBasic.test_orb3",
@@ -152,7 +235,8 @@
         "equality_tok_SfBasic.MFalse@tok", "equality_tok_SfBasic.MTrue@tok",
         "equation_SfBasic.orb", "unit_typing"
       ],
-      0
+      0,
+      "decd4cbd6b8981a8e52daa73d548f09a"
     ],
     [
       "SfBasic.test_orb4",
@@ -160,7 +244,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "73cfff14753afb76bbd1ed9297f5aabd"
     ],
     [
       "SfBasic.test_orb4",
@@ -172,11 +257,36 @@
         "equality_tok_SfBasic.MTrue@tok", "equation_SfBasic.orb",
         "unit_typing"
       ],
-      0
+      0,
+      "173c1671e1008c3337069f966e51b5bd"
     ],
-    [ "SfBasic.nat", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SfBasic.uu___is_O", 1, 2, 1, [ "@query" ], 0 ],
-    [ "SfBasic.uu___is_S", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "SfBasic.nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0fad220bf234ddd8f44e6dbfcb23e71e"
+    ],
+    [
+      "SfBasic.uu___is_O",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "420aa4b36bfb5dc584b83a062bb3501f"
+    ],
+    [
+      "SfBasic.uu___is_S",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ef407287ccbaa92672b223900b9f2615"
+    ],
     [
       "SfBasic.__proj__S__item___0",
       1,
@@ -187,7 +297,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_SfBasic_Tm_refine_b7b70964a15ac3a2f4808938f2801faf"
       ],
-      0
+      0,
+      "cfbf6bb83fbeb024a6a439dd16838bfb"
     ],
     [
       "SfBasic.pred",
@@ -199,7 +310,8 @@
         "disc_equation_SfBasic.S", "equality_tok_SfBasic.O@tok",
         "fuel_guarded_inversion_SfBasic.nat"
       ],
-      0
+      0,
+      "beb5edd183e37c50295e715f1496c474"
     ],
     [
       "SfBasic.minustwo",
@@ -214,7 +326,8 @@
         "refinement_interpretation_SfBasic_Tm_refine_b7b70964a15ac3a2f4808938f2801faf",
         "typing_SfBasic.__proj__S__item___0"
       ],
-      0
+      0,
+      "6b7aac222561f662106e2f8d12cba2a7"
     ],
     [
       "SfBasic.evenb",
@@ -232,7 +345,8 @@
         "refinement_interpretation_SfBasic_Tm_refine_b7b70964a15ac3a2f4808938f2801faf",
         "subterm_ordering_SfBasic.S", "typing_SfBasic.__proj__S__item___0"
       ],
-      0
+      0,
+      "2255f866d28c39675fc89c7c7520616b"
     ],
     [
       "SfBasic.test_oddb1",
@@ -240,7 +354,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "ef5af99d1513c5dfce26264d485a74fe"
     ],
     [
       "SfBasic.test_oddb1",
@@ -260,7 +375,8 @@
         "projection_inverse_SfBasic.S__0", "typing_SfBasic.oddb",
         "typing_tok_SfBasic.O@tok", "unit_typing"
       ],
-      0
+      0,
+      "fcab88ed49f8d36852eba0ddeed72547"
     ],
     [
       "SfBasic.test_oddb2",
@@ -268,7 +384,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "07e8f639c391bb623709852fda975be4"
     ],
     [
       "SfBasic.test_oddb2",
@@ -285,7 +402,8 @@
         "equation_with_fuel_SfBasic.evenb.fuel_instrumented",
         "projection_inverse_SfBasic.S__0", "unit_typing"
       ],
-      0
+      0,
+      "11405d2ecbd25977001939b50a17d720"
     ],
     [
       "SfBasic.plus",
@@ -298,7 +416,8 @@
         "disc_equation_SfBasic.O", "disc_equation_SfBasic.S",
         "fuel_guarded_inversion_SfBasic.nat", "subterm_ordering_SfBasic.S"
       ],
-      0
+      0,
+      "47e8d5ba1454b858e0c8b20bf2a436ea"
     ],
     [
       "SfBasic.mult",
@@ -312,7 +431,8 @@
         "equality_tok_SfBasic.O@tok", "fuel_guarded_inversion_SfBasic.nat",
         "subterm_ordering_SfBasic.S"
       ],
-      0
+      0,
+      "01a3e3a5c981d89ee50dbd164bbf310d"
     ],
     [
       "SfBasic.test_mult1",
@@ -320,7 +440,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.nat_haseq" ],
-      0
+      0,
+      "9eecc5dcd5e6672a8cc374fa8bde60d3"
     ],
     [
       "SfBasic.test_mult1",
@@ -338,7 +459,8 @@
         "equation_with_fuel_SfBasic.plus.fuel_instrumented",
         "projection_inverse_SfBasic.S__0", "unit_typing"
       ],
-      0
+      0,
+      "6072c4b75ace850d97c986a16265e589"
     ],
     [
       "SfBasic.minus",
@@ -357,7 +479,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
-      0
+      0,
+      "032d8b58cd9cd4c20b88167ee246dfe7"
     ],
     [
       "SfBasic.beq_nat",
@@ -374,7 +497,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "subterm_ordering_SfBasic.S", "typing_tok_SfBasic.O@tok"
       ],
-      0
+      0,
+      "f3f95fb6d25521dd09ed2cde735b6fb4"
     ],
     [
       "SfBasic.ble_nat",
@@ -396,7 +520,8 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S",
         "typing_tok_SfBasic.O@tok"
       ],
-      0
+      0,
+      "2875dad1f733bb87ddcf430f108c4929"
     ],
     [
       "SfBasic.test_ble_nat1",
@@ -404,7 +529,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "ecfb13e2cad00183371b0053e16e84e5"
     ],
     [
       "SfBasic.test_ble_nat1",
@@ -425,7 +551,8 @@
         "projection_inverse_SfBasic.S__0", "typing_SfBasic.ble_nat",
         "typing_tok_SfBasic.O@tok", "unit_typing"
       ],
-      0
+      0,
+      "a2d5d3db7f6b11ca838abc3f4c888c05"
     ],
     [
       "SfBasic.test_ble_nat2",
@@ -433,7 +560,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "1f580944778bd9d1021aa19227ac4407"
     ],
     [
       "SfBasic.test_ble_nat2",
@@ -452,7 +580,8 @@
         "projection_inverse_SfBasic.S__0", "typing_tok_SfBasic.O@tok",
         "unit_typing"
       ],
-      0
+      0,
+      "4c3d37afdabdc794be3c9005731388cd"
     ],
     [
       "SfBasic.test_ble_nat3",
@@ -460,7 +589,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "a7ca904a8ede50cce834ff6b993fd004"
     ],
     [
       "SfBasic.test_ble_nat3",
@@ -481,7 +611,8 @@
         "projection_inverse_SfBasic.S__0", "typing_SfBasic.ble_nat",
         "typing_tok_SfBasic.O@tok", "unit_typing"
       ],
-      0
+      0,
+      "7cba4b1dc7e081d45de4e4b4d92d4a79"
     ],
     [
       "SfBasic.plus_O_n",
@@ -489,7 +620,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.nat_haseq" ],
-      0
+      0,
+      "3074e871dc2cf2f110e9c0a816e470fd"
     ],
     [
       "SfBasic.plus_O_n",
@@ -502,7 +634,8 @@
         "constructor_distinct_SfBasic.O", "equality_tok_SfBasic.O@tok",
         "equation_with_fuel_SfBasic.plus.fuel_instrumented", "unit_typing"
       ],
-      0
+      0,
+      "38a9638d73ad8b307114f1a38340fba4"
     ],
     [
       "SfBasic.plus_id_example",
@@ -510,16 +643,26 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.nat_haseq" ],
-      0
+      0,
+      "10c5d6dc32c4909486b4555b522bf7fe"
     ],
-    [ "SfBasic.plus_id_example", 2, 2, 1, [ "@query", "unit_typing" ], 0 ],
+    [
+      "SfBasic.plus_id_example",
+      2,
+      2,
+      1,
+      [ "@query", "unit_typing" ],
+      0,
+      "de3891f675fe981e87908fab23860b7e"
+    ],
     [
       "SfBasic.mult_0_plus",
       1,
       2,
       1,
       [ "@query", "assumption_SfBasic.nat_haseq" ],
-      0
+      0,
+      "4a7ac12f8891c0d7dcbfe7d98d30ee1f"
     ],
     [
       "SfBasic.mult_0_plus",
@@ -532,7 +675,8 @@
         "constructor_distinct_SfBasic.O", "equality_tok_SfBasic.O@tok",
         "equation_with_fuel_SfBasic.plus.fuel_instrumented", "unit_typing"
       ],
-      0
+      0,
+      "6f6cd7464f959724caa841c27e96e24a"
     ],
     [
       "SfBasic.plus_1_neq_0",
@@ -540,7 +684,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "7e77ecf663efb715c15d84e966f1f0f9"
     ],
     [
       "SfBasic.plus_1_neq_0",
@@ -561,7 +706,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "typing_tok_SfBasic.O@tok", "unit_typing"
       ],
-      0
+      0,
+      "d29cbfc22971abd26e24553d9be258e4"
     ],
     [
       "SfBasic.negb_involutive",
@@ -569,7 +715,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.mbool_haseq" ],
-      0
+      0,
+      "26c563faaf900e9bfe0a8f0bfd535a34"
     ],
     [
       "SfBasic.negb_involutive",
@@ -584,7 +731,8 @@
         "equation_SfBasic.negb", "fuel_guarded_inversion_SfBasic.mbool",
         "unit_typing"
       ],
-      0
+      0,
+      "d352cef0ba6074b74864a39f647d3c2a"
     ],
     [
       "SfBasic.plus_0_r",
@@ -592,7 +740,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.nat_haseq" ],
-      0
+      0,
+      "8139c2808e4a68965cfb3bc3493b30a1"
     ],
     [
       "SfBasic.plus_0_r",
@@ -612,7 +761,8 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S",
         "unit_typing"
       ],
-      0
+      0,
+      "32d2be44e0795781404cdbdceccbf03d"
     ],
     [
       "SfBasic.plus_n_Sm",
@@ -620,7 +770,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.nat_haseq" ],
-      0
+      0,
+      "3685b61755cc0ff139f1fa6dbe33cc72"
     ],
     [
       "SfBasic.plus_n_Sm",
@@ -640,7 +791,8 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S",
         "unit_typing"
       ],
-      0
+      0,
+      "bad59a8dafc80da0e18503212e9f3653"
     ],
     [
       "SfBasic.plus_comm",
@@ -648,7 +800,8 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.nat_haseq" ],
-      0
+      0,
+      "2691a0d6f17b59b904e4e5a3771fb480"
     ],
     [
       "SfBasic.plus_comm",
@@ -667,7 +820,8 @@
         "fuel_guarded_inversion_SfBasic.nat",
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
-      0
+      0,
+      "5931074992fc9494723ba64ffbab4cce"
     ],
     [
       "SfBasic.plus_rearrange",
@@ -675,8 +829,17 @@
       2,
       1,
       [ "@query", "assumption_SfBasic.nat_haseq" ],
-      0
+      0,
+      "2ac8c02abbd3122755a6332886322e56"
     ],
-    [ "SfBasic.plus_rearrange", 2, 2, 1, [ "@query" ], 0 ]
+    [
+      "SfBasic.plus_rearrange",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "211511f5d900c3d8f4be1bc66c44a952"
+    ]
   ]
 ]

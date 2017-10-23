@@ -1,5 +1,4 @@
 The printer for the extracted ML code uses the OCaml compiler-libs, which depends
-on the version of the OCaml compiler. In order for extraction to work with both
-OCaml 4.02.3, 4.03.0, 4.04.0, and 4.05.0 four slightly different versions of the
+on the version of the OCaml compiler. In order for extraction to work with
+OCaml 4.02.X, 4.04.X, and 4.05.X three slightly different versions of the
 ML prettyprinter are included for now.
-Currently, the versions for 4.03.0 and 4.04.0 are identical.

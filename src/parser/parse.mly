@@ -23,7 +23,7 @@ open FStar_String
 %}
 
 %token <bytes> BYTEARRAY
-%token <bytes> STRING
+%token <string> STRING
 %token <string> IDENT
 %token <string> NAME
 %token <string> TVAR
@@ -52,9 +52,9 @@ open FStar_String
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
 %token AND ASSERT BEGIN ELSE END
-%token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
+%token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
-%token OPEN REC MUTABLE THEN TRUE L_TRUE TRY TYPE EFFECT VAL
+%token OPEN REC MUTABLE THEN TRUE TRY TYPE EFFECT VAL
 %token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -96,9 +96,8 @@ open FStar_String
 
 %start inputFragment
 %start term
-%type <inputFragment> inputFragment
-%type <term> term
-
+%type <FStar_Parser_AST.inputFragment> inputFragment
+%type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
 
 %%
@@ -335,7 +334,7 @@ letqualifier:
 
  (* Remove with stratify *)
 aqual:
-  | EQUALS    { print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
+  | EQUALS    { warn (lhs parseState) "The '=' notation for equality constraints on binders is deprecated; use '$' instead";
                                         Equality }
   | q=aqualUniverses { q }
 
@@ -768,8 +767,6 @@ atomicTermNotQUident:
                mk_term (Var a) (rhs parseState 1) Expr }
   | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type_level }
   | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
-  | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type_level }
-  | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type_level }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }
   | LPAREN op=operator RPAREN
@@ -929,7 +926,7 @@ atomicUniverse:
 /******************************************************************************/
 
 %inline string:
-  | s=STRING { string_of_bytes s }
+  | s=STRING { s }
 
 %inline operator:
   | op=OPPREFIX

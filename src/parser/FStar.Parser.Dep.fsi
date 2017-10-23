@@ -34,6 +34,7 @@ type open_kind = | Open_module | Open_namespace
 
 val lowercase_module_name : string -> string
 
+val build_inclusion_candidates_list : unit -> list<(string * string)>
 val build_map : list<string> -> map
 
 (* Given a filename, returns the list of automatically opened modules
