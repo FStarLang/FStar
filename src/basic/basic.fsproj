@@ -88,11 +88,11 @@
     <Compile Include="FStar.Common.fs" />
     <Compile Include="FStar.Getopt.fsi" />
     <Compile Include="FStar.Getopt.fs" />
+    <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Options.fsi" />
     <Compile Include="FStar.Options.fs" />
     <Compile Include="FStar.Unionfind.fsi" />
     <Compile Include="FStar.Unionfind.fs" />
-    <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Const.fs" />
     <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />

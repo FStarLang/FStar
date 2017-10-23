@@ -311,7 +311,7 @@ let head_redex env t =
 
 let whnf env t =
     if head_normal env t then t
-    else N.normalize [N.Beta; N.WHNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
+    else N.normalize [N.Beta; N.Weak; N.HNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
                       N.Eager_unfolding; N.EraseUniverses] env.tcenv t
 let norm env t = N.normalize [N.Beta; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
                               N.Eager_unfolding; N.EraseUniverses] env.tcenv t
@@ -457,6 +457,8 @@ let is_BitVector_primitive head args =
       (S.fv_eq_lid fv Const.bv_and_lid
       || S.fv_eq_lid fv Const.bv_xor_lid
       || S.fv_eq_lid fv Const.bv_or_lid
+      || S.fv_eq_lid fv Const.bv_add_lid
+      || S.fv_eq_lid fv Const.bv_sub_lid
       || S.fv_eq_lid fv Const.bv_shift_left_lid
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
@@ -635,6 +637,8 @@ and encode_arith_term env head args_e =
     let bv_and  = mk_bv Util.mkBvAnd binary (Term.boxBitVec sz) in
     let bv_xor  = mk_bv Util.mkBvXor binary (Term.boxBitVec sz) in
     let bv_or   = mk_bv Util.mkBvOr binary (Term.boxBitVec sz) in
+    let bv_add  = mk_bv Util.mkBvAdd binary (Term.boxBitVec sz) in
+    let bv_sub  = mk_bv Util.mkBvSub binary (Term.boxBitVec sz) in
     let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith (Term.boxBitVec sz) in
     let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith (Term.boxBitVec sz) in
     let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith (Term.boxBitVec sz) in
@@ -650,6 +654,8 @@ and encode_arith_term env head args_e =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
          (Const.bv_or_lid, bv_or);
+	 (Const.bv_add_lid, bv_add);
+	 (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.bv_udiv_lid, bv_udiv);
@@ -796,7 +802,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv t0 with
+        let x, f = match N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv t0 with
             | {n=Tm_refine(x, f)} ->
                let b, f = SS.open_term [x, None] f in
                fst (List.hd b), f
@@ -849,14 +855,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 Util.mkAssume(mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
                               Some ("haseq for " ^ tsym),
                               "haseq" ^ tsym) in
-              let t_valid =
-                let xx = (x, Term_sort) in
-                let valid_t = mkApp ("Valid", [t]) in
-                Util.mkAssume(mkForall ([[valid_t]], cvars,
-                    mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
-                              Some ("validity axiom for refinement"),
-                              "ref_valid_" ^ tsym)
-              in
+              // let t_valid =
+              //   let xx = (x, Term_sort) in
+              //   let valid_t = mkApp ("Valid", [t]) in
+              //   Util.mkAssume(mkForall ([[valid_t]], cvars,
+              //       mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
+              //                 Some ("validity axiom for refinement"),
+              //                 "ref_valid_" ^ tsym)
+              // in
 
               let t_kinding =
                 //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
@@ -873,7 +879,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @decls'
                             @[tdecl;
                               t_kinding;
-                              t_valid;
+                              // t_valid;
                               t_interp;t_haseq] in
 
               BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
@@ -959,7 +965,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             begin match head_type with
                 | None -> encode_partial_app None
                 | Some head_type ->
-                  let head_type = U.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
+                  let head_type = U.unrefine <| N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv head_type in
                   let formals, c = curried_arrow_formals_comp head_type in
                   begin match head.n with
                         | Tm_uinst({n=Tm_fvar fv}, _)
@@ -1247,6 +1253,9 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in
+
+    (* Postcondition is thunked, c.f. #57 *)
+    let post = U.unthunk_lemma_post post in
 
     let env = {env with nolabels=true} in
     let pre, decls'' = encode_formula (U.unmeta pre) env in
@@ -1893,7 +1902,7 @@ let encode_top_level_let :
 
             (* have another go, after unfolding all definitions *)
             | _ when not norm ->
-              let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.WHNF;
+              let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.Weak; N.HNF;
                                         (* we don't know if this will terminate; so don't do recursive steps *)
                                         N.Exclude N.Zeta;
                                         N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm

@@ -58,8 +58,8 @@ let pair_typ t s = S.mk_Tm_app (S.mk_Tm_uinst (lid_as_tm PC.lid_tuple2) [U_zero;
                                       None
                                       Range.dummyRange
 
-let embed_proofstate (ps:proofstate) : term =
-    U.mk_alien t_proofstate ps "tactics.embed_proofstate" None
+let embed_proofstate (rng:Range.range) (ps:proofstate) : term =
+    U.mk_alien t_proofstate ps "tactics.embed_proofstate" (Some rng)
 
 let unembed_proofstate (t:term) : option<proofstate> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
@@ -67,29 +67,30 @@ let unembed_proofstate (t:term) : option<proofstate> =
         Err.warn t.pos (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t));
         None
 
-let mk_app hd args =
-  S.mk_Tm_app hd args None Range.dummyRange
-
-let embed_result (ps:proofstate) (res:__result<'a>) (embed_a:'a -> term) (t_a:typ) : term =
+let embed_result (embed_a:embedder<'a>) (t_a:typ) (rng:Range.range) (res:__result<'a>) : term =
     match res with
     | Failed (msg, ps) ->
-      mk_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
+      S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed_tm [U_zero])
              [S.iarg t_a;
-              S.as_arg (mk_app (S.mk_Tm_uinst mktuple2_tm [U_zero; U_zero])
+              S.as_arg (S.mk_Tm_app (S.mk_Tm_uinst mktuple2_tm [U_zero; U_zero])
                                [S.iarg S.t_string;
                                 S.iarg t_proofstate;
-                                S.as_arg (embed_string msg);
-                                S.as_arg (embed_proofstate ps)])]
+                                S.as_arg (embed_string rng msg);
+                                S.as_arg (embed_proofstate rng ps)]
+                                None rng)]
+             None rng
     | Success (a, ps) ->
-      mk_app (S.mk_Tm_uinst fstar_tactics_Success_tm [U_zero])
+      S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Success_tm [U_zero])
              [S.iarg t_a;
-              S.as_arg (mk_app (S.mk_Tm_uinst mktuple2_tm [U_zero; U_zero])
+              S.as_arg (S.mk_Tm_app (S.mk_Tm_uinst mktuple2_tm [U_zero; U_zero])
                                [S.iarg t_a;
                                 S.iarg t_proofstate;
-                                S.as_arg (embed_a a);
-                                S.as_arg (embed_proofstate ps)])]
+                                S.as_arg (embed_a rng a);
+                                S.as_arg (embed_proofstate rng ps)]
+                                None rng)]
+             None rng
 
-let unembed_result (ps:proofstate) (t:term) (unembed_a:term -> option<'a>)
+let unembed_result (t:term) (unembed_a:unembedder<'a>)
         : option<either<('a * proofstate), (string * proofstate)>> =
     let hd'_and_args tm =
       let tm = U.unascribe tm in
@@ -107,7 +108,7 @@ let unembed_result (ps:proofstate) (t:term) (unembed_a:term -> option<'a>)
         Err.warn t.pos (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t));
         None
 
-let embed_direction (d : direction) : term =
+let embed_direction (rng:Range.range) (d : direction) : term =
     match d with
     | TopDown -> fstar_tactics_topdown
     | BottomUp -> fstar_tactics_bottomup

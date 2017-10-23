@@ -22,7 +22,7 @@
         "true_interp", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "6349b9dd242a928ece9a56ad28948754"
+      "710ab00f7f549a42e621f33f1cef55e9"
     ],
     [
       "TestHeap.test0",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "49131f72993812fd3560266287aa4007"
+      "f7d19c84f82144f4599fd3c5515d7802"
     ],
     [
       "TestHeap.test1",
@@ -57,7 +57,7 @@
         "true_interp", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "422789d810a4d00f80c05afbaf201ec1"
+      "87358bd5da27f957a261e52248069773"
     ],
     [
       "TestHeap.test1",
@@ -66,7 +66,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2e4cc9b431ff222b438bf35ce27bbf0a"
+      "2285701758f16210d46a5d4403d20e5b"
     ],
     [
       "TestHeap.test3",
@@ -87,7 +87,7 @@
         "true_interp", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "cbdab3de2b709b415995a92d9d6ebe38"
+      "a57e84f7bdeee2a569456ff4e68358b0"
     ],
     [
       "TestHeap.test3",
@@ -96,7 +96,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "02f067b2ca06e09f5ed23f43e0c5e0d5"
+      "66c9b7bfdaafe5782b2d876131e1584f"
     ],
     [
       "TestHeap.test7",
@@ -122,7 +122,7 @@
         "true_interp", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "58181214b7985d653f72adb52de17494"
+      "59fba976ada0a4c9a68ce709e61f523e"
     ],
     [
       "TestHeap.test8",
@@ -147,7 +147,7 @@
         "true_interp", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "de2048ce70588da7c7bed4d5c24d6d83"
+      "0719e5eb8801358eb4fb812f94f447dc"
     ]
   ]
 ]

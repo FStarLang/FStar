@@ -1,5 +1,5 @@
 [
-  "€>\u0007:5&Ú«äïÎ°>[à",
+  ",wä~&‚\u0012V\u0019n\u0006_¢ÆhX",
   [
     [
       "Canon.Test.lem1",
@@ -12,7 +12,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "8c8162bfbab1b471bbe8e96d8b9fcd90"
+      "0d0ca07ea91e791da4beffaac6e967cd"
     ],
     [
       "Canon.Test.lem8",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "72dbcb0e5b2ed519e1b293ac99388c16"
+      "082b28e4d48fa7388faa73fa760a08be"
     ],
     [
       "Canon.Test.lem9",
@@ -30,7 +30,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f995b67b03349c173833ee96fa1672f9"
+      "c527193a2778dd7bdcb1c70485af62bf"
     ],
     [
       "Canon.Test.lem10",
@@ -39,7 +39,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "02b19c21a3b5c8e3ce26cf71da9a93ff"
+      "b17b5f95d5d83b4391a3b77f6fb97b3c"
     ]
   ]
 ]
