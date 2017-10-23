@@ -52,4 +52,5 @@ let one_time_pad_ok x_0 x_1 tape_0 tape_1
                       dec_0 (enc_0 x_0) = x_0 /\
                       dec_1 (enc_1 x_1) = x_1 /\
                       enc_0 x_0 = enc_1 x_1))
-   = ()
+= ()
+

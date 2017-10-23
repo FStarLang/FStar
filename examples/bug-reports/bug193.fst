@@ -1,4 +1,4 @@
-module WeakestPrecondition
+module Bug193
 
 type form =
 | FTrue   : form

@@ -32,13 +32,13 @@ type input_frag = {
 
 let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
   lexbuf.EndPos <- {lexbuf.EndPos with
-    pos_fname= Range.encode_file filename;
+    pos_fname=filename;
     pos_cnum=0;
     pos_lnum=1 }
 
 let setLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) line col =
   lexbuf.EndPos <- {lexbuf.EndPos with
-    pos_fname= Range.encode_file filename;
+    pos_fname=filename;
     pos_cnum=col;
     pos_lnum=line }
 
@@ -49,24 +49,29 @@ let find_file filename =
     | None ->
       raise (Err(Util.format1 "Unable to find file: %s\n" filename))
 
-let vfs_entries : Util.smap<string> = Util.smap_create 1
+let vfs_entries : Util.smap<(time * string)> = Util.smap_create 1
 
 let read_vfs_entry fname =
-  Util.smap_try_find vfs_entries fname
+  Util.smap_try_find vfs_entries (Util.normalize_file_path fname)
 
 let add_vfs_entry fname contents =
-  Util.smap_add vfs_entries fname contents
+  Util.smap_add vfs_entries (Util.normalize_file_path fname) (Util.now (), contents)
+
+let get_file_last_modification_time filename =
+  match read_vfs_entry filename with
+  | Some (mtime, _contents) -> mtime
+  | None -> Util.get_file_last_modification_time filename
 
 let read_file (filename:string) =
   let debug = Options.debug_any () in
   match read_vfs_entry filename with
-  | Some contents ->
-    if debug then Util.print1 "Reading in-memory file %s" filename;
+  | Some (_mtime, contents) ->
+    if debug then Util.print1 "Reading in-memory file %s\n" filename;
     filename, contents
   | None ->
     let filename = find_file filename in
     try
-      if debug then Util.print1 "Opening file %s" filename;
+      if debug then Util.print1 "Opening file %s\n" filename;
       let fs = new System.IO.StreamReader(filename) in
       filename, fs.ReadToEnd ()
     with _ ->
@@ -92,8 +97,8 @@ let check_extension fn =
 //val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 let parse fn =
   Parser.Util.warningHandler := (function
-    | e -> let msg = Printf.sprintf "Warning: %A\n" e in
-           Util.print_warning msg);
+    | e -> let msg = Printf.sprintf "%A\n" e in
+          Util.print_warning msg);
   Parser.Util.errorHandler := (function
     | e -> raise e);
 

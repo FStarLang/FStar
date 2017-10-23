@@ -151,6 +151,8 @@ let bv_to_nat_lid      = bvconst "bv2int"
 let bv_and_lid         = bvconst "bvand"
 let bv_xor_lid         = bvconst "bvxor"
 let bv_or_lid          = bvconst "bvor"
+let bv_add_lid         = bvconst "bvadd"
+let bv_sub_lid         = bvconst "bvsub"
 let bv_shift_left_lid  = bvconst "bvshl"
 let bv_shift_right_lid = bvconst "bvshr"
 let bv_udiv_lid        = bvconst "bvdiv"
@@ -205,6 +207,8 @@ let as_requires    = pconst "as_requires"
 let as_ensures     = pconst "as_ensures"
 let decreases_lid  = pconst "decreases"
 
+let term_lid       = p2l ["FStar"; "Reflection"; "Types"; "term"]
+
 let range_lid      = pconst "range"
 let range_of_lid   = pconst "range_of"
 let labeled_lid    = pconst "labeled"
@@ -219,7 +223,8 @@ let norm           = pconst "norm"
 
 (* lids for normalizer steps *)
 let steps_simpl      = pconst "Simpl"
-let steps_whnf       = pconst "WHNF"
+let steps_weak       = pconst "Weak"
+let steps_hnf        = pconst "HNF"
 let steps_primops    = pconst "Primops"
 let steps_zeta       = pconst "Zeta"
 let steps_iota       = pconst "Iota"
@@ -324,3 +329,4 @@ let reify_tactic_lid = fstar_tactics_lid' ["Effect"; "reify_tactic"]
 let quote_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "quote"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
 let fstar_refl_embed_lid = lid_of_path (["FStar"; "Tactics"; "Builtins"; "__embed"]) FStar.Range.dummyRange //TODO definitely shouldn't be here
 let fstar_syntax_syntax_term = FStar.Ident.lid_of_str "FStar.Syntax.Syntax.term"
+let fstar_reflection_types_binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.Range.dummyRange

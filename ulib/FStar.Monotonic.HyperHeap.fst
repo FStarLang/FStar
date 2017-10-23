@@ -120,7 +120,7 @@ let rec lemma_disjoint_includes i j k =
 abstract val extends: rid -> rid -> GTot bool
 let extends r0 r1 = Cons? (reveal r0) && rid_tail r0 = r1
 
-abstract val parent: r:rid{r<>root} -> GTot rid
+abstract val parent: r:rid{r<>root} -> Tot rid
 let parent r = rid_tail r
 
 abstract val lemma_includes_refl: i:rid
@@ -284,8 +284,8 @@ abstract val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:ri
                   /\ extends j jpar
                   /\ i<>j))
         (ensures (disjoint i j))
-        [SMTPatT (fresh_region i m0 m1);
-         SMTPatT (fresh_region j m0 m1);
+        [SMTPat (fresh_region i m0 m1);
+         SMTPat (fresh_region j m0 m1);
          SMTPat (extends i ipar);
          SMTPat (extends j jpar)]
 let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()

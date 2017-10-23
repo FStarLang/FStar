@@ -1,0 +1,6 @@
+{"kind": "[...]"}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [], "status": "success"}
+{"kind": "response", "query-id": "3", "response": {"defined-at": null, "definition": null, "documentation": null, "kind": "symbol", "name": "ccc", "type": "Prims.nat * (Prims.string * Prims.int)"}, "status": "success"}
+{"kind": "response", "query-id": "4", "response": {"defined-at": null, "definition": null, "documentation": null, "kind": "symbol", "name": "aaa", "type": "Prims.int"}, "status": "success"}
+{"kind": "response", "query-id": "5", "response": {"defined-at": null, "definition": null, "documentation": null, "kind": "symbol", "name": "bbb", "type": "Prims.string * Prims.int"}, "status": "success"}

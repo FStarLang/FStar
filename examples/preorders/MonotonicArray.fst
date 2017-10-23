@@ -375,6 +375,7 @@ let init_arr_in_heap_i_j (#a:Type0) (#n:nat) (arr:t a n) (h:heap) (i:nat) (j:nat
 let init_arr_in_heap (#a:Type0) (#n:nat) (arr:t a n) (h:heap) :Type0
   = init_arr_in_heap_i_j arr h 0 n
 
+#set-options "--z3rlimit 10"
 abstract let recall_all_init_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >= i /\ j <= n /\ all_init_i_j arr i j})
   :ST unit (requires (fun _ -> True))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ init_arr_in_heap_i_j arr h0 i j))
@@ -386,6 +387,7 @@ abstract let recall_all_init_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{
     in
     if i = j then ()
     else aux i
+#reset-options
 
 abstract let recall_all_init (#a:Type0) (#n:nat) (arr:t a n{all_init arr})
   :ST unit (requires (fun _ -> True))
@@ -492,7 +494,7 @@ let lemma_disjoint_sibling_remain_same_transitive
          (ensures  (disjoint_siblings_remain_same arr h0 h2))
   = ()
 
-#set-options "--z3rlimit 100"
+#reset-options "--z3rlimit 100"
 private let fill_common (#a:Type0) (#n:nat) (arr:t a n) (buf:seq a{Seq.length buf <= n})
   :ST unit (requires (fun h0      -> is_mutable arr h0))
            (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
@@ -505,13 +507,13 @@ private let fill_common (#a:Type0) (#n:nat) (arr:t a n) (buf:seq a{Seq.length bu
     let A #_ #_ #m s_ref off = arr in
     let (s, b) = !s_ref in
     let s1 = copy_seq s off (off + Seq.length buf) buf in
-    assert (forall (off1:nat) (n1:nat). ((off1 + n1 <= m) /\ (off1 + n1 <= off \/ off + n <= off1)) ==>
+    assert_spinoff (forall (off1:nat) (n1:nat). ((off1 + n1 <= m) /\ (off1 + n1 <= off \/ off + n <= off1)) ==>
                                 Seq.slice s off1 (off1 + n1) == Seq.slice s1 off1 (off1 + n1));
     s_ref := (s1, b);
     let h1 = ST.get () in
     witness_all_init_i_j arr 0 (Seq.length buf);
     lemma_get_equivalent_sequence_slice s1 off (off + Seq.length buf) buf;
-    assert (forall (n1:nat) (arr1:t a n1). disjoint_sibling arr arr1 ==>
+    assert_spinoff (forall (n1:nat) (arr1:t a n1). disjoint_sibling arr arr1 ==>
                                    (let A #_ #_ #m1 s_ref1 off1 = arr1 in
 				    m1 == m /\ s_ref1 === s_ref /\ (off1 + n1 <= off \/ off + n <= off1) /\
 				    as_seq arr1 h0 == Seq.slice s off1 (off1 + n1) /\

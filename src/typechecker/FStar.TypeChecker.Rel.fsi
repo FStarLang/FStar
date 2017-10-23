@@ -35,6 +35,8 @@ val map_guard                 : guard_t -> (term -> term) -> guard_t
 val trivial_guard             : guard_t
 val is_trivial                : guard_t -> bool
 val conj_guard                : guard_t -> guard_t -> guard_t
+val abstract_guard            : binder -> guard_t -> guard_t
+val abstract_guard_n          : list<binder> -> guard_t -> guard_t
 val imp_guard                 : guard_t -> guard_t -> guard_t
 val guard_of_guard_formula    : guard_formula -> guard_t
 val guard_form                : guard_t -> guard_formula
@@ -46,6 +48,9 @@ val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : guard_t -> guard_t
 val resolve_implicits_tac     : guard_t -> guard_t
+val guard_unbound_vars        : env -> guard_t -> set<bv>
+val check_term                : string -> env -> term -> unit
+val check_guard               : string -> env -> guard_t -> unit
 
 val unrefine   : env -> typ -> typ
 val try_teq    : bool -> env -> typ -> typ -> option<guard_t>

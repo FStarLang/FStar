@@ -106,8 +106,9 @@ let rec unmeta_safe e =
         | Tm_meta(e', m) ->
             begin match m with
             | Meta_monadic _
-            | Meta_monadic_lift _ ->
-              e // don't remove monadic metas
+            | Meta_monadic_lift _
+            | Meta_alien _ ->
+              e // don't remove the metas that really matter
             | _ -> unmeta_safe e'
             end
         | Tm_ascribed(e, _, _) -> unmeta_safe e
@@ -447,6 +448,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
 
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
       eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
+
+    // Ranges should be opaque, even to the normalizer. c.f. #1312
+    | Tm_constant (Const_range _), _
+    | _, Tm_constant (Const_range _) ->
+      Unknown
 
     | Tm_constant c, Tm_constant d ->
       equal_iff (eq_const c d)
@@ -795,9 +801,11 @@ let is_constructor t lid =
     | Tm_fvar tc -> lid_equals tc.fv_name.v lid
     | _ -> false
 
-let rec is_constructed_typ t lid = match (pre_typ t).n with
+let rec is_constructed_typ t lid =
+  match (pre_typ t).n with
   | Tm_fvar _ -> is_constructor t lid
-  | Tm_app(t, _) -> is_constructed_typ t lid
+  | Tm_app(t, _)
+  | Tm_uinst(t, _) -> is_constructed_typ t lid
   | _ -> false
 
 let rec get_tycon t =
@@ -863,6 +871,7 @@ let exp_false_bool : term = mk (Tm_constant (Const_bool false)) None dummyRange
 let exp_unit : term = mk (Tm_constant (Const_unit)) None dummyRange
 (* Makes an (unbounded) integer from its string repr. *)
 let exp_int s : term = mk (Tm_constant (Const_int (s,None))) None dummyRange
+let exp_char c : term = mk (Tm_constant (Const_char c)) None dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) None dummyRange
 
 let fvar_const l = fvar l Delta_constant None
@@ -1060,13 +1069,13 @@ let destruct_typ_as_formula f : option<connective> =
         let t = compress t in
         match t.n with
             | Tm_meta(t, Meta_pattern pats) -> pats, compress t
-            | _ -> [], compress t in
+            | _ -> [], t in
 
     let destruct_q_conn t =
         let is_q (fa:bool) (fv:fv) : bool =
             if fa
-            then is_forall fv.fv_name.v else
-            is_exists fv.fv_name.v
+            then is_forall fv.fv_name.v
+            else is_exists fv.fv_name.v
         in
         let flat t =
             let t, args = head_and_args t in
@@ -1148,11 +1157,6 @@ let destruct_typ_as_formula f : option<connective> =
             then None
             else
                 let q = (comp_to_comp_typ c).result_typ in
-                let bs, q = open_term [b] q in
-                let b = match bs with // coverage...
-                        | [b] -> b
-                        | _ -> failwith "impossible"
-                in
                 if is_free_in (fst b) q
                 then (
                     let pats, q = patterns q in
@@ -1204,6 +1208,16 @@ let destruct_typ_as_formula f : option<connective> =
         catch_opt (destruct_sq_exists phi) (fun () ->
                    None)))))
 
+let unthunk_lemma_post t =
+    match (compress t).n with
+    | Tm_abs ([b], e, _) ->
+        let bs, e = open_term [b] e in
+        let b = List.hd bs in
+        if is_free_in (fst b) e
+        then mk_app t [as_arg exp_unit]
+        else e
+    | _ ->
+        mk_app t [as_arg exp_unit]
 
 let action_as_lb eff_lid a =
   let lb =
@@ -1318,9 +1332,7 @@ let eqopt (e : 'a -> 'a -> bool) (x : option<'a>) (y : option<'a>) : bool =
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
 // We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
 // indices.
-// TODO: consider unification variables.. somehow? Not sure why we have some of them unresolved at tactic run time
-// TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure
-// that's ok.
+// TODO: GM: be smarter about lcomps, for now we just ignore them and I'm not sure that's ok.
 let rec term_eq t1 t2 =
   let canon_app t =
     match t.n with
@@ -1387,17 +1399,21 @@ let rec sizeof (t:term) : int =
     // TODO: obviously want much more
     | _ -> 1
 
-let is_synth_by_tactic t =
+let is_fvar lid t =
     match (un_uinst t).n with
-    | Tm_fvar fv -> fv_eq_lid fv PC.synth_lid
+    | Tm_fvar fv -> fv_eq_lid fv lid
     | _ -> false
 
-(* Spooky behaviours are possible with this, procede with caution *)
+let is_synth_by_tactic t =
+    is_fvar PC.synth_lid t
 
-let mk_alien (b : 'a) (s : string) (r : option<range>) : term =
-    mk (Tm_meta (tun, Meta_alien (mkdyn b, s))) None (match r with | Some r -> r | None -> dummyRange)
+(* Spooky behaviours are possible with this, proceed with caution *)
+
+let mk_alien (ty : typ) (b : 'a) (s : string) (r : option<range>) : term =
+    mk (Tm_meta (tun, Meta_alien (mkdyn b, s, ty))) None (match r with | Some r -> r | None -> dummyRange)
 
 let un_alien (t : term) : dyn =
+    let t = Subst.compress t in
     match t.n with
-    | Tm_meta (_, Meta_alien (blob, _)) -> blob
+    | Tm_meta (_, Meta_alien (blob, _, _)) -> blob
     | _ -> failwith "unexpected: term was not an alien embedding"

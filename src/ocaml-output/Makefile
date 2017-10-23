@@ -50,7 +50,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/boot/parse.fsy fstar.exe install-compiler-lib
+all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/parse.fsy fstar.exe install-compiler-lib
 
 # Choose the correct version of the ML prettyprinter, based on OCaml version
 ../extraction/ml/FStar_Extraction_ML_PrintML.ml:
@@ -72,7 +72,7 @@ endif
 
 # This is about the F# parser, which we sed-transform from the parse.mly
 # obtained via the rule above.
-../parser/boot/parse.fsy: parse.mly
+../parser/parse.fsy: parse.mly
 	echo "%{" > $@
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@
@@ -175,12 +175,25 @@ FStar_Version.ml:
 #  installs we cannot assume the user has git installed.)
 install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(PREFIX)/$(2)/{} \;
 
+# install the standard library binary files
+install_fstarlib = $(INSTALL_EXEC) -m 755 -D ../../$(1)/$(2) $(PREFIX)/lib/fstar/$(2)
+
 # Install FStar into $(PREFIX) using the standard Unix directory structure.
 install: all
         # Install the binary
 	$(INSTALL_EXEC) -m 755 -D _build/src/fstar/ml/main.native $(PREFIX)/bin/fstar.exe
+	# Then the standard library, but not the ml or fs files
+	cp -p -r ../../ulib ../../ulib-install
+	rm -rf ../../ulib-install/ml
+	rm -rf ../../ulib-install/fs
+	$(call install_dir,ulib-install,lib/fstar)
+	rm -rf ../../ulib-install
+	# Then the binary library
+	$(call install_fstarlib,bin/fstarlib,fstarlib.cma)
+	$(call install_fstarlib,bin/fstarlib,fstarlib.cmxa)
+	$(call install_fstarlib,ulib/ml,fstarlib.ml)
+	$(call install_fstarlib,ulib/ml,fstarlib.mllib)
         # Then the rest of the static files.
-	$(call install_dir,ulib,lib/fstar)
 	$(call install_dir,examples,share/fstar/examples)
 	$(call install_dir,ucontrib,share/fstar/contrib)
 ifeq ($(MADOKO),Madoko)
