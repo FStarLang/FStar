@@ -1,6 +1,6 @@
 module Bug206
 
-open Constructive
+open FStar.Constructive
 
 assume val proof_irrelevance : #a:Type -> x:a -> y:a -> Tot (ceq x y)
 

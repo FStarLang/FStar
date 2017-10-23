@@ -118,7 +118,6 @@ val fstar_home                  : unit    -> string
 val get_option                  : string  -> option_val
 val full_context_dependency     : unit    -> bool
 val gen_native_tactics          : unit    -> option<string>
-val hide_genident_nums          : unit    -> bool
 val hide_uvar_nums              : unit    -> bool
 val hint_info                   : unit    -> bool
 val hint_file                   : unit    -> option<string>

@@ -57,6 +57,8 @@ type op =
   | BvAnd
   | BvXor
   | BvOr
+  | BvAdd
+  | BvSub
   | BvShl
   | BvShr
   | BvUdiv
@@ -165,6 +167,8 @@ val mkBvToNat : (term -> Range.range -> term)
 val mkBvAnd   : ((term * term) -> Range.range -> term)
 val mkBvXor   : ((term * term) -> Range.range -> term)
 val mkBvOr    : ((term * term) -> Range.range -> term)
+val mkBvAdd   : ((term * term) -> Range.range -> term)
+val mkBvSub   : ((term * term) -> Range.range -> term)
 val mkBvUlt   : ((term * term) -> Range.range -> term)
 val mkBvUext  : (int -> term -> Range.range -> term)
 val mkBvShl   : (int -> (term * term) -> Range.range -> term)

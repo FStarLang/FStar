@@ -457,6 +457,8 @@ let is_BitVector_primitive head args =
       (S.fv_eq_lid fv Const.bv_and_lid
       || S.fv_eq_lid fv Const.bv_xor_lid
       || S.fv_eq_lid fv Const.bv_or_lid
+      || S.fv_eq_lid fv Const.bv_add_lid
+      || S.fv_eq_lid fv Const.bv_sub_lid
       || S.fv_eq_lid fv Const.bv_shift_left_lid
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
@@ -635,6 +637,8 @@ and encode_arith_term env head args_e =
     let bv_and  = mk_bv Util.mkBvAnd binary (Term.boxBitVec sz) in
     let bv_xor  = mk_bv Util.mkBvXor binary (Term.boxBitVec sz) in
     let bv_or   = mk_bv Util.mkBvOr binary (Term.boxBitVec sz) in
+    let bv_add  = mk_bv Util.mkBvAdd binary (Term.boxBitVec sz) in
+    let bv_sub  = mk_bv Util.mkBvSub binary (Term.boxBitVec sz) in
     let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith (Term.boxBitVec sz) in
     let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith (Term.boxBitVec sz) in
     let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith (Term.boxBitVec sz) in
@@ -650,6 +654,8 @@ and encode_arith_term env head args_e =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
          (Const.bv_or_lid, bv_or);
+	 (Const.bv_add_lid, bv_add);
+	 (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.bv_udiv_lid, bv_udiv);

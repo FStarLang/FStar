@@ -1,6 +1,6 @@
 module Bug102
 
-type hst : h:Type -> (h -> Tot bool) -> (h -> Tot bool) -> Type -> Type =
+noeq type hst : h:Type -> (h -> Tot bool) -> (h -> Tot bool) -> Type -> Type =
     | Hst : #h:Type
          -> #pre:(h -> Tot bool)
          -> #post:(h -> Tot bool)

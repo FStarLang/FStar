@@ -1,7 +1,7 @@
 module Bug187
 
-opaque type verified : unit -> unit -> Type
-assume type vkey = k:unit{verified k == verified k}
+assume new type verified : unit -> unit -> Type
+type vkey = k:unit{verified k == verified k}
 
 assume val test : option (d:unit & vkey)
 

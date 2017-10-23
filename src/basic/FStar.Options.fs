@@ -111,8 +111,6 @@ let add_light_off_file (filename:string) = light_off_files := filename :: !light
 let defaults =
      [
       ("__temp_no_proj"               , List []);
-      ("_fstar_home"                  , String "");
-      ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
       ("cache_checked_modules"        , Bool false);
@@ -134,7 +132,6 @@ let defaults =
       ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
       ("gen_native_tactics"           , Unset);
-      ("hide_genident_nums"           , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
       ("hint_file"                    , Unset);
@@ -171,7 +168,6 @@ let defaults =
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("reuse_hint_for"               , Unset);
-      ("show_signatures"              , List []);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
       ("smtencoding.elim_box"         , Bool false);
@@ -243,7 +239,6 @@ let get_extract_namespace       ()      = lookup_opt "extract_namespace"        
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_gen_native_tactics      ()      = lookup_opt "gen_native_tactics"       (as_option as_string)
-let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -278,7 +273,6 @@ let get_prn                     ()      = lookup_opt "prn"                      
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
-let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
@@ -573,11 +567,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Compile all user tactics used in the module in <path>");
 
        ( noshort,
-        "hide_genident_nums",
-        Const (mk_bool true),
-        "Don't print generated identifier numbers");
-
-       ( noshort,
         "hide_uvar_nums",
         Const (mk_bool true),
         "Don't print unification variable numbers");
@@ -741,11 +730,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "reuse_hint_for",
         SimpleStr "toplevel_name",
         "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
-
-       ( noshort,
-        "show_signatures",
-        Accumulated (SimpleStr "module_name"),
-        "Show the checked signatures for all top-level symbols in the module");
 
        ( noshort,
         "silent",
@@ -939,7 +923,6 @@ let settable = function
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_inference"
-    | "hide_genident_nums"
     | "hide_uvar_nums"
     | "hint_info"
     | "hint_file"
@@ -961,7 +944,6 @@ let settable = function
     | "print_z3_statistics"
     | "prn"
     | "query_stats"
-    | "show_signatures"
     | "silent"
     | "smtencoding.elim_box"
     | "smtencoding.nl_arith_repr"
@@ -1145,7 +1127,6 @@ let extract_all                  () = get_extract_all                 ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let gen_native_tactics           () = get_gen_native_tactics          ()
 let full_context_dependency      () = true
-let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
                                     || get_query_stats                 ()

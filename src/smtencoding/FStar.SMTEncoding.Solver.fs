@@ -107,31 +107,33 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
         | Namespace lid -> Env.should_enc_lid e lid
         | _ -> false
     in
-    let matches_fact_ids (include_assumption_names:list<string>) (a:Term.assumption) =
+    let matches_fact_ids (include_assumption_names:BU.smap<bool>) (a:Term.assumption) =
       match a.assumption_fact_ids with
-      | [] ->
-//        printfn "Retaining %s because it is not tagged with a fact_id\n" a.assumption_name;
-        true
+      | [] -> true //retaining `a` because it is not tagged with a fact id
       | _ ->
-        List.contains a.assumption_name include_assumption_names
-        || a.assumption_fact_ids |> BU.for_some (fun fid ->
-                should_enc_fid fid)
-           //namespace_strings |> BU.for_some (fun ns -> fact_id_in_namespace ns fid))
+        a.assumption_fact_ids |> BU.for_some should_enc_fid
+        || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
     in
     //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
     let theory_rev = List.rev theory in //TODO: reverse after
-    let pruned_theory, _ =
-        List.fold_left (fun (out, include_assumption_names) d ->
+    let pruned_theory =
+        let include_assumption_names =
+            //this map typically grows to 10k+ elements
+            //using a map for it is important, otherwise the list scanning
+            //becomes near quadratic in the # of facts
+            BU.smap_create 10000
+        in
+        List.fold_left (fun out d ->
           match d with
           | Assume a ->
             if matches_fact_ids include_assumption_names a
-            then d::out, include_assumption_names
-            else out, include_assumption_names
+            then d::out
+            else out
           | RetainAssumptions names ->
-//            printfn "Retaining names: %s\n" (String.concat ", " names);
-            d::out, names@include_assumption_names
-          | _ -> d::out, include_assumption_names)
-       ([], []) theory_rev
+            List.iter (fun x -> BU.smap_add include_assumption_names x true) names;
+            d::out
+          | _ -> d::out)
+        [] theory_rev
     in
     pruned_theory
 
