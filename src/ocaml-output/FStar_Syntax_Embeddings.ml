@@ -113,11 +113,12 @@ let unembed_char:
 let unembed_char_safe:
   FStar_Syntax_Syntax.term -> FStar_Char.char FStar_Pervasives_Native.option
   = fun t  -> __unembed_char false t
-let embed_int: FStar_Range.range -> Prims.int -> FStar_Syntax_Syntax.term =
+let embed_int:
+  FStar_Range.range -> FStar_BigInt.t -> FStar_Syntax_Syntax.term =
   fun rng  ->
     fun i  ->
       let t =
-        let uu____186 = FStar_Util.string_of_int i in
+        let uu____186 = FStar_BigInt.string_of_big_int i in
         FStar_Syntax_Util.exp_int uu____186 in
       let uu___224_187 = t in
       {
@@ -127,7 +128,7 @@ let embed_int: FStar_Range.range -> Prims.int -> FStar_Syntax_Syntax.term =
       }
 let __unembed_int:
   Prims.bool ->
-    FStar_Syntax_Syntax.term -> Prims.int FStar_Pervasives_Native.option
+    FStar_Syntax_Syntax.term -> FStar_BigInt.t FStar_Pervasives_Native.option
   =
   fun w  ->
     fun t0  ->
@@ -135,7 +136,7 @@ let __unembed_int:
       match t.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_int (s,uu____204))
           ->
-          let uu____217 = FStar_Util.int_of_string s in
+          let uu____217 = FStar_BigInt.big_int_of_string s in
           FStar_Pervasives_Native.Some uu____217
       | uu____218 ->
           (if w
@@ -147,10 +148,10 @@ let __unembed_int:
            else ();
            FStar_Pervasives_Native.None)
 let unembed_int:
-  FStar_Syntax_Syntax.term -> Prims.int FStar_Pervasives_Native.option =
+  FStar_Syntax_Syntax.term -> FStar_BigInt.t FStar_Pervasives_Native.option =
   fun t  -> __unembed_int true t
 let unembed_int_safe:
-  FStar_Syntax_Syntax.term -> Prims.int FStar_Pervasives_Native.option =
+  FStar_Syntax_Syntax.term -> FStar_BigInt.t FStar_Pervasives_Native.option =
   fun t  -> __unembed_int false t
 let embed_string:
   FStar_Range.range -> Prims.string -> FStar_Syntax_Syntax.term =
@@ -600,7 +601,7 @@ let __unembed_norm_step:
                FStar_Util.bind_opt uu____1802
                  (fun ss  ->
                     FStar_All.pipe_left
-                      (fun _0_45  -> FStar_Pervasives_Native.Some _0_45)
+                      (fun _0_44  -> FStar_Pervasives_Native.Some _0_44)
                       (UnfoldOnly ss))
            | uu____1822 ->
                (if w

@@ -55,11 +55,11 @@ let __proj__List__item___0: option_val -> option_val Prims.list =
 let uu___is_Unset: option_val -> Prims.bool =
   fun projectee  ->
     match projectee with | Unset  -> true | uu____143 -> false
-let mk_bool: Prims.bool -> option_val = fun _0_28  -> Bool _0_28
-let mk_string: Prims.string -> option_val = fun _0_29  -> String _0_29
-let mk_path: Prims.string -> option_val = fun _0_30  -> Path _0_30
-let mk_int: Prims.int -> option_val = fun _0_31  -> Int _0_31
-let mk_list: option_val Prims.list -> option_val = fun _0_32  -> List _0_32
+let mk_bool: Prims.bool -> option_val = fun _0_27  -> Bool _0_27
+let mk_string: Prims.string -> option_val = fun _0_28  -> String _0_28
+let mk_path: Prims.string -> option_val = fun _0_29  -> Path _0_29
+let mk_int: Prims.int -> option_val = fun _0_30  -> Int _0_30
+let mk_list: option_val Prims.list -> option_val = fun _0_31  -> List _0_31
 type options =
   | Set
   | Reset

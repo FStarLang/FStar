@@ -216,7 +216,7 @@ let reset_gensym: Prims.unit -> Prims.unit = fun uu____339  -> gs.reset ()
 let rec gensyms: Prims.int -> mlident Prims.list =
   fun x  ->
     match x with
-    | _0_41 when _0_41 = (Prims.parse_int "0") -> []
+    | _0_40 when _0_40 = (Prims.parse_int "0") -> []
     | n1 ->
         let uu____349 = gensym () in
         let uu____350 = gensyms (n1 - (Prims.parse_int "1")) in uu____349 ::

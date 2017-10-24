@@ -703,7 +703,7 @@ let new_term_constant_and_tok_from_lid:
               let uu____2657 =
                 let uu____2660 = FStar_SMTEncoding_Util.mkApp (ftok, []) in
                 FStar_All.pipe_left
-                  (fun _0_41  -> FStar_Pervasives_Native.Some _0_41)
+                  (fun _0_40  -> FStar_Pervasives_Native.Some _0_40)
                   uu____2660 in
               (x, fname, uu____2657, FStar_Pervasives_Native.None) in
             Binding_fvar uu____2644 in
@@ -855,8 +855,8 @@ let try_lookup_free_var:
                              FStar_SMTEncoding_Term.mk_ApplyTF uu____3029
                                fuel in
                            FStar_All.pipe_left
-                             (fun _0_42  ->
-                                FStar_Pervasives_Native.Some _0_42)
+                             (fun _0_41  ->
+                                FStar_Pervasives_Native.Some _0_41)
                              uu____3028
                          else FStar_Pervasives_Native.Some t
                      | uu____3033 -> FStar_Pervasives_Native.Some t)
@@ -1710,7 +1710,7 @@ and encode_BitVector_term:
                             sz + uu____5820 in
                           FStar_SMTEncoding_Term.boxBitVec uu____5819 in
                         mk_bv uu____5811 unary uu____5816 arg_tms2 in
-                      let to_int =
+                      let to_int1 =
                         mk_bv FStar_SMTEncoding_Util.mkBvToNat unary
                           FStar_SMTEncoding_Term.boxInt in
                       let bv_to =
@@ -1729,7 +1729,7 @@ and encode_BitVector_term:
                         (FStar_Parser_Const.bv_mul_lid, bv_mul);
                         (FStar_Parser_Const.bv_ult_lid, bv_ult);
                         (FStar_Parser_Const.bv_uext_lid, bv_uext);
-                        (FStar_Parser_Const.bv_to_nat_lid, to_int);
+                        (FStar_Parser_Const.bv_to_nat_lid, to_int1);
                         (FStar_Parser_Const.nat_to_bv_lid, bv_to)] in
                       let uu____6019 =
                         let uu____6028 =
@@ -5287,9 +5287,9 @@ let encode_free_var:
                                                            (vname,
                                                              FStar_SMTEncoding_Term.Term_sort) in
                                                        FStar_All.pipe_left
-                                                         (fun _0_43  ->
+                                                         (fun _0_42  ->
                                                             FStar_Pervasives_Native.Some
-                                                              _0_43)
+                                                              _0_42)
                                                          uu____17586 in
                                                      push_free_var env1 lid
                                                        vname uu____17583 in
@@ -6037,9 +6037,9 @@ let encode_top_level_let:
                                               FStar_SMTEncoding_Util.mkApp
                                                 (g, [fuel_tm]) in
                                             FStar_All.pipe_left
-                                              (fun _0_44  ->
+                                              (fun _0_43  ->
                                                  FStar_Pervasives_Native.Some
-                                                   _0_44) uu____20665 in
+                                                   _0_43) uu____20665 in
                                           push_free_var env3 flid gtok
                                             uu____20662 in
                                         (((flid, f, ftok, g, gtok) :: gtoks),
@@ -7249,9 +7249,9 @@ and encode_sigelt':
                                             FStar_SMTEncoding_Util.mkApp
                                               (tname, []) in
                                           FStar_All.pipe_left
-                                            (fun _0_45  ->
+                                            (fun _0_44  ->
                                                FStar_Pervasives_Native.Some
-                                                 _0_45) uu____23928 in
+                                                 _0_44) uu____23928 in
                                         push_free_var env1 t tname
                                           uu____23925 in
                                       ([], uu____23924)
@@ -8521,7 +8521,7 @@ let encode_labels:
               | (l,uu____26301,uu____26302) ->
                   let uu____26311 =
                     FStar_All.pipe_left
-                      (fun _0_46  -> FStar_SMTEncoding_Term.Echo _0_46)
+                      (fun _0_45  -> FStar_SMTEncoding_Term.Echo _0_45)
                       (FStar_Pervasives_Native.fst l) in
                   let uu____26312 =
                     let uu____26315 =

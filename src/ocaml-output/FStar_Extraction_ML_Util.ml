@@ -303,8 +303,8 @@ let rec type_leq_c:
                            let uu____581 =
                              let uu____584 = mk_fun xs body in
                              FStar_All.pipe_left
-                               (fun _0_42  ->
-                                  FStar_Pervasives_Native.Some _0_42)
+                               (fun _0_41  ->
+                                  FStar_Pervasives_Native.Some _0_41)
                                uu____584 in
                            type_leq_c unfold_ty uu____581 t2 t2' in
                          match uu____574 with
@@ -708,7 +708,7 @@ let mk_tactic_unembedding:
       str_to_top_name uu____1503 in
     let app =
       match FStar_List.length args with
-      | _0_43 when _0_43 = (Prims.parse_int "1") ->
+      | _0_42 when _0_42 = (Prims.parse_int "1") ->
           let uu____1506 =
             let uu____1513 =
               let uu____1516 =

@@ -392,8 +392,8 @@ let value_check_expected_typ:
                                then FStar_Pervasives_Native.None
                                else
                                  FStar_All.pipe_left
-                                   (fun _0_41  ->
-                                      FStar_Pervasives_Native.Some _0_41)
+                                   (fun _0_40  ->
+                                      FStar_Pervasives_Native.Some _0_40)
                                    (FStar_TypeChecker_Err.subtyping_failed
                                       env t1 t') in
                              let g1 =
@@ -4661,9 +4661,9 @@ and tc_eqn:
                                                FStar_Syntax_Util.t_bool w
                                                FStar_Syntax_Util.exp_true_bool in
                                            FStar_All.pipe_left
-                                             (fun _0_42  ->
+                                             (fun _0_41  ->
                                                 FStar_Pervasives_Native.Some
-                                                  _0_42) uu____12333 in
+                                                  _0_41) uu____12333 in
                                      let uu____12336 =
                                        let eqs =
                                          let uu____12346 =
@@ -5399,8 +5399,8 @@ and check_inner_let:
                              FStar_Syntax_Util.mk_eq2 uu____13310
                                c1.FStar_Syntax_Syntax.res_typ uu____13311 e11 in
                            FStar_All.pipe_left
-                             (fun _0_43  ->
-                                FStar_TypeChecker_Common.NonTrivial _0_43)
+                             (fun _0_42  ->
+                                FStar_TypeChecker_Common.NonTrivial _0_42)
                              uu____13309 in
                          let g21 =
                            let uu____13313 =
@@ -5507,8 +5507,8 @@ and check_top_level_let_rec:
                                           FStar_Util.right
                                             lb.FStar_Syntax_Syntax.lbname)) in
                                 FStar_All.pipe_right uu____13461
-                                  (fun _0_44  ->
-                                     FStar_Pervasives_Native.Some _0_44) in
+                                  (fun _0_43  ->
+                                     FStar_Pervasives_Native.Some _0_43) in
                               let lbs4 =
                                 if
                                   Prims.op_Negation

@@ -217,8 +217,8 @@ let rec decr_delta_depth:
     match uu___134_679 with
     | FStar_Syntax_Syntax.Delta_constant  -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Delta_equational  -> FStar_Pervasives_Native.None
-    | FStar_Syntax_Syntax.Delta_defined_at_level _0_40 when
-        _0_40 = (Prims.parse_int "1") ->
+    | FStar_Syntax_Syntax.Delta_defined_at_level _0_39 when
+        _0_39 = (Prims.parse_int "1") ->
         FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Delta_constant
     | FStar_Syntax_Syntax.Delta_defined_at_level i ->
         FStar_Pervasives_Native.Some

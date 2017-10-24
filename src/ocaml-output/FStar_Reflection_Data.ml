@@ -4,7 +4,7 @@ type typ = FStar_Syntax_Syntax.term[@@deriving show]
 type binders = FStar_Syntax_Syntax.binder Prims.list[@@deriving show]
 type vconst =
   | C_Unit
-  | C_Int of Prims.int
+  | C_Int of FStar_BigInt.t
   | C_True
   | C_False
   | C_String of Prims.string[@@deriving show]
@@ -14,7 +14,7 @@ let uu___is_C_Unit: vconst -> Prims.bool =
 let uu___is_C_Int: vconst -> Prims.bool =
   fun projectee  ->
     match projectee with | C_Int _0 -> true | uu____23 -> false
-let __proj__C_Int__item___0: vconst -> Prims.int =
+let __proj__C_Int__item___0: vconst -> FStar_BigInt.t =
   fun projectee  -> match projectee with | C_Int _0 -> _0
 let uu___is_C_True: vconst -> Prims.bool =
   fun projectee  ->
@@ -82,7 +82,7 @@ type term_view =
   | Tv_Refine of (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
   FStar_Pervasives_Native.tuple2
   | Tv_Const of vconst
-  | Tv_Uvar of (Prims.int,typ) FStar_Pervasives_Native.tuple2
+  | Tv_Uvar of (FStar_BigInt.t,typ) FStar_Pervasives_Native.tuple2
   | Tv_Let of
   (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
   FStar_Pervasives_Native.tuple3
@@ -142,7 +142,7 @@ let uu___is_Tv_Uvar: term_view -> Prims.bool =
   fun projectee  ->
     match projectee with | Tv_Uvar _0 -> true | uu____437 -> false
 let __proj__Tv_Uvar__item___0:
-  term_view -> (Prims.int,typ) FStar_Pervasives_Native.tuple2 =
+  term_view -> (FStar_BigInt.t,typ) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | Tv_Uvar _0 -> _0
 let uu___is_Tv_Let: term_view -> Prims.bool =
   fun projectee  ->

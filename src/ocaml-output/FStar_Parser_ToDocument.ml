@@ -708,15 +708,15 @@ let handleable_op:
   fun op  ->
     fun args  ->
       match FStar_List.length args with
-      | _0_28 when _0_28 = (Prims.parse_int "0") -> true
-      | _0_29 when _0_29 = (Prims.parse_int "1") ->
+      | _0_27 when _0_27 = (Prims.parse_int "0") -> true
+      | _0_28 when _0_28 = (Prims.parse_int "1") ->
           (is_general_prefix_op op) ||
             (FStar_List.mem (FStar_Ident.text_of_id op) ["-"; "~"])
-      | _0_30 when _0_30 = (Prims.parse_int "2") ->
+      | _0_29 when _0_29 = (Prims.parse_int "2") ->
           ((is_operatorInfix0ad12 op) || (is_operatorInfix34 op)) ||
             (FStar_List.mem (FStar_Ident.text_of_id op)
                ["<==>"; "==>"; "\\/"; "/\\"; "="; "|>"; ":="; ".()"; ".[]"])
-      | _0_31 when _0_31 = (Prims.parse_int "3") ->
+      | _0_30 when _0_30 = (Prims.parse_int "3") ->
           FStar_List.mem (FStar_Ident.text_of_id op) [".()<-"; ".[]<-"]
       | uu____2496 -> false
 let comment_stack:
