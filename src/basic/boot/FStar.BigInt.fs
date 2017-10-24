@@ -27,7 +27,7 @@ let lt_big_int = Z.lt_big_int
 let ge_big_int = Z.ge_big_int
 let gt_big_int = Z.gt_big_int
 
-let square_big_int = Z.sqrt_big_int
+let sqrt_big_int = Z.sqrt_big_int
 
 let string_of_big_int = Z.string_of_big_int
 let big_int_of_string = Z.big_int_of_string
