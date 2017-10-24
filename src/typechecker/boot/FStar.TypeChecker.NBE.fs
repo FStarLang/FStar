@@ -157,7 +157,7 @@ let rec translate (bs:list<t>) (e:term) : t =
       
     | _ -> debug_term e; failwith "Not yet implemented"
 
-and readback (x:t) : term =
+let rec readback (x:t) : term =
     match x with
     | Unit -> S.unit_const
     | Bool true -> U.exp_true_bool
@@ -184,4 +184,4 @@ and readback (x:t) : term =
        | _ -> U.mk_app head args)
     | _ -> failwith "Not yet implemented"
     
-and normalize (e:term) : term = readback (translate [] e)
+let normalize (e:term) : term = readback (translate [] e)
