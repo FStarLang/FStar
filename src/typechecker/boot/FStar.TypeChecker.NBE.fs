@@ -45,6 +45,7 @@ type atom = //JUST FSHARP
   (* Zoe: I'm not sure how to use this in our setting since F*'s ast does not
      mark the recursive argument and therefore I'm not sure how to prevent 
      infinite fixpoint unrolling *) 
+  | FiX of (t -> t) (* Danel: This is a unary rec. def. that will not be unfolded any more *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
   | Lam of (t -> t)
@@ -53,17 +54,9 @@ and t = //JUST FSHARP
   | Construct of fv * list<t>
   | Unit
   | Bool of bool
+  | Rec of term * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
 type head = t
 type annot = option<t> 
-
-(* We are not targeting tagless normalization at this point *)
-let app (f:t) (x:t) =
-  match f with
-  | Lam f -> f x
-  | Accu (a, ts) -> Accu(a, x::ts)
-  | Construct(i, ts) -> Construct (i, x::ts)
-  | Unit
-  | Bool _ -> failwith "Ill-typed application"
 
 let mkConstruct i ts = Construct(i,ts)
 
@@ -94,7 +87,25 @@ let rec mkBranches branches cont =
     branch :: mkBranches branches' cont
   | _ -> failwith "Unexpected pattern" 
 
-let rec translate (bs:list<t>) (e:term) : t =
+(* We are not targeting tagless normalization at this point *)
+(* Danel: app is now defined simultaneously with translate to accommodate analysing rec. defs. *)
+let rec app (f:t) (x:t) =
+  match f with
+  | Lam f -> f x
+  | Accu (a, ts) -> Accu (a, x::ts)
+  | Construct (i, ts) -> Construct (i, x::ts)
+  | Rec (y, ts) -> (match x with
+                    | Construct (i, ts') -> app (translate (Rec (y, ts)::ts) y) x
+                                            (* Danel: if a rec. def. is applied to 
+                                               a constructor, then we unfold it *)
+                    | _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x]))
+                                                   (* Danel: if a rec. def. is applied 
+                                                      to a non-constructor, turn it into 
+                                                      an accumulator *)
+  | Unit
+  | Bool _ -> failwith "Ill-typed application"
+
+and translate (bs:list<t>) (e:term) : t =
     match (SS.compress e).n with
     | Tm_delayed _ -> failwith "Impossible"
 
@@ -148,12 +159,15 @@ let rec translate (bs:list<t>) (e:term) : t =
       translate (def::bs) body
 
     | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
+      let f = Rec (lb.lbdef, bs) in 
+      translate (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
+
       // this will loop infinitely when the recursive argument is symbolic 
       // let def = lb.lbdef in 
       // let fnorm f = translate (f::bs) def in
       // let rec f = fnorm f in
       // translate (f::bs) body
-      failwith "Not yet implemented"
+      //failwith "Not yet implemented"
       
     | _ -> debug_term e; failwith "Not yet implemented"
 
@@ -182,6 +196,9 @@ let rec readback (x:t) : term =
       (match ts with 
        | [] -> head
        | _ -> U.mk_app head args)
+    | Accu (FiX t, ts) -> failwith "Not yet implemented"
+                          (* Danel: hmm, should we wrap this stuck 
+                             application inside a (unary) let rec? *)
     | _ -> failwith "Not yet implemented"
     
 let normalize (e:term) : term = readback (translate [] e)
