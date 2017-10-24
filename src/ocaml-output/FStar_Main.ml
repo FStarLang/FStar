@@ -1,5 +1,4 @@
 open Prims
-open FStar_TypeChecker_NBE
 let uu___304: Prims.unit = FStar_Version.dummy ()
 let process_args:
   Prims.unit ->
