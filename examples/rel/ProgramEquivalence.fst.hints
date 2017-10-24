@@ -158,7 +158,7 @@
         "token_correspondence_ProgramEquivalence.inv_0"
       ],
       0,
-      "ccfe6380d3187a2fd5a4d001d49c0d94"
+      "23f2b1a86266448a209b530cc08ffb4d"
     ],
     [
       "ProgramEquivalence.inv_1",
@@ -331,7 +331,7 @@
         "token_correspondence_ProgramEquivalence.inv_1"
       ],
       0,
-      "58dc118e999c77a329d6ce4402a656f0"
+      "c34b94d3af182efc54293f1afeaa35aa"
     ],
     [
       "ProgramEquivalence.init_counter_1",

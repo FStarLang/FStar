@@ -11,37 +11,13 @@
       "0dc0c709b8cfa9d3ee31f7d42492919e"
     ],
     [
-      "ShortCircuit.test1",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_BarBar",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "8b3fe4eea5935097011b755f6d9ac284"
-    ],
-    [
       "ShortCircuit.test2",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "5f27b7455be20f61f8176f6dadfc5002"
-    ],
-    [
-      "ShortCircuit.test2",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_BarBar",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "218bbd7e93437e90fe0046a8fa3ef2eb"
+      "59692af6dfdc864b8bcf92246f3fef1c"
     ],
     [
       "ShortCircuit.test3",
@@ -50,19 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "e9f79b8e1a9f69a75506c365c630bdcd"
-    ],
-    [
-      "ShortCircuit.test3",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_BarBar",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "f0e78a283fd83865028e7ecec2333003"
+      "4f1420344d5f4b69f6f93f0bda7774e5"
     ],
     [
       "ShortCircuit.test4",
@@ -71,19 +35,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "76767aa2d20b5632cab052dfe26dab7d"
-    ],
-    [
-      "ShortCircuit.test4",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_BarBar",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "11cd4b89a96a5db21bca003809e8b8c7"
+      "ee9d1e2dee700e3ae6e79a423ec03a45"
     ],
     [
       "ShortCircuit.test1'",
@@ -92,19 +44,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "0e9381fa2240825243e47448246fb43e"
-    ],
-    [
-      "ShortCircuit.test1'",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_AmpAmp",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "7b3431c1b018fade21fc049ca53f343e"
+      "5f5fcca69ce7d1f6b372fc39abae3e04"
     ],
     [
       "ShortCircuit.test2'",
@@ -113,19 +53,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "22db37e874f55842e5bd05d6e5442253"
-    ],
-    [
-      "ShortCircuit.test2'",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_AmpAmp",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "6966655a3f40fe55df0fdb9bbe36fb62"
+      "d88aa3702d5288671716ba7d6eb895cd"
     ],
     [
       "ShortCircuit.test3'",
@@ -134,19 +62,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "d058cc7ecd95d9e43ac84b7266a0e659"
-    ],
-    [
-      "ShortCircuit.test3'",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_AmpAmp",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "8d0b14ccf8a3857e69d9c3afa26c95cd"
+      "f2bc0ca4e04da521532395fd058ecabf"
     ],
     [
       "ShortCircuit.test4'",
@@ -155,19 +71,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "e231e63b8c1afbc90c4855f8260fcab8"
-    ],
-    [
-      "ShortCircuit.test4'",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_AmpAmp",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "9d4eb28eba5d377d61b9756a38ef11e3"
+      "0d28e4df61cd2bed78043e96c5287f68"
     ]
   ]
 ]

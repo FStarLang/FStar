@@ -1,4 +1,4 @@
-module Blah
+module Bug1052
 
 open FStar.All
 

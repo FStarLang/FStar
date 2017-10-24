@@ -438,7 +438,11 @@ def main(argv):
             stat = a
         elif o in ("-t", "-n", "--top"):
             if a == "all" or a == "*":
-                n = sys.maxint
+                v = sys.version_info
+                if v[0] >= 3:
+                    n = sys.maxsize
+                else:
+                    n = sys.maxint
             else:
                 n = int(a)
                 if n < 0:

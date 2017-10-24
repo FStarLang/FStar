@@ -1500,16 +1500,19 @@ and tc_eqn scrutinee env branch
         //Otherwise, its easy to get inconsistent;
         //e.g., if expected_pat_t is (option nat)
         //and   lc.res_typ is (option int)
-        //Rel.teq below will produce a logical guard (int = nat)
-        //which will fail the discharge_guard_no_smt check
-        //Without out, we will be able to conclude in the branch of the pattern,
+        //Rel.teq_nosmt below will forbid producing a logical guard (int = nat)
+        //Without this, we will be able to conclude in the branch of the pattern,
         //with the equality Some #nat x = Some #int x
         //that nat=int and hence False
-        let g' = Rel.teq env1 lc.res_typ expected_pat_t in
-        let g = Rel.conj_guard g g' in
-        let env1 = Env.set_range env1 exp.pos in
-        Rel.discharge_guard_no_smt env1 g |>
-        Rel.resolve_implicits in
+        if Rel.teq_nosmt env1 lc.res_typ expected_pat_t
+        then let env1 = Env.set_range env1 exp.pos in
+             Rel.discharge_guard_no_smt env1 g |>
+             Rel.resolve_implicits
+        else raise (Error (BU.format2 "Inferred type of pattern (%s) is incompatible with the type of the scrutinee (%s)"
+                                       (Print.term_to_string lc.res_typ)
+                                       (Print.term_to_string expected_pat_t),
+                           exp.pos))
+    in
     let norm_exp = N.normalize [N.Beta] env1 exp in
     let uvs1 = Free.uvars norm_exp in
     let uvs2 = Free.uvars expected_pat_t in
@@ -1729,7 +1732,9 @@ and check_top_level_let env e =
             then g1, N.reduce_uvar_solutions env e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  assert (univ_vars = []) ;
-                 let _, univs, e1, c1 = List.hd (TcUtil.generalize env false [lb.lbname, e1, c1.comp()]) in
+                 let _, univs, e1, c1, gvs = List.hd (TcUtil.generalize env false [lb.lbname, e1, c1.comp()]) in
+                 let g1 = map_guard g1 <| N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env in
+                 let g1 = abstract_guard_n gvs g1 in
                  g1, e1, univs, U.lcomp_of_comp c1
          in
 
@@ -1844,7 +1849,7 @@ and check_top_level_let_rec env top =
                                 lb.lbname,
                                 lb.lbdef,
                                 S.mk_Total lb.lbtyp)) in
-                   ecs |> List.map (fun (x, uvs, e, c) ->
+                   ecs |> List.map (fun (x, uvs, e, c, gvs) ->
                       U.close_univs_and_mk_letbinding all_lb_names x uvs (U.comp_result c) (U.comp_effect_name c) e) in
 
           let cres = U.lcomp_of_comp <| S.mk_Total t_unit in

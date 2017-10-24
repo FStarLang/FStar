@@ -1,4 +1,4 @@
-module Test
+module Bug1041
 
 // Works
 let f x : Lemma (True ==> x == x) = ()

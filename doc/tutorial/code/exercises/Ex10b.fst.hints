@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "8e7db214601e4eda217c1e3537f2d90b"
+      "e7373976b8f19c57a23365ca93a19474"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -34,7 +34,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "9c44e9fdb935ff90402036633b2b533a"
+      "77d58bd9f1b9ff745ce2b2ee47392551"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Ex10b_Tm_refine_f2a77ae22406f0f6f8f3003c6e41b99e"
       ],
       0,
-      "c43f32b6825ada4ec89605ae5d4c6807"
+      "4a4919e4647e2424d8fc7f046e6c2f1b"
     ],
     [
       "Ex10b.new_point",
@@ -59,7 +59,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b2b9661c541a0888552535b75c2e5ca0"
+      "c5ee417c125306e8d9c23b25abbbbc50"
     ],
     [
       "Ex10b.new_point",
@@ -68,7 +68,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "70be01764c49fc4a8b8a4598d919f780"
+      "41340dc647d2493619d437d89c502ded"
     ],
     [
       "Ex10b.new_point",
@@ -77,7 +77,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "24a46f1d48a19aed08bf77943333564a"
+      "e74835ac0331b7a11a8ce2afd3418cdf"
     ],
     [
       "Ex10b.new_point",
@@ -114,7 +114,7 @@
         "typing_FStar.Set.empty"
       ],
       0,
-      "197a96d9aba6fc5f8c0d6c209459f8ff"
+      "44375c45889a3c4b96df2edfcb39a8ab"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -127,7 +127,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "25d78b70dd034e13010e001531cd1701"
+      "05171c9b1157f5529d87fa78eac6cc60"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -140,7 +140,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2312f0f7991a7b2ac73077a711e6159a"
+      "d0b2689625f20ae478ae2497986cd4a2"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -152,7 +152,7 @@
         "assumption_Prims.HasEq_int", "function_token_typing_Prims.int"
       ],
       0,
-      "e468555583907f1d19f86107da37a27e"
+      "b0b027b4c679de31fa032cb3a37bf9be"
     ],
     [
       "Ex10b.test",
@@ -183,7 +183,7 @@
         "typing_FStar.Ref.contains", "typing_FStar.Ref.fresh"
       ],
       0,
-      "7c5e0a0c1af4dd286a316f0f5c0a39fa"
+      "316e1fdc90cdf743e0bc3e3cadf2ba51"
     ]
   ]
 ]

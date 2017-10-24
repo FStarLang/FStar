@@ -1,7 +1,8 @@
 module Bug148
 
+open FStar.All
 
-type foo (r:(unit -> Type)) : Type =
+noeq type foo (r:(unit -> Type)) : Type =
   | Foo : x:unit -> (r x -> Tot (foo r)) -> foo r
 
 val bug : r:(unit -> Type) -> x:unit -> foo r -> r x -> ML (foo r)
