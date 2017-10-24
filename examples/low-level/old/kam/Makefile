@@ -21,11 +21,12 @@ kamregions.ml: kam.ml
 kamgc.ml: kam.ml
 	cpp -P -C kam.ml > $@ 2>/dev/null
 
-kam_simple: %.$(CMO)
-	$(OCAMLLINK) -o $@ $^
+kam_simple$(EXE): kam_simple.ml
+	$(OCAMLC) $(FLAGS) -c kam_simple.ml -o kam_simple.cmx
+	$(OCAMLLINK) -o kam_simple$(EXE) kam_simple.cmx
 
-%$(EXE): %.$(CMO)
-	$(OCAMLLINK) -o $@ $^ $(ALLOCATOR_FILES)
+# %$(EXE): %.$(CMO)
+# 	$(OCAMLLINK) -o $@ $^ $(ALLOCATOR_FILES)
 
 allocator:
 ifdef NOGC
