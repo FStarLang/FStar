@@ -20,6 +20,7 @@ module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
+module Z = FStar.BigInt
 
 (* This file provides implementation for reflection primitives in F*.
  *
@@ -110,7 +111,7 @@ let embed_const (rng:Range.range) (c:vconst) : term =
     | C_False   -> ref_C_False
 
     | C_Int i ->
-        S.mk_Tm_app ref_C_Int [S.as_arg (U.exp_int (BU.string_of_int i))]
+        S.mk_Tm_app ref_C_Int [S.as_arg (U.exp_int (Z.string_of_big_int i))]
                     None Range.dummyRange
     | C_String s ->
         S.mk_Tm_app ref_C_String [S.as_arg (embed_string rng s)]
@@ -375,7 +376,7 @@ let inspect_bv (b:binder) : string =
 let inspect_const (c:sconst) : vconst =
     match c with
     | FStar.Const.Const_unit -> C_Unit
-    | FStar.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
+    | FStar.Const.Const_int (s, _) -> C_Int (Z.big_int_of_string s)
     | FStar.Const.Const_bool true  -> C_True
     | FStar.Const.Const_bool false -> C_False
     | FStar.Const.Const_string (s, _) -> C_String s
@@ -444,7 +445,7 @@ let rec inspect (t:term) : term_view =
         Tv_Const (inspect_const c)
 
     | Tm_uvar (u, t) ->
-        Tv_Uvar (UF.uvar_id u, t)
+        Tv_Uvar (Z.of_int_fs (UF.uvar_id u), t)
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
@@ -501,7 +502,7 @@ let pack_comp (cv : comp_view) : comp =
 let pack_const (c:vconst) : sconst =
     match c with
     | C_Unit    -> C.Const_unit
-    | C_Int i   -> C.Const_int (BU.string_of_int i, None)
+    | C_Int i   -> C.Const_int (Z.string_of_big_int i, None)
     | C_True    -> C.Const_bool true
     | C_False   -> C.Const_bool false
     | C_String s -> C.Const_string (s, Range.dummyRange)
@@ -537,7 +538,7 @@ let pack (tv:term_view) : term =
         S.mk (Tm_constant (pack_const c)) None Range.dummyRange
 
     | Tv_Uvar (u, t) ->
-        U.uvar_from_id u t
+        U.uvar_from_id (Z.to_int_fs u) t
 
     | Tv_Let (b, t1, t2) ->
         let bv = fst b in

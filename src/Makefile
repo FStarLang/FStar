@@ -89,7 +89,7 @@ FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_i
                                     tactics tosyntax typechecker)
 
 ALL_BOOT=$(addprefix boot/FStar., \
-           Util.fsti List.fsti Bytes.fsti String.fsti \
+           Util.fsti List.fsti Bytes.fsti String.fsti BigInt.fsti \
 		   Pprint.fsti Parser.Parse.fsti \
 		   Tactics.Interpreter.fst Tactics.Interpreter.fsti)
 

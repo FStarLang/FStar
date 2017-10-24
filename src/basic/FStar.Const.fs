@@ -47,27 +47,32 @@ let eq_const c1 c2 =
     | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
     | _ -> c1=c2
 
-open FStar.Mul
-let rec pow2 (x:int) : int =
-  match x with
-  | 0  -> 1
-  | _  -> Prims.op_Multiply 2 (pow2 (x-1))
+open FStar.BigInt
+let rec pow2 (x:bigint) : bigint =
+  if eq_big_int x zero
+  then one
+  else mult_big_int two (pow2 (pred_big_int x))
 
 
 let bounds signedness width =
     let n =
         match width with
-        | Int8 -> 8
-        | Int16 -> 16
-        | Int32 -> 32
-        | Int64 -> 64
+        | Int8 -> big_int_of_string "8"
+        | Int16 -> big_int_of_string "16"
+        | Int32 -> big_int_of_string "32"
+        | Int64 -> big_int_of_string "64"
     in
     let lower, upper =
       match signedness with
       | Unsigned ->
-        0, pow2 n - 1
+        zero, pred_big_int (pow2 n)
       | Signed ->
-        let upper = pow2 (n - 1) in
-        - upper, upper - 1
+        let upper = pow2 (pred_big_int n) in
+        minus_big_int upper, pred_big_int upper
     in
     lower, upper
+
+let within_bounds repr signedness width =
+  let lower, upper = bounds signedness width in
+  let value = big_int_of_string (FStar.Util.ensure_decimal repr) in
+  le_big_int lower value && le_big_int value upper
