@@ -2,6 +2,8 @@ FSTAR_HOME=../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
+all: verify iverify not-verify extract
+
 ulib: ../../bin/fstarlib/fstarlib.cmxa
 
 ../../bin/fstarlib/fstarlib.cmxa:
@@ -127,9 +129,6 @@ not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 	./$(CAPPED).exe
 
 extract: ulib $(subst .fst,.extract,$(SHOULD_EXTRACT_CLOSED))
-
-
-all: verify iverify not-verify extract
 
 clean:
 	rm -rf out*
