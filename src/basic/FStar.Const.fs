@@ -60,7 +60,7 @@ let bounds signedness width =
         | Int8 -> big_int_of_string "8"
         | Int16 -> big_int_of_string "16"
         | Int32 -> big_int_of_string "32"
-        | Int64 -> big_int_of_string "32"
+        | Int64 -> big_int_of_string "64"
     in
     let lower, upper =
       match signedness with

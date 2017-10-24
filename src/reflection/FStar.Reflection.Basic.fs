@@ -676,7 +676,7 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
         BU.bind_opt (unembed_term t) (fun t ->
         BU.bind_opt (unembed_list unembed_ctor dcs) (fun dcs ->
         Some <| Sg_Inductive (nm, bs, t, dcs)))))
-        
+
     | Tm_fvar fv, [(fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let_lid ->
         BU.bind_opt (unembed_fvar fvar) (fun fvar ->
         BU.bind_opt (unembed_term ty) (fun ty ->

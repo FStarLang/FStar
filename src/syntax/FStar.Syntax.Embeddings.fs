@@ -77,7 +77,6 @@ let embed_int (rng:range) (i:Z.t) : term =
 
 let __unembed_int (w:bool) (t0:term) : option<Z.t> =
     let t = U.unmeta_safe t0 in
-    // What's the portable solution? Let's do this for now
     match t.n with
     | Tm_constant(FStar.Const.Const_int (s, _)) ->
         Some (Z.big_int_of_string s)

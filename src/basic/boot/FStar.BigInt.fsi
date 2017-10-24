@@ -1,6 +1,6 @@
 module FStar.BigInt
 
-type bigint 
+type bigint
     = FSharp.Compatibility.OCaml.Big_int.big_int // JUST FSHARP
 type t = bigint
 
@@ -25,7 +25,7 @@ val lt_big_int : (bigint -> bigint -> bool)
 val ge_big_int : (bigint -> bigint -> bool)
 val gt_big_int : (bigint -> bigint -> bool)
 
-val square_big_int : (bigint -> bigint)
+val sqrt_big_int : (bigint -> bigint)
 
 val string_of_big_int : (bigint -> string)
 val big_int_of_string : (string -> bigint)
