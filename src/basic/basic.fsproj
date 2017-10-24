@@ -93,6 +93,8 @@
     <Compile Include="FStar.Options.fs" />
     <Compile Include="FStar.Unionfind.fsi" />
     <Compile Include="FStar.Unionfind.fs" />
+    <Compile Include="boot/FStar.BigInt.fsi" />
+    <Compile Include="boot/FStar.BigInt.fs" />
     <Compile Include="FStar.Const.fs" />
     <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />

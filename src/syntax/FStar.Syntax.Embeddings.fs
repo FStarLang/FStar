@@ -15,6 +15,7 @@ module U = FStar.Syntax.Util
 module UF = FStar.Syntax.Unionfind
 module Ident = FStar.Ident
 module Err = FStar.Errors
+module Z = FStar.BigInt
 open FStar.Char
 
 type embedder<'a>   = range -> 'a -> term
@@ -70,16 +71,16 @@ let __unembed_char (w:bool) (t0:term) : option<char> =
 let unembed_char      t = __unembed_char true  t
 let unembed_char_safe t = __unembed_char false t
 
-let embed_int (rng:range) (i:int) : term =
-    let t = U.exp_int (BU.string_of_int i) in
+let embed_int (rng:range) (i:Z.t) : term =
+    let t = U.exp_int (Z.string_of_big_int i) in
     { t with pos = rng }
 
-let __unembed_int (w:bool) (t0:term) : option<int> =
+let __unembed_int (w:bool) (t0:term) : option<Z.t> =
     let t = U.unmeta_safe t0 in
     // What's the portable solution? Let's do this for now
     match t.n with
     | Tm_constant(FStar.Const.Const_int (s, _)) ->
-        Some (BU.int_of_string s)
+        Some (Z.big_int_of_string s)
     | _ ->
         if w then
         Err.warn t0.pos (BU.format1 "Not an embedded int: %s" (Print.term_to_string t0));
