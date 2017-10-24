@@ -37,6 +37,12 @@ let lemma_join_h_emp (h:heap)
 	 [SMTPat (join h emp)]
   = admit ()
 
+let lemma_join_emp_h (h:heap)
+  :Lemma (requires True)
+         (ensures (join emp h) == h)
+	 [SMTPat (join emp h)]
+  = admit ()
+
 let lemma_restrict_eq_points_to (r:addr) (h:heap)
   :Lemma (requires True)
          (ensures (restrict h r) == (points_to r (sel h r)))
@@ -84,5 +90,4 @@ let lemma_restrict_r1_from_minus (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (h:
          (ensures restrict (minus h r) r1 == restrict h r1)
 	 [SMTPat (restrict (minus h r) r1)]
   = admit ()
-
 
