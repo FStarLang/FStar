@@ -15,14 +15,14 @@ module BU = FStar.Util
 (* Utils *)
 
 let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
-  let rec aux l acc = 
+  let rec aux (l:list<'a>) (acc:list<'b>) = //NS: weird, this needs an annotation to type-check in F*; cf issue #
    match l with 
    | [] -> acc 
    | x :: xs -> aux xs (f x :: acc)
    in  aux l []
 
 let debug_term (t : term) =
-  Printf.printf "%s\n" (P.term_to_string t)
+  BU.print1 "%s\n" (P.term_to_string t)
 
 type var = bv
 type sort = int
@@ -83,8 +83,8 @@ let rec mkBranches branches cont =
   | ({ v = (Pat_cons (fv, pats))}, _, _) :: branches' -> 
     (* a new binder for each argument *)
     let (args, binders) = 
-      List.foldBack
-        (fun (p : pat * bool) ((args, bs) : list<t> * list<pat * bool>) -> 
+      List.fold_right
+        (fun (p : pat * bool) ((args:list<t>), (bs:list<(pat * bool)>)) ->
            let x = S.new_bv None S.tun in 
            (mkAccuVar x :: args, (S.withinfo (Pat_var x) Range.dummyRange, snd p) :: bs)
         ) pats ([], []) in
@@ -185,3 +185,17 @@ and readback (x:t) : term =
     | _ -> failwith "Not yet implemented"
     
 and normalize (e:term) : term = readback (translate [] e)
+
+////////////////////////////////////////////////////////////////////////////////
+//Testing code
+////////////////////////////////////////////////////////////////////////////////
+let z      = pars "fun f x -> x"
+let succ   = pars "fun n f x -> f (n f x)"
+let pred   = pars "fun n f x -> n (fun g h -> h (g f)) (fun y -> x) (fun y -> y)"
+
+let rec encode n =
+    if n = 0 then z
+    else app succ [encode (n - 1)]
+
+let let_ x e e' : term = U.mk_app (U.abs [S.mk_binder x] e' None) [e]
+

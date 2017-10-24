@@ -108,6 +108,12 @@ boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | 
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
 	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
 
+#fix up by adding an annotation to suppress universe polymorphism in a mutually recursive type
+boot/FStar.TypeChecker.NBE.fst: typechecker/boot/FStar.TypeChecker.NBE.fs | boot_dir
+	cp $^ $@
+	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
+	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
+
 boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
 	echo "#light \"off\"" > $@
 	$(HEAD) -n -12 $^ >> $@
@@ -142,7 +148,7 @@ PARSER_EXTRACTED_FILES=$(addprefix parser/FStar.Parser., AST.fs ParseIt.fsi Driv
 extract_parser: boot $(PARSER_EXTRACTED_FILES)
 	$(FSTARBOOT) $(PARSER_EXTRACTED_FILES) --extract_namespace FStar.Parser
 
-NORMALIZER_EXTRACTED_FILES=$(addprefix typechecker/FStar.TypeChecker., Common.fs Env.fs Normalize.fs Err.fs)
+NORMALIZER_EXTRACTED_FILES=$(addprefix typechecker/FStar.TypeChecker., Common.fs Env.fs Normalize.fs Err.fs) boot/FStar.TypeChecker.NBE.fst
 extract_normalizer: boot $(NORMALIZER_EXTRACTED_FILES)
 	$(FSTARBOOT) $(NORMALIZER_EXTRACTED_FILES) --extract_namespace FStar.TypeChecker
 
