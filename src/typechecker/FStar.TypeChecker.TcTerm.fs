@@ -1382,7 +1382,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 | Some (Implicit _), Some (Implicit _)
                 | None, None
                 | Some Equality, None -> ()
-                | _ -> raise (Error("Inconsistent implicit qualifier", e.pos)) in
+                | _ -> raise (Error(BU.format4 "Inconsistent implicit qualifier; %s vs %s\nfor bvar %s and term %s"
+                                               (Print.aqual_to_string aqual)
+                                               (Print.aqual_to_string aq)
+                                               (Print.bv_to_string x)
+                                               (Print.term_to_string e)
+                                               , e.pos)) in
             let targ = SS.subst subst x.sort in
             let x = {x with sort=targ} in
             if debug env Options.Extreme then  BU.print1 "\tType of arg (after subst) = %s\n" (Print.term_to_string targ);

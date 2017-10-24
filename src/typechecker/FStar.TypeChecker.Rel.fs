@@ -2801,9 +2801,15 @@ let resolve_implicits' must_total forcelax g =
                then BU.print3 "Checking uvar %s resolved to %s at type %s\n"
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
                let env = if forcelax then {env with lax=true} else env in
-               let g = if must_total
-                       then let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in g
-                       else let _, _, g = env.tc_term ({env with use_bv_sorts=true}) tm in g
+               let g =
+                try if must_total
+                    then let _, _, g = env.type_of ({env with use_bv_sorts=true}) tm in g
+                    else let _, _, g = env.tc_term ({env with use_bv_sorts=true}) tm in g
+                with | e ->
+                    Errors.add_errors [BU.format2 "Failed while checking implicit %s set to %s"
+                                               (Print.uvar_to_string u)
+                                               (N.term_to_string env tm), r];
+                    raise e
                in
                let g = if env.is_pattern
                        then {g with guard_f=Trivial} //if we're checking a pattern sub-term, then discard its logical payload

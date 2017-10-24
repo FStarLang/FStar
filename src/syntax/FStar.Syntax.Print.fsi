@@ -43,6 +43,7 @@ val binder_to_string  : binder -> string
 val binders_to_string : string -> binders -> string
 val binder_to_json    : binder -> json
 val binders_to_json   : binders -> json
+val aqual_to_string   : aqual -> string
 val args_to_string    : args -> string
 val eff_decl_to_string: bool -> eff_decl -> string
 val subst_to_string   : subst_t -> string
