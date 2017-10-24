@@ -185,17 +185,3 @@ and readback (x:t) : term =
     | _ -> failwith "Not yet implemented"
     
 and normalize (e:term) : term = readback (translate [] e)
-
-////////////////////////////////////////////////////////////////////////////////
-//Testing code
-////////////////////////////////////////////////////////////////////////////////
-let z      = pars "fun f x -> x"
-let succ   = pars "fun n f x -> f (n f x)"
-let pred   = pars "fun n f x -> n (fun g h -> h (g f)) (fun y -> x) (fun y -> y)"
-
-let rec encode n =
-    if n = 0 then z
-    else app succ [encode (n - 1)]
-
-let let_ x e e' : term = U.mk_app (U.abs [S.mk_binder x] e' None) [e]
-
