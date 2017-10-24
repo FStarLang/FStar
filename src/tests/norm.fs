@@ -98,8 +98,8 @@ let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta;
 let run_nbe i r expected = run_either i r expected (fun _tcenv -> FStar.TypeChecker.NBE.normalize)
 
 let run_both_with_time i r expected =
-  let nbe () = run_interpreter i r expected in
-  let norm () = run_nbe i r expected in
+  let nbe () = run_nbe i r expected in
+  let norm () = run_interpreter i r expected in
   FStar.Util.measure_execution_time  "nbe" nbe;
   Printf.printf "\n";
   FStar.Util.measure_execution_time "normalizer" norm;
