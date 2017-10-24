@@ -1832,7 +1832,7 @@ let resugar_tscheme':
             FStar_Parser_AST.Tycon uu____6397 in
           mk_decl typ.FStar_Syntax_Syntax.pos [] uu____6396
 let resugar_tscheme: FStar_Syntax_Syntax.tscheme -> FStar_Parser_AST.decl =
-  fun ts  -> resugar_tscheme' "tsheme" ts
+  fun ts  -> resugar_tscheme' "tscheme" ts
 let resugar_eff_decl:
   Prims.bool ->
     FStar_Range.range ->

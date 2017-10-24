@@ -12,7 +12,7 @@ val bar : ms1:list (nat * nat)
 let bar ms1 ms2 =
 let x = mapT fst ms1 in
 let y = mapT fst ms2 in
-(** this fails, but removing any one of the assertions below succeeds *)
+(* this fails, but removing any one of the assertions below succeeds *)
 let _ = assert (foo x) in
 let _ = assert (x = y) in
 ()

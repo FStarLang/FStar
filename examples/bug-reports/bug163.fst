@@ -1,4 +1,4 @@
-module Swap
+module Bug163
 
 open FStar.ST
 

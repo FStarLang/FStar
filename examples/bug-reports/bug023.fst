@@ -1,5 +1,6 @@
-module Bug23
-assume type ty
+module Bug023
+
+type ty = a:Type{hasEq a}
 type env = int -> Tot (option ty)
 val extend : env -> int -> ty -> Tot env
 let extend g x t = fun x' -> if x = x' then Some t else g x'

@@ -1,4 +1,4 @@
-module Bug97b
+module Bug097b
 
 assume val f : list 'a -> Tot nat
 

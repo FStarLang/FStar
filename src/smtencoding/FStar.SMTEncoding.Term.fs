@@ -71,6 +71,8 @@ type op =
   | BvAnd
   | BvXor
   | BvOr
+  | BvAdd
+  | BvSub
   | BvShl
   | BvShr  // unsigned shift right\
   | BvUdiv
@@ -212,6 +214,8 @@ let op_to_string = function
   | BvAnd -> "bvand"
   | BvXor -> "bvxor"
   | BvOr -> "bvor"
+  | BvAdd -> "bvadd"
+  | BvSub -> "bvsub"
   | BvShl -> "bvshl"
   | BvShr -> "bvlshr"
   | BvUdiv -> "bvudiv"
@@ -309,6 +313,8 @@ let mkBvToNat t r = mkApp'(BvToNat, [t]) r
 let mkBvAnd = mk_bin_op BvAnd
 let mkBvXor = mk_bin_op BvXor
 let mkBvOr = mk_bin_op BvOr
+let mkBvAdd = mk_bin_op BvAdd
+let mkBvSub = mk_bin_op BvSub
 let mkBvShl sz (t1, t2) r = mkApp'(BvShl, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUdiv sz (t1, t2) r = mkApp'(BvUdiv, [t1;(mkNatToBv sz t2 r)]) r

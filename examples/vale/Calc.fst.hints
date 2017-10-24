@@ -1,0 +1,48 @@
+[
+  "qÙ…\u0015Å@l\u0001\"é≥T|#Nr",
+  [
+    [
+      "Calc.op_Amp_Equals",
+      1,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "5a1841f790cee2a234b060303cc6c26d"
+    ],
+    [
+      "Calc.op_Amp_Bar",
+      1,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "2e6c9a14409b6c8c57649bb4e1e04856"
+    ],
+    [
+      "Calc.op_Amp_Bar_Bar",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.Tactics.Effect_interpretation_Tm_arrow_7e4b1fa81e64a006f3a144df042765be",
+        "FStar.Tactics.Effect_interpretation_Tm_arrow_da51d6432cc088aa37a2db161691fbcd",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Derived.rewrite_eqs_from_context",
+        "equation_Prims.delta", "equation_Prims.pure_pre",
+        "equation_Prims.squash",
+        "function_token_typing_FStar.Tactics.Derived.rewrite_eqs_from_context",
+        "function_token_typing_Prims.unit",
+        "lemma_FStar.Tactics.Effect.by_tactic_seman",
+        "refinement_interpretation_Calc_Tm_refine_f44c3d9c5cd6462679e5b9c6a8c6355f",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Calc_Tm_abs_a46c3dc8af54b4f7c24c0320a48f593c",
+        "typing_FStar.Tactics.Effect.bind", "typing_Prims.squash",
+        "unit_typing"
+      ],
+      0,
+      "09f883ead298e133cc8b2a3344ab6796"
+    ]
+  ]
+]

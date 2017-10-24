@@ -57,7 +57,7 @@ MAKEFLAGS += --no-builtin-rules
 all: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
-	$(DOS2UNIX) parser/boot/parse.fsi
+	$(DOS2UNIX) parser/parse.fsi
 	chmod a+x $(BIN)/tests.exe
 	chmod a+x $(BIN)/fstar.exe
 
@@ -108,7 +108,7 @@ boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | 
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
 	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
 
-boot/FStar.Parser.Parse.fsti: parser/boot/parse.fsi | boot_dir
+boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
 	echo "#light \"off\"" > $@
 	$(HEAD) -n -12 $^ >> $@
 	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>\nopen FStar.Syntax.Syntax/' $@
@@ -116,7 +116,7 @@ boot/FStar.Parser.Parse.fsti: parser/boot/parse.fsi | boot_dir
 boot/%.fst: basic/boot/%.fs | boot_dir
 	cp $^ $@
 
-boot/FStar.Parser.Parse.fst: parser/boot/parse.fs | boot_dir
+boot/FStar.Parser.Parse.fst: parser/parse.fs | boot_dir
 	cp $^ $@
 
 boot/FStar.Tactics.Interpreter.fsti: tactics/boot/FStar.Tactics.Interpreter.fsi | boot_dir
@@ -244,9 +244,7 @@ utest:
 # The first tests have to be performed sequentially (but each one may use some parallelism)
 utest-prelude:
 	+$(MAKE) all
-ifeq ($(OS),Windows_NT)
-	+$(MAKE) fsharp-regressions #normalizer failures on linux so only run on windows
-endif
+	+$(MAKE) fsharp-regressions
 	+$(MAKE) boot-ocaml
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
@@ -257,7 +255,12 @@ interactive-test:
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
+ifeq ($(OS),Windows_NT)
 	$(RUNTIME) $(BIN)/tests.exe
+else
+	@# On Linux, we need to increase the maximum stack size, or we overflow
+	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
+endif
 
 #a basic regression test for extraction
 #In particular, this test builds fstarlib.cmxa, so
