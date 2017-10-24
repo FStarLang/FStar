@@ -255,7 +255,12 @@ interactive-test:
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
+ifeq ($(OS),Windows_NT)
 	$(RUNTIME) $(BIN)/tests.exe
+else
+	@# On Linux, we need to increase the maximum stack size, or we overflow
+	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
+endif
 
 #a basic regression test for extraction
 #In particular, this test builds fstarlib.cmxa, so
