@@ -1500,16 +1500,19 @@ and tc_eqn scrutinee env branch
         //Otherwise, its easy to get inconsistent;
         //e.g., if expected_pat_t is (option nat)
         //and   lc.res_typ is (option int)
-        //Rel.teq below will produce a logical guard (int = nat)
-        //which will fail the discharge_guard_no_smt check
-        //Without out, we will be able to conclude in the branch of the pattern,
+        //Rel.teq_nosmt below will forbid producing a logical guard (int = nat)
+        //Without this, we will be able to conclude in the branch of the pattern,
         //with the equality Some #nat x = Some #int x
         //that nat=int and hence False
-        let g' = Rel.teq env1 lc.res_typ expected_pat_t in
-        let g = Rel.conj_guard g g' in
-        let env1 = Env.set_range env1 exp.pos in
-        Rel.discharge_guard_no_smt env1 g |>
-        Rel.resolve_implicits in
+        if Rel.teq_nosmt env1 lc.res_typ expected_pat_t
+        then let env1 = Env.set_range env1 exp.pos in
+             Rel.discharge_guard_no_smt env1 g |>
+             Rel.resolve_implicits
+        else raise (Error (BU.format2 "Inferred type of pattern (%s) is incompatible with the type of the scrutinee (%s)"
+                                       (Print.term_to_string lc.res_typ)
+                                       (Print.term_to_string expected_pat_t),
+                           exp.pos))
+    in
     let norm_exp = N.normalize [N.Beta] env1 exp in
     let uvs1 = Free.uvars norm_exp in
     let uvs2 = Free.uvars expected_pat_t in
