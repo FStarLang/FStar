@@ -21,12 +21,12 @@ struct \
 micro-benchmarks \
 bytes \
 tactics \
+pattern-matching \
 kv_parsing \
 vale \
 hello \
 native_tactics \
 extraction
-
 
 # low-level \  ... NS: removing from CI for this branch
 
