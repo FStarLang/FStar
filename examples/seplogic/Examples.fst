@@ -58,7 +58,7 @@ let simplify :tactic unit =
   `or_else`  (apply_lemma (quote lemma_sel_r_from_minus);; qed)
   `or_else`  (apply_lemma (quote lemma_restrict_points_to_join_h_to_r);; qed)
   `or_else`  (apply_lemma (quote lemma_join_emp_h);; qed)
-  `or_else`   fail "");;
+  `or_else`   fail "simplify: failed");;
   idtac
 
 let rec repeat_simplify () :Tac unit =
