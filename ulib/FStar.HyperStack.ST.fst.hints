@@ -931,7 +931,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "a3f64b4d8ff44fa4acb5b3b8d88fdc0e"
+      "b6355a6e53a9d9f6d0490cd1bc5190fe"
     ],
     [
       "FStar.HyperStack.ST.test_nested_stl2",
@@ -1367,7 +1367,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "5d406b62f7d649b43599f96a63bf5b77"
+      "d288f0e035ff2e07193d77c547331484"
     ],
     [
       "FStar.HyperStack.ST.test_heap_code_with_stack_calls_and_regions",
@@ -1475,7 +1475,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "19c0bca1dfdf2f9a764d8d5b5ad6b799"
+      "cde79885000be10114f4365d0869ca03"
     ],
     [
       "FStar.HyperStack.ST.test_lax_code_with_stack_calls_and_regions",
@@ -1603,7 +1603,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "2f572cb7116f982d73d7731cbd35c614"
+      "d5706bcf10572bc675c64f7456461fc1"
     ],
     [
       "FStar.HyperStack.ST.test_lax_code_with_stack_calls_and_regions_2",
@@ -1731,7 +1731,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "a8d6cad3c295bcaae7b9c5987086fe2a"
+      "5ae762bcb5ce12b22cc217cf556b3c0f"
     ],
     [
       "FStar.HyperStack.ST.test_to_be_stack_inlined",
@@ -1969,7 +1969,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "1942b50ad8298cb257fc1c1c87b65166"
+      "4a970ec3064317a57ba21cc863243ee9"
     ],
     [
       "FStar.HyperStack.ST.test_to_be_inlined",
@@ -2072,7 +2072,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "35f6245e89792142f0f6c2f133f57622"
+      "40de59806d8cdb9e316a3ad937b92a13"
     ],
     [
       "FStar.HyperStack.ST.test_st_function_with_inline_2",
@@ -2167,7 +2167,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "d6bdb6987d53fc4cc4cf751680e8179a"
+      "596ee702f6ab58644533fd1b07e98784"
     ],
     [
       "FStar.HyperStack.ST.with_frame",
@@ -2494,7 +2494,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "b6bb5d8111f0fa06147ebe1317a22ac2"
+      "615400d4e24b4eccd6a96499ccc8caf2"
     ],
     [
       "FStar.HyperStack.ST.mm_tests",

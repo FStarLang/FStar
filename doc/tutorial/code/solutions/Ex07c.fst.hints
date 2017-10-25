@@ -467,16 +467,18 @@
         "fuel_guarded_inversion_Ex07c.exp",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "function_token_typing_Ex07c.empty", "kinding_Ex07c.exp@tok",
-        "kinding_Ex07c.ty@tok", "lemma_FStar.Pervasives.invertOption",
+        "kinding_Ex07c.ty@tok", "kinding_FStar.Pervasives.Native.option@tok",
+        "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Ex07c.EAbs__0",
+        "projection_inverse_Ex07c.EAbs__1",
         "projection_inverse_Ex07c.EAbs__2",
         "projection_inverse_Ex07c.EApp__0",
         "projection_inverse_Ex07c.EApp__1",
         "projection_inverse_Ex07c.EIf__0", "projection_inverse_Ex07c.EIf__1",
         "projection_inverse_Ex07c.EIf__2",
-        "projection_inverse_Ex07c.ELet__0",
         "projection_inverse_Ex07c.ELet__1",
         "projection_inverse_Ex07c.ELet__2",
         "projection_inverse_Ex07c.EVar__0",
@@ -485,17 +487,21 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "subterm_ordering_Ex07c.EAbs", "subterm_ordering_Ex07c.EApp",
         "subterm_ordering_Ex07c.EIf", "subterm_ordering_Ex07c.ELet",
         "token_correspondence_Ex07c.empty", "typing_Ex07c.is_value",
         "typing_Ex07c.step", "typing_Ex07c.typing",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_tok_Ex07c.TBool@tok", "unit_inversion", "unit_typing"
+        "typing_tok_Ex07c.EFalse@tok", "typing_tok_Ex07c.TBool@tok",
+        "unit_inversion", "unit_typing"
       ],
       0,
-      "7189b7ef6fc6d79ede52072d1c952099"
+      "dd4e99b0c2a1ca7616ce153d29c64f43"
     ],
     [
       "Ex07c.appears_free_in",
@@ -611,7 +617,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_typing"
       ],
       0,
-      "5d45a57e9aeea88a7072ee7ea3e1c3d8"
+      "e9d2b939b01086121cf7f9c8f6348919"
     ],
     [
       "Ex07c.typable_empty_closed",
@@ -628,7 +634,7 @@
         "typing_tok_Ex07c.TBool@tok"
       ],
       0,
-      "59304ccfab284a12fc7aae635ac8ea6b"
+      "32a73bbf1d67d036e3b982211fd6a47c"
     ],
     [
       "Ex07c.equal",
@@ -722,7 +728,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "9399915b8753fe5e75dde7448808df71"
+      "bf91fd8ff1504ebf4fd2e2473f59ac5e"
     ],
     [
       "Ex07c.typing_extensional",
@@ -731,7 +737,7 @@
       1,
       [ "@query", "equation_Ex07c.equal", "equation_Ex07c.equalE" ],
       0,
-      "517a267a8e36910dd72495663dba6b7d"
+      "f9c7b4e93352d16848987d9f491c104a"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -829,7 +835,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "2d1a02fb29a0068c30bf468d28809cea"
+      "30bae3e9cab69eb6b37154b9fca2cc53"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -838,7 +844,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "571f146ea1a7a1672eb9390e17af8ae1"
+      "a0a693663426dbf3dea0fe8eb0a54d57"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -847,7 +853,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8272f5e2ae65684cd8b5429c25c8b4bb"
+      "1ed6fef66d5a15402d95af62e5e6c0a9"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -856,7 +862,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "428812f6aca1d18c0bfc48d4697d54fe"
+      "b49d1a0276fb16a5dec34c1526f8b012"
     ],
     [
       "Ex07c.preservation",
@@ -868,7 +874,7 @@
         "refinement_interpretation_Ex07c_Tm_refine_1382577f550e97ec389aea5ed52cf99a"
       ],
       0,
-      "adab71368e8e67b44aecbc203c647a86"
+      "f068d57ec3561890d1c284c6f8982a68"
     ],
     [
       "Ex07c.preservation",
@@ -941,7 +947,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "9d156883d9934d2a30d4a9d23447c6ab"
+      "a6d23cbad24dbb0bfbad7e1bfe31cbcc"
     ]
   ]
 ]

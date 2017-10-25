@@ -44,16 +44,7 @@
         "unit_typing"
       ],
       0,
-      "9912f9b91d62d93da85c200c0f4b0c60"
-    ],
-    [
-      "FStar.Tactics.Effect.by_tactic_seman",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "e667a5e2b964130789508c8944a77b42"
+      "e0d1a0be1ea06b2e4f4ec7173a86d9bd"
     ]
   ]
 ]

@@ -377,7 +377,7 @@
         "unit_typing"
       ],
       0,
-      "d5e35c31046dd8f34a431a082b7446da"
+      "2cc13edfaa7b06039d163eddf3284e6e"
     ],
     [
       "Ex12b.RPC.client_send",
@@ -428,7 +428,7 @@
         "typing_FStar.Seq.Base.eq", "typing_Platform.Bytes.iutf8"
       ],
       0,
-      "bdc9ba0f8a0fc72e71d6c8e6cbf5ca3e"
+      "f7a066091462c43231b57e86a1ccd75a"
     ],
     [
       "Ex12b.RPC.client_recv",
@@ -528,7 +528,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "d62e3d86385d263bdf176a0ccf8809ce"
+      "ec7837c884df2cb0149ea9906b2045bb"
     ],
     [
       "Ex12b.RPC.server",

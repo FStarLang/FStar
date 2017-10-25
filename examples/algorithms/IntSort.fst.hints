@@ -48,7 +48,7 @@
         "projection_inverse_Prims.Cons_tl", "unit_typing"
       ],
       0,
-      "9af52ca5c4bce935fb88fdd8e1e43330"
+      "6f496d83d5a987214f6e49fdeb2170ce"
     ],
     [
       "IntSort.test_sorted2",
@@ -119,7 +119,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "77bde68199018da754313006ef696987"
+      "4685973811a52f9cddc263c09a406867"
     ],
     [
       "IntSort.sorted_smaller",

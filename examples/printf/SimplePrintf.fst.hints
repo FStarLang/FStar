@@ -350,7 +350,7 @@
       1,
       [ "@query", "equation_FStar.String.char" ],
       0,
-      "addcc1ceacd37f30e3279035dc5ba007"
+      "8b0ed888ecf64f5a7795679ff04076f6"
     ],
     [
       "SimplePrintf.example2_lemma_looks_nicer_but_not_usable",
@@ -359,7 +359,7 @@
       1,
       [ "@query", "equation_FStar.Char.char", "unit_typing" ],
       0,
-      "bf7ae2c39fcfe4568c366e970d57a611"
+      "83e68cb33dbfefeec1ff22d72bd9a7e9"
     ],
     [
       "SimplePrintf.example3_lemma",
@@ -368,7 +368,7 @@
       1,
       [ "@query" ],
       0,
-      "b607732a70b58b6a4c980037b0105615"
+      "88d80a8f29fe1f43462a2597b47d0941"
     ],
     [
       "SimplePrintf.example4_lemma",
@@ -377,7 +377,7 @@
       1,
       [ "@query" ],
       0,
-      "0b6f63128b740553bb35382bba7c311e"
+      "d354aa32d042d91aefb655bcaebf5fcb"
     ],
     [
       "SimplePrintf.id",

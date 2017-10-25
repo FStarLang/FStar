@@ -613,7 +613,7 @@
         "subterm_ordering_Prims.Cons", "true_interp", "unit_typing"
       ],
       0,
-      "27d6e0bd787ae567045cb6a7df169dc6"
+      "4ef8039ca583dae7790b77b48caae53a"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_update_reg_equal",
@@ -626,7 +626,7 @@
         "typing_X64.Vale.State_i.update_reg", "unit_typing"
       ],
       0,
-      "59d8dc5bf44074f048aa8b6ab5b435c3"
+      "02712241df49d481f30b317cb7043fbb"
     ],
     [
       "X64.Vale.StrongPost_i.assert_from_norm'",
@@ -635,7 +635,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "9075ea0114ecb02f5337f0ed7a9cdb0b"
+      "ad7dc0001be5cccaebc2c85e22c8adb1"
     ],
     [
       "X64.Vale.StrongPost_i.assert_to_norm'",
@@ -644,7 +644,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "4f664655b322a0ef9ce168a8bc6d1572"
+      "72d547c1ea86130daa78ea171f7917dc"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_weak_pre_ins",
@@ -814,7 +814,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "bd15fe7ab02064cc4d80be7e73f5cbba"
+      "60940299cf212d56923f6d326b3d1a5c"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_weak_pre_ins",
@@ -919,7 +919,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "51608049a7bf465b2d5b568a3fcc47cc"
+      "d709c516bea88388978728c12488470a"
     ],
     [
       "X64.Vale.StrongPost_i.lemma_weakest_pre_norm'",
@@ -958,7 +958,7 @@
         "typing_X64.Vale.State_i.__proj__Mkstate__item__regs"
       ],
       0,
-      "0888fb08765034264e05e3edb4fff626"
+      "fa0480ebecabc854c2da9360b8571e29"
     ]
   ]
 ]

@@ -81,7 +81,7 @@
         "subterm_ordering_Prims.Cons", "typing_Ex06b.mem", "unit_typing"
       ],
       0,
-      "8be94b2b147a861bb873fa4deb1e826b"
+      "c29f339b1144f9eec72b97d055f1d357"
     ],
     [
       "Ex06b.length",
@@ -202,7 +202,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "d11d131e8748980599e119251bd5f90b"
+      "b16a5827dceaa00e28f4610c34a748c5"
     ],
     [
       "Ex06b.total_order",
@@ -260,7 +260,7 @@
         "unit_typing"
       ],
       0,
-      "bc762621b8851c8c85a382f31b30a9a9"
+      "a74119710629d4982351ea5006b29aac"
     ],
     [
       "Ex06b.sort",
@@ -340,7 +340,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "5e270be25b93ef20ba6dc363a04c820a"
+      "2a3bf479e6a0488bf366fc61758c521f"
     ],
     [
       "Ex06b.sort",

@@ -56,7 +56,7 @@
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "9a696fc63a7b306477fb7f74b940aabd"
+      "bb40f9fee075da08fcc848ab09bcfd1a"
     ],
     [
       "Ex12b1.Format.lemma_eq_intro",
@@ -86,7 +86,7 @@
       1,
       [ "@query", "lemma_FStar.Seq.Base.lemma_eq_intro", "unit_typing" ],
       0,
-      "40e7993b92ea0b20a66c7f6e66e8cc24"
+      "befc5402f01ce902dd43710556ffcac9"
     ],
     [
       "Ex12b1.Format.UTF8_inj",
@@ -181,7 +181,7 @@
         "refinement_interpretation_Ex12b1.Format_Tm_refine_0b0c7870479b009ecde2e1ac3a590e38"
       ],
       0,
-      "3e0ecd61e372dfdc046d10eccba47624"
+      "0670dcd1545f7970170da62319ef95a7"
     ],
     [
       "Ex12b1.Format.req_resp_distinct",

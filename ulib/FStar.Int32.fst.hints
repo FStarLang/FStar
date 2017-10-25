@@ -60,7 +60,7 @@
         "proj_equation_FStar.Int32.Mk_v", "unit_typing"
       ],
       0,
-      "0166e94612bde57e149ee9dfa1795736"
+      "9bc53d51e73c658ab4bcc89d5e4b1a89"
     ],
     [
       "FStar.Int32.vu_inv",
@@ -73,7 +73,7 @@
         "projection_inverse_FStar.Int32.Mk_v", "unit_typing"
       ],
       0,
-      "b141ba1cc21476e3f59bdbb9a052329b"
+      "fc4b457b24ec2744aa2bc316761b409a"
     ],
     [
       "FStar.Int32.v_inj",
@@ -82,7 +82,7 @@
       1,
       [ "@query", "lemma_FStar.Int32.uv_inv", "unit_typing" ],
       0,
-      "826956dc822dfc341152771bc4d31da2"
+      "a4f8a96d53f5935e1c283cd23eefba99"
     ],
     [
       "FStar.Int32.add",

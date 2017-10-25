@@ -14,7 +14,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "dfbb987d1babd26fde9ba12ba6a5688a"
+      "e3b2a7e1496be10dd98b95d5fad90a98"
     ],
     [
       "Cases.test_cases_unsquash",
@@ -29,7 +29,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "f7758ad8fb7c270b7d854cf612755948"
+      "1974f18c4ce4a1f47612fc99f7d0aa0b"
     ],
     [
       "Cases.test_cases_bool",
@@ -38,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "98b8c048aed2e99b8585983005ae2391"
+      "25ba5685952f1030bf958c79dc668082"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fe3361528b20b649318ffd80ee5c3f6a"
+      "a98bde0963b76209023aee3804f93228"
     ],
     [
       "Cases.test_cases_bool_2",

@@ -255,8 +255,27 @@
       "f8927a83ffd093c8ea1da87095a09749"
     ],
     [
-      "X64.Print_s.print_cmp", 1, 1, 0, null, 0,
-      "22535e451844af4bf8379b4acf77a138"
+      "X64.Print_s.print_cmp",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "X64.Semantics_s_pretyping_2a81ad8d1eb2e61e03519aaf20bc2afb",
+        "constructor_distinct_Prims.unit",
+        "constructor_distinct_X64.Semantics_s.ocmp",
+        "disc_equation_X64.Semantics_s.OEq",
+        "disc_equation_X64.Semantics_s.OGe",
+        "disc_equation_X64.Semantics_s.OGt",
+        "disc_equation_X64.Semantics_s.OLe",
+        "disc_equation_X64.Semantics_s.OLt",
+        "disc_equation_X64.Semantics_s.ONe", "equation_Prims._assert",
+        "equation_X64.Print_s.cmp_not", "typing_X64.Print_s.cmp_not",
+        "unit_typing"
+      ],
+      0,
+      "fcfeb654e1cabccd6b608d227c607b16"
     ],
     [
       "X64.Print_s.print_block",

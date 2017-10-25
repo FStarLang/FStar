@@ -565,7 +565,7 @@
         "typing_StlcCbvDbPntSubstNoLists.step", "unit_typing"
       ],
       0,
-      "c38377f9a917a3f7892329113b3e80b4"
+      "34d4ec2a56514dd4d8220c28ed97c714"
     ],
     [
       "StlcCbvDbPntSubstNoLists.appears_free_in",
@@ -655,7 +655,7 @@
         "typing_StlcCbvDbPntSubstNoLists.appears_free_in", "unit_typing"
       ],
       0,
-      "ce57df9132b8b8b0ddafccdd0d0694c9"
+      "9e92fd4b1b9ca2eb00b93fea208fd388"
     ],
     [
       "StlcCbvDbPntSubstNoLists.typable_empty_closed",
@@ -671,7 +671,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "87a9abd18ab17c4cbbbd5c0fa78ff716"
+      "88379bd93c0a1dc68aeac4a6cb2c8e7d"
     ],
     [
       "StlcCbvDbPntSubstNoLists.equal",
@@ -855,7 +855,7 @@
         "typing_StlcCbvDbPntSubstNoLists.subst_beta", "unit_typing"
       ],
       0,
-      "8a1038f992ea503d02a18f0622bb5760"
+      "ac137cf2b694b9088574acc1b8fa674c"
     ],
     [
       "StlcCbvDbPntSubstNoLists.substitution_preserves_typing",

@@ -431,7 +431,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "fd18dc826f168515a2b1e004bc1416b9"
+      "122223c5df67de0cd480ed494830e178"
     ],
     [
       "Ex07a.appears_free_in",
@@ -533,7 +533,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_typing"
       ],
       0,
-      "bf4bf26338c8a60c906dbe0027e1d9c5"
+      "8a0a8e6da3b27d66273a9bc70460ea0e"
     ],
     [
       "Ex07a.typable_empty_closed",
@@ -550,7 +550,7 @@
         "typing_tok_Ex07a.TBool@tok"
       ],
       0,
-      "0c474dbd7e08aaa0e7aaf9460c93113a"
+      "743aa208fa1eeb8ad9449a85856c3346"
     ],
     [
       "Ex07a.equal",
@@ -632,7 +632,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "c0e2b80b3c84d2015b7512c10fc95b49"
+      "1cb9d172b545d95c2abfd65ba0cf6f30"
     ],
     [
       "Ex07a.typing_extensional",
@@ -641,7 +641,7 @@
       1,
       [ "@query", "equation_Ex07a.equal", "equation_Ex07a.equalE" ],
       0,
-      "9eadd20ead017cab35e93043cb7e99ea"
+      "245c81386970dd410510d37a4401e8e2"
     ],
     [
       "Ex07a.substitution_preserves_typing",
@@ -716,7 +716,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "19d66e9bd9ae63ff7e51b29a01c2cc6f"
+      "bd3f9665a56d6075739d75ff812b5681"
     ],
     [
       "Ex07a.substitution_preserves_typing",
@@ -796,7 +796,7 @@
         "typing_tok_Ex07a.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "2bf571b6fa320603c812b40e68d94ee8"
+      "3a4ae6bb6cf81a68ee64035d78b669b5"
     ],
     [
       "Ex07a.typed_step",

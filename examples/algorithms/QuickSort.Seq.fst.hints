@@ -94,7 +94,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d835401b087a7a3aef44588ecd65e67e"
+      "948e26d72f85a7f8956aaf9a196e4760"
     ],
     [
       "QuickSort.Seq.partition",
@@ -162,7 +162,7 @@
         "typing_FStar.Seq.Properties.mem", "well-founded-ordering-on-nat"
       ],
       0,
-      "adb9ef3c6ba6a664b25de7ea70139e28"
+      "7ac755635e1a98a2ada5ea6ada85260f"
     ]
   ]
 ]
