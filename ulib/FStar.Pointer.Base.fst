@@ -4221,7 +4221,26 @@ let modifies_pointer_elim s h1 h2 #a' p' =
 
 #set-options "--z3rlimit 256"
 
-let modifies_buffer_elim #t1 b p h h' =
+val modifies_buffer_elim'
+  (#t1: typ)
+  (b: buffer t1)
+  (p: loc)
+  (h h': HS.mem)
+: Lemma
+  (requires (
+    loc_disjoint (loc_buffer b) p /\
+    buffer_live h b /\
+    UInt32.v (buffer_length b) > 0 /\
+    modifies p h h'
+  ))
+  (ensures (
+    buffer_live h' b /\ (
+      buffer_readable h b ==> (
+	buffer_readable h' b /\
+	buffer_as_seq h b == buffer_as_seq h' b
+  ))))
+
+let modifies_buffer_elim' #t1 b p h h' =
   loc_disjoint_sym (loc_buffer b) p;
   let n = UInt32.v (buffer_length b) in
   begin
@@ -4259,6 +4278,11 @@ let modifies_buffer_elim #t1 b p h h' =
     in
     Classical.move_requires g ()
   end
+
+let modifies_buffer_elim #t1 b p h h' =
+  if buffer_length b = 0ul
+  then ()
+  else modifies_buffer_elim' b p h h'
 
 let modifies_reference_elim #t b p h h' =
   loc_disjoint_sym (loc_addresses (HS.frameOf b) (Set.singleton (HS.as_addr b))) p

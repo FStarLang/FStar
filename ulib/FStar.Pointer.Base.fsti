@@ -2021,7 +2021,7 @@ val modifies_buffer_elim
   (requires (
     loc_disjoint (loc_buffer b) p /\
     buffer_live h b /\
-    UInt32.v (buffer_length b) > 0 /\ // necessary for liveness, because all buffers of size 0 are disjoint for any memory location, so we cannot talk about their liveness individually without referring to a larger nonempty buffer
+    (UInt32.v (buffer_length b) == 0 ==> buffer_live h' b) /\ // necessary for liveness, because all buffers of size 0 are disjoint for any memory location, so we cannot talk about their liveness individually without referring to a larger nonempty buffer
     modifies p h h'
   ))
   (ensures (
