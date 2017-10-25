@@ -13,8 +13,8 @@
 open FStar.Preorder
 open FStar.List.Tot
 
-open FStar.All // compared to the accompanying POPL'18 paper, we use F*'s All  
-               // effect to use the combination of state and exceptions
+open FStar.All // compared to the accompanying POPL'18 paper, we use F*'s All effect to 
+               // use the combination of state and exceptions (MSTMSTExn in the paper)
 
 open FStar.Heap
 open FStar.ST 
