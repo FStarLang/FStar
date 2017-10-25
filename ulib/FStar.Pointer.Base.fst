@@ -3743,6 +3743,8 @@ let loc_includes_trans s1 s2 s3 =
 
 let loc_includes_union_r s s1 s2 = ()
 
+#set-options "--z3rlimit 32"
+
 let loc_includes_union_l s1 s2 s =
   let u12 = loc_union s1 s2 in
   if StrongExcludedMiddle.strong_excluded_middle (s1 == s2)
@@ -3758,8 +3760,6 @@ let loc_includes_union_l s1 s2 s =
       (fun _ -> loc_includes_trans u12 s1 s)
       (fun _ -> loc_includes_trans u12 s2 s)
   end
-
-#set-options "--z3rlimit 32"
 
 let loc_includes_none s = ()
 
