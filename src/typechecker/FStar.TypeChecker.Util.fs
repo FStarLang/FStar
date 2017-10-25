@@ -511,8 +511,9 @@ let close_lcomp env bvs (lc:lcomp) =
 let return_value env t v =
   let c =
     if not <| Env.lid_exists env C.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
-    || U.is_unit t
     then mk_Total t
+    else if U.is_unit t
+    then S.mk_Total' t (Some U_zero)
     else let m = Env.get_effect_decl env C.effect_PURE_lid in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let u_t = env.universe_of env t in
          let wp =

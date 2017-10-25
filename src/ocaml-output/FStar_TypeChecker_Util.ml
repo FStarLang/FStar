@@ -1160,10 +1160,11 @@ let return_value:
             (let uu____4356 =
                FStar_TypeChecker_Env.lid_exists env
                  FStar_Parser_Const.effect_GTot_lid in
-             FStar_All.pipe_left Prims.op_Negation uu____4356) ||
-              (FStar_Syntax_Util.is_unit t) in
+             FStar_All.pipe_left Prims.op_Negation uu____4356) in
           if uu____4353
           then FStar_Syntax_Syntax.mk_Total t
+          else if (FStar_Syntax_Util.is_unit t)
+          then FStar_Syntax_Syntax.mk_Total' t (Some FStar_Syntax_Syntax.U_zero)
           else
             (let m =
                FStar_TypeChecker_Env.get_effect_decl env
