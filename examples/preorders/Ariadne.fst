@@ -13,7 +13,8 @@
 open FStar.Preorder
 open FStar.List.Tot
 
-open FStar.All
+open FStar.All // compared to the accompanying POPL'18 paper, we use F*'s All  
+               // effect to use the combination of state and exceptions
 
 open FStar.Heap
 open FStar.ST 
@@ -21,18 +22,18 @@ open FStar.MRef
 
 
 type index = nat // counter values (no overflow detection yet)
-type volatile = string // the type of the enclave state; reset on crash.
+type state = string // the type of the enclave state; reset on crash.
 
-type record = index * volatile // the type of records protected by authenticated encryption
+type record = index * state // the type of records protected by authenticated encryption
 
 /// For the proof, we define a small state machine and its transitions
 /// when sealing and incrementing.
 
 type case = 
-  | Ok: saved: volatile -> case
-  | Recover: read: volatile -> other: volatile -> case
-  | Writing: latest: volatile -> prior: volatile -> case
-  | Crash: read: volatile -> other: volatile -> case 
+  | Ok: saved: state -> case
+  | Recover: read: state -> other: state -> case
+  | Writing: written: state -> old: state -> case
+  | Crash: read: state -> other: state -> case 
 
 type counter =
   | Counter: 
@@ -41,8 +42,8 @@ type counter =
     counter 
 
 /// A monotonic over-approximation of the encrypted records the host may have
-val sealable: counter -> record -> Type0
-let sealable (Counter n c) s = 
+val saved: counter -> record -> Type0
+let saved (Counter n c) s = 
   let m,u = s in 
   (m < n) \/
   (m = n /\ (match c with 
@@ -55,32 +56,37 @@ let sealable (Counter n c) s =
   | Writing v _ -> u=v
   | Crash v w -> u=v \/ u=w))
 
-let pre :preorder counter = fun (x0:counter) (x1:counter) -> forall s. sealable x0 s ==> sealable x1 s
+let preorder' :preorder counter = fun (x0:counter) (x1:counter) -> forall s. saved x0 s ==> saved x1 s
 
-type enclave = mref counter pre 
+type enclave = mref counter preorder' 
 
 /// An encrypted backup, maintained by the host This is compatible
 /// with our ideal interface for authenticated encryption.
 
-let sealable_pred (e:enclave) (s:record) = fun h -> h `contains` e /\ sealable (sel h e) s
-type entry (e:enclave) = s:record{witnessed (sealable_pred e s)}
+let saved_pred (e:enclave) (s:record) = fun h -> h `contains` e /\ saved (sel h e) s
+
+type entry (e:enclave) = s:record{witnessed (saved_pred e s)}
 
 let prefix_of (#e:enclave) (l1:list (entry e)) (l2:list (entry e)) =
   l1 == l2 \/ strict_prefix_of l1 l2
+  
 let backup_pre' (e:enclave) :relation (list (entry e)) = fun l1 l2 -> l1 `prefix_of` l2
 let backup_pre (e:enclave) :preorder (list (entry e)) = backup_pre' e
 
 type backup (e:enclave) = mref (list (entry e)) (backup_pre e) // could be finer
 
-val create: v: volatile -> ST (e:enclave & backup e)
+noeq type protected = 
+  | Protect: e:enclave -> b:backup e -> protected
+
+val create: v: state -> ST protected
   (requires fun h0 -> True)
-  (ensures fun h0 (|e, b|) h1 -> sel h1 e == Counter 0 (Ok v))
+  (ensures fun h0 (Protect e b) h1 -> sel h1 e == Counter 0 (Ok v))
 let create v = 
   let e = alloc (Counter 0 (Ok v)) in 
   let r = (0,v) in
-  witness (sealable_pred e r);
+  witness (saved_pred e r);
   let b = alloc [r] in 
-  (|e,  b |) 
+  Protect e b 
 
 // privileged code calling back into fallible host code: this may
 // fail, in which case we still conservatively assume the host gets
@@ -98,21 +104,26 @@ let step0 c w =
   | Recover u v -> if w=u then Writing u v else Crash w u
   | Writing u v
   | Crash u v -> if w=u then Crash w v else Crash w u
-val seal: e:enclave -> b:backup e -> w:volatile -> All unit 
-(requires fun h0 -> pre0 (sel h0 e).c w)
+  
+val seal: p:protected -> w:state -> All unit 
+(requires fun h0 -> 
+  let Protect e b = p in 
+  pre0 (sel h0 e).c w)
 (ensures fun h0 r h1 -> 
+  let Protect e b = p in
   let Counter n c0 = sel h0 e in 
   pre0 c0 w /\ (
   let c1 = step0 c0 w in
   //let log1 = append log0 (n+1,w) in
   sel h1 e == Counter n c1))
 
-let seal e b w = 
+let seal p w = 
+  let Protect e b = p in
   let Counter n c0 = read e in
   let c1 = step0 c0 w in
   write e (Counter n c1); 
   let r = (n+1,w) in 
-  witness (sealable_pred e r);
+  witness (saved_pred e r);
   let log0 = read b in 
   write b (r::log0)
 
@@ -124,7 +135,7 @@ let step1 = function
   | Writing w v -> Ok w
   | Crash v0 v1 -> Recover v0 v1
 
-val incr: e:enclave -> w:volatile -> All unit 
+val incr: e:enclave -> w:state -> All unit 
 (requires fun h0 -> pre1 (sel h0 e).c)
 (ensures fun h0 r h1 -> 
   let v0 = sel h0 e in 
@@ -144,22 +155,27 @@ let incr e w =
   write e (Counter (n0+1) (step1 c0))
 
 /// storing a checkpoint requires a clean state 
-val store_state: e:enclave -> b:backup e -> w:volatile -> All unit
-(requires fun h0 -> Ok? (sel h0 e).c)
+val store: p:protected -> w:state -> All unit
+(requires fun h0 -> 
+  let Protect e b = p in 
+  Ok? (sel h0 e).c)
 (ensures fun h0 r h1 -> 
+  let Protect e b = p in
   let Counter _ c1 = sel h1 e in 
   V? r ==> c1 = Ok w)
   
-let store_state e b w = 
-  seal e b w; 
+let store p w = 
+  let Protect e b = p in 
+  seal p w; 
   incr e w
 
 /// recovery does not need *any* precondition, and leads to an Ok
 /// state (unless it crashes). We could be more precise, e.g. we never
 /// get None on honest inputs.
-val recover_state: e:enclave -> b:backup e -> r:entry e -> All (option volatile)
+val recover: p:protected -> last_saved:entry (Protect?.e p) -> All (option state)
 (requires fun h0 -> True)
 (ensures fun h0 r h1 -> 
+  let Protect e b = p in
   let Counter _ c0 = sel h0 e in 
   let Counter _ c1 = sel h1 e in 
   match r with 
@@ -171,29 +187,31 @@ val recover_state: e:enclave -> b:backup e -> r:entry e -> All (option volatile)
     | Writing v0 v0'  | Recover v0 v0' | Crash v0 v0' -> w1 = v0 \/ w1 = v0' ))
   | _ -> True  // should not be provable?! AR: changed it to True from False, after fixing all_wp in Pervasives
   )
- 
-let recover_state e b r = 
-  let m, w = r in
+
+let recover p last_saved = 
+  let Protect e b = p in 
+  let m, w = last_saved in
   let Counter n c0 = read e in 
   if m = n  // authenticated decryption
   then ( 
-    recall (sealable_pred e r);
-    seal e b w;
+    recall (saved_pred e last_saved);
+    seal p w;
     incr e w;
-    seal e b w;
+    seal p w;
     incr e w;
     Some w)
   else None
 
-type whatever 'a = 'a -> All unit (requires fun h0 -> True) (ensures fun h0 _ h1 -> True)
-val example: whatever (whatever enclave)
+type trivial 'a = 'a -> All unit (requires fun h0 -> True) (ensures fun h0 _ h1 -> True)
+val example: trivial (trivial enclave)
 let example attack = 
-  let (|e, b|) = create "hello" in
-  store_state e b "world";
+  let p = create "hello" in
+  let Protect e b = p in
+  store p "world";
   attack e;
   match read b with 
   | r::_ -> 
-    (match recover_state e b r with 
-    | Some _ -> store_state e b "!\n"
+    (match recover p r with 
+    | Some _ -> store p "!\n"
     | _ -> ())
 | _ -> ()
