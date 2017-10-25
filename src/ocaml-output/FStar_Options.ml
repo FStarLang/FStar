@@ -60,45 +60,112 @@ _0
 end))
 
 type option_val =
-  | Bool of Prims.bool
-  | String of Prims.string
-  | Path of Prims.string
-  | Int of Prims.int
-  | List of option_val Prims.list
-  | Unset[@@deriving show]
-let uu___is_Bool: option_val -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Bool _0 -> true | uu____66 -> false
-let __proj__Bool__item___0: option_val -> Prims.bool =
-  fun projectee  -> match projectee with | Bool _0 -> _0
-let uu___is_String: option_val -> Prims.bool =
-  fun projectee  ->
-    match projectee with | String _0 -> true | uu____80 -> false
-let __proj__String__item___0: option_val -> Prims.string =
-  fun projectee  -> match projectee with | String _0 -> _0
-let uu___is_Path: option_val -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Path _0 -> true | uu____94 -> false
-let __proj__Path__item___0: option_val -> Prims.string =
-  fun projectee  -> match projectee with | Path _0 -> _0
-let uu___is_Int: option_val -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Int _0 -> true | uu____108 -> false
-let __proj__Int__item___0: option_val -> Prims.int =
-  fun projectee  -> match projectee with | Int _0 -> _0
-let uu___is_List: option_val -> Prims.bool =
-  fun projectee  ->
-    match projectee with | List _0 -> true | uu____124 -> false
-let __proj__List__item___0: option_val -> option_val Prims.list =
-  fun projectee  -> match projectee with | List _0 -> _0
-let uu___is_Unset: option_val -> Prims.bool =
-  fun projectee  ->
-    match projectee with | Unset  -> true | uu____143 -> false
-let mk_bool: Prims.bool -> option_val = fun _0_27  -> Bool _0_27
-let mk_string: Prims.string -> option_val = fun _0_28  -> String _0_28
-let mk_path: Prims.string -> option_val = fun _0_29  -> Path _0_29
-let mk_int: Prims.int -> option_val = fun _0_30  -> Int _0_30
-let mk_list: option_val Prims.list -> option_val = fun _0_31  -> List _0_31
+| Bool of Prims.bool
+| String of Prims.string
+| Path of Prims.string
+| Int of Prims.int
+| List of option_val Prims.list
+| Unset
+
+
+let uu___is_Bool : option_val  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Bool (_0) -> begin
+true
+end
+| uu____66 -> begin
+false
+end))
+
+
+let __proj__Bool__item___0 : option_val  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Bool (_0) -> begin
+_0
+end))
+
+
+let uu___is_String : option_val  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| String (_0) -> begin
+true
+end
+| uu____80 -> begin
+false
+end))
+
+
+let __proj__String__item___0 : option_val  ->  Prims.string = (fun projectee -> (match (projectee) with
+| String (_0) -> begin
+_0
+end))
+
+
+let uu___is_Path : option_val  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Path (_0) -> begin
+true
+end
+| uu____94 -> begin
+false
+end))
+
+
+let __proj__Path__item___0 : option_val  ->  Prims.string = (fun projectee -> (match (projectee) with
+| Path (_0) -> begin
+_0
+end))
+
+
+let uu___is_Int : option_val  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Int (_0) -> begin
+true
+end
+| uu____108 -> begin
+false
+end))
+
+
+let __proj__Int__item___0 : option_val  ->  Prims.int = (fun projectee -> (match (projectee) with
+| Int (_0) -> begin
+_0
+end))
+
+
+let uu___is_List : option_val  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| List (_0) -> begin
+true
+end
+| uu____124 -> begin
+false
+end))
+
+
+let __proj__List__item___0 : option_val  ->  option_val Prims.list = (fun projectee -> (match (projectee) with
+| List (_0) -> begin
+_0
+end))
+
+
+let uu___is_Unset : option_val  ->  Prims.bool = (fun projectee -> (match (projectee) with
+| Unset -> begin
+true
+end
+| uu____143 -> begin
+false
+end))
+
+
+let mk_bool : Prims.bool  ->  option_val = (fun _0_27 -> Bool (_0_27))
+
+
+let mk_string : Prims.string  ->  option_val = (fun _0_28 -> String (_0_28))
+
+
+let mk_path : Prims.string  ->  option_val = (fun _0_29 -> Path (_0_29))
+
+
+let mk_int : Prims.int  ->  option_val = (fun _0_30 -> Int (_0_30))
+
+
+let mk_list : option_val Prims.list  ->  option_val = (fun _0_31 -> List (_0_31))
+
 type options =
 | Set
 | Reset

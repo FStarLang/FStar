@@ -44,61 +44,92 @@ let string_of_mlpath : mlpath  ->  mlsymbol = (fun uu____33 -> (match (uu____33)
 end))
 
 type gensym_t =
-  {
-  gensym: Prims.unit -> mlident;
-  reset: Prims.unit -> Prims.unit;}[@@deriving show]
-let __proj__Mkgensym_t__item__gensym: gensym_t -> Prims.unit -> mlident =
-  fun projectee  ->
-    match projectee with
-    | { gensym = __fname__gensym; reset = __fname__reset;_} ->
-        __fname__gensym
-let __proj__Mkgensym_t__item__reset: gensym_t -> Prims.unit -> Prims.unit =
-  fun projectee  ->
-    match projectee with
-    | { gensym = __fname__gensym; reset = __fname__reset;_} -> __fname__reset
-let gs: gensym_t =
-  let ctr = FStar_Util.mk_ref (Prims.parse_int "0") in
-  let n_resets = FStar_Util.mk_ref (Prims.parse_int "0") in
-  {
-    gensym =
-      (fun uu____98  ->
-         FStar_Util.incr ctr;
-         (let uu____121 =
-            let uu____122 =
-              let uu____123 = FStar_ST.op_Bang n_resets in
-              FStar_Util.string_of_int uu____123 in
-            let uu____184 =
-              let uu____185 =
-                let uu____186 = FStar_ST.op_Bang ctr in
-                FStar_Util.string_of_int uu____186 in
-              Prims.strcat "_" uu____185 in
-            Prims.strcat uu____122 uu____184 in
-          Prims.strcat "_" uu____121));
-    reset =
-      (fun uu____249  ->
-         FStar_ST.op_Colon_Equals ctr (Prims.parse_int "0");
-         FStar_Util.incr n_resets)
-  }
-let gensym: Prims.unit -> mlident = fun uu____335  -> gs.gensym ()
-let reset_gensym: Prims.unit -> Prims.unit = fun uu____339  -> gs.reset ()
-let rec gensyms: Prims.int -> mlident Prims.list =
-  fun x  ->
-    match x with
-    | _0_40 when _0_40 = (Prims.parse_int "0") -> []
-    | n1 ->
-        let uu____349 = gensym () in
-        let uu____350 = gensyms (n1 - (Prims.parse_int "1")) in uu____349 ::
-          uu____350
-let mlpath_of_lident: FStar_Ident.lident -> mlpath =
-  fun x  ->
-    if FStar_Ident.lid_equals x FStar_Parser_Const.failwith_lid
-    then ([], ((x.FStar_Ident.ident).FStar_Ident.idText))
-    else
-      (let uu____360 =
-         FStar_List.map (fun x1  -> x1.FStar_Ident.idText) x.FStar_Ident.ns in
-       (uu____360, ((x.FStar_Ident.ident).FStar_Ident.idText)))
-type mlidents = mlident Prims.list[@@deriving show]
-type mlsymbols = mlsymbol Prims.list[@@deriving show]
+{gensym : Prims.unit  ->  mlident; reset : Prims.unit  ->  Prims.unit}
+
+
+let __proj__Mkgensym_t__item__gensym : gensym_t  ->  Prims.unit  ->  mlident = (fun projectee -> (match (projectee) with
+| {gensym = __fname__gensym; reset = __fname__reset} -> begin
+__fname__gensym
+end))
+
+
+let __proj__Mkgensym_t__item__reset : gensym_t  ->  Prims.unit  ->  Prims.unit = (fun projectee -> (match (projectee) with
+| {gensym = __fname__gensym; reset = __fname__reset} -> begin
+__fname__reset
+end))
+
+
+let gs : gensym_t = (
+
+let ctr = (FStar_Util.mk_ref (Prims.parse_int "0"))
+in (
+
+let n_resets = (FStar_Util.mk_ref (Prims.parse_int "0"))
+in {gensym = (fun uu____98 -> ((FStar_Util.incr ctr);
+(
+
+let uu____121 = (
+
+let uu____122 = (
+
+let uu____123 = (FStar_ST.op_Bang n_resets)
+in (FStar_Util.string_of_int uu____123))
+in (
+
+let uu____184 = (
+
+let uu____185 = (
+
+let uu____186 = (FStar_ST.op_Bang ctr)
+in (FStar_Util.string_of_int uu____186))
+in (Prims.strcat "_" uu____185))
+in (Prims.strcat uu____122 uu____184)))
+in (Prims.strcat "_" uu____121));
+)); reset = (fun uu____249 -> ((FStar_ST.op_Colon_Equals ctr (Prims.parse_int "0"));
+(FStar_Util.incr n_resets);
+))}))
+
+
+let gensym : Prims.unit  ->  mlident = (fun uu____335 -> (gs.gensym ()))
+
+
+let reset_gensym : Prims.unit  ->  Prims.unit = (fun uu____339 -> (gs.reset ()))
+
+
+let rec gensyms : Prims.int  ->  mlident Prims.list = (fun x -> (match (x) with
+| _0_40 when (_0_40 = (Prims.parse_int "0")) -> begin
+[]
+end
+| n1 -> begin
+(
+
+let uu____349 = (gensym ())
+in (
+
+let uu____350 = (gensyms (n1 - (Prims.parse_int "1")))
+in (uu____349)::uu____350))
+end))
+
+
+let mlpath_of_lident : FStar_Ident.lident  ->  mlpath = (fun x -> (match ((FStar_Ident.lid_equals x FStar_Parser_Const.failwith_lid)) with
+| true -> begin
+(([]), (x.FStar_Ident.ident.FStar_Ident.idText))
+end
+| uu____359 -> begin
+(
+
+let uu____360 = (FStar_List.map (fun x1 -> x1.FStar_Ident.idText) x.FStar_Ident.ns)
+in ((uu____360), (x.FStar_Ident.ident.FStar_Ident.idText)))
+end))
+
+
+type mlidents =
+mlident Prims.list
+
+
+type mlsymbols =
+mlsymbol Prims.list
+
 type e_tag =
 | E_PURE
 | E_GHOST
