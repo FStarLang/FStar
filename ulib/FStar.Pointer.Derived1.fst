@@ -199,3 +199,11 @@ let buffer_cons #t b i len v =
   let h' = HST.get () in
   buffer_readable_gsub_intro h' b i (UInt32.add len 1ul);
   buffer_as_seq_gsub_buffer_cons h' b i len
+
+let buffer_readable_gsub_merge #t b i len h =
+  buffer_readable_intro h b
+
+let buffer_readable_modifies_gsub #t b i len h0 h1 l =
+  buffer_readable_intro h1 (gsub_buffer b 0ul i);
+  buffer_readable_intro h1 (gsub_buffer b (UInt32.add i len) (UInt32.sub (buffer_length b) (UInt32.add i len)));
+  buffer_readable_gsub_merge b i len h1

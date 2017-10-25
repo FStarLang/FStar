@@ -511,3 +511,40 @@ val buffer_cons
     buffer_readable h' (gsub_buffer b i (UInt32.add len 1ul)) /\
     buffer_as_seq h' (gsub_buffer b i (UInt32.add len 1ul)) == Seq.cons v (buffer_as_seq h (gsub_buffer b (UInt32.add i 1ul) len))
   ))
+
+val buffer_readable_gsub_merge
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (h: HS.mem)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_readable h (gsub_buffer b 0ul i) /\
+    buffer_readable h (gsub_buffer b i len) /\ (
+    let off = UInt32.add i len in
+    buffer_readable h (gsub_buffer b off (UInt32.sub (buffer_length b) off))
+  )))
+  (ensures (buffer_readable h b))
+
+val buffer_readable_modifies_gsub
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (h0 h1: HS.mem)
+  (l: loc)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    modifies l h0 h1 /\
+    loc_disjoint l (loc_buffer (gsub_buffer b 0ul i)) /\
+    loc_disjoint l (loc_buffer (gsub_buffer b (UInt32.add i len) (UInt32.sub (buffer_length b) (UInt32.add i len)))) /\
+    buffer_readable h0 b /\
+    buffer_readable h1 (gsub_buffer b i len)
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_readable h1 b
+  ))
