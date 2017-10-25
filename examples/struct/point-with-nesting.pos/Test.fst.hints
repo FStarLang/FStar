@@ -50,7 +50,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "3f33c1c7ecc10415f19ad4652d7f77d0"
+      "ca01ee3a004eb8c65466891a4998e69c"
     ],
     [
       "Test.point_t",
@@ -65,7 +65,7 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
       ],
       0,
-      "0b035b608ba7d38c651493561a6cc0f9"
+      "49ca83178d5f70834297f6273c804442"
     ],
     [
       "Test.colored_object_struct",
@@ -115,7 +115,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "5a83686782e8051296cf2bafff39e4e9"
+      "b77a98a1397d81b781156da0a4a49db2"
     ],
     [
       "Test.colored_object_t",
@@ -134,7 +134,7 @@
         "typing_Test.colored_object_struct"
       ],
       0,
-      "4c2c3fb585ef7f75373511da346c0b0f"
+      "2c153e79c30077eb9b75075a8d60d16e"
     ],
     [
       "Test.write_struct_field",
@@ -162,7 +162,7 @@
         "token_correspondence_FStar.Pointer.Base.type_of_typ"
       ],
       0,
-      "b9fb856b3c6cf98a688c227b715ff82c"
+      "10a0b040f3c2d345b4b812892cad0270"
     ],
     [
       "Test.write_struct_field",
@@ -175,7 +175,7 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
       ],
       0,
-      "63fa3a5eccf641d34ec3464ddf915a58"
+      "335c52fd7052c0ca3bcf77efd5d0d30c"
     ],
     [
       "Test.write_struct_field",
@@ -188,7 +188,7 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
       ],
       0,
-      "967345635db4f27c86c2ca7132bed06b"
+      "94ec98416e0a9eeea3c81af61bb91846"
     ],
     [
       "Test.write_struct_field",
@@ -201,7 +201,7 @@
         "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
       ],
       0,
-      "be36c6bff0d0f08fc72ce40d6e56ac3f"
+      "4a86963b06f78fa9283781fc2f5f6581"
     ],
     [
       "Test.flip",
@@ -221,13 +221,15 @@
         "@query",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_7fe3e7847982dd1674bac902db1b25d6",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
+        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
         "assumption_Prims.HasEq_string", "bool_inversion",
         "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TBool",
         "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
         "data_typing_intro_FStar.Pointer.Base.TBase@tok",
-        "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Cons",
         "equality_tok_FStar.Pointer.Base.TBool@tok",
+        "equality_tok_FStar.Pointer.Base.TInt@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pointer.Base.equal_values",
         "equation_FStar.Pointer.Base.modifies_1",
@@ -252,6 +254,7 @@
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.Monotonic.HyperStack.lemma_equal_domains_trans",
+        "lemma_FStar.Pointer.Base.gread_gfield",
         "lemma_FStar.Pointer.Base.includes_refl",
         "lemma_FStar.Pointer.Base.live_gfield",
         "lemma_FStar.Pointer.Base.loc_disjoint_gfield",
@@ -264,8 +267,8 @@
         "lemma_FStar.Pointer.Base.readable_gfield",
         "lemma_FStar.Pointer.Base.readable_live",
         "lemma_FStar.Pointer.Base.type_of_typ_type_of_struct_field",
-        "lemma_FStar.Pointer.includes_gfield_gen",
-        "lemma_FStar.Pointer.loc_disjoint_gfield_l",
+        "lemma_FStar.Pointer.Derived1.includes_gfield_gen",
+        "lemma_FStar.Pointer.Derived1.loc_disjoint_gfield_l",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Negation",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -292,12 +295,11 @@
         "typing_FStar.Pointer.Base.loc_pointer",
         "typing_FStar.Pointer.Base.loc_union",
         "typing_FStar.Pointer.Base.typ_of_struct_field",
-        "typing_Prims.uu___is_Cons", "typing_Test.colored_object_struct",
-        "typing_Test.colored_object_t",
-        "typing_tok_FStar.Pointer.Base.TBool@tok"
+        "typing_Test.colored_object_struct", "typing_Test.colored_object_t",
+        "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "891aad83a83134a75c9fabb66d139aba"
+      "ce24d21eebce83d9f379ebfd480af732"
     ],
     [
       "Test.flip",
@@ -325,7 +327,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "83e3d5956daa62b62d6c241b7319d566"
+      "2283cff3f5803eeed4bfca2f60f34037"
     ],
     [
       "Test.flip",
@@ -353,7 +355,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "85c9db0adf2ba3c06aae067f917a73e2"
+      "52dd2b32112c7e31a1f354aed0d3c97c"
     ],
     [
       "Test.flip",
@@ -382,7 +384,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "af5ef32790eb0d2830e8f2cf5d3fff56"
+      "a5dfbd7b8d182ae47e403d6f70c2a1b1"
     ],
     [
       "Test.flip",
@@ -418,7 +420,7 @@
         "typing_FStar.List.Tot.Base.map"
       ],
       0,
-      "2c13b02d67a770d90aa10a4a835b5874"
+      "62fd514f962d7b6b9840920f1cc8acd7"
     ],
     [
       "Test.flip",
@@ -460,7 +462,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "3f803666f11dea87804f119ab375706a"
+      "2e61ad7e68e5cb32c22b879e7354e9eb"
     ],
     [
       "Test.flip",
@@ -488,7 +490,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "550c03a71176a8941420bd24176fc1b1"
+      "d495721c122814fcc479ce83254755f6"
     ],
     [
       "Test.flip",
@@ -519,7 +521,7 @@
         "typing_Test.colored_object_struct"
       ],
       0,
-      "ee6ef396447534a534d1df51a4a7ef92"
+      "b9c081a1f57f1050d4ccea037fed56cc"
     ],
     [
       "Test.flip",
@@ -546,7 +548,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "5f34b0dbf9ef111b6e648cb9920aacca"
+      "1ed00cb262a28a614bb6a52e50c640b1"
     ],
     [
       "Test.flip",
@@ -591,7 +593,7 @@
         "typing_Test.colored_object_struct"
       ],
       0,
-      "021ecb726296e7752bc16c6f8059c6e6"
+      "e0e56cf7270ce010c1886d250509387f"
     ],
     [
       "Test.flip",
@@ -619,7 +621,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "b14ad9a2f5b0a4a3ea8584150cdd08df"
+      "bdb47e826106d9ae03026f220e8f8c99"
     ],
     [
       "Test.flip",
@@ -648,7 +650,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "060ac0ccefab6944cd414ed52bb85e04"
+      "f7fa197b33637a5ef73433d03d1fb696"
     ],
     [
       "Test.flip",
@@ -674,7 +676,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "2e96d6b1ce594070ddb6f4b06f52dddf"
+      "c2fe2445685821b8c8159f063ec1fc66"
     ],
     [
       "Test.flip'",
@@ -694,14 +696,14 @@
         "@query",
         "FStar.Pervasives.Native_interpretation_Tm_arrow_7fe3e7847982dd1674bac902db1b25d6",
         "Prims_interpretation_Tm_arrow_9cb3c953faf527c316d427b2ce8bd81b",
-        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
-        "assumption_Prims.HasEq_string", "bool_inversion",
+        "assumption_Prims.HasEq_string", "bool_inversion", "bool_typing",
         "constructor_distinct_FStar.Pointer.Base.TBase",
         "constructor_distinct_FStar.Pointer.Base.TBool",
-        "constructor_distinct_FStar.Pointer.Base.TInt",
         "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
+        "data_typing_intro_FStar.Pointer.Base.TBase@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
         "equality_tok_FStar.Pointer.Base.TBool@tok",
+        "equality_tok_FStar.Pointer.Base.TInt@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pointer.Base.equal_values",
         "equation_FStar.Pointer.Base.modifies_1",
@@ -709,6 +711,8 @@
         "equation_FStar.Pointer.Base.struct_typ",
         "equation_FStar.Pointer.Base.typ_of_struct_field",
         "equation_FStar.Pointer.Base.type_of_base_typ",
+        "equation_FStar.Pointer.Base.type_of_struct_field",
+        "equation_FStar.Pointer.Base.type_of_struct_field_",
         "equation_Prims.eqtype", "equation_Test.colored_object",
         "equation_Test.colored_object_struct",
         "equation_Test.colored_object_t", "equation_Test.colored_point",
@@ -726,10 +730,10 @@
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_FStar.Pointer.Base.typ@tok",
         "lemma_FStar.Monotonic.HyperStack.lemma_equal_domains_trans",
+        "lemma_FStar.Pointer.Base.gread_gfield",
         "lemma_FStar.Pointer.Base.includes_refl",
         "lemma_FStar.Pointer.Base.live_gfield",
         "lemma_FStar.Pointer.Base.loc_disjoint_gfield",
-        "lemma_FStar.Pointer.Base.loc_disjoint_union_r",
         "lemma_FStar.Pointer.Base.loc_includes_pointer_pointer",
         "lemma_FStar.Pointer.Base.loc_includes_union_r",
         "lemma_FStar.Pointer.Base.modifies_1_readable_struct",
@@ -739,9 +743,9 @@
         "lemma_FStar.Pointer.Base.readable_gfield",
         "lemma_FStar.Pointer.Base.readable_live",
         "lemma_FStar.Pointer.Base.type_of_typ_type_of_struct_field",
-        "lemma_FStar.Pointer.includes_gfield_gen",
-        "lemma_FStar.Pointer.loc_disjoint_gfield_l",
-        "lemma_FStar.Pointer.loc_disjoint_gfield_r",
+        "lemma_FStar.Pointer.Derived1.includes_gfield_gen",
+        "lemma_FStar.Pointer.Derived1.loc_disjoint_gfield_l",
+        "lemma_FStar.Pointer.Derived1.loc_disjoint_gfield_r",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Negation",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
@@ -763,15 +767,21 @@
         "token_correspondence_FStar.List.Tot.Base.map.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "token_correspondence_FStar.Pervasives.Native.fst",
+        "token_correspondence_FStar.Pointer.Base.type_of_struct_field",
+        "token_correspondence_FStar.Pointer.Base.type_of_struct_field_",
+        "token_correspondence_FStar.Pointer.Base.type_of_typ",
         "typing_FStar.List.Tot.Base.map", "typing_FStar.List.Tot.Base.mem",
+        "typing_FStar.List.Tot.Base.noRepeats",
         "typing_FStar.Pointer.Base.gfield",
+        "typing_FStar.Pointer.Base.gread",
         "typing_FStar.Pointer.Base.loc_pointer",
         "typing_FStar.Pointer.Base.loc_union",
         "typing_FStar.Pointer.Base.typ_of_struct_field",
-        "typing_Test.colored_object_struct", "typing_Test.colored_object_t"
+        "typing_Test.colored_object_struct", "typing_Test.colored_object_t",
+        "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "81f658b456d5c4e5feb0fcf15fa7eb3d"
+      "78dec1c234c6b83f302aaac93ecc0727"
     ],
     [
       "Test.flip'",
@@ -799,7 +809,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "070eb07ed50fe5af6139caca4f475e56"
+      "2310609947f434a64f43f31fea10e8b1"
     ],
     [
       "Test.flip'",
@@ -837,7 +847,7 @@
         "typing_FStar.List.Tot.Base.map", "typing_Test.colored_object_struct"
       ],
       0,
-      "3e47c7ffb3fb668dce3501e77b33efc2"
+      "42e1132c88d06aa4d096917886c8fc12"
     ],
     [
       "Test.flip'",
@@ -868,7 +878,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "4d9d59a21e9c82bdec925eae6d7ae857"
+      "f7721aef82c735af86bad36d931d849f"
     ],
     [
       "Test.flip'",
@@ -896,7 +906,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "8d7093c5327e19e54191afb7bf713bb3"
+      "9630e2cdcf4f1c58e9ae7ef83c4f00d9"
     ],
     [
       "Test.flip'",
@@ -927,7 +937,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "5c2d6e32fcfa58a7530edb75233be01b"
+      "d3d1d2389f4e9262bfbb2d06de67784e"
     ],
     [
       "Test.flip'",
@@ -955,7 +965,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "642e353e7038e9118c12594d1d42cfed"
+      "de1abee7f76f1510f6fe80404ca02f41"
     ],
     [
       "Test.flip'",
@@ -987,7 +997,7 @@
         "typing_Test.colored_object_struct"
       ],
       0,
-      "3c8dedfcd351310cc5846fcda77d4f75"
+      "1fdfa1cdefdd20691e30fe78632f25b4"
     ],
     [
       "Test.flip'",
@@ -1019,7 +1029,7 @@
         "typing_Test.colored_object_struct"
       ],
       0,
-      "d1811b748492f335d04dc7a02c03e534"
+      "162aee2bc6e0e9fa3bd5465a62a78f16"
     ],
     [
       "Test.flip'",
@@ -1060,7 +1070,7 @@
         "typing_FStar.List.Tot.Base.map"
       ],
       0,
-      "e68d910042edac9bf68665a86ed69db0"
+      "1788621b1308a955ef8608725a611f0f"
     ],
     [
       "Test.flip'",
@@ -1098,7 +1108,7 @@
         "typing_FStar.List.Tot.Base.map", "typing_Test.colored_object_struct"
       ],
       0,
-      "2c05368f3d37b0d672bd061a548addd5"
+      "80ede7f30dfbc3b1327c9dfec3d4aa6f"
     ],
     [
       "Test.flip'",
@@ -1140,7 +1150,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "cda3a63a6ecdccff90b502f84635fde8"
+      "27190f7d970ca421db738bb4dcab4571"
     ],
     [
       "Test.flip'",
@@ -1188,7 +1198,7 @@
         "typing_Test.colored_object_struct"
       ],
       0,
-      "fbf7eb178e581c72fbb99764f0488e0f"
+      "b08b0a2dfa26a2fefa54e1eabd0f9879"
     ]
   ]
 ]
