@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e0d2ba0599d63b8d8426d36314d3f484"
+      "ecda581d13aa317209e81f4fd4e41f3e"
     ],
     [
       "Ex05b.fib",
@@ -37,7 +37,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "181346fa9aa07f9e2a52ea92e5123e30"
+      "ebe912693735764ddf82d16df82235ca"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -49,7 +49,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7584723aec214cbe6802611e1ec3dfee"
+      "20d1c7fb8b70ef420fd6a0bf21be242c"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b3bbdb1acbcec92af381df05385e1123"
+      "581230726b9b7b1a51db8aed7117e473"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -94,7 +94,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "dd249fb82ed75740c756e88f087ee767"
+      "18a2466cf905e0d91581fe9735fb514d"
     ],
     [
       "Ex05b.fib_is_ok_aux",
@@ -106,7 +106,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a2f0fcf30b4143ecd61fdb28aad623d3"
+      "34d318b3b51ddd91b12331a2eed6fa63"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -118,20 +118,11 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "aec938672186df5a8f8e09a371059b9c"
+      "c09accef147de8277731aa1ac28e7977"
     ],
     [
       "Ex05b.fib_is_ok",
       2,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "24e520bcd128d7841ed56ee35058d93d"
-    ],
-    [
-      "Ex05b.fib_is_ok",
-      3,
       2,
       1,
       [
@@ -141,15 +132,13 @@
         "equation_Prims.nat",
         "equation_with_fuel_Ex05b.fibonacci.fuel_instrumented",
         "int_inversion", "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Ex05b_Tm_refine_6cd1a3c33b2175b6547b378acf37e491",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "unit_typing"
       ],
       0,
-      "1e93458f999e3a781c6271fe406f4ed8"
+      "ba78d233b5ca527767b4eae4088e03af"
     ],
     [
       "Ex05b.fib_inner_aux",
@@ -166,7 +155,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bb469b09fe00d1eaf3c7110aec0d8722"
+      "8aaa73fe55940041427ea719f6fd90b9"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -178,7 +167,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "86dc61a2b766128ac730ab656fb8125b"
+      "511577bda259ad8aec398b38ed3b5fd4"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -190,7 +179,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "519763657c417967b0f078cc0bbd51ea"
+      "bc5effadd9599341dd3bb497a0dc0e7f"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -202,7 +191,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "820e639821fede73cad8bff0768ed0c2"
+      "655899cf022696613eb8feff65aa8c6c"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -214,7 +203,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8d051f99575652c41f4bf6608ce386e9"
+      "9a0e5ee458d5897dd783196f4bac4635"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -229,7 +218,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "68a745e4b581198d656386dadffff31a"
+      "e84946bd7e77082583f8944d3b325026"
     ],
     [
       "Ex05b.fib_inner_aux_2",
@@ -253,7 +242,7 @@
         "typing_Ex05b.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "5e9579558090ff6082d399bf07f83191"
+      "b08915c84528201842ab23dcf7a25ef4"
     ]
   ]
 ]

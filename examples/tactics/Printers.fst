@@ -45,7 +45,8 @@ let printer : tactic unit =
         in
         let branches = List.Tot.map br1 ctors in
         let m = pack (Tv_Match (pack (Tv_Var x)) branches) in
-        exact (return m)
+        exact_guard (return m);;
+        smt
 
 type t1 =
     | A : int -> int -> t1

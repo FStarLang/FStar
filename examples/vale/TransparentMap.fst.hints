@@ -1,0 +1,94 @@
+[
+  "Î*6\u0019—\u0019§\f¡Ï~À0\u001e\u0014é",
+  [
+    [
+      "TransparentMap.upd",
+      1,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "47542dd2343c58f4b07976ebb4000ef0"
+    ],
+    [
+      "TransparentMap.upd",
+      2,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "26000c5880c95dc573754d3fb3875541"
+    ],
+    [
+      "TransparentMap.sel_upd1",
+      1,
+      1,
+      0,
+      [
+        "@query", "equation_TransparentMap.sel",
+        "equation_TransparentMap.upd",
+        "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
+        "primitive_Prims.op_Equality", "unit_typing"
+      ],
+      0,
+      "90f3ff84b558d37a515b2fb9ae32f73c"
+    ],
+    [
+      "TransparentMap.sel_upd2",
+      1,
+      1,
+      0,
+      [
+        "@query", "equation_TransparentMap.sel",
+        "equation_TransparentMap.upd",
+        "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "unit_typing"
+      ],
+      0,
+      "8604aa32334a4e976d56be45948229b0"
+    ],
+    [
+      "TransparentMap.lemma_equal_intro",
+      1,
+      1,
+      0,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_TransparentMap.equal", "equation_TransparentMap.sel",
+        "unit_typing"
+      ],
+      0,
+      "7ab057f23cb693cf77672c2036ac0da6"
+    ],
+    [
+      "TransparentMap.lemma_equal_elim",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.FunctionalExtensionality.Extensionality",
+        "equation_FStar.FunctionalExtensionality.efun",
+        "equation_Prims.eqtype", "equation_TransparentMap.equal",
+        "equation_TransparentMap.map",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "unit_typing"
+      ],
+      0,
+      "a44fd3680f406f40eb622c0f147e2e2d"
+    ],
+    [
+      "TransparentMap.lemma_equal_refl",
+      1,
+      1,
+      0,
+      [ "@query", "lemma_TransparentMap.lemma_equal_intro", "unit_typing" ],
+      0,
+      "a2f31f02c412b24a01a8e840159011b9"
+    ]
+  ]
+]

@@ -99,7 +99,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e7da5bedf11228c97631857d78d24612"
+      "a4a8f3ff41616670b3a2f1624d199874"
     ],
     [
       "Ex06b.sorted",
@@ -118,7 +118,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "9729760f05758e28da65d40d20849096"
+      "d52248ef10022241fe335666b164438d"
     ],
     [
       "Ex06b.partition",
@@ -132,7 +132,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3b8bcf62ca366e3e417480361a3228ae"
+      "661cdb92bb56748d61a992d3efd2ffaf"
     ],
     [
       "Ex06b.partition_lemma",
@@ -141,7 +141,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "736443d233ea43c8be7c4948e4af6a0e"
+      "712c6fedb99a28ef1c96a47344efd9e0"
     ],
     [
       "Ex06b.partition_lemma",
@@ -150,7 +150,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "a19bc0f6fdab0d154f352b008fcb6b9e"
+      "da32052e687b3a1913a8f465defd1eb1"
     ],
     [
       "Ex06b.partition_lemma",
@@ -202,7 +202,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "8299be0c020eb9b4d64729dec4fc9510"
+      "d11d131e8748980599e119251bd5f90b"
     ],
     [
       "Ex06b.total_order",
@@ -214,7 +214,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a617731d8c4f70c6d91c01eb18f28120"
+      "0d5b053809e68f80d4e24067233576c9"
     ],
     [
       "Ex06b.sorted_concat_lemma",
@@ -260,7 +260,7 @@
         "unit_typing"
       ],
       0,
-      "74554c3edf13aa675d894e9101613bf9"
+      "bc762621b8851c8c85a382f31b30a9a9"
     ],
     [
       "Ex06b.sort",
@@ -269,7 +269,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "8107f82e37e96dfd5d02553c3b473b49"
+      "7fd9ff39e8894aa82fc1f10a37c9389d"
     ],
     [
       "Ex06b.sort",
@@ -340,7 +340,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "e5af34a2f9c7780f1b8db3be3b26af7b"
+      "5e270be25b93ef20ba6dc363a04c820a"
     ],
     [
       "Ex06b.sort",
@@ -349,7 +349,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "462c963e1e0439c4fd103c3056a738be"
+      "684aafbea635e23e1feccad0fbe0622e"
     ]
   ]
 ]

@@ -1,9 +1,9 @@
 module Bug190
 
-type form =
+noeq type form =
 | FForall : (int -> Tot form) -> form
 
-type deduce : form -> Type =
+noeq type deduce : form -> Type =
   | DForallElim :
              f:(int->Tot form) ->
              deduce (FForall f) ->

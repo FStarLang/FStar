@@ -45,7 +45,7 @@ type term =
 
 (* Finite, ordered sets of variables *)
 val nat_order : OrdSet.cmp nat
-let nat_order x y = x <= y
+let nat_order :(f:(nat -> nat -> bool){OrdSet.total_order nat f}) = fun x y -> x <= y
 type varset = OrdSet.ordset nat nat_order
 
 val empty_vars : varset
@@ -82,7 +82,7 @@ let rec efuns = function
   | (x,y)::tl -> funs x + funs y + efuns tl
 
 (* Counting the number of equations with variables on the the RHS;
-   also for the termination metric *)
+//    also for the termination metric *)
 val n_flex_rhs : eqns -> Tot nat
 let rec n_flex_rhs = function
   | [] -> 0
@@ -121,8 +121,8 @@ let rec lemma_lsubst_eqns_nil = function
   | _::tl -> lemma_lsubst_eqns_nil tl
 
 (* A couple of lemmas about variable counts.
-   Both of these rely on extensional equality of sets.
-   So we need to use eq_lemma explicitly *)
+//    Both of these rely on extensional equality of sets.
+//    So we need to use eq_lemma explicitly *)
 val evars_permute_hd : x:term -> y:term -> tl:eqns -> Lemma
   (ensures (evars ((x, y)::tl) = evars ((y, x)::tl)))
 let evars_permute_hd x y tl = OrdSet.eq_lemma (evars ((x,y)::tl)) (evars ((y,x)::tl))

@@ -21,15 +21,6 @@
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
       "ecba5cc3336b58229210fcb4cb5075a8"
-    ],
-    [
-      "FStar.String.string_of_char",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "6e789821d410c41747dd5f3277da71ba"
     ]
   ]
 ]

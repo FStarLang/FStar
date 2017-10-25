@@ -49,8 +49,11 @@ Guidelines for the changelog:
 
 ## Standard library
 
-* [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32) The specifications for the machine integer libraries (`Int64.fst`,
-  `UInt64.fst`, etc) now forbid several forms of undefined behavior in C.
+* [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32)
+
+  The specifications for the machine integer libraries (`Int64.fst`,
+  `UInt64.fst`, etc) now forbid several forms of undefined behavior in
+  C.
 
   The signed arithmetic `add_underspec`, `sub_underspec`, and `mul_underspec`
   functions have been removed.
@@ -63,6 +66,39 @@ Guidelines for the changelog:
   Code that relied on undefined behavior is unsafe, but it can be extracted
   using `assume` or
   `admit`.
+
+* Related to the change in implicit generalization of types, is the
+  change to the standard libraries for state.
+
+  This program is no longer accepted by F*:
+
+  ```
+  module Test
+  open FStar.ST
+  let f x = !x
+  ```
+
+  It fails with:
+
+  ```
+  test.fst(4,0-4,12):
+        (Error) Failed to resolve implicit argument of type
+        'FStar.Preorder.preorder (*?u538*) _'
+         in the type of f
+         (x:FStar.ST.mref (*?u538*) _ (*?u542*) _ -> FStar.ST.STATE (*?u538*) _)
+  ```
+
+  This is because `FStar.ST` is now designed to work with monotonic
+  references which are indexed by preorders.
+
+  If you do not intend to use preorders, open `FStar.Ref` instead. The
+  program below is accepted.
+
+  ```
+  module Test
+  open FStar.Ref
+  let f x = !x
+  ```
 
 ## C Extraction
 
