@@ -108,12 +108,11 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
       if TcUtil.is_pure_or_ghost_effect env (U.comp_effect_name c)
       then let t = U.unrefine <| (U.comp_result c) in
            match (SS.compress t).n with
-           | Tm_fvar fv when (S.fv_eq_lid fv Const.unit_lid) -> false //uninformative function
            | Tm_constant _ -> false
-           | _ -> true
+           | _ -> not (U.is_unit t) //uninformative function
       else false //can't reason about effectful function definitions, so not worth returning this
-//    | Tm_type _ -> false
-    | _ -> true in
+    | _ -> not (U.is_unit t)
+  in
   (* if term, then lc is a trivial lazy computation (lcomp_of_comp) *)
   let lc = match tlc with
     | Inl t -> U.lcomp_of_comp (if not (should_return t)

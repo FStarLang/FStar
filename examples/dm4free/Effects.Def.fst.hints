@@ -17,7 +17,7 @@
         "unit_typing"
       ],
       0,
-      "0dec0a666f848d7d52428a79cdb56267"
+      "87a728d80be9d98a8484a9adb4375a52"
     ],
     [
       "Effects.Def.morphism_laws_via_eq",
@@ -35,7 +35,7 @@
         "unit_typing"
       ],
       0,
-      "f6c900a255c4dd41f97be6108aeb6841"
+      "bb06c7b456b0f6dd571cfd7dcb82fb2f"
     ],
     [
       "Effects.Def.bind_st",

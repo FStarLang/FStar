@@ -13,16 +13,7 @@
         "unit_typing"
       ],
       0,
-      "68d88239991aa400385a903bba93f17e"
-    ],
-    [
-      "PropositionalExtensionalityInconsistent.proof'",
-      1,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "9f275b46d17546213630490a83705bc9"
+      "c79a0b8892118e5d8ef245c14f5cebb8"
     ],
     [
       "PropositionalExtensionalityInconsistent.clearly_wrong'",
@@ -46,7 +37,7 @@
         "unit_typing"
       ],
       0,
-      "8a0b622116ee4bbfc97cf0f5e044b790"
+      "8ca22d9e387c8ff51f4fa9cadccd89db"
     ],
     [
       "PropositionalExtensionalityInconsistent.predicateExtensionality",
@@ -68,7 +59,7 @@
         "unit_typing"
       ],
       0,
-      "7b335af8a14967553730568b9439d6e7"
+      "d27ba5469b0d332b147891673e681a46"
     ],
     [
       "PropositionalExtensionalityInconsistent.proof",
@@ -88,7 +79,7 @@
         "unit_typing"
       ],
       0,
-      "b6b585c952a80b37e2d07cf5dd70764f"
+      "396dfc3a6cb2691edbb1532f7f57264e"
     ],
     [
       "PropositionalExtensionalityInconsistent.zarb",
@@ -97,7 +88,7 @@
       0,
       [ "@query", "unit_typing" ],
       0,
-      "0edb7864a62d1c99471f6ae5c4015323"
+      "a5ddb55034293d4f6b241b142563c90f"
     ],
     [
       "PropositionalExtensionalityInconsistent.clearly_wrong",
@@ -111,7 +102,7 @@
         "equation_PropositionalExtensionalityInconsistent.p2"
       ],
       0,
-      "3e0d4bdb1d4c5be1d8fd13343e7b4a4e"
+      "5fa5f56a398754ce9d94f2ab43638c27"
     ],
     [
       "PropositionalExtensionalityInconsistent.test",
@@ -123,7 +114,7 @@
         "constructor_distinct_Prims.unit"
       ],
       0,
-      "34f5ac47a3c00442045a0808f174281b"
+      "b5c6bf33d724b824b50d489766f63813"
     ],
     [
       "PropositionalExtensionalityInconsistent.unit_contractible",
@@ -132,7 +123,7 @@
       0,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion", "unit_typing" ],
       0,
-      "fdfff009349f50f0a5916395f239bd4a"
+      "06b3359dd5352448c3684e2c73a9ceda"
     ],
     [
       "PropositionalExtensionalityInconsistent.ahahah",
@@ -141,7 +132,7 @@
       0,
       [ "@query", "int_typing", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "f3ca1f495f9f419e46a05e1cc4d1636c"
+      "7c8f398b7c570cf9a8e290729f1c4af2"
     ]
   ]
 ]

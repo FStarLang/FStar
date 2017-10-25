@@ -995,7 +995,7 @@
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "cce543805c906b15e6a21314209b1a81"
+      "7fca907dd8ebcfbef0ed10fd00d70bd9"
     ],
     [
       "X64.Semantics_s.logxor_uint64",
@@ -1051,7 +1051,7 @@
         "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "b0843eef5765bcd34be2dba3424bb0a6"
+      "858e150d925f8396a94144b001b1d910"
     ],
     [
       "X64.Semantics_s.logand_uint64",
@@ -1113,7 +1113,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9a5f8347c011436b2e68ad5ec2e1d5ff"
+      "d63b59580ed7ec177971ff039d93f846"
     ],
     [
       "X64.Semantics_s.shift_right_uint64",
@@ -1177,7 +1177,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "8adc6975395126eee0283c71258489a0"
+      "b84b868247ee62d17c3682175722231d"
     ],
     [
       "X64.Semantics_s.shift_left_uint64",

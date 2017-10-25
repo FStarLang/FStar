@@ -331,7 +331,7 @@
         "token_correspondence_ProgramEquivalence.inv_1"
       ],
       0,
-      "c34b94d3af182efc54293f1afeaa35aa"
+      "f5acd04c417a56beafddda58b737f5b4"
     ],
     [
       "ProgramEquivalence.init_counter_1",
@@ -542,7 +542,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5e5f01b1e8671acdc8cd5481dc4e7884"
+      "4003670c5f150637d5d056637aac543b"
     ],
     [
       "ProgramEquivalence.observational_equivalence'",
@@ -679,7 +679,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "be443e2ab51e8bc77bab142fafdee3d2"
+      "78c2e2baaee7f11aaf3aca7c7d8f6725"
     ],
     [
       "ProgramEquivalence.counts_even_numbers",

@@ -586,7 +586,7 @@
         "typing_MerkleTree.verifier", "unit_inversion", "unit_typing"
       ],
       0,
-      "1651e5bcac4d1f3e2758bd2e48e06a61"
+      "936c732d69b98f421f8aeab0ac13b608"
     ],
     [
       "MerkleTree.hash_collision",
@@ -718,7 +718,7 @@
         "typing_MerkleTree.len", "typing_MerkleTree.lenp"
       ],
       0,
-      "3a72a8fc252810d9e8e0aca581907cd6"
+      "4871d0ecc4bd18222e543f663601f0e1"
     ],
     [
       "MerkleTree.security",

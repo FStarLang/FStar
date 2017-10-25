@@ -23,7 +23,7 @@
         "unit_typing"
       ],
       0,
-      "3a4edfeac14b3bb51814f0cb897bbe79"
+      "3ab9e475597e8bfce0ad6fd4f338f14a"
     ],
     [
       "FStar.Squash.give_proof",
@@ -36,7 +36,7 @@
         "unit_typing"
       ],
       0,
-      "490bf7ac0adf64a691c877a2ada4e8fc"
+      "c1883fc5f60a036b9609930254e2785a"
     ],
     [
       "FStar.Squash.proof_irrelevance",

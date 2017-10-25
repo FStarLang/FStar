@@ -84,7 +84,7 @@
         "typing_Ex06c.mem", "unit_typing"
       ],
       0,
-      "b7eacdd290a066f87a6dd606430f738a"
+      "75c460f255c8dc81eac7b832d19fa88d"
     ],
     [
       "Ex06c.length",
@@ -205,7 +205,7 @@
         "typing_FStar.Pervasives.Native.snd", "unit_typing"
       ],
       0,
-      "076af4532e5ef33a6fb25ee414e0f707"
+      "7b7ab1a1eb7a06fda73676ec2aa8005d"
     ],
     [
       "Ex06c.sorted_concat_lemma",
@@ -266,7 +266,7 @@
         "typing_Ex06c.mem", "typing_Ex06c.sorted", "unit_typing"
       ],
       0,
-      "24706c9e4cb66ee65d489465b631c7a3"
+      "1a8292c2c9e1390b160d199c02f7d3ca"
     ],
     [
       "Ex06c.match_head",
@@ -481,7 +481,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a6230e2f2c4eb4f83f2f763b031618f9"
+      "028977ed0b9bf7be0f14922bf0becc45"
     ],
     [
       "Ex06c.sort",
