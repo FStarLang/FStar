@@ -210,7 +210,7 @@ private val blit:
 	       /\ (modifies (only t) h0 h1)
 	       /\ (forall (i:nat).
 		   i < len ==> Seq.index (sel h1 s) (s_idx+i) == Seq.index (sel h1 t) (t_idx+i))
-	       /\ (forall (i:nat).
+	       /\ (forall (i:nat).{:pattern (Seq.index (sel h1 t) i)}
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     (Seq.index (sel h1 t) i == Seq.index (sel h0 t) i)) ))
 let rec blit #a s s_idx t t_idx len =

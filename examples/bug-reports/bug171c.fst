@@ -1,4 +1,4 @@
-module InsertionSortCmpFails
+module Bug171c
 
 open FStar.List.Tot
 
@@ -17,9 +17,10 @@ type total_order (#a:eqtype) (f:a -> a -> Tot bool) =
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
     /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality      *)
 
-val insert : #a:eqtype -> f:(a -> a -> Tot bool){total_order f} -> i:a ->
-             l:list a {sorted f l} ->
-             Tot (r:list a { sorted f r /\ permutation r (i::l) })
+val insert : #a:eqtype -> f:(a -> a -> Tot bool) -> i:a -> l:list a ->
+             Pure  (list a)
+                   (requires (total_order f /\ sorted f l))
+                   (ensures (fun r -> sorted f r))
 let rec insert #a f i l =
   match l with
   | [] -> [i]

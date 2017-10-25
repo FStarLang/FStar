@@ -1,4 +1,4 @@
-module Bug862
+module Bug065
 
 type tree =
   | Leaf : tree

@@ -1,4 +1,6 @@
-module Test
+module Bug517
+
+open FStar.ST
 
 type new_int (z:int) = x:int{x = z}
 
@@ -9,7 +11,7 @@ let add' (a:new_int 1) (b:new_int 2) : Tot (new_int 3) = a + b
 
 
 assume new type foo : Type0
-abstract type bar = | Cons: foo -> bar
+noeq abstract type bar = | Cons: foo -> bar
 type bar' = bar
 type tt = ref bar
 

@@ -29,7 +29,7 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin</OutputPath>
@@ -80,6 +80,8 @@
     <Compile Include="boot/FStar.Bytes.fs" />
     <Compile Include="boot/FStar.Dyn.fsi" />
     <Compile Include="boot/FStar.Dyn.fs" />
+    <Compile Include="boot/FStar.BigInt.fsi" />
+    <Compile Include="boot/FStar.BigInt.fs" />
     <Compile Include="profiling.fs" />
     <Compile Include="FStar.Range.fsi" />
     <Compile Include="FStar.Range.fs" />

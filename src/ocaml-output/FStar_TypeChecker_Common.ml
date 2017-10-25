@@ -177,104 +177,80 @@ type deferred =
 
 
 type univ_ineq =
-(FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe)
-
-
-let mk_by_tactic : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax = (fun tac f -> (
-
-let t_by_tactic = (
-
-let uu____628 = (FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.by_tactic_lid)
-in (FStar_Syntax_Syntax.mk_Tm_uinst uu____628 ((FStar_Syntax_Syntax.U_zero)::[])))
-in (
-
-let t_reify_tactic = (
-
-let uu____630 = (FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.reify_tactic_lid)
-in (FStar_Syntax_Syntax.mk_Tm_uinst uu____630 ((FStar_Syntax_Syntax.U_zero)::[])))
-in (
-
-let tac1 = (
-
-let uu____634 = (
-
-let uu____635 = (
-
-let uu____636 = (FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit)
-in (
-
-let uu____637 = (
-
-let uu____640 = (FStar_Syntax_Syntax.as_arg tac)
-in (uu____640)::[])
-in (uu____636)::uu____637))
-in (FStar_Syntax_Syntax.mk_Tm_app t_reify_tactic uu____635))
-in (uu____634 FStar_Pervasives_Native.None FStar_Range.dummyRange))
-in (
-
-let uu____643 = (
-
-let uu____644 = (
-
-let uu____645 = (FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit)
-in (
-
-let uu____646 = (
-
-let uu____649 = (FStar_Syntax_Syntax.as_arg tac1)
-in (
-
-let uu____650 = (
-
-let uu____653 = (FStar_Syntax_Syntax.as_arg f)
-in (uu____653)::[])
-in (uu____649)::uu____650))
-in (uu____645)::uu____646))
-in (FStar_Syntax_Syntax.mk_Tm_app t_by_tactic uu____644))
-in (uu____643 FStar_Pervasives_Native.None FStar_Range.dummyRange))))))
-
-
-let rec delta_depth_greater_than : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth  ->  Prims.bool = (fun l m -> (match (((l), (m))) with
-| (FStar_Syntax_Syntax.Delta_constant, uu____664) -> begin
-false
-end
-| (FStar_Syntax_Syntax.Delta_equational, uu____665) -> begin
-true
-end
-| (uu____666, FStar_Syntax_Syntax.Delta_equational) -> begin
-false
-end
-| (FStar_Syntax_Syntax.Delta_defined_at_level (i), FStar_Syntax_Syntax.Delta_defined_at_level (j)) -> begin
-(i > j)
-end
-| (FStar_Syntax_Syntax.Delta_defined_at_level (uu____669), FStar_Syntax_Syntax.Delta_constant) -> begin
-true
-end
-| (FStar_Syntax_Syntax.Delta_abstract (d), uu____671) -> begin
-(delta_depth_greater_than d m)
-end
-| (uu____672, FStar_Syntax_Syntax.Delta_abstract (d)) -> begin
-(delta_depth_greater_than l d)
-end))
-
-
-let rec decr_delta_depth : FStar_Syntax_Syntax.delta_depth  ->  FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option = (fun uu___134_679 -> (match (uu___134_679) with
-| FStar_Syntax_Syntax.Delta_constant -> begin
-FStar_Pervasives_Native.None
-end
-| FStar_Syntax_Syntax.Delta_equational -> begin
-FStar_Pervasives_Native.None
-end
-| FStar_Syntax_Syntax.Delta_defined_at_level (_0_40) when (_0_40 = (Prims.parse_int "1")) -> begin
-FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Delta_constant)
-end
-| FStar_Syntax_Syntax.Delta_defined_at_level (i) -> begin
-FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Delta_defined_at_level ((i - (Prims.parse_int "1"))))
-end
-| FStar_Syntax_Syntax.Delta_abstract (d) -> begin
-(decr_delta_depth d)
-end))
-
+  (FStar_Syntax_Syntax.universe,FStar_Syntax_Syntax.universe)
+    FStar_Pervasives_Native.tuple2[@@deriving show]
+let mk_by_tactic:
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+  =
+  fun tac  ->
+    fun f  ->
+      let t_by_tactic =
+        let uu____628 =
+          FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.by_tactic_lid in
+        FStar_Syntax_Syntax.mk_Tm_uinst uu____628
+          [FStar_Syntax_Syntax.U_zero] in
+      let t_reify_tactic =
+        let uu____630 =
+          FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.reify_tactic_lid in
+        FStar_Syntax_Syntax.mk_Tm_uinst uu____630
+          [FStar_Syntax_Syntax.U_zero] in
+      let tac1 =
+        let uu____634 =
+          let uu____635 =
+            let uu____636 =
+              FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit in
+            let uu____637 =
+              let uu____640 = FStar_Syntax_Syntax.as_arg tac in [uu____640] in
+            uu____636 :: uu____637 in
+          FStar_Syntax_Syntax.mk_Tm_app t_reify_tactic uu____635 in
+        uu____634 FStar_Pervasives_Native.None FStar_Range.dummyRange in
+      let uu____643 =
+        let uu____644 =
+          let uu____645 = FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit in
+          let uu____646 =
+            let uu____649 = FStar_Syntax_Syntax.as_arg tac1 in
+            let uu____650 =
+              let uu____653 = FStar_Syntax_Syntax.as_arg f in [uu____653] in
+            uu____649 :: uu____650 in
+          uu____645 :: uu____646 in
+        FStar_Syntax_Syntax.mk_Tm_app t_by_tactic uu____644 in
+      uu____643 FStar_Pervasives_Native.None FStar_Range.dummyRange
+let rec delta_depth_greater_than:
+  FStar_Syntax_Syntax.delta_depth ->
+    FStar_Syntax_Syntax.delta_depth -> Prims.bool
+  =
+  fun l  ->
+    fun m  ->
+      match (l, m) with
+      | (FStar_Syntax_Syntax.Delta_constant ,uu____664) -> false
+      | (FStar_Syntax_Syntax.Delta_equational ,uu____665) -> true
+      | (uu____666,FStar_Syntax_Syntax.Delta_equational ) -> false
+      | (FStar_Syntax_Syntax.Delta_defined_at_level
+         i,FStar_Syntax_Syntax.Delta_defined_at_level j) -> i > j
+      | (FStar_Syntax_Syntax.Delta_defined_at_level
+         uu____669,FStar_Syntax_Syntax.Delta_constant ) -> true
+      | (FStar_Syntax_Syntax.Delta_abstract d,uu____671) ->
+          delta_depth_greater_than d m
+      | (uu____672,FStar_Syntax_Syntax.Delta_abstract d) ->
+          delta_depth_greater_than l d
+let rec decr_delta_depth:
+  FStar_Syntax_Syntax.delta_depth ->
+    FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option
+  =
+  fun uu___134_679  ->
+    match uu___134_679 with
+    | FStar_Syntax_Syntax.Delta_constant  -> FStar_Pervasives_Native.None
+    | FStar_Syntax_Syntax.Delta_equational  -> FStar_Pervasives_Native.None
+    | FStar_Syntax_Syntax.Delta_defined_at_level _0_39 when
+        _0_39 = (Prims.parse_int "1") ->
+        FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Delta_constant
+    | FStar_Syntax_Syntax.Delta_defined_at_level i ->
+        FStar_Pervasives_Native.Some
+          (FStar_Syntax_Syntax.Delta_defined_at_level
+             (i - (Prims.parse_int "1")))
+    | FStar_Syntax_Syntax.Delta_abstract d -> decr_delta_depth d
 type identifier_info =
 {identifier : (FStar_Syntax_Syntax.bv, FStar_Syntax_Syntax.fv) FStar_Util.either; identifier_ty : FStar_Syntax_Syntax.typ; identifier_range : FStar_Range.range}
 

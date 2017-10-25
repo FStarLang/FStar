@@ -2,9 +2,9 @@ module BugWildcardTelescopes
 assume type a
 assume type b : a -> Type
 assume type c
-type entry =
+noeq type entry =
   | Entry : a:a -> b:b a -> entry
-                          
+
 val foo2: l:entry -> Tot unit
 let foo2 l = match l with
   | Entry _ b -> ()
@@ -31,12 +31,12 @@ let f = function
    assert (x=0 || x=1)
 ////////////////////////////////////////////////////////////////////////////////
 
-type t : int -> Type
-type e =
+assume new type t : int -> Type
+noeq type e =
   | G : a:int -> b:t a -> e
   | H : a:int -> b:t a -> e
 
-assume val use_b: #x:int -> t x -> Tot unit                          
+assume val use_b: #x:int -> t x -> Tot unit
 val foo3: e -> Tot unit
 let foo3 = function
   | G _ b -> use_b b
@@ -46,7 +46,7 @@ let foo3 = function
 
 val foo4: e -> Tot unit
 let foo4 = function
-  | G _ b 
+  | G _ b
   | H _ b -> use_b b
 
 
