@@ -95,13 +95,13 @@ let rec app (f:t) (x:t) =
   | Accu (a, ts) -> Accu (a, x::ts)
   | Construct (i, ts) -> Construct (i, x::ts)
   | Rec (y, ts) -> (match x with
-                    | Construct (i, ts') -> app (translate (Rec (y, ts)::ts) y) x
-                                            (* Danel: if a rec. def. is applied to 
-                                               a constructor, then we unfold it *)
-                    | _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x]))
+                    | Accu _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x]))
                                                    (* Danel: if a rec. def. is applied 
-                                                      to a non-constructor, turn it into 
-                                                      an accumulator *)
+                                                      to an accumulator, do not unfold 
+                                                      it further *)
+                    | _ -> app (translate (Rec (y, ts)::ts) y) x
+                                            (* Danel: if a rec. def. is applied to 
+                                               a non-accumulator, then we unfold it *)
   | Unit
   | Bool _ -> failwith "Ill-typed application"
 
