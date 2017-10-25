@@ -370,7 +370,7 @@ let lemma_offset_spec
   ))
 = ()
 
-assume
+abstract
 val eqb: #a:typ -> b1:buffer a -> b2:buffer a
   -> len:UInt32.t
   -> HST.ST bool
@@ -388,6 +388,9 @@ val eqb: #a:typ -> b1:buffer a -> b2:buffer a
       (z <==> equal h0 (gsub b1 0ul len) h0 (gsub b2 0ul len))
     ))
 
+let eqb #a b1 b2 len =
+  P.buffer_contents_equal b1 b2 len
+
 (* JP: if the [val] is not specified, there's an issue with these functions
  * taking an extra unification parameter at extraction-time... *)
 val op_Array_Access: #a:typ -> b:buffer a -> n:UInt32.t -> HST.Stack (P.type_of_typ a)
@@ -404,8 +407,28 @@ val op_Array_Assignment: #a:typ -> b:buffer a -> n:UInt32.t -> z:P.type_of_typ a
     /\ as_seq h1 b == Seq.upd (as_seq h0 b) (UInt32.v n) z ))
 let op_Array_Assignment #a b n z = upd #a b n z
 
+val live_slice_middle
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+  (h: HS.mem)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= length b /\
+    live h (gsub b 0ul i) /\
+    live h (gsub b i len) /\ (
+    let off = UInt32.add i len in
+    live h (gsub b off (UInt32.sub (P.buffer_length b) off))
+  )))
+  (ensures (live h b))
+  [SMTPat (live h (gsub b i len))]
+
+let live_slice_middle #t b i len h =
+  P.buffer_readable_gsub_merge b i len h
+
 (** Corresponds to memcpy *)
-assume
+abstract
 val blit: #t:typ
   -> a:buffer t
   -> idx_a:UInt32.t
@@ -422,8 +445,21 @@ val blit: #t:typ
       /\ Seq.slice (as_seq h1 b) (UInt32.v idx_b+UInt32.v len) (length b) ==
         Seq.slice (as_seq h0 b) (UInt32.v idx_b+UInt32.v len) (length b) ))
 
+let blit #t a idx_a b idx_b len =
+  if len = 0ul
+  then ()
+  else begin
+    let h0 = HST.get () in
+    P.copy_buffer_contents a idx_a b idx_b len;
+    let h1 = HST.get () in
+    P.buffer_readable_modifies_gsub b idx_b len h0 h1 (P.loc_buffer (P.gsub_buffer b idx_b len));
+    assert (let g = (gsub b (UInt32.add idx_b len) (UInt32.sub (P.buffer_length b) (UInt32.add idx_b len))) in as_seq h1 g == as_seq h0 g);
+    assert (as_seq h1 (gsub b idx_b len) == as_seq h0 (gsub a idx_a len));
+    assert (let g = gsub b 0ul idx_b in as_seq h1 g == as_seq h0 g)
+  end
+
 (** Corresponds to memset *)
-assume
+abstract
 val fill: #t:typ
   -> b:buffer t
   -> z: P.type_of_typ t
@@ -436,3 +472,9 @@ val fill: #t:typ
       /\ Seq.slice (as_seq h1 b) (UInt32.v len) (length b) ==
         Seq.slice (as_seq h0 b) (UInt32.v len) (length b) ))
 
+let fill #t b z len =
+  let h0 = HST.get () in
+  P.fill_buffer b 0ul len z;
+  let h1 = HST.get () in
+  assert (as_seq h1 (gsub b 0ul len) == Seq.slice (as_seq h1 b) 0 (UInt32.v len));
+  assert (let g = gsub b len (UInt32.sub (P.buffer_length b) len) in as_seq h1 g == as_seq h0 g)
