@@ -8,9 +8,9 @@ open FStar.ST
 
 open MonotonicArray
 
-(***** Ugh *****)
+(***** an unstable sequence proof *****)
 
-let lemma_seq_append_whats_wrong_with_me (#a:Type0) (s:seq a) (s1:seq a) (s2:seq a) (s3:seq a) (pos:nat) (sent:nat{pos + sent <= length s})
+let lemma_seq_append_unstable (#a:Type0) (s:seq a) (s1:seq a) (s2:seq a) (s3:seq a) (pos:nat) (sent:nat{pos + sent <= length s})
   :Lemma (requires (s1 == slice s 0 pos /\ s2 == slice s pos (pos + sent) /\ s3 == slice s 0 (pos + sent)))
          (ensures  (s3 == append s1 s2))
   = assert (Seq.equal s3 (append s1 s2))
@@ -136,21 +136,21 @@ let recall_counter (c:connection)
     | R _ es_ref ctr_ref -> let n = !ctr_ref in gst_recall (counter_pred n es_ref)
 
 (* stable predicate for counter *)
-let snapshot_pred (c:connection) (h0:heap{h0 `live_connection` c}) :(p:heap_predicate{stable p}) =
+let snapshot (c:connection) (h0:heap{h0 `live_connection` c}) :(p:heap_predicate{stable p}) =
   fun h -> h `live_connection` c /\
-        ctr c h0 <= ctr  c h /\ ctr c h0 <= length (log c h) /\ log c h0 `is_prefix_of` log c h
+        ctr c h0 <= ctr  c h /\ ctr c h0 <= Seq.length (log c h) /\ log c h0 `is_prefix_of` log c h
 
 let snap (c:connection) :ST unit (requires (fun _ -> True))
-                                 (ensures  (fun h0 _ h1 -> h0 `live_connection` c /\ witnessed (snapshot_pred c h0) /\ h0 == h1))
+                                 (ensures  (fun h0 _ h1 -> h0 `live_connection` c /\ witnessed (snapshot c h0) /\ h0 == h1))
   = let h0 = ST.get () in
     recall_connection_liveness c;
     recall_counter c;
-    gst_witness (snapshot_pred c h0)
+    gst_witness (snapshot c h0)
 
 type iarray (a:Type0) (n:nat) = x:array a n{all_init x}
 
-let sender (c:connection) :Tot bool   = S? c
-let receiver (c:connection) :Tot bool = R? c
+let sender (c:connection)   :Tot bool = S? c //in the POPL'18 paper we present these definitions using auxiliary function
+let receiver (c:connection) :Tot bool = R? c //`is_receiver` that is essentially defined as `is_receiver c = R? c`
 
 let connection_footprint (c:connection) :GTot (Set.set nat)
   = match c with
@@ -373,7 +373,7 @@ let append_subseq #a #n (f:iarray a n) (pos:nat) (sent:nat{pos + sent <= n}) (h:
       assert (f0 == Seq.slice sbs 0 pos);
       assert (f1 == Seq.slice sbs 0 (pos + sent));
       assert (sent_frag == Seq.slice sbs pos (pos + sent));
-      lemma_seq_append_whats_wrong_with_me sbs f0 sent_frag f1 pos sent
+      lemma_seq_append_unstable sbs f0 sent_frag f1 pos sent
 
 let lemma_sender_connection_ctr_equals_length_log
   (c:connection{sender c}) (h:heap{h `live_connection` c})
