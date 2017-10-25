@@ -95,6 +95,7 @@ let rec app (f:t) (x:t) =
   | Accu (a, ts) -> Accu (a, x::ts)
   | Construct (i, ts) -> Construct (i, x::ts)
   | Rec (y, ts) -> (match x with
+                    (* Danel: In a real F* scenario, the decreases check would happen here? *)
                     | Accu _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x]))
                                                    (* Danel: if a rec. def. is applied 
                                                       to an accumulator, do not unfold 
