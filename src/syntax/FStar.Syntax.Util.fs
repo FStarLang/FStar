@@ -501,7 +501,6 @@ let rec unrefine t =
 
 let rec is_unit t =
     match (unrefine t).n with
-    | Tm_type _ -> true
     | Tm_fvar fv ->
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid

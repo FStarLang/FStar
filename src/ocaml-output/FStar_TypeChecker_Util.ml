@@ -1157,52 +1157,59 @@ let return_value:
       fun v1  ->
         let c =
           let uu____4353 =
-            (let uu____4356 =
-               FStar_TypeChecker_Env.lid_exists env
-                 FStar_Parser_Const.effect_GTot_lid in
-             FStar_All.pipe_left Prims.op_Negation uu____4356) in
+            let uu____4354 =
+              FStar_TypeChecker_Env.lid_exists env
+                FStar_Parser_Const.effect_GTot_lid in
+            FStar_All.pipe_left Prims.op_Negation uu____4354 in
           if uu____4353
           then FStar_Syntax_Syntax.mk_Total t
-          else if (FStar_Syntax_Util.is_unit t)
-          then FStar_Syntax_Syntax.mk_Total' t (Some FStar_Syntax_Syntax.U_zero)
           else
-            (let m =
-               FStar_TypeChecker_Env.get_effect_decl env
-                 FStar_Parser_Const.effect_PURE_lid in
-             let u_t = env.FStar_TypeChecker_Env.universe_of env t in
-             let wp =
-               let uu____4361 =
-                 env.FStar_TypeChecker_Env.lax && (FStar_Options.ml_ish ()) in
-               if uu____4361
-               then FStar_Syntax_Syntax.tun
-               else
-                 (let uu____4363 =
-                    FStar_TypeChecker_Env.wp_signature env
-                      FStar_Parser_Const.effect_PURE_lid in
-                  match uu____4363 with
-                  | (a,kwp) ->
-                      let k =
-                        FStar_Syntax_Subst.subst
-                          [FStar_Syntax_Syntax.NT (a, t)] kwp in
-                      let uu____4371 =
-                        let uu____4372 =
-                          let uu____4373 =
-                            FStar_TypeChecker_Env.inst_effect_fun_with 
-                              [u_t] env m m.FStar_Syntax_Syntax.ret_wp in
-                          let uu____4374 =
-                            let uu____4375 = FStar_Syntax_Syntax.as_arg t in
-                            let uu____4376 =
-                              let uu____4379 = FStar_Syntax_Syntax.as_arg v1 in
-                              [uu____4379] in
-                            uu____4375 :: uu____4376 in
-                          FStar_Syntax_Syntax.mk_Tm_app uu____4373 uu____4374 in
-                        uu____4372 FStar_Pervasives_Native.None
-                          v1.FStar_Syntax_Syntax.pos in
-                      FStar_TypeChecker_Normalize.normalize
-                        [FStar_TypeChecker_Normalize.Beta;
-                        FStar_TypeChecker_Normalize.NoFullNorm] env
-                        uu____4371) in
-             mk_comp m u_t t wp [FStar_Syntax_Syntax.RETURN]) in
+            (let uu____4356 = FStar_Syntax_Util.is_unit t in
+             if uu____4356
+             then
+               FStar_Syntax_Syntax.mk_Total' t
+                 (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.U_zero)
+             else
+               (let m =
+                  FStar_TypeChecker_Env.get_effect_decl env
+                    FStar_Parser_Const.effect_PURE_lid in
+                let u_t = env.FStar_TypeChecker_Env.universe_of env t in
+                let wp =
+                  let uu____4361 =
+                    env.FStar_TypeChecker_Env.lax &&
+                      (FStar_Options.ml_ish ()) in
+                  if uu____4361
+                  then FStar_Syntax_Syntax.tun
+                  else
+                    (let uu____4363 =
+                       FStar_TypeChecker_Env.wp_signature env
+                         FStar_Parser_Const.effect_PURE_lid in
+                     match uu____4363 with
+                     | (a,kwp) ->
+                         let k =
+                           FStar_Syntax_Subst.subst
+                             [FStar_Syntax_Syntax.NT (a, t)] kwp in
+                         let uu____4371 =
+                           let uu____4372 =
+                             let uu____4373 =
+                               FStar_TypeChecker_Env.inst_effect_fun_with
+                                 [u_t] env m m.FStar_Syntax_Syntax.ret_wp in
+                             let uu____4374 =
+                               let uu____4375 = FStar_Syntax_Syntax.as_arg t in
+                               let uu____4376 =
+                                 let uu____4379 =
+                                   FStar_Syntax_Syntax.as_arg v1 in
+                                 [uu____4379] in
+                               uu____4375 :: uu____4376 in
+                             FStar_Syntax_Syntax.mk_Tm_app uu____4373
+                               uu____4374 in
+                           uu____4372 FStar_Pervasives_Native.None
+                             v1.FStar_Syntax_Syntax.pos in
+                         FStar_TypeChecker_Normalize.normalize
+                           [FStar_TypeChecker_Normalize.Beta;
+                           FStar_TypeChecker_Normalize.NoFullNorm] env
+                           uu____4371) in
+                mk_comp m u_t t wp [FStar_Syntax_Syntax.RETURN])) in
         (let uu____4383 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
              (FStar_Options.Other "Return") in
