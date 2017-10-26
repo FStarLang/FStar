@@ -1,11 +1,7 @@
-(* This doesn't work in interactive mode because it seems the symbol
-   table queried by Emacs has stale unification variables in it.
-
-   TODO: fix that table up in the compression pass
-*)
 module FStar.Tactics.Sequences
 
 open FStar.Tactics
+open FStar.Reflection
 open FStar.Seq
 
 let is_seq_t t : tactic bool = 
@@ -14,7 +10,6 @@ let is_seq_t t : tactic bool =
     print ("This is the quoted term: " ^ (term_to_string tseq));;
     print ("This is hd: " ^ (term_to_string hd));;
     return (term_eq tseq hd)
-
 
 let clear_hypothesis (b:binder) : tactic unit = idtac
 
