@@ -26,7 +26,7 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type map = smap<(option<string> * option<string>)>
+type files_for_module_name = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
@@ -35,7 +35,7 @@ type open_kind = | Open_module | Open_namespace
 val lowercase_module_name : string -> string
 
 val build_inclusion_candidates_list : unit -> list<(string * string)>
-val build_map : list<string> -> map
+val build_map : list<string> -> files_for_module_name
 
 (* Given a filename, returns the list of automatically opened modules
 and namespaces *)

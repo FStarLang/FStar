@@ -49,7 +49,7 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type map = smap<(option<string> * option<string>)>
+type files_for_module_name = smap<(option<string> * option<string>)>
 
 type color = | White | Gray | Black
 
@@ -119,7 +119,7 @@ let build_inclusion_candidates_list (): list<(string * string)> =
     all normalized to lowercase. The first component of the pair is the
     interface (if any). The second component of the pair is the implementation
     (if any). *)
-let build_map (filenames: list<string>): map =
+let build_map (filenames: list<string>): files_for_module_name =
   let map = smap_create 41 in
   let add_entry key full_path =
     match smap_try_find map key with
@@ -148,7 +148,7 @@ let build_map (filenames: list<string>): map =
 (** For all items [i] in the map that start with [prefix], add an additional
     entry where [i] stripped from [prefix] points to the same value. Returns a
     boolean telling whether the map was modified. *)
-let enter_namespace (original_map: map) (working_map: map) (prefix: string): bool =
+let enter_namespace (original_map: files_for_module_name) (working_map: files_for_module_name) (prefix: string): bool =
   let found = BU.mk_ref false in
   let prefix = prefix ^ "." in
   List.iter (fun k ->
@@ -203,7 +203,7 @@ let collect_one
   (verify_flags: list<(string * ref<bool>)>)
   (verify_mode: verify_mode)
   (is_user_provided_filename: bool)
-  (original_map: map)
+  (original_map: files_for_module_name)
   (filename: string):
    list<string> //direct dependences of filename
  * list<string> //additional "roots" that should be scanned
@@ -303,13 +303,17 @@ let collect_one
     (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
        module name itself, so only its namespace part is to be
        recorded as a module dependency.  *)
-    let module_of_lid = Ident.lid_of_ids lid.ns in
-    match add_dependence_edge module_of_lid with
-    | None -> ()
-    | Some key ->
-      if List.length lid.ns > 0 && Options.debug_any () then
-      FStar.Errors.warn (range_of_lid lid)
-         (BU.format1 "Unbound module reference %s" (Ident.string_of_lid module_of_lid))
+    match lid.ns with
+    | [] -> ()
+    | _ ->
+      let module_name = Ident.lid_of_ids lid.ns in
+      match add_dependence_edge module_name with
+      | None -> ()
+      | Some key ->
+        if Options.debug_any () then
+            FStar.Errors.warn (range_of_lid lid)
+                (BU.format1 "Unbound module reference %s"
+                                (Ident.string_of_lid module_name))
   in
 
   let auto_open = hard_coded_dependencies filename in
@@ -575,6 +579,13 @@ let print_graph graph =
     "\n}\n"
   )
 
+type filename = string
+type dependences = {
+    interface_deps:list<filename>;
+    implementation_deps:list<filename>
+}
+type depdendence_graph = smap<(dependences * color)>
+
 (** Collect the dependencies for a list of given files. *)
 let collect (verify_mode: verify_mode) (filenames: list<string>) =
   (* The dependency graph; keys are lowercased module names, values = list of
@@ -620,8 +631,9 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
    *)
   let rec discover_one is_user_provided_filename interface_only key =
     if smap_try_find graph key = None then
-      (* Util.print1 "key: %s\n" key; *)
+    begin
       let intf, impl = must (smap_try_find m key) in
+      printfn "(iface only=%A) key: %s --> (%A, %A)\n" interface_only key intf impl;
       let intf_deps, mo_roots =
         match intf with
         | Some intf -> collect_one is_user_provided_filename m intf
@@ -635,8 +647,12 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
       in
       let deps = List.unique (impl_deps @ intf_deps) in
       smap_add graph key (deps, White);
-      let to_scan = List.unique (deps @ mo_roots @ mo'_roots) in
-      List.iter (discover_one false partial_discovery) to_scan
+      let mo_roots = List.unique (mo_roots @ mo'_roots) in
+      let _ = printfn "Found deps of %s = %A" key deps in
+      let _ = printfn "Found mo roots of %s = %A" key mo_roots in
+      List.iter (discover_one false partial_discovery) deps;
+      List.iter (discover_one false false) mo_roots
+    end
   in
   let discover_command_line_argument f =
     let m = lowercase_module_name f in
