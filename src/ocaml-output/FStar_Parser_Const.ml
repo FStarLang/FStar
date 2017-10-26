@@ -196,6 +196,8 @@ let const_to_string: FStar_Const.sconst -> Prims.string =
     | FStar_Const.Const_char c ->
         Prims.strcat "'" (Prims.strcat (FStar_Util.string_of_char c) "'")
     | FStar_Const.Const_range r -> FStar_Range.string_of_range r
+    | FStar_Const.Const_range_of  -> "range_of"
+    | FStar_Const.Const_set_range_of  -> "set_range_of"
     | FStar_Const.Const_reify  -> "reify"
     | FStar_Const.Const_reflect l ->
         let uu____144 = sli l in
