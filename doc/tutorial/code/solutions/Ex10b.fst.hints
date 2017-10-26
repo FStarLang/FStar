@@ -212,7 +212,7 @@
         "typing_FStar.Ref.only", "typing_FStar.Ref.sel"
       ],
       0,
-      "326e845c2be90e65d1d6466e20f93db3"
+      "2cd0dcd0e0264f6c4ff62e1ad1f1e902"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -278,7 +278,7 @@
         "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of"
       ],
       0,
-      "143267727fb36159d08bc22c3f9b4e3f"
+      "2f0fadc28f20fb5f713b1503c04314c3"
     ],
     [
       "Ex10b.test2",
@@ -388,7 +388,7 @@
         "typing_FStar.Ref.sel", "typing_FStar.Set.mem"
       ],
       0,
-      "e8cf74757328facc6e83cc18ecf17ba6"
+      "3bd98f567cc4c6293864c0e2aea0e7b9"
     ],
     [
       "Ex10b.shift_p1",

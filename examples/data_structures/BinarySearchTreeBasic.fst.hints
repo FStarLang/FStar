@@ -466,7 +466,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok", "unit_typing"
       ],
       0,
-      "6ab27271e0bb04f6c801ca8c5974b5c3"
+      "5b20423e619e33440b4a70b81713aa66"
     ],
     [
       "BinarySearchTreeBasic.find_max",
@@ -605,7 +605,7 @@
         "typing_BinarySearchTreeBasic.is_bst", "unit_typing"
       ],
       0,
-      "89d6299dd93a83baef69e0bddd33bd97"
+      "d95b8d12fc3a8a4e63f4b3de9f7a5584"
     ],
     [
       "BinarySearchTreeBasic.find_max_eq",
@@ -665,7 +665,7 @@
         "typing_BinarySearchTreeBasic.uu___is_Node"
       ],
       0,
-      "86349988f2d2525d48fa724c8e8558e9"
+      "516e72c46ea61671dc41a6b9851147dd"
     ],
     [
       "BinarySearchTreeBasic.delete",
@@ -882,7 +882,7 @@
         "unit_typing"
       ],
       0,
-      "4e5d28f4d570bd2f8ebc6cfbbc40954a"
+      "ba111fb5ffdb52662cd483d6c85d631d"
     ],
     [
       "BinarySearchTreeBasic.delete_lemma",

@@ -22,7 +22,7 @@
         "typing_ArrayUtils.get_some_equivalent", "unit_typing"
       ],
       0,
-      "a3534656cb2899378e99ff7284122b63"
+      "f23df31c7771d4fc6ea167346950fc8b"
     ],
     [
       "ArrayUtils.lemma_get_some_equivalent_index",
@@ -38,7 +38,7 @@
         "typing_ArrayUtils.get_some_equivalent", "unit_typing"
       ],
       0,
-      "555493c7b54643a25944e8397e4ddbbf"
+      "ad10cdff86e5e4169d36961914b4d5e1"
     ],
     [
       "ArrayUtils.lemma_get_some_equivalent_snoc",

@@ -461,7 +461,7 @@
         "typing_FStar.List.Tot.Base.filter", "unit_typing"
       ],
       0,
-      "5252ca0ed9122ef4c5245e1b8d9e9d85"
+      "ef43e0e8f2508f17fc0efdead5187afe"
     ],
     [
       "FStar.List.Tot.Base.mem_filter_forall",
@@ -470,7 +470,7 @@
       1,
       [ "@query" ],
       0,
-      "5f0c9d67a5010441255973ba2296bcbd"
+      "45c4943069ab5282dff933be486b5546"
     ],
     [
       "FStar.List.Tot.Base.for_all",
@@ -517,7 +517,7 @@
         "unit_typing"
       ],
       0,
-      "1aba7836f4ef59e4c0c6de5a289c6a59"
+      "719ba9a9d84f0726160fc530d6d74e65"
     ],
     [
       "FStar.List.Tot.Base.collect",
@@ -765,7 +765,7 @@
         "unit_typing"
       ],
       0,
-      "d65c0d194953a28cbfb70ac1c99fde2e"
+      "3eabfb9ee4aba9304dab14beaa422b38"
     ],
     [
       "FStar.List.Tot.Base.compare_of_bool",
@@ -820,7 +820,7 @@
         "typing_FStar.List.Tot.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "64d91749935f185abfe593609f435fa0"
+      "84bf59eac915890320ba00eed1e40e3f"
     ],
     [
       "FStar.List.Tot.Base.test_sort",

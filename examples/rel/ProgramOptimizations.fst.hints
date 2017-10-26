@@ -619,7 +619,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.upd", "unit_typing"
       ],
       0,
-      "abbb3ad1fcd0b8b92cec9092ee38592d"
+      "4524865ac21d1906860824295e068886"
     ],
     [
       "ProgramOptimizations.g_exp",
@@ -1140,7 +1140,7 @@
         "typing_tok_ProgramOptimizations.Skip@tok", "unit_typing"
       ],
       0,
-      "840d90a242a535572a3a8fec341aa41b"
+      "57fb7e15f65b5437534a8379a7baecd1"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization2",
@@ -1256,7 +1256,7 @@
         "typing_ProgramOptimizations.rel_exp_denotation", "unit_typing"
       ],
       0,
-      "39093ae6424ace7b43b1ba40e0aea676"
+      "8e9e67f45bdea0194f519634485b0b76"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization3",
@@ -1371,7 +1371,7 @@
         "typing_tok_ProgramOptimizations.RTrue@tok", "unit_typing"
       ],
       0,
-      "dcfe1c467cede464a2f11c3156ceec05"
+      "a26821138e1f949d8cd910199aa0b3a4"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization4",
@@ -1488,7 +1488,7 @@
         "typing_ProgramOptimizations.rel_exp_denotation", "unit_typing"
       ],
       0,
-      "4518bcab28b0238521885c17285ec014"
+      "7eae63c5e5ec939d889e44bdaf63b1b5"
     ],
     [
       "ProgramOptimizations.rhl",
@@ -1538,7 +1538,7 @@
         "typing_ProgramOptimizations.rel_exp_denotation", "unit_typing"
       ],
       0,
-      "d8658b8e7db7b03ef63fb8d567f48afc"
+      "37878c52c1f3a314faacbb4c94319c96"
     ]
   ]
 ]

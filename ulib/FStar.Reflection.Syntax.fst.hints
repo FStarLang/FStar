@@ -285,7 +285,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "constructor_distinct_Prims.Cons", "data_elim_Prims.Cons",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_FStar.Reflection.Syntax.mktuple2_qn",
         "equation_FStar.Reflection.Syntax.mktuple3_qn",
@@ -304,7 +304,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "645a8f200655150c57f28e62b54238ff"
+      "652ae1c0980afa41c82015ddb43c6a25"
     ],
     [
       "FStar.Reflection.Syntax.mkpair",

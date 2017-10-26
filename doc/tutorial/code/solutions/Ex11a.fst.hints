@@ -1563,7 +1563,7 @@
         "typing_FStar.Set.singleton", "typing_tok_Ex11a.Nil@tok"
       ],
       0,
-      "79e662fab8dbe842062598f868ef67e9"
+      "40c82766d9a9c8ea4171010e545d8d99"
     ],
     [
       "Ex11a.lemma_bots_tl_disjoint",
@@ -1598,7 +1598,7 @@
         "typing_Ex11a.__proj__Bot__item__r", "unit_typing"
       ],
       0,
-      "98d79fd6d23a97fcd9a9a3ff3db47ced"
+      "d41b941cde2e6350411657f0c9bacc11"
     ],
     [
       "Ex11a.lemma_frame_robot_inv_and_flying",
@@ -1669,7 +1669,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.mem"
       ],
       0,
-      "9711d967e0325e12e13b06286afa2ce2"
+      "3c198880e17ad904df9ea2d872aeb809"
     ],
     [
       "Ex11a.lemma_frame_robot_inv_and_flying",
@@ -1798,7 +1798,7 @@
         "typing_FStar.Set.mem", "typing_FStar.Set.singleton"
       ],
       0,
-      "7d9096d0f8a14bb11b056c0662728efb"
+      "347ad7c97e4148074853be0eeb5b425f"
     ],
     [
       "Ex11a.main",

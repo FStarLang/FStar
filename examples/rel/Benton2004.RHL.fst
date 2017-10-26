@@ -496,7 +496,7 @@ let is_per_gand
 : Lemma
   (requires (is_per e1 /\ is_per e2))
   (ensures (is_per (gand e1 e2)))
-= assert (forall s1 s2 . holds (interp (gand e1 e2)) s1 s2 <==> holds (interp e1) s1 s2 /\ holds (interp e2) s1 s2)
+= assert (forall s1 s2 .{:pattern (interp (gand e1 e2) s1 s2)} holds (interp (gand e1 e2)) s1 s2 <==> holds (interp e1) s1 s2 /\ holds (interp e2) s1 s2)
 
 (* FIXME: holds but not replayable
 let is_per_gor

@@ -1563,7 +1563,7 @@
         "typing_FStar.Set.singleton", "typing_tok_Ex11a.Nil@tok"
       ],
       0,
-      "79e662fab8dbe842062598f868ef67e9"
+      "40c82766d9a9c8ea4171010e545d8d99"
     ],
     [
       "Ex11a.lemma_bots_tl_disjoint",
@@ -1600,7 +1600,7 @@
         "typing_Ex11a.__proj__Bot__item__r", "unit_typing"
       ],
       0,
-      "98d79fd6d23a97fcd9a9a3ff3db47ced"
+      "d41b941cde2e6350411657f0c9bacc11"
     ],
     [
       "Ex11a.fly_robot_army",
