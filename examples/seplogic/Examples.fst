@@ -52,13 +52,14 @@ let step :tactic unit =
 
 let simplify :tactic unit =
   pointwise ((apply_lemma (quote lemma_join_h_emp);; qed)
+  `or_else`  (apply_lemma (quote lemma_join_points_to_minus);; qed)
   `or_else`  (apply_lemma (quote lemma_join_restrict_minus);; qed)
-  `or_else`  (apply_lemma (quote lemma_sel_r_from_points_to_join_h);; qed)
-  `or_else`  (apply_lemma (quote lemma_sel_r1_from_points_to_join_h);; qed)
-  `or_else`  (apply_lemma (quote lemma_sel_r_from_minus);; qed)
-  `or_else`  (apply_lemma (quote lemma_restrict_points_to_join_h_to_r);; qed)
+  `or_else`  (apply_lemma (quote lemma_sel_r_update);; qed)
+  `or_else`  (apply_lemma (quote lemma_sel_r1_update);; qed)
+  `or_else`  (apply_lemma (quote lemma_restrict_r_update);; qed)
+  `or_else`  (apply_lemma (quote lemma_restrict_r1_update);; qed)
   `or_else`  (apply_lemma (quote lemma_join_emp_h);; qed)
-  `or_else`   fail "simplify: failed");;
+  `or_else`   trefl);;
   idtac
 
 let rec repeat_simplify () :Tac unit =
@@ -84,6 +85,20 @@ let context_rewrites :tactic unit =
   ) (binders_of_env e);;
   idtac
 
+let normalize_context :tactic unit =
+  e <-- cur_env;
+  mapM (fun b -> 
+    let typ_b = type_of_binder b in
+    begin match term_as_formula' typ_b with
+    | App _ _ -> 
+        norm_binder_type [] b;; 
+	idtac
+    | _       -> 
+        idtac
+    end
+  ) (binders_of_env e);;
+  idtac
+  
 let simplify_context :tactic unit =
   e <-- cur_env;
   mapM (fun b ->
@@ -99,30 +114,32 @@ let simplify_context :tactic unit =
   ) (binders_of_env e);;
   idtac
 
-let normalize_context :tactic unit =
-  e <-- cur_env;
-  mapM (fun b -> 
-    let typ_b = type_of_binder b in
-    begin match term_as_formula' typ_b with
-    | App _ _ -> 
-        norm_binder_type [] b;; 
-	idtac
-    | _       -> 
-        idtac
-    end
-  ) (binders_of_env e);;
-  idtac
-
 let reduce_context :tactic unit =
   simplify_context;;
   normalize_context;;
   context_rewrites
 
+let rec repeat_simplify_context () :Tac unit =
+ (e1 <-- cur_env;
+  reduce_context;;
+  e2 <-- cur_env;
+  let binders_of_e1 = binders_of_env e1 in
+  let binders_of_e2 = binders_of_env e2 in
+  if List.Tot.length binders_of_e1 = List.Tot.length binders_of_e2
+  then (if List.Tot.fold_left2 (fun acc b1 b2 -> acc && term_eq (type_of_binder b1) (type_of_binder b2)) 
+                               true
+			       (binders_of_e1) 
+			       (binders_of_e2)
+       then return ()
+       else repeat_simplify_context)
+  else fail "repeat_simplify_context: binders length vary"
+ ) ()
+
 (* Writing to a pointer *)
 let write_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   step;;
-  reduce_context;;
+  repeat_simplify_context;;
   repeat_simplify;;
   dump "Write"
 
@@ -137,7 +154,7 @@ let increment_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  reduce_context;;
+  repeat_simplify_context;;
   repeat_simplify;;
   dump "Increment"
 
@@ -152,7 +169,7 @@ let swap_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  reduce_context;;
+  repeat_simplify_context;;
   repeat_simplify;;
   dump "Swap"
 
@@ -167,7 +184,7 @@ let double_increment_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  reduce_context;;
+  repeat_simplify_context;;
   repeat_simplify;;
   dump "Double Increment"
 
@@ -182,13 +199,13 @@ let rotate_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  reduce_context;;
+  repeat_simplify_context;;
   repeat_simplify;;
   dump "Rotate"
-  
+
 let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
   let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
-  let p = fun _ h -> (sel h r2 == k) in
+  let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) rotate_tau
 
@@ -196,7 +213,7 @@ let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
 let init_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   repeat step;;
-  reduce_context;;
+  repeat_simplify_context;;
   repeat_simplify;;
   dump "Init"
 
@@ -211,10 +228,10 @@ let copy_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  reduce_context;;
+  repeat_simplify_context;;
   repeat_simplify;;
   dump "Copy"
-  
+
 let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
   let c = Bind (Read r1) (fun n1 -> Write r2 (n1)) in
   let p = fun _ h -> (sel h r1 == i /\ sel h r2 == i /\ sel h r3 == k) in
