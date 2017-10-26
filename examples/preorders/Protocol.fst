@@ -598,7 +598,7 @@ let receive_file #n file c =
 let tags (c:connection) (h:heap) :GTot (seq (seq byte)) =
   ArrayUtils.seq_map (fun (E _ _ _ tag) -> tag) (sel h (entries_of c))
 
-#reset-options "--z3rlimit 50"
+#reset-options "--z3rlimit 100"
 let lemma_partial_length_hiding
   (#n:nat) (#m:nat)
   (c0:connection{sender c0}) (c1:connection{sender c1})
