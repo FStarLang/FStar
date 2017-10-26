@@ -1335,25 +1335,7 @@
       "b40f3eb2c65e8437ab523d2a9a4a88f8"
     ],
     [
-      "Benton2004.RHL.is_per_gand",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp",
-        "equation_Benton2004.RHL.gand", "equation_Benton2004.RHL.interp",
-        "equation_Benton2004.RHL.is_per", "equation_Benton2004.is_per",
-        "equation_Benton2004.sttype", "equation_Prims.eqtype",
-        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.heap",
-        "interpretation_Benton2004.RHL_Tm_abs_7d337ff8789ac9c7f27fe84e068a9c72",
-        "lemma_Benton2004.RHL.holds_gand",
-        "lemma_Benton2004.RHL.holds_interp",
-        "lemma_Benton2004.is_per_holds_sym",
-        "lemma_Benton2004.per_holds_trans",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_Benton2004.RHL.gand", "typing_Benton2004.RHL.interp"
-      ],
-      0,
+      "Benton2004.RHL.is_per_gand", 1, 2, 1, null, 0,
       "04b6c829a780c9d7fb646df3b89f6ef9"
     ],
     [

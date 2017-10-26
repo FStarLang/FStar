@@ -2883,23 +2883,7 @@
       "b7c08ca94f93d8b598391b12c74f9d3e"
     ],
     [
-      "FStar.Seq.Properties.lemma_snoc_inj",
-      1,
-      0,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.Seq.Properties.snoc", "equation_Prims.nat",
-        "int_typing", "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "lemma_FStar.Seq.Base.lemma_index_create",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
-        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.Seq.Base.create"
-      ],
-      0,
+      "FStar.Seq.Properties.lemma_snoc_inj", 1, 0, 1, null, 0,
       "2ab08c694179416c64a5c303842b1a39"
     ],
     [
