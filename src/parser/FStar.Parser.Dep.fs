@@ -204,24 +204,49 @@ let collect_one
   (verify_mode: verify_mode)
   (is_user_provided_filename: bool)
   (original_map: map)
-  (filename: string): list<string>
+  (filename: string):
+   list<string> //direct dependences of filename
+ * list<string> //additional "roots" that should be scanned
+                //i.e. implementations of interfaces in the first list
 =
   let deps = BU.mk_ref [] in
-  let add_dep d =
-    if not (List.existsML (fun d' -> d' = d) !deps) then
-      deps := d :: !deps
+  let mo_roots = BU.mk_ref [] in
+  let add_file l d =
+    if not (List.existsML (fun d' -> d' = d) !l) then
+      l := d :: !l
   in
+  let add_dep = add_file deps in
+  let add_root = add_file mo_roots in
   let working_map = smap_copy original_map in
 
-  let record_open_module let_open lid =
+  let add_dependence_edge lid =
     let key = lowercase_join_longident lid true in
+    let found = smap_try_find working_map key in
     match smap_try_find working_map key with
-    | Some pair ->
-        List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair);
-        true
+    | Some (Some intf,  None) ->
+      add_dep (lowercase_module_name intf);
+      None
+
+    | Some (Some intf,  Some impl) ->
+      add_dep (lowercase_module_name intf);
+      add_root (lowercase_module_name impl);
+      None
+
+    | Some (None, Some impl) ->
+      add_dep (lowercase_module_name impl);
+      None
+
+    | Some (None, None)
     | None ->
+      Some key
+  in
+
+  let record_open_module let_open lid =
+    match add_dependence_edge lid with
+    | None -> true
+    | Some key ->
       let r = enter_namespace original_map working_map key in
-      begin if not r then
+      begin if not r then //NS: this means that lid is a namespace?
         if let_open then
           raise (Errors.Error ("let-open only supported for modules, not namespaces", (range_of_lid lid)))
         else
@@ -273,25 +298,19 @@ let collect_one
     | None ->
         raise (Errors.Error (Util.format1 "module not found in search path: %s\n" alias, range_of_lid lid))
   in
+
   let record_lid lid =
     (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
        module name itself, so only its namespace part is to be
        recorded as a module dependency.  *)
-    let try_key key =
-      begin match smap_try_find working_map key with
-      | Some pair ->
-          List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
-      | None ->
-          if List.length lid.ns > 0 && Options.debug_any () then
-            FStar.Errors.warn (range_of_lid lid)
-              (BU.format1 "Unbound module reference %s" (string_of_lid lid false))
-      end
-    in
-    // Option.Some x
-    try_key (lowercase_join_longident lid false);
-    ()
+    let module_of_lid = Ident.lid_of_ids lid.ns in
+    match add_dependence_edge module_of_lid with
+    | None -> ()
+    | Some key ->
+      if List.length lid.ns > 0 && Options.debug_any () then
+      FStar.Errors.warn (range_of_lid lid)
+         (BU.format1 "Unbound module reference %s" (Ident.string_of_lid module_of_lid))
   in
-
 
   let auto_open = hard_coded_dependencies filename in
   List.iter record_open_module_or_namespace auto_open;
@@ -540,7 +559,7 @@ let collect_one
   let ast, _ = Driver.parse_file filename in
   collect_module ast;
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
-  !deps
+  !deps, !mo_roots
 
 let print_graph graph =
   Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
@@ -603,20 +622,21 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
     if smap_try_find graph key = None then
       (* Util.print1 "key: %s\n" key; *)
       let intf, impl = must (smap_try_find m key) in
-      let intf_deps =
+      let intf_deps, mo_roots =
         match intf with
         | Some intf -> collect_one is_user_provided_filename m intf
-        | None -> []
+        | None -> [], []
       in
-      let impl_deps =
+      let impl_deps, mo'_roots =
         match impl, intf with
-        | Some impl, Some _ when interface_only -> []
+        | Some impl, Some _ when interface_only -> [], []
         | Some impl, _ -> collect_one is_user_provided_filename m impl
-        | None, _-> []
+        | None, _-> [], []
       in
       let deps = List.unique (impl_deps @ intf_deps) in
       smap_add graph key (deps, White);
-      List.iter (discover_one false partial_discovery) deps
+      let to_scan = List.unique (deps @ mo_roots @ mo'_roots) in
+      List.iter (discover_one false partial_discovery) to_scan
   in
   let discover_command_line_argument f =
     let m = lowercase_module_name f in
