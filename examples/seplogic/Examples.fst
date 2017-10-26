@@ -87,28 +87,28 @@ let context_rewrites :tactic unit =
 
 let normalize_context :tactic unit =
   e <-- cur_env;
-  mapM (fun b -> 
+  mapM (fun b ->
     let typ_b = type_of_binder b in
     begin match term_as_formula' typ_b with
-    | App _ _ -> 
-        norm_binder_type [] b;; 
+    | App _ _ ->
+        norm_binder_type [] b;;
 	idtac
-    | _       -> 
+    | _       ->
         idtac
     end
   ) (binders_of_env e);;
   idtac
-  
+
 let simplify_context :tactic unit =
   e <-- cur_env;
   mapM (fun b ->
     let typ_b = type_of_binder b in
     begin match term_as_formula' typ_b with
-    | Comp Eq _ _ _ -> 
+    | Comp Eq _ _ _ ->
         binder_retype b;;
         simplify;;
         trefl
-    | _             -> 
+    | _             ->
         idtac
     end
   ) (binders_of_env e);;
@@ -126,9 +126,9 @@ let rec repeat_simplify_context () :Tac unit =
   let binders_of_e1 = binders_of_env e1 in
   let binders_of_e2 = binders_of_env e2 in
   if List.Tot.length binders_of_e1 = List.Tot.length binders_of_e2
-  then (if List.Tot.fold_left2 (fun acc b1 b2 -> acc && term_eq (type_of_binder b1) (type_of_binder b2)) 
+  then (if List.Tot.fold_left2 (fun acc b1 b2 -> acc && term_eq (type_of_binder b1) (type_of_binder b2))
                                true
-			       (binders_of_e1) 
+			       (binders_of_e1)
 			       (binders_of_e2)
        then return ()
        else repeat_simplify_context)
