@@ -91,6 +91,107 @@ let lowercase_module_name f =
   | None ->
       raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
 
+type file_name = string
+type module_name = string
+type dependence =
+    | PreferInterface of module_name
+    | UseImplementation of module_name
+type dependences = list<dependence>
+let empty_dependences = []
+type dependence_graph = //maps file names to the modules it depends on
+     smap<(dependences * color)>
+
+let module_name_of_dep = function
+    | PreferInterface m
+    | UseImplementation m -> m
+
+let resolve_module_name (file_system_map:files_for_module_name) (key:module_name)
+    : option<module_name>
+    = match BU.smap_try_find file_system_map key with
+      | Some (Some fn, _)
+      | Some (_, Some fn) -> Some (lowercase_module_name fn)
+      | _ -> None
+
+
+let interface_of (file_system_map:files_for_module_name) (key:module_name)
+    : option<file_name> =
+    match BU.smap_try_find file_system_map key with
+    | Some (Some iface, _) -> Some iface
+    | _ -> None
+
+let implementation_of (file_system_map:files_for_module_name) (key:module_name)
+    : option<file_name> =
+    match BU.smap_try_find file_system_map key with
+    | Some (_, Some impl) -> Some impl
+    | _ -> None
+
+let has_interface (file_system_map:files_for_module_name) (key:module_name)
+    : bool =
+    Option.isSome (interface_of file_system_map key)
+
+let has_implementation (file_system_map:files_for_module_name) (key:module_name)
+    : bool =
+    Option.isSome (interface_of file_system_map key)
+
+//let completed_scan file_system_map graph key =
+//    if has_implementation file_system_map key
+//    then match BU.smap_try_find graph key with
+//         | Some ({implementation_deps = _::_}) -> true
+//         | _ -> false
+//    else if has_interface file_system_map key
+//    then match BU.smap_try_find graph key with
+//         | Some ({interface_deps = _::_}) -> true
+//         | _ -> false
+//    else failwith "Impossible: module does not exist"
+
+let dependences_of (file_system_map:files_for_module_name) (deps:dependence_graph) (fn:file_name) : list<file_name> =
+    match BU.smap_try_find deps fn with
+    | None -> empty_dependences
+    | Some (deps, _) ->
+      let file_of_dep = function
+        | PreferInterface key when has_interface file_system_map key ->
+          Option.get <| interface_of file_system_map key
+        | PreferInterface key
+        | UseImplementation key ->
+          Option.get <| implementation_of file_system_map key
+     in
+     List.map file_of_dep deps
+
+let add_dependence (deps:dependence_graph)
+                   (from:file_name) (to_:file_name)
+                  : unit =
+    let key = lowercase_module_name from in
+    let add_dep (d,color) to_ =
+        if is_interface to_
+        then (PreferInterface (lowercase_module_name to_)::d), color
+        else (UseImplementation (lowercase_module_name to_)::d), color
+    in
+    match BU.smap_try_find deps key with
+    | None ->
+      BU.smap_add deps key (add_dep (empty_dependences, White) to_)
+    | Some key_deps ->
+      BU.smap_add deps key (add_dep key_deps to_)
+
+let print_graph (graph:dependence_graph) =
+  Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
+  Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
+  Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims";
+  Util.write_file "dep.graph" (
+    "digraph {\n" ^
+    String.concat "\n" (List.collect
+      (fun k ->
+          let deps = fst (must (smap_try_find graph k)) in
+          let r s = replace_char s '.' '_' in
+          let print dep =
+            Util.format2 " %s -> %s"
+                (r k)
+                (r (module_name_of_dep dep))
+          in
+          List.map print deps)
+     (List.unique (smap_keys graph))) ^
+    "\n}\n"
+  )
+
 (** Enumerate all F* files in include directories.
     Return a list of pairs of long names and full paths. *)
 let build_inclusion_candidates_list (): list<(string * string)> =
@@ -208,52 +309,38 @@ let collect_one
  * list<string> //additional "roots" that should be scanned
                 //i.e. implementations of interfaces in the first list
 =
-  let deps = BU.mk_ref [] in
-  let mo_roots = BU.mk_ref [] in
-  let add_file l d =
-    if not (List.existsML (fun d' -> d' = d) !l) then
-      l := d :: !l
+  let deps     : ref<(list<dependence>)> = BU.mk_ref [] in
+  let mo_roots : ref<(list<dependence>)> = BU.mk_ref [] in
+  let add_dep deps d =
+    if not (List.existsML (fun d' -> d' = d) !deps) then
+      deps := d :: !deps
   in
-  let add_dep = add_file deps in
-  let add_root = add_file mo_roots in
   let working_map = smap_copy original_map in
 
   let add_dependence_edge lid =
     let key = lowercase_join_longident lid true in
-    let found = smap_try_find working_map key in
-    match smap_try_find working_map key with
-    | Some (Some intf,  None) ->
-      add_dep (lowercase_module_name intf);
-      None
-
-    | Some (Some intf,  Some impl) ->
-      add_dep (lowercase_module_name intf);
-      add_root (lowercase_module_name impl);
-      None
-
-    | Some (None, Some impl) ->
-      add_dep (lowercase_module_name impl);
-      None
-
-    | Some (None, None)
-    | None ->
-      Some key
+    match resolve_module_name working_map key with
+    | Some module_name ->
+      add_dep deps (PreferInterface module_name);
+      if has_interface working_map module_name
+      && has_implementation working_map module_name
+      then add_dep mo_roots (UseImplementation module_name);
+      true
+    | _ ->
+      false
   in
 
   let record_open_module let_open lid =
-    match add_dependence_edge lid with
-    | None -> true
-    | Some key ->
-      let r = enter_namespace original_map working_map key in
-      begin if not r then //NS: this means that lid is a namespace?
-        if let_open then
-          raise (Errors.Error ("let-open only supported for modules, not namespaces", (range_of_lid lid)))
-        else
-          FStar.Errors.warn (range_of_lid lid)
-            (Util.format1 "No modules in namespace %s and no file with \
-              that name either" (string_of_lid lid true))
-      end ;
-      false
+      if add_dependence_edge lid then true
+      else let key = lowercase_join_longident lid true in
+           let r = enter_namespace original_map working_map key in
+           if not r //NS: this means that lid is a namespace?
+           then if let_open then
+                raise (Errors.Error ("let-open only supported for modules, not namespaces", (range_of_lid lid)))
+           else FStar.Errors.warn (range_of_lid lid)
+                    (Util.format1 "No modules in namespace %s and no file with \
+                                   that name either" (string_of_lid lid true));
+           false
   in
 
   let record_open_namespace error_msg lid =
@@ -306,10 +393,9 @@ let collect_one
     | [] -> ()
     | _ ->
       let module_name = Ident.lid_of_ids lid.ns in
-      match add_dependence_edge module_name with
-      | None -> ()
-      | Some key ->
-        if Options.debug_any () then
+      if add_dependence_edge module_name
+      then ()
+      else if Options.debug_any () then
             FStar.Errors.warn (range_of_lid lid)
                 (BU.format1 "Unbound module reference %s"
                                 (Ident.string_of_lid module_name))
@@ -326,27 +412,6 @@ let collect_one
         check_module_declaration_against_filename lid filename;
         if List.length lid.ns > 0 then
           ignore (enter_namespace original_map working_map (namespace_of_lid lid));
-        (* We discovered a new file in the graph. *)
-        begin match verify_mode with
-        | VerifyAll ->
-            (* Every module we discover is a module we verify. *)
-            Options.add_verify_module (string_of_lid lid true)
-        | VerifyFigureItOut ->
-            (* Well... to put all the code in one place, the function takes an
-             * argument that tells whether this is a root of the discovery (i.e.
-             * we started from a file that was provided on the command-line. *)
-            if is_user_provided_filename then
-              Options.add_verify_module (string_of_lid lid true)
-        | VerifyUserList ->
-            (* Mutate the reference to acknowledge that we have found the file
-             * the user mentioned in the first place (the code will later bail
-             * if there a user-provided --verify_module argument referes to a
-             * module that hasn't been found in the graph). *)
-            List.iter (fun (m, r) ->
-              if String.lowercase m = String.lowercase (string_of_lid lid true) then
-                r := true
-            ) verify_flags
-        end;
         collect_decls decls
 
   and collect_decls decls =
@@ -357,7 +422,7 @@ let collect_one
     | Open lid ->
         record_open false lid
     | ModuleAbbrev (ident, lid) ->
-        add_dep (lowercase_join_longident lid true);
+        add_dep deps (PreferInterface (lowercase_join_longident lid true));
         record_module_alias ident lid
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
@@ -431,11 +496,11 @@ let collect_one
     | Const_int (_, Some (signedness, width)) ->
         let u = match signedness with | Unsigned -> "u" | Signed -> "" in
         let w = match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64" in
-        add_dep (Util.format2 "fstar.%sint%s" u w)
+        add_dep deps (PreferInterface (Util.format2 "fstar.%sint%s" u w))
     | Const_char _ ->
-        add_dep "fstar.char"
+        add_dep deps (PreferInterface "fstar.char")
     | Const_float _ ->
-        add_dep "fstar.float"
+        add_dep deps (PreferInterface "fstar.float")
     | _ ->
         ()
 
@@ -564,69 +629,15 @@ let collect_one
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps, !mo_roots
 
-type file_name = string
-type module_name = string
-type dependences = {
-    interface_deps:list<module_name>;
-    implementation_deps:list<module_name>
-}
-type dependence_graph = smap<(dependences * color)>
-
-let has_interface (file_system_map:files_for_module_name) key =
-    match BU.smap_try_find file_system_map key with
-    | Some (Some _, _) -> true
-    | _ -> false
-
-let has_implementation (file_system_map:files_for_module_name) key =
-    match BU.smap_try_find file_system_map key with
-    | Some (_, Some _) -> true
-    | _ -> false
-
-let completed_scan file_system_map graph key =
-    if has_implementation file_system_map key
-    then match BU.smap_try_find graph key with
-         | Some ({implementation_deps = _::_}) -> true
-         | _ -> false
-    else if has_interface file_system_map key
-    then match BU.smap_try_find graph key with
-         | Some ({interface_deps = _::_}) -> true
-         | _ -> false
-    else failwith "Impossible: module does not exist"
-
-let dependences_of (file_system_map:files_for_module_name) (g:dependence_graph) (m:module_name) =
-    match BU.smap_try_find g m with
-    | None -> []
-    | Some (deps, _) ->
-      deps.interface_deps
-      @List.filter (fun impl -> not (has_interface file_system_map impl)) deps.implementation_deps
-
-let print_graph (graph:dependence_graph) =
-  Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
-  Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
-  Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims";
-  Util.write_file "dep.graph" (
-    "digraph {\n" ^
-    String.concat "\n" (List.collect
-      (fun k ->
-          let deps = fst (must (smap_try_find graph k)) in
-          let r s = replace_char s '.' '_' in
-          let print iface dep =
-            Util.format3 " %s%s -> %s"
-                (if iface then "interface_" else "")
-                (r k)
-                (r dep)
-          in
-          List.map (print true) deps.interface_deps
-        @ List.map (print false) deps.implementation_deps)
-     (List.unique (smap_keys graph))) ^
-    "\n}\n"
-  )
-
 (** Collect the dependencies for a list of given files. *)
-let collect (verify_mode: verify_mode) (filenames: list<string>) =
+let collect (verify_mode: verify_mode) (filenames: list<file_name>)
+    : list<file_name>
+    * dependence_graph
+    =
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
   let dep_graph : dependence_graph = smap_create 41 in
+
 
   (* A bitmap that ensures every --verify_module X was matched by an existing X
    * in our dependency graph. *)
@@ -694,39 +705,43 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
   List.iter (fun fn -> discover_one (lowercase_module_name fn)) filenames;
 
   (* At this point, we have the (immediate) dependency graph of all the files. *)
-  let immediate_graph = smap_copy dep_graph in
+  (* Add additional edges between the filenames in the order in which they were provided *)
+  let _ =
+    List.fold_left
+        (fun previous_file file ->
+            add_dependence dep_graph file previous_file;
+            file)
+        (List.hd filenames)
+        (List.tl filenames) in
 
-  let topologically_sorted = BU.mk_ref [] in
-
-  (* Compute the transitive closure. *)
-  let rec discover cycle key =
-    let direct_deps, color = must (smap_try_find dep_graph key) in
-    match color with
-    | Gray ->
-        Util.print1_warning "Recursive dependency on module %s\n" key;
-        let cycle = cycle |> List.map file_names_of_key in
-        Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
-        print_graph immediate_graph;
-        print_string "\n";
-        exit 1
-    | Black ->
-        (* If the element has been visited already, then the map contains all its
-         * dependencies. Otherwise, the map only contains its direct dependencies. *)
-        ()
-    | White ->
-        (* Unvisited. Compute. *)
-        smap_add dep_graph key (direct_deps, Gray);
-        List.iter (fun k -> discover (k :: cycle) k) (dependences_of file_system_map dep_graph key);
-        (* Mutate the graph (it now remembers transitive dependencies). *)
-        smap_add dep_graph key (direct_deps, Black);
-        (* Also build the topological sort (Tarjan's algorithm). *)
-        topologically_sorted := key :: !topologically_sorted
-  in
-
-  let discover k =
-    topologically_sorted := [];
-    discover [] k;
-    !topologically_sorted
+  let topological_module_dependences_of filename =
+      let topologically_sorted = BU.mk_ref [] in
+      (* Compute the transitive closure. *)
+      let rec discover cycle filename =
+        let direct_deps, color = must (smap_try_find dep_graph key) in
+        match color with
+        | Gray ->
+            Util.print1_warning "Recursive dependency on module %s\n" key;
+            let cycle = cycle |> List.map file_names_of_key in
+            Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
+            print_graph dep_graph;
+            print_string "\n";
+            exit 1
+        | Black ->
+            (* If the element has been visited already, then the map contains all its
+             * dependencies. Otherwise, the map only contains its direct dependencies. *)
+            ()
+        | White ->
+            (* Unvisited. Compute. *)
+            smap_add dep_graph key (direct_deps, Gray);
+            List.iter (fun k -> discover (k :: cycle) k) (dependences_of file_system_map dep_graph key);
+            (* Mutate the graph (it now remembers transitive dependencies). *)
+            smap_add dep_graph key (direct_deps, Black);
+            (* Also build the topological sort (Tarjan's algorithm). *)
+            topologically_sorted := key :: !topologically_sorted
+      in
+      discover [] filename;
+      !topologically_sorted
   in
 
   let must_find k =
