@@ -2,7 +2,6 @@ module FStar.Tactics.Effect
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result
-open FStar.Reflection
 
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
