@@ -202,7 +202,6 @@ let hard_coded_dependencies filename =
 let collect_one
   (verify_flags: list<(string * ref<bool>)>)
   (verify_mode: verify_mode)
-  (is_user_provided_filename: bool)
   (original_map: files_for_module_name)
   (filename: string):
    list<string> //direct dependences of filename
@@ -565,32 +564,69 @@ let collect_one
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps, !mo_roots
 
-let print_graph graph =
+type file_name = string
+type module_name = string
+type dependences = {
+    interface_deps:list<module_name>;
+    implementation_deps:list<module_name>
+}
+type dependence_graph = smap<(dependences * color)>
+
+let has_interface (file_system_map:files_for_module_name) key =
+    match BU.smap_try_find file_system_map key with
+    | Some (Some _, _) -> true
+    | _ -> false
+
+let has_implementation (file_system_map:files_for_module_name) key =
+    match BU.smap_try_find file_system_map key with
+    | Some (_, Some _) -> true
+    | _ -> false
+
+let completed_scan file_system_map graph key =
+    if has_implementation file_system_map key
+    then match BU.smap_try_find graph key with
+         | Some ({implementation_deps = _::_}) -> true
+         | _ -> false
+    else if has_interface file_system_map key
+    then match BU.smap_try_find graph key with
+         | Some ({interface_deps = _::_}) -> true
+         | _ -> false
+    else failwith "Impossible: module does not exist"
+
+let dependences_of (file_system_map:files_for_module_name) (g:dependence_graph) (m:module_name) =
+    match BU.smap_try_find g m with
+    | None -> []
+    | Some (deps, _) ->
+      deps.interface_deps
+      @List.filter (fun impl -> not (has_interface file_system_map impl)) deps.implementation_deps
+
+let print_graph (graph:dependence_graph) =
   Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
   Util.print_endline "With GraphViz installed, try: fdp -Tpng -odep.png dep.graph";
   Util.print_endline "Hint: cat dep.graph | grep -v _ | grep -v prims";
   Util.write_file "dep.graph" (
     "digraph {\n" ^
-    String.concat "\n" (List.collect (fun k ->
-      let deps = fst (must (smap_try_find graph k)) in
-      let r s = replace_char s '.' '_' in
-      List.map (fun dep -> Util.format2 "  %s -> %s" (r k) (r dep)) deps
-    ) (List.unique (smap_keys graph))) ^
+    String.concat "\n" (List.collect
+      (fun k ->
+          let deps = fst (must (smap_try_find graph k)) in
+          let r s = replace_char s '.' '_' in
+          let print iface dep =
+            Util.format3 " %s%s -> %s"
+                (if iface then "interface_" else "")
+                (r k)
+                (r dep)
+          in
+          List.map (print true) deps.interface_deps
+        @ List.map (print false) deps.implementation_deps)
+     (List.unique (smap_keys graph))) ^
     "\n}\n"
   )
-
-type filename = string
-type dependences = {
-    interface_deps:list<filename>;
-    implementation_deps:list<filename>
-}
-type depdendence_graph = smap<(dependences * color)>
 
 (** Collect the dependencies for a list of given files. *)
 let collect (verify_mode: verify_mode) (filenames: list<string>) =
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
-  let graph = smap_create 41 in
+  let dep_graph : dependence_graph = smap_create 41 in
 
   (* A bitmap that ensures every --verify_module X was matched by an existing X
    * in our dependency graph. *)
@@ -603,9 +639,9 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
   (* A map from lowercase module names (e.g. [a.b.c]) to the corresponding
    * filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
    * immutable from there on. *)
-  let m = build_map filenames in
+  let file_system_map = build_map filenames in
   let file_names_of_key k =
-    let intf, impl = must (smap_try_find m k) in
+    let intf, impl = must (smap_try_find file_system_map k) in
     match intf, impl with
     | None, None -> failwith "Impossible"
     | None, Some i
@@ -629,50 +665,42 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
    *   - M.fsti when **only** M.fsti is given as argument
    *   - both M.fsti and M.fst otherwise (including when both M.fsti and M.fst are passed)
    *)
-  let rec discover_one is_user_provided_filename interface_only key =
-    if smap_try_find graph key = None then
+  let rec discover_one (key:module_name) =
+    if smap_try_find dep_graph key = None then
     begin
-      let intf, impl = must (smap_try_find m key) in
-      printfn "(iface only=%A) key: %s --> (%A, %A)\n" interface_only key intf impl;
+      let intf, impl = must (smap_try_find file_system_map key) in
+      printfn "key: %s --> (%A, %A)\n" key intf impl;
       let intf_deps, mo_roots =
         match intf with
-        | Some intf -> collect_one is_user_provided_filename m intf
+        | Some intf -> collect_one file_system_map intf
         | None -> [], []
       in
       let impl_deps, mo'_roots =
-        match impl, intf with
-        | Some impl, Some _ when interface_only -> [], []
-        | Some impl, _ -> collect_one is_user_provided_filename m impl
-        | None, _-> [], []
+        match impl with
+        | Some impl -> collect_one file_system_map impl
+        | None-> [], []
       in
-      let deps = List.unique (impl_deps @ intf_deps) in
-      smap_add graph key (deps, White);
-      let mo_roots = List.unique (mo_roots @ mo'_roots) in
+      let deps = {
+        interface_deps = List.unique intf_deps;
+        implementation_deps = List.unique impl_deps
+      } in
+      smap_add dep_graph key (deps, White);
+      let all_modules = List.unique (deps.interface_deps @ deps.implementation_deps @ mo_roots @ mo'_roots) in
       let _ = printfn "Found deps of %s = %A" key deps in
-      let _ = printfn "Found mo roots of %s = %A" key mo_roots in
-      List.iter (discover_one false partial_discovery) deps;
-      List.iter (discover_one false false) mo_roots
+      let _ = printfn "Found mo roots of %s = %A" key (mo_roots @ mo'_roots) in
+      List.iter discover_one all_modules
     end
   in
-  let discover_command_line_argument f =
-    let m = lowercase_module_name f in
-    let interface_only = is_interface f &&
-      not (List.existsML (fun f ->
-        lowercase_module_name f = m && is_implementation f)
-      filenames)
-    in
-    discover_one true interface_only m
-  in
-  List.iter discover_command_line_argument filenames;
+  List.iter (fun fn -> discover_one (lowercase_module_name fn)) filenames;
 
   (* At this point, we have the (immediate) dependency graph of all the files. *)
-  let immediate_graph = smap_copy graph in
+  let immediate_graph = smap_copy dep_graph in
 
   let topologically_sorted = BU.mk_ref [] in
 
   (* Compute the transitive closure. *)
   let rec discover cycle key =
-    let direct_deps, color = must (smap_try_find graph key) in
+    let direct_deps, color = must (smap_try_find dep_graph key) in
     match color with
     | Gray ->
         Util.print1_warning "Recursive dependency on module %s\n" key;
@@ -684,21 +712,22 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
     | Black ->
         (* If the element has been visited already, then the map contains all its
          * dependencies. Otherwise, the map only contains its direct dependencies. *)
-        direct_deps
+        ()
     | White ->
         (* Unvisited. Compute. *)
-        smap_add graph key (direct_deps, Gray);
-        let all_deps = List.unique (List.flatten (List.map (fun dep ->
-          dep :: discover (key :: cycle) dep
-        ) direct_deps)) in
+        smap_add dep_graph key (direct_deps, Gray);
+        List.iter (fun k -> discover (k :: cycle) k) (dependences_of file_system_map dep_graph key);
         (* Mutate the graph (it now remembers transitive dependencies). *)
-        smap_add graph key (all_deps, Black);
+        smap_add dep_graph key (direct_deps, Black);
         (* Also build the topological sort (Tarjan's algorithm). *)
-        topologically_sorted := key :: !topologically_sorted;
-        (* Returns transitive dependencies *)
-        all_deps
+        topologically_sorted := key :: !topologically_sorted
   in
-  let discover = discover [] in
+
+  let discover k =
+    topologically_sorted := [];
+    discover [] k;
+    !topologically_sorted
+  in
 
   let must_find k =
     (* Now a bit of reverse-engineering. Sadly, I made the decision to have keys
@@ -706,7 +735,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
      * the two cases we originally were in. If Foo.fst was on the command-line,
      * then it's always fst+fsti; otherwise, it's governed by the
      * partial_discovery flag. *)
-    match must (smap_try_find m k) with
+    match must (smap_try_find file_system_map k) with
     | Some intf, Some impl when not partial_discovery && not (List.existsML (fun f ->
         lowercase_module_name f = k
       ) filenames) ->
@@ -731,7 +760,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
       let k = lowercase_module_name f in
       let suffix =
         // ADL: we want the absolute path of the fsti in the Makefile
-        match must (smap_try_find m k) with
+        match must (smap_try_find file_system_map k) with
         | Some intf, _ when should_append_fsti -> [intf]
         | _ -> [] in
       let deps = List.rev (discover k) in
@@ -739,7 +768,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
       (* List stored in the "right" order. *)
       f, deps_as_filenames
     ) as_list
-  ) (FStar.List.sortWith (fun x y -> String.compare x y) (smap_keys graph)) in
+  ) (FStar.List.sortWith (fun x y -> String.compare x y) (smap_keys dep_graph)) in
   let topologically_sorted = List.collect must_find_r !topologically_sorted in
 
   List.iter (fun (m, r) ->
