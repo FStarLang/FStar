@@ -26,7 +26,7 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type map = smap<(option<string> * option<string>)>
+type map = smap<(int * (option<string> * option<string>))>
 
 type color = | White | Gray | Black
 

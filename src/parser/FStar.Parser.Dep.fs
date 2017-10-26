@@ -49,7 +49,10 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type map = smap<(option<string> * option<string>)>
+// Depth, optional interface file, optional implementation file
+// The depth is used to prioritize, and not shadow explicitly-opened
+// modules when opening namespaces
+type map = smap<(int * (option<string> * option<string>))>
 
 type color = | White | Gray | Black
 
@@ -123,16 +126,16 @@ let build_map (filenames: list<string>): map =
   let map = smap_create 41 in
   let add_entry key full_path =
     match smap_try_find map key with
-    | Some (intf, impl) ->
+    | Some (x, (intf, impl)) ->
         if is_interface full_path then
-          smap_add map key (Some full_path, impl)
+          smap_add map key (0, (Some full_path, impl))
         else
-          smap_add map key (intf, Some full_path)
+          smap_add map key (0, (intf, Some full_path))
     | None ->
         if is_interface full_path then
-          smap_add map key (Some full_path, None)
+          smap_add map key (0, (Some full_path, None))
         else
-          smap_add map key (None, Some full_path)
+          smap_add map key (0, (None, Some full_path))
   in
 
   (* Add files from all include directories *)
@@ -147,21 +150,25 @@ let build_map (filenames: list<string>): map =
 
 (** For all items [i] in the map that start with [prefix], add an additional
     entry where [i] stripped from [prefix] points to the same value. Returns a
-    boolean telling whether the map was modified. *)
+    boolean telling whether some module was found in the namespace. *)
 let enter_namespace (original_map: map) (working_map: map) (prefix: string): bool =
   let found = BU.mk_ref false in
   let prefix = prefix ^ "." in
   List.iter (fun k ->
-    if Util.starts_with k prefix then
+    if Util.starts_with k prefix then begin
+      found := true;
       let suffix =
         String.substring k (String.length prefix) (String.length k - String.length prefix)
       in
-      let filename = must (smap_try_find original_map k) in
-      smap_add working_map suffix filename;
-      found := true
+      let (d, (intf, impl)) = must (smap_try_find original_map k) in
+      match smap_try_find working_map suffix with
+      | Some (d', _) when d' <= d ->
+          () // don't step over more "immediate" modules
+      | _ ->
+          smap_add working_map suffix (d+1, (intf, impl))
+    end
   ) (List.unique (smap_keys original_map));
   !found
-
 
 let string_of_lid (l: lident) (last: bool) =
   let suffix = if last then [ l.ident.idText ] else [ ] in
@@ -216,7 +223,7 @@ let collect_one
   let record_open_module let_open lid =
     let key = lowercase_join_longident lid true in
     match smap_try_find working_map key with
-    | Some pair ->
+    | Some (_, pair) ->
         List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair);
         true
     | None ->
@@ -279,7 +286,7 @@ let collect_one
        recorded as a module dependency.  *)
     let try_key key =
       begin match smap_try_find working_map key with
-      | Some pair ->
+      | Some (_, pair) ->
           List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
       | None ->
           if List.length lid.ns > 0 && Options.debug_any () then
@@ -575,7 +582,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
    * immutable from there on. *)
   let m = build_map filenames in
   let file_names_of_key k =
-    let intf, impl = must (smap_try_find m k) in
+    let _, (intf, impl) = must (smap_try_find m k) in
     match intf, impl with
     | None, None -> failwith "Impossible"
     | None, Some i
@@ -602,7 +609,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
   let rec discover_one is_user_provided_filename interface_only key =
     if smap_try_find graph key = None then
       (* Util.print1 "key: %s\n" key; *)
-      let intf, impl = must (smap_try_find m key) in
+      let _, (intf, impl) = must (smap_try_find m key) in
       let intf_deps =
         match intf with
         | Some intf -> collect_one is_user_provided_filename m intf
@@ -670,7 +677,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
      * the two cases we originally were in. If Foo.fst was on the command-line,
      * then it's always fst+fsti; otherwise, it's governed by the
      * partial_discovery flag. *)
-    match must (smap_try_find m k) with
+    match snd (must (smap_try_find m k)) with
     | Some intf, Some impl when not partial_discovery && not (List.existsML (fun f ->
         lowercase_module_name f = k
       ) filenames) ->
@@ -695,7 +702,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
       let k = lowercase_module_name f in
       let suffix =
         // ADL: we want the absolute path of the fsti in the Makefile
-        match must (smap_try_find m k) with
+        match snd (must (smap_try_find m k)) with
         | Some intf, _ when should_append_fsti -> [intf]
         | _ -> [] in
       let deps = List.rev (discover k) in
