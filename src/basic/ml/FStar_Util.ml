@@ -1021,3 +1021,33 @@ let (:=) = FStar_ST.write
 
 let marshal (x:'a) : string = Marshal.to_string x []
 let unmarshal (x:string) : 'a = Marshal.from_string x 0
+
+type signedness = | Unsigned | Signed
+type width = | Int8 | Int16 | Int32 | Int64
+
+let rec z_pow2 n =
+  if n = Z.zero then Z.one
+  else Z.mul (Z.of_string "2") (z_pow2 (Z.sub n Z.one))
+
+let bounds signedness width =
+    let n =
+        match width with
+        | Int8 -> Z.of_string "8"
+        | Int16 -> Z.of_string "16"
+        | Int32 -> Z.of_string "32"
+        | Int64 -> Z.of_string "64"
+    in
+    let lower, upper =
+      match signedness with
+      | Unsigned ->
+        Z.zero, Z.sub (z_pow2 n) Z.one
+      | Signed ->
+        let upper = z_pow2 (Z.sub n Z.one) in
+        Z.neg upper, Z.sub upper Z.one
+    in
+    lower, upper
+
+let within_bounds repr signedness width =
+  let lower, upper = bounds signedness width in
+  let value = Z.of_string (ensure_decimal repr) in
+  Z.leq lower value && Z.leq value upper

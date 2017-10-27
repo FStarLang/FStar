@@ -4,6 +4,7 @@ module FStar.Reflection.Data
 open FStar.Syntax.Syntax
 module Ident = FStar.Ident
 module Range = FStar.Range
+module Z     = FStar.BigInt
 
 type name = list<string>
 type typ  = term
@@ -11,7 +12,7 @@ type binders = list<binder>
 
 type vconst =
     | C_Unit
-    | C_Int of int
+    | C_Int of Z.t
     | C_True
     | C_False
     | C_String of string
@@ -39,7 +40,7 @@ type term_view =
     | Tv_Type   of unit
     | Tv_Refine of binder * term
     | Tv_Const  of vconst
-    | Tv_Uvar   of int * typ
+    | Tv_Uvar   of Z.t * typ
     | Tv_Let    of binder * term * term
     | Tv_Match  of term * list<branch>
     | Tv_Unknown

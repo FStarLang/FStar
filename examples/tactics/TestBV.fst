@@ -89,7 +89,8 @@ let bv64_tac : tactic unit =
     mapply (quote v64_eq) ;;
     norm [];;
     //proceed top-down through the goal recursively rewriting to `uint_t 64` further
-    pointwise' (unfold64 ()) ;;
+    // if unfold64 fails, then just skip rewriting this node.
+    pointwise' (or_else (unfold64 ()) (fail "SKIP")) ;;
     norm [];;
     //call bv_tac to encode the whole thing to bit vectors
     bv_tac ()

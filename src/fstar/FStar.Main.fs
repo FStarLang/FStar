@@ -66,12 +66,13 @@ let codegen (umods, env) =
     let mllibs = List.flatten mllibs in
     let ext = match opt with
       | Some "FSharp" -> ".fs"
-      | Some "OCaml" -> ".ml"
+      | Some "OCaml"
+      | Some "tactics" -> ".ml"
       | Some "Kremlin" -> ".krml"
       | _ -> failwith "Unrecognized option"
     in
     match opt with
-    | Some "FSharp" | Some "OCaml" ->
+    | Some "FSharp" | Some "OCaml" | Some "tactics" ->
         (* When bootstrapped in F#, this will use the old printer in
            FStar.Extraction.ML.Code for both OCaml and F# extraction.
            When bootstarpped in OCaml, this will use the old printer
@@ -86,7 +87,7 @@ let codegen (umods, env) =
 
 let gen_native_tactics (umods, env) out_dir =
     (* Extract module and its dependencies to OCaml *)
-    Options.set_option "codegen" (Options.String "OCaml");
+    Options.set_option "codegen" (Options.String "tactics");
     let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;

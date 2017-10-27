@@ -27,7 +27,7 @@ fstarlib.mgen: *.fst *.fsti ../bin/fstar.ocaml
 FSTARLIB_LEFTOVERS=$(shell python fstarlib_leftovers.py +ml +ml/extracted -../bin/fstar-compiler-lib/)
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
-	$(FSTAR) --lax --codegen OCaml --odir tactics_ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_TAC_LIB_MODULES)
+	$(FSTAR) --lax --codegen tactics --odir tactics_ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_TAC_LIB_MODULES)
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen

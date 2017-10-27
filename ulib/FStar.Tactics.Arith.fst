@@ -1,9 +1,8 @@
 module FStar.Tactics.Arith
 
 open FStar.Tactics
-open FStar.Reflection
+open FStar.Reflection.Formula
 open FStar.Reflection.Arith
-open FStar.List
 
 // decide if the current goal is arith, drop the built representation of it
 let is_arith_goal : tactic bool =

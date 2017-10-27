@@ -458,14 +458,18 @@ let check_fields env fields rg =
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
-  let check_linear_pattern_variables (p:Syntax.pat) =
+  let check_linear_pattern_variables (p:Syntax.pat) r =
     let rec pat_vars (p:Syntax.pat) = match p.v with
       | Pat_dot_term _
       | Pat_wild _
       | Pat_constant _ -> S.no_names
       | Pat_var x -> BU.set_add x S.no_names
       | Pat_cons(_, pats) ->
-        pats |> List.fold_left (fun out (p, _) -> BU.set_union out (pat_vars p)) S.no_names
+        pats |> List.fold_left (fun out (p, _) ->
+                                  if BU.set_is_empty (BU.set_intersect (pat_vars p) out)
+                                  then BU.set_union out (pat_vars p)
+                                  else raise (Error ("Non-linear patterns are not permitted.", r)))
+                                S.no_names
     in
     pat_vars p
   in
@@ -609,7 +613,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
         env, vars, [pat]
   in
   let env, b, pats = aux_maybe_or env p in
-  ignore <| (List.map check_linear_pattern_variables pats);
+  ignore <| (List.map (fun pats -> check_linear_pattern_variables pats p.prange) pats );
   env, b, pats
 
 and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<pat>) =
@@ -646,8 +650,6 @@ and desugar_typ env e : S.term =
     desugar_term_maybe_top false env e
 
 and desugar_machine_integer env repr (signedness, width) range =
-  let lower, upper = FStar.Const.bounds signedness width in
-  let value = FStar.Util.int_of_string (FStar.Util.ensure_decimal repr) in
   let tnm = "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
     (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64")
@@ -656,7 +658,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   //and coerce them to the appropriate type using the internal coercion
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
-  if not (lower <= value && value <= upper)
+  if not (within_bounds repr signedness width)
   then raise (Error(BU.format2 "%s is not in the expected range for %s"
                                repr tnm,
                     range));

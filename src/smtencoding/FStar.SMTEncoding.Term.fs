@@ -729,7 +729,7 @@ and mkPrelude z3options =
                         :pattern ((Precedes t1 t2)))))\n\
                 (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
                          (Precedes t1 t2))\n\
-                (declare-fun Range_const () Term)\n\
+                (declare-fun Range_const (Int) Term)\n\
                 (declare-fun _mul (Int Int) Int)\n\
                 (declare-fun _div (Int Int) Int)\n\
                 (declare-fun _mod (Int Int) Int)\n\
@@ -765,7 +765,12 @@ let mkBvConstructor (sz : int) =
         [snd (boxBitVecFun sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
     |> constructor_to_decl
 
-let mk_Range_const      = mkApp("Range_const", []) norng
+let __range_c = BU.mk_ref 0
+let mk_Range_const () =
+    let i = !__range_c in
+    __range_c := !__range_c + 1;
+    mkApp("Range_const", [mkInteger' i norng]) norng
+
 let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r

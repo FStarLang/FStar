@@ -121,6 +121,7 @@ open FStar.String
 %token PRIVATE
 %token QMARK
 %token QMARK_DOT
+%token RANGE_OF
 %token RARROW
 %token RBRACE
 %token RBRACK
@@ -132,6 +133,7 @@ open FStar.String
 %token RPAREN
 %token SEMICOLON
 %token SEMICOLON_SEMICOLON
+%token SET_RANGE_OF
 %token SQUIGGLY_RARROW
 %token <string> STRING
 %token SUBKIND
@@ -2296,6 +2298,12 @@ constant:
 | REIFY
     {let _1 = () in
             ( Const_reify )}
+| RANGE_OF
+    {let _1 = () in
+                 ( Const_range_of )}
+| SET_RANGE_OF
+    {let _1 = () in
+                 ( Const_set_range_of )}
 
 universe:
   UNIV_HASH atomicUniverse

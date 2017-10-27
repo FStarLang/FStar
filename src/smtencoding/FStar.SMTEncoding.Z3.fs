@@ -54,7 +54,7 @@ let parse_z3_version_lines out =
                   then
                       let msg =
                           BU.format1
-                              "Successfully found expected Z3 commit hash %s"
+                              "Successfully found expected Z3 commit hash %s\n"
                               hash
                       in
                       print_string msg
