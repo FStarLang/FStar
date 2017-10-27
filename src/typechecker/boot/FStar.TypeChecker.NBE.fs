@@ -96,11 +96,11 @@ let rec app (f:t) (x:t) =
   | Construct (i, ts) -> Construct (i, x::ts)
   | Rec (y, ts) -> (match x with
                     (* Danel: In a real F* scenario, the decreases check would happen here? *)
-                    | Accu _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x]))
+                    | Accu _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x])
                                                    (* Danel: if a rec. def. is applied 
                                                       to an accumulator, do not unfold 
                                                       it further *)
-                    | _ -> app (translate (Rec (y, ts)::ts) y) x
+                    | _ -> app (translate (Rec (y, ts)::ts) y) x)
                                             (* Danel: if a rec. def. is applied to 
                                                a non-accumulator, then we unfold it *)
   | Unit
