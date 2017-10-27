@@ -14,11 +14,11 @@ open FStar.Errors
 module Const = FStar.Parser.Const
 module BU = FStar.Util
 
-type deps
+type file_name = string
 
 type open_kind = | Open_module | Open_namespace
 
-val lowercase_module_name : string -> string
+val lowercase_module_name : file_name -> string
 
 val build_inclusion_candidates_list : unit -> list<(string * string)>
 
@@ -26,10 +26,15 @@ val build_inclusion_candidates_list : unit -> list<(string * string)>
 and namespaces *)
 val hard_coded_dependencies : string -> list<(lident * open_kind)>
 
-val collect : filenames:list<string> -> list<string> * deps
+val collect_and_memoize: list<file_name> -> list<file_name>
 
-val print   : deps -> unit
+val memoized_deps_of : file_name -> list<file_name>
 
-val is_interface: string -> bool
+val print_memoized_deps : unit -> unit
 
-val is_implementation: string -> bool
+val is_interface: file_name -> bool
+
+val is_implementation: file_name -> bool
+
+val cache_file_name: file_name -> file_name
+val hash_dependences: file_name -> option<(list<string>)>

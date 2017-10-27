@@ -118,7 +118,8 @@ let go _ =
         init_native_tactics ();
 
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
-        then Parser.Dep.print (snd (Parser.Dep.collect filenames))
+        then let _ = Parser.Dep.collect_and_memoize filenames in
+             Parser.Dep.print_memoized_deps ()
         else if Options.interactive () then begin
           match filenames with
           | [] ->

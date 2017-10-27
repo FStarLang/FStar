@@ -28,7 +28,7 @@ open FStar.Ident
 (* Finding the transitive dependencies of a list of files               *)
 (***********************************************************************)
 let find_deps_if_needed files =
-    let all_files, _ = Parser.Dep.collect files in
+    let all_files = Parser.Dep.collect_and_memoize files in
     match all_files with
     | [] ->
         Util.print_error "Dependency analysis failed; reverting to using only the files provided\n";

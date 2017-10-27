@@ -85,17 +85,6 @@ let init_env () : TcEnv.env =
   env
 
 (***********************************************************************)
-(* Checking Prims.fst                                                  *)
-(***********************************************************************)
-let tc_prims (env: TcEnv.env)
-    : (Syntax.modul * int) * TcEnv.env =
-  let prims_filename = Options.prims () in
-  let prims_mod, env = parse env None prims_filename in
-  let (prims_mod, env), elapsed_time =
-    record_time (fun () -> Tc.check_module env prims_mod) in
-  (prims_mod, elapsed_time), env
-
-(***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 let tc_one_fragment curmod (env:TcEnv.env) frag =
@@ -165,24 +154,42 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
     raise (FStar.Errors.Error(err, rng))
 
 (***********************************************************************)
+(* Loading and storing cache files                                     *)
+(***********************************************************************)
+let load_module_from_cache fn
+    : option<(Syntax.modul * DsEnv.module_inclusion_info)> =
+    let cache_file = FStar.Parser.Dep.cache_file_name fn in
+    let fail tag =
+         FStar.Errors.warn
+            (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
+            (BU.format3 "%s cache file %s; will recheck %s" tag cache_file fn);
+         None
+    in
+    if BU.file_exists cache_file then
+      match BU.load_value_from_file cache_file with
+      | None ->
+        fail "Corrupt"
+      | Some (digest, tcmod, mii) ->
+         match FStar.Parser.Dep.hash_dependences fn with
+         | Some digest' when digest=digest' ->
+           Some (tcmod, mii)
+         | _ ->
+           fail "Stale"
+    else None
+
+let store_module_to_cache fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
+    let cache_file = FStar.Parser.Dep.cache_file_name fn in
+    let digest = FStar.Parser.Dep.hash_dependences fn in
+    match digest with
+    | Some hashes ->
+      BU.save_value_to_file cache_file (hashes, modul, mii)
+    | _ -> ()
+
+(***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
 let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
                               * TcEnv.env =
-  let checked_file_name = FStar.Parser.ParseIt.find_file fn ^ ".checked" in
-  let lax_checked_file_name = checked_file_name ^ ".lax" in
-  let lax_ok = not (Options.should_verify_file fn) in
-  let cache_file_to_write =
-      if lax_ok
-      then lax_checked_file_name
-      else checked_file_name
-  in
-  let cache_file_to_read () =
-      if BU.file_exists checked_file_name then Some checked_file_name
-      else if lax_ok && BU.file_exists lax_checked_file_name
-           then Some lax_checked_file_name
-           else None
-  in
   let tc_source_file () =
       let fmod, env = parse env pre_fn fn in
       let check_mod () =
@@ -197,27 +204,28 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
         then SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) check_mod
         else check_mod() //don't add a hints file for modules that are not actually verified
       in
-      if Options.cache_checked_modules ()
-      then begin
-        let tcmod, _ = tcmod in
-        let mii = FStar.ToSyntax.Env.inclusion_info env.dsenv tcmod.name in
-        BU.save_value_to_file cache_file_to_write (BU.digest_of_file fn, tcmod, mii)
-      end;
-      tcmod, env
+      let mii = FStar.ToSyntax.Env.inclusion_info env.dsenv (fst tcmod).name in
+      tcmod, mii, env
   in
   if Options.cache_checked_modules ()
-  then match cache_file_to_read () with
-       | None -> tc_source_file ()
-       | Some cache_file ->
-         match BU.load_value_from_file cache_file with
-         | None -> failwith ("Corrupt file: " ^ cache_file)
-         | Some (digest, tcmod, mii) ->
-            if digest = BU.digest_of_file fn
-            then let _, env = with_tcenv env <| FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii in
-                 let env = FStar.TypeChecker.Tc.load_checked_module env tcmod in
-                 (tcmod, 0), env
-            else failwith (BU.format1 "The file %s is stale; delete it" cache_file)
-  else tc_source_file ()
+  then match load_module_from_cache fn with
+       | None ->
+         let tcmod, mii, env = tc_source_file () in
+         store_module_to_cache fn (fst tcmod) mii;
+         tcmod, env
+       | Some (tcmod, mii) ->
+         let _, env = with_tcenv env <| FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii in
+         let env = FStar.TypeChecker.Tc.load_checked_module env tcmod in
+         (tcmod,0), env
+  else let tcmod, _, env = tc_source_file () in
+       tcmod, env
+
+(***********************************************************************)
+(* Checking Prims.fst                                                  *)
+(***********************************************************************)
+let tc_prims (env: TcEnv.env)
+    : (Syntax.modul * int) * TcEnv.env =
+  tc_one_file env None (Options.prims())
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
