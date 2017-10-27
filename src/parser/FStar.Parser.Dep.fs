@@ -653,7 +653,7 @@ let collect (filenames: list<file_name>)
           let module_name = lowercase_module_name file_name in
           if is_implementation file_name
           && has_interface file_system_map module_name
-          then PreferInterface module_name :: deps
+          then deps @ [PreferInterface module_name]
           else deps
       in
       deps_add_dep dep_graph file_name (List.unique deps, White);
