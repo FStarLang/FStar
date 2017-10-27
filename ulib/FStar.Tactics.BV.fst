@@ -1,10 +1,11 @@
 module FStar.Tactics.BV
 
 open FStar.Tactics
-open FStar.Reflection.Syntax
+open FStar.Reflection.Formula
 open FStar.Reflection.Arith
 open FStar.BV
 open FStar.UInt
+
 // using uint_t' instead of uint_t breaks the tactic (goes to inl).
 
 (* Congruence lemmas *)

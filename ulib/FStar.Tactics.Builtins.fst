@@ -5,8 +5,6 @@ Every tactic primitive, i.e., those built into the compiler
 module FStar.Tactics.Builtins
 
 open FStar.Tactics.Effect
-open FStar.Order
-open FStar.Reflection
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 

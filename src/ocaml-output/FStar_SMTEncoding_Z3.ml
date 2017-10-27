@@ -25,7 +25,8 @@ let parse_z3_version_lines:
                   then
                     let msg =
                       FStar_Util.format1
-                        "Successfully found expected Z3 commit hash %s" hash in
+                        "Successfully found expected Z3 commit hash %s\n"
+                        hash in
                     FStar_Util.print_string msg
                   else ());
                  FStar_Pervasives_Native.None)

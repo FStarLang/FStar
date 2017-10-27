@@ -2792,6 +2792,8 @@ and p_constant: FStar_Const.sconst -> FStar_Pprint.document =
             sign_width_opt in
         let uu____6225 = str repr in
         FStar_Pprint.op_Hat_Hat uu____6225 ending
+    | FStar_Const.Const_range_of  -> str "range_of"
+    | FStar_Const.Const_set_range_of  -> str "set_range_of"
     | FStar_Const.Const_range r ->
         let uu____6227 = FStar_Range.string_of_range r in str uu____6227
     | FStar_Const.Const_reify  -> str "reify"
