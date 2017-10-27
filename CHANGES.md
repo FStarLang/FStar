@@ -142,8 +142,8 @@ Guidelines for the changelog:
      - emits the entire dependence graph D of `f1 ... fn`
 
      - additionally, for every interface file `a.fsti` in D whose
-       implementation `a.fst` is not in D, we also emits the
-       dependence graph `a.fst`.
+       implementation `a.fst` is not in D, we also emit the
+       dependence graph of `a.fst`.
 
   This means, for instance, that you can run `fstar --dep make` on the
   main file of your project and get dependences (in make format) for
