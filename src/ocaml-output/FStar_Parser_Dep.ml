@@ -486,9 +486,9 @@ let check_module_declaration_against_filename:
         let uu____1360 =
           let uu____1361 = string_of_lid lid true in
           FStar_Util.format2
-            "The module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect.\n"
+            "The module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect and the module will not be verified.\n"
             uu____1361 filename in
-        FStar_Errors.warn (FStar_Ident.range_of_lid lid) uu____1360
+        FStar_Errors.err (FStar_Ident.range_of_lid lid) uu____1360
       else ()
 exception Exit
 let uu___is_Exit: Prims.exn -> Prims.bool =

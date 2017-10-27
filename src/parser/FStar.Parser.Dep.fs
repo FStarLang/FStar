@@ -303,10 +303,10 @@ let namespace_of_lid l =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    FStar.Errors.warn (range_of_lid lid)
+    FStar.Errors.err (range_of_lid lid)
       (Util.format2 "The module declaration \"module %s\" \
          found in file %s does not match its filename. Dependencies will be \
-         incorrect.\n" (string_of_lid lid true) filename)
+         incorrect and the module will not be verified.\n" (string_of_lid lid true) filename)
 
 exception Exit
 
