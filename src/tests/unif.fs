@@ -40,7 +40,7 @@ let guard_eq i g g' =
         Printf.sprintf "Test %d failed:\n\t\
                         Expected guard %s;\n\t\
                         Got guard      %s\n" i (guard_to_string g') (guard_to_string g) in
-    raise (Error(msg, Range.dummyRange))
+    raise_error (Errors.UnexpectedGuard, msg) Range.dummyRange
 
 let unify i x y g' check =
     printfn "%d ..." i;
@@ -57,7 +57,7 @@ let should_fail x y =
         match g.guard_f with
             | Trivial -> failwith (Printf.sprintf "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
             | NonTrivial f -> Printf.printf "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
-    with Error(msg, r) -> print_string msg; print_newline()
+    with Error(e, msg, r) -> print_string msg; print_newline()
 
 let unify' x y =
     let x = pars x in

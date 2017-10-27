@@ -220,12 +220,12 @@ let check_id id =
     let first_char = String.substring id.idText 0 1 in
     if String.lowercase first_char = first_char
     then ()
-    else raise (Error(Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText, id.idRange))
+    else raise_error (InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText)  id.idRange 
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
   | [] -> None
-  | _ -> raise (Error (Util.format1 "At most one %s is allowed on declarations" s, r))
+  | _ -> raise_error (MoreThanOneDeclaration, (Util.format1 "At most one %s is allowed on declarations" s)) r
 
 let mk_decl d r decorations =
   let doc = at_most_one "fsdoc" r (List.choose (function Doc d -> Some d | _ -> None) decorations) in
@@ -327,7 +327,7 @@ let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
         if should_filter
-        then let _ = Errors.warn r "Focusing on only some cases" in
+        then let _ = Errors.maybe_fatal_error r (Errors.Filtered, "Focusing on only some cases") in
          let focussed = List.filter fst branches |> List.map snd in
                  focussed@[mkWildAdmitMagic r]
         else branches |> List.map snd
@@ -335,7 +335,7 @@ let focusBranches branches r =
 let focusLetBindings lbs r =
     let should_filter = Util.for_some fst lbs in
         if should_filter
-        then let _ = Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
+        then let _ = Errors.maybe_fatal_error r (Errors.Filtered, "Focusing on only some cases in this (mutually) recursive definition") in
          List.map (fun (f, lb) ->
               if f then lb
               else (fst lb, mkAdmitMagic r)) lbs
@@ -424,7 +424,7 @@ let rec as_mlist (cur: (lid * decl) * list<decl>) (ds:list<decl>) : modul =
     | d :: ds ->
         begin match d.d with
         | TopLevelModule m' ->
-            raise (Error("Unexpected module declaration", d.drange))
+            raise_error (UnexpectedModuleDeclaration, "Unexpected module declaration") d.drange
         | _ ->
             as_mlist ((m_name, m_decl), d::cur) ds
         end
@@ -442,7 +442,7 @@ let as_frag is_light (light_range:Range.range) (ds:list<decl>) : inputFragment =
   | _ ->
       let ds = d::ds in
       List.iter (function
-        | {d=TopLevelModule _; drange=r} -> raise (Error("Unexpected module declaration", r))
+        | {d=TopLevelModule _; drange=r} -> raise_error (UnexpectedModuleDeclaration, "Unexpected module declaration") r
         | _ -> ()
       ) ds;
       Inr ds
@@ -470,7 +470,7 @@ let compile_op arity s r =
       |':' -> "Colon"
       |'$' -> "Dollar"
       |'.' -> "Dot"
-      | c -> raise (Error ("Unexpected operator symbol: '" ^ string_of_char c ^ "'" , r))
+      | c -> raise_error (UnexpectedOperatorSymbol, "Unexpected operator symbol: '" ^ string_of_char c ^ "'") r
     in
     match s with
     | ".[]<-" -> "op_String_Assignment"
@@ -635,13 +635,3 @@ let modul_to_string (m:modul) = match m with
     | Module (_, decls)
     | Interface (_, decls, _) ->
       decls |> List.map decl_to_string |> String.concat "\n"
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Error reporting
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-let error msg tm r =
- let tm = tm |> term_to_string in
- let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in
- raise (Error(msg^"\n"^tm, r))

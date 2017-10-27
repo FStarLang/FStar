@@ -384,9 +384,9 @@ let rec resugar_term (t : S.term) : A.term =
         let res_impl desugared_tm qual =
           match resugar_imp qual with
           | Some imp -> imp
-          | None -> Errors.warn t.pos
-                     (BU.format1 "Inaccessible argument %s in function application"
-                                 (parser_term_to_string desugared_tm));
+          | None -> Errors.maybe_fatal_error t.pos
+                     (Errors.InaccessibleArgument, (BU.format1 "Inaccessible argument %s in function application"
+                                 (parser_term_to_string desugared_tm)));
                    A.Nothing in
         List.fold_left (fun acc (x, qual) -> mk (A.App(acc, x, res_impl x qual))) e args
       in
@@ -638,7 +638,7 @@ let rec resugar_term (t : S.term) : A.term =
                 let h, uvs, args' = head_fv_universes_args head in
                 h, uvs, args' @ args
               | _ ->
-                raise (E.Err (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h))))
+                Errors.raise_error (Errors.NotApplicationOrFv, (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h)))) e.pos
             in
             let head, universes, args =
               (* the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker *)
@@ -646,7 +646,7 @@ let rec resugar_term (t : S.term) : A.term =
               (* TODO : report this Meta_monadic if the right options are set *)
               try head_fv_universes_args (U.unmeta e) with
                 | E.Err _ ->
-                  raise (E.Error ((BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e))), e.pos))
+                  Errors.raise_error (Errors.WrongDataAppHeadFormat, (BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e)))) e.pos
             in
             let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
             let args =
@@ -711,7 +711,7 @@ let rec resugar_term (t : S.term) : A.term =
           | Tm_unknown ->
               mk (A.Const (Const_string ("(alien:" ^ s ^ ")", e.pos)))
           | _ ->
-              E.warn e.pos "Meta_alien was not a Tm_unknown";
+              E.maybe_fatal_error e.pos (E.MetaAlienNotATmUnknow, "Meta_alien was not a Tm_unknown");
               resugar_term e
           end
       | Meta_named t ->

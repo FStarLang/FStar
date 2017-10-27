@@ -64,7 +64,7 @@ let embed_proofstate (ps:proofstate) : term =
 let unembed_proofstate (t:term) : option<proofstate> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
     with | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedProofState, (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t)));
         None
 
 let mk_app hd args =
@@ -104,7 +104,7 @@ let unembed_result (ps:proofstate) (t:term) (unembed_a:term -> option<'a>)
         BU.bind_opt (unembed_pair unembed_string unembed_proofstate tuple2) (fun x -> Some (Inr x))
 
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedTacticResult, (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t)));
         None
 
 let embed_direction (d : direction) : term =
@@ -117,5 +117,5 @@ let unembed_direction (t : term) : option<direction> =
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedDirection, (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t)));
         None

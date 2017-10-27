@@ -14,6 +14,7 @@ open FStar.Parser.Util
 open FStar.Const
 open FStar.Ident
 open FStar.String
+
 (*
  We are expected to have only 7 shift-reduce conflicts.
  A lot (176) of end-of-stream conflicts are also reported and
@@ -24,6 +25,7 @@ open FStar.String
 %}
 %start inputFragment
 %start term
+%start warn_error_list
 %token ABSTRACT
 %token AMP
 %token AND
@@ -158,6 +160,8 @@ open FStar.String
 %token VAL
 %token WHEN
 %token WITH
+%token AT
+%token PLUS
 %nonassoc THEN
 %nonassoc ELSE
 %right COLON_COLON
@@ -176,6 +180,7 @@ open FStar.String
 %type <inputFragment> inputFragment
 %type <ident> lident
 %type <term> term
+%type <(FStar.Errors.flag * (int * int)) list> warn_error_list
 %%
 
 option_FSDOC_:
@@ -679,7 +684,7 @@ rawDecl:
         let r = rhs2 parseState 1 3 in
         let lbs = focusLetBindings lbs r in
         if q <> Rec && List.length lbs <> 1
-        then raise (Error ("Unexpected multiple let-binding (Did you forget some rec qualifier ?)", r)) ;
+        then raise_error (MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
         TopLevelLet(q, lbs)
       )}
 | VAL lidentOrOperator list_multiBinder_ COLON typ
@@ -822,14 +827,14 @@ in
           | ("lift_wp", lift_wp) ->
              { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp }
           | _ ->
-             raise (Error("Unexpected identifier; expected {'lift', and possibly 'lift_wp'}", lhs parseState))
+             raise_error (UnexpectedIdentifier, "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}") (lhs parseState)
           end
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
                   | "lift_wp", "lift" -> tm1, tm2
                   | "lift", "lift_wp" -> tm2, tm1
-                  | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
+                  | _ -> raise_error (UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (lhs parseState)
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
@@ -869,14 +874,14 @@ in
           | ("lift_wp", lift_wp) ->
              { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp }
           | _ ->
-             raise (Error("Unexpected identifier; expected {'lift', and possibly 'lift_wp'}", lhs parseState))
+             raise_error (UnexpectedIdentifier, "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}") (lhs parseState)
           end
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
                   | "lift_wp", "lift" -> tm1, tm2
                   | "lift", "lift_wp" -> tm2, tm1
-                  | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
+                  | _ -> raise_error (Errors.UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (lhs parseState)
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
@@ -888,12 +893,12 @@ qualifier:
 | INLINE
     {let _1 = () in
                   (
-    raise (Error("The 'inline' qualifier has been renamed to 'unfold'", lhs parseState))
+    raise_error (InlineRenamedAsUnfold, "The 'inline' qualifier has been renamed to 'unfold'") (lhs parseState)
    )}
 | UNFOLDABLE
     {let _1 = () in
                   (
-              raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
+              raise_error (UnfoldableDeprecated, "The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it") (lhs parseState)
    )}
 | INLINE_FOR_EXTRACTION
     {let _1 = () in
@@ -963,7 +968,7 @@ letqualifier:
 aqual:
   EQUALS
     {let _1 = () in
-              ( warn (lhs parseState) "The '=' notation for equality constraints on binders is deprecated; use '$' instead";
+              ( maybe_fatal_error (lhs parseState) (Errors.DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
                                         Equality )}
 | aqualUniverses
     {let q = $1 in
@@ -1558,7 +1563,7 @@ let q =
 in
       (
         match bs with
-            | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 3))
+            | [] -> raise_error (MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
             | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
       )}
 | EXISTS binders DOT trigger noSeqTerm
@@ -1569,7 +1574,7 @@ let q =
 in
       (
         match bs with
-            | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 3))
+            | [] -> raise_error (MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
             | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
       )}
 
@@ -1862,7 +1867,7 @@ tmNoEq:
       (
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
-            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs parseState 1)) in
+            | _ -> raise_error (MissingQuantifierBinder, "Missing binder for the first component of a dependent tuple") (rhs parseState 1) in
         let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
         let tail = e2 in
         let dom, res = match tail.tm with
@@ -2232,7 +2237,7 @@ constant:
     {let n = $1 in
      (
         if snd n then
-          errorR(Error("This number is outside the allowable range for representable integer constants", lhs(parseState)));
+          maybe_fatal_error (lhs parseState) (OutOfRangeOfInt, "This number is outside the allowable range for representable integer constants");
         Const_int (fst n, None)
      )}
 | CHAR
@@ -2260,7 +2265,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          errorR(Error("This number is outside the allowable range for 8-bit signed integers", lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt8, "This number is outside the allowable range for 8-bit signed integers");
         Const_int (fst n, Some (Signed, Int8))
       )}
 | UINT16
@@ -2270,7 +2275,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          errorR(Error("This number is outside the allowable range for 16-bit signed integers", lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt16, "This number is outside the allowable range for 16-bit signed integers");
         Const_int (fst n, Some (Signed, Int16))
       )}
 | UINT32
@@ -2280,7 +2285,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          errorR(Error("This number is outside the allowable range for 32-bit signed integers", lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt32, "This number is outside the allowable range for 32-bit signed integers");
         Const_int (fst n, Some (Signed, Int32))
       )}
 | UINT64
@@ -2290,7 +2295,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          errorR(Error("This number is outside the allowable range for 64-bit signed integers", lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt64, "This number is outside the allowable range for 64-bit signed integers");
         Const_int (fst n, Some (Signed, Int64))
       )}
 | REIFY
@@ -2310,19 +2315,17 @@ universeFrom:
     {let (u1, op_plus, u2) = ($1, $2, $3) in
        (
          if op_plus <> "+"
-         then errorR(Error("The operator " ^ op_plus ^ " was found in universe context."
-                           ^ "The only allowed operator in that context is +.",
-                           rhs parseState 2)) ;
+         then maybe_fatal_error (rhs parseState 2) (OpPlusInUniverse, ("The operator " ^ op_plus ^ " was found in universe context."
+                           ^ "The only allowed operator in that context is +."));
          mk_term (Op(mk_ident (op_plus, rhs parseState 2), [u1 ; u2])) (rhs2 parseState 1 3) Expr
        )}
 | ident nonempty_list_atomicUniverse_
     {let (max, us) = ($1, $2) in
       (
         if text_of_id max <> text_of_lid max_lid
-        then errorR(Error("A lower case ident " ^ text_of_id max ^
+        then maybe_fatal_error (rhs parseState 1) (InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
-                          "It should be either max or a universe variable 'usomething.",
-                          rhs parseState 1)) ;
+                          "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
         mkApp max (map (fun u -> u, Nothing) us) (rhs2 parseState 1 2)
       )}
@@ -2335,8 +2338,7 @@ atomicUniverse:
     {let n = $1 in
       (
         if snd n then
-          errorR(Error("This number is outside the allowable range for representable integer constants",
-                       lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (Errors.OutOfRangeOfInt, "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       )}
 | lident
@@ -2432,6 +2434,29 @@ in
 | reverse_left_flexible_nonempty_list_BAR_patternBranch_ BAR patternBranch
     {let (xs, _2, x) = ($1, (), $3) in
    ( x :: xs )}
+
+warn_error_list:
+| warn_error EOF { $1 }
+
+warn_error:
+| flag range
+  { [($1, $2)] }
+| flag range warn_error { ($1, $2) :: $3 }
+
+flag:
+| AT
+  { FStar.Errors.flag.CError }
+| MINUS
+  { FStar.Errors.flag.CSilent }
+| PLUS
+  { FStar.Errors.flag.CWarning }
+
+range:
+| INT
+  { let n = $1 in let i = int_of_string (fst n) in
+     (i, i) }
+| INT DOT DOT INT
+  { let i = int_of_string (fst $1) in let j = int_of_string (fst $4) in (i, j) }
 
 %%
 

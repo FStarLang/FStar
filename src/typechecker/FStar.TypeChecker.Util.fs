@@ -46,7 +46,7 @@ module C = FStar.Parser.Const
 
 //Reporting errors
 let report env errs =
-    Errors.err (Env.get_range env)
+    Errors.maybe_fatal_error (Env.get_range env)
                (Err.failed_to_prove_specification errs)
 
 (************************************************************************)
@@ -93,9 +93,9 @@ let check_uvars r t =
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
-    Errors.err r
-      (BU.format2 "Unconstrained unification variables %s in type signature %s; \
-       please add an annotation" us (Print.term_to_string t));
+    Errors.maybe_fatal_error r
+      (Errors.UncontrainedUnificationVar, (BU.format2 "Unconstrained unification variables %s in type signature %s; \
+       please add an annotation" us (Print.term_to_string t)));
     Options.pop()
 
 (************************************************************************)
@@ -169,9 +169,8 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
        | Inr c ->
              if U.is_tot_or_gtot_comp c
              then U.comp_result c
-             else raise (Error(BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
-                                                        (Print.comp_to_string c),
-                           rng))
+             else raise_error (Errors.UnexpectedComputationTypeForLetRec, (BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+                                                        (Print.comp_to_string c))) rng
        | Inl t -> t in
     [], t, b
 
@@ -280,7 +279,7 @@ let pat_as_exp (allow_implicits:bool)
           let rec aux formals pats =
               match formals, pats with
               | [], [] -> []
-              | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid fv.fv_name.v))
+              | [], _::_ -> raise_error (Errors.TooManyPatternArguments, ("Too many pattern arguments")) (range_of_lid fv.fv_name.v)
               | _::_, [] -> //fill the rest with dot patterns (if allowed), if all the remaining formals are implicit
                 formals |>
                 List.map (fun (t, imp) ->
@@ -291,9 +290,8 @@ let pat_as_exp (allow_implicits:bool)
                             maybe_dot inaccessible a r, true
 
                             | _ ->
-                              raise (Error(BU.format1 "Insufficient pattern arguments (%s)"
-                                                      (Print.pat_to_string p),
-                                           range_of_lid fv.fv_name.v)))
+                              raise_error (Errors.InsufficientPatternArguments, (BU.format1 "Insufficient pattern arguments (%s)"
+                                                      (Print.pat_to_string p))) (range_of_lid fv.fv_name.v))
 
               | f::formals', (p, p_imp)::pats' ->
                 begin
@@ -317,7 +315,7 @@ let pat_as_exp (allow_implicits:bool)
         let p = elaborate_pat env p in
         let b, a, w, env, arg, p = pat_as_arg_with_env allow_wc_dependence env p in
         match b |> BU.find_dup bv_eq with
-            | Some x -> raise (Error(Err.nonlinear_pattern_variable x, p.p))
+            | Some x -> raise_error (Err.nonlinear_pattern_variable x) p.p
             | _ -> b, a, w, arg, p
     in
     let b, _, _, tm, p = one_pat true env p in
@@ -594,7 +592,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             then if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
                  then Inl (c2, "Early in prims; we don't have bind yet")
-                 else raise (Error("Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad", Env.get_range env))
+                 else raise_error (Errors.NonTrivialPreConditionInPrims, ("Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")) (Env.get_range env)
             else if U.is_total_comp c1
                  && U.is_total_comp c2
             then subst_c2 "both total"
@@ -862,7 +860,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_to_string c) (Print.comp_to_string c');
   match Rel.sub_comp env c c' with
-    | None -> raise (Error(Err.computed_computation_type_does_not_match_annotation env e c c', Env.get_range env))
+    | None -> raise_error (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
     | Some g -> e, c', g
 
 let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
@@ -896,7 +894,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
   match gopt with
     | None, _ ->
         if env.failhard
-        then raise (Error (Err.basic_type_error env (Some e) t lc.res_typ, e.pos))
+        then raise_error (Err.basic_type_error env (Some e) t lc.res_typ) e.pos
         else (
             subtype_fail env e lc.res_typ t; //log a sub-typing error
             e, {lc with res_typ=t}, Rel.trivial_guard //and keep going to type-check the result of the program
@@ -987,7 +985,7 @@ let pure_or_ghost_pre_and_post env comp =
                       | (req, _)::(ens, _)::_ ->
                          Some (norm req), (norm <| mk_post_type ct.result_typ ens)
                       | _ ->
-                        raise (Error (BU.format1 "Effect constructor is not fully applied; got %s" (Print.comp_to_string comp), comp.pos))
+                        raise_error (Errors.EffectConstructorNotFullyApplied, (BU.format1 "Effect constructor is not fully applied; got %s" (Print.comp_to_string comp))) comp.pos
                    end
               else let ct = Env.unfold_effect_abbrev env comp in
                    begin match ct.effect_args with
@@ -1061,10 +1059,10 @@ let maybe_instantiate (env:Env.env) e t =
              let n_expected = number_of_implicits expected_t in
              let n_available = number_of_implicits t in
              if n_available < n_expected
-             then raise (Error(BU.format3 "Expected a term with %s implicit arguments, but %s has only %s"
+             then raise_error (Errors.MissingImplicitArguments, (BU.format3 "Expected a term with %s implicit arguments, but %s has only %s"
                                         (BU.string_of_int n_expected)
                                         (Print.term_to_string e)
-                                        (BU.string_of_int n_available), Env.get_range env))
+                                        (BU.string_of_int n_available))) (Env.get_range env)
              else Some (n_available - n_expected)
         in
         let decr_inst = function
@@ -1154,8 +1152,8 @@ let check_universe_generalization
   match explicit_univ_names, generalized_univ_names with
   | [], _ -> generalized_univ_names
   | _, [] -> explicit_univ_names
-  | _ -> raise (Error("Generalized universe in a term containing explicit universe annotation : "
-                      ^ Print.term_to_string t, t.pos))
+  | _ -> raise_error (Errors.UnexpectedGeneralizedUniverse, ("Generalized universe in a term containing explicit universe annotation : "
+                      ^ Print.term_to_string t)) t.pos
 
 let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.normalize [N.NoFullNorm; N.Beta] env t0 in
@@ -1224,7 +1222,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                                    requires an incompatible set of universes for %s and %s"
                             (Print.lbname_to_string lb1)
                             (Print.lbname_to_string lb2) in
-             raise (Error(msg, Env.get_range env))
+             raise_error (Errors.IncompatibleSetOfUniverse, msg) (Env.get_range env)
      in
      let force_uvars_eq lec2 u1 u2 =
         let uvars_subseteq u1 u2 =
@@ -1240,7 +1238,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                                    requires an incompatible number of types for %s and %s"
                             (Print.lbname_to_string lb1)
                             (Print.lbname_to_string lb2) in
-             raise (Error(msg, Env.get_range env))
+             raise_error (Errors.IncompatibleNumberOfTypes, msg) (Env.get_range env)
      in
 
      let lecs =
@@ -1357,7 +1355,7 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
   in
   let env = {env with use_eq=env.use_eq || (env.is_pattern && is_var e)} in
   match check env t1 t2 with
-    | None -> raise (Error(Err.expected_expression_of_type env t2 e t1, Env.get_range env))
+    | None -> raise_error (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
     | Some g ->
         if debug env <| Options.Other "Rel"
         then BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
@@ -1584,10 +1582,9 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       let r = U.range_of_sigelt se in
       let no_dup_quals = BU.remove_dups (fun x y -> x=y) quals in
       let err' msg =
-          raise (Error(BU.format2
+          raise_error (Errors.QulifierListNotPermitted, (BU.format2
                           "The qualifier list \"[%s]\" is not permissible for this element%s"
-                          (Print.quals_to_string quals) msg
-                          , r)) in
+                          (Print.quals_to_string quals) msg)) r in
       let err msg = err' (": " ^ msg) in
       let err' () = err' "" in
       if List.length quals <> List.length no_dup_quals
@@ -1865,7 +1862,7 @@ let mk_data_operations iquals env tcs se =
             | None ->
                 if lid_equals typ_lid C.exn_lid
                 then [], U.ktype0, true
-                else raise (Error("Unexpected data constructor", se.sigrng))
+                else raise_error (Errors.UnexpectedDataConstructor, "Unexpected data constructor") se.sigrng
     in
 
     let inductive_tps = SS.subst_binders univ_opening inductive_tps in

@@ -112,7 +112,7 @@ let check_nogen env t k =
     [], N.normalize [N.Beta] env t
 
 let monad_signature env m s =
- let fail () = raise (Error(Err.unexpected_signature_for_monad env m s, range_of_lid m)) in
+ let fail () = raise_error (Err.unexpected_signature_for_monad env m s) (range_of_lid m) in
  let s = SS.compress s in
  match s.n with
   | Tm_arrow(bs, c) ->
@@ -160,7 +160,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
   in
    //Returns (a:Type) and M.WP a, for a fresh name a
   let wp_with_fresh_result_type env mname signature =
-       let fail t = raise (Error(Err.unexpected_signature_for_monad env mname t, range_of_lid mname)) in
+       let fail t = raise_error (Err.unexpected_signature_for_monad env mname t) (range_of_lid mname) in
        match (SS.compress signature).n with
           | Tm_arrow(bs, c) ->
             let bs = SS.open_binders bs in
@@ -341,7 +341,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             let univs, repr = check_and_gen' env ed.return_repr expected_k in
             match univs with
             | [] -> [], repr
-            | _ -> raise (Error("Unexpected universe-polymorphic return for effect", repr.pos)) in
+            | _ -> raise_error (Errors.UnexpectedUniversePolymorphicReturn, "Unexpected universe-polymorphic return for effect") repr.pos in
 
       let actions =
         let check_action (act:action) =
@@ -378,9 +378,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
               let k = U.arrow bs (S.mk_Total res) in
               let k, _, g = tc_tot_or_gtot_term env k in
               k, g
-            | _ -> raise (Error(BU.format2
+            | _ -> raise_error (Errors.ActionMustHaveFunctionType, (BU.format2
               "Actions must have function types (not: %s, a.k.a. %s)"
-                (Print.term_to_string act_typ) (Print.tag_of_term act_typ), act_defn.pos))
+                (Print.term_to_string act_typ) (Print.tag_of_term act_typ))) act_defn.pos
           in
           let g = Rel.teq env act_typ expected_k in
           Rel.force_trivial_guard env (Rel.conj_guard g_a (Rel.conj_guard g_k (Rel.conj_guard g_t g)));
@@ -437,7 +437,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
         BU.format3 "The effect combinator is %s (n=%s) (%s)"
           error (string_of_int n) (Print.tscheme_to_string ts)
       in
-      raise (Error (err_msg, (snd ts ).pos))
+      raise_error (Errors.MismatchUniversePolymorphic, err_msg) (snd ts ).pos
     end ;
     ts in
   let close_action act =
@@ -484,8 +484,8 @@ let cps_and_elaborate env ed =
   let signature, _ = tc_trivial_guard env signature_un in
   // We will open binders through [open_and_check]
 
-  let raise_error : string -> 'a = fun err_msg ->
-    raise (Error (err_msg, signature.pos))
+  let raise_error : (Errors.raw_error * string) -> 'a = fun (e, err_msg) ->
+    Errors.raise_error (e, err_msg) signature.pos
   in
 
   let effect_binders = List.map (fun (bv, qual) ->
@@ -501,7 +501,7 @@ let cps_and_elaborate env ed =
     | Tm_arrow ([(a, _)], effect_marker) ->
         a, effect_marker
     | _ ->
-        raise_error "bad shape for effect-for-free signature"
+        raise_error (Errors.BadSignatureShape, "bad shape for effect-for-free signature")
   in
 
   (* TODO : having "_" as a variable name can create a really strange shadowing
@@ -549,7 +549,7 @@ let cps_and_elaborate env ed =
     // TODO: assert no universe polymorphism
     let item, item_comp = open_and_check env other_binders item in
     if not (U.is_total_lcomp item_comp) then
-      raise (Err (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (Print.lcomp_to_string item_comp)));
+      raise_err (Errors.ComputationNotTotal, (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (Print.lcomp_to_string item_comp)));
     let item_t, item_wp, item_elab = DMFF.star_expr dmff_env item in
     let item_wp = recheck_debug "*" env item_wp in
     let item_elab = recheck_debug "_" env item_elab in
@@ -591,7 +591,7 @@ let cps_and_elaborate env ed =
               (match what' with
                | None -> "None"
                | Some rc -> FStar.Ident.text_of_lid rc.residual_effect)
-          in raise_error error_msg
+          in raise_error (Errors.WrongBodyTypeForReturnWP, error_msg)
         in
         begin match what' with
         | None -> fail ()
@@ -617,7 +617,7 @@ let cps_and_elaborate env ed =
               (Some rc_gtot)
 
       | _ ->
-          raise_error "unexpected shape for return"
+          raise_error (Errors.UnexpectedReturnShape, "unexpected shape for return")
   in
 
   let return_wp =
@@ -626,7 +626,7 @@ let cps_and_elaborate env ed =
     | Tm_abs (b1 :: b2 :: bs, body, what) ->
         U.abs ([ b1; b2 ]) (U.abs bs body what) (Some rc_gtot)
     | _ ->
-        raise_error "unexpected shape for return"
+        raise_error (Errors.UnexpectedReturnShape, "unexpected shape for return")
   in
   let bind_wp =
     match (SS.compress bind_wp).n with
@@ -635,7 +635,7 @@ let cps_and_elaborate env ed =
         let r = S.lid_as_fv PC.range_lid (S.Delta_defined_at_level 1) None in
         U.abs ([ S.null_binder (mk (Tm_fvar r)) ] @ binders) body what
     | _ ->
-        raise_error "unexpected shape for bind"
+        raise_error (Errors.UnexpectedBindShape, "unexpected shape for bind")
   in
 
   let apply_close t =
@@ -754,22 +754,22 @@ let cps_and_elaborate env ed =
                     BU.format1 "Impossible to generate DM effect: no post candidate %s (Type variable does not appear)"
                       (Print.term_to_string arrow)
                   in
-                  raise (Err err_msg)
+                  raise_err (Errors.ImpossibleToGenerateDMEffect, err_msg)
                 | _ ->
                   let err_msg =
                       BU.format1 "Impossible to generate DM effect: multiple post candidates %s" (Print.term_to_string arrow)
                   in
-                  raise (Err err_msg)
+                  raise_err (Errors.ImpossibleToGenerateDMEffect, err_msg)
             in
             // Pre-condition does not mention the return type; don't close over it
             U.arrow pre_args c,
             // Post-condition does, however!
             U.abs (type_param :: effect_param) (fst post).sort None
         | _ ->
-            raise_error (BU.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow))
+            raise_error (Errors.ImpossiblePrePostArrow, (BU.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow)))
         end
     | _ ->
-        raise_error (BU.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type))
+        raise_error (Errors.ImpossiblePrePostAbs, (BU.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type)))
   in
   // Desugaring is aware of these names and generates references to them when
   // the user writes something such as [STINT.repr]
@@ -824,7 +824,7 @@ let tc_lex_t env ses quals lids =
             (lid_equals lex_t PC.lex_t_lid
              && lid_equals lex_top PC.lextop_lid
              && lid_equals lex_cons PC.lexcons_lid) -> ()
-        | _ -> raise (Error ("Invalid (partial) redefinition of lex_t", err_range))
+        | _ -> Errors.raise_error (Errors.InvalidRedefinitionOfLexT, ("Invalid (partial) redefinition of lex_t")) err_range
     end;
     begin match ses with
       | [{ sigel = Sig_inductive_typ(lex_t, [], [], t, _, _);  sigquals = []; sigrng = r };
@@ -876,7 +876,7 @@ let tc_lex_t env ses quals lids =
           BU.format1 "Invalid (re)definition of lex_t: %s\n"
             (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, lids))))
         in
-        raise (Error (err_msg, err_range))
+        raise_error (Errors.InvalidRedefinitionOfLexT, err_msg) err_range
     end
 
 let tc_assume (env:env) (lid:lident) (phi:formula) (quals:list<qualifier>) (r:Range.range) :sigelt =
@@ -914,7 +914,7 @@ let tc_inductive env ses quals lids =
              | Sig_inductive_typ (lid, _, _, _, _, _) -> lid, ty.sigrng
              | _                                         -> failwith "Impossible!"
            in
-           Errors.err r ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition")
+           Errors.maybe_fatal_error r (Errors.InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition"))
          else ()
        ) tcs in
        ());
@@ -984,8 +984,8 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
   | Sig_pragma(p) ->
     let set_options t s = match Options.set_options t s with
       | Getopt.Success -> ()
-      | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
-      | Getopt.Error s -> raise (Error ("Failed to process pragma: " ^s, r))
+      | Getopt.Help  -> raise_error (Errors.FailToProcessPragma, ("Failed to process pragma: use 'fstar --help' to see which options are available")) r
+      | Getopt.Error s -> raise_error (Errors.FailToProcessPragma,  ("Failed to process pragma: " ^s)) r
     in
     begin match p with
       | LightOff ->
@@ -1031,7 +1031,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let wp_a_tgt    = SS.subst [NT(b, S.bv_to_name a)] wp_b_tgt in
     let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
     let repr_type eff_name a wp =
-      let no_reify l = raise (Error(BU.format1 "Effect %s cannot be reified" l.str, Env.get_range env)) in
+      let no_reify l = raise_error (Errors.EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) (Env.get_range env) in
       match Env.effect_decl_opt env eff_name with
       | None -> no_reify eff_name
       | Some (ed, qualifiers) ->
@@ -1108,10 +1108,10 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       | _ -> failwith "Impossible (t is an arrow)" in
     if List.length uvs <> 1
     then (let _, t = Subst.open_univ_vars uvs t in
-          raise (Error(BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
+          raise_error (Errors.TooManyUniverse, (BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
                                   (Print.lid_to_string lid)
                                   (List.length uvs |> BU.string_of_int)
-                                  (Print.term_to_string t), r)));
+                                  (Print.term_to_string t))) r);
     let se = { se with sigel = Sig_effect_abbrev(lid, uvs, tps, c, flags) } in
     [se], []
 
@@ -1125,9 +1125,9 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
     let env = Env.set_range env r in
 
     if lid_exists env lid
-    then raise (Error (BU.format1 "Top-level declaration %s for a name that is already used in this module; \
+    then raise_error (Errors.AlreadyDefinedTopLevelDeclaration, (BU.format1 "Top-level declaration %s for a name that is already used in this module; \
                                    top-level declarations must be unique in their module"
-                                   (Ident.text_of_lid lid), r)) ;
+                                   (Ident.text_of_lid lid))) r;
 
     let uvs, t =
         if uvs = []
@@ -1163,10 +1163,10 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
         if List.length q = List.length q'
         && List.forall2 U.qualifier_equal q q'
         then Some q
-        else raise (Error(BU.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
+        else raise_error (Errors.InconsistentQualifierAnnotation, (BU.format3 "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
                               (Print.lid_to_string l)
                               (Print.quals_to_string q)
-                              (Print.quals_to_string q'), r))
+                              (Print.quals_to_string q'))) r
     in
 
     let rename_parameters lb =
@@ -1219,7 +1219,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
                   mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None), None)) None lb.lbdef.pos
               in
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
-              then raise (Error ("Inline universes are incoherent with annotation from val declaration", r));
+              then raise_error (Errors.IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
               false, //explicit annotation provided; do not generalize
               mk_lb (Inr lbname, uvs, PC.effect_ALL_lid, tval, def),
               quals_opt

@@ -60,10 +60,10 @@ let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
 
 let failed_to_parse s e =
     match e with
-        | Err msg ->
+        | Err (e, msg) ->
             printfn "Failed to parse %s\n%s\n" s msg;
             exit -1
-        | Error(msg, r) ->
+        | Error(e, msg, r) ->
             printfn "Failed to parse %s\n%s: %s\n" s (Range.string_of_range r) msg;
             exit -1
         | _ -> raise e
@@ -106,7 +106,7 @@ let pars_and_tc_fragment (s:string) =
           let n = get_err_count () in
           if n <> 0
           then (report ();
-                raise (Err (Util.format1 "%s errors were reported" (string_of_int n))))
-        with e -> report(); raise (Err ("tc_one_fragment failed: " ^s))
+                raise_err (Errors.ErrorsReported, Util.format1 "%s errors were reported" (string_of_int n)))
+        with e -> report(); raise_err (Errors.TcOneFragmentFailed, ("tc_one_fragment failed: " ^s))
     with
         | e when not ((Options.trace_error())) -> failed_to_parse s e

@@ -103,6 +103,10 @@ let init_native_tactics () =
       Tactics.Load.load_tactics_dir dir
   | None -> ()
 
+let init_warn_error() =
+  let s = Options.warn_error() in
+  FStar.Parser.ParseIt.parse_warn_error s
+
 (****************************************************************************)
 (* Main function                                                            *)
 (****************************************************************************)
@@ -115,6 +119,7 @@ let go _ =
         Util.print_string msg
     | Success ->
         init_native_tactics ();
+        init_warn_error();
 
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
         then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)

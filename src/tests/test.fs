@@ -16,7 +16,7 @@ let main argv =
         Norm.run_all ();
         Unif.run_all ();
         0
-    with Error(msg, r) when not <| Options.trace_error()->
+    with Error(e, msg, r) when not <| Options.trace_error()->
          if r = Range.dummyRange
          then print_string msg
          else printfn "%s: %s" (Range.string_of_range r) msg;

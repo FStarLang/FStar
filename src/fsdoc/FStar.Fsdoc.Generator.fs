@@ -28,6 +28,7 @@ open FStar
 open FStar.Util
 open FStar.Parser.AST
 open FStar.Ident
+open FStar.Errors
 
 module O = FStar.Options
 module P = FStar.Parser.Driver
@@ -194,7 +195,7 @@ let document_toplevel name topdecl =
         | None -> None, Some(doc)
         | Some (_, summary) -> Some(summary), Some(doc))
     | None -> None, None)
-  | _ -> raise(FStar.Errors.Err("Not a TopLevelModule"))
+  | _ -> Errors.raise_err (Errors.NotTopLevelModule, "Not Top-level Module")
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -228,7 +229,7 @@ let document_module (m:modul) =
           close_file fd;
           name
         end
-    | None -> raise(FStar.Errors.Err(Util.format1 "No singleton toplevel in module %s" name.str))
+    | None -> Errors.raise_err (Errors.NonSingletonTopLevel, (Util.format1 "No singleton toplevel in module %s" name.str))
 
 ///////////////////////////////////////////////////////////////////////////////
 // entry point

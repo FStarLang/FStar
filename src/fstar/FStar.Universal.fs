@@ -68,7 +68,7 @@ let parse (env:TcEnv.env) (pre_fn: option<string>) (fn:string)
           let _, env = with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface lid1 decls1 in
           with_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast true
         | _ ->
-            raise (Err ("mismatch between pre-module and module\n"))
+            Errors.raise_err (Errors.PreModuleMismatch, "mismatch between pre-module and module\n")
   in
   with_tcenv env <| Desugar.ast_modul_to_modul ast
 
@@ -126,8 +126,7 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
       with_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
     (match curmod with
      | Some _ when not (acceptable_mod_name modul) ->
-       raise (Errors.Error ("Interactive mode only supports a single module at the top-level",
-                             range_of_first_mod_decl ast_modul))
+       Errors.raise_error (Errors.NonSingletonTopLevelModule, "Interactive mode only supports a single module at the top-level") (range_of_first_mod_decl ast_modul)
      | _ -> ());
     let modul, _, env = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                         else Tc.tc_partial_modul env modul false in
@@ -136,7 +135,7 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
     match curmod with
     | None ->
       let { Parser.AST.drange = rng } = List.hd ast_decls in
-      raise (Errors.Error ("First statement must be a module declaration", rng))
+      Errors.raise_error (Errors.ModuleFirstStatement, "First statement must be a module declaration") rng
     | Some modul ->
       let env, ast_decls_l =
           BU.fold_map
@@ -159,10 +158,10 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
   | Inl (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
     snd (with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
   | Inl _ ->
-    raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
+    Errors.raise_err (FStar.Errors.ParseError, (BU.format1 "Unexpected result from parsing %s; expected a single interface"
                              interface_file_name))
   | Inr (err, rng) ->
-    raise (FStar.Errors.Error(err, rng))
+    Errors.raise_error err rng
 
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)

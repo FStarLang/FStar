@@ -295,10 +295,10 @@ let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface &&
 let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (text_of_lid lid)
 
 let name_not_found (l:lid) =
-  format1 "Name \"%s\" not found" l.str
+  (Errors.NameNotFound, (format1 "Name \"%s\" not found" l.str))
 
 let variable_not_found v =
-  format1 "Variable \"%s\" not found" (Print.bv_to_string v)
+  (Errors.VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
 
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (Unionfind.univ_fresh ())
@@ -518,7 +518,7 @@ let lid_exists env l =
 let lookup_bv env bv =
     let bvr = range_of_bv bv in
     match try_lookup_bv env bv with
-    | None -> raise (Error(variable_not_found bv, bvr))
+    | None -> raise_error (variable_not_found bv) bvr
     | Some (t, r) -> Subst.set_use_range bvr t,
                      Range.set_use_range r (Range.use_range bvr)
 
@@ -532,7 +532,7 @@ let try_lookup_lid env l =
 
 let lookup_lid env l =
     match try_lookup_lid env l with
-    | None -> raise (Error(name_not_found l, range_of_lid l))
+    | None -> raise_error (name_not_found l) (range_of_lid l)
     | Some v -> v
 
 let lookup_univ env x =
@@ -553,13 +553,13 @@ let lookup_val_decl env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_declare_typ(_, uvs, t) }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
-    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let datacons_of_typ env lid =
   match lookup_qname env lid with
@@ -599,7 +599,7 @@ let try_lookup_effect_lid env (ftv:lident) : option<typ> =
 
 let lookup_effect_lid env (ftv:lident) : typ =
   match try_lookup_effect_lid env ftv with
-    | None -> raise (Error(name_not_found ftv, range_of_lid ftv))
+    | None -> raise_error (name_not_found ftv) (range_of_lid ftv)
     | Some k -> k
 
 let lookup_effect_abbrev env (univ_insts:universes) lid0 =
@@ -734,7 +734,7 @@ let is_type_constructor env lid =
 let num_inductive_ty_params env lid =
   match lookup_qname env lid with
   | Some (Inr ({ sigel = Sig_inductive_typ (_, _, tps, _, _, _) }, _), _) -> List.length tps
-  | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+  | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
@@ -744,7 +744,7 @@ let effect_decl_opt env l =
 
 let get_effect_decl env l =
   match effect_decl_opt env l with
-    | None -> raise (Error(name_not_found l, range_of_lid l))
+    | None -> raise_error (name_not_found l) (range_of_lid l)
     | Some md -> fst md
 
 let identity_mlift : mlift =
@@ -758,7 +758,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
   then Const.effect_GTot_lid, identity_mlift, identity_mlift
   else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
-        | None -> raise (Error(BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2), env.range))
+        | None -> raise_error (Errors.EffectsCannotBeComposed, (BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
         | Some (_, _, m3, j1, j2) -> m3, j1, j2
 
 let monad_leq env l1 l2 : option<edge> =
@@ -887,8 +887,7 @@ let build_lattice env se = match se.sigel with
     let _ = order |> List.iter (fun edge ->
         if Ident.lid_equals edge.msource Const.effect_DIV_lid
         && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
-        then raise (Error(BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str,
-                          get_range env)))
+        then raise_error (Errors.DivergentComputationCannotBeIncludedInTotal, (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str)) (get_range env))
     in
     let joins =
       ms |> List.collect (fun i ->
@@ -955,11 +954,10 @@ let rec unfold_effect_abbrev env comp =
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
       if List.length binders <> List.length c.effect_args + 1
-      then raise (Error (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+      then raise_error (Errors.ConstructorArgLengthMismatch, (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                                 (BU.string_of_int (List.length binders))
                                 (BU.string_of_int (List.length c.effect_args + 1))
-                                (Print.comp_to_string (S.mk_Comp c))
-                            , comp.pos));
+                                (Print.comp_to_string (S.mk_Comp c)))) comp.pos;
       let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = Subst.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
@@ -985,14 +983,14 @@ let effect_repr_aux only_reifiable env c u_c =
               let message = BU.format1 "Not enough arguments for effect %s. " name ^
                 "This usually happens when you use a partially applied DM4F effect, " ^
                 "like [TAC int] instead of [Tac int]." in
-              raise (Error (message, get_range env)) in
+              raise_error (Errors.NotEnoughArgumentsForEffect, message) (get_range env) in
           let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
           Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
 
 let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
 
 let reify_comp env c u_c : term =
-    let no_reify l = raise (Error(BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l), get_range env)) in
+    let no_reify l = raise_error (Errors.EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l))) (get_range env) in
     match effect_repr_aux true env c u_c with
     | None -> no_reify (U.comp_effect_name c)
     | Some tm -> tm

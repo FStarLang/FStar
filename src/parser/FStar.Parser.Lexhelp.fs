@@ -234,5 +234,5 @@ let kwd_or_id args (r:Range.range) s =
           INT (Util.string_of_int <| Range.line_of_pos (Range.start_of_range r), false)
         | _ ->
           if Util.starts_with s Ident.reserved_prefix
-          then raise (Error(Ident.reserved_prefix  ^ " is a reserved prefix for an identifier", r))
+          then raise_error (Errors.ReservedPrefix, (Ident.reserved_prefix  ^ " is a reserved prefix for an identifier")) r
           else IDENT (intern_string(s))

@@ -64,18 +64,18 @@ let with_captured_errors' env f =
               "F* may be in an inconsistent state.\n" ^
               "Please file a bug report, ideally with a " ^
               "minimized version of the program that triggered the error." in
-    TcErr.add_errors env [(msg, TcEnv.get_range env)];
+    TcErr.add_errors env [(Errors.AssertionFailure, msg, TcEnv.get_range env)];
     // Make sure the user sees the error, even if it happened transiently while
     // running an automatic syntax checker like FlyCheck.
     Util.print_error msg;
     None
 
-  | Error(msg, r) ->
-    TcErr.add_errors env [(msg, r)];
+  | Error(e, msg, r) ->
+    TcErr.add_errors env [(e, msg, r)];
     None
 
-  | Err msg ->
-    TcErr.add_errors env [(msg, TcEnv.get_range env)];
+  | Err (e, msg) ->
+    TcErr.add_errors env [(e, msg, TcEnv.get_range env)];
     None
 
   | Stop ->
@@ -316,16 +316,16 @@ let deps_and_repl_ld_tasks_of_our_file filename =
     match same_name with
     | [intf; impl] ->
       if not (Parser.Dep.is_interface intf) then
-         raise (Err (Util.format1 "Expecting an interface, got %s" intf));
+         raise_err (Errors.MissingInterface, Util.format1 "Expecting an interface, got %s" intf);
       if not (Parser.Dep.is_implementation impl) then
-         raise (Err (Util.format1 "Expecting an implementation, got %s" impl));
+         raise_err (Errors.MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl);
       [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)]
     | [impl] ->
       []
     | _ ->
       let mods_str = String.concat " " same_name in
       let message = "Too many or too few files matching %s: %s" in
-      raise (Err (Util.format2 message our_mod_name mods_str));
+      raise_err (Errors.TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str));
       [] in
 
   let tasks =

@@ -44,8 +44,8 @@ let parse_fragment frag : fragment =
     | Inl (Inr decls, _) -> //interactive mode: more decls
       Decls decls
 
-    | Inr (msg,r) ->
-      raise (Error(msg, r))
+    | Inr (e, r) ->
+      raise_error e r
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
@@ -56,8 +56,8 @@ let parse_file fn =
   | Inl (Inr _ , _) ->
     let msg = Util.format1 "%s: expected a module\n" fn in
     let r = Range.dummyRange in
-    raise (Error(msg, r))
+    raise_error (Errors.ModuleExpected, msg) r
 
-  | Inr (msg, r) ->
-    raise (Error(msg, r))
+  | Inr (e, r) ->
+    raise_error e r
 

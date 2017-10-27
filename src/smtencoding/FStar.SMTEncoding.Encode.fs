@@ -1014,9 +1014,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           begin match lopt with
             | None ->
               //we don't even know if this is a pure function, so give up
-              Errors.warn t0.pos (BU.format1
+              Errors.maybe_fatal_error t0.pos (Errors.FunctionLiteralPrecisionLoss, (BU.format1
                 "Losing precision when encoding a function literal: %s\n\
-                 (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0));
+                 (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0)));
               fallback ()
 
             | Some rc ->
@@ -1092,7 +1092,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let _ ->
-        Errors.diag t0.pos "Non-top-level recursive functions, and their enclosings let bindings (including the top-level let) are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
+        Errors.diag t.pos "Non-top-level recursive functions, and their enclosings let bindings (including the top-level let) are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
         raise Inner_let_rec
 
       | Tm_match(e, pats) ->
@@ -1202,7 +1202,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let list_elements (e:S.term) : list<S.term> =
       match U.list_elements e with
       | Some l -> l
-      | None -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
+      | None -> Errors.maybe_fatal_error e.pos (Errors.NonListLiteralSMTPattern, "SMT pattern is not a list literal; ignoring the pattern"); [] in
 
     let one_pat p =
         let head, args = U.unmeta p |> U.head_and_args in
@@ -1395,7 +1395,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           | None -> ()
           | Some (x,_) ->
             let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
-            Errors.warn pos (BU.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x))
+            Errors.maybe_fatal_error pos (Errors.SMTPatternMissingBoundVar, (BU.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
         end
     in
     match U.destruct_typ_as_formula phi with
@@ -2458,12 +2458,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       match arg.tm with
                       | FreeV fv -> fv
                       | _ ->
-                         raise (FStar.Errors.Error (
+                         Errors.raise_error (Errors.NonVaribleInductiveTypeParameter,
                            BU.format1 "Inductive type parameter %s must be a variable ; \
                                        You may want to change it to an index."
-                                      (FStar.Syntax.Print.term_to_string orig_arg),
-                           orig_arg.pos
-                           ))
+                                      (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos
                     in
                     let guards = guards |> List.collect (fun g ->
                         if List.contains fv (Term.free_variables g)
@@ -2521,8 +2519,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   arg_decls, [typing_inversion; subterm_ordering]
 
                 | _ ->
-                  Errors.warn se.sigrng (BU.format2 "Constructor %s builds an unexpected type %s\n"
-                        (Print.lid_to_string d) (Print.term_to_string head));
+                  Errors.maybe_fatal_error se.sigrng (Errors.UnexpectedConstructorType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
+                        (Print.lid_to_string d) (Print.term_to_string head)));
                   [], [] in
         let decls2, elim = encode_elim () in
         let g = binder_decls

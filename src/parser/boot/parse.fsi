@@ -2,6 +2,8 @@
 module FStar.Parser.Parse
 open FStar.Parser.AST
 type token = 
+  | PLUS
+  | AT
   | WITH
   | WHEN
   | VAL
@@ -137,6 +139,8 @@ type token =
   | AMP
   | ABSTRACT
 type tokenId = 
+    | TOKEN_PLUS
+    | TOKEN_AT
     | TOKEN_WITH
     | TOKEN_WHEN
     | TOKEN_VAL
@@ -274,6 +278,7 @@ type tokenId =
     | TOKEN_end_of_input
     | TOKEN_error
 type nonTerminalId = 
+    | NONTERM__startwarn_error_list
     | NONTERM__startterm
     | NONTERM__startinputFragment
     | NONTERM_option_FSDOC_
@@ -412,6 +417,10 @@ type nonTerminalId =
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
     | NONTERM_reverse_left_flexible_list_BAR___anonymous_6_
     | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
+    | NONTERM_warn_error_list
+    | NONTERM_warn_error
+    | NONTERM_flag
+    | NONTERM_range
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int
 
@@ -423,5 +432,6 @@ val prodIdxToNonTerminal: int -> nonTerminalId
 
 /// This function gets the name of a token as a string
 val token_to_string: token -> string
+val warn_error_list : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> ((FStar.Errors.flag * (int * int)) list) 
 val term : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (term) 
 val inputFragment : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (inputFragment) 

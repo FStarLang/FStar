@@ -30,7 +30,7 @@ let unembed_bool (t:term) : option<bool> =
     match (SS.compress (U.unmeta t)).n with
     | Tm_constant(FStar.Const.Const_bool b) -> Some b
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded bool: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedBool, (BU.format1 "Not an embedded bool: %s" (Print.term_to_string t)));
         None
 
 let embed_int (i:int) : term = U.exp_int (BU.string_of_int i)
@@ -40,7 +40,7 @@ let unembed_int (t:term) : option<int> =
     | Tm_constant(FStar.Const.Const_int (s, _)) ->
         Some (BU.int_of_string s)
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded int: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedInt, (BU.format1 "Not an embedded int: %s" (Print.term_to_string t)));
         None
 
 let embed_string (s:string) : term =
@@ -53,7 +53,7 @@ let unembed_string (t:term) : option<string> =
     match t.n with
     | Tm_constant(FStar.Const.Const_string(s, _)) -> Some s
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded string: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedString, (BU.format1 "Not an embedded string: %s" (Print.term_to_string t)));
         None
 
 let embed_pair (embed_a:'a -> term) (t_a:term)
@@ -76,7 +76,7 @@ let unembed_pair (unembed_a:term -> option<'a>) (unembed_b:term -> option<'b>) (
         BU.bind_opt (unembed_b b) (fun b ->
         Some (a, b)))
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedPair, (BU.format1 "Not an embedded pair: %s" (Print.term_to_string t)));
         None
 
 let embed_option (embed_a:'a -> term) (typ:term) (o:option<'a>) : term =
@@ -97,7 +97,7 @@ let unembed_option (unembed_a:term -> option<'a>) (t:term) : option<option<'a>> 
    | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
         BU.bind_opt (unembed_a a) (fun a -> Some (Some a))
    | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded option: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedOption, (BU.format1 "Not an embedded option: %s" (Print.term_to_string t)));
         None
 
 let rec embed_list (embed_a: ('a -> term)) (typ:term) (l:list<'a>) : term =
@@ -127,7 +127,7 @@ let rec unembed_list (unembed_a: term -> option<'a>) (t:term) : option<list<'a>>
         BU.bind_opt (unembed_list unembed_a tl) (fun tl ->
         Some (hd :: tl)))
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded list: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedList, (BU.format1 "Not an embedded list: %s" (Print.term_to_string t)));
         None
 
 let embed_string_list ss = embed_list embed_string S.t_string ss
@@ -189,7 +189,7 @@ let unembed_norm_step (t:term) : option<norm_step> =
         BU.bind_opt (unembed_list unembed_string l) (fun ss ->
         Some <| UnfoldOnly ss)
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedNormStep, (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t)));
         None
 
 let embed_range (r:Range.range) : term =
@@ -199,5 +199,5 @@ let unembed_range (t:term) : option<Range.range> =
     match t.n with
     | Tm_constant (C.Const_range r) -> Some r
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded range: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedRange, (BU.format1 "Not an embedded range: %s" (Print.term_to_string t)));
         None

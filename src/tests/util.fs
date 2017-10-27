@@ -19,7 +19,7 @@ open FStar.Range
 let always id b =
     if b
     then ()
-    else raise (Error(Printf.sprintf "Assertion failed: test %d" id, Range.dummyRange))
+    else raise_error (Errors.AssertionFailure, (Printf.sprintf "Assertion failed: test %d" id)) Range.dummyRange
 
 let x = gen_bv "x" None S.tun
 let y = gen_bv "y" None S.tun

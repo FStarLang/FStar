@@ -89,7 +89,7 @@ let lowercase_module_name f =
   | Some longname ->
       String.lowercase longname
   | None ->
-      raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
+      raise_err (Errors.NotValidFStarFile, (Util.format1 "not a valid FStar file: %s\n" f))
 
 (** Enumerate all F* files in include directories.
     Return a list of pairs of long names and full paths. *)
@@ -111,7 +111,7 @@ let build_inclusion_candidates_list (): list<(string * string)> =
               (longname, full_path))
       ) files
     else
-      raise (Err (Util.format1 "not a valid include directory: %s\n" d))
+      raise_err (Errors.NotValidIncludeDirectory, (Util.format1 "not a valid include directory: %s\n" d))
   ) include_directories
 
 (** List the contents of all include directories, then build a map from long
@@ -179,11 +179,11 @@ let namespace_of_lid l =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    FStar.Errors.warn (range_of_lid lid)
-      (Util.format2 "The module declaration \"module %s\" \
+    FStar.Errors.maybe_fatal_error (range_of_lid lid)
+      (Errors.ModuleFileNameMismatch, (Util.format2 "The module declaration \"module %s\" \
          found in file %s does not match its filename. Dependencies will be \
-         incorrect.\n" (string_of_lid lid true) filename)
-
+         incorrect.\n" (string_of_lid lid true) filename))
+                  
 exception Exit
 
 let hard_coded_dependencies filename =
@@ -223,38 +223,38 @@ let collect_one
       let r = enter_namespace original_map working_map key in
       begin if not r then
         if let_open then
-          raise (Errors.Error ("let-open only supported for modules, not namespaces", (range_of_lid lid)))
+          raise_error (Errors.LetOpenModuleOnly, "let-open only supported for modules, not namespaces") (range_of_lid lid)
         else
-          FStar.Errors.warn (range_of_lid lid)
-            (Util.format1 "No modules in namespace %s and no file with \
-              that name either" (string_of_lid lid true))
+          FStar.Errors.maybe_fatal_error (range_of_lid lid)
+            (Errors.ModuleOrFileNotFoundWarning, Util.format1 "No modules in namespace %s and no file with \
+              that name either" (string_of_lid lid true))            
       end ;
       false
   in
 
-  let record_open_namespace error_msg lid =
+  let record_open_namespace error lid =
     let key = lowercase_join_longident lid true in
     let r = enter_namespace original_map working_map key in
     if not r then
-      match error_msg with
+      match error with
       | Some e ->
-          raise (Errors.Error (e, range_of_lid lid))
+          raise_error e (range_of_lid lid)
       | None ->
-        FStar.Errors.warn (range_of_lid lid)
-          (Util.format1 "No modules in namespace %s and no file with \
-            that name either" (string_of_lid lid true))
+        FStar.Errors.maybe_fatal_error (range_of_lid lid)
+          (Errors.ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
+            that name either" (string_of_lid lid true)))           
   in
 
   let record_open let_open lid =
     if record_open_module let_open lid
     then ()
     else
-      let msg =
+      let error =
         if let_open
-        then Some ("let-open only supported for modules, not namespaces")
+        then Some (Errors.LetOpenModuleOnly, ("let-open only supported for modules, not namespaces"))
         else None
       in
-      record_open_namespace msg lid
+      record_open_namespace error lid
   in
 
   let record_open_module_or_namespace (lid, kind) =
@@ -271,7 +271,7 @@ let collect_one
     | Some deps_of_aliased_module ->
         smap_add working_map key deps_of_aliased_module
     | None ->
-        raise (Errors.Error (Util.format1 "module not found in search path: %s\n" alias, range_of_lid lid))
+        raise_error (Errors.ModuleOrFileNotFound, Util.format1 "module not found in search path: %s\n" alias) (range_of_lid lid)
   in
   let record_lid lid =
     (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
@@ -283,8 +283,8 @@ let collect_one
           List.iter (fun f -> add_dep (lowercase_module_name f)) (list_of_pair pair)
       | None ->
           if List.length lid.ns > 0 && Options.debug_any () then
-            FStar.Errors.warn (range_of_lid lid)
-              (BU.format1 "Unbound module reference %s" (string_of_lid lid false))
+            FStar.Errors.maybe_fatal_error (range_of_lid lid)
+              (Errors.UnboundModuleReference, (BU.format1 "Unbound module reference %s" (string_of_lid lid false)))            
       end
     in
     // Option.Some x
@@ -361,10 +361,8 @@ let collect_one
     | TopLevelModule lid ->
         incr num_of_toplevelmods;
         if (!num_of_toplevelmods > 1) then
-            raise (Errors.Error (Util.format1 "Automatic dependency analysis demands one \
-              module per file (module %s not supported)" (string_of_lid lid true),
-                                 range_of_lid lid))
-
+            raise_error (Errors.OneModulePerFile, Util.format1 "Automatic dependency analysis demands one \
+              module per file (module %s not supported)" (string_of_lid lid true)) (range_of_lid lid)
   and collect_tycon = function
     | TyconAbstract (_, binders, k) ->
         collect_binders binders;
@@ -714,7 +712,7 @@ let collect (verify_mode: verify_mode) (filenames: list<string>) =
         then Util.format1 " Did you mean %s ?" (String.substring m 0 (k-4))
         else ""
       in
-      raise (Err (Util.format3 "You passed --verify_module %s but I found no \
+      raise_err (Errors.ModuleFileNotFound, (Util.format3 "You passed --verify_module %s but I found no \
         file that contains [module %s] in the dependency graph.%s\n" m m maybe_fst))
   ) verify_flags;
 
@@ -739,6 +737,6 @@ let print (make_deps, _, graph): unit =
   | Some "graph" ->
       print_graph graph
   | Some _ ->
-      raise (Err "unknown tool for --dep\n")
+      raise_err (Errors.UnknowToolForDep, "unknown tool for --dep\n")
   | None ->
       assert false

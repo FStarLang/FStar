@@ -133,7 +133,7 @@ let rec prefix_with_iface_decls
    | iface_hd::iface_tl -> begin
      match iface_hd.d with
      | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
-        raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", impl.drange))
+        raise_error (Errors.AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") impl.drange
 
      | Val(x, t) ->
        //we have a 'val x' in the interface
@@ -143,10 +143,9 @@ let rec prefix_with_iface_decls
        if not defines_x
        then if def_ids |> Util.for_some (fun y ->
                iface_tl |> Util.for_some (is_val y.ident))
-            then raise (Error(Util.format2 "Expected the definition of %s to precede %s"
+            then raise_error (Errors.WrongDefinitionOrder, (Util.format2 "Expected the definition of %s to precede %s"
                                            x.idText
-                                           (def_ids |> List.map Ident.string_of_lid |> String.concat ", "),
-                              impl.drange))
+                                           (def_ids |> List.map Ident.string_of_lid |> String.concat ", "))) impl.drange
             else iface, [impl]
        else let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
             let rec aux mutuals iface =
@@ -158,10 +157,9 @@ let rec prefix_with_iface_decls
                   then let val_ys, iface = aux ys iface_tl in
                        iface_hd::val_ys, iface
                   else if Option.isSome <| List.tryFind (is_val y.ident) iface_tl
-                  then raise (Error (Util.format2 "%s is out of order with the definition of %s"
+                  then raise_error (Errors.WrongDefinitionOrder, (Util.format2 "%s is out of order with the definition of %s"
                                             (decl_to_string iface_hd)
-                                            (Ident.string_of_lid y),
-                                     iface_hd.drange))
+                                            (Ident.string_of_lid y))) iface_hd.drange
                   else aux ys iface //no val given for 'y'; ok
             in
             let take_iface, rest_iface = aux mutually_defined_with_x iface_tl in
@@ -180,15 +178,13 @@ let check_initial_interface (iface:list<decl>) =
         | hd::tl -> begin
             match hd.d with
             | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
-              raise (Error("Interface contains an abstract 'type' declaration; use 'val' instead", hd.drange))
+              raise_error (Errors.AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") hd.drange
 
             | Val(x, t) ->  //we have a 'val x' in the interface
               if Util.for_some (is_definition_of x) tl
-              then raise (Error(Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" x.idText x.idText,
-                                hd.drange))
+              then raise_error (Errors.BothValAndLetInInterface, (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" x.idText x.idText)) hd.drange
               else if hd.quals |> List.contains Assumption
-              then raise (Error("Interfaces cannot use `assume val x : t`; just write `val x : t` instead",
-                                hd.drange))
+              then raise_error (Errors.AssumeValInInterface, "Interfaces cannot use `assume val x : t`; just write `val x : t` instead") hd.drange
               else ()
 
             | _ -> ()
@@ -249,9 +245,8 @@ let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
         else check_initial_interface l in
     match E.iface_decls env mname with
     | Some _ ->
-      raise (Error(Util.format1 "Interface %s has already been processed"
-                                (Ident.string_of_lid mname),
-                   Ident.range_of_lid mname))
+      raise_error (Errors.InterfaceAlreadyProcessed, (Util.format1 "Interface %s has already been processed"
+                                (Ident.string_of_lid mname))) (Ident.range_of_lid mname)
     | None ->
       (), E.set_iface_decls env mname decls
 
@@ -286,10 +281,9 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> 
         match iface with
         | _::_ when expect_complete_modul ->
           let err = List.map FStar.Parser.AST.decl_to_string iface |> String.concat "\n\t" in
-          raise (Error(Util.format2 "Some interface elements were not implemented by module %s:\n\t%s"
+          raise_error (Errors.InterfaceNotImplementedByModule, (Util.format2 "Some interface elements were not implemented by module %s:\n\t%s"
                                     (Ident.string_of_lid l)
-                                    err,
-                       Ident.range_of_lid l))
+                                    err)) (Ident.range_of_lid l)
         | _ ->
           a, env
       end

@@ -6,9 +6,288 @@ open FStar.All
 open FStar.Util
 open FStar.Range
 
-exception Err of string
-exception Error of string * Range.range
-exception Warning of string * Range.range
+type raw_error =
+  | ReservedPrefix
+  | NotValidFStarFile
+  | NotValidIncludeDirectory
+  | ModuleFileNotFound
+  | UnknowToolForDep
+  | UnrecognizedExtension
+  | UnableToReadFile
+  | Uninstantiated 
+  | IllTypedApplication 
+  | ValueRestriction 
+  | UnexpectedEffect 
+  | NotTopLevelModule
+  | NonSingletonTopLevel 
+  | MissingPrimsModule 
+  | IDEMissingFileName 
+  | IDETooManyFiels 
+  | NotSupported 
+  | OptionsNotCompatible 
+  | NoFileProvided
+  | NonSingletonTopLevelModule 
+  | PreModuleMismatch 
+  | ModuleFirstStatement 
+  | ParseError 
+  | MultipleLetBinding 
+  | UnexpectedIdentifier 
+  | InlineRenamedAsUnfold 
+  | UnfoldableDeprecated 
+  | DeprecatedEqualityOnBinder
+  | MissingQuantifierBinder 
+  | OutOfRange 
+  | OutOfRangeOfInt 
+  | OutOfRangeOfInt8 
+  | OutOfRangeOfInt16 
+  | OutOfRangeOfInt32 
+  | OutOfRangeOfInt64 
+  | OpPlusInUniverse 
+  | InvalidUniverseVar 
+  | InvalidIdentifier 
+  | MoreThanOneDeclaration 
+  | Filtered 
+  | UnexpectedModuleDeclaration 
+  | UnexpectedOperatorSymbol 
+  | UnexpectedTerm 
+  | ModuleFileNameMismatch 
+  | LetOpenModuleOnly 
+  | ModuleOrFileNotFound 
+  | ModuleOrFileNotFoundWarning
+  | UnboundModuleReference 
+  | OneModulePerFile 
+  | SyntaxError 
+  | ParseItError 
+  | ModuleExpected 
+  | DefinitionNotFound 
+  | AbstractTypeNotAllowed 
+  | DuplicateInImplementation 
+  | InterfaceWithTypeImplementation 
+  | BothValLetInInterface 
+  | AssumedDeclNotAllowed 
+  | OutOfOrder 
+  | IllegalCharInByteArray 
+  | IllegalCharInOperatorName 
+  | InvalidFloatingPointNumber 
+  | InvalidNumericLiteral 
+  | InvalidUnicodeInStringLiteral 
+  | InvalidFSDocKeyword 
+  | UnexpectedChar 
+  | UnexpectedPosition 
+  | UnprotectedTerm 
+  | NotEmbeddedBinder 
+  | NotEmbeddedFvar 
+  | NotEmbeddedComp 
+  | NotEmbeddedEnv 
+  | NotEmbeddedAqualv 
+  | NotEmbeddedTermView 
+  | NotEmbeddedCompView 
+  | NotEmbeddedCtor 
+  | NotEmbeddedSigltView 
+  | NotEmbeddedOrder 
+  | NotEmbeddedPattern 
+  | NotEmbeddedVConst 
+  | NotEmbeddedBool 
+  | NotEmbeddedInt 
+  | NotEmbeddedString 
+  | NotEmbeddedPair 
+  | NotEmbeddedOption 
+  | NotEmbeddedList 
+  | NotEmbeddedNormStep 
+  | NotEmbeddedRange 
+  | NotEmbeddedProofState 
+  | NotEmbeddedTacticResult 
+  | NotEmbeddedDirection 
+  | FunctionLiteralPrecisionLoss 
+  | NonTopRecFunctionNotFullyEncoded 
+  | NonListLiteralSMTPattern 
+  | SMTPatternMissingBoundVar 
+  | NonVaribleInductiveTypeParameter 
+  | UnexpectedConstructorType 
+  | SMTSolverError 
+  | Z3InvocationError 
+  | Z3InvocationWarning
+  | SMTOutputParseError 
+  | UnexpectedZ3Output 
+  | CycleInRecTypeAbbreviation 
+  | ImpossibleAbbrevLidBundle 
+  | ImpossibleAbbrevRenameBundle 
+  | ImpossibleTypeAbbrevSigeltBundle 
+  | ImpossibleTypeAbbrevBundle 
+  | ImpossibleInductiveWithAbbrev 
+  | InaccessibleArgument 
+  | WrongDataAppHeadFormat 
+  | TacticGotStuck
+  | UserTacticFailure 
+  | OpenGoalsInSynthesis 
+  | UninstantiatedVarInTactic 
+  | ForbiddenReferenceToCurrentModule 
+  | DuplicateTopLevelNames 
+  | NameSpaceNotFound 
+  | IncludeModuleNotPrepared 
+  | ModuleNotFound 
+  | DocOverwrite 
+  | AdmitWithoutDefinition 
+  | DuplicateModuleOrInterface 
+  | MonadAlreadyDefined 
+  | IdentifierNotFound 
+  | AbstractTypeDeclarationInInterface 
+  | WrongDefinitionOrder 
+  | BothValAndLetInInterface 
+  | AssumeValInInterface 
+  | InterfaceNotImplementedByModule 
+  | InterfaceAlreadyProcessed 
+  | DeprecatedOpaqueQualifier 
+  | ReflectOnlySupportedOnEffects 
+  | DefaultQualifierNotAllowedOnEffects 
+  | UnsupportedQualifier 
+  | NegativeUniverseConstNotSupported 
+  | UniverseMightContainSumOfTwoUnivVars 
+  | FieldsNotBelongToSameRecordType 
+  | LetMutableForVariablesOnly 
+  | TypeWithinPatternsAllowedOnVariablesOnly 
+  | UnexpectedPattern 
+  | UnexpectedNumericLiteral 
+  | UnknownAttribute 
+  | UnepxectedOrUnboundOperator 
+  | AssignToImmutableValues 
+  | EffectNotFound 
+  | DataContructorNotFound 
+  | ConstructorNotFound 
+  | UnsupportedDisjuctivePatterns 
+  | ComputationTypeNotAllowed 
+  | UnexpectedEmptyRecord 
+  | MissingFieldInRecord 
+  | InvalidLemmaArgument 
+  | NotEnoughArgsToEffect 
+  | UnexpectedLetBinding 
+  | UnexpectedTermInUniverse 
+  | UnexpectedUniverseVariable 
+  | UseDefaultEffect 
+  | AddImplicitAssumeNewQualifier 
+  | MissingNameInBinder 
+  | UnexpectedBinder 
+  | MalformedActionDeclaration 
+  | ArgumentLengthMismatch 
+  | WrongTerm 
+  | TermOutsideOfDefLanguage 
+  | LetBoundMonadicMismatch 
+  | TypeMismatch 
+  | EffectfulAndPureComputationMismatch 
+  | NotFunctionType 
+  | BinderAndArgsLengthMismatch 
+  | WhenClauseNotSupported 
+  | NameNotFound 
+  | VariableNotFound 
+  | EffectsCannotBeComposed 
+  | DivergentComputationCannotBeIncludedInTotal 
+  | ConstructorArgLengthMismatch 
+  | NotEnoughArgumentsForEffect 
+  | UnexpectedSignatureForMonad 
+  | ExpectTermGotFunction 
+  | UnexpectedImplicitArgument 
+  | UnexpectedExpressionType 
+  | UnexpectedFunctionParameterType 
+  | TypeError 
+  | PossibleInfiniteTyp 
+  | UnificationNotWellFormed 
+  | IncompatibleKinds 
+  | ConstsructorBuildWrongType 
+  | ConstructorFailedCheck 
+  | DuplicateTypeAnnotationAndValDecl 
+  | InferredTypeCauseVarEscape 
+  | FunctionTypeExpected 
+  | PolyTypeExpected 
+  | NonLinearPatternVars 
+  | DisjuctivePatternVarsMismatch 
+  | ComputedTypeNotMatchAnnotation 
+  | UnExpectedPreCondition 
+  | ExpectedPureExpression 
+  | ExpectedGhostExpression 
+  | TypeCheckerFailToProve 
+  | TopLevelEffect 
+  | CardinalityConstraintViolated 
+  | MetaAlienNotATmUnknow
+  | NotApplicationOrFv
+  | InductiveTypeNotSatisfyPositivityCondition
+  | PatternMissingBoundVar
+  | UncontrainedUnificationVar
+  | IrrelevantQualifierOnArgumentToReify
+  | IrrelevantQualifierOnArgumentToReflect
+  | RedundantExplicitCurrying
+  | ActionMustHaveFunctionType
+  | InvalidRedefinitionOfLexT
+  | FailToProcessPragma
+  | EffectCannotBeReified
+  | TooManyUniverse
+  | InconsistentQualifierAnnotation
+  | AlreadyDefinedTopLevelDeclaration
+  | IncoherentInlineUniverse
+  | WrongResultTypeAfterConstrutor
+  | NonInductiveInMutuallyDefinedType
+  | UnexpectedComputationTypeForLetRec
+  | InsufficientPatternArguments
+  | NonTrivialPreConditionInPrims
+  | EffectConstructorNotFullyApplied
+  | UnexpectedGeneralizedUniverse
+  | MissingImplicitArguments
+  | IncompatibleNumberOfTypes
+  | QulifierListNotPermitted
+  | UnexpectedDataConstructor
+  | BadSignatureShape
+  | ComputationNotTotal
+  | WrongBodyTypeForReturnWP
+  | UnexpectedReturnShape
+  | UnexpectedBindShape
+  | ImpossibleToGenerateDMEffect
+  | ImpossiblePrePostArrow
+  | ImpossiblePrePostAbs
+  | ExpectNormalizedEffect
+  | IncompatibleUniverse
+  | FailToSolveUniverseInEquality
+  | ErrorInSolveDeferredConstraints
+  | ExpectTrivialPreCondition
+  | FailToResolveImplicitArgument
+  | UnexpectedGTotComputation
+  | UnexpectedInstance
+  | IncompatibleSetOfUniverse
+  | TooManyPatternArguments
+  | UnexpectedUniversePolymorphicReturn
+  | MismatchUniversePolymorphic
+  | EscapedBoundVar
+  | ExpectedArrowAnnotatedType
+  | SynthByTacticError
+  | MissingDataConstructor
+  | BadlyInstantiatedSynthByTactic
+  | UnexpectedNumberOfUniverse
+  | UnsupportedConstant
+  | InconsistentImplicitArgumentAnnotation
+  | ToManyArgumentToFunction
+  | InconsistentImplicitQualifier
+  | LetRecArgumentMismatch
+  | RecursiveFunctionLiteral
+  | UnexpectedGTotForLetRec
+  | UnexpectedImplictArgument
+  | UnexpectedTermType
+  | UniversePolymorphicInnerLetBound
+  | UnresolvedPatternVar
+  | HintFailedToReplayProof
+  | HitReplayFailed
+  | ProofObligationFailed
+  | UnknowAssertionFailure
+  | Z3SolverError
+  | UninstantiatedUnificationVarInTactic
+  | AssertionFailure
+  | MissingInterface
+  | MissingImplementation
+  | TooManyOrTooFewFileMatch
+  | UnexpectedGuard
+  | ErrorsReported
+  | TcOneFragmentFailed
+
+exception Err of raw_error* string
+exception Error of raw_error * string * Range.range
+exception Warning of raw_error * string * Range.range
 exception Stop
 
 (* Raised when an empty fragment is parsed *)
@@ -104,11 +383,6 @@ let set_handler handler =
     let issues = report_all () in
     clear (); current_handler := handler; add_many issues
 
-let diag r msg = if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg)
-
-let warn r msg = add_one (mk_issue EWarning (Some r) msg)
-
-let err r msg = add_one (mk_issue EError (Some r) msg)
 
 type error_message_prefix = {
     set_prefix: string -> unit;
@@ -126,16 +400,111 @@ let message_prefix =
     {set_prefix=set_prefix;
      clear_prefix=clear_prefix;
      append_prefix=append_prefix}
+  
+type flag =
+  CError | CWarning | CSilent
+
+let flags = Array.create 71 CError  // the number needs to match the number of entries in "raw_error"
+
+let errno_of_error = function
+  | OutOfRangeOfInt  -> 1
+  | OutOfRangeOfInt8 -> 2
+  | OutOfRangeOfInt16 -> 3
+  | OutOfRangeOfInt32 -> 4
+  | OutOfRangeOfInt64 -> 5
+  | OpPlusInUniverse -> 6
+  | InvalidUniverseVar -> 7
+  | Z3InvocationError -> 8
+  | TypeError -> 9
+  | TypeCheckerFailToProve -> 10
+  | InductiveTypeNotSatisfyPositivityCondition -> 11
+  | UncontrainedUnificationVar -> 12
+  | UnexpectedGTotComputation -> 13
+  | UnexpectedInstance -> 14
+  | ProofObligationFailed -> 15
+  | UnknowAssertionFailure -> 16
+  | UninstantiatedUnificationVarInTactic -> 17
+  | AssertionFailure -> 18
+  | MissingInterface -> 19
+  | MissingImplementation -> 20
+  | TooManyOrTooFewFileMatch -> 21
+  | DeprecatedEqualityOnBinder -> 22
+  | Filtered -> 23
+  | ModuleFileNameMismatch -> 24
+  | ModuleOrFileNotFoundWarning -> 25
+  | UnboundModuleReference -> 26
+  | UnprotectedTerm -> 27 
+  | NotEmbeddedBinder -> 28 
+  | NotEmbeddedFvar -> 29 
+  | NotEmbeddedComp -> 30
+  | NotEmbeddedEnv -> 31 
+  | NotEmbeddedAqualv -> 32 
+  | NotEmbeddedTermView -> 33
+  | NotEmbeddedCompView -> 34
+  | NotEmbeddedCtor -> 35
+  | NotEmbeddedSigltView -> 36 
+  | NotEmbeddedOrder -> 37 
+  | NotEmbeddedPattern -> 38 
+  | NotEmbeddedVConst -> 39 
+  | NotEmbeddedBool -> 40 
+  | NotEmbeddedInt -> 41 
+  | NotEmbeddedString -> 42 
+  | NotEmbeddedPair -> 43 
+  | NotEmbeddedOption -> 44 
+  | NotEmbeddedList -> 45 
+  | NotEmbeddedNormStep -> 46 
+  | NotEmbeddedRange -> 47 
+  | NotEmbeddedProofState -> 48 
+  | NotEmbeddedTacticResult -> 49 
+  | NotEmbeddedDirection -> 50 
+  | FunctionLiteralPrecisionLoss -> 51 
+  | NonListLiteralSMTPattern -> 52 
+  | SMTPatternMissingBoundVar -> 53 
+  | UnexpectedConstructorType -> 54 
+  | Z3InvocationWarning -> 55
+  | UnexpectedZ3Output -> 56
+  | InaccessibleArgument -> 57 
+  | DocOverwrite -> 58
+  | AdmitWithoutDefinition -> 59 
+  | DeprecatedOpaqueQualifier -> 60 
+  | UseDefaultEffect -> 61 
+  | AddImplicitAssumeNewQualifier -> 62 
+  | TopLevelEffect -> 63
+  | MetaAlienNotATmUnknow -> 64
+  | PatternMissingBoundVar -> 65
+  | IrrelevantQualifierOnArgumentToReify -> 66
+  | IrrelevantQualifierOnArgumentToReflect -> 67
+  | RedundantExplicitCurrying -> 68
+  | HintFailedToReplayProof -> 69
+  | HitReplayFailed -> 70
+  | _ ->
+      (** Things that cannot be silenced! *)
+      0
+;;
+
+let diag r msg = 
+  if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg)
+
+let maybe_fatal_error r (e, msg) =
+  let errno = errno_of_error (e) in
+  let msg = "message" in
+  match flags.[errno] with
+  | CError ->
+     add_one (mk_issue EError (Some r) msg)
+  | CWarning ->
+     add_one (mk_issue EWarning (Some r) msg)
+  | CSilent ->
+      ()
 
 let add_errors errs =
-    atomically (fun () -> List.iter (fun (msg, r) -> err r (message_prefix.append_prefix msg)) errs)
+    atomically (fun () -> List.iter (fun (e, msg, r) -> maybe_fatal_error r (e, (message_prefix.append_prefix msg))) errs)
 
 let issue_of_exn = function
-    | Error(msg, r) ->
+    | Error(e, msg, r) ->
       Some (mk_issue EError (Some r) (message_prefix.append_prefix msg))
     | NYI msg ->
       Some (mk_issue ENotImplemented None (message_prefix.append_prefix msg))
-    | Err msg ->
+    | Err (e, msg) ->
       Some (mk_issue EError None (message_prefix.append_prefix msg))
     | _ -> None
 
@@ -156,3 +525,10 @@ let handleable = function
 let stop_if_err () =
     if get_err_count () > 0
     then raise Stop
+
+let raise_error (e, msg) r =
+  raise (Error (e, msg, r))
+
+let raise_err (e, msg) =
+  raise (Err (e, msg))
+

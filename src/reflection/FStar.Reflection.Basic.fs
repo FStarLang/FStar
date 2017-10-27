@@ -53,7 +53,7 @@ let un_protect_embedded_term (t : term) : option<term> =
     | Tm_fvar fv, [_; (x, _)] when S.fv_eq_lid fv PC.fstar_refl_embed_lid ->
         Some x
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an protected term: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.UnprotectedTerm, (BU.format1 "Not an protected term: %s" (Print.term_to_string t)));
         None
 
 let embed_binder (b:binder) : term =
@@ -62,7 +62,7 @@ let embed_binder (b:binder) : term =
 let unembed_binder (t:term) : option<binder> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
     with | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedBinder, (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t)));
         None
 
 let embed_binders l = embed_list embed_binder fstar_refl_binder l
@@ -80,7 +80,7 @@ let embed_fvar (fv:fv) : term =
 let unembed_fvar (t:term) : option<fv> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
     with | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded fvar: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedFvar, (BU.format1 "Not an embedded fvar: %s" (Print.term_to_string t)));
         None
 
 let embed_comp (c:comp) : term =
@@ -89,7 +89,7 @@ let embed_comp (c:comp) : term =
 let unembed_comp (t:term) : option<comp> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
     with | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded comp: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedComp, (BU.format1 "Not an embedded comp: %s" (Print.term_to_string t)));
         None
 
 let embed_env (env:Env.env) : term =
@@ -98,7 +98,7 @@ let embed_env (env:Env.env) : term =
 let unembed_env (t:term) : option<Env.env> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
     with | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded env: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedEnv, (BU.format1 "Not an embedded env: %s" (Print.term_to_string t)));
         None
 
 let embed_const (c:vconst) : term =
@@ -136,7 +136,7 @@ let unembed_const (t:term) : option<vconst> =
         Some <| C_String s)
 
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded vconst: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedVConst, (BU.format1 "Not an embedded vconst: %s" (Print.term_to_string t)));
         None
 
 let rec embed_pattern (p : pattern) : term =
@@ -172,7 +172,7 @@ let rec unembed_pattern (t : term) : option<pattern> =
         Some <| Pat_Wild bv)
 
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded pattern: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedPattern, (BU.format1 "Not an embedded pattern: %s" (Print.term_to_string t)));
         None
 
 let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term
@@ -190,7 +190,7 @@ let unembed_aqualv (t : term) : option<aqualv> =
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Explicit_lid -> Some Data.Q_Explicit
     | Tm_fvar fv, [] when S.fv_eq_lid fv ref_Q_Implicit_lid -> Some Data.Q_Implicit
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded aqualv: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedAqualv, (BU.format1 "Not an embedded aqualv: %s" (Print.term_to_string t)));
         None
 
 let embed_argv = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv
@@ -305,7 +305,7 @@ let unembed_term_view (t:term) : option<term_view> =
         Some <| Tv_Unknown
 
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded term_view: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedTermView, (BU.format1 "Not an embedded term_view: %s" (Print.term_to_string t)));
         None
 
 let embed_comp_view (cv : comp_view) : term =
@@ -338,7 +338,7 @@ let unembed_comp_view (t : term) : option<comp_view> =
         Some <| C_Unknown
 
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded comp_view: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedCompView, (BU.format1 "Not an embedded comp_view: %s" (Print.term_to_string t)));
         None
 
 // TODO: move to library?
@@ -568,7 +568,7 @@ let unembed_order (t:term) : option<order> =
     | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
     | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Gt_lid -> Some Gt
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded order: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedOrder, (BU.format1 "Not an embedded order: %s" (Print.term_to_string t)));
         None
 
 let compare_binder (x:binder) (y:binder) : order =
@@ -634,7 +634,7 @@ let unembed_ctor (t:term) : option<ctor> =
         BU.bind_opt (unembed_term t) (fun t ->
         Some <| Ctor (nm, t)))
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded ctor: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedCtor, (BU.format1 "Not an embedded ctor: %s" (Print.term_to_string t)));
         None
 
 let embed_sigelt_view (sev:sigelt_view) : term =
@@ -678,7 +678,7 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
         Some Unk
 
     | _ ->
-        Err.warn t.pos (BU.format1 "Not an embedded sigelt_view: %s" (Print.term_to_string t));
+        Err.maybe_fatal_error t.pos (Err.NotEmbeddedSigltView, (BU.format1 "Not an embedded sigelt_view: %s" (Print.term_to_string t)));
         None
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
