@@ -347,9 +347,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           let elet = mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng in
 
           (* When extracting with the "tactics" option, if the top-level let is a user-defined tactic, automatically add
-             the matching invocation to FStar.Tactics.Native.register_tactic, allowing the extracted tactic to be dynamically linked.
-             If extracting with a different option, do not extract the top-level let.
-             VD: should we erase instead? *)
+             the matching invocation to FStar.Tactics.Native.register_tactic, allowing the extracted tactic to be dynamically linked. *)
           let tactic_registration_decl =
             let mk_registration tac_lid assm_lid t bs =
               let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident (lid_of_str "FStar_Tactics_Native.register_tactic")) in
@@ -362,48 +360,47 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                   [MLM_Top app]
               | None -> [] in
 
-            (match (snd lbs) with
-             | [hd] ->
-                let bs, comp = U.arrow_formals_comp hd.lbtyp in
-                let t = U.comp_result comp in
-                (match (SS.compress t).n with
-                 | Tm_app(h, args) ->
-                      let tac_lid = (right hd.lbname).fv_name.v in
-                      let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
-                      if is_tactic_decl assm_lid (SS.compress h) g.currentModule then begin
-                        mk_registration tac_lid assm_lid (fst(List.hd args)) bs
-                      end else []
-                 | _ -> [])
-             | _ -> []
-            ) in
+            if Options.codegen() = Some "tactics" then
+              (match (snd lbs) with
+               | [hd] ->
+                  let bs, comp = U.arrow_formals_comp hd.lbtyp in
+                  let t = U.comp_result comp in
+                  (match (SS.compress t).n with
+                   | Tm_app(h, args) ->
+                        let tac_lid = (right hd.lbname).fv_name.v in
+                        let assm_lid = lid_of_ns_and_id tac_lid.ns (id_of_text <| "__" ^ tac_lid.ident.idText) in
+                        if is_tactic_decl assm_lid (SS.compress h) g.currentModule then begin
+                          mk_registration tac_lid assm_lid (fst(List.hd args)) bs
+                        end else []
+                   | _ -> [])
+               | _ -> []
+              ) else [] in
 
-          if (tactic_registration_decl = [] || Options.codegen () = Some "tactics") then begin
-              let ml_let, _, _ = Term.term_as_mlexpr g elet in
-              begin match ml_let.expr with
-                | MLE_Let((flavor, _, bindings), _) ->
-                  let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t} ->
-                  // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
-                      let lb_lid = (right lbname).fv_name.v in
-                      let g, ml_lb =
-                        if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-                        then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
-                             let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
-                             env, {ml_lb with mllb_name=snd mname }
-                        else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
-                     g, ml_lb::ml_lbs)
-                  (g, []) bindings (snd lbs) in
-                  let flags = List.choose (function
-                    | Assumption -> Some Assumed
-                    | S.Private -> Some Private
-                    | S.NoExtract -> Some NoExtract
-                    | _ -> None
-                  ) quals in
-                  let flags' = extract_metadata attrs in
-                  g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')] @ tactic_registration_decl
-                | _ ->
-                  failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
-              end
-          end else g, []
+            let ml_let, _, _ = Term.term_as_mlexpr g elet in
+            begin match ml_let.expr with
+              | MLE_Let((flavor, _, bindings), _) ->
+                let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t} ->
+                // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
+                    let lb_lid = (right lbname).fv_name.v in
+                    let g, ml_lb =
+                      if quals |> BU.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+                      then let mname = mangle_projector_lid lb_lid |> mlpath_of_lident in
+                           let env, _ = UEnv.extend_fv' env (right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
+                           env, {ml_lb with mllb_name=snd mname }
+                      else fst <| UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false, ml_lb in
+                   g, ml_lb::ml_lbs)
+                (g, []) bindings (snd lbs) in
+                let flags = List.choose (function
+                  | Assumption -> Some Assumed
+                  | S.Private -> Some Private
+                  | S.NoExtract -> Some NoExtract
+                  | _ -> None
+                ) quals in
+                let flags' = extract_metadata attrs in
+                g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Let (flavor, flags @ flags', List.rev ml_lbs')] @ tactic_registration_decl
+              | _ ->
+                failwith (BU.format1 "Impossible: Translated a let to a non-let: %s" (Code.string_of_mlexpr g.currentModule ml_let))
+            end
 
        | Sig_declare_typ(lid, _, t) ->
          let quals = se.sigquals in
