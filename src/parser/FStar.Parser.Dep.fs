@@ -94,6 +94,7 @@ let lowercase_module_name f =
 type file_name = string
 type module_name = string
 type dependence =
+    | UseInterface of module_name
     | PreferInterface of module_name
     | UseImplementation of module_name
 type dependences = list<dependence>
@@ -101,14 +102,16 @@ let empty_dependences = []
 type dependence_graph = //maps file names to the modules it depends on
      | Deps of smap<(dependences * color)>
 type deps =
-     | Mk of dependence_graph * files_for_module_name
-
+     | Mk of dependence_graph      //dependences of the entire project, not just those reachable from the command line
+           * files_for_module_name //an abstraction of the file system
+           * list<file_name>       //all command-line files
 let deps_try_find (Deps m) k = BU.smap_try_find m k
 let deps_add_dep (Deps m) k v = BU.smap_add m k v
 let deps_keys (Deps m) = BU.smap_keys m
 let deps_empty () = Deps (BU.smap_create 41)
 
 let module_name_of_dep = function
+    | UseInterface m
     | PreferInterface m
     | UseImplementation m -> m
 
@@ -139,10 +142,28 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-let file_of_dep (file_system_map:files_for_module_name) d =
+let file_of_dep (file_system_map:files_for_module_name)
+                (all_cmd_line_files:list<file_name>)
+                (d:dependence)
+    : file_name =
+    let cmd_line_has_impl key =
+        all_cmd_line_files
+        |> BU.for_some (fun fn ->
+           is_implementation fn &&
+           key = lowercase_module_name fn)
+    in
     match d with
-    | PreferInterface key when has_interface file_system_map key ->
-        Option.get <| interface_of file_system_map key
+    | UseInterface key ->
+      (match interface_of file_system_map key with
+       | None ->
+          raise (Err (BU.format1 "Expected an interface for module %s, but couldn't find one" key))
+       | Some f -> f)
+
+    | PreferInterface key //key for module 'a'
+        when not (cmd_line_has_impl key)               //unless the cmd line contains 'a.fst'
+              && has_interface file_system_map key ->  //so long as 'a.fsti' exists
+      Option.get <| interface_of file_system_map key   //we prefer to use 'a.fsti'
+
     | PreferInterface key
     | UseImplementation key ->
         match implementation_of file_system_map key with
@@ -150,11 +171,15 @@ let file_of_dep (file_system_map:files_for_module_name) d =
           raise (Err (BU.format1 "Expected an implementation of module %s, but couldn't find one" key))
         | Some f -> f
 
-let dependences_of (file_system_map:files_for_module_name) (deps:dependence_graph) (fn:file_name) : list<file_name> =
+let dependences_of (file_system_map:files_for_module_name)
+                   (deps:dependence_graph)
+                   (all_cmd_line_files:list<file_name>)
+                   (fn:file_name)
+    : list<file_name> =
     match deps_try_find deps fn with
     | None -> empty_dependences
     | Some (deps, _) ->
-      List.map (file_of_dep file_system_map) deps
+      List.map (file_of_dep file_system_map all_cmd_line_files) deps
 
 let add_dependence (deps:dependence_graph)
                    (from:file_name) (to_:file_name)
@@ -626,9 +651,9 @@ let collect_one
   !deps, !mo_roots
 
 (** Collect the dependencies for a list of given files. *)
-let collect (filenames: list<file_name>)
-    : list<file_name>
-    * deps
+let collect (all_cmd_line_files: list<file_name>)
+    : list<file_name> //topologically sorted transitive dependences of all_cmd_line_files
+    * deps            //the entire dependence graph
     =
   (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
@@ -637,10 +662,7 @@ let collect (filenames: list<file_name>)
   (* A map from lowercase module names (e.g. [a.b.c]) to the corresponding
    * filenames (e.g. [/where/to/find/A.B.C.fst]). Consider this map
    * immutable from there on. *)
-  let file_system_map = build_map filenames in
-
-  (* Debug. *)
-  //  List.iter (fun k -> BU.print_string (file_names_of_key k)) (smap_keys m);
+  let file_system_map = build_map all_cmd_line_files in
 
   (* discover: Do a graph traversal starting from file_name
    *           filling in dep_graph with the dependences *)
@@ -652,31 +674,23 @@ let collect (filenames: list<file_name>)
           let module_name = lowercase_module_name file_name in
           if is_implementation file_name
           && has_interface file_system_map module_name
-          then deps @ [PreferInterface module_name]
+          then deps @ [UseInterface module_name]
           else deps
       in
       deps_add_dep dep_graph file_name (List.unique deps, White);
       List.iter
             discover_one
-            (List.map (file_of_dep file_system_map)
+            (List.map (file_of_dep file_system_map all_cmd_line_files)
                       (deps @ mo_roots))
     end
   in
-  List.iter discover_one filenames;
+  List.iter discover_one all_cmd_line_files;
 
-  (* At this point, we have the (immediate) dependency graph of all the files. *)
-  (* Add additional edges between the filenames in the order in which they were provided *)
-  let _ =
-    List.fold_left
-        (fun previous_file file ->
-            add_dependence dep_graph file previous_file;
-            file)
-        (List.hd filenames)
-        (List.tl filenames) in
+  (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
 
-  let topological_dependences_of filename =
+  let topological_dependences_of all_command_line_files =
       let topologically_sorted = BU.mk_ref [] in
-      (* Compute the transitive closure. *)
+      (* Compute the transitive closure, collecting visiting files in a post-order traversal *)
       let rec aux (cycle:list<file_name>) filename =
         let direct_deps, color = must (deps_try_find dep_graph filename) in
         match color with
@@ -693,33 +707,37 @@ let collect (filenames: list<file_name>)
         | White ->
             (* Unvisited. Compute. *)
             deps_add_dep dep_graph filename (direct_deps, Gray);
-            List.iter (fun k -> aux (k :: cycle) k) (dependences_of file_system_map dep_graph filename);
+            List.iter (fun k -> aux (k :: cycle) k)
+                      (dependences_of file_system_map
+                                      dep_graph
+                                      all_command_line_files
+                                      filename);
             (* Mutate the graph (it now remembers transitive dependencies). *)
             deps_add_dep dep_graph filename (direct_deps, Black);
             (* Also build the topological sort (Tarjan's algorithm). *)
             topologically_sorted := filename :: !topologically_sorted
       in
-      aux [] filename;
+      List.iter (aux []) all_command_line_files;
       !topologically_sorted
   in
   //only verify those files on the command line
-  filenames |>
+  all_cmd_line_files |>
   List.iter (fun f ->
     let m = lowercase_module_name f in
     Options.add_verify_module m);
 
-  topological_dependences_of (Option.get (List.last filenames)),
-  Mk (dep_graph, file_system_map)
+  topological_dependences_of all_cmd_line_files,
+  Mk (dep_graph, file_system_map, all_cmd_line_files)
 
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format. *)
-let print_make (Mk (deps, file_system_map)) : unit =
+let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let keys = deps_keys deps in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
-          let files = List.map (file_of_dep file_system_map) f_deps in
+          let files = List.map (file_of_dep file_system_map all_cmd_line_files) f_deps in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           Util.print2 "%s: %s\n" f (String.concat " " files))
 
@@ -728,7 +746,7 @@ let print deps : unit =
   | Some "make" ->
       print_make deps
   | Some "graph" ->
-      let (Mk(deps, _)) = deps in
+      let (Mk(deps, _, _)) = deps in
       print_graph deps
   | Some _ ->
       raise (Err "unknown tool for --dep\n")
