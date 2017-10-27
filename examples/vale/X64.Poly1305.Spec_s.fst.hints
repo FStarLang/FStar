@@ -8,7 +8,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "454df20231954c6814ba9aed0aa7ba1e"
+      "e53af66ecb88e6efa0a003a4df01280c"
     ],
     [
       "X64.Poly1305.Spec_s.uu___43",
@@ -17,7 +17,7 @@
       0,
       [ "@query" ],
       0,
-      "e0fbb4bd35afac40c93dcfb82b6c9f5c"
+      "0e26388860f61f39cb552f8cbcc1b257"
     ],
     [
       "X64.Poly1305.Spec_s.modp'",
@@ -29,7 +29,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ff4c05644925df59ef710fa2cc93aeed"
+      "ec384ccd80c13a6f1c1f3c6555816b1d"
     ],
     [
       "X64.Poly1305.Spec_s.and128",
@@ -56,7 +56,7 @@
         "refinement_interpretation_X64.Poly1305.Spec_s_Tm_refine_ca59d6c748a08f1d9b598850b1f7def5"
       ],
       0,
-      "93f9f2abcfe9c5e8821dc38fc477db20"
+      "8e9e76bee2ae3807a127ce98d9e6adcf"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -65,7 +65,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "29fa8052ea8453f60513229066ade712"
+      "f9b6585d095a0a8de6452174d3e1777b"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -89,7 +89,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d95eb3fa1c973ad9a0ea8ff2c37972a2"
+      "9ec99e174f2c4a6cc5f32f693f172695"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -98,7 +98,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b6d2d961505f5f4a815b5ae84155a770"
+      "1adf13ab7027d6089c81a9b0de01a55e"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash_blocks",
@@ -107,7 +107,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2f20fb60f23974cf33d298a9b14f58cc"
+      "7b3e58ba505aef46ff52636c6f8638a6"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -137,7 +137,7 @@
         "typing_FStar.UInt.fits"
       ],
       0,
-      "2aa0103fdc330eb0e60403cdf334bd86"
+      "f2e2fc75dd2d1779d022bd2e2af82e72"
     ],
     [
       "X64.Poly1305.Spec_s.poly1305_hash",
@@ -146,7 +146,7 @@
       0,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c5b3968cc59c10e9eb86e4d94b38568e"
+      "1c66ece8cd407c50126d51b6773c0d43"
     ]
   ]
 ]

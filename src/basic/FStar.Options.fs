@@ -480,7 +480,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
       ( noshort,
         "codegen",
-        EnumStr ["OCaml"; "FSharp"; "Kremlin"],
+        EnumStr ["OCaml"; "FSharp"; "Kremlin"; "tactics"],
         "Generate code for execution");
 
       ( noshort,

@@ -1,5 +1,5 @@
 [
-  "ﬁ E?∫Î0L;LV\u0017&5Ön",
+  "È\u001bÅˆÇî\u0013ˇ©c‡ÁéœÇ”",
   [
     [
       "FStar.Tactics.Sequences.is_seq_t",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "1f784934a43cf77ae5d85e443cb2c2e0"
+      "0b3ed2e3bf4a340d1d8a4a58b77e499d"
     ],
     [
       "FStar.Tactics.Sequences.unrefine_eq_lem",
@@ -22,7 +22,7 @@
         "unit_typing"
       ],
       0,
-      "6eb12b5f8c97e21cf8391b2130a27c16"
+      "cc0c5ca3f13beeeab6014acd02d431d2"
     ],
     [
       "FStar.Tactics.Sequences.prune_for_seq",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "equation_FStar.Tactics.Derived.idtac" ],
       0,
-      "88b6a4df680d20b2771430b948004e34"
+      "3494f5b24b4f948feac9ac57a9b10adc"
     ],
     [
       "FStar.Tactics.Sequences.try_unref_eq",
@@ -45,7 +45,7 @@
         "equation_FStar.Tactics.Effect.bind", "unit_typing"
       ],
       0,
-      "72c2a936c5abf029501871309d75e7dd"
+      "c9669449d0b149647d07c041aeaf31bc"
     ],
     [
       "FStar.Tactics.Sequences.sequence_pruning",
@@ -54,7 +54,7 @@
       1,
       [ "@query" ],
       0,
-      "86f0f63ec74b4eb77923ba43d588558f"
+      "d170f30d7dcab48277a6618dec2410f1"
     ],
     [
       "FStar.Tactics.Sequences.test",
@@ -76,7 +76,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "b99c592301bcdf9d4c82c1941d45244c"
+      "486d1f613c5f81f9eef66ab36b532d0e"
     ],
     [
       "FStar.Tactics.Sequences.test",
@@ -107,7 +107,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "442cc340932c2e1a10703fdbb53abed8"
+      "50938f07edffd2974602fe579955feeb"
     ]
   ]
 ]
