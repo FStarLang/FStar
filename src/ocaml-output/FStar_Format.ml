@@ -56,7 +56,7 @@ let nest: Prims.int -> doc -> doc =
 let align: doc Prims.list -> doc =
   fun docs  ->
     let uu____149 = combine hardline docs in
-    match uu____149 with | Doc doc -> Doc doc
+    match uu____149 with | Doc doc1 -> Doc doc1
 let hbox: doc -> doc = fun d  -> d
 let pretty: Prims.int -> doc -> Prims.string =
-  fun sz  -> fun uu____162  -> match uu____162 with | Doc doc -> doc
+  fun sz  -> fun uu____162  -> match uu____162 with | Doc doc1 -> doc1
