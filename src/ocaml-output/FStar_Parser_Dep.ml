@@ -923,7 +923,7 @@ let collect:
                 (is_implementation file_name) &&
                   (has_interface file_system_map module_name) in
               if uu____3734
-              then (PreferInterface module_name) :: deps
+              then deps @ [PreferInterface module_name]
               else deps in
             ((let uu____3739 =
                 let uu____3744 = FStar_List.unique deps1 in

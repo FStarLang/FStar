@@ -178,7 +178,7 @@ EXTRACTION_EXTRACTED_FILES=$(addprefix extraction/FStar.Extraction., ML.Syntax.f
 extract_extraction: boot $(EXTRACTION_EXTRACTED_FILES)
 	$(FSTARBOOT) $(EXTRACTION_EXTRACTED_FILES) --extract_namespace FStar.Extraction
 
-TACTICS_EXTRACTED_FILES=../ulib/FStar.Tactics.Types.fsti $(addprefix tactics/FStar.Tactics., Types.fs Basic.fs Embedding.fs Native.fs) boot/FStar.Tactics.Interpreter.fst
+TACTICS_EXTRACTED_FILES=$(addprefix tactics/FStar.Tactics., Types.fs Basic.fs Embedding.fs Native.fs) boot/FStar.Tactics.Interpreter.fst
 extract_tactics: boot $(TACTICS_EXTRACTED_FILES)
 	$(FSTARBOOT) $(TACTICS_EXTRACTED_FILES) --extract_namespace FStar.Tactics --no_extract FStar.Tactics.Native
 
