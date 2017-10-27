@@ -29,6 +29,7 @@ module BU = FStar.Util
 module U = FStar.Syntax.Util
 module UEnv = FStar.Extraction.ML.UEnv
 module PC = FStar.Parser.Const
+module Range = FStar.Range
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with
@@ -36,10 +37,14 @@ let pruneNones (l : list<option<'a>>) : list<'a> =
                           | None -> ll) l []
 
 
-let mlconst_of_const (sctt : sconst) =
+let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["Prims"], "mk_range")
+
+(* private *)
+let mlconst_of_const' (sctt : sconst) =
   match sctt with
-  | Const_range _
   | Const_effect       -> failwith "Unsupported constant"
+
+  | Const_range _
   | Const_unit         -> MLC_Unit
   | Const_char   c     -> MLC_Char  c
   | Const_int    (s, i)-> MLC_Int   (s, i)
@@ -51,13 +56,43 @@ let mlconst_of_const (sctt : sconst) =
 
   | Const_string (s, _) -> MLC_String (s)
 
+  | Const_range_of
+  | Const_set_range_of ->
+    failwith "Unhandled constant: range_of/set_range_of"
+
   | Const_reify
   | Const_reflect _ ->
     failwith "Unhandled constant: reify/reflect"
 
-let mlconst_of_const' (p:Range.range) (c:sconst) =
-    try mlconst_of_const c
+let mlconst_of_const (p:Range.range) (c:sconst) =
+    try mlconst_of_const' c
     with _ -> failwith (BU.format2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (Print.const_to_string c))
+
+let mlexpr_of_range (r:Range.range) : mlexpr' =
+    let cint (i : int) : mlexpr =
+        MLC_Int (string_of_int i, None) |> MLE_Const |> with_ty ml_int_ty
+    in
+    let cstr (s : string) : mlexpr =
+        MLC_String s |> MLE_Const |> with_ty ml_string_ty
+    in
+    // This is not being fully faithful since it disregards
+    // the use_range, but I assume that's not too bad.
+    MLE_App (mk_range_mle, [Range.file_of_range r |> cstr;
+                            Range.start_of_range r |> Range.line_of_pos |> cint;
+                            Range.start_of_range r |> Range.col_of_pos  |> cint;
+                            Range.end_of_range r   |> Range.line_of_pos |> cint;
+                            Range.end_of_range r   |> Range.col_of_pos  |> cint;
+                            ])
+
+let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
+    (* Special case ranges, which can be extracted but not as constants.
+     * Maybe a sign that there shouldn't really be a Const_range *)
+    match c with
+    | Const_range r ->
+        mlexpr_of_range r
+
+    | _ ->
+        MLE_Const (mlconst_of_const p c)
 
 let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty =
     match t with

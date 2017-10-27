@@ -384,15 +384,40 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) None top.pos) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
+  (* Unary operators. Explicitly curry extra arguments *)
+  | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest)
   | Tm_app({n=Tm_constant Const_reify}, a::hd::rest)
   | Tm_app({n=Tm_constant (Const_reflect _)}, a::hd::rest) ->
-    //reify and reflect are a unary operators;
-    //if there are more args, then explicitly curry them
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args top in
     let head = mk (Tm_app(unary_op, [a])) None (Range.union_ranges unary_op.pos (fst a).pos) in
     let t = mk (Tm_app(head, rest)) None top.pos in
     tc_term env t
+
+  (* Binary operators *)
+  | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::hd::rest) ->
+    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
+    let unary_op, _ = U.head_and_args top in
+    let head = mk (Tm_app(unary_op, [a1; a2])) None (Range.union_ranges unary_op.pos (fst a1).pos) in
+    let t = mk (Tm_app(head, rest)) None top.pos in
+    tc_term env t
+
+  | Tm_app({n=Tm_constant Const_range_of}, [(e, None)]) ->
+    let e, c, g = tc_term (fst <| Env.clear_expected_typ env) e in
+    let head, _ = U.head_and_args top in
+    mk (Tm_app (head, [(e, None)])) None top.pos, (Util.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
+
+  | Tm_app({n=Tm_constant Const_set_range_of}, (a1, None)::(a2, None)::[]) ->
+    let head, _ = U.head_and_args top in
+    let env' = Env.set_expected_typ env (tabbrev Const.range_lid) in
+    let e1, _, g1 = tc_term env' a1 in
+    let e2, t2, g2 = tc_term env a2 in
+    let g = Rel.conj_guard g1 g2 in
+    mk_Tm_app head [S.as_arg a1; S.as_arg a2] None top.pos, t2, g
+
+  | Tm_app({n=Tm_constant Const_range_of}, _)
+  | Tm_app({n=Tm_constant Const_set_range_of}, _) ->
+    raise (Error(BU.format1 "Ill-applied constant %s" (Print.term_to_string top), e.pos))
 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
@@ -816,6 +841,13 @@ and tc_constant r (c:sconst) : typ =
       (* and see how much code breaks *)
       | Const_effect -> U.ktype0 //NS: really?
       | Const_range _ -> t_range
+
+      | Const_range_of
+      | Const_set_range_of
+      | Const_reify
+      | Const_reflect _ ->
+        raise (Error (BU.format1 "Ill-typed %s: this constant must be fully applied"
+                                 (Const.const_to_string c), r))
 
       | _ -> raise (Error("Unsupported constant", r))
 

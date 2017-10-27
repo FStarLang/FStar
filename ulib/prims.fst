@@ -213,11 +213,11 @@ assume HasEq_int: hasEq int
 
 assume val range_0 : range
 (* A total function to obtain the range of a term x *)
-assume val range_of : #a:Type -> x:a -> Tot range
+(* assume val range_of : #a:Type -> x:a -> Tot range *)
 (* Building a range constant *)
 assume val mk_range : file:string -> from_line:int -> from_col:int -> to_line:int -> to_col:int -> Tot range
 (* Tagging a term x with the range r *)
-let set_range_of (#a:Type) (x:a) (r:range) = x
+(* let set_range_of (#a:Type) (x:a) (r:range) = x *)
 
 assume val op_AmpAmp             : bool -> bool -> Tot bool
 assume val op_BarBar             : bool -> bool -> Tot bool

@@ -107,10 +107,18 @@ let dump_cur ps msg =
         dump_goal ps (List.hd ps.goals)
         end
 
-let ps_to_string (msg, ps) = format6 "State dump @ depth %s(%s):\nACTIVE goals (%s):\n%s\nSMT goals (%s):\n%s"
-                (string_of_int ps.depth)
-                msg (string_of_int (List.length ps.goals)) (String.concat "\n" (List.map goal_to_string ps.goals))
-                (string_of_int (List.length ps.smt_goals)) (String.concat "\n" (List.map goal_to_string ps.smt_goals))
+let ps_to_string (msg, ps) =
+    String.concat ""
+               [format2 "State dump @ depth %s (%s):\n" (string_of_int ps.depth) msg;
+                format1 "Position: %s\n" (Range.string_of_range ps.entry_range);
+                format2 "ACTIVE goals (%s):\n%s\n"
+                    (string_of_int (List.length ps.goals))
+                    (String.concat "\n" (List.map goal_to_string ps.goals));
+                format2 "SMT goals (%s):\n%s\n"
+                    (string_of_int (List.length ps.smt_goals))
+                    (String.concat "\n" (List.map goal_to_string ps.smt_goals));
+               ]
+
 let goal_to_json g =
     let g_binders = Env.all_binders g.context |> Print.binders_to_json in
     JsonAssoc [("hyps", g_binders);
@@ -167,17 +175,22 @@ let fail1 msg x     = fail (BU.format1 msg x)
 let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
 
-let trytac (t : tac<'a>) : tac<option<'a>> =
+let trytac' (t : tac<'a>) : tac<either<string,'a>> =
     mk_tac (fun ps ->
             let tx = UF.new_transaction () in
             match run t ps with
             | Success (a, q) ->
                 UF.commit tx;
-                Success (Some a, q)
-            | Failed (_, _) ->
+                Success (Inr a, q)
+            | Failed (m, _) ->
                 UF.rollback tx;
-                Success (None, ps)
+                Success (Inl m, ps)
            )
+let trytac (t : tac<'a>) : tac<option<'a>> =
+    bind (trytac' t) (fun r ->
+    match r with
+    | Inr v -> ret (Some v)
+    | Inl _ -> ret None)
 
 // This is relying on the fact that errors are strings
 let wrap_err (pref:string) (t : tac<'a>) : tac<'a> =
@@ -883,10 +896,11 @@ let pointwise_rec (ps : proofstate) (tau : tac<unit>) opts (env : Env.env) (t : 
                 ret ut))
           ))
        in
-       bind (trytac rewrite_eq) (fun x ->
+       bind (trytac' rewrite_eq) (fun x ->
        match x with
-       | None -> ret t
-       | Some x -> ret x)
+       | Inl "SKIP" -> ret t
+       | Inl e -> fail e
+       | Inr x -> ret x)
 
 let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
     bind get (fun ps ->
@@ -1051,6 +1065,7 @@ let proofstate_of_goal_ty env typ =
         depth = 0;
         __dump = (fun ps msg -> dump_proofstate ps msg);
         psc = N.null_psc;
+        entry_range = Range.dummyRange;
     }
     in
     (ps, g.witness)
