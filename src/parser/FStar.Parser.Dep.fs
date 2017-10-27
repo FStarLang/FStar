@@ -159,17 +159,16 @@ let dependences_of (file_system_map:files_for_module_name) (deps:dependence_grap
 let add_dependence (deps:dependence_graph)
                    (from:file_name) (to_:file_name)
                   : unit =
-    let key = lowercase_module_name from in
     let add_dep (d,color) to_ =
         if is_interface to_
         then (PreferInterface (lowercase_module_name to_)::d), color
         else (UseImplementation (lowercase_module_name to_)::d), color
     in
-    match deps_try_find deps key with
+    match deps_try_find deps from with
     | None ->
-      deps_add_dep deps key (add_dep (empty_dependences, White) to_)
+      deps_add_dep deps from (add_dep (empty_dependences, White) to_)
     | Some key_deps ->
-      deps_add_dep deps key (add_dep key_deps to_)
+      deps_add_dep deps from (add_dep key_deps to_)
 
 let print_graph (graph:dependence_graph) =
   Util.print_endline "A DOT-format graph has been dumped in the current directory as dep.graph";
