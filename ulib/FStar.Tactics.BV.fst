@@ -137,6 +137,11 @@ let rec arith_expr_to_bv e : tactic unit =
         apply_lemma (quote cong_bvadd);;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2
+    | NatToBv (Lsub e1 e2) | (Lsub e1 e2) ->
+        apply_lemma (quote int2bv_sub);;
+        apply_lemma (quote cong_bvsub);;
+        arith_expr_to_bv e1;;
+        arith_expr_to_bv e2
     | _ ->
         trefl
 
@@ -156,22 +161,6 @@ let arith_to_bv_tac : tactic unit =
         end
     | _ ->
         fail ("impossible: ")
-
-// let get_field_size_prop () : tactic int =
-//   g <-- cur_goal;
-//   let f = term_as_formula g in
-//   match f with
-//   | Comp Eq t l r | Comp Lt t l r ->
-//   begin match run_tm (get_field_size l) with
-//     | Inl s -> 
-//       begin
-//       match run_tm (get_field_size r) with
-//       | Inl s' -> fail ("could not infer field size")
-//       | Inr n -> n
-//       end
-//     | Inr n -> n
-//   end
-//   | _ -> fail ("impossible: ")
 
 (* As things are right now, we need to be able to parse NatToBv
 too. This can be useful, if we have mixed expressions so I'll leave it
