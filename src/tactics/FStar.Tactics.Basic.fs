@@ -632,7 +632,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
              match (SS.compress hd).n with
              | Tm_uvar _ -> true //still unresolved
              | _ -> false) in
-        bind (solve goal solution) (fun _ ->
+        // We solve with (), we don't care about the witness if applying a lemma
+        bind (solve goal U.exp_unit) (fun _ ->
         let is_free_uvar uv t =
             let free_uvars = List.map fst (BU.set_elements (SF.uvars t)) in
             List.existsML (fun u -> UF.equiv u uv) free_uvars
