@@ -44,7 +44,7 @@ all:	Apply.uver		\
 	# launch			\
 
 launch: Launch.fst
-	$(FSTAR) --unsafe_tactic_exec --verify_module Launch $^
+	$(FSTAR) --unsafe_tactic_exec $^
 
 neg:
 	$(MAKE) -C neg
