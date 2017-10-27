@@ -1812,7 +1812,7 @@ let rec specs_with_types:
               "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)")
               :: uu____3084 in
           (FStar_Getopt.noshort, "codegen",
-            (EnumStr ["OCaml"; "FSharp"; "Kremlin"]),
+            (EnumStr ["OCaml"; "FSharp"; "Kremlin"; "tactics"]),
             "Generate code for execution") :: uu____3073 in
         uu____3051 :: uu____3062 in
       (FStar_Getopt.noshort, "admit_except",
