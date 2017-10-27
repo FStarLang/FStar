@@ -625,6 +625,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
                             (N.term_to_string goal.context goal.goal_ty)
     else
         let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
+        let solution, _, g_s = goal.context.type_of goal.context solution in
         bind (add_implicits implicits.implicits) (fun _ ->
         let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
              let hd, _ = U.head_and_args tm in
@@ -658,6 +659,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
              | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
         in
         let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
+        let guard = Rel.conj_guard guard g_s in
         bind (add_goal_from_guard "apply_lemma guard" goal.context guard goal.opts) (fun _ ->
         bind (if not (istrivial goal.context (U.mk_squash pre))
               then add_irrelevant_goal "apply_lemma precondition" goal.context pre goal.opts
