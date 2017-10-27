@@ -10,21 +10,21 @@ type vconst =
   | C_String of Prims.string[@@deriving show]
 let uu___is_C_Unit: vconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | C_Unit  -> true | uu____17 -> false
+    match projectee with | C_Unit  -> true | uu____16 -> false
 let uu___is_C_Int: vconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | C_Int _0 -> true | uu____23 -> false
+    match projectee with | C_Int _0 -> true | uu____21 -> false
 let __proj__C_Int__item___0: vconst -> FStar_BigInt.t =
   fun projectee  -> match projectee with | C_Int _0 -> _0
 let uu___is_C_True: vconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | C_True  -> true | uu____36 -> false
+    match projectee with | C_True  -> true | uu____32 -> false
 let uu___is_C_False: vconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | C_False  -> true | uu____41 -> false
+    match projectee with | C_False  -> true | uu____36 -> false
 let uu___is_C_String: vconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | C_String _0 -> true | uu____47 -> false
+    match projectee with | C_String _0 -> true | uu____41 -> false
 let __proj__C_String__item___0: vconst -> Prims.string =
   fun projectee  -> match projectee with | C_String _0 -> _0
 type pattern =
@@ -35,12 +35,12 @@ type pattern =
   | Pat_Wild of FStar_Syntax_Syntax.bv[@@deriving show]
 let uu___is_Pat_Constant: pattern -> Prims.bool =
   fun projectee  ->
-    match projectee with | Pat_Constant _0 -> true | uu____83 -> false
+    match projectee with | Pat_Constant _0 -> true | uu____75 -> false
 let __proj__Pat_Constant__item___0: pattern -> vconst =
   fun projectee  -> match projectee with | Pat_Constant _0 -> _0
 let uu___is_Pat_Cons: pattern -> Prims.bool =
   fun projectee  ->
-    match projectee with | Pat_Cons _0 -> true | uu____103 -> false
+    match projectee with | Pat_Cons _0 -> true | uu____93 -> false
 let __proj__Pat_Cons__item___0:
   pattern ->
     (FStar_Syntax_Syntax.fv,pattern Prims.list)
@@ -48,12 +48,12 @@ let __proj__Pat_Cons__item___0:
   = fun projectee  -> match projectee with | Pat_Cons _0 -> _0
 let uu___is_Pat_Var: pattern -> Prims.bool =
   fun projectee  ->
-    match projectee with | Pat_Var _0 -> true | uu____135 -> false
+    match projectee with | Pat_Var _0 -> true | uu____123 -> false
 let __proj__Pat_Var__item___0: pattern -> FStar_Syntax_Syntax.bv =
   fun projectee  -> match projectee with | Pat_Var _0 -> _0
 let uu___is_Pat_Wild: pattern -> Prims.bool =
   fun projectee  ->
-    match projectee with | Pat_Wild _0 -> true | uu____149 -> false
+    match projectee with | Pat_Wild _0 -> true | uu____135 -> false
 let __proj__Pat_Wild__item___0: pattern -> FStar_Syntax_Syntax.bv =
   fun projectee  -> match projectee with | Pat_Wild _0 -> _0
 type branch =
@@ -64,10 +64,10 @@ type aqualv =
   | Q_Explicit[@@deriving show]
 let uu___is_Q_Implicit: aqualv -> Prims.bool =
   fun projectee  ->
-    match projectee with | Q_Implicit  -> true | uu____166 -> false
+    match projectee with | Q_Implicit  -> true | uu____150 -> false
 let uu___is_Q_Explicit: aqualv -> Prims.bool =
   fun projectee  ->
-    match projectee with | Q_Explicit  -> true | uu____171 -> false
+    match projectee with | Q_Explicit  -> true | uu____154 -> false
 type argv = (FStar_Syntax_Syntax.term,aqualv) FStar_Pervasives_Native.tuple2
 [@@deriving show]
 type term_view =
@@ -91,23 +91,23 @@ type term_view =
   | Tv_Unknown[@@deriving show]
 let uu___is_Tv_Var: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Var _0 -> true | uu____257 -> false
+    match projectee with | Tv_Var _0 -> true | uu____239 -> false
 let __proj__Tv_Var__item___0: term_view -> FStar_Syntax_Syntax.binder =
   fun projectee  -> match projectee with | Tv_Var _0 -> _0
 let uu___is_Tv_FVar: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_FVar _0 -> true | uu____271 -> false
+    match projectee with | Tv_FVar _0 -> true | uu____251 -> false
 let __proj__Tv_FVar__item___0: term_view -> FStar_Syntax_Syntax.fv =
   fun projectee  -> match projectee with | Tv_FVar _0 -> _0
 let uu___is_Tv_App: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_App _0 -> true | uu____289 -> false
+    match projectee with | Tv_App _0 -> true | uu____267 -> false
 let __proj__Tv_App__item___0:
   term_view -> (FStar_Syntax_Syntax.term,argv) FStar_Pervasives_Native.tuple2
   = fun projectee  -> match projectee with | Tv_App _0 -> _0
 let uu___is_Tv_Abs: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Abs _0 -> true | uu____319 -> false
+    match projectee with | Tv_Abs _0 -> true | uu____295 -> false
 let __proj__Tv_Abs__item___0:
   term_view ->
     (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
@@ -115,7 +115,7 @@ let __proj__Tv_Abs__item___0:
   = fun projectee  -> match projectee with | Tv_Abs _0 -> _0
 let uu___is_Tv_Arrow: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Arrow _0 -> true | uu____349 -> false
+    match projectee with | Tv_Arrow _0 -> true | uu____323 -> false
 let __proj__Tv_Arrow__item___0:
   term_view ->
     (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.comp)
@@ -123,11 +123,11 @@ let __proj__Tv_Arrow__item___0:
   = fun projectee  -> match projectee with | Tv_Arrow _0 -> _0
 let uu___is_Tv_Type: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Type _0 -> true | uu____375 -> false
+    match projectee with | Tv_Type _0 -> true | uu____347 -> false
 let __proj__Tv_Type__item___0: term_view -> Prims.unit = fun projectee  -> ()
 let uu___is_Tv_Refine: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Refine _0 -> true | uu____393 -> false
+    match projectee with | Tv_Refine _0 -> true | uu____363 -> false
 let __proj__Tv_Refine__item___0:
   term_view ->
     (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term)
@@ -135,18 +135,18 @@ let __proj__Tv_Refine__item___0:
   = fun projectee  -> match projectee with | Tv_Refine _0 -> _0
 let uu___is_Tv_Const: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Const _0 -> true | uu____419 -> false
+    match projectee with | Tv_Const _0 -> true | uu____387 -> false
 let __proj__Tv_Const__item___0: term_view -> vconst =
   fun projectee  -> match projectee with | Tv_Const _0 -> _0
 let uu___is_Tv_Uvar: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Uvar _0 -> true | uu____437 -> false
+    match projectee with | Tv_Uvar _0 -> true | uu____403 -> false
 let __proj__Tv_Uvar__item___0:
   term_view -> (FStar_BigInt.t,typ) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | Tv_Uvar _0 -> _0
 let uu___is_Tv_Let: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Let _0 -> true | uu____469 -> false
+    match projectee with | Tv_Let _0 -> true | uu____433 -> false
 let __proj__Tv_Let__item___0:
   term_view ->
     (FStar_Syntax_Syntax.binder,FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
@@ -154,7 +154,7 @@ let __proj__Tv_Let__item___0:
   = fun projectee  -> match projectee with | Tv_Let _0 -> _0
 let uu___is_Tv_Match: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Match _0 -> true | uu____507 -> false
+    match projectee with | Tv_Match _0 -> true | uu____469 -> false
 let __proj__Tv_Match__item___0:
   term_view ->
     (FStar_Syntax_Syntax.term,branch Prims.list)
@@ -162,7 +162,7 @@ let __proj__Tv_Match__item___0:
   = fun projectee  -> match projectee with | Tv_Match _0 -> _0
 let uu___is_Tv_Unknown: term_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Tv_Unknown  -> true | uu____538 -> false
+    match projectee with | Tv_Unknown  -> true | uu____498 -> false
 type comp_view =
   | C_Total of typ
   | C_Lemma of (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
@@ -170,12 +170,12 @@ type comp_view =
   | C_Unknown[@@deriving show]
 let uu___is_C_Total: comp_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | C_Total _0 -> true | uu____556 -> false
+    match projectee with | C_Total _0 -> true | uu____515 -> false
 let __proj__C_Total__item___0: comp_view -> typ =
   fun projectee  -> match projectee with | C_Total _0 -> _0
 let uu___is_C_Lemma: comp_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | C_Lemma _0 -> true | uu____574 -> false
+    match projectee with | C_Lemma _0 -> true | uu____531 -> false
 let __proj__C_Lemma__item___0:
   comp_view ->
     (FStar_Syntax_Syntax.term,FStar_Syntax_Syntax.term)
@@ -183,7 +183,7 @@ let __proj__C_Lemma__item___0:
   = fun projectee  -> match projectee with | C_Lemma _0 -> _0
 let uu___is_C_Unknown: comp_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | C_Unknown  -> true | uu____599 -> false
+    match projectee with | C_Unknown  -> true | uu____554 -> false
 type ctor =
   | Ctor of (name,typ) FStar_Pervasives_Native.tuple2[@@deriving show]
 let uu___is_Ctor: ctor -> Prims.bool = fun projectee  -> true
@@ -198,7 +198,7 @@ type sigelt_view =
   | Unk[@@deriving show]
 let uu___is_Sg_Inductive: sigelt_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Sg_Inductive _0 -> true | uu____672 -> false
+    match projectee with | Sg_Inductive _0 -> true | uu____624 -> false
 let __proj__Sg_Inductive__item___0:
   sigelt_view ->
     (name,FStar_Syntax_Syntax.binder Prims.list,typ,ctor Prims.list)
@@ -206,14 +206,14 @@ let __proj__Sg_Inductive__item___0:
   = fun projectee  -> match projectee with | Sg_Inductive _0 -> _0
 let uu___is_Sg_Let: sigelt_view -> Prims.bool =
   fun projectee  ->
-    match projectee with | Sg_Let _0 -> true | uu____728 -> false
+    match projectee with | Sg_Let _0 -> true | uu____678 -> false
 let __proj__Sg_Let__item___0:
   sigelt_view ->
     (FStar_Syntax_Syntax.fv,typ,FStar_Syntax_Syntax.term)
       FStar_Pervasives_Native.tuple3
   = fun projectee  -> match projectee with | Sg_Let _0 -> _0
 let uu___is_Unk: sigelt_view -> Prims.bool =
-  fun projectee  -> match projectee with | Unk  -> true | uu____759 -> false
+  fun projectee  -> match projectee with | Unk  -> true | uu____707 -> false
 let fstar_refl_lid: Prims.string Prims.list -> FStar_Ident.lident =
   fun s  ->
     FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Reflection"] s)
@@ -228,21 +228,21 @@ let fstar_refl_data_lid: Prims.string -> FStar_Ident.lident =
   fun s  -> fstar_refl_lid ["Data"; s]
 let mk_refl_types_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____788 = fstar_refl_types_lid s in
-    FStar_Syntax_Syntax.tconst uu____788
+    let uu____730 = fstar_refl_types_lid s in
+    FStar_Syntax_Syntax.tconst uu____730
 let mk_refl_syntax_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____793 = fstar_refl_syntax_lid s in
-    FStar_Syntax_Syntax.tconst uu____793
+    let uu____734 = fstar_refl_syntax_lid s in
+    FStar_Syntax_Syntax.tconst uu____734
 let mk_refl_data_lid_as_term: Prims.string -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____798 = fstar_refl_data_lid s in
-    FStar_Syntax_Syntax.tconst uu____798
+    let uu____738 = fstar_refl_data_lid s in
+    FStar_Syntax_Syntax.tconst uu____738
 let fstar_refl_tdataconstr:
   Prims.string Prims.list -> FStar_Syntax_Syntax.term =
   fun s  ->
-    let uu____807 = fstar_refl_lid s in
-    FStar_Syntax_Syntax.tdataconstr uu____807
+    let uu____746 = fstar_refl_lid s in
+    FStar_Syntax_Syntax.tdataconstr uu____746
 let fstar_refl_aqualv: FStar_Syntax_Syntax.term =
   mk_refl_data_lid_as_term "aqualv"
 let fstar_refl_env: FStar_Syntax_Syntax.term =
@@ -360,17 +360,17 @@ let ref_Unk: FStar_Syntax_Syntax.term =
 let ref_Ctor: FStar_Syntax_Syntax.term =
   FStar_Syntax_Syntax.tdataconstr ref_Ctor_lid
 let t_binder: FStar_Syntax_Syntax.term =
-  let uu____808 = fstar_refl_types_lid "binder" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____808
+  let uu____747 = fstar_refl_types_lid "binder" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____747
 let t_term: FStar_Syntax_Syntax.term =
-  let uu____809 = fstar_refl_types_lid "term" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____809
+  let uu____748 = fstar_refl_types_lid "term" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____748
 let t_fv: FStar_Syntax_Syntax.term =
-  let uu____810 = fstar_refl_types_lid "fv" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____810
+  let uu____749 = fstar_refl_types_lid "fv" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____749
 let t_binders: FStar_Syntax_Syntax.term =
-  let uu____811 = fstar_refl_types_lid "binders" in
-  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____811
+  let uu____750 = fstar_refl_types_lid "binders" in
+  FStar_All.pipe_left FStar_Syntax_Syntax.tabbrev uu____750
 let ord_Lt_lid: FStar_Ident.lident =
   FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"] FStar_Range.dummyRange
 let ord_Eq_lid: FStar_Ident.lident =
