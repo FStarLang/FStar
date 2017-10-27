@@ -39,7 +39,7 @@ let __proj__Mkgoal__item__is_guard: goal -> Prims.bool =
 let subst_goal: FStar_Syntax_Syntax.subst_t -> goal -> goal =
   fun subst1  ->
     fun goal  ->
-      let uu___128_74 = goal in
+      let uu___331_74 = goal in
       let uu____75 = FStar_TypeChecker_Env.rename_env subst1 goal.context in
       let uu____76 = FStar_Syntax_Subst.subst subst1 goal.witness in
       let uu____77 = FStar_Syntax_Subst.subst subst1 goal.goal_ty in
@@ -47,8 +47,8 @@ let subst_goal: FStar_Syntax_Syntax.subst_t -> goal -> goal =
         context = uu____75;
         witness = uu____76;
         goal_ty = uu____77;
-        opts = (uu___128_74.opts);
-        is_guard = (uu___128_74.is_guard)
+        opts = (uu___331_74.opts);
+        is_guard = (uu___331_74.is_guard)
       }
 type proofstate =
   {
@@ -126,44 +126,44 @@ let subst_proof_state:
   FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate =
   fun subst1  ->
     fun ps  ->
-      let uu___129_308 = ps in
+      let uu___332_308 = ps in
       let uu____309 = subst_goal subst1 ps.main_goal in
       let uu____310 = FStar_List.map (subst_goal subst1) ps.goals in
       {
-        main_context = (uu___129_308.main_context);
+        main_context = (uu___332_308.main_context);
         main_goal = uu____309;
-        all_implicits = (uu___129_308.all_implicits);
+        all_implicits = (uu___332_308.all_implicits);
         goals = uu____310;
-        smt_goals = (uu___129_308.smt_goals);
-        depth = (uu___129_308.depth);
-        __dump = (uu___129_308.__dump);
-        psc = (uu___129_308.psc)
+        smt_goals = (uu___332_308.smt_goals);
+        depth = (uu___332_308.depth);
+        __dump = (uu___332_308.__dump);
+        psc = (uu___332_308.psc)
       }
 let decr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___130_317 = ps in
+    let uu___333_317 = ps in
     {
-      main_context = (uu___130_317.main_context);
-      main_goal = (uu___130_317.main_goal);
-      all_implicits = (uu___130_317.all_implicits);
-      goals = (uu___130_317.goals);
-      smt_goals = (uu___130_317.smt_goals);
+      main_context = (uu___333_317.main_context);
+      main_goal = (uu___333_317.main_goal);
+      all_implicits = (uu___333_317.all_implicits);
+      goals = (uu___333_317.goals);
+      smt_goals = (uu___333_317.smt_goals);
       depth = (ps.depth - (Prims.parse_int "1"));
-      __dump = (uu___130_317.__dump);
-      psc = (uu___130_317.psc)
+      __dump = (uu___333_317.__dump);
+      psc = (uu___333_317.psc)
     }
 let incr_depth: proofstate -> proofstate =
   fun ps  ->
-    let uu___131_322 = ps in
+    let uu___334_322 = ps in
     {
-      main_context = (uu___131_322.main_context);
-      main_goal = (uu___131_322.main_goal);
-      all_implicits = (uu___131_322.all_implicits);
-      goals = (uu___131_322.goals);
-      smt_goals = (uu___131_322.smt_goals);
+      main_context = (uu___334_322.main_context);
+      main_goal = (uu___334_322.main_goal);
+      all_implicits = (uu___334_322.all_implicits);
+      goals = (uu___334_322.goals);
+      smt_goals = (uu___334_322.smt_goals);
       depth = (ps.depth + (Prims.parse_int "1"));
-      __dump = (uu___131_322.__dump);
-      psc = (uu___131_322.psc)
+      __dump = (uu___334_322.__dump);
+      psc = (uu___334_322.psc)
     }
 let tracepoint: proofstate -> Prims.unit =
   fun ps  ->
@@ -175,15 +175,15 @@ let tracepoint: proofstate -> Prims.unit =
 let set_ps_psc: FStar_TypeChecker_Normalize.psc -> proofstate -> proofstate =
   fun psc  ->
     fun ps  ->
-      let uu___132_339 = ps in
+      let uu___335_339 = ps in
       {
-        main_context = (uu___132_339.main_context);
-        main_goal = (uu___132_339.main_goal);
-        all_implicits = (uu___132_339.all_implicits);
-        goals = (uu___132_339.goals);
-        smt_goals = (uu___132_339.smt_goals);
-        depth = (uu___132_339.depth);
-        __dump = (uu___132_339.__dump);
+        main_context = (uu___335_339.main_context);
+        main_goal = (uu___335_339.main_goal);
+        all_implicits = (uu___335_339.all_implicits);
+        goals = (uu___335_339.goals);
+        smt_goals = (uu___335_339.smt_goals);
+        depth = (uu___335_339.depth);
+        __dump = (uu___335_339.__dump);
         psc
       }
 type direction =

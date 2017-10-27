@@ -80,24 +80,24 @@ let __set_unit_tests: Prims.unit -> Prims.unit =
 let __clear_unit_tests: Prims.unit -> Prims.unit =
   fun uu____288  -> FStar_ST.op_Colon_Equals __unit_tests__ false
 let as_bool: option_val -> Prims.bool =
-  fun uu___59_338  ->
-    match uu___59_338 with
+  fun uu___65_338  ->
+    match uu___65_338 with
     | Bool b -> b
     | uu____340 -> failwith "Impos: expected Bool"
 let as_int: option_val -> Prims.int =
-  fun uu___60_344  ->
-    match uu___60_344 with
+  fun uu___66_344  ->
+    match uu___66_344 with
     | Int b -> b
     | uu____346 -> failwith "Impos: expected Int"
 let as_string: option_val -> Prims.string =
-  fun uu___61_350  ->
-    match uu___61_350 with
+  fun uu___67_350  ->
+    match uu___67_350 with
     | String b -> b
     | Path b -> FStar_Common.try_convert_file_name_to_mixed b
     | uu____353 -> failwith "Impos: expected String"
 let as_list': option_val -> option_val Prims.list =
-  fun uu___62_359  ->
-    match uu___62_359 with
+  fun uu___68_359  ->
+    match uu___68_359 with
     | List ts -> ts
     | uu____365 -> failwith "Impos: expected List"
 let as_list:
@@ -114,8 +114,8 @@ let as_option:
       option_val -> 'Auu____403 FStar_Pervasives_Native.option
   =
   fun as_t  ->
-    fun uu___63_416  ->
-      match uu___63_416 with
+    fun uu___69_416  ->
+      match uu___69_416 with
       | Unset  -> FStar_Pervasives_Native.None
       | v1 ->
           let uu____420 = as_t v1 in FStar_Pervasives_Native.Some uu____420
@@ -442,8 +442,8 @@ let get_no_positivity: Prims.unit -> Prims.bool =
 let get_ml_no_eta_expand_coertions: Prims.unit -> Prims.bool =
   fun uu____1933  -> lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let dlevel: Prims.string -> debug_level_t =
-  fun uu___64_1937  ->
-    match uu___64_1937 with
+  fun uu___70_1937  ->
+    match uu___70_1937 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -1763,8 +1763,8 @@ and specs: Prims.unit -> FStar_Getopt.opt Prims.list =
                (short, long, uu____5085, doc) in
              mk_spec uu____5074) uu____5036
 let settable: Prims.string -> Prims.bool =
-  fun uu___65_5093  ->
-    match uu___65_5093 with
+  fun uu___71_5093  ->
+    match uu___71_5093 with
     | "admit_smt_queries" -> true
     | "admit_except" -> true
     | "debug" -> true

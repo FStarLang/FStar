@@ -130,11 +130,11 @@ boot: $(ALL_BOOT)
 clean_boot:
 	rm -rf boot
 
-MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Ident.fs FStar.Options.fs FStar.Range.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
+MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Range.fs FStar.Ident.fs FStar.Options.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
 extract_misc: boot $(MISC_EXTRACTED_FILES)
 	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Range FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
 
-SYNTAX_EXTRACTED_FILES=$(addprefix syntax/FStar.Syntax., Syntax.fs Subst.fs Free.fs InstFV.fs Util.fs Print.fs Embeddings.fs MutRecTy.fs Resugar.fs Unionfind.fs) fsdoc/FStar.Fsdoc.Generator.fs
+SYNTAX_EXTRACTED_FILES=$(addprefix syntax/FStar.Syntax., Syntax.fs Unionfind.fs Subst.fs Free.fs InstFV.fs Util.fs Resugar.fs Print.fs Embeddings.fs MutRecTy.fs) fsdoc/FStar.Fsdoc.Generator.fs
 extract_syntax: boot $(SYNTAX_EXTRACTED_FILES)
 	$(FSTARBOOT) $(SYNTAX_EXTRACTED_FILES) --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
 
@@ -182,7 +182,7 @@ TACTICS_EXTRACTED_FILES=$(addprefix tactics/FStar.Tactics., Types.fs Basic.fs Em
 extract_tactics: boot $(TACTICS_EXTRACTED_FILES)
 	$(FSTARBOOT) $(TACTICS_EXTRACTED_FILES) --extract_namespace FStar.Tactics --no_extract FStar.Tactics.Native
 
-REFLECTION_EXTRACTED_FILES=../ulib/FStar.Reflection.Types.fsti $(addprefix reflection/FStar.Reflection., Basic.fs Data.fs Interpreter.fs)
+REFLECTION_EXTRACTED_FILES=../ulib/FStar.Reflection.Types.fsti $(addprefix reflection/FStar.Reflection., Data.fs Basic.fs Interpreter.fs)
 extract_reflection: boot $(REFLECTION_EXTRACTED_FILES)
 	$(FSTARBOOT) $(REFLECTION_EXTRACTED_FILES) --extract_namespace FStar.Reflection
 
@@ -202,7 +202,7 @@ SOLVER_EXTRACTED_FILES=smtencoding/FStar.SMTEncoding.Solver.fs
 extract_solver: boot $(SOLVER_EXTRACTED_FILES)
 	$(FSTARBOOT) $(SOLVER_EXTRACTED_FILES) --extract_module FStar.SMTEncoding.Solver
 
-FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Interactive.Legacy.fs Interactive.CompletionTable.fs Interactive.Ide.fs Universal.fs Indent.fs Main.fs)
+FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Universal.fs Interactive.CompletionTable.fs Interactive.Ide.fs Interactive.Legacy.fs Indent.fs Main.fs)
 extract_fstar: boot $(FSTAR_EXTRACTED_FILES)
 	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive.CompletionTable --extract_module FStar.Interactive.Ide --extract_module FStar.Interactive.Legacy --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
