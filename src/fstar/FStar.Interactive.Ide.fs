@@ -306,8 +306,7 @@ let deps_and_repl_ld_tasks_of_our_file filename =
     Options.prims () in
   let deps =
     prims_fname ::
-    (FStar.Dependencies.find_deps_if_needed
-      Parser.Dep.VerifyFigureItOut [filename]) in
+    (FStar.Dependencies.find_deps_if_needed [filename]) in
 
   let same_name, real_deps =
     List.partition has_our_mod_name deps in
@@ -1405,9 +1404,6 @@ let interactive_mode' (filename: string): unit =
 
 let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
-
-  if Options.verify_module () <> [] then
-    Util.print_warning "--ide: ignoring --verify_module";
 
   if Option.isSome (Options.codegen ()) then
     Util.print_warning "--ide: ignoring --codegen";

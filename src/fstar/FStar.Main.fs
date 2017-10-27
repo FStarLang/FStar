@@ -117,7 +117,7 @@ let go _ =
         init_native_tactics ();
 
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
-        then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
+        then Parser.Dep.print (snd (Parser.Dep.collect filenames))
         else if Options.interactive () then begin
           match filenames with
           | [] ->
@@ -125,10 +125,6 @@ let go _ =
           | _ :: _ :: _ ->
             Util.print_error "--ide: Too many files in command line invocation\n"; exit 1
           | [filename] ->
-            if Options.explicit_deps () then begin
-              Util.print_error "--ide: --explicit_deps not supported in interactive mode\n";
-              exit 1 end;
-
             if Options.legacy_interactive () then
               FStar.Interactive.Legacy.interactive_mode filename
             else
@@ -142,19 +138,7 @@ let go _ =
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
-          let verify_mode =
-            if Options.verify_all () then begin
-              if Options.verify_module () <> [] then begin
-                Util.print_error "--verify_module is incompatible with --verify_all\n";
-                exit 1
-              end;
-              Parser.Dep.VerifyAll
-            end else if Options.verify_module () <> [] then
-              Parser.Dep.VerifyUserList
-            else
-              Parser.Dep.VerifyFigureItOut
-          in
-          let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
+          let filenames = FStar.Dependencies.find_deps_if_needed filenames in
           (match Options.gen_native_tactics () with
           | Some dir ->
              Util.print1 "Generating native tactics in %s\n" dir;

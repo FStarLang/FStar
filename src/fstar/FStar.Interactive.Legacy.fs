@@ -229,7 +229,7 @@ let deps_of_our_file filename =
    * and lax-check everything but the current module we're editing. This
    * function may, optionally, return an interface if the currently edited
    * module is an implementation and an interface was found. *)
-  let deps = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
+  let deps = FStar.Dependencies.find_deps_if_needed [ filename ] in
   let deps, same_name = List.partition (fun x ->
     Parser.Dep.lowercase_module_name x <> Parser.Dep.lowercase_module_name filename
   ) deps in
