@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "7aca09276efe6fcdf1432021ef8de4df"
+      "9f9d2337dcc1c4fac1fe7b156ca31de1"
     ],
     [
       "EtM.MAC.tag",
@@ -24,7 +24,7 @@
         "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "4fe6c904dccd62ec35ac7b79f8369e6e"
+      "7138a55a4004aa0c32a01a8ba6dbfd32"
     ],
     [
       "EtM.MAC.sha1",
@@ -33,7 +33,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "dd13f6e9b847aa9c47df7702773957d7"
+      "07d6d3c04e3d90e193dbfb4d9d2f329f"
     ],
     [
       "EtM.MAC.sha1",
@@ -42,7 +42,7 @@
       1,
       [ "@query", "equation_EtM.MAC.macsize" ],
       0,
-      "17c19d67e5bb91111a9c0dc79968f95d"
+      "baab8441b2a4bb9d9858ea2c1181d490"
     ],
     [
       "EtM.MAC.hmac_sha1",
@@ -62,7 +62,7 @@
         "typing_EtM.MAC.sha1", "typing_Platform.Bytes.op_At_Bar"
       ],
       0,
-      "17c8c4980a8119be8521f356352612a8"
+      "8278fd1ddf66ddd7cf0a6e4dae4ac1a2"
     ],
     [
       "EtM.MAC.__proj__Key__item__region",
@@ -71,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "b1a453017995c0e057ae94eee17d89c0"
+      "92cf887f96000b04cd172bedcdd35739"
     ],
     [
       "EtM.MAC.__proj__Key__item__raw",
@@ -80,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "9806bfee7035cedaf2a8145e88930173"
+      "c2837681e52c18344fe3b32b9d0f887c"
     ],
     [
       "EtM.MAC.__proj__Key__item__log",
@@ -92,7 +92,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "e2e5ce865cec9e4c0ab194c4862186dd"
+      "8056abe6c6dfe278945fa5d33177de66"
     ],
     [
       "EtM.MAC.genPost",
@@ -101,7 +101,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "3c53ffacfb8ed1e3096327242c78e6bd"
+      "6b25d51b5ee00ed0ee3244631fff613d"
     ],
     [
       "EtM.MAC.keygen",
@@ -195,7 +195,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "8d840c1a24c0e864862889db3fca4252"
+      "6b94555245f8adc3c75618f0bcb7bf57"
     ],
     [
       "EtM.MAC.mac",
@@ -229,7 +229,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "f8278f51983bad45eb723586087e2bb8"
+      "2928201f38f0ad73c40d4cfb99cebaa8"
     ],
     [
       "EtM.MAC.verify",
@@ -251,7 +251,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "332ce62250cf600ddef8cedb1ba5eee2"
+      "78f10f3eabeac98513b68259a3942cc1"
     ],
     [
       "EtM.MAC.verify",
@@ -264,10 +264,9 @@
         "FStar.Seq.Base_interpretation_Tm_arrow_00f9c71b3857cf53afe4e7056e14e934",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "assumption_FStar.Monotonic.HyperHeap.HasEq_rid", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_EtM.CPA.cipher", "equation_EtM.CPA.mem",
-        "equation_EtM.MAC.log_t", "equation_EtM.MAC.msg",
-        "equation_EtM.MAC.tag", "equation_FStar.Heap.trivial_preorder",
+        "equation_EtM.CPA.cipher", "equation_EtM.MAC.log_t",
+        "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
+        "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.HyperStack.ST.modifies_none",
         "equation_FStar.HyperStack.ref",
         "equation_FStar.Monotonic.HyperHeap.modifies_just",
@@ -291,7 +290,6 @@
         "function_token_typing_FStar.Monotonic.HyperHeap.rid",
         "function_token_typing_FStar.Monotonic.Seq.grows",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Map.lemma_ContainsDom",
         "lemma_FStar.Map.lemma_InDomConcat",
         "lemma_FStar.Map.lemma_InDomRestrict",
         "lemma_FStar.Map.lemma_SelConcat1",
@@ -320,7 +318,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "4e3f46b5c84a955b4cb3d7b21e239dc6"
+      "dca4249b0bde2766aacfbdb0a55abf88"
     ],
     [
       "EtM.MAC.verify",
@@ -335,7 +333,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "5d8bcd90b799e4b1f72a98a80e6c4f98"
+      "cb620cff7d70d5f182f1af34d4cc45ae"
     ],
     [
       "EtM.MAC.verify",
@@ -357,7 +355,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "b2f35016399014cb1f0130d34f73fa04"
+      "cf2fb901f95b46a64efac32651b0b5a6"
     ]
   ]
 ]

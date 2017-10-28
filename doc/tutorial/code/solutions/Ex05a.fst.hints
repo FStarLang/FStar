@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2166f220cdf23c174da662f4973d41e9"
+      "b7112d819f5051ca7b0ee5b46de9e926"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fe9062a4133689816cb6b74f29590cbe"
+      "2f772f5d21334ea11eb24b6358397b29"
     ],
     [
       "Ex05a.rev",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fbc3a63601fbf4c381a28c5ba040fd04"
+      "6ee40717f582dc96e90756ef64dabec1"
     ],
     [
       "Ex05a.append_assoc",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "96235db14cfb49fd91ca41f5e0a45a12"
+      "d5f13e054b9a2d34a12bab5fdef49d74"
     ],
     [
       "Ex05a.rev_is_ok_aux",
@@ -93,7 +93,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "95d685bf01252b1b466c489a00f5299c"
+      "5dab4ea82150528e3e30623a4a6d84a7"
     ],
     [
       "Ex05a.append_nil",
@@ -113,7 +113,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "39b53c93fb01e0c206b6faa9e25fc2fa"
+      "df611837120b7577ab250725cf965a89"
     ],
     [
       "Ex05a.rev_is_ok",
@@ -122,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "1eb685fe3a29420f82b4ad18ce2239b3"
+      "dea73134c1b21713d67782da678b1d29"
     ]
   ]
 ]
