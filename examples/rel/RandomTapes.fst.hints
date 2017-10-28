@@ -45,17 +45,7 @@
       "1c5f97673bc58d555160238b759162e0"
     ],
     [
-      "RandomTapes.otp_rand",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "function_token_typing_RandomTapes.id",
-        "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
-      ],
-      0,
+      "RandomTapes.otp_rand", 1, 2, 1, null, 0,
       "2102c9dbcaccbe302fb9e659ebb118b5"
     ],
     [
@@ -97,17 +87,7 @@
       "f9feb574dc149068d07ef14998987e9d"
     ],
     [
-      "RandomTapes.otp2_rand",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "function_token_typing_RandomTapes.id",
-        "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
-      ],
-      0,
+      "RandomTapes.otp2_rand", 1, 2, 1, null, 0,
       "4fca70ed7cd416114264de6bbf2f6af9"
     ],
     [
