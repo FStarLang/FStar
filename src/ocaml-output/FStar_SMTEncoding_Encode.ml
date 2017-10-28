@@ -1914,7 +1914,9 @@ and encode_term:
                               FStar_TypeChecker_Env.tc_hooks =
                                 (uu___393_6220.FStar_TypeChecker_Env.tc_hooks);
                               FStar_TypeChecker_Env.dsenv =
-                                (uu___393_6220.FStar_TypeChecker_Env.dsenv)
+                                (uu___393_6220.FStar_TypeChecker_Env.dsenv);
+                              FStar_TypeChecker_Env.dep_graph =
+                                (uu___393_6220.FStar_TypeChecker_Env.dep_graph)
                             }) res in
                        (match uu____6211 with
                         | (pre_opt,res_t) ->
@@ -5041,7 +5043,9 @@ let encode_free_var:
                                      FStar_TypeChecker_Env.tc_hooks =
                                        (uu___401_16920.FStar_TypeChecker_Env.tc_hooks);
                                      FStar_TypeChecker_Env.dsenv =
-                                       (uu___401_16920.FStar_TypeChecker_Env.dsenv)
+                                       (uu___401_16920.FStar_TypeChecker_Env.dsenv);
+                                     FStar_TypeChecker_Env.dep_graph =
+                                       (uu___401_16920.FStar_TypeChecker_Env.dep_graph)
                                    }) comp FStar_Syntax_Syntax.U_unknown in
                               FStar_Syntax_Syntax.mk_Total uu____16917
                             else comp in
@@ -5668,7 +5672,9 @@ let encode_top_level_let:
                        FStar_TypeChecker_Env.tc_hooks =
                          (uu___404_18403.FStar_TypeChecker_Env.tc_hooks);
                        FStar_TypeChecker_Env.dsenv =
-                         (uu___404_18403.FStar_TypeChecker_Env.dsenv)
+                         (uu___404_18403.FStar_TypeChecker_Env.dsenv);
+                       FStar_TypeChecker_Env.dep_graph =
+                         (uu___404_18403.FStar_TypeChecker_Env.dep_graph)
                      }) c FStar_Syntax_Syntax.U_unknown
                 else FStar_Syntax_Util.comp_result c in
               let rec aux norm1 t_norm1 =

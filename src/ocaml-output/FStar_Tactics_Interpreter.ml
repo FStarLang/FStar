@@ -1201,7 +1201,9 @@ let run_tactic_on_typ:
                   FStar_TypeChecker_Env.tc_hooks =
                     (uu___408_2645.FStar_TypeChecker_Env.tc_hooks);
                   FStar_TypeChecker_Env.dsenv =
-                    (uu___408_2645.FStar_TypeChecker_Env.dsenv)
+                    (uu___408_2645.FStar_TypeChecker_Env.dsenv);
+                  FStar_TypeChecker_Env.dep_graph =
+                    (uu___408_2645.FStar_TypeChecker_Env.dep_graph)
                 } in
               let uu____2646 =
                 FStar_Tactics_Basic.proofstate_of_goal_ty env2 typ in
