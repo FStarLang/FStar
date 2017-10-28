@@ -24,15 +24,13 @@ val build_inclusion_candidates_list : unit -> list<(string * string)>
 and namespaces *)
 val hard_coded_dependencies : string -> list<(lident * open_kind)>
 
-val collect_and_memoize: list<string> -> list<string>
-
-val memoized_deps_of : string -> list<string>
-
-val print_memoized_deps : unit -> unit
-
 val is_interface: string -> bool
-
 val is_implementation: string -> bool
-
 val cache_file_name: string -> string
-val hash_dependences: string -> option<(list<string>)>
+
+type deps
+val empty_deps : deps
+val collect: list<string> -> list<string> * deps
+val deps_of : deps -> string -> list<string>
+val print : deps -> unit
+val hash_dependences: deps -> string -> option<(list<string>)>

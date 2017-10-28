@@ -109,6 +109,7 @@ let deps_try_find (Deps m) k = BU.smap_try_find m k
 let deps_add_dep (Deps m) k v = BU.smap_add m k v
 let deps_keys (Deps m) = BU.smap_keys m
 let deps_empty () = Deps (BU.smap_create 41)
+let empty_deps = Mk (deps_empty (), BU.smap_create 0, [])
 
 let module_name_of_dep = function
     | UseInterface m
@@ -650,27 +651,11 @@ let collect_one
   (* Util.print2 "Deps for %s: %s\n" filename (String.concat " " (!deps)); *)
   !deps, !mo_roots
 
-let memoized_deps =
-    let memo : ref<(option<deps>)> = BU.mk_ref None in
-    let get_memo () =
-        match !memo with
-        | None -> failwith "Dependence analysis has not been run yet"
-        | Some d -> d
-    in
-    let set_memo d =
-        match !memo with
-        | Some _ -> failwith "Dependence analysis has already been run"
-        | None -> memo := Some d
-    in
-    get_memo,
-    set_memo
-let get_memo = fst memoized_deps
-let set_memo = snd memoized_deps
-
 (** Collect the dependencies for a list of given files.
     And record the entire dependence graph in the memoized state above **)
-let collect_and_memoize (all_cmd_line_files: list<file_name>)
-    : list<file_name> //topologically sorted transitive dependences of all_cmd_line_files
+let collect (all_cmd_line_files: list<file_name>)
+    : list<file_name>
+    * deps //topologically sorted transitive dependences of all_cmd_line_files
     =
 
   (* The dependency graph; keys are lowercased module names, values = list of
@@ -744,17 +729,14 @@ let collect_and_memoize (all_cmd_line_files: list<file_name>)
     let m = lowercase_module_name f in
     Options.add_verify_module m);
 
-  let deps = Mk (dep_graph, file_system_map, all_cmd_line_files) in
-  set_memo deps;
-  topological_dependences_of all_cmd_line_files
+  topological_dependences_of all_cmd_line_files,
+  Mk (dep_graph, file_system_map, all_cmd_line_files)
 
-let memoized_deps_of (f:file_name)
+let deps_of (Mk (deps, file_system_map, all_cmd_line_files)) (f:file_name)
     : list<file_name> =
-    let (Mk (deps, file_system_map, all_cmd_line_files)) = get_memo () in
     dependences_of file_system_map deps all_cmd_line_files f
 
 let cache_file_name fn =
-    let (Mk (deps, file_system_map, all_cmd_line_files)) = get_memo () in
     let checked_file_name = fn ^ ".checked" in
     let lax_checked_file_name = checked_file_name ^ ".lax" in
     let lax_ok = not (Options.should_verify_file fn) in
@@ -762,14 +744,13 @@ let cache_file_name fn =
     then lax_checked_file_name
     else checked_file_name
 
-let hash_dependences fn =
+let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let cache_file = cache_file_name fn in
     let digest_of_file fn =
         if Options.debug_any()
         then BU.print2 "%s: contains digest of %s\n" cache_file fn;
         BU.digest_of_file fn
     in
-    let (Mk (deps, file_system_map, all_cmd_line_files)) = get_memo () in
     let module_name = lowercase_module_name fn in
     let source_hash = digest_of_file fn in
     let interface_hash =
@@ -804,8 +785,7 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           Util.print2 "%s: %s\n" f (String.concat " " files))
 
-let print_memoized_deps () =
-  let deps = get_memo () in
+let print deps =
   match (Options.dep()) with
   | Some "make" ->
       print_make deps

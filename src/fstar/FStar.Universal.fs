@@ -75,9 +75,12 @@ let parse (env:TcEnv.env) (pre_fn: option<string>) (fn:string)
 (***********************************************************************)
 (* Initialize a clean environment                                      *)
 (***********************************************************************)
-let init_env () : TcEnv.env =
-  let solver = if Options.lax() then SMT.dummy else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
-  let env = TcEnv.initial_env TcTerm.tc_term TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
+let init_env deps : TcEnv.env =
+  let solver =
+    if Options.lax()
+    then SMT.dummy
+    else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
+  let env = TcEnv.initial_env deps TcTerm.tc_term TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   (* Set up some tactics callbacks *)
   let env = { env with synth = FStar.Tactics.Interpreter.synth } in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
@@ -156,7 +159,7 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
 (***********************************************************************)
 (* Loading and storing cache files                                     *)
 (***********************************************************************)
-let load_module_from_cache fn
+let load_module_from_cache env fn
     : option<(Syntax.modul * DsEnv.module_inclusion_info)> =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
     let fail tag =
@@ -170,16 +173,16 @@ let load_module_from_cache fn
       | None ->
         fail "Corrupt"
       | Some (digest, tcmod, mii) ->
-         match FStar.Parser.Dep.hash_dependences fn with
+         match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
          | Some digest' when digest=digest' ->
            Some (tcmod, mii)
          | _ ->
            fail "Stale"
     else None
 
-let store_module_to_cache fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
+let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
-    let digest = FStar.Parser.Dep.hash_dependences fn in
+    let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
     match digest with
     | Some hashes ->
       BU.save_value_to_file cache_file (hashes, modul, mii)
@@ -190,6 +193,7 @@ let store_module_to_cache fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
 (***********************************************************************)
 let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
                               * TcEnv.env =
+  Syntax.reset_gensym();
   let tc_source_file () =
       let fmod, env = parse env pre_fn fn in
       let check_mod () =
@@ -208,10 +212,10 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
       tcmod, mii, env
   in
   if Options.cache_checked_modules ()
-  then match load_module_from_cache fn with
+  then match load_module_from_cache env fn with
        | None ->
          let tcmod, mii, env = tc_source_file () in
-         store_module_to_cache fn (fst tcmod) mii;
+         store_module_to_cache env fn (fst tcmod) mii;
          tcmod, env
        | Some (tcmod, mii) ->
          let _, env = with_tcenv env <| FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii in
@@ -271,16 +275,7 @@ let rec tc_fold_interleave (acc:list<(modul * int)> * TcEnv.env) (remaining:list
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
-let batch_mode_tc_no_prims env filenames =
-  let all_mods, env = tc_fold_interleave ([], env) filenames in
-  if Options.interactive()
-  && FStar.Errors.get_err_count () = 0
-  then env.solver.refresh()
-  else env.solver.finish();
-  all_mods, env
-
-let batch_mode_tc filenames =
-  let prims_mod, env = tc_prims (init_env ()) in
+let batch_mode_tc filenames dep_graph =
   if Options.debug_any () then begin
     FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
     FStar.Util.print1 "Here's the list of filenames we will process: %s\n"
@@ -288,5 +283,10 @@ let batch_mode_tc filenames =
     FStar.Util.print1 "Here's the list of modules we will verify: %s\n"
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
-  let all_mods, env = batch_mode_tc_no_prims env filenames in
-  prims_mod :: all_mods, env
+  let env = init_env dep_graph in
+  let all_mods, env = tc_fold_interleave ([], env) filenames in
+  if Options.interactive()
+  && FStar.Errors.get_err_count () = 0
+  then env.solver.refresh()
+  else env.solver.finish();
+  all_mods, env

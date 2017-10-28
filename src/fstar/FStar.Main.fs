@@ -118,8 +118,8 @@ let go _ =
         init_native_tactics ();
 
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
-        then let _ = Parser.Dep.collect_and_memoize filenames in
-             Parser.Dep.print_memoized_deps ()
+        then let _, deps = Parser.Dep.collect filenames in
+             Parser.Dep.print deps
         else if Options.interactive () then begin
           match filenames with
           | [] ->
@@ -140,13 +140,13 @@ let go _ =
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
-          let filenames = FStar.Dependencies.find_deps_if_needed filenames in
+          let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
           (match Options.gen_native_tactics () with
           | Some dir ->
              Util.print1 "Generating native tactics in %s\n" dir;
              Options.set_option "lax" (Options.Bool true)
           | None -> ());
-          let fmods, env = Universal.batch_mode_tc filenames in
+          let fmods, env = Universal.batch_mode_tc filenames dep_graph in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);

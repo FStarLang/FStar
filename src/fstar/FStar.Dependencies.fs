@@ -28,20 +28,12 @@ open FStar.Ident
 (* Finding the transitive dependencies of a list of files               *)
 (***********************************************************************)
 let find_deps_if_needed files =
-    let all_files = Parser.Dep.collect_and_memoize files in
+    let all_files, deps = Parser.Dep.collect files in
     match all_files with
     | [] ->
         Util.print_error "Dependency analysis failed; reverting to using only the files provided\n";
-        files
+        files,
+        deps
     | _ ->
-        let all_files = List.rev all_files in
-        let all_files_except_prims =
-          let prims = Options.prims_basename () in
-          if basename (List.hd all_files) = prims then
-            List.tl all_files
-          else begin
-            Util.print1_error "Dependency analysis did not find prims module %s?!\n" prims;
-            exit 1
-          end
-        in
-        all_files_except_prims
+        List.rev all_files,
+        deps
