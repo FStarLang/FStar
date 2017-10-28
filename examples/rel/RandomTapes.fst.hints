@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5544b9d3f5db86c1b0cc648ede5ff5be"
+      "fc62ff6c5167d856bd6a845fbb79bf93"
     ],
     [
       "RandomTapes.id",
@@ -21,7 +21,7 @@
         "interpretation_RandomTapes_Tm_abs_4a6fb92fc3aadbdc6543585d1b85d3da"
       ],
       0,
-      "3fcbfe4d44d57ae1ccf7edaddead0a5d"
+      "e860b7830ce9f5b615a3b34be75982df"
     ],
     [
       "RandomTapes.add",
@@ -42,11 +42,21 @@
         "token_correspondence_RandomTapes.minus"
       ],
       0,
-      "1c5f97673bc58d555160238b759162e0"
+      "fbac2251c4a68bfc507e1d93a61b5b8f"
     ],
     [
-      "RandomTapes.otp_rand", 1, 2, 1, null, 0,
-      "2102c9dbcaccbe302fb9e659ebb118b5"
+      "RandomTapes.otp_rand",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "function_token_typing_RandomTapes.id",
+        "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
+      ],
+      0,
+      "f0ea71ad9c419a330807204e80eed9fa"
     ],
     [
       "RandomTapes.otp_rand",
@@ -55,7 +65,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9d7169c58f757425e483a42ff3c2f879"
+      "81716c408e8c79d26e26951a74d692ba"
     ],
     [
       "RandomTapes.otp_eq",
@@ -81,14 +91,24 @@
         "token_correspondence_RandomTapes.otp",
         "token_correspondence_RandomTapes.otp_rand",
         "token_correspondence_Rel.__proj__R__item__l",
-        "token_correspondence_Rel.__proj__R__item__r", "unit_typing"
+        "token_correspondence_Rel.__proj__R__item__r"
       ],
       0,
-      "f9feb574dc149068d07ef14998987e9d"
+      "7cb932f819ee5730a0c93aac866f12d5"
     ],
     [
-      "RandomTapes.otp2_rand", 1, 2, 1, null, 0,
-      "4fca70ed7cd416114264de6bbf2f6af9"
+      "RandomTapes.otp2_rand",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "function_token_typing_RandomTapes.id",
+        "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
+      ],
+      0,
+      "9916af25949719bcae89f348a82138ea"
     ],
     [
       "RandomTapes.otp2_eq",
@@ -115,10 +135,10 @@
         "token_correspondence_RandomTapes.otp2",
         "token_correspondence_RandomTapes.otp2_rand",
         "token_correspondence_Rel.__proj__R__item__l",
-        "token_correspondence_Rel.__proj__R__item__r", "unit_typing"
+        "token_correspondence_Rel.__proj__R__item__r"
       ],
       0,
-      "a325a2769b2dff9607f958e22909fc54"
+      "450ad94dd993018b52bef52bc45677ae"
     ]
   ]
 ]

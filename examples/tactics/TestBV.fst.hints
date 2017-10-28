@@ -6,60 +6,36 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "int_inversion",
-        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
-      ],
+      [ "@query" ],
       0,
-      "4ee28c34dd948bbe4874e961481e0b2d"
+      "282f17850ae4ad0cd3950a6ecc090766"
     ],
     [
       "TestBV.test2",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "int_inversion",
-        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
-      ],
+      [ "@query" ],
       0,
-      "b16222f33ab5662c8091981dd886bfe2"
+      "de90f6033af8397f940c90a8afb4e828"
     ],
     [
       "TestBV.test3",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "int_inversion",
-        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
-      ],
+      [ "@query" ],
       0,
-      "823cc784fc127e535214661888624227"
+      "a9af355c87f41be22334ce364a9f5fb7"
     ],
     [
       "TestBV.test4",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.UInt.fits", "equation_FStar.UInt.size",
-        "equation_FStar.UInt.uint_t", "int_inversion",
-        "primitive_Prims.op_AmpAmp", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_FStar.UInt_Tm_refine_a347709bfeba48709474ad26f4f6be87"
-      ],
+      [ "@query" ],
       0,
-      "9a1cbaa15054a863ecbc006f2fffeda7"
+      "615bc1b9d9d960c248f2641107c7d0b4"
     ],
     [
       "TestBV.test5",
@@ -68,16 +44,16 @@
       1,
       [ "@query" ],
       0,
-      "d0865ab5091cd13fdaf07e4b5c452549"
+      "d43ebda34f52a73a7b8b94ccd923e183"
     ],
     [
       "TestBV.v64_eq",
       1,
       2,
       1,
-      [ "@query", "lemma_FStar.UInt64.uv_inv", "unit_typing" ],
+      [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "3c2d05dead10125324c751411be8372a"
+      "5cef74fa5f39244eba2e9da23d406942"
     ],
     [
       "TestBV.unfold_logand64",
@@ -88,10 +64,10 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.UInt64_pretyping_c8c563e063e4f547ecc8aacae59a7475",
         "refinement_interpretation_FStar.UInt64_Tm_refine_3eddd6f6718ab081a94d9ef5c683e848",
-        "typing_FStar.UInt64.logand", "unit_typing"
+        "typing_FStar.UInt64.logand"
       ],
       0,
-      "4ed8d0285e0148644c9b294cbd261e57"
+      "ff67b8d4e446ac417196babe84e02b17"
     ],
     [
       "TestBV.unfold_logor64",
@@ -102,10 +78,10 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.UInt64_pretyping_c8c563e063e4f547ecc8aacae59a7475",
         "refinement_interpretation_FStar.UInt64_Tm_refine_a77c3e97e98860ba2765bae2f6c2d4bb",
-        "typing_FStar.UInt64.logor", "unit_typing"
+        "typing_FStar.UInt64.logor"
       ],
       0,
-      "0e6adcdebd7b4bcda91f1f8e415befa2"
+      "069a707d9202439438d21b6865d1404b"
     ],
     [
       "TestBV.unfold_logxor64",
@@ -116,10 +92,10 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.UInt64_pretyping_c8c563e063e4f547ecc8aacae59a7475",
         "refinement_interpretation_FStar.UInt64_Tm_refine_9508a06939a0f9d15496f1a6ddfc0123",
-        "typing_FStar.UInt64.logxor", "unit_typing"
+        "typing_FStar.UInt64.logxor"
       ],
       0,
-      "b6fb60c9efa464aa2becd788d3171ce7"
+      "bb6dff74ecb9fcffefb5b8609616f483"
     ],
     [
       "TestBV.bv64_tac",
@@ -136,7 +112,7 @@
         "typing_FStar.UInt64.v"
       ],
       0,
-      "6ff53664d8806da23c155a68c6fba41d"
+      "c3dc4464109b71e901ff0fe528d13d36"
     ],
     [
       "TestBV.test6",
@@ -145,7 +121,7 @@
       1,
       [ "@query" ],
       0,
-      "15da02e7bee97792f304e00a15ca52eb"
+      "5e64c55e4cd02cc311946c3e00d4bb80"
     ],
     [
       "TestBV.test7",
@@ -154,7 +130,7 @@
       1,
       [ "@query" ],
       0,
-      "3f3209b2bce7d9a40afb63290c8a4acd"
+      "16edee1bceddb943658109f529496bab"
     ]
   ]
 ]

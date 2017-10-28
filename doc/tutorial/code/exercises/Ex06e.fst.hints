@@ -13,12 +13,11 @@
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.int", "proj_equation_Prims.Cons_tl",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "fa87b75fcd55cd571a6d30545de9a52f"
+      "5edb52597ac08c341b4add9809ae6220"
     ],
     [
       "Ex06e.mem",
@@ -36,7 +35,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "93f207705ab8753d161d6b689dee734c"
+      "835dd288245c6796c0537c57e88d5c91"
     ],
     [
       "Ex06e.mem",
@@ -45,7 +44,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6793e1d50c2fc287b90e9283c83ef524"
+      "cfcc48d6ea437f7bf42de44b06346de3"
     ]
   ]
 ]

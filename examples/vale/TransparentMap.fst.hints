@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "62a2483bd350b4e8ecda75022484ba18"
+      "6ded9edf7d106aa19be9ef0322d01ef3"
     ],
     [
       "TransparentMap.upd",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "28f6bba3cc2ac61a0da7aa9edd57e22d"
+      "a55490306fc18d1112190263a191aec6"
     ],
     [
       "TransparentMap.sel_upd1",
@@ -31,10 +31,10 @@
         "@query", "equation_TransparentMap.sel",
         "equation_TransparentMap.upd",
         "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
-        "primitive_Prims.op_Equality", "unit_typing"
+        "primitive_Prims.op_Equality"
       ],
       0,
-      "41e3a38cd9805e2f37ffc4366d2973ca"
+      "e1814cd7d3ea28c7131412e210a214ba"
     ],
     [
       "TransparentMap.sel_upd2",
@@ -45,11 +45,10 @@
         "@query", "equation_TransparentMap.sel",
         "equation_TransparentMap.upd",
         "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "unit_typing"
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "fa0e416cbc1faf72eb403a709eb255cc"
+      "320af1e10235b19208260a0dab2d8ee0"
     ],
     [
       "TransparentMap.lemma_equal_intro",
@@ -58,11 +57,10 @@
       0,
       [
         "@query", "equation_FStar.FunctionalExtensionality.feq",
-        "equation_TransparentMap.equal", "equation_TransparentMap.sel",
-        "unit_typing"
+        "equation_TransparentMap.equal", "equation_TransparentMap.sel"
       ],
       0,
-      "b8935410151881055fd4f216ff9f6067"
+      "62e414a7a417f0b98cd1262ff3285618"
     ],
     [
       "TransparentMap.lemma_equal_elim",
@@ -75,20 +73,19 @@
         "equation_FStar.FunctionalExtensionality.efun",
         "equation_Prims.eqtype", "equation_TransparentMap.equal",
         "equation_TransparentMap.map",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "unit_typing"
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "35cebe6eacbf85252a948ac82bb849db"
+      "b1b302ec8835c1af4067abea8ebe454d"
     ],
     [
       "TransparentMap.lemma_equal_refl",
       1,
       1,
       0,
-      [ "@query", "lemma_TransparentMap.lemma_equal_intro", "unit_typing" ],
+      [ "@query", "lemma_TransparentMap.lemma_equal_intro" ],
       0,
-      "f52efd1a0ca923330534f772b56002e7"
+      "8a051abfb32e8cff0a611c9fc51a9f45"
     ]
   ]
 ]

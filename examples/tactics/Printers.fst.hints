@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8e297bc0a722fe92eaeafd8724c41e41"
+      "81517476174e2d51394f477c45488de7"
     ],
     [
       "Printers.paren",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "ce497a09ecb5cf3780863155d3f0fb82"
+      "fb00925252ad6a598fd2f062c01f4fe4"
     ],
     [
       "Printers.mk_print_binder",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "fb633af475b59930cb00e9b7748c0c00"
+      "6b3d185d7d32dcf41ca2a07625c0b34e"
     ],
     [
       "Printers.printer",
@@ -43,10 +43,10 @@
         "equation_FStar.Reflection.Basic.lookup_typ",
         "equation_Printers.paren",
         "fuel_guarded_inversion_FStar.Reflection.Data.sigelt_view",
-        "typing_FStar.Reflection.Basic.lookup_typ"
+        "typing_FStar.Reflection.Basic.__lookup_typ"
       ],
       0,
-      "758464d56c901eb84b32eeabbe472227"
+      "51e1117dfa47e26d644eb3da51d0a716"
     ],
     [
       "Printers.t1",
@@ -58,7 +58,7 @@
         "assumption_Prims.HasEq_string"
       ],
       0,
-      "3a1be55204e469f158cda85e4b9b4699"
+      "978c2011b3ec2209f49a89aaff5c9d6c"
     ],
     [
       "Printers.uu___is_A",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "2cc2de8c9b7e0913e3aef6d855d1ba14"
+      "9f87509733f2cace1c92f020ce30bc96"
     ],
     [
       "Printers.__proj__A__item___0",
@@ -80,7 +80,7 @@
         "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "677b9d744b293d04405ffe9eec5bf115"
+      "8dce7b6e44de999c503f98ba7b610c33"
     ],
     [
       "Printers.__proj__A__item___1",
@@ -93,7 +93,7 @@
         "refinement_interpretation_Printers_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "4d3ea72c699302084c454286cf260844"
+      "b812a6abfee1f85ef06f81a96cad28bc"
     ],
     [
       "Printers.uu___is_B",
@@ -102,7 +102,7 @@
       1,
       [ "@query" ],
       0,
-      "9d82c2c4adb64378aefc1743fcf6c8b4"
+      "47bebe86b8ab5915b830d14594550be2"
     ],
     [
       "Printers.__proj__B__item___0",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Printers_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
       ],
       0,
-      "65d139d4af2ff530430aac5ddbe4c2aa"
+      "86ae015de0eb850ef69cb78e766a3e26"
     ],
     [
       "Printers.uu___is_C",
@@ -124,7 +124,7 @@
       1,
       [ "@query" ],
       0,
-      "19fbdf2f4831d7e783dd0d917f82a302"
+      "b90ffb5b6570328d0a8e717f5658d830"
     ],
     [
       "Printers.t1_print",
@@ -132,12 +132,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
-        "disc_equation_Printers.B", "disc_equation_Printers.C",
-        "fuel_guarded_inversion_Printers.t1"
+        "@MaxIFuel_assumption", "@query", "constructor_distinct_Printers.C",
+        "disc_equation_Printers.A", "disc_equation_Printers.B",
+        "disc_equation_Printers.C", "fuel_guarded_inversion_Printers.t1"
       ],
       0,
-      "9db2a997e30d03272e412783fb88db7c"
+      "f2f377c5e9005b7e8a3e386edb7ae8c2"
     ],
     [
       "Printers.uu___93",
@@ -146,7 +146,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "2b9cce903904f3dd852aa5279525281f"
+      "b38db0ab6da20aaab359370f7308d587"
     ],
     [
       "Printers.uu___93",
@@ -155,7 +155,7 @@
       1,
       [ "@query" ],
       0,
-      "f0424dc9818a03e2898b6a60555936d6"
+      "3f48496245b0989a3c6b4b45bda81ac5"
     ],
     [
       "Printers.uu___94",
@@ -164,7 +164,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "8e830eec96fe78d76268ca86c5585ec5"
+      "0e745f54e77f3a91de07df3d4c789f35"
     ],
     [
       "Printers.uu___94",
@@ -173,7 +173,7 @@
       1,
       [ "@query" ],
       0,
-      "966e2f2b8698083c740950df1b9e2b23"
+      "9db015c7c19efe998e50ca76ab13971d"
     ],
     [
       "Printers.uu___95",
@@ -182,7 +182,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
       0,
-      "53652cd01eb94fef507d61947336d795"
+      "0e1cfd27eb74d122947a7ec82e98ca28"
     ],
     [
       "Printers.uu___95",
@@ -191,7 +191,7 @@
       1,
       [ "@query" ],
       0,
-      "5a858131d624ca7252efddd8fb8eba2a"
+      "7f2a87f005e0d70ac091113d6ed68b9b"
     ]
   ]
 ]

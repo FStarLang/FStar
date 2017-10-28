@@ -12,7 +12,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "725043de24f9ce3bc84042ecb5a61139"
+      "7f848358004435acbfba5c08872b4feb"
     ],
     [
       "ImmutableSTwHeaps.ist_witnessed",
@@ -25,7 +25,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "6ab455c1b4b6ded6ea9a422f3ba8d2c3"
+      "faaafbb176f178fd85caa4310a6d4060"
     ],
     [
       "ImmutableSTwHeaps.ist_witness",
@@ -38,7 +38,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "71954087e13db26a26566bf416bbebf9"
+      "225c5ff5c05337c686ebce78943fce83"
     ],
     [
       "ImmutableSTwHeaps.ist_recall",
@@ -51,7 +51,7 @@
         "token_correspondence_ImmutableSTwHeaps.heap_rel"
       ],
       0,
-      "736561d8f4b4ed4f03aaba2b7cfffd22"
+      "0ca1ca87fecbaa86880ba01a0f1e62e4"
     ],
     [
       "ImmutableSTwHeaps.alloc",
@@ -81,7 +81,7 @@
         "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "fd33d3aaf3f44046fe71e907b26ede15"
+      "aeb7b0c41ae94e4d1e6c7586a7fe787b"
     ],
     [
       "ImmutableSTwHeaps.read",
@@ -93,7 +93,7 @@
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda"
       ],
       0,
-      "828cf071ef213c603068ceb08b179c5a"
+      "b6bb83556785ad2defe31dda3c1fb288"
     ],
     [
       "ImmutableSTwHeaps.write",
@@ -114,6 +114,7 @@
         "lemma_FStar.Monotonic.Heap.lemma_sel_same_addr",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd1",
         "lemma_FStar.Monotonic.Heap.lemma_sel_upd2",
+        "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
         "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_910d39030c36174d69dfa7c713b6a7e7",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_a51928430ff7628816c2d836c4b2574e",
         "refinement_interpretation_ImmutableSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda",
@@ -121,7 +122,7 @@
         "typing_ImmutableSTwHeaps.sel", "typing_ImmutableSTwHeaps.upd"
       ],
       0,
-      "d46955ecbcd7d5f3415bd9182e4d90d0"
+      "49459bee11098458976c3c4f14fa2f65"
     ]
   ]
 ]

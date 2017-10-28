@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "f8d31337f7686a71ed551006ef553692"
+      "5b5a9601900e177583fc5ed3ae451990"
     ],
     [
       "Ex12a2.Cap.issue_read",
@@ -40,7 +40,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
       0,
-      "12dfecf8a5d3983de97c98588422f274"
+      "958ae6bca790ed776a391a5764967723"
     ],
     [
       "Ex12a2.Cap.redeem_read",
@@ -48,27 +48,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "constructor_distinct_FStar.Pervasives.V",
-        "data_typing_intro_FStar.Pervasives.V@tok",
-        "disc_equation_FStar.Pervasives.V", "equation_Ex12.MAC.pkey",
-        "equation_Ex12.SHA1.text", "equation_Ex12a2.Cap.capRead",
-        "equation_Platform.Bytes.bytes",
-        "function_token_typing_Ex12a2.Cap.k_read",
-        "proj_equation_FStar.Pervasives.V_v",
+        "@MaxIFuel_assumption", "@query", "equation_Ex12a2.Cap.capRead",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.V_a",
-        "projection_inverse_FStar.Pervasives.V_v",
-        "refinement_interpretation_Ex12.MAC_Tm_refine_bb3768dcb8aba5249319ea75b1a0eaec",
-        "refinement_interpretation_Ex12a2.Cap_Tm_refine_1953fc4207b6fe0efdf63a243ef3afc7",
         "refinement_interpretation_Ex12a2.Cap_Tm_refine_40b23c06210f10bc3c5257ef1ca5518a",
-        "refinement_kinding_Ex12a2.Cap_Tm_refine_1953fc4207b6fe0efdf63a243ef3afc7",
-        "string_inversion", "token_correspondence_Ex12a2.Cap.capRead",
-        "typing_Platform.Bytes.utf8", "unit_typing"
+        "string_inversion"
       ],
       0,
-      "fadf41a1b2b789a53338c2ddc99b4f19"
+      "e8f1172209f4066666c41d1e3d635928"
     ],
     [
       "Ex12a2.Cap.capWrite",
@@ -77,7 +63,7 @@
       1,
       [ "@query", "assumption_Platform.Bytes.HasEq_bytes" ],
       0,
-      "add72a9712157977e057ba91f15ec901"
+      "18ad0e21f1e1c30f5036fc6fe8574f00"
     ],
     [
       "Ex12a2.Cap.issue_write",
@@ -109,7 +95,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_Platform.Bytes.utf8"
       ],
       0,
-      "33eb054da14a69150c273c2833565713"
+      "04f86c756f753b8ab8a34db938ad8cad"
     ],
     [
       "Ex12a2.Cap.redeem_write",
@@ -117,27 +103,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "constructor_distinct_FStar.Pervasives.V",
-        "data_typing_intro_FStar.Pervasives.V@tok",
-        "disc_equation_FStar.Pervasives.V", "equation_Ex12.MAC.pkey",
-        "equation_Ex12.SHA1.text", "equation_Ex12a2.Cap.capWrite",
-        "equation_Platform.Bytes.bytes",
-        "function_token_typing_Ex12a2.Cap.k_write",
-        "proj_equation_FStar.Pervasives.V_v",
+        "@MaxIFuel_assumption", "@query", "equation_Ex12a2.Cap.capWrite",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.V_a",
-        "projection_inverse_FStar.Pervasives.V_v",
-        "refinement_interpretation_Ex12.MAC_Tm_refine_bb3768dcb8aba5249319ea75b1a0eaec",
-        "refinement_interpretation_Ex12a2.Cap_Tm_refine_114058045a9e4d4163ba723f79d2fcd7",
         "refinement_interpretation_Ex12a2.Cap_Tm_refine_40b23c06210f10bc3c5257ef1ca5518a",
-        "refinement_kinding_Ex12a2.Cap_Tm_refine_114058045a9e4d4163ba723f79d2fcd7",
-        "string_inversion", "token_correspondence_Ex12a2.Cap.capWrite",
-        "typing_Platform.Bytes.utf8", "unit_typing"
+        "string_inversion"
       ],
       0,
-      "37c71976d3db96ada7c4bdfe3fd800b8"
+      "927adcdc6d3d21b77b926dca7b9e9eac"
     ]
   ]
 ]
