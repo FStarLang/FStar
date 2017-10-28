@@ -1032,40 +1032,36 @@ let mk_input:
          (r, hash))
 type cb = z3result -> Prims.unit[@@deriving show]
 let cache_hit:
-  (Prims.string FStar_Pervasives_Native.option,unsat_core)
-    FStar_Pervasives_Native.tuple2 ->
+  Prims.string FStar_Pervasives_Native.option ->
     Prims.string FStar_Pervasives_Native.option -> cb -> Prims.bool
   =
   fun cache  ->
     fun qhash  ->
       fun cb  ->
-        let uu____5926 =
+        let uu____5918 =
           (FStar_Options.use_hints ()) && (FStar_Options.use_hint_hashes ()) in
-        if uu____5926
+        if uu____5918
         then
           match qhash with
-          | FStar_Pervasives_Native.Some x when
-              qhash = (FStar_Pervasives_Native.fst cache) ->
+          | FStar_Pervasives_Native.Some x when qhash = cache ->
               let stats = FStar_Util.smap_create (Prims.parse_int "0") in
               (FStar_Util.smap_add stats "fstar_cache_hit" "1";
                (let result =
                   {
-                    z3result_status =
-                      (UNSAT (FStar_Pervasives_Native.snd cache));
+                    z3result_status = (UNSAT FStar_Pervasives_Native.None);
                     z3result_time = (Prims.parse_int "0");
                     z3result_statistics = stats;
                     z3result_query_hash = qhash
                   } in
                 cb result; true))
-          | uu____5939 -> false
+          | uu____5929 -> false
         else false
 let ask_1_core:
   (FStar_SMTEncoding_Term.decls_t ->
      (FStar_SMTEncoding_Term.decls_t,Prims.bool)
        FStar_Pervasives_Native.tuple2)
     ->
-    (Prims.string FStar_Pervasives_Native.option,unsat_core)
-      FStar_Pervasives_Native.tuple2 ->
+    Prims.string FStar_Pervasives_Native.option ->
       FStar_SMTEncoding_Term.error_labels ->
         FStar_SMTEncoding_Term.decls_t -> cb -> Prims.unit
   =
@@ -1075,21 +1071,21 @@ let ask_1_core:
         fun qry  ->
           fun cb  ->
             let theory =
-              let uu____5988 = FStar_ST.op_Bang bg_scope in
-              FStar_List.append uu____5988
+              let uu____5970 = FStar_ST.op_Bang bg_scope in
+              FStar_List.append uu____5970
                 (FStar_List.append [FStar_SMTEncoding_Term.Push]
                    (FStar_List.append qry [FStar_SMTEncoding_Term.Pop])) in
-            let uu____6041 = filter_theory theory in
-            match uu____6041 with
+            let uu____6023 = filter_theory theory in
+            match uu____6023 with
             | (theory1,used_unsat_core) ->
-                let uu____6048 = mk_input theory1 in
-                (match uu____6048 with
+                let uu____6030 = mk_input theory1 in
+                (match uu____6030 with
                  | (input,qhash) ->
                      (FStar_ST.op_Colon_Equals bg_scope [];
-                      (let uu____6112 =
-                         let uu____6113 = cache_hit cache qhash cb in
-                         Prims.op_Negation uu____6113 in
-                       if uu____6112
+                      (let uu____6094 =
+                         let uu____6095 = cache_hit cache qhash cb in
+                         Prims.op_Negation uu____6095 in
+                       if uu____6094
                        then
                          run_job
                            {
@@ -1102,8 +1098,7 @@ let ask_n_cores:
      (FStar_SMTEncoding_Term.decls_t,Prims.bool)
        FStar_Pervasives_Native.tuple2)
     ->
-    (Prims.string FStar_Pervasives_Native.option,unsat_core)
-      FStar_Pervasives_Native.tuple2 ->
+    Prims.string FStar_Pervasives_Native.option ->
       FStar_SMTEncoding_Term.error_labels ->
         FStar_SMTEncoding_Term.decls_t ->
           scope_t FStar_Pervasives_Native.option -> cb -> Prims.unit
@@ -1115,28 +1110,28 @@ let ask_n_cores:
           fun scope  ->
             fun cb  ->
               let theory =
-                let uu____6171 =
+                let uu____6145 =
                   match scope with
                   | FStar_Pervasives_Native.Some s -> FStar_List.rev s
                   | FStar_Pervasives_Native.None  ->
                       (FStar_ST.op_Colon_Equals bg_scope [];
-                       (let uu____6234 = FStar_ST.op_Bang fresh_scope in
-                        FStar_List.rev uu____6234)) in
-                FStar_List.flatten uu____6171 in
+                       (let uu____6208 = FStar_ST.op_Bang fresh_scope in
+                        FStar_List.rev uu____6208)) in
+                FStar_List.flatten uu____6145 in
               let theory1 =
                 FStar_List.append theory
                   (FStar_List.append [FStar_SMTEncoding_Term.Push]
                      (FStar_List.append qry [FStar_SMTEncoding_Term.Pop])) in
-              let uu____6298 = filter_theory theory1 in
-              match uu____6298 with
+              let uu____6272 = filter_theory theory1 in
+              match uu____6272 with
               | (theory2,used_unsat_core) ->
-                  let uu____6305 = mk_input theory2 in
-                  (match uu____6305 with
+                  let uu____6279 = mk_input theory2 in
+                  (match uu____6279 with
                    | (input,qhash) ->
-                       let uu____6318 =
-                         let uu____6319 = cache_hit cache qhash cb in
-                         Prims.op_Negation uu____6319 in
-                       if uu____6318
+                       let uu____6292 =
+                         let uu____6293 = cache_hit cache qhash cb in
+                         Prims.op_Negation uu____6293 in
+                       if uu____6292
                        then
                          enqueue
                            {
@@ -1149,8 +1144,7 @@ let ask:
      (FStar_SMTEncoding_Term.decls_t,Prims.bool)
        FStar_Pervasives_Native.tuple2)
     ->
-    (Prims.string FStar_Pervasives_Native.option,unsat_core)
-      FStar_Pervasives_Native.tuple2 ->
+    Prims.string FStar_Pervasives_Native.option ->
       FStar_SMTEncoding_Term.error_labels ->
         FStar_SMTEncoding_Term.decl Prims.list ->
           scope_t FStar_Pervasives_Native.option -> cb -> Prims.unit
@@ -1161,9 +1155,9 @@ let ask:
         fun qry  ->
           fun scope  ->
             fun cb  ->
-              let uu____6376 =
-                let uu____6377 = FStar_Options.n_cores () in
-                uu____6377 = (Prims.parse_int "1") in
-              if uu____6376
+              let uu____6342 =
+                let uu____6343 = FStar_Options.n_cores () in
+                uu____6343 = (Prims.parse_int "1") in
+              if uu____6342
               then ask_1_core filter1 cache label_messages qry cb
               else ask_n_cores filter1 cache label_messages qry scope cb
