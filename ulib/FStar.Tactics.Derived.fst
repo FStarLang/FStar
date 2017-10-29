@@ -68,6 +68,28 @@ let repeat1 (#a:Type) (t : tactic a) : tactic (list a) =
 let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
     (trytac (seq (t;; return ()) (repeatseq t));; return ()) ()
 
+private
+let admit1' : tactic unit =
+    g <-- cur_goal;
+    gg <-- unquote #Type g;
+    exact (quote #gg (magic ()))
+
+let admit1 : tactic unit =
+    print "Warning: Admitting goal";;
+    admit1'
+
+let admit_all : tactic unit =
+    print "Warning: Admitting all goals";;
+    repeat admit1';;
+    return ()
+
+let guards_to_smt : tactic unit =
+    repeat (b <-- is_guard;
+            if b
+            then smt
+            else fail "");;
+    return ()
+
 let simpl : tactic unit = norm [simplify; primops]
 let whnf  : tactic unit = norm [weak; hnf; primops]
 
@@ -257,10 +279,7 @@ let mapply (t : tactic term) : tactic unit =
 private
 let dump_admit a : tactic unit =
   clear_top;; // gets rid of the unit binder
-  dump1 "Admitting goal";;
-  g <-- cur_goal;
-  gg <-- unquote #Type g;
-  exact (quote #gg (magic ()))
+  admit1
 
 assume val admit_goal : #a:Type -> unit ->
     Pure a (requires (by_tactic (dump_admit a) a))

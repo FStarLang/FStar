@@ -315,6 +315,10 @@ let cur_goal : tac<goal> =
     | [] -> fail "No more goals (1)"
     | hd::tl -> ret hd)
 
+let is_guard : tac<bool> =
+    bind cur_goal (fun g ->
+    ret g.is_guard)
+
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
     let typ = U.mk_squash phi in
     bind (new_uvar reason env typ) (fun u ->

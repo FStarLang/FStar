@@ -28,6 +28,10 @@ assume private val __cur_witness : __tac term
 (** [cur_witness] returns the current goal's witness *)
 let cur_witness = fun () -> TAC?.reflect __cur_witness
 
+assume private val __is_guard   : __tac bool
+(** [is_goal] returns the current goal's type *)
+let is_guard = fun () -> TAC?.reflect __is_guard
+
 (*
  * This is the way we inspect goals and any other term. We can quote them
  * to turn them into a representation of them. Having a total function
