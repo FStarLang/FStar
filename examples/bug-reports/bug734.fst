@@ -1,4 +1,4 @@
-module Bug
+module Bug734
 
 type dir =
 | Bool | Int | Fun

@@ -20,7 +20,7 @@
         "true_interp"
       ],
       0,
-      "f13b5500287b30f2148d766c946ce1cf"
+      "5b94a960c7aaa2c4d678433ce3e16ecf"
     ],
     [
       "Pruning.f",
@@ -32,6 +32,7 @@
         "FStar.Integers_pretyping_86a3501364cba672e9d2365a0f8fa657",
         "assumption_Prims.HasEq_int",
         "constructor_distinct_FStar.Integers.Signed",
+        "constructor_distinct_FStar.Integers.Unsigned",
         "data_typing_intro_FStar.Integers.Unsigned@tok",
         "equality_tok_FStar.Integers.Signed@tok",
         "equation_FStar.Algebra.Monoid.intro_monoid",
@@ -41,38 +42,18 @@
         "function_token_typing_FStar.Algebra.Monoid.nat_plus_monoid",
         "function_token_typing_Prims.nat", "int_typing",
         "proj_equation_FStar.Algebra.Monoid.Monoid_unit",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Algebra.Monoid.Monoid_unit",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_FStar.Integers_Tm_refine_67babc72844915facd9a3c39c4669059",
-        "refinement_interpretation_Pruning_Tm_refine_1a8e64b9e6d92294b5d2c211dc109d2c",
         "typing_FStar.Algebra.Monoid.__proj__Monoid__item__unit",
         "typing_FStar.Integers.v", "typing_tok_FStar.Integers.Signed@tok"
       ],
       0,
-      "43cafebb119d4348583d403e203063f0"
+      "43c2651716bd6ba3dda816aa20574454"
     ],
     [
-      "Pruning.f",
-      3,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxBool_proj_0" ],
-      0,
-      "6cc0877a0afd94a91892c87afc87a74e"
-    ],
-    [
-      "Pruning.f",
-      4,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxBool_proj_0" ],
-      0,
-      "f4737e692430b28a51b5821850cd5bac"
-    ],
-    [
-      "Pruning.uu___214",
+      "Pruning.uu___220",
       1,
       4,
       2,
@@ -87,10 +68,10 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "6cebc70e61982beff7923bce2efd968a"
+      "3be7384aa5f28188cfe76d9895312db6"
     ],
     [
-      "Pruning.uu___215",
+      "Pruning.uu___221",
       1,
       4,
       2,
@@ -105,7 +86,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "5f4a7a4f729897d481ef20c7b37eeed5"
+      "9627e59b675b1eb9d94323fa4999b500"
     ]
   ]
 ]

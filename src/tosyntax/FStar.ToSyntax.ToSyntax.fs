@@ -458,14 +458,18 @@ let check_fields env fields rg =
 (* TODO : Patterns should be checked that there are no incompatible type ascriptions *)
 (* and these type ascriptions should not be dropped !!!                              *)
 let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
-  let check_linear_pattern_variables (p:Syntax.pat) =
+  let check_linear_pattern_variables (p:Syntax.pat) r =
     let rec pat_vars (p:Syntax.pat) = match p.v with
       | Pat_dot_term _
       | Pat_wild _
       | Pat_constant _ -> S.no_names
       | Pat_var x -> BU.set_add x S.no_names
       | Pat_cons(_, pats) ->
-        pats |> List.fold_left (fun out (p, _) -> BU.set_union out (pat_vars p)) S.no_names
+        pats |> List.fold_left (fun out (p, _) ->
+                                  if BU.set_is_empty (BU.set_intersect (pat_vars p) out)
+                                  then BU.set_union out (pat_vars p)
+                                  else raise (Error ("Non-linear patterns are not permitted.", r)))
+                                S.no_names
     in
     pat_vars p
   in
@@ -486,9 +490,10 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
         let e, x = push_bv_maybe_mut e x in
         (x::l), e, x
   in
-  let rec aux (loc:lenv_t) env (p:pattern) =
+  let rec aux' (top:bool) (loc:lenv_t) env (p:pattern) =
     let pos q = Syntax.withinfo q p.prange in
     let pos_r r q = Syntax.withinfo q r in
+    let orig = p in
     match p.pat with
       | PatOr _ -> failwith "impossible"
 
@@ -497,7 +502,14 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p, imp = aux loc env p in
-        let binder = match binder with
+        let annot_pat_var p t =
+            match p.v with
+            | Pat_var x -> {p with v=Pat_var({x with sort=t})}
+            | Pat_wild x -> {p with v=Pat_wild({x with sort=t})}
+            | _ when top -> p
+            | _  -> raise (Error("Type ascriptions within patterns are only allowed on variables", orig.prange))
+        in
+        let p, binder = match binder with
             | LetBinder _ -> failwith "impossible"
             | LocalBinder(x, aq) ->
               let t = desugar_term env (close_fun env t) in
@@ -507,6 +519,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
                                        (Print.bv_to_string x)
                                        (Print.term_to_string x.sort)
                                        (Print.term_to_string t) ;
+              annot_pat_var p t,
               LocalBinder({x with sort=t}, aq)
         in
         loc, env', binder, p, imp
@@ -582,24 +595,25 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
             | Pat_cons(fv, args) -> pos <| Pat_cons(({fv with fv_qual=Some (Record_ctor (record.typename, record.fields |> List.map fst))}), args)
             | _ -> p in
         env, e, b, p, false
+  and aux loc env p = aux' false loc env p
   in
   let aux_maybe_or env (p:pattern) =
     let loc = [] in
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
-        let loc, env, var, p, _ = aux loc env p in
+        let loc, env, var, p, _ = aux' true loc env p in
         let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
-          let loc, env, _, p, _ = aux loc env p in
+          let loc, env, _, p, _ = aux' true loc env p in
           loc, env, p::ps) (loc, env, []) ps in
         let pats = (p::List.rev ps) in
         env, var, pats
       | _ ->
-        let loc, env, vars, pat, b = aux loc env p in
+        let loc, env, vars, pat, b = aux' true loc env p in
         env, vars, [pat]
   in
   let env, b, pats = aux_maybe_or env p in
-  ignore <| (List.map check_linear_pattern_variables pats);
+  ignore <| (List.map (fun pats -> check_linear_pattern_variables pats p.prange) pats );
   env, b, pats
 
 and desugar_binding_pat_maybe_top top env p is_mut : (env_t * bnd * list<pat>) =
@@ -636,8 +650,6 @@ and desugar_typ env e : S.term =
     desugar_term_maybe_top false env e
 
 and desugar_machine_integer env repr (signedness, width) range =
-  let lower, upper = FStar.Const.bounds signedness width in
-  let value = FStar.Util.int_of_string (FStar.Util.ensure_decimal repr) in
   let tnm = "FStar." ^
     (match signedness with | Unsigned -> "U" | Signed -> "") ^ "Int" ^
     (match width with | Int8 -> "8" | Int16 -> "16" | Int32 -> "32" | Int64 -> "64")
@@ -646,7 +658,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   //and coerce them to the appropriate type using the internal coercion
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
-  if not (lower <= value && value <= upper)
+  if not (within_bounds repr signedness width)
   then raise (Error(BU.format2 "%s is not in the expected range for %s"
                                repr tnm,
                     range));
@@ -749,6 +761,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
 
     | Construct (n, [(a, _)]) when n.str = "SMTPatT" ->
+        Errors.warn top.range "SMTPatT is deprecated; please just use SMTPat";
         desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
 
     | Construct (n, [(a, _)]) when n.str = "SMTPatOr" ->
@@ -1271,10 +1284,13 @@ and desugar_comp r env t =
           let req = Requires (mk_term (Name C.true_lid) t.range Formula, None) in
           mk_term req t.range Type_level, Nothing
         in
-        let ens_true =
-          let ens = Ensures (mk_term (Name C.true_lid) t.range Formula, None) in
-          mk_term ens t.range Type_level, Nothing
+        (* The postcondition for Lemma is thunked, to allow to assume the precondition
+         * (c.f. #57), so add the thunking here *)
+        let thunk_ens_ (ens : AST.term) : AST.term =
+            let wildpat = mk_pattern PatWild ens.range in
+            mk_term (Abs ([wildpat], ens)) ens.range Expr
         in
+        let thunk_ens (e, i) = (thunk_ens_ e, i) in
         let fail_lemma () =
              let expected_one_of = ["Lemma post";
                                     "Lemma (ensures post)";
@@ -1305,49 +1321,49 @@ and desugar_comp r env t =
             fail_lemma()
 
           | [ens] -> //otherwise, a single argument is always treated as just an ensures clause
-            [unit_tm;req_true;ens;nil_pat]
+            [unit_tm;req_true;thunk_ens ens;nil_pat]
 
           | [req;ens]
                 when is_requires req
                   && is_ensures ens ->
-            [unit_tm;req;ens;nil_pat]
+            [unit_tm;req;thunk_ens ens;nil_pat]
 
           | [ens;smtpat] //either Lemma p [SMTPat ...]; or Lemma (ensures p) [SMTPat ...]
                 when not (is_requires ens)
                   && not (is_smt_pat ens)
                   && not (is_decreases ens)
                   && is_smt_pat smtpat ->
-            [unit_tm;req_true;ens;smtpat]
+            [unit_tm;req_true;thunk_ens ens;smtpat]
 
           | [ens;dec]
                 when is_ensures ens
                   && is_decreases dec ->
-            [unit_tm;req_true;ens;nil_pat;dec]
+            [unit_tm;req_true;thunk_ens ens;nil_pat;dec]
 
           | [ens;dec;smtpat]
                 when is_ensures ens
                   && is_decreases dec
                   && is_smt_pat smtpat ->
-            [unit_tm;req_true;ens;smtpat;dec]
+            [unit_tm;req_true;thunk_ens ens;smtpat;dec]
 
           | [req;ens;dec]
                 when is_requires req
                   && is_ensures ens
                   && is_decreases dec ->
-            [unit_tm;req;ens;nil_pat;dec]
+            [unit_tm;req;thunk_ens ens;nil_pat;dec]
 
           | [req;ens;smtpat]
                 when is_requires req
                   && is_ensures ens
                   && is_smt_pat smtpat ->
-            unit_tm::args
+            [unit_tm;req;thunk_ens ens;smtpat]
 
           | [req;ens;dec;smtpat]
                 when is_requires req
                   && is_ensures ens
                   && is_smt_pat smtpat
                   && is_decreases dec ->
-            unit_tm::args
+            [unit_tm;req;thunk_ens ens;dec;smtpat]
 
           | _other ->
             fail_lemma()
@@ -2511,7 +2527,7 @@ let ast_modul_to_modul modul : withenv<S.modul> =
          modul,env
 
 let decls_to_sigelts decls : withenv<S.sigelts> =
-    fun env -> 
+    fun env ->
         let env, sigelts = desugar_decls env decls in
         sigelts, env
 

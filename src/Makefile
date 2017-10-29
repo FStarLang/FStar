@@ -57,7 +57,7 @@ MAKEFLAGS += --no-builtin-rules
 all: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
-	$(DOS2UNIX) parser/boot/parse.fsi
+	$(DOS2UNIX) parser/parse.fsi
 	chmod a+x $(BIN)/tests.exe
 	chmod a+x $(BIN)/fstar.exe
 
@@ -89,7 +89,7 @@ FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_i
                                     tactics tosyntax typechecker)
 
 ALL_BOOT=$(addprefix boot/FStar., \
-           Util.fsti List.fsti Bytes.fsti String.fsti \
+           Util.fsti List.fsti Bytes.fsti String.fsti BigInt.fsti \
 		   Pprint.fsti Parser.Parse.fsti \
 		   Tactics.Interpreter.fst Tactics.Interpreter.fsti)
 
@@ -108,7 +108,7 @@ boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | 
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
 	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
 
-boot/FStar.Parser.Parse.fsti: parser/boot/parse.fsi | boot_dir
+boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
 	echo "#light \"off\"" > $@
 	$(HEAD) -n -12 $^ >> $@
 	$(SED) -i 's/module FStar.Parser.Parse/module FStar.Parser.Parse\nopen FStar.All\nopen FStar.BaseTypes\ntype bytes = array<byte>\nopen FStar.Syntax.Syntax/' $@
@@ -116,7 +116,7 @@ boot/FStar.Parser.Parse.fsti: parser/boot/parse.fsi | boot_dir
 boot/%.fst: basic/boot/%.fs | boot_dir
 	cp $^ $@
 
-boot/FStar.Parser.Parse.fst: parser/boot/parse.fs | boot_dir
+boot/FStar.Parser.Parse.fst: parser/parse.fs | boot_dir
 	cp $^ $@
 
 boot/FStar.Tactics.Interpreter.fsti: tactics/boot/FStar.Tactics.Interpreter.fsi | boot_dir
@@ -130,11 +130,11 @@ boot: $(ALL_BOOT)
 clean_boot:
 	rm -rf boot
 
-MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Options.fs FStar.Range.fs FStar.Ident.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
+MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Range.fs FStar.Ident.fs FStar.Options.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
 extract_misc: boot $(MISC_EXTRACTED_FILES)
 	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Range FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
 
-SYNTAX_EXTRACTED_FILES=$(addprefix syntax/FStar.Syntax., Syntax.fs Subst.fs Free.fs InstFV.fs Util.fs Print.fs Embeddings.fs MutRecTy.fs Resugar.fs Unionfind.fs) fsdoc/FStar.Fsdoc.Generator.fs
+SYNTAX_EXTRACTED_FILES=$(addprefix syntax/FStar.Syntax., Syntax.fs Unionfind.fs Subst.fs Free.fs InstFV.fs Util.fs Resugar.fs Print.fs Embeddings.fs MutRecTy.fs) fsdoc/FStar.Fsdoc.Generator.fs
 extract_syntax: boot $(SYNTAX_EXTRACTED_FILES)
 	$(FSTARBOOT) $(SYNTAX_EXTRACTED_FILES) --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
 
@@ -178,11 +178,11 @@ EXTRACTION_EXTRACTED_FILES=$(addprefix extraction/FStar.Extraction., ML.Syntax.f
 extract_extraction: boot $(EXTRACTION_EXTRACTED_FILES)
 	$(FSTARBOOT) $(EXTRACTION_EXTRACTED_FILES) --extract_namespace FStar.Extraction
 
-TACTICS_EXTRACTED_FILES=../ulib/FStar.Tactics.Types.fsti $(addprefix tactics/FStar.Tactics., Types.fs Basic.fs Embedding.fs Native.fs) boot/FStar.Tactics.Interpreter.fst
+TACTICS_EXTRACTED_FILES=$(addprefix tactics/FStar.Tactics., Types.fs Basic.fs Embedding.fs Native.fs) boot/FStar.Tactics.Interpreter.fst
 extract_tactics: boot $(TACTICS_EXTRACTED_FILES)
 	$(FSTARBOOT) $(TACTICS_EXTRACTED_FILES) --extract_namespace FStar.Tactics --no_extract FStar.Tactics.Native
 
-REFLECTION_EXTRACTED_FILES=../ulib/FStar.Reflection.Types.fsti $(addprefix reflection/FStar.Reflection., Basic.fs Data.fs Interpreter.fs)
+REFLECTION_EXTRACTED_FILES=../ulib/FStar.Reflection.Types.fsti $(addprefix reflection/FStar.Reflection., Data.fs Basic.fs Interpreter.fs)
 extract_reflection: boot $(REFLECTION_EXTRACTED_FILES)
 	$(FSTARBOOT) $(REFLECTION_EXTRACTED_FILES) --extract_namespace FStar.Reflection
 
@@ -202,15 +202,15 @@ SOLVER_EXTRACTED_FILES=smtencoding/FStar.SMTEncoding.Solver.fs
 extract_solver: boot $(SOLVER_EXTRACTED_FILES)
 	$(FSTARBOOT) $(SOLVER_EXTRACTED_FILES) --extract_module FStar.SMTEncoding.Solver
 
-FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Interactive.Legacy.fs Interactive.CompletionTable.fs Interactive.Ide.fs Universal.fs Indent.fs Main.fs)
+FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Universal.fs Interactive.CompletionTable.fs Interactive.Ide.fs Interactive.Legacy.fs Indent.fs Main.fs)
 extract_fstar: boot $(FSTAR_EXTRACTED_FILES)
 	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive.CompletionTable --extract_module FStar.Interactive.Ide --extract_module FStar.Interactive.Legacy --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
-extract_typechecker: extract_normalizer extract_rel extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc
+extract_typechecker: extract_rel extract_normalizer extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc
 
-extract_smtencoding: extract_smtencoding_base extract_encode extract_solver
+extract_smtencoding: extract_encode extract_smtencoding_base extract_solver
 
-extract_all: extract_tactics extract_reflection extract_misc extract_syntax extract_parser extract_typechecker extract_tosyntax extract_smtencoding extract_extraction extract_fstar
+extract_all: extract_tactics extract_smtencoding extract_typechecker extract_reflection extract_misc extract_syntax extract_parser extract_tosyntax extract_extraction extract_fstar
 
 clean_extracted:
 	rm -f ocaml-output/FStar_*.ml
@@ -244,9 +244,7 @@ utest:
 # The first tests have to be performed sequentially (but each one may use some parallelism)
 utest-prelude:
 	+$(MAKE) all
-ifeq ($(OS),Windows_NT)
-	+$(MAKE) fsharp-regressions #normalizer failures on linux so only run on windows
-endif
+	+$(MAKE) fsharp-regressions
 	+$(MAKE) boot-ocaml
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
@@ -257,7 +255,12 @@ interactive-test:
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
+ifeq ($(OS),Windows_NT)
 	$(RUNTIME) $(BIN)/tests.exe
+else
+	@# On Linux, we need to increase the maximum stack size, or we overflow
+	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
+endif
 
 #a basic regression test for extraction
 #In particular, this test builds fstarlib.cmxa, so

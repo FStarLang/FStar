@@ -107,7 +107,7 @@ val revert_injective : t1:tree -> t2:tree ->
 let rec revert_injective t1 t2 =
   match t1, t2 with
   | Leaf, Leaf -> ()
-  | Node n t11 t12, Node n t21 t22 -> revert_injective t11 t21;
+  | Node n1 t11 t12, Node n2 t21 t22 -> revert_injective t11 t21;
                                       revert_injective t12 t22
 
 val revert_fold : t:tree ->

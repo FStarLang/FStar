@@ -626,13 +626,13 @@ let rec extract_one_pat (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlt
         let x = gensym() in // as_mlident (S.new_bv None Tm_bvar) in
         let when_clause = with_ty ml_bool_ty <|
             MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x;
-                                    with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const' p.p i)]) in
+                                    with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const p.p i)]) in
         g, Some (MLP_Var x, [when_clause]), ok ml_int_ty
 
     | Pat_constant s     ->
         let t : term = TcTerm.tc_constant Range.dummyRange s in
         let mlty = term_as_mlty g t in
-        g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
+        g, Some (MLP_Const (mlconst_of_const p.p s), []), ok mlty
 
     | Pat_var x | Pat_wild x ->
         // JP,NS: Pat_wild turns into a binder in the internal syntax because
@@ -847,7 +847,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_constant c ->
           let _, ty, _ = TcTerm.type_of_tot_term g.tcenv t in
           let ml_ty = term_as_mlty g ty in
-          with_ty ml_ty (MLE_Const <| mlconst_of_const' t.pos c), E_PURE, ml_ty
+          with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
 
         | Tm_name _
         | Tm_fvar _ -> //lookup in g; decide if its in left or right; tag is Pure because it's just a variable
@@ -881,6 +881,13 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             (fun (_, targ) (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
             ml_bs (f, t) in
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
+
+        | Tm_app({n=Tm_constant Const_range_of}, [(a1, _)]) ->
+          let ty = term_as_mlty g (tabbrev PC.range_lid) in
+          with_ty ty <| mlexpr_of_range a1.pos, E_PURE, ty
+
+        | Tm_app({n=Tm_constant Const_set_range_of}, [(a1, _); (a2, _)]) ->
+          term_as_mlexpr' g a1
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 

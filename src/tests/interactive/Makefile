@@ -42,7 +42,7 @@ endif
 # Feed .in to F* and record output as .out.  Output is passed through cleanup.py
 # to ensure that the output is deterministic by pretty-printing JSON messages
 # (otherwise the order of fields in JSON dictionaries might vary across runs)
-%.out: %.in
+%.out: %.in $(FSTAR_HOME)/bin/fstar.exe
 	$(eval FST := $(firstword $(subst ., ,$<)))
 	${FSTAR_HOME}/bin/fstar.exe $(SMT) "${FST}.fst" --ide < "$<" | python2 cleanup.py "$@"
 

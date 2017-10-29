@@ -65,16 +65,11 @@ type effects = {
 }
 
 // A name prefix, such as ["FStar";"Math"]
-type name_prefix = list<string>
+type name_prefix = FStar.Ident.path
 // A choice of which name prefixes are enabled/disabled
-// The leftmost match takes precedence. Empty list means everything is on.
+// The leftmost match takes precedence. Empty list means everything is off.
 // To turn off everything, one can prepend `([], false)` to this (since [] is a prefix of everything)
-type flat_proof_namespace = list<(name_prefix * bool)>
-
-// A stack of namespace choices. Provides simple push/pop behaviour.
-// For the purposes of filtering facts, this is just flattened.
-// CAN NEVER BE EMPTY
-type proof_namespace = list<flat_proof_namespace>
+type proof_namespace = list<(name_prefix * bool)>
 
 type cached_elt = FStar.Util.either<(universes * typ), (sigelt * option<universes>)> * Range.range
 type goal = term
@@ -109,10 +104,11 @@ type env = {
   qname_and_index:option<(lident*int)>;           (* the top-level term we're currently processing and the nth query for it *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
-  is_native_tactic: lid -> bool;                   (* callback into the native tactics engine *)
+  is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.ToSyntax.Env.env
+  dsenv          : FStar.ToSyntax.Env.env;        (* The desugaring environment from the front-end *)
+  dep_graph      : FStar.Parser.Dep.deps          (* The result of the dependency analysis *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -139,7 +135,8 @@ val tc_hooks : env -> tcenv_hooks
 val set_tc_hooks: env -> tcenv_hooks -> env
 
 type env_t = env
-val initial_env : (env -> term -> term*lcomp*guard_t) ->
+val initial_env : FStar.Parser.Dep.deps ->
+                  (env -> term -> term*lcomp*guard_t) ->
                   (env -> term -> term*typ*guard_t) ->
                   (env -> term -> universe) ->
                   solver_t -> lident -> env
@@ -148,6 +145,9 @@ val initial_env : (env -> term -> term*lcomp*guard_t) ->
 val should_verify   : env -> bool
 val incr_query_index: env -> env
 val string_of_delta_level : delta_level -> string
+val rename_env : subst_t -> env -> env
+val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
+val dep_graph: env -> FStar.Parser.Dep.deps
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push               : env -> string -> env
@@ -256,8 +256,11 @@ val should_enc_path : env -> list<string> -> bool
 val should_enc_lid  : env -> lident -> bool
 val add_proof_ns    : env -> name_prefix -> env
 val rem_proof_ns    : env -> name_prefix -> env
-val push_proof_ns   : env -> env
-val pop_proof_ns    : env -> env
 val get_proof_ns    : env -> proof_namespace
 val set_proof_ns    : proof_namespace -> env -> env
 val string_of_proof_ns : env -> string
+
+(* Check that all free variables of the term are defined in the environment *)
+val unbound_vars    : env -> term -> BU.set<bv>
+val closed          : env -> term -> bool
+val closed'         : term -> bool

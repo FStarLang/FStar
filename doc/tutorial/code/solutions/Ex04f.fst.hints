@@ -10,11 +10,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "332e3526fdc9eda5e8fa74edcb477bb8"
+      "abe607e68f139aab6351bca8f1476f4c"
     ],
     [
       "Ex04f.reverse",
@@ -25,11 +24,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "28335efe47ad9b996e1e96964f4c954c"
+      "09c4be1862415f7ab795e3987bbd98bd"
     ],
     [
       "Ex04f.fold_left",
@@ -44,7 +42,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b1858b212cce35017497873578a54a41"
+      "335b9ccf30d38c5deecbb94fe36744b7"
     ],
     [
       "Ex04f.append_assoc",
@@ -63,10 +61,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7e38ff3c2c128e17a4c9e1099a29103a"
+      "e30d0a84484cc9f876d039a00aa173c5"
     ],
     [
       "Ex04f.fold_left_Cons_is_rev",
@@ -91,10 +89,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "subterm_ordering_Prims.Cons"
       ],
       0,
-      "93a240c4613c182791fb4613075dd953"
+      "4dd3478978b39c004df0ef4786fe674a"
     ]
   ]
 ]

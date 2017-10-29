@@ -19,7 +19,7 @@ val list_subterm_ordering_lemma:
   -> x:'a
   -> Lemma (requires (l << bound))
           (ensures (mem x l ==> x << bound))
-          [SMTPat (mem x l); SMTPatT (x << bound)]
+          [SMTPat (mem x l); SMTPat (x << bound)]
 
 let rec list_subterm_ordering_lemma l bound x = match l with
   | [] -> ()

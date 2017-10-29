@@ -707,7 +707,13 @@ let rec resugar_term (t : S.term) : A.term =
       | Meta_desugared i ->
           resugar_meta_desugared i
       | Meta_alien (_, s, _) ->
-          resugar_term e
+          begin match e.n with
+          | Tm_unknown ->
+              mk (A.Const (Const_string ("(alien:" ^ s ^ ")", e.pos)))
+          | _ ->
+              E.warn e.pos "Meta_alien was not a Tm_unknown";
+              resugar_term e
+          end
       | Meta_named t ->
           mk (A.Name t)
       | Meta_monadic (name, t)
@@ -762,6 +768,8 @@ and resugar_comp (c:S.comp) : A.term =
        if (lid_equals c.effect_name C.effect_Lemma_lid) then (
         match c.effect_args with
         | pre::post::pats::[] ->
+            // Common case, post is thunked.
+            let post = (U.unthunk_lemma_post (fst post), snd post) in
              (if U.is_fvar C.true_lid (fst pre) then [] else [pre])
             @[post]
             @(if U.is_fvar C.nil_lid (fst pats) then [] else [pats])
@@ -980,7 +988,7 @@ let resugar_tscheme' name (ts:S.tscheme) =
   mk_decl typ.pos [] (A.Tycon(false, [(A.TyconAbbrev(name, [], None, resugar_term typ), None)]))
 
 let resugar_tscheme (ts:S.tscheme) =
-  resugar_tscheme' "tsheme" ts
+  resugar_tscheme' "tscheme" ts
 
 let resugar_eff_decl for_free r q ed =
   let resugar_action d for_free =

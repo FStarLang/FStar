@@ -1,5 +1,5 @@
 
-module Bug122PatternsAreIncomplete
+module Bug122
 
 assume val bar : p:Type -> Tot bool
 

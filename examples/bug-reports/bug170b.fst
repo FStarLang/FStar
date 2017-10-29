@@ -1,5 +1,6 @@
-module Inconsistent
-open Classical
+module Bug170b
+
+open FStar.Classical
 
 assume val p2b: p:Type -> Tot (b:bool{b = true <==> p})
 
@@ -8,24 +9,24 @@ type b2p : bool -> Type =
 
 assume val p2p2 : a:Type -> a -> Tot (b2p(p2b a))
 
-type V = a : Type -> ((a-> Tot bool) -> a -> Tot bool) -> a -> Tot bool
-type U = V -> Tot bool
+type v = a : Type -> ((a-> Tot bool) -> a -> Tot bool) -> a -> Tot bool
+type u = v -> Tot bool
 
-val sb : V -> Tot V
-let sb (z : V) = fun (a:Type) r (x : a) -> r (z a r) x
+val sb : v -> Tot v
+let sb (z : v) = fun (a:Type) r (x : a) -> r (z a r) x
 
-val le : i : (U -> Tot bool) -> x: U -> Tot bool
-let le i x = x (fun (a : Type) r y -> i (fun (v : V)-> sb v a r y))
+val le : i : (u -> Tot bool) -> x: u -> Tot bool
+let le i x = x (fun (a : Type) r y -> i (fun (v : v)-> sb v a r y))
 
-val wf : U
-let wf (z : V) = let y : (U -> Tot bool) = z U le in p2b (x : U -> b2p (le y x) -> Tot (b2p (y x)))
+val wf : u
+let wf (z : v) = let y : (u -> Tot bool) = z u le in p2b (x : u -> b2p (le y x) -> Tot (b2p (y x)))
 
 let omega =
-  (fun (i : U -> Tot bool) (y : (x1 : U -> b2p (le i x1) -> Tot (b2p (i x1)))) ->
+  (fun (i : u -> Tot bool) (y : (x1 : u -> b2p (le i x1) -> Tot (b2p (i x1)))) ->
     y wf
       (p2p2
-         ( x2 : U ->
-           b2p (le (fun (a : U) -> i (fun (v : V) -> sb v U le a)) x2) ->
-           b2p (i (fun (v : V) -> sb v U le x2)))
-         (fun (x3 : U) (h0 : b2p (le (fun (a : U) -> i (fun (v : V) -> sb v U le a)) x3)) ->
-           y (fun (v : V) -> sb v U le x3) h0)))
+         ( x2 : u ->
+           b2p (le (fun (a : u) -> i (fun (v : v) -> sb v u le a)) x2) ->
+           b2p (i (fun (v : v) -> sb v u le x2)))
+         (fun (x3 : u) (h0 : b2p (le (fun (a : u) -> i (fun (v : v) -> sb v u le a)) x3)) ->
+           y (fun (v : v) -> sb v u le x3) h0)))

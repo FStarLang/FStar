@@ -101,15 +101,15 @@ assume val lemma_equal_intro: e1:celem -> e2:celem -> Lemma
   (requires (Curve.Inf? e1 /\ Curve.Inf? e2) 
 	     \/ (Curve.Finite? e1 /\ Curve.Finite? e2 /\ get_x e1 == get_x e2 /\ get_y e1 == get_y e2))
   (ensures (equal e1 e2))
-  [SMTPatT (equal e1 e2)]
+  [SMTPat (equal e1 e2)]
 assume val lemma_equal_elim: e1:celem -> e2:celem -> Lemma
     (requires (equal e1 e2))
     (ensures  (e1 = e2))
-    [SMTPatT (equal e1 e2)]
+    [SMTPat (equal e1 e2)]
 assume val lemma_equal_refl: e1:celem -> e2:celem -> Lemma
     (requires (e1 = e2))
     (ensures  (equal e1 e2))
-    [SMTPatT (equal e1 e2)]
+    [SMTPat (equal e1 e2)]
 
 (* General lemmas *)
 val add_equality: a:celem -> b:celem -> c:celem -> d:celem ->
