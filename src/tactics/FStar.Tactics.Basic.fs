@@ -368,6 +368,14 @@ let add_goal_from_guard (reason:string) (e:env) (g : guard_t) opts : tac<unit> =
         let goal = { goal with is_guard = true } in
         push_goals [goal])
 
+let goal_from_guard (reason:string) (e:env) (g : guard_t) opts : tac<option<goal>> =
+    match (Rel.simplify_guard e g).guard_f with
+    | TcComm.Trivial -> ret None
+    | TcComm.NonTrivial f ->
+        if istrivial e f then ret None else
+        bind (mk_irrelevant_goal reason e f opts) (fun goal ->
+        ret (Some ({ goal with is_guard = true })))
+
 let smt : tac<unit> =
     bind cur_goal (fun g ->
     if is_irrelevant g then
@@ -517,6 +525,14 @@ let uvar_free_in_goal (u:uvar) (g:goal) =
 let uvar_free (u:uvar) (ps:proofstate) : bool =
     List.existsML (uvar_free_in_goal u) ps.goals
 
+let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
+    match l with
+    | [] -> ret []
+    | x::xs ->
+        bind (f x) (fun y ->
+        bind (mapM f xs) (fun ys ->
+        ret (y::ys)))
+
 exception NoUnif
 
 // uopt: Don't add goals for implicits that appear free in posterior goals.
@@ -606,9 +622,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
                    // Simplification: if the argument is simply unit, then don't ask for it
                    (U.exp_unit, aq)::uvs, guard, S.NT(b, U.exp_unit)::subst
                else
-                   let u, _, g_u = FStar.TypeChecker.Util.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
+                   let u, _, g_u = TcUtil.new_implicit_var "apply_lemma" goal.goal_ty.pos goal.context b_t in
                    (u, aq)::uvs,
-                   FStar.TypeChecker.Rel.conj_guard guard g_u,
+                   Rel.conj_guard guard g_u,
                    S.NT(b, u)::subst
                )
        ([], guard, [])
@@ -629,13 +645,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
                             (N.term_to_string goal.context goal.goal_ty)
     else
         let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
-        let solution, _, g_s = goal.context.type_of goal.context solution in
         bind (add_implicits implicits.implicits) (fun _ ->
-        let implicits = implicits.implicits |> List.filter (fun (_, _, _, tm, _, _) ->
-             let hd, _ = U.head_and_args tm in
-             match (SS.compress hd).n with
-             | Tm_uvar _ -> true //still unresolved
-             | _ -> false) in
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve goal U.exp_unit) (fun _ ->
         let is_free_uvar uv t =
@@ -650,12 +660,22 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
             | _ -> false
             end
         in
-        let sub_goals =
-             implicits |> List.map (fun (_msg, _env, _uvar, term, typ, _) ->
-                     { goal with
-                      witness = bnorm goal.context term;
-                      goal_ty = bnorm goal.context typ })
-        in
+        bind (implicits.implicits |> mapM (fun (_msg, env, _uvar, term, typ, _) ->
+            let hd, _ = U.head_and_args term in
+            match (SS.compress hd).n with
+            | Tm_uvar _ ->
+                ret [{ goal with
+                       witness = bnorm goal.context term;
+                       goal_ty = bnorm goal.context typ }]
+            | _ ->
+                let term = bnorm env term in
+                let _, _, g_typ = env.type_of (Env.set_expected_typ env typ) term in
+                bind (goal_from_guard "apply_lemma solved arg" goal.context g_typ goal.opts) (function
+                | None -> ret []
+                | Some g -> ret [g]
+                )
+            )) (fun sub_goals_ ->
+        let sub_goals = List.flatten sub_goals_ in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. TODO: maybe keep and check later?
         let rec filter' (f : 'a -> list<'a> -> bool) (xs : list<'a>) : list<'a> =
@@ -664,12 +684,11 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
              | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
         in
         let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
-        let guard = Rel.conj_guard guard g_s in
         bind (add_goal_from_guard "apply_lemma guard" goal.context guard goal.opts) (fun _ ->
         bind (if not (istrivial goal.context (U.mk_squash pre))
               then add_irrelevant_goal "apply_lemma precondition" goal.context pre goal.opts
               else ret ()) (fun _ ->
-        add_goals sub_goals))))))))
+        add_goals sub_goals)))))))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
@@ -839,14 +858,6 @@ let addns (s:string) : tac<unit> =
     let ctx' = Env.add_proof_ns ctx (path_of_text s) in
     let g' = { g with context = ctx' } in
     bind dismiss (fun _ -> add_goals [g']))
-
-let rec mapM (f : 'a -> tac<'b>) (l : list<'a>) : tac<list<'b>> =
-    match l with
-    | [] -> ret []
-    | x::xs ->
-        bind (f x) (fun y ->
-        bind (mapM f xs) (fun ys ->
-        ret (y::ys)))
 
 let rec tac_fold_env (d : direction) (f : env -> term -> tac<term>) (env : env) (t : term) : tac<term> =
     let tn = (SS.compress t).n in

@@ -108,6 +108,7 @@ let rec arith_expr_to_bv e : tactic unit =
         arith_expr_to_bv e1
     | NatToBv (Land e1 e2) | (Land e1 e2) ->
         apply_lemma (quote int2bv_logand);;
+        guards_to_smt;;
         apply_lemma (quote cong_bvand);;
         arith_expr_to_bv e1;;
         arith_expr_to_bv e2

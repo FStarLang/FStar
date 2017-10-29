@@ -1,4 +1,4 @@
-module Monal
+module LemmaArgs
 
 open FStar.Tactics
 
