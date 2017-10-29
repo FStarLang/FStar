@@ -2719,6 +2719,11 @@ let maybe_update_proof_ns env : unit =
 //if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
 //if use_smt = false, then None means could not discharge the guard without using smt
 let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<guard_t> =
+  let debug =
+       (Env.debug env <| Options.Other "Rel")
+    || (Env.debug env <| Options.Other "SMTQuery")
+    || (Env.debug env <| Options.Other "Tac")
+  in
   let g = solve_deferred_constraints env g in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
@@ -2726,26 +2731,24 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
     match g.guard_f with
     | Trivial -> Some ret_g
     | NonTrivial vc ->
-      if Env.debug env <| Options.Other "Norm"
-      || Env.debug env <| Options.Other "SMTQuery"
+      if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "Before normalization VC=\n%s\n" (Print.term_to_string vc));
       let vc = N.normalize [N.Eager_unfolding; N.Simplify; N.Primops] env vc in
-      if Env.debug env <| Options.Other "Norm"
-      || Env.debug env <| Options.Other "SMTQuery"
+      if debug
       then Errors.diag (Env.get_range env)
                        (BU.format1 "After normalization VC=\n%s\n" (Print.term_to_string vc));
       match check_trivial vc with
       | Trivial -> Some ret_g
       | NonTrivial vc ->
         if not use_smt then (
-            if Env.debug env <| Options.Other "Rel" then
+            if debug then
                 Errors.diag (Env.get_range env)
                             (BU.format1 "Cannot solve without SMT : %s\n" (Print.term_to_string vc));
                 None
         ) else
           let _ =
-            if Env.debug env <| Options.Other "Rel"
+            if debug
             then Errors.diag (Env.get_range env)
                              (BU.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
             let vcs =
@@ -2762,7 +2765,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                     let goal = N.normalize [N.Simplify; N.Primops] env goal in
                     match check_trivial goal with
                     | Trivial ->
-                        if (Env.debug env <| Options.Other "Rel") || (Env.debug env <| Options.Other "Tac")
+                        if debug
                         then BU.print_string "Goal completely solved by tactic\n";
                         () // do nothing
 
@@ -2770,13 +2773,12 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
                         FStar.Options.push ();
                         FStar.Options.set opts;
                         maybe_update_proof_ns env;
-                        if Env.debug env <| Options.Other "Rel"
+                        if debug
                         then Errors.diag (Env.get_range env)
                                          (BU.format2 "Trying to solve:\n> %s\nWith proof_ns:\n %s\n"
                                                  (Print.term_to_string goal)
                                                  (Env.string_of_proof_ns env));
-                        if Env.debug env <| Options.Other "Norm"
-                        || Env.debug env <| Options.Other "SMTQuery"
+                        if debug
                         then Errors.diag (Env.get_range env)
                                          (BU.format1 "Before calling solver VC=\n%s\n" (Print.term_to_string goal));
                         let res = env.solver.solve use_env_range_msg env goal in
