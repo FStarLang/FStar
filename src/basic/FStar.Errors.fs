@@ -487,7 +487,6 @@ let diag r msg =
 
 let maybe_fatal_error r (e, msg) =
   let errno = errno_of_error (e) in
-  let msg = "message" in
   match flags.[errno] with
   | CError ->
      add_one (mk_issue EError (Some r) msg)
