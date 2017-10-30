@@ -29,8 +29,13 @@ assume private val __cur_witness : __tac term
 let cur_witness = fun () -> TAC?.reflect __cur_witness
 
 assume private val __is_guard   : __tac bool
-(** [is_goal] returns the current goal's type *)
+(** [is_guard] returns whether the current goal arised from a typechecking guard *)
 let is_guard = fun () -> TAC?.reflect __is_guard
+
+assume private val __refine_intro : __tac unit
+(** [refine_intro] will turn a goal of shape [w : x:t{phi}]
+into [w : t] and [phi{w/x}] *)
+let refine_intro = fun () -> TAC?.reflect __refine_intro
 
 (*
  * This is the way we inspect goals and any other term. We can quote them

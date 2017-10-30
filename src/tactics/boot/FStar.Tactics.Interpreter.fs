@@ -296,6 +296,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__clear"         clear unembed_binder embed_unit t_unit;
       mktac1 "__rewrite"       rewrite unembed_binder embed_unit t_unit;
       mktac0 "__smt"           smt embed_unit t_unit;
+      mktac0 "__refine_intro"  refine_intro embed_unit t_unit;
       mktac1 "__exact"         exact unembed_term embed_unit t_unit;
       mktac1 "__exact_guard"   exact_guard unembed_term embed_unit t_unit;
       mktac1 "__apply"         (apply  true) unembed_term embed_unit t_unit;

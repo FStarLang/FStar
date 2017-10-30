@@ -493,6 +493,20 @@ let norm_term_env (e : env) (s : list<EMB.norm_step>) (t : term) : tac<term> = w
     ret t
     ))
 
+let refine_intro : tac<unit> = wrap_err "refine_intro" <|
+    bind cur_goal (fun g ->
+    match Rel.base_and_refinement g.context g.goal_ty with
+    | _, None -> fail "not a refinement"
+    | t, Some (bv, phi) ->
+        let g1 = { g with goal_ty = t } in
+        let bv, phi = match SS.open_term [S.mk_binder bv] phi with
+                      | bvs, phi -> fst (List.hd bvs), phi
+        in
+        bind (mk_irrelevant_goal "refine_intro refinement" g.context
+                    (SS.subst [S.NT (bv, g.witness)] phi) g.opts) (fun g2 ->
+        bind dismiss (fun _ ->
+        add_goals [g1;g2])))
+
 let __exact force_guard (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->

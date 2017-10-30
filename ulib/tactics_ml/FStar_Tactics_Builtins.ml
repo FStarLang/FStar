@@ -70,6 +70,9 @@ let cur_witness: unit -> RT.term __tac = fun () -> __cur_witness
 let __is_guard: bool __tac = from_tac_0 B.is_guard
 let is_guard: unit -> bool __tac = fun () -> __is_guard
 
+let __refine_intro : unit __tac = from_tac_0 B.refine_intro
+let refine_intro: unit -> unit __tac = fun () -> __refine_intro
+
 let __tc (t: RT.term) : RT.term __tac = from_tac_1 B.tc t
 let tc: RT.term -> unit -> RT.term __tac = fun t -> fun () -> __tc t
 
