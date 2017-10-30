@@ -20,6 +20,7 @@ all:	Apply.uver		\
 	Rename.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
+	NatPos.uver		\
 	Trace.uver		\
 	Bug1270.fst		\
 	Bug1272.fst		\
