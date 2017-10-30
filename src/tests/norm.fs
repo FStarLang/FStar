@@ -137,6 +137,8 @@ let run_all_nbe () =
                 (let_ h (app mul [nm y; nm y])
                           (minus (nm h) (nm h))))) z;
     run 18 (pred_nat (snat (snat znat))) (snat znat);
+    // run 19 (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
+
     Options.__clear_unit_tests();
     Printf.printf "NBE ok\n"
 
