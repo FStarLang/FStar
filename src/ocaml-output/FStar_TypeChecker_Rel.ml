@@ -5560,7 +5560,9 @@ and solve_t': FStar_TypeChecker_Env.env -> tprob -> worklist -> solution =
                                FStar_TypeChecker_Env.tc_hooks =
                                  (uu___199_17222.FStar_TypeChecker_Env.tc_hooks);
                                FStar_TypeChecker_Env.dsenv =
-                                 (uu___199_17222.FStar_TypeChecker_Env.dsenv)
+                                 (uu___199_17222.FStar_TypeChecker_Env.dsenv);
+                               FStar_TypeChecker_Env.dep_graph =
+                                 (uu___199_17222.FStar_TypeChecker_Env.dep_graph)
                              }) t in
                         match uu____17214 with
                         | (uu____17225,ty,uu____17227) ->
@@ -5762,7 +5764,9 @@ and solve_t': FStar_TypeChecker_Env.env -> tprob -> worklist -> solution =
                                FStar_TypeChecker_Env.tc_hooks =
                                  (uu___199_17493.FStar_TypeChecker_Env.tc_hooks);
                                FStar_TypeChecker_Env.dsenv =
-                                 (uu___199_17493.FStar_TypeChecker_Env.dsenv)
+                                 (uu___199_17493.FStar_TypeChecker_Env.dsenv);
+                               FStar_TypeChecker_Env.dep_graph =
+                                 (uu___199_17493.FStar_TypeChecker_Env.dep_graph)
                              }) t in
                         match uu____17485 with
                         | (uu____17496,ty,uu____17498) ->
@@ -8732,7 +8736,9 @@ let resolve_implicits':
                                   FStar_TypeChecker_Env.tc_hooks =
                                     (uu___219_22987.FStar_TypeChecker_Env.tc_hooks);
                                   FStar_TypeChecker_Env.dsenv =
-                                    (uu___219_22987.FStar_TypeChecker_Env.dsenv)
+                                    (uu___219_22987.FStar_TypeChecker_Env.dsenv);
+                                  FStar_TypeChecker_Env.dep_graph =
+                                    (uu___219_22987.FStar_TypeChecker_Env.dep_graph)
                                 }
                               else env1 in
                             let g1 =
@@ -8811,7 +8817,9 @@ let resolve_implicits':
                                        FStar_TypeChecker_Env.tc_hooks =
                                          (uu___220_22998.FStar_TypeChecker_Env.tc_hooks);
                                        FStar_TypeChecker_Env.dsenv =
-                                         (uu___220_22998.FStar_TypeChecker_Env.dsenv)
+                                         (uu___220_22998.FStar_TypeChecker_Env.dsenv);
+                                       FStar_TypeChecker_Env.dep_graph =
+                                         (uu___220_22998.FStar_TypeChecker_Env.dep_graph)
                                      }) tm1 in
                                 match uu____22990 with
                                 | (uu____22999,uu____23000,g1) -> g1
@@ -8889,7 +8897,9 @@ let resolve_implicits':
                                         FStar_TypeChecker_Env.tc_hooks =
                                           (uu___221_23011.FStar_TypeChecker_Env.tc_hooks);
                                         FStar_TypeChecker_Env.dsenv =
-                                          (uu___221_23011.FStar_TypeChecker_Env.dsenv)
+                                          (uu___221_23011.FStar_TypeChecker_Env.dsenv);
+                                        FStar_TypeChecker_Env.dep_graph =
+                                          (uu___221_23011.FStar_TypeChecker_Env.dep_graph)
                                       }) tm1 in
                                  match uu____23003 with
                                  | (uu____23012,uu____23013,g1) -> g1) in

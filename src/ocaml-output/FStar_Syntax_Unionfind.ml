@@ -86,11 +86,11 @@ let new_transaction: Prims.unit -> tx =
   fun uu____539  ->
     let tx = let uu____541 = get () in TX uu____541 in
     (let uu____543 =
-       let uu___108_544 = get () in
+       let uu___122_544 = get () in
        let uu____545 = vops.next_minor () in
        {
-         term_graph = (uu___108_544.term_graph);
-         univ_graph = (uu___108_544.univ_graph);
+         term_graph = (uu___122_544.term_graph);
+         univ_graph = (uu___122_544.univ_graph);
          version = uu____545
        } in
      set uu____543);
@@ -107,11 +107,11 @@ let get_version: Prims.unit -> FStar_Syntax_Syntax.version =
 let set_term_graph: tgraph -> Prims.unit =
   fun tg  ->
     let uu____609 =
-      let uu___109_610 = get () in
+      let uu___123_610 = get () in
       {
         term_graph = tg;
-        univ_graph = (uu___109_610.univ_graph);
-        version = (uu___109_610.version)
+        univ_graph = (uu___123_610.univ_graph);
+        version = (uu___123_610.version)
       } in
     set uu____609
 let chk_v:
@@ -193,11 +193,11 @@ let get_univ_graph: Prims.unit -> ugraph =
 let set_univ_graph: ugraph -> Prims.unit =
   fun ug  ->
     let uu____834 =
-      let uu___110_835 = get () in
+      let uu___124_835 = get () in
       {
-        term_graph = (uu___110_835.term_graph);
+        term_graph = (uu___124_835.term_graph);
         univ_graph = ug;
-        version = (uu___110_835.version)
+        version = (uu___124_835.version)
       } in
     set uu____834
 let univ_uvar_id: FStar_Syntax_Syntax.universe_uvar -> Prims.int =

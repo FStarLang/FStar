@@ -3803,7 +3803,9 @@ let check_and_ascribe:
               FStar_TypeChecker_Env.tc_hooks =
                 (uu___173_10266.FStar_TypeChecker_Env.tc_hooks);
               FStar_TypeChecker_Env.dsenv =
-                (uu___173_10266.FStar_TypeChecker_Env.dsenv)
+                (uu___173_10266.FStar_TypeChecker_Env.dsenv);
+              FStar_TypeChecker_Env.dep_graph =
+                (uu___173_10266.FStar_TypeChecker_Env.dep_graph)
             } in
           let uu____10268 = check env2 t1 t2 in
           match uu____10268 with
