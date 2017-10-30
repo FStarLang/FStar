@@ -98,6 +98,120 @@ let step :tactic unit =
   step_alloc_return                 `or_else`
   fail "step: failed"
 
+let solve :tactic unit =
+  norm [delta; delta_only unfold_steps; primops];;
+  dump "Initial goal";;
+  trytac implies_intro;;
+  repeat step;;
+  repeat_simplify;;
+  dump "Final goal"
+  
+
+(***** Examples *****)
+
+let write_ok (r:addr) (h:heap) (n:int) =
+  let c = (Write r n) in
+  let p = fun _ h -> sel h r == n in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic t solve
+
+let increment_ok (r:addr) (h:heap) (n:int) =
+  let c = Bind (Read r) (fun n -> Write r (n + 1)) in
+  let p = fun _ h -> sel h r == (n + 1) in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (sel h r == n ==> t) solve
+
+let swap_ok (r1:addr) (r2:addr) (h:heap) (a:int) (b:int) =
+  let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
+  let p = fun _ h -> sel h r1 == b /\ sel h r2 == a in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (sel h r1 == a /\ sel h r2 == b ==> t) solve
+
+let double_increment_ok (r:addr) (h:heap) (n:int) =
+  let c = Bind (Bind (Read r) (fun y -> Write r (y + 1))) (fun _ -> (Bind (Read r) (fun y -> Write r (y + 1))))  in
+  let p = fun _ h -> sel h r == (n + 2) in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (sel h r == n ==> t) solve
+
+let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
+  let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
+  let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve
+
+(* Initializing a fresh object *)
+let init_tau :tactic unit =
+  norm [delta; delta_only unfold_steps; primops];;
+  repeat step;;
+  //repeat_simplify_context;;
+  repeat_simplify;;
+  dump "Init"
+
+let init_ok (h:heap) =
+  let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7) (fun _ -> Return r1)) in
+  let p = fun r h -> sel h r == 7 in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic t init_tau
+
+(* Copy a pointer *)
+let copy_tau :tactic unit =
+  norm [delta; delta_only unfold_steps; primops];;
+  implies_intro;;
+  repeat step;;
+  //repeat_simplify_context;;
+  repeat_simplify;;
+  dump "Copy"
+
+let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
+  let c = Bind (Read r1) (fun n1 -> Write r2 (n1)) in
+  let p = fun _ h -> (sel h r1 == i /\ sel h r2 == i /\ sel h r3 == k) in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) copy_tau
+
+// (* Writing to a pointer *)
+// let write_tau :tactic unit =
+//   norm [delta; delta_only unfold_steps; primops];;
+//   step;;
+//   //repeat_simplify_context;;
+//   repeat_simplify;;
+//   dump "Write"
+
+// (* Incrementing a pointer *)
+// let increment_tau :tactic unit =
+//   norm [delta; delta_only unfold_steps; primops];;
+//   implies_intro;;
+//   repeat step;;
+//   //repeat_simplify_context;;
+//   repeat_simplify;;
+//   dump "Increment"
+
+// (* Swapping two pointers *)
+// let swap_tau :tactic unit =
+//   norm [delta; delta_only unfold_steps; primops];;
+//   implies_intro;;
+//   repeat step;;
+//   //repeat_simplify_context;;
+//   repeat_simplify;;
+//   dump "Swap"
+
+// (* Double increment a pointer *)
+// let double_increment_tau :tactic unit =
+//   norm [delta; delta_only unfold_steps; primops];;
+//   implies_intro;;
+//   repeat step;;
+//   //repeat_simplify_context;;
+//   repeat_simplify;;
+//   dump "Double Increment"
+
+// (* Rotate three pointers *)
+// let rotate_tau :tactic unit =
+//   norm [delta; delta_only unfold_steps; primops];;
+//   implies_intro;;
+//   repeat step;;
+//   //repeat_simplify_context;;
+//   repeat_simplify;;
+//   dump "Rotate"
+
 // let swap_ok (r1:addr) (r2:addr) (h:heap) (a:int) (b:int) =
 //   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
 //   let p = fun _ h -> sel h r1 == b /\ sel h r2 == a in
@@ -183,106 +297,3 @@ let step :tactic unit =
 //        else repeat_simplify_context)
 //   else fail "repeat_simplify_context: binders length vary"
 //  ) ()
-
-(* Writing to a pointer *)
-let write_tau :tactic unit =
-  norm [delta; delta_only unfold_steps; primops];;
-  step;;
-  //repeat_simplify_context;;
-  repeat_simplify;;
-  dump "Write"
-
-let write_ok (r:addr) (h:heap) (n:int) =
-  let c = (Write r n) in
-  let p = fun _ h -> sel h r == n in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic t write_tau
-
-(* Incrementing a pointer *)
-let increment_tau :tactic unit =
-  norm [delta; delta_only unfold_steps; primops];;
-  implies_intro;;
-  repeat step;;
-  //repeat_simplify_context;;
-  repeat_simplify;;
-  dump "Increment"
-
-let increment_ok (r:addr) (h:heap) (n:int) =
-  let c = Bind (Read r) (fun n -> Write r (n + 1)) in
-  let p = fun _ h -> sel h r == (n + 1) in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r == n ==> t) increment_tau
-
-(* Swapping two pointers *)
-let swap_tau :tactic unit =
-  norm [delta; delta_only unfold_steps; primops];;
-  implies_intro;;
-  repeat step;;
-  //repeat_simplify_context;;
-  repeat_simplify;;
-  dump "Swap"
-
-let swap_ok (r1:addr) (r2:addr) (h:heap) (a:int) (b:int) =
-  let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
-  let p = fun _ h -> sel h r1 == b /\ sel h r2 == a in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r1 == a /\ sel h r2 == b ==> t) swap_tau
-
-(* Double increment a pointer *)
-let double_increment_tau :tactic unit =
-  norm [delta; delta_only unfold_steps; primops];;
-  implies_intro;;
-  repeat step;;
-  //repeat_simplify_context;;
-  repeat_simplify;;
-  dump "Double Increment"
-
-let double_increment_ok (r:addr) (h:heap) (n:int) =
-  let c = Bind (Bind (Read r) (fun y -> Write r (y + 1))) (fun _ -> (Bind (Read r) (fun y -> Write r (y + 1))))  in
-  let p = fun _ h -> sel h r == (n + 2) in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r == n ==> t) double_increment_tau
-
-(* Rotate three pointers *)
-let rotate_tau :tactic unit =
-  norm [delta; delta_only unfold_steps; primops];;
-  implies_intro;;
-  repeat step;;
-  //repeat_simplify_context;;
-  repeat_simplify;;
-  dump "Rotate"
-
-let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
-  let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
-  let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) rotate_tau
-
-(* Initializing a fresh object *)
-let init_tau :tactic unit =
-  norm [delta; delta_only unfold_steps; primops];;
-  repeat step;;
-  //repeat_simplify_context;;
-  repeat_simplify;;
-  dump "Init"
-
-let init_ok (h:heap) =
-  let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7) (fun _ -> Return r1)) in
-  let p = fun r h -> sel h r == 7 in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic t init_tau
-
-(* Copy a pointer *)
-let copy_tau :tactic unit =
-  norm [delta; delta_only unfold_steps; primops];;
-  implies_intro;;
-  repeat step;;
-  //repeat_simplify_context;;
-  repeat_simplify;;
-  dump "Copy"
-
-let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
-  let c = Bind (Read r1) (fun n1 -> Write r2 (n1)) in
-  let p = fun _ h -> (sel h r1 == i /\ sel h r2 == i /\ sel h r3 == k) in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) copy_tau
