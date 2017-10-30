@@ -507,7 +507,7 @@ let refine_intro : tac<unit> = wrap_err "refine_intro" <|
         bind dismiss (fun _ ->
         add_goals [g1;g2])))
 
-let __exact force_guard (t:term) : tac<unit> =
+let __exact_now force_guard (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
     bind (__tc goal.context t) (fun (t, typ, guard) ->
     bind (if force_guard
@@ -520,6 +520,16 @@ let __exact force_guard (t:term) : tac<unit> =
                     (N.term_to_string goal.context t)
                     (N.term_to_string goal.context (bnorm goal.context typ))
                     (N.term_to_string goal.context goal.goal_ty))))
+
+let __exact force_guard t : tac<unit> =
+    bind (trytac' (__exact_now force_guard t)) (function
+    | Inr r -> ret r
+    | Inl e ->
+    bind (trytac' (bind (norm [EMB.Delta]) (fun _ ->
+                   bind refine_intro (fun _ ->
+                   __exact_now force_guard t)))) (function
+    | Inr r -> ret r
+    | Inl _ -> fail e)) // keep original error
 
 let exact (tm:term) : tac<unit> = wrap_err "exact" <|
     mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
@@ -563,8 +573,7 @@ exception NoUnif
 // solving any of these two goals. In any case, if ?u is not solved, we fail afterwards.
 let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
     bind cur_goal (fun goal ->
-    bind (trytac (__exact true tm)) (fun r ->
-    match r with
+    bind (trytac (__exact true tm)) (function
     | Some r -> ret r // if tm is a solution, we're done
     | None ->
         // exact failed, try to instantiate more arguments
