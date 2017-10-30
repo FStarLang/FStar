@@ -627,7 +627,7 @@ let apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
                             (N.term_to_string goal.context goal.goal_ty))
     )))
 
-let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
+let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
     | Tm_fvar fv when S.fv_eq_lid fv PC.unit_lid -> true
@@ -687,18 +687,19 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
             let hd, _ = U.head_and_args term in
             match (SS.compress hd).n with
             | Tm_uvar _ ->
-                ret [{ goal with
-                       witness = bnorm goal.context term;
-                       goal_ty = bnorm goal.context typ }]
+                ret ([{ goal with
+                        witness = bnorm goal.context term;
+                        goal_ty = bnorm goal.context typ }], [])
             | _ ->
                 let term = bnorm env term in
                 let _, _, g_typ = env.type_of (Env.set_expected_typ env typ) term in
                 bind (goal_from_guard "apply_lemma solved arg" goal.context g_typ goal.opts) (function
-                | None -> ret []
-                | Some g -> ret [g]
+                | None -> ret ([], [])
+                | Some g -> ret ([], [g])
                 )
-            )) (fun sub_goals_ ->
-        let sub_goals = List.flatten sub_goals_ in
+            )) (fun goals_ ->
+        let sub_goals = List.flatten (List.map fst goals_) in
+        let smt_goals = List.flatten (List.map snd goals_) in
         // Optimization: if a uvar appears in a later goal, don't ask for it, since
         // it will be instantiated later. TODO: maybe keep and check later?
         let rec filter' (f : 'a -> list<'a> -> bool) (xs : list<'a>) : list<'a> =
@@ -711,7 +712,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus(
         bind (if not (istrivial goal.context (U.mk_squash pre))
               then add_irrelevant_goal "apply_lemma precondition" goal.context pre goal.opts
               else ret ()) (fun _ ->
-        add_goals sub_goals)))))))))
+        bind (add_smt_goals smt_goals) (fun _ ->
+        add_goals sub_goals))))))))))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
