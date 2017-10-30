@@ -168,7 +168,8 @@ let load_module_from_cache env fn
             (BU.format3 "%s cache file %s; will recheck %s" tag cache_file fn);
          None
     in
-    if BU.file_exists cache_file then
+    if Options.should_verify_file fn
+    && BU.file_exists cache_file then
       match BU.load_value_from_file cache_file with
       | None ->
         fail "Corrupt"
@@ -181,12 +182,15 @@ let load_module_from_cache env fn
     else None
 
 let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
-    let cache_file = FStar.Parser.Dep.cache_file_name fn in
-    let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
-    match digest with
-    | Some hashes ->
-      BU.save_value_to_file cache_file (hashes, modul, mii)
-    | _ -> ()
+    if Options.should_verify_file fn
+    then begin
+      let cache_file = FStar.Parser.Dep.cache_file_name fn in
+      let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
+      match digest with
+      | Some hashes ->
+        BU.save_value_to_file cache_file (hashes, modul, mii)
+      | _ -> ()
+    end
 
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
@@ -215,7 +219,7 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
   then match load_module_from_cache env fn with
        | None ->
          let tcmod, mii, env = tc_source_file () in
-         store_module_to_cache env fn (fst tcmod) mii;
+         if FStar.Errors.get_err_count() = 0 then store_module_to_cache env fn (fst tcmod) mii;
          tcmod, env
        | Some (tcmod, mii) ->
          let _, env = with_tcenv env <| FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii in

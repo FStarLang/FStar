@@ -143,7 +143,11 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-let file_of_dep (file_system_map:files_for_module_name)
+let cache_file_name fn = fn ^ ".checked"
+
+let file_of_dep_aux
+                (use_checked_file:bool)
+                (file_system_map:files_for_module_name)
                 (all_cmd_line_files:list<file_name>)
                 (d:dependence)
     : file_name =
@@ -153,8 +157,12 @@ let file_of_dep (file_system_map:files_for_module_name)
            is_implementation fn &&
            key = lowercase_module_name fn)
     in
+    let maybe_add_suffix f =
+        if use_checked_file then cache_file_name f else f
+    in
     match d with
     | UseInterface key ->
+      //This key always resolves to an interface source file
       (match interface_of file_system_map key with
        | None ->
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
@@ -164,7 +172,7 @@ let file_of_dep (file_system_map:files_for_module_name)
     | PreferInterface key //key for module 'a'
         when not (cmd_line_has_impl key)               //unless the cmd line contains 'a.fst'
               && has_interface file_system_map key ->  //so long as 'a.fsti' exists
-      Option.get <| interface_of file_system_map key   //we prefer to use 'a.fsti'
+      maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
     | UseImplementation key ->
@@ -176,7 +184,9 @@ let file_of_dep (file_system_map:files_for_module_name)
           //     since if the implementation was on the command line, it must exist because of option validation
           assert false; //unreachable
           raise (Err (BU.format1 "Expected an implementation of module %s, but couldn't find one" key))
-        | Some f -> f
+        | Some f -> maybe_add_suffix f
+
+let file_of_dep = file_of_dep_aux false
 
 let dependences_of (file_system_map:files_for_module_name)
                    (deps:dependence_graph)
@@ -730,14 +740,6 @@ let deps_of (Mk (deps, file_system_map, all_cmd_line_files)) (f:file_name)
     : list<file_name> =
     dependences_of file_system_map deps all_cmd_line_files f
 
-let cache_file_name fn =
-    let checked_file_name = fn ^ ".checked" in
-    let lax_checked_file_name = checked_file_name ^ ".lax" in
-    let lax_ok = not (Options.should_verify_file fn) in
-    if lax_ok
-    then lax_checked_file_name
-    else checked_file_name
-
 let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let cache_file = cache_file_name fn in
     let digest_of_file fn =
@@ -775,9 +777,15 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
-          let files = List.map (file_of_dep file_system_map all_cmd_line_files) f_deps in
+          let files = List.map (file_of_dep_aux true file_system_map all_cmd_line_files) f_deps in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
-          Util.print2 "%s: %s\n" f (String.concat " " files))
+          //interfaces get two lines of output
+          //this one prints:
+          //   a.fsti: b.fst.checked c.fsti.checked ...
+          if is_interface f then Util.print2 "%s:\\\n\t%s\n\n" f (String.concat "\\\n\t" files);
+          //ths one prints:
+          //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
+          Util.print2 "%s.checked:\\\n\t%s\n\n" f (String.concat "\\\n\t" files))
 
 let print deps =
   match (Options.dep()) with
