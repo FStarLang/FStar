@@ -139,34 +139,17 @@ let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve
 
-(* Initializing a fresh object *)
-let init_tau :tactic unit =
-  norm [delta; delta_only unfold_steps; primops];;
-  repeat step;;
-  //repeat_simplify_context;;
-  repeat_simplify;;
-  dump "Init"
-
 let init_ok (h:heap) =
   let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7) (fun _ -> Return r1)) in
   let p = fun r h -> sel h r == 7 in
   let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic t init_tau
-
-(* Copy a pointer *)
-let copy_tau :tactic unit =
-  norm [delta; delta_only unfold_steps; primops];;
-  implies_intro;;
-  repeat step;;
-  //repeat_simplify_context;;
-  repeat_simplify;;
-  dump "Copy"
+  assert_by_tactic t (solve;; trefl;; qed)  //no need to go to smt!
 
 let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
   let c = Bind (Read r1) (fun n1 -> Write r2 (n1)) in
   let p = fun _ h -> (sel h r1 == i /\ sel h r2 == i /\ sel h r3 == k) in
   let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) copy_tau
+  assert_by_tactic (sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve //here how can we apply a binder?
 
 // (* Writing to a pointer *)
 // let write_tau :tactic unit =
@@ -297,3 +280,21 @@ let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
 //        else repeat_simplify_context)
 //   else fail "repeat_simplify_context: binders length vary"
 //  ) ()
+
+// (* Initializing a fresh object *)
+// let init_tau :tactic unit =
+//   norm [delta; delta_only unfold_steps; primops];;
+//   repeat step;;
+//   //repeat_simplify_context;;
+//   repeat_simplify;;
+//   dump "Init"
+
+// (* Copy a pointer *)
+// let copy_tau :tactic unit =
+//   norm [delta; delta_only unfold_steps; primops];;
+//   implies_intro;;
+//   repeat step;;
+//   //repeat_simplify_context;;
+//   repeat_simplify;;
+//   dump "Copy"
+
