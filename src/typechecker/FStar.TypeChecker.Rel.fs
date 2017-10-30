@@ -445,16 +445,14 @@ let norm_univ wl u =
             | _ -> u in
     N.normalize_universe wl.tcenv (aux u)
 
-let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
-
-let base_and_refinement env wl t1 =
+let base_and_refinement env t1 =
    let rec aux norm t1 =
         let t1 = U.unmeta t1 in
         match t1.n with
         | Tm_refine(x, phi) ->
             if norm
             then (x.sort, Some(x, phi))
-            else begin match normalize_refinement [N.Weak; N.HNF] env wl t1 with
+            else begin match N.normalize_refinement [N.Weak; N.HNF] env t1 with
                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
                 | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
             end
@@ -464,7 +462,7 @@ let base_and_refinement env wl t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t1' = normalize_refinement [N.Weak; N.HNF] env wl t1 in
+            else let t1' = N.normalize_refinement [N.Weak; N.HNF] env t1 in
                  begin match (SS.compress t1').n with
                             | Tm_refine _ -> aux true t1'
                             | _ -> t1, None
@@ -487,12 +485,14 @@ let base_and_refinement env wl t1 =
 
    aux false (whnf env t1)
 
-let unrefine env t = base_and_refinement env (empty_worklist env) t |> fst
+let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
+
+let unrefine env t = base_and_refinement env t |> fst
 
 let trivial_refinement t = S.null_bv t, U.t_true
 
 let as_refinement env wl t =
-    let t_base, refinement = base_and_refinement env wl t in
+    let t_base, refinement = base_and_refinement env t in
     match refinement with
         | None -> trivial_refinement t_base
         | Some (x, phi) -> x, phi
@@ -1032,7 +1032,7 @@ let rank wl pr : int    //the rank
         | _, Tm_uvar _ when (tp.relation=EQ || Options.eager_inference()) -> flex_rigid_eq, tp
 
         | Tm_uvar _, _ ->
-          let b, ref_opt = base_and_refinement wl.tcenv wl tp.rhs in
+          let b, ref_opt = base_and_refinement wl.tcenv tp.rhs in
           begin match ref_opt with
             | None -> flex_rigid, tp
             | _ ->
@@ -1044,7 +1044,7 @@ let rank wl pr : int    //the rank
           end
 
         | _, Tm_uvar _ ->
-          let b, ref_opt = base_and_refinement wl.tcenv wl tp.lhs in
+          let b, ref_opt = base_and_refinement wl.tcenv tp.lhs in
           begin match ref_opt with
             | None -> rigid_flex, tp
             | _ -> refine_flex, {tp with lhs=force_refinement (b, ref_opt)}
@@ -1629,8 +1629,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     //  By expanding out the definitions
                     //
                     //Otherwise, we reason extensionally about T and try to prove the arguments equal, i.e, ti = si, for all i
-                    let base1, refinement1 = base_and_refinement env wl t1 in
-                    let base2, refinement2 = base_and_refinement env wl t2 in
+                    let base1, refinement1 = base_and_refinement env t1 in
+                    let base2, refinement2 = base_and_refinement env t2 in
                     begin match refinement1, refinement2 with
                             | None, None ->  //neither side is a refinement; reason extensionally
                               begin match solve_maybe_uinsts env orig head1 head2 wl with
@@ -2268,7 +2268,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             let new_rel = problem.relation in
             if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
             then solve_t_flex_rigid false (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t2 wl
-            else let t_base, ref_opt = base_and_refinement env wl t2 in
+            else let t_base, ref_opt = base_and_refinement env t2 in
                  begin match ref_opt with
                         | None -> //no useful refinement on the RHS, so just equate and solve
                           solve_t_flex_rigid false (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t_base wl
@@ -2288,15 +2288,15 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_app({n=Tm_uvar _}, _) -> (* widen immediately, by forgetting the top-level refinement and equating *)
         if wl.defer_ok
         then solve env (defer "rigid-flex subtyping deferred" orig wl)
-        else let t_base, _ = base_and_refinement env wl t1 in
+        else let t_base, _ = base_and_refinement env t1 in
              solve_t env ({problem with lhs=t_base; relation=EQ}) wl
 
       | Tm_refine _, _ ->
-        let t2 = force_refinement <| base_and_refinement env wl t2 in
+        let t2 = force_refinement <| base_and_refinement env t2 in
         solve_t env ({problem with rhs=t2}) wl
 
       | _, Tm_refine _ ->
-        let t1 = force_refinement <| base_and_refinement env wl t1 in
+        let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
 
       | Tm_match _, _
