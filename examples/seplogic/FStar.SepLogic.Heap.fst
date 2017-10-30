@@ -60,21 +60,23 @@ let lemma_points_to_is_injective (r:addr) (x:t) (y:t)
 	 [SMTPat (points_to r x); SMTPat (points_to r y)]
   = admit ()
 
+open FStar.UInt64
+
 let lemma_sel_r_from_points_to_join_h (r:addr) (x:t) (h1:heap)
   :Lemma (requires True)
-         (ensures sel (join (points_to r x) h1) r == x)
+         (ensures v (sel (join (points_to r x) h1) r) == v x)
 	 [SMTPat (sel (join (points_to r x) h1) r)]
   = admit ()
 
 let lemma_sel_r1_from_points_to_join_h (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t) (h1:heap)
   :Lemma (requires True)
-         (ensures sel (join (points_to r x) h1) r1 == sel h1 r1)
+         (ensures v (sel (join (points_to r x) h1) r1) == v (sel h1 r1))
 	 [SMTPat (sel (join (points_to r x) h1) r1)]
   = admit ()
 
 let lemma_sel_r_from_minus (r:addr) (r1:addr{addr_of r1 <> addr_of r})(h:heap)
   :Lemma (requires True)
-         (ensures sel (minus h r1) r == sel h r)
+         (ensures v (sel (minus h r1) r) == v (sel h r))
          [SMTPat (sel (minus h r1) r)]
   = admit ()
 
@@ -104,13 +106,13 @@ let lemma_join_points_to_minus (h:heap) (r:addr) (x:t)
 
 let lemma_sel_r_update (h:heap) (r:addr) (x:t)
   :Lemma (requires True)
-         (ensures sel (upd h r x) r == x)
+         (ensures v (sel (upd h r x) r) == v x)
 	 [SMTPat (sel (upd h r x) r)]
   = admit ()
 
 let lemma_sel_r1_update (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t)
   :Lemma (requires True)
-         (ensures sel (upd h r x) r1 == sel h r1)
+         (ensures v (sel (upd h r x) r1) == v (sel h r1))
 	 [SMTPat (sel (upd h r x) r1)]
   = admit ()
 
