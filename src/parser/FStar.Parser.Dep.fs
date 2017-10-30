@@ -783,9 +783,14 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           //this one prints:
           //   a.fsti: b.fst.checked c.fsti.checked ...
           if is_interface f then Util.print2 "%s:\\\n\t%s\n\n" f (String.concat "\\\n\t" files);
-          //ths one prints:
+          //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-          Util.print2 "%s.checked:\\\n\t%s\n\n" f (String.concat "\\\n\t" files))
+          Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f (String.concat "\\\n\t" files);
+          //And we also print out the dependences among the .ml files
+          // excluding files in ulib, since these are packaged in fstarlib.cmxa
+          let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename f))) '.' "_" in
+          Util.print3 "%s%s.ml: %s.checked\n\n" (match Options.output_dir() with None -> "" | Some x -> x ^ "/") ml_base_name f
+          )
 
 let print deps =
   match (Options.dep()) with

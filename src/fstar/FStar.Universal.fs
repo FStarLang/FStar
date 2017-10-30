@@ -168,8 +168,7 @@ let load_module_from_cache env fn
             (BU.format3 "%s cache file %s; will recheck %s" tag cache_file fn);
          None
     in
-    if Options.should_verify_file fn
-    && BU.file_exists cache_file then
+    if BU.file_exists cache_file then
       match BU.load_value_from_file cache_file with
       | None ->
         fail "Corrupt"

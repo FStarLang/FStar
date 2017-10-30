@@ -1075,11 +1075,11 @@ let print_make: deps -> Prims.unit =
         FStar_All.pipe_right keys
           (FStar_List.iter
              (fun f  ->
-                let uu____4213 =
-                  let uu____4218 = deps_try_find deps f in
-                  FStar_All.pipe_right uu____4218 FStar_Option.get in
-                match uu____4213 with
-                | (f_deps,uu____4240) ->
+                let uu____4216 =
+                  let uu____4221 = deps_try_find deps f in
+                  FStar_All.pipe_right uu____4221 FStar_Option.get in
+                match uu____4216 with
+                | (f_deps,uu____4243) ->
                     let files =
                       FStar_List.map
                         (file_of_dep_aux true file_system_map
@@ -1087,23 +1087,38 @@ let print_make: deps -> Prims.unit =
                     let files1 =
                       FStar_List.map
                         (fun s  -> FStar_Util.replace_chars s 32 "\\ ") files in
-                    ((let uu____4250 = is_interface f in
-                      if uu____4250
+                    ((let uu____4253 = is_interface f in
+                      if uu____4253
                       then
-                        FStar_Util.print2 "%s: %s\n\n" f
-                          (FStar_String.concat " " files1)
+                        FStar_Util.print2 "%s:\\\n\t%s\n\n" f
+                          (FStar_String.concat "\\\n\t" files1)
                       else ());
-                     FStar_Util.print2 "%s.checked: %s\n\n" f
-                       (FStar_String.concat " " files1))))
+                     FStar_Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f
+                       (FStar_String.concat "\\\n\t" files1);
+                     (let ml_base_name =
+                        let uu____4257 =
+                          let uu____4258 =
+                            let uu____4261 = FStar_Util.basename f in
+                            check_and_strip_suffix uu____4261 in
+                          FStar_Option.get uu____4258 in
+                        FStar_Util.replace_chars uu____4257 46 "_" in
+                      let uu____4262 =
+                        let uu____4263 = FStar_Options.output_dir () in
+                        match uu____4263 with
+                        | FStar_Pervasives_Native.None  -> ""
+                        | FStar_Pervasives_Native.Some x ->
+                            Prims.strcat x "/" in
+                      FStar_Util.print3 "%s%s.ml: %s.checked\n\n" uu____4262
+                        ml_base_name f))))
 let print: deps -> Prims.unit =
   fun deps  ->
-    let uu____4255 = FStar_Options.dep () in
-    match uu____4255 with
+    let uu____4270 = FStar_Options.dep () in
+    match uu____4270 with
     | FStar_Pervasives_Native.Some "make" -> print_make deps
     | FStar_Pervasives_Native.Some "graph" ->
-        let uu____4258 = deps in
-        (match uu____4258 with
-         | Mk (deps1,uu____4260,uu____4261) -> print_graph deps1)
-    | FStar_Pervasives_Native.Some uu____4266 ->
+        let uu____4273 = deps in
+        (match uu____4273 with
+         | Mk (deps1,uu____4275,uu____4276) -> print_graph deps1)
+    | FStar_Pervasives_Native.Some uu____4281 ->
         FStar_Exn.raise (FStar_Errors.Err "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()
