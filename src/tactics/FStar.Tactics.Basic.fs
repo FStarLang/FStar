@@ -232,6 +232,8 @@ let dismiss_all : tac<unit> =
     bind get (fun p ->
     set ({p with goals=[]}))
 
+let nwarn = BU.mk_ref 0
+
 let check_valid_goal g =
     let b = true in
     let env = g.context in
@@ -245,10 +247,11 @@ let check_valid_goal g =
             aux b e
             )
     in
-    if not (aux b env)
-    then Err.warn g.goal_ty.pos
-             (BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
-                         (goal_to_string g))
+    if not (aux b env) && !nwarn < 5
+    then (Err.warn g.goal_ty.pos
+              (BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
+                          (goal_to_string g));
+          nwarn := !nwarn + 1)
 
 let add_goals (gs:list<goal>) : tac<unit> =
     bind get (fun p ->
