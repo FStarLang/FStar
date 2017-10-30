@@ -4,7 +4,7 @@ type env = int -> Tot bool
 
 assume val extend : env -> int -> Tot env
 
-type rtyping : env -> int -> Type =
+noeq type rtyping : env -> int -> Type =
   | TyAbs : #g:env ->
             x:int ->
             #e1:int ->

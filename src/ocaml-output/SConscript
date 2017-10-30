@@ -174,7 +174,7 @@ env.Command('../extraction/ml/FStar_Extraction_ML_PrintML.ml',
             '../extraction/ml/FStar_Extraction_ML_PrintML_'+OCAML_VERSION+'.ml',
             Copy('$TARGET', '$SOURCE'))
 
-# generate ../parser/boot/parse.fsy from parse.mly
+# generate ../parser/parse.fsy from parse.mly
 def generate_parse_fsy(target, source, env):
   # read the source file into memory
   try:
@@ -229,7 +229,7 @@ def generate_parse_fsy(target, source, env):
       fd.write(s)
   fd.close()
 
-fstar_version_ml=env.Command(File('#/../parser/boot/parse.fsy'), File('parse.mly'), generate_parse_fsy)
+fstar_version_ml=env.Command(File('#/../parser/parse.fsy'), File('parse.mly'), generate_parse_fsy)
 
 GENERATED_FILES=['parse.mly','FStar_Parser_Parse.ml','FStar_Version.ml','../extraction/ml/FStar_Extraction_ML_PrintML.ml','../parser/boot/parse.fsy']
 

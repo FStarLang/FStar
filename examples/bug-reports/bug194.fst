@@ -39,7 +39,7 @@ assume type red : typ -> exp -> Type
 
 assume val red_halts : #t:typ -> #e:exp -> red t e -> Tot (halts e)
 (* let red_halts t e h = match h with R_arrow _ _ _ hh _ -> hh *)
-                                                           
+
 assume val red_typable_empty : #t:typ -> #e:exp -> red t e -> Tot (typing empty e t)
 (* let red_typable_empty t e h = match h with | R_arrow k1 k2 ht k3 k4 -> ht *)
 

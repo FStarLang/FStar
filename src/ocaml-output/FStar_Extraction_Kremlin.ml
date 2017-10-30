@@ -652,8 +652,8 @@ let thd3:
       -> 'Auu____2784
   = fun uu____2796  -> match uu____2796 with | (uu____2803,uu____2804,x) -> x
 let mk_width: Prims.string -> width FStar_Pervasives_Native.option =
-  fun uu___149_2811  ->
-    match uu___149_2811 with
+  fun uu___156_2811  ->
+    match uu___156_2811 with
     | "UInt8" -> FStar_Pervasives_Native.Some UInt8
     | "UInt16" -> FStar_Pervasives_Native.Some UInt16
     | "UInt32" -> FStar_Pervasives_Native.Some UInt32
@@ -664,8 +664,8 @@ let mk_width: Prims.string -> width FStar_Pervasives_Native.option =
     | "Int64" -> FStar_Pervasives_Native.Some Int64
     | uu____2814 -> FStar_Pervasives_Native.None
 let mk_bool_op: Prims.string -> op FStar_Pervasives_Native.option =
-  fun uu___150_2820  ->
-    match uu___150_2820 with
+  fun uu___157_2820  ->
+    match uu___157_2820 with
     | "op_Negation" -> FStar_Pervasives_Native.Some Not
     | "op_AmpAmp" -> FStar_Pervasives_Native.Some And
     | "op_BarBar" -> FStar_Pervasives_Native.Some Or
@@ -675,8 +675,8 @@ let mk_bool_op: Prims.string -> op FStar_Pervasives_Native.option =
 let is_bool_op: Prims.string -> Prims.bool =
   fun op  -> (mk_bool_op op) <> FStar_Pervasives_Native.None
 let mk_op: Prims.string -> op FStar_Pervasives_Native.option =
-  fun uu___151_2835  ->
-    match uu___151_2835 with
+  fun uu___158_2835  ->
+    match uu___158_2835 with
     | "add" -> FStar_Pervasives_Native.Some Add
     | "op_Plus_Hat" -> FStar_Pervasives_Native.Some Add
     | "add_mod" -> FStar_Pervasives_Native.Some AddW
@@ -758,20 +758,20 @@ let extend: env -> Prims.string -> Prims.bool -> env =
   fun env  ->
     fun x  ->
       fun is_mut  ->
-        let uu___156_2960 = env in
+        let uu___163_2960 = env in
         {
           names = ({ pretty = x; mut = is_mut } :: (env.names));
-          names_t = (uu___156_2960.names_t);
-          module_name = (uu___156_2960.module_name)
+          names_t = (uu___163_2960.names_t);
+          module_name = (uu___163_2960.module_name)
         }
 let extend_t: env -> Prims.string -> env =
   fun env  ->
     fun x  ->
-      let uu___157_2969 = env in
+      let uu___164_2969 = env in
       {
-        names = (uu___157_2969.names);
+        names = (uu___164_2969.names);
         names_t = (x :: (env.names_t));
-        module_name = (uu___157_2969.module_name)
+        module_name = (uu___164_2969.module_name)
       }
 let find_name: env -> Prims.string -> name =
   fun env  ->
@@ -862,8 +862,8 @@ and translate_flags:
   FStar_Extraction_ML_Syntax.meta Prims.list -> flag Prims.list =
   fun flags  ->
     FStar_List.choose
-      (fun uu___152_3399  ->
-         match uu___152_3399 with
+      (fun uu___159_3399  ->
+         match uu___159_3399 with
          | FStar_Extraction_ML_Syntax.Private  ->
              FStar_Pervasives_Native.Some Private
          | FStar_Extraction_ML_Syntax.NoExtract  ->
@@ -902,8 +902,8 @@ and translate_decl:
           ->
           let assumed =
             FStar_Util.for_some
-              (fun uu___153_3439  ->
-                 match uu___153_3439 with
+              (fun uu___160_3439  ->
+                 match uu___160_3439 with
                  | FStar_Extraction_ML_Syntax.Assumed  -> true
                  | uu____3440 -> false) flags in
           let env1 =
@@ -913,8 +913,8 @@ and translate_decl:
           let env2 =
             FStar_List.fold_left
               (fun env2  -> fun name1  -> extend_t env2 name1) env1 tvars in
-          let rec find_return_type i uu___154_3454 =
-            match uu___154_3454 with
+          let rec find_return_type i uu___161_3454 =
+            match uu___161_3454 with
             | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____3455,uu____3456,t)
                 when i > (Prims.parse_int "0") ->
                 find_return_type (i - (Prims.parse_int "1")) t
@@ -954,7 +954,7 @@ and translate_decl:
              with
              | e ->
                  let msg = FStar_Util.print_exn e in
-                 (FStar_Util.print2 "Warning: writing a stub for %s (%s)\n"
+                 (FStar_Util.print2_warning "Writing a stub for %s (%s)\n"
                     (FStar_Pervasives_Native.snd name1) msg;
                   (let msg1 =
                      Prims.strcat "This function was not extracted:\n" msg in
@@ -987,8 +987,8 @@ and translate_decl:
           ->
           let assumed =
             FStar_Util.for_some
-              (fun uu___153_3601  ->
-                 match uu___153_3601 with
+              (fun uu___160_3601  ->
+                 match uu___160_3601 with
                  | FStar_Extraction_ML_Syntax.Assumed  -> true
                  | uu____3602 -> false) flags in
           let env1 =
@@ -998,8 +998,8 @@ and translate_decl:
           let env2 =
             FStar_List.fold_left
               (fun env2  -> fun name1  -> extend_t env2 name1) env1 tvars in
-          let rec find_return_type i uu___154_3616 =
-            match uu___154_3616 with
+          let rec find_return_type i uu___161_3616 =
+            match uu___161_3616 with
             | FStar_Extraction_ML_Syntax.MLTY_Fun (uu____3617,uu____3618,t)
                 when i > (Prims.parse_int "0") ->
                 find_return_type (i - (Prims.parse_int "1")) t
@@ -1039,7 +1039,7 @@ and translate_decl:
              with
              | e ->
                  let msg = FStar_Util.print_exn e in
-                 (FStar_Util.print2 "Warning: writing a stub for %s (%s)\n"
+                 (FStar_Util.print2_warning "Writing a stub for %s (%s)\n"
                     (FStar_Pervasives_Native.snd name1) msg;
                   (let msg1 =
                      Prims.strcat "This function was not extracted:\n" msg in
@@ -1068,7 +1068,7 @@ and translate_decl:
            | e ->
                ((let uu____3782 = FStar_Util.print_exn e in
                  FStar_Util.print2_warning
-                   "Warning: not translating definition for %s (%s)\n"
+                   "Not translating definition for %s (%s)\n"
                    (FStar_Pervasives_Native.snd name1) uu____3782);
                 FStar_Pervasives_Native.Some
                   (DGlobal (flags1, name1, t1, EAny))))
@@ -1085,8 +1085,7 @@ and translate_decl:
                                      uu____3799;_}::uu____3800)
           ->
           (FStar_Util.print1_warning
-             "Warning: not translating definition for %s (and possibly others)\n"
-             name;
+             "Not translating definition for %s (and possibly others)\n" name;
            (match ts with
             | FStar_Pervasives_Native.Some (idents,t) ->
                 let uu____3815 =
@@ -1169,12 +1168,11 @@ and translate_decl:
           ((uu____4333,name,_mangled_name,uu____4336,uu____4337,uu____4338)::uu____4339)
           ->
           (FStar_Util.print1_warning
-             "Warning: not translating definition for %s (and possibly others)\n"
-             name;
+             "Not translating definition for %s (and possibly others)\n" name;
            FStar_Pervasives_Native.None)
       | FStar_Extraction_ML_Syntax.MLM_Ty [] ->
           (FStar_Util.print_string
-             "Impossible!! Empty block of mutually recursive type declarations";
+             "Impossible!! Empty block of mutually recursive type declarations\n";
            FStar_Pervasives_Native.None)
       | FStar_Extraction_ML_Syntax.MLM_Top uu____4384 ->
           failwith "todo: translate_decl [MLM_Top]"
@@ -1284,8 +1282,8 @@ and translate_expr: env -> FStar_Extraction_ML_Syntax.mlexpr -> expr =
           ->
           let is_mut =
             FStar_Util.for_some
-              (fun uu___155_4608  ->
-                 match uu___155_4608 with
+              (fun uu___162_4608  ->
+                 match uu___162_4608 with
                  | FStar_Extraction_ML_Syntax.Mutable  -> true
                  | uu____4609 -> false) flags in
           let uu____4610 =

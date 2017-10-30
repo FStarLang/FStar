@@ -9,6 +9,8 @@ open FStar.Range
 type ident = {idText:string;
               idRange:Range.range}
 
+type path = list<string>
+
 ///[@ PpxDerivingShow ]
 type lident = {ns:list<ident>; //["FStar"; "Basic"]
                ident:ident;    //"lident"

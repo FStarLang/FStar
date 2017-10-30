@@ -13,7 +13,7 @@ MSBUILD = xbuild
 endif
 
 %.uver: %.fst
-	$(FSTAR) --verify_module $* $^
+	$(FSTAR) $^
 
 %.fail-uver: %.fst
-	(! $(FSTAR) --verify_module $* $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)
+	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)

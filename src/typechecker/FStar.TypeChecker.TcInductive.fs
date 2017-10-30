@@ -429,7 +429,10 @@ let ty_positive_in_datacon (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:uni
   | Tm_app (_, _) ->
     debug_log env ("Data constructor type is a Tm_app, so returning true");
     true  //if the data constructor type is a simple app, it must be t ..., and we already don't allow t (t ..), so nothing to check here
-    | _ -> failwith "Unexpected data constructor type when checking positivity"
+  | Tm_uinst (t, univs) ->
+    debug_log env ("Data constructor type is a Tm_uinst, so recursing in the base type");
+    ty_strictly_positive_in_type ty_lid t unfolded env 
+  | _ -> failwith "Unexpected data constructor type when checking positivity"
 
 let check_positivity (ty:sigelt) (env:env_t) :bool =
   //memo table, memoizes the Tm_app nodes for inductives that we have already unfolded

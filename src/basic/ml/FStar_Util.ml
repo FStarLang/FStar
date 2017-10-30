@@ -269,7 +269,8 @@ let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_s
 type 'value smap = (string, 'value) BatHashtbl.t
 let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
 let smap_clear (s:('value smap)) = BatHashtbl.clear s
-let smap_add (m:'value smap) k (v:'value) = BatHashtbl.add m k v
+let smap_add (m:'value smap) k (v:'value) =
+    BatHashtbl.remove m k; BatHashtbl.add m k v
 let smap_of_list (l: (string * 'value) list) =
   let s = BatHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> smap_add s x y) l;
@@ -971,10 +972,10 @@ let read_hints (filename: string): hints_db option =
     )
   with
    | Exit ->
-      print1_warning "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
+      print1_warning "Malformed JSON hints file: %s; ran without hints\n" filename;
       None
    | Sys_error _ ->
-      print1_warning "Warning: Unable to open hints file: %s; ran without hints\n" filename;
+      print1_warning "Unable to open hints file: %s; ran without hints\n" filename;
       None
 
 (** Interactive protocol **)
@@ -1021,3 +1022,33 @@ let (:=) = FStar_ST.write
 
 let marshal (x:'a) : string = Marshal.to_string x []
 let unmarshal (x:string) : 'a = Marshal.from_string x 0
+
+type signedness = | Unsigned | Signed
+type width = | Int8 | Int16 | Int32 | Int64
+
+let rec z_pow2 n =
+  if n = Z.zero then Z.one
+  else Z.mul (Z.of_string "2") (z_pow2 (Z.sub n Z.one))
+
+let bounds signedness width =
+    let n =
+        match width with
+        | Int8 -> Z.of_string "8"
+        | Int16 -> Z.of_string "16"
+        | Int32 -> Z.of_string "32"
+        | Int64 -> Z.of_string "64"
+    in
+    let lower, upper =
+      match signedness with
+      | Unsigned ->
+        Z.zero, Z.sub (z_pow2 n) Z.one
+      | Signed ->
+        let upper = z_pow2 (Z.sub n Z.one) in
+        Z.neg upper, Z.sub upper Z.one
+    in
+    lower, upper
+
+let within_bounds repr signedness width =
+  let lower, upper = bounds signedness width in
+  let value = Z.of_string (ensure_decimal repr) in
+  Z.leq lower value && Z.leq value upper

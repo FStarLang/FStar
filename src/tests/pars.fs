@@ -39,7 +39,13 @@ let add_mods mod_names dsenv env =
 
 let init_once () : unit =
   let solver = SMT.dummy in
-  let env = TcEnv.initial_env TcTerm.tc_term TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
+  let env = TcEnv.initial_env
+                FStar.Parser.Dep.empty_deps
+                TcTerm.tc_term
+                TcTerm.type_of_tot_term
+                TcTerm.universe_of
+                solver
+                Const.prims_lid in
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
   let env = {env with dsenv=dsenv} in
@@ -73,7 +79,7 @@ let pars s =
           let tcenv = init() in
           let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
             lexbuf.EndPos <- {lexbuf.EndPos with
-            pos_fname= Range.encode_file filename;
+            pos_fname= filename;
             pos_cnum=0;
             pos_lnum=1 } in
           let filename,sr,fs = "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
@@ -100,7 +106,7 @@ let pars_and_tc_fragment (s:string) =
         let tcenv = init() in
         let frag = frag_of_text s in
         try
-          let test_mod', tcenv' = FStar.Universal.tc_one_fragment !test_mod_ref tcenv (frag, false) in
+          let test_mod', tcenv' = FStar.Universal.tc_one_fragment !test_mod_ref tcenv frag in
           test_mod_ref := test_mod';
           tcenv_ref := Some tcenv';
           let n = get_err_count () in

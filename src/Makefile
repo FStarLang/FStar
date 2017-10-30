@@ -40,7 +40,7 @@ SCONSFLAGS=$(filter -j%,$(MAKEFLAGS))
 all: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
-	$(DOS2UNIX) parser/boot/parse.fsi
+	$(DOS2UNIX) parser/parse.fsi
 	chmod a+x $(BIN)/tests.exe
 	chmod a+x $(BIN)/fstar.exe
 
@@ -98,9 +98,7 @@ utest:
 # The first tests have to be performed sequentially (but each one may use some parallelism)
 utest-prelude:
 	+$(MAKE) all
-ifeq ($(OS),Windows_NT)
-	+$(MAKE) fsharp-regressions #normalizer failures on linux so only run on windows
-endif
+	+$(MAKE) fsharp-regressions
 	+$(MAKE) boot-ocaml
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
@@ -111,7 +109,12 @@ interactive-test:
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
+ifeq ($(OS),Windows_NT)
 	$(RUNTIME) $(BIN)/tests.exe
+else
+	@# On Linux, we need to increase the maximum stack size, or we overflow
+	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
+endif
 
 #a basic regression test for extraction
 #In particular, this test builds fstarlib.cmxa, so

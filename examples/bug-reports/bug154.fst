@@ -1,4 +1,4 @@
-module Bug
+module Bug154
 
 val search : x:int -> l:(list int) -> Tot (b:bool{b = false})
 let rec search x l =

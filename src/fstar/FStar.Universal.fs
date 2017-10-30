@@ -75,9 +75,12 @@ let parse (env:TcEnv.env) (pre_fn: option<string>) (fn:string)
 (***********************************************************************)
 (* Initialize a clean environment                                      *)
 (***********************************************************************)
-let init_env () : TcEnv.env =
-  let solver = if Options.lax() then SMT.dummy else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
-  let env = TcEnv.initial_env TcTerm.tc_term TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
+let init_env deps : TcEnv.env =
+  let solver =
+    if Options.lax()
+    then SMT.dummy
+    else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
+  let env = TcEnv.initial_env deps TcTerm.tc_term TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
   (* Set up some tactics callbacks *)
   let env = { env with synth = FStar.Tactics.Interpreter.synth } in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
@@ -85,54 +88,49 @@ let init_env () : TcEnv.env =
   env
 
 (***********************************************************************)
-(* Checking Prims.fst                                                  *)
-(***********************************************************************)
-let tc_prims (env: TcEnv.env)
-    : (Syntax.modul * int) * TcEnv.env =
-  let prims_filename = Options.prims () in
-  let prims_mod, env = parse env None prims_filename in
-  let (prims_mod, env), elapsed_time =
-    record_time (fun () -> Tc.check_module env prims_mod) in
-  (prims_mod, elapsed_time), env
-
-(***********************************************************************)
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
-let tc_one_fragment curmod (env:TcEnv.env) (frag, is_interface_dependence) =
+let tc_one_fragment curmod (env:TcEnv.env) frag =
+  let acceptable_mod_name modul =
+    (* Interface is sent as the first chunk, so we must allow repeating the same module. *)
+    Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) =
+    String.lowercase (string_of_lid modul.name) in
+
+  let range_of_first_mod_decl modul =
+    match modul with
+    | Parser.AST.Module (_, { Parser.AST.drange = d } :: _)
+    | Parser.AST.Interface (_, { Parser.AST.drange = d } :: _, _) -> d
+    | _ -> Range.dummyRange in
+
   match Parser.Driver.parse_fragment frag with
-  | Parser.Driver.Empty ->
+  | Parser.Driver.Empty
+  | Parser.Driver.Decls [] ->
     (curmod, env)
 
   | Parser.Driver.Modul ast_modul ->
-      (* It may seem surprising that this function, whose name indicates that
-      it type-checks a fragment, can actually parse an entire module.
-      Actually, this is an abuse, and just means that we're type-checking the
-      first chunk. *)
-    let ast_modul, env = with_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
-    let modul, env = with_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
-    let env =
-      if is_interface_dependence then
-          {env with dsenv=FStar.ToSyntax.Env.set_iface env.dsenv false}
-      else env in
-    let env = match curmod with
-      | Some modul ->
-          (* Same-module is only allowed when editing a fst with an fsti,
-           * because we sent the interface as the first chunk. *)
-          if Parser.Dep.lowercase_module_name (List.hd (Options.file_list ())) <>
-            String.lowercase (string_of_lid modul.name)
-          then
-            raise (Err("Interactive mode only supports a single module at the top-level"))
-          else
-            env
-      | None ->
-          env
-    in
+    (* It may seem surprising that this function, whose name indicates that
+       it type-checks a fragment, can actually parse an entire module.
+       Actually, this is an abuse, and just means that we're type-checking the
+       first chunk. *)
+    let ast_modul, env =
+      with_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
+    let modul, env =
+      with_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
+    (match curmod with
+     | Some _ when not (acceptable_mod_name modul) ->
+       raise (Errors.Error ("Interactive mode only supports a single module at the top-level",
+                             range_of_first_mod_decl ast_modul))
+     | _ -> ());
     let modul, _, env = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                         else Tc.tc_partial_modul env modul false in
     (Some modul, env)
-
   | Parser.Driver.Decls ast_decls ->
-    let env, ast_decls_l =
+    match curmod with
+    | None ->
+      let { Parser.AST.drange = rng } = List.hd ast_decls in
+      raise (Errors.Error ("First statement must be a module declaration", rng))
+    | Some modul ->
+      let env, ast_decls_l =
           BU.fold_map
               (fun env a_decl ->
                   let decls, env =
@@ -142,53 +140,60 @@ let tc_one_fragment curmod (env:TcEnv.env) (frag, is_interface_dependence) =
                   env, decls)
               env
               ast_decls in
-    let sigelts, env = with_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
-    match curmod with
-      | None -> FStar.Util.print_error "fragment without an enclosing module"; exit 1
-      | Some modul ->
-          let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
-                               else Tc.tc_more_partial_modul env modul sigelts in
-          (Some modul, env)
+      let sigelts, env = with_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
+      let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
+                           else Tc.tc_more_partial_modul env modul sigelts in
+      (Some modul, env)
 
 let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
-  try
-    let r = FStar.Parser.ParseIt.parse (Inl interface_file_name) in
-    match r with
-    | Inl (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
-      snd (with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
-    | Inl _ ->
-      raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
-                               interface_file_name))
-    | Inr (err, rng) ->
-      raise (FStar.Errors.Error(err, rng))
-  with
-      | FStar.Errors.Error(msg, r) when not ((Options.trace_error())) ->
-          TypeChecker.Err.add_errors env [(msg,r)];
-          env
-      | FStar.Errors.Err msg when not ((Options.trace_error())) ->
-          TypeChecker.Err.add_errors env [(msg,Range.dummyRange)];
-          env
-      | e when not ((Options.trace_error())) -> raise e
+  let r = FStar.Parser.ParseIt.parse (Inl interface_file_name) in
+  match r with
+  | Inl (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
+    snd (with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
+  | Inl _ ->
+    raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
+                             interface_file_name))
+  | Inr (err, rng) ->
+    raise (FStar.Errors.Error(err, rng))
+
+(***********************************************************************)
+(* Loading and storing cache files                                     *)
+(***********************************************************************)
+let load_module_from_cache env fn
+    : option<(Syntax.modul * DsEnv.module_inclusion_info)> =
+    let cache_file = FStar.Parser.Dep.cache_file_name fn in
+    let fail tag =
+         FStar.Errors.warn
+            (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
+            (BU.format3 "%s cache file %s; will recheck %s" tag cache_file fn);
+         None
+    in
+    if BU.file_exists cache_file then
+      match BU.load_value_from_file cache_file with
+      | None ->
+        fail "Corrupt"
+      | Some (digest, tcmod, mii) ->
+         match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
+         | Some digest' when digest=digest' ->
+           Some (tcmod, mii)
+         | _ ->
+           fail "Stale"
+    else None
+
+let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
+    let cache_file = FStar.Parser.Dep.cache_file_name fn in
+    let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
+    match digest with
+    | Some hashes ->
+      BU.save_value_to_file cache_file (hashes, modul, mii)
+    | _ -> ()
 
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
 let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its elapsed checking time
                               * TcEnv.env =
-  let checked_file_name = FStar.Parser.ParseIt.find_file fn ^ ".checked" in
-  let lax_checked_file_name = checked_file_name ^ ".lax" in
-  let lax_ok = not (Options.should_verify_file fn) in
-  let cache_file_to_write =
-      if lax_ok
-      then lax_checked_file_name
-      else checked_file_name
-  in
-  let cache_file_to_read () =
-      if BU.file_exists checked_file_name then Some checked_file_name
-      else if lax_ok && BU.file_exists lax_checked_file_name
-           then Some lax_checked_file_name
-           else None
-  in
+  Syntax.reset_gensym();
   let tc_source_file () =
       let fmod, env = parse env pre_fn fn in
       let check_mod () =
@@ -203,27 +208,28 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
         then SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) check_mod
         else check_mod() //don't add a hints file for modules that are not actually verified
       in
-      if Options.cache_checked_modules ()
-      then begin
-        let tcmod, _ = tcmod in
-        let mii = FStar.ToSyntax.Env.inclusion_info env.dsenv tcmod.name in
-        BU.save_value_to_file cache_file_to_write (BU.digest_of_file fn, tcmod, mii)
-      end;
-      tcmod, env
+      let mii = FStar.ToSyntax.Env.inclusion_info env.dsenv (fst tcmod).name in
+      tcmod, mii, env
   in
   if Options.cache_checked_modules ()
-  then match cache_file_to_read () with
-       | None -> tc_source_file ()
-       | Some cache_file ->
-         match BU.load_value_from_file cache_file with
-         | None -> failwith ("Corrupt file: " ^ cache_file)
-         | Some (digest, tcmod, mii) ->
-            if digest = BU.digest_of_file fn
-            then let _, env = with_tcenv env <| FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii in
-                 let env = FStar.TypeChecker.Tc.load_checked_module env tcmod in
-                 (tcmod, 0), env
-            else failwith (BU.format1 "The file %s is stale; delete it" cache_file)
-  else tc_source_file ()
+  then match load_module_from_cache env fn with
+       | None ->
+         let tcmod, mii, env = tc_source_file () in
+         store_module_to_cache env fn (fst tcmod) mii;
+         tcmod, env
+       | Some (tcmod, mii) ->
+         let _, env = with_tcenv env <| FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii in
+         let env = FStar.TypeChecker.Tc.load_checked_module env tcmod in
+         (tcmod,0), env
+  else let tcmod, _, env = tc_source_file () in
+       tcmod, env
+
+(***********************************************************************)
+(* Checking Prims.fst                                                  *)
+(***********************************************************************)
+let tc_prims (env: TcEnv.env)
+    : (Syntax.modul * int) * TcEnv.env =
+  tc_one_file env None (Options.prims())
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
@@ -269,22 +275,18 @@ let rec tc_fold_interleave (acc:list<(modul * int)> * TcEnv.env) (remaining:list
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
-let batch_mode_tc_no_prims env filenames =
+let batch_mode_tc filenames dep_graph =
+  if Options.debug_any () then begin
+    FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
+    FStar.Util.print1 "Here's the list of filenames we will process: %s\n"
+      (String.concat " " filenames);
+    FStar.Util.print1 "Here's the list of modules we will verify: %s\n"
+      (String.concat " " (filenames |> List.filter Options.should_verify_file))
+  end;
+  let env = init_env dep_graph in
   let all_mods, env = tc_fold_interleave ([], env) filenames in
   if Options.interactive()
   && FStar.Errors.get_err_count () = 0
   then env.solver.refresh()
   else env.solver.finish();
   all_mods, env
-
-let batch_mode_tc filenames =
-  let prims_mod, env = tc_prims (init_env ()) in
-  if not (Options.explicit_deps ()) && Options.debug_any () then begin
-    FStar.Util.print_endline "Auto-deps kicked in; here's some info.";
-    FStar.Util.print1 "Here's the list of filenames we will process: %s\n"
-      (String.concat " " filenames);
-    FStar.Util.print1 "Here's the list of modules we will verify: %s\n"
-      (String.concat " " (Options.verify_module ()))
-  end;
-  let all_mods, env = batch_mode_tc_no_prims env filenames in
-  prims_mod :: all_mods, env
