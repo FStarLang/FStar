@@ -78,11 +78,13 @@ let () =
   Hashtbl.add keywords "open"          OPEN        ;
   Hashtbl.add keywords "opaque"        OPAQUE      ;
   Hashtbl.add keywords "private"       PRIVATE     ;
+  Hashtbl.add keywords "range_of"      RANGE_OF    ;
   Hashtbl.add keywords "rec"           REC         ;
   Hashtbl.add keywords "reifiable"     REIFIABLE   ;
   Hashtbl.add keywords "reify"         REIFY       ;
   Hashtbl.add keywords "reflectable"   REFLECTABLE ;
   Hashtbl.add keywords "requires"      REQUIRES    ;
+  Hashtbl.add keywords "set_range_of"                 SET_RANGE_OF    ;
   Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
   Hashtbl.add keywords "then"          THEN        ;
   Hashtbl.add keywords "total"         TOTAL       ;

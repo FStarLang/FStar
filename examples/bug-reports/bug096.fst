@@ -1,6 +1,6 @@
 module Bug96
 
-type foo0 : (int -> Type) -> int -> Type =
+noeq type foo0 : (int -> Type) -> int -> Type =
   | MkFoo0 : r:(int -> Type) -> x:int -> r x -> foo0 r x
 
 let test_foo0_1 (r:(int -> Type)) (x:int) (f:foo0 r x) = match f with 

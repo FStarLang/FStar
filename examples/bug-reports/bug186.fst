@@ -1,6 +1,6 @@
 module Bug186
 
-type valid : int -> Type =
+noeq type valid : int -> Type =
   | VForall     : p:(int -> Tot int) ->
                   f: valid (p 67) ->
                   valid 42

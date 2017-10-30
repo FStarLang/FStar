@@ -8,16 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "93f88a29bb413ef37a87b0f5b045b8ca"
-    ],
-    [
-      "Syntax.quote_sanity_check",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "5a1b68e9070b14ee94b6bf341534a736"
+      "90c0e071fbb8d51cb1364334699c0aab"
     ],
     [
       "Syntax.goal_sanity_check",
@@ -26,16 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "2c789ed31f6106ddb9d2b5f438939445"
-    ],
-    [
-      "Syntax.goal_sanity_check",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "92d9ce95145e975523ab777cdb568773"
+      "5c76c892e422e98c54ab1d35e6ab2e6a"
     ],
     [
       "Syntax.test2",
@@ -44,16 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "7bdbdddf8c3349f77b15f3afd060b822"
-    ],
-    [
-      "Syntax.test2",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3563e39d5481a713844b0f69247a2652"
+      "f13b0c67cf53ef2638efbac3dd401af8"
     ],
     [
       "Syntax.blah",
@@ -67,6 +40,7 @@
         "constructor_distinct_FStar.Reflection.Data.Tv_Abs",
         "constructor_distinct_FStar.Reflection.Data.Tv_App",
         "constructor_distinct_FStar.Reflection.Data.Tv_Arrow",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Let",
         "constructor_distinct_FStar.Reflection.Data.Tv_Match",
         "constructor_distinct_FStar.Reflection.Data.Tv_Refine",
         "data_elim_FStar.Reflection.Data.Tv_App",
@@ -91,124 +65,68 @@
         "projection_inverse_FStar.Reflection.Data.Tv_Abs__1",
         "projection_inverse_FStar.Reflection.Data.Tv_App__0",
         "projection_inverse_FStar.Reflection.Data.Tv_App__1",
-        "projection_inverse_FStar.Reflection.Data.Tv_Arrow__0",
-        "projection_inverse_FStar.Reflection.Data.Tv_Arrow__1",
+        "projection_inverse_FStar.Reflection.Data.Tv_Refine__0",
         "projection_inverse_FStar.Reflection.Data.Tv_Refine__1",
         "refinement_interpretation_FStar.Reflection.Basic_Tm_refine_62353a91a906896ee28a928c3c16dabb",
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2",
-        "typing_FStar.Reflection.Basic.__inspect",
-        "typing_FStar.Reflection.Basic.inspect"
+        "typing_FStar.Reflection.Basic.__inspect"
       ],
       0,
-      "8f316439ef4d4e8147a99540adbb0ede"
+      "455b870cc4d2da8f8a23d0ccb6ce4889"
     ],
     [
-      "Syntax.uu___99",
+      "Syntax.uu___111",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "53a3ff48fd018ba01faad1ded40ebd8f"
+      "a7258c7026581d63c7dd2cb94b207492"
     ],
     [
-      "Syntax.uu___99",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d3c666fa59e9af59c7365b95cf1fca8a"
-    ],
-    [
-      "Syntax.uu___100",
+      "Syntax.uu___112",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "8897be08d7bda9421cbc65da76cb4390"
+      "476ea8ac14c4c73c2e85732a800a152c"
     ],
     [
-      "Syntax.uu___100",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ab2b69fbeb873211018e4497b67d74cf"
-    ],
-    [
-      "Syntax.uu___101",
+      "Syntax.uu___113",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "79d03bfecc6355cfa5ecd675e8321295"
+      "b445649b6e31b9657e89e3ddf23e9754"
     ],
     [
-      "Syntax.uu___101",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ad8c2a0240a8b4c89026c2b2e4935b84"
-    ],
-    [
-      "Syntax.uu___102",
+      "Syntax.uu___114",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "e28cfb95babd50a346c2e3b13d363e3d"
+      "8e1b4a2b4deda1666cfad6b8fbaa068a"
     ],
     [
-      "Syntax.uu___102",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "02b398125d3eba70810404bcdeb74c21"
-    ],
-    [
-      "Syntax.uu___103",
+      "Syntax.uu___115",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "88acc12ae624ef0579389519d4e373ad"
+      "7c6854a15aad133dfa69869d5a329ad7"
     ],
     [
-      "Syntax.uu___103",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "03ed0f1954c80d3f8e99d561da85f039"
-    ],
-    [
-      "Syntax.uu___104",
+      "Syntax.uu___116",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "b2746ed247f2bde6a2478dbc2751e4b4"
-    ],
-    [
-      "Syntax.uu___104",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "0502c8fde6359e5ef1d388bff87d85e2"
+      "9b674d3bdbd75da1f4634e0cdfda2df7"
     ],
     [
       "Syntax.arith_test1",
@@ -226,25 +144,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "745ac2eae07e55a497f33e3c899de5cc"
-    ],
-    [
-      "Syntax.arith_test1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr",
-        "equation_FStar.Reflection.Arith.run_tm",
-        "fuel_guarded_inversion_FStar.Pervasives.either",
-        "kinding_FStar.Reflection.Arith.expr@tok",
-        "typing_FStar.Reflection.Arith.is_arith_expr",
-        "typing_FStar.Reflection.Arith.run_tm"
-      ],
-      0,
-      "f60d93a96a086c80e4abb3288835beb5"
+      "130deb2cf785bfe0334bff159025a2ac"
     ],
     [
       "Syntax.arith_test2",
@@ -262,43 +162,16 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "634b8c0c5d2d34aacf5cd986b432cd5c"
+      "48f825e6b01b36f78143e1233030b213"
     ],
     [
-      "Syntax.arith_test2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr",
-        "equation_FStar.Reflection.Arith.run_tm",
-        "fuel_guarded_inversion_FStar.Pervasives.either",
-        "kinding_FStar.Reflection.Arith.expr@tok",
-        "typing_FStar.Reflection.Arith.is_arith_expr",
-        "typing_FStar.Reflection.Arith.run_tm"
-      ],
-      0,
-      "31337943a412ea760fd23a704732f564"
-    ],
-    [
-      "Syntax.uu___105",
+      "Syntax.uu___117",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "c32367ce0641c5ef519ece83079fcc4c"
-    ],
-    [
-      "Syntax.uu___105",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c855ac11edb3764a4336f4c5690b2564"
+      "40e656de4518b5b6e8f9267210e72b10"
     ]
   ]
 ]

@@ -535,6 +535,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                           || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
+                 let dd = if quals |> BU.for_some (function Abstract -> true | _ -> false) then Delta_abstract dd else dd in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in

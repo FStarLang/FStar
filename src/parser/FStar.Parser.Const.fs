@@ -151,6 +151,8 @@ let bv_to_nat_lid      = bvconst "bv2int"
 let bv_and_lid         = bvconst "bvand"
 let bv_xor_lid         = bvconst "bvxor"
 let bv_or_lid          = bvconst "bvor"
+let bv_add_lid         = bvconst "bvadd"
+let bv_sub_lid         = bvconst "bvsub"
 let bv_shift_left_lid  = bvconst "bvshl"
 let bv_shift_right_lid = bvconst "bvshr"
 let bv_udiv_lid        = bvconst "bvdiv"
@@ -221,7 +223,8 @@ let norm           = pconst "norm"
 
 (* lids for normalizer steps *)
 let steps_simpl      = pconst "Simpl"
-let steps_whnf       = pconst "WHNF"
+let steps_weak       = pconst "Weak"
+let steps_hnf        = pconst "HNF"
 let steps_primops    = pconst "Primops"
 let steps_zeta       = pconst "Zeta"
 let steps_iota       = pconst "Iota"
@@ -250,6 +253,8 @@ let const_to_string x = match x with
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStar.Range.string_of_range r
+  | Const_range_of -> "range_of"
+  | Const_set_range_of -> "set_range_of"
   | Const_reify -> "reify"
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 

@@ -1,4 +1,4 @@
-module Bug26
+module Bug026
 
 assume val factorial : n:nat -> Tot nat
 assume val bar:n:int{n > 1} -> Tot (y:int{y=factorial n})
@@ -28,6 +28,3 @@ let evenb3 i = (i % 2) = 0
 val test_filter3 : unit -> Lemma
       (ensures (b2t (filter evenb3 [1;2;3;4] = [2;4])))
 let test_filter3 () = ()
-
-
-

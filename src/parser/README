@@ -22,7 +22,7 @@ be kept up to date with the parser as much as possible since it tries to keep
 the same general structure as the parser.
 
 
-- [parser/boot/parse.fs(i)]; is auto-generated from [parse.fsy] by [fsyacc];
+- [parser/parse.fs(i)]; is auto-generated from [parse.fsy] by [fsyacc];
   The fsi is sed-copied as [boot/FStar.Parser.Parse.fsti] when *extracting*
   [lexhelp.fs] so that [lexhelp.fs] has
   something to type-check against; but, it is _not_ used when compiling the

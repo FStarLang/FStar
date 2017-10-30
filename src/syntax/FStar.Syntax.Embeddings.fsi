@@ -3,35 +3,65 @@ module FStar.Syntax.Embeddings
 
 open FStar.All
 open FStar.Syntax.Syntax
+open FStar.Char
+
 module Range = FStar.Range
+module Z = FStar.BigInt
 
-val embed_unit   : unit -> term
-val unembed_unit : term -> option<unit>
+(*
+ * Unmbedding functions return an option because they might fail to
+ * interpret the given term as valid data. The `_safe` version will simply
+ * return None in that case, but the unsafe one will also raise a
+ * warning, and should be used only where we really expect to always be able
+ * to unembed.
+ *
+ * Polymorphic embedders need the type of whatever they're embedding to construct
+ * a propert well-typed term.
+ *)
 
-val embed_bool   : bool -> term
-val unembed_bool : term -> option<bool>
+type embedder<'a>   = Range.range -> 'a -> term
+type unembedder<'a> = term -> option<'a>
 
-val embed_int   : int -> term
-val unembed_int : term -> option<int>
+val embed_unit        : embedder<unit>
+val unembed_unit      : unembedder<unit>
+val unembed_unit_safe : unembedder<unit>
 
-val embed_string   : string -> term
-val unembed_string : term -> option<string>
+val embed_bool        : embedder<bool>
+val unembed_bool      : unembedder<bool>
+val unembed_bool_safe : unembedder<bool>
 
-val embed_pair   : ('a -> term) -> term -> ('b -> term) -> term -> ('a*'b) -> term
-val unembed_pair : (term -> option<'a>) -> (term -> option<'b>) -> term -> option<('a*'b)>
+val embed_char        : embedder<char>
+val unembed_char      : unembedder<char>
+val unembed_char_safe : unembedder<char>
 
-val embed_option   : ('a -> term) -> term -> option<'a> -> term
-val unembed_option : (term -> option<'a>) -> term -> option<option<'a>>
+val embed_int        : embedder<Z.t>
+val unembed_int      : unembedder<Z.t>
+val unembed_int_safe : unembedder<Z.t>
 
-val embed_list   : ('a -> term) -> term -> list<'a> -> term
-val unembed_list : (term -> option<'a>) -> term -> option<list<'a>>
+val embed_string        : embedder<string>
+val unembed_string      : unembedder<string>
+val unembed_string_safe : unembedder<string>
 
-val embed_string_list   : list<string> -> term
-val unembed_string_list : term -> option<list<string>>
+val embed_pair        : embedder<'a> -> typ -> embedder<'b> -> typ -> embedder<('a * 'b)>
+val unembed_pair      : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
+val unembed_pair_safe : unembedder<'a> -> unembedder<'b> -> unembedder<('a * 'b)>
+
+val embed_option        : embedder<'a> -> typ -> embedder<option<'a>>
+val unembed_option      : unembedder<'a> -> unembedder<option<'a>>
+val unembed_option_safe : unembedder<'a> -> unembedder<option<'a>>
+
+val embed_list        : embedder<'a> -> typ -> embedder<list<'a>>
+val unembed_list      : unembedder<'a> -> unembedder<list<'a>>
+val unembed_list_safe : unembedder<'a> -> unembedder<list<'a>>
+
+val embed_string_list        : embedder<list<string>>
+val unembed_string_list      : unembedder<list<string>>
+val unembed_string_list_safe : unembedder<list<string>>
 
 type norm_step =
     | Simpl
-    | WHNF
+    | Weak
+    | HNF
     | Primops
     | Delta
     | Zeta
@@ -39,15 +69,18 @@ type norm_step =
     | UnfoldOnly of list<string>
 
 val steps_Simpl : term
-val steps_WHNF : term
+val steps_Weak : term
+val steps_HNF  : term
 val steps_Primops : term
 val steps_Delta : term
 val steps_Zeta : term
 val steps_Iota : term
 val steps_UnfoldOnly : term
 
-val embed_norm_step : norm_step -> term
-val unembed_norm_step : term -> option<norm_step>
+val embed_norm_step        : embedder<norm_step>
+val unembed_norm_step      : unembedder<norm_step>
+val unembed_norm_step_safe : unembedder<norm_step>
 
-val embed_range : Range.range -> term
-val unembed_range : term -> option<Range.range>
+val embed_range        : embedder<Range.range>
+val unembed_range      : unembedder<Range.range>
+val unembed_range_safe : unembedder<Range.range>

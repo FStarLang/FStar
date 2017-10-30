@@ -40,6 +40,7 @@ module PC = FStar.Parser.Const
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
+module Z = FStar.BigInt
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -55,7 +56,8 @@ type step =
   | Iota            //pattern matching
   | Zeta            //fixed points
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
-  | WHNF            //Only produce a weak head normal form
+  | Weak            //Do not descend into binders
+  | HNF             //Only produce a head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining
@@ -76,11 +78,11 @@ and steps = list<step>
 
 type psc = {
     psc_range:FStar.Range.range;
-    psc_subst:subst_t
+    psc_subst: unit -> subst_t // potentially expensive, so thunked
 }
-let null_psc = { psc_range = Range.dummyRange ; psc_subst = [] }
+let null_psc = { psc_range = Range.dummyRange ; psc_subst = fun () -> [] }
 let psc_range psc = psc.psc_range
-let psc_subst psc = psc.psc_subst
+let psc_subst psc = psc.psc_subst ()
 type primitive_step = {
     name:Ident.lid;
     arity:int;
@@ -106,13 +108,9 @@ type cfg = {
     steps: steps;
     tcenv: Env.env;
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
-    primitive_steps:list<primitive_step>
+    primitive_steps:list<primitive_step>;
+    strong : bool;                       // under a binder
 }
-
-let only_strong_steps' steps =
-    List.filter (fun ps -> ps.strong_reduction_ok) steps
-let only_strong_steps cfg =
-    { cfg with primitive_steps = only_strong_steps' cfg.primitive_steps}
 
 type branches = list<(pat * option<term> * term)>
 
@@ -130,7 +128,7 @@ type stack_elt =
 type stack = list<stack_elt>
 
 let mk t r = mk t None r
-let set_memo r t =
+let set_memo (r:memo<'a>) (t:'a) =
   match !r with
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
     | None -> r := Some t
@@ -156,6 +154,12 @@ let stack_to_string s =
 
 let log cfg f =
     if Env.debug cfg.tcenv (Options.Other "Norm")
+    then f()
+    else ()
+
+let log_primops cfg f =
+    if Env.debug cfg.tcenv (Options.Other "Norm")
+    || Env.debug cfg.tcenv (Options.Other "Primops")
     then f()
     else ()
 
@@ -457,64 +461,17 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
 let built_in_primitive_steps : list<primitive_step> =
-    let const_as_tm c p = mk (Tm_constant c) p in
-    let int_as_const  : Range.range -> int  -> term =
-        fun p i -> const_as_tm (FC.Const_int (BU.string_of_int i, None)) p
-    in
-    let bool_as_const : Range.range -> bool -> term =
-        fun p b -> const_as_tm (FC.Const_bool b) p
-    in
-    let string_as_const : Range.range -> string -> term =
-        fun p b -> const_as_tm (FC.Const_string (b, p)) p
-    in
-    let arg_as_int (a, _) : option<int> =
-        match (SS.compress a).n with
-        | Tm_constant (FC.Const_int(i, None)) ->
-          Some (BU.int_of_string i)
-        | _ ->
-          None
-    in
-    let arg_as_bounded_int (a, _) : option<(fv * int)> =
+    let arg_as_int    (a:arg) = fst a |> EMB.unembed_int_safe in
+    let arg_as_bool   (a:arg) = fst a |> EMB.unembed_bool_safe in
+    let arg_as_char   (a:arg) = fst a |> EMB.unembed_char_safe in
+    let arg_as_string (a:arg) = fst a |> EMB.unembed_string_safe in
+    let arg_as_list (u : EMB.unembedder<'a>) a = fst a |> EMB.unembed_list_safe u in
+    let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
         match (SS.compress a).n with
         | Tm_app ({n=Tm_fvar fv1}, [({n=Tm_constant (FC.Const_int (i, None))}, _)])
             when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
-          Some (fv1, BU.int_of_string i)
+          Some (fv1, Z.big_int_of_string i)
         | _ -> None
-    in
-    let arg_as_bool (a, _) : option<bool> =
-        match (SS.compress a).n with
-        | Tm_constant (FC.Const_bool b) ->
-          Some b
-        | _ ->
-          None
-    in
-    let arg_as_char (a, _) : option<char> =
-        match (SS.compress a).n with
-        | Tm_constant (Const_char c) ->
-          Some c
-        | _ ->
-          None
-    in
-    let arg_as_string (a, _) : option<string> =
-        match (SS.compress a).n with
-        | Tm_constant (FC.Const_string(s, _)) ->
-          Some s
-        | _ ->
-          None
-    in
-    let arg_as_list (f : arg -> option<'a>) (a, _) : option<list<'a>> =
-        let rec sequence (l:list<option<'a>>) : option<list<'a>> =
-            match l with
-            | [] -> Some []
-            | None::_ -> None
-            | Some x::xs -> begin match sequence xs with
-                            | None -> None
-                            | Some xs' -> Some (x::xs')
-                            end
-        in
-        match U.list_elements a with
-        | None -> None
-        | Some elts -> sequence (List.map (fun x -> f (as_arg x)) elts)
     in
     let lift_unary
         : ('a -> 'b) -> list<option<'a>> ->option<'b>
@@ -553,20 +510,20 @@ let built_in_primitive_steps : list<primitive_step> =
         requires_binder_substitution=false;
         interpretation=f
     } in
-    let unary_int_op (f:int -> int) =
-        unary_op arg_as_int (fun r x -> int_as_const r (f x))
+    let unary_int_op (f:Z.t -> Z.t) =
+        unary_op arg_as_int (fun r x -> EMB.embed_int r (f x))
     in
-    let binary_int_op (f:int -> int -> int) =
-        binary_op arg_as_int (fun r x y -> int_as_const r (f x y))
+    let binary_int_op (f:Z.t -> Z.t -> Z.t) =
+        binary_op arg_as_int (fun r x y -> EMB.embed_int r (f x y))
     in
     let unary_bool_op (f:bool -> bool) =
-        unary_op arg_as_bool (fun r x -> bool_as_const r (f x))
+        unary_op arg_as_bool (fun r x -> EMB.embed_bool r (f x))
     in
     let binary_bool_op (f:bool -> bool -> bool) =
-        binary_op arg_as_bool (fun r x y -> bool_as_const r (f x y))
+        binary_op arg_as_bool (fun r x y -> EMB.embed_bool r (f x y))
     in
     let binary_string_op (f : string -> string -> string) =
-        binary_op arg_as_string (fun r x y -> string_as_const r (f x y))
+        binary_op arg_as_string (fun r x y -> EMB.embed_string r (f x y))
     in
     let list_of_string' rng (s:string) : term =
         let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
@@ -580,49 +537,30 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let string_compare' rng (s1:string) (s2:string) : term =
         let r = String.compare s1 s2 in
-        int_as_const rng r
+        EMB.embed_int rng (Z.big_int_of_string (BU.string_of_int r))
     in
     let string_concat' psc args : option<term> =
         match args with
         | [a1; a2] ->
             begin match arg_as_string a1 with
             | Some s1 ->
-                begin match arg_as_list arg_as_string a2 with
+                begin match arg_as_list EMB.unembed_string_safe a2 with
                 | Some s2 ->
                     let r = String.concat s1 s2 in
-                    Some (string_as_const psc.psc_range r)
+                    Some (EMB.embed_string psc.psc_range r)
                 | _ -> None
                 end
             | _ -> None
             end
         | _ -> None
     in
-    let string_of_int rng (i:int) : term =
-        string_as_const rng (BU.string_of_int i)
+    let string_of_int rng (i:Z.t) : term =
+        EMB.embed_string rng (Z.string_of_big_int i)
     in
     let string_of_bool rng (b:bool) : term =
-        string_as_const rng (if b then "true" else "false")
-    in
-    let string_of_int rng (i:int) : term =
-        string_as_const rng (BU.string_of_int i)
-    in
-    let string_of_bool rng (b:bool) : term =
-        string_as_const rng (if b then "true" else "false")
+        EMB.embed_string rng (if b then "true" else "false")
     in
     let term_of_range r = S.mk (Tm_constant (FStar.Const.Const_range r)) None r in
-    let range_of _ args : option<term> =
-      match args with
-      | [_; (t, _)] ->
-        Some (term_of_range t.pos)
-      | _ -> None
-    in
-    let set_range_of _ args : option<term> =
-      match args with
-      | [_; (t, _); (r, _)] ->
-        BU.bind_opt (EMB.unembed_range r) (fun r ->
-        Some ({t with pos=r}))
-      | _ -> None
-    in
     let mk_range (_:psc) args : option<term> =
       match args with
       | [fn; from_line; from_col; to_line; to_col] -> begin
@@ -633,8 +571,8 @@ let built_in_primitive_steps : list<primitive_step> =
               arg_as_int to_col with
         | Some fn, Some from_l, Some from_c, Some to_l, Some to_c ->
           let r = FStar.Range.mk_range fn
-                              (FStar.Range.mk_pos from_l from_c)
-                              (FStar.Range.mk_pos to_l to_c) in
+                              (FStar.Range.mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
+                              (FStar.Range.mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c)) in
           Some (term_of_range r)
         | _ -> None
         end
@@ -654,18 +592,22 @@ let built_in_primitive_steps : list<primitive_step> =
         | _ ->
             failwith "Unexpected number of arguments"
     in
+    let idstep psc args : option<term> =
+        match args with
+        | [(a1, _)] -> Some a1
+        | _ -> failwith "Unexpected number of arguments"
+    in
     let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
-            [(PC.op_Minus,       1, unary_int_op (fun x -> - x));
-             (PC.op_Addition,    2, binary_int_op (fun x y -> (x + y)));
-             (PC.op_Subtraction, 2, binary_int_op (fun x y -> (x - y)));
-             (PC.op_Multiply,    2, binary_int_op (fun x y -> (Prims.op_Multiply x y)));
-             (PC.op_Division,    2, binary_int_op (fun x y -> (x / y)));
-             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x < y)));
-             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x <= y)));
-             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> bool_as_const r (x > y)));
-             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> bool_as_const r (x >= y)));
-             (PC.op_Modulus,     2, binary_int_op (fun x y -> (x % y)));
-             (PC.op_Negation,    1, unary_bool_op (fun x -> not x));
+            [(PC.op_Minus,       1, unary_int_op (fun x -> Z.minus_big_int x));
+             (PC.op_Addition,    2, binary_int_op (fun x y -> Z.add_big_int x y));
+             (PC.op_Subtraction, 2, binary_int_op (fun x y -> Z.sub_big_int x y));
+             (PC.op_Multiply,    2, binary_int_op (fun x y -> Z.mult_big_int x y));
+             (PC.op_Division,    2, binary_int_op (fun x y -> Z.div_big_int x y));
+             (PC.op_LT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.lt_big_int x y)));
+             (PC.op_LTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.le_big_int x y)));
+             (PC.op_GT,          2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.gt_big_int x y)));
+             (PC.op_GTE,         2, binary_op arg_as_int (fun r x y -> EMB.embed_bool r (Z.ge_big_int x y)));
+             (PC.op_Modulus,     2, binary_int_op (fun x y -> Z.mod_big_int x y));
              (PC.op_And,         2, binary_bool_op (fun x y -> x && y));
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
@@ -678,25 +620,26 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.p2l ["FStar"; "String"; "list_of_string"],
                                     1, unary_op arg_as_string list_of_string');
              (PC.p2l ["FStar"; "String"; "string_of_list"],
-                                    1, unary_op (arg_as_list arg_as_char) string_of_list');
+                                    1, unary_op (arg_as_list EMB.unembed_char_safe) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
-             (PC.p2l ["Prims"; "range_of"], 2, range_of);
-             (PC.p2l ["Prims"; "set_range_of"], 3, set_range_of);
-             (PC.p2l ["Prims"; "mk_range"], 5, mk_range);]
+             (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
+             (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, idstep);
+             ]
     in
-    let bounded_arith_ops =
+    let bounded_arith_ops
+        =
         let bounded_int_types =
            [ "Int8"; "UInt8"; "Int16"; "UInt16"; "Int32"; "UInt32"; "Int64"; "UInt64"; "UInt128"]
         in
         let int_as_bounded r int_to_t n =
-            let c = int_as_const r n in
+            let c = EMB.embed_int r n in
             let int_to_t = S.fv_to_tm int_to_t in
             S.mk_Tm_app int_to_t [S.as_arg c] None r
         in
         bounded_int_types |> List.collect (fun m ->
-        [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x + y)));
-         (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (x - y)));
-         (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Prims.op_Multiply x y)))])
+        [(PC.p2l ["FStar"; m; "add"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.add_big_int x y)));
+         (PC.p2l ["FStar"; m; "sub"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.sub_big_int x y)));
+         (PC.p2l ["FStar"; m; "mul"], 2, binary_op arg_as_bounded_int (fun r (int_to_t, x) (_, y) -> int_as_bounded r int_to_t (Z.mult_big_int x y)))])
     in
     List.map as_primitive_step (basic_ops@bounded_arith_ops)
 
@@ -730,6 +673,11 @@ let equality_ops : list<primitive_step> =
 
     [propositional_equality; hetero_propositional_equality]
 
+// Should match FStar.Reflection.Basic.unembed_binder
+let unembed_binder (t : term) : option<S.binder> =
+    try Some (U.un_alien t |> FStar.Dyn.undyn)
+    with | _ -> None
+
 let mk_psc_subst cfg env =
     List.fold_right
         (fun (binder_opt, closure) subst ->
@@ -740,14 +688,17 @@ let mk_psc_subst cfg env =
                 if not (U.is_constructed_typ bv.sort FStar.Parser.Const.fstar_reflection_types_binder_lid)
                 then subst
                 else let term = closure_as_term cfg env term in
-                     let x : S.binder = U.un_alien term |> FStar.Dyn.undyn in
-                     let b = S.freshen_bv ({bv with sort=SS.subst subst (fst x).sort}) in
-                     let b_for_x = S.NT(fst x, S.bv_to_name b) in
-                     //remove names shadowed by b
-                     let subst = List.filter (function NT(_, {n=Tm_name b'}) ->
-                                                              not (Ident.ident_equals b.ppname b'.ppname)
-                                                      | _ -> true) subst in
-                     b_for_x :: subst
+                     begin match unembed_binder term with
+                     | None -> subst
+                     | Some x ->
+                         let b = S.freshen_bv ({bv with sort=SS.subst subst (fst x).sort}) in
+                         let b_for_x = S.NT(fst x, S.bv_to_name b) in
+                         //remove names shadowed by b
+                         let subst = List.filter (function NT(_, {n=Tm_name b'}) ->
+                                                                  not (Ident.ident_equals b.ppname b'.ppname)
+                                                          | _ -> true) subst in
+                         b_for_x :: subst
+                     end
             | _ -> subst)
         env []
 
@@ -759,31 +710,58 @@ let reduce_primops cfg env stack tm =
          match (U.un_uinst head).n with
          | Tm_fvar fv -> begin
            match List.tryFind (fun ps -> S.fv_eq_lid fv ps.name) cfg.primitive_steps with
-           | None -> tm
-           | Some prim_step ->
+           | Some prim_step when prim_step.strong_reduction_ok || not cfg.strong ->
              if List.length args < prim_step.arity
-             then begin log cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
+             then begin log_primops cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
                                                      (Print.lid_to_string prim_step.name)
                                                      (string_of_int (List.length args))
                                                      (string_of_int prim_step.arity));
                         tm //partial application; can't step
                   end
-             else begin log cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
+             else begin log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
                   let psc = {
                       psc_range = head.pos;
-                      psc_subst = if prim_step.requires_binder_substitution then mk_psc_subst cfg env else []
+                      psc_subst = fun () -> if prim_step.requires_binder_substitution
+                                            then mk_psc_subst cfg env
+                                            else []
                   } in
                   match prim_step.interpretation psc args with
                   | None ->
-                      log cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
+                      log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
                       tm
                   | Some reduced ->
-                      log cfg (fun () -> BU.print2 "primop: <%s> reduced to <%s>\n"
+                      log_primops cfg (fun () -> BU.print2 "primop: <%s> reduced to <%s>\n"
                                               (Print.term_to_string tm)
                                               (Print.term_to_string reduced));
                       reduced
                  end
+           | Some _ ->
+               log_primops cfg (fun () -> BU.print1 "primop: not reducing <%s> since we're doing strong reduction\n"
+                                            (Print.term_to_string tm));
+               tm
+           | None -> tm
            end
+
+         | Tm_constant Const_range_of when not cfg.strong ->
+           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
+                                        (Print.term_to_string tm));
+           begin match args with
+           | [(a1, _)] -> (EMB.embed_range tm.pos a1.pos)
+           | _ -> tm
+           end
+
+         | Tm_constant Const_set_range_of when not cfg.strong ->
+           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
+                                        (Print.term_to_string tm));
+           begin match args with
+           | [(a1, _); (a2, _)] ->
+                begin match EMB.unembed_range a2 with
+                | Some r -> ({ a1 with pos = r })
+                | None -> tm
+                end
+           | _ -> tm
+           end
+
          | _ -> tm
    end
 
@@ -860,6 +838,11 @@ let maybe_simplify cfg env stack tm =
                    | _ -> tm
              end
            | _ -> tm
+      else if S.fv_eq_lid fv PC.b2t_lid
+      then match args with
+           | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
+           | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
+           | _ -> tm
       else reduce_equality cfg env stack tm
     | _ -> tm
 
@@ -884,7 +867,8 @@ let tr_norm_step = function
     | EMB.Iota ->    [Iota]
     | EMB.Delta ->   [UnfoldUntil Delta_constant]
     | EMB.Simpl ->   [Simplify]
-    | EMB.WHNF ->    [WHNF]
+    | EMB.Weak ->    [Weak]
+    | EMB.HNF  ->    [HNF]
     | EMB.Primops -> [Primops]
     | EMB.UnfoldOnly names ->
         [UnfoldUntil Delta_constant; UnfoldOnly (List.map I.lid_of_str names)]
@@ -986,10 +970,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
               else tail in
             norm cfg' env stack' tm
 
+          | Tm_app({n=Tm_constant Const_range_of}, a1::a2::rest)
           | Tm_app({n=Tm_constant FC.Const_reify}, a1::a2::rest) ->
             let hd, _ = U.head_and_args t in
             let t' = S.mk (Tm_app(hd, [a1])) None t.pos in
             let t = S.mk(Tm_app(t', a2::rest)) None t.pos in
+            norm cfg env stack t
+
+          | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::a3::rest) ->
+            let hd, _ = U.head_and_args t in
+            let t' = S.mk (Tm_app(hd, [a1;a2])) None t.pos in
+            let t = S.mk(Tm_app(t', a3::rest)) None t.pos in
             norm cfg env stack t
 
           | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [a])
@@ -1132,7 +1123,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | App _ :: _
                 | Abs _ :: _
                 | [] ->
-                  if List.contains WHNF cfg.steps //don't descend beneath a lambda if we're just doing WHNF
+                  if List.contains Weak cfg.steps //don't descend beneath a lambda if we're just doing weak reduction
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body, opening = open_term' bs body in
                        let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
@@ -1146,7 +1137,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
-                       let cfg = only_strong_steps cfg in
+                       let cfg = { cfg with strong = true } in
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
 
@@ -1156,7 +1147,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg env stack head
 
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
-            if List.contains WHNF cfg.steps
+            if List.contains Weak cfg.steps
             then match env, stack with
                     | [], [] -> //TODO: Make this work in general!
                       let t_x = norm cfg env [] x.sort in
@@ -1170,7 +1161,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  rebuild cfg env stack t
 
           | Tm_arrow(bs, c) ->
-            if List.contains WHNF cfg.steps
+            if List.contains Weak cfg.steps
             then rebuild cfg env stack (closure_as_term cfg env t)
             else let bs, c = open_comp bs c in
                  let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> dummy::env) env) c in
@@ -1182,9 +1173,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
               | Match _ :: _
               | Arg _ :: _
               | App (_, {n=Tm_constant FC.Const_reify}, _, _) :: _
-              | MemoLazy _ :: _ -> norm cfg env stack t1 //ascriptions should not block reduction
+              | MemoLazy _ :: _ ->
+                log cfg  (fun () -> BU.print_string "+++ Dropping ascription \n");
+                norm cfg env stack t1 //ascriptions should not block reduction
               | _ ->
                 (* Drops stack *)
+                log cfg  (fun () -> BU.print_string "+++ Keeping ascription \n");
                 let t1 = norm cfg env [] t1 in
                 log cfg  (fun () -> BU.print_string "+++ Normalizing ascription \n");
                 let tc = match tc with
@@ -1208,17 +1202,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
             || (U.is_ghost_effect n && not (cfg.steps |> List.contains PureSubtermsWithinComputations)))
             then let binder = S.mk_binder (BU.left lb.lbname) in
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
+                 log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
             else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
+                 log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- type\n");
                  let ty = norm cfg env [] lb.lbtyp in
                  let lbname =
                     let x = fst (List.hd bs) in
                     Inl ({x with sort=ty}) in
+                 log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- definiens\n");
                  let lb = {lb with lbname=lbname;
                                    lbtyp=ty;
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                 let cfg = only_strong_steps cfg in
+                 let cfg = { cfg with strong = true } in
+                 log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- body\n");
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
           | Tm_let((true, lbs), body)
@@ -1724,7 +1722,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     // GM: This is basically saying "if exclude iota, don't memoize".
     // what's up with that?
     if List.contains (Exclude Iota) cfg.steps
-    then if List.contains WHNF cfg.steps
+    then if List.contains HNF cfg.steps
          then let arg = closure_as_term cfg env_arg tm in
               let t = extend_app t (arg, aq) None r in
               rebuild cfg env_arg stack t
@@ -1732,7 +1730,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               norm cfg env_arg stack tm
     else begin match !m with
       | None ->
-        if List.contains WHNF cfg.steps
+        if List.contains HNF cfg.steps
         then let arg = closure_as_term cfg env_arg tm in
              let t = extend_app t (arg, aq) None r in
              rebuild cfg env_arg stack t
@@ -1758,7 +1756,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           BU.print2 "match is irreducible: scrutinee=%s\nbranches=%s\n"
                 (Print.term_to_string scrutinee)
                 (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
-      let whnf = List.contains WHNF cfg.steps in
+      // If either Weak or HNF, then don't descend into branch
+      let whnf = List.contains Weak cfg.steps || List.contains HNF cfg.steps in
       let cfg_exclude_iota_zeta =
         let new_delta =
           cfg.delta_level |> List.filter (function
@@ -1772,7 +1771,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           (* KM : Why are we excluding Iota (pattern matching) here ? *)
           else [Exclude Iota; Exclude Zeta]
         in
-        only_strong_steps ({cfg with delta_level=new_delta; steps=steps'@cfg.steps})
+        ({cfg with delta_level=new_delta; steps=steps'@cfg.steps; strong=true})
       in
       let norm_or_whnf env t =
         if whnf
@@ -1900,7 +1899,7 @@ let config s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps}
+    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps; strong=false}
 
 let normalize_with_primitive_steps ps s e t =
     let c = config s e in
@@ -1953,7 +1952,7 @@ let normalize_refinement steps env t0 =
        | _ -> t in
    aux t
 
-let unfold_whnf env t = normalize [WHNF; UnfoldUntil Delta_constant; Beta] env t
+let unfold_whnf env t = normalize [Weak;HNF; UnfoldUntil Delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
               @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm])

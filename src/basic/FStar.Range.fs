@@ -131,3 +131,17 @@ let end_of_line p = {p with col=BU.max_int}
 let extend_to_end_of_line r = mk_range (file_of_range r)
                                        (start_of_range r)
                                        (end_of_line (end_of_range r))
+
+(* This needs to correspond with the `range` type is ulib/ml/prims.ml,
+ * but sadly we cannot use Prims.range here *)
+let prims_to_fstar_range (r : (string * (int * int) * (int * int)) * (string * (int * int) * (int * int))) : range =
+    let (r1, r2) = r in
+    let (f1, s1, e1) = r1 in
+    let (f2, s2, e2) = r2 in
+    let s1 = mk_pos (fst s1) (snd s1) in
+    let e1 = mk_pos (fst e1) (snd e1) in
+    let s2 = mk_pos (fst s2) (snd s2) in
+    let e2 = mk_pos (fst e2) (snd e2) in
+    let r1 = mk_rng f1 s1 e1 in
+    let r2 = mk_rng f2 s2 e2 in
+    { def_range = r1; use_range = r2 }

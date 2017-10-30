@@ -44,11 +44,6 @@ let tc_one_file (remaining:list<string>) (env:TcEnv.env) = //:((string option * 
   in
   (intf, impl), env, remaining
 
-// Ibid.
-let tc_prims () = //:uenv =
-  let _, env = tc_prims (init_env ()) in
-  env
-
 // The interactive mode has its own notion of a stack that is super flaky,
 // seeing that there's a lot of mutable state under the hood. This is most
 // likely not working as the original author intended it to.
@@ -229,7 +224,7 @@ let deps_of_our_file filename =
    * and lax-check everything but the current module we're editing. This
    * function may, optionally, return an interface if the currently edited
    * module is an implementation and an interface was found. *)
-  let deps = FStar.Dependencies.find_deps_if_needed Parser.Dep.VerifyFigureItOut [ filename ] in
+  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [ filename ] in
   let deps, same_name = List.partition (fun x ->
     Parser.Dep.lowercase_module_name x <> Parser.Dep.lowercase_module_name filename
   ) deps in
@@ -244,7 +239,7 @@ let deps_of_our_file filename =
         Util.print_warning (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name));
         None
   in
-  deps, maybe_intf
+  deps, maybe_intf, dep_graph
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
 type m_timestamps = list<(option<string> * string * option<time> * time)>
@@ -355,7 +350,7 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
   in
 
   (* Well, the file list hasn't changed, so our (single) file is still there. *)
-  let filenames, _ = deps_of_our_file filename in
+  let filenames, _, dep_graph = deps_of_our_file filename in
   //reverse stk and ts, since iterate expects them in "first dependency first order"
   iterate filenames (List.rev_append stk []) env (List.rev_append ts []) [] []
 
@@ -564,8 +559,8 @@ let interactive_mode (filename:string): unit =
   then Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag";
 
   //type check prims and the dependencies
-  let filenames, maybe_intf = deps_of_our_file filename in
-  let env = tc_prims () in
+  let filenames, maybe_intf, dep_graph = deps_of_our_file filename in
+  let env = init_env dep_graph in
   let stack, env, ts = tc_deps None [] env filenames [] in
   let initial_range = Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0) in
   let env = FStar.TypeChecker.Env.set_range env initial_range in

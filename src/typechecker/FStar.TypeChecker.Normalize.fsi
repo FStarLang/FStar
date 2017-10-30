@@ -28,7 +28,8 @@ type step =
   | Iota            //pattern matching
   | Zeta            //fixed points
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
-  | WHNF            //Only produce a weak head normal form
+  | Weak            //Do not descend into binders
+  | HNF             //Only produce a head normal form
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining
@@ -52,7 +53,7 @@ type closure =
   | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
 and env = list<(option<binder> * closure)>
 type cfg
-type psc
+type psc // primitive step context
 val null_psc : psc
 val psc_range : psc -> FStar.Range.range
 val psc_subst : psc -> subst_t

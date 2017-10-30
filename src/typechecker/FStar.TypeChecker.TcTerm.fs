@@ -108,12 +108,11 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
       if TcUtil.is_pure_or_ghost_effect env (U.comp_effect_name c)
       then let t = U.unrefine <| (U.comp_result c) in
            match (SS.compress t).n with
-           | Tm_fvar fv when (S.fv_eq_lid fv Const.unit_lid) -> false //uninformative function
            | Tm_constant _ -> false
-           | _ -> true
+           | _ -> not (U.is_unit t) //uninformative function
       else false //can't reason about effectful function definitions, so not worth returning this
-//    | Tm_type _ -> false
-    | _ -> true in
+    | _ -> not (U.is_unit t)
+  in
   (* if term, then lc is a trivial lazy computation (lcomp_of_comp) *)
   let lc = match tlc with
     | Inl t -> U.lcomp_of_comp (if not (should_return t)
@@ -385,15 +384,40 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) None top.pos) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
+  (* Unary operators. Explicitly curry extra arguments *)
+  | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest)
   | Tm_app({n=Tm_constant Const_reify}, a::hd::rest)
   | Tm_app({n=Tm_constant (Const_reflect _)}, a::hd::rest) ->
-    //reify and reflect are a unary operators;
-    //if there are more args, then explicitly curry them
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args top in
     let head = mk (Tm_app(unary_op, [a])) None (Range.union_ranges unary_op.pos (fst a).pos) in
     let t = mk (Tm_app(head, rest)) None top.pos in
     tc_term env t
+
+  (* Binary operators *)
+  | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::hd::rest) ->
+    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
+    let unary_op, _ = U.head_and_args top in
+    let head = mk (Tm_app(unary_op, [a1; a2])) None (Range.union_ranges unary_op.pos (fst a1).pos) in
+    let t = mk (Tm_app(head, rest)) None top.pos in
+    tc_term env t
+
+  | Tm_app({n=Tm_constant Const_range_of}, [(e, None)]) ->
+    let e, c, g = tc_term (fst <| Env.clear_expected_typ env) e in
+    let head, _ = U.head_and_args top in
+    mk (Tm_app (head, [(e, None)])) None top.pos, (Util.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
+
+  | Tm_app({n=Tm_constant Const_set_range_of}, (a1, None)::(a2, None)::[]) ->
+    let head, _ = U.head_and_args top in
+    let env' = Env.set_expected_typ env (tabbrev Const.range_lid) in
+    let e1, _, g1 = tc_term env' a1 in
+    let e2, t2, g2 = tc_term env a2 in
+    let g = Rel.conj_guard g1 g2 in
+    mk_Tm_app head [S.as_arg a1; S.as_arg a2] None top.pos, t2, g
+
+  | Tm_app({n=Tm_constant Const_range_of}, _)
+  | Tm_app({n=Tm_constant Const_set_range_of}, _) ->
+    raise (Error(BU.format1 "Ill-applied constant %s" (Print.term_to_string top), e.pos))
 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
@@ -818,6 +842,13 @@ and tc_constant r (c:sconst) : typ =
       | Const_effect -> U.ktype0 //NS: really?
       | Const_range _ -> t_range
 
+      | Const_range_of
+      | Const_set_range_of
+      | Const_reify
+      | Const_reflect _ ->
+        raise (Error (BU.format1 "Ill-typed %s: this constant must be fully applied"
+                                 (Const.const_to_string c), r))
+
       | _ -> raise (Error("Unsupported constant", r))
 
 
@@ -1010,7 +1041,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       | Some (Inl more_bs) ->  //more actual args
                         let c = SS.subst_comp subst c_expected in
                         (* the expected type is explicitly curried *)
-                        if U.is_named_tot c then
+                        if Options.ml_ish () || U.is_named_tot c then
                           let t = N.unfold_whnf env (U.comp_result c) in
                           match t.n with
                           | Tm_arrow(bs_expected, c_expected) ->
@@ -1500,16 +1531,19 @@ and tc_eqn scrutinee env branch
         //Otherwise, its easy to get inconsistent;
         //e.g., if expected_pat_t is (option nat)
         //and   lc.res_typ is (option int)
-        //Rel.teq below will produce a logical guard (int = nat)
-        //which will fail the discharge_guard_no_smt check
-        //Without out, we will be able to conclude in the branch of the pattern,
+        //Rel.teq_nosmt below will forbid producing a logical guard (int = nat)
+        //Without this, we will be able to conclude in the branch of the pattern,
         //with the equality Some #nat x = Some #int x
         //that nat=int and hence False
-        let g' = Rel.teq env1 lc.res_typ expected_pat_t in
-        let g = Rel.conj_guard g g' in
-        let env1 = Env.set_range env1 exp.pos in
-        Rel.discharge_guard_no_smt env1 g |>
-        Rel.resolve_implicits in
+        if Rel.teq_nosmt env1 lc.res_typ expected_pat_t
+        then let env1 = Env.set_range env1 exp.pos in
+             Rel.discharge_guard_no_smt env1 g |>
+             Rel.resolve_implicits
+        else raise (Error (BU.format2 "Inferred type of pattern (%s) is incompatible with the type of the scrutinee (%s)"
+                                       (Print.term_to_string lc.res_typ)
+                                       (Print.term_to_string expected_pat_t),
+                           exp.pos))
+    in
     let norm_exp = N.normalize [N.Beta] env1 exp in
     let uvs1 = Free.uvars norm_exp in
     let uvs2 = Free.uvars expected_pat_t in
@@ -1729,7 +1763,9 @@ and check_top_level_let env e =
             then g1, N.reduce_uvar_solutions env e1, univ_vars, c1
             else let g1 = Rel.solve_deferred_constraints env g1 |> Rel.resolve_implicits in
                  assert (univ_vars = []) ;
-                 let _, univs, e1, c1 = List.hd (TcUtil.generalize env false [lb.lbname, e1, c1.comp()]) in
+                 let _, univs, e1, c1, gvs = List.hd (TcUtil.generalize env false [lb.lbname, e1, c1.comp()]) in
+                 let g1 = map_guard g1 <| N.normalize [N.Beta; N.NoDeltaSteps; N.CompressUvars; N.NoFullNorm; N.Exclude N.Zeta] env in
+                 let g1 = abstract_guard_n gvs g1 in
                  g1, e1, univs, U.lcomp_of_comp c1
          in
 
@@ -1844,7 +1880,7 @@ and check_top_level_let_rec env top =
                                 lb.lbname,
                                 lb.lbdef,
                                 S.mk_Total lb.lbtyp)) in
-                   ecs |> List.map (fun (x, uvs, e, c) ->
+                   ecs |> List.map (fun (x, uvs, e, c, gvs) ->
                       U.close_univs_and_mk_letbinding all_lb_names x uvs (U.comp_result c) (U.comp_effect_name c) e) in
 
           let cres = U.lcomp_of_comp <| S.mk_Total t_unit in
@@ -1904,6 +1940,7 @@ and check_inner_let_rec env top =
 and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
    let env0 = env in
    let termination_check_enabled lbname lbdef lbtyp =
+     if Options.ml_ish () then false else
      let t = N.unfold_whnf env lbtyp in
      match (SS.compress t).n, (SS.compress lbdef).n with
      | Tm_arrow (formals, c), Tm_abs(actuals, _, _) ->

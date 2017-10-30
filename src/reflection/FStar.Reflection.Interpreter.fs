@@ -13,21 +13,21 @@ open FStar.Syntax.Embeddings
 module Print = FStar.Syntax.Print
 module BU = FStar.Util
 
-let int1 (m:lid) (f:'a -> 'b) (ua:term -> option<'a>) (em:'b -> term)
+let int1 (m:lid) (f:'a -> 'b) (ua:unembedder<'a>) (em:embedder<'b>)
                  (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _)] ->
         BU.bind_opt (ua a) (fun a ->
-        Some (em (f a)))
+        Some (em r (f a)))
     | _ -> None
 
-let int2 (m:lid) (f:'a -> 'b -> 'c) (ua:term -> option<'a>) (ub:term -> option<'b>) (em:'c -> term)
+let int2 (m:lid) (f:'a -> 'b -> 'c) (ua:unembedder<'a>) (ub:unembedder<'b>) (em:embedder<'c>)
                  (r:Range.range) (args : args) : option<term> =
     match args with
     | [(a, _); (b, _)] ->
         BU.bind_opt (ua a) (fun a ->
         BU.bind_opt (ub b) (fun b ->
-        Some (em (f a b))))
+        Some (em r (f a b))))
     | _ -> None
 
 let reflection_primops : list<N.primitive_step> =

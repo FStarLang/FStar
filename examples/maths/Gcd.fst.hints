@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7575cb016501ff71897c51296ac22fdb"
+      "8b108111308028d6471280d097ae753e"
     ],
     [
       "Gcd.times_one",
@@ -16,32 +16,22 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Mul.op_Star",
-        "equation_Prims.pos", "int_inversion", "int_typing",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b",
-        "typing_FStar.Mul.op_Star", "unit_typing"
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "d863d62573ffbf55a5682b6e29be1b38"
+      "84e3a6fb0441977d5cdb68cb17b97054"
     ],
     [
       "Gcd.a_divides_a'",
       1,
       2,
       1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "b9b612208db5caecc27b9b3bfc0bc9e2"
-    ],
-    [
-      "Gcd.a_divides_a",
-      1,
-      2,
-      1,
       [ "@query" ],
       0,
-      "5a70033231f41e0015273e61c33aaa2c"
+      "b5748b783d72c475862ec90a84824b96"
     ],
     [
       "Gcd.gcd_triv",
@@ -50,7 +40,7 @@
       1,
       [ "@query", "equation_Gcd.is_gcd" ],
       0,
-      "41b94b13e9a8493970f3bc9ac90b4cd1"
+      "4e5327d6df0f46f9c4a6e78f3f78c4d8"
     ]
   ]
 ]
