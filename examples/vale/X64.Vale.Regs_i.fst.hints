@@ -12,10 +12,10 @@
         "equality_tok_X64.Machine_s.Rax@tok",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_X64.Machine_s.nat64", "equation_X64.Vale.Regs_i.equal",
-        "typing_tok_X64.Machine_s.Rax@tok", "unit_typing"
+        "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "85ee7d33472fdd74eeb07405203f85ff"
+      "be3c9e5d120fd2769272ba68c102322d"
     ],
     [
       "X64.Vale.Regs_i.lemma_equal_elim",
@@ -33,11 +33,10 @@
         "equation_X64.Machine_s.nat64", "equation_X64.Vale.Regs_i.equal",
         "equation_X64.Vale.Regs_i.t",
         "function_token_typing_X64.Machine_s.nat64",
-        "kinding_X64.Machine_s.reg@tok", "typing_tok_X64.Machine_s.Rax@tok",
-        "unit_typing"
+        "kinding_X64.Machine_s.reg@tok", "typing_tok_X64.Machine_s.Rax@tok"
       ],
       0,
-      "d454357fc40f920de9faed2a210aa2fe"
+      "3e57eabfec5ae4481bf979bd7863c4c6"
     ]
   ]
 ]

@@ -97,6 +97,7 @@
     <Compile Include="FStar.Tactics.Result.fs" />
     <Compile Include="FStar.Tactics.Basic.fs" />
     <Compile Include="FStar.Tactics.Embedding.fs" />
+    <Compile Include="FStar.Tactics.Native.fsi" />
     <Compile Include="FStar.Tactics.Native.fs" />
     <Compile Include="boot/FStar.Tactics.Interpreter.fsi" />
     <Compile Include="boot/FStar.Tactics.Interpreter.fs" />

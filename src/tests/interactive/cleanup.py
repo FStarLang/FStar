@@ -23,7 +23,7 @@ def cleanup_json(js):
             cleanup_json(v)
 
 def cleanup_one(line):
-    line = re.sub(r"\b(?<![\\])u[0-9][0-9]+\b", "u[...]", line)
+    line = re.sub(r"\b(?<![\\])u[0-9]+\b", "u[...]", line)
     try:
         js = json.loads(line)
         if js.get("kind") == "protocol-info":

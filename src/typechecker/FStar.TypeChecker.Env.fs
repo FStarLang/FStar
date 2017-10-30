@@ -111,7 +111,8 @@ type env = {
   is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.ToSyntax.Env.env
+  dsenv          : FStar.ToSyntax.Env.env;           (* The desugaring environment from the front-end *)
+  dep_graph      : FStar.Parser.Dep.deps             (* The result of the dependency analysis *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -151,6 +152,9 @@ let default_tc_hooks =
 let tc_hooks (env: env) = env.tc_hooks
 let set_tc_hooks env hooks = { env with tc_hooks = hooks }
 
+let set_dep_graph e g = {e with dep_graph=g}
+let dep_graph e = e.dep_graph
+
 type env_t = env
 
 type sigtable = BU.smap<sigelt>
@@ -172,7 +176,7 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env tc_term type_of universe_of solver module_lid =
+let initial_env deps tc_term type_of universe_of solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -205,7 +209,8 @@ let initial_env tc_term type_of universe_of solver module_lid =
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
-    dsenv = FStar.ToSyntax.Env.empty_env()
+    dsenv = FStar.ToSyntax.Env.empty_env();
+    dep_graph = deps
   }
 
 (* Marking and resetting the environment, for the interactive mode *)

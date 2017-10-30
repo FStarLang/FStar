@@ -83,7 +83,7 @@
     <Compile Include="FStar.Parser.Lexhelp.fs" />
     <Compile Include="lex.fs" />
     <Compile Include="FStar.Parser.ParseIt.fsi" />
-    <Compile Include="FStar.Parser.ParseIt.fs" />
+    <Compile Include="NotFStar.Parser.ParseIt.fs" />
     <Compile Include="FStar.Parser.Driver.fs" />
     <Content Include="packages.config" />
     <Compile Include="FStar.Parser.Dep.fsi" />

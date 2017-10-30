@@ -10,11 +10,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c1cc1db3c08dc99053caa45357d209c5"
+      "abe607e68f139aab6351bca8f1476f4c"
     ],
     [
       "Ex04f.reverse",
@@ -25,11 +24,10 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "38adaa642c1e1b14bbd4dacb324084e7"
+      "09c4be1862415f7ab795e3987bbd98bd"
     ],
     [
       "Ex04f.fold_left",
@@ -44,7 +42,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6b13828e23b64eb1ba4b76f586c7ac5c"
+      "335b9ccf30d38c5deecbb94fe36744b7"
     ],
     [
       "Ex04f.append_assoc",
@@ -63,10 +61,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "subterm_ordering_Prims.Cons"
       ],
       0,
-      "63665c8ff92d536c72010394bdf653db"
+      "e30d0a84484cc9f876d039a00aa173c5"
     ],
     [
       "Ex04f.fold_left_Cons_is_rev",
@@ -91,10 +89,10 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
-        "subterm_ordering_Prims.Cons", "unit_typing"
+        "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5a89447712d5c356606a4e16b45643b7"
+      "4dd3478978b39c004df0ef4786fe674a"
     ]
   ]
 ]

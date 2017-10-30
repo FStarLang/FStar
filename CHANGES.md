@@ -43,7 +43,7 @@ Guidelines for the changelog:
 
   This restriction is a breaking change. For a sampling of the changes
   needed to accommodate it see:
-  
+
        [commit mitls/hacl-star@c93dd40b89263056c6dec8c606eebd885ba2984e]
        [commit FStar@8529b03e30e8dd77cd181256f0ec3473f8cd68bf]
 
@@ -121,6 +121,59 @@ Guidelines for the changelog:
   typechecker can reconstruct its state, instead of re-verifying a
   module every time
 
+* --verify_all, --verify_module, --extract_all, --explicit_deps are
+    gone. The behavior of `--dep make` has changed. See the section on
+    dependence analysis below.
+
+## Dependence analysis; which files are verified and extracted
+
+* When a file `f` (either an implementation or an interface file)
+  refers to a symbol from a module `A`, then `f` depends only on the
+  interface of `A` if one exists on the search path and if the
+  implementation of `A` is not explicitly provided on the command
+  line.
+
+* Additionally, an implementation file always depends on its
+  interface, if one exists. An interface does not depend on its
+  implementation.
+
+* The `fstar --dep make f1 ... fn` option:
+
+     - emits the entire dependence graph D of `f1 ... fn`
+
+     - additionally, for every interface file `a.fsti` in D whose
+       implementation `a.fst` is not in D, we also emit the
+       dependence graph of `a.fst`.
+
+  This means, for instance, that you can run `fstar --dep make` on the
+  main file of your project and get dependences (in make format) for
+  all the files you need to verify in order to be sure that your
+  project is fully verified.
+
+* When you invoke `fstar f1 ... fn`, the only files that are verified
+  are those that are mentioned on the command line. The dependences of
+  those files are computed automatically and are lax-checked.
+
+* Given an invocation of `fstar --codegen OCaml f1 ... fn`, all (and
+  only) implementation files in the dependence graph of `f1 ... fn`
+  will be extracted.
+
+**Expected further changes in the near future**
+
+* We aim to encourage a style in which typical invocations of `fstar`
+  take only a single file on the command line.
+
+* Only that file will be verified (unless --lax) and extracted (if
+  --codegen is specified).
+
+* The --extract_namespace and --extract_module flags will be removed.
+
+* We will make --cache_checked_modules the default so that the cost of
+  reloading dependences for each invocation of fstar is mininimized.
+
+* We will provide scons and makefile templates to support full
+  project, incremental verification and extraction.
+
 ## Error reporting
 
 * The error reports from SMT query failures have been substantially
@@ -131,7 +184,7 @@ Guidelines for the changelog:
   be printed as errors. If no localized errors could be recovered
   (e.g., because of a solver timeout) then the dreaded "Unknown
   assertion failed" error is reported.
-   
+
 * --query_stats now reports a reason for a hint failure as well as
   localized errors for sub-proofs that failed to replay. This is
   should provide a faster workflow than using --detail_hint_replay

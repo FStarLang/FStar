@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "70a134e2d004640c12540142785120f5"
+      "48b78ec649f09ce26ff3969917837d18"
     ],
     [
       "Trace.uu___is_Z",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "19272153d6688c56712eae16690cadb1"
+      "9973766607a95e11626661c6ac314522"
     ],
     [
       "Trace.uu___is_S",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "a009a0fe194e9a1179e464de6a3cfb3f"
+      "5f4b2856fc23348c701fc2fb96d83ea8"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Trace_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "4e7ec11e57f8ff6de972703d63bed68a"
+      "6b8de0d326c757b4d68293134e044cd2"
     ],
     [
       "Trace.tick_last",
@@ -50,10 +50,11 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_a186ce44c6e2798ac268e43592882258_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6c5e3b535adf54d21b53a4c8abf73265"
+      "ea8f600f4854668312dfd487d4bf11c3"
     ],
     [
       "Trace.cons_fst",
@@ -62,7 +63,7 @@
       1,
       [ "@query" ],
       0,
-      "395f017fb7313230068fdfdec9ed618e"
+      "465c5a4130da572c626903568a5d57f3"
     ],
     [
       "Trace.term_is_fv",
@@ -71,7 +72,7 @@
       1,
       [ "@query" ],
       0,
-      "11adf7525feaee69cfdfa89f467d0320"
+      "a49f2152656d3831d346b0f0aa6a92c8"
     ],
     [
       "Trace.term_is_fv",
@@ -85,7 +86,7 @@
         "function_token_typing_Prims.string"
       ],
       0,
-      "bfc413bcd2548c0d06992aebeb3feb43"
+      "c5984375d7e1db33667a040fa34ca156"
     ],
     [
       "Trace.__proj__Mkins_info__item__orig_name",
@@ -94,7 +95,7 @@
       1,
       [ "@query" ],
       0,
-      "b5ab498894a02d556ad0527334804df0"
+      "25e98046e9581f14b26b1f1ecbb21949"
     ],
     [
       "Trace.__proj__Mkins_info__item__ins_name",
@@ -103,7 +104,7 @@
       1,
       [ "@query" ],
       0,
-      "83dd179b7315503895019a48021e54b8"
+      "5409c7e7a3a315f2bd35a1987c628cfa"
     ],
     [
       "Trace.__proj__Mkins_info__item__args",
@@ -112,7 +113,7 @@
       1,
       [ "@query" ],
       0,
-      "8880a6368982a5ac7a94e46a58fb15b8"
+      "e3a579c81ab0a9c57dbed5d6a0c77ca3"
     ],
     [
       "Trace.__proj__Mkins_info__item__trace_arg",
@@ -121,7 +122,7 @@
       1,
       [ "@query" ],
       0,
-      "e9d889abbadc75e603f833b01d320a52"
+      "0d7a71aaef09fb8cdc94fdb1a86526b6"
     ],
     [
       "Trace.instrument_body",
@@ -138,7 +139,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0,
-      "dff31b1bca259a0b01ab422721419113"
+      "4266e8b5ec1ae4f6a50463091a77b129"
     ],
     [
       "Trace.cutlast",
@@ -149,10 +150,11 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "94b15038aadce21871f7e30556cf4a67"
+      "e8f25d3e709fb116081868d9648a5400"
     ],
     [
       "Trace.instrument",
@@ -161,7 +163,7 @@
       1,
       [ "@query" ],
       0,
-      "dadf2ce52142b596cc9a8d43e67574fa"
+      "9804e15ab9538be70405f38ade9a79ad"
     ],
     [
       "Trace.fall",
@@ -171,13 +173,12 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_e519551c40173fe1db462584f3778483_0",
-        "constructor_distinct_Trace.Z", "disc_equation_Trace.S",
-        "disc_equation_Trace.Z", "equality_tok_Trace.Z@tok",
-        "fuel_guarded_inversion_Trace.mynat",
+        "disc_equation_Trace.S", "disc_equation_Trace.Z",
+        "equality_tok_Trace.Z@tok", "fuel_guarded_inversion_Trace.mynat",
         "projection_inverse_Trace.S__0", "subterm_ordering_Trace.S"
       ],
       0,
-      "1f35f2493995ab36a0978ca1f8770db1"
+      "4e4709be27fab7c8fbc494174447f50b"
     ],
     [
       "Trace.uu___101",
@@ -195,7 +196,7 @@
         "projection_inverse_Trace.S__0", "token_correspondence_Trace.fall_"
       ],
       0,
-      "13f229f9d5a893c09b5e6787b51aff3c"
+      "56bb6ecaae396d6ab453bc45e0f2985e"
     ],
     [
       "Trace.fact_aux",
@@ -207,14 +208,14 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_1", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_Equality",
+        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "f445bc3c63a5fb103f79c2a1c9dcbe3d"
+      "199fc45c4aeaab97b434670c93dce41a"
     ],
     [
       "Trace.fact_aux",
@@ -223,7 +224,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "dced89e9937f73e294af33ec1e73d33f"
+      "23b91888ea82010a792c6ede70a16f9f"
     ],
     [
       "Trace.uu___102",
@@ -233,8 +234,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_Trace.fact_aux_.fuel_instrumented", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565", "bool_inversion",
-        "bool_typing",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_with_fuel_Trace.fact_aux_.fuel_instrumented", "int_typing",
         "primitive_Prims.op_Equality", "primitive_Prims.op_Multiply",
         "primitive_Prims.op_Subtraction",
@@ -242,7 +242,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "cc047a5eea85b64f44b9868cff34f13d"
+      "45a08c92e1f58f1a021615669da440b4"
     ],
     [
       "Trace.uu___103",
@@ -261,7 +261,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "f24be2ad707d920a37f5e12b8993bc03"
+      "59372a1d4719a3a718210e79ec5bf409"
     ]
   ]
 ]

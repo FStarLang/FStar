@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f14766f3fa37029146c8234e494b2ac7"
+      "78ad267b3bd84b5649de1ac4919a7ea0"
     ],
     [
       "Map.upd",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7745a04edaba1b50dfd90fd6a089eac8"
+      "3e74ef8bfc812199a398d3f56be80604"
     ],
     [
       "Map.sel_upd1",
@@ -30,10 +30,10 @@
       [
         "@query", "equation_Map.sel", "equation_Map.upd",
         "interpretation_Map_Tm_abs_130c2f30bd8262f24e6cf58a5019ec1a",
-        "primitive_Prims.op_Equality", "unit_typing"
+        "primitive_Prims.op_Equality"
       ],
       0,
-      "1c60b30bdb88ac8208016696294f83ca"
+      "efe113fc788c647e9105b4496561ecde"
     ],
     [
       "Map.sel_upd2",
@@ -43,11 +43,10 @@
       [
         "@query", "equation_Map.sel", "equation_Map.upd",
         "interpretation_Map_Tm_abs_130c2f30bd8262f24e6cf58a5019ec1a",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "unit_typing"
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2645e967da8cb1a4d4a8375f832e66f7"
+      "2e5a0371ed4367048cc77a95c5941d40"
     ]
   ]
 ]
