@@ -109,47 +109,52 @@ let solve :tactic unit =
 
 (***** Examples *****)
 
-let write_ok (r:addr) (h:heap) (n:int) =
+type t = FStar.SepLogic.Heap.t
+
+open FStar.UInt
+open FStar.UInt64
+
+let write_ok (r:addr) (h:heap) (n:t) =
   let c = (Write r n) in
   let p = fun _ h -> sel h r == n in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic t solve
+  let post = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic post solve
 
-let increment_ok (r:addr) (h:heap) (n:int) =
-  let c = Bind (Read r) (fun n -> Write r (n + 1)) in
-  let p = fun _ h -> sel h r == (n + 1) in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r == n ==> t) solve
+let increment_ok (r:addr) (h:heap) (n:t) =
+  let c = Bind (Read r) (fun n -> Write r (n +?^ 1uL)) in
+  let p = fun _ h -> sel h r == (n +?^ 1uL) in
+  let post = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (sel h r == n ==> post) solve
 
-let swap_ok (r1:addr) (r2:addr) (h:heap) (a:int) (b:int) =
+let swap_ok (r1:addr) (r2:addr) (h:heap) (a:t) (b:t) =
   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
   let p = fun _ h -> sel h r1 == b /\ sel h r2 == a in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (sel h r1 == a /\ sel h r2 == b ==> t) solve
 
-let double_increment_ok (r:addr) (h:heap) (n:int) =
-  let c = Bind (Bind (Read r) (fun y -> Write r (y + 1))) (fun _ -> (Bind (Read r) (fun y -> Write r (y + 1))))  in
-  let p = fun _ h -> sel h r == (n + 2) in
+let double_increment_ok (r:addr) (h:heap) (n:t{size (v n + 2) FStar.UInt64.n}) =
+  let c = Bind (Bind (Read r) (fun y -> Write r (y +?^ 1uL))) (fun _ -> (Bind (Read r) (fun y -> Write r (y +?^ 1uL))))  in
+  let p = fun _ h -> sel h r == (n +?^ 2uL) in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (sel h r == n ==> t) solve
 
-let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
+let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
   let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
   let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve
 
 let init_ok (h:heap) =
-  let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7) (fun _ -> Return r1)) in
-  let p = fun r h -> sel h r == 7 in
+  let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7uL) (fun _ -> Return r1)) in
+  let p = fun r h -> sel h r == 7uL in
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic t (solve;; trefl;; qed)  //no need to go to smt!
 
-let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
+let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
   let c = Bind (Read r1) (fun n1 -> Write r2 (n1)) in
   let p = fun _ h -> (sel h r1 == i /\ sel h r2 == i /\ sel h r3 == k) in
-  let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve //here how can we apply a binder?
+  let post = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> post) solve //here how can we apply a binder?
 
 // (* Writing to a pointer *)
 // let write_tau :tactic unit =
