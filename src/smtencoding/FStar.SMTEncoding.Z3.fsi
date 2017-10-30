@@ -34,13 +34,16 @@ type z3status =
     | KILLED
 val status_string_and_errors : z3status -> string * error_labels
 type z3statistics = BU.smap<string>
-type z3result =
-      z3status
-    * int
-    * z3statistics
+type z3result = {
+      z3result_status      : z3status;
+      z3result_time        : int;
+      z3result_statistics  : z3statistics;
+      z3result_query_hash  : option<string>
+}
 type cb = z3result -> unit
 val giveZ3 : list<decl> -> unit
-val ask : filter:(decls_t -> decls_t * bool)
+val ask: filter:(decls_t -> decls_t * bool)
+       -> cache:(option<string> * unsat_core) // hash * core
        -> label_messages:error_labels
        -> qry:list<decl>
        -> scope:option<scope_t>

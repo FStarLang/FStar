@@ -87,7 +87,7 @@ abstract val lemma_InDomRestrict: #key:eqtype -> #value:Type -> m:t key value ->
 
 abstract val lemma_ContainsDom: #key:eqtype -> #value:Type -> m:t key value -> k:key -> 
   Lemma (requires True) (ensures (contains m k = mem k (domain m)))
-                      [SMTPat (contains m k)]
+                      [SMTPatOr[[SMTPat (contains m k)]; [SMTPat (mem k (domain m))]]]
 
 abstract val lemma_UpdDomain : #key:eqtype -> #value:Type -> m:t key value -> k:key -> v:value ->
   Lemma (requires True) 

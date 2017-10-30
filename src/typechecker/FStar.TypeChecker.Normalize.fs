@@ -604,7 +604,8 @@ let built_in_primitive_steps : list<primitive_step> =
     in
     let set_range_of (r:Range.range) args : option<term> =
       match args with
-      | [_; (t, _); ({n=Tm_constant (FStar.Const.Const_range r)}, _)] ->
+      | [_; (t, _); (r, _)] ->
+        let r = EMB.unembed_range r in
         Some ({t with pos=r})
       | _ -> None
     in
@@ -885,6 +886,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_app(hd, args)
             when U.is_fstar_tactics_embed hd
+              || (U.is_fstar_tactics_quote hd && List.contains NoDeltaSteps cfg.steps)
               || U.is_fstar_tactics_by_tactic hd ->
             let args = closures_as_args_delayed cfg env args in
             let hd = closure_as_term cfg env hd in

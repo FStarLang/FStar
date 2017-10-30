@@ -13,7 +13,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "3c123d41c7970a0c87a9c6a7ded1ba8b"
     ],
     [
       "Ex04f.reverse",
@@ -27,7 +28,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "72731d2d7cdefc26cdd58ca189247b85"
     ]
   ]
 ]

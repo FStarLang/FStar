@@ -1,14 +1,23 @@
 [
   "\nD^”ΆƒρθMλ\u0001)§",
   [
-    [ "FStar.DM4F.IntStoreFixed.bind_is", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.IntStoreFixed.bind_is",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2dfdbee6240ed63ff1472f8439771343"
+    ],
     [
       "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE_bind_wp",
       1,
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "5aa033627d70010800e3d8cc5ea04f49"
     ],
     [
       "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__get_elab",
@@ -16,7 +25,8 @@
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "753f96596b0505eb6a97a1d29a3ab8bc"
     ],
     [
       "FStar.DM4F.IntStoreFixed._dm4f_INT_STORE___proj__INT_STORE__item__put_elab",
@@ -24,10 +34,27 @@
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "0ecf8e96c96cb597bacfc81aceff7c09"
     ],
-    [ "FStar.DM4F.IntStoreFixed.read", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.DM4F.IntStoreFixed.write", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.DM4F.IntStoreFixed.read",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "42dbe81af2b6d5c316320cc1f7f98fb8"
+    ],
+    [
+      "FStar.DM4F.IntStoreFixed.write",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1a2891490c1f1dfbb916edd3cc1f7dfb"
+    ],
     [
       "FStar.DM4F.IntStoreFixed.refine_st",
       1,
@@ -40,8 +67,17 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
-      0
+      0,
+      "24638d64dc147b25e05513315d6e73a9"
     ],
-    [ "FStar.DM4F.IntStoreFixed.refine_st", 2, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.DM4F.IntStoreFixed.refine_st",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "aa7f2c5ca1125f52736b8ce4936d33cb"
+    ]
   ]
 ]

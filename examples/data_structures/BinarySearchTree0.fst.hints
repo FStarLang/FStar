@@ -7,10 +7,27 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "56b411073272f8c8e90cf77c9a47e8c1"
     ],
-    [ "BinarySearchTree0.uu___is_Leaf", 1, 2, 1, [ "@query" ], 0 ],
-    [ "BinarySearchTree0.uu___is_Node", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "BinarySearchTree0.uu___is_Leaf",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ab449b5fccf060e87bfdb4f898ba31b1"
+    ],
+    [
+      "BinarySearchTree0.uu___is_Node",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "47a54ec8b164b891ac8f16a7bfdbb733"
+    ],
     [
       "BinarySearchTree0.__proj__Node__item___0",
       1,
@@ -22,7 +39,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_BinarySearchTree0_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
-      0
+      0,
+      "c333641a725a184ae39c948817416561"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___1",
@@ -35,7 +53,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_BinarySearchTree0_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
-      0
+      0,
+      "27f6174bc3a9af47cb78819f4817ad6f"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___2",
@@ -48,7 +67,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_BinarySearchTree0_Tm_refine_0f47b300bc7833c94b530c9724981898"
       ],
-      0
+      0,
+      "fb922755ff38e3684ae5add0edc43f21"
     ],
     [
       "BinarySearchTree0.search",
@@ -65,7 +85,8 @@
         "fuel_guarded_inversion_BinarySearchTree0.tree", "int_inversion",
         "subterm_ordering_BinarySearchTree0.Node"
       ],
-      0
+      0,
+      "ce1329ca6c56de13d810672feb01f3b4"
     ],
     [
       "BinarySearchTree0.search",
@@ -73,7 +94,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "3eba39a3fd8181e2cdcf06236cb6161b"
     ],
     [
       "BinarySearchTree0.insert",
@@ -92,7 +114,8 @@
         "fuel_guarded_inversion_BinarySearchTree0.tree", "int_inversion",
         "subterm_ordering_BinarySearchTree0.Node"
       ],
-      0
+      0,
+      "fa98cccee19042750367185ec9e07bff"
     ],
     [
       "BinarySearchTree0.insert",
@@ -100,7 +123,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "03bc66798f9fa169c56e505921409999"
     ]
   ]
 ]

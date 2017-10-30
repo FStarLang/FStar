@@ -1,9 +1,33 @@
 [
   "*\u001cb\u0019*9@´,™æ\u0016|!\u000bª",
   [
-    [ "Ex04e.option", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex04e.uu___is_None", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Ex04e.uu___is_Some", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex04e.option",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b5de185f235538a31039f0fbfba26170"
+    ],
+    [
+      "Ex04e.uu___is_None",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ea3dcd7b072691b785045b9828b083c7"
+    ],
+    [
+      "Ex04e.uu___is_Some",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7d4e82d3ce5f654da064677786c6251b"
+    ],
     [
       "Ex04e.__proj__Some__item__v",
       1,
@@ -14,7 +38,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Ex04e_Tm_refine_5940fa0a1398f97ef02a98908357b71e"
       ],
-      0
+      0,
+      "d9371716191bdbd95bce686f9afb9b87"
     ],
     [
       "Ex04e.find",
@@ -29,7 +54,8 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "f59b3df3037117a649c710cb8a787e83"
     ],
     [
       "Ex04e.find'",
@@ -43,7 +69,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "4c7cf9d29c3d9fa666cf945402a270bf"
     ],
     [
       "Ex04e.find_some",
@@ -57,7 +84,8 @@
         "fuel_guarded_inversion_Ex04e.option",
         "projection_inverse_BoxBool_proj_0", "typing_Ex04e.find_"
       ],
-      0
+      0,
+      "3159c6820e76522bd411e63234e58400"
     ],
     [
       "Ex04e.find_some",
@@ -80,7 +108,8 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "subterm_ordering_Prims.Cons", "unit_typing"
       ],
-      0
+      0,
+      "6d47d7563b4b4b1bf3665b1768925507"
     ],
     [
       "Ex04e.find_some'",
@@ -93,7 +122,8 @@
         "disc_equation_Ex04e.None", "disc_equation_Ex04e.Some",
         "fuel_guarded_inversion_Ex04e.option", "typing_Ex04e.find"
       ],
-      0
+      0,
+      "f476c39bedcf4c9dfe8c523f094d8c9c"
     ],
     [
       "Ex04e.find_some'",
@@ -121,7 +151,8 @@
         "refinement_interpretation_Ex04e_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa",
         "subterm_ordering_Prims.Cons", "typing_Ex04e.find", "unit_typing"
       ],
-      0
+      0,
+      "f2d5d0bc800a9bd34ca90fb3cd80d54a"
     ]
   ]
 ]

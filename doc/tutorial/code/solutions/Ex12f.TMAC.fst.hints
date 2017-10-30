@@ -1,7 +1,15 @@
 [
   "…¹oÞE¥\u001eúÊÄPb\\¡yX",
   [
-    [ "Ex12f.TMAC.keygen", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Ex12f.TMAC.keygen",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2c295f8bdd661a09480440b8de0060d4"
+    ],
     [
       "Ex12f.TMAC.mac",
       1,
@@ -21,7 +29,8 @@
         "token_correspondence_Ex12.BMAC.key_prop",
         "token_correspondence_Ex12f.TMAC.bspec"
       ],
-      0
+      0,
+      "951fa6857b2517dc08c9a15b6d0654fa"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -41,7 +50,8 @@
         "token_correspondence_Ex12.BMAC.key_prop",
         "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode"
       ],
-      0
+      0,
+      "93a81a6ec5e2ffaff943f48e40ab2bed"
     ]
   ]
 ]

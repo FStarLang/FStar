@@ -112,7 +112,7 @@ def generate_TacticsInterpreter(target, source, env):
     return t
   return generate_boot_file_ex(target, source, env, process)
 
-# Generate 'boot/FStar.Parser.Parse.fsti from parser/boot/parser.fsi
+# Generate 'boot/FStar.Parser.Parse.fsti from parser/parser.fsi
 def generate_ParserParse(target, source, env):
   def process(sourcelines):
     match = 'module FStar.Parser.Parse'
@@ -148,15 +148,15 @@ def generate_PrettyPrint(target, source, env):
 
 # all boot files are listed here
 ALL_BOOT=addprefix('boot/FStar.',
-  ['Util.fsti','List.fsti','Bytes.fsti','String.fsti',
+  ['Util.fsti','List.fsti','Bytes.fsti','String.fsti','BigInt.fsti',
    'Range.fsti','Pprint.fsti','Parser.Parse.fsti',
    'Tactics.Interpreter.fst','Tactics.Interpreter.fsti'])
 
 # Instructions on how to generate all of the ALL_BOOT files
               # tuples of:  (target filename, source filename, and how to generate)
 Boot_Rules = [('boot/FStar.Tactics.Interpreter.fst', 'tactics/boot/FStar.Tactics.Interpreter.fs', generate_TacticsInterpreter),
-              ('boot/FStar.Parser.Parse.fsti', 'parser/boot/parse.fsi', generate_ParserParse),
-              ('boot/FStar.Parser.Parse.fst', 'parser/boot/parser.fs', generate_Copy),
+              ('boot/FStar.Parser.Parse.fsti', 'parser/parse.fsi', generate_ParserParse),
+              ('boot/FStar.Parser.Parse.fst', 'parser/parser.fs', generate_Copy),
               ('boot/FStar.Tactics.Interpreter.fsti', 'tactics/boot/FStar.Tactics.Interpreter.fsi', generate_Copy),
               ('boot/%.fsti', 'basic/boot/%.fsi', generate_Basic),
               ('boot/%.fsti', 'prettyprint/boot/%.fsi', generate_PrettyPrint),
@@ -262,15 +262,16 @@ Extractions=[
   ('extract_misc',ExtractModules([
     ('FStar.Pervasives',    'basic/FStar.Common.fs'),
     ('FStar.Common',        'basic/FStar.Common.fs'),
-    ('FStar.Options',       'basic/FStar.Options.fs'),
+    ('FStar.Range',         'basic/FStar.Range.fs'),
     ('FStar.Ident',         'basic/FStar.Ident.fs'),
+    ('FStar.Options',       'basic/FStar.Options.fs'),
     ('FStar.Errors',        'basic/FStar.Errors.fs'),
     ('FStar.Const',         'basic/FStar.Const.fs'),
     ('FStar.Order',         'basic/FStar.Order.fs'),
     ('FStar.Format',        'format/FStar.Format.fs')
   ])),
   ('extract_syntax_basic',ExtractNamespace(
-   [addprefix('syntax/FStar.Syntax.','Syntax.fs Subst.fs Free.fs InstFV.fs Util.fs Print.fs Embeddings.fs MutRecTy.fs Resugar.fs Unionfind.fs')],
+   [addprefix('syntax/FStar.Syntax.','Syntax.fs Unionfind.fs Subst.fs Free.fs InstFV.fs Util.fs Resugar.fs Print.fs Embeddings.fs MutRecTy.fs')],
    'FStar.Syntax')
    ),
   ('extract_fsdoc',ExtractNamespace(
@@ -318,7 +319,7 @@ Extractions=[
    'FStar.Tactics.Native')  # --no-extract FStar.Tactics.Native
    ),
   ('extract_reflection',ExtractNamespace(
-   addprefix('reflection/FStar.Reflection.','Basic.fs Data.fs Interpreter.fs'),
+   addprefix('reflection/FStar.Reflection.','Data.fs Basic.fs Interpreter.fs'),
    'FStar.Reflection',
    'FStar.Reflection.Types')  # --no-extract FStar.Reflection.Types
    ),
@@ -334,9 +335,9 @@ Extractions=[
    ])),
   ('extract_fstar',ExtractModules([
    ('FStar.Dependencies',       'fstar/FStar.Dependencies.fs'),
-   ('FStar.Interactive',        'fstar/FStar.Interactive.fs'),
-   ('FStar.Legacy.Interactive', 'fstar/FStar.Legacy.Interactive.fs'),
    ('FStar.Universal',          'fstar/FStar.Universal.fs'),
+   ('FStar.Legacy.Interactive', 'fstar/FStar.Legacy.Interactive.fs'),
+   ('FStar.Interactive',        'fstar/FStar.Interactive.fs'),
    ('FStar.Indent',             'fstar/FStar.Indent.fs'),
    ('FStar.Main',               'fstar/FStar.Main.fs')
    ]))

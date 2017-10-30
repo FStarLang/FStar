@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "5a5de3137c1666eee616b2766995ec1a"
     ],
     [
       "FStar.WellFounded.acc_inv",
@@ -18,10 +19,27 @@
         "@MaxIFuel_assumption", "@query",
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
-      0
+      0,
+      "acf2d2990d273d4cafa16add2071ca9d"
     ],
-    [ "FStar.WellFounded.axiom1", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.WellFounded.apply", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.WellFounded.axiom1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "530f60201fe698c15ac468ff8433fcbd"
+    ],
+    [
+      "FStar.WellFounded.apply",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2ad0a87d984c51d0996ecb470f14ea69"
+    ],
     [
       "FStar.WellFounded.fix_F",
       1,
@@ -35,7 +53,8 @@
         "fuel_guarded_inversion_FStar.WellFounded.acc",
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
-      0
+      0,
+      "2c96307b735082140f8b0824ec6a36b5"
     ]
   ]
 ]

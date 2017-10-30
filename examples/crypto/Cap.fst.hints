@@ -10,7 +10,8 @@
         "@query", "assumption_Platform.Bytes.HasEq_bytes",
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
-      0
+      0,
+      "a79bf8cfafd7b8e606fea11ddc449d89"
     ],
     [
       "Cap.main",
@@ -43,7 +44,8 @@
         "token_correspondence_MAC.key_prop",
         "typing_Platform.Bytes.equalBytes", "unit_typing"
       ],
-      0
+      0,
+      "e8f739f235a72610e490d00e8a391b53"
     ]
   ]
 ]

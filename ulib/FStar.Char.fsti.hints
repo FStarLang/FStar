@@ -12,9 +12,18 @@
         "haseqFStar.Char_Tm_refine_0e3e560c796fef6df2d948e98bb1d5d6",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "32b998dda2deb101f5c9d1f023454622"
     ],
-    [ "FStar.Char.__proj__Char__item___0", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Char.__proj__Char__item___0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "98aaa921956855e4d051c98f98cee8bb"
+    ],
     [
       "FStar.Char.char_of_int",
       1,
@@ -26,7 +35,8 @@
         "haseqFStar.Char_Tm_refine_0e3e560c796fef6df2d948e98bb1d5d6",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
-      0
+      0,
+      "6d2622a6d348f5dc73a7f10e4c077292"
     ]
   ]
 ]

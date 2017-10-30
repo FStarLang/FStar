@@ -1,7 +1,15 @@
 [
   "ÑðÕú»…\u0014°‰:ìd&J-Ë",
   [
-    [ "FStar.Reflection.Syntax.Lemmas.uncurry", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Reflection.Syntax.Lemmas.uncurry",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5bb74eb88c3c942f6b9f7c806d1dcacf"
+    ],
     [
       "FStar.Reflection.Syntax.Lemmas.mk_app_collect_inv_s",
       1,
@@ -37,7 +45,8 @@
         "token_correspondence_FStar.Reflection.Syntax.mk_app",
         "typing_FStar.Reflection.Basic.__inspect", "unit_typing"
       ],
-      0
+      0,
+      "faa08036cffa742f66ab100eadced3c0"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.mk_app_collect_inv",
@@ -52,7 +61,8 @@
         "equation_with_fuel_FStar.Reflection.Syntax.mk_app.fuel_instrumented",
         "projection_inverse_Prims.Nil_a"
       ],
-      0
+      0,
+      "11efc974e7466cfd18bd02c2af1fb5b5"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.collect_app_order'",
@@ -90,7 +100,8 @@
         "refinement_interpretation_FStar.Reflection.Basic_Tm_refine_62353a91a906896ee28a928c3c16dabb",
         "typing_FStar.Reflection.Basic.__inspect", "unit_typing"
       ],
-      0
+      0,
+      "b49fd210af0c31881b65134a7572d50e"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.collect_app_order",
@@ -125,7 +136,8 @@
         "true_interp", "typing_FStar.Reflection.Basic.__inspect",
         "unit_typing"
       ],
-      0
+      0,
+      "2ddcb4c9da78362702ff7cfcdd23c87d"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.list_ref",
@@ -143,7 +155,8 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "b55bdeae6e2a87cf55389ce56b54c7a6"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.collect_app_ref",
@@ -161,7 +174,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Nil_a", "true_interp"
       ],
-      0
+      0,
+      "4361f4b74672986c2ee2ee2528934cac"
     ]
   ]
 ]

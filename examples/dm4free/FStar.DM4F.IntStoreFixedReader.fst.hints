@@ -7,7 +7,8 @@
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "93a1a24ce4ff39af80329c546dfdc296"
     ],
     [
       "FStar.DM4F.IntStoreFixedReader._dm4f_INT_STORE_READER_wp_if_then_else",
@@ -15,8 +16,17 @@
       2,
       1,
       [ "@query" ],
-      0
+      0,
+      "2995ce48ea8e4d1843961f3c2eedcc08"
     ],
-    [ "FStar.DM4F.IntStoreFixedReader.read", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.DM4F.IntStoreFixedReader.read",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fadf84de91de59461d1caa3680ecf3c3"
+    ]
   ]
 ]

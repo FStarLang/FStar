@@ -45,7 +45,7 @@ val discharge_guard_no_smt    : env -> guard_t -> guard_t
 val discharge_guard           : env -> guard_t -> guard_t
 val force_trivial_guard       : env -> guard_t -> unit
 val resolve_implicits         : guard_t -> guard_t
-val resolve_implicits_lax     : guard_t -> guard_t
+val resolve_implicits_tac     : guard_t -> guard_t
 
 val unrefine   : env -> typ -> typ
 val try_teq    : bool -> env -> typ -> typ -> option<guard_t>

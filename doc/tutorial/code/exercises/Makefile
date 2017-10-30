@@ -32,7 +32,6 @@ Ex12f.TMAC.fst \
 Ex12g.TMAC2.fst
 
 FSTAR_HOME=../../../../
-HINTS_ENABLED?=--use_hints
 include ../Makefile.include
 
 HYPERSTACK=$(FSTAR_HOME)/ulib/hyperstack

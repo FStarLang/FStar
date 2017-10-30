@@ -241,7 +241,8 @@ let prefix_one_decl iface impl =
 //Top-level interface
 //////////////////////////////////////////////////////////////////////////
 module E = FStar.ToSyntax.Env
-let initialize_interface (mname:Ident.lid) (l:list<decl>) (env:E.env) : E.env =
+let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
+  fun (env:E.env) ->
     let decls =
         if Options.ml_ish()
         then ml_mode_check_initial_interface l
@@ -252,23 +253,25 @@ let initialize_interface (mname:Ident.lid) (l:list<decl>) (env:E.env) : E.env =
                                 (Ident.string_of_lid mname),
                    Ident.range_of_lid mname))
     | None ->
-      E.set_iface_decls env mname decls
+      (), E.set_iface_decls env mname decls
 
-let prefix_with_interface_decls (env:E.env) (impl:decl) : E.env * list<decl> =
+let prefix_with_interface_decls (impl:decl) : E.withenv<(list<decl>)> =
+  fun (env:E.env) ->
     match E.iface_decls env (E.current_module env) with
     | None ->
-      env, [impl]
+      [impl], env
     | Some iface ->
       let iface, impl = prefix_one_decl iface impl in
       let env = E.set_iface_decls env (E.current_module env) iface in
-      env, impl
+      impl, env
 
-let interleave_module (env:E.env) (a:modul) (expect_complete_modul:bool) : E.env * modul =
+let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> =
+  fun (env:E.env)  ->
     match a with
-    | Interface _ -> env, a
+    | Interface _ -> a, env
     | Module(l, impls) -> begin
       match E.iface_decls env l with
-      | None -> env, a
+      | None -> a, env
       | Some iface ->
         let iface, impls =
             List.fold_left
@@ -288,5 +291,5 @@ let interleave_module (env:E.env) (a:modul) (expect_complete_modul:bool) : E.env
                                     err,
                        Ident.range_of_lid l))
         | _ ->
-          env, a
+          a, env
       end

@@ -24,6 +24,7 @@ open FStar.BaseTypes
 open FStar.Util
 open FStar.SMTEncoding.Term
 open FStar.SMTEncoding.Util
+open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding
 open FStar.Range
 module BU = FStar.Util
@@ -320,8 +321,8 @@ let detail_errors hint_replay
         | hd::tl ->
 	      BU.print1 "%s, " (BU.string_of_int (List.length active));
 	      let decls = elim <| (eliminated @ errors @ tl) in
-          let result, _, _ = askZ3 decls in //hd is the only thing to prove
-          match result with
+          let result = askZ3 decls in //hd is the only thing to prove
+          match result.z3result_status with
           | Z3.UNSAT _ -> //hd is provable
             linear_check (hd::eliminated) errors tl
           | _ -> linear_check eliminated (hd::errors) tl in

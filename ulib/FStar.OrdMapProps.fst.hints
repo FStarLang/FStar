@@ -40,7 +40,8 @@
         "typing_FStar.Pervasives.Native.uu___is_Some",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "7676dcffbc664a2d7260fe8ca7131c22"
     ],
     [
       "FStar.OrdMapProps.fold",
@@ -48,7 +49,8 @@
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "c7786bdb7d344050db65d687fda8e9d0"
     ]
   ]
 ]

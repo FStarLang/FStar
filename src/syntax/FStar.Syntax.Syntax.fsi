@@ -372,6 +372,8 @@ type modul = {
   exports: sigelts;
   is_interface:bool;
 }
+val mod_name: modul -> lident
+
 type path = list<string>
 type subst_t = list<subst_elt>
 type mk_t_a<'a> = option<unit> -> range -> syntax<'a>

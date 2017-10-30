@@ -671,7 +671,8 @@ let lemma_modifies_1_1 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1 h2
   (requires (live h0 b /\ live h0 b' /\ modifies_1 b h0 h1 /\ modifies_1 b' h1 h2))
   (ensures  (modifies_2 b b' h0 h2 /\ modifies_2 b' b h0 h2))
   [SMTPatT (modifies_1 b h0 h1); SMTPatT (modifies_1 b' h1 h2)]
-  = ()
+  = if frameOf b = frameOf b' then modifies_trans_1_1' (frameOf b) b b' h0 h1 h2
+    else ()
 
 #reset-options "--z3rlimit 200 --initial_fuel 0 --max_fuel 0"
 

@@ -10,10 +10,27 @@
         "@query", "assumption_CPS.Expr.expr_haseq",
         "assumption_Prims.HasEq_int"
       ],
-      0
+      0,
+      "6384efe862559ed2bc4a61b791d59c90"
     ],
-    [ "CPS.DoubleDefun.uu___is_C0", 1, 2, 1, [ "@query" ], 0 ],
-    [ "CPS.DoubleDefun.uu___is_C1", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "CPS.DoubleDefun.uu___is_C0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "54051f79437299a8c8cfb0f57dfd241b"
+    ],
+    [
+      "CPS.DoubleDefun.uu___is_C1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "128aea015464dcbc415602a718398491"
+    ],
     [
       "CPS.DoubleDefun.__proj__C1__item___0",
       1,
@@ -24,7 +41,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_b1d4de3cb1cee3ac5aafed034e069035"
       ],
-      0
+      0,
+      "c8c862379b05ab15194230360c3e73e1"
     ],
     [
       "CPS.DoubleDefun.__proj__C1__item___1",
@@ -36,9 +54,18 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_b1d4de3cb1cee3ac5aafed034e069035"
       ],
-      0
+      0,
+      "4b1c84e880ecb6fddf98590d54e697ad"
     ],
-    [ "CPS.DoubleDefun.uu___is_C2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "CPS.DoubleDefun.uu___is_C2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "30b7aaeed06f6b7619dcecde514c6f6c"
+    ],
     [
       "CPS.DoubleDefun.__proj__C2__item___0",
       1,
@@ -49,7 +76,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_470d7912c558796d2a0ae83a2d7f54a2"
       ],
-      0
+      0,
+      "c35dcb1455619d811bbf316d8440b90d"
     ],
     [
       "CPS.DoubleDefun.__proj__C2__item___1",
@@ -61,7 +89,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_CPS.DoubleDefun_Tm_refine_470d7912c558796d2a0ae83a2d7f54a2"
       ],
-      0
+      0,
+      "c0a9457127f19cf1d0c9ccc79bf32986"
     ],
     [
       "CPS.DoubleDefun.stack",
@@ -78,7 +107,8 @@
         "subterm_ordering_CPS.DoubleDefun.C1",
         "subterm_ordering_CPS.DoubleDefun.C2"
       ],
-      0
+      0,
+      "0d81eb1a387c94e7b69228aa868bc54b"
     ],
     [
       "CPS.DoubleDefun.apply",
@@ -108,7 +138,8 @@
         "projection_inverse_CPS.DoubleDefun.C2__1",
         "subterm_ordering_CPS.DoubleDefun.C1", "typing_CPS.DoubleDefun.stack"
       ],
-      0
+      0,
+      "6578691ee9f52587ffa75e8321d23bb1"
     ],
     [
       "CPS.DoubleDefun.apply",
@@ -133,7 +164,8 @@
         "subterm_ordering_CPS.Expr.Plus", "typing_CPS.DoubleDefun.stack",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "9b9024367b7ef5e75790771e5f92f812"
     ]
   ]
 ]

@@ -19,6 +19,7 @@ all:	Apply.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
 	Trace.uver		\
+	Nest.uver		\
 	TestBV.uver		\
 	Map.uver		\
 	Map.OpaqueToSMT.uver	\
@@ -29,6 +30,7 @@ all:	Apply.uver		\
 	Simplifier.uver		\
 	Neg.uver		\
 	Caller.uver		\
+	Retype.uver		\
 	Unify.uver		\
 	UnitTests.uver		\
 	MetaCoq.uver		\

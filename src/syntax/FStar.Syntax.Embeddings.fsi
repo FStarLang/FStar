@@ -3,6 +3,7 @@ module FStar.Syntax.Embeddings
 
 open FStar.All
 open FStar.Syntax.Syntax
+module Range = FStar.Range
 
 val embed_unit   : unit -> term
 val unembed_unit : term -> unit
@@ -47,3 +48,6 @@ val steps_UnfoldOnly : term
 
 val embed_norm_step : norm_step -> term
 val unembed_norm_step : term -> norm_step
+
+val embed_range : Range.range -> term
+val unembed_range : term -> Range.range

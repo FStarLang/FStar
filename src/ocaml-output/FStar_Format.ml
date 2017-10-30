@@ -32,13 +32,13 @@ let cat: doc -> doc -> doc =
       match (uu____62, uu____63) with
       | (Doc d1,Doc d2) -> Doc (Prims.strcat d1 d2)
 let reduce: doc Prims.list -> doc =
-  fun docs1  -> FStar_List.fold_left cat empty docs1
+  fun docs  -> FStar_List.fold_left cat empty docs
 let group: doc -> doc = fun uu____77  -> match uu____77 with | Doc d -> Doc d
 let groups: doc Prims.list -> doc =
-  fun docs1  -> let uu____87 = reduce docs1 in group uu____87
+  fun docs  -> let uu____87 = reduce docs in group uu____87
 let combine: doc -> doc Prims.list -> doc =
   fun uu____96  ->
-    fun docs1  ->
+    fun docs  ->
       match uu____96 with
       | Doc sep ->
           let select uu____106 =
@@ -47,15 +47,15 @@ let combine: doc -> doc Prims.list -> doc =
                 if d = ""
                 then FStar_Pervasives_Native.None
                 else FStar_Pervasives_Native.Some d in
-          let docs2 = FStar_List.choose select docs1 in
-          Doc (FStar_String.concat sep docs2)
+          let docs1 = FStar_List.choose select docs in
+          Doc (FStar_String.concat sep docs1)
 let cat1: doc -> doc -> doc = fun d1  -> fun d2  -> reduce [d1; break1; d2]
-let reduce1: doc Prims.list -> doc = fun docs1  -> combine break1 docs1
+let reduce1: doc Prims.list -> doc = fun docs  -> combine break1 docs
 let nest: Prims.int -> doc -> doc =
   fun i  -> fun uu____139  -> match uu____139 with | Doc d -> Doc d
 let align: doc Prims.list -> doc =
-  fun docs1  ->
-    let uu____149 = combine hardline docs1 in
+  fun docs  ->
+    let uu____149 = combine hardline docs in
     match uu____149 with | Doc doc1 -> Doc doc1
 let hbox: doc -> doc = fun d  -> d
 let pretty: Prims.int -> doc -> Prims.string =

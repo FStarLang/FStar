@@ -99,6 +99,14 @@ so a behaviour opposite to [intros].
 *)
 let revert : tactic unit = fun () -> TAC?.reflect __revert
 
+assume private val __binder_retype  : binder -> __tac unit
+(** [binder_retype] changes the type of a binder in the context. After calling it
+with a binder of type `t`, the user is presented with a goal of the form `t == ?u`
+to be filled. The original goal (following that one) has the type of `b` in the
+context replaced by `?u`.
+*)
+let binder_retype (b : binder) : tactic unit = fun () -> TAC?.reflect (__binder_retype b)
+
 assume private val __clear_top : __tac unit
 (** [clear_top] will drop the outermost binder from the environment.
 Can only be used if the goal does not at all depend on it.

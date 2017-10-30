@@ -140,7 +140,7 @@ type norm_step =
     | Iota
     | UnfoldOnly : string list -> norm_step
 
-let simpl   : norm_step = Simpl
+let simplify : norm_step = Simpl
 let whnf    : norm_step = WHNF
 let primops : norm_step = Primops
 let delta   : norm_step = Delta
