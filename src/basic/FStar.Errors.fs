@@ -402,7 +402,7 @@ let message_prefix =
      append_prefix=append_prefix}
   
 type flag =
-  CError | CWarning | CSilent
+  | CError | CWarning | CSilent
 
 let flags = Array.create 71 CError  // the number needs to match the number of entries in "raw_error"
 
@@ -477,10 +477,7 @@ let errno_of_error = function
   | RedundantExplicitCurrying -> 68
   | HintFailedToReplayProof -> 69
   | HitReplayFailed -> 70
-  | _ ->
-      (** Things that cannot be silenced! *)
-      0
-;;
+  | _ -> 0 (** Things that cannot be silenced! *)
 
 let diag r msg = 
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg)
