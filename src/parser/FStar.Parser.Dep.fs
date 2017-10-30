@@ -157,7 +157,8 @@ let file_of_dep (file_system_map:files_for_module_name)
     | UseInterface key ->
       (match interface_of file_system_map key with
        | None ->
-          raise (Err (BU.format1 "Expected an interface for module %s, but couldn't find one" key))
+         assert false; //should be unreachable; see the only use of UseInterface in discover_one
+         raise (Err (BU.format1 "Expected an interface for module %s, but couldn't find one" key))
        | Some f -> f)
 
     | PreferInterface key //key for module 'a'
@@ -169,6 +170,11 @@ let file_of_dep (file_system_map:files_for_module_name)
     | UseImplementation key ->
         match implementation_of file_system_map key with
         | None ->
+          //if d is actually an edge in the dep_graph computed by discover
+          //then d is only present if either an interface or an implementation exist
+          //the previous case already established that the interface doesn't exist
+          //     since if the implementation was on the command line, it must exist because of option validation
+          assert false; //unreachable
           raise (Err (BU.format1 "Expected an implementation of module %s, but couldn't find one" key))
         | Some f -> f
 
@@ -354,25 +360,18 @@ let collect_one
 
   let record_open_module let_open lid =
       if add_dependence_edge lid then true
-      else let key = lowercase_join_longident lid true in
-           let r = enter_namespace original_map working_map key in
-           if not r //NS: this means that lid is a namespace?
-           then if let_open then
-                raise (Errors.Error ("let-open only supported for modules, not namespaces", (range_of_lid lid)))
-           else FStar.Errors.warn (range_of_lid lid)
-                    (Util.format1 "No modules in namespace %s and no file with \
-                                   that name either" (string_of_lid lid true));
-           false
+      else begin
+        if let_open then
+           FStar.Errors.warn (range_of_lid lid)
+                             (Util.format1 "Module not found: %s" (string_of_lid lid true));
+        false
+      end
   in
 
-  let record_open_namespace error_msg lid =
+  let record_open_namespace lid =
     let key = lowercase_join_longident lid true in
     let r = enter_namespace original_map working_map key in
     if not r then
-      match error_msg with
-      | Some e ->
-          raise (Errors.Error (e, range_of_lid lid))
-      | None ->
         FStar.Errors.warn (range_of_lid lid)
           (Util.format1 "No modules in namespace %s and no file with \
             that name either" (string_of_lid lid true))
@@ -381,18 +380,13 @@ let collect_one
   let record_open let_open lid =
     if record_open_module let_open lid
     then ()
-    else
-      let msg =
-        if let_open
-        then Some ("let-open only supported for modules, not namespaces")
-        else None
-      in
-      record_open_namespace msg lid
+    else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
+    then record_open_namespace lid
   in
 
   let record_open_module_or_namespace (lid, kind) =
     match kind with
-    | Open_namespace -> record_open_namespace None lid
+    | Open_namespace -> record_open_namespace lid
     | Open_module -> let _ = record_open_module false lid in ()
   in
 
@@ -404,7 +398,7 @@ let collect_one
     | Some deps_of_aliased_module ->
         smap_add working_map key deps_of_aliased_module
     | None ->
-        raise (Errors.Error (Util.format1 "module not found in search path: %s\n" alias, range_of_lid lid))
+        FStar.Errors.warn (range_of_lid lid) (Util.format1 "module not found in search path: %s\n" alias)
   in
 
   let record_lid lid =
