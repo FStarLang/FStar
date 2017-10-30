@@ -37,54 +37,10 @@ let step_exists_subheaps :tactic unit =
   apply_lemma (quote lemma_destruct_exists_subheaps);;
   norm []
 
-let step_intros :tactic unit =
-  forall_intros;;
-  implies_intro;;
-  idtac
-
-let step :tactic unit =
-  step_exists_subheaps              `or_else`
-  (step_read_write;; step_intros)   `or_else`
-  (step_alloc_return;; step_intros) `or_else`
-  step_read_write                   `or_else`
-  step_alloc_return                 `or_else`
-  fail "step: failed"
-
-let simplify :tactic unit =
-  pointwise ((apply_lemma (quote lemma_join_h_emp);; qed)
-  `or_else`  (apply_lemma (quote lemma_join_points_to_minus);; qed)
-  `or_else`  (apply_lemma (quote lemma_join_restrict_minus);; qed)
-  `or_else`  (apply_lemma (quote lemma_sel_r_update);; qed)
-  `or_else`  (apply_lemma (quote lemma_sel_r1_update);; qed)
-  `or_else`  (apply_lemma (quote lemma_restrict_r_update);; qed)
-  `or_else`  (apply_lemma (quote lemma_restrict_r1_update);; qed)
-  `or_else`  (apply_lemma (quote lemma_join_emp_h);; qed)
-  `or_else`   trefl);;
-  idtac
-
-let rec repeat_simplify () :Tac unit =
- ( g1 <-- cur_goal;
-   simplify;;
-   g2 <-- cur_goal;
-   if term_eq g1 g2
-   then return ()
-   else repeat_simplify
- ) ()
-
-let context_rewrites :tactic unit =
-  e <-- cur_env;
-  mapM (fun b ->
-    let typ_b = type_of_binder b in
-    match term_as_formula' typ_b with
-    | Comp Eq _ l r ->
-       begin match inspect l with
-       | Tv_Var _  -> rewrite b
-       | _         -> idtac
-       end
-    | _            -> idtac
-  ) (binders_of_env e);;
-  idtac
-
+let step_implies_intro_equality :tactic unit =
+  apply_lemma (quote lemma_implies_intro_equality);;
+  norm []
+  
 let normalize_context :tactic unit =
   e <-- cur_env;
   mapM (fun b ->
@@ -97,49 +53,142 @@ let normalize_context :tactic unit =
         idtac
     end
   ) (binders_of_env e);;
-  idtac
+  return ()
 
-let simplify_context :tactic unit =
-  e <-- cur_env;
-  mapM (fun b ->
-    let typ_b = type_of_binder b in
-    begin match term_as_formula' typ_b with
-    | Comp Eq _ _ _ ->
-        binder_retype b;;
-        simplify;;
-        trefl
-    | _             ->
-        idtac
-    end
-  ) (binders_of_env e);;
-  idtac
+let simplify :tactic unit =
+  pointwise ((apply_lemma (quote lemma_join_h_emp);; qed)
+  `or_else`  (apply_lemma (quote lemma_join_points_to_minus);; qed)
+  `or_else`  (apply_lemma (quote lemma_join_restrict_minus);; qed)
+  `or_else`  (apply_lemma (quote lemma_sel_r_update);; qed)
+  `or_else`  (apply_lemma (quote lemma_sel_r1_update);; qed)
+  `or_else`  (apply_lemma (quote lemma_restrict_r_update);; qed)
+  `or_else`  (apply_lemma (quote lemma_restrict_r1_update);; qed)
+  `or_else`  (apply_lemma (quote lemma_join_emp_h);; qed)
+  `or_else`  (apply_lemma (quote lemma_implies_intro_equality);; qed)
+  `or_else`   fail "")
 
-let reduce_context :tactic unit =
-  simplify_context;;
-  normalize_context;;
-  context_rewrites
-
-let rec repeat_simplify_context () :Tac unit =
- (e1 <-- cur_env;
-  reduce_context;;
-  e2 <-- cur_env;
-  let binders_of_e1 = binders_of_env e1 in
-  let binders_of_e2 = binders_of_env e2 in
-  if List.Tot.length binders_of_e1 = List.Tot.length binders_of_e2
-  then (if List.Tot.fold_left2 (fun acc b1 b2 -> acc && term_eq (type_of_binder b1) (type_of_binder b2))
-                               true
-			       (binders_of_e1)
-			       (binders_of_e2)
-       then return ()
-       else repeat_simplify_context)
-  else fail "repeat_simplify_context: binders length vary"
+let rec repeat_simplify () :Tac unit =
+ ( g1 <-- cur_goal;
+   simplify;;
+   g2 <-- cur_goal;
+   if term_eq g1 g2
+   then return ()
+   else repeat_simplify
  ) ()
+
+let implies_intro' :tactic unit =
+  b <-- implies_intro;
+  binder_retype b;;
+  simplify;;
+  trefl;;
+  normalize_context
+
+let step_intros :tactic unit =
+  forall_intros;;
+  implies_intro';;
+  idtac
+
+let step :tactic unit =
+  step_exists_subheaps              `or_else`
+  (step_read_write;; step_implies_intro_equality) `or_else`
+  (step_alloc_return;; step_implies_intro_equality) `or_else`
+  (step_read_write;; step_intros)   `or_else`
+  (step_alloc_return;; step_intros) `or_else`
+  step_read_write                   `or_else`
+  step_alloc_return                 `or_else`
+  fail "step: failed"
+
+// let swap_ok (r1:addr) (r2:addr) (h:heap) (a:int) (b:int) =
+//   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
+//   let p = fun _ h -> sel h r1 == b /\ sel h r2 == a in
+//   let t = (lift_wpsep (wpsep_command c)) p h in
+//   assert_by_tactic (sel h r1 == a /\ sel h r2 == b ==> t) (
+//     norm [delta; delta_only unfold_steps; primops];;
+//     implies_intro;;
+//     apply_lemma (quote lemma_destruct_exists_subheaps);;
+//     norm [];;
+//     apply_lemma (quote lemma_read_write);;
+//     norm [];;
+//     forall_intro;;
+//     implies_intro;;
+//     apply_lemma (quote lemma_destruct_exists_subheaps);;
+//     norm [];;
+//     apply_lemma (quote lemma_read_write);;
+//     norm [];;
+//     forall_intro;;
+//     b <-- implies_intro;
+//     binder_retype b;;
+//     simplify;;
+//     trefl;;
+//     normalize_context;;
+//     apply_lemma (quote lemma_destruct_exists_subheaps);;
+//     norm [];;
+//     apply_lemma (quote lemma_read_write);;
+//     norm [];;
+//     apply_lemma (quote lemma_implies_intro_equality);;
+//     norm [];;
+//     apply_lemma (quote lemma_read_write);;
+//     norm [];;
+//     apply_lemma (quote lemma_implies_intro_equality);;
+//     norm [];;
+//     repeat_simplify
+// )
+
+// let context_rewrites :tactic unit =
+//   e <-- cur_env;
+//   mapM (fun b ->
+//     let typ_b = type_of_binder b in
+//     match term_as_formula' typ_b with
+//     | Comp Eq _ l r ->
+//        begin match inspect l with
+//        | Tv_Var _  -> rewrite b
+//        | _         -> idtac
+//        end
+//     | _            -> idtac
+//   ) (binders_of_env e);;
+//   idtac
+
+// let simplify_context :tactic unit =
+//   e <-- cur_env;
+//   mapM (fun b ->
+//     let typ_b = type_of_binder b in
+//     begin match term_as_formula' typ_b with
+//     | Comp Eq _ _ _ ->
+//         binder_retype b;;
+//         simplify;;
+//         trefl
+//     | _             ->
+//         idtac
+//     end
+//   ) (binders_of_env e);;
+//   idtac
+
+// let reduce_context :tactic unit =
+//   simplify_context;;
+//   normalize_context;;
+//   context_rewrites
+
+// let rec repeat_simplify_context () :Tac unit =
+//  (e1 <-- cur_env;
+//   reduce_context;;
+//   e2 <-- cur_env;
+//   let binders_of_e1 = binders_of_env e1 in
+//   let binders_of_e2 = binders_of_env e2 in
+//   if List.Tot.length binders_of_e1 = List.Tot.length binders_of_e2
+//   then (if List.Tot.fold_left2 (fun acc b1 b2 -> acc && term_eq (type_of_binder b1) (type_of_binder b2))
+//                                true
+// 			       (binders_of_e1)
+// 			       (binders_of_e2)
+//        then return ()
+//        else repeat_simplify_context)
+//   else fail "repeat_simplify_context: binders length vary"
+//  ) ()
 
 (* Writing to a pointer *)
 let write_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   step;;
-  repeat_simplify_context;;
+  //repeat_simplify_context;;
   repeat_simplify;;
   dump "Write"
 
@@ -154,7 +203,7 @@ let increment_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  repeat_simplify_context;;
+  //repeat_simplify_context;;
   repeat_simplify;;
   dump "Increment"
 
@@ -169,7 +218,7 @@ let swap_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  repeat_simplify_context;;
+  //repeat_simplify_context;;
   repeat_simplify;;
   dump "Swap"
 
@@ -184,7 +233,7 @@ let double_increment_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  repeat_simplify_context;;
+  //repeat_simplify_context;;
   repeat_simplify;;
   dump "Double Increment"
 
@@ -199,7 +248,7 @@ let rotate_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  repeat_simplify_context;;
+  //repeat_simplify_context;;
   repeat_simplify;;
   dump "Rotate"
 
@@ -213,7 +262,7 @@ let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:int) (j:int) (k:int) =
 let init_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   repeat step;;
-  repeat_simplify_context;;
+  //repeat_simplify_context;;
   repeat_simplify;;
   dump "Init"
 
@@ -228,7 +277,7 @@ let copy_tau :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   implies_intro;;
   repeat step;;
-  repeat_simplify_context;;
+  //repeat_simplify_context;;
   repeat_simplify;;
   dump "Copy"
 

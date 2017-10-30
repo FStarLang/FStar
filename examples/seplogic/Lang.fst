@@ -53,7 +53,10 @@ let lemma_destruct_exists_subheaps (phi:heap -> heap -> heap -> heap -> prop) (h
 		                             phi h1' h1'' h2' h2'')))
   = ()
 
-
+let lemma_implies_intro_equality (phi:heap -> prop) (x:heap)
+  :Lemma (requires phi x)
+         (ensures (forall (y:heap). (y == x) ==> phi y))
+  = ()
 
 
 
