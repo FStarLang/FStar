@@ -21,8 +21,8 @@ module U32 = FStar.UInt32
 
 /// This coercion seems to be necessary in some places
 ///
-/// For example,  when trying to treat a    `vec a (l1 +^ l2)`
-///                                    as a `vec a (m1 +^ m2)`
+/// For example,  when trying to treat a    `raw a (l1 +^ l2)`
+///                                    as a `raw a (m1 +^ m2)`
 /// F* type inference tries matches on the head symbol of the index
 /// and tries to prove `l1 = m1 /\ l2 = m2`
 /// which is often too strong.
@@ -31,9 +31,9 @@ unfold
 let coerce
     (#a:Type)
     (#l:len_t)
-    (v:vec a l)
+    (v:raw a l)
     (m:len_t{l == m})
-  : Tot (vec a m)
+  : Tot (raw a m)
   = v
 
 /// An abbreviation that states that some binary arithmetic
@@ -54,10 +54,10 @@ let append_inj
     (#l2:len_t)
     (#m1:len_t)
     (#m2:len_t)
-    (u1:vec a l1)
-    (u2:vec a l2{ok (+) l1 l2})
-    (v1:vec a m1)
-    (v2:vec a m2{ok (+) m1 m2})
+    (u1:raw a l1)
+    (u2:raw a l2{ok (+) l1 l2})
+    (v1:raw a m1)
+    (v2:raw a m2{ok (+) m1 m2})
   : Lemma
     (requires (let open U32 in
                m1 +^ m2 = l1 +^ l2 /\
@@ -69,20 +69,20 @@ let append_inj
               equal u2 v2))
   = FStar.Seq.lemma_append_inj (reveal u1) (reveal u2) (reveal v1) (reveal v2)
 
-let head (#a:Type) (#l:len_t{l <> 0ul}) (v:vec a l)
+let head (#a:Type) (#l:len_t{l <> 0ul}) (v:raw a l)
   : Tot a
-  = v.(0ul)
+  = v.[0ul]
 
-let tail (#a:Type) (#l:len_t{l <> 0ul}) (v:vec a l)
-  : Tot (vec a U32.(l -^ 1ul))
-  = slice v 1ul l
+let tail (#a:Type) (#l:len_t{l <> 0ul}) (v:raw a l)
+  : Tot (raw a U32.(l -^ 1ul))
+  = sub v 1ul l
 
 let head_append
     (#a:Type)
     (#l1:len_t)
     (#l2:len_t)
-    (v1:vec a l1{l1 <> 0ul})
-    (v2:vec a l2{ok (+) l1 l2})
+    (v1:raw a l1{l1 <> 0ul})
+    (v2:raw a l2{ok (+) l1 l2})
   : Lemma
     (ensures (head (v1@|v2) == head v1))
   = ()
@@ -91,8 +91,8 @@ let tail_append
     (#a:Type)
     (#l1:len_t)
     (#l2:len_t)
-    (v1:vec a l1{l1 <> 0ul})
-    (v2:vec a l2{ok (+) l1 l2})
+    (v1:raw a l1{l1 <> 0ul})
+    (v2:raw a l2{ok (+) l1 l2})
   : Lemma
     (ensures (tail (v1@|v2) == tail v1@|v2))
   = Seq.lemma_tail_append (reveal v1) (reveal v2)
