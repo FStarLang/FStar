@@ -3,11 +3,13 @@ module Lang
 open FStar.ST
 open FStar.SepLogic.Heap
 
+type t = FStar.SepLogic.Heap.t
+
 noeq type command :Type0 -> Type =
   | Return: #a:Type -> v:a -> command a
   | Bind  : #a:Type0 -> #b:Type0 -> c1:command a -> c2:(a -> command b) -> command b
-  | Read  : id:addr -> command int
-  | Write : id:addr -> v:int -> command unit
+  | Read  : id:addr -> command t
+  | Write : id:addr -> v:t -> command unit
   | Alloc : command addr
 
 let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
@@ -22,13 +24,13 @@ let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
      (wpsep_command (c2 x)) (fun y h2 -> p y (h2 `join` h1'')) h1') h2'
 
     | Read r ->
-      fun p h0 -> (exists (x:int). h0 == (r `points_to` x)) /\ (forall (x:int). h0 == (r `points_to` x) ==> p x h0)
+      fun p h0 -> (exists (x:t). h0 == (r `points_to` x)) /\ (forall (x:t). h0 == (r `points_to` x) ==> p x h0)
 
     | Write r y ->
-      fun p h0 -> (exists (x:int). h0 == (r `points_to` x)) /\ (forall (h1:heap). h1 == (r `points_to` y) ==> p () h1)
+      fun p h0 -> (exists (x:t). h0 == (r `points_to` x)) /\ (forall (h1:heap). h1 == (r `points_to` y) ==> p () h1)
 
     | Alloc ->
-      fun p h0 -> (h0 == emp) /\ (forall (r:addr) (h1:heap). (h1 == r `points_to` 0) ==> p r h1)
+      fun p h0 -> (h0 == emp) /\ (forall (r:addr) (h1:heap). (h1 == r `points_to` 0uL) ==> p r h1)
 
 let lift_wpsep (#a:Type0) (wp_sep:st_wp a) :st_wp a
   = fun p h0 -> exists (h0':heap) (h0'':heap). h0 == (h0' `join` h0'') /\

@@ -2,7 +2,9 @@ module FStar.SepLogic.Heap
 
 include FStar.Heap
 
-type addr = ref int
+type t = UInt64.t
+
+type addr = ref t
 
 abstract let restrict (h:heap) (r:addr) :heap
   = admit ()
@@ -13,13 +15,13 @@ abstract let minus (h:heap) (r:addr) :heap
 abstract let join (h1:heap) (h2:heap) :heap
   = admit ()
 
-abstract let points_to (r:addr) (x:int) :heap
+abstract let points_to (r:addr) (x:t) :heap
   = admit ()
 
-abstract let sel (h:heap) (r:addr) :Tot int
+abstract let sel (h:heap) (r:addr) :Tot t
   = admit ()
 
-abstract let upd (h:heap) (r:addr) (x:int) :heap
+abstract let upd (h:heap) (r:addr) (x:t) :heap
   = admit ()
 
 let lemma_join_restrict_minus (r:addr) (h:heap)
@@ -52,19 +54,19 @@ let lemma_restrict_eq_points_to (r:addr) (h:heap)
 	 [SMTPat (restrict h r)]
   = admit ()
 
-let lemma_points_to_is_injective (r:addr) (x:int) (y:int)
+let lemma_points_to_is_injective (r:addr) (x:t) (y:t)
   :Lemma (requires (points_to r x == points_to r y))
          (ensures  (x == y))
 	 [SMTPat (points_to r x); SMTPat (points_to r y)]
   = admit ()
 
-let lemma_sel_r_from_points_to_join_h (r:addr) (x:int) (h1:heap)
+let lemma_sel_r_from_points_to_join_h (r:addr) (x:t) (h1:heap)
   :Lemma (requires True)
          (ensures sel (join (points_to r x) h1) r == x)
 	 [SMTPat (sel (join (points_to r x) h1) r)]
   = admit ()
 
-let lemma_sel_r1_from_points_to_join_h (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:int) (h1:heap)
+let lemma_sel_r1_from_points_to_join_h (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t) (h1:heap)
   :Lemma (requires True)
          (ensures sel (join (points_to r x) h1) r1 == sel h1 r1)
 	 [SMTPat (sel (join (points_to r x) h1) r1)]
@@ -76,13 +78,13 @@ let lemma_sel_r_from_minus (r:addr) (r1:addr{addr_of r1 <> addr_of r})(h:heap)
          [SMTPat (sel (minus h r1) r)]
   = admit ()
 
-let lemma_restrict_points_to_join_h_to_r (r:addr) (x:int) (h1:heap)
+let lemma_restrict_points_to_join_h_to_r (r:addr) (x:t) (h1:heap)
   :Lemma (requires True)
          (ensures restrict (join (points_to r x) h1) r == (points_to r x))
          [SMTPat (restrict (join (points_to r x) h1) r)]
   = admit ()
 
-let lemma_restrict_points_to_join_h_to_r1 (r:addr) (r1:addr{addr_of r1 <> addr_of r})(x:int) (h1:heap)
+let lemma_restrict_points_to_join_h_to_r1 (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t) (h1:heap)
   :Lemma (requires True)
          (ensures restrict (join (points_to r x) h1) r1 == restrict h1 r1)
 	 [SMTPat (restrict (join (points_to r x) h1) r1)]
@@ -94,31 +96,31 @@ let lemma_restrict_r1_from_minus (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (h:
 	 [SMTPat (restrict (minus h r) r1)]
   = admit ()
 
-let lemma_join_points_to_minus (h:heap) (r:addr) (x:int)
+let lemma_join_points_to_minus (h:heap) (r:addr) (x:t)
   :Lemma (requires True)
          (ensures join (points_to r x) (minus h r) == upd h r x)
 	 [SMTPat (join (points_to r x) (minus h r))]
   = admit ()
 
-let lemma_sel_r_update (h:heap) (r:addr) (x:int)
+let lemma_sel_r_update (h:heap) (r:addr) (x:t)
   :Lemma (requires True)
          (ensures sel (upd h r x) r == x)
 	 [SMTPat (sel (upd h r x) r)]
   = admit ()
 
-let lemma_sel_r1_update (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:int)
+let lemma_sel_r1_update (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t)
   :Lemma (requires True)
          (ensures sel (upd h r x) r1 == sel h r1)
 	 [SMTPat (sel (upd h r x) r1)]
   = admit ()
 
-let lemma_restrict_r_update (h:heap) (r:addr) (x:int)
+let lemma_restrict_r_update (h:heap) (r:addr) (x:t)
   :Lemma (requires True)
          (ensures restrict (upd h r x) r == points_to r x)
 	 [SMTPat (restrict (upd h r x) r)]
   = admit ()
 
-let lemma_restrict_r1_update (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:int)
+let lemma_restrict_r1_update (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t)
   :Lemma (requires True)
          (ensures restrict (upd h r x) r1 == restrict h r1)
 	 [SMTPat (restrict (upd h r x) r1)]
