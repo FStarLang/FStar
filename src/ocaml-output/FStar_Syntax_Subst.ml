@@ -1426,6 +1426,16 @@ let close_univ_vars_tscheme:
               (fun i  -> fun x  -> FStar_Syntax_Syntax.UD (x, (k + (n1 - i))))
               us in
           let uu____5586 = subst s t in (us', uu____5586)
+let subst_tscheme:
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.tscheme -> FStar_Syntax_Syntax.tscheme
+  =
+  fun s  ->
+    fun uu____5596  ->
+      match uu____5596 with
+      | (us,t) ->
+          let s1 = shift_subst (FStar_List.length us) s in
+          let uu____5606 = subst s1 t in (us, uu____5606)
 let opening_of_binders:
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_t =
   fun bs  ->
@@ -1433,9 +1443,9 @@ let opening_of_binders:
     FStar_All.pipe_right bs
       (FStar_List.mapi
          (fun i  ->
-            fun uu____5608  ->
-              match uu____5608 with
-              | (x,uu____5614) -> FStar_Syntax_Syntax.DB ((n1 - i), x)))
+            fun uu____5628  ->
+              match uu____5628 with
+              | (x,uu____5634) -> FStar_Syntax_Syntax.DB ((n1 - i), x)))
 let closing_of_binders:
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.subst_t =
   fun bs  -> closing_subst bs
