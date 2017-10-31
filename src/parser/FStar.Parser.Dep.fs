@@ -175,7 +175,8 @@ let file_of_dep_aux
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
       if cmd_line_has_impl key //unless the cmd line contains 'a.fst'
-      then if Options.exposed key
+      && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
+      then if Options.expose_interfaces()
            then maybe_add_suffix (Option.get (implementation_of file_system_map key))
            else raise (Err(BU.format3 "Invoking fstar with %s on the command line breaks \
                                        the abstraction imposed by its interface %s; \
