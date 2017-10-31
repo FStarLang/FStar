@@ -35,7 +35,8 @@ all: $(addsuffix .checked, $(FSTAR_FILES))
 .PRECIOUS: _tags $(ML_FILES) $(addsuffix .checked,$(FSTAR_FILES)) $(OUTPUT_DIRECTORY)/out.krml
 
 _tags:
-	echo -e "<ml>:traverse\n<$(OUTPUT_DIRECTORY)>:traverse\n" > $@
+	echo "<ml>: traverse" > $@
+	echo "<$(OUTPUT_DIRECTORY)>: traverse\n" >> $@
 
 # To extract an A.ml ML file from an A.fst, we just reload its A.fst.checked file
 # and then with the --codegen OCaml option, emit an A.ml
@@ -60,6 +61,8 @@ $(KREMLIN_EXE): $(OUTPUT_DIRECTORY)/out.krml
 
 test.kremlin: $(KREMLIN_EXE)
 	./$< hello
+
+test: test.kremlin test.ocaml
 
 $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
 	make -C $(FSTAR_HOME)/ulib/ml
