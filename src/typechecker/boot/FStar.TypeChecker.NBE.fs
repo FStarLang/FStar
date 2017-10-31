@@ -35,15 +35,15 @@ type atom = //JUST FSHARP
   | Match of list<branch> * (* the original branches -- used for readback initially then I realized it is not needed *)
              t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *) 
-  | Fix of (t -> t) * 
-            t * (**)
-            int (* the recursive argument *)
+//  | Fix of (t -> t) * 
+//            t * (**)
+//            int (* the recursive argument *)
   (* Fix is used to represent fixpoints whose evaluation 
        is stuck because the recursive argument is not a contructor. *)
   (* Zoe: I'm not sure how to use this in our setting since F*'s ast does not
      mark the recursive argument and therefore I'm not sure how to prevent 
      infinite fixpoint unrolling *) 
-  | FiX of (t -> t) (* Danel: This is a unary rec. def. that will not be unfolded any more *)
+  | Rec of term * list<t> (* Thunk of a rec. function def. *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
   | Lam of (t -> t)
@@ -52,9 +52,13 @@ and t = //JUST FSHARP
   | Construct of fv * list<t>
   | Unit
   | Bool of bool
-  | Rec of term * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
 type head = t
 type annot = option<t> 
+
+let is_not_accu (x:t) =
+  match x with
+  | Accu (_, _) -> false
+  | _ -> true
 
 let mkConstruct i ts = Construct(i,ts)
 
@@ -86,23 +90,18 @@ let rec mkBranches branches cont =
   | _ -> failwith "Unexpected pattern" 
 
 (* We are not targeting tagless normalization at this point *)
-(* Danel: app is now defined simultaneously with translate to accommodate analysing rec. defs. *)
 let rec app (f:t) (x:t) =
   match f with
   | Lam f -> f x
   | Accu (a, ts) -> Accu (a, x::ts)
   | Construct (i, ts) -> Construct (i, x::ts)
-  | Rec (y, ts) -> (match x with
-                    (* Danel: In a real F* scenario, the decreases check would happen here? *)
-                    | Accu _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x])
-                                                   (* Danel: if a rec. def. is applied 
-                                                      to an accumulator, do not unfold 
-                                                      it further *)
-                    | _ -> app (translate (Rec (y, ts)::ts) y) x)
-                                            (* Danel: if a rec. def. is applied to 
-                                               a non-accumulator, then we unfold it *)
   | Unit
   | Bool _ -> failwith "Ill-typed application"
+
+and iapp (f:t) (args:list<t>) = 
+  match args with
+  | [] -> f
+  | _ -> iapp (app f (List.head args)) (List.tail args)
 
 and translate (bs:list<t>) (e:term) : t =
     match (SS.compress e).n with
@@ -158,8 +157,8 @@ and translate (bs:list<t>) (e:term) : t =
       translate (def::bs) body
 
     | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
-      let f = Rec (lb.lbdef, bs) in 
-      translate (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
+      let f = Accu (Rec (lb.lbdef, bs), []) in
+      translate (f::bs) body
 
       // this will loop infinitely when the recursive argument is symbolic 
       // let def = lb.lbdef in 
@@ -195,9 +194,22 @@ let rec readback (x:t) : term =
       (match ts with 
        | [] -> head
        | _ -> U.mk_app head args)
-    | Accu (FiX t, ts) -> failwith "Not yet implemented"
-                          (* Danel: hmm, should we wrap this stuck 
-                             application inside a (unary) let rec? *)
+    | Accu (Rec (f, bs), ts) -> 
+       (match (SS.compress f).n with
+        | Tm_abs (args, _, _) -> 
+            if (ts.Length = args.Length &&  
+                List.fold (fun x y -> x && y) true (List.map is_not_accu ts))
+            then readback (iapp (translate ((Accu (Rec (f, bs), []))::bs) f) ts)
+            else failwith "TODO: reading back a partially applied recursive function not yet implemented"
+                          (* Danel: we need to store more information in the Rec thunks, such as 
+                                    the name of the let binder, so as to be able to define this 
+                                    case as the following FStar term (pretty printed):
+
+                                    let g = readback (translate bs e) in 
+                                    g ts_1 ... ts_n
+
+                           *)
+        | _ -> failwith "Recursive definition not a function")
     | _ -> failwith "Not yet implemented"
     
 let normalize (e:term) : term = readback (translate [] e)
