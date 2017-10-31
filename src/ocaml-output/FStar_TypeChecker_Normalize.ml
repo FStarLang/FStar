@@ -6087,3 +6087,9 @@ let rec elim_uvars:
                    (uu___393_20362.FStar_Syntax_Syntax.sigattrs)
                })
       | FStar_Syntax_Syntax.Sig_pragma uu____20373 -> s
+let erase_universes:
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term
+  =
+  fun env  ->
+    fun t  -> normalize [EraseUniverses; AllowUnboundUniverses] env t

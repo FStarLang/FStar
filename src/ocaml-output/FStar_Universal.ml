@@ -581,7 +581,8 @@ let tc_one_file:
            | FStar_Pervasives_Native.Some (tcmod,mii) ->
                let uu____1108 =
                  let uu____1113 =
-                   FStar_ToSyntax_ToSyntax.add_modul_to_env tcmod mii in
+                   FStar_ToSyntax_ToSyntax.add_modul_to_env tcmod mii
+                     (FStar_TypeChecker_Normalize.erase_universes env) in
                  FStar_All.pipe_left (with_tcenv env) uu____1113 in
                (match uu____1108 with
                 | (uu____1134,env1) ->

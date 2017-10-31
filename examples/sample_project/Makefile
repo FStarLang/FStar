@@ -16,7 +16,7 @@ OUTPUT_DIRECTORY=_output
 ################################################################################
 #All the F* files in your project
 FSTAR_FILES=$(wildcard *.fst)
-FSTAR=fstar --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
+FSTAR=fstar --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --use_hints $(OTHERFLAGS)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
 OCAML_EXE=$(PROGRAM).ocaml.exe
 KREMLIN_EXE=$(PROGRAM).exe
