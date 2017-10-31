@@ -21,7 +21,7 @@ else
   SCONS = scons
 endif
 
-CONFIGURATION=Release
+CONFIGURATION?=Release
 
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
