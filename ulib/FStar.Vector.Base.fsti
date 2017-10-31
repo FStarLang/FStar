@@ -115,6 +115,10 @@ val reveal_hide:
 let equal (#a:Type) (#l:len_t) (v1:raw a l) (v2:raw a l) =
     Seq.equal (reveal v1) (reveal v2)
 
+/// Equality for vectors of potentially different sizes
+let equal2 (#a:Type) (#l1:len_t) (#l2:len_t) (v1:raw a l1) (v2:raw a l2) =
+    l1 == l2 /\ equal #a #l1 v1 v2
+
 /// Extensional equality can be used to prove syntactic equality
 val extensionality:
     #a:Type
