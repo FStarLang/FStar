@@ -123,3 +123,9 @@ let lemma_restrict_r1_update (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r}
          (ensures restrict (upd h r x) r1 == restrict h r1)
 	 [SMTPat (restrict (upd h r x) r1)]
   = admit ()
+
+let lemma_sel_r1_from_restrict (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r})(h1:heap)
+  :Lemma (requires True)
+         (ensures sel (join (restrict h r) h1) r1 == sel h1 r1)
+	 [SMTPat (sel (join (restrict h r) h1) r1)]
+  = admit ()
