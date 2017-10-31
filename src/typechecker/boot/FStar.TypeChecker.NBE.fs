@@ -101,7 +101,7 @@ let rec app (f:t) (x:t) =
 and iapp (f:t) (args:list<t>) = 
   match args with
   | [] -> f
-  | _ -> iapp (app f (List.head args)) (List.tail args)
+  | _ -> iapp (app f (List.hd args)) (List.tl args)
 
 and translate (bs:list<t>) (e:term) : t =
     match (SS.compress e).n with
@@ -197,8 +197,8 @@ let rec readback (x:t) : term =
     | Accu (Rec (f, bs), ts) -> 
        (match (SS.compress f).n with
         | Tm_abs (args, _, _) -> 
-            if (ts.Length = args.Length &&  
-                List.fold (fun x y -> x && y) true (List.map is_not_accu ts))
+            if (List.length ts = List.length args &&
+                List.fold_right (fun x y -> x && y) (List.map is_not_accu ts) true)
             then readback (iapp (translate ((Accu (Rec (f, bs), []))::bs) f) ts)
             else failwith "TODO: reading back a partially applied recursive function not yet implemented"
                           (* Danel: we need to store more information in the Rec thunks, such as 
