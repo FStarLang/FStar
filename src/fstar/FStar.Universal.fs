@@ -221,7 +221,10 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
          if FStar.Errors.get_err_count() = 0 then store_module_to_cache env fn (fst tcmod) mii;
          tcmod, env
        | Some (tcmod, mii) ->
-         let _, env = with_tcenv env <| FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii in
+         let _, env =
+            with_tcenv env <|
+            FStar.ToSyntax.ToSyntax.add_modul_to_env tcmod mii (FStar.TypeChecker.Normalize.erase_universes env)
+         in
          let env = FStar.TypeChecker.Tc.load_checked_module env tcmod in
          (tcmod,0), env
   else let tcmod, _, env = tc_source_file () in

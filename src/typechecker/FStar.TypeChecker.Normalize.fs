@@ -2168,3 +2168,6 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
 
     | Sig_pragma _ ->
       s
+
+let erase_universes env t =
+    normalize [EraseUniverses; AllowUnboundUniverses] env t

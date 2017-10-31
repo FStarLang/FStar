@@ -124,6 +124,7 @@ let monad_signature env m s =
   | _ -> fail()
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) =
+//  printfn "initial eff_decl :\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
   let open_annotated_univs, annotated_univ_names = SS.univ_var_opening ed.univs in
   let open_univs n_binders t =
       SS.subst (SS.shift_subst n_binders open_annotated_univs) t
@@ -170,8 +171,8 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                 action_typ  = snd (op ([], a.action_typ)) }) ed.actions
         }
   in
-
-  //Returns (a:Type) and M.WP a, for a fresh name a
+//  printfn "eff_decl after opening:\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
+   //Returns (a:Type) and M.WP a, for a fresh name a
   let wp_with_fresh_result_type env mname signature =
        let fail t =
            raise (Error(Err.unexpected_signature_for_monad env mname t,
