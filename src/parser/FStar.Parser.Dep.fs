@@ -143,7 +143,11 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-let file_of_dep (file_system_map:files_for_module_name)
+let cache_file_name fn = fn ^ ".checked"
+
+let file_of_dep_aux
+                (use_checked_file:bool)
+                (file_system_map:files_for_module_name)
                 (all_cmd_line_files:list<file_name>)
                 (d:dependence)
     : file_name =
@@ -153,24 +157,36 @@ let file_of_dep (file_system_map:files_for_module_name)
            is_implementation fn &&
            key = lowercase_module_name fn)
     in
+    let maybe_add_suffix f =
+        if use_checked_file then cache_file_name f else f
+    in
     match d with
     | UseInterface key ->
+      //This key always resolves to an interface source file
       (match interface_of file_system_map key with
        | None ->
-          raise (Err (BU.format1 "Expected an interface for module %s, but couldn't find one" key))
+         assert false; //should be unreachable; see the only use of UseInterface in discover_one
+         raise (Err (BU.format1 "Expected an interface for module %s, but couldn't find one" key))
        | Some f -> f)
 
     | PreferInterface key //key for module 'a'
         when not (cmd_line_has_impl key)               //unless the cmd line contains 'a.fst'
               && has_interface file_system_map key ->  //so long as 'a.fsti' exists
-      Option.get <| interface_of file_system_map key   //we prefer to use 'a.fsti'
+      maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
     | UseImplementation key ->
         match implementation_of file_system_map key with
         | None ->
+          //if d is actually an edge in the dep_graph computed by discover
+          //then d is only present if either an interface or an implementation exist
+          //the previous case already established that the interface doesn't exist
+          //     since if the implementation was on the command line, it must exist because of option validation
+          assert false; //unreachable
           raise (Err (BU.format1 "Expected an implementation of module %s, but couldn't find one" key))
-        | Some f -> f
+        | Some f -> maybe_add_suffix f
+
+let file_of_dep = file_of_dep_aux false
 
 let dependences_of (file_system_map:files_for_module_name)
                    (deps:dependence_graph)
@@ -354,25 +370,18 @@ let collect_one
 
   let record_open_module let_open lid =
       if add_dependence_edge lid then true
-      else let key = lowercase_join_longident lid true in
-           let r = enter_namespace original_map working_map key in
-           if not r //NS: this means that lid is a namespace?
-           then if let_open then
-                raise (Errors.Error ("let-open only supported for modules, not namespaces", (range_of_lid lid)))
-           else FStar.Errors.warn (range_of_lid lid)
-                    (Util.format1 "No modules in namespace %s and no file with \
-                                   that name either" (string_of_lid lid true));
-           false
+      else begin
+        if let_open then
+           FStar.Errors.warn (range_of_lid lid)
+                             (Util.format1 "Module not found: %s" (string_of_lid lid true));
+        false
+      end
   in
 
-  let record_open_namespace error_msg lid =
+  let record_open_namespace lid =
     let key = lowercase_join_longident lid true in
     let r = enter_namespace original_map working_map key in
     if not r then
-      match error_msg with
-      | Some e ->
-          raise (Errors.Error (e, range_of_lid lid))
-      | None ->
         FStar.Errors.warn (range_of_lid lid)
           (Util.format1 "No modules in namespace %s and no file with \
             that name either" (string_of_lid lid true))
@@ -381,18 +390,13 @@ let collect_one
   let record_open let_open lid =
     if record_open_module let_open lid
     then ()
-    else
-      let msg =
-        if let_open
-        then Some ("let-open only supported for modules, not namespaces")
-        else None
-      in
-      record_open_namespace msg lid
+    else if not let_open //syntactically, this cannot be a namespace if let_open is true; so don't retry
+    then record_open_namespace lid
   in
 
   let record_open_module_or_namespace (lid, kind) =
     match kind with
-    | Open_namespace -> record_open_namespace None lid
+    | Open_namespace -> record_open_namespace lid
     | Open_module -> let _ = record_open_module false lid in ()
   in
 
@@ -404,7 +408,7 @@ let collect_one
     | Some deps_of_aliased_module ->
         smap_add working_map key deps_of_aliased_module
     | None ->
-        raise (Errors.Error (Util.format1 "module not found in search path: %s\n" alias, range_of_lid lid))
+        FStar.Errors.warn (range_of_lid lid) (Util.format1 "module not found in search path: %s\n" alias)
   in
 
   let record_lid lid =
@@ -736,14 +740,6 @@ let deps_of (Mk (deps, file_system_map, all_cmd_line_files)) (f:file_name)
     : list<file_name> =
     dependences_of file_system_map deps all_cmd_line_files f
 
-let cache_file_name fn =
-    let checked_file_name = fn ^ ".checked" in
-    let lax_checked_file_name = checked_file_name ^ ".lax" in
-    let lax_ok = not (Options.should_verify_file fn) in
-    if lax_ok
-    then lax_checked_file_name
-    else checked_file_name
-
 let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let cache_file = cache_file_name fn in
     let digest_of_file fn =
@@ -781,9 +777,21 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
-          let files = List.map (file_of_dep file_system_map all_cmd_line_files) f_deps in
+          let files = List.map (file_of_dep_aux true file_system_map all_cmd_line_files) f_deps in
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
-          Util.print2 "%s: %s\n" f (String.concat " " files))
+          //interfaces get two lines of output
+          //this one prints:
+          //   a.fsti: b.fst.checked c.fsti.checked ...
+          if is_interface f then Util.print2 "%s:\\\n\t%s\n\n" f (String.concat "\\\n\t" files);
+          //this one prints:
+          //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
+          Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f (String.concat "\\\n\t" files);
+          //And, if this is not an interface, we also print out the dependences among the .ml files
+          // excluding files in ulib, since these are packaged in fstarlib.cmxa
+          if is_implementation f then
+            let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename f))) '.' "_" in
+            Util.print3 "%s%s.ml: %s.checked\n\n" (match Options.output_dir() with None -> "" | Some x -> x ^ "/") ml_base_name f
+          )
 
 let print deps =
   match (Options.dep()) with

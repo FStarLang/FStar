@@ -3,8 +3,8 @@ let mkAssume:
   (FStar_SMTEncoding_Term.term,FStar_SMTEncoding_Term.caption,Prims.string)
     FStar_Pervasives_Native.tuple3 -> FStar_SMTEncoding_Term.decl
   =
-  fun uu____10  ->
-    match uu____10 with
+  fun uu____9  ->
+    match uu____9 with
     | (tm,cap,nm) ->
         FStar_SMTEncoding_Term.Assume
           {
@@ -14,9 +14,9 @@ let mkAssume:
             FStar_SMTEncoding_Term.assumption_fact_ids = []
           }
 let norng:
-  'Auu____28 'Auu____29 .
-    ('Auu____29 -> FStar_Range.range -> 'Auu____28) ->
-      'Auu____29 -> 'Auu____28
+  'Auu____23 'Auu____24 .
+    ('Auu____24 -> FStar_Range.range -> 'Auu____23) ->
+      'Auu____24 -> 'Auu____23
   = fun f  -> fun x  -> f x FStar_Range.dummyRange
 let mkTrue: FStar_SMTEncoding_Term.term =
   FStar_SMTEncoding_Term.mkTrue FStar_Range.dummyRange
@@ -187,9 +187,9 @@ let mkExists:
     FStar_SMTEncoding_Term.term
   = norng FStar_SMTEncoding_Term.mkExists
 let norng2:
-  'Auu____562 'Auu____563 'Auu____564 .
-    ('Auu____564 -> 'Auu____563 -> FStar_Range.range -> 'Auu____562) ->
-      'Auu____564 -> 'Auu____563 -> 'Auu____562
+  'Auu____502 'Auu____503 'Auu____504 .
+    ('Auu____504 -> 'Auu____503 -> FStar_Range.range -> 'Auu____502) ->
+      'Auu____504 -> 'Auu____503 -> 'Auu____502
   = fun f  -> fun x  -> fun y  -> f x y FStar_Range.dummyRange
 let mk_Term_app:
   FStar_SMTEncoding_Term.term ->
