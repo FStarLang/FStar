@@ -124,6 +124,7 @@ let defaults =
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
+      ("expose"                       , List []);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
@@ -229,6 +230,7 @@ let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
+let get_expose                  ()      = lookup_opt "expose"                   (as_list as_string)
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
@@ -542,6 +544,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "extract_namespace",
         Accumulated (PostProcessed (pp_lowercase, (SimpleStr "namespace name"))),
         "Only extract modules in the specified namespace");
+
+       ( noshort,
+        "expose",
+        Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
+        "Explicitly break the abstraction imposed by the interface of the provided module (use with care!)");
 
        ( noshort,
         "fstar_home",
@@ -1090,6 +1097,8 @@ let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
+let exposed                      m  = get_expose () |> Util.for_some (fun x ->
+                                      String.lowercase x = String.lowercase m)
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let gen_native_tactics           () = get_gen_native_tactics          ()
 let full_context_dependency      () = true
