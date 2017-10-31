@@ -1,20 +1,21 @@
 ################################################################################
 # Customize these variables for your project
 ################################################################################
-#The root files of your project, from which to begin scanning dependences
+# The root files of your project, from which to begin scanning dependences
 ROOT_FILE=A.fst
 
-#The executable file you want to produce
+# The executable file you want to produce
 PROGRAM=myprogram
 
-#A driver in ML to call into your program
+# A driver in ML to call into your program
 TOP_LEVEL_FILE=ml/main.ml
 
-#A place to put all the emitted .ml files
+# A place to put all the emitted .ml files
 OUTPUT_DIRECTORY=_output
 
 ################################################################################
-#All the F* files in your project
+# All the F* files in your project
+################################################################################
 FSTAR_FILES=$(wildcard *.fst)
 FSTAR=fstar --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --use_hints $(OTHERFLAGS)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
@@ -51,7 +52,7 @@ $(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE) $(FSTAR_HOME)/bin/fstarlib/fst
 	mv _build/$(subst .ml,.native,$(TOP_LEVEL_FILE)) $@
 
 test.ocaml: $(OCAML_EXE)
-	./$<
+	./$< hello
 
 $(OUTPUT_DIRECTORY)/c/out.krml: $(addsuffix .checked,$(FSTAR_FILES))
 	krml -fsopts --cache_checked_modules -tmpdir $(OUTPUT_DIRECTORY)/c -skip-translation $(FSTAR_FILES)
@@ -67,14 +68,12 @@ test: test.kremlin test.ocaml
 $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
 	make -C $(FSTAR_HOME)/ulib/ml
 
+clean:
+	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE)
 
 .depend:
 	$(FSTAR) --dep make $(ROOT_FILE) > .depend
 
 depend: .depend
 
-clean:
-	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE)
-
 include .depend
-
