@@ -82,7 +82,7 @@ $(FSYACC) $(FSLEX): nuget-restore
 # This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
-FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_info \
+FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --expose_interfaces --eager_inference --lax --MLish --no_location_info \
 		   --odir ocaml-output --codegen OCaml \
 			$(addprefix --include , ../ulib boot basic extraction format fsdoc fstar \
                                     parser prettyprint reflection smtencoding syntax \

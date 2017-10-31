@@ -2,7 +2,7 @@
 # Customize these variables for your project
 ################################################################################
 # The root files of your project, from which to begin scanning dependences
-ROOT_FILE=A.fst
+FSTAR_FILES=$(wildcard *.fst)
 
 # The executable file you want to produce
 PROGRAM=myprogram
@@ -16,19 +16,17 @@ OUTPUT_DIRECTORY=_output
 ################################################################################
 # All the F* files in your project
 ################################################################################
-FSTAR_FILES=$(wildcard *.fst)
 FSTAR=fstar --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --use_hints $(OTHERFLAGS)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
 OCAML_EXE=$(PROGRAM).ocaml.exe
 KREMLIN_EXE=$(PROGRAM).exe
 
-
-# The default target is to verify all files, without extracting anything
-all: $(addsuffix .checked, $(FSTAR_FILES))
+all: verify-all
 
 # The a.fst.checked is the binary, checked version of a.fst
 %.checked: %
 	$(FSTAR) $*
+	touch $@
 
 # The _tags file is a directive to ocamlbuild
 # The extracted ML files are precious, because you may want to examine them,
@@ -69,11 +67,14 @@ $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa:
 	make -C $(FSTAR_HOME)/ulib/ml
 
 clean:
-	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE)
+	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend
 
 .depend:
-	$(FSTAR) --dep full $(ROOT_FILE) > .depend
+	$(FSTAR) --dep full $(FSTAR_FILES) > .depend
 
 depend: .depend
 
 include .depend
+
+# The default target is to verify all files, without extracting anything
+verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
