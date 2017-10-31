@@ -2102,17 +2102,19 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
         in
         lid, ed, desugar_args env args, desugar_attributes env cattributes in
     let binders = Subst.close_binders binders in
-    let sub (_, x) =
-        let edb, x = Subst.open_term ed.binders x in
-        if List.length args <> List.length edb
-        then raise (Error("Unexpected number of arguments to effect constructor", defn.range));
-        let s = U.subst_of_list edb args in
-        [], Subst.close binders (Subst.subst s x) in
+    if List.length args <> List.length ed.binders
+    then raise (Error("Unexpected number of arguments to effect constructor", defn.range));
+    let ed_binders, _, ed_binders_opening = Subst.open_term' ed.binders S.t_unit in
+    let sub (us, x) =
+        let x = Subst.subst (Subst.shift_subst (List.length us) ed_binders_opening) x in
+        let s = U.subst_of_list ed_binders args in
+        Subst.close_tscheme binders (us, (Subst.subst s x))
+    in
     let mname=qualify env0 eff_name in
     let ed = {
             mname       =mname;
             cattributes =cattributes;
-            univs       =[];
+            univs       =ed.univs;
             binders     =binders;
             signature   =snd (sub ([], ed.signature));
             ret_wp      =sub ed.ret_wp;
