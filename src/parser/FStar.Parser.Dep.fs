@@ -771,8 +771,30 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     hash_deps [] binary_deps
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
-    format. *)
+    format.
+
+    Deprecated: this will print the dependences among the source files
+  *)
 let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
+    let keys = deps_keys deps in
+    keys |> List.iter
+        (fun f ->
+          let f_deps, _ = deps_try_find deps f |> Option.get in
+          let files = List.map (file_of_dep file_system_map all_cmd_line_files) f_deps in
+          let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
+          //this one prints:
+          //   a.fst: b.fst c.fsti a.fsti
+          Util.print2 "%s: %s\n\n" f (String.concat " " files))
+
+(** Print the dependencies as returned by [collect] in a Makefile-compatible
+    format.
+
+     -- The dependences are among the .checked files
+
+     -- We also print dependences for producing .ml files from .checked files
+        This takes care of renaming A.B.C.fst to A_B_C.ml
+  *)
+let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let keys = deps_keys deps in
     keys |> List.iter
         (fun f ->
@@ -794,9 +816,11 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           )
 
 let print deps =
-  match (Options.dep()) with
+  match Options.dep() with
   | Some "make" ->
       print_make deps
+  | Some "full" ->
+      print_full deps
   | Some "graph" ->
       let (Mk(deps, _, _)) = deps in
       print_graph deps

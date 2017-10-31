@@ -72,7 +72,7 @@ clean:
 	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE)
 
 .depend:
-	$(FSTAR) --dep make $(ROOT_FILE) > .depend
+	$(FSTAR) --dep full $(ROOT_FILE) > .depend
 
 depend: .depend
 
