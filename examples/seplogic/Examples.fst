@@ -49,47 +49,36 @@ let simplify :tactic unit =
   `or_else`  (apply_lemma (quote lemma_implies_intro_equality);; qed)
   `or_else`  (apply_lemma (quote lemma_sel_r1_from_restrict);; qed)
   `or_else`  (apply_lemma (quote lemma_sel_r_from_minus);; qed)
-  `or_else`   fail "")
+  `or_else`   fail "simplify: failed")
 
 let rec repeat_simplify () :Tac unit =
-  (g1 <-- cur_goal;
-   simplify;;
-   g2 <-- cur_goal;
-   if term_eq g1 g2
-   then return ()
+  (g1 <-- cur_goal; simplify;; g2 <-- cur_goal;
+   if term_eq g1 g2 
+   then return () 
    else repeat_simplify
   ) ()
 
-let rec repeat_simplify_binder () :Tac unit =
-  (g1 <-- cur_goal;
-   simplify;;
-   g2 <-- cur_goal;
-   begin match (term_as_formula' g1, term_as_formula' g2) with
-   | App _ t1, App _ t2 -> 
+let rec repeat_simplify' () :Tac unit =
+  (g1 <-- cur_goal; simplify;; g2 <-- cur_goal;
+    begin match (term_as_formula' g1, term_as_formula' g2) with
+    | App _ t1, App _ t2 -> 
        begin match (term_as_formula' t1, term_as_formula' t2) with
-       | (Comp Eq _ l1 _, Comp Eq _ l2 _) -> if term_eq l1 l2
-                                             then return ()
-                         		     else repeat_simplify_binder
-       | _                                -> return ()				 
+       | (Iff l1 _, Iff l2 _) -> if term_eq l1 l2
+                                 then return ()
+                         	 else repeat_simplify'
+       | _                    -> return ()				 
        end
-   | _ -> return ()
-   end
+    | _                  -> return ()
+    end
    ) ()
-
-let implies_intro' :tactic unit =
-  b <-- implies_intro;
-  binder_retype b;;
-  repeat_simplify_binder;;
-  trefl;;
-  e <-- cur_env;
-  begin match (List.Tot.nth (List.Tot.rev (binders_of_env e)) 0) with
-  | Some b' -> norm_binder_type [] b'
-  | None -> idtac
-  end
 
 let step_intros :tactic unit =
   forall_intros;;
-  implies_intro'
+  apply_lemma (quote lemma_impl_l_cong);;
+  repeat_simplify';;
+  apply_lemma (quote lemma_refl);;
+  implies_intro;;
+  return ()
 
 let step :tactic unit =
   step_destruct_exists_subheaps                     `or_else`

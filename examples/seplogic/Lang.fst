@@ -60,5 +60,13 @@ let lemma_implies_intro_equality (phi:heap -> prop) (x:heap)
          (ensures (forall (y:heap). (y == x) ==> phi y))
   = ()
 
+let lemma_refl (#a:Type) 
+  :Lemma (requires True)
+         (ensures a <==> a) 
+  = ()
 
+let lemma_impl_l_cong (#a:Type) (#b:Type) (#c:Type) (p1:squash (a <==> b)) (p2:squash (b ==> c)) 
+  :Lemma (requires True)
+         (ensures a ==> c) 
+  = ()
 
