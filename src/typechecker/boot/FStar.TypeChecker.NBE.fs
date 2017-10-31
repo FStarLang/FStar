@@ -146,7 +146,7 @@ and translate (bs:list<t>) (e:term) : t =
           (* Assuming that all the arguments to the pattern constructors 
              are binders -- i.e. no nested patterns for now  *) 
           (* XXX : is rev needed? *)
-          let branch = translate ((List.rev args) @ args) (pickBranch c branches) in
+          let branch = translate ((List.rev args) @ bs) (pickBranch c branches) in
           branch
         | _ -> 
           mkAccuMatch branches scrut case
