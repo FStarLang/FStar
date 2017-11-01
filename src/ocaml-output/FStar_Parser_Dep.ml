@@ -283,9 +283,9 @@ let file_of_dep_aux:
                         let uu____741 =
                           let uu____742 = interface_of file_system_map key in
                           FStar_Option.get uu____742 in
-                        FStar_Util.format3
-                          "Invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s; if you really want this behavior add the option '--expose %s'"
-                          uu____737 uu____741 key in
+                        FStar_Util.format2
+                          "Invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s; if you really want this behavior add the option '--expose_interfaces'"
+                          uu____737 uu____741 in
                       FStar_Errors.Err uu____736 in
                     FStar_Exn.raise uu____735))
               else
