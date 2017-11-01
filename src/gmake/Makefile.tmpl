@@ -18,7 +18,7 @@ TOP_LEVEL_FILE ?=
 OUTPUT_DIRECTORY ?= _output
 
 ################################################################################
-FSTAR += --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
+MY_FSTAR=$(FSTAR) --cache_checked_modules --odir $(OUTPUT_DIRECTORY)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
 OCAML_EXE=$(PROGRAM).ocaml.exe
 KREMLIN_EXE=$(PROGRAM).exe
@@ -27,7 +27,7 @@ all: verify-all
 
 # a.fst.checked is the binary, checked version of a.fst
 %.checked: %
-	$(FSTAR) $*
+	$(MY_FSTAR) $*
 	touch $@
 
 # The _tags file is a directive to ocamlbuild
@@ -45,7 +45,7 @@ _tags:
 # Note, by default F* will extract all files in the dependency graph
 # With the --extract_module, we instruct it to just extract A.ml
 $(OUTPUT_DIRECTORY)/%.ml:
-	$(FSTAR) $(subst .checked,,$<) --codegen OCaml --extract_module $(subst .fst.checked,,$<)
+	$(MY_FSTAR) $(subst .checked,,$<) --codegen OCaml --extract_module $(subst .fst.checked,,$<)
 
 $(OCAML_EXE): _tags $(ML_FILES) $(TOP_LEVEL_FILE) $(FSTAR_HOME)/bin/fstarlib/fstarlib.cmxa
 	OCAMLPATH="$(FSTAR_HOME)/bin" ocamlbuild -I $(OUTPUT_DIRECTORY) -use-ocamlfind -pkg fstarlib $(subst .ml,.native,$(TOP_LEVEL_FILE))
@@ -72,7 +72,7 @@ basic_clean:
 	rm -rf _build $(OUTPUT_DIRECTORY) *~ *.checked $(OCAML_EXE) $(KREMLIN_EXE) .depend
 
 .depend:
-	$(FSTAR) --dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend
+	$(MY_FSTAR) --dep full $(addprefix --include , $(INCLUDE_PATHS)) $(FSTAR_FILES) > .depend
 
 depend: .depend
 

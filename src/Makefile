@@ -279,16 +279,17 @@ ulib-extra:
 
 ulib:
 	+$(MAKE) -C ../ulib
+	+$(MAKE) -C ../ulib/ml
 
 # Depends on fstarlib.cmxa, which is built by hello
 tutorial: hello
 	+$(MAKE) -C ../doc/tutorial regressions
 
 # Depends on fstarlib.cmxa, which is built by hello
-native_tactics: hello
+native_tactics: hello ulib
 	+$(MAKE) -C ../examples/native_tactics all
 
-extraction-examples: hello
+extraction-examples: hello ulib
 	+$(MAKE) -C ../examples/extraction all
 
 uexamples:
