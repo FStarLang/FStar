@@ -170,7 +170,8 @@ let file_of_dep_aux
        | None ->
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
          raise (Err (BU.format1 "Expected an interface for module %s, but couldn't find one" key))
-       | Some f -> f)
+       | Some f ->
+         if use_checked_file then f ^ ".source" else f)
 
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
@@ -814,8 +815,9 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           //interfaces get two lines of output
           //this one prints:
-          //   a.fsti: b.fst.checked c.fsti.checked ...
-          if is_interface f then Util.print2 "%s:\\\n\t%s\n\n" f (String.concat "\\\n\t" files);
+          //   a.fsti.source: a.fsti b.fst.checked c.fsti.checked
+          //                 touch $@
+          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" f f (String.concat "\\\n\t" files);
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
           Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f (String.concat " \\\n\t" files);
