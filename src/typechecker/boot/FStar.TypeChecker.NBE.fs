@@ -43,7 +43,7 @@ type atom = //JUST FSHARP
   (* Zoe: I'm not sure how to use this in our setting since F*'s ast does not
      mark the recursive argument and therefore I'm not sure how to prevent 
      infinite fixpoint unrolling *) 
-  | Rec of term * list<t> (* Thunk of a rec. function def. *)
+  | Rec of letbinding * list<t> (* Thunk of a rec. function def. *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
   | Lam of (t -> t)
@@ -157,7 +157,7 @@ and translate (bs:list<t>) (e:term) : t =
       translate (def::bs) body
 
     | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
-      let f = Accu (Rec (lb.lbdef, bs), []) in
+      let f = Accu (Rec (lb, bs), []) in
       translate (f::bs) body
 
       // this will loop infinitely when the recursive argument is symbolic 
@@ -194,21 +194,23 @@ let rec readback (x:t) : term =
       (match ts with 
        | [] -> head
        | _ -> U.mk_app head args)
-    | Accu (Rec (f, bs), ts) -> 
-       (match (SS.compress f).n with
+    | Accu (Rec (lb, bs), ts) -> 
+       (match (SS.compress lb.lbdef).n with
         | Tm_abs (args, _, _) -> 
             if (List.length ts = List.length args &&
                 List.fold_right (fun x y -> x && y) (List.map is_not_accu ts) true)
-            then readback (iapp (translate ((Accu (Rec (f, bs), []))::bs) f) ts)
-            else failwith "TODO: reading back a partially applied recursive function not yet implemented"
-                          (* Danel: we need to store more information in the Rec thunks, such as 
-                                    the name of the let binder, so as to be able to define this 
-                                    case as the following FStar term (pretty printed):
-
-                                    let g = readback (translate bs e) in 
-                                    g ts_1 ... ts_n
-
-                           *)
+            then readback (iapp (translate ((Accu (Rec (lb, bs), []))::bs) lb.lbdef) ts)
+            else (let args = List.map (fun x -> as_arg (readback x)) ts in
+                  let body = (match args with 
+                              | [] -> (match lb.lbname with
+                                       | BU.Inl bv -> S.bv_to_name bv
+                                       | BU.Inr fv -> failwith "Not yet implemented")
+                              | _  -> (match lb.lbname with
+                                       | BU.Inl bv -> U.mk_app (S.bv_to_name bv) args
+                                       | BU.Inr fv -> failwith "Not yet implemented")) in 
+                  S.mk (Tm_let((true, [lb]), body)) None Range.dummyRange)
+                  (* Currently not normalizing the let-bound definition on its own, 
+                     only normalizing it when it is unfolded *)
         | _ -> failwith "Recursive definition not a function")
     | _ -> failwith "Not yet implemented"
     
