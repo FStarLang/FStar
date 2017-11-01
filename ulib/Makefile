@@ -1,3 +1,5 @@
+all: verify-all
+
 # Makefile.verify has been split off because it is the actual
 # Makefile that is distributed in the binary package. This
 # Makefile here is not.

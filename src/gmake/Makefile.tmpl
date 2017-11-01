@@ -23,8 +23,6 @@ ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .
 OCAML_EXE=$(PROGRAM).ocaml.exe
 KREMLIN_EXE=$(PROGRAM).exe
 
-all: verify-all
-
 # a.fst.checked is the binary, checked version of a.fst
 %.checked: %
 	$(MY_FSTAR) $*
