@@ -96,7 +96,7 @@ install-fstar-tactics: $(TACLIB_OBJECTS)
 	mkdir -p $(TACLIB_DIR)
 	cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
 
-clean:
+clean: basic_clean
 	rm -f *.mgen
 	rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
 	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
