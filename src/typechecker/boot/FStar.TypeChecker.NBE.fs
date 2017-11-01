@@ -211,7 +211,7 @@ and readback (x:t) : term =
           | _ -> U.mk_app head args)
        else (* otherwise compute *)
          readback (curry (translate ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
-// Zoe: Commenting out conflict in Danel
+// Zoe: Commenting out conflict with Danel
 // =======
 //     | Accu (Rec (lb, bs), ts) -> 
 //        (match (SS.compress lb.lbdef).n with
