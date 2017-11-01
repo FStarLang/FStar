@@ -129,15 +129,16 @@ Guidelines for the changelog:
 
 * When a file `f` (either an implementation or an interface file)
   refers to a symbol from a module `A`, then `f` depends only on the
-  interface of `A` if one exists on the search path and if the
-  implementation of `A` is not explicitly provided on the command
-  line.
+  interface of `A` if one exists on the search path. If no interface
+  exists for `A` then `f` depends on the implementation of `A`.
 
 * Additionally, an implementation file always depends on its
   interface, if one exists. An interface does not depend on its
   implementation.
 
-* The `fstar --dep make f1 ... fn` option:
+* The `--dep full` option:
+
+  Invoking `fstar --dep full f1 ... fn`
 
      - emits the entire dependence graph D of `f1 ... fn`
 
@@ -145,9 +146,9 @@ Guidelines for the changelog:
        implementation `a.fst` is not in D, we also emit the
        dependence graph of `a.fst`.
 
-  This means, for instance, that you can run `fstar --dep make` on the
-  main file of your project and get dependences (in make format) for
-  all the files you need to verify in order to be sure that your
+  This means, for instance, that you can run `fstar --dep full` on all
+  the root files of your project and get dependences (in make format)
+  for all the files you need to verify in order to be sure that your
   project is fully verified.
 
 * When you invoke `fstar f1 ... fn`, the only files that are verified
@@ -158,21 +159,36 @@ Guidelines for the changelog:
   only) implementation files in the dependence graph of `f1 ... fn`
   will be extracted.
 
-**Expected further changes in the near future**
+* The `--expose_interfaces` option:
+
+  In rare cases, we want to verify module `B` against a particular,
+  concrete implementation of module `A`, disregarding the abstraction
+  imposed by an interface of `A`.
+
+  In such a situation, you can run:
+  
+     `fstar --expose_interfaces A.fsti A.fst B.fst`
+
+  Note, this explicitly breaks the abstraction of the interface
+  `A.fsti`. So use this only if you really know what you're doing.
 
 * We aim to encourage a style in which typical invocations of `fstar`
-  take only a single file on the command line.
+  take only a single file on the command line. Only that file will be
+  verified.
 
-* Only that file will be verified (unless --lax) and extracted (if
-  --codegen is specified).
+* Only that file will be verified and extracted (if --codegen is
+  specified).
 
-* The --extract_namespace and --extract_module flags will be removed.
+* The --cache_checked_modules flag enables incremental, separate
+  compilation of F* projects. See examples/sample_project for how this
+  is used.
+
+Expected changes in the near future:
 
 * We will make --cache_checked_modules the default so that the cost of
   reloading dependences for each invocation of fstar is mininimized.
 
-* We will provide scons and makefile templates to support full
-  project, incremental verification and extraction.
+* The --extract_namespace and --extract_module flags will be removed.
 
 ## Error reporting
 
