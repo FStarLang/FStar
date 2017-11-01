@@ -178,12 +178,11 @@ let file_of_dep_aux
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
            then maybe_add_suffix (Option.get (implementation_of file_system_map key))
-           else raise (Err(BU.format3 "Invoking fstar with %s on the command line breaks \
+           else raise (Err(BU.format2 "Invoking fstar with %s on the command line breaks \
                                        the abstraction imposed by its interface %s; \
-                                       if you really want this behavior add the option '--expose %s'"
+                                       if you really want this behavior add the option '--expose_interfaces'"
                                        (Option.get (implementation_of file_system_map key))
-                                       (Option.get (interface_of file_system_map key))
-                                       key))
+                                       (Option.get (interface_of file_system_map key))))
       else maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
