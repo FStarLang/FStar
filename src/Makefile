@@ -259,7 +259,7 @@ else
 endif
 
 # Getting parallelism from this target
-uregressions: ulib tutorial uexamples interactive-test
+uregressions: fstarlib ulib tutorial uexamples interactive-test
 
 # Getting parallelism from this target as well
 uregressions-ulong: uregressions ulib-extra
@@ -267,20 +267,21 @@ uregressions-ulong: uregressions ulib-extra
 ulib-extra:
 	+$(MAKE) -C ../ulib extra
 
-ulib:
-	+$(MAKE) -C ../ulib
+fstarlib:
 	+$(MAKE) -C ../ulib/ml
 
-# Depends on fstarlib.cmxa, which is built by hello
-tutorial: ulib
+ulib:
+	+$(MAKE) -C ../ulib
+
+tutorial: fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
+
+uexamples: fstarlib
+	+$(MAKE) -C ../examples all
 
 # Interactive mode regressions
 interactive-test:
 	$(MAKE) -C tests/interactive
-
-uexamples: ulib
-	+$(MAKE) -C ../examples all
 
 ulong:
 	+$(MAKE) utest-prelude
