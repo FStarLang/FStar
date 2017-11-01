@@ -14,8 +14,6 @@ TOP_LEVEL_FILE=ml/main.ml
 OUTPUT_DIRECTORY=_output
 
 ################################################################################
-# All the F* files in your project
-################################################################################
 FSTAR=fstar --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --use_hints $(OTHERFLAGS)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
 OCAML_EXE=$(PROGRAM).ocaml.exe
@@ -23,7 +21,7 @@ KREMLIN_EXE=$(PROGRAM).exe
 
 all: verify-all
 
-# The a.fst.checked is the binary, checked version of a.fst
+# a.fst.checked is the binary, checked version of a.fst
 %.checked: %
 	$(FSTAR) $*
 	touch $@
@@ -77,4 +75,5 @@ depend: .depend
 include .depend
 
 # The default target is to verify all files, without extracting anything
+# It needs to be here, because it reads the variable ALL_FST_FILES in .depend
 verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
