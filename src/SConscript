@@ -446,6 +446,7 @@ def GenerateDependencyGraph():
     target = s[0][:-1]  # the 0th string is the target name.  Remove the trailing ':'
     sources = s[1:]     # the remaining strings are the sources.
     sourcesmunged = map((lambda x: x.replace('.checked.lax','')), sources) # remove .checked.lax from filenames when present
+    sourcesmunged = map((lambda x: x.replace('.source','')), sourcesmunged) # remove .source from filenames when present
     if target.endswith(".ml"):
       Depends(target, sourcesmunged)
     else: # target is .source or .checked.  Make a pseudotarget for it.
