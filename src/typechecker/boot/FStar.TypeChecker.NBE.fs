@@ -34,7 +34,6 @@ type atom = //JUST FSHARP
   | Prod of t * t (* for full CiC -- not used right now *)
   | Match of t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *) 
-  | FiX of (t -> t) (* Danel: This is a unary rec. def. that will not be unfolded any more *)
   | Rec of letbinding * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
@@ -47,6 +46,11 @@ and t = //JUST FSHARP
   | Bool of bool
 type head = t
 type annot = option<t> 
+
+let is_not_accu (x:t) =
+  match x with
+  | Accu (_, _) -> false
+  | _ -> true
 
 let mkConstruct i ts = Construct(i,ts)
 
@@ -84,23 +88,18 @@ let rec mkBranches branches cont =
   | _ -> failwith "Unexpected pattern" 
 
 (* We are not targeting tagless normalization at this point *)
-(* Danel: app is now defined simultaneously with translate to accommodate analysing rec. defs. *)
 let rec app (f:t) (x:t) =
   match f with
   | Lam f -> f x
   | Accu (a, ts) -> Accu (a, x::ts)
   | Construct (i, ts) -> Construct (i, x::ts)
-  // | Rec (y, ts) -> (match x with
-  //                   (* Danel: In a real F* scenario, the decreases check would happen here? *)
-  //                   | Accu _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x])
-  //                                                  (* Danel: if a rec. def. is applied 
-  //                                                     to an accumulator, do not unfold 
-  //                                                     it further *)
-  //                   | _ -> app (translate (Rec (y, ts)::ts) y) x)
-  //                                           (* Danel: if a rec. def. is applied to 
-  //                                              a non-accumulator, then we unfold it *)
   | Unit
   | Bool _ -> failwith "Ill-typed application"
+
+and iapp (f:t) (args:list<t>) = 
+  match args with
+  | [] -> f
+  | _ -> iapp (app f (List.hd args)) (List.tl args)
 
 and translate (bs:list<t>) (e:term) : t =
     match (SS.compress e).n with
@@ -144,7 +143,7 @@ and translate (bs:list<t>) (e:term) : t =
           (* Assuming that all the arguments to the pattern constructors 
              are binders -- i.e. no nested patterns for now  *) 
           (* XXX : is rev needed? *)
-          let branch = translate ((List.rev args) @ args) (pickBranch c branches) in
+          let branch = translate ((List.rev args) @ bs) (pickBranch c branches) in
           branch
         | _ -> 
           mkAccuMatch scrut case
@@ -200,7 +199,7 @@ and readback (x:t) : term =
        | [arg] -> app hd arg
        | arg :: args -> app (curry hd args) arg
        in
-       if List.exists isAccu ts then (* if there is at least one symbolic argument, do not unfold *)
+       if List.exists isAccu ts then (* if there is at least one symbolic argument or (TODO) application is partial, do not unfold *)
          let head = 
            (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
            let f = S.new_bv None S.tun in
@@ -212,6 +211,27 @@ and readback (x:t) : term =
           | _ -> U.mk_app head args)
        else (* otherwise compute *)
          readback (curry (translate ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
+// Zoe: Commenting out conflict in Danel
+// =======
+//     | Accu (Rec (lb, bs), ts) -> 
+//        (match (SS.compress lb.lbdef).n with
+//         | Tm_abs (args, _, _) -> 
+//             if (List.length ts = List.length args &&
+//                 List.fold_right (fun x y -> x && y) (List.map is_not_accu ts) true)
+//             then readback (iapp (translate ((Accu (Rec (lb, bs), []))::bs) lb.lbdef) ts)
+//             else (let args = List.map (fun x -> as_arg (readback x)) ts in
+//                   let body = (match args with 
+//                               | [] -> (match lb.lbname with
+//                                        | BU.Inl bv -> S.bv_to_name bv
+//                                        | BU.Inr fv -> failwith "Not yet implemented")
+//                               | _  -> (match lb.lbname with
+//                                        | BU.Inl bv -> U.mk_app (S.bv_to_name bv) args
+//                                        | BU.Inr fv -> failwith "Not yet implemented")) in 
+//                   S.mk (Tm_let((true, [lb]), body)) None Range.dummyRange)
+//                   (* Currently not normalizing the let-bound definition on its own, 
+//                      only normalizing it when it is unfolded *)
+//         | _ -> failwith "Recursive definition not a function")
+// >>>>>>> 86f93ae6edc257258f376954fed7fba11f53ff83
     | _ -> failwith "Not yet implemented"
     
 let normalize (e:term) : term = readback (translate [] e)
