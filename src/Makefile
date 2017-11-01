@@ -249,10 +249,6 @@ utest-prelude:
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
 
-# Interactive mode regressions
-interactive-test:
-	$(MAKE) -C tests/interactive
-
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
 ifeq ($(OS),Windows_NT)
@@ -262,14 +258,8 @@ else
 	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
 endif
 
-#a basic regression test for extraction
-#In particular, this test builds fstarlib.cmxa, so
-#any other examples that do need fstarlib.cmxa should depend on it
-hello:
-	+$(MAKE) -C ../examples/hello ocaml
-
 # Getting parallelism from this target
-uregressions: hello native_tactics ulib tutorial uexamples extraction-examples interactive-test
+uregressions: ulib tutorial uexamples interactive-test
 
 # Getting parallelism from this target as well
 uregressions-ulong: uregressions ulib-extra
@@ -282,17 +272,14 @@ ulib:
 	+$(MAKE) -C ../ulib/ml
 
 # Depends on fstarlib.cmxa, which is built by hello
-tutorial: hello
+tutorial: ulib
 	+$(MAKE) -C ../doc/tutorial regressions
 
-# Depends on fstarlib.cmxa, which is built by hello
-native_tactics: hello ulib
-	+$(MAKE) -C ../examples/native_tactics all
+# Interactive mode regressions
+interactive-test:
+	$(MAKE) -C tests/interactive
 
-extraction-examples: hello ulib
-	+$(MAKE) -C ../examples/extraction all
-
-uexamples:
+uexamples: ulib
 	+$(MAKE) -C ../examples all
 
 ulong:
