@@ -32,35 +32,33 @@ type atom = //JUST FSHARP
   | Var of var
   | Sort of sort (* for full CiC -- not used right now *)
   | Prod of t * t (* for full CiC -- not used right now *)
-  | Match of list<branch> * (* the original branches -- used for readback initially then I realized it is not needed *)
-             t * (* the scutinee *)
+  | Match of t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *) 
-  | Fix of (t -> t) * 
-            t * (**)
-            int (* the recursive argument *)
-  (* Fix is used to represent fixpoints whose evaluation 
-       is stuck because the recursive argument is not a contructor. *)
-  (* Zoe: I'm not sure how to use this in our setting since F*'s ast does not
-     mark the recursive argument and therefore I'm not sure how to prevent 
-     infinite fixpoint unrolling *) 
   | FiX of (t -> t) (* Danel: This is a unary rec. def. that will not be unfolded any more *)
+  | Rec of letbinding * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
   | Lam of (t -> t)
+  | Fix of (t -> t) (* potentially recursive (i.e. a lambda inside ). The only difference with [Lam] is that there is an [is_accu] for the argument during application *)
   | Accu of atom * list<t>
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<t>
   | Unit
   | Bool of bool
-  | Rec of term * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
 type head = t
 type annot = option<t> 
 
 let mkConstruct i ts = Construct(i,ts)
 
 let mkAccuVar (v:var) = Accu(Var v, [])
-let mkAccuMatch (b : list<branch>) (s : t) (c : t -> t) = Accu(Match (b, s, c), [])
+let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
+let mkAccuRec (b:letbinding) (env:list<t>) = Accu(Rec(b, env), [])
 
+let isAccu (trm:t) = 
+  match trm with 
+  | Accu _ -> true
+  | _ -> false
+  
 let rec pickBranch (c : fv) (branches : list<branch>) : term = 
   match branches with
   | [] -> failwith "Branch not found"
@@ -92,15 +90,15 @@ let rec app (f:t) (x:t) =
   | Lam f -> f x
   | Accu (a, ts) -> Accu (a, x::ts)
   | Construct (i, ts) -> Construct (i, x::ts)
-  | Rec (y, ts) -> (match x with
-                    (* Danel: In a real F* scenario, the decreases check would happen here? *)
-                    | Accu _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x])
-                                                   (* Danel: if a rec. def. is applied 
-                                                      to an accumulator, do not unfold 
-                                                      it further *)
-                    | _ -> app (translate (Rec (y, ts)::ts) y) x)
-                                            (* Danel: if a rec. def. is applied to 
-                                               a non-accumulator, then we unfold it *)
+  // | Rec (y, ts) -> (match x with
+  //                   (* Danel: In a real F* scenario, the decreases check would happen here? *)
+  //                   | Accu _ -> Accu (FiX (fun (z:t) -> translate (z::ts) y),[x])
+  //                                                  (* Danel: if a rec. def. is applied 
+  //                                                     to an accumulator, do not unfold 
+  //                                                     it further *)
+  //                   | _ -> app (translate (Rec (y, ts)::ts) y) x)
+  //                                           (* Danel: if a rec. def. is applied to 
+  //                                              a non-accumulator, then we unfold it *)
   | Unit
   | Bool _ -> failwith "Ill-typed application"
 
@@ -149,7 +147,7 @@ and translate (bs:list<t>) (e:term) : t =
           let branch = translate ((List.rev args) @ args) (pickBranch c branches) in
           branch
         | _ -> 
-          mkAccuMatch branches scrut case
+          mkAccuMatch scrut case
       in 
       case (translate bs scrut)
 
@@ -158,7 +156,7 @@ and translate (bs:list<t>) (e:term) : t =
       translate (def::bs) body
 
     | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
-      let f = Rec (lb.lbdef, bs) in 
+      let f = mkAccuRec lb bs in 
       translate (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
       // this will loop infinitely when the recursive argument is symbolic 
@@ -170,7 +168,7 @@ and translate (bs:list<t>) (e:term) : t =
       
     | _ -> debug_term e; failwith "Not yet implemented"
 
-let rec readback (x:t) : term =
+and readback (x:t) : term =
     match x with
     | Unit -> S.unit_const
     | Bool true -> U.exp_true_bool
@@ -189,15 +187,31 @@ let rec readback (x:t) : term =
     | Accu (Var bv, ts) ->
       let args = map_rev (fun x -> as_arg (readback x)) ts in
       U.mk_app (S.bv_to_name bv) args
-    | Accu (Match (branches, scrut, cases), ts) ->
+    | Accu (Match (scrut, cases), ts) ->
       let args = map_rev (fun x -> as_arg (readback x)) ts in
       let head =  readback (cases scrut) in
       (match ts with 
        | [] -> head
        | _ -> U.mk_app head args)
-    | Accu (FiX t, ts) -> failwith "Not yet implemented"
-                          (* Danel: hmm, should we wrap this stuck 
-                             application inside a (unary) let rec? *)
+    | Accu (Rec(lb, bs), ts) ->
+       let rec curry hd args = 
+       match args with 
+       | [] -> hd
+       | [arg] -> app hd arg
+       | arg :: args -> app (curry hd args) arg
+       in
+       if List.exists isAccu ts then (* if there is at least one symbolic argument, do not unfold *)
+         let head = 
+           (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
+           let f = S.new_bv None S.tun in
+           S.mk (Tm_let((true, [lb]), S.bv_to_tm f)) None Range.dummyRange
+         in
+         let args = map_rev (fun x -> as_arg (readback x)) ts in
+         (match ts with 
+          | [] -> head
+          | _ -> U.mk_app head args)
+       else (* otherwise compute *)
+         readback (curry (translate ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
     | _ -> failwith "Not yet implemented"
     
 let normalize (e:term) : term = readback (translate [] e)
