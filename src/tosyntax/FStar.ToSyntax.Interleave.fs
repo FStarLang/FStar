@@ -46,7 +46,9 @@ let definition_lids d =
         lids_of_let defs
     | Tycon(_, tys) ->
         tys |> List.collect (function
-                | TyconAbbrev(id, _, _, _), _ ->
+                | TyconAbbrev (id, _, _, _), _
+                | TyconRecord (id, _, _, _), _
+                | TyconVariant(id, _, _, _), _ ->
                   [Ident.lid_of_ids [id]]
                 | _ -> [])
     | _ -> []
@@ -137,7 +139,10 @@ let rec prefix_with_iface_decls
 
      | Val(x, t) ->
        //we have a 'val x' in the interface
-       //take impl as is, unless it is a let x, in which case prefix it with iface_hd
+       //take impl as is, unless it is a
+       //       let x (or a `type abbreviation x`)
+       //or an  inductive type x
+       //in which case prefix it with iface_hd
        let def_ids = definition_lids impl in
        let defines_x = Util.for_some (id_eq_lid x) def_ids in
        if not defines_x
@@ -281,11 +286,17 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> 
                 (iface, [])
                 impls
         in
-        let env = E.set_iface_decls env l iface in
+        let iface_lets, remaining_iface_vals =
+            match FStar.Util.prefix_until (function {d=Val _} -> true | _ -> false) iface with
+            | None -> iface, []
+            | Some (lets, one_val, rest) -> lets, one_val::rest
+        in
+        let impls = impls@iface_lets in
+        let env = E.set_iface_decls env l remaining_iface_vals in
         let a = Module(l, impls) in
-        match iface with
+        match remaining_iface_vals with
         | _::_ when expect_complete_modul ->
-          let err = List.map FStar.Parser.AST.decl_to_string iface |> String.concat "\n\t" in
+          let err = List.map FStar.Parser.AST.decl_to_string remaining_iface_vals |> String.concat "\n\t" in
           raise (Error(Util.format2 "Some interface elements were not implemented by module %s:\n\t%s"
                                     (Ident.string_of_lid l)
                                     err,
