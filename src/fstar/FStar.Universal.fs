@@ -181,15 +181,17 @@ let load_module_from_cache env fn
     else None
 
 let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info) =
-    if Options.should_verify_file fn
-    then begin
-      let cache_file = FStar.Parser.Dep.cache_file_name fn in
-      let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
-      match digest with
-      | Some hashes ->
-        BU.save_value_to_file cache_file (hashes, modul, mii)
-      | _ -> ()
-    end
+    let cache_file = FStar.Parser.Dep.cache_file_name fn in
+    let digest = FStar.Parser.Dep.hash_dependences env.dep_graph fn in
+    match digest with
+    | Some hashes ->
+      BU.save_value_to_file cache_file (hashes, modul, mii)
+    | _ ->
+      FStar.Errors.warn
+        (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
+                                 (FStar.Range.mk_pos 0 0))
+        (BU.format1 "%s was not written, since some of its dependences were not also checked"
+                    cache_file)
 
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)

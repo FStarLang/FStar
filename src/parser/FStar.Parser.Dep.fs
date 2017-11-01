@@ -143,7 +143,10 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
     : bool =
     Option.isSome (implementation_of file_system_map key)
 
-let cache_file_name fn = fn ^ ".checked"
+let cache_file_name fn =
+    if Options.lax()
+    then fn ^ ".checked.lax"
+    else fn ^ ".checked"
 
 let file_of_dep_aux
                 (use_checked_file:bool)
@@ -167,12 +170,21 @@ let file_of_dep_aux
        | None ->
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
          raise (Err (BU.format1 "Expected an interface for module %s, but couldn't find one" key))
-       | Some f -> f)
+       | Some f ->
+         if use_checked_file then f ^ ".source" else f)
 
     | PreferInterface key //key for module 'a'
-        when not (cmd_line_has_impl key)               //unless the cmd line contains 'a.fst'
-              && has_interface file_system_map key ->  //so long as 'a.fsti' exists
-      maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
+        when has_interface file_system_map key ->  //so long as 'a.fsti' exists
+      if cmd_line_has_impl key //unless the cmd line contains 'a.fst'
+      && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
+      then if Options.expose_interfaces()
+           then maybe_add_suffix (Option.get (implementation_of file_system_map key))
+           else raise (Err(BU.format2 "Invoking fstar with %s on the command line breaks \
+                                       the abstraction imposed by its interface %s; \
+                                       if you really want this behavior add the option '--expose_interfaces'"
+                                       (Option.get (implementation_of file_system_map key))
+                                       (Option.get (interface_of file_system_map key))))
+      else maybe_add_suffix (Option.get (interface_of file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
     | UseImplementation key ->
@@ -771,8 +783,30 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     hash_deps [] binary_deps
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
-    format. *)
+    format.
+
+    Deprecated: this will print the dependences among the source files
+  *)
 let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
+    let keys = deps_keys deps in
+    keys |> List.iter
+        (fun f ->
+          let f_deps, _ = deps_try_find deps f |> Option.get in
+          let files = List.map (file_of_dep file_system_map all_cmd_line_files) f_deps in
+          let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
+          //this one prints:
+          //   a.fst: b.fst c.fsti a.fsti
+          Util.print2 "%s: %s\n\n" f (String.concat " " files))
+
+(** Print the dependencies as returned by [collect] in a Makefile-compatible
+    format.
+
+     -- The dependences are among the .checked files
+
+     -- We also print dependences for producing .ml files from .checked files
+        This takes care of renaming A.B.C.fst to A_B_C.ml
+  *)
+let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let keys = deps_keys deps in
     keys |> List.iter
         (fun f ->
@@ -781,22 +815,27 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
           //interfaces get two lines of output
           //this one prints:
-          //   a.fsti: b.fst.checked c.fsti.checked ...
-          if is_interface f then Util.print2 "%s:\\\n\t%s\n\n" f (String.concat "\\\n\t" files);
+          //   a.fsti.source: a.fsti b.fst.checked c.fsti.checked
+          //                 touch $@
+          if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" f f (String.concat "\\\n\t" files);
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-          Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f (String.concat "\\\n\t" files);
+          Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f (String.concat " \\\n\t" files);
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then
             let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename f))) '.' "_" in
             Util.print3 "%s%s.ml: %s.checked\n\n" (match Options.output_dir() with None -> "" | Some x -> x ^ "/") ml_base_name f
-          )
+          );
+    let all_fst_files = keys |> List.filter is_implementation in
+    Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t")
 
 let print deps =
-  match (Options.dep()) with
+  match Options.dep() with
   | Some "make" ->
       print_make deps
+  | Some "full" ->
+      print_full deps
   | Some "graph" ->
       let (Mk(deps, _, _)) = deps in
       print_graph deps

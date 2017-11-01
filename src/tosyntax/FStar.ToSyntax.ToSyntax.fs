@@ -1912,6 +1912,19 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
+let push_reflect_effect env quals (effect_name:Ident.lid) range =
+    if quals |> BU.for_some (function S.Reflectable _ -> true | _ -> false)
+    then let monad_env = Env.enter_monad_scope env effect_name.ident in
+         let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
+         let quals = [S.Assumption; S.Reflectable effect_name] in
+         let refl_decl = { sigel = S.Sig_declare_typ(reflect_lid, [], S.tun);
+                           sigrng = range;
+                           sigquals = quals;
+                           sigmeta = default_sigmeta  ;
+                           sigattrs = [] } in
+         Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
+    else env
+
 let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls =
     let env0 = env in
     // qualified with effect name
@@ -2065,18 +2078,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
         let env = push_sigelt env (U.action_as_lb mname a) in
         push_doc env a.action_name doc) env
     in
-    let env =
-      if quals |> List.contains Reflectable
-      then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
-           let quals = [S.Assumption; S.Reflectable mname] in
-           let refl_decl = { sigel = S.Sig_declare_typ(reflect_lid, [], S.tun);
-                             sigrng = d.drange;
-                             sigquals = quals;
-                             sigmeta = default_sigmeta  ;
-                             sigattrs = [] } in
-           push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
-      else env
-    in
+    let env = push_reflect_effect env qualifiers mname d.drange in
     let env = push_doc env mname d.doc in
     env, [se]
 
@@ -2602,15 +2604,22 @@ let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (erase_univs:S
                actions     = List.map erase_action ed.actions
           }
       in
-      let maybe_erase_univs_sigelt se =
+      let push_sigelt env se =
           match se.sigel with
-          | Sig_new_effect ed -> {se with sigel=Sig_new_effect (erase_univs_ed ed)}
-          | Sig_new_effect_for_free ed -> {se with sigel=Sig_new_effect_for_free (erase_univs_ed ed)}
-          | _ -> se
+          | Sig_new_effect ed ->
+            let se' = {se with sigel=Sig_new_effect (erase_univs_ed ed)} in
+            let env = Env.push_sigelt env se' in
+            push_reflect_effect env se.sigquals ed.mname se.sigrng
+          | Sig_new_effect_for_free ed ->
+            let se' = {se with sigel=Sig_new_effect_for_free (erase_univs_ed ed)} in
+            let env = Env.push_sigelt env se' in
+            push_reflect_effect env se.sigquals ed.mname se.sigrng
+          | _ -> Env.push_sigelt env se
       in
       let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
       let en = List.fold_left
-                    (fun env x -> Env.push_sigelt env (maybe_erase_univs_sigelt x))
-                    (Env.set_current_module en m.name) m.exports in
+                    push_sigelt
+                    (Env.set_current_module en m.name)
+                    m.exports in
       let env = Env.finish en m in
       (), (if pop_when_done then export_interface m.name env else env)
