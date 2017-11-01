@@ -2,7 +2,7 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
-all: hello.uver
+all: ocaml
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 

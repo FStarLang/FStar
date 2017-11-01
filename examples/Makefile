@@ -22,7 +22,10 @@ micro-benchmarks \
 bytes \
 tactics \
 kv_parsing \
-vale
+vale \
+hello \
+native_tactics \
+extraction
 
 
 # low-level \  ... NS: removing from CI for this branch
