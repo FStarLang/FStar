@@ -13,6 +13,9 @@ for /f "usebackq tokens=1* delims=: " %%i in (`%VsWhere% -latest -requires Micro
   if /i "%%i"=="installationPath" set InstallDir=%%j
 )
 if "%InstallDir%" == "" goto vs2015
+rem PLATFORM must be unset in VS2017, otherwise
+rem MSBuild complains about "Solution configuration Release|X64 invalid"
+set PLATFORM=
 "%InstallDir%\MSBuild\15.0\Bin\MSBuild.exe" %*
 if errorlevel 1 exit /b 1
 goto end
