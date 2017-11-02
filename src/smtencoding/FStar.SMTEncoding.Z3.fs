@@ -28,56 +28,87 @@ module BU = FStar.Util
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
-type z3version =
-| Z3V_Unknown of string
-| Z3V of int * int * int
 
-let z3version_as_string = function
-    | Z3V_Unknown s -> BU.format1 "unknown version: %s" s
-    | Z3V (i, j, k) -> BU.format3 "%s.%s.%s" (BU.string_of_int i) (BU.string_of_int j) (BU.string_of_int k)
+(* Check the Z3 commit hash once, and issue a warning if it is not
+   equal to the one that we are expecting from the Z3 url below
+*)
+let _z3hash_checked : ref<bool> = BU.mk_ref false
 
-let z3v_compare known (w1, w2, w3) =
-    match known with
-    | Z3V_Unknown _-> None
-    | Z3V (k1, k2, k3) -> Some(
-        if k1 <> w1 then w1 - k1 else
-        if k2 <> w2 then w2 - k2 else
-        w3 - k3
-    )
+let _z3hash_expected = "1f29cebd4df6"
 
-let z3v_le known wanted =
-    match z3v_compare known wanted with
-    | None   -> false
-    | Some i -> i >= 0
+let _z3url = "https://github.com/FStarLang/binaries/tree/master/z3-tested"
 
-let _z3version : ref<option<z3version>> = BU.mk_ref None
+let parse_z3_version_lines out =
+    match splitlines out with
+    | x :: _ ->
+        begin
+            let trimmed = trim_string x in
+            let parts = split trimmed " " in
+            let rec aux = function
+            | [hash] ->
+              let n = min (String.strlen _z3hash_expected) (String.strlen hash) in
+              let hash_prefix = String.substring hash 0 n in
+              if hash_prefix = _z3hash_expected
+              then begin
+                  if Options.debug_any ()
+                  then
+                      let msg =
+                          BU.format1
+                              "Successfully found expected Z3 commit hash %s\n"
+                              hash
+                      in
+                      print_string msg
+                  else ();
+                  None
+              end else
+                  let msg =
+                      BU.format2
+                          "Expected Z3 commit hash \"%s\", got \"%s\""
+                          _z3hash_expected
+                          trimmed
+                  in
+                  Some msg
+            | _ :: q -> aux q
+            | _ -> Some "No Z3 commit hash found"
+            in
+            aux parts
+        end
+    | _ -> Some "No Z3 version string found"
 
-let get_z3version () =
-    let prefix = "Z3 version " in
+let z3hash_warning_message () =
+    let run_proc_result =
+        try
+            Some (BU.run_proc (Options.z3_exe()) "-version" "")
+        with _ -> None
+    in
+    match run_proc_result with
+    | None -> Some (FStar.Errors.EError, "Could not run Z3")
+    | Some (_, out, _) ->
+        begin match parse_z3_version_lines out with
+        | None -> None
+        | Some msg -> Some (FStar.Errors.EWarning, msg)
+        end
 
-    match !_z3version with
-    | Some version -> version
-    | None ->
-        let _, out, _ = BU.run_proc (Options.z3_exe()) "-version" "" in
-        let out =
-            match splitlines out with
-            | x :: _ when starts_with x prefix -> begin
-                let x = trim_string (substring_from x (String.length prefix)) in
-                let x = try List.map int_of_string (split x ".") with _ -> [] in
-                match x with
-                | [i1; i2; i3] -> Z3V (i1, i2, i3)
-                | _ -> Z3V_Unknown out
-            end
-            | _ -> Z3V_Unknown out
-        in
-            _z3version := Some out; out
+let check_z3hash () =
+    if not !_z3hash_checked
+    then begin
+        _z3hash_checked := true;
+        match z3hash_warning_message () with
+        | None -> ()
+        | Some (level, msg) ->
+          let msg =
+              BU.format4
+                  "%s\n%s\n%s\n%s\n"
+                  msg
+                  "Please download the version of Z3 corresponding to your platform from:"
+                  _z3url
+                  "and add the bin/ subdirectory into your PATH"
+          in
+          FStar.Errors.add_one (FStar.Errors.mk_issue level None msg)
+    end
 
 let ini_params () =
-  let z3_v = get_z3version () in
-  begin if z3v_le (get_z3version ()) (4, 4, 0)
-  then raise (Util.HardError (BU.format1 "Z3 4.5.0 recommended; at least Z3 v4.4.1 required; got %s\n" (z3version_as_string z3_v)))
-  else ()
-  end;
+  check_z3hash ();
   (String.concat " "
                 (List.append
                  [ "-smt2 -in auto_config=false model=true smt.relevancy=2";
@@ -377,7 +408,14 @@ type job<'a> = {
     callback: 'a -> unit
 }
 
-type z3job = job<(z3status * int * z3statistics)>
+type z3result = {
+      z3result_status      : z3status;
+      z3result_time        : int;
+      z3result_statistics  : z3statistics;
+      z3result_query_hash  : option<string>
+}
+
+type z3job = job<z3result>
 
 let job_queue : ref<list<z3job>> = BU.mk_ref []
 
@@ -388,11 +426,19 @@ let with_monitor m f =
     BU.monitor_exit(m);
     res
 
-let z3_job fresh (label_messages:error_labels) input () : z3status * int * z3statistics =
+let z3_job fresh (label_messages:error_labels) input qhash () : z3result =
   let start = BU.now() in
-  let status, statistics = doZ3Exe fresh input label_messages in
+  let status, statistics =
+    try doZ3Exe fresh input label_messages
+    with _ when not (Options.trace_error()) ->
+         bg_z3_proc.refresh();
+         UNKNOWN([], Some "Z3 raised an exception"), BU.smap_create 0
+  in
   let _, elapsed_time = BU.time_diff start (BU.now()) in
-  status, elapsed_time, statistics
+  { z3result_status     = status;
+    z3result_time       = elapsed_time;
+    z3result_statistics = statistics;
+    z3result_query_hash = qhash }
 
 let running = BU.mk_ref false
 
@@ -497,52 +543,89 @@ let refresh () =
         bg_z3_proc.refresh();
         bg_scope := List.flatten (List.rev !fresh_scope)
 
-//mark, reset_mark, commit_mark:
-//    setting rollback points for the interactive mode
-// JP: I suspect the expected usage for the interactive mode is as follows:
-// - the stack (fresh_scope) has size >= 1, the top scope contains the queries
-//   that have been successful so far
-// - one calls "mark" to push a new scope of tentative queries
-// - in case of success, the new scope is collapsed with the previous scope,
-//   effectively bringing the new queries into the scope of successful queries so far
-// - in case of failure, the new scope is discarded
-let mark msg =
-    push msg
-let reset_mark msg =
-    // JP: pop_context (in universal.fs) does the same thing: it calls pop,
-    // followed by refresh
-    pop msg;
-    refresh ()
-let commit_mark (msg:string) =
-    begin match !fresh_scope with
-        | hd::s::tl -> fresh_scope := (hd@s)::tl
-        | _ -> failwith "Impossible"
-    end
-
 let mk_input theory =
-    let r = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-    if Options.log_queries() then query_logging.write_to_log r ;
-    r
+    let options = z3_options () in
+    let r, hash =
+        if Options.record_hints()
+        || (Options.use_hints() && Options.use_hint_hashes()) then
+            //the suffix of a "theory" that follows the "CheckSat" call
+            //contains semantically irrelevant things
+            //(e.g., get-model, get-statistics etc.)
+            //that vary depending on some user options (e.g., record_hints etc.)
+            //They should not be included in the query hash,
+            //so split the prefix out and use only it for the hash
+            let prefix, check_sat, suffix =
+                theory |>
+                BU.prefix_until (function CheckSat -> true | _ -> false) |>
+                Option.get
+            in
+            let pp        = List.map (declToSmt options) in
+            let pp_no_cap = List.map (declToSmt_no_caps options) in
+            let suffix = check_sat::suffix in
+            let ps_lines = pp prefix in
+            let ss_lines = pp suffix in
+            let ps = String.concat "\n" ps_lines in
+            let ss = String.concat "\n" ss_lines in
 
-type z3result =
-      z3status
-    * int
-    * z3statistics
+            (* Ignore captions AND ranges when hashing, otherwise we depend on file names *)
+            let uncaption = function
+            | Caption _ -> Caption ""
+            | Assume a -> Assume ({ a with assumption_caption = None })
+            | DeclFun (n, a, s, _) -> DeclFun (n, a, s, None)
+            | DefineFun (n, a, s, b, _) -> DefineFun (n, a, s, b, None)
+            | d -> d
+            in
+            let hs = prefix |> List.map uncaption
+                            |> pp_no_cap
+                            |> List.filter (fun s -> s <> "")
+                            |> String.concat "\n" in
+            ps ^ "\n" ^ ss, Some (BU.digest_of_string hs)
+        else
+            List.map (declToSmt options) theory |> String.concat "\n", None
+    in
+    if Options.log_queries() then query_logging.write_to_log r ;
+    r, hash
+
 type cb = z3result -> unit
+
+let cache_hit
+    (cache:option<string>)
+    (qhash:option<string>)
+    (cb:cb) =
+    if Options.use_hints() && Options.use_hint_hashes() then
+        match qhash with
+        | Some (x) when qhash = cache ->
+            let stats : z3statistics = BU.smap_create 0 in
+            smap_add stats "fstar_cache_hit" "1";
+            let result = {
+              z3result_status = UNSAT None;
+              z3result_time = 0;
+              z3result_statistics = stats;
+              z3result_query_hash = qhash
+            } in
+            cb result;
+            true
+        | _ ->
+            false
+    else
+        false
 
 let ask_1_core
     (filter_theory:decls_t -> decls_t * bool)
+    (cache:option<string>)
     (label_messages:error_labels)
     (qry:decls_t)
-    (cb: cb)
+    (cb:cb)
   = let theory = !bg_scope@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input = mk_input theory in
+    let input, qhash = mk_input theory in
     bg_scope := [] ; // Now consumed.
-    run_job ({job=z3_job false label_messages input; callback=cb})
+    if not (cache_hit cache qhash cb) then
+        run_job ({job=z3_job false label_messages input qhash; callback=cb})
 
 let ask_n_cores
     (filter_theory:decls_t -> decls_t * bool)
+    (cache:option<string>)
     (label_messages:error_labels)
     (qry:decls_t)
     (scope:option<scope_t>)
@@ -553,16 +636,18 @@ let ask_n_cores
                     (List.rev !fresh_scope)) in
     let theory = theory@[Push]@qry@[Pop] in
     let theory, used_unsat_core = filter_theory theory in
-    let input = mk_input theory in
-    enqueue ({job=z3_job true label_messages input; callback=cb})
+    let input, qhash = mk_input theory in
+    if not (cache_hit cache qhash cb) then
+        enqueue ({job=z3_job true label_messages input qhash; callback=cb})
 
 let ask
     (filter:decls_t -> decls_t * bool)
+    (cache:option<string>)
     (label_messages:error_labels)
     (qry:decls_t)
     (scope:option<scope_t>)
     (cb:cb)
   = if Options.n_cores() = 1 then
-        ask_1_core filter label_messages qry cb
+        ask_1_core filter cache label_messages qry cb
     else
-        ask_n_cores filter label_messages qry scope cb
+        ask_n_cores filter cache label_messages qry scope cb

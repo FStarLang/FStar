@@ -1,7 +1,19 @@
 [
   "„P\bÙqªó’\u00061‰Õ¯F¤“",
   [
-    [ "Neg.c3", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Neg.c3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Neg.phi",
+        "equation_Neg.psi",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "0cfc859d9820609e81434c93c6682f96"
+    ],
     [
       "Neg.c3",
       2,
@@ -12,8 +24,17 @@
         "equation_Prims.squash",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "64d16a4135836bbb1360f5f3d48e45a4"
     ],
-    [ "Neg.c4", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "Neg.c4",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "94aa5802b8af765487ae34ed9166e187"
+    ]
   ]
 ]

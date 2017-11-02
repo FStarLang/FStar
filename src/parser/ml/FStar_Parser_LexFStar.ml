@@ -78,11 +78,13 @@ let () =
   Hashtbl.add keywords "open"          OPEN        ;
   Hashtbl.add keywords "opaque"        OPAQUE      ;
   Hashtbl.add keywords "private"       PRIVATE     ;
+  Hashtbl.add keywords "range_of"      RANGE_OF    ;
   Hashtbl.add keywords "rec"           REC         ;
   Hashtbl.add keywords "reifiable"     REIFIABLE   ;
   Hashtbl.add keywords "reify"         REIFY       ;
   Hashtbl.add keywords "reflectable"   REFLECTABLE ;
   Hashtbl.add keywords "requires"      REQUIRES    ;
+  Hashtbl.add keywords "set_range_of"                 SET_RANGE_OF    ;
   Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
   Hashtbl.add keywords "then"          THEN        ;
   Hashtbl.add keywords "total"         TOTAL       ;
@@ -367,10 +369,6 @@ let rec token = lexer
  | "#light" -> FStar_Options.add_light_off_file (L.source_file lexbuf); PRAGMALIGHT
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS
- | '#' ' ' (digit)* ->
-   let n = int_of_string (trim_left lexbuf 2) in
-   mknewline (n - (L.current_line lexbuf)) lexbuf;
-   cpp_filename lexbuf
  | "__SOURCE_FILE__" -> STRING (L.source_file lexbuf)
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf), false)
 
@@ -500,9 +498,6 @@ and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
    L.new_line lexbuf;
    fsdoc (n, doc, (kwn, kwa)::kw) lexbuf
  | _ -> fsdoc_kw_arg (n, doc, kw, kwn, kwa^(L.lexeme lexbuf)) lexbuf
-
-and cpp_filename = lexer
- | " \"" [^ '"' 10 13 0x2028 0x2029]+ '"' -> ignore_endline lexbuf
 
 and ignore_endline = lexer
  | ' '* newline -> token lexbuf

@@ -1,9 +1,33 @@
 [
-  "»æ‚Åm˚5•v¸Uµ+ïnΩ",
+  "™{Ä“πáÁ0ÈÕÎ4A‚ìü",
   [
-    [ "Syntax.quote_sanity_check", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.goal_sanity_check", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.test2", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Syntax.quote_sanity_check",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c669e50e28fe847db9130cf8e6e7cea2"
+    ],
+    [
+      "Syntax.goal_sanity_check",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c0720dd2a5389b48e156324c53a0eb88"
+    ],
+    [
+      "Syntax.test2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a48f2960e10a1e346c7048f691a0daeb"
+    ],
     [
       "Syntax.blah",
       1,
@@ -16,6 +40,7 @@
         "constructor_distinct_FStar.Reflection.Data.Tv_Abs",
         "constructor_distinct_FStar.Reflection.Data.Tv_App",
         "constructor_distinct_FStar.Reflection.Data.Tv_Arrow",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Let",
         "constructor_distinct_FStar.Reflection.Data.Tv_Match",
         "constructor_distinct_FStar.Reflection.Data.Tv_Refine",
         "data_elim_FStar.Reflection.Data.Tv_App",
@@ -40,22 +65,69 @@
         "projection_inverse_FStar.Reflection.Data.Tv_Abs__1",
         "projection_inverse_FStar.Reflection.Data.Tv_App__0",
         "projection_inverse_FStar.Reflection.Data.Tv_App__1",
-        "projection_inverse_FStar.Reflection.Data.Tv_Arrow__0",
-        "projection_inverse_FStar.Reflection.Data.Tv_Arrow__1",
+        "projection_inverse_FStar.Reflection.Data.Tv_Refine__0",
         "projection_inverse_FStar.Reflection.Data.Tv_Refine__1",
         "refinement_interpretation_FStar.Reflection.Basic_Tm_refine_62353a91a906896ee28a928c3c16dabb",
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2",
-        "typing_FStar.Reflection.Basic.__inspect",
-        "typing_FStar.Reflection.Basic.inspect"
+        "typing_FStar.Reflection.Basic.__inspect"
       ],
-      0
+      0,
+      "4b91261f6f41f7b5b9f1e734d454f1c6"
     ],
-    [ "Syntax.uu___93", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___94", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___95", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___96", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___97", 1, 2, 1, [ "@query" ], 0 ],
-    [ "Syntax.uu___98", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Syntax.uu___117",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8c4430584637b93fabc290a57a8ae0a8"
+    ],
+    [
+      "Syntax.uu___118",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "27b4a46a322a104e3ea7a0130f18c45c"
+    ],
+    [
+      "Syntax.uu___119",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e1503f315ff661c25fd744541616c641"
+    ],
+    [
+      "Syntax.uu___120",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "15ce18783d3d0f4843d516f7d7653b06"
+    ],
+    [
+      "Syntax.uu___121",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "294534eb405749cbe96f094460731709"
+    ],
+    [
+      "Syntax.uu___122",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "766387463d0bf37103c13ab1bc572e64"
+    ],
     [
       "Syntax.arith_test1",
       1,
@@ -71,7 +143,8 @@
         "typing_FStar.Reflection.Arith.is_arith_expr",
         "typing_FStar.Reflection.Arith.run_tm"
       ],
-      0
+      0,
+      "8297685b2e5fa8ef55d49606dbb2bbc3"
     ],
     [
       "Syntax.arith_test2",
@@ -88,8 +161,17 @@
         "typing_FStar.Reflection.Arith.is_arith_expr",
         "typing_FStar.Reflection.Arith.run_tm"
       ],
-      0
+      0,
+      "1a66d3ddc6afbc0e5f311d86d271847b"
     ],
-    [ "Syntax.uu___99", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "Syntax.uu___123",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "73d4dafabb37517b0b571a94701fbd9d"
+    ]
   ]
 ]

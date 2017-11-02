@@ -1,21 +1,23 @@
 [
-  "dqT[\u0015\u001e\u0010ö¿ÅŠÎ½f\u0014»",
+  "4ßø ÿÔ9í¥*OŠ¡Æ®(",
   [
     [
-      "UnitTests.uu___114",
+      "UnitTests.uu___124",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "ab89b9360c8974d3e55a3d6ebfb2b8e7"
     ],
     [
-      "UnitTests.uu___116",
+      "UnitTests.uu___126",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_string" ],
-      0
+      0,
+      "f75464a2ba045cc2a48fe3d44d8e54a9"
     ],
     [
       "UnitTests.fib",
@@ -24,26 +26,69 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0", "int_inversion",
         "int_typing", "primitive_Prims.op_LessThan",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "well-founded-ordering-on-nat"
       ],
-      0
+      0,
+      "ecaebe066439988559312bd773871e5e"
     ],
     [
-      "UnitTests.uu___119",
+      "UnitTests.uu___129",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "84270b90ca511f926c17285527808c1a"
     ],
-    [ "UnitTests.t", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "UnitTests.uu___is_A", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UnitTests.uu___is_B", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UnitTests.uu___is_C", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UnitTests.uu___is_D", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "UnitTests.t",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "f1e19a6869a87213bf40c56c28b04a7d"
+    ],
+    [
+      "UnitTests.uu___is_A",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c0bb2344aeb73a559089542d6ba5799a"
+    ],
+    [
+      "UnitTests.uu___is_B",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a9056498a57273316404673dc72a89fd"
+    ],
+    [
+      "UnitTests.uu___is_C",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "40e46894cbf8537a828c19c6bdd9ba78"
+    ],
+    [
+      "UnitTests.uu___is_D",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4dd49063850499a0297c5f19cce83ac4"
+    ],
     [
       "UnitTests.__proj__D__item__x",
       1,
@@ -54,7 +99,8 @@
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_UnitTests_Tm_refine_d5280682073b2e7543fac398f926302c"
       ],
-      0
+      0,
+      "c61496dcbacff49f1b09516cb5fb01c3"
     ],
     [
       "UnitTests.f",
@@ -62,17 +108,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_UnitTests.A",
-        "constructor_distinct_UnitTests.B", "disc_equation_UnitTests.A",
+        "@MaxIFuel_assumption", "@query", "disc_equation_UnitTests.A",
         "disc_equation_UnitTests.B", "disc_equation_UnitTests.C",
-        "disc_equation_UnitTests.D", "equality_tok_UnitTests.A@tok",
-        "equality_tok_UnitTests.B@tok", "equality_tok_UnitTests.C@tok",
-        "fuel_guarded_inversion_UnitTests.t"
+        "disc_equation_UnitTests.D", "equality_tok_UnitTests.B@tok",
+        "equality_tok_UnitTests.C@tok", "fuel_guarded_inversion_UnitTests.t"
       ],
-      0
+      0,
+      "aa2661c402c4be0a57dec7cd1363cab0"
     ],
     [
-      "UnitTests.uu___126",
+      "UnitTests.uu___136",
       1,
       2,
       1,
@@ -81,74 +126,89 @@
         "disc_equation_UnitTests.D", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_UnitTests.D_x"
       ],
-      0
+      0,
+      "9bb0900f2381cbf41bd03b0f02d7a9e2"
     ],
-    [ "UnitTests.l2", 1, 2, 1, [ "@query" ], 0 ],
-    [ "UnitTests.r", 1, 2, 1, [ "@query", "assumption_Prims.HasEq_int" ], 0 ],
-    [ "UnitTests.__proj__Mkr__item__x", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "UnitTests.uu___129",
+      "UnitTests.r",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
-      0
+      0,
+      "da4549928400746c617d64b8e893371f"
     ],
     [
-      "UnitTests.uu___133",
+      "UnitTests.__proj__Mkr__item__x",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "caa9879de08c0fc05fdbe52a3ffe900c"
+    ],
+    [
+      "UnitTests.uu___139",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "7104c89a18396649cf6dd90f44b7f63f"
+    ],
+    [
+      "UnitTests.uu___143",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "929e4f2a04bfdafcc39cf9406609e436"
     ],
     [
-      "UnitTests.uu___134",
+      "UnitTests.uu___144",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "8ae90b0ccf719bb883bbd361572ca7ee"
     ],
     [
-      "UnitTests.uu___135",
+      "UnitTests.uu___145",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
-    ],
-    [
-      "UnitTests.uu___136",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
-    ],
-    [
-      "UnitTests.uu___137",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
-    ],
-    [
-      "UnitTests.uu___138",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "566572c8488664ae77e1c9cf11f9ca01"
     ],
     [
       "UnitTests.uu___146",
       1,
       2,
       1,
-      [ "@query", "projection_inverse_BoxBool_proj_0" ],
-      0
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "b7269d46031fabf83f59b9fd7c264f3f"
+    ],
+    [
+      "UnitTests.uu___147",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "7ab3d29a82b3c0f90ccfc7c0f3da3f95"
+    ],
+    [
+      "UnitTests.uu___148",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_FStar.Order.order_haseq" ],
+      0,
+      "15fde933214b9719402d99f52bd16cd7"
     ]
   ]
 ]

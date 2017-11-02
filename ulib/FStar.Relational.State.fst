@@ -2,7 +2,7 @@ module FStar.Relational.State
 open FStar.Relational.Relational
 open FStar.Relational.Comp
 open FStar.Heap
-open FStar.ST
+open FStar.Ref
 
 (* Some convenient stateful functions *)
 let read_rel1 r = compose2_self read (twice r)

@@ -164,7 +164,7 @@ let puf_test () =
     (print1 "There are %s elements\n" (Printf.sprintf "%i" !(u.count)));
     let u_d = puf_fresh u "d" in
     let u_e = puf_fresh u "e" in
-    let u_f = puf_fresh u "f" in
+    let _ = puf_fresh u "f" in
     let u_g = puf_fresh u "g" in
     let u_h = puf_fresh u "h" in
     let le, i_e= puf_find_i u u_e in

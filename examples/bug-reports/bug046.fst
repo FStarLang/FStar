@@ -1,5 +1,4 @@
-
-module Bug46
+module Bug046
 
 (* having this type abbreviation seems crucial for reproducing this *)
 type env = int -> Tot (option int)

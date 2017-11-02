@@ -1,7 +1,23 @@
 [
   "®ÿÊ•∫7\u0007Qõ}\u001c êoƒ",
   [
-    [ "FStar.Universe.__proj__Ret__item___0", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Universe.downgrade_val", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.Universe.__proj__Ret__item___0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ff11c230a8a3b9fbb26cc063ae36dd78"
+    ],
+    [
+      "FStar.Universe.downgrade_val",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3b9b12a035ec2171719e8a05eacebced"
+    ]
   ]
 ]

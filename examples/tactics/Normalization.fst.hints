@@ -1,36 +1,71 @@
 [
   "沑u0010嚬\u000e檈󍿄#拚傱",
   [
-    [ "Normalization.def_of", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Normalization.uu___91",
+      "Normalization.def_of",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "916f40b7fa3b7c24b46b151ca53a47c0"
+    ],
+    [
+      "Normalization.uu___103",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "56a0e066a38d5da91b37d3795e1bd534"
     ],
-    [ "Normalization.uu___91", 2, 2, 1, [ "@query" ], 0 ],
     [
-      "Normalization.uu___92",
+      "Normalization.uu___103",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a680b9e1d5b6103acc78a4e39e50fef4"
+    ],
+    [
+      "Normalization.uu___104",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "0dc778180f8753a88bf2861993fa0443"
     ],
-    [ "Normalization.uu___92", 2, 2, 1, [ "@query" ], 0 ],
     [
-      "Normalization.uu___93",
+      "Normalization.uu___104",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7441d90f56c7f031c69479656e3dfa83"
+    ],
+    [
+      "Normalization.uu___105",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "f213972c58ace5e6f6e0e256e7d9cd6f"
     ],
-    [ "Normalization.uu___93", 2, 2, 1, [ "@query" ], 0 ],
     [
-      "Normalization.uu___94",
+      "Normalization.uu___105",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fe26a5d1a34765db9bbc05f5a9a194c4"
+    ],
+    [
+      "Normalization.uu___106",
       1,
       2,
       1,
@@ -41,16 +76,26 @@
         "function_token_typing_Normalization.four__", "int_inversion",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "5f24885fa345aa3db9dc859eb527a393"
     ],
     [
-      "Normalization.uu___95",
+      "Normalization.uu___107",
       1,
       2,
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
-      0
+      0,
+      "1f2683a590f0a6d4035ad771bc7b8706"
     ],
-    [ "Normalization.uu___95", 2, 2, 1, [ "@query" ], 0 ]
+    [
+      "Normalization.uu___107",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cf990a6bcaaaff06e1ac07e0ba2bba23"
+    ]
   ]
 ]

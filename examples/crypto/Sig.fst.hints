@@ -9,7 +9,8 @@
       [
         "@query", "equation_Sig.sigsize", "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "787146165d455ddc96bed362eac36371"
     ],
     [
       "Sig.pk",
@@ -17,7 +18,8 @@
       2,
       1,
       [ "@query", "equation_Sig.pksize", "projection_inverse_BoxInt_proj_0" ],
-      0
+      0,
+      "d2d3dc21fb8dbc2f6fb0989c7b046246"
     ],
     [
       "Sig.sk",
@@ -25,7 +27,8 @@
       2,
       1,
       [ "@query", "equation_Sig.sksize", "projection_inverse_BoxInt_proj_0" ],
-      0
+      0,
+      "33b735be3a0c398824f7d390eb7755ba"
     ],
     [
       "Sig.entry",
@@ -40,9 +43,18 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
         "haseqSig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
       ],
-      0
+      0,
+      "766497082b76f96854ca76fcf25bf0ce"
     ],
-    [ "Sig.__proj__Entry__item__k", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "Sig.__proj__Entry__item__k",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "036abdbe05ac2be3ea77f7f13de6f035"
+    ],
     [
       "Sig.__proj__Entry__item__t",
       1,
@@ -52,42 +64,33 @@
         "@MaxIFuel_assumption", "@query", "equation_Platform.Bytes.bytes",
         "equation_Sig.text", "proj_equation_Sig.Entry_k",
         "projection_inverse_Sig.Entry_k",
-        "refinement_interpretation_Sig_Tm_refine_cde4d222f8ab5744405107af8baa7ed1"
+        "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d"
       ],
-      0
+      0,
+      "2962851d9573f5bff038e3363ea56a11"
     ],
-    [ "Sig.__proj__Entry__item__m", 1, 2, 1, [ "@query" ], 0 ],
     [
-      "Sig.sign",
+      "Sig.__proj__Entry__item__m",
       1,
       2,
       1,
-      [ "@query", "equation_FStar.Heap.trivial_preorder", "true_interp" ],
-      0
+      [ "@query" ],
+      0,
+      "faabc2dd21451c6157e03a857df35730"
     ],
     [
       "Sig.sign",
-      2,
+      1,
       2,
       1,
       [
         "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Heap.trivial_rel", "equation_Prims.l_True",
+        "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
-      0
-    ],
-    [
-      "Sig.sign",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
+      0,
+      "63d0069304605e1427c7863cc38b3914"
     ],
     [
       "Sig.verify",
@@ -105,7 +108,8 @@
         "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d",
         "refinement_interpretation_Sig_Tm_refine_79a5609e5a23968ed29de422371cc63a"
       ],
-      0
+      0,
+      "339534a95e323ad76cd63f4ea0a0073c"
     ],
     [
       "Sig.verify",
@@ -118,7 +122,8 @@
         "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
-      0
+      0,
+      "be386bdadab26f7aacad46336ec5f27b"
     ],
     [
       "Sig.verify",
@@ -129,23 +134,12 @@
         "@query", "assumption_Platform.Bytes.HasEq_bytes",
         "equation_Sig.text"
       ],
-      0
+      0,
+      "96d653407bf39b1785b5a9f90fe158f9"
     ],
     [
       "Sig.verify",
       4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Sig.verify",
-      5,
       2,
       1,
       [
@@ -155,7 +149,8 @@
         "equation_Sig.text",
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
-      0
+      0,
+      "3b51f778f0a382e6070579dc4ea8ad0f"
     ]
   ]
 ]

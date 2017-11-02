@@ -143,18 +143,7 @@ let infix_prim_op_to_string e = find_lid (get_lid e)      infix_prim_ops
 let unary_prim_op_to_string e = find_lid (get_lid e)      unary_prim_ops
 let quant_to_string t = find_lid (get_lid t) quants
 
-let const_to_string x = match x with
-  | Const_effect -> "Effect"
-  | Const_unit -> "()"
-  | Const_bool b -> if b then "true" else "false"
-  | Const_float x ->      U.string_of_float x
-  | Const_string(s, _) -> U.format1 "\"%s\"" s
-  | Const_bytearray _  ->  "<bytearray>"
-  | Const_int (x, _) -> x
-  | Const_char c -> "'" ^ U.string_of_char c ^ "'"
-  | Const_range r -> Range.string_of_range r
-  | Const_reify -> "reify"
-  | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
+let const_to_string x = C.const_to_string x
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l
@@ -275,11 +264,20 @@ let rec term_to_string x =
         U.format2 "{:pattern %s} %s" pats (term_to_string t)
 
       | Tm_meta(t, Meta_monadic (m, t')) -> U.format4 ("(Monadic-%s{%s %s} %s)") (tag_of_term t) (sli m) (term_to_string t') (term_to_string t)
+
       | Tm_meta(t, Meta_monadic_lift(m0, m1, t')) -> U.format5 ("(MonadicLift-%s{%s : %s -> %s} %s)") (tag_of_term t) (term_to_string t') (sli m0) (sli m1) (term_to_string t)
-      | Tm_meta(t, Meta_alien(_, s)) -> U.format1 "(Meta_alien \"%s\")" s
-      | Tm_meta(t, Meta_labeled(l,r,b)) when Options.print_implicits() ->
+
+      | Tm_meta(t, Meta_alien(_, s, _)) -> U.format1 "(Meta_alien \"%s\")" s
+
+      | Tm_meta(t, Meta_labeled(l,r,b)) ->
         U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
-      | Tm_meta(t, _) ->    term_to_string t
+
+      | Tm_meta(t, Meta_named(l)) ->
+        U.format3 "Meta_named(%s, %s){%s}" (lid_to_string l) (Range.string_of_range t.pos) (term_to_string t)
+
+      | Tm_meta(t, Meta_desugared _) ->
+        U.format1 "Meta_desugared{%s}"  (term_to_string t)
+
       | Tm_bvar x ->        db_to_string x ^ ":" ^ (tag_of_term x.sort)
       | Tm_name x ->        nm_to_string x
       | Tm_fvar f ->        fv_to_string f

@@ -296,6 +296,9 @@ let rec is_ml_value e =
     | MLE_TApp (h, _) -> is_ml_value h
     | _ -> false
 
+(*copied from ocaml-asttrans.fs*)
+let fresh = let c = mk_ref 0 in
+            fun (x:string) -> (incr c; x ^ string_of_int (!c))
 
 //pre-condition: SS.compress t = Tm_abs _
 //Collapses adjacent abstractions into a single n-ary abstraction
@@ -373,7 +376,7 @@ let erase (g:env) e ty (f:e_tag) : (mlexpr * e_tag * mlty) =
 let eta_expand (t : mlty) (e : mlexpr) : mlexpr =
     let ts, r = doms_and_cod t in
     if ts = [] then e else // just quit if this is not a function type
-    let vs = List.map (fun _ -> "a") ts in
+    let vs = List.map (fun _ -> fresh "a") ts in
     let vs_ts = List.zip vs ts in
     let vs_es = List.map (fun (v, t) -> with_ty t (MLE_Var v)) (List.zip vs ts) in
     let body = with_ty r <| MLE_App (e, vs_es) in
@@ -623,13 +626,13 @@ let rec extract_one_pat (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlt
         let x = gensym() in // as_mlident (S.new_bv None Tm_bvar) in
         let when_clause = with_ty ml_bool_ty <|
             MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x;
-                                    with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const' p.p i)]) in
+                                    with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const p.p i)]) in
         g, Some (MLP_Var x, [when_clause]), ok ml_int_ty
 
     | Pat_constant s     ->
         let t : term = TcTerm.tc_constant Range.dummyRange s in
         let mlty = term_as_mlty g t in
-        g, Some (MLP_Const (mlconst_of_const' p.p s), []), ok mlty
+        g, Some (MLP_Const (mlconst_of_const p.p s), []), ok mlty
 
     | Pat_var x | Pat_wild x ->
         // JP,NS: Pat_wild turns into a binder in the internal syntax because
@@ -844,7 +847,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_constant c ->
           let _, ty, _ = TcTerm.type_of_tot_term g.tcenv t in
           let ml_ty = term_as_mlty g ty in
-          with_ty ml_ty (MLE_Const <| mlconst_of_const' t.pos c), E_PURE, ml_ty
+          with_ty ml_ty (mlexpr_of_const t.pos c), E_PURE, ml_ty
 
         | Tm_name _
         | Tm_fvar _ -> //lookup in g; decide if its in left or right; tag is Pure because it's just a variable
@@ -878,6 +881,13 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
             (fun (_, targ) (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
             ml_bs (f, t) in
           with_ty tfun <| MLE_Fun(ml_bs, ml_body), f, tfun
+
+        | Tm_app({n=Tm_constant Const_range_of}, [(a1, _)]) ->
+          let ty = term_as_mlty g (tabbrev PC.range_lid) in
+          with_ty ty <| mlexpr_of_range a1.pos, E_PURE, ty
+
+        | Tm_app({n=Tm_constant Const_set_range_of}, [(a1, _); (a2, _)]) ->
+          term_as_mlexpr' g a1
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 
@@ -928,7 +938,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
                         //   then evaluation order must be enforced to be L-to-R (by hoisting)
                         let evaluation_order_guaranteed =
                           List.length mlargs_f = 1 ||
-                          Util.codegen_fsharp () ||
+                          Options.codegen_fsharp () ||
                           (match head.n with
                            | Tm_fvar fv ->
 			                    S.fv_eq_lid fv PC.op_And ||
@@ -1325,14 +1335,14 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         | Tm_arrow (binders, _) ->
             binders
             |> List.filter (function (_, (Some (Implicit _))) -> true | _ -> false)
-            |> List.map (fun _ -> "_", MLTY_Top)
+            |> List.map (fun _ -> fresh "_", MLTY_Top)
         | _ ->
             failwith "Discriminator must be a function"
     in
     // Unfortunately, looking up the constructor name in the environment would give us a _curried_ type.
     // So, we don't bother popping arrows until we find the return type of the constructor.
     // We just use Top.
-    let mlid = "_discr_" in
+    let mlid = fresh "_discr_" in
     let targ = MLTY_Top in
     // Ugly hack: we don't know what to put in there, so we just write a dummy
     // polymorphic value to make sure that the type is not printed.

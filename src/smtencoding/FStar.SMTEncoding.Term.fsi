@@ -57,6 +57,8 @@ type op =
   | BvAnd
   | BvXor
   | BvOr
+  | BvAdd
+  | BvSub
   | BvShl
   | BvShr
   | BvUdiv
@@ -165,6 +167,8 @@ val mkBvToNat : (term -> Range.range -> term)
 val mkBvAnd   : ((term * term) -> Range.range -> term)
 val mkBvXor   : ((term * term) -> Range.range -> term)
 val mkBvOr    : ((term * term) -> Range.range -> term)
+val mkBvAdd   : ((term * term) -> Range.range -> term)
+val mkBvSub   : ((term * term) -> Range.range -> term)
 val mkBvUlt   : ((term * term) -> Range.range -> term)
 val mkBvUext  : (int -> term -> Range.range -> term)
 val mkBvShl   : (int -> (term * term) -> Range.range -> term)
@@ -189,6 +193,7 @@ val fresh_constructor : (string * list<sort> * sort * int) -> decl
 val constructor_to_decl: constructor_t -> decls_t
 val mkBvConstructor: int -> decls_t
 val declToSmt: string -> decl -> string
+val declToSmt_no_caps: string -> decl -> string
 
 val mk_Term_app : term -> term -> Range.range -> term
 val mk_Term_uvar: int -> Range.range -> term
@@ -204,7 +209,8 @@ val unboxString: term -> term
 val boxBitVec:   int -> term -> term
 val unboxBitVec: int -> term -> term
 
-val mk_Range_const:  term
+// Thunked, produces a different opaque constant on each call
+val mk_Range_const:  unit -> term
 val mk_Term_unit:    term
 
 val mk_PreType:      term -> term

@@ -1,7 +1,4 @@
 module Recursive 
-
-open Rel
-
 (* Reasoning about recursive functions *)
 
 #set-options "--initial_fuel 1"

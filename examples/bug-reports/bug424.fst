@@ -1,11 +1,13 @@
-module Bug
+module Bug424
 
-type f (t:Type)
+open FStar.ST
+
+assume new type f (t:Type)
 
 // making this opaque lets the program check
 type t (u:unit) = x:int{u = ()}
 
-type box = | B: v:f (t ()) -> box
+noeq type box = | B: v:f (t ()) -> box
 
 val get: b:box -> St (f (t ()))
 

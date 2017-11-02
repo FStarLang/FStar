@@ -1,5 +1,5 @@
 [
-  "‘\u0018xñﬂ&#≈øVŒ\u000e0-Ç’",
+  "ÒÔ◊œ2{\u001dël-X¶_\f˛ù",
   [
     [
       "FStar.Tactics.Derived.mapM",
@@ -12,9 +12,18 @@
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "fcf5ddd825e697e1cb4acd46a8c98e15"
     ],
-    [ "FStar.Tactics.Derived.guard", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Derived.guard",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "186958ede4db6d7d345dc791c1f26c0a"
+    ],
     [
       "FStar.Tactics.Derived.or_else",
       1,
@@ -28,7 +37,8 @@
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
-      0
+      0,
+      "5955950c8e554bda9781436aa4aaa5a5"
     ],
     [
       "FStar.Tactics.Derived.repeat",
@@ -43,10 +53,36 @@
         "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
-      0
+      0,
+      "4babf242549e4af61ff83fa96ee086b1"
     ],
-    [ "FStar.Tactics.Derived.repeatseq", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Tactics.Derived.tcut", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Derived.repeatseq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8ef169f260703eeb6e980880025c8680"
+    ],
+    [
+      "FStar.Tactics.Derived.guards_to_smt",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8509158f39d8802e06edac558fb8fa73"
+    ],
+    [
+      "FStar.Tactics.Derived.tcut",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d35419057f6812d14365135cb02ecd3e"
+    ],
     [
       "FStar.Tactics.Derived.revert_all",
       1,
@@ -60,7 +96,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "2512bb27b39aa0f0789e867e349b410b"
     ],
     [
       "FStar.Tactics.Derived.assumption",
@@ -73,7 +110,8 @@
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "c3345f50e059a5649c83354dcd165dd1"
     ],
     [
       "FStar.Tactics.Derived.destruct_equality_implication",
@@ -81,7 +119,8 @@
       2,
       1,
       [ "@query", "equation_FStar.Tactics.Effect.return" ],
-      0
+      0,
+      "41e9ae504abff66ac0e3d1678cf2d31c"
     ],
     [
       "FStar.Tactics.Derived.try_rewrite_equality",
@@ -99,7 +138,8 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "9b3d5d5f9ff7c29cb66d7e6dad180073"
     ],
     [
       "FStar.Tactics.Derived.rewrite_all_context_equalities",
@@ -117,7 +157,8 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "9f5f315683b227a0b2640312d81cc2a3"
     ],
     [
       "FStar.Tactics.Derived.unfold_point",
@@ -130,7 +171,8 @@
         "equation_FStar.Tactics.Derived.fail",
         "equation_FStar.Tactics.Effect.bind", "unit_typing"
       ],
-      0
+      0,
+      "2591298e099fb87f2eb9a44e6cb72d5b"
     ],
     [
       "FStar.Tactics.Derived.grewrite'",
@@ -143,9 +185,18 @@
         "equation_FStar.Tactics.Builtins.exact",
         "equation_FStar.Tactics.Derived.fail", "unit_typing"
       ],
-      0
+      0,
+      "123ed3105c1fbcfad88c646f43d021e0"
     ],
-    [ "FStar.Tactics.Derived.mk_sq_eq", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Tactics.Derived.mk_sq_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4930ffe081472eb0382669aca75df0af"
+    ],
     [
       "FStar.Tactics.Derived.iseq",
       1,
@@ -158,7 +209,8 @@
         "equation_FStar.Tactics.Effect.tactic",
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "2188e2a7ae7619d8f8f6d388ddaaeb18"
     ],
     [
       "FStar.Tactics.Derived.__witness",
@@ -170,7 +222,54 @@
         "exists-interp",
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
-      0
+      0,
+      "60b4e8c4a0ecb3b2854299c20150e090"
+    ],
+    [
+      "FStar.Tactics.Derived.push1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_imp",
+        "equation_Prims.squash", "l_imp-interp",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "c389b9b8dd9c9fa5202d592fd1c82828"
+    ],
+    [
+      "FStar.Tactics.Derived.apply_squash_or_lem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equality_tok_Prims.LexTop@tok",
+        "equation_FStar.Reflection.Formula.unsquash",
+        "equation_FStar.Reflection.Types.typ",
+        "equation_FStar.Tactics.Builtins.apply",
+        "equation_FStar.Tactics.Derived.fail",
+        "equation_FStar.Tactics.Effect.bind", "equation_Prims.nat",
+        "function_token_typing_FStar.Reflection.Types.term",
+        "function_token_typing_Prims.unit", "int_inversion", "int_typing",
+        "lemma_FStar.Pervasives.invertOption",
+        "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
+        "typing_FStar.Reflection.Formula.unsquash", "unit_typing",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "803f75cfeaec6a42c4f5cd3c22eb3b70"
     ]
   ]
 ]

@@ -1,4 +1,4 @@
-module Bug
+module Bug1150
 
 let positive' (s:int) : Type0 = s > 0
 let positive : p:(int->Type0){p 42} = positive'

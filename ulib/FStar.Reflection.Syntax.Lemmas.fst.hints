@@ -1,7 +1,15 @@
 [
-  "ÑðÕú»…\u0014°‰:ìd&J-Ë",
+  "¿/*)çÆ²¥4-\u001eq\f{×u",
   [
-    [ "FStar.Reflection.Syntax.Lemmas.uncurry", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Reflection.Syntax.Lemmas.uncurry",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d7e546bbe8b4e2e293c2688b20543257"
+    ],
     [
       "FStar.Reflection.Syntax.Lemmas.mk_app_collect_inv_s",
       1,
@@ -37,7 +45,8 @@
         "token_correspondence_FStar.Reflection.Syntax.mk_app",
         "typing_FStar.Reflection.Basic.__inspect", "unit_typing"
       ],
-      0
+      0,
+      "8d48a9be0f49238a5ff717c8a62c33d3"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.mk_app_collect_inv",
@@ -52,7 +61,8 @@
         "equation_with_fuel_FStar.Reflection.Syntax.mk_app.fuel_instrumented",
         "projection_inverse_Prims.Nil_a"
       ],
-      0
+      0,
+      "f291d2ce1e5d8718242305e7e190027d"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.collect_app_order'",
@@ -90,7 +100,8 @@
         "refinement_interpretation_FStar.Reflection.Basic_Tm_refine_62353a91a906896ee28a928c3c16dabb",
         "typing_FStar.Reflection.Basic.__inspect", "unit_typing"
       ],
-      0
+      0,
+      "1347f5b9ad1c9dac0aa5a1d4f31ea6ce"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.collect_app_order",
@@ -125,7 +136,8 @@
         "true_interp", "typing_FStar.Reflection.Basic.__inspect",
         "unit_typing"
       ],
-      0
+      0,
+      "8f856c815ac7341882b11b45bedd587c"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.list_ref",
@@ -143,7 +155,8 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "6848ba444427ae95038500172b24a050"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.collect_app_ref",
@@ -161,7 +174,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Nil_a", "true_interp"
       ],
-      0
+      0,
+      "347ff3b06b382dea4d6c7f8e9ef11ae3"
     ]
   ]
 ]

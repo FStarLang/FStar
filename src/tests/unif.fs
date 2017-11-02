@@ -20,7 +20,7 @@ open FStar.Ident
 open FStar.Range
 open FStar.Tests.Util
 
-let tcenv () = Pars.init() |> snd
+let tcenv () = Pars.init()
 
 let guard_to_string g = match g with
     | Trivial -> "trivial"
