@@ -223,13 +223,12 @@ let equal_intro #a s1 s2 = ()
 let equal_elim #a s1 s2  =
   let MkSeq l1 = s1 in
   let MkSeq l2 = s2 in
-  assert (List.length l1 == List.length l2);
   assert (forall (i:nat{i<List.length l1}).{:pattern (List.index l1 i)}
             List.index l1 i == index s1 i);
   assert (forall (i:nat{i<List.length l2}).{:pattern (List.index l2 i)}
             List.index l2 i == index s2 i);
-  assert (forall (i:nat{i<List.length l2}).{:pattern (index s1 i)}
-            index s1 i == index s2 i);
+  assert (forall (i:nat{i<length s1}).{:pattern s1.(i);s2.(i)}
+            s1.(i) == s2.(i));
   List.index_extensionality l1 l2
 
 let equal_refl #a s1 s2 = ()
