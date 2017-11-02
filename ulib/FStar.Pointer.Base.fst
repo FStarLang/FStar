@@ -18,6 +18,9 @@ open HST // for := , !
     `nullptr #t` (of type `npointer t`) represents the "NULL" value.
 *)
 
+(* GM: Seems the initial fuels are needed, or we get queries with fuel=2 *)
+#set-options "--initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
+
 type step: (from: typ) -> (to: typ) -> Tot Type0 =
   | StepField:
     (l: struct_typ) ->
@@ -124,9 +127,14 @@ let g_is_null_intro
 
 (** Buffers *)
 
+let not_an_array_cell (#t: typ) (p: pointer t) : GTot bool =
+  match Pointer?.p p with
+  | PathStep _ _ _ (StepCell _ _ _) -> false
+  | _ -> true
+
 noeq type buffer_root (t: typ) =
 | BufferRootSingleton:
-  (p: pointer t) ->
+  (p: pointer t { not_an_array_cell p } ) ->
   buffer_root t
 | BufferRootArray:
   (#max_length: array_length_t) ->
@@ -699,7 +707,7 @@ let value_of_ovalue_array_index
   (ensures (forall (i: nat) . i < UInt32.v len ==> Seq.index (value_of_ovalue (TArray len t') (Some sv)) i == value_of_ovalue t' (Seq.index sv i)))
 = ()
 
-#reset-options "--z3rlimit 16"
+#set-options "--z3rlimit 16"
 
 let rec value_of_ovalue_of_value
   (t: typ)
@@ -2291,7 +2299,7 @@ let unused_in_includes
 : Lemma
   (requires (includes p1 p2))
   (unused_in p1 h <==> unused_in p2 h)
-  [SMTPatT (unused_in p2 h); SMTPatT (includes p1 p2)]
+  [SMTPat (unused_in p2 h); SMTPat (includes p1 p2)]
 = includes_ind
   (fun #v1 #v2 p1 p2 -> unused_in p1 h <==> unused_in p2 h)
   (fun l p fd -> unused_in_gfield p fd h)
@@ -2310,7 +2318,7 @@ let live_includes
 : Lemma
   (requires (includes p1 p2))
   (ensures (live h p1 <==> live h p2))
-  [SMTPatT (live h p2); SMTPatT (includes p1 p2)]
+  [SMTPat (live h p2); SMTPat (includes p1 p2)]
 = includes_ind
   (fun #v1 #v2 p1 p2 -> live h p1 <==> live h p2)
   (fun l p fd -> live_gfield h p fd)
@@ -2551,19 +2559,21 @@ let is_active_union_field_includes_readable
 
 (** Operations on buffers *)
 
-let gsingleton_buffer_of_pointer
+let _singleton_buffer_of_pointer
   (#t: typ)
   (p: pointer t)
-: GTot (buffer t)
-= Buffer (BufferRootSingleton p) 0ul 1ul
+: Tot (buffer t)
+= let Pointer from contents pth = p in
+  match pth with
+  | PathStep _ _ pth' (StepCell ln ty i) ->
+    (* reconstruct the buffer to the enclosing array *)
+    Buffer (BufferRootArray #ty #ln (Pointer from contents pth')) i 1ul 
+  | _ ->
+    Buffer (BufferRootSingleton p) 0ul 1ul
 
-let singleton_buffer_of_pointer
-  (#t: typ)
-  (p: pointer t)
-: HST.Stack (buffer t)
-  (requires (fun h -> live h p))
-  (ensures (fun h b h' -> h' == h /\ b == gsingleton_buffer_of_pointer p))
-= Buffer (BufferRootSingleton p) 0ul 1ul
+let gsingleton_buffer_of_pointer #t p = _singleton_buffer_of_pointer p
+
+let singleton_buffer_of_pointer #t p = _singleton_buffer_of_pointer p
 
 let gbuffer_of_array_pointer
   (#t: typ)
@@ -2683,6 +2693,9 @@ let sub_buffer
   len
 = Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) len
 
+let offset_buffer #t b i =
+  Buffer (Buffer?.broot b) FStar.UInt32.(Buffer?.bidx b +^ i) (UInt32.sub (Buffer?.blength b) i)
+
 let buffer_length_gsub_buffer
   (#t: typ)
   (b: buffer t)
@@ -2753,11 +2766,26 @@ let buffer_length_buffer_as_seq
   (b: buffer t)
 = ()
 
-let buffer_as_seq_gsingleton_buffer_of_pointer
-  (#t: typ)
-  (h: HS.mem)
-  (p: pointer t)
-= Seq.slice_length (Seq.create 1 (gread h p))
+let buffer_as_seq_gsingleton_buffer_of_pointer #t h p =
+  let Pointer from contents pth = p in
+  match pth with
+  | PathStep through to pth' (StepCell ln ty i) ->
+    assert (through == TArray ln ty);
+    assert (to == ty);
+    assert (t == ty);
+    let p' : pointer (TArray ln ty) = Pointer from contents pth' in
+    let s : array ln (type_of_typ t) = gread h p' in
+    let s1 = Seq.slice s (UInt32.v i) (UInt32.v i + 1) in
+    let v = gread h p in
+    assert (v == Seq.index s (UInt32.v i));
+    let s2 = Seq.create 1 v in
+    assert (Seq.length s1 == 1);
+    assert (Seq.length s2 == 1);
+    assert (Seq.index s1 0 == v);
+    assert (Seq.index s2 0 == v);
+    assert (Seq.equal s1 s2)
+  | _ ->
+    Seq.slice_length (Seq.create 1 (gread h p))
 
 let buffer_as_seq_gbuffer_of_array_pointer
   (#length: array_length_t)
@@ -2805,12 +2833,14 @@ let live_gpointer_of_buffer_cell
   i h
 = ()
 
+#set-options "--initial_ifuel 2 --max_ifuel 2"
 let gpointer_of_buffer_cell_gsingleton_buffer_of_pointer
   (#t: typ)
   (p: pointer t)
   i
 = ()
 
+#set-options "--initial_ifuel 1 --max_ifuel 1"
 let gpointer_of_buffer_cell_gbuffer_of_array_pointer
   (#length: array_length_t)
   (#t: typ)
@@ -2842,6 +2872,10 @@ let index_buffer_as_seq
   (b: buffer t)
   i
 = ()
+
+let gsingleton_buffer_of_pointer_gcell #t #len p i = ()
+
+let gsingleton_buffer_of_pointer_gpointer_of_buffer_cell #t b i = ()
 
 (* The readable permission lifted to buffers. *)
 
@@ -3104,13 +3138,13 @@ let disjoint_sym''
 let disjoint_includes_l #a #as #a' (x: pointer a) (subx:pointer as) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint subx y))
-  [SMTPatT (disjoint subx y); SMTPatT (includes x subx)]
+  [SMTPat (disjoint subx y); SMTPat (includes x subx)]
   = disjoint_includes x y subx y
 
 let disjoint_includes_l_swap #a #as #a' (x:pointer a) (subx:pointer as) (y:pointer a') : Lemma
   (requires (includes x subx /\ disjoint x y))
   (ensures  (disjoint y subx))
-  [SMTPatT (disjoint y subx); SMTPatT (includes x subx)]
+  [SMTPat (disjoint y subx); SMTPat (includes x subx)]
   = disjoint_includes_l x subx y;
     disjoint_sym subx y
 
@@ -3699,7 +3733,7 @@ let loc_includes_union_l s1 s2 s =
     (fun _ -> loc_includes_trans u12 s1 s)
     (fun _ -> loc_includes_trans u12 s2 s)
 
-#reset-options "--z3rlimit 32"
+#set-options "--z3rlimit 32"
 
 let loc_includes_none s = ()
 
@@ -3714,7 +3748,7 @@ let loc_includes_gbuffer_of_array_pointer l #len #t p =
 let loc_includes_gpointer_of_array_cell l #t b i =
   loc_includes_trans l (loc_buffer b) (loc_pointer (gpointer_of_buffer_cell b i))
 
-#reset-options "--z3rlimit 64"
+#set-options "--z3rlimit 64"
 
 let loc_includes_gsub_buffer_r l #t b i len =
   if len = 0ul
@@ -4038,19 +4072,17 @@ let rec loc_aux_disjoint_loc_aux_includes
 let loc_disjoint_includes p1 p2 p1' p2' =
   regions_of_loc_monotonic p1 p1';
   regions_of_loc_monotonic p2 p2';
-  let pre
-    (r: HH.rid)
-    (n: nat)
-  : GTot Type0
-  = Set.mem r (Ghost.reveal (Loc?.aux_regions p1')) /\ Set.mem n (Loc?.aux_addrs p1' r) /\
-    Set.mem r (Ghost.reveal (Loc?.aux_regions p2')) /\ Set.mem n (Loc?.aux_addrs p2' r)
+  let pre = //A rather brutal way to force inlining of pre and post in VC of the continuation
+    (fun r n ->
+      Set.mem r (Ghost.reveal (Loc?.aux_regions p1')) /\ Set.mem n (Loc?.aux_addrs p1' r) /\
+      Set.mem r (Ghost.reveal (Loc?.aux_regions p2')) /\ Set.mem n (Loc?.aux_addrs p2' r))
+    <: Tot ((r:HH.rid) -> (n:nat) -> GTot Type0)
   in
-  let post
-    (r: HH.rid)
-    (n: nat)
-  : GTot Type0
-  = pre r n /\
-    loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n)
+  let post =
+    (fun r n ->
+       pre r n /\
+       loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n))
+    <: Tot ((r:HH.rid) -> (n:nat) -> GTot Type0)
   in
   let f
     (r: HH.rid)
@@ -4067,8 +4099,7 @@ let loc_disjoint_includes p1 p2 p1' p2' =
     loc_aux_disjoint_loc_aux_includes l2' l1 l1';
     loc_aux_disjoint_sym l2' l1'
   in
-  Classical.forall_intro_2 (fun r -> Classical.move_requires (f r));
-  assert (forall r n . pre r n ==> post r n)
+  Classical.forall_intro_2 (fun r -> Classical.move_requires (f r))
 
 let live_unused_in_disjoint_strong
   (#value1: typ)
@@ -4081,17 +4112,8 @@ let live_unused_in_disjoint_strong
   (ensures (frameOf p1 <> frameOf p2 \/ as_addr p1 <> as_addr p2))
 = ()
 
-let live_unused_in_disjoint
-  (#value1: typ)
-  (#value2: typ)
-  (h: HS.mem)
-  (p1: pointer value1)
-  (p2: pointer value2)
-: Lemma
-  (requires (live h p1 /\ unused_in p2 h))
-  (ensures (disjoint p1 p2))
-  [SMTPatT (disjoint p1 p2); SMTPatT (live h p1)]
-= live_unused_in_disjoint_strong h p1 p2;
+let live_unused_in_disjoint #value1 #value2 h p1 p2 =
+  live_unused_in_disjoint_strong h p1 p2;
   disjoint_root p1 p2
 
 let loc_disjoint_gsub_buffer #t b i1 len1 i2 len2 = ()
@@ -4160,7 +4182,7 @@ let modifies_pointer_elim s h1 h2 #a' p' =
     let r = greference_of p' in
     assert (HS.sel h1 r == HS.sel h2 r)
 
-#reset-options "--z3rlimit 256"
+#set-options "--z3rlimit 256"
 
 let modifies_buffer_elim #t1 b p h h' =
   loc_disjoint_sym (loc_buffer b) p;
@@ -4206,10 +4228,10 @@ let modifies_reference_elim #t b p h h' =
 
 let modifies_refl s h = ()
 
-#reset-options "--z3rlimit 512"
+#reset-options "--z3rlimit 160 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
 
 let modifies_loc_includes s1 h h' s2 =
-  assert (
+  assert_spinoff (
     forall rs r . (
       HH.modifies_just rs h.HS.h h'.HS.h /\
       HS.live_region h r /\
@@ -4221,8 +4243,8 @@ let modifies_loc_includes s1 h h' s2 =
   aux_addrs_nonempty s2;
   let h1 = h in
   let h2 = h' in
-  assert (HH.modifies_just (regions_of_loc s1) h1.HS.h h2.HS.h);
-  assert (
+  assert_spinoff (HH.modifies_just (regions_of_loc s1) h1.HS.h h2.HS.h);
+  assert_spinoff (
     forall r . (
       HS.live_region h1 r /\
       Set.mem r (regions_of_loc s1) /\
@@ -4245,7 +4267,7 @@ let modifies_loc_includes s1 h h' s2 =
     (ensures (
       equal_values h1 p h2 p
     ))
-  = assert (~ (Set.mem (as_addr p) (addrs_of_loc_weak s2 (frameOf p))));
+  = assert_spinoff (~ (Set.mem (as_addr p) (addrs_of_loc_weak s2 (frameOf p))));
     if
       Set.mem (frameOf p) (Ghost.reveal (Loc?.aux_regions s2)) &&
       Set.mem (as_addr p) (Loc?.aux_addrs s2 (frameOf p))
@@ -4259,6 +4281,8 @@ let modifies_loc_includes s1 h h' s2 =
       ()
   in
   Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
+
+#set-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
 
 let modifies_only_live_regions_weak
   (rs: Set.set HH.rid)
@@ -4782,3 +4806,43 @@ let write_buffer
   (b: buffer t)
   i v
 = write (pointer_of_buffer_cell b i) v
+
+(* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
+
+let root_buffer #t b =
+  let root = Buffer?.broot b in 
+  match root with
+  | BufferRootSingleton p -> Buffer root 0ul 1ul
+  | BufferRootArray #_ #len _ -> Buffer root 0ul len
+
+let buffer_idx #t b =
+  Buffer?.bidx b
+
+let buffer_eq_gsub_root #t b =
+  assert (UInt32.add 0ul (buffer_idx b) == buffer_idx b)
+
+let root_buffer_gsub_buffer #t b i len = ()
+
+let buffer_idx_gsub_buffer #t b i len = ()
+
+let buffer_includes #t blarge bsmall =
+  let () = () in (
+    root_buffer blarge == root_buffer bsmall /\
+    UInt32.v (buffer_idx blarge) <= UInt32.v (buffer_idx bsmall) /\
+    UInt32.v (buffer_idx bsmall) + UInt32.v (buffer_length bsmall) <= UInt32.v (buffer_idx blarge) + UInt32.v (buffer_length blarge)
+  )
+
+let buffer_includes_refl #t b = ()
+
+let buffer_includes_trans #t b1 b2 b3 = ()
+
+let buffer_includes_gsub_r #t b i len = ()
+
+let buffer_includes_gsub #t b i1 i2 len1 len2 = ()
+
+let buffer_includes_elim #t b1 b2 = ()
+
+let buffer_includes_loc_includes #t b1 b2 =
+  buffer_includes_elim b1 b2;
+  loc_includes_refl (loc_buffer b1);
+  loc_includes_gsub_buffer_r (loc_buffer b1) b1 (UInt32.sub (buffer_idx b2) (buffer_idx b1)) (buffer_length b2)

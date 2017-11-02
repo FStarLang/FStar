@@ -1,4 +1,4 @@
-module Bug56
+module Bug056
 
 val g : x:'a -> Tot unit
 let g x = ()

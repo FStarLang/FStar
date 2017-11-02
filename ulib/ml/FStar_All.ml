@@ -1,4 +1,5 @@
-let failwith x = failwith x
+exception Failure = Failure
+let failwith x = raise (Failure x)
 let exit i = exit (Z.to_int i)
 let pipe_right a f = f a
 let pipe_left f a = f a

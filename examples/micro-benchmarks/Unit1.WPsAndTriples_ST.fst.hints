@@ -1,5 +1,5 @@
 [
-  "\u0015â”ni• C¬\u001c\u001c‘≥MöÉ",
+  "ÿ‰ÜWe#√¡Cb5d—‰\u0006”",
   [
     [
       "Unit1.WPsAndTriples_ST.g",
@@ -7,82 +7,11 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Unit1.WPsAndTriples_ST.g",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Unit1.WPsAndTriples_ST.g",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Unit1.WPsAndTriples_ST.g",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Unit1.WPsAndTriples_ST.g",
-      5,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Unit1.WPsAndTriples_ST.g",
-      6,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
-      0
-    ],
-    [
-      "Unit1.WPsAndTriples_ST.g",
-      7,
-      2,
-      1,
-      [
         "@query", "primitive_Prims.op_Multiply",
         "projection_inverse_BoxInt_proj_0"
       ],
-      0
+      0,
+      "df67098a1949d99eca5893096ba54291"
     ]
   ]
 ]

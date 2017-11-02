@@ -1,4 +1,4 @@
-let make i = String.make (Z.to_int i)
+let make i ci = String.make (Z.to_int i) (Char.chr ci)
 let strcat s t = s ^ t
 let split seps s =
   let rec repeat_split acc = function
@@ -11,6 +11,7 @@ let split seps s =
 let compare x y = Z.of_int (BatString.compare x y)
 let concat = BatString.concat
 let length s = Z.of_int (BatUTF8.length s)
+let strlen s = length s
 
 let substring s i j =
   BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))

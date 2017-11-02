@@ -6,28 +6,24 @@ include $(FSTAR_HOME)/ulib/ml/Makefile.include
 OCAML_OUTPUT=$(FSTAR_HOME)/src/ocaml-output
 INCLUDES=$(addprefix -I $(OCAML_OUTPUT)/_build/, src/tactics/ml ulib/ml src/ocaml-output/ src/basic/ml)
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 
-.PRECIOUS: %.cmxs
-.PHONY: %.test
+.PRECIOUS: _cache/%.cmxs
+.PHONY: %.test fstartaclib
 
 MODULES=Print Split Canon
 
-all: $(patsubst %,%.cmxs,$(MODULES)) $(patsubst %,%.test,$(MODULES))
+all: $(patsubst %,%.test,$(MODULES))
 
-.ulib: ../../bin/fstarlib/fstarlib.cmxa
-	touch $@
+$(FSTARTACLIB):
+	$(MAKE) -C $(FSTAR_HOME)/ulib install-fstar-tactics
 
-../../bin/fstarlib/fstarlib.cmxa:
-	$(MAKE) -C $(ULIB_ML)
-
-$(CACHE):
-	mkdir $@
-
-%.cmxs: %.Test.fst .ulib $(CACHE)
-	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE) $<
+%.cmxs: %.Test.fst $(FSTARTACLIB)
+	mkdir -p $(CACHE)_$*
+	$(FSTAR) $(OTHERFLAGS) --gen_native_tactics $(CACHE)_$* $<
 
 %.test: %.Test.fst %.cmxs
-	$(FSTAR) $(OTHERFLAGS) --use_native_tactics $(CACHE) $<
+	$(FSTAR) $(OTHERFLAGS) --use_native_tactics $(CACHE)_$* $<
 
 clean:
-	rm -f $(CACHE)/*.ml $(CACHE)/*.cm* $(CACHE)/*.o
+	rm -rf $(CACHE)_*

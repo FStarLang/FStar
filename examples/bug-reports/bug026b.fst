@@ -1,7 +1,4 @@
-
-(* Filed as: https://github.com/FStarLang/FStar/issues/26 *)
-
-module WellFormedness
+module Bug026b
 
 assume val factorial : n:nat -> Tot nat
 

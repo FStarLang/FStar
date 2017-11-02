@@ -19,9 +19,9 @@ type monoid (m:Type) =
   | Monoid :
     unit:m ->
     mult:(m -> m -> m) ->
-    right_unitality:right_unitality_lemma m unit mult ->
-    left_unitality:left_unitality_lemma m unit mult ->
-    associativity:associativity_lemma m mult ->
+    right_unitality:squash (right_unitality_lemma m unit mult) ->
+    left_unitality:squash (left_unitality_lemma m unit mult) ->
+    associativity:squash (associativity_lemma m mult) ->
     monoid m
 
 
@@ -30,10 +30,7 @@ let intro_monoid (m:Type) (u:m) (mult:m -> m -> m)
     (requires (right_unitality_lemma m u mult /\ left_unitality_lemma m u mult /\ associativity_lemma m mult))
     (ensures (fun mm -> Monoid?.unit mm == u /\ Monoid?.mult mm == mult))
 =
-  Monoid u mult
-    (get_forall (fun (x:m) -> x `mult` u == x))
-    (get_forall (fun (x:m) -> u `mult` x == x))
-    (get_forall (fun (x:m) -> forall (y z:m). x `mult` y `mult` z == x `mult` (y `mult` z)))
+  Monoid u mult () () ()
 
 
 (** Some monoid structures *)
@@ -115,6 +112,13 @@ let bool_xor_monoid : monoid bool =
   let xor b1 b2 = (b1 || b2) && not (b1 && b2) in
   intro_monoid bool false xor
 
+let lift_monoid_option (#a:Type) (m:monoid a) : monoid (option a) =
+  let mult (x y:option a) =
+    match x, y with
+    | Some x0, Some y0 -> Some (m.mult x0 y0)
+    | _, _ -> None
+  in
+  intro_monoid (option a) (Some m.unit) mult
 
 (* Definition of a morphism of monoid *)
 
@@ -124,11 +128,10 @@ let monoid_morphism_unit_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid 
 let monoid_morphism_mult_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
   forall (x y:a). Monoid?.mult mb (f x) (f y) == f (Monoid?.mult ma x y)
 
-unopteq
 type monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
   | MonoidMorphism :
-    unit:monoid_morphism_unit_lemma f ma mb ->
-    mult:monoid_morphism_mult_lemma f ma mb ->
+    unit:squash (monoid_morphism_unit_lemma f ma mb) ->
+    mult:squash (monoid_morphism_mult_lemma f ma mb) ->
     monoid_morphism f ma mb
 
 let intro_monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b)
@@ -136,9 +139,7 @@ let intro_monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b)
     (requires (monoid_morphism_unit_lemma f ma mb /\ monoid_morphism_mult_lemma f ma mb))
     (ensures (fun _ -> True))
 =
-  MonoidMorphism
-    (get_equality (f (Monoid?.unit ma)) (Monoid?.unit mb))
-    (get_forall (fun (x:a) -> forall (y:a). Monoid?.mult mb (f x) (f y) == f (Monoid?.mult ma x y)))
+  MonoidMorphism () ()
 
 let embed_nat_int (n:nat) : int = n
 let _ = intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
@@ -176,8 +177,8 @@ unopteq
 type left_action (#m:Type) (mm:monoid m) (a:Type) =
   | LAct :
     act:(m -> a -> a) ->
-    mult_lemma: mult_act_lemma m a (Monoid?.mult mm) act ->
-    unit_lemma: unit_act_lemma m a (Monoid?.unit mm) act ->
+    mult_lemma: squash (mult_act_lemma m a (Monoid?.mult mm) act) ->
+    unit_lemma: squash (unit_act_lemma m a (Monoid?.unit mm) act) ->
     left_action mm a
 
 let left_action_morphism

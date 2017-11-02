@@ -5,9 +5,16 @@ Every tactic primitive, i.e., those built into the compiler
 module FStar.Tactics.Builtins
 
 open FStar.Tactics.Effect
-open FStar.Order
-open FStar.Reflection
 open FStar.Reflection.Types
+open FStar.Tactics.Types
+
+assume private val __fail : a:Type -> string -> __tac a
+let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
+
+assume private val __top_env     : __tac env
+(** [top_env] returns the environment where the tactic started running.
+ * This works even if no goals are present. *)
+let top_env = fun () -> TAC?.reflect __top_env
 
 assume private val __cur_env     : __tac env
 (** [cur_env] returns the current goal's environment *)
@@ -21,6 +28,15 @@ assume private val __cur_witness : __tac term
 (** [cur_witness] returns the current goal's witness *)
 let cur_witness = fun () -> TAC?.reflect __cur_witness
 
+assume private val __is_guard   : __tac bool
+(** [is_guard] returns whether the current goal arised from a typechecking guard *)
+let is_guard = fun () -> TAC?.reflect __is_guard
+
+assume private val __refine_intro : __tac unit
+(** [refine_intro] will turn a goal of shape [w : x:t{phi}]
+into [w : t] and [phi{w/x}] *)
+let refine_intro = fun () -> TAC?.reflect __refine_intro
+
 (*
  * This is the way we inspect goals and any other term. We can quote them
  * to turn them into a representation of them. Having a total function
@@ -33,6 +49,16 @@ let cur_witness = fun () -> TAC?.reflect __cur_witness
  *)
 assume private val __embed  : #a:Type -> a -> term
 unfold let quote #a (x:a) : tactic term = fun () -> __embed x
+
+assume private val __tc : term -> __tac term
+(** [tc] returns the type of a term in the current environment,
+or fails if it is untypeable. *)
+let tc (t : term) = fun () -> TAC?.reflect (__tc t)
+
+assume private val __unshelve : term -> __tac unit
+(** [tc] returns the type of a term in the current environment,
+or fails if it is untypeable. *)
+let unshelve (t : term) = fun () -> TAC?.reflect (__unshelve t)
 
 assume private val __unquote : #a:Type -> term -> __tac a
 (** [unquote t] with turn a quoted term [t] into an actual value, of
@@ -68,10 +94,16 @@ string operations)
 *)
 let norm steps : tactic unit = fun () -> TAC?.reflect (__norm steps)
 
-assume private val __norm_term  : list norm_step -> term -> __tac term
-(** [norm_term steps t] will call the normalizer on the term [t]
-using the list of steps [steps]. The list has the same meaning as for [norm]. *)
-let norm_term steps t : tactic term = fun () -> TAC?.reflect (__norm_term steps t)
+assume private val __norm_term_env  : env -> list norm_step -> term -> __tac term
+(** [norm_term_env e steps t] will call the normalizer on the term [t]
+using the list of steps [steps], over environment [e]. The list has the same meaning as for [norm]. *)
+let norm_term_env env steps t : tactic term = fun () -> TAC?.reflect (__norm_term_env env steps t)
+
+assume private val __norm_binder_type  : list norm_step -> binder -> __tac unit
+(** [norm_binder_type steps b] will call the normalizer on the type of the [b]
+binder for the current goal. Notably, this cannot be done via binder_retype and norm,
+because of uvars being resolved to lambda-abstractions. *)
+let norm_binder_type steps b : tactic unit = fun () -> TAC?.reflect (__norm_binder_type steps b)
 
 assume private val __intro  : __tac binder
 (** [intro] pushes the first argument of an arrow goal into the
@@ -87,17 +119,37 @@ Currently broken (c.f. issue #1103)
 *)
 let intro_rec : tactic (binder * binder) = fun () -> TAC?.reflect __intro_rec
 
+assume private val __rename_to  : binder -> string -> __tac unit
+(** [rename_to b nm] will rename the binder [b] to [nm] in
+the environment, goal, and witness in a safe manner. The only use of this
+is to make goals and terms more user readable. *)
+let rename_to bv s : tactic unit = fun () -> TAC?.reflect (__rename_to bv s)
+
 assume private val __revert  : __tac unit
 (** [revert] pushes out a binder from the environment into the goal type,
 so a behaviour opposite to [intros].
 *)
 let revert : tactic unit = fun () -> TAC?.reflect __revert
 
-assume private val __clear   : __tac unit
-(** [clear] will drop the outermost binder from the environment.
+assume private val __binder_retype  : binder -> __tac unit
+(** [binder_retype] changes the type of a binder in the context. After calling it
+with a binder of type `t`, the user is presented with a goal of the form `t == ?u`
+to be filled. The original goal (following that one) has the type of `b` in the
+context replaced by `?u`.
+*)
+let binder_retype (b : binder) : tactic unit = fun () -> TAC?.reflect (__binder_retype b)
+
+assume private val __clear_top : __tac unit
+(** [clear_top] will drop the outermost binder from the environment.
 Can only be used if the goal does not at all depend on it.
 *)
-let clear : tactic unit = fun () -> TAC?.reflect __clear
+let clear_top : tactic unit = fun () -> TAC?.reflect __clear_top
+
+assume private val __clear : binder -> __tac unit
+(** [clear] will drop the given binder from the context, is
+nothing depends on it.
+*)
+let clear (b : binder) : tactic unit = fun () -> TAC?.reflect (__clear b)
 
 assume private val __rewrite : binder -> __tac unit
 (** If [b] is a binder of type [v == r], [rewrite b] will rewrite
@@ -130,6 +182,11 @@ assume private val __exact : term -> __tac unit
 [t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
 always be the case since [w] is usually a uvar. *)
 let exact (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact tt)
+
+assume private val __exact_guard : term -> __tac unit
+(** Like [exact], but allows for the term [e] to have a type [t] only
+under some guard [g], adding the guard as a goal. *)
+let exact_guard (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact_guard tt)
 
 assume private val __apply : term -> __tac unit
 (** [apply f] will attempt to produce a solution to the goal by an application
@@ -170,7 +227,7 @@ assume private val __trefl : __tac unit
 when trying to [apply] a reflexivity lemma. *)
 let trefl : tactic unit = fun () -> TAC?.reflect __trefl
 
-assume private val __pointwise : __tac unit -> __tac unit
+assume private val __pointwise : direction -> __tac unit -> __tac unit
 (** (TODO: explain bettter) When running [pointwise tau] For every
 subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
 |= t' == ?u] and run [tau] on it. When the tactic proves the goal,
@@ -178,7 +235,8 @@ the engine will rewrite [t'] for [?u] in the original goal type. This
 is done for every subterm, bottom-up. This allows to recurse over an
 unknown goal type. By inspecting the goal, the [tau] can then decide
 what to do (to not do anything, use [trefl]). *)
-let pointwise (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__pointwise (reify_tactic tau))
+let pointwise (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__pointwise BottomUp (reify_tactic tau))
+let pointwise' (tau : tactic unit) : tactic unit = fun () -> TAC?.reflect (__pointwise TopDown (reify_tactic tau))
 
 assume private val __later : __tac unit
 (** Push the current goal to the back. *)

@@ -52,9 +52,9 @@ open FStar_String
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
 %token AND ASSERT BEGIN ELSE END
-%token EXCEPTION FALSE L_FALSE FUN FUNCTION IF IN MODULE DEFAULT
+%token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
 %token MATCH OF
-%token OPEN REC MUTABLE THEN TRUE L_TRUE TRY TYPE EFFECT VAL
+%token OPEN REC MUTABLE THEN TRUE TRY TYPE EFFECT VAL
 %token INCLUDE
 %token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
@@ -64,7 +64,7 @@ open FStar_String
 %token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LPAREN LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
-%token PRIVATE REIFIABLE REFLECTABLE REIFY LBRACE_COLON_PATTERN PIPE_RIGHT
+%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
 %token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS
@@ -334,7 +334,7 @@ letqualifier:
 
  (* Remove with stratify *)
 aqual:
-  | EQUALS    { print1 "%s (Warning): The '=' notation for equality constraints on binders is deprecated; use '$' instead\n" (string_of_range (lhs parseState));
+  | EQUALS    { warn (lhs parseState) "The '=' notation for equality constraints on binders is deprecated; use '$' instead";
                                         Equality }
   | q=aqualUniverses { q }
 
@@ -767,8 +767,6 @@ atomicTermNotQUident:
                mk_term (Var a) (rhs parseState 1) Expr }
   | tv=tvar     { mk_term (Tvar tv) (rhs parseState 1) Type_level }
   | c=constant { mk_term (Const c) (rhs parseState 1) Expr }
-  | L_TRUE   { mk_term (Name (lid_of_path ["True"] (rhs parseState 1))) (rhs parseState 1) Type_level }
-  | L_FALSE   { mk_term (Name (lid_of_path ["False"] (rhs parseState 1))) (rhs parseState 1) Type_level }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }
   | LPAREN op=operator RPAREN
@@ -883,6 +881,8 @@ constant:
       }
   (* TODO : What about reflect ? There is also a constant representing it *)
   | REIFY   { Const_reify }
+  | RANGE_OF     { Const_range_of }
+  | SET_RANGE_OF { Const_set_range_of }
 
 
 universe:

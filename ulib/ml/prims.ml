@@ -24,7 +24,10 @@ type nonrec exn = exn
 type nonrec 'a list = 'a list
 type nonrec 'a option = 'a option
 
-type range     = unit
+type _pos = int * int
+type _rng = string * _pos * _pos
+type range = _rng * _rng
+
 type nat       = int
 type pos       = int
 type 'd b2t    = unit
@@ -85,9 +88,11 @@ let magic () = failwith "no magic"
 let unsafe_coerce x = Obj.magic x
 let op_Negation x = not x
 
-let range_0 = ()
-let range_of _ = ()
-let mk_range _ _ _ _ _ = ()
+let mk_range f a b c d : range = let r = (f, (a, b), (c, d)) in (r, r)
+let range_0 : range = let z = parse_int "0" in mk_range "<dummy>" z z z z
+
+(* These two cannot be (reasonably) implemented in extracted code *)
+let range_of _ = range_0
 let set_range_of x = x
 
 (* for partially variants of the operators *)
@@ -125,25 +130,29 @@ let rec pow2 n =
   else
     ~$2 * pow2 (n - ~$1)
 
-let __proj__Cons__item__tl = function
-  | _::tl -> tl
-  | _     -> failwith "Impossible"
+let __proj__Cons__item__hd = List.hd
+
+let __proj__Cons__item__tl = List.tl
 
 let min = min
 
 type norm_step =
     | Simpl
-    | WHNF
+    | Weak
+    | HNF
     | Primops
     | Delta
     | Zeta
     | Iota
     | UnfoldOnly : string list -> norm_step
 
-let simpl   : norm_step = Simpl
-let whnf    : norm_step = WHNF
+let simplify : norm_step = Simpl
+let weak    : norm_step = Weak
+let hnf     : norm_step = HNF
 let primops : norm_step = Primops
 let delta   : norm_step = Delta
 let zeta    : norm_step = Zeta
 let iota    : norm_step = Iota
 let delta_only (s:string list) : norm_step = UnfoldOnly s
+
+type ('a, 'b) admit = unit

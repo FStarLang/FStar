@@ -20,7 +20,13 @@ incl \
 struct \
 micro-benchmarks \
 bytes \
-tactics
+tactics \
+kv_parsing \
+vale \
+hello \
+native_tactics \
+extraction
+
 
 # low-level \  ... NS: removing from CI for this branch
 

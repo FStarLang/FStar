@@ -1,0 +1,3 @@
+ocaml-output/
+*\.hints
+boot/

@@ -154,7 +154,6 @@ let keywords =
     ALWAYS, "exception"  ,EXCEPTION;
     ALWAYS, "exists"     ,EXISTS;
     ALWAYS, "false"      ,FALSE;
-    ALWAYS, "False"      ,L_FALSE;
     ALWAYS, "forall"     ,FORALL;
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
@@ -176,16 +175,17 @@ let keywords =
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;
+    ALWAYS, "range_of"   ,RANGE_OF;
     ALWAYS, "rec"        ,REC;
     ALWAYS, "reifiable"  ,REIFIABLE;
     ALWAYS, "reify"      ,REIFY;
     ALWAYS, "reflectable",REFLECTABLE;
     ALWAYS, "requires"   ,REQUIRES;
+    ALWAYS, "set_range_of"              ,SET_RANGE_OF;
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "then"       ,THEN;
     ALWAYS, "total"      ,TOTAL;
     ALWAYS, "true"       ,TRUE;
-    ALWAYS, "True"       ,L_TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
     ALWAYS, "unfold"     ,UNFOLD;

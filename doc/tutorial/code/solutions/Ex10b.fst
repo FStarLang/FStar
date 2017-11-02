@@ -1,8 +1,7 @@
 module Ex10b
 //shift
 
-open FStar.Heap
-open FStar.ST
+open FStar.Ref
 
 
 noeq type point =

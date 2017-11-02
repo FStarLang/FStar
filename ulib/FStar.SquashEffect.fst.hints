@@ -1,7 +1,35 @@
 [
-  "π‘\u0003#å\u0000Ù>IV¥\u0010Æk÷h",
+  "K\u0002ò†‘ÍÔ≈›k≈˜\u0011WÁÄ",
   [
-    [ "FStar.SquashEffect.return_squash", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.SquashEffect.bind_squash", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.SquashEffect.resquash'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
+      ],
+      0,
+      "a1675ecd9e00212a14d7bf93a24e76ee"
+    ],
+    [
+      "FStar.SquashEffect.return_squash",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c99ad8ac8e74fdf62672b9d40739f9aa"
+    ],
+    [
+      "FStar.SquashEffect.bind_squash",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5987d944f029719c315edeea352ac06e"
+    ]
   ]
 ]

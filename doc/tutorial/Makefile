@@ -24,4 +24,4 @@ clean:
 regressions: code/exercises.ver code/solutions.ver
 
 %.ver: %
-	make -C $^ all
+	+$(MAKE) -C $^ all

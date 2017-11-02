@@ -17,12 +17,9 @@
 module FStar.ToSyntax.Interleave
 open FStar.ST
 open FStar.All
-open FStar.ST
-open FStar.All
 open FStar.Ident
 open FStar.Parser.AST
 open FStar.ToSyntax.Env
-
-val initialize_interface: lident -> list<decl> -> FStar.ToSyntax.Env.env -> FStar.ToSyntax.Env.env
-val prefix_with_interface_decls: FStar.ToSyntax.Env.env -> decl -> FStar.ToSyntax.Env.env * list<decl>
-val interleave_module: FStar.ToSyntax.Env.env -> modul -> bool -> FStar.ToSyntax.Env.env * modul
+val initialize_interface:        lident -> list<decl> -> Env.withenv<unit>
+val prefix_with_interface_decls: decl -> Env.withenv<(list<decl>)>
+val interleave_module:           modul -> bool -> Env.withenv<modul>

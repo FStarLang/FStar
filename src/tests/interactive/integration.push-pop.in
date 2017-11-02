@@ -1,0 +1,114 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module Test\n","line":1,"column":0}}
+{"query-id":"2","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
+{"query-id":"3","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"4","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"5","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"6","query":"pop","args":{}}
+{"query-id":"7","query":"pop","args":{}}
+{"query-id":"8","query":"pop","args":{}}
+{"query-id":"9","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"10","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"11","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"12","query":"pop","args":{}}
+{"query-id":"13","query":"pop","args":{}}
+{"query-id":"14","query":"pop","args":{}}
+{"query-id":"15","query":"pop","args":{}}
+{"query-id":"16","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
+{"query-id":"17","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"18","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"19","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"20","query":"pop","args":{}}
+{"query-id":"21","query":"pop","args":{}}
+{"query-id":"22","query":"pop","args":{}}
+{"query-id":"23","query":"pop","args":{}}
+{"query-id":"24","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
+{"query-id":"25","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"26","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"27","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"28","query":"pop","args":{}}
+{"query-id":"29","query":"pop","args":{}}
+{"query-id":"30","query":"pop","args":{}}
+{"query-id":"31","query":"pop","args":{}}
+{"query-id":"32","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
+{"query-id":"33","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"34","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"35","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"36","query":"pop","args":{}}
+{"query-id":"37","query":"pop","args":{}}
+{"query-id":"38","query":"pop","args":{}}
+{"query-id":"39","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"40","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"41","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"42","query":"pop","args":{}}
+{"query-id":"43","query":"pop","args":{}}
+{"query-id":"44","query":"pop","args":{}}
+{"query-id":"45","query":"pop","args":{}}
+{"query-id":"46","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
+{"query-id":"47","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"48","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"49","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"50","query":"pop","args":{}}
+{"query-id":"51","query":"pop","args":{}}
+{"query-id":"52","query":"pop","args":{}}
+{"query-id":"53","query":"pop","args":{}}
+{"query-id":"54","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
+{"query-id":"55","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"56","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"57","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"58","query":"pop","args":{}}
+{"query-id":"59","query":"pop","args":{}}
+{"query-id":"60","query":"pop","args":{}}
+{"query-id":"61","query":"pop","args":{}}
+{"query-id":"62","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
+{"query-id":"63","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"64","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"65","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"66","query":"pop","args":{}}
+{"query-id":"67","query":"pop","args":{}}
+{"query-id":"68","query":"pop","args":{}}
+{"query-id":"69","query":"pop","args":{}}
+{"query-id":"70","query":"pop","args":{}}
+{"query-id":"71","query":"push","args":{"kind":"full","code":"module Test\n","line":1,"column":0}}
+{"query-id":"72","query":"push","args":{"kind":"full","code":"\nlet xxxxxx = 1\n","line":2,"column":0}}
+{"query-id":"73","query":"push","args":{"kind":"full","code":"\nlet yyyyyy = xxxxxx\n","line":4,"column":0}}
+{"query-id":"74","query":"push","args":{"kind":"full","code":"\nlet aaaaaa = yyyyyy\n","line":6,"column":0}}
+{"query-id":"75","query":"push","args":{"kind":"full","code":"\nlet aaaaaaaaaaaaaaaaaaaaaaaa = yyyyyy\n","line":8,"column":0}}
+{"query-id":"79","query":"peek","args":{"kind":"lax","code":"\n","line":10,"column":0}}
+{"query-id":"80","query":"peek","args":{"kind":"lax","code":"\n\n","line":10,"column":0}}
+{"query-id":"91","query":"peek","args":{"kind":"lax","code":"\nlet xx : \n","line":10,"column":0}}
+{"query-id":"98","query":"peek","args":{"kind":"lax","code":"\nlet xx : nat = -1\n","line":10,"column":0}}
+{"query-id":"101","query":"push","args":{"kind":"full","code":"\nlet xx : nat = -1\n","line":10,"column":0}}
+{"query-id":"107","query":"peek","args":{"kind":"lax","code":"\nlet xx : nat = 1\n","line":10,"column":0}}
+{"query-id":"108","query":"push","args":{"kind":"full","code":"\nlet xx : nat = 1\n","line":10,"column":0}}
+{"query-id":"112","query":"pop","args":{}}
+{"query-id":"114","query":"peek","args":{"kind":"lax","code":"\nlet xx : nat = -1\n","line":10,"column":0}}
+{"query-id":"116","query":"push","args":{"kind":"full","code":"\nlet xx : nat = -1\n","line":10,"column":0}}
+{"query-id":"118","query":"peek","args":{"kind":"lax","code":"\nlet xx : nat = 1\n","line":10,"column":0}}
+{"query-id":"119","query":"push","args":{"kind":"full","code":"\nlet xx : nat = 1\n","line":10,"column":0}}
+{"query-id":"122","query":"pop","args":{}}
+{"query-id":"124","query":"peek","args":{"kind":"lax","code":"\nlet xx : nat = -1\n","line":10,"column":0}}
+{"query-id":"126","query":"push","args":{"kind":"full","code":"\nlet xx : nat = -1\n","line":10,"column":0}}
+{"query-id":"128","query":"peek","args":{"kind":"lax","code":"\nlet xx : nat = 1\n","line":10,"column":0}}
+{"query-id":"130","query":"push","args":{"kind":"full","code":"\nlet xx : nat = 1\n","line":10,"column":0}}
+{"query-id":"133","query":"peek","args":{"kind":"lax","code":"\n","line":12,"column":0}}
+{"query-id":"137","query":"peek","args":{"kind":"lax","code":"\nlet ","line":12,"column":0}}
+{"query-id":"159","query":"peek","args":{"kind":"lax","code":"\nlet y = assert (xx )","line":12,"column":0}}
+{"query-id":"163","query":"peek","args":{"kind":"lax","code":"\nlet y = assert (xx = 2)","line":12,"column":0}}
+{"query-id":"164","query":"peek","args":{"kind":"lax","code":"\nlet y = assert (xx = 2)\n","line":12,"column":0}}
+{"query-id":"165","query":"push","args":{"kind":"full","code":"\nlet y = assert (xx = 2)\n","line":12,"column":0}}
+{"query-id":"170","query":"peek","args":{"kind":"lax","code":"\nlet y = assert (xx = -2)\n","line":12,"column":0}}
+{"query-id":"175","query":"peek","args":{"kind":"lax","code":"\nlet y = assert (xx = -2z)\n","line":12,"column":0}}
+{"query-id":"179","query":"peek","args":{"kind":"lax","code":"\nlet y = assert (xx = -1)\n","line":12,"column":0}}
+{"query-id":"180","query":"push","args":{"kind":"full","code":"\nlet y = assert (xx = -1)\n","line":12,"column":0}}
+{"query-id":"185","query":"peek","args":{"kind":"lax","code":"\nlet y = assert (xx = 1)\n","line":12,"column":0}}
+{"query-id":"186","query":"push","args":{"kind":"full","code":"\nlet y = assert (xx = 1)\n","line":12,"column":0}}
+{"query-id":"191","query":"pop","args":{}}
+{"query-id":"192","query":"pop","args":{}}
+{"query-id":"194","query":"peek","args":{"kind":"lax","code":"\nlet xx : nat = -1\n\nlet y = assert (xx = 1)\n","line":10,"column":0}}
+{"query-id":"198","query":"push","args":{"kind":"full","code":"\nlet xx : nat = -1\n","line":10,"column":0}}
+{"query-id":"200","query":"peek","args":{"kind":"lax","code":"\nlet xx : nat = 2\n\nlet y = assert (xx = 1)\n","line":10,"column":0}}
+{"query-id":"204","query":"push","args":{"kind":"full","code":"\nlet xx : nat = 2\n","line":10,"column":0}}
+{"query-id":"205","query":"push","args":{"kind":"full","code":"\nlet y = assert (xx = 1)\n","line":12,"column":0}}
+{"query-id":"211","query":"peek","args":{"kind":"lax","code":"\nlet y = assert (xx = 2)\n","line":12,"column":0}}
+{"query-id":"213","query":"push","args":{"kind":"full","code":"\nlet y = assert (xx = 2)\n","line":12,"column":0}}
+{"query-id":"214","query":"peek","args":{"kind":"lax","code":"","line":14,"column":0}}

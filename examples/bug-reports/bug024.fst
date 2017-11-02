@@ -1,5 +1,4 @@
-
-module Bug24
+module Bug024
 
 (* Example 1 works now *)
 
@@ -12,7 +11,7 @@ let rec nth l = match l with
     | [] -> 0
     | x::xs -> 1
 
-(* Example 3 
+(* Example 3
 
 val length : list 'a -> Tot nat
 let rec length l =

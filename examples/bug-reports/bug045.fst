@@ -1,4 +1,3 @@
-
 module Bug045
 
 val xxx : unit -> Lemma (ensures (False))

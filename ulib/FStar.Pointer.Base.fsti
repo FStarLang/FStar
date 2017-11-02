@@ -104,7 +104,8 @@ and struct_typ_depth
 : GTot nat
 = match l with
   | [] -> 0
-  | (_, t) :: l ->
+  | h :: l ->
+    let (_, t) = h in // matching like this prevents needing two units of ifuel
     let n1 = typ_depth t in
     let n2 = struct_typ_depth l in
     if n1 > n2 then n1 else n2
@@ -451,7 +452,7 @@ val live_not_unused_in
   (p: pointer value)
 : Lemma
   (ensures (live h p /\ p `unused_in` h ==> False))
-  [SMTPatT (live h p); SMTPatT (p `unused_in` h)]
+  [SMTPat (live h p); SMTPat (p `unused_in` h)]
 
 val gread
   (#value: typ)
@@ -1134,6 +1135,14 @@ val sub_buffer
   (requires (fun h -> UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ buffer_live h b))
   (ensures (fun h b' h' -> UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\ h' == h /\ b' == gsub_buffer b i len ))
 
+val offset_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+: HST.Stack (buffer t)
+  (requires (fun h -> UInt32.v i <= UInt32.v (buffer_length b) /\ buffer_live h b))
+  (ensures (fun h b' h' -> UInt32.v i <= UInt32.v (buffer_length b) /\ h' == h /\ b' == gsub_buffer b i (UInt32.sub (buffer_length b) i)))
+
 val buffer_length_gsub_buffer
   (#t: typ)
   (b: buffer t)
@@ -1369,6 +1378,35 @@ val index_buffer_as_seq
   (requires (i < UInt32.v (buffer_length b)))
   (ensures (i < UInt32.v (buffer_length b) /\ Seq.index (buffer_as_seq h b) i == gread h (gpointer_of_buffer_cell b (UInt32.uint_to_t i))))
   [SMTPat (Seq.index (buffer_as_seq h b) i)]
+
+val gsingleton_buffer_of_pointer_gcell
+  (#t: typ)
+  (#len: array_length_t)
+  (p: pointer (TArray len t))
+  (i: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i < UInt32.v len
+  ))
+  (ensures (
+    UInt32.v i < UInt32.v len /\
+    gsingleton_buffer_of_pointer (gcell p i) == gsub_buffer (gbuffer_of_array_pointer p) i 1ul
+  ))
+  [SMTPat (gsingleton_buffer_of_pointer (gcell p i))]
+
+val gsingleton_buffer_of_pointer_gpointer_of_buffer_cell
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i < UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i < UInt32.v (buffer_length b) /\
+    gsingleton_buffer_of_pointer (gpointer_of_buffer_cell b i) == gsub_buffer b i 1ul
+  ))
+  [SMTPat (gsingleton_buffer_of_pointer (gpointer_of_buffer_cell b i))]
 
 (* The readable permission lifted to buffers. *)
 
@@ -1676,6 +1714,7 @@ val loc_disjoint_sym
 : Lemma
   (requires (loc_disjoint s1 s2))
   (ensures (loc_disjoint s2 s1))
+  [SMTPat (loc_disjoint s1 s2)]
 
 val loc_disjoint_none_r
   (s: loc)
@@ -1764,8 +1803,8 @@ val live_unused_in_disjoint
   (requires (live h p1 /\ unused_in p2 h))
   (ensures (loc_disjoint (loc_pointer p1) (loc_pointer p2)))
   [SMTPatOr [
-    [SMTPatT (loc_disjoint (loc_pointer p1) (loc_pointer p2)); SMTPatT (live h p1)];
-    [SMTPatT (loc_disjoint (loc_pointer p1) (loc_pointer p2)); SMTPatT (unused_in p2 h)];
+    [SMTPat (loc_disjoint (loc_pointer p1) (loc_pointer p2)); SMTPat (live h p1)];
+    [SMTPat (loc_disjoint (loc_pointer p1) (loc_pointer p2)); SMTPat (unused_in p2 h)];
     [SMTPat (live h p1); SMTPat (unused_in p2 h)];
   ]]
 
@@ -1885,12 +1924,12 @@ val modifies_pointer_elim
     equal_values h1 p' h2 p'
   ))
   [SMTPatOr [
-    [ SMTPatT (modifies s h1 h2); SMTPatT (gread h1 p') ] ;
-    [ SMTPatT (modifies s h1 h2); SMTPat (readable h1 p') ] ;
-    [ SMTPatT (modifies s h1 h2); SMTPatT (live h1 p') ];
-    [ SMTPatT (modifies s h1 h2); SMTPatT (gread h2 p') ] ;
-    [ SMTPatT (modifies s h1 h2); SMTPat (readable h2 p') ] ;
-    [ SMTPatT (modifies s h1 h2); SMTPatT (live h2 p') ]
+    [ SMTPat (modifies s h1 h2); SMTPat (gread h1 p') ] ;
+    [ SMTPat (modifies s h1 h2); SMTPat (readable h1 p') ] ;
+    [ SMTPat (modifies s h1 h2); SMTPat (live h1 p') ];
+    [ SMTPat (modifies s h1 h2); SMTPat (gread h2 p') ] ;
+    [ SMTPat (modifies s h1 h2); SMTPat (readable h2 p') ] ;
+    [ SMTPat (modifies s h1 h2); SMTPat (live h2 p') ]
   ] ]
 
 val modifies_buffer_elim
@@ -1912,12 +1951,12 @@ val modifies_buffer_elim
 	buffer_as_seq h b == buffer_as_seq h' b
   ))))
   [SMTPatOr [
-    [ SMTPatT (modifies p h h'); SMTPatT (buffer_as_seq h b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPat (buffer_readable h b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPatT (buffer_live h b) ];
-    [ SMTPatT (modifies p h h'); SMTPatT (buffer_as_seq h' b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPat (buffer_readable h' b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPatT (buffer_live h' b) ]
+    [ SMTPat (modifies p h h'); SMTPat (buffer_as_seq h b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (buffer_readable h b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (buffer_live h b) ];
+    [ SMTPat (modifies p h h'); SMTPat (buffer_as_seq h' b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (buffer_readable h' b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (buffer_live h' b) ]
   ] ]
 
 val modifies_reference_elim
@@ -1936,10 +1975,10 @@ val modifies_reference_elim
     HS.sel h b == HS.sel h' b
   ))
   [SMTPatOr [
-    [ SMTPatT (modifies p h h'); SMTPatT (HS.sel h b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPatT (HS.contains h b) ];
-    [ SMTPatT (modifies p h h'); SMTPatT (HS.sel h' b) ] ;
-    [ SMTPatT (modifies p h h'); SMTPatT (HS.contains h' b) ]
+    [ SMTPat (modifies p h h'); SMTPat (HS.sel h b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (HS.contains h b) ];
+    [ SMTPat (modifies p h h'); SMTPat (HS.sel h' b) ] ;
+    [ SMTPat (modifies p h h'); SMTPat (HS.contains h' b) ]
   ] ]
 
 val modifies_refl
@@ -2099,18 +2138,18 @@ val write_union_field
 val no_upd_fresh: h0:HS.mem -> h1:HS.mem -> Lemma
   (requires (HS.fresh_frame h0 h1))
   (ensures  (modifies_0 h0 h1))
-  [SMTPatT (HS.fresh_frame h0 h1)]
+  [SMTPat (HS.fresh_frame h0 h1)]
 
 val no_upd_popped: #t:typ -> h0:HS.mem -> h1:HS.mem -> b:pointer t -> Lemma
   (requires (live h0 b /\ frameOf b <> h0.HS.tip /\ HS.popped h0 h1))
   (ensures  (live h0 b /\ live h1 b /\ equal_values h0 b h1 b))
   [SMTPatOr [
-    [SMTPatT (live h0 b); SMTPatT (HS.popped h0 h1)];
-    [SMTPatT (readable h0 b); SMTPatT (HS.popped h0 h1)];    
-    [SMTPatT (gread h0 b); SMTPatT (HS.popped h0 h1)];    
-    [SMTPatT (live h1 b); SMTPatT (HS.popped h0 h1)];
-    [SMTPatT (readable h1 b); SMTPatT (HS.popped h0 h1)];    
-    [SMTPatT (gread h1 b); SMTPatT (HS.popped h0 h1)];    
+    [SMTPat (live h0 b); SMTPat (HS.popped h0 h1)];
+    [SMTPat (readable h0 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (gread h0 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (live h1 b); SMTPat (HS.popped h0 h1)];
+    [SMTPat (readable h1 b); SMTPat (HS.popped h0 h1)];    
+    [SMTPat (gread h1 b); SMTPat (HS.popped h0 h1)];    
   ]]
 
 val modifies_fresh_frame_popped
@@ -2217,3 +2256,138 @@ val write_buffer
     Seq.index (buffer_as_seq h' b) (UInt32.v i) == v /\
     (buffer_readable h b ==> buffer_readable h' b)
   ))
+
+
+(* Buffer inclusion without existential quantifiers: remnants of the legacy buffer interface *)
+
+(* Returns the greatest buffer (of the same type) including b *)
+
+val root_buffer
+  (#t: typ)
+  (b: buffer t)
+: GTot (buffer t)
+
+(* Return the "offset" of b within its root buffer *)
+
+val buffer_idx
+  (#t: typ)
+  (b: buffer t)
+: Ghost UInt32.t
+  (requires True)
+  (ensures (fun y ->
+    UInt32.v y + UInt32.v (buffer_length b) <=
+      UInt32.v (buffer_length (root_buffer b))
+  ))
+
+val buffer_eq_gsub_root
+  (#t: typ)
+  (b: buffer t)
+: Lemma
+  (b == gsub_buffer (root_buffer b) (buffer_idx b) (buffer_length b))
+
+val root_buffer_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    root_buffer (gsub_buffer b i len) == root_buffer b
+  ))
+  [SMTPat (root_buffer (gsub_buffer b i len))]
+
+val buffer_idx_gsub_buffer
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_idx (gsub_buffer b i len) == UInt32.add (buffer_idx b) i
+  ))
+  [SMTPat (buffer_idx (gsub_buffer b i len))]
+
+val buffer_includes
+  (#t: typ)
+  (blarge bsmall: buffer t)
+: GTot Type0
+
+val buffer_includes_refl
+  (#t: typ)
+  (b: buffer t)
+: Lemma
+  (buffer_includes b b)
+  [SMTPat (buffer_includes b b)]
+
+val buffer_includes_trans
+  (#t: typ)
+  (b1 b2 b3: buffer t)
+: Lemma
+  (requires (buffer_includes b1 b2 /\ buffer_includes b2 b3))
+  (ensures (buffer_includes b1 b3))
+
+val buffer_includes_gsub_r
+  (#t: typ)
+  (b: buffer t)
+  (i: UInt32.t)
+  (len: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
+    buffer_includes b (gsub_buffer b i len)
+  ))
+
+val buffer_includes_gsub
+  (#t: typ)
+  (b: buffer t)
+  (i1: UInt32.t)
+  (i2: UInt32.t)
+  (len1: UInt32.t)
+  (len2: UInt32.t)
+: Lemma
+  (requires (
+    UInt32.v i1 <= UInt32.v i2 /\
+    UInt32.v i2 + UInt32.v len2 <= UInt32.v i1 + UInt32.v len1 /\
+    UInt32.v i1 + UInt32.v len1 <= UInt32.v (buffer_length b)
+  ))
+  (ensures (
+    UInt32.v i1 + UInt32.v len1 <= UInt32.v (buffer_length b) /\
+    UInt32.v i2 + UInt32.v len2 <= UInt32.v (buffer_length b) /\
+    buffer_includes (gsub_buffer b i1 len1) (gsub_buffer b i2 len2)
+  ))
+  [SMTPat (buffer_includes (gsub_buffer b i1 len1) (gsub_buffer b i2 len2))]
+
+val buffer_includes_elim
+  (#t: typ)
+  (b1 b2: buffer t)
+: Lemma
+  (requires (
+    buffer_includes b1 b2
+  ))
+  (ensures (
+    UInt32.v (buffer_idx b1) <= UInt32.v (buffer_idx b2) /\
+    UInt32.v (buffer_idx b2) + UInt32.v (buffer_length b2) <= UInt32.v (buffer_idx b1) + UInt32.v (buffer_length b1) /\
+    b2 == gsub_buffer b1 (UInt32.sub (buffer_idx b2) (buffer_idx b1)) (buffer_length b2)
+  ))
+
+val buffer_includes_loc_includes
+  (#t: typ)
+  (b1 b2: buffer t)
+: Lemma
+  (requires (buffer_includes b1 b2))
+  (ensures (loc_includes (loc_buffer b1) (loc_buffer b2)))
+  [SMTPatOr [
+    [SMTPat (buffer_includes b1 b2)];
+    [SMTPat (loc_includes(loc_buffer b1) (loc_buffer b2))]
+  ]]

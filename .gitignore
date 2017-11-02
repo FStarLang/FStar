@@ -12,14 +12,10 @@ dump*
 cache/
 /VS/packages
 
-/src/parser/boot/parse.fs
+/src/parser/parse.fs
 /src/parser/lex.fs
 
 /src/boot
-
-/ulib/.mgen
-/ulib/ml/extracted
-/ulib/ml/compiler-extracted
 
 /bin/*.dll
 /bin/*.pdb
@@ -40,6 +36,7 @@ examples/wysteria/ocaml-output/*
 examples/incl/*.neg/error.log
 
 _build/
+/ulib/ml/_taclib_build/
 
 *.native
 *.byte
@@ -52,6 +49,8 @@ dump
 *.cmo
 *.cmx
 *.cma
+*.cmxs
+*.cmxa
 *.o
 
 .depend
@@ -67,6 +66,9 @@ tags
 *.swp
 
 *.exe
+
+*.checked
+*.checked.lax
 
 /.nubuild
 /nucache/

@@ -1,9 +1,9 @@
 module Bug139
 
-assume type A : Type
-assume type B : Type
+assume type t1 : Type
+assume type t2 : Type
 
-assume val f : #a:A -> b:B -> Tot bool
+assume val f : #a:t1 -> b:t2 -> Tot bool
 
-val bug : a:A -> b:B{f #a b} -> Tot unit
+val bug : a:t1 -> b:t2{f #a b} -> Tot unit
 let rec bug a b = ()

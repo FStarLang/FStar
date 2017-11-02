@@ -73,9 +73,6 @@ let mk_data_tester env l x = mk_tester (escape l.str) x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
-    mark: unit -> unit;
-    reset_mark: unit -> unit;
-    commit_mark: unit -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
     fresh:string -> string;
@@ -109,19 +106,8 @@ let varops =
             f in
     let push () = scopes := new_scope()::!scopes in
     let pop () = scopes := List.tl !scopes in
-    let mark () = push () in
-    let reset_mark () = pop () in
-    let commit_mark () = match !scopes with
-        | (hd1, hd2)::(next1, next2)::tl ->
-          BU.smap_fold hd1 (fun key value v  -> BU.smap_add next1 key value) ();
-          BU.smap_fold hd2 (fun key value v  -> BU.smap_add next2 key value) ();
-          scopes := (next1, next2)::tl
-        | _ -> failwith "Impossible" in
     {push=push;
      pop=pop;
-     mark=mark;
-     reset_mark=reset_mark;
-     commit_mark=commit_mark;
      new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;
@@ -325,7 +311,7 @@ let head_redex env t =
 
 let whnf env t =
     if head_normal env t then t
-    else N.normalize [N.Beta; N.WHNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
+    else N.normalize [N.Beta; N.Weak; N.HNF; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
                       N.Eager_unfolding; N.EraseUniverses] env.tcenv t
 let norm env t = N.normalize [N.Beta; N.Exclude N.Zeta;  //we don't know if it will terminate, so no recursion
                               N.Eager_unfolding; N.EraseUniverses] env.tcenv t
@@ -420,17 +406,7 @@ type pattern = {
  }
 exception Let_rec_unencodeable
 
-let encode_const = function
-    | Const_unit -> mk_Term_unit
-    | Const_bool true -> boxBool mkTrue
-    | Const_bool false -> boxBool mkFalse
-    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))])
-    | Const_int (i, None)  -> boxInt (mkInteger i)
-    | Const_int (i, Some _) -> failwith "Machine integers should be desugared"
-    | Const_string(s, _) -> varops.string_const s
-    | Const_range r -> mk_Range_const
-    | Const_effect -> mk_Term_type
-    | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
+exception Inner_let_rec
 
 let as_function_typ env t0 =
     let rec aux norm t =
@@ -443,11 +419,12 @@ let as_function_typ env t0 =
                    else failwith (BU.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (Print.term_to_string t0))
     in aux true t0
 
-let curried_arrow_formals_comp k =
+let rec curried_arrow_formals_comp k =
   let k = Subst.compress k in
   match k.n with
-  | Tm_arrow(bs, c) -> Subst.open_comp bs c
-  | _ -> [], Syntax.mk_Total k
+  | Tm_arrow(bs, c)  -> Subst.open_comp bs c
+  | Tm_refine(bv, _) -> curried_arrow_formals_comp bv.sort
+  | _                -> [], Syntax.mk_Total k
 
 let is_arithmetic_primitive head args =
     match head.n, args with
@@ -481,6 +458,8 @@ let is_BitVector_primitive head args =
       (S.fv_eq_lid fv Const.bv_and_lid
       || S.fv_eq_lid fv Const.bv_xor_lid
       || S.fv_eq_lid fv Const.bv_or_lid
+      || S.fv_eq_lid fv Const.bv_add_lid
+      || S.fv_eq_lid fv Const.bv_sub_lid
       || S.fv_eq_lid fv Const.bv_shift_left_lid
       || S.fv_eq_lid fv Const.bv_shift_right_lid
       || S.fv_eq_lid fv Const.bv_udiv_lid
@@ -497,7 +476,22 @@ let is_BitVector_primitive head args =
     | _ -> false
 
 
-let rec encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
+let rec encode_const c env =
+    match c with
+    | Const_unit -> mk_Term_unit, []
+    | Const_bool true -> boxBool mkTrue, []
+    | Const_bool false -> boxBool mkFalse, []
+    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))]), []
+    | Const_int (i, None)  -> boxInt (mkInteger i), []
+    | Const_int (repr, Some sw) ->
+      let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
+      encode_term syntax_term env
+    | Const_string(s, _) -> varops.string_const s, []
+    | Const_range _ -> mk_Range_const (), []
+    | Const_effect -> mk_Term_type, []
+    | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
+
+and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             (list<fv>                       (* translated bound variables *)
                             * list<term>                    (* guards *)
                             * env_t                         (* extended context *)
@@ -644,6 +638,8 @@ and encode_arith_term env head args_e =
     let bv_and  = mk_bv Util.mkBvAnd binary (Term.boxBitVec sz) in
     let bv_xor  = mk_bv Util.mkBvXor binary (Term.boxBitVec sz) in
     let bv_or   = mk_bv Util.mkBvOr binary (Term.boxBitVec sz) in
+    let bv_add  = mk_bv Util.mkBvAdd binary (Term.boxBitVec sz) in
+    let bv_sub  = mk_bv Util.mkBvSub binary (Term.boxBitVec sz) in
     let bv_shl  = mk_bv (Util.mkBvShl sz) binary_arith (Term.boxBitVec sz) in
     let bv_shr  = mk_bv (Util.mkBvShr sz) binary_arith (Term.boxBitVec sz) in
     let bv_udiv = mk_bv (Util.mkBvUdiv sz) binary_arith (Term.boxBitVec sz) in
@@ -659,6 +655,8 @@ and encode_arith_term env head args_e =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
          (Const.bv_or_lid, bv_or);
+	 (Const.bv_add_lid, bv_add);
+	 (Const.bv_sub_lid, bv_sub);
          (Const.bv_shift_left_lid, bv_shl);
          (Const.bv_shift_right_lid, bv_shr);
          (Const.bv_udiv_lid, bv_udiv);
@@ -691,6 +689,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_ascribed(t, k, _) ->
         encode_term t env
 
+      | Tm_meta ({n = Tm_unknown}, Meta_alien (obj, desc, ty)) ->
+        let tsym = varops.fresh "t", Term_sort in
+        let t = mkFreeV tsym in
+        let decl = Term.DeclFun(fst tsym, [], Term_sort, Some (BU.format1 "alien term (%s)" desc)) in
+        t, [decl]
+
       | Tm_meta(t, _) ->
         encode_term t env
 
@@ -708,7 +712,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_term t env
 
       | Tm_constant c ->
-        encode_const c, []
+        encode_const c env
 
       | Tm_arrow(binders, c) ->
         let module_name = env.current_module_name in
@@ -799,7 +803,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv t0 with
+        let x, f = match N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv t0 with
             | {n=Tm_refine(x, f)} ->
                let b, f = SS.open_term [x, None] f in
                fst (List.hd b), f
@@ -852,14 +856,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 Util.mkAssume(mkForall ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
                               Some ("haseq for " ^ tsym),
                               "haseq" ^ tsym) in
-              let t_valid =
-                let xx = (x, Term_sort) in
-                let valid_t = mkApp ("Valid", [t]) in
-                Util.mkAssume(mkForall ([[valid_t]], cvars,
-                    mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
-                              Some ("validity axiom for refinement"),
-                              "ref_valid_" ^ tsym)
-              in
+              // let t_valid =
+              //   let xx = (x, Term_sort) in
+              //   let valid_t = mkApp ("Valid", [t]) in
+              //   Util.mkAssume(mkForall ([[valid_t]], cvars,
+              //       mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
+              //                 Some ("validity axiom for refinement"),
+              //                 "ref_valid_" ^ tsym)
+              // in
 
               let t_kinding =
                 //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
@@ -876,7 +880,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             @decls'
                             @[tdecl;
                               t_kinding;
-                              t_valid;
+                              // t_valid;
                               t_interp;t_haseq] in
 
               BU.smap_add env.cache tkey_hash (mk_cache_entry env tsym cvar_sorts t_decls);
@@ -911,6 +915,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let v1, decls1 = encode_term v1 env in
             let v2, decls2 = encode_term v2 env in
             mk_LexCons v1 v2, decls1@decls2
+
+        | Tm_constant Const_range_of, [(arg, _)] ->
+            encode_const (Const_range arg.pos) env
+
+        | Tm_constant Const_set_range_of, [(rng, _); (arg, _)] ->
+            encode_term arg env
 
         | Tm_constant Const_reify, _ (* (_::_::_) *) ->
             let e0 = TcUtil.reify_body_with_arg env.tcenv head (List.hd args_e) in
@@ -962,7 +972,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             begin match head_type with
                 | None -> encode_partial_app None
                 | Some head_type ->
-                  let head_type = U.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
+                  let head_type = U.unrefine <| N.normalize_refinement [N.Weak; N.HNF; N.EraseUniverses] env.tcenv head_type in
                   let formals, c = curried_arrow_formals_comp head_type in
                   begin match head.n with
                         | Tm_uinst({n=Tm_fvar fv}, _)
@@ -1095,10 +1105,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_let x t1 e1 e2 env encode_term
 
       | Tm_let _ ->
-        Errors.diag t0.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
-        let e = varops.fresh "let-rec" in
-        let decl_e = Term.DeclFun(e, [], Term_sort, None) in
-        mkFreeV(e, Term_sort), [decl_e]
+        Errors.diag t0.pos "Non-top-level recursive functions, and their enclosings let bindings (including the top-level let) are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
+        raise Inner_let_rec
 
       | Tm_match(e, pats) ->
         encode_match e pats mk_Term_unit env encode_term
@@ -1154,7 +1162,9 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
         | Pat_wild _
         | Pat_dot_term _ -> mkTrue
         | Pat_constant c ->
-            mkEq(scrutinee, encode_const c)
+            let tm, decls = encode_const c env in
+            let _ = match decls with _::_ -> failwith "Unexpected encoding of constant pattern" | _ -> () in
+            mkEq(scrutinee, tm)
         | Pat_cons(f, args) ->
             let is_f =
                 let tc_name = Env.typ_of_datacon env.tcenv f.fv_name.v in
@@ -1250,6 +1260,9 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
         pats, decls) |> List.unzip in
 
     let decls' = List.flatten decls' in
+
+    (* Postcondition is thunked, c.f. #57 *)
+    let post = U.unthunk_lemma_post post in
 
     let env = {env with nolabels=true} in
     let pre, decls'' = encode_formula (U.unmeta pre) env in
@@ -1642,7 +1655,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                      "exists-interp")] in
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = mkApp(range, []) in
-        [Util.mkAssume(mk_HasTypeZ mk_Range_const range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
+        [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
    let mk_inversion_axiom : env -> string -> term -> decls_t = fun env inversion tt ->
        // (assert (forall ((t Term))
        //            (! (implies (Valid (FStar.Pervasives.inversion t))
@@ -1780,11 +1793,10 @@ let encode_free_var uninterpreted env fv tt t_norm quals =
                         | [] -> decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
                         | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
-                                let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
                                 let name_tok_corr = Util.mkAssume(mkForall([[vtok_app]; [vapp]], vars, mkEq(vtok_app, vapp)),
                                                                 Some "Name-token correspondence",
                                                                 ("token_correspondence_"^vname)) in
-                                decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
+                                decls2@[vtok_decl;name_tok_corr;tok_typing], env in
                 vname_decl::tok_decl, env in
               let encoded_res_t, ty_pred, decls3 =
                    let res_t = SS.compress res_t in
@@ -1874,7 +1886,7 @@ let encode_top_level_let :
         let binders, body, lopt = U.abs_formals e in
         match binders with
         | _::_ -> begin
-            match (SS.compress t_norm).n with
+            match (U.unascribe <| SS.compress t_norm).n with
             | Tm_arrow(formals, c) ->
               let formals, c = SS.open_comp formals c in
               let nformals = List.length formals in
@@ -1897,7 +1909,7 @@ let encode_top_level_let :
 
             (* have another go, after unfolding all definitions *)
             | _ when not norm ->
-              let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.WHNF;
+              let t_norm = N.normalize [N.AllowUnboundUniverses; N.Beta; N.Weak; N.HNF;
                                         (* we don't know if this will terminate; so don't do recursive steps *)
                                         N.Exclude N.Zeta;
                                         N.UnfoldUntil Delta_constant; N.EraseUniverses] env.tcenv t_norm
@@ -1909,13 +1921,17 @@ let encode_top_level_let :
                         flid.str (Print.term_to_string e) (Print.term_to_string t_norm))
           end
         | _ -> begin
-            match (SS.compress t_norm).n with
-            | Tm_arrow(formals, c) ->
+            let rec aux' (t_norm:S.term) =
+              match (SS.compress t_norm).n with
+              | Tm_arrow(formals, c) ->
                 let formals, c = SS.open_comp formals c in
                 let tres = get_result_type c in
                 let binders, body = eta_expand [] formals e tres in
                 (binders, body, formals, tres), false
-            | _ -> ([], e, [], t_norm), false
+              | Tm_refine (bv, _) -> aux' bv.sort
+              | _ -> ([], e, [], t_norm), false
+            in
+            aux' t_norm
           end
       in
       aux false t_norm
@@ -1930,7 +1946,7 @@ let encode_top_level_let :
           bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
             (* some, but not all are lemmas; impossible *)
             if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
-            let t_norm = whnf env lb.lbtyp in
+                let t_norm = whnf env lb.lbtyp in
             (* We are declaring the top_level_let with t_norm which might contain *)
             (* non-reified reifiable computation type. *)
             (* TODO : clear this mess, the declaration should have a type corresponding to *)
@@ -1954,19 +1970,13 @@ let encode_top_level_let :
                   else mkApp(f, List.map mkFreeV vars)
         in
 
-        if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
-        || typs  |> BU.for_some (fun t -> not <| (U.is_pure_or_ghost_function t ||
-                                                  is_reifiable_function env.tcenv t))
-        then decls, env
-        else if not is_rec
-        then
-          (* Encoding non-recursive definitions *)
-          match bindings, typs, toks with
-          | [{lbunivs=uvs;lbdef=e}], [t_norm], [(flid_fv, (f, ftok))] ->
+        let encode_non_rec_lbdef (bindings:list<letbinding>) (typs:list<S.term>) (toks:list<(S.fv * (string * option<term>))>) (env:env_t) =
+            match bindings, typs, toks with
+            | [{lbunivs=uvs;lbdef=e}], [t_norm], [(flid_fv, (f, ftok))] ->
 
-              (* Open universes *)
-              let flid = flid_fv.fv_name.v in
-              let env', e, t_norm =
+                (* Open universes *)
+                let flid = flid_fv.fv_name.v in
+                let env', e, t_norm =
                 let tcenv', _, e_t =
                     Env.open_universes_in env.tcenv uvs [e; t_norm] in
                 let e, t_norm =
@@ -1974,40 +1984,41 @@ let encode_top_level_let :
                     | [e; t_norm] -> e, t_norm
                     | _ -> failwith "Impossible" in
                 {env with tcenv=tcenv'}, e, t_norm
-              in
+                in
 
-              (* Open binders *)
-              let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
-              if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-              then BU.print2 "Encoding let : binders=[%s], body=%s\n"
+                (* Open binders *)
+                let (binders, body, _, _), curry = destruct_bound_function flid t_norm e in
+                if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+                then BU.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (Print.binders_to_string ", " binders)
                                 (Print.term_to_string body);
-              (* Encode binders *)
-              let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
+                (* Encode binders *)
+                let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
 
-              let body =
+                let body =
                 (* Reify the body if needed *)
                 if is_reifiable_function env'.tcenv t_norm
                 then TcUtil.reify_body env'.tcenv body
                 else body
-              in
-              let app = mk_app curry f ftok vars in
-              let app, (body, decls2) =
-                  if quals |> List.contains Logic
-                  then mk_Valid app, encode_formula body env'
-                  else app, encode_term body env'
-              in
+                in
+                let app = mk_app curry f ftok vars in
+                let app, (body, decls2) =
+                    if quals |> List.contains Logic
+                    then mk_Valid app, encode_formula body env'
+                    else app, encode_term body env'
+                in
 
-              //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
-              //But the guard is unnecessary given the pattern
-              let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body)),
-                                  Some (BU.format1 "Equation for %s" flid.str),
-                                  ("equation_"^f)) in
-              decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
-              env
+                //NS 05.25: This used to be mkImp(mk_and_l guards, mkEq(app, body))),
+                //But the guard is unnecessary given the pattern
+                let eqn = Util.mkAssume(mkForall([[app]], vars, mkEq(app,body)),
+                                    Some (BU.format1 "Equation for %s" flid.str),
+                                    ("equation_"^f)) in
+                decls@binder_decls@decls2@[eqn]@primitive_type_axioms env.tcenv flid f app,
+                env
+            | _ -> failwith "Impossible"
+        in
 
-          | _ -> failwith "Impossible"
-        else
+        let encode_rec_lbdefs (bindings:list<letbinding>) (typs:list<S.term>) (toks:list<(S.fv * (string * option<term>))>) (env:env_t) =
           (* encoding recursive definitions using fuel to throttle unfoldings *)
           (* We create a new variable corresponding to the current fuel *)
           let fuel = varops.fresh "fuel", Fuel_sort in
@@ -2110,6 +2121,21 @@ let encode_top_level_let :
           in
           let eqns = List.rev eqns in
           prefix_decls@rest@eqns, env0
+        in
+
+        if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
+        || typs  |> BU.for_some (fun t -> not <| (U.is_pure_or_ghost_function t ||
+                                                  is_reifiable_function env.tcenv t))
+        then decls, env
+        else
+          try
+            if not is_rec
+            then
+              (* Encoding non-recursive definitions *)
+              encode_non_rec_lbdef bindings typs toks env
+            else
+              encode_rec_lbdefs bindings typs toks env
+          with Inner_let_rec -> decls, env  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->
       let msg = bindings |> List.map (fun lb -> Print.lbname_to_string lb.lbname) |> String.concat " and " in
@@ -2634,12 +2660,6 @@ let push_env () = match !last_env with
 let pop_env () = match !last_env with
     | [] -> failwith "Popping an empty stack"
     | _::tl -> last_env := tl
-let mark_env () = push_env()
-let reset_mark_env () = pop_env()
-let commit_mark_env () =
-    match !last_env with
-        | hd::_::tl -> last_env := hd::tl
-        | _ -> failwith "Impossible"
 (* TOP-LEVEL API *)
 
 let init tcenv =
@@ -2654,18 +2674,6 @@ let pop msg   =
     let _ = pop_env() in
     varops.pop();
     Z3.pop msg
-let mark msg =
-    mark_env();
-    varops.mark();
-    Z3.mark msg
-let reset_mark msg =
-    reset_mark_env();
-    varops.reset_mark();
-    Z3.reset_mark msg
-let commit_mark (msg:string) =
-    commit_mark_env();
-    varops.commit_mark();
-    Z3.commit_mark msg
 
 //////////////////////////////////////////////////////////////////////////
 //guarding top-level terms with fact database triggers
@@ -2699,6 +2707,8 @@ let encode_sig tcenv se =
     if Options.log_queries()
     then Term.Caption ("encoding sigelt " ^ (U.lids_of_sigelt se |> List.map Print.lid_to_string |> String.concat ", "))::decls
     else decls in
+   if Env.debug tcenv Options.Low
+   then BU.print1 "+++++++++++Encoding sigelt %s\n" (Print.sigelt_to_string se);
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
    set_env env;
@@ -2767,12 +2777,3 @@ let encode_query use_env_msg tcenv q
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
     query_prelude, labels, qry, suffix
-
-let is_trivial (tcenv:Env.env) (q:typ) : bool =
-   let env = get_env (Env.current_module tcenv) tcenv in
-   push "query";
-   let f, _ = encode_formula q env in
-   pop "query";
-   match f.tm with
-   | App(TrueOp, _) -> true
-   | _ -> false

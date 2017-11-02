@@ -108,7 +108,7 @@ type equal (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
 val eq_lemma: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
               -> Lemma (requires (equal s1 s2))
                        (ensures (s1 = s2))
-                 [SMTPatT (equal s1 s2)]
+                 [SMTPat (equal s1 s2)]
 
 val mem_empty: #a:eqtype -> #f:cmp a -> x:a
                -> Lemma (requires True) (ensures (not (mem #a #f x (empty #a #f))))
@@ -292,6 +292,29 @@ assume val size_union: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                          [SMTPat (size #a #f (union #a #f s1 s2))]
 
 (**********)
+
+let rec fold (#a:eqtype) (#acc:Type) (#f:cmp a) (g:acc -> a -> acc) (init:acc) (s:ordset a f) =
+  List.Tot.fold_left g init s
+
+private
+let rec map_internal (#a #b:eqtype) (#fa:cmp a) (#fb:cmp b) (g:a -> b) (sa:ordset a fa)
+  : Pure (ordset b fb)
+    (requires (forall x y. x `fa` y ==> g x `fb` g y))
+    (ensures (fun sb -> Cons? sb ==> Cons? sa /\ Cons?.hd sb == g (Cons?.hd sa)))
+= match sa with
+  | [] -> []
+  | x :: xs ->
+    let y = g x in
+    let ys = map_internal #a #b #fa #fb g xs in
+    if not (Cons? ys) || Cons?.hd ys <> y then
+      y :: ys
+    else ys
+
+let map (#a #b:eqtype) (#fa:cmp a) (#fb:cmp b) (g:a -> b) (sa:ordset a fa)
+  : Pure (ordset b fb)
+    (requires (forall x y. x `fa` y ==> g x `fb` g y))
+    (ensures (fun sb -> True))
+= map_internal #a #b #fa #fb g sa
 
 private
 let rec remove_le #a #f x (s:ordset a f)

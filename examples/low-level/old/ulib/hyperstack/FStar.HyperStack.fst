@@ -86,7 +86,7 @@ let lemma_upd_1 #a (h:mem) (x:stackref a) (v:a) : Lemma
 	    /\ modifies_one (frameOf x) h (upd h x v)
 	    /\ modifies_ref (frameOf x) (Set.singleton (as_aref x)) h (upd h x v)
 	    /\ sel (upd h x v) x = v ))
-  [SMTPat (upd h x v); SMTPatT (contains h x)]
+  [SMTPat (upd h x v); SMTPat (contains h x)]
   = ()
 
 let lemma_upd_2 #a (h:mem) (x:stackref a) (v:a) : Lemma
@@ -96,13 +96,13 @@ let lemma_upd_2 #a (h:mem) (x:stackref a) (v:a) : Lemma
 	    /\ modifies_one h.tip h (upd h x v)
 	    /\ modifies_ref h.tip Set.empty h (upd h x v)
 	    /\ sel (upd h x v) x = v ))
-  [SMTPat (upd h x v); SMTPatT (~(contains h x))]
+  [SMTPat (upd h x v); SMTPat (~(contains h x))]
   = ()
 
 assume val lemma_live_1: #a:Type ->  #a':Type -> h:mem -> x:stackref a -> x':stackref a' -> Lemma
   (requires (contains h x /\ ~(contains h x')))
   (ensures  (Heap.Ref (as_ref x) <> Heap.Ref (as_ref x')))
-  [SMTPat (contains h x); SMTPatT (~(contains h x'))]
+  [SMTPat (contains h x); SMTPat (~(contains h x'))]
 
 (* (\* //l0 `suffix_of` l1 is strict; i.e., l0 <> l1; RENAMED: used to be includes *\) *)
 (* (\* //TODO: change this to be non-strict *\) *)
@@ -254,7 +254,7 @@ assume val lemma_live_1: #a:Type ->  #a':Type -> h:mem -> x:stackref a -> x':sta
 (* (\* val lemma_modifies_ref_2: #a:Type -> y:stacked a -> s0:t -> s1:t -> x:stacked a -> Lemma *\) *)
 (* (\*   (requires (contains s0 x /\ modifies_ref (frameOf y) !{as_ref y} s0 s1 /\ modifies_one (frameOf y) s0 s1 /\ (frameOf x <> frameOf y \/ (frameOf x = frameOf y /\ y <> x)))) *\) *)
 (* (\*   (ensures (sel s1 x = sel s0 x)) *\) *)
-(* (\*   [SMTPat (modifies_ref (frameOf y) !{as_ref y} s0 s1); SMTPatT (x <> y)] *\) *)
+(* (\*   [SMTPat (modifies_ref (frameOf y) !{as_ref y} s0 s1); SMTPat (x <> y)] *\) *)
 (* (\* let lemma_modifies_ref_2 #a y s0 s1 x = () *\) *)
 
 (* (\* open FStar.Set *\) *)
@@ -303,7 +303,7 @@ assume val lemma_live_1: #a:Type ->  #a':Type -> h:mem -> x:stackref a -> x':sta
 (* (\* 	     /\ h3 = pop_top_frame h2)) *\) *)
 (* (\*   (ensures (domain_equality h0 h3)) *\) *)
 (* (\*   [SMTPat (h1 = push_empty_frame h0); SMTPat (frame_ids h2 = frame_ids h1); *\) *)
-(* (\*    SMTPatT (domain_equality (pop_top_frame h1) (pop_top_frame h2)); SMTPat (h3 = pop_top_frame h2)] *\) *)
+(* (\*    SMTPat (domain_equality (pop_top_frame h1) (pop_top_frame h2)); SMTPat (h3 = pop_top_frame h2)] *\) *)
 (* (\* let domain_equality_lemma_1 h0 h1 h2 h3 = () *\) *)
 
 (* (\* assume val domain_equality_lemma_2: h0:t{poppable h0} -> h1:t{frame_ids h0 = frame_ids h1} -> Lemma *\) *)

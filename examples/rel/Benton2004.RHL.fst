@@ -496,7 +496,7 @@ let is_per_gand
 : Lemma
   (requires (is_per e1 /\ is_per e2))
   (ensures (is_per (gand e1 e2)))
-= assert (forall s1 s2 . holds (interp (gand e1 e2)) s1 s2 <==> holds (interp e1) s1 s2 /\ holds (interp e2) s1 s2)
+= assert (forall s1 s2 .{:pattern (interp (gand e1 e2) s1 s2)} holds (interp (gand e1 e2)) s1 s2 <==> holds (interp e1) s1 s2 /\ holds (interp e2) s1 s2)
 
 (* FIXME: holds but not replayable
 let is_per_gor
@@ -512,7 +512,7 @@ let r_sym
   (f f' : computation)
 : Lemma
   (requires (is_per p /\ is_per p'))
-  (exec_equiv p p' f f' <==> exec_equiv p p' f' f)
+  (ensures (exec_equiv p p' f f' <==> exec_equiv p p' f' f))
   [SMTPat (exec_equiv p p' f f'); SMTPat (is_per p); SMTPat (is_per p')]
 = exec_equiv_sym (interp p) (interp p') f f'
 
@@ -681,20 +681,6 @@ let r_dassl
       skip
   ))
 = ()
-
-let r_dassr
-  (x: var)
-  (e: exp int)
-  (phi: gexp bool)
-: Lemma
-  (ensures (
-    exec_equiv
-      (gsubst phi x Right (exp_to_gexp e Right))
-      phi
-      skip
-      (assign x e)
-  ))
-= r_dassl x e (flip phi)
 
 (* Common branch *)
 

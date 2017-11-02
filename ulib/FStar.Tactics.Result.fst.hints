@@ -1,0 +1,51 @@
+[
+  "窽�s*󺹮贔\t辉苇",
+  [
+    [
+      "FStar.Tactics.Result.uu___is_Success",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "58e95e5b0f5bf0928a078bcce8541c92"
+    ],
+    [
+      "FStar.Tactics.Result.__proj__Success__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Success",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Result_Tm_refine_29b9adb85ab54486bb858ab07eefa868"
+      ],
+      0,
+      "2314fa47e4ea4cb1f04d425732766936"
+    ],
+    [
+      "FStar.Tactics.Result.uu___is_Failed",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2c9ce33ec7e62d8ec36af113cdc8094d"
+    ],
+    [
+      "FStar.Tactics.Result.__proj__Failed__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Tactics.Result_Tm_refine_e5441e7c5a446e2437660eff2f66dd32"
+      ],
+      0,
+      "fcaffbf323cd3653e5349bacbcf9d41e"
+    ]
+  ]
+]
