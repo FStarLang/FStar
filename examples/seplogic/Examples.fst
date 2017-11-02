@@ -31,8 +31,8 @@ let step_read_write :tactic unit =
 let step_alloc_return :tactic unit =
   apply_lemma (quote lemma_alloc_return);; norm []
 
-let step_destruct_exists_subheaps :tactic unit =
-  apply_lemma (quote lemma_destruct_exists_subheaps);; norm []
+let step_bind :tactic unit =
+  apply_lemma (quote lemma_bind);; norm []
 
 let step_implies_intro_equality :tactic unit =
   apply_lemma (quote lemma_implies_intro_equality);; norm []
@@ -81,13 +81,11 @@ let step_intros :tactic unit =
   return ()
 
 let step :tactic unit =
-  step_destruct_exists_subheaps                     `or_else`
-  (step_read_write;; step_implies_intro_equality)   `or_else`
-  (step_alloc_return;; step_implies_intro_equality) `or_else`
-  (step_read_write;; step_intros)                   `or_else`
-  (step_alloc_return;; step_intros)                 `or_else`
-  step_read_write                                   `or_else`
-  step_alloc_return                                 `or_else`
+  step_bind                   `or_else`
+  step_read_write             `or_else`
+  step_alloc_return           `or_else`
+  step_implies_intro_equality `or_else`
+  step_intros                 `or_else`
   fail "step: failed"
 
 let solve :tactic unit =

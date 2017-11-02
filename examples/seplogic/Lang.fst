@@ -47,7 +47,7 @@ let lemma_alloc_return (phi:heap -> heap -> prop) (h:heap)
          (ensures (exists (h':heap) (h'':heap). h == h' `join` h'' /\ ((h' == emp) /\ phi h' h'')))
   = ()
 
-let lemma_destruct_exists_subheaps (phi:heap -> heap -> heap -> heap -> prop) (h:heap)
+let lemma_bind (phi:heap -> heap -> heap -> heap -> prop) (h:heap)
   :Lemma (requires (exists (h2':heap) (h2'':heap). h == h2' `join` h2'' /\
                                               phi h emp h2' h2''))
          (ensures (exists (h1':heap) (h1'':heap). h == h1' `join` h1'' /\
