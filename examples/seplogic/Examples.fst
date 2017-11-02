@@ -37,9 +37,12 @@ let step_bind :tactic unit =
 let step_implies_intro_equality :tactic unit =
   apply_lemma (quote lemma_implies_intro_equality);; norm []
 
-let simplify :tactic unit =
-  pointwise ((apply_lemma (quote lemma_join_h_emp);; qed)
-  `or_else`  (apply_lemma (quote lemma_join_points_to_minus);; qed)
+// Note - If pointwise fails when one of its subgoals fails, then update this to use trefl instead of fail
+let simplify_join_h_emp :tactic unit =
+  pointwise ((apply_lemma (quote lemma_join_h_emp);; qed) `or_else` fail "")
+
+let simplify_goal :tactic unit =
+  pointwise ((apply_lemma (quote lemma_join_points_to_minus);; qed)
   `or_else`  (apply_lemma (quote lemma_join_restrict_minus);; qed)
   `or_else`  (apply_lemma (quote lemma_sel_r_update);; qed)
   `or_else`  (apply_lemma (quote lemma_sel_r1_update);; qed)
@@ -51,15 +54,18 @@ let simplify :tactic unit =
   `or_else`  (apply_lemma (quote lemma_sel_r_from_minus);; qed)
   `or_else`   fail "simplify: failed")
 
-let rec repeat_simplify () :Tac unit =
-  (g1 <-- cur_goal; simplify;; g2 <-- cur_goal;
+let rec repeat_simplify_goal () :Tac unit =
+  (g1 <-- cur_goal; simplify_goal;; g2 <-- cur_goal;
    if term_eq g1 g2 
    then return () 
-   else repeat_simplify
+   else repeat_simplify_goal
   ) ()
 
+let repeat_simplify :tactic unit =
+  simplify_join_h_emp;; repeat_simplify_goal
+
 let rec repeat_simplify' () :Tac unit =
-  (g1 <-- cur_goal; simplify;; g2 <-- cur_goal;
+  (g1 <-- cur_goal; simplify_goal;; g2 <-- cur_goal;
     begin match (term_as_formula' g1, term_as_formula' g2) with
     | App _ t1, App _ t2 -> 
        begin match (term_as_formula' t1, term_as_formula' t2) with
@@ -75,6 +81,7 @@ let rec repeat_simplify' () :Tac unit =
 let step_intros :tactic unit =
   forall_intros;;
   apply_lemma (quote lemma_impl_l_cong);;
+  simplify_join_h_emp;;
   repeat_simplify';;
   apply_lemma (quote lemma_refl);;
   implies_intro;;
@@ -93,6 +100,7 @@ let solve :tactic unit =
   dump "Initial goal";;
   trytac implies_intro;;
   repeat step;;
+  simplify_join_h_emp;;
   repeat_simplify;;
   dump "Final goal"
   
