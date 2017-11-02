@@ -49,7 +49,6 @@ let simplify_goal :tactic unit =
   `or_else`  (apply_lemma (quote lemma_restrict_r_update);; qed)
   `or_else`  (apply_lemma (quote lemma_restrict_r1_update);; qed)
   `or_else`  (apply_lemma (quote lemma_join_emp_h);; qed)
-  `or_else`  (apply_lemma (quote lemma_implies_intro_equality);; qed)
   `or_else`  (apply_lemma (quote lemma_sel_r1_from_restrict);; qed)
   `or_else`  (apply_lemma (quote lemma_sel_r_from_minus);; qed)
   `or_else`   fail "simplify: failed")
