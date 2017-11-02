@@ -41,6 +41,14 @@ let step_implies_intro_equality :tactic unit =
 let simplify_join_h_emp :tactic unit =
   pointwise ((apply_lemma (quote lemma_join_h_emp);; qed) `or_else` fail "")
 
+let simplify_context :tactic unit =
+  pointwise ((apply_lemma (quote lemma_join_points_to_minus);; qed)
+  `or_else`  (apply_lemma (quote lemma_join_restrict_minus);; qed)
+  `or_else`  (apply_lemma (quote lemma_restrict_r_update);; qed)
+  `or_else`  (apply_lemma (quote lemma_restrict_r1_update);; qed)
+  `or_else`  (apply_lemma (quote lemma_join_emp_h);; qed)
+  `or_else`   fail "simplify_context: failed")
+  
 let simplify_goal :tactic unit =
   pointwise ((apply_lemma (quote lemma_join_points_to_minus);; qed)
   `or_else`  (apply_lemma (quote lemma_join_restrict_minus);; qed)
@@ -51,7 +59,7 @@ let simplify_goal :tactic unit =
   `or_else`  (apply_lemma (quote lemma_join_emp_h);; qed)
   `or_else`  (apply_lemma (quote lemma_sel_r1_from_restrict);; qed)
   `or_else`  (apply_lemma (quote lemma_sel_r_from_minus);; qed)
-  `or_else`   fail "simplify: failed")
+  `or_else`   fail "simplify_goal: failed")
 
 let rec repeat_simplify_goal () :Tac unit =
   (g1 <-- cur_goal; simplify_goal;; g2 <-- cur_goal;
