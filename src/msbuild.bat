@@ -16,6 +16,12 @@ if "%InstallDir%" == "" goto vs2015
 rem PLATFORM must be unset in VS2017, otherwise
 rem MSBuild complains about "Solution configuration Release|X64 invalid"
 set PLATFORM=
+rem We first have to properly set up the environment through VsDevCmd
+rem NOTE: the current directory has to be saved prior to calling VsDevCmd
+set VSCMD_START_DIR=%CD%
+rem TODO: change the platform as needed
+call "%InstallDir%\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
+if errorlevel 1 exit /b 1
 "%InstallDir%\MSBuild\15.0\Bin\MSBuild.exe" %*
 if errorlevel 1 exit /b 1
 goto end
