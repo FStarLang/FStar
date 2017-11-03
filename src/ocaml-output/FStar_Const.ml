@@ -41,18 +41,18 @@ type sconst =
   | Const_reflect of FStar_Ident.lid[@@deriving show]
 let uu___is_Const_effect: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_effect  -> true | uu____80 -> false
+    match projectee with | Const_effect  -> true | uu____86 -> false
 let uu___is_Const_unit: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_unit  -> true | uu____84 -> false
+    match projectee with | Const_unit  -> true | uu____90 -> false
 let uu___is_Const_bool: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_bool _0 -> true | uu____89 -> false
+    match projectee with | Const_bool _0 -> true | uu____95 -> false
 let __proj__Const_bool__item___0: sconst -> Prims.bool =
   fun projectee  -> match projectee with | Const_bool _0 -> _0
 let uu___is_Const_int: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_int _0 -> true | uu____111 -> false
+    match projectee with | Const_int _0 -> true | uu____117 -> false
 let __proj__Const_int__item___0:
   sconst ->
     (Prims.string,(signedness,width) FStar_Pervasives_Native.tuple2
@@ -61,17 +61,17 @@ let __proj__Const_int__item___0:
   = fun projectee  -> match projectee with | Const_int _0 -> _0
 let uu___is_Const_char: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_char _0 -> true | uu____153 -> false
+    match projectee with | Const_char _0 -> true | uu____159 -> false
 let __proj__Const_char__item___0: sconst -> FStar_BaseTypes.char =
   fun projectee  -> match projectee with | Const_char _0 -> _0
 let uu___is_Const_float: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_float _0 -> true | uu____165 -> false
+    match projectee with | Const_float _0 -> true | uu____180 -> false
 let __proj__Const_float__item___0: sconst -> FStar_BaseTypes.double =
   fun projectee  -> match projectee with | Const_float _0 -> _0
 let uu___is_Const_bytearray: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_bytearray _0 -> true | uu____183 -> false
+    match projectee with | Const_bytearray _0 -> true | uu____198 -> false
 let __proj__Const_bytearray__item___0:
   sconst ->
     (FStar_BaseTypes.byte Prims.array,FStar_Range.range)
@@ -79,27 +79,27 @@ let __proj__Const_bytearray__item___0:
   = fun projectee  -> match projectee with | Const_bytearray _0 -> _0
 let uu___is_Const_string: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_string _0 -> true | uu____217 -> false
+    match projectee with | Const_string _0 -> true | uu____232 -> false
 let __proj__Const_string__item___0:
   sconst -> (Prims.string,FStar_Range.range) FStar_Pervasives_Native.tuple2 =
   fun projectee  -> match projectee with | Const_string _0 -> _0
 let uu___is_Const_range_of: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_range_of  -> true | uu____240 -> false
+    match projectee with | Const_range_of  -> true | uu____255 -> false
 let uu___is_Const_set_range_of: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_set_range_of  -> true | uu____244 -> false
+    match projectee with | Const_set_range_of  -> true | uu____259 -> false
 let uu___is_Const_range: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_range _0 -> true | uu____249 -> false
+    match projectee with | Const_range _0 -> true | uu____264 -> false
 let __proj__Const_range__item___0: sconst -> FStar_Range.range =
   fun projectee  -> match projectee with | Const_range _0 -> _0
 let uu___is_Const_reify: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_reify  -> true | uu____260 -> false
+    match projectee with | Const_reify  -> true | uu____275 -> false
 let uu___is_Const_reflect: sconst -> Prims.bool =
   fun projectee  ->
-    match projectee with | Const_reflect _0 -> true | uu____265 -> false
+    match projectee with | Const_reflect _0 -> true | uu____280 -> false
 let __proj__Const_reflect__item___0: sconst -> FStar_Ident.lid =
   fun projectee  -> match projectee with | Const_reflect _0 -> _0
 let eq_const: sconst -> sconst -> Prims.bool =
@@ -107,23 +107,23 @@ let eq_const: sconst -> sconst -> Prims.bool =
     fun c2  ->
       match (c1, c2) with
       | (Const_int (s1,o1),Const_int (s2,o2)) ->
-          (let uu____311 = FStar_Util.ensure_decimal s1 in
-           let uu____312 = FStar_Util.ensure_decimal s2 in
-           uu____311 = uu____312) && (o1 = o2)
-      | (Const_bytearray (a,uu____320),Const_bytearray (b,uu____322)) ->
+          (let uu____326 = FStar_Util.ensure_decimal s1 in
+           let uu____327 = FStar_Util.ensure_decimal s2 in
+           uu____326 = uu____327) && (o1 = o2)
+      | (Const_bytearray (a,uu____335),Const_bytearray (b,uu____337)) ->
           a = b
-      | (Const_string (a,uu____334),Const_string (b,uu____336)) -> a = b
+      | (Const_string (a,uu____349),Const_string (b,uu____351)) -> a = b
       | (Const_reflect l1,Const_reflect l2) -> FStar_Ident.lid_equals l1 l2
-      | uu____339 -> c1 = c2
+      | uu____354 -> c1 = c2
 let rec pow2: FStar_BigInt.bigint -> FStar_BigInt.bigint =
   fun x  ->
-    let uu____347 = FStar_BigInt.eq_big_int x FStar_BigInt.zero in
-    if uu____347
+    let uu____362 = FStar_BigInt.eq_big_int x FStar_BigInt.zero in
+    if uu____362
     then FStar_BigInt.one
     else
-      (let uu____349 =
-         let uu____350 = FStar_BigInt.pred_big_int x in pow2 uu____350 in
-       FStar_BigInt.mult_big_int FStar_BigInt.two uu____349)
+      (let uu____364 =
+         let uu____365 = FStar_BigInt.pred_big_int x in pow2 uu____365 in
+       FStar_BigInt.mult_big_int FStar_BigInt.two uu____364)
 let bounds:
   signedness ->
     width ->
@@ -138,28 +138,28 @@ let bounds:
         | Int16  -> FStar_BigInt.big_int_of_string "16"
         | Int32  -> FStar_BigInt.big_int_of_string "32"
         | Int64  -> FStar_BigInt.big_int_of_string "64" in
-      let uu____362 =
+      let uu____377 =
         match signedness with
         | Unsigned  ->
-            let uu____371 =
-              let uu____372 = pow2 n1 in FStar_BigInt.pred_big_int uu____372 in
-            (FStar_BigInt.zero, uu____371)
+            let uu____386 =
+              let uu____387 = pow2 n1 in FStar_BigInt.pred_big_int uu____387 in
+            (FStar_BigInt.zero, uu____386)
         | Signed  ->
             let upper =
-              let uu____374 = FStar_BigInt.pred_big_int n1 in pow2 uu____374 in
-            let uu____375 = FStar_BigInt.minus_big_int upper in
-            let uu____376 = FStar_BigInt.pred_big_int upper in
-            (uu____375, uu____376) in
-      match uu____362 with | (lower,upper) -> (lower, upper)
+              let uu____389 = FStar_BigInt.pred_big_int n1 in pow2 uu____389 in
+            let uu____390 = FStar_BigInt.minus_big_int upper in
+            let uu____391 = FStar_BigInt.pred_big_int upper in
+            (uu____390, uu____391) in
+      match uu____377 with | (lower,upper) -> (lower, upper)
 let within_bounds: Prims.string -> signedness -> width -> Prims.bool =
   fun repr  ->
     fun signedness  ->
       fun width  ->
-        let uu____392 = bounds signedness width in
-        match uu____392 with
+        let uu____407 = bounds signedness width in
+        match uu____407 with
         | (lower,upper) ->
             let value =
-              let uu____400 = FStar_Util.ensure_decimal repr in
-              FStar_BigInt.big_int_of_string uu____400 in
+              let uu____415 = FStar_Util.ensure_decimal repr in
+              FStar_BigInt.big_int_of_string uu____415 in
             (FStar_BigInt.le_big_int lower value) &&
               (FStar_BigInt.le_big_int value upper)

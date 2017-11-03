@@ -432,12 +432,12 @@ let update_names_from_event:
       fun evt  ->
         let is_cur_mod lid = lid.FStar_Ident.str = cur_mod_str in
         match evt with
-        | NTAlias (host,id,included) ->
+        | NTAlias (host,id1,included) ->
             if is_cur_mod host
             then
               let uu____1104 = query_of_lid included in
               FStar_Interactive_CompletionTable.register_alias table
-                (FStar_Ident.text_of_id id) [] uu____1104
+                (FStar_Ident.text_of_id id1) [] uu____1104
             else table
         | NTOpen (host,(included,kind)) ->
             if is_cur_mod host

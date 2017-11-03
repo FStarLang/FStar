@@ -200,11 +200,11 @@ let tid: Prims.unit -> Prims.string =
     let uu____538 = FStar_Util.current_tid () in
     FStar_All.pipe_right uu____538 FStar_Util.string_of_int
 let new_z3proc: Prims.string -> FStar_Util.proc =
-  fun id  ->
+  fun id1  ->
     let cond pid s = let x = (FStar_Util.trim_string s) = "Done!" in x in
     let uu____550 = FStar_Options.z3_exe () in
     let uu____551 = ini_params () in
-    FStar_Util.start_process false id uu____550 uu____551 cond
+    FStar_Util.start_process false id1 uu____550 uu____551 cond
 type bgproc =
   {
   grab: Prims.unit -> FStar_Util.proc;
