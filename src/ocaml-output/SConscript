@@ -120,9 +120,9 @@ fstar_parser_parse_ml=env.Command('FStar_Parser_Parse.ml', File('parse.mly'), ge
 def generate_fstar_version_ml(target, source, env):
   # read the source file into memory
   try:
-    fd = open(source[0].get_path(), 'r')
+    fd = open(source, 'r')
   except:
-    raise SCons.Errors.UserError("Can't read source file %s" % source[0])
+    raise SCons.Errors.UserError("Can't read source file %s" % source)
   sourcefile = fd.read().split('\r\n')
   fd.close()
   VERSION = sourcefile[0]
@@ -150,9 +150,9 @@ def generate_fstar_version_ml(target, source, env):
     COMMIT = COMMIT + ' (dirty)'
 
   try:
-    fd = open(target[0].get_path(), "w")
+    fd = open(target, "w")
   except:
-    raise SCons.Errors.UserError("Can't write target file %s" % target[0])
+    raise SCons.Errors.UserError("Can't write target file %s" % target)
 
   fd.write('open FStar_Util\n')
   fd.write('let dummy () = ();;\n')
@@ -162,8 +162,11 @@ def generate_fstar_version_ml(target, source, env):
   fd.write('FStar_Options._date := "' + DATE + '";;\n')
   fd.write('FStar_Options._commit:= "' + COMMIT + '";;\n')
   fd.close()
+  return target
 
-fstar_version_ml=env.Command('FStar_Version.ml', '../../version.txt', generate_fstar_version_ml)
+# always generate a fresh FStar_Version.ml file.  This triggers SCons to invoke ocamlbuild
+# to rebuild fstar.exe.
+fstar_version_ml = generate_fstar_version_ml('FStar_Version.ml', '../../version.txt', env)
 
 readpipe, writepipe = os.pipe()
 os.write(writepipe, str.encode('print_endline Sys.ocaml_version'))
