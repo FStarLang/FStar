@@ -242,10 +242,6 @@ rule token args = parse
      { PRAGMA_SET_OPTIONS }
  | "#reset-options"
      { PRAGMA_RESET_OPTIONS }
- | '#' ' ' (digit)*
-     { let n = Util.int_of_string (trim_left lexbuf 2) in
-     mknewline (n - !lc) lexbuf;
-       cpp_filename args lexbuf }
  | int8
   { INT8 (trim_and_check_range lexbuf int8 0x80L "8-bit signed integer") }
  | (uint8 | char8)
