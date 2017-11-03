@@ -1,3 +1,3 @@
-module Bug69
+module Bug069
 
-type T (x:int) (y:int) = x << y
+type t (x:int) (y:int) = x << y

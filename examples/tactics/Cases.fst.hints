@@ -6,30 +6,18 @@
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
+      [ "@query" ],
       0,
-      "56a605d64befe076f2af92b8a5d3381a"
+      "1d4dc97111634bdf154402562633105b"
     ],
     [
       "Cases.test_cases_unsquash",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Tactics.Result.Success@tok",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "function_token_typing_FStar.Tactics.Types.proofstate"
-      ],
+      [ "@query" ],
       0,
-      "dd3c584d52d08d88368d8467d0f3cbf0"
+      "ecadf8770e99e5ca9eb62ba1e6faaac9"
     ],
     [
       "Cases.test_cases_bool",
@@ -38,16 +26,16 @@
       1,
       [ "@query" ],
       0,
-      "917a2d5e29d8233f06a8ff3924f4e4f0"
+      "810c805655bc985303528087e6c8e425"
     ],
     [
       "Cases.test_cases_bool_2",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [ "@query" ],
       0,
-      "abf7281bbdda0cf1e0fcc5ec88e243f2"
+      "ee09e6dfa52566d1f789a0c472598f22"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -56,7 +44,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "4c9cf9f2351246d294dc95f0e0b9a968"
+      "fd7e2c104322c7af849178107cc01865"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -68,7 +56,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "ecf5a557fcc0ed40ae1ed60cb3db9b7d"
+      "d4bce352dbe4c3543998cb5d197493af"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -82,7 +70,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "5cd7e75fc677e8f4c6ac5591bd66c9cb"
+      "84607a0449cb3fe9c773b4845faea928"
     ],
     [
       "Cases.test_cases_bool_2",
@@ -91,7 +79,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "71d30c567276a9203217104153ec5f3b"
+      "a37fe41526aec91a5c8c045bb3d27846"
     ]
   ]
 ]

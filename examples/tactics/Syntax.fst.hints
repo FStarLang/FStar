@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "9c47108e3efa5c3aa7e62d85d2b248b7"
+      "c669e50e28fe847db9130cf8e6e7cea2"
     ],
     [
       "Syntax.goal_sanity_check",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "a74d42846e6f2c5f791c90ec10400d6b"
+      "c0720dd2a5389b48e156324c53a0eb88"
     ],
     [
       "Syntax.test2",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "e2a0ef77aeee7567dd592dce6653c737"
+      "a48f2960e10a1e346c7048f691a0daeb"
     ],
     [
       "Syntax.blah",
@@ -40,6 +40,7 @@
         "constructor_distinct_FStar.Reflection.Data.Tv_Abs",
         "constructor_distinct_FStar.Reflection.Data.Tv_App",
         "constructor_distinct_FStar.Reflection.Data.Tv_Arrow",
+        "constructor_distinct_FStar.Reflection.Data.Tv_Let",
         "constructor_distinct_FStar.Reflection.Data.Tv_Match",
         "constructor_distinct_FStar.Reflection.Data.Tv_Refine",
         "data_elim_FStar.Reflection.Data.Tv_App",
@@ -64,70 +65,68 @@
         "projection_inverse_FStar.Reflection.Data.Tv_Abs__1",
         "projection_inverse_FStar.Reflection.Data.Tv_App__0",
         "projection_inverse_FStar.Reflection.Data.Tv_App__1",
-        "projection_inverse_FStar.Reflection.Data.Tv_Arrow__0",
-        "projection_inverse_FStar.Reflection.Data.Tv_Arrow__1",
+        "projection_inverse_FStar.Reflection.Data.Tv_Refine__0",
         "projection_inverse_FStar.Reflection.Data.Tv_Refine__1",
         "refinement_interpretation_FStar.Reflection.Basic_Tm_refine_62353a91a906896ee28a928c3c16dabb",
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2",
-        "typing_FStar.Reflection.Basic.__inspect",
-        "typing_FStar.Reflection.Basic.inspect"
+        "typing_FStar.Reflection.Basic.__inspect"
       ],
       0,
-      "e18c430fc1e45fed8ef2bbec7f5a8c70"
+      "4b91261f6f41f7b5b9f1e734d454f1c6"
     ],
     [
-      "Syntax.uu___99",
+      "Syntax.uu___117",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "38d916d282072f000132eb47787ac9b4"
+      "8c4430584637b93fabc290a57a8ae0a8"
     ],
     [
-      "Syntax.uu___100",
+      "Syntax.uu___118",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "4e93cb7bee757701da63ba4302cbef5d"
+      "27b4a46a322a104e3ea7a0130f18c45c"
     ],
     [
-      "Syntax.uu___101",
+      "Syntax.uu___119",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "b39b7697afaa240b980621ebcdc86bff"
+      "e1503f315ff661c25fd744541616c641"
     ],
     [
-      "Syntax.uu___102",
+      "Syntax.uu___120",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "8101b79f5c11be4234a89b38ce2a528f"
+      "15ce18783d3d0f4843d516f7d7653b06"
     ],
     [
-      "Syntax.uu___103",
+      "Syntax.uu___121",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "13230ca0bc5dfa2a399089ca330f4b44"
+      "294534eb405749cbe96f094460731709"
     ],
     [
-      "Syntax.uu___104",
+      "Syntax.uu___122",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "8bce76e701de9db44a039c1d6adaaf16"
+      "766387463d0bf37103c13ab1bc572e64"
     ],
     [
       "Syntax.arith_test1",
@@ -145,7 +144,7 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "f9cc3412d1c4b6268bff43be54dda6d6"
+      "8297685b2e5fa8ef55d49606dbb2bbc3"
     ],
     [
       "Syntax.arith_test2",
@@ -163,16 +162,16 @@
         "typing_FStar.Reflection.Arith.run_tm"
       ],
       0,
-      "6686715ce3f7fef281cd33ece0a17262"
+      "1a66d3ddc6afbc0e5f311d86d271847b"
     ],
     [
-      "Syntax.uu___105",
+      "Syntax.uu___123",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "4c5b1f16722b64adfad4ee4eae4ff483"
+      "73d4dafabb37517b0b571a94701fbd9d"
     ]
   ]
 ]

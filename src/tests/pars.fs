@@ -39,7 +39,13 @@ let add_mods mod_names dsenv env =
 
 let init_once () : unit =
   let solver = SMT.dummy in
-  let env = TcEnv.initial_env TcTerm.tc_term TcTerm.type_of_tot_term TcTerm.universe_of solver Const.prims_lid in
+  let env = TcEnv.initial_env
+                FStar.Parser.Dep.empty_deps
+                TcTerm.tc_term
+                TcTerm.type_of_tot_term
+                TcTerm.universe_of
+                solver
+                Const.prims_lid in
   env.solver.init env;
   let dsenv, prims_mod = parse_mod (Options.prims()) (DsEnv.empty_env()) in
   let env = {env with dsenv=dsenv} in

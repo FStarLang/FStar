@@ -1,4 +1,4 @@
-module Bug64
+module Bug064
 
   let f = function
   | 0 -> 0

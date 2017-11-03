@@ -104,7 +104,8 @@ and struct_typ_depth
 : GTot nat
 = match l with
   | [] -> 0
-  | (_, t) :: l ->
+  | h :: l ->
+    let (_, t) = h in // matching like this prevents needing two units of ifuel
     let n1 = typ_depth t in
     let n2 = struct_typ_depth l in
     if n1 > n2 then n1 else n2

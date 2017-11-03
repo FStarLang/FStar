@@ -120,7 +120,7 @@ let rec lemma_disjoint_includes i j k =
 abstract val extends: rid -> rid -> GTot bool
 let extends r0 r1 = Cons? (reveal r0) && rid_tail r0 = r1
 
-abstract val parent: r:rid{r<>root} -> GTot rid
+abstract val parent: r:rid{r<>root} -> Tot rid
 let parent r = rid_tail r
 
 abstract val lemma_includes_refl: i:rid

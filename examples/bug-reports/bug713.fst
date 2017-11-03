@@ -7,7 +7,7 @@ let return (a:Type0) (x:a) (p : a -> M r) : M r = p x
 
 let bind (a:Type0) (b:Type0)
          (m : cont a) (f : a -> Tot (cont b)) (k : b -> M r) : M r =
-         m (fun (x:a) -> f x k)
+         m (fun (x:a) -> let fx = f x in fx k)
 
 reifiable new_effect {
   CONT: Type -> Effect

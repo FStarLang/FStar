@@ -19,7 +19,7 @@ let test' () = a := 0;
               a := 0;
               a := 0;
               f ();
-              a := 0; 
+              a := 0;
               a := 0;
               f ();
               a := 0;
@@ -30,15 +30,15 @@ val test2': unit -> St unit
 let test2' () = compose_self test'
 
 val test: unit -> St unit
-let test () = a := 0; 
-              a := 0; 
-              a := 0; 
-              a := 0; 
-              a := 0; 
-              a := 0; 
-              a := 0; 
-              a := 0; 
-              a := 0; 
+let test () = a := 0;
+              a := 0;
+              a := 0;
+              a := 0;
+              a := 0;
+              a := 0;
+              a := 0;
+              a := 0;
+              a := 0;
               a := 0;
               a := 0;
               a := 0;

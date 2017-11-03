@@ -13,5 +13,4 @@ propImpredicative:
 
 %.fst-in:
 	@echo $(OPTIONS) \
-	--__temp_no_proj InjectiveTypeFormers \
-	--verify_module $(basename $(notdir $@))
+	--__temp_no_proj InjectiveTypeFormers

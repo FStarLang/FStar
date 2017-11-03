@@ -1,5 +1,4 @@
-module Bug22
-open Prims.PURE
+module Bug022
 
 type exp =
   | EAbs   : exp -> exp

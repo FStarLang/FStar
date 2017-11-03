@@ -1,11 +1,7 @@
 module FStar.Reflection.Arith
 
-open FStar.Reflection.Syntax
-open FStar.Reflection.Types
-open FStar.Reflection.Syntax.Lemmas
-open FStar.Reflection.Basic
-open FStar.Reflection.Data
 open FStar.Tactics
+open FStar.Reflection
 module O = FStar.Order
 
 (*

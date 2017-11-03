@@ -12,7 +12,9 @@ val f: n:int {within n u} -> m:int {within m r}
 let f n = n
 
 val g: rint u -> rint r
+
+//This fails
 let g n = n
 
 //This works
-//let g n = let m:int = n in m
+let g n = let m:int = n in m

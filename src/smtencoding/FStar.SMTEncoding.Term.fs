@@ -71,6 +71,8 @@ type op =
   | BvAnd
   | BvXor
   | BvOr
+  | BvAdd
+  | BvSub
   | BvShl
   | BvShr  // unsigned shift right\
   | BvUdiv
@@ -212,6 +214,8 @@ let op_to_string = function
   | BvAnd -> "bvand"
   | BvXor -> "bvxor"
   | BvOr -> "bvor"
+  | BvAdd -> "bvadd"
+  | BvSub -> "bvsub"
   | BvShl -> "bvshl"
   | BvShr -> "bvlshr"
   | BvUdiv -> "bvudiv"
@@ -309,6 +313,8 @@ let mkBvToNat t r = mkApp'(BvToNat, [t]) r
 let mkBvAnd = mk_bin_op BvAnd
 let mkBvXor = mk_bin_op BvXor
 let mkBvOr = mk_bin_op BvOr
+let mkBvAdd = mk_bin_op BvAdd
+let mkBvSub = mk_bin_op BvSub
 let mkBvShl sz (t1, t2) r = mkApp'(BvShl, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUdiv sz (t1, t2) r = mkApp'(BvUdiv, [t1;(mkNatToBv sz t2 r)]) r
@@ -714,8 +720,8 @@ and mkPrelude z3options =
                 (declare-fun Tm_uvar (Int) Term)\n\
                 (define-fun Reify ((x Term)) Term x)\n\
                 (assert (forall ((t Term))\n\
-                            (! (implies (exists ((e Term)) (HasType e t))\n\
-                                        (Valid t))\n\
+                            (! (iff (exists ((e Term)) (HasType e t))\n\
+                                    (Valid t))\n\
                                 :pattern ((Valid t)))))\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
                      (! (iff (Valid (Precedes t1 t2)) \n\
@@ -723,7 +729,7 @@ and mkPrelude z3options =
                         :pattern ((Precedes t1 t2)))))\n\
                 (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
                          (Precedes t1 t2))\n\
-                (declare-fun Range_const () Term)\n\
+                (declare-fun Range_const (Int) Term)\n\
                 (declare-fun _mul (Int Int) Int)\n\
                 (declare-fun _div (Int Int) Int)\n\
                 (declare-fun _mod (Int Int) Int)\n\
@@ -759,7 +765,12 @@ let mkBvConstructor (sz : int) =
         [snd (boxBitVecFun sz), BitVec_sort sz, true], Term_sort, 12+sz, true)
     |> constructor_to_decl
 
-let mk_Range_const      = mkApp("Range_const", []) norng
+let __range_c = BU.mk_ref 0
+let mk_Range_const () =
+    let i = !__range_c in
+    __range_c := !__range_c + 1;
+    mkApp("Range_const", [mkInteger' i norng]) norng
+
 let mk_Term_type        = mkApp("Tm_type", []) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r

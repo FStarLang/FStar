@@ -11,7 +11,7 @@
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
       ],
       0,
-      "bdadbbe74491868d28491f2ec3ae8002"
+      "f865fac3e7c77a01575e7983a7a6ebc5"
     ],
     [
       "CntFormat.append_inj_lemma",
@@ -23,7 +23,7 @@
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
       ],
       0,
-      "b3ed26abae54a4b3dad29fd05026f26f"
+      "9524fb9205b6a349dcdb427dc07463c8"
     ],
     [
       "CntFormat.append_inj_lemma",
@@ -35,7 +35,7 @@
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
       ],
       0,
-      "c78712bd53dcb8ab2fac2c62290e5d29"
+      "28bb8d699c17fa6de046315b39ee5743"
     ],
     [
       "CntFormat.append_inj_lemma",
@@ -51,6 +51,7 @@
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.length",
         "equation_Platform.Bytes.op_At_Bar", "equation_Prims.eqtype",
         "equation_Prims.nat", "kinding_FStar.Char.char_@tok",
+        "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "refinement_interpretation_CntFormat_Tm_refine_85f3da332f3668e6446e4e98ff1dad55",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
@@ -59,43 +60,7 @@
         "typing_CntFormat.op_At_Bar", "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "6ae30971ccab1664ae1b42430a46ca42"
-    ],
-    [
-      "CntFormat.uint16_to_bytes",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "6e69d1b28dc0e6e765cde597f89fe735"
-    ],
-    [
-      "CntFormat.uint32_to_bytes",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "7e5d7923f41176974ec355a2d36db987"
-    ],
-    [
-      "CntFormat.bytes_to_uint16",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "87600b0c674c669c9ad8a0326321557a"
-    ],
-    [
-      "CntFormat.bytes_to_uint32",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "410142172dbf689f129c018ceccae33f"
+      "3f6a99f0d10f3151de2d6ec8da6ab784"
     ],
     [
       "CntFormat.UTF8_inj",
@@ -107,34 +72,7 @@
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
       ],
       0,
-      "cb204307ec92273bd4aa3c1337357b33"
-    ],
-    [
-      "CntFormat.tag0",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "8218c2ddad5be1697a9b8b6673d48e11"
-    ],
-    [
-      "CntFormat.tag1",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "2cb634f37c035469bb52f6cef9aa98ab"
-    ],
-    [
-      "CntFormat.tag2",
-      1,
-      2,
-      1,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
-      0,
-      "f82aa64539f1d9ed3b87999ec6043ded"
+      "e7760bda8215b74b254cd74ef86bb55a"
     ],
     [
       "CntFormat.response",
@@ -146,7 +84,7 @@
         "refinement_interpretation_CntFormat_Tm_refine_f5cfff85cb7c9a21e92347e29fc626c9"
       ],
       0,
-      "7c0a8afbce5731391f84061ebdc8f5a9"
+      "e938edbfcf9f2a2a2a95119f7bb2629f"
     ],
     [
       "CntFormat.signal",
@@ -158,7 +96,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "2e6e21993f46c9980375cee2d1a77c8b"
+      "e8c14199923c120051b687966f6b6c35"
     ],
     [
       "CntFormat.signal",
@@ -168,7 +106,8 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_CntFormat.message",
         "equation_CntFormat.op_At_Bar", "equation_CntFormat.signal_size",
-        "equation_CntFormat.uint16", "equation_CntFormat.uint32",
+        "equation_CntFormat.uint16", "equation_CntFormat.uint16_to_bytes",
+        "equation_CntFormat.uint32", "equation_CntFormat.uint32_to_bytes",
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
         "equation_Platform.Bytes.length",
@@ -181,7 +120,7 @@
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "34b146ab932622e6067fb97caaacfff4"
+      "10ee52de262bc957f628c2d8e2aa1d75"
     ],
     [
       "CntFormat.signal_split",
@@ -200,7 +139,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "9e76ef6ecdba3adbf02bdbb5decf3cf2"
+      "bf3f4af5b5d1813e66f6ece720ef8773"
     ],
     [
       "CntFormat.signal_split",
@@ -212,7 +151,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "4d4a37940b6e4c4d45faf306f963bfc2"
+      "27bbf375f5f16024e9bd2f8357ef2169"
     ],
     [
       "CntFormat.signal_split",
@@ -249,7 +188,7 @@
         "refinement_interpretation_Platform.Bytes_Tm_refine_71050496a0b6bdbab08b701114cb2b13"
       ],
       0,
-      "b59bde7e6d04145ee2ab4fdad0155b8c"
+      "8fc53d9a6f702d4d40c4678d4877efde"
     ],
     [
       "CntFormat.signal_components_corr",
@@ -261,7 +200,7 @@
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
       ],
       0,
-      "a5c3cfc74125f84362e4c6c95ab6ebb7"
+      "2f9d0f791a97d50a2ae43410829b21da"
     ],
     [
       "CntFormat.signal_components_corr",
@@ -275,7 +214,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "952453de5c32f8b54fa9f1d1a91c8e53"
+      "043411e2e84c700d46f42363c649f477"
     ],
     [
       "CntFormat.signal_components_corr",
@@ -289,7 +228,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "37852d78e3d6402a006b1b15bc893e2f"
+      "9761b23226bfd7989b893579c82b9557"
     ],
     [
       "CntFormat.signal_components_corr",
@@ -301,7 +240,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "d8f386bb05a6bfe0f5e400dcfa7ef2fb"
+      "31724c8eff5d6ac76d5e9e4b488a42ef"
     ],
     [
       "CntFormat.signal_components_corr",
@@ -313,7 +252,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "be55bab01a2438339ac345a74f506a77"
+      "f934f0989b1d5809352471ee148dad95"
     ]
   ]
 ]
