@@ -18,7 +18,7 @@ noeq
 type expr =
     | Lit     : int -> expr
     // atom, contains both a numerical ID and the actual term encountered
-    | Atom    : nat -> term -> expr 
+    | Atom    : nat -> term -> expr
     | Plus    : expr -> expr -> expr
     | Mult    : expr -> expr -> expr
     | Minus   : expr -> expr -> expr
