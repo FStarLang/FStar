@@ -66,12 +66,13 @@ let codegen (umods, env) =
     let mllibs = List.flatten mllibs in
     let ext = match opt with
       | Some "FSharp" -> ".fs"
-      | Some "OCaml" -> ".ml"
+      | Some "OCaml"
+      | Some "tactics" -> ".ml"
       | Some "Kremlin" -> ".krml"
       | _ -> failwith "Unrecognized option"
     in
     match opt with
-    | Some "FSharp" | Some "OCaml" ->
+    | Some "FSharp" | Some "OCaml" | Some "tactics" ->
         (* When bootstrapped in F#, this will use the old printer in
            FStar.Extraction.ML.Code for both OCaml and F# extraction.
            When bootstarpped in OCaml, this will use the old printer
@@ -86,7 +87,7 @@ let codegen (umods, env) =
 
 let gen_native_tactics (umods, env) out_dir =
     (* Extract module and its dependencies to OCaml *)
-    Options.set_option "codegen" (Options.String "OCaml");
+    Options.set_option "codegen" (Options.String "tactics");
     let mllibs = snd <| Util.fold_map Extraction.ML.Modul.extract (Extraction.ML.UEnv.mkContext env) umods in
     let mllibs = List.flatten mllibs in
     List.iter (FStar.Extraction.ML.PrintML.print (Some out_dir) ".ml") mllibs;
@@ -117,7 +118,8 @@ let go _ =
         init_native_tactics ();
 
         if Options.dep() <> None  //--dep: Just compute and print the transitive dependency graph; don't verify anything
-        then Parser.Dep.print (Parser.Dep.collect Parser.Dep.VerifyAll filenames)
+        then let _, deps = Parser.Dep.collect filenames in
+             Parser.Dep.print deps
         else if Options.interactive () then begin
           match filenames with
           | [] ->
@@ -125,10 +127,6 @@ let go _ =
           | _ :: _ :: _ ->
             Util.print_error "--ide: Too many files in command line invocation\n"; exit 1
           | [filename] ->
-            if Options.explicit_deps () then begin
-              Util.print_error "--ide: --explicit_deps not supported in interactive mode\n";
-              exit 1 end;
-
             if Options.legacy_interactive () then
               FStar.Interactive.Legacy.interactive_mode filename
             else
@@ -142,25 +140,13 @@ let go _ =
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \
                          reindenting is not known to work yet with this version"
         else if List.length filenames >= 1 then begin //normal batch mode
-          let verify_mode =
-            if Options.verify_all () then begin
-              if Options.verify_module () <> [] then begin
-                Util.print_error "--verify_module is incompatible with --verify_all\n";
-                exit 1
-              end;
-              Parser.Dep.VerifyAll
-            end else if Options.verify_module () <> [] then
-              Parser.Dep.VerifyUserList
-            else
-              Parser.Dep.VerifyFigureItOut
-          in
-          let filenames = FStar.Dependencies.find_deps_if_needed verify_mode filenames in
+          let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames in
           (match Options.gen_native_tactics () with
           | Some dir ->
              Util.print1 "Generating native tactics in %s\n" dir;
              Options.set_option "lax" (Options.Bool true)
           | None -> ());
-          let fmods, env = Universal.batch_mode_tc filenames in
+          let fmods, env = Universal.batch_mode_tc filenames dep_graph in
           let module_names_and_times = fmods |> List.map (fun (x, t) -> Universal.module_or_interface_name x, t) in
           report_errors module_names_and_times;
           codegen (fmods |> List.map fst, env);

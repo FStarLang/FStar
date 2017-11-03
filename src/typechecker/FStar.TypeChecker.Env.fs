@@ -111,7 +111,8 @@ type env = {
   is_native_tactic: lid -> bool;                     (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                      (* hooks that the interactive more relies onto for symbol tracking *)
-  dsenv          : FStar.ToSyntax.Env.env
+  dsenv          : FStar.ToSyntax.Env.env;           (* The desugaring environment from the front-end *)
+  dep_graph      : FStar.Parser.Dep.deps             (* The result of the dependency analysis *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -139,7 +140,9 @@ let rename_gamma subst gamma =
       | Binding_var x -> begin
         let y = Subst.subst subst (S.bv_to_name x) in
         match (Subst.compress y).n with
-        | Tm_name y -> Binding_var y
+        | Tm_name y ->
+            // We don't want to change the type
+            Binding_var ({ y with sort = Subst.subst subst x.sort })
         | _ -> failwith "Not a renaming"
         end
       | b -> b)
@@ -148,6 +151,9 @@ let default_tc_hooks =
   { tc_push_in_gamma_hook = (fun _ _ -> ()) }
 let tc_hooks (env: env) = env.tc_hooks
 let set_tc_hooks env hooks = { env with tc_hooks = hooks }
+
+let set_dep_graph e g = {e with dep_graph=g}
+let dep_graph e = e.dep_graph
 
 type env_t = env
 
@@ -170,7 +176,7 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env tc_term type_of universe_of solver module_lid =
+let initial_env deps tc_term type_of universe_of solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -203,7 +209,8 @@ let initial_env tc_term type_of universe_of solver module_lid =
     is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
-    dsenv = FStar.ToSyntax.Env.empty_env()
+    dsenv = FStar.ToSyntax.Env.empty_env();
+    dep_graph = deps
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -1222,6 +1229,16 @@ let add_proof_ns e path = cons_proof_ns true  e path
 let rem_proof_ns e path = cons_proof_ns false e path
 let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
+
+let unbound_vars (e : env) (t : term) : BU.set<bv> =
+    List.fold_left (fun s bv -> BU.set_remove bv s) (Free.names t) (bound_vars e)
+
+let closed (e : env) (t : term) =
+    BU.set_is_empty (unbound_vars e t)
+
+let closed' (t : term) =
+    BU.set_is_empty (Free.names t)
+
 let string_of_proof_ns env =
     let aux (p,b) =
         if p = [] && b then "*"

@@ -3,15 +3,13 @@
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/z3.mk
 include $(FSTAR_HOME)/src/gmake/fstar.mk
+include $(FSTAR_HOME)/src/gmake/Makefile.tmpl
 
 EXTRA=
 FLAKY=$(EXTRA) FStar.Int31.fst FStar.UInt31.fst FStar.Relational.State.fst
 EXPENSIVE=FStar.Pointer.Base.fst
 
-ALL=$(filter-out $(FLAKY) $(EXPENSIVE) ,$(wildcard FStar.*.fst FStar.*.fsti))
-
-#schedule the EXPENSIVE ones first to reduce overall CI time
-all:  $(addsuffix -ver, $(EXPENSIVE) $(ALL))
+FSTAR_FILES=$(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
 
 extra: $(addsuffix -ver, $(EXTRA))
 

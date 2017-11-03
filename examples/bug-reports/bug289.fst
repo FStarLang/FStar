@@ -1,6 +1,8 @@
 module Bug289
 
-val foo : unit -> St unit 
+open FStar.ST
+
+val foo : unit -> St unit
 let foo () = ()
 
 (* val test : unit -> unit *)

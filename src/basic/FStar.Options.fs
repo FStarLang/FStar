@@ -111,8 +111,6 @@ let add_light_off_file (filename:string) = light_off_files := filename :: !light
 let defaults =
      [
       ("__temp_no_proj"               , List []);
-      ("_fstar_home"                  , String "");
-      ("_include_path"                , List []);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
       ("cache_checked_modules"        , Bool false);
@@ -126,7 +124,7 @@ let defaults =
       ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_inference"              , Bool false);
-      ("explicit_deps"                , Bool false);
+      ("expose_interfaces"            , Bool false);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
       ("extract_namespace"            , List []);
@@ -134,7 +132,6 @@ let defaults =
       ("fstar_home"                   , Unset);
       ("full_context_dependency"      , Bool true);
       ("gen_native_tactics"           , Unset);
-      ("hide_genident_nums"           , Bool false);
       ("hide_uvar_nums"               , Bool false);
       ("hint_info"                    , Bool false);
       ("hint_file"                    , Unset);
@@ -171,7 +168,6 @@ let defaults =
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("reuse_hint_for"               , Unset);
-      ("show_signatures"              , List []);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
       ("smtencoding.elim_box"         , Bool false);
@@ -190,8 +186,6 @@ let defaults =
       ("use_hints"                    , Bool false);
       ("use_hint_hashes"              , Bool false);
       ("using_facts_from"             , Unset);
-      ("verify"                       , Bool true);
-      ("verify_all"                   , Bool false);
       ("verify_module"                , List []);
       ("warn_default_effects"         , Bool false);
       ("z3refresh"                    , Bool false);
@@ -236,14 +230,12 @@ let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       
 let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_inference         ()      = lookup_opt "eager_inference"          as_bool
-let get_explicit_deps           ()      = lookup_opt "explicit_deps"            as_bool
-let get_extract_all             ()      = lookup_opt "extract_all"              as_bool
+let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_fstar_home              ()      = lookup_opt "fstar_home"               (as_option as_string)
 let get_gen_native_tactics      ()      = lookup_opt "gen_native_tactics"       (as_option as_string)
-let get_hide_genident_nums      ()      = lookup_opt "hide_genident_nums"       as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
 let get_hint_file               ()      = lookup_opt "hint_file"                (as_option as_string)
@@ -278,7 +270,6 @@ let get_prn                     ()      = lookup_opt "prn"                      
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
-let get_show_signatures         ()      = lookup_opt "show_signatures"          (as_list as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
@@ -297,7 +288,6 @@ let get_use_hint_hashes         ()      = lookup_opt "use_hint_hashes"          
 let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
 let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
-let get_verify_all              ()      = lookup_opt "verify_all"               as_bool
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
 let get___temp_no_proj          ()      = lookup_opt "__temp_no_proj"           (as_list as_string)
 let get_version                 ()      = lookup_opt "version"                  as_bool
@@ -492,7 +482,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
       ( noshort,
         "codegen",
-        EnumStr ["OCaml"; "FSharp"; "Kremlin"],
+        EnumStr ["OCaml"; "FSharp"; "Kremlin"; "tactics"],
         "Generate code for execution");
 
       ( noshort,
@@ -512,8 +502,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "dep",
-        EnumStr ["make"; "graph"],
-        "Output the transitive closure of the dependency graph in a format suitable for the given tool");
+        EnumStr ["make"; "graph"; "full"],
+        "Output the transitive closure of the full dependency graph in three formats:\n\t \
+         'graph': a format suitable the 'dot' tool from 'GraphViz'\n\t \
+         'full': a format suitable for 'make', including dependences for producing .ml files\n\t \
+         'make': (deprecated) a format suitable for 'make', including only dependences among source files");
 
        ( noshort,
         "detail_errors",
@@ -543,16 +536,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
 
        ( noshort,
-        "explicit_deps",
-        Const (mk_bool true),
-        "Do not find dependencies automatically, the user provides them on the command-line");
-
-       ( noshort,
-        "extract_all",
-        Const (mk_bool true),
-        "Discover the complete dependency graph and do not stop at interface boundaries");
-
-       ( noshort,
         "extract_module",
         Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
         "Only extract the specified modules (instead of the possibly-partial dependency graph)");
@@ -563,6 +546,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Only extract modules in the specified namespace");
 
        ( noshort,
+        "expose_interfaces",
+        Const (mk_bool true),
+        "Explicitly break the abstraction imposed by the interface of any implementation file that appears on the command line (use with care!)");
+
+       ( noshort,
         "fstar_home",
         PathStr "dir",
         "Set the FSTAR_HOME variable to <dir>");
@@ -571,11 +559,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          "gen_native_tactics",
          PathStr "[path]",
         "Compile all user tactics used in the module in <path>");
-
-       ( noshort,
-        "hide_genident_nums",
-        Const (mk_bool true),
-        "Don't print generated identifier numbers");
 
        ( noshort,
         "hide_uvar_nums",
@@ -624,7 +607,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "lax",
-        Const (mk_bool true), //pretype := true; verify := false),
+        Const (mk_bool true),
         "Run the lax-type checker only (admit all verification conditions)");
 
       ( noshort,
@@ -743,11 +726,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
 
        ( noshort,
-        "show_signatures",
-        Accumulated (SimpleStr "module_name"),
-        "Show the checked signatures for all top-level symbols in the module");
-
-       ( noshort,
         "silent",
         Const (mk_bool true),
         " ");
@@ -859,16 +837,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B.");
 
        ( noshort,
-        "verify_all",
-        Const (mk_bool true),
-        "With automatic dependencies, verify all the dependencies, not just the files passed on the command-line.");
-
-       ( noshort,
-        "verify_module",
-        Accumulated (PostProcessed (pp_lowercase, (SimpleStr "module_name"))),
-        "Name of the module to verify");
-
-       ( noshort,
         "__temp_no_proj",
         Accumulated (SimpleStr "module_name"),
         "Don't generate projectors for this module");
@@ -939,7 +907,6 @@ let settable = function
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_inference"
-    | "hide_genident_nums"
     | "hide_uvar_nums"
     | "hint_info"
     | "hint_file"
@@ -961,7 +928,6 @@ let settable = function
     | "print_z3_statistics"
     | "prn"
     | "query_stats"
-    | "show_signatures"
     | "silent"
     | "smtencoding.elim_box"
     | "smtencoding.nl_arith_repr"
@@ -1048,17 +1014,8 @@ let module_name_of_file_name f =
 let should_verify m =
   if get_lax () then
     false
-  else if get_verify_all () then
-    true
-  else match get_verify_module () with
-    | [] ->
-        (* Note: in auto-deps mode, [dep.fs] fills in the [verify_module] option
-         * meaning that this case is only called when in [--explicit_deps] mode.
-         * If we could remove [--explicit_deps], there would be less complexity
-         * here. *)
-        List.existsML (fun f -> module_name_of_file_name f = m) (file_list ())
-    | l ->
-        List.contains (String.lowercase m) l
+  else let l = get_verify_module () in
+       List.contains (String.lowercase m) l
 
 let should_verify_file fn = should_verify (module_name_of_file_name fn)
 
@@ -1140,12 +1097,10 @@ let detail_hint_replay           () = get_detail_hint_replay          ()
 let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.contains s
 let eager_inference              () = get_eager_inference             ()
-let explicit_deps                () = get_explicit_deps               ()
-let extract_all                  () = get_extract_all                 ()
+let expose_interfaces            () = get_expose_interfaces          ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let gen_native_tactics           () = get_gen_native_tactics          ()
 let full_context_dependency      () = true
-let hide_genident_nums           () = get_hide_genident_nums          ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
 let hint_info                    () = get_hint_info                   ()
                                     || get_query_stats                 ()
@@ -1215,8 +1170,6 @@ let using_facts_from             () =
     match get_using_facts_from () with
     | None -> [ [], true ] //if not set, then retain all facts
     | Some ns -> List.collect parse_setting ns |> List.rev
-let verify_all                   () = get_verify_all                  ()
-let verify_module                () = get_verify_module               ()
 let warn_default_effects         () = get_warn_default_effects        ()
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
@@ -1231,13 +1184,13 @@ let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 
 
 let should_extract m =
-  not (no_extract m) && (extract_all () ||
+  not (no_extract m) &&
   (match get_extract_module () with
   | [] ->
     (match get_extract_namespace () with
      | [] -> true
      | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
-  | l -> List.contains (String.lowercase m) l))
+  | l -> List.contains (String.lowercase m) l)
 
 let codegen_fsharp () =
     codegen() = Some "FSharp"

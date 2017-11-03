@@ -1,4 +1,4 @@
-module Bug21 
+module Bug021
 
 val constfun0 : bool -> int -> Tot bool
 let constfun0 x k = x

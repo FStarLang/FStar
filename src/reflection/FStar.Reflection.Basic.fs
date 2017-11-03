@@ -20,6 +20,7 @@ module Print = FStar.Syntax.Print
 module Ident = FStar.Ident
 module Env = FStar.TypeChecker.Env
 module Err = FStar.Errors
+module Z = FStar.BigInt
 
 (* This file provides implementation for reflection primitives in F*.
  *
@@ -56,8 +57,8 @@ let un_protect_embedded_term (t : term) : option<term> =
         Err.warn t.pos (BU.format1 "Not an protected term: %s" (Print.term_to_string t));
         None
 
-let embed_binder (b:binder) : term =
-    U.mk_alien fstar_refl_binder b "reflection.embed_binder" None
+let embed_binder (rng:Range.range) (b:binder) : term =
+    U.mk_alien fstar_refl_binder b "reflection.embed_binder" (Some rng)
 
 let unembed_binder (t:term) : option<binder> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
@@ -65,17 +66,18 @@ let unembed_binder (t:term) : option<binder> =
         Err.warn t.pos (BU.format1 "Not an embedded binder: %s" (Print.term_to_string t));
         None
 
-let embed_binders l = embed_list embed_binder fstar_refl_binder l
+let embed_binders rng l = embed_list embed_binder fstar_refl_binder rng l
 let unembed_binders t = unembed_list unembed_binder t
 
-let embed_term (t:term) : term =
-    protect_embedded_term S.tun t
+let embed_term (rng:Range.range) (t:term) : term =
+    let t = protect_embedded_term S.tun t in
+    { t with pos = rng }
 
 let unembed_term (t:term) : option<term> =
     un_protect_embedded_term t
 
-let embed_fvar (fv:fv) : term =
-    U.mk_alien fstar_refl_fvar fv "reflection.embed_fvar" None
+let embed_fvar (rng:Range.range) (fv:fv) : term =
+    U.mk_alien fstar_refl_fvar fv "reflection.embed_fvar" (Some rng)
 
 let unembed_fvar (t:term) : option<fv> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
@@ -83,8 +85,8 @@ let unembed_fvar (t:term) : option<fv> =
         Err.warn t.pos (BU.format1 "Not an embedded fvar: %s" (Print.term_to_string t));
         None
 
-let embed_comp (c:comp) : term =
-    U.mk_alien fstar_refl_comp c "reflection.embed_comp" None
+let embed_comp (rng:Range.range) (c:comp) : term =
+    U.mk_alien fstar_refl_comp c "reflection.embed_comp" (Some rng)
 
 let unembed_comp (t:term) : option<comp> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
@@ -92,8 +94,8 @@ let unembed_comp (t:term) : option<comp> =
         Err.warn t.pos (BU.format1 "Not an embedded comp: %s" (Print.term_to_string t));
         None
 
-let embed_env (env:Env.env) : term =
-    U.mk_alien fstar_refl_env env "tactics_embed_env" None
+let embed_env (rng:Range.range) (env:Env.env) : term =
+    U.mk_alien fstar_refl_env env "tactics_embed_env" (Some rng)
 
 let unembed_env (t:term) : option<Env.env> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
@@ -101,18 +103,20 @@ let unembed_env (t:term) : option<Env.env> =
         Err.warn t.pos (BU.format1 "Not an embedded env: %s" (Print.term_to_string t));
         None
 
-let embed_const (c:vconst) : term =
+let embed_const (rng:Range.range) (c:vconst) : term =
+    let r =
     match c with
     | C_Unit    -> ref_C_Unit
     | C_True    -> ref_C_True
     | C_False   -> ref_C_False
 
     | C_Int i ->
-        S.mk_Tm_app ref_C_Int [S.as_arg (U.exp_int (BU.string_of_int i))]
+        S.mk_Tm_app ref_C_Int [S.as_arg (U.exp_int (Z.string_of_big_int i))]
                     None Range.dummyRange
     | C_String s ->
-        S.mk_Tm_app ref_C_String [S.as_arg (embed_string s)]
+        S.mk_Tm_app ref_C_String [S.as_arg (embed_string rng s)]
                     None Range.dummyRange
+    in { r with pos = rng }
 
 let unembed_const (t:term) : option<vconst> =
     let t = U.unascribe t in
@@ -139,16 +143,16 @@ let unembed_const (t:term) : option<vconst> =
         Err.warn t.pos (BU.format1 "Not an embedded vconst: %s" (Print.term_to_string t));
         None
 
-let rec embed_pattern (p : pattern) : term =
+let rec embed_pattern (rng:Range.range) (p : pattern) : term =
     match p with
     | Pat_Constant c ->
-        S.mk_Tm_app ref_Pat_Constant [S.as_arg (embed_const c)] None Range.dummyRange
+        S.mk_Tm_app ref_Pat_Constant [S.as_arg (embed_const rng c)] None rng
     | Pat_Cons (fv, ps) ->
-        S.mk_Tm_app ref_Pat_Cons [S.as_arg (embed_fvar fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern ps)] None Range.dummyRange
+        S.mk_Tm_app ref_Pat_Cons [S.as_arg (embed_fvar rng fv); S.as_arg (embed_list embed_pattern fstar_refl_pattern rng ps)] None rng
     | Pat_Var bv ->
-        S.mk_Tm_app ref_Pat_Var [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
+        S.mk_Tm_app ref_Pat_Var [S.as_arg (embed_binder rng (S.mk_binder bv))] None rng
     | Pat_Wild bv ->
-        S.mk_Tm_app ref_Pat_Wild [S.as_arg (embed_binder (S.mk_binder bv))] None Range.dummyRange
+        S.mk_Tm_app ref_Pat_Wild [S.as_arg (embed_binder rng (S.mk_binder bv))] None rng
 
 let rec unembed_pattern (t : term) : option<pattern> =
     let t = U.unascribe t in
@@ -178,10 +182,12 @@ let rec unembed_pattern (t : term) : option<pattern> =
 let embed_branch = embed_pair embed_pattern fstar_refl_pattern embed_term S.t_term
 let unembed_branch = unembed_pair unembed_pattern unembed_term
 
-let embed_aqualv (q : aqualv) : term =
+let embed_aqualv (rng:Range.range) (q : aqualv) : term =
+    let r =
     match q with
     | Data.Q_Explicit -> ref_Q_Explicit
     | Data.Q_Implicit -> ref_Q_Implicit
+    in { r with pos = rng }
 
 let unembed_aqualv (t : term) : option<aqualv> =
     let t = U.unascribe t in
@@ -196,54 +202,54 @@ let unembed_aqualv (t : term) : option<aqualv> =
 let embed_argv = embed_pair embed_term S.t_term embed_aqualv fstar_refl_aqualv
 let unembed_argv = unembed_pair unembed_term unembed_aqualv
 
-let embed_term_view (t:term_view) : term =
+let embed_term_view (rng:Range.range) (t:term_view) : term =
     match t with
     | Tv_FVar fv ->
-        S.mk_Tm_app ref_Tv_FVar [S.as_arg (embed_fvar fv)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_FVar [S.as_arg (embed_fvar rng fv)]
+                    None rng
 
     | Tv_Var bv ->
-        S.mk_Tm_app ref_Tv_Var [S.as_arg (embed_binder bv)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_Var [S.as_arg (embed_binder rng bv)]
+                    None rng
 
     | Tv_App (hd, a) ->
-        S.mk_Tm_app ref_Tv_App [S.as_arg (embed_term hd); S.as_arg (embed_argv a)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_App [S.as_arg (embed_term rng hd); S.as_arg (embed_argv rng a)]
+                    None rng
 
     | Tv_Abs (b, t) ->
-        S.mk_Tm_app ref_Tv_Abs [S.as_arg (embed_binder b); S.as_arg (embed_term t)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_Abs [S.as_arg (embed_binder rng b); S.as_arg (embed_term rng t)]
+                    None rng
 
     | Tv_Arrow (b, c) ->
-        S.mk_Tm_app ref_Tv_Arrow [S.as_arg (embed_binder b); S.as_arg (embed_comp c)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_Arrow [S.as_arg (embed_binder rng b); S.as_arg (embed_comp rng c)]
+                    None rng
 
     | Tv_Type u ->
-        S.mk_Tm_app ref_Tv_Type [S.as_arg (embed_unit ())]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_Type [S.as_arg (embed_unit rng ())]
+                    None rng
 
     | Tv_Refine (bv, t) ->
-        S.mk_Tm_app ref_Tv_Refine [S.as_arg (embed_binder bv); S.as_arg (embed_term t)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_Refine [S.as_arg (embed_binder rng bv); S.as_arg (embed_term rng t)]
+                    None rng
 
     | Tv_Const c ->
-        S.mk_Tm_app ref_Tv_Const [S.as_arg (embed_const c)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_Const [S.as_arg (embed_const rng c)]
+                    None rng
 
     | Tv_Uvar (u, t) ->
-        S.mk_Tm_app ref_Tv_Uvar [S.as_arg (embed_int u); S.as_arg (embed_term t)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_Uvar [S.as_arg (embed_int rng u); S.as_arg (embed_term rng t)]
+                    None rng
 
     | Tv_Let (b, t1, t2) ->
-        S.mk_Tm_app ref_Tv_Let [S.as_arg (embed_binder b); S.as_arg (embed_term t1); S.as_arg (embed_term t2)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_Let [S.as_arg (embed_binder rng b); S.as_arg (embed_term rng t1); S.as_arg (embed_term rng t2)]
+                    None rng
 
     | Tv_Match (t, brs) ->
-        S.mk_Tm_app ref_Tv_Match [S.as_arg (embed_term t); S.as_arg (embed_list embed_branch fstar_refl_branch brs)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_Tv_Match [S.as_arg (embed_term rng t); S.as_arg (embed_list embed_branch fstar_refl_branch rng brs)]
+                    None rng
 
     | Tv_Unknown ->
-        ref_Tv_Unknown
+        { ref_Tv_Unknown with pos = rng }
 
 let unembed_term_view (t:term) : option<term_view> =
     let t = U.unascribe t in
@@ -308,18 +314,19 @@ let unembed_term_view (t:term) : option<term_view> =
         Err.warn t.pos (BU.format1 "Not an embedded term_view: %s" (Print.term_to_string t));
         None
 
-let embed_comp_view (cv : comp_view) : term =
+let embed_comp_view (rng:Range.range) (cv : comp_view) : term =
     match cv with
     | C_Total t ->
-        S.mk_Tm_app ref_C_Total [S.as_arg (embed_term t)]
-                    None Range.dummyRange
+        S.mk_Tm_app ref_C_Total [S.as_arg (embed_term rng t)]
+                    None rng
 
     | C_Lemma (pre, post) ->
-        S.mk_Tm_app ref_C_Lemma [S.as_arg (embed_term pre); S.as_arg (embed_term post)]
-                    None Range.dummyRange
+        let post = U.unthunk_lemma_post post in
+        S.mk_Tm_app ref_C_Lemma [S.as_arg (embed_term rng pre); S.as_arg (embed_term rng post)]
+                    None rng
 
     | C_Unknown ->
-        ref_C_Unknown
+        { ref_C_Unknown with pos = rng }
 
 let unembed_comp_view (t : term) : option<comp_view> =
     let t = U.unascribe t in
@@ -369,7 +376,7 @@ let inspect_bv (b:binder) : string =
 let inspect_const (c:sconst) : vconst =
     match c with
     | FStar.Const.Const_unit -> C_Unit
-    | FStar.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
+    | FStar.Const.Const_int (s, _) -> C_Int (Z.big_int_of_string s)
     | FStar.Const.Const_bool true  -> C_True
     | FStar.Const.Const_bool false -> C_False
     | FStar.Const.Const_string (s, _) -> C_String s
@@ -438,7 +445,7 @@ let rec inspect (t:term) : term_view =
         Tv_Const (inspect_const c)
 
     | Tm_uvar (u, t) ->
-        Tv_Uvar (UF.uvar_id u, t)
+        Tv_Uvar (Z.of_int_fs (UF.uvar_id u), t)
 
     | Tm_let ((false, [lb]), t2) ->
         if lb.lbunivs <> [] then Tv_Unknown else
@@ -495,7 +502,7 @@ let pack_comp (cv : comp_view) : comp =
 let pack_const (c:vconst) : sconst =
     match c with
     | C_Unit    -> C.Const_unit
-    | C_Int i   -> C.Const_int (BU.string_of_int i, None)
+    | C_Int i   -> C.Const_int (Z.string_of_big_int i, None)
     | C_True    -> C.Const_bool true
     | C_False   -> C.Const_bool false
     | C_String s -> C.Const_string (s, Range.dummyRange)
@@ -531,7 +538,7 @@ let pack (tv:term_view) : term =
         S.mk (Tm_constant (pack_const c)) None Range.dummyRange
 
     | Tv_Uvar (u, t) ->
-        U.uvar_from_id u t
+        U.uvar_from_id (Z.to_int_fs u) t
 
     | Tv_Let (b, t1, t2) ->
         let bv = fst b in
@@ -554,11 +561,13 @@ let pack (tv:term_view) : term =
     | Tv_Unknown ->
         failwith "pack: unexpected term view"
 
-let embed_order (o:order) : term =
+let embed_order (rng:Range.range) (o:order) : term =
+    let r =
     match o with
     | Lt -> ord_Lt
     | Eq -> ord_Eq
     | Gt -> ord_Gt
+    in { r with pos = rng }
 
 let unembed_order (t:term) : option<order> =
     let t = U.unascribe t in
@@ -617,13 +626,13 @@ let lookup_typ (env:Env.env) (ns:list<string>) : sigelt_view =
             Unk
         end
 
-let embed_ctor (c:ctor) : term =
+let embed_ctor (rng:Range.range) (c:ctor) : term =
     match c with
     | Ctor (nm, t) ->
         S.mk_Tm_app ref_Ctor
-                    [S.as_arg (embed_string_list nm);
-                     S.as_arg (embed_term t)]
-                    None Range.dummyRange
+                    [S.as_arg (embed_string_list rng nm);
+                     S.as_arg (embed_term rng t)]
+                    None rng
 
 let unembed_ctor (t:term) : option<ctor> =
     let t = U.unascribe t in
@@ -637,25 +646,25 @@ let unembed_ctor (t:term) : option<ctor> =
         Err.warn t.pos (BU.format1 "Not an embedded ctor: %s" (Print.term_to_string t));
         None
 
-let embed_sigelt_view (sev:sigelt_view) : term =
+let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
     match sev with
     | Sg_Inductive (nm, bs, t, dcs) ->
         S.mk_Tm_app ref_Sg_Inductive
-                    [S.as_arg (embed_string_list nm);
-                        S.as_arg (embed_binders bs);
-                        S.as_arg (embed_term t);
-                        S.as_arg (embed_list embed_ctor fstar_refl_ctor dcs)]
-                    None Range.dummyRange
+                    [S.as_arg (embed_string_list rng nm);
+                        S.as_arg (embed_binders rng bs);
+                        S.as_arg (embed_term rng t);
+                        S.as_arg (embed_list embed_ctor fstar_refl_ctor rng dcs)]
+                    None rng
 
     | Sg_Let (fv, ty, t) ->
         S.mk_Tm_app ref_Sg_Let
-                    [S.as_arg (embed_fvar fv);
-                        S.as_arg (embed_term ty);
-                        S.as_arg (embed_term t)]
-                    None Range.dummyRange
+                    [S.as_arg (embed_fvar rng fv);
+                        S.as_arg (embed_term rng ty);
+                        S.as_arg (embed_term rng t)]
+                    None rng
 
     | Unk ->
-        ref_Unk
+        { ref_Unk with pos = rng }
 
 let unembed_sigelt_view (t:term) : option<sigelt_view> =
     let t = U.unascribe t in
@@ -667,7 +676,7 @@ let unembed_sigelt_view (t:term) : option<sigelt_view> =
         BU.bind_opt (unembed_term t) (fun t ->
         BU.bind_opt (unembed_list unembed_ctor dcs) (fun dcs ->
         Some <| Sg_Inductive (nm, bs, t, dcs)))))
-        
+
     | Tm_fvar fv, [(fvar, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let_lid ->
         BU.bind_opt (unembed_fvar fvar) (fun fvar ->
         BU.bind_opt (unembed_term ty) (fun ty ->

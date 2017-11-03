@@ -51,9 +51,6 @@ open FStar.PredicateExtensionality
 open FStar.PropositionalExtensionality
 open FStar.Reader
 open FStar.Reflection
-open FStar.Relational.Comp
-open FStar.Relational.Relational
-open FStar.Relational.State
 open FStar.Seq
 open FStar.Seq.Base
 open FStar.Seq.Properties
