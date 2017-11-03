@@ -1,5 +1,7 @@
 module Test
 
+let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
+
 let a n :nat = 1
 let f (ls:list nat) :nat =
   let rec aux (xs:list nat) :nat = a 0

@@ -1109,7 +1109,7 @@ and unembed_tactic_0':
   fun unembed_b  ->
     fun embedded_tac_b  ->
       let uu____2457 = unembed_tactic_0 unembed_b embedded_tac_b in
-      FStar_All.pipe_left (fun _0_64  -> FStar_Pervasives_Native.Some _0_64)
+      FStar_All.pipe_left (fun _0_63  -> FStar_Pervasives_Native.Some _0_63)
         uu____2457
 let report_implicits:
   FStar_Tactics_Types.proofstate ->

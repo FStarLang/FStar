@@ -703,7 +703,7 @@ let new_term_constant_and_tok_from_lid:
               let uu____2560 =
                 let uu____2563 = FStar_SMTEncoding_Util.mkApp (ftok, []) in
                 FStar_All.pipe_left
-                  (fun _0_40  -> FStar_Pervasives_Native.Some _0_40)
+                  (fun _0_39  -> FStar_Pervasives_Native.Some _0_39)
                   uu____2563 in
               (x, fname, uu____2560, FStar_Pervasives_Native.None) in
             Binding_fvar uu____2547 in
@@ -855,8 +855,8 @@ let try_lookup_free_var:
                              FStar_SMTEncoding_Term.mk_ApplyTF uu____2917
                                fuel in
                            FStar_All.pipe_left
-                             (fun _0_41  ->
-                                FStar_Pervasives_Native.Some _0_41)
+                             (fun _0_40  ->
+                                FStar_Pervasives_Native.Some _0_40)
                              uu____2916
                          else FStar_Pervasives_Native.Some t
                      | uu____2921 -> FStar_Pervasives_Native.Some t)
@@ -5301,9 +5301,9 @@ let encode_free_var:
                                                            (vname,
                                                              FStar_SMTEncoding_Term.Term_sort) in
                                                        FStar_All.pipe_left
-                                                         (fun _0_42  ->
+                                                         (fun _0_41  ->
                                                             FStar_Pervasives_Native.Some
-                                                              _0_42)
+                                                              _0_41)
                                                          uu____17470 in
                                                      push_free_var env1 lid
                                                        vname uu____17467 in
@@ -6053,9 +6053,9 @@ let encode_top_level_let:
                                               FStar_SMTEncoding_Util.mkApp
                                                 (g, [fuel_tm]) in
                                             FStar_All.pipe_left
-                                              (fun _0_43  ->
+                                              (fun _0_42  ->
                                                  FStar_Pervasives_Native.Some
-                                                   _0_43) uu____20533 in
+                                                   _0_42) uu____20533 in
                                           push_free_var env3 flid gtok
                                             uu____20530 in
                                         (((flid, f, ftok, g, gtok) :: gtoks),
@@ -7265,9 +7265,9 @@ and encode_sigelt':
                                             FStar_SMTEncoding_Util.mkApp
                                               (tname, []) in
                                           FStar_All.pipe_left
-                                            (fun _0_44  ->
+                                            (fun _0_43  ->
                                                FStar_Pervasives_Native.Some
-                                                 _0_44) uu____23796 in
+                                                 _0_43) uu____23796 in
                                         push_free_var env1 t tname
                                           uu____23793 in
                                       ([], uu____23792)
@@ -8537,7 +8537,7 @@ let encode_labels:
               | (l,uu____26164,uu____26165) ->
                   let uu____26174 =
                     FStar_All.pipe_left
-                      (fun _0_45  -> FStar_SMTEncoding_Term.Echo _0_45)
+                      (fun _0_44  -> FStar_SMTEncoding_Term.Echo _0_44)
                       (FStar_Pervasives_Native.fst l) in
                   let uu____26175 =
                     let uu____26178 =

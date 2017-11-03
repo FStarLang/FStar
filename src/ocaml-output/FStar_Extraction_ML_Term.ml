@@ -965,8 +965,8 @@ let rec extract_one_pat:
                               FStar_Extraction_ML_Util.mlconst_of_const
                                 p.FStar_Syntax_Syntax.p i in
                             FStar_All.pipe_left
-                              (fun _0_45  ->
-                                 FStar_Extraction_ML_Syntax.MLE_Const _0_45)
+                              (fun _0_44  ->
+                                 FStar_Extraction_ML_Syntax.MLE_Const _0_44)
                               uu____2917 in
                           FStar_All.pipe_left
                             (FStar_Extraction_ML_Syntax.with_ty
