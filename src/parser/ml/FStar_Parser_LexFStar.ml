@@ -190,7 +190,7 @@ let rec mknewline n lexbuf =
   if n = 0 then ()
   else (L.new_line lexbuf; mknewline (n-1) lexbuf)
 
-let clean_number x = String.strip ~chars:"uzyslLUnINZ" x
+let clean_number x = String.strip ~chars:"uzyslLUnIN" x
 let comments : (string * FStar_Range.range) list ref = ref []
 
 let flush_comments () =

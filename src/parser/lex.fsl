@@ -45,7 +45,7 @@ let trim_right_char s c =
 
 let stripped_integer lexbuf =
   let s = ulexeme lexbuf in
-  List.fold_left trim_right_char s ['l'; 'L'; 'z'; 'y'; 's'; 'u'; 'U'; 'Z']
+  List.fold_left trim_right_char s ['l'; 'L'; 'z'; 'y'; 's'; 'u'; 'U']
 
 let inline trim_and_check_range lexbuf (check: string -> 'a) (max: int64) (descr: string): string * bool =
   let s = stripped_integer lexbuf in
@@ -166,7 +166,6 @@ let uint32 = any_integer unsigned 'l'
 let int64 = any_integer 'L'
 let uint64 = any_integer unsigned 'L'
 let char8 = any_integer 'z'
-let char_unicode = any_integer 'Z'
 
 let floatp = digit+ '.' digit*
 let floate = digit+ ('.' digit* )? ('e'| 'E') ['+' '-']? digit+
@@ -247,8 +246,6 @@ rule token args = parse
      { let n = Util.int_of_string (trim_left lexbuf 2) in
      mknewline (n - !lc) lexbuf;
        cpp_filename args lexbuf }
- | char_unicode
-  { CHAR (Util.char_of_int (Util.int_of_string (trim_and_check_range_u lexbuf uint32 "unicode character"))) }
  | int8
   { INT8 (trim_and_check_range lexbuf int8 0x80L "8-bit signed integer") }
  | (uint8 | char8)
