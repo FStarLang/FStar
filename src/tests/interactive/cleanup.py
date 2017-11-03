@@ -11,11 +11,12 @@ Usage: python2 cleanup.py fname.clean < fname.dirty
 import json
 import sys
 import re
+import os
 
 def cleanup_json(js):
     if isinstance(js, dict):
         if "fname" in js:
-            js["fname"] = js["fname"].replace('\\', '/')
+            js["fname"] = os.path.basename(js["fname"].replace('\\', '/'))
         for v in js.itervalues():
             cleanup_json(v)
     elif isinstance(js, list):
