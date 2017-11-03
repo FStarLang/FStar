@@ -746,15 +746,16 @@ let mk_letbinding lbname univ_vars typ eff def =
      lbeff=eff;
      lbdef=def}
 
-let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
-    let def = match recs, univ_vars with
-        | None, _
-        | _, [] -> def
-        | Some fvs, _ ->
-          let universes = univ_vars |> List.map U_name in
-          let inst = fvs |> List.map (fun fv -> fv.fv_name.v, universes) in
-          FStar.Syntax.InstFV.instantiate inst def
-    in
+let close_univs_and_mk_letbinding (* recs *) lbname univ_vars typ eff def =
+(* AR: no need to instantiate here *)
+//    let def = match recs, univ_vars with
+//        | None, _
+//        | _, [] -> def
+//        | Some fvs, _ ->
+//          let universes = univ_vars |> List.map U_name in
+//          let inst = fvs |> List.map (fun fv -> fv.fv_name.v, universes) in
+//          FStar.Syntax.InstFV.instantiate inst def
+//    in
     let typ = Subst.close_univ_vars univ_vars typ in
     let def = Subst.close_univ_vars univ_vars def in
     mk_letbinding lbname univ_vars typ eff def
@@ -1221,7 +1222,6 @@ let unthunk_lemma_post t =
 let action_as_lb eff_lid a =
   let lb =
     close_univs_and_mk_letbinding
-      None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
       (Inr (lid_as_fv a.action_name Delta_equational None))
       a.action_univs
