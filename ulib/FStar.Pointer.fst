@@ -39,10 +39,10 @@ let includes_gcell_gen
   (#length: array_length_t)
   (#value: typ)
   (q: pointer (TArray length value))
-  (i: UInt32.t)
+  (i: UInt32.t{includes p q /\ UInt32.v i < UInt32.v length})
 : Lemma
-  (requires (includes p q /\ UInt32.v i < UInt32.v length))
-  (ensures (UInt32.v i < UInt32.v length /\ includes p (gcell q i)))
+  (requires True)
+  (ensures (includes p (gcell q i)))
   [SMTPat (includes p (gcell q i))]
 = includes_gcell q i;
   includes_trans p q (gcell q i)
@@ -169,10 +169,10 @@ let loc_disjoint_gcell_r
   (#value: typ)
   (#len: array_length_t)
   (q: pointer (TArray len value))
-  (i: UInt32.t)
+  (i: UInt32.t{UInt32.v i < UInt32.v len /\ loc_disjoint p (loc_pointer q)})
 : Lemma
-  (requires (UInt32.v i < UInt32.v len /\ loc_disjoint p (loc_pointer q)))
-  (ensures (UInt32.v i < UInt32.v len /\ loc_disjoint p (loc_pointer (gcell q i))))
+  (requires True)
+  (ensures (loc_disjoint p (loc_pointer (gcell q i))))
   [SMTPat (loc_disjoint p (loc_pointer (gcell q i)))]
 = loc_disjoint_includes p (loc_pointer q) p (loc_pointer (gcell q i))
 
@@ -181,10 +181,10 @@ let loc_disjoint_gcell_l
   (#value: typ)
   (#len: array_length_t)
   (q: pointer (TArray len value))
-  (i: UInt32.t)
+  (i: UInt32.t{UInt32.v i < UInt32.v len /\ loc_disjoint (loc_pointer q) p})
 : Lemma
-  (requires (UInt32.v i < UInt32.v len /\ loc_disjoint (loc_pointer q) p))
-  (ensures (UInt32.v i < UInt32.v len /\ loc_disjoint (loc_pointer (gcell q i)) p))
+  (requires True)
+  (ensures (loc_disjoint (loc_pointer (gcell q i)) p))
   [SMTPat (loc_disjoint (loc_pointer (gcell q i)) p)]
 = loc_disjoint_sym (loc_pointer q) p;
   loc_disjoint_gcell_r p q i;
@@ -238,10 +238,10 @@ let loc_disjoint_gpointer_of_buffer_cell_r
   (l: loc)
   (#t: typ)
   (b: buffer t)
-  (i: UInt32.t)
+  (i: UInt32.t{UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint l (loc_buffer b)})
 : Lemma
-  (requires (UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint l (loc_buffer b)))
-  (ensures (UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint l (loc_pointer (gpointer_of_buffer_cell b i))))
+  (requires True)
+  (ensures (loc_disjoint l (loc_pointer (gpointer_of_buffer_cell b i))))
   [SMTPat (loc_disjoint l (loc_pointer (gpointer_of_buffer_cell b i)))]
 = loc_disjoint_includes l (loc_buffer b) l (loc_pointer (gpointer_of_buffer_cell b i))
 
@@ -249,10 +249,10 @@ let loc_disjoint_gpointer_of_buffer_cell_l
   (l: loc)
   (#t: typ)
   (b: buffer t)
-  (i: UInt32.t)
+  (i: UInt32.t{UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint (loc_buffer b) l})
 : Lemma
-  (requires (UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint (loc_buffer b) l))
-  (ensures (UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint (loc_pointer (gpointer_of_buffer_cell b i)) l))
+  (requires True)
+  (ensures (loc_disjoint (loc_pointer (gpointer_of_buffer_cell b i)) l))
   [SMTPat (loc_disjoint (loc_pointer (gpointer_of_buffer_cell b i)) l)]
 = loc_disjoint_includes (loc_buffer b) l (loc_pointer (gpointer_of_buffer_cell b i)) l
 
@@ -350,14 +350,10 @@ let buffer_includes_gsub_r_gen
   (b0: buffer t)
   (b: buffer t)
   (i: UInt32.t)
-  (len: UInt32.t)
+  (len: UInt32.t{UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b)})
 : Lemma
-  (requires (
-    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
-    buffer_includes b0 b
-  ))
+  (requires (buffer_includes b0 b))
   (ensures (
-    UInt32.v i + UInt32.v len <= UInt32.v (buffer_length b) /\
     buffer_includes b0 (gsub_buffer b i len)
   ))
   [SMTPat (buffer_includes b0 (gsub_buffer b i len))]

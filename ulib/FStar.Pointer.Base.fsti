@@ -1284,15 +1284,11 @@ let gpointer_of_buffer_cell_gsub_buffer'
   (b: buffer t)
   (i1: UInt32.t)
   (len: UInt32.t)
-  (i2: UInt32.t)
+  (i2: UInt32.t{UInt32.v i1 + UInt32.v len <= UInt32.v (buffer_length b) /\
+	        UInt32.v i2 < UInt32.v len})
 : Lemma
-  (requires (
-    UInt32.v i1 + UInt32.v len <= UInt32.v (buffer_length b) /\
-    UInt32.v i2 < UInt32.v len
-  ))
+  (requires True)
   (ensures (
-    UInt32.v i1 + UInt32.v len <= UInt32.v (buffer_length b) /\
-    UInt32.v i2 < UInt32.v len /\
     gpointer_of_buffer_cell (gsub_buffer b i1 len) i2 == gpointer_of_buffer_cell b FStar.UInt32.(i1 +^ i2)
   ))
   [SMTPat (gpointer_of_buffer_cell (gsub_buffer b i1 len) i2)]
@@ -1852,10 +1848,10 @@ let loc_disjoint_gpointer_of_buffer_cell_r
   (l: loc)
   (#t: typ)
   (b: buffer t)
-  (i: UInt32.t)
+  (i: UInt32.t{UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint l (loc_buffer b)})
 : Lemma
-  (requires (UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint l (loc_buffer b)))
-  (ensures (UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint l (loc_pointer (gpointer_of_buffer_cell b i))))
+  (requires True)
+  (ensures (loc_disjoint l (loc_pointer (gpointer_of_buffer_cell b i))))
   [SMTPat (loc_disjoint l (loc_pointer (gpointer_of_buffer_cell b i)))]
 = loc_disjoint_includes l (loc_buffer b) l (loc_pointer (gpointer_of_buffer_cell b i))
 
@@ -1863,10 +1859,10 @@ let loc_disjoint_gpointer_of_buffer_cell_l
   (l: loc)
   (#t: typ)
   (b: buffer t)
-  (i: UInt32.t)
+  (i: UInt32.t{UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint (loc_buffer b) l})
 : Lemma
-  (requires (UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint (loc_buffer b) l))
-  (ensures (UInt32.v i < UInt32.v (buffer_length b) /\ loc_disjoint (loc_pointer (gpointer_of_buffer_cell b i)) l))
+  (requires True)
+  (ensures (loc_disjoint (loc_pointer (gpointer_of_buffer_cell b i)) l))
   [SMTPat (loc_disjoint (loc_pointer (gpointer_of_buffer_cell b i)) l)]
 = loc_disjoint_includes (loc_buffer b) l (loc_pointer (gpointer_of_buffer_cell b i)) l
 
