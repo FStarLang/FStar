@@ -239,26 +239,3 @@ let equal_refl #a s1 s2 = ()
 let reveal_length #a s = ()
 let reveal_index #a s i = ()
 let reveal_append #a s1 s2 = ()
-
-// (* Properties of [append] *)
-
-// abstract let append_assoc
-//   (#a: Type)
-//   (s1 s2 s3: seq a)
-// : Lemma
-//   (ensures (append (append s1 s2) s3 == append s1 (append s2 s3)))
-// = List.append_assoc (MkSeq?.l s1) (MkSeq?.l s2) (MkSeq?.l s3)
-
-// abstract let append_empty_l
-//   (#a: Type)
-//   (s: seq a)
-// : Lemma
-//   (ensures (append createEmpty s == s))
-// = List.append_nil_l (MkSeq?.l s)
-
-// abstract let append_empty_r
-//   (#a: Type)
-//   (s: seq a)
-// : Lemma
-//   (ensures (append s createEmpty == s))
-// = List.append_l_nil (MkSeq?.l s)

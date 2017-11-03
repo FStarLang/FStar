@@ -28,6 +28,13 @@ let last
   : Tot a
   = s.(length s - 1)
 
+let rec to_list
+   (#a:Type)
+   (s:seq a)
+  : Tot (list a) (decreases (length s))
+  = if length s = 0 then []
+    else head s::to_list (tail s)
+
 let split
     (#a:Type)
     (s:seq a)
@@ -129,17 +136,10 @@ let rec find_r
          if f last then Some last
          else find_r f prefix
 
+/// for_all: Tests if the predicate is true on all elements
 let for_all
     (#a:Type)
     (f:(a -> Tot bool))
     (l:seq a)
   : Tot bool
   = None? (find_l (fun i -> not (f i)) l)
-
-let rec to_list
-   (#a:Type)
-   (s:seq a)
-  : Tot (list a) (decreases (length s))
-  = if length s = 0 then []
-    else head s::to_list (tail s)
-
