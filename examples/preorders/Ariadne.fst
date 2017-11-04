@@ -63,9 +63,9 @@ type enclave = mref counter preorder'
 /// An encrypted backup, maintained by the host This is compatible
 /// with our ideal interface for authenticated encryption.
 
-let saved_pred (e:enclave) (s:record) = fun h -> h `contains` e /\ saved (sel h e) s
+let saved_backup (e:enclave) (s:record) = fun h -> h `contains` e /\ saved (sel h e) s
 
-type entry (e:enclave) = s:record{witnessed (saved_pred e s)}
+type entry (e:enclave) = s:record{witnessed (saved_backup e s)}
 
 let prefix_of (#e:enclave) (l1:list (entry e)) (l2:list (entry e)) =
   l1 == l2 \/ strict_prefix_of l1 l2
@@ -73,8 +73,8 @@ let prefix_of (#e:enclave) (l1:list (entry e)) (l2:list (entry e)) =
 let backup_pre' (e:enclave) :relation (list (entry e)) = fun l1 l2 -> l1 `prefix_of` l2
 let backup_pre (e:enclave) :preorder (list (entry e)) = backup_pre' e
 
-type backup (e:enclave) = mref (list (entry e)) (backup_pre e) // could be finer
-
+type backup (e:enclave) = mref (list (entry e)) (backup_pre e) // in the POPL'18 paper we consider lists of length 1 
+                                                               // for simplicity, i.e., there backup = entry
 noeq type protected = 
   | Protect: e:enclave -> b:backup e -> protected
 
@@ -84,7 +84,7 @@ val create: v: state -> ST protected
 let create v = 
   let e = alloc (Counter 0 (Ok v)) in 
   let r = (0,v) in
-  witness (saved_pred e r);
+  witness (saved_backup e r);
   let b = alloc [r] in 
   Protect e b 
 
@@ -105,7 +105,7 @@ let step0 c w =
   | Writing u v
   | Crash u v -> if w=u then Crash w v else Crash w u
   
-val seal: p:protected -> w:state -> All unit 
+val save: p:protected -> w:state -> All unit 
 (requires fun h0 -> 
   let Protect e b = p in 
   pre0 (sel h0 e).c w)
@@ -117,13 +117,13 @@ val seal: p:protected -> w:state -> All unit
   //let log1 = append log0 (n+1,w) in
   sel h1 e == Counter n c1))
 
-let seal p w = 
+let save p w = 
   let Protect e b = p in
   let Counter n c0 = read e in
   let c1 = step0 c0 w in
   write e (Counter n c1); 
   let r = (n+1,w) in 
-  witness (saved_pred e r);
+  witness (saved_backup e r);
   let log0 = read b in 
   write b (r::log0)
 
@@ -166,7 +166,7 @@ val store: p:protected -> w:state -> All unit
   
 let store p w = 
   let Protect e b = p in 
-  seal p w; 
+  save p w; 
   incr e w
 
 /// recovery does not need *any* precondition, and leads to an Ok
@@ -194,10 +194,10 @@ let recover p last_saved =
   let Counter n c0 = read e in 
   if m = n  // authenticated decryption
   then ( 
-    recall (saved_pred e last_saved);
-    seal p w;
+    recall (saved_backup e last_saved);
+    save p w;
     incr e w;
-    seal p w;
+    save p w;
     incr e w;
     Some w)
   else None
