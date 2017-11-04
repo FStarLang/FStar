@@ -82,13 +82,13 @@ noeq type protected =
 
 val create: v: state -> ST protected
   (requires fun h0 -> True)
-  (ensures fun h0 (Protect e b) h1 -> sel h1 e == Counter 0 (Ok v))
+  (ensures fun h0 (Protect c b) h1 -> sel h1 c == Counter 0 (Ok v))
 let create v = 
-  let e = alloc (Counter 0 (Ok v)) in 
+  let c = alloc (Counter 0 (Ok v)) in 
   let r = (0,v) in
-  witness (saved_backup e r);
+  witness (saved_backup c r);
   let b = alloc [r] in 
-  Protect e b 
+  Protect c b 
 
 // Privileged code calling back into fallible host code: this may
 // fail, in which case we still conservatively assume the host gets
