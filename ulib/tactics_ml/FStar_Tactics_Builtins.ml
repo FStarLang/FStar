@@ -124,11 +124,11 @@ let divide: int -> 'a E.tactic -> 'b E.tactic -> ('a * 'b) E.tactic = fun n f g 
 let __seq (t1: unit __tac) (t2: unit __tac): unit __tac = from_tac_2 B.seq (to_tac_0 t1) (to_tac_0 t2)
 let seq: unit E.tactic -> unit E.tactic -> unit -> unit __tac = fun f  -> fun g  -> fun () -> __seq (E.reify_tactic f) (E.reify_tactic g)
 
-let __exact (t: RT.term): unit __tac = from_tac_1 B.exact t
-let exact: RT.term E.tactic -> unit -> unit __tac =
-  fun t  -> fun () -> fun ps ->
+let __t_exact b1 b2 (t: RT.term): unit __tac = from_tac_3 B.t_exact b1 b2 t
+let t_exact: bool -> bool -> RT.term E.tactic -> unit -> unit __tac =
+  fun b1 b2 t  -> fun () -> fun ps ->
     match (t ()) ps with
-    | Success (a, state) -> __exact a state
+    | Success (a, state) -> __t_exact b1 b2 a state
     | Failed (s, state) -> Failed (s, state)
 
 let __apply (t: RT.term): unit __tac = from_tac_1 (B.apply true) t
