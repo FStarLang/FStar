@@ -65,18 +65,20 @@ type enclave = mref counter preorder'
 
 let saved_backup (e:enclave) (s:record) = fun h -> h `contains` e /\ saved (sel h e) s
 
-type entry (e:enclave) = s:record{witnessed (saved_backup e s)}
+type backup (e:enclave) = s:record{witnessed (saved_backup e s)}
 
-let prefix_of (#e:enclave) (l1:list (entry e)) (l2:list (entry e)) =
+let prefix_of (#e:enclave) (l1:list (backup e)) (l2:list (backup e)) =
   l1 == l2 \/ strict_prefix_of l1 l2
   
-let backup_pre' (e:enclave) :relation (list (entry e)) = fun l1 l2 -> l1 `prefix_of` l2
-let backup_pre (e:enclave) :preorder (list (entry e)) = backup_pre' e
+let backups_pre' (e:enclave) :relation (list (backup e)) = fun l1 l2 -> l1 `prefix_of` l2
+let backups_pre (e:enclave) :preorder (list (backup e)) = backups_pre' e
 
-type backup (e:enclave) = mref (list (entry e)) (backup_pre e) // in the POPL'18 paper we consider lists of length 1 
-                                                               // for simplicity, i.e., there backup = entry
+type backups (e:enclave) = mref (list (backup e)) (backups_pre e) //compared to the general situation described in the
+                                                                 //POPL'18 paper, for simplicity, here we consider only  
+                                                                 //trivial backup keys, i.e., key c = backups c; 
+                                                                 //we omit the auth_encrypt and auth_decrypt functions
 noeq type protected = 
-  | Protect: e:enclave -> b:backup e -> protected
+  | Protect: e:enclave -> b:backups e -> protected
 
 val create: v: state -> ST protected
   (requires fun h0 -> True)
@@ -172,7 +174,7 @@ let store p w =
 /// recovery does not need *any* precondition, and leads to an Ok
 /// state (unless it crashes). We could be more precise, e.g. we never
 /// get None on honest inputs.
-val recover: p:protected -> last_saved:entry (Protect?.e p) -> All (option state)
+val recover: p:protected -> last_saved:backup (Protect?.e p) -> All (option state)
 (requires fun h0 -> True)
 (ensures fun h0 r h1 -> 
   let Protect e b = p in
