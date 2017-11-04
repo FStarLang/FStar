@@ -36,6 +36,7 @@ type implicits = Env.implicits
 // Beta reduce
 let normalize s e t = N.normalize_with_primitive_steps FStar.Reflection.Interpreter.reflection_primops s e t
 let bnorm e t = normalize [] e t
+let tts = N.term_to_string
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result
@@ -510,39 +511,36 @@ let refine_intro : tac<unit> = wrap_err "refine_intro" <|
         bind dismiss (fun _ ->
         add_goals [g1;g2])))
 
-let __exact_now force_guard (t:term) : tac<unit> =
+let __exact_now set_expected_typ force_guard (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
-    bind (__tc goal.context t) (fun (t, typ, guard) ->
+    let env = if set_expected_typ
+              then Env.set_expected_typ goal.context goal.goal_ty
+              else goal.context
+    in
+    bind (__tc env t) (fun (t, typ, guard) ->
     bind (if force_guard
           then must_trivial goal.context guard
           else add_goal_from_guard "__exact typing" goal.context guard goal.opts
           ) (fun _ ->
+    mlog (fun () -> BU.print2 "exact: unifying %s and %s\n" (tts goal.context typ)
+                                                            (tts goal.context goal.goal_ty)) (fun _ ->
     if do_unify goal.context typ goal.goal_ty
     then solve goal t
     else fail3 "%s : %s does not exactly solve the goal %s"
                     (N.term_to_string goal.context t)
-                    (N.term_to_string goal.context (bnorm goal.context typ))
-                    (N.term_to_string goal.context goal.goal_ty))))
+                    (N.term_to_string goal.context typ)
+                    (N.term_to_string goal.context goal.goal_ty)))))
 
-let __exact force_guard t : tac<unit> =
-    bind (trytac' (__exact_now force_guard t)) (function
+let t_exact set_expected_typ force_guard tm : tac<unit> = wrap_err "exact" <|
+    mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
+    bind (trytac' (__exact_now set_expected_typ force_guard tm)) (function
     | Inr r -> ret r
     | Inl e ->
     bind (trytac' (bind (norm [EMB.Delta]) (fun _ ->
                    bind refine_intro (fun _ ->
-                   __exact_now force_guard t)))) (function
+                   __exact_now set_expected_typ force_guard tm)))) (function
     | Inr r -> ret r
-    | Inl _ -> fail e)) // keep original error
-
-let exact (tm:term) : tac<unit> = wrap_err "exact" <|
-    mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
-    focus (__exact true tm)
-    )
-
-let exact_guard (tm:term) : tac<unit> = wrap_err "exact_guard" <|
-    mlog (fun () -> BU.print1 "exact_guard: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
-    focus (__exact false tm)
-    )
+    | Inl _ -> fail e))) // keep original error
 
 let uvar_free_in_goal (u:uvar) (g:goal) =
     if g.is_guard then false else
@@ -574,9 +572,10 @@ exception NoUnif
 //
 // without asking for ?u first, which will most likely be instantiated when
 // solving any of these two goals. In any case, if ?u is not solved, we fail afterwards.
+// TODO: this should probably be made into a user tactic
 let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
     bind cur_goal (fun goal ->
-    bind (trytac (__exact true tm)) (function
+    bind (trytac (t_exact false true tm)) (function
     | Some r -> ret r // if tm is a solution, we're done
     | None ->
         // exact failed, try to instantiate more arguments
