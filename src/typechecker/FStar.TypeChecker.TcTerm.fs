@@ -318,7 +318,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_meta(e, Meta_desugared Meta_smt_pat) ->
     let e, c, g = tc_tot_or_gtot_term env e in
     let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant
-    e, c, g //strip the Meta going up
+    mk (Tm_meta (e, Meta_desugared Meta_smt_pat)) None top.pos, c, g
 
   | Tm_meta(e, Meta_pattern pats) ->
     let t, u = U.type_u () in
