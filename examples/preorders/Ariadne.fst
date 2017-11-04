@@ -21,31 +21,30 @@ open FStar.ST
 open FStar.MRef
 
 
-type index = nat // counter values (no overflow detection yet)
+type index = nat    // counter values (no overflow detection yet)
 type state = string // the type of the enclave state; reset on crash.
 
-type record = index * state // the type of records protected by authenticated encryption
+type record = index * state // the type of backup records protected by authenticated encryption
 
-// For the proof, we define a small state machine and its transitions
-// when sealing and incrementing.
-
+// A small ghost state machine we use to capture the intermediate steps in the protocol.
 type case = 
   | Ok: saved: state -> case
   | Recover: read: state -> other: state -> case
   | Writing: written: state -> old: state -> case
   | Crash: read: state -> other: state -> case 
 
+// Packaging the hardware-based counter with a ghost state machine.
 type counter =
   | Counter: 
     n: index -> // counter (monotonic)
-    c: case -> // ghost state; saves quantifiers
+    c: case ->  // ghost state of the counter
     counter 
 
-// A monotonic over-approximation of the encrypted records the host may have
+// A monotonic over-approximation of the encrypted backup records the host may have.
 val saved: counter -> record -> Type0
 let saved (Counter n c) s = 
   let m,u = s in 
-  (m < n) \/
+  (m < n) \/  // an old state; authentication of m will fail, so nothing to say about it
   (m = n /\ (match c with 
   | Ok v -> u=v
   | Recover w v 
@@ -58,10 +57,17 @@ let saved (Counter n c) s =
 
 let preorder' :preorder counter = fun (x0:counter) (x1:counter) -> forall s. saved x0 s ==> saved x1 s
 
+// A monotonic view of the hardware-based counter.
 type ctr = mref counter preorder' 
 
-// An encrypted backup, maintained by the host This is compatible
-// with our ideal interface for authenticated encryption.
+// An encrypted backup, maintained by the host, and protected by a
+// hardware-based encryption key. Compared to the general situation
+// described in the POPL'18 paper, for simplicity and in order to
+// focus on the state continuity property of Ariadne, we consider here
+// only trivial backup keys, i.e., key c = unit * log c ≡ log c, where
+// log c is the type of monotonic ghost logs of previously saved backups 
+// we attach to backup every key. As a result, in the following we 
+// also omit the authenticated encryption and decryption functions.
 
 let saved_backup (c:ctr) (s:record) = fun h -> h `contains` c /\ saved (sel h c) s
 
@@ -70,29 +76,31 @@ type backup (c:ctr) = s:record{witnessed (saved_backup c s)}
 let prefix_of (#c:ctr) (l1:list (backup c)) (l2:list (backup c)) =
   l1 == l2 \/ strict_prefix_of l1 l2
   
-let backups_pre' (c:ctr) :relation (list (backup c)) = fun l1 l2 -> l1 `prefix_of` l2
-let backups_pre (c:ctr) :preorder (list (backup c)) = backups_pre' c
+let log_pre' (c:ctr) :relation (list (backup c)) = fun l1 l2 -> l1 `prefix_of` l2
+let log_pre (c:ctr) :preorder (list (backup c)) = log_pre' c
 
-type backups (c:ctr) = mref (list (backup c)) (backups_pre c) // Compared to the general situation described in the
-                                                              // POPL'18 paper, for simplicity, here we consider only  
-                                                              // trivial backup keys, i.e., key c = backups c. Thus, 
-                                                              // we omit the auth_encrypt and auth_decrypt functions
+type log (c:ctr) = mref (list (backup c)) (log_pre c) 
+
+type key (c:ctr) = log c
+
+// Private datatype constructor for modeling hardware protection; packaging 
+// the enclave capabilities to use the monotonic counter c and backup key k.
 noeq type protected = 
-  | Protect: c:ctr -> b:backups c -> protected
+  | Protect: c:ctr -> k:key c -> protected
 
 val create: v: state -> ST protected
   (requires fun h0 -> True)
-  (ensures fun h0 (Protect c b) h1 -> sel h1 c == Counter 0 (Ok v))
+  (ensures fun h0 (Protect c _) h1 -> sel h1 c == Counter 0 (Ok v))
 let create v = 
   let c = alloc (Counter 0 (Ok v)) in 
   let r = (0,v) in
   witness (saved_backup c r);
-  let b = alloc [r] in 
-  Protect c b 
+  let k = alloc [r] in 
+  Protect c k
 
 // Privileged code calling back into fallible host code: this may
 // fail, in which case we still conservatively assume the host gets
-// the sealed record (although we can't rely on it for recovery)
+// the saved record (although we can't rely on it for recovery).
 
 let pre0 c w = 
   match c with 
@@ -109,27 +117,29 @@ let step0 c w =
   
 val save: p:protected -> w:state -> All unit 
 (requires fun h0 -> 
-  let Protect c b = p in 
+  let Protect c _ = p in 
   let Counter _ c0 = sel h0 c in 
   pre0 c0 w)
 (ensures fun h0 r h1 -> 
-  let Protect c b = p in
+  let Protect c _ = p in
   let Counter n c0 = sel h0 c in 
   pre0 c0 w /\ (
   let c1 = step0 c0 w in
   sel h1 c == Counter n c1))
 
 let save p w = 
-  let Protect c b = p in
+  let Protect c k = p in
   let Counter n c0 = read c in
   let c1 = step0 c0 w in
   write c (Counter n c1); 
   let r = (n+1,w) in 
   witness (saved_backup c r);
-  let log0 = read b in 
-  write b (r::log0)
+  let log0 = read k in 
+  write k (r::log0)
 
-// Incrementing the counter is privileged code; it may fail before or after incrementing c
+// Incrementing the counter is privileged code; 
+// it may fail before or after incrementing c.
+
 let pre1 c = Writing? c \/ Crash? c
 val step1: c:case {pre1 c} -> case
 let step1 = function
@@ -150,34 +160,35 @@ val incr: c:ctr -> w:state -> All unit
   | V _ ->  sel h1 c ==  v1
   | _ -> sel h1 c == v0 \/ sel h1 c == v1 ))
 
-// A sample implementation of incr, with sample failure
+// A sample implementation of incr, with a sample failure.
 let incr c w = 
   let x = read c in
   let Counter n0 c0 = x in 
   if n0 = 3 then failwith "crash" else
   write c (Counter (n0+1) (step1 c0))
 
-// storing a checkpoint requires a clean state 
+// Storing a backup; requires a clean state.
 val store: p:protected -> w:state -> All unit
 (requires fun h0 -> 
-  let Protect c b = p in 
+  let Protect c _ = p in 
   let Counter _ c0 = sel h0 c in
   Ok? c0)
 (ensures fun h0 r h1 -> 
-  let Protect c b = p in
+  let Protect c _ = p in
   let Counter _ c1 = sel h1 c in 
   V? r ==> c1 = Ok w)
   
 let store p w = 
-  let Protect c b = p in 
+  let Protect c _ = p in 
   save p w; 
   incr c w
 
-// recovery does not need *any* precondition, and leads to an Ok state (unless it crashes)
+// Recovering the state from a backuo; does not need *any*  
+// precondition, and leads to an Ok state (unless it crashes).
 val recover: p:protected -> last_saved:backup (Protect?.c p) -> All (option state)
 (requires fun h0 -> True)
 (ensures fun h0 r h1 -> 
-  let Protect c b = p in
+  let Protect c _ = p in
   let Counter _ c0 = sel h0 c in 
   let Counter _ c1 = sel h1 c in 
   match r with 
@@ -191,10 +202,10 @@ val recover: p:protected -> last_saved:backup (Protect?.c p) -> All (option stat
   )
 
 let recover p last_saved = 
-  let Protect c b = p in 
+  let Protect c _ = p in 
   let m, w = last_saved in
   let Counter n c0 = read c in 
-  if m = n  // authenticated decryption
+  if m = n  // authenticated decryption (see earlier comments on backup keys)
   then ( 
     recall (saved_backup c last_saved);
     save p w;
@@ -204,14 +215,16 @@ let recover p last_saved =
     Some w)
   else None
 
+
+// A test attack on the protocol.
 type trivial 'a = 'a -> All unit (requires fun h0 -> True) (ensures fun h0 _ h1 -> True)
 val example: trivial (trivial ctr)
 let example attack = 
   let p = create "hello" in
-  let Protect c b = p in
+  let Protect c k = p in
   store p "world";
   attack c;
-  match read b with 
+  match read k with 
   | r::_ -> 
     (match recover p r with 
     | Some _ -> store p "!\n"
