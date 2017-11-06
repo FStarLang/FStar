@@ -437,7 +437,7 @@ and translate_let env flavor flags lb: option<decl> =
 
   | { mllb_name = name; mllb_tysc = ts } ->
       // TODO JP: figure out what exactly we're hitting here...?
-      BU.print1_warning "Not translating definition for %s (and possibly others)\n" name;
+      BU.print1_warning "Not translating definition for %s\n" name;
       begin match ts with
       | Some (idents, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
@@ -477,7 +477,7 @@ and translate_type_decl env ty: option<decl> =
 
   | (_, name, _mangled_name, _, _, _) ->
       // JP: TODO: figure out why and how this happens
-      BU.print1_warning "Not translating definition for %s (and possibly others)\n" name;
+      BU.print1_warning "Not translating type definition for %s\n" name;
       None
 
 and translate_type env t: typ =
