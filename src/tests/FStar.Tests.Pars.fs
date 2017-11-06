@@ -1,23 +1,26 @@
 ﻿#light "off"
 module FStar.Tests.Pars
-open FSharp.Compatibility.OCaml
+//open FSharp.Compatibility.OCaml
 open FStar
+open FStar.All
 open FStar.Range
 open FStar.Parser
 open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Errors
+open FStar.TypeChecker.Env
 module DsEnv = FStar.ToSyntax.Env
 module TcEnv = FStar.TypeChecker.Env
 module SMT = FStar.SMTEncoding.Solver
 module Tc = FStar.TypeChecker.Tc
 module TcTerm = FStar.TypeChecker.TcTerm
 module ToSyntax = FStar.ToSyntax.ToSyntax
+module BU = FStar.Util
 
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
-let tcenv_ref = ref None
-let test_mod_ref = ref (Some ({name=test_lid;
+let tcenv_ref: ref<option<env>> = mk_ref None
+let test_mod_ref = mk_ref (Some ({name=test_lid;
                                 declarations=[];
                                 exports=[];
                                 is_interface=false}))
@@ -64,33 +67,34 @@ let rec init () =
 open FStar.Parser.ParseIt
 let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
 
-let failed_to_parse s e =
-    match e with
-        | Err msg ->
-            printfn "Failed to parse %s\n%s\n" s msg;
-            exit -1
-        | Error(msg, r) ->
-            printfn "Failed to parse %s\n%s: %s\n" s (Range.string_of_range r) msg;
-            exit -1
-        | _ -> raise e
+// let failed_to_parse s e =
+//     match e with
+//         | Err msg ->
+//             printfn "Failed to parse %s\n%s\n" s msg;
+//             exit -1
+//         | Error(msg, r) ->
+//             printfn "Failed to parse %s\n%s: %s\n" s (Range.string_of_range r) msg;
+//             exit -1
+//         | _ -> raise e
 
 let pars s =
     try
           let tcenv = init() in
-          let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
-            lexbuf.EndPos <- {lexbuf.EndPos with
-            pos_fname= filename;
-            pos_cnum=0;
-            pos_lnum=1 } in
-          let filename,sr,fs = "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
-          let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
-          resetLexbufPos filename lexbuf;
-          let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
-          let lexer = LexFStar.token lexargs in
-          let t = Parser.Parse.term lexer lexbuf in
+          // let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
+          //   lexbuf.EndPos <- {lexbuf.EndPos with
+          //   pos_fname= filename;
+          //   pos_cnum=0;
+          //   pos_lnum=1 } in
+          // let filename,sr,fs = "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
+          // let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
+          // resetLexbufPos filename lexbuf;
+          // let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
+          // let lexer = LexFStar.token lexargs in
+          // let t = Parser.Parse.term lexer lexbuf in
+          let t = AST.mkAdmitMagic Range.dummyRange in
           ToSyntax.desugar_term tcenv.dsenv t
      with
-        | e when not ((Options.trace_error())) -> failed_to_parse s e
+        | e when not ((Options.trace_error())) -> raise e // failed_to_parse s e
 
 let tc s =
     let tm = pars s in
@@ -112,7 +116,7 @@ let pars_and_tc_fragment (s:string) =
           let n = get_err_count () in
           if n <> 0
           then (report ();
-                raise (Err (Util.format1 "%s errors were reported" (string_of_int n))))
+                raise (Err (BU.format1 "%s errors were reported" (string_of_int n))))
         with e -> report(); raise (Err ("tc_one_fragment failed: " ^s))
     with
-        | e when not ((Options.trace_error())) -> failed_to_parse s e
+        | e when not ((Options.trace_error())) -> raise e // failed_to_parse s e

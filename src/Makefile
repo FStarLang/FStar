@@ -91,7 +91,8 @@ FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --expose_interfaces --eager_inference --lax --M
 ALL_BOOT=$(addprefix boot/FStar., \
            Util.fsti List.fsti Bytes.fsti String.fsti BigInt.fsti \
 		   Pprint.fsti Parser.Parse.fsti \
-		   Tactics.Interpreter.fst Tactics.Interpreter.fsti)
+		   Tactics.Interpreter.fst Tactics.Interpreter.fsti \
+           Tests.Test.fst)
 
 boot/%.fsti: basic/boot/%.fsi | boot_dir
 	cp $^ $@
@@ -107,6 +108,10 @@ boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | 
 	cp $^ $@
 	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
 	$(SED) -i 's,^ *// *IN *F\* *:,,g' $@
+
+boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
+	cp $^ $@
+	$(SED) -i '/\/\/ *JUST *FSHARP */d' $@
 
 boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
 	echo "#light \"off\"" > $@
@@ -205,6 +210,10 @@ extract_solver: boot $(SOLVER_EXTRACTED_FILES)
 FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Universal.fs Interactive.CompletionTable.fs Interactive.Ide.fs Interactive.Legacy.fs Indent.fs Main.fs)
 extract_fstar: boot $(FSTAR_EXTRACTED_FILES)
 	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive.CompletionTable --extract_module FStar.Interactive.Ide --extract_module FStar.Interactive.Legacy --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
+
+TESTS_EXTRACTED_FILES=$(addprefix tests/, FStar.Tests.Pars.fs FStar.Tests.Util.fs FStar.Tests.Norm.fs FStar.Tests.Unif.fs) boot/FStar.Tests.Test.fst
+extract_tests: boot $(TESTS_EXTRACTED_FILES)
+	$(FSTARBOOT) $(TESTS_EXTRACTED_FILES) --extract_namespace FStar.Tests
 
 extract_typechecker: extract_rel extract_normalizer extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc
 
