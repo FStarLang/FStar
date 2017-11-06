@@ -288,8 +288,8 @@ open FStar.Syntax.Syntax
 let bv_as_mlident (x:bv): mlident =
   if Util.starts_with x.ppname.idText Ident.reserved_prefix
   || is_null_bv x || is_reserved x.ppname.idText
-  then x.ppname.idText ^ "_" ^ (string_of_int x.index)
-  else x.ppname.idText
+  then avoid_keyword <| x.ppname.idText ^ "_" ^ (string_of_int x.index)
+  else avoid_keyword <| x.ppname.idText
 
 let push_unit (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in
