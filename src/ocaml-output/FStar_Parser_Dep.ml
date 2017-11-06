@@ -603,7 +603,10 @@ let collect_one:
              true)
         | uu____2422 -> false in
       let record_open_module let_open lid =
-        let uu____2432 = add_dependence_edge original_map lid in
+        let uu____2432 =
+          (let_open && (add_dependence_edge working_map lid)) ||
+            ((Prims.op_Negation let_open) &&
+               (add_dependence_edge original_map lid)) in
         if uu____2432
         then true
         else

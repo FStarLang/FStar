@@ -386,7 +386,16 @@ let collect_one
       //use the original_map here
       //since the working_map will resolve lid while accounting
       //for already opened namespaces
-      if add_dependence_edge original_map lid then true
+      //if let_open, then this is the form `UInt64.( ... )`
+      //             where UInt64 can resolve to FStar.UInt64
+      //           So, use the working map, accounting for opened namespaces
+      //Otherwise, this is the form `open UInt64`,
+      //           where UInt64 must resolve to either
+      //           a module or a namespace for F# compatibility
+      //           So, use the original map, disregarding opened namespaces
+      if (let_open     && add_dependence_edge working_map lid)
+      ||  (not let_open && add_dependence_edge original_map lid)
+      then true
       else begin
         if let_open then
            FStar.Errors.warn (range_of_lid lid)
