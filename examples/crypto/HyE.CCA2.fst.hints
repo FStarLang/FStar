@@ -1,10 +1,42 @@
 [
   "c‡Î‘G€áÑTøY’·'KÔ",
   [
-    [ "HyE.CCA2.__proj__Entry__item__c", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.CCA2.__proj__Entry__item__p", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.CCA2.__proj__PKey__item__region", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.CCA2.__proj__PKey__item__rawpk", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "HyE.CCA2.__proj__Entry__item__c",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0f459c1e80d3b046b4f5dd6b8081f7e9"
+    ],
+    [
+      "HyE.CCA2.__proj__Entry__item__p",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4c97ddcfd3d14a459778507047bbc28e"
+    ],
+    [
+      "HyE.CCA2.__proj__PKey__item__region",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4104ba7bf96129ce615197cacd456175"
+    ],
+    [
+      "HyE.CCA2.__proj__PKey__item__rawpk",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9a00bce47494b1fec51d6466b2cb1717"
+    ],
     [
       "HyE.CCA2.__proj__PKey__item__log",
       1,
@@ -14,10 +46,27 @@
         "@query", "proj_equation_HyE.CCA2.PKey_region",
         "projection_inverse_HyE.CCA2.PKey_region"
       ],
-      0
+      0,
+      "7fe100fc7e704995c7921dc40cbb1d3a"
     ],
-    [ "HyE.CCA2.__proj__SKey__item__raw", 1, 2, 1, [ "@query" ], 0 ],
-    [ "HyE.CCA2.__proj__SKey__item__pk", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "HyE.CCA2.__proj__SKey__item__raw",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b9764d1d683a12ea9f838038aa9eda75"
+    ],
+    [
+      "HyE.CCA2.__proj__SKey__item__pk",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2d7ebf5dc6b1976210a0e69c519ff4fd"
+    ],
     [
       "HyE.CCA2.keygen",
       1,
@@ -33,9 +82,11 @@
         "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "kinding_HyE.CCA2.pkey@tok", "kinding_HyE.CCA2.skey@tok",
+        "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_ffd890ccd7288c856f2f05ce06687083"
       ],
-      0
+      0,
+      "c622dc4f2620d8b773b55a4b12df6c07"
     ],
     [
       "HyE.CCA2.encrypt",
@@ -49,9 +100,11 @@
         "equation_HyE.RSA.plain", "fuel_guarded_inversion_HyE.CCA2.pkey",
         "function_token_typing_HyE.Ideal.ind_cca",
         "function_token_typing_HyE.RSA.cipher",
+        "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_d52cae8b8e1ca91e1679b9bdc9938557",
         "refinement_interpretation_HyE.CCA2_Tm_refine_1c6722903ddd7320ab2f1c0508d45292"
       ],
-      0
+      0,
+      "a421bdc20e35358de4b6c5cc03600d04"
     ],
     [
       "HyE.CCA2.decrypt",
@@ -64,7 +117,8 @@
         "equation_HyE.PlainPKE.t", "function_token_typing_HyE.AE.key",
         "kinding_FStar.Pervasives.Native.option@tok"
       ],
-      0
+      0,
+      "414c3651b4ec7f847c52eed0094992ae"
     ],
     [
       "HyE.CCA2.decrypt",
@@ -77,7 +131,8 @@
         "equation_Platform.Bytes.lbytes",
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
-      0
+      0,
+      "ae1e45e962273ad3d64d69d7d208c14e"
     ]
   ]
 ]

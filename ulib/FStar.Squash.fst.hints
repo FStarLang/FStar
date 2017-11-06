@@ -1,7 +1,15 @@
 [
   "tMm&nRf<ìóÄª\bãE2",
   [
-    [ "FStar.Squash.return_squash", 1, 2, 1, [ "@query" ], 0 ],
+    [
+      "FStar.Squash.return_squash",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "96a6a0180756d3951957975f4087e61f"
+    ],
     [
       "FStar.Squash.get_proof",
       1,
@@ -14,7 +22,8 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
-      0
+      0,
+      "83d92ab1f93e3ad89da5d11c55da078c"
     ],
     [
       "FStar.Squash.give_proof",
@@ -26,7 +35,8 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_typing"
       ],
-      0
+      0,
+      "ec3fd40c323ed751bc8b0399346169c5"
     ],
     [
       "FStar.Squash.proof_irrelevance",
@@ -38,9 +48,26 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "unit_inversion"
       ],
-      0
+      0,
+      "7d56a74eb9f5fdf4c6a1966f49b499e5"
     ],
-    [ "FStar.Squash.push_sum", 1, 2, 1, [ "@query" ], 0 ],
-    [ "FStar.Squash.squash_double_sum", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.Squash.push_sum",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ff612e591eec79aa098b4261eb998b98"
+    ],
+    [
+      "FStar.Squash.squash_double_sum",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d4e1c8445aaf3788072012e49cc213c2"
+    ]
   ]
 ]

@@ -18,8 +18,8 @@ type step : exp -> exp -> Type =
             step (EApp e1 e2) (EApp e1 e2')
 
 
-kind Relation (a:Type) = a -> a -> Type
-type multi (a:Type) (r:Relation a) : a -> a -> Type =
+type relation (a:Type) = a -> a -> Type
+type multi (a:Type) (r:relation a) : a -> a -> Type =
   | Multi_refl : x:a -> multi a r x x
   | Multi_step : x:a -> y:a -> z:a -> r x y -> multi a r y z -> multi a r x z
 type steps : exp -> exp -> Type = multi exp step

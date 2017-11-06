@@ -46,7 +46,9 @@ let definition_lids d =
         lids_of_let defs
     | Tycon(_, tys) ->
         tys |> List.collect (function
-                | TyconAbbrev(id, _, _, _), _ ->
+                | TyconAbbrev (id, _, _, _), _
+                | TyconRecord (id, _, _, _), _
+                | TyconVariant(id, _, _, _), _ ->
                   [Ident.lid_of_ids [id]]
                 | _ -> [])
     | _ -> []
@@ -137,7 +139,10 @@ let rec prefix_with_iface_decls
 
      | Val(x, t) ->
        //we have a 'val x' in the interface
-       //take impl as is, unless it is a let x, in which case prefix it with iface_hd
+       //take impl as is, unless it is a
+       //       let x (or a `type abbreviation x`)
+       //or an  inductive type x
+       //in which case prefix it with iface_hd
        let def_ids = definition_lids impl in
        let defines_x = Util.for_some (id_eq_lid x) def_ids in
        if not defines_x
@@ -241,7 +246,8 @@ let prefix_one_decl iface impl =
 //Top-level interface
 //////////////////////////////////////////////////////////////////////////
 module E = FStar.ToSyntax.Env
-let initialize_interface (mname:Ident.lid) (l:list<decl>) (env:E.env) : E.env =
+let initialize_interface (mname:Ident.lid) (l:list<decl>) : E.withenv<unit> =
+  fun (env:E.env) ->
     let decls =
         if Options.ml_ish()
         then ml_mode_check_initial_interface l
@@ -252,23 +258,25 @@ let initialize_interface (mname:Ident.lid) (l:list<decl>) (env:E.env) : E.env =
                                 (Ident.string_of_lid mname),
                    Ident.range_of_lid mname))
     | None ->
-      E.set_iface_decls env mname decls
+      (), E.set_iface_decls env mname decls
 
-let prefix_with_interface_decls (env:E.env) (impl:decl) : E.env * list<decl> =
+let prefix_with_interface_decls (impl:decl) : E.withenv<(list<decl>)> =
+  fun (env:E.env) ->
     match E.iface_decls env (E.current_module env) with
     | None ->
-      env, [impl]
+      [impl], env
     | Some iface ->
       let iface, impl = prefix_one_decl iface impl in
       let env = E.set_iface_decls env (E.current_module env) iface in
-      env, impl
+      impl, env
 
-let interleave_module (env:E.env) (a:modul) (expect_complete_modul:bool) : E.env * modul =
+let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv<modul> =
+  fun (env:E.env)  ->
     match a with
-    | Interface _ -> env, a
+    | Interface _ -> a, env
     | Module(l, impls) -> begin
       match E.iface_decls env l with
-      | None -> env, a
+      | None -> a, env
       | Some iface ->
         let iface, impls =
             List.fold_left
@@ -278,15 +286,21 @@ let interleave_module (env:E.env) (a:modul) (expect_complete_modul:bool) : E.env
                 (iface, [])
                 impls
         in
-        let env = E.set_iface_decls env l iface in
+        let iface_lets, remaining_iface_vals =
+            match FStar.Util.prefix_until (function {d=Val _} -> true | _ -> false) iface with
+            | None -> iface, []
+            | Some (lets, one_val, rest) -> lets, one_val::rest
+        in
+        let impls = impls@iface_lets in
+        let env = E.set_iface_decls env l remaining_iface_vals in
         let a = Module(l, impls) in
-        match iface with
+        match remaining_iface_vals with
         | _::_ when expect_complete_modul ->
-          let err = List.map FStar.Parser.AST.decl_to_string iface |> String.concat "\n\t" in
+          let err = List.map FStar.Parser.AST.decl_to_string remaining_iface_vals |> String.concat "\n\t" in
           raise (Error(Util.format2 "Some interface elements were not implemented by module %s:\n\t%s"
                                     (Ident.string_of_lid l)
                                     err,
                        Ident.range_of_lid l))
         | _ ->
-          env, a
+          a, env
       end

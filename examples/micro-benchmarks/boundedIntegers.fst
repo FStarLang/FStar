@@ -28,14 +28,14 @@ val int32_unfold: i:int
                -> Lemma
                (requires (Int32 i))
                (ensures (Within_Int32 i))
-               [SMTPatT (Int32 i)]
+               [SMTPat (Int32 i)]
 let int32_unfold i = ()
 
 val uint32_unfold: i:int
                -> Lemma
                (requires (UInt32 i))
                (ensures (Within_UInt32 i))
-               [SMTPatT (UInt32 i)]
+               [SMTPat (UInt32 i)]
 let uint32_unfold i = ()
 
 val int32_add:i:int
@@ -44,7 +44,7 @@ val int32_add:i:int
   (requires True)
   (ensures (Int32 i /\ Int32 j /\ Within_Int32 (i + j)
             ==> Int32 (i + j)))
-  [SMTPatT (Int32 (i + j))]
+  [SMTPat (Int32 (i + j))]
 let int32_add i j = ()
 
 val int32_sub:i:int
@@ -53,7 +53,7 @@ val int32_sub:i:int
   (requires True)
   (ensures (Int32 i /\ Int32 j /\ Within_Int32 (i - j)
             ==> Int32 (i - j)))
-  [SMTPatT (Int32 (i - j))]
+  [SMTPat (Int32 (i - j))]
 let int32_sub i j = ()
 
 val int32_mul:i:int
@@ -62,7 +62,7 @@ val int32_mul:i:int
   (requires True)
   (ensures (Int32 i /\ Int32 j /\ Within_Int32 (i * j)
             ==> Int32 (i * j)))
-  [SMTPatT (Int32 (i * j))]
+  [SMTPat (Int32 (i * j))]
 let int32_mul i j = ()
 
 val int32_div:i:nat
@@ -71,7 +71,7 @@ val int32_div:i:nat
   (requires True)
   (ensures (Int32 i /\ Int32 j /\ Within_Int32 (i / j)
             ==> Int32 (i / j)))
-  [SMTPatT (Int32 (i / j))]
+  [SMTPat (Int32 (i / j))]
 let int32_div i j = ()
 
 (*val int32_op: op:(int -> int -> Tot int)
@@ -81,7 +81,7 @@ let int32_div i j = ()
   (requires True)
   (ensures (Int32 i /\ Int32 j /\ Within_Int32 (op i j)
             ==> Int32 (op i j)))
-  [SMTPatT (Int32 (op i j))]
+  [SMTPat (Int32 (op i j))]
 let int32_op op i j = ()
 
 val uint32_op: op:(int -> int -> Tot int)
@@ -91,6 +91,6 @@ val uint32_op: op:(int -> int -> Tot int)
   (requires True)
   (ensures (UInt32 i /\ UInt32 j /\ Within_UInt32 (op i j)
             ==> UInt32 (op i j)))
-  [SMTPatT (UInt32 (op i j))]
+  [SMTPat (UInt32 (op i j))]
 let uint32_op op i j = ()*)
 

@@ -150,7 +150,7 @@ val fly_both: b0:bot -> b1:bot{HH.disjoint (Bot?.r b0) (Bot?.r b1)}
             /\ robot_inv b1 h1
             /\ flying b0 h1
             /\ flying b1 h1))
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 50"
 let fly_both b0 b1 =
   fly b0;
   fly b1
@@ -210,7 +210,7 @@ val fly_robot_army: #rs:set rid -> bs:bots rs -> ST unit
   (requires (fun h -> (forall b. mem b bs ==> robot_inv b h)))
   (ensures  (fun h0 _u h1 ->   HH.modifies rs h0.h h1.h
                           /\ (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
-#set-options "--z3rlimit 30"
+#set-options "--z3rlimit 50"
 let rec fly_robot_army #rs bs =
   match bs with
   | Nil -> ()

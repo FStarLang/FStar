@@ -1,4 +1,4 @@
-module Bug44
+module Bug044
 
 type nat =
   | O : nat

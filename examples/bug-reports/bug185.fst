@@ -1,12 +1,13 @@
-module Bug
+module Bug185
 
 assume type data
+assume HasEq_data: hasEq data
 
 type vk = data
 
 type tag = data
 
-opaque type verified : vk -> data -> Type
+assume new type verified : vk -> data -> Type
 type vkey (p:(data -> Type)) = k:vk{verified k == p}
 
 assume val verify: p:(data -> Type) -> v:vkey p -> d:data -> tag -> Tot (b:bool{b ==> p d})
@@ -14,7 +15,7 @@ assume val verify: p:(data -> Type) -> v:vkey p -> d:data -> tag -> Tot (b:bool{
 assume val format : list data -> Tot data
 assume val parse : d:data -> Tot (s : list data {format s = d})
 
-opaque type certified (d:data)
+assume new type certified (d:data)
 assume Certified:
     (forall k. {:pattern (format [k])}
             certified (format [k]) <==> verified k == certified )
@@ -27,7 +28,7 @@ let rec validate vk0 chain =
         | [ ctxt; ctag ] ->
             (match parse ctxt with
             | [ sender; vk ] -> ()
-            | [ vk ] -> if verify #certified vk0 ctxt ctag then
+            | [ vk ] -> if verify certified vk0 ctxt ctag then
               (
                assert (verified vk == certified);
                assume (verified vk == certified);

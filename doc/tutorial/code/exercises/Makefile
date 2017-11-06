@@ -32,7 +32,6 @@ Ex12f.TMAC.fst \
 Ex12g.TMAC2.fst
 
 FSTAR_HOME=../../../../
-HINTS_ENABLED?=--use_hints
 include ../Makefile.include
 
 HYPERSTACK=$(FSTAR_HOME)/ulib/hyperstack
@@ -64,4 +63,3 @@ Ex01a-ocaml: out Ex01a.fst
 # %.fst-in: 
 # 	@echo $(OPTIONS) \
 # 	--include $(FSTAR_HOME)/ulib/hyperstack \
-# 	--verify_module $(basename $(notdir $@))

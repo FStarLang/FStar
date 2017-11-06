@@ -1,0 +1,20 @@
+Loops,Loops;{\ref{sec:first-example}}
+Swap,Reordering equivalence;{\ref{sec:transformations-spec}-\ref{sec:transformations-proofs}}
+Benton2004,Benton (2004);{\ref{sec:benton2004-rhl}}
+Benton2004.RHL,Benton (2004);{\ref{sec:benton2004-rhl}}
+Benton2004.RHL.Examples2,Benton (2004);{\ref{sec:benton2004-rhl}}
+While,Static IFC;{\ref{sec:ifc-while}}
+WhileReify,Static IFC;{\ref{sec:ifc-while}}
+IfcRulesReify,Static IFC;{\ref{sec:ifc-while}}
+IfcTypechecker,Static IFC;{\ref{sec:ifc-while}}
+IfcMonitor,IFC Monitor;{\ref{sec:ifc-monitor}}
+IfcMonitorTest,IFC Monitor;{\ref{sec:ifc-monitor}}
+IfcExampleReify2,Combining static IFC and proofs;{\ref{sec:ifc-combining}}
+IfcDelimitedRelease,Declassification;{\ref{sec:declassification}}
+IfcDeclassify,Declassification;{\ref{sec:declassification}}
+OTP,Cryptography examples;{\ref{sec:crypto}}
+ElGamal,Cryptography examples;{\ref{sec:crypto}}
+RandomTapes,Cryptography examples;{\ref{sec:crypto}}
+Bijection,Cryptography examples;{\ref{sec:crypto}}
+Memo,Memoization;{\ref{sec:memo}}
+UnionFind,Union-find;{\ref{sec:unionfind}}

@@ -48,7 +48,7 @@ let add_errors env errs =
         errs |> List.map (fun (msg, r) ->
                         if r = dummyRange
                         then msg, Env.get_range env
-                        else let r' = {r with def_range=r.use_range} in
+                        else let r' = Range.set_def_range r (Range.use_range r) in
                              if Range.file_of_range r' <> Range.file_of_range (Env.get_range env) //r points to another file
                              then (msg ^ ("(Also see: " ^ (Range.string_of_use_range r) ^")")), Env.get_range env
                              else msg, r) in

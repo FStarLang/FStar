@@ -1,15 +1,31 @@
 open Dynlink
 
 module U = FStar_Util
+module E = FStar_Errors
 
 let loaded_taclib = ref false
+
+(* We had weird failures, so don't trust in Dynlink.error_message *)
+let error_message : Dynlink.error -> string =
+    fun e ->
+    let s = match e with
+    | Not_a_bytecode_file _ -> "Not_a_bytecode_file"
+    | Inconsistent_import _ -> "Inconsistent_import"
+    | Unavailable_unit _ -> "Unavailable_unit"
+    | Unsafe_file -> "Unsafe_file"
+    | Linking_error _ -> "Linking_error"
+    | Corrupted_interface _ -> "Corrupted_interface"
+    | File_not_found _ -> "File_not_found"
+    | Cannot_open_dll _ -> "Cannot_open_dll"
+    | Inconsistent_implementation _ -> "Inconsistent_implementation"
+    in s ^ ": " ^ Dynlink.error_message e
 
 let load_tactic tac =
   let dynlink fname =
     try
       Dynlink.loadfile fname
     with Dynlink.Error e ->
-      failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e)) in
+      failwith (U.format2 "Dynlinking %s failed: %s" fname (error_message e)) in
 
   if not !loaded_taclib then begin
       dynlink (FStar_Options.fstar_home () ^ "/bin/fstar-tactics-lib/fstartaclib.cmxs");
@@ -35,12 +51,16 @@ let load_tactics tacs =
      let packages = ["fstar-tactics-lib"] in
      let pkg pname = "-package " ^ pname in
      let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
+                @ ["-I"; dir]
                 @ (List.map pkg packages)
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
-     let env_setter = U.format1 "OCAMLPATH=\"%s/bin/\"" fs_home in
+     let env_setter = U.format1 "env OCAMLPATH=\"%s/bin/\"" fs_home in
      let cmd = String.concat " " (env_setter :: "ocamlfind" :: args) in
-     print_string (cmd ^ "\n");
-     Sys.command cmd in
-    ms
-    |> List.map (fun m -> dir ^ "/" ^ m)
-    |> List.iter (fun x -> ignore (compile x))
+     let rc = Sys.command cmd in
+     if rc <> 0
+     then raise (E.Err (U.format2 "Failed to compile native tactic. Command\n`%s`\nreturned with exit code %s"
+                                  cmd (string_of_int rc)))
+     else ()
+   in ms
+      |> List.map (fun m -> dir ^ "/" ^ m)
+      |> List.iter compile

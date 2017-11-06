@@ -28,7 +28,7 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin\</OutputPath>
@@ -107,6 +107,11 @@
     <ProjectReference Include="..\prettyprint\prettyprint.fsproj">
       <Name>prettyprint</Name>
       <Project>{7de787b9-e5a4-4288-8e5a-f887c08f8d82}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\tosyntax\tosyntax.fsproj">
+      <Name>tosyntax</Name>
+      <Project>{b0968012-b93c-4198-9085-b89669e8e4e8}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\typechecker\typechecker.fsproj">

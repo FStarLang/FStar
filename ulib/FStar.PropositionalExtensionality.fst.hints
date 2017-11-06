@@ -1,4 +1,14 @@
 [
   "|á×Äœ\u001b¥ñÚµŠIc–2\u001f",
-  [ [ "FStar.PropositionalExtensionality.apply", 1, 2, 1, [ "@query" ], 0 ] ]
+  [
+    [
+      "FStar.PropositionalExtensionality.apply",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "32923473ca895d5e43d057f44ea33364"
+    ]
+  ]
 ]

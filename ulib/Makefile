@@ -1,3 +1,5 @@
+all: verify-all
+
 # Makefile.verify has been split off because it is the actual
 # Makefile that is distributed in the binary package. This
 # Makefile here is not.
@@ -20,14 +22,14 @@ FSTAR_TAC_LIB_EXTRACT=$(addprefix --extract_module ,$(sort $(FSTAR_TAC_LIB_DROPP
 
 fstarlib.mgen: *.fst *.fsti ../bin/fstar.ocaml
 	mkdir -p ml/extracted
-	$(FSTAR) --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTARLIB_MODULES)
+	$(FSTAR) --expose_interfaces --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTARLIB_MODULES)
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted
 	touch fstarlib.mgen
 
 FSTARLIB_LEFTOVERS=$(shell python fstarlib_leftovers.py +ml +ml/extracted -../bin/fstar-compiler-lib/)
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
-	$(FSTAR) --lax --codegen OCaml --odir tactics_ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_TAC_LIB_MODULES)
+	$(FSTAR) --expose_interfaces --lax --codegen tactics --odir tactics_ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_TAC_LIB_MODULES)
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen
@@ -96,7 +98,7 @@ install-fstar-tactics: $(TACLIB_OBJECTS)
 	mkdir -p $(TACLIB_DIR)
 	cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
 
-clean:
+clean: basic_clean
 	rm -f *.mgen
 	rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
 	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~

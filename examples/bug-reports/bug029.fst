@@ -1,4 +1,4 @@
-module Bug29
+module Bug029
 
 (* Some tests for heterogenous equality *)
 

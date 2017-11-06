@@ -1,10 +1,10 @@
 module FStar.Reflection.Formula
 
+open FStar.Reflection.Types
+open FStar.Reflection.Data
+open FStar.Reflection.Basic
 open FStar.Reflection.Syntax
 open FStar.Reflection.Syntax.Lemmas
-open FStar.Reflection.Types
-open FStar.Reflection.Basic
-open FStar.Reflection.Data
 
 type comparison =
   | Eq            (* Propositional equality (eq2) *)
@@ -114,10 +114,16 @@ let term_as_formula' (t:term) : Tot (f:formula{smaller f t}) =
             App h0 (fst t)
         end
 
-    | Tv_Arrow b t ->
-        if is_free b t
-        then Forall b t
-        else Implies (type_of_binder b) t
+    // This case is shady, our logical connectives are squashed and we
+    // usually don't get arrows. Nevertheless keeping it in case it helps.
+    | Tv_Arrow b c ->
+        begin match inspect_comp c with
+        | C_Total t ->
+            if is_free b t
+            then Forall b t
+            else Implies (type_of_binder b) t
+        | _ -> F_Unknown
+        end
 
     | Tv_Const (C_Int i) ->
         IntLit i
@@ -141,7 +147,7 @@ let rec is_name_imp (nm : name) (t : term) : bool =
     | _ -> false
     end
 
-let rec unsquash (t : term) : option term =
+let unsquash (t : term) : option term =
     match inspect t with
     | Tv_App l (r, Q_Explicit) ->
         if is_name_imp squash_qn l

@@ -242,10 +242,6 @@ rule token args = parse
      { PRAGMA_SET_OPTIONS }
  | "#reset-options"
      { PRAGMA_RESET_OPTIONS }
- | '#' ' ' (digit)*
-     { let n = Util.int_of_string (trim_left lexbuf 2) in
-     mknewline (n - !lc) lexbuf;
-       cpp_filename args lexbuf }
  | char8
   { CHAR (Util.char_of_int (Util.int_of_string (trim_and_check_range_u lexbuf uint8 "character"))) }
  | int8
@@ -309,7 +305,7 @@ rule token args = parse
 
  | "(|"             { LENS_PAREN_LEFT }
  | "|)"             { LENS_PAREN_RIGHT }
- 
+
  | "(*" '*'* "*)" // Silly to have, but fsdoc breaks bootstrapping otherwise
     { token args lexbuf }
 
@@ -618,13 +614,6 @@ and fsdoc_kw_arg cargs = parse
 	   fsdoc(n,doc^(ulexeme lexbuf),(kwn,kwa)::kw) lexbuf}
  | _ { let n,doc,kw,kwn,kwa = cargs in
        fsdoc_kw_arg(n,doc,kw,kwn,kwa^(ulexeme lexbuf)) lexbuf }
-
-and cpp_filename args = parse
- | ' ' '"' [^ '"']+ '"'
-     { let s = trim_both lexbuf 2 1 in
-     let r = getLexerRange lexbuf in
-     Range.set_file_of_range r s;
-     ignore_endline args lexbuf }
 
 and ignore_endline args = parse
  | ' '* newline

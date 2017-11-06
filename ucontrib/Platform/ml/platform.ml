@@ -126,7 +126,7 @@ module Bytes = struct
       res := !res ^ (Printf.sprintf "%02X" (int_of_char s.[i]));
     done; !res
 
-  let byte_of_int i = char_of_int (Z.to_int i)
+  let byte_of_int i = Z.to_int i
 
   (* Some helpers to deal with the conversation from hex literals to bytes and
    * conversely. Mostly for tests. *)

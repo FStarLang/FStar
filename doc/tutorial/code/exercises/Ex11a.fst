@@ -149,7 +149,7 @@ val fly_both: b0:bot -> b1:bot{HH.disjoint (Bot?.r b0) (Bot?.r b1)}
             /\ robot_inv b1 h1
             /\ flying b0 h1
             /\ flying b1 h1))
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 50"
 let fly_both b0 b1 =
   fly b0;
   fly b1

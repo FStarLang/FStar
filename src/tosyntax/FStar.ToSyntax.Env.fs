@@ -95,7 +95,19 @@ type env = {
   docs:                 BU.smap<Parser.AST.fsdoc>;        (* Docstrings of lids *)
   remaining_iface_decls:list<(lident*list<Parser.AST.decl>)>;  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
+  ds_hooks:             dsenv_hooks                       (* hooks that the interactive more relies onto for symbol tracking *)
 }
+and dsenv_hooks =
+  { ds_push_open_hook : env -> open_module_or_namespace -> unit;
+    ds_push_include_hook : env -> lident -> unit;
+    ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
+
+type withenv<'a> = env -> 'a * env
+
+let default_ds_hooks =
+  { ds_push_open_hook = (fun _ _ -> ());
+    ds_push_include_hook = (fun _ _ -> ());
+    ds_push_module_abbrev_hook = (fun _ _ _ -> ()) }
 
 type foundname =
   | Term_name of typ * bool // indicates if mutable
@@ -114,6 +126,11 @@ let transitive_exported_ids env lid =
     | None -> []
     | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> BU.set_elements
 let open_modules e = e.modules
+let open_modules_and_namespaces env =
+  List.filter_map (function
+                   | Open_module_or_namespace (lid, _info) -> Some lid
+                   | _ -> None)
+    env.scope_mods
 let set_current_module e l = {e with curmodule=Some l}
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
@@ -136,6 +153,8 @@ let qualify env id =
     | Some monad -> mk_field_projector_name_from_ident (qual (current_module env) monad) id
 let syntax_only env = env.syntax_only
 let set_syntax_only env b = { env with syntax_only = b }
+let ds_hooks env = env.ds_hooks
+let set_ds_hooks env hooks = { env with ds_hooks = hooks }
 let new_sigmap () = BU.smap_create 100
 let empty_env () = {curmodule=None;
                     curmonad=None;
@@ -151,7 +170,8 @@ let empty_env () = {curmodule=None;
                     expect_typ=false;
                     docs=new_sigmap();
                     remaining_iface_decls=[];
-                    syntax_only=false}
+                    syntax_only=false;
+                    ds_hooks=default_ds_hooks}
 
 let sigmap env = env.sigmap
 let has_all_in_scope env =
@@ -470,7 +490,12 @@ let resolve_in_open_namespaces'
   let k_global_def' k lid def = cont_of_option k (k_global_def lid def) in
   let f_module lid' = let k = Cont_ignore in find_in_module env lid' (k_global_def' k) k in
   let l_default k i = lookup_default_id env i (k_global_def' k) k in
-  resolve_in_open_namespaces'' env lid Exported_id_term_type (fun l -> cont_of_option Cont_fail (k_local_binding l)) (fun r -> cont_of_option Cont_fail (k_rec_binding r)) (fun _ -> Cont_ignore) f_module l_default
+  resolve_in_open_namespaces'' env lid Exported_id_term_type
+    (fun l -> cont_of_option Cont_fail (k_local_binding l))
+    (fun r -> cont_of_option Cont_fail (k_rec_binding r))
+    (fun _ -> Cont_ignore)
+    f_module
+    l_default
 
 let fv_qual_of_se = fun se -> match se.sigel with
     | Sig_datacon(_, _, _, l, _, _) ->
@@ -515,6 +540,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                           || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
                           then Delta_equational
                           else Delta_constant in
+                 let dd = if quals |> BU.for_some (function Abstract -> true | _ -> false) then Delta_abstract dd else dd in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
@@ -630,8 +656,8 @@ let try_lookup_definition env (lid:lident) =
 let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
 let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
 
-let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * bool)> =
-  match try_lookup_name any_val exclude_interf env lid with
+let try_lookup_lid' any_val exclude_interface env (lid:lident) : option<(term * bool)> =
+  match try_lookup_name any_val exclude_interface env lid with
     | Some (Term_name (e, mut)) -> Some (e, mut)
     | _ -> None
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
@@ -814,7 +840,7 @@ let exported_id_set_new () =
     | Exported_id_term_type -> term_type_set
     | Exported_id_field -> field_set
 
-let unique any_val exclude_if env lid =
+let unique any_val exclude_interface env lid =
   (* Disable name resolution altogether, thus lid is assumed to be fully qualified *)
   let filter_scope_mods = function
     | Rec_binding _
@@ -822,7 +848,7 @@ let unique any_val exclude_if env lid =
     | _ -> false
   in
   let this_env = {env with scope_mods = List.filter filter_scope_mods env.scope_mods; exported_ids=empty_exported_id_smap; includes=empty_include_smap } in
-  match try_lookup_lid' any_val exclude_if this_env lid with
+  match try_lookup_lid' any_val exclude_interface this_env lid with
     | None -> true
     | Some _ -> false
 
@@ -858,13 +884,13 @@ let push_sigelt env s =
     raise (Error (BU.format2 "Duplicate top-level names [%s]; previously declared at %s" (text_of_lid l) r, range_of_lid l)) in
   let globals = BU.mk_ref env.scope_mods in
   let env =
-      let any_val, exclude_if = match s.sigel with
-        | Sig_let _ -> false, true
-        | Sig_bundle _ -> true, true
+      let any_val, exclude_interface = match s.sigel with
+        | Sig_let _
+        | Sig_bundle _ -> false, true
         | _ -> false, false in
       let lids = lids_of_sigelt s in
-      begin match BU.find_map lids (fun l -> if not (unique any_val exclude_if env l) then Some l else None) with
-        | Some l when not (Options.interactive ()) -> err l
+      begin match BU.find_map lids (fun l -> if not (unique any_val exclude_interface env l) then Some l else None) with
+        | Some l -> err l
         | _ -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
       end in
   let env = {env with scope_mods = !globals} in
@@ -886,6 +912,8 @@ let push_sigelt env s =
         my_exported_ids := BU.set_add lid.ident.idText !my_exported_ids
       | None -> () (* current module was not prepared? should not happen *)
       in
+      let is_iface = env.iface && not env.admitted_iface in
+//      printfn "Adding %s at key %s with flag %A" (FStar.Syntax.Print.sigelt_to_string_short se) lid.str is_iface;
       BU.smap_add (sigmap env) lid.str (se, env.iface && not env.admitted_iface)));
   let env = {env with scope_mods = !globals } in
   env
@@ -903,6 +931,7 @@ let push_namespace env ns =
      let _ = fail_if_curmodule env ns ns' in
      (ns', Open_module)
   in
+     env.ds_hooks.ds_push_open_hook env (ns', kd);
      push_scope_mod env (Open_module_or_namespace (ns', kd))
 
 let push_include env ns =
@@ -911,6 +940,7 @@ let push_include env ns =
     let ns0 = ns in
     match resolve_module_name env ns false with
     | Some ns ->
+      env.ds_hooks.ds_push_include_hook env ns;
       let _ = fail_if_curmodule env ns0 ns in
       (* from within the current module, include is equivalent to open *)
       let env = push_scope_mod env (Open_module_or_namespace (ns, Open_module)) in
@@ -950,6 +980,7 @@ let push_module_abbrev env x l =
      in 'module A = B', B must be fully qualified *)
   if module_is_defined env l
   then let _ = fail_if_curmodule env l l in
+       env.ds_hooks.ds_push_module_abbrev_hook env x l;
        push_scope_mod env (Module_abbrev (x,l))
   else raise (Error(BU.format1 "Module %s cannot be found" (Ident.text_of_lid l), Ident.range_of_lid l))
 
@@ -1139,7 +1170,7 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
     in
     let namespace_of_module = if List.length mname.ns > 0 then [ (lid_of_ids mname.ns, Open_namespace) ] else [] in
     (* [scope_mods] is a stack, so reverse the order *)
-    let auto_open = List.rev (auto_open @ namespace_of_module) in
+    let auto_open = namespace_of_module @ List.rev auto_open in
 
     (* Create new empty set of exported identifiers for the current module, for 'include' *)
     let () = BU.smap_add env.exported_ids mname.str (as_exported_id_set mii.mii_exported_ids) in
@@ -1147,12 +1178,14 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
     let () = BU.smap_add env.trans_exported_ids mname.str (as_exported_id_set mii.mii_trans_exported_ids) in
     (* Create new empty list of includes for the current module *)
     let () = BU.smap_add env.includes mname.str (as_includes mii.mii_includes) in
-    {
+    let env' = {
       env with curmodule=Some mname;
       sigmap=env.sigmap;
       scope_mods = List.map (fun x -> Open_module_or_namespace x) auto_open;
       iface=intf;
-      admitted_iface=admitted }
+      admitted_iface=admitted } in
+    List.iter (fun op -> env.ds_hooks.ds_push_open_hook env' op) (List.rev auto_open);
+    env'
   in
 
   match env.modules |> BU.find_opt (fun (l, _) -> lid_equals l mname) with

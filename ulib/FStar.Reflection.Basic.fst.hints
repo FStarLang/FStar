@@ -1,5 +1,5 @@
 [
-  "µaç\u0010¾ŒŽçfR“6÷ÕíË",
+  "æÜ¿ºµ\u0010#‡¾~ZéŸ\u0014bž",
   [
     [
       "FStar.Reflection.Basic.forall_list",
@@ -13,7 +13,8 @@
         "equation_Prims.l_True", "fuel_guarded_inversion_Prims.list",
         "subterm_ordering_Prims.Cons"
       ],
-      0
+      0,
+      "0a1b6c99cbd2844659b50c8c430f8491"
     ],
     [
       "FStar.Reflection.Basic.smaller",
@@ -44,8 +45,33 @@
         "equation_Prims.l_True",
         "fuel_guarded_inversion_FStar.Reflection.Data.term_view"
       ],
-      0
+      0,
+      "d11af7ce9bfbcb574a64222624ba589a"
     ],
-    [ "FStar.Reflection.Basic.term_eq", 1, 2, 1, [ "@query" ], 0 ]
+    [
+      "FStar.Reflection.Basic.smaller_comp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Reflection.Data.C_Lemma",
+        "disc_equation_FStar.Reflection.Data.C_Total",
+        "disc_equation_FStar.Reflection.Data.C_Unknown",
+        "equation_Prims.l_True",
+        "fuel_guarded_inversion_FStar.Reflection.Data.comp_view"
+      ],
+      0,
+      "95c6dc880ab40e67a3bd42877f03cd0a"
+    ],
+    [
+      "FStar.Reflection.Basic.term_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4cc43114c464ffedbf614b0b19899d28"
+    ]
   ]
 ]

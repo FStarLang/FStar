@@ -1,0 +1,4 @@
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module backtracking\n","line":1,"column":0}}
+{"query-id":"2","query":"autocomplete","args":{"partial-symbol":"let","context":"code"}}
+{"query-id":"3","query":"peek","args":{"kind":"lax","code":"\nlet a ","line":2,"column":0}}
+{"query-id":"4","query":"peek","args":{"kind":"lax","code":"\nlet a = 1","line":2,"column":0}}
