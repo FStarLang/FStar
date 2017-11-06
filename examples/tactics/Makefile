@@ -20,6 +20,7 @@ all:	Apply.uver		\
 	Rename.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
+	DependentSynth.uver	\
 	NatPos.uver		\
 	Trace.uver		\
 	Bug1252.uver		\
