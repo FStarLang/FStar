@@ -241,7 +241,7 @@ main_native = env.Command('_build/src/fstar/ml/main.native', '', 'cd .. && $OCAM
 for g in GENERATED_FILES:
   Depends(main_native, File('#/ocaml-output/'+g))
 fstar_exe = env.Command('../../bin/fstar.exe', main_native, Copy('$TARGET', '$SOURCE'))
-env.precious(fstar_exe) # don't delete the prior fstar.exe
+env.Precious(fstar_exe) # don't delete the prior fstar.exe
 
 Return('fstar_exe')
 
