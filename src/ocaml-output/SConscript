@@ -31,8 +31,7 @@ else:
 
 menhir_min_version=20161115
 if menhir_tool:
-  output = subprocess.check_output([menhir_tool, '--version'])
-  output = str(output) # on python3, check_output returns bytes, not a string
+  output = subprocess.check_output([menhir_tool, '--version']).decode('utf-8')
   srch = re.search(r'.*version ([0-9]*)', output)
   version = int(srch.group(1))
   if version < menhir_min_version:
@@ -139,10 +138,11 @@ def generate_fstar_version_ml(target, source, env):
   else:
     PLATFORM=os.uname()[4]  # machine is at index 4
 
-  COMPILER = 'OCaml ' + str(subprocess.check_output(['ocamlc', '-version'])).split('\r\n')[0]
+  ocv = subprocess.check_output(['ocamlc', '-version']).decode('utf-8')
+  COMPILER = 'OCaml ' + ocv.split('\r\n')[0]
 
   # implement tools/get_commit directly
-  COMMIT = str(subprocess.check_output(['git', 'log','--pretty=format:%h','-n','1']))
+  COMMIT = subprocess.check_output(['git', 'log','--pretty=format:%h','-n','1']).decode('utf-8')
   try:
     subprocess.check_output(['git', 'diff','--exit-code','HEAD'], stderr=subprocess.STDOUT)
   except subprocess.CalledProcessError as e:
@@ -171,7 +171,8 @@ fstar_version_ml = generate_fstar_version_ml('FStar_Version.ml', '../../version.
 readpipe, writepipe = os.pipe()
 os.write(writepipe, str.encode('print_endline Sys.ocaml_version'))
 os.close(writepipe)
-OCAML_VERSION = str(subprocess.check_output(['ocaml','get_branch.ml'], stdin=readpipe)).splitlines()[0]
+ov = subprocess.check_output(['ocaml','get_branch.ml'], stdin=readpipe).decode('utf-8')
+OCAML_VERSION = ov.splitlines()[0]  # take the first string
 os.close(readpipe)
 env.Command('../extraction/ml/FStar_Extraction_ML_PrintML.ml',
             '../extraction/ml/FStar_Extraction_ML_PrintML_'+OCAML_VERSION+'.ml',

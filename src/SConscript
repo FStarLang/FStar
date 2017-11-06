@@ -157,7 +157,7 @@ if sys.platform == 'win32' or sys.platform == 'cygwin':  # Windows
 else:  # Unix
     fstar_path = os.path.realpath('../bin/fstar.exe')
     if os.path.exists(fstar):
-        filetype = subprocess.check_output(['file',fstar_path])
+        filetype = subprocess.check_output(['file',fstar_path]).deocde('utf-8')
         if filetype.contains('Mono'):
             env['FSTAR'] = 'mono ' + env['FSTAR']  # F# version, mono fstar.exe
         else:
