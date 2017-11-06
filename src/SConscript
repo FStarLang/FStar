@@ -11,26 +11,6 @@ Import('My_env')
 env = My_env.Clone()  # ensure changes here don't have impact on other SConscripts
 ocaml_output = 'ocaml-output/'  # directory to extract Ocaml code to
 
-# launch an external process and return its stdout as a list of lines of text
-def docmd(env, cmd):
-  try:
-    pipe = SCons.Action._subproc(env, cmd,
-                                 stdin = 'devnull',
-                                 stderr = 'devnull',
-                                 stdout = subprocess.PIPE)
-  except:
-    e = sys.exc_info()[0]
-    print ("Error invoking: %s" % cmd)
-    print (formatExceptionInfo())
-    print ("Exception: %s" % e)
-    Exit(1)
-  result = []
-  line = pipe.stdout.readline()
-  while line:
-    result.append(line)
-    line = pipe.stdout.readline()
-  return result
-
 # --------------------------------------------------------------------
 # Generate boot files
 # --------------------------------------------------------------------
