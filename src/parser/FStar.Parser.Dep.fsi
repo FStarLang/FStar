@@ -16,6 +16,7 @@ module BU = FStar.Util
 
 type open_kind = | Open_module | Open_namespace
 
+val module_name_of_file : string -> string
 val lowercase_module_name : string -> string
 
 val build_inclusion_candidates_list : unit -> list<(string * string)>

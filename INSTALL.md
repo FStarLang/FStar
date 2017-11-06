@@ -170,8 +170,8 @@ you to skip directly to step 3 and build F\* with just an OCaml compiler.
 
 Some convenience Makefile targets are available for steps 2 and 3:
 
-- To run steps 2 and 3, do `make -j 6 fstar-ocaml`.
-- To run steps 3, 2 and 3 again, do: `make -j 6 ocaml-fstar-ocaml`.
+- To run steps 2 and 3, do `make -C src -j 6 fstar-ocaml`.
+- To run steps 3, 2 and 3 again, do: `make -C src -j 6 ocaml-fstar-ocaml`.
 
 The option `-j 6` controls the number of cores to be used in parallel build.
 Using more cores results in greater RAM usage. This can make builds slow if you do not have enough RAM to support all parallel builds. Consider monitoring RAM usage when building, and use fewer cores if you are using 100% of your RAM. 
