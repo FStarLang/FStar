@@ -137,6 +137,10 @@ FStar_Parser_Parse.ml: parse.mly
 	cat parse.ml >> $@
 	rm parse.ml parse.mli
 
+tests.exe: fstar.exe
+	$(OCAMLBUILD) FStar_Tests_Test.native
+	cp -f _build/src/ocaml-output/FStar_Tests_Test.native ../../bin/$@
+
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging
 VERSION=$(shell head -n 1 ../../version.txt)

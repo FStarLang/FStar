@@ -23,6 +23,7 @@ open FStar
 open FStar.Parser
 open FStar.Parser.AST
 open FStar.Parser.Parse
+open FStar.Parser.ParseIt
 open FStar.Util
 open FStar.Errors
 
@@ -33,31 +34,29 @@ type fragment =
     | Modul of AST.modul // an entire module or interface -- unspecified
     | Decls of list<AST.decl> // a partial set of declarations
 
-let parse_fragment frag : fragment =
-    match ParseIt.parse (Inr frag) with
-    | Inl (Inl modul, _) -> //interactive mode: module
-      Modul modul
-
-    | Inl (Inr [], _) -> //interactive mode: blank space
-      Empty
-
-    | Inl (Inr decls, _) -> //interactive mode: more decls
-      Decls decls
-
-    | Inr (msg,r) ->
-      raise (Error(msg, r))
+let parse_fragment (frag: ParseIt.input_frag) : fragment =
+    match ParseIt.parse (Toplevel frag) with
+    | ASTFragment (Inl modul, _) -> //interactive mode: module
+        Modul modul
+    | ASTFragment (Inr [], _) -> //interactive mode: blank space
+        Empty
+    | ASTFragment (Inr decls, _) -> //interactive mode: more decls
+        Decls decls
+    | ParseError (msg,r) ->
+        raise (Error(msg, r))
+    | Term _ ->
+        failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
-  match ParseIt.parse (Inl fn) with
-  | Inl (Inl ast, comments) ->
-    ast, comments
-
-  | Inl (Inr _ , _) ->
-    let msg = Util.format1 "%s: expected a module\n" fn in
-    let r = Range.dummyRange in
-    raise (Error(msg, r))
-
-  | Inr (msg, r) ->
-    raise (Error(msg, r))
-
+    match ParseIt.parse (Filename fn) with
+    | ASTFragment (Inl ast, comments) ->
+        ast, comments
+    | ASTFragment (Inr _ , _) ->
+        let msg = Util.format1 "%s: expected a module\n" fn in
+        let r = Range.dummyRange in
+        raise (Error(msg, r))
+    | ParseError (msg, r) ->
+        raise (Error(msg, r))
+    | Term _ ->
+        failwith "Impossible: parsing a Filename always results in an ASTFragment"

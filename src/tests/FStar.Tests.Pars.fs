@@ -10,6 +10,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Errors
 open FStar.TypeChecker.Env
+open FStar.Parser.ParseIt
 module DsEnv = FStar.ToSyntax.Env
 module TcEnv = FStar.TypeChecker.Env
 module SMT = FStar.SMTEncoding.Solver
@@ -17,6 +18,7 @@ module Tc = FStar.TypeChecker.Tc
 module TcTerm = FStar.TypeChecker.TcTerm
 module ToSyntax = FStar.ToSyntax.ToSyntax
 module BU = FStar.Util
+module D = FStar.Parser.Driver
 
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
 let tcenv_ref: ref<option<env>> = mk_ref None
@@ -26,12 +28,15 @@ let test_mod_ref = mk_ref (Some ({name=test_lid;
                                 is_interface=false}))
 
 let parse_mod mod_name dsenv =
-    match ParseIt.parse (Inl mod_name) with
-    | Inl (Inl m, _) ->
+    match parse (Filename mod_name) with
+    | ASTFragment (Inl m, _) ->
         let m, env'= ToSyntax.ast_modul_to_modul m dsenv in
         let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) DsEnv.default_mii in
         env', m
-    | _ -> failwith "Unexpected "
+    | ParseError (msg, r) ->
+        raise (Error(msg, r))
+    | Term _ ->
+        failwith "Impossible: parsing a Filename always results in an ASTFragment"
 
 let add_mods mod_names dsenv env =
   List.fold_left (fun (dsenv,env) mod_name ->
@@ -64,7 +69,6 @@ let rec init () =
         | Some f -> f
         | _ -> init_once(); init()
 
-open FStar.Parser.ParseIt
 let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
 
 // let failed_to_parse s e =
@@ -79,21 +83,15 @@ let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
 
 let pars s =
     try
-          let tcenv = init() in
-          // let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
-          //   lexbuf.EndPos <- {lexbuf.EndPos with
-          //   pos_fname= filename;
-          //   pos_cnum=0;
-          //   pos_lnum=1 } in
-          // let filename,sr,fs = "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
-          // let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
-          // resetLexbufPos filename lexbuf;
-          // let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
-          // let lexer = LexFStar.token lexargs in
-          // let t = Parser.Parse.term lexer lexbuf in
-          let t = AST.mkAdmitMagic Range.dummyRange in
-          ToSyntax.desugar_term tcenv.dsenv t
-     with
+        let tcenv = init() in
+        match parse (Fragment <| frag_of_text s) with
+        | Term t ->
+            ToSyntax.desugar_term tcenv.dsenv t
+        | ParseError (msg, r) ->
+            raise (Error(msg, r))
+        | ASTFragment _ ->
+            failwith "Impossible: parsing a Fragment always results in a Term"
+    with
         | e when not ((Options.trace_error())) -> raise e // failed_to_parse s e
 
 let tc s =
