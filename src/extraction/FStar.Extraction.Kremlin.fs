@@ -331,7 +331,7 @@ and translate_module (module_name, modul, _): file =
   let module_name = fst module_name @ [ snd module_name ] in
   let program = match modul with
     | Some (_signature, decls) ->
-        List.filter_map (translate_decl (empty module_name)) decls
+        List.collect (translate_decl (empty module_name)) decls
     | _ ->
         failwith "Unexpected standalone interface or nested modules"
   in
@@ -348,18 +348,41 @@ and translate_flags flags =
     | _ -> None // is this all of them?
   ) flags
 
-and translate_decl env d: option<decl> =
+and translate_decl env d: list<decl> =
   match d with
-  | MLM_Let (flavor, flags, [ {
+  | MLM_Let (flavor, flags, lbs) ->
+      // We don't care about mutual recursion, since every C file will include
+      // its own header with the forward declarations.
+      List.choose (translate_let env flavor flags) lbs
+
+  | MLM_Loc _ ->
+      // JP: TODO: use this to reconstruct location information
+      []
+
+  | MLM_Ty tys ->
+      // We don't care about mutual recursion, since KreMLin will insert forward
+      // declarations exactly as needed, as part of its monomorphization phase
+      List.choose (translate_type_decl env) tys
+
+  | MLM_Top _ ->
+      failwith "todo: translate_decl [MLM_Top]"
+
+  | MLM_Exn _ ->
+      failwith "todo: translate_decl [MLM_Exn]"
+
+and translate_let env flavor flags lb: option<decl> =
+  match lb with
+  | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t0);
       mllb_def = { expr = MLE_Fun (args, body) }
-    } ])
-  | MLM_Let (flavor, flags, [ {
+    }
+  | {
       mllb_name = name;
       mllb_tysc = Some (tvars, t0);
       mllb_def = { expr = MLE_Coerce ({ expr = MLE_Fun (args, body) }, _, _) }
-    } ]) ->
+    } ->
+      // Case 1: a possibly-polymorphic function.
       let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) flags in
       let env = if flavor = Rec then extend env name false else env in
       let env = List.fold_left (fun env name -> extend_t env name) env tvars in
@@ -380,23 +403,27 @@ and translate_decl env d: option<decl> =
         if List.length tvars = 0 then
           Some (DExternal (None, name, translate_type env t0))
         else
+          // JP: TODO assume polymorphic function and have KreMLin generate
+          // monomorphized assumes 
           None
       else begin
         try
           let body = translate_expr env body in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, body))
         with e ->
+          // JP: TODO: figure out what are the remaining things we don't extract
           let msg = BU.print_exn e in
           BU.print2_warning "Writing a stub for %s (%s)\n" (snd name) msg;
           let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg))
       end
 
-  | MLM_Let (flavor, flags, [ {
+  | {
       mllb_name = name;
       mllb_tysc = Some ([], t);
       mllb_def = expr
-    } ]) ->
+    } ->
+      // Case 2: this is a global
       let flags = translate_flags flags in
       let t = translate_type env t in
       let name = env.module_name, name in
@@ -408,11 +435,9 @@ and translate_decl env d: option<decl> =
         Some (DGlobal (flags, name, t, EAny))
       end
 
-  | MLM_Let (_, _, { mllb_name = name; mllb_tysc = ts } :: _) ->
-      (* Things we currently do not translate:
-       * - polymorphic functions (lemmas do count, sadly)
-       *)
-      BU.print1_warning "Not translating definition for %s (and possibly others)\n" name;
+  | { mllb_name = name; mllb_tysc = ts } ->
+      // TODO JP: figure out what exactly we're hitting here...?
+      BU.print1_warning "Not translating definition for %s\n" name;
       begin match ts with
       | Some (idents, t) ->
           BU.print2 "Type scheme is: forall %s. %s\n"
@@ -423,27 +448,24 @@ and translate_decl env d: option<decl> =
       end;
       None
 
-  | MLM_Let _ ->
-      failwith "impossible"
-
-  | MLM_Loc _ ->
-      None
-
-  | MLM_Ty [ (assumed, name, _mangled_name, args, _, Some (MLTD_Abbrev t)) ] ->
+and translate_type_decl env ty: option<decl> =
+  match ty with
+  | (assumed, name, _mangled_name, args, _, Some (MLTD_Abbrev t)) ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env name -> extend_t env name) env args in
       if assumed then
+        // JP: TODO: shall we be smarter here?
         None
       else
         Some (DTypeAlias (name, List.length args, translate_type env t))
 
-  | MLM_Ty [ (_, name, _mangled_name, args, _, Some (MLTD_Record fields)) ] ->
+  | (_, name, _mangled_name, args, _, Some (MLTD_Record fields)) ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env name -> extend_t env name) env args in
       Some (DTypeFlat (name, List.length args, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
-  | MLM_Ty [ (_, name, _mangled_name, args, attrs, Some (MLTD_DType branches)) ] ->
+  | (_, name, _mangled_name, args, attrs, Some (MLTD_DType branches)) ->
       let name = env.module_name, name in
       let flags = translate_flags attrs in
       let env = List.fold_left extend_t env args in
@@ -453,19 +475,10 @@ and translate_decl env d: option<decl> =
         ) ts
       ) branches))
 
-  | MLM_Ty ((_, name, _mangled_name, _, _, _) :: _) ->
-      BU.print1_warning "Not translating definition for %s (and possibly others)\n" name;
+  | (_, name, _mangled_name, _, _, _) ->
+      // JP: TODO: figure out why and how this happens
+      BU.print1_warning "Not translating type definition for %s\n" name;
       None
-
-  | MLM_Ty [] ->
-      BU.print_string "Impossible!! Empty block of mutually recursive type declarations\n";
-      None
-
-  | MLM_Top _ ->
-      failwith "todo: translate_decl [MLM_Top]"
-
-  | MLM_Exn _ ->
-      failwith "todo: translate_decl [MLM_Exn]"
 
 and translate_type env t: typ =
   match t with

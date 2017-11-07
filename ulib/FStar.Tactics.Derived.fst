@@ -4,6 +4,17 @@ open FStar.Reflection
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 
+(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
+[t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
+always be the case since [w] is usually a uvar. *)
+let exact (t : tactic term) : tactic unit =
+    t_exact false true t
+
+(** Like [exact], but allows for the term [e] to have a type [t] only
+under some guard [g], adding the guard as a goal. *)
+let exact_guard (t : tactic term) : tactic unit =
+    t_exact false false t
+
 let fresh_uvar o =
     e <-- cur_env;
     uvar_env e o

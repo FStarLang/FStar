@@ -2003,4 +2003,91 @@ let check_inductive_well_typedness:
                                     FStar_Syntax_Syntax.default_sigmeta;
                                   FStar_Syntax_Syntax.sigattrs = uu____5408
                                 } in
-                              (sig_bndle, tcs1, datas2)))))
+                              (FStar_All.pipe_right tcs1
+                                 (FStar_List.iter
+                                    (fun se  ->
+                                       match se.FStar_Syntax_Syntax.sigel
+                                       with
+                                       | FStar_Syntax_Syntax.Sig_inductive_typ
+                                           (l,univs1,binders,typ,uu____5434,uu____5435)
+                                           ->
+                                           let fail expected inferred =
+                                             let uu____5451 =
+                                               let uu____5452 =
+                                                 let uu____5457 =
+                                                   let uu____5458 =
+                                                     FStar_Syntax_Print.tscheme_to_string
+                                                       expected in
+                                                   let uu____5459 =
+                                                     FStar_Syntax_Print.tscheme_to_string
+                                                       inferred in
+                                                   FStar_Util.format2
+                                                     "Expected an inductive with type %s; got %s"
+                                                     uu____5458 uu____5459 in
+                                                 (uu____5457,
+                                                   (se.FStar_Syntax_Syntax.sigrng)) in
+                                               FStar_Errors.Error uu____5452 in
+                                             FStar_Exn.raise uu____5451 in
+                                           let uu____5460 =
+                                             FStar_TypeChecker_Env.try_lookup_val_decl
+                                               env0 l in
+                                           (match uu____5460 with
+                                            | FStar_Pervasives_Native.None 
+                                                -> ()
+                                            | FStar_Pervasives_Native.Some
+                                                (expected_typ1,uu____5476) ->
+                                                let inferred_typ =
+                                                  let body =
+                                                    match binders with
+                                                    | [] -> typ
+                                                    | uu____5497 ->
+                                                        let uu____5498 =
+                                                          let uu____5501 =
+                                                            let uu____5502 =
+                                                              let uu____5515
+                                                                =
+                                                                FStar_Syntax_Syntax.mk_Total
+                                                                  typ in
+                                                              (binders,
+                                                                uu____5515) in
+                                                            FStar_Syntax_Syntax.Tm_arrow
+                                                              uu____5502 in
+                                                          FStar_Syntax_Syntax.mk
+                                                            uu____5501 in
+                                                        uu____5498
+                                                          FStar_Pervasives_Native.None
+                                                          se.FStar_Syntax_Syntax.sigrng in
+                                                  (univs1, body) in
+                                                if
+                                                  (FStar_List.length univs1)
+                                                    =
+                                                    (FStar_List.length
+                                                       (FStar_Pervasives_Native.fst
+                                                          expected_typ1))
+                                                then
+                                                  let uu____5521 =
+                                                    FStar_TypeChecker_Env.inst_tscheme
+                                                      inferred_typ in
+                                                  (match uu____5521 with
+                                                   | (uu____5526,inferred) ->
+                                                       let uu____5528 =
+                                                         FStar_TypeChecker_Env.inst_tscheme
+                                                           expected_typ1 in
+                                                       (match uu____5528 with
+                                                        | (uu____5533,expected)
+                                                            ->
+                                                            let uu____5535 =
+                                                              FStar_TypeChecker_Rel.teq_nosmt
+                                                                env0 inferred
+                                                                expected in
+                                                            if uu____5535
+                                                            then ()
+                                                            else
+                                                              fail
+                                                                expected_typ1
+                                                                inferred_typ))
+                                                else
+                                                  fail expected_typ1
+                                                    inferred_typ)
+                                       | uu____5538 -> ()));
+                               (sig_bndle, tcs1, datas2))))))

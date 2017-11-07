@@ -84,12 +84,14 @@ let list_of_option = function Some x -> [x] | None -> []
 let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
-let lowercase_module_name f =
-  match check_and_strip_suffix (basename f) with
-  | Some longname ->
-      String.lowercase longname
-  | None ->
+let module_name_of_file f =
+    match check_and_strip_suffix (basename f) with
+    | Some longname ->
+      longname
+    | None ->
       raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
+
+let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
 type file_name = string
 type module_name = string
