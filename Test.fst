@@ -16,7 +16,7 @@ module Test
 
 let rec fact (a:Type u#a) (x:nat) :nat = if x = 0 then 0 else x + fact a (x - 1)
 
-//let foo (a:Type u#a) = assert_norm (fact a 2 = 3)
+let foo (a:Type u#a) = assert_norm (fact a 2 = 3)
 
 //let rec sum (a:Type) (x:nat) :Tot nat = if x = 0 then 1 else sum a (x - 1)
 

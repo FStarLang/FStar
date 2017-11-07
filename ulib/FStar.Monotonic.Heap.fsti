@@ -284,7 +284,7 @@ val contains_gref_of
   (rel: preorder t)
 : Lemma
   (requires (exists h' . aref_live_at h' a t rel))
-  (ensures (exists h' . aref_live_at h' a t rel /\ (contains h (gref_of a t rel) <==> aref_live_at h a t rel)))
+  (ensures ((exists h' . aref_live_at h' a t rel) /\ (contains h (gref_of a t rel) <==> aref_live_at h a t rel)))
   [SMTPatOr [
     [SMTPat (contains h (gref_of a t rel))];
     [SMTPat (aref_live_at h a t rel)];
@@ -296,7 +296,7 @@ val aref_of_gref_of
   (rel: preorder t)
 : Lemma
   (requires (exists h . aref_live_at h a t rel))
-  (ensures (exists h . aref_live_at h a t rel /\ (aref_of (gref_of a t rel) == a)))
+  (ensures ((exists h . aref_live_at h a t rel) /\ (aref_of (gref_of a t rel) == a)))
   [SMTPat (aref_of (gref_of a t rel))]
 
 (* Operators lowered to ref *)
@@ -307,7 +307,7 @@ let addr_of_gref_of
   (rel: preorder t)
 : Lemma
   (requires (exists h . aref_live_at h a t rel))
-  (ensures (exists h . aref_live_at h a t rel /\ (addr_of (gref_of a t rel) == addr_of_aref a)))
+  (ensures ((exists h . aref_live_at h a t rel) /\ (addr_of (gref_of a t rel) == addr_of_aref a)))
   [SMTPat (addr_of (gref_of a t rel))]
 = addr_of_aref_of (gref_of a t rel)
 
@@ -318,7 +318,7 @@ let is_mm_gref_of
   (rel: preorder t)
 : Lemma
   (requires (exists h . aref_live_at h a t rel))
-  (ensures (exists h . aref_live_at h a t rel /\ (is_mm (gref_of a t rel) == aref_is_mm a)))
+  (ensures ((exists h . aref_live_at h a t rel) /\ (is_mm (gref_of a t rel) == aref_is_mm a)))
   [SMTPat (is_mm (gref_of a t rel))]
 = is_mm_aref_of (gref_of a t rel)
 
@@ -330,7 +330,7 @@ let unused_in_gref_of
   (h: heap)
 : Lemma
   (requires (exists h . aref_live_at h a t rel))
-  (ensures (exists h . aref_live_at h a t rel /\ (unused_in (gref_of a t rel) h <==> aref_unused_in a h)))
+  (ensures ((exists h . aref_live_at h a t rel) /\ (unused_in (gref_of a t rel) h <==> aref_unused_in a h)))
   [SMTPat (unused_in (gref_of a t rel) h)]
 = unused_in_aref_of (gref_of a t rel) h
 
