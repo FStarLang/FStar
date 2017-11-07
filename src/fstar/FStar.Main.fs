@@ -113,7 +113,7 @@ let go _ =
     | Help ->
         Options.display_usage(); exit 0
     | Error msg ->
-        Util.print_string msg
+        Util.print_string msg; exit 1
     | Success ->
         init_native_tactics ();
 
