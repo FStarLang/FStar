@@ -303,13 +303,15 @@ let rec mem_index
     (v:raw a l)
   : Lemma 
     (requires (mem x v))
-    (ensures (exists (i:index_t v). (index #a #l v i) == x)) // cwinter: why doesn't it like this?
+    (ensures (exists (i:index_t v). (index #a #l v i) == x)) // cwinter: why doesn't it like this?; //NS: fixed, see below
     (decreases (u32_to_int l))
   = if l =^ 0ul then ()
-    else if (head #a #l v) = x then ()
-    else
-      let t = tail #a #l v in
-      mem_index #a #(l -^ 1ul) x t
+    else let m : (m:len_t{m <> 0ul}) = l in
+         let u = coerce v m in //NS: I use this patterns sometimes to workaround providing too many painful implicit arguments
+         if head u = x then ()
+         else let t = tail u in
+              let _ = mem_index x t in
+              assert (forall (j:index_t t). index t j == index u (j +^ 1ul)) //NS: this bit of index juggling is needed to find the witness of the existential in the goal
 #reset-options
 
 let swap
@@ -356,16 +358,21 @@ let rec lemma_sub_first_in_append
     else lemma_sub_first_in_append (tail v1) v2 (i -^ 1ul)
 
 // cwinter: should this go into FStar.Vector.Base.fst?
+// NS: yes, it could
 let lemma_eq_intro
     (#a:Type) 
     (#l:len_t)
     (v1:raw a l)
     (v2:raw a l)
   : Lemma
-     (requires (forall (i:len_t{i <^ l}).{:pattern (index v1 (reinx i v1)); (index v2 (reinx i v2))} 
-                       index v1 (reinx i v1) == index v2 (reinx i v2)))
+     (requires (forall (i:len_t{i <^ l}).{:pattern (index v1 i); (index v2 i)}
+                       index v1 i == index v2 i))
+     // (requires (forall (i:len_t{i <^ l}).{:pattern (index v1 (reinx i v1)); (index v2 (reinx i v2))}  //NS:it's very brittle to have reinx in a pattern; not sure why it's necessary
+     //                   index v1 (reinx i v1) == index v2 (reinx i v2)))
      (ensures (equal v1 v2))
-  = ()
+  = assert (forall (i:nat{i<UInt32.v l}). Seq.index (reveal v1) i == index v1 (uint_to_t i));
+    assert (forall (i:nat{i<UInt32.v l}). Seq.index (reveal v2) i == index v2 (uint_to_t i));
+    FStar.Seq.lemma_eq_intro (reveal v1) (reveal v2)
 
 let sub_update
     (#a:Type)
@@ -1021,7 +1028,7 @@ let rec find_append_some
     (#a:Type)
     (#l1:len_t)
     (#l2:len_t)
-    (v1:raw a l1{l1 >^ 0ul}) // cwinter: should work with l1 =^ 0ul too?
+    (v1:raw a l1{l1 >^ 0ul}) // cwinter: should work with l1 =^ 0ul too?; NS: yes it should; the pre-condition would effectively be false
     (v2:raw a l2{ok (+) l1 l2})
     (f:a -> Tot bool)
   : Lemma
