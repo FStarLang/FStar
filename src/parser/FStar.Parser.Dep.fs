@@ -369,13 +369,13 @@ let collect_one
   in
   let working_map = smap_copy original_map in
 
-  let add_dependence_edge lid =
+  let add_dependence_edge original_or_working_map lid =
     let key = lowercase_join_longident lid true in
-    match resolve_module_name working_map key with
+    match resolve_module_name original_or_working_map key with
     | Some module_name ->
       add_dep deps (PreferInterface module_name);
-      if has_interface working_map module_name
-      && has_implementation working_map module_name
+      if has_interface original_or_working_map module_name
+      && has_implementation original_or_working_map module_name
       then add_dep mo_roots (UseImplementation module_name);
       true
     | _ ->
@@ -383,7 +383,10 @@ let collect_one
   in
 
   let record_open_module let_open lid =
-      if add_dependence_edge lid then true
+      //use the original_map here
+      //since the working_map will resolve lid while accounting
+      //for already opened namespaces
+      if add_dependence_edge original_map lid then true
       else begin
         if let_open then
            FStar.Errors.warn (range_of_lid lid)
@@ -433,7 +436,7 @@ let collect_one
     | [] -> ()
     | _ ->
       let module_name = Ident.lid_of_ids lid.ns in
-      if add_dependence_edge module_name
+      if add_dependence_edge working_map module_name
       then ()
       else if Options.debug_any () then
             FStar.Errors.warn (range_of_lid lid)
