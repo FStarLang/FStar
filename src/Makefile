@@ -219,7 +219,7 @@ extract_typechecker: extract_rel extract_normalizer extract_util extract_dmff ex
 
 extract_smtencoding: extract_encode extract_smtencoding_base extract_solver
 
-extract_all: extract_tactics extract_smtencoding extract_typechecker extract_reflection extract_misc extract_syntax extract_parser extract_tosyntax extract_extraction extract_fstar
+extract_all: extract_tactics extract_smtencoding extract_typechecker extract_reflection extract_misc extract_syntax extract_parser extract_tosyntax extract_extraction extract_fstar extract_tests
 
 clean_extracted:
 	rm -f ocaml-output/FStar_*.ml
