@@ -373,7 +373,7 @@ let new_region r0 =
   recall_weak_live_region r0 ;
   HH.extend_monochrome_preserves_map_invariant m0.h h1 r0 r1 n ;
   assert (HH.map_invariant h1) ;
-  assume (downward_closed h1) ;
+  assert (downward_closed h1) ;
   assert (eternal_is_live h1) ;
   let m1 = HS h1 m0.tip n in
   // assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
