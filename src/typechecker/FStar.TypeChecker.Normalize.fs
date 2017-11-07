@@ -1567,10 +1567,7 @@ and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
                   norm cfg env stack t
                 | _ when (cfg.steps |> List.contains EraseUniverses) ->
                   norm cfg env stack t
-                | _ ->
-                  let env = us |> List.fold_left (fun env u -> (None, Univ (U_name u))::env) env in
-                  norm cfg env stack t
-                  //failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v)) //AR: add fresh universes? matters?
+                | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
          else norm cfg env stack t
 
 (* Reifies the lifting of the term [e] of type [t] from computational  *)

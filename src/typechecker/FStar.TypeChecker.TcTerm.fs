@@ -232,7 +232,7 @@ let check_smt_pat env t bs c =
 (* Building the environment for the body of a let rec;                                                      *)
 (* guards the recursively bound names with a termination check                                              *)
 (************************************************************************************************************)
-let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
+let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
     if not (Env.should_verify env) then env.letrecs else
     match env.letrecs with
     | [] -> []
@@ -265,7 +265,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                         | _ -> mk_lex_list xs in
 
         let previous_dec = decreases_clause actuals expected_c in
-        let guard_one_letrec (l, t) =
+        let guard_one_letrec (l, t, u_names) =
             match (SS.compress t).n with
                 | Tm_arrow(formals, c) ->
                   //make sure they all have non-null names
@@ -280,7 +280,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                   if debug env Options.Low
                   then BU.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
                         (Print.lbname_to_string l) (Print.term_to_string t) (Print.term_to_string t');
-                  l,t'
+                  l, t', u_names
 
                 | _ -> raise (Error ("Annotated type of 'let rec' must be an arrow", t.pos)) in
 
@@ -1074,11 +1074,11 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let mk_letrec_env envbody bs c =
                     let letrecs = guard_letrecs envbody bs c in
                     let envbody = {envbody with letrecs=[]} in
-                    letrecs |> List.fold_left (fun (env, letrec_binders) (l,t) ->
+                    letrecs |> List.fold_left (fun (env, letrec_binders) (l,t,u_names) ->
 //                        let t = N.normalize [N.EraseUniverses; N.Beta] env t in
 //                        printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
                         let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
-                        let env = Env.push_let_binding env l ([], t) in
+                        let env = Env.push_let_binding env l (u_names, t) in
                         let lb = match l with
                             | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
                             | _ -> letrec_binders in
@@ -1807,7 +1807,7 @@ and check_top_level_let env e =
          (* the result has the same effect as c1, except it returns unit *)
          let cres = Env.null_wp_for_eff env (U.comp_effect_name c1) U_zero t_unit in
 
-(*close*)let lb = U.close_univs_and_mk_letbinding lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 in
+(*close*)let lb = U.close_univs_and_mk_letbinding None lb.lbname univ_vars (U.comp_result c1) (U.comp_effect_name c1) e1 in
          mk (Tm_let((false, [lb]), e2))
             None
             e.pos,
@@ -1891,13 +1891,13 @@ and check_top_level_let_rec env top =
                     let lbdef = N.reduce_uvar_solutions env lb.lbdef in
                     if lb.lbunivs = []
                     then lb
-                    else U.close_univs_and_mk_letbinding (* all_lb_names *) lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef)
+                    else U.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lbdef)
               else let ecs = TcUtil.generalize env true (lbs |> List.map (fun lb ->
                                 lb.lbname,
                                 lb.lbdef,
                                 S.mk_Total lb.lbtyp)) in
                    ecs |> List.map (fun (x, uvs, e, c, gvs) ->
-                      U.close_univs_and_mk_letbinding (* all_lb_names *) x uvs (U.comp_result c) (U.comp_effect_name c) e) in
+                      U.close_univs_and_mk_letbinding all_lb_names x uvs (U.comp_result c) (U.comp_effect_name c) e) in
 
           let cres = U.lcomp_of_comp <| S.mk_Total t_unit in
 
@@ -2009,9 +2009,10 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                   norm env0 t) in
         let env = if termination_check_enabled lb.lbname e t
                   && Env.should_verify env (* store the let rec names separately for termination checks *)
-                  then {env with letrecs=(lb.lbname,t)::env.letrecs}  //AR: we need to add the binding of the let rec after adding the binders of the lambda term, and so, here we just note in the env
-                                                                      //that we are typechecking a let rec, the recursive binding will be added in tc_abs
-                  else Env.push_let_binding env lb.lbname ([], t) in //no polymorphic recursion on universes
+                  then {env with letrecs=(lb.lbname,t,univ_vars)::env.letrecs}  //AR: we need to add the binding of the let rec after adding the binders of the lambda term, and so, here we just note in the env
+                                                                                //that we are typechecking a let rec, the recursive binding will be added in tc_abs
+                                                                                //adding universes here so that when we add the let binding, we can add a typescheme with these universes
+                  else Env.push_let_binding env lb.lbname (univ_vars, t) in
         let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
         lb::lbs,  env)
     ([],env)
