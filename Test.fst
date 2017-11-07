@@ -14,9 +14,9 @@ module Test
 // let bar (k:nat) (x:t k) = if k > 0 then foo x else ()
 
 
-let rec fact (a:Type u#a) (x:nat) :nat = if x = 0 then 0 else x + fact a (x - 1)
+// let rec fact (a:Type u#a) (x:nat) :nat = if x = 0 then 0 else x + fact a (x - 1)
 
-let foo (a:Type u#a) = assert_norm (fact a 2 = 3)
+// let foo (a:Type u#a) = assert_norm (fact a 2 = 3)
 
 //let rec sum (a:Type) (x:nat) :Tot nat = if x = 0 then 1 else sum a (x - 1)
 
@@ -32,3 +32,11 @@ let foo (a:Type u#a) = assert_norm (fact a 2 = 3)
 
 // let fa_intro_lem (p:int -> Type0) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x)
 //   = FStar.Classical.forall_intro #int #p (fun x -> (f x <: Lemma (p x)))
+
+(* This gives error in reguaring ... try with printing phase 1 message, and with --ugly
+open FStar.All
+
+let rec map (f:'a -> ML 'b) (x:list 'a) :ML (list 'b) = match x with
+  | [] -> []
+  | a::tl -> f a::map f tl
+*)

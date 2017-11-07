@@ -349,9 +349,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           e, c, g
     end
 
-  | Tm_meta(e, Meta_monadic _) ->
+  | Tm_meta(e, Meta_monadic _)
+  | Tm_meta(e, Meta_monadic_lift _) ->
     (* KM : This case should not happen when typechecking once but is it really *)
-    (* okay to just drop the annotation ? And what about Meta_monadic_lift then ? *)
+    (* okay to just drop the annotation ? *)
     tc_term env e
 
   | Tm_meta(e, m) ->
