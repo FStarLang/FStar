@@ -6,6 +6,8 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 open HST // for := , !
 
+#set-options "--lax"
+
 (*** Definitions *)
 
 (** Pointers to data of type t.
@@ -4228,7 +4230,7 @@ let modifies_reference_elim #t b p h h' =
 
 let modifies_refl s h = ()
 
-#reset-options "--z3rlimit 160 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
+#reset-options "--z3rlimit 160 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2 --lax"
 
 let modifies_loc_includes s1 h h' s2 =
   assert_spinoff (
