@@ -18,5 +18,3 @@ let main: 'Auu____4 'Auu____5 . 'Auu____5 -> 'Auu____4 =
             (let uu____30 = FStar_Range.string_of_range r in
              FStar_Util.print2 "%s: %s\n" uu____30 msg);
           FStar_All.exit (Prims.parse_int "1")))
-
-let () = main ()

@@ -71,16 +71,6 @@ let rec init () =
 
 let frag_of_text s = {frag_text=s; frag_line=1; frag_col=0}
 
-// let failed_to_parse s e =
-//     match e with
-//         | Err msg ->
-//             printfn "Failed to parse %s\n%s\n" s msg;
-//             exit -1
-//         | Error(msg, r) ->
-//             printfn "Failed to parse %s\n%s: %s\n" s (Range.string_of_range r) msg;
-//             exit -1
-//         | _ -> raise e
-
 let pars s =
     try
         let tcenv = init() in
@@ -92,7 +82,7 @@ let pars s =
         | ASTFragment _ ->
             failwith "Impossible: parsing a Fragment always results in a Term"
     with
-        | e when not ((Options.trace_error())) -> raise e // failed_to_parse s e
+        | e when not ((Options.trace_error())) -> raise e
 
 let tc s =
     let tm = pars s in
@@ -117,4 +107,4 @@ let pars_and_tc_fragment (s:string) =
                 raise (Err (BU.format1 "%s errors were reported" (string_of_int n))))
         with e -> report(); raise (Err ("tc_one_fragment failed: " ^s))
     with
-        | e when not ((Options.trace_error())) -> raise e // failed_to_parse s e
+        | e when not ((Options.trace_error())) -> raise e
