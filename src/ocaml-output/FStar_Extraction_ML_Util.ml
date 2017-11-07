@@ -62,14 +62,14 @@ let mlexpr_of_range: FStar_Range.range -> FStar_Extraction_ML_Syntax.mlexpr'
             (uu____108, FStar_Pervasives_Native.None) in
           FStar_Extraction_ML_Syntax.MLC_Int uu____97 in
         FStar_All.pipe_right uu____96
-          (fun _0_40  -> FStar_Extraction_ML_Syntax.MLE_Const _0_40) in
+          (fun _0_41  -> FStar_Extraction_ML_Syntax.MLE_Const _0_41) in
       FStar_All.pipe_right uu____95
         (FStar_Extraction_ML_Syntax.with_ty
            FStar_Extraction_ML_Syntax.ml_int_ty) in
     let cstr s =
       let uu____123 =
         FStar_All.pipe_right (FStar_Extraction_ML_Syntax.MLC_String s)
-          (fun _0_41  -> FStar_Extraction_ML_Syntax.MLE_Const _0_41) in
+          (fun _0_42  -> FStar_Extraction_ML_Syntax.MLE_Const _0_42) in
       FStar_All.pipe_right uu____123
         (FStar_Extraction_ML_Syntax.with_ty
            FStar_Extraction_ML_Syntax.ml_string_ty) in
@@ -380,8 +380,8 @@ let rec type_leq_c:
                            let uu____642 =
                              let uu____645 = mk_fun xs body in
                              FStar_All.pipe_left
-                               (fun _0_42  ->
-                                  FStar_Pervasives_Native.Some _0_42)
+                               (fun _0_43  ->
+                                  FStar_Pervasives_Native.Some _0_43)
                                uu____645 in
                            type_leq_c unfold_ty uu____642 t2 t2' in
                          match uu____635 with
@@ -786,7 +786,7 @@ let mk_tactic_unembedding:
       str_to_top_name uu____1520 in
     let app =
       match FStar_List.length args with
-      | _0_43 when _0_43 = (Prims.parse_int "1") ->
+      | _0_44 when _0_44 = (Prims.parse_int "1") ->
           let uu____1523 =
             let uu____1530 =
               let uu____1533 =

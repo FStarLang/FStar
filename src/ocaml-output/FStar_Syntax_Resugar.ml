@@ -863,12 +863,12 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                     (fun uu____2922  ->
                        match uu____2922 with | (e1,qual) -> resugar_term e1)) in
              (match arity with
-              | _0_38 when _0_38 = (Prims.parse_int "0") ->
+              | _0_39 when _0_39 = (Prims.parse_int "0") ->
                   let uu____2929 =
                     FStar_Parser_ToDocument.handleable_args_length op1 in
                   (match uu____2929 with
-                   | _0_39 when
-                       (_0_39 = (Prims.parse_int "1")) &&
+                   | _0_40 when
+                       (_0_40 = (Prims.parse_int "1")) &&
                          ((FStar_List.length args1) > (Prims.parse_int "0"))
                        ->
                        let uu____2936 =
@@ -879,8 +879,8 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                            (op1, uu____2944) in
                          FStar_Parser_AST.Op uu____2937 in
                        mk1 uu____2936
-                   | _0_40 when
-                       (_0_40 = (Prims.parse_int "2")) &&
+                   | _0_41 when
+                       (_0_41 = (Prims.parse_int "2")) &&
                          ((FStar_List.length args1) > (Prims.parse_int "1"))
                        ->
                        let uu____2962 =
@@ -891,8 +891,8 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                            (op1, uu____2970) in
                          FStar_Parser_AST.Op uu____2963 in
                        mk1 uu____2962
-                   | _0_41 when
-                       (_0_41 = (Prims.parse_int "3")) &&
+                   | _0_42 when
+                       (_0_42 = (Prims.parse_int "3")) &&
                          ((FStar_List.length args1) > (Prims.parse_int "2"))
                        ->
                        let uu____2988 =
@@ -904,8 +904,8 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                          FStar_Parser_AST.Op uu____2989 in
                        mk1 uu____2988
                    | uu____3008 -> resugar_as_app e args1)
-              | _0_42 when
-                  (_0_42 = (Prims.parse_int "2")) &&
+              | _0_43 when
+                  (_0_43 = (Prims.parse_int "2")) &&
                     ((FStar_List.length args1) > (Prims.parse_int "1"))
                   ->
                   let uu____3015 =
