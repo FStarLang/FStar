@@ -50,7 +50,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/boot/parse.fsy fstar.exe install-compiler-lib
+all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/parse.fsy fstar.exe install-compiler-lib
 
 # Choose the correct version of the ML prettyprinter, based on OCaml version
 ../extraction/ml/FStar_Extraction_ML_PrintML.ml:
@@ -72,7 +72,7 @@ endif
 
 # This is about the F# parser, which we sed-transform from the parse.mly
 # obtained via the rule above.
-../parser/boot/parse.fsy: parse.mly
+../parser/parse.fsy: parse.mly
 	echo "%{" > $@
 	echo "#light \"off\"" >> $@
 	echo "// (c) Microsoft Corporation. All rights reserved" >> $@

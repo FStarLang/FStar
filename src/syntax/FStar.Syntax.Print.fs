@@ -143,18 +143,7 @@ let infix_prim_op_to_string e = find_lid (get_lid e)      infix_prim_ops
 let unary_prim_op_to_string e = find_lid (get_lid e)      unary_prim_ops
 let quant_to_string t = find_lid (get_lid t) quants
 
-let const_to_string x = match x with
-  | Const_effect -> "Effect"
-  | Const_unit -> "()"
-  | Const_bool b -> if b then "true" else "false"
-  | Const_float x ->      U.string_of_float x
-  | Const_string(s, _) -> U.format1 "\"%s\"" s
-  | Const_bytearray _  ->  "<bytearray>"
-  | Const_int (x, _) -> x
-  | Const_char c -> "'" ^ U.string_of_char c ^ "'"
-  | Const_range r -> Range.string_of_range r
-  | Const_reify -> "reify"
-  | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
+let const_to_string x = C.const_to_string x
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l

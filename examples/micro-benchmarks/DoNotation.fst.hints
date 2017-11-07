@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "c8b80d28c974c81a02ce593e81ea98e7"
+      "2a442aabef4f58531692c97f8619501b"
     ],
     [
       "DoNotation.add",
@@ -24,7 +24,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6688309a686fdb544b64af2e428e4ecf"
+      "fdbde41adee4e47e8bd19a35c068fb6b"
     ],
     [
       "DoNotation.add",
@@ -33,7 +33,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f5f6d4bfcbc0658e88f2b59ab178c231"
+      "7a60409adb4debbc975650ea68d4b401"
     ],
     [
       "DoNotation.uu___11",
@@ -46,16 +46,16 @@
         "function_token_typing_Prims.int", "function_token_typing_Prims.unit"
       ],
       0,
-      "b5696e55217866c6dd90cbab7632d099"
+      "f05c7a089b83e3462ef5f5f105fff88c"
     ],
     [
       "DoNotation.uu___11",
       2,
       2,
       1,
-      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      [ "@query" ],
       0,
-      "0bafd594e48081cce2be4128b3a3e434"
+      "bc9eecf4dd3ce020baf3d2f50aaa6396"
     ]
   ]
 ]

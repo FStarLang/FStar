@@ -773,6 +773,7 @@ let uint64_to_uint128 (a:U64.t) = { low = a; high = U64.uint_to_t 0; }
 
 let uint128_to_uint64 (a:t) : b:U64.t{U64.v b == v a % pow2 64} = a.low
 
+inline_for_extraction
 let u64_l32_mask: x:U64.t{U64.v x == pow2 32 - 1} = U64.uint_to_t 0xffffffff
 
 let u64_mod_32 (a: U64.t) : Pure U64.t

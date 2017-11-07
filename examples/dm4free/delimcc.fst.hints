@@ -16,11 +16,10 @@
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
         "refinement_interpretation_DelimCC_Tm_refine_ec226b0e6a0f4fa7cc8749ef613754f4",
         "token_correspondence_DelimCC.return_k",
-        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "unit_typing"
+        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
       0,
-      "d63d8642de96d35a10daf4d3c30e9bb3"
+      "ab90afece62aac57f5f0200bea52635e"
     ],
     [
       "DelimCC.left_unit",
@@ -32,11 +31,10 @@
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_DelimCC_Tm_abs_8ba7c9e9c6ff9a4294f8e9311355d069",
         "interpretation_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
-        "unit_typing"
+        "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6"
       ],
       0,
-      "d8387176efe96b9eb8838d9994fc0908"
+      "edc7d30b11ccc11acd58d2d99de0d263"
     ],
     [
       "DelimCC.associativity",
@@ -52,11 +50,10 @@
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
         "interpretation_DelimCC_Tm_abs_e9c89cb6b52613c1825b275ae72a823c",
         "refinement_interpretation_DelimCC_Tm_refine_ec226b0e6a0f4fa7cc8749ef613754f4",
-        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "unit_typing"
+        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
       0,
-      "0371dcce823ec1239fe1f4aa3584d989"
+      "acd9625a23f135f3cd77e4bdd517d565"
     ],
     [
       "DelimCC.right_unit2",
@@ -73,11 +70,10 @@
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
         "refinement_interpretation_DelimCC_Tm_refine_c081f6d4b0cd4f0a803b92d834bc0423",
         "token_correspondence_DelimCC.return_k2",
-        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "unit_typing"
+        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
       0,
-      "545e47bcec6d0dfebff2714dffbc9f80"
+      "e3369a0c23dc272c940e5866ff42f622"
     ],
     [
       "DelimCC.left_unit2",
@@ -89,11 +85,10 @@
         "equation_FStar.FunctionalExtensionality.feq",
         "interpretation_DelimCC_Tm_abs_8ba7c9e9c6ff9a4294f8e9311355d069",
         "interpretation_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
-        "unit_typing"
+        "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6"
       ],
       0,
-      "9256b95e6b862c1f5eb7244198719d3c"
+      "edb608f9af62207dfb4e127ab19b7b10"
     ],
     [
       "DelimCC.associativity2",
@@ -109,20 +104,19 @@
         "interpretation_DelimCC_Tm_abs_cde96296a368020f94c20b882c564ba6",
         "interpretation_DelimCC_Tm_abs_f47ea27f0c9878b94f87ce35f7f63df2",
         "refinement_interpretation_DelimCC_Tm_refine_c081f6d4b0cd4f0a803b92d834bc0423",
-        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0",
-        "unit_typing"
+        "typing_DelimCC_Tm_abs_bf07d25bbaf06a58bebcd1e84af4cad0"
       ],
       0,
-      "fabb9cbdfb66dbef9908aef553a45ecc"
+      "e98cd5cb04aeb968cab6a67f4d66fed9"
     ],
     [
       "DelimCC.ext",
       1,
       2,
       1,
-      [ "@query", "unit_typing" ],
+      [ "@query" ],
       0,
-      "bc7a0cc300e4e323eb3cbd2b46bb3a1d"
+      "80504fddbc8b54e1d2169c3c8c69af94"
     ],
     [
       "DelimCC.left_unit3",
@@ -131,25 +125,25 @@
       1,
       [ "@query" ],
       0,
-      "bbd921d78c4c4954d17e1dcff4c9c984"
+      "4d98ceaa465375d5b5f1c0246c421e14"
     ],
     [
       "DelimCC.right_unit3",
       1,
       2,
       1,
-      [ "@query", "unit_typing" ],
+      [ "@query" ],
       0,
-      "a0c953fb4e2d499f3409d6ff604fda56"
+      "9a5d705bc8212adbbf18028146e41589"
     ],
     [
       "DelimCC.associativity3",
       1,
       2,
       1,
-      [ "@query", "unit_typing" ],
+      [ "@query" ],
       0,
-      "d16b0c6e76af4b31be30e084affd5276"
+      "9f65a1bb805ed3b1c53a3796cbe6452f"
     ]
   ]
 ]

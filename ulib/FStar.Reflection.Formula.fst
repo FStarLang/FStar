@@ -1,10 +1,10 @@
 module FStar.Reflection.Formula
 
+open FStar.Reflection.Types
+open FStar.Reflection.Data
+open FStar.Reflection.Basic
 open FStar.Reflection.Syntax
 open FStar.Reflection.Syntax.Lemmas
-open FStar.Reflection.Types
-open FStar.Reflection.Basic
-open FStar.Reflection.Data
 
 type comparison =
   | Eq            (* Propositional equality (eq2) *)

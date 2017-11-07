@@ -6,6 +6,7 @@ open FStar.Syntax.Syntax
 open FStar.Char
 
 module Range = FStar.Range
+module Z = FStar.BigInt
 
 (*
  * Unmbedding functions return an option because they might fail to
@@ -33,9 +34,9 @@ val embed_char        : embedder<char>
 val unembed_char      : unembedder<char>
 val unembed_char_safe : unembedder<char>
 
-val embed_int        : embedder<int>
-val unembed_int      : unembedder<int>
-val unembed_int_safe : unembedder<int>
+val embed_int        : embedder<Z.t>
+val unembed_int      : unembedder<Z.t>
+val unembed_int_safe : unembedder<Z.t>
 
 val embed_string        : embedder<string>
 val unembed_string      : unembedder<string>

@@ -123,7 +123,7 @@ let instrument (f : 'a) : tactic unit =
     dup;;
     t <-- instrument_body ii t;
     dump "";;
-    exact_guard (return t);; smt;;
+    focus (exact_guard (return t);; repeat smt);;
     norm [];;
     trefl
 

@@ -18,5 +18,4 @@ let _ =
                    (fun () ->
                      admit ();
                      let x = quote 1 () in
-                     print (term_to_string (norm_term [] x ())) ();
-                     fail "" ())
+                     print (term_to_string (norm_term [] x ())) ())

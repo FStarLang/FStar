@@ -109,8 +109,7 @@ val doc                         : unit    -> bool
 val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
 val eager_inference             : unit    -> bool
-val explicit_deps               : unit    -> bool
-val extract_all                 : unit    -> bool
+val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list<string>
 val find_file                   : string  -> option<string>
 val fs_typ_app                  : string  -> bool
@@ -184,8 +183,6 @@ val use_hint_hashes             : unit    -> bool
 val use_native_tactics          : unit    -> option<string>
 val use_tactics                 : unit    -> bool
 val using_facts_from            : unit    -> list<(Ident.path * bool)>
-val verify_all                  : unit    -> bool
-val verify_module               : unit    -> list<string>
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val z3_exe                      : unit    -> string

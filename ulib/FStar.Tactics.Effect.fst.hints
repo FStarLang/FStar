@@ -1,5 +1,5 @@
 [
-  "m²\u0010E<Í\ttI4ÂA;\u0000\n",
+  "a·¨¯é\u001f¨ô\u0010¢\t\u0018£‚`",
   [
     [
       "FStar.Tactics.Effect.__bind",
@@ -16,7 +16,7 @@
         "typing_FStar.Tactics.Types.incr_depth"
       ],
       0,
-      "460d48cac50e9125da0857e322233fbd"
+      "95cd3c093f7bb2a6aebd04314c742438"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -30,7 +30,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "3e9da7935ce985471f8e1ae952f67e19"
+      "2cd9f7dc2526f508c9c349af053a825f"
     ],
     [
       "FStar.Tactics.Effect.assert_by_tactic",
@@ -44,16 +44,7 @@
         "unit_typing"
       ],
       0,
-      "b85d7bae75e9a7d5e7eb2d9ed8fc52ff"
-    ],
-    [
-      "FStar.Tactics.Effect.by_tactic_seman",
-      1,
-      2,
-      1,
-      [ "@query", "unit_typing" ],
-      0,
-      "a45ec370ecbb1601f56c5e357b00f117"
+      "378f0fd4c76a249026e79a5d3ca955b0"
     ]
   ]
 ]

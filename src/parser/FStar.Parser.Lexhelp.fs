@@ -175,11 +175,13 @@ let keywords =
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;
+    ALWAYS, "range_of"   ,RANGE_OF;
     ALWAYS, "rec"        ,REC;
     ALWAYS, "reifiable"  ,REIFIABLE;
     ALWAYS, "reify"      ,REIFY;
     ALWAYS, "reflectable",REFLECTABLE;
     ALWAYS, "requires"   ,REQUIRES;
+    ALWAYS, "set_range_of"              ,SET_RANGE_OF;
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "then"       ,THEN;
     ALWAYS, "total"      ,TOTAL;
