@@ -8,7 +8,7 @@ open FStar.Tactics
 
 private
 let local_unfold names : tactic unit =
-  norm [delta ; delta_only (List.Tot.map (fun s -> FStar.String.strcat "FStar.HyperStack.ST." s) names)]
+  norm [delta_only (List.Tot.map (fun s -> FStar.String.strcat "FStar.HyperStack.ST." s) names)]
 
 
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
@@ -24,16 +24,22 @@ unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fu
 sub_effect DIV ~> GST = lift_div_gst
 
 
-let ref_liveness = fun h1 h2 ->
-   (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
-     h1 `contains` r /\ h2 `weak_live_region` r.id ==>
-       (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
+let ref_liveness h1 h2 =
+   (forall (a:Type0) (rel:preorder a) (r:mreference a rel). 
+                {:pattern (h1 `contains` r) \/ (h2 `contains` r) \/ (h2 `weak_live_region` r.id)}
+                h1 `contains` r /\ h2 `weak_live_region` r.id ==>
+                (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
 
+logic
 let region_liveness : preorder mem = fun h1 h2 ->
-   (forall (i:HH.rid). Map.contains h1.h i ==> Map.contains h2.h i) /\
-   (forall (i:HH.rid). ~(i `is_alive` h1) ==> ~(i `is_alive` h2)) /\
-   (forall (i:HH.rid). i `is_above` h2.tip /\ Map.contains h1.h i ==> i `is_above` h1.tip)
-
+   (forall (i:HH.rid).{:pattern (Map.contains h1.h i) \/ (Map.contains h2.h i)}
+                 Map.contains h1.h i ==> Map.contains h2.h i) /\
+   (forall (i:HH.rid).{:pattern (i `is_alive` h1) \/ (i `is_alive` h2)}
+                 ~(i `is_alive` h1) ==> ~(i `is_alive` h2)) /\
+   (forall (i:HH.rid).{:pattern (i `is_above` h1.tip) \/ (i `is_above` h2.tip)}
+                  i `is_above` h2.tip /\ Map.contains h1.h i ==> i `is_above` h1.tip)
+   
+logic
 let region_freshness_increases : preorder mem = fun h1 h2 ->
   b2t (h1.region_freshness <= h2.region_freshness)
 
@@ -42,11 +48,12 @@ let ref_liveness_trans_trans (h1:mem) (h2:mem) (h3:mem)
   : Lemma (requires (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3))
           (ensures  (ref_liveness h1 h3))
           [SMTPat (ref_liveness h1 h2); SMTPat (ref_liveness h2 h3)]
-= assert_by_tactic
-  (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 ==> ref_liveness h1 h3)
-  (clear_top ;; local_unfold ["region_liveness" ; "ref_liveness"])
+= ()
+// assert_by_tactic
+//   (region_liveness h1 h2 /\ region_liveness h2 h3 /\ ref_liveness h1 h2 /\ ref_liveness h2 h3 ==> ref_liveness h1 h3)
+//   (dump "A" ;; clear_top ;; dump "B" ;; local_unfold ["region_liveness" ; "ref_liveness"];; dump "C")
 
-
+logic
 let mem_rel : preorder mem = fun h1 h2 ->
   region_liveness h1 h2 /\
   region_freshness_increases h1 h2 /\
@@ -59,7 +66,7 @@ assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
 type mem_predicate = mem -> Type0
 
 let stable (p:mem_predicate) =
-  forall (h1:mem) (h2:mem). (p h1 /\ mem_rel h1 h2) ==> p h2
+  forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
 
 let stable_predicate = p:mem_predicate{stable p}
 
@@ -168,15 +175,13 @@ let recall_weak_live_region (r:rid)
 = gst_witness (region_allocated_pred HH.root) ; gst_recall (region_allocated_pred r)
 
 private
-let valid_ref0 (#a:Type) (#rel:preorder a) (r:mreference a rel) =
-  fun (m:mem) ->
+let valid_ref0 (#a:Type) (#rel:preorder a) (r:mreference a rel) (m:mem) =
     region_allocated_pred r.id m /\
     (m `weak_live_region` r.id /\ r.id `is_alive` m ==> HH.contains_ref m.h r.ref)
 
-
-let valid_ref_lemma (#a:Type) (#rel:preorder a) (r:mreference a rel) : Lemma (stable (valid_ref0 r))=
-  assert_by_tactic (stable (valid_ref0 r))
-    (local_unfold ["stable" ; "mem_rel" ; "valid_ref0" ; "ref_liveness"])
+let valid_ref_lemma (#a:Type) (#rel:preorder a) (r:mreference a rel) : Lemma (stable (valid_ref0 r)) = ()
+  // assert_by_tactic (stable (valid_ref0 r))
+  //   (local_unfold ["stable" ; "mem_rel" ; "valid_ref0" ; "ref_liveness"])
 
 let valid_ref (#a:Type) (#rel:preorder a) (r:mreference a rel): stable_predicate =
   valid_ref_lemma r ; valid_ref0 r
@@ -211,8 +216,8 @@ let push_colored_frame (c:int) =
   let h : hh = h in
   let m1 = HS h tip n in
   assert (region_freshness_increases m0 m1) ;
-  assert_by_tactic (region_liveness m0 m1) (local_unfold ["region_liveness"]) ;
-  assert_by_tactic (ref_liveness m0 m1) (local_unfold ["ref_liveness"]) ;
+  // assert_by_tactic (region_liveness m0 m1) (local_unfold ["region_liveness"]) ;
+  // assert_by_tactic (ref_liveness m0 m1) (local_unfold ["ref_liveness"]) ;
   gst_put m1
 
 (**
@@ -234,7 +239,7 @@ let pop_frame () =
   let m0 = gst_get () in
   let m1 = pop m0 in
   assert (popped m0 m1) ;
-  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "region_liveness" ; "ref_liveness"]) ;
+  // assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "region_liveness" ; "ref_liveness"]) ;
   gst_put m1
 
 let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}) (m1:mem) =
@@ -281,13 +286,13 @@ let salloc_maybe_mm #a init mm =
   HH.lemma_alloc m0.tip (Preorder.trivial_preorder a) m0.h init mm ;
   lemma_upd_tip_idempotent m0;
   let m1 = HS h m0.tip m0.region_freshness in
-  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "region_liveness" ; "ref_liveness"]) ;
+  // assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "region_liveness" ; "ref_liveness"]) ;
   gst_put m1 ;
   let s = MkRef m0.tip r in
-  assert_by_tactic (valid_ref s m1) (local_unfold ["valid_ref"]) ;
+  // assert_by_tactic (valid_ref s m1) (local_unfold ["valid_ref"]) ;
   let s = to_stack_reference s in
-  assert_by_tactic (salloc_post init m0 s m1 /\ is_mm s == mm) (local_unfold ["salloc_post"]);
-  assert_by_tactic (inline_stack_inv m0 m1) (local_unfold ["inline_stack_inv"]);
+  // assert_by_tactic (salloc_post init m0 s m1 /\ is_mm s == mm) (local_unfold ["salloc_post"]);
+  // assert_by_tactic (inline_stack_inv m0 m1) (local_unfold ["inline_stack_inv"]);
   s
 
 val salloc: #a:Type -> init:a -> StackInline (stackref a)
@@ -371,16 +376,16 @@ let new_region r0 =
   assume (downward_closed h1) ;
   assert (eternal_is_live h1) ;
   let m1 = HS h1 m0.tip n in
-  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
+  // assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
   gst_put m1 ;
   gst_witness (region_allocated_pred r1) ;
-  let r1 : rid = r1 in
-assert(r1 `HH.extends` r0);
-assert(HH.fresh_region r1 m0.h m1.h);
-assert(			    HH.color r1 == HH.color r0);
-assert(			    m1.h == Map.upd m0.h r1 HH.emp);
-assert(			    m1.tip == m0.tip);
- r1
+  // let r1 : rid = r1 in
+  // assert(r1 `HH.extends` r0);
+  // assert(HH.fresh_region r1 m0.h m1.h);
+  // assert(			    HH.color r1 == HH.color r0);
+  // assert(			    m1.h == Map.upd m0.h r1 HH.emp);
+  // assert(			    m1.tip == m0.tip);
+  r1
 
 
 let is_eternal_color = HS.is_eternal_color
@@ -402,11 +407,12 @@ let new_colored_region r0 c =
   let h1 = Map.upd m0.h r1 HH.emp in
   HH.extend_preserves_map_invariant m0.h h1 r0 r1 n c;
   let m1 = HS h1 m0.tip n in
-  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
+  // assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
   gst_put m1 ;
   gst_witness (region_allocated_pred r1) ;
-  let r1 : rid = r1 in
   r1
+  // let r1 : rid = r1 in
+  // r1
 
 #reset-options
 
@@ -421,11 +427,11 @@ let to_eternal_reference (#a:Type) (r:FStar.HyperStack.reference a)
   : ST (s:reference a{is_eternal_region s.id})
         (fun h -> valid_ref r h /\ is_eternal_region r.id)
         (fun (h0:mem) s (h1:mem) -> r === s /\ h0 == h1)
-= gst_witness (valid_ref r) ;
-  let x : reference a = r in
-  assert (is_eternal_region x.id) ;
-  let x : (x:reference a{is_eternal_region x.id}) = x in
-  x
+= gst_witness (valid_ref r) ; r
+  // let x : reference a = r in
+  // assert (is_eternal_region x.id) ;
+  // let x : (x:reference a{is_eternal_region x.id}) = x in
+  // x
 
 #set-options "--max_fuel 0 --z3rlimit 50"
 
@@ -440,12 +446,12 @@ let ralloc_maybe_mm #a i init mm =
   HH.lemma_alloc i (Preorder.trivial_preorder a) m0.h init mm ;
   lemma_upd_existing_rid_idempotent i m0;
   let m1 = HS h m0.tip m0.region_freshness in
-  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
+  // assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
   gst_put m1 ;
   let x = MkRef i r in
-  assert_by_tactic (valid_ref x m1) (local_unfold ["valid_ref"]) ;
+  // assert_by_tactic (valid_ref x m1) (local_unfold ["valid_ref"]) ;
   let x = to_eternal_reference x in
-  assert_by_tactic (ralloc_post i init m0 x m1 /\ is_mm x == mm) (local_unfold ["ralloc_post"]);
+  // assert_by_tactic (ralloc_post i init m0 x m1 /\ is_mm x == mm) (local_unfold ["ralloc_post"]);
   x
 
 #reset-options
@@ -489,11 +495,11 @@ let op_Colon_Equals #a r v =
   let h1 = HH.upd_tot m0.h r.ref v in
   lemma_upd_existing_rid_idempotent r.id m0 ;
   let m1 = HS h1 m0.tip m0.region_freshness in
-  assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
+  // assert_by_tactic (mem_rel m0 m1) (local_unfold ["mem_rel" ; "ref_liveness" ; "region_liveness"]) ;
   gst_put m1 ;
-  assert_by_tactic (assign_post r v m0 () m1) (local_unfold ["assign_post"]) ;
-  HH.lemma_upd_tot m0.h h1 r.ref v ;
-  assert_by_tactic (equal_domains m0 m1) (norm [delta ; delta_only ["FStar.HyperStack.equal_domains"] ])
+  // assert_by_tactic (assign_post r v m0 () m1) (local_unfold ["assign_post"]) ;
+  HH.lemma_upd_tot m0.h h1 r.ref v
+  // assert_by_tactic (equal_domains m0 m1) (norm [delta ; delta_only ["FStar.HyperStack.equal_domains"] ])
 
 #reset-options
 
@@ -608,6 +614,7 @@ val test_stack_with_long_lived: s:reference int -> Stack unit
   (requires (fun h -> contains h s))
   (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1
     /\ modifies (Set.singleton s.id) h0 h1))
+#reset-options
 let test_stack_with_long_lived s =
   push_frame();
   let _ = test_stack !s in
@@ -729,9 +736,12 @@ val with_frame: #a:Type -> #pre:gst_pre -> #post:(mem -> Tot (gst_post a)) -> $f
 				 /\ equal_domains s0' s1'
 				 /\ s1 == pop s1')
 let with_frame #a #pre #post f =
+  let h0 = gst_get () in
   push_frame();
   let x = f() in
   pop_frame();
+  let h1 = gst_get () in
+  assert (equal_domains h0 h1);
   x
 
 let test_with_frame (x:stackref int) (v:int)
