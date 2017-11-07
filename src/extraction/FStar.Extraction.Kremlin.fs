@@ -32,8 +32,9 @@ open FStar.BaseTypes
 module BU = FStar.Util
 
 (** CHANGELOG
-- Added a single constructor to the expression type to reflect the addition
+- v24: Added a single constructor to the expression type to reflect the addition
   of type applications to the ML extraction language.
+- v25: Added a number of type parameters for globals.
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -42,7 +43,7 @@ type program =
   list<decl>
 
 and decl =
-  | DGlobal of list<flag> * lident * typ * expr
+  | DGlobal of list<flag> * lident * int * typ * expr
   | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr
   | DTypeAlias of lident * int * typ
   | DTypeFlat of lident * int * fields_t
@@ -169,7 +170,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 24
+let current_version: version = 25
 
 type file = string * program
 type binary_format = version * list<file>
@@ -420,19 +421,20 @@ and translate_let env flavor flags lb: option<decl> =
 
   | {
       mllb_name = name;
-      mllb_tysc = Some ([], t);
+      mllb_tysc = Some (tvars, t);
       mllb_def = expr
     } ->
       // Case 2: this is a global
       let flags = translate_flags flags in
+      let env = List.fold_left (fun env name -> extend_t env name) env tvars in
       let t = translate_type env t in
       let name = env.module_name, name in
       begin try
         let expr = translate_expr env expr in
-        Some (DGlobal (flags, name, t, expr))
+        Some (DGlobal (flags, name, List.length tvars, t, expr))
       with e ->
         BU.print2_warning "Not translating definition for %s (%s)\n" (snd name) (BU.print_exn e);
-        Some (DGlobal (flags, name, t, EAny))
+        Some (DGlobal (flags, name, List.length tvars, t, EAny))
       end
 
   | { mllb_name = name; mllb_tysc = ts } ->
@@ -447,6 +449,7 @@ and translate_let env flavor flags lb: option<decl> =
           ()
       end;
       None
+
 
 and translate_type_decl env ty: option<decl> =
   match ty with
