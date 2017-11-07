@@ -1765,12 +1765,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             | Env.Eager_unfolding_only -> true
             | _ -> false)
         in
-        let steps' =
-          if cfg.steps |> List.contains PureSubtermsWithinComputations
-          then [Exclude Zeta]
-          (* KM : Why are we excluding Iota (pattern matching) here ? *)
-          else [Exclude Iota; Exclude Zeta]
-        in
+        let steps' = [Exclude Zeta] in
         ({cfg with delta_level=new_delta; steps=steps'@cfg.steps; strong=true})
       in
       let norm_or_whnf env t =
@@ -1842,7 +1837,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         | Pat_dot_term _ -> Inl []
         | Pat_constant s -> begin
           match scrutinee.n with
-            | Tm_constant s' when (s=s') -> Inl []
+            | Tm_constant s'
+              when FStar.Const.eq_const s s' ->
+              Inl []
             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
           end
         | Pat_cons(fv, arg_pats) -> begin
