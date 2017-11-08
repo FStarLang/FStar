@@ -17,7 +17,7 @@ module FStar.Monotonic.HyperHeap
 open FStar.Map
 open FStar.Preorder
 open FStar.Monotonic.Heap
-
+module Map = FStar.Map
 open FStar.Ghost
 
 abstract type rid = erased (list (int * int))
