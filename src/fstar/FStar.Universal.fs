@@ -117,11 +117,15 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
       with_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
     let modul, env =
       with_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
-    (match curmod with
-     | Some _ when not (acceptable_mod_name modul) ->
-       raise (Errors.Error ("Interactive mode only supports a single module at the top-level",
+    if not (acceptable_mod_name modul) then
+    begin
+       let msg : string =
+           BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
+                       (Parser.Dep.module_name_of_file (List.hd (Options.file_list ())))
+       in
+       raise (Errors.Error (msg,
                              range_of_first_mod_decl ast_modul))
-     | _ -> ());
+    end;
     let modul, _, env = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                         else Tc.tc_partial_modul env modul false in
     (Some modul, env)

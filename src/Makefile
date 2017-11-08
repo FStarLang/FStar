@@ -12,7 +12,7 @@ BIN=../bin
 
 ifeq ($(OS),Windows_NT)
   FSC     = fsc
-  MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g' | tr -d '\r')\")/MSBuild.exe
+  MSBUILD = ./msbuild.bat
   UNAME   = Windows_NT
   FSTAR   = ../bin/fstar.exe
   RUNTIME =

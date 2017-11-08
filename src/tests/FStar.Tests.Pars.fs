@@ -35,6 +35,9 @@ let parse_mod mod_name dsenv =
         env', m
     | ParseError (msg, r) ->
         raise (Error(msg, r))
+    | ASTFragment (Inr _, _) ->
+        let msg = BU.format1 "%s: expected a module\n" mod_name in
+        raise (Error(msg, dummyRange))
     | Term _ ->
         failwith "Impossible: parsing a Filename always results in an ASTFragment"
 
