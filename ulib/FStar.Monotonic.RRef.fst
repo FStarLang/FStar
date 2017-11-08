@@ -19,13 +19,13 @@ let monotonic (a:Type) (b:reln a) =
 (*
  * AR: adding is_eternal_region refinement, since mrefs are allocated using ralloc
  *)
-type rid = r:HH.rid{is_eternal_region r}
+type rid = r:HST.rid{is_eternal_region r}
 
 (*
  * AR: HS.ref, means it is not mm.
  * This along with rid above is essential to justify recall.
  *)
-abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{x.id = r}
+abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HST.ref a{x.id = r}
 
 (* let haseq_m_rref (r:rid) (a:Type) (b:reln a)  *)
 (*     : Lemma (requires True) *)
@@ -40,7 +40,7 @@ abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{x.id = r}
 (*
  * AR: the refinement is important here, for as_rref rid was part of the type index
  *)
-val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:HS.ref a{x.id = r})
+val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:HST.ref a{x.id = r})
 let as_hsref #r #a #b x = x
 
 (* val m_contains : #r:rid -> #a:Type -> #b:reln a -> mr:m_rref r a b -> m:t -> GTot bool *)
@@ -63,7 +63,7 @@ let m_fresh (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m0:mem) (m1:mem) :
 val m_sel: #r:rid -> #a:Type -> #b:reln a -> h:mem -> m_rref r a b -> GTot a
 let m_sel #r #a #b h m = HS.sel h (as_hsref m)
 
-(* 17-01-05 m_upd seems unsound (2 missing preconditions) and unused: commenting out for now 
+(* 17-01-05 m_upd seems unsound (2 missing preconditions) and unused: commenting out for now
 (* val m_upd: #r:rid -> #a:Type -> #b:reln a -> h:t -> m_rref r a b -> a -> GTot t *)
 (* let m_upd #r #a #b h m v = HyperHeap.upd h (as_rref m) v *)
 
@@ -81,7 +81,7 @@ val m_alloc: #a:Type
 		(ensures (fun h0 (m:m_rref r a b) h1 -> ralloc_post r init h0 (as_hsref m) h1))
 let m_alloc #a #b r init = HST.ralloc r init
 
-val m_read:#r:rid 
+val m_read:#r:rid
        -> #a:Type
        -> #b:reln a
        -> x:m_rref r a b
@@ -90,7 +90,7 @@ val m_read:#r:rid
             (ensures (deref_post (as_hsref x)))
 let m_read #r #a #b x = !x
 
-val m_write:#r:rid 
+val m_write:#r:rid
         -> #a:Type
         -> #b:reln a
         -> x:m_rref r a b
@@ -100,14 +100,14 @@ val m_write:#r:rid
               (ensures (assign_post (as_hsref x) v))
 let m_write #r #a #b x v = x := v
 
-(* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content. 
+(* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content.
 *)
 unfold type stable_on_t (#i:rid) (#a:Type) (#b:reln a) (r:m_rref i a b) (p:(mem -> GTot Type0)) =
   forall h0 h1. p h0 /\ b (m_sel h0 r) (m_sel h1 r) ==> p h1
 
 abstract type witnessed (p:(mem -> GTot Type0)) = True
 
-(* witnesses a property stable by all updates on p; once we have a witness, there is no need to record that it was obtained using m's monotonicity. *) 
+(* witnesses a property stable by all updates on p; once we have a witness, there is no need to record that it was obtained using m's monotonicity. *)
 val witness: #r:rid
           -> #a:Type
           -> #b:reln a
@@ -118,8 +118,9 @@ val witness: #r:rid
                 (ensures (fun h0 _ h1 -> h0==h1 /\ witnessed p))
 let witness #r #a #b m p = ()
 
-assume val weaken_witness : p:(mem -> GTot Type0) 
-			  -> q:(mem -> GTot Type0) 
+(* TODO : should be a consequence of witness functoriality (assumed in HST) *)
+assume val weaken_witness : p:(mem -> GTot Type0)
+			  -> q:(mem -> GTot Type0)
 			  -> Lemma
   ((forall h. p h ==> q h) /\ witnessed p ==> witnessed q)
 
@@ -130,21 +131,22 @@ val testify: p:(mem -> GTot Type0)
                (ensures (fun h0 _ h1 -> h0==h1 /\ p h1))
 let testify p = admit() //intentionally admitted
 
-(* 17-01-05 can we prove it from testify? *) 
-val testify_forall: #a:Type -> #p:(a -> mem -> Type0) 
-       -> $s:squash (forall (x:a). witnessed (p x)) 
+(* 17-01-05 can we prove it from testify? *)
+val testify_forall: #a:Type -> #p:(a -> mem -> Type0)
+       -> $s:squash (forall (x:a). witnessed (p x))
        -> ST unit
   (requires (fun h -> True))
   (ensures (fun h0 _ h1 -> h0==h1 /\ (forall (x:a). p x h1)))
 let testify_forall #a #p $s = admit() //intentionally admitted
 
-val m_recall: #r:rid -> #a:Type -> #b:reln a 
+val m_recall: #r:rid -> #a:Type -> #b:reln a
             -> m:m_rref r a b
-	    -> ST unit 
+	    -> ST unit
 	      (requires (fun h -> True))
 	      (ensures (fun h0 _ h1 -> h0==h1 /\ m_contains m h1))
 let m_recall #r #a #b m = recall m
 
+(* TODO : all these should be consequence of the refinement given in HST for rid *)
 (* another instance of monotonic property, this time on the global map of regions; not used much? *)
 let rid_exists (r:rid) (h:mem) = b2t(Map.contains h.h r)
 // ex_rid: The type of a region id that is known to exist now and for ever more

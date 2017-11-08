@@ -1920,7 +1920,7 @@ let live
   (h: HS.mem)
   (p: pointer value)
 : GTot Type0
-= let rel = Heap.trivial_preorder pointer_ref_contents in
+= let rel = Preorder.trivial_preorder pointer_ref_contents in
   let (Pointer from contents _) = p in (
     HS.aref_live_at h contents pointer_ref_contents rel /\ (
       let untyped_contents = HS.greference_of contents pointer_ref_contents rel in (
@@ -1953,8 +1953,8 @@ let greference_of
   (p: pointer value)
 : Ghost (HS.reference pointer_ref_contents)
   (requires (exists h . live h p))
-  (ensures (fun x -> (exists h . live h p) /\ x == HS.greference_of (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) /\ HS.aref_of x == Pointer?.contents p))
-= HS.greference_of (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents)
+  (ensures (fun x -> (exists h . live h p) /\ x == HS.greference_of (Pointer?.contents p) pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents) /\ HS.aref_of x == Pointer?.contents p))
+= HS.greference_of (Pointer?.contents p) pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents)
 
 let unused_in_greference_of
   (#value: typ)
@@ -4334,12 +4334,12 @@ let screate
   let aref = HS.aref_of content in
   let p = Pointer value aref PathBase in
   let h1 = HST.get () in
-  assert (HS.aref_live_at h1 aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents));
+  assert (HS.aref_live_at h1 aref pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents));
   let f () : Lemma (
-    let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
+    let gref = HS.greference_of aref pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents) in
     HS.sel h1 gref == HS.sel h1 content
   )
-  = let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
+  = let gref = HS.greference_of aref pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents) in
     assert (HS.frameOf content == HS.frameOf gref);
     assert (HS.as_addr content == HS.as_addr gref);
     HS.lemma_sel_same_addr h1 content gref
@@ -4371,12 +4371,12 @@ let ecreate
   let aref = HS.aref_of content in
   let p = Pointer t aref PathBase in
   let h1 = HST.get () in
-  assert (HS.aref_live_at h1 aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents));
+  assert (HS.aref_live_at h1 aref pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents));
   let f () : Lemma (
-    let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
+    let gref = HS.greference_of aref pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents) in
     HS.sel h1 gref == HS.sel h1 content
   )
-  = let gref = HS.greference_of aref pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) in
+  = let gref = HS.greference_of aref pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents) in
     assert (HS.frameOf content == HS.frameOf gref);
     assert (HS.as_addr content == HS.as_addr gref);
     HS.lemma_sel_same_addr h1 content gref
@@ -4411,7 +4411,7 @@ let reference_of
   (requires (live h p))
   (ensures (fun x -> 
     live h p /\
-    x == HS.reference_of h (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents) /\
+    x == HS.reference_of h (Pointer?.contents p) pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents) /\
     HS.frameOf x == HS.frameOf (greference_of p) /\
     HS.as_addr x == HS.as_addr (greference_of p) /\
     (forall h' . h' `HS.contains` x <==> h' `HS.contains` (greference_of p)) /\
@@ -4421,7 +4421,7 @@ let reference_of
       (h' `HS.contains` x /\ h' `HS.contains` (greference_of p) /\ HS.upd h' x z == HS.upd h' (greference_of p) z)
   )))
 = let x =
-    HS.reference_of h (Pointer?.contents p) pointer_ref_contents (Heap.trivial_preorder pointer_ref_contents)
+    HS.reference_of h (Pointer?.contents p) pointer_ref_contents (Preorder.trivial_preorder pointer_ref_contents)
   in
   let f (h' : HS.mem) : Lemma
     ( (exists h' . live h' p) /\ // necessary to typecheck Classical.forall_intro

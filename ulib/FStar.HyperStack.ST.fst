@@ -25,7 +25,7 @@ sub_effect DIV ~> GST = lift_div_gst
 
 
 let ref_liveness h1 h2 =
-   (forall (a:Type0) (rel:preorder a) (r:mreference a rel). 
+   (forall (a:Type0) (rel:preorder a) (r:mreference a rel).
                 {:pattern (h1 `contains` r) \/ (h2 `contains` r) \/ (h2 `weak_live_region` r.id)}
                 h1 `contains` r /\ h2 `weak_live_region` r.id ==>
                 (h2 `contains` r /\ rel (sel h1 r) (sel h2 r)))
@@ -38,7 +38,7 @@ let region_liveness : preorder mem = fun h1 h2 ->
                  ~(i `is_alive` h1) ==> ~(i `is_alive` h2)) /\
    (forall (i:HH.rid).{:pattern (i `is_above` h1.tip) \/ (i `is_above` h2.tip)}
                   i `is_above` h2.tip /\ Map.contains h1.h i ==> i `is_above` h1.tip)
-   
+
 logic
 let region_freshness_increases : preorder mem = fun h1 h2 ->
   b2t (h1.region_freshness <= h2.region_freshness)
@@ -75,6 +75,9 @@ assume type witnessed: stable_predicate -> Type0
 assume val gst_witness: p:stable_predicate -> GST unit (fun post h0 -> p h0 /\ (witnessed p ==> post () h0))
 assume val gst_recall:  p:stable_predicate -> GST unit (fun post h0 -> witnessed p /\ (p h0 ==> post () h0))
 
+assume val lemma_functoriality
+  (p:mem_predicate{stable p /\ witnessed p}) (q:mem_predicate{stable q /\ (forall (h:mem). p h ==> q h)})
+  : Lemma (ensures (witnessed q))
 
 (**
     WARNING: this effect is unsafe, for C/C++ extraction it shall only be used by
@@ -104,6 +107,7 @@ effect Stack (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0))
 effect Heap (a:Type) (pre:gst_pre) (post: (m0:mem -> Tot (gst_post' a (pre m0)))) =
   GST a
     (fun (p:gst_post a) (h:mem) -> pre h /\ (forall a h1. (pre h /\ post h a h1 /\ h.tip = HH.root /\ h1.tip = HH.root ) ==> p a h1)) (* WP *)
+
 
 (**
   Effect of low-level code:

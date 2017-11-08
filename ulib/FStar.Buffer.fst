@@ -1,5 +1,5 @@
 module FStar.Buffer
- 
+
 open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.UInt32
@@ -14,7 +14,7 @@ module HST = FStar.HyperStack.ST
 
 #set-options "--initial_fuel 0 --max_fuel 0"
 
-//17-01-04 usage? move to UInt? 
+//17-01-04 usage? move to UInt?
 let lemma_size (x:int) : Lemma (requires (UInt.size x n))
 				     (ensures (x >= 0))
 				     [SMTPat (UInt.size x n)]
@@ -23,7 +23,7 @@ let lemma_size (x:int) : Lemma (requires (UInt.size x n))
 (* Buffer general type, fully implemented on FStar's arrays *)
 noeq private type _buffer (a:Type) =
   | MkBuffer: max_length:UInt32.t
-    -> content:reference (s:seq a{Seq.length s == v max_length})
+    -> content:HST.reference (s:seq a{Seq.length s == v max_length})
     -> idx:UInt32.t
     -> length:UInt32.t{v idx + v length <= v max_length}
     -> _buffer a
@@ -43,7 +43,7 @@ let max_length #a (b:buffer a) : GTot nat = v b.max_length
 let length #a (b:buffer a) : GTot nat = v b.length
 let idx #a (b:buffer a) : GTot nat = v b.idx
 
-//17-01-04 rename to container or ref? 
+//17-01-04 rename to container or ref?
 let content #a (b:buffer a) :
   GTot (reference (s:seq a{Seq.length s == v b.max_length})) = b.content
 
@@ -61,7 +61,7 @@ val recall: #a:Type
   (requires (fun m -> True))
   (ensures  (fun m0 _ m1 -> m0 == m1 /\ live m1 b))
 let recall #a b = recall b.content
- 
+
 (* Ghostly access an element of the array, or the full underlying sequence *)
 let as_seq #a h (b:buffer a) : GTot (s:seq a{Seq.length s == length b}) =
   Seq.slice (sel h b) (idx b) (idx b + length b)
@@ -77,7 +77,7 @@ let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
 (* y is included in x / x contains y *)
 let includes #a (x:buffer a) (y:buffer a) : GTot Type0 =
   x.max_length == y.max_length /\
-  x.content == y.content /\
+  x.content === y.content /\ (* x.content and y.content does not seem to have the same type *)
   idx y >= idx x /\
   idx x + length x >= idx y + length y
 
@@ -875,7 +875,7 @@ let to_seq #a b l =
 // ocaml-only, used for conversions to Platform.bytes
 val to_seq_full: #a:Type -> b:buffer a -> ST (seq a)
   (requires (fun h -> live h b))
-  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\ 
+  (ensures  (fun h0 r h1 -> h0 == h1 /\ live h1 b /\
 			 r == as_seq #a h1 b ))
 let to_seq_full #a b =
   let s = !b.content in
@@ -962,7 +962,7 @@ let sub_sub
   (len2: UInt32.t {v i2 + v len2 <= v len1})
 : Lemma
   (ensures (sub (sub b i1 len1) i2 len2 == sub b (i1 +^ i2) len2))
-= ()  
+= ()
 
 let sub_zero_length
   (#a: Type)
@@ -1005,7 +1005,7 @@ let lemma_offset_spec (#a:Type) (b:buffer a)
      [SMTPatOr [[SMTPat (as_seq h (offset b i))];
                 [SMTPat (Seq.slice (as_seq h b) (v i) (length b))]]]
   = Seq.lemma_eq_intro (as_seq h (offset b i)) (Seq.slice (as_seq h b) (v i) (length b))
-  
+
 private val eq_lemma1:
     #a:eqtype
   -> b1:buffer a
@@ -1221,7 +1221,7 @@ let modifies_subbuffer_2 (#t:Type) (#t':Type) h0 h1 (sub:buffer t) (a':buffer t'
   (ensures  (modifies_2 a a' h0 h1 /\ modifies_2 a' a h0 h1 /\ live h1 a))
   [SMTPat (modifies_2 sub a' h0 h1); SMTPat (includes a sub)]
   = ()
-    
+
 let modifies_subbuffer_2' (#t:Type) (#t':Type) h0 h1 (sub:buffer t) (a':buffer t') (a:buffer t) : Lemma
   (requires (live h0 a /\ live h0 a' /\ includes a sub /\ modifies_2 a' sub h0 h1 ))
   (ensures  (modifies_2 a a' h0 h1 /\ live h1 a))
