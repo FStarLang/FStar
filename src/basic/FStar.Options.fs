@@ -1243,6 +1243,13 @@ let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
 
+let default_warn_error() =
+  let d = Util.smap_of_list defaults in
+  match Util.smap_try_find d "warn_error" with
+  | None -> failwith ("default value for warn_error not found")
+  | Some s -> as_string s
+  
+
 
 let should_extract m =
   not (no_extract m) && (extract_all () ||

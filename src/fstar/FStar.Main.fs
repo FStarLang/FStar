@@ -104,8 +104,13 @@ let init_native_tactics () =
   | None -> ()
 
 let init_warn_error() =
+  let d = Options.default_warn_error() in
   let s = Options.warn_error() in
-  FStar.Parser.ParseIt.parse_warn_error s
+  if (String.compare d s) = 0 then 
+    FStar.Parser.ParseIt.parse_warn_error d
+  else
+    FStar.Parser.ParseIt.parse_warn_error d;
+    FStar.Parser.ParseIt.parse_warn_error s
 
 (****************************************************************************)
 (* Main function                                                            *)

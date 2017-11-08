@@ -400,11 +400,6 @@ let message_prefix =
     {set_prefix=set_prefix;
      clear_prefix=clear_prefix;
      append_prefix=append_prefix}
-  
-type flag =
-  | CError | CWarning | CSilent
-
-let flags = Array.create 71 CError  // the number needs to match the number of entries in "raw_error"
 
 let errno_of_error = function
   | OutOfRangeOfInt  -> 1
@@ -479,12 +474,41 @@ let errno_of_error = function
   | HitReplayFailed -> 70
   | _ -> 0 (** Things that cannot be silenced! *)
 
+type flag =
+  | CError | CWarning | CSilent
+
+let next_errno = 71 // the number needs to match the number of entries in "errno_of_error"
+let flags: ref<list<flag>> = mk_ref (List.init next_errno (fun index -> CError))
+
+let update_flags l =
+  l |> List.iter (fun (f, (l, h)) -> if l < 0 || h > next_errno then 
+                                         failwith (BU.format2 "No error for warn_error [%d..%d]" (string_of_int l) (string_of_int h));); 
+  let compare (_, (a, _)) (_, (b, _)) =
+    if a > b then 1 
+    else if a < b then -1
+    else 0
+  in
+  let sorted = List.sortWith compare l in
+  let rec set_flag i l= 
+    match l with 
+    | [] -> CError
+    | (f, (l, h))::tl -> 
+      if (i>=l && i <= h) then f
+      else if (i<l) then List.nth !flags i
+      else set_flag i tl
+  in
+  let rec aux f i l = match l with
+    | [] -> f
+    | hd::tl -> aux (f@[set_flag i sorted]) (i+1) tl
+  in
+  flags := aux [] 0 !flags
+
 let diag r msg = 
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg)
 
 let maybe_fatal_error r (e, msg) =
   let errno = errno_of_error (e) in
-  match flags.[errno] with
+  match List.nth !flags errno with
   | CError ->
      add_one (mk_issue EError (Some r) msg)
   | CWarning ->

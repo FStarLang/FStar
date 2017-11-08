@@ -162,10 +162,4 @@ let parse_warn_error s =
     with e ->
       failwith "Malformed warn-error list"
   in
-  List.iter (fun (f, (l, h)) ->
-    if l < 0 || h >= Array.length flags then
-      failwith (sprintf "No error for number %d" l);
-    for i = l to h do
-      FStar.Errors.flags.[i] <- f
-    done;
-  ) user_flags 
+  FStar.Errors.update_flags user_flags 
