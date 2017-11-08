@@ -36,6 +36,7 @@ type implicits = Env.implicits
 // Beta reduce
 let normalize s e t = N.normalize_with_primitive_steps FStar.Reflection.Interpreter.reflection_primops s e t
 let bnorm e t = normalize [] e t
+let tts = N.term_to_string
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result
@@ -70,7 +71,7 @@ let goal_to_string (g:goal) =
     let g_binders = Env.all_binders g.context |> Print.binders_to_string ", " in
     let w = bnorm g.context g.witness in
     let t = bnorm g.context g.goal_ty in
-    Util.format3 "%s |- %s : %s" g_binders (N.term_to_string g.context w) (N.term_to_string g.context t)
+    Util.format3 "%s |- %s : %s" g_binders (tts g.context w) (tts g.context t)
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
 let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
@@ -122,8 +123,8 @@ let ps_to_string (msg, ps) =
 let goal_to_json g =
     let g_binders = Env.all_binders g.context |> Print.binders_to_json in
     JsonAssoc [("hyps", g_binders);
-               ("goal", JsonAssoc [("witness", JsonStr (N.term_to_string g.context g.witness));
-                                   ("type", JsonStr (N.term_to_string g.context g.goal_ty))])]
+               ("goal", JsonAssoc [("witness", JsonStr (tts g.context g.witness));
+                                   ("type", JsonStr (tts g.context g.goal_ty))])]
 
 let ps_to_json (msg, ps) =
     JsonAssoc [("label", JsonStr msg);
@@ -224,9 +225,9 @@ let solve (goal : goal) (solution : term) : tac<unit> =
     if trysolve goal solution
     then dismiss
     else fail (BU.format3 "%s does not solve %s : %s"
-              (N.term_to_string goal.context solution)
-              (N.term_to_string goal.context goal.witness)
-              (N.term_to_string goal.context goal.goal_ty))
+              (tts goal.context solution)
+              (tts goal.context goal.witness)
+              (tts goal.context goal.goal_ty))
 
 let dismiss_all : tac<unit> =
     bind get (fun p ->
@@ -359,7 +360,7 @@ let trivial : tac<unit> =
     bind cur_goal (fun goal ->
     if istrivial goal.context goal.goal_ty
     then solve goal U.exp_unit
-    else fail1 "Not a trivial goal: %s" (N.term_to_string goal.context goal.goal_ty)
+    else fail1 "Not a trivial goal: %s" (tts goal.context goal.goal_ty)
     )
 
 let add_goal_from_guard (reason:string) (e:env) (g : guard_t) opts : tac<unit> =
@@ -384,7 +385,7 @@ let smt : tac<unit> =
     if is_irrelevant g then
         bind dismiss (fun _ -> add_smt_goals [g])
     else
-        fail1 "goal is not irrelevant: cannot dispatch to smt (%s)" (N.term_to_string g.context g.goal_ty)
+        fail1 "goal is not irrelevant: cannot dispatch to smt (%s)" (tts g.context g.goal_ty)
     )
 
 let divide (n:Z.t) (l : tac<'a>) (r : tac<'b>) : tac<('a * 'b)> =
@@ -446,7 +447,7 @@ let intro : tac<binder> =
              else fail "intro: unification failed"
              )
     | None ->
-        fail1 "intro: goal is not an arrow (%s)" (N.term_to_string goal.context goal.goal_ty)
+        fail1 "intro: goal is not an arrow (%s)" (tts goal.context goal.goal_ty)
     )
 
 // TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
@@ -475,7 +476,7 @@ let intro_rec : tac<(binder * binder)> =
              else fail "intro_rec: unification failed"
              )
     | None ->
-        fail1 "intro_rec: goal is not an arrow (%s)" (N.term_to_string goal.context goal.goal_ty)
+        fail1 "intro_rec: goal is not an arrow (%s)" (tts goal.context goal.goal_ty)
     )
 
 let norm (s : list<EMB.norm_step>) : tac<unit> =
@@ -510,39 +511,36 @@ let refine_intro : tac<unit> = wrap_err "refine_intro" <|
         bind dismiss (fun _ ->
         add_goals [g1;g2])))
 
-let __exact_now force_guard (t:term) : tac<unit> =
+let __exact_now set_expected_typ force_guard (t:term) : tac<unit> =
     bind cur_goal (fun goal ->
-    bind (__tc goal.context t) (fun (t, typ, guard) ->
+    let env = if set_expected_typ
+              then Env.set_expected_typ goal.context goal.goal_ty
+              else goal.context
+    in
+    bind (__tc env t) (fun (t, typ, guard) ->
     bind (if force_guard
           then must_trivial goal.context guard
           else add_goal_from_guard "__exact typing" goal.context guard goal.opts
           ) (fun _ ->
+    mlog (fun () -> BU.print2 "exact: unifying %s and %s\n" (tts goal.context typ)
+                                                            (tts goal.context goal.goal_ty)) (fun _ ->
     if do_unify goal.context typ goal.goal_ty
     then solve goal t
     else fail3 "%s : %s does not exactly solve the goal %s"
-                    (N.term_to_string goal.context t)
-                    (N.term_to_string goal.context (bnorm goal.context typ))
-                    (N.term_to_string goal.context goal.goal_ty))))
+                    (tts goal.context t)
+                    (tts goal.context typ)
+                    (tts goal.context goal.goal_ty)))))
 
-let __exact force_guard t : tac<unit> =
-    bind (trytac' (__exact_now force_guard t)) (function
+let t_exact set_expected_typ force_guard tm : tac<unit> = wrap_err "exact" <|
+    mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
+    bind (trytac' (__exact_now set_expected_typ force_guard tm)) (function
     | Inr r -> ret r
     | Inl e ->
     bind (trytac' (bind (norm [EMB.Delta]) (fun _ ->
                    bind refine_intro (fun _ ->
-                   __exact_now force_guard t)))) (function
+                   __exact_now set_expected_typ force_guard tm)))) (function
     | Inr r -> ret r
-    | Inl _ -> fail e)) // keep original error
-
-let exact (tm:term) : tac<unit> = wrap_err "exact" <|
-    mlog (fun () -> BU.print1 "exact: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
-    focus (__exact true tm)
-    )
-
-let exact_guard (tm:term) : tac<unit> = wrap_err "exact_guard" <|
-    mlog (fun () -> BU.print1 "exact_guard: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
-    focus (__exact false tm)
-    )
+    | Inl _ -> fail e))) // keep original error
 
 let uvar_free_in_goal (u:uvar) (g:goal) =
     if g.is_guard then false else
@@ -574,9 +572,10 @@ exception NoUnif
 //
 // without asking for ?u first, which will most likely be instantiated when
 // solving any of these two goals. In any case, if ?u is not solved, we fail afterwards.
+// TODO: this should probably be made into a user tactic
 let rec __apply (uopt:bool) (tm:term) (typ:typ) : tac<unit> =
     bind cur_goal (fun goal ->
-    bind (trytac (__exact true tm)) (function
+    bind (trytac (t_exact false true tm)) (function
     | Some r -> ret r // if tm is a solution, we're done
     | None ->
         // exact failed, try to instantiate more arguments
@@ -625,9 +624,9 @@ let apply (uopt:bool) (tm:term) : tac<unit> = wrap_err "apply" <|
     // Focus helps keep the goal order
     try_unif (focus (bind (__apply uopt tm typ) (fun _ -> add_goal_from_guard "apply guard" goal.context guard goal.opts)))
              (fail3 "Cannot instantiate %s (of type %s) to match goal (%s)"
-                            (N.term_to_string goal.context tm)
-                            (N.term_to_string goal.context typ)
-                            (N.term_to_string goal.context goal.goal_ty))
+                            (tts goal.context tm)
+                            (tts goal.context typ)
+                            (tts goal.context goal.goal_ty))
     )))
 
 let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
@@ -666,9 +665,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     let post = U.mk_app post [S.as_arg U.exp_unit] in
     if not (do_unify goal.context (U.mk_squash post) goal.goal_ty)
     then fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
-                            (N.term_to_string goal.context tm)
-                            (N.term_to_string goal.context (U.mk_squash post))
-                            (N.term_to_string goal.context goal.goal_ty)
+                            (tts goal.context tm)
+                            (tts goal.context (U.mk_squash post))
+                            (tts goal.context goal.goal_ty)
     else
         let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
         bind (add_implicits implicits.implicits) (fun _ ->
@@ -762,7 +761,7 @@ let subst_goal (b1 : bv) (b2 : bv) (s:list<subst_elt>) (g:goal) : option<goal> =
 let rewrite (h:binder) : tac<unit> =
     bind cur_goal (fun goal ->
     let bv, _ = h in
-    mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort)) (fun _ ->
+    mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (tts goal.context bv.sort)) (fun _ ->
     match split_env bv goal.context with
     | None -> fail "rewrite: binder not found in environment"
     | Some (e0, bvs) -> begin
@@ -973,10 +972,10 @@ let trefl : tac<unit> =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
             if not (do_unify g.context l r)
-            then fail2 "trefl: not a trivial equality (%s vs %s)" (N.term_to_string g.context l) (N.term_to_string g.context r)
+            then fail2 "trefl: not a trivial equality (%s vs %s)" (tts g.context l) (tts g.context r)
             else solve g U.exp_unit
         | hd, _ ->
-            fail1 "trefl: not an equality (%s)" (N.term_to_string g.context t)
+            fail1 "trefl: not an equality (%s)" (tts g.context t)
         end
      | None ->
         fail "not an irrelevant goal")
@@ -1026,7 +1025,7 @@ let cases (t : term) : tac<(term * term)> = wrap_err "cases" <|
         bind (add_goals [g1; g2]) (fun _ ->
         ret (S.bv_to_name v_p, S.bv_to_name v_q)))
     | _ ->
-        fail1 "Not a disjunction: %s" (N.term_to_string g.context typ)))
+        fail1 "Not a disjunction: %s" (tts g.context typ)))
 
 let set_options (s : string) : tac<unit> =
     bind cur_goal (fun g ->

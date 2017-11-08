@@ -86,6 +86,14 @@ def generate_Copy(target, source, env):
     return s
   return generate_boot_file_ex(target, source, env, process)
 
+# Generate boot/FStar.Tests.Test.fsti from tests/boot/FStar.Tests.Test.fs
+def generate_Test(target, source, env):
+  def process(s):
+    if re.search(r'// *JUST *FSHARP *', s):
+      return None
+    return t
+  return generate_boot_file_ex(target, source, env, process)
+
 # Generate boot/%.fsti from basic/boot/%.fsi
 def generate_Basic(target, source, env):
   def process(s):
@@ -107,7 +115,8 @@ def generate_PrettyPrint(target, source, env):
 ALL_BOOT=addprefix('boot/FStar.',
   ['Util.fsti','List.fsti','Bytes.fsti','String.fsti','BigInt.fsti',
    'Range.fsti','Pprint.fsti','Parser.Parse.fsti',
-   'Tactics.Interpreter.fst','Tactics.Interpreter.fsti'])
+   'Tactics.Interpreter.fst','Tactics.Interpreter.fsti',
+   'Tests.Test.fst'])
 
 # Instructions on how to generate all of the ALL_BOOT files
               # tuples of:  (target filename, source filename, and how to generate)
@@ -115,6 +124,7 @@ Boot_Rules = [('boot/FStar.Tactics.Interpreter.fst', 'tactics/boot/FStar.Tactics
               ('boot/FStar.Parser.Parse.fsti', 'parser/parse.fsi', generate_ParserParse),
               ('boot/FStar.Parser.Parse.fst', 'parser/parser.fs', generate_Copy),
               ('boot/FStar.Tactics.Interpreter.fsti', 'tactics/boot/FStar.Tactics.Interpreter.fsi', generate_Copy),
+              ('boot/FStar.Tests.Test.fsti', 'tests/boot/FStar.Tests.Test.fs', generate_Test),
               ('boot/%.fsti', 'basic/boot/%.fsi', generate_Basic),
               ('boot/%.fsti', 'prettyprint/boot/%.fsi', generate_PrettyPrint),
               ('boot/%.fst', 'basic/boot/%.fs', generate_Copy)
@@ -298,15 +308,17 @@ Extractions=[
    ('FStar.Interactive.Legacy',         'fstar/FStar.Interactive.Legacy.fs'),
    ('FStar.Indent',                     'fstar/FStar.Indent.fs'),
    ('FStar.Main',                       'fstar/FStar.Main.fs')
-   ]))
-]
+   ])),
+  ('extract_tests',ExtractNamespace(
+   [addprefix('tests/','FStar.Tests.Pars.fs FStar.Tests.Util.fs FStar.Tests.Norm.fs FStar.Tests.Unif.fs'), 'boot/FStar.Tests.Test.fst'],
+   'FStar.Tests')
 
 # List of handy target names that alias sets of targets listed above
 ExtractionTargets = [
   ('extract_syntax',     'extract_syntax_basic extract_fsdoc'),
   ('extract_typechecker','extract_rel extract_normalizer extract_util extract_dmff extract_tcterm extract_tcinductive extract_tc'),
   ('extract_smtencoding','extract_encode extract_smtencoding_base extract_solver'),
-  ('extract_all',        'extract_tactics extract_smtencoding extract_typechecker extract_reflection extract_misc extract_syntax extract_parser extract_tosyntax extract_extraction extract_fstar')
+  ('extract_all',        'extract_tactics extract_smtencoding extract_typechecker extract_reflection extract_misc extract_syntax extract_parser extract_tosyntax extract_extraction extract_fstar extract_tests')
 ]
 
 # This class is a wrapper on the Command Action.  It

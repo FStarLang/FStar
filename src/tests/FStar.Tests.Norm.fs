@@ -3,7 +3,6 @@ module FStar.Tests.Norm
 //Normalization tests
 
 open FStar
-open FStar.Util
 open FStar.Syntax.Syntax
 open FStar.Tests.Pars
 module S = FStar.Syntax.Syntax
@@ -12,6 +11,7 @@ module SS = FStar.Syntax.Subst
 module I = FStar.Ident
 module P  = FStar.Syntax.Print
 module Const = FStar.Parser.Const
+module BU = FStar.Util
 open FStar.Ident
 open FStar.Range
 open FStar.Tests.Util
@@ -37,7 +37,7 @@ let minus m n = app n [pred; m]
 let let_ x e e' : term = app (U.abs [b x] e' None) [e]
 let mk_let x e e' : term =
     let e' = FStar.Syntax.Subst.subst [NM(x, 0)] e' in
-    mk (Tm_let((false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid}]), e'))
+    mk (Tm_let((false, [{lbname=BU.Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid}]), e'))
                            None dummyRange
 
 let lid x = lid_of_path [x] dummyRange
@@ -68,7 +68,7 @@ let minus_nat t1 t2 =
     let sbranch = pat (Pat_cons(snat_l, [pat (Pat_var n), false])),
                   None,
                   app (nm minus) [pred_nat (nm x); nm n] in
-    let lb = {lbname=Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun;
+    let lb = {lbname=BU.Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun;
               lbdef=subst [NM(minus, 0)] (U.abs [b x; b y] (mk_match (nm y) [zbranch; sbranch]) None)} in
     mk (Tm_let((true, [lb]), subst [NM(minus, 0)] (app (nm minus) [t1; t2]))) None dummyRange
 let encode_nat n =
@@ -77,23 +77,23 @@ let encode_nat n =
         else aux (snat out) (n - 1) in
     aux znat n
 
-module N = TypeChecker.Normalize
+module N = FStar.TypeChecker.Normalize
 
 let run i r expected =
 //    force_term r;
-    Printf.printf "%d: ... \n" i;
+    BU.print1 "%s: ... \n" (BU.string_of_int i);
     let tcenv = Pars.init() in
     FStar.Main.process_args() |> ignore; //set the command line args for debugging
     let x = N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops] tcenv r in
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
-//    Printf.printf "result = %s\n" (P.term_to_string x);
-//    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
-    Util.always i (Util.term_eq (U.unascribe x) expected)
+//    BU.print1 "result = %s\n" (P.term_to_string x);
+//    BU.print1 "expected = %s\n\n" (P.term_to_string expected);
+    always i (term_eq (U.unascribe x) expected)
 
 let run_all () =
-    Printf.printf "Testing the normalizer\n";
+    BU.print_string "Testing the normalizer\n";
     let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
                                            match x with \
                                             | [] -> []  \
@@ -141,7 +141,7 @@ let run_all () =
     run 16 (pred_nat (snat (snat znat))) (snat znat);
     run 17 (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
     run 18 (minus_nat (encode_nat 100) (encode_nat 100)) znat;
-    run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
+    run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;   // VD: Stack overflow with F# build
     run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
 //    run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
     Options.__clear_unit_tests();
@@ -150,6 +150,6 @@ let run_all () =
     run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
     run 1062 (Pars.tc "f (B 5 3)") (Pars.tc "2");
 //  run 24 (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"); -- CH: works up to an unfolding too much (char -> char')
-    Printf.printf "Normalizer ok\n"
+    BU.print_string "Normalizer ok\n"
 
 

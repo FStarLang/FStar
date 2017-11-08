@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "52ed4fe78e39c6830a41a541e085fb09"
+      "a489fb89b45f71879cd958d4b3b16a48"
     ],
     [
       "FStar.Tactics.Sequences.unrefine_eq_lem",
@@ -22,7 +22,7 @@
         "unit_typing"
       ],
       0,
-      "85edbd27900839c76d26cbce706df442"
+      "1363073ddec65499aaa9010d52d9a783"
     ],
     [
       "FStar.Tactics.Sequences.prune_for_seq",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "equation_FStar.Tactics.Derived.idtac" ],
       0,
-      "ad21db5dac8faaa3b377540810272c3d"
+      "878834b2b3e8327383838ec2fd107747"
     ],
     [
       "FStar.Tactics.Sequences.try_unref_eq",
@@ -45,7 +45,7 @@
         "equation_FStar.Tactics.Effect.bind", "unit_typing"
       ],
       0,
-      "5ebf0e2643a11718853920fcd72d7723"
+      "147e96a1c2cd8273aaf1be450416f466"
     ],
     [
       "FStar.Tactics.Sequences.sequence_pruning",
@@ -54,7 +54,7 @@
       1,
       [ "@query" ],
       0,
-      "0716dcbe75c443ae485b77bafbd21d28"
+      "caf79d52c718099c8f7e34ec739bb472"
     ],
     [
       "FStar.Tactics.Sequences.test",
@@ -76,7 +76,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "c11f8c338f76d60a328b35911d242a09"
+      "28a2471a1aef16e68e28daa9e6ef4e32"
     ],
     [
       "FStar.Tactics.Sequences.test",
@@ -107,7 +107,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "acee8c4267db8a6ac8b36b7912b9136e"
+      "82d676a234b65d5d571e7132bad20ef3"
     ],
     [
       "FStar.Tactics.Sequences.test",
@@ -121,7 +121,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "89a207591f685b267c56bbe04fd0f0bc"
+      "abb7d7bdf97c9ee3da2e2f0f39711047"
     ],
     [
       "FStar.Tactics.Sequences.test",
@@ -152,7 +152,7 @@
         "typing_FStar.Seq.Base.create", "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "ef2b173d9868cb2cd2099098123f8a01"
+      "e93de7892e182240fd1c51257ed78376"
     ]
   ]
 ]

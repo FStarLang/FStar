@@ -40,6 +40,10 @@ if menhir_tool:
 else:
   raise SCons.Errors.UserError('Cannot find menhir')
 
+compiler_libs = subprocess.check_output('ocamlfind query compiler-libs').decode('utf-8').splitlines()[0]
+print ('['+compiler_libs+']')
+env['ENV']['OCAMLFIND_IGNORE_DUPS_IN' = compiler_libs
+
 # copy environment variable from the OS env block into child process env blocks,
 # if the variable exists on the OS side.
 def ForwardEnvironmentVariable(env, name):
@@ -60,7 +64,7 @@ env['OCAMLLEX']='ocamllex'
 env['OCAMLBUILD']='ocamlbuild'
 env['OCAMLBUILDARGS']='$FSTAR_OCAMLBUILD_EXTRAS -I src/ocaml-output -I src/basic/ml ' \
                       '-I src/parser/ml -I src/fstar/ml -I src/extraction/ml ' \
-                      '-I src/prettyprint/ml -I src/tactics/ml -I ulib/ml ' \
+                      '-I src/prettyprint/ml -I src/tactics/ml -I src/tests/ml -I ulib/ml ' \
                       '-j 24 -build-dir src/ocaml-output/_build -use-ocamlfind'
 
 parse_mly=env.Command('parse.mly', '../parser/parse.mly',
@@ -243,5 +247,10 @@ for g in GENERATED_FILES:
 fstar_exe = env.Command('../../bin/fstar.exe', main_native, Copy('$TARGET', '$SOURCE'))
 env.NoClean(fstar_exe) # don't delete the prior fstar.exe
 
-Return('fstar_exe')
+tests_native = env.Command('FStar_Tests_main.native', '', 'cd .. && $OCAMLBUILD $OCAMLBUILDARGS FStar_Tests_main.native')
+tests_exe = env.Command('../../bin/FStar_Tests_main.native', tests_native, Copy('$TARGET', '$SOURCE'))
+Depends(tests_native, fstar_native)
+
+all = Alias('ocaml-output all', [fstar_exe, tests_exe])
+Return(all)
 

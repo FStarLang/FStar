@@ -17,10 +17,7 @@ FSTAR_TAC_LIB_DROPPED_FST=$(FSTAR_TAC_LIB_MODULES:.fst=)
 FSTAR_TAC_LIB_DROPPED_EXTENSIONS=$(FSTAR_TAC_LIB_DROPPED_FST:.fsti=)
 FSTAR_TAC_LIB_EXTRACT=$(addprefix --extract_module ,$(sort $(FSTAR_TAC_LIB_DROPPED_EXTENSIONS)))
 
-../bin/fstar.ocaml:
-	make -C ../src/ocaml-output
-
-fstarlib.mgen: *.fst *.fsti ../bin/fstar.ocaml
+fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
 	$(FSTAR) --expose_interfaces --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTARLIB_MODULES)
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted

@@ -11,7 +11,7 @@ BIN=../bin
 # Configuration of some platform-specific tools; eventually we will want a configure script
 
 ifeq ($(OS),Windows_NT)
-  MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g' | tr -d '\r')\")/MSBuild.exe
+  MSBUILD = ./msbuild.bat
   RUNTIME =
   SCONS = scons.bat
 else
@@ -102,6 +102,7 @@ utest-prelude:
 	+$(MAKE) boot-ocaml
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
+	+$(MAKE) ocaml-regressions
 
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
@@ -111,6 +112,9 @@ else
 	@# On Linux, we need to increase the maximum stack size, or we overflow
 	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
 endif
+
+ocaml-regressions:
+	$(BIN)/tests.exe
 
 # Getting parallelism from this target
 uregressions: fstarlib ulib tutorial uexamples interactive-test

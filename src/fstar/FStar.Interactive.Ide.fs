@@ -1168,8 +1168,8 @@ let run_with_parsed_and_tc_term st term line column continuation =
     | _ -> None in
 
   let parse frag =
-    match FStar.Parser.ParseIt.parse (Inr frag) with
-    | Inl (Inr decls, _) -> Some decls
+    match FStar.Parser.ParseIt.parse (FStar.Parser.ParseIt.Toplevel frag) with
+    | FStar.Parser.ParseIt.ASTFragment (Inr decls, _) -> Some decls
     | _ -> None in
 
   let desugar env decls =

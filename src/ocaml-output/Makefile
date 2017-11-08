@@ -1,4 +1,3 @@
-
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
 PREFIX=$(shell pwd)/fstar
@@ -31,9 +30,13 @@ make_fstar:
 install-compiler-lib: make_fstar
 	mkdir -p ../../bin/fstar-compiler-lib/
 	$(FIND) -name "*.cmi" -exec cp {} ../../bin/fstar-compiler-lib/ \;
+all:  tests.exe install-compiler-lib
     
-all:  install-compiler-lib
-    
+tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+tests.exe: fstar.exe
+	$(OCAMLBUILD) FStar_Tests_Main.native
+	cp -f _build/src/tests/ml/FStar_Tests_Main.native ../../bin/$@
+
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging
 VERSION=$(shell head -n 1 ../../version.txt)
