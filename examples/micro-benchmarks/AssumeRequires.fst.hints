@@ -92,11 +92,12 @@
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "data_elim_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_Prims._assert",
         "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_BoxBool_proj_0", "unit_inversion", "unit_typing"
       ],
       0,
-      "d5ff05fde7a28ed7dee07e558e2686ae"
+      "5e40196e4138c4d6b1e0d59f3cf471cf"
     ],
     [
       "AssumeRequires.get_ghost",

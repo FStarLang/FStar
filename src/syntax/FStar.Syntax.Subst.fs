@@ -582,6 +582,10 @@ let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
    let s = List.mapi (fun i x -> UD(x, k + (n - i))) us in
    (us', subst s t)
 
+let subst_tscheme (s:list<subst_elt>) ((us, t):tscheme) =
+    let s = shift_subst (List.length us) s in
+    (us, subst s t)
+
 let opening_of_binders (bs:binders) =
   let n = List.length bs - 1 in
   bs |> List.mapi (fun i (x, _) -> DB(n - i, x))

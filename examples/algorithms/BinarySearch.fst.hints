@@ -15,9 +15,7 @@
         "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Division", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_BinarySearch_Tm_refine_83f587e68677148e460204d370039d71",
         "refinement_interpretation_BinarySearch_Tm_refine_a93f3eba5c28d8b55b52c4768a290543",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
@@ -44,13 +42,12 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_Prims.nat", "function_token_typing_Prims.int",
-        "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "8c8053af369d5aa8285e66cbbd9cf5bf"
+      "c9b438fb11f6c038d92a4d2541ba5dc5"
     ],
     [
       "BinarySearch.bsearch_rec_correct",
@@ -137,17 +134,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "disc_equation_FStar.Pervasives.Some",
         "equation_BinarySearch.bsearch", "equation_Prims.nat",
         "function_token_typing_Prims.int", "int_inversion",
-        "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_BinarySearch_Tm_refine_5d820218f95035bfa67bc583200cf455",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "21b8033be35bd1642491953c3cecc92c"
+      "e96ae1f3572064aa9650d1122c7e6f7c"
     ],
     [
       "BinarySearch.hint1",
@@ -163,9 +157,9 @@
       2,
       2,
       1,
-      [ "@query", "unit_typing" ],
+      [ "@query" ],
       0,
-      "36d435bb4b6c70161541193f29a08b2f"
+      "706705425c3c60099cb6af4633f555bf"
     ],
     [
       "BinarySearch.hint2",
@@ -208,9 +202,9 @@
       2,
       2,
       1,
-      [ "@query", "unit_typing" ],
+      [ "@query" ],
       0,
-      "74ec481e9c5ff4926c0c1dd72ae935d2"
+      "b717ae1c6b369faa6fa8e222817bca14"
     ],
     [
       "BinarySearch.hint4",
@@ -294,8 +288,8 @@
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_0dadc9957b7ee1a2ac2dc6b84bb90882_2",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
-        "binder_x_a5d09bc7a6a83a40c35ac7a2c288dc24_3", "bool_inversion",
-        "bool_typing", "constructor_distinct_FStar.Pervasives.Native.Some",
+        "binder_x_a5d09bc7a6a83a40c35ac7a2c288dc24_3",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.None",
         "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
         "equation_with_fuel_BinarySearch.bsearch_rec.fuel_instrumented",
@@ -311,7 +305,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "58fa24910494d4b4f25247c169b2c64f"
+      "9d207e8b71a7395dad5dd0752c656f3d"
     ],
     [
       "BinarySearch.bsearch_rec_complete",
@@ -350,13 +344,12 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_BinarySearch.bsearch", "equation_Prims.nat",
         "function_token_typing_Prims.int", "int_inversion",
-        "primitive_Prims.op_Minus", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "a610385658d215d624481ff5af10ce70"
+      "785030ed41a1295a63a20bfb84cd6167"
     ]
   ]
 ]

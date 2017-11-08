@@ -296,8 +296,8 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__clear"         clear unembed_binder embed_unit t_unit;
       mktac1 "__rewrite"       rewrite unembed_binder embed_unit t_unit;
       mktac0 "__smt"           smt embed_unit t_unit;
-      mktac1 "__exact"         exact unembed_term embed_unit t_unit;
-      mktac1 "__exact_guard"   exact_guard unembed_term embed_unit t_unit;
+      mktac0 "__refine_intro"  refine_intro embed_unit t_unit;
+      mktac3 "__t_exact"       t_exact unembed_bool unembed_bool unembed_term embed_unit t_unit;
       mktac1 "__apply"         (apply  true) unembed_term embed_unit t_unit;
       mktac1 "__apply_raw"     (apply false) unembed_term embed_unit t_unit;
       mktac1 "__apply_lemma"   apply_lemma unembed_term embed_unit t_unit;
@@ -333,6 +333,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__cur_env"       cur_env     embed_env RD.fstar_refl_env;
       mktac0 "__cur_goal"      cur_goal'   embed_term S.t_term;
       mktac0 "__cur_witness"   cur_witness embed_term S.t_term;
+      mktac0 "__is_guard"      is_guard    embed_bool t_bool;
 
       mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term S.t_term;
       mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;

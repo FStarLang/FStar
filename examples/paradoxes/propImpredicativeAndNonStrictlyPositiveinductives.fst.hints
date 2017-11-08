@@ -98,10 +98,11 @@
         "exists-interp",
         "function_token_typing_PropImpredicativeAndNonStrictlyPositiveInductives.x0",
         "interpretation_PropImpredicativeAndNonStrictlyPositiveInductives_Tm_abs_5767ad136232c7fff0b973c505131401",
-        "l_and-interp", "l_not-interp"
+        "l_and-interp", "l_not-interp",
+        "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.p0"
       ],
       0,
-      "f3b2ddbdc6a210ae57a48048d092ec20"
+      "834adc06f8cbc5fde9f301dd5fa903ea"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad",

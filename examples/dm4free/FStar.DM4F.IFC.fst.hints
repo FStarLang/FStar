@@ -35,12 +35,10 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.DM4F.IFC.ifc", "kinding_FStar.DM4F.IFC.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
+        "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "6954af4b004d844e27f035aa1765e1e8"
+      "efc61545bef4c95100430c94c8119eee"
     ],
     [
       "FStar.DM4F.IFC.join",

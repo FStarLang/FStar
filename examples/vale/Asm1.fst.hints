@@ -526,15 +526,14 @@
       1,
       0,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@MaxFuel_assumption",
         "@fuel_correspondence_Asm1.eval_block.fuel_instrumented", "@query",
         "constructor_distinct_Prims.Nil",
         "equation_with_fuel_Asm1.eval_block.fuel_instrumented",
-        "fuel_guarded_inversion_Asm1.state",
-        "projection_inverse_Prims.Nil_a", "unit_typing"
+        "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "cc9aaed8ab2bf73af0212d6812134356"
+      "7d491a82917308a416a3ffaab1af92d7"
     ],
     [
       "Asm1.lemma_copy",

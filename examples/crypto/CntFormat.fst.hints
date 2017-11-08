@@ -51,6 +51,7 @@
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.length",
         "equation_Platform.Bytes.op_At_Bar", "equation_Prims.eqtype",
         "equation_Prims.nat", "kinding_FStar.Char.char_@tok",
+        "lemma_FStar.Seq.Base.lemma_eq_elim",
         "lemma_FStar.Seq.Base.lemma_eq_intro",
         "refinement_interpretation_CntFormat_Tm_refine_85f3da332f3668e6446e4e98ff1dad55",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_36f208f2b1019ab7b5d9be73f4c89349",
@@ -59,7 +60,7 @@
         "typing_CntFormat.op_At_Bar", "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "8331c59752b56686d4e29a5f510295cd"
+      "3f6a99f0d10f3151de2d6ec8da6ab784"
     ],
     [
       "CntFormat.UTF8_inj",
@@ -105,7 +106,8 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_CntFormat.message",
         "equation_CntFormat.op_At_Bar", "equation_CntFormat.signal_size",
-        "equation_CntFormat.uint16", "equation_CntFormat.uint32",
+        "equation_CntFormat.uint16", "equation_CntFormat.uint16_to_bytes",
+        "equation_CntFormat.uint32", "equation_CntFormat.uint32_to_bytes",
         "equation_FStar.Char.char", "equation_Platform.Bytes.byte",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
         "equation_Platform.Bytes.length",
@@ -118,7 +120,7 @@
         "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "346a708208a8a944c51b96cdbf2e38e1"
+      "10ee52de262bc957f628c2d8e2aa1d75"
     ],
     [
       "CntFormat.signal_split",

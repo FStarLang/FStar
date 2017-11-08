@@ -32,7 +32,7 @@
       1,
       0,
       0,
-      [ "@query", "projection_inverse_BoxInt_proj_0" ],
+      [ "@query" ],
       0,
       "4abf39fba97da30adba24bef7a9961b7"
     ],
@@ -122,12 +122,9 @@
       10,
       0,
       0,
-      [
-        "@query", "equation_Prims.assert_norm",
-        "projection_inverse_BoxInt_proj_0", "unit_typing"
-      ],
+      [ "@query" ],
       0,
-      "ddcb568b7292343cccf4ed7094f2df20"
+      "3e50b0f723b966cbe16c1ec17678e8ca"
     ],
     [
       "Normalization.compare",

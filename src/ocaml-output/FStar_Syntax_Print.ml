@@ -1,8 +1,8 @@
 open Prims
 let rec delta_depth_to_string:
   FStar_Syntax_Syntax.delta_depth -> Prims.string =
-  fun uu___209_3  ->
-    match uu___209_3 with
+  fun uu___250_3  ->
+    match uu___250_3 with
     | FStar_Syntax_Syntax.Delta_constant  -> "Delta_constant"
     | FStar_Syntax_Syntax.Delta_defined_at_level i ->
         let uu____5 = FStar_Util.string_of_int i in
@@ -118,8 +118,8 @@ let is_inr:
   'Auu____232 'Auu____233 .
     ('Auu____233,'Auu____232) FStar_Util.either -> Prims.bool
   =
-  fun uu___210_241  ->
-    match uu___210_241 with
+  fun uu___251_241  ->
+    match uu___251_241 with
     | FStar_Util.Inl uu____246 -> false
     | FStar_Util.Inr uu____247 -> true
 let filter_imp:
@@ -134,8 +134,8 @@ let filter_imp:
   fun a  ->
     FStar_All.pipe_right a
       (FStar_List.filter
-         (fun uu___211_304  ->
-            match uu___211_304 with
+         (fun uu___252_304  ->
+            match uu___252_304 with
             | (uu____311,FStar_Pervasives_Native.Some
                (FStar_Syntax_Syntax.Implicit uu____312)) -> false
             | uu____315 -> true))
@@ -204,8 +204,8 @@ let quant_to_string:
 let const_to_string: FStar_Const.sconst -> Prims.string =
   fun x  -> FStar_Parser_Const.const_to_string x
 let lbname_to_string: FStar_Syntax_Syntax.lbname -> Prims.string =
-  fun uu___212_566  ->
-    match uu___212_566 with
+  fun uu___253_566  ->
+    match uu___253_566 with
     | FStar_Util.Inl l -> bv_to_string l
     | FStar_Util.Inr l ->
         lid_to_string (l.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
@@ -326,8 +326,8 @@ let univ_names_to_string: FStar_Ident.ident Prims.list -> Prims.string =
     let uu____965 = FStar_List.map (fun x  -> x.FStar_Ident.idText) us in
     FStar_All.pipe_right uu____965 (FStar_String.concat ", ")
 let qual_to_string: FStar_Syntax_Syntax.qualifier -> Prims.string =
-  fun uu___213_974  ->
-    match uu___213_974 with
+  fun uu___254_974  ->
+    match uu___254_974 with
     | FStar_Syntax_Syntax.Assumption  -> "assume"
     | FStar_Syntax_Syntax.New  -> "new"
     | FStar_Syntax_Syntax.Private  -> "private"
@@ -658,14 +658,14 @@ and lbs_to_string:
                           | uu____1847 -> failwith "Impossibe" in
                         (match uu____1779 with
                          | (t,d) ->
-                             let uu___220_1866 = lb in
+                             let uu___261_1866 = lb in
                              {
                                FStar_Syntax_Syntax.lbname =
-                                 (uu___220_1866.FStar_Syntax_Syntax.lbname);
+                                 (uu___261_1866.FStar_Syntax_Syntax.lbname);
                                FStar_Syntax_Syntax.lbunivs = us;
                                FStar_Syntax_Syntax.lbtyp = t;
                                FStar_Syntax_Syntax.lbeff =
-                                 (uu___220_1866.FStar_Syntax_Syntax.lbeff);
+                                 (uu___261_1866.FStar_Syntax_Syntax.lbeff);
                                FStar_Syntax_Syntax.lbdef = d
                              }))) in
           ((FStar_Pervasives_Native.fst lbs), uu____1753)
@@ -715,8 +715,8 @@ and imp_to_string:
       Prims.string
   =
   fun s  ->
-    fun uu___214_1909  ->
-      match uu___214_1909 with
+    fun uu___255_1909  ->
+      match uu___255_1909 with
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit (false ))
           -> Prims.strcat "#" s
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit (true ))
@@ -793,8 +793,8 @@ and arg_to_string:
                               FStar_Pervasives_Native.option)
     FStar_Pervasives_Native.tuple2 -> Prims.string
   =
-  fun uu___215_1962  ->
-    match uu___215_1962 with
+  fun uu___256_1962  ->
+    match uu___256_1962 with
     | (a,imp) ->
         let uu____1975 = term_to_string a in imp_to_string uu____1975 imp
 and args_to_string: FStar_Syntax_Syntax.args -> Prims.string =
@@ -886,8 +886,8 @@ and comp_to_string: FStar_Syntax_Syntax.comp -> Prims.string =
                (let uu____2095 =
                   (FStar_All.pipe_right c1.FStar_Syntax_Syntax.flags
                      (FStar_Util.for_some
-                        (fun uu___216_2099  ->
-                           match uu___216_2099 with
+                        (fun uu___257_2099  ->
+                           match uu___257_2099 with
                            | FStar_Syntax_Syntax.TOTAL  -> true
                            | uu____2100 -> false)))
                     &&
@@ -916,8 +916,8 @@ and comp_to_string: FStar_Syntax_Syntax.comp -> Prims.string =
                          Prims.op_Negation uu____2115) &&
                           (FStar_All.pipe_right c1.FStar_Syntax_Syntax.flags
                              (FStar_Util.for_some
-                                (fun uu___217_2119  ->
-                                   match uu___217_2119 with
+                                (fun uu___258_2119  ->
+                                   match uu___258_2119 with
                                    | FStar_Syntax_Syntax.MLEFFECT  -> true
                                    | uu____2120 -> false))) in
                       if uu____2112
@@ -935,8 +935,8 @@ and comp_to_string: FStar_Syntax_Syntax.comp -> Prims.string =
              let uu____2126 =
                FStar_All.pipe_right c1.FStar_Syntax_Syntax.flags
                  (FStar_List.collect
-                    (fun uu___218_2136  ->
-                       match uu___218_2136 with
+                    (fun uu___259_2136  ->
+                       match uu___259_2136 with
                        | FStar_Syntax_Syntax.DECREASES e ->
                            let uu____2142 =
                              let uu____2143 = term_to_string e in
@@ -1302,8 +1302,8 @@ let rec modul_to_string: FStar_Syntax_Syntax.modul -> Prims.string =
       FStar_All.pipe_right uu____2649 (FStar_String.concat "\n") in
     FStar_Util.format2 "module %s\n%s" uu____2647 uu____2648
 let subst_elt_to_string: FStar_Syntax_Syntax.subst_elt -> Prims.string =
-  fun uu___219_2656  ->
-    match uu___219_2656 with
+  fun uu___260_2656  ->
+    match uu___260_2656 with
     | FStar_Syntax_Syntax.DB (i,x) ->
         let uu____2659 = FStar_Util.string_of_int i in
         let uu____2660 = bv_to_string x in

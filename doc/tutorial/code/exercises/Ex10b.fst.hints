@@ -44,10 +44,10 @@
       [
         "@MaxIFuel_assumption", "@query", "proj_equation_Ex10b.Point_x",
         "projection_inverse_Ex10b.Point_x",
-        "refinement_interpretation_Ex10b_Tm_refine_f2a77ae22406f0f6f8f3003c6e41b99e"
+        "refinement_interpretation_Ex10b_Tm_refine_a6b3b93ccac4faacfc19f781025f5715"
       ],
       0,
-      "6b2c2732319f5c27e7d0bf80b7106a4d"
+      "09e4edcc563659c1b8a3ac7a89cdb4b4"
     ],
     [
       "Ex10b.new_point",
@@ -108,13 +108,14 @@
         "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
+        "typing_Ex10b.__proj__Point__item__x",
         "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Ref.addr_of",
         "typing_FStar.Ref.fresh", "typing_FStar.Ref.sel",
         "typing_FStar.Set.empty"
       ],
       0,
-      "4a608e16a1dc1cd2e908dca28e0e39d1"
+      "9e84d7518e830e2e7c6d3dd06d4b72a8"
     ],
     [
       "Ex10b.shift_x_p1",

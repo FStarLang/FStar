@@ -294,7 +294,10 @@ let repl_ld_tasks_of_deps (deps: list<string>) (final_tasks: list<repl_task>) =
 
 The dependencies are a list of file name.  The steps are a list of
 ``repl_task`` elements, to be executed by ``run_repl_task``. **)
-let deps_and_repl_ld_tasks_of_our_file filename =
+let deps_and_repl_ld_tasks_of_our_file filename
+    : list<string>
+    * list<repl_task>
+    * FStar.Parser.Dep.deps =
   let get_mod_name fname =
     Parser.Dep.lowercase_module_name fname in
   let our_mod_name =
@@ -302,12 +305,7 @@ let deps_and_repl_ld_tasks_of_our_file filename =
   let has_our_mod_name f =
     (get_mod_name f = our_mod_name) in
 
-  let prims_fname =
-    Options.prims () in
-  let deps =
-    prims_fname ::
-    (FStar.Dependencies.find_deps_if_needed
-      Parser.Dep.VerifyFigureItOut [filename]) in
+  let deps, dep_graph = FStar.Dependencies.find_deps_if_needed [filename] in
 
   let same_name, real_deps =
     List.partition has_our_mod_name deps in
@@ -330,7 +328,7 @@ let deps_and_repl_ld_tasks_of_our_file filename =
 
   let tasks =
     repl_ld_tasks_of_deps real_deps intf_tasks in
-  real_deps, tasks
+  real_deps, tasks, dep_graph
 
 (** Update timestamps in argument task to last modification times. **)
 let update_task_timestamps = function
@@ -924,7 +922,8 @@ let load_deps st =
   match with_captured_errors st.repl_env
           (fun _env -> Some <| deps_and_repl_ld_tasks_of_our_file st.repl_fname) with
   | None -> Inr st
-  | Some (deps, tasks) ->
+  | Some (deps, tasks, dep_graph) ->
+    let st = {st with repl_env=FStar.TypeChecker.Env.set_dep_graph st.repl_env dep_graph} in
     match run_repl_ld_transactions st tasks with
     | Inr st -> Inr st
     | Inl st -> Inl (st, deps)
@@ -1387,7 +1386,7 @@ let initial_range =
 let interactive_mode' (filename: string): unit =
   write_hello ();
 
-  let env = init_env () in
+  let env = init_env FStar.Parser.Dep.empty_deps in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
 
   let init_st =
@@ -1405,9 +1404,6 @@ let interactive_mode' (filename: string): unit =
 
 let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
-
-  if Options.verify_module () <> [] then
-    Util.print_warning "--ide: ignoring --verify_module";
 
   if Option.isSome (Options.codegen ()) then
     Util.print_warning "--ide: ignoring --codegen";

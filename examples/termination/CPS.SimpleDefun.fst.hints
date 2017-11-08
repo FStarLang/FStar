@@ -66,11 +66,10 @@
         "disc_equation_CPS.SimpleDefun.C0",
         "disc_equation_CPS.SimpleDefun.C1",
         "fuel_guarded_inversion_CPS.SimpleDefun.cont", "int_inversion",
-        "projection_inverse_CPS.SimpleDefun.C1__0",
         "subterm_ordering_CPS.SimpleDefun.C1"
       ],
       0,
-      "bbcd9b59b4d343f2090ebc6da3371e12"
+      "a0fcb96d90d15aa0b41fdfa302eecc5e"
     ],
     [
       "CPS.SimpleDefun.add_cps",

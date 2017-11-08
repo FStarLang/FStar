@@ -30,10 +30,10 @@
       [
         "@query", "equation_Map.sel", "equation_Map.upd",
         "interpretation_Map_Tm_abs_130c2f30bd8262f24e6cf58a5019ec1a",
-        "primitive_Prims.op_Equality", "unit_typing"
+        "primitive_Prims.op_Equality"
       ],
       0,
-      "d7fdd96604a03d821ecc448e8d5006fb"
+      "efe113fc788c647e9105b4496561ecde"
     ],
     [
       "Map.sel_upd2",
@@ -43,11 +43,10 @@
       [
         "@query", "equation_Map.sel", "equation_Map.upd",
         "interpretation_Map_Tm_abs_130c2f30bd8262f24e6cf58a5019ec1a",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "unit_typing"
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "1bb883be1ee31ac61826ced74151c3f5"
+      "2e5a0371ed4367048cc77a95c5941d40"
     ]
   ]
 ]

@@ -2,13 +2,13 @@
   "”uéj w™Ÿùóx¿ã¶∞è",
   [
     [
-      "Synthesis.uu___103",
+      "Synthesis.uu___109",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.a" ],
       0,
-      "963aa55c4bcb1186fc917a1e0f69e6bf"
+      "55581d0ccc03a60a4db6aba299c8e36f"
     ],
     [
       "Synthesis.fib",
@@ -23,10 +23,10 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "804d1c2cd302ca467760544931cfcd38"
+      "ff2f37536a8843b3ac2259501c73b51f"
     ],
     [
-      "Synthesis.uu___104",
+      "Synthesis.uu___110",
       1,
       2,
       1,
@@ -35,7 +35,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "3cc8f730bbb044d7e1471e86578eaf85"
+      "697b40ad5432e1a5dfae94063472bd28"
     ],
     [
       "Synthesis.fib_norm",
@@ -50,16 +50,16 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "7f8dfc5d28fcc9bbbf84b9a77e0392fd"
+      "8ba03145f309238d019ccee6db32f60e"
     ],
     [
-      "Synthesis.uu___105",
+      "Synthesis.uu___111",
       1,
       2,
       1,
       [ "@query", "equation_Synthesis.fn8" ],
       0,
-      "ce04ff466fed2a0adc459a144b50f575"
+      "c7c948f20e104d2ee30200381ca8bc63"
     ],
     [
       "Synthesis.iszero",
@@ -68,19 +68,37 @@
       1,
       [ "@query" ],
       0,
-      "5ea036c9e1350cd23ca029b093c607ee"
+      "a096652b83a8e4756b8e89739dd800f0"
     ],
     [
-      "Synthesis.uu___106",
+      "Synthesis.uu___112",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "bb444cc572cb4b2fd4afcd97e441fbb6"
+      "2770abdef35939ff6e4485292efb3907"
     ],
     [
-      "Synthesis.uu___106",
+      "Synthesis.uu___112",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.iszero" ],
+      0,
+      "962bf1ef4db112875d451c153b793254"
+    ],
+    [
+      "Synthesis.uu___113",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "58cc603f354fb415998eb57a58eaca93"
+    ],
+    [
+      "Synthesis.uu___113",
       2,
       2,
       1,
@@ -89,19 +107,19 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "2c58f5ad4342b6bdb354fdca3458cb53"
+      "b44ae28d8dc8372caf8853e1394d2a2d"
     ],
     [
-      "Synthesis.uu___107",
+      "Synthesis.uu___114",
       1,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fb84427c50b4bcb21f6441313a55cc97"
+      "d7d2f9db2f8af165290f2e9da9876f94"
     ],
     [
-      "Synthesis.uu___107",
+      "Synthesis.uu___114",
       2,
       2,
       1,
@@ -110,28 +128,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "6d9df9b9648e433c9a8bfc256b3a9384"
-    ],
-    [
-      "Synthesis.uu___108",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "58200dd35eb4393015cc848800c3e71b"
-    ],
-    [
-      "Synthesis.uu___108",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Synthesis.iszero",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "1171da975357b36134b4e14bb762ac15"
+      "8c4ff2d1bc1321571b19c4b680c12d0b"
     ]
   ]
 ]
