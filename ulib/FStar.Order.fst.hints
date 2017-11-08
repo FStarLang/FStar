@@ -107,20 +107,12 @@
       2,
       1,
       [
-        "@query", "equality_tok_FStar.Order.Eq@tok",
-        "equality_tok_FStar.Order.Gt@tok", "equality_tok_FStar.Order.Lt@tok"
+        "@query", "assumption_Prims.HasEq_int",
+        "equality_tok_FStar.Order.Eq@tok", "equality_tok_FStar.Order.Gt@tok",
+        "equality_tok_FStar.Order.Lt@tok"
       ],
       0,
-      "b52f277385f51bb9b7681979f414de30"
-    ],
-    [
-      "FStar.Order.order_from_int",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "dee5295dc2d80124f0c8b6caf49a2483"
+      "d6e3fa3167ffdb0577911675cd022b16"
     ],
     [
       "FStar.Order.compare_list",

@@ -24,21 +24,12 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0,
-      "df0ddbf057e221f4aceba02c481e4556"
-    ],
-    [
-      "FStar.Map.upd",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.Set.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2f398d2838e8864ca1e72cb1172484e6"
+      "470b192be0a0907987e17bba8820a301"
     ],
     [
       "FStar.Map.concat",
