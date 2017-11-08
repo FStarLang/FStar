@@ -432,9 +432,11 @@ let collect_one
     // Only fully qualified module aliases are allowed.
     match smap_try_find original_map alias with
     | Some deps_of_aliased_module ->
-        smap_add working_map key deps_of_aliased_module
+        smap_add working_map key deps_of_aliased_module;
+        true
     | None ->
-        FStar.Errors.warn (range_of_lid lid) (Util.format1 "module not found in search path: %s\n" alias)
+        FStar.Errors.warn (range_of_lid lid) (Util.format1 "module not found in search path: %s\n" alias);
+        false
   in
 
   let record_lid lid =
@@ -474,8 +476,8 @@ let collect_one
     | Open lid ->
         record_open false lid
     | ModuleAbbrev (ident, lid) ->
-        add_dep deps (PreferInterface (lowercase_join_longident lid true));
-        record_module_alias ident lid
+        if record_module_alias ident lid
+        then add_dep deps (PreferInterface (lowercase_join_longident lid true))
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | Main t

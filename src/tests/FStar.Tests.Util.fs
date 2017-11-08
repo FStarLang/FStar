@@ -2,6 +2,7 @@
 module FStar.Tests.Util
 
 open FStar
+open FStar.All
 open FStar.Errors
 open FStar.Util
 open FStar.Syntax
@@ -12,6 +13,7 @@ module SS = FStar.Syntax.Subst
 module I = FStar.Ident
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
+module BU = FStar.Util
 
 open FStar.Ident
 open FStar.Range
@@ -19,7 +21,7 @@ open FStar.Range
 let always id b =
     if b
     then ()
-    else raise (Error(Printf.sprintf "Assertion failed: test %d" id, Range.dummyRange))
+    else raise (Error(BU.format1 "Assertion failed: test %s" (BU.string_of_int id), Range.dummyRange))
 
 let x = gen_bv "x" None S.tun
 let y = gen_bv "y" None S.tun
@@ -35,7 +37,7 @@ let rec term_eq' t1 t2 =
     let t2 = SS.compress t2 in
     let binders_eq xs ys =
         List.length xs = List.length ys
-        && List.forall2 (fun ((x:bv, _)) (y:bv, _) -> term_eq' x.sort y.sort) xs ys in
+        && List.forall2 (fun ((x, _):binder) ((y, _):binder) -> term_eq' x.sort y.sort) xs ys in
     let args_eq xs ys =
          List.length xs = List.length ys
          && List.forall2 (fun (a, imp) (b, imp') -> term_eq' a b && imp=imp') xs ys in
@@ -57,10 +59,10 @@ let rec term_eq' t1 t2 =
       | Tm_abs(xs, t, _), Tm_abs(ys, u, _) when (List.length xs = List.length ys) -> binders_eq xs ys && term_eq' t u
       | Tm_abs(xs, t, _), Tm_abs(ys, u, _) ->
         if List.length xs > List.length ys
-        then let xs, xs' = Util.first_N (List.length ys) xs in
+        then let xs, xs' = BU.first_N (List.length ys) xs in
              let t1 = mk (Tm_abs(xs, mk (Tm_abs(xs', t, None)) None t1.pos, None)) None t1.pos in
              term_eq' t1 t2
-        else let ys, ys' = Util.first_N (List.length xs) ys in
+        else let ys, ys' = BU.first_N (List.length xs) ys in
              let t2 = mk (Tm_abs(ys, mk (Tm_abs(ys', u, None)) None t2.pos, None)) None t2.pos in
              term_eq' t1 t2
       | Tm_arrow(xs, c), Tm_arrow(ys, d) -> binders_eq xs ys && comp_eq c d
@@ -87,13 +89,13 @@ let rec term_eq' t1 t2 =
 
       | Tm_delayed _, _
       | _, Tm_delayed _ ->
-        failwith (Util.format2 "Impossible: %s and %s" (Print.tag_of_term t1) (Print.tag_of_term t2))
+        failwith (BU.format2 "Impossible: %s and %s" (Print.tag_of_term t1) (Print.tag_of_term t2))
 
       | Tm_unknown, Tm_unknown -> true
       | _ -> false
 
 let term_eq t1 t2 =
-//    Printf.printf "Comparing %s and\n\t%s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+//    BU.print2 "Comparing %s and\n\t%s\n" (Print.term_to_string t1) (Print.term_to_string t2);
     let b = term_eq' t1 t2 in
-    if not b then Printf.printf ">>>>>>>>>>>Term %s is not equal to %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+    if not b then BU.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
     b

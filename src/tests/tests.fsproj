@@ -57,11 +57,11 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="pars.fs" />
-    <Compile Include="util.fs" />
-    <Compile Include="norm.fs" />
-    <Compile Include="unif.fs" />
-    <Compile Include="test.fs" />
+    <Compile Include="FStar.Tests.Pars.fs" />
+    <Compile Include="FStar.Tests.Util.fs" />
+    <Compile Include="FStar.Tests.Norm.fs" />
+    <Compile Include="FStar.Tests.Unif.fs" />
+    <Compile Include="boot/FStar.Tests.Test.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -38,6 +38,7 @@ module Util    = FStar.Syntax.Util
 module Desugar = FStar.ToSyntax.ToSyntax
 module SMT     = FStar.SMTEncoding.Solver
 module Const   = FStar.Parser.Const
+module Pars    = FStar.Parser.ParseIt
 module Tc      = FStar.TypeChecker.Tc
 module TcTerm  = FStar.TypeChecker.TcTerm
 module BU      = FStar.Util
@@ -150,15 +151,18 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
       (Some modul, env)
 
 let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
-  let r = FStar.Parser.ParseIt.parse (Inl interface_file_name) in
+  let r = Pars.parse (Pars.Filename interface_file_name) in
   match r with
-  | Inl (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
+  | Pars.ASTFragment (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
     snd (with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
-  | Inl _ ->
+  | Pars.ASTFragment _ ->
     raise (FStar.Errors.Err(BU.format1 "Unexpected result from parsing %s; expected a single interface"
                              interface_file_name))
-  | Inr (err, rng) ->
+  | Pars.ParseError (err, rng) ->
     raise (FStar.Errors.Error(err, rng))
+  | Pars.Term _ ->
+     failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
+
 
 (***********************************************************************)
 (* Loading and storing cache files                                     *)
@@ -214,7 +218,7 @@ let tc_one_file env pre_fn fn : (Syntax.modul * int) //checked module and its el
         if (Options.should_verify fmod.name.str //if we're verifying this module
             && (FStar.Options.record_hints() //and if we're recording or using hints
                 || FStar.Options.use_hints()))
-        then SMT.with_hints_db (FStar.Parser.ParseIt.find_file fn) check_mod
+        then SMT.with_hints_db (Pars.find_file fn) check_mod
         else check_mod() //don't add a hints file for modules that are not actually verified
       in
       let mii = FStar.ToSyntax.Env.inclusion_info env.dsenv (fst tcmod).name in

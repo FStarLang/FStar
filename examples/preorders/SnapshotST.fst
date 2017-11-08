@@ -9,222 +9,148 @@ module SnapshotST
 
 open FStar.Preorder
 
+(* The original type of states and a preorder on it *)
 
-(* The state space and the preorder on it for the snapshot instance of IST. *)
+assume type state
+assume val rel_s : preorder state
 
-let snapshot_state (state:Type) = state * (option state)
+(* The richer state type that allows us to temporarily violate rel *)
 
-let snapshot_rel (#state:Type) (rel:preorder state) (s0:snapshot_state state) (s1:snapshot_state state) = 
-     ((snd s0 == None #state /\ snd s1 == None #state) ==> rel (fst s0) (fst s1))
-  /\ (forall s . (snd s0 == None #state /\ snd s1 == Some s) ==> rel (fst s0) s)
-  /\ (forall s . (snd s0 == Some s /\ snd s1 == None #state) ==> rel s (fst s1))
-  /\ (forall s s' . (snd s0 == Some s /\ snd s1 == Some s') ==> rel s s')  
+noeq type t = 
+  | Ok  : state -> t
+  | Tmp : state -> state -> t
 
+(* The lifting of rel to the richer state type *)
 
-(* Proof that the relation of the snapshot instance of IST is associative. *)
-val snapshot_rel_assoc : #state:Type -> 
-			 rel:preorder state -> 
-			 s0:snapshot_state state -> 
-			 s1:snapshot_state state -> 
-			 s2:snapshot_state state ->
-			 Lemma (requires (snapshot_rel rel s0 s1 /\ snapshot_rel rel s1 s2))
-			       (ensures  (snapshot_rel rel s0 s2))
-			 [SMTPat (snapshot_rel rel s0 s1); SMTPat (snapshot_rel rel s1 s2)]
-let snapshot_rel_assoc #state rel s0 s1 s2 = 
-  match snd s0 with
-  | None -> 
-      (match snd s1 with
-       | None -> 
-          (match snd s2 with
-           | None -> ()
-	   | Some s2' -> ())
-       | Some s1' -> 
-           (match snd s2 with
-	    | None -> ()
-	    | Some s2' -> assert (rel (fst s0) s1'); assert (rel s1' s2')))
-  | Some s0' -> 
-      (match snd s1 with
-       | None -> 
-           (match snd s2 with
-	    | None -> ()
-	    | Some s2' -> ())
-       | Some s1' -> 
-           (match snd s2 with
-	    | None -> assert (rel s0' s1'); assert (rel s1' (fst s2))
-	    | Some s2' -> assert (rel s0' s1'); assert (rel s1' s2')))
+let rel_t (t0:t) (t1:t) 
+ = match t0 , t1 with
+   | Ok s0    , Ok s1    -> rel_s s0 s1
+   | Ok s0    , Tmp s1 _ -> rel_s s0 s1
+   | Tmp s0 _ , Ok s1    -> rel_s s0 s1
+   | Tmp s0 _ , Tmp s1 _ -> rel_s s0 s1
 
+(* Lifting predicates from state to t *)
 
-(* Witnessing predicate for the snapshot instance of IST. *)
+let lift_predicate (p:predicate state{stable p rel_s}) (t:t) 
+  = match t with
+    | Ok s -> p s
+    | Tmp s _ -> p s
 
-let witnessing_predicate (#state:Type) (#rel:preorder state) (p:predicate state{stable p rel}) (s:snapshot_state state) =
-  (snd s == None ==> p (fst s)) /\ 
-  (forall s' . snd s == Some s' ==> p s')
+(* Lifting stability from state to t *)
 
-
-val witnessing_predicate_stable : #state:Type ->
-		                  rel:preorder state -> 
-		                  p:predicate state{stable p rel} ->
-		                  s0:snapshot_state state ->
-		                  s1:snapshot_state state ->
-		                  Lemma (requires (witnessing_predicate #state #rel p s0 /\ snapshot_rel rel s0 s1))
-		                        (ensures  (witnessing_predicate #state #rel p s1))
-		                  [SMTPat (witnessing_predicate #state #rel p s0); SMTPat (snapshot_rel rel s0 s1)]
-let witnessing_predicate_stable #state rel p s0 s1 = 
-  match snd s0 with
-  | None -> ()
-  | Some s0' ->
-      (match snd s1 with
-       | None -> ()
-       | Some s1' -> assert(rel s0' s1'))
+val lift_stability : p:predicate state{stable p rel_s}
+		  -> t0:t
+		  -> t1:t
+		  -> Lemma (requires (lift_predicate p t0 /\ rel_t t0 t1))
+		           (ensures  (lift_predicate p t1))
+let lift_stability p t0 t1 = ()
 
 
 (* ************************************************************************************************** *)
 
 (* 
-   A temporary definition of preorder-indexed state 
-   monads specialized to the snapshot example, in 
-   order to make sub-effecting to work. Using tmp_state 
-   and tmp_rel for the statespace and the relation on 
-   it, which otherwise would be given by parameters.
+   A temporary definition of monotonic-state monad specialized to 
+   this snapshots example, in order to make sub-effecting to work.
 *)
 
-(* Temporarily assuming the type of the states and the preorder on them. *)
+(* Preconditions, postconditions, and WPs for the monotonic-state monad. *)
 
-assume type tmp_state
-assume type tmp_rel : rel:preorder tmp_state
+let mst_pre          = t -> Type0
+let mst_post (a:Type) = a -> t -> Type0
+let mst_wp   (a:Type) = mst_post a -> Tot mst_pre
 
+(* A WP-style monotonic-state monad specialised for this example. *)
 
-(* Preconditions, postconditions and WPs for the preorder-indexed state monad. *)
+new_effect MSTATE = STATE_h t
 
-let ist_pre  (state:Type)          = state -> Type0
-let ist_post (state:Type) (a:Type) = a -> state -> Type0
-let ist_wp   (state:Type) (a:Type) = ist_post state a -> Tot (ist_pre state)
+(* DIV is a sub-effect of the snapshots instance of the monotonic-state monad. *)
 
+sub_effect DIV ~> MSTATE = fun a wp p t -> wp (fun x -> p x t)
 
-(* A WP-style preorder-indexed state monad specialised for snapshots. *)
+(* A pre- and postcondition version of this monotonic-state monad. *)
 
-new_effect ISTATE = STATE_h (snapshot_state tmp_state)
-
-
-(* DIV is a sub-effect/sub-monad of the snapshot instance of the preorder-indexed monad. *)
-
-unfold let lift_div_istate (state:Type) (rel:preorder state) 
-                           (a:Type) (wp:pure_wp a) (p:ist_post state a) (s:state) = wp (fun x -> p x s)
-sub_effect DIV ~> ISTATE = lift_div_istate (snapshot_state tmp_state) (snapshot_rel tmp_rel)
-
-
-(*A pre- and postcondition version of this preorder-indexed state monad. *)
-
-effect IST    (a:Type) 
-              (pre:ist_pre (snapshot_state tmp_state)) 
-	      (post:(snapshot_state tmp_state -> Tot (ist_post (snapshot_state tmp_state) a))) 
+effect MST (a:Type) (pre:mst_pre) (post:(t -> Tot (mst_post a))) 
        =
-       ISTATE a (fun p s0 -> pre s0 /\ (forall x s1 . pre s0 /\ post s0 x s1 ==> p x s1))
+       MSTATE a (fun p t0 -> pre t0 /\ (forall x t1 . pre t0 /\ post t0 x t1 ==> p x t1))
 
+(* The logical witnessed capability for the richer type of states *)
 
-(* A box-like modality for witnessed stable predicates for IST. *)
+assume type witnessed : p:predicate t -> Type0
 
-assume type ist_witnessed: p:predicate (snapshot_state tmp_state){stable p (snapshot_rel tmp_rel)} -> Type0
+(* Actions of MST. *)
 
+assume val get :     unit 
+                  -> MST t (fun _ -> True) (fun t0 v t1 -> t0 == v /\ v == t1)
 
-(* Generic effects (operations) for IST. *)
+assume val put :     t:t 
+                  -> MST unit (fun t0 -> rel_t t0 t) (fun _ _ t1 -> t1 == t)
 
-assume val ist_get :     unit -> IST (snapshot_state tmp_state) (fun s0 -> True) (fun s0 s s1 -> s0 == s /\ s == s1)
+assume val witness : p:predicate t{stable p rel_t} 
+                  -> MST unit (fun t0 -> p t0) (fun t0 _ t1 -> t0 == t1 /\ witnessed p)
 
-assume val ist_put :     x:snapshot_state tmp_state ->
-		         IST unit (fun s0 -> snapshot_rel tmp_rel s0 x) (fun s0 _ s1 -> s1 == x)
-
-assume val ist_witness : p:predicate (snapshot_state tmp_state){stable p (snapshot_rel tmp_rel)} ->
-		         IST unit (fun s0 -> p s0) (fun s0 _ s1 -> s0 == s1 /\ ist_witnessed p)
-
-assume val ist_recall :  p:predicate (snapshot_state tmp_state){stable p (snapshot_rel tmp_rel)} -> 
-		         IST unit (fun _ -> ist_witnessed p) (fun s0 _ s1 -> s0 == s1 /\ p s1)
+assume val recall :  p:predicate t{stable p rel_t} 
+                  -> MST unit (fun _ -> witnessed p) (fun t0 _ t1 -> t0 == t1 /\ p t1)
 
 (* ************************************************************************************************** *)
 
 
-(* Pre- and postconditions for the snapshot instance of IST. *)
+(* Logical witnessed capability for the original type of states *)
 
-let snapshot_pre           = snapshot_state tmp_state -> Type0
-let snapshot_post (a:Type) = a -> (snapshot_state tmp_state) -> Type0
-let snapshot_wp   (a:Type) = snapshot_post a -> Tot snapshot_pre
+let witnessed_s (p:predicate state{stable p rel_s}) = 
+  witnessed (fun s -> lift_predicate p s)
 
+(* Get and put actions for the original type of states *)
 
-(* The snapshot instance of IST. *)
+val get_s : unit 
+         -> MST state (fun _ -> True)
+	              (fun t0 s t1 -> t0 == t1 /\ (match t1 with 
+                                                   | Ok s1    -> s1 == s
+                                                   | Tmp _ s1 -> s1 == s))
+let get_s _ = 
+  let t = get () in
+  match t with
+  | Ok s    -> s
+  | Tmp _ s -> s
 
-effect SnapshotST (a:Type)
-		  (pre:snapshot_pre)
-		  (post:snapshot_state tmp_state -> Tot (snapshot_post a)) 
-       = 
-       IST        a pre post
+val put_s : s:state -> 
+            MST unit (fun t0      -> match t0 with
+                                     | Ok s0    -> rel_s s0 s
+                                     | Tmp s0 _ -> rel_s s0 s)
+		     (fun t0 _ t1 -> match t0 with
+                                     | Ok _       -> t1 == Ok s
+                                     | Tmp s0 s0' -> t1 == Tmp s0 s)
+let put_s s = 
+  let t = get () in
+  match t with
+  | Ok _     -> put (Ok s)
+  | Tmp s' _ -> put (Tmp s' s)
 
+(* Witness and recall operations for the original type of states *)
 
-(* The box-like modality for witnessed stable predicates for the snapshot instance of IST. *)
+val witness_s : p:predicate state{stable p rel_s}
+             -> MST unit (fun t0      -> Ok? t0 /\ (let Ok s = t0 in p s))
+			 (fun t0 _ t1 -> t0 == t1 /\ witnessed_s p)
+let witness_s p = 
+  witness (fun s -> lift_predicate p s)
 
-let witnessed (p:predicate tmp_state{stable p tmp_rel}) = 
-  ist_witnessed (fun s -> witnessing_predicate #tmp_state #tmp_rel p s)
+val recall_s : p:predicate state{stable p rel_s} 
+            -> MST unit (fun t0       -> Ok? t0 /\ witnessed_s p)
+			 (fun t0 _ t1 -> Ok? t0 /\ t0 == t1 /\ (let Ok s = t1 in p s))
+let recall_s p =
+  recall (fun s -> lift_predicate p s)
 
+(* Actions for temporarily breaking and restoring the original preorder *)
 
-(* Read and write operations. These only work on the "observable" part of the state. *)
+val break : unit 
+         -> MST unit (fun t0      -> Ok? t0) 
+		     (fun t0 _ t1 -> Ok? t0 /\ (let Ok s = t0 in t1 == Tmp s s))
+let break _ = 
+  let Ok s = get () in 
+  put (Tmp s s)
 
-val read : unit -> 
-           SnapshotST tmp_state (fun s0      -> True)
-				(fun s0 s s1 -> fst s0 == s /\ 
-				                fst s1 == s /\ 
-						snd s0 == snd s1)
-let read _ = 
-  let s = ist_get () in
-  fst s
-
-
-val write : x:tmp_state -> 
-            SnapshotST unit (fun s0      -> snapshot_rel tmp_rel s0 (x, snd s0))
-		            (fun s0 _ s1 -> s1 == (x, snd s0))
-let write x = 
-  let s = ist_get () in
-  ist_put (x, snd s)
-
-
-(* Witness and recall operations. These are applicable only when the state is "consistent" (any better terminology???) wrt. the preorder. *)
-
-val witness : p:predicate tmp_state{stable p tmp_rel} -> 
-              SnapshotST unit (fun s0      -> p (fst s0) /\ 
-	                                      snd s0 == None)
-			      (fun s0 _ s1 -> s0 == s1 /\ 
-			                      witnessed p)
-let witness p = 
-  ist_witness (fun s -> witnessing_predicate #tmp_state #tmp_rel p s)
-
-
-val recall : p:predicate tmp_state{stable p tmp_rel} -> 
-             SnapshotST unit (fun s0      -> witnessed p /\ 
-	                                     snd s0 == None)
-			     (fun s0 _ s1 -> s0 == s1 /\ 
-			                     p (fst s0))
-let recall p =
-  ist_recall (fun s -> witnessing_predicate #tmp_state #tmp_rel p s)
-
-
-(* Operation for making a snapshot of the current "consistent" state, allowing the future state updates to temporarily invalidate the preorder. *)
-
-val make_snapshot : unit -> 
-                    SnapshotST unit (fun s0      -> snd s0 == None) 
-			            (fun s0 _ s1 -> fst s0 == fst s1 /\ 
-				                    snd s1 == Some (fst s0))
-let make_snapshot _ = 
-  let s = ist_get () in 
-  ist_put (fst s, Some (fst s))
-
-
-(* Operation for restoring "consistency" when the current state is related to the snapshot that was made of an earlier "consistent" state. *)
-
-val restore_consistency : unit -> 
-                          SnapshotST unit (fun s0      -> exists s . 
-			                                    snd s0 == Some s /\ 
-							    tmp_rel s (fst s0))
-                                          (fun s0 _ s1 -> fst s0 == fst s1 /\ 
-					                  snd s1 == None)
-let restore_consistency _ = 
-  let s = ist_get () in
-  ist_put (fst s, None)
-
+val restore : unit 
+           -> MST unit (fun t0      -> Tmp? t0 /\ (let Tmp s0 s1 = t0 in rel_s s0 s1))
+                       (fun t0 _ t1 -> Tmp? t0 /\ (let Tmp _ s1 = t0 in t1 == Ok s1))
+let restore _ = 
+  let Tmp _ s = get () in
+  put (Ok s)
