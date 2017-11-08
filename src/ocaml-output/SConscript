@@ -42,7 +42,7 @@ else:
 
 compiler_libs = subprocess.check_output('ocamlfind query compiler-libs').decode('utf-8').splitlines()[0]
 print ('['+compiler_libs+']')
-env['ENV']['OCAMLFIND_IGNORE_DUPS_IN' = compiler_libs
+env['ENV']['OCAMLFIND_IGNORE_DUPS_IN'] = compiler_libs
 
 # copy environment variable from the OS env block into child process env blocks,
 # if the variable exists on the OS side.
@@ -247,10 +247,10 @@ for g in GENERATED_FILES:
 fstar_exe = env.Command('../../bin/fstar.exe', main_native, Copy('$TARGET', '$SOURCE'))
 env.NoClean(fstar_exe) # don't delete the prior fstar.exe
 
-tests_native = env.Command('FStar_Tests_main.native', '', 'cd .. && $OCAMLBUILD $OCAMLBUILDARGS FStar_Tests_main.native')
+tests_native = env.Command('_build/src/tests/ml/FStar_Tests_Main.native', '', 'cd .. && $OCAMLBUILD $OCAMLBUILDARGS FStar_Tests_Main.native')
 tests_exe = env.Command('../../bin/FStar_Tests_main.native', tests_native, Copy('$TARGET', '$SOURCE'))
-Depends(tests_native, fstar_native)
+Depends(tests_native, main_native)
 
 all = Alias('ocaml-output all', [fstar_exe, tests_exe])
-Return(all)
+Return('all')
 

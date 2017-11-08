@@ -91,7 +91,7 @@ def generate_Test(target, source, env):
   def process(s):
     if re.search(r'// *JUST *FSHARP *', s):
       return None
-    return t
+    return s
   return generate_boot_file_ex(target, source, env, process)
 
 # Generate boot/%.fsti from basic/boot/%.fsi
@@ -124,7 +124,7 @@ Boot_Rules = [('boot/FStar.Tactics.Interpreter.fst', 'tactics/boot/FStar.Tactics
               ('boot/FStar.Parser.Parse.fsti', 'parser/parse.fsi', generate_ParserParse),
               ('boot/FStar.Parser.Parse.fst', 'parser/parser.fs', generate_Copy),
               ('boot/FStar.Tactics.Interpreter.fsti', 'tactics/boot/FStar.Tactics.Interpreter.fsi', generate_Copy),
-              ('boot/FStar.Tests.Test.fsti', 'tests/boot/FStar.Tests.Test.fs', generate_Test),
+              ('boot/FStar.Tests.Test.fst', 'tests/boot/FStar.Tests.Test.fs', generate_Test),
               ('boot/%.fsti', 'basic/boot/%.fsi', generate_Basic),
               ('boot/%.fsti', 'prettyprint/boot/%.fsi', generate_PrettyPrint),
               ('boot/%.fst', 'basic/boot/%.fs', generate_Copy)
@@ -144,8 +144,8 @@ for t in ALL_BOOT:
   x = None
   for target, source, action in Boot_Rules:
     if target == t:
-        x = env.Command(target, source,  action)
-        break
+      x = env.Command(target, source,  action)
+      break
     elif '%' in target:
       # split t into path, basename, and extension
       sourceparts = split_path(source)
@@ -311,7 +311,8 @@ Extractions=[
    ])),
   ('extract_tests',ExtractNamespace(
    [addprefix('tests/','FStar.Tests.Pars.fs FStar.Tests.Util.fs FStar.Tests.Norm.fs FStar.Tests.Unif.fs'), 'boot/FStar.Tests.Test.fst'],
-   'FStar.Tests')
+   'FStar.Tests'))
+]
 
 # List of handy target names that alias sets of targets listed above
 ExtractionTargets = [
