@@ -167,6 +167,7 @@ and translate (bs:list<t>) (e:term) : t =
       
     | _ -> debug_term e; failwith "Not yet implemented"
 
+(* [readback] creates named binders and not De Bruijn *)
 and readback (x:t) : term =
     match x with
     | Unit -> S.unit_const
@@ -202,8 +203,11 @@ and readback (x:t) : term =
        if List.exists isAccu ts then (* if there is at least one symbolic argument or (TODO) application is partial, do not unfold *)
          let head = 
            (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
-           let f = S.new_bv None S.tun in
-           S.mk (Tm_let((true, [lb]), S.bv_to_tm f)) None Range.dummyRange
+           let f = match lb.lbname with
+                   | BU.Inl bv -> S.bv_to_name bv
+                   | BU.Inr fv -> failwith "Not yet implemented"
+           in
+           S.mk (Tm_let((true, [lb]), f)) None Range.dummyRange
          in
          let args = map_rev (fun x -> as_arg (readback x)) ts in
          (match ts with 
