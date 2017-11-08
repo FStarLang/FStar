@@ -80,5 +80,5 @@ val normalize_with_primitive_steps : list<primitive_step> -> list<step> -> Env.e
 val term_to_string:  Env.env -> term -> string
 val comp_to_string:  Env.env -> comp -> string
 val elim_uvars: Env.env -> sigelt -> sigelt
-
+val erase_universes: Env.env -> term -> term
 val tr_norm_steps : list<FStar.Syntax.Embeddings.norm_step> -> list<step>

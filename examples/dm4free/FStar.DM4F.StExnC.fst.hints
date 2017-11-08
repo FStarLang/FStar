@@ -18,11 +18,10 @@
         "kinding_FStar.Pervasives.Native.tuple2@tok",
         "lemma_FStar.Pervasives.invertOption",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "03b059f51eab6258718e5c9e6f19606d"
+      "6f7cdfaaf6d19dc09e389a5163332957"
     ]
   ]
 ]

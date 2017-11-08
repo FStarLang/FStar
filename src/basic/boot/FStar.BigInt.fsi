@@ -1,4 +1,6 @@
+#light "off"
 module FStar.BigInt
+open FStar.All
 
 type bigint
     = FSharp.Compatibility.OCaml.Big_int.big_int // JUST FSHARP

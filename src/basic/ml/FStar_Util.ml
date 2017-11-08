@@ -269,7 +269,8 @@ let fifo_set_difference ((s1, eq):'a fifo_set) ((s2, _):'a fifo_set) : 'a fifo_s
 type 'value smap = (string, 'value) BatHashtbl.t
 let smap_create (i:Z.t) : 'value smap = BatHashtbl.create (Z.to_int i)
 let smap_clear (s:('value smap)) = BatHashtbl.clear s
-let smap_add (m:'value smap) k (v:'value) = BatHashtbl.add m k v
+let smap_add (m:'value smap) k (v:'value) =
+    BatHashtbl.remove m k; BatHashtbl.add m k v
 let smap_of_list (l: (string * 'value) list) =
   let s = BatHashtbl.create (BatList.length l) in
   FStar_List.iter (fun (x,y) -> smap_add s x y) l;

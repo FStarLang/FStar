@@ -12,7 +12,7 @@ BIN=../bin
 
 ifeq ($(OS),Windows_NT)
   FSC     = fsc
-  MSBUILD = $(shell cygpath -u \"$$(reg.exe query 'HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0' /v MSBuildToolsPath | tail -n 2 | head -n 1 | sed 's/.*REG_SZ\s\+//g' | tr -d '\r')\")/MSBuild.exe
+  MSBUILD = ./msbuild.bat
   UNAME   = Windows_NT
   FSTAR   = ../bin/fstar.exe
   RUNTIME =
@@ -25,7 +25,7 @@ else
   RUNTIME = mono
 endif
 
-CONFIGURATION=Release
+CONFIGURATION?=Release
 
 MSBUILD := $(MSBUILD) /verbosity:minimal /p:Configuration=$(CONFIGURATION)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
@@ -82,7 +82,7 @@ $(FSYACC) $(FSLEX): nuget-restore
 # This is the way in which we invoke F* for boostrapping
 #   -- we use automatic dependence analysis based on files in ulib, src/{basic, ...} and boot
 #   -- eager_inference, MLish, lax: all tune type-inference for use with unverified ML programs
-FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --eager_inference --lax --MLish --no_location_info \
+FSTARBOOT=$(FSTAR) $(OTHERFLAGS) --expose_interfaces --eager_inference --lax --MLish --no_location_info \
 		   --odir ocaml-output --codegen OCaml \
 			$(addprefix --include , ../ulib boot basic extraction format fsdoc fstar \
                                     parser prettyprint reflection smtencoding syntax \
@@ -130,11 +130,11 @@ boot: $(ALL_BOOT)
 clean_boot:
 	rm -rf boot
 
-MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Ident.fs FStar.Options.fs FStar.Range.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
+MISC_EXTRACTED_FILES=$(addprefix basic/, FStar.Common.fs FStar.Range.fs FStar.Ident.fs FStar.Options.fs FStar.Errors.fs FStar.Const.fs FStar.Order.fs) format/FStar.Format.fs
 extract_misc: boot $(MISC_EXTRACTED_FILES)
 	$(FSTARBOOT) $(MISC_EXTRACTED_FILES) $(addprefix --extract_module , FStar.Pervasives FStar.Common FStar.Range FStar.Options FStar.Ident FStar.Errors FStar.Const FStar.Format FStar.Order)
 
-SYNTAX_EXTRACTED_FILES=$(addprefix syntax/FStar.Syntax., Syntax.fs Subst.fs Free.fs InstFV.fs Util.fs Print.fs Embeddings.fs MutRecTy.fs Resugar.fs Unionfind.fs) fsdoc/FStar.Fsdoc.Generator.fs
+SYNTAX_EXTRACTED_FILES=$(addprefix syntax/FStar.Syntax., Syntax.fs Unionfind.fs Subst.fs Free.fs InstFV.fs Util.fs Resugar.fs Print.fs Embeddings.fs MutRecTy.fs) fsdoc/FStar.Fsdoc.Generator.fs
 extract_syntax: boot $(SYNTAX_EXTRACTED_FILES)
 	$(FSTARBOOT) $(SYNTAX_EXTRACTED_FILES) --extract_namespace FStar.Syntax --extract_namespace FStar.Fsdoc
 
@@ -178,11 +178,11 @@ EXTRACTION_EXTRACTED_FILES=$(addprefix extraction/FStar.Extraction., ML.Syntax.f
 extract_extraction: boot $(EXTRACTION_EXTRACTED_FILES)
 	$(FSTARBOOT) $(EXTRACTION_EXTRACTED_FILES) --extract_namespace FStar.Extraction
 
-TACTICS_EXTRACTED_FILES=../ulib/FStar.Tactics.Types.fsti $(addprefix tactics/FStar.Tactics., Types.fs Basic.fs Embedding.fs Native.fs) boot/FStar.Tactics.Interpreter.fst
+TACTICS_EXTRACTED_FILES=$(addprefix tactics/FStar.Tactics., Types.fs Basic.fs Embedding.fs Native.fs) boot/FStar.Tactics.Interpreter.fst
 extract_tactics: boot $(TACTICS_EXTRACTED_FILES)
 	$(FSTARBOOT) $(TACTICS_EXTRACTED_FILES) --extract_namespace FStar.Tactics --no_extract FStar.Tactics.Native
 
-REFLECTION_EXTRACTED_FILES=../ulib/FStar.Reflection.Types.fsti $(addprefix reflection/FStar.Reflection., Basic.fs Data.fs Interpreter.fs)
+REFLECTION_EXTRACTED_FILES=../ulib/FStar.Reflection.Types.fsti $(addprefix reflection/FStar.Reflection., Data.fs Basic.fs Interpreter.fs)
 extract_reflection: boot $(REFLECTION_EXTRACTED_FILES)
 	$(FSTARBOOT) $(REFLECTION_EXTRACTED_FILES) --extract_namespace FStar.Reflection
 
@@ -202,7 +202,7 @@ SOLVER_EXTRACTED_FILES=smtencoding/FStar.SMTEncoding.Solver.fs
 extract_solver: boot $(SOLVER_EXTRACTED_FILES)
 	$(FSTARBOOT) $(SOLVER_EXTRACTED_FILES) --extract_module FStar.SMTEncoding.Solver
 
-FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Interactive.Legacy.fs Interactive.CompletionTable.fs Interactive.Ide.fs Universal.fs Indent.fs Main.fs)
+FSTAR_EXTRACTED_FILES=$(addprefix fstar/FStar., Dependencies.fs Universal.fs Interactive.CompletionTable.fs Interactive.Ide.fs Interactive.Legacy.fs Indent.fs Main.fs)
 extract_fstar: boot $(FSTAR_EXTRACTED_FILES)
 	$(FSTARBOOT) $(FSTAR_EXTRACTED_FILES) --extract_module FStar.Dependencies --extract_module FStar.Interactive.CompletionTable --extract_module FStar.Interactive.Ide --extract_module FStar.Interactive.Legacy --extract_module FStar.Universal --extract_module FStar.Indent --extract_module FStar.Main
 
@@ -249,10 +249,6 @@ utest-prelude:
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
 
-# Interactive mode regressions
-interactive-test:
-	$(MAKE) -C tests/interactive
-
 # The regressions to be run with a working F# build of F*
 fsharp-regressions:
 ifeq ($(OS),Windows_NT)
@@ -262,14 +258,8 @@ else
 	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
 endif
 
-#a basic regression test for extraction
-#In particular, this test builds fstarlib.cmxa, so
-#any other examples that do need fstarlib.cmxa should depend on it
-hello:
-	+$(MAKE) -C ../examples/hello ocaml
-
 # Getting parallelism from this target
-uregressions: hello native_tactics ulib tutorial uexamples extraction-examples interactive-test
+uregressions: fstarlib ulib tutorial uexamples interactive-test
 
 # Getting parallelism from this target as well
 uregressions-ulong: uregressions ulib-extra
@@ -277,22 +267,21 @@ uregressions-ulong: uregressions ulib-extra
 ulib-extra:
 	+$(MAKE) -C ../ulib extra
 
+fstarlib:
+	+$(MAKE) -C ../ulib/ml
+
 ulib:
 	+$(MAKE) -C ../ulib
 
-# Depends on fstarlib.cmxa, which is built by hello
-tutorial: hello
+tutorial: fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
 
-# Depends on fstarlib.cmxa, which is built by hello
-native_tactics: hello
-	+$(MAKE) -C ../examples/native_tactics all
-
-extraction-examples: hello
-	+$(MAKE) -C ../examples/extraction all
-
-uexamples:
+uexamples: fstarlib
 	+$(MAKE) -C ../examples all
+
+# Interactive mode regressions
+interactive-test:
+	$(MAKE) -C tests/interactive
 
 ulong:
 	+$(MAKE) utest-prelude

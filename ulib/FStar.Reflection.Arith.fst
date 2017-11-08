@@ -1,11 +1,7 @@
 module FStar.Reflection.Arith
 
-open FStar.Reflection.Syntax
-open FStar.Reflection.Types
-open FStar.Reflection.Syntax.Lemmas
-open FStar.Reflection.Basic
-open FStar.Reflection.Data
 open FStar.Tactics
+open FStar.Reflection
 module O = FStar.Order
 
 (*
@@ -22,13 +18,15 @@ noeq
 type expr =
     | Lit     : int -> expr
     // atom, contains both a numerical ID and the actual term encountered
-    | Atom    : nat -> term -> expr 
+    | Atom    : nat -> term -> expr
     | Plus    : expr -> expr -> expr
     | Mult    : expr -> expr -> expr
     | Minus   : expr -> expr -> expr
     | Land    : expr -> expr -> expr
     | Lxor    : expr -> expr -> expr
     | Lor     : expr -> expr -> expr
+    | Ladd    : expr -> expr -> expr
+    | Lsub    : expr -> expr -> expr
     | Shl     : expr -> expr -> expr
     | Shr     : expr -> expr -> expr
     | Neg     : expr -> expr
@@ -126,6 +124,8 @@ let rec as_arith_expr (t:term) =
       else if qn = udiv_qn then liftM2 Udiv e2' e3'
       else if qn = umod_qn then liftM2 Umod e2' e3'
       else if qn = mul_mod_qn then liftM2 MulMod e2' e3'
+      else if qn = ladd_qn then liftM2 Ladd e2' e3'
+      else if qn = lsub_qn then liftM2 Lsub e2' e3'
       else atom t
     | Tv_FVar fv, [(l, Q_Explicit); (r, Q_Explicit)] ->
         let qn = inspect_fv fv in
@@ -196,6 +196,8 @@ let rec expr_to_string (e:expr) : string =
     | Land l r -> "(" ^ (expr_to_string l) ^ " & " ^ (expr_to_string r) ^ ")"
     | Lor l r -> "(" ^ (expr_to_string l) ^ " | " ^ (expr_to_string r) ^ ")"
     | Lxor l r -> "(" ^ (expr_to_string l) ^ " ^ " ^ (expr_to_string r) ^ ")"
+    | Ladd l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
+    | Lsub l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | Shl l r -> "(" ^ (expr_to_string l) ^ " << " ^ (expr_to_string r) ^ ")"
     | Shr l r -> "(" ^ (expr_to_string l) ^ " >> " ^ (expr_to_string r) ^ ")"
     | NatToBv l -> "(" ^ "to_vec " ^ (expr_to_string l) ^ ")"

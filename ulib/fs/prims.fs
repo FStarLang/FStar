@@ -28,7 +28,10 @@ type 'a list'  = 'a list
 type 'a list   = 'a Microsoft.FSharp.Collections.list
 type 'a option = 'a Microsoft.FSharp.Core.option
 
-type range     = unit
+type _pos = int * int
+type _rng = string * _pos * _pos
+type range = _rng * _rng
+
 type nat       = int
 type pos       = int
 type 'd b2t    = B2t of unit
@@ -89,9 +92,11 @@ let magic () = failwith "no magic"
 let unsafe_coerce x = Obj.magic x
 let op_Negation x = not x
 
-let range_0 = ()
+let mk_range f a b c d : range = let r = (f, (a, b), (c, d)) in (r, r)
+let range_0 = let z = parse_int "0" in mk_range "<dummy>" z z z z
+
+(* These two cannot be (reasonably) implemented in extracted code *)
 let range_of _ = ()
-let mk_range _ _ _ _ _ = ()
 let set_range_of x = x
 
 let op_Equality x y = x = y

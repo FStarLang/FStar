@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "e7587a78fe9d3d28c9d8879a0721cd91"
+      "ddd67aaa2407545db8ccb73cff0544b4"
     ],
     [
       "FStar.DM4F.Random.bind",
@@ -20,11 +20,11 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.Native.uu___is_None",
+        "projection_inverse_BoxBool_proj_0",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "38c215de5c72ee003d370223be9125f0"
+      "181ade74aa3c6cd9b0c0bc0a427c2ef8"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND_lift_from_pure",
@@ -33,7 +33,7 @@
       1,
       [ "@query" ],
       0,
-      "bef42576177013355e3114fcfa777e06"
+      "773ed04a53c9e010ffea2dcd43b8f0bd"
     ],
     [
       "FStar.DM4F.Random._dm4f_RAND_return_wp",
@@ -42,7 +42,7 @@
       1,
       [ "@query" ],
       0,
-      "6dd0fea0babd02f970c249d0c43dd4f6"
+      "c6b6c5610d69081e58fcb71f747aa5ca"
     ]
   ]
 ]

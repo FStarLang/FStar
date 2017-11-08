@@ -51,6 +51,7 @@ val open_univ_vars:     univ_names -> term -> univ_names * term
 val open_univ_vars_comp:univ_names -> comp -> univ_names * comp
 val opening_of_binders: binders -> subst_t
 
+val subst_tscheme: list<subst_elt> -> tscheme -> tscheme
 val close_tscheme: binders -> tscheme -> tscheme
 val close_univ_vars_tscheme: univ_names -> tscheme -> tscheme
 

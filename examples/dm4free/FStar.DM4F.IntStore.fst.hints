@@ -11,11 +11,11 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "8ff46e84c54581868ad40a03cbe4cadf"
+      "c11a6719c0c4d0ad608b4bc341e496c1"
     ]
   ]
 ]

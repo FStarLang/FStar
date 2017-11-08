@@ -209,7 +209,8 @@ val unboxString: term -> term
 val boxBitVec:   int -> term -> term
 val unboxBitVec: int -> term -> term
 
-val mk_Range_const:  term
+// Thunked, produces a different opaque constant on each call
+val mk_Range_const:  unit -> term
 val mk_Term_unit:    term
 
 val mk_PreType:      term -> term

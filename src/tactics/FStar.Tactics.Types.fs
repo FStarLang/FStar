@@ -7,6 +7,7 @@ open FStar.TypeChecker.Env
 module Options = FStar.Options
 module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
+module Range = FStar.Range
 
 (*
    f: x:int -> P
@@ -42,7 +43,8 @@ type proofstate = {
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying ciruluarity
 
-    psc          : N.psc         //primitive step context where we started execution
+    psc          : N.psc;        //primitive step context where we started execution
+    entry_range  : Range.range;  //position of entry, set by the use
 }
 
 let subst_proof_state subst ps = {
@@ -58,10 +60,13 @@ let incr_depth (ps:proofstate) : proofstate =
 
 let tracepoint ps : unit =
     if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ())
-    then ps.__dump ps "TRACE"
+    then ps.__dump (subst_proof_state (N.psc_subst ps.psc) ps) "TRACE"
     else ()
 
 let set_ps_psc psc ps = { ps with psc = psc }
+
+let set_proofstate_range ps r =
+    { ps with entry_range = r }
 
 type direction =
     | TopDown

@@ -1912,6 +1912,19 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
+let push_reflect_effect env quals (effect_name:Ident.lid) range =
+    if quals |> BU.for_some (function S.Reflectable _ -> true | _ -> false)
+    then let monad_env = Env.enter_monad_scope env effect_name.ident in
+         let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
+         let quals = [S.Assumption; S.Reflectable effect_name] in
+         let refl_decl = { sigel = S.Sig_declare_typ(reflect_lid, [], S.tun);
+                           sigrng = range;
+                           sigquals = quals;
+                           sigmeta = default_sigmeta  ;
+                           sigattrs = [] } in
+         Env.push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
+    else env
+
 let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ eff_decls =
     let env0 = env in
     // qualified with effect name
@@ -2065,18 +2078,7 @@ let rec desugar_effect env d (quals: qualifiers) eff_name eff_binders eff_typ ef
         let env = push_sigelt env (U.action_as_lb mname a) in
         push_doc env a.action_name doc) env
     in
-    let env =
-      if quals |> List.contains Reflectable
-      then let reflect_lid = Ident.id_of_text "reflect" |> Env.qualify monad_env in
-           let quals = [S.Assumption; S.Reflectable mname] in
-           let refl_decl = { sigel = S.Sig_declare_typ(reflect_lid, [], S.tun);
-                             sigrng = d.drange;
-                             sigquals = quals;
-                             sigmeta = default_sigmeta  ;
-                             sigattrs = [] } in
-           push_sigelt env refl_decl // FIXME: Add docs to refl_decl?
-      else env
-    in
+    let env = push_reflect_effect env qualifiers mname d.drange in
     let env = push_doc env mname d.doc in
     env, [se]
 
@@ -2101,18 +2103,21 @@ and desugar_redefine_effect env d trans_qual quals eff_name eff_binders defn =
             | _ -> [], args
         in
         lid, ed, desugar_args env args, desugar_attributes env cattributes in
+//    printfn "ToSyntax got eff_decl: %s\n" (Print.eff_decl_to_string false ed);
     let binders = Subst.close_binders binders in
-    let sub (_, x) =
-        let edb, x = Subst.open_term ed.binders x in
-        if List.length args <> List.length edb
-        then raise (Error("Unexpected number of arguments to effect constructor", defn.range));
-        let s = U.subst_of_list edb args in
-        [], Subst.close binders (Subst.subst s x) in
+    if List.length args <> List.length ed.binders
+    then raise (Error("Unexpected number of arguments to effect constructor", defn.range));
+    let ed_binders, _, ed_binders_opening = Subst.open_term' ed.binders S.t_unit in
+    let sub (us, x) =
+        let x = Subst.subst (Subst.shift_subst (List.length us) ed_binders_opening) x in
+        let s = U.subst_of_list ed_binders args in
+        Subst.close_tscheme binders (us, (Subst.subst s x))
+    in
     let mname=qualify env0 eff_name in
     let ed = {
             mname       =mname;
             cattributes =cattributes;
-            univs       =[];
+            univs       =ed.univs;
             binders     =binders;
             signature   =snd (sub ([], ed.signature));
             ret_wp      =sub ed.ret_wp;
@@ -2536,9 +2541,85 @@ let partial_ast_modul_to_modul modul a_modul : withenv<S.modul> =
         let env, modul = desugar_partial_modul modul env a_modul in
         modul, env
 
-let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) : withenv<unit> =
+let add_modul_to_env (m:Syntax.modul) (mii:module_inclusion_info) (erase_univs:S.term -> S.term) : withenv<unit> =
   fun en ->
+      let erase_univs_ed ed =
+          let erase_binders bs =
+              match bs with
+              | [] -> []
+              | _ ->
+                let t = erase_univs (S.mk (Tm_abs(bs, S.t_unit, None)) None Range.dummyRange) in
+                match (Subst.compress t).n with
+                | Tm_abs(bs, _, _) -> bs
+                | _ -> failwith "Impossible"
+          in
+          let binders, _, binders_opening =
+              Subst.open_term' (erase_binders ed.binders) S.t_unit in
+          let erase_term t =
+              Subst.close binders (erase_univs (Subst.subst binders_opening t))
+          in
+          let erase_tscheme (us, t) =
+              let t = Subst.subst (Subst.shift_subst (List.length us) binders_opening) t in
+              [], Subst.close binders (erase_univs t)
+          in
+          let erase_action action =
+              let opening = Subst.shift_subst (List.length action.action_univs) binders_opening in
+              let erased_action_params =
+                  match action.action_params with
+                  | [] -> []
+                  | _ ->
+                    let bs = erase_binders <| Subst.subst_binders opening action.action_params in
+                    let t = S.mk (Tm_abs(bs, S.t_unit, None)) None Range.dummyRange in
+                    match (Subst.compress (Subst.close binders t)).n with
+                    | Tm_abs(bs, _, _) -> bs
+                    | _ -> failwith "Impossible"
+              in
+              let erase_term t =
+                  Subst.close binders (erase_univs (Subst.subst opening t))
+              in
+                { action with
+                    action_univs = [];
+                    action_params = erased_action_params;
+                    action_defn = erase_term action.action_defn;
+                    action_typ = erase_term action.action_typ
+                }
+          in
+            { ed with
+               univs = [];
+               binders   = Subst.close_binders binders;
+               signature = erase_term ed.signature;
+               ret_wp    = erase_tscheme ed.ret_wp;
+               bind_wp   = erase_tscheme ed.bind_wp;
+               if_then_else= erase_tscheme ed.if_then_else;
+               ite_wp      = erase_tscheme ed.ite_wp;
+               stronger    = erase_tscheme ed.stronger;
+               close_wp    = erase_tscheme ed.close_wp;
+               assert_p    = erase_tscheme ed.assert_p;
+               assume_p    = erase_tscheme ed.assume_p;
+               null_wp     = erase_tscheme ed.null_wp;
+               trivial     = erase_tscheme ed.trivial;
+               repr        = erase_term ed.repr;
+               return_repr = erase_tscheme ed.return_repr;
+               bind_repr   = erase_tscheme ed.bind_repr;
+               actions     = List.map erase_action ed.actions
+          }
+      in
+      let push_sigelt env se =
+          match se.sigel with
+          | Sig_new_effect ed ->
+            let se' = {se with sigel=Sig_new_effect (erase_univs_ed ed)} in
+            let env = Env.push_sigelt env se' in
+            push_reflect_effect env se.sigquals ed.mname se.sigrng
+          | Sig_new_effect_for_free ed ->
+            let se' = {se with sigel=Sig_new_effect_for_free (erase_univs_ed ed)} in
+            let env = Env.push_sigelt env se' in
+            push_reflect_effect env se.sigquals ed.mname se.sigrng
+          | _ -> Env.push_sigelt env se
+      in
       let en, pop_when_done = Env.prepare_module_or_interface false false en m.name mii in
-      let en = List.fold_left Env.push_sigelt (Env.set_current_module en m.name) m.exports in
+      let en = List.fold_left
+                    push_sigelt
+                    (Env.set_current_module en m.name)
+                    m.exports in
       let env = Env.finish en m in
       (), (if pop_when_done then export_interface m.name env else env)
