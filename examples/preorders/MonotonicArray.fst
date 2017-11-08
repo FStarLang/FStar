@@ -35,6 +35,7 @@ private type seq_rel (a:Type0) (n:nat) :relation (repr a n)
 				    (f1 == MutableUntilFrozen ==> (f2 =!= Mutable)) /\
 				    (f1 == Frozen  ==> s1 == s2)                    /\  //once the seq is frozen, it remains so
 				    (forall (i:nat). i < n ==> (init_at_seq s1 i ==> init_at_seq s2 i))  //once an index is init, it remains so
+                                                                                                         //last clause corresponds to `remains_init` in the POPL'18 paper
 (* typing the relation above as preorder *)
 private let seq_pre (a:Type0) (n:nat) :preorder (repr a n) = seq_rel a n
 
@@ -149,11 +150,11 @@ abstract let init_at_arr (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) (h:heap) 
   = let s = as_seq arr h in
     init_at_seq s i
 
-private let init_at_pred' (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :heap_predicate
+private let initialized' (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :heap_predicate
   = fun h -> h `contains_array` arr /\ init_at_arr arr i h
 
-(* a stable init_at predicate *)
-abstract let init_at_pred (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :(p:heap_predicate{stable p})
+(* a stable initialized predicate *)
+abstract let initialized (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :(p:heap_predicate{stable p})
   = let A #_ #_ #m s_ref off = arr in
     assert (forall (h:heap).
               let s, _ = sel h s_ref in
@@ -163,11 +164,11 @@ abstract let init_at_pred (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :(p:heap
 	      let s2, _ = sel h2 s_ref in
               (h1 `contains_array` arr /\ heap_rel h1 h2) ==> (forall (i:nat). i < m ==> (Some? (Seq.index s1 i) ==>
 	                                                                          Some? (Seq.index s2 i))));
-    init_at_pred' arr i
+    initialized' arr i
 
-(* witnessed predicate for init_at *)
+(* witnessed predicate for initialized *)
 abstract let init_at (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :Type0
-  = witnessed (init_at_pred arr i)
+  = witnessed (initialized arr i)
 
 (* scaffolding for frozen predicate *)
 abstract let frozen_bit (#a:Type0) (#n:nat) (arr:t a n) (h:heap) :Type0
@@ -215,7 +216,7 @@ abstract let read (#a:Type0) (#n:nat) (arr:t a n) (i:index arr{arr `init_at` i})
         (ensures  (fun h0 r h1 -> h0 == h1 /\ Some r == Seq.index (as_seq arr h0) i))
   = let A #_ s_ref o = arr in
     let (s, _) = !s_ref in
-    gst_recall (init_at_pred arr i);
+    gst_recall (initialized arr i);
     Some?.v (Seq.index s (o + i))
 
 private let write_common (#a:Type0) (#n:nat) (arr:t a n) (i:nat{i < n}) (x:a)
@@ -228,7 +229,7 @@ private let write_common (#a:Type0) (#n:nat) (arr:t a n) (i:nat{i < n}) (x:a)
     let (s, b) = !s_ref in
     let s = Seq.upd s (offset + i) (Some x) in
     s_ref := (s, b);
-    gst_witness (init_at_pred arr i);
+    gst_witness (initialized arr i);
     ()
 
 abstract let write (#a:Type0) (#n:nat) (arr:array a n) (i:nat{i < n}) (x:a)
@@ -333,14 +334,14 @@ let lemma_sub_init_at
          (ensures  ((sub arr j len) `init_at` (i - j)))
 	 [SMTPat (arr `init_at` i); SMTPat (sub arr j len)]
   = let arr' = sub arr j len in
-    lemma_functoriality (init_at_pred arr i) (init_at_pred arr' (i - j))
+    lemma_functoriality (initialized arr i) (initialized arr' (i - j))
 
 (* recall various properties *)
 abstract let recall_init (#a:Type0) (#n:nat) (arr:t a n) (i:index arr{arr `init_at` i})
   :ST unit (requires (fun _       -> True))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ Some? (Seq.index (as_seq arr h0) i)))
   = let h0 = ST.get () in
-    gst_recall (init_at_pred arr i)
+    gst_recall (initialized arr i)
 
 abstract let recall_frozen (#a:Type0) (#n:nat) (arr:t a n) (es:erased (Seq.seq a){frozen_with arr es})
   :ST unit (requires (fun _       -> True))
@@ -359,7 +360,7 @@ let lemma_frozen_implies_init_at (#a:Type0) (#n:nat) (arr:t a n) (es:erased (Seq
   :Lemma (requires True)
          (ensures  (arr `init_at` i))
 	 [SMTPat (frozen_with arr es); SMTPat (arr `init_at` i)]
-  = lemma_functoriality (frozen_pred arr es) (init_at_pred arr i)
+  = lemma_functoriality (frozen_pred arr es) (initialized arr i)
 
 (***** some utility functions *****)
 
@@ -382,7 +383,7 @@ abstract let recall_all_init_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{
   = let rec aux (curr:nat{curr >= i /\ curr < j})
       :ST unit (requires (fun h0      -> init_arr_in_heap_i_j arr h0 i curr))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ init_arr_in_heap_i_j arr h0 i j))
-      = gst_recall (init_at_pred arr curr);
+      = gst_recall (initialized arr curr);
         if curr = j - 1 then () else aux (curr + 1)
     in
     if i = j then ()
@@ -401,7 +402,7 @@ abstract let witness_all_init_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat
       :ST unit (requires (fun h0      -> init_arr_in_heap_i_j arr h0 i j /\ all_init_i_j arr i curr))
                (ensures  (fun h0 _ h1 -> h0 == h1 /\ all_init_i_j arr i j))
       = recall_contains arr;
-        gst_witness (init_at_pred arr curr);
+        gst_witness (initialized arr curr);
         if curr = j - 1 then () else aux (curr + 1)
     in
     if i = j then ()
