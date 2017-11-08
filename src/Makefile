@@ -253,20 +253,23 @@ utest:
 # The first tests have to be performed sequentially (but each one may use some parallelism)
 utest-prelude:
 	+$(MAKE) all
-	+$(MAKE) fstar-regressions
+	+$(MAKE) fsharp-regressions
 	+$(MAKE) boot-ocaml
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
-	+$(MAKE) fstar-regressions
+	+$(MAKE) ocaml-regressions
 
-# The regressions to be run with both the F# and the OCaml build of F*
-fstar-regressions:
+# The regressions to be run with a working F# build of F*
+fsharp-regressions:
 ifeq ($(OS),Windows_NT)
 	$(RUNTIME) $(BIN)/tests.exe
 else
 	@# On Linux, we need to increase the maximum stack size, or we overflow
 	ulimit -s unlimited; $(RUNTIME) $(BIN)/tests.exe
 endif
+
+ocaml-regressions:
+	$(BIN)/tests.exe
 
 # Getting parallelism from this target
 uregressions: fstarlib ulib tutorial uexamples interactive-test
