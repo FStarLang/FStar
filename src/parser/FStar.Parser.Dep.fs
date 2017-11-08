@@ -93,6 +93,12 @@ let module_name_of_file f =
 
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
+let namespace_of_module f =
+    let lid = FStar.Ident.lid_of_path (FStar.Ident.path_of_text f) Range.dummyRange in
+    match lid.ns with
+    | [] -> None
+    | _ -> Some (FStar.Ident.lid_of_ids lid.ns)
+
 type file_name = string
 type module_name = string
 type dependence =
@@ -341,16 +347,20 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 
 exception Exit
 
-let hard_coded_dependencies filename =
-  let filename : string = basename filename in
+let hard_coded_dependencies full_filename =
+  let filename : string = basename full_filename in
   let corelibs =
     [Options.prims_basename () ; Options.pervasives_basename () ; Options.pervasives_native_basename ()]
   in
   (* The core libraries do not have any implicit dependencies *)
   if List.mem filename corelibs then []
-  else [ (Const.fstar_ns_lid, Open_namespace);
-         (Const.prims_lid, Open_module);
-         (Const.pervasives_lid, Open_module) ]
+  else let implicit_deps =
+           [ (Const.fstar_ns_lid, Open_namespace);
+             (Const.prims_lid, Open_module);
+             (Const.pervasives_lid, Open_module) ] in
+       match (namespace_of_module (lowercase_module_name full_filename)) with
+       | None -> implicit_deps
+       | Some ns -> implicit_deps @ [(ns, Open_namespace)]
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
