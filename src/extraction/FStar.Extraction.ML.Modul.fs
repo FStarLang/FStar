@@ -51,7 +51,7 @@ let fail_exp (lid:lident) (t:typ) =
 let mangle_projector_lid (x: lident) : lident =
     x
 
-let lident_as_mlsymbol (id : lident) : mlsymbol = id.ident.idText
+let lident_as_mlsymbol (id : lident) : mlsymbol = avoid_keyword id.ident.idText
 
 let as_pair = function
    | [a;b] -> (a,b)
