@@ -253,13 +253,14 @@ utest:
 # The first tests have to be performed sequentially (but each one may use some parallelism)
 utest-prelude:
 	+$(MAKE) all
-	+$(MAKE) fsharp-regressions
+	+$(MAKE) fstar-regressions
 	+$(MAKE) boot-ocaml
 	+$(MAKE) clean_extracted #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml
+	+$(MAKE) fstar-regressions
 
-# The regressions to be run with a working F# build of F*
-fsharp-regressions:
+# The regressions to be run with both the F# and the OCaml build of F*
+fstar-regressions:
 ifeq ($(OS),Windows_NT)
 	$(RUNTIME) $(BIN)/tests.exe
 else
