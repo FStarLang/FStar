@@ -19,7 +19,7 @@ open HST // for := , !
 *)
 
 (* GM: Seems the initial fuels are needed, or we get queries with fuel=2 *)
-#set-options "--initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1 --z3rlimit 150"
+#set-options "--initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
 
 type step: (from: typ) -> (to: typ) -> Tot Type0 =
   | StepField:
@@ -1240,8 +1240,6 @@ let rec path_includes_concat
 = match q with
   | PathBase -> ()
   | PathStep _ _ q' _ -> path_includes_concat p q'
-
-#reset-options "--z3rlimit 100"
 
 let path_includes_exists_concat
   (#from #through: typ)
@@ -3750,7 +3748,7 @@ let loc_includes_gbuffer_of_array_pointer l #len #t p =
 let loc_includes_gpointer_of_array_cell l #t b i =
   loc_includes_trans l (loc_buffer b) (loc_pointer (gpointer_of_buffer_cell b i))
 
-#set-options "--z3rlimit 150"
+#set-options "--z3rlimit 64"
 
 let loc_includes_gsub_buffer_r l #t b i len =
   if len = 0ul
@@ -4074,24 +4072,16 @@ let rec loc_aux_disjoint_loc_aux_includes
 let loc_disjoint_includes p1 p2 p1' p2' =
   regions_of_loc_monotonic p1 p1';
   regions_of_loc_monotonic p2 p2';
-  let pre = //A rather brutal way to force inlining of pre and post in VC of the continuation
-    (fun r n ->
-      Set.mem r (Ghost.reveal (Loc?.aux_regions p1')) /\ Set.mem n (Loc?.aux_addrs p1' r) /\
-      Set.mem r (Ghost.reveal (Loc?.aux_regions p2')) /\ Set.mem n (Loc?.aux_addrs p2' r))
-    <: Tot ((r:HH.rid) -> (n:nat) -> GTot Type0)
-  in
-  let post =
-    (fun r n ->
-       pre r n /\
-       loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n))
-    <: Tot ((r:HH.rid) -> (n:nat) -> GTot Type0)
+  let pre (r:HH.rid) (n:nat) :Type0 =
+    Set.mem r (Ghost.reveal (Loc?.aux_regions p1')) /\ Set.mem n (Loc?.aux_addrs p1' r) /\
+    Set.mem r (Ghost.reveal (Loc?.aux_regions p2')) /\ Set.mem n (Loc?.aux_addrs p2' r)
   in
   let f
     (r: HH.rid)
     (n: nat)
   : Lemma
     (requires (pre r n))
-    (ensures (post r n))
+    (ensures (pre r n /\ loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n)))
   = let l1 = Loc?.aux p1 r n in
     let l2 = Loc?.aux p2 r n in
     let l1' = Loc?.aux p1' r n in
@@ -4101,7 +4091,10 @@ let loc_disjoint_includes p1 p2 p1' p2' =
     loc_aux_disjoint_loc_aux_includes l2' l1 l1';
     loc_aux_disjoint_sym l2' l1'
   in
-  Classical.forall_intro_2 (fun r -> Classical.move_requires (f r))
+  let g (r:HH.rid) (n:nat) :Lemma (pre r n ==> loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n))
+  = Classical.move_requires (f r) n
+  in
+  Classical.forall_intro_2 g  //AR: this used to be: Classical.forall_intro_2 (fun r -> Classical.move_requires (f r)) -- need to see why that doesn't work
 
 let live_unused_in_disjoint_strong
   (#value1: typ)
@@ -4230,7 +4223,7 @@ let modifies_reference_elim #t b p h h' =
 
 let modifies_refl s h = ()
 
-#reset-options "--z3rlimit 400 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
+#reset-options "--z3rlimit 160 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
 
 let modifies_loc_includes s1 h h' s2 =
   assert_spinoff (
@@ -4282,9 +4275,19 @@ let modifies_loc_includes s1 h h' s2 =
     end else
       ()
   in
-  Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
+  let g
+    (t: typ)
+    (p: pointer t)
+  : Lemma ((Set.mem (frameOf p) (Ghost.reveal (Loc?.aux_regions s1)) /\
+            Set.mem (as_addr p) (Loc?.aux_addrs s1 (frameOf p)) /\
+            (~ (Set.mem (as_addr p) (addrs_of_loc_weak s1 (frameOf p)))) /\
+            loc_aux_disjoint_pointer (Loc?.aux s1 (frameOf p) (as_addr p)) p /\
+            live h1 p) ==> equal_values h1 p h2 p)
+    = Classical.move_requires (f t) p
+  in
+  Classical.forall_intro_2 g  //AR: this was the same pattern as above (forall_intro_2 and move_requires, there was no g)
 
-#set-options "--z3rlimit 150 --max_fuel 1 --max_ifuel 1"
+#set-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
 
 let modifies_only_live_regions_weak
   (rs: Set.set HH.rid)
@@ -4634,7 +4637,19 @@ let modifies_fresh_frame_popped_weak
     assert (Set.equal (addrs_of_loc_weak u r) (addrs_of_loc_weak s r));
     assert (Loc?.aux u r a == Loc?.aux s r a)
   in
-  Classical.forall_intro_2 (fun t -> Classical.move_requires (g t))
+  let g'
+    (t: typ)
+    (p: pointer t)
+  : Lemma (
+      (Set.mem (frameOf p) (Ghost.reveal (Loc?.aux_regions s)) /\
+      Set.mem (as_addr p) (Loc?.aux_addrs s (frameOf p)) /\
+      (~ (Set.mem (as_addr p) (addrs_of_loc_weak s (frameOf p)))) /\
+      loc_aux_disjoint_pointer (Loc?.aux s (frameOf p) (as_addr p)) p /\
+      live h0 p) ==>
+      equal_values h0 p h3 p
+    ) = Classical.move_requires (g t) p
+  in
+  Classical.forall_intro_2 g'  //AR: again same pattern, there was no g'
 
 let no_upd_popped #t h0 h1 b =
   let g = greference_of b in

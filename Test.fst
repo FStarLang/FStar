@@ -40,3 +40,19 @@ let rec map (f:'a -> ML 'b) (x:list 'a) :ML (list 'b) = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 *)
+
+#set-options "--use_two_phase_tc"
+
+assume val req (r1:int) (r2:int) :Type0
+assume val ens (r1:int) (r2:int) :Type0
+
+assume val foo (r1:int) (r2:int) :Lemma (requires (req r1 r2)) (ensures (ens r1 r2))
+
+let baz () :Lemma (forall r1 r2. req r1 r2 ==> ens r1 r2) =
+  let foo' (r1:int) (r2:int) :Lemma (requires (req r1 r2)) (ensures (ens r1 r2)) = foo r1 r2 in
+  FStar.Classical.forall_intro_2 (fun r1 -> Classical.move_requires (foo' r1))
+  
+  let bar (r1:int) (r2:int) :Lemma (req r1 r2 ==> ens r1 r2)
+    = FStar.Classical.move_requires (foo' r1) r2
+  in
+  ()

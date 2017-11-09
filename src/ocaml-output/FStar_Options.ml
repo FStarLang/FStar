@@ -1849,6 +1849,7 @@ let settable: Prims.string -> Prims.bool =
     | "z3rlimit_factor" -> true
     | "z3rlimit" -> true
     | "z3refresh" -> true
+    | "use_two_phase_tc" -> true
     | uu____4981 -> false
 let resettable: Prims.string -> Prims.bool =
   fun s  ->

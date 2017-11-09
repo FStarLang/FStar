@@ -951,7 +951,8 @@ let settable = function
     | "reuse_hint_for"
     | "z3rlimit_factor"
     | "z3rlimit"
-    | "z3refresh" -> true
+    | "z3refresh"
+    | "use_two_phase_tc" -> true
     | _ -> false
 
 // the first two options below are options that are passed to z3 using
