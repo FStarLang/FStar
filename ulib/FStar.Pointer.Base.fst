@@ -6,8 +6,6 @@ module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
 open HST // for := , !
 
-#set-options "--lax"
-
 (*** Definitions *)
 
 (** Pointers to data of type t.
@@ -21,7 +19,7 @@ open HST // for := , !
 *)
 
 (* GM: Seems the initial fuels are needed, or we get queries with fuel=2 *)
-#set-options "--initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
+#set-options "--initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1 --z3rlimit 150"
 
 type step: (from: typ) -> (to: typ) -> Tot Type0 =
   | StepField:
@@ -1242,6 +1240,8 @@ let rec path_includes_concat
 = match q with
   | PathBase -> ()
   | PathStep _ _ q' _ -> path_includes_concat p q'
+
+#reset-options "--z3rlimit 100"
 
 let path_includes_exists_concat
   (#from #through: typ)
@@ -3750,7 +3750,7 @@ let loc_includes_gbuffer_of_array_pointer l #len #t p =
 let loc_includes_gpointer_of_array_cell l #t b i =
   loc_includes_trans l (loc_buffer b) (loc_pointer (gpointer_of_buffer_cell b i))
 
-#set-options "--z3rlimit 64"
+#set-options "--z3rlimit 150"
 
 let loc_includes_gsub_buffer_r l #t b i len =
   if len = 0ul
@@ -4230,7 +4230,7 @@ let modifies_reference_elim #t b p h h' =
 
 let modifies_refl s h = ()
 
-#reset-options "--z3rlimit 160 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2 --lax"
+#reset-options "--z3rlimit 400 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
 
 let modifies_loc_includes s1 h h' s2 =
   assert_spinoff (
@@ -4284,7 +4284,7 @@ let modifies_loc_includes s1 h h' s2 =
   in
   Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
 
-#set-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
+#set-options "--z3rlimit 150 --max_fuel 1 --max_ifuel 1"
 
 let modifies_only_live_regions_weak
   (rs: Set.set HH.rid)
