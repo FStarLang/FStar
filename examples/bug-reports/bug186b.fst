@@ -1,6 +1,6 @@
 module Bug186b
 
-open Classical
+open FStar.Classical
 
 type typ =
   | TArr : typ -> typ -> typ
@@ -74,7 +74,7 @@ assume opaque val weakening : x:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       (decreases h)
 
 type subst_typing (s:sub) (g1:env) (g2:env) =
-  (x:var{Some? (g1 x)} -> Tot(typing g2 (s x) (Some?.v (g1 x)))) 
+  (x:var{Some? (g1 x)} -> Tot(typing g2 (s x) (Some?.v (g1 x))))
 
 val substitution :
       #g1:env -> #e:exp -> #t:typ -> s:sub -> #g2:env ->
@@ -82,10 +82,10 @@ val substitution :
       hs:subst_typing s g1 g2 ->
       Tot (typing g2 (subst s e) t) (decreases h1)
 (* This makes F* explode. It is likely because of the call to weakening *)
-let rec substitution g1 e t s g2 h1 hs = 
+let rec substitution g1 e t s g2 h1 hs =
 match h1 with
-| TyLam tlam hbody -> 
-let hs' : subst_typing (subst_elam s) (extend g1 0 tlam) (extend g2 0 tlam) = fun y -> 
+| TyLam tlam hbody ->
+let hs' : subst_typing (subst_elam s) (extend g1 0 tlam) (extend g2 0 tlam) = fun y ->
   let hgamma2 = hs (y - 1) in weakening 0 tlam hgamma2
 in magic()
 | _ -> magic()

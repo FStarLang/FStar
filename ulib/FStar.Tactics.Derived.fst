@@ -1,10 +1,19 @@
 module FStar.Tactics.Derived
 
 open FStar.Reflection
-open FStar.Reflection.Types
-open FStar.Tactics.Result
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
+
+(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
+[t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
+always be the case since [w] is usually a uvar. *)
+let exact (t : tactic term) : tactic unit =
+    t_exact false true t
+
+(** Like [exact], but allows for the term [e] to have a type [t] only
+under some guard [g], adding the guard as a goal. *)
+let exact_guard (t : tactic term) : tactic unit =
+    t_exact false false t
 
 let fresh_uvar o =
     e <-- cur_env;
@@ -44,10 +53,6 @@ let rec mapM f l = match l with
 
 let idtac : tactic unit = return ()
 
-(* working around #885 *)
-private let __fail (a:Type) (msg:string) : __tac a = fun s0 -> Failed (msg, s0)
-let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
-
 let guard (b : bool) : tactic unit =
     if b
     then return ()
@@ -74,8 +79,30 @@ let repeat1 (#a:Type) (t : tactic a) : tactic (list a) =
 let rec repeatseq (#a:Type) (t : tactic a) () : Tac unit =
     (trytac (seq (t;; return ()) (repeatseq t));; return ()) ()
 
+private
+let admit1' : tactic unit =
+    g <-- cur_goal;
+    gg <-- unquote #Type g;
+    exact (quote #gg (magic ()))
+
+let admit1 : tactic unit =
+    print "Warning: Admitting goal";;
+    admit1'
+
+let admit_all : tactic unit =
+    print "Warning: Admitting all goals";;
+    repeat admit1';;
+    return ()
+
+let guards_to_smt : tactic unit =
+    repeat (b <-- is_guard;
+            if b
+            then smt
+            else fail "");;
+    return ()
+
 let simpl : tactic unit = norm [simplify; primops]
-let whnf  : tactic unit = norm [whnf; primops]
+let whnf  : tactic unit = norm [weak; hnf; primops]
 
 let intros : tactic (list binder) = repeat intro
 
@@ -233,6 +260,7 @@ let rec apply_squash_or_lem d t =
        match r with
        | Some _ -> return () // Success
        | None ->
+           post <-- norm_term [] post;
            (* Is the lemma an implication? We can try to intro *)
            match term_as_formula' post with
            | Implies p q ->
@@ -258,3 +286,12 @@ let rec apply_squash_or_lem d t =
 let mapply (t : tactic term) : tactic unit =
     tt <-- t;
     apply_squash_or_lem 10 tt
+
+private
+let dump_admit a : tactic unit =
+  clear_top;; // gets rid of the unit binder
+  admit1
+
+assume val admit_goal : #a:Type -> unit ->
+    Pure a (requires (by_tactic (dump_admit a) a))
+           (ensures (fun _ -> False))

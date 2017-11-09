@@ -235,6 +235,8 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(BvAnd, _)
         | App(BvXor, _)
         | App(BvOr, _)
+	| App(BvAdd, _)
+	| App(BvSub, _)
         | App(BvShl, _)
         | App(BvShr, _)
         | App(BvUdiv, _)

@@ -5,10 +5,11 @@ Every tactic primitive, i.e., those built into the compiler
 module FStar.Tactics.Builtins
 
 open FStar.Tactics.Effect
-open FStar.Order
-open FStar.Reflection
 open FStar.Reflection.Types
 open FStar.Tactics.Types
+
+assume private val __fail : a:Type -> string -> __tac a
+let fail (#a:Type) (msg:string) : tactic a = fun () -> TAC?.reflect (__fail a msg)
 
 assume private val __top_env     : __tac env
 (** [top_env] returns the environment where the tactic started running.
@@ -26,6 +27,15 @@ let cur_goal = fun () -> TAC?.reflect __cur_goal
 assume private val __cur_witness : __tac term
 (** [cur_witness] returns the current goal's witness *)
 let cur_witness = fun () -> TAC?.reflect __cur_witness
+
+assume private val __is_guard   : __tac bool
+(** [is_guard] returns whether the current goal arised from a typechecking guard *)
+let is_guard = fun () -> TAC?.reflect __is_guard
+
+assume private val __refine_intro : __tac unit
+(** [refine_intro] will turn a goal of shape [w : x:t{phi}]
+into [w : t] and [phi{w/x}] *)
+let refine_intro = fun () -> TAC?.reflect __refine_intro
 
 (*
  * This is the way we inspect goals and any other term. We can quote them
@@ -88,6 +98,12 @@ assume private val __norm_term_env  : env -> list norm_step -> term -> __tac ter
 (** [norm_term_env e steps t] will call the normalizer on the term [t]
 using the list of steps [steps], over environment [e]. The list has the same meaning as for [norm]. *)
 let norm_term_env env steps t : tactic term = fun () -> TAC?.reflect (__norm_term_env env steps t)
+
+assume private val __norm_binder_type  : list norm_step -> binder -> __tac unit
+(** [norm_binder_type steps b] will call the normalizer on the type of the [b]
+binder for the current goal. Notably, this cannot be done via binder_retype and norm,
+because of uvars being resolved to lambda-abstractions. *)
+let norm_binder_type steps b : tactic unit = fun () -> TAC?.reflect (__norm_binder_type steps b)
 
 assume private val __intro  : __tac binder
 (** [intro] pushes the first argument of an arrow goal into the
@@ -161,11 +177,9 @@ with a single goal (they're "focused"). *)
 let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () ->
   TAC?.reflect (__seq (reify_tactic f) (reify_tactic g))
 
-assume private val __exact : term -> __tac unit
-(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
-[t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
-always be the case since [w] is usually a uvar. *)
-let exact (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact tt)
+assume private val __t_exact : bool -> bool -> term -> __tac unit
+let t_exact hard guard (t:tactic term) : tactic unit =
+    fun () -> let tt = t () in TAC?.reflect (__t_exact hard guard tt)
 
 assume private val __apply : term -> __tac unit
 (** [apply f] will attempt to produce a solution to the goal by an application

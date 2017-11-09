@@ -14,13 +14,20 @@ all:	Apply.uver		\
 	Cases.uver		\
 	Tutorial.uver		\
 	Syntax.uver		\
+	NormBinderType.uver	\
 	Normalization.uver	\
 	GRewrite.uver		\
 	Rename.uver		\
 	UserTactics.uver	\
 	Logic.uver		\
+	DependentSynth.uver	\
+	NatPos.uver		\
 	Trace.uver		\
-	Bug1299.fst		\
+	Bug1252.uver		\
+	Bug1270.uver		\
+	Bug1272.uver		\
+	Bug1299.uver		\
+	Admit.uver		\
 	Nest.uver		\
 	TestBV.uver		\
 	Map.uver		\
@@ -40,7 +47,7 @@ all:	Apply.uver		\
 	# launch			\
 
 launch: Launch.fst
-	$(FSTAR) --unsafe_tactic_exec --verify_module Launch $^
+	$(FSTAR) --unsafe_tactic_exec $^
 
 neg:
 	$(MAKE) -C neg

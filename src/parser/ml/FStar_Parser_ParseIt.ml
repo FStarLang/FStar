@@ -79,17 +79,28 @@ let check_extension fn =
                   message ^ " (pass --MLish to process .fs and .fsi files)"
                 else message))
 
+type parse_frag =
+    | Filename of filename
+    | Toplevel of input_frag
+    | Fragment of input_frag
+
+type parse_result =
+    | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Range.range) list)
+    | Term of FStar_Parser_AST.term
+    | ParseError of (string * FStar_Range.range)
+
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
 
   let lexbuf, filename = match fn with
-    | U.Inl(f) ->
+    | Filename f ->
         check_extension f;
         let f', contents = read_file f in
         (try create contents f' 1 0, f'
          with _ -> raise (Err(FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f')))
-    | U.Inr s ->
+    | Toplevel s
+    | Fragment s ->
       create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
   in
 
@@ -99,6 +110,9 @@ let parse fn =
   in
 
   try
+    match fn with
+    | Filename _
+    | Toplevel _ -> begin
       let fileOrFragment = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer in
       let frags = match fileOrFragment with
           | U.Inl modul ->
@@ -109,16 +123,18 @@ let parse fn =
                   | _ -> failwith "Impossible"
              else U.Inl modul
           | _ -> fileOrFragment
-      in
-      U.Inl (frags, FStar_Parser_LexFStar.flush_comments ())
+      in ASTFragment (frags, FStar_Parser_LexFStar.flush_comments ())
+      end
+    | Fragment _ ->
+      Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)
   with
     | FStar_Errors.Empty_frag ->
-      U.Inl (U.Inr [], [])
+      ASTFragment (U.Inr [], [])
 
     | FStar_Errors.Error(msg, r) ->
-      U.Inr (msg, r)
+      ParseError (msg, r)
 
     | e ->
       let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
       let r = FStar_Range.mk_range filename pos pos in
-      U.Inr ("Syntax error: " ^ (Printexc.to_string e), r)
+      ParseError ("Syntax error: " ^ (Printexc.to_string e), r)

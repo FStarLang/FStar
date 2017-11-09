@@ -15,7 +15,7 @@ type raw_error =
   | UnrecognizedExtension
   | UnableToReadFile
   | Uninstantiated 
-  | IllTypedApplication 
+  | IllTyped of string
   | ValueRestriction 
   | UnexpectedEffect 
   | NotTopLevelModule
@@ -29,7 +29,7 @@ type raw_error =
   | NonSingletonTopLevelModule 
   | PreModuleMismatch 
   | ModuleFirstStatement 
-  | ParseError 
+  | ParseErrors 
   | MultipleLetBinding 
   | UnexpectedIdentifier 
   | InlineRenamedAsUnfold 
@@ -98,6 +98,8 @@ type raw_error =
   | NotEmbeddedProofState 
   | NotEmbeddedTacticResult 
   | NotEmbeddedDirection 
+  | NotEmbeddedUnit
+  | NotEmbeddedChar
   | FunctionLiteralPrecisionLoss 
   | NonTopRecFunctionNotFullyEncoded 
   | NonListLiteralSMTPattern 
@@ -284,6 +286,16 @@ type raw_error =
   | UnexpectedGuard
   | ErrorsReported
   | TcOneFragmentFailed
+  | MissingExposeInterfacesOption
+  | NonLinearPatternNotPermitted
+  | SMTPatTDeprecated
+  | IllAppliedConstant
+  | MismatchedPatternType
+  | FreeVariables of string
+  | UnexpectedInductivetype
+  | IllFormedGoal
+  | CachedFile
+  | FileNotWritten
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
@@ -472,12 +484,17 @@ let errno_of_error = function
   | RedundantExplicitCurrying -> 68
   | HintFailedToReplayProof -> 69
   | HitReplayFailed -> 70
+  | SMTPatTDeprecated -> 71
+  | CachedFile -> 72
+  | FileNotWritten -> 73
+  | NotEmbeddedUnit -> 74
+  | NotEmbeddedChar -> 75
   | _ -> 0 (** Things that cannot be silenced! *)
 
 type flag =
   | CError | CWarning | CSilent
 
-let next_errno = 71 // the number needs to match the number of entries in "errno_of_error"
+let next_errno = 76 // the number needs to match the number of entries in "errno_of_error"
 let flags: ref<list<flag>> = mk_ref (List.init next_errno (fun index -> CError))
 
 let update_flags l =

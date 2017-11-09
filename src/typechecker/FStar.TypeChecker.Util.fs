@@ -510,6 +510,8 @@ let return_value env t v =
   let c =
     if not <| Env.lid_exists env C.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
     then mk_Total t
+    else if U.is_unit t
+    then S.mk_Total' t (Some U_zero)
     else let m = Env.get_effect_decl env C.effect_PURE_lid in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let u_t = env.universe_of env t in
          let wp =
@@ -829,6 +831,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   let refine () =
       let c = lc.comp() in
       if not (is_pure_or_ghost_effect env lc.eff_name)
+      || U.is_unit lc.res_typ
       || env.lax
       then c
       else if U.is_partial_return c //it's already a return; no need to add another equality
@@ -855,7 +858,8 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let eq_ret = weaken_precondition env ret (NonTrivial eq) in
            U.comp_set_flags ((bind e.pos env None (U.lcomp_of_comp c) (Some x, eq_ret)).comp()) flags
   in
-  {lc with comp=refine; cflags=flags}
+  if U.is_unit lc.res_typ then lc
+  else {lc with comp=refine; cflags=flags}
 
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_to_string c) (Print.comp_to_string c');
@@ -870,7 +874,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
         | Tm_type _ -> true
         | _ -> false
     in
-    match (SS.compress lc.res_typ).n with
+    match (U.unrefine lc.res_typ).n with
     | Tm_fvar fv
         when S.fv_eq_lid fv C.bool_lid
           && is_type t ->
@@ -1169,7 +1173,7 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     let ts = SS.close_univ_vars univs t in
     univs, ts
 
-let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbname * list<univ_name> * term * comp)>> =
+let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbname * list<univ_name> * term * comp * list<binder>)>> =
   if not <| (BU.for_all (fun (_, _, c) -> U.is_pure_or_ghost_comp c) lecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
@@ -1207,7 +1211,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (uvs |> List.map (fun (u,t) -> BU.format2 "(%s : %s)"
                                                         (Print.uvar_to_string u)
-                                                        (Print.term_to_string t)) |> String.concat ", ");
+                                                        (N.term_to_string env t)) |> String.concat ", ");
 
          univs, uvs, (lbname, e, c)
      in
@@ -1254,12 +1258,34 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let lecs = lec_hd :: lecs in
 
      let gen_types uvs =
+         let fail k =
+             let lbname, e, c = lec_hd in
+               raise_error (Errors.FailToResolveImplicitArgument, (BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
+                                       (Print.term_to_string k)
+                                       (Print.lbname_to_string lbname)
+                                       (Print.term_to_string (U.comp_result c))))
+                            (Env.get_range env)
+         in
          uvs |> List.map (fun (u, k) ->
          match Unionfind.find u with
          | Some _ -> failwith "Unexpected instantiation of mutually recursive uvar"
          | _ ->
            let k = N.normalize [N.Beta; N.Exclude N.Zeta] env k in
            let bs, kres = U.arrow_formals k in
+           let _ =
+             //we only generalize variables at type k = a:Type{phi}
+             //where k is closed
+             //this is in support of ML-style polymorphism, while also allowing generalizing
+             //over things like eqtype, which is a common case
+             //Otherwise, things go badly wrong: see #1091
+             match (U.unrefine (N.unfold_whnf env kres)).n with
+             | Tm_type _ ->
+                let free = FStar.Syntax.Free.names kres in
+                if not (BU.set_is_empty free) then fail kres
+
+             | _ ->
+               fail kres
+           in
            let a = S.new_bv (Some <| Env.get_range env) kres in
            let t = U.abs bs (S.bv_to_name a) (Some (U.residual_tot kres)) in
            U.set_uvar u t; //t clearly has a free variable; this is the one place we break the
@@ -1271,11 +1297,11 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let gen_tvars = gen_types uvs in
 
      let ecs = lecs |> List.map (fun (lbname, e, c) ->
-         let e, c =
+         let e, c, gvs =
             match gen_tvars, gen_univs with
             | [], [] ->
               //nothing generalized
-              e, c
+              e, c, []
 
             | _ ->
               //before we manipulate the term further, we must normalize it to get rid of the invariant-broken uvars
@@ -1301,11 +1327,11 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                     | _ ->
                       U.arrow gen_tvars c in
               let e' = U.abs gen_tvars e (Some (U.residual_comp_of_comp c)) in
-              e', S.mk_Total t in
-          (lbname, gen_univs, e, c)) in
+              e', S.mk_Total t, gen_tvars in
+          (lbname, gen_univs, e, c, gvs)) in
      Some ecs
 
-let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp)>) =
+let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp*list<binder>)>) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
   if debug env Options.Low
   then BU.print1 "Generalizing: %s\n"
@@ -1313,20 +1339,21 @@ let generalize env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname
   let univnames_lecs = List.map (fun (l, t, c) -> gather_free_univnames env t) lecs in
   let generalized_lecs =
       match gen env is_rec lecs with
-          | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c)
+          | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c,[])
           | Some luecs ->
             if debug env Options.Medium
             then luecs |> List.iter
-                    (fun (l, us, e, c) ->
-                         BU.print4 "(%s) Generalized %s at type %s\n%s\n"
+                    (fun (l, us, e, c, gvs) ->
+                         BU.print5 "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n"
                                           (Range.string_of_range e.pos)
                                           (Print.lbname_to_string l)
                                           (Print.term_to_string (U.comp_result c))
-                                          (Print.term_to_string e));
+                                          (Print.term_to_string e)
+                                          (Print.binders_to_string ", " gvs));
             luecs
    in
-   List.map2 (fun univnames (l,generalized_univs, t, c) ->
-              (l, check_universe_generalization univnames generalized_univs t, t, c))
+   List.map2 (fun univnames (l,generalized_univs, t, c, gvs) ->
+              (l, check_universe_generalization univnames generalized_univs t, t, c, gvs))
              univnames_lecs
              generalized_lecs
 

@@ -107,31 +107,33 @@ let filter_using_facts_from (e:env) (theory:decls_t) =
         | Namespace lid -> Env.should_enc_lid e lid
         | _ -> false
     in
-    let matches_fact_ids (include_assumption_names:list<string>) (a:Term.assumption) =
+    let matches_fact_ids (include_assumption_names:BU.smap<bool>) (a:Term.assumption) =
       match a.assumption_fact_ids with
-      | [] ->
-//        printfn "Retaining %s because it is not tagged with a fact_id\n" a.assumption_name;
-        true
+      | [] -> true //retaining `a` because it is not tagged with a fact id
       | _ ->
-        List.contains a.assumption_name include_assumption_names
-        || a.assumption_fact_ids |> BU.for_some (fun fid ->
-                should_enc_fid fid)
-           //namespace_strings |> BU.for_some (fun ns -> fact_id_in_namespace ns fid))
+        a.assumption_fact_ids |> BU.for_some should_enc_fid
+        || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
     in
     //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
-    let theory_rev = List.rev theory in //TODO: reverse after
-    let pruned_theory, _ =
-        List.fold_left (fun (out, include_assumption_names) d ->
+    let theory_rev = List.rev theory in
+    let pruned_theory =
+        let include_assumption_names =
+            //this map typically grows to 10k+ elements
+            //using a map for it is important, otherwise the list scanning
+            //becomes near quadratic in the # of facts
+            BU.smap_create 10000
+        in
+        List.fold_left (fun out d ->
           match d with
           | Assume a ->
             if matches_fact_ids include_assumption_names a
-            then d::out, include_assumption_names
-            else out, include_assumption_names
+            then d::out
+            else out
           | RetainAssumptions names ->
-//            printfn "Retaining names: %s\n" (String.concat ", " names);
-            d::out, names@include_assumption_names
-          | _ -> d::out, include_assumption_names)
-       ([], []) theory_rev
+            List.iter (fun x -> BU.smap_add include_assumption_names x true) names;
+            d::out
+          | _ -> d::out)
+        [] theory_rev
     in
     pruned_theory
 
@@ -214,7 +216,7 @@ let with_fuel_and_diagnostics settings label_assumptions =
 
 let used_hint s = Option.isSome s.query_hint
 
-let next_hint qname qindex =
+let get_hint_for qname qindex =
     match !replaying_hints with
     | Some hints ->
       BU.find_map hints (function
@@ -246,7 +248,7 @@ let detail_hint_replay settings z3result =
            let ask_z3 label_assumptions =
                let res = BU.mk_ref None in
                Z3.ask (filter_assertions settings.query_env settings.query_hint)
-                      (settings.query_hash, settings.query_hint)
+                      settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
                       None
@@ -272,7 +274,7 @@ let report_errors settings : unit =
          let ask_z3 label_assumptions =
             let res = BU.mk_ref None in
             Z3.ask (filter_facts_without_core settings.query_env)
-                    (settings.query_hash, None)
+                    settings.query_hash
                     settings.query_all_labels
                     (with_fuel_and_diagnostics initial_fuel label_assumptions)
                     None
@@ -350,9 +352,13 @@ let record_hint settings z3result =
           | _ -> assert false; ()
       in
       match z3result.z3result_status with
+      | UNSAT None ->
+        // we succeeded by just matching a query hash
+        store_hint (Option.get (get_hint_for settings.query_name settings.query_index))
       | UNSAT unsat_core ->
         if used_hint settings //if we already successfully use a hint
-        then store_hint (mk_hint settings.query_hint) //just re-use the successful hint
+        then //just re-use the successful hint, but record the hash of the pruned theory
+             store_hint (mk_hint settings.query_hint)
         else store_hint (mk_hint unsat_core)          //else store the new unsat core
       | _ ->  () //the query failed, so nothing to do
     end
@@ -395,7 +401,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
                 (Options.z3_rlimit_factor ())
                 (Prims.op_Multiply (Options.z3_rlimit ()) 544656)
         in
-        let next_hint = next_hint qname index in
+        let next_hint = get_hint_for qname index in
         let default_settings = {
             query_env=env;
             query_decl=query;
@@ -465,7 +471,7 @@ let ask_and_report_errors env all_labels prefix query suffix =
     let check_one_config config (k:z3result -> unit) : unit =
           if used_hint config || Options.z3_refresh() then Z3.refresh();
           Z3.ask (filter_assertions config.query_env config.query_hint)
-                  (config.query_hash, config.query_hint)
+                  config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
                   (Some (Z3.mk_fresh_scope()))

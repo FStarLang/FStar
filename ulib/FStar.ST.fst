@@ -24,7 +24,8 @@ open FStar.Preorder
 new_effect GST = STATE_h heap
 
 let gst_pre           = st_pre_h heap
-let gst_post (a:Type) = st_post_h heap a
+let gst_post' (a:Type) (pre:Type) = st_post_h' heap a pre
+let gst_post  (a:Type) = st_post_h heap a
 let gst_wp (a:Type)   = st_wp_h heap a
 
 unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:heap) = wp (fun a -> p a h)
@@ -53,9 +54,10 @@ assume val lemma_functoriality
 
 (***** ST effect *****)
 
-let st_pre  = gst_pre
-let st_post = gst_post
-let st_wp   = gst_wp
+let st_pre   = gst_pre
+let st_post' = gst_post'
+let st_post  = gst_post
+let st_wp    = gst_wp
 
 new_effect STATE = GST
 
@@ -64,7 +66,7 @@ sub_effect GST ~> STATE = lift_gst_state
 
 effect State (a:Type) (wp:st_wp a) = STATE a wp
 
-effect ST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) =
+effect ST (a:Type) (pre:st_pre) (post: (h:heap -> Tot (st_post' a (pre h)))) =
   STATE a (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. post h a h1 ==> p a h1))
 effect St (a:Type) = ST a (fun h -> True) (fun h0 r h1 -> True)
 

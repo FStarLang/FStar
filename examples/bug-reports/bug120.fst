@@ -1,4 +1,4 @@
-module Bug120ShouldFail
+module Bug120
 
 type var = nat
 

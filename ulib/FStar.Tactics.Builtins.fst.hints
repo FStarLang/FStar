@@ -1,5 +1,5 @@
 [
-  "+\u001en.Ì\u0001”\u001c6Â›>\u0015ü\u0001ž",
+  "\u0007\u0002Š¿d¬\u001c\u007f°CS\bv`§$",
   [
     [
       "FStar.Tactics.Builtins.quote",
@@ -14,7 +14,7 @@
         "function_token_typing_FStar.Tactics.Types.proofstate"
       ],
       0,
-      "8d09d10adbdf64b84559a19d838254ee"
+      "38cf4b82d5c4b2890e62b5c17588f829"
     ],
     [
       "FStar.Tactics.Builtins.divide",
@@ -23,7 +23,7 @@
       1,
       [ "@query" ],
       0,
-      "79773a2e133ec513b612dcf828ca2cc4"
+      "cb8494075704b627b570b4c3e371d2f5"
     ],
     [
       "FStar.Tactics.Builtins.divide",
@@ -32,10 +32,10 @@
       1,
       [ "@query" ],
       0,
-      "28a2299dd48e187fd52a262df64ccb25"
+      "01ddf4d82efa9d8f60e4844937ab900b"
     ],
     [
-      "FStar.Tactics.Builtins.exact",
+      "FStar.Tactics.Builtins.t_exact",
       1,
       2,
       1,
@@ -50,7 +50,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "062bb7881171bf70b184cd520d8e146a"
+      "ea675c34bf144f759e3054b47ef7621d"
     ],
     [
       "FStar.Tactics.Builtins.apply",
@@ -68,7 +68,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "d7a2500c22338570e223aeb2c2a2cdca"
+      "97e6773069a9cca0849594485ca1000f"
     ],
     [
       "FStar.Tactics.Builtins.apply_raw",
@@ -86,7 +86,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "465de64efae87fcddb36d1599657882f"
+      "4df1319286764da45ffc683d70819455"
     ],
     [
       "FStar.Tactics.Builtins.apply_lemma",
@@ -104,7 +104,7 @@
         "function_token_typing_Prims.unit", "unit_typing"
       ],
       0,
-      "e7e27f443cfa71a531b898c2e6746411"
+      "f6bd175aab3720e153aa0a918543601f"
     ]
   ]
 ]
