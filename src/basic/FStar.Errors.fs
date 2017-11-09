@@ -489,17 +489,16 @@ let errno_of_error = function
   | FileNotWritten -> 73
   | NotEmbeddedUnit -> 74
   | NotEmbeddedChar -> 75
+  | IllFormedGoal -> 76
   | _ -> 0 (** Things that cannot be silenced! *)
 
 type flag =
   | CError | CWarning | CSilent
 
-let next_errno = 76 // the number needs to match the number of entries in "errno_of_error"
-let flags: ref<list<flag>> = mk_ref (List.init next_errno (fun index -> CError))
+let next_errno = 77 // the number needs to match the number of entries in "errno_of_error"
+let flags: ref<list<flag>> = mk_ref []
 
 let update_flags l =
-  l |> List.iter (fun (f, (l, h)) -> if l < 0 || h > next_errno then 
-                                         failwith (BU.format2 "No error for warn_error [%d..%d]" (string_of_int l) (string_of_int h));); 
   let compare (_, (a, _)) (_, (b, _)) =
     if a > b then 1 
     else if a < b then -1
@@ -508,7 +507,7 @@ let update_flags l =
   let sorted = List.sortWith compare l in
   let rec set_flag i l= 
     match l with 
-    | [] -> CError
+    | [] -> List.nth !flags i
     | (f, (l, h))::tl -> 
       if (i>=l && i <= h) then f
       else if (i<l) then List.nth !flags i
@@ -518,6 +517,16 @@ let update_flags l =
     | [] -> f
     | hd::tl -> aux (f@[set_flag i sorted]) (i+1) tl
   in
+  let rec init_flags l i = 
+    if i > 0 then init_flags (l@[CError]) (i-1) else l
+  in
+  let rec check_range l = match l with
+    | [] -> ()
+    | (_, (l, h))::tl -> 
+      if l < 0 || h > next_errno then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h))
+  in
+  check_range l;
+  if !flags = [] then flags := init_flags [] next_errno;
   flags := aux [] 0 !flags
 
 let diag r msg = 
