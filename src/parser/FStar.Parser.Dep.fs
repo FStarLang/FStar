@@ -846,7 +846,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" f f (String.concat "\\\n\t" files);
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-          Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f (String.concat " \\\n\t" files);
+          Util.print3 "%s: %s \\\n\t%s\n\n" (cache_file_name f) f (String.concat " \\\n\t" files);
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then

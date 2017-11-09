@@ -1175,43 +1175,44 @@ let print_full: deps -> Prims.unit =
                            "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" f f
                            (FStar_String.concat "\\\n\t" files1)
                        else ());
-                      FStar_Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f
-                        (FStar_String.concat " \\\n\t" files1);
-                      (let uu____4390 = is_implementation f in
-                       if uu____4390
+                      (let uu____4390 = cache_file_name f in
+                       FStar_Util.print3 "%s: %s \\\n\t%s\n\n" uu____4390 f
+                         (FStar_String.concat " \\\n\t" files1));
+                      (let uu____4391 = is_implementation f in
+                       if uu____4391
                        then
                          let ml_base_name =
-                           let uu____4392 =
-                             let uu____4393 =
-                               let uu____4396 = FStar_Util.basename f in
-                               check_and_strip_suffix uu____4396 in
-                             FStar_Option.get uu____4393 in
-                           FStar_Util.replace_chars uu____4392 46 "_" in
-                         let uu____4397 =
-                           let uu____4398 = FStar_Options.output_dir () in
-                           match uu____4398 with
+                           let uu____4393 =
+                             let uu____4394 =
+                               let uu____4397 = FStar_Util.basename f in
+                               check_and_strip_suffix uu____4397 in
+                             FStar_Option.get uu____4394 in
+                           FStar_Util.replace_chars uu____4393 46 "_" in
+                         let uu____4398 =
+                           let uu____4399 = FStar_Options.output_dir () in
+                           match uu____4399 with
                            | FStar_Pervasives_Native.None  -> ""
                            | FStar_Pervasives_Native.Some x ->
                                Prims.strcat x "/" in
                          FStar_Util.print3 "%s%s.ml: %s.checked\n\n"
-                           uu____4397 ml_base_name f
+                           uu____4398 ml_base_name f
                        else ()))));
          (let all_fst_files =
             FStar_All.pipe_right keys (FStar_List.filter is_implementation) in
-          let uu____4410 =
+          let uu____4411 =
             FStar_All.pipe_right all_fst_files
               (FStar_String.concat " \\\n\t") in
-          FStar_Util.print1 "ALL_FST_FILES=\\\n\t%s\n" uu____4410))
+          FStar_Util.print1 "ALL_FST_FILES=\\\n\t%s\n" uu____4411))
 let print: deps -> Prims.unit =
   fun deps  ->
-    let uu____4416 = FStar_Options.dep () in
-    match uu____4416 with
+    let uu____4417 = FStar_Options.dep () in
+    match uu____4417 with
     | FStar_Pervasives_Native.Some "make" -> print_make deps
     | FStar_Pervasives_Native.Some "full" -> print_full deps
     | FStar_Pervasives_Native.Some "graph" ->
-        let uu____4419 = deps in
-        (match uu____4419 with
-         | Mk (deps1,uu____4421,uu____4422) -> print_graph deps1)
-    | FStar_Pervasives_Native.Some uu____4427 ->
+        let uu____4420 = deps in
+        (match uu____4420 with
+         | Mk (deps1,uu____4422,uu____4423) -> print_graph deps1)
+    | FStar_Pervasives_Native.Some uu____4428 ->
         FStar_Exn.raise (FStar_Errors.Err "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()
