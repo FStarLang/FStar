@@ -606,9 +606,9 @@ let lemma_swap_permutes_aux
     (j:index_t v{i <=^ j /\ ok (+) i 1ul /\ ok (+) j 1ul /\ ok (+) i j /\ 1ul <^ l -^ j})
     (x:a)
   : Lemma
-    (requires True)
+    (requires (1ul <^ l -^ i /\ 1ul <^ l -^ j))
     (ensures (count x v = count x (swap v i j)))
-  = if j =^ i
+  = if i =^ j
     then cut (equal (swap v i j) v)
     else begin
       let frag_lo, frag_i, frag_mid, frag_j, frag_hi = split_5 v i j in
@@ -630,6 +630,7 @@ let lemma_swap_permutes_aux
       lemma_append_count_aux x frag_i frag_hi
   end
 #reset-options
+
 
 type permutation (#a:eqtype) (#l:len_t) (v1:raw a l) (v2:raw a l) = (forall i. count i v1 = count i v2)
 
@@ -1077,15 +1078,15 @@ let rec find_append_none_v2
       cut (equal2 #a #(l1 +^ l2 -^ 1ul) #(l1 -^ 1ul +^ l2) q r)
     end
 
-// val find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
-//                -> Lemma (ensures (let res = find_l f (snoc s x) in
-//                            match res with 
-//                            | None -> find_l f s == None /\ not (f x)
-//                            | Some y -> res == find_l f s \/ (f x /\ x==y)))
-//                  (decreases (Seq.length s))
-// let find_snoc #a s x f =
-//   if Some? (find_l f s) then find_append_some s (Seq.create 1 x) f
-//   else find_append_none s (Seq.create 1 x) f
+let find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
+               -> Lemma (ensures (let res = find_l f (snoc s x) in
+                           match res with 
+                           | None -> find_l f s == None /\ not (f x)
+                           | Some y -> res == find_l f s \/ (f x /\ x==y)))
+                 (decreases (Seq.length s))
+let find_snoc #a s x f =
+  if Some? (find_l f s) then find_append_some s (Seq.create 1 x) f
+  else find_append_none s (Seq.create 1 x) f
 
 // let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (r:(seq a * a){s == snoc (fst r) (snd r)}) =
 //   let s', a = split s (length s - 1) in
