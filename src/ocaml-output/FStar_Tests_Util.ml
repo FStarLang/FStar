@@ -1,6 +1,6 @@
 open Prims
 let always: Prims.int -> Prims.bool -> Prims.unit =
-  fun id  ->
+  fun id1  ->
     fun b  ->
       if b
       then ()
@@ -8,7 +8,7 @@ let always: Prims.int -> Prims.bool -> Prims.unit =
         (let uu____8 =
            let uu____9 =
              let uu____14 =
-               let uu____15 = FStar_Util.string_of_int id in
+               let uu____15 = FStar_Util.string_of_int id1 in
                FStar_Util.format1 "Assertion failed: test %s" uu____15 in
              (uu____14, FStar_Range.dummyRange) in
            FStar_Errors.Error uu____9 in
