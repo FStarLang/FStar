@@ -48,7 +48,8 @@ let map_opt = List.filter_map
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
-    if starts_with reserved_prefix x.ppname.idText then
+    if starts_with reserved_prefix x.ppname.idText
+    ||  Options.print_real_names () then
       x.ppname.idText ^ (string_of_int x.index)
     else
       x.ppname.idText

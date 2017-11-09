@@ -790,24 +790,29 @@ let bv_as_mlident: FStar_Syntax_Syntax.bv -> mlident =
     if uu____2487
     then
       let uu____2488 =
-        let uu____2489 = FStar_Util.string_of_int x.FStar_Syntax_Syntax.index in
-        Prims.strcat "_" uu____2489 in
-      Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
-        uu____2488
-    else (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
+        let uu____2489 =
+          let uu____2490 =
+            FStar_Util.string_of_int x.FStar_Syntax_Syntax.index in
+          Prims.strcat "_" uu____2490 in
+        Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
+          uu____2489 in
+      FStar_All.pipe_left avoid_keyword uu____2488
+    else
+      FStar_All.pipe_left avoid_keyword
+        (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
 let push_unit: mltyscheme -> mltyscheme =
   fun ts  ->
-    let uu____2494 = ts in
-    match uu____2494 with
+    let uu____2495 = ts in
+    match uu____2495 with
     | (vs,ty) -> (vs, (MLTY_Fun (ml_unit_ty, E_PURE, ty)))
 let pop_unit: mltyscheme -> mltyscheme =
   fun ts  ->
-    let uu____2500 = ts in
-    match uu____2500 with
+    let uu____2501 = ts in
+    match uu____2501 with
     | (vs,ty) ->
         (match ty with
          | MLTY_Fun (l,E_PURE ,t) ->
              if l = ml_unit_ty
              then (vs, t)
              else failwith "unexpected: pop_unit: domain was not unit"
-         | uu____2506 -> failwith "unexpected: pop_unit: not a function type")
+         | uu____2507 -> failwith "unexpected: pop_unit: not a function type")

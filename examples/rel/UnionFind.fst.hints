@@ -913,7 +913,7 @@
         "unit_typing"
       ],
       0,
-      "5c1c3cbd97c959e69c80fe67757e1570"
+      "b5c634b03442ee055b051951aab141bc"
     ],
     [
       "UnionFind.lemma_merge_opt_helper",
@@ -1598,7 +1598,7 @@
         "typing_UnionFind.Forest.elt", "unit_inversion", "unit_typing"
       ],
       0,
-      "8694abc2543de8bc354925cc49e32973"
+      "02bd3069d7f00d854b0a2d5667e98644"
     ],
     [
       "UnionFind.lemma_merge_merge_opt_equivalence",
