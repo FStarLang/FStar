@@ -121,9 +121,9 @@ let subv
     (#l:len_t)
     (v:raw a l)
     (i:len_t)
-    (j:len_t{U32.(v i <= v j /\ v j <= v l)})
+    (j:len_t{i <=^ j /\ j <=^ l})
   : Tot (raw a (j -^ i))
-  = Base.sub #a #l v i j
+  = FStar.Vector.Base.sub #a #l v i j
 
 let reinx 
     (#a:Type) 
@@ -367,8 +367,6 @@ let lemma_eq_intro
   : Lemma
      (requires (forall (i:len_t{i <^ l}).{:pattern (index v1 i); (index v2 i)}
                        index v1 i == index v2 i))
-     // (requires (forall (i:len_t{i <^ l}).{:pattern (index v1 (reinx i v1)); (index v2 (reinx i v2))}  //NS:it's very brittle to have reinx in a pattern; not sure why it's necessary
-     //                   index v1 (reinx i v1) == index v2 (reinx i v2)))
      (ensures (equal v1 v2))
   = assert (forall (i:nat{i<UInt32.v l}). Seq.index (reveal v1) i == index v1 (uint_to_t i));
     assert (forall (i:nat{i<UInt32.v l}). Seq.index (reveal v2) i == index v2 (uint_to_t i));
@@ -556,14 +554,14 @@ let split_5
     (#a:Type)
     (#l:len_t)
     (v:raw a l) 
-    (i:index_t v)
-    (j:index_t v{i <^ j})
+    (i:index_t v{1ul <^ l -^ i /\ ok (+) i 1ul})
+    (j:index_t v{1ul <^ l -^ j /\ i <^ j /\ ok (+) j 1ul /\ ok (+) i j})
   : Pure (raw a i * 
           raw a 1ul * 
           raw a (j -^ (i +^ 1ul)) * 
           raw a 1ul * 
           raw a (l -^ (j +^ 1ul)))
-    (requires (1ul <^ l -^ i /\ 1ul <^ l -^ j))
+    (requires True)
     (ensures (fun (b, c, d, e, f) ->
                (v == b @| c @| d @| e @| f)
                /\ equal2 b (subv v 0ul i)
@@ -572,9 +570,9 @@ let split_5
                /\ equal2 e (subv v j (j +^ 1ul))
                /\ equal2 f (subv v (j +^ 1ul) l)
                ))
-  = let frag_lo,  rest = split_eq v i in
-    let frag_i,   rest = split_eq rest (reinx 1ul rest) in
-    let frag_mid, rest = split_eq rest (j -^ (i +^ 1ul)) in
+  = let frag_lo,  (rest:raw a (l -^ i)) = split_eq #a #l v i in
+    let frag_i,   (rest:raw a (l -^ i -^ 1ul))  = split_eq rest (reinx 1ul rest) in
+    let frag_mid, (rest:raw a (l -^ i -^ 1ul -^ (j -^ (i +^ 1ul)))) = split_eq rest (j -^ (i +^ 1ul)) in
     let frag_j,   (rest:raw a (l -^ i -^ 1ul -^ (j -^ (i +^ 1ul)) -^ 1ul)) = split_eq rest (reinx 1ul rest) in
     let frag_hi        = coerce rest (l -^ (j +^ 1ul)) in
     (frag_lo, frag_i, frag_mid, frag_j, frag_hi)
@@ -583,17 +581,15 @@ let split_5
 let lemma_swap_permutes_aux_frag_eq
     (#a:Type)
     (#l:len_t)
-    (v:raw a  l)
+    (v:raw a l)
     (i:index_t v)
-    (j:index_t v{i <=^ j})
+    (j:index_t v{i <=^ j /\ ok (+) i 1ul /\ ok (+) j 1ul})
     (i':index_t v)
-    (j':index_t v{i' <=^ j' /\
-                  (j <^ i'  //high sub
-                  \/ j' <=^ i //low sub
-                  \/ (i <^ i' /\ j' <=^ j)) //mid sub
-                  /\ ok (+) i 1ul
-                  /\ ok (+) j 1ul
-                  })
+    (j':index_t v{i' <=^ j' /\ ok (+) i' 1ul /\ ok (+) j' 1ul /\
+              (j <^ i'  //high sub
+              \/ j' <=^ i //low sub
+              \/ (i <^ i' /\ j' <=^ j)) //mid sub 
+              })
   : Lemma (ensures (subv v i' j' == subv (swap v i j) i' j'
                  /\ subv v i (i +^ 1ul) == coerce (subv (swap v i j) j (j +^ 1ul)) (i +^ 1ul -^ i)
                  /\ subv v j (j +^ 1ul) == coerce (subv (swap v i j) i (i +^ 1ul)) (j +^ 1ul -^ j)))
@@ -601,13 +597,13 @@ let lemma_swap_permutes_aux_frag_eq
     cut (equal (subv v i (i +^ 1ul)) (coerce (subv (swap v i j) j (j +^ 1ul)) (i +^ 1ul -^ i)));
     cut (equal (subv v j (j +^ 1ul)) (coerce (subv (swap v i j) i (i +^ 1ul)) (j +^ 1ul -^ j)))
 
-#set-options "--z3rlimit 20"
+#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
 let lemma_swap_permutes_aux
     (#a:eqtype)
     (#l:len_t)
     (v:raw a l)
     (i:index_t v) 
-    (j:index_t v{i <=^ j /\ ok (+) i 1ul /\ ok (+) j 1ul})
+    (j:index_t v{i <=^ j /\ ok (+) i 1ul /\ ok (+) j 1ul /\ ok (+) i j /\ 1ul <^ l -^ j})
     (x:a)
   : Lemma
     (requires True)
