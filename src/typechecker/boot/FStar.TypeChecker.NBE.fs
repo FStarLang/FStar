@@ -70,6 +70,47 @@ let rec pickBranch (c : fv) (branches : list<branch>) : term =
     e
   | b :: bs -> pickBranch c bs
 
+(* Tests is the application is full and if none of the arguments is symbolic *)
+let rec test_args ts cnt = 
+  match ts with 
+  | [] -> cnt <= 0 
+  | t :: ts -> (not (isAccu t)) && test_args ts (cnt - 1)
+
+(* It count the number of abstractions in the body of a let rec. 
+   It accounts for abstractions instantiated inside the body.
+*)
+let rec count_abstractions (t : term) : int =
+    match (SS.compress t).n with
+    | Tm_delayed _ | Tm_unknown -> failwith "Impossible" 
+    | Tm_uinst _
+    | Tm_bvar _ 
+    | Tm_name _
+    | Tm_fvar _
+    | Tm_constant _ 
+    | Tm_type _ 
+    | Tm_arrow _ 
+    | Tm_uvar _ 
+    | Tm_refine _
+    | Tm_unknown -> 0
+   
+    
+    | Tm_abs (xs, body, _) ->
+      List.length xs + count_abstractions body
+
+    | Tm_app(head, args) -> 
+      max (count_abstractions head - List.length args) 0
+    
+    | Tm_match(scrut, branches) ->
+      (match branches with
+       | [] -> failwith "Branch not found"
+       (* count just one branch assuming it is well-typed *)
+       | (_, _, e) :: bs -> count_abstractions e)
+
+    | Tm_let (_, t)
+    | Tm_meta (t, _) 
+    | Tm_ascribed (t, _, _) -> count_abstractions t
+        
+
 (* XXX unused *)
 let rec mkBranches branches cont = 
   match branches with 
@@ -200,7 +241,11 @@ and readback (x:t) : term =
        | [arg] -> app hd arg
        | arg :: args -> app (curry hd args) arg
        in
-       if List.exists isAccu ts then (* if there is at least one symbolic argument or (TODO) application is partial, do not unfold *)
+       let args_no = count_abstractions lb.lbdef in 
+       // Printf.printf "Args no. %d\n" args_no;
+       if test_args ts args_no then (* if the arguments are not symbolic and the application is not partial compute *)
+         readback (curry (translate ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
+       else (* otherwise do not unfold *)
          let head = 
            (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
            let f = match lb.lbname with
@@ -213,8 +258,7 @@ and readback (x:t) : term =
          (match ts with 
           | [] -> head
           | _ -> U.mk_app head args)
-       else (* otherwise compute *)
-         readback (curry (translate ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
+      
 // Zoe: Commenting out conflict with Danel
 // =======
 //     | Accu (Rec (lb, bs), ts) -> 
@@ -237,5 +281,5 @@ and readback (x:t) : term =
 //         | _ -> failwith "Recursive definition not a function")
 // >>>>>>> 86f93ae6edc257258f376954fed7fba11f53ff83
     | _ -> failwith "Not yet implemented"
-    
+
 let normalize (e:term) : term = readback (translate [] e)
