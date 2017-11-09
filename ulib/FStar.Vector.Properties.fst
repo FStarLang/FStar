@@ -19,6 +19,22 @@ module FStar.Vector.Properties
 open FStar.Vector.Base
 module S = FStar.Seq
 module U32 = FStar.UInt32
+module L = FStar.List.Tot
+
+open U32
+
+let int_to_u32 (x:int): Tot U32.t = U32.uint_to_t (UInt.to_uint_t 32 x)
+let u32_to_int (x:U32.t): Tot (y:int{y = U32.v x}) = U32.v x
+let is_u32 (x:int): bool = UInt.fits x U32.n
+
+let subv
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+    (i:len_t)
+    (j:len_t{i <=^ j /\ j <=^ l})
+  : Tot (raw a (j -^ i))
+  = FStar.Vector.Base.sub #a #l v i j
 
 /// This coercion seems to be necessary in some places
 ///
@@ -47,15 +63,6 @@ let ok
   : Type
   = UInt.size U32.(op (v l1) (v l2)) U32.n
 
-unfold 
-let all_ok
-    (op:len_t -> len_t -> len_t)
-    (lst:list len_t)
-  : Type
-  = let f a x = assert(UInt.size (U32.v (op a x)) U32.n); (op a x) in
-    let sum = List.Tot.fold_left f 0ul lst in
-    UInt.size (U32.v sum) U32.n
-
 /// Most lemmas from FStar.Seq.Properties can just be lifted
 /// to vectors, although the lengths have to be bounds checked
 let append_inj
@@ -69,8 +76,7 @@ let append_inj
     (v1:raw a m1)
     (v2:raw a m2{ok (+) m1 m2})
   : Lemma
-    (requires (let open U32 in
-               m1 +^ m2 = l1 +^ l2 /\
+    (requires (m1 +^ m2 = l1 +^ l2 /\
                equal (u1@|u2) (coerce (v1@|v2) (l1 +^ l2)) /\
                (l1 == m1 \/ l2 == m2)))
     (ensures (l1 = m1 /\
@@ -79,19 +85,25 @@ let append_inj
               equal u2 v2))
   = FStar.Seq.lemma_append_inj (reveal u1) (reveal u2) (reveal v1) (reveal v2)
 
-let head (#a:Type) (#l:len_t{l <> 0ul}) (v:raw a l)
+let head 
+    (#a:Type) 
+    (#l:len_t{l >^ 0ul}) 
+    (v:raw a l)
   : Tot a
   = v.[0ul]
 
-let tail (#a:Type) (#l:len_t{l <> 0ul}) (v:raw a l)
+let tail 
+    (#a:Type) 
+    (#l:len_t{l >^ 0ul}) 
+    (v:raw a l)
   : Tot (raw a U32.(l -^ 1ul))
-  = sub v 1ul l
+  = subv v 1ul l
 
 let head_append
     (#a:Type)
     (#l1:len_t)
     (#l2:len_t)
-    (v1:raw a l1{l1 <> 0ul})
+    (v1:raw a l1{l1 >^ 0ul})
     (v2:raw a l2{ok (+) l1 l2})
   : Lemma
     (ensures (head (v1@|v2) == head v1))
@@ -101,29 +113,11 @@ let tail_append
     (#a:Type)
     (#l1:len_t)
     (#l2:len_t)
-    (v1:raw a l1{l1 <> 0ul})
+    (v1:raw a l1{l1 >^ 0ul})
     (v2:raw a l2{ok (+) l1 l2})
   : Lemma
     (ensures (tail (v1@|v2) == tail v1@|v2))
   = Seq.lemma_tail_append (reveal v1) (reveal v2)
-
-
-open U32
-
-val int_to_u32: x:int -> Tot U32.t
-let int_to_u32 x = U32.uint_to_t (UInt.to_uint_t 32 x)
-
-val u32_to_int: (x:U32.t) -> Tot (y:int{y = U32.v x}) 
-let u32_to_int x = U32.v x
-
-let subv
-    (#a:Type)
-    (#l:len_t)
-    (v:raw a l)
-    (i:len_t)
-    (j:len_t{i <=^ j /\ j <=^ l})
-  : Tot (raw a (j -^ i))
-  = FStar.Vector.Base.sub #a #l v i j
 
 let reinx 
     (#a:Type) 
@@ -144,10 +138,10 @@ let lemma_append_inj_l
     (w2:raw a l2)
     (i:index_t v1{ok (+) l1 l2})
   : Lemma
-    (requires (equal (append v1 v2) (append w1 w2)))
+    (requires (equal (v1 @| v2) (w1 @| w2)))
     (ensures (v1.[i] == w1.[reinx i w1]))
-  = let rs = append v1 v2 in
-    let rt = append w1 w2 in
+  = let rs = v1 @| v2 in
+    let rt = w1 @| w2 in
     let rl = l1 +^ l2 in
     assert (v1.[i] == index rs (reinx i rs));
     assert (w1.[reinx i w1] == index rt (reinx i rt))
@@ -162,10 +156,10 @@ let lemma_append_inj_r
     (w2:raw a l2)
     (i:index_t v2{ok (+) l1 l2})
   : Lemma 
-    (requires (equal (append v1 v2) (append w1 w2)))
+    (requires (equal (v1 @| v2) (w1 @| w2)))
     (ensures (v2.[i] == w2.[reinx i w2]))
-  = let rs = append v1 v2 in
-    let rt = append w1 w2 in
+  = let rs = v1 @| v2 in
+    let rt = w1 @| w2 in
     let rl = l1 +^ l2 in
     let ipl1 = i +^ l1 in
     assert (v2.[i] == index rs ipl1);
@@ -215,12 +209,17 @@ let last
   : Tot a
   = v.[l -^ 1ul]
 
+let empty
+    (#a:Type)
+  : raw a 0ul
+  = init #a 0ul (fun _ -> ())
+
 let create1
     (#a:Type)
     (x:a)
   : raw a 1ul
   = init 1ul (fun _ -> x)
-  
+
 let cons
     (#a:Type)
     (#l:len_t)
@@ -303,15 +302,15 @@ let rec mem_index
     (v:raw a l)
   : Lemma 
     (requires (mem x v))
-    (ensures (exists (i:index_t v). (index #a #l v i) == x)) // cwinter: why doesn't it like this?; //NS: fixed, see below
+    (ensures (exists (i:index_t v). (index #a #l v i) == x))
     (decreases (u32_to_int l))
   = if l =^ 0ul then ()
-    else let m : (m:len_t{m <> 0ul}) = l in
+    else let m : (m:len_t{m >^ 0ul}) = l in
          let u = coerce v m in //NS: I use this patterns sometimes to workaround providing too many painful implicit arguments
          if head u = x then ()
          else let t = tail u in
               let _ = mem_index x t in
-              assert (forall (j:index_t t). index t j == index u (j +^ 1ul)) //NS: this bit of index juggling is needed to find the witness of the existential in the goal
+              assert (forall (j:index_t t). t.[j] == u.[j +^ 1ul]) //NS: this bit of index juggling is needed to find the witness of the existential in the goal
 #reset-options
 
 let swap
@@ -356,21 +355,6 @@ let rec lemma_sub_first_in_append
     (decreases (u32_to_int lv1))
   = if i =^ 0ul then ()
     else lemma_sub_first_in_append (tail v1) v2 (i -^ 1ul)
-
-// cwinter: should this go into FStar.Vector.Base.fst?
-// NS: yes, it could
-let lemma_eq_intro
-    (#a:Type) 
-    (#l:len_t)
-    (v1:raw a l)
-    (v2:raw a l)
-  : Lemma
-     (requires (forall (i:len_t{i <^ l}).{:pattern (index v1 i); (index v2 i)}
-                       index v1 i == index v2 i))
-     (ensures (equal v1 v2))
-  = assert (forall (i:nat{i<UInt32.v l}). Seq.index (reveal v1) i == index v1 (uint_to_t i));
-    assert (forall (i:nat{i<UInt32.v l}). Seq.index (reveal v2) i == index v2 (uint_to_t i));
-    FStar.Seq.lemma_eq_intro (reveal v1) (reveal v2)
 
 let sub_update
     (#a:Type)
@@ -520,7 +504,7 @@ type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
 type tot_ord (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 
-#set-options "--max_fuel 1 --initial_fuel 1 --z3rlimit  100"
+#set-options "--max_fuel 1 --initial_fuel 1 --z3rlimit 100"
 let rec sorted_concat_lemma
     (#a:eqtype)
     (#llo:len_t)
@@ -554,14 +538,14 @@ let split_5
     (#a:Type)
     (#l:len_t)
     (v:raw a l) 
-    (i:index_t v{1ul <^ l -^ i /\ ok (+) i 1ul})
-    (j:index_t v{1ul <^ l -^ j /\ i <^ j /\ ok (+) j 1ul /\ ok (+) i j})
+    (i:index_t v{ok (+) i 1ul /\ ok (Prims.op_Subtraction) l i})
+    (j:index_t v{i <^ j /\ ok (+) j 1ul /\ ok (+) i j /\ 1ul <^ l -^ j})
   : Pure (raw a i * 
           raw a 1ul * 
           raw a (j -^ (i +^ 1ul)) * 
           raw a 1ul * 
           raw a (l -^ (j +^ 1ul)))
-    (requires True)
+    (requires (True))
     (ensures (fun (b, c, d, e, f) ->
                (v == b @| c @| d @| e @| f)
                /\ equal2 b (subv v 0ul i)
@@ -570,11 +554,11 @@ let split_5
                /\ equal2 e (subv v j (j +^ 1ul))
                /\ equal2 f (subv v (j +^ 1ul) l)
                ))
-  = let frag_lo,  (rest:raw a (l -^ i)) = split_eq #a #l v i in
+  = let frag_lo,  (rest:raw a (l -^ i)) = split_eq #a #l v i in  
     let frag_i,   (rest:raw a (l -^ i -^ 1ul))  = split_eq rest (reinx 1ul rest) in
     let frag_mid, (rest:raw a (l -^ i -^ 1ul -^ (j -^ (i +^ 1ul)))) = split_eq rest (j -^ (i +^ 1ul)) in
     let frag_j,   (rest:raw a (l -^ i -^ 1ul -^ (j -^ (i +^ 1ul)) -^ 1ul)) = split_eq rest (reinx 1ul rest) in
-    let frag_hi        = coerce rest (l -^ (j +^ 1ul)) in
+    let frag_hi   = coerce rest (l -^ (j +^ 1ul)) in
     (frag_lo, frag_i, frag_mid, frag_j, frag_hi)
 #reset-options
 
@@ -597,42 +581,65 @@ let lemma_swap_permutes_aux_frag_eq
     cut (equal (subv v i (i +^ 1ul)) (coerce (subv (swap v i j) j (j +^ 1ul)) (i +^ 1ul -^ i)));
     cut (equal (subv v j (j +^ 1ul)) (coerce (subv (swap v i j) i (i +^ 1ul)) (j +^ 1ul -^ j)))
 
-#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 100"
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 20"
 let lemma_swap_permutes_aux
     (#a:eqtype)
     (#l:len_t)
     (v:raw a l)
     (i:index_t v) 
-    (j:index_t v{i <=^ j /\ ok (+) i 1ul /\ ok (+) j 1ul /\ ok (+) i j /\ 1ul <^ l -^ j})
+    (j:index_t v{i <=^ j})
     (x:a)
   : Lemma
-    (requires (1ul <^ l -^ i /\ 1ul <^ l -^ j))
+    (requires (ok (+) i 1ul /\ ok (+) j 1ul /\ ok (+) i j /\ 1ul <^ l -^ j /\ ok (Prims.op_Subtraction) l i))
     (ensures (count x v = count x (swap v i j)))
   = if i =^ j
     then cut (equal (swap v i j) v)
     else begin
       let frag_lo, frag_i, frag_mid, frag_j, frag_hi = split_5 v i j in
-      lemma_append_count_aux x frag_lo (append frag_i (append frag_mid (append frag_j frag_hi)));
-      lemma_append_count_aux x frag_i (append frag_mid (append frag_j frag_hi));
-      lemma_append_count_aux x frag_mid (append frag_j frag_hi);
+      let l5 = (l -^ (j +^ 1ul)) in
+      let l4 = 1ul in
+      let l3 = (j -^ (i +^ 1ul)) in
+      let l2 = 1ul in
+      let l1 = i in
+      let l45 = l4 +^ l5 in
+      let (f45:raw a l45) = (append frag_j frag_hi) in
+      let l345 = l3 +^ l45 in
+      let (f345:raw a l345) = (append #a #l3 #l45 frag_mid f45) in
+      let l2345 = l2 +^ l345 in
+      let (f2345:raw a l2345) = (append frag_i f345) in
+      lemma_append_count_aux x frag_lo f2345;
+      lemma_append_count_aux x frag_i f345;
+      lemma_append_count_aux #a #l3 #l45 x frag_mid f45;
       lemma_append_count_aux x frag_j frag_hi;
 
       let v' = swap v i j in
-      let frag_lo', frag_j', frag_mid', frag_i', frag_hi' = split_5 v' i j in
-
+      let i' = reinx i v' in
+      let j' = reinx j v' in
+      let frag_lo', frag_j', frag_mid', frag_i', frag_hi' = split_5 v' i' j' in // cwinter: necessary?
+      
       lemma_swap_permutes_aux_frag_eq v i j 0ul i;
       lemma_swap_permutes_aux_frag_eq v i j (i +^ 1ul) j;
-      lemma_swap_permutes_aux_frag_eq v i j (j +^ 1ul) l;
+      lemma_swap_permutes_aux_frag_eq v i j (j +^ 1ul) (l -^ 1ul);
 
-      lemma_append_count_aux x frag_lo (append frag_j (append frag_mid (append frag_i frag_hi)));
-      lemma_append_count_aux x frag_j (append frag_mid (append frag_i frag_hi));
-      lemma_append_count_aux x frag_mid (append frag_i frag_hi);
-      lemma_append_count_aux x frag_i frag_hi
+      let lihi = l2 +^ l5 in
+      let (ihi:raw a lihi) = (append frag_i frag_hi) in
+      let lmidihi = l3 +^ lihi in
+      let (midihi:raw a lmidihi) = (append #a #l3 #lihi frag_mid ihi) in
+      let ljmidihi = l4 +^ lmidihi in
+      let (jmidihi:raw a ljmidihi) = (append frag_j midihi) in
+      lemma_append_count_aux #a #l1 #ljmidihi x frag_lo jmidihi;
+      lemma_append_count_aux x frag_j midihi;
+      lemma_append_count_aux #a #l3 #lihi x frag_mid ihi;
+      lemma_append_count_aux x frag_i frag_hi      
   end
 #reset-options
 
-
-type permutation (#a:eqtype) (#l:len_t) (v1:raw a l) (v2:raw a l) = (forall i. count i v1 = count i v2)
+type permutation 
+     (#a:eqtype)
+     (#l:len_t)
+     (v1:raw a l)
+     (v2:raw a l) 
+  = (forall i. count i v1 = count i v2)
 
 let lemma_swap_permutes
     (#a:eqtype)
@@ -641,8 +648,9 @@ let lemma_swap_permutes
     (i:index_t v)
     (j:index_t v{i <=^ j})
   : Lemma
-    (permutation v (swap v i j))
-  = FStar.Classical.forall_intro #a #(fun x -> count x v = count x (swap v i j)) (lemma_swap_permutes_aux v i j)
+      (requires (ok (+) i 1ul /\ ok (+) j 1ul /\ ok (+) i j /\ 1ul <^ l -^ j /\ 1ul <^ l -^ i))
+      (ensures (permutation v (swap v i j)))
+  = FStar.Classical.forall_intro' #a #(fun x -> count x v = count x (swap v i j)) (lemma_swap_permutes_aux v i j)
 
 #set-options "--max_fuel 1 --initial_fuel 1"
 let cons_perm
@@ -689,6 +697,7 @@ let lemma_sub_snoc
     cut (equal2 (subv v i j) (append (subv v i (j -^ 1ul)) vj1));
     lemma_mem_append (subv v i (j -^ 1ul)) vj1
 
+#reset-options "--z3rlimit 10"
 let lemma_ordering_lo_snoc
     (#a:eqtype)
     (#l:len_t)
@@ -704,7 +713,7 @@ let lemma_ordering_lo_snoc
     cut (equal2 (subv v i (j +^ 1ul)) (append (subv v i j) vj1));
     lemma_mem_append (subv v i j) vj1
 
-#set-options "--z3rlimit 10"
+#reset-options "--z3rlimit 20"
 let lemma_ordering_hi_cons
     (#a:eqtype)
     (#l:len_t)
@@ -763,7 +772,7 @@ let lemma_swap_sub_commute
     (start:index_t v)
     (i:index_t v{start <=^ i})
     (j:index_t v{i <=^ j})
-    (len:index_t v{j <^ len})
+    (len:len_t{j <^ len /\ len <=^ l})
   : Lemma 
     (ensures (subv (swap v i j) start len == (swap (subv v start len) (i -^ start) (j -^ start))))
   = cut (equal (subv (swap v i j) start len) (swap (subv v start len) (i -^ start) (j -^ start)))
@@ -775,8 +784,9 @@ let lemma_swap_permutes_sub
     (start:index_t v)
     (i:index_t v{start <=^ i})
     (j:index_t v{i <=^ j})
-    (len:index_t v{j <^ len})
+    (len:len_t{j <^ len /\ len <=^ l})
   : Lemma 
+    (requires (ok (+) i 1ul /\ ok (+) j 1ul /\ ok (+) i j /\ ok (Prims.op_Subtraction) start j /\ 0ul <^ start -^ i))
     (ensures (permutation (subv v start len) (subv (swap v i j) start len)))
   = lemma_swap_sub_commute v start i j len;
     lemma_swap_permutes (subv v start len) (i -^ start) (j -^ start)
@@ -895,7 +905,7 @@ let lemma_trans_frame
     (ensures (v1 == splice v3 i v1 j))
   = cut (equal v1 (splice v3 i v1 j))
 
-#reset-options "--z3rlimit  20"
+#reset-options "--z3rlimit 40"
 let lemma_weaken_perm_left
     (#a:eqtype)
     (#l:len_t)
@@ -914,7 +924,6 @@ let lemma_weaken_perm_left
     lemma_append_count (subv v2 i j) (subv v2 j k);
     lemma_append_count (subv v2 i j) (subv v1 j k)
 
-#reset-options "--z3rlimit  30"
 let lemma_weaken_perm_right
     (#a:eqtype)
     (#l:len_t)
@@ -944,11 +953,11 @@ let lemma_trans_perm
     (v3:raw a l)
     (i:index_t v1)
     (j:len_t{i <=^ j && j <=^ l})
- : Lemma
-   (requires (permutation (subv v1 i j) (subv v2 i j)
-             /\ permutation (subv v2 i j) (subv v3 i j)))
-   (ensures (permutation (subv v1 i j) (subv v3 i j)))
- = ()
+  : Lemma
+    (requires (permutation (subv v1 i j) (subv v2 i j)
+              /\ permutation (subv v2 i j) (subv v3 i j)))
+    (ensures (permutation (subv v1 i j) (subv v3 i j)))
+  = ()
 
 let snoc
     (#a:Type)
@@ -1015,7 +1024,7 @@ let rec find_l
     (f:a -> Tot bool)
     (v:raw a l)
   : Tot (o:option a{Some? o ==> f (Some?.v o)})
-        (decreases (u32_to_int l))
+    (decreases (u32_to_int l))
   = if l =^ 0ul then None
     else let hv = head #a #l v in
          if f hv then Some hv
@@ -1025,19 +1034,22 @@ let rec find_append_some
     (#a:Type)
     (#l1:len_t)
     (#l2:len_t)
-    (v1:raw a l1{l1 >^ 0ul}) // cwinter: should work with l1 =^ 0ul too?; NS: yes it should; the pre-condition would effectively be false
+    (v1:raw a l1{l1 >^ 0ul}) // TODO: cwinter: make this work with l1 =^ 0ul
     (v2:raw a l2{ok (+) l1 l2})
     (f:a -> Tot bool)
   : Lemma
     (requires (Some? (find_l f v1)))
     (ensures (find_l f (append v1 v2) == find_l f v1))
     (decreases (u32_to_int l1))
-  = if f (head v1) then ()
+  = assert (l1 >^ 0ul);
+    if f (head v1) then ()
     else
-      let q = append #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 in
+      let l1s1 = l1 -^ 1ul in
+      let q = append #a #l1s1 #l2 (tail #a #l1 v1) v2 in
       let r = tail #a #(l1 +^ l2) (append #a #l1 #l2 v1 v2) in
-      let _ = cut (equal2 #a #(l1 -^ 1ul +^ l2) #(l1 +^ l2 -^ 1ul) q r) in
-      find_append_some #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 f // cwinter: l1 -^ 1ul could be 0ul here, no?
+      let _ = cut (equal2 #a #(l1s1 +^ l2) #(l1 +^ l2 -^ 1ul) q r) in
+      let tl = tail #a #l1 v1 in
+      find_append_some #a #l1s1 #l2 tl v2 f
 
 let rec find_append_none
     (#a:Type)
@@ -1073,405 +1085,844 @@ let rec find_append_none_v2
     else if f (head #a #l1 v1) then ()
     else begin
       find_append_none_v2 #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 f;
-      let q = (tail #a #(l1 +^ l2) (append #a #l1 #l2 v1 v2)) in
-      let r = (append #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2) in
+      let q = tail #a #(l1 +^ l2) (append #a #l1 #l2 v1 v2) in
+      let r = append #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 in
       cut (equal2 #a #(l1 +^ l2 -^ 1ul) #(l1 -^ 1ul +^ l2) q r)
     end
+#reset-options
 
-let find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
-               -> Lemma (ensures (let res = find_l f (snoc s x) in
-                           match res with 
-                           | None -> find_l f s == None /\ not (f x)
-                           | Some y -> res == find_l f s \/ (f x /\ x==y)))
-                 (decreases (Seq.length s))
-let find_snoc #a s x f =
-  if Some? (find_l f s) then find_append_some s (Seq.create 1 x) f
-  else find_append_none s (Seq.create 1 x) f
+let find_snoc
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+    (f:a -> Tot bool)
+  : Lemma 
+    (ensures (let res = find_l #a #(l +^ 1ul) f (snoc v x) in
+              match res with 
+              | None -> find_l f v == None /\ not (f x)
+              | Some y -> res == find_l f v \/ (f x /\ x==y)))
+    (decreases (u32_to_int l))
+  = if Some? (find_l f v) then find_append_some v (create1 x) f
+    else find_append_none v (create1 x) f
 
-// let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (r:(seq a * a){s == snoc (fst r) (snd r)}) =
-//   let s', a = split s (length s - 1) in
-//   assert (Seq.equal (snoc s' (Seq.index a 0)) s);
-//   s', Seq.index a 0
+let un_snoc 
+    (#a:Type) 
+    (#l:len_t)
+    (v:raw a l{l >^ 0ul}) 
+  : Tot (r:(raw a (l -^ 1ul) * a){v == snoc (fst r) (snd r)}) 
+  = let s', a = split v (l -^ 1ul) in
+    assert (equal (snoc s' (index a 0ul)) v);
+    s', index a 0ul
 
-// let un_snoc_snoc (#a:Type) (s:seq a) (x:a) : Lemma (un_snoc (snoc s x) == (s, x)) =
-//   let s', x = un_snoc (snoc s x) in
-//   assert (Seq.equal s s')
+let un_snoc_snoc 
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+  : Lemma 
+    (requires True)
+    (ensures (un_snoc #a #(l +^ 1ul) (snoc v x) == (v, x)))
+  = let v', x = un_snoc #a #(l +^ 1ul) (snoc v x) in
+    assert (equal v v')
 
-// val find_r: #a:Type -> f:(a -> Tot bool) -> l:seq a -> Tot (o:option a{Some? o ==> f (Some?.v o)})
-//   (decreases (Seq.length l))
-// let rec find_r #a f l = 
-//   if Seq.length l = 0 then None
-//   else let prefix, last = un_snoc l in 
-//        if f last then Some last
-//        else find_r f prefix
+let rec find_r
+    (#a:Type)
+    (#l:len_t)
+    (f:a -> Tot bool)
+    (v:raw a l{ok (+) l 1ul})
+  : Tot (o:option a{Some? o ==> f (Some?.v o)})
+    (decreases (u32_to_int l))
+  = if l =^ 0ul then None
+    else let prefix, last = un_snoc v in 
+         if f last then Some last
+         else find_r #a #(l -^ 1ul) f prefix
 
-// #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 0 --max_fuel 0"
-// type found (i:nat) = True
-// val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
-//                    -> ctr:nat{ctr <= Seq.length l}
-//                    -> Pure (option a)
-//                       (requires (forall (i:nat{ i < Seq.length l /\ i >= ctr}).
-//                                         not (f (Seq.index l i) )))
-//                       (ensures (function 
-//                                   | None -> forall (i:nat{i < Seq.length l}).  not (f (Seq.index l i))
-//                                   | Some x -> f x /\  (exists (i:nat{i < Seq.length l}). {:pattern (found i)}
-//                   found i /\
-//                                                             x == Seq.index l i)))
+type found (i:len_t) = True
+let rec raw_find_aux
+    (#a:Type)
+    (#l:len_t)
+    (f:a -> Tot bool)
+    (v:raw a l)
+    (ctr:len_t{ctr <=^ l})
+  : Pure (option a)
+    (requires (forall (i:index_t v{i >=^ ctr}). not (f v.[i])))
+    (ensures (function 
+              | None -> forall (i:index_t v). not (f v.[i])
+              | Some x -> f x /\  
+                (exists (i:index_t v). {:pattern (found i)} found i /\ x == v.[i])))
+  = match ctr with
+    | 0ul -> None
+    | _ -> let i = ctr -^ 1ul in
+    if f v.[i]
+    then (cut (found i); Some v.[i])
+    else raw_find_aux f v i
 
-// let rec seq_find_aux #a f l ctr =
-//   match ctr with
-//   | 0 -> None
-//   | _ -> let i = ctr - 1 in
-//   if f (Seq.index l i)
-//   then (
-//      cut (found i);
-//      Some (Seq.index l i))
-//   else seq_find_aux f l i
+let raw_find
+    (#a:Type)
+    (#l:len_t)
+    (f:a -> Tot bool)
+    (v:raw a l)
+  : Pure (option a)
+    (requires True)
+    (ensures (function
+              | None -> forall (i:index_t v). not (f v.[i])
+              | Some x -> f x /\ 
+                (exists (i:index_t v).{:pattern (found i)} found i /\ x == v.[i])))
+  = raw_find_aux f v l
 
-// val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
-//                      Pure (option a)
-//                           (requires True)
-//                           (ensures (function
-//                                       | None -> forall (i:nat{i < Seq.length l}). not (f (Seq.index l i))
-//                                       | Some x -> f x /\ (exists (i:nat{i < Seq.length l}).{:pattern (found i)}
-//                                                           found i /\ x == Seq.index l i)))
+let find_mem 
+    (#a:eqtype)
+    (#l:len_t)
+    (v:raw a l) 
+    (f:a -> Tot bool) 
+    (x:a{f x})
+  : Lemma 
+    (requires (mem x v))
+    (ensures (Some? (raw_find f v) /\ f (Some?.v (raw_find f v))))
+  = match raw_find f v with
+    | None -> mem_index x v
+    | Some _ -> ()
 
-// let seq_find #a f l =
-//   seq_find_aux f l (Seq.length l)
+let for_all
+    (#a: Type)
+    (#l:len_t)
+    (f:a -> Tot bool)
+    (v:raw a l)
+  : Pure bool
+    (requires True)
+    (ensures (fun b -> (b == true <==> (forall (i:index_t v) . f v.[i] == true))))
+  = None? (raw_find (fun i -> not (f i)) v)
 
-// let find_mem (#a:eqtype) (s:seq a) (f:a -> Tot bool) (x:a{f x})
-//    : Lemma (requires (mem x s))
-//            (ensures (Some? (seq_find f s) /\ f (Some?.v (seq_find f s))))
-//    = match seq_find f s with
-//      | None -> mem_index x s
-//      | Some _ -> ()
+let rec raw_mem_k
+    (#a:eqtype)
+    (#l:len_t)
+    (v:raw a l)
+    (n:index_t v)
+  : Lemma 
+    (requires True)
+    (ensures (mem v.[n] v))
+    (decreases (u32_to_int n))
+    [SMTPat (mem v.[n] v)]
+  = if n =^ 0ul then ()
+    else let tl = tail v in
+         raw_mem_k tl (n -^ 1ul)
 
-// let for_all
-//   (#a: Type)
-//   (f: (a -> Tot bool))
-//   (l: seq a)
-// : Pure bool
-//   (requires True)
-//   (ensures (fun b -> (b == true <==> (forall (i: nat {i < Seq.length l} ) . f (index l i) == true))))
-// = None? (seq_find (fun i -> not (f i)) l)
+let rec raw_to_list
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+  : Tot (r:list a{L.length r = u32_to_int l}) 
+    (decreases (u32_to_int l))
+  = if l =^ 0ul then []
+    else index v 0ul::(raw_to_list #a #(l -^ 1ul) (subv v 1ul l))
 
-// #set-options "--initial_ifuel 1 --max_ifuel 1 --initial_fuel 1 --max_fuel 1"
-// val seq_mem_k: #a:eqtype -> s:seq a -> n:nat{n < Seq.length s} -> 
-//     Lemma (requires True)
-//     (ensures (mem (Seq.index s n) s))
-//     (decreases n)
-//     [SMTPat (mem (Seq.index s n) s)]
-// let rec seq_mem_k #a s n = 
-//   if n = 0 then ()
-//   else let tl = tail s in
-//        seq_mem_k tl (n - 1)
+let rec raw_of_list
+    (#a:Type)
+    (l:list a{is_u32 (L.length l)})
+  : Tot (r:raw a (int_to_u32 (L.length l)))
+  = match l with
+    | [] -> init #a 0ul (fun _ -> ())
+    | hd::tl -> create1 hd @| raw_of_list tl
 
-// module L = FStar.List.Tot
+#set-options "--z3rlimit 30"
+let rec lemma_raw_list_bij
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+  : Lemma
+    (requires (True))
+    (ensures  (raw_of_list (raw_to_list v) == v))
+    (decreases (u32_to_int l))
+  = if l =^ 0ul then (
+       lemma_eq_intro v (raw_of_list (raw_to_list v))
+    )
+    else (
+      lemma_raw_list_bij #a #(l -^ 1ul) (subv v 1ul l);
+      lemma_eq_intro v (raw_of_list (raw_to_list v))
+    )
 
-// val seq_to_list: #a:Type -> s:seq a -> Tot (l:list a{L.length l = length s}) (decreases (length s))
-// let rec seq_to_list #a s =
-//   if length s = 0 then []
-//   else index s 0::seq_to_list (subv s 1 (length s))
+let rec lemma_list_raw_bij
+    (#a:Type)
+    (l:list a{is_u32 (L.length l)})
+  : Lemma
+    (requires (True))
+    (ensures  (raw_to_list (raw_of_list l) == l))
+    (decreases (L.length l))
+  = if L.length l = 0 then ()
+    else (
+      lemma_list_raw_bij #a (L.tl l);
+      let hd = L.hd l in let tl = L.tl l in
+      cut (raw_to_list (raw_of_list tl) == tl);
+      cut (raw_of_list l == create1 hd @| raw_of_list tl);
+      let lraw = raw_of_list l in
+      let ll32 = int_to_u32 (L.length l) in
+      let tlraw = coerce (raw_of_list tl) (ll32 -^ 1ul) in
+      lemma_eq_intro #a #(ll32 -^ 1ul) tlraw (subv #a #ll32 lraw 1ul ll32)
+    )
+#reset-options
 
-// val seq_of_list: #a:Type -> l:list a -> Tot (s:seq a{L.length l = length s})
-// let rec seq_of_list #a l =
-//   match l with
-//   | [] -> createEmpty #a
-//   | hd::tl -> create 1 hd @| seq_of_list tl
+unfold 
+let createL_post 
+    (#a:Type0)
+    (#len:len_t)
+    (l:list a{is_u32 (L.length l)}) 
+    (v:raw a len) 
+  : GTot Type0 
+  = normalize (L.length l = (u32_to_int len)) /\ raw_to_list v == l /\ raw_of_list l == v
 
-// val lemma_seq_list_bij: #a:Type -> s:seq a -> Lemma
-//   (requires (True))
-//   (ensures  (seq_of_list (seq_to_list s) == s))
-//   (decreases (length s))
-// let rec lemma_seq_list_bij #a s =
-//   if length s = 0 then (
-//     Seq.lemma_eq_intro s (seq_of_list (seq_to_list s))
-//   )
-//   else (
-//     lemma_seq_list_bij (subv s 1 (length s));
-//     lemma_eq_intro s (seq_of_list (seq_to_list s))
-//   )
+let createL
+    (#a:Type0)
+    (l:list a{is_u32 (L.length l)})
+  : Pure (raw a (int_to_u32 (L.length l)))
+    (requires True)
+    (ensures (fun s -> createL_post #a l s))
+  = let s = raw_of_list l in
+    lemma_list_raw_bij l;
+    s
 
-// val lemma_list_seq_bij: #a:Type -> l:list a -> Lemma
-//   (requires (True))
-//   (ensures  (seq_to_list (seq_of_list l) == l))
-//   (decreases (L.length l))
-// let rec lemma_list_seq_bij #a l =
-//   if L.length l = 0 then ()
-//   else (
-//     lemma_list_seq_bij #a (L.tl l);
-//     let hd = L.hd l in let tl = L.tl l in
-//     cut (seq_to_list (seq_of_list tl) == tl);
-//     cut (seq_of_list l == create 1 hd @| seq_of_list tl);
-//     lemma_eq_intro (seq_of_list tl) (subv (seq_of_list l) 1 (length (seq_of_list l)))
-//   )
+let rec lemma_index_is_nth
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+    (i:index_t v)
+  : Lemma
+    (requires True)
+    (ensures (L.index (raw_to_list v) (u32_to_int i) == v.[i]))
+    (decreases (u32_to_int i))
+  = if i =^ 0ul then ()
+    else lemma_index_is_nth (subv v 1ul l) (i -^ 1ul)
 
-// unfold let createL_post (#a:Type0) (l:list a) (s:seq a) : GTot Type0 =
-//   normalize (L.length l = length s) /\ seq_to_list s == l /\ seq_of_list l == s
-
-// val createL: #a:Type0 -> l:list a -> Pure (seq a)
-//   (requires True)
-//   (ensures (fun s -> createL_post #a l s))
-// let createL #a l =
-//   let s = seq_of_list l in
-//   lemma_list_seq_bij l;
-//   s
-
-// val lemma_index_is_nth: #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
-//   (requires True)
-//   (ensures  (L.index (seq_to_list s) i == index s i))
-//   (decreases i)
-// let rec lemma_index_is_nth #a s i =
-//   if i = 0 then ()
-//   else (
-//     lemma_index_is_nth (subv s 1 (length s)) (i-1)
-//   )
-
-// ////////////////////////////////////////////////////////////////////////////////
-// //s `contains` x : Type0
-// //    An undecidable version of `mem`, 
-// //    for when the sequence payload is not an eqtype
-// ////////////////////////////////////////////////////////////////////////////////
-// abstract let contains (#a:Type) (s:seq a) (x:a) : Tot Type0 = 
-//   exists (k:nat). k < Seq.length s /\ Seq.index s k == x
+////////////////////////////////////////////////////////////////////////////////
+//s `contains` x : Type0
+//    An undecidable version of `mem`, 
+//    for when the vector payload is not an eqtype
+  ////////////////////////////////////////////////////////////////////////////////
+abstract 
+let contains
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l) 
+    (x:a) 
+  : Tot Type0 
+  = if l =^ 0ul then false
+    else (exists (k:index_t v). v.[k] == x)
     
-// let contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
-//   : Lemma (k < Seq.length s /\ Seq.index s k == x
-//       ==>
-//      s `contains` x)
-//   = ()
+let contains_intro 
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l) 
+    (k:index_t v) 
+    (x:a)
+  : Lemma 
+    (v.[k] == x ==> v `contains` x)
+  = ()
 
-// let contains_elim (#a:Type) (s:seq a) (x:a)
-//   : Lemma (s `contains` x
-//       ==>
-//     (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
-//   = ()
+let contains_elim 
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l) 
+    (x:a)
+  : Lemma (v `contains` x ==> (exists (k:index_t v). v.[k] == x))
+  = ()
 
-// let lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.createEmpty x)) = ()
+let lemma_contains_empty 
+    (#a:Type)
+  : Lemma (forall (x:a). ~ (contains (init 0ul (fun _ -> x)) x)) 
+  = ()
 
-// let lemma_contains_singleton (#a:Type) (x:a) : Lemma (forall (y:a). contains (create 1 x) y ==> y == x) = ()
+let lemma_contains_create1 
+    (#a:Type) 
+    (x:a) 
+  : Lemma (forall (y:a). contains (create1 x) y ==> y == x) 
+  = ()
 
-// private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (v2:seq a) (x:a)
-//     : Lemma (requires s1 `contains` x \/ v2 `contains` x)
-//          (ensures (append s1 v2) `contains` x)
-//     = let open FStar.Classical in 
-//       let open FStar.StrongExcludedMiddle in
-//       let open FStar.Squash in
-//       if strong_excluded_middle (s1 `contains` x)
-//       then ()
-//       else let s = append s1 v2 in
-//      exists_elim (s `contains` x) (get_proof (v2 `contains` x)) (fun k -> 
-//            assert (Seq.index s (Seq.length s1 + k) == x))
+#reset-options "--z3rlimit 20"
+private
+let intro_append_contains_from_disjunction 
+    (#a:Type)
+    (#l1:len_t)
+    (#l2:len_t)
+    (v1:raw a l1)
+    (v2:raw a l2{ok (+) l1 l2})
+    (x:a) 
+  : Lemma 
+    (requires (v1 `contains` x \/ v2 `contains` x))
+    (ensures (v1 @| v2) `contains` x)
+  = let v1v2 = v1 @| v2 in
+    assert ((exists i. (v1.[i] == x /\ v1v2.[reinx i v1v2] == x)) \/
+            (exists j. (v2.[j] == x /\ v1v2.[reinx (j +^ l1) v1v2] == x)))
 
-// let append_contains_equiv (#a:Type) (s1:seq a) (v2:seq a) (x:a)
-//   : Lemma ((append s1 v2) `contains` x
-//       <==>
-//        (s1 `contains` x \/ v2 `contains` x))
-//   = FStar.Classical.move_requires (intro_append_contains_from_disjunction s1 v2) x
+#reset-options "--z3rlimit 20"
+let append_contains_equiv 
+    (#a:Type)
+    (#l1:len_t)
+    (#l2:len_t)
+    (v1:raw a l1) 
+    (v2:raw a l2{ok (+) l1 l2}) 
+    (x:a)
+  : Lemma ((v1 @| v2) `contains` x
+           <==>
+           (v1 `contains` x \/ v2 `contains` x))
+  = let v1v2 = v1 @| v2 in
+    assert (v1v2 `contains` x ==>
+            ((exists i. (v1.[i] == x /\ v1v2.[reinx i v1v2] == x)) \/
+             (exists j. (v2.[j] == x /\ v1v2.[reinx (j +^ l1) v1v2] == x))))
+#reset-options
 
-// val contains_snoc : #a:Type -> s:Seq.seq a -> x:a ->
-//    Lemma (ensures (forall y. (snoc s x) `contains` y  <==> s `contains` y \/ x==y))
-// let contains_snoc #a s x =
-//   FStar.Classical.forall_intro (append_contains_equiv s (Seq.create 1 x))
+let snoc_v_x_contains_x
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+  : Lemma ((snoc v x) `contains` x)
+  = assert((snoc v x) == (append v (create1 x))); 
+    append_contains_equiv v (create1 x) x
 
-// let rec lemma_find_l_contains (#a:Type) (f:a -> Tot bool) (l:seq a)
-//   : Lemma (requires True) (ensures Some? (find_l f l) ==> l `contains` (Some?.v (find_l f l)))
-//           (decreases (Seq.length l))
-//   = if length l = 0 then ()
-//     else if f (head l) then ()
-//     else lemma_find_l_contains f (tail l)
+let snoc_v_x_contains_y
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+    (y:a)
+  : Lemma 
+    (requires (x == y))
+    (ensures ((snoc v x) `contains` y))
+  = snoc_v_x_contains_x v x
+  
+let v_contains_x_snoc_y_contains_x
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+    (y:a)
+  : Lemma 
+    (requires (v `contains` x))
+    (ensures ((snoc v y) `contains` x))
+  = append_contains_equiv v (create1 y) x
+  
+let contains_snoc_r_l_aux
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+    (y:a)
+  : Lemma 
+    (requires (v `contains` y \/ x==y))
+    (ensures ((snoc v x) `contains` y))
+  = let c = StrongExcludedMiddle.strong_excluded_middle (x == y) in
+    if c then snoc_v_x_contains_y v x y
+    else v_contains_x_snoc_y_contains_x v y x
 
-// let contains_cons (#a:Type) (hd:a) (tl:Seq.seq a) (x:a)
-//   : Lemma ((cons hd tl) `contains` x
-//      <==>
-//      (x==hd \/ tl `contains` x))
-//   = append_contains_equiv (Seq.create 1 hd) tl x
+let contains_snoc_r_l_aux2
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+    (y:a)
+  : Lemma 
+    (requires True)
+    (ensures ((v `contains` y \/ x==y) ==> (snoc v x) `contains` y)) 
+    // cwinter: not sure how to move the premise to the of the implication
+    // into the precondition without breaking contains_snoc_r_l. 
+  = let if_p_then_q (#p:Type0) (#q:Type0) 
+                    (l:(unit -> Lemma (requires p) (ensures q))) (s:squash p) 
+                  : Lemma q 
+                  = l s in
+    let p1 = x == y in
+    let p2 = v `contains` y in
+    let c = (snoc v x) `contains` y in
+    Classical.or_elim  #p1 #p2 #(fun _ -> (snoc v x) `contains` y)
+    (if_p_then_q #_ #c (fun _ -> (snoc_v_x_contains_y v x y)))
+    (if_p_then_q #_ #c (fun _ -> (v_contains_x_snoc_y_contains_x v y x)))
 
-// let append_cons_snoc (#a:Type) (u: Seq.seq a) (x:a) (v:Seq.seq a)
-//     : Lemma (Seq.equal (Seq.append u (cons x v))
-//            (Seq.append (snoc u x) v))
-//     = ()           
+let contains_snoc_r_l
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+  : Lemma 
+    (requires True)
+    (ensures (forall y. v `contains` y \/ x==y ==> (snoc v x) `contains` y))
+  = Classical.forall_intro (contains_snoc_r_l_aux2 v x)
+  
+#reset-options "--z3rlimit 20"
+let contains_snoc_l_r
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+  : Lemma 
+    (ensures (forall y. (snoc v x) `contains` y ==> v `contains` y \/ x==y))
+  = FStar.Classical.forall_intro (append_contains_equiv v (create1 x))
+#reset-options 
+
+let contains_snoc 
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{ok (+) l 1ul})
+    (x:a)
+  : Lemma 
+    (ensures (forall y. (snoc v x) `contains` y <==> v `contains` y \/ x==y))
+  = contains_snoc_r_l v x;
+    contains_snoc_l_r v x
+
+let rec lemma_find_l_exists_index
+    (#a:Type) 
+    (#l:len_t)
+    (f:a -> Tot bool)
+    (v:raw a l)
+  : Lemma 
+    (requires (Some? (find_l f v)))
+    (ensures (exists i. f v.[i]))
+    (decreases (u32_to_int l))
+  = assert (l >^ 0ul);
+    let m : (m:len_t{m >^ 0ul}) = l in
+    let u = coerce v m in
+    if f (head u) then ()
+    else let tl = tail u in
+         let _ = lemma_find_l_exists_index f tl in
+         assert (forall (j:index_t tl). tl.[j] == u.[j +^ 1ul])
+
+let rec get_f_index
+    (#a:Type) 
+    (#l:len_t)
+    (f:a -> Tot bool)
+    (v:raw a l)
+  : Tot (option (i:index_t v{f v.[i]}))
+    (decreases (u32_to_int l))
+  = if l =^ 0ul then None
+    else let m : (m:len_t{m >^ 0ul}) = l in
+         let u = coerce v m in
+         if f (head u) then Some 0ul
+         else let tl = tail u in
+              match get_f_index f tl with
+              | None -> None
+              | Some i -> Some (reinx (i +^ 1ul) v)
+
+let rec get_a_index
+    (#a:eqtype) 
+    (#l:len_t)
+    (x:a)
+    (v:raw a l)
+  : Tot (option (i:index_t v{v.[i] == x}))
+    (decreases (u32_to_int l))
+  = if l =^ 0ul then None
+    else let m : (m:len_t{m >^ 0ul}) = l in
+         let u = coerce v m in
+         if (head u) = x then Some 0ul 
+         else let tl = tail u in
+              match get_a_index x tl with
+              | None -> None
+              | Some i -> Some (reinx (i +^ 1ul) v)
+
+#reset-options "--initial_fuel 1 --max_fuel 4 --z3rlimit 20"
+let rec lemma_find_l_contains 
+    (#a:eqtype) 
+    (#l:len_t)
+    (f:a -> Tot bool)
+    (v:raw a l)
+  : Lemma 
+    (requires (Some? (find_l f v)))
+    (ensures (v `contains` (Some?.v (find_l f v))))
+    (decreases (u32_to_int l))
+  = let x = Some?.v (find_l f v) in
+    assert (l >^ 0ul);
+    match get_a_index x v with
+    | None -> 
+      assert (forall i. not (f v.[i]));
+      assert (None? (find_l f v)) // TODO: cwinter: Somewhere there must be a lemma that gives us this?
+    | Some k -> 
+      assert (k <^ l);
+      assert (f v.[k]);
+      assert (v.[k] == x);
+      assert (ok (Prims.op_Subtraction) l k);
+      lemma_find_l_exists_index f v;
+      assert (exists i. f v.[i] /\ i == k /\ v.[k] == x);  
+      contains_intro v k x; // (v.[k] == x ==> v `contains` x)
+      assert (Some? (find_l f v));
+      assert (v `contains` x)
+
+let contains_cons 
+    (#a:Type)
+    (#l:len_t)
+    (hd:a) 
+    (tl:raw a l{ok (+) l 1ul}) 
+    (x:a)
+  : Lemma ((cons hd tl) `contains` x
+          ==>
+          (x==hd \/ tl `contains` x))
+  = append_contains_equiv (create1 hd) tl x
+
+let append_cons_snoc
+    (#a:Type) 
+    (#l1:len_t{ok (+) l1 1ul})
+    (#l2:len_t{ok (+) l2 1ul /\ ok (+) 1ul l2 /\ ok (+) (l2 +^ 1ul) l1})
+    (v1:raw a l1)
+    (x:a)
+    (v2:raw a l2{ok (+) l1 l2})
+      : Lemma (let q = append v1 (cons x v2) in
+               let r = coerce (append (snoc v1 x) v2) (l1 +^ (1ul +^ l2)) in
+               equal q r)
+   = ()           
     
-// let append_subs (#a:Type) (s1:Seq.seq a) (v2:Seq.seq a)
-//    : Lemma ( Seq.equal s1 (Seq.sub (Seq.append s1 v2) 0 (Seq.length s1)) /\
-//        Seq.equal v2 (Seq.sub (Seq.append s1 v2) (Seq.length s1) (Seq.length s1 + Seq.length v2)) /\
-//        (forall (i:nat) (j:nat).
-//     i <= j /\ j <= Seq.length v2 ==>
-//     Seq.equal (Seq.sub v2 i j) 
-//         (Seq.sub (Seq.append s1 v2) (Seq.length s1 + i) (Seq.length s1 + j))))
-//    = ()       
+let append_subs 
+    (#a:Type)
+    (#l1:len_t)
+    (#l2:len_t)
+    (v1:raw a l1)
+    (v2:raw a l2{ok (+) l1 l2})
+   : Lemma (equal v1 (subv (append v1 v2) 0ul l1) /\
+            equal v2 (subv (append v1 v2) l1 (l1 +^ l2)) /\
+            (forall (i:len_t) (j:len_t). (
+              i <=^ j /\ j <=^ l2 
+              ==> (let (q:raw a (j -^ i)) = subv #a #l2 v2 i j in
+                   let (r:raw a ((l1 +^ j) -^ (l1 +^ i))) = (subv (append v1 v2) (l1 +^ i) (l1 +^ j)) in
+                   equal2 #a #(j -^ i) #((l1 +^ j) -^ (l1 +^ i)) q r))))
+   = ()       
+
+#set-options "--max_fuel 3 --initial_fuel 1 --z3rlimit 20"
+let rec find_l_none_no_index 
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+    (f:a -> Tot bool)
+  : Lemma 
+    (requires (None? (find_l f v)))
+    (ensures (forall (i:index_t v). not (f v.[i])))
+    (decreases (u32_to_int l))
+  = assert (None? (find_l f v)); 
+    if l =^ 0ul then ()
+    else let m : (m:len_t{m >^ 0ul}) = l in
+         let ls1 = l -^ 1ul in
+         let u = coerce v m in         
+         let hd = head #a #l u in
+         let tl = tail #a #l u in
+         assert (not (f (hd)));
+         find_l_none_no_index #a #ls1 tl f;         
+         assert (None? (find_l #a #ls1 f tl)); // TODO: cwinter: somewhere there must be a lemma that gives us that?
+         find_append_none #a #1ul #ls1 (create1 hd) tl f
+
+#reset-options
+
+(** More properties, with new naming conventions *)
+
+let suffix_of
+    (#a:Type)
+    (#l1:len_t)
+    (#l2:len_t)    
+    (suffix:raw a l2)
+    (v:raw a l1)
+  = if l2 >^ l1 then False
+    else 
+      let prelen = l1 -^ l2 in
+      (exists (prefix:raw a prelen). (v == prefix @| suffix))
 
 
-// val find_l_none_no_index (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool)) :
-//   Lemma (requires (None? (find_l f s)))
-//         (ensures (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i))))
-//   (decreases (Seq.length s))
-// #reset-options
-// let rec find_l_none_no_index #a s f =
-//   if Seq.length s = 0
-//   then ()
-//   else (assert (not (f (head s)));
-//         assert (None? (find_l f (tail s)));
-//         find_l_none_no_index (tail s) f;
-//   assert (Seq.equal s (cons (head s) (tail s)));
-//   find_append_none (create 1 (head s)) (tail s) f)
+// MOVE TO BASE FROM HERE
+let rec lemma_index_create
+    (#a:Type) 
+    (n:len_t)
+    (x:a)
+    (i:len_t{i <^ n})
+  : Lemma
+    (requires True)
+    (ensures ((init n (fun _ -> x)).[i] == x))
+    (decreases (u32_to_int n))
+    [SMTPat ((init n (fun _ -> x)).[i])]
+  = if n =^ 0ul then ()
+    else
+      if i =^ 0ul then () 
+      else lemma_index_create #a (n -^ 1ul) x (i -^ 1ul)
 
-// (** More properties, with new naming conventions *)
+let rec lemma_index_upd1
+    (#a:Type)
+    (#l:len_t) 
+    (v:raw a l)
+    (n:len_t{n <^ l})
+    (x:a)
+  : Lemma
+    (requires True)
+    (ensures ((update v n x).[n] == x)) 
+    (decreases (u32_to_int l))
+    [SMTPat ((update v n x).[n])]
+  = if n =^ 0ul then () 
+    else lemma_index_upd1 #a #(l -^ 1ul) (tail v) (n -^ 1ul) x
 
-// let suffix_of
-//   (#a: Type)
-//   (s_suff s: seq a)
-// = exists s_pref . (s == append s_pref s_suff)
+let rec lemma_index_upd2
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+    (n:len_t{n <^ l})
+    (x:a)
+    (i:len_t{i <^ l /\ i <> n})
+  : Lemma
+    (requires True)
+    (ensures ((update v n x).[i] == v.[i])) 
+    (decreases (u32_to_int l))
+    [SMTPat ((update v n x).[i])]
+  = if l =^ 0ul then ()
+    else if i =^ 0ul then ()
+    else if n =^ 0ul then ()
+    else let hd = head v in
+         let tl = tail v in
+         lemma_index_upd2 #a tl (n -^ 1ul) x (i -^ 1ul)
 
-// let cons_head_tail
-//   (#a: Type)
-//   (s: seq a {length s > 0})
-// : Lemma
-//   (requires True)
-//   (ensures (s == cons (head s) (tail s)))
-//   [SMTPat (cons (head s) (tail s))]
-// = let _ : squash (subv s 0 1 == create 1 (index s 0)) =
-//       lemma_index_sub s 0 1 0;
-//       lemma_index_create 1 (index s 0) 0;
-//       lemma_eq_elim (subv s 0 1) (create 1 (index s 0))
-//   in
-//   lemma_split s 1
+abstract 
+let rec lemma_index_app1
+    (#a:Type) 
+    (#l1:len_t)
+    (#l2:len_t)
+    (v1:raw a l1)
+    (v2:raw a l2)
+    (i:len_t{i <^ l1 /\ ok (+) l1 l2})
+  : Lemma
+    (requires True)
+    (ensures ((v1 @| v2).[i] == v1.[i])) 
+    (decreases (u32_to_int l1))
+    [SMTPat ((v1 @| v2).[i])]
+  = if l1 =^ 0ul then ()
+    else if i =^ 0ul then ()
+    else let hd = head v1 in
+         let tl = tail v1 in
+         lemma_index_app1 tl v2 (i -^ 1ul)
 
-// let head_cons
-//   (#a: Type)
-//   (x: a)
-//   (s: seq a)
-// : Lemma
-//   (ensures (head (cons x s) == x))
-// = ()
+abstract 
+let rec lemma_index_app2
+    (#a:Type)
+    (#l1:len_t)
+    (#l2:len_t)
+    (v1:raw a l1)
+    (v2:raw a l2)
+    (i:index_t v1{ok (+) l1 l2 /\ i <^ (l1 +^ l2) /\ l1 <=^ i})
+  : Lemma
+    (requires True)
+    (ensures (index (v1 @| v2) i == index v2 (i -^ l1))) 
+    (decreases (u32_to_int l1))
+    [SMTPat (index (v1 @| v2) i)]
+  = if l1 =^ 0ul then ()
+    else if i =^ 0ul then ()
+    else let hd = head v1 in
+         let tl = tail v1 in
+         lemma_index_app2 tl v2 (i -^ 1ul)
 
-// let suffix_of_tail
-//   (#a: Type)
-//   (s: seq a {length s > 0})
-// : Lemma
-//   (requires True)
-//   (ensures ((tail s) `suffix_of` s))
-//   [SMTPat ((tail s) `suffix_of` s)]
-// = cons_head_tail s    
+abstract
+let rec lemma_index_sub
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+    (i:index_t v)
+    (j:index_t v{i <=^ j})
+    (k:len_t{k <^ j -^ i})
+  : Lemma
+    (requires True)
+    (ensures (index (subv v i j) k == index v (k +^ i))) 
+    (decreases (u32_to_int l))
+    [SMTPat (index (subv v i j) k)]
+  = if i >^ 0ul then lemma_index_sub #a (tail v) (i -^ 1ul) (j -^ 1ul) k
+    else
+      if j =^ 0ul then ()
+      else if k =^ 0ul then () 
+      else let tl = (tail v) in
+           lemma_index_sub #a tl (reinx i tl) (j -^ 1ul) (k -^ 1ul)
 
-// let index_cons_l
-//   (#a: Type)
-//   (c: a)
-//   (s: seq a)
-// : Lemma
-//   (ensures (index (cons c s) 0 == c))
-// = ()
+abstract 
+let lemma_eq_elim
+    (#a:Type)
+    (#l1:len_t)
+    (#l2:len_t)    
+    (v1:raw a l1)
+    (v2:raw a l2)
+  : Lemma
+     (requires (l1 == l2 /\ equal v1 v2) \/ (equal2 v1 v2))
+     (ensures (v1 == v2))
+     [SMTPat (equal v1 v2); SMTPat (equal2 v1 v2)]
+  = Seq.lemma_eq_elim (reveal v1) (reveal v2)
 
-// let index_cons_r
-//   (#a: Type)
-//   (c: a)
-//   (s: seq a)
-//   (i: nat {1 <= i /\ i <= length s})
-// : Lemma
-//   (ensures (index (cons c s) i == index s (i - 1)))
-// = ()
 
-// let append_cons
-//   (#a: Type)
-//   (c: a)
-//   (s1 v2: seq a)
-// : Lemma
-//   (ensures (append (cons c s1) v2 == cons c (append s1 v2)))
-// = lemma_eq_elim (append (cons c s1) v2) (cons c (append s1 v2))
 
-// let index_tail
-//   (#a: Type)
-//   (s: seq a {length s > 0})
-//   (i: nat {i < length s - 1} )
-// : Lemma
-//   (ensures (index (tail s) i == index s (i + 1)))
-// = ()
+// MOVE TO BASE TO HERE
 
-// let mem_cons
-//   (#a:eqtype)
-//   (x:a)
-//   (s:seq a)
-// : Lemma
-//   (ensures (forall y. mem y (cons x s) <==> mem y s \/ x=y))
-// = lemma_append_count (create 1 x) s
 
-// let snoc_sub_index
-//   (#a: Type)
-//   (s: seq a)
-//   (i: nat)
-//   (j: nat {i <= j /\ j < length s} )
-// : Lemma
-//   (requires True)
-//   (ensures (snoc (subv s i j) (index s j) == sub s i (j + 1)))
-//   [SMTPat (snoc (subv s i j) (index s j))]
-// = lemma_eq_elim (snoc (subv s i j) (index s j)) (subv s i (j + 1))
+let cons_head_tail
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{l >^ 0ul})
+  : Lemma
+    (requires True)
+    (ensures (v == cons (head v) (tail v)))
+    [SMTPat (cons (head v) (tail v))]
+  = lemma_eq_intro v (cons (head v) (tail v))
 
-// let cons_index_sub
-//   (#a: Type)
-//   (s: seq a)
-//   (i: nat)
-//   (j: nat {i < j /\ j <= length s} )
-// : Lemma
-//   (requires True)
-//   (ensures (cons (index s i) (subv s (i + 1) j) == sub s i j))
-//   [SMTPat (cons (index s i) (subv s (i + 1) j))]
-// = lemma_eq_elim (cons (index s i) (subv s (i + 1) j)) (subv s i j)
+let head_cons
+    (#a:Type)
+    (#l:len_t)
+    (x:a)
+    (v:raw a l{ok (+) l 1ul})
+  : Lemma
+    (ensures (head (cons x v) == x))
+  = ()
 
-// let sub_is_empty
-//   (#a: Type)
-//   (s: seq a)
-//   (i: nat {i <= length s})
-// : Lemma
-//   (requires True)
-//   (ensures (subv s i i == createEmpty))
-//   [SMTPat (subv s i i)]
-// = lemma_eq_elim (subv s i i) createEmpty
+let suffix_of_tail
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{l >^ 0ul})
+  : Lemma
+    (requires True)
+    (ensures ((tail v) `suffix_of` v))
+    [SMTPat ((tail v) `suffix_of` v)]
+  = cons_head_tail v
 
-// let sub_length
-//   (#a: Type)
-//   (s: seq a)
-// : Lemma
-//   (requires True)
-//   (ensures (subv s 0 (length s) == s))
-//   [SMTPat (subv s 0 (length s))]
-// = lemma_eq_elim (subv s 0 (length s)) s
+let index_cons_l
+    (#a:Type)
+    (#l:len_t)
+    (c:a)
+    (v:raw a l{l >^ 0ul /\ ok (+) l 1ul})
+  : Lemma
+    (ensures ((cons c v).[0ul] == c))
+  = ()
 
-// let sub_sub
-//   (#a: Type)
-//   (s: seq a)
-//   (i1: nat)
-//   (j1: nat {i1 <= j1 /\ j1 <= length s} )
-//   (i2: nat)
-//   (j2: nat {i2 <= j2 /\ j2 <= j1 - i1} )
-// : Lemma
-//   (requires True)
-//   (ensures (subv (subv s i1 j1) i2 j2 == sub s (i1 + i2) (i1 + j2)))
-//   [SMTPat (subv (subv s i1 j1) i2 j2)]
-// = lemma_eq_elim (subv (subv s i1 j1) i2 j2) (subv s (i1 + i2) (i1 + j2))
+let index_cons_r
+    (#a:Type)
+    (#l:len_t)
+    (c:a)
+    (v:raw a l)
+    (i:len_t{1ul <=^ i /\ i <=^ l /\ ok (+) l 1ul})
+  : Lemma
+    (ensures (index (cons c v) i == index v (i -^ 1ul)))
+  = ()
 
-// let seq_of_list_tl
-//   (#a: Type)
-//   (l: list a { List.Tot.length l > 0 } )
-// : Lemma
-//   (requires True)
-//   (ensures (seq_of_list (List.Tot.tl l) == tail (seq_of_list l)))
-//   [SMTPat (seq_of_list (List.Tot.tl l))]
-// = lemma_tl (List.Tot.hd l) (seq_of_list (List.Tot.tl l))
+let append_cons
+    (#a:Type)
+    (#l1:len_t)
+    (#l2:len_t)
+    (c:a)
+    (v1:raw a l1)
+    (v2:raw a l2{ok (+) l1 l2 /\ ok (+) (l1 +^ l2) 1ul})
+  : Lemma
+    (ensures (let v1v2 = append v1 v2 in
+              let lv1v2 = l1 +^ l2 +^ 1ul in
+              let appcons = coerce (append (cons c v1) v2) lv1v2 in
+              let consapp = coerce (cons #a #(l1 +^ l2) c v1v2) lv1v2 in
+              appcons == consapp))
+  = lemma_eq_elim (append (cons c v1) v2) (cons c (append v1 v2))
 
-// let rec mem_seq_of_list
-//   (#a: eqtype)
-//   (x: a)
-//   (l: list a)
-// : Lemma
-//   (requires True)
-//   (ensures (mem x (seq_of_list l) == List.Tot.mem x l))
-//   [SMTPat (mem x (seq_of_list l))]
-// = match l with
-//   | [] -> ()
-//   | y :: q ->
-//     let _ : squash (head (seq_of_list l) == y) = () in
-//     let _ : squash (tail (seq_of_list l) == seq_of_list q) = seq_of_list_tl l in
-//     let _ : squash (mem x (seq_of_list l) == (x = y || mem x (seq_of_list q))) =
-//      lemma_mem_inversion (seq_of_list l)
-//     in
-//     mem_seq_of_list x q
+let index_tail
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l{l >^ 0ul})
+    (i:len_t{i <^ l -^ 1ul})
+  : Lemma
+    (ensures (index (tail v) i == index v (i +^ 1ul)))
+  = ()
+
+let mem_cons
+    (#a:eqtype)
+    (#l:len_t)
+    (x:a)
+    (v:raw a l{ok (+) l 1ul})
+  : Lemma
+    (ensures (forall y. mem y (cons x v) <==> mem y v \/ x=y))
+  = lemma_append_count (create1 x) v
+
+let snoc_sub_index
+    (a: Type)
+    (#l:len_t)
+    (v:raw a l)
+    (i:index_t v)
+    (j:index_t v{i <=^ j})
+  : Lemma
+    (requires True)
+    (ensures (snoc (subv v i j) (index v j) == coerce (subv v i (j +^ 1ul)) (j -^ i +^ 1ul)))
+    [SMTPat (snoc (subv v i j) (index v j))]
+  = lemma_eq_elim (snoc (subv v i j) (index v j)) (subv v i (j +^ 1ul))
+
+let cons_index_sub
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+    (i:len_t)
+    (j:len_t{i <^ j /\ j <=^ l} )
+  : Lemma
+    (requires True)
+    (ensures (cons (index v i) (subv v (i +^ 1ul) j) == coerce (subv v i j) (1ul +^ (j -^ (i +^ 1ul))) ))
+    [SMTPat (cons (index v i) (subv v (i +^ 1ul) j))]
+  = lemma_eq_elim (cons (index v i) (subv v (i +^ 1ul) j)) (subv v i j)
+
+let sub_is_empty
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+    (i:len_t{i <=^ l})
+  : Lemma
+    (requires (True))
+    (ensures (coerce (subv v i i) 0ul == empty))
+    [SMTPat (subv v i i)]
+  = lemma_eq_elim (subv v i i) empty
+
+let sub_length
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+  : Lemma
+    (requires True)
+    (ensures (subv v 0ul l == v))
+    [SMTPat (subv v 0ul l)]
+  = lemma_eq_elim (subv v 0ul l) v
+
+let sub_sub
+    (#a:Type)
+    (#l:len_t)
+    (v:raw a l)
+    (i1:len_t)
+    (j1:len_t{i1 <=^ j1 /\ j1 <=^ l} )
+    (i2:len_t)
+    (j2:len_t{i2 <=^ j2 /\ j2 <=^ j1 -^ i1})
+  : Lemma
+    (requires (ok (+) i1 i2 /\ ok (+) i1 j2)) 
+    (ensures (subv (subv v i1 j1) i2 j2 == coerce (subv v (i1 +^ i2) (i1 +^ j2)) (j2 -^ i2)))
+    [SMTPat (subv (subv v i1 j1) i2 j2)]
+  = lemma_eq_elim (subv (subv v i1 j1) i2 j2) (subv v (i1 +^ i2) (i1 +^ j2))
+
+#reset-options "--z3rlimit 20"
+let raw_of_list_tl
+    (#a: Type)
+    (l:list a{is_u32 (L.length l) /\ L.length l > 0} )
+: Lemma
+  (requires True)
+  (ensures (let l32s1 = (int_to_u32 (L.length l)) -^ 1ul in
+            let rawtl = coerce (raw_of_list (L.tl l)) l32s1 in
+            let tlraw = coerce (tail (raw_of_list l)) l32s1 in
+            rawtl == tlraw
+            ))
+  [SMTPat (raw_of_list (L.tl l))]
+= lemma_tl (L.hd l) (raw_of_list (L.tl l)); // cwinter: just this goes through, ...
+  let l32s1 = (int_to_u32 (L.length l)) -^ 1ul in
+  let rawtl = coerce (raw_of_list (L.tl l)) l32s1 in
+  let tlraw = coerce (tail (raw_of_list l)) l32s1 in
+  lemma_eq_intro rawtl tlraw; // ... this makes it go through faster.
+  lemma_eq_elim rawtl tlraw
+
+#reset-options "--z3rlimit 30"
+let rec mem_raw_of_list
+    (#a:eqtype)
+    (x:a)
+    (l:list a{is_u32 (L.length l)})
+  : Lemma
+    (requires True)
+    (ensures (mem x (raw_of_list l) == L.mem x l))
+    (decreases (L.length l))
+    [SMTPat (mem x (raw_of_list l))]
+  = match l with
+    | [] -> ()
+    | hd :: tl ->
+      let l32 = int_to_u32 (L.length l) in
+      let _ : squash (head #a #l32 (raw_of_list l) == hd) = () in
+      let _ : squash (let l32s1 = l32 -^ 1ul in
+                      let rawtl = coerce #a #l32s1 (raw_of_list tl) l32s1 in
+                      let tlraw = coerce #a #l32s1 (tail #a #l32 (raw_of_list l)) l32s1 in
+                      tlraw == rawtl) = raw_of_list_tl l in
+      let _ : squash (mem x (raw_of_list l) == (x = hd || mem x (raw_of_list tl))) = 
+                     lemma_mem_inversion (raw_of_list l) 
+      in
+        mem_raw_of_list x tl

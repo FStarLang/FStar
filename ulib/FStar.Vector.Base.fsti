@@ -256,6 +256,31 @@ val reveal_sub:
     (ensures (reveal (sub v i j) == S.slice (reveal v) (U32.v i) (U32.v j)))
     [SMTPat (sub v i j)]
 
+let lemma_eq_intro
+    (#a:Type) 
+    (#l:len_t)
+    (v1:raw a l)
+    (v2:raw a l)
+  : Lemma
+     (requires (forall (i:len_t{U32.(i <^ l)}).{:pattern (index v1 i); (index v2 i)}
+                       index v1 i == index v2 i))
+     (ensures (equal v1 v2))
+  = assert (forall (i:nat{i<UInt32.v l}). Seq.index (reveal v1) i == index v1 (U32.uint_to_t i));
+    assert (forall (i:nat{i<UInt32.v l}). Seq.index (reveal v2) i == index v2 (U32.uint_to_t i));
+    Seq.lemma_eq_intro (reveal v1) (reveal v2)
+
+let lemma_eq2_intro
+    (#a:Type) 
+    (#l1:len_t)
+    (#l2:len_t)
+    (v1:raw a l1)
+    (v2:raw a l2{l1 == l2})
+  : Lemma
+     (requires (forall (i:len_t{U32.(i <^ l1)}).{:pattern (index v1 i); (index v2 i)}
+                       index v1 i == index v2 i))
+     (ensures (equal2 #a #l1 #l2 v1 v2))
+  = lemma_eq_intro #a #l1 v1 v2
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Now, we have `Vector.Base.t`, abstractly, a raw vector paired with its u32 length
 ////////////////////////////////////////////////////////////////////////////////
