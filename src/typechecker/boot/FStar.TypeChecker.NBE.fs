@@ -81,6 +81,7 @@ let rec test_args ts cnt =
 
 (* It count the number of abstractions in the body of a let rec. 
    It accounts for abstractions instantiated inside the body.
+   This analysis needs further refinement, for example see the let in case. 
 *)
 let rec count_abstractions (t : term) : int =
     match (SS.compress t).n with
@@ -109,7 +110,10 @@ let rec count_abstractions (t : term) : int =
        (* count just one branch assuming it is well-typed *)
        | (_, _, e) :: bs -> count_abstractions e)
 
-    | Tm_let (_, t)
+    | Tm_let (_, t) 
+      (* This is not quite right. We need to somehow cound the abstractions of the let definition
+         as it might be used in head position. For instance we might have something like [let t = e in t]
+       *)
     | Tm_meta (t, _) 
     | Tm_ascribed (t, _, _) -> count_abstractions t
         
