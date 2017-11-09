@@ -7,13 +7,14 @@ include $(FSTAR_HOME)/src/gmake/z3.mk
 include $(FSTAR_HOME)/src/gmake/fstar.mk
 
 ifeq ($(OS),Windows_NT)
-MSBUILD = msbuild
+  MSBUILD = $(FSTAR_HOME)/src/msbuild.bat
 else
-MSBUILD = xbuild
+  # If can't find msbuild, use xbuild, but throw a warning
+  MSBUILD = $(shell which msbuild || (echo '\n\n\033[0;31mWarning:\033[0m could not find "msbuild", trying (deprecated) "xbuild"\n\n'>&2; which xbuild))
 endif
 
 %.uver: %.fst
-	$(FSTAR) --verify_module $* $^
+	$(FSTAR) $^
 
 %.fail-uver: %.fst
-	(! $(FSTAR) --verify_module $* $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)
+	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)

@@ -43,7 +43,7 @@ Guidelines for the changelog:
 
   This restriction is a breaking change. For a sampling of the changes
   needed to accommodate it see:
-  
+
        [commit mitls/hacl-star@c93dd40b89263056c6dec8c606eebd885ba2984e]
        [commit FStar@8529b03e30e8dd77cd181256f0ec3473f8cd68bf]
 
@@ -121,6 +121,75 @@ Guidelines for the changelog:
   typechecker can reconstruct its state, instead of re-verifying a
   module every time
 
+* --verify_all, --verify_module, --extract_all, --explicit_deps are
+    gone. The behavior of `--dep make` has changed. See the section on
+    dependence analysis below.
+
+## Dependence analysis; which files are verified and extracted
+
+* When a file `f` (either an implementation or an interface file)
+  refers to a symbol from a module `A`, then `f` depends only on the
+  interface of `A` if one exists on the search path. If no interface
+  exists for `A` then `f` depends on the implementation of `A`.
+
+* Additionally, an implementation file always depends on its
+  interface, if one exists. An interface does not depend on its
+  implementation.
+
+* The `--dep full` option:
+
+  Invoking `fstar --dep full f1 ... fn`
+
+     - emits the entire dependence graph D of `f1 ... fn`
+
+     - additionally, for every interface file `a.fsti` in D whose
+       implementation `a.fst` is not in D, we also emit the
+       dependence graph of `a.fst`.
+
+  This means, for instance, that you can run `fstar --dep full` on all
+  the root files of your project and get dependences (in make format)
+  for all the files you need to verify in order to be sure that your
+  project is fully verified.
+
+* When you invoke `fstar f1 ... fn`, the only files that are verified
+  are those that are mentioned on the command line. The dependences of
+  those files are computed automatically and are lax-checked.
+
+* Given an invocation of `fstar --codegen OCaml f1 ... fn`, all (and
+  only) implementation files in the dependence graph of `f1 ... fn`
+  will be extracted.
+
+* The `--expose_interfaces` option:
+
+  In rare cases, we want to verify module `B` against a particular,
+  concrete implementation of module `A`, disregarding the abstraction
+  imposed by an interface of `A`.
+
+  In such a situation, you can run:
+  
+     `fstar --expose_interfaces A.fsti A.fst B.fst`
+
+  Note, this explicitly breaks the abstraction of the interface
+  `A.fsti`. So use this only if you really know what you're doing.
+
+* We aim to encourage a style in which typical invocations of `fstar`
+  take only a single file on the command line. Only that file will be
+  verified.
+
+* Only that file will be verified and extracted (if --codegen is
+  specified).
+
+* The --cache_checked_modules flag enables incremental, separate
+  compilation of F* projects. See examples/sample_project for how this
+  is used.
+
+Expected changes in the near future:
+
+* We will make --cache_checked_modules the default so that the cost of
+  reloading dependences for each invocation of fstar is mininimized.
+
+* The --extract_namespace and --extract_module flags will be removed.
+
 ## Error reporting
 
 * The error reports from SMT query failures have been substantially
@@ -131,7 +200,7 @@ Guidelines for the changelog:
   be printed as errors. If no localized errors could be recovered
   (e.g., because of a solver timeout) then the dreaded "Unknown
   assertion failed" error is reported.
-   
+
 * --query_stats now reports a reason for a hint failure as well as
   localized errors for sub-proofs that failed to replay. This is
   should provide a faster workflow than using --detail_hint_replay

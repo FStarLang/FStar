@@ -94,7 +94,16 @@ let check_extension fn =
                   message ^ " (pass --MLish to process .fs and .fsi files)"
                 else message))
 
-//val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
+type parse_frag =
+    | Filename of filename
+    | Toplevel of input_frag
+    | Fragment of input_frag
+
+type parse_result =
+    | ASTFragment of (AST.inputFragment * list<(string * Range.range)>)
+    | Term of AST.term
+    | ParseError of (string * Range.range)
+
 let parse fn =
   Parser.Util.warningHandler := (function
     | e -> let msg = Printf.sprintf "%A\n" e in
@@ -103,7 +112,7 @@ let parse fn =
     | e -> raise e);
 
   let filename,sr,fs,line,col = match fn with
-    | Inl (filename:string) ->
+    | Filename (filename:string) ->
         check_extension filename;
         let filename', contents = read_file filename in
         filename',
@@ -111,7 +120,8 @@ let parse fn =
         contents,
         1,
         0
-    | Inr frag ->
+    | Toplevel frag
+    | Fragment frag ->
         "<input>",
         new System.IO.StringReader(frag.frag_text) :> System.IO.TextReader,
         frag.frag_text,
@@ -132,29 +142,35 @@ let parse fn =
               //     printfn "token : %+A\n" tok ;
               tok
       in
-      let fileOrFragment = Parse.inputFragment lexer lexbuf in
-      let frags = match fileOrFragment with
-        | Inl modul ->
-           if has_extension filename interface_extensions
-           then match modul with
-                | AST.Module(l,d) ->
+      match fn with
+      | Toplevel _
+      | Filename _ -> begin
+          let fileOrFragment = Parse.inputFragment lexer lexbuf in
+          let frags = match fileOrFragment with
+          | Inl modul ->
+              if has_extension filename interface_extensions
+              then match modul with
+              | AST.Module(l,d) ->
                   Inl (AST.Interface(l, d, true))
-                | _ -> failwith "Impossible"
-           else Inl modul
-        | _ -> fileOrFragment in
-       let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
-       Inl (frags, non_polymorphic_nil)
+              | _ -> failwith "Impossible"
+              else Inl modul
+           | _ -> fileOrFragment in
+           let non_polymorphic_nil : list<string * FStar.Range.range> = [] in
+           ASTFragment (frags, non_polymorphic_nil)
+           end
+      | Fragment _ ->
+          Term (Parse.term lexer lexbuf)
   with
     | Empty_frag ->
-      Inl (Inr [], [])
+        ASTFragment (Inr [], [])
     | Error(msg, r) ->
-      Inr (msg, r)
+        ParseError(msg, r)
     | e ->
-      let pos_of_lexpos (p: Microsoft.FSharp.Text.Lexing.Position) =
-        Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol) in
-      let p0 = pos_of_lexpos lexbuf.StartPos in
-      let p1 = pos_of_lexpos lexbuf.EndPos in
-      let r = Range.mk_range filename p0 p1 in
-      Inr ((if Options.trace_error ()
-            then sprintf "Syntax error (%A)" e
-            else sprintf "Syntax error (%s)" e.Message), r)
+        let pos_of_lexpos (p: Microsoft.FSharp.Text.Lexing.Position) =
+            Range.mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol) in
+        let p0 = pos_of_lexpos lexbuf.StartPos in
+        let p1 = pos_of_lexpos lexbuf.EndPos in
+        let r = Range.mk_range filename p0 p1 in
+        ParseError ((if Options.trace_error ()
+                     then sprintf "Syntax error (%A)" e
+                     else sprintf "Syntax error (%s)" e.Message), r)

@@ -1222,6 +1222,8 @@ and p_constant = function
       in
       let ending = default_or_map empty (fun (s, w) -> signedness s ^^ width w) sign_width_opt in
       str repr ^^ ending
+  | Const_range_of -> str "range_of"
+  | Const_set_range_of -> str "set_range_of"
   | Const_range r -> str (Range.string_of_range r)
   | Const_reify -> str "reify"
   | Const_reflect lid -> p_quident lid ^^ qmark ^^ dot ^^ str "reflect"

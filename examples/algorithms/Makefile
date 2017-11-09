@@ -7,7 +7,7 @@ all: uall
 uall: BinarySearch.uver IntSort.uver InsertionSort.uver MergeSort.uver QuickSort.List.uver QuickSort.Seq.uver GC.uver Unification.uver Huffman.uver #downgrade QuickSort.Array.uver //TODO
 
 downgrade: QuickSort.Array.fst downgrade.fst
-	$(FSTAR) --include $(FSTAR_HOME)/ulib/reclaimable downgrade.fst --verify_module Downgrade
+	$(FSTAR) --include $(FSTAR_HOME)/ulib/reclaimable downgrade.fst
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 

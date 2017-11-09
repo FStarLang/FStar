@@ -15,6 +15,6 @@ type native_primitive_step =
       strong_reduction_ok: bool;
       tactic: itac}
 
-let list_all () = []
+let list_all : unit -> list<native_primitive_step> = fun () -> []
 
-let is_native_tactic t = false
+let is_native_tactic : FStar.Ident.lid -> bool = fun _ -> false

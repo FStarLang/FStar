@@ -512,6 +512,8 @@ let return_value env t v =
   let c =
     if not <| Env.lid_exists env C.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
     then mk_Total t
+    else if U.is_unit t
+    then S.mk_Total' t (Some U_zero)
     else let m = Env.get_effect_decl env C.effect_PURE_lid in //if Tot isn't fully defined in prims yet, then just return (Total t)
          let u_t = env.universe_of env t in
          let wp =
@@ -831,6 +833,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
   let refine () =
       let c = lc.comp() in
       if not (is_pure_or_ghost_effect env lc.eff_name)
+      || U.is_unit lc.res_typ
       || env.lax
       then c
       else if U.is_partial_return c //it's already a return; no need to add another equality
@@ -857,7 +860,8 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let eq_ret = weaken_precondition env ret (NonTrivial eq) in
            U.comp_set_flags ((bind e.pos env None (U.lcomp_of_comp c) (Some x, eq_ret)).comp()) flags
   in
-  {lc with comp=refine; cflags=flags}
+  if U.is_unit lc.res_typ then lc
+  else {lc with comp=refine; cflags=flags}
 
 let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_to_string c) (Print.comp_to_string c');

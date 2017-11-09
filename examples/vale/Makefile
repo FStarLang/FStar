@@ -1,3 +1,4 @@
+FSTAR_HOME=../..
 OTHERFLAGS+= \
 --z3cliopt smt.QI.EAGER_THRESHOLD=100 \
 --z3cliopt smt.CASE_SPLIT=3 \
@@ -9,7 +10,7 @@ OTHERFLAGS+= \
 --max_ifuel 1 \
 --initial_ifuel 0
 
-include $(FSTAR_HOME)/examples/Makefile.include
+include ../Makefile.include
 
 FSTS = $(wildcard *fst)
 FSTIS = $(wildcard *fsti) # These are currently verified when the corresponding .fst is verified

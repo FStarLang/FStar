@@ -253,6 +253,8 @@ let const_to_string x = match x with
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStar.Range.string_of_range r
+  | Const_range_of -> "range_of"
+  | Const_set_range_of -> "set_range_of"
   | Const_reify -> "reify"
   | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
 

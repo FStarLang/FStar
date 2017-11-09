@@ -54,7 +54,7 @@ let parse_z3_version_lines out =
                   then
                       let msg =
                           BU.format1
-                              "Successfully found expected Z3 commit hash %s"
+                              "Successfully found expected Z3 commit hash %s\n"
                               hash
                       in
                       print_string msg
@@ -589,16 +589,16 @@ let mk_input theory =
 type cb = z3result -> unit
 
 let cache_hit
-    (cache:option<string> * unsat_core)
+    (cache:option<string>)
     (qhash:option<string>)
     (cb:cb) =
     if Options.use_hints() && Options.use_hint_hashes() then
         match qhash with
-        | Some (x) when qhash = (fst cache) ->
+        | Some (x) when qhash = cache ->
             let stats : z3statistics = BU.smap_create 0 in
             smap_add stats "fstar_cache_hit" "1";
             let result = {
-              z3result_status = UNSAT (snd cache);
+              z3result_status = UNSAT None;
               z3result_time = 0;
               z3result_statistics = stats;
               z3result_query_hash = qhash
@@ -612,7 +612,7 @@ let cache_hit
 
 let ask_1_core
     (filter_theory:decls_t -> decls_t * bool)
-    (cache:option<string> * unsat_core)
+    (cache:option<string>)
     (label_messages:error_labels)
     (qry:decls_t)
     (cb:cb)
@@ -625,7 +625,7 @@ let ask_1_core
 
 let ask_n_cores
     (filter_theory:decls_t -> decls_t * bool)
-    (cache:option<string> * unsat_core)
+    (cache:option<string>)
     (label_messages:error_labels)
     (qry:decls_t)
     (scope:option<scope_t>)
@@ -642,7 +642,7 @@ let ask_n_cores
 
 let ask
     (filter:decls_t -> decls_t * bool)
-    (cache:option<string> * unsat_core)
+    (cache:option<string>)
     (label_messages:error_labels)
     (qry:decls_t)
     (scope:option<scope_t>)

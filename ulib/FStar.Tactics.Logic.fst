@@ -4,7 +4,7 @@ open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 open FStar.Tactics.Derived
 open FStar.Reflection
-open FStar.Reflection.Types
+open FStar.Reflection.Formula
 
 private val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
                             (squash (forall (x:a). b x)) ->

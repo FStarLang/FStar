@@ -14,6 +14,9 @@ module BU = FStar.Util
 
 (* Utils *)
 
+// VD: This seems necessary for the OCaml build
+let max a b = if a > b then a else b
+
 let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
   let rec aux (l:list<'a>) (acc:list<'b>) = //NS: weird, this needs an annotation to type-check in F*; cf issue #
    match l with 

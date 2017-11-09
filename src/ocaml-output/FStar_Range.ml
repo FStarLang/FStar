@@ -63,16 +63,16 @@ let set_use_range: range -> rng -> range =
     fun use_rng  ->
       if use_rng <> dummy_rng
       then
-        let uu___54_115 = r2 in
-        { def_range = (uu___54_115.def_range); use_range = use_rng }
+        let uu___60_98 = r2 in
+        { def_range = (uu___60_98.def_range); use_range = use_rng }
       else r2
 let set_def_range: range -> rng -> range =
   fun r2  ->
     fun def_rng  ->
       if def_rng <> dummy_rng
       then
-        let uu___55_125 = r2 in
-        { def_range = def_rng; use_range = (uu___55_125.use_range) }
+        let uu___61_106 = r2 in
+        { def_range = def_rng; use_range = (uu___61_106.use_range) }
       else r2
 let mk_pos: Prims.int -> Prims.int -> pos =
   fun l  ->
@@ -110,14 +110,14 @@ let union_ranges: range -> range -> range =
       }
 let string_of_pos: pos -> Prims.string =
   fun pos  ->
-    let uu____185 = FStar_Util.string_of_int pos.line in
-    let uu____186 = FStar_Util.string_of_int pos.col in
-    FStar_Util.format2 "%s,%s" uu____185 uu____186
+    let uu____153 = FStar_Util.string_of_int pos.line in
+    let uu____154 = FStar_Util.string_of_int pos.col in
+    FStar_Util.format2 "%s,%s" uu____153 uu____154
 let string_of_rng: rng -> Prims.string =
   fun r  ->
-    let uu____191 = string_of_pos r.start_pos in
-    let uu____192 = string_of_pos r.end_pos in
-    FStar_Util.format3 "%s(%s-%s)" r.file_name uu____191 uu____192
+    let uu____158 = string_of_pos r.start_pos in
+    let uu____159 = string_of_pos r.end_pos in
+    FStar_Util.format3 "%s(%s-%s)" r.file_name uu____158 uu____159
 let string_of_def_range: range -> Prims.string =
   fun r  -> string_of_rng r.def_range
 let string_of_use_range: range -> Prims.string =
@@ -154,14 +154,49 @@ let compare: range -> range -> Prims.int =
 let compare_use_range: range -> range -> Prims.int =
   fun r1  -> fun r2  -> compare_rng r1.use_range r2.use_range
 let range_before_pos: range -> pos -> Prims.bool =
-  fun m1  -> fun p  -> let uu____279 = end_of_range m1 in pos_geq p uu____279
+  fun m1  -> fun p  -> let uu____226 = end_of_range m1 in pos_geq p uu____226
 let end_of_line: pos -> pos =
   fun p  ->
-    let uu___56_284 = p in
-    { line = (uu___56_284.line); col = FStar_Util.max_int }
+    let uu___62_230 = p in
+    { line = (uu___62_230.line); col = FStar_Util.max_int }
 let extend_to_end_of_line: range -> range =
   fun r  ->
-    let uu____289 = file_of_range r in
-    let uu____290 = start_of_range r in
-    let uu____291 = let uu____292 = end_of_range r in end_of_line uu____292 in
-    mk_range uu____289 uu____290 uu____291
+    let uu____234 = file_of_range r in
+    let uu____235 = start_of_range r in
+    let uu____236 = let uu____237 = end_of_range r in end_of_line uu____237 in
+    mk_range uu____234 uu____235 uu____236
+let prims_to_fstar_range:
+  ((Prims.string,(Prims.int,Prims.int) FStar_Pervasives_Native.tuple2,
+     (Prims.int,Prims.int) FStar_Pervasives_Native.tuple2)
+     FStar_Pervasives_Native.tuple3,(Prims.string,(Prims.int,Prims.int)
+                                                    FStar_Pervasives_Native.tuple2,
+                                      (Prims.int,Prims.int)
+                                        FStar_Pervasives_Native.tuple2)
+                                      FStar_Pervasives_Native.tuple3)
+    FStar_Pervasives_Native.tuple2 -> range
+  =
+  fun r  ->
+    let uu____305 = r in
+    match uu____305 with
+    | (r1,r2) ->
+        let uu____396 = r1 in
+        (match uu____396 with
+         | (f1,s1,e1) ->
+             let uu____430 = r2 in
+             (match uu____430 with
+              | (f2,s2,e2) ->
+                  let s11 =
+                    mk_pos (FStar_Pervasives_Native.fst s1)
+                      (FStar_Pervasives_Native.snd s1) in
+                  let e11 =
+                    mk_pos (FStar_Pervasives_Native.fst e1)
+                      (FStar_Pervasives_Native.snd e1) in
+                  let s21 =
+                    mk_pos (FStar_Pervasives_Native.fst s2)
+                      (FStar_Pervasives_Native.snd s2) in
+                  let e21 =
+                    mk_pos (FStar_Pervasives_Native.fst e2)
+                      (FStar_Pervasives_Native.snd e2) in
+                  let r11 = mk_rng f1 s11 e11 in
+                  let r21 = mk_rng f2 s21 e21 in
+                  { def_range = r11; use_range = r21 }))

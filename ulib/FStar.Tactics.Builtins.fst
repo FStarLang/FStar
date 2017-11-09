@@ -5,8 +5,6 @@ Every tactic primitive, i.e., those built into the compiler
 module FStar.Tactics.Builtins
 
 open FStar.Tactics.Effect
-open FStar.Order
-open FStar.Reflection
 open FStar.Reflection.Types
 open FStar.Tactics.Types
 
@@ -29,6 +27,15 @@ let cur_goal = fun () -> TAC?.reflect __cur_goal
 assume private val __cur_witness : __tac term
 (** [cur_witness] returns the current goal's witness *)
 let cur_witness = fun () -> TAC?.reflect __cur_witness
+
+assume private val __is_guard   : __tac bool
+(** [is_guard] returns whether the current goal arised from a typechecking guard *)
+let is_guard = fun () -> TAC?.reflect __is_guard
+
+assume private val __refine_intro : __tac unit
+(** [refine_intro] will turn a goal of shape [w : x:t{phi}]
+into [w : t] and [phi{w/x}] *)
+let refine_intro = fun () -> TAC?.reflect __refine_intro
 
 (*
  * This is the way we inspect goals and any other term. We can quote them
@@ -170,16 +177,9 @@ with a single goal (they're "focused"). *)
 let seq (f:tactic unit) (g:tactic unit) : tactic unit = fun () ->
   TAC?.reflect (__seq (reify_tactic f) (reify_tactic g))
 
-assume private val __exact : term -> __tac unit
-(** [exact e] will solve a goal [Gamma |- w : t] if [e] has type exactly
-[t] in [Gamma]. Also, [e] needs to unift with [w], but this will almost
-always be the case since [w] is usually a uvar. *)
-let exact (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact tt)
-
-assume private val __exact_guard : term -> __tac unit
-(** Like [exact], but allows for the term [e] to have a type [t] only
-under some guard [g], adding the guard as a goal. *)
-let exact_guard (t:tactic term) : tactic unit = fun () -> let tt = t () in TAC?.reflect (__exact_guard tt)
+assume private val __t_exact : bool -> bool -> term -> __tac unit
+let t_exact hard guard (t:tactic term) : tactic unit =
+    fun () -> let tt = t () in TAC?.reflect (__t_exact hard guard tt)
 
 assume private val __apply : term -> __tac unit
 (** [apply f] will attempt to produce a solution to the goal by an application
