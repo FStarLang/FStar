@@ -453,7 +453,7 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
 		   modifies_rref i Set.empty h0.h h1.h /\
 		   m_fresh c h0 h1 /\
 		   m_sel h1 c = init /\
-		   Map.contains h1.h i))
+		   FStar.Map.contains h1.h i))
   =
     m_recall log; recall_region i;
     witness log (at_most_log_len init log);

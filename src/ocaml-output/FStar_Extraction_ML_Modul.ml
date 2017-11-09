@@ -43,7 +43,9 @@ let mangle_projector_lid: FStar_Ident.lident -> FStar_Ident.lident =
   fun x  -> x
 let lident_as_mlsymbol:
   FStar_Ident.lident -> FStar_Extraction_ML_Syntax.mlsymbol =
-  fun id  -> (id.FStar_Ident.ident).FStar_Ident.idText
+  fun id  ->
+    FStar_Extraction_ML_Syntax.avoid_keyword
+      (id.FStar_Ident.ident).FStar_Ident.idText
 let as_pair:
   'Auu____66 .
     'Auu____66 Prims.list ->

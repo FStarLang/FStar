@@ -93,6 +93,12 @@ let module_name_of_file f =
 
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
+let namespace_of_module f =
+    let lid = FStar.Ident.lid_of_path (FStar.Ident.path_of_text f) Range.dummyRange in
+    match lid.ns with
+    | [] -> None
+    | _ -> Some (FStar.Ident.lid_of_ids lid.ns)
+
 type file_name = string
 type module_name = string
 type dependence =
@@ -341,16 +347,20 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 
 exception Exit
 
-let hard_coded_dependencies filename =
-  let filename : string = basename filename in
+let hard_coded_dependencies full_filename =
+  let filename : string = basename full_filename in
   let corelibs =
     [Options.prims_basename () ; Options.pervasives_basename () ; Options.pervasives_native_basename ()]
   in
   (* The core libraries do not have any implicit dependencies *)
   if List.mem filename corelibs then []
-  else [ (Const.fstar_ns_lid, Open_namespace);
-         (Const.prims_lid, Open_module);
-         (Const.pervasives_lid, Open_module) ]
+  else let implicit_deps =
+           [ (Const.fstar_ns_lid, Open_namespace);
+             (Const.prims_lid, Open_module);
+             (Const.pervasives_lid, Open_module) ] in
+       match (namespace_of_module (lowercase_module_name full_filename)) with
+       | None -> implicit_deps
+       | Some ns -> implicit_deps @ [(ns, Open_namespace)]
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
@@ -432,9 +442,11 @@ let collect_one
     // Only fully qualified module aliases are allowed.
     match smap_try_find original_map alias with
     | Some deps_of_aliased_module ->
-        smap_add working_map key deps_of_aliased_module
+        smap_add working_map key deps_of_aliased_module;
+        true
     | None ->
-        FStar.Errors.warn (range_of_lid lid) (Util.format1 "module not found in search path: %s\n" alias)
+        FStar.Errors.warn (range_of_lid lid) (Util.format1 "module not found in search path: %s\n" alias);
+        false
   in
 
   let record_lid lid =
@@ -474,8 +486,8 @@ let collect_one
     | Open lid ->
         record_open false lid
     | ModuleAbbrev (ident, lid) ->
-        add_dep deps (PreferInterface (lowercase_join_longident lid true));
-        record_module_alias ident lid
+        if record_module_alias ident lid
+        then add_dep deps (PreferInterface (lowercase_join_longident lid true))
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | Main t
@@ -834,7 +846,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" f f (String.concat "\\\n\t" files);
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-          Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f (String.concat " \\\n\t" files);
+          Util.print3 "%s: %s \\\n\t%s\n\n" (cache_file_name f) f (String.concat " \\\n\t" files);
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then

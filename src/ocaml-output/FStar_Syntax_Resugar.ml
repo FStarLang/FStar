@@ -18,7 +18,8 @@ let bv_as_unique_ident: FStar_Syntax_Syntax.bv -> FStar_Ident.ident =
     let unique_name =
       if
         FStar_Util.starts_with FStar_Ident.reserved_prefix
-          (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
+                               (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText
+      || FStar_Options.print_real_names()
       then
         let uu____32 = FStar_Util.string_of_int x.FStar_Syntax_Syntax.index in
         Prims.strcat (x.FStar_Syntax_Syntax.ppname).FStar_Ident.idText

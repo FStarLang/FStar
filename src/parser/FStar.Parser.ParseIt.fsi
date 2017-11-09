@@ -34,5 +34,15 @@ val add_vfs_entry: fname:string -> contents:string -> unit
 // This reads mtimes from the VFS as well
 val get_file_last_modification_time: fname:string -> time
 
-val parse: either<filename, input_frag> -> either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
+type parse_frag =
+    | Filename of filename
+    | Toplevel of input_frag
+    | Fragment of input_frag
+
+type parse_result =
+    | ASTFragment of (AST.inputFragment * list<(string * Range.range)>)
+    | Term of AST.term
+    | ParseError of (string * Range.range)
+
+val parse: parse_frag -> parse_result // either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 val find_file: string -> string
