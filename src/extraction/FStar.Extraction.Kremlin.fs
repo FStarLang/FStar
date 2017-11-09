@@ -35,6 +35,7 @@ module BU = FStar.Util
 - v24: Added a single constructor to the expression type to reflect the addition
   of type applications to the ML extraction language.
 - v25: Added a number of type parameters for globals.
+- v26: Flags for DExternal and all the DType's
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -45,9 +46,9 @@ type program =
 and decl =
   | DGlobal of list<flag> * lident * int * typ * expr
   | DFunction of option<cc> * list<flag> * int * typ * lident * list<binder> * expr
-  | DTypeAlias of lident * int * typ
-  | DTypeFlat of lident * int * fields_t
-  | DExternal of option<cc> * lident * typ
+  | DTypeAlias of lident * list<flag> * int * typ
+  | DTypeFlat of lident * list<flag> * int * fields_t
+  | DExternal of option<cc> * list<flag> * lident * typ
   | DTypeVariant of lident * list<flag> * int * branches_t
 
 and cc =
@@ -63,11 +64,12 @@ and branches_t =
 
 and flag =
   | Private
-  | NoExtract
+  | WipeBody
   | CInline
   | Substitute
   | GCType
   | Comment of string
+  | MustDisappear
 
 and fsdoc = string
 
@@ -170,7 +172,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 25
+let current_version: version = 26
 
 type file = string * program
 type binary_format = version * list<file>
@@ -341,7 +343,7 @@ and translate_module (module_name, modul, _): file =
 and translate_flags flags =
   List.choose (function
     | Syntax.Private -> Some Private
-    | Syntax.NoExtract -> Some NoExtract
+    | Syntax.NoExtract -> Some WipeBody
     | Syntax.CInline -> Some CInline
     | Syntax.Substitute -> Some Substitute
     | Syntax.GCType -> Some GCType
@@ -398,11 +400,11 @@ and translate_let env flavor flags lb: option<decl> =
       let env = add_binders env args in
       let name = env.module_name, name in
       let flags = (match t0 with
-      | MLTY_Fun (_, E_GHOST, _) -> NoExtract :: (translate_flags flags)
-      | _ -> translate_flags flags) in
+        | MLTY_Fun (_, E_GHOST, _) -> MustDisappear :: (translate_flags flags)
+        | _ -> translate_flags flags) in
       if assumed then
         if List.length tvars = 0 then
-          Some (DExternal (None, name, translate_type env t0))
+          Some (DExternal (None, flags, name, translate_type env t0))
         else
           // JP: TODO assume polymorphic function and have KreMLin generate
           // monomorphized assumes 
@@ -453,24 +455,24 @@ and translate_let env flavor flags lb: option<decl> =
 
 and translate_type_decl env ty: option<decl> =
   match ty with
-  | (assumed, name, _mangled_name, args, _, Some (MLTD_Abbrev t)) ->
+  | (assumed, name, _mangled_name, args, flags, Some (MLTD_Abbrev t)) ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env name -> extend_t env name) env args in
       if assumed then
         // JP: TODO: shall we be smarter here?
         None
       else
-        Some (DTypeAlias (name, List.length args, translate_type env t))
+        Some (DTypeAlias (name, translate_flags flags, List.length args, translate_type env t))
 
-  | (_, name, _mangled_name, args, _, Some (MLTD_Record fields)) ->
+  | (_, name, _mangled_name, args, flags, Some (MLTD_Record fields)) ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env name -> extend_t env name) env args in
-      Some (DTypeFlat (name, List.length args, List.map (fun (f, t) ->
+      Some (DTypeFlat (name, translate_flags flags, List.length args, List.map (fun (f, t) ->
         f, (translate_type env t, false)) fields))
 
-  | (_, name, _mangled_name, args, attrs, Some (MLTD_DType branches)) ->
+  | (_, name, _mangled_name, args, flags, Some (MLTD_DType branches)) ->
       let name = env.module_name, name in
-      let flags = translate_flags attrs in
+      let flags = translate_flags flags in
       let env = List.fold_left extend_t env args in
       Some (DTypeVariant (name, flags, List.length args, List.map (fun (cons, ts) ->
         cons, List.map (fun (name, t) ->
