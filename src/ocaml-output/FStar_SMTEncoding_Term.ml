@@ -467,13 +467,13 @@ let freevar_eq: term -> term -> Prims.bool =
       | (FreeV x1,FreeV y1) -> fv_eq x1 y1
       | uu____1268 -> false
 let freevar_sort: term -> sort =
-  fun uu___227_1275  ->
-    match uu___227_1275 with
+  fun uu___228_1275  ->
+    match uu___228_1275 with
     | { tm = FreeV x; freevars = uu____1277; rng = uu____1278;_} -> fv_sort x
     | uu____1291 -> failwith "impossible"
 let fv_of_term: term -> fv =
-  fun uu___228_1294  ->
-    match uu___228_1294 with
+  fun uu___229_1294  ->
+    match uu___229_1294 with
     | { tm = FreeV fv; freevars = uu____1296; rng = uu____1297;_} -> fv
     | uu____1310 -> failwith "impossible"
 let rec freevars:
@@ -501,11 +501,11 @@ let free_variables: term -> fvs =
            (FStar_Pervasives_Native.Some fvs);
          fvs)
 let qop_to_string: qop -> Prims.string =
-  fun uu___229_1561  ->
-    match uu___229_1561 with | Forall  -> "forall" | Exists  -> "exists"
+  fun uu___230_1561  ->
+    match uu___230_1561 with | Forall  -> "forall" | Exists  -> "exists"
 let op_to_string: op -> Prims.string =
-  fun uu___230_1564  ->
-    match uu___230_1564 with
+  fun uu___231_1564  ->
+    match uu___231_1564 with
     | TrueOp  -> "true"
     | FalseOp  -> "false"
     | Not  -> "not"
@@ -545,8 +545,8 @@ let op_to_string: op -> Prims.string =
         FStar_Util.format1 "(_ int2bv %s)" uu____1568
     | Var s -> s
 let weightToSmt: Prims.int FStar_Pervasives_Native.option -> Prims.string =
-  fun uu___231_1574  ->
-    match uu___231_1574 with
+  fun uu___232_1574  ->
+    match uu___232_1574 with
     | FStar_Pervasives_Native.None  -> ""
     | FStar_Pervasives_Native.Some i ->
         let uu____1578 = FStar_Util.string_of_int i in
@@ -1583,8 +1583,8 @@ let termToSmt: Prims.bool -> Prims.string -> term -> Prims.string =
         aux (Prims.parse_int "0") (Prims.parse_int "0") [] t
 let caption_to_string:
   Prims.string FStar_Pervasives_Native.option -> Prims.string =
-  fun uu___232_5168  ->
-    match uu___232_5168 with
+  fun uu___233_5168  ->
+    match uu___233_5168 with
     | FStar_Pervasives_Native.None  -> ""
     | FStar_Pervasives_Native.Some c ->
         let uu____5172 =
@@ -1608,8 +1608,8 @@ let rec declToSmt': Prims.bool -> Prims.string -> decl -> Prims.string =
             then
               let uu____5217 =
                 FStar_All.pipe_right (FStar_Util.splitlines c)
-                  (fun uu___233_5221  ->
-                     match uu___233_5221 with | [] -> "" | h::t -> h) in
+                  (fun uu___234_5221  ->
+                     match uu___234_5221 with | [] -> "" | h::t -> h) in
               FStar_Util.format1 "\n; %s" uu____5217
             else ""
         | DeclFun (f,argsorts,retsort,c) ->
@@ -1636,8 +1636,8 @@ let rec declToSmt': Prims.bool -> Prims.string -> decl -> Prims.string =
             let fact_ids_to_string ids =
               FStar_All.pipe_right ids
                 (FStar_List.map
-                   (fun uu___234_5316  ->
-                      match uu___234_5316 with
+                   (fun uu___235_5316  ->
+                      match uu___235_5316 with
                       | Name n1 ->
                           Prims.strcat "Name " (FStar_Ident.text_of_lid n1)
                       | Namespace ns ->
@@ -1997,10 +1997,10 @@ let mk_Valid: term -> term =
           let uu____6442 = unboxBitVec sz t2 in (uu____6441, uu____6442) in
         mkBvUlt uu____6436 t.rng
     | App (Var "Prims.b2t",t1::[]) ->
-        let uu___235_6446 = unboxBool t1 in
+        let uu___236_6446 = unboxBool t1 in
         {
-          tm = (uu___235_6446.tm);
-          freevars = (uu___235_6446.freevars);
+          tm = (uu___236_6446.tm);
+          freevars = (uu___236_6446.freevars);
           rng = (t.rng)
         }
     | uu____6447 -> mkApp ("Valid", [t]) t.rng

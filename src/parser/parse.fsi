@@ -2,8 +2,6 @@
 module FStar.Parser.Parse
 open FStar.Parser.AST
 type token = 
-  | PLUS
-  | AT
   | WITH
   | WHEN
   | VAL
@@ -49,6 +47,7 @@ type token =
   | PRAGMA_SET_OPTIONS
   | PRAGMA_RESET_OPTIONS
   | PRAGMALIGHT
+  | PLUS
   | PIPE_RIGHT
   | PERCENT_LBRACK
   | OPPREFIX of (string)
@@ -135,14 +134,13 @@ type token =
   | BANG_LBRACE
   | BACKTICK
   | ATTRIBUTES
+  | AT
   | ASSUME
   | ASSERT
   | AND
   | AMP
   | ABSTRACT
 type tokenId = 
-    | TOKEN_PLUS
-    | TOKEN_AT
     | TOKEN_WITH
     | TOKEN_WHEN
     | TOKEN_VAL
@@ -188,6 +186,7 @@ type tokenId =
     | TOKEN_PRAGMA_SET_OPTIONS
     | TOKEN_PRAGMA_RESET_OPTIONS
     | TOKEN_PRAGMALIGHT
+    | TOKEN_PLUS
     | TOKEN_PIPE_RIGHT
     | TOKEN_PERCENT_LBRACK
     | TOKEN_OPPREFIX
@@ -274,6 +273,7 @@ type tokenId =
     | TOKEN_BANG_LBRACE
     | TOKEN_BACKTICK
     | TOKEN_ATTRIBUTES
+    | TOKEN_AT
     | TOKEN_ASSUME
     | TOKEN_ASSERT
     | TOKEN_AND
@@ -413,6 +413,10 @@ type nonTerminalId =
     | NONTERM_universe
     | NONTERM_universeFrom
     | NONTERM_atomicUniverse
+    | NONTERM_warn_error_list
+    | NONTERM_warn_error
+    | NONTERM_flag
+    | NONTERM_range
     | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
     | NONTERM_right_flexible_list_SEMICOLON_recordFieldDecl_
@@ -421,10 +425,6 @@ type nonTerminalId =
     | NONTERM_right_flexible_nonempty_list_SEMICOLON_simpleDef_
     | NONTERM_reverse_left_flexible_list_BAR___anonymous_6_
     | NONTERM_reverse_left_flexible_nonempty_list_BAR_patternBranch_
-    | NONTERM_warn_error_list
-    | NONTERM_warn_error
-    | NONTERM_flag
-    | NONTERM_range
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int
 
@@ -436,6 +436,6 @@ val prodIdxToNonTerminal: int -> nonTerminalId
 
 /// This function gets the name of a token as a string
 val token_to_string: token -> string
-val warn_error_list : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> ((FStar.Errors.flag * (int * int)) list) 
+val warn_error_list : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> ((flag * (int * int)) list) 
 val term : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (term) 
 val inputFragment : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (inputFragment) 

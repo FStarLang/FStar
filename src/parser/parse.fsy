@@ -30,6 +30,7 @@ open FStar.String
 %token AND
 %token ASSERT
 %token ASSUME
+%token AT
 %token ATTRIBUTES
 %token BACKTICK
 %token BANG_LBRACE
@@ -116,6 +117,7 @@ open FStar.String
 %token <string> OPPREFIX
 %token PERCENT_LBRACK
 %token PIPE_RIGHT
+%token PLUS
 %token PRAGMALIGHT
 %token PRAGMA_RESET_OPTIONS
 %token PRAGMA_SET_OPTIONS
@@ -161,8 +163,6 @@ open FStar.String
 %token VAL
 %token WHEN
 %token WITH
-%token AT
-%token PLUS
 %nonassoc THEN
 %nonassoc ELSE
 %right COLON_COLON
@@ -181,7 +181,7 @@ open FStar.String
 %type <inputFragment> inputFragment
 %type <ident> lident
 %type <term> term
-%type <(FStar.Errors.flag * (int * int)) list> warn_error_list
+%type <(flag * (int * int)) list> warn_error_list
 %%
 
 option_FSDOC_:
@@ -882,7 +882,7 @@ in
           let lift, lift_wp = match (id1, id2) with
                   | "lift_wp", "lift" -> tm1, tm2
                   | "lift", "lift_wp" -> tm2, tm1
-                  | _ -> raise_error (Errors.UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (lhs parseState)
+                  | _ -> raise_error (UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (lhs parseState)
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      )}
@@ -969,7 +969,7 @@ letqualifier:
 aqual:
   EQUALS
     {let _1 = () in
-              ( maybe_fatal_error (lhs parseState) (Errors.DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
+              (  maybe_fatal_error (lhs parseState) (DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
                                         Equality )}
 | aqualUniverses
     {let q = $1 in
@@ -2345,7 +2345,7 @@ atomicUniverse:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (Errors.OutOfRangeOfInt, "This number is outside the allowable range for representable integer constants");
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt, "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       )}
 | lident
@@ -2354,6 +2354,38 @@ atomicUniverse:
 | LPAREN universeFrom RPAREN
     {let (_1, u, _3) = ((), $2, ()) in
     ( u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) )}
+
+warn_error_list:
+  warn_error EOF
+    {let (e, _2) = ($1, ()) in
+                     ( e )}
+
+warn_error:
+  flag range
+    {let (f, r) = ($1, $2) in
+    ( [(f, r)] )}
+| flag range warn_error
+    {let (f, r, e) = ($1, $2, $3) in
+    ( (f, r) :: e )}
+
+flag:
+  AT
+    {let _1 = () in
+    ( CError )}
+| MINUS
+    {let _1 = () in
+    ( CSilent )}
+| PLUS
+    {let _1 = () in
+    ( CWarning )}
+
+range:
+  INT
+    {let i = $1 in
+    ( let i = int_of_string (fst i) in (i, i) )}
+| INT DOT DOT INT
+    {let (i, _2, _3, j) = ($1, (), (), $4) in
+    ( let i = int_of_string (fst i) in let j = int_of_string (fst j) in (i, j) )}
 
 some_fsTypeArgs_:
   fsTypeArgs
@@ -2441,29 +2473,6 @@ in
 | reverse_left_flexible_nonempty_list_BAR_patternBranch_ BAR patternBranch
     {let (xs, _2, x) = ($1, (), $3) in
    ( x :: xs )}
-
-warn_error_list:
-| warn_error EOF { $1 }
-
-warn_error:
-| flag range
-  { [($1, $2)] }
-| flag range warn_error { ($1, $2) :: $3 }
-
-flag:
-| AT
-  { FStar.Errors.flag.CError }
-| MINUS
-  { FStar.Errors.flag.CSilent }
-| PLUS
-  { FStar.Errors.flag.CWarning }
-
-range:
-| INT
-  { let n = $1 in let i = int_of_string (fst n) in
-     (i, i) }
-| INT DOT DOT INT
-  { let i = int_of_string (fst $1) in let j = int_of_string (fst $4) in (i, j) }
 
 %%
 

@@ -296,6 +296,8 @@ type raw_error =
   | IllFormedGoal
   | CachedFile
   | FileNotWritten
+  | InvalidUTF8Encoding
+  | FailToCompileNativeTactic
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range

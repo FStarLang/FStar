@@ -669,15 +669,17 @@ let detail_errors:
                 else
                   if hint_replay
                   then
-                    FStar_Errors.warn r
-                      (Prims.strcat "Hint failed to replay this sub-proof: "
-                         msg)
+                    FStar_Errors.maybe_fatal_error r
+                      (FStar_Errors.HintFailedToReplayProof,
+                        (Prims.strcat
+                           "Hint failed to replay this sub-proof: " msg))
                   else
                     ((let uu____2060 = FStar_Range.string_of_range r in
                       FStar_Util.print2_error
                         "XX: proof obligation at %s failed\n\t%s\n"
                         uu____2060 msg);
-                     FStar_Errors.err r msg) in
+                     FStar_Errors.maybe_fatal_error r
+                       (FStar_Errors.ProofObligationFailed, msg)) in
           let elim labs =
             FStar_All.pipe_right labs
               (FStar_List.map

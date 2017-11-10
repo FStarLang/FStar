@@ -33,7 +33,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise(Err (FStar_Util.format1 "Unable to find file: %s\n" filename))
+      raise_err (ModuleOrFileNotFound, FStar_Util.format1 "Unable to find file: %s\n" filename)
 
 let vfs_entries : (U.time * string) U.smap = U.smap_create (Z.of_int 1)
 
@@ -60,7 +60,7 @@ let read_file (filename:string) =
       if debug then U.print1 "Opening file %s\n" filename;
       filename, BatFile.with_file_in filename BatIO.read_all
     with e ->
-      raise (Err (U.format1 "Unable to read file %s\n" filename))
+      raise_err (UnableToReadFile, U.format1 "Unable to read file %s\n" filename)
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
@@ -75,9 +75,9 @@ let has_extension file extensions =
 let check_extension fn =
   if (not (has_extension fn (valid_extensions ()))) then
     let message = FStar_Util.format1 "Unrecognized extension '%s'" fn in
-    raise (Err (if has_extension fn fs_extensions then
+    raise_err (UnrecognizedExtension, if has_extension fn fs_extensions then
                   message ^ " (pass --MLish to process .fs and .fsi files)"
-                else message))
+                else message)
 
 type parse_frag =
     | Filename of filename
@@ -87,7 +87,7 @@ type parse_frag =
 type parse_result =
     | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Range.range) list)
     | Term of FStar_Parser_AST.term
-    | ParseError of (string * FStar_Range.range)
+    | ParseError of (FStar_Errors.raw_error * string * FStar_Range.range)
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
@@ -98,7 +98,7 @@ let parse fn =
         check_extension f;
         let f', contents = read_file f in
         (try create contents f' 1 0, f'
-         with _ -> raise (Err(FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f')))
+         with _ -> raise_err (InvalidUTF8Encoding, FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f'))
     | Toplevel s
     | Fragment s ->
       create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
@@ -131,10 +131,25 @@ let parse fn =
     | FStar_Errors.Empty_frag ->
       ASTFragment (U.Inr [], [])
 
-    | FStar_Errors.Error(msg, r) ->
-      ParseError (msg, r)
+    | FStar_Errors.Error(e, msg, r) ->
+      ParseError (e, msg, r)
 
     | e ->
       let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
       let r = FStar_Range.mk_range filename pos pos in
-      ParseError ("Syntax error: " ^ (Printexc.to_string e), r)
+      ParseError (SyntaxError, "Syntax error: " ^ (Printexc.to_string e), r)
+
+(** Parsing of command-line error/warning/silent flags. *)
+let parse_warn_error s =
+  (* let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
+  let user_flags =
+    try
+      FStar_Parser_Parse.warn_error_list (FStar_Parser_LexFStar.token lexbuf)
+    with e ->
+      failwith "Malformed warn-error list"
+  in *)
+  (* hardcode to +22..75 until I can figure out how to uncomment the above code *)
+  let r = ((Prims.parse_int "22"), (Prims.parse_int "75")) in
+  let e = (CWarning, r) in
+  let user_flags = [e] in
+  FStar_Errors.update_flags user_flags 

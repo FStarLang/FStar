@@ -56,7 +56,7 @@ open FStar_String
 %token MATCH OF
 %token OPEN REC MUTABLE THEN TRUE TRY TYPE EFFECT VAL
 %token INCLUDE
-%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
+%token WHEN WITH AT PLUS HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
@@ -96,10 +96,11 @@ open FStar_String
 
 %start inputFragment
 %start term
+%start warn_error_list
 %type <FStar_Parser_AST.inputFragment> inputFragment
 %type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
-
+%type <(FStar_Errors.flag * (int * int)) list> warn_error_list
 %%
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
@@ -170,7 +171,7 @@ rawDecl:
         let r = rhs2 parseState 1 3 in
         let lbs = focusLetBindings lbs r in
         if q <> Rec && List.length lbs <> 1
-        then raise (Error ("Unexpected multiple let-binding (Did you forget some rec qualifier ?)", r)) ;
+        then raise_error (MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
         TopLevelLet(q, lbs)
       }
   | VAL lid=lidentOrOperator bss=list(multiBinder) COLON t=typ
@@ -279,14 +280,14 @@ subEffect:
           | ("lift_wp", lift_wp) ->
              { msource = src_eff; mdest = tgt_eff; lift_op = NonReifiableLift lift_wp }
           | _ ->
-             raise (Error("Unexpected identifier; expected {'lift', and possibly 'lift_wp'}", lhs parseState))
+             raise_error (UnexpectedIdentifier, "Unexpected identifier; expected {'lift', and possibly 'lift_wp'}") (lhs parseState)
           end
        | Some (id2, tm2) ->
           let (id1, tm1) = lift1 in
           let lift, lift_wp = match (id1, id2) with
                   | "lift_wp", "lift" -> tm1, tm2
                   | "lift", "lift_wp" -> tm2, tm1
-                  | _ -> raise (Error("Unexpected identifier; expected {'lift', 'lift_wp'}", lhs parseState))
+                  | _ -> raise_error (UnexpectedIdentifier, "Unexpected identifier; expected {'lift', 'lift_wp'}") (lhs parseState)
           in
           { msource = src_eff; mdest = tgt_eff; lift_op = ReifiableLift (lift, lift_wp) }
      }
@@ -299,10 +300,10 @@ subEffect:
 qualifier:
   | ASSUME        { Assumption }
   | INLINE        {
-    raise (Error("The 'inline' qualifier has been renamed to 'unfold'", lhs parseState))
+    raise_error (InlineRenamedAsUnfold, "The 'inline' qualifier has been renamed to 'unfold'") (lhs parseState)
    }
   | UNFOLDABLE    {
-              raise (Error("The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it", lhs parseState))
+              raise_error (UnfoldableDeprecated, "The 'unfoldable' qualifier is no longer denotable; it is the default qualifier so just omit it") (lhs parseState)
    }
   | INLINE_FOR_EXTRACTION {
      Inline_for_extraction
@@ -334,7 +335,7 @@ letqualifier:
 
  (* Remove with stratify *)
 aqual:
-  | EQUALS    { warn (lhs parseState) "The '=' notation for equality constraints on binders is deprecated; use '$' instead";
+  | EQUALS    {  maybe_fatal_error (lhs parseState) (DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
                                         Equality }
   | q=aqualUniverses { q }
 
@@ -560,7 +561,7 @@ typ:
   | q=quantifier bs=binders DOT trigger=trigger e=noSeqTerm
       {
         match bs with
-            | [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 3))
+            | [] -> raise_error (MissingQuantifierBinder, "Missing binders for a quantifier") (rhs2 parseState 1 3)
             | _ -> mk_term (q (bs, trigger, e)) (rhs2 parseState 1 5) Formula
       }
 
@@ -677,7 +678,7 @@ tmNoEq:
       {
         let x, t, f = match extract_named_refinement e1 with
             | Some (x, t, f) -> x, t, f
-            | _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs parseState 1)) in
+            | _ -> raise_error (MissingQuantifierBinder, "Missing binder for the first component of a dependent tuple") (rhs parseState 1) in
         let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
         let tail = e2 in
         let dom, res = match tail.tm with
@@ -842,7 +843,7 @@ constant:
   | n=INT
      {
         if snd n then
-          errorR(Error("This number is outside the allowable range for representable integer constants", lhs(parseState)));
+          maybe_fatal_error (lhs parseState) (OutOfRangeOfInt, "This number is outside the allowable range for representable integer constants");
         Const_int (fst n, None)
      }
   | c=CHAR { Const_char c }
@@ -855,28 +856,28 @@ constant:
   | n=INT8
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for 8-bit signed integers", lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt8, "This number is outside the allowable range for 8-bit signed integers");
         Const_int (fst n, Some (Signed, Int8))
       }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
   | n=INT16
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for 16-bit signed integers", lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt16, "This number is outside the allowable range for 16-bit signed integers");
         Const_int (fst n, Some (Signed, Int16))
       }
   | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
   | n=INT32
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for 32-bit signed integers", lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt32, "This number is outside the allowable range for 32-bit signed integers");
         Const_int (fst n, Some (Signed, Int32))
       }
   | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
   | n=INT64
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for 64-bit signed integers", lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt64, "This number is outside the allowable range for 64-bit signed integers");
         Const_int (fst n, Some (Signed, Int64))
       }
   (* TODO : What about reflect ? There is also a constant representing it *)
@@ -893,18 +894,16 @@ universeFrom:
   | u1=universeFrom op_plus=OPINFIX2 u2=universeFrom
        {
          if op_plus <> "+"
-         then errorR(Error("The operator " ^ op_plus ^ " was found in universe context."
-                           ^ "The only allowed operator in that context is +.",
-                           rhs parseState 2)) ;
+         then maybe_fatal_error (rhs parseState 2) (OpPlusInUniverse, ("The operator " ^ op_plus ^ " was found in universe context."
+                           ^ "The only allowed operator in that context is +."));
          mk_term (Op(mk_ident (op_plus, rhs parseState 2), [u1 ; u2])) (rhs2 parseState 1 3) Expr
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
         if text_of_id max <> text_of_lid max_lid
-        then errorR(Error("A lower case ident " ^ text_of_id max ^
+        then maybe_fatal_error (rhs parseState 1) (InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
-                          "It should be either max or a universe variable 'usomething.",
-                          rhs parseState 1)) ;
+                          "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
         mkApp max (map (fun u -> u, Nothing) us) (rhs2 parseState 1 2)
       }
@@ -915,13 +914,35 @@ atomicUniverse:
   | n=INT
       {
         if snd n then
-          errorR(Error("This number is outside the allowable range for representable integer constants",
-                       lhs(parseState)));
+          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt, "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       }
   | u=lident { mk_term (Uvar u) u.idRange Expr }
   | LPAREN u=universeFrom RPAREN
     { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
+
+warn_error_list:
+  | e=warn_error EOF { e }
+
+warn_error:
+  | f=flag r=range
+    { [(f, r)] }
+  | f=flag r=range e=warn_error 
+    { (f, r) :: e }
+
+flag:
+  | AT
+    { CError }
+  | MINUS
+    { CSilent }
+  | PLUS
+    { CWarning }
+
+range:
+  | i=INT
+    { let i = int_of_string (fst i) in (i, i) }
+  | i=INT DOT DOT j=INT
+    { let i = int_of_string (fst i) in let j = int_of_string (fst j) in (i, j) }
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */
