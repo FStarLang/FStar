@@ -397,7 +397,7 @@
         "typing_FStar.Algebra.Monoid.neg", "unit_inversion", "unit_typing"
       ],
       0,
-      "5eda412c6d913940495874a8abb052f3"
+      "2c1fbd61a75324aafd8a94b0910e286d"
     ],
     [
       "FStar.Algebra.Monoid.uu___7",
@@ -432,7 +432,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "821e111350b50f96059edef38747e445"
+      "aabd2b5f8df5f0e075486b4b9535cd15"
     ],
     [
       "FStar.Algebra.Monoid.__proj__LAct__item__act",
@@ -441,7 +441,7 @@
       1,
       [ "@query" ],
       0,
-      "6ad4d31dc13aeede37e62638db8832f8"
+      "362c25fde8ad166532c8d1ca31618d81"
     ],
     [
       "FStar.Algebra.Monoid.__proj__LAct__item__mult_lemma",
@@ -453,7 +453,7 @@
         "projection_inverse_FStar.Algebra.Monoid.LAct_act"
       ],
       0,
-      "c89dd480bb905cc317c8d1225501c358"
+      "f327b757c6e8863aa804a9daaabce166"
     ],
     [
       "FStar.Algebra.Monoid.__proj__LAct__item__unit_lemma",
@@ -465,7 +465,7 @@
         "projection_inverse_FStar.Algebra.Monoid.LAct_act"
       ],
       0,
-      "2b0531203333ae623cb7316f4d2a3e74"
+      "16fbf7b87155a0b3191c398da40010c1"
     ]
   ]
 ]

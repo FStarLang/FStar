@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "18785098412c209af8b95afd534eef7e"
+      "53f5e1ec4442def26e79341251aa6e89"
     ],
     [
       "FStar.HyperHeap.ST.modifies_none",
@@ -89,7 +89,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "6d7ecb378fbf14d1613ffdbaab17418c"
+      "16f9a9544064dff14bb6752be5cbbb43"
     ],
     [
       "FStar.HyperHeap.ST.recall",

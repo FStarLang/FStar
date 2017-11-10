@@ -30,8 +30,9 @@ module Test
 
 // let baz () :Lemma (requires True) (ensures (predicate)) = foo 0
 
-// let fa_intro_lem (p:int -> Type0) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x)
-//   = FStar.Classical.forall_intro #int #p (fun x -> (f x <: Lemma (p x)))
+#set-options "--max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
+let fa_intro_lem (p:int -> Type0) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x)
+  = FStar.Classical.forall_intro #int #p (fun x -> (f x <: Lemma (p x)))
 
 (* This gives error in reguaring ... try with printing phase 1 message, and with --ugly
 open FStar.All
@@ -41,18 +42,18 @@ let rec map (f:'a -> ML 'b) (x:list 'a) :ML (list 'b) = match x with
   | a::tl -> f a::map f tl
 *)
 
-#set-options "--use_two_phase_tc"
+// #set-options "--use_two_phase_tc"
 
-assume val req (r1:int) (r2:int) :Type0
-assume val ens (r1:int) (r2:int) :Type0
+// assume val req (r1:int) (r2:int) :Type0
+// assume val ens (r1:int) (r2:int) :Type0
 
-assume val foo (r1:int) (r2:int) :Lemma (requires (req r1 r2)) (ensures (ens r1 r2))
+// assume val foo (r1:int) (r2:int) :Lemma (requires (req r1 r2)) (ensures (ens r1 r2))
 
-let baz () :Lemma (forall r1 r2. req r1 r2 ==> ens r1 r2) =
-  let foo' (r1:int) (r2:int) :Lemma (requires (req r1 r2)) (ensures (ens r1 r2)) = foo r1 r2 in
-  FStar.Classical.forall_intro_2 (fun r1 -> Classical.move_requires (foo' r1))
+// let baz () :Lemma (forall r1 r2. req r1 r2 ==> ens r1 r2) =
+//   let foo' (r1:int) (r2:int) :Lemma (requires (req r1 r2)) (ensures (ens r1 r2)) = foo r1 r2 in
+//   FStar.Classical.forall_intro_2 (fun r1 -> Classical.move_requires (foo' r1))
   
-  let bar (r1:int) (r2:int) :Lemma (req r1 r2 ==> ens r1 r2)
-    = FStar.Classical.move_requires (foo' r1) r2
-  in
-  ()
+//   let bar (r1:int) (r2:int) :Lemma (req r1 r2 ==> ens r1 r2)
+//     = FStar.Classical.move_requires (foo' r1) r2
+//   in
+//   ()

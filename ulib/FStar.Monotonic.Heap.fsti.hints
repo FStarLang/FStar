@@ -449,15 +449,18 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_and", "equation_Prims.squash", "l_and-interp",
         "lemma_FStar.Monotonic.Heap.contains_gref_of",
         "lemma_FStar.Monotonic.Heap.lemma_sel_same_addr",
         "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_e9f69f18eb8d91697e49057991573e9f",
         "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_f871b1cec1676516ecbdd8b1fdf16da7",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "typing_FStar.Monotonic.Heap.gref_of",
         "typing_FStar.Monotonic.Heap.ref_of", "unit_typing"
       ],
       0,
-      "34d08caa932f7c9f2460e4df681a05d3"
+      "89741b46b7ad1e2db10bd8219c424b3d"
     ],
     [
       "FStar.Monotonic.Heap.sel_ref_of",
@@ -470,7 +473,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "4367633fef8c1a801f9a567bb4c7dd29"
+      "2c1150494d75120d13bdb3646c5e5d1e"
     ],
     [
       "FStar.Monotonic.Heap.upd_ref_of",
@@ -488,7 +491,7 @@
         "typing_FStar.Monotonic.Heap.ref_of"
       ],
       0,
-      "672c6d45026c19ac1056cb17ff3d4741"
+      "40f7b961227ce3f5dffcb80b3a119165"
     ],
     [
       "FStar.Monotonic.Heap.upd_ref_of",
@@ -500,7 +503,7 @@
         "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_d9467e46756f298ce55a3e4ac17e694b"
       ],
       0,
-      "1a0480e6a8e26787457d301012145387"
+      "60f6ddfd2e29b1b9fa40d48b5bab5067"
     ]
   ]
 ]

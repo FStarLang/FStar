@@ -182,7 +182,7 @@
         "unit_typing"
       ],
       0,
-      "ea672b19b0dd51bebd6d5bd2998736c2"
+      "7ed86ab6a9f665fd40bd56ab9b8329fb"
     ],
     [
       "FStar.Classical.ghost_lemma",
@@ -225,7 +225,7 @@
         "unit_typing"
       ],
       0,
-      "af80c3079b8579a6406d7b8eaceecb78"
+      "21e93843f0ccab36cd1d3e6940612233"
     ],
     [
       "FStar.Classical.excluded_middle",
