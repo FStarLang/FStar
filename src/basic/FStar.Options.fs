@@ -195,7 +195,7 @@ let defaults =
       ("z3cliopt"                     , List []);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
-      ("warn_error"                   , String "@1..21+22..75")]
+      ("warn_error"                   , String "@1..21+22..76")]
 
 let init () =
    let o = peek () in

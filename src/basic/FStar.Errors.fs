@@ -491,7 +491,7 @@ let errno_of_error = function
   | FileNotWritten -> 73
   | NotEmbeddedUnit -> 74
   | NotEmbeddedChar -> 75
-  | IllFormedGoal -> 76
+  | IllFormedGoal -> 76 (* when new entries are added, need to update "next_errno" and default "warn_error" in Options.fs *)
   | _ -> 0 (** Things that cannot be silenced! *)
 
 type flag =

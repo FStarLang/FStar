@@ -148,8 +148,8 @@ let parse_warn_error s =
     with e ->
       failwith "Malformed warn-error list"
   in *)
-  (* hardcode to +22..75 until I can figure out how to uncomment the above code *)
-  let r = ((Prims.parse_int "22"), (Prims.parse_int "75")) in
+  (* hardcode to +22..76 until I can figure out how to uncomment the above code *)
+  let r = ((Prims.parse_int "22"), (Prims.parse_int "76")) in
   let e = (CWarning, r) in
   let user_flags = [e] in
   FStar_Errors.update_flags user_flags 
