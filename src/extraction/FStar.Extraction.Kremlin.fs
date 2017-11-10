@@ -389,19 +389,21 @@ and translate_let env flavor flags lb: option<decl> =
       let assumed = BU.for_some (function Syntax.Assumed -> true | _ -> false) flags in
       let env = if flavor = Rec then extend env name false else env in
       let env = List.fold_left (fun env name -> extend_t env name) env tvars in
-      let rec find_return_type i = function
-        | MLTY_Fun (_, _, t) when i > 0 ->
-            find_return_type (i - 1) t
+      let rec find_return_type eff i = function
+        | MLTY_Fun (_, eff, t) when i > 0 ->
+            find_return_type eff (i - 1) t
         | t ->
-            t
+            eff, t
       in
-      let t = translate_type env (find_return_type (List.length args) t0) in
+      let eff, t = find_return_type E_PURE (List.length args) t0 in
+      let t = translate_type env t in
       let binders = translate_binders env args in
       let env = add_binders env args in
       let name = env.module_name, name in
-      let flags = (match t0 with
-        | MLTY_Fun (_, E_GHOST, _) -> MustDisappear :: (translate_flags flags)
-        | _ -> translate_flags flags) in
+      let flags = match eff with
+        | E_GHOST -> MustDisappear :: translate_flags flags
+        | _ -> translate_flags flags
+      in
       if assumed then
         if List.length tvars = 0 then
           Some (DExternal (None, flags, name, translate_type env t0))
