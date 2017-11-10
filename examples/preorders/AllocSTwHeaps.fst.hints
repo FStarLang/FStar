@@ -2,7 +2,7 @@
   "® U:A< 9|åñÕ¤VØ1",
   [
     [
-      "AllocSTwHeaps.302273",
+      "AllocSTwHeaps.2375",
       1,
       2,
       1,
@@ -12,7 +12,7 @@
         "token_correspondence_AllocSTwHeaps.heap_rel"
       ],
       0,
-      "0d8ba49683438a670b3bd646264797e7"
+      "e4f157f5f47f5eb3338f99440701b821"
     ],
     [
       "AllocSTwHeaps.ist_witnessed",
@@ -25,7 +25,7 @@
         "token_correspondence_AllocSTwHeaps.heap_rel"
       ],
       0,
-      "148d5209ca8ee5e61e802d9de9f7f5fb"
+      "dbcd3e640316a7acd976c781cf692d30"
     ],
     [
       "AllocSTwHeaps.ist_witness",
@@ -38,7 +38,7 @@
         "token_correspondence_AllocSTwHeaps.heap_rel"
       ],
       0,
-      "39e2b5dbeb16baafedeeabbcb7641d56"
+      "2aa3788d3bf3c69a235f44ad660c419a"
     ],
     [
       "AllocSTwHeaps.ist_recall",
@@ -51,7 +51,7 @@
         "token_correspondence_AllocSTwHeaps.heap_rel"
       ],
       0,
-      "b68753abc4c32fc8afa6e34c7363dc18"
+      "442b4424c88e76ac61538dc2900b187d"
     ],
     [
       "AllocSTwHeaps.contains_lemma",
@@ -67,11 +67,10 @@
         "refinement_interpretation_FStar.StrongExcludedMiddle_Tm_refine_94f72bfda5e23ac3960136c8bc3f958c",
         "typing_FStar.Heap.trivial_preorder",
         "typing_FStar.Monotonic.Heap.contains",
-        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle",
-        "unit_typing"
+        "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "68c802e0da6c23c08b6c62f91830c626"
+      "decb4a4f17423a02519246441d7380ee"
     ],
     [
       "AllocSTwHeaps.ref",
@@ -93,7 +92,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "e29aa858bcdc7bbf6eeb53571d55bb47"
+      "ce27b0027da70239ff9d84f976b3790e"
     ],
     [
       "AllocSTwHeaps.alloc",
@@ -105,15 +104,15 @@
         "equation_AllocSTwHeaps.contains", "equation_AllocSTwHeaps.heap_rel",
         "equation_AllocSTwHeaps.ref", "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Heap.trivial_rel",
-        "equation_FStar.Monotonic.Heap.modifies",
-        "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_FStar.Monotonic.Heap.valid_upd",
         "equation_FStar.Preorder.stable", "equation_FStar.ST.mref",
         "equation_FStar.ST.ref", "equation_Prims.l_True",
         "interpretation_FStar.Heap_Tm_abs_a0a13c11aa3964346153dd55506fa009",
         "lemma_AllocSTwHeaps.contains_lemma",
-        "lemma_FStar.Monotonic.Heap.lemma_unused_upd_modifies",
+        "lemma_FStar.Monotonic.Heap.lemma_contains_implies_used",
+        "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_unused",
         "lemma_FStar.Monotonic.Heap.lemma_upd_contains",
+        "lemma_FStar.Monotonic.Heap.lemma_upd_contains_different_addr",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_5694aa6cb032c1a787a03895fe77cef3",
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_7d1ecf302207478c2c2b5f3c521f42f8",
@@ -129,7 +128,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "aa6acc79ba2dbf5272b0defdf0c737cb"
+      "c26e152657e5610395fca226f3a76572"
     ],
     [
       "AllocSTwHeaps.read",
@@ -141,7 +140,7 @@
         "refinement_interpretation_AllocSTwHeaps_Tm_refine_fcc3ae3430dace306efd930c647e1fda"
       ],
       0,
-      "96a9a7dd869719886edc647bb8ef2969"
+      "2a7602f50d4af4609d5a7c4551f605bf"
     ],
     [
       "AllocSTwHeaps.write",
@@ -164,7 +163,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "53de7e06c709b6439c95260e0b5ccde2"
+      "37c835423f9b510e38c08963e3e3b351"
     ],
     [
       "AllocSTwHeaps.precise_write",
@@ -187,7 +186,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "8ff6719c3bae28672c37ffee2ad876dc"
+      "ba03461101eedc607f4dffae3f46f63a"
     ],
     [
       "AllocSTwHeaps.recall",
@@ -210,7 +209,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "74e6adc827acf94270315c8cb1649ac7"
+      "9d5dd2aef2115179dc2c30b05154466e"
     ]
   ]
 ]

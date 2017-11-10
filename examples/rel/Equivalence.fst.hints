@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b4626a11c6918ed13101435d57113482"
+      "12e32af36a0c21addcd74b2847171d6a"
     ],
     [
       "Equivalence.if_left",
@@ -19,11 +19,10 @@
         "@query",
         "interpretation_Equivalence_Tm_abs_5646eff0017a4d35a78f1f3103e85ba6",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "unit_typing"
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "0fc5e05f315c8e1f86f4bfa3f04b6ba6"
+      "b870e089379efe3a1a8b30cd9466a310"
     ],
     [
       "Equivalence.if_left_wp",
@@ -41,19 +40,16 @@
         "unit_typing"
       ],
       0,
-      "8b8c2da41e5d956c51cc7233e66a1850"
+      "8fb799b00f2ce714291a59b5ed3161bb"
     ],
     [
       "Equivalence.if_left_wp",
       2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Equivalence_Tm_refine_2b5f2d484e596d06d6d46c7ceda588e0"
-      ],
+      [ "@query" ],
       0,
-      "0cfa22324dde631d09ebfddc08ff05a2"
+      "c3cd46a0e30895b41d5797b8bee3aa13"
     ],
     [
       "Equivalence.if_left_wp'",
@@ -70,7 +66,7 @@
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0,
-      "43d6746f0905123323215cebc196e248"
+      "d41385afd8fb55faa18d8aa41aa47dca"
     ]
   ]
 ]

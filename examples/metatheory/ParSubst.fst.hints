@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "bafebe42bdba013a3e48a49a32d57910"
+      "e12ada4d26d46978145aad682fc106ae"
     ],
     [
       "ParSubst.__proj__TArrow__item__t1",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "5e04d31acf5dc1e56b7601ab3fdffccc"
+      "36c55c2f5ea7a23f42eef493109a38af"
     ],
     [
       "ParSubst.__proj__TArrow__item__t2",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "e90831b70dc98520f8d8e50abc396d8f"
+      "80ab1f1d786c2c671018dea60131e94f"
     ],
     [
       "ParSubst.exp",
@@ -40,7 +40,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "90d3bfde2fca9cbea98fdc943c65baca"
+      "441f21a6f39943c551f5f64a550bd0a1"
     ],
     [
       "ParSubst.uu___is_EVar",
@@ -49,7 +49,7 @@
       1,
       [ "@query" ],
       0,
-      "cee067038d25ee0b65f4092c7e54dda4"
+      "90a697d7414c19fe6c84a98676117eb9"
     ],
     [
       "ParSubst.__proj__EVar__item___0",
@@ -62,7 +62,7 @@
         "refinement_interpretation_ParSubst_Tm_refine_943feaa075f629a91cb492a3c84ce6a4"
       ],
       0,
-      "d1e45a67d90245ff208e60329fff4300"
+      "ef52d3e0c22b23ddf2b887f70035cd24"
     ],
     [
       "ParSubst.uu___is_EApp",
@@ -71,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "dd1c4b3537f3abd1b4eab1811d0b9b63"
+      "d22fdb3a28f759b05d2f786704b926e7"
     ],
     [
       "ParSubst.__proj__EApp__item___0",
@@ -84,7 +84,7 @@
         "refinement_interpretation_ParSubst_Tm_refine_1671cc933db960f7ca6afb279f753fd0"
       ],
       0,
-      "468178dfb7b67be5e693acbc03e68426"
+      "bbd7db2bb339f00d46cb537e6a3d356c"
     ],
     [
       "ParSubst.__proj__EApp__item___1",
@@ -97,7 +97,7 @@
         "refinement_interpretation_ParSubst_Tm_refine_1671cc933db960f7ca6afb279f753fd0"
       ],
       0,
-      "f2ebf92bbf75a1beb913533e100eddab"
+      "174f920fe2e0dbf008de80dadc4c306a"
     ],
     [
       "ParSubst.uu___is_EAbs",
@@ -106,7 +106,7 @@
       1,
       [ "@query" ],
       0,
-      "197e673628c52a109520e55f578c8351"
+      "eae765bbbd178c2e702446d4aa5a4f04"
     ],
     [
       "ParSubst.__proj__EAbs__item___0",
@@ -119,7 +119,7 @@
         "refinement_interpretation_ParSubst_Tm_refine_58bb134335ce00d990053a5f172c1453"
       ],
       0,
-      "44a47f4fdd591214f3c22c714c050479"
+      "9d321cd4acd78332109edee2590175ac"
     ],
     [
       "ParSubst.__proj__EAbs__item___1",
@@ -132,7 +132,7 @@
         "refinement_interpretation_ParSubst_Tm_refine_58bb134335ce00d990053a5f172c1453"
       ],
       0,
-      "d121c1737248313157eeccd9c76e4e2a"
+      "447964a5360c8f5c37617382ed2772fe"
     ],
     [
       "ParSubst.is_renaming",
@@ -141,7 +141,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "cf2fc0969280dccc440126b1e77ce59a"
+      "0984a07269955bd08059a10a89d8fc17"
     ],
     [
       "ParSubst.is_renaming",
@@ -150,7 +150,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "dd02caac43ee42fd8cb95f34dbdc8143"
+      "4621232dcb6dfd6f37445cf2a20750e3"
     ],
     [
       "ParSubst.sub_inc",
@@ -164,7 +164,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "84993114edb257a6821a5d65dff044cd"
+      "1d540247533047b26e540e6f5a5ceffb"
     ],
     [
       "ParSubst.renaming_sub_inc",
@@ -176,10 +176,10 @@
         "disc_equation_ParSubst.EVar", "equation_ParSubst.renaming",
         "equation_ParSubst.sub_inc", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_ParSubst.EVar__0",
-        "token_correspondence_ParSubst.sub_inc", "unit_typing"
+        "token_correspondence_ParSubst.sub_inc"
       ],
       0,
-      "51d6288cc673d53d9d3da6882fd7961a"
+      "099ffc6092de3fa8f3b57fda3d2f8afa"
     ],
     [
       "ParSubst.is_var",
@@ -188,7 +188,7 @@
       1,
       [ "@query" ],
       0,
-      "4b27f7b2015f04eca9cd30097eaa7f65"
+      "7890f1a1a9537b65016061fa8bdcd581"
     ],
     [
       "ParSubst.subst",
@@ -197,7 +197,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b1aedc76c4f6446486484988103154b1"
+      "9054e5992af4eaf6065656df5fdfb233"
     ],
     [
       "ParSubst.subst",
@@ -211,7 +211,7 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_26c3b6ccfcbd94452acb614866f829fb_0",
         "binder_x_387d71a930d867c375624ccb57d4ec61_1", "bool_inversion",
-        "bool_typing", "constructor_distinct_ParSubst.EApp",
+        "bool_typing", "constructor_distinct_ParSubst.EAbs",
         "constructor_distinct_ParSubst.EVar", "disc_equation_ParSubst.EAbs",
         "disc_equation_ParSubst.EApp", "disc_equation_ParSubst.EVar",
         "equality_tok_Prims.LexTop@tok", "equation_ParSubst.is_var",
@@ -224,6 +224,8 @@
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_ParSubst.EAbs__0",
+        "projection_inverse_ParSubst.EAbs__1",
         "projection_inverse_ParSubst.EVar__0",
         "refinement_interpretation_ParSubst_Tm_refine_e857d5775d0df3c0b10d55cf5cd457f5",
         "refinement_interpretation_ParSubst_Tm_refine_ed6540358c59e4bc9dd4fdb32776aaf9",
@@ -234,7 +236,7 @@
         "typing_ParSubst.uu___is_EVar", "well-founded-ordering-on-nat"
       ],
       0,
-      "94d29585706d94d5a9b27c07e501dcda"
+      "3f5a05e30409a0021deea8340fbb70ba"
     ],
     [
       "ParSubst.subst",
@@ -243,7 +245,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "38af1cf5d69bfbb669f75362dd06288e"
+      "ea45cab3c246dc9f5fb6d66b1c14a756"
     ],
     [
       "ParSubst.subst_eabs",
@@ -259,7 +261,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "deca225436389eadb6683e6ed613f587"
+      "8d5b8f668eeafeaf8355e1edc41952d3"
     ],
     [
       "ParSubst.subst_eabs",
@@ -268,7 +270,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3434f34bf838a205892142f33e52dbd4"
+      "24a1659bc6fd7e0f8f17af6ed067344e"
     ],
     [
       "ParSubst.subst_extensional",
@@ -277,7 +279,7 @@
       1,
       [ "@query", "assumption_ParSubst.exp_haseq" ],
       0,
-      "f44e915830918217a01ec075a8008b35"
+      "12b65ed32a21025b09f931a9cff540b6"
     ],
     [
       "ParSubst.subst_extensional",
@@ -294,11 +296,10 @@
         "equation_ParSubst.sub", "equation_ParSubst.var",
         "equation_Prims.nat", "function_token_typing_Prims.nat",
         "kinding_ParSubst.exp@tok",
-        "refinement_interpretation_ParSubst_Tm_refine_d4ba12e293918eb1d428c76033e258fe",
-        "unit_typing"
+        "refinement_interpretation_ParSubst_Tm_refine_d4ba12e293918eb1d428c76033e258fe"
       ],
       0,
-      "71015af997ed7ad985b173bb175b23fa"
+      "ac9262a613bf2ad24c192167cb9b45d6"
     ],
     [
       "ParSubst.test_hoist",
@@ -312,11 +313,12 @@
         "ParSubst_interpretation_Tm_arrow_b42d65321775e43d5dcc18dbd5914b1f",
         "ParSubst_interpretation_Tm_arrow_ffde041010018e98855f775572cc70ce",
         "ParSubst_pretyping_26c3b6ccfcbd94452acb614866f829fb",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_ParSubst.EAbs",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_ParSubst.sub", "equation_ParSubst.subst_eabs",
         "equation_ParSubst.var", "equation_Prims.nat",
-        "equation_with_fuel_ParSubst.subst.fuel_instrumented",
+        "equation_with_fuel_ParSubst.subst.fuel_instrumented", "int_typing",
         "interpretation_ParSubst_Tm_abs_5de7c93e585c0cf6974fb8750043ad22",
         "interpretation_ParSubst_Tm_abs_eb241f25cceea816d33b5447d83a48ac",
         "lemma_ParSubst.subst_extensional",
@@ -328,7 +330,7 @@
         "typing_ParSubst_Tm_abs_5de7c93e585c0cf6974fb8750043ad22"
       ],
       0,
-      "474f7d1edded9cc73b1ebbe0b72f192e"
+      "d2b49a6d3ae5202316d4841e09c3d62d"
     ],
     [
       "ParSubst.test_hoist",
@@ -337,7 +339,7 @@
       1,
       [ "@query", "assumption_ParSubst.exp_haseq" ],
       0,
-      "be8429c922af87417d75edae2c5a6fc4"
+      "1771d2b257af3c471047e4a876af65f2"
     ]
   ]
 ]

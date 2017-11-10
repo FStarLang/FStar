@@ -33,6 +33,8 @@ type sconst =
   | Const_float       of double
   | Const_bytearray   of array<byte> * Range.range
   | Const_string      of string * Range.range                (* UTF-8 encoded *)
+  | Const_range_of                                           (* `range_of` primitive *)
+  | Const_set_range_of                                       (* `set_range_of` primitive *)
   | Const_range       of Range.range                         (* not denotable by the programmer *)
   | Const_reify                                              (* a coercion from a computation to a Tot term *)
   | Const_reflect     of Ident.lid                           (* a coercion from a Tot term to an l-computation type *)

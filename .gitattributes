@@ -19,3 +19,6 @@ kremlin_ref eol=lf
 # Checked modules
 *.checked binary
 *.checked.lax binary
+
+# Batch files
+*.bat eol=crlf

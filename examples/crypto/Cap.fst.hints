@@ -11,7 +11,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "35d80e6851a0f6f9dda94720be0915d6"
+      "3798b872ce72de2f14afe1650adca703"
     ],
     [
       "Cap.main",
@@ -22,14 +22,14 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "assumption_Cap.UTF8_inj",
+        "assumption_Cap.UTF8_inj", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.Some", "equation_Cap.capRead",
         "equation_Cap.f", "equation_Cert.ACLs.canRead",
-        "equation_Cert.ACLs.publicFile", "equation_Cert.ACLs.readme",
-        "equation_MAC.pkey", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.lbytes", "equation_SHA1.key",
-        "equation_SHA1.keysize", "equation_SHA1.tag",
+        "equation_Cert.ACLs.file", "equation_Cert.ACLs.publicFile",
+        "equation_Cert.ACLs.readme", "equation_MAC.pkey",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.tag",
         "function_token_typing_Cert.ACLs.readme",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_BarBar",
         "primitive_Prims.op_Equality",
@@ -41,11 +41,11 @@
         "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2",
         "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
         "token_correspondence_Cap.capRead",
-        "token_correspondence_MAC.key_prop",
+        "token_correspondence_MAC.key_prop", "typing_Cert.ACLs.canRead",
         "typing_Platform.Bytes.equalBytes", "unit_typing"
       ],
       0,
-      "c12502f057cb917bc69307bd6bbbcfe2"
+      "87484a4412d41b6b7f3a44c14b753e56"
     ]
   ]
 ]

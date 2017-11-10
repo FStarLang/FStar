@@ -7,19 +7,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_Prims.l_or", "equation_Prims.squash",
+        "@query", "equation_FStar.TSet.subset",
         "function_token_typing_TestSet.a", "function_token_typing_TestSet.b",
         "function_token_typing_TestSet.elt", "l_or-interp",
         "lemma_FStar.TSet.lemma_equal_intro",
-        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_subset",
-        "lemma_FStar.TSet.mem_union", "lemma_FStar.TSet.subset_mem",
-        "typing_FStar.TSet.singleton", "typing_FStar.TSet.union",
-        "unit_typing"
+        "lemma_FStar.TSet.mem_singleton", "lemma_FStar.TSet.mem_union",
+        "lemma_FStar.TSet.subset_mem", "typing_FStar.TSet.singleton",
+        "typing_FStar.TSet.union"
       ],
       0,
-      "a7559391a63a1b4020a237a12fc0b524"
+      "8d3d28d905652df3504d629a5946da6b"
     ]
   ]
 ]

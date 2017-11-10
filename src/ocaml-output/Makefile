@@ -11,7 +11,7 @@ OCAMLLEX=ocamllex
 FSTAR_OCAMLBUILD_EXTRAS ?= -cflag -g
 OCAMLBUILD=cd ../../ && ocamlbuild $(FSTAR_OCAMLBUILD_EXTRAS) -I src/ocaml-output -I src/basic/ml \
   -I src/parser/ml -I src/fstar/ml -I src/extraction/ml \
-  -I src/prettyprint/ml -I src/tactics/ml -I ulib/ml \
+  -I src/prettyprint/ml -I src/tactics/ml -I src/tests/ml -I ulib/ml \
   -j 24 -build-dir src/ocaml-output/_build -use-ocamlfind
 COMPILER_ML_LIB=FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Platform.cmx FStar_Unionfind.cmx
 PARSER_ML_LIB=FStar_Parser_Util.cmx
@@ -50,7 +50,7 @@ OCAML_BRANCH=$(shell ocaml get_branch.ml)
 # Complete build: generate fstar.exe and derive a fresh F#-compatible parser
 # from our reference parser (i.e. ../parser/parse.mly) using Menhir (if
 # possible).
-all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/parse.fsy fstar.exe install-compiler-lib
+all: ../extraction/ml/FStar_Extraction_ML_PrintML.ml ../parser/parse.fsy fstar.exe tests.exe install-compiler-lib
 
 # Choose the correct version of the ML prettyprinter, based on OCaml version
 ../extraction/ml/FStar_Extraction_ML_PrintML.ml:
@@ -136,6 +136,11 @@ FStar_Parser_Parse.ml: parse.mly
 	fi
 	cat parse.ml >> $@
 	rm parse.ml parse.mli
+
+tests.exe: export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+tests.exe: fstar.exe
+	$(OCAMLBUILD) FStar_Tests_Main.native
+	cp -f _build/src/tests/ml/FStar_Tests_Main.native ../../bin/$@
 
 # always bump version for a release; always bump it when recompiling so that one
 # can easily help debugging

@@ -618,7 +618,7 @@ let field_projector_prefix = Ident.reserved_prefix ^ "proj__"
    examples/preorders/MRefHeap.fst (even after regenerating hints), it
    will produce the following error:
 
-   fstar.exe  --use_hints --verify_module MRefHeap MRefHeap.fst
+   fstar.exe  --use_hints MRefHeap.fst
    ./MRefHeap.fst(55,51-58,27): (Error) Unknown assertion failed
    Verified module: MRefHeap (2150 milliseconds)
    1 error was reported (see above)

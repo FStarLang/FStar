@@ -15,7 +15,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "33317bf873c5fa6fd005d8ec26c651eb"
+      "486ea97a7655456a9d2d000fbfa51052"
     ],
     [
       "MAC.__proj__Entry__item__k",
@@ -24,7 +24,7 @@
       1,
       [ "@query" ],
       0,
-      "2f292defea624acf552d867f3fba28cc"
+      "6d9b56e9aab060cc99d222d482346ed6"
     ],
     [
       "MAC.__proj__Entry__item__t",
@@ -35,10 +35,10 @@
         "@MaxIFuel_assumption", "@query", "equation_Platform.Bytes.bytes",
         "equation_SHA1.text", "proj_equation_MAC.Entry_k",
         "projection_inverse_MAC.Entry_k",
-        "refinement_interpretation_MAC_Tm_refine_efe335931539402e9fdf173d2969658e"
+        "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f"
       ],
       0,
-      "8a39c6df00ca9dabddf03ff11372b654"
+      "c3f110a6190f9e3a183a89ab54392a93"
     ],
     [
       "MAC.__proj__Entry__item__m",
@@ -47,20 +47,16 @@
       1,
       [ "@query" ],
       0,
-      "a5b599b50a390297c82b99f1b56af938"
+      "5290dcec47f2f63964ae5ec9accf7b5c"
     ],
     [
       "MAC.mac",
       1,
       2,
       1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
+      [ "@query" ],
       0,
-      "90ce3f073b26c524709a4adb0c069b4d"
+      "4550cfc69e1214bce68efbf816abf51c"
     ],
     [
       "MAC.mac",
@@ -69,7 +65,7 @@
       1,
       [ "@query" ],
       0,
-      "79b6844cdd6ce2b7e3b8133e856bc182"
+      "468a00d5200dd2a040a589e5eca4aa9a"
     ],
     [
       "MAC.verify",
@@ -78,20 +74,16 @@
       1,
       [ "@query" ],
       0,
-      "69c49f2b2953ff92e3b751e23df26f83"
+      "41f1beaa5311d3f5b9d199cac810878a"
     ],
     [
       "MAC.verify",
       2,
       2,
       1,
-      [
-        "@query", "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Preorder.preorder_rel",
-        "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
-      ],
+      [ "@query" ],
       0,
-      "954ff131fa062bf2618de744b2ce2f46"
+      "52872a19c3c47b8b22fa49012c005f09"
     ],
     [
       "MAC.keygen",
@@ -105,7 +97,7 @@
         "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2"
       ],
       0,
-      "f4abea8e361703efaa33b96e8d60a632"
+      "b10c3e9ec5932805edc9d014cb27b65f"
     ],
     [
       "MAC.mac",
@@ -145,7 +137,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_SHA1.hmac_sha1"
       ],
       0,
-      "78b40a05e74d6deeed267548967643b4"
+      "ad79ab429cdf47eb1ac06f2d15ada913"
     ],
     [
       "MAC.verify",
@@ -159,6 +151,7 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
         "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_MAC.entry", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
@@ -169,30 +162,16 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "34cec98fb3315f06a99a48c4510cdf80"
+      "36f2e8d737e4ff9ddfb2e9d14eb7380e"
     ],
     [
       "MAC.verify",
       4,
       2,
-      2,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "data_elim_FStar.Pervasives.Native.Some", "data_elim_MAC.Entry",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_SHA1.key", "equation_SHA1.keysize", "equation_SHA1.text",
-        "fuel_guarded_inversion_MAC.entry", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_MAC_Tm_refine_41dd6cceb17df1e54d0ecf64f0496d0f",
-        "refinement_interpretation_MAC_Tm_refine_61aeee88c37953ca4933a44381e61e4a",
-        "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
-        "refinement_interpretation_Platform.Bytes_Tm_refine_ad9cde64c932cdae765806f65e24e93b",
-        "typing_Platform.Bytes.equalBytes"
-      ],
+      1,
+      [ "@query" ],
       0,
-      "70d898e7c00b6990acfa41d2f9c5b0aa"
+      "a42807816bd18ca8d8defc9cbab70f71"
     ]
   ]
 ]

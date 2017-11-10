@@ -20,7 +20,7 @@
         "true_interp"
       ],
       0,
-      "4240d7df630a598166be43d919036567"
+      "2f6072175eee6a01479e2a0a70ea0b21"
     ],
     [
       "Pruning.f",
@@ -32,6 +32,7 @@
         "FStar.Integers_pretyping_86a3501364cba672e9d2365a0f8fa657",
         "assumption_Prims.HasEq_int",
         "constructor_distinct_FStar.Integers.Signed",
+        "constructor_distinct_FStar.Integers.Unsigned",
         "data_typing_intro_FStar.Integers.Unsigned@tok",
         "equality_tok_FStar.Integers.Signed@tok",
         "equation_FStar.Algebra.Monoid.intro_monoid",
@@ -41,17 +42,15 @@
         "function_token_typing_FStar.Algebra.Monoid.nat_plus_monoid",
         "function_token_typing_Prims.nat", "int_typing",
         "proj_equation_FStar.Algebra.Monoid.Monoid_unit",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Algebra.Monoid.Monoid_unit",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "refinement_interpretation_FStar.Integers_Tm_refine_67babc72844915facd9a3c39c4669059",
-        "refinement_interpretation_Pruning_Tm_refine_1a8e64b9e6d92294b5d2c211dc109d2c",
         "typing_FStar.Algebra.Monoid.__proj__Monoid__item__unit",
         "typing_FStar.Integers.v", "typing_tok_FStar.Integers.Signed@tok"
       ],
       0,
-      "002b77f5f42052fd75a41e0a68050f04"
+      "1a94505b02d07d73cc42583408bcb49b"
     ],
     [
       "Pruning.uu___226",
@@ -69,7 +68,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "3b53b2add0e270722eaed432f509608f"
+      "a45532d53bac9673cc63be1d1489c13f"
     ],
     [
       "Pruning.uu___227",
@@ -87,7 +86,7 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "a33ed067c977e253b5ec5e5371df3edd"
+      "65e01a5264386a4bb4cfc2df40e95ac3"
     ]
   ]
 ]

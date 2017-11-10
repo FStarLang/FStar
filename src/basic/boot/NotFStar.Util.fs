@@ -817,12 +817,6 @@ let save_value_to_file (fname:string) value =
     printfn "Failed to write value to file because: %A" e;
     raise e
 
-//
-//  // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextWriter` to be passed to `output_value`.
-//  //this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.
-//  use writer = new System.IO.StreamWriter(fname) in
-//  output_value writer value
-
 let load_value_from_file (fname:string) =
   // the older version of `FSharp.Compatibility.OCaml` that we're using expects a `TextReader` to be passed to `input_value`.
   // this is inconsistent with OCaml's behavior (binary encoding), which appears to be corrected in more recent versions of `FSharp.Compatibility.OCaml`.

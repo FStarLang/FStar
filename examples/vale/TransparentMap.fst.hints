@@ -1,5 +1,5 @@
 [
-  "ë*6\u0019Ñ\u0019¤\fÁì~Ë0\u001e\u0014Ž",
+  "Ô\u000bÍ\u0010œŸè\u0004\u0004\u000e}\u0014i…hœ",
   [
     [
       "TransparentMap.upd",
@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "47542dd2343c58f4b07976ebb4000ef0"
+      "62a2483bd350b4e8ecda75022484ba18"
     ],
     [
       "TransparentMap.upd",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "26000c5880c95dc573754d3fb3875541"
+      "28f6bba3cc2ac61a0da7aa9edd57e22d"
     ],
     [
       "TransparentMap.sel_upd1",
@@ -31,10 +31,10 @@
         "@query", "equation_TransparentMap.sel",
         "equation_TransparentMap.upd",
         "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
-        "primitive_Prims.op_Equality", "unit_typing"
+        "primitive_Prims.op_Equality"
       ],
       0,
-      "d39f9151b38a23769b22057bb0d2d040"
+      "b052f75042c63a5cd37683c33d8735af"
     ],
     [
       "TransparentMap.sel_upd2",
@@ -45,11 +45,10 @@
         "@query", "equation_TransparentMap.sel",
         "equation_TransparentMap.upd",
         "interpretation_TransparentMap_Tm_abs_30b0e4a5afaec2e1b3f4d8e46a5ee071",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
-        "unit_typing"
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "0a3198c2c144778c6e48674f0b06fb41"
+      "9ad81209965ef74e51d5b636aef200da"
     ],
     [
       "TransparentMap.lemma_equal_intro",
@@ -58,11 +57,10 @@
       0,
       [
         "@query", "equation_FStar.FunctionalExtensionality.feq",
-        "equation_TransparentMap.equal", "equation_TransparentMap.sel",
-        "unit_typing"
+        "equation_TransparentMap.equal", "equation_TransparentMap.sel"
       ],
       0,
-      "4904f958005f61711966136056959989"
+      "3d9d1bf5e86c1af9335f19ba105edd7b"
     ],
     [
       "TransparentMap.lemma_equal_elim",
@@ -75,20 +73,19 @@
         "equation_FStar.FunctionalExtensionality.efun",
         "equation_Prims.eqtype", "equation_TransparentMap.equal",
         "equation_TransparentMap.map",
-        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "unit_typing"
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9cb86be64e85ee57576634d762565e95"
+      "3c58780e1c711ded18d5e948988757fe"
     ],
     [
       "TransparentMap.lemma_equal_refl",
       1,
       1,
       0,
-      [ "@query", "lemma_TransparentMap.lemma_equal_intro", "unit_typing" ],
+      [ "@query", "lemma_TransparentMap.lemma_equal_intro" ],
       0,
-      "9d34cdf3a672f34f6aa5c2a04fb22f5b"
+      "eb7bb351a82bf8acf99ce202d00df456"
     ]
   ]
 ]

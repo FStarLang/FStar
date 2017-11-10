@@ -124,21 +124,34 @@ let monad_signature env m s =
   | _ -> fail()
 
 let tc_eff_decl env0 (ed:Syntax.eff_decl) =
-  assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
-  let effect_params_un, signature_un, opening = SS.open_term' ed.binders ed.signature in
+//  printfn "initial eff_decl :\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
+  let open_annotated_univs, annotated_univ_names = SS.univ_var_opening ed.univs in
+  let open_univs n_binders t =
+      SS.subst (SS.shift_subst n_binders open_annotated_univs) t
+  in
+  let open_univs_binders n_binders bs =
+      SS.subst_binders (SS.shift_subst n_binders open_annotated_univs) bs
+  in
+  let n_effect_params = List.length ed.binders in
+  let effect_params_un, signature_un, opening =
+      SS.open_term' (open_univs_binders 0 ed.binders)
+                    (open_univs n_effect_params ed.signature) in
   let effect_params, env, _ = tc_tparams env0 effect_params_un in
   let signature, _    = tc_trivial_guard env signature_un in
   let ed = {ed with binders=effect_params;
                     signature=signature} in
   //open ed's operations with respect to the effect parameters that are already in scope
-  let ed = match effect_params with
-    | [] -> ed
+  let ed =
+    match effect_params, annotated_univ_names with
+    | [], [] -> ed
     | _ ->
-        let op ts =
-            assert (fst ts = []);
-            let t1 = SS.subst opening (snd ts) in
-            ([], t1) in
+        let op (us, t) =
+            let n_us = List.length us in
+            us, SS.subst (SS.shift_subst n_us opening)
+                         (open_univs (n_effect_params + n_us) t)
+        in
         { ed with
+            univs         = annotated_univ_names;
             ret_wp        =op ed.ret_wp
             ; bind_wp     =op ed.bind_wp
             ; return_repr =op ed.return_repr
@@ -155,26 +168,37 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
             ; actions     = List.map (fun a ->
             { a with
                 action_defn = snd (op ([], a.action_defn));
-                action_typ = snd (op ([], a.action_typ)) }) ed.actions
+                action_typ  = snd (op ([], a.action_typ)) }) ed.actions
         }
   in
+//  printfn "eff_decl after opening:\n\t%s\n" (FStar.Syntax.Print.eff_decl_to_string false ed);
    //Returns (a:Type) and M.WP a, for a fresh name a
   let wp_with_fresh_result_type env mname signature =
-       let fail t = raise (Error(Err.unexpected_signature_for_monad env mname t, range_of_lid mname)) in
+       let fail t =
+           raise (Error(Err.unexpected_signature_for_monad env mname t,
+                        range_of_lid mname)) in
        match (SS.compress signature).n with
-          | Tm_arrow(bs, c) ->
-            let bs = SS.open_binders bs in
-            begin match bs with
-                | [(a, _);(wp, _)] -> a, wp.sort
-                | _ -> fail signature
-            end
-          | _ -> fail signature
+       | Tm_arrow(bs, c) ->
+         let bs = SS.open_binders bs in
+         begin match bs with
+               | [(a, _);(wp, _)] -> a, wp.sort
+               | _ -> fail signature
+         end
+       | _ -> fail signature
   in
   let a, wp_a = wp_with_fresh_result_type env ed.mname ed.signature in
   let fresh_effect_signature ()  =
-    //we type-check the signature_un again, because we want a fresh universe
-    let signature, _ = tc_trivial_guard env signature_un in
-    wp_with_fresh_result_type env ed.mname signature in
+      match annotated_univ_names with
+      | [] ->
+        //we type-check the signature_un again, because we want a fresh universe
+        let signature, _ = tc_trivial_guard env signature_un in
+        wp_with_fresh_result_type env ed.mname signature
+      | _ ->
+        let _, signature =
+            Env.inst_tscheme (annotated_univ_names,
+                              Subst.close_univ_vars annotated_univ_names signature) in
+        wp_with_fresh_result_type env ed.mname signature
+  in
 
   //put the signature in the environment to prevent generalizing its free universe variables until we're done
   let env = Env.push_bv env (S.new_bv None ed.signature) in
@@ -187,8 +211,15 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
                         (Print.term_to_string (S.bv_to_name a))
                         (Print.term_to_string a.sort);
 
-  let check_and_gen' env (_,t) k =
-    check_and_gen env t k in
+  let check_and_gen' env (us,t) k =
+      match annotated_univ_names with
+      | [] -> check_and_gen env t k
+      | _::_ ->
+        let (us, t) = SS.subst_tscheme open_annotated_univs (us, t) in
+        let us, t = SS.open_univ_vars us t in
+        let _ = tc_check_trivial_guard env t k in
+        us, SS.close_univ_vars us t
+  in
 
   let return_wp =
     let expected_k = U.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
@@ -419,8 +450,22 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl) =
 
   //generalize and close
   (* QUESTION (KM) : Why do we close with ed.binders and not effect_params ?? *)
-  let t = U.arrow ed.binders (S.mk_Total ed.signature) in
-  let (univs, t) = TcUtil.generalize_universes env0 t in
+  let t0 = U.arrow ed.binders (S.mk_Total ed.signature) in
+  let (univs, t) =
+      let gen_univs, t = TcUtil.generalize_universes env0 t0 in
+      match annotated_univ_names with
+      | [] -> gen_univs, t
+      | _ ->
+        if List.length gen_univs = List.length annotated_univ_names
+        && List.forall2 (fun u1 u2 -> FStar.Syntax.Syntax.order_univ_name u1 u2 = 0)
+                         gen_univs
+                         annotated_univ_names
+        then gen_univs, t
+        else raise (Error(BU.format2 "Expected an effect definition with %s universes; but found %s"
+                                        (BU.string_of_int (List.length annotated_univ_names))
+                                        (BU.string_of_int (List.length gen_univs)),
+                          ed.signature.pos))
+  in
   let signature = match effect_params, (SS.compress t).n with
     | [], _ -> t
     | _, Tm_arrow(_, c) -> U.comp_result c

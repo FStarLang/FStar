@@ -75,26 +75,26 @@
     <Compile Include="boot/FStar.List.fsi" />
     <Compile Include="boot/FStar.List.fs" />
     <Compile Include="boot/FStar.Util.fsi" />
-    <Compile Include="boot/FStar.Util.fs" />
+    <Compile Include="boot/NotFStar.Util.fs" />
     <Compile Include="boot/FStar.Bytes.fsi" />
-    <Compile Include="boot/FStar.Bytes.fs" />
+    <Compile Include="boot/NotFStar.Bytes.fs" />
     <Compile Include="boot/FStar.Dyn.fsi" />
-    <Compile Include="boot/FStar.Dyn.fs" />
+    <Compile Include="boot/NotFStar.Dyn.fs" />
     <Compile Include="boot/FStar.BigInt.fsi" />
-    <Compile Include="boot/FStar.BigInt.fs" />
+    <Compile Include="boot/NotFStar.BigInt.fs" />
     <Compile Include="profiling.fs" />
     <Compile Include="FStar.Range.fsi" />
     <Compile Include="FStar.Range.fs" />
     <Compile Include="FStar.Platform.fsi" />
-    <Compile Include="FStar.Platform.fs" />
+    <Compile Include="NotFStar.Platform.fs" />
     <Compile Include="FStar.Common.fs" />
     <Compile Include="FStar.Getopt.fsi" />
-    <Compile Include="FStar.Getopt.fs" />
+    <Compile Include="NotFStar.Getopt.fs" />
     <Compile Include="FStar.Ident.fs" />
     <Compile Include="FStar.Options.fsi" />
     <Compile Include="FStar.Options.fs" />
     <Compile Include="FStar.Unionfind.fsi" />
-    <Compile Include="FStar.Unionfind.fs" />
+    <Compile Include="NotFStar.Unionfind.fs" />
     <Compile Include="FStar.Const.fs" />
     <Compile Include="FStar.Order.fs" />
     <Compile Include="FStar.Errors.fs" />
@@ -108,6 +108,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>$(MSBuildProgramFiles32)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PPrint">

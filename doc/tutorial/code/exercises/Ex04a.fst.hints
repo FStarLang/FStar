@@ -16,7 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f9bbe2f3378893147bfe2cdffbc855b4"
+      "3e84df389c3df86070a375090d098db9"
     ],
     [
       "Ex04a.append",
@@ -27,10 +27,11 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_099eb87e5bbf2ec48455272706edb9bc_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cd9ebf6e6e0d25975621c7359bd52639"
+      "773fb8deecff662e2e396bbd9ab6200a"
     ]
   ]
 ]
