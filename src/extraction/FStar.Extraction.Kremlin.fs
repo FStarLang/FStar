@@ -30,12 +30,14 @@ open FStar.Const
 open FStar.BaseTypes
 
 module BU = FStar.Util
+module FC = FStar.Const
 
 (** CHANGELOG
 - v24: Added a single constructor to the expression type to reflect the addition
   of type applications to the ML extraction language.
 - v25: Added a number of type parameters for globals.
 - v26: Flags for DExternal and all the DType's
+- v27: Added PConstant
 *)
 
 (* COPY-PASTED ****************************************************************)
@@ -133,6 +135,7 @@ and pattern =
   | PCons of (ident * list<pattern>)
   | PTuple of list<pattern>
   | PRecord of list<(ident * pattern)>
+  | PConstant of constant
 
 and width =
   | UInt8 | UInt16 | UInt32 | UInt64
@@ -172,7 +175,7 @@ and typ =
 (** Versioned binary writing/reading of ASTs *)
 
 type version = int
-let current_version: version = 26
+let current_version: version = 27
 
 type file = string * program
 type binary_format = version * list<file>
@@ -745,12 +748,25 @@ and translate_branch env (pat, guard, expr) =
   else
     failwith "todo: translate_branch"
 
+and translate_width = function
+  | None -> CInt
+  | Some (FC.Signed, FC.Int8) -> Int8
+  | Some (FC.Signed, FC.Int16) -> Int16
+  | Some (FC.Signed, FC.Int32) -> Int32
+  | Some (FC.Signed, FC.Int64) -> Int64
+  | Some (FC.Unsigned, FC.Int8) -> UInt8
+  | Some (FC.Unsigned, FC.Int16) -> UInt16
+  | Some (FC.Unsigned, FC.Int32) -> UInt32
+  | Some (FC.Unsigned, FC.Int64) -> UInt64
+
 and translate_pat env p =
   match p with
   | MLP_Const MLC_Unit ->
       env, PUnit
   | MLP_Const (MLC_Bool b) ->
       env, PBool b
+  | MLP_Const (MLC_Int (s, sw)) ->
+      env, PConstant (translate_width sw, s)
   | MLP_Var name ->
       let env = extend env name false in
       env, PVar ({ name = name; typ = TAny; mut = false })
