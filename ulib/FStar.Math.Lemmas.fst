@@ -528,7 +528,7 @@ let modulo_division_lemma a b c =
   division_multiplication_lemma a b c;
   euclidean_division_definition (a / b) c
 
-#set-options "--z3rlimit 150 --max_fuel 2 --max_ifuel 2"
+#set-options "--z3rlimit 150"
 
 val modulo_modulo_lemma: a:nat -> b:pos -> c:pos ->
     Lemma ( (a % (b * c)) % b = a % b )
