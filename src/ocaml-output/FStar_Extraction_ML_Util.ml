@@ -187,8 +187,8 @@ let udelta_unfold:
       FStar_Extraction_ML_Syntax.mlty FStar_Pervasives_Native.option
   =
   fun g  ->
-    fun uu___369_317  ->
-      match uu___369_317 with
+    fun uu___370_317  ->
+      match uu___370_317 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n1) ->
           let uu____326 = FStar_Extraction_ML_UEnv.lookup_ty_const g n1 in
           (match uu____326 with
@@ -226,8 +226,8 @@ let eff_leq:
          ,FStar_Extraction_ML_Syntax.E_IMPURE ) -> true
       | uu____355 -> false
 let eff_to_string: FStar_Extraction_ML_Syntax.e_tag -> Prims.string =
-  fun uu___370_362  ->
-    match uu___370_362 with
+  fun uu___371_362  ->
+    match uu___371_362 with
     | FStar_Extraction_ML_Syntax.E_PURE  -> "Pure"
     | FStar_Extraction_ML_Syntax.E_GHOST  -> "Ghost"
     | FStar_Extraction_ML_Syntax.E_IMPURE  -> "Impure"
@@ -459,8 +459,8 @@ let is_type_abstraction:
     (('Auu____892,'Auu____891) FStar_Util.either,'Auu____890)
       FStar_Pervasives_Native.tuple2 Prims.list -> Prims.bool
   =
-  fun uu___371_906  ->
-    match uu___371_906 with
+  fun uu___372_906  ->
+    match uu___372_906 with
     | (FStar_Util.Inl uu____917,uu____918)::uu____919 -> true
     | uu____942 -> false
 let is_xtuple:
@@ -496,8 +496,8 @@ let resugar_exp:
     | uu____1010 -> e
 let record_field_path:
   FStar_Ident.lident Prims.list -> Prims.string Prims.list =
-  fun uu___372_1017  ->
-    match uu___372_1017 with
+  fun uu___373_1017  ->
+    match uu___373_1017 with
     | f::uu____1023 ->
         let uu____1026 = FStar_Util.prefix f.FStar_Ident.ns in
         (match uu____1026 with
