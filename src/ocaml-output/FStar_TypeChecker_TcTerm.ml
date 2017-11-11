@@ -2959,9 +2959,26 @@ and tc_constant:
       | FStar_Const.Const_bool uu____6792 -> FStar_Syntax_Util.t_bool
       | FStar_Const.Const_int (uu____6793,FStar_Pervasives_Native.None ) ->
           FStar_Syntax_Syntax.t_int
-      | FStar_Const.Const_int
-          (uu____6804,FStar_Pervasives_Native.Some uu____6805) ->
-          failwith "machine integers should be desugared"
+      | FStar_Const.Const_int (uu____6804,FStar_Pervasives_Native.Some msize)
+          ->
+          FStar_Syntax_Syntax.tconst
+            (match msize with
+             | (FStar_Const.Signed ,FStar_Const.Int8 ) ->
+                 FStar_Parser_Const.int8_lid
+             | (FStar_Const.Signed ,FStar_Const.Int16 ) ->
+                 FStar_Parser_Const.int16_lid
+             | (FStar_Const.Signed ,FStar_Const.Int32 ) ->
+                 FStar_Parser_Const.int32_lid
+             | (FStar_Const.Signed ,FStar_Const.Int64 ) ->
+                 FStar_Parser_Const.int64_lid
+             | (FStar_Const.Unsigned ,FStar_Const.Int8 ) ->
+                 FStar_Parser_Const.uint8_lid
+             | (FStar_Const.Unsigned ,FStar_Const.Int16 ) ->
+                 FStar_Parser_Const.uint16_lid
+             | (FStar_Const.Unsigned ,FStar_Const.Int32 ) ->
+                 FStar_Parser_Const.uint32_lid
+             | (FStar_Const.Unsigned ,FStar_Const.Int64 ) ->
+                 FStar_Parser_Const.uint64_lid)
       | FStar_Const.Const_string uu____6820 -> FStar_Syntax_Syntax.t_string
       | FStar_Const.Const_float uu____6825 -> FStar_Syntax_Syntax.t_float
       | FStar_Const.Const_char uu____6826 -> FStar_Syntax_Syntax.t_char
@@ -6186,9 +6203,7 @@ and build_let_rec_env:
                        FStar_Util.format4
                          "From its type %s, the definition of `let rec %s` expects a function with %s, but %s"
                          uu____14888 uu____14889 formals_msg actuals_msg in
-                     FStar_Exn.raise
-                       (FStar_Errors.Error
-                          (msg, (lbdef.FStar_Syntax_Syntax.pos))))
+                     FStar_Util.print1 "%s\n" msg)
                   else ();
                   (let quals =
                      FStar_TypeChecker_Env.lookup_effect_quals env
