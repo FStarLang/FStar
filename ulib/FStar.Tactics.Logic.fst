@@ -24,10 +24,7 @@ let rec l_revert_all (bs:binders) : tactic unit =
 private val fa_intro_lem : (#a:Type) -> (#p : (a -> Type)) ->
                            (x:a -> squash (p x)) ->
                            Lemma (forall (x:a). p x)
-(* let fa_intro_lem #a #p f = FStar.Classical.forall_intro #a #p (fun x -> f x <: Lemma (p x)): AR: this does not go with 2-phase *)
-let fa_intro_lem #a #p f =
-  let aux (x:a) :Lemma (p x) = f x in
-  FStar.Classical.forall_intro #a #p aux
+let fa_intro_lem #a #p f = FStar.Classical.forall_intro #a #p (fun x -> f x <: Lemma (p x))
 
 let forall_intro : tactic binder =
     g <-- cur_goal;
