@@ -456,10 +456,10 @@ let contains_ref_grref_of
   (#i: rid)
   (a: aref i)
   (v: Type0)
-  (rel: preorder v{exists h' . aref_live_at h' a v rel})
+  (rel: preorder v)
 : Lemma
-  (requires True)
-  (ensures ((contains_ref (grref_of a v rel) m <==> aref_live_at m a v rel)))
+  (requires (exists h' . aref_live_at h' a v rel))
+  (ensures ((exists h' . aref_live_at h' a v rel) /\ (contains_ref (grref_of a v rel) m <==> aref_live_at m a v rel)))
   [SMTPatOr [
     [SMTPat (contains_ref (grref_of a v rel) m)];
     [SMTPat (aref_live_at m a v rel)];
@@ -471,10 +471,10 @@ let aref_of_grref_of
   (#i: rid)
   (a: aref i)
   (v: Type0)
-  (rel: preorder v{exists h . aref_live_at h a v rel})
+  (rel: preorder v)
 : Lemma
-  (requires True)
-  (ensures (aref_of (grref_of a v rel) == a))
+  (requires (exists h . aref_live_at h a v rel))
+  (ensures ((exists h. aref_live_at h a v rel) /\ aref_of (grref_of a v rel) == a))
   [SMTPat (aref_of (grref_of a v rel))]
 = ()
 
@@ -485,10 +485,10 @@ let addr_of_grref_of
   (#i: rid)
   (a: aref i)
   (t: Type0)
-  (rel: preorder t{exists h . aref_live_at h a t rel})
+  (rel: preorder t)
 : Lemma
-  (requires True)
-  (ensures (addr_of (grref_of a t rel) == addr_of_aref a))
+  (requires (exists h . aref_live_at h a t rel))
+  (ensures ((exists h . aref_live_at h a t rel) /\ addr_of (grref_of a t rel) == addr_of_aref a))
   [SMTPat (addr_of (grref_of a t rel))]
 = ()
 
@@ -497,10 +497,10 @@ let is_mm_grref_of
   (#i: rid)
   (a: aref i)
   (t: Type0)
-  (rel: preorder t{exists h . aref_live_at h a t rel})
+  (rel: preorder t)
 : Lemma
-  (requires True)
-  (ensures (is_mm (grref_of a t rel) == aref_is_mm a))
+  (requires (exists h . aref_live_at h a t rel))
+  (ensures ((exists h . aref_live_at h a t rel) /\ is_mm (grref_of a t rel) == aref_is_mm a))
   [SMTPat (is_mm (grref_of a t rel))]
 = ()
 
@@ -509,11 +509,11 @@ let unused_in_gref_of
   (#i: rid)
   (a: aref i)
   (v: Type0)
-  (rel: preorder v{exists h . aref_live_at h a v rel})
+  (rel: preorder v)
   (h: t)
 : Lemma
-  (requires True)
-  (ensures ((unused_in (grref_of a v rel) h <==> aref_unused_in a h)))
+  (requires (exists h . aref_live_at h a v rel))
+  (ensures ((exists h . aref_live_at h a v rel) /\ (unused_in (grref_of a v rel) h <==> aref_unused_in a h)))
   [SMTPat (unused_in (grref_of a v rel) h)]
 = ()
 
@@ -523,10 +523,10 @@ let sel_rref_of
   (a: aref i)
   (v: Type0)
   (rel: preorder v)
-  (h1:t) (h2: t{aref_live_at h1 a v rel /\ aref_live_at h2 a v rel})
+  (h1 h2: t)
 : Lemma
-  (requires True)
-  (ensures (sel h1 (rref_of h2 a v rel) == sel h1 (grref_of a v rel)))
+  (requires (aref_live_at h1 a v rel /\ aref_live_at h2 a v rel))
+  (ensures (aref_live_at h2 a v rel /\ sel h1 (rref_of h2 a v rel) == sel h1 (grref_of a v rel)))
   [SMTPat (sel h1 (rref_of h2 a v rel))]
 = ()
 
@@ -536,10 +536,10 @@ let upd_rref_of
   (a: aref i)
   (v: Type0)
   (rel: preorder v)
-  (h1:t) (h2:t{aref_live_at h1 a v rel /\ aref_live_at h2 a v rel})
+  (h1 h2: t)
   (x: v)
 : Lemma
-  (requires True)
-  (ensures (upd h1 (rref_of h2 a v rel) x == upd h1 (grref_of a v rel) x))
+  (requires (aref_live_at h1 a v rel /\ aref_live_at h2 a v rel))
+  (ensures (aref_live_at h2 a v rel /\ upd h1 (rref_of h2 a v rel) x == upd h1 (grref_of a v rel) x))
   [SMTPat (upd h1 (rref_of h2 a v rel) x)]
 = ()
