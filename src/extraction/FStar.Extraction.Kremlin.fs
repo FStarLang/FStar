@@ -788,14 +788,17 @@ and translate_constant c: expr =
       EUnit
   | MLC_Bool b ->
       EBool b
+  | MLC_String s ->
+      if FStar.String.list_of_string s
+      |> BU.for_some (fun (c:Char.char) -> c = Char.char_of_int 0)
+      then failwith (BU.format1 "Refusing to translate a string literal that contains a null character: %s" s);
+      EString s
   | MLC_Int (s, Some _) ->
       failwith "impossible: machine integer not desugared to a function call"
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
   | MLC_Char _ ->
       failwith "todo: translate_expr [MLC_Char]"
-  | MLC_String _ ->
-      failwith "todo: translate_expr [MLC_String]"
   | MLC_Bytes _ ->
       failwith "todo: translate_expr [MLC_Bytes]"
   | MLC_Int (s, None) ->
