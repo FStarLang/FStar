@@ -296,7 +296,7 @@ val aref_of_gref_of
   (rel: preorder t)
 : Lemma
   (requires (exists h . aref_live_at h a t rel))
-  (ensures ((exists h . aref_live_at h a t rel) /\ (aref_of (gref_of a t rel) == a)))
+  (ensures ((exists h . aref_live_at h a t rel) /\ aref_of (gref_of a t rel) == a))
   [SMTPat (aref_of (gref_of a t rel))]
 
 (* Operators lowered to ref *)
@@ -307,7 +307,7 @@ let addr_of_gref_of
   (rel: preorder t)
 : Lemma
   (requires (exists h . aref_live_at h a t rel))
-  (ensures ((exists h . aref_live_at h a t rel) /\ (addr_of (gref_of a t rel) == addr_of_aref a)))
+  (ensures ((exists h . aref_live_at h a t rel) /\ addr_of (gref_of a t rel) == addr_of_aref a))
   [SMTPat (addr_of (gref_of a t rel))]
 = addr_of_aref_of (gref_of a t rel)
 
@@ -318,7 +318,7 @@ let is_mm_gref_of
   (rel: preorder t)
 : Lemma
   (requires (exists h . aref_live_at h a t rel))
-  (ensures ((exists h . aref_live_at h a t rel) /\ (is_mm (gref_of a t rel) == aref_is_mm a)))
+  (ensures ((exists h . aref_live_at h a t rel) /\ is_mm (gref_of a t rel) == aref_is_mm a))
   [SMTPat (is_mm (gref_of a t rel))]
 = is_mm_aref_of (gref_of a t rel)
 
@@ -342,7 +342,7 @@ let sel_ref_of
   (h1 h2: heap)
 : Lemma
   (requires (aref_live_at h1 a t rel /\ aref_live_at h2 a t rel))
-  (ensures (sel h1 (ref_of h2 a t rel) == sel h1 (gref_of a t rel)))
+  (ensures (aref_live_at h2 a t rel /\ sel h1 (ref_of h2 a t rel) == sel h1 (gref_of a t rel)))
   [SMTPat (sel h1 (ref_of h2 a t rel))]
 = ()
 
@@ -351,11 +351,11 @@ let upd_ref_of
   (a: aref)
   (t: Type0)
   (rel: preorder t)
-  (h1:heap) (h2: heap{aref_live_at h1 a t rel /\ aref_live_at h2 a t rel})
+  (h1 h2: heap)
   (x: t)
 : Lemma
-  (requires True)
-  (ensures (upd h1 (ref_of h2 a t rel) x == upd h1 (gref_of a t rel) x))
+  (requires (aref_live_at h1 a t rel /\ aref_live_at h2 a t rel))
+  (ensures (aref_live_at h2 a t rel /\ upd h1 (ref_of h2 a t rel) x == upd h1 (gref_of a t rel) x))
   [SMTPat (upd h1 (ref_of h2 a t rel) x)]
 = ()
 

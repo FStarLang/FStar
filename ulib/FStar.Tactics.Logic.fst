@@ -52,10 +52,7 @@ let split : tactic unit =
 private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
                             (a -> squash b) ->
                             Lemma (a ==> b)
-(* let imp_intro_lem #a #b f = FStar.Classical.impl_intro #a #b (fun x -> f x <: Lemma b): AR: this does not go with 2-phase *)
-let imp_intro_lem #a #b f =
-  let aux (x:a) :Lemma b = f x in
-  FStar.Classical.impl_intro #a #b aux
+let imp_intro_lem #a #b f = FStar.Classical.impl_intro #a #b (fun x -> f x <: Lemma b)
 
 let implies_intro : tactic binder =
     g <-- cur_goal;

@@ -33,10 +33,8 @@ let intro_sorted_pred (#a:eqtype) (f:tot_ord a) (s:seq a)
     g i j ;
     FStar.Squash.get_proof (f (index s i) (index s j))
   in
-  let aux' (i j:k:nat{k < length s}) :Lemma (i <= j ==> f (index s i) (index s j))
-    = FStar.Classical.arrow_to_impl (aux i j)
-  in
-  FStar.Classical.forall_intro_2 aux'
+  FStar.Classical.forall_intro_2 (fun (i j:k:nat{k < length s}) ->
+    FStar.Classical.arrow_to_impl (aux i j) <: Lemma (i <= j ==> f (index s i) (index s j)))
 
 val sorted_pred_cons_lemma :
   #a:eqtype ->
