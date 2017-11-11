@@ -4072,16 +4072,24 @@ let rec loc_aux_disjoint_loc_aux_includes
 let loc_disjoint_includes p1 p2 p1' p2' =
   regions_of_loc_monotonic p1 p1';
   regions_of_loc_monotonic p2 p2';
-  let pre (r:HH.rid) (n:nat) :Type0 =
-    Set.mem r (Ghost.reveal (Loc?.aux_regions p1')) /\ Set.mem n (Loc?.aux_addrs p1' r) /\
-    Set.mem r (Ghost.reveal (Loc?.aux_regions p2')) /\ Set.mem n (Loc?.aux_addrs p2' r)
+  let pre = //A rather brutal way to force inlining of pre and post in VC of the continuation
+    (fun r n ->
+      Set.mem r (Ghost.reveal (Loc?.aux_regions p1')) /\ Set.mem n (Loc?.aux_addrs p1' r) /\
+      Set.mem r (Ghost.reveal (Loc?.aux_regions p2')) /\ Set.mem n (Loc?.aux_addrs p2' r))
+    <: Tot ((r:HH.rid) -> (n:nat) -> GTot Type0)
+  in
+  let post =
+    (fun r n ->
+       pre r n /\
+       loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n))
+    <: Tot ((r:HH.rid) -> (n:nat) -> GTot Type0)
   in
   let f
     (r: HH.rid)
     (n: nat)
   : Lemma
     (requires (pre r n))
-    (ensures (pre r n /\ loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n)))
+    (ensures (post r n))
   = let l1 = Loc?.aux p1 r n in
     let l2 = Loc?.aux p2 r n in
     let l1' = Loc?.aux p1' r n in
@@ -4091,10 +4099,7 @@ let loc_disjoint_includes p1 p2 p1' p2' =
     loc_aux_disjoint_loc_aux_includes l2' l1 l1';
     loc_aux_disjoint_sym l2' l1'
   in
-  let g (r:HH.rid) (n:nat) :Lemma (pre r n ==> loc_aux_disjoint (Loc?.aux p1' r n) (Loc?.aux p2' r n))
-  = Classical.move_requires (f r) n
-  in
-  Classical.forall_intro_2 g  //AR: this used to be: Classical.forall_intro_2 (fun r -> Classical.move_requires (f r)) -- need to see why that doesn't work
+  Classical.forall_intro_2 (fun r -> Classical.move_requires (f r))
 
 let live_unused_in_disjoint_strong
   (#value1: typ)
@@ -4637,19 +4642,8 @@ let modifies_fresh_frame_popped_weak
     assert (Set.equal (addrs_of_loc_weak u r) (addrs_of_loc_weak s r));
     assert (Loc?.aux u r a == Loc?.aux s r a)
   in
-  let g'
-    (t: typ)
-    (p: pointer t)
-  : Lemma (
-      (Set.mem (frameOf p) (Ghost.reveal (Loc?.aux_regions s)) /\
-      Set.mem (as_addr p) (Loc?.aux_addrs s (frameOf p)) /\
-      (~ (Set.mem (as_addr p) (addrs_of_loc_weak s (frameOf p)))) /\
-      loc_aux_disjoint_pointer (Loc?.aux s (frameOf p) (as_addr p)) p /\
-      live h0 p) ==>
-      equal_values h0 p h3 p
-    ) = Classical.move_requires (g t) p
-  in
-  Classical.forall_intro_2 g'  //AR: again same pattern, there was no g'
+  let h = fun t -> Classical.move_requires (g t) in
+  Classical.forall_intro_2 h //AR: note
 
 let no_upd_popped #t h0 h1 b =
   let g = greference_of b in
