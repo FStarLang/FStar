@@ -1,8 +1,9 @@
 ﻿#light "off"
 module FStar.Tests.Unif
 //Unification tests
-open FSharp.Compatibility.OCaml
+//open FSharp.Compatibility.OCaml
 open FStar
+open FStar.All
 open FStar.Errors
 open FStar.Util
 open FStar.Syntax.Syntax
@@ -15,7 +16,9 @@ module P  = FStar.Syntax.Print
 module N = FStar.TypeChecker.Normalize
 module Rel = FStar.TypeChecker.Rel
 module Env = FStar.TypeChecker.Env
+module BU = FStar.Util
 open FStar.TypeChecker.Common
+open FStar.TypeChecker.Env
 open FStar.Ident
 open FStar.Range
 open FStar.Tests.Util
@@ -37,15 +40,15 @@ let guard_eq i g g' =
         | _ -> false, g, g' in
     if not b then
     let msg =
-        Printf.sprintf "Test %d failed:\n\t\
+        BU.format3 "Test %s failed:\n\t\
                         Expected guard %s;\n\t\
-                        Got guard      %s\n" i (guard_to_string g') (guard_to_string g) in
+                        Got guard      %s\n" (BU.string_of_int i) (guard_to_string g') (guard_to_string g) in
     raise (Error(msg, Range.dummyRange))
 
 let unify i x y g' check =
-    printfn "%d ..." i;
+    BU.print1 "%s ..." (BU.string_of_int i);
     FStar.Main.process_args () |> ignore; //set options
-    printfn "Unify %s\nand %s\n" (FStar.Syntax.Print.term_to_string x) (FStar.Syntax.Print.term_to_string y);
+    BU.print2 "Unify %s\nand %s\n" (FStar.Syntax.Print.term_to_string x) (FStar.Syntax.Print.term_to_string y);
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
     guard_eq i g.guard_f g';
     check();
@@ -55,15 +58,15 @@ let should_fail x y =
     try
         let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
         match g.guard_f with
-            | Trivial -> failwith (Printf.sprintf "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
-            | NonTrivial f -> Printf.printf "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
-    with Error(msg, r) -> print_string msg; print_newline()
+            | Trivial -> failwith (BU.format2 "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
+            | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
+    with Error(msg, r) -> BU.print1 "%s\n" msg
 
 let unify' x y =
     let x = pars x in
     let y = pars y in
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
-    Printf.printf "%s and %s are unifiable with guard %s\n"  (P.term_to_string x) (P.term_to_string y) (guard_to_string g.guard_f)
+    BU.print3 "%s and %s are unifiable with guard %s\n"  (P.term_to_string x) (P.term_to_string y) (guard_to_string g.guard_f)
 
 let norm t = N.normalize [] (tcenv()) t
 
@@ -77,7 +80,7 @@ let inst n tm =
    norm (app tm us), us
 
 let run_all () =
-    Printf.printf "Testing the unifier\n";
+    BU.print_string "Testing the unifier\n";
 
     Options.__set_unit_tests();
     let unify_check n x y g f = unify n x y g f in
@@ -194,5 +197,4 @@ let run_all () =
 
     Options.__clear_unit_tests();
 
-    Printf.printf "Unifier ok\n";
-
+    BU.print_string "Unifier ok\n"

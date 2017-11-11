@@ -93,6 +93,12 @@ let module_name_of_file f =
 
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
+let namespace_of_module f =
+    let lid = FStar.Ident.lid_of_path (FStar.Ident.path_of_text f) Range.dummyRange in
+    match lid.ns with
+    | [] -> None
+    | _ -> Some (FStar.Ident.lid_of_ids lid.ns)
+
 type file_name = string
 type module_name = string
 type dependence =
@@ -341,16 +347,20 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 
 exception Exit
 
-let hard_coded_dependencies filename =
-  let filename : string = basename filename in
+let hard_coded_dependencies full_filename =
+  let filename : string = basename full_filename in
   let corelibs =
     [Options.prims_basename () ; Options.pervasives_basename () ; Options.pervasives_native_basename ()]
   in
   (* The core libraries do not have any implicit dependencies *)
   if List.mem filename corelibs then []
-  else [ (Const.fstar_ns_lid, Open_namespace);
-         (Const.prims_lid, Open_module);
-         (Const.pervasives_lid, Open_module) ]
+  else let implicit_deps =
+           [ (Const.fstar_ns_lid, Open_namespace);
+             (Const.prims_lid, Open_module);
+             (Const.pervasives_lid, Open_module) ] in
+       match (namespace_of_module (lowercase_module_name full_filename)) with
+       | None -> implicit_deps
+       | Some ns -> implicit_deps @ [(ns, Open_namespace)]
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
@@ -369,13 +379,13 @@ let collect_one
   in
   let working_map = smap_copy original_map in
 
-  let add_dependence_edge lid =
+  let add_dependence_edge original_or_working_map lid =
     let key = lowercase_join_longident lid true in
-    match resolve_module_name working_map key with
+    match resolve_module_name original_or_working_map key with
     | Some module_name ->
       add_dep deps (PreferInterface module_name);
-      if has_interface working_map module_name
-      && has_implementation working_map module_name
+      if has_interface original_or_working_map module_name
+      && has_implementation original_or_working_map module_name
       then add_dep mo_roots (UseImplementation module_name);
       true
     | _ ->
@@ -383,7 +393,19 @@ let collect_one
   in
 
   let record_open_module let_open lid =
-      if add_dependence_edge lid then true
+      //use the original_map here
+      //since the working_map will resolve lid while accounting
+      //for already opened namespaces
+      //if let_open, then this is the form `UInt64.( ... )`
+      //             where UInt64 can resolve to FStar.UInt64
+      //           So, use the working map, accounting for opened namespaces
+      //Otherwise, this is the form `open UInt64`,
+      //           where UInt64 must resolve to either
+      //           a module or a namespace for F# compatibility
+      //           So, use the original map, disregarding opened namespaces
+      if (let_open     && add_dependence_edge working_map lid)
+      ||  (not let_open && add_dependence_edge original_map lid)
+      then true
       else begin
         if let_open then
            FStar.Errors.warn (range_of_lid lid)
@@ -420,9 +442,11 @@ let collect_one
     // Only fully qualified module aliases are allowed.
     match smap_try_find original_map alias with
     | Some deps_of_aliased_module ->
-        smap_add working_map key deps_of_aliased_module
+        smap_add working_map key deps_of_aliased_module;
+        true
     | None ->
-        FStar.Errors.warn (range_of_lid lid) (Util.format1 "module not found in search path: %s\n" alias)
+        FStar.Errors.warn (range_of_lid lid) (Util.format1 "module not found in search path: %s\n" alias);
+        false
   in
 
   let record_lid lid =
@@ -433,7 +457,7 @@ let collect_one
     | [] -> ()
     | _ ->
       let module_name = Ident.lid_of_ids lid.ns in
-      if add_dependence_edge module_name
+      if add_dependence_edge working_map module_name
       then ()
       else if Options.debug_any () then
             FStar.Errors.warn (range_of_lid lid)
@@ -462,8 +486,8 @@ let collect_one
     | Open lid ->
         record_open false lid
     | ModuleAbbrev (ident, lid) ->
-        add_dep deps (PreferInterface (lowercase_join_longident lid true));
-        record_module_alias ident lid
+        if record_module_alias ident lid
+        then add_dep deps (PreferInterface (lowercase_join_longident lid true))
     | TopLevelLet (_, patterms) ->
         List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
     | Main t
@@ -822,7 +846,7 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" f f (String.concat "\\\n\t" files);
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-          Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f (String.concat " \\\n\t" files);
+          Util.print3 "%s: %s \\\n\t%s\n\n" (cache_file_name f) f (String.concat " \\\n\t" files);
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then

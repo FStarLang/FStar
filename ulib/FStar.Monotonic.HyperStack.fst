@@ -2,8 +2,8 @@ module FStar.Monotonic.HyperStack
 
 open FStar.Preorder
 open FStar.Monotonic.HyperHeap
-module M  = FStar.Map
-module HH = FStar.Monotonic.HyperHeap
+module Map  = FStar.Map
+module HH   = FStar.Monotonic.HyperHeap
 
 let is_in (r:rid) (h:HH.t) = h `Map.contains` r
 
