@@ -953,24 +953,24 @@ let mk_decl: decl' -> FStar_Range.range -> decoration Prims.list -> decl =
         let doc1 =
           let uu____3614 =
             FStar_List.choose
-              (fun uu___103_3619  ->
-                 match uu___103_3619 with
+              (fun uu___46_3619  ->
+                 match uu___46_3619 with
                  | Doc d1 -> FStar_Pervasives_Native.Some d1
                  | uu____3623 -> FStar_Pervasives_Native.None) decorations in
           at_most_one "fsdoc" r uu____3614 in
         let attributes_ =
           let uu____3629 =
             FStar_List.choose
-              (fun uu___104_3638  ->
-                 match uu___104_3638 with
+              (fun uu___47_3638  ->
+                 match uu___47_3638 with
                  | DeclAttributes a -> FStar_Pervasives_Native.Some a
                  | uu____3648 -> FStar_Pervasives_Native.None) decorations in
           at_most_one "attribute set" r uu____3629 in
         let attributes_1 = FStar_Util.dflt [] attributes_ in
         let qualifiers =
           FStar_List.choose
-            (fun uu___105_3663  ->
-               match uu___105_3663 with
+            (fun uu___48_3663  ->
+               match uu___48_3663 with
                | Qualifier q -> FStar_Pervasives_Native.Some q
                | uu____3667 -> FStar_Pervasives_Native.None) decorations in
         { d; drange = r; doc = doc1; quals = qualifiers; attrs = attributes_1
@@ -1404,8 +1404,8 @@ let as_frag:
              | uu____5004 ->
                  let ds2 = d :: ds1 in
                  (FStar_List.iter
-                    (fun uu___106_5015  ->
-                       match uu___106_5015 with
+                    (fun uu___49_5015  ->
+                       match uu___49_5015 with
                        | { d = TopLevelModule uu____5016; drange = r;
                            doc = uu____5018; quals = uu____5019;
                            attrs = uu____5020;_} ->
@@ -1419,8 +1419,8 @@ let compile_op:
   fun arity  ->
     fun s  ->
       fun r  ->
-        let name_of_char uu___107_5038 =
-          match uu___107_5038 with
+        let name_of_char uu___50_5038 =
+          match uu___50_5038 with
           | 38 -> "Amp"
           | 64 -> "At"
           | 43 -> "Plus"
@@ -1478,8 +1478,8 @@ let string_of_fsdoc:
           FStar_String.concat "," uu____5092 in
         Prims.strcat comment uu____5091
 let string_of_let_qualifier: let_qualifier -> Prims.string =
-  fun uu___108_5111  ->
-    match uu___108_5111 with
+  fun uu___51_5111  ->
+    match uu___51_5111 with
     | NoLetQualifier  -> ""
     | Rec  -> "rec"
     | Mutable  -> "mutable"
@@ -1495,8 +1495,8 @@ let to_string_l:
         let uu____5138 = FStar_List.map f l in
         FStar_String.concat sep uu____5138
 let imp_to_string: imp -> Prims.string =
-  fun uu___109_5143  ->
-    match uu___109_5143 with | Hash  -> "#" | uu____5144 -> ""
+  fun uu___52_5143  ->
+    match uu___52_5143 with | Hash  -> "#" | uu____5144 -> ""
 let rec term_to_string: term -> Prims.string =
   fun x  ->
     match x.tm with
@@ -1690,8 +1690,8 @@ and binder_to_string: binder -> Prims.string =
     let uu____5563 = aqual_to_string x.aqual in
     FStar_Util.format2 "%s%s" uu____5563 s
 and aqual_to_string: aqual -> Prims.string =
-  fun uu___110_5564  ->
-    match uu___110_5564 with
+  fun uu___53_5564  ->
+    match uu___53_5564 with
     | FStar_Pervasives_Native.Some (Equality ) -> "$"
     | FStar_Pervasives_Native.Some (Implicit ) -> "#"
     | uu____5565 -> ""
@@ -1755,8 +1755,8 @@ let lids_of_let:
          (fun uu____5699  ->
             match uu____5699 with | (p,uu____5707) -> head_id_of_pat p))
 let id_of_tycon: tycon -> Prims.string =
-  fun uu___111_5710  ->
-    match uu___111_5710 with
+  fun uu___54_5710  ->
+    match uu___54_5710 with
     | TyconAbstract (i,uu____5712,uu____5713) -> i.FStar_Ident.idText
     | TyconAbbrev (i,uu____5723,uu____5724,uu____5725) ->
         i.FStar_Ident.idText
