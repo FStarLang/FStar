@@ -129,13 +129,13 @@ utest-prelude:
 	+$(MAKE) boot-ocaml        #build the ocaml-snapshot
 	+$(MAKE) clean_extracted   #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml       #extract the compiler again and build the result
-	+$(MAKE) ocaml-regressions #run the unit tests
+	+$(MAKE) ocaml-unit-tests  #run the unit tests
 
 ocaml-unit-tests:
 	$(BIN)/tests.exe
 
 # The regressions to be run with a working F# build of F*
-fsharp-regressions:
+fsharp-unit-tests:
 ifeq ($(OS),Windows_NT)
 	$(RUNTIME) $(BIN)/tests.exe
 else
@@ -170,7 +170,7 @@ interactive-test:
 
 ulong:
 	+$(MAKE) fstar-in-fsharp
-	+$(MAKE) fsharp-regressions
+	+$(MAKE) fsharp-unit-tests
 	+$(MAKE) utest-prelude
 	+$(MAKE) uregressions-ulong
 
