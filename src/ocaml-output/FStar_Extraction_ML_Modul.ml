@@ -1262,7 +1262,7 @@ let extract_iface:
       let uu____3087 =
         FStar_Util.fold_map extract_sig g m.FStar_Syntax_Syntax.declarations in
       FStar_All.pipe_right uu____3087 FStar_Pervasives_Native.fst
-let extract:
+let extract':
   FStar_Extraction_ML_UEnv.env ->
     FStar_Syntax_Syntax.modul ->
       (FStar_Extraction_ML_UEnv.env,FStar_Extraction_ML_Syntax.mllib
@@ -1272,63 +1272,75 @@ let extract:
   fun g  ->
     fun m  ->
       FStar_Syntax_Syntax.reset_gensym ();
-      (let uu____3130 = FStar_Options.debug_any () in
-       if uu____3130
-       then
-         let uu____3131 =
-           FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
-         FStar_Util.print1 "Extracting module %s\n" uu____3131
-       else ());
       (let codegen_opt = FStar_Options.codegen () in
-       let uu____3136 = FStar_Options.restore_cmd_line_options true in
+       let uu____3132 = FStar_Options.restore_cmd_line_options true in
        (match codegen_opt with
         | FStar_Pervasives_Native.Some "tactics" ->
             FStar_Options.set_option "codegen"
               (FStar_Options.String "tactics")
-        | uu____3138 -> ());
+        | uu____3134 -> ());
        (let name =
           FStar_Extraction_ML_Syntax.mlpath_of_lident
             m.FStar_Syntax_Syntax.name in
         let g1 =
-          let uu___304_3143 = g in
-          let uu____3144 =
+          let uu___304_3139 = g in
+          let uu____3140 =
             FStar_TypeChecker_Env.set_current_module
               g.FStar_Extraction_ML_UEnv.tcenv m.FStar_Syntax_Syntax.name in
           {
-            FStar_Extraction_ML_UEnv.tcenv = uu____3144;
+            FStar_Extraction_ML_UEnv.tcenv = uu____3140;
             FStar_Extraction_ML_UEnv.gamma =
-              (uu___304_3143.FStar_Extraction_ML_UEnv.gamma);
+              (uu___304_3139.FStar_Extraction_ML_UEnv.gamma);
             FStar_Extraction_ML_UEnv.tydefs =
-              (uu___304_3143.FStar_Extraction_ML_UEnv.tydefs);
+              (uu___304_3139.FStar_Extraction_ML_UEnv.tydefs);
             FStar_Extraction_ML_UEnv.type_names =
-              (uu___304_3143.FStar_Extraction_ML_UEnv.type_names);
+              (uu___304_3139.FStar_Extraction_ML_UEnv.type_names);
             FStar_Extraction_ML_UEnv.currentModule = name
           } in
-        let uu____3145 =
+        let uu____3141 =
           FStar_Util.fold_map extract_sig g1
             m.FStar_Syntax_Syntax.declarations in
-        match uu____3145 with
+        match uu____3141 with
         | (g2,sigs) ->
             let mlm = FStar_List.flatten sigs in
             let is_kremlin =
-              let uu____3174 = FStar_Options.codegen () in
-              match uu____3174 with
+              let uu____3170 = FStar_Options.codegen () in
+              match uu____3170 with
               | FStar_Pervasives_Native.Some "Kremlin" -> true
-              | uu____3177 -> false in
-            let uu____3180 =
+              | uu____3173 -> false in
+            let uu____3176 =
               (((m.FStar_Syntax_Syntax.name).FStar_Ident.str <> "Prims") &&
                  (is_kremlin ||
                     (Prims.op_Negation m.FStar_Syntax_Syntax.is_interface)))
                 &&
                 (FStar_Options.should_extract
                    (m.FStar_Syntax_Syntax.name).FStar_Ident.str) in
-            if uu____3180
+            if uu____3176
             then
-              ((let uu____3188 =
+              ((let uu____3184 =
                   FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
-                FStar_Util.print1 "Extracted module %s\n" uu____3188);
+                FStar_Util.print1 "Extracted module %s\n" uu____3184);
                (g2,
                  [FStar_Extraction_ML_Syntax.MLLib
                     [(name, (FStar_Pervasives_Native.Some ([], mlm)),
                        (FStar_Extraction_ML_Syntax.MLLib []))]]))
             else (g2, [])))
+let extract:
+  FStar_Extraction_ML_UEnv.env ->
+    FStar_Syntax_Syntax.modul ->
+      (FStar_Extraction_ML_UEnv.env,FStar_Extraction_ML_Syntax.mllib
+                                      Prims.list)
+        FStar_Pervasives_Native.tuple2
+  =
+  fun g  ->
+    fun m  ->
+      let uu____3258 = FStar_Options.debug_any () in
+      if uu____3258
+      then
+        let msg =
+          let uu____3266 =
+            FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
+          FStar_Util.format1 "Extracting module %s\n" uu____3266 in
+        FStar_Util.measure_execution_time msg
+          (fun uu____3274  -> extract' g m)
+      else extract' g m
