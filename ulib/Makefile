@@ -2,7 +2,7 @@
 # Makefile that is distributed in the binary package. This
 # Makefile here is not.
 
-all: verify-all
+all:
 	+$(MAKE) -f Makefile.verify verify-all
 
 include ml/Makefile.include
