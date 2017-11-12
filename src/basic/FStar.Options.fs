@@ -1122,7 +1122,8 @@ let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
 let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
-let no_extract                   s  = get_no_extract() |> List.contains s
+let no_extract                   s  = let s = String.lowercase s in
+    get_no_extract() |> FStar.Util.for_some (fun f -> String.lowercase f = s)
 let no_location_info             () = get_no_location_info            ()
 let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()
@@ -1182,15 +1183,22 @@ let z3_seed                      () = get_z3seed                      ()
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 
+let should_extract_namespace m =
+    match get_extract_namespace () with
+    | [] -> false
+    | ns -> ns |> Util.for_some (fun n -> Util.starts_with m (String.lowercase n))
+
+let should_extract_module m =
+    match get_extract_module () with
+    | [] -> false
+    | l -> l |> Util.for_some (fun n -> String.lowercase n = m)
 
 let should_extract m =
-  not (no_extract m) &&
-  (match get_extract_module () with
-  | [] ->
-    (match get_extract_namespace () with
-     | [] -> true
-     | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
-  | l -> List.contains (String.lowercase m) l)
+    let m = String.lowercase m in
+    not (no_extract m) &&
+    (match get_extract_namespace (), get_extract_module() with
+    | [], [] -> true //neither is set
+    | _ -> should_extract_namespace m || should_extract_module m)
 
 let codegen_fsharp () =
     codegen() = Some "FSharp"
