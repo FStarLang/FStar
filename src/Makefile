@@ -211,8 +211,10 @@ ocaml-output/%.ml:
 # Dependency analysis for bootstrapping
 # --------------------------------------------------------------------
 
-depend: .depend
+.depend:
 	$(FSTAR_C) --dep full fstar/FStar.Main.fs boot/FStar.Tests.Test.fst $(EXTRACT) --codegen OCaml > .depend
+
+depend: .depend
 
 include .depend
 
