@@ -21,6 +21,7 @@ type origin =
 | TOrigin : protocol:scheme -> host: hdomain -> port:option port -> dom:option hdomain -> origin
 | OOrigin : id:nat -> origin
 
+type oorigin = o:origin{OOrigin? o}
 type torigin = o:origin{TOrigin? o}
 
 let blank_origin = (TOrigin "" [] None None)
@@ -111,4 +112,3 @@ let rec hostMatch h l =
   | [] -> false
   | hd::tl -> if (domainMatch h hd) then true
 	    else hostMatch h tl 
-  

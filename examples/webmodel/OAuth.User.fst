@@ -4,7 +4,6 @@
 module OAuth.User
 
 open FStar.All
-open FStar.Heap
 open FStar.IO
 open Web.Origin
 open Web.URI
@@ -14,21 +13,21 @@ open Browser.Datatypes
 open AuxiliaryFunctions
 open Browser.StringFunctions
 open Browser.Model.Interface
-open NetworkRequestInterface
+open Network.Interface
 open OAuth.Datatypes
 open OAuth.RP
 open OAuth.IP
 
-val anyReqResp : r:request -> Tot (ret:retReqResp{isValidRetResp r ret})
-let anyReqResp r = RetResponse defResponse
+val anyReqResp : r:anyRequest -> Tot (ret:retReqResp{isValidRetResp r ret})
+let anyReqResp r = RetResponse (defResponse rpori ipori) (* replace with proper origins *)
 
-val getResponse : o:torigin{List.mem o trustedOrigins} -> ML (r:request -> ML (ret:retReqResp{isValidRetResp r ret}))
+val getResponse : o:torigin{List.mem o trustedOrigins} -> ML (r:anyRequest -> ML (ret:retReqResp{isValidRetResp r ret}))
 let getResponse o =
   if (o = rpori) then rpReqResp
   else if (o = ipori) then ipReqResp
   else anyReqResp
 
-val getProcResponse : o:origin -> ML (r:request -> ML (ret:retReqResp{isValidRetResp r ret}))
+val getProcResponse : o:origin -> ML (r:anyRequest -> ML (ret:retReqResp{isValidRetResp r ret}))
 let getProcResponse o = 
   if (TOrigin? o && List.mem o trustedOrigins) then getResponse o
   else anyReqResp
@@ -50,8 +49,9 @@ let sl = (SecretVal [rpori])
 (* Request's URL - RP's server *)
 let rurl = {c_origin=rpori;c_uname=emptyString sl;c_pwd=emptyString sl;c_path=[(classify #PublicVal "login-ipauth" sl)];c_querystring=[(classify #PublicVal "IP" sl),(classify #PublicVal "ip" sl)];c_fragment=emptyString sl}
 let ruri = mk_uri rurl
+
 (* Request to start OAuth authentication *)
-let newreq = Request sl ({reqm = "POST"; requrl = [ruri]; reqhead = []; reqo = (mk_aorigin (URI?.u (CWindow?.cwloc sw)).c_origin); reqw = (Some sw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "manual"; reqref = (Client sw); reqrefPolicy = RP_OriginWhenCO; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = emptyString sl; corsflag = false; corspfflag = false; authflag = false; recflag = false})
+let newreq = BRequest sl ({reqb=cb.bid;reqm = "POST"; requrl = [ruri]; reqhead = []; reqo = (mk_aorigin (URI?.u (CWindow?.cwloc sw)).c_origin); reqw = (Some sw); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "manual"; reqref = (Client sw); reqrefPolicy = RP_OriginWhenCO; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = emptyString sl; corsflag = false; corspfflag = false; authflag = false; recflag = false})
 
 (* Username and password for IP *)
 let uname = classify #PublicVal "usernameU" (SecretVal [ipori])
@@ -63,24 +63,26 @@ let print_result r =
   | Error e -> print_string ("Error: " ^ e ^ "\n")
   | Success s -> print_string ("Success: " ^ s ^ "\n")
 
+(* Extra functions for the abstract request type *)
+val notFRHeader : anyRequest -> GTot bool
+let notFRHeader r = 
+  match r with 
+  | BrowserRequest req -> notForbiddenHeaderfieldInReqHeader (BRequest?.rf req).reqhead
+  | ServerRequest req -> notForbiddenHeaderfieldInReqHeader (SRequest?.srf req).sreqhead
+
 (* Process the RP response at codeEP and send a request to get access-token -- process the response to that request *)
-val processRPResponse : req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> ML (result) 
+val processRPResponse : req:anyRequest{notFRHeader req} -> ML (result) 
 let processRPResponse req = 
   let pr' = (getProcResponse rpori) req in
   match pr' with
-  | RetRequest nreq -> (let co = {cori=ipori;ccred=true} in
-		      match (getConnection !rpbr co) with (* the rp creates a new request here - sent to the ip *)
-		      | None -> (Error ("No connections available at the RP!"))
-	   	      | Some ({connect=oconn;creq=oreq}) -> 
-			     let pr'' = (getProcResponse ipori) nreq in
-			     (match pr'' with 
-			     | RetRequest _ -> (Error ("FATAL ERROR AGAIN!")) 
-			     | RetResponse pr -> let (res, _, _, nb) = processResponse !rpbr oconn nreq pr in 
-						rpbr := nb; (res)))
+  | RetRequest nreq -> (let pr'' = (getProcResponse ipori) nreq in
+		      (match pr'' with 
+		      | RetRequest _ -> (Error ("FATAL ERROR AGAIN!")) 
+		      | RetResponse pr -> processSResponse nreq pr))
   | RetResponse _ -> (Error ("No request made from RP to IP!")) 
 
 (* Process the response from the IP after authentication *)
-val processIPResponse : browser -> req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> ML (result * browser) 
+val processIPResponse : browser -> req:browserRequest{notForbiddenHeaderfieldInReqHeader (BRequest?.rf req).reqhead} -> ML (result * browser) 
 let processIPResponse ib req =
     let co = {cori=ipori;ccred=true} in
     match (getConnection ib co) with
@@ -95,7 +97,7 @@ let processIPResponse ib req =
 	    print_result res; 
 	    match nr with
 	    | None -> (Success ("No more requests!"), nb)
-	    | Some nreq -> ((processRPResponse nreq), nb)) (* process the new RP request to obtain the access-token *)
+	    | Some nreq -> ((processRPResponse (BrowserRequest nreq)), nb)) (* process the new RP request to obtain the access-token *)
 
 (* Process the response from IP to send credentials and complete a form submission *)
 (* TODO - if session cookie is present, do not perform form_submission *)
@@ -121,7 +123,7 @@ let processIPFormResponse br r oconn =
 	    | Some req -> processIPResponse nb req)) (* the IP processes the form data and returns the relevant cookie and authcode *)
 
 let browserOAuth () : ML (result * browser) =
-  let (r, _, nw, nb) = open_window cb sw "https://rp.com/" "" in
+  let (r, _, nw, nb) = open_window cb sw "https://rp.com/" "" in (* sw.open("https://rp.com") *)
   let (re, nr, win, sb) = navigateWindow (nb) sw nw (RequestResource newreq) "other" in
   print_result re;
   match sb.conn with (*the response arrives on the connection - assume connection is the first available here*)

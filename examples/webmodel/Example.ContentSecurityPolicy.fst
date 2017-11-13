@@ -40,7 +40,9 @@ let rsl = (SecretVal [rorigin])
 let rcuri = {c_origin=rorigin;c_uname=(emptyString rsl);c_pwd=(emptyString rsl);c_path=[];c_querystring=[];c_fragment=(emptyString rsl)}
 let rurl = URI rsl rcuri
 
-let req = Request (rsl) ({reqm = "GET"; requrl = [rurl]; reqhead = []; reqo = (getAOrigin sw.wloc); reqw = (Some csw); reqinit = "fetch"; reqtype = ""; reqdest = "subresource"; reqtarget = (Some csw); reqredirect = 0; reqredmode = "follow"; reqref = (Client csw); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (classify #PublicVal "username:u;password:p" rsl); corsflag = false; corspfflag = false; authflag = false; recflag = false})
+let ib = (init_browser)
+
+let req = BRequest (rsl) ({reqb = ib.bid; reqm = "GET"; requrl = [rurl]; reqhead = []; reqo = (getAOrigin sw.wloc); reqw = (Some csw); reqinit = "fetch"; reqtype = ""; reqdest = "subresource"; reqtarget = (Some csw); reqredirect = 0; reqredmode = "follow"; reqref = (Client csw); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (classify #PublicVal "username:u;password:p" rsl); corsflag = false; corspfflag = false; authflag = false; recflag = false})
 
 let main =
   if reqBlockedCSP req then

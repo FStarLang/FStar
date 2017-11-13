@@ -97,16 +97,17 @@ type referer=
    Current URL is the first url in requrl
 *)
 type requestFormat (s:secLevel) = {
-  reqm:reqMethod;
-  requrl:list uri;
-  reqhead:header;
-  reqo:a_origin;
-  reqw:option (cowindow);
-  reqinit:initiator;
+  reqb:oorigin; (* browser id *)
+  reqm:reqMethod; (* request method - GET, POST, etc. *)
+  requrl:list uri; (* first element in the list is the request uri *)
+  reqhead:header; (* list of (header fields * header value) *)
+  reqo:a_origin; (* origin of the window from which the request originated *)
+  reqw:option (cowindow); (* window from which the request originated *)
+  reqinit:initiator; 
   reqtype:requesttype;
   reqdest:destination;
-  reqtarget:option (cowindow);
-  reqredirect:nat;
+  reqtarget:option (cowindow); (* target window for the request*)
+  reqredirect:nat; (* count of number of redirects *)
   reqredmode:redirectVal;
   reqref:referer;
   reqrefPolicy:refPolicy;
@@ -115,7 +116,7 @@ type requestFormat (s:secLevel) = {
   requnsafe:bool;
   reqpreflight:bool;
   reqsync:bool;
-  reqmode:mode;
+  reqmode:mode; (* mode represents whether or not the request is same-origin *)
   reqtaint:taintVal;
   reqcredm:credmode;
   reqcredflag:bool;
@@ -150,11 +151,20 @@ val validRequestLemma : #s:secLevel -> rf:(requestFormat s){isValidRequest #s rf
 			Lemma (requires (True)) (ensures (s = URI?.usl (firstElement rf.requrl))) [SMTPat (isValidRequest #s rf)]
 let validRequestLemma #s rf = ()
 
-type request = 
-| Request : (rsl:secLevel) -> rf:(requestFormat rsl){isValidRequest rf /\ checkHeaderSecLevel rf.reqhead} -> request
+type browserRequest = 
+| BRequest : (rsl:secLevel) -> rf:(requestFormat rsl){isValidRequest rf /\ checkHeaderSecLevel rf.reqhead} -> browserRequest
 
-val default_request : cowindow -> u:uri -> Tot (request)
-let default_request w u = Request (URI?.usl u) ({reqm = "GET"; requrl = [(u)]; reqhead = []; reqo = (getOrigin (CWindow?.cwloc w)); reqw = (Some w); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client w); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (emptyString (URI?.usl u)); corsflag = false; corspfflag = false; authflag = false; recflag = false})
+(* logging msgs being sent out of the browser *)
+type outMsg =
+| HTTPReqMsg : r:browserRequest -> outMsg
+| JSMsg : l:secLevel -> u:uri{URI?.usl u = l} -> s:secString l -> outMsg
+
+val secOutMsg : outMsg -> Tot bool
+let secOutMsg m =  match m with
+  | HTTPReqMsg r -> true
+  | JSMsg l u s -> true
+
+type logMsg = o:outMsg{secOutMsg o}
 
 (* Section 3.4 Fetch spec - Connections*)
 type connection' = {
@@ -166,7 +176,7 @@ abstract type connection = connection'
 
 type connReq' = {
   connect:connection;
-  creq:list (request * cowindow * cowindow * navType); (* windows required for processing response *)
+  creq:list (browserRequest * cowindow * cowindow * navType); (* windows required for processing response *)
 }
 
 abstract type connReq = connReq'
@@ -175,12 +185,14 @@ type connectionPool = list connReq (*contains the list of pending requests for t
 
 (* add STS for automatic upgrades of the requests to HTTPS *)
 type browser :Type0 = {
+  bid:oorigin;
   windows:list cowindow;
   cookieStore:list cookie;
   localStorage:localStorageMap;
   sts:list hdomain;
   conn:connectionPool;
   next_u_id:wid;
+  (* msgLog:list logMsg; *)
 }
 
 
@@ -188,7 +200,7 @@ type browser :Type0 = {
 
 
 (* ***** INITIALIZE BROWSER ***** *)
-let init_browser:browser = {windows=[];cookieStore=[];localStorage=[];sts=[];conn=[];next_u_id=1}
+let init_browser:browser = {bid=(OOrigin 1);windows=[];cookieStore=[];localStorage=[];sts=[];conn=[];next_u_id=2}
 
 (* Generate unique ids *)
 val set_unique_id : browser -> Tot (wid * browser)
@@ -253,7 +265,7 @@ let rec classifyQS #s l s' =
   | [] -> []
   | (hq,hv)::tl -> (classify hq s', classify hv s')::(classifyQS tl s')
 
-private val u_curi : #s:secLevel -> u:uri{URI?.usl u = s} -> Tot (c_uri s)
+val u_curi : #s:secLevel -> u:uri{URI?.usl u = s} -> Tot (c_uri s)
 let u_curi #s u = mk_curi (URI?.u u)
 
 val equalAOrigin : a_origin -> a_origin -> Tot bool
@@ -437,8 +449,8 @@ let is_opaqueDoc d = OOrigin? d.dori
 val is_opaqueWin : cowindow -> Tot bool
 let is_opaqueWin cw = is_opaqueDoc (CWindow?.cwdoc cw)
 
-val is_opaqueReq : request -> Tot bool
-let is_opaqueReq req = OOrigin? (Request?.rf req).reqo
+val is_opaqueReq : browserRequest -> Tot bool
+let is_opaqueReq req = OOrigin? (BRequest?.rf req).reqo
 
 val mk_adoc : document -> Tot a_document
 let mk_adoc d = d
@@ -501,7 +513,6 @@ let rec accessible_windows w lw =
   | [] -> []
   | hw::tl -> if familiar_with w hw then hw::(accessible_windows w tl)
 	    else (accessible_windows w tl)
-
 
 
 
@@ -786,15 +797,15 @@ let isSecureHost b u = hostMatch (TOrigin?.host (URI?.u u).c_origin) b.sts
 (* *** CONNECTION *** *)
 (* send request over one of the connections, and wait for response *)
 (* Section 5.6 of RFC 7230 - response on a connection is sent to the first outstanding/pending request on that connection *)
-val sendRequest : browser -> request -> bool -> (cowindow * cowindow * navType) -> Tot (result * browser)
+val sendRequest : browser -> browserRequest -> bool -> (cowindow * cowindow * navType) -> Tot (result * browser)
 let sendRequest b r cflag einfo =
-  let c = {cori=getOrigin (firstElement (Request?.rf r).requrl); ccred=cflag} in
+  let c = {cori=getOrigin (firstElement (BRequest?.rf r).requrl); ccred=cflag} in
   let (sw, tw, ty) = einfo in
   match (List.tryFind (fun {connect=x;creq=rl} -> x.cori=c.cori && x.ccred = c.ccred) b.conn) with
-  | None -> (Success ("LOG: request sent to " ^ (uri_to_hstring_val (firstElement (Request?.rf r).requrl)) ^ "\n"), {b with conn=({connect=c;creq=[(r, sw, tw, ty)]}::b.conn)})
+  | None -> (Success ("LOG: request sent to " ^ (uri_to_hstring_val (firstElement (BRequest?.rf r).requrl)) ^ "\n"), {b with conn=({connect=c;creq=[(r, sw, tw, ty)]}::b.conn)})
   | Some {connect=oconn;creq=oreq} ->
 	let ncl = (({connect=oconn;creq=(List.append oreq [(r, sw, tw, ty)])})::(remove_elem_list b.conn ({connect=oconn;creq=oreq}))) in
-	(Success ("LOG: request sent to " ^ (uri_to_hstring_val (firstElement (Request?.rf r).requrl)) ^ "\n"), {b with conn=ncl})
+	(Success ("LOG: request sent to " ^ (uri_to_hstring_val (firstElement (BRequest?.rf r).requrl)) ^ "\n"), {b with conn=ncl})
 
 val getConnection : browser -> connection' -> Tot (option (connReq'))
 let getConnection b c = 
@@ -803,7 +814,7 @@ let getConnection b c =
   | Some x -> Some x
 
 (* get the new connection pool after removing the first request for the connection*)
-val getResponseConn : connectionPool -> connection -> Tot (option ((request * cowindow * cowindow * navType) * bool * connectionPool))
+val getResponseConn : connectionPool -> connection -> Tot (option ((browserRequest * cowindow * cowindow * navType) * bool * connectionPool))
 let getResponseConn cl c =
   match (List.tryFind (fun ({connect=x;creq=rl}) -> x = c) cl) with
   | None -> None
@@ -821,7 +832,7 @@ let mk_conn c = c
 val getConn : connReq -> Tot connReq'
 let getConn c = c
 
-val getConnReq : connReq' -> Tot (option request)
+val getConnReq : connReq' -> Tot (option browserRequest)
 let getConnReq c =
   match c.creq with
   | [] -> None
@@ -857,26 +868,26 @@ val mk_headerval : #s:secLevel -> secString s -> Tot (headervalue)
 let mk_headerval #s t = Headervalue s t
 
 (* Check if the request url is in the secLevel of the URI (or) should we add the origin to the secLevel *)
-(* {match (URI?.usl u) with | PublicVal -> true | SecretVal sec -> List.mem (getOrigin (firstElement (Request?.rf r).requrl)) sec} *)
-val getHeaderValueURI : r:request -> u:uri -> Tot (h:headervalue) 
+(* {match (URI?.usl u) with | PublicVal -> true | SecretVal sec -> List.mem (getOrigin (firstElement (BRequest?.rf r).requrl)) sec} *)
+val getHeaderValueURI : r:browserRequest -> u:uri -> Tot (h:headervalue) 
 let getHeaderValueURI r u = 
-  let s = Request?.rsl r in
+  let s = BRequest?.rsl r in
   let str = declassify (uri_to_hstring #(URI?.usl u) u) in
   Headervalue s (reclassifyVal #PublicVal str s) (* need to reclassify the header value for the URI that will receive it *)
 
-val getHeaderValueOrigin : r:request -> Tot (h:headervalue)
+val getHeaderValueOrigin : r:browserRequest -> Tot (h:headervalue)
 let getHeaderValueOrigin r =
-  let s = Request?.rsl r in
-  if (TOrigin? (mk_origin (Request?.rf r).reqo)) then Headervalue s (classify #PublicVal (origin_to_string (Request?.rf r).reqo) s)
+  let s = BRequest?.rsl r in
+  if (TOrigin? (mk_origin (BRequest?.rf r).reqo)) then Headervalue s (classify #PublicVal (origin_to_string (BRequest?.rf r).reqo) s)
   else Headervalue s (emptyString s)
 
-private val parseCookieHeaderVal : #s:secLevel -> h:headervalue{Headervalue?.hvs h = s} -> Tot (list (secString s))
+val parseCookieHeaderVal : #s:secLevel -> h:headervalue{Headervalue?.hvs h = s} -> Tot (list (secString s))
 let parseCookieHeaderVal #s h = parseSerialCookie (Headervalue?.hv h)
 
-private val parseHeaderVal : #s:secLevel -> h:headervalue{Headervalue?.hvs h = s} -> Tot (list (secString s))
+val parseHeaderVal : #s:secLevel -> h:headervalue{Headervalue?.hvs h = s} -> Tot (list (secString s))
 let parseHeaderVal #s h = parseSerial (Headervalue?.hv h)
 
-private val parseLocHeaderVal : #s:secLevel -> h:headervalue{Headervalue?.hvs h = s} -> Tot (secString s)
+val parseLocHeaderVal : #s:secLevel -> h:headervalue{Headervalue?.hvs h = s} -> Tot (secString s)
 let parseLocHeaderVal #s h = (Headervalue?.hv h)
 
 (* Check the ABNF to determine how many header field values are allowed for each header *)
@@ -923,13 +934,13 @@ let rec reclassifyForbiddenLemma h u =
   | (f,v)::tl -> reclassifyForbiddenLemma tl u
 
 (* make the scheme of the request https *)
-val makeRequestHTTPS : r:request{notForbiddenHeaderfieldInReqHeader (Request?.rf r).reqhead} -> 
-		       Tot (nr:request{notForbiddenHeaderfieldInReqHeader (Request?.rf nr).reqhead}) 
+val makeRequestHTTPS : r:browserRequest{notForbiddenHeaderfieldInReqHeader (BRequest?.rf r).reqhead} -> 
+		       Tot (nr:browserRequest{notForbiddenHeaderfieldInReqHeader (BRequest?.rf nr).reqhead}) 
 let makeRequestHTTPS r =
-  let req = Request?.rf r in
+  let req = BRequest?.rf r in
   let u = setURIScheme (firstElement req.requrl) "https" in
   let h = reclassifySchemeHeader req.reqhead u in 
-  Request (URI?.usl u) ({req with requrl=[u];reqhead=h;reqbody=reclassifyVal req.reqbody (URI?.usl u)})
+  BRequest (URI?.usl u) ({req with requrl=[u];reqhead=h;reqbody=reclassifyVal req.reqbody (URI?.usl u)})
 
 (* convert method to string *)
 private val toStringMethod : reqMethod -> Tot string
@@ -959,6 +970,8 @@ type respuri =
 // if resp_code is 404, page is not found and return error
 // Current URL is the first url in respurl if it is not empty
 type actResponse' (s:secLevel) = {
+  respori:torigin;
+  respdest:origin;
   resptype:responseType;
   respcode:nat;
   respurl:list uri;
@@ -991,12 +1004,12 @@ type actResponse =
 | ActResponse : arl:secLevel -> ar:actResponse' arl{isValidResponse ar} -> actResponse
 
 (* Use this function to check if the secLevel of the redirect uri is what was expected by the response server *)
-private val checkRespSecLevel : resp:(actResponse){(ActResponse?.ar resp).resploc <> None /\ (ActResponse?.ar resp).resploc <> Some Failure} -> GTot bool
+val checkRespSecLevel : resp:(actResponse){(ActResponse?.ar resp).resploc <> None /\ (ActResponse?.ar resp).resploc <> Some Failure} -> GTot bool
 let checkRespSecLevel resp =
   match (ActResponse?.ar resp).resploc with
   | Some (URL u) -> equalSubLevels (URI?.usl u) (ActResponse?.ar resp).respRedSec
 
-private val checkLocationURISecLevel : resp:actResponse -> GTot (bool)
+val checkLocationURISecLevel : resp:actResponse -> GTot (bool)
 let checkLocationURISecLevel resp =
   let (hl) = parseHeader (ActResponse?.ar resp).resphead "Location" in
   match hl with
@@ -1025,15 +1038,15 @@ let isRedResponse #s resp =
 
 (* returns whether the redirect response (307/308) is valid or not -- 
    assume that all redirect responses with code 307/308 should have public requests *)
-private val isValidRedirectResp : req:request -> resp:actResponse -> GTot bool
+private val isValidRedirectResp : req:browserRequest -> resp:actResponse -> GTot bool
 let isValidRedirectResp req resp = 
   if isRedirectResponse (ActResponse?.ar resp) then 
     (checkLocationURISecLevel resp) &&
-    (canReclHeader (redirectHeaders (Request?.rf req).reqhead) (ActResponse?.ar resp).respRedSec) &&
-    (if isRedResponse (ActResponse?.ar resp) then canReclassify (Request?.rf req).reqbody (ActResponse?.ar resp).respRedSec else true)
+    (canReclHeader (redirectHeaders (BRequest?.rf req).reqhead) (ActResponse?.ar resp).respRedSec) &&
+    (if isRedResponse (ActResponse?.ar resp) then canReclassify (BRequest?.rf req).reqbody (ActResponse?.ar resp).respRedSec else true)
   else (ActResponse?.ar resp).resploc = None (* if it is not a redirect response, the resploc field should not be populated *)
 
-private val isValidLocResp : req:request -> resp:actResponse -> GTot bool
+private val isValidLocResp : req:browserRequest -> resp:actResponse -> GTot bool
 let isValidLocResp req resp = 
   match (ActResponse?.ar resp).resploc with 
   | None -> true
@@ -1044,23 +1057,23 @@ let isValidLocResp req resp =
    Check if the redirect response is valid and can be reclassified appropriately and
    Check if the resploc of response is valid (populated by browser using the location header)
 *)
-val requestResponseValid : request -> actResponse -> GTot bool
+val requestResponseValid : browserRequest -> actResponse -> GTot bool
 let requestResponseValid req resp = (isValidRedirectResp req resp) && (isValidLocResp req resp)
 
-private val isValidRedReclURI : req:request -> resp:actResponse -> GTot bool
-let isValidRedReclURI req resp = (canReclHeader (redirectHeaders (Request?.rf req).reqhead) (ActResponse?.ar resp).respRedSec)
+private val isValidRedReclURI : req:browserRequest -> resp:actResponse -> GTot bool
+let isValidRedReclURI req resp = (canReclHeader (redirectHeaders (BRequest?.rf req).reqhead) (ActResponse?.ar resp).respRedSec)
 
 (* If a response to request is valid then headers can be reclassified *)
-val validRedLemma : req:request -> resp:actResponse -> 
+val validRedLemma : req:browserRequest -> resp:actResponse -> 
 		    Lemma (requires (requestResponseValid req resp /\ isRedirectResponse (ActResponse?.ar resp)))
 			  (ensures (isValidRedReclURI req resp))
 		    [SMTPat (requestResponseValid req resp)]
 let validRedLemma req resp = ()
 
-val reqRespLocLemma : req:request -> resp:actResponse -> 
+val reqRespLocLemma : req:browserRequest -> resp:actResponse -> 
 		      Lemma (requires (requestResponseValid req resp /\ isRedirectResponse (ActResponse?.ar resp))) 
 			    (ensures (match (ActResponse?.ar resp).resploc with | None -> true | Some Failure -> true 
-				     | Some (URL u) -> (canReclHeader (redirectHeaders (Request?.rf req).reqhead) (URI?.usl u))))
+				     | Some (URL u) -> (canReclHeader (redirectHeaders (BRequest?.rf req).reqhead) (URI?.usl u))))
 		      [SMTPat (requestResponseValid req resp)]
 let reqRespLocLemma req resp = ()
 
@@ -1197,7 +1210,7 @@ type response =
 | TotResponse : t:actResponse -> response
 | FilteredResponse : fr:filteredResponse -> response
 
-val validReqResp : request -> response -> GTot bool
+val validReqResp : browserRequest -> response -> GTot bool
 let validReqResp req res =
   match res with 
   | TotResponse resp -> requestResponseValid req resp
@@ -1210,8 +1223,13 @@ let validReqResp req res =
   | _ -> true
   
 type resource =
-| RequestResource : req:request{notForbiddenHeaderfieldInReqHeader (Request?.rf req).reqhead} -> resource (*For urls, use default_request using the current window and url*)
-| ResponseResource : req:request -> resp:response{validReqResp req resp} -> resource
+| RequestResource : req:browserRequest{notForbiddenHeaderfieldInReqHeader (BRequest?.rf req).reqhead} -> resource 
+		    (*For urls, use default_request using the current window and url*)
+| ResponseResource : req:browserRequest -> resp:response{validReqResp req resp} -> resource
+
+val default_browser_request : browser -> cowindow -> u:uri -> Tot (browserRequest)
+let default_browser_request b w u = BRequest (URI?.usl u) ({reqb=(b.bid); reqm = "GET"; requrl = [(u)]; reqhead = []; reqo = (getOrigin (CWindow?.cwloc w)); reqw = (Some w); reqinit = ""; reqtype = ""; reqdest = ""; reqtarget = None; reqredirect = 0; reqredmode = "follow"; reqref = (Client w); reqrefPolicy = RP_EmptyPolicy; reqnonce = ""; reqparser = ""; requnsafe = false; reqpreflight = false; reqsync = false; reqmode = NoCORS; reqtaint = "basic"; reqcredm = "omit"; reqcredflag = false; reqbody = (emptyString (URI?.usl u)); corsflag = false; corspfflag = false; authflag = false; recflag = false})
+
 
 
 
@@ -1222,12 +1240,12 @@ val getCSPDirectives : resp:actResponse -> Tot csp_policy
 let getCSPDirectives resp =
   let l = (parseHeader (ActResponse?.ar resp).resphead "Content-Security-Policy") in
   (match l with | None -> [] | Some v -> getCSPDirectivesList #(Headervalue?.hvs v) (parseHeaderVal v))
-  
+
 (* Section 5.9 - CORS check *)
 (* missing check for "null" -- not defined in the spec *)
-val corsCheck : req:request -> resp:actResponse -> Tot bool
+val corsCheck : req:browserRequest -> resp:actResponse -> Tot bool
 let corsCheck req resp =
-  let nreq = (Request?.rf req) in
+  let nreq = (BRequest?.rf req) in
   let l = parseHeader (ActResponse?.ar resp).resphead "Access-Control-Allow-Origin" in
   match l with 
   | None -> false (* origin is null *)
@@ -1244,16 +1262,16 @@ let corsCheck req resp =
 	    let cred = parseHeaderVal #(Headervalue?.hvs cv) cv in
 	    if (singleValue cred && firstElement cred = classify #PublicVal "true" (Headervalue?.hvs cv)) then true else false))
 
-private val corsOKResponse1 : req:request -> resp:actResponse -> Tot (option actResponse)
+private val corsOKResponse1 : req:browserRequest -> resp:actResponse -> Tot (option actResponse)
 let corsOKResponse1 req resp = 
-  let nreq = (Request?.rf req) in
+  let nreq = (BRequest?.rf req) in
   if (List.tryFind (fun (n,v) -> n = "Authorization") nreq.reqhead <> None) then None
   else if (List.for_all (fun (n,_) -> isCORSSafeReqHeader n) nreq.reqhead) = false then None
   else Some resp (* return the response ; check for the appropriate max-age and set in the CORS-preflight cache*)
 
-private val corsOKResponse2 : req:request -> resp:actResponse -> vh:headervalue -> Tot (option actResponse)
+private val corsOKResponse2 : req:browserRequest -> resp:actResponse -> vh:headervalue -> Tot (option actResponse)
 let corsOKResponse2 req resp vh = 
-  let nreq = (Request?.rf req) in
+  let nreq = (BRequest?.rf req) in
   let (hheaders) = parseHeaderVal #(Headervalue?.hvs vh) vh in 
   if (List.tryFind (fun x -> eqString x "*") hheaders <> None) && (nreq.reqcredm = "include") then None
   else if ((List.tryFind (fun (n,v) -> n = "Authorization") nreq.reqhead <> None) && 
@@ -1262,9 +1280,9 @@ let corsOKResponse2 req resp vh =
       List.tryFind (fun x -> eqString x "*") hheaders = None) then None
   else Some resp (* return the response ; check for the appropriate max-age and set in the CORS-preflight cache*)
 
-private val corsOKResponse3 : #l:secLevel -> request -> actResponse -> list (secString l) -> Tot (option actResponse)
+private val corsOKResponse3 : #l:secLevel -> browserRequest -> actResponse -> list (secString l) -> Tot (option actResponse)
 let corsOKResponse3 #l req resp hmethods = 
-  let nreq = (Request?.rf req) in
+  let nreq = (BRequest?.rf req) in
   if ((List.tryFind (fun x -> eqString x "*") hmethods <> None) && nreq.reqcredm = "include") then None
   else if ((List.tryFind (fun x -> eqString x (toStringMethod nreq.reqm)) hmethods = None) && 
       (List.tryFind (fun x -> eqString x "*") hmethods = None) && (nreq.reqm <> "GET") && (nreq.reqm <> "POST") && (nreq.reqm <> "HEAD")) then None
@@ -1272,9 +1290,9 @@ let corsOKResponse3 #l req resp hmethods =
   else if (List.for_all (fun (n,_) -> isCORSSafeReqHeader n) nreq.reqhead) = false then None
   else Some resp (* return the response ; check for the appropriate max-age and set in the CORS-preflight cache*)
 
-private val corsOKResponse4 : #l:secLevel -> request -> actResponse -> headervalue -> list (secString l) -> Tot (option actResponse)
+private val corsOKResponse4 : #l:secLevel -> browserRequest -> actResponse -> headervalue -> list (secString l) -> Tot (option actResponse)
 let corsOKResponse4 #l req resp vh hmethods = 
-  let nreq = (Request?.rf req) in
+  let nreq = (BRequest?.rf req) in
   let (hheaders) = parseHeaderVal #(Headervalue?.hvs vh) vh in 
   if ((List.tryFind (fun x -> eqString x "*") hmethods <> None || List.tryFind (fun x -> eqString x "*") hheaders <> None) && nreq.reqcredm = "include") then None
   else if ((List.tryFind (fun x -> eqString x (toStringMethod nreq.reqm)) hmethods = None) && (List.tryFind (fun x -> eqString x "*") hmethods = None) &&
@@ -1284,16 +1302,16 @@ let corsOKResponse4 #l req resp vh hmethods =
   else Some resp (* return the response ; check for the appropriate max-age and set in the CORS-preflight cache*)
 
 (* Step 7 of Section 5.7 *)
-val corsOKResponse : req:request -> resp:actResponse -> Tot (option actResponse)
+val corsOKResponse : req:browserRequest -> resp:actResponse -> Tot (option actResponse)
 let corsOKResponse req resp =
-  let nreq = (Request?.rf req) in
+  let nreq = (BRequest?.rf req) in
   let lm = parseHeader (ActResponse?.ar resp).resphead "Access-Control-Allow-Methods" in
   let lh = parseHeader (ActResponse?.ar resp).resphead "Access-Control-Allow-Headers" in
   match lm with
   | None ->  
       let hmeth = if (nreq.reqpreflight) then [(toStringMethod nreq.reqm)] else [] in
       if ((List.tryFind (fun x -> x = (toStringMethod nreq.reqm)) hmeth = None) && (List.tryFind (fun x -> x = "*") hmeth = None) &&
-	 (nreq.reqm <> "GET") && (nreq.reqm <> "POST") && ((Request?.rf req).reqm <> "HEAD")) then None
+	 (nreq.reqm <> "GET") && (nreq.reqm <> "POST") && ((BRequest?.rf req).reqm <> "HEAD")) then None
       else 
       (
 	match lh with
@@ -1525,11 +1543,11 @@ private val serialize_cookie_list : s:secLevel -> l:(list cookie_send) -> Tot (h
 let serialize_cookie_list s l = Headervalue s (serialize_string s l)
 
 (* Get the cookie-list as a string*)
-val get_cookie_list : b:browser -> r:request -> bool -> Tot headervalue
+val get_cookie_list : b:browser -> r:browserRequest -> bool -> Tot headervalue
 let get_cookie_list b r nhapi =
-  let u = firstElement (Request?.rf r).requrl in
+  let u = firstElement (BRequest?.rf r).requrl in
   let cl = get_cookies u (get_cookies_from_store u b.cookieStore) nhapi in
-  serialize_cookie_list (Request?.rsl r) cl
+  serialize_cookie_list (BRequest?.rsl r) cl
 
 (* Set all the cookies in the cookieHeader list from response based on set_cookie algorithm *)
 private val setCookieBrowser : #s:secLevel -> list (cookieHeader s) -> browser -> u:uri -> Tot browser
@@ -1540,9 +1558,9 @@ let rec setCookieBrowser #s lc b u =
 	    setCookieBrowser tl nb u
 
 (* set the cookies in the browser from the response *)
-val setCookie : browser -> req:request -> resp:actResponse{requestResponseValid req resp} -> Tot browser
+val setCookie : browser -> req:browserRequest -> resp:actResponse{requestResponseValid req resp} -> Tot browser
 let setCookie b req resp =
-  let u = (firstElement (Request?.rf req).requrl) in
+  let u = (firstElement (BRequest?.rf req).requrl) in
   let l = (parseHeader (ActResponse?.ar resp).resphead "Set-Cookie") in  (* s is the list of string and o is the list of origin*)
   match l with
   | None -> b
@@ -1669,27 +1687,27 @@ let s_getHeaderValueString #s h = getHeaderVal h
 val s_getURI : #s:secLevel -> u:uri{URI?.usl u = s} -> Tot (c_uri s)
 let s_getURI #s u = (u_curi u)
 
-val s_getReqHeaderValue : request -> headerfield -> Tot (list string)
-let s_getReqHeaderValue req h =
-  match (parseReqHeader (Request?.rf req).reqhead h) with
+val s_getBReqHeaderValue : browserRequest -> headerfield -> Tot (list string)
+let s_getBReqHeaderValue req h =
+  match (parseReqHeader (BRequest?.rf req).reqhead h) with
   | None -> []
   | Some v -> let s = (if (h = "Cookie") then parseCookieHeaderVal #(Headervalue?.hvs v) v else parseHeaderVal #(Headervalue?.hvs v) v) in
 	     declassify_list s
   
-val s_getRequestURI : #s:secLevel -> req:request{(URI?.usl (firstElement (Request?.rf req).requrl)) = s} -> Tot (c_uri s)
-let s_getRequestURI #s req = u_curi (firstElement (Request?.rf req).requrl)
+(* val s_getRequestURI : #s:secLevel -> req:browserRequest{(URI?.usl (firstElement (BRequest?.rf req).requrl)) = s} -> Tot (c_uri s) *)
+(* let s_getRequestURI #s req = u_curi (firstElement (BRequest?.rf req).requrl) *)
 
-val s_getRequestOrigin : request -> Tot origin
-let s_getRequestOrigin req = (mk_origin (Request?.rf req).reqo)
+val s_getBRequestOrigin : browserRequest -> Tot origin
+let s_getBRequestOrigin req = (mk_origin (BRequest?.rf req).reqo)
 
-val s_getURISecLevel : #s:secLevel -> c_uri s -> Tot (l:secLevel{l = s})
-let s_getURISecLevel #s u = s
+(* val s_getURISecLevel : #s:secLevel -> c_uri s -> Tot (l:secLevel{l = s}) *)
+(* let s_getURISecLevel #s u = s *)
 
-val s_getReqURISecLevel : request  -> Tot (l:secLevel)
-let s_getReqURISecLevel req = (URI?.usl (firstElement (Request?.rf req).requrl))
+(* val s_getReqURISecLevel : browserRequest  -> Tot (l:secLevel) *)
+(* let s_getReqURISecLevel req = (URI?.usl (firstElement (BRequest?.rf req).requrl)) *)
 
-val s_getRequestBody : #s:secLevel -> req:request{Request?.rsl req = s} -> Tot (secString s)
-let s_getRequestBody #s req = (Request?.rf req).reqbody
+(* val s_getRequestBody : #s:secLevel -> req:browserRequest{BRequest?.rsl req = s} -> Tot (secString s) *)
+(* let s_getRequestBody #s req = (BRequest?.rf req).reqbody *)
 
 val s_secstring_uri: #l:secLevel -> secString l -> Tot (option (torigin * a_uri l))
 let s_secstring_uri #l s = (hstring_to_curi_ml l (declassify s)) 

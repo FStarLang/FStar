@@ -15,9 +15,9 @@ module List = FStar.List.Tot
 
 (* Section 6.6.1.7. - effective-directive-for-a-request *)
 (* Returns the effective CSP directive for the request type based on the algorithm*)
-private val getDirectiveForRequest: request -> Tot (option csp_dir_name)
+private val getDirectiveForRequest: browserRequest -> Tot (option csp_dir_name)
 let getDirectiveForRequest req = 
-  let r = (Request?.rf req) in 
+  let r = (BRequest?.rf req) in 
   if r.reqtype = "" then (
      if r.reqinit="fetch" then Some CSP_connect_src
      else if r.reqinit="manifest" then Some CSP_manifest_src
@@ -74,9 +74,9 @@ let nonce_match_source n l =
 
 (* Section 6.1.2.1. -- CSP's prerequest check for connect-src *)
 (* true indicates that the prerequest check succeeds. otherwise, false *)
-private val connect_src_prerequest : request -> csp_directive -> Tot bool
+private val connect_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let connect_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if r.reqinit="fetch" || (r.reqtype="" && r.reqdest="subresource") then 
     uri_match_source r.requrl d.dir_value r.reqo r.reqredirect
   else true  
@@ -92,57 +92,57 @@ let connect_src_prerequest req d =
   (* 	       else true ) *)
 
 (* Section 6.1.4.1. -- CSP's prerequest check for font-src *)
-private val font_src_prerequest : request -> csp_directive -> Tot bool
+private val font_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let font_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "font") then
       uri_match_source r.requrl d.dir_value r.reqo r.reqredirect
   else true
 
 (* Section 6.1.5.1. -- CSP's prerequest check for frame-src *)
-private val frame_src_prerequest : request -> csp_directive -> Tot bool
+private val frame_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let frame_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "document" && (match r.reqtarget with |None -> false |Some win -> ((CWindow?.cwparent win) <> None))) then (
      uri_match_source r.requrl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.6.1. -- CSP's prerequest check for img-src *)
-private val img_src_prerequest : request -> csp_directive -> Tot bool
+private val img_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let img_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "img") then (
      uri_match_source r.requrl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.7.1. -- CSP's prerequest check for manifest-src *)
-private val manifest_src_prerequest : request -> csp_directive -> Tot bool
+private val manifest_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let manifest_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "" && r.reqinit = "manifest") then (
      uri_match_source r.requrl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.8.1. -- CSP's prerequest check for media-src *)
-private val media_src_prerequest : request -> csp_directive -> Tot bool
+private val media_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let media_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "audio" || r.reqtype = "video" || r.reqtype = "track") then (
      uri_match_source r.requrl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.9.1. -- CSP's prerequest check for object-src *)
-private val object_src_prerequest : request -> csp_directive -> Tot bool
+private val object_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let object_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "" && r.reqdest = "unknown") then (
      uri_match_source r.requrl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.10.1. -- CSP's prerequest check for script-src *)
-private val script_src_prerequest : request -> csp_directive -> Tot bool
+private val script_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let script_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "script" && r.reqdest = "subresource") then ( 
     if (nonce_match_source r.reqnonce d.dir_value) then true (*check for cryptographic nonces*)
     else if (List.find (fun v -> v = DV_St_Dynamic) d.dir_value <> None) then 
@@ -151,24 +151,24 @@ let script_src_prerequest req d =
   else true
 
 (* Section 6.1.11.1. -- CSP's prerequest check for style-src *)
-private val style_src_prerequest : request -> csp_directive -> Tot bool
+private val style_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let style_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "style") then ( 
     if (nonce_match_source r.reqnonce d.dir_value) then true (*check for cryptographic nonces*)
     else uri_match_source r.requrl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.12.1. -- CSP's prerequest check for worker-src *)
-private val worker_src_prerequest : request -> csp_directive -> Tot bool
+private val worker_src_prerequest : browserRequest -> csp_directive -> Tot bool
 let worker_src_prerequest req d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqdest = "worker" || r.reqdest = "serviceworker" || r.reqdest = "sharedworker") then (
     uri_match_source r.requrl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.1.1. -- CSP's prerequest check for child-src *)
-private val child_src_prerequest : request -> csp_directive -> csp_policy -> Tot bool
+private val child_src_prerequest : browserRequest -> csp_directive -> csp_policy -> Tot bool
 let child_src_prerequest r d p =
   let n=getDirectiveForRequest r in
     match n with
@@ -182,7 +182,7 @@ let child_src_prerequest r d p =
     | None -> true  (* Not specified - doing as per default-src *)
 
 (* Section 6.1.3.1. -- CSP's prerequest check for default-src *)
-private val default_src_prerequest : request -> csp_directive -> csp_policy -> Tot bool
+private val default_src_prerequest : browserRequest -> csp_directive -> csp_policy -> Tot bool
 let default_src_prerequest r d p =
   let n=getDirectiveForRequest r in
     match n with
@@ -205,89 +205,89 @@ let default_src_prerequest r d p =
 
 (* Section 6.1.2.2. -- CSP's postrequest check for connect-src *)
 (* true indicates that the postrequest check succeeds. otherwise, false *)
-private val connect_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val connect_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let connect_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if r.reqinit="fetch" || (r.reqtype="" && r.reqdest="subresource") then 
     uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect
   else true 
   
 (* Section 6.1.4.2. -- CSP's postrequest check for font-src *)
-private val font_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val font_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let font_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "font") then (
     uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect) 
   else true
 
 (* Section 6.1.5.2. -- CSP's postrequest check for frame-src *)
-private val frame_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val frame_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let frame_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "document" && (match r.reqtarget with |None -> false |Some win -> (CWindow?.cwparent win) <> None)) then (
     uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.6.2. -- CSP's postrequest check for img-src *)
-private val img_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val img_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let img_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "img") then (
     uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.7.2. -- CSP's postrequest check for manifest-src *)
-private val manifest_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val manifest_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let manifest_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "" && r.reqinit = "manifest") then (
     uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.8.2. -- CSP's postrequest check for media-src *)
-private val media_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val media_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let media_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "audio" || r.reqtype = "video" || r.reqtype = "track") then (
     uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.9.2. -- CSP's postrequest check for object-src *)
-private val object_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val object_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let object_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "" && r.reqdest = "unknown") then (
     uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.10.2. -- CSP's postrequest check for script-src *)
-private val script_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val script_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let script_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "script" && r.reqdest = "subresource") then ( 
     if (nonce_match_source r.reqnonce d.dir_value) then true
     else uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.11.2. -- CSP's postrequest check for style-src *)
-private val style_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val style_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let style_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqtype = "style") then ( 
     if (nonce_match_source r.reqnonce d.dir_value) then true (*check for cryptographic nonces*)
     else uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.12.2. -- CSP's postrequest check for worker-src *)
-private val worker_src_postrequest : request -> actResponse -> csp_directive -> Tot bool
+private val worker_src_postrequest : browserRequest -> actResponse -> csp_directive -> Tot bool
 let worker_src_postrequest req resp d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (r.reqdest = "worker" || r.reqdest = "serviceworker" || r.reqdest = "sharedworker") then (
     uri_match_resp_source (ActResponse?.ar resp).respurl d.dir_value r.reqo r.reqredirect)
   else true
 
 (* Section 6.1.1.2. -- CSP's postrequest check for child-src *)
-private val child_src_postrequest : request -> actResponse -> csp_directive -> csp_policy -> Tot bool
+private val child_src_postrequest : browserRequest -> actResponse -> csp_directive -> csp_policy -> Tot bool
 let child_src_postrequest r resp d p =
   let n=getDirectiveForRequest r in
     match n with
@@ -301,7 +301,7 @@ let child_src_postrequest r resp d p =
     | None -> false  
 
 (* Section 6.1.3.2. -- CSP's postrequest check for default-src *)
-private val default_src_postrequest : request -> actResponse -> csp_directive -> csp_policy -> Tot bool
+private val default_src_postrequest : browserRequest -> actResponse -> csp_directive -> csp_policy -> Tot bool
 let default_src_postrequest r resp d p =
   let n=getDirectiveForRequest r in
     match n with
@@ -323,7 +323,7 @@ let default_src_postrequest r resp d p =
     | None -> true  
     
 (* 6.6.1.1. CSP Level 3 - Does request violate CSP policy *)
-private val reqViolatePolicy: request -> csp_policy -> Tot (option csp_directive)
+private val reqViolatePolicy: browserRequest -> csp_policy -> Tot (option csp_directive)
 let rec reqViolatePolicy r p =
   match p with
   | [] -> None 
@@ -345,15 +345,15 @@ let rec reqViolatePolicy r p =
 
 (* CSP Level 3 - 4.1.3. Should request be blocked by Content Security Policy? *)
 (* true -> blocked; false -> allowed *)
-val reqBlockedCSP : request -> Tot bool
+val reqBlockedCSP : browserRequest -> Tot bool
 let reqBlockedCSP r =
-  match (Request?.rf r).reqw with 
+  match (BRequest?.rf r).reqw with 
   | None -> false (* Not specified in the spec? may be the policy list is treated to be [] *)
   | Some w -> match reqViolatePolicy r (getCSPList w) with
 	     | None -> false
 	     | Some v -> true (*report all violations*)
  
-private val respViolatePolicy: actResponse -> request -> csp_policy -> Tot (option csp_directive)
+private val respViolatePolicy: actResponse -> browserRequest -> csp_policy -> Tot (option csp_directive)
 let rec respViolatePolicy resp req p =
   match p with
   | [] -> None 
@@ -375,18 +375,18 @@ let rec respViolatePolicy resp req p =
 	      
 (* CSP Level 3 - 4.1.4. Should response to request be blocked by Content Security Policy? *)
 (* true -> blocked; false -> allowed *)
-val respReqBlockedCSP : actResponse -> request -> Tot bool
+val respReqBlockedCSP : actResponse -> browserRequest -> Tot bool
 let respReqBlockedCSP resp req =
-  match (Request?.rf req).reqw with 
+  match (BRequest?.rf req).reqw with 
   | None -> false 
   | Some w -> match respViolatePolicy resp req (getCSPList w) with
 	     | None -> false
 	     | Some v -> true (*report all violations*)
 
 (* 6.3.1.1 form-action pre-navigation check *)
-private val form_action_prenavigate : request -> string -> csp_directive -> Tot bool
+private val form_action_prenavigate : browserRequest -> string -> csp_directive -> Tot bool
 let form_action_prenavigate req t d =
-  let r = (Request?.rf req) in
+  let r = (BRequest?.rf req) in
   if (t = "form-submission") then 
     uri_match_source r.requrl d.dir_value r.reqo r.reqredirect
     (* match (List.find (fun s -> s.dir_name = CSP_form_action) p) with  *)
@@ -395,12 +395,12 @@ let form_action_prenavigate req t d =
   else true 
 
 (* 6.3.3.1 navigate-to pre-navigation check *)
-private val navigate_to_prenavigate : request -> csp_directive -> Tot bool
+private val navigate_to_prenavigate : browserRequest -> csp_directive -> Tot bool
 let navigate_to_prenavigate req d =   
-  let r = (Request?.rf req) in 
+  let r = (BRequest?.rf req) in 
   uri_match_source r.requrl d.dir_value r.reqo r.reqredirect
 
-private val navViolatePolicy: request -> string -> csp_policy -> Tot (option csp_directive)
+private val navViolatePolicy: browserRequest -> string -> csp_policy -> Tot (option csp_directive)
 let rec navViolatePolicy r t p =
   match p with
   | [] -> None
@@ -410,7 +410,7 @@ let rec navViolatePolicy r t p =
 	      | _ -> navViolatePolicy r t pt
   
 (* CSP Level 3 - 4.2.4. Should navigation request of type from source to target be blocked by Content Security Policy? *)
-val navReqBlockedCSP : request -> string -> cowindow -> cowindow -> Tot bool
+val navReqBlockedCSP : browserRequest -> string -> cowindow -> cowindow -> Tot bool
 let navReqBlockedCSP r t sw tw =
   match navViolatePolicy r t (getCSPList sw) with
     | None -> false
@@ -424,14 +424,14 @@ let rec checkAncestor w v u n =
   
 (* 6.3.2.1. frame-ancestors Navigation Response Check *)
 (* request is not used by the algorithm currently *)
-private val frame_ancestors_navresponse : request -> resp:actResponse{not (emptyList (ActResponse?.ar resp).respurl)} ->
+private val frame_ancestors_navresponse : browserRequest -> resp:actResponse{not (emptyList (ActResponse?.ar resp).respurl)} ->
 					cowindow -> cowindow -> csp_directive -> Tot bool
 let frame_ancestors_navresponse req resp sw tw d = 
   match (ActResponse?.ar resp).respurl with 
   | rurl::_ -> checkAncestor tw d.dir_value rurl 0
 
 (* request is not used by the algorithm currently *)
-private val navRespViolatePolicy: request -> actResponse -> cowindow -> cowindow -> csp_policy -> Tot (option csp_directive)
+private val navRespViolatePolicy: browserRequest -> actResponse -> cowindow -> cowindow -> csp_policy -> Tot (option csp_directive)
 let rec navRespViolatePolicy req resp sw tw p =
   match p with
   | [] -> None
@@ -444,7 +444,7 @@ let rec navRespViolatePolicy req resp sw tw p =
 (* 4.2.5. Should navigation response to navigation request of type from source in target be blocked by Content Security Policy? *)
 (* Use of type? Not used by underlying algorithm *)
 (* request is not used by the algorithm currently *)
-val navRespBlockedCSP : request -> string -> actResponse -> cowindow -> cowindow -> Tot bool
+val navRespBlockedCSP : browserRequest -> string -> actResponse -> cowindow -> cowindow -> Tot bool
 let navRespBlockedCSP r t resp sw tw =
   match navRespViolatePolicy r resp sw tw (ActResponse?.ar resp).respCSP with
     | None -> false

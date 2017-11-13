@@ -95,6 +95,13 @@ let rec list_to_string l =
   | [] -> ""
   | h::t -> h ^ (list_to_string t)
 
+(* Similar to a set-difference operation *)
+val list_difference : #t:eqtype -> a:list t -> b:list t -> Tot (c:(list t){forall x. List.mem x b ==> not (List.mem x c)})
+let rec list_difference #t a b =
+  match a with 
+  | [] -> []
+  | h::t -> if (List.mem h b) then list_difference t b else h::(list_difference t b)
+
 (* Remove entries after the nth entry *)
 val rem_sublist : #a:eqtype -> l:list a -> n:nat -> Tot (fl:(list a){(if n <= List.length l then List.length fl = n else List.length l = List.length fl) /\ List.length fl <= n})
 let rec rem_sublist #a l n =

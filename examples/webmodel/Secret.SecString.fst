@@ -15,10 +15,10 @@ module List = FStar.List.Tot
 (* Secrecy level *)
 type secLevel = 
 | PublicVal : secLevel
-| SecretVal : seco:list torigin{not (emptyList seco)} -> secLevel
+| SecretVal : seco:list origin{not (emptyList seco)} -> secLevel
 
 (* abstract *) 
-type a_string (ol:list torigin) = 
+type a_string (ol:list origin) = 
      | AString : string -> a_string ol
 
 let secString (s:secLevel): Tot Type0 =
@@ -29,7 +29,7 @@ let secString (s:secLevel): Tot Type0 =
 type pubString = secString PublicVal
 
 (* all secrets with possible list of origins for a particular user *)
-type secretOriginList = list ((l:secLevel & secString l) * list torigin)
+type secretOriginList = list ((l:secLevel & secString l) * list origin)
 
 let secList : secretOriginList = []
 
@@ -165,13 +165,13 @@ let rec mk_list_string #s l =
   | hd::tl -> (classify #PublicVal hd s)::(mk_list_string tl)
 
 (* Checks if the origin is a part of the secrecy level or if the secrecy level is public *)
-val isOriginSec : torigin -> s:secLevel -> Tot bool
+val isOriginSec : origin -> s:secLevel -> Tot bool
 let isOriginSec t s =
   match s with
   | PublicVal -> true
   | SecretVal sec -> List.mem t sec
 
-private val getSecretOrigin : #l:secLevel -> secString l -> secretOriginList -> Tot (list torigin)
+private val getSecretOrigin : #l:secLevel -> secString l -> secretOriginList -> Tot (list origin)
 let rec getSecretOrigin #l s ls =
   match ls with
   | [] -> []
@@ -186,7 +186,7 @@ let canReclassify #l s l' =
   | PublicVal -> false
   | SecretVal ol' -> (List.for_all (fun x -> List.mem x lo) ol'))
 
-val addSecretOrigins : #l:secLevel -> s:secString l -> ol:list torigin -> ls:secretOriginList -> Tot (nls:secretOriginList)
+val addSecretOrigins : #l:secLevel -> s:secString l -> ol:list origin -> ls:secretOriginList -> Tot (nls:secretOriginList)
 let rec addSecretOrigins #l s ol ls = 
   match ls with
   | [] -> [((|l, s|), ol)]
@@ -208,15 +208,21 @@ let declassify (#l:secLevel) (s:secString l) : Tot string =
     | SecretVal ol -> 
       let (AString #ol v) = s in v
 
+(* Server-side declassify --- the server should be able to properly guess the secLevel for declassify to succeed *)
+let s_declassify (l:secLevel) (s:secString l) : Tot string = 
+    match l with
+    | PublicVal -> s
+    | SecretVal ol -> let (AString #ol v) = s in v
+
 let rec declassify_list  (#l:secLevel) (s:list (secString l)) : Tot (list string) = 
   match s with 
   | [] -> []
   | hd::tl -> (declassify #l hd)::(declassify_list tl)
 
 (* for printing and logging *)
-val getOriginString : list torigin -> Tot (string)
+val getOriginString : list origin -> Tot (string)
 let rec getOriginString l =
   match l with 
   | [] -> ""
   | hd::tl -> "Origin: " ^ (origin_to_string hd) ^ "\n" ^ (getOriginString tl)
-  
+

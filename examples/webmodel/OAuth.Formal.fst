@@ -1,30 +1,23 @@
 module OAuth.Formal
 
-type http_request
-type http_response
-type param
-type header
-type body
-type uri
-type origin = string
-type uid = string
+open AuxiliaryFunctions
+open Secret.SecString
 
+let  public_index = PublicVal
 
-// We will check by typing that a nonce of type "nonce idx"
-// can never be sent to principals other than idx.uid, idx.rp, idx.ip
-type index 
-assume val public_index: index
-assume val can_send: i:index -> i':index -> GTot Type
-assume val includes: i:index -> o:origin -> GTot Type
+let can_send i i' = restricts i i'
 
-assume val index2 : o1:origin -> o2:origin -> i:index{includes i o1 /\ includes i o2}
+let includes i o = isOriginSec o i
 
-type nonce
-assume val nonce_index: nonce -> index
-assume val eq_nonce: x:nonce -> y:nonce -> b:bool{b ==> nonce_index x == nonce_index y}
+let index_origins lo = SecretVal lo
 
-assume val param_index: param -> GTot index
-type pub_param = p:param{param_index p == public_index}
+let nonce_index n = (Network.Interface.Secret?.s n)
+
+let eq_nonce n1 n2 = 
+  (Network.Interface.Secret?.s n1) = (Network.Interface.Secret?.s n2) &&
+    Secret.SecString.equal (Network.Interface.Secret?.v n1) (Network.Interface.Secret?.v n2)
+
+let param_index p = (Network.Interface.Secret?.s p)
 
 assume val header_index: header -> GTot index
 type pub_header = h:header{header_index h == public_index}
@@ -34,7 +27,7 @@ type pub_body = b:body{body_index b == public_index}
 
 assume val can_send_public: i:index ->  Lemma 
 	   (requires True)
-	   (ensures (fun _ -> can_send public_index i))
+	   (ensures (can_send public_index i))
 	   [SMTPat (can_send public_index i)]
 	   
 assume val mk_uri: origin -> path:string -> list param  -> uri
@@ -98,7 +91,7 @@ assume val get_client_id: idp_record -> string
 assume val get_client_secret: ir:idp_record -> option (n:nonce{nonce_index n `includes` get_rp_origin ir /\ 
 							      nonce_index n `includes` get_idp_origin ir /\
 							      can_send (nonce_index n) 
-								(index2 (get_idp_origin ir) (get_rp_origin ir))})
+								(index_origins [(get_idp_origin ir);(get_rp_origin ir)])})
 
 
 assume val response_type_param: string -> pub_param
@@ -117,7 +110,7 @@ assume val idp_code_params: user:uid -> ip:origin -> rp:origin -> code:nonce -> 
 				       (nonce_index code `includes` ip /\
 					nonce_index code `includes` rp /\
 				        nonce_index code `includes` user /\
-				        can_send (nonce_index code) (index2 ip rp))))
+				        can_send (nonce_index code) (index_origins [ip;rp]))))
 			    (ensures (fun _ -> True))
 
 assume val get_idp_param: (list param) -> option origin
@@ -136,7 +129,7 @@ assume val get_idp_code_params: (rp:origin) -> (list param) -> Pure (option (ori
 						     nonce_index code == public_index \/
 						     (nonce_index code `includes` idp /\
 						      nonce_index code `includes` rp /\
-						      can_send (nonce_index code) (index2 idp rp))))
+						      can_send (nonce_index code) (index_origins [idp;rp]))))
 
 assume val set_rp_session: loginSessionId:nonce -> idp:origin -> s:nonce -> m:string -> redir:uri -> server unit
 assume val get_rp_session: loginSessionId:nonce -> server (option (idp:origin * s:nonce * m:string * redir:uri))
@@ -218,7 +211,7 @@ let rp_http_server (rp_origin:origin) (msg:http_message) : server (option http_m
                              match (get_client_secret ir) with
 			     | None -> return None
 			     | Some sec -> 
-				    let token_index = index2 idp rp_origin in
+				    let token_index = index_origins [idp; rp_origin] in
 				    let auth_header = mk_authorization_header client_id sec in
 				    let grant_param = grant_type_param "authorization_code" in
 				    can_send_public token_index;
@@ -260,7 +253,7 @@ let rp_http_server (rp_origin:origin) (msg:http_message) : server (option http_m
 		 let intros_uri = add_parameters intros_uri [access_token_param token] in
 		 request_id <-- mk_nonce ;
    		 set_rp_request_state request_id "introspect" idp prev ;;
-		 let request_idx = index2 idp rp_origin in
+		 let request_idx = index_origins [idp; rp_origin] in
 		 assert (includes request_idx idp);
 		 assert (includes request_idx (uri_origin intros_uri));
 		 let request = mk_request #request_idx "GET" intros_uri [] (mk_body #request_idx []) in
