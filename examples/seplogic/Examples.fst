@@ -39,24 +39,20 @@ let simplify_join_emp :tactic unit =
                               (apply_lemma (quote lemma_join_emp_h);; qed))
 		     (fail  "simplify_join_emp: failed"))
 
-let simplify_context :tactic unit =
+let simplify_join  :tactic unit =
   pointwise ((apply_lemma (quote lemma_join_points_to_minus);; qed)
   `or_else`  (apply_lemma (quote lemma_join_restrict_minus);; qed)
-  `or_else`  (apply_lemma (quote lemma_restrict_r_update);; qed)
-  `or_else`  (apply_lemma (quote lemma_restrict_r1_update);; qed)
   `or_else`   fail "simplify_context: failed")
-  
-let simplify_goal :tactic unit =
-  pointwise ((apply_lemma (quote lemma_join_points_to_minus);; qed)
-  `or_else`  (apply_lemma (quote lemma_join_restrict_minus);; qed)
-  `or_else`  (apply_lemma (quote lemma_sel_r_update);; qed)
-  `or_else`  (apply_lemma (quote lemma_sel_r1_update);; qed)
-  `or_else`  (apply_lemma (quote lemma_restrict_r_update);; qed)
-  `or_else`  (apply_lemma (quote lemma_restrict_r1_update);; qed)
-  `or_else`  (apply_lemma (quote lemma_sel_r1_from_restrict);; qed)
-  `or_else`  (apply_lemma (quote lemma_sel_r_from_minus);; qed)
-  `or_else`   fail "simplify_goal: failed")
 
+let simplify_restrict :tactic unit =
+  apply_lemma (quote lemma_restrict_r_update')  `or_else`
+  apply_lemma (quote lemma_restrict_r1_update') `or_else`
+  fail "simplify_restrict: failed"
+
+let simplify_context :tactic unit =
+  simplify_join;;
+  return ()
+  
 let simplify_sel :tactic unit =
   apply_lemma (quote lemma_sel_r_update')         `or_else`
   apply_lemma (quote lemma_sel_r1_update')        `or_else`
@@ -64,22 +60,14 @@ let simplify_sel :tactic unit =
   apply_lemma (quote lemma_sel_r_from_minus')     `or_else`
   fail "simplify_sel: failed"
 
-let rec repeat_simplify_goal () :Tac unit =
-  (g1 <-- cur_goal; simplify_goal;; g2 <-- cur_goal;
-   if term_eq g1 g2 
-   then return () 
-   else repeat_simplify_goal
-  ) ()
-
-let repeat_simplify :tactic unit =
-  simplify_join_emp;; repeat_simplify_goal
-
 let rec repeat_simplify' () :Tac unit =
-  (g1 <-- cur_goal; simplify_context;; g2 <-- cur_goal;
+  (dump "hereee";; g1 <-- cur_goal; simplify_context;; g2 <-- cur_goal;
     begin match (term_as_formula' g1, term_as_formula' g2) with
     | App _ t1, App _ t2 -> 
        begin match (term_as_formula' t1, term_as_formula' t2) with
-       | (Iff l1 _, Iff l2 _) -> if term_eq l1 l2
+       | (Iff l1 _, Iff l2 _) -> print (term_to_string l1);;
+                                 print (term_to_string l2);;
+                                 if term_eq l1 l2
                                  then return ()
                          	 else repeat_simplify'
        | _                    -> return ()				 
@@ -93,6 +81,7 @@ let step_intros :tactic unit =
   apply_lemma (quote lemma_impl_l_cong);;
   simplify_join_emp;;
   repeat_simplify';;
+  repeat simplify_restrict;;
   apply_lemma (quote lemma_refl);;
   implies_intro;;
   return ()
@@ -109,12 +98,11 @@ let rec repeat_simplify_sel () :Tac unit =
   (g <-- trytac cur_goal;
   begin match g with
   | None -> return ()
-  | Some _ -> simplify_sel;;
+  | Some _ -> repeat simplify_sel;;
               trytac ((trefl;; qed) `or_else` smt);;
               repeat_simplify_sel
   end
   ) ()
-
 
 let solve_goal :tactic unit =
   simplify_join_emp;;
@@ -162,11 +150,11 @@ let double_increment_ok (r:addr) (h:heap) (n:t{size (v n + 2) FStar.UInt64.n}) =
   let t = (lift_wpsep (wpsep_command c)) p h in
   assert_by_tactic (sel h r == n ==> t) solve
 
-// let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
-//   let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
-//   let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
-//   let t = (lift_wpsep (wpsep_command c)) p h in
-//   assert_by_tactic (addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve
+let rotate_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
+  let c = Bind (Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1)))) (fun _ -> Bind (Read r2) (fun n3 -> Bind (Read r3) (fun n4 -> Bind (Write r2 n4) (fun _ -> Write r3 n3)))) in
+  let p = fun _ h -> (sel h r1 == j /\ sel h r2 == k /\ sel h r3 == i) in
+  let t = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> t) solve
 
 let init_ok (h:heap) =
   let c = Bind (Alloc) (fun (r1:addr) -> Bind (Write r1 7uL) (fun _ -> Return r1)) in
