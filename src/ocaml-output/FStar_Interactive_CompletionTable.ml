@@ -435,7 +435,7 @@ let rec trie_find_exact:
             (fun scope  -> trie_find_exact scope query1)
 let names_insert: 'a . 'a names -> Prims.string -> 'a -> 'a names =
   fun name_collections  ->
-    fun id1  ->
+    fun id  ->
       fun v1  ->
         let uu____2365 =
           match name_collections with
@@ -444,7 +444,7 @@ let names_insert: 'a . 'a names -> Prims.string -> 'a -> 'a names =
         match uu____2365 with
         | (bt,name_collections1) ->
             let uu____2428 =
-              let uu____2431 = btree_insert_replace bt id1 v1 in
+              let uu____2431 = btree_insert_replace bt id v1 in
               Names uu____2431 in
             uu____2428 :: name_collections1
 let rec namespaces_mutate:
@@ -484,11 +484,11 @@ and trie_mutate:
           fun mut_leaf  ->
             match q with
             | [] -> mut_leaf tr rev_acc1
-            | id1::q1 ->
+            | id::q1 ->
                 let ns' =
-                  namespaces_mutate tr.namespaces id1 q1 (id1 :: rev_acc1)
+                  namespaces_mutate tr.namespaces id q1 (id :: rev_acc1)
                     mut_node mut_leaf in
-                mut_node tr id1 q1 rev_acc1 ns'
+                mut_node tr id q1 rev_acc1 ns'
 let trie_mutate_leaf:
   'a . 'a trie -> query -> ('a trie -> query -> 'a trie) -> 'a trie =
   fun tr  ->
@@ -504,13 +504,13 @@ let trie_mutate_leaf:
 let trie_insert: 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
   fun tr  ->
     fun ns_query  ->
-      fun id1  ->
+      fun id  ->
         fun v1  ->
           trie_mutate_leaf tr ns_query
             (fun tr1  ->
                fun uu____2758  ->
                  let uu___41_2761 = tr1 in
-                 let uu____2764 = names_insert tr1.bindings id1 v1 in
+                 let uu____2764 = names_insert tr1.bindings id v1 in
                  {
                    bindings = uu____2764;
                    namespaces = (uu___41_2761.namespaces)
@@ -633,17 +633,17 @@ let names_find_rev:
         (path_elem,'a) FStar_Pervasives_Native.tuple2 Prims.list
   =
   fun names  ->
-    fun id1  ->
+    fun id  ->
       let matching_values_per_collection_with_imports =
-        match id1 with
+        match id with
         | NSTNone  -> []
         | NSTAll  ->
             names_revmap (btree_find_all FStar_Pervasives_Native.None) names
         | NSTPrefix "" ->
             names_revmap (btree_find_all (FStar_Pervasives_Native.Some ""))
               names
-        | NSTPrefix id2 ->
-            names_revmap (fun bt  -> btree_find_prefix bt id2) names in
+        | NSTPrefix id1 ->
+            names_revmap (fun bt  -> btree_find_prefix bt id1) names in
       let matching_values_per_collection =
         FStar_List.map
           (fun uu____3346  ->
@@ -674,7 +674,7 @@ let rec trie_find_prefix':
           let uu____3464 =
             match query with
             | [] -> (NSTAll, NSTAll, [])
-            | id1::[] -> ((NSTPrefix id1), (NSTPrefix id1), [])
+            | id::[] -> ((NSTPrefix id), (NSTPrefix id), [])
             | ns::query1 -> ((NSTPrefix ns), NSTNone, query1) in
           match uu____3464 with
           | (ns_search_term,bindings_search_term,query1) ->
@@ -778,10 +778,10 @@ let empty: table = { tbl_lids = (trie_empty ()); tbl_mods = (trie_empty ()) }
 let insert: table -> query -> Prims.string -> lid_symbol -> table =
   fun tbl  ->
     fun host_query  ->
-      fun id1  ->
+      fun id  ->
         fun c  ->
           let uu___44_3791 = tbl in
-          let uu____3792 = trie_insert tbl.tbl_lids host_query id1 c in
+          let uu____3792 = trie_insert tbl.tbl_lids host_query id c in
           { tbl_lids = uu____3792; tbl_mods = (uu___44_3791.tbl_mods) }
 let register_alias: table -> Prims.string -> query -> query -> table =
   fun tbl  ->
@@ -817,22 +817,22 @@ let register_module_path:
     fun loaded  ->
       fun path  ->
         fun mod_query  ->
-          let ins_ns id1 bindings full_name loaded1 =
+          let ins_ns id bindings full_name loaded1 =
             let uu____3874 =
-              let uu____3881 = names_find_exact bindings id1 in
+              let uu____3881 = names_find_exact bindings id in
               (uu____3881, loaded1) in
             match uu____3874 with
             | (FStar_Pervasives_Native.None ,uu____3890) ->
-                names_insert bindings id1
+                names_insert bindings id
                   (Namespace { ns_name = full_name; ns_loaded = loaded1 })
             | (FStar_Pervasives_Native.Some (Namespace
                { ns_name = uu____3895; ns_loaded = false ;_}),true ) ->
-                names_insert bindings id1
+                names_insert bindings id
                   (Namespace { ns_name = full_name; ns_loaded = loaded1 })
             | (FStar_Pervasives_Native.Some uu____3900,uu____3901) ->
                 bindings in
-          let ins_mod id1 bindings full_name loaded1 =
-            names_insert bindings id1
+          let ins_mod id bindings full_name loaded1 =
+            names_insert bindings id
               (Module
                  {
                    mod_name = full_name;
@@ -841,21 +841,21 @@ let register_module_path:
                  }) in
           let name_of_revq query =
             FStar_String.concat "." (FStar_List.rev query) in
-          let ins id1 q revq bindings loaded1 =
-            let name = name_of_revq (id1 :: revq) in
+          let ins id q revq bindings loaded1 =
+            let name = name_of_revq (id :: revq) in
             match q with
-            | [] -> ins_mod id1 bindings name loaded1
-            | uu____3974 -> ins_ns id1 bindings name loaded1 in
+            | [] -> ins_mod id bindings name loaded1
+            | uu____3974 -> ins_ns id bindings name loaded1 in
           let uu___48_3980 = tbl in
           let uu____3981 =
             trie_mutate tbl.tbl_mods mod_query []
               (fun tr  ->
-                 fun id1  ->
+                 fun id  ->
                    fun q  ->
                      fun revq  ->
                        fun namespaces  ->
                          let uu___49_4003 = tr in
-                         let uu____4006 = ins id1 q revq tr.bindings loaded in
+                         let uu____4006 = ins id q revq tr.bindings loaded in
                          { bindings = uu____4006; namespaces })
               (fun tr  -> fun uu____4017  -> tr) in
           { tbl_lids = (uu___48_3980.tbl_lids); tbl_mods = uu____3981 }
