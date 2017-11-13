@@ -233,7 +233,6 @@ let check_smt_pat env t bs c =
 (* guards the recursively bound names with a termination check                                              *)
 (************************************************************************************************************)
 let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
-    if not (Env.should_verify env) then env.letrecs else
     match env.letrecs with
     | [] -> []
     | letrecs ->
@@ -1097,7 +1096,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 in
 
                 let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
-                let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
+                let envbody, letrecs = mk_letrec_env envbody bs c in
                 let envbody = Env.set_expected_typ envbody (U.comp_result c) in
                 Some t, bs, letrecs, Some c, envbody, body, g
 
@@ -2019,8 +2018,10 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                   let g = Rel.resolve_implicits g in
                   ignore <| Rel.discharge_guard env g;
                   norm env0 t) in
-        let env = if termination_check_enabled lb.lbname e t
-                  && Env.should_verify env (* store the let rec names separately for termination checks *)
+        let env = if termination_check_enabled lb.lbname e t  //AR: This code also used to have && Env.should_verify env
+                                                              //i.e. when lax checking it was adding lbname in the second branch
+                                                              //this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug058)
+                                                              //Removed that check. Rest of the code relies on env.letrecs = []
                   then {env with letrecs=(lb.lbname,t,univ_vars)::env.letrecs}  //AR: we need to add the binding of the let rec after adding the binders of the lambda term, and so, here we just note in the env
                                                                                 //that we are typechecking a let rec, the recursive binding will be added in tc_abs
                                                                                 //adding universes here so that when we add the let binding, we can add a typescheme with these universes
