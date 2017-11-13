@@ -1,20 +1,23 @@
 module Test
 
-val g : x:'a -> Tot unit
-let g x = ()
+let rec f: a:Type u#x -> l:list u#x a -> list u#x a = fun a l -> []
 
-let rec xxx (x:int) (y:int) :unit = g (xxx y)
+
+// val g : x:'a -> Tot unit
+// let g x = ()
+
+// let rec xxx (x:int) (y:int) :unit = g (xxx y)
 
 
 //let rec foo :int -> int -> int = fun x -> let z = 3 in fun y -> x + y + z
 
-// let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
+let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
 
-// let a n :nat = 1
-// let f (ls:list nat) :nat =
-//   let rec aux (xs:list nat) :nat = a 0
-//   in
-//   0
+let a n :nat = 1
+let f1 (ls:list nat) :nat =
+  let rec aux (xs:list nat) :nat = a 0
+  in
+  0
 
 // assume type t (n:nat) :Type0
 // assume val foo: #n:nat{n > 0} -> t n -> Tot unit
