@@ -29,8 +29,8 @@ let definition_lids: FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list =
     | FStar_Parser_AST.Tycon (uu____92,tys) ->
         FStar_All.pipe_right tys
           (FStar_List.collect
-             (fun uu___296_133  ->
-                match uu___296_133 with
+             (fun uu___158_133  ->
+                match uu___158_133 with
                 | (FStar_Parser_AST.TyconAbbrev
                    (id,uu____143,uu____144,uu____145),uu____146) ->
                     let uu____159 = FStar_Ident.lid_of_ids [id] in
@@ -66,8 +66,8 @@ let rec prefix_with_iface_decls:
            | FStar_Parser_AST.Tycon (uu____303,tys) when
                FStar_All.pipe_right tys
                  (FStar_Util.for_some
-                    (fun uu___297_338  ->
-                       match uu___297_338 with
+                    (fun uu___159_338  ->
+                       match uu___159_338 with
                        | (FStar_Parser_AST.TyconAbstract uu____345,uu____346)
                            -> true
                        | uu____361 -> false))
@@ -167,8 +167,8 @@ let check_initial_interface:
            | FStar_Parser_AST.Tycon (uu____671,tys) when
                FStar_All.pipe_right tys
                  (FStar_Util.for_some
-                    (fun uu___298_706  ->
-                       match uu___298_706 with
+                    (fun uu___160_706  ->
+                       match uu___160_706 with
                        | (FStar_Parser_AST.TyconAbstract uu____713,uu____714)
                            -> true
                        | uu____729 -> false))
@@ -332,8 +332,8 @@ let interleave_module:
                       let uu____1181 =
                         let uu____1190 =
                           FStar_Util.prefix_until
-                            (fun uu___299_1209  ->
-                               match uu___299_1209 with
+                            (fun uu___161_1209  ->
+                               match uu___161_1209 with
                                | {
                                    FStar_Parser_AST.d = FStar_Parser_AST.Val
                                      uu____1210;
