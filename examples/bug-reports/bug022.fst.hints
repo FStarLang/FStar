@@ -1,0 +1,63 @@
+[
+  "#?\u0000¢rä(Ù˛F0ı#D¬ê",
+  [
+    [
+      "Bug022.exp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "415c4b6762433c6591af9327c2042e0a"
+    ],
+    [
+      "Bug022.uu___is_EAbs",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "72070cfea5659bd7a3d166ac43417fb9"
+    ],
+    [
+      "Bug022.__proj__EAbs__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug022.EAbs",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug022_Tm_refine_1fab4118271d47fc28cd28aead33e87f"
+      ],
+      0,
+      "f40783c40b5a569f0ce16aadb116f8b6"
+    ],
+    [
+      "Bug022.uu___is_EFalse",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3803159d96fa49ce188145443cd10040"
+    ],
+    [
+      "Bug022.subst",
+      1,
+      2,
+      1,
+      [ "@query", "equality_tok_Bug022.EFalse@tok" ],
+      0,
+      "4ef8219ffca989ef8866c9df0ea29cf8"
+    ],
+    [
+      "Bug022.subst",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "8055b7ed14dbd499543171a5e06a1a82"
+    ]
+  ]
+]

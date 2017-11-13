@@ -1,0 +1,32 @@
+[
+  "򗥊釀攵鸛臷u0002}E淃",
+  [
+    [
+      "Bug184.refl",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "967c1a664cb42d49548a04aa31abb04a"
+    ],
+    [
+      "Bug184.__proj__Refl__item__x",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d8cb91e7fa169da2fcd74ec5e1ac79f5"
+    ],
+    [
+      "Bug184.foo",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2aee7178bbc75f8bad90d1f60e98b405"
+    ]
+  ]
+]
