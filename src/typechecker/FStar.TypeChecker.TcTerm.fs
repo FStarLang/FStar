@@ -2020,7 +2020,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                   norm env0 t) in
         let env = if termination_check_enabled lb.lbname e t  //AR: This code also used to have && Env.should_verify env
                                                               //i.e. when lax checking it was adding lbname in the second branch
-                                                              //this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug058)
+                                                              //this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
                                                               //Removed that check. Rest of the code relies on env.letrecs = []
                   then {env with letrecs=(lb.lbname,t,univ_vars)::env.letrecs}  //AR: we need to add the binding of the let rec after adding the binders of the lambda term, and so, here we just note in the env
                                                                                 //that we are typechecking a let rec, the recursive binding will be added in tc_abs
