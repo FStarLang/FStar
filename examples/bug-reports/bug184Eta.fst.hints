@@ -1,0 +1,32 @@
+[
+  "\u0019jd»Â\b×G”\rååyT§\u0007",
+  [
+    [
+      "Bug184Eta.refl",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d5d6de6cc7a0964235d3f6ec6f120605"
+    ],
+    [
+      "Bug184Eta.__proj__Refl__item__x",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b5c2a7ac96636f9da3674e28cf3d63ad"
+    ],
+    [
+      "Bug184Eta.foo",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "62b3fa4929cfd8210689dbd69c05e458"
+    ]
+  ]
+]

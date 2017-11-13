@@ -158,9 +158,12 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
       0,
-      "53795b8ff705805a40ec0856460f2626"
+      "d99e23c6dcf299d5828bb2fe6acb53b3"
     ],
     [
       "FStar.Relational.Relational.eq_irel",
@@ -172,7 +175,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "48cb6ad36ee5b0a79d7c15524a707cca"
+      "d7fe3c9506de9d2d3b870344acb66a7d"
     ]
   ]
 ]

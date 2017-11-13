@@ -1,0 +1,108 @@
+[
+  "\u0005¨è\u001b#ÚWân\u000f–£k¡÷°",
+  [
+    [
+      "Bug260.pnat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f74dae0ca8b150a3ff32fcf7b2460570"
+    ],
+    [
+      "Bug260.uu___is_O",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "986fde17ba5502a7726ac261a4165b25"
+    ],
+    [
+      "Bug260.uu___is_S",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f5b9f8c840b0a828ca51cd1940d62f94"
+    ],
+    [
+      "Bug260.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug260.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug260_Tm_refine_157a25d7c8423b184ee7d22a138c6995"
+      ],
+      0,
+      "a63b246de57d9115232877611e60d301"
+    ],
+    [
+      "Bug260.validity",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug260.pnat_haseq" ],
+      0,
+      "fe5c11fd37335bd76cd471e70168d00e"
+    ],
+    [
+      "Bug260.__proj__VSucc__item__n",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "59468e60162838295db927dce22e1f5b"
+    ],
+    [
+      "Bug260.validity'",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug260.pnat_haseq" ],
+      0,
+      "a4cebe47cb03d21eb1e961dcc01c70c8"
+    ],
+    [
+      "Bug260.__proj__VSucc'__item__n",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "709d452da0724653e40f368d9ea5f40a"
+    ],
+    [
+      "Bug260.__proj__VSucc'__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug260.VSucc__n",
+        "projection_inverse_Bug260.VSucc__n"
+      ],
+      0,
+      "e189b848a56783f9ccfb74091411f9e0"
+    ],
+    [
+      "Bug260.validity'_empty",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9092173dacc7c806816e845a428fbe8f_0",
+        "binder_x_bc3bc53b54e64d3a6235a24efa65ce59_1",
+        "fuel_guarded_inversion_Bug260.validity_",
+        "projection_inverse_Bug260.VSucc__n", "subterm_ordering_Bug260.S"
+      ],
+      0,
+      "85cdaa4ba060cea8319a764dd695acc2"
+    ]
+  ]
+]

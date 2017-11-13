@@ -1,0 +1,38 @@
+[
+  "I¿»*²¨ˆ‡´\u000f±\u0010Cm!Ç",
+  [
+    [
+      "Bug577.__proj__Multi_step__item__x",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d71a9a2b12e44edb82c62ce5727bd2d0"
+    ],
+    [
+      "Bug577.__proj__Multi_step__item___1",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug577.Multi_step_x",
+        "projection_inverse_Bug577.Multi_step_x"
+      ],
+      0,
+      "4dd11c74c58b87bf417bd189191537b6"
+    ],
+    [
+      "Bug577.steps_preserves_red",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "fuel_guarded_inversion_Bug577.step"
+      ],
+      0,
+      "2adcc12c07ac96dc4a8ea290fcb27353"
+    ]
+  ]
+]

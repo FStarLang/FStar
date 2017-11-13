@@ -78,9 +78,9 @@
       1,
       2,
       1,
-      [ "@query", "equation_FStar.Heap.trivial_preorder", "true_interp" ],
+      [ "@query" ],
       0,
-      "b89610d0137f11f7f0343d4f96fe19d8"
+      "1777506a54ef76ed0ba6342a4a8431c8"
     ],
     [
       "FStar.HyperHeap.ST.recall",

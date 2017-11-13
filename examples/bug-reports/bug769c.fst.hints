@@ -1,0 +1,59 @@
+[
+  ":\u0018¼PÄƒ‰ÅhTòù\u0001¡_\u001b",
+  [
+    [
+      "Bug769c.u",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_unit" ],
+      0,
+      "82c4074f65bd28ed62aa08934bfc044f"
+    ],
+    [
+      "Bug769c.__proj__Mku__item__a",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7f427b743e530d146d732b510951d6d1"
+    ],
+    [
+      "Bug769c.__proj__Mku__item__b",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "797475a4ea7a1c041b22461582780cb6"
+    ],
+    [
+      "Bug769c.v",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_unit" ],
+      0,
+      "ee99363034294bfd2dbe941e44d41dc0"
+    ],
+    [
+      "Bug769c.__proj__Mkv__item__a",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c09f6af6ba5fb5932938619c2628ae2c"
+    ],
+    [
+      "Bug769c.__proj__Mkv__item__c",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "55097983b713380cc71ec54afc83ce28"
+    ]
+  ]
+]

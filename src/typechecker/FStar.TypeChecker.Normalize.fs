@@ -1191,6 +1191,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_match(head, branches) ->
             let stack = Match(env, branches, t.pos)::stack in
             norm cfg env stack head
+          
+          | Tm_let((b, lbs), lbody) when is_top_level lbs && List.contains CompressUvars cfg.steps ->
+            let lbs = lbs |> List.map (fun lb ->
+              let openings, lbunivs = Subst.univ_var_opening lb.lbunivs in
+              let cfg = { cfg with tcenv = Env.push_univ_vars cfg.tcenv lbunivs } in
+              let norm t = Subst.close_univ_vars lbunivs (norm cfg env [] (Subst.subst openings t)) in
+              let lbtyp = norm lb.lbtyp in
+              let lbdef = norm lb.lbdef in
+              { lb with lbunivs = lbunivs; lbtyp = lbtyp; lbdef = lbdef }
+            ) in
+
+            rebuild cfg env stack (mk (Tm_let ((b, lbs), lbody)) t.pos)
 
           | Tm_let((_, {lbname=Inr _}::_), _) -> //this is a top-level let binding; nothing to normalize
             rebuild cfg env stack t
@@ -1952,7 +1964,7 @@ let normalize_refinement steps env t0 =
 let unfold_whnf env t = normalize [Weak;HNF; UnfoldUntil Delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
-              @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm])
+              @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])
               env
               t
 let reduce_uvar_solutions env t = reduce_or_remove_uvar_solutions false env t

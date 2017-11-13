@@ -1,0 +1,32 @@
+[
+  "y\u001d£q»Ã¹Õ,É5ÅQa_ª",
+  [
+    [
+      "Bug185.parse",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Bug185.HasEq_data" ],
+      0,
+      "6852aaaf16d7f591312b3a9aea0f5166"
+    ],
+    [
+      "Bug185.validate",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption",
+        "binder_x_ab406dde1f6cab92bf9b7aa3461e7323_0",
+        "constructor_distinct_Bug185.certified",
+        "constructor_distinct_Bug185.verified", "equation_Bug185.vk",
+        "equation_Bug185.vkey",
+        "refinement_interpretation_Bug185_Tm_refine_47bb5e04350d529229da0ec9c09c0e4d",
+        "token_correspondence_Bug185.certified",
+        "token_correspondence_Bug185.verified"
+      ],
+      0,
+      "ae6295d33fc93a61624930f33e82fb87"
+    ]
+  ]
+]

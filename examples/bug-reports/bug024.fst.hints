@@ -1,0 +1,19 @@
+[
+  "A†t‰‘yK&Çöã9^Ò+\u0005",
+  [
+    [
+      "Bug024.nth",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_9a90b418fb6f363de1987f48a5513cdd_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "88a14b37e5d8a9857891df594c2f5110"
+    ]
+  ]
+]

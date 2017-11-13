@@ -14,7 +14,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0a1b6c99cbd2844659b50c8c430f8491"
+      "4b244aee85946358a9df4f1743573ce0"
     ],
     [
       "FStar.Reflection.Basic.smaller",
@@ -71,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "4cc43114c464ffedbf614b0b19899d28"
+      "d35c1fbe37c021cbb72f34568fdb1970"
     ]
   ]
 ]

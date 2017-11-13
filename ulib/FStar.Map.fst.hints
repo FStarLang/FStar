@@ -24,9 +24,12 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Set.eqtype",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
       0,
-      "df0ddbf057e221f4aceba02c481e4556"
+      "6b07fd060cefedc1c8263eb793927bc8"
     ],
     [
       "FStar.Map.upd",
@@ -38,7 +41,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2f398d2838e8864ca1e72cb1172484e6"
+      "3fb27078cb795044d810f9c2a251a543"
     ],
     [
       "FStar.Map.concat",

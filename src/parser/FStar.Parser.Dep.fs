@@ -834,6 +834,11 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
   *)
 let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let keys = deps_keys deps in
+    let output_ml_file fst_file =
+        let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
+        let dir= match Options.output_dir() with None -> "" | Some x -> x ^ "/" in
+        dir ^ ml_base_name ^ ".ml"
+    in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
@@ -851,10 +856,17 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then
             let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename f))) '.' "_" in
-            Util.print3 "%s%s.ml: %s.checked\n\n" (match Options.output_dir() with None -> "" | Some x -> x ^ "/") ml_base_name f
+            Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file_name f)
           );
-    let all_fst_files = keys |> List.filter is_implementation in
-    Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t")
+    let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
+    let all_ml_files = all_fst_files |> List.collect (fun fst_file -> 
+        if Options.should_extract (lowercase_module_name fst_file)
+        then [output_ml_file fst_file]
+        else []
+      ) |> Util.sort_with String.compare in
+    Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t");
+    Util.print1 "ALL_ML_FILES=\\\n\t%s\n" (all_ml_files |> String.concat " \\\n\t")
+    
 
 let print deps =
   match Options.dep() with
