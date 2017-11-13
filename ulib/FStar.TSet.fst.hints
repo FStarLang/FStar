@@ -211,13 +211,14 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.TSet.mem",
-        "equation_FStar.TSet.tset_of_set", "equation_Prims.prop",
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.TSet.mem", "equation_FStar.TSet.tset_of_set",
+        "equation_Prims.prop",
         "interpretation_FStar.TSet_Tm_abs_72d81c36c33d89af8ffb225fe76fa39e",
         "refinement_interpretation_FStar.TSet_Tm_refine_a77d79782e60b55519df953e8dedd579"
       ],
       0,
-      "33a7fe62129942f06471f3bdfc1d7552"
+      "dd498b3b8fc907eaa1024cdd103cea5d"
     ],
     [
       "FStar.TSet.lemma_mem_tset_of_set_r",
@@ -235,7 +236,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "a18ae6194951008753b01caf93a57892"
+      "9bee89e936b748aa27d21ae3dbc07da6"
     ],
     [
       "FStar.TSet.lemma_mem_tset_of_set",
@@ -244,7 +245,7 @@
       0,
       [ "@query" ],
       0,
-      "80abf0fcede3ea0c84667e360c1f30ff"
+      "0ad42457b0d73cd37cfbffee07c29c02"
     ],
     [
       "FStar.TSet.filter",
@@ -259,7 +260,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "de46e15e270193c50f229adb81b5e0ff"
+      "738d3ddccd65eaa0a6fa1001fef87d73"
     ],
     [
       "FStar.TSet.lemma_mem_filter",
@@ -273,7 +274,7 @@
         "l_and-interp", "unit_typing"
       ],
       0,
-      "5ea9bea8550dec71f34208e412e0725f"
+      "4ecead32efde168f97744449b75aafd1"
     ],
     [
       "FStar.TSet.exists_y_in_s",
@@ -288,7 +289,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "e276d3e28c27005a24775277786cff8e"
+      "4037e386807fcafbddfc6a2e6f6d8b5e"
     ],
     [
       "FStar.TSet.lemma_mem_map",
@@ -301,7 +302,7 @@
         "token_correspondence_FStar.TSet.exists_y_in_s", "unit_typing"
       ],
       0,
-      "506bf331a9b88c180097ff76a617370f"
+      "c41b55c62eb4c572d3ae3cca3dae65d7"
     ],
     [
       "FStar.TSet.as_set'",
@@ -315,7 +316,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0b01e5852ab989f2dfac592c7af91337"
+      "0c0f1b5906b1a3584c92d8889da1593b"
     ]
   ]
 ]

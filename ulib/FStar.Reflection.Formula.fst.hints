@@ -481,6 +481,24 @@
       "c6eccd6289bb7ae0003f4e7058adbc00"
     ],
     [
+      "FStar.Reflection.Formula.mk_Forall",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9bd30b7d4f9b579843136c1d0bed23da"
+    ],
+    [
+      "FStar.Reflection.Formula.mk_Exists",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8187fd1401aa5bc19f4a1c323aa52b59"
+    ],
+    [
       "FStar.Reflection.Formula.smaller",
       1,
       2,
@@ -513,7 +531,7 @@
         "fuel_guarded_inversion_FStar.Reflection.Formula.formula"
       ],
       0,
-      "ccf794d4b7859c56964d9156ea71bfd4"
+      "b9fb0fe18d9ebf3ca2f274585df63497"
     ],
     [
       "FStar.Reflection.Formula.term_as_formula'",
@@ -627,7 +645,205 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "0b4b81db27daab0592ff4ec3dc0410c4"
+      "6eb689d984903d63b3b84e469cc8a9af"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0,
+      "8cb24f58f651c7ed155faa265ea744bc"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0,
+      "54ad07f9f259269f0d2acb36de2a4940"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "6768cdbd4daa39f7c9e64c49316dedc3"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      5,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0,
+      "00328ea45724babfe8a6fd790c258088"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      6,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "99df4fa5a200fd8690bc7a4d2079d5bc"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      7,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0,
+      "a598f27a52540a919b679260129cdc75"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      8,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "49f4f20dcdb5ab8dcf0b5252e124622f"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      9,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0,
+      "06c8dff4ffc4e417430f8dfdac4b24af"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      10,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "abf63fe44e12990e00295e33cf457fc2"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      11,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "350f1cf1ad53fe6f5404da32e27e5efb"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      12,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "a8b6af71170eff690cee7e056a54073e"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      13,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "b7dce393555361d81b433c0fdd66ae2c"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      14,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "170a0567b0bd6cc3bc24e5058df19530"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      15,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0,
+      "abc427065d02cc5d35a3afb8d5bf171a"
+    ],
+    [
+      "FStar.Reflection.Formula.term_as_formula'",
+      16,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "f52efaed8bc3b1f5bdd7f7dff8fb4940"
     ],
     [
       "FStar.Reflection.Formula.is_name_imp",
@@ -651,7 +867,21 @@
         "typing_FStar.Reflection.Basic.__inspect"
       ],
       0,
-      "e3397d43374fdcef126963dfc3d55488"
+      "b08b387c84efd713bf41e0fa21d8915c"
+    ],
+    [
+      "FStar.Reflection.Formula.is_name_imp",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "f8b016a90b203a1cb5e491881addf110"
     ],
     [
       "FStar.Reflection.Formula.unsquash",
@@ -660,7 +890,7 @@
       1,
       [ "@query" ],
       0,
-      "ccf45e0a98c93f670fec12b3b128a81b"
+      "9d4b37a9790f964b2aaa454e4a5b0db0"
     ],
     [
       "FStar.Reflection.Formula.term_as_formula",
@@ -695,7 +925,7 @@
         "typing_FStar.Reflection.Basic.inspect"
       ],
       0,
-      "8b583ad547207e862c853b834a4de19a"
+      "98ab5d06da7f55100208b9226505c907"
     ],
     [
       "FStar.Reflection.Formula.formula_as_term_view",
@@ -736,7 +966,7 @@
         "typing_FStar.Reflection.Formula.__proj__Comp__item___0"
       ],
       0,
-      "4e31bf10b8f38e50490afce9debdbd6b"
+      "c810ef04f6316745953f59df641ef7f6"
     ],
     [
       "FStar.Reflection.Formula.formula_to_string",
@@ -776,7 +1006,7 @@
         "typing_FStar.Reflection.Formula.__proj__Comp__item___0"
       ],
       0,
-      "875c2bf9e53ff5e5c8421d70e871ff1b"
+      "ae06b5fad83a2bf86d4280d0da50aa23"
     ]
   ]
 ]

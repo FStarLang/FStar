@@ -23,13 +23,22 @@
       "668e1a5defcfef4c15e34fc0c6ca0b0c"
     ],
     [
+      "FStar.WellFounded.axiom1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1db93bf6030ee5d73bf5458c5d727024"
+    ],
+    [
       "FStar.WellFounded.apply",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "5a2738c6b22a8b46f20133b8a6b7717d"
+      "1e12818693c5e2e047fa217c280b08bb"
     ],
     [
       "FStar.WellFounded.fix_F",
@@ -45,7 +54,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "8bc216047f39c6f0c3f0a01b97153e3d"
+      "e91bf89fc6a10dfd432af374ac51dc03"
     ]
   ]
 ]

@@ -313,7 +313,47 @@
         "function_token_typing_Prims.string"
       ],
       0,
-      "65d3584a2dde33f0ea4de8de8dccc4d8"
+      "2c146924561e87b796c6fce24fe3c973"
+    ],
+    [
+      "FStar.Tactics.Simplifier.inhabit",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq",
+        "equation_FStar.Reflection.Types.name",
+        "function_token_typing_Prims.string"
+      ],
+      0,
+      "d016cc1c9306805f0bd45193bc98270f"
+    ],
+    [
+      "FStar.Tactics.Simplifier.inhabit",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_string",
+        "assumption_Prims.list_haseq", "function_token_typing_Prims.string"
+      ],
+      0,
+      "e99c72cb0e2a6b7981b46c5797eae25e"
+    ],
+    [
+      "FStar.Tactics.Simplifier.inhabit",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_FStar.Tactics.Builtins.fail",
+        "equation_FStar.Tactics.Derived.exact", "unit_typing"
+      ],
+      0,
+      "9977aca31b4f814bcf18b67508f21a6d"
     ],
     [
       "FStar.Tactics.Simplifier.simplify_point",
@@ -330,7 +370,7 @@
         "equation_FStar.Tactics.Simplifier.tiff", "unit_typing"
       ],
       0,
-      "ecee5b08455221666b53bcfbe9c90078"
+      "7712dacd8298295819d8f4491ccb6fbd"
     ],
     [
       "FStar.Tactics.Simplifier.simplify_point",
@@ -344,7 +384,7 @@
         "equation_FStar.Tactics.Simplifier.tiff", "unit_typing"
       ],
       0,
-      "0a38afc853bcc650df10d5fd60c12263"
+      "9660a32fa8cfcc53a6163b253753cb6f"
     ],
     [
       "FStar.Tactics.Simplifier.equiv",
@@ -358,7 +398,7 @@
         "unit_typing"
       ],
       0,
-      "bf5190d2ba2c42aeba82ee45ec4c4e44"
+      "6bebca149e909979947d6808fb7d75b3"
     ]
   ]
 ]

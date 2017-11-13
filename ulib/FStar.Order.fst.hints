@@ -112,7 +112,16 @@
         "equality_tok_FStar.Order.Lt@tok"
       ],
       0,
-      "dfb380689b12a35377e217b5bfba31f0"
+      "e0deadf94c15919ba45769a04c6d0f6a"
+    ],
+    [
+      "FStar.Order.order_from_int",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "a92471a64ebbad401d4f9de0956029e5"
     ],
     [
       "FStar.Order.compare_list",

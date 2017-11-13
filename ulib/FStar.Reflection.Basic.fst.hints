@@ -8,13 +8,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.l_True", "fuel_guarded_inversion_Prims.list",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "dc550a7100a5f3db640ae1317d298ab7"
+      "4b244aee85946358a9df4f1743573ce0"
     ],
     [
       "FStar.Reflection.Basic.smaller",
@@ -63,6 +63,15 @@
       ],
       0,
       "95c6dc880ab40e67a3bd42877f03cd0a"
+    ],
+    [
+      "FStar.Reflection.Basic.term_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d35c1fbe37c021cbb72f34568fdb1970"
     ]
   ]
 ]
