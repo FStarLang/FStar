@@ -100,7 +100,6 @@ let rec force_uvar' t =
 
 //wraps force_uvar' to propagate any position information
 //from the uvar to anything it may have been resolved to
-//AR: adding a boolean to returned value indicating whether the uvar was resolved
 let force_uvar t =
   let t' = force_uvar' t in
   if U.physical_equality t t'
