@@ -373,8 +373,9 @@ and translate_decl env d: list<decl> =
   | MLM_Top _ ->
       failwith "todo: translate_decl [MLM_Top]"
 
-  | MLM_Exn _ ->
-      failwith "todo: translate_decl [MLM_Exn]"
+  | MLM_Exn (m, _) ->
+      BU.print1_warning "Skipping the translation of exception: %s\n" m;
+      []
 
 and translate_let env flavor flags lb: option<decl> =
   match lb with
