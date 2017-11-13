@@ -40,18 +40,19 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.MRef.p_pred",
         "equation_FStar.MRef.stable", "equation_FStar.MRef.token",
-        "equation_FStar.Preorder.stable", "equation_FStar.ST.contains_pred",
-        "equation_FStar.ST.heap_rel", "equation_FStar.ST.mref",
-        "equation_FStar.ST.stable", "l_and-interp",
+        "equation_FStar.Preorder.preorder", "equation_FStar.Preorder.stable",
+        "equation_FStar.ST.contains_pred", "equation_FStar.ST.heap_rel",
+        "equation_FStar.ST.mref", "equation_FStar.ST.stable", "l_and-interp",
         "refinement_interpretation_FStar.MRef_Tm_refine_3223fc2fad6b8a43211d3ba380b48e7d",
         "refinement_interpretation_FStar.MRef_Tm_refine_eec85113147ac69743351537161554f2",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
         "token_correspondence_FStar.MRef.p_pred",
         "token_correspondence_FStar.ST.contains_pred",
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "0cb5d4ba17ecbb5db8e9be22d8839d9a"
+      "7f42bf9b32b99cc286e5ab35104c9fd1"
     ],
     [
       "FStar.MRef.recall_token",
@@ -73,16 +74,18 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.MRef.p_pred",
         "equation_FStar.MRef.stable", "equation_FStar.MRef.token",
-        "equation_FStar.Preorder.stable", "equation_FStar.ST.heap_rel",
-        "equation_FStar.ST.mref", "equation_FStar.ST.stable", "l_and-interp",
+        "equation_FStar.Preorder.preorder", "equation_FStar.Preorder.stable",
+        "equation_FStar.ST.heap_rel", "equation_FStar.ST.mref",
+        "equation_FStar.ST.stable", "l_and-interp",
         "refinement_interpretation_FStar.MRef_Tm_refine_29896cf9c1a3c45a370038b2a8c508b8",
         "refinement_interpretation_FStar.MRef_Tm_refine_3223fc2fad6b8a43211d3ba380b48e7d",
+        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
         "token_correspondence_FStar.MRef.p_pred",
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "4986bd9db7ef3c6d8c132895258b4f14"
+      "f81c6fe351e72e4f32d455bc08aac449"
     ],
     [
       "FStar.MRef.spred",

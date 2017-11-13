@@ -232,8 +232,7 @@ let check_smt_pat env t bs c =
 (* Building the environment for the body of a let rec;                                                      *)
 (* guards the recursively bound names with a termination check                                              *)
 (************************************************************************************************************)
-let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
-    if not (Env.should_verify env) then env.letrecs else
+let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
     match env.letrecs with
     | [] -> []
     | letrecs ->
@@ -265,7 +264,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                         | _ -> mk_lex_list xs in
 
         let previous_dec = decreases_clause actuals expected_c in
-        let guard_one_letrec (l, t) =
+        let guard_one_letrec (l, t, u_names) =
             match (SS.compress t).n with
                 | Tm_arrow(formals, c) ->
                   //make sure they all have non-null names
@@ -280,7 +279,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                   if debug env Options.Low
                   then BU.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
                         (Print.lbname_to_string l) (Print.term_to_string t) (Print.term_to_string t');
-                  l,t'
+                  l, t', u_names
 
                 | _ -> raise (Error ("Annotated type of 'let rec' must be an arrow", t.pos)) in
 
@@ -318,7 +317,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_meta(e, Meta_desugared Meta_smt_pat) ->
     let e, c, g = tc_tot_or_gtot_term env e in
     let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant
-    e, c, g //strip the Meta going up
+    mk (Tm_meta (e, Meta_desugared Meta_smt_pat)) None top.pos, c, g  //AR: keeping the pats as meta for the second phase. smtencoding does an unmeta.
 
   | Tm_meta(e, Meta_pattern pats) ->
     let t, u = U.type_u () in
@@ -349,9 +348,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
           e, c, g
     end
 
-  | Tm_meta(e, Meta_monadic _) ->
+  | Tm_meta(e, Meta_monadic _)
+  | Tm_meta(e, Meta_monadic_lift _) ->
     (* KM : This case should not happen when typechecking once but is it really *)
-    (* okay to just drop the annotation ? And what about Meta_monadic_lift then ? *)
+    (* okay to just drop the annotation ? *)
     tc_term env e
 
   | Tm_meta(e, m) ->
@@ -365,7 +365,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t_res = U.comp_result expected_c in
     let e, c', g' = tc_term (Env.set_expected_typ env0 t_res) e in
     let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, c'.comp()) in
-    let e = mk (Tm_ascribed(e, (Inl t_res, None), Some (U.comp_effect_name expected_c))) None top.pos in
+    let e = mk (Tm_ascribed(e, (Inr expected_c, None), Some (U.comp_effect_name expected_c))) None top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
     let topt = tc_tactic_opt env0 topt in
@@ -607,14 +607,30 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_let ((false, [{lbname=Inr _}]), _) ->
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    check_top_level_let env top
+    (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
+    if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
+    then let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
+         let lax_top = N.reduce_uvar_solutions env lax_top in
+         //BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
+         if Env.should_verify env then
+           check_top_level_let env lax_top
+         else lax_top, l, g
+    else check_top_level_let env top
 
   | Tm_let ((false, _), _) ->
     check_inner_let env top
 
   | Tm_let ((true, {lbname=Inr _}::_), _) ->
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
-    check_top_level_let_rec env top
+    (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
+    if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
+    then let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
+         let lax_top = N.remove_uvar_solutions env lax_top in  (* AR: are we calling it two times currently if lax mode? *)
+         //let _ = BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top) in
+         if Env.should_verify env then
+            check_top_level_let_rec env lax_top
+         else lax_top, l, g
+    else check_top_level_let_rec env top
 
   | Tm_let ((true, _), _) ->
     check_inner_let_rec env top
@@ -1067,11 +1083,11 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 let mk_letrec_env envbody bs c =
                     let letrecs = guard_letrecs envbody bs c in
                     let envbody = {envbody with letrecs=[]} in
-                    letrecs |> List.fold_left (fun (env, letrec_binders) (l,t) ->
+                    letrecs |> List.fold_left (fun (env, letrec_binders) (l,t,u_names) ->
 //                        let t = N.normalize [N.EraseUniverses; N.Beta] env t in
 //                        printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
                         let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
-                        let env = Env.push_let_binding env l ([], t) in
+                        let env = Env.push_let_binding env l (u_names, t) in
                         let lb = match l with
                             | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
                             | _ -> letrec_binders in
@@ -1080,7 +1096,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 in
 
                 let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
-                let envbody, letrecs = if Env.should_verify env then mk_letrec_env envbody bs c else envbody, [] in
+                let envbody, letrecs = mk_letrec_env envbody bs c in
                 let envbody = Env.set_expected_typ envbody (U.comp_result c) in
                 Some t, bs, letrecs, Some c, envbody, body, g
 
@@ -1979,7 +1995,9 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                             (Print.lbname_to_string lbname)
                             formals_msg
                             actuals_msg in
-            raise (Error(msg, lbdef.pos))
+            //raise (Error(msg, lbdef.pos))  //AR: this check does not consider an lbdef of the form (fun x -> fun y -> ...), also the checks seems misplaced in this function?
+                                             //Thigs like this don't typecheck with this: let rec foo :int -> int -> int = fun x -> let z = 3 in fun y -> x + y + z
+            BU.print1 "%s\n" msg
        end;
        let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
        quals |> List.contains TotalEffect
@@ -2000,10 +2018,14 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                   let g = Rel.resolve_implicits g in
                   ignore <| Rel.discharge_guard env g;
                   norm env0 t) in
-        let env = if termination_check_enabled lb.lbname e t
-                  && Env.should_verify env (* store the let rec names separately for termination checks *)
-                  then {env with letrecs=(lb.lbname,t)::env.letrecs}
-                  else Env.push_let_binding env lb.lbname ([], t) in //no polymorphic recursion on universes
+        let env = if termination_check_enabled lb.lbname e t  //AR: This code also used to have && Env.should_verify env
+                                                              //i.e. when lax checking it was adding lbname in the second branch
+                                                              //this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
+                                                              //Removed that check. Rest of the code relies on env.letrecs = []
+                  then {env with letrecs=(lb.lbname,t,univ_vars)::env.letrecs}  //AR: we need to add the binding of the let rec after adding the binders of the lambda term, and so, here we just note in the env
+                                                                                //that we are typechecking a let rec, the recursive binding will be added in tc_abs
+                                                                                //adding universes here so that when we add the let binding, we can add a typescheme with these universes
+                  else Env.push_let_binding env lb.lbname (univ_vars, t) in
         let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
         lb::lbs,  env)
     ([],env)

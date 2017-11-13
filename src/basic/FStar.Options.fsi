@@ -191,6 +191,7 @@ val z3_refresh                  : unit    -> bool
 val z3_rlimit                   : unit    -> int
 val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
+val use_two_phase_tc            : unit    -> bool
 val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
 

@@ -1,9 +1,15 @@
-all: verify-all
+.PHONY: all
+
+FSTAR_HOME=..
+include $(FSTAR_HOME)/src/gmake/z3.mk
+include $(FSTAR_HOME)/src/gmake/fstar.mk
 
 # Makefile.verify has been split off because it is the actual
 # Makefile that is distributed in the binary package. This
 # Makefile here is not.
-include Makefile.verify
+
+all:
+	+$(MAKE) -f Makefile.verify verify-all
 
 include ml/Makefile.include
 
@@ -95,8 +101,10 @@ install-fstar-tactics: $(TACLIB_OBJECTS)
 	mkdir -p $(TACLIB_DIR)
 	cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
 
-clean: basic_clean
+clean:
+	rm -f .depend
 	rm -f *.mgen
+	rm -f *.checked *.source *.checked.lax
 	rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
 	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
 	rm -f $(FSTARLIB_DIR)/*.cm[aiox]

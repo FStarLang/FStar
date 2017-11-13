@@ -1,4 +1,4 @@
-.PHONY: indent all extra
+.PHONY: indent extra
 
 FSTAR_HOME=..
 include $(FSTAR_HOME)/src/gmake/z3.mk

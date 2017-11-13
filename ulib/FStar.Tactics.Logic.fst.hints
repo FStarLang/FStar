@@ -196,7 +196,7 @@
       1,
       [ "@query" ],
       0,
-      "11d632d0b2261e7c1c8cac13c2774f9e"
+      "a003a967f65e0ba0a0ac4fb62415717e"
     ],
     [
       "FStar.Tactics.Logic.or_ind",
@@ -219,7 +219,7 @@
       1,
       [ "@query" ],
       0,
-      "a29f1ffb30c1f6b4a16e2d372f55c296"
+      "ecea5fe05ea274c3b232d8dac1493355"
     ],
     [
       "FStar.Tactics.Logic.bool_ind",
@@ -241,7 +241,7 @@
       1,
       [ "@query" ],
       0,
-      "9eb43010a0119b93bdb07ef0d305fdb6"
+      "24ac761924b210d67ceafbf9acfb383a"
     ],
     [
       "FStar.Tactics.Logic.or_intro_1",
@@ -288,7 +288,7 @@
       1,
       [ "@query" ],
       0,
-      "12ffe0d65e31543b7749e08bbad266d2"
+      "716609ec71a5637a5d39a2aac342ad2a"
     ]
   ]
 ]
