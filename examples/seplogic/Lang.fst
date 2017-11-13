@@ -55,7 +55,7 @@ let lemma_bind (phi:heap -> heap -> heap -> heap -> prop) (h:heap)
 		                             phi h1' h1'' h2' h2'')))
   = ()
 
-let lemma_implies_intro_equality (phi:heap -> prop) (x:heap)
+let lemma_eq_implies_intro (phi:heap -> prop) (x:heap)
   :Lemma (requires phi x)
          (ensures (forall (y:heap). (y == x) ==> phi y))
   = ()
