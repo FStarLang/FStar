@@ -269,4 +269,28 @@ let rp_http_server (rp_origin:origin) (msg:http_message) : server (option http_m
 	else return None 
 
 
- 
+type browser_state
+type browser 'a = browser_state -> ('a * browser_state)
+assume val new_browser: unit -> browser_state 
+assume val new_servers: unit -> server_state
+
+assume val user_navigates: u:origin -> browser (option (m:http_message{Req? m}))
+assume val process_response: m:http_message{Resp? m} -> browser (option (m:http_message{Req? m}))
+
+assume val ip_http_server: ip_origin:origin -> msg:http_message -> server (option http_message)
+
+let main ip rp =
+    let browser = new_browser() in
+    let servers = new_servers() in
+    let (Some req,browser) = user_navigates rp browser in
+    let (Some resp,servers) = rp_http_server rp req servers in
+    let (Some req, browser) = process_response resp browser in
+    let (Some resp,servers) = ip_http_server ip req servers in
+    let (Some req, browser) = process_response resp browser in
+    let (Some req,servers) = rp_http_server rp req servers in
+    let (Some resp,servers) = ip_http_server ip req servers in
+    let (Some resp,servers) = rp_http_server rp resp servers in
+    let (Some req, browser) = process_response resp browser in
+    ()
+  
+
