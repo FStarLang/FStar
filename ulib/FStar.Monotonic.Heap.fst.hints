@@ -576,7 +576,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "230e7c9c0fb124bec06b8cf0a8f26729"
+      "c6de03d19b364fd6baa91f3df12f696f"
     ],
     [
       "FStar.Monotonic.Heap.lemma_upd_contains_test",
@@ -673,7 +673,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "c9559b8431ef99fc157f59ff0d97ff7a"
+      "6540b56a134461097c29b58d72aceb82"
     ],
     [
       "FStar.Monotonic.Heap.lemma_upd_contains_not_necessarily_well_typed_test",
@@ -746,7 +746,7 @@
         "unit_typing"
       ],
       0,
-      "c8565c156b72d474808142d3b514a87c"
+      "bd89f881309858f96549097e2103044f"
     ],
     [
       "FStar.Monotonic.Heap.lemma_upd_unused_test",
@@ -829,7 +829,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "d814e04d8a126f7cd5e18423b904ab00"
+      "84efaabd6c4ad537945699742f717ed5"
     ],
     [
       "FStar.Monotonic.Heap.lemma_alloc_test",
@@ -905,7 +905,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "079a480eb3fb426447da760a1658e725"
+      "de853fa1b5a249080803dc278cd85027"
     ],
     [
       "FStar.Monotonic.Heap.lemma_free_mm_test",
@@ -2729,7 +2729,7 @@
         "unit_typing"
       ],
       0,
-      "15412748b6a792d426ea8e6502f09a05"
+      "d4673cf7e5d3ebe0e31310d49ebf5a98"
     ],
     [
       "FStar.Monotonic.Heap.sel_ref_of",
@@ -2746,7 +2746,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "aac0c3cdd1210589876cab2ccda38ae8"
+      "fb61ba28b128e10e25292bb9b7336091"
     ],
     [
       "FStar.Monotonic.Heap.upd_ref_of",
@@ -2780,7 +2780,7 @@
         "typing_FStar.Monotonic.Heap.ref_of"
       ],
       0,
-      "51c7ade7c25264a2695337cf98d838c8"
+      "a25077d07ef22249495b9dfbbffb6c57"
     ],
     [
       "FStar.Monotonic.Heap.upd_ref_of",
@@ -2793,7 +2793,7 @@
         "refinement_interpretation_FStar.Monotonic.Heap_Tm_refine_d9467e46756f298ce55a3e4ac17e694b"
       ],
       0,
-      "922c8bbc4016a48e7fc6b653f3e15fe6"
+      "a5bf4a45aae92fb8b29b37c247a31cf5"
     ]
   ]
 ]

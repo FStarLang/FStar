@@ -50,11 +50,11 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "c9a6f61ba10302e53ee055ed3d060ec3"
+      "71888431a71a2540e43a8eeb1efdec42"
     ],
     [
       "FStar.Tactics.Derived.repeatseq",
@@ -63,7 +63,7 @@
       1,
       [ "@query" ],
       0,
-      "89f0d3b9835a4bb8a91afe64d915cc2f"
+      "56be45d2fdd9ac2f292a535ee1503a5a"
     ],
     [
       "FStar.Tactics.Derived.guards_to_smt",

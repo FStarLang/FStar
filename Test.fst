@@ -3,7 +3,7 @@ module Test
 val g : x:'a -> Tot unit
 let g x = ()
 
-let rec xxx (x:int) (y:int) :unit = g xxx
+let rec xxx (x:int) (y:int) :unit = g (xxx y)
 
 
 //let rec foo :int -> int -> int = fun x -> let z = 3 in fun y -> x + y + z
