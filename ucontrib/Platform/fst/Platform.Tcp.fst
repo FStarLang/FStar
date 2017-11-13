@@ -2,7 +2,7 @@ module Platform.Tcp
 
 open FStar.HyperHeap
 
-open Platform.Bytes
+open FStar.Bytes
 open Platform.Error
 
 assume new type networkStream: Type0
