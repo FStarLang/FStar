@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "3c5e3422836dcc28a14919171a5d3554"
+      "4816f100abfa35ab4894996a4627d73d"
     ],
     [
       "Bug154.search",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d3c63ad848069f3fa65552ed28ec1a83"
+      "10bc6bf1432044997bf5c381ff594e7d"
     ]
   ]
 ]

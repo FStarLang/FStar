@@ -81,7 +81,7 @@
       1,
       [ "@query" ],
       0,
-      "490acbec8d6b1ededa089860fa3f7c09"
+      "3af45018685e96fbe88d7126ca0c141a"
     ],
     [
       "FStar.Tactics.Derived.revert_all",
@@ -195,7 +195,7 @@
       1,
       [ "@query" ],
       0,
-      "fb7da374eb643bdb891012727d37a7be"
+      "1c942e2c201fa8322377e8c9e50245e7"
     ],
     [
       "FStar.Tactics.Derived.iseq",

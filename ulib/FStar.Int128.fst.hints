@@ -198,7 +198,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a454a3541cfde1e2426537bafb02ebb0"
+      "d06f451a474d940e23945bd6826388b0"
     ],
     [
       "FStar.Int128.rem",
@@ -259,7 +259,7 @@
         "haseqFStar.Int128_Tm_refine_caafbd90ce18139927afd290d9749f67"
       ],
       0,
-      "4fa7cf18a5802553f87fa840f25853c6"
+      "8dfb745450e629069bf4a2123025a633"
     ],
     [
       "FStar.Int128.logand",

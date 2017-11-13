@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "52d3529abe170ff9f8eb810ed0f6fdba"
+      "665d0ca996e75cc3621a3b51c6a8b50d"
     ],
     [
       "Bug379.test1",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c1ab2cc88a5bfe00eb2a3e23caf6a9d1"
+      "9a89a5c7df4b56e1b44a15f48fd129fe"
     ],
     [
       "Bug379.test2",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0bb515790b8b081c3ccfefd365165402"
+      "ace22300008354344a2b195a299562a2"
     ],
     [
       "Bug379.test3",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "de421a520eb64bfb1d19f21033bb31c2"
+      "6fc305c537a4de540da242e2f6312818"
     ]
   ]
 ]

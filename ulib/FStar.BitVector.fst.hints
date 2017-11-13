@@ -146,7 +146,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "db622e23dac76e1c752954766bf75927"
+      "452b85e9b14d120aea1c4e5da684b827"
     ],
     [
       "FStar.BitVector.logxor_vec",
@@ -199,7 +199,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6daba5370a8b8bac51f602c70ce21da4"
+      "562d48203483c8f5cdddc689b18d384d"
     ],
     [
       "FStar.BitVector.logxor_vec",
@@ -208,7 +208,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "68f514550619752ec2c596ba0ecc244e"
+      "fe763ae9b508e29e4c68228a8a78eab6"
     ],
     [
       "FStar.BitVector.logxor_vec",
@@ -217,7 +217,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "e8ba10ac659dbd79cef7f4f493b7b969"
+      "9aaba2d0125c08ace05a3c14e242f532"
     ],
     [
       "FStar.BitVector.logor_vec",
@@ -270,7 +270,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6972f49334adb1eaf6059e1dd6c2542c"
+      "f8095977a34d33f6522b1107e2fb5ff3"
     ],
     [
       "FStar.BitVector.lognot_vec",
@@ -319,7 +319,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b2ec2ab2d46acfbd16bb93b6bbb438cb"
+      "f827fa4ea69306c220d328f3fa80c3ce"
     ],
     [
       "FStar.BitVector.logand_vec_definition",
@@ -406,7 +406,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6254d543775f4a54b38ebc705fcd29f1"
+      "7f6dbf56afceef1eea30502f15124fe3"
     ],
     [
       "FStar.BitVector.logxor_vec_definition",
@@ -501,7 +501,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "96d78f9b5a158d637113cc3a0161c4db"
+      "b398742b983d1253326548bf1486fbef"
     ],
     [
       "FStar.BitVector.logor_vec_definition",
@@ -589,7 +589,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "2fbd7b863c7619952abe895138caa8dd"
+      "1594256903a057f382c1221bf1dc87e9"
     ],
     [
       "FStar.BitVector.lognot_vec_definition",
@@ -675,7 +675,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b16ba6e34e1f18bb9ca0daf6856968a0"
+      "637f93ce6bac7c9533f9ad6014bab5f0"
     ],
     [
       "FStar.BitVector.lemma_xor_bounded",
@@ -777,7 +777,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "e5969699b5f3ecb2b3eb79427b707810"
+      "d25e0b7d8719a37ce5bab519228c9044"
     ],
     [
       "FStar.BitVector.is_superset_vec",
@@ -809,7 +809,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "1fab9669f8b46940b1712485890a459f"
+      "9bfc97de7aef3319160c9d309c9d999e"
     ],
     [
       "FStar.BitVector.lemma_slice_subset_vec",
@@ -960,7 +960,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0abc10b5a98d4b8fe2a3027f9f2d7027"
+      "bba41f8c6b7c2b2c9aafde668c7982b3"
     ],
     [
       "FStar.BitVector.shift_right_vec",
@@ -1009,7 +1009,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c72da62bfb88546840c08be72ecad743"
+      "6e76cca3c6f20a0d8605dd8e1dc7ca1c"
     ],
     [
       "FStar.BitVector.shift_left_vec_lemma_1",
