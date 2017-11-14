@@ -2103,22 +2103,22 @@ and translate_constant: FStar_Extraction_ML_Syntax.mlconstant -> expr =
                     c1 = (FStar_Char.char_of_int (Prims.parse_int "0")))) in
           if uu____5972
           then
-            let uu____5989 =
+            let uu____5985 =
               FStar_Util.format1
                 "Refusing to translate a string literal that contains a null character: %s"
                 s in
-            failwith uu____5989
+            failwith uu____5985
           else ());
          EString s)
     | FStar_Extraction_ML_Syntax.MLC_Int
-        (s,FStar_Pervasives_Native.Some uu____5992) ->
+        (s,FStar_Pervasives_Native.Some uu____5988) ->
         failwith
           "impossible: machine integer not desugared to a function call"
-    | FStar_Extraction_ML_Syntax.MLC_Float uu____6007 ->
+    | FStar_Extraction_ML_Syntax.MLC_Float uu____6003 ->
         failwith "todo: translate_expr [MLC_Float]"
-    | FStar_Extraction_ML_Syntax.MLC_Char uu____6008 ->
+    | FStar_Extraction_ML_Syntax.MLC_Char uu____6004 ->
         failwith "todo: translate_expr [MLC_Char]"
-    | FStar_Extraction_ML_Syntax.MLC_Bytes uu____6009 ->
+    | FStar_Extraction_ML_Syntax.MLC_Bytes uu____6005 ->
         failwith "todo: translate_expr [MLC_Bytes]"
     | FStar_Extraction_ML_Syntax.MLC_Int (s,FStar_Pervasives_Native.None ) ->
         EConstant (CInt, s)
@@ -2129,7 +2129,7 @@ and mk_op_app:
     fun w  ->
       fun op  ->
         fun args  ->
-          let uu____6029 =
-            let uu____6036 = FStar_List.map (translate_expr env) args in
-            ((EOp (op, w)), uu____6036) in
-          EApp uu____6029
+          let uu____6025 =
+            let uu____6032 = FStar_List.map (translate_expr env) args in
+            ((EOp (op, w)), uu____6032) in
+          EApp uu____6025
