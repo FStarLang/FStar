@@ -460,7 +460,7 @@ and close_lcomp_opt cfg env lopt = match lopt with
 (*******************************************************************)
 (* Semantics for primitive operators (+, -, >, &&, ...)            *)
 (*******************************************************************)
-let built_in_primitive_steps : list<primitive_step> =
+let built_in_primitive_steps (env:FStar.TypeChecker.Env.env) : list<primitive_step> =
     let arg_as_int    (a:arg) = fst a |> EMB.unembed_int_safe in
     let arg_as_bool   (a:arg) = fst a |> EMB.unembed_bool_safe in
     let arg_as_char   (a:arg) = fst a |> EMB.unembed_char_safe in
@@ -526,8 +526,11 @@ let built_in_primitive_steps : list<primitive_step> =
         binary_op arg_as_string (fun r x y -> EMB.embed_string r (f x y))
     in
     let list_of_string' rng (s:string) : term =
-        let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
-        let char_t = name PC.char_lid in
+        let char_t = FStar.ToSyntax.Env.try_lookup_lid
+                        env.dsenv
+                        PC.char_lid
+                   |> BU.must
+                   |> fst in
         let charterm c = mk (Tm_constant (Const_char c)) rng in
         U.mk_list char_t rng <| List.map charterm (list_of_string s)
     in
@@ -1191,7 +1194,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_match(head, branches) ->
             let stack = Match(env, branches, t.pos)::stack in
             norm cfg env stack head
-          
+
           | Tm_let((b, lbs), lbody) when is_top_level lbs && List.contains CompressUvars cfg.steps ->
             let lbs = lbs |> List.map (fun lb ->
               let openings, lbunivs = Subst.univ_var_opening lb.lbunivs in
@@ -1908,7 +1911,7 @@ let config s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps; strong=false}
+    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps e; strong=false}
 
 let normalize_with_primitive_steps ps s e t =
     let c = config s e in
