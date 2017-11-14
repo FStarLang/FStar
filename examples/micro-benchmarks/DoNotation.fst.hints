@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "2a442aabef4f58531692c97f8619501b"
+      "631a3520e3fa30e407dbdabc4958d234"
     ],
     [
       "DoNotation.add",
@@ -24,7 +24,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "fdbde41adee4e47e8bd19a35c068fb6b"
+      "9f48af10a280b0bcce30c373298019a5"
     ],
     [
       "DoNotation.add",
@@ -33,7 +33,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "7a60409adb4debbc975650ea68d4b401"
+      "c60526d071234356617aba6a9779d8a3"
     ],
     [
       "DoNotation.uu___11",
@@ -46,7 +46,7 @@
         "function_token_typing_Prims.int", "function_token_typing_Prims.unit"
       ],
       0,
-      "f05c7a089b83e3462ef5f5f105fff88c"
+      "b45786ed56fa57870c66df0d6d65903b"
     ],
     [
       "DoNotation.uu___11",
@@ -55,7 +55,7 @@
       1,
       [ "@query" ],
       0,
-      "bc9eecf4dd3ce020baf3d2f50aaa6396"
+      "00f5bbc187ef79264a1f561a177255e3"
     ]
   ]
 ]

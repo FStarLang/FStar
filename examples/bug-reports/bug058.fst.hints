@@ -18,7 +18,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8ecc46204a0c695f3997e5b60a623c07"
+      "d37df9826aa7e131646993ff0c3e31c2"
     ],
     [
       "Bug058.fibonacci",
@@ -30,7 +30,7 @@
         "haseqBug058_Tm_refine_402366a12062163eb79afd36b7d562c3"
       ],
       0,
-      "1c03a9457814e52c1f211f186c34e8e8"
+      "6222b60c9e9f0065c2692f0d6d9d5dc3"
     ]
   ]
 ]

@@ -6,36 +6,27 @@
       1,
       2,
       1,
-      [
-        "@query", "assumption_FStar.Char.char__haseq",
-        "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
-      ],
+      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
       0,
-      "c511b4b6f1246fed8d5ca6ded768d8f4"
+      "ab3f1a34fc0bd2f2a68a28e5e329a0ee"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
       2,
       2,
       1,
-      [
-        "@query", "assumption_FStar.Char.char__haseq",
-        "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
-      ],
+      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
       0,
-      "9b76037722c0f7dc3b9982fc15d9a64c"
+      "31ec7e0e5c105c604b31172037e2de5c"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
       3,
       2,
       1,
-      [
-        "@query", "assumption_FStar.Char.char__haseq",
-        "equation_FStar.Char.char", "equation_Platform.Bytes.byte"
-      ],
+      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
       0,
-      "ffd943b67286e5449a4c7693a40bcb8a"
+      "7363798f6d5102841e963618cf2625db"
     ],
     [
       "Ex12c.Format.append_inj_lemma",
@@ -43,17 +34,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Char.char__haseq", "equation_Ex12c.Format.message",
-        "equation_FStar.Char.char", "equation_FStar.Seq.Base.op_At_Bar",
+        "@MaxIFuel_assumption", "@query", "assumption_FStar.UInt8.t_haseq",
+        "equation_Ex12c.Format.message", "equation_FStar.Seq.Base.op_At_Bar",
         "equation_Platform.Bytes.byte", "equation_Platform.Bytes.bytes",
-        "equation_Prims.eqtype", "kinding_FStar.Char.char_@tok",
+        "equation_Prims.eqtype", "function_token_typing_FStar.UInt8.t",
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_f904f6c16e829f6df71f9c4ec26e4ace",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "typing_FStar.Seq.Base.eq", "typing_FStar.Seq.Base.op_At_Bar"
       ],
       0,
-      "e621c15325eeb6d1ae20ee284641a8d3"
+      "82e97e737d4c003f06bbe0eb0ec165cc"
     ]
   ]
 ]
