@@ -141,15 +141,14 @@ let parse fn =
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =
-  (* let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
+  let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
+  let lexer() = let tok = FStar_Parser_LexFStar.tokenize_error_warn lexbuf in
+    (tok, lexbuf.start_p, lexbuf.cur_p)
+  in
   let user_flags =
     try
-      FStar_Parser_Parse.warn_error_list (FStar_Parser_LexFStar.token lexbuf)
+      MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.warn_error_list lexer
     with e ->
-      failwith "Malformed warn-error list"
-  in *)
-  (* hardcode to +22..76 until I can figure out how to uncomment the above code *)
-  let r = ((Prims.parse_int "22"), (Prims.parse_int "76")) in
-  let e = (CWarning, r) in
-  let user_flags = [e] in
+      failwith (FStar_Util.format1 "Malformed warn-error list: %s" s)
+  in
   FStar_Errors.update_flags user_flags 

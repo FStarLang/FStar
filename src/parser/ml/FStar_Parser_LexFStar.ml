@@ -501,3 +501,11 @@ and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
 
 and ignore_endline = lexer
  | ' '* newline -> token lexbuf
+
+and tokenize_error_warn = lexer
+ | integer -> INT (clean_number (L.lexeme lexbuf), false)
+ | "." -> DOT
+ | "@" -> AT
+ | "-" -> MINUS
+ | "+" -> PLUS
+ | eof -> EOF
