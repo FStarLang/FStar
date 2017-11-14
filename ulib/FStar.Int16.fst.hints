@@ -196,7 +196,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d5f294e01852ec95540c3fd7a573904d"
+      "2e74617879247edd37858498f5b120d0"
     ],
     [
       "FStar.Int16.rem",
@@ -257,7 +257,7 @@
         "haseqFStar.Int16_Tm_refine_db50c75084ed51c83ec5f81c60ffe2f8"
       ],
       0,
-      "5da7acf04a932a1208e751657c91ad24"
+      "11eccc9c9299b47e68b72f4cf250b2c6"
     ],
     [
       "FStar.Int16.logand",
