@@ -80,6 +80,70 @@ let encode_nat n =
 
 module N = FStar.TypeChecker.Normalize
 
+let tests =
+  let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
+                                         match x with \
+                                          | [] -> []  \
+                                          | hd::tl -> hd::copy tl" in
+  let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
+                                         match x with \
+                                          | [] -> []  \
+                                          | hd::tl -> hd::tl" in
+  let _ = Pars.pars_and_tc_fragment "let rev (x:list 'a) : Tot (list 'a) = \
+                                         let rec aux (x:list 'a) (out:list 'a) : Tot (list 'a) = \
+                                             match x with \
+                                               | [] -> out \
+                                               | hd::tl -> aux tl (hd::out) in \
+                                          aux x []" in
+  let _ = Pars.pars_and_tc_fragment "type t = \
+                                      | A : int -> int -> t \
+                                      | B : int -> int -> t \
+                                     let f = function \
+                                       | A x y \
+                                       | B y x -> y - x" in
+  [ (0, (app apply [one; id; nm n]), (nm n))
+  ; (1, (app apply [tt; nm n; nm m]), (nm n))
+  ; (2, (app apply [ff; nm n; nm m]), (nm m))
+  ; (3, (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]), (nm m))
+  ; (4, (app twice [apply; ff; nm n; nm m]), (nm m))
+  ; (5, (minus one z), one)
+  ; (6, (app pred [one]), z)
+  ; (7, (minus one one), z)
+  ; (8, (app mul [one; one]), one)
+  ; (9, (app mul [two; one]), two)
+  ; (10, (app mul [app succ [one]; one]), two)
+  ; (11, (minus (encode 10) (encode 10)), z)
+  ; (12, (minus (encode 100) (encode 100)), z)
+  ; (13, (let_ x (encode 100) (minus (nm x) (nm x))), z)
+  ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
+  ; (15, (let_ x (app succ [one])
+            (let_ y (app mul [nm x; nm x])
+               (let_ h (app mul [nm y; nm y])
+                       (minus (nm h) (nm h))))), z)
+  ; (16, (mk_let x (app succ [one])
+            (mk_let y (app mul [nm x; nm x])
+                    (mk_let h (app mul [nm y; nm y])
+                            (minus (nm h) (nm h))))), z)
+  ; (17, (let_ x (app succ [one])
+            (let_ y (app mul [nm x; nm x])
+               (let_ h (app mul [nm y; nm y])
+                       (minus (nm h) (nm h))))), z)
+  ; (18, (pred_nat (snat (snat znat))), (snat znat))
+  ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
+  ; (20, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
+  ; (21, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat)
+  ; (22, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
+  //; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE
+  // The following do not work for NBE because of type allications.
+  //; (24, (tc "recons [0;1]"), (tc "[0;1]"))
+  //; (25, (tc "copy [0;1]"), (tc "[0;1]"))
+  //; (26, (tc "rev [0;1;2;3;4;5;6;7;8;9;10]"), (tc "[10;9;8;7;6;5;4;3;2;1;0]"))
+  //; (1062, (Pars.tc "f (B 5 3)"), (Pars.tc "2")) 
+  // Type defs not yet implemented for NBE
+  //; (27, (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
+  ]
+
+
 let run_either i r expected normalizer =
 //    force_term r;
     BU.print1 "%s: ... \n" (BU.string_of_int i);
@@ -104,103 +168,19 @@ let run_both_with_time i r expected =
   FStar.Util.measure_execution_time "normalizer" norm;
   BU.print_string "\n"
 
+let run_tests run = 
+  Options.__set_unit_tests();
+  List.iter (function (no, test, res) -> run no test res) tests;
+  Options.__clear_unit_tests()
+
 let run_all_nbe () =
     BU.print_string "Testing NBE\n";
-    Options.__set_unit_tests();
-    let run = run_nbe in
-    run 0 (app apply [one; id; nm n]) (nm n);
-    run 1 (app apply [tt; nm n; nm m]) (nm n);
-    run 2 (app apply [ff; nm n; nm m]) (nm m);
-    run 3 (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]) (nm m);
-    run 4 (app twice [apply; ff; nm n; nm m]) (nm m);
-    run 5 (minus one z) one;
-    run 6 (app pred [one]) z;
-    run 7 (minus one one) z;
-    run 8 (app mul [one; one]) one;
-    run 9 (app mul [two; one]) two;
-    run 10 (app mul [app succ [one]; one]) two;
-    run 11 (minus (encode 10) (encode 10)) z;
-    run 12 (minus (encode 100) (encode 100)) z;
-    run 13 (let_ x (encode 100) (minus (nm x) (nm x))) z;
-    // run 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~10s; wasteful for CI
-    run 15 (let_ x (app succ [one])
-            (let_ y (app mul [nm x; nm x])
-                (let_ h (app mul [nm y; nm y])
-                        (minus (nm h) (nm h))))) z;
-    run 16 (mk_let x (app succ [one])
-             (mk_let y (app mul [nm x; nm x])
-                     (mk_let h (app mul [nm y; nm y])
-                             (minus (nm h) (nm h))))) z;
-    run 17 (let_ x (app succ [one])
-            (let_ y (app mul [nm x; nm x])
-                (let_ h (app mul [nm y; nm y])
-                          (minus (nm h) (nm h))))) z;
-    run 18 (pred_nat (snat (snat znat))) (snat znat);
-    run 19 (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
-
-    Options.__clear_unit_tests();
+    run_tests run_nbe;
     BU.print_string "NBE ok\n"
-
 
 let run_all_interpreter () =
     BU.print_string "Testing the normalizer\n";
-    let run = run_interpreter in
-    let _ = Pars.pars_and_tc_fragment "let rec copy (x:list int) : Tot (list int) = \
-                                           match x with \
-                                            | [] -> []  \
-                                            | hd::tl -> hd::copy tl" in
-    let _ = Pars.pars_and_tc_fragment "let recons (x:list int) : Tot (list int) = \
-                                           match x with \
-                                            | [] -> []  \
-                                            | hd::tl -> hd::tl" in
-    let _ = Pars.pars_and_tc_fragment "let rev (x:list 'a) : Tot (list 'a) = \
-                                            let rec aux (x:list 'a) (out:list 'a) : Tot (list 'a) = \
-                                                match x with \
-                                                  | [] -> out \
-                                                | hd::tl -> aux tl (hd::out) in \
-                                            aux x []" in
-    let _ = Pars.pars_and_tc_fragment "type t = \
-                                        | A : int -> int -> t \
-                                        | B : int -> int -> t \
-                                      let f = function \
-                                        | A x y \
-                                        | B y x -> y - x" in
-    Options.__set_unit_tests();
-    run 0 (app apply [one; id; nm n]) (nm n);
-    run 1 (app apply [tt; nm n; nm m]) (nm n);
-    run 2 (app apply [ff; nm n; nm m]) (nm m);
-    run 3 (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]) (nm m);
-    run 4 (app twice [apply; ff; nm n; nm m]) (nm m);
-    run 5 (minus one z) one;
-    run 6 (app pred [one]) z;
-    run 7 (minus one one) z;
-    run 8 (app mul [one; one]) one;
-    run 9 (app mul [two; one]) two;
-    run 10 (app mul [app succ [one]; one]) two;
-    run 11 (minus (encode 10) (encode 10)) z;
-    run 12 (minus (encode 100) (encode 100)) z;
-    run 13 (let_ x (encode 100) (minus (nm x) (nm x))) z;
-//    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~5s; wasteful for CI
-    run 14 (let_ x (app succ [one])
-            (let_ y (app mul [nm x; nm x])
-                (let_ h (app mul [nm y; nm y])
-                        (minus (nm h) (nm h))))) z;
-    run 15 (mk_let x (app succ [one])
-            (mk_let y (app mul [nm x; nm x])
-                (mk_let h (app mul [nm y; nm y])
-                          (minus (nm h) (nm h))))) z;
-    run 16 (pred_nat (snat (snat znat))) (snat znat);
-    run 17 (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
-    run 18 (minus_nat (encode_nat 100) (encode_nat 100)) znat;
-    run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
-    run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
-//    run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
-    Options.__clear_unit_tests();
-    run 21 (tc "recons [0;1]") (tc "[0;1]");
-    run 22 (tc "copy [0;1]") (tc "[0;1]");
-    run 23 (tc "rev [0;1;2;3;4;5;6;7;8;9;10]") (tc "[10;9;8;7;6;5;4;3;2;1;0]");
-    run 1062 (Pars.tc "f (B 5 3)") (Pars.tc "2");
-//  run 24 (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"); -- CH: works up to an unfolding too much (char -> char')
+    run_tests run_interpreter;
     BU.print_string "Normalizer ok\n"
 
 let compare () =
