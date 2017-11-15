@@ -29,7 +29,7 @@
 #light
 
 /// Byte arrays
-module FStar.Bytes
+module FStar.Compiler.Bytes
 
 open System.IO
 open FSharp.Compatibility.OCaml

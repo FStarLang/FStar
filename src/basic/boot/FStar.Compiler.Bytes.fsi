@@ -1,5 +1,5 @@
 #light "off"
-module FStar.Bytes
+module FStar.Compiler.Bytes
 open FStar.ST
 open FStar.All
 open FStar.BaseTypes

@@ -365,7 +365,8 @@ let string_of_mlconstant:
     | FStar_Extraction_ML_Syntax.MLC_Float d -> FStar_Util.string_of_float d
     | FStar_Extraction_ML_Syntax.MLC_Bytes bytes ->
         let uu____1172 =
-          let uu____1173 = FStar_Bytes.f_encode escape_byte_hex bytes in
+          let uu____1173 =
+            FStar_Compiler_Bytes.f_encode escape_byte_hex bytes in
           Prims.strcat uu____1173 "\"" in
         Prims.strcat "\"" uu____1172
     | FStar_Extraction_ML_Syntax.MLC_String chars ->

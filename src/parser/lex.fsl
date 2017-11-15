@@ -27,6 +27,7 @@ open FStar.Parser.Parse
 open FStar.Parser.AST
 open FStar.Parser.Util
 open FStar.Errors
+open FStar.Compiler
 
 let string_trim_both s n m = Util.substring s n (String.length s - (n+m))
 let trim_both   lexbuf n m = string_trim_both (ulexeme lexbuf) n m
