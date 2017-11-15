@@ -85,7 +85,7 @@ let unembed_proofstate:
             let uu____79 =
               let uu____80 = FStar_Syntax_Print.term_to_string t in
               FStar_Util.format1 "Not an embedded proofstate: %s" uu____80 in
-            (FStar_Errors.NotEmbeddedProofState, uu____79) in
+            ((FStar_Errors.NotEmbedded "proofstate"), uu____79) in
           FStar_Errors.maybe_fatal_error t.FStar_Syntax_Syntax.pos uu____74);
          FStar_Pervasives_Native.None)
 let embed_result:
@@ -228,7 +228,7 @@ let unembed_result:
                 let uu____548 = FStar_Syntax_Print.term_to_string t in
                 FStar_Util.format1 "Not an embedded tactic result: %s"
                   uu____548 in
-              (FStar_Errors.NotEmbeddedTacticResult, uu____547) in
+              ((FStar_Errors.NotEmbedded "tactic_result"), uu____547) in
             FStar_Errors.maybe_fatal_error t.FStar_Syntax_Syntax.pos
               uu____542);
            FStar_Pervasives_Native.None)
@@ -261,6 +261,6 @@ let unembed_direction:
             let uu____589 =
               let uu____590 = FStar_Syntax_Print.term_to_string t in
               FStar_Util.format1 "Not an embedded direction: %s" uu____590 in
-            (FStar_Errors.NotEmbeddedDirection, uu____589) in
+            ((FStar_Errors.NotEmbedded "direction"), uu____589) in
           FStar_Errors.maybe_fatal_error t.FStar_Syntax_Syntax.pos uu____584);
          FStar_Pervasives_Native.None)

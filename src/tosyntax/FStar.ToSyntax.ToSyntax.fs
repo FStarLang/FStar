@@ -658,7 +658,7 @@ and desugar_machine_integer env repr (signedness, width) range =
   // __uint_to_t or __int_to_t
   //Rather than relying on a verification condition to check this trivial property
   if not (within_bounds repr signedness width)
-  then raise_error (Errors.OutOfRange, (BU.format2 "%s is not in the expected range for %s"
+  then raise_error (Errors.OutOfRange tnm, (BU.format2 "%s is not in the expected range for %s"
                                repr tnm))
                     range;
   let private_intro_nm = tnm ^

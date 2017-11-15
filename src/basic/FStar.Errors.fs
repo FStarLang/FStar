@@ -36,12 +36,7 @@ type raw_error =
   | UnfoldableDeprecated 
   | DeprecatedEqualityOnBinder
   | MissingQuantifierBinder 
-  | OutOfRange 
-  | OutOfRangeOfInt 
-  | OutOfRangeOfInt8 
-  | OutOfRangeOfInt16 
-  | OutOfRangeOfInt32 
-  | OutOfRangeOfInt64 
+  | OutOfRange of string (* the type of the integer *)
   | OpPlusInUniverse 
   | InvalidUniverseVar 
   | InvalidIdentifier 
@@ -75,31 +70,7 @@ type raw_error =
   | UnexpectedChar 
   | UnexpectedPosition 
   | UnprotectedTerm 
-  | NotEmbeddedBinder 
-  | NotEmbeddedFvar 
-  | NotEmbeddedComp 
-  | NotEmbeddedEnv 
-  | NotEmbeddedAqualv 
-  | NotEmbeddedTermView 
-  | NotEmbeddedCompView 
-  | NotEmbeddedCtor 
-  | NotEmbeddedSigltView 
-  | NotEmbeddedOrder 
-  | NotEmbeddedPattern 
-  | NotEmbeddedVConst 
-  | NotEmbeddedBool 
-  | NotEmbeddedInt 
-  | NotEmbeddedString 
-  | NotEmbeddedPair 
-  | NotEmbeddedOption 
-  | NotEmbeddedList 
-  | NotEmbeddedNormStep 
-  | NotEmbeddedRange 
-  | NotEmbeddedProofState 
-  | NotEmbeddedTacticResult 
-  | NotEmbeddedDirection 
-  | NotEmbeddedUnit
-  | NotEmbeddedChar
+  | NotEmbedded of string (* the nature of the term *)
   | FunctionLiteralPrecisionLoss 
   | NonTopRecFunctionNotFullyEncoded 
   | NonListLiteralSMTPattern 
@@ -416,88 +387,60 @@ let message_prefix =
      append_prefix=append_prefix}
 
 let errno_of_error = function
-  | OutOfRangeOfInt  -> 1
-  | OutOfRangeOfInt8 -> 2
-  | OutOfRangeOfInt16 -> 3
-  | OutOfRangeOfInt32 -> 4
-  | OutOfRangeOfInt64 -> 5
-  | OpPlusInUniverse -> 6
-  | InvalidUniverseVar -> 7
-  | Z3InvocationError -> 8
-  | TypeError -> 9
-  | TypeCheckerFailToProve -> 10
-  | InductiveTypeNotSatisfyPositivityCondition -> 11
-  | UncontrainedUnificationVar -> 12
-  | UnexpectedGTotComputation -> 13
-  | UnexpectedInstance -> 14
-  | ProofObligationFailed -> 15
-  | UnknowAssertionFailure -> 16
-  | UninstantiatedUnificationVarInTactic -> 17
-  | AssertionFailure -> 18
-  | MissingInterface -> 19
-  | MissingImplementation -> 20
-  | TooManyOrTooFewFileMatch -> 21
-  | DeprecatedEqualityOnBinder -> 22
-  | Filtered -> 23
-  | ModuleFileNameMismatch -> 24
-  | ModuleOrFileNotFoundWarning -> 25
-  | UnboundModuleReference -> 26
-  | UnprotectedTerm -> 27 
-  | NotEmbeddedBinder -> 28 
-  | NotEmbeddedFvar -> 29 
-  | NotEmbeddedComp -> 30
-  | NotEmbeddedEnv -> 31 
-  | NotEmbeddedAqualv -> 32 
-  | NotEmbeddedTermView -> 33
-  | NotEmbeddedCompView -> 34
-  | NotEmbeddedCtor -> 35
-  | NotEmbeddedSigltView -> 36 
-  | NotEmbeddedOrder -> 37 
-  | NotEmbeddedPattern -> 38 
-  | NotEmbeddedVConst -> 39 
-  | NotEmbeddedBool -> 40 
-  | NotEmbeddedInt -> 41 
-  | NotEmbeddedString -> 42 
-  | NotEmbeddedPair -> 43 
-  | NotEmbeddedOption -> 44 
-  | NotEmbeddedList -> 45 
-  | NotEmbeddedNormStep -> 46 
-  | NotEmbeddedRange -> 47 
-  | NotEmbeddedProofState -> 48 
-  | NotEmbeddedTacticResult -> 49 
-  | NotEmbeddedDirection -> 50 
-  | FunctionLiteralPrecisionLoss -> 51 
-  | NonListLiteralSMTPattern -> 52 
-  | SMTPatternMissingBoundVar -> 53 
-  | UnexpectedConstructorType -> 54 
-  | Z3InvocationWarning -> 55
-  | UnexpectedZ3Output -> 56
-  | InaccessibleArgument -> 57 
-  | DocOverwrite -> 58
-  | AdmitWithoutDefinition -> 59 
-  | DeprecatedOpaqueQualifier -> 60 
-  | UseDefaultEffect -> 61 
-  | AddImplicitAssumeNewQualifier -> 62 
-  | TopLevelEffect -> 63
-  | MetaAlienNotATmUnknow -> 64
-  | PatternMissingBoundVar -> 65
-  | IrrelevantQualifierOnArgumentToReify -> 66
-  | IrrelevantQualifierOnArgumentToReflect -> 67
-  | RedundantExplicitCurrying -> 68
-  | HintFailedToReplayProof -> 69
-  | HitReplayFailed -> 70
-  | SMTPatTDeprecated -> 71
-  | CachedFile -> 72
-  | FileNotWritten -> 73
-  | NotEmbeddedUnit -> 74
-  | NotEmbeddedChar -> 75
-  | IllFormedGoal -> 76 (* when new entries are added, need to update "next_errno" and default "warn_error" in Options.fs *)
+  | OutOfRange _ -> 1
+  | OpPlusInUniverse -> 2
+  | InvalidUniverseVar -> 3
+  | Z3InvocationError -> 4
+  | TypeError -> 5
+  | TypeCheckerFailToProve -> 6
+  | InductiveTypeNotSatisfyPositivityCondition -> 7
+  | UncontrainedUnificationVar -> 8
+  | UnexpectedGTotComputation -> 9
+  | UnexpectedInstance -> 10
+  | ProofObligationFailed -> 11
+  | UnknowAssertionFailure -> 12
+  | UninstantiatedUnificationVarInTactic -> 13
+  | AssertionFailure -> 14
+  | MissingInterface -> 15
+  | MissingImplementation -> 16
+  | TooManyOrTooFewFileMatch -> 17
+  | DeprecatedEqualityOnBinder -> 18
+  | Filtered -> 19
+  | ModuleFileNameMismatch -> 20
+  | ModuleOrFileNotFoundWarning -> 21
+  | UnboundModuleReference -> 22
+  | UnprotectedTerm -> 23 
+  | NotEmbedded _ -> 24
+  | FunctionLiteralPrecisionLoss -> 25 
+  | NonListLiteralSMTPattern -> 26
+  | SMTPatternMissingBoundVar -> 27
+  | UnexpectedConstructorType -> 28
+  | Z3InvocationWarning -> 29
+  | UnexpectedZ3Output -> 30
+  | InaccessibleArgument -> 31
+  | DocOverwrite -> 32
+  | AdmitWithoutDefinition -> 33 
+  | DeprecatedOpaqueQualifier -> 34
+  | UseDefaultEffect -> 35
+  | AddImplicitAssumeNewQualifier -> 36 
+  | TopLevelEffect -> 37
+  | MetaAlienNotATmUnknow -> 38
+  | PatternMissingBoundVar -> 39
+  | IrrelevantQualifierOnArgumentToReify -> 40
+  | IrrelevantQualifierOnArgumentToReflect -> 41
+  | RedundantExplicitCurrying -> 42
+  | HintFailedToReplayProof -> 43
+  | HitReplayFailed -> 44
+  | SMTPatTDeprecated -> 45
+  | CachedFile -> 46
+  | FileNotWritten -> 47
+  | IllFormedGoal -> 48 (* when new entries are added, need to update "next_errno" and default "warn_error" in Options.fs *)
   | _ -> 0 (** Things that cannot be silenced! *)
 
 type flag =
   | CError | CWarning | CSilent
 
-let next_errno = 77 // the number needs to match the number of entries in "errno_of_error"
+let next_errno = 49 // the number needs to match the number of entries in "errno_of_error"
 let flags: ref<list<flag>> = mk_ref []
 
 let update_flags l =

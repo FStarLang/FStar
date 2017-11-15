@@ -2238,7 +2238,7 @@ constant:
     {let n = $1 in
      (
         if snd n then
-          maybe_fatal_error (lhs parseState) (OutOfRangeOfInt, "This number is outside the allowable range for representable integer constants");
+          maybe_fatal_error (lhs parseState) (OutOfRange "int", "This number is outside the allowable range for representable integer constants");
         Const_int (fst n, None)
      )}
 | CHAR
@@ -2266,7 +2266,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt8, "This number is outside the allowable range for 8-bit signed integers");
+          maybe_fatal_error (lhs(parseState)) (OutOfRange "int8", "This number is outside the allowable range for 8-bit signed integers");
         Const_int (fst n, Some (Signed, Int8))
       )}
 | UINT16
@@ -2276,7 +2276,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt16, "This number is outside the allowable range for 16-bit signed integers");
+          maybe_fatal_error (lhs(parseState)) (OutOfRange "int16", "This number is outside the allowable range for 16-bit signed integers");
         Const_int (fst n, Some (Signed, Int16))
       )}
 | UINT32
@@ -2286,7 +2286,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt32, "This number is outside the allowable range for 32-bit signed integers");
+          maybe_fatal_error (lhs(parseState)) (OutOfRange "int32", "This number is outside the allowable range for 32-bit signed integers");
         Const_int (fst n, Some (Signed, Int32))
       )}
 | UINT64
@@ -2296,7 +2296,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt64, "This number is outside the allowable range for 64-bit signed integers");
+          maybe_fatal_error (lhs(parseState)) (OutOfRange "int64", "This number is outside the allowable range for 64-bit signed integers");
         Const_int (fst n, Some (Signed, Int64))
       )}
 | REIFY
@@ -2345,7 +2345,7 @@ atomicUniverse:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (OutOfRangeOfInt, "This number is outside the allowable range for representable integer constants");
+          maybe_fatal_error (lhs(parseState)) (OutOfRange "int", "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       )}
 | lident

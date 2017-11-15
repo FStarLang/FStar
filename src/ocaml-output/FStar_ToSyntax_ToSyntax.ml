@@ -1569,7 +1569,7 @@ and desugar_machine_integer:
                     let uu____4372 =
                       FStar_Util.format2
                         "%s is not in the expected range for %s" repr tnm in
-                    (FStar_Errors.OutOfRange, uu____4372) in
+                    ((FStar_Errors.OutOfRange tnm), uu____4372) in
                   FStar_Errors.raise_error uu____4367 range
                 else ());
                (let private_intro_nm =

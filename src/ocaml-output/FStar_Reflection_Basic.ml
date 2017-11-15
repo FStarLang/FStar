@@ -74,7 +74,7 @@ let unembed_binder:
             let uu____194 =
               let uu____195 = FStar_Syntax_Print.term_to_string t in
               FStar_Util.format1 "Not an embedded binder: %s" uu____195 in
-            (FStar_Errors.NotEmbeddedBinder, uu____194) in
+            ((FStar_Errors.NotEmbedded "binder"), uu____194) in
           FStar_Errors.maybe_fatal_error t.FStar_Syntax_Syntax.pos uu____189);
          FStar_Pervasives_Native.None)
 let embed_binders:
@@ -131,7 +131,7 @@ let unembed_fvar:
             let uu____282 =
               let uu____283 = FStar_Syntax_Print.term_to_string t in
               FStar_Util.format1 "Not an embedded fvar: %s" uu____283 in
-            (FStar_Errors.NotEmbeddedFvar, uu____282) in
+            ((FStar_Errors.NotEmbedded "fvar"), uu____282) in
           FStar_Errors.maybe_fatal_error t.FStar_Syntax_Syntax.pos uu____277);
          FStar_Pervasives_Native.None)
 let embed_comp:
@@ -156,7 +156,7 @@ let unembed_comp:
             let uu____319 =
               let uu____320 = FStar_Syntax_Print.term_to_string t in
               FStar_Util.format1 "Not an embedded comp: %s" uu____320 in
-            (FStar_Errors.NotEmbeddedComp, uu____319) in
+            ((FStar_Errors.NotEmbedded "comp"), uu____319) in
           FStar_Errors.maybe_fatal_error t.FStar_Syntax_Syntax.pos uu____314);
          FStar_Pervasives_Native.None)
 let embed_env:
@@ -182,7 +182,7 @@ let unembed_env:
             let uu____356 =
               let uu____357 = FStar_Syntax_Print.term_to_string t in
               FStar_Util.format1 "Not an embedded env: %s" uu____357 in
-            (FStar_Errors.NotEmbeddedEnv, uu____356) in
+            ((FStar_Errors.NotEmbedded "env"), uu____356) in
           FStar_Errors.maybe_fatal_error t.FStar_Syntax_Syntax.pos uu____351);
          FStar_Pervasives_Native.None)
 let embed_const:
@@ -276,7 +276,7 @@ let unembed_const:
                  let uu____587 =
                    let uu____588 = FStar_Syntax_Print.term_to_string t1 in
                    FStar_Util.format1 "Not an embedded vconst: %s" uu____588 in
-                 (FStar_Errors.NotEmbeddedVConst, uu____587) in
+                 ((FStar_Errors.NotEmbedded "vconst"), uu____587) in
                FStar_Errors.maybe_fatal_error t1.FStar_Syntax_Syntax.pos
                  uu____582);
               FStar_Pervasives_Native.None))
@@ -411,7 +411,7 @@ let rec unembed_pattern:
                  let uu____917 =
                    let uu____918 = FStar_Syntax_Print.term_to_string t1 in
                    FStar_Util.format1 "Not an embedded pattern: %s" uu____918 in
-                 (FStar_Errors.NotEmbeddedPattern, uu____917) in
+                 ((FStar_Errors.NotEmbedded "pattern"), uu____917) in
                FStar_Errors.maybe_fatal_error t1.FStar_Syntax_Syntax.pos
                  uu____912);
               FStar_Pervasives_Native.None))
@@ -472,7 +472,7 @@ let unembed_aqualv:
                  let uu____1067 =
                    let uu____1068 = FStar_Syntax_Print.term_to_string t1 in
                    FStar_Util.format1 "Not an embedded aqualv: %s" uu____1068 in
-                 (FStar_Errors.NotEmbeddedAqualv, uu____1067) in
+                 ((FStar_Errors.NotEmbedded "aqualv"), uu____1067) in
                FStar_Errors.maybe_fatal_error t1.FStar_Syntax_Syntax.pos
                  uu____1062);
               FStar_Pervasives_Native.None))
@@ -828,7 +828,7 @@ let unembed_term_view:
                    let uu____1922 = FStar_Syntax_Print.term_to_string t1 in
                    FStar_Util.format1 "Not an embedded term_view: %s"
                      uu____1922 in
-                 (FStar_Errors.NotEmbeddedTermView, uu____1921) in
+                 ((FStar_Errors.NotEmbedded "term_view"), uu____1921) in
                FStar_Errors.maybe_fatal_error t1.FStar_Syntax_Syntax.pos
                  uu____1916);
               FStar_Pervasives_Native.None))
@@ -925,7 +925,7 @@ let unembed_comp_view:
                    let uu____2150 = FStar_Syntax_Print.term_to_string t1 in
                    FStar_Util.format1 "Not an embedded comp_view: %s"
                      uu____2150 in
-                 (FStar_Errors.NotEmbeddedCompView, uu____2149) in
+                 ((FStar_Errors.NotEmbedded "comp_view"), uu____2149) in
                FStar_Errors.maybe_fatal_error t1.FStar_Syntax_Syntax.pos
                  uu____2144);
               FStar_Pervasives_Native.None))
@@ -1270,7 +1270,7 @@ let unembed_order:
                  let uu____3275 =
                    let uu____3276 = FStar_Syntax_Print.term_to_string t1 in
                    FStar_Util.format1 "Not an embedded order: %s" uu____3276 in
-                 (FStar_Errors.NotEmbeddedOrder, uu____3275) in
+                 ((FStar_Errors.NotEmbedded "order"), uu____3275) in
                FStar_Errors.maybe_fatal_error t1.FStar_Syntax_Syntax.pos
                  uu____3270);
               FStar_Pervasives_Native.None))
@@ -1391,7 +1391,7 @@ let unembed_ctor:
                  let uu____3773 =
                    let uu____3774 = FStar_Syntax_Print.term_to_string t1 in
                    FStar_Util.format1 "Not an embedded ctor: %s" uu____3774 in
-                 (FStar_Errors.NotEmbeddedCtor, uu____3773) in
+                 ((FStar_Errors.NotEmbedded "ctor"), uu____3773) in
                FStar_Errors.maybe_fatal_error t1.FStar_Syntax_Syntax.pos
                  uu____3768);
               FStar_Pervasives_Native.None))
@@ -1530,7 +1530,7 @@ let unembed_sigelt_view:
                    let uu____4140 = FStar_Syntax_Print.term_to_string t1 in
                    FStar_Util.format1 "Not an embedded sigelt_view: %s"
                      uu____4140 in
-                 (FStar_Errors.NotEmbeddedSigltView, uu____4139) in
+                 ((FStar_Errors.NotEmbedded "siglt_view"), uu____4139) in
                FStar_Errors.maybe_fatal_error t1.FStar_Syntax_Syntax.pos
                  uu____4134);
               FStar_Pervasives_Native.None))

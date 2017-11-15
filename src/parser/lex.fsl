@@ -55,19 +55,19 @@ let inline trim_and_check_range lexbuf (check: string -> 'a) (max: int64) (descr
   else
     let n =
       try int64 s
-      with _ -> fail lexbuf (Errors.OutOfRange, "This number is outside the allowable range") 0L in
+      with _ -> fail lexbuf (Errors.OutOfRange "int64", "This number is outside the allowable range") 0L in
     // we allow MAX_INT+1 to be represented as a valid token even though it's
     // outside of the admissible range, because it might be preceded by -, in
     // which case it becomes MIN_INT, which is admissible
     if n = max
     then s, true
     else try ignore (check s); s, false
-    with _ -> fail lexbuf (Errors.OutOfRange, "This number is outside the allowable range for " ^ descr ^ " integers") ("0", false)
+    with _ -> fail lexbuf (Errors.OutOfRange "int64", "This number is outside the allowable range for " ^ descr ^ " integers") ("0", false)
 
 let inline trim_and_check_range_u lexbuf narrow descr =
   let s = stripped_integer lexbuf in
   try ignore (narrow s); s
-  with _ -> fail lexbuf (Errors.OutOfRange, "This number is outside the allowable range for " ^ descr ^ " integers") "0"
+  with _ -> fail lexbuf (Errors.OutOfRange descr, "This number is outside the allowable range for " ^ descr ^ " integers") "0"
 
 let checkExprOp lexbuf =
   if String.contains (ulexeme lexbuf)  ':'
