@@ -33,20 +33,20 @@ module Tcp = struct
   let connectTimeout t s i = connect s i
 
   let sock_send sock str =
-      let str = get_cbytes str in
+      let str = FStar_Bytes.get_cbytes str in
       let len = String.length str in
       send sock str 0 len []
 
   let sock_recv sock maxlen =
-      let str = StdBytes.create maxlen in
+      let str = Bytes.create maxlen in
       let recvlen = recv sock str 0 maxlen [] in
       let str = String.sub str 0 recvlen in
-      abytes str
+      FStar_Bytes.abytes str
 
   type 'a recv_result = 
   | RecvWouldBlock
   | RecvError of string
-  | Received of Bytes.bytes
+  | Received of FStar_Bytes.bytes
 
   let recv_async s i =
       let i = Z.to_int i in
@@ -66,7 +66,7 @@ module Tcp = struct
   let rec send s b =
       try (
           let n = sock_send s b in 
-          let m = Z.to_int (Bytes.length b) in 
+          let m = Z.to_int (FStar_Bytes.length b) in 
           if n < m
           then 
               (* send s (String.sub str n (m - n) *)

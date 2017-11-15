@@ -23,3 +23,17 @@ val u32_of_char_of_u32:
 
 let int_of_char (c:char) : nat = U32.v (u32_of_char c)
 let char_of_int (i:nat{i < pow2 21}) : char = char_of_u32 (U32.uint_to_t i)
+
+#set-options "--lax"
+//This private primitive is used internally by the
+//compiler to translate character literals
+//with a desugaring-time check of the size of the number,
+//rather than an expensive verifiation check.
+//Since it is marked private, client programs cannot call it directly
+//Since it is marked unfold, it eagerly reduces,
+//eliminating the verification overhead of the wrapper
+private
+unfold
+let __char_of_int (x:int) : Tot char
+    = char_of_int x
+#reset-options
