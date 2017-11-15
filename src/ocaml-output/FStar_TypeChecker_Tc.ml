@@ -2029,7 +2029,7 @@ let cps_and_elaborate:
                                (let dmff_env =
                                   FStar_TypeChecker_DMFF.empty env1
                                     (FStar_TypeChecker_TcTerm.tc_constant
-                                       FStar_Range.dummyRange) in
+                                       env1 FStar_Range.dummyRange) in
                                 let wp_type =
                                   FStar_TypeChecker_DMFF.star_type dmff_env
                                     repr in
@@ -3729,7 +3729,7 @@ let tc_decl:
                              else ());
                             (let dmff_env =
                                FStar_TypeChecker_DMFF.empty env1
-                                 (FStar_TypeChecker_TcTerm.tc_constant
+                                 (FStar_TypeChecker_TcTerm.tc_constant env1
                                     FStar_Range.dummyRange) in
                              let uu____5254 =
                                FStar_TypeChecker_TcTerm.tc_term env1 lift in
