@@ -789,7 +789,7 @@ and tc_value env (e:term) : term
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
   | Tm_constant c ->
-    let t = tc_constant top.pos c in
+    let t = tc_constant env top.pos c in
     let e = mk (Tm_constant c) None e.pos in
     value_check_expected_typ env e (Inl t) Rel.trivial_guard
 
@@ -843,7 +843,7 @@ and tc_value env (e:term) : term
   | _ ->
     failwith (BU.format2 "Unexpected value: %s (%s)" (Print.term_to_string top) (Print.tag_of_term top))
 
-and tc_constant r (c:sconst) : typ =
+and tc_constant (env:env_t) r (c:sconst) : typ =
      match c with
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
@@ -860,7 +860,11 @@ and tc_constant r (c:sconst) : typ =
           | Unsigned, Int64 -> Const.uint64_lid)
       | Const_string _ -> t_string
       | Const_float _ -> t_float
-      | Const_char _ -> t_char
+      | Const_char _ ->
+        FStar.ToSyntax.Env.try_lookup_lid env.dsenv FStar.Parser.Const.char_lid
+        |> BU.must
+        |> fst
+
       (* TODO (KM) : Try to change this to U.ktype1 *)
       (* (because that's the minimal universe level of the WP) *)
       (* and see how much code breaks *)
@@ -1719,7 +1723,7 @@ and tc_eqn scrutinee env branch
                 | Tm_app({n=Tm_uvar _}, _)
                 | Tm_name _
                 | Tm_constant Const_unit -> []
-                | Tm_constant c -> [U.mk_eq2 U_zero (tc_constant pat_exp.pos c) scrutinee_tm pat_exp]
+                | Tm_constant c -> [U.mk_eq2 U_zero (tc_constant env pat_exp.pos c) scrutinee_tm pat_exp]
                 | Tm_uinst _
                 | Tm_fvar _ ->
                   let f = head_constructor pat_exp in
@@ -2272,7 +2276,7 @@ let rec universe_of_aux env e =
    | Tm_ascribed(_, (Inr c, _), _) -> U.comp_result c
    //also easy, since we can quickly recompute the type
    | Tm_type u -> S.mk (Tm_type (U_succ u)) None e.pos
-   | Tm_constant sc -> tc_constant e.pos sc
+   | Tm_constant sc -> tc_constant env e.pos sc
    //slightly subtle, since fv is a type-scheme; instantiate it with us
    | Tm_uinst({n=Tm_fvar fv}, us) ->
      let (us', t), _ = Env.lookup_lid env fv.fv_name.v in
