@@ -1,0 +1,44 @@
+[
+  "‹\u00060.å»g=x(‰t´wö¹",
+  [
+    [
+      "Bug293.test",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "bbb6705bec9b10574f9379b2e099a0d6"
+    ],
+    [
+      "Bug293.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
+      ],
+      0,
+      "9d2e56a34518c7e0383f8e1fe4522d2e"
+    ],
+    [
+      "Bug293.test",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "27fa4034907cbde5d9dc17ad40f64393"
+    ],
+    [
+      "Bug293.test",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "8fbbbfde4597573ea6286de8cad916de"
+    ]
+  ]
+]

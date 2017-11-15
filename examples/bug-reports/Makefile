@@ -1,5 +1,5 @@
 FSTAR_HOME=../..
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+include ../Makefile.include
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
 all: verify iverify not-verify extract

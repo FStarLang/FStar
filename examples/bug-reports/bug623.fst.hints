@@ -1,0 +1,32 @@
+[
+  "\u0001'C¤ÍÝ\u001a‘Û€\u0011o\u00041^ã",
+  [
+    [
+      "Bug623.null",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "function_token_typing_Prims.unit",
+        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
+        "unit_inversion", "unit_typing"
+      ],
+      0,
+      "186cf416e253780ec26650606f2406bb"
+    ],
+    [
+      "Bug623.null2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
+      ],
+      0,
+      "36cba351e8c3421415a2d51d26788bd6"
+    ]
+  ]
+]

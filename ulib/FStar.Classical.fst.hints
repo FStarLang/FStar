@@ -228,9 +228,15 @@
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_typing"
+      ],
       0,
-      "cc653c357a9977af480815eb7f422952"
+      "ec898aefefbb3f6ddfb73325817bbf51"
     ],
     [
       "FStar.Classical.ghost_lemma",

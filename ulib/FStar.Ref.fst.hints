@@ -98,11 +98,13 @@
       2,
       1,
       [
-        "@query", "equation_FStar.Ref.fresh", "equation_FStar.Ref.sel",
-        "equation_FStar.ST.ref"
+        "@query", "assumption_Prims.HasEq_int", "equation_FStar.Ref.fresh",
+        "equation_FStar.Ref.sel", "equation_FStar.ST.ref",
+        "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0d66f4015136eacc15066f52afed9cbc"
+      "ef74aa2c6955bb650d5b1f0318fe66b9"
     ],
     [
       "FStar.Ref.alloc",

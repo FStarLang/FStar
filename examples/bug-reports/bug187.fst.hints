@@ -1,0 +1,33 @@
+[
+  "‹'\tCÊ@é‚•žú¹‘ò¢ã",
+  [
+    [
+      "Bug187.fail",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some", "equation_Bug187.vkey",
+        "function_token_typing_Bug187.test",
+        "function_token_typing_Prims.unit", "kinding_Prims.dtuple2@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_Bug187_Tm_abs_33c425e9d5a70900b1deadec7d52bee0",
+        "typing_FStar.Pervasives.Native.uu___is_None",
+        "typing_FStar.Pervasives.Native.uu___is_Some"
+      ],
+      0,
+      "a50434e7f28c1ab335065a2f61465005"
+    ],
+    [
+      "Bug187.no_fail",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "198306923f2753b84b2c27264d777473"
+    ]
+  ]
+]

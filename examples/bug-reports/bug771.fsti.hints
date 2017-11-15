@@ -1,0 +1,29 @@
+[
+  "‹»A›z\bÌ­¶\nyJ¦¯'\u001e",
+  [
+    [
+      "Bug771.clen",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "haseqBug771_Tm_refine_cfd5022733fb6490c664c19d1fc29fba"
+      ],
+      0,
+      "b999272356cfe8436037e5d928e4b2f8"
+    ],
+    [
+      "Bug771.ctemplate",
+      1,
+      1,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "haseqBug771_Tm_refine_cfd5022733fb6490c664c19d1fc29fba"
+      ],
+      0,
+      "ece9176aef1feb121c1298ea2bd01a34"
+    ]
+  ]
+]

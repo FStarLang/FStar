@@ -710,9 +710,10 @@ and star_type' env t =
   | Tm_ascribed (e, (Inl t, None), something) ->
       mk (Tm_ascribed (star_type' env e, (Inl (star_type' env t), None), something))
 
-  | Tm_ascribed _ ->
-      raise_err (Errors.TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
-        (Print.term_to_string t)))
+  | Tm_ascribed (e, (Inr c, None), something) ->
+      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env (U.comp_result c)), None), something))  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
+      (*raise_err (Errors.TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
+              (Print.term_to_string t)))*)
 
   | Tm_refine _ ->
       raise_err (Errors.TermOutsideOfDefLanguage, (BU.format1 "Tm_refine is outside of the definition language: %s"

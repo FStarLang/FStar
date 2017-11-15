@@ -1220,8 +1220,7 @@ let unthunk_lemma_post t =
 
 let action_as_lb eff_lid a =
   let lb =
-    close_univs_and_mk_letbinding
-      None
+    close_univs_and_mk_letbinding None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
       (Inr (lid_as_fv a.action_name Delta_equational None))
       a.action_univs

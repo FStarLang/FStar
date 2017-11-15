@@ -1,0 +1,45 @@
+[
+  "Ô4h\u0012‚\u001cÎ:ð\\6l4\u0018ì1",
+  [
+    [
+      "Bug043.nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "28f8bf5323b7a0d3097734341a414dd9"
+    ],
+    [
+      "Bug043.uu___is_O",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "7395332b1e98a9978136c57579cbb912"
+    ],
+    [
+      "Bug043.uu___is_S",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "363bc9d7613db8a7ce8b2a86dd84dc36"
+    ],
+    [
+      "Bug043.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug043.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug043_Tm_refine_e9b75321b1c0b82fe3be1f811b1a5f79"
+      ],
+      0,
+      "f48e2ffaab8046703159b7c3da481254"
+    ]
+  ]
+]

@@ -90,7 +90,10 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_dea15b1a659d037d1c75ce3b40081e17"
+      ],
       0,
       "7b8990e32aa1e9e7f083a85d4209edaf"
     ],
@@ -427,22 +430,27 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.UInt32_pretyping_041e3a67a2d2b51fd702f1f88cfc3b44",
         "data_typing_intro_FStar.Pointer.Base.TArray@tok",
-        "equation_FStar.UInt32.t", "fuel_guarded_inversion_FStar.UInt32.t_",
         "lemma_FStar.Pointer.Base.includes_refl",
         "lemma_FStar.Pointer.Base.loc_includes_pointer_pointer",
         "lemma_FStar.Pointer.Base.loc_includes_refl",
-        "lemma_FStar.Pointer.includes_gcell_gen"
+        "lemma_FStar.Pointer.includes_gcell_gen",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_5809dbebfddf8a319f8ecffaa27336a6",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_dea15b1a659d037d1c75ce3b40081e17"
       ],
       0,
-      "af13aed6b7c7d31db69587ee34e22ec0"
+      "438b4d7efd086689073812a1f8709601"
     ],
     [
       "FStar.Pointer.loc_disjoint_gcell_l",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_5830a1c86204cb1e91e594dfe436f5a6"
+      ],
       0,
       "9ea3b05f549c4d8280cd22ddb9c48480"
     ],
@@ -500,14 +508,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt32.t",
-        "fuel_guarded_inversion_FStar.UInt32.t_",
-        "lemma_FStar.Pointer.Base.loc_disjoint_gpointer_of_buffer_cell_r",
+        "@MaxIFuel_assumption", "@query",
         "lemma_FStar.Pointer.Base.loc_includes_gpointer_of_array_cell",
-        "lemma_FStar.Pointer.Base.loc_includes_refl"
+        "lemma_FStar.Pointer.Base.loc_includes_refl",
+        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_780a58d3abf8ac8412c61f118449e052"
       ],
       0,
-      "029f3171b149f491d266f0df817901ad"
+      "218689bc73e016b509efbd4e02e7ac57"
     ],
     [
       "FStar.Pointer.loc_disjoint_gpointer_of_buffer_cell_l",
@@ -515,10 +522,10 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt32.t",
-        "fuel_guarded_inversion_FStar.UInt32.t_",
+        "@MaxIFuel_assumption", "@query",
         "lemma_FStar.Pointer.Base.loc_includes_gpointer_of_array_cell",
-        "lemma_FStar.Pointer.Base.loc_includes_refl"
+        "lemma_FStar.Pointer.Base.loc_includes_refl",
+        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_8c23b222cc3779bf1b758c868f138137"
       ],
       0,
       "4669415b42209484fde56ab0a1ad3a55"
@@ -557,21 +564,26 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid",
+        "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "lemma_FStar.Pointer.Base.loc_disjoint_pointer_addresses"
       ],
       0,
-      "3fee1daeb86d7506685da58498830f98"
+      "6d51901540d3bfc457b5bbacaaf2c1fb"
     ],
     [
       "FStar.Pointer.loc_disjoint_addresses_pointer",
       2,
       2,
       1,
-      [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
+      [
+        "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid",
+        "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
       0,
-      "95e5c7f310952514fee6e577955b275f"
+      "568aa098848a51e6f07d003693aa8dcd"
     ],
     [
       "FStar.Pointer.loc_disjoint_addresses_pointer",
@@ -694,7 +706,10 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_FStar.Pointer_Tm_refine_159bb3f18579485e7bd27172ac61f8f3"
+      ],
       0,
       "61d855622cf594472af6da394e9c120e"
     ]

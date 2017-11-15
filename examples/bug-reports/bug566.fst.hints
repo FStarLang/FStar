@@ -1,0 +1,93 @@
+[
+  "\u0015È\u007f É¾’‰î¯\u0001j;Ê\u0006*",
+  [
+    [
+      "Bug566.uu___is_C",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "097c4c2b2ead0f990084d012613026ea"
+    ],
+    [
+      "Bug566.__proj__C__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug566.C",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug566_Tm_refine_ca26a7be6e8d5671df710d5a799d30b5"
+      ],
+      0,
+      "aa67eab59a0e962212c814835b8d2cb3"
+    ],
+    [
+      "Bug566.uu___is_F",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1b2bb8e3f84685379a66e21556634846"
+    ],
+    [
+      "Bug566.__proj__F__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug566.F",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug566_Tm_refine_2dc605cac2a2b1e27d394607dbcd94b7"
+      ],
+      0,
+      "677253194de5c37e459dd585e9c711d7"
+    ],
+    [
+      "Bug566.uu___is_C'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3895efdb194a78698102336ee9f331da"
+    ],
+    [
+      "Bug566.__proj__C'__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug566.C_",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug566_Tm_refine_c69cc4c61eeac57c1118fca0dc112ca5"
+      ],
+      0,
+      "c5a171d368d730db50c458b6bcf43d55"
+    ],
+    [
+      "Bug566.uu___is_F'",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c81ed45e86203594e291ec06a4e9f56a"
+    ],
+    [
+      "Bug566.__proj__F'__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug566.F_",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug566_Tm_refine_5518a97d3f72135e379d9e2c8d483299"
+      ],
+      0,
+      "497bc15c4cb1bdb8edd9a5ce127d4fe5"
+    ]
+  ]
+]

@@ -349,11 +349,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "equation_FStar.Tactics.Builtins.exact",
-        "equation_FStar.Tactics.Derived.fail", "unit_typing"
+        "equation_FStar.Tactics.Builtins.fail",
+        "equation_FStar.Tactics.Derived.exact", "unit_typing"
       ],
       0,
-      "affef71ab39f840e3c87ceb0a57ac6c2"
+      "9d771b7b95d1a87b0a3f6c48d9340e39"
     ],
     [
       "FStar.Tactics.Simplifier.simplify_point",

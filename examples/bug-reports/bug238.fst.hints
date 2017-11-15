@@ -1,0 +1,32 @@
+[
+  "öç\u0014˝¸€ıBksWpËTÊ¨",
+  [
+    [
+      "Bug238.box",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "a13dbba5e716cf9ce564033bfcefc287"
+    ],
+    [
+      "Bug238.__proj__Box__item___0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1c43168c23e77f863c1f64a6c55bf5ae"
+    ],
+    [
+      "Bug238.silly",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "715ccedfbea8d27bfabd90027fffa312"
+    ]
+  ]
+]

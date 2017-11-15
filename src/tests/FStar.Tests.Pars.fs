@@ -62,8 +62,8 @@ let init_once () : unit =
   let env = {env with dsenv=dsenv} in
   let _prims_mod, env = Tc.check_module env prims_mod in
 // only needed by normalization test #24, probably quite expensive otherwise
-//  let dsenv, env = add_mods ["FStar.PropositionalExtensionality.fst"; "FStar.FunctionalExtensionality.fst"; "FStar.PredicateExtensionality.fst";
-//                             "FStar.TSet.fst"; "FStar.Heap.fst"; "FStar.ST.fst"; "FStar.All.fst"; "FStar.Char.fsti"; "FStar.String.fsti"] dsenv env in
+  // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Char.fsti"; "FStar.String.fsti"] dsenv env in
+
   let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env
 

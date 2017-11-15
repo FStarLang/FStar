@@ -7,14 +7,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
-        "disc_equation_Prims.Left", "disc_equation_Prims.Right",
-        "equation_Prims.l_not", "fuel_guarded_inversion_Prims.c_or",
-        "projection_inverse_BoxBool_proj_0", "typing_Prims.l_not",
-        "typing_Prims.uu___is_Left"
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
+        "bool_inversion", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "equation_Prims.l_not",
+        "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "4ed029f7c3725298fb1785e39f673934"
+      "29815125210c80a1822d1c5886f1b682"
     ],
     [
       "FStar.IndefiniteDescription.aux",
@@ -102,9 +101,9 @@
       2,
       2,
       1,
-      [ "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing" ],
+      [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "85672df21fee5fd44464aee0857612de"
+      "03dfbda602ee3a2395a92a705e24700b"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",

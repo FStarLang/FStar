@@ -107,11 +107,12 @@
       2,
       1,
       [
-        "@query", "equality_tok_FStar.Order.Eq@tok",
-        "equality_tok_FStar.Order.Gt@tok", "equality_tok_FStar.Order.Lt@tok"
+        "@query", "assumption_Prims.HasEq_int",
+        "equality_tok_FStar.Order.Eq@tok", "equality_tok_FStar.Order.Gt@tok",
+        "equality_tok_FStar.Order.Lt@tok"
       ],
       0,
-      "b52f277385f51bb9b7681979f414de30"
+      "e0deadf94c15919ba45769a04c6d0f6a"
     ],
     [
       "FStar.Order.order_from_int",
