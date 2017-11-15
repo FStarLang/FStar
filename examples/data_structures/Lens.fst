@@ -156,6 +156,7 @@ let makeGreen (c:colored circle) =
 /// Now for some stateful stuff
 ///   – This is not quite as nice an compositional as before
 ///     Would be curious to have your thoughts on how it could be generalized
+/// (My first naive attempt: See StatefulLens for how to do it better)
 ////////////////////////////////////////////////////////////////////////////////
 
 open FStar.Heap
