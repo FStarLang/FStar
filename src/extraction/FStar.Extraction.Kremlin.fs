@@ -411,10 +411,10 @@ and translate_let env flavor flags lb: option<decl> =
       if assumed then
         if List.length tvars = 0 then
           Some (DExternal (None, flags, name, translate_type env t0))
-        else
-          // JP: TODO assume polymorphic function and have KreMLin generate
-          // monomorphized assumes 
+        else begin
+          BU.print1_warning "No writing anything for %s (polymorphic assume)\n" (snd name);
           None
+        end
       else begin
         try
           let body = translate_expr env body in

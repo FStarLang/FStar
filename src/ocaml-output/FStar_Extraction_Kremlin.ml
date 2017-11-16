@@ -977,7 +977,11 @@ and translate_let:
                               uu____3500) in
                           DExternal uu____3481 in
                         FStar_Pervasives_Native.Some uu____3480
-                      else FStar_Pervasives_Native.None)
+                      else (
+                          (FStar_Util.print1_warning
+                             "No writing anything for %s (polymorphic assume)\n"
+                             (FStar_Pervasives_Native.snd name1));
+                        FStar_Pervasives_Native.None))
                    else
                      (try
                         let body1 = translate_expr env3 body in
