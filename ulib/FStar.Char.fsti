@@ -9,15 +9,15 @@ val uppercase: char -> Tot char
 type char_code = n:U32.t{U32.v n < pow2 21}
 val u32_of_char: char -> Tot char_code
 val char_of_u32: char_code -> Tot char
-val char_of_u32_of_char: 
-    c:char 
-  -> Lemma 
+val char_of_u32_of_char:
+    c:char
+  -> Lemma
     (ensures (char_of_u32 (u32_of_char c) == c))
     [SMTPat (u32_of_char c)]
 
-val u32_of_char_of_u32: 
+val u32_of_char_of_u32:
     c:char_code
-  -> Lemma 
+  -> Lemma
     (ensures (u32_of_char (char_of_u32 c) == c))
     [SMTPat (char_of_u32 c)]
 

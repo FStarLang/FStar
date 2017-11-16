@@ -9,14 +9,14 @@ type optResult 'a 'b =
 /// allowing inverting optResult without having
 /// to globally increase the fuel just for this
 let invertOptResult (a:Type) (b:Type)
-  : Lemma 
+  : Lemma
     (requires True)
     (ensures (forall (x:optResult a b). Error? x \/ Correct? x))
     [SMTPat (optResult a b)]
   = allow_inversion (optResult a b)
 
 irreducible
-let perror 
+let perror
     (file:string)
     (line:int)
     (text:string)
@@ -34,8 +34,8 @@ let correct
    they indicate code that should never be executed at runtime.
    This is verified by typing only for the unreachable function;
    this matters e.g. when dynamic errors are security-critical *)
-let rec unexpected 
-    (#a:Type) 
+let rec unexpected
+    (#a:Type)
     (s:string)
    : Div a
      (requires True)
@@ -53,7 +53,7 @@ let rec unreachable
      unreachable s
 
 irreducible
-let if_ideal 
+let if_ideal
     (f:unit -> Tot 'a)
     (x:'a)
   : Tot 'a
