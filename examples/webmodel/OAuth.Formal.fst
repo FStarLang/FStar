@@ -1,4 +1,4 @@
-module OAuth.Formal
+module OAuth.Formal.Test
 
 type http_request
 type http_response
@@ -59,11 +59,11 @@ assume val mk_uri: #idx:index -> origin -> path:string -> indexed_parameters idx
 assume val uri_origin: uri -> origin
 assume val add_parameters: #idx:index -> u:uri{can_send (uri_index u) idx}  -> indexed_parameters idx -> u':uri{uri_origin u == uri_origin u' /\ uri_index u' == idx}
 
+assume val request_uri: http_request -> uri
 assume val request_path: http_request -> string
+assume val request_parameters: #req_idx:index -> http_request ->  indexed_parameters req_idx	      
+
 assume val request_method: http_request -> string
-
-
-assume val request_parameters: #req_idx:index -> http_request ->  indexed_parameters req_idx
 			      
 assume val request_origin_header: http_request -> string
 assume val request_cookie_header: http_request -> nonce
@@ -201,16 +201,21 @@ assume val get_client_id_state_params: #idx:index -> indexed_parameters idx -> P
 assume val set_rp_session: loginSessionId:nonce -> idp:origin -> s:nonce -> m:string -> redir:uri -> server unit
 assume val get_rp_session: loginSessionId:nonce -> server (option (idp:origin * s:nonce * m:string * redir:uri))
 
-assume val set_rp_request_state: request_id:nonce -> mode:string -> idp:origin -> req:nonce -> server unit
-assume val get_rp_request_state: request_id:nonce -> server (o:option (mode:string * idp:origin * req:nonce){ match o with 
+assume val check_password: username:string -> password:nonce -> server bool
+
+noeq type req_id = 
+  | Id : src:origin -> n:nonce -> req_id
+
+
+assume val set_rp_request_state: request_id:nonce -> mode:string -> idp:origin -> req:req_id -> server unit
+assume val get_rp_request_state: request_id:nonce -> server (o:option (mode:string * idp:origin * req:req_id){ match o with 
 			| Some (m,i,r) -> (nonce_index request_id) `includes` i
 			| None -> True})
 
-assume val check_password: username:string -> password:nonce -> server bool
 
 noeq type http_message = 
-  | Req : id:nonce -> http_request -> http_message 
-  | Resp: id:nonce -> http_response -> http_message
+  | Req : id:req_id -> req:http_request -> http_message 
+  | Resp: id:req_id -> resp:http_response -> http_message
 
 #reset-options "--z3rlimit 100"
 //val rp_http_server: rp_origin:origin -> msg:http_message -> server (option (msg':http_message{
@@ -226,23 +231,23 @@ let rp_http_server (rp_origin:origin) (msg:http_message) : server (option http_m
   if path = "/" then
     let headers = [mk_referrer_policy_header "origin"] in 
     let script_ = script_param "script_rp_index" in
-    can_send_public (nonce_index id);
-    assert (can_send (param_index script_) (nonce_index id));
-    let resp = Resp id (mk_response #(nonce_index id) headers (mk_body #(nonce_index id) [script_])) in
+    can_send_public (nonce_index id.n);
+    assert (can_send (param_index script_) (nonce_index id.n));
+    let resp = Resp id (mk_response #(nonce_index id.n) headers (mk_body #(nonce_index id.n) [script_])) in
     return (Some resp)
   else if path = "/startInteractiveLogin" then
     if (request_method req = "POST" &&
         request_origin_header req = get_origin rp_origin)
 	 //may need extra checks for HTTPS 
     then (
-       match get_idp_param (get_body #(nonce_index id) (request_body req)) with
+       match get_idp_param (get_body #(nonce_index id.n) (request_body req)) with
        | None -> return None 
        | Some idp -> 
 	 iro <-- read_idp_record rp_origin idp;
 	 match iro with
 	 | None -> return None
 	 | Some ir -> 
-	     let redir_index = index_add (nonce_index id) idp in
+	     let redir_index = index_add (nonce_index id.n) idp in
   	     (state <-- mk_nonce #redir_index;
 	     let auth_uri = get_idp_auth_endpoint_uri ir in
 	     let client_id = get_client_id ir in
@@ -271,7 +276,7 @@ let rp_http_server (rp_origin:origin) (msg:http_message) : server (option http_m
 	| None -> return None
 	| Some ir -> 
 	       let client_id = get_client_id ir in
-	       let req_params = request_parameters #(nonce_index id) req in
+	       let req_params = request_parameters #(nonce_index id.n) req in
 	       match (get_client_id_param req_params, 
 		      get_state_param req_params, 
 		      get_mode_param req_params) with
@@ -304,29 +309,31 @@ let rp_http_server (rp_origin:origin) (msg:http_message) : server (option http_m
 								 [grant_param;
 							          authorization_code_param code;
 								  redirect_uri_param redir]) in
-				    request_id <-- mk_nonce #(nonce_index id);
+				    request_id <-- mk_nonce #(nonce_index id.n);
+				    let req_id = Id rp_origin request_id in
 				    set_rp_request_state request_id "code" idp id ;;
-			            return (Some (Req request_id token_request))
+			            return (Some (Req req_id token_request))
     
 		      else return None   
 	       | _,_,_ -> return None
     else return None
  | Resp id resp -> // process IP's response and process API response
-     session_or_none <-- get_rp_request_state id ;
+     session_or_none <-- get_rp_request_state id.n ;
      match session_or_none with
      | None -> return None
      | Some (mode,idp,prev) -> 
         if mode = "code" then 
         let resp_params = get_body (response_body resp) in
-	match get_access_token_param #(nonce_index id) resp_params with
+	match get_access_token_param #(nonce_index id.n) resp_params with
 	| None -> return None
 	| Some token -> 
 	  iro <-- read_idp_record rp_origin idp;
 	  match iro with
 	  | None -> return None
 	  | Some ir -> 
-		 request_id <-- mk_nonce #(nonce_index id);
-		 let request_idx = (nonce_index id) in
+		 request_id <-- mk_nonce #(nonce_index id.n);
+		 let req_id = Id rp_origin request_id in
+		 let request_idx = (nonce_index id.n) in
 		 let intros_uri = get_idp_introspection_endpoint_uri ir in
 		 let token_param = access_token_param token in
 		 let intros_uri = add_parameters #(request_idx) intros_uri [token_param] in
@@ -334,18 +341,17 @@ let rp_http_server (rp_origin:origin) (msg:http_message) : server (option http_m
 		 assert (includes request_idx idp);
 		 assert (includes request_idx (uri_origin intros_uri));
 		 let request = mk_request #request_idx "GET" intros_uri [] (mk_body #request_idx []) in
-		 return (Some (Req request_id request))
+		 return (Some (Req req_id request))
         else if mode = "introspect" then
 	     /// We may get back the userid and/or a protected resource and/or client_id here
 	     /// For authentication, we need to check these values, but not for authorization
 	     let headers = [mk_referrer_policy_header "origin"] in 
 	     let script_ = script_param "script_rp_index" in
-	     can_send_public (nonce_index id);
-	     assert (can_send (param_index script_) (nonce_index id));
-	     return (Some (Resp prev (mk_response #(nonce_index prev) headers 
-			  (mk_body #(nonce_index prev) [script_]))))
+	     can_send_public (nonce_index id.n);
+	     assert (can_send (param_index script_) (nonce_index id.n));
+	     return (Some (Resp prev (mk_response #(nonce_index prev.n) headers 
+			  (mk_body #(nonce_index prev.n) [script_]))))
 	else return None 
-
 
 assume val get_path: u:uri -> path:string
 
@@ -380,19 +386,19 @@ let ip_http_server ip msg =
 | Req id req ->
       let path = request_path req in
       if path = "/auth" && request_method req = "GET" then
-	 let params = request_parameters #(nonce_index id) req in
+	 let params = request_parameters #(nonce_index id.n) req in
 	 let headers = [mk_referrer_policy_header "origin"] in 
-	 let script_ = script_data_param #(nonce_index id) "script_idp_form" params in
-//	 assert (param_index script_ == nonce_index id);
-//	 assert (can_send (param_index script_) (nonce_index id));
+	 let script_ = script_data_param #(nonce_index id.n) "script_idp_form" params in
+//	 assert (param_index script_ == nonce_index id.n);
+//	 assert (can_send (param_index script_) (nonce_index id.n));
 	 let resp = Resp id 
-		      (mk_response #(nonce_index id) 
+		      (mk_response #(nonce_index id.n) 
 			 headers 
-			 (mk_body #(nonce_index id) [script_])) in
+			 (mk_body #(nonce_index id.n) [script_])) in
 	 return (Some resp)
       else if (path = "/auth" && request_method req = "POST" &&
    	       request_origin_header req = get_origin ip) then
-	 let params   = get_body #(nonce_index id) (request_body req) in
+	 let params   = get_body #(nonce_index id.n) (request_body req) in
 	 let username = get_username_param params in
 	 let password = get_password_param params in
 	 let clientid_state = get_client_id_state_params params in
@@ -408,7 +414,7 @@ let ip_http_server ip msg =
 		   | Some rpr -> 
 		   let rp_origin = get_rp_record_rp_origin rpr in
 		   if check_redirect_uri rpr rp_origin ruri then
-   		     let code_index = index_add (nonce_index id) rp_origin in
+   		     let code_index = index_add (nonce_index id.n) rp_origin in
 		     new_code <-- mk_nonce #code_index ;
 		     store_code new_code cid ruri u ;;  
 		     assert (nonce_index st == public_index \/
@@ -430,7 +436,7 @@ let ip_http_server ip msg =
 	  | Some (u,p) -> 
 	   check <-- check_password u p ;
 	   if check then
-	     let params   = get_body #(nonce_index id) (request_body req) in
+	     let params   = get_body #(nonce_index id.n) (request_body req) in
 	     let code = get_code_param params in
 	     let red_uri = get_redirect_uri_param params in
 	     match code,red_uri with
@@ -443,8 +449,8 @@ let ip_http_server ip msg =
 	           if client_id = u && 
 		      eq_uri red_uri ruri then
 		    (remove_code code ;;
-  		     let token_index = nonce_index id in
-		     token <-- mk_token #token_index ;
+  		     let token_index = nonce_index id.n in
+		     token <-- mk_nonce #token_index ;
 		     let b = mk_body #token_index [access_token_param token] in
   	             let resp = Resp id (mk_response #token_index [] b) in
 		     return (Some resp))
@@ -456,14 +462,168 @@ let ip_http_server ip msg =
 
 
 
-
-
 type browser_state
 type browser 'a = browser_state -> ('a * browser_state)
 assume val new_browser: unit -> browser_state 
 assume val new_servers: unit -> server_state
 assume val user_navigates: u:origin -> browser (option (m:http_message{Req? m}))
 assume val process_response: m:http_message{Resp? m} -> browser (option (m:http_message{Req? m}))
+
+
+(***********)
+
+type system
+type id = origin
+assume val is_browser : id -> bool
+
+type window
+noeq type event = 
+  | HTTP_Msg : http_message -> event
+  | Load_Script : id -> window -> event
+  
+assume val event_target: event -> id
+type log = l:list event
+assume val get_log: system -> log
+
+type browser_process = option event -> browser_state -> (list event * browser_state)
+type server_process = option event -> server_state -> (list event * server_state)
+type script_process = option event -> browser_state -> (list event * browser_state)
+assume val get_browser_ids: system -> list id 
+assume val get_browser: id -> system -> browser_state * browser_process
+assume val get_server: id -> system -> server_state * server_process
+assume val get_script: id -> system -> script_process
+assume val set_browser_state: id -> browser_state -> i:system -> o:system{get_log o == get_log i}
+assume val set_server_state: id -> server_state -> i:system -> o:system{get_log o == get_log i}
+
+val valid_event: list event -> event -> Type0
+let valid_event l e = True
+
+assume val valid_monotonic: l:list event -> e:event -> e':event -> Lemma
+				  (requires (valid_event l e))
+				  (ensures (valid_event (e'::l) e))
+				  [SMTPat (valid_event (e'::l) e)]
+				  
+val valid_log: list event -> Type0
+let rec valid_log l : Type0 = 
+  match l with
+  | [] -> True
+  | h::t -> valid_log t /\ valid_event t h
+
+val valid_log_lemma: l:list event -> Lemma 
+		    (requires (True))
+		    (ensures (valid_log l))
+		    [SMTPat (valid_log l)]
+let rec valid_log_lemma l = 
+    match l with 
+    | [] -> ()
+    | h::t -> valid_log_lemma t
+			
+			    
+val first_n: n:nat -> l:list event{List.Tot.length l >= n}  -> list event
+let rec first_n n l = 
+  if List.Tot.length l = n then l 
+  else 
+  match l with
+  | h::t -> first_n n t 
+  
+val extends: l1:list event -> l2:list event -> Type0
+let rec extends l1 l2 = 
+  if List.Tot.length l1 < List.Tot.length l2 then False
+  else first_n (List.Tot.length l2) l1 == l2
+
+
+val init: s:system{get_log s == []}
+type stateful 'a = s:system -> Pure ('a * system)
+			   (requires (valid_log (get_log s)))
+			   (ensures (fun (r,f) -> valid_log (get_log f) /\
+					       get_log f `extends` get_log s))
+
+type stateful_spec 'a (pre:system -> Type) (post:system -> 'a -> system -> Type) = 
+		     i:system -> Pure (r:'a * o:system)
+			    (requires (valid_log (get_log i) /\ pre i))
+			    (ensures (fun (r,o) -> valid_log (get_log o) /\ 
+						get_log o `extends` get_log i /\
+						post i r o))
+
+
+assume val mk_browser: stateful id (* creates a new browser and returns an identifier for it *)
+
+assume val add_event: e:event -> stateful_spec unit (fun i -> valid_log (e::(get_log i)))  (fun i r o -> get_log o == e::get_log i)
+assume val add_events: es:list event -> stateful_spec unit (fun i -> valid_log (es@(get_log i)))  (fun i r o -> get_log o == es @ get_log i)
+
+assume val get_pending_event: stateful_spec (option event)
+					    (fun _ -> True)
+					    (fun i e o -> get_log i == get_log o /\ 
+						       (match e with
+						       | Some e -> valid_event (get_log i) e
+						       | None -> True))
+
+
+let scheduler_step : stateful unit =  fun st -> 
+  let (ev,st) = get_pending_event st in
+  match ev with
+  | Some (HTTP_Msg (Req id r)) -> 
+         let o = uri_origin (request_uri r) in
+	 let (s_st,s_fun) = get_server o st in
+	 let (evs,s_st) = s_fun ev s_st in
+	 let _,st' = add_events evs st in
+	 let st' = set_server_state o s_st st' in
+	 (),st'
+
+  | Some (HTTP_Msg (Resp id r)) -> 
+         if is_browser id.src then 
+	   let (b_st,b_fun) = get_browser id.src st in
+	   let (evs,b_st) = b_fun ev b_st  in
+	   let _,st' = add_events evs st in
+	   let st' = set_browser_state id.src b_st st' in
+	   (),st'
+	 else 
+	   let o = id.src in 
+	   let (s_st,s_fun) = get_server o st in
+	   let (evs,s_st) = s_fun ev s_st in
+	   let _,st' = add_events evs st in
+	   let st' = set_server_state o s_st st' in
+	   (),st'
+  | Some (Load_Script id w) ->
+	   let (b_st,b_fun) = get_browser id st in
+	   let (evs,b_st) = b_fun ev b_st  in
+	   let _,st' = add_events evs st in
+	   let st' = set_browser_state id b_st st' in
+	   (),st'
+  | None -> 
+	  match (get_browser_ids st) with
+	  | [] -> (),st
+	  | id::t -> 
+		 let (b_st,b_fun) = get_browser id st in
+		 let (evs,b_st) = b_fun None b_st  in
+		 let _,st' = add_events evs st in
+		 let st' = set_browser_state id b_st st' in
+		 (),st' 
+   
+
+let rec scheduler (n:nat) (st:system{valid_log (get_log st)}) =
+  if n > 0 then
+    let _,st' = scheduler_step st in
+    scheduler (n-1) st'
+  else ()	   
+	     
+	 
+	 
+  
+
+
+
+val navigate_window: bid:id -> w:window -> u:uri -> stateful_spec unit
+				      (fun i -> True) // maybe ask for bid and w to exist in i
+				      (fun i _ o -> exists r. get_log o == (HTTP_Msg r) :: get_log i /\ Req? r /\ request_uri (Req?.req r) == u)
+
+
+
+
+
+
+				      
+
 
 let main ip rp =
     let browser = new_browser() in
@@ -479,7 +639,6 @@ let main ip rp =
     let (Some req, browser) = process_response resp browser in
     ()
   
-
 
 
 
