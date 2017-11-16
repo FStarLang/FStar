@@ -407,13 +407,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let head, _ = U.head_and_args top in
     mk (Tm_app (head, [(e, None)])) None top.pos, (Util.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
 
-  | Tm_app({n=Tm_constant Const_set_range_of}, (a1, None)::(a2, None)::[]) ->
+  | Tm_app({n=Tm_constant Const_set_range_of}, (t, None)::(r, None)::[]) ->
     let head, _ = U.head_and_args top in
     let env' = Env.set_expected_typ env (tabbrev Const.range_lid) in
-    let e1, _, g1 = tc_term env' a1 in
-    let e2, t2, g2 = tc_term env a2 in
-    let g = Rel.conj_guard g1 g2 in
-    mk_Tm_app head [S.as_arg a1; S.as_arg a2] None top.pos, t2, g
+    let er, _, gr = tc_term env' r in
+    let t, tt, gt = tc_term env t in
+    let g = Rel.conj_guard gr gt in
+    mk_Tm_app head [S.as_arg t; S.as_arg r] None top.pos, tt, g
 
   | Tm_app({n=Tm_constant Const_range_of}, _)
   | Tm_app({n=Tm_constant Const_set_range_of}, _) ->

@@ -754,9 +754,9 @@ let reduce_primops cfg env stack tm =
            log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
                                         (Print.term_to_string tm));
            begin match args with
-           | [(a1, _); (a2, _)] ->
-                begin match EMB.unembed_range a2 with
-                | Some r -> ({ a1 with pos = r })
+           | [(t, _); (r, _)] ->
+                begin match EMB.unembed_range r with
+                | Some rng -> ({ t with pos = rng })
                 | None -> tm
                 end
            | _ -> tm

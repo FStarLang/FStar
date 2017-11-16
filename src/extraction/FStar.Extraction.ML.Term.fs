@@ -886,8 +886,8 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
           let ty = term_as_mlty g (tabbrev PC.range_lid) in
           with_ty ty <| mlexpr_of_range a1.pos, E_PURE, ty
 
-        | Tm_app({n=Tm_constant Const_set_range_of}, [(a1, _); (a2, _)]) ->
-          term_as_mlexpr' g a1
+        | Tm_app({n=Tm_constant Const_set_range_of}, [(t, _); (r, _)]) ->
+          term_as_mlexpr' g t
 
         | Tm_app({n=Tm_constant (Const_reflect _)}, _) -> failwith "Unreachable? Tm_app Const_reflect"
 
