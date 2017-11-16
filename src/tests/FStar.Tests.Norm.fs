@@ -130,10 +130,10 @@ let tests =
                        (minus (nm h) (nm h))))), z)
   ; (18, (pred_nat (snat (snat znat))), (snat znat))
   ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
-  ; (20, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
-  ; (21, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat)
-  ; (22, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
-  //; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE
+  ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
+  ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
+  ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
+  //; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   // The following do not work for NBE because of type allications.
   //; (24, (tc "recons [0;1]"), (tc "[0;1]"))
   //; (25, (tc "copy [0;1]"), (tc "[0;1]"))
@@ -160,34 +160,77 @@ let run_either i r expected normalizer =
 let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops])
 let run_nbe i r expected = run_either i r expected (fun _tcenv -> FStar.TypeChecker.NBE.normalize)
 
-let run_both_with_time i r expected =
+let run_interpreter_with_time i r expected =
+  let interp () = run_interpreter i r expected in
+  (i, snd (FStar.Util.return_execution_time interp))
+
+let run_nbe_with_time i r expected =
   let nbe () = run_nbe i r expected in
-  let norm () = run_interpreter i r expected in
-  FStar.Util.measure_execution_time  "nbe" nbe;
-  BU.print_string "\n";
-  FStar.Util.measure_execution_time "normalizer" norm;
-  BU.print_string "\n"
+  (i, snd (FStar.Util.return_execution_time nbe))
 
 let run_tests run = 
   Options.__set_unit_tests();
-  List.iter (function (no, test, res) -> run no test res) tests;
-  Options.__clear_unit_tests()
+  let l = List.map (function (no, test, res) -> run no test res) tests in
+  Options.__clear_unit_tests(); 
+  l
 
 let run_all_nbe () =
     BU.print_string "Testing NBE\n";
-    run_tests run_nbe;
+    let _ = run_tests run_nbe in
     BU.print_string "NBE ok\n"
 
 let run_all_interpreter () =
     BU.print_string "Testing the normalizer\n";
-    run_tests run_interpreter;
+    let _ = run_tests run_interpreter in
     BU.print_string "Normalizer ok\n"
 
-let compare () =
+let run_all_nbe_with_time () =
+  BU.print_string "Testing NBE\n";
+  let l = run_tests run_nbe_with_time in
+  BU.print_string "NBE ok\n";
+  l
+
+let run_all_interpreter_with_time () =
+  BU.print_string "Testing the normalizer\n";
+  let l = run_tests run_interpreter_with_time in
+  BU.print_string "Normalizer ok\n"; 
+  l
+
+
+// old compare
+let run_both_with_time i r expected =
+  let nbe () = run_nbe i r expected in
+  let norm () = run_interpreter i r expected in
+  FStar.Util.measure_execution_time "nbe" nbe;
+  BU.print_string "\n";
+  FStar.Util.measure_execution_time "normalizer" norm;
+  BU.print_string "\n"
+
+let compare () =   
   BU.print_string "Comparing times for normalization and nbe\n";
   run_both_with_time 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z
 
+
+let compare_times l_int l_nbe =
+  BU.print_string "Comparing times for normalization and nbe\n";
+  List.iter2 (fun res1 res2 -> 
+                let (t1, time_int) = res1 in
+                let (t2, time_nbe) = res2 in
+                if (t1 = t2) // sanity check
+                then 
+                  BU.print3 "Test %s\nNBE %s\nInterpreter %s\n"
+                  // Figure out if there is division compatible with both F* and F#
+                  //BU.print4 "%s: NBE %s    Interpreter %s    Ratio %s\n" 
+                    (BU.string_of_int t1)
+                    (BU.string_of_float time_nbe)
+                    (BU.string_of_float time_int)
+                    //IN F*: (BU.string_of_float (time_nbe /. time_int))
+                    //(BU.string_of_float (time_nbe / time_int)) //JUST FSHARP
+                else
+                  BU.print_string "Test numbers do not match...\n"
+              ) l_int l_nbe
+
 let run_all () =
-    run_all_nbe ();
-    compare ()
-//    run_all_interpreter ()
+    let l_int = run_all_interpreter_with_time () in
+    let l_nbe = run_all_nbe_with_time () in 
+    compare_times l_int l_nbe
