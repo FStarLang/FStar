@@ -1,3 +1,4 @@
+
 (*
    Copyright 2008-2017 Microsoft Research
 
@@ -1051,6 +1052,7 @@ let rec find_append_some
       let tl = tail #a #l1 v1 in
       find_append_some #a #l1s1 #l2 tl v2 f
 
+#reset-options "--z3rlimit 10"
 let rec find_append_none
     (#a:Type)
     (#l1:len_t)
@@ -1069,7 +1071,7 @@ let rec find_append_none
       let _ = cut (equal2 #a #(l1 +^ l2 -^ 1ul) #(l1 -^ 1ul +^ l2 ) q r) in
       find_append_none #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 f
 
-#set-options "--z3rlimit 30"
+#reset-options "--z3rlimit 30"
 let rec find_append_none_v2
     (#a:Type)
     (#l1:len_t)
@@ -1516,32 +1518,32 @@ let rec get_a_index
               | None -> None
               | Some i -> Some (reinx (i +^ 1ul) v)
 
-#reset-options "--initial_fuel 1 --max_fuel 4 --z3rlimit 20"
-let rec lemma_find_l_contains 
-    (#a:eqtype) 
-    (#l:len_t)
-    (f:a -> Tot bool)
-    (v:raw a l)
-  : Lemma 
-    (requires (Some? (find_l f v)))
-    (ensures (v `contains` (Some?.v (find_l f v))))
-    (decreases (u32_to_int l))
-  = let x = Some?.v (find_l f v) in
-    assert (l >^ 0ul);
-    match get_a_index x v with
-    | None -> 
-      assert (forall i. not (f v.[i]));
-      assert (None? (find_l f v)) // TODO: cwinter: Somewhere there must be a lemma that gives us this?
-    | Some k -> 
-      assert (k <^ l);
-      assert (f v.[k]);
-      assert (v.[k] == x);
-      assert (ok (Prims.op_Subtraction) l k);
-      lemma_find_l_exists_index f v;
-      assert (exists i. f v.[i] /\ i == k /\ v.[k] == x);  
-      contains_intro v k x; // (v.[k] == x ==> v `contains` x)
-      assert (Some? (find_l f v));
-      assert (v `contains` x)
+// #reset-options "--initial_fuel 1 --max_fuel 4 --z3rlimit 20"
+// let rec lemma_find_l_contains 
+//     (#a:eqtype) 
+//     (#l:len_t)
+//     (f:a -> Tot bool)
+//     (v:raw a l)
+//   : Lemma 
+//     (requires (Some? (find_l f v)))
+//     (ensures (v `contains` (Some?.v (find_l f v))))
+//     (decreases (u32_to_int l))
+//   = let x = Some?.v (find_l f v) in
+//     assert (l >^ 0ul);
+//     match get_a_index x v with
+//     | None -> 
+//       assert (forall i. not (f v.[i]));
+//       assert (None? (find_l f v)) // TODO: cwinter: Somewhere there must be a lemma that gives us this?
+//     | Some k -> 
+//       assert (k <^ l);
+//       assert (f v.[k]);
+//       assert (v.[k] == x);
+//       assert (ok (Prims.op_Subtraction) l k);
+//       lemma_find_l_exists_index f v;
+//       assert (exists i. f v.[i] /\ i == k /\ v.[k] == x);  
+//       contains_intro v k x; // (v.[k] == x ==> v `contains` x)
+//       assert (Some? (find_l f v));
+//       assert (v `contains` x)
 
 let contains_cons 
     (#a:Type)
@@ -1581,27 +1583,27 @@ let append_subs
                    equal2 #a #(j -^ i) #((l1 +^ j) -^ (l1 +^ i)) q r))))
    = ()       
 
-#set-options "--max_fuel 3 --initial_fuel 1 --z3rlimit 20"
-let rec find_l_none_no_index 
-    (#a:Type)
-    (#l:len_t)
-    (v:raw a l)
-    (f:a -> Tot bool)
-  : Lemma 
-    (requires (None? (find_l f v)))
-    (ensures (forall (i:index_t v). not (f v.[i])))
-    (decreases (u32_to_int l))
-  = assert (None? (find_l f v)); 
-    if l =^ 0ul then ()
-    else let m : (m:len_t{m >^ 0ul}) = l in
-         let ls1 = l -^ 1ul in
-         let u = coerce v m in         
-         let hd = head #a #l u in
-         let tl = tail #a #l u in
-         assert (not (f (hd)));
-         find_l_none_no_index #a #ls1 tl f;         
-         assert (None? (find_l #a #ls1 f tl)); // TODO: cwinter: somewhere there must be a lemma that gives us that?
-         find_append_none #a #1ul #ls1 (create1 hd) tl f
+// #set-options "--max_fuel 3 --initial_fuel 1 --z3rlimit 20"
+// let rec find_l_none_no_index 
+//     (#a:Type)
+//     (#l:len_t)
+//     (v:raw a l)
+//     (f:a -> Tot bool)
+//   : Lemma 
+//     (requires (None? (find_l f v)))
+//     (ensures (forall (i:index_t v). not (f v.[i])))
+//     (decreases (u32_to_int l))
+//   = assert (None? (find_l f v)); 
+//     if l =^ 0ul then ()
+//     else let m : (m:len_t{m >^ 0ul}) = l in
+//          let ls1 = l -^ 1ul in
+//          let u = coerce v m in         
+//          let hd = head #a #l u in
+//          let tl = tail #a #l u in
+//          assert (not (f (hd)));
+//          find_l_none_no_index #a #ls1 tl f;         
+//          assert (None? (find_l #a #ls1 f tl)); // TODO: cwinter: somewhere there must be a lemma that gives us that?
+//          find_append_none #a #1ul #ls1 (create1 hd) tl f
 
 #reset-options
 
@@ -1619,7 +1621,7 @@ let suffix_of
       (exists (prefix:raw a prelen). (v == prefix @| suffix))
 
 
-// MOVE TO BASE FROM HERE
+// MOVE TO BASE FROM HERE?
 let rec lemma_index_create
     (#a:Type) 
     (n:len_t)
@@ -1739,9 +1741,7 @@ let lemma_eq_elim
      [SMTPat (equal v1 v2); SMTPat (equal2 v1 v2)]
   = Seq.lemma_eq_elim (reveal v1) (reveal v2)
 
-
-
-// MOVE TO BASE TO HERE
+// MOVE TO BASE UP TO HERE?
 
 
 let cons_head_tail
@@ -1884,7 +1884,7 @@ let sub_sub
     [SMTPat (subv (subv v i1 j1) i2 j2)]
   = lemma_eq_elim (subv (subv v i1 j1) i2 j2) (subv v (i1 +^ i2) (i1 +^ j2))
 
-#reset-options "--z3rlimit 20"
+#reset-options "--z3rlimit 30"
 let raw_of_list_tl
     (#a: Type)
     (l:list a{is_u32 (L.length l) /\ L.length l > 0} )
