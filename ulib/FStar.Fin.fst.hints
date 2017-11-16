@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "02fc87e421be6360f97b653abdec04d8"
+      "8952326e64a311b314b983428bb853cd"
     ],
     [
       "FStar.Fin.seqn",
@@ -23,7 +23,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "83d62f80acf65a0cee419a030a76c3e8"
+      "bd5650e7775746328e22cd0df789e2bc"
     ],
     [
       "FStar.Fin.find",
@@ -38,7 +38,7 @@
         "refinement_interpretation_FStar.Fin_Tm_refine_2cd871355b42ef555f2a2cb61cec67a8"
       ],
       0,
-      "df874490f8214e57db9050e189f15ca4"
+      "e33596897778cfd95a5f4f4186be8ae8"
     ],
     [
       "FStar.Fin.find",
@@ -76,7 +76,7 @@
         "typing_FStar.Seq.Base.index", "well-founded-ordering-on-nat"
       ],
       0,
-      "4aeb17309075f9816d32b6efec1b24b1"
+      "25192b56e5f688aabd57e23c0ee54d03"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -85,7 +85,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a4d2b7fbdebdd1a21f462c8955d5323a"
+      "fa4e181cc43f839003cc495187ef6758"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -97,7 +97,7 @@
         "haseqFStar.Fin_Tm_refine_b1698bc3cb0c5972e029a0c543eec916"
       ],
       0,
-      "eec05ac7f03042d4f4b18925ae92a039"
+      "0c9a6c9b525f315900eda7674475c9cc"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -149,7 +149,7 @@
         "typing_FStar.Seq.Base.index", "well-founded-ordering-on-nat"
       ],
       0,
-      "6a66e490464371db6a2fadad7b2cc2ac"
+      "d15de7c6a5a24b5d9cce883c2361b940"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -157,7 +157,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.Fin.find.fuel_instrumented", "@query",
         "FStar.Fin_interpretation_Tm_arrow_52551f2a404183ed23f99984ad9b27d1",
         "FStar.Fin_interpretation_Tm_arrow_d7f99247b0ae2d6b050418177010af96",
         "FStar.Seq.Base_interpretation_Tm_arrow_015e5d64a12964940b96ac2bc090f517",
@@ -165,13 +166,15 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
         "binder_x_8f7114194c5d6abeb66956762904efa1_1",
-        "binder_x_e22ba7a032a73f6d0678d3d186686631_0",
-        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "bool_inversion",
+        "bool_typing", "constructor_distinct_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.Fin.fin",
-        "equation_FStar.Fin.in_", "equation_Prims.nat", "int_inversion",
-        "int_typing",
+        "equation_FStar.Fin.in_", "equation_Prims.nat",
+        "equation_with_fuel_FStar.Fin.find.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "int_inversion", "int_typing",
         "interpretation_FStar.Fin_Tm_abs_519779745438b66112d801d449da4b85",
         "interpretation_FStar.Fin_Tm_abs_c5c581666833b7fa14b3e9fc0d1fd6b5",
         "lemma_FStar.Seq.Base.init_index",
@@ -182,6 +185,7 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.Fin_Tm_refine_22624a7f3ac59e9520f8ae54d167758f",
         "refinement_interpretation_FStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff",
@@ -194,13 +198,13 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_f874e2190eee7a2db7ea0e274c3085a5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_FStar.Fin.find.fuel_instrumented",
         "typing_FStar.Fin.fin", "typing_FStar.Fin.find",
-        "typing_FStar.Fin_Tm_abs_519779745438b66112d801d449da4b85",
         "typing_FStar.Fin_Tm_abs_c5c581666833b7fa14b3e9fc0d1fd6b5",
         "typing_FStar.Seq.Base.index", "well-founded-ordering-on-nat"
       ],
       0,
-      "ab09ade8da60bc39156852eae24b40aa"
+      "13ec95df85b0f4f7355467d023cffc58"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -209,7 +213,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "06f12d92cdbef7aec2a40aedd401e23c"
+      "8031cdcaa697e037c9fb601cab2d9231"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -221,7 +225,7 @@
         "haseqFStar.Fin_Tm_refine_c6346e71d85a744a896c121fbf4b9557"
       ],
       0,
-      "678a60f78379b414d46b1af1785ce00c"
+      "ced5e46e8c8047fca1d65ccb153751ec"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -230,7 +234,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "17a4d6b8c5ac6e42e9e7f98bf660c164"
+      "254e4654f5f74a9493268aa4c7f3747e"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -239,7 +243,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c8401fbbab53625e11d016b1c235922e"
+      "8618ca17c58649701a9acdac4b07a251"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -251,7 +255,7 @@
         "haseqFStar.Fin_Tm_refine_c6346e71d85a744a896c121fbf4b9557"
       ],
       0,
-      "3ab28825230a89a67809b19c33f0b7b5"
+      "7439fa3b7f282cc809d1783a71f14ada"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -263,7 +267,7 @@
         "haseqFStar.Fin_Tm_refine_c6346e71d85a744a896c121fbf4b9557"
       ],
       0,
-      "cb23bf85338c40a8ffaceb61ed33d729"
+      "e43c9daaf353cff1f5c2794d525918f6"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -275,7 +279,7 @@
         "haseqFStar.Fin_Tm_refine_d693ee8bb2e9c4dbed189fbf7bcade8c"
       ],
       0,
-      "594b5baa6b2eef987954404d2ddb1cd2"
+      "5e1468ce07933399859120efa69986bf"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -288,7 +292,7 @@
         "refinement_interpretation_FStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
       ],
       0,
-      "b590f32049865cb7938076241e1c9163"
+      "06f5f6ca028cf21bb2bb84f093c4d78f"
     ]
   ]
 ]
