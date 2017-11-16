@@ -59,12 +59,11 @@ assume val mk_uri: #idx:index -> origin -> path:string -> indexed_parameters idx
 assume val uri_origin: uri -> origin
 assume val add_parameters: #idx:index -> u:uri{can_send (uri_index u) idx}  -> indexed_parameters idx -> u':uri{uri_origin u == uri_origin u' /\ uri_index u' == idx}
 
+assume val request_uri: http_request -> uri
 assume val request_path: http_request -> string
+assume val request_parameters: #req_idx:index -> http_request ->  indexed_parameters req_idx	      
+
 assume val request_method: http_request -> string
-
-
-assume val request_parameters: #req_idx:index -> http_request ->  indexed_parameters req_idx
-			      
 assume val request_origin_header: http_request -> string
 assume val request_cookie_header: http_request -> nonce
 assume val request_body: http_request -> body
@@ -208,9 +207,12 @@ assume val get_rp_request_state: request_id:nonce -> server (o:option (mode:stri
 
 assume val check_password: username:string -> password:nonce -> server bool
 
+type req_id = 
+  | Id : bid:origin -> n:nonce -> req_id
+  
 noeq type http_message = 
-  | Req : id:nonce -> http_request -> http_message 
-  | Resp: id:nonce -> http_response -> http_message
+  | Req : id:req_id -> req:http_request -> http_message 
+  | Resp: id:req_id -> resp:http_response -> http_message
 
 #reset-options "--z3rlimit 100"
 //val rp_http_server: rp_origin:origin -> msg:http_message -> server (option (msg':http_message{
@@ -464,6 +466,115 @@ assume val new_browser: unit -> browser_state
 assume val new_servers: unit -> server_state
 assume val user_navigates: u:origin -> browser (option (m:http_message{Req? m}))
 assume val process_response: m:http_message{Resp? m} -> browser (option (m:http_message{Req? m}))
+
+
+(***********)
+
+type system
+type id = origin
+type window
+noeq type event = 
+  | HTTP_Msg : http_message -> event
+  | Load_Script : window -> event
+  
+assume val event_target: event -> id
+type log = l:list event
+assume val get_log: system -> log
+
+type browser_process = option event -> browser_state -> (list event * browser_state)
+type server_process = option event -> server_state -> (list event * server_state)
+type script_process = option event -> browser_state -> (list event * browser_state)
+assume val get_browser: id -> system -> browser_state * browser_process
+assume val get_server: id -> system -> server_state * server_process
+assume val get_script: id -> system -> script_process
+assume val set_browser_state: id -> browser_state -> system -> system
+assume val set_server_state: id -> server_state -> system -> system
+
+assume val valid_event: list event -> event -> Type
+assume val valid_monotonic: l:list event -> e:event -> e':event -> Lemma
+				  (requires (valid_event l e))
+				  (ensures (valid_event (e'::l) e))
+				  [SMTPat (valid_event (e'::l) e)]
+				  
+val valid_log: list event -> Type0
+let rec valid_log l : Type0 = 
+  match l with
+  | [] -> True
+  | h::t -> valid_log t /\ valid_event t h
+
+val first_n: n:nat -> l:list event{List.Tot.length l >= n}  -> list event
+let rec first_n n l = 
+  if List.Tot.length l = n then l 
+  else 
+  match l with
+  | h::t -> first_n n t 
+  
+val extends: l1:list event -> l2:list event -> Type0
+let rec extends l1 l2 = 
+  if List.Tot.length l1 < List.Tot.length l2 then False
+  else first_n (List.Tot.length l2) l1 == l2
+
+
+val init: s:system{get_log s == []}
+type stateful 'a = s:system -> Pure ('a * system)
+			   (requires (valid_log (get_log s)))
+			   (ensures (fun (r,f) -> valid_log (get_log f) /\
+					       get_log f `extends` get_log s))
+
+type stateful_spec 'a (pre:system -> Type) (post:system -> 'a -> system -> Type) = 
+		     i:system -> Pure (r:'a * o:system)
+			    (requires (valid_log (get_log i) /\ pre i))
+			    (ensures (fun (r,o) -> valid_log (get_log o) /\ 
+						get_log o `extends` get_log i /\
+						post i r o))
+
+
+assume val mk_browser: stateful id (* creates a new browser and returns an identifier for it *)
+
+assume val add_event: e:event -> stateful_spec unit (fun _ -> True)  (fun i r o -> get_log o == e::get_log i)
+assume val add_events: es:list event -> stateful_spec unit (fun _ -> True)  (fun i r o -> get_log o == es @ get_log i)
+assume val get_pending_event: stateful_spec (option event)
+					    (fun _ -> True)
+					    (fun i e o -> get_log i == get_log o /\ 
+						       (match e with
+						       | Some e -> valid_event (get_log i) e
+						       | None -> True))
+
+
+let rec scheduler st =
+  let (ev,st) = get_pending_event st in
+  match ev with
+  | Some (HTTP_Msg (Req id r)) -> 
+         let o = uri_origin (request_uri r) in
+	 let (s_st,s_fun) = get_server o st in
+	 let (evs,s_st) = s_fun ev s_st in
+	 let _,st' = add_events evs st in
+	 let st' = set_server_state o s_st st' in
+	 st'
+
+  | Some (HTTP_Msg (Resp id r)) ->
+	 
+	 
+  
+
+
+
+val navigate_window: bid:id -> w:window -> u:uri -> stateful_spec unit
+				      (fun i -> True) // maybe ask for bid and w to exist in i
+				      (fun i _ o -> exists r. get_log o == (HTTP_Msg r) :: get_log i /\ Req? r /\ request_uri (Req?.req r) == u)
+
+
+
+
+
+
+				      
+
+
+
+
+
+
 
 let main ip rp =
     let browser = new_browser() in
