@@ -1633,8 +1633,8 @@ let message_prefix: error_message_prefix =
     | FStar_Pervasives_Native.Some p -> Prims.strcat p (Prims.strcat ": " s) in
   { set_prefix; append_prefix; clear_prefix }
 let errno_of_error: raw_error -> Prims.int =
-  fun uu___77_2478  ->
-    match uu___77_2478 with
+  fun uu___38_2478  ->
+    match uu___38_2478 with
     | OutOfRange uu____2479 -> Prims.parse_int "1"
     | OpPlusInUniverse  -> Prims.parse_int "2"
     | InvalidUniverseVar  -> Prims.parse_int "3"
@@ -1807,8 +1807,8 @@ let add_errors:
                     (e, uu____3260) in
                   maybe_fatal_error r uu____3255) errs)
 let issue_of_exn: Prims.exn -> issue FStar_Pervasives_Native.option =
-  fun uu___78_3265  ->
-    match uu___78_3265 with
+  fun uu___39_3265  ->
+    match uu___39_3265 with
     | Error (e,msg,r) ->
         let uu____3271 =
           let uu____3272 = message_prefix.append_prefix msg in
@@ -1835,8 +1835,8 @@ let err_exn: Prims.exn -> Prims.unit =
        | FStar_Pervasives_Native.Some issue -> add_one issue
        | FStar_Pervasives_Native.None  -> FStar_Exn.raise exn)
 let handleable: Prims.exn -> Prims.bool =
-  fun uu___79_3291  ->
-    match uu___79_3291 with
+  fun uu___40_3291  ->
+    match uu___40_3291 with
     | Error uu____3292 -> true
     | FStar_Util.NYI uu____3299 -> true
     | Stop  -> true

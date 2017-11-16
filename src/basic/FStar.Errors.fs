@@ -468,7 +468,7 @@ let update_flags l =
   let rec check_range l = match l with
     | [] -> ()
     | (_, (l, h))::tl -> 
-      if l < 0 || h > next_errno then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h))
+      if (l < 0)  || (h > next_errno)  then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h))
   in
   check_range l;
   if !flags = [] then flags := init_flags [] next_errno;
