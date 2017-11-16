@@ -488,6 +488,8 @@ assume val get_log: system -> log
 type browser_process = option event -> browser_state -> (list event * browser_state)
 type server_process = option event -> server_state -> (list event * server_state)
 type script_process = option event -> browser_state -> (list event * browser_state)
+
+
 assume val get_browser_ids: system -> list id 
 assume val get_browser: id -> system -> browser_state * browser_process
 assume val get_server: id -> system -> server_state * server_process
@@ -532,7 +534,15 @@ let rec extends l1 l2 =
   else first_n (List.Tot.length l2) l1 == l2
 
 
-val init: s:system{get_log s == []}
+assume val mk_browser: stateful id (* creates a new browser and returns an identifier for it *)
+
+
+val init: browsers: list (id * browser_state * browser_process) -> 
+	  servers: list (id * server_state * server_process) -> 
+	  scripts: list (id * script_process) ->
+	  trusted: list id ->
+	  s:system{get_log s == []}
+	  
 type stateful 'a = s:system -> Pure ('a * system)
 			   (requires (valid_log (get_log s)))
 			   (ensures (fun (r,f) -> valid_log (get_log f) /\
@@ -545,9 +555,6 @@ type stateful_spec 'a (pre:system -> Type) (post:system -> 'a -> system -> Type)
 						get_log o `extends` get_log i /\
 						post i r o))
 
-
-assume val mk_browser: stateful id (* creates a new browser and returns an identifier for it *)
-
 assume val add_event: e:event -> stateful_spec unit (fun i -> valid_log (e::(get_log i)))  (fun i r o -> get_log o == e::get_log i)
 assume val add_events: es:list event -> stateful_spec unit (fun i -> valid_log (es@(get_log i)))  (fun i r o -> get_log o == es @ get_log i)
 
@@ -557,7 +564,6 @@ assume val get_pending_event: stateful_spec (option event)
 						       (match e with
 						       | Some e -> valid_event (get_log i) e
 						       | None -> True))
-
 
 let scheduler_step : stateful unit =  fun st -> 
   let (ev,st) = get_pending_event st in
@@ -611,11 +617,6 @@ let rec scheduler (n:nat) (st:system{valid_log (get_log st)}) =
 	 
   
 
-
-
-val navigate_window: bid:id -> w:window -> u:uri -> stateful_spec unit
-				      (fun i -> True) // maybe ask for bid and w to exist in i
-				      (fun i _ o -> exists r. get_log o == (HTTP_Msg r) :: get_log i /\ Req? r /\ request_uri (Req?.req r) == u)
 
 
 
