@@ -1034,15 +1034,15 @@ let rec find_append_some
     (#a:Type)
     (#l1:len_t)
     (#l2:len_t)
-    (v1:raw a l1{l1 >^ 0ul}) // TODO: cwinter: make this work with l1 =^ 0ul
+    (v1:raw a l1)
     (v2:raw a l2{ok (+) l1 l2})
     (f:a -> Tot bool)
   : Lemma
     (requires (Some? (find_l f v1)))
     (ensures (find_l f (append v1 v2) == find_l f v1))
     (decreases (u32_to_int l1))
-  = assert (l1 >^ 0ul);
-    if f (head v1) then ()
+  = if l1 =^ 0ul then ()
+    else if f (head #a #l1 v1) then ()
     else
       let l1s1 = l1 -^ 1ul in
       let q = append #a #l1s1 #l2 (tail #a #l1 v1) v2 in
@@ -1243,6 +1243,7 @@ let rec lemma_raw_list_bij
       lemma_eq_intro v (raw_of_list (raw_to_list v))
     )
 
+#set-options "--z3rlimit 50"
 let rec lemma_list_raw_bij
     (#a:Type)
     (l:list a{is_u32 (L.length l)})
@@ -1368,8 +1369,6 @@ let append_contains_equiv
            <==>
            (v1 `contains` x \/ v2 `contains` x))
   = contains_elim (v1 @| v2) x;
-    //contains_elim v1 x;
-    //contains_elim v2 x;
     let v1v2 = v1 @| v2 in
     assert (v1v2 `contains` x ==>
             ((exists i. (v1.[i] == x /\ v1v2.[reinx i v1v2] == x)) \/
@@ -1605,29 +1604,36 @@ let append_subs
                    equal2 #a #(j -^ i) #((l1 +^ j) -^ (l1 +^ i)) q r))))
    = ()       
 
-// #set-options "--max_fuel 3 --initial_fuel 1 --z3rlimit 20"
+
+// #reset-options "--max_fuel 3 --initial_fuel 1 --z3rlimit 20"
 // let rec find_l_none_no_index 
-//     (#a:Type)
+//     (#a:eqtype)
 //     (#l:len_t)
-//     (v:raw a l)
+//     (v:raw a l{ok (+) l 1ul})
 //     (f:a -> Tot bool)
 //   : Lemma 
 //     (requires (None? (find_l f v)))
 //     (ensures (forall (i:index_t v). not (f v.[i])))
 //     (decreases (u32_to_int l))
-//   = assert (None? (find_l f v)); 
-//     if l =^ 0ul then ()
-//     else let m : (m:len_t{m >^ 0ul}) = l in
-//          let ls1 = l -^ 1ul in
-//          let u = coerce v m in         
-//          let hd = head #a #l u in
-//          let tl = tail #a #l u in
-//          assert (not (f (hd)));
-//          find_l_none_no_index #a #ls1 tl f;         
-//          assert (None? (find_l #a #ls1 f tl)); // TODO: cwinter: somewhere there must be a lemma that gives us that?
-//          find_append_none #a #1ul #ls1 (create1 hd) tl f
+//   = if l =^ 0ul then ()
+//     else let ls1 = l -^ 1ul in
+//          let m : (m:len_t{m >^ 0ul}) = l in
+//          let u = coerce v m in
+//          let hd = head u in
+//          let tl = tail u in
+//          let hd1 = create1 hd in
+//          assert (not (f hd));
+//          assert (None? (find_l f tl));
+//          find_l_none_no_index #a #ls1 tl f;
+//          let hd1 = create1 hd in
+//          assert (equal u (append hd1 tl));
+//        	 find_append_none #a #1ul #ls1 hd1 tl f
+
 
 #reset-options
+
+
+
 
 let suffix_of
     (#a:Type)
