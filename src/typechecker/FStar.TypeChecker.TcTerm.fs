@@ -969,7 +969,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                                             * binders                         (* a type-checked prefix of bs       *)
                                             * option<either<binders,binders>> (* suffix of either bs or bs_expected*)
                                             * guard_t                         (* accumulated logical guard         *)
-                                            * subst_t =                         (* alpha conv. of bs_expected to bs  *)
+                                            * subst_t =                       (* alpha conv. of bs_expected to bs  *)
         let rec aux (env, out, g, subst) (bs:binders) (bs_expected:binders) = match bs, bs_expected with
             | [], [] -> env, List.rev out, None, g, subst
 
@@ -993,9 +993,17 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       if Env.debug env Options.High then BU.print1 "Checking binder %s\n" (Print.bv_to_string hd);
                       let t, _, g1 = tc_tot_or_gtot_term env hd.sort in
                       let g2 =
-                          TcUtil.label_guard (Env.get_range env)
+                        //cf issue #57 (the discussion at the end about subtyping vs. equality in check_binders)
+                        //check that the context is more demanding of the argument type
+                        match Rel.try_subtype env expected_t t with
+                        | None ->
+                          raise (Error(Err.basic_type_error env None expected_t t, Env.get_range env))
+                        | Some g ->
+                          TcUtil.label_guard
+                            (Env.get_range env)
                             "Type annotation on parameter incompatible with the expected type"
-                            (Rel.teq env t expected_t) in
+                            g
+                      in
                       let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
                       t, g in
                 let hd = {hd with sort=t} in
@@ -1009,7 +1017,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
           | [], rest -> env, List.rev out, Some (Inr rest), g, subst in
 
-        aux (env, [], Rel.trivial_guard, []) bs bs_expected in
+        aux (env, [], Rel.trivial_guard, []) bs bs_expected
+    in //end check_binders
 
 
     let rec expected_function_typ env t0 body
@@ -1048,6 +1057,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
               (* NS: 07/21 dropping the refinement is not sound; we need to check that f validates phi. See Bug #284 *)
               | Tm_refine (b, _) ->
                 let _, bs, bs', copt, env, body, g = as_function_typ norm b.sort in
+                //we pass type `t` out to check afterwards the full refinement type is respected
                 Some t, bs, bs', copt, env, body, g
 
               | Tm_arrow(bs_expected, c_expected) ->
@@ -1059,7 +1069,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       2. If the function is a let-rec and it is to be total, then we need to add termination checks.
                   *)
                 let check_actuals_against_formals env bs bs_expected =
-                    let rec handle_more (env, bs, more, guard, subst) c_expected = match more with
+                    let rec handle_more (env, bs, more, guard, subst) c_expected =
+                      match more with
                       | None -> //number of binders match up
                         env, bs, guard, SS.subst_comp subst c_expected
 
