@@ -3397,8 +3397,9 @@ let build_lattice: env -> FStar_Syntax_Syntax.sigelt -> env =
                                                             FStar_Ident.lid_equals
                                                               k ub
                                                           then
-                                                            (FStar_Util.print_warning
-                                                               "Looking multiple times at the same upper bound candidate\n";
+                                                            (FStar_Errors.maybe_fatal_err
+                                                               (FStar_Errors.UpperBoundCandidateAlreadyVisited,
+                                                                 "Looking multiple times at the same upper bound candidate");
                                                              bopt)
                                                           else
                                                             failwith

@@ -2495,8 +2495,9 @@ and p_argTerm:
     match arg_imp with
     | (u,FStar_Parser_AST.UnivApp ) -> p_universe u
     | (e,FStar_Parser_AST.FsTypApp ) ->
-        (FStar_Util.print_warning
-           "Unexpected FsTypApp, output might not be formatted correctly.\n";
+        (FStar_Errors.maybe_fatal_error e.FStar_Parser_AST.range
+           (FStar_Errors.UnexpectedFsTypApp,
+             "Unexpected FsTypApp, output might not be formatted correctly.");
          (let uu____5630 = p_indexingTerm e in
           FStar_Pprint.surround (Prims.parse_int "2") (Prims.parse_int "1")
             FStar_Pprint.langle uu____5630 FStar_Pprint.rangle))

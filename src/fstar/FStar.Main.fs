@@ -131,9 +131,9 @@ let go _ =
         else if Options.interactive () then begin
           match filenames with
           | [] ->
-            Util.print_error "--ide: Name of current file missing in command line invocation\n"; exit 1
+            Errors.maybe_fatal_err (Errors.MissingFileName, "--ide: Name of current file missing in command line invocation\n"); exit 1
           | _ :: _ :: _ ->
-            Util.print_error "--ide: Too many files in command line invocation\n"; exit 1
+            Errors.maybe_fatal_err (Errors.TooManyFiles, "--ide: Too many files in command line invocation\n"); exit 1
           | [filename] ->
             if Options.legacy_interactive () then
               FStar.Interactive.Legacy.interactive_mode filename
@@ -165,7 +165,7 @@ let go _ =
           finished_message module_names_and_times 0
         end //end normal batch mode
         else
-          Util.print_error "no file provided\n"
+          Errors.maybe_fatal_err (Errors.MissingFileName,  "no file provided\n")
 
 
 let main () =

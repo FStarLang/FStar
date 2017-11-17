@@ -248,7 +248,7 @@ let defaults:
   ("use_two_phase_tc", (Bool false));
   ("__no_positivity", (Bool false));
   ("__ml_no_eta_expand_coertions", (Bool false));
-  ("warn_error", (String "@1..16+17..48"))]
+  ("warn_error", (String "@1..19+20..67"))]
 let init: Prims.unit -> Prims.unit =
   fun uu____1313  ->
     let o = peek () in

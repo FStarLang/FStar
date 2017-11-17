@@ -190,12 +190,14 @@ let go: 'Auu____390 . 'Auu____390 -> Prims.unit =
                   then
                     match filenames with
                     | [] ->
-                        (FStar_Util.print_error
-                           "--ide: Name of current file missing in command line invocation\n";
+                        (FStar_Errors.maybe_fatal_err
+                           (FStar_Errors.MissingFileName,
+                             "--ide: Name of current file missing in command line invocation\n");
                          FStar_All.exit (Prims.parse_int "1"))
                     | uu____435::uu____436::uu____437 ->
-                        (FStar_Util.print_error
-                           "--ide: Too many files in command line invocation\n";
+                        (FStar_Errors.maybe_fatal_err
+                           (FStar_Errors.TooManyFiles,
+                             "--ide: Too many files in command line invocation\n");
                          FStar_All.exit (Prims.parse_int "1"))
                     | filename::[] ->
                         let uu____442 = FStar_Options.legacy_interactive () in
@@ -275,7 +277,10 @@ let go: 'Auu____390 . 'Auu____390 -> Prims.unit =
                                         finished_message
                                           module_names_and_times
                                           (Prims.parse_int "0")))))
-                          else FStar_Util.print_error "no file provided\n"))))))
+                          else
+                            FStar_Errors.maybe_fatal_err
+                              (FStar_Errors.MissingFileName,
+                                "no file provided\n")))))))
 let main: 'Auu____613 . Prims.unit -> 'Auu____613 =
   fun uu____617  ->
     try go (); cleanup (); FStar_All.exit (Prims.parse_int "0")

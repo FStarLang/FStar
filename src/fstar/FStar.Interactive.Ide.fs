@@ -64,10 +64,9 @@ let with_captured_errors' env f =
               "F* may be in an inconsistent state.\n" ^
               "Please file a bug report, ideally with a " ^
               "minimized version of the program that triggered the error." in
-    TcErr.add_errors env [(Errors.AssertionFailure, msg, TcEnv.get_range env)];
     // Make sure the user sees the error, even if it happened transiently while
     // running an automatic syntax checker like FlyCheck.
-    Util.print_error msg;
+    Errors.maybe_fatal_error (TcEnv.get_range env) (Errors.AssertionFailure, msg);
     None
 
   | Error(e, msg, r) ->
@@ -1406,7 +1405,7 @@ let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
 
   if Option.isSome (Options.codegen ()) then
-    Util.print_warning "--ide: ignoring --codegen";
+    Errors.maybe_fatal_error Range.dummyRange (Errors.IDEIgnoreCodeGen, "--ide: ignoring --codegen");
 
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces

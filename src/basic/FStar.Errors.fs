@@ -21,8 +21,8 @@ type raw_error =
   | NotTopLevelModule
   | NonSingletonTopLevel 
   | MissingPrimsModule 
-  | IDEMissingFileName 
-  | IDETooManyFiels 
+  | MissingFileName 
+  | TooManyFiles 
   | NotSupported 
   | OptionsNotCompatible 
   | NoFileProvided
@@ -270,6 +270,26 @@ type raw_error =
   | InvalidUTF8Encoding
   | FailToCompileNativeTactic
   | MalformedWarnErrorList
+  | CallNotImplemented
+  | IDEIgnoreCodeGen
+  | MissingInterfaceOrImplementation
+  | UnexpectedFile
+  | WrongErrorLocation
+  | IDEUnrecognized of string
+  | IDETooManyPops
+  | UnexpectedFsTypApp
+  | UpperBoundCandidateAlreadyVisited
+  | DefinitionNotTranslated
+  | FunctionNotExtacted
+  | UnrecognizedAttribute
+  | NotDependentArrow
+  | NondependentUserDefinedDataType
+  | IncoherentImplicitQualifier
+  | DependencyFound
+  | MultipleAscriptions
+  | RecursiveDependency
+  | NormalizationFailure
+  | DependencyAnalysisFailed
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
@@ -405,10 +425,10 @@ let errno_of_error = function
   | MissingInterface -> 14
   | MissingImplementation -> 15
   | TooManyOrTooFewFileMatch -> 16
+  | CallNotImplemented -> 17
+  | IDEUnrecognized _ -> 18
+  | DependencyAnalysisFailed -> 19
   (* the errors below are default to warning *)
-  | MalformedWarnErrorList -> 17
-  | DeprecatedEqualityOnBinder -> 18
-  | Filtered -> 19
   | ModuleFileNameMismatch -> 20
   | ModuleOrFileNotFoundWarning -> 21
   | UnboundModuleReference -> 22
@@ -437,13 +457,33 @@ let errno_of_error = function
   | SMTPatTDeprecated -> 45
   | CachedFile -> 46
   | FileNotWritten -> 47
-  | IllFormedGoal -> 48 (* when new entries are added, need to update "next_errno" and default "warn_error" in Options.fs *)
+  | IllFormedGoal -> 48 
+  | MalformedWarnErrorList -> 49
+  | IDEIgnoreCodeGen -> 50
+  | MissingInterfaceOrImplementation -> 51
+  | UnexpectedFile -> 52
+  | WrongErrorLocation -> 53
+  | DeprecatedEqualityOnBinder -> 54
+  | UnexpectedFsTypApp -> 55
+  | UpperBoundCandidateAlreadyVisited -> 56
+  | DefinitionNotTranslated -> 57
+  | FunctionNotExtacted -> 58
+  | UnrecognizedAttribute -> 59
+  | NotDependentArrow -> 60
+  | NondependentUserDefinedDataType -> 61
+  | IncoherentImplicitQualifier -> 62
+  | DependencyFound -> 63
+  | MultipleAscriptions -> 64
+  | RecursiveDependency -> 65
+  | NormalizationFailure -> 66
+  | Filtered -> 67
+  (* when new entries are added, need to update "next_errno" and default "warn_error" in Options.fs *)
   | _ -> 0 (** Things that cannot be silenced! *)
 
 type flag =
   | CError | CWarning | CSilent
 
-let next_errno = 49 // the number needs to match the number of entries in "errno_of_error"
+let next_errno = 68 // the number needs to match the number of entries in "errno_of_error"
 let flags: ref<list<flag>> = mk_ref []
 
 let update_flags l =
@@ -496,6 +536,9 @@ let maybe_fatal_error r (e, msg) =
      add_one (mk_issue EWarning (Some r) msg)
   | CSilent ->
       ()
+
+let maybe_fatal_err e =
+  maybe_fatal_error Range.dummyRange e
 
 let add_errors errs =
     atomically (fun () -> List.iter (fun (e, msg, r) -> maybe_fatal_error r (e, (message_prefix.append_prefix msg))) errs)

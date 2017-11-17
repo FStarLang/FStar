@@ -739,7 +739,7 @@ let collect (all_cmd_line_files: list<file_name>)
         let direct_deps, color = must (deps_try_find dep_graph filename) in
         match color with
         | Gray ->
-            Util.print1_warning "Recursive dependency on module %s\n" filename;
+            Errors.maybe_fatal_err (Errors.RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
             Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
             print_graph dep_graph;
             print_string "\n";

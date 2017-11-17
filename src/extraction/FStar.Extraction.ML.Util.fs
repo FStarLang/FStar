@@ -360,8 +360,9 @@ let rec uncurry_mlty_fun t =
    to FStar.Tactics.Native.register_tactic *)
 module RD = FStar.Reflection.Data
 
-exception CallNotImplemented
-let not_implemented_warning t = BU.print1_warning ". Tactic %s will not run natively.\n" t
+exception CallNotImplemented of string // reason why it is not implemented
+let not_implemented_warning r t msg =
+    Errors.maybe_fatal_error r (Errors.CallNotImplemented, BU.format2 ". Tactic %s will not run natively because %s.\n" t msg)
 
 type emb_decl =
     | Embed
@@ -395,8 +396,7 @@ let mk_tactic_unembedding (args: list<mlexpr'>) =
     let app = match (List.length args) with
     | 1 -> MLE_App (from_tac, [with_ty MLTY_Top (MLE_App (unembed_tactic, List.map (with_ty MLTY_Top) args@[reify_tactic]))])
     | n ->
-        BU.print1_warning "Unembedding not defined for tactics of %s arguments\n" (BU.string_of_int n);
-        raise CallNotImplemented in
+        raise (CallNotImplemented (BU.format1 "Unembedding not defined for tactics of %s arguments\n" (BU.string_of_int n))) in
     MLE_Fun ([(tac_arg, MLTY_Top); ("()", MLTY_Top)], with_ty MLTY_Top app)
 
 let rec mk_tac_param_type (t: term): mlexpr' =
@@ -421,14 +421,11 @@ let rec mk_tac_param_type (t: term): mlexpr' =
                 let arg_term = fst (List.hd args) in
                 MLE_App (with_ty MLTY_Top (fstar_tc_common_prefix "t_option_of"), List.map (with_ty MLTY_Top) [mk_tac_param_type arg_term] )
             | _ ->
-                BU.print_warning ("Type term not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')));
-                raise CallNotImplemented)
+                raise (CallNotImplemented ("Type term not defined for higher-order type" ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')))))
         | _ ->
-            BU.print_warning "Impossible\n";
-            raise CallNotImplemented)
+            raise (CallNotImplemented "Impossible\n"))
      | _ ->
-         BU.print_warning ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)));
-         raise CallNotImplemented
+         raise (CallNotImplemented ("Type term not defined for " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t))))
 
 (* Except for the `tactic` type, which is handled specially, this assumes that functions for embedding/unembedding a type
    live in the same place and are named embed_x, unembed_x *)
@@ -458,8 +455,7 @@ let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
                      let arg_term = fst (List.hd args) in
                      "list", [mk_tac_embedding_path m arg_term], mk_tac_param_type arg_term, true
                  | _ ->
-                     BU.print_warning ("Embedding not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h')));
-                     raise CallNotImplemented) in
+                     raise (CallNotImplemented ("Embedding not defined for higher-order type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress h'))))) in
             let hargs =
                 match m with
                 | Embed -> hargs @ [type_arg]
@@ -467,17 +463,14 @@ let rec mk_tac_embedding_path (m: emb_decl) (t: term): mlexpr' =
             if is_tactic then
                 match m with
                 | Embed ->
-                    BU.print_warning "Embedding not defined for tactic type\n";
-                    raise CallNotImplemented
+                    raise (CallNotImplemented "Embedding not defined for tactic type\n")
                 | Unembed -> mk_tactic_unembedding hargs
             else
                 MLE_App (with_ty MLTY_Top (mk_basic_embedding m ht), List.map (with_ty MLTY_Top) hargs)
          | _ ->
-             BU.print_warning "Impossible\n";
-             raise CallNotImplemented)
+             raise (CallNotImplemented "Impossible\n"))
     | _ ->
-        BU.print_warning ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t)));
-        raise CallNotImplemented
+        raise (CallNotImplemented ("Embedding not defined for type " ^ (Print.term_to_string (FStar.Syntax.Subst.compress t))))
 
 let mk_interpretation_fun tac_lid assm_lid t bs =
     try
@@ -493,6 +486,6 @@ let mk_interpretation_fun tac_lid assm_lid t bs =
             [mk_tac_embedding_path Embed t; mk_tac_param_type t; tac_lid_app; psc; str_to_name "args"] in
         let app = with_ty MLTY_Top <| MLE_App (h, List.map (with_ty MLTY_Top) args) in
         Some (MLE_Fun ([("psc", MLTY_Top); ("args", MLTY_Top)], app))
-    with CallNotImplemented ->
-        not_implemented_warning (string_of_lid tac_lid);
+    with CallNotImplemented msg ->
+        not_implemented_warning t.pos (string_of_lid tac_lid) msg;
         None
