@@ -685,7 +685,7 @@ let report_errors: query_settings -> Prims.unit =
                let uu____1823 =
                  FStar_Util.format1 "Unknown assertion failed (%s)"
                    err_detail in
-               (FStar_Errors.UnknowAssertionFailure, uu____1823,
+               (FStar_Errors.UnknownAssertionFailure, uu____1823,
                  (settings.query_range)) in
              [uu____1816] in
            FStar_TypeChecker_Err.add_errors settings.query_env uu____1807)

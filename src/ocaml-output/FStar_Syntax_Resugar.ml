@@ -1248,7 +1248,7 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                             (e.FStar_Syntax_Syntax.pos))))
               | uu____4629 ->
                   (FStar_Errors.maybe_fatal_error e.FStar_Syntax_Syntax.pos
-                     (FStar_Errors.MetaAlienNotATmUnknow,
+                     (FStar_Errors.MetaAlienNotATmUnknown,
                        "Meta_alien was not a Tm_unknown");
                    resugar_term e))
          | FStar_Syntax_Syntax.Meta_named t1 ->

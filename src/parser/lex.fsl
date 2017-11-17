@@ -170,6 +170,7 @@ let char8 = any_integer 'z'
 let floatp = digit+ '.' digit*
 let floate = digit+ ('.' digit* )? ('e'| 'E') ['+' '-']? digit+
 let float = floatp | floate
+let range = digit+ '.' '.' digit+
 let bigint =  integer 'I'
 let bignum =  integer 'N'
 let ieee64 = float
@@ -265,6 +266,8 @@ rule token args = parse
      {
        let s = ulexeme lexbuf in INT(s, false)
      }
+ 
+ | range { let s = ulexeme lexbuf in RANGE(s) }
 
  | ieee64
      { IEEE64 (try float(ulexeme lexbuf) with _ -> fail lexbuf (Errors.InvalidFloatingPointNumber, "Invalid floating point number") 0.0) }
@@ -618,12 +621,3 @@ and fsdoc_kw_arg cargs = parse
 and ignore_endline args = parse
  | ' '* newline
      { token args lexbuf }
-
-and tokenize_error_warn = parse
- | integer
-   { let s = ulexeme lexbuf in INT(s, false) }
- | "."     { DOT }
- | "@"     { AT }
- | "-"     { MINUS }
- | "+"     { PLUS }
- | eof     { EOF }

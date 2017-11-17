@@ -30,7 +30,6 @@ open FStar.String
 %token AND
 %token ASSERT
 %token ASSUME
-%token AT
 %token ATTRIBUTES
 %token BACKTICK
 %token BANG_LBRACE
@@ -117,13 +116,13 @@ open FStar.String
 %token <string> OPPREFIX
 %token PERCENT_LBRACK
 %token PIPE_RIGHT
-%token PLUS
 %token PRAGMALIGHT
 %token PRAGMA_RESET_OPTIONS
 %token PRAGMA_SET_OPTIONS
 %token PRIVATE
 %token QMARK
 %token QMARK_DOT
+%token <string> RANGE
 %token RANGE_OF
 %token RARROW
 %token RBRACE
@@ -181,7 +180,7 @@ open FStar.String
 %type <inputFragment> inputFragment
 %type <ident> lident
 %type <term> term
-%type <(flag * (int * int)) list> warn_error_list
+%type <(flag * string) list> warn_error_list
 %%
 
 option_FSDOC_:
@@ -2369,23 +2368,23 @@ warn_error:
     ( (f, r) :: e )}
 
 flag:
-  AT
-    {let _1 = () in
-    ( CError )}
+  OPINFIX1
+    {let op = $1 in
+    ( if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op))}
+| OPINFIX2
+    {let op = $1 in
+    ( if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op))}
 | MINUS
     {let _1 = () in
-    ( CSilent )}
-| PLUS
-    {let _1 = () in
-    ( CWarning )}
+   ( CSilent )}
 
 range:
   INT
     {let i = $1 in
-    ( let i = int_of_string (fst i) in (i, i) )}
-| INT DOT DOT INT
-    {let (i, _2, _3, j) = ($1, (), (), $4) in
-    ( let i = int_of_string (fst i) in let j = int_of_string (fst j) in (i, j) )}
+    ( format2 "%s..%s" (fst i) (fst i) )}
+| RANGE
+    {let r = $1 in
+    ( r )}
 
 some_fsTypeArgs_:
   fsTypeArgs

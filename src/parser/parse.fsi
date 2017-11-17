@@ -41,13 +41,13 @@ type token =
   | RBRACE
   | RARROW
   | RANGE_OF
+  | RANGE of (string)
   | QMARK_DOT
   | QMARK
   | PRIVATE
   | PRAGMA_SET_OPTIONS
   | PRAGMA_RESET_OPTIONS
   | PRAGMALIGHT
-  | PLUS
   | PIPE_RIGHT
   | PERCENT_LBRACK
   | OPPREFIX of (string)
@@ -134,7 +134,6 @@ type token =
   | BANG_LBRACE
   | BACKTICK
   | ATTRIBUTES
-  | AT
   | ASSUME
   | ASSERT
   | AND
@@ -180,13 +179,13 @@ type tokenId =
     | TOKEN_RBRACE
     | TOKEN_RARROW
     | TOKEN_RANGE_OF
+    | TOKEN_RANGE
     | TOKEN_QMARK_DOT
     | TOKEN_QMARK
     | TOKEN_PRIVATE
     | TOKEN_PRAGMA_SET_OPTIONS
     | TOKEN_PRAGMA_RESET_OPTIONS
     | TOKEN_PRAGMALIGHT
-    | TOKEN_PLUS
     | TOKEN_PIPE_RIGHT
     | TOKEN_PERCENT_LBRACK
     | TOKEN_OPPREFIX
@@ -273,7 +272,6 @@ type tokenId =
     | TOKEN_BANG_LBRACE
     | TOKEN_BACKTICK
     | TOKEN_ATTRIBUTES
-    | TOKEN_AT
     | TOKEN_ASSUME
     | TOKEN_ASSERT
     | TOKEN_AND
@@ -436,6 +434,6 @@ val prodIdxToNonTerminal: int -> nonTerminalId
 
 /// This function gets the name of a token as a string
 val token_to_string: token -> string
-val warn_error_list : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> ((flag * (int * int)) list) 
+val warn_error_list : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> ((flag * string) list) 
 val term : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (term) 
 val inputFragment : (Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> Microsoft.FSharp.Text.Lexing.LexBuffer<'cty> -> (inputFragment) 

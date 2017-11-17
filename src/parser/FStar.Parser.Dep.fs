@@ -877,6 +877,6 @@ let print deps =
       let (Mk(deps, _, _)) = deps in
       print_graph deps
   | Some _ ->
-      raise_err (Errors.UnknowToolForDep, "unknown tool for --dep\n")
+      raise_err (Errors.UnknownToolForDep, "unknown tool for --dep\n")
   | None ->
       assert false

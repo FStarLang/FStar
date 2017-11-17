@@ -11,7 +11,7 @@ type raw_error =
   | NotValidFStarFile
   | NotValidIncludeDirectory
   | ModuleFileNotFound
-  | UnknowToolForDep
+  | UnknownToolForDep
   | UnrecognizedExtension
   | UnableToReadFile
   | Uninstantiated 
@@ -180,7 +180,7 @@ type raw_error =
   | TypeCheckerFailToProve 
   | TopLevelEffect 
   | CardinalityConstraintViolated 
-  | MetaAlienNotATmUnknow
+  | MetaAlienNotATmUnknown
   | NotApplicationOrFv
   | InductiveTypeNotSatisfyPositivityCondition
   | PatternMissingBoundVar
@@ -247,7 +247,7 @@ type raw_error =
   | HintFailedToReplayProof
   | HitReplayFailed
   | ProofObligationFailed
-  | UnknowAssertionFailure
+  | UnknownAssertionFailure
   | Z3SolverError
   | UninstantiatedUnificationVarInTactic
   | AssertionFailure
@@ -269,6 +269,7 @@ type raw_error =
   | FileNotWritten
   | InvalidUTF8Encoding
   | FailToCompileNativeTactic
+  | MalformedWarnErrorList
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
@@ -387,6 +388,7 @@ let message_prefix =
      append_prefix=append_prefix}
 
 let errno_of_error = function
+  (* the errors below are default to error *)
   | OutOfRange _ -> 1
   | OpPlusInUniverse -> 2
   | InvalidUniverseVar -> 3
@@ -398,12 +400,13 @@ let errno_of_error = function
   | UnexpectedGTotComputation -> 9
   | UnexpectedInstance -> 10
   | ProofObligationFailed -> 11
-  | UnknowAssertionFailure -> 12
-  | UninstantiatedUnificationVarInTactic -> 13
-  | AssertionFailure -> 14
-  | MissingInterface -> 15
-  | MissingImplementation -> 16
-  | TooManyOrTooFewFileMatch -> 17
+  | UnknownAssertionFailure -> 12
+  | AssertionFailure -> 13
+  | MissingInterface -> 14
+  | MissingImplementation -> 15
+  | TooManyOrTooFewFileMatch -> 16
+  (* the errors below are default to warning *)
+  | MalformedWarnErrorList -> 17
   | DeprecatedEqualityOnBinder -> 18
   | Filtered -> 19
   | ModuleFileNameMismatch -> 20
@@ -424,7 +427,7 @@ let errno_of_error = function
   | UseDefaultEffect -> 35
   | AddImplicitAssumeNewQualifier -> 36 
   | TopLevelEffect -> 37
-  | MetaAlienNotATmUnknow -> 38
+  | MetaAlienNotATmUnknown -> 38
   | PatternMissingBoundVar -> 39
   | IrrelevantQualifierOnArgumentToReify -> 40
   | IrrelevantQualifierOnArgumentToReflect -> 41
@@ -449,7 +452,6 @@ let update_flags l =
     else if a < b then -1
     else 0
   in
-  let sorted = List.sortWith compare l in
   let rec set_flag i l= 
     match l with 
     | [] -> List.nth !flags i
@@ -458,21 +460,29 @@ let update_flags l =
       else if (i<l) then List.nth !flags i
       else set_flag i tl
   in
-  let rec aux f i l = match l with
+  let rec aux f i l sorted = match l with
     | [] -> f
-    | hd::tl -> aux (f@[set_flag i sorted]) (i+1) tl
+    | hd::tl -> aux (f@[set_flag i sorted]) (i+1) tl sorted
   in
   let rec init_flags l i = 
     if i > 0 then init_flags (l@[CError]) (i-1) else l
   in
-  let rec check_range l = match l with
-    | [] -> ()
-    | (_, (l, h))::tl -> 
-      if (l < 0)  || (h > next_errno)  then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h))
+  let rec compute_range result l = match l with
+    | [] -> result
+    | (f, s)::tl -> 
+      let r = Util.split s ".." in
+      let (l,h) = match r with 
+        | [r1; r2] -> (int_of_string r1, int_of_string r2)
+        | _ -> failwith (BU.format1 "Malformed warn-error range %s" s)
+      in 
+      if (l < 0)  || (h > next_errno)  then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h));
+      compute_range (result@[(f, (l, h))]) tl
   in
-  check_range l;
   if !flags = [] then flags := init_flags [] next_errno;
-  flags := aux [] 0 !flags
+  if l <> [] then
+    let range = compute_range [] l in
+    let sorted = List.sortWith compare range in
+    flags := aux [] 0 !flags sorted
 
 let diag r msg = 
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg)

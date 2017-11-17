@@ -1260,5 +1260,5 @@ let print: deps -> Prims.unit =
          | Mk (deps1,uu____4518,uu____4519) -> print_graph deps1)
     | FStar_Pervasives_Native.Some uu____4524 ->
         FStar_Errors.raise_err
-          (FStar_Errors.UnknowToolForDep, "unknown tool for --dep\n")
+          (FStar_Errors.UnknownToolForDep, "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()

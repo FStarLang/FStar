@@ -35,6 +35,7 @@ open FStar_String
 %token <string * bool> INT32
 %token <string * bool> INT64
 %token <string * bool> INT
+%token <string> RANGE
 
 %token <string> UINT8
 %token <string> UINT16
@@ -56,7 +57,7 @@ open FStar_String
 %token MATCH OF
 %token OPEN REC MUTABLE THEN TRUE TRY TYPE EFFECT VAL
 %token INCLUDE
-%token WHEN WITH AT PLUS HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
+%token WHEN WITH HASH AMP LPAREN RPAREN LPAREN_RPAREN COMMA LONG_LEFT_ARROW LARROW RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
@@ -100,7 +101,7 @@ open FStar_String
 %type <FStar_Parser_AST.inputFragment> inputFragment
 %type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
-%type <(FStar_Errors.flag * (int * int)) list> warn_error_list
+%type <(FStar_Errors.flag * string) list> warn_error_list
 %%
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
@@ -931,18 +932,19 @@ warn_error:
     { (f, r) :: e }
 
 flag:
-  | AT
-    { CError }
-  | MINUS
-    { CSilent }
-  | PLUS
-    { CWarning }
+  | op=OPINFIX1
+    { if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op)}
+  | op=OPINFIX2
+    { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
+	| MINUS
+	  { CSilent }
 
 range:
   | i=INT
-    { let i = int_of_string (fst i) in (i, i) }
-  | i=INT DOT DOT j=INT
-    { let i = int_of_string (fst i) in let j = int_of_string (fst j) in (i, j) }
+    { format2 "%s..%s" (fst i) (fst i) }
+  | r=RANGE
+    { r }
+
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */

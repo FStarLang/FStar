@@ -142,7 +142,7 @@ let parse fn =
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =
   let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
-  let lexer() = let tok = FStar_Parser_LexFStar.tokenize_error_warn lexbuf in
+  let lexer() = let tok = FStar_Parser_LexFStar.token lexbuf in
     (tok, lexbuf.start_p, lexbuf.cur_p)
   in
   let user_flags =

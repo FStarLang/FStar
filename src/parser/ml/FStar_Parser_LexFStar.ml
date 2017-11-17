@@ -336,6 +336,7 @@ let regexp floatp     = digit+ '.' digit*
 let regexp floate     = digit+ ('.' digit* )? ["eE"] ["+-"]? digit+
 let regexp ieee64     = floatp | floate
 let regexp xieee64    = xinteger 'L' 'F'
+let regexp range      = digit+ '.' '.' digit+
 
 let regexp op_prefix  = ["!~?"]
 let regexp op_infix0a = ["|"] (* left *)
@@ -397,6 +398,7 @@ let rec token = lexer
  | int32 -> INT32 (clean_number (L.lexeme lexbuf), false)
  | uint64 -> UINT64 (clean_number (L.lexeme lexbuf))
  | int64 -> INT64 (clean_number (L.lexeme lexbuf), false)
+ | range -> RANGE (L.lexeme lexbuf)
  | (ieee64 | xieee64) -> IEEE64 (float_of_string (L.lexeme lexbuf))
  
  | (integer | xinteger | ieee64 | xieee64) ident_char+ ->
@@ -502,10 +504,3 @@ and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
 and ignore_endline = lexer
  | ' '* newline -> token lexbuf
 
-and tokenize_error_warn = lexer
- | integer -> INT (clean_number (L.lexeme lexbuf), false)
- | "." -> DOT
- | "@" -> AT
- | "-" -> MINUS
- | "+" -> PLUS
- | eof -> EOF

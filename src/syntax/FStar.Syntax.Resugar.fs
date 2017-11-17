@@ -712,7 +712,7 @@ let rec resugar_term (t : S.term) : A.term =
           | Tm_unknown ->
               mk (A.Const (Const_string ("(alien:" ^ s ^ ")", e.pos)))
           | _ ->
-              E.maybe_fatal_error e.pos (E.MetaAlienNotATmUnknow, "Meta_alien was not a Tm_unknown");
+              E.maybe_fatal_error e.pos (E.MetaAlienNotATmUnknown, "Meta_alien was not a Tm_unknown");
               resugar_term e
           end
       | Meta_named t ->
