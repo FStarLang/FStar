@@ -2541,10 +2541,11 @@ let solve_and_commit env probs err =
       UF.commit tx;
       Some deferred
     | Failed (d,s) ->
-      UF.rollback tx;
       if Env.debug env <| Options.Other "ExplainRel"
       then BU.print_string <| explain env d s;
-      err (d,s)
+      let result = err (d,s) in
+      UF.rollback tx;
+      result
 
 let simplify_guard env g = match g.guard_f with
     | Trivial -> g
