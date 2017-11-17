@@ -1,4 +1,3 @@
-
 (*
    Copyright 2008-2017 Microsoft Research
 
@@ -1524,32 +1523,49 @@ let rec get_a_index
               | None -> None
               | Some i -> Some (reinx (i +^ 1ul) v)
 
-// #reset-options "--initial_fuel 1 --max_fuel 4 --z3rlimit 20"
-// let rec lemma_find_l_contains 
-//     (#a:eqtype) 
-//     (#l:len_t)
-//     (f:a -> Tot bool)
-//     (v:raw a l)
-//   : Lemma 
-//     (requires (Some? (find_l f v)))
-//     (ensures (v `contains` (Some?.v (find_l f v))))
-//     (decreases (u32_to_int l))
-//   = let x = Some?.v (find_l f v) in
-//     assert (l >^ 0ul);
-//     match get_a_index x v with
-//     | None -> 
-//       assert (forall i. not (f v.[i]));
-//       assert (None? (find_l f v)) // TODO: cwinter: Somewhere there must be a lemma that gives us this?
-//     | Some k -> 
-//       assert (k <^ l);
-//       assert (f v.[k]);
-//       assert (v.[k] == x);
-//       assert (ok (Prims.op_Subtraction) l k);
-//       lemma_find_l_exists_index f v;
-//       assert (exists i. f v.[i] /\ i == k /\ v.[k] == x);  
-//       contains_intro v k x; // (v.[k] == x ==> v `contains` x)
-//       assert (Some? (find_l f v));
-//       assert (v `contains` x)
+#reset-options "--initial_fuel 1 --max_fuel 4 --z3rlimit 20"
+let rec lemma_find_l_contains 
+    (#a:Type) 
+    (#l:len_t)
+    (f:a -> Tot bool)
+    (v:raw a l)
+  : Lemma 
+    (requires (Some? (find_l f v)))
+    (ensures (v `contains` (Some?.v (find_l f v))))
+    (decreases (u32_to_int l))
+  = assert (l >^ 0ul);
+    let x = Some?.v (find_l f v) in
+    assert (f x);
+    lemma_find_l_exists_index f v;
+    assert (exists i. f v.[i]);
+    // cwinter: there must be a better way than this...
+    let rec raw_find_x_aux (#a:Type) (#l:len_t) (f:a -> Tot bool) (x:a) (v:raw a l) (ctr:len_t{ctr <=^ l})
+      : Pure (option a)
+        (requires (forall (i:index_t v{i >=^ ctr}). not (f v.[i]) /\ 
+                                                    (v.[i] == x \/  ~ (v.[i] == x))))
+        (ensures (function 
+                 | None -> forall (i:index_t v). not (f v.[i])
+                 | Some y -> f y /\  
+                             (exists (i:index_t v). {:pattern (found i)} found i /\ 
+                                                   y == v.[i] /\ x == y)))
+      = match ctr with
+        | 0ul -> None
+        | _ -> let i = ctr -^ 1ul in
+        if (f v.[i])
+        then (cut (found i); Some v.[i])
+        else raw_find_x_aux x f v i in
+    let raw_find_x (#a:Type) (#l:len_t) (f:a -> Tot bool) (x:a) (v:raw a l)
+      : Pure (option a)
+        (requires True)
+        (ensures (function
+                 | None -> forall (i:index_t v). not (f v.[i])
+                 | Some y -> f y /\ 
+                             (exists (i:index_t v). {:pattern (found i)} found i /\ 
+                                                    x == v.[i] /\ x == y)))
+      = raw_find_x_aux f x v l in
+    match raw_find_x f x v with
+    | None -> ()
+    | Some y -> assert (x == y)
 
 let contains_cons 
     (#a:Type)
@@ -1613,8 +1629,6 @@ let append_subs
 
 #reset-options
 
-(** More properties, with new naming conventions *)
-
 let suffix_of
     (#a:Type)
     (#l1:len_t)
@@ -1625,7 +1639,6 @@ let suffix_of
     else 
       let prelen = l1 -^ l2 in
       (exists (prefix:raw a prelen). (v == prefix @| suffix))
-
 
 // MOVE TO BASE FROM HERE?
 let rec lemma_index_create
