@@ -3273,7 +3273,7 @@ and tc_abs:
                                  | (t,uu____7700,g1) ->
                                      let g2 =
                                        let uu____7703 =
-                                         FStar_TypeChecker_Rel.try_subtype
+                                         FStar_TypeChecker_Rel.get_subtyping_prop
                                            env2 expected_t t in
                                        match uu____7703 with
                                        | FStar_Pervasives_Native.None  ->

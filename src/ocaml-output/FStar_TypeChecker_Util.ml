@@ -2406,7 +2406,7 @@ let weaken_result_typ:
               (uu____5856, false)
             else
               (let uu____5862 =
-                 FStar_TypeChecker_Rel.try_subtype env
+                 FStar_TypeChecker_Rel.get_subtyping_predicate env
                    lc.FStar_Syntax_Syntax.res_typ t in
                (uu____5862, true)) in
           match gopt with
@@ -3701,7 +3701,7 @@ let check_and_ascribe:
             then FStar_TypeChecker_Rel.try_teq true env2 t11 t21
             else
               (let uu____10078 =
-                 FStar_TypeChecker_Rel.try_subtype env2 t11 t21 in
+                 FStar_TypeChecker_Rel.get_subtyping_predicate env2 t11 t21 in
                match uu____10078 with
                | FStar_Pervasives_Native.None  ->
                    FStar_Pervasives_Native.None
