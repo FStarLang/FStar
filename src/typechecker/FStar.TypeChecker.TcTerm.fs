@@ -995,14 +995,16 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       let g2 =
                         //cf issue #57 (the discussion at the end about subtyping vs. equality in check_binders)
                         //check that the context is more demanding of the argument type
-                        match Rel.get_subtyping_prop env expected_t t with
-                        | None ->
-                          raise (Error(Err.basic_type_error env None expected_t t, Env.get_range env))
-                        | Some g ->
-                          TcUtil.label_guard
-                            (Env.get_range env)
-                            "Type annotation on parameter incompatible with the expected type"
-                            g
+                        if Rel.teq_nosmt env t expected_t
+                        then Rel.trivial_guard
+                        else match Rel.get_subtyping_prop env expected_t t with
+                             | None ->
+                               raise (Error(Err.basic_type_error env None expected_t t, Env.get_range env))
+                             | Some g ->
+                                TcUtil.label_guard
+                                    (Env.get_range env)
+                                    "Type annotation on parameter incompatible with the expected type"
+                                    g
                       in
                       let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
                       t, g in
