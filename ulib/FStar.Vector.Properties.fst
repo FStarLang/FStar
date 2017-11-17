@@ -1490,37 +1490,6 @@ let rec lemma_find_l_exists_index
          let _ = lemma_find_l_exists_index f tl in
          assert (forall (j:index_t tl). tl.[j] == u.[j +^ 1ul])
 
-let rec get_f_index
-    (#a:Type) 
-    (#l:len_t)
-    (f:a -> Tot bool)
-    (v:raw a l)
-  : Tot (option (i:index_t v{f v.[i]}))
-    (decreases (u32_to_int l))
-  = if l =^ 0ul then None
-    else let m : (m:len_t{m >^ 0ul}) = l in
-         let u = coerce v m in
-         if f (head u) then Some 0ul
-         else let tl = tail u in
-              match get_f_index f tl with
-              | None -> None
-              | Some i -> Some (reinx (i +^ 1ul) v)
-
-let rec get_a_index
-    (#a:eqtype) 
-    (#l:len_t)
-    (x:a)
-    (v:raw a l)
-  : Tot (option (i:index_t v{v.[i] == x}))
-    (decreases (u32_to_int l))
-  = if l =^ 0ul then None
-    else let m : (m:len_t{m >^ 0ul}) = l in
-         let u = coerce v m in
-         if (head u) = x then Some 0ul 
-         else let tl = tail u in
-              match get_a_index x tl with
-              | None -> None
-              | Some i -> Some (reinx (i +^ 1ul) v)
 
 #reset-options "--initial_fuel 1 --max_fuel 4 --z3rlimit 20"
 let rec lemma_find_l_contains 
@@ -1605,9 +1574,10 @@ let append_subs
    = ()       
 
 
+// // cwinter: TODO
 // #reset-options "--max_fuel 3 --initial_fuel 1 --z3rlimit 20"
 // let rec find_l_none_no_index 
-//     (#a:eqtype)
+//     (#a:Type)
 //     (#l:len_t)
 //     (v:raw a l{ok (+) l 1ul})
 //     (f:a -> Tot bool)
@@ -1618,22 +1588,17 @@ let append_subs
 //   = if l =^ 0ul then ()
 //     else let ls1 = l -^ 1ul in
 //          let m : (m:len_t{m >^ 0ul}) = l in
-//          let u = coerce v m in
-//          let hd = head u in
-//          let tl = tail u in
-//          let hd1 = create1 hd in
-//          assert (not (f hd));
-//          assert (None? (find_l f tl));
+//          let u = coerce #a #l v m in
+//          let (hd:a{not (f hd)}) = head #a #m u in
+//          let tl = tail #a #m u in
+//          let hd1 = create1 #a hd in
+//          assert (not (f hd) /\ hd1.[0ul] == hd /\ not (f hd1.[0ul]));
+//          assert (None? (find_l #a #ls1 f tl));
+//          assert (None? (find_l #a #1ul f hd1)); // <-- find_append_none wants this.
 //          find_l_none_no_index #a #ls1 tl f;
-//          let hd1 = create1 hd in
-//          assert (equal u (append hd1 tl));
-//        	 find_append_none #a #1ul #ls1 hd1 tl f
-
-
-#reset-options
-
-
-
+//          assert (equal #a #l u (append #a #1ul #ls1 hd1 tl));
+//        	find_append_none #a #1ul #ls1 hd1 tl f
+// #reset-options
 
 let suffix_of
     (#a:Type)
