@@ -22,7 +22,7 @@ module S = FStar.Seq
 module U32 = FStar.UInt32
 module L = FStar.List.Tot
 
-open U32
+open FStar.UInt32
 
 let int_to_u32 (x:int): Tot U32.t = U32.uint_to_t (UInt.to_uint_t 32 x)
 let u32_to_int (x:U32.t): Tot (y:int{y = U32.v x}) = U32.v x
@@ -1351,7 +1351,9 @@ let intro_append_contains_from_disjunction
   : Lemma 
     (requires (v1 `contains` x \/ v2 `contains` x))
     (ensures (v1 @| v2) `contains` x)
-  = let v1v2 = v1 @| v2 in
+  = contains_elim v1 x;
+    contains_elim v2 x;
+    let v1v2 = v1 @| v2 in
     assert ((exists i. (v1.[i] == x /\ v1v2.[reinx i v1v2] == x)) \/
             (exists j. (v2.[j] == x /\ v1v2.[reinx (j +^ l1) v1v2] == x)))
 
@@ -1366,7 +1368,10 @@ let append_contains_equiv
   : Lemma ((v1 @| v2) `contains` x
            <==>
            (v1 `contains` x \/ v2 `contains` x))
-  = let v1v2 = v1 @| v2 in
+  = contains_elim (v1 @| v2) x;
+    //contains_elim v1 x;
+    //contains_elim v2 x;
+    let v1v2 = v1 @| v2 in
     assert (v1v2 `contains` x ==>
             ((exists i. (v1.[i] == x /\ v1v2.[reinx i v1v2] == x)) \/
              (exists j. (v2.[j] == x /\ v1v2.[reinx (j +^ l1) v1v2] == x))))
@@ -1379,7 +1384,8 @@ let snoc_v_x_contains_x
     (x:a)
   : Lemma ((snoc v x) `contains` x)
   = assert((snoc v x) == (append v (create1 x))); 
-    append_contains_equiv v (create1 x) x
+    append_contains_equiv v (create1 x) x;
+    assert (last (snoc v x) == x)
 
 let snoc_v_x_contains_y
     (#a:Type)
