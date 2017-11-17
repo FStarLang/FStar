@@ -57,8 +57,9 @@ val unrefine   : env -> typ -> typ
 val try_teq    : bool -> env -> typ -> typ -> option<guard_t>
 val teq        : env -> typ -> typ -> guard_t
 val teq_nosmt  : env -> typ -> typ -> bool
-val try_subtype: env -> typ -> typ -> option<guard_t>
-val try_subtype': env -> typ -> typ -> bool -> option<guard_t>
+val get_subtyping_predicate: env -> typ -> typ -> option<guard_t>
+val get_subtyping_prop: env -> typ -> typ -> option<guard_t>
+val subtype_nosmt: env -> typ -> typ -> bool
 val sub_comp   : env -> comp -> comp -> option<guard_t>
 
 val universe_inequality : universe -> universe -> guard_t

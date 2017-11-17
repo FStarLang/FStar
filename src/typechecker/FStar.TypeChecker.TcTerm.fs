@@ -995,7 +995,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       let g2 =
                         //cf issue #57 (the discussion at the end about subtyping vs. equality in check_binders)
                         //check that the context is more demanding of the argument type
-                        match Rel.try_subtype env expected_t t with
+                        match Rel.get_subtyping_prop env expected_t t with
                         | None ->
                           raise (Error(Err.basic_type_error env None expected_t t, Env.get_range env))
                         | Some g ->

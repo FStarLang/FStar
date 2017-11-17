@@ -2586,24 +2586,8 @@ let teq env t1 t2 : guard_t =
                         (guard_to_string env g);
       g
 
-let try_subtype' env t1 t2 smt_ok =
- if debug env <| Options.Other "Rel"
- then BU.print2 "try_subtype of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
- let prob, x = new_t_prob env t1 SUB t2 in
- let g = with_guard env prob <| solve_and_commit env (singleton' env prob smt_ok) (fun _ -> None) in
- if debug env <| Options.Other "Rel"
-    && BU.is_some g
- then BU.print3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n"
-                    (N.term_to_string env t1)
-                    (N.term_to_string env t2)
-                    (guard_to_string env (BU.must g));
- map_opt g (abstract_guard (S.mk_binder x))
-
-let try_subtype env t1 t2 = try_subtype' env t1 t2 true
-
 let subtype_fail env e t1 t2 =
     Errors.err (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
-
 
 let sub_comp env c1 c2 =
   if debug env <| Options.Other "Rel"
@@ -2848,11 +2832,51 @@ let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=([], [u1,u2])}
 
-let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
-  match try_teq false env t1 t2 with
-  | None -> false
-  | Some g ->
+let discharge_guard_nosmt env g =
     match discharge_guard' None env g false with
     | Some _ -> true
     | None   -> false
 
+let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
+  match try_teq false env t1 t2 with
+  | None -> false
+  | Some g -> discharge_guard_nosmt env g
+
+///////////////////////////////////////////////////////////////////
+let check_subtyping env t1 t2 =
+    if debug env <| Options.Other "Rel"
+    then BU.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
+    let prob, x = new_t_prob env t1 SUB t2 in
+    let g = with_guard env prob <| solve_and_commit env (singleton' env prob true) (fun _ -> None) in
+    if debug env <| Options.Other "Rel"
+    && BU.is_some g
+    then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
+                    (N.term_to_string env t1)
+                    (N.term_to_string env t2)
+                    (guard_to_string env (BU.must g));
+    match g with
+    | None -> None
+    | Some g -> Some (x, g)
+
+let get_subtyping_predicate env t1 t2 =
+    match check_subtyping env t1 t2 with
+    | None -> None
+    | Some (x, g) ->
+      Some (abstract_guard (S.mk_binder x) g)
+
+let get_subtyping_prop env t1 t2 =
+    match check_subtyping env t1 t2 with
+    | None -> None
+    | Some (x, g) ->
+      Some (close_guard env [S.mk_binder x] g)
+
+let subtype_nosmt env t1 t2 =
+    if debug env <| Options.Other "Rel"
+    then BU.print2 "try_subtype_no_smt of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
+    let prob, x = new_t_prob env t1 SUB t2 in
+    let g = with_guard env prob <| solve_and_commit env (singleton' env prob false) (fun _ -> None) in
+    match g with
+    | None -> false
+    | Some g ->
+      let g = close_guard env [S.mk_binder x] g in
+      discharge_guard_nosmt env g

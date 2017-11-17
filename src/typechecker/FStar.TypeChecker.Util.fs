@@ -896,7 +896,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
      | _ -> false) in
   let gopt = if use_eq //see issue #881 for why weakening result type of a reifiable computation is problematic
              then Rel.try_teq true env lc.res_typ t, false
-             else Rel.try_subtype env lc.res_typ t, true in
+             else Rel.get_subtyping_predicate env lc.res_typ t, true in
   match gopt with
     | None, _ ->
         if env.failhard
@@ -1370,7 +1370,7 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
   let check env t1 t2 =
     if env.use_eq
     then Rel.try_teq true env t1 t2
-    else match Rel.try_subtype env t1 t2 with
+    else match Rel.get_subtyping_predicate env t1 t2 with
             | None -> None
             | Some f -> Some <| apply_guard f e in
   let is_var e = match (SS.compress e).n with
