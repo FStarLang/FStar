@@ -1023,7 +1023,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     in //end check_binders
 
 
-    let rec expected_function_typ env t0 body
+    let rec expected_function_typ env t0 (body:term)
         : (option<typ>        (* any remaining expected type to check against *)
         * binders             (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
         * binders             (* let rec binders, suitably guarded with termination check, if any *)
@@ -1070,15 +1070,15 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                             b. fewer immediate binders, meaning that the function type is explicitly curried
                       2. If the function is a let-rec and it is to be total, then we need to add termination checks.
                   *)
-                let check_actuals_against_formals env bs bs_expected =
-                    let rec handle_more (env, bs, more, guard, subst) c_expected =
+                let check_actuals_against_formals env bs bs_expected body =
+                    let rec handle_more (env, bs, more, guard, subst) c_expected body =
                       match more with
                       | None -> //number of binders match up
-                        env, bs, guard, SS.subst_comp subst c_expected
+                        env, bs, guard, SS.subst_comp subst c_expected, body
 
                       | Some (Inr more_bs_expected) -> //more formal parameters; expect the body to return a total function
                         let c = S.mk_Total (U.arrow more_bs_expected c_expected) in
-                        env, bs, guard, SS.subst_comp subst c
+                        env, bs, guard, SS.subst_comp subst c, body
 
                       | Some (Inl more_bs) ->  //more actual args
                         let c = SS.subst_comp subst c_expected in
@@ -1089,12 +1089,15 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                           | Tm_arrow(bs_expected, c_expected) ->
                             let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
                             let (env, bs', more, guard', subst) = check_binders env more_bs bs_expected in
-                            handle_more (env, bs@bs', more, Rel.conj_guard guard guard', subst) c_expected
-                          | _ -> fail (BU.format1 "More arguments than annotated type (%s)" (Print.term_to_string t)) t
-                        else fail "Function definition takes more arguments than expected from its annotated type" t
+                            handle_more (env, bs@bs', more, Rel.conj_guard guard guard', subst) c_expected body
+                          | _ ->
+                            let body = U.abs more_bs body None in
+                            env, bs, guard, c, body
+                        else let body = U.abs more_bs body None in
+                             env, bs, guard, c, body
                       in
 
-                      handle_more (check_binders env bs bs_expected) c_expected
+                      handle_more (check_binders env bs bs_expected) c_expected body
                 in
 
                 let mk_letrec_env envbody bs c =
@@ -1112,7 +1115,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       (envbody, [])
                 in
 
-                let envbody, bs, g, c = check_actuals_against_formals env bs bs_expected in
+                let envbody, bs, g, c, body = check_actuals_against_formals env bs bs_expected body in
                 let envbody, letrecs = mk_letrec_env envbody bs c in
                 let envbody = Env.set_expected_typ envbody (U.comp_result c) in
                 Some t, bs, letrecs, Some c, envbody, body, g
