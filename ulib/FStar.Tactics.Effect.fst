@@ -17,9 +17,6 @@ let __bind (a:Type) (b:Type) (t1:__tac a) (t2:a -> __tac b) : __tac b =
     fun p -> let r = t1 (incr_depth p) in
              match r with
              | Success(a, q)  ->
-                 (* We want range_of t2, but it does not work until we make range_of a constant *)
-                 let r = range_of q in
-                 let q = set_proofstate_range q (FStar.Range.prims_to_fstar_range r) in
                  // Force evaluation of __tracepoint q
                  begin match tracepoint q with
                  | () -> t2 a (decr_depth q)
@@ -68,8 +65,16 @@ let tactic (a:Type) = unit -> Tac a
 let return (#a:Type) (x:a) : tactic a =
     fun () -> x
 
-let bind (#a:Type) (#b:Type) (t : tactic a) (f : a -> tactic b) : tactic b =
-    fun () -> let r = t () in f r ()
+(* Why the "CPS"-like definition? So we don't call bind which would
+ * introduce an extra tracepoint. *)
+let set_rng (rng:range) (tau : unit -> Tac 'a) : Tac 'a =
+    TAC?.reflect (fun ps ->
+        let ps = set_proofstate_range ps (FStar.Range.prims_to_fstar_range rng) in
+        reify (tau ()) ps
+    )
+
+let bind (#a:Type) (#b:Type) (rng:range) (t : tactic a) (f : a -> tactic b) : tactic b =
+    fun () -> set_rng rng (fun () -> let r = t () in f r ())
 
 (* Cannot eta reduce this... *)
 let get : tactic proofstate = fun () -> TAC?.__get ()
