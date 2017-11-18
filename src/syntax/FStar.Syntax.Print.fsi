@@ -55,3 +55,4 @@ val set_to_string     : ('a -> string) -> set<'a> -> string
 val list_to_string    : ('a -> string) -> list<'a> -> string
 val delta_depth_to_string : delta_depth -> string
 val action_to_string  : action -> string
+val metadata_to_string : metadata -> string
