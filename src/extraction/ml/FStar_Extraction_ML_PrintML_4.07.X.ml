@@ -96,7 +96,7 @@ let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): Parsetree.constant =
   match c with
-  | MLC_Int (v, _) ->
+  | MLC_Int (v, None) ->
      let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
      Const.integer i
   | MLC_Float v -> Const.float (string_of_float v)
