@@ -123,7 +123,7 @@ type stack_elt =
  | App      of env * term * aqual * Range.range
  | Meta     of S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
- | Steps    of steps * list<primitive_step> * list<Env.delta_level>
+ | Cfg      of cfg
  | Debug    of term * BU.time
 type stack = list<stack_elt>
 
@@ -145,7 +145,7 @@ let stack_elt_to_string = function
     | App (_, t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
     | Meta (m,_) -> "Meta"
     | Let  _ -> "Let"
-    | Steps (_, _, _) -> "Steps"
+    | Cfg _ -> "Cfg"
     | Debug (t, _) -> BU.format1 "Debug %s" (Print.term_to_string t)
     // | _ -> "Match"
 
@@ -964,7 +964,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 else [NoDelta] in
             let cfg' = {cfg with steps=s; delta_level=delta_level} in
             let stack' =
-              let tail = Steps (cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+              let tail = (Cfg cfg)::stack in
               if Env.debug cfg.tcenv <| Options.Other "print_normalized_terms"
               then Debug(t, BU.now())::tail
               else tail in
@@ -1109,8 +1109,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       end
                   end
 
-                | Steps (s, ps, dl) :: stack ->
-                  norm ({cfg with steps=s; primitive_steps=ps; delta_level=dl}) env stack t
+                | Cfg cfg :: stack ->
+                  norm cfg env stack t
 
                 | MemoLazy r :: stack ->
                   set_memo r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
@@ -1136,7 +1136,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                           Some ({rc with residual_typ=rct})
                         | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
-                       let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+                       let stack = (Cfg cfg)::stack in
                        let cfg = { cfg with strong = true } in
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
@@ -1375,7 +1375,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     (* the Meta_monadic marker and reconstruct the computation after      *)
     (* normalization.                                                     *)
     let t = norm cfg env [] t in
-    let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+    let stack = (Cfg cfg)::stack in
     let cfg =
       if cfg.steps |> List.contains PureSubtermsWithinComputations
       then
@@ -1685,8 +1685,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     end;
     rebuild cfg env stack t
 
-  | Steps (s, ps, dl) :: stack ->
-    rebuild ({cfg with steps=s; primitive_steps=ps; delta_level=dl}) env stack t
+  | Cfg cfg :: stack ->
+    rebuild cfg env stack t
 
   | Meta(m, r)::stack ->
     let t = mk (Tm_meta(t, m)) r in
