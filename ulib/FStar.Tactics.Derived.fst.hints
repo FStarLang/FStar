@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "87f6bb84ce92cea2cfb39dd70d99e4c9"
+      "024ae8f37f62405ae32669f8d400fad6"
     ],
     [
       "FStar.Tactics.Derived.guard",
@@ -22,7 +22,7 @@
       1,
       [ "@query" ],
       0,
-      "1eba1fad2c21f9f11ca5ade84c6a568c"
+      "10c2bc9378898c445adec6261ba9e4a5"
     ],
     [
       "FStar.Tactics.Derived.or_else",
@@ -38,7 +38,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "4be7f8c0c141ded95681afe0ab6cda71"
+      "2edf1dc8e916f70d2966e41acc7ae8b0"
     ],
     [
       "FStar.Tactics.Derived.repeat",
@@ -54,7 +54,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "d4358eaca78dbdef91b748753a989e6a"
+      "1bb61bc3bd45bd7bec766623f795cdd3"
     ],
     [
       "FStar.Tactics.Derived.repeatseq",
@@ -63,7 +63,7 @@
       1,
       [ "@query" ],
       0,
-      "74c4730ab7dbfa247d8a7111f47b088a"
+      "7c36fd496ae6645f032578bb52bc2946"
     ],
     [
       "FStar.Tactics.Derived.guards_to_smt",
@@ -72,16 +72,7 @@
       1,
       [ "@query" ],
       0,
-      "2f7951db6d5da4bf15857de1a076ed2e"
-    ],
-    [
-      "FStar.Tactics.Derived.tcut",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7b1385b811f47b1b29ecc2283a751305"
+      "853d84a8f19925394a40f8c7e19c3ce0"
     ],
     [
       "FStar.Tactics.Derived.revert_all",
@@ -97,7 +88,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "24166189089d052bb3ae0c4b51dc8919"
+      "702c340e5610b6ebec922c155c4e8bec"
     ],
     [
       "FStar.Tactics.Derived.assumption",
@@ -111,7 +102,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fa38955f9a9c6ff68bba3cf77247b26b"
+      "8ce65bafc0408d75e36ac5da2718c12e"
     ],
     [
       "FStar.Tactics.Derived.destruct_equality_implication",
@@ -120,7 +111,7 @@
       1,
       [ "@query", "equation_FStar.Tactics.Effect.return" ],
       0,
-      "5f044c589b69aaac054520094a4a3ef8"
+      "f52c5b2222678a26ccc439f29e0e768c"
     ],
     [
       "FStar.Tactics.Derived.try_rewrite_equality",
@@ -139,7 +130,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2e165f327ab133ee196badb1c0d2c8f7"
+      "f78e5c47eda8516421746f9ed9f328bd"
     ],
     [
       "FStar.Tactics.Derived.rewrite_all_context_equalities",
@@ -158,7 +149,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f3861f0c2ee324bf09477e81a4b0ffaa"
+      "7f3dcbb52bb3d6df68f525eba5869215"
     ],
     [
       "FStar.Tactics.Derived.unfold_point",
@@ -172,7 +163,7 @@
         "equation_FStar.Tactics.Effect.bind", "unit_typing"
       ],
       0,
-      "c58d7f2fffd5e438f0d8ded4389e4920"
+      "35cf3b5170a3dcee43ac9f9cf48e9917"
     ],
     [
       "FStar.Tactics.Derived.grewrite'",
@@ -186,16 +177,7 @@
         "equation_FStar.Tactics.Derived.fail", "unit_typing"
       ],
       0,
-      "df11d6e6fd6c1df0553a672c869856ef"
-    ],
-    [
-      "FStar.Tactics.Derived.mk_sq_eq",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ef59ae04b42be0d16169d2356fcfff4d"
+      "22b892453f646d80ee7d3e79103206db"
     ],
     [
       "FStar.Tactics.Derived.iseq",
@@ -210,7 +192,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "23fd6a79fd709c3290438d42403542d2"
+      "44e58f1e824fc334752f320ef441b866"
     ],
     [
       "FStar.Tactics.Derived.__witness",
@@ -223,7 +205,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "350fe16ffc00b0eafd758565fa894549"
+      "d709533a0902a7d56367454436f105c4"
     ],
     [
       "FStar.Tactics.Derived.push1",
@@ -236,7 +218,7 @@
         "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
       ],
       0,
-      "eaf0a822020b0f00eb25e7405deaf056"
+      "dfe802bd5dce9c47abbb79324f7bb2e8"
     ],
     [
       "FStar.Tactics.Derived.apply_squash_or_lem",
@@ -269,7 +251,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1e0b490ca5e99fa7bfa4d17e5e8a8828"
+      "1961db0bae11549e21a444b51dadde74"
     ]
   ]
 ]
