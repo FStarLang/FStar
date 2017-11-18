@@ -1227,6 +1227,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                    lbtyp=ty;
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
+                 let stack = (Cfg cfg)::stack in
                  let cfg = { cfg with strong = true } in
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- body\n");
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
