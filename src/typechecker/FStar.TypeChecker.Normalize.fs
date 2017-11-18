@@ -1288,18 +1288,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             begin match m with
               | Meta_monadic (m, t) ->
-                log cfg (fun () -> BU.print2 "Will %sreify : %s \n"
-                                             (if should_reify cfg stack then "" else "not ")
-                                             (stack_to_string stack));
-                if should_reify cfg stack
-                then do_reify_monadic cfg env stack head m t
-                else reduce_impure_comp cfg env stack head (Inl m) t
+                reduce_impure_comp cfg env stack head (Inl m) t
 
               | Meta_monadic_lift (m, m', t) ->
-                if should_reify cfg stack
-                then
-                    norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
-                else reduce_impure_comp cfg env stack head (Inr (m, m')) t
+                reduce_impure_comp cfg env stack head (Inr (m, m')) t
 
               | _ ->
                 if List.contains Unmeta cfg.steps
@@ -1409,6 +1401,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     norm cfg env (Meta(metadata, t.pos)::stack) head
 
 and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : term=
+    (* Precondition: the stack head is an App (reify, ...) *)
     match (SS.compress head).n with
     | Tm_let ((false, [lb]), body) ->
       (* ****************************************************************************)
@@ -1746,6 +1739,22 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       | Some (_, a) ->
         let t = S.extend_app t (a,aq) None r in
         rebuild cfg env_arg stack t
+    end
+
+  | App(env, head, aq, r)::stack' when should_reify cfg stack ->
+    begin match (SS.compress t).n with
+    | Tm_meta (t, Meta_monadic (m, ty)) ->
+       log cfg (fun () -> BU.print1 "Will reify: %s \n" (stack_to_string stack));
+       do_reify_monadic cfg env stack t m ty
+
+    | Tm_meta (t, Meta_monadic_lift (m, m', ty)) ->
+       log cfg (fun () -> BU.print1 "Will reify lift: %s \n" (stack_to_string stack));
+       norm cfg env stack (reify_lift cfg.tcenv t m m' (closure_as_term cfg env ty))
+
+    | _ ->
+       log cfg (fun () -> BU.print1 "Not reifying: %s \n" (stack_to_string stack));
+       let t = S.extend_app head (t,aq) None r in
+       rebuild cfg env stack' (maybe_simplify cfg env stack' t)
     end
 
   | App(env, head, aq, r)::stack ->
