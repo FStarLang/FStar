@@ -970,49 +970,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
               else tail in
             norm cfg' env stack' tm
 
-          | Tm_app({n=Tm_constant Const_range_of}, a1::a2::rest)
-          | Tm_app({n=Tm_constant FC.Const_reify}, a1::a2::rest) ->
-            let hd, _ = U.head_and_args t in
-            let t' = S.mk (Tm_app(hd, [a1])) None t.pos in
-            let t = S.mk(Tm_app(t', a2::rest)) None t.pos in
-            norm cfg env stack t
-
-          | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::a3::rest) ->
-            let hd, _ = U.head_and_args t in
-            let t' = S.mk (Tm_app(hd, [a1;a2])) None t.pos in
-            let t = S.mk(Tm_app(t', a3::rest)) None t.pos in
-            norm cfg env stack t
-
-          | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [a])
-                when (cfg.steps |> List.contains Reify &&
-                      is_reify_head stack) ->
-            norm cfg env (List.tl stack) (fst a)
-
-          | Tm_app({n=Tm_constant FC.Const_reify}, [a])
-                when (cfg.steps |> List.contains Reify) ->
-            let reify_head, _ = U.head_and_args t in
-            let a = SS.compress (U.unascribe <| fst a) in
-            //BU.print2_warning "TRYING NORMALIZATION OF REIFY: %s ... %s\n" (Print.tag_of_term a) (Print.term_to_string a);
-            begin match a.n with
-              (* KM : This assumes that reflect is never tagged by a Meta_monadic flag *)
-              (* Is that really the case ? *)
-              | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [a]) ->
-                //reify (reflect e) ~> e
-                norm cfg env stack (fst a)
-
-              (* KM : This case reall y does not make any sense to me *)
-              // | Tm_match(e, branches) ->
-              //   //reify (match e with p -> e') ~> match (reify e) with p -> reify e'
-              //   let e = U.mk_reify e in
-              //   let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
-              //   let tm = mk (Tm_match(e, branches)) t.pos in
-              //   norm cfg env stack tm
-
-              | _ ->
-                let stack = App(env, reify_head, None, t.pos)::stack in
-                norm cfg env stack a
-            end
-
           | Tm_type u ->
             let u = norm_universe cfg env u in
             rebuild cfg env stack (mk (Tm_type u) t.pos)
@@ -1287,6 +1244,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg body_env stack body
 
           | Tm_meta (head, m) ->
+            log cfg (fun () -> BU.print1 ">> metadata = %s\n" (Print.metadata_to_string m));
             begin match m with
               | Meta_monadic (m, t) ->
                 reduce_impure_comp cfg env stack head (Inl m) t
@@ -1401,8 +1359,10 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     in
     norm cfg env (Meta(metadata, head.pos)::stack) head
 
-and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : term=
+and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : typ) : term=
     (* Precondition: the stack head is an App (reify, ...) *)
+    let head = U.unascribe head in
+    log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (Print.tag_of_term head) (Print.term_to_string head));
     match (SS.compress head).n with
     | Tm_let ((false, [lb]), body) ->
       (* ****************************************************************************)
@@ -1542,11 +1502,16 @@ and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : te
           (* An action was found and successfully unfolded *)
           | Some true -> body
         in
-
         norm cfg env (List.tl stack) body
+
+    // Doubly-annotated effect.. just take the outmost one. (unsure..)
+    | Tm_meta(e, Meta_monadic _) ->
+        do_reify_monadic fallback cfg env stack e m t
+
     | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
-        let lifted = reify_lift cfg.tcenv e msrc mtgt (closure_as_term cfg env t') in
+        let lifted = reify_lift cfg e msrc mtgt (closure_as_term cfg env t') in
         norm cfg env (List.tl stack) lifted
+
     | Tm_match(e, branches) ->
       (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
       (* (should be checked at typechecking and elaborated with an explicit binding if needed) *)
@@ -1554,13 +1519,15 @@ and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : te
       let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
       let tm = mk (Tm_match(e, branches)) head.pos in
       norm cfg env (List.tl stack) tm
+
     | _ ->
-        (* TODO : that seems a little fishy *)
-        norm cfg env stack head
+      fallback ()
 
 (* Reifies the lifting of the term [e] of type [t] from computational  *)
 (* effect [m] to computational effect [m'] using lifting data in [env] *)
-and reify_lift (env : Env.env) e msrc mtgt t : term =
+and reify_lift cfg e msrc mtgt t : term =
+  let env = cfg.tcenv in
+  log cfg (fun () -> BU.print1 "Reifying lift: %s\n" (Print.term_to_string e));
   (* check if the lift is concrete, if so replace by its definition on terms *)
   (* if msrc is PURE or Tot we can use mtgt.return *)
   if U.is_pure_effect msrc
@@ -1743,19 +1710,26 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     end
 
   | App(env, head, aq, r)::stack' when should_reify cfg stack ->
+    let t0 = t in
+    let fallback () =
+       log cfg (fun () -> BU.print1 "Not reifying: %s\n" (Print.term_to_string t));
+       let t = S.extend_app head (t, aq) None r in
+       rebuild cfg env stack' (maybe_simplify cfg env stack' t)
+    in
     begin match (SS.compress t).n with
     | Tm_meta (t, Meta_monadic (m, ty)) ->
-       log cfg (fun () -> BU.print1 "Will reify: %s \n" (stack_to_string stack));
-       do_reify_monadic cfg env stack t m ty
+       do_reify_monadic fallback cfg env stack t m ty
 
     | Tm_meta (t, Meta_monadic_lift (m, m', ty)) ->
-       log cfg (fun () -> BU.print1 "Will reify lift: %s \n" (stack_to_string stack));
-       norm cfg env stack (reify_lift cfg.tcenv t m m' (closure_as_term cfg env ty))
+       norm cfg env stack (reify_lift cfg t m m' (closure_as_term cfg env ty))
+
+    | Tm_app ({n = Tm_constant (FC.Const_reflect _)}, [(e, _)]) ->
+       // reify (reflect e) ~> e
+       // Although shouldn't `e` ALWAYS be marked with a Meta_monadic?
+       norm cfg env stack' e
 
     | _ ->
-       log cfg (fun () -> BU.print1 "Not reifying: %s \n" (stack_to_string stack));
-       let t = S.extend_app head (t,aq) None r in
-       rebuild cfg env stack' (maybe_simplify cfg env stack' t)
+        fallback ()
     end
 
   | App(env, head, aq, r)::stack ->
