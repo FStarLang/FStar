@@ -1296,8 +1296,9 @@ and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
                        (Print.term_to_string t0) (Print.term_to_string t));
          let t =
            if cfg.steps |> List.contains (UnfoldUntil Delta_constant)
+            && not (cfg.steps |> List.contains UnfoldTac)
            //we're really trying to compute here; no point propagating range information
-           //which can be expensive
+           //which can be expensive (except for tactics: it matters for tracing!)
            then t
            else Subst.set_use_range (Ident.range_of_lid f.fv_name.v) t
          in
@@ -1359,7 +1360,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     in
     norm cfg env (Meta(metadata, head.pos)::stack) head
 
-and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : typ) : term=
+and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : typ) : term =
     (* Precondition: the stack head is an App (reify, ...) *)
     let head = U.unascribe head in
     log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (Print.tag_of_term head) (Print.term_to_string head));
@@ -1403,10 +1404,12 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
               (* We are in the case where [head] = [bind e (fun x -> return x)] *)
               (* which can be optimised to just keeping normalizing [e] with a reify on the stack *)
               norm cfg env stack lb.lbdef
-            else
+            else (
               (* TODO : optimize [bind (bind e1 e2) e3] into [bind e1 (bind e2 e3)] *)
               (* Rewriting binds in that direction would be better for exception-like monad *)
               (* since we wouldn't rematch on an already raised exception *)
+              let rng = head.pos in
+
               let head = U.mk_reify <| lb.lbdef in
               let body = U.mk_reify <| body in
               (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
@@ -1421,7 +1424,7 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                 | Tm_uinst (bind, [_ ; _]) ->
                     S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
                                           ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
-                    None head.pos
+                    None rng
                 | _ -> failwith "NIY : Reification of indexed effects"
               in
               let reified = S.mk (Tm_app(bind_inst, [
@@ -1431,9 +1434,10 @@ and do_reify_monadic fallback cfg env stack (head : term) (m : monad_name) (t : 
                   as_arg S.tun; as_arg head;
                   (* wp_body, body--the term shouldn't depend on wp_body *)
                   as_arg S.tun; as_arg body]))
-                None head.pos
+                None rng
               in
               norm cfg env (List.tl stack) reified
+            )
       end
     | Tm_app (head_app, args) ->
         (* ****************************************************************************)
