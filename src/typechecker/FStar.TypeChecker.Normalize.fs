@@ -1399,7 +1399,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                    | Inl m -> Meta_monadic (m, t)
                    | Inr (m, m') -> Meta_monadic_lift (m, m', t)
     in
-    norm cfg env (Meta(metadata, t.pos)::stack) head
+    norm cfg env (Meta(metadata, head.pos)::stack) head
 
 and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : term=
     (* Precondition: the stack head is an App (reify, ...) *)
@@ -1461,7 +1461,7 @@ and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : te
                 | Tm_uinst (bind, [_ ; _]) ->
                     S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
                                           ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
-                    None t.pos
+                    None head.pos
                 | _ -> failwith "NIY : Reification of indexed effects"
               in
               let reified = S.mk (Tm_app(bind_inst, [
@@ -1471,7 +1471,7 @@ and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : te
                   as_arg S.tun; as_arg head;
                   (* wp_body, body--the term shouldn't depend on wp_body *)
                   as_arg S.tun; as_arg body]))
-                None t.pos
+                None head.pos
               in
               norm cfg env (List.tl stack) reified
       end
@@ -1530,7 +1530,7 @@ and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : te
         in
 
         let head_app, found_action = maybe_unfold_action head_app in
-        let mk tm = S.mk tm None t.pos in
+        let mk tm = S.mk tm None head.pos in
         let body = mk (Tm_app(head_app, args)) in
         let body = match found_action with
           (* This is not an action let's just reify it *)
@@ -1552,7 +1552,7 @@ and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : te
       (* (should be checked at typechecking and elaborated with an explicit binding if needed) *)
       (* reify (match e with p -> e') ~> match e with p -> reify e' *)
       let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
-      let tm = mk (Tm_match(e, branches)) t.pos in
+      let tm = mk (Tm_match(e, branches)) head.pos in
       norm cfg env (List.tl stack) tm
     | _ ->
         (* TODO : that seems a little fishy *)
