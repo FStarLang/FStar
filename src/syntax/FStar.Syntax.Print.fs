@@ -495,6 +495,9 @@ and metadata_to_string = function
     | Meta_monadic_lift (m, m', t) ->
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
 
+    | Meta_alien (_, s, t) ->
+        U.format2 "{Meta_alien (%s, %s)}" s (term_to_string t)
+
 let binder_to_json b =
 
     let (a, imp) = b in
