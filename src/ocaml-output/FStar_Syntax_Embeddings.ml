@@ -7,11 +7,11 @@ type 'a unembedder =
 let embed_unit: FStar_Range.range -> Prims.unit -> FStar_Syntax_Syntax.term =
   fun rng  ->
     fun u  ->
-      let uu___111_26 = FStar_Syntax_Util.exp_unit in
+      let uu___112_26 = FStar_Syntax_Util.exp_unit in
       {
-        FStar_Syntax_Syntax.n = (uu___111_26.FStar_Syntax_Syntax.n);
+        FStar_Syntax_Syntax.n = (uu___112_26.FStar_Syntax_Syntax.n);
         FStar_Syntax_Syntax.pos = rng;
-        FStar_Syntax_Syntax.vars = (uu___111_26.FStar_Syntax_Syntax.vars)
+        FStar_Syntax_Syntax.vars = (uu___112_26.FStar_Syntax_Syntax.vars)
       }
 let __unembed_unit:
   Prims.bool ->
@@ -45,11 +45,11 @@ let embed_bool: FStar_Range.range -> Prims.bool -> FStar_Syntax_Syntax.term =
         if b
         then FStar_Syntax_Util.exp_true_bool
         else FStar_Syntax_Util.exp_false_bool in
-      let uu___112_76 = t in
+      let uu___113_76 = t in
       {
-        FStar_Syntax_Syntax.n = (uu___112_76.FStar_Syntax_Syntax.n);
+        FStar_Syntax_Syntax.n = (uu___113_76.FStar_Syntax_Syntax.n);
         FStar_Syntax_Syntax.pos = rng;
-        FStar_Syntax_Syntax.vars = (uu___112_76.FStar_Syntax_Syntax.vars)
+        FStar_Syntax_Syntax.vars = (uu___113_76.FStar_Syntax_Syntax.vars)
       }
 let __unembed_bool:
   Prims.bool ->
@@ -81,11 +81,11 @@ let embed_char:
   fun rng  ->
     fun c  ->
       let t = FStar_Syntax_Util.exp_char c in
-      let uu___113_124 = t in
+      let uu___114_124 = t in
       {
-        FStar_Syntax_Syntax.n = (uu___113_124.FStar_Syntax_Syntax.n);
+        FStar_Syntax_Syntax.n = (uu___114_124.FStar_Syntax_Syntax.n);
         FStar_Syntax_Syntax.pos = rng;
-        FStar_Syntax_Syntax.vars = (uu___113_124.FStar_Syntax_Syntax.vars)
+        FStar_Syntax_Syntax.vars = (uu___114_124.FStar_Syntax_Syntax.vars)
       }
 let __unembed_char:
   Prims.bool ->
@@ -120,11 +120,11 @@ let embed_int:
       let t =
         let uu____174 = FStar_BigInt.string_of_big_int i in
         FStar_Syntax_Util.exp_int uu____174 in
-      let uu___114_175 = t in
+      let uu___115_175 = t in
       {
-        FStar_Syntax_Syntax.n = (uu___114_175.FStar_Syntax_Syntax.n);
+        FStar_Syntax_Syntax.n = (uu___115_175.FStar_Syntax_Syntax.n);
         FStar_Syntax_Syntax.pos = rng;
-        FStar_Syntax_Syntax.vars = (uu___114_175.FStar_Syntax_Syntax.vars)
+        FStar_Syntax_Syntax.vars = (uu___115_175.FStar_Syntax_Syntax.vars)
       }
 let __unembed_int:
   Prims.bool ->
