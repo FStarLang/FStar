@@ -1714,7 +1714,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
     let fallback () =
        log cfg (fun () -> BU.print1 "Not reifying: %s\n" (Print.term_to_string t));
        let t = S.extend_app head (t, aq) None r in
-       rebuild cfg env stack' (maybe_simplify cfg env stack' t)
+       rebuild cfg env stack' t
     in
     begin match (SS.compress t).n with
     | Tm_meta (t, Meta_monadic (m, ty)) ->
