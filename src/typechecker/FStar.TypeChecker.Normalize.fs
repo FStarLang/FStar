@@ -1288,227 +1288,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_meta (head, m) ->
             begin match m with
               | Meta_monadic (m, t) ->
-                // BU.print2 "Will %sreify : %s \n" (if should_reify cfg stack then "" else "not ") (stack_to_string stack);
-
-                if not (should_reify cfg stack)
-                then
-                 (*  We have an impure computation, and we aim to perform any pure steps within that computation.   *
-                  *                                                                                                 *
-                  *  This scenario arises primarily as we extract (impure) programs and partially evaluate them     *
-                  *  before extraction, as an optimization.                                                         *
-                  *                                                                                                 *
-                  *  First, we reduce **the type annotation** t with an empty stack                                 *
-                  *                                                                                                 *
-                  *  Then, we reduce the monadic computation `head`, in a stack marked with a Meta_monadic,         *
-                  *  indicating that this reduction should not consume any arguments on the stack. `rebuild`        *
-                  *  will notice the Meta_monadic marker and reconstruct the computation after normalization.       *)
-
-                  let t = norm cfg env [] t in
-                  let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
-                  let cfg =
-                    if cfg.steps |> List.contains PureSubtermsWithinComputations
-                    then
-                      (* KM : This case should be tailored for extraction but I'm not exactly sure that the logic here is correct *)
-                      (* Why are we dropping previous steps arbitrarily ? This will silently break any extension of the steps *)
-                      { cfg with
-                        steps=[PureSubtermsWithinComputations;
-                               Primops;
-                               AllowUnboundUniverses;
-                               EraseUniverses;
-                               Exclude Zeta;
-                               NoDeltaSteps];
-                        delta_level=[Env.Inlining; Env.Eager_unfolding_only]
-                      }
-                    else
-                      { cfg with steps=[ Exclude Zeta]@cfg.steps }
-                  in
-                  (* meta doesn't block reduction, but we need to put the label back *)
-                  norm cfg env (Meta(Meta_monadic(m, t), t.pos)::stack) head
-                else
-                  begin match (SS.compress head).n with
-                    | Tm_let((false, [lb]), body) ->
-                      (* ****************************************************************************)
-                      (* Monadic binding                                                            *)
-                      (*                                                                            *)
-                      (* This is reify (M.bind e1 (fun x -> e2)) which is elaborated to             *)
-                      (*                                                                            *)
-                      (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
-                      (*                                                                            *)
-                      (* ****************************************************************************)
-                      let ed = Env.get_effect_decl cfg.tcenv m in
-                      let _, bind_repr = ed.bind_repr in
-                      begin match lb.lbname with
-                        | Inr _ -> failwith "Cannot reify a top-level let binding"
-                        | Inl x ->
-
-                          (* [is_return e] returns [Some e'] if [e] is a lift from Pure of [e'], [None] otherwise *)
-                          let is_return e =
-                            match (SS.compress e).n with
-                            | Tm_meta(e, Meta_monadic(_, _)) ->
-                              begin match (SS.compress e).n with
-                                | Tm_meta(e, Meta_monadic_lift(_, msrc, _)) when U.is_pure_effect msrc ->
-                                    Some (SS.compress e)
-                                | _ -> None
-                              end
-                           | _ -> None
-                          in
-
-                          match is_return lb.lbdef with
-                          (* We are in the case where [head] = [bind (return e) (fun x -> body)] *)
-                          (* which can be optimised to a non-monadic let-binding [let x = e in body] *)
-                          | Some e ->
-                            let lb = {lb with lbeff=PC.effect_PURE_lid; lbdef=e} in
-                            norm cfg env (List.tl stack) (S.mk (Tm_let((false, [lb]), U.mk_reify body)) None head.pos)
-                          | None ->
-                            if (match is_return body with Some ({n=Tm_bvar y}) -> S.bv_eq x y | _ -> false)
-                            then
-                              (* We are in the case where [head] = [bind e (fun x -> return x)] *)
-                              (* which can be optimised to just keeping normalizing [e] with a reify on the stack *)
-                              norm cfg env stack lb.lbdef
-                            else
-                              (* TODO : optimize [bind (bind e1 e2) e3] into [bind e1 (bind e2 e3)] *)
-                              (* Rewriting binds in that direction would be better for exception-like monad *)
-                              (* since we wouldn't rematch on an already raised exception *)
-                              let head = U.mk_reify <| lb.lbdef in
-                              let body = U.mk_reify <| body in
-                              (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
-                              let body_rc = {
-                                residual_effect=m;
-                                residual_flags=[];
-                                residual_typ=Some t
-                              } in
-                              let body = S.mk (Tm_abs([S.mk_binder x], body, Some body_rc)) None body.pos in
-                              let close = closure_as_term cfg env in
-                              let bind_inst = match (SS.compress bind_repr).n with
-                                | Tm_uinst (bind, [_ ; _]) ->
-                                    S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
-                                                          ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
-                                    None t.pos
-                                | _ -> failwith "NIY : Reification of indexed effects"
-                              in
-                              let reified = S.mk (Tm_app(bind_inst, [
-                                  (* a, b *)
-                                  as_arg lb.lbtyp; as_arg t;
-                                  (* wp_head, head--the term shouldn't depend on wp_head *)
-                                  as_arg S.tun; as_arg head;
-                                  (* wp_body, body--the term shouldn't depend on wp_body *)
-                                  as_arg S.tun; as_arg body]))
-                                None t.pos
-                              in
-                              norm cfg env (List.tl stack) reified
-                      end
-                    | Tm_app (head_app, args) ->
-                        (* ****************************************************************************)
-                        (* Monadic application                                                        *)
-                        (*                                                                            *)
-                        (* The typechecker should have turned any monadic application into a serie of *)
-                        (* let-bindings (binding explicitly any monadic term)                         *)
-                        (*    let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn     *)
-                        (*                                                                            *)
-                        (* which wil be ultimately reified to                                         *)
-                        (*     bind (reify head) (fun x0 ->                                           *)
-                        (*            bind (reify arg0) (fun x1 -> ... (fun xn -> x0 x1 .. xn) ))     *)
-                        (*                                                                            *)
-                        (* If head is an action then it is unfolded otherwise the                     *)
-                        (* resulting application is reified again                                     *)
-                        (* ****************************************************************************)
-
-
-                        let ed = Env.get_effect_decl cfg.tcenv m in
-                        let _, bind_repr = ed.bind_repr in
-
-                        (* [maybe_unfold_action head] test whether [head] is an action and tries to unfold it if it is *)
-                        let maybe_unfold_action head : term * option<bool> =
-                          let maybe_extract_fv t =
-                            let t = match (SS.compress t).n with
-                              | Tm_uinst (t, _) -> t
-                              | _ -> head
-                            in match (SS.compress t).n with
-                              | Tm_fvar x -> Some x
-                              | _ -> None
-                          in
-                          match maybe_extract_fv head with
-                          | Some x when Env.is_action cfg.tcenv (S.lid_of_fv x) ->
-                            (* Note that this is not a tail call, but it's a bounded (small) number of recursive steps *)
-                            let head = norm cfg env [] head in
-                            let action_unfolded = match maybe_extract_fv head with | Some _ -> Some true | _ -> Some false in
-                            head, action_unfolded
-                          | _ ->
-                            head, None
-                        in
-
-                        (* Checking that the typechecker did its job correctly and hoisted all impure *)
-                        (* terms to explicit let-bindings (see TcTerm, monadic_application) *)
-                        let _ =
-                          let is_arg_impure (e,q) =
-                            match (SS.compress e).n with
-                            | Tm_meta (e0, Meta_monadic_lift(m1, m2, t')) -> not (U.is_pure_effect m1)
-                            | _ -> false
-                          in
-                          if BU.for_some is_arg_impure ((as_arg head_app)::args)
-                          then failwith (BU.format1 "Incompability between typechecker and normalizer; \
-                                                     this monadic application contains impure terms %s\n"
-                                                    (Print.term_to_string head))
-                        in
-
-                        let head_app, found_action = maybe_unfold_action head_app in
-                        let mk tm = S.mk tm None t.pos in
-                        let body = mk (Tm_app(head_app, args)) in
-                        let body = match found_action with
-                          (* This is not an action let's just reify it *)
-                          | None -> U.mk_reify body
-
-                          (* The action was found but not unfolded (maybe abstract ?) *)
-                          | Some false -> mk (Tm_meta (body, Meta_monadic(m, t)))
-
-                          (* An action was found and successfully unfolded *)
-                          | Some true -> body
-                        in
-
-                        norm cfg env (List.tl stack) body
-                    | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
-                        let lifted = reify_lift cfg.tcenv e msrc mtgt (closure_as_term cfg env t') in
-                        norm cfg env (List.tl stack) lifted
-                    | Tm_match(e, branches) ->
-                      (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
-                      (* (should be checked at typechecking and elaborated with an explicit binding if needed) *)
-                      (* reify (match e with p -> e') ~> match e with p -> reify e' *)
-                      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
-                      let tm = mk (Tm_match(e, branches)) t.pos in
-                      norm cfg env (List.tl stack) tm
-                    | _ ->
-                        (* TODO : that seems a little fishy *)
-                        norm cfg env stack head
-                end
-
+                log cfg (fun () -> BU.print2 "Will %sreify : %s \n"
+                                             (if should_reify cfg stack then "" else "not ")
+                                             (stack_to_string stack));
+                if should_reify cfg stack
+                then do_reify_monadic cfg env stack head m t
+                else reduce_impure_comp cfg env stack head (Inl m) t
 
               | Meta_monadic_lift (m, m', t) ->
                 if should_reify cfg stack
                 then
                     norm cfg env (List.tl stack) (reify_lift cfg.tcenv head m m' (closure_as_term cfg env t))
-                else
-                (* KM: We need to normalize at least to erase universes when extracting *)
-                let t = norm cfg env [] t in
-                if (U.is_pure_effect m
-                    || U.is_ghost_effect m)
-                && cfg.steps |> List.contains PureSubtermsWithinComputations
-                then
-                  let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
-                  let cfg =
-                    { cfg with
-                      steps=[PureSubtermsWithinComputations;
-                             Primops;
-                             AllowUnboundUniverses;
-                             EraseUniverses;
-                             Exclude Zeta];
-                      delta_level=[Env.Inlining; Env.Eager_unfolding_only]
-                    }
-                  in
-                  (* meta doesn't block reduction, but we need to put the label back *)
-                  norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head
-                else
-                  (* meta doesn't block reduction, but we need to put the label back *)
-                  norm cfg env (Meta(Meta_monadic_lift(m, m', t), head.pos)::stack) head
+                else reduce_impure_comp cfg env stack head (Inr (m, m')) t
 
               | _ ->
                 if List.contains Unmeta cfg.steps
@@ -1569,6 +1360,209 @@ and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
                   norm cfg env stack t
                 | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
          else norm cfg env stack t
+
+and reduce_impure_comp cfg env stack (head : term) // monadic term
+                                     (m : either<monad_name,(monad_name * monad_name)>)
+                                        // relevant monads.
+                                        // Inl m - this is a Meta_monadic with monad m
+                                        // Inr (m, m') - this is a Meta_monadic_lift with monad m
+                                     (t : typ) // annotated type in the Meta
+                                     : term =
+    (* We have an impure computation, and we aim to perform any pure      *)
+    (* steps within that computation.                                     *)
+
+    (* This scenario arises primarily as we extract (impure) programs and *)
+    (* partially evaluate them before extraction, as an optimization.     *)
+
+    (* First, we reduce **the type annotation** t with an empty stack (as *)
+    (* it's not applied to anything)                                      *)
+
+    (* Then, we reduce the monadic computation `head`, in a stack marked  *)
+    (* with a Meta_monadic, indicating that this reduction should         *)
+    (* not consume any arguments on the stack. `rebuild` will notice      *)
+    (* the Meta_monadic marker and reconstruct the computation after      *)
+    (* normalization.                                                     *)
+    let t = norm cfg env [] t in
+    let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
+    let cfg =
+      if cfg.steps |> List.contains PureSubtermsWithinComputations
+      then
+        (* KM : This case should be tailored for extraction but I'm not exactly sure that the logic here is correct *)
+        (* Why are we dropping previous steps arbitrarily ? This will silently break any extension of the steps *)
+        { cfg with
+          steps=[PureSubtermsWithinComputations;
+                 Primops;
+                 AllowUnboundUniverses;
+                 EraseUniverses;
+                 Exclude Zeta;
+                 NoDeltaSteps];
+          delta_level=[Env.Inlining; Env.Eager_unfolding_only]
+        }
+      else
+        { cfg with steps=[Exclude Zeta]@cfg.steps }
+    in
+    (* monadic annotations don't block reduction, but we need to put the label back *)
+    let metadata = match m with
+                   | Inl m -> Meta_monadic (m, t)
+                   | Inr (m, m') -> Meta_monadic_lift (m, m', t)
+    in
+    norm cfg env (Meta(metadata, t.pos)::stack) head
+
+and do_reify_monadic cfg env stack (head : term) (m : monad_name) (t : typ) : term=
+    match (SS.compress head).n with
+    | Tm_let ((false, [lb]), body) ->
+      (* ****************************************************************************)
+      (* Monadic binding                                                            *)
+      (*                                                                            *)
+      (* This is reify (M.bind e1 (fun x -> e2)) which is elaborated to             *)
+      (*                                                                            *)
+      (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
+      (*                                                                            *)
+      (* ****************************************************************************)
+      let ed = Env.get_effect_decl cfg.tcenv m in
+      let _, bind_repr = ed.bind_repr in
+      begin match lb.lbname with
+        | Inr _ -> failwith "Cannot reify a top-level let binding"
+        | Inl x ->
+
+          (* [is_return e] returns [Some e'] if [e] is a lift from Pure of [e'], [None] otherwise *)
+          let is_return e =
+            match (SS.compress e).n with
+            | Tm_meta(e, Meta_monadic(_, _)) ->
+              begin match (SS.compress e).n with
+                | Tm_meta(e, Meta_monadic_lift(_, msrc, _)) when U.is_pure_effect msrc ->
+                    Some (SS.compress e)
+                | _ -> None
+              end
+           | _ -> None
+          in
+
+          match is_return lb.lbdef with
+          (* We are in the case where [head] = [bind (return e) (fun x -> body)] *)
+          (* which can be optimised to a non-monadic let-binding [let x = e in body] *)
+          | Some e ->
+            let lb = {lb with lbeff=PC.effect_PURE_lid; lbdef=e} in
+            norm cfg env (List.tl stack) (S.mk (Tm_let((false, [lb]), U.mk_reify body)) None head.pos)
+          | None ->
+            if (match is_return body with Some ({n=Tm_bvar y}) -> S.bv_eq x y | _ -> false)
+            then
+              (* We are in the case where [head] = [bind e (fun x -> return x)] *)
+              (* which can be optimised to just keeping normalizing [e] with a reify on the stack *)
+              norm cfg env stack lb.lbdef
+            else
+              (* TODO : optimize [bind (bind e1 e2) e3] into [bind e1 (bind e2 e3)] *)
+              (* Rewriting binds in that direction would be better for exception-like monad *)
+              (* since we wouldn't rematch on an already raised exception *)
+              let head = U.mk_reify <| lb.lbdef in
+              let body = U.mk_reify <| body in
+              (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
+              let body_rc = {
+                residual_effect=m;
+                residual_flags=[];
+                residual_typ=Some t
+              } in
+              let body = S.mk (Tm_abs([S.mk_binder x], body, Some body_rc)) None body.pos in
+              let close = closure_as_term cfg env in
+              let bind_inst = match (SS.compress bind_repr).n with
+                | Tm_uinst (bind, [_ ; _]) ->
+                    S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
+                                          ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
+                    None t.pos
+                | _ -> failwith "NIY : Reification of indexed effects"
+              in
+              let reified = S.mk (Tm_app(bind_inst, [
+                  (* a, b *)
+                  as_arg lb.lbtyp; as_arg t;
+                  (* wp_head, head--the term shouldn't depend on wp_head *)
+                  as_arg S.tun; as_arg head;
+                  (* wp_body, body--the term shouldn't depend on wp_body *)
+                  as_arg S.tun; as_arg body]))
+                None t.pos
+              in
+              norm cfg env (List.tl stack) reified
+      end
+    | Tm_app (head_app, args) ->
+        (* ****************************************************************************)
+        (* Monadic application                                                        *)
+        (*                                                                            *)
+        (* The typechecker should have turned any monadic application into a serie of *)
+        (* let-bindings (binding explicitly any monadic term)                         *)
+        (*    let x0 = head in let x1 = arg0 in ... let xn = argn in x0 x1 ... xn     *)
+        (*                                                                            *)
+        (* which wil be ultimately reified to                                         *)
+        (*     bind (reify head) (fun x0 ->                                           *)
+        (*            bind (reify arg0) (fun x1 -> ... (fun xn -> x0 x1 .. xn) ))     *)
+        (*                                                                            *)
+        (* If head is an action then it is unfolded otherwise the                     *)
+        (* resulting application is reified again                                     *)
+        (* ****************************************************************************)
+
+
+        let ed = Env.get_effect_decl cfg.tcenv m in
+        let _, bind_repr = ed.bind_repr in
+
+        (* [maybe_unfold_action head] test whether [head] is an action and tries to unfold it if it is *)
+        let maybe_unfold_action head : term * option<bool> =
+          let maybe_extract_fv t =
+            let t = match (SS.compress t).n with
+              | Tm_uinst (t, _) -> t
+              | _ -> head
+            in match (SS.compress t).n with
+              | Tm_fvar x -> Some x
+              | _ -> None
+          in
+          match maybe_extract_fv head with
+          | Some x when Env.is_action cfg.tcenv (S.lid_of_fv x) ->
+            (* Note that this is not a tail call, but it's a bounded (small) number of recursive steps *)
+            let head = norm cfg env [] head in
+            let action_unfolded = match maybe_extract_fv head with | Some _ -> Some true | _ -> Some false in
+            head, action_unfolded
+          | _ ->
+            head, None
+        in
+
+        (* Checking that the typechecker did its job correctly and hoisted all impure *)
+        (* terms to explicit let-bindings (see TcTerm, monadic_application) *)
+        let _ =
+          let is_arg_impure (e,q) =
+            match (SS.compress e).n with
+            | Tm_meta (e0, Meta_monadic_lift(m1, m2, t')) -> not (U.is_pure_effect m1)
+            | _ -> false
+          in
+          if BU.for_some is_arg_impure ((as_arg head_app)::args)
+          then failwith (BU.format1 "Incompability between typechecker and normalizer; \
+                                     this monadic application contains impure terms %s\n"
+                                    (Print.term_to_string head))
+        in
+
+        let head_app, found_action = maybe_unfold_action head_app in
+        let mk tm = S.mk tm None t.pos in
+        let body = mk (Tm_app(head_app, args)) in
+        let body = match found_action with
+          (* This is not an action let's just reify it *)
+          | None -> U.mk_reify body
+
+          (* The action was found but not unfolded (maybe abstract ?) *)
+          | Some false -> mk (Tm_meta (body, Meta_monadic(m, t)))
+
+          (* An action was found and successfully unfolded *)
+          | Some true -> body
+        in
+
+        norm cfg env (List.tl stack) body
+    | Tm_meta(e, Meta_monadic_lift (msrc, mtgt, t')) ->
+        let lifted = reify_lift cfg.tcenv e msrc mtgt (closure_as_term cfg env t') in
+        norm cfg env (List.tl stack) lifted
+    | Tm_match(e, branches) ->
+      (* Commutation of reify with match, note that the scrutinee should never be effectful    *)
+      (* (should be checked at typechecking and elaborated with an explicit binding if needed) *)
+      (* reify (match e with p -> e') ~> match e with p -> reify e' *)
+      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
+      let tm = mk (Tm_match(e, branches)) t.pos in
+      norm cfg env (List.tl stack) tm
+    | _ ->
+        (* TODO : that seems a little fishy *)
+        norm cfg env stack head
 
 (* Reifies the lifting of the term [e] of type [t] from computational  *)
 (* effect [m] to computational effect [m'] using lifting data in [env] *)
