@@ -102,6 +102,7 @@ let memo_tk (e:term) (t:typ) = e
 (************************************************************************************************************)
 let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_t)
     : term * lcomp * guard_t =
+  let e0 = e in
   let should_return t =
     match (SS.compress t).n with
     | Tm_arrow(_, c) ->
@@ -610,8 +611,8 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
     if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
     then let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
-         let lax_top = N.reduce_uvar_solutions env lax_top in
-         //BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
+         let lax_top = N.remove_uvar_solutions env lax_top in
+         BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
          if Env.should_verify env then
            check_top_level_let env lax_top
          else lax_top, l, g
@@ -626,7 +627,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
     then let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
          let lax_top = N.remove_uvar_solutions env lax_top in  (* AR: are we calling it two times currently if lax mode? *)
-         //let _ = BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top) in
+         let _ = BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top) in
          if Env.should_verify env then
             check_top_level_let_rec env lax_top
          else lax_top, l, g
@@ -1547,6 +1548,9 @@ and tc_eqn scrutinee env branch
     //has exactly its expected type, rather than just a sub-type. see #1062
     let env1 = {env1 with Env.is_pattern=true} in
     let expected_pat_t = Rel.unrefine env pat_t in
+    Util.print1 "Pat bvs are: %s\n\n" (List.fold_left (fun s bv -> s ^ "; " ^ (PP.bv_to_string bv)) "" pat_bvs);
+    Util.print1 "Pat bv sorts are: %s\n\n" (List.fold_left (fun s bv -> s ^ "; " ^ (PP.term_to_string bv.sort)) "" pat_bvs); 
+    Util.print2 "Checking pattern: %s with expected type: %s\n\n" (PP.term_to_string exp) (PP.term_to_string pat_t);
     if Env.debug env Options.High
     then BU.print2 "Checking pattern expression %s against expected type %s\n"
                     (Print.term_to_string exp)
