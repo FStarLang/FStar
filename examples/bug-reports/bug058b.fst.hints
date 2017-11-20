@@ -21,7 +21,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d2b0362671aeb5bcc03aaa1a26c69e63"
+      "92e86fa66c97ee96d49e8297af47f868"
     ],
     [
       "Bug058b.sub_fibo",
@@ -33,7 +33,7 @@
         "haseqBug058b_Tm_refine_ad02706b0e44fd70b15c27c862d543aa"
       ],
       0,
-      "b0e452b8b73b924eb5c114c7b8015d3c"
+      "11fc1e0e7f375e868df68ae0d95e1264"
     ],
     [
       "Bug058b.fibonacci",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "484efc2035dada75326ec22aba98743d"
+      "5984fd14e8a2461aa857a8ae9b352dba"
     ]
   ]
 ]

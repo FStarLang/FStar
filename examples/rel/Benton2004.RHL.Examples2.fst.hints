@@ -13,7 +13,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b6b14f96bf0e1850438b4192cec27e19"
+      "eb786686d0f72cf5228a96e8c7d5de39"
     ],
     [
       "Benton2004.RHL.Examples2.phi",
@@ -22,7 +22,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f5d780e1f5cf9bd874430539065973e3"
+      "b70a08338b67d6d5a2b41928d68e1677"
     ],
     [
       "Benton2004.RHL.Examples2.phi",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d430396c4ba827301daeca8dbf378673"
+      "914b8600037a1791e73bc5d98738dc89"
     ],
     [
       "Benton2004.RHL.Examples2.phi",
@@ -40,7 +40,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e7aa014ed6266900006f614b39f0c3b7"
+      "0ffc4af2cf911dae8b4c4b5bf1150ef0"
     ],
     [
       "Benton2004.RHL.Examples2.proof",
@@ -151,7 +151,7 @@
         "typing_tok_Benton2004.RHL.Right@tok", "unit_typing"
       ],
       0,
-      "a3f860a661c34c492e852072b561b20c"
+      "8c31b8f8b22e4772e103be63986fc726"
     ],
     [
       "Benton2004.RHL.Examples2.proof",
@@ -160,7 +160,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "236b089635c10ad092221e8809d041f2"
+      "a2557cc3c98a111b187e6224b481cf86"
     ],
     [
       "Benton2004.RHL.Examples2.proof",
@@ -169,7 +169,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d7ceda5b199a0e2173be9a8cb3cb38b2"
+      "192323d657a962e3a3d421f92168743c"
     ]
   ]
 ]

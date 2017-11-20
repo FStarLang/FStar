@@ -12,7 +12,7 @@
         "equation_Benton2004.op_abs", "lemma_Benton2004.DDCC.holds_ns_singl"
       ],
       0,
-      "50cfec73905df61ecb3d174f0b95c8ea"
+      "a9f4a99875682848df4cdb59c94418d8"
     ],
     [
       "Benton2004.DDCC.Examples.d_op_singl",
@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "78f0e898aba3921f84191999562c0abc"
+      "d5f3207ae36b5071b561f0b23f7769d1"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d1",
@@ -50,7 +50,7 @@
         "typing_Benton2004.evar"
       ],
       0,
-      "b7d765c77a88bf8d15b77acbaec5473a"
+      "8e0d49b2782aee66dece5d93b8476a32"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d1",
@@ -59,7 +59,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "434a293cf671afc86d7c455fe11dd214"
+      "0153ee7c69b49f2c77f7e1b799c8f376"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -106,7 +106,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "6b07004f085e492944839d53fb9129ad"
+      "ad4b5b7c2e820b5b8c2ee60ee9513313"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -120,7 +120,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "773ffad422219f3917fdd9365ed2921a"
+      "2c0fda35ce8e65b0a14cb5e3b0b4c642"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -134,7 +134,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "018c27ee23c00df787638bfe422a523d"
+      "4de8677d75a2d7f206a5f471095fe1bd"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -177,7 +177,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "e6465f0caf8878c64dba9e468d79caac"
+      "cb08ddf870687627b1b7bb48751ad315"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -191,7 +191,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8e97399aa9b720ab50b7cfbbcfa2ec7c"
+      "5001b4c9debc48ef2e04b185cef9348d"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -205,7 +205,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fc9ddff5716b3a93d3b79bd4b8062b65"
+      "3c1ca147a6d1a7870d02ecbe8773eeed"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -256,7 +256,7 @@
         "typing_Benton2004.seq", "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "d14a6e11f419505758db7da59d043243"
+      "1c388eb82f92e4912b63c44e6777cedb"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -270,7 +270,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e984b8fd5f3e9635e8bd2d4dfdbc32a2"
+      "9d86c8b3552a88354bd1f00cb68e9dbf"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -284,7 +284,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2bb2834d12a7d414458c9e30b563d0e2"
+      "9c38612a73e86bc1eb95595efb996e46"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -293,7 +293,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d7a01b3a87b66b249f91d838d4132ce1"
+      "fd18fc4a7ce99cb974bb844ab7c902b8"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -302,7 +302,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "fcad463cadb804f4e350b61a9b79f1b0"
+      "0bc812d13527b5dcafce86de12deb1d7"
     ]
   ]
 ]

@@ -40,16 +40,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "8ed016baf3ebf293c38388913b4ffc7e"
-    ],
-    [
-      "FStar.IndefiniteDescription.strong_excluded_middle",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "ff30c5ee4b90bd0cbe17ae9002fbbffd"
+      "752cef3f4cb050c8ae4214734b8909b6"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
