@@ -94,7 +94,7 @@ let ge e1 e2 = CompProp (Plus (Lit 1) e1) C_Gt e2
 private let st = p:(tuple2 nat (list term)){fst p == List.length (snd p)}
 private let tm a = st -> either string (tuple2 a st)
 private let return (x:'a) : tm 'a = fun i -> Inr (x, i)
-private let bind (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
+private let bind _rng (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
     fun i -> match m i with
              | Inl s -> Inl s
              | Inr (x, j) -> f x j
