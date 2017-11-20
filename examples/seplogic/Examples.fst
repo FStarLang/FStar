@@ -5,6 +5,8 @@ open FStar.SepLogic.Heap
 
 open FStar.Tactics
 
+#reset-options "--log_queries --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+
 let unfold_fns :list string = [
   "wp_command";
   "wpsep_command";
@@ -75,6 +77,7 @@ let rec repeat_simplify_sel () :Tac unit =
   begin match g with
   | None -> return ()
   | Some _ -> repeat simplify_sel;;
+              print "Before smt";;
               trytac ((trefl;; qed) `or_else` smt);;
               repeat_simplify_sel
   end
