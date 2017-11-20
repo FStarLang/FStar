@@ -32,16 +32,16 @@ let definition_lids: FStar_Parser_AST.decl -> FStar_Ident.lid Prims.list =
              (fun uu___159_133  ->
                 match uu___159_133 with
                 | (FStar_Parser_AST.TyconAbbrev
-                   (id,uu____143,uu____144,uu____145),uu____146) ->
-                    let uu____159 = FStar_Ident.lid_of_ids [id] in
+                   (id1,uu____143,uu____144,uu____145),uu____146) ->
+                    let uu____159 = FStar_Ident.lid_of_ids [id1] in
                     [uu____159]
                 | (FStar_Parser_AST.TyconRecord
-                   (id,uu____161,uu____162,uu____163),uu____164) ->
-                    let uu____197 = FStar_Ident.lid_of_ids [id] in
+                   (id1,uu____161,uu____162,uu____163),uu____164) ->
+                    let uu____197 = FStar_Ident.lid_of_ids [id1] in
                     [uu____197]
                 | (FStar_Parser_AST.TyconVariant
-                   (id,uu____199,uu____200,uu____201),uu____202) ->
-                    let uu____243 = FStar_Ident.lid_of_ids [id] in
+                   (id1,uu____199,uu____200,uu____201),uu____202) ->
+                    let uu____243 = FStar_Ident.lid_of_ids [id1] in
                     [uu____243]
                 | uu____244 -> []))
     | uu____251 -> []

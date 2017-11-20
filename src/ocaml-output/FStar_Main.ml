@@ -158,9 +158,7 @@ let init_warn_error: Prims.unit -> Prims.unit =
     let d = FStar_Options.default_warn_error () in
     let s = FStar_Options.warn_error () in
     FStar_Parser_ParseIt.parse_warn_error d;
-    if (FStar_String.compare d s) <> (Prims.parse_int "0")
-    then FStar_Parser_ParseIt.parse_warn_error s
-    else ()
+    if d <> s then FStar_Parser_ParseIt.parse_warn_error s else ()
 let go: 'Auu____390 . 'Auu____390 -> Prims.unit =
   fun uu____394  ->
     let uu____395 = process_args () in

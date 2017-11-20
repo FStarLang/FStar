@@ -570,7 +570,7 @@ let cps_and_elaborate env ed =
   if Env.debug env (Options.Other "ED") then
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
-  let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
+  let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
   let wp_type = DMFF.star_type dmff_env repr in
   let wp_type = recheck_debug "*" env wp_type in
   let wp_a = N.normalize [ N.Beta ] env (mk (Tm_app (wp_type, [ (S.bv_to_name a, S.as_implicit false) ]))) in
@@ -1099,7 +1099,7 @@ let tc_decl env se: list<sigelt> * list<sigelt> =
       | Some (what, lift), None ->
         if Env.debug env (Options.Other "ED") then
             BU.print1 "Lift for free : %s\n" (Print.term_to_string lift) ;
-        let dmff_env = DMFF.empty env (tc_constant Range.dummyRange) in
+        let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
         let lift, comp, _ = tc_term env lift in
         (* TODO : Check that comp is pure ? *)
         let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in

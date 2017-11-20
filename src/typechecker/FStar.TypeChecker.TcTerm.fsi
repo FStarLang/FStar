@@ -15,7 +15,7 @@ open FStar.Const
 open FStar.TypeChecker.Rel
 open FStar.TypeChecker.Common
 
-val tc_constant: FStar.Range.range -> sconst -> typ
+val tc_constant: env -> FStar.Range.range -> sconst -> typ
 val tc_binders: env -> binders -> binders * env * guard_t * universes
 val tc_term: env -> term -> term * lcomp * guard_t
 val tc_maybe_toplevel_term: env -> term -> term * lcomp * guard_t

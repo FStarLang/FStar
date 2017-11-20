@@ -20,9 +20,10 @@ type char = FStar.Char.char
 (* Not much in here; we should extend and refine this interface *)
 
 val length:  string -> Tot nat
-val make: l:nat -> char -> Tot (s:string {length s = l}) 
+val make: l:nat -> char -> Tot (s:string {length s = l})
 val split:   list char -> string -> Tot (list string)
 val strcat:  s0:string -> s1:string -> Tot (s:string{length s = length s0 + length s1})
+unfold let (^) s0 s1 = strcat s0 s1
 val concat:  string -> list string -> Tot string
 val compare: string -> string -> Tot int
 val strlen:  string -> Tot nat

@@ -534,12 +534,7 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>
   //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
   let bs' = List.filter (fun b ->
     let _, en, _, _ = acc in
-    //false means don't use SMT solver
-    let opt = Rel.try_subtype' en (fst b).sort  (fst (type_u ())) false in
-    //is this criteria for success/failure ok ?
-    match opt with
-    | None   -> false
-    | Some _ -> true
+    Rel.subtype_nosmt en (fst b).sort  (fst (type_u ()))
   ) bs in
   let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
   //implication
