@@ -181,8 +181,8 @@ let lemma_append_len_disj
     (ensures (lv1 =^ lw1 /\ lv2 =^ lw2))
   = let v1v2 = append v1 v2 in
     let w1w2 = append w1 w2 in
-    cut (raw_length v1v2 == u32_to_int (lv1 +^ lv2));
-    cut (raw_length w1w2 == u32_to_int (lw1 +^ lw2))
+    assert (raw_length v1v2 == u32_to_int (lv1 +^ lv2));
+    assert (raw_length w1w2 == u32_to_int (lw1 +^ lw2))
 
 let lemma_append_inj
     (#a:Type)
@@ -211,13 +211,13 @@ let last
 
 let empty
     (#a:Type)
-  : raw a 0ul
+  : Tot (raw a 0ul)
   = init #a 0ul (fun _ -> ())
 
 let create1
     (#a:Type)
     (x:a)
-  : raw a 1ul
+  : Tot (raw a 1ul)
   = init 1ul (fun _ -> x)
 
 let cons
@@ -259,7 +259,7 @@ let lemma_split
     (i:index_t v)
   : Lemma 
     (ensures (append (fst (split v i)) (snd (split v i)) == v))
-  = cut (equal (append (fst (split v i)) (snd (split v i))) v)
+  = assert (equal (append (fst (split v i)) (snd (split v i))) v)
 
 let split_eq
     (#a:Type)
@@ -415,7 +415,8 @@ let rec sorted
     (#l:len_t)
     (f:a -> a -> Tot bool)
     (v:raw a l)
-  : Tot bool (decreases (u32_to_int l))
+  : Tot bool 
+    (decreases (u32_to_int l))
   = if l <=^ 1ul
     then true
     else let hd = head #a #l v in
@@ -432,7 +433,7 @@ let rec lemma_append_count
     (ensures (forall x. count x (append #a #llo #lhi lo hi) = (count x lo + count x hi)))
     (decreases (u32_to_int llo))
   = if llo =^ 0ul
-    then cut (equal #a #(llo +^ lhi) (append #a #llo #lhi lo hi) hi)
+    then assert (equal #a #(llo +^ lhi) (append #a #llo #lhi lo hi) hi)
     else 
       let (lohi:raw a (llo +^ lhi)) = append lo hi in
       let (hdlo:a) = head #a #llo lo in
@@ -440,14 +441,14 @@ let rec lemma_append_count
       let (tllohi:raw a ltllohi) = append #a #(llo -^ 1ul) #lhi (tail #a #llo lo) hi in
       let lhdlotllohi = 1ul +^ (llo -^ 1ul +^ lhi) in
       let (hdlotllohi:raw a lhdlotllohi) = cons #a #(llo -^ 1ul +^ lhi) hdlo tllohi in
-      (cut (equal hdlotllohi lohi);
+      (assert (equal hdlotllohi lohi);
            let (ln:len_t) = llo -^ 1ul in
            lemma_append_count #a #ln (tail #a #llo lo) hi;
            let ltl_l_h = (llo -^ 1ul) +^ lhi in
            let (tl_l_h:raw a ltl_l_h) = append #a #(llo -^ 1ul) #lhi (tail #a #llo lo) hi in
            let llh = 1ul +^ ltl_l_h in
            let (lh:raw a llh) = cons #a #ltl_l_h (head #a #llo lo) tl_l_h in
-           cut (equal2 #a #(llh -^ 1ul) #ltl_l_h (tail #a #llh lh) tl_l_h))
+           assert (equal2 #a #(llh -^ 1ul) #ltl_l_h (tail #a #llh lh) tl_l_h))
 #reset-options
 
 let lemma_append_count_aux
@@ -482,7 +483,7 @@ let rec lemma_mem_count
   = if l =^ 0ul then ()
     else let ltl = l -^ 1ul in
          let tl = tail #a #l v in
-         cut (forall (i:len_t{i <^ ltl}). 
+         assert (forall (i:len_t{i <^ ltl}). 
                      (index #a #ltl tl i) = v.[i +^ 1ul]);
          lemma_mem_count #a #ltl tl f
 
@@ -494,8 +495,7 @@ let lemma_count_sub
   : Lemma
     (requires True)
     (ensures (forall x. count x v = count x (subv v 0ul i) + count x (subv v i l)))
-    (decreases (u32_to_int l))
-  = cut (equal v (append (subv v 0ul i) (subv v i l)));
+  = assert (equal v (append (subv v 0ul i) (subv v i l)));
     lemma_append_count (subv v 0ul i) (subv v i l)
 
 type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
@@ -523,8 +523,8 @@ let rec sorted_concat_lemma
     if llo =^ 0ul 
     then let llophi = llo +^ lhi +^ 1ul in
          let lophi = append #a #llo #lphi lo phi in
-         (cut (equal2 #a #llophi #lphi lophi phi);
-          cut (equal #a #lhi (tail #a #lphi phi) hi))
+         (assert (equal2 #a #llophi #lphi lophi phi);
+          assert (equal #a #lhi (tail #a #lphi phi) hi))
     else let tlo = tail #a #llo lo in
          let ltlo = llo -^ 1ul in
          let tllophi = append #a #ltlo #lphi tlo phi in
@@ -577,9 +577,9 @@ let lemma_swap_permutes_aux_frag_eq
   : Lemma (ensures (subv v i' j' == subv (swap v i j) i' j'
                  /\ subv v i (i +^ 1ul) == coerce (subv (swap v i j) j (j +^ 1ul)) (i +^ 1ul -^ i)
                  /\ subv v j (j +^ 1ul) == coerce (subv (swap v i j) i (i +^ 1ul)) (j +^ 1ul -^ j)))
-  = cut (equal (subv v i' j') (subv (swap v i j) i' j'));
-    cut (equal (subv v i (i +^ 1ul)) (coerce (subv (swap v i j) j (j +^ 1ul)) (i +^ 1ul -^ i)));
-    cut (equal (subv v j (j +^ 1ul)) (coerce (subv (swap v i j) i (i +^ 1ul)) (j +^ 1ul -^ j)))
+  = assert (equal (subv v i' j') (subv (swap v i j) i' j'));
+    assert (equal (subv v i (i +^ 1ul)) (coerce (subv (swap v i j) j (j +^ 1ul)) (i +^ 1ul -^ i)));
+    assert (equal (subv v j (j +^ 1ul)) (coerce (subv (swap v i j) i (i +^ 1ul)) (j +^ 1ul -^ j)))
 
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 20"
 let lemma_swap_permutes_aux
@@ -593,7 +593,7 @@ let lemma_swap_permutes_aux
     (requires (ok (+) i 1ul /\ ok (+) j 1ul /\ ok (+) i j /\ 1ul <^ l -^ j /\ ok (Prims.op_Subtraction) l i))
     (ensures (count x v = count x (swap v i j)))
   = if i =^ j
-    then cut (equal (swap v i j) v)
+    then assert (equal (swap v i j) v)
     else begin
       let frag_lo, frag_i, frag_mid, frag_j, frag_hi = split_5 v i j in
       let l5 = (l -^ (j +^ 1ul)) in
@@ -682,7 +682,7 @@ let lemma_sub_cons
     (j:index_t v{i <^ j})
   : Lemma (ensures (forall x. mem x (subv v i j) <==> (x = v.[i] || mem x (subv v (i +^ 1ul) j))))
   = let vi1 = create1 v.[i] in
-    cut (equal2 (subv v i j) (append vi1 (subv v (i +^ 1ul) j)));
+    assert (equal2 (subv v i j) (append vi1 (subv v (i +^ 1ul) j)));
     lemma_mem_append vi1 (subv v (i +^ 1ul) j)
 
 let lemma_sub_snoc
@@ -694,7 +694,7 @@ let lemma_sub_snoc
   : Lemma 
     (ensures (forall x. mem x (subv v i j) <==> (x = v.[j -^ 1ul] || mem x (subv v i (j -^ 1ul)))))
   = let vj1 = create1 v.[j -^ 1ul] in
-    cut (equal2 (subv v i j) (append (subv v i (j -^ 1ul)) vj1));
+    assert (equal2 (subv v i j) (append (subv v i (j -^ 1ul)) vj1));
     lemma_mem_append (subv v i (j -^ 1ul)) vj1
 
 #reset-options "--z3rlimit 10"
@@ -710,7 +710,7 @@ let lemma_ordering_lo_snoc
      (requires ((forall y. mem y (subv v i j) ==> f y pv) /\ f v.[j] pv))
      (ensures ((forall y. mem y (subv v i (j +^ 1ul)) ==> f y pv)))
   = let vj1 = create1 v.[j] in
-    cut (equal2 (subv v i (j +^ 1ul)) (append (subv v i j) vj1));
+    assert (equal2 (subv v i (j +^ 1ul)) (append (subv v i j) vj1));
     lemma_mem_append (subv v i j) vj1
 
 #reset-options "--z3rlimit 20"
@@ -726,7 +726,7 @@ let lemma_ordering_hi_cons
     (requires ((forall y. mem y (subv v (back +^ 1ul) len) ==> f pv y) /\ f pv v.[back]))
     (ensures ((forall y. mem y (subv v back len) ==> f pv y)))
   = let vb1 = create1 v.[back] in
-    cut (equal2 (subv v back len) (append vb1 (subv v (back +^ 1ul) len)));
+    assert (equal2 (subv v back len) (append vb1 (subv v (back +^ 1ul) len)));
     lemma_mem_append vb1 (subv v (back +^ 1ul) len)
 #reset-options
 
@@ -739,7 +739,7 @@ let swap_frame_lo
     (j:index_t v{i <=^ j})
   : Lemma 
     (ensures (subv v lo i == subv (swap v i j) lo i))
-  = cut (equal (subv v lo i) (subv (swap v i j) lo i))
+  = assert (equal (subv v lo i) (subv (swap v i j) lo i))
 
 let swap_frame_lo' 
     (#a:Type)
@@ -751,7 +751,7 @@ let swap_frame_lo'
     (j:index_t v{i <=^ j})
   : Lemma 
     (ensures (subv v lo i' == subv (swap v i j) lo i'))
-  = cut (equal (subv v lo i') (subv (swap v i j) lo i'))
+  = assert (equal (subv v lo i') (subv (swap v i j) lo i'))
 
 let swap_frame_hi
     (#a:Type)
@@ -763,7 +763,7 @@ let swap_frame_hi
     (hi:index_t v{k <=^ hi})
   : Lemma 
     (ensures (subv v k hi == subv (swap v i j) k hi))
-  = cut (equal (subv v k hi) (subv (swap v i j) k hi))
+  = assert (equal (subv v k hi) (subv (swap v i j) k hi))
 
 let lemma_swap_sub_commute
     (#a:Type)
@@ -775,7 +775,7 @@ let lemma_swap_sub_commute
     (len:len_t{j <^ len /\ len <=^ l})
   : Lemma 
     (ensures (subv (swap v i j) start len == (swap (subv v start len) (i -^ start) (j -^ start))))
-  = cut (equal (subv (swap v i j) start len) (swap (subv v start len) (i -^ start) (j -^ start)))
+  = assert (equal (subv (swap v i j) start len) (swap (subv v start len) (i -^ start) (j -^ start)))
 
 let lemma_swap_permutes_sub 
     (#a:eqtype)
@@ -810,7 +810,7 @@ let splice_refl
     (j:len_t{i <=^ j /\ j <=^ l})
   : Lemma
     (ensures (v == splice v i v j))
-  = cut (equal v (splice v i v j))
+  = assert (equal v (splice v i v j))
 
 let lemma_swap_splice
     (#a:Type)
@@ -822,7 +822,7 @@ let lemma_swap_splice
     (len:len_t{j <^ len /\ len <=^ l})
    : Lemma
      (ensures (swap v i j == splice v start (swap v i j) len))
-= cut (equal (swap v i j) (splice v start (swap v i j) len))
+= assert (equal (swap v i j) (splice v start (swap v i j) len))
 
 let lemma_vector_frame_hi
     (#a:Type)
@@ -836,7 +836,7 @@ let lemma_vector_frame_hi
   : Lemma
     (requires (v1 == (splice v2 i v1 j)))
     (ensures  ((subv v1 m n == subv v2 m n) /\ (index v1 m == index v2 (reinx m v2))))
-  = cut (equal (subv v1 m n) (subv v2 m n))
+  = assert (equal (subv v1 m n) (subv v2 m n))
 
 let lemma_vector_frame_lo
     (#a:Type)
@@ -850,7 +850,7 @@ let lemma_vector_frame_lo
   : Lemma
     (requires (v1 == (splice v2 m v1 n)))
     (ensures  ((subv v1 i j == subv v2 i j) /\ (index v1 j == index v2 (reinx j v2))))
-  = cut (equal (subv v1 i j) (subv v2 i j))
+  = assert (equal (subv v1 i j) (subv v2 i j))
 
 let lemma_tail_sub
     (#a:Type)
@@ -864,7 +864,7 @@ let lemma_tail_sub
               let sv = subv v (i +^ 1ul) j in
               tl == coerce sv (j -^ i -^ 1ul)))
     [SMTPat (tail (subv v i j))]
-  = cut (equal (tail (subv v i j)) (coerce (subv v (i +^ 1ul) j) (j -^ i -^ 1ul)))
+  = assert (equal (tail (subv v i j)) (coerce (subv v (i +^ 1ul) j) (j -^ i -^ 1ul)))
 
 let lemma_weaken_frame_right 
     (#a:Type)
@@ -877,7 +877,7 @@ let lemma_weaken_frame_right
   : Lemma
     (requires (v1 == splice v2 i v1 j))
     (ensures (v1 == splice v2 i v1 k))
-  = cut (equal v1 (splice v2 i v1 k))
+  = assert (equal v1 (splice v2 i v1 k))
 
 let lemma_weaken_frame_left
     (#a:Type)
@@ -890,7 +890,7 @@ let lemma_weaken_frame_left
   : Lemma
     (requires (v1 == splice v2 j v1 k))
     (ensures (v1 == splice v2 i v1 k))
-  = cut (equal v1 (splice v2 i v1 k))
+  = assert (equal v1 (splice v2 i v1 k))
 
 let lemma_trans_frame
     (#a:Type)
@@ -903,7 +903,7 @@ let lemma_trans_frame
   : Lemma
     (requires ((v1 == splice v2 (reinx i v2) v1 j) /\ v2 == splice v3 i v2 j))
     (ensures (v1 == splice v3 i v1 j))
-  = cut (equal v1 (splice v3 i v1 j))
+  = assert (equal v1 (splice v3 i v1 j))
 
 #reset-options "--z3rlimit 40"
 let lemma_weaken_perm_left
@@ -917,9 +917,9 @@ let lemma_weaken_perm_left
   : Lemma
     (requires (v1 == splice v2 j v1 k /\ permutation (subv v2 j k) (subv v1 j k)))
     (ensures (permutation (subv v2 i k) (subv v1 i k)))
-  = cut (equal2 (subv v2 i k) (append (subv v2 i j)
+  = assert (equal2 (subv v2 i k) (append (subv v2 i j)
                                       (subv v2 j k)));
-    cut (equal2 (subv v1 i k) (append (subv v2 i j)
+    assert (equal2 (subv v1 i k) (append (subv v2 i j)
                                       (subv v1 j k)));
     lemma_append_count (subv v2 i j) (subv v2 j k);
     lemma_append_count (subv v2 i j) (subv v1 j k)
@@ -937,9 +937,9 @@ let lemma_weaken_perm_right
                v1 == splice v2 iq v1 j /\ 
                permutation #a #(j -^ i) (subv v2 iq j) (subv v1 iq j)))
     (ensures (permutation (subv v2 i k) (subv v1 i k)))
-  = cut (equal2 (subv v2 i k) (append (subv v2 i j)
+  = assert (equal2 (subv v2 i k) (append (subv v2 i j)
                                      (subv v2 j k)));
-    cut (equal2 (subv v1 i k) (append (subv v1 i j)
+    assert (equal2 (subv v1 i k) (append (subv v1 i j)
                                      (subv v2 j k)));
     lemma_append_count (subv v2 i j) (subv v2 j k);
     lemma_append_count (subv v1 i j) (subv v2 j k)
@@ -1047,7 +1047,7 @@ let rec find_append_some
       let l1s1 = l1 -^ 1ul in
       let q = append #a #l1s1 #l2 (tail #a #l1 v1) v2 in
       let r = tail #a #(l1 +^ l2) (append #a #l1 #l2 v1 v2) in
-      let _ = cut (equal2 #a #(l1s1 +^ l2) #(l1 +^ l2 -^ 1ul) q r) in
+      let _ = assert (equal2 #a #(l1s1 +^ l2) #(l1 +^ l2 -^ 1ul) q r) in
       let tl = tail #a #l1 v1 in
       find_append_some #a #l1s1 #l2 tl v2 f
 
@@ -1063,11 +1063,11 @@ let rec find_append_none
     (requires (None? (find_l f v1)))
     (ensures (find_l f (append v1 v2) == find_l f v2))
     (decreases (u32_to_int l1))
-  = if l1 =^ 0ul then cut (equal2 (append v1 v2) v2)
+  = if l1 =^ 0ul then assert (equal2 (append v1 v2) v2)
     else
       let q = tail #a #(l1 +^ l2) (append v1 v2) in
       let r = append #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 in
-      let _ = cut (equal2 #a #(l1 +^ l2 -^ 1ul) #(l1 -^ 1ul +^ l2 ) q r) in
+      let _ = assert (equal2 #a #(l1 +^ l2 -^ 1ul) #(l1 -^ 1ul +^ l2 ) q r) in
       find_append_none #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 f
 
 #reset-options "--z3rlimit 30"
@@ -1082,13 +1082,13 @@ let rec find_append_none_v2
     (requires (None? (find_l f v2)))
     (ensures  (find_l f (append v1 v2) == find_l f v1))
     (decreases (u32_to_int l1))
-  = if l1 =^ 0ul then cut (equal2 #a #(l1 +^ l2) #l2 (append #a #l1 #l2 v1 v2) v2)
+  = if l1 =^ 0ul then assert (equal2 #a #(l1 +^ l2) #l2 (append #a #l1 #l2 v1 v2) v2)
     else if f (head #a #l1 v1) then ()
     else begin
       find_append_none_v2 #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 f;
       let q = tail #a #(l1 +^ l2) (append #a #l1 #l2 v1 v2) in
       let r = append #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 in
-      cut (equal2 #a #(l1 +^ l2 -^ 1ul) #(l1 -^ 1ul +^ l2) q r)
+      assert (equal2 #a #(l1 +^ l2 -^ 1ul) #(l1 -^ 1ul +^ l2) q r)
     end
 #reset-options
 
@@ -1156,7 +1156,7 @@ let rec raw_find_aux
     | 0ul -> None
     | _ -> let i = ctr -^ 1ul in
     if f v.[i]
-    then (cut (found i); Some v.[i])
+    then (assert (found i); Some v.[i])
     else raw_find_aux f v i
 
 let raw_find
@@ -1255,8 +1255,8 @@ let rec lemma_list_raw_bij
     else (
       lemma_list_raw_bij #a (L.tl l);
       let hd = L.hd l in let tl = L.tl l in
-      cut (raw_to_list (raw_of_list tl) == tl);
-      cut (raw_of_list l == create1 hd @| raw_of_list tl);
+      assert (raw_to_list (raw_of_list tl) == tl);
+      assert (raw_of_list l == create1 hd @| raw_of_list tl);
       let lraw = raw_of_list l in
       let ll32 = int_to_u32 (L.length l) in
       let tlraw = coerce (raw_of_list tl) (ll32 -^ 1ul) in
@@ -1520,7 +1520,7 @@ let rec lemma_find_l_contains
         | 0ul -> None
         | _ -> let i = ctr -^ 1ul in
         if (f v.[i])
-        then (cut (found i); Some v.[i])
+        then (assert (found i); Some v.[i])
         else raw_find_x_aux x f v i in
     let raw_find_x (#a:Type) (#l:len_t) (f:a -> Tot bool) (x:a) (v:raw a l)
       : Pure (option a)
@@ -1606,6 +1606,7 @@ let suffix_of
     (#l2:len_t)    
     (suffix:raw a l2)
     (v:raw a l1)
+  : Tot Type0
   = if l2 >^ l1 then False
     else 
       let prelen = l1 -^ l2 in
@@ -1726,7 +1727,7 @@ let lemma_eq_elim
     (v1:raw a l1)
     (v2:raw a l2)
   : Lemma
-     (requires (l1 == l2 /\ equal v1 v2) \/ (equal2 v1 v2))
+     (requires (l1 =^ l2 /\ equal v1 v2) \/ (equal2 v1 v2))
      (ensures (v1 == v2))
      [SMTPat (equal v1 v2); SMTPat (equal2 v1 v2)]
   = Seq.lemma_eq_elim (reveal v1) (reveal v2)
@@ -1816,7 +1817,7 @@ let mem_cons
   = lemma_append_count (create1 x) v
 
 let snoc_sub_index
-    (a: Type)
+    (#a:Type)
     (#l:len_t)
     (v:raw a l)
     (i:index_t v)
