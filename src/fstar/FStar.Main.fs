@@ -108,7 +108,7 @@ let init_warn_error() =
   let d = Options.default_warn_error() in
   let s = Options.warn_error() in
   FStar.Parser.ParseIt.parse_warn_error d;
-  if (String.compare d s) <> 0 then 
+  if d <> s then 
     FStar.Parser.ParseIt.parse_warn_error s
 
 (****************************************************************************)

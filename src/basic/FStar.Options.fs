@@ -468,6 +468,12 @@ let pp_validate_dir p =
 let pp_lowercase s =
   mk_string (String.lowercase (as_string s))
 
+let default_warn_error() =
+  let d = Util.smap_of_list defaults in
+  match Util.smap_try_find d "warn_error" with
+  | None -> failwith ("default value for warn_error not found")
+  | Some s -> as_string s
+
 let rec specs_with_types () : list<(char * string * opt_type * string)> =
      [( noshort,
         "admit_smt_queries",
@@ -904,7 +910,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          - [-r] silences range [r]\n\t\t\
          - [+r] enables range [r]\n\t\t\
          - [@r] makes range [r] fatal.\n\t\t\
-         The default is @1..21+22..70");
+         The default is" ^ default_warn_error());
 
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
@@ -1205,13 +1211,6 @@ let use_two_phase_tc             () = get_use_two_phase_tc            ()
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let warn_error                   () = get_warn_error                  ()
-
-let default_warn_error() =
-  let d = Util.smap_of_list defaults in
-  match Util.smap_try_find d "warn_error" with
-  | None -> failwith ("default value for warn_error not found")
-  | Some s -> as_string s
-  
 
 let should_extract_namespace m =
     match get_extract_namespace () with

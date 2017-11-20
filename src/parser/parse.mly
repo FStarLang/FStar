@@ -936,7 +936,7 @@ flag:
     { if op = "@" then CError else failwith (format1 "unexpected token %s in warn-error list" op)}
   | op=OPINFIX2
     { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
-	| MINUS
+  | MINUS
 	  { CSilent }
 
 range:
