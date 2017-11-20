@@ -431,7 +431,7 @@ let ty_positive_in_datacon (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:uni
     true  //if the data constructor type is a simple app, it must be t ..., and we already don't allow t (t ..), so nothing to check here
   | Tm_uinst (t, univs) ->
     debug_log env ("Data constructor type is a Tm_uinst, so recursing in the base type");
-    ty_strictly_positive_in_type ty_lid t unfolded env 
+    ty_strictly_positive_in_type ty_lid t unfolded env
   | _ -> failwith "Unexpected data constructor type when checking positivity"
 
 let check_positivity (ty:sigelt) (env:env_t) :bool =
@@ -534,12 +534,7 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list<subst_elt>
   //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
   let bs' = List.filter (fun b ->
     let _, en, _, _ = acc in
-    //false means don't use SMT solver
-    let opt = Rel.try_subtype' en (fst b).sort  (fst (type_u ())) false in
-    //is this criteria for success/failure ok ?
-    match opt with
-    | None   -> false
-    | Some _ -> true
+    Rel.subtype_nosmt en (fst b).sort  (fst (type_u ()))
   ) bs in
   let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
   //implication
@@ -853,4 +848,35 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
                     sigrng = Env.get_range env0;
                     sigmeta = default_sigmeta;
                     sigattrs = List.collect (fun s -> s.sigattrs) ses } in
+
+  (* In any of the tycons had their typed declared using `val`,
+     check that the declared and inferred types are compatible *)
+  tcs |> List.iter (fun se ->
+    match se.sigel with
+    | Sig_inductive_typ(l, univs, binders, typ, _, _) ->
+      let fail expected inferred =
+          raise (Error(BU.format2 "Expected an inductive with type %s; got %s"
+                                            (Print.tscheme_to_string expected)
+                                            (Print.tscheme_to_string inferred),
+                       se.sigrng))
+      in
+      begin match Env.try_lookup_val_decl env0 l with
+            | None -> ()
+            | Some (expected_typ, _) ->
+              let inferred_typ =
+                  let body =
+                      match binders with
+                      | [] -> typ
+                      | _ -> S.mk (Tm_arrow(binders, S.mk_Total typ)) None se.sigrng in
+                  (univs, body)
+              in
+              if List.length univs = List.length (fst expected_typ)
+              then let _, inferred = Env.inst_tscheme inferred_typ in
+                   let _, expected = Env.inst_tscheme expected_typ in
+                   if Rel.teq_nosmt env0 inferred expected
+                   then ()
+                   else fail expected_typ inferred_typ
+              else fail expected_typ inferred_typ
+      end
+    | _ -> ());
   sig_bndle, tcs, datas

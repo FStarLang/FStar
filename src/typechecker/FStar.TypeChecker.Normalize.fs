@@ -108,13 +108,9 @@ type cfg = {
     steps: steps;
     tcenv: Env.env;
     delta_level: list<Env.delta_level>;  // Controls how much unfolding of definitions should be performed
-    primitive_steps:list<primitive_step>
+    primitive_steps:list<primitive_step>;
+    strong : bool;                       // under a binder
 }
-
-let only_strong_steps' steps =
-    List.filter (fun ps -> ps.strong_reduction_ok) steps
-let only_strong_steps cfg =
-    { cfg with primitive_steps = only_strong_steps' cfg.primitive_steps}
 
 type branches = list<(pat * option<term> * term)>
 
@@ -565,19 +561,6 @@ let built_in_primitive_steps : list<primitive_step> =
         EMB.embed_string rng (if b then "true" else "false")
     in
     let term_of_range r = S.mk (Tm_constant (FStar.Const.Const_range r)) None r in
-    let range_of _ args : option<term> =
-      match args with
-      | [_; (t, _)] ->
-        Some (term_of_range t.pos)
-      | _ -> None
-    in
-    let set_range_of _ args : option<term> =
-      match args with
-      | [_; (t, _); (r, _)] ->
-        BU.bind_opt (EMB.unembed_range_safe r) (fun r ->
-        Some ({t with pos=r}))
-      | _ -> None
-    in
     let mk_range (_:psc) args : option<term> =
       match args with
       | [fn; from_line; from_col; to_line; to_col] -> begin
@@ -609,6 +592,11 @@ let built_in_primitive_steps : list<primitive_step> =
         | _ ->
             failwith "Unexpected number of arguments"
     in
+    let idstep psc args : option<term> =
+        match args with
+        | [(a1, _)] -> Some a1
+        | _ -> failwith "Unexpected number of arguments"
+    in
     let basic_ops : list<(Ident.lid * int * (psc -> args -> option<term>))> =
             [(PC.op_Minus,       1, unary_int_op (fun x -> Z.minus_big_int x));
              (PC.op_Addition,    2, binary_int_op (fun x y -> Z.add_big_int x y));
@@ -634,9 +622,9 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.p2l ["FStar"; "String"; "string_of_list"],
                                     1, unary_op (arg_as_list EMB.unembed_char_safe) string_of_list');
              (PC.p2l ["FStar"; "String"; "concat"], 2, string_concat');
-             (PC.p2l ["Prims"; "range_of"], 2, range_of);
-             (PC.p2l ["Prims"; "set_range_of"], 3, set_range_of);
-             (PC.p2l ["Prims"; "mk_range"], 5, mk_range);]
+             (PC.p2l ["Prims"; "mk_range"], 5, mk_range);
+             (PC.p2l ["FStar"; "Range"; "prims_to_fstar_range"], 1, idstep);
+             ]
     in
     let bounded_arith_ops
         =
@@ -722,8 +710,7 @@ let reduce_primops cfg env stack tm =
          match (U.un_uinst head).n with
          | Tm_fvar fv -> begin
            match List.tryFind (fun ps -> S.fv_eq_lid fv ps.name) cfg.primitive_steps with
-           | None -> tm
-           | Some prim_step ->
+           | Some prim_step when prim_step.strong_reduction_ok || not cfg.strong ->
              if List.length args < prim_step.arity
              then begin log_primops cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
                                                      (Print.lid_to_string prim_step.name)
@@ -748,7 +735,33 @@ let reduce_primops cfg env stack tm =
                                               (Print.term_to_string reduced));
                       reduced
                  end
+           | Some _ ->
+               log_primops cfg (fun () -> BU.print1 "primop: not reducing <%s> since we're doing strong reduction\n"
+                                            (Print.term_to_string tm));
+               tm
+           | None -> tm
            end
+
+         | Tm_constant Const_range_of when not cfg.strong ->
+           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
+                                        (Print.term_to_string tm));
+           begin match args with
+           | [(a1, _)] -> (EMB.embed_range tm.pos a1.pos)
+           | _ -> tm
+           end
+
+         | Tm_constant Const_set_range_of when not cfg.strong ->
+           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
+                                        (Print.term_to_string tm));
+           begin match args with
+           | [(a1, _); (a2, _)] ->
+                begin match EMB.unembed_range a2 with
+                | Some r -> ({ a1 with pos = r })
+                | None -> tm
+                end
+           | _ -> tm
+           end
+
          | _ -> tm
    end
 
@@ -957,10 +970,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
               else tail in
             norm cfg' env stack' tm
 
+          | Tm_app({n=Tm_constant Const_range_of}, a1::a2::rest)
           | Tm_app({n=Tm_constant FC.Const_reify}, a1::a2::rest) ->
             let hd, _ = U.head_and_args t in
             let t' = S.mk (Tm_app(hd, [a1])) None t.pos in
             let t = S.mk(Tm_app(t', a2::rest)) None t.pos in
+            norm cfg env stack t
+
+          | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::a3::rest) ->
+            let hd, _ = U.head_and_args t in
+            let t' = S.mk (Tm_app(hd, [a1;a2])) None t.pos in
+            let t = S.mk(Tm_app(t', a3::rest)) None t.pos in
             norm cfg env stack t
 
           | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [a])
@@ -1117,7 +1137,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | _ -> lopt in
                        log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        let stack = Steps(cfg.steps, cfg.primitive_steps, cfg.delta_level)::stack in
-                       let cfg = only_strong_steps cfg in
+                       let cfg = { cfg with strong = true } in
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
 
@@ -1171,6 +1191,18 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_match(head, branches) ->
             let stack = Match(env, branches, t.pos)::stack in
             norm cfg env stack head
+          
+          | Tm_let((b, lbs), lbody) when is_top_level lbs && List.contains CompressUvars cfg.steps ->
+            let lbs = lbs |> List.map (fun lb ->
+              let openings, lbunivs = Subst.univ_var_opening lb.lbunivs in
+              let cfg = { cfg with tcenv = Env.push_univ_vars cfg.tcenv lbunivs } in
+              let norm t = Subst.close_univ_vars lbunivs (norm cfg env [] (Subst.subst openings t)) in
+              let lbtyp = norm lb.lbtyp in
+              let lbdef = norm lb.lbdef in
+              { lb with lbunivs = lbunivs; lbtyp = lbtyp; lbdef = lbdef }
+            ) in
+
+            rebuild cfg env stack (mk (Tm_let ((b, lbs), lbody)) t.pos)
 
           | Tm_let((_, {lbname=Inr _}::_), _) -> //this is a top-level let binding; nothing to normalize
             rebuild cfg env stack t
@@ -1195,7 +1227,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                    lbtyp=ty;
                                    lbdef=norm cfg env [] lb.lbdef} in
                  let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                 let cfg = only_strong_steps cfg in
+                 let cfg = { cfg with strong = true } in
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- body\n");
                  norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
 
@@ -1745,13 +1777,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
             | Env.Eager_unfolding_only -> true
             | _ -> false)
         in
-        let steps' =
-          if cfg.steps |> List.contains PureSubtermsWithinComputations
-          then [Exclude Zeta]
-          (* KM : Why are we excluding Iota (pattern matching) here ? *)
-          else [Exclude Iota; Exclude Zeta]
-        in
-        only_strong_steps ({cfg with delta_level=new_delta; steps=steps'@cfg.steps})
+        let steps' = [Exclude Zeta] in
+        ({cfg with delta_level=new_delta; steps=steps'@cfg.steps; strong=true})
       in
       let norm_or_whnf env t =
         if whnf
@@ -1822,7 +1849,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         | Pat_dot_term _ -> Inl []
         | Pat_constant s -> begin
           match scrutinee.n with
-            | Tm_constant s' when (s=s') -> Inl []
+            | Tm_constant s'
+              when FStar.Const.eq_const s s' ->
+              Inl []
             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
           end
         | Pat_cons(fv, arg_pats) -> begin
@@ -1879,7 +1908,7 @@ let config s e =
     let d = match d with
         | [] -> [Env.NoDelta]
         | _ -> d in
-    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps}
+    {tcenv=e; steps=s; delta_level=d; primitive_steps=built_in_primitive_steps; strong=false}
 
 let normalize_with_primitive_steps ps s e t =
     let c = config s e in
@@ -1935,7 +1964,7 @@ let normalize_refinement steps env t0 =
 let unfold_whnf env t = normalize [Weak;HNF; UnfoldUntil Delta_constant; Beta] env t
 let reduce_or_remove_uvar_solutions remove env t =
     normalize ((if remove then [CheckNoUvars] else [])
-              @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm])
+              @[Beta; NoDeltaSteps; CompressUvars; Exclude Zeta; Exclude Iota; NoFullNorm;])
               env
               t
 let reduce_uvar_solutions env t = reduce_or_remove_uvar_solutions false env t
@@ -2148,3 +2177,6 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
 
     | Sig_pragma _ ->
       s
+
+let erase_universes env t =
+    normalize [EraseUniverses; AllowUnboundUniverses] env t

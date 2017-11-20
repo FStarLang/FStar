@@ -2,7 +2,6 @@ module FStar.Tactics.Effect
 
 open FStar.Tactics.Types
 open FStar.Tactics.Result
-open FStar.Reflection
 
 (* This module is extracted, don't add any `assume val`s or extraction
  * will break. (`synth_by_tactic` is fine) *)
@@ -18,8 +17,11 @@ let __bind (a:Type) (b:Type) (t1:__tac a) (t2:a -> __tac b) : __tac b =
     fun p -> let r = t1 (incr_depth p) in
              match r with
              | Success(a, q)  ->
+                 (* We want range_of t2, but it does not work until we make range_of a constant *)
+                 let r = range_of q in
+                 let q = set_proofstate_range q (FStar.Range.prims_to_fstar_range r) in
                  // Force evaluation of __tracepoint q
-                 begin match tracepoint q  with
+                 begin match tracepoint q with
                  | () -> t2 a (decr_depth q)
                  end
              | Failed(msg, q) -> Failed(msg, q)

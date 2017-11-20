@@ -40,6 +40,7 @@ open FStar.Errors
 open FStar.Parser
 open FStar.Parser.Parse
 open FStar.BaseTypes
+open FStar.Compiler
 
 let intern_string : string -> string =
   let strings = Util.smap_create 100 in
@@ -175,11 +176,13 @@ let keywords =
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;
+    ALWAYS, "range_of"   ,RANGE_OF;
     ALWAYS, "rec"        ,REC;
     ALWAYS, "reifiable"  ,REIFIABLE;
     ALWAYS, "reify"      ,REIFY;
     ALWAYS, "reflectable",REFLECTABLE;
     ALWAYS, "requires"   ,REQUIRES;
+    ALWAYS, "set_range_of"              ,SET_RANGE_OF;
     ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "then"       ,THEN;
     ALWAYS, "total"      ,TOTAL;

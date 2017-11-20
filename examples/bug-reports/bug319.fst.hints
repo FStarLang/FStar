@@ -1,0 +1,26 @@
+[
+  "\u0016d\u000b“I\u007f\u001ftsQÜû\u001c!Ï´",
+  [
+    [
+      "Bug319.__proj__T__item__f",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "abf0b4f299917aadc3613b31f6924a10"
+    ],
+    [
+      "Bug319.bug",
+      1,
+      2,
+      1,
+      [
+        "equation_Bug319.omega", "equation_Prims.l_False", "false_interp",
+        "function_token_typing_Bug319.omega"
+      ],
+      0,
+      "6f5c7e6e26e9e13ea87a499570031cf7"
+    ]
+  ]
+]

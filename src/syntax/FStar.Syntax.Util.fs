@@ -618,7 +618,7 @@ let field_projector_prefix = Ident.reserved_prefix ^ "proj__"
    examples/preorders/MRefHeap.fst (even after regenerating hints), it
    will produce the following error:
 
-   fstar.exe  --use_hints --verify_module MRefHeap MRefHeap.fst
+   fstar.exe  --use_hints MRefHeap.fst
    ./MRefHeap.fst(55,51-58,27): (Error) Unknown assertion failed
    Verified module: MRefHeap (2150 milliseconds)
    1 error was reported (see above)
@@ -1220,8 +1220,7 @@ let unthunk_lemma_post t =
 
 let action_as_lb eff_lid a =
   let lb =
-    close_univs_and_mk_letbinding
-      None
+    close_univs_and_mk_letbinding None
       (* Actions are set to Delta_constant since they need an explicit reify to be unfolded *)
       (Inr (lid_as_fv a.action_name Delta_equational None))
       a.action_univs

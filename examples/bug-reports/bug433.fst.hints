@@ -1,0 +1,35 @@
+[
+  "\u001b\u00144T\u001b.\u0004\u0013hñ²cîZšœ",
+  [
+    [
+      "Bug433.num",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Prims.pos",
+        "haseqPrims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
+      ],
+      0,
+      "115270ba6afd857a36a4ec1f53fafb22"
+    ],
+    [
+      "Bug433.__proj__N__item___0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9a39afa2c7fb9ec51d091705da6ab2a0"
+    ],
+    [
+      "Bug433.f",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d33ceebaafdefbe54a9f62cf3c63f68a"
+    ]
+  ]
+]

@@ -9,7 +9,7 @@ A few files need more work:
 
   New files in this category need to be listed in ALL_BOOT in the Makefile.
 
-  Note: the parser is a special case.  `parse.fs`, `parse.fsi`, and `parse.fsy` should be in `parser/boot/`, but movign them there breaks incrementality of the F# build (fixed in b34750ad8beb813f91299da54287a716bd1137ce).
+  Note: the parser is a special case.  `parse.fs`, `parse.fsi`, and `parse.fsy` should be in `parser/boot/`, but moving them there breaks incrementality of the F# build (fixed in b34750ad8beb813f91299da54287a716bd1137ce).
 
 - Files that are realized in F# and OCaml separately
   These have native implementations in F# and OCaml, and an F#-friendly fsi.  When the fsi needs massaging (as explained above) these are stored in boot/ subfolders (but see below).  Otherwised, they are stored along other fs files (F# forces us to keep fsi and fs files together, so we can't put the fs files only in boot/ or in a separate folder). The ml realization is stored in either ulib/ml or src/**/ml.

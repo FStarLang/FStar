@@ -490,7 +490,12 @@ let resolve_in_open_namespaces'
   let k_global_def' k lid def = cont_of_option k (k_global_def lid def) in
   let f_module lid' = let k = Cont_ignore in find_in_module env lid' (k_global_def' k) k in
   let l_default k i = lookup_default_id env i (k_global_def' k) k in
-  resolve_in_open_namespaces'' env lid Exported_id_term_type (fun l -> cont_of_option Cont_fail (k_local_binding l)) (fun r -> cont_of_option Cont_fail (k_rec_binding r)) (fun _ -> Cont_ignore) f_module l_default
+  resolve_in_open_namespaces'' env lid Exported_id_term_type
+    (fun l -> cont_of_option Cont_fail (k_local_binding l))
+    (fun r -> cont_of_option Cont_fail (k_rec_binding r))
+    (fun _ -> Cont_ignore)
+    f_module
+    l_default
 
 let fv_qual_of_se = fun se -> match se.sigel with
     | Sig_datacon(_, _, _, l, _, _) ->
@@ -651,8 +656,8 @@ let try_lookup_definition env (lid:lident) =
 let empty_include_smap : BU.smap<(ref<(list<lident>)>)> = new_sigmap()
 let empty_exported_id_smap : BU.smap<exported_id_set> = new_sigmap()
 
-let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<(term * bool)> =
-  match try_lookup_name any_val exclude_interf env lid with
+let try_lookup_lid' any_val exclude_interface env (lid:lident) : option<(term * bool)> =
+  match try_lookup_name any_val exclude_interface env lid with
     | Some (Term_name (e, mut)) -> Some (e, mut)
     | _ -> None
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
@@ -835,7 +840,7 @@ let exported_id_set_new () =
     | Exported_id_term_type -> term_type_set
     | Exported_id_field -> field_set
 
-let unique any_val exclude_if env lid =
+let unique any_val exclude_interface env lid =
   (* Disable name resolution altogether, thus lid is assumed to be fully qualified *)
   let filter_scope_mods = function
     | Rec_binding _
@@ -843,7 +848,7 @@ let unique any_val exclude_if env lid =
     | _ -> false
   in
   let this_env = {env with scope_mods = List.filter filter_scope_mods env.scope_mods; exported_ids=empty_exported_id_smap; includes=empty_include_smap } in
-  match try_lookup_lid' any_val exclude_if this_env lid with
+  match try_lookup_lid' any_val exclude_interface this_env lid with
     | None -> true
     | Some _ -> false
 
@@ -879,13 +884,13 @@ let push_sigelt env s =
     raise (Error (BU.format2 "Duplicate top-level names [%s]; previously declared at %s" (text_of_lid l) r, range_of_lid l)) in
   let globals = BU.mk_ref env.scope_mods in
   let env =
-      let any_val, exclude_if = match s.sigel with
-        | Sig_let _ -> false, true
-        | Sig_bundle _ -> true, true
+      let any_val, exclude_interface = match s.sigel with
+        | Sig_let _
+        | Sig_bundle _ -> false, true
         | _ -> false, false in
       let lids = lids_of_sigelt s in
-      begin match BU.find_map lids (fun l -> if not (unique any_val exclude_if env l) then Some l else None) with
-        | Some l when not (Options.interactive ()) -> err l
+      begin match BU.find_map lids (fun l -> if not (unique any_val exclude_interface env l) then Some l else None) with
+        | Some l -> err l
         | _ -> extract_record env globals s; {env with sigaccum=s::env.sigaccum}
       end in
   let env = {env with scope_mods = !globals} in
@@ -907,6 +912,8 @@ let push_sigelt env s =
         my_exported_ids := BU.set_add lid.ident.idText !my_exported_ids
       | None -> () (* current module was not prepared? should not happen *)
       in
+      let is_iface = env.iface && not env.admitted_iface in
+//      printfn "Adding %s at key %s with flag %A" (FStar.Syntax.Print.sigelt_to_string_short se) lid.str is_iface;
       BU.smap_add (sigmap env) lid.str (se, env.iface && not env.admitted_iface)));
   let env = {env with scope_mods = !globals } in
   env

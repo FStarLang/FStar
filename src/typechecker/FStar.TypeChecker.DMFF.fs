@@ -710,9 +710,10 @@ and star_type' env t =
   | Tm_ascribed (e, (Inl t, None), something) ->
       mk (Tm_ascribed (star_type' env e, (Inl (star_type' env t), None), something))
 
-  | Tm_ascribed _ ->
-      raise (Err (BU.format1 "Tm_ascribed is outside of the definition language: %s"
-        (Print.term_to_string t)))
+  | Tm_ascribed (e, (Inr c, None), something) ->
+      mk (Tm_ascribed (star_type' env e, (Inl (star_type' env (U.comp_result c)), None), something))  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
+      (*raise (Err (BU.format1 "Tm_ascribed is outside of the definition language: %s"
+              (Print.term_to_string t)))*)
 
   | Tm_refine _ ->
       raise (Err (BU.format1 "Tm_refine is outside of the definition language: %s"
@@ -997,6 +998,40 @@ and infer (env: env) (e: term): nm * term * term =
       let _, t = fst <| Env.lookup_lid env.env lid in
       // Need to erase universes here! This is an F* type that is fully annotated.
       N (normalize t), e, e
+
+  (* Unary operators. Explicitly curry extra arguments *)
+  | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest) ->
+    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
+    let unary_op, _ = U.head_and_args e in
+    let head = mk (Tm_app(unary_op, [a])) in
+    let t = mk (Tm_app(head, rest)) in
+    infer env t
+
+  (* Binary operators *)
+  | Tm_app({n=Tm_constant Const_set_range_of}, a1::a2::hd::rest) ->
+    let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
+    let unary_op, _ = U.head_and_args e in
+    let head = mk (Tm_app(unary_op, [a1; a2])) in
+    let t = mk (Tm_app(head, rest)) in
+    infer env t
+
+  | Tm_app({n=Tm_constant Const_range_of}, [(a, None)]) ->
+    let t, s, u = infer env a in
+    let head,_ = U.head_and_args e in
+    N (tabbrev PC.range_lid),
+        mk (Tm_app (head, [S.as_arg s])),
+        mk (Tm_app (head, [S.as_arg u]))
+
+  | Tm_app({n=Tm_constant Const_set_range_of}, (a1, _)::a2::[]) ->
+    let t, s, u = infer env a1 in
+    let head,_ = U.head_and_args e in
+    t,
+        mk (Tm_app (head, [S.as_arg s; a2])),
+        mk (Tm_app (head, [S.as_arg u; a2]))
+
+  | Tm_app({n=Tm_constant Const_range_of}, _)
+  | Tm_app({n=Tm_constant Const_set_range_of}, _) ->
+    raise (Error(BU.format1 "DMFF: Ill-applied constant %s" (Print.term_to_string e), e.pos))
 
   | Tm_app (head, args) ->
       let t_head, s_head, u_head = check_n env head in

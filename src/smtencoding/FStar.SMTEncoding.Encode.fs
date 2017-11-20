@@ -481,13 +481,13 @@ let rec encode_const c env =
     | Const_unit -> mk_Term_unit, []
     | Const_bool true -> boxBool mkTrue, []
     | Const_bool false -> boxBool mkFalse, []
-    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))]), []
+    | Const_char c -> mkApp("FStar.Char.__char_of_int", [boxInt (mkInteger' (BU.int_of_char c))]), []
     | Const_int (i, None)  -> boxInt (mkInteger i), []
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
     | Const_string(s, _) -> varops.string_const s, []
-    | Const_range r -> mk_Range_const, []
+    | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
     | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
 
@@ -915,6 +915,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let v1, decls1 = encode_term v1 env in
             let v2, decls2 = encode_term v2 env in
             mk_LexCons v1 v2, decls1@decls2
+
+        | Tm_constant Const_range_of, [(arg, _)] ->
+            encode_const (Const_range arg.pos) env
+
+        | Tm_constant Const_set_range_of, [(rng, _); (arg, _)] ->
+            encode_term arg env
 
         | Tm_constant Const_reify, _ (* (_::_::_) *) ->
             let e0 = TcUtil.reify_body_with_arg env.tcenv head (List.hd args_e) in
@@ -1649,7 +1655,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                      "exists-interp")] in
    let mk_range_interp : env -> string -> term -> decls_t = fun env range tt ->
         let range_ty = mkApp(range, []) in
-        [Util.mkAssume(mk_HasTypeZ mk_Range_const range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
+        [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
    let mk_inversion_axiom : env -> string -> term -> decls_t = fun env inversion tt ->
        // (assert (forall ((t Term))
        //            (! (implies (Valid (FStar.Pervasives.inversion t))

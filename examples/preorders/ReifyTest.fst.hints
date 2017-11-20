@@ -11,21 +11,21 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565", "b2t_def",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "equation_FStar.Pervasives.Native.snd",
+        "equation_FStar.Preorder.predicate",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.stable", "equation_MRefHeap.alloc_ref",
         "equation_MRefHeap.contains", "equation_MRefHeap.heap_cell",
         "equation_MRefHeap.preorder_t", "equation_MRefHeap.sel",
-        "equation_MRefST.contains", "equation_MRefST.heap_rel",
-        "equation_MRefST.mref", "equation_MRefST.stable_on_heap",
+        "equation_MRefST.contains", "equation_MRefST.mref",
+        "equation_MRefST.stable_on_heap",
         "equation_MRefST.stable_on_heap_aux", "equation_Prims.nat",
         "fuel_guarded_inversion_Prims.dtuple2",
         "function_token_typing_Prims.nat", "int_typing",
         "interpretation_MRefHeap_Tm_abs_ca7ca508b0f11218e4d69ff09a8817a3",
         "interpretation_ReifyTest_Tm_abs_1fb5647deeb692985769a8a38bbfe04a",
-        "interpretation_ReifyTest_Tm_abs_8b7c35248131ee5b76dcf8f14ef9ab09",
         "interpretation_ReifyTest_Tm_abs_def637e0fbf0d6b8dbaef872b09fb625",
-        "l_and-interp", "lemma_MRefST.contains_lemma",
+        "l_and-interp", "lemma_MRefST.stable_on_heap_stable",
         "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
         "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -38,14 +38,13 @@
         "projection_inverse_Prims.Mkdtuple2__2",
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466",
         "refinement_interpretation_MRefHeap_Tm_refine_f2f7aad12be5d33874cf210bb491505c",
-        "refinement_interpretation_MRefST_Tm_refine_3568bcf9133bbe8512b3c2560361e2a6",
         "refinement_interpretation_MRefST_Tm_refine_da9cbab0485332770e2f963089e2dda6",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Pervasives.Native.snd",
         "token_correspondence_MRefST.heap_rel", "typing_MRefHeap.upd"
       ],
       0,
-      "7d9ae006d289af3b28b7f279e3c0dd4a"
+      "5fe24e6e2a9d0d74e7eb14c22463a282"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -62,7 +61,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "7a98978577cfb7faaee7664d24c58a55"
+      "becdce22b1e99b71fba1d5b0121d747e"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -79,7 +78,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "4a80fe41ce60857f7ab6c0ea98b9d6cf"
+      "bb2b843e02da38560445482eca488783"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -96,7 +95,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "c5a2d76fb72e017dac9c417952ca85b3"
+      "fec12a1df17e7107f7eda657294ca8ec"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -113,7 +112,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "78dd47c730c408471777f452dbf1d322"
+      "599f75f69d8d961fc7bda96f73f3911e"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -130,7 +129,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c390c1d237b145fc7ac70a71ca49e79f"
+      "f5165386fa6c685fbc3d50c1c3dd1f00"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -147,7 +146,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "cc5fba06cc56710e42fdecab0269f597"
+      "a186ef56c471e7984bf4286cdddd611b"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -164,7 +163,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fa84ba11994c3823221fab268e7e9bef"
+      "4981496d753ff204ac3439659d8cf47d"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -181,7 +180,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "8c3118a7ec6ff78bd754e56409f66a42"
+      "99ffb9101c394eeaf13bd89d1572613e"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -198,7 +197,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "ff279d92b52726e336a0abb993af432f"
+      "4bb43564f8fb9f54770923cedd94e231"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -215,7 +214,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f2739aa1c66a1a62439e2cabeda3ad9e"
+      "54450c3c2bfc193eac903e78caa79710"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -232,7 +231,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c74befb1f2e7c0cb139244b9a7d0304f"
+      "45497a63b3b2c2246eacb80e8def8ea0"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -249,7 +248,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "64f6624011307289269c18c3218d16b7"
+      "2381f1c5aa598c7a7344133a1b12b926"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -266,7 +265,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "b0af16fecf6be718ab58440a49b63da6"
+      "d6d315be43a3d5b9e3860066dd747ec2"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -283,7 +282,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fed9ccf74f64221fffb319c15fbc038c"
+      "778c09638d8c6bc2437e1740efd657a5"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -300,7 +299,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2c58bea112da6a94529cc6904e840c0b"
+      "159919ed2210530b2c41910b31980823"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -317,7 +316,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7b654a7db0c02c88d08e559be4ce9728"
+      "11e18c30fe57d9ed7792a81ff20f1798"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -334,7 +333,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2b440b633bf66c4b4a20c262cce42ca4"
+      "f7d368302b823bba67c5a05b8eb22eda"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -351,7 +350,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5caaca11c08788dedbae6e3b3217d731"
+      "8841e2d11b4e6b85f93350820470aeba"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -368,7 +367,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "bdebcb9eeda17a476baec42576e9c0fa"
+      "57d73f96112255a11daa80fad7c7826b"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -385,7 +384,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "5d31856e1d27c910b4464b18b288aca4"
+      "338fc7b1ffcc1d1d9d7f615b5fcd5285"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -402,7 +401,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "20610949c6c8b6b51d343d1b65bb8da2"
+      "0f194fd53643cd27b58748878c66e25f"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -419,7 +418,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "079d6fcfb7442bd02693ee7eed5b75a0"
+      "7ea8a39627e6d362baa498a4696091eb"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -436,7 +435,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "a8c2b7386c6373ecf00f92693d6c5e7d"
+      "ac2edbbee644405fd0f49d1b13df0788"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -453,7 +452,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "901de16f00560295f346e06b0afc1c94"
+      "060d6b2a815cd872d438b704b2e5ba23"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -470,7 +469,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "2e2c69409c0694979060fbb258a2d869"
+      "e73c5ac941fb91dd10d4ef097e10b160"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -487,7 +486,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "380f8ebe58dce9c19e3ddf34774169e0"
+      "e9a35c39043b0beca3108c2afb0ba0c7"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -504,7 +503,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "f7a4d2d79ad98408eb8363aeff8e622c"
+      "1e0b3e772779e7c0b241d91f57c71b35"
     ],
     [
       "ReifyTest.test_reify_recall",
@@ -521,7 +520,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "75a6fbae93f05761c8a3962bbf601260"
+      "054499da41d07a78b69ba3d8dc0d7e53"
     ]
   ]
 ]

@@ -96,13 +96,13 @@ let try_with_ident = path_to_ident (["FStar"; "All"], "try_with")
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant (c: mlconstant): Parsetree.constant =
   match c with
-  | MLC_Int (v, _) ->
+  | MLC_Int (v, None) ->
      let i = BatString.concat "" ["(Prims.parse_int \""; v; "\")"] in
      Const.integer i
   | MLC_Float v -> Const.float (string_of_float v)
   | MLC_Char v -> Const.int v
   | MLC_String v -> Const.string v
-  | MLC_Bytes _ -> failwith "Case not handled" (* do we need this? *)
+  | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
   | _ -> failwith "Case not handled"
 
 let build_constant_expr (c: mlconstant): expression =
@@ -231,6 +231,8 @@ let rec build_expr (e: mlexpr): expression =
       let args = map (fun x -> (Nolabel, build_expr x)) es in
       let f = build_expr e in
       resugar_app f args es
+   | MLE_TApp (e, ts) ->
+      build_expr e
    | MLE_Fun (l, e) -> build_fun l e
    | MLE_Match (e, branches) ->
       let ep = build_expr e in
@@ -359,11 +361,11 @@ let build_ty_manifest (b: mltybody): core_type option=
 let skip_type_defn (current_module:string) (type_name:string) :bool =
   current_module = "FStar_Pervasives" && type_name = "option"
 
-let type_attrs (attrs: tyattrs): attributes option =
+let type_attrs (attrs: metadata): attributes option =
   let deriving_show = (mk_sym "deriving", PStr [Str.eval (Exp.ident (mk_lident "show"))]) in
   if BatList.is_empty attrs then None else (Some [deriving_show])
 
-let add_deriving_const (attrs: tyattrs) (ptype_manifest: core_type option): core_type option =
+let add_deriving_const (attrs: metadata) (ptype_manifest: core_type option): core_type option =
   match attrs with
   | [PpxDerivingShowConstant s] ->
       let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(Nolabel, Exp.ident (mk_lident "fmt")); (Nolabel, Exp.constant (Const.string s))] in

@@ -1,0 +1,23 @@
+[
+  "ù!Q\u0000,9üK¡\u0013\u001c;\u0005_20",
+  [
+    [
+      "Bug154.search",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_bool" ],
+      0,
+      "f2f0d588fe3d0baf9618a0ae9482d826"
+    ],
+    [
+      "Bug154.search",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "95a3126cc6c0cbe0dcd4a96f3285b7b2"
+    ]
+  ]
+]

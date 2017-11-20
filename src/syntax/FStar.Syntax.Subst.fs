@@ -197,7 +197,10 @@ let rec subst' (s:subst_ts) t =
     | Tm_unknown
     | Tm_constant _                      //a constant cannot be substituted
     | Tm_fvar _                          //fvars are never subject to substitution
-    | Tm_uvar _ -> tag_with_range t0 s    //uvars are always resolved to closed terms
+    | Tm_uvar _ -> tag_with_range t0 s   //uvars are always resolved to closed terms, AR: doesn't seem so
+                                         //there could be free universe names, and so universe substs need to be taken care of
+                                         //right now the problem is masked by using a normalization/compress pass
+                                         //AR: update, it happens that univ subst is applied to a uvar, see the example from commit: 3ac46a2a40dd97025522afb19b1437d0e4bbbe4a
 
     | Tm_delayed((t', s'), m) ->
         //s' is the subsitution already associated with this node;
@@ -300,8 +303,8 @@ let push_subst s t =
 
     | Tm_constant _
     | Tm_fvar _
-    | Tm_unknown
-    | Tm_uvar _ -> tag_with_range t s
+    | Tm_uvar _
+    | Tm_unknown -> tag_with_range t s
 
     | Tm_type _
     | Tm_bvar _
@@ -528,10 +531,21 @@ let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
     subst_comp s c
 
 let open_let_rec lbs (t:term) =
-    if is_top_level lbs then lbs, t //top-level let recs are not opened
-    else (* Consider
+    let n_let_recs, lbs, let_rec_opening =
+      if is_top_level lbs
+      then 0, lbs, []  //top-level let recs are not opened,
+                       //but we still have to open their universe binders,
+                       //if any (see below)
+      else List.fold_right
+              (fun lb (i, lbs, out) ->
+                 let x = Syntax.freshen_bv (left lb.lbname) in
+                 i+1, {lb with lbname=Inl x}::lbs, DB(i, x)::out)
+              lbs
+              (0, [], [])
+    in
+      (* Consider
                 let rec f<u> x = g x
-                and g<u'> y = f y in
+                and g<u> y = f y in
                 f 0, g 0
             In de Bruijn notation, this is
                 let rec f x = g@1 x@0
@@ -544,30 +558,43 @@ let open_let_rec lbs (t:term) =
                   and for the body is
                         f, g
          *)
-         let n_let_recs, lbs, let_rec_opening =
-             List.fold_right (fun lb (i, lbs, out) ->
-                let x = Syntax.freshen_bv (left lb.lbname) in
-                i+1, {lb with lbname=Inl x}::lbs, DB(i, x)::out) lbs (0, [], []) in
-
-         let lbs = lbs |> List.map (fun lb ->
-              let _, us, u_let_rec_opening =
-                  List.fold_right (fun u (i, us, out) ->
-                    i+1, u::us, UN(i, U_name u)::out)
-                  lb.lbunivs (n_let_recs, [], let_rec_opening) in
-             {lb with lbunivs=us; lbdef=subst u_let_rec_opening lb.lbdef}) in
-
-         let t = subst let_rec_opening t in
-         lbs, t
+    let lbs = lbs |> List.map (fun lb ->
+        let _, us, u_let_rec_opening =
+            List.fold_right
+             (fun u (i, us, out) ->
+                  let u = Syntax.new_univ_name None in
+                  i+1, u::us, UN(i, U_name u)::out)
+             lb.lbunivs
+             (n_let_recs, [], let_rec_opening)
+        in
+        {lb with lbunivs=us;
+                 lbdef=subst u_let_rec_opening lb.lbdef;
+                 lbtyp=subst u_let_rec_opening lb.lbtyp})
+    in
+    let t = subst let_rec_opening t in
+    lbs, t
 
 let close_let_rec lbs (t:term) =
-    if is_top_level lbs then lbs, t //top-level let recs do not have to be closed
-    else let n_let_recs, let_rec_closing =
-            List.fold_right (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out) lbs (0, []) in
-         let lbs = lbs |> List.map (fun lb ->
-                let _, u_let_rec_closing = List.fold_right (fun u (i, out) -> i+1, UD(u, i)::out) lb.lbunivs (n_let_recs, let_rec_closing) in
-                {lb with lbdef=subst u_let_rec_closing lb.lbdef}) in
-         let t = subst let_rec_closing t in
-         lbs, t
+    let n_let_recs, let_rec_closing =
+      if is_top_level lbs
+      then 0, [] //top-level let recs do not have to be closed
+                 //except for their universe binders, if any (see below)
+      else List.fold_right
+               (fun lb (i, out) -> i+1, NM(left lb.lbname, i)::out)
+               lbs
+               (0, [])
+    in let lbs = lbs |> List.map (fun lb ->
+           let _, u_let_rec_closing =
+               List.fold_right
+                 (fun u (i, out) -> i+1, UD(u, i)::out)
+                 lb.lbunivs
+                 (n_let_recs, let_rec_closing)
+           in
+           {lb with lbdef=subst u_let_rec_closing lb.lbdef;
+                    lbtyp=subst u_let_rec_closing lb.lbtyp})
+       in
+       let t = subst let_rec_closing t in
+       lbs, t
 
 let close_tscheme (binders:binders) ((us, t) : tscheme) =
     let n = List.length binders - 1 in
@@ -581,6 +608,10 @@ let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
    let k = List.length us' in
    let s = List.mapi (fun i x -> UD(x, k + (n - i))) us in
    (us', subst s t)
+
+let subst_tscheme (s:list<subst_elt>) ((us, t):tscheme) =
+    let s = shift_subst (List.length us) s in
+    (us, subst s t)
 
 let opening_of_binders (bs:binders) =
   let n = List.length bs - 1 in

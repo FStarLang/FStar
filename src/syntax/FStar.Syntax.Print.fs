@@ -143,18 +143,7 @@ let infix_prim_op_to_string e = find_lid (get_lid e)      infix_prim_ops
 let unary_prim_op_to_string e = find_lid (get_lid e)      unary_prim_ops
 let quant_to_string t = find_lid (get_lid t) quants
 
-let const_to_string x = match x with
-  | Const_effect -> "Effect"
-  | Const_unit -> "()"
-  | Const_bool b -> if b then "true" else "false"
-  | Const_float x ->      U.string_of_float x
-  | Const_string(s, _) -> U.format1 "\"%s\"" s
-  | Const_bytearray _  ->  "<bytearray>"
-  | Const_int (x, _) -> x
-  | Const_char c -> "'" ^ U.string_of_char c ^ "'"
-  | Const_range r -> Range.string_of_range r
-  | Const_reify -> "reify"
-  | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
+let const_to_string x = C.const_to_string x
 
 let lbname_to_string = function
   | Inl l -> bv_to_string l
@@ -353,14 +342,14 @@ and pat_to_string x =
 
 
 and lbs_to_string quals lbs =
-    let lbs =
-        if (Options.print_universes())
-        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in
-                                        let t, d = match (Subst.compress td).n with
-                                            | Tm_app(_, [(t, _); (d, _)]) -> t, d
-                                            | _ -> failwith "Impossibe" in
-                                        {lb with lbunivs=us; lbtyp=t; lbdef=d}))
-        else lbs in
+//    let lbs =
+//        if (Options.print_universes())
+//        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in
+//                                        let t, d = match (Subst.compress td).n with
+//                                            | Tm_app(_, [(t, _); (d, _)]) -> t, d
+//                                            | _ -> failwith "Impossibe" in
+//                                        {lb with lbunivs=us; lbtyp=t; lbdef=d}))
+//        else lbs in
     U.format3 "%slet %s %s"
     (quals_to_string' quals)
     (if fst lbs then "rec" else "")

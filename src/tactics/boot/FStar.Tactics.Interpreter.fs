@@ -241,12 +241,30 @@ let rec primitive_steps () : list<N.primitive_step> =
             Some U.exp_unit)
         | _ -> failwith "Unexpected application of tracepoint"
     in
+    let set_proofstate_range_interp psc (args : args) =
+        match args with
+        | [(ps, _); (r, _)] ->
+            bind_opt (E.unembed_proofstate ps) (fun ps ->
+            bind_opt (unembed_range r) (fun r ->
+            let ps' = set_proofstate_range ps r in
+            Some (E.embed_proofstate (N.psc_range psc) ps')))
+        | _ -> failwith "Unexpected application of set_proofstate_range"
+    in
+    let set_proofstate_range_step : N.primitive_step =
+        let nm = Ident.lid_of_str "FStar.Tactics.Types.set_proofstate_range" in
+        {N.name = nm;
+         N.arity = 2;
+         N.strong_reduction_ok = false;
+         N.requires_binder_substitution = false;
+         N.interpretation = set_proofstate_range_interp
+        }
+    in
     let tracepoint_step : N.primitive_step =
         let nm = Ident.lid_of_str "FStar.Tactics.Types.tracepoint" in
         {N.name = nm;
          N.arity = 1;
          N.strong_reduction_ok = false;
-         N.requires_binder_substitution = false;
+         N.requires_binder_substitution = true;
          N.interpretation = tracepoint_interp
         }
     in
@@ -278,8 +296,8 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac1 "__clear"         clear unembed_binder embed_unit t_unit;
       mktac1 "__rewrite"       rewrite unembed_binder embed_unit t_unit;
       mktac0 "__smt"           smt embed_unit t_unit;
-      mktac1 "__exact"         exact unembed_term embed_unit t_unit;
-      mktac1 "__exact_guard"   exact_guard unembed_term embed_unit t_unit;
+      mktac0 "__refine_intro"  refine_intro embed_unit t_unit;
+      mktac3 "__t_exact"       t_exact unembed_bool unembed_bool unembed_term embed_unit t_unit;
       mktac1 "__apply"         (apply  true) unembed_term embed_unit t_unit;
       mktac1 "__apply_raw"     (apply false) unembed_term embed_unit t_unit;
       mktac1 "__apply_lemma"   apply_lemma unembed_term embed_unit t_unit;
@@ -315,6 +333,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       mktac0 "__cur_env"       cur_env     embed_env RD.fstar_refl_env;
       mktac0 "__cur_goal"      cur_goal'   embed_term S.t_term;
       mktac0 "__cur_witness"   cur_witness embed_term S.t_term;
+      mktac0 "__is_guard"      is_guard    embed_bool t_bool;
 
       mktac2 "__uvar_env"      uvar_env unembed_env (unembed_option unembed_term) embed_term S.t_term;
       mktac2 "__unify"         unify unembed_term unembed_term embed_bool t_bool;
@@ -322,6 +341,7 @@ let rec primitive_steps () : list<N.primitive_step> =
       decr_depth_step;
       incr_depth_step;
       tracepoint_step;
+      set_proofstate_range_step;
     ]@reflection_primops @native_tactics_steps
 
 // Please note, these markers are for some makefile magic that tweaks this function in the OCaml output

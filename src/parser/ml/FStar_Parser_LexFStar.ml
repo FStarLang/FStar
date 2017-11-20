@@ -78,11 +78,13 @@ let () =
   Hashtbl.add keywords "open"          OPEN        ;
   Hashtbl.add keywords "opaque"        OPAQUE      ;
   Hashtbl.add keywords "private"       PRIVATE     ;
+  Hashtbl.add keywords "range_of"      RANGE_OF    ;
   Hashtbl.add keywords "rec"           REC         ;
   Hashtbl.add keywords "reifiable"     REIFIABLE   ;
   Hashtbl.add keywords "reify"         REIFY       ;
   Hashtbl.add keywords "reflectable"   REFLECTABLE ;
   Hashtbl.add keywords "requires"      REQUIRES    ;
+  Hashtbl.add keywords "set_range_of"                 SET_RANGE_OF    ;
   Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
   Hashtbl.add keywords "then"          THEN        ;
   Hashtbl.add keywords "total"         TOTAL       ;
@@ -328,7 +330,7 @@ let regexp int32 = any_integer 'l'
 let regexp uint32 = any_integer unsigned 'l'
 let regexp int64 = any_integer 'L'
 let regexp uint64 = any_integer unsigned 'L'
-let regexp charint = any_integer 'z'
+let regexp char8 = any_integer 'z'
 
 let regexp floatp     = digit+ '.' digit*
 let regexp floate     = digit+ ('.' digit* )? ["eE"] ["+-"]? digit+
@@ -385,9 +387,11 @@ let rec token = lexer
 
  | tvar -> TVAR (L.lexeme lexbuf)
  | (integer | xinteger) -> INT (clean_number (L.lexeme lexbuf), false)
- (* TODO: check bounds!! *)
- | uint8 -> UINT8 (clean_number (L.lexeme lexbuf))
- | charint -> CHAR (int_of_string (clean_number (L.lexeme lexbuf)))
+ | (uint8 | char8) ->
+   let c = clean_number (L.lexeme lexbuf) in
+   let cv = int_of_string c in
+   if cv < 0 || cv > 255 then failwith "Out-of-range character literal"
+   else UINT8 (c)
  | int8 -> INT8 (clean_number (L.lexeme lexbuf), false)
  | uint16 -> UINT16 (clean_number (L.lexeme lexbuf))
  | int16 -> INT16 (clean_number (L.lexeme lexbuf), false)

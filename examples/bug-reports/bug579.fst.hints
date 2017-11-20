@@ -1,0 +1,109 @@
+[
+  "˛+YPÄı»∫qêW0à0…∂",
+  [
+    [
+      "Bug579.step",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "8fe10d5eb5712b6b18f982b3e6b60f53"
+    ],
+    [
+      "Bug579.__proj__SBeta__item__e1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "46844c9da8b3307bd34d15648c83bef9"
+    ],
+    [
+      "Bug579.__proj__SBeta__item__e2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "aed8c3fbb59a0616717a5aee1a41504a"
+    ],
+    [
+      "Bug579.typing",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "360daa784a87008af781f976c90ea1f7"
+    ],
+    [
+      "Bug579.__proj__TyEqu__item__e",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "45b9049d6b64f850ebe636518fe2182b"
+    ],
+    [
+      "Bug579.__proj__TyEqu__item__t1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8c2398b8140bc3e985fc019e75bed2e8"
+    ],
+    [
+      "Bug579.__proj__TyEqu__item__t2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "157c2618b3f4c7bd106972bb67812298"
+    ],
+    [
+      "Bug579.__proj__TyEqu__item__ht",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_Bug579.TyEqu_e",
+        "proj_equation_Bug579.TyEqu_t1", "projection_inverse_Bug579.TyEqu_e",
+        "projection_inverse_Bug579.TyEqu_t1"
+      ],
+      0,
+      "b3a4946b574626c49c6d2f955992013b"
+    ],
+    [
+      "Bug579.progress'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_e4f13f20c6a154a4a71672b0064d098a_2",
+        "data_elim_Bug579.TyEqu", "equality_tok_Prims.LexTop@tok",
+        "subterm_ordering_Bug579.TyEqu"
+      ],
+      0,
+      "94d09af81ce55d1a12a0e2efaa107b80"
+    ],
+    [
+      "Bug579.progress",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_e4f13f20c6a154a4a71672b0064d098a_2",
+        "data_elim_Bug579.TyEqu", "equality_tok_Prims.LexTop@tok",
+        "subterm_ordering_Bug579.TyEqu"
+      ],
+      0,
+      "3c178f3017f85c32b29d21744afdc1fc"
+    ]
+  ]
+]

@@ -1,0 +1,26 @@
+[
+  "tRÈ²É­#YG®Æ\u0019¯Ÿ*C",
+  [
+    [
+      "Bug605.__proj__Refl__item__x",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "283135518d7ba143f21c0868a8ab14cd"
+    ],
+    [
+      "Bug605.steps_preserves_red",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug605.ieq",
+        "fuel_guarded_inversion_Bug605.peq"
+      ],
+      0,
+      "322d848eefad9915ccb3a2f3020ff286"
+    ]
+  ]
+]

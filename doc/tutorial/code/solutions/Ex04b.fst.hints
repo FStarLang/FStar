@@ -16,7 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "778dd8b512853bb849a258477e5bc8a9"
+      "fd7c6749707013572637947d34a84be7"
     ],
     [
       "Ex04b.append",
@@ -31,7 +31,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "93a64f1f2732b2afac9d2e9f2aeba2bd"
+      "c6a1cb0de796e1e708907eaee457d54b"
     ],
     [
       "Ex04b.append_len",
@@ -40,7 +40,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "00307d155c7276129f9eeb862536cc83"
+      "25945f77723fdd19b68e654d5689e507"
     ],
     [
       "Ex04b.append_len",
@@ -48,7 +48,11 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption", "@query",
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_Ex04b.append.fuel_instrumented",
+        "@fuel_correspondence_Ex04b.length.fuel_instrumented",
+        "@fuel_irrelevance_Ex04b.append.fuel_instrumented",
+        "@fuel_irrelevance_Ex04b.length.fuel_instrumented", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
@@ -58,22 +62,17 @@
         "equation_Prims.nat",
         "equation_with_fuel_Ex04b.append.fuel_instrumented",
         "equation_with_fuel_Ex04b.length.fuel_instrumented",
-        "fuel_correspondence_Ex04b.append.fuel_instrumented",
-        "fuel_correspondence_Ex04b.length.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
-        "fuel_irrelevance_Ex04b.append.fuel_instrumented",
-        "fuel_irrelevance_Ex04b.length.fuel_instrumented", "int_inversion",
-        "int_typing", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
+        "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_Prims.Cons", "typing_Ex04b.append",
-        "typing_Ex04b.length", "unit_typing"
+        "typing_Ex04b.length"
       ],
       0,
-      "adfd62ee2b005e4b99bccfdd7b0ee45b"
+      "45c409fbbcc2dfd1cbeba4134fd94a48"
     ]
   ]
 ]
