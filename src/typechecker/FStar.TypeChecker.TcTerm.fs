@@ -603,7 +603,6 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if debug env Options.Extreme
     then BU.print2 "(%s) comp type = %s\n"
                       (Range.string_of_range top.pos) (Print.comp_to_string <| cres.comp());
-
     e, cres, Rel.conj_guard g1 g_branches
 
   | Tm_let ((false, [{lbname=Inr _}]), _) ->
@@ -612,7 +611,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
     then let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
          let lax_top = N.remove_uvar_solutions env lax_top in
-         BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
+         //BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
          if Env.should_verify env then
            check_top_level_let env lax_top
          else lax_top, l, g
@@ -627,7 +626,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
     then let lax_top, l, g = check_top_level_let_rec ({env with lax=true}) top in
          let lax_top = N.remove_uvar_solutions env lax_top in  (* AR: are we calling it two times currently if lax mode? *)
-         let _ = BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top) in
+         //let _ = BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top) in
          if Env.should_verify env then
             check_top_level_let_rec env lax_top
          else lax_top, l, g
@@ -1526,20 +1525,24 @@ and tc_eqn scrutinee env branch
 
   (*<tc_pat>*)
   let tc_pat (allow_implicits:bool) (pat_t:typ) p0 :
-        pat                                (* the type-checked, fully decorated pattern                             *)
-      * list<bv>                           (* all its bound variables, used for closing the type of the branch term *)
-      * Env.env                            (* the environment extended with all the binders                         *)
-      * term                               (* terms corresponding to the pattern                                    *)
-      * term                               (* the same term in normal form                                          *)
+        pat                                (* the type-checked, fully decorated pattern                                   *)
+      * list<bv>                           (* all its bound variables, used for closing the type of the branch term       *)
+      * Env.env                            (* the environment extended with all the binders                               *)
+      * term                               (* terms corresponding to the pattern                                          *)
+      * guard_t                            (* accumulated guard for well-typedness of the type annotations on pattern bvs *)  //AR: for dependent patterns, this requires the equality of scrutinee and the pattern
+                                                                                                                              //which is available later in the typechecking for branches
+                                                                                                                              //so, here we just accumulate the guard, and return it
+                                                                                                                              //the caller will add it to the g_branches later
+                                                                                                                              //this guard is well-formed for list<bv>
+      * term                               (* the same term in normal form                                                *)
       =
     let tc_annot env t =
         let tu, u = U.type_u () in
         let t, _, g = tc_check_tot_or_gtot_term env t tu in
-        Rel.force_trivial_guard env g;
-        t
+        t, g  //AR: this used to force the guard, but now we defer it to be checked alongwith the guard for the branches
     in
     //an expression for each clause in a disjunctive pattern
-    let pat_bvs, exp, p = TcUtil.pat_as_exp allow_implicits env p0 tc_annot in
+    let pat_bvs, exp, guard_pat_annots, p = TcUtil.pat_as_exp allow_implicits env p0 tc_annot in
     if Env.debug env Options.High
     then BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
     let pat_env = List.fold_left Env.push_bv env pat_bvs in
@@ -1548,9 +1551,6 @@ and tc_eqn scrutinee env branch
     //has exactly its expected type, rather than just a sub-type. see #1062
     let env1 = {env1 with Env.is_pattern=true} in
     let expected_pat_t = Rel.unrefine env pat_t in
-    Util.print1 "Pat bvs are: %s\n\n" (List.fold_left (fun s bv -> s ^ "; " ^ (PP.bv_to_string bv)) "" pat_bvs);
-    Util.print1 "Pat bv sorts are: %s\n\n" (List.fold_left (fun s bv -> s ^ "; " ^ (PP.term_to_string bv.sort)) "" pat_bvs); 
-    Util.print2 "Checking pattern: %s with expected type: %s\n\n" (PP.term_to_string exp) (PP.term_to_string pat_t);
     if Env.debug env Options.High
     then BU.print2 "Checking pattern expression %s against expected type %s\n"
                     (Print.term_to_string exp)
@@ -1607,7 +1607,7 @@ and tc_eqn scrutinee env branch
     if Env.debug env Options.High
     then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env exp);
     let p = TcUtil.decorate_pattern env p exp in
-    p, pat_bvs, pat_env, exp, norm_exp
+    p, pat_bvs, pat_env, exp, guard_pat_annots, norm_exp
   in
   (*</tc_pat>*)
 
@@ -1616,7 +1616,7 @@ and tc_eqn scrutinee env branch
   let scrutinee_env, _ = Env.push_bv env scrutinee |> Env.clear_expected_typ in
 
   (* 1. Check the pattern *)
-  let pattern, pat_bvs, pat_env, pat_exp, norm_pat_exp =
+  let pattern, pat_bvs, pat_env, pat_exp, guard_pat_annots, norm_pat_exp =
     tc_pat true pat_t pattern
   in
 
@@ -1633,6 +1633,8 @@ and tc_eqn scrutinee env branch
 
   (* 3. Check the branch *)
   let branch_exp, c, g_branch = tc_term pat_env branch_exp in
+
+  let g_branch = Rel.conj_guard guard_pat_annots g_branch in  //AR: add the guard from the type annotations on pattern bvars
 
   (* 4. Lift the when clause to a logical condition. *)
   (*    It is used in step 5 (a) below, and in step 6 (d) to build the branch guard *)
