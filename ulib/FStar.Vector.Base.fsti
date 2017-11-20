@@ -373,3 +373,15 @@ let slice
   = from_raw (sub (as_raw x) i j)
 
 val dummy : unit
+
+let lemma_t_eq_intro
+    (#a:Type) 
+    (v1:t a)
+    (v2:t a{U32.(len v1 =^ len v2)})
+  : Lemma
+     (requires (forall (i:len_t{U32.(i <^ len v1)}).{:pattern v1.(i); v2.(i)}
+                       v1.(i) == v2.(i)))
+     (ensures (v1 == v2))
+  = assert (forall (i:nat{i<UInt32.v (len v1)}). Seq.index (reveal (as_raw v1)) i == v1.(U32.uint_to_t i));
+    assert (forall (i:nat{i<UInt32.v (len v1)}). Seq.index (reveal (as_raw v2)) i == v2.(U32.uint_to_t i));
+    Seq.lemma_eq_intro (reveal (as_raw v1)) (reveal (as_raw v2))
