@@ -39,12 +39,12 @@ let step_eq_implies_intro :tactic unit = apply_lemma (quote lemma_eq_implies_int
 let simplify_join_emp :tactic unit =
   pointwise (or_else (or_else (apply_lemma (quote lemma_join_h_emp);; qed) 
                               (apply_lemma (quote lemma_join_emp_h);; qed))
-		     (fail  "simplify_join_emp: failed"))
+		     (trefl))
 		     
 let simplify_join_minus :tactic unit =
   pointwise (or_else (or_else (apply_lemma (quote lemma_join_points_to_minus);; qed)
                               (apply_lemma (quote lemma_join_restrict_minus);; qed))
-		     (fail "simplify_join_minus: failed"))
+		     (trefl))
 
 let simplify_restrict :tactic unit =
   apply_lemma (quote lemma_restrict_r_update')  `or_else`
@@ -84,6 +84,7 @@ let rec repeat_simplify_sel () :Tac unit =
   ) ()
 
 let step_intros :tactic unit =
+  dump "step_intros";;
   forall_intros;;
   apply_lemma (quote lemma_impl_l_cong);;
   simplify_join_emp;;
@@ -139,7 +140,7 @@ let swap_ok (r1:addr) (r2:addr) (h:heap) (a:t) (b:t) =
   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
   let p = fun _ h -> sel h r1 == b /\ sel h r2 == a in
   let t = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r1 == a /\ sel h r2 == b ==> t) solve
+  assert_by_tactic (addr_of r1 <> addr_of r2 /\ sel h r1 == a /\ sel h r2 == b ==> t) solve
 
 let double_increment_ok (r:addr) (h:heap) (n:t{size (v n + 2) FStar.UInt64.n}) =
   let c = Bind (Bind (Read r) (fun y -> Write r (y +?^ 1uL))) (fun _ -> (Bind (Read r) (fun y -> Write r (y +?^ 1uL))))  in
@@ -163,4 +164,4 @@ let copy_ok (r1:addr) (r2:addr) (r3:addr) (h:heap) (i:t) (j:t) (k:t) =
   let c = Bind (Read r1) (fun n1 -> Write r2 (n1)) in
   let p = fun _ h -> (sel h r1 == i /\ sel h r2 == i /\ sel h r3 == k) in
   let post = (lift_wpsep (wpsep_command c)) p h in
-  assert_by_tactic (sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> post) solve //here how can we apply a binder?
+  assert_by_tactic (addr_of r1 <> addr_of r2 /\ addr_of r2 <> addr_of r3 /\ addr_of r1 <> addr_of r3 /\ sel h r1 == i /\ sel h r2 == j /\ sel h r3 == k ==> post) solve //here how can we apply a binder?
