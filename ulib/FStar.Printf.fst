@@ -105,7 +105,7 @@ let sprintf
     : normalize_term (dir_type (Some?.v (parse_format_string s)))
     = normalize_term (string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s))
 
-(** THIS DOESN'T WORK WITH --use_two_phase_tc 
+(* THIS DOESN'T WORK WITH --use_two_phase_tc 
 #set-options "--max_fuel 0" //no SMT reasoning about recursive functions
 let test () = sprintf "%d: Hello %s, sprintf %s" 0 "#fstar-hackery" "works!"
-**)
+*)
