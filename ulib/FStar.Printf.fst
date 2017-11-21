@@ -38,7 +38,7 @@ let rec dir_type (ds:list dir) : Tot Type0 =
 /// `string_of_dirs ds`:
 ///       Interpreting a list of directives as its function,
 ///       in a continuation-passing style
-let rec string_of_dirs 
+let rec string_of_dirs
         (ds:list dir)
         (k:string -> string)
   : dir_type ds
@@ -49,11 +49,13 @@ let rec string_of_dirs
       <: normalize_term (dir_type ds')
     | Arg a :: ds' ->
       fun (x : arg_type a) ->
-        string_of_dirs ds' (fun res -> k (match a with
+        string_of_dirs ds' (fun res -> ((k "")
+                                     ^ (match a with
                                         | Bool -> string_of_bool x
                                         | Int -> string_of_int x
                                         | Char -> string_of_char x
-                                        | String -> x) ^ res)
+                                        | String -> x))
+                                     ^ res)
 
 /// `parse_format s`:
 ///     Parses a list of characters into a list of directives
@@ -84,7 +86,7 @@ let rec parse_format
 
 /// `parse_format_string`: parses a format `string` into a list of directives
 let parse_format_string
-    (s:string) 
+    (s:string)
   : option (list dir)
   = parse_format (list_of_string s)
 

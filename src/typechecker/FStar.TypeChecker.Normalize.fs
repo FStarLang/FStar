@@ -631,7 +631,7 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
              (PC.strcat_lid',    2, binary_string_op (fun x y -> x ^ y));
              (PC.str_make_lid,   2, mixed_binary_op arg_as_int arg_as_char EMB.embed_string
-                                    (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int x) y));
+                                    (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int_fs x) y));
              (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (PC.string_compare, 2, binary_op arg_as_string string_compare');
@@ -1205,7 +1205,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inl t -> Inl (norm cfg env [] t)
                     | Inr c -> Inr (norm_comp cfg env c) in
                 let tacopt = BU.map_opt tacopt (norm cfg env []) in
-                rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
+                match stack with
+                | Steps (s, ps, dl) :: stack ->
+                  let t = mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos in
+                  norm ({cfg with steps=s; primitive_steps=ps; delta_level=dl}) env stack t
+                | _ ->
+                  rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
             end
 
           | Tm_match(head, branches) ->
