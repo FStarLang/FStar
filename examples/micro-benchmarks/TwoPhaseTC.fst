@@ -1,6 +1,6 @@
 module TwoPhaseTC
 
-#set-options "--use_two_phase_tc --ugly"
+#set-options "--use_two_phase_tc true --ugly"
 
 (*
  * Uvar solutions are not always closed, they can have free universe names.
