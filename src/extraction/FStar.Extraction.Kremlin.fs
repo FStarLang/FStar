@@ -464,10 +464,11 @@ and translate_type_decl env ty: option<decl> =
   | (assumed, name, _mangled_name, args, flags, Some (MLTD_Abbrev t)) ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env name -> extend_t env name) env args in
-      if assumed then
+      if assumed then begin
+        BU.print1_warning "Not translating type definition (assumed) for %s\n" (snd name);
         // JP: TODO: shall we be smarter here?
         None
-      else
+      end else
         Some (DTypeAlias (name, translate_flags flags, List.length args, translate_type env t))
 
   | (_, name, _mangled_name, args, flags, Some (MLTD_Record fields)) ->
