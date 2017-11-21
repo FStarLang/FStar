@@ -525,6 +525,24 @@ let built_in_primitive_steps : list<primitive_step> =
     let binary_string_op (f : string -> string -> string) =
         binary_op arg_as_string (fun r x y -> EMB.embed_string r (f x y))
     in
+    let mixed_binary_op
+           :  (arg -> option<'a>)
+           -> (arg -> option<'b>)
+           -> (Range.range -> 'c -> term)
+           -> (Range.range -> 'a -> 'b -> 'c)
+           -> psc
+           -> args
+           -> option<term>
+           = fun as_a as_b embed_c f res args ->
+                 match args with
+                 | [a;b] ->
+                    begin
+                    match as_a a, as_b b with
+                    | Some a, Some b -> Some (embed_c res.psc_range (f res.psc_range a b))
+                    | _ -> None
+                    end
+                 | _ -> None
+    in
     let list_of_string' rng (s:string) : term =
         let name l = mk (Tm_fvar (lid_as_fv l Delta_constant None)) rng in
         let char_t = name PC.char_lid in
@@ -612,6 +630,8 @@ let built_in_primitive_steps : list<primitive_step> =
              (PC.op_Or,          2, binary_bool_op (fun x y -> x || y));
              (PC.strcat_lid,     2, binary_string_op (fun x y -> x ^ y));
              (PC.strcat_lid',    2, binary_string_op (fun x y -> x ^ y));
+             (PC.str_make_lid,   2, mixed_binary_op arg_as_int arg_as_char EMB.embed_string
+                                    (fun r (x:BigInt.t) (y:char) -> FStar.String.make (BigInt.to_int x) y));
              (PC.string_of_int_lid, 1, unary_op arg_as_int string_of_int);
              (PC.string_of_bool_lid, 1, unary_op arg_as_bool string_of_bool);
              (PC.string_compare, 2, binary_op arg_as_string string_compare');
@@ -1191,7 +1211,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_match(head, branches) ->
             let stack = Match(env, branches, t.pos)::stack in
             norm cfg env stack head
-          
+
           | Tm_let((b, lbs), lbody) when is_top_level lbs && List.contains CompressUvars cfg.steps ->
             let lbs = lbs |> List.map (fun lb ->
               let openings, lbunivs = Subst.univ_var_opening lb.lbunivs in
