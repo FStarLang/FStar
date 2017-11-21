@@ -7891,7 +7891,8 @@ let simplify_guard:
                 [FStar_TypeChecker_Normalize.Beta;
                 FStar_TypeChecker_Normalize.Eager_unfolding;
                 FStar_TypeChecker_Normalize.Simplify;
-                FStar_TypeChecker_Normalize.Primops] env f in
+                FStar_TypeChecker_Normalize.Primops;
+                FStar_TypeChecker_Normalize.NoFullNorm] env f in
             (let uu____21311 =
                FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
                  (FStar_Options.Other "Simplification") in

@@ -2551,7 +2551,7 @@ let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops] env f in
+      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops; N.NoFullNorm] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
