@@ -490,6 +490,13 @@ type server_process = option event -> server_state -> (list event * server_state
 type script_process = option event -> browser_state -> (list event * browser_state)
 
 
+val init: trusted: list id ->
+	  browsers: list (id * uid * uri * browser_state * browser_process) -> 
+	  servers: list (id * script_process * server_state * server_process) -> 
+	  s:system{get_log s == []}
+
+
+
 assume val get_browser_ids: system -> list id 
 assume val get_browser: id -> system -> browser_state * browser_process
 assume val get_server: id -> system -> server_state * server_process
@@ -533,16 +540,6 @@ let rec extends l1 l2 =
   if List.Tot.length l1 < List.Tot.length l2 then False
   else first_n (List.Tot.length l2) l1 == l2
 
-
-assume val mk_browser: stateful id (* creates a new browser and returns an identifier for it *)
-
-
-val init: browsers: list (id * browser_state * browser_process) -> 
-	  servers: list (id * server_state * server_process) -> 
-	  scripts: list (id * script_process) ->
-	  trusted: list id ->
-	  s:system{get_log s == []}
-	  
 type stateful 'a = s:system -> Pure ('a * system)
 			   (requires (valid_log (get_log s)))
 			   (ensures (fun (r,f) -> valid_log (get_log f) /\
@@ -554,6 +551,9 @@ type stateful_spec 'a (pre:system -> Type) (post:system -> 'a -> system -> Type)
 			    (ensures (fun (r,o) -> valid_log (get_log o) /\ 
 						get_log o `extends` get_log i /\
 						post i r o))
+
+
+assume val mk_browser: stateful id (* creates a new browser and returns an identifier for it *)
 
 assume val add_event: e:event -> stateful_spec unit (fun i -> valid_log (e::(get_log i)))  (fun i r o -> get_log o == e::get_log i)
 assume val add_events: es:list event -> stateful_spec unit (fun i -> valid_log (es@(get_log i)))  (fun i r o -> get_log o == es @ get_log i)
