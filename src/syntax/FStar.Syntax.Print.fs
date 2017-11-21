@@ -590,7 +590,7 @@ let rec sigelt_to_string (x: sigelt) =
              (term_to_string k)
   | Sig_datacon(lid, univs, t, _, _, _) ->
     if (Options.print_universes())
-    then let univs, t = Subst.open_univ_vars univs t in
+    then //let univs, t = Subst.open_univ_vars univs t in
          U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
     else U.format2 "datacon %s : %s" lid.str (term_to_string t)
   | Sig_declare_typ(lid, univs, t) ->
