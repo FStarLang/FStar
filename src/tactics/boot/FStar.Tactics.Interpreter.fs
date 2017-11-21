@@ -502,7 +502,14 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
                 let gs1 = List.flatten gs1 in
                 let (topen', gs2) = traverse f pol e' topen in
                 ((U.abs bs topen' k).n, gs1@gs2)
-        | x -> (x, []) in
+
+        | Tm_ascribed (t, asc, ef) ->
+            // TODO: traverse the types?
+            let (t, gs1) = traverse f pol e t in
+            (Tm_ascribed (t, asc, ef), gs1)
+
+        | x ->
+            (x, []) in
     let t' = { t with n = tn' } in
     let t', gs' = f pol e t' in
     (t', gs@gs')
