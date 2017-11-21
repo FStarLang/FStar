@@ -13,7 +13,7 @@ FSTAR_FILES=$(filter-out $(FLAKY) ,$(wildcard FStar.*.fst FStar.*.fsti))
 
 extra: $(addsuffix -ver, $(EXTRA))
 
-OTHERFLAGS+=--use_two_phase_tc
+OTHERFLAGS+=--use_two_phase_tc true
 
 indent: $(addsuffix -indent, $(ALL))
 
