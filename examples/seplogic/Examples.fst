@@ -35,25 +35,33 @@ let step_bind             :tactic unit = apply_lemma (quote lemma_bind);; norm [
 
 let step_eq_implies_intro :tactic unit = apply_lemma (quote lemma_eq_implies_intro);; norm []
 
-// Note - If pointwise fails when one of its subgoals fails, then update this to use trefl instead of fail
 let simplify_join_emp :tactic unit =
   pointwise (or_else (or_else (apply_lemma (quote lemma_join_h_emp);; qed) 
                               (apply_lemma (quote lemma_join_emp_h);; qed))
-		     (trefl))
+		     (fail "SKIP"))
 		     
 let simplify_join_minus :tactic unit =
   pointwise (or_else (or_else (apply_lemma (quote lemma_join_points_to_minus);; qed)
                               (apply_lemma (quote lemma_join_restrict_minus);; qed))
-		     (trefl))
+		     (fail "SKIP"))
 
 let simplify_restrict :tactic unit =
   apply_lemma (quote lemma_restrict_r_update')  `or_else`
   apply_lemma (quote lemma_restrict_r1_update') `or_else`
   fail "simplify_restrict: failed"
+
+let assumption' :tactic unit =
+  apply_raw (quote FStar.Squash.return_squash);;
+  assumption
+
+let assumption'' :tactic unit =
+  dump "before assumption";;
+  or_else assumption' (apply_lemma (quote lemma_addr_not_eq_refl);; norm [];; assumption');;
+  dump "after assumption"
   
 let simplify_sel :tactic unit =
+  (apply_lemma (quote lemma_sel_r1_update');; split;; assumption'')        `or_else`
   apply_lemma (quote lemma_sel_r_update')         `or_else`
-  apply_lemma (quote lemma_sel_r1_update')        `or_else`
   apply_lemma (quote lemma_sel_r1_from_restrict') `or_else`
   apply_lemma (quote lemma_sel_r_from_minus')     `or_else`
   fail "simplify_sel: failed"
@@ -107,11 +115,21 @@ let simplify_goals :tactic unit =
   trytac (repeat split);;
   repeat_simplify_sel;;
   return ()
+
+let and_elim' :tactic unit =
+  h <-- implies_intro;
+  and_elim (pack (Tv_Var h));;
+  clear h
+
+let implies_intros' :tactic unit =
+  repeat and_elim';;
+  implies_intros;;
+  return ()
   
 let solve :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   dump "Initial goal";;
-  trytac implies_intro;;
+  trytac implies_intros';;
   repeat step;;
   simplify_goals;;
   dump "Final goal"
