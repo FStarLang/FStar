@@ -41,6 +41,8 @@ let grows' (#a:eqtype) (#b:a -> Type) (#inv:(partial_dependent_map a b -> Type))
               Some?.v (sel m1 x) == Some?.v (sel m2 x)
 let grows #a #b #inv = grows' #a #b #inv
 
+let contains_stable #a #b #inv #r t x y = ()
+let defined_stable #a #b #inv #r t x = ()
 ////////////////////////////////////////////////////////////////////////////////
 
 //The main stateful interface is minimal and straigtforward
