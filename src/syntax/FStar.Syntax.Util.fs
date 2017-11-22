@@ -398,6 +398,27 @@ type eq_result =
     | NotEqual
     | Unknown
 
+// Functions that we specially treat as injective, to make normalization
+// (particularly of decidable equality) better. We should make sure they
+// are actually proved to be injective.
+let injectives =
+    ["FStar.Int8.int_to_t";
+     "FStar.Int16.int_to_t";
+     "FStar.Int32.int_to_t";
+     "FStar.Int64.int_to_t";
+     "FStar.UInt8.uint_to_t";
+     "FStar.UInt16.uint_to_t";
+     "FStar.UInt32.uint_to_t";
+     "FStar.UInt64.uint_to_t";
+     "FStar.Int8.__int_to_t";
+     "FStar.Int16.__int_to_t";
+     "FStar.Int32.__int_to_t";
+     "FStar.Int64.__int_to_t";
+     "FStar.UInt8.__uint_to_t";
+     "FStar.UInt16.__uint_to_t";
+     "FStar.UInt32.__uint_to_t";
+     "FStar.UInt64.__uint_to_t"]
+
 let rec eq_tm (t1:term) (t2:term) : eq_result =
     let canon_app t =
         let hd, args = head_and_args' (unascribe t) in
@@ -464,7 +485,11 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
       begin match (un_uinst h1).n, (un_uinst h2).n with
       | Tm_fvar f1, Tm_fvar f2 when f1.fv_qual = Some Data_ctor && f2.fv_qual = Some Data_ctor ->
         equal_data f1 args1 f2 args2
-      | _ -> // can only they're equal if they syntactically match, nothing else
+
+      | Tm_fvar f1, Tm_fvar f2 when fv_eq f1 f2 && List.mem (string_of_lid (lid_of_fv f1)) injectives ->
+        equal_data f1 args1 f2 args2
+
+      | _ -> // can only assert they're equal if they syntactically match, nothing else
         eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
       end
 
