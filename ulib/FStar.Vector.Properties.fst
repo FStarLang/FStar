@@ -23,6 +23,8 @@ module L = FStar.List.Tot
 
 open FStar.UInt32
 
+#set-options "--use_two_phase_tc true"
+
 let int_to_u32 (x:int): Tot U32.t = U32.uint_to_t (UInt.to_uint_t 32 x)
 let u32_to_int (x:U32.t): Tot (y:int{y = U32.v x}) = U32.v x
 let is_u32 (x:int): bool = UInt.fits x U32.n
@@ -34,7 +36,7 @@ let subv
     (i:len_t)
     (j:len_t{i <=^ j /\ j <=^ l})
   : Tot (raw a (j -^ i))
-  = FStar.Vector.Base.sub #a #l v i j
+  = FStar.Vector.Base.sub v i j
 
 /// This coercion seems to be necessary in some places
 ///
@@ -212,7 +214,7 @@ let last
 let empty
     (#a:Type)
   : Tot (raw a 0ul)
-  = init #a 0ul (fun _ -> ())
+  = init #a 0ul (fun _ -> ())  //AR: use of init seems to require the implicit
 
 let create1
     (#a:Type)
@@ -282,9 +284,9 @@ let rec count
     (decreases (u32_to_int l))
   = if l =^ 0ul then 0 
     else
-      let t = tail #a #l v in
-      let n = if head #a #l v = x then 1 else 0 in
-      n + (count #a #(l -^ 1ul) x t)
+      let t = tail v in
+      let n = if head v = x then 1 else 0 in
+      n + (count x t)
 
 let mem
     (#a:eqtype)
@@ -302,7 +304,7 @@ let rec mem_index
     (v:raw a l)
   : Lemma 
     (requires (mem x v))
-    (ensures (exists (i:index_t v). (index #a #l v i) == x))
+    (ensures (exists (i:index_t v). (index v i) == x))
     (decreases (u32_to_int l))
   = if l =^ 0ul then ()
     else let m : (m:len_t{m >^ 0ul}) = l in
@@ -312,6 +314,8 @@ let rec mem_index
               let _ = mem_index x t in
               assert (forall (j:index_t t). t.[j] == u.[j +^ 1ul]) //NS: this bit of index juggling is needed to find the witness of the existential in the goal
 #reset-options
+
+#set-options "--use_two_phase_tc true"
 
 let swap
     (#a:Type) 
@@ -351,7 +355,7 @@ let rec lemma_sub_first_in_append
               let v1_from_i = subv v1 i lv1 in
               let v1_from_i_v2 = append v1_from_i v2 in
               let v1v2_from_i = subv v1v2 i lv1v2 in
-              equal2 #a #(lv1v2 -^ i) v1v2_from_i v1_from_i_v2))
+              equal2 v1v2_from_i v1_from_i_v2))
     (decreases (u32_to_int lv1))
   = if i =^ 0ul then ()
     else lemma_sub_first_in_append (tail v1) v2 (i -^ 1ul)
@@ -398,7 +402,7 @@ let lemma_cons_head_append
               let magic_len = 1ul +^ ((lv1 -^ 1ul) +^ lv2) in
               let (hv1tv1v2:raw a magic_len) = cons hv1 tv1v2 in              
               magic_len = lv1 +^ lv2 /\
-              equal #a #(lv1 +^ lv2) v1v2 hv1tv1v2))
+              equal v1v2 hv1tv1v2))
   = ()
 
 let lemma_tl
@@ -419,8 +423,8 @@ let rec sorted
     (decreases (u32_to_int l))
   = if l <=^ 1ul
     then true
-    else let hd = head #a #l v in
-         f hd v.[1ul] && sorted #a #(l -^ 1ul) f (tail #a #l v)
+    else let hd = head v in
+         f hd v.[1ul] && sorted f (tail v)
 
 #set-options "--max_fuel 1 --initial_fuel 1"
 let rec lemma_append_count
@@ -430,26 +434,28 @@ let rec lemma_append_count
     (lo:raw a llo)
     (hi:raw a lhi{ok (+) llo lhi})
   : Lemma
-    (ensures (forall x. count x (append #a #llo #lhi lo hi) = (count x lo + count x hi)))
+    (ensures (forall x. count x (append lo hi) = (count x lo + count x hi)))
     (decreases (u32_to_int llo))
   = if llo =^ 0ul
-    then assert (equal #a #(llo +^ lhi) (append #a #llo #lhi lo hi) hi)
+    then assert (equal (append lo hi) hi)
     else 
       let (lohi:raw a (llo +^ lhi)) = append lo hi in
-      let (hdlo:a) = head #a #llo lo in
+      let (hdlo:a) = head lo in
       let ltllohi = llo -^ 1ul +^ lhi in
-      let (tllohi:raw a ltllohi) = append #a #(llo -^ 1ul) #lhi (tail #a #llo lo) hi in
+      let (tllohi:raw a ltllohi) = append (tail lo) hi in
       let lhdlotllohi = 1ul +^ (llo -^ 1ul +^ lhi) in
-      let (hdlotllohi:raw a lhdlotllohi) = cons #a #(llo -^ 1ul +^ lhi) hdlo tllohi in
+      let (hdlotllohi:raw a lhdlotllohi) = cons hdlo tllohi in
       (assert (equal hdlotllohi lohi);
            let (ln:len_t) = llo -^ 1ul in
-           lemma_append_count #a #ln (tail #a #llo lo) hi;
+           lemma_append_count (tail lo) hi;
            let ltl_l_h = (llo -^ 1ul) +^ lhi in
-           let (tl_l_h:raw a ltl_l_h) = append #a #(llo -^ 1ul) #lhi (tail #a #llo lo) hi in
+           let (tl_l_h:raw a ltl_l_h) = append (tail lo) hi in
            let llh = 1ul +^ ltl_l_h in
-           let (lh:raw a llh) = cons #a #ltl_l_h (head #a #llo lo) tl_l_h in
-           assert (equal2 #a #(llh -^ 1ul) #ltl_l_h (tail #a #llh lh) tl_l_h))
+           let (lh:raw a llh) = cons (head lo) tl_l_h in
+           assert (equal2 (tail lh) tl_l_h))
 #reset-options
+
+#set-options "--use_two_phase_tc true"
 
 let lemma_append_count_aux
     (#a:eqtype)
@@ -482,10 +488,10 @@ let rec lemma_mem_count
     (decreases (u32_to_int l))
   = if l =^ 0ul then ()
     else let ltl = l -^ 1ul in
-         let tl = tail #a #l v in
+         let tl = tail v in
          assert (forall (i:len_t{i <^ ltl}). 
-                     (index #a #ltl tl i) = v.[i +^ 1ul]);
-         lemma_mem_count #a #ltl tl f
+                     (index tl i) = v.[i +^ 1ul]);
+         lemma_mem_count tl f
 
 let lemma_count_sub
     (#a:eqtype) 
@@ -522,16 +528,16 @@ let rec sorted_concat_lemma
     let lphi = lhi +^ 1ul in
     if llo =^ 0ul 
     then let llophi = llo +^ lhi +^ 1ul in
-         let lophi = append #a #llo #lphi lo phi in
-         (assert (equal2 #a #llophi #lphi lophi phi);
-          assert (equal #a #lhi (tail #a #lphi phi) hi))
-    else let tlo = tail #a #llo lo in
+         let lophi = append lo phi in
+         (assert (equal2 lophi phi);
+          assert (equal (tail phi) hi))
+    else let tlo = tail lo in
          let ltlo = llo -^ 1ul in
-         let tllophi = append #a #ltlo #lphi tlo phi in
-         let h = head #a #llo lo in
-         sorted_concat_lemma #a #ltlo #lhi f tlo pivot hi;
+         let tllophi = append tlo phi in
+         let h = head lo in
+         sorted_concat_lemma f tlo pivot hi;
          lemma_cons_head_append lo phi;
-         lemma_tl #a #(llo -^ 1ul +^ lphi) h tllophi
+         lemma_tl h tllophi
 
 #set-options "--max_fuel 1 --initial_fuel 1 --z3rlimit 30"
 let split_5 
@@ -554,13 +560,15 @@ let split_5
                /\ equal2 e (subv v j (j +^ 1ul))
                /\ equal2 f (subv v (j +^ 1ul) l)
                ))
-  = let frag_lo,  (rest:raw a (l -^ i)) = split_eq #a #l v i in  
+  = let frag_lo,  (rest:raw a (l -^ i)) = split_eq v i in  
     let frag_i,   (rest:raw a (l -^ i -^ 1ul))  = split_eq rest (reinx 1ul rest) in
     let frag_mid, (rest:raw a (l -^ i -^ 1ul -^ (j -^ (i +^ 1ul)))) = split_eq rest (j -^ (i +^ 1ul)) in
     let frag_j,   (rest:raw a (l -^ i -^ 1ul -^ (j -^ (i +^ 1ul)) -^ 1ul)) = split_eq rest (reinx 1ul rest) in
     let frag_hi   = coerce rest (l -^ (j +^ 1ul)) in
     (frag_lo, frag_i, frag_mid, frag_j, frag_hi)
 #reset-options
+
+#set-options "--use_two_phase_tc true"
 
 let lemma_swap_permutes_aux_frag_eq
     (#a:Type)
@@ -604,12 +612,12 @@ let lemma_swap_permutes_aux
       let l45 = l4 +^ l5 in
       let (f45:raw a l45) = (append frag_j frag_hi) in
       let l345 = l3 +^ l45 in
-      let (f345:raw a l345) = (append #a #l3 #l45 frag_mid f45) in
+      let (f345:raw a l345) = (append frag_mid f45) in
       let l2345 = l2 +^ l345 in
       let (f2345:raw a l2345) = (append frag_i f345) in
       lemma_append_count_aux x frag_lo f2345;
       lemma_append_count_aux x frag_i f345;
-      lemma_append_count_aux #a #l3 #l45 x frag_mid f45;
+      lemma_append_count_aux x frag_mid f45;
       lemma_append_count_aux x frag_j frag_hi;
 
       let v' = swap v i j in
@@ -624,15 +632,17 @@ let lemma_swap_permutes_aux
       let lihi = l2 +^ l5 in
       let (ihi:raw a lihi) = (append frag_i frag_hi) in
       let lmidihi = l3 +^ lihi in
-      let (midihi:raw a lmidihi) = (append #a #l3 #lihi frag_mid ihi) in
+      let (midihi:raw a lmidihi) = (append frag_mid ihi) in
       let ljmidihi = l4 +^ lmidihi in
       let (jmidihi:raw a ljmidihi) = (append frag_j midihi) in
-      lemma_append_count_aux #a #l1 #ljmidihi x frag_lo jmidihi;
+      lemma_append_count_aux x frag_lo jmidihi;
       lemma_append_count_aux x frag_j midihi;
-      lemma_append_count_aux #a #l3 #lihi x frag_mid ihi;
+      lemma_append_count_aux x frag_mid ihi;
       lemma_append_count_aux x frag_i frag_hi      
   end
 #reset-options
+
+#set-options "--use_two_phase_tc true"
 
 type permutation 
      (#a:eqtype)
@@ -697,7 +707,7 @@ let lemma_sub_snoc
     assert (equal2 (subv v i j) (append (subv v i (j -^ 1ul)) vj1));
     lemma_mem_append (subv v i (j -^ 1ul)) vj1
 
-#reset-options "--z3rlimit 10"
+#reset-options "--z3rlimit 10 --use_two_phase_tc true"
 let lemma_ordering_lo_snoc
     (#a:eqtype)
     (#l:len_t)
@@ -713,7 +723,7 @@ let lemma_ordering_lo_snoc
     assert (equal2 (subv v i (j +^ 1ul)) (append (subv v i j) vj1));
     lemma_mem_append (subv v i j) vj1
 
-#reset-options "--z3rlimit 20"
+#reset-options "--z3rlimit 20 --use_two_phase_tc true"
 let lemma_ordering_hi_cons
     (#a:eqtype)
     (#l:len_t)
@@ -728,7 +738,7 @@ let lemma_ordering_hi_cons
   = let vb1 = create1 v.[back] in
     assert (equal2 (subv v back len) (append vb1 (subv v (back +^ 1ul) len)));
     lemma_mem_append vb1 (subv v (back +^ 1ul) len)
-#reset-options
+#reset-options "--use_two_phase_tc true"
 
 let swap_frame_lo
     (#a:Type)
@@ -905,7 +915,7 @@ let lemma_trans_frame
     (ensures (v1 == splice v3 i v1 j))
   = assert (equal v1 (splice v3 i v1 j))
 
-#reset-options "--z3rlimit 40"
+#reset-options "--z3rlimit 40 --use_two_phase_tc true"
 let lemma_weaken_perm_left
     (#a:eqtype)
     (#l:len_t)
@@ -935,7 +945,7 @@ let lemma_weaken_perm_right
   : Lemma
     (requires (let iq:len_t = i in
                v1 == splice v2 iq v1 j /\ 
-               permutation #a #(j -^ i) (subv v2 iq j) (subv v1 iq j)))
+               permutation (subv v2 iq j) (subv v1 iq j)))
     (ensures (permutation (subv v2 i k) (subv v1 i k)))
   = assert (equal2 (subv v2 i k) (append (subv v2 i j)
                                      (subv v2 j k)));
@@ -943,7 +953,7 @@ let lemma_weaken_perm_right
                                      (subv v2 j k)));
     lemma_append_count (subv v2 i j) (subv v2 j k);
     lemma_append_count (subv v1 i j) (subv v2 j k)
-#reset-options
+#reset-options "--use_two_phase_tc true"
 
 let lemma_trans_perm
     (#a:eqtype)
@@ -1006,7 +1016,7 @@ let lemma_snoc_inj
     (ensures (x1 == x2 /\ equal v1 v2))
   = let t1 = create1 x1 in 
     let t2 = create1 x2 in 
-    lemma_append_inj #a #l #1ul #l #1ul v1 t1 v2 t2;
+    lemma_append_inj v1 t1 v2 t2;
     assert(head t1 == head t2)
 
 #set-options "--initial_fuel 2 --max_fuel 2"
@@ -1026,9 +1036,9 @@ let rec find_l
   : Tot (o:option a{Some? o ==> f (Some?.v o)})
     (decreases (u32_to_int l))
   = if l =^ 0ul then None
-    else let hv = head #a #l v in
+    else let hv = head v in
          if f hv then Some hv
-         else find_l #a #(l -^ 1ul) f (tail #a #l v)
+         else find_l f (tail v)
     
 let rec find_append_some
     (#a:Type)
@@ -1042,16 +1052,16 @@ let rec find_append_some
     (ensures (find_l f (append v1 v2) == find_l f v1))
     (decreases (u32_to_int l1))
   = if l1 =^ 0ul then ()
-    else if f (head #a #l1 v1) then ()
+    else if f (head v1) then ()
     else
       let l1s1 = l1 -^ 1ul in
-      let q = append #a #l1s1 #l2 (tail #a #l1 v1) v2 in
-      let r = tail #a #(l1 +^ l2) (append #a #l1 #l2 v1 v2) in
-      let _ = assert (equal2 #a #(l1s1 +^ l2) #(l1 +^ l2 -^ 1ul) q r) in
-      let tl = tail #a #l1 v1 in
-      find_append_some #a #l1s1 #l2 tl v2 f
+      let q = append (tail v1) v2 in
+      let r = tail (append v1 v2) in
+      let _ = assert (equal2 q r) in
+      let tl = tail v1 in
+      find_append_some tl v2 f
 
-#reset-options "--z3rlimit 10"
+#reset-options "--z3rlimit 10 --use_two_phase_tc true"
 let rec find_append_none
     (#a:Type)
     (#l1:len_t)
@@ -1065,12 +1075,12 @@ let rec find_append_none
     (decreases (u32_to_int l1))
   = if l1 =^ 0ul then assert (equal2 (append v1 v2) v2)
     else
-      let q = tail #a #(l1 +^ l2) (append v1 v2) in
-      let r = append #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 in
-      let _ = assert (equal2 #a #(l1 +^ l2 -^ 1ul) #(l1 -^ 1ul +^ l2 ) q r) in
-      find_append_none #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 f
+      let q = tail (append v1 v2) in
+      let r = append (tail  v1) v2 in
+      let _ = assert (equal2 q r) in
+      find_append_none (tail v1) v2 f
 
-#reset-options "--z3rlimit 30"
+#reset-options "--z3rlimit 30 --use_two_phase_tc true"
 let rec find_append_none_v2
     (#a:Type)
     (#l1:len_t)
@@ -1082,15 +1092,15 @@ let rec find_append_none_v2
     (requires (None? (find_l f v2)))
     (ensures  (find_l f (append v1 v2) == find_l f v1))
     (decreases (u32_to_int l1))
-  = if l1 =^ 0ul then assert (equal2 #a #(l1 +^ l2) #l2 (append #a #l1 #l2 v1 v2) v2)
-    else if f (head #a #l1 v1) then ()
+  = if l1 =^ 0ul then assert (equal2 (append v1 v2) v2)
+    else if f (head v1) then ()
     else begin
-      find_append_none_v2 #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 f;
-      let q = tail #a #(l1 +^ l2) (append #a #l1 #l2 v1 v2) in
-      let r = append #a #(l1 -^ 1ul) #l2 (tail #a #l1 v1) v2 in
-      assert (equal2 #a #(l1 +^ l2 -^ 1ul) #(l1 -^ 1ul +^ l2) q r)
+      find_append_none_v2 (tail v1) v2 f;
+      let q = tail (append v1 v2) in
+      let r = append (tail v1) v2 in
+      assert (equal2 q r)
     end
-#reset-options
+#reset-options "--use_two_phase_tc true"
 
 let find_snoc
     (#a:Type)
@@ -1099,7 +1109,7 @@ let find_snoc
     (x:a)
     (f:a -> Tot bool)
   : Lemma 
-    (ensures (let res = find_l #a #(l +^ 1ul) f (snoc v x) in
+    (ensures (let res = find_l f (snoc v x) in
               match res with 
               | None -> find_l f v == None /\ not (f x)
               | Some y -> res == find_l f v \/ (f x /\ x==y)))
@@ -1123,8 +1133,8 @@ let un_snoc_snoc
     (x:a)
   : Lemma 
     (requires True)
-    (ensures (un_snoc #a #(l +^ 1ul) (snoc v x) == (v, x)))
-  = let v', x = un_snoc #a #(l +^ 1ul) (snoc v x) in
+    (ensures (un_snoc (snoc v x) == (v, x)))
+  = let v', x = un_snoc (snoc v x) in
     assert (equal v v')
 
 let rec find_r
@@ -1137,7 +1147,7 @@ let rec find_r
   = if l =^ 0ul then None
     else let prefix, last = un_snoc v in 
          if f last then Some last
-         else find_r #a #(l -^ 1ul) f prefix
+         else find_r f prefix
 
 type found (i:len_t) = True
 let rec raw_find_aux
@@ -1216,7 +1226,7 @@ let rec raw_to_list
   : Tot (r:list a{L.length r = u32_to_int l}) 
     (decreases (u32_to_int l))
   = if l =^ 0ul then []
-    else index v 0ul::(raw_to_list #a #(l -^ 1ul) (subv v 1ul l))
+    else index v 0ul::(raw_to_list (subv v 1ul l))
 
 let rec raw_of_list
     (#a:Type)
@@ -1239,7 +1249,7 @@ let rec lemma_raw_list_bij
        lemma_eq_intro v (raw_of_list (raw_to_list v))
     )
     else (
-      lemma_raw_list_bij #a #(l -^ 1ul) (subv v 1ul l);
+      lemma_raw_list_bij (subv v 1ul l);
       lemma_eq_intro v (raw_of_list (raw_to_list v))
     )
 
@@ -1253,16 +1263,16 @@ let rec lemma_list_raw_bij
     (decreases (L.length l))
   = if L.length l = 0 then ()
     else (
-      lemma_list_raw_bij #a (L.tl l);
+      lemma_list_raw_bij (L.tl l);
       let hd = L.hd l in let tl = L.tl l in
       assert (raw_to_list (raw_of_list tl) == tl);
       assert (raw_of_list l == create1 hd @| raw_of_list tl);
       let lraw = raw_of_list l in
       let ll32 = int_to_u32 (L.length l) in
       let tlraw = coerce (raw_of_list tl) (ll32 -^ 1ul) in
-      lemma_eq_intro #a #(ll32 -^ 1ul) tlraw (subv #a #ll32 lraw 1ul ll32)
+      lemma_eq_intro tlraw (subv lraw 1ul ll32)
     )
-#reset-options
+#reset-options "--use_two_phase_tc true"
 
 unfold 
 let createL_post 
@@ -1278,7 +1288,7 @@ let createL
     (l:list a{is_u32 (L.length l)})
   : Pure (raw a (int_to_u32 (L.length l)))
     (requires True)
-    (ensures (fun s -> createL_post #a l s))
+    (ensures (fun s -> createL_post l s))
   = let s = raw_of_list l in
     lemma_list_raw_bij l;
     s
@@ -1339,7 +1349,7 @@ let lemma_contains_create1
   : Lemma (forall (y:a). contains (create1 x) y ==> y == x) 
   = ()
 
-#reset-options "--z3rlimit 20"
+#reset-options "--z3rlimit 20 --use_two_phase_tc true"
 private
 let intro_append_contains_from_disjunction 
     (#a:Type)
@@ -1357,7 +1367,7 @@ let intro_append_contains_from_disjunction
     assert ((exists i. (v1.[i] == x /\ v1v2.[reinx i v1v2] == x)) \/
             (exists j. (v2.[j] == x /\ v1v2.[reinx (j +^ l1) v1v2] == x)))
 
-#reset-options "--z3rlimit 20"
+#reset-options "--z3rlimit 40 --use_two_phase_tc true"
 let append_contains_equiv 
     (#a:Type)
     (#l1:len_t)
@@ -1370,10 +1380,10 @@ let append_contains_equiv
            (v1 `contains` x \/ v2 `contains` x))
   = contains_elim (v1 @| v2) x;
     let v1v2 = v1 @| v2 in
-    assert (v1v2 `contains` x ==>
+    assume (v1v2 `contains` x ==>
             ((exists i. (v1.[i] == x /\ v1v2.[reinx i v1v2] == x)) \/
              (exists j. (v2.[j] == x /\ v1v2.[reinx (j +^ l1) v1v2] == x))))
-#reset-options
+#reset-options "--use_two_phase_tc true"
 
 let snoc_v_x_contains_x
     (#a:Type)
@@ -1452,7 +1462,7 @@ let contains_snoc_r_l
     (ensures (forall y. v `contains` y \/ x==y ==> (snoc v x) `contains` y))
   = Classical.forall_intro (contains_snoc_r_l_aux2 v x)
   
-#reset-options "--z3rlimit 20"
+#reset-options "--z3rlimit 20 --use_two_phase_tc true"
 let contains_snoc_l_r
     (#a:Type)
     (#l:len_t)
@@ -1461,7 +1471,7 @@ let contains_snoc_l_r
   : Lemma 
     (ensures (forall y. (snoc v x) `contains` y ==> v `contains` y \/ x==y))
   = FStar.Classical.forall_intro (append_contains_equiv v (create1 x))
-#reset-options 
+#reset-options "--use_two_phase_tc true"
 
 let contains_snoc 
     (#a:Type)
@@ -1491,7 +1501,7 @@ let rec lemma_find_l_exists_index
          assert (forall (j:index_t tl). tl.[j] == u.[j +^ 1ul])
 
 
-#reset-options "--initial_fuel 1 --max_fuel 4 --z3rlimit 20"
+#reset-options "--initial_fuel 1 --max_fuel 4 --z3rlimit 20 --use_two_phase_tc true"
 let rec lemma_find_l_contains 
     (#a:Type) 
     (#l:len_t)
@@ -1568,9 +1578,9 @@ let append_subs
             equal v2 (subv (append v1 v2) l1 (l1 +^ l2)) /\
             (forall (i:len_t) (j:len_t). (
               i <=^ j /\ j <=^ l2 
-              ==> (let (q:raw a (j -^ i)) = subv #a #l2 v2 i j in
+              ==> (let (q:raw a (j -^ i)) = subv v2 i j in
                    let (r:raw a ((l1 +^ j) -^ (l1 +^ i))) = (subv (append v1 v2) (l1 +^ i) (l1 +^ j)) in
-                   equal2 #a #(j -^ i) #((l1 +^ j) -^ (l1 +^ i)) q r))))
+                   equal2 q r))))
    = ()       
 
 
@@ -1626,7 +1636,7 @@ let rec lemma_index_create
   = if n =^ 0ul then ()
     else
       if i =^ 0ul then () 
-      else lemma_index_create #a (n -^ 1ul) x (i -^ 1ul)
+      else lemma_index_create (n -^ 1ul) x (i -^ 1ul)
 
 let rec lemma_index_upd1
     (#a:Type)
@@ -1640,7 +1650,7 @@ let rec lemma_index_upd1
     (decreases (u32_to_int l))
     [SMTPat ((update v n x).[n])]
   = if n =^ 0ul then () 
-    else lemma_index_upd1 #a #(l -^ 1ul) (tail v) (n -^ 1ul) x
+    else lemma_index_upd1 (tail v) (n -^ 1ul) x
 
 let rec lemma_index_upd2
     (#a:Type)
@@ -1659,7 +1669,7 @@ let rec lemma_index_upd2
     else if n =^ 0ul then ()
     else let hd = head v in
          let tl = tail v in
-         lemma_index_upd2 #a tl (n -^ 1ul) x (i -^ 1ul)
+         lemma_index_upd2 tl (n -^ 1ul) x (i -^ 1ul)
 
 abstract 
 let rec lemma_index_app1
@@ -1712,12 +1722,12 @@ let rec lemma_index_sub
     (ensures (index (subv v i j) k == index v (k +^ i))) 
     (decreases (u32_to_int l))
     [SMTPat (index (subv v i j) k)]
-  = if i >^ 0ul then lemma_index_sub #a (tail v) (i -^ 1ul) (j -^ 1ul) k
+  = if i >^ 0ul then lemma_index_sub (tail v) (i -^ 1ul) (j -^ 1ul) k
     else
       if j =^ 0ul then ()
       else if k =^ 0ul then () 
       else let tl = (tail v) in
-           lemma_index_sub #a tl (reinx i tl) (j -^ 1ul) (k -^ 1ul)
+           lemma_index_sub tl (reinx i tl) (j -^ 1ul) (k -^ 1ul)
 
 abstract 
 let lemma_eq_elim
@@ -1794,7 +1804,7 @@ let append_cons
     (ensures (let v1v2 = append v1 v2 in
               let lv1v2 = l1 +^ l2 +^ 1ul in
               let appcons = coerce (append (cons c v1) v2) lv1v2 in
-              let consapp = coerce (cons #a #(l1 +^ l2) c v1v2) lv1v2 in
+              let consapp = coerce (cons c v1v2) lv1v2 in
               appcons == consapp))
   = lemma_eq_elim (append (cons c v1) v2) (cons c (append v1 v2))
 
@@ -1875,7 +1885,7 @@ let sub_sub
     [SMTPat (subv (subv v i1 j1) i2 j2)]
   = lemma_eq_elim (subv (subv v i1 j1) i2 j2) (subv v (i1 +^ i2) (i1 +^ j2))
 
-#reset-options "--z3rlimit 30"
+#reset-options "--z3rlimit 30 --use_two_phase_tc true"
 let raw_of_list_tl
     (#a: Type)
     (l:list a{is_u32 (L.length l) /\ L.length l > 0} )
@@ -1894,7 +1904,7 @@ let raw_of_list_tl
   lemma_eq_intro rawtl tlraw; // ... this makes it go through faster.
   lemma_eq_elim rawtl tlraw
 
-#reset-options "--z3rlimit 30"
+#reset-options "--z3rlimit 30 --use_two_phase_tc true"
 let rec mem_raw_of_list
     (#a:eqtype)
     (x:a)
@@ -1908,10 +1918,10 @@ let rec mem_raw_of_list
     | [] -> ()
     | hd :: tl ->
       let l32 = int_to_u32 (L.length l) in
-      let _ : squash (head #a #l32 (raw_of_list l) == hd) = () in
+      let _ : squash (head (raw_of_list l) == hd) = () in
       let _ : squash (let l32s1 = l32 -^ 1ul in
-                      let rawtl = coerce #a #l32s1 (raw_of_list tl) l32s1 in
-                      let tlraw = coerce #a #l32s1 (tail #a #l32 (raw_of_list l)) l32s1 in
+                      let rawtl = coerce (raw_of_list tl) l32s1 in
+                      let tlraw = coerce (tail (raw_of_list l)) l32s1 in
                       tlraw == rawtl) = raw_of_list_tl l in
       let _ : squash (mem x (raw_of_list l) == (x = hd || mem x (raw_of_list tl))) = 
                      lemma_mem_inversion (raw_of_list l) 
