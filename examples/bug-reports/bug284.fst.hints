@@ -34,11 +34,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_bool",
         "refinement_interpretation_Bug284_Tm_refine_6bf7e0d19c9816135a96d2d4a380fa10"
       ],
       0,
-      "fa9b80f9a3b8b92f2eafab646db93157"
+      "e19e39aae94996a5fd1a9215d53abacb"
     ]
   ]
 ]

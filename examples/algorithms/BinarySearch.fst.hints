@@ -9,6 +9,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
         "binder_x_0dadc9957b7ee1a2ac2dc6b84bb90882_2",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
         "binder_x_a5d09bc7a6a83a40c35ac7a2c288dc24_3",
@@ -22,16 +23,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "fa469c30ea30914f882ca8c1632989e4"
-    ],
-    [
-      "BinarySearch.bsearch_rec",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "911c4196b5e648cdb9830ba230edc158"
+      "8d298f5bb198f68bf1109d393eda0e80"
     ],
     [
       "BinarySearch.bsearch",
@@ -77,6 +69,7 @@
         "@fuel_correspondence_BinarySearch.bsearch_rec.fuel_instrumented",
         "@fuel_irrelevance_BinarySearch.bsearch_rec.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
         "binder_x_0dadc9957b7ee1a2ac2dc6b84bb90882_2",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
         "binder_x_a5d09bc7a6a83a40c35ac7a2c288dc24_3",
@@ -97,16 +90,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "322056e45983d2c06220ad00cc164815"
-    ],
-    [
-      "BinarySearch.bsearch_rec_correct",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "4ca235d3d0be12f96e50d5b98b017249"
+      "8aa5e984d569e43f45abc82a30e6e6a8"
     ],
     [
       "BinarySearch.bsearch_correct",
@@ -280,12 +264,13 @@
       "BinarySearch.bsearch_rec_complete",
       5,
       2,
-      1,
+      2,
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_BinarySearch.bsearch_rec.fuel_instrumented",
         "@fuel_irrelevance_BinarySearch.bsearch_rec.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
         "binder_x_0dadc9957b7ee1a2ac2dc6b84bb90882_2",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_1",
         "binder_x_a5d09bc7a6a83a40c35ac7a2c288dc24_3",
@@ -305,16 +290,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "0720878ce8380f65519665ed14007159"
-    ],
-    [
-      "BinarySearch.bsearch_rec_complete",
-      6,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "19c92fdbcfd2e62a7b96148d56f56c79"
+      "c8847ee60643da4f495c3e3ccabed719"
     ],
     [
       "BinarySearch.bsearch_complete",

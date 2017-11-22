@@ -76,34 +76,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
-        "binder_x_ce9e987e2a674adb4dce3a63ac377c81_1",
-        "disc_equation_BinarySearchTree0.Leaf",
-        "disc_equation_BinarySearchTree0.Node",
-        "equality_tok_Prims.LexTop@tok",
-        "fuel_guarded_inversion_BinarySearchTree0.tree", "int_inversion",
-        "subterm_ordering_BinarySearchTree0.Node"
-      ],
-      0,
-      "ecdcb1d91cbae79f19692c75373a19d0"
-    ],
-    [
-      "BinarySearchTree0.search",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "3b11addd31a0e8bbdd1bab7af3445088"
-    ],
-    [
-      "BinarySearchTree0.insert",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
         "binder_x_ce9e987e2a674adb4dce3a63ac377c81_1",
         "disc_equation_BinarySearchTree0.Leaf",
@@ -111,19 +84,31 @@
         "equality_tok_Prims.LexTop@tok",
         "fuel_guarded_inversion_BinarySearchTree0.tree", "int_inversion",
         "projection_inverse_BinarySearchTree0.Node__1",
+        "projection_inverse_BinarySearchTree0.Node__2",
         "subterm_ordering_BinarySearchTree0.Node"
       ],
       0,
-      "e88959b7048a30b0a9913f5f3960fe22"
+      "163e30cc0540d4ed240051e7ab989668"
     ],
     [
       "BinarySearchTree0.insert",
-      2,
+      1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
+        "binder_x_ce9e987e2a674adb4dce3a63ac377c81_1",
+        "disc_equation_BinarySearchTree0.Leaf",
+        "disc_equation_BinarySearchTree0.Node",
+        "equality_tok_Prims.LexTop@tok",
+        "fuel_guarded_inversion_BinarySearchTree0.tree", "int_inversion",
+        "projection_inverse_BinarySearchTree0.Node__1",
+        "projection_inverse_BinarySearchTree0.Node__2",
+        "subterm_ordering_BinarySearchTree0.Node"
+      ],
       0,
-      "1ed9c46e4dbfbe65d1475ddd840070f2"
+      "7ab7d9a9c8474f4c65d091229a93a06a"
     ]
   ]
 ]

@@ -6,21 +6,12 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0,
-      "6123c446a772077160feb4610571732c"
-    ],
-    [
-      "Bug540.test",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "1b693e391abf2f7906a6da491d09a398"
+      "c42d9a30aa552c8f31f6ae9c999e8182"
     ]
   ]
 ]

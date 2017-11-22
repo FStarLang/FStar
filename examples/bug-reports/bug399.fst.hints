@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_unit" ],
       0,
-      "3ad58e494523b00fd974f14f50103441"
+      "c2e4282f36d907c69d719eb50d8e4258"
     ],
     [
       "Bug399.works",
@@ -25,21 +25,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Bug399.foo",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_unit",
         "unit_inversion"
       ],
       0,
-      "8c2511ec106fa9033f5194c054eb8155"
-    ],
-    [
-      "Bug399.works",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_unit" ],
-      0,
-      "03218d7e918682accc170e58b97f53d7"
+      "40ad4e07ab204d2cd88dadb01a7a316a"
     ]
   ]
 ]

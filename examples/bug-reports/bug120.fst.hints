@@ -57,15 +57,6 @@
       ],
       0,
       "e79d1babd516f58ca84c258b055bf4d5"
-    ],
-    [
-      "Bug120.subst",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "0a6293d4b9b9ca953388f9358fe181b0"
     ]
   ]
 ]

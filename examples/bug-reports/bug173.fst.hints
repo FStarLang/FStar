@@ -481,22 +481,16 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0,
-      "1c3d15741197cf801831d397be157634"
-    ],
-    [
-      "Bug173.update",
-      2,
-      2,
-      1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Bug173.id",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_Bug173.id",
         "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "cb20cf8d2ac6be75c4acf08f1c39dd63"
+      "6f8f46f38e2156a7aca722e1a38e6ef0"
     ],
     [
       "Bug173.step_exp",
@@ -506,25 +500,18 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Bug173_pretyping_d83e1dc370c53e96a182896c4591ec0d",
+        "assumption_Prims.HasEq_int",
         "binder_x_d83e1dc370c53e96a182896c4591ec0d_1", "bool_inversion",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "kinding_Bug173.exp@tok", "lemma_FStar.Pervasives.invertOption",
-        "subterm_ordering_Bug173.If", "subterm_ordering_Bug173.Op",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Bug173.If",
+        "subterm_ordering_Bug173.Op",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "da69b06e0d7ef0e49b9891364f623f52"
-    ],
-    [
-      "Bug173.step_exp",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "3eec855eb92c42592146b9858b9e1066"
+      "f1fb35d94c5957c1c2d187ec09ccb98b"
     ],
     [
       "Bug173.step",
@@ -592,7 +579,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Bug173.typ_haseq",
         "binder_x_d83e1dc370c53e96a182896c4591ec0d_1",
         "disc_equation_Bug173.If", "disc_equation_Bug173.Op",
         "disc_equation_Bug173.Val", "disc_equation_Bug173.Var",
@@ -601,34 +588,7 @@
         "subterm_ordering_Bug173.If", "subterm_ordering_Bug173.Op"
       ],
       0,
-      "cef186ef2e6e08314ab1815835650391"
-    ],
-    [
-      "Bug173.typing_exp",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Bug173.typ_haseq" ],
-      0,
-      "5b04febb6dbf45a2beb8159c128df4ac"
-    ],
-    [
-      "Bug173.typing_exp",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Bug173.typ_haseq" ],
-      0,
-      "f80928404be4ef905740aff4b1641e97"
-    ],
-    [
-      "Bug173.typing_exp",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Bug173.typ_haseq" ],
-      0,
-      "7138512ae7e265eb3f6d57368b73d15a"
+      "1585bf098588820d218212c19adb53e8"
     ],
     [
       "Bug173.typing",
@@ -639,35 +599,23 @@
         "@MaxIFuel_assumption",
         "@fuel_correspondence_Bug173.typing_exp.fuel_instrumented", "@query",
         "Bug173_pretyping_2e6088c3e78554cca9be304cc06504d2",
+        "assumption_Bug173.typ_haseq",
         "binder_x_814bbe39f9d21c3fa611e97d9721bf41_1",
         "binder_x_9e53eb5d806d96bed9bf05f4a8103650_0", "bool_inversion",
-        "constructor_distinct_Bug173.Cond",
-        "constructor_distinct_Bug173.Seq",
         "data_typing_intro_Bug173.TBool@tok", "disc_equation_Bug173.Assign",
         "disc_equation_Bug173.Cond", "disc_equation_Bug173.Seq",
         "disc_equation_Bug173.Skip", "disc_equation_Bug173.While",
+        "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "fuel_guarded_inversion_Bug173.stmt", "kinding_Bug173.typ@tok",
         "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_Bug173.Cond_cond",
-        "projection_inverse_Bug173.Cond_else_branch",
-        "projection_inverse_Bug173.Cond_then_branch",
         "subterm_ordering_Bug173.Cond", "subterm_ordering_Bug173.Seq",
         "subterm_ordering_Bug173.While", "typing_Bug173.typing_exp",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "f14e0944213a17406627c9b82ba53b13"
-    ],
-    [
-      "Bug173.typing",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Bug173.typ_haseq" ],
-      0,
-      "c9c379e612042d1572f04c097f515859"
+      "374e452768c390b773ea3bb1012dd171"
     ],
     [
       "Bug173.typed_heap",
@@ -676,7 +624,7 @@
       1,
       [ "@query", "assumption_Bug173.typ_haseq" ],
       0,
-      "593c6663a273a356dc05ba9db086e8f9"
+      "c20bf8205c0beb308790195f2ddeb4cd"
     ],
     [
       "Bug173.progress_exp",

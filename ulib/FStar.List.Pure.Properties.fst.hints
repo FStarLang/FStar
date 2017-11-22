@@ -39,7 +39,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "423cacb71a87f8407756973300c630ed"
+      "f5397d53c8b5f36b9dcd01cd2f3d44e8"
     ],
     [
       "FStar.List.Pure.Properties.splitAt_assoc",
@@ -52,21 +52,19 @@
         "@fuel_correspondence_FStar.List.Tot.Base.splitAt.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.splitAt.fuel_instrumented",
-        "@query", "assumption_Prims.HasEq_int",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
         "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_4",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_2",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_3",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_FStar.Pervasives.Native.Mktuple2",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.List.Tot.Base.op_At", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.splitAt.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
-        "lemma_FStar.List.Tot.Properties.append_l_nil",
+        "interpretation_FStar.List.Tot.Base_Tm_abs_bdbb3a5fa88a61f1cfb8a0d549d4efde",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
@@ -77,11 +75,11 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "typing_FStar.List.Tot.Base.splitAt", "unit_inversion",
+        "token_correspondence_FStar.List.Tot.Base.op_At", "unit_inversion",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "2f5d8bc63ecd757e10fe3921f8be0497"
+      "7a72a67a7b9fe04ffb6d14b03e8ffc93"
     ],
     [
       "FStar.List.Pure.Properties.splitAt_length_total",
@@ -111,7 +109,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "c8f9cd9770083f5d01d9f64fbd8d92d2"
+      "dfa024fae0c243397040faa1d5dbb8da"
     ]
   ]
 ]

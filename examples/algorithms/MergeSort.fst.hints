@@ -54,27 +54,9 @@
       1,
       2,
       1,
-      [ "@query" ],
-      0,
-      "d498e60d1acee7e82200af236c166470"
-    ],
-    [
-      "MergeSort.merge_inv",
-      2,
-      2,
-      1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f8001de6862fb19f49f2675bcc9788dd"
-    ],
-    [
-      "MergeSort.merge_inv",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "fbc3e0542681d4a86ec7f4763ff1625d"
+      "c89ce9d94347cc06be631d57ba0b4a61"
     ],
     [
       "MergeSort.merge",

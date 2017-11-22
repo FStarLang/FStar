@@ -114,16 +114,7 @@
         "typing_FStar.List.Tot.Base.mem", "unit_inversion", "unit_typing"
       ],
       0,
-      "3aed3815454b9371d203871358b019c8"
-    ],
-    [
-      "IntSort.sorted_smaller",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b9b72a17a6789f6af2940b927f9c3a4d"
+      "6594f2008e5a7c55a29c7a97b3fc51e8"
     ],
     [
       "IntSort.permutation",
@@ -131,83 +122,23 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "@query", "assumption_Prims.HasEq_bool",
+        "assumption_Prims.HasEq_int", "equation_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "94ba1bbac7fd9935d0fa30fc1e079ee7"
-    ],
-    [
-      "IntSort.permutation",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
-      0,
-      "67e1583af4f812ece83ec9ed911ecf79"
-    ],
-    [
-      "IntSort.permutation",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "c88efba546d0667ef36864214b3d0800"
-    ],
-    [
-      "IntSort.permutation",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f939feeb93f34673d20a03061ba5082a"
+      "a2983ec928849ab9a0adc04898d819f8"
     ],
     [
       "IntSort.permutation_2",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_bool" ],
+      [
+        "@query", "assumption_Prims.HasEq_bool", "assumption_Prims.HasEq_int"
+      ],
       0,
-      "01bf5786159811782898674069dbff07"
-    ],
-    [
-      "IntSort.permutation_2",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d165c605a95cbe93d10cf044e64c7917"
-    ],
-    [
-      "IntSort.permutation_2",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "25c91b55011f777726fc516c732e926e"
-    ],
-    [
-      "IntSort.permutation_2",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "5049ce80d21b855912954bc00add5799"
-    ],
-    [
-      "IntSort.permutation_2",
-      5,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "45b23c3d094d121fb69f80a5adb32b46"
+      "b4d4c7b68df984665e38588b95255e85"
     ]
   ]
 ]

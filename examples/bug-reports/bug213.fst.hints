@@ -75,9 +75,13 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "data_typing_intro_Bug213.IP@tok",
+        "fuel_guarded_inversion_Bug213.cexists",
+        "projection_inverse_Bug213.ExIntro_a"
+      ],
       0,
-      "7eaeab0c175e9c2e172291acfbc02090"
+      "6efc99245b4a15b6ff8c837a35553449"
     ]
   ]
 ]
