@@ -2365,11 +2365,15 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              let wp = match c1.effect_args with
                       | [(wp1,_)] -> wp1
                       | _ -> failwith (BU.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
+             let univs =
+               match c1.comp_univs with
+               | [] -> [env.universe_of env c1.result_typ]
+               | x -> x in
              {
-                comp_univs=c1.comp_univs;
+                comp_univs=univs;
                 effect_name=c2.effect_name;
                 result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift.mlift_wp (List.hd c1.comp_univs) c1.result_typ wp)];
+                effect_args=[as_arg (edge.mlift.mlift_wp (List.hd univs) c1.result_typ wp)];
                 flags=c1.flags
              }
         in
