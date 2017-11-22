@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "92e1446d6521c21855bfe27302e32254"
+      "3000bd8b7b162999b0dcf6a1c1d8f4f7"
     ],
     [
       "Bug128.subst",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equality_tok_Prims.LexTop@tok" ],
       0,
-      "8169d7fe4477c28fdba7adec026de4a4"
+      "503d7eccc740e69f0c357c049eba4291"
     ]
   ]
 ]

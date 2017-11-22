@@ -986,7 +986,8 @@ let rec extract_one_pat:
                 uu____2920)
           | FStar_Syntax_Syntax.Pat_constant s ->
               let t =
-                FStar_TypeChecker_TcTerm.tc_constant FStar_Range.dummyRange s in
+                FStar_TypeChecker_TcTerm.tc_constant
+                  g.FStar_Extraction_ML_UEnv.tcenv FStar_Range.dummyRange s in
               let mlty = term_as_mlty g t in
               let uu____2940 =
                 let uu____2949 =

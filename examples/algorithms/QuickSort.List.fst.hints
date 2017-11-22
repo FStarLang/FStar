@@ -12,7 +12,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "365045d6bcd08167bfad0e951fd8adc9"
+      "ccf6152634795ab9093ca5a01880a9e5"
     ],
     [
       "QuickSort.List.total_order",
@@ -24,7 +24,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "448961186ae40acc3bee2b0ccdc05844"
+      "7842fe80b52c5ed38614de546b08cdbc"
     ],
     [
       "QuickSort.List.count",
@@ -48,7 +48,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0610798fb4f0a2d5fa8a9c990edd76e3"
+      "f3c421340baba39c488cdee0e26ea77d"
     ],
     [
       "QuickSort.List.count",
@@ -62,7 +62,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0c7ac0818a1c95a870a80e5b108f8c10"
+      "3e4619553add56ad22e7d0d27a2563b7"
     ],
     [
       "QuickSort.List.mem_count",
@@ -71,7 +71,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_bool" ],
       0,
-      "669f0656ee465a15ac92cdf7695e0c26"
+      "90b67e7cf8efd29aa36f0c57905c3214"
     ],
     [
       "QuickSort.List.mem_count",
@@ -99,7 +99,7 @@
         "subterm_ordering_Prims.Cons", "typing_QuickSort.List.count"
       ],
       0,
-      "7616f0748b18ade86367dff68fae9e8d"
+      "703440e629ec1c2d6f7523249621524c"
     ],
     [
       "QuickSort.List.partition",
@@ -114,7 +114,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "adc01040a5e5af2c206e0833a3decc1b"
+      "dd0c4472f14019c7bf4282473045ca67"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -123,7 +123,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "feb8604ec232b06703a72394770e2a78"
+      "346a2b8b3abeb03a80042a9069cf1409"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -132,7 +132,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ef6c5e65a618f42bd9e0a6f668ed8db5"
+      "693aa4e18a8b27c51f60761b11d7cff4"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -141,7 +141,7 @@
       1,
       [ "@query" ],
       0,
-      "7faf59271bda409eea2880b7d8e79613"
+      "946a80ce448d881d1adf51a01645fba9"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -198,7 +198,7 @@
         "typing_QuickSort.List.partition"
       ],
       0,
-      "94019a5d2af9df11a6db15759ab7c09e"
+      "950b789663208c6ae27b1bbb01dc5be8"
     ],
     [
       "QuickSort.List.sorted_app_lemma",
@@ -246,7 +246,7 @@
         "typing_QuickSort.List.sorted"
       ],
       0,
-      "815273acb3138460407c2b118397b67a"
+      "5448ef12165543da898d3e2c91610a0f"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -258,7 +258,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "54227e664985160c4097da6198c8128d"
+      "e01e49b9da28ad8bc7956fc1f7b2fe9b"
     ],
     [
       "QuickSort.List.append_count",
@@ -267,7 +267,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f73ac5f757534d03c84a8f96e050c6b9"
+      "f2691221f091c958e816bc0d2bc9968e"
     ],
     [
       "QuickSort.List.append_count",
@@ -303,7 +303,7 @@
         "typing_QuickSort.List.count"
       ],
       0,
-      "2c5fb640665c98f32539d28f59a3cb53"
+      "629af8e4ff3d4897c3b8c3f4ddfc658d"
     ],
     [
       "QuickSort.List.permutation_app_lemma",
@@ -336,7 +336,7 @@
         "typing_FStar.List.Tot.Base.op_At", "typing_QuickSort.List.count"
       ],
       0,
-      "34000e471b8bd79e3e36b53200842989"
+      "0ebb222a834296d5561de8faea912f35"
     ],
     [
       "QuickSort.List.permutation_app_lemma",
@@ -345,7 +345,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "bd5beb10fcf5cb89796fdd6e0f7b5d64"
+      "a924db0646aac72998bd194806e43e36"
     ],
     [
       "QuickSort.List.quicksort",
@@ -402,7 +402,7 @@
         "typing_QuickSort.List.sorted", "well-founded-ordering-on-nat"
       ],
       0,
-      "528f3d010d4bf29d322495d49e93b553"
+      "ea2e475e3f7f3cf195a3915350a024cd"
     ]
   ]
 ]

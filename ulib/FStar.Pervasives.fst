@@ -4,6 +4,8 @@ module FStar.Pervasives
 open Prims
 include FStar.Pervasives.Native
 
+let id (#a:Type) (x:a) = x
+
 new_effect DIV = PURE
 sub_effect PURE ~> DIV  = purewp_id
 

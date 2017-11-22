@@ -630,7 +630,7 @@ let rec extract_one_pat (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlt
         g, Some (MLP_Var x, [when_clause]), ok ml_int_ty
 
     | Pat_constant s     ->
-        let t : term = TcTerm.tc_constant Range.dummyRange s in
+        let t : term = TcTerm.tc_constant g.tcenv Range.dummyRange s in
         let mlty = term_as_mlty g t in
         g, Some (MLP_Const (mlconst_of_const p.p s), []), ok mlty
 

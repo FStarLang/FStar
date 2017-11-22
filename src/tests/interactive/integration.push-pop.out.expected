@@ -98,7 +98,7 @@
 {"kind": "response", "query-id": "164", "response": [], "status": "success"}
 {"kind": "response", "query-id": "165", "response": [{"level": "error", "message": "assertion failed", "ranges": [{"beg": [13, 8], "end": [13, 14], "fname": "<input>"}, {"beg": [13, 15], "end": [13, 23], "fname": "<input>"}]}], "status": "failure"}
 {"kind": "response", "query-id": "170", "response": [], "status": "success"}
-{"kind": "response", "query-id": "175", "response": [{"level": "error", "message": "Expected expression of type \"Prims.int\"; got expression \"'2'\" of type \"FStar.Char.char\"", "ranges": [{"beg": [13, 22], "end": [13, 24], "fname": "<input>"}]}], "status": "success"}
+{"kind": "response", "query-id": "175", "response": [{"level": "error", "message": "Unexpected numeric literal.  Restart F* to load FStar.UInt8.", "ranges": [{"beg": [13, 22], "end": [13, 24], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "179", "response": [], "status": "success"}
 {"kind": "response", "query-id": "180", "response": [{"level": "error", "message": "assertion failed", "ranges": [{"beg": [13, 8], "end": [13, 14], "fname": "<input>"}, {"beg": [13, 15], "end": [13, 24], "fname": "<input>"}]}], "status": "failure"}
 {"kind": "response", "query-id": "185", "response": [], "status": "success"}

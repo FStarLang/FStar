@@ -40,6 +40,7 @@ open FStar.Errors
 open FStar.Parser
 open FStar.Parser.Parse
 open FStar.BaseTypes
+open FStar.Compiler
 
 let intern_string : string -> string =
   let strings = Util.smap_create 100 in

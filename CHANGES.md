@@ -100,6 +100,14 @@ Guidelines for the changelog:
   let f x = !x
   ```
 
+* FStar.Char.char: In support of unicode, FStar.Char.char is now an
+  abstract alias for a 21 bit integer represented within a
+  FStar.UInt32.t.
+
+* ucontrib/Platform/fst/*: These modules are deprecated. Their
+  functionality is now moved to FStar.Bytes, FStar.Error, FStar.Tcp,
+  FStar.Udp, and FStar.Date.
+
 ## C Extraction
 
 * [PR #1176](https://github.com/FStarLang/FStar/pull/1176)

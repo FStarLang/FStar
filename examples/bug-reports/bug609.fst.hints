@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e56573b0794f35a212ec909a15e42a44"
+      "55c2b57fe4f5d3d108029a8a27f4bd56"
     ],
     [
       "Bug609.add''",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c798754012ef7cbfd949d176f0fd0854"
+      "153722be7da35f965a12f4a504bbe551"
     ],
     [
       "Bug609.test",
@@ -26,7 +26,7 @@
       2,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "8a0af8f0018fd6f2bf7a31cf6f37b9eb"
+      "e465005d105e16d99fca6276f8a41483"
     ],
     [
       "Bug609.test",
@@ -51,7 +51,7 @@
         "typing_FStar.List.Tot.Base.fold_left"
       ],
       0,
-      "de03640fad1bc35018b3145374cd11d5"
+      "7f7ea509807428784059e765a5524797"
     ]
   ]
 ]

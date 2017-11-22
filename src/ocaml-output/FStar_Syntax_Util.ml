@@ -1,11 +1,11 @@
 open Prims
 let qual_id: FStar_Ident.lident -> FStar_Ident.ident -> FStar_Ident.lident =
   fun lid  ->
-    fun id  ->
+    fun id1  ->
       let uu____7 =
         FStar_Ident.lid_of_ids
-          (FStar_List.append lid.FStar_Ident.ns [lid.FStar_Ident.ident; id]) in
-      FStar_Ident.set_lid_range uu____7 id.FStar_Ident.idRange
+          (FStar_List.append lid.FStar_Ident.ns [lid.FStar_Ident.ident; id1]) in
+      FStar_Ident.set_lid_range uu____7 id1.FStar_Ident.idRange
 let mk_discriminator: FStar_Ident.lident -> FStar_Ident.lident =
   fun lid  ->
     FStar_Ident.lid_of_ids
@@ -2762,12 +2762,12 @@ let uvar_from_id:
     FStar_Syntax_Syntax.typ ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
   =
-  fun id  ->
+  fun id1  ->
     fun t  ->
       let uu____8320 =
         let uu____8323 =
           let uu____8324 =
-            let uu____8341 = FStar_Syntax_Unionfind.from_id id in
+            let uu____8341 = FStar_Syntax_Unionfind.from_id id1 in
             (uu____8341, t) in
           FStar_Syntax_Syntax.Tm_uvar uu____8324 in
         FStar_Syntax_Syntax.mk uu____8323 in

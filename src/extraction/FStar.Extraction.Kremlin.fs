@@ -373,8 +373,9 @@ and translate_decl env d: list<decl> =
   | MLM_Top _ ->
       failwith "todo: translate_decl [MLM_Top]"
 
-  | MLM_Exn _ ->
-      failwith "todo: translate_decl [MLM_Exn]"
+  | MLM_Exn (m, _) ->
+      BU.print1_warning "Skipping the translation of exception: %s\n" m;
+      []
 
 and translate_let env flavor flags lb: option<decl> =
   match lb with
@@ -410,10 +411,10 @@ and translate_let env flavor flags lb: option<decl> =
       if assumed then
         if List.length tvars = 0 then
           Some (DExternal (None, flags, name, translate_type env t0))
-        else
-          // JP: TODO assume polymorphic function and have KreMLin generate
-          // monomorphized assumes 
+        else begin
+          BU.print1_warning "No writing anything for %s (polymorphic assume)\n" (snd name);
           None
+        end
       else begin
         try
           let body = translate_expr env body in
@@ -463,10 +464,11 @@ and translate_type_decl env ty: option<decl> =
   | (assumed, name, _mangled_name, args, flags, Some (MLTD_Abbrev t)) ->
       let name = env.module_name, name in
       let env = List.fold_left (fun env name -> extend_t env name) env args in
-      if assumed then
+      if assumed then begin
+        BU.print1_warning "Not translating type definition (assumed) for %s\n" (snd name);
         // JP: TODO: shall we be smarter here?
         None
-      else
+      end else
         Some (DTypeAlias (name, translate_flags flags, List.length args, translate_type env t))
 
   | (_, name, _mangled_name, args, flags, Some (MLTD_Record fields)) ->
@@ -509,7 +511,12 @@ and translate_type env t: typ =
       TInt (must (mk_width m))
   | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
-  | MLTY_Named ([arg], p) when (Syntax.string_of_mlpath p = "FStar.Buffer.buffer") ->
+  | MLTY_Named ([arg; _], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref") ->
+      TBuf (translate_type env arg)
+  | MLTY_Named ([arg], p) when
+    Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mref" ||
+    Syntax.string_of_mlpath p = "FStar.HyperStack.ref" ||
+    Syntax.string_of_mlpath p = "FStar.Buffer.buffer" ->
       TBuf (translate_type env arg)
   | MLTY_Named ([_], p) when (Syntax.string_of_mlpath p = "FStar.Ghost.erased") ->
       TAny
@@ -592,8 +599,13 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
     when string_of_mlpath p = "FStar.Buffer.index" || string_of_mlpath p = "FStar.Buffer.op_Array_Access" ->
       EBufRead (translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])
+    when string_of_mlpath p = "FStar.HyperStack.ST.op_Bang" ->
+      EBufRead (translate_expr env e, EConstant (UInt32, "0"))
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.create") ->
       EBufCreate (Stack, translate_expr env e1, translate_expr env e2)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) } , [ _rid; init ]) when (string_of_mlpath p = "FStar.HyperStack.ST.ralloc") ->
+      EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "0"))
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.rcreate") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e2 ]) when (string_of_mlpath p = "FStar.Buffer.createL") ->
@@ -617,6 +629,9 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
     when string_of_mlpath p = "FStar.Buffer.upd" || string_of_mlpath p = "FStar.Buffer.op_Array_Assignment" ->
       EBufWrite (translate_expr env e1, translate_expr env e2, translate_expr env e3)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ])
+    when string_of_mlpath p = "FStar.HyperStack.ST.op_Colon_Equals" ->
+      EBufWrite (translate_expr env e1, EConstant (UInt32, "0"), translate_expr env e2)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.push_frame") ->
       EPushFrame
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when (string_of_mlpath p = "FStar.HyperStack.ST.pop_frame") ->

@@ -41,8 +41,9 @@ $(FSYACC) $(FSLEX): nuget-restore
 
 # All the files that need to be pre-processed
 
-ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti Bytes.fsti	\
-			          String.fsti BigInt.fsti Pprint.fsti	\
+ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
+			          Compiler.Bytes.fsti String.fsti	\
+			          BigInt.fsti Pprint.fsti		\
 			          Parser.Parse.fsti			\
 			          Tactics.Interpreter.fst		\
 			          Tactics.Interpreter.fsti		\

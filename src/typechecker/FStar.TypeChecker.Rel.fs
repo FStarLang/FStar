@@ -2365,11 +2365,15 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              let wp = match c1.effect_args with
                       | [(wp1,_)] -> wp1
                       | _ -> failwith (BU.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
+             let univs =
+               match c1.comp_univs with
+               | [] -> [env.universe_of env c1.result_typ]
+               | x -> x in
              {
-                comp_univs=c1.comp_univs;
+                comp_univs=univs;
                 effect_name=c2.effect_name;
                 result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift.mlift_wp c1.result_typ wp)];
+                effect_args=[as_arg (edge.mlift.mlift_wp (List.hd univs) c1.result_typ wp)];
                 flags=c1.flags
              }
         in
@@ -2408,13 +2412,21 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                          if env.lax then
                             U.t_true
                          else if is_null_wp_2
-                         then let _ = if debug env <| Options.Other "Rel" then BU.print_string "Using trivial wp ... \n" in
-                              mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial,
-                                        [as_arg c1.result_typ; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1]))
+                         then let _ = if debug env <| Options.Other "Rel"
+                                      then BU.print_string "Using trivial wp ... \n" in
+                              let c1_univ = env.universe_of env c1.result_typ in
+                              mk (Tm_app(inst_effect_fun_with [c1_univ] env c2_decl c2_decl.trivial,
+                                        [as_arg c1.result_typ;
+                                         as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
                                  None r
-                         else mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.stronger,
-                                        [as_arg c2.result_typ; as_arg wpc2; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1]))
-                                 None r in
+                         else let c1_univ = env.universe_of env c1.result_typ in
+                              let c2_univ = env.universe_of env c2.result_typ in
+                               mk (Tm_app(inst_effect_fun_with
+                                                [c2_univ] env c2_decl c2_decl.stronger,
+                                          [as_arg c2.result_typ;
+                                           as_arg wpc2;
+                                           as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
+                                   None r in
                       let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob |> fst) g) [] wl in
                       solve env (attempt [base_prob] wl)
@@ -2541,16 +2553,17 @@ let solve_and_commit env probs err =
       UF.commit tx;
       Some deferred
     | Failed (d,s) ->
-      UF.rollback tx;
       if Env.debug env <| Options.Other "ExplainRel"
       then BU.print_string <| explain env d s;
-      err (d,s)
+      let result = err (d,s) in
+      UF.rollback tx;
+      result
 
 let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops] env f in
+      let f = N.normalize [N.Beta; N.Eager_unfolding; N.Simplify; N.Primops; N.NoFullNorm] env f in
       if Env.debug env <| Options.Other "Simplification" then BU.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match (U.unmeta f).n with
         | Tm_fvar fv when S.fv_eq_lid fv Const.true_lid -> Trivial
@@ -2585,24 +2598,8 @@ let teq env t1 t2 : guard_t =
                         (guard_to_string env g);
       g
 
-let try_subtype' env t1 t2 smt_ok =
- if debug env <| Options.Other "Rel"
- then BU.print2 "try_subtype of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
- let prob, x = new_t_prob env t1 SUB t2 in
- let g = with_guard env prob <| solve_and_commit env (singleton' env prob smt_ok) (fun _ -> None) in
- if debug env <| Options.Other "Rel"
-    && BU.is_some g
- then BU.print3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n"
-                    (N.term_to_string env t1)
-                    (N.term_to_string env t2)
-                    (guard_to_string env (BU.must g));
- map_opt g (abstract_guard (S.mk_binder x))
-
-let try_subtype env t1 t2 = try_subtype' env t1 t2 true
-
 let subtype_fail env e t1 t2 =
     Errors.err (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
-
 
 let sub_comp env c1 c2 =
   if debug env <| Options.Other "Rel"
@@ -2847,11 +2844,51 @@ let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=([], [u1,u2])}
 
-let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
-  match try_teq false env t1 t2 with
-  | None -> false
-  | Some g ->
+let discharge_guard_nosmt env g =
     match discharge_guard' None env g false with
     | Some _ -> true
     | None   -> false
 
+let teq_nosmt (env:env) (t1:typ) (t2:typ) :bool =
+  match try_teq false env t1 t2 with
+  | None -> false
+  | Some g -> discharge_guard_nosmt env g
+
+///////////////////////////////////////////////////////////////////
+let check_subtyping env t1 t2 =
+    if debug env <| Options.Other "Rel"
+    then BU.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
+    let prob, x = new_t_prob env t1 SUB t2 in
+    let g = with_guard env prob <| solve_and_commit env (singleton' env prob true) (fun _ -> None) in
+    if debug env <| Options.Other "Rel"
+    && BU.is_some g
+    then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
+                    (N.term_to_string env t1)
+                    (N.term_to_string env t2)
+                    (guard_to_string env (BU.must g));
+    match g with
+    | None -> None
+    | Some g -> Some (x, g)
+
+let get_subtyping_predicate env t1 t2 =
+    match check_subtyping env t1 t2 with
+    | None -> None
+    | Some (x, g) ->
+      Some (abstract_guard (S.mk_binder x) g)
+
+let get_subtyping_prop env t1 t2 =
+    match check_subtyping env t1 t2 with
+    | None -> None
+    | Some (x, g) ->
+      Some (close_guard env [S.mk_binder x] g)
+
+let subtype_nosmt env t1 t2 =
+    if debug env <| Options.Other "Rel"
+    then BU.print2 "try_subtype_no_smt of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
+    let prob, x = new_t_prob env t1 SUB t2 in
+    let g = with_guard env prob <| solve_and_commit env (singleton' env prob false) (fun _ -> None) in
+    match g with
+    | None -> false
+    | Some g ->
+      let g = close_guard env [S.mk_binder x] g in
+      discharge_guard_nosmt env g

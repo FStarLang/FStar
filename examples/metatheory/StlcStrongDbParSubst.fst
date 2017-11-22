@@ -19,6 +19,8 @@
 
 module StlcStrongDbParSubst
 
+#set-options "--use_two_phase_tc true"
+
 open FStar.Constructive
 open FStar.Classical
 open FStar.FunctionalExtensionality
@@ -187,7 +189,7 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
      let hs' : subst_typing (sub_elam s) (extend tlam g1) (extend tlam g2) =
        fun y -> if y = 0 then TyVar y
              else let n:var = y - 1 in //Silly limitation of implicits and refinements
-                  substitution #_ #_ #(Some?.v (g1 n)) sub_inc #_ (hs n) hs'' //NS: needed to instantiate the Some?.v 
+                  substitution sub_inc (hs n) hs'' //NS: needed to instantiate the Some?.v 
      in TyLam tlam (substitution (sub_elam s) hbody hs')
   | TyUnit -> TyUnit
 
@@ -210,6 +212,6 @@ val preservation : #e:exp -> #e':exp -> #g:env -> #t:typ ->
        Tot (typing g e' t) (decreases ht)
 let rec preservation #e #e' #g #t (TyApp h1 h2) hs =
   match hs with
-  | SBeta tx e1' e2' -> substitution_beta #e1' #_ #_ #t #_ h2 (TyLam?.hbody h1)
+  | SBeta tx e1' e2' -> substitution_beta h2 (TyLam?.hbody h1)
   | SApp1 e2' hs1   -> TyApp (preservation h1 hs1) h2
   | SApp2 e1' hs2   -> TyApp h1 (preservation h2 hs2)

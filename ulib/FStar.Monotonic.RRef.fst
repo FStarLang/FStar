@@ -72,6 +72,7 @@ let m_upd #r #a #b h m v = HS.upd h (as_hsref m) v
 *)
 
 (* allocates a reference and an associated monotonic-update condition *)
+inline_for_extraction
 val m_alloc: #a:Type
           -> #b:reln a
 	    -> r:rid
@@ -79,8 +80,10 @@ val m_alloc: #a:Type
             -> ST (m_rref r a b)
 		(requires (fun _ -> monotonic a b))
 		(ensures (fun h0 (m:m_rref r a b) h1 -> ralloc_post r init h0 (as_hsref m) h1))
+inline_for_extraction
 let m_alloc #a #b r init = HST.ralloc r init
 
+inline_for_extraction
 val m_read:#r:rid 
        -> #a:Type
        -> #b:reln a
@@ -88,8 +91,10 @@ val m_read:#r:rid
        -> ST a
             (requires (fun h -> True))
             (ensures (deref_post (as_hsref x)))
+inline_for_extraction
 let m_read #r #a #b x = !x
 
+inline_for_extraction
 val m_write:#r:rid 
         -> #a:Type
         -> #b:reln a
@@ -98,6 +103,7 @@ val m_write:#r:rid
         -> ST unit
               (requires (fun h0 -> h0 `contains` (as_hsref x) /\ b (m_sel h0 x) v))
               (ensures (assign_post (as_hsref x) v))
+inline_for_extraction
 let m_write #r #a #b x v = x := v
 
 (* states that p is preserved by any valid updates on r; note that h0 and h1 may differ arbitrarily elsewhere, hence proving stability usually requires that p depends only on r's content. 
