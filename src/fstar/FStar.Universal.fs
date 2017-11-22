@@ -201,7 +201,7 @@ let load_module_from_cache env fn
                                         (FStar.Parser.Dep.print_digest [(x,y)])
                                         (FStar.Parser.Dep.print_digest [(x',y')]))
                          digest
-                         digest';
+                         digest'
                   end;
                 fail "Stale"
             end
