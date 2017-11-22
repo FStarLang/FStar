@@ -129,40 +129,40 @@ let lemma_sel_r1_from_restrict' (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of
 
 (***** Restrict lemmas *****)
 
-let lemma_restrict_r_update (h:heap) (r:addr) (x:t)
-  :Lemma (requires True)
-         (ensures restrict (upd h r x) r == points_to r x)
-	 [SMTPat (restrict (upd h r x) r)]
-  = admit ()
+// let lemma_restrict_r_update (h:heap) (r:addr) (x:t)
+//   :Lemma (requires True)
+//          (ensures restrict (upd h r x) r == points_to r x)
+// 	 [SMTPat (restrict (upd h r x) r)]
+//   = admit ()
 
 let lemma_restrict_r_update' (h:heap) (r:addr) (x:t) (n:heap) (a:Type0)
   : Lemma (requires (points_to r x) == n <==> a)
           (ensures restrict (upd h r x) r == n <==> a)
   = admit ()
   
-let lemma_restrict_points_to_join_h_to_r (r:addr) (x:t) (h1:heap)
-  :Lemma (requires True)
-         (ensures restrict (join (points_to r x) h1) r == (points_to r x))
-         [SMTPat (restrict (join (points_to r x) h1) r)]
-  = admit ()
+// let lemma_restrict_points_to_join_h_to_r (r:addr) (x:t) (h1:heap)
+//   :Lemma (requires True)
+//          (ensures restrict (join (points_to r x) h1) r == (points_to r x))
+//          [SMTPat (restrict (join (points_to r x) h1) r)]
+//   = admit ()
 
-let lemma_restrict_points_to_join_h_to_r1 (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t) (h1:heap)
-  :Lemma (requires True)
-         (ensures restrict (join (points_to r x) h1) r1 == restrict h1 r1)
-	 [SMTPat (restrict (join (points_to r x) h1) r1)]
-  = admit ()
+// let lemma_restrict_points_to_join_h_to_r1 (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t) (h1:heap)
+//   :Lemma (requires True)
+//          (ensures restrict (join (points_to r x) h1) r1 == restrict h1 r1)
+// 	 [SMTPat (restrict (join (points_to r x) h1) r1)]
+//   = admit ()
 
-let lemma_restrict_r1_from_minus (r:addr) (r1:addr) (h:heap)
-  :Lemma (requires addr_of r <> addr_of r1)
-         (ensures restrict (minus h r) r1 == restrict h r1)
-	 [SMTPat (restrict (minus h r) r1)]
-  = admit ()
+// let lemma_restrict_r1_from_minus (r:addr) (r1:addr) (h:heap)
+//   :Lemma (requires addr_of r <> addr_of r1)
+//          (ensures restrict (minus h r) r1 == restrict h r1)
+// 	 [SMTPat (restrict (minus h r) r1)]
+//   = admit ()
 
-let lemma_restrict_r1_update (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t)
-  :Lemma (requires True)
-         (ensures restrict (upd h r x) r1 == restrict h r1)
-	 [SMTPat (restrict (upd h r x) r1)]
-  = admit ()
+// let lemma_restrict_r1_update (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t)
+//   :Lemma (requires True)
+//          (ensures restrict (upd h r x) r1 == restrict h r1)
+// 	 [SMTPat (restrict (upd h r x) r1)]
+//   = admit ()
   
 let lemma_restrict_r1_update' (h:heap) (r:addr) (r1:addr{addr_of r1 <> addr_of r}) (x:t) (n:heap) (a:Type0)
   :Lemma (requires restrict h r1 == n <==> a)
