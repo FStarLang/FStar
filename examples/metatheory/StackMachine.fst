@@ -4,6 +4,8 @@ module StackMachine
 
 open FStar.List.Tot
 
+#set-options "--use_two_phase_tc true"
+
 (* Compiling arithmetic expressions to stack machine  *)
 
 type binop : Type0 = | Plus | Times
