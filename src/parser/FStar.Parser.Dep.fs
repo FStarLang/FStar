@@ -10,6 +10,7 @@
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
@@ -790,23 +791,35 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let interface_hash =
         if is_implementation fn
         && has_interface file_system_map module_name
-        then [digest_of_file (Option.get (interface_of file_system_map module_name))]
+        then ["interface", digest_of_file (Option.get (interface_of file_system_map module_name))]
         else []
     in
     let binary_deps = dependences_of file_system_map deps all_cmd_line_files fn
                 |> List.filter (fun fn ->
                 not (is_interface fn &&
                     lowercase_module_name fn = module_name)) in
-    let binary_deps = FStar.List.sortWith String.compare binary_deps in
+    let binary_deps =
+        FStar.List.sortWith
+          (fun fn1 fn2 ->
+             String.compare (lowercase_module_name fn1)
+                            (lowercase_module_name fn2))
+        binary_deps in
     let rec hash_deps out = function
-        | [] -> Some (source_hash::interface_hash@out)
+        | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
           let fn = cache_file_name fn in
           if BU.file_exists fn
-          then hash_deps (digest_of_file fn :: out) deps
-          else None
+          then hash_deps ((lowercase_module_name fn, digest_of_file fn) :: out) deps
+          else (if Options.debug_any()
+                then BU.print2 "%s: missed digest of file %s\n" cache_file fn;
+                None)
     in
     hash_deps [] binary_deps
+
+let print_digest (dig:list<(string * string)>) : string =
+    dig
+    |> List.map (fun (m, d) -> BU.format2 "%s:%s" m (BU.base64_encode d))
+    |> String.concat "\n"
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format.
@@ -859,14 +872,14 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
             Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file_name f)
           );
     let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
-    let all_ml_files = all_fst_files |> List.collect (fun fst_file -> 
+    let all_ml_files = all_fst_files |> List.collect (fun fst_file ->
         if Options.should_extract (lowercase_module_name fst_file)
         then [output_ml_file fst_file]
         else []
       ) |> Util.sort_with String.compare in
     Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t");
     Util.print1 "ALL_ML_FILES=\\\n\t%s\n" (all_ml_files |> String.concat " \\\n\t")
-    
+
 
 let print deps =
   match Options.dep() with

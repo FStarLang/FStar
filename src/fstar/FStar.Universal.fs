@@ -182,8 +182,29 @@ let load_module_from_cache env fn
         fail "Corrupt"
       | Some (digest, tcmod, mii) ->
          match FStar.Parser.Dep.hash_dependences env.dep_graph fn with
-         | Some digest' when digest=digest' ->
-           Some (tcmod, mii)
+         | Some digest' ->
+           if digest=digest'
+           then Some (tcmod, mii)
+           else begin
+                if Options.debug_any()
+                then begin
+                     BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
+                                (BU.string_of_int (List.length digest'))
+                                (FStar.Parser.Dep.print_digest digest')
+                                (BU.string_of_int (List.length digest))
+                                (FStar.Parser.Dep.print_digest digest);
+                    if List.length digest = List.length digest'
+                    then List.iter2
+                            (fun (x,y) (x', y') ->
+                                 if x<>x || y<>y'
+                                 then BU.print2 "Differ at: Expected %s\n Got %s\n"
+                                        (FStar.Parser.Dep.print_digest [(x,y)])
+                                        (FStar.Parser.Dep.print_digest [(x',y')]))
+                         digest
+                         digest';
+                  end;
+                fail "Stale"
+            end
          | _ ->
            fail "Stale"
     else None

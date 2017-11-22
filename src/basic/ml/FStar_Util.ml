@@ -394,7 +394,8 @@ let unicode_of_string (string:string) =
   let i = ref 0 in
   BatUTF8.iter (fun c -> t.(!i) <- BatUChar.code c; incr i) string;
   t
-
+let base64_encode s = BatBase64.encode_str s
+let base64_decode s = BatBase64.decode_str s
 let char_of_int i = Z.to_int i
 let int_of_string = Z.of_string
 let safe_int_of_string x = try Some (int_of_string x) with Invalid_argument _ -> None
