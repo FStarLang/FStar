@@ -55,16 +55,13 @@ let assumption' :tactic unit =
   assumption
 
 let assumption'' :tactic unit =
-  dump "before assumption";;
-  or_else assumption' (apply_lemma (quote lemma_addr_not_eq_refl);; norm [];; assumption');;
-  dump "after assumption"
+  or_else assumption' (apply_lemma (quote lemma_addr_not_eq_refl);; norm [];; assumption')
   
 let simplify_sel :tactic unit =
   (apply_lemma (quote lemma_sel_r1_update');; split;; assumption'')        `or_else`
-  apply_lemma (quote lemma_sel_r_update')         `or_else`
-  apply_lemma (quote lemma_sel_r1_from_restrict') `or_else`
-  apply_lemma (quote lemma_sel_r_from_minus')     `or_else`
-  fail "simplify_sel: failed"
+  apply_lemma (quote lemma_sel_r_update')                                  `or_else`
+  (apply_lemma (quote lemma_sel_r1_from_restrict');; split;; assumption'') `or_else`
+  (apply_lemma (quote lemma_sel_r_from_minus');; split;; assumption'')
 
 let rec repeat_simplify_join_minus () :Tac unit =
   (g1 <-- cur_goal; simplify_join_minus;; g2 <-- cur_goal;
@@ -85,7 +82,6 @@ let rec repeat_simplify_sel () :Tac unit =
   begin match g with
   | None -> return ()
   | Some _ -> repeat simplify_sel;;
-              print "Before smt";;
               trytac ((trefl;; qed) `or_else` smt);;
               repeat_simplify_sel
   end
