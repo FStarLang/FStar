@@ -84,7 +84,6 @@ let rec repeat_simplify_sel () :Tac unit =
   ) ()
 
 let step_intros :tactic unit =
-  dump "step_intros";;
   forall_intros;;
   apply_lemma (quote lemma_impl_l_cong);;
   simplify_join_emp;;
