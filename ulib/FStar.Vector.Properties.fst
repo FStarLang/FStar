@@ -1382,7 +1382,7 @@ let append_contains_equiv
     let v1v2 = v1 @| v2 in
     assume (v1v2 `contains` x ==>
             ((exists i. (v1.[i] == x /\ v1v2.[reinx i v1v2] == x)) \/
-             (exists j. (v2.[j] == x /\ v1v2.[reinx (j +^ l1) v1v2] == x))))
+             (exists j. (v2.[j] == x /\ v1v2.[reinx (j +^ l1) v1v2] == x))))  //AR: this doesn't go through
 #reset-options "--use_two_phase_tc true"
 
 let snoc_v_x_contains_x
