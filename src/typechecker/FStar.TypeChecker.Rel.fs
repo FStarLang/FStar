@@ -2365,11 +2365,15 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              let wp = match c1.effect_args with
                       | [(wp1,_)] -> wp1
                       | _ -> failwith (BU.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
+             let univs =
+               match c1.comp_univs with
+               | [] -> [env.universe_of env c1.result_typ]
+               | x -> x in
              {
-                comp_univs=c1.comp_univs;
+                comp_univs=univs;
                 effect_name=c2.effect_name;
                 result_typ=c1.result_typ;
-                effect_args=[as_arg (edge.mlift.mlift_wp c1.result_typ wp)];
+                effect_args=[as_arg (edge.mlift.mlift_wp (List.hd univs) c1.result_typ wp)];
                 flags=c1.flags
              }
         in
@@ -2408,13 +2412,21 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                          if env.lax then
                             U.t_true
                          else if is_null_wp_2
-                         then let _ = if debug env <| Options.Other "Rel" then BU.print_string "Using trivial wp ... \n" in
-                              mk (Tm_app(inst_effect_fun_with [env.universe_of env c1.result_typ] env c2_decl c2_decl.trivial,
-                                        [as_arg c1.result_typ; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1]))
+                         then let _ = if debug env <| Options.Other "Rel"
+                                      then BU.print_string "Using trivial wp ... \n" in
+                              let c1_univ = env.universe_of env c1.result_typ in
+                              mk (Tm_app(inst_effect_fun_with [c1_univ] env c2_decl c2_decl.trivial,
+                                        [as_arg c1.result_typ;
+                                         as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
                                  None r
-                         else mk (Tm_app(inst_effect_fun_with [env.universe_of env c2.result_typ] env c2_decl c2_decl.stronger,
-                                        [as_arg c2.result_typ; as_arg wpc2; as_arg <| edge.mlift.mlift_wp c1.result_typ wpc1]))
-                                 None r in
+                         else let c1_univ = env.universe_of env c1.result_typ in
+                              let c2_univ = env.universe_of env c2.result_typ in
+                               mk (Tm_app(inst_effect_fun_with
+                                                [c2_univ] env c2_decl c2_decl.stronger,
+                                          [as_arg c2.result_typ;
+                                           as_arg wpc2;
+                                           as_arg <| edge.mlift.mlift_wp c1_univ c1.result_typ wpc1]))
+                                   None r in
                       let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                       let wl = solve_prob orig (Some <| U.mk_conj (p_guard base_prob |> fst) g) [] wl in
                       solve env (attempt [base_prob] wl)

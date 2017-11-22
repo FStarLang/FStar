@@ -922,7 +922,7 @@ let lift_comp:
             let uu____4014 =
               let uu____4023 =
                 let uu____4024 =
-                  lift.FStar_TypeChecker_Env.mlift_wp
+                  lift.FStar_TypeChecker_Env.mlift_wp u
                     c.FStar_Syntax_Syntax.result_typ wp in
                 FStar_Syntax_Syntax.as_arg uu____4024 in
               [uu____4023] in
