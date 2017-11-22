@@ -130,8 +130,17 @@ let rec prefix_with_iface_decls
         (impl:decl)
    : list<decl>  //remaining iface decls
    * list<decl> =  //d prefixed with relevant bits from iface
+   let qualify_kremlin_private impl =
+       let krem_private =
+           FStar.Parser.AST.mk_term
+                 (Const (FStar.Const.Const_string ("KremlinPrivate", impl.drange)))
+                 impl.drange
+                 FStar.Parser.AST.Expr
+       in
+       {impl with attrs=krem_private::impl.attrs}
+   in
    match iface with
-   | [] -> [], [impl]
+   | [] -> [], [qualify_kremlin_private impl]
    | iface_hd::iface_tl -> begin
      match iface_hd.d with
      | Tycon(_, tys) when (tys |> Util.for_some (function (TyconAbstract _, _)  -> true | _ -> false)) ->
@@ -152,7 +161,7 @@ let rec prefix_with_iface_decls
                                            x.idText
                                            (def_ids |> List.map Ident.string_of_lid |> String.concat ", "),
                               impl.drange))
-            else iface, [impl]
+            else iface, [qualify_kremlin_private impl]
        else let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
             let rec aux mutuals iface =
                 match mutuals, iface with

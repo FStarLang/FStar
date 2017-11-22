@@ -145,7 +145,7 @@ type mlpattern =
 | MLP_Tuple  of list<mlpattern>
 
 
-type meta = // C backend only
+type meta =
   | Mutable
   | Assumed
   | Private
