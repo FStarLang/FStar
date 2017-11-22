@@ -2143,8 +2143,9 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
     let t = SS.compress lb.lbtyp in
     match t.n with
         | Tm_unknown ->
-          if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
-          None, Rel.trivial_guard, [], [], env
+          //if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";  //AR: do we need this check? this situation arises in phase 2
+          let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
+          None, Rel.trivial_guard, univ_vars, univ_opening, env
 
         | _ ->
           let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
