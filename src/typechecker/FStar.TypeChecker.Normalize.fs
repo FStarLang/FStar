@@ -1061,6 +1061,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    || S.fv_eq_lid f PC.squash_lid
                    || S.fv_eq_lid f PC.exists_lid
                    || S.fv_eq_lid f PC.eq2_lid
+                   || S.fv_eq_lid f PC.eq3_lid
                    || S.fv_eq_lid f PC.true_lid
                    || S.fv_eq_lid f PC.false_lid)
                 then false
