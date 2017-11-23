@@ -55,6 +55,19 @@ val upd (#a:_) (#b:_)
     (requires True)
     (ensures (fun r' -> repr r' == DM.upd (repr r) x (Some v)))
 
+/// map and fold functions
+let f_opt (#a:eqtype) (#b #c:a -> Type) (f: (x:a) -> b x -> c x) :(x:a) -> option (b x) -> option (c x)
+  = fun x y ->
+    match y with
+    | None   -> None
+    | Some y -> Some (f x y)
+
+val mmap_f (#a:eqtype) (#b #c:a -> Type) (m:map a b) (f: (x:a) -> b x -> c x)
+  :Tot (m':(map a c){repr m' == DM.map (f_opt f) (repr m)})
+
+val mfold_f (#a:eqtype) (#b:a -> Type) (#c:Type) (f:c -> (x:a) -> b x -> c) (x:c) (m:map a b)
+  :Tot c
+
 /// `imap a b inv` further augments a map with an invariant on its repr
 let imap (a:eqtype) (b: a -> Type) (inv:DM.t a (opt b) -> Type) =
     r:map a b{inv (repr r)}
@@ -209,26 +222,25 @@ val lookup
           | Some v ->
             contains t x v h1 /\
             MR.witnessed (contains t x v))))
- 
+
+/// forall predicate: pred holds for all the entries in the map
 let forall_t (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
              (t:t r a b inv) (h:HS.mem) (pred: (x:a) -> b x -> Type0)
   = forall (x:a).{:pattern (sel (MR.m_sel h t) x) \/ (DM.sel (repr (MR.m_sel h t)) x)}
             defined t x h ==> pred x (Some?.v (sel (MR.m_sel h t) x))
 
-let f_opt (#a:eqtype) (#b #c:a -> Type) (f: (x:a) -> b x -> c x) :(x:a) -> option (b x) -> option (c x)
-  = fun x y ->
-    match y with
-    | None   -> None
-    | Some y -> Some (f x y)
-
-val mmap_f (#a:eqtype) (#b #c:a -> Type) (m:map a b) (f: (x:a) -> b x -> c x)
-  :Tot (m':(map a c){repr m' == DM.map (f_opt f) (repr m)})
-
+/// the stateful map function
+/// allocates a new t
 val map_f (#a:eqtype) (#b #c:a -> Type)
           (#inv:DM.t a (opt b) -> Type) (#inv':DM.t a (opt c) -> Type)
 	  (#r #r':MR.rid)
           (m:t r a b inv) (f: (x:a) -> b x -> c x)
 	  :ST (t r' a c inv')
 	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (MR.m_sel h0 m)))))
-	      (ensures  (fun h0 m' h1 ->
-	                 ralloc_post r' (mmap_f (MR.m_sel h0 m) f) h0 (MR.as_hsref m') h1))
+	      (ensures  (fun h0 m' h1 -> ralloc_post r' (mmap_f (MR.m_sel h0 m) f) h0 (MR.as_hsref m') h1))
+
+/// fold function, leaves the memory unchanged
+val fold_f (#a:eqtype) (#b:a -> Type) (#c:Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
+           (x:c) (f:c -> (x:a) -> b x -> c) (m:t r a b inv)
+           :ST c (requires (fun h0      -> True))
+	         (ensures  (fun h0 y h1 -> h0 == h1 /\ y == mfold_f f x (MR.m_sel h0 m)))

@@ -29,6 +29,19 @@ let rec sel #a #b r x =
 
 let upd #a #b r x v = (|x, v|)::r
 
+/// map and fold functions
+let rec mmap_f #a #b #c m f =
+  match m with
+  | [] ->
+    assert (DM.equal (empty_partial_dependent_map #a #c)
+                     (DM.map (f_opt f) (empty_partial_dependent_map #a #b)));
+    []
+  | (| x, y |)::tl -> (| x, f x y |)::(mmap_f #a #b #c tl f)  //AR: doesn't work without these implicits
+
+let rec mfold_f #a #b #c f x m
+  = let open FStar.List.Tot in
+    fold_left (fun (z:c) ((| x, y |):(x:a & b x)) -> f z x y)  x m
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /// `grows'` and `grows`: a preorder of invariant-respeting maps
@@ -65,14 +78,11 @@ let lookup #a #b #inv #r t x =
       witness t (contains t x b);
       y
 
-let rec mmap_f #a #b #c m f =
-  match m with
-  | [] ->
-    assert (DM.equal (empty_partial_dependent_map #a #c)
-                     (DM.map (f_opt f) (empty_partial_dependent_map #a #b)));
-    []
-  | (| x, y |)::tl -> (| x, f x y |)::(mmap_f #a #b #c tl f)  //AR: doesn't work without these implicits
-
 let map_f #a #b #c #inv #inv' #r #r' t f
   = let m = MR.m_read t in
     MR.m_alloc r' (mmap_f m f)
+
+let fold_f #a #b #c #inv #r x f t
+  = let m = MR.m_read t in
+    mfold_f f x m
+
