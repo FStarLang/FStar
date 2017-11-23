@@ -3,7 +3,7 @@ open FStar.HyperStack
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
 let st_pre = st_pre_h mem
-let st_post' (a:Type) (pre:Type) = st_post_h' mem a True
+let st_post' (a:Type) (pre:Type) = st_post_h' mem a pre
 let st_post  (a:Type) = st_post_h mem a
 let st_wp (a:Type) = st_wp_h mem a
 
@@ -411,7 +411,7 @@ let test_st_function_with_inline_2 () =
   pop_frame();
   ()
 
-val with_frame: #a:Type -> #pre:st_pre -> #post:(mem -> Tot (st_post a)) -> $f:(unit -> Stack a pre post)
+val with_frame: #a:Type -> #pre:st_pre -> #post:(h:mem -> Tot (st_post' a (pre h))) -> $f:(unit -> Stack a pre post)
 	     -> Stack a (fun s0 -> forall s1. fresh_frame s0 s1 ==> pre s1)
 		     (fun s0 x s1 ->
 			exists s0' s1'. fresh_frame s0 s0'
