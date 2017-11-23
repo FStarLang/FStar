@@ -67,10 +67,8 @@ years of F* experience, etc.
 Users can also ask questions on the public `#fstar` Slack channel
 on `functionalprogramming`. You can get an invite at:
 <https://fpchat-invite.herokuapp.com/>.
-<!-- hopefully soon
 Archives are available at:
-archive https://functionalprogramming.slackarchive.io/fstar/
--->
+https://functionalprogramming.slackarchive.io/fstar/
 
 ### Reporting issues
 
