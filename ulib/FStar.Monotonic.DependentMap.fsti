@@ -231,5 +231,4 @@ val map_f (#a:eqtype) (#b #c:a -> Type)
 	  :ST (t r' a c inv')
 	      (requires (fun h0 -> inv' (DM.map (f_opt f) (repr (MR.m_sel h0 m)))))
 	      (ensures  (fun h0 m' h1 ->
-	                 inv' (DM.map (f_opt f) (repr (MR.m_sel h0 m))) /\  //AR: surprised that even after the fix for #57, we need this repetetion from the requires clause
 	                 ralloc_post r' (mmap_f (MR.m_sel h0 m) f) h0 (MR.as_hsref m') h1))
