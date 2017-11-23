@@ -1127,13 +1127,13 @@ let hash_dependences:
                   (FStar_List.append (("source", source_hash) ::
                      interface_hash) out)
             | fn1::deps1 ->
-                let fn2 = cache_file_name fn1 in
-                if FStar_Util.file_exists fn2
+                let cache_fn = cache_file_name fn1 in
+                if FStar_Util.file_exists cache_fn
                 then
                   let uu____4335 =
                     let uu____4342 =
-                      let uu____4347 = lowercase_module_name fn2 in
-                      let uu____4348 = digest_of_file1 fn2 in
+                      let uu____4347 = lowercase_module_name fn1 in
+                      let uu____4348 = digest_of_file1 cache_fn in
                       (uu____4347, uu____4348) in
                     uu____4342 :: out in
                   hash_deps uu____4335 deps1
@@ -1142,7 +1142,7 @@ let hash_dependences:
                     if uu____4355
                     then
                       FStar_Util.print2 "%s: missed digest of file %s\n"
-                        cache_file fn2
+                        cache_file cache_fn
                     else ());
                    FStar_Pervasives_Native.None) in
           hash_deps [] binary_deps1

@@ -807,11 +807,11 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let rec hash_deps out = function
         | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
-          let fn = cache_file_name fn in
-          if BU.file_exists fn
-          then hash_deps ((lowercase_module_name fn, digest_of_file fn) :: out) deps
+          let cache_fn = cache_file_name fn in
+          if BU.file_exists cache_fn
+          then hash_deps ((lowercase_module_name fn, digest_of_file cache_fn) :: out) deps
           else (if Options.debug_any()
-                then BU.print2 "%s: missed digest of file %s\n" cache_file fn;
+                then BU.print2 "%s: missed digest of file %s\n" cache_file cache_fn;
                 None)
     in
     hash_deps [] binary_deps
