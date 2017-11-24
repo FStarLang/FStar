@@ -446,9 +446,13 @@ let norm_univ wl u =
             | _ -> u in
     N.normalize_universe wl.tcenv (aux u)
 
-let base_and_refinement env t1 =
+let base_and_refinement_maybe_delta should_delta env t1 =
    let norm_refinement env t =
-       N.normalize_refinement [N.Weak; N.HNF; N.UnfoldUntil Delta_constant] env t
+       let steps = 
+         if should_delta
+         then [N.Weak; N.HNF; N.UnfoldUntil Delta_constant]
+         else [N.Weak; N.HNF] in
+       N.normalize_refinement steps env t
    in
    let rec aux norm t1 =
         let t1 = U.unmeta t1 in
@@ -489,6 +493,7 @@ let base_and_refinement env t1 =
 
    aux false (whnf env t1)
 
+let base_and_refinement = base_and_refinement_maybe_delta false
 let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
 
 let unrefine env t = base_and_refinement env t |> fst
@@ -496,7 +501,7 @@ let unrefine env t = base_and_refinement env t |> fst
 let trivial_refinement t = S.null_bv t, U.t_true
 
 let as_refinement env wl t =
-    let t_base, refinement = base_and_refinement env t in
+    let t_base, refinement = base_and_refinement_maybe_delta true env t in
     match refinement with
         | None -> trivial_refinement t_base
         | Some (x, phi) -> x, phi
@@ -2295,11 +2300,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         else let t_base, _ = base_and_refinement env t1 in
              solve_t env ({problem with lhs=t_base; relation=EQ}) wl
 
-      | Tm_refine _, _
+      | Tm_refine _, _ -> 
+        let t2 = force_refinement <| base_and_refinement env t2 in
+        solve_t env ({problem with rhs=t2}) wl
+      
       | _, Tm_refine _ ->
         let t1 = force_refinement <| base_and_refinement env t1 in
-        let t2 = force_refinement <| base_and_refinement env t2 in
-        solve_t env ({problem with lhs=t1; rhs=t2}) wl
+        solve_t env ({problem with lhs=t1}) wl
 
       | Tm_match _, _
       | Tm_uinst _, _
