@@ -54,18 +54,12 @@
       1,
       2,
       1,
-      [ "@query", "assumption_IfcRules.label_haseq" ],
+      [
+        "@query", "assumption_IfcRules.label_haseq",
+        "assumption_Prims.HasEq_int"
+      ],
       0,
-      "23b5e032958c4f8e9b01f6ad95c8d9d9"
-    ],
-    [
-      "IfcRules.low_equiv",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "e6a2af8921cae8806fdeb2845f7a7f86"
+      "6d73cab50fbeb36ad455b7c70b68722d"
     ],
     [
       "IfcRules.ni_exp",
@@ -74,34 +68,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "59354b1e871781be24631a7d6130291a"
+      "d1b0d82925bbdab88065436d57d28b69"
     ],
     [
       "IfcRules.ni_com'",
       1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f78ecfd7de6ca3694324e1e329db545f"
-    ],
-    [
-      "IfcRules.ni_com'",
-      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5758927a01b0667f7cc1ed30c383a322"
-    ],
-    [
-      "IfcRules.ni_com'",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "aa13e6a379ec0f431a3a8b014774818c"
+      "05568834649632fcfb2e01154fccfd67"
     ],
     [
       "IfcRules.sub_exp",

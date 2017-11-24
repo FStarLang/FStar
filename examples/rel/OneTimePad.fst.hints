@@ -25,11 +25,14 @@
       0,
       4,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple4_haseq",
+        "assumption_Prims.HasEq_bool", "bool_inversion", "bool_typing",
         "data_elim_FStar.Pervasives.Native.Mktuple4",
         "equation_OneTimePad.nib", "equation_OneTimePad.xor",
         "equation_OneTimePad.xor_b",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple4",
+        "function_token_typing_Prims.bool", "primitive_Prims.op_Equality",
         "primitive_Prims.op_disEquality",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
@@ -41,55 +44,7 @@
         "typing_OneTimePad.xor_b"
       ],
       0,
-      "2781067c5f7105759587ab172789da2c"
-    ],
-    [
-      "OneTimePad.xor_properties",
-      2,
-      0,
-      4,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple4_haseq",
-        "assumption_Prims.HasEq_bool", "function_token_typing_Prims.bool"
-      ],
-      0,
-      "c2d82a949a1a7277e9c153e83127dcb9"
-    ],
-    [
-      "OneTimePad.xor_properties",
-      3,
-      0,
-      4,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple4_haseq",
-        "assumption_Prims.HasEq_bool", "function_token_typing_Prims.bool"
-      ],
-      0,
-      "6d9da2da84a22997945b659717c56b8c"
-    ],
-    [
-      "OneTimePad.xor_properties",
-      4,
-      0,
-      4,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple4_haseq",
-        "assumption_Prims.HasEq_bool", "function_token_typing_Prims.bool"
-      ],
-      0,
-      "04fc783292e9e0b0f884d6427d5f4a39"
-    ],
-    [
-      "OneTimePad.xor_properties",
-      5,
-      0,
-      4,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.tuple4_haseq",
-        "assumption_Prims.HasEq_bool", "function_token_typing_Prims.bool"
-      ],
-      0,
-      "8f935962a7318d1bc01d27fff60e09c8"
+      "84b348fea45bedff1df08dcc67bbe6b4"
     ],
     [
       "OneTimePad.bind",

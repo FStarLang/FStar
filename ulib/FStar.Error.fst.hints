@@ -1,0 +1,74 @@
+[
+  "i\u0000πULèVõHqI+ˇtÙc",
+  [
+    [
+      "FStar.Error.optResult",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4e920c4b7f3ad16b7a907941b0db691b"
+    ],
+    [
+      "FStar.Error.uu___is_Error",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fe45c5133846296369225f338682e66f"
+    ],
+    [
+      "FStar.Error.__proj__Error__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Error.Error",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Error_Tm_refine_813a5bb4d39ab83f71d70e865ca6a2c8"
+      ],
+      0,
+      "f44299dde984427e6ce5492f3009ec79"
+    ],
+    [
+      "FStar.Error.uu___is_Correct",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "badcd3e0f8850f690c2871186b3455d9"
+    ],
+    [
+      "FStar.Error.__proj__Correct__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Error.Correct",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_FStar.Error_Tm_refine_9570651724fccc40ed9243df14ac4feb"
+      ],
+      0,
+      "4d5dba8f3119e9dff8c48be669ed6487"
+    ],
+    [
+      "FStar.Error.invertOptResult",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Error.Correct",
+        "disc_equation_FStar.Error.Error",
+        "fuel_guarded_inversion_FStar.Error.optResult",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f5502fad3108e227cbb7083c6f51bb4d"
+    ]
+  ]
+]

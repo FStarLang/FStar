@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "20b6c96076cfbaee52312f0b4d7d3afe"
+      "1ba56ece0c60cca784bb64ea29be44d8"
     ],
     [
       "RandomTapes.id",
@@ -50,22 +50,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "function_token_typing_RandomTapes.id",
         "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
       ],
       0,
-      "e15781d6ca6cab45d4854e34caa66dda"
-    ],
-    [
-      "RandomTapes.otp_rand",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "1ecc81ef33e672dbc96d509fa05d7db8"
+      "c10a96eca420b364cc4b999dd991d3a6"
     ],
     [
       "RandomTapes.otp_eq",
