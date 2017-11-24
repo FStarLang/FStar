@@ -448,7 +448,7 @@ let norm_univ wl u =
 
 let base_and_refinement_maybe_delta should_delta env t1 =
    let norm_refinement env t =
-       let steps = 
+       let steps =
          if should_delta
          then [N.Weak; N.HNF; N.UnfoldUntil Delta_constant]
          else [N.Weak; N.HNF] in
@@ -493,15 +493,15 @@ let base_and_refinement_maybe_delta should_delta env t1 =
 
    aux false (whnf env t1)
 
-let base_and_refinement = base_and_refinement_maybe_delta false
+let base_and_refinement env t = base_and_refinement_maybe_delta false env t
 let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
 
 let unrefine env t = base_and_refinement env t |> fst
 
 let trivial_refinement t = S.null_bv t, U.t_true
 
-let as_refinement env wl t =
-    let t_base, refinement = base_and_refinement_maybe_delta true env t in
+let as_refinement unfold env wl t =
+    let t_base, refinement = base_and_refinement_maybe_delta unfold env t in
     match refinement with
         | None -> trivial_refinement t_base
         | Some (x, phi) -> x, phi
@@ -2209,37 +2209,44 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         end
 
       | Tm_refine _, Tm_refine _ ->
-        let x1, phi1 = as_refinement env wl t1 in
-        let x2, phi2 = as_refinement env wl t2 in
-        let base_prob = TProb <| mk_problem (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
-        let x1 = freshen_bv x1 in
-        let subst = [DB(0, x1)] in
-        let phi1 = Subst.subst subst phi1 in
-        let phi2 = Subst.subst subst phi2 in
-        let env = Env.push_bv env x1 in
-        let mk_imp imp phi1 phi2 = imp phi1 phi2 |> guard_on_element wl problem x1 in
-        let fallback () =
-            let impl =
-                if problem.relation = EQ
-                then mk_imp U.mk_iff phi1 phi2
-                else mk_imp U.mk_imp phi1 phi2 in
-            let guard = U.mk_conj (p_guard base_prob |> fst) impl in
-            let wl = solve_prob orig (Some guard) [] wl in
-            solve env (attempt [base_prob] wl) in
-        if problem.relation = EQ
-        then let ref_prob = TProb <| mk_problem (p_scope orig @ [mk_binder x1]) orig phi1 EQ phi2 None "refinement formula" in
-             begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
-                    | Failed _ -> fallback()
-                    | Success _ ->
-                      let guard =
-                        U.mk_conj (p_guard base_prob |> fst)
-                                  (p_guard ref_prob |> fst |> guard_on_element wl problem x1) in
-                      let wl = solve_prob orig (Some guard) [] wl in
-                      let wl = {wl with ctr=wl.ctr+1} in
-                      solve env (attempt [base_prob] wl)
-             end
-        else fallback()
-
+        let uvars_1 = FStar.Syntax.Free.uvars t1 in
+        let uvars_2 = FStar.Syntax.Free.uvars t2 in
+        let remaining_uvars = not (BU.set_is_empty uvars_1) || not (BU.set_is_empty uvars_2) in
+        if remaining_uvars
+        && wl.defer_ok
+        then solve env (defer "refinement subtyping with unsolved variables" orig wl)
+        else begin
+            let x1, phi1 = as_refinement (not remaining_uvars) env wl t1 in
+            let x2, phi2 = as_refinement (not remaining_uvars) env wl t2 in
+            let base_prob = TProb <| mk_problem (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
+            let x1 = freshen_bv x1 in
+            let subst = [DB(0, x1)] in
+            let phi1 = Subst.subst subst phi1 in
+            let phi2 = Subst.subst subst phi2 in
+            let env = Env.push_bv env x1 in
+            let mk_imp imp phi1 phi2 = imp phi1 phi2 |> guard_on_element wl problem x1 in
+            let fallback () =
+                let impl =
+                    if problem.relation = EQ
+                    then mk_imp U.mk_iff phi1 phi2
+                    else mk_imp U.mk_imp phi1 phi2 in
+                let guard = U.mk_conj (p_guard base_prob |> fst) impl in
+                let wl = solve_prob orig (Some guard) [] wl in
+                solve env (attempt [base_prob] wl) in
+            if problem.relation = EQ
+            then let ref_prob = TProb <| mk_problem (p_scope orig @ [mk_binder x1]) orig phi1 EQ phi2 None "refinement formula" in
+                 begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
+                        | Failed _ -> fallback()
+                        | Success _ ->
+                          let guard =
+                            U.mk_conj (p_guard base_prob |> fst)
+                                      (p_guard ref_prob |> fst |> guard_on_element wl problem x1) in
+                          let wl = solve_prob orig (Some guard) [] wl in
+                          let wl = {wl with ctr=wl.ctr+1} in
+                          solve env (attempt [base_prob] wl)
+                 end
+            else fallback()
+        end
       (* flex-flex *)
       | Tm_uvar _,                Tm_uvar _
       | Tm_app({n=Tm_uvar _}, _), Tm_uvar _
@@ -2300,10 +2307,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         else let t_base, _ = base_and_refinement env t1 in
              solve_t env ({problem with lhs=t_base; relation=EQ}) wl
 
-      | Tm_refine _, _ -> 
+      | Tm_refine _, _ ->
         let t2 = force_refinement <| base_and_refinement env t2 in
         solve_t env ({problem with rhs=t2}) wl
-      
+
       | _, Tm_refine _ ->
         let t1 = force_refinement <| base_and_refinement env t1 in
         solve_t env ({problem with lhs=t1}) wl
