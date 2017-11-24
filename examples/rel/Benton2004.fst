@@ -738,8 +738,14 @@ let d_lu2
       end else ()
     end else ()
   in
-  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf1 x));
-  Classical.forall_intro_2 (fun x -> Classical.move_requires (prf2 x))
+  let prf1' (s0:heap) (fuel:nat) :Lemma (fst (fl fuel s0) == true ==> fr fuel s0 == fl fuel s0)
+    = Classical.move_requires (prf1 s0) fuel
+  in
+  let prf2' (s0:heap) (fuel:nat) :Lemma (fst (fr fuel s0) == true ==> fl (fuel + fuel) s0 == fr fuel s0)
+    = Classical.move_requires (prf2 s0) fuel
+  in
+  Classical.forall_intro_2 prf1';  //AR: same pattern as in Pointer, see the comment there
+  Classical.forall_intro_2 prf2'
 
 (* 3.2 Optimizing Transformations *)
 
