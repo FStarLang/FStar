@@ -423,14 +423,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
     then Errors.warn e.pos "Qualifier on argument to reify is irrelevant and will be ignored";
-    let e, c, g =
-      let env0, _ = Env.clear_expected_typ env in
-      tc_term env0 e
-    in
+    let env0, _ = Env.clear_expected_typ env in
+    let e, c, g = tc_term env0 e in
     let reify_op, _ = U.head_and_args top in
     let u_c =
         (* c' is the computation type of the computation type and as such should be Type u *)
-        let _, c', _ = tc_term env c.res_typ in
+        let _, c', _ = tc_term env0 c.res_typ in  //AR: note that we use env0, which unsets the expected_typ
         match (SS.compress c'.res_typ).n with
         | Tm_type u -> u
         | _ ->
@@ -625,7 +623,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
       let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
          let lax_top = N.remove_uvar_solutions env lax_top in
-         //BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
+         BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
          if Env.should_verify env then
            check_top_level_let env (if is_lb_unannotated top then drop_lbtyp lax_top else lax_top)  //AR: drop lbtyp from lax_top if needed
          else lax_top, l, g
