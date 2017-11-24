@@ -8,6 +8,8 @@ open FStar.ST
 
 open MonotonicArray
 
+#set-options "--use_two_phase_tc false"
+
 (***** an unstable sequence proof *****)
 
 let lemma_seq_append_unstable (#a:Type0) (s:seq a) (s1:seq a) (s2:seq a) (s3:seq a) (pos:nat) (sent:nat{pos + sent <= length s})
