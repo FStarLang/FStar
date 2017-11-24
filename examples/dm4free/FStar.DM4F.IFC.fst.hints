@@ -46,29 +46,12 @@
       2,
       1,
       [
-        "@query", "equality_tok_FStar.DM4F.IFC.High@tok",
+        "@query", "assumption_FStar.DM4F.IFC.label_haseq",
+        "equality_tok_FStar.DM4F.IFC.High@tok",
         "equality_tok_FStar.DM4F.IFC.Low@tok"
       ],
       0,
-      "66c9084cfcb659edb9ab43558ab1437c"
-    ],
-    [
-      "FStar.DM4F.IFC.join",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
-      0,
-      "46fa8e4e9af5cb56601bae5c0bc73555"
-    ],
-    [
-      "FStar.DM4F.IFC.join",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
-      0,
-      "ea1b37c8a7cdb9c055edeed238fd9f3c"
+      "7075aa45c84345a72dba3a5977d26833"
     ],
     [
       "FStar.DM4F.IFC.flows",
@@ -77,16 +60,7 @@
       1,
       [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
       0,
-      "18692aeffa0a34324647af61af1d00ea"
-    ],
-    [
-      "FStar.DM4F.IFC.flows",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_FStar.DM4F.IFC.label_haseq" ],
-      0,
-      "b0e0599c0344a00fb237be41edededbb"
+      "4670b472914419d42554fac1c465e334"
     ],
     [
       "FStar.DM4F.IFC.write",

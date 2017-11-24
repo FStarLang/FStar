@@ -17,16 +17,7 @@
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
       0,
-      "34c1f0bc75bc573b1cf4ccbc2a304035"
-    ],
-    [
-      "Normalization.uu___107",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "74637fe824299e09287d9696328e284e"
+      "e63f564348b73e5b49585a292ca10f3c"
     ],
     [
       "Normalization.uu___108",
@@ -35,16 +26,7 @@
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
       0,
-      "bc568a663aa26215565438edd85e1ec4"
-    ],
-    [
-      "Normalization.uu___108",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "889c4ee929121fa748b9982eaf57eca0"
+      "3c6df0abef242c129518f9a2178be705"
     ],
     [
       "Normalization.uu___109",
@@ -53,16 +35,7 @@
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
       0,
-      "ecc9a2ab2ff925e9ff99a0459dbb07b9"
-    ],
-    [
-      "Normalization.uu___109",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "1d1af9031682dee5119d06f2c8381a6b"
+      "ea9163fccf2640bb585e84c74ee22dd9"
     ],
     [
       "Normalization.uu___110",
@@ -86,16 +59,7 @@
       1,
       [ "@query", "assumption_FStar.Order.order_haseq" ],
       0,
-      "bc0a630e0d0fd7d3b512eb4508c0831b"
-    ],
-    [
-      "Normalization.uu___111",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "61a5cb194e510894e88e32d0acaf26dd"
+      "8de1523cff0d44b0b8407e5d0bb828ec"
     ]
   ]
 ]

@@ -7,8 +7,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Multiply", "primitive_Prims.op_Subtraction",
@@ -18,16 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d2ffaeb80796bcd1fcec623f509c2142"
-    ],
-    [
-      "FirstProofs.factorial",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d4d35489ad5ee23b357c2546439bff43"
+      "57898095dd7c23ff073b19b9ab53ee84"
     ],
     [
       "FirstProofs.factorial_is_positive",

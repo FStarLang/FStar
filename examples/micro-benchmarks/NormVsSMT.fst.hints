@@ -23,16 +23,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "1284787ed4b9ac217b30014620fbc673"
-    ],
-    [
-      "NormVsSMT.uu___11",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "83b9cf59815b562e9a93b7c81ae04a3d"
+      "ad0b76d77d36ca79be56513d9249fb7e"
     ],
     [
       "NormVsSMT.uu___12",

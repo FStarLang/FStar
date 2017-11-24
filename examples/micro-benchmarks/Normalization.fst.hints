@@ -145,16 +145,7 @@
         "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
       ],
       0,
-      "fab6ba95d29c407ca013e7863369def1"
-    ],
-    [
-      "Normalization.test_sort",
-      2,
-      0,
-      0,
-      [ "@query" ],
-      0,
-      "77517722e34a13224b8b0096a2dbaad4"
+      "8bce509c86be4f00c7904e05dfbbb380"
     ]
   ]
 ]

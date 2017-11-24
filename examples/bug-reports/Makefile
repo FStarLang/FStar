@@ -2,8 +2,6 @@ FSTAR_HOME=../..
 include ../Makefile.include
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 
-OTHERFLAGS+=--use_two_phase_tc true
-
 all: verify iverify not-verify extract
 
 ulib: ../../bin/fstarlib/fstarlib.cmxa

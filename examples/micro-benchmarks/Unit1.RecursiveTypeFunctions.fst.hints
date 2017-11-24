@@ -223,50 +223,31 @@
       2,
       1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "d2f4a0ed2838120f06bacc5c5279db77"
-    ],
-    [
-      "Unit1.RecursiveTypeFunctions.pointwise_eq_length",
-      2,
-      2,
-      1,
-      [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
-        "@query", "binder_x_64bbe2e649c5e2dff004f077d943400a_1",
-        "binder_x_64bbe2e649c5e2dff004f077d943400a_2",
-        "constructor_distinct_Prims.Nil", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil",
+        "@query", "assumption_Prims.HasEq_int",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
+        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_Unit1.RecursiveTypeFunctions.pointwise_eq.fuel_instrumented",
-        "false_interp", "fuel_guarded_inversion_Prims.list", "l_and-interp",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "false_interp", "fuel_guarded_inversion_Prims.list",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "l_and-interp", "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2130047e989e51bd68c26cdca56179b2"
-    ],
-    [
-      "Unit1.RecursiveTypeFunctions.pointwise_eq_length",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "e7a67da695bd17c24bbe24e9f4f2437b"
+      "da40481784dae297d7a95e07ea54bd20"
     ]
   ]
 ]

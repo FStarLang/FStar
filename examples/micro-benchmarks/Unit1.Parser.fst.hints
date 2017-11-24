@@ -7,21 +7,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.list_haseq",
-        "equation_Prims.eqtype",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "assumption_Prims.list_haseq", "equation_Prims.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6aabb65085641565ccb3249a02624323"
-    ],
-    [
-      "Unit1.Parser.t3",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "d8eb8095bf7d54a75b948eae3fe82228"
+      "76f6dffc11bc8328f5b4543a1d521d52"
     ],
     [
       "Unit1.Parser.t5",
@@ -39,7 +30,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "78a6290481b7a799bacd0321f7e66a61"
+      "931878f1d167c9a4d11a83c4a45fcbd3"
     ],
     [
       "Unit1.Parser.f3",
@@ -48,7 +39,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d900cc5e9a9f4507602477f83197abe7"
+      "0b12354635b419d67cf4b78311957f31"
     ],
     [
       "Unit1.Parser.s1",
@@ -57,7 +48,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0560a3f7feceeb514d62d5e9aa367bd1"
+      "b061bc4ec639634707dcc95d1e7641f9"
     ],
     [
       "Unit1.Parser.s1",
@@ -66,16 +57,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "21ece03c08632636b385ea6846d5657c"
-    ],
-    [
-      "Unit1.Parser.s1",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "dddcae2a6aff1e55c05294c880da61d8"
+      "9296de66a21d7e697767479c9f7caa34"
     ],
     [
       "Unit1.Parser.s3",
@@ -84,7 +66,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d469a833ee7105d3e31bd6d05028d31e"
+      "cbb6a4f5d24efbac74780545f609e0b3"
     ],
     [
       "Unit1.Parser.s3",
@@ -93,16 +75,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "26c62bc83f9cf7323ee1dffa091761c4"
-    ],
-    [
-      "Unit1.Parser.s3",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "ff6b037201d80f55cf3c5d337bbe4f62"
+      "5df36ca6201f8dabf4c113cfcf58b912"
     ]
   ]
 ]

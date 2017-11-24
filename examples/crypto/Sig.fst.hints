@@ -99,58 +99,20 @@
       2,
       [
         "@MaxIFuel_assumption", "@query",
+        "assumption_Platform.Bytes.HasEq_bytes",
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_Sig.Entry",
         "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Platform.Bytes.bytes", "equation_Sig.pk",
-        "equation_Sig.pksize", "equation_Sig.sigsize", "equation_Sig.text",
-        "fuel_guarded_inversion_Sig.entry", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
+        "equation_Sig.text", "fuel_guarded_inversion_Sig.entry",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94",
+        "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Sig_Tm_refine_77f98adb3f75273495a03d6e19fc6e7d",
         "refinement_interpretation_Sig_Tm_refine_79a5609e5a23968ed29de422371cc63a"
       ],
       0,
-      "ce668856c214121ecfdf15818e7a88c4"
-    ],
-    [
-      "Sig.verify",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "f993bb68169de76e337b57db0ad47362"
-    ],
-    [
-      "Sig.verify",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Sig.text"
-      ],
-      0,
-      "4b93d51a7da10590e04a8e9c7b6bf76c"
-    ],
-    [
-      "Sig.verify",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "equation_Sig.text",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "b5e3893a6be23013aef9371bddd331de"
+      "65d34e358a15658a0f04632c911b630b"
     ]
   ]
 ]

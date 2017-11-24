@@ -80,9 +80,9 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e7f155c89e63d48af75f690528c2f677"
+      "f51e068d7b70c4801fadb2aac8682e04"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__l",
@@ -90,13 +90,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "disc_equation_NegativeTests.BST.Node", "int_inversion",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "61c6dee3881f23c34060adcb86c5e840"
+      "67be5811fb130807c33b11f506b17e88"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__left",
@@ -104,7 +104,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "disc_equation_NegativeTests.BST.Node", "int_inversion",
         "proj_equation_NegativeTests.BST.Node_l",
         "projection_inverse_BoxBool_proj_0",
@@ -112,7 +112,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "959cdd7a978ad3973ad106c775aae8b0"
+      "dbf00da9a51fd986c51f3af5d2703b7e"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__n",
@@ -120,13 +120,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "disc_equation_NegativeTests.BST.Node", "int_inversion",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "87d7a3bbcd769440fefbfd4bca1543a6"
+      "40ca91767ae89326a183b078ceb43a6d"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__r",
@@ -134,13 +134,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "disc_equation_NegativeTests.BST.Node", "int_inversion",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_NegativeTests.BST_Tm_refine_75411a533307926cb439c1c1b9e6a6c4"
       ],
       0,
-      "101f3e62d0b38649d3bd2d4e4da2d21a"
+      "a00c27d2a2350b127f86caa5b95cc5e6"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__right",
@@ -149,7 +149,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b3211f29e72e7cbfd77a37e081d3e2a9"
+      "0060ba94c03f486e99c36ac991284d96"
     ],
     [
       "NegativeTests.BST.__proj__Node__item__right",
@@ -157,7 +157,8 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "data_elim_NegativeTests.BST.Node",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "data_elim_NegativeTests.BST.Node",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_NegativeTests.BST.Node", "int_inversion",
         "proj_equation_NegativeTests.BST.Node_l",
@@ -174,7 +175,7 @@
         "refinement_interpretation_NegativeTests.BST_Tm_refine_7b1de022dd98e3cefdde3a41e40ebd18"
       ],
       0,
-      "ce490678129da98e92251bfead7cbbe4"
+      "0ab842ef49a4fc698356c38b709ebcc9"
     ],
     [
       "NegativeTests.BST.test_node_1",
@@ -188,7 +189,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "eb07bada642b9a56c6aefb19f9719de6"
+      "e04d085826446ca7381b126dd11ccb29"
     ],
     [
       "NegativeTests.BST.test_node_2",
@@ -205,7 +206,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "de873cae5d53e7807cd0b186745a1e67"
+      "d2dba62718c205795774bed2693a4258"
     ],
     [
       "NegativeTests.BST.test_node_3",
@@ -220,7 +221,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "be02d99f08476d4142e6fee9ccf790dd"
+      "41c1b22c3d26c0a78910f84342436ae8"
     ]
   ]
 ]

@@ -7,8 +7,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "equation_FStar.Heap.ref", "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Heap.trivial_rel",
         "equation_FStar.Monotonic.Heap.valid_upd", "equation_Prims.l_True",
@@ -21,16 +20,7 @@
         "typing_TestHeap.h"
       ],
       0,
-      "5e88166e099e7e3d537189498442019d"
-    ],
-    [
-      "TestHeap.test0",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "7fe8fc38abe0cb3973b6e59773698826"
+      "340ac6e9972953082d86527e07a72c22"
     ],
     [
       "TestHeap.test1",
@@ -38,8 +28,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "assumption_TestHeap.DistinctXY", "equation_FStar.Heap.ref",
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Heap.trivial_rel",
@@ -55,16 +44,7 @@
         "typing_TestHeap.h"
       ],
       0,
-      "9cc0d421d4dbbd9356c46be1aec3b661"
-    ],
-    [
-      "TestHeap.test1",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "dda71e692f484e667187413479f1ea7e"
+      "4d07125ba992810ec977b550fb61aa76"
     ],
     [
       "TestHeap.test3",
@@ -72,8 +52,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "equation_FStar.Heap.ref", "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Heap.trivial_rel",
         "equation_FStar.Monotonic.Heap.valid_upd", "equation_Prims.l_True",
@@ -85,16 +64,7 @@
         "true_interp", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "a6341d7e0db9c6645d80bf634325f040"
-    ],
-    [
-      "TestHeap.test3",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f6becd1e8c75f78c973ca57d28d762b5"
+      "a6d9b17bf3c79ba95ea08b938ef19968"
     ],
     [
       "TestHeap.test7",
@@ -119,7 +89,7 @@
         "typing_TestHeap.h"
       ],
       0,
-      "8e3be2d98e065b6782f48a7754ceffcd"
+      "b3134b0c7f03b36f5c8fe2862f668747"
     ],
     [
       "TestHeap.test8",
@@ -143,7 +113,7 @@
         "typing_TestHeap.h"
       ],
       0,
-      "94813ccd27aff87d85c0e2b7b4b37bd7"
+      "dc3fdc5e0871646fe889490f905a62f6"
     ]
   ]
 ]

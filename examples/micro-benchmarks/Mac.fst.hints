@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0d8844e7045478a870515361e548eae3"
+      "38f2c11c01747a16a2e74a569e831667"
     ],
     [
       "MAC.key",
@@ -118,34 +118,7 @@
         "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "e14d34b2b2b8e115088e06d3164aad60"
-    ],
-    [
-      "MAC.verify",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
-      0,
-      "dbb266a547546afb97452616d0458c38"
-    ],
-    [
-      "MAC.verify",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
-      0,
-      "3e9db859544595cf24d837e307c16ef8"
-    ],
-    [
-      "MAC.verify",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_FStar.UInt8.t_haseq" ],
-      0,
-      "d9f7c64eb891641ff0b739b2674b9f93"
+      "5a17ce67a2cbafa9b380dd82fc8124ff"
     ]
   ]
 ]

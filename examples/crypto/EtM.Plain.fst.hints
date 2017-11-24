@@ -51,21 +51,16 @@
       1,
       2,
       1,
-      [ "@query", "equation_EtM.Plain.reveal" ],
-      0,
-      "3b468411778613359a510158be69f92c"
-    ],
-    [
-      "EtM.Plain.length",
-      2,
-      2,
-      1,
       [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equation_EtM.Plain.reveal",
+        "equation_FStar.UInt32.n", "equation_Prims.nat",
+        "function_token_typing_FStar.UInt32.n",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "140c48614705405fb576866217197240"
+      "c5c983352c3964706a99118eb0ac35e9"
     ]
   ]
 ]
