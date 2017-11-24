@@ -500,8 +500,8 @@ let unrefine env t = base_and_refinement env t |> fst
 
 let trivial_refinement t = S.null_bv t, U.t_true
 
-let as_refinement unfold env wl t =
-    let t_base, refinement = base_and_refinement_maybe_delta unfold env t in
+let as_refinement delta env wl t =
+    let t_base, refinement = base_and_refinement_maybe_delta delta env t in
     match refinement with
         | None -> trivial_refinement t_base
         | Some (x, phi) -> x, phi
