@@ -16,8 +16,6 @@
 
 module StlcCbvDbPntSubstNoLists
 
-#set-options "--use_two_phase_tc true"
-
 type ty =
   | TArrow : t1:ty -> t2:ty -> ty
 

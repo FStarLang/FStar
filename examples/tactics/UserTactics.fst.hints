@@ -118,7 +118,7 @@
       1,
       [ "@query", "primitive_Prims.op_Multiply" ],
       0,
-      "85bf27fb63fb27f588cc546cdbab2326"
+      "4077a0bd966abfbdff55eca8771c6d0f"
     ],
     [
       "UserTactics.test_inspect",
@@ -127,7 +127,7 @@
       1,
       [ "@query" ],
       0,
-      "0bf33bbdeca2e3b3daaf0b9d6c67fbb7"
+      "eeabc54801ff3994411cd0fd3deaeccc"
     ],
     [
       "UserTactics.test_simpl",
@@ -136,7 +136,7 @@
       1,
       [ "@query" ],
       0,
-      "a7e0bb170ec3428d0b98f43a5efa3726"
+      "869a4156d62d76e49049ef2f06d7acb3"
     ]
   ]
 ]

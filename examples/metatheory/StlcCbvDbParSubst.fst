@@ -25,8 +25,6 @@ open FStar.Classical
 open FStar.FunctionalExtensionality
 open StlcStrongDbParSubst
 
-#set-options "--use_two_phase_tc true"
-
 (* Weakening (or shifting preserves typing) *)
 (* Useless now, showing that it follows from substitution lemma *)
 val sub_inc_above : nat -> var -> Tot exp

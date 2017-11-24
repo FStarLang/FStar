@@ -19,8 +19,6 @@
 
 module StlcStrongDbParSubst
 
-#set-options "--use_two_phase_tc true"
-
 open FStar.Constructive
 open FStar.Classical
 open FStar.FunctionalExtensionality

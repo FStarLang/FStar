@@ -1198,7 +1198,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "01538b8c8773a03b804c1d3993f65954"
+      "2624a256996f5ffd254bb9be54448064"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_blocks",
@@ -1555,7 +1555,7 @@
         "typing_tok_X64.Machine_s.Rdx@tok"
       ],
       0,
-      "bbeff1c478a3a78aa6216e650476ee79"
+      "7770b8d22148e36b70172bdabb87ba47"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_last_block",
@@ -2236,7 +2236,7 @@
         "typing_tok_X64.Machine_s.Rsi@tok"
       ],
       0,
-      "6674e7e135267fc5d3f944ef8b7a0169"
+      "84000e9f655c959ef0ef0a63085b867a"
     ],
     [
       "X64.Poly1305.va_lemma_poly1305_impl",
