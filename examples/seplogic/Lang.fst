@@ -63,13 +63,12 @@ let lemma_eq_implies_intro (phi:heap -> prop) (x:heap)
 let lemma_addr_not_eq_refl (r1:addr) (r2:addr)
   :Lemma (requires addr_of r1 <> addr_of r2)
          (ensures addr_of r2 <> addr_of r1)
-	 [SMTPat (addr_of r1 <> addr_of r2)]
   = ()
 
-let lemma_eq_is_refl (#a:Type) (#b:Type)
-  :Lemma (requires a == b)
-         (ensures b == a)
-  = ()
+// let lemma_eq_is_refl (#a:Type) (#b:Type)
+//   :Lemma (requires a == b)
+//          (ensures b == a)
+//   = ()
 
 let lemma_refl (#a:Type) 
   :Lemma (requires True)
