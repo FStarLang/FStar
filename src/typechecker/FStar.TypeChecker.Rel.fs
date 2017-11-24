@@ -238,7 +238,8 @@ let prob_to_string env = function
          (* (N.term_to_string env (fst p.logical_guard)); *)
          (* (p.reason |> String.concat "\n\t\t\t") *)]
   | CProb p ->
-    BU.format3 "\n\t%s \n\t\t%s\n\t%s"
+    BU.format4 "\n%s:\t%s \n\t\t%s\n\t%s"
+                 (BU.string_of_int p.pid)
                  (N.comp_to_string env p.lhs)
                  (rel_to_string p.relation)
                  (N.comp_to_string env p.rhs)
@@ -446,13 +447,16 @@ let norm_univ wl u =
     N.normalize_universe wl.tcenv (aux u)
 
 let base_and_refinement env t1 =
+   let norm_refinement env t =
+       N.normalize_refinement [N.Weak; N.HNF; N.UnfoldUntil Delta_constant] env t
+   in
    let rec aux norm t1 =
         let t1 = U.unmeta t1 in
         match t1.n with
         | Tm_refine(x, phi) ->
             if norm
             then (x.sort, Some(x, phi))
-            else begin match N.normalize_refinement [N.Weak; N.HNF] env t1 with
+            else begin match norm_refinement env t1 with
                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
                 | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
             end
@@ -462,7 +466,7 @@ let base_and_refinement env t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t1' = N.normalize_refinement [N.Weak; N.HNF] env t1 in
+            else let t1' = norm_refinement env t1 in
                  begin match (SS.compress t1').n with
                             | Tm_refine _ -> aux true t1'
                             | _ -> t1, None
@@ -2291,13 +2295,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         else let t_base, _ = base_and_refinement env t1 in
              solve_t env ({problem with lhs=t_base; relation=EQ}) wl
 
-      | Tm_refine _, _ ->
-        let t2 = force_refinement <| base_and_refinement env t2 in
-        solve_t env ({problem with rhs=t2}) wl
-
+      | Tm_refine _, _
       | _, Tm_refine _ ->
         let t1 = force_refinement <| base_and_refinement env t1 in
-        solve_t env ({problem with lhs=t1}) wl
+        let t2 = force_refinement <| base_and_refinement env t2 in
+        solve_t env ({problem with lhs=t1; rhs=t2}) wl
 
       | Tm_match _, _
       | Tm_uinst _, _
