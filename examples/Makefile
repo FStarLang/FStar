@@ -1,6 +1,8 @@
 FSTAR_HOME=..
 include Makefile.include
 
+OTHERFLAGS+=--use_two_phase_tc true
+
 ALL_EXAMPLE_DIRS=\
 bug-reports \
 data_structures \
