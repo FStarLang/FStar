@@ -60,6 +60,17 @@ let lemma_eq_implies_intro (phi:heap -> prop) (x:heap)
          (ensures (forall (y:heap). (y == x) ==> phi y))
   = ()
 
+let lemma_addr_not_eq_refl (r1:addr) (r2:addr)
+  :Lemma (requires addr_of r1 <> addr_of r2)
+         (ensures addr_of r2 <> addr_of r1)
+	 [SMTPat (addr_of r1 <> addr_of r2)]
+  = ()
+
+let lemma_eq_is_refl (#a:Type) (#b:Type)
+  :Lemma (requires a == b)
+         (ensures b == a)
+  = ()
+
 let lemma_refl (#a:Type) 
   :Lemma (requires True)
          (ensures a <==> a) 
@@ -69,4 +80,15 @@ let lemma_impl_l_cong (#a:Type) (#b:Type) (#c:Type) (p1:squash (a <==> b)) (p2:s
   :Lemma (requires True)
          (ensures a ==> c) 
   = ()
+
+let lemma_eq_l_cong (a:heap) (b:heap) (#c:Type) (u:heap) (p1:squash (a == u)) (p2:squash (u == b ==> c))
+  :Lemma (requires True)
+         (ensures a == b ==> c)
+  = ()
+
+let lemma_eq_cong (#a:t) (#b:t) (#c:t) (p1:squash (a == c)) (p:squash (c == b))
+  :Lemma (requires True)
+         (ensures a == b)
+  = ()
+  
 

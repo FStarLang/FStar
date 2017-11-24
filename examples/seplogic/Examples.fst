@@ -35,6 +35,24 @@ let step_bind             :tactic unit = apply_lemma (quote lemma_bind);; norm [
 
 let step_eq_implies_intro :tactic unit = apply_lemma (quote lemma_eq_implies_intro);; norm []
 
+let assumption'  :tactic unit = 
+  apply_raw (quote FStar.Squash.return_squash);; 
+  assumption
+
+let assumption'' :tactic unit =
+  or_else assumption'
+         (apply_lemma (quote lemma_addr_not_eq_refl);; norm [];; assumption')
+
+let and_elim' :tactic unit =
+  h <-- implies_intro;
+  and_elim (pack (Tv_Var h));;
+  clear h
+
+let implies_intros' :tactic unit =
+  repeat and_elim';;
+  implies_intros;;
+  return ()
+
 let simplify_join_emp :tactic unit =
   pointwise (or_else (or_else (apply_lemma (quote lemma_join_h_emp);; qed) 
                               (apply_lemma (quote lemma_join_emp_h);; qed))
@@ -46,54 +64,22 @@ let simplify_join_minus :tactic unit =
 		     (fail "SKIP"))
 
 let simplify_restrict :tactic unit =
-  apply_lemma (quote lemma_restrict_r_update')  `or_else`
-  apply_lemma (quote lemma_restrict_r1_update') `or_else`
-  fail "simplify_restrict: failed"
+  or_else (apply_lemma (quote lemma_restrict_r_update))
+          (apply_lemma (quote lemma_restrict_r1_update);; assumption'') 
 
-let assumption' :tactic unit =
-  apply_raw (quote FStar.Squash.return_squash);;
-  assumption
-
-let assumption'' :tactic unit =
-  or_else assumption' (apply_lemma (quote lemma_addr_not_eq_refl);; norm [];; assumption')
-  
-let simplify_sel :tactic unit =
-  (apply_lemma (quote lemma_sel_r1_update');; split;; assumption'')        `or_else`
-  apply_lemma (quote lemma_sel_r_update')                                  `or_else`
-  (apply_lemma (quote lemma_sel_r1_from_restrict');; split;; assumption'') `or_else`
-  (apply_lemma (quote lemma_sel_r_from_minus');; split;; assumption'')
-
-let rec repeat_simplify_join_minus () :Tac unit =
-  (g1 <-- cur_goal; simplify_join_minus;; g2 <-- cur_goal;
-    begin match (term_as_formula' g1, term_as_formula' g2) with
-    | App _ t1, App _ t2 -> 
-       begin match (term_as_formula' t1, term_as_formula' t2) with
-       | (Iff l1 _, Iff l2 _) -> if term_eq l1 l2
-                                 then return ()
-                         	 else repeat_simplify_join_minus
-       | _                    -> return ()				 
-       end
-    | _                  -> return ()
-    end
-   ) ()
-
-let rec repeat_simplify_sel () :Tac unit =
-  (g <-- trytac cur_goal;
-  begin match g with
-  | None -> return ()
-  | Some _ -> repeat simplify_sel;;
-              trytac ((trefl;; qed) `or_else` smt);;
-              repeat_simplify_sel
-  end
-  ) ()
+let repeat_simplify_restrict :tactic unit =
+  apply_lemma (quote lemma_eq_l_cong);;
+  simplify_restrict;;
+  trytac trefl;;
+  return ()
 
 let step_intros :tactic unit =
   forall_intros;;
   apply_lemma (quote lemma_impl_l_cong);;
   simplify_join_emp;;
-  repeat_simplify_join_minus;;
-  repeat simplify_restrict;;
+  simplify_join_minus;;
   apply_lemma (quote lemma_refl);;
+  repeat repeat_simplify_restrict;;
   implies_intro;;
   return ()
 
@@ -105,31 +91,59 @@ let step :tactic unit =
   step_intros                 `or_else`
   fail "step: failed"
 
+let simplify_sel :tactic unit =
+  dump "monal";;
+  apply_lemma (quote lemma_eq_cong);;
+  dump "tesst";;
+  (apply_lemma (quote lemma_sel_r1_update);; assumption'')        `or_else`
+  apply_lemma (quote lemma_sel_r_update)                                  `or_else`
+  (apply_lemma (quote lemma_sel_r1_from_restrict);; assumption'') `or_else`
+  (apply_lemma (quote lemma_sel_r_from_minus);; assumption'');;
+  dump "state";;
+  trytac (apply_lemma (quote lemma_refl));;
+  return ()
+
+// let rec repeat_simplify_join_minus () :Tac unit =
+//   (g1 <-- cur_goal; simplify_join_minus;; g2 <-- cur_goal;
+//     begin match (term_as_formula' g1, term_as_formula' g2) with
+//     | App _ t1, App _ t2 -> 
+//        begin match (term_as_formula' t1, term_as_formula' t2) with
+//        | (Iff l1 _, Iff l2 _) -> if term_eq l1 l2
+//                                  then return ()
+//                          	 else repeat_simplify_join_minus
+//        | _                    -> return ()				 
+//        end
+//     | _                  -> return ()
+//     end
+//    ) ()
+
+let rec repeat_simplify_sel () :Tac unit =
+  (g <-- trytac cur_goal;
+  begin match g with
+  | None -> return ()
+  | Some _ -> repeat simplify_sel;;
+              trytac ((trefl;; qed) `or_else` smt);;
+              repeat_simplify_sel
+  end
+  ) ()
+
+
 let simplify_goals :tactic unit =
   simplify_join_emp;;
-  repeat_simplify_join_minus;;
+  simplify_join_minus;;
   trytac (repeat split);;
   repeat_simplify_sel;;
   return ()
 
-let and_elim' :tactic unit =
-  h <-- implies_intro;
-  and_elim (pack (Tv_Var h));;
-  clear h
-
-let implies_intros' :tactic unit =
-  repeat and_elim';;
-  implies_intros;;
-  return ()
-  
 let solve :tactic unit =
   norm [delta; delta_only unfold_steps; primops];;
   dump "Initial goal";;
   trytac implies_intros';;
   repeat step;;
   simplify_goals;;
-  dump "Final goal"
-  
+  dump "here"
+  // dump "Final goal"
+
 (***** Examples *****)
 
 type t = FStar.SepLogic.Heap.t
