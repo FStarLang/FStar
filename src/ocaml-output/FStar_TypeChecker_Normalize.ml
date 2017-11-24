@@ -2764,26 +2764,29 @@ let rec norm:
                    (FStar_List.mem FStar_TypeChecker_Env.UnfoldTac
                       cfg.delta_level)
                      &&
-                     (((((((((FStar_Syntax_Syntax.fv_eq_lid f
-                                FStar_Parser_Const.and_lid)
+                     ((((((((((FStar_Syntax_Syntax.fv_eq_lid f
+                                 FStar_Parser_Const.and_lid)
+                                ||
+                                (FStar_Syntax_Syntax.fv_eq_lid f
+                                   FStar_Parser_Const.or_lid))
                                ||
                                (FStar_Syntax_Syntax.fv_eq_lid f
-                                  FStar_Parser_Const.or_lid))
+                                  FStar_Parser_Const.imp_lid))
                               ||
                               (FStar_Syntax_Syntax.fv_eq_lid f
-                                 FStar_Parser_Const.imp_lid))
+                                 FStar_Parser_Const.forall_lid))
                              ||
                              (FStar_Syntax_Syntax.fv_eq_lid f
-                                FStar_Parser_Const.forall_lid))
+                                FStar_Parser_Const.squash_lid))
                             ||
                             (FStar_Syntax_Syntax.fv_eq_lid f
-                               FStar_Parser_Const.squash_lid))
+                               FStar_Parser_Const.exists_lid))
                            ||
                            (FStar_Syntax_Syntax.fv_eq_lid f
-                              FStar_Parser_Const.exists_lid))
+                              FStar_Parser_Const.eq2_lid))
                           ||
                           (FStar_Syntax_Syntax.fv_eq_lid f
-                             FStar_Parser_Const.eq2_lid))
+                             FStar_Parser_Const.eq3_lid))
                          ||
                          (FStar_Syntax_Syntax.fv_eq_lid f
                             FStar_Parser_Const.true_lid))
