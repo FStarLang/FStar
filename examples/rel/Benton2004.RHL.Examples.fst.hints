@@ -58,7 +58,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "f0ad769e6321425b6aeb5afbee70a93c"
+      "227333488b0f4ca37441d1fbbf8f8391"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex1",
@@ -67,7 +67,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "12c32af74f28fdde33e68f1dc7c6f190"
+      "b785c2304b997ed4af3372decd1e96fc"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex1",
@@ -76,7 +76,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "82fe9af05f874cd98b08fc8ba0de3cc8"
+      "fe19d0d525dbb6f6b42b6b98d0335726"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex1",
@@ -85,7 +85,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "14a66e3c5c0b81c12b16ef8384ef0b2a"
+      "4448a30a57ab148e0ab90b46c188e2fb"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex1",
@@ -94,7 +94,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a8a6b1ce6a76bf7f42a4a23cb5d6e3b3"
+      "79f330be2854a518fdfdead7691d09ef"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex1",
@@ -103,7 +103,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e55542d2d4a4b19298021098f085265f"
+      "e5cde452dbfd1139310965def11de0f7"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex1",
@@ -112,7 +112,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "46d34b5e03166d5ffc5900db28eebeed"
+      "ca2d66196e68a6ae8efb6d28122b8e13"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -150,7 +150,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "6ce19b685447dde29b1c8c5b0753a1e4"
+      "67a0ee358064f17d754809610d7c147d"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -164,7 +164,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0753fcf6a11e953d249a9decf5174db8"
+      "4bddae461e7df4c066a63aac1e8639c6"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -173,7 +173,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "f38ba4885fc667abd38e6d630a4432d7"
+      "ae2d5508da0a63b91c95c18a435a0934"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -182,7 +182,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "ad6a2421bba377a192d6f1ed0859f2f8"
+      "85bc7ac872d7499e52ee6475aa9e04c0"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -191,7 +191,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b47e49a225e84a0d9b5faed6876e3515"
+      "3e10ca9621b6ceaffd9107d0b9a29eee"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -200,7 +200,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "818be362ce3f6602d093de6b4e6a535d"
+      "365095710c5b1990e27ccad7ce7a8ff6"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -209,7 +209,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5f57556953f2c0b8217dedadd5048136"
+      "82910890da466e77e229d5643e89e43f"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -218,7 +218,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c10112c4caa3fcbcbcbeee2c77270f0c"
+      "5e0338483e099a6afc6bdaa11d9b223c"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -247,7 +247,7 @@
         "typing_Benton2004.RHL_Tm_abs_3f7e5aeb06b289102e285de2b7bf9058"
       ],
       0,
-      "2e1a14dea0f10316dec722f1f6d5b15b"
+      "76192eac0f87faba905ac03e05f845b4"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -256,7 +256,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c033753c511e8feeae9468f6553c1628"
+      "fa3edc3407a814a3186bfbb18f86961f"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -265,7 +265,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9457c822cc33eba89f9496b49ff94d5b"
+      "2811877f9e29190df0990f6a8b20b5fe"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -274,7 +274,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "9a12d53cdf2ee48882196bc4589c49b8"
+      "3f3fae4533b818ee2b62f2fe1b166437"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -302,7 +302,7 @@
         "typing_Benton2004.eop", "typing_Benton2004.evar"
       ],
       0,
-      "57dcdef30f9c39d931f698bdbff38671"
+      "fb481b7e8ea21e960c5832242ea7a982"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -316,7 +316,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "cfc8ecf61e5796744f4b3ec212a9dc5c"
+      "8f8a0bbea8ed3eb05de7c8df6083fdd1"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -325,7 +325,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e9944b62f0ca62393946970dea039934"
+      "204fd35dfa7e92255a1cb45a7d8bf06b"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -334,7 +334,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "59f3bc35a1b4e3842809f136a9e52610"
+      "77055e88c806109a07bcf1b312324219"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -343,7 +343,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "b12f3befb9a50b37c25f5947c98ddc7b"
+      "5e7f06bb88cb266187bf15e53f5ab22c"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -376,7 +376,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "385b9f410de1d8f81fd56b74045a392b"
+      "40f4fd25c0010f5aa7a313090f82dc26"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -390,7 +390,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6bfe0d655d3527a4b3eb33df9bd2208d"
+      "6a1fe9b0f2ddf4149d0b480fddbdd1bd"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -399,7 +399,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "20dbc653ce8a17bdabbbe13d9226d216"
+      "b04988edab7b25901281ea852e6f1db2"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -408,7 +408,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d45eaf6695af7049d48bdac618e694b6"
+      "a54ed374259772c81c676410f811f721"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -417,7 +417,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0f4ef12b18b608a11d5be0e4a3f85d5b"
+      "7f16dde52110adb522c9ebdb8cb46df9"
     ],
     [
       "Benton2004.RHL.Examples.sec43_phi",
@@ -426,7 +426,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6ef23960bec3d5b8f4db0e3d317f53b7"
+      "ef02c071f7e934efb095cdb5553f5af1"
     ],
     [
       "Benton2004.RHL.Examples.sec43_phi",
@@ -435,7 +435,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "e5663f0d64b8e40a77b10b4a730342f7"
+      "80ade5bcc18b278a9771f2fd47315877"
     ],
     [
       "Benton2004.RHL.Examples.sec43_phi",
@@ -444,7 +444,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "18da90f23707e4cc422bd44bfe6d6a44"
+      "d2a5d640ee9593db87cf37d1f1f22005"
     ],
     [
       "Benton2004.RHL.Examples.sec43_left",
@@ -453,7 +453,7 @@
       1,
       [ "@query" ],
       0,
-      "5217e5e69e515aa2219e4b7b6d312c87"
+      "5013b6002523f581c575e77196c183e6"
     ],
     [
       "Benton2004.RHL.Examples.sec43_right",
@@ -462,7 +462,7 @@
       1,
       [ "@query" ],
       0,
-      "6fcc30e0f539a21b3d90dcd2f2a5bb80"
+      "a10dd60fd1f3130dd214242853809502"
     ],
     [
       "Benton2004.RHL.Examples.r_ass",
@@ -480,7 +480,7 @@
         "typing_Benton2004.assign"
       ],
       0,
-      "962e26096365d70bcb70453f2a3ed664"
+      "c8d5b9475134c5b2a843884d5db751e9"
     ],
     [
       "Benton2004.RHL.Examples.r_dassl",
@@ -498,7 +498,7 @@
         "typing_Benton2004.assign"
       ],
       0,
-      "4b7139e44a05319b36ff93532dafa028"
+      "0373c1ad087ca157af1e06dd9ac67a3e"
     ],
     [
       "Benton2004.RHL.Examples.flip_flip",
@@ -511,7 +511,7 @@
         "token_correspondence_Benton2004.RHL.flip"
       ],
       0,
-      "1e2554b99614aa4af256806148386e43"
+      "3c5fcb06c66ea6b623eca40f04655e13"
     ],
     [
       "Benton2004.RHL.Examples.r_dassr",
@@ -550,7 +550,7 @@
         "typing_Benton2004.assign", "typing_Benton2004.reify_exp"
       ],
       0,
-      "6393f575d765df07905eaf4f0366b503"
+      "86c36555e0f4851012c8a2c1ca4d16d2"
     ],
     [
       "Benton2004.RHL.Examples.d_su1'_flip",
@@ -563,7 +563,7 @@
         "lemma_Benton2004.RHL.exec_equiv_flip", "typing_Benton2004.seq"
       ],
       0,
-      "5999ef0305bc4d0324e1ff8a1ea01fe7"
+      "27b0c6c1bf6c4d977b7547c679f76584"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -644,7 +644,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "4ca328a4aae02cbc6bef4743353b5e17"
+      "8a4c77806108245dc640fa97ac67b4bf"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -658,7 +658,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8f7435f773c14c8bd5bf6f03c2e9e26f"
+      "e726785f5c6a0ca66d410666b68ea0bb"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -667,7 +667,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "761bdc16334826655147a79a068dbdaf"
+      "eacdcfb12cb2ffdcb132d543a23a7aa8"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -676,7 +676,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "59f620883f3f51f069cd24dc4296925f"
+      "44604a98520af0203173c001d6961499"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -690,7 +690,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "efe3e0a9a4a84464326b8fef71fd813c"
+      "b5e2b04d71f63090ccae8879d132f383"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -704,7 +704,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4f88615d2b36a3626a5b507b19f697a4"
+      "4758bacafffc4ad47c880751ab400d0a"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -718,7 +718,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f67cf289d0a3f97691aa66912c91555d"
+      "abdfdadb83a9aaf61e68ea1cf803170e"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -732,7 +732,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "dd8838f69ee6e18276392e29bd6959cc"
+      "3bd873879269fda917dcdbf1cfb4d1e4"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -746,7 +746,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c455db28615b8b7308e7344f2c1a8726"
+      "283d48fbdc75ac5bf59afeede4518c80"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -760,7 +760,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "c0040db3f3a5b6bf1fd1fbde576b1a60"
+      "a286aa85bbf4825cc1ec4357aef45329"
     ],
     [
       "Benton2004.RHL.Examples.sec43'_postcond",
@@ -769,7 +769,7 @@
       1,
       [ "@query" ],
       0,
-      "b2aa4a5ef7ac29faef9f611d13f2f2e7"
+      "be54af84d7832a2c230d6c6bcd8550f7"
     ],
     [
       "Benton2004.RHL.Examples.sec43'_precond",
@@ -778,7 +778,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "302d348746653fb09b8da53b7e6203ee"
+      "ddea1076f54c5fd9c1604806aeceadbb"
     ],
     [
       "Benton2004.RHL.Examples.sec43'",
@@ -831,7 +831,7 @@
         "typing_Benton2004.evar", "typing_tok_Benton2004.RHL.Left@tok"
       ],
       0,
-      "0faa7bc0b46637faf5b18f9a67e67a4a"
+      "ee8e03a2da9e627e08f4601f85a6d84f"
     ]
   ]
 ]

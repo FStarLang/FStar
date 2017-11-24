@@ -25,14 +25,23 @@ FSTAR_TAC_LIB_EXTRACT=$(addprefix --extract_module ,$(sort $(FSTAR_TAC_LIB_DROPP
 
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
-	$(FSTAR) --expose_interfaces --lax --codegen OCaml --odir ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTARLIB_MODULES)
+	rm -f .depend.extract
+	FSTAR_FILES='$(FSTARLIB_MODULES)' \
+	OUTPUT_DIRECTORY=ml/extracted \
+	EXTRACT_MODULES='$(FSTAR_DEFAULT_ARGS)' \
+	$(MAKE) -f Makefile.extract all-ml
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted
 	touch fstarlib.mgen
 
 FSTARLIB_LEFTOVERS=$(shell python fstarlib_leftovers.py +ml +ml/extracted -../bin/fstar-compiler-lib/)
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
-	$(FSTAR) --expose_interfaces --lax --codegen tactics --odir tactics_ml/extracted $(FSTAR_DEFAULT_ARGS) $(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_TAC_LIB_MODULES)
+	rm -f .depend.extract
+	FSTAR_FILES='$(FSTAR_TAC_LIB_MODULES)' \
+	OUTPUT_DIRECTORY=tactics_ml/extracted \
+	CODEGEN=tactics \
+	EXTRACT_MODULES='$(FSTAR_TAC_LIB_EXTRACT) $(FSTAR_DEFAULT_ARGS)' \
+	$(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen
@@ -102,7 +111,7 @@ install-fstar-tactics: $(TACLIB_OBJECTS)
 	cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
 
 clean:
-	rm -f .depend
+	rm -f .depend .depend.extract
 	rm -f *.mgen
 	rm -f *.checked *.source *.checked.lax
 	rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers

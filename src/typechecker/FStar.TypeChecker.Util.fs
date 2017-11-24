@@ -190,20 +190,22 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 let pat_as_exp (allow_implicits:bool)
                (env:Env.env)
                (p:pat)
-               (tc_annot : Env.env -> term -> term)
+               (tc_annot : Env.env -> term -> term * guard_t)
     : (list<bv>          (* pattern-bound variables (which may appear in the branch of match) *)
      * term              (* expressions corresponding to the pattern *)
+     * guard_t           (* guard for the annotations on the pattern bound variables *)  //AR: earlier tc_annot was forcing it to be trivial without assuming the equality of the scrutinee with the pattern
+                                                                                         //see the comment in tc_pat in TcTerm.fs
      * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
-    let check_bv (env:Env.env) (x:bv) =
-          let t_x =
+    let check_bv (env:Env.env) (x:bv) :(bv * guard_t) =
+          let t_x, guard =
               match (SS.compress x.sort) with
               | {n=Tm_unknown} ->
                 let t, _ = U.type_u() in
-                new_uvar env t
+                new_uvar env t, Rel.trivial_guard
               | t -> //user-decorated type
                 tc_annot env t
           in
-          {x with sort=t_x}
+          {x with sort=t_x}, guard
     in
     let rec pat_as_arg_with_env allow_wc_dependence env (p:pat) :
                                     (list<bv>    //all pattern-bound vars including wild-cards, in proper order
@@ -211,6 +213,7 @@ let pat_as_exp (allow_implicits:bool)
                                     * list<bv>   //just the wildcards
                                     * Env.env    //env extending with the pattern-bound variables
                                     * term       //the pattern as a term/typ
+                                    * guard_t    //guard for the type annotations on the pattern bvs
                                     * pat) =     //the elaborated pattern itself
         match p.v with
            | Pat_constant c ->
@@ -221,7 +224,7 @@ let pat_as_exp (allow_implicits:bool)
                 | _ ->
                   mk (Tm_constant c) None p.p
              in
-             ([], [], [], env, e, p)
+             ([], [], [], env, e, Rel.trivial_guard, p)
 
            | Pat_dot_term(x, _) ->
              let k, _ = U.type_u () in
@@ -229,29 +232,29 @@ let pat_as_exp (allow_implicits:bool)
              let x = {x with sort=t} in
              let e, u = Rel.new_uvar p.p (Env.all_binders env) t in
              let p = {p with v=Pat_dot_term(x, e)} in
-             ([], [], [], env, e, p)
+             ([], [], [], env, e, Rel.trivial_guard, p)
 
            | Pat_wild x ->
-             let x = check_bv env x in
+             let x, g = check_bv env x in
              let env = if allow_wc_dependence then Env.push_bv env x else env in
              let e = mk (Tm_name x) None p.p in
-             ([x], [], [x], env, e, p)
+             ([x], [], [x], env, e, g, p)
 
            | Pat_var x ->
-             let x = check_bv env x in
+             let x, g = check_bv env x in
              let env = Env.push_bv env x in
              let e = mk (Tm_name x) None p.p in
-             ([x], [x], [], env, e, p)
+             ([x], [x], [], env, e, g, p)
 
            | Pat_cons(fv, pats) ->
-             let (b, a, w, env, args, pats) =
+             let (b, a, w, env, args, guard, pats) =
                pats |>
                List.fold_left
-                 (fun (b, a, w, env, args, pats) (p, imp) ->
-                    let (b', a', w', env, te, pat) = pat_as_arg_with_env allow_wc_dependence env p in
+                 (fun (b, a, w, env, args, guard, pats) (p, imp) ->
+                    let (b', a', w', env, te, guard', pat) = pat_as_arg_with_env allow_wc_dependence env p in
                     let arg = if imp then iarg te else as_arg te in
-                    (b'::b, a'::a, w'::w, env, arg::args, (pat, imp)::pats))
-               ([], [], [], env, [], [])
+                    (b'::b, a'::a, w'::w, env, arg::args, Rel.conj_guard guard guard', (pat, imp)::pats))
+               ([], [], [], env, [], Rel.trivial_guard, [])
              in
              let e = mk (Tm_meta(mk_Tm_app (Syntax.fv_to_tm fv)
                                            (args |> List.rev) None p.p,
@@ -263,6 +266,7 @@ let pat_as_exp (allow_implicits:bool)
               List.rev w |> List.flatten,
               env,
               e,
+              guard,
               {p with v=Pat_cons(fv, List.rev pats)})
     in
 
@@ -315,13 +319,13 @@ let pat_as_exp (allow_implicits:bool)
 
     let one_pat allow_wc_dependence env p =
         let p = elaborate_pat env p in
-        let b, a, w, env, arg, p = pat_as_arg_with_env allow_wc_dependence env p in
+        let b, a, w, env, arg, guard, p = pat_as_arg_with_env allow_wc_dependence env p in
         match b |> BU.find_dup bv_eq with
             | Some x -> raise (Error(Err.nonlinear_pattern_variable x, p.p))
-            | _ -> b, a, w, arg, p
+            | _ -> b, a, w, arg, guard, p
     in
-    let b, _, _, tm, p = one_pat true env p in
-    b, tm, p
+    let b, _, _, tm, guard, p = one_pat true env p in
+    b, tm, guard, p
 
 let decorate_pattern env p exp =
     let qq = p in
@@ -430,7 +434,7 @@ let lift_comp c m lift =
   {comp_univs=[u];
    effect_name=m;
    result_typ=c.result_typ;
-   effect_args=[as_arg (lift.mlift_wp c.result_typ wp)];
+   effect_args=[as_arg (lift.mlift_wp u c.result_typ wp)];
    flags=[]}
 
 let join_effects env l1 l2 =

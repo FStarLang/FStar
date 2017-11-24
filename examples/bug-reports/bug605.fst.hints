@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "283135518d7ba143f21c0868a8ab14cd"
+      "305cc32d994a0bf0d03ca0b1a40f4faa"
     ],
     [
       "Bug605.steps_preserves_red",
@@ -20,7 +20,7 @@
         "fuel_guarded_inversion_Bug605.peq"
       ],
       0,
-      "322d848eefad9915ccb3a2f3020ff286"
+      "6271f8413200501b16789a30be8ca7cc"
     ]
   ]
 ]

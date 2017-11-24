@@ -2,6 +2,8 @@
 FSTAR_HOME=../..
 include ../Makefile.include
 
+OTHERFLAGS+=--use_two_phase_tc true
+
 all: uall
 
 uall: BinarySearch.uver IntSort.uver InsertionSort.uver MergeSort.uver QuickSort.List.uver QuickSort.Seq.uver GC.uver Unification.uver Huffman.uver #downgrade QuickSort.Array.uver //TODO

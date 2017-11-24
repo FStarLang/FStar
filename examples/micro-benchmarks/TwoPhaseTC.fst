@@ -1,6 +1,6 @@
 module TwoPhaseTC
 
-#set-options "--use_two_phase_tc --ugly"
+#set-options "--use_two_phase_tc true --ugly"
 
 (*
  * Uvar solutions are not always closed, they can have free universe names.
@@ -67,6 +67,28 @@ let f17 (x:int) :Lemma (requires True) (ensures f15) [SMTPat (f16 x)] = admit ()
 (* We were dropping the comp from the ascription in the second phase, this testcase tests the fix *)
 let f18 (p:int -> Type0) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x)
   = FStar.Classical.forall_intro #int #p (fun x -> (f x <: Lemma (p x)))
+
+(*
+ * This tests the type annotations on the dependent patterns.
+ * Consider ExIntro IP hp in the function f21.
+ * In the first phase, it is elaborated to: ExIntro (#uu1:Type0) (#uu2:@0 -> Type0) IP (hp:@0 IP)
+ * Where @0, @1 etc. are de-bruijn variables.
+ * When it is typechecked in the second phase, the annotation @0 IP for hp is typechecked
+ * and the typechecker tries to prove that IP has type #uu1, which it fails to prove without any contextual information.
+ * To prove it, we need the information that the scrutinee h is equal to the pattern ExIntro ... and then
+ * type equalities kick in, I think.
+ *)
+type f19 =
+  | IP : f19
+
+noeq type f20 : a:Type0 -> (a -> Type0) -> Type u#1 =
+  | ExIntro : #a:Type0 -> #p:(a -> Type0) -> x:a -> p x -> f20 a p
+
+val f21 : f20 f19 (fun (p:f19) -> unit) -> Tot unit
+  let f21 h =
+  let ExIntro IP hp = h in
+  ()
+
 
 (* This gives error in reguaring ... try with printing phase 1 message, and with --ugly
 open FStar.All

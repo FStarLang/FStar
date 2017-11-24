@@ -11,7 +11,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "d389703e4d110eebf2f61d73abb96dbf"
+      "eeb431cd55196be5dc8dbb1ac8d27953"
     ],
     [
       "FStar.Fin.seqn",
@@ -23,7 +23,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0519cf3d632e1fd18384c06b4599a15c"
+      "6028fd2e80a692dbed1e9c55e7980b43"
     ],
     [
       "FStar.Fin.find",
@@ -62,37 +62,11 @@
         "typing_FStar.Seq.Base.index", "well-founded-ordering-on-nat"
       ],
       0,
-      "62adce1a4871adfdedd97daad4d92dd4"
+      "2ecb085809fa804323b070999d69262d"
     ],
     [
       "FStar.Fin.pigeonhole",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Fin.fin",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
-      ],
-      0,
-      "5c9e49333f76003a1eeb0471a1627116"
-    ],
-    [
-      "FStar.Fin.pigeonhole",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Fin.fin",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_FStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff"
-      ],
-      0,
-      "3b2cc7cc5242ea1af3ecf09ef1a806bb"
-    ],
-    [
-      "FStar.Fin.pigeonhole",
-      3,
       2,
       1,
       [
@@ -112,7 +86,7 @@
         "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_Prims.LexTop@tok", "equation_FStar.Fin.fin",
         "equation_FStar.Fin.in_", "equation_Prims.nat",
-        "equation_with_fuel_FStar.Fin.find.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "haseqFStar.Fin_Tm_refine_c6346e71d85a744a896c121fbf4b9557",
         "haseqFStar.Fin_Tm_refine_d693ee8bb2e9c4dbed189fbf7bcade8c",
         "int_inversion", "int_typing",
@@ -126,7 +100,7 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.Fin_Tm_refine_22624a7f3ac59e9520f8ae54d167758f",
         "refinement_interpretation_FStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff",
@@ -138,11 +112,12 @@
         "refinement_interpretation_FStar.Seq.Base_Tm_refine_5514fbe9e08dfda40f950a7b9f1b2b98",
         "refinement_interpretation_FStar.Seq.Properties_Tm_refine_f874e2190eee7a2db7ea0e274c3085a5",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "token_correspondence_FStar.Fin.find.fuel_instrumented",
         "typing_FStar.Fin.fin", "typing_FStar.Fin.find",
         "typing_FStar.Seq.Base.index", "well-founded-ordering-on-nat"
       ],
       0,
-      "684da954f23e3a019fa2e61bdf10c391"
+      "00eafc6ad734b0255b519d3e1f274f33"
     ]
   ]
 ]

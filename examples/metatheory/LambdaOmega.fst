@@ -25,6 +25,9 @@ open FStar.Classical
 open FStar.FunctionalExtensionality
 open FStar.StrongExcludedMiddle
 
+#set-options "--max_fuel 1 --max_ifuel 1 --use_two_phase_tc true"
+
+
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
    proof follows Chapter 30, but we don't consider polymorphism
    (for extension to System F-omega see f-omega.fst) *)
@@ -451,12 +454,12 @@ let rec progress #e #t h =
     | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
       (match e1 with
        | ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2)
-       | _ -> (match progress #e1 h1 with
+       | _ -> (match progress h1 with
                | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
     (* | TyEqu h1 _ _ -> progress h1 -- used to work *)
     (* | TyEqu #g #e #t1 #t2 h1 _ _ -> progress #e #t1 h1
        -- explicit annotation doesn't help with Pure annotation *)
-       | TyEqu h1 _ _ -> progress #e h1
+       | TyEqu h1 _ _ -> progress h1
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
@@ -516,7 +519,7 @@ let rec kinding_weakening_tbnd #g #t #k h x k' =
   match h with
     | KiVar a -> if a < x then KiVar a
                           else KiVar (a + 1)
-    | KiLam #g k'' #t1 #k''' h1 ->
+    | KiLam #g k'' #t1 #_ h1 ->
       tshift_up_above_lam x k'' t1;
       let h2 = kinding_weakening_tbnd h1 (x + 1) k' in
       KiLam k'' (kinding_extensional h2 (extend_tvar (extend_tvar g x k') 0 k''))
@@ -547,7 +550,7 @@ let rec typing_to_kinding #g #e #t h = match h with
   | TyLam t' hk h1 -> KiArr hk (kinding_strengthening_ebnd g 0 t'
                                   (typing_to_kinding h1))
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
-    Conj?.h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h1))
+    Conj?.h2 (kinding_inversion_arrow (typing_to_kinding h1))
   | TyEqu h1 eq hk -> hk
 
 (* this folows from functional extensionality *)
@@ -649,8 +652,7 @@ let rec substitution #g1 #e #t s #g2 h1 hs =
               (* substitution esub_inc hgamma2 hs'' *)
               (* Failed to verify implicit argument: Subtyping check failed;
                  expected type LambdaOmega.var; got type Prims.int [2 times] *)
-              substitution #_ #(s (y-1)) #(Some?.v (lookup_evar g1 (y-1)))
-                esub_inc #_ hgamma2 hs''
+              substitution esub_inc hgamma2 hs''
      in (esub_lam_hoist tlam ebody s;
          TyLam tlam (kinding_extensional hkind g2)
                (substitution (esub_lam s) hbody hs'))
@@ -837,8 +839,6 @@ let rec tred_diamond #s #t #u h1 h2 =
     | MkLTup _ (TrRefl t1) -> ExIntro t (Conj (TrRefl t) h1)
     (* if one is TrLam, the other has to be TrLam *)
     | MkLTup (TrLam k h11) (TrLam _ h12) ->
-    (* AR: p only has one constructor Conj,
-           but direct pattern matching doesn't work *)
       let ExIntro t' (Conj pa pb) = tred_diamond h11 h12 in
       ExIntro (TLam k t') (Conj (TrLam k pa) (TrLam k pb))
     (* if one is TrArr, the other has to be TrArr *)
@@ -852,8 +852,8 @@ let rec tred_diamond #s #t #u h1 h2 =
       let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
       ExIntro (TApp v1 v2) (Conj (TrApp p1a p2a) (TrApp p1b p2b))
     (* both TrBeta *)
-    | MkLTup (TrBeta #s1 #s2 #t1' #t2' k h11 h12)
-             (TrBeta #s11 #s21 #u1' #u2' k' h21 h22) ->
+    | MkLTup (TrBeta k h11 h12)
+             (TrBeta k' h21 h22) ->
       let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
       let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
       ExIntro (tsubst_beta v2 v1) (Conj (subst_of_tred_tred 0 p2a p1a)
@@ -878,8 +878,7 @@ let rec tred_diamond #s #t #u h1 h2 =
         match h21 with
           | TrLam _ h' -> h'
           | TrRefl _ -> TrRefl (TLam?.t s1') in
-      (* magic() (\* XXX *\) *)
-      let ExIntro v1 (Conj p1a p1b) = tred_diamond #(TLam?.t s1') #_ #(TLam?.t lu1') h11 h21 in
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
         (* XXX: tred_diamond h11 h21 (#580)
            This used to work before universes but now fails:
            Failed to verify implicit argument: Subtyping check failed;
@@ -889,7 +888,7 @@ let rec tred_diamond #s #t #u h1 h2 =
         *)
       let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
       let v = tsubst_beta v2 v1 in
-      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta #(TLam?.t lu1') #_ #_ #_ k p1b p2b))
+      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta k p1b p2b))
       (* XXX: TrBeta k p1b p2b:
         Failed to verify implicit argument: Subtyping check failed;
         expected type (uu___#3285:LambdaOmega.typ{(Prims.b2t
@@ -908,7 +907,7 @@ let rec tred_diamond #s #t #u h1 h2 =
           | TrLam _ h' -> h'
           | TrRefl _ -> TrRefl t1' in
       ExIntro (tsubst_beta v2 (TLam?.t v1))
-              (Conj (TrBeta #(TLam?.t lu1') #_ #_ #_ k h_body p3)
+              (Conj (TrBeta k h_body p3)
                     (subst_of_tred_tred 0 p4 h_body2))
       (* XXX (#580): (TrBeta k h_body p3) *)
       (* Failed to verify implicit argument: Subtyping check failed;
@@ -930,7 +929,7 @@ irreducible val tred_star_one_loop: #s:typ -> #t:typ -> #u:typ ->
 let rec tred_star_one_loop #s #t #u h hs = match hs with
   | TsRefl _ ->
     ExIntro t (Conj (TsRefl t) h)
-  | TsStep #s #u1 #u h1 hs' ->
+  | TsStep h1 hs' ->
     let ExIntro v1 (Conj p1a p1b) = tred_diamond h h1 in
     let ExIntro v (Conj p2a p2b) = tred_star_one_loop p1b hs' in
     ExIntro v (Conj (TsStep p1a p2a) (p2b))
@@ -944,7 +943,7 @@ let rec confluence #s #t #u h1 h2 =
   match h1 with
   | TsRefl _ ->
     ExIntro u (Conj h2 (TsRefl u))
-  | TsStep #s #t1 #t h1' hs1 ->
+  | TsStep h1' hs1 ->
      let ExIntro v1 (Conj p1 p2) = tred_star_one_loop h1' h2 in
      let ExIntro v (Conj p1' p2') = confluence hs1 p1 in
      ExIntro v (Conj p1' (TsStep p2 p2'))
@@ -955,7 +954,7 @@ irreducible val ts_tran: #s:typ -> #t:typ -> #u:typ ->
 let rec ts_tran #s #t #u h1 h2 =
   match h1 with
     | TsRefl _ -> h2
-    | TsStep #s #s1 #t h11 h12 ->
+    | TsStep h11 h12 ->
       TsStep h11 (ts_tran h12 h2)
 
 type tred_star_sym : typ -> typ -> Type =
@@ -980,7 +979,7 @@ let rec tred_star_sym_confluent #s #t h =
     | TssSym h1 ->
       let ExIntro u (Conj p1 p2) = tred_star_sym_confluent h1 in
       ExIntro u (Conj p2 p1)
-    | TssTran #s #v #t h1 h2 ->
+    | TssTran h1 h2 ->
       let ExIntro u1 (Conj psu1 pvu1) = tred_star_sym_confluent h1 in
       let ExIntro u2 (Conj pvu2 ptu2) = tred_star_sym_confluent h2 in
       let ExIntro w (Conj pu1w pu2w) = confluence pvu1 pvu2 in
@@ -1096,10 +1095,9 @@ let rec tred_tarr_preserved #s1 #s2 #t h =
     | TsStep #s #u #t h1 hs1 ->
       match h1 with
           | TrRefl _ -> tred_tarr_preserved hs1
-          | TrArr #s1 #s2 #u1 #u2 h11 h12 ->
-            (* AR: does not work without specifying implicits *)
+          | TrArr h11 h12 ->
             let ExIntro t1 (ExIntro t2 (Conj p1 p2)) =
-                                           tred_tarr_preserved #u1 #u2 #t hs1 in
+                                           tred_tarr_preserved hs1 in
             ExIntro t1 (ExIntro t2 (Conj (TsStep h11 p1) (TsStep h12 p2)))
 
 //NS: Something seems super fragile here ...
@@ -1154,8 +1152,6 @@ let rec inversion_elam #g s1 e #s t1 t2 ht heq hnew = match ht with
     Conj (Conj (EqTran (tred_star_tequiv ptu1)
                        (EqSymm (tred_star_tequiv psu1))) h) hk
 
-#reset-options
-
 (* Corollary of inversion_elam *)
 irreducible val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
       t1:typ -> t2:typ -> typing g (ELam s1 e) (TArr t1 t2) ->
@@ -1163,7 +1159,7 @@ irreducible val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
                 (kinding g s1 KTyp))
 let inversion_elam_typing #g s1 e t1 t2 h =
   inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2))
-    (Conj?.h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h)))
+    (Conj?.h2 (kinding_inversion_arrow (typing_to_kinding h)))
 
 (* Type preservation *)
 irreducible val preservation : #e:exp -> #e':exp -> hs:step e e' ->

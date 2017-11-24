@@ -16,6 +16,8 @@
 
 module ParSubst
 
+#set-options "--use_two_phase_tc true"
+
 open FStar.FunctionalExtensionality
 
 (* Parallel substitution, with comments

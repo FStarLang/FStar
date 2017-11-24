@@ -1690,19 +1690,11 @@ let check_exports env (modul:modul) exports =
     then ()
     else List.iter check_sigelt exports
 
-let load_checked_module env modul =
-  let env = Env.set_current_module env modul.name in
-  let env = List.fold_left Env.push_sigelt env modul.exports in
-  let env = Env.finish_module env modul in
-  env.solver.encode_modul env modul;
-  env.solver.refresh();
-  let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
-  env
-
-let finish_partial_modul env modul exports =
+let finish_partial_modul must_check_exports env modul exports =
   let modul = {modul with exports=exports; is_interface=modul.is_interface} in
   let env = Env.finish_module env modul in
   if not (Options.lax())
+  && must_check_exports
   then check_exports env modul exports;
   env.solver.pop ("Ending modul " ^ modul.name.str);
   env.solver.encode_modul env modul;
@@ -1711,9 +1703,31 @@ let finish_partial_modul env modul exports =
   let _ = if not (Options.interactive ()) then Options.restore_cmd_line_options true |> ignore else () in
   modul, env
 
+let load_checked_module env modul =
+  //This function tries to very carefully mimic the effect of the environment
+  //of having checked the module from scratch, i.e., using tc_module below
+  let env = Env.set_current_module env modul.name in
+  env.solver.push ("Internals for " ^ Ident.string_of_lid modul.name);
+  let env = List.fold_left (fun env se ->
+             //push every sigelt in the environment
+             let env = Env.push_sigelt env se in
+             //and then query it back immediately to populate the environment's internal cache
+             //this is important for extraction to work correctly,
+             //in particular, when extracting a module we want the module's internal symbols
+             //that may be marked "abstract" externally to be visible internally
+             //populating the cache enables this behavior, rather indirectly, sadly : (
+             let lids = Util.lids_of_sigelt se in
+             lids |> List.iter (fun lid -> ignore (Env.try_lookup_lid env lid));
+             env)
+             env
+             modul.declarations in
+  //And then call finish_partial_modul, which is the normal workflow of tc_modul below
+  //except with the flag `must_check_exports` set to false, since this is already a checked module
+  snd (finish_partial_modul false env modul modul.exports)
+
 let tc_modul env modul =
   let modul, non_private_decls, env = tc_partial_modul env modul true in
-  finish_partial_modul env modul non_private_decls
+  finish_partial_modul true env modul non_private_decls
 
 let check_module env m =
   if Options.debug_any()

@@ -102,6 +102,7 @@ let memo_tk (e:term) (t:typ) = e
 (************************************************************************************************************)
 let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_t)
     : term * lcomp * guard_t =
+  let e0 = e in
   let should_return t =
     match (SS.compress t).n with
     | Tm_arrow(_, c) ->
@@ -602,18 +603,31 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if debug env Options.Extreme
     then BU.print2 "(%s) comp type = %s\n"
                       (Range.string_of_range top.pos) (Print.comp_to_string <| cres.comp());
-
     e, cres, Rel.conj_guard g1 g_branches
 
   | Tm_let ((false, [{lbname=Inr _}]), _) ->
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
     (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
     if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
-    then let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
-         let lax_top = N.reduce_uvar_solutions env lax_top in
+    then
+      //AR: if the top-level binding is unannotated, we want to drop the wps computed in phase 1
+      //since they are lax etc., and phase 2 will do the proper computation anyway
+      //in case they are annotated, we will retain them
+      let is_lb_unannotated (t:term) :bool = match t.n with
+        | Tm_let ((_, [lb]), _) -> (SS.compress lb.lbtyp).n = Tm_unknown
+        | _                     -> failwith "Impossible"
+      in
+
+      let drop_lbtyp (t:term) :term = match t.n with
+        | Tm_let ((t1, [lb]), t2) ->  { t with n = Tm_let ((t1, [ { lb with lbtyp = mk Tm_unknown None lb.lbtyp.pos }]), t2) }
+        | _                       -> failwith "Impossible"
+      in
+
+      let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
+         let lax_top = N.remove_uvar_solutions env lax_top in
          //BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
          if Env.should_verify env then
-           check_top_level_let env lax_top
+           check_top_level_let env (if is_lb_unannotated top then drop_lbtyp lax_top else lax_top)  //AR: drop lbtyp from lax_top if needed
          else lax_top, l, g
     else check_top_level_let env top
 
@@ -1525,20 +1539,24 @@ and tc_eqn scrutinee env branch
 
   (*<tc_pat>*)
   let tc_pat (allow_implicits:bool) (pat_t:typ) p0 :
-        pat                                (* the type-checked, fully decorated pattern                             *)
-      * list<bv>                           (* all its bound variables, used for closing the type of the branch term *)
-      * Env.env                            (* the environment extended with all the binders                         *)
-      * term                               (* terms corresponding to the pattern                                    *)
-      * term                               (* the same term in normal form                                          *)
+        pat                                (* the type-checked, fully decorated pattern                                   *)
+      * list<bv>                           (* all its bound variables, used for closing the type of the branch term       *)
+      * Env.env                            (* the environment extended with all the binders                               *)
+      * term                               (* terms corresponding to the pattern                                          *)
+      * guard_t                            (* accumulated guard for well-typedness of the type annotations on pattern bvs *)  //AR: for dependent patterns, this requires the equality of scrutinee and the pattern
+                                                                                                                              //which is available later in the typechecking for branches
+                                                                                                                              //so, here we just accumulate the guard, and return it
+                                                                                                                              //the caller will add it to the g_branches later
+                                                                                                                              //this guard is well-formed for list<bv>
+      * term                               (* the same term in normal form                                                *)
       =
     let tc_annot env t =
         let tu, u = U.type_u () in
         let t, _, g = tc_check_tot_or_gtot_term env t tu in
-        Rel.force_trivial_guard env g;
-        t
+        t, g  //AR: this used to force the guard, but now we defer it to be checked alongwith the guard for the branches
     in
     //an expression for each clause in a disjunctive pattern
-    let pat_bvs, exp, p = TcUtil.pat_as_exp allow_implicits env p0 tc_annot in
+    let pat_bvs, exp, guard_pat_annots, p = TcUtil.pat_as_exp allow_implicits env p0 tc_annot in
     if Env.debug env Options.High
     then BU.print2 "Pattern %s elaborated to %s\n" (Print.pat_to_string p0) (Print.pat_to_string p);
     let pat_env = List.fold_left Env.push_bv env pat_bvs in
@@ -1603,7 +1621,7 @@ and tc_eqn scrutinee env branch
     if Env.debug env Options.High
     then BU.print1 "Done checking pattern expression %s\n" (N.term_to_string env exp);
     let p = TcUtil.decorate_pattern env p exp in
-    p, pat_bvs, pat_env, exp, norm_exp
+    p, pat_bvs, pat_env, exp, guard_pat_annots, norm_exp
   in
   (*</tc_pat>*)
 
@@ -1612,7 +1630,7 @@ and tc_eqn scrutinee env branch
   let scrutinee_env, _ = Env.push_bv env scrutinee |> Env.clear_expected_typ in
 
   (* 1. Check the pattern *)
-  let pattern, pat_bvs, pat_env, pat_exp, norm_pat_exp =
+  let pattern, pat_bvs, pat_env, pat_exp, guard_pat_annots, norm_pat_exp =
     tc_pat true pat_t pattern
   in
 
@@ -1629,6 +1647,8 @@ and tc_eqn scrutinee env branch
 
   (* 3. Check the branch *)
   let branch_exp, c, g_branch = tc_term pat_env branch_exp in
+
+  let g_branch = Rel.conj_guard guard_pat_annots g_branch in  //AR: add the guard from the type annotations on pattern bvars
 
   (* 4. Lift the when clause to a logical condition. *)
   (*    It is used in step 5 (a) below, and in step 6 (d) to build the branch guard *)
@@ -2123,8 +2143,9 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
     let t = SS.compress lb.lbtyp in
     match t.n with
         | Tm_unknown ->
-          if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
-          None, Rel.trivial_guard, [], [], env
+          //if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";  //AR: do we need this check? this situation arises in phase 2
+          let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
+          None, Rel.trivial_guard, univ_vars, univ_opening, env
 
         | _ ->
           let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
