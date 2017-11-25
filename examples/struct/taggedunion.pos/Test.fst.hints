@@ -43,7 +43,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "4ee59fe901422b51b1d807064e83b9f6"
+      "a1fc45df61c0b2a5413179c0074a77e1"
     ],
     [
       "Test.either_tags",
@@ -96,7 +96,7 @@
         "typing_Prims.pow2", "typing_Test.either_l"
       ],
       0,
-      "5177e16cd7a4e74125719934142a209b"
+      "306a92055f677e298cd245c2dfa6f439"
     ],
     [
       "Test.option_l",
@@ -140,7 +140,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "db459654943535734513f667dcf7719a"
+      "d65bb89de560c0c0777eaaf4fe3493fa"
     ],
     [
       "Test.option_tags",
@@ -200,7 +200,7 @@
         "typing_Prims.pow2", "typing_Test.option_l"
       ],
       0,
-      "303607c28107aed89cbfd34995cac696"
+      "5b6a1bb39f00a476b38b59df3fc9be57"
     ],
     [
       "Test.s_l",
@@ -238,7 +238,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "40ff1debd463ad0fb80dcbdb860848dd"
+      "9d75429c93c5e795da7e36479f162be9"
     ],
     [
       "Test.s_x",
@@ -277,7 +277,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "0c37674127870a4d66204823cc2f2fad"
+      "3fd3f02b55c1fc8c714c1cb8f6345e87"
     ],
     [
       "Test.s_y",
@@ -316,21 +316,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "82a8fae49d485f2d688d986e0d2a35d5"
-    ],
-    [
-      "Test.s_typ",
-      1,
-      4,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Pointer.Base.struct_typ", "equation_Test.s_l",
-        "function_token_typing_Test.s_l",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
-      ],
-      0,
-      "5d23acc67c75ff58c4a425528afcd5c8"
+      "20902a26f100a574e242567862eaa546"
     ],
     [
       "Test.step_0",
@@ -420,7 +406,7 @@
         "typing_Test.either_l", "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "9e4fa8e18c8d9c8ab2b469c0ab779627"
+      "02ad51d5c02612108b9c5af0a33fc53f"
     ],
     [
       "Test.step",
@@ -528,7 +514,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "532edb5d343c2467e0be2a5e30ee83c7"
+      "8751c9eb13141ec57a8c55bff5657c8f"
     ],
     [
       "Test.step_alt",
@@ -650,7 +636,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt16@tok"
       ],
       0,
-      "e40c4919ce70284c94e576aca0bdc1b8"
+      "dc1dc42a68a1ff5b738507de39fcd2a0"
     ]
   ]
 ]

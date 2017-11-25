@@ -2,19 +2,6 @@
   "t\u0007\u0006c—AÏ9/\u0002<ô-s~­",
   [
     [
-      "FStar.TaggedUnion.typ_l",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Pointer.Base.union_typ",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
-      ],
-      0,
-      "9cb2d65f8e6f207f4f7ab22ce27ab982"
-    ],
-    [
       "FStar.TaggedUnion.tag_field",
       1,
       4,
@@ -65,7 +52,7 @@
         "typing_FStar.TaggedUnion.typ_l"
       ],
       0,
-      "81626d9811553eed395cb786da99db71"
+      "100f1ad0c6a489d0935d6b0353768212"
     ],
     [
       "FStar.TaggedUnion.union_field",
@@ -101,7 +88,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "97bd060764a25c066b6a489fe31c63e9"
+      "47ee4f46038fb1edcd4fce84fff24a44"
     ],
     [
       "FStar.TaggedUnion.typ",
@@ -150,7 +137,7 @@
         "typing_FStar.TaggedUnion.typ_l"
       ],
       0,
-      "055e6b6f3537494a73d66d9511215fdc"
+      "88e97d1a2e1707d5eb8702e9310a89d1"
     ],
     [
       "FStar.TaggedUnion.tags",
@@ -159,7 +146,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t_haseq" ],
       0,
-      "7c784008ec9eec36e9ad10bf21e8a78f"
+      "738b3262de81aea68fa7cceb09270096"
     ],
     [
       "FStar.TaggedUnion.field_of_tag",
@@ -224,7 +211,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "b8e8980202852ecfd92af0ca62692aae"
+      "3100b1103ee75f9db7f43899e51388df"
     ],
     [
       "FStar.TaggedUnion.tag_of_field",
@@ -290,7 +277,7 @@
         "typing_FStar.Pointer.Base.struct_field", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "7a19e6f9f2db15178a2ab82b0b6b1985"
+      "ed6ded08e9bef24072c096a6f56a93a6"
     ],
     [
       "FStar.TaggedUnion.field_of_tag_of_field",
@@ -299,7 +286,7 @@
       1,
       [ "@query" ],
       0,
-      "38ecc86e09d17399e5506898ffb06a65"
+      "0ca1caa4f12df971af00f0710813ba30"
     ],
     [
       "FStar.TaggedUnion.field_of_tag_of_field",
@@ -381,7 +368,7 @@
         "typing_FStar.TaggedUnion.tag_of_field", "unit_inversion"
       ],
       0,
-      "4de4c7a3f95264f9a1cff6fa47bc4c64"
+      "6d31cb45bb3d4f5008e26b356fafcf0b"
     ],
     [
       "FStar.TaggedUnion.tag_of_field_of_tag",
@@ -390,7 +377,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t_haseq" ],
       0,
-      "ff26e54c8b86f118c41fb8c26e9ff074"
+      "1462ab14c266de415e872aa5b89fd3ca"
     ],
     [
       "FStar.TaggedUnion.tag_of_field_of_tag",
@@ -399,7 +386,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t_haseq" ],
       0,
-      "5d121e76041ff4471342b62d9a3da05d"
+      "83160a5136d722e8dd1c41956d893d1c"
     ],
     [
       "FStar.TaggedUnion.tag_of_field_of_tag",
@@ -474,7 +461,7 @@
         "typing_FStar.List.Tot.Base.noRepeats", "unit_inversion"
       ],
       0,
-      "8286de13a8d18ddd18cc59b0c7d1b5b0"
+      "98b7b932aaaa8e1b96b4384b47544b46"
     ],
     [
       "FStar.TaggedUnion.field_matches_tag_intro",
@@ -496,7 +483,7 @@
         "string_inversion"
       ],
       0,
-      "7de48a6cf1083249e3ee9ec3103cddb2"
+      "bec04c20cff439a533e1b85cf48b0cf4"
     ],
     [
       "FStar.TaggedUnion.field_matches_tag_elim",
@@ -518,7 +505,7 @@
         "string_inversion"
       ],
       0,
-      "d761bddb1f6fe228f1d5777ecd30eb55"
+      "1ea1539e4e02bd0d57f54ab73689b7f4"
     ],
     [
       "FStar.TaggedUnion.assert_field_matches_tag",
@@ -544,7 +531,7 @@
         "string_inversion"
       ],
       0,
-      "a0e7be264c0dcae53e0a9bb396a6db30"
+      "b61e7809ae37e9e95e6e5aa646622800"
     ],
     [
       "FStar.TaggedUnion.valid",
@@ -602,7 +589,7 @@
         "typing_FStar.TaggedUnion.typ", "typing_FStar.TaggedUnion.typ_l"
       ],
       0,
-      "34fd498b41ece1514ede9b739b42bee7"
+      "5eb9d59fc2d42a069eba54b73895b095"
     ],
     [
       "FStar.TaggedUnion.valid_live",
@@ -630,7 +617,7 @@
         "typing_FStar.TaggedUnion.typ_l"
       ],
       0,
-      "bf48632b5be084fa5da87e570d4ff09e"
+      "f0c9802d92caac64998da5ffc7c0796f"
     ],
     [
       "FStar.TaggedUnion.gread_tag",
@@ -665,7 +652,7 @@
         "typing_FStar.TaggedUnion.typ"
       ],
       0,
-      "fba5fe9a13017222b7b91c6e0bb0b1af"
+      "ba9abc8c46280b58a4f4de4e61c9b681"
     ],
     [
       "FStar.TaggedUnion.read_tag",
@@ -674,7 +661,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t_haseq" ],
       0,
-      "7a015c3b322e44aa20740141bcb79825"
+      "5e1c03ef017c9277ce15f8eca0e8838a"
     ],
     [
       "FStar.TaggedUnion.read_tag",
@@ -726,7 +713,7 @@
         "typing_FStar.TaggedUnion.typ"
       ],
       0,
-      "70e93a9ca736df2e38c784ec9017401a"
+      "a3ff8d98a88d790cfe63cfda8fad71dd"
     ],
     [
       "FStar.TaggedUnion.gfield",
@@ -786,7 +773,7 @@
         "typing_FStar.TaggedUnion.union_field"
       ],
       0,
-      "2299902165aae6074cb6c70b78eb7e95"
+      "fae3b146a23e8e0400dd93904bc1164f"
     ],
     [
       "FStar.TaggedUnion.field",
@@ -870,7 +857,7 @@
         "typing_FStar.TaggedUnion.union_field"
       ],
       0,
-      "97098603b66d581e3d9670aafb99f890"
+      "a9943c18bd231d0a578539f6095d7bb7"
     ],
     [
       "FStar.TaggedUnion.write",
@@ -986,7 +973,7 @@
         "typing_FStar.TaggedUnion.union_field", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "b7e7e0290293e73f98449827a71c4395"
+      "697a589d1c183ff79d4d9903925208cd"
     ],
     [
       "FStar.TaggedUnion.write_tag",
@@ -1097,7 +1084,7 @@
         "typing_tok_FStar.Pointer.Base.TUInt32@tok"
       ],
       0,
-      "25272f87d10240f9102307bce25c1e4a"
+      "681130a37f4273280c28a998cf723552"
     ],
     [
       "FStar.TaggedUnion.includes_gfield",
@@ -1115,7 +1102,7 @@
         "string_inversion", "typing_FStar.TaggedUnion.gfield"
       ],
       0,
-      "784476479cd73ce3df2f222e22a75893"
+      "0df0a597a873b9cf8bc09547f4f6fdf6"
     ],
     [
       "FStar.TaggedUnion.includes_gfield_gen",
@@ -1124,7 +1111,7 @@
       1,
       [ "@query" ],
       0,
-      "58c71d5e58b4885e9a0b82ec0e292ebb"
+      "4054c9ba410e2b5ac87e5759587d31b7"
     ],
     [
       "FStar.TaggedUnion.live_gfield",
@@ -1184,7 +1171,7 @@
         "typing_FStar.TaggedUnion.union_field", "unit_typing"
       ],
       0,
-      "a6f3a940663050f2795ee837a09bfa67"
+      "30af41145fb0c913c67e3fd46d315377"
     ],
     [
       "FStar.TaggedUnion.modifies_1_valid",
@@ -1268,7 +1255,7 @@
         "typing_FStar.TaggedUnion.union_field"
       ],
       0,
-      "49c303a720ac85effb25ba05447074b9"
+      "6a96fc9464bacbd4df4eb55c188a3c9f"
     ],
     [
       "FStar.TaggedUnion.modifies_1_field_tag",
@@ -1359,7 +1346,7 @@
         "typing_FStar.TaggedUnion.union_field"
       ],
       0,
-      "ee1d7231e8ad587459c258a9d6773cbd"
+      "fa0ae3c0ac17e31b9d342131588af9fe"
     ],
     [
       "FStar.TaggedUnion.modifies_1_field",
@@ -1388,7 +1375,7 @@
         "typing_FStar.TaggedUnion.gfield", "typing_FStar.TaggedUnion.typ"
       ],
       0,
-      "181289b6c2d1669e956e3716f5cdbf94"
+      "726fad033b2b19137c1773e3c4f9aa54"
     ],
     [
       "FStar.TaggedUnion.modifies_1_field_tag_equal",
@@ -1406,7 +1393,7 @@
         "string_inversion"
       ],
       0,
-      "23bb14e1e325f549727b372d45841c4c"
+      "c1359e6cb4c310a064f36c83d7819651"
     ],
     [
       "FStar.TaggedUnion.readable_intro",
@@ -1472,7 +1459,7 @@
         "typing_FStar.TaggedUnion.union_field"
       ],
       0,
-      "816b7e964f1a11cc1b80bc765631c31c"
+      "0f32adce0dcc5f4b8b31a70e7fbb2272"
     ],
     [
       "FStar.TaggedUnion.readable_field",
@@ -1547,7 +1534,7 @@
         "typing_FStar.TaggedUnion.union_field"
       ],
       0,
-      "4f43085f2164a4228229694a04fa9ee9"
+      "ac67b3f6575cccb9de73bc7e90f1721a"
     ],
     [
       "FStar.TaggedUnion.raw_get_tag",
@@ -1591,7 +1578,7 @@
         "typing_FStar.TaggedUnion.typ", "typing_FStar.TaggedUnion.typ_l"
       ],
       0,
-      "e9b47faafb07a984226a2020617f4ac3"
+      "c3c3867fdfae1806f411dbcc7708477e"
     ],
     [
       "FStar.TaggedUnion.raw_get_field",
@@ -1654,7 +1641,7 @@
         "typing_FStar.TaggedUnion.typ", "typing_FStar.TaggedUnion.typ_l"
       ],
       0,
-      "5acfaafcf6578796c2881408f67e0313"
+      "906181125d1acde774ae0edce5409d0a"
     ],
     [
       "FStar.TaggedUnion.raw_get_value",
@@ -1715,7 +1702,7 @@
         "typing_FStar.TaggedUnion.union_field"
       ],
       0,
-      "b920671edeba9a858ff37afac3c4527c"
+      "bce680d10aa753ebbee80dd9466d825c"
     ],
     [
       "FStar.TaggedUnion.matching_tags",
@@ -1724,7 +1711,7 @@
       1,
       [ "@query", "assumption_FStar.UInt32.t_haseq" ],
       0,
-      "15bb800c4822ae6f0dd20e65aa28c463"
+      "c21cf8c2b1439f4b4f10aa83d6ec5513"
     ],
     [
       "FStar.TaggedUnion.get_field",
@@ -1736,7 +1723,7 @@
         "refinement_interpretation_FStar.TaggedUnion_Tm_refine_b1bf8f1568fdea244a500a7e69890ee4"
       ],
       0,
-      "1d12ba47c6192e24b5d9170dfcb37fb9"
+      "85e12f515e4fa215bbecc413c385caa1"
     ],
     [
       "FStar.TaggedUnion.get_tag",
@@ -1763,7 +1750,7 @@
         "refinement_interpretation_FStar.TaggedUnion_Tm_refine_b1bf8f1568fdea244a500a7e69890ee4"
       ],
       0,
-      "ef74075338bcb140ff1c391dcc3b0597"
+      "1afc5ca4e2e4c34e5a0adbfc3c6bc435"
     ],
     [
       "FStar.TaggedUnion.get_value",
@@ -1779,7 +1766,7 @@
         "refinement_interpretation_FStar.TaggedUnion_Tm_refine_b1bf8f1568fdea244a500a7e69890ee4"
       ],
       0,
-      "e668639fdf373d21814bcfc03670da0c"
+      "f9971258ffe651ebcafbde769562533e"
     ],
     [
       "FStar.TaggedUnion.valid_matching_tags",
@@ -1853,7 +1840,7 @@
         "typing_FStar.TaggedUnion.union_field"
       ],
       0,
-      "534092906ad933db0b7a4c5b6d1befec"
+      "eb433cbb020aa90e5209bcc91024bf9e"
     ],
     [
       "FStar.TaggedUnion.valid_matching_tags",
@@ -1914,7 +1901,7 @@
         "typing_FStar.TaggedUnion.union_field"
       ],
       0,
-      "4ae79ac17858dd4f09cff39c22ccfb49"
+      "d5e54b03d25fb1c7b816fab985f5b043"
     ]
   ]
 ]
