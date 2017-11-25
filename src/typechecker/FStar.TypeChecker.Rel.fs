@@ -2208,16 +2208,29 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | _ -> failwith "Impossible: at least one side is an abstraction"
         end
 
-      | Tm_refine _, Tm_refine _ ->
-        let uvars_1 = FStar.Syntax.Free.uvars t1 in
-        let uvars_2 = FStar.Syntax.Free.uvars t2 in
-        let remaining_uvars = not (BU.set_is_empty uvars_1) || not (BU.set_is_empty uvars_2) in
+      | Tm_refine(x1, ph1), Tm_refine(x2, phi2) ->
+        let should_delta =
+          BU.set_is_empty (FStar.Syntax.Free.uvars t1)
+          && BU.set_is_empty (FStar.Syntax.Free.uvars t2) //no remaining uvars on eithe side
+          && (match head_matches env x1.sort x2.sort with
+              | MisMatch(Some d1, Some d2) ->
+                let is_unfoldable = function
+                    | Delta_constant
+                    | Delta_defined_at_level _ -> true
+                    | _ -> false
+                in
+                is_unfoldable d1 && is_unfoldable d2
+              | _ -> false
+                //head symbols of x1 and x2 already match, don't unfold further
+                //Or, they cannot match after unfolding, so no point trying
+              ) //and heads don't match
+        in
         //If there are no remaining uvars then unfold t1 and t2 all the way down to
         //a type constant and its refinement;
         //Otherwise peel it back one refinement at a time
         //See issue #1345
-        let x1, phi1 = as_refinement (not remaining_uvars) env wl t1 in
-        let x2, phi2 = as_refinement (not remaining_uvars) env wl t2 in
+        let x1, phi1 = as_refinement should_delta env wl t1 in
+        let x2, phi2 = as_refinement should_delta env wl t2 in
         let base_prob = TProb <| mk_problem (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1 = freshen_bv x1 in
         let subst = [DB(0, x1)] in
@@ -2246,7 +2259,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                        solve env (attempt [base_prob] wl)
              end
         else fallback()
-        
+
       (* flex-flex *)
       | Tm_uvar _,                Tm_uvar _
       | Tm_app({n=Tm_uvar _}, _), Tm_uvar _
