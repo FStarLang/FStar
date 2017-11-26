@@ -625,7 +625,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
          let lax_top = N.remove_uvar_solutions env lax_top in
          if Env.should_verify env then
            let lax_top = if is_lb_unannotated top then drop_lbtyp lax_top else lax_top in
-           BU.print1 "Phase 1: checked %s\n... moving to second phase\n\n" (Print.term_to_string lax_top);
+           //BU.print1 "Phase 1: checked %s\n... moving to second phase\n\n" (Print.term_to_string lax_top);
            check_top_level_let env lax_top  //AR: drop lbtyp from lax_top if needed
          else lax_top, l, g
     else check_top_level_let env top
