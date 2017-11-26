@@ -11,6 +11,7 @@ module Range = FStar.Range
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module BU = FStar.Util
+module Env = FStar.TypeChecker.Env
 
 (* Utils *)
 
@@ -78,7 +79,7 @@ let rec test_args ts cnt =
   | [] -> cnt <= 0 
   | t :: ts -> (not (isAccu t)) && test_args ts (cnt - 1)
 
-(* It count the number of abstractions in the body of a let rec. 
+(* Count the number of abstractions in the body of a let rec. 
    It accounts for abstractions instantiated inside the body.
    This analysis needs further refinement, for example see the let in case. 
 *)
@@ -148,7 +149,7 @@ and iapp (f:t) (args:list<t>) =
   | [] -> f
   | _ -> iapp (app f (List.hd args)) (List.tl args)
 
-and translate (bs:list<t>) (e:term) : t =
+and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     match (SS.compress e).n with
     | Tm_delayed _ -> failwith "Tm_delayed: Impossible"
       
@@ -181,13 +182,13 @@ and translate (bs:list<t>) (e:term) : t =
 
     | Tm_uvar _ -> debug_term e; failwith "Tm_uvar: Not yet implemented"
     
-    | Tm_meta (e, _) -> translate bs e
+    | Tm_meta (e, _) -> translate env bs e
     
     | Tm_name x ->
       mkAccuVar x
 
     | Tm_abs ([x], body, _) ->
-      Lam (fun (y:t) -> translate (y::bs) body)
+      Lam (fun (y:t) -> translate env (y::bs) body)
 
     | Tm_fvar v ->
       mkConstruct v []
@@ -195,15 +196,15 @@ and translate (bs:list<t>) (e:term) : t =
     | Tm_abs (x::xs, body, _) ->
       let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
       let tm = S.mk (Tm_abs([x], rest, None)) None e.pos in
-      translate bs tm
+      translate env bs tm
 
     | Tm_app (e, [arg]) ->
-      app (translate bs e) (translate bs (fst arg))
+      app (translate env bs e) (translate env bs (fst arg))
 
     | Tm_app(head, arg::args) ->
       let first = S.mk (Tm_app(head, [arg])) None Range.dummyRange in
       let tm = S.mk (Tm_app(first, args)) None e.pos in
-      translate bs tm
+      translate env bs tm
     
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t = 
@@ -212,20 +213,20 @@ and translate (bs:list<t>) (e:term) : t =
           (* Assuming that all the arguments to the pattern constructors 
              are binders -- i.e. no nested patterns for now  *) 
           (* XXX : is rev needed? *)
-          let branch = translate ((List.rev args) @ bs) (pickBranch c branches) in
+          let branch = translate env ((List.rev args) @ bs) (pickBranch c branches) in
           branch
         | _ -> 
           mkAccuMatch scrut case
       in 
-      case (translate bs scrut)
+      case (translate env bs scrut)
 
     | Tm_let((false, [lb]), body) -> // non-recursive let
-      let def = translate bs lb.lbdef in
-      translate (def::bs) body
+      let def = translate env bs lb.lbdef in
+      translate env (def::bs) body
 
     | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
       let f = mkAccuRec lb bs in 
-      translate (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
+      translate env (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
       // this will loop infinitely when the recursive argument is symbolic 
       // let def = lb.lbdef in 
@@ -235,33 +236,33 @@ and translate (bs:list<t>) (e:term) : t =
       //failwith "Not yet implemented"
       
 (* [readback] creates named binders and not De Bruijn *)
-and readback (x:t) : term =
+and readback (env:Env.env) (x:t) : term =
     match x with
     | Unit -> S.unit_const
     | Bool true -> U.exp_true_bool
     | Bool false -> U.exp_false_bool
     | Lam f ->
       let x = S.new_bv None S.tun in
-      let body = readback (f (mkAccuVar x)) in
+      let body = readback env (f (mkAccuVar x)) in
       U.abs [S.mk_binder x] body None
     | Construct (fv, args) -> 
-      let args = List.map (fun x -> as_arg (readback x)) args in
+      let args = List.map (fun x -> as_arg (readback env x)) args in
       (match args with 
        | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
        | _ -> U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args)
     | Accu (Var bv, []) ->
       S.bv_to_name bv
     | Accu (Var bv, ts) ->
-      let args = map_rev (fun x -> as_arg (readback x)) ts in
+      let args = map_rev (fun x -> as_arg (readback env x)) ts in
       U.mk_app (S.bv_to_name bv) args
     | Accu (Type u, []) ->
       S.mk (Tm_type u) None Range.dummyRange
     | Accu (Type u, ts) ->
-      let args = map_rev (fun x -> as_arg (readback x)) ts in
+      let args = map_rev (fun x -> as_arg (readback env x)) ts in
       U.mk_app (S.mk (Tm_type u) None Range.dummyRange) args
     | Accu (Match (scrut, cases), ts) ->
-      let args = map_rev (fun x -> as_arg (readback x)) ts in
-      let head =  readback (cases scrut) in
+      let args = map_rev (fun x -> as_arg (readback env x)) ts in
+      let head =  readback env (cases scrut) in
       (match ts with 
        | [] -> head
        | _ -> U.mk_app head args)
@@ -275,7 +276,7 @@ and readback (x:t) : term =
        let args_no = count_abstractions lb.lbdef in 
        // Printf.printf "Args no. %d\n" args_no;
        if test_args ts args_no then (* if the arguments are not symbolic and the application is not partial compute *)
-         readback (curry (translate ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
+         readback env (curry (translate env ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
        else (* otherwise do not unfold *)
          let head = 
            (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
@@ -285,7 +286,7 @@ and readback (x:t) : term =
            in
            S.mk (Tm_let((true, [lb]), f)) None Range.dummyRange
          in
-         let args = map_rev (fun x -> as_arg (readback x)) ts in
+         let args = map_rev (fun x -> as_arg (readback env x)) ts in
          (match ts with 
           | [] -> head
           | _ -> U.mk_app head args)
@@ -312,4 +313,4 @@ and readback (x:t) : term =
 //         | _ -> failwith "Recursive definition not a function")
 // >>>>>>> 86f93ae6edc257258f376954fed7fba11f53ff83
 
-let normalize (e:term) : term = readback (translate [] e)
+let normalize (env : Env.env) (e:term) : term = readback env (translate env [] e)
