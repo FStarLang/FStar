@@ -132,7 +132,7 @@ let tests =
   ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
   ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
   ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
-  ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
+  //; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
   //; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   // The following do not work for NBE because of type allications.
   //; (24, (tc "recons [0;1]"), (tc "[0;1]"))
