@@ -158,7 +158,7 @@ let run_either i r expected normalizer =
     always i (term_eq (U.unascribe x) expected)
 
 let run_interpreter i r expected = run_either i r expected (N.normalize [N.Beta; N.UnfoldUntil Delta_constant; N.Primops])
-let run_nbe i r expected = run_either i r expected (fun _tcenv -> FStar.TypeChecker.NBE.normalize)
+let run_nbe i r expected = run_either i r expected FStar.TypeChecker.NBE.normalize
 
 let run_interpreter_with_time i r expected =
   let interp () = run_interpreter i r expected in

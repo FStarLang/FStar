@@ -196,7 +196,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_fvar fvar ->
       let find_in_sigtab (env : Env.env) (lid : lident) : option<sigelt> = BU.smap_try_find env.sigtab (text_of_lid lid) in
       (match find_in_sigtab env fvar.fv_name.v with 
-       | Some { sigel = Sig_let ((is_rec, [lb]), _) n} ->
+       | Some { sigel = Sig_let ((is_rec, [lb]), _) } ->
          if is_rec then 
            mkAccuRec lb [] 
          else 
