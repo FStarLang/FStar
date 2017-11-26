@@ -37,7 +37,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "9ee5fabb1ffcf70e6296f5b4008466d3"
+      "659b23146aed4b4c2c005b99f34e24a8"
     ],
     [
       "Test.u",
@@ -83,21 +83,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "8660a06194cae710b241b51917c6aae9"
-    ],
-    [
-      "Test.t",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Pointer.Base.union_typ", "equation_Test.u",
-        "function_token_typing_Test.u",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
-      ],
-      0,
-      "f74453285758e8c6098837d12b6ca81a"
+      "fc5b614235a04d2f5f3af11cabbe4892"
     ],
     [
       "Test.f",
@@ -223,7 +209,7 @@
         "typing_tok_FStar.Pointer.Base.TUnit@tok"
       ],
       0,
-      "17e4014fa93f8639a2f35bd99c3af467"
+      "1150aa9da4fa1dd485a4dd78240b5efc"
     ]
   ]
 ]

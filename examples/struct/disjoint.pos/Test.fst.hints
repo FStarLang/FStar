@@ -31,21 +31,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "f82eadc49101ce071d083a46003c68b8"
-    ],
-    [
-      "Test.struct_t",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Pointer.Base.struct_typ", "equation_Test.struct",
-        "function_token_typing_Test.struct",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
-      ],
-      0,
-      "2938f4f1a2bb69600d8d999b09288215"
+      "a09c0dce454bc3d46387f76414f76c7c"
     ],
     [
       "Test.callee",
@@ -122,7 +108,7 @@
         "typing_FStar.Pointer.Base.loc_pointer"
       ],
       0,
-      "aff7c2232a2e55793f0ab30b8d1f55d1"
+      "7a8978cfb9f0e3c5ab89e9c2b06b5167"
     ],
     [
       "Test.more_struct",
@@ -171,22 +157,7 @@
         "typing_FStar.List.Tot.Base.noRepeats"
       ],
       0,
-      "4c519a16ec1980ed4765ee872ec8cb9a"
-    ],
-    [
-      "Test.more_struct_t",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Pointer.Base.struct_typ",
-        "equation_Test.more_struct",
-        "function_token_typing_Test.more_struct",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
-      ],
-      0,
-      "af7f84c7f8587afd3913434e774a4915"
+      "0fa89fc923333f2591a9ad65ac234801"
     ],
     [
       "Test.caller",
@@ -366,7 +337,7 @@
         "typing_Prims.uu___is_Cons"
       ],
       0,
-      "594fc6456374ff248e2814e8cc65b793"
+      "d873c1a74bce6b1eeb0a56e9f011f5ea"
     ]
   ]
 ]

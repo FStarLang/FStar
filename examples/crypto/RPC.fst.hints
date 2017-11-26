@@ -14,7 +14,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "03459d4760f45dcb9eb3e79ef527f9f9"
+      "c8c6e4ac8b53badf4634454e26d235c3"
     ],
     [
       "RPC.recv",
@@ -30,7 +30,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "682e1c95ccd24cc7715f62756a2cf788"
+      "cd12af4afd6a3119b3364309b711c8a2"
     ],
     [
       "RPC.reqresp",
@@ -42,7 +42,7 @@
         "equation_Formatting.message"
       ],
       0,
-      "073fd78c55cafc918f693463a509d518"
+      "e258589c0ad065ff7f092a15890b2e62"
     ],
     [
       "RPC.k",
@@ -51,13 +51,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_MAC.pkey",
-        "equation_Platform.Bytes.lbytes", "equation_SHA1.key",
-        "equation_SHA1.keysize",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "equation_SHA1.key", "equation_SHA1.keysize",
         "fuel_guarded_inversion_FStar.Pervasives.result",
-        "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2"
+        "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2",
+        "refinement_interpretation_Platform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "278aa00b15ebd76c27e2ddd5b088c49a"
+      "e1afd74b812b0589eda665f31ede269f"
     ],
     [
       "RPC.client_send",
@@ -82,7 +83,7 @@
         "token_correspondence_RPC.reqresp", "unit_inversion", "unit_typing"
       ],
       0,
-      "6366c4659ddca3c578896753bcbc5c98"
+      "8843c66f13296c3238d704d585c0e4be"
     ],
     [
       "RPC.client_recv",
@@ -122,7 +123,7 @@
         "typing_Formatting.response"
       ],
       0,
-      "a70ad65755182c68cbab2f96cb9e2f86"
+      "726c1c32b4b5d0a7d9429ec80a436968"
     ],
     [
       "RPC.server",
@@ -176,7 +177,7 @@
         "unit_typing"
       ],
       0,
-      "008d0fe1e7ffd7ba684db91fada1fcf4"
+      "4eecf962eb3e2a42e4060a552e1cfe73"
     ],
     [
       "RPC.test",
@@ -203,7 +204,7 @@
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0,
-      "508bac72df6736c8c6848836fe6c41f1"
+      "e193ba2bbf9776a2e5c4a49fc1b12048"
     ]
   ]
 ]

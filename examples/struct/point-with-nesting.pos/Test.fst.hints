@@ -31,22 +31,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "db69fd8548d097547ed210e6fe946c26"
-    ],
-    [
-      "Test.point_t",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Pointer.Base.struct_typ",
-        "equation_Test.point_struct",
-        "function_token_typing_Test.point_struct",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
-      ],
-      0,
-      "a6c4c159d7cc36d96b184fdc65a22653"
+      "d2820e6cb2f9c2346d09cddf793b137c"
     ],
     [
       "Test.colored_object_struct",
@@ -92,26 +77,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "64fdee39535c929df3dc070e66ffa9ef"
-    ],
-    [
-      "Test.colored_object_t",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "constructor_distinct_Prims.Cons",
-        "disc_equation_Prims.Cons", "equation_FStar.Pointer.Base.struct_typ",
-        "equation_Test.colored_object_struct",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Cons_a",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20",
-        "typing_Test.colored_object_struct"
-      ],
-      0,
-      "14fa21831d4790c3de0fcac9aa6e8ce2"
+      "8eb0d1041dd381e023b20a5107af04e5"
     ],
     [
       "Test.write_struct_field",
@@ -140,7 +106,7 @@
         "token_correspondence_FStar.Pointer.Base.type_of_typ"
       ],
       0,
-      "2937a22e2a9f684d660f571f392620f7"
+      "f3326cee400a7a81b89da72503196409"
     ],
     [
       "Test.flip",
@@ -233,7 +199,7 @@
         "typing_tok_FStar.Pointer.Base.TBool@tok"
       ],
       0,
-      "70b943f8c75af666b91857bbced448ee"
+      "5de08a85b9ddc66dfffff2e55605527d"
     ],
     [
       "Test.flip'",
@@ -339,7 +305,7 @@
         "typing_Test.colored_object_struct", "typing_Test.colored_object_t"
       ],
       0,
-      "323288c1557d04c445a85a62cf978817"
+      "41bebe8afbffa626e9f620d75244c3ac"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "68dd4f510e5606a936b2fa0babe5e551"
+      "2be61be00813c2274b2ec72eb000c395"
     ],
     [
       "NegativeTests.Bug260.uu___is_O",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "2d991e447b242ee7a26146746a75bc5c"
+      "c3e71540b4b32f94018ff954799decd5"
     ],
     [
       "NegativeTests.Bug260.uu___is_S",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "ce85023a4002219dbd468c42dd1cca15"
+      "c48d2b92a06c34c9cf20901c4d7eaf7d"
     ],
     [
       "NegativeTests.Bug260.__proj__S__item___0",
@@ -40,7 +40,7 @@
         "refinement_interpretation_NegativeTests.Bug260_Tm_refine_c7798980fdaa69b62544817f36c3402f"
       ],
       0,
-      "e0b13d4653fb2b8fe888893c17914ecc"
+      "f7e718f4a23c3b41a6b131d8ed67e4b7"
     ],
     [
       "NegativeTests.Bug260.validity",
@@ -49,7 +49,7 @@
       1,
       [ "@query", "assumption_NegativeTests.Bug260.pnat_haseq" ],
       0,
-      "1439a37efd7adb2faa2b164fedde726e"
+      "ec5858e72f62118d643e368176bb94c5"
     ],
     [
       "NegativeTests.Bug260.__proj__VSucc__item__n",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "1d432393c6199fac5ad5b1264199e8e9"
+      "12ad2aaa6672f5b14d07819775d48b2f"
     ]
   ]
 ]

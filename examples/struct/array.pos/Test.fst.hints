@@ -37,21 +37,7 @@
         "token_correspondence_FStar.Pervasives.Native.fst"
       ],
       0,
-      "fcf4ff9f14d6cae6f474909f40664d72"
-    ],
-    [
-      "Test.struct_t",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Pointer.Base.struct_typ", "equation_Test.struct",
-        "function_token_typing_Test.struct",
-        "refinement_interpretation_FStar.Pointer.Base_Tm_refine_01326aab0f4c8e9192277785ee000b20"
-      ],
-      0,
-      "75bb533381563201682206cac255d572"
+      "866981033492a0c848e06930224b9074"
     ],
     [
       "Test.callee",
@@ -113,7 +99,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "558a4a03c82198933dcecfe8ccc57c32"
+      "48e47778d4b4a9e3c551000095d79f21"
     ],
     [
       "Test.caller",
@@ -292,7 +278,7 @@
         "typing_FStar.Set.union", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "9cf472f9f901bc1606000a2629080a34"
+      "63d28cd1a5e1e2591267e8ccf9b48c95"
     ]
   ]
 ]

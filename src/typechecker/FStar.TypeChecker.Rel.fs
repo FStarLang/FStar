@@ -238,7 +238,8 @@ let prob_to_string env = function
          (* (N.term_to_string env (fst p.logical_guard)); *)
          (* (p.reason |> String.concat "\n\t\t\t") *)]
   | CProb p ->
-    BU.format3 "\n\t%s \n\t\t%s\n\t%s"
+    BU.format4 "\n%s:\t%s \n\t\t%s\n\t%s"
+                 (BU.string_of_int p.pid)
                  (N.comp_to_string env p.lhs)
                  (rel_to_string p.relation)
                  (N.comp_to_string env p.rhs)
@@ -445,14 +446,21 @@ let norm_univ wl u =
             | _ -> u in
     N.normalize_universe wl.tcenv (aux u)
 
-let base_and_refinement env t1 =
+let base_and_refinement_maybe_delta should_delta env t1 =
+   let norm_refinement env t =
+       let steps =
+         if should_delta
+         then [N.Weak; N.HNF; N.UnfoldUntil Delta_constant]
+         else [N.Weak; N.HNF] in
+       N.normalize_refinement steps env t
+   in
    let rec aux norm t1 =
         let t1 = U.unmeta t1 in
         match t1.n with
         | Tm_refine(x, phi) ->
             if norm
             then (x.sort, Some(x, phi))
-            else begin match N.normalize_refinement [N.Weak; N.HNF] env t1 with
+            else begin match norm_refinement env t1 with
                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
                 | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
             end
@@ -462,7 +470,7 @@ let base_and_refinement env t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t1' = N.normalize_refinement [N.Weak; N.HNF] env t1 in
+            else let t1' = norm_refinement env t1 in
                  begin match (SS.compress t1').n with
                             | Tm_refine _ -> aux true t1'
                             | _ -> t1, None
@@ -485,14 +493,15 @@ let base_and_refinement env t1 =
 
    aux false (whnf env t1)
 
+let base_and_refinement env t = base_and_refinement_maybe_delta false env t
 let normalize_refinement steps env wl t0 = N.normalize_refinement steps env t0
 
 let unrefine env t = base_and_refinement env t |> fst
 
 let trivial_refinement t = S.null_bv t, U.t_true
 
-let as_refinement env wl t =
-    let t_base, refinement = base_and_refinement env t in
+let as_refinement delta env wl t =
+    let t_base, refinement = base_and_refinement_maybe_delta delta env t in
     match refinement with
         | None -> trivial_refinement t_base
         | Some (x, phi) -> x, phi
@@ -2199,9 +2208,29 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | _ -> failwith "Impossible: at least one side is an abstraction"
         end
 
-      | Tm_refine _, Tm_refine _ ->
-        let x1, phi1 = as_refinement env wl t1 in
-        let x2, phi2 = as_refinement env wl t2 in
+      | Tm_refine(x1, ph1), Tm_refine(x2, phi2) ->
+        let should_delta =
+          BU.set_is_empty (FStar.Syntax.Free.uvars t1)
+          && BU.set_is_empty (FStar.Syntax.Free.uvars t2) //no remaining uvars on eithe side
+          && (match head_matches env x1.sort x2.sort with
+              | MisMatch(Some d1, Some d2) ->
+                let is_unfoldable = function
+                    | Delta_constant
+                    | Delta_defined_at_level _ -> true
+                    | _ -> false
+                in
+                is_unfoldable d1 && is_unfoldable d2
+              | _ -> false
+                //head symbols of x1 and x2 already match, don't unfold further
+                //Or, they cannot match after unfolding, so no point trying
+              ) //and heads don't match
+        in
+        //If there are no remaining uvars then unfold t1 and t2 all the way down to
+        //a type constant and its refinement;
+        //Otherwise peel it back one refinement at a time
+        //See issue #1345
+        let x1, phi1 = as_refinement should_delta env wl t1 in
+        let x2, phi2 = as_refinement should_delta env wl t2 in
         let base_prob = TProb <| mk_problem (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1 = freshen_bv x1 in
         let subst = [DB(0, x1)] in
@@ -2220,14 +2249,14 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         if problem.relation = EQ
         then let ref_prob = TProb <| mk_problem (p_scope orig @ [mk_binder x1]) orig phi1 EQ phi2 None "refinement formula" in
              begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
-                    | Failed _ -> fallback()
-                    | Success _ ->
-                      let guard =
-                        U.mk_conj (p_guard base_prob |> fst)
-                                  (p_guard ref_prob |> fst |> guard_on_element wl problem x1) in
-                      let wl = solve_prob orig (Some guard) [] wl in
-                      let wl = {wl with ctr=wl.ctr+1} in
-                      solve env (attempt [base_prob] wl)
+                   | Failed _ -> fallback()
+                     | Success _ ->
+                       let guard =
+                         U.mk_conj (p_guard base_prob |> fst)
+                                   (p_guard ref_prob |> fst |> guard_on_element wl problem x1) in
+                       let wl = solve_prob orig (Some guard) [] wl in
+                       let wl = {wl with ctr=wl.ctr+1} in
+                       solve env (attempt [base_prob] wl)
              end
         else fallback()
 
