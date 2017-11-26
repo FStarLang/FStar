@@ -4,7 +4,8 @@ open FStar.All
 open FStar
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
-
+open FStar.Ident
+  
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module Range = FStar.Range
@@ -12,6 +13,7 @@ module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module BU = FStar.Util
 module Env = FStar.TypeChecker.Env
+
 
 (* Utils *)
 
@@ -34,7 +36,8 @@ type sort = int
 //IN F*: type atom : Type0 =
 type atom = //JUST FSHARP
   | Var of var
-  | Type of universe
+  | Type of universe //Zoe: Not sure why this need to be an atom, just following the paper
+  | Inductive of fv
   | Match of t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *) 
   | Rec of letbinding * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
@@ -60,6 +63,7 @@ let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
 let mkAccuRec (b:letbinding) (env:list<t>) = Accu(Rec(b, env), [])
 let mkAccTyp (u:universe) = Accu(Type u, [])
+let mkAccInd (fvar : fv) = Accu(Inductive fvar, [])
 
 let isAccu (trm:t) = 
   match trm with 
@@ -168,8 +172,6 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_bvar db -> //de Bruijn
       List.nth bs db.index
 
-    //| Tm_fvar _ -> debug_term e; failwith "Tm_fvar: Not yet implemented"
-
     | Tm_uinst _ -> debug_term e; failwith "Tm_uinst: Not yet implemented"
 
     | Tm_type u -> mkAccTyp u
@@ -190,9 +192,15 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_abs ([x], body, _) ->
       Lam (fun (y:t) -> translate env (y::bs) body)
 
-    | Tm_fvar v ->
-      mkConstruct v []
-      
+    | Tm_fvar fvar ->
+      let find_in_sigtab (env : Env.env) (lid : lident) : option<sigelt> = BU.smap_try_find env.sigtab (text_of_lid lid) in
+      (match find_in_sigtab env fvar.fv_name.v with 
+       | Some elt ->
+         (match elt.sigel with 
+          | Sig_datacon _ -> mkConstruct fvar []
+          | Sig_inductive_typ _ -> mkAccInd fvar
+          | _ -> failwith "Sigelt not yet supported")
+       | None -> failwith "Free variable not found")
     | Tm_abs (x::xs, body, _) ->
       let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
       let tm = S.mk (Tm_abs([x], rest, None)) None e.pos in
@@ -239,33 +247,46 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 and readback (env:Env.env) (x:t) : term =
     match x with
     | Unit -> S.unit_const
+    
     | Bool true -> U.exp_true_bool
     | Bool false -> U.exp_false_bool
+    
     | Lam f ->
       let x = S.new_bv None S.tun in
       let body = readback env (f (mkAccuVar x)) in
       U.abs [S.mk_binder x] body None
+    
     | Construct (fv, args) -> 
       let args = List.map (fun x -> as_arg (readback env x)) args in
       (match args with 
        | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
        | _ -> U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args)
+    
     | Accu (Var bv, []) ->
       S.bv_to_name bv
     | Accu (Var bv, ts) ->
       let args = map_rev (fun x -> as_arg (readback env x)) ts in
       U.mk_app (S.bv_to_name bv) args
+    
     | Accu (Type u, []) ->
       S.mk (Tm_type u) None Range.dummyRange
     | Accu (Type u, ts) ->
       let args = map_rev (fun x -> as_arg (readback env x)) ts in
       U.mk_app (S.mk (Tm_type u) None Range.dummyRange) args
+   
+    | Accu (Inductive fv, []) ->
+      S.mk (Tm_fvar fv) None Range.dummyRange
+    | Accu (Inductive fv, ts) ->
+      let args = map_rev (fun x -> as_arg (readback env x)) ts in
+      U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args
+      
     | Accu (Match (scrut, cases), ts) ->
       let args = map_rev (fun x -> as_arg (readback env x)) ts in
       let head =  readback env (cases scrut) in
       (match ts with 
        | [] -> head
        | _ -> U.mk_app head args)
+   
     | Accu (Rec(lb, bs), ts) ->
        let rec curry hd args = 
        match args with 
