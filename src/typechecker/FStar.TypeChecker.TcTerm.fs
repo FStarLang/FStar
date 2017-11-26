@@ -623,9 +623,10 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
       let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
          let lax_top = N.remove_uvar_solutions env lax_top in
-         //BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
          if Env.should_verify env then
-           check_top_level_let env (if is_lb_unannotated top then drop_lbtyp lax_top else lax_top)  //AR: drop lbtyp from lax_top if needed
+           let lax_top = if is_lb_unannotated top then drop_lbtyp lax_top else lax_top in
+           //BU.print1 "Phase 1: checked %s\n... moving to second phase" (Print.term_to_string lax_top);
+           check_top_level_let env lax_top  //AR: drop lbtyp from lax_top if needed
          else lax_top, l, g
     else check_top_level_let env top
 
@@ -2115,12 +2116,16 @@ and check_let_bound_def top_level env lb
     assert ( top_level || List.length univ_opening = 0 );
     let e1 = subst univ_opening e1 in
     let e1, c1, g1 = tc_maybe_toplevel_term ({env1 with top_level=top_level}) e1 in
+    let g1 = Rel.conj_guard g1 wf_annot in  //AR: strengthening the VC, as commented out below, turns a Pure.return wp into a Pure.assert_wp
+                                            //This causes the Pure.bind not to inline the Pure.return wp
+                                            //Among other things, it breaks assert_norm, if let's say some local let binding is annotated and wf_annot is not trivial (hasEq for instance) 
 
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
-    let c1, guard_f = TcUtil.strengthen_precondition
-                        (Some (fun () -> return_all Err.ill_kinded_type))
-                        (Env.set_range env1 e1.pos) e1 c1 wf_annot in
-    let g1 = Rel.conj_guard g1 guard_f in
+//    let c1, guard_f = TcUtil.strengthen_precondition
+//                        (Some (fun () -> return_all Err.ill_kinded_type))
+//                        (Env.set_range env1 e1.pos) e1 c1 wf_annot in
+//  let g1 = Rel.conj_guard g1 guard_f in
+    let g1 = Rel.conj_guard g1 wf_annot in
 
     if Env.debug env Options.Extreme
     then BU.print3 "checked top-level def %s, result type is %s, guard is %s\n"
