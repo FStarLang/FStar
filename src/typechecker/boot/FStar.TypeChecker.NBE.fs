@@ -151,17 +151,39 @@ and iapp (f:t) (args:list<t>) =
 
 and translate (bs:list<t>) (e:term) : t =
     match (SS.compress e).n with
-    | Tm_delayed _ -> failwith "Impossible"
-
+    | Tm_delayed _ -> failwith "Tm_delayed: Impossible"
+      
+    | Tm_unknown _ -> failwith "Tm_unknown: Impossible"
+      
     | Tm_constant (FStar.Const.Const_unit) ->
       Unit
 
     | Tm_constant (FStar.Const.Const_bool b) ->
       Bool b
 
+    | Tm_constant c -> 
+      let err = "Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented" in
+      debug_term e; failwith err
+      
     | Tm_bvar db -> //de Bruijn
       List.nth bs db.index
 
+    //| Tm_fvar _ -> debug_term e; failwith "Tm_fvar: Not yet implemented"
+
+    | Tm_uinst _ -> debug_term e; failwith "Tm_uinst: Not yet implemented"
+
+    | Tm_type u -> debug_term e; failwith "Tm_type: Not yet implemented"
+
+    | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
+
+    | Tm_refine _ -> debug_term e; failwith "Tm_refine: Not yet implemented"
+
+    | Tm_ascribed _ -> debug_term e; failwith "Tm_ascribed: Not yet implemented"
+
+    | Tm_uvar _ -> debug_term e; failwith "Tm_uvar: Not yet implemented"
+    
+    | Tm_meta (e, _) -> translate bs e
+    
     | Tm_name x ->
       mkAccuVar x
 
@@ -213,8 +235,6 @@ and translate (bs:list<t>) (e:term) : t =
       // translate (f::bs) body
       //failwith "Not yet implemented"
       
-    | _ -> debug_term e; failwith "Not yet implemented"
-
 (* [readback] creates named binders and not De Bruijn *)
 and readback (x:t) : term =
     match x with
