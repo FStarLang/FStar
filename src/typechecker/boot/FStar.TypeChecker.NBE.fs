@@ -33,15 +33,13 @@ type sort = int
 //IN F*: type atom : Type0 =
 type atom = //JUST FSHARP
   | Var of var
-  | Sort of sort (* for full CiC -- not used right now *)
-  | Prod of t * t (* for full CiC -- not used right now *)
+  | Type of universe
   | Match of t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *) 
   | Rec of letbinding * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
   | Lam of (t -> t)
-  | Fix of (t -> t) (* potentially recursive (i.e. a lambda inside ). The only difference with [Lam] is that there is an [is_accu] for the argument during application *)
   | Accu of atom * list<t>
   (* For simplicity represent constructors with fv as in F* *)
   | Construct of fv * list<t>
@@ -60,6 +58,7 @@ let mkConstruct i ts = Construct(i,ts)
 let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
 let mkAccuRec (b:letbinding) (env:list<t>) = Accu(Rec(b, env), [])
+let mkAccTyp (u:universe) = Accu(Type u, [])
 
 let isAccu (trm:t) = 
   match trm with 
@@ -172,7 +171,7 @@ and translate (bs:list<t>) (e:term) : t =
 
     | Tm_uinst _ -> debug_term e; failwith "Tm_uinst: Not yet implemented"
 
-    | Tm_type u -> debug_term e; failwith "Tm_type: Not yet implemented"
+    | Tm_type u -> mkAccTyp u
 
     | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
 
@@ -255,6 +254,11 @@ and readback (x:t) : term =
     | Accu (Var bv, ts) ->
       let args = map_rev (fun x -> as_arg (readback x)) ts in
       U.mk_app (S.bv_to_name bv) args
+    | Accu (Type u, []) ->
+      S.mk (Tm_type u) None Range.dummyRange
+    | Accu (Type u, ts) ->
+      let args = map_rev (fun x -> as_arg (readback x)) ts in
+      U.mk_app (S.mk (Tm_type u) None Range.dummyRange) args
     | Accu (Match (scrut, cases), ts) ->
       let args = map_rev (fun x -> as_arg (readback x)) ts in
       let head =  readback (cases scrut) in
@@ -307,6 +311,5 @@ and readback (x:t) : term =
 //                      only normalizing it when it is unfolded *)
 //         | _ -> failwith "Recursive definition not a function")
 // >>>>>>> 86f93ae6edc257258f376954fed7fba11f53ff83
-    | _ -> failwith "Not yet implemented"
 
 let normalize (e:term) : term = readback (translate [] e)
