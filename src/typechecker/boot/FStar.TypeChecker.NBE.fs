@@ -30,14 +30,16 @@ let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
 let debug_term (t : term) =
   BU.print1 "%s\n" (P.term_to_string t)
 
+let debug_sigmap (m : BU.smap<sigelt>) =
+  BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
+
 type var = bv
 type sort = int
 
 //IN F*: type atom : Type0 =
 type atom = //JUST FSHARP
   | Var of var
-  | Type of universe //Zoe: Not sure why this need to be an atom, just following the paper
-  | Inductive of fv
+  | Type of universe (* Zoe: Not sure why this needs to be an atom, just following the paper *)
   | Match of t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *) 
   | Rec of letbinding * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
@@ -46,7 +48,7 @@ and t = //JUST FSHARP
   | Lam of (t -> t)
   | Accu of atom * list<t>
   (* For simplicity represent constructors with fv as in F* *)
-  | Construct of fv * list<t>
+  | Construct of fv * list<t> (* Zoe: This is used for both type and data constructors*)
   | Unit
   | Bool of bool
 type head = t
@@ -63,7 +65,6 @@ let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
 let mkAccuRec (b:letbinding) (env:list<t>) = Accu(Rec(b, env), [])
 let mkAccTyp (u:universe) = Accu(Type u, [])
-let mkAccInd (fvar : fv) = Accu(Inductive fvar, [])
 
 let isAccu (trm:t) = 
   match trm with 
@@ -195,12 +196,14 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_fvar fvar ->
       let find_in_sigtab (env : Env.env) (lid : lident) : option<sigelt> = BU.smap_try_find env.sigtab (text_of_lid lid) in
       (match find_in_sigtab env fvar.fv_name.v with 
-       | Some elt ->
-         (match elt.sigel with 
-          | Sig_datacon _ -> mkConstruct fvar []
-          | Sig_inductive_typ _ -> mkAccInd fvar
-          | _ -> failwith "Sigelt not yet supported")
-       | None -> failwith "Free variable not found")
+       | Some { sigel = Sig_let ((is_rec, [lb]), _) n} ->
+         if is_rec then 
+           mkAccuRec lb [] 
+         else 
+           translate env [] lb.lbdef
+       | None -> mkConstruct fvar [] (* Zoe : Treat all other cases as type/data constructors for now. *)
+         (* Zoe : Z and S dataconstructors from the examples are not in the environment *) 
+       )
     | Tm_abs (x::xs, body, _) ->
       let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
       let tm = S.mk (Tm_abs([x], rest, None)) None e.pos in
@@ -261,7 +264,7 @@ and readback (env:Env.env) (x:t) : term =
       (match args with 
        | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
        | _ -> U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args)
-    
+      
     | Accu (Var bv, []) ->
       S.bv_to_name bv
     | Accu (Var bv, ts) ->
@@ -273,13 +276,7 @@ and readback (env:Env.env) (x:t) : term =
     | Accu (Type u, ts) ->
       let args = map_rev (fun x -> as_arg (readback env x)) ts in
       U.mk_app (S.mk (Tm_type u) None Range.dummyRange) args
-   
-    | Accu (Inductive fv, []) ->
-      S.mk (Tm_fvar fv) None Range.dummyRange
-    | Accu (Inductive fv, ts) ->
-      let args = map_rev (fun x -> as_arg (readback env x)) ts in
-      U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args
-      
+               
     | Accu (Match (scrut, cases), ts) ->
       let args = map_rev (fun x -> as_arg (readback env x)) ts in
       let head =  readback env (cases scrut) in
@@ -334,4 +331,6 @@ and readback (env:Env.env) (x:t) : term =
 //         | _ -> failwith "Recursive definition not a function")
 // >>>>>>> 86f93ae6edc257258f376954fed7fba11f53ff83
 
-let normalize (env : Env.env) (e:term) : term = readback env (translate env [] e)
+let normalize (env : Env.env) (e:term) : term = 
+  //debug_sigmap env.sigtab;
+  readback env (translate env [] e)
