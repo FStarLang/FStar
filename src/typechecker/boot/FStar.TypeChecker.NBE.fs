@@ -124,6 +124,22 @@ let rec count_abstractions (t : term) : int =
     | Tm_ascribed (t, _, _) -> count_abstractions t
         
 
+let rec t_to_string (x:t) =
+    match x with
+    | Lam _ -> "Lam"
+    | Accu (a, l) -> "Accu (" ^ (atom_to_string a) ^ ") (" ^ (String.concat ", " (List.map t_to_string l)) ^ ")"
+    | Construct (fv, l) -> "Construct (" ^ (P.fv_to_string fv) ^ ") (" ^ (String.concat ", " (List.map t_to_string l)) ^ ")"
+    | Unit -> "Unit"
+    | Bool b -> if b then "Bool true" else "Bool false"
+
+and atom_to_string (a: atom) =
+    match a with
+    | Var v -> "Var " ^ (P.bv_to_string v)
+    | Type u -> "Univ " ^ (P.univ_to_string u)
+    | Match (t, _) -> "Match " ^ (t_to_string t)
+    | Rec (_, l) -> "Rec (" ^ (String.concat ", " (List.map t_to_string l)) ^ ")"
+
+
 (* XXX unused *)
 let rec mkBranches branches cont = 
   match branches with 
@@ -156,6 +172,11 @@ and iapp (f:t) (args:list<t>) =
   | _ -> iapp (app f (List.hd args)) (List.tl args)
 
 and translate (env:Env.env) (bs:list<t>) (e:term) : t =
+    BU.print2 "Term: %s - %s\n" (P.tag_of_term e) (P.term_to_string e);
+    BU.print1 "BS list: %s\n" (String.concat ", " (List.map (fun x -> t_to_string x) bs));
+    // Env.print_gamma env;
+    // BU.print1 "%s" "\n";
+
     match (SS.compress e).n with
     | Tm_delayed _ -> failwith "Tm_delayed: Impossible"
       
@@ -174,17 +195,16 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     | Tm_bvar db -> //de Bruijn
       List.nth bs db.index
 
-     | Tm_uinst (t, [u]) ->
-         BU.print1 "Term with univs: %s\n" (P.term_to_string t);
-         BU.print1 "Univ %s\n" (P.univ_to_string u);
-         // app (translate bs t) (Universe (SS.compress_univ u))
-         translate env bs t
+    | Tm_uinst (t, [u]) ->
+      BU.print1 "Term with univs: %s\n" (P.term_to_string t);
+      BU.print1 "Univ %s\n" (P.univ_to_string u);
+      app (translate env bs t) (mkAccTyp u)
 
-     | Tm_uinst (t, u::us) ->
-         BU.print1 "Term with univs: %s\n" (P.term_to_string t);
-         // List.iter (fun x -> BU.print1 "Univ %s\n" (P.univ_to_string (SS.compress_univ x))) u;
-         // translate ((map_rev (fun x -> mkAccuUniv (SS.compress_univ x)) u) @ bs) t
-         debug_term e; failwith "Not yet implemented Tm_uinst"
+    | Tm_uinst (t, _) ->
+      BU.print1 "Term with univs: %s\n" (P.term_to_string t);
+      // List.iter (fun x -> BU.print1 "Univ %s\n" (P.univ_to_string (SS.compress_univ x))) u;
+      // translate ((map_rev (fun x -> mkAccuUniv (SS.compress_univ x)) u) @ bs) t
+      debug_term e; failwith "Not yet implemented Tm_uinst"
 
     | Tm_type u -> mkAccTyp u
 
@@ -194,7 +214,7 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
 
     | Tm_ascribed _ -> debug_term e; failwith "Tm_ascribed: Not yet implemented"
 
-    | Tm_uvar _ -> debug_term e; failwith "Tm_uvar: Not yet implemented"
+    | Tm_uvar (uvar, t) -> debug_term e; failwith "Tm_uvar: Not yet implemented"
     
     | Tm_meta (e, _) -> translate env bs e
     
@@ -213,6 +233,11 @@ and translate (env:Env.env) (bs:list<t>) (e:term) : t =
          else 
            translate env [] lb.lbdef
        | None -> mkConstruct fvar [] (* Zoe : Treat all other cases as type/data constructors for now. *)
+       | Some {sigel = Sig_declare_typ(lid, us, t)} ->
+           // VD: Type is not in environment (e.g. bool)
+           BU.format3 "Sig_declare_typ val %s : %s / %s" lid.str (P.term_to_string t) (P.univ_names_to_string us) |> failwith
+       | Some s ->
+           BU.format1 "Sig %s\n" (P.sigelt_to_string s) |> failwith
          (* Zoe : Z and S dataconstructors from the examples are not in the environment *) 
        )
     | Tm_abs (x::xs, body, _) ->

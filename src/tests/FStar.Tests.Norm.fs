@@ -101,6 +101,8 @@ let tests =
                                      let f = function \
                                        | A x y \
                                        | B y x -> y - x" in
+  let _ = Pars.pars_and_tc_fragment "type tb = | T | F" in
+  let _ = Pars.pars_and_tc_fragment "let idd (x: 'a) = x" in
   [ (0, (app apply [one; id; nm n]), (nm n))
   ; (1, (app apply [tt; nm n; nm m]), (nm n))
   // ; (2, (app apply [ff; nm n; nm m]), (nm m))
@@ -141,7 +143,8 @@ let tests =
   //; (1062, (Pars.tc "f (B 5 3)"), (Pars.tc "2")) 
   // Type defs not yet implemented for NBE
   //; (27, (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
-  ; (28, (tc "rev [true; false]"), (tc "[false; true]"))
+  //; (28, (tc "rev [T; F]"), (tc "[F; T]"))
+    ; (29, (tc "idd T"), (tc "T"))
   ]
 
 

@@ -570,15 +570,15 @@ let eff_decl_to_string for_free ed =
   eff_decl_to_string' for_free Range.dummyRange [] ed
 
 let rec sigelt_to_string (x: sigelt) =
- if not (Options.ugly()) then
-    let e = Resugar.resugar_sigelt x in
-    begin match e with
-    | Some d ->
-      let d = ToDocument.decl_to_document d in
-      Pp.pretty_string (float_of_string "1.0") 100 d
-    | _ -> ""
-    end
- else
+ // if not (Options.ugly()) then
+ //    let e = Resugar.resugar_sigelt x in
+ //    begin match e with
+ //    | Some d ->
+ //      let d = ToDocument.decl_to_document d in
+ //      Pp.pretty_string (float_of_string "1.0") 100 d
+ //    | _ -> ""
+ //    end
+ // else
   begin match x.sigel with
   | Sig_pragma(LightOff) -> "#light \"off\""
   | Sig_pragma(ResetOptions None) -> "#reset-options"
