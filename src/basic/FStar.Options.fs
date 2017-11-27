@@ -196,7 +196,7 @@ let defaults =
       ("use_two_phase_tc"             , Bool false);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
-      ("warn_error"                   , String "@1..19+20..67")]
+      ("warn_error"                   , String "@1..20+21..67")]
 
 let init () =
    let o = peek () in

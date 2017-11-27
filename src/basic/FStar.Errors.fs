@@ -14,172 +14,172 @@ type raw_error =
   | UnknownToolForDep
   | UnrecognizedExtension
   | UnableToReadFile
-  | Uninstantiated 
+  | Uninstantiated
   | IllTyped of string
-  | ValueRestriction 
-  | UnexpectedEffect 
+  | ValueRestriction
+  | UnexpectedEffect
   | NotTopLevelModule
-  | NonSingletonTopLevel 
-  | MissingPrimsModule 
-  | MissingFileName 
-  | TooManyFiles 
-  | NotSupported 
-  | OptionsNotCompatible 
+  | NonSingletonTopLevel
+  | MissingPrimsModule
+  | MissingFileName
+  | TooManyFiles
+  | NotSupported
+  | OptionsNotCompatible
   | NoFileProvided
-  | NonSingletonTopLevelModule 
-  | PreModuleMismatch 
-  | ModuleFirstStatement 
-  | ParseErrors 
-  | MultipleLetBinding 
-  | UnexpectedIdentifier 
-  | InlineRenamedAsUnfold 
-  | UnfoldableDeprecated 
+  | NonSingletonTopLevelModule
+  | PreModuleMismatch
+  | ModuleFirstStatement
+  | ParseErrors
+  | MultipleLetBinding
+  | UnexpectedIdentifier
+  | InlineRenamedAsUnfold
+  | UnfoldableDeprecated
   | DeprecatedEqualityOnBinder
-  | MissingQuantifierBinder 
+  | MissingQuantifierBinder
   | OutOfRange of string (* the type of the integer *)
-  | OpPlusInUniverse 
-  | InvalidUniverseVar 
-  | InvalidIdentifier 
-  | MoreThanOneDeclaration 
-  | Filtered 
-  | UnexpectedModuleDeclaration 
-  | UnexpectedOperatorSymbol 
-  | UnexpectedTerm 
-  | ModuleFileNameMismatch 
-  | LetOpenModuleOnly 
-  | ModuleOrFileNotFound 
+  | OpPlusInUniverse
+  | InvalidUniverseVar
+  | InvalidIdentifier
+  | MoreThanOneDeclaration
+  | Filtered
+  | UnexpectedModuleDeclaration
+  | UnexpectedOperatorSymbol
+  | UnexpectedTerm
+  | ModuleFileNameMismatch
+  | LetOpenModuleOnly
+  | ModuleOrFileNotFound
   | ModuleOrFileNotFoundWarning
-  | UnboundModuleReference 
-  | OneModulePerFile 
-  | SyntaxError 
-  | ParseItError 
-  | ModuleExpected 
-  | DefinitionNotFound 
-  | AbstractTypeNotAllowed 
-  | DuplicateInImplementation 
-  | InterfaceWithTypeImplementation 
-  | BothValLetInInterface 
-  | AssumedDeclNotAllowed 
-  | OutOfOrder 
-  | IllegalCharInByteArray 
-  | IllegalCharInOperatorName 
-  | InvalidFloatingPointNumber 
-  | InvalidNumericLiteral 
-  | InvalidUnicodeInStringLiteral 
-  | InvalidFSDocKeyword 
-  | UnexpectedChar 
-  | UnexpectedPosition 
-  | UnprotectedTerm 
+  | UnboundModuleReference
+  | OneModulePerFile
+  | SyntaxError
+  | ParseItError
+  | ModuleExpected
+  | DefinitionNotFound
+  | AbstractTypeNotAllowed
+  | DuplicateInImplementation
+  | InterfaceWithTypeImplementation
+  | BothValLetInInterface
+  | AssumedDeclNotAllowed
+  | OutOfOrder
+  | IllegalCharInByteArray
+  | IllegalCharInOperatorName
+  | InvalidFloatingPointNumber
+  | InvalidNumericLiteral
+  | InvalidUnicodeInStringLiteral
+  | InvalidFSDocKeyword
+  | UnexpectedChar
+  | UnexpectedPosition
+  | UnprotectedTerm
   | NotEmbedded of string (* the nature of the term *)
-  | FunctionLiteralPrecisionLoss 
-  | NonTopRecFunctionNotFullyEncoded 
-  | NonListLiteralSMTPattern 
-  | SMTPatternMissingBoundVar 
-  | NonVaribleInductiveTypeParameter 
-  | UnexpectedConstructorType 
-  | SMTSolverError 
-  | Z3InvocationError 
+  | FunctionLiteralPrecisionLoss
+  | NonTopRecFunctionNotFullyEncoded
+  | NonListLiteralSMTPattern
+  | SMTPatternMissingBoundVar
+  | NonVaribleInductiveTypeParameter
+  | UnexpectedConstructorType
+  | SMTSolverError
+  | Z3InvocationError
   | Z3InvocationWarning
-  | SMTOutputParseError 
-  | UnexpectedZ3Output 
-  | CycleInRecTypeAbbreviation 
-  | ImpossibleAbbrevLidBundle 
-  | ImpossibleAbbrevRenameBundle 
-  | ImpossibleTypeAbbrevSigeltBundle 
-  | ImpossibleTypeAbbrevBundle 
-  | ImpossibleInductiveWithAbbrev 
-  | InaccessibleArgument 
-  | WrongDataAppHeadFormat 
+  | SMTOutputParseError
+  | UnexpectedZ3Output
+  | CycleInRecTypeAbbreviation
+  | ImpossibleAbbrevLidBundle
+  | ImpossibleAbbrevRenameBundle
+  | ImpossibleTypeAbbrevSigeltBundle
+  | ImpossibleTypeAbbrevBundle
+  | ImpossibleInductiveWithAbbrev
+  | InaccessibleArgument
+  | WrongDataAppHeadFormat
   | TacticGotStuck
-  | UserTacticFailure 
-  | OpenGoalsInSynthesis 
-  | UninstantiatedVarInTactic 
-  | ForbiddenReferenceToCurrentModule 
-  | DuplicateTopLevelNames 
-  | NameSpaceNotFound 
-  | IncludeModuleNotPrepared 
-  | ModuleNotFound 
-  | DocOverwrite 
-  | AdmitWithoutDefinition 
-  | DuplicateModuleOrInterface 
-  | MonadAlreadyDefined 
-  | IdentifierNotFound 
-  | AbstractTypeDeclarationInInterface 
-  | WrongDefinitionOrder 
-  | BothValAndLetInInterface 
-  | AssumeValInInterface 
-  | InterfaceNotImplementedByModule 
-  | InterfaceAlreadyProcessed 
-  | DeprecatedOpaqueQualifier 
-  | ReflectOnlySupportedOnEffects 
-  | DefaultQualifierNotAllowedOnEffects 
-  | UnsupportedQualifier 
-  | NegativeUniverseConstNotSupported 
-  | UniverseMightContainSumOfTwoUnivVars 
-  | FieldsNotBelongToSameRecordType 
-  | LetMutableForVariablesOnly 
-  | TypeWithinPatternsAllowedOnVariablesOnly 
-  | UnexpectedPattern 
-  | UnexpectedNumericLiteral 
-  | UnknownAttribute 
-  | UnepxectedOrUnboundOperator 
-  | AssignToImmutableValues 
-  | EffectNotFound 
-  | DataContructorNotFound 
-  | ConstructorNotFound 
-  | UnsupportedDisjuctivePatterns 
-  | ComputationTypeNotAllowed 
-  | UnexpectedEmptyRecord 
-  | MissingFieldInRecord 
-  | InvalidLemmaArgument 
-  | NotEnoughArgsToEffect 
-  | UnexpectedLetBinding 
-  | UnexpectedTermInUniverse 
-  | UnexpectedUniverseVariable 
-  | UseDefaultEffect 
-  | AddImplicitAssumeNewQualifier 
-  | MissingNameInBinder 
-  | UnexpectedBinder 
-  | MalformedActionDeclaration 
-  | ArgumentLengthMismatch 
-  | WrongTerm 
-  | TermOutsideOfDefLanguage 
-  | LetBoundMonadicMismatch 
-  | TypeMismatch 
-  | EffectfulAndPureComputationMismatch 
-  | NotFunctionType 
-  | BinderAndArgsLengthMismatch 
-  | WhenClauseNotSupported 
-  | NameNotFound 
-  | VariableNotFound 
-  | EffectsCannotBeComposed 
-  | DivergentComputationCannotBeIncludedInTotal 
-  | ConstructorArgLengthMismatch 
-  | NotEnoughArgumentsForEffect 
-  | UnexpectedSignatureForMonad 
-  | ExpectTermGotFunction 
-  | UnexpectedImplicitArgument 
-  | UnexpectedExpressionType 
-  | UnexpectedFunctionParameterType 
-  | TypeError 
-  | PossibleInfiniteTyp 
-  | UnificationNotWellFormed 
-  | IncompatibleKinds 
-  | ConstsructorBuildWrongType 
-  | ConstructorFailedCheck 
-  | DuplicateTypeAnnotationAndValDecl 
-  | InferredTypeCauseVarEscape 
-  | FunctionTypeExpected 
-  | PolyTypeExpected 
-  | NonLinearPatternVars 
-  | DisjuctivePatternVarsMismatch 
-  | ComputedTypeNotMatchAnnotation 
-  | UnExpectedPreCondition 
-  | ExpectedPureExpression 
-  | ExpectedGhostExpression 
-  | TypeCheckerFailToProve 
-  | TopLevelEffect 
-  | CardinalityConstraintViolated 
+  | UserTacticFailure
+  | OpenGoalsInSynthesis
+  | UninstantiatedVarInTactic
+  | ForbiddenReferenceToCurrentModule
+  | DuplicateTopLevelNames
+  | NameSpaceNotFound
+  | IncludeModuleNotPrepared
+  | ModuleNotFound
+  | DocOverwrite
+  | AdmitWithoutDefinition
+  | DuplicateModuleOrInterface
+  | MonadAlreadyDefined
+  | IdentifierNotFound
+  | AbstractTypeDeclarationInInterface
+  | WrongDefinitionOrder
+  | BothValAndLetInInterface
+  | AssumeValInInterface
+  | InterfaceNotImplementedByModule
+  | InterfaceAlreadyProcessed
+  | DeprecatedOpaqueQualifier
+  | ReflectOnlySupportedOnEffects
+  | DefaultQualifierNotAllowedOnEffects
+  | UnsupportedQualifier
+  | NegativeUniverseConstNotSupported
+  | UniverseMightContainSumOfTwoUnivVars
+  | FieldsNotBelongToSameRecordType
+  | LetMutableForVariablesOnly
+  | TypeWithinPatternsAllowedOnVariablesOnly
+  | UnexpectedPattern
+  | UnexpectedNumericLiteral
+  | UnknownAttribute
+  | UnepxectedOrUnboundOperator
+  | AssignToImmutableValues
+  | EffectNotFound
+  | DataContructorNotFound
+  | ConstructorNotFound
+  | UnsupportedDisjuctivePatterns
+  | ComputationTypeNotAllowed
+  | UnexpectedEmptyRecord
+  | MissingFieldInRecord
+  | InvalidLemmaArgument
+  | NotEnoughArgsToEffect
+  | UnexpectedLetBinding
+  | UnexpectedTermInUniverse
+  | UnexpectedUniverseVariable
+  | UseDefaultEffect
+  | AddImplicitAssumeNewQualifier
+  | MissingNameInBinder
+  | UnexpectedBinder
+  | MalformedActionDeclaration
+  | ArgumentLengthMismatch
+  | WrongTerm
+  | TermOutsideOfDefLanguage
+  | LetBoundMonadicMismatch
+  | TypeMismatch
+  | EffectfulAndPureComputationMismatch
+  | NotFunctionType
+  | BinderAndArgsLengthMismatch
+  | WhenClauseNotSupported
+  | NameNotFound
+  | VariableNotFound
+  | EffectsCannotBeComposed
+  | DivergentComputationCannotBeIncludedInTotal
+  | ConstructorArgLengthMismatch
+  | NotEnoughArgumentsForEffect
+  | UnexpectedSignatureForMonad
+  | ExpectTermGotFunction
+  | UnexpectedImplicitArgument
+  | UnexpectedExpressionType
+  | UnexpectedFunctionParameterType
+  | TypeError
+  | PossibleInfiniteTyp
+  | UnificationNotWellFormed
+  | IncompatibleKinds
+  | ConstsructorBuildWrongType
+  | ConstructorFailedCheck
+  | DuplicateTypeAnnotationAndValDecl
+  | InferredTypeCauseVarEscape
+  | FunctionTypeExpected
+  | PolyTypeExpected
+  | NonLinearPatternVars
+  | DisjuctivePatternVarsMismatch
+  | ComputedTypeNotMatchAnnotation
+  | UnExpectedPreCondition
+  | ExpectedPureExpression
+  | ExpectedGhostExpression
+  | TypeCheckerFailToProve
+  | TopLevelEffect
+  | CardinalityConstraintViolated
   | MetaAlienNotATmUnknown
   | NotApplicationOrFv
   | InductiveTypeNotSatisfyPositivityCondition
@@ -428,13 +428,13 @@ let errno_of_error = function
   | CallNotImplemented -> 17
   | IDEUnrecognized _ -> 18
   | DependencyAnalysisFailed -> 19
-  (* the errors below are default to warning *)
   | ModuleFileNameMismatch -> 20
+  (* the errors below are default to warning *)
   | ModuleOrFileNotFoundWarning -> 21
   | UnboundModuleReference -> 22
-  | UnprotectedTerm -> 23 
+  | UnprotectedTerm -> 23
   | NotEmbedded _ -> 24
-  | FunctionLiteralPrecisionLoss -> 25 
+  | FunctionLiteralPrecisionLoss -> 25
   | NonListLiteralSMTPattern -> 26
   | SMTPatternMissingBoundVar -> 27
   | UnexpectedConstructorType -> 28
@@ -442,10 +442,10 @@ let errno_of_error = function
   | UnexpectedZ3Output -> 30
   | InaccessibleArgument -> 31
   | DocOverwrite -> 32
-  | AdmitWithoutDefinition -> 33 
+  | AdmitWithoutDefinition -> 33
   | DeprecatedOpaqueQualifier -> 34
   | UseDefaultEffect -> 35
-  | AddImplicitAssumeNewQualifier -> 36 
+  | AddImplicitAssumeNewQualifier -> 36
   | TopLevelEffect -> 37
   | MetaAlienNotATmUnknown -> 38
   | PatternMissingBoundVar -> 39
@@ -457,7 +457,7 @@ let errno_of_error = function
   | SMTPatTDeprecated -> 45
   | CachedFile -> 46
   | FileNotWritten -> 47
-  | IllFormedGoal -> 48 
+  | IllFormedGoal -> 48
   | MalformedWarnErrorList -> 49
   | IDEIgnoreCodeGen -> 50
   | MissingInterfaceOrImplementation -> 51
@@ -488,14 +488,14 @@ let flags: ref<list<flag>> = mk_ref []
 
 let update_flags l =
   let compare (_, (a, _)) (_, (b, _)) =
-    if a > b then 1 
+    if a > b then 1
     else if a < b then -1
     else 0
   in
-  let rec set_flag i l= 
-    match l with 
+  let rec set_flag i l=
+    match l with
     | [] -> List.nth !flags i
-    | (f, (l, h))::tl -> 
+    | (f, (l, h))::tl ->
       if (i>=l && i <= h) then f
       else if (i<l) then List.nth !flags i
       else set_flag i tl
@@ -504,17 +504,17 @@ let update_flags l =
     | [] -> f
     | hd::tl -> aux (f@[set_flag i sorted]) (i+1) tl sorted
   in
-  let rec init_flags l i = 
+  let rec init_flags l i =
     if i > 0 then init_flags (l@[CError]) (i-1) else l
   in
   let rec compute_range result l = match l with
     | [] -> result
-    | (f, s)::tl -> 
+    | (f, s)::tl ->
       let r = Util.split s ".." in
-      let (l,h) = match r with 
+      let (l,h) = match r with
         | [r1; r2] -> (int_of_string r1, int_of_string r2)
         | _ -> failwith (BU.format1 "Malformed warn-error range %s" s)
-      in 
+      in
       if (l < 0)  || (h > next_errno)  then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h));
       compute_range (result@[(f, (l, h))]) tl
   in
@@ -524,7 +524,7 @@ let update_flags l =
     let sorted = List.sortWith compare range in
     flags := aux [] 0 !flags sorted
 
-let diag r msg = 
+let diag r msg =
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg)
 
 let maybe_fatal_error r (e, msg) =
