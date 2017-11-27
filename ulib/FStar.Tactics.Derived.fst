@@ -1,6 +1,14 @@
 module FStar.Tactics.Derived
 
 open FStar.Reflection
+
+(* VD: for testing *)
+open FStar.Reflection.Types
+open FStar.Reflection.Data
+open FStar.Reflection.Basic
+open FStar.Reflection.Formula
+open FStar.Reflection.Syntax
+
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
 

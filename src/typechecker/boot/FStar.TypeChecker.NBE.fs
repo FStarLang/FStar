@@ -47,6 +47,7 @@ and t = //JUST FSHARP
   | Construct of fv * list<t>
   | Unit
   | Bool of bool
+  | Universe of universe
 type head = t
 type annot = option<t> 
 
@@ -150,6 +151,8 @@ and iapp (f:t) (args:list<t>) =
   | _ -> iapp (app f (List.hd args)) (List.tl args)
 
 and translate (bs:list<t>) (e:term) : t =
+    BU.print1 "Term: %s\n" (P.term_to_string (SS.compress e));
+    BU.print1 "BS list: %s \n" (String.concat ", " (List.map t_to_string bs));
     match (SS.compress e).n with
     | Tm_delayed _ -> failwith "Impossible"
 
@@ -177,9 +180,11 @@ and translate (bs:list<t>) (e:term) : t =
       translate bs tm
 
     | Tm_app (e, [arg]) ->
+      BU.print2 "!!!! %s / %s\n" (P.term_to_string e) (P.term_to_string (fst arg));
       app (translate bs e) (translate bs (fst arg))
 
     | Tm_app(head, arg::args) ->
+      BU.print2 "!!! %s / %s\n" (P.term_to_string head) (P.term_to_string (fst arg));
       let first = S.mk (Tm_app(head, [arg])) None Range.dummyRange in
       let tm = S.mk (Tm_app(first, args)) None e.pos in
       translate bs tm
@@ -212,8 +217,34 @@ and translate (bs:list<t>) (e:term) : t =
       // let rec f = fnorm f in
       // translate (f::bs) body
       //failwith "Not yet implemented"
+
+     | Tm_uinst (t, [u]) ->
+         BU.print1 "Term with univs: %s\n" (P.term_to_string t);
+         BU.print1 "Univ %s\n" (P.univ_to_string u);
+         // app (translate bs t) (Universe (SS.compress_univ u))
+         translate bs t
+
+     | Tm_uinst (t, u::us) ->
+         BU.print1 "Term with univs: %s\n" (P.term_to_string t);
+         // List.iter (fun x -> BU.print1 "Univ %s\n" (P.univ_to_string (SS.compress_univ x))) u;
+         // translate ((map_rev (fun x -> mkAccuUniv (SS.compress_univ x)) u) @ bs) t
+         debug_term e; failwith "Not yet implemented Tm_uinst"
+
+     | Tm_meta (t, m) ->
+         translate bs t
+
+     | Tm_constant c -> debug_term e; failwith "Not yet implemented Tm_constant"
+     | Tm_type u -> debug_term e; failwith "Not yet implemented Tm_type"
+     | Tm_abs ([], _, _) -> debug_term e; failwith "Not yet implemented Tm_abs"
+     | Tm_arrow (b, c)-> debug_term e; failwith "Not yet implemented Tm_arrow"
+     | Tm_refine (bv, t) -> debug_term e; failwith "Not yet implemented Tm_refine"
+     | Tm_app (_, []) -> debug_term e; failwith "Not yet implemented Tm_app"
+     | Tm_ascribed (t, a, _) -> debug_term e; failwith "Not yet implemented Tm_ascribed"
+     | Tm_let ((_, _), _) -> debug_term e; failwith "Not yet implemented Tm_let"
+     | Tm_uvar (u, t) -> debug_term e; failwith "Not yet implemented Tm_uvar"
+     | Tm_unknown -> debug_term e; failwith "Not yet implemented Tm_unknown"
       
-    | _ -> debug_term e; failwith "Not yet implemented"
+    // | _ -> debug_term e; failwith "Not yet implemented"
 
 (* [readback] creates named binders and not De Bruijn *)
 and readback (x:t) : term =
@@ -265,6 +296,7 @@ and readback (x:t) : term =
          (match ts with 
           | [] -> head
           | _ -> U.mk_app head args)
+    // | Universe u
       
 // Zoe: Commenting out conflict with Danel
 // =======

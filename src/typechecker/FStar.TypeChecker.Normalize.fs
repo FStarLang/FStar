@@ -214,7 +214,10 @@ let norm_universe cfg (env:env) u =
           | U_bvar x ->
             begin
                 try match snd (List.nth env x) with
-                      | Univ u -> aux u
+                      | Univ u ->
+                           if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
+                               BU.print1 "Univ (in norm_universe): %s\n" (Print.univ_to_string u)
+                           else ();  aux u
                       | Dummy -> [u]
                       | _ -> failwith "Impossible: universe variable bound to a term"
                 with _ -> if cfg.steps |> List.contains AllowUnboundUniverses
@@ -1551,6 +1554,9 @@ and do_unfold_fv cfg env stack (t0:term) (f:fv) : term =
          if n > 0
          then match stack with //universe beta reduction
                 | UnivArgs(us', _)::stack ->
+                  if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
+                      List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (Print.univ_to_string x)) us'
+                  else ();
                   let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) env in
                   norm cfg env stack t
                 | _ when (cfg.steps |> List.contains EraseUniverses) ->

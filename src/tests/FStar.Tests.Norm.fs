@@ -103,36 +103,37 @@ let tests =
                                        | B y x -> y - x" in
   [ (0, (app apply [one; id; nm n]), (nm n))
   ; (1, (app apply [tt; nm n; nm m]), (nm n))
-  ; (2, (app apply [ff; nm n; nm m]), (nm m))
-  ; (3, (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]), (nm m))
-  ; (4, (app twice [apply; ff; nm n; nm m]), (nm m))
-  ; (5, (minus one z), one)
-  ; (6, (app pred [one]), z)
-  ; (7, (minus one one), z)
-  ; (8, (app mul [one; one]), one)
-  ; (9, (app mul [two; one]), two)
-  ; (10, (app mul [app succ [one]; one]), two)
-  ; (11, (minus (encode 10) (encode 10)), z)
-  ; (12, (minus (encode 100) (encode 100)), z)
-  ; (13, (let_ x (encode 100) (minus (nm x) (nm x))), z)
-  ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
-  ; (15, (let_ x (app succ [one])
-            (let_ y (app mul [nm x; nm x])
-               (let_ h (app mul [nm y; nm y])
-                       (minus (nm h) (nm h))))), z)
-  ; (16, (mk_let x (app succ [one])
-            (mk_let y (app mul [nm x; nm x])
-                    (mk_let h (app mul [nm y; nm y])
-                            (minus (nm h) (nm h))))), z)
-  ; (17, (let_ x (app succ [one])
-            (let_ y (app mul [nm x; nm x])
-               (let_ h (app mul [nm y; nm y])
-                       (minus (nm h) (nm h))))), z)
-  ; (18, (pred_nat (snat (snat znat))), (snat znat))
-  ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
-  ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
-  ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
-  ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
+  // ; (2, (app apply [ff; nm n; nm m]), (nm m))
+  // ; (3, (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]), (nm m))
+  // ; (4, (app twice [apply; ff; nm n; nm m]), (nm m))
+  // ; (5, (minus one z), one)
+  // ; (6, (app pred [one]), z)
+  // ; (7, (minus one one), z)
+  // ; (8, (app mul [one; one]), one)
+  // ; (9, (app mul [two; one]), two)
+  // ; (10, (app mul [app succ [one]; one]), two)
+  // ; (11, (minus (encode 10) (encode 10)), z)
+  // ; (12, (minus (encode 100) (encode 100)), z)
+  // ; (13, (let_ x (encode 100) (minus (nm x) (nm x))), z)
+  // ; (14, (let_ x (encode 1000) (minus (nm x) (nm x))), z) //takes ~10s; wasteful for CI
+  // ; (15, (let_ x (app succ [one])
+  //           (let_ y (app mul [nm x; nm x])
+  //              (let_ h (app mul [nm y; nm y])
+  //                      (minus (nm h) (nm h))))), z)
+  // ; (16, (mk_let x (app succ [one])
+  //           (mk_let y (app mul [nm x; nm x])
+  //                   (mk_let h (app mul [nm y; nm y])
+  //                           (minus (nm h) (nm h))))), z)
+  // ; (17, (let_ x (app succ [one])
+  //           (let_ y (app mul [nm x; nm x])
+  //              (let_ h (app mul [nm y; nm y])
+  //                      (minus (nm h) (nm h))))), z)
+  // ; (18, (pred_nat (snat (snat znat))), (snat znat))
+  // ; (19, (minus_nat (snat (snat znat)) (snat znat)), (snat znat))
+  // ; (20, (minus_nat (encode_nat 10) (encode_nat 10)), znat)
+  // ; (21, (minus_nat (encode_nat 100) (encode_nat 100)), znat)
+  // ; (22, (minus_nat (encode_nat 10000) (encode_nat 10000)), znat) // Stack overflow in Normalizer when run with mono
+
   //; (23, (minus_nat (encode_nat 1000000) (encode_nat 1000000)), znat) //this one takes about 30 sec and ~3.5GB of memory. Stack overflow in NBE when run with mono
   // The following do not work for NBE because of type allications.
   //; (24, (tc "recons [0;1]"), (tc "[0;1]"))
@@ -141,6 +142,7 @@ let tests =
   //; (1062, (Pars.tc "f (B 5 3)"), (Pars.tc "2")) 
   // Type defs not yet implemented for NBE
   //; (27, (tc "(rev (FStar.String.list_of_string \"abcd\"))") (tc "['d'; 'c'; 'b'; 'a']"))// -- CH: works up to an unfolding too much (char -> char')
+  ; (28, (tc "rev [true; false]"), (tc "[false; true]"))
   ]
 
 
@@ -153,6 +155,7 @@ let run_either i r expected normalizer =
     Options.init(); //reset them
     Options.set_option "print_universes" (Options.Bool true);
     Options.set_option "print_implicits" (Options.Bool true);
+    ignore (Options.set_options Options.Set "--debug Test --debug_level univ_norm");
 //    BU.print1 "result = %s\n" (P.term_to_string x);
 //    BU.print1 "expected = %s\n\n" (P.term_to_string expected);
     always i (term_eq (U.unascribe x) expected)
@@ -210,6 +213,71 @@ let compare () =
   BU.print_string "Comparing times for normalization and nbe\n";
   run_both_with_time 14 (let_ x (encode 1000) (minus (nm x) (nm x))) z
 
+let run_nbe_tac () =
+    let _ = Pars.pars_and_tc_fragment "
+       open FStar.Tactics
+       open FStar.Tactics.Effect" in
+
+    // let s0 = "" in
+    // BU.print1 "Term: %s\n" (P.term_to_string (tc s0));
+
+    let s1 = "FStar.Tactics.Effect.assert_by_tactic (True ==> False \/ True) (
+                FStar.Tactics.Logic.implies_intro;;
+                FStar.Tactics.Logic.left)" in
+    BU.print1 "Term: %s\n" (P.term_to_string (tc s1));
+// Term: FStar.Tactics.Effect.assert_by_tactic (Test.a u#_ ==> Test.a u#_ \/ Prims.l_True)
+//   (FStar.Tactics.Effect.bind u#_
+//       u#_
+//       #FStar.Reflection.Types.binder
+//       #Prims.unit
+//       FStar.Tactics.Logic.implies_intro
+//       (fun uu___46 -> FStar.Tactics.Logic.right))
+
+    // let s2 = "FStar.Tactics.Effect.assert_by_tactic (True ==> False \/ True) (
+    //             FStar.Tactics.Effect.bind (FStar.Tactics.Logic.implies_intro)
+    //               (fun x -> FStar.Tactics.Effect.bind (FStar.Tactics.Logic.right)
+    //                  (fun y -> FStar.Tactics.Effect.return () )))" in
+    // BU.print1 "Term: %s\n" (P.term_to_string (tc s2));
+// Term: FStar.Tactics.Effect.assert_by_tactic (Prims.l_True ==> Prims.l_False \/ Prims.l_True)
+//   (FStar.Tactics.Effect.bind u#_
+//       u#_
+//       #FStar.Reflection.Types.binder
+//       #Prims.unit
+//       FStar.Tactics.Logic.implies_intro
+//       (fun x ->
+//           FStar.Tactics.Effect.bind u#0
+//             u#0
+//             #((fun x -> Prims.unit) x)
+//             #((fun x -> (fun x -> Prims.unit) x) x)
+//             FStar.Tactics.Logic.right
+//             (fun y -> FStar.Tactics.Effect.return u#0 #((fun x y -> (fun x -> Prims.unit) x) x y) ()
+//             )))
+
+    // let s3 = "FStar.Tactics.Effect.reify_tactic (FStar.Tactics.Effect.trace_wrap (FStar.Tactics.Effect.bind FStar.Tactics.Logic.right
+    //       (fun x -> FStar.Tactics.Logic.right)))" in
+    // BU.print1 "Term: %s\n" (P.term_to_string (tc s3));
+
+    // let s4 = "FStar.Tactics.Effect.__by_tactic (FStar.Tactics.Effect.reify_tactic (FStar.Tactics.Effect.trace_wrap
+    //       FStar.Tactics.Logic.right))
+    // (Prims.squash (Prims.l_False \/ Prims.l_True))" in
+    // BU.print1 "Term: %s\n" (P.term_to_string (tc s4));
+
+     // run_tac_interpreter 11 (tc s1) (tc "()");
+     run_interpreter 12 (tc s1) (tc "()");
+     run_nbe 13 (tc s1) (tc "()")
+
+     // run_tac_interpreter 11 (tc s1) (tc "()");
+     // run_interpreter 12 (tc s1) (tc "()");
+     // run_nbe 13 (tc s1) (tc "()");
+
+     // run_tac_interpreter 31 (tc s3) (tc "()");
+     // run_interpreter 32 (tc s3) (tc "()");
+     // run_nbe 33 (tc s3) (tc "()")
+
+     // run_tac_interpreter 41 (tc s4) (tc "()");
+     // run_interpreter 42 (tc s4) (tc "()");
+     // run_nbe 43 (tc s4) (tc "()")
+
 
 let compare_times l_int l_nbe =
   BU.print_string "Comparing times for normalization and nbe\n";
@@ -233,4 +301,5 @@ let compare_times l_int l_nbe =
 let run_all () =
     let l_int = run_all_interpreter_with_time () in
     let l_nbe = run_all_nbe_with_time () in 
-    compare_times l_int l_nbe
+    //compare_times l_int l_nbe
+    run_nbe_tac ()

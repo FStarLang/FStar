@@ -21,7 +21,7 @@ module BU = FStar.Util
 module D = FStar.Parser.Driver
 
 let test_lid = Ident.lid_of_path ["Test"] Range.dummyRange
-let tcenv_ref: ref<option<env>> = mk_ref None
+let tcenv_ref: ref<option<TcEnv.env>> = mk_ref None
 let test_mod_ref = mk_ref (Some ({name=test_lid;
                                 declarations=[];
                                 exports=[];
@@ -63,6 +63,18 @@ let init_once () : unit =
   let _prims_mod, env = Tc.check_module env prims_mod in
 // only needed by normalization test #24, probably quite expensive otherwise
   // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Char.fsti"; "FStar.String.fsti"] dsenv env in
+
+// only needed to test tatic normalization
+  let dsenv, env = add_mods ["FStar.Range.fsti"; "FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Reflection.Types.fsti"; "FStar.Order.fst";
+                             "FStar.Reflection.Data.fst"; "FStar.Reflection.Basic.fst"; "FStar.Squash.fsti"; "FStar.Classical.fst";
+                             "FStar.List.Tot.Base.fst"; "FStar.List.Tot.Properties.fst"; "FStar.List.Tot.fst"; "FStar.Char.fsti";
+                             "FStar.String.fsti"; "FStar.Reflection.Syntax.fst"; "FStar.Reflection.Syntax.Lemmas.fst";
+                             "FStar.Reflection.Formula.fst"; "FStar.Tactics.Types.fsti"; "FStar.Tactics.Result.fst";
+                             "FStar.Tactics.Effect.fst"; "FStar.Tactics.Builtins.fst"; "FStar.Tactics.Derived.fst";
+                             "FStar.Tactics.Logic.fst"; "FStar.Tactics.fst"] dsenv env in
+
+
+  let env = {env with dsenv=dsenv} in (* VD: need to propagate add_mods to the dsenv in env *)
 
   let env = TcEnv.set_current_module env test_lid in
   tcenv_ref := Some env

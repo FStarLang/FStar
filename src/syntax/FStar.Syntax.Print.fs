@@ -185,13 +185,15 @@ let rec int_of_univ n u = match Subst.compress_univ u with
     | _ -> n, Some u
 
 let rec univ_to_string u =
-  if not (Options.ugly()) then
-    let e = Resugar.resugar_universe u Range.dummyRange in
-    let d = ToDocument.term_to_document e in
-    Pp.pretty_string (float_of_string "1.0") 100 d
-  else match Subst.compress_univ u with
-    | U_unif u -> univ_uvar_to_string u
-    | U_name x -> x.idText
+  // VD: commented out for testing NBE
+  // if not (Options.ugly()) then
+  //   let e = Resugar.resugar_universe u Range.dummyRange in
+  //   let d = ToDocument.term_to_document e in
+  //   Pp.pretty_string (float_of_string "1.0") 100 d
+  // else
+  match Subst.compress_univ u with
+    | U_unif u -> "U_unif "^univ_uvar_to_string u
+    | U_name x -> "U_name "^x.idText
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
     | U_succ u ->

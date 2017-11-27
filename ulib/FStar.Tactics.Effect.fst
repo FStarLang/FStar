@@ -89,7 +89,9 @@ unfold let by_tactic (t : tactic 'a) (p:Type) : Type = __by_tactic (reify_tactic
 // TODO: `a` is really fixed to unit for now. Make it consistent
 assume val synth_by_tactic : (#t:Type) -> (#a:Type) -> tactic a -> Tot t
 
-private let trace_wrap (t : tactic 'a) : tactic 'a =
+// VD: Just for testing
+// private let trace_wrap (t : tactic 'a) : tactic 'a =
+let trace_wrap (t : tactic 'a) : tactic 'a =
     return ();;
     r <-- t;
     return r
