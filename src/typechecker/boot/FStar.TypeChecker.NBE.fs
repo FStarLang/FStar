@@ -152,7 +152,6 @@ and iapp (f:t) (args:list<t>) =
 
 and translate (bs:list<t>) (e:term) : t =
     BU.print1 "Term: %s\n" (P.term_to_string (SS.compress e));
-    BU.print1 "BS list: %s \n" (String.concat ", " (List.map t_to_string bs));
     match (SS.compress e).n with
     | Tm_delayed _ -> failwith "Impossible"
 
