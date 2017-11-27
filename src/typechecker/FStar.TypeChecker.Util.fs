@@ -488,6 +488,20 @@ let is_function t = match (compress t).n with
     | Tm_arrow _ -> true
     | _ -> false
 
+let label reason r f : term =
+    mk (Tm_meta(f, Meta_labeled(reason, r, false))) None f.pos
+
+let label_opt env reason r f = match reason with
+    | None -> f
+    | Some reason ->
+        if not <| Env.should_verify env
+        then f
+        else label (reason()) r f
+
+let label_guard r reason (g:guard_t) = match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f -> {g with guard_f=NonTrivial (label reason r f)}
+
 let close_comp env bvs (c:comp) =
     if U.is_ml_comp c then c
     else if env.lax
@@ -587,6 +601,45 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                   Inl (SS.subst_comp [NT(x,e)] c2, reason)
                 | _ -> aux()
             in
+            let inline_c1_as_guarded_pure_return () :bool * comp =
+              let c1_is_guarded_pure_return () :bool * list<term> =
+                let pure_return_p = FStar.Parser.Const.pconst "pure_return" in
+                let pure_assert_p = FStar.Parser.Const.pconst "pure_assert_p" in
+              
+                let rec collect_guards (t:term) (accum:list<term>) :bool * list<term> =
+                  match (SS.compress t).n with
+                  | Tm_app (head, args) ->
+                    (match (SS.compress head).n with
+                     | Tm_uinst ({ n = Tm_fvar fv }, _) when fv_eq_lid fv pure_return_p -> true, accum
+                     | Tm_uinst ({ n = Tm_fvar fv }, _) when fv_eq_lid fv pure_assert_p ->
+                       (match args with
+                        | _::p::wp::_ -> collect_guards (fst wp) ((fst p)::accum)
+                        | _           -> failwith "Impossible, pure_assert_p should have at least 3 args!")
+                     | _ -> false, accum)
+                  | _ -> false, accum
+                in
+                match c1.n with
+                | Comp { effect_args = [ (wp, _) ] } -> collect_guards wp []
+                | _                                  -> false, []
+              in
+
+              let c1_is_guarded, guards = c1_is_guarded_pure_return () in
+              if c1_is_guarded && List.length guards > 0 then
+                match subst_c2 "c1 is guarded tot" with
+                | Inl (c2, _) ->
+                  let c2 = Env.unfold_effect_abbrev env c2 in
+                  let u_res_t, res_t, wp = destruct_comp c2 in
+                  let md = Env.get_effect_decl env c2.effect_name in
+                  let wp =
+                    List.fold_left (fun wp guard ->
+                                    mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assert_p)
+                                              [S.as_arg res_t; S.as_arg <| label_opt env None (Env.get_range env) guard; S.as_arg wp] None wp.pos
+                                   ) wp guards in
+                  let c2 = mk_comp md u_res_t res_t wp [] in  //AR: dropping the flags?
+                  true, c2
+                | Inr _  -> false, c2
+              else false, c2
+            in
             let rec maybe_close t x c =
                 match (N.unfold_whnf env t).n with
                 | Tm_refine(y, _) ->
@@ -607,26 +660,30 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
             then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
-            else match e1opt, b with
-                 | Some e, Some x ->
-                   if U.is_total_comp c1
-                   && not (Syntax.is_null_bv x)
-                   then let c2 = SS.subst_comp [NT(x,e)] c2 in
-                        let x = {x with sort = U.comp_result c1} in
-                        Inl (maybe_close x.sort x c2, "c1 Tot")
-                        //forall (_:t). c2[e/x]
-                        //It's important to have that (forall (_:t)) since
-                        //if x does not appear free in e,
-                        //then it may still be important to know that t is inhabited
-                   else aux ()
-                 | _ -> aux ()
+            else
+              let c1_is_guarded_tot, ret_c2 = inline_c1_as_guarded_pure_return () in
+              if c1_is_guarded_tot then Inl (ret_c2, "c1 is guarded tot")
+              else
+                match e1opt, b with
+                   | Some e, Some x ->
+                     if U.is_total_comp c1
+                     && not (Syntax.is_null_bv x)
+                     then let c2 = SS.subst_comp [NT(x,e)] c2 in
+                          let x = {x with sort = U.comp_result c1} in
+                          Inl (maybe_close x.sort x c2, "c1 Tot")
+                          //forall (_:t). c2[e/x]
+                          //It's important to have that (forall (_:t)) since
+                          //if x does not appear free in e,
+                          //then it may still be important to know that t is inhabited
+                     else aux ()
+                   | _ -> aux ()
           in
           match try_simplify () with
           | Inl (c, reason) ->
             if debug env Options.Extreme
             || debug env <| Options.Other "bind"
-            then BU.print4 "Simplified (because %s) bind %s %s to %s\n"
-                            reason (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c);
+            then BU.print5 "Simplified (because %s) bind c1: %s\n\nc2: %s\n\nto c: %s\n\nWith effect lid: %s\n\n"
+                            reason (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c) (Print.lid_to_string joined_eff);
             c
           | Inr reason ->
             let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
@@ -647,20 +704,6 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       (* TODO : these cflags might be inconsistent with the one returned by bind_it  !!! *)
       cflags=[];
       comp=bind_it}
-
-let label reason r f : term =
-    mk (Tm_meta(f, Meta_labeled(reason, r, false))) None f.pos
-
-let label_opt env reason r f = match reason with
-    | None -> f
-    | Some reason ->
-        if not <| Env.should_verify env
-        then f
-        else label (reason()) r f
-
-let label_guard r reason (g:guard_t) = match g.guard_f with
-    | Trivial -> g
-    | NonTrivial f -> {g with guard_f=NonTrivial (label reason r f)}
 
 let weaken_guard g1 g2 = match g1, g2 with
     | NonTrivial f1, NonTrivial f2 ->
@@ -732,7 +775,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                     let c2 = mk_comp md u_res_t res_t wp flags in
                     c2
              end
-       in
+         in
        {lc with eff_name=norm_eff_name env lc.eff_name;
                 cflags=(if U.is_pure_lcomp lc && not <| U.is_function_typ lc.res_typ then flags else []);
                 comp=strengthen},
