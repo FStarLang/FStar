@@ -4,13 +4,16 @@ open FStar.All
 open FStar
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
-
+open FStar.Ident
+  
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module Range = FStar.Range
 module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module BU = FStar.Util
+module Env = FStar.TypeChecker.Env
+
 
 (* Utils *)
 
@@ -27,27 +30,28 @@ let map_rev (f : 'a -> 'b) (l : list<'a>) : list<'b> =
 let debug_term (t : term) =
   BU.print1 "%s\n" (P.term_to_string t)
 
+let debug_sigmap (m : BU.smap<sigelt>) =
+  BU.smap_fold m (fun k v u -> BU.print2 "%s -> %%s\n" k (P.sigelt_to_string_short v)) ()
+
 type var = bv
 type sort = int
 
 //IN F*: type atom : Type0 =
 type atom = //JUST FSHARP
   | Var of var
-  | Sort of sort (* for full CiC -- not used right now *)
-  | Prod of t * t (* for full CiC -- not used right now *)
+  | Type of universe (* Zoe: Not sure why this needs to be an atom, just following the paper *)
   | Match of t * (* the scutinee *)
              (t -> t) (* the closure that pattern matches the scrutiny *) 
   | Rec of letbinding * list<t> (* Danel: This wraps a unary F* rec. def. as a thunk in F# *)
 //IN F*: and t : Type0 =
 and t = //JUST FSHARP
   | Lam of (t -> t)
-  | Fix of (t -> t) (* potentially recursive (i.e. a lambda inside ). The only difference with [Lam] is that there is an [is_accu] for the argument during application *)
   | Accu of atom * list<t>
   (* For simplicity represent constructors with fv as in F* *)
-  | Construct of fv * list<t>
+  | Construct of fv * list<t> (* Zoe: This is used for both type and data constructors*)
   | Unit
   | Bool of bool
-  | Universe of universe
+  // | Universe of universe
 type head = t
 type annot = option<t> 
 
@@ -61,6 +65,7 @@ let mkConstruct i ts = Construct(i,ts)
 let mkAccuVar (v:var) = Accu(Var v, [])
 let mkAccuMatch (s : t) (c : t -> t) = Accu(Match (s, c), [])
 let mkAccuRec (b:letbinding) (env:list<t>) = Accu(Rec(b, env), [])
+let mkAccTyp (u:universe) = Accu(Type u, [])
 
 let isAccu (trm:t) = 
   match trm with 
@@ -80,7 +85,7 @@ let rec test_args ts cnt =
   | [] -> cnt <= 0 
   | t :: ts -> (not (isAccu t)) && test_args ts (cnt - 1)
 
-(* It count the number of abstractions in the body of a let rec. 
+(* Count the number of abstractions in the body of a let rec. 
    It accounts for abstractions instantiated inside the body.
    This analysis needs further refinement, for example see the let in case. 
 *)
@@ -150,43 +155,80 @@ and iapp (f:t) (args:list<t>) =
   | [] -> f
   | _ -> iapp (app f (List.hd args)) (List.tl args)
 
-and translate (bs:list<t>) (e:term) : t =
-    BU.print1 "Term: %s\n" (P.term_to_string (SS.compress e));
+and translate (env:Env.env) (bs:list<t>) (e:term) : t =
     match (SS.compress e).n with
-    | Tm_delayed _ -> failwith "Impossible"
-
+    | Tm_delayed _ -> failwith "Tm_delayed: Impossible"
+      
+    | Tm_unknown _ -> failwith "Tm_unknown: Impossible"
+      
     | Tm_constant (FStar.Const.Const_unit) ->
       Unit
 
     | Tm_constant (FStar.Const.Const_bool b) ->
       Bool b
 
+    | Tm_constant c -> 
+      let err = "Tm_constant " ^ (P.const_to_string c) ^ ": Not yet implemented" in
+      debug_term e; failwith err
+      
     | Tm_bvar db -> //de Bruijn
       List.nth bs db.index
 
+     | Tm_uinst (t, [u]) ->
+         BU.print1 "Term with univs: %s\n" (P.term_to_string t);
+         BU.print1 "Univ %s\n" (P.univ_to_string u);
+         // app (translate bs t) (Universe (SS.compress_univ u))
+         translate env bs t
+
+     | Tm_uinst (t, u::us) ->
+         BU.print1 "Term with univs: %s\n" (P.term_to_string t);
+         // List.iter (fun x -> BU.print1 "Univ %s\n" (P.univ_to_string (SS.compress_univ x))) u;
+         // translate ((map_rev (fun x -> mkAccuUniv (SS.compress_univ x)) u) @ bs) t
+         debug_term e; failwith "Not yet implemented Tm_uinst"
+
+    | Tm_type u -> mkAccTyp u
+
+    | Tm_arrow (bs, c) -> debug_term e; failwith "Tm_arrow: Not yet implemented"
+
+    | Tm_refine _ -> debug_term e; failwith "Tm_refine: Not yet implemented"
+
+    | Tm_ascribed _ -> debug_term e; failwith "Tm_ascribed: Not yet implemented"
+
+    | Tm_uvar _ -> debug_term e; failwith "Tm_uvar: Not yet implemented"
+    
+    | Tm_meta (e, _) -> translate env bs e
+    
     | Tm_name x ->
       mkAccuVar x
 
     | Tm_abs ([x], body, _) ->
-      Lam (fun (y:t) -> translate (y::bs) body)
+      Lam (fun (y:t) -> translate env (y::bs) body)
 
-    | Tm_fvar v ->
-      mkConstruct v []
-      
+    | Tm_fvar fvar ->
+      let find_in_sigtab (env : Env.env) (lid : lident) : option<sigelt> = BU.smap_try_find env.sigtab (text_of_lid lid) in
+      (match find_in_sigtab env fvar.fv_name.v with 
+       | Some { sigel = Sig_let ((is_rec, [lb]), _) } ->
+         if is_rec then 
+           mkAccuRec lb [] 
+         else 
+           translate env [] lb.lbdef
+       | None -> mkConstruct fvar [] (* Zoe : Treat all other cases as type/data constructors for now. *)
+         (* Zoe : Z and S dataconstructors from the examples are not in the environment *) 
+       )
     | Tm_abs (x::xs, body, _) ->
       let rest = S.mk (Tm_abs(xs, body, None)) None Range.dummyRange in
       let tm = S.mk (Tm_abs([x], rest, None)) None e.pos in
-      translate bs tm
+      translate env bs tm
 
     | Tm_app (e, [arg]) ->
       BU.print2 "!!!! %s / %s\n" (P.term_to_string e) (P.term_to_string (fst arg));
-      app (translate bs e) (translate bs (fst arg))
+      app (translate env bs e) (translate env bs (fst arg))
 
     | Tm_app(head, arg::args) ->
       BU.print2 "!!! %s / %s\n" (P.term_to_string head) (P.term_to_string (fst arg));
       let first = S.mk (Tm_app(head, [arg])) None Range.dummyRange in
       let tm = S.mk (Tm_app(first, args)) None e.pos in
-      translate bs tm
+      translate env bs tm
     
     | Tm_match(scrut, branches) ->
       let rec case (scrut : t) : t = 
@@ -195,20 +237,20 @@ and translate (bs:list<t>) (e:term) : t =
           (* Assuming that all the arguments to the pattern constructors 
              are binders -- i.e. no nested patterns for now  *) 
           (* XXX : is rev needed? *)
-          let branch = translate ((List.rev args) @ bs) (pickBranch c branches) in
+          let branch = translate env ((List.rev args) @ bs) (pickBranch c branches) in
           branch
         | _ -> 
           mkAccuMatch scrut case
       in 
-      case (translate bs scrut)
+      case (translate env bs scrut)
 
     | Tm_let((false, [lb]), body) -> // non-recursive let
-      let def = translate bs lb.lbdef in
-      translate (def::bs) body
+      let def = translate env bs lb.lbdef in
+      translate env (def::bs) body
 
     | Tm_let((true, [lb]), body) -> // recursive let with only one recursive definition
       let f = mkAccuRec lb bs in 
-      translate (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
+      translate env (f::bs) body (* Danel: storing the rec. def. as F* code wrapped in a thunk *)
 
       // this will loop infinitely when the recursive argument is symbolic 
       // let def = lb.lbdef in 
@@ -217,60 +259,45 @@ and translate (bs:list<t>) (e:term) : t =
       // translate (f::bs) body
       //failwith "Not yet implemented"
 
-     | Tm_uinst (t, [u]) ->
-         BU.print1 "Term with univs: %s\n" (P.term_to_string t);
-         BU.print1 "Univ %s\n" (P.univ_to_string u);
-         // app (translate bs t) (Universe (SS.compress_univ u))
-         translate bs t
-
-     | Tm_uinst (t, u::us) ->
-         BU.print1 "Term with univs: %s\n" (P.term_to_string t);
-         // List.iter (fun x -> BU.print1 "Univ %s\n" (P.univ_to_string (SS.compress_univ x))) u;
-         // translate ((map_rev (fun x -> mkAccuUniv (SS.compress_univ x)) u) @ bs) t
-         debug_term e; failwith "Not yet implemented Tm_uinst"
-
-     | Tm_meta (t, m) ->
-         translate bs t
-
-     | Tm_constant c -> debug_term e; failwith "Not yet implemented Tm_constant"
-     | Tm_type u -> debug_term e; failwith "Not yet implemented Tm_type"
-     | Tm_abs ([], _, _) -> debug_term e; failwith "Not yet implemented Tm_abs"
-     | Tm_arrow (b, c)-> debug_term e; failwith "Not yet implemented Tm_arrow"
-     | Tm_refine (bv, t) -> debug_term e; failwith "Not yet implemented Tm_refine"
-     | Tm_app (_, []) -> debug_term e; failwith "Not yet implemented Tm_app"
-     | Tm_ascribed (t, a, _) -> debug_term e; failwith "Not yet implemented Tm_ascribed"
-     | Tm_let ((_, _), _) -> debug_term e; failwith "Not yet implemented Tm_let"
-     | Tm_uvar (u, t) -> debug_term e; failwith "Not yet implemented Tm_uvar"
-     | Tm_unknown -> debug_term e; failwith "Not yet implemented Tm_unknown"
-      
-    // | _ -> debug_term e; failwith "Not yet implemented"
 
 (* [readback] creates named binders and not De Bruijn *)
-and readback (x:t) : term =
+and readback (env:Env.env) (x:t) : term =
     match x with
     | Unit -> S.unit_const
+    
     | Bool true -> U.exp_true_bool
     | Bool false -> U.exp_false_bool
+    
     | Lam f ->
       let x = S.new_bv None S.tun in
-      let body = readback (f (mkAccuVar x)) in
+      let body = readback env (f (mkAccuVar x)) in
       U.abs [S.mk_binder x] body None
+    
     | Construct (fv, args) -> 
-      let args = List.map (fun x -> as_arg (readback x)) args in
+      let args = List.map (fun x -> as_arg (readback env x)) args in
       (match args with 
        | [] -> (S.mk (Tm_fvar fv) None Range.dummyRange)
        | _ -> U.mk_app (S.mk (Tm_fvar fv) None Range.dummyRange) args)
+      
     | Accu (Var bv, []) ->
       S.bv_to_name bv
     | Accu (Var bv, ts) ->
-      let args = map_rev (fun x -> as_arg (readback x)) ts in
+      let args = map_rev (fun x -> as_arg (readback env x)) ts in
       U.mk_app (S.bv_to_name bv) args
+    
+    | Accu (Type u, []) ->
+      S.mk (Tm_type u) None Range.dummyRange
+    | Accu (Type u, ts) ->
+      let args = map_rev (fun x -> as_arg (readback env x)) ts in
+      U.mk_app (S.mk (Tm_type u) None Range.dummyRange) args
+               
     | Accu (Match (scrut, cases), ts) ->
-      let args = map_rev (fun x -> as_arg (readback x)) ts in
-      let head =  readback (cases scrut) in
+      let args = map_rev (fun x -> as_arg (readback env x)) ts in
+      let head =  readback env (cases scrut) in
       (match ts with 
        | [] -> head
        | _ -> U.mk_app head args)
+   
     | Accu (Rec(lb, bs), ts) ->
        let rec curry hd args = 
        match args with 
@@ -281,7 +308,7 @@ and readback (x:t) : term =
        let args_no = count_abstractions lb.lbdef in 
        // Printf.printf "Args no. %d\n" args_no;
        if test_args ts args_no then (* if the arguments are not symbolic and the application is not partial compute *)
-         readback (curry (translate ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
+         readback env (curry (translate env ((mkAccuRec lb bs) :: bs) lb.lbdef) ts)
        else (* otherwise do not unfold *)
          let head = 
            (* Zoe: I want the head to be [let rec f = lb in f]. Is this the right way to construct it? *)
@@ -291,7 +318,7 @@ and readback (x:t) : term =
            in
            S.mk (Tm_let((true, [lb]), f)) None Range.dummyRange
          in
-         let args = map_rev (fun x -> as_arg (readback x)) ts in
+         let args = map_rev (fun x -> as_arg (readback env x)) ts in
          (match ts with 
           | [] -> head
           | _ -> U.mk_app head args)
@@ -318,6 +345,7 @@ and readback (x:t) : term =
 //                      only normalizing it when it is unfolded *)
 //         | _ -> failwith "Recursive definition not a function")
 // >>>>>>> 86f93ae6edc257258f376954fed7fba11f53ff83
-    | _ -> failwith "Not yet implemented"
 
-let normalize (e:term) : term = readback (translate [] e)
+let normalize (env : Env.env) (e:term) : term = 
+  //debug_sigmap env.sigtab;
+  readback env (translate env [] e)
