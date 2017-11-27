@@ -320,8 +320,8 @@ let add_binders env binders =
 let rec translate (MLLib modules): list<file> =
   List.filter_map (fun m ->
     let m_name =
-      let (prefix, final), _, _ = m in
-      String.concat "." (prefix @ [ final ])
+      let path, _, _ = m in
+      Syntax.string_of_mlpath path
     in
     try
       BU.print1 "Attempting to translate module %s\n" m_name;
@@ -412,7 +412,7 @@ and translate_let env flavor flags lb: option<decl> =
         if List.length tvars = 0 then
           Some (DExternal (None, flags, name, translate_type env t0))
         else begin
-          BU.print1_warning "No writing anything for %s (polymorphic assume)\n" (snd name);
+          BU.print1_warning "No writing anything for %s (polymorphic assume)\n" (Syntax.string_of_mlpath name);
           None
         end
       else begin
@@ -422,7 +422,7 @@ and translate_let env flavor flags lb: option<decl> =
         with e ->
           // JP: TODO: figure out what are the remaining things we don't extract
           let msg = BU.print_exn e in
-          BU.print2_warning "Writing a stub for %s (%s)\n" (snd name) msg;
+          BU.print2_warning "Writing a stub for %s (%s)\n" (Syntax.string_of_mlpath name) msg;
           let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (None, flags, List.length tvars, t, name, binders, EAbortS msg))
       end
@@ -441,7 +441,7 @@ and translate_let env flavor flags lb: option<decl> =
         let expr = translate_expr env expr in
         Some (DGlobal (flags, name, List.length tvars, t, expr))
       with e ->
-        BU.print2_warning "Not translating definition for %s (%s)\n" (snd name) (BU.print_exn e);
+        BU.print2_warning "Not translating definition for %s (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e);
         Some (DGlobal (flags, name, List.length tvars, t, EAny))
       end
 
@@ -465,7 +465,7 @@ and translate_type_decl env ty: option<decl> =
       let name = env.module_name, name in
       let env = List.fold_left (fun env name -> extend_t env name) env args in
       if assumed then
-        let name = String.concat "." (fst name @ [ snd name ]) in 
+        let name = string_of_mlpath name in
         BU.print1_warning "Not translating type definition (assumed) for %s\n" name;
         // JP: TODO: shall we be smarter here?
         None
