@@ -830,7 +830,7 @@ let maybe_simplify_aux cfg env stack tm =
           || S.fv_eq_lid fv PC.eq3_lid
           || S.fv_eq_lid fv PC.b2t_lid
           //these are an uninterpreted predicates
-          //which we are better of treating as sub-singleton
+          //which we are better off treating as sub-singleton
           || S.fv_eq_lid fv PC.haseq_lid
           || S.fv_eq_lid fv PC.has_type_lid
           || S.fv_eq_lid fv PC.precedes_lid
