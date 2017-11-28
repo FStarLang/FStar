@@ -19,6 +19,7 @@ open FStar.ST
 open FStar.Exn
 open FStar.All
 open FStar
+open FStar.TypeChecker.Env
 open FStar.Util
 open FStar.Const
 open FStar.Ident
@@ -605,7 +606,11 @@ let resugar_pat q p = match p with
 //     Translates an F* pattern to an ML pattern
 //     The main work is erasing inaccessible (dot) patterns
 //     And turning F*'s curried pattern style to ML's fully applied ones
-let rec extract_one_pat (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlty>)
+let rec extract_one_pat (imp : bool)
+                        (g:env)
+                        (p:S.pat)
+                        (expected_topt:option<mlty>)
+                        (term_as_mlexpr:env -> S.term -> (mlexpr * e_tag * mlty))
     : env * option<(mlpattern * list<mlexpr>)> * bool =
     let ok t =
         match expected_topt with
@@ -618,16 +623,28 @@ let rec extract_one_pat (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlt
             ok
     in
     match p.v with
-    | Pat_constant (Const_int (c, None))  ->
+    | Pat_constant (Const_int (c, swopt))  ->
         // note: as-patterns are not valid F* and "let Pat_constant i = p.v"
         // is not valid F# ?!!
-        let i = Const_int (c, None) in
+        // NS: but `let (Pat_constant i) = p.v` is valid F#,
+        //     although it would warn about incomplete pattern matching
+        let mlc, ml_ty =
+            match swopt with
+            | None ->
+              with_ty ml_int_ty <| (MLE_Const (mlconst_of_const p.p (Const_int (c, None)))),
+              ml_int_ty
+            | Some sw ->
+              let source_term =
+                  FStar.ToSyntax.ToSyntax.desugar_machine_integer g.tcenv.dsenv c sw Range.dummyRange in
+              let mlterm, _, mlty = term_as_mlexpr g source_term in
+              mlterm, mlty
+        in
         //these may be extracted to bigint, in which case, we need to emit a when clause
         let x = gensym() in // as_mlident (S.new_bv None Tm_bvar) in
         let when_clause = with_ty ml_bool_ty <|
-            MLE_App(prims_op_equality, [with_ty ml_int_ty <| MLE_Var x;
-                                    with_ty ml_int_ty <| (MLE_Const <| mlconst_of_const p.p i)]) in
-        g, Some (MLP_Var x, [when_clause]), ok ml_int_ty
+            MLE_App(prims_op_equality, [with_ty ml_ty <| MLE_Var x;
+                                        mlc]) in
+        g, Some (MLP_Var x, [when_clause]), ok ml_ty
 
     | Pat_constant s     ->
         let t : term = TcTerm.tc_constant g.tcenv Range.dummyRange s in
@@ -663,14 +680,14 @@ let rec extract_one_pat (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlt
                 with Un_extractable -> None in
 
         let g, tyMLPats = BU.fold_map (fun g (p, imp) ->
-            let g, p, _ = extract_one_pat true g p None in
+            let g, p, _ = extract_one_pat true g p None term_as_mlexpr in
             g, p) g tysVarPats in (*not all of these were type vars in ML*)
 
         let (g, f_ty_opt), restMLPats = BU.fold_map (fun (g, f_ty_opt) (p, imp) ->
             let f_ty_opt, expected_ty = match f_ty_opt with
                 | Some (hd::rest, res) -> Some (rest, res), Some hd
                 | _ -> None, None in
-            let g, p, _ = extract_one_pat false g p expected_ty in
+            let g, p, _ = extract_one_pat false g p expected_ty term_as_mlexpr in
             (g, f_ty_opt), p) (g, f_ty_opt) restPats in
 
         let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
@@ -679,9 +696,11 @@ let rec extract_one_pat (imp : bool) (g:env) (p:S.pat) (expected_topt:option<mlt
             | _ -> false in
         g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat
 
-let extract_pat (g:env) p (expected_t:mlty) : (env * list<(mlpattern * option<mlexpr>)> * bool) =
+let extract_pat (g:env) (p:S.pat) (expected_t:mlty)
+                (term_as_mlexpr: env -> S.term -> (mlexpr * e_tag * mlty))
+    : (env * list<(mlpattern * option<mlexpr>)> * bool) =
     let extract_one_pat g p expected_t =
-        match extract_one_pat false g p expected_t with
+        match extract_one_pat false g p expected_t term_as_mlexpr with
         | g, Some (x, v), b -> g, (x, v), b
         | _ -> failwith "Impossible: Unable to translate pattern"
     in
@@ -1265,7 +1284,7 @@ and term_as_mlexpr' (g:env) (top:term) : (mlexpr * e_tag * mlty) =
         else
             let pat_t_compat, mlbranches = pats |> BU.fold_map (fun compat br ->
                 let pat, when_opt, branch = SS.open_branch br in
-                let env, p, pat_t_compat = extract_pat g pat t_e in
+                let env, p, pat_t_compat = extract_pat g pat t_e term_as_mlexpr in
                 let when_opt, f_when = match when_opt with
                     | None -> None, E_PURE
                     | Some w ->
