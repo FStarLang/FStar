@@ -62,7 +62,7 @@ SHOULD_NOT_VERIFY_CLOSED=bug035.fst bug043.fst bug044.fst bug063.fst bug120.fst 
   bug156.fst bug163.fst bug176.fst bug177.fst bug183.fst bug250.fst bug253.fst bug253b.fst bug262.fst bug284.fst\
   bug319.fst bug320.fst bug362.fst bug379.fst bug406.fst bug417.fst bug446.fst bug612.fst bug623.fst bug655.fst\
   bug769.fst bug769b.fst bug769d.fst bug1017.fst bug1043.fst bug1043b.fst bug1106.fst bug1106b.fst bug174.fst\
-  bug193.fst bug208.fst bug208.fst bug378.fst bug696.fst bug1090.fst bug1187.fst
+  bug193.fst bug208.fst bug208.fst bug378.fst bug696.fst bug1090.fst bug1187.fst bug380_1.fst bug380_2.fst
 
 # These will not be checked, but the SHOULD_NOT_VERIFY_BROKEN examples are expected to work since their
 # corresponding GitHub issue is closed. Consider re-opening.
