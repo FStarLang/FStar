@@ -644,7 +644,6 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             c
           | Inr reason ->
             //c1 and c2 are the two comps
-            Util.print2 "Enter here: c1: %s\n\nc2:%s\n\n" (Print.comp_to_string c1) (Print.comp_to_string c2);
             let c2 =
               if U.is_pure_or_ghost_comp c1 then
                 match e1opt, b with
@@ -663,7 +662,6 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 | _, _       -> c2
               else c2
             in
-            Util.print1 "Now here: c2:%s\n\n" (Print.comp_to_string c2);
             let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
             let bs =
                 match b with
