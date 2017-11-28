@@ -9,6 +9,6 @@ val predicateExtensionality : a:Type -> p1:predicate a -> p2:predicate a ->
   Lemma (requires (peq #a p1 p2))
 	(ensures (p1==p2))
 let predicateExtensionality a p1 p2 =  
-  PropositionalExtensionality.axiom();
+  propositional_extensionality_axiom ();
   assert (FunctionalExtensionality.feq p1 p2)
 
