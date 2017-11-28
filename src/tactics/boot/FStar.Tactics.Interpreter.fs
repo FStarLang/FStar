@@ -510,7 +510,7 @@ let rec traverse (f: pol -> Env.env -> term -> term * list<goal>) (pol:pol) (e:E
 
 let getprop (e:env) (t:term) : option<term> =
     let tn = N.normalize [N.Weak; N.HNF; N.UnfoldUntil Delta_constant] e t in
-    U.un_squash tn
+    if U.is_sub_singleton tn then Some tn else U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * FStar.Options.optionstate)> =
     tacdbg := Env.debug env (Options.Other "Tac");

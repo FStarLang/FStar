@@ -803,41 +803,8 @@ let maybe_simplify_aux cfg env stack tm =
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None
     in
-    let is_squash t =
-        let head, args = U.head_and_args t in
-        match (SS.compress head).n, args with
-        | Tm_uinst({n=Tm_fvar fv}, [u]), [(t, _)]
-          when S.fv_eq_lid fv PC.squash_lid ->
-          Some (u, t)
-        | _ -> None
-    in
-    let is_sub_singleton t =
-        let head, _ = U.head_and_args (U.unmeta t) in
-        match (U.un_uinst head).n with
-        | Tm_fvar fv ->
-          S.fv_eq_lid fv PC.squash_lid
-          || S.fv_eq_lid fv PC.and_lid
-          || S.fv_eq_lid fv PC.or_lid
-          || S.fv_eq_lid fv PC.not_lid
-          || S.fv_eq_lid fv PC.imp_lid
-          || S.fv_eq_lid fv PC.iff_lid
-          || S.fv_eq_lid fv PC.ite_lid
-          || S.fv_eq_lid fv PC.exists_lid
-          || S.fv_eq_lid fv PC.forall_lid
-          || S.fv_eq_lid fv PC.true_lid
-          || S.fv_eq_lid fv PC.false_lid
-          || S.fv_eq_lid fv PC.eq2_lid
-          || S.fv_eq_lid fv PC.eq3_lid
-          || S.fv_eq_lid fv PC.b2t_lid
-          //these are an uninterpreted predicates
-          //which we are better off treating as sub-singleton
-          || S.fv_eq_lid fv PC.haseq_lid
-          || S.fv_eq_lid fv PC.has_type_lid
-          || S.fv_eq_lid fv PC.precedes_lid
-        | _ -> false
-    in
     let maybe_squash t =
-        if is_sub_singleton t
+        if U.is_sub_singleton t
         then t
         else U.mk_squash U_zero t
     in
@@ -845,7 +812,7 @@ let maybe_simplify_aux cfg env stack tm =
         //The head of t is already a squashed operator, e.g. /\ etc.
         //no point also squashing its arguments if they're already in U_zero
         let maybe_unsquash_arg (t,q) =
-            match is_squash t with
+            match U.is_squash t with
             | Some (U_zero, t) ->
              //if we're squashing from U_zero to U_zero
              // then just remove it
@@ -920,9 +887,9 @@ let maybe_simplify_aux cfg env stack tm =
            | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
            | _ -> tm //its arg is a bool, can't unsquash
       else begin
-           match is_squash tm with
+           match U.is_squash tm with
            | Some (U_zero, t)
-             when is_sub_singleton t ->
+             when U.is_sub_singleton t ->
              //remove redundant squashes
              t
            | _ ->
@@ -933,7 +900,9 @@ let maybe_simplify_aux cfg env stack tm =
 let maybe_simplify cfg env stack tm =
     let tm' = maybe_simplify_aux cfg env stack tm in
     if Env.debug cfg.tcenv <| Options.Other "380"
-    then BU.print2 "Simplified\n\t%s to\n\t%s\n" (Print.term_to_string tm) (Print.term_to_string tm');
+    then BU.print3 "%sSimplified\n\t%s to\n\t%s\n"
+                   (if List.contains Simplify cfg.steps then "" else "NOT ")
+                   (Print.term_to_string tm) (Print.term_to_string tm');
     tm'
 
 (********************************************************************************************************************)
