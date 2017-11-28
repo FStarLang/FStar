@@ -623,11 +623,10 @@ let rec extract_one_pat (imp : bool)
             ok
     in
     match p.v with
-    | Pat_constant (Const_int (c, swopt))  ->
-        // note: as-patterns are not valid F* and "let Pat_constant i = p.v"
-        // is not valid F# ?!!
-        // NS: but `let (Pat_constant i) = p.v` is valid F#,
-        //     although it would warn about incomplete pattern matching
+    | Pat_constant (Const_int (c, swopt))
+      when Options.codegen() <> Some "Kremlin" ->
+      //Kremlin supports native integer constants in patterns
+      //Don't convert them into `when` clauses
         let mlc, ml_ty =
             match swopt with
             | None ->
