@@ -581,65 +581,26 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 (Print.comp_to_string c1)
                 (Print.lcomp_to_string lc2)
                 (Print.comp_to_string c2);
+          let aux () =
+            if U.is_trivial_wp c1
+            then match b with
+                 | None ->
+                   Inl (c2, "trivial no binder")
+                 | Some _ ->
+                   if U.is_ml_comp c2 //|| not (U.is_free [Inr x] (U.freevars_comp c2))
+                   then Inl (c2, "trivial ml")
+                   else Inr "c1 trivial; but c2 is not ML"
+            else if U.is_ml_comp c1 && U.is_ml_comp c2
+            then Inl (c2, "both ml")
+            else Inr "c1 not trivial, and both are not ML"
+          in
+          let subst_c2 reason =
+            match e1opt, b with
+            | Some e, Some x ->
+                Inl (SS.subst_comp [NT(x,e)] c2, reason)
+            | _ -> aux()
+          in
           let try_simplify () =
-            let aux () =
-                if U.is_trivial_wp c1
-                then match b with
-                     | None ->
-                       Inl (c2, "trivial no binder")
-                     | Some _ ->
-                       if U.is_ml_comp c2 //|| not (U.is_free [Inr x] (U.freevars_comp c2))
-                       then Inl (c2, "trivial ml")
-                       else Inr "c1 trivial; but c2 is not ML"
-                else if U.is_ml_comp c1 && U.is_ml_comp c2
-                then Inl (c2, "both ml")
-                else Inr "c1 not trivial, and both are not ML"
-            in
-            let subst_c2 reason =
-                match e1opt, b with
-                | Some e, Some x ->
-                  Inl (SS.subst_comp [NT(x,e)] c2, reason)
-                | _ -> aux()
-            in
-            let inline_c1_as_guarded_pure_return () :bool * comp =
-              let c1_is_guarded_pure_return () :bool * list<term> =
-                let pure_return_p = FStar.Parser.Const.pconst "pure_return" in
-                let pure_assert_p = FStar.Parser.Const.pconst "pure_assert_p" in
-              
-                let rec collect_guards (t:term) (accum:list<term>) :bool * list<term> =
-                  match (SS.compress t).n with
-                  | Tm_app (head, args) ->
-                    (match (SS.compress head).n with
-                     | Tm_uinst ({ n = Tm_fvar fv }, _) when fv_eq_lid fv pure_return_p -> true, accum
-                     | Tm_uinst ({ n = Tm_fvar fv }, _) when fv_eq_lid fv pure_assert_p ->
-                       (match args with
-                        | _::p::wp::_ -> collect_guards (fst wp) ((fst p)::accum)
-                        | _           -> failwith "Impossible, pure_assert_p should have at least 3 args!")
-                     | _ -> false, accum)
-                  | _ -> false, accum
-                in
-                match c1.n with
-                | Comp { effect_args = [ (wp, _) ] } -> collect_guards wp []
-                | _                                  -> false, []
-              in
-
-              let c1_is_guarded, guards = c1_is_guarded_pure_return () in
-              if c1_is_guarded && List.length guards > 0 then
-                match subst_c2 "c1 is guarded tot" with
-                | Inl (c2, _) ->
-                  let c2 = Env.unfold_effect_abbrev env c2 in
-                  let u_res_t, res_t, wp = destruct_comp c2 in
-                  let md = Env.get_effect_decl env c2.effect_name in
-                  let wp =
-                    List.fold_left (fun wp guard ->
-                                    mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assert_p)
-                                              [S.as_arg res_t; S.as_arg <| label_opt env None (Env.get_range env) guard; S.as_arg wp] None wp.pos
-                                   ) wp guards in
-                  let c2 = mk_comp md u_res_t res_t wp [] in  //AR: dropping the flags?
-                  true, c2
-                | Inr _  -> false, c2
-              else false, c2
-            in
             let rec maybe_close t x c =
                 match (N.unfold_whnf env t).n with
                 | Tm_refine(y, _) ->
@@ -660,11 +621,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
             then Inl (S.mk_GTotal (U.comp_result c2), "both gtot")
-            else
-              let c1_is_guarded_tot, ret_c2 = inline_c1_as_guarded_pure_return () in
-              if c1_is_guarded_tot then Inl (ret_c2, "c1 is guarded tot")
-              else
-                match e1opt, b with
+            else match e1opt, b with
                    | Some e, Some x ->
                      if U.is_total_comp c1
                      && not (Syntax.is_null_bv x)
@@ -686,6 +643,27 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                             reason (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c) (Print.lid_to_string joined_eff);
             c
           | Inr reason ->
+            //c1 and c2 are the two comps
+            let c2 =
+              if U.is_pure_or_ghost_comp c1 then
+                match subst_c2 "inline all pure" with
+                | Inl (c2, _) -> c2
+                  //we have inlined
+//                  let c2 = Env.unfold_effect_abbrev env c2 in
+//                  let u_res_t, res_t, wp = destruct_comp c2 in
+//                  let md = Env.get_effect_decl env c2.effect_name in
+//                  let wp =
+//                    match e1opt, b with
+//                    | Some e, Some bv ->
+//                      let c1 = Env.unfold_effect_abbrev env c1 in
+//                      let u_res_t1, res_t1, _ = destruct_comp c1 in
+//                      U.mk_imp (U.mk_eq2 u_res_t1 res_t1 (bv_to_name bv) e) wp
+//                    | _, _ -> wp
+//                  in
+//                  mk_comp md u_res_t res_t wp c2.flags
+                | Inr _       -> c2
+              else c2
+            in
             let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
             let bs =
                 match b with
