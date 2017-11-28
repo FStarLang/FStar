@@ -98,12 +98,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "binder_x_e4f13f20c6a154a4a71672b0064d098a_2",
         "data_elim_Bug579.TyEqu", "equality_tok_Prims.LexTop@tok",
-        "subterm_ordering_Bug579.TyEqu"
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "subterm_ordering_Bug579.TyEqu", "unit_typing"
       ],
       0,
-      "3c178f3017f85c32b29d21744afdc1fc"
+      "0323535bc0f14296294a120deb80fe4f"
     ]
   ]
 ]

@@ -105,7 +105,7 @@
         "refinement_interpretation_FStar.DM4F.Heap_Tm_refine_21289dc55e15f9aa09f9343c2dd9dd86"
       ],
       0,
-      "ef7d653c0414166181777a33d20406db"
+      "0daed8acc6b96f8cb5d8e6061418fcf2"
     ],
     [
       "FStar.DM4F.Heap.upd_tot",
@@ -177,7 +177,7 @@
         "token_correspondence_FStar.DM4F.Heap.__proj__Mkheap_rec__item__memory"
       ],
       0,
-      "0a0cc14fd953ab0453f9edc76730f59d"
+      "71d491266c4f8a62c2e45680e6b52c02"
     ],
     [
       "FStar.DM4F.Heap.alloc",
@@ -300,7 +300,7 @@
       1,
       [ "@query" ],
       0,
-      "cafaa52c298692b1d9b6fc198db123fe"
+      "a659153974b20d154e3aca4851af346d"
     ],
     [
       "FStar.DM4F.Heap.alloc_lemma",
@@ -371,7 +371,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "bdfbcf394a60ef1ace9ed4f535bafed7"
+      "49dec062649204191618ade00c7f6d05"
     ],
     [
       "FStar.DM4F.Heap.sel_upd1",

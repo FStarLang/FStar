@@ -1085,7 +1085,7 @@
         "typing_tok_ProgramOptimizations.Skip@tok", "unit_typing"
       ],
       0,
-      "cf0d1567745405260916629cc1f411c1"
+      "5860fad1bb31ac2d81220055a3d1a39c"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization2",
@@ -1205,7 +1205,7 @@
         "typing_ProgramOptimizations.rel_exp_denotation", "unit_typing"
       ],
       0,
-      "6f057a40dc6c2f19bc08847bce964717"
+      "549e7e63c8a289c7e90275eebd82afea"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization3",
@@ -1319,7 +1319,7 @@
         "typing_tok_ProgramOptimizations.RTrue@tok", "unit_typing"
       ],
       0,
-      "82c29c026f5ba9705a51874a183ef144"
+      "fc5d446b18c1895d098600455ea307d6"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization4",
@@ -1429,7 +1429,7 @@
         "typing_ProgramOptimizations.rel_exp_denotation", "unit_typing"
       ],
       0,
-      "25469980bdf3ee59406ee997c27da1b7"
+      "1325dc9151b417a784ff845e359f3aca"
     ],
     [
       "ProgramOptimizations.rhl",

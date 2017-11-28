@@ -503,7 +503,7 @@
       1,
       [ "@query" ],
       0,
-      "d502931a34d868e54b08893d62707295"
+      "2867b05c20d5c974e46ddfec717c66dc"
     ],
     [
       "BinarySearchTreeBasic.find_max_lemma",
@@ -581,7 +581,7 @@
       1,
       [ "@query" ],
       0,
-      "8197bc35da2f61f3421aa46ec2df36b1"
+      "a20ce723739449b96104b3f7791ede60"
     ],
     [
       "BinarySearchTreeBasic.find_max_eq",

@@ -146,15 +146,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "binder_x_a489a5e64fbe6f9e47d2efe45c07dd11_0", "bool_inversion",
         "disc_equation_RBTree.E", "disc_equation_RBTree.T",
-        "fuel_guarded_inversion_RBTree.rbtree_",
+        "equation_Prims.squash", "fuel_guarded_inversion_RBTree.rbtree_",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_RBTree.T_left", "subterm_ordering_RBTree.T",
-        "typing_RBTree.uu___is_T"
+        "projection_inverse_RBTree.T_left",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "subterm_ordering_RBTree.T", "typing_RBTree.uu___is_T", "unit_typing"
       ],
       0,
-      "6c805ae58d414f03921735f10c9f7020"
+      "3a22796d22747932b561efd62bd485da"
     ],
     [
       "RBTree.max_elt",
@@ -163,15 +165,17 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "binder_x_a489a5e64fbe6f9e47d2efe45c07dd11_0", "bool_inversion",
         "disc_equation_RBTree.E", "disc_equation_RBTree.T",
-        "fuel_guarded_inversion_RBTree.rbtree_",
+        "equation_Prims.squash", "fuel_guarded_inversion_RBTree.rbtree_",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_RBTree.T_right", "subterm_ordering_RBTree.T",
-        "typing_RBTree.uu___is_T"
+        "projection_inverse_RBTree.T_right",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "subterm_ordering_RBTree.T", "typing_RBTree.uu___is_T", "unit_typing"
       ],
       0,
-      "08e9525d50e9bfc6bdf575252f71ee96"
+      "b108583224b0a9a0f140f3df849ef3f5"
     ],
     [
       "RBTree.r_inv",

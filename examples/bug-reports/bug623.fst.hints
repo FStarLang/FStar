@@ -8,13 +8,14 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.V@tok",
+        "data_typing_intro_FStar.Pervasives.V@tok", "equation_Prims.squash",
         "function_token_typing_Prims.unit",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "unit_inversion", "unit_typing"
       ],
       0,
-      "09c7b8064fbe54a4a17e795066795ee7"
+      "9fb094d274d57b441ad01e57455eff87"
     ],
     [
       "Bug623.null2",
@@ -23,10 +24,29 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
+        "unit_inversion", "unit_typing"
       ],
       0,
-      "82abf5cc4ad672191c3f9e5610ca97ff"
+      "5cdf259f84b2c2cfe2969544595931ef"
+    ],
+    [
+      "Bug623.null3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_inversion", "unit_typing"
+      ],
+      0,
+      "ea31ebcc6c1277bf2baead63f1838c69"
     ]
   ]
 ]

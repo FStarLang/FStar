@@ -230,10 +230,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Monotonic.Heap.fresh", "equation_FStar.ST.mref",
         "equation_FStar.ST.ref", "equation_Prims.nat",
-        "fuel_guarded_inversion_Ex10b.point",
+        "equation_Prims.squash", "fuel_guarded_inversion_Ex10b.point",
         "function_token_typing_Prims.int", "int_typing",
         "lemma_FStar.Monotonic.Heap.lemma_contains_implies_used",
         "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_unused",
@@ -242,13 +243,15 @@
         "refinement_interpretation_Ex10b_Tm_refine_f3e142df71a242a3e99502b256642b5e",
         "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
         "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "typing_Ex10b.__proj__Point__item__x",
         "typing_Ex10b.__proj__Point__item__y",
-        "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of"
+        "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of",
+        "unit_typing"
       ],
       0,
-      "a29a0ab804c993970baa2886e004c3cb"
+      "535ef38d07d40ec07dfc69c2bb9f43ab"
     ],
     [
       "Ex10b.test2",
@@ -258,23 +261,25 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Monotonic.Heap.fresh", "equation_FStar.ST.mref",
         "equation_FStar.ST.ref", "equation_Prims.nat",
-        "function_token_typing_Prims.int", "function_token_typing_Prims.nat",
-        "int_typing",
+        "equation_Prims.squash", "function_token_typing_Prims.int",
+        "function_token_typing_Prims.nat", "int_typing",
         "lemma_FStar.Monotonic.Heap.lemma_contains_implies_used",
         "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_unused",
         "proj_equation_Ex10b.Point_x",
         "refinement_interpretation_Ex10b_Tm_refine_31c6abe7f01867055de0a732e5379bd8",
         "refinement_interpretation_Ex10b_Tm_refine_910605741ab9e2f7be62d575a8996df2",
         "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "typing_Ex10b.__proj__Point__item__x",
-        "typing_FStar.Heap.trivial_preorder"
+        "typing_FStar.Heap.trivial_preorder", "unit_typing"
       ],
       0,
-      "3f9e3c13948d2450c188890ae7a9ffbc"
+      "8dcc832ce31d5e3565ff95654db50b7b"
     ],
     [
       "Ex10b.test2",
@@ -407,10 +412,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Monotonic.Heap.fresh", "equation_FStar.ST.mref",
         "equation_FStar.ST.ref", "equation_Prims.nat",
-        "fuel_guarded_inversion_Ex10b.point",
+        "equation_Prims.squash", "fuel_guarded_inversion_Ex10b.point",
         "function_token_typing_Prims.int", "int_typing",
         "lemma_FStar.Monotonic.Heap.lemma_contains_implies_used",
         "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_unused",
@@ -419,13 +425,15 @@
         "refinement_interpretation_Ex10b_Tm_refine_f3e142df71a242a3e99502b256642b5e",
         "refinement_interpretation_FStar.Ref_Tm_refine_97700fe16f945c5ec8c6946e4b28ac5b",
         "refinement_interpretation_FStar.ST_Tm_refine_ca727a68fd7473cd20ae227f4a0ef884",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b",
         "typing_Ex10b.__proj__Point__item__x",
         "typing_Ex10b.__proj__Point__item__y",
-        "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of"
+        "typing_FStar.Heap.trivial_preorder", "typing_FStar.Ref.addr_of",
+        "unit_typing"
       ],
       0,
-      "9157daab611b9515e9f41e00b13733e4"
+      "ecae1b18f52d7ef0a3f6babafb610528"
     ]
   ]
 ]

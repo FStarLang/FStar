@@ -331,23 +331,27 @@
         "@fuel_correspondence_StackMachine.compile.fuel_instrumented",
         "@fuel_correspondence_StackMachine.expDenote.fuel_instrumented",
         "@fuel_correspondence_StackMachine.progDenote.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_irrelevance_StackMachine.compile.fuel_instrumented",
         "@fuel_irrelevance_StackMachine.expDenote.fuel_instrumented",
         "@fuel_irrelevance_StackMachine.progDenote.fuel_instrumented",
-        "@query", "StackMachine_pretyping_348f082711510f298b6584ad3416d399",
+        "@query",
+        "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "StackMachine_pretyping_348f082711510f298b6584ad3416d399",
         "assumption_FStar.Pervasives.Native.option_haseq",
         "assumption_Prims.HasEq_int", "assumption_Prims.list_haseq",
         "binder_x_2a319081b764dd27a6651686e4e88bbc_0",
         "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_2",
         "binder_x_ce0b7b036f4e4c7e19ed25969fddd4c5_1",
         "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Pervasives.Native.option",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_Prims.unit",
         "constructor_distinct_StackMachine.Binop",
         "constructor_distinct_StackMachine.Const",
         "constructor_distinct_StackMachine.IBinop",
         "constructor_distinct_StackMachine.IConst",
-        "constructor_distinct_Tm_unit", "data_typing_intro_Prims.Cons@tok",
+        "data_elim_StackMachine.Const", "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
         "data_typing_intro_StackMachine.IBinop@tok",
         "data_typing_intro_StackMachine.Times@tok",
@@ -360,12 +364,11 @@
         "equation_with_fuel_StackMachine.compile.fuel_instrumented",
         "equation_with_fuel_StackMachine.expDenote.fuel_instrumented",
         "equation_with_fuel_StackMachine.progDenote.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_StackMachine.exp",
         "function_token_typing_Prims.nat",
         "function_token_typing_StackMachine.stack",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
-        "kinding_StackMachine.instr@tok",
+        "int_inversion", "kinding_StackMachine.instr@tok",
         "lemma_StackMachine.app_assoc_reverse",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
@@ -377,13 +380,15 @@
         "projection_inverse_StackMachine.Binop__2",
         "projection_inverse_StackMachine.IBinop__0",
         "projection_inverse_StackMachine.IConst__0",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "subterm_ordering_StackMachine.Binop",
+        "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "token_correspondence_StackMachine.compile.fuel_instrumented",
-        "token_correspondence_StackMachine.progDenote.fuel_instrumented",
-        "typing_FStar.List.Tot.Base.op_At", "typing_StackMachine.compile"
+        "typing_FStar.List.Tot.Base.op_At", "typing_StackMachine.compile",
+        "typing_StackMachine.progDenote", "unit_typing"
       ],
       0,
-      "be3ec33561e82dee36058b54799e5d6f"
+      "8b7a9f497f23e859b378c283f09b20d7"
     ],
     [
       "StackMachine.app_nil_end",
@@ -423,7 +428,7 @@
         "projection_inverse_Prims.Nil_a", "typing_StackMachine.compile"
       ],
       0,
-      "15aa813fae502ed3d99fd4d58801015d"
+      "e073c50ce095b04cc513247fec8d1809"
     ],
     [
       "StackMachine.uu___is_Nat",
@@ -1305,7 +1310,7 @@
         "typing_tok_StackMachine.Bool@tok"
       ],
       0,
-      "e1b39884366df89049f5c88fbd0a4046"
+      "519d95a0c9081be8f891b19b92077f18"
     ],
     [
       "StackMachine.tcompile_correct",
@@ -1330,7 +1335,7 @@
         "unit_typing"
       ],
       0,
-      "21be3c7357be52dfec9a7d608f830038"
+      "77a1239b8a1d830e6ccef501e861253a"
     ]
   ]
 ]

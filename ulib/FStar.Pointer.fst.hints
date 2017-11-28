@@ -378,7 +378,7 @@
         "lemma_FStar.Pointer.Base.loc_disjoint_pointer_addresses"
       ],
       0,
-      "841923a2cb25cc012f4e68be58fdc008"
+      "814d58eabd32d64a768d83e47370acec"
     ],
     [
       "FStar.Pointer.loc_disjoint_union_r_elim",
@@ -473,7 +473,7 @@
         "typing_FStar.Pointer.Base.loc_union", "typing_FStar.Set.singleton"
       ],
       0,
-      "6b9f31312cf43638ddfbc27849ba3845"
+      "e960a37b8c70b09d1bc87e8a9ef06d3f"
     ],
     [
       "FStar.Pointer.buffer_includes_gsub_r_gen",

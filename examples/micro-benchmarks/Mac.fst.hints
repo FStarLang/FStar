@@ -104,7 +104,6 @@
         "equation_FStar.UInt8.byte", "equation_MAC.bytes",
         "equation_MAC.key", "equation_MAC.keysize", "equation_MAC.nbytes",
         "equation_MAC.text", "equation_Prims.eqtype",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.result",
         "fuel_guarded_inversion_MAC.entry",
         "function_token_typing_FStar.UInt8.t",
@@ -118,7 +117,7 @@
         "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "e7bd630cde16a387f3adeee139c3a13c"
+      "6835fe7fe984de110fa5d48bac6c7237"
     ]
   ]
 ]
