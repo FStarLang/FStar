@@ -324,7 +324,7 @@ let is_guard : tac<bool> =
     ret g.is_guard)
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) opts : tac<goal> =
-    let typ = U.mk_squash phi in
+    let typ = U.mk_squash (env.universe_of env phi) phi in
     bind (new_uvar reason env typ) (fun u ->
     let goal = { context = env; witness = u; goal_ty = typ; opts = opts; is_guard = false } in
     ret goal)
@@ -661,12 +661,12 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                     | pre::post::_ -> fst pre, fst post
                     | _ -> failwith "apply_lemma: impossible: not a lemma"
     in
-    // Lemma post is thunked
+    // Lemma post is thunked, and is specialized to U_zero
     let post = U.mk_app post [S.as_arg U.exp_unit] in
-    if not (do_unify goal.context (U.mk_squash post) goal.goal_ty)
+    if not (do_unify goal.context (U.mk_squash U_zero post) goal.goal_ty)
     then fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
                             (tts goal.context tm)
-                            (tts goal.context (U.mk_squash post))
+                            (tts goal.context (U.mk_squash U_zero post))
                             (tts goal.context goal.goal_ty)
     else
         let solution = N.normalize [N.Beta] goal.context (S.mk_Tm_app tm uvs None goal.context.range) in
@@ -711,7 +711,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         in
         let sub_goals = filter' (fun g goals -> not (checkone g.witness goals)) sub_goals in
         bind (add_goal_from_guard "apply_lemma guard" goal.context guard goal.opts) (fun _ ->
-        bind (if not (istrivial goal.context (U.mk_squash pre))
+        bind (if not (istrivial goal.context (U.mk_squash U_zero pre)) //lemma preconditions are in U_zero
               then add_irrelevant_goal "apply_lemma precondition" goal.context pre goal.opts
               else ret ()) (fun _ ->
         bind (add_smt_goals smt_goals) (fun _ ->

@@ -797,10 +797,55 @@ let maybe_simplify cfg env stack tm =
     if not <| List.contains Simplify cfg.steps then tm
     else
     let w t = {t with pos=tm.pos} in
-    let simp_t t = match t.n with
+    let simp_t t =
+        match t.n with
         | Tm_fvar fv when S.fv_eq_lid fv PC.true_lid ->  Some true
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
-        | _ -> None in
+        | _ -> None
+    in
+    let is_squashed t =
+        let head, _ = U.head_and_args t in
+        match (U.un_uinst head).n with
+        | Tm_fvar fv ->
+          S.fv_eq_lid fv PC.squash_lid
+          || S.fv_eq_lid fv PC.and_lid
+          || S.fv_eq_lid fv PC.or_lid
+          || S.fv_eq_lid fv PC.not_lid
+          || S.fv_eq_lid fv PC.imp_lid
+          || S.fv_eq_lid fv PC.iff_lid
+          || S.fv_eq_lid fv PC.ite_lid
+          || S.fv_eq_lid fv PC.exists_lid
+          || S.fv_eq_lid fv PC.forall_lid
+          || S.fv_eq_lid fv PC.true_lid
+          || S.fv_eq_lid fv PC.false_lid
+          || S.fv_eq_lid fv PC.eq2_lid
+          || S.fv_eq_lid fv PC.eq3_lid
+          || S.fv_eq_lid fv PC.b2t_lid
+        | _ -> false
+    in
+    let maybe_squash t =
+        if is_squashed t
+        then t
+        else U.mk_squash U_zero t
+    in
+    let squashed_head_unsquash_args t =
+        //The head of t is already a squashed operator, e.g. /\ etc.
+        //no point also squashing its arguments if they're already in U_zero
+        let maybe_unsquash_arg (t,q) =
+            let head, args = U.head_and_args t in
+            //if we're squashing from U_zero to U_zero
+            //
+            match (SS.compress head).n, args with
+            | Tm_uinst({n=Tm_fvar fv}, [U_zero]), [(t, _)]
+                when S.fv_eq_lid fv PC.squash_lid ->
+              t,q
+            | _ ->
+              t,q
+        in
+        let head, args = U.head_and_args t in
+        let args = List.map maybe_unsquash_arg args in
+        S.mk_Tm_app head args None t.pos
+    in
     let simplify arg = (simp_t (fst arg), arg) in
     match tm.n with
     | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, args)
@@ -808,32 +853,32 @@ let maybe_simplify cfg env stack tm =
       if S.fv_eq_lid fv PC.and_lid
       then match args |> List.map simplify with
            | [(Some true, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some true, _)] -> arg
+           | [(_, (arg, _)); (Some true, _)] -> maybe_squash arg
            | [(Some false, _); _]
            | [_; (Some false, _)] -> w U.t_false
-           | _ -> tm
+           | _ -> squashed_head_unsquash_args tm
       else if S.fv_eq_lid fv PC.or_lid
       then match args |> List.map simplify with
            | [(Some true, _); _]
            | [_; (Some true, _)] -> w U.t_true
            | [(Some false, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some false, _)] -> arg
-           | _ -> tm
+           | [(_, (arg, _)); (Some false, _)] -> maybe_squash arg
+           | _ -> squashed_head_unsquash_args tm
       else if S.fv_eq_lid fv PC.imp_lid
       then match args |> List.map simplify with
            | [_; (Some true, _)]
            | [(Some false, _); _] -> w U.t_true
-           | [(Some true, _); (_, (arg, _))] -> arg
+           | [(Some true, _); (_, (arg, _))] -> maybe_squash arg
            | [(_, (p, _)); (_, (q, _))] ->
              if U.term_eq p q
              then w U.t_true
-             else tm
-           | _ -> tm
+             else squashed_head_unsquash_args tm
+           | _ -> squashed_head_unsquash_args tm
       else if S.fv_eq_lid fv PC.not_lid
       then match args |> List.map simplify with
            | [(Some true, _)] ->  w U.t_false
            | [(Some false, _)] -> w U.t_true
-           | _ -> tm
+           | _ -> squashed_head_unsquash_args tm
       else if S.fv_eq_lid fv PC.forall_lid
       then match args with
            | [(t, _)]
@@ -841,7 +886,7 @@ let maybe_simplify cfg env stack tm =
              begin match (SS.compress t).n with
                    | Tm_abs([_], body, _) ->
                      (match simp_t body with
-                     | Some true ->  w U.t_true
+                     | Some true -> w U.t_true
                      | _ -> tm)
                    | _ -> tm
              end
@@ -862,7 +907,7 @@ let maybe_simplify cfg env stack tm =
       then match args with
            | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true
            | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false
-           | _ -> tm
+           | _ -> tm //its arg is a bool, can't unsquash
       else reduce_equality cfg env stack tm
     | _ -> tm
 

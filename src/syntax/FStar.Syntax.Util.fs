@@ -1001,9 +1001,9 @@ let if_then_else b t1 t2 =
     mk (Tm_match(b, [then_branch; else_branch])) None (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
 
-let mk_squash p =
+let mk_squash u p =
     let sq = fvar PC.squash_lid (Delta_defined_at_level 1) None in
-    mk_app (mk_Tm_uinst sq [U_zero]) [as_arg p]
+    mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
     let head, args = head_and_args t in
