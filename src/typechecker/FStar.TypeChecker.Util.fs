@@ -644,26 +644,26 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             c
           | Inr reason ->
             //c1 and c2 are the two comps
+            Util.print2 "Enter here: c1: %s\n\nc2:%s\n\n" (Print.comp_to_string c1) (Print.comp_to_string c2);
             let c2 =
               if U.is_pure_or_ghost_comp c1 then
-                match subst_c2 "inline all pure" with
-                | Inl (c2, _) -> c2
-                  //we have inlined
-//                  let c2 = Env.unfold_effect_abbrev env c2 in
-//                  let u_res_t, res_t, wp = destruct_comp c2 in
-//                  let md = Env.get_effect_decl env c2.effect_name in
-//                  let wp =
-//                    match e1opt, b with
-//                    | Some e, Some bv ->
-//                      let c1 = Env.unfold_effect_abbrev env c1 in
-//                      let u_res_t1, res_t1, _ = destruct_comp c1 in
-//                      U.mk_imp (U.mk_eq2 u_res_t1 res_t1 (bv_to_name bv) e) wp
-//                    | _, _ -> wp
-//                  in
-//                  mk_comp md u_res_t res_t wp c2.flags
-                | Inr _       -> c2
+                match e1opt, b with
+                | Some e, Some bv ->
+                  (match subst_c2 "inline all pure" with
+                   | Inl (c2, _) ->
+                     //we have inlined
+                     let c2_typ = Env.unfold_effect_abbrev env c2 in
+                     let u_res_t, res_t, wp = destruct_comp c2_typ in
+                     let md = Env.get_effect_decl env c2_typ.effect_name in
+                     let c1_typ = Env.unfold_effect_abbrev env c1 in
+                     let u_res_t1, res_t1, _ = destruct_comp c1_typ in
+                     let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)  [S.as_arg res_t; S.as_arg (U.mk_eq2 u_res_t1 res_t1 (bv_to_name bv) e); S.as_arg wp] None wp.pos in
+                     mk_comp md u_res_t res_t wp c2_typ.flags
+                   | Inr _ -> c2)
+                | _, _       -> c2
               else c2
             in
+            Util.print1 "Now here: c2:%s\n\n" (Print.comp_to_string c2);
             let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
             let bs =
                 match b with
@@ -673,7 +673,6 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             let mk_lam wp = U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in //we know it's total; let the normalizer reduce it
             let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
             let wp_args = [S.as_arg r1; S.as_arg t1; S.as_arg t2; S.as_arg wp1; S.as_arg (mk_lam wp2)] in
-            let k = SS.subst [NT(a, t2)] kwp in
             let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md md.bind_wp)  wp_args None t2.pos in
             mk_comp md u_t2 t2 wp []
       end
