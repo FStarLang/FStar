@@ -1375,7 +1375,9 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
                   fallback phi
               end
 
-            | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv Const.squash_lid ->
+            | Tm_fvar fv, [(t, _)] 
+              when S.fv_eq_lid fv Const.squash_lid
+                 || S.fv_eq_lid fv Const.auto_squash_lid ->
               encode_formula t env
 
             | _ when head_redex env head ->
