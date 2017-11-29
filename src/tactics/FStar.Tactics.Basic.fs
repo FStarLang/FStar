@@ -91,7 +91,7 @@ let comp_to_typ (c:comp) : typ =
 
 let is_irrelevant (g:goal) : bool =
     match U.un_squash (N.unfold_whnf g.context g.goal_ty) with
-    | Some _ -> true
+    | Some t -> true
     | _ -> false
 
 let dump_goal ps goal =
@@ -292,25 +292,26 @@ let new_uvar (reason:string) (env:env) (typ:typ) : tac<term> =
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
-let maybe_un_squash t =
-    match U.un_squash t with
-    | Some t' -> t'
-    | _ -> t
-
 (* Some utilities on goals *)
 let is_true t =
-    let t' = maybe_un_squash t in
-    match (SS.compress t').n with
-    | Tm_fvar fv -> S.fv_eq_lid fv PC.true_lid
+    match U.un_squash t with
+    | Some t' ->
+        begin match (SS.compress t').n with
+        | Tm_fvar fv -> S.fv_eq_lid fv PC.true_lid
+        | _ -> false
+        end
     | _ -> false
 
 let is_false t =
-    let t' = maybe_un_squash t in
-    match (SS.compress t').n with
-    | Tm_fvar fv -> S.fv_eq_lid fv PC.false_lid
+    match U.un_squash t with
+    | Some t' ->
+        begin match (SS.compress t').n with
+        | Tm_fvar fv -> S.fv_eq_lid fv PC.false_lid
+        | _ -> false
+        end
     | _ -> false
-
 ////////////////////////////////////////////////////////////////////
+
 
 let cur_goal : tac<goal> =
     bind get (fun p ->
@@ -352,8 +353,8 @@ let add_irrelevant_goal reason env phi opts : tac<unit> =
 
 let istrivial (e:env) (t:term) : bool =
     let steps = [N.Reify; N.UnfoldUntil Delta_constant; N.Primops; N.Simplify; N.UnfoldTac; N.Unmeta] in
-    let t1 = normalize steps e t in
-    is_true t1
+    let t = normalize steps e t in
+    is_true t
 
 let trivial : tac<unit> =
     bind cur_goal (fun goal ->
@@ -724,8 +725,14 @@ let destruct_eq' (typ : typ) : option<(term * term)> =
         None
 
 let destruct_eq (typ : typ) : option<(term * term)> =
-    let typ = maybe_un_squash typ in
-    destruct_eq' typ
+    match destruct_eq' typ with
+    | Some t -> Some t
+    | None ->
+        // Retry for a squashed one
+        begin match U.un_squash typ with
+        | Some typ -> destruct_eq' typ
+        | None -> None
+        end
 
 let split_env (bvar : bv) (e : env) : option<(env * list<bv>)> =
     let rec aux e =
@@ -958,12 +965,20 @@ let pointwise (d : direction) (tau:tac<unit>) : tac<unit> =
 
 let trefl : tac<unit> =
     bind cur_goal (fun g ->
-    match destruct_eq g.goal_ty with
-    | None -> fail1 "trefl: not an equality (%s)" (tts g.context g.goal_ty)
-    | Some (l, r) ->
-      if not (do_unify g.context l r)
-      then fail2 "trefl: not a trivial equality (%s vs %s)" (tts g.context l) (tts g.context r)
-      else solve g U.exp_unit)
+    match U.un_squash g.goal_ty with
+    | Some t ->
+        begin
+        let hd, args = U.head_and_args' t in
+        match (U.un_uinst hd).n, args with
+        | Tm_fvar fv, [_; (l, _); (r, _)] when S.fv_eq_lid fv PC.eq2_lid ->
+            if not (do_unify g.context l r)
+            then fail2 "trefl: not a trivial equality (%s vs %s)" (tts g.context l) (tts g.context r)
+            else solve g U.exp_unit
+        | hd, _ ->
+            fail1 "trefl: not an equality (%s)" (tts g.context t)
+        end
+     | None ->
+        fail "not an irrelevant goal")
 
 let dup : tac<unit> =
     bind cur_goal (fun g ->

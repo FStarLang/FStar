@@ -24,33 +24,35 @@ open FStar.Const
 module U = FStar.Util
 
 let p2l l = lid_of_path l dummyRange
+
 let pconst s       = p2l ["Prims";s]
 let psconst s      = p2l ["FStar"; "Pervasives"; s]
-let psnconst s      = p2l ["FStar"; "Pervasives" ; "Native" ; s]
+let psnconst s     = p2l ["FStar"; "Pervasives" ; "Native" ; s]
 let prims_lid      = p2l ["Prims"]
 let pervasives_lid = p2l ["FStar"; "Pervasives"]
 let fstar_ns_lid   = p2l ["FStar"]
 
 (* Primitive types *)
-let bool_lid     = pconst "bool"
-let unit_lid     = pconst "unit"
-let squash_lid   = pconst "squash"
-let string_lid   = pconst "string"
-let bytes_lid    = pconst "bytes"
-let int_lid      = pconst "int"
-let exn_lid      = pconst "exn"
-let list_lid     = pconst "list"
-let option_lid   = psnconst "option"
-let either_lid   = psconst "either"
-let pattern_lid  = pconst "pattern"
-let precedes_lid = pconst "precedes"
-let lex_t_lid    = pconst "lex_t"
-let lexcons_lid  = pconst "LexCons"
-let lextop_lid   = pconst "LexTop"
-let smtpat_lid   = pconst "smt_pat"
-let smtpatOr_lid = pconst "smt_pat_or"
-let monadic_lid  = pconst "M"
-let spinoff_lid  = pconst "spinoff"
+let bool_lid        = pconst "bool"
+let unit_lid        = pconst "unit"
+let squash_lid      = pconst "squash"
+let auto_squash_lid = pconst "auto_squash"
+let string_lid      = pconst "string"
+let bytes_lid       = pconst "bytes"
+let int_lid         = pconst "int"
+let exn_lid         = pconst "exn"
+let list_lid        = pconst "list"
+let option_lid      = psnconst "option"
+let either_lid      = psconst "either"
+let pattern_lid     = pconst "pattern"
+let precedes_lid    = pconst "precedes"
+let lex_t_lid       = pconst "lex_t"
+let lexcons_lid     = pconst "LexCons"
+let lextop_lid      = pconst "LexTop"
+let smtpat_lid      = pconst "smt_pat"
+let smtpatOr_lid    = pconst "smt_pat_or"
+let monadic_lid     = pconst "M"
+let spinoff_lid     = pconst "spinoff"
 
 let int8_lid   = p2l ["FStar"; "Int8"; "t"]
 let uint8_lid  = p2l ["FStar"; "UInt8"; "t"]

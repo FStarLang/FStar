@@ -1007,6 +1007,10 @@ let mk_squash u p =
     let sq = fvar PC.squash_lid (Delta_defined_at_level 1) None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
+let mk_auto_squash u p =
+    let sq = fvar PC.auto_squash_lid (Delta_defined_at_level 2) None in
+    mk_app (mk_Tm_uinst sq [u]) [as_arg p]
+
 let un_squash t =
     let head, args = head_and_args t in
     match (un_uinst head).n, args with
@@ -1038,11 +1042,21 @@ let is_squash t =
         Some (u, t)
     | _ -> None
 
+
+let is_auto_squash t =
+    let head, args = head_and_args t in
+    match (Subst.compress head).n, args with
+    | Tm_uinst({n=Tm_fvar fv}, [u]), [(t, _)]
+        when Syntax.fv_eq_lid fv PC.auto_squash_lid ->
+        Some (u, t)
+    | _ -> None
+
 let is_sub_singleton t =
     let head, _ = head_and_args (unmeta t) in
     match (un_uinst head).n with
     | Tm_fvar fv ->
-        Syntax.fv_eq_lid fv PC.squash_lid
+          Syntax.fv_eq_lid fv PC.squash_lid
+        || Syntax.fv_eq_lid fv PC.auto_squash_lid
         || Syntax.fv_eq_lid fv PC.and_lid
         || Syntax.fv_eq_lid fv PC.or_lid
         || Syntax.fv_eq_lid fv PC.not_lid
