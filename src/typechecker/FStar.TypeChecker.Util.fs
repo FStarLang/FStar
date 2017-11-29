@@ -643,9 +643,14 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                             reason (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c) (Print.lid_to_string joined_eff);
             c
           | Inr reason ->
+            let c1_typ = Env.unfold_effect_abbrev env c1 in
+            let u_res_t1, res_t1, _ = destruct_comp c1_typ in
             //c1 and c2 are the two comps
+            let should_inline_c1 () :bool =
+              U.is_pure_or_ghost_comp c1 && not (U.is_unit res_t1)
+            in
             let c2 =
-              if U.is_pure_or_ghost_comp c1 then
+              if should_inline_c1 () then
                 match e1opt, b with
                 | Some e, Some bv ->
                   (match subst_c2 "inline all pure" with
@@ -654,9 +659,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                      let c2_typ = Env.unfold_effect_abbrev env c2 in
                      let u_res_t, res_t, wp = destruct_comp c2_typ in
                      let md = Env.get_effect_decl env c2_typ.effect_name in
-                     let c1_typ = Env.unfold_effect_abbrev env c1 in
-                     let u_res_t1, res_t1, _ = destruct_comp c1_typ in
-                     let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)  [S.as_arg res_t; S.as_arg (U.mk_eq2 u_res_t1 res_t1 (bv_to_name bv) e); S.as_arg wp] None wp.pos in
+                     let wp =
+                       if (List.existsb (function RETURN | PARTIAL_RETURN -> true | _ -> false) c1_typ.flags) then
+                         mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)  [S.as_arg res_t; S.as_arg (U.mk_eq2 u_res_t1 res_t1 (bv_to_name bv) e); S.as_arg wp] None wp.pos
+                       else wp
+                     in
                      mk_comp md u_res_t res_t wp c2_typ.flags
                    | Inr _ -> c2)
                 | _, _       -> c2
