@@ -5,7 +5,7 @@ type ('Aheap,'Aa,'Apre) st_post_h' = 'Aa -> 'Aheap -> Obj.t[@@deriving show]
 type ('Aheap,'Aa) st_post_h = ('Aheap,'Aa,Prims.unit) st_post_h'[@@deriving
                                                                   show]
 type ('Aheap,'Aa) st_wp_h = Prims.unit -> 'Aheap st_pre_h[@@deriving show]
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___6_85) st_return = 'Ap[@@deriving show]
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___5_85) st_return = 'Ap[@@deriving show]
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) st_bind_wp = 'Awp1[@@deriving
                                                                     show]
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) st_if_then_else =
@@ -56,7 +56,7 @@ type ('Ah,'Aa,'Apre) all_post_h' = 'Aa result -> 'Ah -> Obj.t[@@deriving
 type ('Ah,'Aa) all_post_h = ('Ah,'Aa,Prims.unit) all_post_h'[@@deriving show]
 type ('Ah,'Aa) all_wp_h = Prims.unit -> 'Ah all_pre_h[@@deriving show]
 type ('Aheap,'Aa,'Awp,'Apost,'Ah0) all_ite_wp = Prims.unit[@@deriving show]
-type ('Aheap,'Aa,'Ax,'Ap,'Auu___8_1290) all_return = 'Ap[@@deriving show]
+type ('Aheap,'Aa,'Ax,'Ap,'Auu___7_1290) all_return = 'Ap[@@deriving show]
 type ('Aheap,'Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap,'Ah0) all_bind_wp = 'Awp1[@@deriving
                                                                     show]
 type ('Aheap,'Aa,'Ap,'Awp_then,'Awp_else,'Apost,'Ah0) all_if_then_else =
@@ -148,3 +148,17 @@ let uu___is_Comment: __internal_ocaml_attributes -> Prims.bool =
     match projectee with | Comment _0 -> true | uu____2398 -> false
 let __proj__Comment__item___0: __internal_ocaml_attributes -> Prims.string =
   fun projectee  -> match projectee with | Comment _0 -> _0
+let propositional_extensionality_axiom: Prims.unit -> Prims.unit =
+  fun a108  ->
+    (Obj.magic
+       (fun uu____2412  ->
+          failwith "Not yet implemented:propositional_extensionality_axiom"))
+      a108
+let propositional_eq: 'Ap1 'Ap2 . Prims.unit -> Prims.unit =
+  fun uu____2432  -> ()
+let lemma_and_commutative: 'Aa 'Ab . Prims.unit -> Prims.unit =
+  fun uu____2452  -> ()
+let lemma_and_identity: 'Aa . Prims.unit = ()
+let lemma_or_commputative: 'Aa 'Ab . Prims.unit -> Prims.unit =
+  fun uu____2512  -> ()
+let lemma_or_identity: 'Aa . Prims.unit = ()

@@ -20,7 +20,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "e871616d59e0bcee40af464c21fc586f"
+      "93016dde6dca69586dde1eaa65cb7d09"
     ],
     [
       "FStar.MRef.witness_token",
@@ -32,7 +32,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "c08f39a94fc7578ee55ec43ecf21baab"
+      "6ee30b375470595bcd56e709828e4236"
     ],
     [
       "FStar.MRef.witness_token",
@@ -56,7 +56,7 @@
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "6512f6559a6ae2563236d30daae4c696"
+      "0c665a1d1636c5aedb953c473af42577"
     ],
     [
       "FStar.MRef.recall_token",
@@ -68,7 +68,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "bce22b56ba275e6c1dbc58be84c92b4a"
+      "e71982207cbd5e0d4ea8ecae31bd5785"
     ],
     [
       "FStar.MRef.recall_token",
@@ -91,19 +91,7 @@
         "typing_FStar.Monotonic.Heap.sel", "unit_typing"
       ],
       0,
-      "449464534e64da36851d435fb48d98bb"
-    ],
-    [
-      "FStar.MRef.spred",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
-        "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
-      ],
-      0,
-      "77d840186e4309bb137e4016aa51aaae"
+      "ee63e017e382cf4e91052bd017c764f8"
     ],
     [
       "FStar.MRef.lemma_functoriality",
@@ -124,7 +112,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "786d57547f5dc6a60a88bab6e6c299f9"
+      "9d6b5579a5dd564c91082223dffcf1ac"
     ],
     [
       "FStar.MRef.recall",
@@ -138,7 +126,7 @@
         "unit_typing"
       ],
       0,
-      "2d9f61443aa17d04277c7e7173e8b895"
+      "49f5af4616a2e4700328b6a03f1508fb"
     ],
     [
       "FStar.MRef.witness",
@@ -152,7 +140,7 @@
         "unit_typing"
       ],
       0,
-      "99503026ac4d96b60b80d5e823a00440"
+      "4f0945a70da1fb7b365eaf43fea38cf0"
     ]
   ]
 ]

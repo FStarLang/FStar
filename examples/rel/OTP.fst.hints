@@ -17,7 +17,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "21771d52f332da63d01177327fb81993"
+      "2535958801b25ad097a4021f3fb79c43"
     ],
     [
       "OTP.xor_idempotent",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "b531c93a300facf065e90c8f5bad45ac"
+      "786dee89db076c5aba1d5fbb7da52002"
     ],
     [
       "OTP.xor_idempotent",
@@ -62,7 +62,7 @@
         "typing_FStar.BitVector.logxor_vec", "typing_FStar.Seq.Base.index"
       ],
       0,
-      "2f432d5a3b546d8a41ec385ffc33814a"
+      "0012b9c7bb9d3c63d6f7fdba306a9b78"
     ],
     [
       "OTP.bij",
@@ -71,18 +71,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "equation_FStar.DM4F.OTP.Heap.elem",
         "equation_FStar.DM4F.OTP.Heap.sel",
         "equation_FStar.DM4F.OTP.Heap.size",
-        "equation_FStar.DM4F.OTP.Heap.to_id", "equation_OTP.op_Hat_Hat",
+        "equation_FStar.DM4F.OTP.Heap.to_id",
+        "equation_FStar.DM4F.OTP.Heap.upd", "equation_OTP.op_Hat_Hat",
         "equation_Prims.nat", "equation_Prims.pos",
         "function_token_typing_FStar.DM4F.OTP.Heap.q",
         "function_token_typing_FStar.DM4F.OTP.Heap.size", "int_inversion",
-        "int_typing",
-        "interpretation_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40",
-        "lemma_FStar.DM4F.OTP.Heap.lemma_eq_intro",
+        "int_typing", "lemma_FStar.DM4F.OTP.Heap.lemma_eq_intro",
         "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd1",
         "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd2",
         "lemma_OTP.xor_idempotent", "projection_inverse_BoxInt_proj_0",
@@ -93,10 +91,11 @@
         "token_correspondence_FStar.BitVector.logxor_vec",
         "token_correspondence_OTP.op_Hat_Hat",
         "typing_FStar.BitVector.logxor_vec",
-        "typing_FStar.DM4F.OTP.Heap.sel", "typing_FStar.DM4F.OTP.Heap.to_id"
+        "typing_FStar.DM4F.OTP.Heap.sel", "typing_FStar.DM4F.OTP.Heap.to_id",
+        "typing_FStar.DM4F.OTP.Heap.upd"
       ],
       0,
-      "c00943e444d86607c9813532242df24e"
+      "6322a2ffcb431f16067f529ee68483d8"
     ],
     [
       "OTP.otp",
@@ -127,7 +126,7 @@
         "typing_FStar.DM4F.OTP.Heap.incr"
       ],
       0,
-      "903b5286c34107214c2aca0f733487b9"
+      "67cde4c0bbcf30f2005403868f857916"
     ],
     [
       "OTP.xor_prop",
@@ -145,7 +144,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "1c72927a0db67df74321698fdcd844a1"
+      "0f2d466ce182d11d06a53a2c2cd7e1f4"
     ],
     [
       "OTP.xor_prop",
@@ -154,7 +153,7 @@
       1,
       [ "@query" ],
       0,
-      "19978ec48d27b4da4c37a896a987726a"
+      "de987a86c6e4ca99b30326ca78834b25"
     ],
     [
       "OTP.xor_prop",
@@ -195,7 +194,7 @@
         "typing_OTP.op_Hat_Hat"
       ],
       0,
-      "ede80dbb3c83d1a9a9f0f692cac07364"
+      "eaf8eb9cb8730264f5fd89a1da68011c"
     ],
     [
       "OTP.otp_secure",
@@ -210,7 +209,7 @@
         "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "78305a75c8b391e4c4e28c8c26777144"
+      "d9c5101b62edaa440f1c037edc51604c"
     ],
     [
       "OTP.otp_secure",
@@ -225,7 +224,7 @@
         "haseqFStar.BitVector_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e"
       ],
       0,
-      "acbb769bc2cd67ee4d640fbadadc5ea0"
+      "1158a303b95dabe5cc16aa6d453ff339"
     ],
     [
       "OTP.otp_secure",
@@ -310,7 +309,7 @@
         "typing_OTP_Tm_abs_ece719c3a1a611fb54564d84ffd27f40", "unit_typing"
       ],
       0,
-      "5a0bb7f4d4c95f5fe32c99ac057367c3"
+      "61ddeb8b70e4a6c1de02bdae34897bdd"
     ],
     [
       "OTP.one_time_pad",
@@ -344,7 +343,7 @@
         "typing_FStar.DM4F.OTP.Heap.incr"
       ],
       0,
-      "d3671a5cd198a75fdee35af902cb1dd7"
+      "5f4245e46c8be1e93764796668806c43"
     ],
     [
       "OTP.one_time_pad_ok",
@@ -447,7 +446,7 @@
         "unit_typing"
       ],
       0,
-      "f5f5072fbf5b747ab1879ee8dab09436"
+      "bcc9f73b438e821cd4f5ac5da6a80b4c"
     ]
   ]
 ]

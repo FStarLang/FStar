@@ -1,5 +1,5 @@
 [
-  "|ƒKñ\u001c›«Ê\u0019 _\u0003¼&=g",
+  "6žP*¼\u001cQÂ\u001eHÞÕ}+á\f",
   [
     [
       "FStar.Pervasives.uu___is_V",
@@ -362,6 +362,45 @@
       ],
       0,
       "2203ac346a79747e68354018bd8b3ef7"
+    ],
+    [
+      "FStar.Pervasives.propositional_eq",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3f281308b4f6117a45544480912b8c88"
+    ],
+    [
+      "FStar.Pervasives.lemma_and_commutative",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_and", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_inversion", "unit_typing"
+      ],
+      0,
+      "34dc48c0177c43cffdbc691c245622c4"
+    ],
+    [
+      "FStar.Pervasives.lemma_or_commputative",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equation_Prims.l_or", "equation_Prims.squash",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "unit_inversion", "unit_typing"
+      ],
+      0,
+      "3bc91270c3e1fa1c4fc73330dff4733f"
     ]
   ]
 ]

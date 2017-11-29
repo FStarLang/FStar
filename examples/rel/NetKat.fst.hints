@@ -11,7 +11,7 @@
         "assumption_Prims.HasEq_string"
       ],
       0,
-      "f9844eeb22d80668949ac4ccfc4e2b1e"
+      "278059d2051ba6213a2ad92dbbd22d94"
     ],
     [
       "NetKat.uu___is_PrTrue",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "2ab3d657475687c63c4a6a0d55e9ec46"
+      "fe9334f059a5881664bb1d766bfab98d"
     ],
     [
       "NetKat.uu___is_PrFalse",
@@ -29,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "7e508436b1c326a12420405577426edb"
+      "79e23cf24d05d40fb1dd905e264fb838"
     ],
     [
       "NetKat.uu___is_PrFieldEq",
@@ -38,7 +38,7 @@
       1,
       [ "@query" ],
       0,
-      "72b18041ae8308ae80644097ccfd3dcc"
+      "d6357cc1009a20a94642750280e0cb9b"
     ],
     [
       "NetKat.__proj__PrFieldEq__item__f",
@@ -51,7 +51,7 @@
         "refinement_interpretation_NetKat_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
       ],
       0,
-      "5c106bbccd75b4cf35c6c6f5b92230bf"
+      "a73cc7b54f92ed85542443f4c53e64ff"
     ],
     [
       "NetKat.__proj__PrFieldEq__item__v",
@@ -64,7 +64,7 @@
         "refinement_interpretation_NetKat_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
       ],
       0,
-      "90632ee6d63e2803fafaa5ee52f6a3ea"
+      "dc3f7658ba9e09dee56c363694cee0e3"
     ],
     [
       "NetKat.uu___is_PrOr",
@@ -73,7 +73,7 @@
       1,
       [ "@query" ],
       0,
-      "fafa76857ebc275f17a3e8ca52b710de"
+      "60c4e227575aea6cdc5381d9193c5f0b"
     ],
     [
       "NetKat.__proj__PrOr__item__p1",
@@ -86,7 +86,7 @@
         "refinement_interpretation_NetKat_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
       ],
       0,
-      "30ed49a233a84795ee8d0824259e5437"
+      "c723481c15d861539ee10913a93772a6"
     ],
     [
       "NetKat.__proj__PrOr__item__p2",
@@ -99,7 +99,7 @@
         "refinement_interpretation_NetKat_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
       ],
       0,
-      "93f377a37055c8e3be1ac01ae0c67f5b"
+      "b4938acad615f5fd303cfa5a481d030d"
     ],
     [
       "NetKat.uu___is_PrAnd",
@@ -108,7 +108,7 @@
       1,
       [ "@query" ],
       0,
-      "d1770890e171563d8564f6f11d6dd895"
+      "9a47ac9153bef2642a2387ab6b49ac6d"
     ],
     [
       "NetKat.__proj__PrAnd__item__p1",
@@ -121,7 +121,7 @@
         "refinement_interpretation_NetKat_Tm_refine_1946ce43305aefbee803bf8108076b85"
       ],
       0,
-      "27e9824e807cb74267e957af46d0f656"
+      "4ae706c73d484605d987fdb515f99c89"
     ],
     [
       "NetKat.__proj__PrAnd__item__p2",
@@ -134,7 +134,7 @@
         "refinement_interpretation_NetKat_Tm_refine_1946ce43305aefbee803bf8108076b85"
       ],
       0,
-      "8a0cbba9af55f67c6377c333089efa01"
+      "24178856e5b506740028a7f7120045c0"
     ],
     [
       "NetKat.uu___is_PrNot",
@@ -143,7 +143,7 @@
       1,
       [ "@query" ],
       0,
-      "09f8521788019c1fb817eedff73a6879"
+      "166413bb10090ffc3d7b65ee8ec26c71"
     ],
     [
       "NetKat.__proj__PrNot__item__p",
@@ -156,7 +156,7 @@
         "refinement_interpretation_NetKat_Tm_refine_7760677cd8a5f6510bfc8a68ad245267"
       ],
       0,
-      "7d625753b7df41b44a174028bf46bd37"
+      "ddcb640559c2017b79e6e04b95f74842"
     ],
     [
       "NetKat.uu___is_PoFilter",
@@ -165,7 +165,7 @@
       1,
       [ "@query" ],
       0,
-      "5ffd57d1fc0dabc7091876af7047e288"
+      "df1e4c240710ca477a50c2ccf45cd422"
     ],
     [
       "NetKat.__proj__PoFilter__item__p",
@@ -178,7 +178,7 @@
         "refinement_interpretation_NetKat_Tm_refine_e0380cdb056d7ca9abeae44e9ba6fa85"
       ],
       0,
-      "2eeb1e76a6e9b1381d315d6933fb4fbe"
+      "563d87bbfa1e8eb5be1839e8a90051c1"
     ],
     [
       "NetKat.uu___is_PoMod",
@@ -187,7 +187,7 @@
       1,
       [ "@query" ],
       0,
-      "0987b5c80928b8f1bd32d6db264835f6"
+      "9ca9164e22e55aab515861895c730edd"
     ],
     [
       "NetKat.__proj__PoMod__item__f",
@@ -200,7 +200,7 @@
         "refinement_interpretation_NetKat_Tm_refine_cbdb8a3b39554f903e421008232b8117"
       ],
       0,
-      "c83811bdeedb340383685a199e4a8947"
+      "e6456c86477851b31fff2406f2c3ab8a"
     ],
     [
       "NetKat.__proj__PoMod__item__v",
@@ -213,7 +213,7 @@
         "refinement_interpretation_NetKat_Tm_refine_cbdb8a3b39554f903e421008232b8117"
       ],
       0,
-      "0e080bfcab8648e60740c64b4bb3d330"
+      "ef332d541982d004b9c77bd7812ba5e8"
     ],
     [
       "NetKat.uu___is_PoUnion",
@@ -222,7 +222,7 @@
       1,
       [ "@query" ],
       0,
-      "fa4e4871f2ecc0d5a9b40831fdf75091"
+      "e37d274b65f57bfaf4713b04eae6e1b3"
     ],
     [
       "NetKat.__proj__PoUnion__item__p1",
@@ -235,7 +235,7 @@
         "refinement_interpretation_NetKat_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
       ],
       0,
-      "14f2083ac6c36f945d77397cdd0b23cb"
+      "8bca17cd84f211ae5e2e6b2c345c88ef"
     ],
     [
       "NetKat.__proj__PoUnion__item__p2",
@@ -248,7 +248,7 @@
         "refinement_interpretation_NetKat_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
       ],
       0,
-      "01e5e6133f2ab94e239db4eaeb075910"
+      "f2e1c51ef1c14cf2aec91703006ad80f"
     ],
     [
       "NetKat.uu___is_PoSeq",
@@ -257,7 +257,7 @@
       1,
       [ "@query" ],
       0,
-      "bccc6c0b99bdc0a9b8e081fc73d2e229"
+      "1b70d968d74b08df38f1fabfe66104b9"
     ],
     [
       "NetKat.__proj__PoSeq__item__p1",
@@ -270,7 +270,7 @@
         "refinement_interpretation_NetKat_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
       ],
       0,
-      "6068a31c2d7a04213c00bb1eac78e1dd"
+      "4ac7c56da98a52c36a7a77d8153ba33e"
     ],
     [
       "NetKat.__proj__PoSeq__item__p2",
@@ -283,7 +283,7 @@
         "refinement_interpretation_NetKat_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
       ],
       0,
-      "bac7cc0d04993aa2d1e22e69e7e966f8"
+      "57d1de49ae4bbc5808d677ba86ed79b7"
     ],
     [
       "NetKat.uu___is_PoStar",
@@ -292,7 +292,7 @@
       1,
       [ "@query" ],
       0,
-      "525938d768189a3ed3e2977d752417b8"
+      "85a37c938761d6ce63ec578b233303a8"
     ],
     [
       "NetKat.__proj__PoStar__item__p",
@@ -305,7 +305,7 @@
         "refinement_interpretation_NetKat_Tm_refine_85f8b73a81bd8fc5fad5d793e629d0e4"
       ],
       0,
-      "6a42d3fa13ab18157da18c423f21b4e0"
+      "37b8e600b066942031bcfec6ce13d026"
     ],
     [
       "NetKat.uu___is_PoDup",
@@ -314,7 +314,7 @@
       1,
       [ "@query" ],
       0,
-      "908a15560ee1e697b251da2e30c2aa17"
+      "bd73e6e9b2aa64a393aeb57e09492f11"
     ]
   ]
 ]
