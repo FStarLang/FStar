@@ -1662,16 +1662,23 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
     (* <force_quasi_pattern> *)
     let force_quasi_pattern xs_opt (t, u, k, args) =
+            let debug f =
+              if Env.debug env <| Options.Other "Rel"
+              then f()
+            in
             (* A quasi pattern is a U x1...xn, where not all the xi are distinct
             *)
            let rec aux pat_args              (* pattern arguments, so far *)
+                       pat_args_set          (* conceptually the same as the previous arg, but as a set of bvs *)
                        pattern_vars          (* corresponding formals *)
-                       pattern_var_set       (* formals a set of bvs *)
+                       pattern_var_set       (* conceptually the same as the previous arg, but as a set of bvs *)
                        seen_formals          (* all formal parameters handles so far *)
                        formals               (* remaining formals to examine *)
                        res_t                 (* result type *)
                        args                  (* remaining actuals *)
                         : option<(uvi * flex_t)> =
+              debug (fun () ->
+                     BU.print1 "pat_args so far: {%s}\n" (Print.binders_to_string ", " pat_args));
               match formals, args with
                 | [], [] ->
                     let pat_args = List.rev pat_args |> List.map (fun (x, imp) -> (S.bv_to_name x, imp)) in
@@ -1688,9 +1695,14 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     Some (sol, (t_app, u1, k1, pat_args))
 
                 | formal::formals, hd::tl ->
+                  debug (fun () ->
+                            BU.print2 "force_quasi_pattern (case 2): formal=%s, hd=%s\n"
+                                     (Print.binder_to_string formal)
+                                      (Print.args_to_string [hd]));
                   begin match pat_var_opt env pat_args hd with
                     | None -> //hd is not a pattern var
-                      aux pat_args pattern_vars pattern_var_set (formal::seen_formals) formals res_t tl
+                      debug (fun () -> BU.print_string "not a pattern var\n");
+                      aux pat_args pat_args_set pattern_vars pattern_var_set (formal::seen_formals) formals res_t tl
 
                     | Some y -> //hd=y and does not occur in pat_args
                       let maybe_pat = match xs_opt with
@@ -1698,26 +1710,47 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         | Some xs -> xs |> BU.for_some (fun (x, _) -> S.bv_eq x (fst y)) in //it's in the intersection
 
                       if not maybe_pat
-                      then aux pat_args pattern_vars pattern_var_set (formal::seen_formals) formals res_t tl
+                      then aux pat_args pat_args_set pattern_vars pattern_var_set (formal::seen_formals) formals res_t tl
                       else //for y to be a pattern var, the type of formal has to be dependent (at most) on the other pattern_vars
+                          let _ = debug (fun () -> BU.print2 "%s (var = %s) maybe pat\n"
+                                                    (Print.args_to_string [hd])
+                                                    (Print.binder_to_string y)) in
                           let fvs = Free.names (fst y).sort in
-                          if not (BU.set_is_subset_of fvs pattern_var_set)
+                          if not (BU.set_is_subset_of fvs pat_args_set)
                           then //y can't be a pattern variable ... its type is dependent on a non-pattern variable
-                               aux pat_args pattern_vars pattern_var_set (formal::seen_formals) formals res_t tl
-                          else aux (y::pat_args) (formal::pattern_vars) (BU.set_add (fst formal) pattern_var_set) (formal::seen_formals) formals res_t tl
+                               let _ = debug (fun () -> BU.print "BUT! %s (var = %s) is not a pat because its \
+                                                                  type %s contains {%s} fvs \
+                                                                  which are not included in the pattern vars so far {%s}\n"
+                                                    [Print.args_to_string [hd];
+                                                     Print.binder_to_string y;
+                                                     Print.term_to_string (fst y).sort;
+                                                     names_to_string fvs;
+                                                     names_to_string pattern_var_set]) in
+                               aux pat_args pat_args_set pattern_vars pattern_var_set (formal::seen_formals) formals res_t tl
+                          else aux (y::pat_args)
+                                   (BU.set_add (fst y) pat_args_set)
+                                   (formal::pattern_vars)
+                                   (BU.set_add (fst formal) pattern_var_set)
+                                   (formal::seen_formals)
+                                   formals res_t tl
                   end
 
                  | [], _::_ ->
                    let more_formals, res_t = U.arrow_formals (N.unfold_whnf env res_t) in
                    begin match more_formals with
                    | [] -> None
-                   | _ -> aux pat_args pattern_vars pattern_var_set seen_formals more_formals res_t args
+                   | _ -> aux pat_args pat_args_set pattern_vars pattern_var_set seen_formals more_formals res_t args
                    end
 
                  | _::_, [] -> None
            in
            let all_formals, res_t = U.arrow_formals (N.unfold_whnf env k) in
-           aux [] [] (S.new_bv_set()) [] all_formals res_t args
+           debug (fun () -> BU.print4 "force_quasi_pattern of %s with all_formals={%s}, res_t={%s} and args={%s}\n"
+                            (Print.term_to_string t)
+                            (Print.binders_to_string ", " all_formals)
+                            (Print.term_to_string res_t)
+                            (Print.args_to_string args));
+           aux [] (S.new_bv_set()) [] (S.new_bv_set()) [] all_formals res_t args
     in
     (* </force_quasi_pattern> *)
 
@@ -1748,8 +1781,8 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let im = U.abs xs (h gs_xs) (U.residual_comp_of_comp c |> Some) in
         if Env.debug env <| Options.Other "Rel"
         then BU.print
-                "Imitating gs_xs=%s\n\t binders are {%s}, comp=%s\n\t%s (%s)\nsub_probs = %s\nformula=%s\n"
-                   [(List.map tc_to_string gs_xs |> String.concat "\n\t");
+                "Imitating gs_xs=\n\t>%s\n\t binders are {%s}, comp=%s\n\t%s (%s)\nsub_probs = %s\nformula=%s\n"
+                   [(List.map tc_to_string gs_xs |> String.concat "\n\t>");
                     (Print.binders_to_string ", " xs);
                     (Print.comp_to_string c);
                     (Print.term_to_string im);
@@ -1890,13 +1923,35 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | None ->
               imitate_or_project n lhs rhs stopt
             | Some(sol, forced_lhs_pattern) ->
-              let tx = UF.new_transaction () in
-              let wl = extend_solution (p_pid orig) [sol] wl in
-              match solve_t env (as_tprob orig) wl with
-              | Failed _ ->
-                UF.rollback tx;
-                imitate_or_project n lhs rhs stopt
-              | sol -> sol
+              let (lhs_t, _, _, _) = forced_lhs_pattern in
+              let _ = if Env.debug env (Options.Other "Rel")
+                      then let t0, _, _, _ = lhs in
+                           let t1, _, _, _ = forced_lhs_pattern in
+                           BU.print2 "force_quasi_pattern succeeded, turning %s into %s\n"
+                                                        (Print.term_to_string t0)
+                                                        (Print.term_to_string t1) in
+              let rhs_vars = (Free.names rhs) in
+              let lhs_vars = (Free.names lhs_t) in
+              if BU.set_is_subset_of rhs_vars lhs_vars
+              then //the forcing of lhs to a pattern will succeed in solving lhs=rhs, so use it and proceed
+                   //but backtrack to here in case some other problem in the worklist required a more general solution
+                   let _ = if Env.debug env (Options.Other "Rel")
+                           then BU.print3 "fvar check succeeded for quasi pattern ...\n\trhs = %s, rhs_vars=%s\nlhs_vars=%s ... proceeding\n"
+                                        (Print.term_to_string rhs)
+                                        (names_to_string rhs_vars)
+                                        (names_to_string lhs_vars)
+                                     in
+                   let tx = UF.new_transaction () in
+                   let wl = extend_solution (p_pid orig) [sol] wl in
+                   match solve_t env (as_tprob orig) wl with
+                   | Failed _ ->
+                     UF.rollback tx;
+                     imitate_or_project n lhs rhs stopt
+                   | sol -> sol
+              else //it will fail, so just proceed as usual
+                   let _ = if Env.debug env (Options.Other "Rel")
+                           then BU.print_string "fvar check failed for quasi pattern ... im/proj\n" in
+                   imitate_or_project n lhs rhs stopt
         in
 
         let check_head fvs1 t2 =

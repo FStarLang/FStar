@@ -211,8 +211,27 @@ let set (p:proofstate) : tac<unit> =
     mk_tac (fun _ -> Success ((), p))
 
 let do_unify (env : env) (t1 : term) (t2 : term) : bool =
-    try Rel.teq_nosmt env t1 t2
-    with | _ -> false
+    let debug_on () =
+        let _ = Options.set_options Options.Set "--debug_level Rel --debug_level RelCheck" in
+        ()
+    in
+    let debug_off () =
+        let _ = Options.set_options Options.Reset "" in
+        ()
+    in
+
+    let _ = if Env.debug env (Options.Other "1346")
+            then let _ = debug_on () in
+                  BU.print2 "%%%%%%%%do_unify %s =? %s\n"
+                            (Print.term_to_string t1)
+                            (Print.term_to_string t2) in
+    try
+            let res = Rel.teq_nosmt env t1 t2 in
+            debug_off(); res
+    with | uu____900 -> debug_off(); false
+
+//    try Rel.teq_nosmt env t1 t2
+//    with | _ -> false
 
 let trysolve (goal : goal) (solution : term) : bool =
     do_unify goal.context solution goal.witness
