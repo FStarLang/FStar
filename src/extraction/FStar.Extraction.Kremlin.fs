@@ -594,7 +594,7 @@ and translate_expr env e: expr =
 
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Kremlin constructs
-  | MLE_App ({ expr = MLE_Name p }, _) when (string_of_mlpath p = "Prims.admit") ->
+  | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, _) when (string_of_mlpath p = "Prims.admit") ->
       EAbort
   | MLE_App ({ expr = MLE_Name p }, [ { expr = MLE_Var v } ]) when (string_of_mlpath p = "FStar.HyperStack.ST.op_Bang" && is_mutable env v) ->
       EBound (find env v)
