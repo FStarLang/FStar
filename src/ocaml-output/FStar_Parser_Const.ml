@@ -12,6 +12,7 @@ let fstar_ns_lid: FStar_Ident.lident = p2l ["FStar"]
 let bool_lid: FStar_Ident.lident = pconst "bool"
 let unit_lid: FStar_Ident.lident = pconst "unit"
 let squash_lid: FStar_Ident.lident = pconst "squash"
+let auto_squash_lid: FStar_Ident.lident = pconst "auto_squash"
 let string_lid: FStar_Ident.lident = pconst "string"
 let bytes_lid: FStar_Ident.lident = pconst "bytes"
 let int_lid: FStar_Ident.lident = pconst "int"

@@ -1933,16 +1933,18 @@ let maybe_simplify_aux:
                      FStar_Parser_Const.false_lid
                    -> FStar_Pervasives_Native.Some false
                | uu____7232 -> FStar_Pervasives_Native.None in
-             let maybe_squash t =
+             let maybe_auto_squash t =
                let uu____7237 = FStar_Syntax_Util.is_sub_singleton t in
                if uu____7237
                then t
-               else FStar_Syntax_Util.mk_squash FStar_Syntax_Syntax.U_zero t in
-             let squashed_head_unsquash_args t =
-               let maybe_unsquash_arg uu____7258 =
+               else
+                 FStar_Syntax_Util.mk_auto_squash FStar_Syntax_Syntax.U_zero
+                   t in
+             let squashed_head_un_auto_squash_args t =
+               let maybe_un_auto_squash_arg uu____7258 =
                  match uu____7258 with
                  | (t1,q) ->
-                     let uu____7271 = FStar_Syntax_Util.is_squash t1 in
+                     let uu____7271 = FStar_Syntax_Util.is_auto_squash t1 in
                      (match uu____7271 with
                       | FStar_Pervasives_Native.Some
                           (FStar_Syntax_Syntax.U_zero ,t2) -> (t2, q)
@@ -1950,7 +1952,7 @@ let maybe_simplify_aux:
                let uu____7308 = FStar_Syntax_Util.head_and_args t in
                match uu____7308 with
                | (head1,args) ->
-                   let args1 = FStar_List.map maybe_unsquash_arg args in
+                   let args1 = FStar_List.map maybe_un_auto_squash_arg args in
                    FStar_Syntax_Syntax.mk_Tm_app head1 args1
                      FStar_Pervasives_Native.None t.FStar_Syntax_Syntax.pos in
              let simplify1 arg =
@@ -1976,16 +1978,17 @@ let maybe_simplify_aux:
                      FStar_All.pipe_right args (FStar_List.map simplify1) in
                    (match uu____7436 with
                     | (FStar_Pervasives_Native.Some (true ),uu____7491)::
-                        (uu____7492,(arg,uu____7494))::[] -> maybe_squash arg
+                        (uu____7492,(arg,uu____7494))::[] ->
+                        maybe_auto_squash arg
                     | (uu____7559,(arg,uu____7561))::(FStar_Pervasives_Native.Some
                                                       (true ),uu____7562)::[]
-                        -> maybe_squash arg
+                        -> maybe_auto_squash arg
                     | (FStar_Pervasives_Native.Some (false ),uu____7627)::uu____7628::[]
                         -> w FStar_Syntax_Util.t_false
                     | uu____7691::(FStar_Pervasives_Native.Some (false
                                    ),uu____7692)::[]
                         -> w FStar_Syntax_Util.t_false
-                    | uu____7755 -> squashed_head_unsquash_args tm1)
+                    | uu____7755 -> squashed_head_un_auto_squash_args tm1)
                  else
                    (let uu____7771 =
                       FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2002,11 +2005,11 @@ let maybe_simplify_aux:
                           -> w FStar_Syntax_Util.t_true
                       | (FStar_Pervasives_Native.Some (false ),uu____7955)::
                           (uu____7956,(arg,uu____7958))::[] ->
-                          maybe_squash arg
+                          maybe_auto_squash arg
                       | (uu____8023,(arg,uu____8025))::(FStar_Pervasives_Native.Some
                                                         (false ),uu____8026)::[]
-                          -> maybe_squash arg
-                      | uu____8091 -> squashed_head_unsquash_args tm1
+                          -> maybe_auto_squash arg
+                      | uu____8091 -> squashed_head_un_auto_squash_args tm1
                     else
                       (let uu____8107 =
                          FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2024,14 +2027,15 @@ let maybe_simplify_aux:
                              -> w FStar_Syntax_Util.t_true
                          | (FStar_Pervasives_Native.Some (true ),uu____8291)::
                              (uu____8292,(arg,uu____8294))::[] ->
-                             maybe_squash arg
+                             maybe_auto_squash arg
                          | (uu____8359,(p,uu____8361))::(uu____8362,(q,uu____8364))::[]
                              ->
                              let uu____8429 = FStar_Syntax_Util.term_eq p q in
                              (if uu____8429
                               then w FStar_Syntax_Util.t_true
-                              else squashed_head_unsquash_args tm1)
-                         | uu____8431 -> squashed_head_unsquash_args tm1
+                              else squashed_head_un_auto_squash_args tm1)
+                         | uu____8431 ->
+                             squashed_head_un_auto_squash_args tm1
                        else
                          (let uu____8447 =
                             FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2048,7 +2052,8 @@ let maybe_simplify_aux:
                             | (FStar_Pervasives_Native.Some (false
                                ),uu____8542)::[] ->
                                 w FStar_Syntax_Util.t_true
-                            | uu____8581 -> squashed_head_unsquash_args tm1
+                            | uu____8581 ->
+                                squashed_head_un_auto_squash_args tm1
                           else
                             (let uu____8597 =
                                FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2153,7 +2158,7 @@ let maybe_simplify_aux:
                                      | uu____8926 -> tm1
                                    else
                                      (let uu____8936 =
-                                        FStar_Syntax_Util.is_squash tm1 in
+                                        FStar_Syntax_Util.is_auto_squash tm1 in
                                       match uu____8936 with
                                       | FStar_Pervasives_Native.Some
                                           (FStar_Syntax_Syntax.U_zero ,t)
@@ -2177,16 +2182,17 @@ let maybe_simplify_aux:
                      FStar_All.pipe_right args (FStar_List.map simplify1) in
                    (match uu____8990 with
                     | (FStar_Pervasives_Native.Some (true ),uu____9045)::
-                        (uu____9046,(arg,uu____9048))::[] -> maybe_squash arg
+                        (uu____9046,(arg,uu____9048))::[] ->
+                        maybe_auto_squash arg
                     | (uu____9113,(arg,uu____9115))::(FStar_Pervasives_Native.Some
                                                       (true ),uu____9116)::[]
-                        -> maybe_squash arg
+                        -> maybe_auto_squash arg
                     | (FStar_Pervasives_Native.Some (false ),uu____9181)::uu____9182::[]
                         -> w FStar_Syntax_Util.t_false
                     | uu____9245::(FStar_Pervasives_Native.Some (false
                                    ),uu____9246)::[]
                         -> w FStar_Syntax_Util.t_false
-                    | uu____9309 -> squashed_head_unsquash_args tm1)
+                    | uu____9309 -> squashed_head_un_auto_squash_args tm1)
                  else
                    (let uu____9325 =
                       FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2203,11 +2209,11 @@ let maybe_simplify_aux:
                           -> w FStar_Syntax_Util.t_true
                       | (FStar_Pervasives_Native.Some (false ),uu____9509)::
                           (uu____9510,(arg,uu____9512))::[] ->
-                          maybe_squash arg
+                          maybe_auto_squash arg
                       | (uu____9577,(arg,uu____9579))::(FStar_Pervasives_Native.Some
                                                         (false ),uu____9580)::[]
-                          -> maybe_squash arg
-                      | uu____9645 -> squashed_head_unsquash_args tm1
+                          -> maybe_auto_squash arg
+                      | uu____9645 -> squashed_head_un_auto_squash_args tm1
                     else
                       (let uu____9661 =
                          FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2225,14 +2231,15 @@ let maybe_simplify_aux:
                              -> w FStar_Syntax_Util.t_true
                          | (FStar_Pervasives_Native.Some (true ),uu____9845)::
                              (uu____9846,(arg,uu____9848))::[] ->
-                             maybe_squash arg
+                             maybe_auto_squash arg
                          | (uu____9913,(p,uu____9915))::(uu____9916,(q,uu____9918))::[]
                              ->
                              let uu____9983 = FStar_Syntax_Util.term_eq p q in
                              (if uu____9983
                               then w FStar_Syntax_Util.t_true
-                              else squashed_head_unsquash_args tm1)
-                         | uu____9985 -> squashed_head_unsquash_args tm1
+                              else squashed_head_un_auto_squash_args tm1)
+                         | uu____9985 ->
+                             squashed_head_un_auto_squash_args tm1
                        else
                          (let uu____10001 =
                             FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2249,7 +2256,8 @@ let maybe_simplify_aux:
                             | (FStar_Pervasives_Native.Some (false
                                ),uu____10096)::[] ->
                                 w FStar_Syntax_Util.t_true
-                            | uu____10135 -> squashed_head_unsquash_args tm1
+                            | uu____10135 ->
+                                squashed_head_un_auto_squash_args tm1
                           else
                             (let uu____10151 =
                                FStar_Syntax_Syntax.fv_eq_lid fv
@@ -2354,7 +2362,7 @@ let maybe_simplify_aux:
                                      | uu____10480 -> tm1
                                    else
                                      (let uu____10490 =
-                                        FStar_Syntax_Util.is_squash tm1 in
+                                        FStar_Syntax_Util.is_auto_squash tm1 in
                                       match uu____10490 with
                                       | FStar_Pervasives_Native.Some
                                           (FStar_Syntax_Syntax.U_zero ,t)

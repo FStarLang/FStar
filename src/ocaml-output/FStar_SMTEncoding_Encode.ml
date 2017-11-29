@@ -3656,8 +3656,11 @@ and encode_formula:
                       fallback phi3
                   | uu____12073 -> fallback phi2)
              | (FStar_Syntax_Syntax.Tm_fvar fv,(t,uu____12080)::[]) when
-                 FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.squash_lid
+                 (FStar_Syntax_Syntax.fv_eq_lid fv
+                    FStar_Parser_Const.squash_lid)
+                   ||
+                   (FStar_Syntax_Syntax.fv_eq_lid fv
+                      FStar_Parser_Const.auto_squash_lid)
                  -> encode_formula t env
              | uu____12105 when head_redex env head2 ->
                  let uu____12118 = whnf env phi1 in
