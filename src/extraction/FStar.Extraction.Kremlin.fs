@@ -404,8 +404,9 @@ and translate_let env flavor flags lb: option<decl> =
       let binders = translate_binders env args in
       let env = add_binders env args in
       let name = env.module_name, name in
-      let flags = match eff with
-        | E_GHOST -> MustDisappear :: translate_flags flags
+      let flags = match eff, t with
+        | E_GHOST, _ 
+        | E_PURE, TUnit -> MustDisappear :: translate_flags flags
         | _ -> translate_flags flags
       in
       if assumed then
