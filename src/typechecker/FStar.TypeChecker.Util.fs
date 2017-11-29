@@ -647,7 +647,19 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             let u_res_t1, res_t1, _ = destruct_comp c1_typ in
             //c1 and c2 are the two comps
             let should_inline_c1 () :bool =
-              U.is_pure_or_ghost_comp c1 && not (U.is_unit res_t1)
+              U.is_pure_or_ghost_comp c1 && not (U.is_unit res_t1) &&
+               (match e1opt with
+                | Some e1 ->
+                  let head, _ = U.head_and_args' e1 in
+                  (match (U.un_uinst head).n with
+                   | Tm_fvar fv ->
+                     (match Env.lookup_qname env (lid_of_fv fv) with
+                      | Some (Inr (se, _), _) -> not (List.existsb (function | Irreducible | Assumption -> true | _ -> false) se.sigquals)
+                      | _ -> true
+                     )
+                   | _ -> true)
+                | _ -> false
+               )
             in
             let c2 =
               if should_inline_c1 () then
