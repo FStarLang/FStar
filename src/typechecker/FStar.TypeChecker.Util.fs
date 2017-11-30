@@ -744,14 +744,15 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                 match guard_form g0 with
                     | Trivial -> c
                     | NonTrivial f ->
-                    let c =
+                    //AR: With the new inlining behavior, this may not be needed anymore
+                    (*let c =
                         if (U.is_pure_or_ghost_comp c
                            && not (U.is_partial_return c))
                         then let x = S.gen_bv "strengthen_pre_x" None (U.comp_result c) in
                              let xret = U.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
                              let lc = bind e.pos env (Some e) (U.lcomp_of_comp c) (Some x, U.lcomp_of_comp xret) in
                              lc.comp()
-                        else c in
+                        else c in*)
 
                     if Env.debug env <| Options.Extreme
                     then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"

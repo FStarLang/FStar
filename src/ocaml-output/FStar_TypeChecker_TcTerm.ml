@@ -1232,7 +1232,8 @@ and tc_maybe_toplevel_term:
                                      FStar_TypeChecker_Rel.map_guard f
                                        (fun f1  ->
                                           let uu____2467 =
-                                            FStar_Syntax_Util.mk_squash f1 in
+                                            FStar_Syntax_Util.mk_squash
+                                              FStar_Syntax_Syntax.U_zero f1 in
                                           FStar_TypeChecker_Common.mk_by_tactic
                                             tactic uu____2467) in
                                let uu____2468 =

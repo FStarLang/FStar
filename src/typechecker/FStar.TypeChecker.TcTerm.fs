@@ -370,9 +370,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
     let topt = tc_tactic_opt env0 topt in
-    let f = match topt with
-            | None -> f
-            | Some tactic -> Rel.map_guard f (fun f -> Common.mk_by_tactic tactic (U.mk_squash f)) in
+    let f =
+        match topt with
+        | None -> f
+        | Some tactic ->
+          Rel.map_guard f (fun f -> //guards are in U_zero
+          Common.mk_by_tactic tactic (U.mk_squash U_zero f)) in
     let e, c, f2 = comp_check_expected_typ env e lc in
     let final_guard = Rel.conj_guard f f2 in
     e, c, final_guard

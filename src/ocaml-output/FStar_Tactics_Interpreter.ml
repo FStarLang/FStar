@@ -1403,7 +1403,8 @@ let rec traverse:
                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.imp_lid
                 ->
                 let x =
-                  let uu____3256 = FStar_Syntax_Util.mk_squash p in
+                  let uu____3256 =
+                    FStar_Syntax_Util.mk_squash FStar_Syntax_Syntax.U_zero p in
                   FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
                     uu____3256 in
                 let uu____3257 = traverse f (flip pol) e p in
