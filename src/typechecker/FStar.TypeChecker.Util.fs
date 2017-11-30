@@ -657,6 +657,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                       | Some (Inr (se, _), _) -> not (List.existsb (function | Irreducible | Assumption -> true | _ -> false) se.sigquals)
                       | _ -> true
                      )
+                   | Tm_let ((true, _), _) -> false
                    | _ -> true)
                 | _ -> false
                )
