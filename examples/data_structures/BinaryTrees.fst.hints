@@ -87,7 +87,7 @@
         "subterm_ordering_BinaryTrees.Node"
       ],
       0,
-      "277e3907767531c19fce1033b813a742"
+      "2800032e0ee5a4607e6999b74024cd55"
     ],
     [
       "BinaryTrees.map",
@@ -103,7 +103,7 @@
         "subterm_ordering_BinaryTrees.Node"
       ],
       0,
-      "3efe27d5dede0fcf85bf95fa5d1efe3c"
+      "1477a4f3e4021963bfbb9c6563592e8d"
     ],
     [
       "BinaryTrees.map_size",
@@ -158,7 +158,7 @@
         "subterm_ordering_BinaryTrees.Node"
       ],
       0,
-      "c0d1f6b23e86d8c409c65667b005e88b"
+      "01c6d5707c0232e6faafddc86697c822"
     ],
     [
       "BinaryTrees.find_some",
@@ -322,7 +322,7 @@
         "subterm_ordering_BinaryTrees.Node"
       ],
       0,
-      "d3ea4f1cb1d6a16615496ba14a3a0ed7"
+      "fc50a68d870fb62d06e64cfa0764f103"
     ],
     [
       "BinaryTrees.fold_map",
@@ -493,7 +493,7 @@
         "subterm_ordering_BinaryTrees.Node"
       ],
       0,
-      "a26996f730d0f9bd7d031d7bbf19d4db"
+      "ec936e13c04d55c3922076b8ac3ae102"
     ],
     [
       "BinaryTrees.revert_involutive",
@@ -635,7 +635,7 @@
         "subterm_ordering_BinaryTrees.Node"
       ],
       0,
-      "28cdca0f82ee0450da82c22cae22fafa"
+      "d7fae839e577d63bf4aa9c6b1f7ed4ee"
     ],
     [
       "BinaryTrees.add_root",
@@ -657,7 +657,7 @@
         "subterm_ordering_BinaryTrees.Node"
       ],
       0,
-      "6607a796472b07e175a5ce8ca6f8b89c"
+      "dda0ebc1309a2427bd421f66762f33ff"
     ],
     [
       "BinaryTrees.remove_add_root",
@@ -727,7 +727,7 @@
         "subterm_ordering_BinaryTrees.Node"
       ],
       0,
-      "437229f1e1cdfaf8bdebaed1e4948e5b"
+      "5a1c21bdca4991e82e96b222ca77c91f"
     ],
     [
       "BinaryTrees.remove",
@@ -757,7 +757,7 @@
         "subterm_ordering_BinaryTrees.Node"
       ],
       0,
-      "386f817cfad5eab457c66cb9df396ba6"
+      "cf5f3db91569e813ecb51d871fbb1bdd"
     ],
     [
       "BinaryTrees.count_remove_root",
@@ -840,7 +840,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "b08a7b98b4b2cceedf4788c64b9f6bdb"
+      "9d3e6539279a5dc0f33868cb99dbfcc4"
     ]
   ]
 ]

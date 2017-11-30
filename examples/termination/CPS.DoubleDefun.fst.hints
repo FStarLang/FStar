@@ -108,7 +108,7 @@
         "subterm_ordering_CPS.DoubleDefun.C2"
       ],
       0,
-      "5c07e67bd8c72a37f63b5da765509526"
+      "1ba6815a249154e5afe6a3dd0f57a979"
     ],
     [
       "CPS.DoubleDefun.apply",
@@ -138,7 +138,7 @@
         "subterm_ordering_CPS.DoubleDefun.C1", "typing_CPS.DoubleDefun.stack"
       ],
       0,
-      "836e73d1d49589d38c63bd84815bc31c"
+      "b3846179e6058b6ecfb8d268ae555eeb"
     ],
     [
       "CPS.DoubleDefun.apply",

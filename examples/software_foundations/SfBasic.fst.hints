@@ -425,7 +425,7 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "0f68c2a2ad430d92f717f0cae0021b71"
+      "927ae1bd8bfbb154921097e47126f0d1"
     ],
     [
       "SfBasic.mult",
@@ -440,7 +440,7 @@
         "projection_inverse_SfBasic.S__0", "subterm_ordering_SfBasic.S"
       ],
       0,
-      "96b6885121b6ac55e2ac4aa311add304"
+      "1e7ad047225c4885028d4f31453f5970"
     ],
     [
       "SfBasic.test_mult1",

@@ -22,7 +22,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c8dd5b14c264754dba3af5ba4926963f"
+      "6c9c03d3c5233eee94788daa726a1382"
     ],
     [
       "Benton2004.RHL.Examples2.proof",
@@ -127,7 +127,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "d6bc29ba49328fbd995d095d96290147"
+      "58c8d54e28c3f0a665436d42f6ab5985"
     ]
   ]
 ]

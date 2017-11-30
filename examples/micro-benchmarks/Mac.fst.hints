@@ -88,7 +88,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "00eb1d394d590a5cad28a96a5cd9b139"
+      "a062fefd2039a0e8f98e6ed70dd9bd62"
     ],
     [
       "MAC.verify",
@@ -118,7 +118,7 @@
         "typing_FStar.Seq.Base.eq"
       ],
       0,
-      "c193cce4f72ea7de5291a4c0d6836494"
+      "3258152f0b283bc7ef39d0fccea194f0"
     ]
   ]
 ]

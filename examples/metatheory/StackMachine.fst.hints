@@ -181,7 +181,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "3c3e3808bf5b3706ed26eb89aa1a0a0d"
+      "b1246cbfd036a1e276b1378ceb108d5e"
     ],
     [
       "StackMachine.instr",
@@ -295,7 +295,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "6e129c17e88647b4a9415098bffcc626"
+      "15341fa75b445aac8404b54a6d61f05d"
     ],
     [
       "StackMachine.app_assoc_reverse",
@@ -736,7 +736,7 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
-      "f0bfee3baa39594cde185154cacee248"
+      "4e5dc94727ec5fe08ef2bfcbe46cf568"
     ],
     [
       "StackMachine.tinstr",
@@ -1052,7 +1052,7 @@
         "subterm_ordering_Prims.Cons", "unit_typing"
       ],
       0,
-      "b1c989c8fa8dbdf57531c9008fc8dcc0"
+      "61e26c068296880a70786f27544ab0db"
     ],
     [
       "StackMachine.tinstrDenote",
@@ -1124,7 +1124,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "dd05ce6049b0a00419ee2100b971a0ce"
+      "3beb21d92740616338d0d7b1c08e2366"
     ],
     [
       "StackMachine.tconcat",
@@ -1144,7 +1144,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "cd59176c91e0fd209d96d5806bad4f05"
+      "a0536d6c64796030fe2d415ee33b5f6b"
     ],
     [
       "StackMachine.tcompile",
@@ -1178,7 +1178,7 @@
         "subterm_ordering_StackMachine.TBinop"
       ],
       0,
-      "b5676a4dd7195868e13d0e0a42e30ad9"
+      "7a0545569b49b66b19c8090774d5c25c"
     ],
     [
       "StackMachine.tconcat_correct",
@@ -1208,7 +1208,7 @@
         "subterm_ordering_StackMachine.TCons"
       ],
       0,
-      "d26cd91cc8e08f0f80333dd79d54eb77"
+      "f9fe8ac5cb9f66323eeb385c3513a606"
     ],
     [
       "StackMachine.tcompile_correct'",
@@ -1304,7 +1304,7 @@
         "typing_tok_StackMachine.Bool@tok"
       ],
       0,
-      "72661a2f11775c8d1c2f4400a3fa0480"
+      "23d9d548583d6a3c1865ba139a03c383"
     ],
     [
       "StackMachine.tcompile_correct",
@@ -1329,7 +1329,7 @@
         "unit_typing"
       ],
       0,
-      "a0c0ed8e3a7769c5ecaba84d04dd737e"
+      "08b429b74bc9469f7cde13760d9e6b89"
     ]
   ]
 ]

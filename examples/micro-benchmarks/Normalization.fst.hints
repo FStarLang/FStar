@@ -25,7 +25,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "351e85e7b9827fc905426c56384e1bf2"
+      "e9a27c94624c02a4b652871ea74ff68f"
     ],
     [
       "Normalization.test2",
@@ -145,7 +145,7 @@
         "assumption_Prims.list_haseq", "function_token_typing_Prims.int"
       ],
       0,
-      "5e4209d216bd242c373d97e827f66404"
+      "39ee28f9b5e0e285b3ffd9971670b8ca"
     ]
   ]
 ]

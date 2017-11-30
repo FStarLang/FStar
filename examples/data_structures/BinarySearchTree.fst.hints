@@ -125,7 +125,7 @@
         "typing_BinarySearchTree.all", "typing_BinarySearchTree.in_tree"
       ],
       0,
-      "177929b824578b24bf8f657efcd3f478"
+      "02c2320f151275213af257afee79cf95"
     ],
     [
       "BinarySearchTree.is_bst",
@@ -194,7 +194,7 @@
         "typing_BinarySearchTree_Tm_abs_07d54406df86a0f1fa6b7e73e17b87bd"
       ],
       0,
-      "10218d78ecd6af8b440576ee5205181d"
+      "2d18be9ac0ddd02ac2b430a4fa341385"
     ],
     [
       "BinarySearchTree.insert",
@@ -263,7 +263,7 @@
         "typing_tok_BinarySearchTree.Leaf@tok"
       ],
       0,
-      "b95b406fe41c7303dd50edc3867697e2"
+      "ec59d11359384711d20146f10c2f2fbc"
     ]
   ]
 ]

@@ -579,7 +579,7 @@
         "typing_ProgramOptimizations.uu___is_CTrue"
       ],
       0,
-      "072ccd14a665736310a2c831fb9fe510"
+      "c9ab8c3ea8f98218df4bc66cdaedd70c"
     ],
     [
       "ProgramOptimizations.com_denotation",
@@ -935,7 +935,7 @@
         "subterm_ordering_ProgramOptimizations.GIOp"
       ],
       0,
-      "9f9df5d533dbb053faf4d658d7746bd5"
+      "800e784ea814bee70853b566f8dc2323"
     ],
     [
       "ProgramOptimizations.rel_exp_denotation",
@@ -970,7 +970,7 @@
         "subterm_ordering_ProgramOptimizations.RNot"
       ],
       0,
-      "00d66608f30152158c0b4b03520b708a"
+      "7c21ede391c9fb98155853ba8f9cfa6c"
     ],
     [
       "ProgramOptimizations.lemma_sound_optimization1",

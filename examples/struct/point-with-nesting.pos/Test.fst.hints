@@ -106,7 +106,7 @@
         "token_correspondence_FStar.Pointer.Base.type_of_typ"
       ],
       0,
-      "06c215f7491c0e9a761ca2a15ce8f51e"
+      "e36dc2114af35c84b52f04de39de896b"
     ],
     [
       "Test.flip",
@@ -199,7 +199,7 @@
         "typing_tok_FStar.Pointer.Base.TBool@tok"
       ],
       0,
-      "15e56dfde883f8403ff6ace7f34bcfb3"
+      "cf74dab964df0678fb1be7f023a5699e"
     ],
     [
       "Test.flip'",
@@ -305,7 +305,7 @@
         "typing_Test.colored_object_struct", "typing_Test.colored_object_t"
       ],
       0,
-      "7cac3641e61b7b05a91867e6189f1ab0"
+      "48d93947b3dc59f9df3c86a451f43c12"
     ]
   ]
 ]

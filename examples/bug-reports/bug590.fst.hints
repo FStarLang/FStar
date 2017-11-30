@@ -31,7 +31,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e48f7f2cc2f1b64c3f5662bd5aaf5c31"
+      "84098adb4b359fc2dbf74d67f6f91e0c"
     ],
     [
       "Bug590.blah2",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32"
       ],
       0,
-      "523ef6f5e0e71e2355fec770a8a32c83"
+      "26d4faf5e71b95d3b4b1bbfe3bcda315"
     ],
     [
       "Bug590.flatten_lemma",

@@ -186,7 +186,7 @@
         "typing_SimplePrintf_Tm_abs_f9392fb11968dc07bfc5643a7c50c36d"
       ],
       0,
-      "eac1f746241c6b4b02954e35e9023f79"
+      "d675578626fcb186566cd0bb82bf7341"
     ],
     [
       "SimplePrintf.example1",
@@ -206,7 +206,7 @@
         "int_typing", "projection_inverse_Prims.Nil_a", "string_typing"
       ],
       0,
-      "2e76e9517b8a9d7425fe8da723c6b622"
+      "eacc55b0e2fcf9b7f91943bcba15eca3"
     ],
     [
       "SimplePrintf.add_dir",
@@ -243,7 +243,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "8c16ded157602ffda58fd91e810eac95"
+      "bfd9f8b599dea1eb170d2a820a44bce8"
     ],
     [
       "SimplePrintf.sprintf",
@@ -291,7 +291,7 @@
         "typing_SimplePrintf_Tm_abs_44d84743e2f76b959287eab585a8a645"
       ],
       0,
-      "699c18d11500281600fc9bb34fcd3278"
+      "95808f9f16b6e76e55184fbe4694c2f2"
     ],
     [
       "SimplePrintf.test",

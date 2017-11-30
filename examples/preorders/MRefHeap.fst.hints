@@ -12,7 +12,7 @@
         "refinement_interpretation_FStar.Preorder_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "20662dfef773efe77c67e90a899cbb56"
+      "b4f0b242874ff95ed9ce951091b9915d"
     ],
     [
       "MRefHeap.sel",
@@ -33,7 +33,7 @@
         "refinement_interpretation_MRefHeap_Tm_refine_36453e3eb6145226f640e16ed9612466"
       ],
       0,
-      "0ead49817f19359bd218b1a7094ff021"
+      "c3a9fe9a4a27ad8e13c1111c933e2838"
     ],
     [
       "MRefHeap.alloc_ref",
@@ -51,16 +51,17 @@
       "MRefHeap.alloc_ref",
       2,
       2,
-      2,
+      1,
       [
         "@MaxIFuel_assumption", "@query",
         "MRefHeap_interpretation_Tm_arrow_1309b2ba2b486dd3a0f833087ae704ad",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "assumption_Prims.HasEq_int", "bool_inversion", "bool_typing",
+        "assumption_Prims.HasEq_int",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Mktuple2",
         "data_elim_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd",
         "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
@@ -68,8 +69,8 @@
         "equation_MRefHeap.heap", "equation_MRefHeap.heap_cell",
         "equation_MRefHeap.mref", "equation_MRefHeap.preorder_t",
         "equation_MRefHeap.sel", "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "fuel_guarded_inversion_Prims.dtuple2",
         "function_token_typing_Prims.nat",
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "int_inversion",
@@ -92,11 +93,11 @@
         "refinement_interpretation_MRefHeap_Tm_refine_ae7928a4b4a4c805d35f0abc425c2c90",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
         "token_correspondence_FStar.Pervasives.Native.snd",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
+        "typing_FStar.Pervasives.Native.fst",
         "typing_MRefHeap_Tm_abs_ca7ca508b0f11218e4d69ff09a8817a3"
       ],
       0,
-      "475ac7d1f554591c4c996e2f846ff5db"
+      "70b39c1b72acdd4bf8f169d24010b6de"
     ],
     [
       "MRefHeap.upd",
@@ -155,7 +156,7 @@
         "token_correspondence_FStar.Pervasives.Native.snd"
       ],
       0,
-      "11eae10c540cab40e15873ec4da0d295"
+      "38d4898304cc9adcd31ff4159b47ed9b"
     ],
     [
       "MRefHeap.emp",

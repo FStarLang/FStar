@@ -50,7 +50,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "3de9afb5db4f1ea889a20da10aed0a17"
+      "6e6797c6bb09670d417847a31d2c6c09"
     ],
     [
       "PropositionalExtensionalityInconsistent.proof",
@@ -119,7 +119,7 @@
       0,
       [ "@query", "int_typing", "projection_inverse_BoxInt_proj_0" ],
       0,
-      "d9e96396c3d20e40f856fa9a00d538e8"
+      "35fe31379864fa71cbd51b50956cb8c1"
     ]
   ]
 ]

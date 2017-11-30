@@ -35,7 +35,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e97d471fd7e64d8667509859f7eb2c99"
+      "519a358647a9590ff66811fe6b830e0b"
     ],
     [
       "QuickSort.List.mem_count",
@@ -87,7 +87,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3a91ed2c0c0049def775ec1e01f6d792"
+      "f337449fade40394af5ca26df4119044"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -304,7 +304,7 @@
         "typing_QuickSort.List.count"
       ],
       0,
-      "4b80433de3c9e1fab4a25b2c69552e6b"
+      "85820ecf1d63d70be820f1d3be81a345"
     ],
     [
       "QuickSort.List.quicksort",
@@ -361,7 +361,7 @@
         "typing_QuickSort.List.sorted", "well-founded-ordering-on-nat"
       ],
       0,
-      "9bab919011e10793eb41c6637d038cad"
+      "34f66b32a4b9233d65e925597ef43608"
     ]
   ]
 ]
