@@ -673,7 +673,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                      let u_res_t, res_t, wp = destruct_comp c2_typ in
                      let md = Env.get_effect_decl env c2_typ.effect_name in
                      let wp =
-                       if (List.existsb (function RETURN | PARTIAL_RETURN -> true | _ -> false) c1_typ.flags) then
+                       if not (List.existsb (function RETURN | PARTIAL_RETURN -> true | _ -> false) c1_typ.flags) then
                          mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)  [S.as_arg res_t; S.as_arg (U.mk_eq2 u_res_t1 res_t1 (bv_to_name bv) e); S.as_arg wp] None wp.pos
                        else wp
                      in

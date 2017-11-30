@@ -148,17 +148,3 @@ let uu___is_Comment: __internal_ocaml_attributes -> Prims.bool =
     match projectee with | Comment _0 -> true | uu____2398 -> false
 let __proj__Comment__item___0: __internal_ocaml_attributes -> Prims.string =
   fun projectee  -> match projectee with | Comment _0 -> _0
-let propositional_extensionality_axiom: Prims.unit -> Prims.unit =
-  fun a108  ->
-    (Obj.magic
-       (fun uu____2412  ->
-          failwith "Not yet implemented:propositional_extensionality_axiom"))
-      a108
-let propositional_eq: 'Ap1 'Ap2 . Prims.unit -> Prims.unit =
-  fun uu____2432  -> ()
-let lemma_and_commutative: 'Aa 'Ab . Prims.unit -> Prims.unit =
-  fun uu____2452  -> ()
-let lemma_and_identity: 'Aa . Prims.unit = ()
-let lemma_or_commputative: 'Aa 'Ab . Prims.unit -> Prims.unit =
-  fun uu____2512  -> ()
-let lemma_or_identity: 'Aa . Prims.unit = ()

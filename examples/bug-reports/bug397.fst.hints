@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "54ad474b6974f34c1518f4f9c4540b43"
+      "d5cddcc316a2d73fa8badc5591295fa2"
     ],
     [
       "Bug397.__proj__C__item___0",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "b5fdd3030647009a453fede2806ef2bd"
+      "46793f8b2146b376b31fbe627fc18851"
     ],
     [
       "Bug397.dummy2",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "40c039412ccd48f4f9e5d9e442b40f9c"
+      "209c4c439e60cdb68e14fbf7f804c4dc"
     ],
     [
       "Bug397.dummy",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "42ef4061f7fdd281382fe7a74d492992"
+      "403c19b3603f58dd16b951695f087e73"
     ]
   ]
 ]
