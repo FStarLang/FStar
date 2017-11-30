@@ -167,7 +167,7 @@ val alloc (#a:eqtype) (#b:a -> Type) (#inv:DM.t a (opt b) -> Type) (#r:MR.rid)
 //This really should be hidden inside the MR library
 let addr_of (#r:_) (#a:_) (#b:_) (m:MR.m_rref r a b) : GTot nat =
     let x = MR.as_hsref m in
-    Heap.addr_of (HH.as_ref (HS.MkRef?.ref x))
+    HS.as_addr x
 
 val extend
     (#a:eqtype)
