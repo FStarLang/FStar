@@ -1,6 +1,7 @@
 module FStar.Algebra.Monoid
 
 open FStar.Classical
+module PropExt = FStar.PropositionalExtensionality
 
 (** Definition of a monoid *)
 
@@ -45,28 +46,56 @@ let int_plus_monoid : monoid int =
 (*   intro_monoid int 1 op_Multiply *)
 
 let conjunction_monoid : monoid prop =
-  let u : prop = True in
+  let u : prop = singleton True in
   let mult (p q : prop) : prop = p /\ q in
+
+  let left_unitality_helper (p:prop) : Lemma ((u `mult` p) == p) =
+    assert ((u `mult` p) <==> p) ;
+    PropExt.apply (u `mult` p) p
+  in
+
+  let right_unitality_helper (p:prop) : Lemma ((p `mult` u) == p) =
+    assert ((p `mult` u) <==> p) ;
+    PropExt.apply (p `mult` u) p
+  in
 
   let associativity_helper (p1 p2 p3 : prop) : Lemma (p1 `mult` p2 `mult` p3 == p1 `mult` (p2 `mult` p3)) =
     assert (p1 `mult` p2 `mult` p3 <==> p1 `mult` (p2 `mult` p3)) ;
-    propositional_eq (p1 `mult` p2 `mult` p3) (p1 `mult` (p2 `mult` p3))
+    PropExt.apply (p1 `mult` p2 `mult` p3) (p1 `mult` (p2 `mult` p3))
   in
 
+  forall_intro right_unitality_helper ;
+  assert (right_unitality_lemma prop u mult) ;
+  forall_intro left_unitality_helper ;
+  assert (left_unitality_lemma prop u mult) ;
   forall_intro_3 associativity_helper;
   assert (associativity_lemma prop mult) ;
   intro_monoid prop u mult
 
 
 let disjunction_monoid : monoid prop =
-  let u : prop = False in
+  let u : prop = singleton False in
   let mult (p q : prop) : prop = p \/ q in
+
+  let left_unitality_helper (p:prop) : Lemma ((u `mult` p) == p) =
+    assert ((u `mult` p) <==> p) ;
+    PropExt.apply (u `mult` p) p
+  in
+
+  let right_unitality_helper (p:prop) : Lemma ((p `mult` u) == p) =
+    assert ((p `mult` u) <==> p) ;
+    PropExt.apply (p `mult` u) p
+  in
 
   let associativity_helper (p1 p2 p3 : prop) : Lemma (p1 `mult` p2 `mult` p3 == p1 `mult` (p2 `mult` p3)) =
     assert (p1 `mult` p2 `mult` p3 <==> p1 `mult` (p2 `mult` p3)) ;
-    propositional_eq (p1 `mult` p2 `mult` p3) (p1 `mult` (p2 `mult` p3))
+    PropExt.apply (p1 `mult` p2 `mult` p3) (p1 `mult` (p2 `mult` p3))
   in
 
+  forall_intro right_unitality_helper ;
+  assert (right_unitality_lemma prop u mult) ;
+  forall_intro left_unitality_helper ;
+  assert (left_unitality_lemma prop u mult) ;
   forall_intro_3 associativity_helper;
   assert (associativity_lemma prop mult) ;
   intro_monoid prop u mult
@@ -118,20 +147,20 @@ let _ = intro_monoid_morphism embed_nat_int nat_plus_monoid int_plus_monoid
 let neg (p:prop) : prop = ~p
 let _ =
   assert (neg True <==> False) ;
-  propositional_eq (neg True) False ;
+  PropExt.apply (neg True) False ;
   let mult_lemma_helper (p q:prop) : Lemma (neg (p /\ q) == (neg p \/ neg q)) =
     assert (neg (p /\ q) <==> (neg p \/ neg q)) ;
-    propositional_eq (neg (p /\ q)) (neg p \/ neg q)
+    PropExt.apply (neg (p /\ q)) (neg p \/ neg q)
   in
   forall_intro_2 mult_lemma_helper ;
   intro_monoid_morphism neg conjunction_monoid disjunction_monoid
 
 let _ =
   assert (neg False <==> True) ;
-  propositional_eq (neg False) True ;
+  PropExt.apply (neg False) True ;
   let mult_lemma_helper (p q:prop) : Lemma (neg (p \/ q) == (neg p /\ neg q)) =
     assert (neg (p \/ q) <==> (neg p /\ neg q)) ;
-    propositional_eq (neg (p \/ q)) (neg p /\ neg q)
+    PropExt.apply (neg (p \/ q)) (neg p /\ neg q)
   in
   forall_intro_2 mult_lemma_helper ;
   intro_monoid_morphism neg disjunction_monoid conjunction_monoid

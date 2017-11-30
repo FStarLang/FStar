@@ -272,30 +272,3 @@ type __internal_ocaml_attributes =
   | Substitute
   | Gc
   | Comment of string
-
-(*
- * lemmas about logical connectives
- *)
-assume val propositional_extensionality_axiom: unit -> Lemma (forall (p1 p2:prop). (p1 <==> p2) <==> (p1 == p2))
-
-let propositional_eq (p1 p2:prop) :Lemma ((p1 <==> p2) <==> (p1 == p2)) = propositional_extensionality_axiom ()
-
-let lemma_and_commutative (a:prop) (b:prop)
-  :Lemma (requires True) (ensures ((a /\ b) == (b /\ a)))
-         [SMTPat (a /\ b)]
-  = propositional_eq (a /\ b) (b /\ a)
-
-let lemma_and_identity (a:prop)
-  :Lemma (requires True) (ensures ((a /\ True) == a))
-         [SMTPat (a /\ True)]
-  = propositional_eq (a /\ True) a
-
-let lemma_or_commputative (a:prop) (b:prop)
-  :Lemma (requires True) (ensures ((a \/ b) == (b \/ a)))
-         [SMTPat (a \/ b)]
-  = propositional_eq (a \/ b) (b \/ a)
-
-let lemma_or_identity (a:prop)
-  :Lemma (requires True) (ensures ((a \/ False) == a))
-         [SMTPat (a \/ False)]
-  = propositional_eq (a \/ False) a
