@@ -288,7 +288,7 @@ let lemma_and_commutative (a:prop) (b:prop)
 let lemma_and_identity (a:prop)
   :Lemma (requires True) (ensures ((a /\ True) == a))
          [SMTPat (a /\ True)]
-  = ()
+  = propositional_eq (a /\ True) a
 
 let lemma_or_commputative (a:prop) (b:prop)
   :Lemma (requires True) (ensures ((a \/ b) == (b \/ a)))
@@ -298,4 +298,4 @@ let lemma_or_commputative (a:prop) (b:prop)
 let lemma_or_identity (a:prop)
   :Lemma (requires True) (ensures ((a \/ False) == a))
          [SMTPat (a \/ False)]
-  = ()
+  = propositional_eq (a \/ False) a
