@@ -16,7 +16,7 @@
         "typing_FStar.Tactics.Types.incr_depth"
       ],
       0,
-      "a5602b721f0e5881e1bc58ead174419b"
+      "87dfe8604b17dcfd0433e912ba414750"
     ],
     [
       "FStar.Tactics.Effect.g_bind",
@@ -30,7 +30,7 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result"
       ],
       0,
-      "91a0e80b7f266ec36244d9d1973ef3fd"
+      "ad439fe29da3e79239a94a4face095fc"
     ],
     [
       "FStar.Tactics.Effect.assert_by_tactic",
@@ -44,7 +44,16 @@
         "unit_typing"
       ],
       0,
-      "61f3eff780771fa44bab029a3cddbcf8"
+      "f05d4b2cbf1bda19ca4d032da2326f31"
+    ],
+    [
+      "FStar.Tactics.Effect.by_tactic_seman",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "4c593afacfedb71c4fe7955bcfe3ec65"
     ]
   ]
 ]

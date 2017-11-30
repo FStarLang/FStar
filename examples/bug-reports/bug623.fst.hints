@@ -14,7 +14,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "1a6da8f538072c8b1773e187a611a955"
+      "b1075fc24db29031d77d9f45579e2d79"
     ],
     [
       "Bug623.null2",
@@ -26,7 +26,16 @@
         "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
       ],
       0,
-      "226145fc6045460caa39bef90df57db5"
+      "b2e889cbeb2a9ada80183f3f4df0928b"
+    ],
+    [
+      "Bug623.null3",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f46acebb5c145de5fb05acc4dd6c93d3"
     ]
   ]
 ]

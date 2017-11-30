@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "eff75ffc0b39317f8c865b2edb7ac9b9"
+      "0a06e63921f8cc30607895e6ef62bd85"
     ],
     [
       "Ex06e.mem",
@@ -27,6 +27,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
         "binder_x_6d0180d4fcd10237cf0d87dd345d77cc_0",
         "binder_x_9a691d092aa1033ae30e6c0e5e60237c_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
@@ -35,7 +36,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "8dba1eee986015905a8257c200ee499d"
+      "91a4748a88055fb79fd8983355bcd0a5"
     ],
     [
       "Ex06e.mem",
@@ -44,7 +45,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5e8f21436db0feca3af62de2350e953c"
+      "1ece5b6bec11552d1b5dde1811c13a9e"
     ]
   ]
 ]
