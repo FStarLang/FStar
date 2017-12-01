@@ -377,4 +377,10 @@ abstract let norm (s:list norm_step) (#a:Type) (x:a) : a = x
 val assert_norm : p:Type -> Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 let assert_norm p = ()
 
+(*
+ * Pure and ghost inner let bindings are now always inlined during the wp computation, if:
+ * the return type is not unit and the head symbol is not marked irreducible.
+ * To circumvent this behavior, singleton can be used.
+ * See the example usage in ulib/FStar.Algebra.Monoid.fst.
+ *)
 irreducible let singleton (#a:Type) (x:a) :(y:a{y == x}) = x

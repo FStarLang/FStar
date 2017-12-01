@@ -643,23 +643,31 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                             reason (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c) (Print.lid_to_string joined_eff);
             c
           | Inr reason ->
+            (* AR: we have let the previously applied bind optimizations take effect, below is the code to do more inlining for pure and ghost terms *)
             let c1_typ = Env.unfold_effect_abbrev env c1 in
             let u_res_t1, res_t1, _ = destruct_comp c1_typ in
-            //c1 and c2 are the two comps
-            let should_inline_c1 () :bool =
-              U.is_pure_or_ghost_comp c1 && not (U.is_unit res_t1) &&
+            //c1 and c2 are bound to the input comps
+            (*
+             * We will inline e1, if:
+             * (a) It's a pure or ghost term
+             * (b) Its return type is not unit -- as a general rule we don't inline or return unit typed terms
+             * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
+             * (d) It's not a let rec -- this is a bit sketchy currently since we only check let rec existence at the top-level. What about inner let recs within the term?
+             *)
+            let should_inline_c1 () :bool =  //TODO: this function should move to a general utility and be called from `return_value`, `maybe_assume_result_eq_pure_term` too
+              U.is_pure_or_ghost_comp c1 && not (U.is_unit res_t1) &&  //inline if pure or ghost and not a unit return value
                (match e1opt with
                 | Some e1 ->
                   let head, _ = U.head_and_args' e1 in
                   (match (U.un_uinst head).n with
                    | Tm_fvar fv ->
                      (match Env.lookup_qname env (lid_of_fv fv) with
-                      | Some (Inr (se, _), _) -> not (List.existsb (function | Irreducible | Assumption -> true | _ -> false) se.sigquals)
+                      | Some (Inr (se, _), _) -> not (List.existsb (function | Irreducible | Assumption -> true | _ -> false) se.sigquals)  //irreducible head symbol no inline
                       | _ -> true
                      )
-                   | Tm_let ((true, _), _) -> false
+                   | Tm_let ((true, _), _) -> false  //let recs no inline
                    | _ -> true)
-                | _ -> false
+                | _ -> false  //if e1opt is None, no inline
                )
             in
             let c2 =
@@ -668,20 +676,22 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 | Some e, Some bv ->
                   (match subst_c2 "inline all pure" with
                    | Inl (c2, _) ->
-                     //we have inlined
+                     //we have inlined, now wp2 has become wp2[e/x]
                      let c2_typ = Env.unfold_effect_abbrev env c2 in
                      let u_res_t, res_t, wp = destruct_comp c2_typ in
                      let md = Env.get_effect_decl env c2_typ.effect_name in
-                     let wp =
+                     let wp =  //If c1 is not a return or partial return, as determined from the flags, then we will make it ((x = e) ==> (wp2[e/x])), to retain the correlation between x and e
                        if not (List.existsb (function RETURN | PARTIAL_RETURN -> true | _ -> false) c1_typ.flags) then
                          mk_Tm_app (inst_effect_fun_with [u_res_t] env md md.assume_p)  [S.as_arg res_t; S.as_arg (U.mk_eq2 u_res_t1 res_t1 (bv_to_name bv) e); S.as_arg wp] None wp.pos
                        else wp
                      in
-                     mk_comp md u_res_t res_t wp c2_typ.flags
+                     mk_comp md u_res_t res_t wp c2_typ.flags  //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
+                                                               //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
                    | Inr _ -> c2)
                 | _, _       -> c2
               else c2
             in
+            (* AR: end code for inlining pure and ghost terms *)
             let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) = lift_and_destruct env c1 c2 in
             let bs =
                 match b with
@@ -744,7 +754,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                 match guard_form g0 with
                     | Trivial -> c
                     | NonTrivial f ->
-                    //AR: With the new inlining behavior, this may not be needed anymore
+                    //AR: With the new inlining behavior of pure and ghost terms, this may not be needed anymore, as we will inline pure and ghost terms if needed later on
                     (*let c =
                         if (U.is_pure_or_ghost_comp c
                            && not (U.is_partial_return c))
