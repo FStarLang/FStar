@@ -257,7 +257,25 @@
         "typing_FStar.DM4F.Random.sample", "unit_typing"
       ],
       0,
-      "073b465a068c1f548c18b840dca9cbf2"
+      "a68cb575fd16fe77e7509225f39cec5a"
+    ],
+    [
+      "ElGamal.elgamal_equiv",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int", "equation_ElGamal.group" ],
+      0,
+      "785848708c3f884186363d6a2ea57bac"
+    ],
+    [
+      "ElGamal.elgamal_equiv",
+      5,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int", "equation_ElGamal.group" ],
+      0,
+      "35507398ae2cd741921a6390f448b07f"
     ]
   ]
 ]

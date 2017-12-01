@@ -97,7 +97,7 @@
         "refinement_interpretation_MAC_Tm_refine_1cf95beb4e0ccb163dfdf90ffb00eff2"
       ],
       0,
-      "9758cbe502a9a3d03160120dfb165fea"
+      "b204ffe982dcb851660067023d63269a"
     ],
     [
       "MAC.mac",
@@ -137,7 +137,7 @@
         "typing_Platform.Bytes.equalBytes", "typing_SHA1.hmac_sha1"
       ],
       0,
-      "6a7d20d0359b6c70d3be6248f889b7e0"
+      "11068b994adc89dda311152afc470806"
     ],
     [
       "MAC.verify",
@@ -165,7 +165,16 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "e29330dbba2c0202d1760de75b3b0940"
+      "a379056ae06a8e964fcd8ce39b07bd41"
+    ],
+    [
+      "MAC.verify",
+      4,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c98cebc7198821a5c02b5197d61b443e"
     ]
   ]
 ]

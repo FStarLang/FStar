@@ -62,7 +62,7 @@
         "typing_EtM.MAC.sha1", "typing_Platform.Bytes.op_At_Bar"
       ],
       0,
-      "4281b7e159227a35ebf909a490188a36"
+      "095ed9282eddc3b73028b5c49b4b00a7"
     ],
     [
       "EtM.MAC.__proj__Key__item__region",
@@ -71,7 +71,7 @@
       1,
       [ "@query" ],
       0,
-      "27004dbcbb379e5587b24331df4d20e0"
+      "0349d50ed66a4f97ffc87d313dbc9990"
     ],
     [
       "EtM.MAC.__proj__Key__item__raw",
@@ -80,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "0ee261c3fc4b67f6fcd1da1a50150bda"
+      "b169c1c38aade472070f7f4b5b16bd0a"
     ],
     [
       "EtM.MAC.__proj__Key__item__log",
@@ -92,7 +92,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "8cb94dc681c362bb53a11c301ec33cd1"
+      "007e893b024fe54e5101c5d74c464a55"
     ],
     [
       "EtM.MAC.genPost",
@@ -101,7 +101,7 @@
       1,
       [ "@query", "assumption_FStar.Monotonic.HyperHeap.HasEq_rid" ],
       0,
-      "e749b924c8eb5a6ff87999f3ffa7f83f"
+      "140a2f335eab9425196acf0b3ae69660"
     ],
     [
       "EtM.MAC.keygen",
@@ -190,7 +190,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "6b46a049b9785b2f09a8c2e46edaabdd"
+      "454c3aaf7f7a8a06eef8e5d113d4e5d1"
     ],
     [
       "EtM.MAC.mac",
@@ -223,7 +223,7 @@
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "dc6b5bf4a3e32ab4742a0af4311ac7bb"
+      "06e848a2edbb0c03f56509d7e3724dfd"
     ],
     [
       "EtM.MAC.verify",
@@ -246,7 +246,7 @@
         "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
       ],
       0,
-      "df8afafce128f1802b7ba10d7609147f"
+      "a8b8626f57c713fb243624a2e94d14b4"
     ],
     [
       "EtM.MAC.verify",
@@ -334,7 +334,45 @@
         "typing_FStar.Set.mem", "typing_FStar.UInt.fits", "typing_Prims.pow2"
       ],
       0,
-      "8cb7b4106235ae62b8c434abdc600bb9"
+      "e9c7ef46a242de40c84d1fa40e535e51"
+    ],
+    [
+      "EtM.MAC.verify",
+      3,
+      2,
+      1,
+      [
+        "@query", "assumption_Platform.Bytes.HasEq_bytes",
+        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize",
+        "equation_EtM.MAC.macsize", "equation_EtM.MAC.tag",
+        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+      ],
+      0,
+      "52c81143b76e6876dc69000d0f3f71b5"
+    ],
+    [
+      "EtM.MAC.verify",
+      4,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2_haseq",
+        "assumption_Platform.Bytes.HasEq_bytes",
+        "equality_tok_CoreCrypto.AES_128_CBC@tok",
+        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.blockSize",
+        "equation_CoreCrypto.hashSize", "equation_EtM.CPA.cipher",
+        "equation_EtM.CPA.ivsize", "equation_EtM.MAC.log_entry",
+        "equation_EtM.MAC.macsize", "equation_EtM.MAC.msg",
+        "equation_EtM.MAC.tag", "equation_Platform.Bytes.bytes",
+        "equation_Platform.Bytes.lbytes",
+        "function_token_typing_EtM.CPA.cipher",
+        "function_token_typing_EtM.MAC.tag",
+        "haseqEtM.CPA_Tm_refine_a2de0e48328ec9e47c8f36fcf85cb78b",
+        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
+      ],
+      0,
+      "77a077f86533373a1b21309b5e4ff934"
     ]
   ]
 ]

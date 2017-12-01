@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5fc651f69cfb6e017b8878b24966c7c9"
+      "626ec81a27aabe314da88238bfeb98dc"
     ],
     [
       "RandomTapes.id",
@@ -55,7 +55,16 @@
         "refinement_interpretation_RandomTapes_Tm_refine_60e263aa463cd7a4c0a43fe7e4551bdf"
       ],
       0,
-      "dd31f30a28c1609e15a755bb2cf74723"
+      "eead934017c4ee8e3f3147f628ed9d0a"
+    ],
+    [
+      "RandomTapes.otp_rand",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "ff58e9084a96fd43c8699bc36a4b590a"
     ],
     [
       "RandomTapes.otp_eq",
