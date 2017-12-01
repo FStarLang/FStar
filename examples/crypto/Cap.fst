@@ -22,7 +22,6 @@ let gen () = keygen capRead
 let issue (f:file{ canRead f }) (k:pkey capRead) = MAC.mac k (utf8 f)
 
 //val redeem: f:file -> m:SHA1.tag -> pkey capRead -> St (option (u:unit{ canRead f }))
-#set-options "--use_two_phase_tc false"  //AR: seems like #1123
 let redeem f t k = 
   if MAC.verify k (utf8 f) t then 
     Some ()

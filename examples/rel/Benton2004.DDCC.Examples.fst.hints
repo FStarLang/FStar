@@ -21,7 +21,7 @@
       1,
       [ "@query" ],
       0,
-      "e65a2dafabf49c24b49fedb6164f4667"
+      "fa20ac0c1dcf3867537004e40b368adc"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d1",
@@ -50,7 +50,16 @@
         "typing_Benton2004.evar"
       ],
       0,
-      "4c570f958c9d27786327d3f1640ab5a4"
+      "c8b78151157f4f50b8468ab0cd432308"
+    ],
+    [
+      "Benton2004.DDCC.Examples.fig3_d1",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "5a06a4252890feba9e08a005dc83752a"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d2",
@@ -100,7 +109,35 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "31b50804189da880de6340d06cde6055"
+      "eb58599667ca76333c5ea1a2552129ac"
+    ],
+    [
+      "Benton2004.DDCC.Examples.fig3_d2",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "2b91ee96fd460c6e2e608fa29ba6f09c"
+    ],
+    [
+      "Benton2004.DDCC.Examples.fig3_d2",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "d3decd6d9256175f599ae00ce32a5466"
     ],
     [
       "Benton2004.DDCC.Examples.fig3_d3",
@@ -145,7 +182,35 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "7dfb700d910164c97587b0882e36efcf"
+      "09f26a66235d9278e7d12bd00b405838"
+    ],
+    [
+      "Benton2004.DDCC.Examples.fig3_d3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "9ee99fc41b83a5647f05c714a1b9e601"
+    ],
+    [
+      "Benton2004.DDCC.Examples.fig3_d3",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "29a4fb7f21f4eb4264fc4c20b83f33fc"
     ],
     [
       "Benton2004.DDCC.Examples.fig3",
@@ -194,7 +259,53 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.sel"
       ],
       0,
-      "afba1510f072fb4f0bf458f4cbe202ec"
+      "36a4c5b4dc87be204410463b3cd32251"
+    ],
+    [
+      "Benton2004.DDCC.Examples.fig3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "a603b241e5c1904b4b240b584052a172"
+    ],
+    [
+      "Benton2004.DDCC.Examples.fig3",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Benton2004.var",
+        "equation_Prims.eqtype",
+        "function_token_typing_FStar.DM4F.Heap.IntStoreFixed.id",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "3f990aa290210b25e7d6b68e03cb3b41"
+    ],
+    [
+      "Benton2004.DDCC.Examples.fig3",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "be151ccbabab00e659e0fe5292fddf9d"
+    ],
+    [
+      "Benton2004.DDCC.Examples.fig3",
+      5,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "719149bdd336ca2833f1eee6aa486ea9"
     ]
   ]
 ]
