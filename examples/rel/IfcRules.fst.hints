@@ -59,16 +59,7 @@
         "assumption_Prims.HasEq_int"
       ],
       0,
-      "bc736ea4cba5c073fb81c4fce0f330d0"
-    ],
-    [
-      "IfcRules.low_equiv",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b36f0171f83ceb8b34786160b1fa3aac"
+      "9252b75c44e2e124ef6e4fd107814389"
     ],
     [
       "IfcRules.ni_exp",
@@ -77,7 +68,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0a48e66d81686aa80207e9d0289967b2"
+      "8c44a3eb162c3485de2ce7e139cce4be"
     ],
     [
       "IfcRules.ni_com'",
@@ -86,25 +77,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "595132e357dd52dcf374e3b17c259f2b"
-    ],
-    [
-      "IfcRules.ni_com'",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "549d83e49e82cbdda2d693ed70eb846f"
-    ],
-    [
-      "IfcRules.ni_com'",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "58f03823eb89767dbaa91260583ce36e"
+      "5682b2e4b40a9f5aa093bdbdbe76123d"
     ],
     [
       "IfcRules.sub_exp",
@@ -473,7 +446,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8a51ce30b8e867cc3763864b2f885faf"
+      "a88e636cc198282341eea8b0286d936d"
     ],
     [
       "IfcRules.while_com",

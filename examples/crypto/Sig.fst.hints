@@ -112,48 +112,7 @@
         "refinement_interpretation_Sig_Tm_refine_79a5609e5a23968ed29de422371cc63a"
       ],
       0,
-      "fd46bdd4867152a089dedb9d0eec86d4"
-    ],
-    [
-      "Sig.verify",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "8f339deb86bb54e76309761b7ea26000"
-    ],
-    [
-      "Sig.verify",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Sig.text"
-      ],
-      0,
-      "691e457c98edcc3ce1a114c267fec4a0"
-    ],
-    [
-      "Sig.verify",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.bytes", "equation_Platform.Bytes.lbytes",
-        "equation_Sig.pk", "equation_Sig.pksize", "equation_Sig.sigsize",
-        "equation_Sig.text",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "02fe76d9ae6e40dab03b89b023573f1e"
+      "f6e391ffd6d44b01df47c007ffd34117"
     ]
   ]
 ]

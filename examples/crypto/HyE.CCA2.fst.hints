@@ -86,7 +86,7 @@
         "refinement_interpretation_FStar.Monotonic.RRef_Tm_refine_ffd890ccd7288c856f2f05ce06687083"
       ],
       0,
-      "4b8fee51134701d26976879e5012a3da"
+      "6a8d9842fdd7ec1936693c465dcab25e"
     ],
     [
       "HyE.CCA2.encrypt",
@@ -110,7 +110,7 @@
         "refinement_interpretation_HyE.CCA2_Tm_refine_6e5e30b8a35b3df5111e4e25b1b2bf65"
       ],
       0,
-      "920228a912a79ad3f07bbad068286386"
+      "164166b426c4e72aac42bcc608c73107"
     ],
     [
       "HyE.CCA2.decrypt",
@@ -130,21 +130,7 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0b5a0a2d7683440b42c841019342f23e"
-    ],
-    [
-      "HyE.CCA2.decrypt",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_HyE.RSA.cipher", "equation_Platform.Bytes.bytes",
-        "equation_Platform.Bytes.lbytes",
-        "haseqPlatform.Bytes_Tm_refine_3458b9f6f40fe62446cdc2c6d3755a94"
-      ],
-      0,
-      "e59b2db44ac32554a202059f58418036"
+      "0eb35704e67a88ad3cc63576095f3110"
     ]
   ]
 ]

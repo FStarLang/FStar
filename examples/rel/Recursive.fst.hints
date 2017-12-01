@@ -17,16 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "be557b7d340d9f36fe7432155887e1be"
-    ],
-    [
-      "Recursive.fac",
-      2,
-      1,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "40265142f158ea3614ad49e11b02f038"
+      "525550171b859e4e65376b2f84f8c224"
     ],
     [
       "Recursive.fac_mon",
