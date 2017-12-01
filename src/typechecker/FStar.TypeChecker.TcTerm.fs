@@ -1432,7 +1432,14 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                                "Potentially redundant explicit currying of a function type";
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
                     | _ when not norm ->
-                        aux true (N.unfold_whnf env tres)
+                        let rec norm_tres (tres:term) :term =
+                          let tres = N.unfold_whnf env tres in
+                          match (SS.compress tres).n with
+                          | Tm_refine ( { sort = tres }, _) -> norm_tres tres
+                          | _                               -> tres
+                        in
+                        let tres = norm_tres tres in
+                        aux true (norm_tres tres)
                     | _ -> raise (Error(BU.format2 "Too many arguments to function of type %s; got %s arguments"
                                             (N.term_to_string env thead) (BU.string_of_int n_args), argpos arg)) in
             aux false chead.res_typ
