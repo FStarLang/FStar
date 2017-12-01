@@ -375,7 +375,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2eb3e27a549780fb98bdb2cc8fb26c54"
+      "9b3dbc7646e4f062e3a077a547ae6d59"
     ],
     [
       "While.interpret_while",
@@ -404,25 +404,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3804bbb3c74345d542d8f9a766825b44"
-    ],
-    [
-      "While.interpret_while",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "c98947d7df6b69a2b484913b3ed0aa3c"
-    ],
-    [
-      "While.interpret_while",
-      4,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "a07f5adc73c1de82272db8d4f0c38e42"
+      "de70883d5cbce708e3569be08d0cba86"
     ],
     [
       "While.interpret_exp_st",
@@ -480,24 +462,6 @@
       ],
       0,
       "efe9ebfd76471134641afad81a9061d2"
-    ],
-    [
-      "While.interpret_com_st",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "7843a730ae39420a8b9ed1a300bd4c16"
-    ],
-    [
-      "While.interpret_com_st",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "7a74dbafeb1f985ade58da5965b17d7a"
     ]
   ]
 ]

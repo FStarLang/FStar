@@ -22,25 +22,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "10b1ce99c795ac71b6abfa3f4b677642"
-    ],
-    [
-      "Benton2004.RHL.Examples2.phi",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "bc6fe23fa0c35fd62d5ae9df78669600"
-    ],
-    [
-      "Benton2004.RHL.Examples2.phi",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "ab721517ee4e10851d43bc6462450dd4"
+      "a7680bbcfa8255602278d5bd7ab134d9"
     ],
     [
       "Benton2004.RHL.Examples2.proof",
@@ -145,25 +127,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "1ab91b725ad9f8d5430425c54b2945d8"
-    ],
-    [
-      "Benton2004.RHL.Examples2.proof",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "574c3738eb8230c89e833fcf4fa2a45b"
-    ],
-    [
-      "Benton2004.RHL.Examples2.proof",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "bb0e4fe41ee94bed4c626b26798ccc19"
+      "52649bffee840a46e8ba9f388486d469"
     ]
   ]
 ]

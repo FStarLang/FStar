@@ -32,24 +32,14 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
-        "interpretation_Equivalence_Tm_abs_302db0542cb84fe174f74449dff28a8e",
+        "interpretation_Equivalence_Tm_abs_0fa59d72b49b5a2bc999d88ede729bfa",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__a",
         "refinement_interpretation_Equivalence_Tm_refine_3bb8de9165e5ea42e5e07a8efedd0281",
         "unit_typing"
       ],
       0,
-      "bd30102b6fecfcb7ae78729f626311ba"
-    ],
-    [
-      "Equivalence.if_left_wp",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "26108a0370c467581d2ba30abf662352"
+      "7f2f124f3a64e49524c090c8855ce18e"
     ],
     [
       "Equivalence.if_left_wp'",
@@ -66,7 +56,7 @@
         "refinement_interpretation_Equivalence_Tm_refine_362a15a1e90690626f6a6a30d2273471"
       ],
       0,
-      "dbe676cc1c1eff9aaaa001dad8a45a4b"
+      "b3fbce7047443d37ad542013ad14176b"
     ]
   ]
 ]
