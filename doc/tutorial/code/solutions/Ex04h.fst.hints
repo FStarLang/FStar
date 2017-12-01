@@ -16,7 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a9fc953c926e9a27c32a719a17dfbe2b"
+      "d69b27957e92e5f0a1c5d9e1a60c74eb"
     ],
     [
       "Ex04h.nth",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0447047f9b1cda234185b3bc05fcaaa1"
+      "390207b2b602bed20fa286d44c2dc555"
     ],
     [
       "Ex04h.nth",
@@ -51,7 +51,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "3695fa76d1d11d7e8a26f4239542edd3"
+      "be986e9bf67b99e5eca5bef82d7231a3"
     ]
   ]
 ]

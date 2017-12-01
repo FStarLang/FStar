@@ -62,7 +62,7 @@
         "typing_FStar.Seq.Base.index", "well-founded-ordering-on-nat"
       ],
       0,
-      "b8ff8cf3610cf031aa5d3bbad54e378b"
+      "e68772cdf1077cf160780cda13697dd2"
     ],
     [
       "FStar.Fin.pigeonhole",
@@ -100,6 +100,7 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_FStar.Fin_Tm_refine_22624a7f3ac59e9520f8ae54d167758f",
         "refinement_interpretation_FStar.Fin_Tm_refine_38875d319fffb1adc095084210de20ff",
@@ -117,7 +118,7 @@
         "typing_FStar.Seq.Base.index", "well-founded-ordering-on-nat"
       ],
       0,
-      "2b10e087b791588cc2cc8724f6ef57da"
+      "3c5d42d30fdfb6d40ade69f2744780a9"
     ]
   ]
 ]

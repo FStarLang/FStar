@@ -1623,18 +1623,20 @@ let bind:
                                                        c2_typ.FStar_Syntax_Syntax.effect_name in
                                                    let wp1 =
                                                      if
-                                                       FStar_List.existsb
-                                                         (fun uu___270_5161 
-                                                            ->
-                                                            match uu___270_5161
-                                                            with
-                                                            | FStar_Syntax_Syntax.RETURN
-                                                                 -> true
-                                                            | FStar_Syntax_Syntax.PARTIAL_RETURN
-                                                                 -> true
-                                                            | uu____5162 ->
-                                                                false)
-                                                         c1_typ.FStar_Syntax_Syntax.flags
+                                                       Prims.op_Negation
+                                                         (FStar_List.existsb
+                                                            (fun
+                                                               uu___270_5161 
+                                                               ->
+                                                               match uu___270_5161
+                                                               with
+                                                               | FStar_Syntax_Syntax.RETURN
+                                                                    -> true
+                                                               | FStar_Syntax_Syntax.PARTIAL_RETURN
+                                                                    -> true
+                                                               | uu____5162
+                                                                   -> false)
+                                                            c1_typ.FStar_Syntax_Syntax.flags)
                                                      then
                                                        let uu____5163 =
                                                          let uu____5164 =

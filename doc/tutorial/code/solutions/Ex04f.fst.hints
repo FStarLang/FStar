@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "68470c4dcd87bfb438eb73eeeef09119"
+      "0d5948c8138e521721a9d6afab45e099"
     ],
     [
       "Ex04f.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ddf61a7ab2ba7d15ef046365c8d2e310"
+      "89e5b6aa38202f4b8dbac6e54b93d5c4"
     ],
     [
       "Ex04f.fold_left",
@@ -42,7 +42,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2616d48d0d79599388b0a324f1dd69ae"
+      "fe5ed4752d41dac911b96e7398b06c24"
     ],
     [
       "Ex04f.append_assoc",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3122c98e4b284845a11079a4ffa399f2"
+      "c13eb6ad31e87db24ef86104150ae11a"
     ],
     [
       "Ex04f.fold_left_Cons_is_rev",
@@ -92,7 +92,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "195ee885c456f081297eedc64fb10508"
+      "c888c0e6f277490ba03ed3c4820ceb2d"
     ]
   ]
 ]

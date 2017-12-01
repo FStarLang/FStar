@@ -13,7 +13,7 @@ let right_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =
   forall (x:m). x `mult` u == x
 
 let conjunction_monoid :unit =
-  let u : prop = True in
+  let u : prop = singleton True in
   let mult (p q : prop) : prop = p /\ q in
   assume (forall (p:prop). p `mult` u == p);
   assert (right_unitality_lemma prop u mult) ;
