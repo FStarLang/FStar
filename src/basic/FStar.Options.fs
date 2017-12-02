@@ -174,6 +174,7 @@ let defaults =
       ("smtencoding.nl_arith_repr"    , String "boxwrap");
       ("smtencoding.l_arith_repr"     , String "boxwrap");
       ("split_cases"                  , Int 0);
+      ("tactic_raw_binders"           , Bool false);
       ("tactic_trace"                 , Bool false);
       ("tactic_trace_d"               , Int 0);
       ("timing"                       , Bool false);
@@ -277,6 +278,7 @@ let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
 let get_split_cases             ()      = lookup_opt "split_cases"              as_int
+let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
 let get_tactic_trace            ()      = lookup_opt "tactic_trace"             as_bool
 let get_tactic_trace_d          ()      = lookup_opt "tactic_trace_d"           as_int
 let get_timing                  ()      = lookup_opt "timing"                   as_bool
@@ -765,6 +767,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Partition VC of a match into groups of <positive_integer> cases");
 
        ( noshort,
+        "tactic_raw_binders",
+        Const (mk_bool true),
+        "Do not use the lexical scope of tactics to improve binder names");
+
+       ( noshort,
         "tactic_trace",
         Const (mk_bool true),
         "Print a depth-indexed trace of tactic execution (Warning: very verbose)");
@@ -945,6 +952,7 @@ let settable = function
     | "unthrottle_inductives"
     | "use_eq_at_higher_order"
     | "no_tactics"
+    | "tactic_raw_binders"
     | "tactic_trace"
     | "tactic_trace_d"
     | "__temp_no_proj"
@@ -1153,6 +1161,7 @@ let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwra
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
 let split_cases                  () = get_split_cases                 ()
+let tactic_raw_binders           () = get_tactic_raw_binders          ()
 let tactic_trace                 () = get_tactic_trace                ()
 let tactic_trace_d               () = get_tactic_trace_d              ()
 let timing                       () = get_timing                      ()
