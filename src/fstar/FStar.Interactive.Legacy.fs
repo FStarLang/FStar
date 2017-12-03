@@ -231,7 +231,7 @@ let deps_of_our_file filename =
   let maybe_intf = match same_name with
     | [ intf; impl ] ->
         if not (Parser.Dep.is_interface intf) || not (Parser.Dep.is_implementation impl) then
-          Errors.maybe_fatal_err (Errors.MissingInterfaceOrImplementation, (Util.format2 "Found %s and %s but not an interface + implementation" intf impl));
+          Errors.maybe_fatal_err (Errors.Fatal_MissingInterfaceOrImplementation, (Util.format2 "Found %s and %s but not an interface + implementation" intf impl));
         Some intf
     | [ impl ] ->
         None

@@ -169,7 +169,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
        | Inr c ->
              if U.is_tot_or_gtot_comp c
              then U.comp_result c
-             else raise_error (Errors.UnexpectedComputationTypeForLetRec, (BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
+             else raise_error (Errors.Fatal_UnexpectedComputationTypeForLetRec, (BU.format1 "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                                                         (Print.comp_to_string c))) rng
        | Inl t -> t in
     [], t, b
@@ -283,7 +283,7 @@ let pat_as_exp (allow_implicits:bool)
           let rec aux formals pats =
               match formals, pats with
               | [], [] -> []
-              | [], _::_ -> raise_error (Errors.TooManyPatternArguments, ("Too many pattern arguments")) (range_of_lid fv.fv_name.v)
+              | [], _::_ -> raise_error (Errors.Fatal_TooManyPatternArguments, ("Too many pattern arguments")) (range_of_lid fv.fv_name.v)
               | _::_, [] -> //fill the rest with dot patterns (if allowed), if all the remaining formals are implicit
                 formals |>
                 List.map (fun (t, imp) ->
@@ -294,7 +294,7 @@ let pat_as_exp (allow_implicits:bool)
                             maybe_dot inaccessible a r, true
 
                             | _ ->
-                              raise_error (Errors.InsufficientPatternArguments, (BU.format1 "Insufficient pattern arguments (%s)"
+                              raise_error (Errors.Fatal_InsufficientPatternArguments, (BU.format1 "Insufficient pattern arguments (%s)"
                                                       (Print.pat_to_string p))) (range_of_lid fv.fv_name.v))
 
               | f::formals', (p, p_imp)::pats' ->
@@ -598,7 +598,7 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             then if U.is_tot_or_gtot_comp c1
                  && U.is_tot_or_gtot_comp c2
                  then Inl (c2, "Early in prims; we don't have bind yet")
-                 else raise_error (Errors.NonTrivialPreConditionInPrims, ("Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")) (Env.get_range env)
+                 else raise_error (Errors.Fatal_NonTrivialPreConditionInPrims, ("Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")) (Env.get_range env)
             else if U.is_total_comp c1
                  && U.is_total_comp c2
             then subst_c2 "both total"
@@ -993,7 +993,7 @@ let pure_or_ghost_pre_and_post env comp =
                       | (req, _)::(ens, _)::_ ->
                          Some (norm req), (norm <| mk_post_type ct.result_typ ens)
                       | _ ->
-                        raise_error (Errors.EffectConstructorNotFullyApplied, (BU.format1 "Effect constructor is not fully applied; got %s" (Print.comp_to_string comp))) comp.pos
+                        raise_error (Errors.Fatal_EffectConstructorNotFullyApplied, (BU.format1 "Effect constructor is not fully applied; got %s" (Print.comp_to_string comp))) comp.pos
                    end
               else let ct = Env.unfold_effect_abbrev env comp in
                    begin match ct.effect_args with
@@ -1067,7 +1067,7 @@ let maybe_instantiate (env:Env.env) e t =
              let n_expected = number_of_implicits expected_t in
              let n_available = number_of_implicits t in
              if n_available < n_expected
-             then raise_error (Errors.MissingImplicitArguments, (BU.format3 "Expected a term with %s implicit arguments, but %s has only %s"
+             then raise_error (Errors.Fatal_MissingImplicitArguments, (BU.format3 "Expected a term with %s implicit arguments, but %s has only %s"
                                         (BU.string_of_int n_expected)
                                         (Print.term_to_string e)
                                         (BU.string_of_int n_available))) (Env.get_range env)
@@ -1160,7 +1160,7 @@ let check_universe_generalization
   match explicit_univ_names, generalized_univ_names with
   | [], _ -> generalized_univ_names
   | _, [] -> explicit_univ_names
-  | _ -> raise_error (Errors.UnexpectedGeneralizedUniverse, ("Generalized universe in a term containing explicit universe annotation : "
+  | _ -> raise_error (Errors.Fatal_UnexpectedGeneralizedUniverse, ("Generalized universe in a term containing explicit universe annotation : "
                       ^ Print.term_to_string t)) t.pos
 
 let generalize_universes (env:env) (t0:term) : tscheme =
@@ -1230,7 +1230,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                                    requires an incompatible set of universes for %s and %s"
                             (Print.lbname_to_string lb1)
                             (Print.lbname_to_string lb2) in
-             raise_error (Errors.IncompatibleSetOfUniverse, msg) (Env.get_range env)
+             raise_error (Errors.Fatal_IncompatibleSetOfUniverse, msg) (Env.get_range env)
      in
      let force_uvars_eq lec2 u1 u2 =
         let uvars_subseteq u1 u2 =
@@ -1246,7 +1246,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                                    requires an incompatible number of types for %s and %s"
                             (Print.lbname_to_string lb1)
                             (Print.lbname_to_string lb2) in
-             raise_error (Errors.IncompatibleNumberOfTypes, msg) (Env.get_range env)
+             raise_error (Errors.Fatal_IncompatibleNumberOfTypes, msg) (Env.get_range env)
      in
 
      let lecs =
@@ -1264,7 +1264,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let gen_types uvs =
          let fail k =
              let lbname, e, c = lec_hd in
-               raise_error (Errors.FailToResolveImplicitArgument, (BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
+               raise_error (Errors.Fatal_FailToResolveImplicitArgument, (BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
                                        (Print.term_to_string k)
                                        (Print.lbname_to_string lbname)
                                        (Print.term_to_string (U.comp_result c))))
@@ -1613,7 +1613,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
       let r = U.range_of_sigelt se in
       let no_dup_quals = BU.remove_dups (fun x y -> x=y) quals in
       let err' msg =
-          raise_error (Errors.QulifierListNotPermitted, (BU.format2
+          raise_error (Errors.Fatal_QulifierListNotPermitted, (BU.format2
                           "The qualifier list \"[%s]\" is not permissible for this element%s"
                           (Print.quals_to_string quals) msg)) r in
       let err msg = err' (": " ^ msg) in
@@ -1893,7 +1893,7 @@ let mk_data_operations iquals env tcs se =
             | None ->
                 if lid_equals typ_lid C.exn_lid
                 then [], U.ktype0, true
-                else raise_error (Errors.UnexpectedDataConstructor, "Unexpected data constructor") se.sigrng
+                else raise_error (Errors.Fatal_UnexpectedDataConstructor, "Unexpected data constructor") se.sigrng
     in
 
     let inductive_tps = SS.subst_binders univ_opening inductive_tps in

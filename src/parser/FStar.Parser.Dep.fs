@@ -89,7 +89,7 @@ let module_name_of_file f =
     | Some longname ->
       longname
     | None ->
-      raise_err (Errors.NotValidFStarFile, (Util.format1 "not a valid FStar file: %s\n" f))
+      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "not a valid FStar file: %s\n" f))
 
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
@@ -177,7 +177,7 @@ let file_of_dep_aux
       (match interface_of file_system_map key with
        | None ->
          assert false; //should be unreachable; see the only use of UseInterface in discover_one
-         raise_err (Errors.MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
+         raise_err (Errors.Fatal_MissingInterface, BU.format1 "Expected an interface for module %s, but couldn't find one" key)
        | Some f ->
          if use_checked_file then f ^ ".source" else f)
 
@@ -187,7 +187,7 @@ let file_of_dep_aux
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
            then maybe_add_suffix (Option.get (implementation_of file_system_map key))
-           else raise_err (Errors.MissingExposeInterfacesOption, BU.format2 "Invoking fstar with %s on the command line breaks \
+           else raise_err (Errors.Fatal_MissingExposeInterfacesOption, BU.format2 "Invoking fstar with %s on the command line breaks \
                                        the abstraction imposed by its interface %s; \
                                        if you really want this behavior add the option '--expose_interfaces'"
                                        (Option.get (implementation_of file_system_map key))
@@ -203,7 +203,7 @@ let file_of_dep_aux
           //the previous case already established that the interface doesn't exist
           //     since if the implementation was on the command line, it must exist because of option validation
           assert false; //unreachable
-          raise_err (Errors.MissingImplementation, BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
+          raise_err (Errors.Fatal_MissingImplementation, BU.format1 "Expected an implementation of module %s, but couldn't find one" key)
         | Some f -> maybe_add_suffix f
 
 let file_of_dep = file_of_dep_aux false
@@ -272,7 +272,7 @@ let build_inclusion_candidates_list (): list<(string * string)> =
               (longname, full_path))
       ) files
     else
-      raise_err (Errors.NotValidIncludeDirectory, (Util.format1 "not a valid include directory: %s\n" d))
+      raise_err (Errors.Fatal_NotValidIncludeDirectory, (Util.format1 "not a valid include directory: %s\n" d))
   ) include_directories
 
 (** List the contents of all include directories, then build a map from long
@@ -409,7 +409,7 @@ let collect_one
       else begin
         if let_open then
            FStar.Errors.maybe_fatal_error (range_of_lid lid)
-            (Errors.ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true)));
+            (Errors.Fatal_ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true)));
         false
       end
   in
@@ -419,7 +419,7 @@ let collect_one
     let r = enter_namespace original_map working_map key in
     if not r then
         FStar.Errors.maybe_fatal_error (range_of_lid lid)
-          (Errors.ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
+          (Errors.Fatal_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
             that name either" (string_of_lid lid true)))
   in
 
@@ -446,7 +446,7 @@ in
         true
     | None ->
         FStar.Errors.maybe_fatal_error (range_of_lid lid)
-          (Errors.ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s\n" alias));
+          (Errors.Fatal_ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s\n" alias));
         false
   in
 
@@ -513,7 +513,7 @@ in
     | TopLevelModule lid ->
         incr num_of_toplevelmods;
         if (!num_of_toplevelmods > 1) then
-            raise_error (Errors.OneModulePerFile, Util.format1 "Automatic dependency analysis demands one \
+            raise_error (Errors.Fatal_OneModulePerFile, Util.format1 "Automatic dependency analysis demands one \
               module per file (module %s not supported)" (string_of_lid lid true)) (range_of_lid lid)
   and collect_tycon = function
     | TyconAbstract (_, binders, k) ->
@@ -877,6 +877,6 @@ let print deps =
       let (Mk(deps, _, _)) = deps in
       print_graph deps
   | Some _ ->
-      raise_err (Errors.UnknownToolForDep, "unknown tool for --dep\n")
+      raise_err (Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
   | None ->
       assert false

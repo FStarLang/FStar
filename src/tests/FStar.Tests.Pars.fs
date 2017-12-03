@@ -37,7 +37,7 @@ let parse_mod mod_name dsenv =
         raise (Error(err, msg, r))
     | ASTFragment (Inr _, _) ->
         let msg = BU.format1 "%s: expected a module\n" mod_name in
-        raise_error (Errors.ModuleExpected, msg) dummyRange
+        raise_error (Errors.Fatal_ModuleExpected, msg) dummyRange
     | Term _ ->
         failwith "Impossible: parsing a Filename always results in an ASTFragment"
 
@@ -107,7 +107,7 @@ let pars_and_tc_fragment (s:string) =
           let n = get_err_count () in
           if n <> 0
           then (report ();
-                raise_err (Errors.ErrorsReported, BU.format1 "%s errors were reported" (string_of_int n)))
-        with e -> report(); raise_err (Errors.TcOneFragmentFailed, "tc_one_fragment failed: " ^s)
+                raise_err (Errors.Fatal_ErrorsReported, BU.format1 "%s errors were reported" (string_of_int n)))
+        with e -> report(); raise_err (Errors.Fatal_TcOneFragmentFailed, "tc_one_fragment failed: " ^s)
     with
         | e when not ((Options.trace_error())) -> raise e

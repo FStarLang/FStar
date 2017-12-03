@@ -220,12 +220,12 @@ let check_id id =
     let first_char = String.substring id.idText 0 1 in
     if String.lowercase first_char = first_char
     then ()
-    else raise_error (InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText)  id.idRange 
+    else raise_error (Fatal_InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText)  id.idRange 
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
   | [] -> None
-  | _ -> raise_error (MoreThanOneDeclaration, (Util.format1 "At most one %s is allowed on declarations" s)) r
+  | _ -> raise_error (Fatal_MoreThanOneDeclaration, (Util.format1 "At most one %s is allowed on declarations" s)) r
 
 let mk_decl d r decorations =
   let doc = at_most_one "fsdoc" r (List.choose (function Doc d -> Some d | _ -> None) decorations) in
@@ -424,7 +424,7 @@ let rec as_mlist (cur: (lid * decl) * list<decl>) (ds:list<decl>) : modul =
     | d :: ds ->
         begin match d.d with
         | TopLevelModule m' ->
-            raise_error (UnexpectedModuleDeclaration, "Unexpected module declaration") d.drange
+            raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") d.drange
         | _ ->
             as_mlist ((m_name, m_decl), d::cur) ds
         end
@@ -442,7 +442,7 @@ let as_frag is_light (light_range:Range.range) (ds:list<decl>) : inputFragment =
   | _ ->
       let ds = d::ds in
       List.iter (function
-        | {d=TopLevelModule _; drange=r} -> raise_error (UnexpectedModuleDeclaration, "Unexpected module declaration") r
+        | {d=TopLevelModule _; drange=r} -> raise_error (Fatal_UnexpectedModuleDeclaration, "Unexpected module declaration") r
         | _ -> ()
       ) ds;
       Inr ds
@@ -470,7 +470,7 @@ let compile_op arity s r =
       |':' -> "Colon"
       |'$' -> "Dollar"
       |'.' -> "Dot"
-      | c -> raise_error (UnexpectedOperatorSymbol, "Unexpected operator symbol: '" ^ string_of_char c ^ "'") r
+      | c -> raise_error (Fatal_UnexpectedOperatorSymbol, "Unexpected operator symbol: '" ^ string_of_char c ^ "'") r
     in
     match s with
     | ".[]<-" -> "op_String_Assignment"

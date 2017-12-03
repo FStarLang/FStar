@@ -69,7 +69,7 @@ let parse (env:TcEnv.env) (pre_fn: option<string>) (fn:string)
           let _, env = with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface lid1 decls1 in
           with_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast true
         | _ ->
-            Errors.raise_err (Errors.PreModuleMismatch, "mismatch between pre-module and module\n")
+            Errors.raise_err (Errors.Fatal_PreModuleMismatch, "mismatch between pre-module and module\n")
   in
   with_tcenv env <| Desugar.ast_modul_to_modul ast
 
@@ -123,7 +123,7 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
            BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
                        (Parser.Dep.module_name_of_file (List.hd (Options.file_list ())))
        in
-       Errors.raise_error (Errors.NonSingletonTopLevelModule, msg)
+       Errors.raise_error (Errors.Fatal_Fatal_NonSingletonTopLevelModule, msg)
                              (range_of_first_mod_decl ast_modul)
     end;
     let modul, _, env = if DsEnv.syntax_only env.dsenv then (modul, [], env)
@@ -133,7 +133,7 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
     match curmod with
     | None ->
       let { Parser.AST.drange = rng } = List.hd ast_decls in
-      Errors.raise_error (Errors.ModuleFirstStatement, "First statement must be a module declaration") rng
+      Errors.raise_error (Errors.Fatal_ModuleFirstStatement, "First statement must be a module declaration") rng
     | Some modul ->
       let env, ast_decls_l =
           BU.fold_map
@@ -156,7 +156,7 @@ let load_interface_decls env interface_file_name : FStar.TypeChecker.Env.env =
   | Pars.ASTFragment (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
     snd (with_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
   | Pars.ASTFragment _ ->
-    Errors.raise_err (FStar.Errors.ParseErrors, (BU.format1 "Unexpected result from parsing %s; expected a single interface"
+    Errors.raise_err (FStar.Errors.Fatal_ParseErrors, (BU.format1 "Unexpected result from parsing %s; expected a single interface"
                              interface_file_name))
   | Pars.ParseError (err, msg, rng) ->
     raise (FStar.Errors.Error(err, msg, rng))

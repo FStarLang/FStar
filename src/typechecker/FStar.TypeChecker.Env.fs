@@ -302,10 +302,10 @@ let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface &&
 let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (text_of_lid lid)
 
 let name_not_found (l:lid) =
-  (Errors.NameNotFound, (format1 "Name \"%s\" not found" l.str))
+  (Errors.Fatal_NameNotFound, (format1 "Name \"%s\" not found" l.str))
 
 let variable_not_found v =
-  (Errors.VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
+  (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
 
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (Unionfind.univ_fresh ())
@@ -765,7 +765,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
        || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
   then Const.effect_GTot_lid, identity_mlift, identity_mlift
   else match env.effects.joins |> BU.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
-        | None -> raise_error (Errors.EffectsCannotBeComposed, (BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
+        | None -> raise_error (Errors.Fatal_EffectsCannotBeComposed, (BU.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
         | Some (_, _, m3, j1, j2) -> m3, j1, j2
 
 let monad_leq env l1 l2 : option<edge> =
@@ -894,7 +894,7 @@ let build_lattice env se = match se.sigel with
     let _ = order |> List.iter (fun edge ->
         if Ident.lid_equals edge.msource Const.effect_DIV_lid
         && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
-        then raise_error (Errors.DivergentComputationCannotBeIncludedInTotal, (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str)) (get_range env))
+        then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal, (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str)) (get_range env))
     in
     let joins =
       ms |> List.collect (fun i ->
@@ -961,7 +961,7 @@ let rec unfold_effect_abbrev env comp =
     | Some (binders, cdef) ->
       let binders, cdef = Subst.open_comp binders cdef in
       if List.length binders <> List.length c.effect_args + 1
-      then raise_error (Errors.ConstructorArgLengthMismatch, (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
+      then raise_error (Errors.Fatal_ConstructorArgLengthMismatch, (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                                 (BU.string_of_int (List.length binders))
                                 (BU.string_of_int (List.length c.effect_args + 1))
                                 (Print.comp_to_string (S.mk_Comp c)))) comp.pos;
@@ -990,14 +990,14 @@ let effect_repr_aux only_reifiable env c u_c =
               let message = BU.format1 "Not enough arguments for effect %s. " name ^
                 "This usually happens when you use a partially applied DM4F effect, " ^
                 "like [TAC int] instead of [Tac int]." in
-              raise_error (Errors.NotEnoughArgumentsForEffect, message) (get_range env) in
+              raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) (get_range env) in
           let repr = inst_effect_fun_with [u_c] env ed ([], ed.repr) in
           Some (S.mk (Tm_app(repr, [as_arg res_typ; wp])) None (get_range env))
 
 let effect_repr env c u_c : option<term> = effect_repr_aux false env c u_c
 
 let reify_comp env c u_c : term =
-    let no_reify l = raise_error (Errors.EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l))) (get_range env) in
+    let no_reify l = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (Ident.string_of_lid l))) (get_range env) in
     match effect_repr_aux true env c u_c with
     | None -> no_reify (U.comp_effect_name c)
     | Some tm -> tm

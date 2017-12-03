@@ -47,7 +47,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise_err (Errors.ModuleOrFileNotFound, (Util.format1 "Unable to find file: %s\n" filename))
+      raise_err (Errors.Fatal_ModuleOrFileNotFound, (Util.format1 "Unable to find file: %s\n" filename))
 
 let vfs_entries : Util.smap<(time * string)> = Util.smap_create 1
 
@@ -75,7 +75,7 @@ let read_file (filename:string) =
       let fs = new System.IO.StreamReader(filename) in
       filename, fs.ReadToEnd ()
     with _ ->
-      raise_err (Errors.UnableToReadFile, (Util.format1 "Unable to read file %s" filename))
+      raise_err (Errors.Fatal_UnableToReadFile, (Util.format1 "Unable to read file %s" filename))
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
@@ -90,7 +90,7 @@ let has_extension file extensions =
 let check_extension fn =
   if (not (has_extension fn (valid_extensions ()))) then
     let message = format1 "Unrecognized extension '%s'" fn in
-    raise_err (Errors.UnrecognizedExtension, (if has_extension fn fs_extensions then
+    raise_err (Errors.Fatal_UnrecognizedExtension, (if has_extension fn fs_extensions then
                   message ^ " (pass --MLish to process .fs and .fsi files)"
                 else message))
 

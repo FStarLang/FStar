@@ -72,7 +72,7 @@ let check_no_escape head_opt env (fvs:list<bv>) kt =
                         | None -> BU.format1 "Bound variables '%s' escapes; add a type annotation" (Print.bv_to_string x)
                         | Some head -> BU.format2 "Bound variables '%s' in the type of '%s' escape because of impure applications; add explicit let-bindings"
                                         (Print.bv_to_string x) (N.term_to_string env head) in
-                       raise_error (Errors.EscapedBoundVar, msg) (Env.get_range env) in
+                       raise_error (Errors.Fatal_EscapedBoundVar, msg) (Env.get_range env) in
                    let s = TcUtil.new_uvar env (fst <| U.type_u()) in
                    match Rel.try_teq true env t s with
                     | Some g -> Rel.force_trivial_guard env g; s
@@ -282,7 +282,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                         (Print.lbname_to_string l) (Print.term_to_string t) (Print.term_to_string t');
                   l, t', u_names
 
-                | _ -> raise_error (Errors.ExpectedArrowAnnotatedType, "Annotated type of 'let rec' must be an arrow") t.pos in
+                | _ -> raise_error (Errors.Fatal_ExpectedArrowAnnotatedType, "Annotated type of 'let rec' must be an arrow") t.pos in
 
         letrecs |> List.map guard_one_letrec
 
@@ -418,7 +418,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app({n=Tm_constant Const_range_of}, _)
   | Tm_app({n=Tm_constant Const_set_range_of}, _) ->
-    raise_error (Errors.IllAppliedConstant, BU.format1 "Ill-applied constant %s" (Print.term_to_string top)) e.pos
+    raise_error (Errors.Fatal_IllAppliedConstant, BU.format1 "Ill-applied constant %s" (Print.term_to_string top)) e.pos
 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
@@ -460,7 +460,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
     if Option.isSome aqual
     then Errors.maybe_fatal_error e.pos (Errors.IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
-    let no_reflect () = raise_error (Errors.EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos in
+    let no_reflect () = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos in
     let reflect_op, _ = U.head_and_args top in
     begin match Env.effect_decl_opt env l with
     | None -> no_reflect()
@@ -644,7 +644,7 @@ and tc_synth env args rng =
     | (a, Some (Implicit _)) :: (_, Some (Implicit _)) :: (tau, None) :: rest ->
         tau, Some a, rest
     | _ ->
-        raise_error (Errors.SynthByTacticError, "synth_by_tactic: bad application") rng
+        raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: bad application") rng
     in
 
     let typ =
@@ -652,7 +652,7 @@ and tc_synth env args rng =
         | Some t -> t
         | None -> begin match Env.expected_typ env with
                   | Some t -> t
-                  | None -> raise_error (Errors.SynthByTacticError, "synth_by_tactic: need a type annotation when no expected type is present") (Env.get_range env)
+                  | None -> raise_error (Errors.Fatal_SynthByTacticError, "synth_by_tactic: need a type annotation when no expected type is present") (Env.get_range env)
                   end
     in
 
@@ -713,7 +713,7 @@ and tc_value env (e:term) : term
         | Some (Record_ctor _) -> true
         | _ -> false in
     if is_data_ctor dc && not(Env.is_datacon env v.v)
-    then raise_error (Errors.MissingDataConstructor, (BU.format1 "Expected a data constructor; got %s" v.v.str)) (Env.get_range env)
+    then raise_error (Errors.Fatal_MissingDataConstructor, (BU.format1 "Expected a data constructor; got %s" v.v.str)) (Env.get_range env)
     else value_check_expected_typ env e tc implicits in
 
   //As a general naming convention, we use e for the term being analyzed and its subterms as e1, e2, etc.
@@ -756,13 +756,13 @@ and tc_value env (e:term) : term
 
   | Tm_uinst({n=Tm_fvar fv}, _)
   | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid ->
-    raise_error (Errors.BadlyInstantiatedSynthByTactic, "Badly instantiated synth_by_tactic") (Env.get_range env)
+    raise_error (Errors.Fatal_BadlyInstantiatedSynthByTactic, "Badly instantiated synth_by_tactic") (Env.get_range env)
 
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in
     let (us', t), range = Env.lookup_lid env fv.fv_name.v in
     if List.length us <> List.length us'
-    then raise_error (Errors.UnexpectedNumberOfUniverse, (BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
+    then raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, (BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
                                     (Print.fv_to_string fv)
                                     (string_of_int (List.length us))
                                     (string_of_int (List.length us')))) (Env.get_range env)
@@ -877,7 +877,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
         raise_error ((Errors.IllTyped (Const.const_to_string c)), BU.format1 "Ill-typed %s: this constant must be fully applied"
                                  (Const.const_to_string c)) r
 
-      | _ -> raise_error (Errors.UnsupportedConstant, "Unsupported constant") r
+      | _ -> raise_error (Errors.Fatal_UnsupportedConstant, "Unsupported constant") r
 
 
 (************************************************************************************************************)
@@ -976,7 +976,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                begin match imp, imp' with
                     | None, Some (Implicit _)
                     | Some (Implicit _), None ->
-                      raise_error (Errors.InconsistentImplicitArgumentAnnotation, (BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))) (S.range_of_bv hd)
+                      raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation, (BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))) (S.range_of_bv hd)
                     | _ -> ()
                end;
                (* since binders depend on previous ones, we accumulate a substitution *)
@@ -1380,7 +1380,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 | Some (Implicit _), Some (Implicit _)
                 | None, None
                 | Some Equality, None -> ()
-                | _ -> raise_error (Errors.InconsistentImplicitQualifier, "Inconsistent implicit qualifier") e.pos in
+                | _ -> raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifier") e.pos in
             let targ = SS.subst subst x.sort in
             let x = {x with sort=targ} in
             if debug env Options.Extreme then  BU.print1 "\tType of arg (after subst) = %s\n" (Print.term_to_string targ);
@@ -1416,7 +1416,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
                     | _ when not norm ->
                         aux true (N.unfold_whnf env tres)
-                    | _ -> raise_error (Errors.ToManyArgumentToFunction, (BU.format2 "Too many arguments to function of type %s; got %s arguments"
+                    | _ -> raise_error (Errors.Fatal_ToManyArgumentToFunction, (BU.format2 "Too many arguments to function of type %s; got %s arguments"
                                             (N.term_to_string env thead) (BU.string_of_int n_args))) (argpos arg) in
             aux false chead.res_typ
     in //end tc_args
@@ -1488,7 +1488,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
         | Tm_arrow(bs, c) when (U.is_total_comp c && List.length bs=List.length args) ->
           let res_t = U.comp_result c in
           let args, guard, ghost = List.fold_left2 (fun (seen, guard, ghost) (e, aq) (b, aq') ->
-                if aq<>aq' then raise_error (Errors.InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") e.pos;
+                if aq<>aq' then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") e.pos;
                 let e, c, g = tc_check_tot_or_gtot_term env e b.sort in //NS: this forbids stuff like !x && y, maybe that's ok
                 let short = TcUtil.short_circuit head seen in
                 let g = Rel.imp_guard (Rel.guard_of_guard_formula short) g in
@@ -1586,7 +1586,7 @@ and tc_eqn scrutinee env branch
         then let env1 = Env.set_range env1 exp.pos in
              Rel.discharge_guard_no_smt env1 g |>
              Rel.resolve_implicits
-        else raise_error (Errors.MismatchedPatternType, BU.format2 "Inferred type of pattern (%s) is incompatible with the type of the scrutinee (%s)"
+        else raise_error (Errors.Fatal_MismatchedPatternType, BU.format2 "Inferred type of pattern (%s) is incompatible with the type of the scrutinee (%s)"
                                        (Print.term_to_string lc.res_typ)
                                        (Print.term_to_string expected_pat_t))
                            exp.pos
@@ -1596,7 +1596,7 @@ and tc_eqn scrutinee env branch
     let uvs2 = Free.uvars expected_pat_t in
     if not <| BU.set_is_subset_of uvs1 uvs2
     then (let unresolved = BU.set_difference uvs1 uvs2 |> BU.set_elements in
-            raise_error (Errors.UnresolvedPatternVar, (BU.format3 "Implicit pattern variables in %s could not be resolved against expected type %s;\
+            raise_error (Errors.Fatal_UnresolvedPatternVar, (BU.format3 "Implicit pattern variables in %s could not be resolved against expected type %s;\
                                         Variables {%s} were unresolved; please bind them explicitly"
                                 (N.term_to_string env norm_exp)
                                 (N.term_to_string env expected_pat_t)
@@ -1623,7 +1623,7 @@ and tc_eqn scrutinee env branch
     | None -> None, Rel.trivial_guard
     | Some e ->
         if Env.should_verify env
-        then raise_error (Errors.WhenClauseNotSupported, "When clauses are not yet supported in --verify mode; they will be some day") e.pos
+        then raise_error (Errors.WhenClauseFatal_NotSupported, "When clauses are not yet supported in --verify mode; they will be some day") e.pos
         //             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env TcUtil.t_bool) e in
         //             Some e, g
         else let e, c, g = tc_term (Env.set_expected_typ pat_env t_bool) e in
@@ -2019,14 +2019,14 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t =
                             (Print.lbname_to_string lbname)
                             formals_msg
                             actuals_msg in
-            //raise_error (Errors.LetRecArgumentMismatch, msg) lbdef.pos  //AR: this check does not consider an lbdef of the form (fun x -> fun y -> ...), also the checks seems misplaced in this function?
+            //raise_error (Errors.Fatal_LetRecArgumentMismatch, msg) lbdef.pos  //AR: this check does not consider an lbdef of the form (fun x -> fun y -> ...), also the checks seems misplaced in this function?
                                                                           //Thigs like this don't typecheck with this: let rec foo :int -> int -> int = fun x -> let z = 3 in fun y -> x + y + z
             BU.print1 "%s\n" msg
        end;
        let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
        quals |> List.contains TotalEffect
      | _ ->
-       raise_error (Errors.RecursiveFunctionLiteral, (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
+       raise_error (Errors.Fatal_RecursiveFunctionLiteral, (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
                                (Print.term_to_string lbdef)
                                (Print.term_to_string lbtyp))) lbtyp.pos
    in
@@ -2063,11 +2063,11 @@ and check_let_recs env lbs =
         let _ = //see issue #1017
            match (SS.compress lb.lbdef).n with
             | Tm_abs _ -> ()
-            | _ -> raise_error (Errors.RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
+            | _ -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
         in
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (U.is_total_lcomp c)
-        then raise_error (Errors.UnexpectedGTotForLetRec, "Expected let rec to be a Tot term; got effect GTot") e.pos;
+        then raise_error (Errors.Fatal_UnexpectedGTotForLetRec, "Expected let rec to be a Tot term; got effect GTot") e.pos;
         (* replace the body lb.lbdef with the type checked body e with elaboration on monadic application *)
         let lb = U.mk_letbinding lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid e in
         lb, g) |> List.unzip in
@@ -2092,7 +2092,7 @@ and check_let_bound_def top_level env lb
     let topt, wf_annot, univ_vars, univ_opening, env1 = check_lbtyp top_level env lb in
 
     if not top_level && univ_vars <> []
-    then raise_error (Errors.UniversePolymorphicInnerLetBound, "Inner let-bound definitions cannot be universe polymorphic") e1.pos;
+    then raise_error (Errors.Fatal_UniversePolymorphicInnerLetBound, "Inner let-bound definitions cannot be universe polymorphic") e1.pos;
 
     (* 2. type-check e1 *)
     (* Only toplevel terms should have universe openings *)
@@ -2227,10 +2227,10 @@ let type_of_tot_term env e =
         with Error(e, msg, _) -> raise_error (e, msg) (Env.get_range env) in
     if U.is_total_lcomp c
     then t, c.res_typ, g
-    else raise_error (Errors.UnexpectedImplictArgument, (BU.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e))) (Env.get_range env)
+    else raise_error (Errors.Fatal_UnexpectedImplictArgument, (BU.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e))) (Env.get_range env)
 
 let level_of_type_fail env e t =
-    raise_error (Errors.UnexpectedTermType, (BU.format2 "Expected a term of type 'Type'; got %s : %s"
+    raise_error (Errors.Fatal_Fatal_UnexpectedTermType, (BU.format2 "Expected a term of type 'Type'; got %s : %s"
                                 (Print.term_to_string e) t)) (Env.get_range env)
 
 let level_of_type env e t =
@@ -2297,7 +2297,7 @@ let rec universe_of_aux env e =
    | Tm_uinst({n=Tm_fvar fv}, us) ->
      let (us', t), _ = Env.lookup_lid env fv.fv_name.v in
      if List.length us <> List.length us'
-     then raise_error (Errors.UnexpectedNumberOfUniverse, "Unexpected number of universe instantiations") (Env.get_range env)
+     then raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, "Unexpected number of universe instantiations") (Env.get_range env)
      else List.iter2 (fun u' u -> match u' with
         | U_unif u'' -> UF.univ_change u'' u
         | _ -> failwith "Impossible") us' us;

@@ -639,7 +639,7 @@ let rec resugar_term (t : S.term) : A.term =
                 let h, uvs, args' = head_fv_universes_args head in
                 h, uvs, args' @ args
               | _ ->
-                Errors.raise_error (Errors.NotApplicationOrFv, (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h)))) e.pos
+                Errors.raise_error (Errors.Fatal_NotApplicationOrFv, (BU.format1 "Not an application or a fv %s" (parser_term_to_string (resugar_term h)))) e.pos
             in
             let head, universes, args =
               (* the Tm_app for Data_app could be wrapped inside Tm_meta(_, Meta_monadic) after TypeChecker *)
@@ -647,7 +647,7 @@ let rec resugar_term (t : S.term) : A.term =
               (* TODO : report this Meta_monadic if the right options are set *)
               try head_fv_universes_args (U.unmeta e) with
                 | E.Err _ ->
-                  Errors.raise_error (Errors.WrongDataAppHeadFormat, (BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e)))) e.pos
+                  Errors.raise_error (Errors.Fatal_WrongDataAppHeadFormat, (BU.format1 "wrong Data_app head format %s" (parser_term_to_string (resugar_term e)))) e.pos
             in
             let universes = List.map (fun u -> (resugar_universe u t.pos, A.UnivApp)) universes in
             let args =

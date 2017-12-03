@@ -43,7 +43,7 @@ let guard_eq i g g' =
         BU.format3 "Test %s failed:\n\t\
                         Expected guard %s;\n\t\
                         Got guard      %s\n" (BU.string_of_int i) (guard_to_string g') (guard_to_string g) in
-    raise_error (Errors.UnexpectedGuard, msg) Range.dummyRange
+    raise_error (Errors.Fatal_UnexpectedGuard, msg) Range.dummyRange
 
 let unify i x y g' check =
     BU.print1 "%s ..." (BU.string_of_int i);

@@ -72,10 +72,10 @@ let inline trim_and_check_range_u lexbuf narrow descr =
 
 let checkExprOp lexbuf =
   if String.contains (ulexeme lexbuf)  ':'
-  then raise_error (Errors.IllegalCharInOperatorName, "':' is no longer permitted as a character in operator names") (getLexerRange lexbuf)
+  then raise_error (Errors.Fatal_IllegalCharInOperatorName, "':' is no longer permitted as a character in operator names") (getLexerRange lexbuf)
 
 let unexpected_char lexbuf =
-    raise_err (Errors.UnexpectedChar, "Unexpected character '"^(lexeme lexbuf)^"'")
+    raise_err (Errors.Fatal_UnexpectedChar, "Unexpected character '"^(lexeme lexbuf)^"'")
 
 let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) =
     let buf = Bytes.create 100 in
@@ -112,7 +112,7 @@ let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBu
    let char_ok = new System.Text.RegularExpressions.Regex(@"\w|\s|\(|\)|<|>|\*|-|'|,|\.") in
    let balanced (contents : string) pos =
     if Util.char_at contents pos <> '<' then
-      raise_err (Errors.UnexpectedPosition, "Unexpected position. die!");
+      raise_err (Errors.Fatal_UnexpectedPosition, "Unexpected position. die!");
     let d = {angle=ref 1; paren=ref 0} in
     let upd i = match Util.char_at contents i with
       | '(' -> incr d.paren
@@ -301,7 +301,7 @@ rule token args = parse
  | "\\/"   { DISJUNCTION }
  | '\'' hexgraph_short '\'' { CHAR (char (int32 (Lexhelp.hexgraph_short (trim_both lexbuf 3 1)))) }
  | '\'' unicodegraph_short '\'' { CHAR (char (int32 (Lexhelp.unicodegraph_short (trim_both lexbuf 3 1)))) }
- | '\'' unicodegraph_long '\''  { raise_err (Errors.InvalidUnicodeInStringLiteral, "This unicode encoding is only valid in string literals") }
+ | '\'' unicodegraph_long '\''  { raise_err (Errors.Fatal_InvalidUnicodeInStringLiteral, "This unicode encoding is only valid in string literals") }
  | "<:"             { SUBTYPE }
  | "<@"             { SUBKIND }
 

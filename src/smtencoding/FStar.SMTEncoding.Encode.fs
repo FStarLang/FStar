@@ -2478,7 +2478,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       match arg.tm with
                       | FreeV fv -> fv
                       | _ ->
-                         Errors.raise_error (Errors.NonVaribleInductiveTypeParameter,
+                         Errors.raise_error (Errors.Fatal_NonVaribleInductiveTypeParameter,
                            BU.format1 "Inductive type parameter %s must be a variable ; \
                                        You may want to change it to an index."
                                       (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos
@@ -2539,7 +2539,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   arg_decls, [typing_inversion; subterm_ordering]
 
                 | _ ->
-                  Errors.maybe_fatal_error se.sigrng (Errors.UnexpectedConstructorType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
+                  Errors.maybe_fatal_error se.sigrng (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
                         (Print.lid_to_string d) (Print.term_to_string head)));
                   [], [] in
         let decls2, elim = encode_elim () in

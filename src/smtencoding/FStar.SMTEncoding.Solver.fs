@@ -295,7 +295,7 @@ let report_errors settings : unit =
             String.concat "; " in
           FStar.TypeChecker.Err.add_errors
                    settings.query_env
-                   [(Errors.UnknownAssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
+                   [(Errors.UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
                      settings.query_range)]
     end
 

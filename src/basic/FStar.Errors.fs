@@ -7,289 +7,289 @@ open FStar.Util
 open FStar.Range
 
 type raw_error =
-  | ReservedPrefix
-  | NotValidFStarFile
-  | NotValidIncludeDirectory
-  | ModuleFileNotFound
-  | UnknownToolForDep
-  | UnrecognizedExtension
-  | UnableToReadFile
-  | Uninstantiated
-  | IllTyped of string
-  | ValueRestriction
-  | UnexpectedEffect
-  | NotTopLevelModule
-  | NonSingletonTopLevel
-  | MissingPrimsModule
-  | MissingFileName
-  | TooManyFiles
-  | NotSupported
-  | OptionsNotCompatible
-  | NoFileProvided
-  | NonSingletonTopLevelModule
-  | PreModuleMismatch
-  | ModuleFirstStatement
-  | ParseErrors
-  | MultipleLetBinding
-  | UnexpectedIdentifier
-  | InlineRenamedAsUnfold
-  | UnfoldableDeprecated
-  | DeprecatedEqualityOnBinder
-  | MissingQuantifierBinder
-  | OutOfRange of string (* the type of the integer *)
-  | OpPlusInUniverse
-  | InvalidUniverseVar
-  | InvalidIdentifier
-  | MoreThanOneDeclaration
-  | Filtered
-  | UnexpectedModuleDeclaration
-  | UnexpectedOperatorSymbol
-  | UnexpectedTerm
-  | ModuleFileNameMismatch
-  | LetOpenModuleOnly
-  | ModuleOrFileNotFound
-  | ModuleOrFileNotFoundWarning
-  | UnboundModuleReference
-  | OneModulePerFile
-  | SyntaxError
-  | ParseItError
-  | ModuleExpected
-  | DefinitionNotFound
   | AbstractTypeNotAllowed
-  | DuplicateInImplementation
-  | InterfaceWithTypeImplementation
-  | BothValLetInInterface
-  | AssumedDeclNotAllowed
-  | OutOfOrder
-  | IllegalCharInByteArray
-  | IllegalCharInOperatorName
-  | InvalidFloatingPointNumber
-  | InvalidNumericLiteral
-  | InvalidUnicodeInStringLiteral
-  | InvalidFSDocKeyword
-  | UnexpectedChar
-  | UnexpectedPosition
-  | UnprotectedTerm
-  | NotEmbedded of string (* the nature of the term *)
-  | FunctionLiteralPrecisionLoss
-  | NonTopRecFunctionNotFullyEncoded
-  | NonListLiteralSMTPattern
-  | SMTPatternMissingBoundVar
-  | NonVaribleInductiveTypeParameter
-  | UnexpectedConstructorType
-  | SMTSolverError
-  | Z3InvocationError
-  | Z3InvocationWarning
-  | SMTOutputParseError
-  | UnexpectedZ3Output
-  | CycleInRecTypeAbbreviation
-  | ImpossibleAbbrevLidBundle
-  | ImpossibleAbbrevRenameBundle
-  | ImpossibleTypeAbbrevSigeltBundle
-  | ImpossibleTypeAbbrevBundle
-  | ImpossibleInductiveWithAbbrev
-  | InaccessibleArgument
-  | WrongDataAppHeadFormat
-  | TacticGotStuck
-  | UserTacticFailure
-  | OpenGoalsInSynthesis
-  | UninstantiatedVarInTactic
-  | ForbiddenReferenceToCurrentModule
-  | DuplicateTopLevelNames
-  | NameSpaceNotFound
-  | IncludeModuleNotPrepared
-  | ModuleNotFound
-  | DocOverwrite
-  | AdmitWithoutDefinition
-  | DuplicateModuleOrInterface
-  | MonadAlreadyDefined
-  | IdentifierNotFound
-  | AbstractTypeDeclarationInInterface
-  | WrongDefinitionOrder
-  | BothValAndLetInInterface
-  | AssumeValInInterface
-  | InterfaceNotImplementedByModule
-  | InterfaceAlreadyProcessed
-  | DeprecatedOpaqueQualifier
-  | ReflectOnlySupportedOnEffects
-  | DefaultQualifierNotAllowedOnEffects
-  | UnsupportedQualifier
-  | NegativeUniverseConstNotSupported
-  | UniverseMightContainSumOfTwoUnivVars
-  | FieldsNotBelongToSameRecordType
-  | LetMutableForVariablesOnly
-  | TypeWithinPatternsAllowedOnVariablesOnly
-  | UnexpectedPattern
-  | UnexpectedNumericLiteral
-  | UnknownAttribute
-  | UnepxectedOrUnboundOperator
-  | AssignToImmutableValues
-  | EffectNotFound
-  | DataContructorNotFound
-  | ConstructorNotFound
-  | UnsupportedDisjuctivePatterns
-  | ComputationTypeNotAllowed
-  | UnexpectedEmptyRecord
-  | MissingFieldInRecord
-  | InvalidLemmaArgument
-  | NotEnoughArgsToEffect
-  | UnexpectedLetBinding
-  | UnexpectedTermInUniverse
-  | UnexpectedUniverseVariable
-  | UseDefaultEffect
   | AddImplicitAssumeNewQualifier
-  | MissingNameInBinder
-  | UnexpectedBinder
-  | MalformedActionDeclaration
-  | ArgumentLengthMismatch
-  | WrongTerm
-  | TermOutsideOfDefLanguage
-  | LetBoundMonadicMismatch
-  | TypeMismatch
-  | EffectfulAndPureComputationMismatch
-  | NotFunctionType
-  | BinderAndArgsLengthMismatch
-  | WhenClauseNotSupported
-  | NameNotFound
-  | VariableNotFound
-  | EffectsCannotBeComposed
-  | DivergentComputationCannotBeIncludedInTotal
-  | ConstructorArgLengthMismatch
-  | NotEnoughArgumentsForEffect
-  | UnexpectedSignatureForMonad
-  | ExpectTermGotFunction
-  | UnexpectedImplicitArgument
-  | UnexpectedExpressionType
-  | UnexpectedFunctionParameterType
-  | TypeError
-  | PossibleInfiniteTyp
-  | UnificationNotWellFormed
-  | IncompatibleKinds
-  | ConstsructorBuildWrongType
-  | ConstructorFailedCheck
-  | DuplicateTypeAnnotationAndValDecl
-  | InferredTypeCauseVarEscape
-  | FunctionTypeExpected
-  | PolyTypeExpected
-  | NonLinearPatternVars
-  | DisjuctivePatternVarsMismatch
-  | ComputedTypeNotMatchAnnotation
-  | UnExpectedPreCondition
-  | ExpectedPureExpression
-  | ExpectedGhostExpression
-  | TypeCheckerFailToProve
-  | TopLevelEffect
+  | AdmitWithoutDefinition
+  | AssumedDeclNotAllowed
+  | BothValLetInInterface
+  | CachedFile
   | CardinalityConstraintViolated
-  | MetaAlienNotATmUnknown
-  | NotApplicationOrFv
-  | InductiveTypeNotSatisfyPositivityCondition
-  | PatternMissingBoundVar
-  | UncontrainedUnificationVar
-  | IrrelevantQualifierOnArgumentToReify
-  | IrrelevantQualifierOnArgumentToReflect
-  | RedundantExplicitCurrying
-  | ActionMustHaveFunctionType
-  | InvalidRedefinitionOfLexT
-  | FailToProcessPragma
-  | EffectCannotBeReified
-  | TooManyUniverse
-  | InconsistentQualifierAnnotation
-  | AlreadyDefinedTopLevelDeclaration
-  | IncoherentInlineUniverse
-  | WrongResultTypeAfterConstrutor
-  | NonInductiveInMutuallyDefinedType
-  | UnexpectedComputationTypeForLetRec
-  | InsufficientPatternArguments
-  | NonTrivialPreConditionInPrims
-  | EffectConstructorNotFullyApplied
-  | UnexpectedGeneralizedUniverse
-  | MissingImplicitArguments
-  | IncompatibleNumberOfTypes
-  | QulifierListNotPermitted
-  | UnexpectedDataConstructor
-  | BadSignatureShape
-  | ComputationNotTotal
-  | WrongBodyTypeForReturnWP
-  | UnexpectedReturnShape
-  | UnexpectedBindShape
-  | ImpossibleToGenerateDMEffect
-  | ImpossiblePrePostArrow
-  | ImpossiblePrePostAbs
-  | ExpectNormalizedEffect
-  | IncompatibleUniverse
-  | FailToSolveUniverseInEquality
-  | ErrorInSolveDeferredConstraints
-  | ExpectTrivialPreCondition
-  | FailToResolveImplicitArgument
-  | UnexpectedGTotComputation
-  | UnexpectedInstance
-  | IncompatibleSetOfUniverse
-  | TooManyPatternArguments
-  | UnexpectedUniversePolymorphicReturn
-  | MismatchUniversePolymorphic
-  | EscapedBoundVar
-  | ExpectedArrowAnnotatedType
-  | SynthByTacticError
-  | MissingDataConstructor
-  | BadlyInstantiatedSynthByTactic
-  | UnexpectedNumberOfUniverse
-  | UnsupportedConstant
-  | InconsistentImplicitArgumentAnnotation
-  | ToManyArgumentToFunction
-  | InconsistentImplicitQualifier
-  | LetRecArgumentMismatch
-  | RecursiveFunctionLiteral
-  | UnexpectedGTotForLetRec
-  | UnexpectedImplictArgument
-  | UnexpectedTermType
-  | UniversePolymorphicInnerLetBound
-  | UnresolvedPatternVar
+  | ComputedTypeNotMatchAnnotation
+  | ConstructorFailedCheck
+  | ConstructorNotFound
+  | ConstsructorBuildWrongType
+  | DefinitionNotFound
+  | DefinitionNotTranslated
+  | DependencyAnalysisFailed
+  | DependencyFound
+  | DeprecatedEqualityOnBinder
+  | DeprecatedOpaqueQualifier
+  | DisjuctivePatternVarsMismatch
+  | DocOverwrite
+  | DuplicateInImplementation
+  | DuplicateTypeAnnotationAndValDecl
+  | ExpectTermGotFunction
+  | ExpectedGhostExpression
+  | ExpectedPureExpression
+  | FailToCompileNativeTactic
+  | Fatal_AbstractTypeDeclarationInInterface
+  | Fatal_ActionMustHaveFunctionType
+  | Fatal_AlreadyDefinedTopLevelDeclaration
+  | Fatal_ArgumentLengthMismatch
+  | Fatal_AssertionFailure
+  | Fatal_AssignToImmutableValues
+  | Fatal_AssumeValInInterface
+  | Fatal_BadSignatureShape
+  | Fatal_BadlyInstantiatedSynthByTactic
+  | Fatal_BinderAndArgsLengthMismatch
+  | Fatal_BothValAndLetInInterface
+  | Fatal_CallNotImplemented
+  | Fatal_ComputationNotTotal
+  | Fatal_ComputationTypeNotAllowed
+  | Fatal_ConstructorArgLengthMismatch
+  | Fatal_CycleInRecTypeAbbreviation
+  | Fatal_DataContructorNotFound
+  | Fatal_DefaultQualifierNotAllowedOnEffects
+  | Fatal_DivergentComputationCannotBeIncludedInTotal
+  | Fatal_DuplicateModuleOrInterface
+  | Fatal_DuplicateTopLevelNames
+  | Fatal_EffectCannotBeReified
+  | Fatal_EffectConstructorNotFullyApplied
+  | Fatal_EffectNotFound
+  | Fatal_EffectfulAndPureComputationMismatch
+  | Fatal_EffectsCannotBeComposed
+  | Fatal_ErrorInSolveDeferredConstraints
+  | Fatal_ErrorsReported
+  | Fatal_EscapedBoundVar
+  | Fatal_ExpectNormalizedEffect
+  | Fatal_ExpectTrivialPreCondition
+  | Fatal_ExpectedArrowAnnotatedType
+  | Fatal_FailToProcessPragma
+  | Fatal_FailToResolveImplicitArgument
+  | Fatal_FailToSolveUniverseInEquality
+  | Fatal_Fatal_NonSingletonTopLevelModule
+  | Fatal_Fatal_UnexpectedTermInUniverse
+  | Fatal_Fatal_UnexpectedTermType
+  | Fatal_FieldsNotBelongToSameRecordType
+  | Fatal_ForbiddenReferenceToCurrentModule
+  | Fatal_IdentifierNotFound
+  | Fatal_IllAppliedConstant
+  | Fatal_IllegalCharInOperatorName
+  | Fatal_ImpossiblePrePostAbs
+  | Fatal_ImpossiblePrePostArrow
+  | Fatal_ImpossibleToGenerateDMEffect
+  | Fatal_IncludeModuleNotPrepared
+  | Fatal_IncoherentInlineUniverse
+  | Fatal_IncompatibleNumberOfTypes
+  | Fatal_IncompatibleSetOfUniverse
+  | Fatal_IncompatibleUniverse
+  | Fatal_InconsistentImplicitArgumentAnnotation
+  | Fatal_InconsistentImplicitQualifier
+  | Fatal_InconsistentQualifierAnnotation
+  | Fatal_InlineRenamedAsUnfold
+  | Fatal_InsufficientPatternArguments
+  | Fatal_InterfaceAlreadyProcessed
+  | Fatal_InterfaceNotImplementedByModule
+  | Fatal_InvalidIdentifier
+  | Fatal_InvalidLemmaArgument
+  | Fatal_InvalidRedefinitionOfLexT
+  | Fatal_InvalidUnicodeInStringLiteral
+  | Fatal_LetBoundMonadicMismatch
+  | Fatal_LetMutableForVariablesOnly
+  | Fatal_LetRecArgumentMismatch
+  | Fatal_MalformedActionDeclaration
+  | Fatal_MismatchUniversePolymorphic
+  | Fatal_MismatchedPatternType
+  | Fatal_MissingDataConstructor
+  | Fatal_MissingExposeInterfacesOption
+  | Fatal_MissingFieldInRecord
+  | Fatal_MissingImplementation
+  | Fatal_MissingImplicitArguments
+  | Fatal_MissingInterface
+  | Fatal_MissingInterfaceOrImplementation
+  | Fatal_MissingNameInBinder
+  | Fatal_MissingQuantifierBinder
+  | Fatal_ModuleExpected
+  | Fatal_ModuleFirstStatement
+  | Fatal_ModuleNotFound
+  | Fatal_ModuleOrFileNotFound
+  | Fatal_ModuleOrFileNotFoundWarning
+  | Fatal_MonadAlreadyDefined
+  | Fatal_MoreThanOneDeclaration
+  | Fatal_MultipleLetBinding
+  | Fatal_NameSpaceNotFound
+  | Fatal_NegativeUniverseConstFatal_NotSupported
+  | Fatal_NonInductiveInMutuallyDefinedType
+  | Fatal_NonLinearPatternNotPermitted
+  | Fatal_NonSingletonTopLevel
+  | Fatal_NonTrivialPreConditionInPrims
+  | Fatal_NonVaribleInductiveTypeParameter
+  | Fatal_NotApplicationOrFv
+  | Fatal_NotEnoughArgumentsForEffect
+  | Fatal_NotFunctionType
+  | Fatal_NotSupported
+  | Fatal_NotTopLevelModule
+  | Fatal_NotValidFStarFile
+  | Fatal_NotValidIncludeDirectory
+  | Fatal_OneModulePerFile
+  | Fatal_OpenGoalsInSynthesis
+  | Fatal_ParseErrors
+  | Fatal_PreModuleMismatch
+  | Fatal_QulifierListNotPermitted
+  | Fatal_RecursiveFunctionLiteral
+  | Fatal_ReflectOnlySupportedOnEffects
+  | Fatal_ReservedPrefix
+  | Fatal_SynthByTacticError
+  | Fatal_TacticGotStuck
+  | Fatal_TcOneFragmentFailed
+  | Fatal_TermOutsideOfDefLanguage
+  | Fatal_ToManyArgumentToFunction
+  | Fatal_TooManyOrTooFewFileMatch
+  | Fatal_TooManyPatternArguments
+  | Fatal_TooManyUniverse
+  | Fatal_TypeMismatch
+  | Fatal_TypeWithinPatternsAllowedOnVariablesOnly
+  | Fatal_UnableToReadFile
+  | Fatal_UnepxectedOrUnboundOperator
+  | Fatal_UnexpectedBindShape
+  | Fatal_UnexpectedBinder
+  | Fatal_UnexpectedChar
+  | Fatal_UnexpectedComputationTypeForLetRec
+  | Fatal_UnexpectedConstructorType
+  | Fatal_UnexpectedDataConstructor
+  | Fatal_UnexpectedEmptyRecord
+  | Fatal_UnexpectedGTotForLetRec
+  | Fatal_UnexpectedGeneralizedUniverse
+  | Fatal_UnexpectedGuard
+  | Fatal_UnexpectedIdentifier
+  | Fatal_UnexpectedImplictArgument
+  | Fatal_UnexpectedInductivetype
+  | Fatal_UnexpectedLetBinding
+  | Fatal_UnexpectedModuleDeclaration
+  | Fatal_UnexpectedNumberOfUniverse
+  | Fatal_UnexpectedNumericLiteral
+  | Fatal_UnexpectedOperatorSymbol
+  | Fatal_UnexpectedPattern
+  | Fatal_UnexpectedPosition
+  | Fatal_UnexpectedReturnShape
+  | Fatal_UnexpectedTerm
+  | Fatal_UnexpectedUniversePolymorphicReturn
+  | Fatal_UnexpectedUniverseVariable
+  | Fatal_UnfoldableDeprecated
+  | Fatal_UniverseMightContainSumOfTwoUnivVars
+  | Fatal_UniversePolymorphicInnerLetBound
+  | Fatal_UnknownAttribute
+  | Fatal_UnknownToolForDep
+  | Fatal_UnrecognizedExtension
+  | Fatal_UnresolvedPatternVar
+  | Fatal_UnsupportedConstant
+  | Fatal_UnsupportedDisjuctivePatterns
+  | Fatal_UnsupportedQualifier
+  | Fatal_WrongBodyTypeForReturnWP
+  | Fatal_WrongDataAppHeadFormat
+  | Fatal_WrongDefinitionOrder
+  | Fatal_WrongResultTypeAfterConstrutor
+  | Fatal_WrongTerm
+  | FileNotWritten
+  | Filtered
+  | FreeVariables of string
+  | FunctionLiteralPrecisionLoss
+  | FunctionNotExtacted
+  | FunctionTypeExpected
   | HintFailedToReplayProof
   | HitReplayFailed
-  | ProofObligationFailed
-  | UnknownAssertionFailure
-  | Z3SolverError
-  | UninstantiatedUnificationVarInTactic
-  | AssertionFailure
-  | MissingInterface
-  | MissingImplementation
-  | TooManyOrTooFewFileMatch
-  | UnexpectedGuard
-  | ErrorsReported
-  | TcOneFragmentFailed
-  | MissingExposeInterfacesOption
-  | NonLinearPatternNotPermitted
-  | SMTPatTDeprecated
-  | IllAppliedConstant
-  | MismatchedPatternType
-  | FreeVariables of string
-  | UnexpectedInductivetype
-  | IllFormedGoal
-  | CachedFile
-  | FileNotWritten
-  | InvalidUTF8Encoding
-  | FailToCompileNativeTactic
-  | MalformedWarnErrorList
-  | CallNotImplemented
   | IDEIgnoreCodeGen
-  | MissingInterfaceOrImplementation
-  | UnexpectedFile
-  | WrongErrorLocation
-  | IDEUnrecognized of string
   | IDETooManyPops
-  | UnexpectedFsTypApp
-  | UpperBoundCandidateAlreadyVisited
-  | DefinitionNotTranslated
-  | FunctionNotExtacted
-  | UnrecognizedAttribute
-  | NotDependentArrow
-  | NondependentUserDefinedDataType
+  | IDEUnrecognized of string
+  | IllFormedGoal
+  | IllTyped of string
+  | IllegalCharInByteArray
+  | ImpossibleAbbrevLidBundle
+  | ImpossibleAbbrevRenameBundle
+  | ImpossibleInductiveWithAbbrev
+  | ImpossibleTypeAbbrevBundle
+  | ImpossibleTypeAbbrevSigeltBundle
+  | InaccessibleArgument
   | IncoherentImplicitQualifier
-  | DependencyFound
+  | IncompatibleKinds
+  | InductiveTypeNotSatisfyPositivityCondition
+  | InferredTypeCauseVarEscape
+  | InterfaceWithTypeImplementation
+  | InvalidFSDocKeyword
+  | InvalidFloatingPointNumber
+  | InvalidNumericLiteral
+  | InvalidUTF8Encoding
+  | InvalidUniverseVar
+  | IrrelevantQualifierOnArgumentToReflect
+  | IrrelevantQualifierOnArgumentToReify
+  | LetOpenModuleOnly
+  | MalformedWarnErrorList
+  | MetaAlienNotATmUnknown
+  | MissingFileName
+  | MissingPrimsModule
+  | ModuleFileNameMismatch
+  | ModuleFileNotFound
   | MultipleAscriptions
-  | RecursiveDependency
+  | Fatal_NameNotFound
+  | NoFileProvided
+  | NonLinearPatternVars
+  | NonListLiteralSMTPattern
+  | NonTopRecFunctionNotFullyEncoded
+  | NondependentUserDefinedDataType
   | NormalizationFailure
-  | DependencyAnalysisFailed
+  | NotDependentArrow
+  | NotEmbedded of string (* the nature of the term *)
+  | NotEnoughArgsToEffect
+  | OpPlusInUniverse
+  | OptionsNotCompatible
+  | OutOfOrder
+  | OutOfRange of string (* the type of the integer *)
+  | ParseItError
+  | PatternMissingBoundVar
+  | PolyTypeExpected
+  | PossibleInfiniteTyp
+  | ProofObligationFailed
+  | RecursiveDependency
+  | RedundantExplicitCurrying
+  | SMTOutputParseError
+  | SMTPatTDeprecated
+  | SMTPatternMissingBoundVar
+  | SMTSolverError
+  | SyntaxError
+  | TooManyFiles
+  | TopLevelEffect
+  | TypeCheckerFailToProve
+  | TypeError
+  | UnExpectedPreCondition
+  | UnboundModuleReference
+  | UncontrainedUnificationVar
+  | UnexpectedEffect
+  | UnexpectedExpressionType
+  | UnexpectedFile
+  | UnexpectedFsTypApp
+  | UnexpectedFunctionParameterType
+  | UnexpectedGTotComputation
+  | UnexpectedImplicitArgument
+  | UnexpectedInstance
+  | UnexpectedSignatureForMonad
+  | UnexpectedZ3Output
+  | UnificationNotWellFormed
+  | Uninstantiated
+  | UninstantiatedUnificationVarInTactic
+  | UninstantiatedVarInTactic
+  | UnknownFatal_AssertionFailure
+  | UnprotectedTerm
+  | UnrecognizedAttribute
+  | UpperBoundCandidateAlreadyVisited
+  | UseDefaultEffect
+  | UserTacticFailure
+  | ValueRestriction
+  | Fatal_VariableNotFound
+  | WhenClauseFatal_NotSupported
+  | WrongErrorLocation
+  | Z3InvocationError
+  | Z3InvocationWarning
+  | Z3SolverError
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
@@ -420,24 +420,24 @@ let errno_of_error = function
   | UnexpectedGTotComputation -> 9
   | UnexpectedInstance -> 10
   | ProofObligationFailed -> 11
-  | UnknownAssertionFailure -> 12
-  | AssertionFailure -> 13
-  | MissingInterface -> 14
-  | MissingImplementation -> 15
-  | TooManyOrTooFewFileMatch -> 16
-  | CallNotImplemented -> 17
+  | UnknownFatal_AssertionFailure -> 12
+  | Fatal_AssertionFailure -> 13
+  | Fatal_MissingInterface -> 14
+  | Fatal_MissingImplementation -> 15
+  | Fatal_TooManyOrTooFewFileMatch -> 16
+  | Fatal_CallNotImplemented -> 17
   | IDEUnrecognized _ -> 18
   | DependencyAnalysisFailed -> 19
   | ModuleFileNameMismatch -> 20
   (* the errors below are default to warning *)
-  | ModuleOrFileNotFoundWarning -> 21
+  | Fatal_ModuleOrFileNotFoundWarning -> 21
   | UnboundModuleReference -> 22
   | UnprotectedTerm -> 23
   | NotEmbedded _ -> 24
   | FunctionLiteralPrecisionLoss -> 25
   | NonListLiteralSMTPattern -> 26
   | SMTPatternMissingBoundVar -> 27
-  | UnexpectedConstructorType -> 28
+  | Fatal_UnexpectedConstructorType -> 28
   | Z3InvocationWarning -> 29
   | UnexpectedZ3Output -> 30
   | InaccessibleArgument -> 31
@@ -460,7 +460,7 @@ let errno_of_error = function
   | IllFormedGoal -> 48
   | MalformedWarnErrorList -> 49
   | IDEIgnoreCodeGen -> 50
-  | MissingInterfaceOrImplementation -> 51
+  | Fatal_MissingInterfaceOrImplementation -> 51
   | UnexpectedFile -> 52
   | WrongErrorLocation -> 53
   | DeprecatedEqualityOnBinder -> 54

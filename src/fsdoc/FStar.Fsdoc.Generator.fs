@@ -195,7 +195,7 @@ let document_toplevel name topdecl =
         | None -> None, Some(doc)
         | Some (_, summary) -> Some(summary), Some(doc))
     | None -> None, None)
-  | _ -> Errors.raise_err (Errors.NotTopLevelModule, "Not Top-level Module")
+  | _ -> Errors.raise_err (Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -229,7 +229,7 @@ let document_module (m:modul) =
           close_file fd;
           name
         end
-    | None -> Errors.raise_err (Errors.NonSingletonTopLevel, (Util.format1 "No singleton toplevel in module %s" name.str))
+    | None -> Errors.raise_err (Errors.Fatal_NonSingletonTopLevel, (Util.format1 "No singleton toplevel in module %s" name.str))
 
 ///////////////////////////////////////////////////////////////////////////////
 // entry point

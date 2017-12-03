@@ -55,7 +55,7 @@ let parse_file fn =
     | ASTFragment (Inr _ , _) ->
         let msg = Util.format1 "%s: expected a module\n" fn in
         let r = Range.dummyRange in
-        raise_error (Errors.ModuleExpected, msg) r
+        raise_error (Errors.Fatal_ModuleExpected, msg) r
     | ParseError (e, msg, r) ->
         raise_error (e, msg) r
     | Term _ ->

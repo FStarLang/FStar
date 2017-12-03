@@ -66,7 +66,7 @@ let with_captured_errors' env f =
               "minimized version of the program that triggered the error." in
     // Make sure the user sees the error, even if it happened transiently while
     // running an automatic syntax checker like FlyCheck.
-    Errors.maybe_fatal_error (TcEnv.get_range env) (Errors.AssertionFailure, msg);
+    Errors.maybe_fatal_error (TcEnv.get_range env) (Errors.Fatal_AssertionFailure, msg);
     None
 
   | Error(e, msg, r) ->
@@ -313,16 +313,16 @@ let deps_and_repl_ld_tasks_of_our_file filename
     match same_name with
     | [intf; impl] ->
       if not (Parser.Dep.is_interface intf) then
-         raise_err (Errors.MissingInterface, Util.format1 "Expecting an interface, got %s" intf);
+         raise_err (Errors.Fatal_MissingInterface, Util.format1 "Expecting an interface, got %s" intf);
       if not (Parser.Dep.is_implementation impl) then
-         raise_err (Errors.MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl);
+         raise_err (Errors.Fatal_MissingImplementation, Util.format1 "Expecting an implementation, got %s" impl);
       [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)]
     | [impl] ->
       []
     | _ ->
       let mods_str = String.concat " " same_name in
       let message = "Too many or too few files matching %s: %s" in
-      raise_err (Errors.TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str));
+      raise_err (Errors.Fatal_TooManyOrTooFewFileMatch, (Util.format2 message our_mod_name mods_str));
       [] in
 
   let tasks =

@@ -2379,7 +2379,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
               | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
               | _ ->
-                raise_error (Errors.ExpectNormalizedEffect, (BU.format2 "Got effects %s and %s, expected normalized effects"
+                raise_error (Errors.Fatal_ExpectNormalizedEffect, (BU.format2 "Got effects %s and %s, expected normalized effects"
                                           (Print.lid_to_string c1.effect_name)
                                           (Print.lid_to_string c2.effect_name))) env.range
              in
@@ -2606,7 +2606,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
    //This ensures, e.g., that we don't needlessly generalize types, avoid issues lik #806
    let fail u1 u2 =
         UF.rollback tx;
-        raise_error (Errors.IncompatibleUniverse, (BU.format2 "Universe %s and %s are incompatible"
+        raise_error (Errors.Fatal_IncompatibleUniverse, (BU.format2 "Universe %s and %s are incompatible"
                                 (Print.univ_to_string u1)
                                 (Print.univ_to_string u2))) (Env.get_range env)
    in
@@ -2667,7 +2667,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
          then (BU.print1 "Partially solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs));
                UF.rollback tx;
                BU.print1 "Original solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs)));
-         raise_error (Errors.FailToSolveUniverseInEquality, ("Failed to solve universe inequalities for inductives")) (Env.get_range env))
+         raise_error (Errors.Fatal_FailToSolveUniverseInEquality, ("Failed to solve universe inequalities for inductives")) (Env.get_range env))
 
 let solve_universe_inequalities env ineqs =
     let tx = UF.new_transaction () in
@@ -2677,7 +2677,7 @@ let solve_universe_inequalities env ineqs =
 let rec solve_deferred_constraints env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
-      raise_error (Errors.ErrorInSolveDeferredConstraints, msg) (p_loc d) in
+      raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d) in
    let wl = wl_of_guard env g.deferred in
    if Env.debug env <| Options.Other "RelCheck"
    then BU.print2 "Trying to solve carried problems: begin\n\t%s\nend\n and %s implicits\n"  (wl_to_string wl) (string_of_int (List.length g.implicits));
@@ -2774,7 +2774,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
 let discharge_guard_no_smt env g =
   match discharge_guard' None env g false with
   | Some g -> g
-  | None  -> raise_error (Errors.ExpectTrivialPreCondition, "Expected a trivial pre-condition") (Env.get_range env)
+  | None  -> raise_error (Errors.Fatal_ExpectTrivialPreCondition, "Expected a trivial pre-condition") (Env.get_range env)
 
 let discharge_guard env g =
   match discharge_guard' None env g true with
@@ -2822,7 +2822,7 @@ let force_trivial_guard env g =
     match g.implicits with
         | [] -> ignore <| discharge_guard env g
         | (reason,_,_,e,t,r)::_ ->
-           raise_error (Errors.FailToResolveImplicitArgument, (BU.format2 "Failed to resolve implicit argument of type '%s' introduced in %s"
+           raise_error (Errors.Fatal_FailToResolveImplicitArgument, (BU.format2 "Failed to resolve implicit argument of type '%s' introduced in %s"
                                     (Print.term_to_string t)
                                     (Print.term_to_string e))) r
 
