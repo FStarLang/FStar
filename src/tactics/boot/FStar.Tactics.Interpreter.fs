@@ -381,7 +381,7 @@ and unembed_tactic_0'<'b> (unembed_b:unembedder<'b>) (embedded_tac_b:term) : opt
 
 let report_implicits ps (is : Env.implicits) : unit =
     let errs = List.map (fun (r, _, uv, _, ty, rng) ->
-                (Errors.UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
+                (Errors.Fatal_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string uv) (Print.term_to_string ty) r,
                  rng)) is in
     match errs with

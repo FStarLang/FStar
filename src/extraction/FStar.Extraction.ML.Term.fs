@@ -78,25 +78,25 @@ let fail r err =
     Errors.raise_error err r
 
 let err_uninst env (t:term) (vars, ty) (app:term) =
-    fail t.pos (Uninstantiated, (BU.format4 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
+    fail t.pos (Fatal_Uninstantiated, (BU.format4 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
                     (Print.term_to_string t)
                     (vars |> String.concat ", ")
                     (Code.string_of_mlty env.currentModule ty)
                     (Print.term_to_string app)))
 
 let err_ill_typed_application env (t : term) args (ty : mlty) =
-    fail t.pos ((IllTyped "Application"), (BU.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
+    fail t.pos ((Fatal_IllTyped "Application"), (BU.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
                 (Print.term_to_string t)
                 (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " ")
                 (Code.string_of_mlty env.currentModule ty)))
 
 
 let err_value_restriction t =
-    fail t.pos (ValueRestriction, (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
+    fail t.pos (Fatal_ValueRestriction, (BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
                     (Print.tag_of_term t) (Print.term_to_string t)))
 
 let err_unexpected_eff t f0 f1 =
-    fail t.pos (UnexpectedEffect, (BU.format3 "for expression %s, Expected effect %s; got effect %s" (Print.term_to_string t) (eff_to_string f0) (eff_to_string f1)))
+    fail t.pos (Fatal_UnexpectedEffect, (BU.format3 "for expression %s, Expected effect %s; got effect %s" (Print.term_to_string t) (eff_to_string f0) (eff_to_string f1)))
 
 (***********************************************************************)
 (* Translating an effect lid to an e_tag = {E_PURE, E_GHOST, E_IMPURE} *)

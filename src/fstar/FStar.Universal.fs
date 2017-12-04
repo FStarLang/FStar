@@ -123,7 +123,7 @@ let tc_one_fragment curmod (env:TcEnv.env) frag =
            BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
                        (Parser.Dep.module_name_of_file (List.hd (Options.file_list ())))
        in
-       Errors.raise_error (Errors.Fatal_Fatal_NonSingletonTopLevelModule, msg)
+       Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
                              (range_of_first_mod_decl ast_modul)
     end;
     let modul, _, env = if DsEnv.syntax_only env.dsenv then (modul, [], env)

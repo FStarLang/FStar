@@ -7,31 +7,28 @@ open FStar.Util
 open FStar.Range
 
 type raw_error =
-  | AbstractTypeNotAllowed
   | Warning_AddImplicitAssumeNewQualifier
   | Warning_AdmitWithoutDefinition
-  | AssumedDeclNotAllowed
-  | BothValLetInInterface
   | Warning_CachedFile
-  | CardinalityConstraintViolated
-  | ComputedTypeNotMatchAnnotation
-  | ConstructorFailedCheck
-  | ConstructorNotFound
-  | ConstsructorBuildWrongType
-  | DefinitionNotFound
+  | Fatal_CardinalityConstraintViolated
+  | Fatal_ConstructorFailedCheck
+  | Fatal_ComputedTypeNotMatchAnnotation
+  | Fatal_ConstructorNotFound
+  | Fatal_ConstsructorBuildWrongType
+  | Fatal_DefinitionNotFound
   | Warning_DefinitionNotTranslated
   | Error_DependencyAnalysisFailed
   | Warning_DependencyFound
   | Warning_DeprecatedEqualityOnBinder
   | Warning_DeprecatedOpaqueQualifier
-  | DisjuctivePatternVarsMismatch
+  | Fatal_DisjuctivePatternVarsMismatch
   | Warning_DocOverwrite
-  | DuplicateInImplementation
-  | DuplicateTypeAnnotationAndValDecl
-  | ExpectTermGotFunction
-  | ExpectedGhostExpression
-  | ExpectedPureExpression
-  | FailToCompileNativeTactic
+  | Fatal_DuplicateInImplementation
+  | Fatal_DuplicateTypeAnnotationAndValDecl
+  | Fatal_ExpectTermGotFunction
+  | Fatal_ExpectedGhostExpression
+  | Fatal_ExpectedPureExpression
+  | Fatal_FailToCompileNativeTactic
   | Fatal_AbstractTypeDeclarationInInterface
   | Fatal_ActionMustHaveFunctionType
   | Fatal_AlreadyDefinedTopLevelDeclaration
@@ -67,9 +64,9 @@ type raw_error =
   | Fatal_FailToProcessPragma
   | Fatal_FailToResolveImplicitArgument
   | Fatal_FailToSolveUniverseInEquality
-  | Fatal_Fatal_NonSingletonTopLevelModule
-  | Fatal_Fatal_UnexpectedTermInUniverse
-  | Fatal_Fatal_UnexpectedTermType
+  | Fatal_NonSingletonTopLevelModule
+  | Fatal_UnexpectedTermInUniverse
+  | Fatal_UnexpectedTermType
   | Fatal_FieldsNotBelongToSameRecordType
   | Fatal_ForbiddenReferenceToCurrentModule
   | Fatal_IdentifierNotFound
@@ -192,104 +189,104 @@ type raw_error =
   | Fatal_WrongTerm
   | Warning_FileNotWritten
   | Warning_Filtered
-  | FreeVariables of string
+  | Fatal_FreeVariables of string
   | Warning_FunctionLiteralPrecisionLoss
   | Warning_FunctionNotExtacted
-  | FunctionTypeExpected
+  | Fatal_FunctionTypeExpected
   | Warning_HintFailedToReplayProof
   | Warning_HitReplayFailed
   | Warning_IDEIgnoreCodeGen
-  | IDETooManyPops
+  | Error_IDETooManyPops
   | Error_IDEUnrecognized of string
   | Warning_IllFormedGoal
-  | IllTyped of string
-  | IllegalCharInByteArray
-  | ImpossibleAbbrevLidBundle
-  | ImpossibleAbbrevRenameBundle
-  | ImpossibleInductiveWithAbbrev
-  | ImpossibleTypeAbbrevBundle
-  | ImpossibleTypeAbbrevSigeltBundle
+  | Fatal_IllTyped of string
+  | Fatal_IllegalCharInByteArray
+  | Fatal_ImpossibleAbbrevLidBundle
+  | Fatal_ImpossibleAbbrevRenameBundle
+  | Fatal_ImpossibleInductiveWithAbbrev
+  | Fatal_ImpossibleTypeAbbrevBundle
+  | Fatal_ImpossibleTypeAbbrevSigeltBundle
   | Warning_InaccessibleArgument
   | Warning_IncoherentImplicitQualifier
-  | IncompatibleKinds
+  | Fatal_IncompatibleKinds
   | Error_InductiveTypeNotSatisfyPositivityCondition
-  | InferredTypeCauseVarEscape
-  | InterfaceWithTypeImplementation
-  | InvalidFSDocKeyword
-  | InvalidFloatingPointNumber
-  | InvalidNumericLiteral
-  | InvalidUTF8Encoding
+  | Fatal_InferredTypeCauseVarEscape
+  | Fatal_InterfaceWithTypeImplementation
+  | Fatal_InvalidFSDocKeyword
+  | Fatal_InvalidFloatingPointNumber
+  | Fatal_InvalidNumericLiteral
+  | Fatal_InvalidUTF8Encoding
   | Error_InvalidUniverseVar
   | Warning_IrrelevantQualifierOnArgumentToReflect
   | Warning_IrrelevantQualifierOnArgumentToReify
-  | LetOpenModuleOnly
+  | Fatal_LetOpenModuleOnly
   | Warning_MalformedWarnErrorList
   | Warning_MetaAlienNotATmUnknown
-  | MissingFileName
-  | MissingPrimsModule
+  | Error_MissingFileName
+  | Fatal_MissingPrimsModule
   | Error_ModuleFileNameMismatch
-  | ModuleFileNotFound
+  | Fatal_ModuleFileNotFound
   | Warning_MultipleAscriptions
   | Fatal_NameNotFound
-  | NoFileProvided
-  | NonLinearPatternVars
+  | Fatal_NoFileProvided
+  | Fatal_NonLinearPatternVars
   | Warning_NonListLiteralSMTPattern
-  | NonTopRecFunctionNotFullyEncoded
+  | Fatal_NonTopRecFunctionNotFullyEncoded
   | Warning_NondependentUserDefinedDataType
   | Warning_NormalizationFailure
   | Warning_NotDependentArrow
   | Warning_NotEmbedded of string (* the nature of the term *)
-  | NotEnoughArgsToEffect
+  | Fatal_NotEnoughArgsToEffect
   | Error_OpPlusInUniverse
-  | OptionsNotCompatible
-  | OutOfOrder
+  | Fatal_OptionsNotCompatible
+  | Fatal_OutOfOrder
   | Error_OutOfRange of string (* the type of the integer *)
-  | ParseItError
+  | Fatal_ParseItError
   | Warning_PatternMissingBoundVar
-  | PolyTypeExpected
-  | PossibleInfiniteTyp
+  | Fatal_PolyTypeExpected
+  | Fatal_PossibleInfiniteTyp
   | Error_ProofObligationFailed
   | Warning_RecursiveDependency
   | Warning_RedundantExplicitCurrying
-  | SMTOutputParseError
+  | Fatal_SMTOutputParseError
   | Warning_SMTPatTDeprecated
   | Warning_SMTPatternMissingBoundVar
-  | SMTSolverError
-  | SyntaxError
-  | TooManyFiles
+  | Fatal_SMTSolverError
+  | Fatal_SyntaxError
+  | Error_TooManyFiles
   | Warning_TopLevelEffect
   | Error_TypeCheckerFailToProve
   | Error_TypeError
-  | UnExpectedPreCondition
+  | Fatal_UnExpectedPreCondition
   | Warning_UnboundModuleReference
   | Error_UncontrainedUnificationVar
-  | UnexpectedEffect
-  | UnexpectedExpressionType
+  | Fatal_UnexpectedEffect
+  | Fatal_UnexpectedExpressionType
   | Warning_UnexpectedFile
   | Warning_UnexpectedFsTypApp
-  | UnexpectedFunctionParameterType
+  | Fatal_UnexpectedFunctionParameterType
   | Error_UnexpectedGTotComputation
-  | UnexpectedImplicitArgument
+  | Fatal_UnexpectedImplicitArgument
   | Error_UnexpectedInstance
-  | UnexpectedSignatureForMonad
+  | Fatal_UnexpectedSignatureForMonad
   | Warning_UnexpectedZ3Output
-  | UnificationNotWellFormed
-  | Uninstantiated
-  | UninstantiatedUnificationVarInTactic
-  | UninstantiatedVarInTactic
+  | Fatal_UnificationNotWellFormed
+  | Fatal_Uninstantiated
+  | Fatal_UninstantiatedUnificationVarInTactic
+  | Fatal_UninstantiatedVarInTactic
   | Error_UnknownFatal_AssertionFailure
   | Warning_UnprotectedTerm
   | Warning_UnrecognizedAttribute
   | Warning_UpperBoundCandidateAlreadyVisited
   | Warning_UseDefaultEffect
-  | UserTacticFailure
-  | ValueRestriction
+  | Fatal_UserTacticFailure
+  | Fatal_ValueRestriction
   | Fatal_VariableNotFound
   | WhenClauseFatal_NotSupported
   | Warning_WrongErrorLocation
   | Error_Z3InvocationError
   | Warning_Z3InvocationWarning
-  | Z3SolverError
+  | Fatal_Z3SolverError
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range

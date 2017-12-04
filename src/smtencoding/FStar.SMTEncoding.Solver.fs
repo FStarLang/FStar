@@ -234,7 +234,7 @@ let query_errors settings z3result =
             error_fuel = settings.query_fuel;
             error_ifuel = settings.query_ifuel;
             error_hint = settings.query_hint;
-            error_messages = List.map (fun (_, x, y) -> Errors.Z3SolverError,x,y) error_labels
+            error_messages = List.map (fun (_, x, y) -> Errors.Fatal_Z3SolverError,x,y) error_labels
         }
      in
      Some err

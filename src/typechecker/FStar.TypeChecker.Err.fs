@@ -74,19 +74,19 @@ let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
 let unexpected_signature_for_monad env m k =
-  (Errors.UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => Effect); got %s"
+  (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => Effect); got %s"
     m.str (N.term_to_string env k)))
 
 let expected_a_term_of_type_t_got_a_function env msg t e =
-  (Errors.ExpectTermGotFunction, (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
+  (Errors.Fatal_ExpectTermGotFunction, (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
     (N.term_to_string env t) (Print.term_to_string e) msg))
 
 let unexpected_implicit_argument =
-  (Errors.UnexpectedImplicitArgument, ("Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"))
+  (Errors.Fatal_UnexpectedImplicitArgument, ("Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"))
 
 let expected_expression_of_type env t1 e t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
-  (Errors.UnexpectedExpressionType, (format3 "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
+  (Errors.Fatal_UnexpectedExpressionType, (format3 "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\""
     s1 (Print.term_to_string e) s2))
 
 let expected_function_with_parameter_of_type env t1 t2 =
@@ -106,47 +106,47 @@ let basic_type_error env eopt t1 t2 =
   (Errors.Error_TypeError, msg)
 
 let occurs_check =
-  (Errors.PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
+  (Errors.Fatal_PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
 
 let unification_well_formedness =
-  (Errors.UnificationNotWellFormed, "Term or type of an unexpected sort")
+  (Errors.Fatal_UnificationNotWellFormed, "Term or type of an unexpected sort")
 
 let incompatible_kinds env k1 k2 =
-  (Errors.IncompatibleKinds, (format2 "Kinds \"%s\" and \"%s\" are incompatible"
+  (Errors.Fatal_IncompatibleKinds, (format2 "Kinds \"%s\" and \"%s\" are incompatible"
     (N.term_to_string env k1) (N.term_to_string env k2)))
 
 let constructor_builds_the_wrong_type env d t t' =
-  (Errors.ConstsructorBuildWrongType, (format3 "Constructor \"%s\" builds a value of type \"%s\"; expected \"%s\""
+  (Errors.Fatal_ConstsructorBuildWrongType, (format3 "Constructor \"%s\" builds a value of type \"%s\"; expected \"%s\""
     (Print.term_to_string d) (N.term_to_string env t) (N.term_to_string env t')))
 
 let constructor_fails_the_positivity_check env d l =
-  (Errors.ConstructorFailedCheck, (format2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
+  (Errors.Fatal_ConstructorFailedCheck, (format2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
     (Print.term_to_string d) (Print.lid_to_string l)))
 
 let inline_type_annotation_and_val_decl l =
-  (Errors.DuplicateTypeAnnotationAndValDecl, (format1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" (Print.lid_to_string l)))
+  (Errors.Fatal_DuplicateTypeAnnotationAndValDecl, (format1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" (Print.lid_to_string l)))
 
 (* CH: unsure if the env is good enough for normalizing t here *)
 let inferred_type_causes_variable_to_escape env t x =
-  (Errors.InferredTypeCauseVarEscape, (format2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
+  (Errors.Fatal_InferredTypeCauseVarEscape, (format2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
     (N.term_to_string env t) (Print.bv_to_string x)))
 
 let expected_function_typ env t =
-  (Errors.FunctionTypeExpected, (format1 "Expected a function; got an expression of type \"%s\""
+  (Errors.Fatal_FunctionTypeExpected, (format1 "Expected a function; got an expression of type \"%s\""
     (N.term_to_string env t)))
 
 let expected_poly_typ env f t targ =
-  (Errors.PolyTypeExpected, (format3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
+  (Errors.Fatal_PolyTypeExpected, (format3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
     (Print.term_to_string f) (N.term_to_string env t) (N.term_to_string env targ)))
 
 let nonlinear_pattern_variable x =
   let m = Print.bv_to_string x in
-  (Errors.NonLinearPatternVars, (format1 "The pattern variable \"%s\" was used more than once" m))
+  (Errors.Fatal_NonLinearPatternVars, (format1 "The pattern variable \"%s\" was used more than once" m))
 
 let disjunctive_pattern_vars v1 v2 =
   let vars v =
     v |> List.map Print.bv_to_string |> String.concat ", " in
-  (Errors.DisjuctivePatternVarsMismatch, (format2
+  (Errors.Fatal_DisjuctivePatternVarsMismatch, (format2
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
     (vars v1) (vars v2)))
 
@@ -159,21 +159,21 @@ let computed_computation_type_does_not_match_annotation env e c c' =
   let f1, r1 = name_and_result c in
   let f2, r2 = name_and_result c' in
   let s1, s2 = err_msg_type_strings env r1 r2 in
-  (Errors.ComputedTypeNotMatchAnnotation, (format4
+  (Errors.Fatal_ComputedTypeNotMatchAnnotation, (format4
     "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
       s1 f1 s2 f2))
 
 let unexpected_non_trivial_precondition_on_term env f =
- (Errors.UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
+ (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
 
 let expected_pure_expression e c =
-  (Errors.ExpectedPureExpression, (format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+  (Errors.Fatal_ExpectedPureExpression, (format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
 
 let expected_ghost_expression e c =
-  (Errors.ExpectedGhostExpression, (format2 "Expected a ghost expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+  (Errors.Fatal_ExpectedGhostExpression, (format2 "Expected a ghost expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
-  (Errors.UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))
+  (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))
 
 let failed_to_prove_specification_of l lbls =
   (Errors.Error_TypeCheckerFailToProve, (format2 "Failed to prove specification of %s; assertions at [%s] may fail" (Print.lbname_to_string l) (lbls |> String.concat ", ")))
@@ -187,4 +187,4 @@ let failed_to_prove_specification lbls =
 let top_level_effect = (Errors.Warning_TopLevelEffect, "Top-level let-bindings must be total; this term may have effects")
 
 let cardinality_constraint_violated l a =
-    (Errors.CardinalityConstraintViolated, (format2 "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed" (Print.lid_to_string l) (Print.bv_to_string a.v)))
+    (Errors.Fatal_CardinalityConstraintViolated, (format2 "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed" (Print.lid_to_string l) (Print.bv_to_string a.v)))

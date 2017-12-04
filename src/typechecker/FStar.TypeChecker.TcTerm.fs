@@ -874,7 +874,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
       | Const_set_range_of
       | Const_reify
       | Const_reflect _ ->
-        raise_error ((Errors.IllTyped (Const.const_to_string c)), BU.format1 "Ill-typed %s: this constant must be fully applied"
+        raise_error ((Errors.Fatal_IllTyped (Const.const_to_string c)), BU.format1 "Ill-typed %s: this constant must be fully applied"
                                  (Const.const_to_string c)) r
 
       | _ -> raise_error (Errors.Fatal_UnsupportedConstant, "Unsupported constant") r
@@ -2230,7 +2230,7 @@ let type_of_tot_term env e =
     else raise_error (Errors.Fatal_UnexpectedImplictArgument, (BU.format1 "Implicit argument: Expected a total term; got a ghost term: %s" (Print.term_to_string e))) (Env.get_range env)
 
 let level_of_type_fail env e t =
-    raise_error (Errors.Fatal_Fatal_UnexpectedTermType, (BU.format2 "Expected a term of type 'Type'; got %s : %s"
+    raise_error (Errors.Fatal_UnexpectedTermType, (BU.format2 "Expected a term of type 'Type'; got %s : %s"
                                 (Print.term_to_string e) t)) (Env.get_range env)
 
 let level_of_type env e t =

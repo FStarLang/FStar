@@ -422,9 +422,9 @@ let rec desugar_maybe_non_constant_universe t
               let nargs = List.map (function Inl n -> n | Inr _ -> failwith "impossible") univargs in
               Inl (List.fold_left (fun m n -> if m > n then m else n) 0 nargs)
         (* TODO : Might not be the best place to raise the error... *)
-        | _ -> raise_error (Errors.Fatal_Fatal_UnexpectedTermInUniverse, ("Unexpected term " ^ term_to_string t ^ " in universe context")) t.range
+        | _ -> raise_error (Errors.Fatal_UnexpectedTermInUniverse, ("Unexpected term " ^ term_to_string t ^ " in universe context")) t.range
       in aux t []
-  | _ -> raise_error (Errors.Fatal_Fatal_UnexpectedTermInUniverse, ("Unexpected term " ^ term_to_string t ^ " in universe context")) t.range
+  | _ -> raise_error (Errors.Fatal_UnexpectedTermInUniverse, ("Unexpected term " ^ term_to_string t ^ " in universe context")) t.range
 
 let rec desugar_universe t : Syntax.universe =
     let u = desugar_maybe_non_constant_universe t in
@@ -848,8 +848,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         | None ->
             let err =
               match Env.try_lookup_effect_name env l with
-              | None -> (Errors.ConstructorNotFound, ("Constructor " ^ l.str ^ " not found"))
-              | Some _ -> (Errors.UnexpectedEffect, ("Effect " ^ l.str ^ " used at an unexpected position"))
+              | None -> (Errors.Fatal_ConstructorNotFound, ("Constructor " ^ l.str ^ " not found"))
+              | Some _ -> (Errors.Fatal_UnexpectedEffect, ("Effect " ^ l.str ^ " used at an unexpected position"))
             in
             raise_error err top.range
         end
@@ -1402,7 +1402,7 @@ and desugar_comp r env t =
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
-    then fail (Errors.NotEnoughArgsToEffect, (BU.format1 "Not enough args to effect %s" (Print.lid_to_string eff)));
+    then fail (Errors.Fatal_NotEnoughArgsToEffect, (BU.format1 "Not enough args to effect %s" (Print.lid_to_string eff)));
     let is_universe (_, imp) = imp = UnivApp in
     let universes, args = BU.take is_universe args in
     let universes = List.map (fun (u, imp) -> desugar_universe u) universes in

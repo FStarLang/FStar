@@ -511,7 +511,7 @@ let rec go (line_col:(int*int))
       pop env msg;
       let (env, curmod), stack =
         match stack with
-        | [] -> Errors.maybe_fatal_err (Errors.IDETooManyPops,  "too many pops"); exit 1
+        | [] -> Errors.maybe_fatal_err (Errors.Error_IDETooManyPops,  "too many pops"); exit 1
         | hd::tl -> hd, tl
       in
       go line_col filename stack curmod env ts
