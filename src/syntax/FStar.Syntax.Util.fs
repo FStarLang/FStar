@@ -740,6 +740,7 @@ let rec arrow_formals_comp k =
             then let bs', k = arrow_formals_comp (comp_result c) in
                 bs@bs', k
             else bs, c
+        | Tm_refine ({ sort = k }, _) -> arrow_formals_comp k
         | _ -> [], Syntax.mk_Total k
 
 let rec arrow_formals k =
