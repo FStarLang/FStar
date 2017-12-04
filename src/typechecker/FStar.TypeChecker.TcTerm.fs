@@ -225,7 +225,7 @@ let check_smt_pat env t bs c =
             let pat_vars = get_pat_vars (N.normalize [N.Beta] env pats) (BU.new_set Syntax.order_bv) in
             begin match bs |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
                 | None -> ()
-                | Some (x,_) -> Errors.maybe_fatal_error t.pos (Errors.PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
+                | Some (x,_) -> Errors.maybe_fatal_error t.pos (Errors.Warning_PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
             end
         | _ -> failwith "Impossible"
 
@@ -422,7 +422,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
-    then Errors.maybe_fatal_error e.pos (Errors.IrrelevantQualifierOnArgumentToReify, "Qualifier on argument to reify is irrelevant and will be ignored");
+    then Errors.maybe_fatal_error e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReify, "Qualifier on argument to reify is irrelevant and will be ignored");
     let e, c, g =
       let env0, _ = Env.clear_expected_typ env in
       tc_term env0 e
@@ -459,7 +459,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
     if Option.isSome aqual
-    then Errors.maybe_fatal_error e.pos (Errors.IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
+    then Errors.maybe_fatal_error e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
     let no_reflect () = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos in
     let reflect_op, _ = U.head_and_args top in
     begin match Env.effect_decl_opt env l with
@@ -481,9 +481,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let e, g =
           let e, c, g = tc_tot_or_gtot_term env_no_ex e in
           if not <| U.is_total_lcomp c
-          then Err.add_errors env [Errors.UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
+          then Err.add_errors env [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
           match Rel.try_teq true env_no_ex c.res_typ expected_repr_typ with
-          | None -> Err.add_errors env [Errors.UnexpectedInstance, BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
+          | None -> Err.add_errors env [Errors.Error_UnexpectedInstance, BU.format2 "Expected an instance of %s; got %s" (Print.term_to_string ed.repr) (Print.term_to_string c.res_typ), e.pos];
                     e, Rel.conj_guard g g0
           | Some g' -> e, Rel.conj_guard g' (Rel.conj_guard g g0)
         in
@@ -1412,7 +1412,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         let head_info = (head, chead, ghead, U.lcomp_of_comp cres') in
                         if debug env Options.Low
                         then FStar.Errors.maybe_fatal_error tres.pos
-                               (Errors.RedundantExplicitCurrying, "Potentially redundant explicit currying of a function type");
+                               (Errors.Warning_RedundantExplicitCurrying, "Potentially redundant explicit currying of a function type");
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
                     | _ when not norm ->
                         aux true (N.unfold_whnf env tres)

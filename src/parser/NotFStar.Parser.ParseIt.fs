@@ -177,7 +177,7 @@ let parse_warn_error s =
     try
       Parse.warn_error_list lexer lexbuf 
     with e ->
-      FStar.Errors.maybe_fatal_error Range.dummyRange (MalformedWarnErrorList, "Malformed warn-error list, ignored");
+      FStar.Errors.maybe_fatal_error Range.dummyRange (Warning_MalformedWarnErrorList, "Malformed warn-error list, ignored");
       []
   in
   FStar.Errors.update_flags user_flags 

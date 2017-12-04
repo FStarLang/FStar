@@ -103,7 +103,7 @@ let basic_type_error env eopt t1 t2 =
   let msg = match eopt with
     | None -> format2 "Expected type \"%s\"; got type \"%s\"" s1 s2
     | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (N.term_to_string env e) s2 in
-  (Errors.TypeError, msg)
+  (Errors.Error_TypeError, msg)
 
 let occurs_check =
   (Errors.PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
@@ -176,15 +176,15 @@ let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   (Errors.UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))
 
 let failed_to_prove_specification_of l lbls =
-  (Errors.TypeCheckerFailToProve, (format2 "Failed to prove specification of %s; assertions at [%s] may fail" (Print.lbname_to_string l) (lbls |> String.concat ", ")))
+  (Errors.Error_TypeCheckerFailToProve, (format2 "Failed to prove specification of %s; assertions at [%s] may fail" (Print.lbname_to_string l) (lbls |> String.concat ", ")))
 
 let failed_to_prove_specification lbls =
   let msg = match lbls with
     | [] -> "An unknown assertion in the term at this location was not provable"
     | _ ->  format1 "The following problems were found:\n\t%s" (lbls |> String.concat "\n\t") in
-  (Errors.TypeCheckerFailToProve, msg)
+  (Errors.Error_TypeCheckerFailToProve, msg)
 
-let top_level_effect = (Errors.TopLevelEffect, "Top-level let-bindings must be total; this term may have effects")
+let top_level_effect = (Errors.Warning_TopLevelEffect, "Top-level let-bindings must be total; this term may have effects")
 
 let cardinality_constraint_violated l a =
     (Errors.CardinalityConstraintViolated, (format2 "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed" (Print.lid_to_string l) (Print.bv_to_string a.v)))

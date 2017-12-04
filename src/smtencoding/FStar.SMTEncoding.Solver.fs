@@ -295,7 +295,7 @@ let report_errors settings : unit =
             String.concat "; " in
           FStar.TypeChecker.Err.add_errors
                    settings.query_env
-                   [(Errors.UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
+                   [(Errors.Error_UnknownFatal_AssertionFailure, BU.format1 "Unknown assertion failed (%s)" err_detail,
                      settings.query_range)]
     end
 
@@ -328,7 +328,7 @@ let query_info settings z3result =
                 stats ];
         errs |> List.iter (fun (_, msg, range) ->
             let tag = if used_hint settings then "(Hint-replay failed): " else "" in
-            FStar.Errors.maybe_fatal_error range (FStar.Errors.HitReplayFailed, (tag ^ msg)))
+            FStar.Errors.maybe_fatal_error range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
     end
 
 let record_hint settings z3result =

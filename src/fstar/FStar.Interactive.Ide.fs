@@ -1405,7 +1405,7 @@ let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
 
   if Option.isSome (Options.codegen ()) then
-    Errors.maybe_fatal_error Range.dummyRange (Errors.IDEIgnoreCodeGen, "--ide: ignoring --codegen");
+    Errors.maybe_fatal_error Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
 
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces

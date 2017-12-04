@@ -293,8 +293,8 @@ let detail_errors hint_replay
         if success
         then BU.print1 "OK: proof obligation at %s was proven\n" (Range.string_of_range r)
         else if hint_replay
-        then FStar.Errors.maybe_fatal_error r (Errors.HintFailedToReplayProof, ("Hint failed to replay this sub-proof: " ^ msg))
-        else FStar.Errors.maybe_fatal_error r (Errors.ProofObligationFailed, (BU.format2 "XX: proof obligation at %s failed\n\t%s\n" (Range.string_of_range r) msg))
+        then FStar.Errors.maybe_fatal_error r (Errors.Warning_HintFailedToReplayProof, ("Hint failed to replay this sub-proof: " ^ msg))
+        else FStar.Errors.maybe_fatal_error r (Errors.Error_ProofObligationFailed, (BU.format2 "XX: proof obligation at %s failed\n\t%s\n" (Range.string_of_range r) msg))
     in
 
     let elim labs = //assumes that all the labs are true, effectively removing them from the query

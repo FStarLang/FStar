@@ -341,7 +341,7 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
     FStar.Errors.maybe_fatal_error (range_of_lid lid)
-      (Errors.ModuleFileNameMismatch, (Util.format2 "The module declaration \"module %s\" \
+      (Errors.Error_ModuleFileNameMismatch, (Util.format2 "The module declaration \"module %s\" \
          found in file %s does not match its filename. Dependencies will be \
          incorrect and the module will not be verified.\n" (string_of_lid lid true) filename))
 
@@ -462,7 +462,7 @@ in
       then ()
       else if Options.debug_any () then
             FStar.Errors.maybe_fatal_error (range_of_lid lid)
-                (Errors.UnboundModuleReference, (BU.format1 "Unbound module reference %s"
+                (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
                                 (Ident.string_of_lid module_name)))
   in
 
@@ -739,7 +739,7 @@ let collect (all_cmd_line_files: list<file_name>)
         let direct_deps, color = must (deps_try_find dep_graph filename) in
         match color with
         | Gray ->
-            Errors.maybe_fatal_err (Errors.RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
+            Errors.maybe_fatal_err (Errors.Warning_RecursiveDependency, (BU.format1 "Recursive dependency on module %s\n" filename));
             Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
             print_graph dep_graph;
             print_string "\n";

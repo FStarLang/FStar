@@ -1027,7 +1027,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           begin match lopt with
             | None ->
               //we don't even know if this is a pure function, so give up
-              Errors.maybe_fatal_error t0.pos (Errors.FunctionLiteralPrecisionLoss, (BU.format1
+              Errors.maybe_fatal_error t0.pos (Errors.Warning_FunctionLiteralPrecisionLoss, (BU.format1
                 "Losing precision when encoding a function literal: %s\n\
                  (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0)));
               fallback ()
@@ -1215,7 +1215,7 @@ and encode_function_type_as_formula (t:typ) (env:env_t) : term * decls_t =
     let list_elements (e:S.term) : list<S.term> =
       match U.list_elements e with
       | Some l -> l
-      | None -> Errors.maybe_fatal_error e.pos (Errors.NonListLiteralSMTPattern, "SMT pattern is not a list literal; ignoring the pattern"); [] in
+      | None -> Errors.maybe_fatal_error e.pos (Errors.Warning_NonListLiteralSMTPattern, "SMT pattern is not a list literal; ignoring the pattern"); [] in
 
     let one_pat p =
         let head, args = U.unmeta p |> U.head_and_args in
@@ -1411,7 +1411,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
           | None -> ()
           | Some (x,_) ->
             let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
-            Errors.maybe_fatal_error pos (Errors.SMTPatternMissingBoundVar, (BU.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
+            Errors.maybe_fatal_error pos (Errors.Warning_SMTPatternMissingBoundVar, (BU.format1 "SMT pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
         end
     in
     match U.destruct_typ_as_formula phi with

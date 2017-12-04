@@ -173,7 +173,7 @@ let load_module_from_cache env fn
     let fail tag =
          FStar.Errors.maybe_fatal_error
             (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
-            (Errors.CachedFile, BU.format3 "%s cache file %s; will recheck %s" tag cache_file fn);
+            (Errors.Warning_CachedFile, BU.format3 "%s cache file %s; will recheck %s" tag cache_file fn);
          None
     in
     if BU.file_exists cache_file then
@@ -198,7 +198,7 @@ let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info)
       FStar.Errors.maybe_fatal_error
         (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
                                  (FStar.Range.mk_pos 0 0))
-        (Errors.FileNotWritten, BU.format1 "%s was not written, since some of its dependences were not also checked"
+        (Errors.Warning_FileNotWritten, BU.format1 "%s was not written, since some of its dependences were not also checked"
                     cache_file)
 
 (***********************************************************************)

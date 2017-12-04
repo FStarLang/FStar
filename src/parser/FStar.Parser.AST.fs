@@ -327,7 +327,7 @@ let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
 let focusBranches branches r =
     let should_filter = Util.for_some fst branches in
         if should_filter
-        then let _ = Errors.maybe_fatal_error r (Errors.Filtered, "Focusing on only some cases") in
+        then let _ = Errors.maybe_fatal_error r (Errors.Warning_Filtered, "Focusing on only some cases") in
          let focussed = List.filter fst branches |> List.map snd in
                  focussed@[mkWildAdmitMagic r]
         else branches |> List.map snd
@@ -335,7 +335,7 @@ let focusBranches branches r =
 let focusLetBindings lbs r =
     let should_filter = Util.for_some fst lbs in
         if should_filter
-        then let _ = Errors.maybe_fatal_error r (Errors.Filtered, "Focusing on only some cases in this (mutually) recursive definition") in
+        then let _ = Errors.maybe_fatal_error r (Errors.Warning_Filtered, "Focusing on only some cases in this (mutually) recursive definition") in
          List.map (fun (f, lb) ->
               if f then lb
               else (fst lb, mkAdmitMagic r)) lbs

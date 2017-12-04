@@ -8,24 +8,24 @@ open FStar.Range
 
 type raw_error =
   | AbstractTypeNotAllowed
-  | AddImplicitAssumeNewQualifier
-  | AdmitWithoutDefinition
+  | Warning_AddImplicitAssumeNewQualifier
+  | Warning_AdmitWithoutDefinition
   | AssumedDeclNotAllowed
   | BothValLetInInterface
-  | CachedFile
+  | Warning_CachedFile
   | CardinalityConstraintViolated
   | ComputedTypeNotMatchAnnotation
   | ConstructorFailedCheck
   | ConstructorNotFound
   | ConstsructorBuildWrongType
   | DefinitionNotFound
-  | DefinitionNotTranslated
-  | DependencyAnalysisFailed
-  | DependencyFound
-  | DeprecatedEqualityOnBinder
-  | DeprecatedOpaqueQualifier
+  | Warning_DefinitionNotTranslated
+  | Error_DependencyAnalysisFailed
+  | Warning_DependencyFound
+  | Warning_DeprecatedEqualityOnBinder
+  | Warning_DeprecatedOpaqueQualifier
   | DisjuctivePatternVarsMismatch
-  | DocOverwrite
+  | Warning_DocOverwrite
   | DuplicateInImplementation
   | DuplicateTypeAnnotationAndValDecl
   | ExpectTermGotFunction
@@ -190,18 +190,18 @@ type raw_error =
   | Fatal_WrongDefinitionOrder
   | Fatal_WrongResultTypeAfterConstrutor
   | Fatal_WrongTerm
-  | FileNotWritten
-  | Filtered
+  | Warning_FileNotWritten
+  | Warning_Filtered
   | FreeVariables of string
-  | FunctionLiteralPrecisionLoss
-  | FunctionNotExtacted
+  | Warning_FunctionLiteralPrecisionLoss
+  | Warning_FunctionNotExtacted
   | FunctionTypeExpected
-  | HintFailedToReplayProof
-  | HitReplayFailed
-  | IDEIgnoreCodeGen
+  | Warning_HintFailedToReplayProof
+  | Warning_HitReplayFailed
+  | Warning_IDEIgnoreCodeGen
   | IDETooManyPops
-  | IDEUnrecognized of string
-  | IllFormedGoal
+  | Error_IDEUnrecognized of string
+  | Warning_IllFormedGoal
   | IllTyped of string
   | IllegalCharInByteArray
   | ImpossibleAbbrevLidBundle
@@ -209,86 +209,86 @@ type raw_error =
   | ImpossibleInductiveWithAbbrev
   | ImpossibleTypeAbbrevBundle
   | ImpossibleTypeAbbrevSigeltBundle
-  | InaccessibleArgument
-  | IncoherentImplicitQualifier
+  | Warning_InaccessibleArgument
+  | Warning_IncoherentImplicitQualifier
   | IncompatibleKinds
-  | InductiveTypeNotSatisfyPositivityCondition
+  | Error_InductiveTypeNotSatisfyPositivityCondition
   | InferredTypeCauseVarEscape
   | InterfaceWithTypeImplementation
   | InvalidFSDocKeyword
   | InvalidFloatingPointNumber
   | InvalidNumericLiteral
   | InvalidUTF8Encoding
-  | InvalidUniverseVar
-  | IrrelevantQualifierOnArgumentToReflect
-  | IrrelevantQualifierOnArgumentToReify
+  | Error_InvalidUniverseVar
+  | Warning_IrrelevantQualifierOnArgumentToReflect
+  | Warning_IrrelevantQualifierOnArgumentToReify
   | LetOpenModuleOnly
-  | MalformedWarnErrorList
-  | MetaAlienNotATmUnknown
+  | Warning_MalformedWarnErrorList
+  | Warning_MetaAlienNotATmUnknown
   | MissingFileName
   | MissingPrimsModule
-  | ModuleFileNameMismatch
+  | Error_ModuleFileNameMismatch
   | ModuleFileNotFound
-  | MultipleAscriptions
+  | Warning_MultipleAscriptions
   | Fatal_NameNotFound
   | NoFileProvided
   | NonLinearPatternVars
-  | NonListLiteralSMTPattern
+  | Warning_NonListLiteralSMTPattern
   | NonTopRecFunctionNotFullyEncoded
-  | NondependentUserDefinedDataType
-  | NormalizationFailure
-  | NotDependentArrow
-  | NotEmbedded of string (* the nature of the term *)
+  | Warning_NondependentUserDefinedDataType
+  | Warning_NormalizationFailure
+  | Warning_NotDependentArrow
+  | Warning_NotEmbedded of string (* the nature of the term *)
   | NotEnoughArgsToEffect
-  | OpPlusInUniverse
+  | Error_OpPlusInUniverse
   | OptionsNotCompatible
   | OutOfOrder
-  | OutOfRange of string (* the type of the integer *)
+  | Error_OutOfRange of string (* the type of the integer *)
   | ParseItError
-  | PatternMissingBoundVar
+  | Warning_PatternMissingBoundVar
   | PolyTypeExpected
   | PossibleInfiniteTyp
-  | ProofObligationFailed
-  | RecursiveDependency
-  | RedundantExplicitCurrying
+  | Error_ProofObligationFailed
+  | Warning_RecursiveDependency
+  | Warning_RedundantExplicitCurrying
   | SMTOutputParseError
-  | SMTPatTDeprecated
-  | SMTPatternMissingBoundVar
+  | Warning_SMTPatTDeprecated
+  | Warning_SMTPatternMissingBoundVar
   | SMTSolverError
   | SyntaxError
   | TooManyFiles
-  | TopLevelEffect
-  | TypeCheckerFailToProve
-  | TypeError
+  | Warning_TopLevelEffect
+  | Error_TypeCheckerFailToProve
+  | Error_TypeError
   | UnExpectedPreCondition
-  | UnboundModuleReference
-  | UncontrainedUnificationVar
+  | Warning_UnboundModuleReference
+  | Error_UncontrainedUnificationVar
   | UnexpectedEffect
   | UnexpectedExpressionType
-  | UnexpectedFile
-  | UnexpectedFsTypApp
+  | Warning_UnexpectedFile
+  | Warning_UnexpectedFsTypApp
   | UnexpectedFunctionParameterType
-  | UnexpectedGTotComputation
+  | Error_UnexpectedGTotComputation
   | UnexpectedImplicitArgument
-  | UnexpectedInstance
+  | Error_UnexpectedInstance
   | UnexpectedSignatureForMonad
-  | UnexpectedZ3Output
+  | Warning_UnexpectedZ3Output
   | UnificationNotWellFormed
   | Uninstantiated
   | UninstantiatedUnificationVarInTactic
   | UninstantiatedVarInTactic
-  | UnknownFatal_AssertionFailure
-  | UnprotectedTerm
-  | UnrecognizedAttribute
-  | UpperBoundCandidateAlreadyVisited
-  | UseDefaultEffect
+  | Error_UnknownFatal_AssertionFailure
+  | Warning_UnprotectedTerm
+  | Warning_UnrecognizedAttribute
+  | Warning_UpperBoundCandidateAlreadyVisited
+  | Warning_UseDefaultEffect
   | UserTacticFailure
   | ValueRestriction
   | Fatal_VariableNotFound
   | WhenClauseFatal_NotSupported
-  | WrongErrorLocation
-  | Z3InvocationError
-  | Z3InvocationWarning
+  | Warning_WrongErrorLocation
+  | Error_Z3InvocationError
+  | Warning_Z3InvocationWarning
   | Z3SolverError
 
 exception Err of raw_error* string
@@ -409,74 +409,74 @@ let message_prefix =
 
 let errno_of_error = function
   (* the errors below are default to error *)
-  | OutOfRange _ -> 1
-  | OpPlusInUniverse -> 2
-  | InvalidUniverseVar -> 3
-  | Z3InvocationError -> 4
-  | TypeError -> 5
-  | TypeCheckerFailToProve -> 6
-  | InductiveTypeNotSatisfyPositivityCondition -> 7
-  | UncontrainedUnificationVar -> 8
-  | UnexpectedGTotComputation -> 9
-  | UnexpectedInstance -> 10
-  | ProofObligationFailed -> 11
-  | UnknownFatal_AssertionFailure -> 12
+  | Error_OutOfRange _ -> 1
+  | Error_OpPlusInUniverse -> 2
+  | Error_InvalidUniverseVar -> 3
+  | Error_Z3InvocationError -> 4
+  | Error_TypeError -> 5
+  | Error_TypeCheckerFailToProve -> 6
+  | Error_InductiveTypeNotSatisfyPositivityCondition -> 7
+  | Error_UncontrainedUnificationVar -> 8
+  | Error_UnexpectedGTotComputation -> 9
+  | Error_UnexpectedInstance -> 10
+  | Error_ProofObligationFailed -> 11
+  | Error_UnknownFatal_AssertionFailure -> 12
   | Fatal_AssertionFailure -> 13
   | Fatal_MissingInterface -> 14
   | Fatal_MissingImplementation -> 15
   | Fatal_TooManyOrTooFewFileMatch -> 16
   | Fatal_CallNotImplemented -> 17
-  | IDEUnrecognized _ -> 18
-  | DependencyAnalysisFailed -> 19
-  | ModuleFileNameMismatch -> 20
+  | Error_IDEUnrecognized _ -> 18
+  | Error_DependencyAnalysisFailed -> 19
+  | Error_ModuleFileNameMismatch -> 20
   (* the errors below are default to warning *)
   | Fatal_ModuleOrFileNotFoundWarning -> 21
-  | UnboundModuleReference -> 22
-  | UnprotectedTerm -> 23
-  | NotEmbedded _ -> 24
-  | FunctionLiteralPrecisionLoss -> 25
-  | NonListLiteralSMTPattern -> 26
-  | SMTPatternMissingBoundVar -> 27
+  | Warning_UnboundModuleReference -> 22
+  | Warning_UnprotectedTerm -> 23
+  | Warning_NotEmbedded _ -> 24
+  | Warning_FunctionLiteralPrecisionLoss -> 25
+  | Warning_NonListLiteralSMTPattern -> 26
+  | Warning_SMTPatternMissingBoundVar -> 27
   | Fatal_UnexpectedConstructorType -> 28
-  | Z3InvocationWarning -> 29
-  | UnexpectedZ3Output -> 30
-  | InaccessibleArgument -> 31
-  | DocOverwrite -> 32
-  | AdmitWithoutDefinition -> 33
-  | DeprecatedOpaqueQualifier -> 34
-  | UseDefaultEffect -> 35
-  | AddImplicitAssumeNewQualifier -> 36
-  | TopLevelEffect -> 37
-  | MetaAlienNotATmUnknown -> 38
-  | PatternMissingBoundVar -> 39
-  | IrrelevantQualifierOnArgumentToReify -> 40
-  | IrrelevantQualifierOnArgumentToReflect -> 41
-  | RedundantExplicitCurrying -> 42
-  | HintFailedToReplayProof -> 43
-  | HitReplayFailed -> 44
-  | SMTPatTDeprecated -> 45
-  | CachedFile -> 46
-  | FileNotWritten -> 47
-  | IllFormedGoal -> 48
-  | MalformedWarnErrorList -> 49
-  | IDEIgnoreCodeGen -> 50
+  | Warning_Z3InvocationWarning -> 29
+  | Warning_UnexpectedZ3Output -> 30
+  | Warning_InaccessibleArgument -> 31
+  | Warning_DocOverwrite -> 32
+  | Warning_AdmitWithoutDefinition -> 33
+  | Warning_DeprecatedOpaqueQualifier -> 34
+  | Warning_UseDefaultEffect -> 35
+  | Warning_AddImplicitAssumeNewQualifier -> 36
+  | Warning_TopLevelEffect -> 37
+  | Warning_MetaAlienNotATmUnknown -> 38
+  | Warning_PatternMissingBoundVar -> 39
+  | Warning_IrrelevantQualifierOnArgumentToReify -> 40
+  | Warning_IrrelevantQualifierOnArgumentToReflect -> 41
+  | Warning_RedundantExplicitCurrying -> 42
+  | Warning_HintFailedToReplayProof -> 43
+  | Warning_HitReplayFailed -> 44
+  | Warning_SMTPatTDeprecated -> 45
+  | Warning_CachedFile -> 46
+  | Warning_FileNotWritten -> 47
+  | Warning_IllFormedGoal -> 48
+  | Warning_MalformedWarnErrorList -> 49
+  | Warning_IDEIgnoreCodeGen -> 50
   | Fatal_MissingInterfaceOrImplementation -> 51
-  | UnexpectedFile -> 52
-  | WrongErrorLocation -> 53
-  | DeprecatedEqualityOnBinder -> 54
-  | UnexpectedFsTypApp -> 55
-  | UpperBoundCandidateAlreadyVisited -> 56
-  | DefinitionNotTranslated -> 57
-  | FunctionNotExtacted -> 58
-  | UnrecognizedAttribute -> 59
-  | NotDependentArrow -> 60
-  | NondependentUserDefinedDataType -> 61
-  | IncoherentImplicitQualifier -> 62
-  | DependencyFound -> 63
-  | MultipleAscriptions -> 64
-  | RecursiveDependency -> 65
-  | NormalizationFailure -> 66
-  | Filtered -> 67
+  | Warning_UnexpectedFile -> 52
+  | Warning_WrongErrorLocation -> 53
+  | Warning_DeprecatedEqualityOnBinder -> 54
+  | Warning_UnexpectedFsTypApp -> 55
+  | Warning_UpperBoundCandidateAlreadyVisited -> 56
+  | Warning_DefinitionNotTranslated -> 57
+  | Warning_FunctionNotExtacted -> 58
+  | Warning_UnrecognizedAttribute -> 59
+  | Warning_NotDependentArrow -> 60
+  | Warning_NondependentUserDefinedDataType -> 61
+  | Warning_IncoherentImplicitQualifier -> 62
+  | Warning_DependencyFound -> 63
+  | Warning_MultipleAscriptions -> 64
+  | Warning_RecursiveDependency -> 65
+  | Warning_NormalizationFailure -> 66
+  | Warning_Filtered -> 67
   (* when new entries are added, need to update "next_errno" and default "warn_error" in Options.fs *)
   | _ -> 0 (** Things that cannot be silenced! *)
 

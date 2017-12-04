@@ -94,7 +94,7 @@ let check_uvars r t =
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
     Errors.maybe_fatal_error r
-      (Errors.UncontrainedUnificationVar, (BU.format2 "Unconstrained unification variables %s in type signature %s; \
+      (Errors.Error_UncontrainedUnificationVar, (BU.format2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" us (Print.term_to_string t)));
     Options.pop()
 

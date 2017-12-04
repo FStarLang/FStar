@@ -31,7 +31,7 @@ let find_deps_if_needed files =
     let all_files, deps = Parser.Dep.collect files in
     match all_files with
     | [] ->
-        Errors.maybe_fatal_err (Errors.DependencyAnalysisFailed, "Dependency analysis failed; reverting to using only the files provided\n");
+        Errors.maybe_fatal_err (Errors.Error_DependencyAnalysisFailed, "Dependency analysis failed; reverting to using only the files provided\n");
         files,
         deps
     | _ ->

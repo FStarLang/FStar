@@ -991,7 +991,7 @@ let push_doc env (l:lid) (doc_opt:option<Parser.AST.fsdoc>) =
     (match BU.smap_try_find env.docs l.str with
      | None -> ()
      | Some old_doc -> FStar.Errors.maybe_fatal_error (range_of_lid l)
-                        (Errors.DocOverwrite, (BU.format3 "Overwriting doc of %s; old doc was [%s]; new doc are [%s]"
+                        (Errors.Warning_DocOverwrite, (BU.format3 "Overwriting doc of %s; old doc was [%s]; new doc are [%s]"
                            (Ident.string_of_lid l) (Parser.AST.string_of_fsdoc old_doc)
                            (Parser.AST.string_of_fsdoc doc))));
     BU.smap_add env.docs l.str doc;
@@ -1004,7 +1004,7 @@ let check_admits env =
         | None ->
           if not (Options.interactive ()) then
             FStar.Errors.maybe_fatal_error (range_of_lid l)
-              (Errors.AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l)));
+              (Errors.Warning_AdmitWithoutDefinition, (BU.format1 "Admitting %s without a definition" (Print.lid_to_string l)));
           let quals = Assumption :: se.sigquals in
           BU.smap_add (sigmap env) l.str ({ se with sigquals = quals },
                                           false)
