@@ -334,7 +334,13 @@ let format_issue issue =
     BU.format4 "%s%s%s%s\n" range_str level_header issue.issue_message see_also_str
 
 let print_issue issue =
-    BU.print_error (format_issue issue)
+    let printer = 
+        match issue.issue_level with
+        | EInfo -> BU.print_string
+        | EWarning -> BU.print_warning
+        | EError -> BU.print_error
+        | ENotImplemented -> BU.print_error in
+    printer (format_issue issue)
 
 let compare_issues i1 i2 =
     match i1.issue_range, i2.issue_range with
