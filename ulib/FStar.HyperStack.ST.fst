@@ -12,7 +12,7 @@ private let rid_last_component (r:HH.rid) :GTot int
   = let open FStar.List.Tot in
     let r = HH.reveal r in
     if length r = 0 then 0
-    else snd (index r (length r - 1))
+    else snd (hd r)
 
 (* In a mem, all the contained regions have last component less than the rid counter *)
 let mem = m:HS.mem{forall (r:HH.rid).{:pattern (m.h `Map.contains`r)}
@@ -38,8 +38,8 @@ private let rid_last_component_pred (m1 m2:mem) :Type0
 private let eternal_refs_pred (m1 m2:mem) :Type0
   = forall (a:Type) (rel:preorder a) (r:mreference a rel).
       {:pattern (m1.h `Map.contains` r.id); (HS.is_mm r); (HH.contains_ref r.ref m1.h); (m2.h `Map.contains` r.id)}
-      ((not (HS.is_mm r)) /\ HH.contains_ref r.ref m1.h /\ m2.h `Map.contains` r.id) ==>
-      (HH.contains_ref r.ref m2.h)
+      ((not (HS.is_mm r)) /\ HH.contains_ref r.ref m1.h) ==>
+      (rid_last_component r.id < m2.rid_ctr /\ ((not (m2.h `Map.contains` r.id)) \/ (HH.contains_ref r.ref m2.h)))
 
 let mem_rel :relation mem
   = fun (m1 m2:mem) ->
@@ -185,18 +185,17 @@ let region_contains_pred (r:HH.rid{is_eternal_region r}) :stable_predicate
   = fun m -> m.h `Map.contains` r
 type rid = r:HH.rid{is_eternal_region r ==> witnessed (region_contains_pred r)}
 
-let ref_contains_pred' (#a:Type) (#rel:preorder a) (r:mreference a rel{not (is_mm r)}) :mem_predicate
-  = fun m -> m.h `Map.contains` r.id ==> HH.contains_ref r.ref m.h
 let ref_contains_pred (#a:Type) (#rel:preorder a) (r:mreference a rel{not (is_mm r)}) :stable_predicate
-  = ref_contains_pred' r
-type mreference (a:Type) (rel:preorder a) = r:HS.mreference{not (is_mm r) ==> witnessed 
+  = fun m -> rid_last_component r.id < m.rid_ctr /\ (not (m.h `Map.contains` r.id) \/ HH.contains_ref r.ref m.h)
+type mreference (a:Type) (rel:preorder a) = r:HS.mreference a rel{not (is_mm r) ==> witnessed (ref_contains_pred r)}
 
 (**
    Pushes a new empty frame on the stack
    *)
-assume val push_frame: unit -> Unsafe unit
-  (requires (fun m -> True))
-  (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
+let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
+  = let m0 = gst_get () in
+    let new_tip_rid = HH.extend m0.tip m0.rid_ctr 1 in
+    gst_put (HS (m0.rid_ctr + 1) (Map.upd m0.h new_tip_rid Heap.emp) new_tip_rid)
 
 (**
    Removes old frame from the stack

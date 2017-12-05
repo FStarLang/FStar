@@ -543,3 +543,7 @@ let upd_rref_of
   (ensures (aref_live_at h2 a v rel /\ upd h1 (rref_of h2 a v rel) x == upd h1 (grref_of a v rel) x))
   [SMTPat (upd h1 (rref_of h2 a v rel) x)]
 = ()
+
+abstract let extend (r:rid) (n:int) (c:int)
+  :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons?.hd (reveal s) == (n, c)))
+  = elift1 (fun r -> (n, c)::r) r
