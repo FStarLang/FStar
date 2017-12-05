@@ -185,7 +185,7 @@ let rec read_chunk () =
         Util.clear_string_builder s.chunk;
         Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
-        Errors.maybe_fatal_err (Errors.Error_IDEUnrecognized "info", "Unrecognized \"#info\" request: " ^l);
+        Errors.maybe_fatal_err (Errors.Error_IDEUnrecognized, "Unrecognized \"#info\" request: " ^l);
         exit 1
   else if Util.starts_with l "#completions " then
       match Util.split l " " with
@@ -193,7 +193,7 @@ let rec read_chunk () =
         Util.clear_string_builder s.chunk;
         Completions (prefix)
       | _ ->
-        Errors.maybe_fatal_err (Errors.Error_IDEUnrecognized "completion", "Unrecognized \"#completions\" request: " ^ l);
+        Errors.maybe_fatal_err (Errors.Error_IDEUnrecognized, "Unrecognized \"#completions\" request: " ^ l);
         exit 1
   else if l = "#finish" then exit 0
   else

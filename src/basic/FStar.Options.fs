@@ -196,7 +196,7 @@ let defaults =
       ("use_two_phase_tc"             , Bool false);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false);
-      ("warn_error"                   , String "@1..20+21..67")]
+      ("warn_error"                   , String "")]
 
 let init () =
    let o = peek () in
@@ -467,12 +467,6 @@ let pp_validate_dir p =
 
 let pp_lowercase s =
   mk_string (String.lowercase (as_string s))
-
-let default_warn_error() =
-  let d = Util.smap_of_list defaults in
-  match Util.smap_try_find d "warn_error" with
-  | None -> failwith ("default value for warn_error not found")
-  | Some s -> as_string s
 
 let rec specs_with_types () : list<(char * string * opt_type * string)> =
      [( noshort,
@@ -909,9 +903,8 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          - [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t\
          - [-r] silences range [r]\n\t\t\
          - [+r] enables range [r]\n\t\t\
-         - [@r] makes range [r] fatal.\n\t\t\
-         The default is" ^ default_warn_error());
-
+         - [@r] makes range [r] fatal.");
+   
        ('h',
         "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
                                 (Const (mk_bool true))),

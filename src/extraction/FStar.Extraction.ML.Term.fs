@@ -85,7 +85,7 @@ let err_uninst env (t:term) (vars, ty) (app:term) =
                     (Print.term_to_string app)))
 
 let err_ill_typed_application env (t : term) args (ty : mlty) =
-    fail t.pos ((Fatal_IllTyped "Application"), (BU.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
+    fail t.pos (Fatal_IllTyped, (BU.format3 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
                 (Print.term_to_string t)
                 (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " ")
                 (Code.string_of_mlty env.currentModule ty)))

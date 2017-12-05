@@ -64,7 +64,7 @@ let embed_proofstate (rng:Range.range) (ps:proofstate) : term =
 let unembed_proofstate (t:term) : option<proofstate> =
     try Some (U.un_alien t |> FStar.Dyn.undyn)
     with | _ ->
-        Err.maybe_fatal_error t.pos (Err.Warning_NotEmbedded "proofstate", (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t)));
+        Err.maybe_fatal_error t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded proofstate: %s" (Print.term_to_string t)));
         None
 
 let embed_result (embed_a:embedder<'a>) (t_a:typ) (rng:Range.range) (res:__result<'a>) : term =
@@ -105,7 +105,7 @@ let unembed_result (t:term) (unembed_a:unembedder<'a>)
         BU.bind_opt (unembed_pair unembed_string unembed_proofstate tuple2) (fun x -> Some (Inr x))
 
     | _ ->
-        Err.maybe_fatal_error t.pos (Err.Warning_NotEmbedded "tactic_result", (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t)));
+        Err.maybe_fatal_error t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded tactic result: %s" (Print.term_to_string t)));
         None
 
 let embed_direction (rng:Range.range) (d : direction) : term =
@@ -118,5 +118,5 @@ let unembed_direction (t : term) : option<direction> =
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_topdown_lid -> Some TopDown
     | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_bottomup_lid -> Some BottomUp
     | _ ->
-        Err.maybe_fatal_error t.pos (Err.Warning_NotEmbedded "direction", (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t)));
+        Err.maybe_fatal_error t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded direction: %s" (Print.term_to_string t)));
         None

@@ -74,7 +74,7 @@ let check_guard msg env g =
     let s = guard_unbound_vars env g in
     if BU.set_is_empty s
     then ()
-    else raise_err ((Errors.Fatal_FreeVariables "in guard"), BU.format2 "Guard has free variables (%s): %s"
+    else raise_err (Errors.Fatal_FreeVariables, BU.format2 "Guard has free variables (%s): %s"
                                 msg
                                 (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
 
@@ -82,7 +82,7 @@ let check_term msg env t =
     let s = unbound_vars env t in
     if BU.set_is_empty s
     then ()
-    else raise_err ((Errors.Fatal_FreeVariables "in term"), BU.format3 "Term <%s> has free variables (%s): %s"
+    else raise_err (Errors.Fatal_FreeVariables, BU.format3 "Term <%s> has free variables (%s): %s"
                                 (Print.term_to_string t)
                                 msg
                                 (BU.set_elements s |> List.map S.mk_binder |> Print.binders_to_string ", "))
@@ -1837,7 +1837,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             let xs, rest = BU.first_N n_args xs in
                             let t = mk (Tm_arrow(rest, c)) None k.pos in
                             SS.open_comp xs (S.mk_Total t) |> Some
-                     | _ -> raise_error ((Errors.Fatal_IllTyped "Application"), (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
+                     | _ -> raise_error (Errors.Fatal_IllTyped, (BU.format3 "Impossible: ill-typed application %s : %s\n\t%s"
                                          (Print.uvar_to_string uv)
                                          (Print.term_to_string k)
                                          (Print.term_to_string k_uv))) t1.pos in

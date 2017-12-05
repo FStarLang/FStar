@@ -874,7 +874,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
       | Const_set_range_of
       | Const_reify
       | Const_reflect _ ->
-        raise_error ((Errors.Fatal_IllTyped (Const.const_to_string c)), BU.format1 "Ill-typed %s: this constant must be fully applied"
+        raise_error (Errors.Fatal_IllTyped, BU.format1 "Ill-typed %s: this constant must be fully applied"
                                  (Const.const_to_string c)) r
 
       | _ -> raise_error (Errors.Fatal_UnsupportedConstant, "Unsupported constant") r

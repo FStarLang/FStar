@@ -7,28 +7,24 @@ open FStar.Util
 open FStar.Range
 
 type raw_error =
-  | Warning_AddImplicitAssumeNewQualifier
-  | Warning_AdmitWithoutDefinition
-  | Warning_CachedFile
-  | Fatal_CardinalityConstraintViolated
-  | Fatal_ConstructorFailedCheck
-  | Fatal_ComputedTypeNotMatchAnnotation
-  | Fatal_ConstructorNotFound
-  | Fatal_ConstsructorBuildWrongType
-  | Fatal_DefinitionNotFound
-  | Warning_DefinitionNotTranslated
   | Error_DependencyAnalysisFailed
-  | Warning_DependencyFound
-  | Warning_DeprecatedEqualityOnBinder
-  | Warning_DeprecatedOpaqueQualifier
-  | Fatal_DisjuctivePatternVarsMismatch
-  | Warning_DocOverwrite
-  | Fatal_DuplicateInImplementation
-  | Fatal_DuplicateTypeAnnotationAndValDecl
-  | Fatal_ExpectTermGotFunction
-  | Fatal_ExpectedGhostExpression
-  | Fatal_ExpectedPureExpression
-  | Fatal_FailToCompileNativeTactic
+  | Error_IDETooManyPops
+  | Error_IDEUnrecognized
+  | Error_InductiveTypeNotSatisfyPositivityCondition
+  | Error_InvalidUniverseVar
+  | Error_MissingFileName
+  | Error_ModuleFileNameMismatch
+  | Error_OpPlusInUniverse
+  | Error_OutOfRange
+  | Error_ProofObligationFailed
+  | Error_TooManyFiles
+  | Error_TypeCheckerFailToProve
+  | Error_TypeError
+  | Error_UncontrainedUnificationVar
+  | Error_UnexpectedGTotComputation
+  | Error_UnexpectedInstance
+  | Error_UnknownFatal_AssertionFailure
+  | Error_Z3InvocationError
   | Fatal_AbstractTypeDeclarationInInterface
   | Fatal_ActionMustHaveFunctionType
   | Fatal_AlreadyDefinedTopLevelDeclaration
@@ -36,67 +32,94 @@ type raw_error =
   | Fatal_AssertionFailure
   | Fatal_AssignToImmutableValues
   | Fatal_AssumeValInInterface
-  | Fatal_BadSignatureShape
   | Fatal_BadlyInstantiatedSynthByTactic
+  | Fatal_BadSignatureShape
   | Fatal_BinderAndArgsLengthMismatch
   | Fatal_BothValAndLetInInterface
   | Fatal_CallNotImplemented
+  | Fatal_CardinalityConstraintViolated
   | Fatal_ComputationNotTotal
   | Fatal_ComputationTypeNotAllowed
+  | Fatal_ComputedTypeNotMatchAnnotation
   | Fatal_ConstructorArgLengthMismatch
+  | Fatal_ConstructorFailedCheck
+  | Fatal_ConstructorNotFound
+  | Fatal_ConstsructorBuildWrongType
   | Fatal_CycleInRecTypeAbbreviation
   | Fatal_DataContructorNotFound
   | Fatal_DefaultQualifierNotAllowedOnEffects
+  | Fatal_DefinitionNotFound
+  | Fatal_DisjuctivePatternVarsMismatch
   | Fatal_DivergentComputationCannotBeIncludedInTotal
+  | Fatal_DuplicateInImplementation
   | Fatal_DuplicateModuleOrInterface
   | Fatal_DuplicateTopLevelNames
+  | Fatal_DuplicateTypeAnnotationAndValDecl
   | Fatal_EffectCannotBeReified
   | Fatal_EffectConstructorNotFullyApplied
-  | Fatal_EffectNotFound
   | Fatal_EffectfulAndPureComputationMismatch
+  | Fatal_EffectNotFound
   | Fatal_EffectsCannotBeComposed
   | Fatal_ErrorInSolveDeferredConstraints
   | Fatal_ErrorsReported
   | Fatal_EscapedBoundVar
-  | Fatal_ExpectNormalizedEffect
-  | Fatal_ExpectTrivialPreCondition
   | Fatal_ExpectedArrowAnnotatedType
+  | Fatal_ExpectedGhostExpression
+  | Fatal_ExpectedPureExpression
+  | Fatal_ExpectNormalizedEffect
+  | Fatal_ExpectTermGotFunction
+  | Fatal_ExpectTrivialPreCondition
+  | Fatal_FailToCompileNativeTactic
   | Fatal_FailToProcessPragma
   | Fatal_FailToResolveImplicitArgument
   | Fatal_FailToSolveUniverseInEquality
-  | Fatal_NonSingletonTopLevelModule
-  | Fatal_UnexpectedTermInUniverse
-  | Fatal_UnexpectedTermType
   | Fatal_FieldsNotBelongToSameRecordType
   | Fatal_ForbiddenReferenceToCurrentModule
+  | Fatal_FreeVariables
+  | Fatal_FunctionTypeExpected
   | Fatal_IdentifierNotFound
   | Fatal_IllAppliedConstant
+  | Fatal_IllegalCharInByteArray
   | Fatal_IllegalCharInOperatorName
+  | Fatal_IllTyped
+  | Fatal_ImpossibleAbbrevLidBundle
+  | Fatal_ImpossibleAbbrevRenameBundle
+  | Fatal_ImpossibleInductiveWithAbbrev
   | Fatal_ImpossiblePrePostAbs
   | Fatal_ImpossiblePrePostArrow
   | Fatal_ImpossibleToGenerateDMEffect
+  | Fatal_ImpossibleTypeAbbrevBundle
+  | Fatal_ImpossibleTypeAbbrevSigeltBundle
   | Fatal_IncludeModuleNotPrepared
   | Fatal_IncoherentInlineUniverse
+  | Fatal_IncompatibleKinds
   | Fatal_IncompatibleNumberOfTypes
   | Fatal_IncompatibleSetOfUniverse
   | Fatal_IncompatibleUniverse
   | Fatal_InconsistentImplicitArgumentAnnotation
   | Fatal_InconsistentImplicitQualifier
   | Fatal_InconsistentQualifierAnnotation
+  | Fatal_InferredTypeCauseVarEscape
   | Fatal_InlineRenamedAsUnfold
   | Fatal_InsufficientPatternArguments
   | Fatal_InterfaceAlreadyProcessed
   | Fatal_InterfaceNotImplementedByModule
+  | Fatal_InterfaceWithTypeImplementation
+  | Fatal_InvalidFloatingPointNumber
+  | Fatal_InvalidFSDocKeyword
   | Fatal_InvalidIdentifier
   | Fatal_InvalidLemmaArgument
+  | Fatal_InvalidNumericLiteral
   | Fatal_InvalidRedefinitionOfLexT
   | Fatal_InvalidUnicodeInStringLiteral
+  | Fatal_InvalidUTF8Encoding
   | Fatal_LetBoundMonadicMismatch
   | Fatal_LetMutableForVariablesOnly
+  | Fatal_LetOpenModuleOnly
   | Fatal_LetRecArgumentMismatch
   | Fatal_MalformedActionDeclaration
-  | Fatal_MismatchUniversePolymorphic
   | Fatal_MismatchedPatternType
+  | Fatal_MismatchUniversePolymorphic
   | Fatal_MissingDataConstructor
   | Fatal_MissingExposeInterfacesOption
   | Fatal_MissingFieldInRecord
@@ -105,8 +128,10 @@ type raw_error =
   | Fatal_MissingInterface
   | Fatal_MissingInterfaceOrImplementation
   | Fatal_MissingNameInBinder
+  | Fatal_MissingPrimsModule
   | Fatal_MissingQuantifierBinder
   | Fatal_ModuleExpected
+  | Fatal_ModuleFileNotFound
   | Fatal_ModuleFirstStatement
   | Fatal_ModuleNotFound
   | Fatal_ModuleOrFileNotFound
@@ -114,14 +139,20 @@ type raw_error =
   | Fatal_MonadAlreadyDefined
   | Fatal_MoreThanOneDeclaration
   | Fatal_MultipleLetBinding
+  | Fatal_NameNotFound
   | Fatal_NameSpaceNotFound
   | Fatal_NegativeUniverseConstFatal_NotSupported
+  | Fatal_NoFileProvided
   | Fatal_NonInductiveInMutuallyDefinedType
   | Fatal_NonLinearPatternNotPermitted
+  | Fatal_NonLinearPatternVars
   | Fatal_NonSingletonTopLevel
+  | Fatal_NonSingletonTopLevelModule
+  | Fatal_NonTopRecFunctionNotFullyEncoded
   | Fatal_NonTrivialPreConditionInPrims
   | Fatal_NonVaribleInductiveTypeParameter
   | Fatal_NotApplicationOrFv
+  | Fatal_NotEnoughArgsToEffect
   | Fatal_NotEnoughArgumentsForEffect
   | Fatal_NotFunctionType
   | Fatal_NotSupported
@@ -130,12 +161,20 @@ type raw_error =
   | Fatal_NotValidIncludeDirectory
   | Fatal_OneModulePerFile
   | Fatal_OpenGoalsInSynthesis
+  | Fatal_OptionsNotCompatible
+  | Fatal_OutOfOrder
   | Fatal_ParseErrors
+  | Fatal_ParseItError
+  | Fatal_PolyTypeExpected
+  | Fatal_PossibleInfiniteTyp
   | Fatal_PreModuleMismatch
   | Fatal_QulifierListNotPermitted
   | Fatal_RecursiveFunctionLiteral
   | Fatal_ReflectOnlySupportedOnEffects
   | Fatal_ReservedPrefix
+  | Fatal_SMTOutputParseError
+  | Fatal_SMTSolverError
+  | Fatal_SyntaxError
   | Fatal_SynthByTacticError
   | Fatal_TacticGotStuck
   | Fatal_TcOneFragmentFailed
@@ -148,17 +187,21 @@ type raw_error =
   | Fatal_TypeWithinPatternsAllowedOnVariablesOnly
   | Fatal_UnableToReadFile
   | Fatal_UnepxectedOrUnboundOperator
-  | Fatal_UnexpectedBindShape
   | Fatal_UnexpectedBinder
+  | Fatal_UnexpectedBindShape
   | Fatal_UnexpectedChar
   | Fatal_UnexpectedComputationTypeForLetRec
   | Fatal_UnexpectedConstructorType
   | Fatal_UnexpectedDataConstructor
+  | Fatal_UnexpectedEffect
   | Fatal_UnexpectedEmptyRecord
-  | Fatal_UnexpectedGTotForLetRec
+  | Fatal_UnexpectedExpressionType
+  | Fatal_UnexpectedFunctionParameterType
   | Fatal_UnexpectedGeneralizedUniverse
+  | Fatal_UnexpectedGTotForLetRec
   | Fatal_UnexpectedGuard
   | Fatal_UnexpectedIdentifier
+  | Fatal_UnexpectedImplicitArgument
   | Fatal_UnexpectedImplictArgument
   | Fatal_UnexpectedInductivetype
   | Fatal_UnexpectedLetBinding
@@ -168,11 +211,19 @@ type raw_error =
   | Fatal_UnexpectedOperatorSymbol
   | Fatal_UnexpectedPattern
   | Fatal_UnexpectedPosition
+  | Fatal_UnExpectedPreCondition
   | Fatal_UnexpectedReturnShape
+  | Fatal_UnexpectedSignatureForMonad
   | Fatal_UnexpectedTerm
+  | Fatal_UnexpectedTermInUniverse
+  | Fatal_UnexpectedTermType
   | Fatal_UnexpectedUniversePolymorphicReturn
   | Fatal_UnexpectedUniverseVariable
   | Fatal_UnfoldableDeprecated
+  | Fatal_UnificationNotWellFormed
+  | Fatal_Uninstantiated
+  | Fatal_UninstantiatedUnificationVarInTactic
+  | Fatal_UninstantiatedVarInTactic
   | Fatal_UniverseMightContainSumOfTwoUnivVars
   | Fatal_UniversePolymorphicInnerLetBound
   | Fatal_UnknownAttribute
@@ -182,111 +233,345 @@ type raw_error =
   | Fatal_UnsupportedConstant
   | Fatal_UnsupportedDisjuctivePatterns
   | Fatal_UnsupportedQualifier
+  | Fatal_UserTacticFailure
+  | Fatal_ValueRestriction
+  | Fatal_VariableNotFound
   | Fatal_WrongBodyTypeForReturnWP
   | Fatal_WrongDataAppHeadFormat
   | Fatal_WrongDefinitionOrder
   | Fatal_WrongResultTypeAfterConstrutor
   | Fatal_WrongTerm
+  | Fatal_Z3SolverError
+  | WhenClauseFatal_NotSupported
+  | Warning_AddImplicitAssumeNewQualifier
+  | Warning_AdmitWithoutDefinition
+  | Warning_CachedFile
+  | Warning_DefinitionNotTranslated
+  | Warning_DependencyFound
+  | Warning_DeprecatedEqualityOnBinder
+  | Warning_DeprecatedOpaqueQualifier
+  | Warning_DocOverwrite
   | Warning_FileNotWritten
   | Warning_Filtered
-  | Fatal_FreeVariables of string
   | Warning_FunctionLiteralPrecisionLoss
   | Warning_FunctionNotExtacted
-  | Fatal_FunctionTypeExpected
   | Warning_HintFailedToReplayProof
   | Warning_HitReplayFailed
   | Warning_IDEIgnoreCodeGen
-  | Error_IDETooManyPops
-  | Error_IDEUnrecognized of string
   | Warning_IllFormedGoal
-  | Fatal_IllTyped of string
-  | Fatal_IllegalCharInByteArray
-  | Fatal_ImpossibleAbbrevLidBundle
-  | Fatal_ImpossibleAbbrevRenameBundle
-  | Fatal_ImpossibleInductiveWithAbbrev
-  | Fatal_ImpossibleTypeAbbrevBundle
-  | Fatal_ImpossibleTypeAbbrevSigeltBundle
   | Warning_InaccessibleArgument
   | Warning_IncoherentImplicitQualifier
-  | Fatal_IncompatibleKinds
-  | Error_InductiveTypeNotSatisfyPositivityCondition
-  | Fatal_InferredTypeCauseVarEscape
-  | Fatal_InterfaceWithTypeImplementation
-  | Fatal_InvalidFSDocKeyword
-  | Fatal_InvalidFloatingPointNumber
-  | Fatal_InvalidNumericLiteral
-  | Fatal_InvalidUTF8Encoding
-  | Error_InvalidUniverseVar
   | Warning_IrrelevantQualifierOnArgumentToReflect
   | Warning_IrrelevantQualifierOnArgumentToReify
-  | Fatal_LetOpenModuleOnly
   | Warning_MalformedWarnErrorList
   | Warning_MetaAlienNotATmUnknown
-  | Error_MissingFileName
-  | Fatal_MissingPrimsModule
-  | Error_ModuleFileNameMismatch
-  | Fatal_ModuleFileNotFound
   | Warning_MultipleAscriptions
-  | Fatal_NameNotFound
-  | Fatal_NoFileProvided
-  | Fatal_NonLinearPatternVars
-  | Warning_NonListLiteralSMTPattern
-  | Fatal_NonTopRecFunctionNotFullyEncoded
   | Warning_NondependentUserDefinedDataType
+  | Warning_NonListLiteralSMTPattern
   | Warning_NormalizationFailure
   | Warning_NotDependentArrow
-  | Warning_NotEmbedded of string (* the nature of the term *)
-  | Fatal_NotEnoughArgsToEffect
-  | Error_OpPlusInUniverse
-  | Fatal_OptionsNotCompatible
-  | Fatal_OutOfOrder
-  | Error_OutOfRange of string (* the type of the integer *)
-  | Fatal_ParseItError
+  | Warning_NotEmbedded
   | Warning_PatternMissingBoundVar
-  | Fatal_PolyTypeExpected
-  | Fatal_PossibleInfiniteTyp
-  | Error_ProofObligationFailed
   | Warning_RecursiveDependency
   | Warning_RedundantExplicitCurrying
-  | Fatal_SMTOutputParseError
   | Warning_SMTPatTDeprecated
   | Warning_SMTPatternMissingBoundVar
-  | Fatal_SMTSolverError
-  | Fatal_SyntaxError
-  | Error_TooManyFiles
   | Warning_TopLevelEffect
-  | Error_TypeCheckerFailToProve
-  | Error_TypeError
-  | Fatal_UnExpectedPreCondition
   | Warning_UnboundModuleReference
-  | Error_UncontrainedUnificationVar
-  | Fatal_UnexpectedEffect
-  | Fatal_UnexpectedExpressionType
   | Warning_UnexpectedFile
   | Warning_UnexpectedFsTypApp
-  | Fatal_UnexpectedFunctionParameterType
-  | Error_UnexpectedGTotComputation
-  | Fatal_UnexpectedImplicitArgument
-  | Error_UnexpectedInstance
-  | Fatal_UnexpectedSignatureForMonad
   | Warning_UnexpectedZ3Output
-  | Fatal_UnificationNotWellFormed
-  | Fatal_Uninstantiated
-  | Fatal_UninstantiatedUnificationVarInTactic
-  | Fatal_UninstantiatedVarInTactic
-  | Error_UnknownFatal_AssertionFailure
   | Warning_UnprotectedTerm
   | Warning_UnrecognizedAttribute
   | Warning_UpperBoundCandidateAlreadyVisited
   | Warning_UseDefaultEffect
-  | Fatal_UserTacticFailure
-  | Fatal_ValueRestriction
-  | Fatal_VariableNotFound
-  | WhenClauseFatal_NotSupported
   | Warning_WrongErrorLocation
-  | Error_Z3InvocationError
   | Warning_Z3InvocationWarning
-  | Fatal_Z3SolverError
+
+type flag =
+  | CError | CFatal | CWarning | CSilent
+
+let default_flags:list<raw_error*flag> =
+  [(Error_DependencyAnalysisFailed, CError);
+  (Error_IDETooManyPops, CError);
+  (Error_IDEUnrecognized, CError);
+  (Error_InductiveTypeNotSatisfyPositivityCondition, CError);
+  (Error_InvalidUniverseVar, CError);
+  (Error_MissingFileName, CError);
+  (Error_ModuleFileNameMismatch, CError);
+  (Error_OpPlusInUniverse, CError);
+  (Error_OutOfRange, CError);
+  (Error_ProofObligationFailed, CError);
+  (Error_TooManyFiles, CError);
+  (Error_TypeCheckerFailToProve, CError);
+  (Error_TypeError, CError);
+  (Error_UncontrainedUnificationVar, CError);
+  (Error_UnexpectedGTotComputation, CError);
+  (Error_UnexpectedInstance, CError);
+  (Error_UnknownFatal_AssertionFailure, CError);
+  (Error_Z3InvocationError, CError);
+  (Fatal_AbstractTypeDeclarationInInterface, CFatal);
+  (Fatal_ActionMustHaveFunctionType, CFatal);
+  (Fatal_AlreadyDefinedTopLevelDeclaration, CFatal);
+  (Fatal_ArgumentLengthMismatch, CFatal);
+  (Fatal_AssertionFailure, CFatal);
+  (Fatal_AssignToImmutableValues, CFatal);
+  (Fatal_AssumeValInInterface, CFatal);
+  (Fatal_BadlyInstantiatedSynthByTactic, CFatal);
+  (Fatal_BadSignatureShape, CFatal);
+  (Fatal_BinderAndArgsLengthMismatch, CFatal);
+  (Fatal_BothValAndLetInInterface, CFatal);
+  (Fatal_CallNotImplemented, CFatal);
+  (Fatal_CardinalityConstraintViolated, CFatal);
+  (Fatal_ComputationNotTotal, CFatal);
+  (Fatal_ComputationTypeNotAllowed, CFatal);
+  (Fatal_ComputedTypeNotMatchAnnotation, CFatal);
+  (Fatal_ConstructorArgLengthMismatch, CFatal);
+  (Fatal_ConstructorFailedCheck, CFatal);
+  (Fatal_ConstructorNotFound, CFatal);
+  (Fatal_ConstsructorBuildWrongType, CFatal);
+  (Fatal_CycleInRecTypeAbbreviation, CFatal);
+  (Fatal_DataContructorNotFound, CFatal);
+  (Fatal_DefaultQualifierNotAllowedOnEffects, CFatal);
+  (Fatal_DefinitionNotFound, CFatal);
+  (Fatal_DisjuctivePatternVarsMismatch, CFatal);
+  (Fatal_DivergentComputationCannotBeIncludedInTotal, CFatal);
+  (Fatal_DuplicateInImplementation, CFatal);
+  (Fatal_DuplicateModuleOrInterface, CFatal);
+  (Fatal_DuplicateTopLevelNames, CFatal);
+  (Fatal_DuplicateTypeAnnotationAndValDecl, CFatal);
+  (Fatal_EffectCannotBeReified, CFatal);
+  (Fatal_EffectConstructorNotFullyApplied, CFatal);
+  (Fatal_EffectfulAndPureComputationMismatch, CFatal);
+  (Fatal_EffectNotFound, CFatal);
+  (Fatal_EffectsCannotBeComposed, CFatal);
+  (Fatal_ErrorInSolveDeferredConstraints, CFatal);
+  (Fatal_ErrorsReported, CFatal);
+  (Fatal_EscapedBoundVar, CFatal);
+  (Fatal_ExpectedArrowAnnotatedType, CFatal);
+  (Fatal_ExpectedGhostExpression, CFatal);
+  (Fatal_ExpectedPureExpression, CFatal);
+  (Fatal_ExpectNormalizedEffect, CFatal);
+  (Fatal_ExpectTermGotFunction, CFatal);
+  (Fatal_ExpectTrivialPreCondition, CFatal);
+  (Fatal_FailToCompileNativeTactic, CFatal);
+  (Fatal_FailToProcessPragma, CFatal);
+  (Fatal_FailToResolveImplicitArgument, CFatal);
+  (Fatal_FailToSolveUniverseInEquality, CFatal);
+  (Fatal_FieldsNotBelongToSameRecordType, CFatal);
+  (Fatal_ForbiddenReferenceToCurrentModule, CFatal);
+  (Fatal_FreeVariables, CFatal);
+  (Fatal_FunctionTypeExpected, CFatal);
+  (Fatal_IdentifierNotFound, CFatal);
+  (Fatal_IllAppliedConstant, CFatal);
+  (Fatal_IllegalCharInByteArray, CFatal);
+  (Fatal_IllegalCharInOperatorName, CFatal);
+  (Fatal_IllTyped, CFatal);
+  (Fatal_ImpossibleAbbrevLidBundle, CFatal);
+  (Fatal_ImpossibleAbbrevRenameBundle, CFatal);
+  (Fatal_ImpossibleInductiveWithAbbrev, CFatal);
+  (Fatal_ImpossiblePrePostAbs, CFatal);
+  (Fatal_ImpossiblePrePostArrow, CFatal);
+  (Fatal_ImpossibleToGenerateDMEffect, CFatal);
+  (Fatal_ImpossibleTypeAbbrevBundle, CFatal);
+  (Fatal_ImpossibleTypeAbbrevSigeltBundle, CFatal);
+  (Fatal_IncludeModuleNotPrepared, CFatal);
+  (Fatal_IncoherentInlineUniverse, CFatal);
+  (Fatal_IncompatibleKinds, CFatal);
+  (Fatal_IncompatibleNumberOfTypes, CFatal);
+  (Fatal_IncompatibleSetOfUniverse, CFatal);
+  (Fatal_IncompatibleUniverse, CFatal);
+  (Fatal_InconsistentImplicitArgumentAnnotation, CFatal);
+  (Fatal_InconsistentImplicitQualifier, CFatal);
+  (Fatal_InconsistentQualifierAnnotation, CFatal);
+  (Fatal_InferredTypeCauseVarEscape, CFatal);
+  (Fatal_InlineRenamedAsUnfold, CFatal);
+  (Fatal_InsufficientPatternArguments, CFatal);
+  (Fatal_InterfaceAlreadyProcessed, CFatal);
+  (Fatal_InterfaceNotImplementedByModule, CFatal);
+  (Fatal_InterfaceWithTypeImplementation, CFatal);
+  (Fatal_InvalidFloatingPointNumber, CFatal);
+  (Fatal_InvalidFSDocKeyword, CFatal);
+  (Fatal_InvalidIdentifier, CFatal);
+  (Fatal_InvalidLemmaArgument, CFatal);
+  (Fatal_InvalidNumericLiteral, CFatal);
+  (Fatal_InvalidRedefinitionOfLexT, CFatal);
+  (Fatal_InvalidUnicodeInStringLiteral, CFatal);
+  (Fatal_InvalidUTF8Encoding, CFatal);
+  (Fatal_LetBoundMonadicMismatch, CFatal);
+  (Fatal_LetMutableForVariablesOnly, CFatal);
+  (Fatal_LetOpenModuleOnly, CFatal);
+  (Fatal_LetRecArgumentMismatch, CFatal);
+  (Fatal_MalformedActionDeclaration, CFatal);
+  (Fatal_MismatchedPatternType, CFatal);
+  (Fatal_MismatchUniversePolymorphic, CFatal);
+  (Fatal_MissingDataConstructor, CFatal);
+  (Fatal_MissingExposeInterfacesOption, CFatal);
+  (Fatal_MissingFieldInRecord, CFatal);
+  (Fatal_MissingImplementation, CFatal);
+  (Fatal_MissingImplicitArguments, CFatal);
+  (Fatal_MissingInterface, CFatal);
+  (Fatal_MissingInterfaceOrImplementation, CFatal);
+  (Fatal_MissingNameInBinder, CFatal);
+  (Fatal_MissingPrimsModule, CFatal);
+  (Fatal_MissingQuantifierBinder, CFatal);
+  (Fatal_ModuleExpected, CFatal);
+  (Fatal_ModuleFileNotFound, CFatal);
+  (Fatal_ModuleFirstStatement, CFatal);
+  (Fatal_ModuleNotFound, CFatal);
+  (Fatal_ModuleOrFileNotFound, CFatal);
+  (Fatal_ModuleOrFileNotFoundWarning, CFatal);
+  (Fatal_MonadAlreadyDefined, CFatal);
+  (Fatal_MoreThanOneDeclaration, CFatal);
+  (Fatal_MultipleLetBinding, CFatal);
+  (Fatal_NameNotFound, CFatal);
+  (Fatal_NameSpaceNotFound, CFatal);
+  (Fatal_NegativeUniverseConstFatal_NotSupported, CFatal);
+  (Fatal_NoFileProvided, CFatal);
+  (Fatal_NonInductiveInMutuallyDefinedType, CFatal);
+  (Fatal_NonLinearPatternNotPermitted, CFatal);
+  (Fatal_NonLinearPatternVars, CFatal);
+  (Fatal_NonSingletonTopLevel, CFatal);
+  (Fatal_NonSingletonTopLevelModule, CFatal);
+  (Fatal_NonTopRecFunctionNotFullyEncoded, CFatal);
+  (Fatal_NonTrivialPreConditionInPrims, CFatal);
+  (Fatal_NonVaribleInductiveTypeParameter, CFatal);
+  (Fatal_NotApplicationOrFv, CFatal);
+  (Fatal_NotEnoughArgsToEffect, CFatal);
+  (Fatal_NotEnoughArgumentsForEffect, CFatal);
+  (Fatal_NotFunctionType, CFatal);
+  (Fatal_NotSupported, CFatal);
+  (Fatal_NotTopLevelModule, CFatal);
+  (Fatal_NotValidFStarFile, CFatal);
+  (Fatal_NotValidIncludeDirectory, CFatal);
+  (Fatal_OneModulePerFile, CFatal);
+  (Fatal_OpenGoalsInSynthesis, CFatal);
+  (Fatal_OptionsNotCompatible, CFatal);
+  (Fatal_OutOfOrder, CFatal);
+  (Fatal_ParseErrors, CFatal);
+  (Fatal_ParseItError, CFatal);
+  (Fatal_PolyTypeExpected, CFatal);
+  (Fatal_PossibleInfiniteTyp, CFatal);
+  (Fatal_PreModuleMismatch, CFatal);
+  (Fatal_QulifierListNotPermitted, CFatal);
+  (Fatal_RecursiveFunctionLiteral, CFatal);
+  (Fatal_ReflectOnlySupportedOnEffects, CFatal);
+  (Fatal_ReservedPrefix, CFatal);
+  (Fatal_SMTOutputParseError, CFatal);
+  (Fatal_SMTSolverError, CFatal);
+  (Fatal_SyntaxError, CFatal);
+  (Fatal_SynthByTacticError, CFatal);
+  (Fatal_TacticGotStuck, CFatal);
+  (Fatal_TcOneFragmentFailed, CFatal);
+  (Fatal_TermOutsideOfDefLanguage, CFatal);
+  (Fatal_ToManyArgumentToFunction, CFatal);
+  (Fatal_TooManyOrTooFewFileMatch, CFatal);
+  (Fatal_TooManyPatternArguments, CFatal);
+  (Fatal_TooManyUniverse, CFatal);
+  (Fatal_TypeMismatch, CFatal);
+  (Fatal_TypeWithinPatternsAllowedOnVariablesOnly, CFatal);
+  (Fatal_UnableToReadFile, CFatal);
+  (Fatal_UnepxectedOrUnboundOperator, CFatal);
+  (Fatal_UnexpectedBinder, CFatal);
+  (Fatal_UnexpectedBindShape, CFatal);
+  (Fatal_UnexpectedChar, CFatal);
+  (Fatal_UnexpectedComputationTypeForLetRec, CFatal);
+  (Fatal_UnexpectedConstructorType, CFatal);
+  (Fatal_UnexpectedDataConstructor, CFatal);
+  (Fatal_UnexpectedEffect, CFatal);
+  (Fatal_UnexpectedEmptyRecord, CFatal);
+  (Fatal_UnexpectedExpressionType, CFatal);
+  (Fatal_UnexpectedFunctionParameterType, CFatal);
+  (Fatal_UnexpectedGeneralizedUniverse, CFatal);
+  (Fatal_UnexpectedGTotForLetRec, CFatal);
+  (Fatal_UnexpectedGuard, CFatal);
+  (Fatal_UnexpectedIdentifier, CFatal);
+  (Fatal_UnexpectedImplicitArgument, CFatal);
+  (Fatal_UnexpectedImplictArgument, CFatal);
+  (Fatal_UnexpectedInductivetype, CFatal);
+  (Fatal_UnexpectedLetBinding, CFatal);
+  (Fatal_UnexpectedModuleDeclaration, CFatal);
+  (Fatal_UnexpectedNumberOfUniverse, CFatal);
+  (Fatal_UnexpectedNumericLiteral, CFatal);
+  (Fatal_UnexpectedOperatorSymbol, CFatal);
+  (Fatal_UnexpectedPattern, CFatal);
+  (Fatal_UnexpectedPosition, CFatal);
+  (Fatal_UnExpectedPreCondition, CFatal);
+  (Fatal_UnexpectedReturnShape, CFatal);
+  (Fatal_UnexpectedSignatureForMonad, CFatal);
+  (Fatal_UnexpectedTerm, CFatal);
+  (Fatal_UnexpectedTermInUniverse, CFatal);
+  (Fatal_UnexpectedTermType, CFatal);
+  (Fatal_UnexpectedUniversePolymorphicReturn, CFatal);
+  (Fatal_UnexpectedUniverseVariable, CFatal);
+  (Fatal_UnfoldableDeprecated, CFatal);
+  (Fatal_UnificationNotWellFormed, CFatal);
+  (Fatal_Uninstantiated, CFatal);
+  (Fatal_UninstantiatedUnificationVarInTactic, CFatal);
+  (Fatal_UninstantiatedVarInTactic, CFatal);
+  (Fatal_UniverseMightContainSumOfTwoUnivVars, CFatal);
+  (Fatal_UniversePolymorphicInnerLetBound, CFatal);
+  (Fatal_UnknownAttribute, CFatal);
+  (Fatal_UnknownToolForDep, CFatal);
+  (Fatal_UnrecognizedExtension, CFatal);
+  (Fatal_UnresolvedPatternVar, CFatal);
+  (Fatal_UnsupportedConstant, CFatal);
+  (Fatal_UnsupportedDisjuctivePatterns, CFatal);
+  (Fatal_UnsupportedQualifier, CFatal);
+  (Fatal_UserTacticFailure, CFatal);
+  (Fatal_ValueRestriction, CFatal);
+  (Fatal_VariableNotFound, CFatal);
+  (Fatal_WrongBodyTypeForReturnWP, CFatal);
+  (Fatal_WrongDataAppHeadFormat, CFatal);
+  (Fatal_WrongDefinitionOrder, CFatal);
+  (Fatal_WrongResultTypeAfterConstrutor, CFatal);
+  (Fatal_WrongTerm, CFatal);
+  (Fatal_Z3SolverError, CFatal);
+  (WhenClauseFatal_NotSupported, CFatal);
+  (Warning_AddImplicitAssumeNewQualifier, CWarning);
+  (Warning_AdmitWithoutDefinition, CWarning);
+  (Warning_CachedFile, CWarning);
+  (Warning_DefinitionNotTranslated, CWarning);
+  (Warning_DependencyFound, CWarning);
+  (Warning_DeprecatedEqualityOnBinder, CWarning);
+  (Warning_DeprecatedOpaqueQualifier, CWarning);
+  (Warning_DocOverwrite, CWarning);
+  (Warning_FileNotWritten, CWarning);
+  (Warning_Filtered, CWarning);
+  (Warning_FunctionLiteralPrecisionLoss, CWarning);
+  (Warning_FunctionNotExtacted, CWarning);
+  (Warning_HintFailedToReplayProof, CWarning);
+  (Warning_HitReplayFailed, CWarning);
+  (Warning_IDEIgnoreCodeGen, CWarning);
+  (Warning_IllFormedGoal, CWarning);
+  (Warning_InaccessibleArgument, CWarning);
+  (Warning_IncoherentImplicitQualifier, CWarning);
+  (Warning_IrrelevantQualifierOnArgumentToReflect, CWarning);
+  (Warning_IrrelevantQualifierOnArgumentToReify, CWarning);
+  (Warning_MalformedWarnErrorList, CWarning);
+  (Warning_MetaAlienNotATmUnknown, CWarning);
+  (Warning_MultipleAscriptions, CWarning);
+  (Warning_NondependentUserDefinedDataType, CWarning);
+  (Warning_NonListLiteralSMTPattern, CWarning);
+  (Warning_NormalizationFailure, CWarning);
+  (Warning_NotDependentArrow, CWarning);
+  (Warning_NotEmbedded, CWarning);
+  (Warning_PatternMissingBoundVar, CWarning);
+  (Warning_RecursiveDependency, CWarning);
+  (Warning_RedundantExplicitCurrying, CWarning);
+  (Warning_SMTPatTDeprecated, CWarning);
+  (Warning_SMTPatternMissingBoundVar, CWarning);
+  (Warning_TopLevelEffect, CWarning);
+  (Warning_UnboundModuleReference, CWarning);
+  (Warning_UnexpectedFile, CWarning);
+  (Warning_UnexpectedFsTypApp, CWarning);
+  (Warning_UnexpectedZ3Output, CWarning);
+  (Warning_UnprotectedTerm, CWarning);
+  (Warning_UnrecognizedAttribute, CWarning);
+  (Warning_UpperBoundCandidateAlreadyVisited, CWarning);
+  (Warning_UseDefaultEffect, CWarning);
+  (Warning_WrongErrorLocation, CWarning);
+  (Warning_Z3InvocationWarning, CWarning);]
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
@@ -307,7 +592,8 @@ type issue_level =
 type issue = {
     issue_message: string;
     issue_level: issue_level;
-    issue_range: option<Range.range>
+    issue_range: option<Range.range>;
+    issue_number: option<int>
 }
 
 type error_handler = {
@@ -331,7 +617,11 @@ let format_issue issue =
           (BU.format1 "%s: " (Range.string_of_use_range r),
            (if use_range r = def_range r then ""
             else BU.format1 " (see also %s)" (Range.string_of_range r))) in
-    BU.format4 "%s%s%s%s\n" range_str level_header issue.issue_message see_also_str
+    let issue_number = 
+        match issue.issue_number with
+        | None -> ""
+        | Some n -> BU.format1 "Issue %s: " (string_of_int n) in
+    BU.format5 "%s%s%s%s%s\n" issue_number range_str level_header issue.issue_message see_also_str
 
 let print_issue issue =
     let printer = 
@@ -371,8 +661,8 @@ let default_handler =
 let current_handler =
     BU.mk_ref default_handler
 
-let mk_issue level range msg =
-    { issue_level = level; issue_range = range; issue_message = msg }
+let mk_issue level range msg n =
+    { issue_level = level; issue_range = range; issue_message = msg; issue_number = n}
 
 let get_err_count () = (!current_handler).eh_count_errors ()
 
@@ -410,84 +700,17 @@ let message_prefix =
      clear_prefix=clear_prefix;
      append_prefix=append_prefix}
 
-let errno_of_error = function
-  (* the errors below are default to error *)
-  | Error_OutOfRange _ -> 1
-  | Error_OpPlusInUniverse -> 2
-  | Error_InvalidUniverseVar -> 3
-  | Error_Z3InvocationError -> 4
-  | Error_TypeError -> 5
-  | Error_TypeCheckerFailToProve -> 6
-  | Error_InductiveTypeNotSatisfyPositivityCondition -> 7
-  | Error_UncontrainedUnificationVar -> 8
-  | Error_UnexpectedGTotComputation -> 9
-  | Error_UnexpectedInstance -> 10
-  | Error_ProofObligationFailed -> 11
-  | Error_UnknownFatal_AssertionFailure -> 12
-  | Fatal_AssertionFailure -> 13
-  | Fatal_MissingInterface -> 14
-  | Fatal_MissingImplementation -> 15
-  | Fatal_TooManyOrTooFewFileMatch -> 16
-  | Fatal_CallNotImplemented -> 17
-  | Error_IDEUnrecognized _ -> 18
-  | Error_DependencyAnalysisFailed -> 19
-  | Error_ModuleFileNameMismatch -> 20
-  (* the errors below are default to warning *)
-  | Fatal_ModuleOrFileNotFoundWarning -> 21
-  | Warning_UnboundModuleReference -> 22
-  | Warning_UnprotectedTerm -> 23
-  | Warning_NotEmbedded _ -> 24
-  | Warning_FunctionLiteralPrecisionLoss -> 25
-  | Warning_NonListLiteralSMTPattern -> 26
-  | Warning_SMTPatternMissingBoundVar -> 27
-  | Fatal_UnexpectedConstructorType -> 28
-  | Warning_Z3InvocationWarning -> 29
-  | Warning_UnexpectedZ3Output -> 30
-  | Warning_InaccessibleArgument -> 31
-  | Warning_DocOverwrite -> 32
-  | Warning_AdmitWithoutDefinition -> 33
-  | Warning_DeprecatedOpaqueQualifier -> 34
-  | Warning_UseDefaultEffect -> 35
-  | Warning_AddImplicitAssumeNewQualifier -> 36
-  | Warning_TopLevelEffect -> 37
-  | Warning_MetaAlienNotATmUnknown -> 38
-  | Warning_PatternMissingBoundVar -> 39
-  | Warning_IrrelevantQualifierOnArgumentToReify -> 40
-  | Warning_IrrelevantQualifierOnArgumentToReflect -> 41
-  | Warning_RedundantExplicitCurrying -> 42
-  | Warning_HintFailedToReplayProof -> 43
-  | Warning_HitReplayFailed -> 44
-  | Warning_SMTPatTDeprecated -> 45
-  | Warning_CachedFile -> 46
-  | Warning_FileNotWritten -> 47
-  | Warning_IllFormedGoal -> 48
-  | Warning_MalformedWarnErrorList -> 49
-  | Warning_IDEIgnoreCodeGen -> 50
-  | Fatal_MissingInterfaceOrImplementation -> 51
-  | Warning_UnexpectedFile -> 52
-  | Warning_WrongErrorLocation -> 53
-  | Warning_DeprecatedEqualityOnBinder -> 54
-  | Warning_UnexpectedFsTypApp -> 55
-  | Warning_UpperBoundCandidateAlreadyVisited -> 56
-  | Warning_DefinitionNotTranslated -> 57
-  | Warning_FunctionNotExtacted -> 58
-  | Warning_UnrecognizedAttribute -> 59
-  | Warning_NotDependentArrow -> 60
-  | Warning_NondependentUserDefinedDataType -> 61
-  | Warning_IncoherentImplicitQualifier -> 62
-  | Warning_DependencyFound -> 63
-  | Warning_MultipleAscriptions -> 64
-  | Warning_RecursiveDependency -> 65
-  | Warning_NormalizationFailure -> 66
-  | Warning_Filtered -> 67
-  (* when new entries are added, need to update "next_errno" and default "warn_error" in Options.fs *)
-  | _ -> 0 (** Things that cannot be silenced! *)
-
-type flag =
-  | CError | CWarning | CSilent
-
-let next_errno = 68 // the number needs to match the number of entries in "errno_of_error"
+let findIndex l v = l |> List.findIndex (function (e, _) when e=v -> true | _ -> false)
+let errno_of_error e = findIndex default_flags e
 let flags: ref<list<flag>> = mk_ref []
+
+let init_warn_error_flags =
+  let rec aux r l =
+    match l with
+    | [] -> r
+    | (e, f)::tl -> aux (r@[f]) tl
+  in
+  flags := aux [] default_flags
 
 let update_flags l =
   let compare (_, (a, _)) (_, (b, _)) =
@@ -495,20 +718,25 @@ let update_flags l =
     else if a < b then -1
     else 0
   in
+  let set_one_flag f d =
+    match (f, d) with 
+    | (CWarning, CError) -> failwith "cannot turn an error into warning"
+    | (CSilent, CError) -> failwith "cannot silence an error"
+    | (_, CFatal) -> failwith "cannot reset the error level of a fatal error"
+    | _ -> f
+  in
   let rec set_flag i l=
+    let d = List.nth !flags i in
     match l with
-    | [] -> List.nth !flags i
+    | [] -> d
     | (f, (l, h))::tl ->
-      if (i>=l && i <= h) then f
-      else if (i<l) then List.nth !flags i
+      if (i>=l && i <= h) then set_one_flag f d
+      else if (i<l) then d
       else set_flag i tl
   in
   let rec aux f i l sorted = match l with
     | [] -> f
     | hd::tl -> aux (f@[set_flag i sorted]) (i+1) tl sorted
-  in
-  let rec init_flags l i =
-    if i > 0 then init_flags (l@[CError]) (i-1) else l
   in
   let rec compute_range result l = match l with
     | [] -> result
@@ -518,27 +746,25 @@ let update_flags l =
         | [r1; r2] -> (int_of_string r1, int_of_string r2)
         | _ -> failwith (BU.format1 "Malformed warn-error range %s" s)
       in
-      if (l < 0)  || (h > next_errno)  then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h));
+      if (l < 0)  || (h >= default_flags.Length)  then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h));
       compute_range (result@[(f, (l, h))]) tl
   in
-  if !flags = [] then flags := init_flags [] next_errno;
-  if l <> [] then
-    let range = compute_range [] l in
-    let sorted = List.sortWith compare range in
-    flags := aux [] 0 !flags sorted
+  let range = compute_range [] l in
+  let sorted = List.sortWith compare range in
+  flags := aux [] 0 !flags sorted
 
 let diag r msg =
-  if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg)
+  if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg None)
 
 let maybe_fatal_error r (e, msg) =
   let errno = errno_of_error (e) in
   match List.nth !flags errno with
   | CError ->
-     add_one (mk_issue EError (Some r) msg)
+     add_one (mk_issue EError (Some r) msg (Some errno))
   | CWarning ->
-     add_one (mk_issue EWarning (Some r) msg)
-  | CSilent ->
-      ()
+     add_one (mk_issue EWarning (Some r) msg (Some errno))
+  | CSilent -> ()
+  | CFatal -> failwith ("don't use maybe_fatal_error for fatal error")
 
 let maybe_fatal_err e =
   maybe_fatal_error Range.dummyRange e
@@ -548,11 +774,13 @@ let add_errors errs =
 
 let issue_of_exn = function
     | Error(e, msg, r) ->
-      Some (mk_issue EError (Some r) (message_prefix.append_prefix msg))
+      let errno = errno_of_error (e) in
+      Some (mk_issue EError (Some r) (message_prefix.append_prefix msg) (Some errno))
     | NYI msg ->
-      Some (mk_issue ENotImplemented None (message_prefix.append_prefix msg))
+      Some (mk_issue ENotImplemented None (message_prefix.append_prefix msg) None)
     | Err (e, msg) ->
-      Some (mk_issue EError None (message_prefix.append_prefix msg))
+      let errno = errno_of_error (e) in
+      Some (mk_issue EError None (message_prefix.append_prefix msg) (Some errno))
     | _ -> None
 
 let err_exn exn =
