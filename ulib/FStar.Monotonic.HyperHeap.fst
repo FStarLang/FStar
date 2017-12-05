@@ -545,5 +545,5 @@ let upd_rref_of
 = ()
 
 abstract let extend (r:rid) (n:int) (c:int)
-  :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons?.hd (reveal s) == (n, c)))
-  = elift1 (fun r -> (n, c)::r) r
+  :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons?.hd (reveal s) == (c, n) /\ color s == c))
+  = elift1 (fun r -> (c, n)::r) r
