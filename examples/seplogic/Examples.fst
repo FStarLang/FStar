@@ -1,7 +1,7 @@
 module Examples
 
 open Lang
-open FStar.Heap
+open FStar.SepLogic.Heap
 
 open FStar.Tactics
 
@@ -42,14 +42,14 @@ let step_eq_implies_intro :tactic unit =
   apply_lemma (quote lemma_eq_implies_intro);; norm [];;
   dump "After step_eq_implies_intro"
 
-let step_extract_disjoint :tactic unit =
-  dump "In step_extract_disjoint";;
-  apply_lemma (quote lemma_extract_disjoint);; norm [];;
-  dump "After lemma_extract_disjoint";;
-  split;;
-  dump "After split";;
-  // TODO - Replace "smt" with "simplify_disjoint"
-  smt
+// let step_extract_disjoint :tactic unit =
+//   dump "In step_extract_disjoint";;
+//   apply_lemma (quote lemma_extract_disjoint);; norm [];;
+//   dump "After lemma_extract_disjoint"
+//   // split;;
+//   // dump "After split";;
+//   // // TODO - Replace "smt" with "simplify_disjoint"
+//   // smt
 
 let assumption'  :tactic unit = 
   apply_raw (quote FStar.Squash.return_squash);; assumption
@@ -60,23 +60,26 @@ let assumption'' :tactic unit =
 let step_read_write       :tactic unit = 
   dump "In step_read_write";;
   apply_lemma (quote lemma_read_write);; norm [];;
-  dump "After lemma_read_write";;
-  split;;
-  dump "After split";;
-  // TODO - Replace "smt" with "simplify_contains"
-  smt
+  dump "After lemma_read_write"
+  // split;;
+  // dump "After split";;
+  // // TODO - Replace "smt" with "simplify_contains"
+  // smt
 
 let step_restrict :tactic unit =
   dump "In step_restrict";;
-  or_else (apply_lemma (quote lemma_restrict_r_join_restrict_minus);;
-           // TODO - Replace "smt" with "simplify_contains"
-           smt)
-          (apply_lemma (quote lemma_restrict_r1_join_restrict_minus);;
-	   repeat (split);; 
-	   // TODO - Replace "smt" with "simplify_contains"
-	   smt;; 
-	   smt;; 
-	   assumption'')
+  (apply_lemma (quote lemma_restrict_r_join_points_to_minus')) `or_else`
+  (apply_lemma (quote lemma_restrict_r1_join_points_to_minus');; assumption'')
+       
+  // or_else (apply_lemma (quote lemma_restrict_r_join_restrict_minus);;
+  //          // TODO - Replace "smt" with "simplify_contains"
+  //          smt)
+  //         (apply_lemma (quote lemma_restrict_r1_join_restrict_minus);;
+  // 	   repeat (split);; 
+  // 	   // TODO - Replace "smt" with "simplify_contains"
+  // 	   smt;; 
+  // 	   smt;; 
+  // 	   assumption'')
 
 let simplify_restrict :tactic unit =
   apply_lemma (quote lemma_eq_l_cong);;
@@ -86,23 +89,26 @@ let simplify_restrict :tactic unit =
 
 let simplify_join_emp :tactic unit =
   dump "In simplify_join_emp";;
-  pointwise (or_else (or_else (apply_lemma (quote lemma_join_h_emp);; qed) 
-                              (apply_lemma (quote lemma_join_emp_h);; qed))
+  pointwise (or_else (or_else (apply_lemma (quote lemma_join_h_emp');; qed) 
+                              (apply_lemma (quote lemma_join_emp_h');; qed))
 		     (fail "SKIP"))
 
 let simplify_join_minus :tactic unit =
   dump "In simplify_join_minus";;
-  pointwise (or_else (apply_lemma (quote lemma_join_restrict_minus);;
-                      // TODO - Replace "smt" with "simplify_contains"
-		      smt)
+  pointwise (or_else (apply_lemma (quote lemma_join_restrict_minus');; qed)
 		     (fail "SKIP"))
 
-let step_disjoint :tactic unit =
-  dump "In step_disjoint";;
-  split;;
-  dump "After split";;
-  // TODO - Replace "smt" with "step_disjoint"
-  smt
+  // pointwise (or_else (apply_lemma (quote lemma_join_restrict_minus);;
+  //                     // TODO - Replace "smt" with "simplify_contains"
+  // 		      smt)
+  // 		     (fail "SKIP"))
+
+// let step_disjoint :tactic unit =
+//   dump "In step_disjoint";;
+//   split;;
+//   dump "After split";;
+//   // TODO - Replace "smt" with "step_disjoint"
+//   smt
 
 let simplify_join :tactic unit =
   dump "In simplify_join";;
@@ -127,20 +133,19 @@ let step :tactic unit =
   step_alloc_return           `or_else`
   step_eq_implies_intro       `or_else`
   step_intros                 `or_else`
-  step_extract_disjoint       `or_else`
-  step_disjoint               `or_else`
+  // step_extract_disjoint       `or_else`
+  // step_disjoint               `or_else`
   fail "step: failed"
 
 let step_sel :tactic unit =
   dump "In step_sel";;
-  (apply_lemma (quote lemma_sel_r_join_points_to_minus);; 
-   // TODO - Replace "smt" with "simplify_contains"
-   smt)           `or_else`
-  (apply_lemma (quote lemma_sel_join_h_emp))                                       `or_else`
-  // (apply_lemma (quote lemma_sel_r_update);; dump "ss1")                         `or_else`
-  // (apply_lemma (quote lemma_sel_r1_update);; dump "ss2";; assumption'')         `or_else`
-  // (apply_lemma (quote lemma_sel_r1_from_restrict);; dump "ss3";;  assumption'') `or_else`
-  // (apply_lemma (quote lemma_sel_r_from_minus);; dump "ss4";; assumption'')      `or_else`
+  // (apply_lemma (quote lemma_sel_r_join_points_to_minus);; 
+  //  // TODO - Replace "smt" with "simplify_contains"
+  //  smt)           `or_else`
+  (apply_lemma (quote lemma_sel_r_join_points_to_minus'))                        `or_else`
+  (apply_lemma (quote lemma_sel_r1_join_points_to_minus');; assumption'')        `or_else`
+  (apply_lemma (quote lemma_sel_r1_from_restrict');; dump "ss3";;  assumption'') `or_else`
+  (apply_lemma (quote lemma_sel_r_from_minus');; dump "ss4";; assumption'')      `or_else`
   fail "step_sel: failed"
 
 let simplify_sel :tactic unit =
@@ -167,7 +172,7 @@ let rec repeat_simplify_sel () :Tac unit =
   | None -> return ()
   | Some _ -> repeat simplify_sel;;
               dump "After repeat simplify_sel";;
-              trytac (trivial `or_else` (trefl;; qed) `or_else` smt);;
+              trytac ((trefl;; qed) `or_else` smt);;
               repeat_simplify_sel
   end
   ) ()
@@ -229,11 +234,11 @@ type t = UInt64.t
 //     assumption''
 //   )
 
-// let write_ok (h:heap) (r:addr) (n:t) =
-//   let c = (Write r n) in
-//   let p = fun _ h -> sel h r == n in
-//   let post = (lift_wpsep (wpsep_command c)) p h in
-//   assert_by_tactic (h `contains` r ==> post) solve
+let write_ok (h:heap) (r:addr) (n:t) =
+  let c = (Write r n) in
+  let p = fun _ h -> sel h r == n in
+  let post = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (h `contains` r ==> post) solve
 
 // let increment_ok (h:heap) (r:addr) (n:t) =
 //   let c = Bind (Read r) (fun n -> Write r (n +?^ 1uL)) in
@@ -280,11 +285,11 @@ type t = UInt64.t
 //     smt
 //   )
 
-// let increment_ok (h:heap) (r:addr) (n:t) =
-//   let c = Bind (Read r) (fun n -> Write r (n +?^ 1uL)) in
-//   let p = fun _ h -> (sel h r == n +?^ 1uL) in
-//   let post = (lift_wpsep (wpsep_command c)) p h in
-//   assert_by_tactic (h `contains` r /\ sel h r == n ==> post) solve
+let increment_ok (h:heap) (r:addr) (n:t) =
+  let c = Bind (Read r) (fun n -> Write r (n +?^ 1uL)) in
+  let p = fun _ h -> (sel h r == n +?^ 1uL) in
+  let post = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (h `contains` r /\ sel h r == n ==> post) solve
  
 // let swap_ok (r1:addr) (r2:addr) (h:heap) (a:t) (b:t) =
 //   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
@@ -328,11 +333,11 @@ type t = UInt64.t
 //     fail "here"
 //   )
 
-// let swap_ok (r1:addr) (r2:addr) (h:heap) (a:t) (b:t) =
-//   let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
-//   let p = fun _ h -> (sel h r1 == b /\ sel h r2 == a) in
-//   let post = (lift_wpsep (wpsep_command c)) p h in
-//   assert_by_tactic (h `contains` r1 /\  h `contains` r2 /\ addr_of r1 <> addr_of r2 /\ sel h r1 == a /\ sel h r2 == b ==> post) solve
+let swap_ok (r1:addr) (r2:addr) (h:heap) (a:t) (b:t) =
+  let c = Bind (Read r1) (fun n1 -> Bind (Read r2) (fun n2 -> Bind (Write r1 n2) (fun _ -> Write r2 n1))) in
+  let p = fun _ h -> (sel h r1 == b /\ sel h r2 == a) in
+  let post = (lift_wpsep (wpsep_command c)) p h in
+  assert_by_tactic (h `contains` r1 /\  h `contains` r2 /\ addr_of r1 <> addr_of r2 /\ sel h r1 == a /\ sel h r2 == b ==> post) solve
 
 let double_increment_ok (r:addr) (h:heap) (n:t{size (v n + 2) FStar.UInt64.n}) =
   let c = Bind (Bind (Read r) (fun y -> Write r (y +?^ 1uL))) (fun _ -> (Bind (Read r) (fun y -> Write r (y +?^ 1uL))))  in

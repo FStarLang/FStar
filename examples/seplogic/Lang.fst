@@ -21,7 +21,7 @@ let rec wpsep_command (#a:Type0) (c:command a) :st_wp a
     | Bind #a #b c1 c2 ->
       FStar.Classical.forall_intro (FStar.WellFounded.axiom1 #a #(command b) c2);
       fun p h3 -> exists (h2':heap) (h2'':heap). disjoint h2' h2'' /\ h3 == h2' `join` h2'' /\
-     (wpsep_command c1) (fun x h1 -> exists (h1':heap) (h1'':heap). disjoint h1' h1'' /\  disjoint h1 h2'' /\ (h1 `join` h2'') == (h1' `join` h1'') /\
+     (wpsep_command c1) (fun x h1 -> exists (h1':heap) (h1'':heap). disjoint h1' h1'' /\ disjoint h1 h2'' /\ (h1 `join` h2'') == (h1' `join` h1'') /\
      (wpsep_command (c2 x)) (fun y h2 -> disjoint h2 h1'' /\ p y (h2 `join` h1'')) h1') h2'
 
     | Read r ->
@@ -37,8 +37,8 @@ let lift_wpsep (#a:Type0) (wp_sep:st_wp a) :st_wp a
   = fun p h0 -> exists (h0':heap) (h0'':heap). disjoint h0' h0'' /\ h0 == (h0' `join` h0'') /\
                                        wp_sep (fun x h1' -> disjoint h1' h0'' /\ p x (h1' `join` h0'')) h0'
 
-let lemma_read_write (phi:heap -> heap -> prop) (r:addr) (h:heap)
-  :Lemma (requires h `contains` r /\ phi (h `restrict` r) (h `minus` r))
+let lemma_read_write (phi:heap -> heap -> prop) (r:addr) (h:heap) (p1:squash (h `contains` r))
+  :Lemma (requires phi (h `restrict` r) (h `minus` r))
          (ensures (exists (h':heap) (h'':heap). disjoint h' h'' /\ h == h' `join` h'' /\
 	                                  ((exists x. h' == (r `points_to` x)) /\ phi h' h'')))
   = ()
@@ -46,7 +46,7 @@ let lemma_read_write (phi:heap -> heap -> prop) (r:addr) (h:heap)
 let lemma_alloc_return (phi:heap -> heap -> prop) (h:heap)
   :Lemma (requires (phi emp h))
          (ensures (exists (h':heap) (h'':heap). disjoint h' h'' /\ h == h' `join` h'' /\ ((h' == emp) /\ phi h' h'')))
-  = lemma_emp_disjoint h
+  = ()
 
 let lemma_bind (phi:heap -> heap -> heap -> heap -> prop) (h:heap)
   :Lemma (requires (exists (h2':heap) (h2'':heap). disjoint h2' h2'' /\ h == h2' `join` h2'' /\
@@ -56,8 +56,9 @@ let lemma_bind (phi:heap -> heap -> heap -> heap -> prop) (h:heap)
 		                             phi h1' h1'' h2' h2'')))
   = ()
 
-let lemma_extract_disjoint (phi:heap -> heap -> heap -> heap ->  prop) (h2':heap) (h2'':heap)
-  :Lemma (requires (disjoint h2' h2'' /\ (exists (h1':heap) (h1'':heap). disjoint h1' h1'' /\ join h2' h2'' == join h1' h1'' /\ phi h1' h1'' h2' h2'')))
+let lemma_extract_disjoint 
+  (phi:heap -> heap -> heap -> heap ->  prop) (h2':heap) (h2'':heap) (p1:squash (disjoint h2' h2''))
+  :Lemma (requires (exists (h1':heap) (h1'':heap). disjoint h1' h1'' /\ join h2' h2'' == join h1' h1'' /\ phi h1' h1'' h2' h2''))
          (ensures (exists (h1':heap) (h1'':heap). disjoint h1' h1'' /\ disjoint h2' h2'' /\ join h2' h2'' == join h1' h1'' /\ phi h1' h1'' h2' h2''))
   = ()
 
@@ -90,4 +91,4 @@ let lemma_eq_cong (h:heap) (r:addr) (n:t) (u:t) (p1:squash (sel h r == u)) (p2:s
   :Lemma (requires True)
          (ensures sel h r == n)
   = ()
-
+  

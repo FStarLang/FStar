@@ -371,11 +371,11 @@ val lemma_join_emp_h (h:heap)
          (ensures join emp h == h)
 	 [SMTPat (join emp h)]
 
-val lemma_join_points_to_minus 
-  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{valid_upd h r x})
-  :Lemma (requires h `contains` r)
-         (ensures join (points_to r x) (minus h r) == upd h r x)
-	 [SMTPat (join (points_to r x) (minus h r))]
+// val lemma_join_points_to_minus 
+//   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a{valid_upd h r x})
+//   :Lemma (requires h `contains` r)
+//          (ensures join (points_to r x) (minus h r) == upd h r x)
+// 	 [SMTPat (join (points_to r x) (minus h r))]
 
 val lemma_restrict_eq_points_to 
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
@@ -389,15 +389,49 @@ val lemma_points_to_is_injective
          (ensures x == y)
  	 [SMTPat (points_to r x); SMTPat (points_to r y)]
 
+val lemma_sel_r_from_minus
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (r1:mref a rel)
+  :Lemma (requires h `contains` r1 /\ addr_of r1 <> addr_of r)
+         (ensures sel (minus h r1) r == sel h r)
+	 [SMTPat (sel (minus h r1) r)]
+
+val lemma_sel_r1_from_restrict
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (r1:mref a rel)
+  :Lemma (requires h `contains` r)
+         (ensures sel (join (restrict h r) (minus h r)) r1 == sel h r1)
+	 [SMTPat (sel (join (restrict h r) (minus h r)) r1)]
+
 val lemma_sel_r_join_points_to_minus
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a)
   :Lemma (requires h `contains` r)
          (ensures sel (join (points_to r x) (minus h r)) r == x)
 
+val lemma_sel_r1_join_points_to_minus
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (r1:mref a rel) (x:a)
+  :Lemma (requires h `contains` r /\ addr_of r1 <> addr_of r)
+         (ensures sel (join (points_to r x) (minus h r)) r1 == sel h r1)
+
 val lemma_sel_join_h_emp
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
   :Lemma (requires True)
          (ensures sel (join h emp) r == sel h r)
+
+val lemma_restrict_r_join_points_to_minus
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a)
+  :Lemma (requires h `contains` r)
+         (ensures restrict (join (points_to r x) (minus h r)) r == points_to r x)
+	 [SMTPat (restrict (join (points_to r x) (minus h r)) r)]
+
+val lemma_restrict_r1_join_points_to_minus
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (r1:mref a rel) (x:a)
+  :Lemma (requires  h `contains` r1 /\  h `contains` r /\ addr_of r1 <> addr_of r)
+         (ensures restrict (join (points_to r x) (minus h r)) r1 == restrict h r1)
+	 [SMTPat (restrict (join (points_to r x) (minus h r)) r1)]
+
+// val lemma_sel_join_h_emp
+//   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
+//   :Lemma (requires True)
+//          (ensures sel (join h emp) r == sel h r)
 
 val lemma_restrict_r_join_restrict_minus
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
@@ -408,6 +442,36 @@ val lemma_restrict_r1_join_restrict_minus
   (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (r1:mref a rel)
   :Lemma (requires h `contains` r /\ h `contains` r1 /\ addr_of r1 <> addr_of r)
          (ensures restrict (join (restrict h r) (minus h r)) r1 == restrict h r1)
+
+val lemma_restrict_join_h_emp
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
+  :Lemma (requires h `contains` r)
+         (ensures restrict (join h emp) r == restrict h r)
+
+val lemma_contains_r_join_restrict_minus
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
+  :Lemma (requires h `contains` r)
+         (ensures (join (restrict h r) (minus h r)) `contains` r)
+
+val lemma_contains_r1_join_restrict_minus
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (r1:mref a rel) (p1:squash (h `contains` r))
+  :Lemma (requires h `contains` r1)
+         (ensures (join (restrict h r) (minus h r)) `contains` r1)
+
+val lemma_contains_r_join_points_to_minus
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a)
+  :Lemma (requires h `contains` r)
+         (ensures (join (points_to r x) (minus h r)) `contains` r)
+
+val lemma_contains_r1_join_points_to_minus
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (r1:mref a rel) (x:a) (p1:squash (h `contains` r))
+  :Lemma (requires h `contains` r1)
+         (ensures (join (points_to r x) (minus h r)) `contains` r1)
+
+val lemma_contains_join_h_emp
+  (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel)
+  :Lemma (requires h `contains` r)
+         (ensures (join h emp) `contains` r)
 
 (*** Untyped views of monotonic references *)
 

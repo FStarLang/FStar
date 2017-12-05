@@ -227,34 +227,54 @@ let lemma_join_sel #a #rel h1 h2 r = ()
 let lemma_points_to_contains #a #rel r1 r2 x = ()
 let lemma_points_to_unused #a #rel r1 r2 x = ()
 let lemma_points_to_sel #a #rel r1 r2 x = ()
-
 let lemma_disjoint_is_comm h1 h2 = ()
 let lemma_emp_disjoint h = ()
 let lemma_emp_disjoint' h = ()
 let lemma_disjoint_restrict_minus #a #rel h r = ()
 let lemma_disjoint_points_to_minus #a #rel h r x = ()
-let lemma_join_restrict_minus #a #rel h r = assert (equal (join (restrict h r) (minus h r)) h)
-let lemma_join_is_comm h1 h2 = assert (equal (join h1 h2) (join h2 h1))
-let lemma_join_h_emp h = assert (equal (join h emp) h)
-let lemma_join_emp_h h = assert (equal (join emp h) h)
-let lemma_join_points_to_minus #a #rel h r x = 
-  assert (equal (join (points_to r x) (minus h r)) (upd h r x))
-
+let lemma_join_restrict_minus #a #rel h r = 
+  assert (equal (join (restrict h r) (minus h r)) h)
+let lemma_join_is_comm h1 h2 = 
+  assert (equal (join h1 h2) (join h2 h1))
+let lemma_join_h_emp h = 
+  assert (equal (join h emp) h)
+let lemma_join_emp_h h = 
+  assert (equal (join emp h) h)
+  
 let lemma_restrict_eq_points_to #a #rel h r = admit ()
 
 let lemma_points_to_is_injective #a #rel r x y = 
   assert (sel (points_to r x) r == sel (points_to r y) r)
 
+let lemma_sel_r_from_minus #a #rel h r r1 = ()
+
+let lemma_sel_r1_from_restrict #a #rel h r r1 = admit ()
+
 let lemma_sel_r_join_points_to_minus #a #rel h r x = ()
+
+let lemma_sel_r1_join_points_to_minus #a #rel h h1 r r1 = admit ()
+
 let lemma_sel_join_h_emp #a #rel h r = ()
+
+let lemma_restrict_r_join_points_to_minus #a #rel h r x = ()
+let lemma_restrict_r1_join_points_to_minus #a #rel h r r1 x = ()
+
 let lemma_restrict_r_join_restrict_minus #a #rel h r = ()
 let lemma_restrict_r1_join_restrict_minus #a #rel h r r1 = ()
-// let lemma_sel_r_update #a #rel h r x n = ()
-// let lemma_sel_r1_update #a #rel h r r1 x n = ()
-// let lemma_sel_r_from_minus #a #rel h r r1 n = ()
-// let lemma_sel_r1_from_restrict #a #rel h h1 r r1 n = ()
-// let lemma_restrict_r_update #a #rel h r x = ()
-// let lemma_restrict_r1_update #a #rel h r r1 x = ()
+let lemma_restrict_join_h_emp #a #rel h r = ()
+
+// // let lemma_sel_r_update #a #rel h r x n = ()
+// // let lemma_sel_r1_update #a #rel h r r1 x n = ()
+
+// // let lemma_restrict_r_update #a #rel h r x = ()
+// // let lemma_restrict_r1_update #a #rel h r r1 x = ()
+
+let lemma_contains_r_join_restrict_minus #a #rel h r = ()
+let lemma_contains_r1_join_restrict_minus #a #rel h r r1 p1 = ()
+ 
+let lemma_contains_r_join_points_to_minus #a #rel h r x = ()
+let lemma_contains_r1_join_points_to_minus #a #rel h r r1 x p1 = ()
+let lemma_contains_join_h_emp #a #rel h r = ()
 
 (*** Untyped views of references *)
 
