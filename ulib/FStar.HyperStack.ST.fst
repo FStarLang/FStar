@@ -2,12 +2,93 @@ module FStar.HyperStack.ST
 open FStar.HyperStack
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
-let st_pre = st_pre_h mem
-let st_post' (a:Type) (pre:Type) = st_post_h' mem a True
-let st_post  (a:Type) = st_post_h mem a
-let st_wp (a:Type) = st_wp_h mem a
 
-private new_effect STATE = STATE_h mem
+open FStar.Preorder
+
+(* Setting up the preorder for mem *)
+
+(* Get the last component of the rid list *)
+private let rid_last_component (r:HH.rid) :GTot int
+  = let open FStar.List.Tot in
+    let r = HH.reveal r in
+    if length r = 0 then 0
+    else snd (index r (length r - 1))
+
+(* In a mem, all the contained regions have last component less than the rid counter *)
+let mem = m:HS.mem{forall (r:HH.rid).{:pattern (m.h `Map.contains`r)}
+                                m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr}
+
+(* Starting the predicates that constitute the preorder *)
+
+(* Eternal regions remain contained *)
+private let eternal_region_pred (m1 m2:mem) :Type0
+  = forall (r:HH.rid).{:pattern (is_eternal_region r); (m1.h `Map.contains` r)}
+                 (is_eternal_region r /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
+
+(* rid counter increases *)
+private let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
+
+(* regions with rid counter less than the m1 rid counter and not contained in m1 are not contained in m2 *)
+private let rid_last_component_pred (m1 m2:mem) :Type0
+  = forall (r:HH.rid).{:pattern (m1.h `Map.contains` r)}
+                 ((~ (m1.h `Map.contains` r)) /\ rid_last_component r < m1.rid_ctr) ==>
+		 (~ (m2.h `Map.contains` r))
+
+(* Eternal refs remain contained if their region is contained in both *)
+private let eternal_refs_pred (m1 m2:mem) :Type0
+  = forall (a:Type) (rel:preorder a) (r:mreference a rel).
+      {:pattern (m1.h `Map.contains` r.id); (HS.is_mm r); (HH.contains_ref r.ref m1.h); (m2.h `Map.contains` r.id)}
+      ((not (HS.is_mm r)) /\ HH.contains_ref r.ref m1.h /\ m2.h `Map.contains` r.id) ==>
+      (HH.contains_ref r.ref m2.h)
+
+let mem_rel :relation mem
+  = fun (m1 m2:mem) ->
+      eternal_region_pred m1 m2 /\ rid_ctr_pred m1 m2 /\ rid_last_component_pred m1 m2 /\ eternal_refs_pred m1 m2
+
+let mem_pre :preorder mem = mem_rel
+
+(***** Global ST (GST) effect with put, get, witness, and recall *****)
+
+new_effect GST = STATE_h mem
+
+let gst_pre           = st_pre_h mem
+let gst_post' (a:Type) (pre:Type) = st_post_h' mem a True
+let gst_post (a:Type) = st_post_h mem a
+let gst_wp (a:Type)   = st_wp_h mem a
+
+unfold let lift_div_gst (a:Type0) (wp:pure_wp a) (p:gst_post a) (h:mem) = wp (fun a -> p a h)
+sub_effect DIV ~> GST = lift_div_gst
+
+
+(* TODO *)
+assume val gst_get: unit    -> GST mem (fun p h0 -> p h0 h0)
+assume val gst_put: h1:mem -> GST unit (fun p h0 -> mem_rel h0 h1 /\ p () h1)
+
+type mem_predicate = mem -> Type0
+
+let stable (p:mem_predicate) =
+  forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
+
+let stable_predicate = p:mem_predicate{stable p}
+
+assume type witnessed: stable_predicate -> Type0
+
+assume val gst_witness: p:stable_predicate -> GST unit (fun post h0 -> p h0 /\ (witnessed p ==> post () h0))
+assume val gst_recall:  p:stable_predicate -> GST unit (fun post h0 -> witnessed p /\ (p h0 ==> post () h0))
+
+assume val lemma_functoriality
+  (p:mem_predicate{stable p /\ witnessed p}) (q:mem_predicate{stable q /\ (forall (h:mem). p h ==> q h)})
+  : Lemma (ensures (witnessed q))
+
+let st_pre   = gst_pre
+let st_post' = gst_post'
+let st_post  = gst_post
+let st_wp    = gst_wp
+
+new_effect STATE = GST
+
+unfold let lift_gst_state (a:Type0) (wp:gst_wp a) = wp
+sub_effect GST ~> STATE = lift_gst_state
 
 (* effect State (a:Type) (wp:st_wp a) = *)
 (*        STATE a wp *)
@@ -99,6 +180,16 @@ effect STL (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) =
 
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:mem) -> wp (fun a -> p a h)
+
+let region_contains_pred (r:HH.rid{is_eternal_region r}) :stable_predicate
+  = fun m -> m.h `Map.contains` r
+type rid = r:HH.rid{is_eternal_region r ==> witnessed (region_contains_pred r)}
+
+let ref_contains_pred' (#a:Type) (#rel:preorder a) (r:mreference a rel{not (is_mm r)}) :mem_predicate
+  = fun m -> m.h `Map.contains` r.id ==> HH.contains_ref r.ref m.h
+let ref_contains_pred (#a:Type) (#rel:preorder a) (r:mreference a rel{not (is_mm r)}) :stable_predicate
+  = ref_contains_pred' r
+type mreference (a:Type) (rel:preorder a) = r:HS.mreference{not (is_mm r) ==> witnessed 
 
 (**
    Pushes a new empty frame on the stack

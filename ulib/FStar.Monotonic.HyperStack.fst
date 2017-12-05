@@ -34,7 +34,8 @@ let is_tip (tip:HH.rid) (h:HH.t) =
 let hh = h:HH.t{HH.root `is_in` h /\ HH.map_invariant h /\ downward_closed h}        //the memory itself, always contains the root region, and the parent of any active region is active
 
 noeq type mem =
-  | HS : h:hh
+  | HS : rid_ctr:int
+       -> h:hh
        -> tip:rid{tip `is_tip` h}                                                   //the id of the current top-most region
        -> mem
 
@@ -42,7 +43,7 @@ let empty_mem (m:HH.t) =
   let empty_map = Map.restrict (Set.empty) m in 
   let h = Map.upd empty_map HH.root Heap.emp in 
   let tip = HH.root in 
-  HS h tip
+  HS 0 h tip
  
 let test0 (m:mem) (r:rid{r `is_above` m.tip}) = 
     assert (r `is_in` m.h)
@@ -89,7 +90,7 @@ let pop (m0:mem{poppable m0}) : GTot mem =
   let tip1 = HH.parent tip0 in
   assert (forall (r:sid). Map.contains h1 r ==>
   	    (forall (s:sid). includes s r ==> Map.contains h1 s));
-  HS h1 tip1
+  HS m0.rid_ctr h1 tip1
 
 //A (reference a) may reside in the stack or heap, and may be manually managed
 noeq type mreference (a:Type) (rel:preorder a) =
@@ -153,7 +154,7 @@ let sel (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel)
 
 let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m s.id}) (v:a)
   : GTot mem
-  = HS (m.h.[s.ref] <- v) m.tip
+  = HS m.rid_ctr (m.h.[s.ref] <- v) m.tip
 
 let equal_domains (m0:mem) (m1:mem) =
   m0.tip = m1.tip
