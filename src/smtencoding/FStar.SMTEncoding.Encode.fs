@@ -481,7 +481,7 @@ let rec encode_const c env =
     | Const_unit -> mk_Term_unit, []
     | Const_bool true -> boxBool mkTrue, []
     | Const_bool false -> boxBool mkFalse, []
-    | Const_char c -> mkApp("FStar.Char.Char", [boxInt (mkInteger' (BU.int_of_char c))]), []
+    | Const_char c -> mkApp("FStar.Char.__char_of_int", [boxInt (mkInteger' (BU.int_of_char c))]), []
     | Const_int (i, None)  -> boxInt (mkInteger i), []
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
@@ -1374,6 +1374,11 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
                 | _ ->
                   fallback phi
               end
+
+            | Tm_fvar fv, [(t, _)] 
+              when S.fv_eq_lid fv Const.squash_lid
+                 || S.fv_eq_lid fv Const.auto_squash_lid ->
+              encode_formula t env
 
             | _ when head_redex env head ->
               encode_formula (whnf env phi) env

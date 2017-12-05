@@ -129,7 +129,7 @@ let run_all () =
     run 11 (minus (encode 10) (encode 10)) z;
     run 12 (minus (encode 100) (encode 100)) z;
     run 13 (let_ x (encode 100) (minus (nm x) (nm x))) z;
-//    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~10s; wasteful for CI
+//    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z; //takes ~5s; wasteful for CI
     run 14 (let_ x (app succ [one])
             (let_ y (app mul [nm x; nm x])
                 (let_ h (app mul [nm y; nm y])
@@ -141,7 +141,7 @@ let run_all () =
     run 16 (pred_nat (snat (snat znat))) (snat znat);
     run 17 (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
     run 18 (minus_nat (encode_nat 100) (encode_nat 100)) znat;
-    run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;   // VD: Stack overflow with F# build
+    run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
     run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
 //    run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
     Options.__clear_unit_tests();

@@ -17,14 +17,7 @@ module FStar.Monotonic.HyperHeap
 open FStar.Map
 open FStar.Preorder
 open FStar.Monotonic.Heap
-module Set = FStar.Set
-
-
-
-(*+ Definition and properties of regions ids (rid) +*)
-
-(*! Definition of rid !*)
-
+module Map = FStar.Map
 open FStar.Ghost
 
 abstract type rid = erased (list (int * int))

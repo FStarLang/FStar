@@ -193,6 +193,7 @@ let defaults =
       ("z3rlimit_factor"              , Int 1);
       ("z3seed"                       , Int 0);
       ("z3cliopt"                     , List []);
+      ("use_two_phase_tc"             , Bool false);
       ("__no_positivity"              , Bool false);
       ("__ml_no_eta_expand_coertions" , Bool false)]
 
@@ -297,6 +298,7 @@ let get_z3refresh               ()      = lookup_opt "z3refresh"                
 let get_z3rlimit                ()      = lookup_opt "z3rlimit"                 as_int
 let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          as_int
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
+let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 
@@ -878,6 +880,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Set the Z3 random seed (default 0)");
 
        ( noshort,
+        "use_two_phase_tc",
+        BoolStr,
+        "Use the two phase typechecker (default 'false')");
+
+       ( noshort,
         "__no_positivity",
         Const (mk_bool true),
         "Don't check positivity of inductive types");
@@ -944,7 +951,8 @@ let settable = function
     | "reuse_hint_for"
     | "z3rlimit_factor"
     | "z3rlimit"
-    | "z3refresh" -> true
+    | "z3refresh"
+    | "use_two_phase_tc" -> true
     | _ -> false
 
 // the first two options below are options that are passed to z3 using
@@ -1122,7 +1130,8 @@ let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
 let n_cores                      () = get_n_cores                     ()
 let no_default_includes          () = get_no_default_includes         ()
-let no_extract                   s  = get_no_extract() |> List.contains s
+let no_extract                   s  = let s = String.lowercase s in
+    get_no_extract() |> FStar.Util.for_some (fun f -> String.lowercase f = s)
 let no_location_info             () = get_no_location_info            ()
 let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()
@@ -1179,18 +1188,26 @@ let z3_refresh                   () = get_z3refresh                   ()
 let z3_rlimit                    () = get_z3rlimit                    ()
 let z3_rlimit_factor             () = get_z3rlimit_factor             ()
 let z3_seed                      () = get_z3seed                      ()
+let use_two_phase_tc             () = get_use_two_phase_tc            ()
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 
+let should_extract_namespace m =
+    match get_extract_namespace () with
+    | [] -> false
+    | ns -> ns |> Util.for_some (fun n -> Util.starts_with m (String.lowercase n))
+
+let should_extract_module m =
+    match get_extract_module () with
+    | [] -> false
+    | l -> l |> Util.for_some (fun n -> String.lowercase n = m)
 
 let should_extract m =
-  not (no_extract m) &&
-  (match get_extract_module () with
-  | [] ->
-    (match get_extract_namespace () with
-     | [] -> true
-     | ns -> Util.for_some (Util.starts_with (String.lowercase m)) ns)
-  | l -> List.contains (String.lowercase m) l)
+    let m = String.lowercase m in
+    not (no_extract m) &&
+    (match get_extract_namespace (), get_extract_module() with
+    | [], [] -> true //neither is set
+    | _ -> should_extract_namespace m || should_extract_module m)
 
 let codegen_fsharp () =
     codegen() = Some "FSharp"

@@ -52,8 +52,8 @@ type delta_level =
   | UnfoldTac
 
 type mlift = {
-  mlift_wp:typ -> typ -> typ ;
-  mlift_term:option<(typ -> typ -> term -> term)>
+  mlift_wp:universe -> typ -> typ -> typ ;
+  mlift_term:option<(universe -> typ -> typ -> term -> term)>
 }
 
 type edge = {
@@ -91,7 +91,7 @@ type env = {
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ)>;         (* mutually recursive names and their types (for termination checking) *)
+  letrecs        :list<(lbname * typ * univ_names)>;           (* mutually recursive names and their types (for termination checking) *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
@@ -755,8 +755,8 @@ let get_effect_decl env l =
     | Some md -> fst md
 
 let identity_mlift : mlift =
-  { mlift_wp=(fun t wp -> wp) ;
-    mlift_term=Some (fun t wp e -> return_all e) }
+  { mlift_wp=(fun _ t wp -> wp) ;
+    mlift_term=Some (fun _ t wp e -> return_all e) }
 
 let join env l1 l2 : (lident * mlift * mlift) =
   if lid_equals l1 l2
@@ -809,10 +809,10 @@ let build_lattice env se = match se.sigel with
   | Sig_sub_effect(sub) ->
     let compose_edges e1 e2 : edge =
       let composed_lift =
-        let mlift_wp r wp1 = e2.mlift.mlift_wp r (e1.mlift.mlift_wp r wp1) in
+        let mlift_wp u r wp1 = e2.mlift.mlift_wp u r (e1.mlift.mlift_wp u r wp1) in
         let mlift_term =
           match e1.mlift.mlift_term, e2.mlift.mlift_term with
-          | Some l1, Some l2 -> Some (fun t wp e -> l2 t (e1.mlift.mlift_wp t wp) (l1 t wp e))
+          | Some l1, Some l2 -> Some (fun u t wp e -> l2 u t (e1.mlift.mlift_wp u t wp) (l1 u t wp e))
           | _ -> None
         in
         { mlift_wp=mlift_wp ; mlift_term=mlift_term}
@@ -822,8 +822,8 @@ let build_lattice env se = match se.sigel with
         mlift=composed_lift }
     in
 
-    let mk_mlift_wp lift_t r wp1 =
-      let _, lift_t = inst_tscheme lift_t in
+    let mk_mlift_wp lift_t u r wp1 =
+      let _, lift_t = inst_tscheme_with lift_t [u] in
       mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos
     in
 
@@ -834,8 +834,8 @@ let build_lattice env se = match se.sigel with
           failwith "sub effect should've been elaborated at this stage"
     in
 
-    let mk_mlift_term lift_t r wp1 e =
-      let _, lift_t = inst_tscheme lift_t in
+    let mk_mlift_term lift_t u r wp1 e =
+      let _, lift_t = inst_tscheme_with lift_t [u] in
       mk (Tm_app(lift_t, [as_arg r; as_arg wp1; as_arg e])) None e.pos
     in
 
@@ -861,8 +861,8 @@ let build_lattice env se = match se.sigel with
       let wp = bogus_term "WP" in
       let e = bogus_term "COMP" in
       BU.format2 "{ wp : %s ; term : %s }"
-                 (Print.term_to_string (l.mlift_wp arg wp))
-                 (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l arg wp e))))
+                 (Print.term_to_string (l.mlift_wp U_zero arg wp))
+                 (BU.dflt "none" (BU.map_opt l.mlift_term (fun l -> Print.term_to_string (l U_zero arg wp e))))
     in
 
     let order = edge::env.effects.order in

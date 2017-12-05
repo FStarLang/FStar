@@ -1,5 +1,5 @@
 [
-  "\u0003N\u001dø©!£¶Êk\n\u0002ÖüÃœ",
+  "\u0011£G6êhafó¶‘8ﬂËk3",
   [
     [
       "SimplePrintf.uu___is_Bool",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "effdba76e3786e641cd853437c59a525"
+      "eb280454b13a877d69428b316c849e31"
     ],
     [
       "SimplePrintf.uu___is_Int",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "98a3f8727095e5e733c11175df6ccdcd"
+      "40ffe16610366b202a72d4378e427952"
     ],
     [
       "SimplePrintf.uu___is_Char",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "4feb5c9740a10dc7a447da41c4da73fe"
+      "d493c391a6a0da5b68790e4fb607b0ab"
     ],
     [
       "SimplePrintf.uu___is_String",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "b755e61a3bfefd413d9fdacc7f3ac42c"
+      "820cbdfef624b21fe9955dd42bd6f727"
     ],
     [
       "SimplePrintf.dir",
@@ -43,12 +43,13 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.Char.char__haseq",
-        "assumption_SimplePrintf.arg_haseq", "equation_FStar.Char.char",
-        "equation_FStar.String.char"
+        "@MaxIFuel_assumption", "@query",
+        "assumption_SimplePrintf.arg_haseq", "equation_FStar.String.char",
+        "equation_Prims.eqtype", "function_token_typing_FStar.Char.char",
+        "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "369cf8b7052677f7b9a0aba20dab793e"
+      "c70111fce976275189175ecc1195a567"
     ],
     [
       "SimplePrintf.uu___is_Lit",
@@ -57,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "39647a7df4ca4984df5f2a9420bf4214"
+      "43dc47d4139e70715ae744ca475a97e2"
     ],
     [
       "SimplePrintf.__proj__Lit__item___0",
@@ -70,7 +71,7 @@
         "refinement_interpretation_SimplePrintf_Tm_refine_4c947cba4356c53de258d6a2aaf1bdcf"
       ],
       0,
-      "95e756a6eb5a153555835673596873fb"
+      "0b53dad176929e5517820dcf5f4dfd16"
     ],
     [
       "SimplePrintf.uu___is_Arg",
@@ -79,7 +80,7 @@
       1,
       [ "@query" ],
       0,
-      "b41254f1d62ca16c1ab37d8833dea72c"
+      "baddc0a64b5d5d31860186c3194c264d"
     ],
     [
       "SimplePrintf.__proj__Arg__item___0",
@@ -92,7 +93,7 @@
         "refinement_interpretation_SimplePrintf_Tm_refine_18496ceb9c66ce4705128a993a338a20"
       ],
       0,
-      "3780b6c1c6fcdf8b82d4c9b429e17f06"
+      "5a92880b0ad01c6d2a4abe47f0f311d5"
     ],
     [
       "SimplePrintf.arg_type",
@@ -114,7 +115,7 @@
         "fuel_guarded_inversion_SimplePrintf.arg"
       ],
       0,
-      "77c18d59d8d55b6c34d28175a505592b"
+      "a90e7a4ffeaf1a8ff650386e6f6340fb"
     ],
     [
       "SimplePrintf.dir_type",
@@ -135,7 +136,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__hd"
       ],
       0,
-      "c01cd10367ebb5c3e1860975687141f0"
+      "2af9bf4c5293d972f62c0af7cbcf2911"
     ],
     [
       "SimplePrintf.string_of_dirs",
@@ -148,24 +149,27 @@
         "@fuel_irrelevance_SimplePrintf.dir_type.fuel_instrumented",
         "@query",
         "Prims_interpretation_Tm_arrow_f82c3fb9ac6610efb97620a59b378092",
+        "SimplePrintf_interpretation_Tm_arrow_352767d400f691c9087c9fe137ff2a2a",
         "SimplePrintf_interpretation_Tm_arrow_920700e18f4a827a573cc108b4a8b178",
         "SimplePrintf_interpretation_Tm_arrow_e6c430e76be26dc6ad28f8fdd2dc70ca",
         "binder_x_513418ee1a9bd16c03f003addbbcba09_0",
         "binder_x_a703a5688952559d5cefe1268f16f195_1",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "constructor_distinct_SimplePrintf.Arg",
         "constructor_distinct_SimplePrintf.Bool",
         "constructor_distinct_SimplePrintf.Char",
         "constructor_distinct_SimplePrintf.Int",
-        "constructor_distinct_SimplePrintf.Lit", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "disc_equation_SimplePrintf.Arg",
-        "disc_equation_SimplePrintf.Bool", "disc_equation_SimplePrintf.Char",
-        "disc_equation_SimplePrintf.Int", "disc_equation_SimplePrintf.Lit",
+        "constructor_distinct_SimplePrintf.Lit",
+        "constructor_distinct_SimplePrintf.String",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "disc_equation_SimplePrintf.Arg", "disc_equation_SimplePrintf.Bool",
+        "disc_equation_SimplePrintf.Char", "disc_equation_SimplePrintf.Int",
+        "disc_equation_SimplePrintf.Lit",
         "disc_equation_SimplePrintf.String",
         "equality_tok_SimplePrintf.Bool@tok",
         "equality_tok_SimplePrintf.Char@tok",
         "equality_tok_SimplePrintf.Int@tok",
-        "equation_SimplePrintf.arg_type", "equation_SimplePrintf.dir_type_",
+        "equality_tok_SimplePrintf.String@tok",
+        "equation_SimplePrintf.arg_type",
         "equation_with_fuel_SimplePrintf.dir_type.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
         "fuel_guarded_inversion_SimplePrintf.arg",
@@ -179,10 +183,10 @@
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "string_inversion", "string_typing", "subterm_ordering_Prims.Cons",
         "typing_Prims.__proj__Cons__item__hd",
-        "typing_SimplePrintf_Tm_abs_ebd05b398fdfa7e177dc58aee43fb9d0"
+        "typing_SimplePrintf_Tm_abs_f9392fb11968dc07bfc5643a7c50c36d"
       ],
       0,
-      "bcc6b839fd3dd282f336c373b992984a"
+      "059ab2e0f76086a35ee8aefe221d13cf"
     ],
     [
       "SimplePrintf.example1",
@@ -202,60 +206,7 @@
         "int_typing", "projection_inverse_Prims.Nil_a", "string_typing"
       ],
       0,
-      "b91dca74b1e49644ded210611698b59e"
-    ],
-    [
-      "SimplePrintf.hoption",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "ecb21cc40cc96b8e34ec98bed3e4e6ed"
-    ],
-    [
-      "SimplePrintf.uu___is_Nothing",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "66872032bf43b9110674b45849cdc040"
-    ],
-    [
-      "SimplePrintf.uu___is_Just",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "15e5eb48174b5f65b2b80c4802aadd5a"
-    ],
-    [
-      "SimplePrintf.__proj__Just__item__v",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_SimplePrintf.Just",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_SimplePrintf_Tm_refine_a2795d8fcc71bdbaee0ccebeef97db28"
-      ],
-      0,
-      "77013e266403da8c3d414ddc242a9ea5"
-    ],
-    [
-      "SimplePrintf.just",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_SimplePrintf.Just",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_SimplePrintf_Tm_refine_a2795d8fcc71bdbaee0ccebeef97db28"
-      ],
-      0,
-      "da7869e89f77432741561f00868e2617"
+      "a7118911552a846af17f72e67cc4f08a"
     ],
     [
       "SimplePrintf.add_dir",
@@ -263,14 +214,16 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_SimplePrintf.Nothing",
-        "disc_equation_SimplePrintf.Just",
-        "disc_equation_SimplePrintf.Nothing",
-        "fuel_guarded_inversion_SimplePrintf.hoption"
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "kinding_Prims.list@tok", "kinding_SimplePrintf.dir@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "projection_inverse_BoxBool_proj_0",
+        "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "36fd9749b504104da81223733762d461"
+      "e3335d300e11958e7423565036a69c54"
     ],
     [
       "SimplePrintf.parse_format_pure",
@@ -281,16 +234,16 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_4bb2ecabb8dd73bd801eb57f838ec7dc_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Char.char", "equation_FStar.String.char",
-        "equation_SimplePrintf.add_dir", "fuel_guarded_inversion_Prims.list",
-        "kinding_FStar.Char.char_@tok", "proj_equation_Prims.Cons_tl",
-        "projection_inverse_BoxBool_proj_0",
+        "equation_FStar.String.char", "equation_SimplePrintf.add_dir",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_FStar.String.char",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Prims_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "feb0dce1fb5b96389a15e50f2f819684"
+      "ccdbdea0d6d8b5bb1142c79290d9a917"
     ],
     [
       "SimplePrintf.sprintf",
@@ -301,101 +254,53 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_SimplePrintf.dir_type.fuel_instrumented",
         "@fuel_correspondence_SimplePrintf.parse_format_pure.fuel_instrumented",
-        "@fuel_correspondence_SimplePrintf.parse_format_string.fuel_instrumented",
         "@fuel_correspondence_SimplePrintf.string_of_dirs.fuel_instrumented",
         "@fuel_irrelevance_SimplePrintf.dir_type.fuel_instrumented",
         "@fuel_irrelevance_SimplePrintf.parse_format_pure.fuel_instrumented",
         "@query", "Prims_pretyping_ce036b6b736ef4e0bc3a9ff132a12aed",
-        "bool_inversion", "constructor_distinct_Prims.Cons",
-        "constructor_distinct_Prims.Nil",
-        "constructor_distinct_SimplePrintf.Nothing",
-        "constructor_distinct_Tm_unit", "disc_equation_SimplePrintf.Just",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "constructor_distinct_SimplePrintf.Arg",
+        "constructor_distinct_SimplePrintf.Lit",
+        "constructor_distinct_Tm_unit", "data_elim_Prims.Cons",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.String.char", "equation_SimplePrintf.add_dir",
         "equation_SimplePrintf.example1",
+        "equation_SimplePrintf.parse_format_string",
         "equation_with_fuel_SimplePrintf.dir_type.fuel_instrumented",
         "equation_with_fuel_SimplePrintf.parse_format_pure.fuel_instrumented",
-        "equation_with_fuel_SimplePrintf.parse_format_string.fuel_instrumented",
         "equation_with_fuel_SimplePrintf.string_of_dirs.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_SimplePrintf.example1",
         "kinding_Prims.list@tok", "kinding_SimplePrintf.dir@tok",
+        "lemma_FStar.Pervasives.invertOption",
+        "proj_equation_FStar.Pervasives.Native.Some_v",
         "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_Prims.Nil_a",
-        "projection_inverse_SimplePrintf.Just_v", "string_inversion",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "projection_inverse_SimplePrintf.Lit__0",
+        "refinement_interpretation_SimplePrintf_Tm_refine_189be86eb20fb7b22f365eee2b75b254",
+        "string_inversion",
+        "token_correspondence_SimplePrintf.string_of_dirs.fuel_instrumented",
+        "typing_FStar.String.list_of_string",
         "typing_SimplePrintf.parse_format_string",
-        "typing_SimplePrintf.uu___is_Just",
-        "typing_SimplePrintf_Tm_abs_69e5a6be57ae13be830377c30466c1e7"
+        "typing_SimplePrintf_Tm_abs_2df820f8f07feb6eb7a98f6e6130df91",
+        "typing_SimplePrintf_Tm_abs_44d84743e2f76b959287eab585a8a645"
       ],
       0,
-      "ad37a46287906987b10e5194db833c51"
+      "306ddff57f172c568d0be62a59a30e76"
     ],
     [
-      "SimplePrintf.example2",
-      1,
-      0,
-      1,
-      [ "@query", "equation_FStar.Char.char" ],
-      0,
-      "546e50e29240f89e226ad3a756d25ebe"
-    ],
-    [
-      "SimplePrintf.example2_lemma",
-      1,
-      0,
-      1,
-      [ "@query", "equation_FStar.String.char" ],
-      0,
-      "d76edeb2b5571fd078c8f45fda46388d"
-    ],
-    [
-      "SimplePrintf.example2_lemma_looks_nicer_but_not_usable",
-      1,
-      0,
-      1,
-      [ "@query", "equation_FStar.Char.char" ],
-      0,
-      "3963f07e9235cecd68dc48091c533938"
-    ],
-    [
-      "SimplePrintf.example3_lemma",
+      "SimplePrintf.test",
       1,
       0,
       1,
       [ "@query" ],
       0,
-      "8e589d850659ad0b1c0432a97684f817"
-    ],
-    [
-      "SimplePrintf.example4_lemma",
-      1,
-      0,
-      1,
-      [ "@query" ],
-      0,
-      "2c3126e597af032852d2575b2e0e84ec"
-    ],
-    [
-      "SimplePrintf.id",
-      1,
-      0,
-      1,
-      [ "@query" ],
-      0,
-      "408440daf21c6202717455676ccb6ac4"
-    ],
-    [
-      "SimplePrintf.example5",
-      1,
-      0,
-      1,
-      [
-        "@query", "constructor_distinct_SimplePrintf.Just",
-        "disc_equation_SimplePrintf.Just",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_SimplePrintf.Just_a",
-        "projection_inverse_SimplePrintf.Just_v"
-      ],
-      0,
-      "161c4fccb4aead58024a655b5eef3407"
+      "9364f592061281beb1488f6640bdee38"
     ]
   ]
 ]

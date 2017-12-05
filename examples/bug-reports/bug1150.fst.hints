@@ -1,0 +1,33 @@
+[
+  "Ö{—Ñ³<˜\u0018õè¸Ê\u001d'˜ø",
+  [
+    [
+      "Bug1150.positive",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_Bug1150.positive_",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "1aff2f3185aa4594da05f47d41c8a7ed"
+    ],
+    [
+      "Bug1150.foo",
+      1,
+      2,
+      1,
+      [
+        "@query", "b2t_def", "equation_Bug1150.positive",
+        "equation_Bug1150.positive_", "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "f258b1a022acbf0113f616c6bd86f14b"
+    ]
+  ]
+]

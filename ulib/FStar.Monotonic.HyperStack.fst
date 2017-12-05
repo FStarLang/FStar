@@ -2,9 +2,8 @@ module FStar.Monotonic.HyperStack
 
 open FStar.Preorder
 open FStar.Monotonic.HyperHeap
-module M  = FStar.Map
-module HH = FStar.Monotonic.HyperHeap
-module Set = FStar.Set
+module Map  = FStar.Map
+module HH   = FStar.Monotonic.HyperHeap
 
 (*+ Convenience predicates on rids +*)
 

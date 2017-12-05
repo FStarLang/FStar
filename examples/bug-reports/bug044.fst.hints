@@ -1,0 +1,45 @@
+[
+  "V]ù¶˜¬%ë˙Ë`Á48Wı",
+  [
+    [
+      "Bug044.nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "97ac6cd4c593ebda5da81d44defa7195"
+    ],
+    [
+      "Bug044.uu___is_O",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "892b9cbe5f6b8aa12af181610dbaa5dc"
+    ],
+    [
+      "Bug044.uu___is_S",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cdac07d2bf75c9b2d2b32267050571b6"
+    ],
+    [
+      "Bug044.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug044.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Bug044_Tm_refine_cb990c8c018df02302626151fc4bc03a"
+      ],
+      0,
+      "4b4a49907a6d9baf4558194a53c86631"
+    ]
+  ]
+]

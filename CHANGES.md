@@ -47,6 +47,69 @@ Guidelines for the changelog:
        [commit mitls/hacl-star@c93dd40b89263056c6dec8c606eebd885ba2984e]
        [commit FStar@8529b03e30e8dd77cd181256f0ec3473f8cd68bf]
 
+* More predictable and uniform inlining behavior when computing wps
+
+  When computing wp of `let x = e1 in e2`, F* computes the wp of `e1`,
+  say `wp1`, and that of `e2`, say `wp2` (where `x` is free in
+  `wp2`), and binds the twp wps to get the final wp.
+
+  Earlier the typechecker would perform inlining of `e1` in `wp2` in
+  certain cases (i.e. `wp2[e/x]`), e.g. when both `e1` and `e2` are
+  `Tot`, or both `e1` and `e2` are `GTot`, etc. If none of these
+  optimizations applied, the typechecker would simply use the
+  effect-specific `bind` to compute the final wp. This behavior was
+  quite brittle. See PR 1350 for an example.
+
+  Now the typechecker follows a more uniform, and predictable inlining
+  strategy. Term `e1` is inlined into `wp2` if all the following
+  conditions hold:
+
+  1. `e1` is a `Pure` or `Ghost` term
+  2. The return type of `e1` is not `unit`
+  3. The head symbol of `e1` is not marked `irreducible` and it is not an `assume val`
+  4. `e1` is not a `let rec`
+
+  This is breaking change. Consider the following example (adapted
+  from `ulib/FStar.Algebra.Monoid.fst`):
+
+  ```
+  let t (m:Type) (u:m) (op:m -> m -> m) =
+    forall (x:m). x `op` u == x
+
+  let foo :unit =
+    let u : prop = True in
+    let conj (p q : prop) : prop = p /\ q in
+    assume (forall (p:prop). p `conj` u == p);  //extensionality of props
+    assert (t prop u conj) ;
+    ()
+  ```
+
+  Previously, the inlining of `u` and `conj` didn't kick in, and so,
+  when the query goes to Z3, the `assume` remains in the precondition
+  of the query, and Z3 is able to then prove `p /\ True == p`.
+
+  With the new inlining behavior, `u` and `mult` get inlined, and the
+  assumption then becomes `p /\ True == p`. Before giving it to Z3,
+  the normalizer simplifies `p /\ True` to `squash p` (roughly, see PR
+  380), and then Z3 is no longer able to prove the query.
+
+  To get around this inlining behavior, `prims` now provides a
+  `singleton` function. Wrapping `u` in `singleton` like:
+
+  ```
+    ...
+    let u : prop = singleton True in
+    ...
+  ```
+
+  prevents inlining of `u`, leaving the assumption as is for Z3.
+
+  See [commit
+  FStar@02707cd0](https://github.com/FStarLang/FStar/commit/02707cd037f1d297452bb150c7a7e84dc11d5ee7)
+  for an example.
+
+  Only `ulib/FStar.Algebra.Monoid.fst` needed to be tweaked like this.
+
 ## Standard library
 
 * [commit FStar@f73f295e](https://github.com/FStarLang/FStar/commit/f73f295ed0661faec205fdf7b76bdd85a2a94a32)
@@ -99,6 +162,14 @@ Guidelines for the changelog:
   open FStar.Ref
   let f x = !x
   ```
+
+* FStar.Char.char: In support of unicode, FStar.Char.char is now an
+  abstract alias for a 21 bit integer represented within a
+  FStar.UInt32.t.
+
+* ucontrib/Platform/fst/*: These modules are deprecated. Their
+  functionality is now moved to FStar.Bytes, FStar.Error, FStar.Tcp,
+  FStar.Udp, and FStar.Date.
 
 ## C Extraction
 

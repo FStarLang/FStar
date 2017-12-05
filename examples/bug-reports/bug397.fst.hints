@@ -1,0 +1,41 @@
+[
+  "è¶B«\u0007ñx\u001eÎ ¥ëiÕÄÈ",
+  [
+    [
+      "Bug397.t",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "d5cddcc316a2d73fa8badc5591295fa2"
+    ],
+    [
+      "Bug397.__proj__C__item___0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "46793f8b2146b376b31fbe627fc18851"
+    ],
+    [
+      "Bug397.dummy2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "209c4c439e60cdb68e14fbf7f804c4dc"
+    ],
+    [
+      "Bug397.dummy",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "403c19b3603f58dd16b951695f087e73"
+    ]
+  ]
+]

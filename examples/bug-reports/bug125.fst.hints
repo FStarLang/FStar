@@ -1,0 +1,17 @@
+[
+  "ê\u00020èºéñ\u001a7üiÛDo8Q",
+  [
+    [
+      "Bug125.test",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Multiply",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "7d7a3cbcf65a7d03053c26c207bbb79b"
+    ]
+  ]
+]

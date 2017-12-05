@@ -33,8 +33,8 @@ all: verify-all
 
 _tags:
 	echo "<ml>: traverse" > $@
-	echo "<$(OUTPUT_DIRECTORY)>: traverse\n" >> $@
-	echo "<$(OUTPUT_DIRECTORY)/c>: -traverse\n" >> $@
+	echo "<$(OUTPUT_DIRECTORY)>: traverse" >> $@
+	echo "<$(OUTPUT_DIRECTORY)/c>: -traverse" >> $@
 
 # To extract an A.ml ML file from an A.fst, we just reload its A.fst.checked file
 # and then with the --codegen OCaml option, emit an A.ml

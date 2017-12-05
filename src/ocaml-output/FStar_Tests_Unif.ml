@@ -35,8 +35,8 @@ let guard_eq:
                 (FStar_TypeChecker_Common.NonTrivial f'1))
           | uu____38 -> (false, g, g') in
         match uu____18 with
-        | (b1,g1,g'1) ->
-            if Prims.op_Negation b1
+        | (b,g1,g'1) ->
+            if Prims.op_Negation b
             then
               let msg =
                 let uu____47 = FStar_Util.string_of_int i in

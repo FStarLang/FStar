@@ -1,5 +1,5 @@
 [
-  "\u0017C\u000ft=Ä÷Ós\u0001’æ-åBp",
+  "\u0017^¯·hê]¬\u0006XD\"|‡Üš",
   [
     [
       "FStar.OrdMapProps.fold",
@@ -7,27 +7,25 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_273c0cb114efbc10b99731f088b17ae0_3",
-        "binder_x_273c0cb114efbc10b99731f088b17ae0_4",
         "binder_x_63f3685f59346354f68f9ab20fc9977e_6",
-        "binder_x_f51065cae6499a090a1d1c539f604949_8", "bool_inversion",
+        "binder_x_ed12ac16d5df566962f297cf9d6bdde0_8",
+        "binder_x_fe28d8bcde588226b4e538b35321de05_4", "bool_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.None",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
-        "equation_Prims.nat", "int_typing",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.contains_upd1",
-        "lemma_FStar.OrdMap.eq_lemma", "lemma_FStar.OrdMap.sel_contains",
+        "equation_Prims.nat", "kinding_FStar.Pervasives.Native.tuple2@tok",
+        "lemma_FStar.OrdMap.choose_m", "lemma_FStar.OrdMap.eq_lemma",
+        "lemma_FStar.OrdMap.eq_remove", "lemma_FStar.OrdMap.sel_rem1",
         "lemma_FStar.OrdMap.size_empty", "lemma_FStar.OrdMap.size_remove",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_FStar.Pervasives.Native.Some_v",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
@@ -41,16 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "59883545b473f84c9be0d375d17c8d7a"
-    ],
-    [
-      "FStar.OrdMapProps.fold",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "f25e648a4099b53634da02f11fc05f1c"
+      "bc890dd62112f14a8313d307e750dee4"
     ]
   ]
 ]

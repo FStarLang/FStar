@@ -1,0 +1,19 @@
+[
+  "¸:b‰Ï±P\u000f\u0004‹ß=§ïú",
+  [
+    [
+      "Bug581.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.V@tok",
+        "function_token_typing_Prims.int",
+        "refinement_interpretation_Prims_Tm_refine_c16bc1b61f58b349bf6fc1c94dcaf83b"
+      ],
+      0,
+      "85ff2211e72adad647078239121e9ea8"
+    ]
+  ]
+]

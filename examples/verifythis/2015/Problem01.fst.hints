@@ -13,7 +13,7 @@
         "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "4d9ebfa5746d1b9fe096181652aee93f"
+      "8ceb288a041b015bc7c730a1afa7a2df"
     ],
     [
       "Problem01.prefix",
@@ -24,35 +24,30 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.append.fuel_instrumented",
-        "@query", "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_0",
-        "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_1",
+        "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "assumption_Prims.HasEq_int", "assumption_Prims.list_haseq",
+        "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_0",
+        "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_1", "bool_inversion",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
         "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "primitive_Prims.op_Equality",
+        "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "primitive_Prims.op_Equality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Problem01_Tm_refine_86501a336fc39c0d1f9c79f2564f9d82",
+        "subterm_ordering_Prims.Cons", "typing_Prims.uu___is_Nil"
       ],
       0,
-      "6c1d3330b93539279a8928d3c5750685"
-    ],
-    [
-      "Problem01.prefix",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "32050fb806b8839e2b3db214f20da622"
+      "d139cdd2880f105878dc262f63fd2e9b"
     ],
     [
       "Problem01.remove_elem_from_list",
@@ -64,6 +59,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int",
         "binder_x_323b8b24dedcbcde84b47deb8aeac554_1",
         "binder_x_a21c6d0afff00f7e13fcf2d1497e4726_0",
         "disc_equation_Prims.Cons", "equation_Prims.nat",
@@ -77,16 +73,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "44f01b492ffae2fe6135d63b0b3262ea"
-    ],
-    [
-      "Problem01.remove_elem_from_list",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "48c6ddef69ac1802cf158319f968d4b7"
+      "d088bcb0b6c2d0020c647aead1f3a623"
     ],
     [
       "Problem01.test_prefix",
@@ -98,7 +85,7 @@
         "refinement_interpretation_Problem01_Tm_refine_5ec69b392d18c536c7a2f6f1921608e0"
       ],
       0,
-      "74dc6fcc37630b155b3561193de6e6af"
+      "7077776f477f230def8d10a041636d4e"
     ],
     [
       "Problem01.test_prefix",
@@ -153,7 +140,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "16f24181b4ef2f0ef056a398fa26c86b"
+      "b17d3b24db04d87af01263e39ac8467c"
     ],
     [
       "Problem01.test_relaxed_prefix",
@@ -190,7 +177,7 @@
         "typing_Problem01.test_prefix"
       ],
       0,
-      "5a5725ef7565f16ccb64a85e65436f6c"
+      "880b6a6dc23e19798ea4d64c7e5c752c"
     ]
   ]
 ]

@@ -1,0 +1,23 @@
+[
+  "èŽ³ü”,a‚Xª\u0019m1‰„×",
+  [
+    [
+      "Bug128.subst",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "454734cb18f823c4c03be80ee63997df"
+    ],
+    [
+      "Bug128.subst",
+      2,
+      2,
+      1,
+      [ "@query", "equality_tok_Prims.LexTop@tok" ],
+      0,
+      "fdf3c6c17937f5f691734ff7f163f23a"
+    ]
+  ]
+]

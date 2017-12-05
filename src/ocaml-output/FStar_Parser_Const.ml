@@ -12,6 +12,7 @@ let fstar_ns_lid: FStar_Ident.lident = p2l ["FStar"]
 let bool_lid: FStar_Ident.lident = pconst "bool"
 let unit_lid: FStar_Ident.lident = pconst "unit"
 let squash_lid: FStar_Ident.lident = pconst "squash"
+let auto_squash_lid: FStar_Ident.lident = pconst "auto_squash"
 let string_lid: FStar_Ident.lident = pconst "string"
 let bytes_lid: FStar_Ident.lident = pconst "bytes"
 let int_lid: FStar_Ident.lident = pconst "int"
@@ -78,6 +79,7 @@ let list_tot_append_lid: FStar_Ident.lident =
   p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let strcat_lid: FStar_Ident.lident = p2l ["Prims"; "strcat"]
 let strcat_lid': FStar_Ident.lident = p2l ["FStar"; "String"; "strcat"]
+let str_make_lid: FStar_Ident.lident = p2l ["FStar"; "String"; "make"]
 let let_in_typ: FStar_Ident.lident = p2l ["Prims"; "Let"]
 let string_of_int_lid: FStar_Ident.lident = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid: FStar_Ident.lident = p2l ["Prims"; "string_of_bool"]

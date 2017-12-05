@@ -44,8 +44,8 @@ type delta_level =
 (* computations [e] of type [Msource.repr t wp] to a computation of type *)
 (* [Mtarget.repr t (lift_wp t wp)] *)
 type mlift = {
-  mlift_wp:typ -> typ -> typ ;
-  mlift_term:option<(typ -> typ -> term -> term)>
+  mlift_wp:universe -> typ -> typ -> typ ;
+  mlift_term:option<(universe -> typ -> typ -> term -> term)>
   (* KM : not exactly sure if mlift_term really need the wp term inside the compiler *)
   (* (it needs it in the F* source to be well-typed but we are forgetting a lot here) *)
 }
@@ -87,7 +87,7 @@ type env = {
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ)>;         (* mutually recursive names and their types (for termination checking) *)
+  letrecs        :list<(lbname * typ * univ_names)>;           (* mutually recursive names and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
@@ -199,7 +199,6 @@ val new_u_univ             : unit -> universe
 (* Instantiate the universe variables in a type scheme with new unification variables *)
 val inst_tscheme           : tscheme -> universes * term
 val inst_effect_fun_with   : universes -> env -> eff_decl -> tscheme -> term
-
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env

@@ -101,7 +101,8 @@ let build_constant (c: mlconstant): constant =
   | MLC_Float v -> Const_float (string_of_float v)
   | MLC_Char v -> Const_int v
   | MLC_String v -> Const_string (v, None)
-  | MLC_Bytes _ -> failwith "Case not handled" (* do we need this? *)
+  | MLC_Int (v, None) -> Const_int (int_of_string v)
+  | MLC_Bytes _ -> failwith "not defined10" (* do we need this? *)
   | _ -> failwith "Case not handled"
 
 let build_constant_expr (c: mlconstant): expression =
@@ -110,7 +111,7 @@ let build_constant_expr (c: mlconstant): expression =
   | MLC_Bool b ->
      let id = if b then "true" else "false" in
      Exp.construct (mk_lident id) None
-  | MLC_Int (v, _) ->
+  | MLC_Int (v, None) ->
       let args = [no_label, Exp.constant (Const_string(v, None))] in
       Exp.apply (Exp.ident (mk_lident "Prims.parse_int")) args
   | _ -> Exp.constant (build_constant c)

@@ -10,6 +10,7 @@
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
@@ -92,6 +93,12 @@ let module_name_of_file f =
       raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
 
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
+
+let namespace_of_module f =
+    let lid = FStar.Ident.lid_of_path (FStar.Ident.path_of_text f) Range.dummyRange in
+    match lid.ns with
+    | [] -> None
+    | _ -> Some (FStar.Ident.lid_of_ids lid.ns)
 
 type file_name = string
 type module_name = string
@@ -341,16 +348,20 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
 
 exception Exit
 
-let hard_coded_dependencies filename =
-  let filename : string = basename filename in
+let hard_coded_dependencies full_filename =
+  let filename : string = basename full_filename in
   let corelibs =
     [Options.prims_basename () ; Options.pervasives_basename () ; Options.pervasives_native_basename ()]
   in
   (* The core libraries do not have any implicit dependencies *)
   if List.mem filename corelibs then []
-  else [ (Const.fstar_ns_lid, Open_namespace);
-         (Const.prims_lid, Open_module);
-         (Const.pervasives_lid, Open_module) ]
+  else let implicit_deps =
+           [ (Const.fstar_ns_lid, Open_namespace);
+             (Const.prims_lid, Open_module);
+             (Const.pervasives_lid, Open_module) ] in
+       match (namespace_of_module (lowercase_module_name full_filename)) with
+       | None -> implicit_deps
+       | Some ns -> implicit_deps @ [(ns, Open_namespace)]
 
 (** Parse a file, walk its AST, return a list of FStar lowercased module names
     it depends on. *)
@@ -780,23 +791,35 @@ let hash_dependences (Mk (deps, file_system_map, all_cmd_line_files)) fn =
     let interface_hash =
         if is_implementation fn
         && has_interface file_system_map module_name
-        then [digest_of_file (Option.get (interface_of file_system_map module_name))]
+        then ["interface", digest_of_file (Option.get (interface_of file_system_map module_name))]
         else []
     in
     let binary_deps = dependences_of file_system_map deps all_cmd_line_files fn
                 |> List.filter (fun fn ->
                 not (is_interface fn &&
                     lowercase_module_name fn = module_name)) in
-    let binary_deps = FStar.List.sortWith String.compare binary_deps in
+    let binary_deps =
+        FStar.List.sortWith
+          (fun fn1 fn2 ->
+             String.compare (lowercase_module_name fn1)
+                            (lowercase_module_name fn2))
+        binary_deps in
     let rec hash_deps out = function
-        | [] -> Some (source_hash::interface_hash@out)
+        | [] -> Some (("source", source_hash)::interface_hash@out)
         | fn::deps ->
-          let fn = cache_file_name fn in
-          if BU.file_exists fn
-          then hash_deps (digest_of_file fn :: out) deps
-          else None
+          let cache_fn = cache_file_name fn in
+          if BU.file_exists cache_fn
+          then hash_deps ((lowercase_module_name fn, digest_of_file cache_fn) :: out) deps
+          else (if Options.debug_any()
+                then BU.print2 "%s: missed digest of file %s\n" cache_file cache_fn;
+                None)
     in
     hash_deps [] binary_deps
+
+let print_digest (dig:list<(string * string)>) : string =
+    dig
+    |> List.map (fun (m, d) -> BU.format2 "%s:%s" m (BU.base64_encode d))
+    |> String.concat "\n"
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format.
@@ -824,6 +847,11 @@ let print_make (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
   *)
 let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
     let keys = deps_keys deps in
+    let output_ml_file fst_file =
+        let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
+        let dir= match Options.output_dir() with None -> "" | Some x -> x ^ "/" in
+        dir ^ ml_base_name ^ ".ml"
+    in
     keys |> List.iter
         (fun f ->
           let f_deps, _ = deps_try_find deps f |> Option.get in
@@ -836,15 +864,22 @@ let print_full (Mk (deps, file_system_map, all_cmd_line_files)) : unit =
           if is_interface f then Util.print3 "%s.source: %s \\\n\t%s\n\ttouch $@\n\n" f f (String.concat "\\\n\t" files);
           //this one prints:
           //   a.fst.checked: b.fst.checked c.fsti.checked a.fsti
-          Util.print3 "%s.checked: %s \\\n\t%s\n\n" f f (String.concat " \\\n\t" files);
+          Util.print3 "%s: %s \\\n\t%s\n\n" (cache_file_name f) f (String.concat " \\\n\t" files);
           //And, if this is not an interface, we also print out the dependences among the .ml files
           // excluding files in ulib, since these are packaged in fstarlib.cmxa
           if is_implementation f then
             let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename f))) '.' "_" in
-            Util.print3 "%s%s.ml: %s.checked\n\n" (match Options.output_dir() with None -> "" | Some x -> x ^ "/") ml_base_name f
+            Util.print2 "%s: %s\n\n" (output_ml_file f) (cache_file_name f)
           );
-    let all_fst_files = keys |> List.filter is_implementation in
-    Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t")
+    let all_fst_files = keys |> List.filter is_implementation |> Util.sort_with String.compare in
+    let all_ml_files = all_fst_files |> List.collect (fun fst_file ->
+        if Options.should_extract (lowercase_module_name fst_file)
+        then [output_ml_file fst_file]
+        else []
+      ) |> Util.sort_with String.compare in
+    Util.print1 "ALL_FST_FILES=\\\n\t%s\n" (all_fst_files |> String.concat " \\\n\t");
+    Util.print1 "ALL_ML_FILES=\\\n\t%s\n" (all_ml_files |> String.concat " \\\n\t")
+
 
 let print deps =
   match Options.dep() with

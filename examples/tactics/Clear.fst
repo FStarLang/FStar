@@ -29,6 +29,7 @@ let clear_all_of_type (t : typ) : tactic unit =
          (List.rev bs);;
     return ()
 
+#set-options "--use_two_phase_tc false"
 let l2 (x : int) (y : bool) (z : int) =
     assert_by_tactic (phi ==> (psi ==> xi))
             (e <-- cur_env;

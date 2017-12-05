@@ -51,7 +51,7 @@ let fail_exp (lid:lident) (t:typ) =
 let mangle_projector_lid (x: lident) : lident =
     x
 
-let lident_as_mlsymbol (id : lident) : mlsymbol = id.ident.idText
+let lident_as_mlsymbol (id : lident) : mlsymbol = avoid_keyword id.ident.idText
 
 let as_pair = function
    | [a;b] -> (a,b)
@@ -85,6 +85,7 @@ let rec extract_meta x =
       Some (PpxDerivingShowConstant s)
   | { n = Tm_app ({ n = Tm_fvar fv }, [{ n = Tm_constant (Const_string (s, _)) }, _]) } when string_of_lid (lid_of_fv fv) = "FStar.Pervasives.Comment" ->
       Some (Comment s)
+  | { n = Tm_constant (Const_string (data, _)) } when data = "KremlinPrivate" -> Some Private
   // These are only for backwards compatibility, they should be removed at some point.
   | { n = Tm_constant (Const_string (data, _)) } when data = "c_inline" -> Some CInline
   | { n = Tm_constant (Const_string (data, _)) } when data = "substitute" -> Some Substitute
@@ -451,10 +452,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
 let extract_iface (g:env) (m:modul) =  BU.fold_map extract_sig g m.declarations |> fst
 
-let extract (g:env) (m:modul) : env * list<mllib> =
+let extract' (g:env) (m:modul) : env * list<mllib> =
   S.reset_gensym();
-  if Options.debug_any ()
-  then BU.print1 "Extracting module %s\n" (Print.lid_to_string m.name);
   let codegen_opt = Options.codegen () in
   let _ = Options.restore_cmd_line_options true in
   (* since command line options are reset, need to set OCaml extraction for when
@@ -477,3 +476,9 @@ let extract (g:env) (m:modul) : env * list<mllib> =
   end else begin
     g, []
   end
+
+let extract (g:env) (m:modul) =
+  if Options.debug_any ()
+  then let msg = BU.format1 "Extracting module %s\n" (Print.lid_to_string m.name) in
+       BU.measure_execution_time msg (fun () -> extract' g m)
+  else extract' g m

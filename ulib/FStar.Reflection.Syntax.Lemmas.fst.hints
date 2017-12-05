@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "357611b5eb6c63ffd1eecec8b14cff7e"
+      "eedb8f97f60ab3c1d2efdba2030e98a8"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.mk_app_collect_inv_s",
@@ -46,7 +46,7 @@
         "typing_FStar.Reflection.Basic.__inspect", "unit_typing"
       ],
       0,
-      "aca5f23366f27f8da248fe8cf009776a"
+      "56ea4c90d7e49177ff4bbd401d0a33c1"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.mk_app_collect_inv",
@@ -62,7 +62,7 @@
         "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "c13170b6cd12d70c61a0056b3775c136"
+      "1e5ef636b8dcbeb66fce2bdcd41c1bcb"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.collect_app_order'",
@@ -101,7 +101,7 @@
         "typing_FStar.Reflection.Basic.__inspect", "unit_typing"
       ],
       0,
-      "8eb75f56f152c6107ab18f9ff9338968"
+      "5c451c9e4b251eb178e05484c64036e8"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.collect_app_order",
@@ -137,7 +137,7 @@
         "unit_typing"
       ],
       0,
-      "310fdcc9e65043671a2f4f197f9f742a"
+      "3d00324faf40e21af2638851c8704302"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.list_ref",
@@ -156,7 +156,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "557546dc25cf00f8cb4c5f701a7823c8"
+      "a6baa060a0b525c0f8fad125f96b9755"
     ],
     [
       "FStar.Reflection.Syntax.Lemmas.collect_app_ref",
@@ -175,7 +175,7 @@
         "projection_inverse_Prims.Nil_a", "true_interp"
       ],
       0,
-      "176e9c5c5ca0584e5743df04903c89b8"
+      "2a77ce2bf0c22456303e255584d881c1"
     ]
   ]
 ]

@@ -64,8 +64,8 @@ val response: string16 -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = createBytes 1 (Char.char_of_int 0)
-let tag1 = createBytes 1 (Char.char_of_int 1)
+let tag0 = createBytes 1 0uy
+let tag1 = createBytes 1 1uy
 
 let request s = tag0 @| (utf8 s)
 
@@ -109,8 +109,8 @@ val resp_injective:
 let req_resp_distinct s s' t' = 
   lemma_repr_bytes_values (length (utf8 s));
   lemma_repr_bytes_values (length (utf8 s'));
-  assert (Seq.index (request s) 0 == Char.char_of_int 0);
-  assert (Seq.index (response s' t') 0 == Char.char_of_int 1)
+  assert (Seq.index (request s) 0 == 0uy);
+  assert (Seq.index (response s' t') 0 == 1uy)
 
 let req_injective s0 s1 = ()
 

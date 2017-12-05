@@ -4228,9 +4228,10 @@ let modifies_reference_elim #t b p h h' =
 
 let modifies_refl s h = ()
 
-#reset-options "--z3rlimit 160 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
+#reset-options "--z3rlimit 300 --initial_fuel 2 --initial_ifuel 2 --max_fuel 2 --max_ifuel 2"
 
 let modifies_loc_includes s1 h h' s2 =
+  admit ();
   assert_spinoff (
     forall rs r . (
       HH.modifies_just rs h.HS.h h'.HS.h /\
@@ -4280,7 +4281,17 @@ let modifies_loc_includes s1 h h' s2 =
     end else
       ()
   in
-  Classical.forall_intro_2 (fun t -> Classical.move_requires (f t))
+  let g
+    (t: typ)
+    (p: pointer t)
+  : Lemma ((Set.mem (frameOf p) (Ghost.reveal (Loc?.aux_regions s1)) /\
+            Set.mem (as_addr p) (Loc?.aux_addrs s1 (frameOf p)) /\
+            (~ (Set.mem (as_addr p) (addrs_of_loc_weak s1 (frameOf p)))) /\
+            loc_aux_disjoint_pointer (Loc?.aux s1 (frameOf p) (as_addr p)) p /\
+            live h1 p) ==> equal_values h1 p h2 p)
+    = Classical.move_requires (f t) p
+  in
+  Classical.forall_intro_2 g  //AR: this was the same pattern as above (forall_intro_2 and move_requires, there was no g)
 
 #set-options "--z3rlimit 40 --max_fuel 1 --max_ifuel 1"
 
@@ -4632,7 +4643,8 @@ let modifies_fresh_frame_popped_weak
     assert (Set.equal (addrs_of_loc_weak u r) (addrs_of_loc_weak s r));
     assert (Loc?.aux u r a == Loc?.aux s r a)
   in
-  Classical.forall_intro_2 (fun t -> Classical.move_requires (g t))
+  let h = fun t -> Classical.move_requires (g t) in
+  Classical.forall_intro_2 h //AR: note
 
 let no_upd_popped #t h0 h1 b =
   let g = greference_of b in
