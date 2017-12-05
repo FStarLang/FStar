@@ -20,7 +20,19 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "350d212873b1b39f952c6e47d66f7a3c"
+      "84f76ec737e4cbfbae9f2b49bd9484d2"
+    ],
+    [
+      "Bug058.fibonacci",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int",
+        "haseqBug058_Tm_refine_402366a12062163eb79afd36b7d562c3"
+      ],
+      0,
+      "724fd201c416efe487c22e1626289250"
     ]
   ]
 ]

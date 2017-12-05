@@ -490,7 +490,20 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "7d67f020bdfaffdb5d07e22cb45d3170"
+      "9ccd117ebab99fc7258c469347c2da18"
+    ],
+    [
+      "Bug173.update",
+      2,
+      2,
+      1,
+      [
+        "@query", "assumption_Prims.HasEq_int", "equation_Bug173.id",
+        "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+      ],
+      0,
+      "6ac112b2b471d4f4c1b4966d788a94ae"
     ],
     [
       "Bug173.step_exp",
@@ -511,7 +524,16 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "a96245079bf2be1060aaae21789e18df"
+      "1e31264d92fadc172cc2cd94102d9f19"
+    ],
+    [
+      "Bug173.step_exp",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Prims.HasEq_int" ],
+      0,
+      "64fd4249e359557b24fa7643b8edce4f"
     ],
     [
       "Bug173.step",
@@ -588,7 +610,34 @@
         "subterm_ordering_Bug173.If", "subterm_ordering_Bug173.Op"
       ],
       0,
-      "a5575fba84a6aab5a1ba02e3822617ea"
+      "6370e6cd7e182ed22cd4868bacdf95a2"
+    ],
+    [
+      "Bug173.typing_exp",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Bug173.typ_haseq" ],
+      0,
+      "f671409d4412519973a48be41d2af5af"
+    ],
+    [
+      "Bug173.typing_exp",
+      3,
+      2,
+      1,
+      [ "@query", "assumption_Bug173.typ_haseq" ],
+      0,
+      "742dd20cb63e82e4fd140f04c15d36ec"
+    ],
+    [
+      "Bug173.typing_exp",
+      4,
+      2,
+      1,
+      [ "@query", "assumption_Bug173.typ_haseq" ],
+      0,
+      "f1dcf9c6186f136aa4f803c32acd585b"
     ],
     [
       "Bug173.typing",
@@ -615,7 +664,16 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "ce7795a4e9999361d5ec16fce68f2960"
+      "57fa2ee4c9199dc4cbc5a6933f3d14a0"
+    ],
+    [
+      "Bug173.typing",
+      2,
+      2,
+      1,
+      [ "@query", "assumption_Bug173.typ_haseq" ],
+      0,
+      "55f3c10074aa117dd52590c4254a3e4e"
     ],
     [
       "Bug173.typed_heap",
@@ -624,7 +682,7 @@
       1,
       [ "@query", "assumption_Bug173.typ_haseq" ],
       0,
-      "5ebdf34202fd2650a18c82afcdd800ce"
+      "6185f20f0f85da44931c64c93bfcfb03"
     ],
     [
       "Bug173.progress_exp",
