@@ -225,7 +225,7 @@ let check_smt_pat env t bs c =
             let pat_vars = get_pat_vars (N.normalize [N.Beta] env pats) (BU.new_set Syntax.order_bv) in
             begin match bs |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
                 | None -> ()
-                | Some (x,_) -> Errors.maybe_fatal_error t.pos (Errors.Warning_PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
+                | Some (x,_) -> Errors.log_issue t.pos (Errors.Warning_PatternMissingBoundVar, (BU.format1 "Pattern misses at least one bound variable: %s" (Print.bv_to_string x)))
             end
         | _ -> failwith "Impossible"
 
@@ -422,7 +422,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
-    then Errors.maybe_fatal_error e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReify, "Qualifier on argument to reify is irrelevant and will be ignored");
+    then Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReify, "Qualifier on argument to reify is irrelevant and will be ignored");
     let e, c, g =
       let env0, _ = Env.clear_expected_typ env in
       tc_term env0 e
@@ -459,7 +459,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_app({n=Tm_constant (Const_reflect l)}, [(e, aqual)])->
     if Option.isSome aqual
-    then Errors.maybe_fatal_error e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
+    then Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReflect, "Qualifier on argument to reflect is irrelevant and will be ignored");
     let no_reflect () = raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" l.str)) e.pos in
     let reflect_op, _ = U.head_and_args top in
     begin match Env.effect_decl_opt env l with
@@ -1411,7 +1411,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         let bs, cres' = SS.open_comp bs cres' in
                         let head_info = (head, chead, ghead, U.lcomp_of_comp cres') in
                         if debug env Options.Low
-                        then FStar.Errors.maybe_fatal_error tres.pos
+                        then FStar.Errors.log_issue tres.pos
                                (Errors.Warning_RedundantExplicitCurrying, "Potentially redundant explicit currying of a function type");
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
                     | _ when not norm ->
@@ -1825,7 +1825,7 @@ and check_top_level_let env e =
                 let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
                 if ok
                 then e2, c1
-                else (Errors.maybe_fatal_error (Env.get_range env) Err.top_level_effect;
+                else (Errors.log_issue (Env.get_range env) Err.top_level_effect;
                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
             else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
                  let _ = Rel.force_trivial_guard env g1 in

@@ -91,7 +91,7 @@ let rec extract_meta x =
   | { n = Tm_meta (x, _) } ->
       extract_meta x
   | a ->
-      Errors.maybe_fatal_error a.pos (Errors.Warning_UnrecognizedAttribute, (BU.format1 "Unrecognized attribute (%s), valid attributes are `c_inline`, `substitute`, and `gc`.\n")
+      Errors.log_issue a.pos (Errors.Warning_UnrecognizedAttribute, (BU.format1 "Unrecognized attribute (%s), valid attributes are `c_inline`, `substitute`, and `gc`.\n")
       (Print.term_to_string a));
       (* BU.print2 "Unrecognized attribute at extraction: %s (%s)\n" *)
       (*   (Print.term_to_string a) *)

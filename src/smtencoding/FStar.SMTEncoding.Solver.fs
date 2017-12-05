@@ -328,7 +328,7 @@ let query_info settings z3result =
                 stats ];
         errs |> List.iter (fun (_, msg, range) ->
             let tag = if used_hint settings then "(Hint-replay failed): " else "" in
-            FStar.Errors.maybe_fatal_error range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
+            FStar.Errors.log_issue range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
     end
 
 let record_hint settings z3result =

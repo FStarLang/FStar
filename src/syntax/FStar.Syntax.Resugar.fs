@@ -385,7 +385,7 @@ let rec resugar_term (t : S.term) : A.term =
         let res_impl desugared_tm qual =
           match resugar_imp qual with
           | Some imp -> imp
-          | None -> Errors.maybe_fatal_error t.pos
+          | None -> Errors.log_issue t.pos
                      (Errors.Warning_InaccessibleArgument, (BU.format1 "Inaccessible argument %s in function application"
                                  (parser_term_to_string desugared_tm)));
                    A.Nothing in
@@ -712,7 +712,7 @@ let rec resugar_term (t : S.term) : A.term =
           | Tm_unknown ->
               mk (A.Const (Const_string ("(alien:" ^ s ^ ")", e.pos)))
           | _ ->
-              E.maybe_fatal_error e.pos (E.Warning_MetaAlienNotATmUnknown, "Meta_alien was not a Tm_unknown");
+              E.log_issue e.pos (E.Warning_MetaAlienNotATmUnknown, "Meta_alien was not a Tm_unknown");
               resugar_term e
           end
       | Meta_named t ->

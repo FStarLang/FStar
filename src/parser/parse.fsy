@@ -968,7 +968,7 @@ letqualifier:
 aqual:
   EQUALS
     {let _1 = () in
-              (  maybe_fatal_error (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
+              (  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
                                         Equality )}
 | aqualUniverses
     {let q = $1 in
@@ -2237,7 +2237,7 @@ constant:
     {let n = $1 in
      (
         if snd n then
-          maybe_fatal_error (lhs parseState) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
+          log_issue (lhs parseState) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         Const_int (fst n, None)
      )}
 | CHAR
@@ -2265,7 +2265,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 8-bit signed integers");
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 8-bit signed integers");
         Const_int (fst n, Some (Signed, Int8))
       )}
 | UINT16
@@ -2275,7 +2275,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 16-bit signed integers");
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 16-bit signed integers");
         Const_int (fst n, Some (Signed, Int16))
       )}
 | UINT32
@@ -2285,7 +2285,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 32-bit signed integers");
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 32-bit signed integers");
         Const_int (fst n, Some (Signed, Int32))
       )}
 | UINT64
@@ -2295,7 +2295,7 @@ constant:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for 64-bit signed integers");
         Const_int (fst n, Some (Signed, Int64))
       )}
 | REIFY
@@ -2321,7 +2321,7 @@ universeFrom:
     {let (u1, op_plus, u2) = ($1, $2, $3) in
        (
          if op_plus <> "+"
-         then maybe_fatal_error (rhs parseState 2) (Error_OpPlusInUniverse, ("The operator " ^ op_plus ^ " was found in universe context."
+         then log_issue (rhs parseState 2) (Error_OpPlusInUniverse, ("The operator " ^ op_plus ^ " was found in universe context."
                            ^ "The only allowed operator in that context is +."));
          mk_term (Op(mk_ident (op_plus, rhs parseState 2), [u1 ; u2])) (rhs2 parseState 1 3) Expr
        )}
@@ -2329,7 +2329,7 @@ universeFrom:
     {let (max, us) = ($1, $2) in
       (
         if text_of_id max <> text_of_lid max_lid
-        then maybe_fatal_error (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
+        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
@@ -2344,7 +2344,7 @@ atomicUniverse:
     {let n = $1 in
       (
         if snd n then
-          maybe_fatal_error (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
+          log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       )}
 | lident

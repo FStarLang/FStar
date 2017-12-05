@@ -613,7 +613,7 @@ and star_type' env t =
                 BU.string_builder_append strb "}" ;
                 BU.string_of_string_builder strb
         in
-        Errors.maybe_fatal_error t.pos (Errors.Warning_DependencyFound, (BU.format2 "Dependency found in term %s : %s" (Print.term_to_string t) (string_of_set Print.bv_to_string s)))
+        Errors.log_issue t.pos (Errors.Warning_DependencyFound, (BU.format2 "Dependency found in term %s : %s" (Print.term_to_string t) (string_of_set Print.bv_to_string s)))
       in
       let rec is_non_dependent_arrow ty n =
         match (SS.compress ty).n with
@@ -639,7 +639,7 @@ and star_type' env t =
                     with Not_found -> false
             end
         | _ ->
-            Errors.maybe_fatal_error ty.pos (Errors.Warning_NotDependentArrow, (BU.format1 "Not a dependent arrow : %s" (Print.term_to_string ty))) ;
+            Errors.log_issue ty.pos (Errors.Warning_NotDependentArrow, (BU.format1 "Not a dependent arrow : %s" (Print.term_to_string ty))) ;
             false
       in
       let rec is_valid_application head =
@@ -661,7 +661,7 @@ and star_type' env t =
                 begin match res.n with
                   | Tm_app _ -> true
                   | _ ->
-                    Errors.maybe_fatal_error head.pos (Errors.Warning_NondependentUserDefinedDataType, (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head))) ;
+                    Errors.log_issue head.pos (Errors.Warning_NondependentUserDefinedDataType, (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head))) ;
                     false
                 end
              else false
@@ -1286,7 +1286,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         failwith "mismatch";
       mk (Tm_app (head, List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_implicit q then "implicit" else "explicit" in
-        if q <> q' then Errors.maybe_fatal_error head.pos (Errors.Warning_IncoherentImplicitQualifier, (BU.format2 "Incoherent implicit qualifiers %b %b\n" (print_implicit q) (print_implicit q'))) ;
+        if q <> q' then Errors.log_issue head.pos (Errors.Warning_IncoherentImplicitQualifier, (BU.format2 "Incoherent implicit qualifiers %b %b\n" (print_implicit q) (print_implicit q'))) ;
         trans_F_ env arg wp_arg, q)
       args wp_args))
   | Tm_arrow (binders, comp) ->

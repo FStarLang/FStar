@@ -171,7 +171,7 @@ let load_module_from_cache env fn
     : option<(Syntax.modul * DsEnv.module_inclusion_info)> =
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
     let fail tag =
-         FStar.Errors.maybe_fatal_error
+         FStar.Errors.log_issue
             (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
             (Errors.Warning_CachedFile, BU.format3 "%s cache file %s; will recheck %s" tag cache_file fn);
          None
@@ -195,7 +195,7 @@ let store_module_to_cache env fn (modul:modul) (mii:DsEnv.module_inclusion_info)
     | Some hashes ->
       BU.save_value_to_file cache_file (hashes, modul, mii)
     | _ ->
-      FStar.Errors.maybe_fatal_error
+      FStar.Errors.log_issue
         (FStar.Range.mk_range fn (FStar.Range.mk_pos 0 0)
                                  (FStar.Range.mk_pos 0 0))
         (Errors.Warning_FileNotWritten, BU.format1 "%s was not written, since some of its dependences were not also checked"

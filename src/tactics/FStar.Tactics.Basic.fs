@@ -249,7 +249,7 @@ let check_valid_goal g =
             )
     in
     if not (aux b env) && !nwarn < 5
-    then (Err.maybe_fatal_error g.goal_ty.pos
+    then (Err.log_issue g.goal_ty.pos
               (Errors.Warning_IllFormedGoal, BU.format1 "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
                           (goal_to_string g));
           nwarn := !nwarn + 1)

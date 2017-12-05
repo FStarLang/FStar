@@ -46,7 +46,7 @@ module C = FStar.Parser.Const
 
 //Reporting errors
 let report env errs =
-    Errors.maybe_fatal_error (Env.get_range env)
+    Errors.log_issue (Env.get_range env)
                (Err.failed_to_prove_specification errs)
 
 (************************************************************************)
@@ -93,7 +93,7 @@ let check_uvars r t =
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
-    Errors.maybe_fatal_error r
+    Errors.log_issue r
       (Errors.Error_UncontrainedUnificationVar, (BU.format2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" us (Print.term_to_string t)));
     Options.pop()

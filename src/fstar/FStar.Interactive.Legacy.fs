@@ -172,7 +172,7 @@ let rec read_chunk () =
             | [l; c; "#lax"] -> true, Util.int_of_string l, Util.int_of_string c
             | [l; c]         -> false, Util.int_of_string l, Util.int_of_string c
             | _              ->
-              Errors.maybe_fatal_err (Errors.Warning_WrongErrorLocation, ("Error locations may be wrong, unrecognized string after #push: " ^ lc_lax));
+              Errors. log_issue Range.dummyRange (Errors.Warning_WrongErrorLocation, ("Error locations may be wrong, unrecognized string after #push: " ^ lc_lax));
               false, 1, 0
         in
         Push lc)
@@ -185,7 +185,7 @@ let rec read_chunk () =
         Util.clear_string_builder s.chunk;
         Info (symbol, false, Some (file, Util.int_of_string row, Util.int_of_string col))
       | _ ->
-        Errors.maybe_fatal_err (Errors.Error_IDEUnrecognized, "Unrecognized \"#info\" request: " ^l);
+        Errors. log_issue Range.dummyRange (Errors.Error_IDEUnrecognized, "Unrecognized \"#info\" request: " ^l);
         exit 1
   else if Util.starts_with l "#completions " then
       match Util.split l " " with
@@ -193,7 +193,7 @@ let rec read_chunk () =
         Util.clear_string_builder s.chunk;
         Completions (prefix)
       | _ ->
-        Errors.maybe_fatal_err (Errors.Error_IDEUnrecognized, "Unrecognized \"#completions\" request: " ^ l);
+        Errors. log_issue Range.dummyRange (Errors.Error_IDEUnrecognized, "Unrecognized \"#completions\" request: " ^ l);
         exit 1
   else if l = "#finish" then exit 0
   else
@@ -231,12 +231,12 @@ let deps_of_our_file filename =
   let maybe_intf = match same_name with
     | [ intf; impl ] ->
         if not (Parser.Dep.is_interface intf) || not (Parser.Dep.is_implementation impl) then
-          Errors.maybe_fatal_err (Errors.Fatal_MissingInterfaceOrImplementation, (Util.format2 "Found %s and %s but not an interface + implementation" intf impl));
+          Errors. log_issue Range.dummyRange (Errors.Fatal_MissingInterfaceOrImplementation, (Util.format2 "Found %s and %s but not an interface + implementation" intf impl));
         Some intf
     | [ impl ] ->
         None
     | _ ->
-        Errors.maybe_fatal_err (Errors.Warning_UnexpectedFile, (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name)));
+        Errors. log_issue Range.dummyRange (Errors.Warning_UnexpectedFile, (Util.format1 "Unexpected: ended up with %s" (String.concat " " same_name)));
         None
   in
   deps, maybe_intf, dep_graph
@@ -511,7 +511,7 @@ let rec go (line_col:(int*int))
       pop env msg;
       let (env, curmod), stack =
         match stack with
-        | [] -> Errors.maybe_fatal_err (Errors.Error_IDETooManyPops,  "too many pops"); exit 1
+        | [] -> Errors. log_issue Range.dummyRange (Errors.Error_IDETooManyPops,  "too many pops"); exit 1
         | hd::tl -> hd, tl
       in
       go line_col filename stack curmod env ts
@@ -556,7 +556,7 @@ end
 let interactive_mode (filename:string): unit =
 
   if Option.isSome (Options.codegen())
-  then Errors.maybe_fatal_err (Errors.Warning_IDEIgnoreCodeGen, "code-generation is not supported in interactive mode, ignoring the codegen flag");
+  then Errors. log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "code-generation is not supported in interactive mode, ignoring the codegen flag");
 
   //type check prims and the dependencies
   let filenames, maybe_intf, dep_graph = deps_of_our_file filename in

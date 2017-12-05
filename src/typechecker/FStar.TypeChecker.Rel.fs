@@ -2587,7 +2587,7 @@ let teq env t1 t2 : guard_t =
       g
 
 let subtype_fail env e t1 t2 =
-    Errors.maybe_fatal_error (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
+    Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
 
 let sub_comp env c1 c2 =
   if debug env <| Options.Other "Rel"

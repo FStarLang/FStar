@@ -756,7 +756,7 @@ let update_flags l =
 let diag r msg =
   if Options.debug_any() then add_one (mk_issue EInfo (Some r) msg None)
 
-let maybe_fatal_error r (e, msg) =
+let log_issue r (e, msg) =
   let errno = errno_of_error (e) in
   match List.nth !flags errno with
   | CError ->
@@ -764,13 +764,10 @@ let maybe_fatal_error r (e, msg) =
   | CWarning ->
      add_one (mk_issue EWarning (Some r) msg (Some errno))
   | CSilent -> ()
-  | CFatal -> failwith ("don't use maybe_fatal_error for fatal error")
-
-let maybe_fatal_err e =
-  maybe_fatal_error Range.dummyRange e
+  | CFatal -> failwith ("don't use log_issue to report fatal error")
 
 let add_errors errs =
-    atomically (fun () -> List.iter (fun (e, msg, r) -> maybe_fatal_error r (e, (message_prefix.append_prefix msg))) errs)
+    atomically (fun () -> List.iter (fun (e, msg, r) -> log_issue r (e, (message_prefix.append_prefix msg))) errs)
 
 let issue_of_exn = function
     | Error(e, msg, r) ->

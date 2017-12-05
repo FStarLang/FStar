@@ -104,7 +104,7 @@ let check_z3hash () =
                   _z3url
                   "and add the bin/ subdirectory into your PATH"
           in
-          FStar.Errors.maybe_fatal_error Range.dummyRange (e, msg)
+          FStar.Errors.log_issue Range.dummyRange (e, msg)
     end
 
 let ini_params () =
@@ -302,7 +302,7 @@ let smt_output_sections (lines:list<string>) : smt_output =
         match remaining with
         | [] -> ()
         | _ ->
-            FStar.Errors.maybe_fatal_error
+            FStar.Errors.log_issue
                     Range.dummyRange
                     (Errors.Warning_UnexpectedZ3Output, (BU.format2 "%s: Unexpected output from Z3: %s\n"
                                     (query_logging.get_module_name())

@@ -57,7 +57,7 @@ let trans_qual r maybe_effect_id = function
   | AST.Effect_qual ->   S.Effect
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
-  | AST.Opaque ->        Errors.maybe_fatal_error r (Errors.Warning_DeprecatedOpaqueQualifier, "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."); S.Visible_default
+  | AST.Opaque ->        Errors.log_issue r (Errors.Warning_DeprecatedOpaqueQualifier, "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."); S.Visible_default
   | AST.Reflectable ->
     begin match maybe_effect_id with
     | None -> raise_error (Errors.Fatal_ReflectOnlySupportedOnEffects, "Qualifier reflect only supported on effects") r
@@ -514,7 +514,7 @@ let rec desugar_data_pat env p is_mut : (env_t * bnd * list<Syntax.pat>) =
               let t = desugar_term env (close_fun env t) in
               (* TODO : This should be a real check instead of just a warning *)
               if (match x.sort.n with | S.Tm_unknown -> false | _ -> true)
-              then Errors.maybe_fatal_error orig.prange (Errors.Warning_MultipleAscriptions, (BU.format3 "Multiple ascriptions for %s in pattern, type %s was shadowed by %s\n"
+              then Errors.log_issue orig.prange (Errors.Warning_MultipleAscriptions, (BU.format3 "Multiple ascriptions for %s in pattern, type %s was shadowed by %s\n"
                                              (Print.bv_to_string x)
                                              (Print.term_to_string x.sort)
                                              (Print.term_to_string t))) ;
@@ -759,7 +759,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
 
     | Construct (n, [(a, _)]) when n.str = "SMTPatT" ->
-        Errors.maybe_fatal_error top.range (Errors.Warning_SMTPatTDeprecated, "SMTPatT is deprecated; please just use SMTPat");
+        Errors.log_issue top.range (Errors.Warning_SMTPatTDeprecated, "SMTPatT is deprecated; please just use SMTPat");
         desugar_term_maybe_top top_level env ({top with tm = App ({top with tm = Var (lid_of_path ["Prims";"smt_pat"] top.range)}, a, Nothing)})
 
     | Construct (n, [(a, _)]) when n.str = "SMTPatOr" ->
@@ -1396,7 +1396,7 @@ and desugar_comp r env t =
           if Options.ml_ish ()
           then Const.effect_ML_lid
           else (if Options.warn_default_effects()
-                then FStar.Errors.maybe_fatal_error head.range (Errors.Warning_UseDefaultEffect, "Using default effect Tot");
+                then FStar.Errors.log_issue head.range (Errors.Warning_UseDefaultEffect, "Using default effect Tot");
                 Const.effect_Tot_lid) in
         (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
     in
@@ -1738,7 +1738,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
              let quals = if List.contains S.Assumption quals
                          then quals
                          else (if not (Options.ml_ish ()) then
-                                 FStar.Errors.maybe_fatal_error se.sigrng
+                                 FStar.Errors.log_issue se.sigrng
                                    (Errors.Warning_AddImplicitAssumeNewQualifier, (BU.format1 "Adding an implicit 'assume new' qualifier on %s"
                                                (Print.lid_to_string l)));
                                  S.Assumption :: S.New :: quals) in

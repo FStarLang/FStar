@@ -66,7 +66,7 @@ let with_captured_errors' env f =
               "minimized version of the program that triggered the error." in
     // Make sure the user sees the error, even if it happened transiently while
     // running an automatic syntax checker like FlyCheck.
-    Errors.maybe_fatal_error (TcEnv.get_range env) (Errors.Fatal_AssertionFailure, msg);
+    Errors.log_issue (TcEnv.get_range env) (Errors.Fatal_AssertionFailure, msg);
     None
 
   | Error(e, msg, r) ->
@@ -1405,7 +1405,7 @@ let interactive_mode (filename:string): unit =
   FStar.Util.set_printer interactive_printer;
 
   if Option.isSome (Options.codegen ()) then
-    Errors.maybe_fatal_error Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
+    Errors.log_issue Range.dummyRange (Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen");
 
   if Options.trace_error () then
     // This prevents the error catcher below from swallowing backtraces
