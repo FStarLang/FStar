@@ -184,13 +184,38 @@ effect STL (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))) =
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:mem) -> wp (fun a -> p a h)
 
-let region_contains_pred (r:HH.rid{is_eternal_region r}) :stable_predicate
-  = fun m -> m.h `Map.contains` r
-type rid = r:HH.rid{is_eternal_region r ==> witnessed (region_contains_pred r)}
 
-let ref_contains_pred (#a:Type) (#rel:preorder a) (r:mreference a rel{not (is_mm r)}) :stable_predicate
-  = fun m -> rid_last_component r.id < m.rid_ctr /\ (not (m.h `Map.contains` r.id) \/ HH.contains_ref r.ref m.h)
-type mreference (a:Type) (rel:preorder a) = r:HS.mreference a rel{not (is_mm r) ==> witnessed (ref_contains_pred r)}
+(*
+ * A few caveats:
+ * (a) The clients should now open HyperStack.ST after the memory model files (as with Heap and FStar.ST).
+ * (b) When the clients get rid from this interface, they will get witnessed predicates.
+ *     But if we directly get an id from the HH map, then we don't get these.
+ * (c) Similar thing happens with mem, there is a refinement that we attach to mem, but that could
+ *     probably be moved to HyperStack mem itself.
+ *)
+let region_contains_pred (r:HH.rid) :stable_predicate
+  = fun m -> (not (is_eternal_region r)) \/ m.h `Map.contains` r
+type rid = r:HH.rid{witnessed (region_contains_pred r)}
+
+let ref_contains_pred (#a:Type) (#rel:preorder a) (r:mreference a rel) :stable_predicate
+  = fun m -> rid_last_component r.id < m.rid_ctr /\ (is_mm r \/ (not (m.h `Map.contains` r.id) \/ HH.contains_ref r.ref m.h))
+type mreference (a:Type) (rel:preorder a) = r:HS.mreference a rel{witnessed (ref_contains_pred r) /\
+                                                                  witnessed (region_contains_pred r.id)}
+
+type reference (a:Type) = r:HS.reference a{witnessed (ref_contains_pred r) /\
+                                           witnessed (region_contains_pred r.id)}
+
+type stackref (a:Type) = r:HS.stackref a{witnessed (ref_contains_pred r) /\
+                                         witnessed (region_contains_pred r.id)}
+type ref (a:Type) = r:HS.ref a{witnessed (ref_contains_pred r) /\
+                               witnessed (region_contains_pred r.id)}
+
+type mmstackref (a:Type) = r:HS.mmstackref a{witnessed (ref_contains_pred r) /\
+                                             witnessed (region_contains_pred r.id)}
+type mmref (a:Type) = r:HS.mmref a{witnessed (ref_contains_pred r) /\
+                                   witnessed (region_contains_pred r.id)}
+type s_ref (i:rid) (a:Type) = r:HS.s_ref i a{witnessed (ref_contains_pred r) /\
+                                             witnessed (region_contains_pred r.id)}
 
 (**
    Pushes a new empty frame on the stack
@@ -228,7 +253,8 @@ let salloc (#a:Type) (init:a)
     let r, h = HH.alloc (Heap.trivial_preorder a) m0.tip init false m0.h in
     let m1 = HS m0.rid_ctr h m0.tip in
     gst_put m1;
-    MkRef m0.tip r
+    let r: HS.stackref a = MkRef m0.tip r in
+    admit ()
 
 
 assume val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
