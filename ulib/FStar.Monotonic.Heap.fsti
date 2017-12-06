@@ -54,13 +54,13 @@ val sel: #a:Type0 -> #rel:preorder a -> heap -> mref a rel -> GTot a
 
 let valid_upd (#a:Type0) (#rel:preorder a) (h:heap) (r:mref a rel) (x:a) = rel (sel h r) x
 
-val upd_tot: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` r} -> x:a{valid_upd h r x} -> Tot heap
+val upd_tot: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` r} -> x:a -> Tot heap
 
 val upd: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel -> x:a -> GTot heap
 
 val alloc: #a:Type0 -> rel:preorder a -> heap -> a -> mm:bool -> Tot (mref a rel * heap)
 
-val free_mm: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` r /\ is_mm r} -> GTot heap
+val free_mm: #a:Type0 -> #rel:preorder a -> h:heap -> r:mref a rel{h `contains` r /\ is_mm r} -> Tot heap
 
 let modifies_t (s:tset nat) (h0:heap) (h1:heap) =
   (forall (a:Type) (rel:preorder a) (r:mref a rel).{:pattern (sel h1 r)}
@@ -98,6 +98,11 @@ val lemma_distinct_addrs_distinct_preorders
          (ensures  (addr_of r1 <> addr_of r2))
 	 [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
 
+ val lemma_distinct_addrs_distinct_mm
+      (#a #b:Type0) (#rel1:preorder a) (#rel2: preorder b) (h:heap) (r1:mref a rel1) (r2:mref b rel2)
+    :Lemma (requires (is_mm r1 =!= is_mm r2 /\ h `contains` r1 /\ h `contains` r2))
+           (ensures  (addr_of r1 <> addr_of r2))
+    [SMTPat (h `contains` r1); SMTPat (h `contains` r2)]
 (*
  * AR: this is a bit surprising. i had to add ~ (r1 === r2) postcondition to make the lemma
  * lemma_live_1 in hyperstack to go through. if addr_of r1 <> addr_of r2, shouldn't we get ~ (r1 === r2)

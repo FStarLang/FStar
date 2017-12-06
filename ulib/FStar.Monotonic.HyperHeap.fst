@@ -548,7 +548,25 @@ abstract let extend (r:rid) (n:int) (c:int)
   :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons? (reveal s) /\ Cons?.hd (reveal s) == (c, n) /\ color s == c))
   = elift1 (fun r -> (c, n)::r) r
 
-let alloc (#a:Type0) (rel:preorder a) (id:rid) (init:a) (mm:bool) (m:t{m `Map.contains` id})
-  :Tot (mrref id a rel * t) =
-  let (r, h) = Heap.alloc rel (Map.sel m id) init mm in
-  r, Map.upd m id h
+abstract let extend_monochrome (r:rid) (n:int)
+  : Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons? (reveal s) /\ Cons?.hd (reveal s) == ((color r), n) /\ color s == color r))
+= elift1 (fun r -> ((match r with | [] -> 0 | (c, _) :: _ -> c), n)::r) r
+
+abstract let alloc (#a:Type0) (rel:preorder a) (id:rid) (init:a) (mm:bool) (m:t{m `Map.contains` id})
+  :Tot (p:(mrref id a rel * t){let (r, h) = Heap.alloc rel (Map.sel m id) init mm in
+                               (as_ref (fst p) == r /\
+			        snd p == Map.upd m id h)})
+  = let (r, h) = Heap.alloc rel (Map.sel m id) init mm in
+    r, Map.upd m id h
+
+abstract let free (#a:Type0) (#rel:preorder a) (#id:rid) (r:mrref id a rel{is_mm r}) (m:t{contains_ref r m})
+  :Tot (m':t{let h = Heap.free_mm (Map.sel m id) (as_ref r) in
+             m' == Map.upd m id h})
+  = Map.upd m id (Heap.free_mm (Map.sel m id) (as_ref r))
+
+let upd_tot (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel{contains_ref r m}) (v:a) :Tot t
+  = Map.upd m i (Heap.upd_tot (Map.sel m i) (as_ref r) v)
+
+let sel_tot (#a:Type) (#rel:preorder a) (#i:rid) (m:t) (r:mrref i a rel{contains_ref r m}) :Tot a
+  = Heap.sel_tot (Map.sel m i) (as_ref r)
+
