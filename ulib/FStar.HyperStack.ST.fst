@@ -14,9 +14,12 @@ private let rid_last_component (r:HH.rid) :GTot int
     if length r = 0 then 0
     else snd (hd r)
 
+private let mem_pred (m:mem) =
+  forall (r:HH.rid).{:pattern (m.h `Map.contains`r)}
+               m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr
+
 (* In a mem, all the contained regions have last component less than the rid counter *)
-let mem = m:HS.mem{forall (r:HH.rid).{:pattern (m.h `Map.contains`r)}
-                                m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr}
+let mem = m:HS.mem{mem_pred m}
 
 (* Starting the predicates that constitute the preorder *)
 
@@ -193,16 +196,18 @@ type mreference (a:Type) (rel:preorder a) = r:HS.mreference a rel{not (is_mm r) 
    Pushes a new empty frame on the stack
    *)
 let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m0:mem) _ (m1:mem) -> fresh_frame m0 m1))
-  = let m0 = gst_get () in
+  = let m0:mem = gst_get () in
     let new_tip_rid = HH.extend m0.tip m0.rid_ctr 1 in
     gst_put (HS (m0.rid_ctr + 1) (Map.upd m0.h new_tip_rid Heap.emp) new_tip_rid)
 
 (**
    Removes old frame from the stack
    *)
-assume val pop_frame: unit -> Unsafe unit
+let pop_frame (_:unit)
+  :Unsafe unit
   (requires (fun m -> poppable m))
   (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
+  = gst_put (pop (gst_get ()))
 
 let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}) (m1:mem) =
       is_stack_region m0.tip
@@ -215,9 +220,16 @@ let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}
 (**
      Allocates on the top-most stack frame
      *)
-assume val salloc: #a:Type -> init:a -> StackInline (stackref a)
+let salloc (#a:Type) (init:a)
+  :StackInline (stackref a)
   (requires (fun m -> is_stack_region m.tip))
   (ensures salloc_post init)
+  = let m0 = gst_get () in
+    let r, h = HH.alloc (Heap.trivial_preorder a) m0.tip init false m0.h in
+    let m1 = HS m0.rid_ctr h m0.tip in
+    gst_put m1;
+    MkRef m0.tip r
+
 
 assume val salloc_mm: #a:Type -> init:a -> StackInline (mmstackref a)
   (requires (fun m -> is_stack_region m.tip))

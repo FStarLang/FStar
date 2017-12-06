@@ -545,5 +545,10 @@ let upd_rref_of
 = ()
 
 abstract let extend (r:rid) (n:int) (c:int)
-  :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons?.hd (reveal s) == (c, n) /\ color s == c))
+  :Pure rid (requires True) (ensures (fun s -> s `extends` r /\ Cons? (reveal s) /\ Cons?.hd (reveal s) == (c, n) /\ color s == c))
   = elift1 (fun r -> (c, n)::r) r
+
+let alloc (#a:Type0) (rel:preorder a) (id:rid) (init:a) (mm:bool) (m:t{m `Map.contains` id})
+  :Tot (mrref id a rel * t) =
+  let (r, h) = Heap.alloc rel (Map.sel m id) init mm in
+  r, Map.upd m id h

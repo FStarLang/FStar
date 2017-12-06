@@ -81,7 +81,7 @@ let popped m0 m1 =
   /\ Set.equal (Map.domain m1.h) (remove_elt (Map.domain m0.h) m0.tip)
   /\ Map.equal m1.h (Map.restrict (Map.domain m1.h) m0.h)
 
-let pop (m0:mem{poppable m0}) : GTot mem =
+let pop (m0:mem{poppable m0}) : Tot mem =
   root_has_color_zero();
   let dom = remove_elt (Map.domain m0.h) m0.tip in
   let h0 = m0.h in
