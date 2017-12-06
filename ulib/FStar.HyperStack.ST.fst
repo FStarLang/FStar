@@ -60,11 +60,6 @@ let region_contains_pred (r:HH.rid) :stable_predicate
 let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :stable_predicate
   = fun m -> rid_last_component r.id < m.rid_ctr /\ (HS.is_mm r \/ (not (m.h `Map.contains` r.id) \/ HH.contains_ref r.ref m.h))
 
-(*
- * We need to witness these predicates for m.tip and HH.root, so that clients get them.
- *)
-type mem = m:mem{witnessed (region_contains_pred m.tip) /\ witnessed (region_contains_pred HH.root)}
-
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 
 new_effect GST = STATE_h mem
@@ -199,7 +194,9 @@ sub_effect
  * (c) Similar thing happens with mem, there is a refinement that we attach to mem, but that could
  *     probably be moved to HyperStack mem itself.
  *)
-type rid = r:HH.rid{witnessed (region_contains_pred r)}
+type rid = r:HH.rid{r == HH.root                \/
+                    (not (is_eternal_region r)) \/
+		    witnessed (region_contains_pred r)}
 
 type mreference (a:Type) (rel:preorder a) = r:HS.mreference a rel{witnessed (ref_contains_pred r) /\
                                                                   witnessed (region_contains_pred r.id)}
@@ -226,7 +223,6 @@ let push_frame (_:unit) :Unsafe unit (requires (fun m -> True)) (ensures (fun (m
   = let m0 = gst_get () in
     let new_tip_rid = HH.extend m0.tip m0.rid_ctr 1 in
     let m1 = HS (m0.rid_ctr + 1) (Map.upd m0.h new_tip_rid Heap.emp) new_tip_rid in
-    gst_witness (region_contains_pred m1.tip);
     gst_put m1
 
 (**
@@ -237,7 +233,6 @@ let pop_frame (_:unit)
   (requires (fun m -> poppable m))
   (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1==pop m0 /\ popped m0 m1))
   = let m1 = pop (gst_get ()) in
-    gst_witness (region_contains_pred m1.tip);
     gst_put m1
 
 let salloc_post (#a:Type) (init:a) (m0:mem) (s:reference a{is_stack_region s.id}) (m1:mem) =
@@ -320,7 +315,7 @@ let new_region (r0:rid)
 			/\ m1.h == Map.upd m0.h r1 Heap.emp
 			/\ m1.tip = m0.tip
 			))
-  = gst_recall (region_contains_pred r0);  //recall containment of r0
+  = if r0 <> HH.root then gst_recall (region_contains_pred r0);  //recall containment of r0
     let m0 = gst_get () in
     let new_rid = HH.extend_monochrome r0 m0.rid_ctr in
     let m1 = HS (m0.rid_ctr + 1) (Map.upd m0.h new_rid Heap.emp) m0.tip in
@@ -340,7 +335,7 @@ let new_colored_region (r0:rid) (c:int)
 			/\ m1.h == Map.upd m0.h r1 Heap.emp
 			/\ m1.tip = m0.tip
 			))
-  = gst_recall (region_contains_pred r0);  //recall containment of r0
+  = if r0 <> HH.root then gst_recall (region_contains_pred r0);  //recall containment of r0
     let m0 = gst_get () in
     let new_rid = HH.extend r0 m0.rid_ctr c in
     let m1 = HS (m0.rid_ctr + 1) (Map.upd m0.h new_rid Heap.emp) m0.tip in
@@ -355,11 +350,12 @@ unfold let ralloc_post (#a:Type) (i:rid) (init:a) (m0:mem) (x:reference a{is_ete
   /\ i = x.id
   /\ m1 == upd m0 x init
 
+#set-options "--z3rlimit 10"
 private let ralloc_common (#a:Type) (i:rid) (init:a) (mm:bool)
   :ST (reference a)
       (requires (fun m       -> is_eternal_region i))
       (ensures  (fun m0 r m1 -> is_eternal_region r.id /\ ralloc_post i init m0 r m1 /\ is_mm r == mm))
-  = gst_recall (region_contains_pred i);
+  = if i <> HH.root then gst_recall (region_contains_pred i);
     let m0 = gst_get () in
     let r, h = HH.alloc (Heap.trivial_preorder a) i init mm m0.h in
     let m1 = HS m0.rid_ctr h m0.tip in
@@ -367,6 +363,7 @@ private let ralloc_common (#a:Type) (i:rid) (init:a) (mm:bool)
     assert (Set.equal (Map.domain m0.h) (Map.domain m1.h));
     let r = MkRef i r in
     gst_witness (ref_contains_pred r);
+    gst_witness (region_contains_pred i);
     r
 
 let ralloc (#a:Type) (i:rid) (init:a)
@@ -453,7 +450,7 @@ let recall (#a:Type) (r:ref a)
    *)
 let recall_region (i:rid{is_eternal_region i})
   :Stack unit (requires (fun m -> True)) (ensures (fun m0 _ m1 -> m0==m1 /\ i `is_in` m1.h))
-  = gst_recall (region_contains_pred i)
+  = if i <> HH.root then gst_recall (region_contains_pred i)
 
 (* Tests *)
 val test_do_nothing: int -> Stack int
