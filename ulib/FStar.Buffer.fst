@@ -1,10 +1,10 @@
 module FStar.Buffer
  
-open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.UInt32
 module Int32 = FStar.Int32
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Ghost
 
 
@@ -50,7 +50,7 @@ let content #a (b:buffer a) :
 (* Lifting from buffer to reference *)
 let as_ref #a (b:buffer a) = as_ref (content b)
 let as_addr #a (b:buffer a) = as_addr (content b)
-let frameOf #a (b:buffer a) : GTot HH.rid = frameOf (content b)
+let frameOf #a (b:buffer a) : GTot rid = frameOf (content b)
 
 (* Liveliness condition, necessary for any computation on the buffer *)
 let live #a (h:mem) (b:buffer a) : GTot Type0 = HS.contains h b.content
@@ -77,7 +77,7 @@ let equal #a h (b:buffer a) h' (b':buffer a) : GTot Type0 =
 (* y is included in x / x contains y *)
 let includes #a (x:buffer a) (y:buffer a) : GTot Type0 =
   x.max_length == y.max_length /\
-  x.content == y.content /\
+  x.content === y.content /\
   idx y >= idx x /\
   idx x + length x >= idx y + length y
 
@@ -826,7 +826,7 @@ let lemma_upd (#a:Type) (h:mem) (x:reference a{live_region h x.id}) (v:a) : Lemm
     let m' = Map.upd m x.id (Heap.upd (Map.sel m x.id) (HH.as_ref x.ref) v) in
     Set.lemma_equal_intro (Map.domain m) (Map.domain m')
 
-val rcreate: #a:Type -> r:HH.rid -> init:a -> len:UInt32.t -> ST (buffer a)
+val rcreate: #a:Type -> r:rid -> init:a -> len:UInt32.t -> ST (buffer a)
   (requires (fun h -> is_eternal_region r))
   (ensures (fun (h0:mem) b h1 -> b `unused_in` h0
     /\ live h1 b /\ idx b == 0 /\ length b == v len
@@ -1141,7 +1141,7 @@ let rec fill #t b z len =
 let split #t (b:buffer t) (i:UInt32.t{v i <= length b}) : Tot (buffer t * buffer t)
   = sub b 0ul i, offset b i
 
-let join #t (b:buffer t) (b':buffer t{b.max_length == b'.max_length /\ b.content == b'.content /\ idx b + length b == idx b'}) : Tot (buffer t)
+let join #t (b:buffer t) (b':buffer t{b.max_length == b'.max_length /\ b.content === b'.content /\ idx b + length b == idx b'}) : Tot (buffer t)
   = MkBuffer (b.max_length) (b.content) (b.idx) (FStar.UInt32.(b.length +^ b'.length))
 
 
