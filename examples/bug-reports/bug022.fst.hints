@@ -54,16 +54,7 @@
         "projection_inverse_Bug022.EAbs__0"
       ],
       0,
-      "52dcd294aed427625b6c9980e1126a6f"
-    ],
-    [
-      "Bug022.subst",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "de1b8bf40678598fedf04c2eb4473f5c"
+      "dc6e7c8cb899c6778fea307f00364da1"
     ]
   ]
 ]
