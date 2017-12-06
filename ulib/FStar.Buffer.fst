@@ -411,7 +411,7 @@ abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0 h1
       /\ HH.modifies_just (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton h0.tip)) h0.h h1.h
       /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1))
 
-abstract let modifies_region rid bufs h0 h1 =
+abstract let modifies_region (rid:rid) bufs h0 h1 =
   modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1
 
 (* Lemmas introducing the 'modifies' predicates *)
@@ -474,7 +474,7 @@ let lemma_intro_modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h0
   (ensures  (modifies_3_2 b b' h0 h1))
   = ()
 
-let lemma_intro_modifies_region rid bufs h0 h1 : Lemma
+let lemma_intro_modifies_region (rid:rid) bufs h0 h1 : Lemma
   (requires (modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1))
   (ensures  (modifies_region rid bufs h0 h1))
   = ()
@@ -538,7 +538,7 @@ let lemma_reveal_modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') h
 	/\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 h0.tip h0 h1)) ))
   = ()
 
-let lemma_reveal_modifies_region rid bufs h0 h1 : Lemma
+let lemma_reveal_modifies_region (rid:rid) bufs h0 h1 : Lemma
   (requires (modifies_region rid bufs h0 h1))
   (ensures  (modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1))
   = ()

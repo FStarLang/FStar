@@ -3,8 +3,8 @@ module FStar.Monotonic.RRef
 open FStar
 open FStar.HyperHeap
 
-open FStar.HyperStack.ST
 open FStar.HyperStack
+open FStar.HyperStack.ST
 
 module HH = FStar.HyperHeap
 module HS = FStar.HyperStack
@@ -19,13 +19,13 @@ let monotonic (a:Type) (b:reln a) =
 (*
  * AR: adding is_eternal_region refinement, since mrefs are allocated using ralloc
  *)
-type rid = r:HH.rid{is_eternal_region r}
+type rid = r:rid{is_eternal_region r}
 
 (*
  * AR: HS.ref, means it is not mm.
  * This along with rid above is essential to justify recall.
  *)
-abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{x.id = r}
+abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:ref a{x.id = r}
 
 (* let haseq_m_rref (r:rid) (a:Type) (b:reln a)  *)
 (*     : Lemma (requires True) *)
@@ -40,7 +40,7 @@ abstract type m_rref (r:rid) (a:Type) (b:reln a) = x:HS.ref a{x.id = r}
 (*
  * AR: the refinement is important here, for as_rref rid was part of the type index
  *)
-val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:HS.ref a{x.id = r})
+val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:ref a{x.id = r})
 let as_hsref #r #a #b x = x
 
 (* val m_contains : #r:rid -> #a:Type -> #b:reln a -> mr:m_rref r a b -> m:t -> GTot bool *)

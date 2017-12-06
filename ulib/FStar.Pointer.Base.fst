@@ -4368,7 +4368,7 @@ let domain_upd (#a:Type) (h:HS.mem) (x:HS.reference a{HS.live_region h x.HS.id})
 
 let ecreate
   (t:typ)
-  (r:HH.rid)
+  (r:HST.rid)
   (s: option (type_of_typ t))
 = let h0 = HST.get () in
   let s = match s with
@@ -4459,6 +4459,8 @@ let read
  (p: pointer value)
 = let h = HST.get () in
   let r = reference_of h p in
+  HST.gst_witness (HST.ref_contains_pred r);
+  HST.gst_witness (HST.region_contains_pred r.HS.id);
   let (| _ , c |) = !r in
   value_of_ovalue value (path_sel c (Pointer?.p p))
 
@@ -4485,6 +4487,8 @@ let owrite
   )))
 = let h0 = HST.get () in
   let r = reference_of h0 b in
+  HST.gst_witness (HST.ref_contains_pred r);
+  HST.gst_witness (HST.region_contains_pred r.HS.id);
   let v0 = !r in
   let (| t , c0 |) = v0 in
   let c1 = path_upd c0 (Pointer?.p b) z in

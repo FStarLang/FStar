@@ -2059,7 +2059,7 @@ val screate
 
 val ecreate
   (t:typ)
-  (r:HH.rid)
+  (r:HST.rid)
   (s: option (type_of_typ t))
 : HST.ST (pointer t)
   (requires (fun h -> HS.is_eternal_region r))
