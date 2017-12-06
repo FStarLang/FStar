@@ -9,29 +9,15 @@ open FStar.Preorder
 
 (* Setting up the preorder for mem *)
 
-(* Get the last component of the rid list *)
-private let rid_last_component (r:HH.rid) :GTot int
-  = let open FStar.List.Tot in
-    let r = HH.reveal r in
-    if length r = 0 then 0
-    else snd (hd r)
-
-private let mem_pred (m:HS.mem) =
-  forall (r:HH.rid).{:pattern (m.h `Map.contains`r)}
-               m.h `Map.contains` r ==> rid_last_component r < m.rid_ctr
-
-(* In a mem, all the contained regions have last component less than the rid counter *)
-let mem0 = m:HS.mem{mem_pred m}
-
 (* Starting the predicates that constitute the preorder *)
 
 (* Eternal regions remain contained *)
-private let eternal_region_pred (m1 m2:mem0) :Type0
+private let eternal_region_pred (m1 m2:mem) :Type0
   = forall (r:HH.rid).{:pattern (HS.is_eternal_region r); (m1.h `Map.contains` r)}
                  (HS.is_eternal_region r /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
 
 (* rid counter increases monotonically *)
-private let rid_ctr_pred (m1 m2:mem0) :Type0 = m1.rid_ctr <= m2.rid_ctr
+private let rid_ctr_pred (m1 m2:mem) :Type0 = m1.rid_ctr <= m2.rid_ctr
 
 (*
  * A region r, that is:
@@ -40,28 +26,28 @@ private let rid_ctr_pred (m1 m2:mem0) :Type0 = m1.rid_ctr <= m2.rid_ctr
  * 
  * remains not contained in m2
  *)
-private let rid_last_component_pred (m1 m2:HS.mem) :Type0
+private let rid_last_component_pred (m1 m2:mem) :Type0
   = forall (r:HH.rid).{:pattern (m1.h `Map.contains` r)}
                  ((~ (m1.h `Map.contains` r)) /\ rid_last_component r < m1.rid_ctr) ==>
 		 (~ (m2.h `Map.contains` r))
 
 (* Predicate for refs *)
-private let eternal_refs_pred (m1 m2:mem0) :Type0
+private let eternal_refs_pred (m1 m2:mem) :Type0
   = forall (a:Type) (rel:preorder a) (r:HS.mreference a rel).
       {:pattern (m1.h `Map.contains` r.id); (HS.is_mm r); (HH.contains_ref r.ref m1.h); (m2.h `Map.contains` r.id)}
       ((not (HS.is_mm r)) /\ HH.contains_ref r.ref m1.h) ==>  //if the ref is not mm, and is contained in m1
       ((not (m2.h `Map.contains` r.id)) \/ (HH.contains_ref r.ref m2.h))  //then, either its region is not contained in m2, or m2 also contains the ref
 
 (* The preorder is the conjunction of above predicates *)
-let mem_rel :relation mem0
-  = fun (m1 m2:mem0) ->
+let mem_rel :relation mem
+  = fun (m1 m2:mem) ->
       eternal_region_pred m1 m2 /\ rid_ctr_pred m1 m2 /\ rid_last_component_pred m1 m2 /\ eternal_refs_pred m1 m2
-let mem_pre :preorder mem0 = mem_rel
+let mem_pre :preorder mem = mem_rel
 
-type mem_predicate = mem0 -> Type0
+type mem_predicate = mem -> Type0
 
 let stable (p:mem_predicate) =
-  forall (h1:mem0) (h2:mem0).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
+  forall (h1:mem) (h2:mem).{:pattern (mem_rel h1 h2)} (p h1 /\ mem_rel h1 h2) ==> p h2
 
 let stable_predicate = p:mem_predicate{stable p}
 
@@ -77,7 +63,7 @@ let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :stabl
 (*
  * We need to witness these predicates for m.tip and HH.root, so that clients get them.
  *)
-type mem = m:mem0{witnessed (region_contains_pred m.tip) /\ witnessed (region_contains_pred HH.root)}
+type mem = m:mem{witnessed (region_contains_pred m.tip) /\ witnessed (region_contains_pred HH.root)}
 
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
 
@@ -527,11 +513,13 @@ val test_stack_with_long_lived: s:reference int -> Stack unit
   (requires (fun h -> contains h s))
   (ensures  (fun h0 _ h1 -> contains h1 s /\ sel h1 s = (sel h0 s) + 1
     /\ modifies (Set.singleton s.id) h0 h1))
+#set-options "--z3rlimit 10"
 let test_stack_with_long_lived s =
   push_frame();
   let _ = test_stack !s in
   s := !s + 1;
   pop_frame()
+#reset-options
 
 val test_heap_code_with_stack_calls: unit -> Heap unit
   (requires (fun h -> heap_only h))

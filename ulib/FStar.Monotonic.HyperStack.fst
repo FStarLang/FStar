@@ -31,19 +31,30 @@ let is_tip (tip:HH.rid) (h:HH.t) =
   /\ tip `is_in` h                                                      //the tip is active
   /\ (forall (r:sid). r `is_in` h <==> r `is_above` tip)                      //any other sid activation is a above (or equal to) the tip
 
+let rid_last_component (r:HH.rid) :GTot int
+  = let open FStar.List.Tot in
+    let r = HH.reveal r in
+    if length r = 0 then 0
+    else snd (hd r)
+
+let rid_ctr_pred (h:HH.t) (n:int) =
+  forall (r:HH.rid).{:pattern (h `Map.contains`r)}
+               h `Map.contains` r ==> rid_last_component r < n
+
 let hh = h:HH.t{HH.root `is_in` h /\ HH.map_invariant h /\ downward_closed h}        //the memory itself, always contains the root region, and the parent of any active region is active
 
 noeq type mem =
   | HS : rid_ctr:int
-       -> h:hh
+       -> h:hh{rid_ctr_pred h rid_ctr}
        -> tip:rid{tip `is_tip` h}                                                   //the id of the current top-most region
        -> mem
 
 let empty_mem (m:HH.t) = 
   let empty_map = Map.restrict (Set.empty) m in 
-  let h = Map.upd empty_map HH.root Heap.emp in 
-  let tip = HH.root in 
-  HS 0 h tip
+  let h = Map.upd empty_map HH.root Heap.emp in
+  let tip = HH.root in
+  assume (rid_last_component HH.root == 0);
+  HS 1 h tip
  
 let test0 (m:mem) (r:rid{r `is_above` m.tip}) = 
     assert (r `is_in` m.h)
