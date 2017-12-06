@@ -409,7 +409,7 @@ let collect_one
       else begin
         if let_open then
            FStar.Errors.log_issue (range_of_lid lid)
-            (Errors.Fatal_ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true)));
+            (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "Module not found: %s" (string_of_lid lid true)));
         false
       end
   in
@@ -419,7 +419,7 @@ let collect_one
     let r = enter_namespace original_map working_map key in
     if not r then
         FStar.Errors.log_issue (range_of_lid lid)
-          (Errors.Fatal_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
+          (Errors.Warning_ModuleOrFileNotFoundWarning, (Util.format1 "No modules in namespace %s and no file with \
             that name either" (string_of_lid lid true)))
   in
 
@@ -446,7 +446,7 @@ in
         true
     | None ->
         FStar.Errors.log_issue (range_of_lid lid)
-          (Errors.Fatal_ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s\n" alias));
+          (Errors.Warning_ModuleOrFileNotFoundWarning,  (Util.format1 "module not found in search path: %s\n" alias));
         false
   in
 

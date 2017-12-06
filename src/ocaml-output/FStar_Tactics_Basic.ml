@@ -453,8 +453,8 @@ let check_valid_goal: FStar_Tactics_Types.goal -> Prims.unit =
             FStar_Util.format1
               "The following goal is ill-formed. Keeping calm and carrying on...\n<%s>\n\n"
               uu____1042 in
-          (FStar_Errors.IllFormedGoal, uu____1041) in
-        FStar_Errors.maybe_fatal_error
+          (FStar_Errors.Warning_IllFormedGoal, uu____1041) in
+        FStar_Errors.log_issue
           (g.FStar_Tactics_Types.goal_ty).FStar_Syntax_Syntax.pos uu____1036);
        (let uu____1043 =
           let uu____1044 = FStar_ST.op_Bang nwarn in

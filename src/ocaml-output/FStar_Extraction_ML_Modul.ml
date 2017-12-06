@@ -186,8 +186,8 @@ let rec extract_meta:
               FStar_Util.format1
                 "Unrecognized attribute (%s), valid attributes are `c_inline`, `substitute`, and `gc`.\n"
                 uu____262 in
-            (FStar_Errors.UnrecognizedAttribute, uu____261) in
-          FStar_Errors.maybe_fatal_error a.FStar_Syntax_Syntax.pos uu____256);
+            (FStar_Errors.Warning_UnrecognizedAttribute, uu____261) in
+          FStar_Errors.log_issue a.FStar_Syntax_Syntax.pos uu____256);
          FStar_Pervasives_Native.None)
 let extract_metadata:
   FStar_Syntax_Syntax.term Prims.list ->

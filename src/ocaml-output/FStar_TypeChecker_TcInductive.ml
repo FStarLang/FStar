@@ -150,7 +150,7 @@ let tc_data:
                   then (env, [], FStar_Syntax_Syntax.U_zero)
                   else
                     FStar_Errors.raise_error
-                      (FStar_Errors.UnexpectedDataConstructor,
+                      (FStar_Errors.Fatal_UnexpectedDataConstructor,
                         "Unexpected data constructor")
                       se.FStar_Syntax_Syntax.sigrng in
             (match uu____275 with
@@ -230,7 +230,7 @@ let tc_data:
                                            FStar_Util.format2
                                              "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
                                              uu____712 uu____713 in
-                                         (FStar_Errors.WrongResultTypeAfterConstrutor,
+                                         (FStar_Errors.Fatal_WrongResultTypeAfterConstrutor,
                                            uu____711) in
                                        FStar_Errors.raise_error uu____706
                                          se.FStar_Syntax_Syntax.sigrng);
@@ -261,7 +261,7 @@ let tc_data:
                                                  FStar_Util.format2
                                                    "Expected a constructor of type %s; got %s"
                                                    uu____768 uu____769 in
-                                               (FStar_Errors.UnexpectedConstructorType,
+                                               (FStar_Errors.Fatal_UnexpectedConstructorType,
                                                  uu____767) in
                                              FStar_Errors.raise_error
                                                uu____762
@@ -1916,7 +1916,7 @@ let check_inductive_well_typedness:
                 then
                   let uu____5124 = FStar_TypeChecker_Env.get_range env in
                   FStar_Errors.raise_error
-                    (FStar_Errors.NonInductiveInMutuallyDefinedType,
+                    (FStar_Errors.Fatal_NonInductiveInMutuallyDefinedType,
                       "Mutually defined type contains a non-inductive element")
                     uu____5124
                 else ());
@@ -2015,7 +2015,7 @@ let check_inductive_well_typedness:
                                                  FStar_Util.format2
                                                    "Expected an inductive with type %s; got %s"
                                                    uu____5445 uu____5446 in
-                                               (FStar_Errors.UnexpectedInductivetype,
+                                               (FStar_Errors.Fatal_UnexpectedInductivetype,
                                                  uu____5444) in
                                              FStar_Errors.raise_error
                                                uu____5439

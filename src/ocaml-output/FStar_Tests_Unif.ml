@@ -45,7 +45,8 @@ let guard_eq:
                 FStar_Util.format3
                   "Test %s failed:\n\tExpected guard %s;\n\tGot guard      %s\n"
                   uu____47 uu____48 uu____49 in
-              FStar_Errors.raise_error (FStar_Errors.UnexpectedGuard, msg)
+              FStar_Errors.raise_error
+                (FStar_Errors.Fatal_UnexpectedGuard, msg)
                 FStar_Range.dummyRange
             else ()
 let unify:

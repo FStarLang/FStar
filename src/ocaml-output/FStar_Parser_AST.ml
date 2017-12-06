@@ -920,7 +920,7 @@ let check_id: FStar_Ident.ident -> Prims.unit =
            FStar_Util.format1
              "Invalid identifer '%s'; expected a symbol that begins with a lower-case character"
              id1.FStar_Ident.idText in
-         (FStar_Errors.InvalidIdentifier, uu____3560) in
+         (FStar_Errors.Fatal_InvalidIdentifier, uu____3560) in
        FStar_Errors.raise_error uu____3555 id1.FStar_Ident.idRange)
 let at_most_one:
   'Auu____3565 .
@@ -940,7 +940,7 @@ let at_most_one:
               let uu____3593 =
                 FStar_Util.format1
                   "At most one %s is allowed on declarations" s in
-              (FStar_Errors.MoreThanOneDeclaration, uu____3593) in
+              (FStar_Errors.Fatal_MoreThanOneDeclaration, uu____3593) in
             FStar_Errors.raise_error uu____3588 r
 let mk_decl: decl' -> FStar_Range.range -> decoration Prims.list -> decl =
   fun d  ->
@@ -1191,8 +1191,8 @@ let focusBranches:
         FStar_Util.for_some FStar_Pervasives_Native.fst branches in
       if should_filter
       then
-        (FStar_Errors.maybe_fatal_error r
-           (FStar_Errors.Filtered, "Focusing on only some cases");
+        (FStar_Errors.log_issue r
+           (FStar_Errors.Warning_Filtered, "Focusing on only some cases");
          (let focussed =
             let uu____4297 =
               FStar_List.filter FStar_Pervasives_Native.fst branches in
@@ -1216,8 +1216,8 @@ let focusLetBindings:
       let should_filter = FStar_Util.for_some FStar_Pervasives_Native.fst lbs in
       if should_filter
       then
-        (FStar_Errors.maybe_fatal_error r
-           (FStar_Errors.Filtered,
+        (FStar_Errors.log_issue r
+           (FStar_Errors.Warning_Filtered,
              "Focusing on only some cases in this (mutually) recursive definition");
          FStar_List.map
            (fun uu____4554  ->
@@ -1375,7 +1375,7 @@ let rec as_mlist:
                (match d.d with
                 | TopLevelModule m' ->
                     FStar_Errors.raise_error
-                      (FStar_Errors.UnexpectedModuleDeclaration,
+                      (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
                         "Unexpected module declaration") d.drange
                 | uu____4934 -> as_mlist ((m_name, m_decl), (d :: cur1)) ds1))
 let as_frag:
@@ -1408,7 +1408,7 @@ let as_frag:
                            doc = uu____5016; quals = uu____5017;
                            attrs = uu____5018;_} ->
                            FStar_Errors.raise_error
-                             (FStar_Errors.UnexpectedModuleDeclaration,
+                             (FStar_Errors.Fatal_UnexpectedModuleDeclaration,
                                "Unexpected module declaration") r
                        | uu____5021 -> ()) ds2;
                   FStar_Util.Inr ds2))
@@ -1442,7 +1442,7 @@ let compile_op:
           | 46 -> "Dot"
           | c ->
               FStar_Errors.raise_error
-                (FStar_Errors.UnexpectedOperatorSymbol,
+                (FStar_Errors.Fatal_UnexpectedOperatorSymbol,
                   (Prims.strcat "Unexpected operator symbol: '"
                      (Prims.strcat (FStar_Util.string_of_char c) "'"))) r in
         match s with

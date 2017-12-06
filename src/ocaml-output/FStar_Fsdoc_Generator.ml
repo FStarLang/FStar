@@ -259,7 +259,7 @@ let document_toplevel:
                (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None))
       | uu____1152 ->
           FStar_Errors.raise_err
-            (FStar_Errors.NotTopLevelModule, "Not Top-level Module")
+            (FStar_Errors.Fatal_NotTopLevelModule, "Not Top-level Module")
 let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
   fun m  ->
     let uu____1164 =
@@ -304,7 +304,7 @@ let document_module: FStar_Parser_AST.modul -> FStar_Ident.lid =
                let uu____1275 =
                  FStar_Util.format1 "No singleton toplevel in module %s"
                    name.FStar_Ident.str in
-               (FStar_Errors.NonSingletonTopLevel, uu____1275) in
+               (FStar_Errors.Fatal_NonSingletonTopLevel, uu____1275) in
              FStar_Errors.raise_err uu____1270)
 let generate: Prims.string Prims.list -> Prims.unit =
   fun files  ->

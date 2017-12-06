@@ -84,7 +84,7 @@ let err_uninst:
                   FStar_Util.format4
                     "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated, but got %s"
                     uu____147 uu____148 uu____151 uu____152 in
-                (FStar_Errors.Uninstantiated, uu____146) in
+                (FStar_Errors.Fatal_Uninstantiated, uu____146) in
               fail t.FStar_Syntax_Syntax.pos uu____141
 let err_ill_typed_application:
   'Auu____159 'Auu____160 .
@@ -115,7 +115,7 @@ let err_ill_typed_application:
               FStar_Util.format3
                 "Ill-typed application: application is %s \n remaining args are %s\nml type of head is %s\n"
                 uu____195 uu____196 uu____224 in
-            ((FStar_Errors.IllTyped "Application"), uu____194) in
+            (FStar_Errors.Fatal_IllTyped, uu____194) in
           fail t.FStar_Syntax_Syntax.pos uu____189
 let err_value_restriction:
   'Auu____227 .
@@ -129,7 +129,7 @@ let err_value_restriction:
         FStar_Util.format2
           "Refusing to generalize because of the value restriction: (%s) %s"
           uu____242 uu____243 in
-      (FStar_Errors.ValueRestriction, uu____241) in
+      (FStar_Errors.Fatal_ValueRestriction, uu____241) in
     fail t.FStar_Syntax_Syntax.pos uu____236
 let err_unexpected_eff:
   'Auu____248 .
@@ -147,7 +147,7 @@ let err_unexpected_eff:
               "for expression %s, Expected effect %s; got effect %s"
               uu____271 (FStar_Extraction_ML_Util.eff_to_string f0)
               (FStar_Extraction_ML_Util.eff_to_string f1) in
-          (FStar_Errors.UnexpectedEffect, uu____270) in
+          (FStar_Errors.Fatal_UnexpectedEffect, uu____270) in
         fail t.FStar_Syntax_Syntax.pos uu____265
 let effect_as_etag:
   FStar_Extraction_ML_UEnv.env ->

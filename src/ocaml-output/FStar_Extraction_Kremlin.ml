@@ -998,8 +998,10 @@ and translate_let:
                                 FStar_Util.format2
                                   "Writing a stub for %s (%s)\n"
                                   (FStar_Pervasives_Native.snd name1) msg in
-                              (FStar_Errors.FunctionNotExtacted, uu____3552) in
-                            FStar_Errors.maybe_fatal_err uu____3547);
+                              (FStar_Errors.Warning_FunctionNotExtacted,
+                                uu____3552) in
+                            FStar_Errors.log_issue FStar_Range.dummyRange
+                              uu____3547);
                            (let msg1 =
                               Prims.strcat
                                 "This function was not extracted:\n" msg in
@@ -1090,8 +1092,10 @@ and translate_let:
                                 FStar_Util.format2
                                   "Writing a stub for %s (%s)\n"
                                   (FStar_Pervasives_Native.snd name1) msg in
-                              (FStar_Errors.FunctionNotExtacted, uu____3742) in
-                            FStar_Errors.maybe_fatal_err uu____3737);
+                              (FStar_Errors.Warning_FunctionNotExtacted,
+                                uu____3742) in
+                            FStar_Errors.log_issue FStar_Range.dummyRange
+                              uu____3737);
                            (let msg1 =
                               Prims.strcat
                                 "This function was not extracted:\n" msg in
@@ -1125,8 +1129,9 @@ and translate_let:
                          FStar_Util.format2
                            "Not translating definition for %s (%s)\n"
                            (FStar_Pervasives_Native.snd name1) uu____3816 in
-                       (FStar_Errors.DefinitionNotTranslated, uu____3815) in
-                     FStar_Errors.maybe_fatal_err uu____3810);
+                       (FStar_Errors.Warning_DefinitionNotTranslated,
+                         uu____3815) in
+                     FStar_Errors.log_issue FStar_Range.dummyRange uu____3810);
                     FStar_Pervasives_Native.Some
                       (DGlobal
                          (flags2, name1, (FStar_List.length tvars), t1, EAny))))
@@ -1139,8 +1144,8 @@ and translate_let:
                   let uu____3840 =
                     FStar_Util.format1 "Not translating definition for %s\n"
                       name in
-                  (FStar_Errors.DefinitionNotTranslated, uu____3840) in
-                FStar_Errors.maybe_fatal_err uu____3835);
+                  (FStar_Errors.Warning_DefinitionNotTranslated, uu____3840) in
+                FStar_Errors.log_issue FStar_Range.dummyRange uu____3835);
                (match ts with
                 | FStar_Pervasives_Native.Some (idents,t) ->
                     let uu____3848 =
@@ -1224,8 +1229,8 @@ and translate_type_decl:
               let uu____4308 =
                 FStar_Util.format1 "Not translating type definition for %s\n"
                   name in
-              (FStar_Errors.DefinitionNotTranslated, uu____4308) in
-            FStar_Errors.maybe_fatal_err uu____4303);
+              (FStar_Errors.Warning_DefinitionNotTranslated, uu____4308) in
+            FStar_Errors.log_issue FStar_Range.dummyRange uu____4303);
            FStar_Pervasives_Native.None)
 and translate_type: env -> FStar_Extraction_ML_Syntax.mlty -> typ =
   fun env  ->

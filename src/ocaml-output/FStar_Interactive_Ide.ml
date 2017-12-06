@@ -123,8 +123,8 @@ let with_captured_errors':
                           "Please file a bug report, ideally with a "
                           "minimized version of the program that triggered the error.")))) in
           ((let uu____90 = FStar_TypeChecker_Env.get_range env in
-            FStar_Errors.maybe_fatal_error uu____90
-              (FStar_Errors.AssertionFailure, msg1));
+            FStar_Errors.log_issue uu____90
+              (FStar_Errors.Error_IDEAssertionFailure, msg1));
            FStar_Pervasives_Native.None)
       | FStar_Errors.Error (e,msg,r) ->
           (FStar_TypeChecker_Err.add_errors env [(e, msg, r)];
@@ -673,7 +673,7 @@ let deps_and_repl_ld_tasks_of_our_file:
                          let uu____1817 =
                            FStar_Util.format1
                              "Expecting an interface, got %s" intf in
-                         (FStar_Errors.MissingInterface, uu____1817) in
+                         (FStar_Errors.Fatal_MissingInterface, uu____1817) in
                        FStar_Errors.raise_err uu____1812
                      else ());
                     (let uu____1820 =
@@ -686,7 +686,8 @@ let deps_and_repl_ld_tasks_of_our_file:
                          let uu____1827 =
                            FStar_Util.format1
                              "Expecting an implementation, got %s" impl in
-                         (FStar_Errors.MissingImplementation, uu____1827) in
+                         (FStar_Errors.Fatal_MissingImplementation,
+                           uu____1827) in
                        FStar_Errors.raise_err uu____1822
                      else ());
                     [LDInterfaceOfCurrentFile (dummy_tf_of_fname intf)])
@@ -697,7 +698,8 @@ let deps_and_repl_ld_tasks_of_our_file:
                    ((let uu____1836 =
                        let uu____1841 =
                          FStar_Util.format2 message our_mod_name mods_str in
-                       (FStar_Errors.TooManyOrTooFewFileMatch, uu____1841) in
+                       (FStar_Errors.Fatal_TooManyOrTooFewFileMatch,
+                         uu____1841) in
                      FStar_Errors.raise_err uu____1836);
                     []) in
              let tasks = repl_ld_tasks_of_deps real_deps intf_tasks in
@@ -2087,7 +2089,8 @@ let rephrase_dependency_error: FStar_Errors.issue -> FStar_Errors.issue =
     {
       FStar_Errors.issue_message = uu____4967;
       FStar_Errors.issue_level = (uu___388_4966.FStar_Errors.issue_level);
-      FStar_Errors.issue_range = (uu___388_4966.FStar_Errors.issue_range)
+      FStar_Errors.issue_range = (uu___388_4966.FStar_Errors.issue_range);
+      FStar_Errors.issue_number = (uu___388_4966.FStar_Errors.issue_number)
     }
 let run_push_without_deps:
   'Auu____4971 .
@@ -3271,8 +3274,8 @@ let interactive_mode: Prims.string -> Prims.unit =
        FStar_Option.isSome uu____8699 in
      if uu____8698
      then
-       FStar_Errors.maybe_fatal_error FStar_Range.dummyRange
-         (FStar_Errors.IDEIgnoreCodeGen, "--ide: ignoring --codegen")
+       FStar_Errors.log_issue FStar_Range.dummyRange
+         (FStar_Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen")
      else ());
     (let uu____8703 = FStar_Options.trace_error () in
      if uu____8703

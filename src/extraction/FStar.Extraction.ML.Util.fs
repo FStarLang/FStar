@@ -362,7 +362,7 @@ module RD = FStar.Reflection.Data
 
 exception Fatal_CallNotImplemented of string // reason why it is not implemented
 let not_implemented_warning r t msg =
-    Errors.log_issue r (Errors.Fatal_CallNotImplemented, BU.format2 ". Tactic %s will not run natively because %s.\n" t msg)
+    Errors.log_issue r (Errors.Warning_CallNotImplemented, BU.format2 ". Tactic %s will not run natively because %s.\n" t msg)
 
 type emb_decl =
     | Embed

@@ -88,7 +88,7 @@ let check_guard:
                    (FStar_Syntax_Print.binders_to_string ", ") in
                FStar_Util.format2 "Guard has free variables (%s): %s" msg
                  uu____129 in
-             ((FStar_Errors.FreeVariables "in guard"), uu____128) in
+             (FStar_Errors.Fatal_FreeVariables, uu____128) in
            FStar_Errors.raise_err uu____123)
 let check_term:
   Prims.string ->
@@ -114,7 +114,7 @@ let check_term:
                    (FStar_Syntax_Print.binders_to_string ", ") in
                FStar_Util.format3 "Term <%s> has free variables (%s): %s"
                  uu____162 msg uu____163 in
-             ((FStar_Errors.FreeVariables "in term"), uu____161) in
+             (FStar_Errors.Fatal_FreeVariables, uu____161) in
            FStar_Errors.raise_err uu____156)
 let apply_guard:
   FStar_TypeChecker_Env.guard_t ->
@@ -4692,8 +4692,7 @@ and solve_t': FStar_TypeChecker_Env.env -> tprob -> worklist -> solution =
                                  FStar_Util.format3
                                    "Impossible: ill-typed application %s : %s\n\t%s"
                                    uu____14562 uu____14563 uu____14564 in
-                               ((FStar_Errors.IllTyped "Application"),
-                                 uu____14561) in
+                               (FStar_Errors.Fatal_IllTyped, uu____14561) in
                              FStar_Errors.raise_error uu____14556
                                t1.FStar_Syntax_Syntax.pos in
                        let uu____14571 = elim k_uv ps in
@@ -7197,7 +7196,7 @@ and solve_c:
                        FStar_Util.format2
                          "Got effects %s and %s, expected normalized effects"
                          uu____20489 uu____20490 in
-                     (FStar_Errors.ExpectNormalizedEffect, uu____20488) in
+                     (FStar_Errors.Fatal_ExpectNormalizedEffect, uu____20488) in
                    FStar_Errors.raise_error uu____20483
                      env.FStar_TypeChecker_Env.range in
              match uu____20367 with
@@ -8054,7 +8053,7 @@ let subtype_fail:
           let uu____21506 =
             FStar_TypeChecker_Err.basic_type_error env
               (FStar_Pervasives_Native.Some e) t2 t1 in
-          FStar_Errors.maybe_fatal_error uu____21505 uu____21506
+          FStar_Errors.log_issue uu____21505 uu____21506
 let sub_comp:
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.comp ->
@@ -8112,7 +8111,7 @@ let solve_universe_inequalities':
                    let uu____21620 = FStar_Syntax_Print.univ_to_string u2 in
                    FStar_Util.format2 "Universe %s and %s are incompatible"
                      uu____21619 uu____21620 in
-                 (FStar_Errors.IncompatibleUniverse, uu____21618) in
+                 (FStar_Errors.Fatal_IncompatibleUniverse, uu____21618) in
                let uu____21621 = FStar_TypeChecker_Env.get_range env in
                FStar_Errors.raise_error uu____21613 uu____21621) in
             let equiv1 v1 v' =
@@ -8249,7 +8248,7 @@ let solve_universe_inequalities':
                 else ());
                (let uu____21910 = FStar_TypeChecker_Env.get_range env in
                 FStar_Errors.raise_error
-                  (FStar_Errors.FailToSolveUniverseInEquality,
+                  (FStar_Errors.Fatal_FailToSolveUniverseInEquality,
                     "Failed to solve universe inequalities for inductives")
                   uu____21910))
 let solve_universe_inequalities:
@@ -8276,7 +8275,8 @@ let rec solve_deferred_constraints:
         | (d,s) ->
             let msg = explain env d s in
             FStar_Errors.raise_error
-              (FStar_Errors.ErrorInSolveDeferredConstraints, msg) (p_loc d) in
+              (FStar_Errors.Fatal_ErrorInSolveDeferredConstraints, msg)
+              (p_loc d) in
       let wl = wl_of_guard env g.FStar_TypeChecker_Env.deferred in
       (let uu____21972 =
          FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
@@ -8529,7 +8529,7 @@ let discharge_guard_no_smt:
       | FStar_Pervasives_Native.None  ->
           let uu____22371 = FStar_TypeChecker_Env.get_range env in
           FStar_Errors.raise_error
-            (FStar_Errors.ExpectTrivialPreCondition,
+            (FStar_Errors.Fatal_ExpectTrivialPreCondition,
               "Expected a trivial pre-condition") uu____22371
 let discharge_guard:
   FStar_TypeChecker_Env.env ->
@@ -8899,7 +8899,7 @@ let force_trivial_guard:
               FStar_Util.format2
                 "Failed to resolve implicit argument of type '%s' introduced in %s"
                 uu____22734 uu____22735 in
-            (FStar_Errors.FailToResolveImplicitArgument, uu____22733) in
+            (FStar_Errors.Fatal_FailToResolveImplicitArgument, uu____22733) in
           FStar_Errors.raise_error uu____22728 r
 let universe_inequality:
   FStar_Syntax_Syntax.universe ->

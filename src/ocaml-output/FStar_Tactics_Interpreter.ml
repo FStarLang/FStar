@@ -1082,7 +1082,7 @@ and unembed_tactic_0:
                      FStar_Util.format1
                        "Tactic got stuck! Please file a bug report with a minimal reproduction of this issue.\n%s"
                        uu____2443 in
-                   (FStar_Errors.TacticGotStuck, uu____2442) in
+                   (FStar_Errors.Fatal_TacticGotStuck, uu____2442) in
                  FStar_Errors.raise_error uu____2437
                    (proof_state.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.range)))
 and unembed_tactic_0':
@@ -1113,7 +1113,7 @@ let report_implicits:
                    FStar_Util.format3
                      "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
                      uu____2534 uu____2535 r in
-                 (FStar_Errors.UninstantiatedUnificationVarInTactic,
+                 (FStar_Errors.Fatal_UninstantiatedUnificationVarInTactic,
                    uu____2533, rng)) is in
       match errs with
       | [] -> ()
@@ -1299,7 +1299,7 @@ let run_tactic_on_typ:
                           (let uu____2806 =
                              let uu____2811 =
                                FStar_Util.format1 "user tactic failed: %s" s in
-                             (FStar_Errors.ArgumentLengthMismatch,
+                             (FStar_Errors.Fatal_ArgumentLengthMismatch,
                                uu____2811) in
                            FStar_Errors.raise_error uu____2806
                              typ.FStar_Syntax_Syntax.pos)))))))
@@ -1632,6 +1632,6 @@ let synth:
              if uu____4349
              then
                FStar_Errors.raise_error
-                 (FStar_Errors.OpenGoalsInSynthesis,
+                 (FStar_Errors.Fatal_OpenGoalsInSynthesis,
                    "synthesis left open goals") typ.FStar_Syntax_Syntax.pos
              else w)

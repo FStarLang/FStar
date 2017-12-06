@@ -33,7 +33,7 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise_err (ModuleOrFileNotFound, FStar_Util.format1 "Unable to find file: %s\n" filename)
+      raise_err (Fatal_ModuleOrFileNotFound, FStar_Util.format1 "Unable to find file: %s\n" filename)
 
 let vfs_entries : (U.time * string) U.smap = U.smap_create (Z.of_int 1)
 
@@ -60,7 +60,7 @@ let read_file (filename:string) =
       if debug then U.print1 "Opening file %s\n" filename;
       filename, BatFile.with_file_in filename BatIO.read_all
     with e ->
-      raise_err (UnableToReadFile, U.format1 "Unable to read file %s\n" filename)
+      raise_err (Fatal_UnableToReadFile, U.format1 "Unable to read file %s\n" filename)
 
 let fs_extensions = [".fs"; ".fsi"]
 let fst_extensions = [".fst"; ".fsti"]
@@ -75,7 +75,7 @@ let has_extension file extensions =
 let check_extension fn =
   if (not (has_extension fn (valid_extensions ()))) then
     let message = FStar_Util.format1 "Unrecognized extension '%s'" fn in
-    raise_err (UnrecognizedExtension, if has_extension fn fs_extensions then
+    raise_err (Fatal_UnrecognizedExtension, if has_extension fn fs_extensions then
                   message ^ " (pass --MLish to process .fs and .fsi files)"
                 else message)
 
@@ -98,7 +98,7 @@ let parse fn =
         check_extension f;
         let f', contents = read_file f in
         (try create contents f' 1 0, f'
-         with _ -> raise_err (InvalidUTF8Encoding, FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f'))
+         with _ -> raise_err (Fatal_InvalidUTF8Encoding, FStar_Util.format1 "File %s has invalid UTF-8 encoding.\n" f'))
     | Toplevel s
     | Fragment s ->
       create s.frag_text "<input>" (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>"
@@ -137,7 +137,7 @@ let parse fn =
     | e ->
       let pos = FStar_Parser_Util.pos_of_lexpos lexbuf.cur_p in
       let r = FStar_Range.mk_range filename pos pos in
-      ParseError (SyntaxError, "Syntax error: " ^ (Printexc.to_string e), r)
+      ParseError (Fatal_SyntaxError, "Syntax error: " ^ (Printexc.to_string e), r)
 
 (** Parsing of command-line error/warning/silent flags. *)
 let parse_warn_error s =

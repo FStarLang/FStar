@@ -5299,9 +5299,8 @@ let term_to_string:
                   let uu____18470 = FStar_Util.message_of_exn e in
                   FStar_Util.format1 "Normalization failed with error %s\n"
                     uu____18470 in
-                (FStar_Errors.NormalizationFailure, uu____18469) in
-              FStar_Errors.maybe_fatal_error t.FStar_Syntax_Syntax.pos
-                uu____18464);
+                (FStar_Errors.Warning_NormalizationFailure, uu____18469) in
+              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____18464);
              t) in
       FStar_Syntax_Print.term_to_string t1
 let comp_to_string:
@@ -5319,9 +5318,8 @@ let comp_to_string:
                   let uu____18500 = FStar_Util.message_of_exn e in
                   FStar_Util.format1 "Normalization failed with error %s\n"
                     uu____18500 in
-                (FStar_Errors.NormalizationFailure, uu____18499) in
-              FStar_Errors.maybe_fatal_error c.FStar_Syntax_Syntax.pos
-                uu____18494);
+                (FStar_Errors.Warning_NormalizationFailure, uu____18499) in
+              FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu____18494);
              c) in
       FStar_Syntax_Print.comp_to_string c1
 let normalize_refinement:

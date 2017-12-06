@@ -689,15 +689,16 @@ let rec uncurry_mlty_fun:
         let uu____1409 = uncurry_mlty_fun b in
         (match uu____1409 with | (args,res) -> ((a :: args), res))
     | uu____1430 -> ([], t)
-exception CallNotImplemented of Prims.string
-let uu___is_CallNotImplemented: Prims.exn -> Prims.bool =
+exception Fatal_CallNotImplemented of Prims.string
+let uu___is_Fatal_CallNotImplemented: Prims.exn -> Prims.bool =
   fun projectee  ->
     match projectee with
-    | CallNotImplemented uu____1439 -> true
+    | Fatal_CallNotImplemented uu____1439 -> true
     | uu____1440 -> false
-let __proj__CallNotImplemented__item__uu___: Prims.exn -> Prims.string =
+let __proj__Fatal_CallNotImplemented__item__uu___: Prims.exn -> Prims.string
+  =
   fun projectee  ->
-    match projectee with | CallNotImplemented uu____1447 -> uu____1447
+    match projectee with | Fatal_CallNotImplemented uu____1447 -> uu____1447
 let not_implemented_warning:
   FStar_Range.range -> Prims.string -> Prims.string -> Prims.unit =
   fun r  ->
@@ -707,8 +708,8 @@ let not_implemented_warning:
           let uu____1462 =
             FStar_Util.format2
               ". Tactic %s will not run natively because %s.\n" t msg in
-          (FStar_Errors.CallNotImplemented, uu____1462) in
-        FStar_Errors.maybe_fatal_error r uu____1457
+          (FStar_Errors.Warning_CallNotImplemented, uu____1462) in
+        FStar_Errors.log_issue r uu____1457
 type emb_decl =
   | Embed
   | Unembed[@@deriving show]
@@ -825,7 +826,7 @@ let mk_tactic_unembedding:
               FStar_Util.format1
                 "Unembedding not defined for tactics of %s arguments\n"
                 uu____1578 in
-            CallNotImplemented uu____1577 in
+            Fatal_CallNotImplemented uu____1577 in
           FStar_Exn.raise uu____1576 in
     FStar_Extraction_ML_Syntax.MLE_Fun
       ([(tac_arg, FStar_Extraction_ML_Syntax.MLTY_Top);
@@ -933,9 +934,10 @@ let rec mk_tac_param_type:
                       Prims.strcat
                         "Type term not defined for higher-order type"
                         uu____1737 in
-                    CallNotImplemented uu____1736 in
+                    Fatal_CallNotImplemented uu____1736 in
                   FStar_Exn.raise uu____1735)
-         | uu____1739 -> FStar_Exn.raise (CallNotImplemented "Impossible\n"))
+         | uu____1739 ->
+             FStar_Exn.raise (Fatal_CallNotImplemented "Impossible\n"))
     | uu____1740 ->
         let uu____1741 =
           let uu____1742 =
@@ -943,7 +945,7 @@ let rec mk_tac_param_type:
               let uu____1744 = FStar_Syntax_Subst.compress t in
               FStar_Syntax_Print.term_to_string uu____1744 in
             Prims.strcat "Type term not defined for " uu____1743 in
-          CallNotImplemented uu____1742 in
+          Fatal_CallNotImplemented uu____1742 in
         FStar_Exn.raise uu____1741
 let rec mk_tac_embedding_path:
   emb_decl -> FStar_Syntax_Syntax.term -> FStar_Extraction_ML_Syntax.mlexpr'
@@ -1045,7 +1047,7 @@ let rec mk_tac_embedding_path:
                          Prims.strcat
                            "Embedding not defined for higher-order type "
                            uu____1907 in
-                       CallNotImplemented uu____1906 in
+                       Fatal_CallNotImplemented uu____1906 in
                      FStar_Exn.raise uu____1905 in
                (match uu____1801 with
                 | (ht,hargs,type_arg,is_tactic) ->
@@ -1058,7 +1060,7 @@ let rec mk_tac_embedding_path:
                       (match m with
                        | Embed  ->
                            FStar_Exn.raise
-                             (CallNotImplemented
+                             (Fatal_CallNotImplemented
                                 "Embedding not defined for tactic type\n")
                        | Unembed  -> mk_tactic_unembedding hargs1)
                     else
@@ -1074,7 +1076,7 @@ let rec mk_tac_embedding_path:
                          (uu____1940, uu____1942) in
                        FStar_Extraction_ML_Syntax.MLE_App uu____1933))
            | uu____1947 ->
-               FStar_Exn.raise (CallNotImplemented "Impossible\n"))
+               FStar_Exn.raise (Fatal_CallNotImplemented "Impossible\n"))
       | uu____1948 ->
           let uu____1949 =
             let uu____1950 =
@@ -1082,7 +1084,7 @@ let rec mk_tac_embedding_path:
                 let uu____1952 = FStar_Syntax_Subst.compress t in
                 FStar_Syntax_Print.term_to_string uu____1952 in
               Prims.strcat "Embedding not defined for type " uu____1951 in
-            CallNotImplemented uu____1950 in
+            Fatal_CallNotImplemented uu____1950 in
           FStar_Exn.raise uu____1949
 let mk_interpretation_fun:
   'Auu____1958 .
@@ -1166,7 +1168,7 @@ let mk_interpretation_fun:
                  ([("psc", FStar_Extraction_ML_Syntax.MLTY_Top);
                   ("args", FStar_Extraction_ML_Syntax.MLTY_Top)], app))
           with
-          | CallNotImplemented msg ->
+          | Fatal_CallNotImplemented msg ->
               ((let uu____2136 = FStar_Ident.string_of_lid tac_lid in
                 not_implemented_warning t.FStar_Syntax_Syntax.pos uu____2136
                   msg);

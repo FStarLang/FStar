@@ -8,7 +8,7 @@ let report:
     fun errs  ->
       let uu____17 = FStar_TypeChecker_Env.get_range env in
       let uu____18 = FStar_TypeChecker_Err.failed_to_prove_specification errs in
-      FStar_Errors.maybe_fatal_error uu____17 uu____18
+      FStar_Errors.log_issue uu____17 uu____18
 let is_type: FStar_Syntax_Syntax.term -> Prims.bool =
   fun t  ->
     let uu____26 =
@@ -138,8 +138,8 @@ let check_uvars: FStar_Range.range -> FStar_Syntax_Syntax.typ -> Prims.unit =
               FStar_Util.format2
                 "Unconstrained unification variables %s in type signature %s; please add an annotation"
                 us uu____398 in
-            (FStar_Errors.UncontrainedUnificationVar, uu____397) in
-          FStar_Errors.maybe_fatal_error r uu____392);
+            (FStar_Errors.Error_UncontrainedUnificationVar, uu____397) in
+          FStar_Errors.log_issue r uu____392);
          FStar_Options.pop ())
       else ()
 let extract_let_rec_annotation:
@@ -283,7 +283,7 @@ let extract_let_rec_annotation:
                                   FStar_Util.format1
                                     "Expected a 'let rec' to be annotated with a value type; got a computation type %s"
                                     uu____1003 in
-                                (FStar_Errors.UnexpectedComputationTypeForLetRec,
+                                (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
                                   uu____1002) in
                               FStar_Errors.raise_error uu____997 rng)
                        | FStar_Util.Inl t3 -> t3 in
@@ -504,7 +504,7 @@ let pat_as_exp:
                             | ([],[]) -> []
                             | ([],uu____2246::uu____2247) ->
                                 FStar_Errors.raise_error
-                                  (FStar_Errors.TooManyPatternArguments,
+                                  (FStar_Errors.Fatal_TooManyPatternArguments,
                                     "Too many pattern arguments")
                                   (FStar_Ident.range_of_lid
                                      (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
@@ -543,7 +543,7 @@ let pat_as_exp:
                                                      FStar_Util.format1
                                                        "Insufficient pattern arguments (%s)"
                                                        uu____2423 in
-                                                   (FStar_Errors.InsufficientPatternArguments,
+                                                   (FStar_Errors.Fatal_InsufficientPatternArguments,
                                                      uu____2422) in
                                                  FStar_Errors.raise_error
                                                    uu____2417
@@ -1395,7 +1395,7 @@ let bind:
                                (let uu____4743 =
                                   FStar_TypeChecker_Env.get_range env in
                                 FStar_Errors.raise_error
-                                  (FStar_Errors.NonTrivialPreConditionInPrims,
+                                  (FStar_Errors.Fatal_NonTrivialPreConditionInPrims,
                                     "Non-trivial pre-conditions very early in prims, even before we have defined the PURE monad")
                                   uu____4743))
                           else
@@ -2765,7 +2765,7 @@ let pure_or_ghost_pre_and_post:
                         FStar_Util.format1
                           "Effect constructor is not fully applied; got %s"
                           uu____6373 in
-                      (FStar_Errors.EffectConstructorNotFullyApplied,
+                      (FStar_Errors.Fatal_EffectConstructorNotFullyApplied,
                         uu____6372) in
                     FStar_Errors.raise_error uu____6367
                       comp.FStar_Syntax_Syntax.pos)
@@ -2986,7 +2986,8 @@ let maybe_instantiate:
                        FStar_Util.format3
                          "Expected a term with %s implicit arguments, but %s has only %s"
                          uu____7012 uu____7019 uu____7020 in
-                     (FStar_Errors.MissingImplicitArguments, uu____7011) in
+                     (FStar_Errors.Fatal_MissingImplicitArguments,
+                       uu____7011) in
                    let uu____7027 = FStar_TypeChecker_Env.get_range env in
                    FStar_Errors.raise_error uu____7006 uu____7027
                  else FStar_Pervasives_Native.Some (n_available - n_expected) in
@@ -3157,7 +3158,7 @@ let check_universe_generalization:
                 Prims.strcat
                   "Generalized universe in a term containing explicit universe annotation : "
                   uu____7861 in
-              (FStar_Errors.UnexpectedGeneralizedUniverse, uu____7860) in
+              (FStar_Errors.Fatal_UnexpectedGeneralizedUniverse, uu____7860) in
             FStar_Errors.raise_error uu____7855 t.FStar_Syntax_Syntax.pos
 let generalize_universes:
   FStar_TypeChecker_Env.env ->
@@ -3374,8 +3375,8 @@ let gen:
                              let uu____8706 =
                                FStar_TypeChecker_Env.get_range env in
                              FStar_Errors.raise_error
-                               (FStar_Errors.IncompatibleSetOfUniverse, msg)
-                               uu____8706)) in
+                               (FStar_Errors.Fatal_IncompatibleSetOfUniverse,
+                                 msg) uu____8706)) in
                let force_uvars_eq lec2 u1 u2 =
                  let uvars_subseteq u11 u21 =
                    FStar_All.pipe_right u11
@@ -3411,8 +3412,8 @@ let gen:
                              let uu____8885 =
                                FStar_TypeChecker_Env.get_range env in
                              FStar_Errors.raise_error
-                               (FStar_Errors.IncompatibleNumberOfTypes, msg)
-                               uu____8885)) in
+                               (FStar_Errors.Fatal_IncompatibleNumberOfTypes,
+                                 msg) uu____8885)) in
                let lecs1 =
                  let uu____8895 = FStar_List.tl lecs in
                  FStar_List.fold_right
@@ -3444,7 +3445,7 @@ let gen:
                            FStar_Util.format3
                              "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
                              uu____9123 uu____9124 uu____9125 in
-                         (FStar_Errors.FailToResolveImplicitArgument,
+                         (FStar_Errors.Fatal_FailToResolveImplicitArgument,
                            uu____9122) in
                        let uu____9126 = FStar_TypeChecker_Env.get_range env in
                        FStar_Errors.raise_error uu____9117 uu____9126 in
@@ -4344,7 +4345,7 @@ let check_sigelt_quals:
               FStar_Util.format2
                 "The qualifier list \"[%s]\" is not permissible for this element%s"
                 uu____11346 msg in
-            (FStar_Errors.QulifierListNotPermitted, uu____11345) in
+            (FStar_Errors.Fatal_QulifierListNotPermitted, uu____11345) in
           FStar_Errors.raise_error uu____11340 r in
         let err msg = err' (Prims.strcat ": " msg) in
         let err'1 uu____11354 = err' "" in
@@ -5223,7 +5224,7 @@ let mk_data_operations:
                               then ([], FStar_Syntax_Util.ktype0, true)
                               else
                                 FStar_Errors.raise_error
-                                  (FStar_Errors.UnexpectedDataConstructor,
+                                  (FStar_Errors.Fatal_UnexpectedDataConstructor,
                                     "Unexpected data constructor")
                                   se.FStar_Syntax_Syntax.sigrng in
                         (match uu____12598 with

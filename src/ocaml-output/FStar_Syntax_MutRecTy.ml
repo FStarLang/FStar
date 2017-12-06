@@ -160,7 +160,8 @@ let disentangle_abbrevs_from_bundle:
                                  "Cycle on %s in mutually recursive type abbreviations"
                                  ((fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v).FStar_Ident.str in
                              FStar_Errors.raise_error
-                               (FStar_Errors.CycleInRecTypeAbbreviation, msg)
+                               (FStar_Errors.Fatal_CycleInRecTypeAbbreviation,
+                                 msg)
                                (FStar_Ident.range_of_lid
                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v)
                            else unfold_abbrev se

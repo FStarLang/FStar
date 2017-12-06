@@ -57,14 +57,14 @@ let z3hash_warning_message:
     match run_proc_result with
     | FStar_Pervasives_Native.None  ->
         FStar_Pervasives_Native.Some
-          (FStar_Errors.Z3InvocationError, "Could not run Z3")
+          (FStar_Errors.Error_Z3InvocationError, "Could not run Z3")
     | FStar_Pervasives_Native.Some (uu____143,out,uu____145) ->
         let uu____152 = parse_z3_version_lines out in
         (match uu____152 with
          | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
          | FStar_Pervasives_Native.Some msg ->
              FStar_Pervasives_Native.Some
-               (FStar_Errors.Z3InvocationWarning, msg))
+               (FStar_Errors.Warning_Z3InvocationWarning, msg))
 let check_z3hash: Prims.unit -> Prims.unit =
   fun uu____172  ->
     let uu____173 =
@@ -81,7 +81,7 @@ let check_z3hash: Prims.unit -> Prims.unit =
               FStar_Util.format4 "%s\n%s\n%s\n%s\n" msg
                 "Please download the version of Z3 corresponding to your platform from:"
                 _z3url "and add the bin/ subdirectory into your PATH" in
-            FStar_Errors.maybe_fatal_error FStar_Range.dummyRange (e, msg1)))
+            FStar_Errors.log_issue FStar_Range.dummyRange (e, msg1)))
     else ()
 let ini_params: Prims.unit -> Prims.string =
   fun uu____289  ->
@@ -556,9 +556,9 @@ let smt_output_sections: Prims.string Prims.list -> smt_output =
                                         "%s: Unexpected output from Z3: %s\n"
                                         uu____3472
                                         (FStar_String.concat "\n" remaining) in
-                                    (FStar_Errors.UnexpectedZ3Output,
+                                    (FStar_Errors.Warning_UnexpectedZ3Output,
                                       uu____3471) in
-                                  FStar_Errors.maybe_fatal_error
+                                  FStar_Errors.log_issue
                                     FStar_Range.dummyRange uu____3466);
                              (let uu____3473 = FStar_Util.must result_opt in
                               {

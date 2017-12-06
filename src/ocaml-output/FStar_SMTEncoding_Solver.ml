@@ -572,7 +572,8 @@ let query_errors:
                      (fun uu____1398  ->
                         match uu____1398 with
                         | (uu____1411,x,y) ->
-                            (FStar_Errors.Z3SolverError, x, y)) error_labels in
+                            (FStar_Errors.Error_Z3SolverError, x, y))
+                     error_labels in
                  {
                    error_reason = msg;
                    error_fuel = (settings.query_fuel);
@@ -685,7 +686,7 @@ let report_errors: query_settings -> Prims.unit =
                let uu____1823 =
                  FStar_Util.format1 "Unknown assertion failed (%s)"
                    err_detail in
-               (FStar_Errors.UnknownAssertionFailure, uu____1823,
+               (FStar_Errors.Error_UnknownFatal_AssertionFailure, uu____1823,
                  (settings.query_range)) in
              [uu____1816] in
            FStar_TypeChecker_Err.add_errors settings.query_env uu____1807)
@@ -778,8 +779,8 @@ let query_info: query_settings -> FStar_SMTEncoding_Z3.z3result -> Prims.unit
                            if used_hint settings
                            then "(Hint-replay failed): "
                            else "" in
-                         FStar_Errors.maybe_fatal_error range1
-                           (FStar_Errors.HitReplayFailed,
+                         FStar_Errors.log_issue range1
+                           (FStar_Errors.Warning_HitReplayFailed,
                              (Prims.strcat tag1 msg)))))
       else ()
 let record_hint:

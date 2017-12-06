@@ -1319,7 +1319,7 @@ let tc_eff_decl:
                                                   | [] -> ([], repr1)
                                                   | uu____1488 ->
                                                       FStar_Errors.raise_error
-                                                        (FStar_Errors.UnexpectedUniversePolymorphicReturn,
+                                                        (FStar_Errors.Fatal_UnexpectedUniversePolymorphicReturn,
                                                           "Unexpected universe-polymorphic return for effect")
                                                         repr1.FStar_Syntax_Syntax.pos)) in
                                       let actions =
@@ -1524,7 +1524,7 @@ let tc_eff_decl:
                                                                 "Actions must have function types (not: %s, a.k.a. %s)"
                                                                 uu____1611
                                                                 uu____1612 in
-                                                            (FStar_Errors.ActionMustHaveFunctionType,
+                                                            (FStar_Errors.Fatal_ActionMustHaveFunctionType,
                                                               uu____1610) in
                                                           FStar_Errors.raise_error
                                                             uu____1605
@@ -1708,7 +1708,7 @@ let tc_eff_decl:
                                                       FStar_Util.format2
                                                         "Expected an effect definition with %s universes; but found %s"
                                                         uu____1787 uu____1788 in
-                                                    (FStar_Errors.UnexpectedNumberOfUniverse,
+                                                    (FStar_Errors.Fatal_UnexpectedNumberOfUniverse,
                                                       uu____1786) in
                                                   FStar_Errors.raise_error
                                                     uu____1781
@@ -1771,7 +1771,7 @@ let tc_eff_decl:
                                                   "The effect combinator is %s (n=%s) (%s)"
                                                   error uu____1877 uu____1878 in
                                               FStar_Errors.raise_error
-                                                (FStar_Errors.MismatchUniversePolymorphic,
+                                                (FStar_Errors.Fatal_MismatchUniversePolymorphic,
                                                   err_msg)
                                                 (FStar_Pervasives_Native.snd
                                                    ts1).FStar_Syntax_Syntax.pos
@@ -1971,7 +1971,7 @@ let cps_and_elaborate:
                           (a, effect_marker)
                       | uu____2103 ->
                           raise_error1
-                            (FStar_Errors.BadSignatureShape,
+                            (FStar_Errors.Fatal_BadSignatureShape,
                               "bad shape for effect-for-free signature") in
                     (match uu____2063 with
                      | (a,effect_marker) ->
@@ -2100,7 +2100,7 @@ let cps_and_elaborate:
                                                    FStar_Util.format2
                                                      "Computation for [%s] is not total : %s !"
                                                      uu____2391 uu____2392 in
-                                                 (FStar_Errors.ComputationNotTotal,
+                                                 (FStar_Errors.Fatal_ComputationNotTotal,
                                                    uu____2390) in
                                                FStar_Errors.raise_err
                                                  uu____2385
@@ -2230,7 +2230,7 @@ let cps_and_elaborate:
                                                                     FStar_Ident.text_of_lid
                                                                     rc.FStar_Syntax_Syntax.residual_effect) in
                                                            raise_error1
-                                                             (FStar_Errors.WrongBodyTypeForReturnWP,
+                                                             (FStar_Errors.Fatal_WrongBodyTypeForReturnWP,
                                                                error_msg) in
                                                          ((match what' with
                                                            | FStar_Pervasives_Native.None
@@ -2326,7 +2326,7 @@ let cps_and_elaborate:
                                                                 rc_gtot)))))
                                            | uu____2814 ->
                                                raise_error1
-                                                 (FStar_Errors.UnexpectedReturnShape,
+                                                 (FStar_Errors.Fatal_UnexpectedReturnShape,
                                                    "unexpected shape for return") in
                                          let return_wp1 =
                                            let uu____2816 =
@@ -2346,7 +2346,7 @@ let cps_and_elaborate:
                                                     rc_gtot)
                                            | uu____2874 ->
                                                raise_error1
-                                                 (FStar_Errors.UnexpectedReturnShape,
+                                                 (FStar_Errors.Fatal_UnexpectedReturnShape,
                                                    "unexpected shape for return") in
                                          let bind_wp1 =
                                            let uu____2876 =
@@ -2379,7 +2379,7 @@ let cps_and_elaborate:
                                                  uu____2904 body what
                                            | uu____2910 ->
                                                raise_error1
-                                                 (FStar_Errors.UnexpectedBindShape,
+                                                 (FStar_Errors.Fatal_UnexpectedBindShape,
                                                    "unexpected shape for bind") in
                                          let apply_close t =
                                            if
@@ -2883,7 +2883,7 @@ let cps_and_elaborate:
                                                                     "Impossible to generate DM effect: no post candidate %s (Type variable does not appear)"
                                                                     uu____4032 in
                                                                     FStar_Errors.raise_err
-                                                                    (FStar_Errors.ImpossibleToGenerateDMEffect,
+                                                                    (FStar_Errors.Fatal_ImpossibleToGenerateDMEffect,
                                                                     err_msg)
                                                                     | 
                                                                     uu____4037
@@ -2898,7 +2898,7 @@ let cps_and_elaborate:
                                                                     "Impossible to generate DM effect: multiple post candidates %s"
                                                                     uu____4045 in
                                                                     FStar_Errors.raise_err
-                                                                    (FStar_Errors.ImpossibleToGenerateDMEffect,
+                                                                    (FStar_Errors.Fatal_ImpossibleToGenerateDMEffect,
                                                                     err_msg) in
                                                                     let uu____4050
                                                                     =
@@ -2928,7 +2928,7 @@ let cps_and_elaborate:
                                                                     FStar_Util.format1
                                                                     "Impossible: pre/post arrow %s"
                                                                     uu____4067 in
-                                                                    (FStar_Errors.ImpossiblePrePostArrow,
+                                                                    (FStar_Errors.Fatal_ImpossiblePrePostArrow,
                                                                     uu____4066) in
                                                                   raise_error1
                                                                     uu____4061))
@@ -2941,7 +2941,7 @@ let cps_and_elaborate:
                                                             FStar_Util.format1
                                                               "Impossible: pre/post abs %s"
                                                               uu____4081 in
-                                                          (FStar_Errors.ImpossiblePrePostAbs,
+                                                          (FStar_Errors.Fatal_ImpossiblePrePostAbs,
                                                             uu____4080) in
                                                         raise_error1
                                                           uu____4075 in
@@ -3153,7 +3153,7 @@ let tc_lex_t:
                -> ()
            | uu____4327 ->
                FStar_Errors.raise_error
-                 (FStar_Errors.InvalidRedefinitionOfLexT,
+                 (FStar_Errors.Fatal_InvalidRedefinitionOfLexT,
                    "Invalid (partial) redefinition of lex_t") err_range);
           (match ses with
            | {
@@ -3347,7 +3347,8 @@ let tc_lex_t:
                  FStar_Util.format1 "Invalid (re)definition of lex_t: %s\n"
                    uu____4534 in
                FStar_Errors.raise_error
-                 (FStar_Errors.InvalidRedefinitionOfLexT, err_msg) err_range)
+                 (FStar_Errors.Fatal_InvalidRedefinitionOfLexT, err_msg)
+                 err_range)
 let tc_assume:
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
@@ -3431,8 +3432,8 @@ let tc_inductive:
                             | uu____4693 -> failwith "Impossible!" in
                           match uu____4670 with
                           | (lid,r) ->
-                              FStar_Errors.maybe_fatal_error r
-                                (FStar_Errors.InductiveTypeNotSatisfyPositivityCondition,
+                              FStar_Errors.log_issue r
+                                (FStar_Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
                                   (Prims.strcat "Inductive type "
                                      (Prims.strcat lid.FStar_Ident.str
                                         " does not satisfy the positivity condition")))
@@ -3538,12 +3539,12 @@ let tc_decl:
              | FStar_Getopt.Success  -> ()
              | FStar_Getopt.Help  ->
                  FStar_Errors.raise_error
-                   (FStar_Errors.FailToProcessPragma,
+                   (FStar_Errors.Fatal_FailToProcessPragma,
                      "Failed to process pragma: use 'fstar --help' to see which options are available")
                    r
              | FStar_Getopt.Error s1 ->
                  FStar_Errors.raise_error
-                   (FStar_Errors.FailToProcessPragma,
+                   (FStar_Errors.Fatal_FailToProcessPragma,
                      (Prims.strcat "Failed to process pragma: " s1)) r in
            (match p with
             | FStar_Syntax_Syntax.LightOff  ->
@@ -3663,7 +3664,8 @@ let tc_decl:
                            let uu____5113 =
                              FStar_Util.format1 "Effect %s cannot be reified"
                                l.FStar_Ident.str in
-                           (FStar_Errors.EffectCannotBeReified, uu____5113) in
+                           (FStar_Errors.Fatal_EffectCannotBeReified,
+                             uu____5113) in
                          let uu____5114 =
                            FStar_TypeChecker_Env.get_range env1 in
                          FStar_Errors.raise_error uu____5108 uu____5114 in
@@ -4006,7 +4008,7 @@ let tc_decl:
                                                    "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
                                                    uu____5712 uu____5713
                                                    uu____5714 in
-                                               (FStar_Errors.TooManyUniverse,
+                                               (FStar_Errors.Fatal_TooManyUniverse,
                                                  uu____5711) in
                                              FStar_Errors.raise_error
                                                uu____5706 r)
@@ -4054,7 +4056,8 @@ let tc_decl:
                    FStar_Util.format1
                      "Top-level declaration %s for a name that is already used in this module; top-level declarations must be unique in their module"
                      (FStar_Ident.text_of_lid lid) in
-                 (FStar_Errors.AlreadyDefinedTopLevelDeclaration, uu____5772) in
+                 (FStar_Errors.Fatal_AlreadyDefinedTopLevelDeclaration,
+                   uu____5772) in
                FStar_Errors.raise_error uu____5767 r
              else ());
             (let uu____5774 =
@@ -4165,7 +4168,7 @@ let tc_decl:
                         FStar_Util.format3
                           "Inconsistent qualifier annotations on %s; Expected {%s}, got {%s}"
                           uu____5964 uu____5965 uu____5966 in
-                      (FStar_Errors.InconsistentQualifierAnnotation,
+                      (FStar_Errors.Fatal_InconsistentQualifierAnnotation,
                         uu____5963) in
                     FStar_Errors.raise_error uu____5958 r) in
            let rename_parameters lb =
@@ -4288,7 +4291,7 @@ let tc_decl:
                                          <> (FStar_List.length uvs))
                                   then
                                     FStar_Errors.raise_error
-                                      (FStar_Errors.IncoherentInlineUniverse,
+                                      (FStar_Errors.Fatal_IncoherentInlineUniverse,
                                         "Inline universes are incoherent with annotation from val declaration")
                                       r
                                   else ();

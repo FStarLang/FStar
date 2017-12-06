@@ -1815,7 +1815,7 @@ let name_not_found:
   fun l  ->
     let uu____6933 =
       FStar_Util.format1 "Name \"%s\" not found" l.FStar_Ident.str in
-    (FStar_Errors.NameNotFound, uu____6933)
+    (FStar_Errors.Fatal_NameNotFound, uu____6933)
 let variable_not_found:
   FStar_Syntax_Syntax.bv ->
     (FStar_Errors.raw_error,Prims.string) FStar_Pervasives_Native.tuple2
@@ -1824,7 +1824,7 @@ let variable_not_found:
     let uu____6941 =
       let uu____6942 = FStar_Syntax_Print.bv_to_string v1 in
       FStar_Util.format1 "Variable \"%s\" not found" uu____6942 in
-    (FStar_Errors.VariableNotFound, uu____6941)
+    (FStar_Errors.Fatal_VariableNotFound, uu____6941)
 let new_u_univ: Prims.unit -> FStar_Syntax_Syntax.universe =
   fun uu____6945  ->
     let uu____6946 = FStar_Syntax_Unionfind.univ_fresh () in
@@ -2977,7 +2977,7 @@ let join:
                      FStar_Util.format2
                        "Effects %s and %s cannot be composed" uu____11919
                        uu____11920 in
-                   (FStar_Errors.EffectsCannotBeComposed, uu____11918) in
+                   (FStar_Errors.Fatal_EffectsCannotBeComposed, uu____11918) in
                  FStar_Errors.raise_error uu____11913 env.range
              | FStar_Pervasives_Native.Some
                  (uu____11927,uu____11928,m3,j1,j2) -> (m3, j1, j2))
@@ -3336,7 +3336,7 @@ let build_lattice: env -> FStar_Syntax_Syntax.sigelt -> env =
                          FStar_Util.format1
                            "Divergent computations cannot be included in an effect %s marked 'total'"
                            (edge1.mtarget).FStar_Ident.str in
-                       (FStar_Errors.DivergentComputationCannotBeIncludedInTotal,
+                       (FStar_Errors.Fatal_DivergentComputationCannotBeIncludedInTotal,
                          uu____12716) in
                      let uu____12717 = get_range env in
                      FStar_Errors.raise_error uu____12711 uu____12717
@@ -3397,8 +3397,9 @@ let build_lattice: env -> FStar_Syntax_Syntax.sigelt -> env =
                                                             FStar_Ident.lid_equals
                                                               k ub
                                                           then
-                                                            (FStar_Errors.maybe_fatal_err
-                                                               (FStar_Errors.UpperBoundCandidateAlreadyVisited,
+                                                            (FStar_Errors.log_issue
+                                                               FStar_Range.dummyRange
+                                                               (FStar_Errors.Warning_UpperBoundCandidateAlreadyVisited,
                                                                  "Looking multiple times at the same upper bound candidate");
                                                              bopt)
                                                           else
@@ -3507,7 +3508,8 @@ let rec unfold_effect_abbrev:
                        FStar_Util.format3
                          "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                          uu____13097 uu____13102 uu____13109 in
-                     (FStar_Errors.ConstructorArgLengthMismatch, uu____13096) in
+                     (FStar_Errors.Fatal_ConstructorArgLengthMismatch,
+                       uu____13096) in
                    FStar_Errors.raise_error uu____13091
                      comp.FStar_Syntax_Syntax.pos)
                 else ();
@@ -3592,7 +3594,7 @@ let effect_repr_aux:
                                   "like [TAC int] instead of [Tac int].") in
                            let uu____13308 = get_range env in
                            FStar_Errors.raise_error
-                             (FStar_Errors.NotEnoughArgumentsForEffect,
+                             (FStar_Errors.Fatal_NotEnoughArgumentsForEffect,
                                message) uu____13308 in
                      let repr =
                        inst_effect_fun_with [u_c] env ed
@@ -3630,7 +3632,7 @@ let reify_comp:
             let uu____13395 =
               let uu____13396 = FStar_Ident.string_of_lid l in
               FStar_Util.format1 "Effect %s cannot be reified" uu____13396 in
-            (FStar_Errors.EffectCannotBeReified, uu____13395) in
+            (FStar_Errors.Fatal_EffectCannotBeReified, uu____13395) in
           let uu____13397 = get_range env in
           FStar_Errors.raise_error uu____13390 uu____13397 in
         let uu____13398 = effect_repr_aux true env c u_c in

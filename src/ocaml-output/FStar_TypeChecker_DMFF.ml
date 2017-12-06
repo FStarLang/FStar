@@ -1544,9 +1544,8 @@ and star_type':
                   string_of_set FStar_Syntax_Print.bv_to_string s in
                 FStar_Util.format2 "Dependency found in term %s : %s"
                   uu____3332 uu____3333 in
-              (FStar_Errors.DependencyFound, uu____3331) in
-            FStar_Errors.maybe_fatal_error t2.FStar_Syntax_Syntax.pos
-              uu____3326 in
+              (FStar_Errors.Warning_DependencyFound, uu____3331) in
+            FStar_Errors.log_issue t2.FStar_Syntax_Syntax.pos uu____3326 in
           let rec is_non_dependent_arrow ty n1 =
             let uu____3341 =
               let uu____3342 = FStar_Syntax_Subst.compress ty in
@@ -1596,8 +1595,8 @@ and star_type':
                       let uu____3451 = FStar_Syntax_Print.term_to_string ty in
                       FStar_Util.format1 "Not a dependent arrow : %s"
                         uu____3451 in
-                    (FStar_Errors.NotDependentArrow, uu____3450) in
-                  FStar_Errors.maybe_fatal_error ty.FStar_Syntax_Syntax.pos
+                    (FStar_Errors.Warning_NotDependentArrow, uu____3450) in
+                  FStar_Errors.log_issue ty.FStar_Syntax_Syntax.pos
                     uu____3445);
                  false) in
           let rec is_valid_application head2 =
@@ -1643,9 +1642,9 @@ and star_type':
                                   FStar_Util.format1
                                     "Got a term which might be a non-dependent user-defined data-type %s\n"
                                     uu____3511 in
-                                (FStar_Errors.NondependentUserDefinedDataType,
+                                (FStar_Errors.Warning_NondependentUserDefinedDataType,
                                   uu____3510) in
-                              FStar_Errors.maybe_fatal_error
+                              FStar_Errors.log_issue
                                 head2.FStar_Syntax_Syntax.pos uu____3505);
                              false))
                      else false)
@@ -1676,7 +1675,7 @@ and star_type':
                  FStar_Util.format1
                    "For now, only [either], [option] and [eq2] are supported in the definition language (got: %s)"
                    uu____3593 in
-               (FStar_Errors.WrongTerm, uu____3592) in
+               (FStar_Errors.Fatal_WrongTerm, uu____3592) in
              FStar_Errors.raise_err uu____3587)
       | FStar_Syntax_Syntax.Tm_bvar uu____3594 -> t1
       | FStar_Syntax_Syntax.Tm_name uu____3595 -> t1
@@ -1755,7 +1754,7 @@ and star_type':
               FStar_Util.format1
                 "Tm_refine is outside of the definition language: %s"
                 uu____3937 in
-            (FStar_Errors.TermOutsideOfDefLanguage, uu____3936) in
+            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu____3936) in
           FStar_Errors.raise_err uu____3931
       | FStar_Syntax_Syntax.Tm_uinst uu____3938 ->
           let uu____3945 =
@@ -1764,7 +1763,7 @@ and star_type':
               FStar_Util.format1
                 "Tm_uinst is outside of the definition language: %s"
                 uu____3951 in
-            (FStar_Errors.TermOutsideOfDefLanguage, uu____3950) in
+            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu____3950) in
           FStar_Errors.raise_err uu____3945
       | FStar_Syntax_Syntax.Tm_constant uu____3952 ->
           let uu____3953 =
@@ -1773,7 +1772,7 @@ and star_type':
               FStar_Util.format1
                 "Tm_constant is outside of the definition language: %s"
                 uu____3959 in
-            (FStar_Errors.TermOutsideOfDefLanguage, uu____3958) in
+            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu____3958) in
           FStar_Errors.raise_err uu____3953
       | FStar_Syntax_Syntax.Tm_match uu____3960 ->
           let uu____3983 =
@@ -1782,7 +1781,7 @@ and star_type':
               FStar_Util.format1
                 "Tm_match is outside of the definition language: %s"
                 uu____3989 in
-            (FStar_Errors.TermOutsideOfDefLanguage, uu____3988) in
+            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu____3988) in
           FStar_Errors.raise_err uu____3983
       | FStar_Syntax_Syntax.Tm_let uu____3990 ->
           let uu____4003 =
@@ -1790,7 +1789,7 @@ and star_type':
               let uu____4009 = FStar_Syntax_Print.term_to_string t1 in
               FStar_Util.format1
                 "Tm_let is outside of the definition language: %s" uu____4009 in
-            (FStar_Errors.TermOutsideOfDefLanguage, uu____4008) in
+            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu____4008) in
           FStar_Errors.raise_err uu____4003
       | FStar_Syntax_Syntax.Tm_uvar uu____4010 ->
           let uu____4027 =
@@ -1799,7 +1798,7 @@ and star_type':
               FStar_Util.format1
                 "Tm_uvar is outside of the definition language: %s"
                 uu____4033 in
-            (FStar_Errors.TermOutsideOfDefLanguage, uu____4032) in
+            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu____4032) in
           FStar_Errors.raise_err uu____4027
       | FStar_Syntax_Syntax.Tm_unknown  ->
           let uu____4034 =
@@ -1808,7 +1807,7 @@ and star_type':
               FStar_Util.format1
                 "Tm_unknown is outside of the definition language: %s"
                 uu____4040 in
-            (FStar_Errors.TermOutsideOfDefLanguage, uu____4039) in
+            (FStar_Errors.Fatal_TermOutsideOfDefLanguage, uu____4039) in
           FStar_Errors.raise_err uu____4034
       | FStar_Syntax_Syntax.Tm_delayed uu____4041 -> failwith "impossible"
 let is_monadic:
@@ -1940,7 +1939,7 @@ let rec check:
                       FStar_Util.format3
                         "[check]: the expression [%s] has type [%s] but should have type [%s]"
                         uu____4527 uu____4528 uu____4529 in
-                    (FStar_Errors.TypeMismatch, uu____4526) in
+                    (FStar_Errors.Fatal_TypeMismatch, uu____4526) in
                   FStar_Errors.raise_err uu____4521
                 else () in
               (match (rec_nm, context_nm) with
@@ -1959,7 +1958,7 @@ let rec check:
                        FStar_Util.format3
                          "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]"
                          uu____4555 uu____4556 uu____4557 in
-                     (FStar_Errors.EffectfulAndPureComputationMismatch,
+                     (FStar_Errors.Fatal_EffectfulAndPureComputationMismatch,
                        uu____4554) in
                    FStar_Errors.raise_err uu____4549) in
         let ensure_m env1 e2 =
@@ -1975,7 +1974,7 @@ let rec check:
                   Prims.strcat
                     "let-bound monadic body has a non-monadic continuation or a branch of a match is monadic and the others aren't : "
                     uu____4640 in
-                (FStar_Errors.LetBoundMonadicMismatch, uu____4639) in
+                (FStar_Errors.Fatal_LetBoundMonadicMismatch, uu____4639) in
               FStar_Errors.raise_error uu____4634 e2.FStar_Syntax_Syntax.pos
           | M uu____4647 ->
               let uu____4648 = check env1 e2 context_nm in strip_m uu____4648 in
@@ -2444,7 +2443,7 @@ and infer:
             let uu____6232 =
               let uu____6233 = FStar_Syntax_Print.term_to_string e in
               FStar_Util.format1 "DMFF: Ill-applied constant %s" uu____6233 in
-            (FStar_Errors.IllAppliedConstant, uu____6232) in
+            (FStar_Errors.Fatal_IllAppliedConstant, uu____6232) in
           FStar_Errors.raise_error uu____6227 e.FStar_Syntax_Syntax.pos
       | FStar_Syntax_Syntax.Tm_app
           ({
@@ -2457,7 +2456,7 @@ and infer:
             let uu____6268 =
               let uu____6269 = FStar_Syntax_Print.term_to_string e in
               FStar_Util.format1 "DMFF: Ill-applied constant %s" uu____6269 in
-            (FStar_Errors.IllAppliedConstant, uu____6268) in
+            (FStar_Errors.Fatal_IllAppliedConstant, uu____6268) in
           FStar_Errors.raise_error uu____6263 e.FStar_Syntax_Syntax.pos
       | FStar_Syntax_Syntax.Tm_app (head1,args) ->
           let uu____6298 = check_n env head1 in
@@ -2497,7 +2496,7 @@ and infer:
                            FStar_Syntax_Print.term_to_string t_head in
                          FStar_Util.format1 "%s: not a function type"
                            uu____6528 in
-                       (FStar_Errors.NotFunctionType, uu____6527) in
+                       (FStar_Errors.Fatal_NotFunctionType, uu____6527) in
                      FStar_Errors.raise_err uu____6522 in
                let uu____6541 = flatten1 t_head in
                (match uu____6541 with
@@ -2516,7 +2515,7 @@ and infer:
                             FStar_Util.format3
                               "The head of this application, after being applied to %s arguments, is an effectful computation (leaving %s arguments to be applied). Please let-bind the head applied to the %s first arguments."
                               uu____6607 uu____6614 uu____6625 in
-                          (FStar_Errors.BinderAndArgsLengthMismatch,
+                          (FStar_Errors.Fatal_BinderAndArgsLengthMismatch,
                             uu____6606) in
                         FStar_Errors.raise_err uu____6601)
                      else ();
@@ -2721,7 +2720,7 @@ and mk_match:
                                     (s_body, u_body, body))))
                        | uu____7793 ->
                            FStar_Errors.raise_err
-                             (FStar_Errors.WhenClauseNotSupported,
+                             (FStar_Errors.WhenClauseFatal_NotSupported,
                                "No when clauses in the definition language"))
                     branches in
                 FStar_List.split uu____7613 in
@@ -3207,9 +3206,9 @@ and trans_F_:
                                              FStar_Util.format2
                                                "Incoherent implicit qualifiers %b %b\n"
                                                uu____9334 uu____9335 in
-                                           (FStar_Errors.IncoherentImplicitQualifier,
+                                           (FStar_Errors.Warning_IncoherentImplicitQualifier,
                                              uu____9333) in
-                                         FStar_Errors.maybe_fatal_error
+                                         FStar_Errors.log_issue
                                            head1.FStar_Syntax_Syntax.pos
                                            uu____9328)
                                       else ();

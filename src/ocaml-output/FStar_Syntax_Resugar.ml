@@ -590,9 +590,8 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                       FStar_Util.format1
                         "Inaccessible argument %s in function application"
                         uu____1810 in
-                    (FStar_Errors.InaccessibleArgument, uu____1809) in
-                  FStar_Errors.maybe_fatal_error t.FStar_Syntax_Syntax.pos
-                    uu____1804);
+                    (FStar_Errors.Warning_InaccessibleArgument, uu____1809) in
+                  FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____1804);
                  FStar_Parser_AST.Nothing) in
           FStar_List.fold_left
             (fun acc  ->
@@ -1128,7 +1127,7 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                           parser_term_to_string uu____4214 in
                         FStar_Util.format1 "Not an application or a fv %s"
                           uu____4213 in
-                      (FStar_Errors.NotApplicationOrFv, uu____4212) in
+                      (FStar_Errors.Fatal_NotApplicationOrFv, uu____4212) in
                     FStar_Errors.raise_error uu____4207
                       e.FStar_Syntax_Syntax.pos in
               let uu____4231 =
@@ -1144,7 +1143,7 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                           parser_term_to_string uu____4316 in
                         FStar_Util.format1 "wrong Data_app head format %s"
                           uu____4315 in
-                      (FStar_Errors.WrongDataAppHeadFormat, uu____4314) in
+                      (FStar_Errors.Fatal_WrongDataAppHeadFormat, uu____4314) in
                     FStar_Errors.raise_error uu____4309
                       e.FStar_Syntax_Syntax.pos in
               (match uu____4231 with
@@ -1247,8 +1246,8 @@ let rec resugar_term: FStar_Syntax_Syntax.term -> FStar_Parser_AST.term =
                           ((Prims.strcat "(alien:" (Prims.strcat s ")")),
                             (e.FStar_Syntax_Syntax.pos))))
               | uu____4633 ->
-                  (FStar_Errors.maybe_fatal_error e.FStar_Syntax_Syntax.pos
-                     (FStar_Errors.MetaAlienNotATmUnknown,
+                  (FStar_Errors.log_issue e.FStar_Syntax_Syntax.pos
+                     (FStar_Errors.Warning_MetaAlienNotATmUnknown,
                        "Meta_alien was not a Tm_unknown");
                    resugar_term e))
          | FStar_Syntax_Syntax.Meta_named t1 ->

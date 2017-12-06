@@ -2539,7 +2539,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   arg_decls, [typing_inversion; subterm_ordering]
 
                 | _ ->
-                  Errors.log_issue se.sigrng (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
+                  Errors.log_issue se.sigrng (Errors.Warning_ConstructorBuildsUnexpectedType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
                         (Print.lid_to_string d) (Print.term_to_string head)));
                   [], [] in
         let decls2, elim = encode_elim () in

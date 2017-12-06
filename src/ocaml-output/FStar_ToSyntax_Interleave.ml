@@ -73,7 +73,7 @@ let rec prefix_with_iface_decls:
                        | uu____361 -> false))
                ->
                FStar_Errors.raise_error
-                 (FStar_Errors.AbstractTypeDeclarationInInterface,
+                 (FStar_Errors.Fatal_AbstractTypeDeclarationInInterface,
                    "Interface contains an abstract 'type' declaration; use 'val' instead")
                  impl.FStar_Parser_AST.drange
            | FStar_Parser_AST.Val (x,t) ->
@@ -101,7 +101,7 @@ let rec prefix_with_iface_decls:
                         FStar_Util.format2
                           "Expected the definition of %s to precede %s"
                           x.FStar_Ident.idText uu____411 in
-                      (FStar_Errors.WrongDefinitionOrder, uu____410) in
+                      (FStar_Errors.Fatal_WrongDefinitionOrder, uu____410) in
                     FStar_Errors.raise_error uu____405
                       impl.FStar_Parser_AST.drange
                   else (iface1, [impl]))
@@ -138,7 +138,8 @@ let rec prefix_with_iface_decls:
                                  FStar_Util.format2
                                    "%s is out of order with the definition of %s"
                                    uu____574 uu____575 in
-                               (FStar_Errors.WrongDefinitionOrder, uu____573) in
+                               (FStar_Errors.Fatal_WrongDefinitionOrder,
+                                 uu____573) in
                              FStar_Errors.raise_error uu____568
                                iface_hd1.FStar_Parser_AST.drange
                            else aux ys iface2) in
@@ -169,7 +170,7 @@ let check_initial_interface:
                        | uu____727 -> false))
                ->
                FStar_Errors.raise_error
-                 (FStar_Errors.AbstractTypeDeclarationInInterface,
+                 (FStar_Errors.Fatal_AbstractTypeDeclarationInInterface,
                    "Interface contains an abstract 'type' declaration; use 'val' instead")
                  hd1.FStar_Parser_AST.drange
            | FStar_Parser_AST.Val (x,t) ->
@@ -181,7 +182,7 @@ let check_initial_interface:
                      FStar_Util.format2
                        "'val %s' and 'let %s' cannot both be provided in an interface"
                        x.FStar_Ident.idText x.FStar_Ident.idText in
-                   (FStar_Errors.BothValAndLetInInterface, uu____742) in
+                   (FStar_Errors.Fatal_BothValAndLetInInterface, uu____742) in
                  FStar_Errors.raise_error uu____737
                    hd1.FStar_Parser_AST.drange
                else
@@ -191,7 +192,7 @@ let check_initial_interface:
                   if uu____744
                   then
                     FStar_Errors.raise_error
-                      (FStar_Errors.AssumeValInInterface,
+                      (FStar_Errors.Fatal_AssumeValInInterface,
                         "Interfaces cannot use `assume val x : t`; just write `val x : t` instead")
                       hd1.FStar_Parser_AST.drange
                   else ())
@@ -268,7 +269,7 @@ let initialize_interface:
                 let uu____952 = FStar_Ident.string_of_lid mname in
                 FStar_Util.format1 "Interface %s has already been processed"
                   uu____952 in
-              (FStar_Errors.InterfaceAlreadyProcessed, uu____951) in
+              (FStar_Errors.Fatal_InterfaceAlreadyProcessed, uu____951) in
             FStar_Errors.raise_error uu____946
               (FStar_Ident.range_of_lid mname)
         | FStar_Pervasives_Native.None  ->
@@ -364,7 +365,7 @@ let interleave_module:
                                     FStar_Util.format2
                                       "Some interface elements were not implemented by module %s:\n\t%s"
                                       uu____1306 err in
-                                  (FStar_Errors.InterfaceNotImplementedByModule,
+                                  (FStar_Errors.Fatal_InterfaceNotImplementedByModule,
                                     uu____1305) in
                                 FStar_Errors.raise_error uu____1300
                                   (FStar_Ident.range_of_lid l)

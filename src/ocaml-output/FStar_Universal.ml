@@ -128,7 +128,7 @@ let parse:
                                    uu____188)
                         | uu____201 ->
                             FStar_Errors.raise_err
-                              (FStar_Errors.PreModuleMismatch,
+                              (FStar_Errors.Fatal_PreModuleMismatch,
                                 "mismatch between pre-module and module\n"))) in
             (match uu____108 with
              | (ast1,env1) ->
@@ -381,8 +381,8 @@ let tc_one_fragment:
                               "Interactive mode only supports a single module at the top-level. Expected module %s"
                               uu____372 in
                           FStar_Errors.raise_error
-                            (FStar_Errors.NonSingletonTopLevelModule, msg)
-                            (range_of_first_mod_decl ast_modul1)
+                            (FStar_Errors.Fatal_NonSingletonTopLevelModule,
+                              msg) (range_of_first_mod_decl ast_modul1)
                         else ());
                        (let uu____378 =
                           let uu____387 =
@@ -407,7 +407,7 @@ let tc_one_fragment:
                       FStar_Parser_AST.quals = uu____433;
                       FStar_Parser_AST.attrs = uu____434;_} ->
                       FStar_Errors.raise_error
-                        (FStar_Errors.ModuleFirstStatement,
+                        (FStar_Errors.Fatal_ModuleFirstStatement,
                           "First statement must be a module declaration") rng)
              | FStar_Pervasives_Native.Some modul ->
                  let uu____444 =
@@ -467,7 +467,7 @@ let load_interface_decls:
               FStar_Util.format1
                 "Unexpected result from parsing %s; expected a single interface"
                 interface_file_name in
-            (FStar_Errors.ParseErrors, uu____651) in
+            (FStar_Errors.Fatal_ParseErrors, uu____651) in
           FStar_Errors.raise_err uu____646
       | FStar_Parser_ParseIt.ParseError (err,msg,rng) ->
           FStar_Exn.raise (FStar_Errors.Error (err, msg, rng))
@@ -494,8 +494,8 @@ let load_module_from_cache:
            let uu____694 =
              FStar_Util.format3 "%s cache file %s; will recheck %s" tag
                cache_file fn in
-           (FStar_Errors.CachedFile, uu____694) in
-         FStar_Errors.maybe_fatal_error uu____686 uu____689);
+           (FStar_Errors.Warning_CachedFile, uu____694) in
+         FStar_Errors.log_issue uu____686 uu____689);
         FStar_Pervasives_Native.None in
       if FStar_Util.file_exists cache_file
       then
@@ -542,8 +542,8 @@ let store_module_to_cache:
                   FStar_Util.format1
                     "%s was not written, since some of its dependences were not also checked"
                     cache_file in
-                (FStar_Errors.FileNotWritten, uu____831) in
-              FStar_Errors.maybe_fatal_error uu____823 uu____826
+                (FStar_Errors.Warning_FileNotWritten, uu____831) in
+              FStar_Errors.log_issue uu____823 uu____826
 let tc_one_file:
   FStar_TypeChecker_Env.env ->
     Prims.string FStar_Pervasives_Native.option ->

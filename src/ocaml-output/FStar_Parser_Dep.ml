@@ -94,7 +94,7 @@ let module_name_of_file: Prims.string -> Prims.string =
     | FStar_Pervasives_Native.None  ->
         let uu____199 =
           let uu____204 = FStar_Util.format1 "not a valid FStar file: %s\n" f in
-          (FStar_Errors.NotValidFStarFile, uu____204) in
+          (FStar_Errors.Fatal_NotValidFStarFile, uu____204) in
         FStar_Errors.raise_err uu____199
 let lowercase_module_name: Prims.string -> Prims.string =
   fun f  ->
@@ -269,7 +269,7 @@ let file_of_dep_aux:
                        FStar_Util.format1
                          "Expected an interface for module %s, but couldn't find one"
                          key in
-                     (FStar_Errors.MissingInterface, uu____748) in
+                     (FStar_Errors.Fatal_MissingInterface, uu____748) in
                    FStar_Errors.raise_err uu____743
                | FStar_Pervasives_Native.Some f ->
                    if use_checked_file then Prims.strcat f ".source" else f)
@@ -300,7 +300,8 @@ let file_of_dep_aux:
                         FStar_Util.format2
                           "Invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s; if you really want this behavior add the option '--expose_interfaces'"
                           uu____769 uu____773 in
-                      (FStar_Errors.MissingExposeInterfacesOption, uu____768) in
+                      (FStar_Errors.Fatal_MissingExposeInterfacesOption,
+                        uu____768) in
                     FStar_Errors.raise_err uu____763))
               else
                 (let uu____778 =
@@ -316,7 +317,7 @@ let file_of_dep_aux:
                        FStar_Util.format1
                          "Expected an implementation of module %s, but couldn't find one"
                          key in
-                     (FStar_Errors.MissingImplementation, uu____794) in
+                     (FStar_Errors.Fatal_MissingImplementation, uu____794) in
                    FStar_Errors.raise_err uu____789
                | FStar_Pervasives_Native.Some f -> maybe_add_suffix f)
           | UseImplementation key ->
@@ -328,7 +329,7 @@ let file_of_dep_aux:
                        FStar_Util.format1
                          "Expected an implementation of module %s, but couldn't find one"
                          key in
-                     (FStar_Errors.MissingImplementation, uu____808) in
+                     (FStar_Errors.Fatal_MissingImplementation, uu____808) in
                    FStar_Errors.raise_err uu____803
                | FStar_Pervasives_Native.Some f -> maybe_add_suffix f)
 let file_of_dep:
@@ -442,7 +443,7 @@ let build_inclusion_candidates_list:
            (let uu____1079 =
               let uu____1084 =
                 FStar_Util.format1 "not a valid include directory: %s\n" d in
-              (FStar_Errors.NotValidIncludeDirectory, uu____1084) in
+              (FStar_Errors.Fatal_NotValidIncludeDirectory, uu____1084) in
             FStar_Errors.raise_err uu____1079)) include_directories2
 let build_map: Prims.string Prims.list -> files_for_module_name =
   fun filenames  ->
@@ -550,9 +551,8 @@ let check_module_declaration_against_filename:
             FStar_Util.format2
               "The module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect and the module will not be verified.\n"
               uu____1501 filename in
-          (FStar_Errors.ModuleFileNameMismatch, uu____1500) in
-        FStar_Errors.maybe_fatal_error (FStar_Ident.range_of_lid lid)
-          uu____1495
+          (FStar_Errors.Error_ModuleFileNameMismatch, uu____1500) in
+        FStar_Errors.log_issue (FStar_Ident.range_of_lid lid) uu____1495
       else ()
 exception Exit
 let uu___is_Exit: Prims.exn -> Prims.bool =
@@ -638,8 +638,9 @@ let collect_one:
                 let uu____2516 =
                   let uu____2517 = string_of_lid lid true in
                   FStar_Util.format1 "Module not found: %s" uu____2517 in
-                (FStar_Errors.ModuleOrFileNotFoundWarning, uu____2516) in
-              FStar_Errors.maybe_fatal_error (FStar_Ident.range_of_lid lid)
+                (FStar_Errors.Warning_ModuleOrFileNotFoundWarning,
+                  uu____2516) in
+              FStar_Errors.log_issue (FStar_Ident.range_of_lid lid)
                 uu____2511)
            else ();
            false) in
@@ -654,9 +655,8 @@ let collect_one:
               FStar_Util.format1
                 "No modules in namespace %s and no file with that name either"
                 uu____2531 in
-            (FStar_Errors.ModuleOrFileNotFoundWarning, uu____2530) in
-          FStar_Errors.maybe_fatal_error (FStar_Ident.range_of_lid lid)
-            uu____2525
+            (FStar_Errors.Warning_ModuleOrFileNotFoundWarning, uu____2530) in
+          FStar_Errors.log_issue (FStar_Ident.range_of_lid lid) uu____2525
         else () in
       let record_open let_open lid =
         let uu____2540 = record_open_module let_open lid in
@@ -685,8 +685,9 @@ let collect_one:
                 let uu____2626 =
                   FStar_Util.format1 "module not found in search path: %s\n"
                     alias in
-                (FStar_Errors.ModuleOrFileNotFoundWarning, uu____2626) in
-              FStar_Errors.maybe_fatal_error (FStar_Ident.range_of_lid lid)
+                (FStar_Errors.Warning_ModuleOrFileNotFoundWarning,
+                  uu____2626) in
+              FStar_Errors.log_issue (FStar_Ident.range_of_lid lid)
                 uu____2621);
              false) in
       let record_lid lid =
@@ -706,9 +707,9 @@ let collect_one:
                      let uu____2644 = FStar_Ident.string_of_lid module_name in
                      FStar_Util.format1 "Unbound module reference %s"
                        uu____2644 in
-                   (FStar_Errors.UnboundModuleReference, uu____2643) in
-                 FStar_Errors.maybe_fatal_error
-                   (FStar_Ident.range_of_lid lid) uu____2638
+                   (FStar_Errors.Warning_UnboundModuleReference, uu____2643) in
+                 FStar_Errors.log_issue (FStar_Ident.range_of_lid lid)
+                   uu____2638
                else ()) in
       let auto_open = hard_coded_dependencies filename in
       FStar_List.iter record_open_module_or_namespace auto_open;
@@ -806,7 +807,7 @@ let collect_one:
                      FStar_Util.format1
                        "Automatic dependency analysis demands one module per file (module %s not supported)"
                        uu____2980 in
-                   (FStar_Errors.OneModulePerFile, uu____2979) in
+                   (FStar_Errors.Fatal_OneModulePerFile, uu____2979) in
                  FStar_Errors.raise_error uu____2974
                    (FStar_Ident.range_of_lid lid)
                else ()))
@@ -1050,8 +1051,8 @@ let collect:
                       let uu____3976 =
                         FStar_Util.format1
                           "Recursive dependency on module %s\n" filename in
-                      (FStar_Errors.RecursiveDependency, uu____3976) in
-                    FStar_Errors.maybe_fatal_err uu____3971);
+                      (FStar_Errors.Warning_RecursiveDependency, uu____3976) in
+                    FStar_Errors.log_issue FStar_Range.dummyRange uu____3971);
                    FStar_Util.print1
                      "The cycle contains a subset of the modules in:\n%s \n"
                      (FStar_String.concat "\n`used by` " cycle);
@@ -1264,5 +1265,5 @@ let print: deps -> Prims.unit =
          | Mk (deps1,uu____4533,uu____4534) -> print_graph deps1)
     | FStar_Pervasives_Native.Some uu____4539 ->
         FStar_Errors.raise_err
-          (FStar_Errors.UnknownToolForDep, "unknown tool for --dep\n")
+          (FStar_Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()

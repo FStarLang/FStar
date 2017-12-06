@@ -2731,10 +2731,10 @@ and encode_term:
                            FStar_Util.format1
                              "Losing precision when encoding a function literal: %s\n(Unnannotated abstraction in the compiler ?)"
                              uu____8248 in
-                         (FStar_Errors.FunctionLiteralPrecisionLoss,
+                         (FStar_Errors.Warning_FunctionLiteralPrecisionLoss,
                            uu____8247) in
-                       FStar_Errors.maybe_fatal_error
-                         t0.FStar_Syntax_Syntax.pos uu____8242);
+                       FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
+                         uu____8242);
                       fallback ())
                  | FStar_Pervasives_Native.Some rc ->
                      let uu____8250 =
@@ -3260,8 +3260,8 @@ and encode_function_type_as_formula:
         match uu____9724 with
         | FStar_Pervasives_Native.Some l -> l
         | FStar_Pervasives_Native.None  ->
-            (FStar_Errors.maybe_fatal_error e.FStar_Syntax_Syntax.pos
-               (FStar_Errors.NonListLiteralSMTPattern,
+            (FStar_Errors.log_issue e.FStar_Syntax_Syntax.pos
+               (FStar_Errors.Warning_NonListLiteralSMTPattern,
                  "SMT pattern is not a list literal; ignoring the pattern");
              []) in
       let one_pat p =
@@ -3804,8 +3804,9 @@ and encode_formula:
                       FStar_Util.format1
                         "SMT pattern misses at least one bound variable: %s"
                         uu____12641 in
-                    (FStar_Errors.SMTPatternMissingBoundVar, uu____12640) in
-                  FStar_Errors.maybe_fatal_error pos uu____12635) in
+                    (FStar_Errors.Warning_SMTPatternMissingBoundVar,
+                      uu____12640) in
+                  FStar_Errors.log_issue pos uu____12635) in
        let uu____12642 = FStar_Syntax_Util.destruct_typ_as_formula phi1 in
        match uu____12642 with
        | FStar_Pervasives_Native.None  -> fallback phi1
@@ -7559,7 +7560,7 @@ and encode_sigelt':
                                                                     FStar_Util.format1
                                                                     "Inductive type parameter %s must be a variable ; You may want to change it to an index."
                                                                     uu____24513 in
-                                                                    (FStar_Errors.NonVaribleInductiveTypeParameter,
+                                                                    (FStar_Errors.Fatal_NonVaribleInductiveTypeParameter,
                                                                     uu____24512) in
                                                                     FStar_Errors.raise_error
                                                                     uu____24507
@@ -7910,7 +7911,7 @@ and encode_sigelt':
                                                                     FStar_Util.format1
                                                                     "Inductive type parameter %s must be a variable ; You may want to change it to an index."
                                                                     uu____25051 in
-                                                                    (FStar_Errors.NonVaribleInductiveTypeParameter,
+                                                                    (FStar_Errors.Fatal_NonVaribleInductiveTypeParameter,
                                                                     uu____25050) in
                                                                     FStar_Errors.raise_error
                                                                     uu____25045
@@ -8240,9 +8241,9 @@ and encode_sigelt':
                                                                 "Constructor %s builds an unexpected type %s\n"
                                                                 uu____25545
                                                                 uu____25546 in
-                                                            (FStar_Errors.UnexpectedConstructorType,
+                                                            (FStar_Errors.Warning_ConstructorBuildsUnexpectedType,
                                                               uu____25544) in
-                                                          FStar_Errors.maybe_fatal_error
+                                                          FStar_Errors.log_issue
                                                             se.FStar_Syntax_Syntax.sigrng
                                                             uu____25539);
                                                          ([], []))) in

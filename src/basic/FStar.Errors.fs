@@ -25,6 +25,8 @@ type raw_error =
   | Error_UnexpectedInstance
   | Error_UnknownFatal_AssertionFailure
   | Error_Z3InvocationError
+  | Error_IDEAssertionFailure
+  | Error_Z3SolverError
   | Fatal_AbstractTypeDeclarationInInterface
   | Fatal_ActionMustHaveFunctionType
   | Fatal_AlreadyDefinedTopLevelDeclaration
@@ -36,7 +38,6 @@ type raw_error =
   | Fatal_BadSignatureShape
   | Fatal_BinderAndArgsLengthMismatch
   | Fatal_BothValAndLetInInterface
-  | Fatal_CallNotImplemented
   | Fatal_CardinalityConstraintViolated
   | Fatal_ComputationNotTotal
   | Fatal_ComputationTypeNotAllowed
@@ -126,7 +127,6 @@ type raw_error =
   | Fatal_MissingImplementation
   | Fatal_MissingImplicitArguments
   | Fatal_MissingInterface
-  | Fatal_MissingInterfaceOrImplementation
   | Fatal_MissingNameInBinder
   | Fatal_MissingPrimsModule
   | Fatal_MissingQuantifierBinder
@@ -135,7 +135,6 @@ type raw_error =
   | Fatal_ModuleFirstStatement
   | Fatal_ModuleNotFound
   | Fatal_ModuleOrFileNotFound
-  | Fatal_ModuleOrFileNotFoundWarning
   | Fatal_MonadAlreadyDefined
   | Fatal_MoreThanOneDeclaration
   | Fatal_MultipleLetBinding
@@ -241,7 +240,6 @@ type raw_error =
   | Fatal_WrongDefinitionOrder
   | Fatal_WrongResultTypeAfterConstrutor
   | Fatal_WrongTerm
-  | Fatal_Z3SolverError
   | WhenClauseFatal_NotSupported
   | Warning_AddImplicitAssumeNewQualifier
   | Warning_AdmitWithoutDefinition
@@ -287,11 +285,15 @@ type raw_error =
   | Warning_UseDefaultEffect
   | Warning_WrongErrorLocation
   | Warning_Z3InvocationWarning
+  | Warning_CallNotImplemented
+  | Warning_MissingInterfaceOrImplementation
+  | Warning_ConstructorBuildsUnexpectedType
+  | Warning_ModuleOrFileNotFoundWarning
 
 type flag =
   | CError | CFatal | CWarning | CSilent
 
-let default_flags:list<raw_error*flag> =
+let default_flags =
   [(Error_DependencyAnalysisFailed, CError);
   (Error_IDETooManyPops, CError);
   (Error_IDEUnrecognized, CError);
@@ -310,6 +312,8 @@ let default_flags:list<raw_error*flag> =
   (Error_UnexpectedInstance, CError);
   (Error_UnknownFatal_AssertionFailure, CError);
   (Error_Z3InvocationError, CError);
+  (Error_IDEAssertionFailure, CError);
+  (Error_Z3SolverError, CError);
   (Fatal_AbstractTypeDeclarationInInterface, CFatal);
   (Fatal_ActionMustHaveFunctionType, CFatal);
   (Fatal_AlreadyDefinedTopLevelDeclaration, CFatal);
@@ -321,7 +325,6 @@ let default_flags:list<raw_error*flag> =
   (Fatal_BadSignatureShape, CFatal);
   (Fatal_BinderAndArgsLengthMismatch, CFatal);
   (Fatal_BothValAndLetInInterface, CFatal);
-  (Fatal_CallNotImplemented, CFatal);
   (Fatal_CardinalityConstraintViolated, CFatal);
   (Fatal_ComputationNotTotal, CFatal);
   (Fatal_ComputationTypeNotAllowed, CFatal);
@@ -411,7 +414,6 @@ let default_flags:list<raw_error*flag> =
   (Fatal_MissingImplementation, CFatal);
   (Fatal_MissingImplicitArguments, CFatal);
   (Fatal_MissingInterface, CFatal);
-  (Fatal_MissingInterfaceOrImplementation, CFatal);
   (Fatal_MissingNameInBinder, CFatal);
   (Fatal_MissingPrimsModule, CFatal);
   (Fatal_MissingQuantifierBinder, CFatal);
@@ -420,7 +422,6 @@ let default_flags:list<raw_error*flag> =
   (Fatal_ModuleFirstStatement, CFatal);
   (Fatal_ModuleNotFound, CFatal);
   (Fatal_ModuleOrFileNotFound, CFatal);
-  (Fatal_ModuleOrFileNotFoundWarning, CFatal);
   (Fatal_MonadAlreadyDefined, CFatal);
   (Fatal_MoreThanOneDeclaration, CFatal);
   (Fatal_MultipleLetBinding, CFatal);
@@ -526,8 +527,8 @@ let default_flags:list<raw_error*flag> =
   (Fatal_WrongDefinitionOrder, CFatal);
   (Fatal_WrongResultTypeAfterConstrutor, CFatal);
   (Fatal_WrongTerm, CFatal);
-  (Fatal_Z3SolverError, CFatal);
   (WhenClauseFatal_NotSupported, CFatal);
+  (Warning_CallNotImplemented, CWarning);
   (Warning_AddImplicitAssumeNewQualifier, CWarning);
   (Warning_AdmitWithoutDefinition, CWarning);
   (Warning_CachedFile, CWarning);
@@ -571,7 +572,10 @@ let default_flags:list<raw_error*flag> =
   (Warning_UpperBoundCandidateAlreadyVisited, CWarning);
   (Warning_UseDefaultEffect, CWarning);
   (Warning_WrongErrorLocation, CWarning);
-  (Warning_Z3InvocationWarning, CWarning);]
+  (Warning_Z3InvocationWarning, CWarning);
+  (Warning_MissingInterfaceOrImplementation, CWarning);
+  (Warning_ConstructorBuildsUnexpectedType, CWarning);
+  (Warning_ModuleOrFileNotFoundWarning, CWarning)]
 
 exception Err of raw_error* string
 exception Error of raw_error * string * Range.range
@@ -700,7 +704,7 @@ let message_prefix =
      clear_prefix=clear_prefix;
      append_prefix=append_prefix}
 
-let findIndex l v = l |> List.findIndex (function (e, _) when e=v -> true | _ -> false)
+let findIndex l v = l |> List.index (function (e, _) when e=v -> true | _ -> false)
 let errno_of_error e = findIndex default_flags e
 let flags: ref<list<flag>> = mk_ref []
 
@@ -746,7 +750,7 @@ let update_flags l =
         | [r1; r2] -> (int_of_string r1, int_of_string r2)
         | _ -> failwith (BU.format1 "Malformed warn-error range %s" s)
       in
-      if (l < 0)  || (h >= default_flags.Length)  then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h));
+      if (l < 0)  || (h >= List.length default_flags)  then  failwith (BU.format2 "No error for warn_error %s..%s" (string_of_int l) (string_of_int h));
       compute_range (result@[(f, (l, h))]) tl
   in
   let range = compute_range [] l in
@@ -759,12 +763,12 @@ let diag r msg =
 let log_issue r (e, msg) =
   let errno = errno_of_error (e) in
   match List.nth !flags errno with
-  | CError ->
+  | CError
+  | CFatal ->
      add_one (mk_issue EError (Some r) msg (Some errno))
   | CWarning ->
      add_one (mk_issue EWarning (Some r) msg (Some errno))
   | CSilent -> ()
-  | CFatal -> failwith ("don't use log_issue to report fatal error")
 
 let add_errors errs =
     atomically (fun () -> List.iter (fun (e, msg, r) -> log_issue r (e, (message_prefix.append_prefix msg))) errs)

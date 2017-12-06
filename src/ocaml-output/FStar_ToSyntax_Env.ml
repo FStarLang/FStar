@@ -1122,7 +1122,8 @@ let fail_if_curmodule:
                   FStar_Util.format1
                     "Reference %s to current module is forbidden (see GitHub issue #451)"
                     ns_original.FStar_Ident.str in
-                (FStar_Errors.ForbiddenReferenceToCurrentModule, uu____3589) in
+                (FStar_Errors.Fatal_ForbiddenReferenceToCurrentModule,
+                  uu____3589) in
               FStar_Errors.raise_error uu____3584
                 (FStar_Ident.range_of_lid ns_original)))
         else ()
@@ -2319,7 +2320,7 @@ let push_top_level_rec_binding:
         then push_scope_mod env (Rec_binding (x, l, dd))
         else
           FStar_Errors.raise_error
-            (FStar_Errors.DuplicateTopLevelNames,
+            (FStar_Errors.Fatal_DuplicateTopLevelNames,
               (Prims.strcat "Duplicate top-level names " l.FStar_Ident.str))
             (FStar_Ident.range_of_lid l)
 let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
@@ -2344,7 +2345,7 @@ let push_sigelt: env -> FStar_Syntax_Syntax.sigelt -> env =
             FStar_Util.format2
               "Duplicate top-level names [%s]; previously declared at %s"
               (FStar_Ident.text_of_lid l) r in
-          (FStar_Errors.DuplicateTopLevelNames, uu____7855) in
+          (FStar_Errors.Fatal_DuplicateTopLevelNames, uu____7855) in
         FStar_Errors.raise_error uu____7850 (FStar_Ident.range_of_lid l) in
       let globals = FStar_Util.mk_ref env.scope_mods in
       let env1 =
@@ -2514,7 +2515,7 @@ let push_namespace: env -> FStar_Ident.lident -> env =
                  let uu____8559 =
                    FStar_Util.format1 "Namespace %s cannot be found"
                      (FStar_Ident.text_of_lid ns) in
-                 (FStar_Errors.NameSpaceNotFound, uu____8559) in
+                 (FStar_Errors.Fatal_NameSpaceNotFound, uu____8559) in
                FStar_Errors.raise_error uu____8554
                  (FStar_Ident.range_of_lid ns))
         | FStar_Pervasives_Native.Some ns' ->
@@ -2589,7 +2590,8 @@ let push_include: env -> FStar_Ident.lident -> env =
                           FStar_Util.format1
                             "include: Module %s was not prepared"
                             ns1.FStar_Ident.str in
-                        (FStar_Errors.IncludeModuleNotPrepared, uu____9379) in
+                        (FStar_Errors.Fatal_IncludeModuleNotPrepared,
+                          uu____9379) in
                       FStar_Errors.raise_error uu____9374
                         (FStar_Ident.range_of_lid ns1)))))
       | uu____9380 ->
@@ -2597,7 +2599,7 @@ let push_include: env -> FStar_Ident.lident -> env =
             let uu____9388 =
               FStar_Util.format1 "include: Module %s cannot be found"
                 ns.FStar_Ident.str in
-            (FStar_Errors.ModuleNotFound, uu____9388) in
+            (FStar_Errors.Fatal_ModuleNotFound, uu____9388) in
           FStar_Errors.raise_error uu____9383 (FStar_Ident.range_of_lid ns)
 let push_module_abbrev: env -> FStar_Ident.ident -> FStar_Ident.lident -> env
   =
@@ -2615,7 +2617,7 @@ let push_module_abbrev: env -> FStar_Ident.ident -> FStar_Ident.lident -> env
              let uu____9407 =
                FStar_Util.format1 "Module %s cannot be found"
                  (FStar_Ident.text_of_lid l) in
-             (FStar_Errors.ModuleNotFound, uu____9407) in
+             (FStar_Errors.Fatal_ModuleNotFound, uu____9407) in
            FStar_Errors.raise_error uu____9402 (FStar_Ident.range_of_lid l))
 let push_doc:
   env ->
@@ -2642,8 +2644,8 @@ let push_doc:
                       FStar_Util.format3
                         "Overwriting doc of %s; old doc was [%s]; new doc are [%s]"
                         uu____9433 uu____9434 uu____9435 in
-                    (FStar_Errors.DocOverwrite, uu____9432) in
-                  FStar_Errors.maybe_fatal_error (FStar_Ident.range_of_lid l)
+                    (FStar_Errors.Warning_DocOverwrite, uu____9432) in
+                  FStar_Errors.log_issue (FStar_Ident.range_of_lid l)
                     uu____9427);
              FStar_Util.smap_add env.docs l.FStar_Ident.str doc1;
              env)
@@ -2668,9 +2670,10 @@ let check_admits: env -> Prims.unit =
                                FStar_Syntax_Print.lid_to_string l in
                              FStar_Util.format1
                                "Admitting %s without a definition" uu____9471 in
-                           (FStar_Errors.AdmitWithoutDefinition, uu____9470) in
-                         FStar_Errors.maybe_fatal_error
-                           (FStar_Ident.range_of_lid l) uu____9465
+                           (FStar_Errors.Warning_AdmitWithoutDefinition,
+                             uu____9470) in
+                         FStar_Errors.log_issue (FStar_Ident.range_of_lid l)
+                           uu____9465
                        else ());
                       (let quals = FStar_Syntax_Syntax.Assumption ::
                          (se.FStar_Syntax_Syntax.sigquals) in
@@ -3130,7 +3133,8 @@ let prepare_module_or_interface:
                         FStar_Util.format1
                           "Duplicate module or interface name: %s"
                           mname.FStar_Ident.str in
-                      (FStar_Errors.DuplicateModuleOrInterface, uu____11551) in
+                      (FStar_Errors.Fatal_DuplicateModuleOrInterface,
+                        uu____11551) in
                     FStar_Errors.raise_error uu____11546
                       (FStar_Ident.range_of_lid mname)
                   else ());
@@ -3143,7 +3147,7 @@ let enter_monad_scope: env -> FStar_Ident.ident -> env =
       match env.curmonad with
       | FStar_Pervasives_Native.Some mname' ->
           FStar_Errors.raise_error
-            (FStar_Errors.MonadAlreadyDefined,
+            (FStar_Errors.Fatal_MonadAlreadyDefined,
               (Prims.strcat "Trying to define monad "
                  (Prims.strcat mname.FStar_Ident.idText
                     (Prims.strcat ", but already in monad scope "
@@ -3226,7 +3230,8 @@ let fail_or:
                        "%s\nModule %s resolved into %s, definition %s not found"
                        msg modul.FStar_Ident.str modul'.FStar_Ident.str
                        (lid.FStar_Ident.ident).FStar_Ident.idText) in
-            FStar_Errors.raise_error (FStar_Errors.IdentifierNotFound, msg1)
+            FStar_Errors.raise_error
+              (FStar_Errors.Fatal_IdentifierNotFound, msg1)
               (FStar_Ident.range_of_lid lid)
         | FStar_Pervasives_Native.Some r -> r
 let fail_or2:
@@ -3240,7 +3245,7 @@ let fail_or2:
       match uu____11645 with
       | FStar_Pervasives_Native.None  ->
           FStar_Errors.raise_error
-            (FStar_Errors.IdentifierNotFound,
+            (FStar_Errors.Fatal_IdentifierNotFound,
               (Prims.strcat "Identifier not found ["
                  (Prims.strcat id1.FStar_Ident.idText "]")))
             id1.FStar_Ident.idRange
