@@ -30,26 +30,32 @@ private let eternal_region_pred (m1 m2:mem0) :Type0
   = forall (r:HH.rid).{:pattern (HS.is_eternal_region r); (m1.h `Map.contains` r)}
                  (HS.is_eternal_region r /\ m1.h `Map.contains` r) ==> m2.h `Map.contains` r
 
-(* rid counter increases *)
+(* rid counter increases monotonically *)
 private let rid_ctr_pred (m1 m2:mem0) :Type0 = m1.rid_ctr <= m2.rid_ctr
 
-(* regions with rid counter less than the m1 rid counter and not contained in m1 are not contained in m2 *)
+(*
+ * A region r, that is:
+ * (a) not contained in m1, and
+ * (b) has rid last component less than m1.rid_ctr
+ * 
+ * remains not contained in m2
+ *)
 private let rid_last_component_pred (m1 m2:HS.mem) :Type0
   = forall (r:HH.rid).{:pattern (m1.h `Map.contains` r)}
                  ((~ (m1.h `Map.contains` r)) /\ rid_last_component r < m1.rid_ctr) ==>
 		 (~ (m2.h `Map.contains` r))
 
-(* Eternal refs remain contained if their region is contained in both *)
+(* Predicate for refs *)
 private let eternal_refs_pred (m1 m2:mem0) :Type0
   = forall (a:Type) (rel:preorder a) (r:HS.mreference a rel).
       {:pattern (m1.h `Map.contains` r.id); (HS.is_mm r); (HH.contains_ref r.ref m1.h); (m2.h `Map.contains` r.id)}
-      ((not (HS.is_mm r)) /\ HH.contains_ref r.ref m1.h) ==>
-      (rid_last_component r.id < m2.rid_ctr /\ ((not (m2.h `Map.contains` r.id)) \/ (HH.contains_ref r.ref m2.h)))
+      ((not (HS.is_mm r)) /\ HH.contains_ref r.ref m1.h) ==>  //if the ref is not mm, and is contained in m1
+      ((not (m2.h `Map.contains` r.id)) \/ (HH.contains_ref r.ref m2.h))  //then, either its region is not contained in m2, or m2 also contains the ref
 
+(* The preorder is the conjunction of above predicates *)
 let mem_rel :relation mem0
   = fun (m1 m2:mem0) ->
       eternal_region_pred m1 m2 /\ rid_ctr_pred m1 m2 /\ rid_last_component_pred m1 m2 /\ eternal_refs_pred m1 m2
-
 let mem_pre :preorder mem0 = mem_rel
 
 type mem_predicate = mem0 -> Type0
@@ -61,12 +67,16 @@ let stable_predicate = p:mem_predicate{stable p}
 
 assume type witnessed: stable_predicate -> Type0
 
+(* Predicates that we will witness with regions and refs *)
 let region_contains_pred (r:HH.rid) :stable_predicate
   = fun m -> (not (HS.is_eternal_region r)) \/ m.h `Map.contains` r
 
 let ref_contains_pred (#a:Type) (#rel:preorder a) (r:HS.mreference a rel) :stable_predicate
   = fun m -> rid_last_component r.id < m.rid_ctr /\ (HS.is_mm r \/ (not (m.h `Map.contains` r.id) \/ HH.contains_ref r.ref m.h))
 
+(*
+ * We need to witness these predicates for m.tip and HH.root, so that clients get them.
+ *)
 type mem = m:mem0{witnessed (region_contains_pred m.tip) /\ witnessed (region_contains_pred HH.root)}
 
 (***** Global ST (GST) effect with put, get, witness, and recall *****)
@@ -196,7 +206,7 @@ sub_effect
 
 
 (*
- * A few caveats:
+ * AR: A few caveats:
  * (a) The clients should now open HyperStack.ST after the memory model files (as with Heap and FStar.ST).
  * (b) When the clients get rid from this interface, they will get witnessed predicates.
  *     But if we directly get an id from the HH map, then we don't get these.
