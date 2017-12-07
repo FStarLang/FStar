@@ -16,46 +16,16 @@ module Seq = FStar.Seq
 
 ////////////////////////////////////////////////////////////////////////////////
 
-abstract let seq_extension (#a:Type) (s1:seq a) (s2:seq a) (s3:seq a) =
-  equal s3 (append s1 s2)
-  
-abstract let grows' (#a:Type) :Preorder.relation (seq a)
-  = fun (s1:seq a) (s3:seq a) -> exists (s2:seq a). seq_extension s1 s2 s3
-
-let seq_extension_reflexive (#a:Type) (s:seq a) 
-  : Lemma (ensures (grows' s s)) 
-  = exists_intro (fun w -> seq_extension s w s) (Seq.createEmpty #a)
-
-let seq_extension_transitive (s1:seq 'a) (s2:seq 'a) (s3:seq 'a) (s1':seq 'a) (s2':seq 'a) 
-  : Lemma ((seq_extension s1 s1' s2 /\ seq_extension s2 s2' s3)
-            ==> seq_extension s1 (Seq.append s1' s2') s3) 
-  = ()
-
-let seq_extends_to_transitive_aux (s1:seq 'a) (s2:seq 'a) (s3:seq 'a) (s1':seq 'a) (s2':seq 'a)
-  : Lemma ((seq_extension s1 s1' s2 /\ seq_extension s2 s2' s3)
-            ==> grows' s1 s3) 
-  = seq_extension_transitive s1 s2 s3 s1' s2'
-
-let grows_transitive (s1:seq 'a) (s2:seq 'a) (s3:seq 'a)
-  : Lemma ((grows' s1 s2 /\ grows' s2 s3)
-           ==> grows' s1 s3) 
-  = forall_to_exists_2 (seq_extends_to_transitive_aux s1 s2 s3)
-
-abstract let grows (#a:Type) :Preorder.preorder (seq a) =
-  Classical.forall_intro (seq_extension_reflexive #a);
-  Classical.forall_intro_3 (grows_transitive #a);
-  grows' #a
+abstract let grows (#a:Type) :Preorder.preorder (seq a)
+  = fun (s1:seq a) (s2:seq a) ->
+    length s1 <= length s2 /\
+    (forall (i:nat).{:pattern (Seq.index s1 i) \/ (Seq.index s2 i)} i < length s1 ==> index s1 i == index s2 i)
 
 open FStar.Monotonic.RRef
 open FStar.HyperHeap
 open FStar.HyperStack
 
 type rid = MR.rid
-
-let lemma_grows_monotone (#a:Type)
-  : Lemma (monotonic (seq a) (grows #a))
-  = forall_intro (seq_extension_reflexive #a);
-    forall_intro_3 (grows_transitive #a)
 
 let snoc (s:seq 'a) (x:'a) 
   : Tot (seq 'a) 
@@ -74,8 +44,7 @@ let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
 	 HS.contains h1 m /\
 	 HS.sel h1 m == init /\
 	 HST.ralloc_post r init h0 m h1))
-  = lemma_grows_monotone #a;
-    FStar.Monotonic.RRef.m_alloc r init
+  = FStar.Monotonic.RRef.m_alloc r init
 
 (*
  * AR: changing rids below to rid which is eternal regions.
@@ -93,15 +62,13 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
   : ST unit
        (requires (fun h -> True))
        (ensures (fun h0 _ h1 ->
-                       let r_ashsref = MR.as_hsref r in
-	               m_contains r h1
+	               contains h1 r
 		     /\ modifies_one i h0 h1
-		     (* AR: before merge: /\ modifies_rref i (Set.singleton (addr_of (as_rref r))) h0 h1 *)
-		     /\ modifies_rref i (Set.singleton (addr_of r_ashsref.ref)) h0.h h1.h
-		     /\ m_sel h1 r == Seq.snoc (m_sel h0 r) x
-		     /\ witnessed (at_least (Seq.length (m_sel h0 r)) x r)))
+		     /\ modifies_rref i (Set.singleton (addr_of r.ref)) h0.h h1.h
+		     /\ HS.sel h1 r == Seq.snoc (HS.sel h0 r) x
+		     /\ witnessed r (at_least (Seq.length (HS.sel h0 r)) x r)))
   =
-    m_recall r;
+    recall r;
     let s0 = m_read r in
     let n = Seq.length s0 in
     m_write r (Seq.snoc s0 x);
@@ -113,25 +80,27 @@ let write_at_end (#a:Type) (#i:rid) (r:m_rref i (seq a) grows) (x:a)
 //Monotone sequences with a (stateless) invariant of the whole sequence
 ////////////////////////////////////////////////////////////////////////////////
 
-let i_seq (r:rid) (a:Type) (p:seq a -> Type) = m_rref r (s:seq a{p s}) grows
+let grows_p (#a:Type) (p:seq a -> Type) :Preorder.preorder (s:seq a{p s}) =
+  fun s1 s2 -> grows s1 s2
+
+let i_seq (r:rid) (a:Type) (p:seq a -> Type) = m_rref r (s:seq a{p s}) (grows_p p)
 
 let alloc_mref_iseq (#a:Type) (p:seq a -> Type) (r:rid) (init:seq a{p init})
   : ST (i_seq r a p)
        (requires (fun _ -> True))
-       (ensures (fun h0 m h1 -> HST.ralloc_post r init h0 (MR.as_hsref m) h1))
-  = lemma_grows_monotone #a;
-    FStar.Monotonic.RRef.m_alloc r init
+       (ensures (fun h0 m h1 -> HST.ralloc_post r init h0 m h1))
+  = FStar.Monotonic.RRef.m_alloc r init
 
 let i_at_least (#r:rid) (#a:Type) (#p:(seq a -> Type)) (n:nat) (x:a) (m:i_seq r a p) (h:mem) =
-        Seq.length (m_sel h m) > n
-      /\ Seq.index (m_sel h m) n == x
+        Seq.length (HS.sel h m) > n
+      /\ Seq.index (HS.sel h m) n == x
 
 let i_at_least_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (n:nat) (x:a) (m:i_seq r a p)
   : Lemma (ensures stable_on_t m (i_at_least n x m))
   = ()
 
 let int_at_most #r #a #p (x:int) (is:i_seq r a p) (h:mem) : Type0 =
-  x < Seq.length (m_sel h is)
+  x < Seq.length (HS.sel h is)
 
 let int_at_most_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (is:i_seq r a p) (k:int)
   : Lemma (ensures stable_on_t is (int_at_most k is))
@@ -139,7 +108,7 @@ let int_at_most_is_stable (#r:rid) (#a:Type) (#p:seq a -> Type) (is:i_seq r a p)
 
 let i_sel (#r:rid) (#a:Type) (#p:seq a -> Type) (h:mem) (m:i_seq r a p)
   : GTot (s:seq a{p s})
-  = m_sel h m
+  = HS.sel h m
 
 let i_read (#r:rid) (#a:Type) (#p:Seq.seq a -> Type) (m:i_seq r a p)
   : ST (s:seq a{p s})
@@ -149,21 +118,19 @@ let i_read (#r:rid) (#a:Type) (#p:Seq.seq a -> Type) (m:i_seq r a p)
 
 let i_contains (#r:rid) (#a:Type) (#p:seq a -> Type) (m:i_seq r a p) (h:mem)
   : GTot Type0
-  = m_contains m h
+  = HS.contains h m
 
 let i_write_at_end (#rgn:rid) (#a:Type) (#p:seq a -> Type) (r:i_seq rgn a p) (x:a)
   : ST unit
        (requires (fun h -> p (Seq.snoc (i_sel h r) x)))
        (ensures (fun h0 _ h1 ->
-                       let r_ashsref = MR.as_hsref r in
 	               i_contains r h1
 		     /\ modifies_one rgn h0 h1
-		     (* AR: before merge: /\ modifies_rref rgn (Set.singleton (addr_of (as_rref r))) h0 h1 *)
-		     /\ modifies_rref rgn (Set.singleton (addr_of r_ashsref.ref)) h0.h h1.h
+		     /\ modifies_rref rgn (Set.singleton (addr_of r.ref)) h0.h h1.h
 		     /\ i_sel h1 r == Seq.snoc (i_sel h0 r) x
-		     /\ witnessed (i_at_least (Seq.length (i_sel h0 r)) x r)))
+		     /\ witnessed r (i_at_least (Seq.length (i_sel h0 r)) x r)))
   =
-    m_recall r;
+    recall r;
     let s0 = m_read r in
     let n = Seq.length s0 in
     m_write r (Seq.snoc s0 x);
@@ -179,15 +146,15 @@ private let invariant (s:seq nat) =
 		 ==> Seq.index s i <> Seq.index s j
   
 private val test0: r:rid -> a:m_rref r (seq nat) grows -> k:nat -> ST unit
-  (requires (fun h -> k < Seq.length (m_sel h a)))
+  (requires (fun h -> k < Seq.length (HS.sel h a)))
   (ensures (fun h0 result h1 -> True))
 let test0 r a k =
   let h0 = HST.get() in
   let _ = 
-    let s = m_sel h0 a in 
-    at_least_is_stable k (Seq.index (m_sel h0 a) k) a;
+    let s = HS.sel h0 a in 
+    at_least_is_stable k (Seq.index (HS.sel h0 a) k) a;
     Seq.contains_intro s k (Seq.index s k) in
-  MR.witness a (at_least k (Seq.index (m_sel h0 a) k) a)
+  MR.witness a (at_least k (Seq.index (HS.sel h0 a) k) a)
   
 private val itest: r:rid -> a:i_seq r nat invariant -> k:nat -> ST unit
   (requires (fun h -> k < Seq.length (i_sel h a)))
@@ -272,37 +239,28 @@ let rec map_index f s i =
 //17-01-05 all the stuff above should go to Seq.Properties! 
 
 let map_grows (f:'a -> Tot 'b)
-	      (s1:seq 'a) (s3:seq 'a) (s2:seq 'a)
-  : Lemma (seq_extension s1 s2 s3
+	      (s1:seq 'a) (s3:seq 'a)
+  : Lemma (grows s1 s3
 	   ==> grows (map f s1) (map f s3))
-  = map_append f s1 s2
+  = ()
 
 let map_prefix (#a:Type) (#b:Type) (#i:rid)
 	       (r:m_rref i (seq a) grows)
 	       (f:a -> Tot b)
 	       (bs:seq b)
 	       (h:mem) =
-  grows bs (map f (MR.m_sel h r))
+  grows bs (map f (HS.sel h r))
 
 //17-01-05  this applies to log_t's defined below. 
 let map_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows) (f:a -> Tot b) (bs:seq b)
-  : Lemma (MR.stable_on_t r (map_prefix r f bs))
-  = let aux : h0:mem -> h1:mem -> Lemma
-      (map_prefix r f bs h0
-       /\ grows (MR.m_sel h0 r) (MR.m_sel h1 r)
-       ==> map_prefix r f bs h1) =
-      fun h0 h1 ->
-	  let s1 = MR.m_sel h0 r in
-	  let s3 = MR.m_sel h1 r in
-	  forall_to_exists (map_grows f s1 s3);
-	  grows_transitive bs (map f s1) (map f s3) in
-    forall_intro_2 aux
+  :Lemma (MR.stable_on_t r (map_prefix r f bs))
+  = ()
 
 let map_has_at_index (#a:Type) (#b:Type) (#i:rid)
 		     (r:m_rref i (seq a) grows)
 		     (f:a -> Tot b)
 		     (n:nat) (v:b) (h:mem) =
-    let s = MR.m_sel h r in
+    let s = HS.sel h r in
     n < Seq.length s
   /\ Seq.index (map f s) n == v
 
@@ -354,37 +312,30 @@ let rec collect_append f s_1 s_2 =
 
 //17-01-05 all the stuff above should go to Seq.Properties! 
 
-#reset-options "--z3rlimit 5"
-
-let collect_grows_aux (f:'a -> Tot (seq 'b))
-		  (s1:seq 'a) (s3:seq 'a) (s2:seq 'a)
-  : Lemma (seq_extension s1 s2 s3
-	   ==> grows (collect f s1) (collect f s3))
-  = collect_append f s1 s2
-
+#set-options "--z3rlimit 15"
 let collect_grows (f:'a -> Tot (seq 'b))
 		  (s1:seq 'a) (s2:seq 'a)
   : Lemma (grows s1 s2 ==> grows (collect f s1) (collect f s2))
-  = forall_to_exists (collect_grows_aux f s1 s2)
+  = admit ()
   
 let collect_prefix (#a:Type) (#b:Type) (#i:rid)
 		   (r:m_rref i (seq a) grows)
 		   (f:a -> Tot (seq b))
 		   (bs:seq b)
 		   (h:mem) =
-  grows bs (collect f (MR.m_sel h r))
+  grows bs (collect f (HS.sel h r))
 
 let collect_prefix_stable (#a:Type) (#b:Type) (#i:rid) (r:m_rref i (seq a) grows) (f:a -> Tot (seq b)) (bs:seq b)
   : Lemma (MR.stable_on_t r (collect_prefix r f bs))
   = let aux : h0:mem -> h1:mem -> Lemma
       (collect_prefix r f bs h0
-       /\ grows (MR.m_sel h0 r) (MR.m_sel h1 r)
+       /\ grows (HS.sel h0 r) (HS.sel h1 r)
        ==> collect_prefix r f bs h1) =
       fun h0 h1 ->
-	  let s1 = MR.m_sel h0 r in
-	  let s3 = MR.m_sel h1 r in
-	  collect_grows f s1 s3;
-	  grows_transitive bs (collect f s1) (collect f s3) in
+	  let s1 = HS.sel h0 r in
+	  let s3 = HS.sel h1 r in
+	  collect_grows f s1 s3
+    in
     forall_intro_2 aux
 
 
@@ -392,7 +343,7 @@ let collect_has_at_index (#a:Type) (#b:Type) (#i:rid)
 			 (r:m_rref i (seq a) grows)
 			 (f:a -> Tot (seq b))
 			 (n:nat) (v:b) (h:mem) =
-    let s = MR.m_sel h r in
+    let s = HS.sel h r in
     n < Seq.length (collect f s)
   /\ Seq.index (collect f s) n == v
 
@@ -402,15 +353,9 @@ let collect_has_at_index_stable (#a:Type) (#b:Type) (#i:rid)
   : Lemma (MR.stable_on_t r (collect_has_at_index r f n v))
   = let aux : h0:mem -> h1:mem -> Lemma
       (collect_has_at_index r f n v h0
-       /\ grows (MR.m_sel h0 r) (MR.m_sel h1 r)
-       ==> collect_has_at_index r f n v h1) =
-      fun h0 h1 ->
-	  let s1 = MR.m_sel h0 r in
-	  let s3 = MR.m_sel h1 r in
-	  let aux2 : s2:seq a -> Lemma ((s1@s2 == s3 /\ collect_has_at_index r f n v h0)
-				       ==> collect_has_at_index r f n v h1)
-	      = fun s2 -> collect_append f s1 s2 in
-	  forall_to_exists aux2 in
+       /\ grows (HS.sel h0 r) (HS.sel h1 r)
+       ==> collect_has_at_index r f n v h1) = admit ()
+    in
     forall_intro_2 aux
 
 
@@ -424,12 +369,12 @@ let increases (x:int) (y:int) = b2t (x <= y)
 
 let at_most_log_len (#l:rid) (#a:Type) (x:nat) (log:log_t l a)
     : mem -> GTot Type0
-    = fun h -> x <= Seq.length (m_sel h log)
+    = fun h -> x <= Seq.length (HS.sel h log)
 
 //Note: we may want int seqn, instead of nat seqn
 //because the handshake uses an initial value of -1
 type seqn_val (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
-     (x:nat{x <= max /\ witnessed (at_most_log_len x log)}) //never more than the length of the log
+     (x:nat{x <= max /\ witnessed log (at_most_log_len x log)}) //never more than the length of the log
 	 
 type seqn (#l:rid) (#a:Type) (i:rid) (log:log_t l a) (max:nat) =
   m_rref i  //counter in region i
@@ -451,16 +396,15 @@ let new_seqn (#l:rid) (#a:Type) (#max:nat)
   : ST (seqn i log max)
        (requires (fun h ->
 	   init <= max /\
-	   init <= Seq.length (m_sel h log)))
+	   init <= Seq.length (HS.sel h log)))
        (ensures (fun h0 c h1 -> //17-01-05 unify with ralloc_post? 
 		   modifies_one i h0 h1 /\
-		   (* AR: before merge: modifies_rref i Set.empty h0 h1 /\ *)
 		   modifies_rref i Set.empty h0.h h1.h /\
 		   m_fresh c h0 h1 /\
-		   m_sel h1 c = init /\
+		   HS.sel h1 c = init /\
 		   FStar.Map.contains h1.h i))
   =
-    m_recall log; recall_region i;
+    recall log; recall_region i;
     witness log (at_most_log_len init log);
     m_alloc i init
 
@@ -468,17 +412,16 @@ let increment_seqn (#l:rid) (#a:Type) (#max:nat)
 	           (#i:rid) (#log:log_t l a) ($c:seqn i log max)
   : ST unit
        (requires (fun h ->
-	  let log = m_sel h log in
-	  let n = m_sel h c in
+	  let log = HS.sel h log in
+	  let n = HS.sel h c in
 	  n < Seq.length log  /\
 	  n + 1 <= max))
        (ensures (fun h0 _ h1 ->
-          let c_ashsref = MR.as_hsref c in
 	  modifies_one i h0 h1 /\
 	  (* AR: before merge: modifies_rref i (Set.singleton (addr_of (as_rref c))) h0 h1 /\ *)
-	  modifies_rref i (Set.singleton (addr_of c_ashsref.ref)) h0.h h1.h /\
-	  m_sel h1 c = m_sel h0 c + 1))
-  = m_recall c; m_recall log;
+	  modifies_rref i (Set.singleton (addr_of c.ref)) h0.h h1.h /\
+	  HS.sel h1 c = HS.sel h0 c + 1))
+  = recall c; recall log;
     let n = m_read c + 1 in
     witness log (at_most_log_len n log);
     m_write c n
@@ -488,16 +431,15 @@ let testify_seqn (#i:rid) (#l:rid) (#a:Type0) (#log:log_t l a) (#max:nat) (ctr:s
        (requires (fun h -> True))
        (ensures (fun h0 _ h1 ->
 	   h0==h1 /\
-	   at_most_log_len (m_sel h1 ctr) log h1))
+	   at_most_log_len (HS.sel h1 ctr) log h1))
   = let n = m_read ctr in
-    testify (at_most_log_len n log)
+    testify log (at_most_log_len n log)
 
 private let test (i:rid) (l:rid) (a:Type0) (log:log_t l a) //(p:(nat -> Type))
          (r:seqn i log 8) (h:mem)
   = //assert (m_sel2 h r = HyperHeap.sel h (as_rref r));
-    let r_ashsref = MR.as_hsref r in
-    assert (m_sel h r = HyperHeap.sel h.h r_ashsref.ref);
-    assert (m_sel #_ #(seqn_val i log 8) #_ h r = HyperHeap.sel h.h r_ashsref.ref)
+    assert (HS.sel h r = HyperHeap.sel h.h r.ref);
+    assert (HS.sel h r = HyperHeap.sel h.h r.ref)
 
 
 (* TODO: this fails with a silly inconsistent qualifier error *)
