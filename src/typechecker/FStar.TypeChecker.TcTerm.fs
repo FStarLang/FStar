@@ -370,9 +370,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let lc = U.lcomp_of_comp expected_c in
     let f = Rel.conj_guard g (Rel.conj_guard g' g'') in
     let topt = tc_tactic_opt env0 topt in
-    let f = match topt with
-            | None -> f
-            | Some tactic -> Rel.map_guard f (fun f -> Common.mk_by_tactic tactic (U.mk_squash f)) in
+    let f =
+        match topt with
+        | None -> f
+        | Some tactic ->
+          Rel.map_guard f (fun f -> //guards are in U_zero
+          Common.mk_by_tactic tactic (U.mk_squash U_zero f)) in
     let e, c, f2 = comp_check_expected_typ env e lc in
     let final_guard = Rel.conj_guard f f2 in
     e, c, final_guard
@@ -423,14 +426,12 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   | Tm_app({n=Tm_constant Const_reify}, [(e, aqual)]) ->
     if Option.isSome aqual
     then Errors.log_issue e.pos (Errors.Warning_IrrelevantQualifierOnArgumentToReify, "Qualifier on argument to reify is irrelevant and will be ignored");
-    let e, c, g =
-      let env0, _ = Env.clear_expected_typ env in
-      tc_term env0 e
-    in
+    let env0, _ = Env.clear_expected_typ env in
+    let e, c, g = tc_term env0 e in
     let reify_op, _ = U.head_and_args top in
     let u_c =
         (* c' is the computation type of the computation type and as such should be Type u *)
-        let _, c', _ = tc_term env c.res_typ in
+        let _, c', _ = tc_term env0 c.res_typ in  //AR: note that we use env0, which unsets the expected_typ
         match (SS.compress c'.res_typ).n with
         | Tm_type u -> u
         | _ ->
@@ -609,11 +610,25 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     if Env.debug env Options.Low then BU.print1 "%s\n" (Print.term_to_string top);
     (* MAIN HOOK FOR 2-PHASE CHECKING, currently guarded under a debug flag *)
     if Options.use_two_phase_tc ()//Env.debug env (Options.Other "2-Phase-Checking")
-    then let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
+    then
+      //AR: if the top-level binding is unannotated, we want to drop the wps computed in phase 1
+      //since they are lax etc., and phase 2 will do the proper computation anyway
+      //in case they are annotated, we will retain them
+      let is_lb_unannotated (t:term) :bool = match t.n with
+        | Tm_let ((_, [lb]), _) -> (SS.compress lb.lbtyp).n = Tm_unknown
+        | _                     -> failwith "Impossible"
+      in
+
+      let drop_lbtyp (t:term) :term = match t.n with
+        | Tm_let ((t1, [lb]), t2) ->  { t with n = Tm_let ((t1, [ { lb with lbtyp = mk Tm_unknown None lb.lbtyp.pos }]), t2) }
+        | _                       -> failwith "Impossible"
+      in
+
+      let lax_top, l, g = check_top_level_let ({env with lax=true}) top in
          let lax_top = N.remove_uvar_solutions env lax_top in
          //BU.print1 "Phase 1: checked %s\n" (Print.term_to_string lax_top);
          if Env.should_verify env then
-           check_top_level_let env lax_top
+           check_top_level_let env (if is_lb_unannotated top then drop_lbtyp lax_top else lax_top)  //AR: drop lbtyp from lax_top if needed
          else lax_top, l, g
     else check_top_level_let env top
 
@@ -1392,7 +1407,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             let g = Rel.conj_guard g g_e in
 //                if debug env Options.High then BU.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
-            let xterm = S.as_arg (S.bv_to_name x) in
+            let xterm = (fst (S.as_arg (S.bv_to_name x)), aq) in  //AR: fix for #1123, we were dropping the qualifiers
             if U.is_tot_or_gtot_lcomp c //early in prims, Tot and GTot are primitive, not defined in terms of Pure/Ghost yet
             || TcUtil.is_pure_or_ghost_effect env c.eff_name
             then let subst = maybe_extend_subst subst (List.hd bs) e in
@@ -1415,7 +1430,13 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                                (Errors.Warning_RedundantExplicitCurrying, "Potentially redundant explicit currying of a function type");
                         tc_args head_info ([], [], [], Rel.trivial_guard, []) bs args
                     | _ when not norm ->
-                        aux true (N.unfold_whnf env tres)
+                      let rec norm_tres (tres:term) :term =
+                        let tres = N.unfold_whnf env tres in
+                        match (SS.compress tres).n with
+                        | Tm_refine ( { sort = tres }, _) -> norm_tres tres
+                        | _                               -> tres
+                      in
+                      aux true (norm_tres tres)
                     | _ -> raise_error (Errors.Fatal_ToManyArgumentToFunction, (BU.format2 "Too many arguments to function of type %s; got %s arguments"
                                             (N.term_to_string env thead) (BU.string_of_int n_args))) (argpos arg) in
             aux false chead.res_typ
@@ -2125,8 +2146,9 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
     let t = SS.compress lb.lbtyp in
     match t.n with
         | Tm_unknown ->
-          if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
-          None, Rel.trivial_guard, [], [], env
+          //if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";  //AR: do we need this check? this situation arises in phase 2
+          let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
+          None, Rel.trivial_guard, univ_vars, univ_opening, env
 
         | _ ->
           let univ_opening, univ_vars = univ_var_opening lb.lbunivs in

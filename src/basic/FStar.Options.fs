@@ -883,8 +883,8 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "use_two_phase_tc",
-        Const (mk_bool true),
-        "Use the two phase typechecker");
+        BoolStr,
+        "Use the two phase typechecker (default 'false')");
 
        ( noshort,
         "__no_positivity",

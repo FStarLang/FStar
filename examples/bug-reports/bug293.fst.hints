@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "d3ed508298e87787a89c6b104400906f"
+      "04c0a388ab67670283c42f604afda51a"
     ],
     [
       "Bug293.test",
@@ -16,11 +16,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "refinement_interpretation_Bug293_Tm_refine_24a102650c3561bc6be37068de08feda"
       ],
       0,
-      "5d6c00911bc8183357e18637b8da4266"
+      "9d4dfc25b8e9ad59ba17c48490c98032"
     ],
     [
       "Bug293.test",
@@ -29,7 +29,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0f07de5f42b945c6ef42d40cdb3ccd78"
+      "d0a00a0d688c7fea2b30265897f62be6"
     ],
     [
       "Bug293.test",
@@ -38,7 +38,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "97b168e6c1fba8b8b0bf1a781ccbd831"
+      "7066e7bdcaea4662626d0a4d0a687d60"
     ]
   ]
 ]

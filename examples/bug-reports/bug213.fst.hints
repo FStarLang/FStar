@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "a6605e5acdb5ece7e3e1ef6160b4e60c"
+      "613d968ecf88e392a4a51e2998d1d43f"
     ],
     [
       "Bug213.__proj__IP__item__f",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "9527d2170627c3cab4eb25e12c33e5c8"
+      "a33099f946c4e719ba6be7bca8e77c26"
     ],
     [
       "Bug213.__proj__ExIntro__item__a",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "22957a7b40eacdd917c034d1fa6bc596"
+      "33d76c31cbecf5256799c05f21759be5"
     ],
     [
       "Bug213.__proj__ExIntro__item__p",
@@ -41,7 +41,7 @@
         "projection_inverse_Bug213.ExIntro_p"
       ],
       0,
-      "60d3bcccb5f9297c230e0abc034a44a7"
+      "adf4702af78f2363f7a6336b62371770"
     ],
     [
       "Bug213.__proj__ExIntro__item__x",
@@ -53,7 +53,7 @@
         "projection_inverse_Bug213.ExIntro_a"
       ],
       0,
-      "bf346b3c20ba72f104d6e57e4a12eec9"
+      "62be5ef3049424701628f8e61501122c"
     ],
     [
       "Bug213.__proj__ExIntro__item___3",
@@ -68,16 +68,20 @@
         "token_correspondence_Bug213.__proj__ExIntro__item__p"
       ],
       0,
-      "cfa2c852570341a9b795f19cabc9b129"
+      "d3dd80f2a4d230c41134da0f6f815641"
     ],
     [
       "Bug213.foo",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "data_typing_intro_Bug213.IP@tok",
+        "fuel_guarded_inversion_Bug213.cexists",
+        "projection_inverse_Bug213.ExIntro_a"
+      ],
       0,
-      "7eaeab0c175e9c2e172291acfbc02090"
+      "44ac7b1fb752f0e8620ecd73b230adae"
     ]
   ]
 ]

@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6e2c45132c145f7dd1acdf6b73360edd"
+      "731538436627e84d1602740d4840df62"
     ],
     [
       "Bug052.trivial_a",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "3564074ac39d9444cf03f16d3c498724"
+      "61f4f158e0246b4bd693a437f1dfdeea"
     ],
     [
       "Bug052.trivial_b",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c1ffb7dd724ecfee9ac4b138c4cb8b16"
+      "e942f5d0579d430e096894feff621f15"
     ],
     [
       "Bug052.trivial_c",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "c610dd2580fc4af4be1e3c2e2963ab32"
+      "5bf4be6ac589356e84732ab4cff6a80f"
     ],
     [
       "Bug052.use_fact_and_lemma",
@@ -43,12 +43,13 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
+        "equation_Prims.nat", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "c07663da1d3dd1bb7c5ffbb6b94847c9"
+      "091a93c46eae536ec2a814049e73cd42"
     ],
     [
       "Bug052.test",
@@ -56,11 +57,12 @@
       2,
       1,
       [
-        "@query", "equation_Bug052.use_fact_and_lemma",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
+        "@query", "assumption_Prims.HasEq_int",
+        "equation_Bug052.use_fact_and_lemma", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "b406a7028585e7811ed0dc037ec1a801"
+      "e96ac79162d6aa7c7bf660826222f2b4"
     ],
     [
       "Bug052.test",
@@ -69,7 +71,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "0918e020c5b209a87fccd05f77d542be"
+      "9ec7c96630fb32f42f90ab7cd1bdf914"
     ]
   ]
 ]

@@ -7,59 +7,15 @@
       2,
       1,
       [
-        "@query", "equality_tok_IfcRules.High@tok",
-        "equality_tok_IfcRules.Low@tok"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "assumption_Prims.HasEq_int", "equality_tok_IfcRules.High@tok",
+        "equality_tok_IfcRules.Low@tok", "equation_Prims.nat",
+        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d",
+        "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "fa6c1a31f130ccd27b3e39dd7591802f"
-    ],
-    [
-      "IfcExample.env",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "83befa67493b651dbc3bd38e27a2ec9b"
-    ],
-    [
-      "IfcExample.env",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "552e8844da697f4accf4f35af410ac9f"
-    ],
-    [
-      "IfcExample.env",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "a848c1418fcc90f71916ea37eeea74d7"
-    ],
-    [
-      "IfcExample.env",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int", "equation_Prims.nat",
-        "haseqPrims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
-      ],
-      0,
-      "0b1983780376517e4a88f0f3a8cb3ad2"
+      "26e0d5f9d2a40c8729a7c6cdd663dadd"
     ],
     [
       "IfcExample.c1_1_ni",
@@ -119,7 +75,7 @@
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r"
       ],
       0,
-      "9b3b52caa8e07c3466a204969f4dd6da"
+      "43d16c881f41661b8cb74229b45fbe0b"
     ],
     [
       "IfcExample.c1_2_ni",
@@ -189,7 +145,7 @@
         "typing_tok_IfcRules.Low@tok"
       ],
       0,
-      "cc67b1b409d539b0e7606afde6e913f6"
+      "536bcea5c2e3240e1cb058319e250957"
     ],
     [
       "IfcExample.c1_3_ni",
@@ -259,7 +215,7 @@
         "typing_tok_IfcRules.Low@tok"
       ],
       0,
-      "d21dc3e0b3f26001a722c1ff4719b676"
+      "80df5a452afbc5337b61c1b958374a6d"
     ],
     [
       "IfcExample.c1_3_4_ni",
@@ -330,7 +286,7 @@
         "typing_Rel.__proj__R__item__r"
       ],
       0,
-      "4a523f668b43a064e5c0673db3bfdb40"
+      "7958bd563586ce4a65aa2bfc037837e9"
     ],
     [
       "IfcExample.c1_ni",
@@ -423,7 +379,7 @@
         "typing_tok_While.Plus@tok"
       ],
       0,
-      "3c93935f2cdb4793b0c1c3dd9654031e"
+      "c5731822d28a06877b4ed25c1c6f3dee"
     ]
   ]
 ]

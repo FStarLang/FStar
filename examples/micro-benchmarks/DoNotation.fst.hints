@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "89937090c6582879b7c409792302b045"
+      "573f455819deafd0fb8ec2c39518c1de"
     ],
     [
       "DoNotation.add",
@@ -16,7 +16,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
+        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_int",
         "binder_x_e22ba7a032a73f6d0678d3d186686631_0", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Equality",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
@@ -24,16 +24,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "421762e3de4d4f9b9a110272a6f1d60f"
-    ],
-    [
-      "DoNotation.add",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "a4a2e2955f67df70853b7195e47d14d7"
+      "6ce2fca044419660627990db1172126c"
     ],
     [
       "DoNotation.uu___11",
@@ -46,16 +37,7 @@
         "function_token_typing_Prims.int", "function_token_typing_Prims.unit"
       ],
       0,
-      "7d81a5f9f087f77773698b7d81efc62a"
-    ],
-    [
-      "DoNotation.uu___11",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b6a8df6718866629c5691965e22a31bb"
+      "2a8fba017ee9a76fba9837844ef0816c"
     ]
   ]
 ]

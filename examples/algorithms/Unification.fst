@@ -358,7 +358,7 @@ val unify_correct_aux: l:list subst -> e:eqns -> Pure (list subst)
 		  l' = (m @ l)
 		 /\ solved (lsubst_eqns l' e)))
  (decreases %[n_evars e; efuns e; n_flex_rhs e])
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 100"
 let rec unify_correct_aux l = function
   | [] -> []
   | hd::tl ->

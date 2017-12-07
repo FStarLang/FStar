@@ -6,21 +6,12 @@
       1,
       1,
       0,
-      [ "@query" ],
-      0,
-      "34074c646a132ababd4b79a451b9040e"
-    ],
-    [
-      "TransparentMap.upd",
-      2,
-      1,
-      0,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e81c6726cdda3268d222b862182bfcaf"
+      "915f273db335b4fc77df8128ad521403"
     ],
     [
       "TransparentMap.sel_upd1",
@@ -34,7 +25,7 @@
         "primitive_Prims.op_Equality"
       ],
       0,
-      "6d19cbe696e63dd460a49810fe9a960e"
+      "9646a6925b7ce186e14ff77760dc37cc"
     ],
     [
       "TransparentMap.sel_upd2",
@@ -48,7 +39,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "abbda6672755754a5200b6f9df8ffc69"
+      "811ff7551747e3a7c0c1dcbc80897193"
     ],
     [
       "TransparentMap.lemma_equal_intro",
@@ -60,7 +51,7 @@
         "equation_TransparentMap.equal", "equation_TransparentMap.sel"
       ],
       0,
-      "bd5567f81646f0cb368aaf6e0bc7fda5"
+      "9a56d1d393be09045e757af0b69092ad"
     ],
     [
       "TransparentMap.lemma_equal_elim",
@@ -76,7 +67,7 @@
         "refinement_interpretation_Prims_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "238db743c05b0aafab65524737741751"
+      "04babdcd95532d76b7723637b7795a90"
     ],
     [
       "TransparentMap.lemma_equal_refl",
@@ -85,7 +76,7 @@
       0,
       [ "@query", "lemma_TransparentMap.lemma_equal_intro" ],
       0,
-      "56a7ed307c06bed2795649dfd3f949ac"
+      "df741f986e25f0a89eb2fc62d3e3035e"
     ]
   ]
 ]

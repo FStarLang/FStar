@@ -1,6 +1,23 @@
 module TwoPhaseTC
 
-#set-options "--use_two_phase_tc --ugly"
+#set-options "--use_two_phase_tc true --ugly"
+
+open FStar.Classical
+module PropExt = FStar.PropositionalExtensionality
+
+#set-options "--max_fuel 0 --max_ifuel 0 --initial_fuel 0 --initial_ifuel 0"
+
+(** Definition of a monoid *)
+
+let right_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =
+  forall (x:m). x `mult` u == x
+
+let conjunction_monoid :unit =
+  let u : prop = singleton True in
+  let mult (p q : prop) : prop = p /\ q in
+  assume (forall (p:prop). p `mult` u == p);
+  assert (right_unitality_lemma prop u mult) ;
+  ()
 
 (*
  * Uvar solutions are not always closed, they can have free universe names.

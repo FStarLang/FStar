@@ -33,6 +33,7 @@ let rec fib_norm (n : int) : tactic unit =
 let fn8 : int = synth_by_tactic (fib_norm 8)
 let _ = assert (fn8 == 34) // syntactically equal
 
+#set-options "--use_two_phase_tc false"  //AR: need to check
 let iszero (x : int) : int =
     synth_by_tactic (
         x <-- quote x;

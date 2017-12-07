@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "dd0896dc41ac0dc2e5d548f0c1e19169"
+      "546d360e4b957f3f1d1d7e441be4fdd5"
     ],
     [
       "IfcRules.uu___is_High",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "576f999bcde39fd4fe2ec450ebc8369e"
+      "ef6f3c90da5244a7835f7f1637730b45"
     ],
     [
       "IfcRules.op_Less",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "ac0d01fc0f86efab5e270c84ed046385"
+      "6c69d845f0f620cd2d2b95c9792685bb"
     ],
     [
       "IfcRules.op_Less_Equals",
@@ -35,7 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "40fe87a14952916d79d9ae43ddb924a2"
+      "8d94fc624d91cc2a89d44eba65be25c6"
     ],
     [
       "IfcRules.join",
@@ -47,25 +47,19 @@
         "equality_tok_IfcRules.Low@tok"
       ],
       0,
-      "373ff6ecf9f58cec1dc31d7baeae3261"
+      "9dbbea4f41a9fc12643f8d06d7aa4f9d"
     ],
     [
       "IfcRules.low_equiv",
       1,
       2,
       1,
-      [ "@query", "assumption_IfcRules.label_haseq" ],
+      [
+        "@query", "assumption_IfcRules.label_haseq",
+        "assumption_Prims.HasEq_int"
+      ],
       0,
-      "23b5e032958c4f8e9b01f6ad95c8d9d9"
-    ],
-    [
-      "IfcRules.low_equiv",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "e6a2af8921cae8806fdeb2845f7a7f86"
+      "9252b75c44e2e124ef6e4fd107814389"
     ],
     [
       "IfcRules.ni_exp",
@@ -74,34 +68,16 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "59354b1e871781be24631a7d6130291a"
+      "8c44a3eb162c3485de2ce7e139cce4be"
     ],
     [
       "IfcRules.ni_com'",
       1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f78ecfd7de6ca3694324e1e329db545f"
-    ],
-    [
-      "IfcRules.ni_com'",
-      2,
       2,
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "5758927a01b0667f7cc1ed30c383a322"
-    ],
-    [
-      "IfcRules.ni_com'",
-      3,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "aa13e6a379ec0f431a3a8b014774818c"
+      "5682b2e4b40a9f5aa093bdbdbe76123d"
     ],
     [
       "IfcRules.sub_exp",
@@ -123,7 +99,7 @@
         "typing_IfcRules.uu___is_Low"
       ],
       0,
-      "c29b6dbc757c3cccc65d049340ee8c9f"
+      "61e2af0d5c514aaa147af815b495ef76"
     ],
     [
       "IfcRules.avar_exp",
@@ -143,7 +119,7 @@
         "projection_inverse_While.AVar__0"
       ],
       0,
-      "f7805bc2d98718feff086e744715c477"
+      "137967b6443fdabf5f42b70f64d153ca"
     ],
     [
       "IfcRules.aint_exp",
@@ -160,7 +136,7 @@
         "projection_inverse_While.AInt__0"
       ],
       0,
-      "f2e1e1a926c925e33022a4128c775368"
+      "3eb44760c0cba17a0c5af63fdb9cfbe2"
     ],
     [
       "IfcRules.binop_exp",
@@ -178,7 +154,7 @@
         "projection_inverse_While.AOp__2"
       ],
       0,
-      "a9e236b2e3a7a28e4345c3ee8244a86e"
+      "7f30924f8febc58124a31a13f5667811"
     ],
     [
       "IfcRules.sub_com",
@@ -201,7 +177,7 @@
         "typing_IfcRules.op_Less_Equals"
       ],
       0,
-      "f1706184c3257d5ad9a5596d4e7014e2"
+      "a99e24c6a2e01d56f615935bc16a365d"
     ],
     [
       "IfcRules.assign_com",
@@ -262,7 +238,7 @@
         "typing_While.interpret_exp"
       ],
       0,
-      "063518cf9043e9a75e9c6ac1e7d23e2b"
+      "9c00c39620a29369cca339d36065e3fa"
     ],
     [
       "IfcRules.seq_com'",
@@ -303,7 +279,7 @@
         "typing_While.interpret_com"
       ],
       0,
-      "9bb726edc5a97e288fe8f7df35209a1c"
+      "a28eebb49c1fa0c43d5255810f34f0fc"
     ],
     [
       "IfcRules.seq_com",
@@ -312,7 +288,7 @@
       1,
       [ "@query", "equation_IfcRules.ni_com" ],
       0,
-      "d5f2f2a6e915da9b5736d0801cfc8b62"
+      "34f8b895905f712d220c00834f5f638a"
     ],
     [
       "IfcRules.cond_com",
@@ -356,7 +332,7 @@
         "typing_Rel.__proj__R__item__l", "typing_Rel.__proj__R__item__r"
       ],
       0,
-      "fa7491feb7b67b572c4be72ab87f689a"
+      "64b98f2e65bf17d5eb0e6ac809d76d93"
     ],
     [
       "IfcRules.skip_com",
@@ -377,7 +353,7 @@
         "projection_inverse_Rel.R_l", "projection_inverse_Rel.R_r"
       ],
       0,
-      "f58cb98c650a8d235e9e813f570624e2"
+      "5a1cffaff64c5ff583f16757bf35315e"
     ],
     [
       "IfcRules.decr_while",
@@ -395,7 +371,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "b4089b500fb1740f3612919fe3a5c9f6"
+      "48cb8b739b2316a58f21664fd68c7e5c"
     ],
     [
       "IfcRules.while_com'",
@@ -470,7 +446,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "74e08aa0240200464c5e493d01b2afc6"
+      "a88e636cc198282341eea8b0286d936d"
     ],
     [
       "IfcRules.while_com",
@@ -479,7 +455,7 @@
       1,
       [ "@query", "equation_IfcRules.ni_com" ],
       0,
-      "045d8e9e3c9afac953a66c4b6f2d0cb1"
+      "b540972d0232e5315770d3471ad21dda"
     ]
   ]
 ]

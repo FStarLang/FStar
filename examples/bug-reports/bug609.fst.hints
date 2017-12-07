@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "55c2b57fe4f5d3d108029a8a27f4bd56"
+      "bcf00cf91cd0fefdc0fcf314d1710344"
     ],
     [
       "Bug609.add''",
@@ -17,16 +17,27 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "153722be7da35f965a12f4a504bbe551"
+      "7b321a9885d7e47e345b981fec55b5a8"
     ],
     [
       "Bug609.test",
       1,
       8,
       2,
-      [ "@query", "assumption_Prims.HasEq_int" ],
+      [
+        "@MaxFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.fold_left.fuel_instrumented",
+        "@query", "assumption_Prims.HasEq_int",
+        "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
+        "equation_with_fuel_FStar.List.Tot.Base.fold_left.fuel_instrumented",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
+        "token_correspondence_Prims.op_Addition"
+      ],
       0,
-      "e465005d105e16d99fca6276f8a41483"
+      "dbca33abe59538e3107c678431847ca3"
     ],
     [
       "Bug609.test",
@@ -51,7 +62,7 @@
         "typing_FStar.List.Tot.Base.fold_left"
       ],
       0,
-      "7f7ea509807428784059e765a5524797"
+      "1d8932a41906e68edd9a45840368bdc8"
     ]
   ]
 ]

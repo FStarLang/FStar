@@ -152,7 +152,7 @@ let __unembed_int:
                   let uu____227 = FStar_Syntax_Print.term_to_string t0 in
                   FStar_Util.format1 "Not an embedded int: %s" uu____227 in
                 (FStar_Errors.Warning_NotEmbedded, uu____226) in
-              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____221)
+              FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____221)
            else ();
            FStar_Pervasives_Native.None)
 let unembed_int:
@@ -186,7 +186,7 @@ let __unembed_string:
                   let uu____275 = FStar_Syntax_Print.term_to_string t0 in
                   FStar_Util.format1 "Not an embedded string: %s" uu____275 in
                 (FStar_Errors.Warning_NotEmbedded, uu____274) in
-              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____269)
+              FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____269)
            else ();
            FStar_Pervasives_Native.None)
 let unembed_string:
@@ -281,7 +281,7 @@ let __unembed_pair:
                            FStar_Util.format1 "Not an embedded pair: %s"
                              uu____618 in
                          (FStar_Errors.Warning_NotEmbedded, uu____617) in
-                       FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
+                       FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                          uu____612)
                     else ();
                     FStar_Pervasives_Native.None))
@@ -376,7 +376,7 @@ let __unembed_option:
                          FStar_Util.format1 "Not an embedded option: %s"
                            uu____983 in
                        (FStar_Errors.Warning_NotEmbedded, uu____982) in
-                     FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
+                     FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                        uu____977)
                   else ();
                   FStar_Pervasives_Native.None))
@@ -475,7 +475,7 @@ let rec __unembed_list:
                          FStar_Util.format1 "Not an embedded list: %s"
                            uu____1355 in
                        (FStar_Errors.Warning_NotEmbedded, uu____1354) in
-                     FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
+                     FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                        uu____1349)
                   else ();
                   FStar_Pervasives_Native.None))
@@ -633,7 +633,7 @@ let __unembed_norm_step:
                        FStar_Util.format1 "Not an embedded norm_step: %s"
                          uu____1803 in
                      (FStar_Errors.Warning_NotEmbedded, uu____1802) in
-                   FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos
+                   FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
                      uu____1797)
                 else ();
                 FStar_Pervasives_Native.None))
@@ -669,7 +669,7 @@ let __unembed_range:
                   let uu____1850 = FStar_Syntax_Print.term_to_string t0 in
                   FStar_Util.format1 "Not an embedded range: %s" uu____1850 in
                 (FStar_Errors.Warning_NotEmbedded, uu____1849) in
-              FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu____1844)
+              FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu____1844)
            else ();
            FStar_Pervasives_Native.None)
 let unembed_range:

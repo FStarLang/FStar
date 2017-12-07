@@ -1,6 +1,26 @@
 [
-  "µ¿ýjWÉÈ¿]ÕC\u000f˜Üž¥",
+  "æ¾ýµ`,(Ó2J\u001e°pL:1",
   [
+    [
+      "TwoPhaseTC.conjunction_monoid",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
+        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
+        "equation_Prims.l_and", "equation_Prims.prop",
+        "equation_Prims.squash", "equation_TwoPhaseTC.right_unitality_lemma",
+        "refinement_interpretation_Prims_Tm_refine_2fbd657fe85bcb2423f9c7e5f9b3bcb5",
+        "refinement_interpretation_Prims_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "token_correspondence_Prims.l_and", "typing_tok_Prims.T@tok",
+        "unit_inversion", "unit_typing"
+      ],
+      0,
+      "3fc77c3282c788382b6e39a07712445e"
+    ],
     [
       "TwoPhaseTC.xxx",
       1,
@@ -8,7 +28,7 @@
       1,
       [ "@query" ],
       0,
-      "e17e5c70ddff1b90709d0be3dc142f34"
+      "8e169340930b40e3675e1674e814bfc4"
     ],
     [
       "TwoPhaseTC.false_elim",
@@ -21,7 +41,7 @@
         "refinement_interpretation_TwoPhaseTC_Tm_refine_bb26061a0b65cfdbbd4fbb3aba2011c7"
       ],
       0,
-      "0752c4a106240e2af14b654ab2489396"
+      "3a15dedb7c08a6ca0605f12ed3b542f3"
     ],
     [
       "TwoPhaseTC.f8",
@@ -35,7 +55,16 @@
         "refinement_interpretation_Prims_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
       ],
       0,
-      "0c9409a8e91f6d249d211c98921a7ae4"
+      "66a0544aa541eb09e7d26bca63db73d8"
+    ],
+    [
+      "TwoPhaseTC.f12",
+      1,
+      0,
+      0,
+      [ "@query" ],
+      0,
+      "e35bbc1b632328c0ae51258723dc293a"
     ],
     [
       "TwoPhaseTC.f13",
@@ -53,7 +82,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "be3bba427b423fb4c3cbab7f1d6155db"
+      "be0735c0cd2a51462fad3283ad225aaa"
     ],
     [
       "TwoPhaseTC.f14",
@@ -62,7 +91,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "6066b2f3fd335c91ed75646d1c04904f"
+      "e3f6f396199be9bbe9d299281a308247"
     ],
     [
       "TwoPhaseTC.f18",
@@ -77,7 +106,7 @@
         "unit_typing"
       ],
       0,
-      "cc135087fa40f44db732faca71fc26b2"
+      "a51cc74cbcc45092e136fc06315c9715"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__a",
@@ -86,7 +115,7 @@
       1,
       [ "@query" ],
       0,
-      "e1327e45f0189f98c4326a48d5d357a3"
+      "fe543a4652ac2651303491e259068d43"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__p",
@@ -101,7 +130,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_p"
       ],
       0,
-      "d0c425d3c120e7a120e35d439f5c9516"
+      "6484610bbf3cc3fbb5ebc8c0431ef051"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item__x",
@@ -113,7 +142,7 @@
         "projection_inverse_TwoPhaseTC.ExIntro_a"
       ],
       0,
-      "61e9bf1d092a9967612996b6f79e5560"
+      "bd63d4ef8c262f587c2535ae32824dbd"
     ],
     [
       "TwoPhaseTC.__proj__ExIntro__item___3",
@@ -128,7 +157,7 @@
         "token_correspondence_TwoPhaseTC.__proj__ExIntro__item__p"
       ],
       0,
-      "48dbe2a04212b0f966d7e4418e90a155"
+      "557d42be6406516b16ac4495ee938e47"
     ],
     [
       "TwoPhaseTC.f21",
@@ -142,7 +171,7 @@
         "typing_tok_TwoPhaseTC.IP@tok"
       ],
       0,
-      "bc764b57a9bdecc340ed3c66dc69b920"
+      "f082fba5b704a1b618f61de382a1a5b0"
     ]
   ]
 ]

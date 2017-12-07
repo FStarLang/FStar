@@ -256,6 +256,8 @@ val string_of_char:  char -> Tot<string>
 val hex_string_of_byte:  byte -> Tot<string>
 val string_of_bytes: array<byte> -> Tot<string>
 val bytes_of_string: string -> Tot<array<byte>>
+val base64_encode: string -> string
+val base64_decode: string -> string
 val starts_with: long:string -> short:string -> Tot<bool>
 val trim_string: string -> Tot<string>
 val ends_with: long:string -> short:string -> Tot<bool>
