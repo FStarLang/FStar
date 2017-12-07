@@ -70,7 +70,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "d069b1a8759b931e3d1e813808da9b89"
+      "97c4224c0628df8e647586754b7315b1"
     ],
     [
       "AllocSTwHeaps.ref",
@@ -92,7 +92,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "b21b056dcb0e493aec3d5dda76d1643c"
+      "4d444228826cf7125fb3c7a81ba343b7"
     ],
     [
       "AllocSTwHeaps.alloc",
@@ -125,7 +125,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "459d50f98797873464063356a946c790"
+      "fa5061eef7e78ac303eabb26bcbab008"
     ],
     [
       "AllocSTwHeaps.read",
@@ -155,7 +155,7 @@
         "typing_AllocSTwHeaps.upd", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "95e5c5651432c97d35db80cecdf2dd3a"
+      "ea9f6c78dabc603fe0465441881b568c"
     ],
     [
       "AllocSTwHeaps.precise_write",
@@ -173,7 +173,7 @@
         "typing_AllocSTwHeaps.upd", "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "756ba6d149eb5ef98219fb4295f5390a"
+      "4ff2287882dc2782691719313d53f6cb"
     ],
     [
       "AllocSTwHeaps.recall",
@@ -198,7 +198,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "dd43078757bfdfaacc57fb1d0f6c5fab"
+      "7a2eac94b2a25237f356ef37cb142a52"
     ]
   ]
 ]

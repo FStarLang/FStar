@@ -61,7 +61,7 @@
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.singleton"
       ],
       0,
-      "2a7c2448bd11555ec3b87171dd64a8ab"
+      "5919f11ed9258d5044cd746cc8e2a41c"
     ],
     [
       "TestMRef.test_frame_write_mref",
@@ -114,7 +114,7 @@
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.singleton"
       ],
       0,
-      "68bbf4960a3187c9cd3e8a3f67aa4cca"
+      "b0dd009371ac44890ccde3b4ba4ad562"
     ],
     [
       "TestMRef.test_frame_alloc_mref",
@@ -160,7 +160,7 @@
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty"
       ],
       0,
-      "31698c9e1654e2247704d444ff192b8d"
+      "308588ac14bd0772b778f7715b5e8d3b"
     ],
     [
       "TestMRef.test_write_mref",
