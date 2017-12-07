@@ -1623,7 +1623,7 @@ and tc_eqn scrutinee env branch
     | None -> None, Rel.trivial_guard
     | Some e ->
         if Env.should_verify env
-        then raise_error (Errors.WhenClauseFatal_NotSupported, "When clauses are not yet supported in --verify mode; they will be some day") e.pos
+        then raise_error (Errors.Fatal_WhenClauseNotSupported, "When clauses are not yet supported in --verify mode; they will be some day") e.pos
         //             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env TcUtil.t_bool) e in
         //             Some e, g
         else let e, c, g = tc_term (Env.set_expected_typ pat_env t_bool) e in

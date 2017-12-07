@@ -240,7 +240,8 @@ type raw_error =
   | Fatal_WrongDefinitionOrder
   | Fatal_WrongResultTypeAfterConstrutor
   | Fatal_WrongTerm
-  | WhenClauseFatal_NotSupported
+  | Fatal_WhenClauseNotSupported
+  | Fatal_CallNotImplemented
   | Warning_AddImplicitAssumeNewQualifier
   | Warning_AdmitWithoutDefinition
   | Warning_CachedFile
@@ -285,11 +286,12 @@ type raw_error =
   | Warning_UseDefaultEffect
   | Warning_WrongErrorLocation
   | Warning_Z3InvocationWarning
-  | Warning_CallNotImplemented
+  | Warning_CallNotImplementedAsWarning
   | Warning_MissingInterfaceOrImplementation
   | Warning_ConstructorBuildsUnexpectedType
   | Warning_ModuleOrFileNotFoundWarning
 
+// Needs review: Do we need CFatal, or can we just use CError?
 type flag =
   | CError | CFatal | CWarning | CSilent
 
@@ -302,10 +304,21 @@ let default_flags =
   (Error_MissingFileName, CError);
   (Error_ModuleFileNameMismatch, CError);
   (Error_OpPlusInUniverse, CError);
+  // Needs review: OutOfRange is handled inconsistently. It is treated as a fatal error in lex.fs and FStar.ToSyntax.ToSyntax.fs
+  // and an error in parse.fs. For example:
+  //   parser\lex.fs:      with _ -> fail lexbuf (Errors.Error_OutOfRange, "This number is outside the allowable range") 0L
+  //   parser\parse.fs:    log_issue (lhs parseState) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
+  //   tosyntax\FStar.ToSyntax.ToSyntax.fs:  then raise_error (Errors.Error_OutOfRange, (BU.format2 "%s is not in the expected range for %s""
+  // Should probably fix it to be either fatal or error in all use. Default it to CError for now.
   (Error_OutOfRange, CError);
   (Error_ProofObligationFailed, CError);
   (Error_TooManyFiles, CError);
   (Error_TypeCheckerFailToProve, CError);
+  // Needs review: TypeError is handled inconsistently, It is handled both as a fatal error and an error.
+  // For example:
+  //   typechecker\FStar.TypeChecker.Rel.fs:    | None -> raise_error (Err.basic_type_error env None t2 t1) (Env.get_range env)
+  //   typechecker\FStar.TypeChecker.Rel.fs:    Errors.log_issue (Env.get_range env) (Err.basic_type_error env (Some e) t2 t1)
+  //  Should probably fix it to be either fatal or error in all use. Default it to CError for now.
   (Error_TypeError, CError);
   (Error_UncontrainedUnificationVar, CError);
   (Error_UnexpectedGTotComputation, CError);
@@ -527,8 +540,9 @@ let default_flags =
   (Fatal_WrongDefinitionOrder, CFatal);
   (Fatal_WrongResultTypeAfterConstrutor, CFatal);
   (Fatal_WrongTerm, CFatal);
-  (WhenClauseFatal_NotSupported, CFatal);
-  (Warning_CallNotImplemented, CWarning);
+  (Fatal_WhenClauseNotSupported, CFatal);
+  (Fatal_CallNotImplemented, CFatal);
+  (Warning_CallNotImplementedAsWarning, CWarning);
   (Warning_AddImplicitAssumeNewQualifier, CWarning);
   (Warning_AdmitWithoutDefinition, CWarning);
   (Warning_CachedFile, CWarning);
@@ -763,12 +777,13 @@ let diag r msg =
 let log_issue r (e, msg) =
   let errno = errno_of_error (e) in
   match List.nth !flags errno with
-  | CError
-  | CFatal ->
+  | CError ->
      add_one (mk_issue EError (Some r) msg (Some errno))
   | CWarning ->
      add_one (mk_issue EWarning (Some r) msg (Some errno))
   | CSilent -> ()
+  // Needs review: Should we allow using log_issue to set a Fatal error as CError?
+  | CFatal -> failwith ("don't use log_issue to report fatal error, should use raise_error")
 
 let add_errors errs =
     atomically (fun () -> List.iter (fun (e, msg, r) -> log_issue r (e, (message_prefix.append_prefix msg))) errs)

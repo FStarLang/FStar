@@ -1145,7 +1145,7 @@ and mk_match env e0 branches f =
         let nm, s_body, u_body = f env body in
         nm, (pat, None, (s_body, u_body, body))
     | _ ->
-        raise_err (Errors.WhenClauseFatal_NotSupported, ("No when clauses in the definition language"))
+        raise_err (Errors.Fatal_WhenClauseNotSupported, ("No when clauses in the definition language"))
   ) branches) in
   let t1 = match List.hd nms with | M t1 | N t1 -> t1 in
   let has_m = List.existsb (function | M _ -> true | _ -> false) nms in
