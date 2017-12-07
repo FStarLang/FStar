@@ -1,9 +1,9 @@
 module EtM.AE
-open FStar.HyperStack.ST
 open FStar.Seq
 open FStar.Monotonic.Seq
 open FStar.HyperHeap
 open FStar.HyperStack
+open FStar.HyperStack.ST
 open FStar.Monotonic.RRef
 
 module MAC = EtM.MAC
@@ -242,7 +242,7 @@ let keygen (parent:rid)
   (ensures  (fun h0 k h1 ->
     modifies Set.empty h0 h1 /\
     extends k.region parent /\
-    fresh_region k.region h0.h h1.h /\
+    HyperHeap.fresh_region k.region h0.h h1.h /\
     Map.contains h1.h k.region /\
     m_contains k.log h1 /\
     m_sel h1 k.log == createEmpty /\
