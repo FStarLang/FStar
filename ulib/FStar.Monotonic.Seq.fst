@@ -19,11 +19,11 @@ module Seq = FStar.Seq
 abstract let seq_extension (#a:Type) (s1:seq a) (s2:seq a) (s3:seq a) =
   equal s3 (append s1 s2)
   
-abstract let grows (#a:Type) (s1:seq a) (s3:seq a) =
-  exists (s2:seq a). seq_extension s1 s2 s3
-  
+abstract let grows' (#a:Type) :Preorder.relation (seq a)
+  = fun (s1:seq a) (s3:seq a) -> exists (s2:seq a). seq_extension s1 s2 s3
+
 let seq_extension_reflexive (#a:Type) (s:seq a) 
-  : Lemma (ensures (grows s s)) 
+  : Lemma (ensures (grows' s s)) 
   = exists_intro (fun w -> seq_extension s w s) (Seq.createEmpty #a)
 
 let seq_extension_transitive (s1:seq 'a) (s2:seq 'a) (s3:seq 'a) (s1':seq 'a) (s2':seq 'a) 
@@ -33,13 +33,18 @@ let seq_extension_transitive (s1:seq 'a) (s2:seq 'a) (s3:seq 'a) (s1':seq 'a) (s
 
 let seq_extends_to_transitive_aux (s1:seq 'a) (s2:seq 'a) (s3:seq 'a) (s1':seq 'a) (s2':seq 'a)
   : Lemma ((seq_extension s1 s1' s2 /\ seq_extension s2 s2' s3)
-            ==> grows s1 s3) 
+            ==> grows' s1 s3) 
   = seq_extension_transitive s1 s2 s3 s1' s2'
 
 let grows_transitive (s1:seq 'a) (s2:seq 'a) (s3:seq 'a)
-  : Lemma ((grows s1 s2 /\ grows s2 s3)
-           ==> grows s1 s3) 
+  : Lemma ((grows' s1 s2 /\ grows' s2 s3)
+           ==> grows' s1 s3) 
   = forall_to_exists_2 (seq_extends_to_transitive_aux s1 s2 s3)
+
+abstract let grows (#a:Type) :Preorder.preorder (seq a) =
+  Classical.forall_intro (seq_extension_reflexive #a);
+  Classical.forall_intro_3 (grows_transitive #a);
+  grows' #a
 
 open FStar.Monotonic.RRef
 open FStar.HyperHeap
@@ -66,9 +71,9 @@ let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
   : ST (m_rref r (seq a) grows)
        (requires (fun _ -> True))
        (ensures (fun h0 m h1 ->
-	 m_contains m h1 /\
-	 m_sel h1 m == init /\
-	 HST.ralloc_post r init h0 (as_hsref m) h1))
+	 HS.contains h1 m /\
+	 HS.sel h1 m == init /\
+	 HST.ralloc_post r init h0 m h1))
   = lemma_grows_monotone #a;
     FStar.Monotonic.RRef.m_alloc r init
 
@@ -76,8 +81,8 @@ let alloc_mref_seq (#a:Type) (r:rid) (init:seq a)
  * AR: changing rids below to rid which is eternal regions.
  *)
 let at_least (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows) (h:mem) =
-    Seq.length (m_sel h r) > n
-  /\ Seq.index (m_sel h r) n == x
+    Seq.length (HS.sel h r) > n
+  /\ Seq.index (HS.sel h r) n == x
 
 let at_least_is_stable (#a:Type) (#i:rid) (n:nat) (x:a) (r:m_rref i (seq a) grows)
   : Lemma (ensures stable_on_t r (at_least n x r))

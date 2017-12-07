@@ -358,6 +358,7 @@ unfold let ralloc_post (#a:Type) (#rel:preorder a) (i:rid) (init:a) (m0:mem)
      i = x.id                                   /\
      m1 == upd m0 x init                      
 
+#set-options "--z3rlimit 10"
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
       (requires (fun m       -> is_eternal_region i))
@@ -372,6 +373,7 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
     gst_witness (ref_contains_pred r);
     gst_witness (region_contains_pred i);
     r
+#reset-options
 
 let ralloc (#a:Type) (#rel:preorder a) (i:rid) (init:a)
   :ST (mref a rel)
