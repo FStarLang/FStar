@@ -52,3 +52,4 @@ let recall_region = (fun r -> ())
 
 type 'a ref = 'a FStar_HyperStack.reference
 let alloc = salloc
+type ('a, 'b) mref = 'a ref

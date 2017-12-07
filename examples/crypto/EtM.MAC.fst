@@ -78,7 +78,7 @@ val mac: k:key -> m:msg -> ST tag
        modifies_one k.region h0 h1
      /\ m_contains k.log h1
      /\ log1 == snoc log0 (m, t)
-     /\ witnessed (at_least (Seq.length log0) (m, t) k.log)
+     /\ witnessed k.log (at_least (Seq.length log0) (m, t) k.log)
      /\ Seq.length log1 == Seq.length log0 + 1
         (* CH: This last condition should follow from snoc, prove lemma?
                EtM.AE.fst(136,4-158,15) *)

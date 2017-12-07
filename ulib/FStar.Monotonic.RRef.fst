@@ -44,13 +44,13 @@ type m_rref (r:rid) (a:Type) (b:reln a) = x:mref a b{x.id = r}
 (*
  * AR: commenting out as_hsref, m_contains, m_unused_in, m_fresh, m_sel as we can now use their HS counterparts
  *)
-// val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:ref a{x.id = r})
-// let as_hsref #r #a #b x = x
+val as_hsref: #r:rid -> #a:Type -> #b:reln a -> m_rref r a b -> GTot (x:mref a b{x.id = r})
+let as_hsref #r #a #b x = x
 
 // (* val m_contains : #r:rid -> #a:Type -> #b:reln a -> mr:m_rref r a b -> m:t -> GTot bool *)
 // (* let m_contains #r #a #b mr m = HyperHeap.contains_ref (as_rref mr) m *)
 
-// let m_contains (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.contains m (as_hsref mr)
+let m_contains (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.contains m mr
 
 // let m_unused_in (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m:mem) = HS.unused_in (as_hsref mr) m
 
@@ -63,8 +63,8 @@ let m_fresh (#r:rid) (#a:Type) (#b:reln a) (mr:m_rref r a b) (m0:mem) (m1:mem) :
 // (* val m_sel: #r:rid -> #a:Type -> #b:reln a -> h:t -> m_rref r a b -> GTot a *)
 // (* let m_sel #r #a #b h m = HyperHeap.sel h (as_rref m) *)
 
-// val m_sel: #r:rid -> #a:Type -> #b:reln a -> h:mem -> m_rref r a b -> GTot a
-// let m_sel #r #a #b h m = HS.sel h (as_hsref m)
+val m_sel: #r:rid -> #a:Type -> #b:reln a -> h:mem -> m_rref r a b -> GTot a
+let m_sel #r #a #b h m = HS.sel h m
 
 (* 17-01-05 m_upd seems unsound (2 missing preconditions) and unused: commenting out for now 
 (* val m_upd: #r:rid -> #a:Type -> #b:reln a -> h:t -> m_rref r a b -> a -> GTot t *)
@@ -147,9 +147,9 @@ let testify_forall #r #a #b #p $s = admit ()
 (*
  * AR: 12/07: use recall from HyperStack.ST
  *)
-// val m_recall (#r:rid) (#a:Type) (#b:reln a) (m:m_rref r a b)
-//   :ST unit (requires (fun h -> True)) (ensures (fun h0 _ h1 -> h0==h1 /\ contains h1 m))
-// let m_recall #r #a #b m = recall m
+val m_recall (#r:rid) (#a:Type) (#b:reln a) (m:m_rref r a b)
+  :ST unit (requires (fun h -> True)) (ensures (fun h0 _ h1 -> h0==h1 /\ contains h1 m))
+let m_recall #r #a #b m = recall m
 
 (* another instance of monotonic property, this time on the global map of regions; not used much? *)
 (*
