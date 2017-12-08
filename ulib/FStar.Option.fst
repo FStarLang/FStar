@@ -17,8 +17,30 @@ module FStar.Option
 
 open FStar.All
 
+inline_for_extraction
 val isNone: option 'a -> Tot bool
+inline_for_extraction
+let isNone = function
+  | None -> true
+  | Some _ -> false
+
+inline_for_extraction
 val isSome: option 'a -> Tot bool
+inline_for_extraction
+let isSome = function
+  | Some _ -> true
+  | None -> false
+
+inline_for_extraction
 val map: ('a -> 'b) -> option 'a -> option 'b
+inline_for_extraction
+let map f = function
+  | Some x -> Some (f x)
+  | None -> None
+
+inline_for_extraction
 val mapTot: ('a -> Tot 'b) -> option 'a -> Tot (option 'b)
-val get: option 'a -> 'a 
+inline_for_extraction
+let mapTot f = function
+  | Some x -> Some (f x)
+  | None -> None
