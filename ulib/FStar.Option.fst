@@ -44,3 +44,9 @@ inline_for_extraction
 let mapTot f = function
   | Some x -> Some (f x)
   | None -> None
+
+inline_for_extraction
+val get: option 'a -> ML 'a
+let get = function
+  | Some x -> x
+  | None -> failwith "empty option"
